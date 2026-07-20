@@ -1,0 +1,301 @@
+{
+  "schema_version": 1,
+  "scope": "ORCHIDEE-MAN PFT14 independent single-landpoint DIM2 driver restart",
+  "source_reference": "reference/OUT/orc_calibrate_250919_sen/arg2_1.0/001.0-071.0/I10/S2_63.206_0.0876_0.2019_50.658/driver_start.nc",
+  "fortran_provenance": {
+    "file": "fortran_source/ORCHIDEE/src_driver/dim2_driver.f90",
+    "subroutine": "dim2_driver main restart block",
+    "lines": "722-796, 1139-1157, 1411-1429",
+    "physical_file_owner": "IOIPSL restini/restput_p"
+  },
+  "file_format": "NETCDF4",
+  "dimensions": {
+    "x": {
+      "size": 1,
+      "unlimited": false
+    },
+    "y": {
+      "size": 1,
+      "unlimited": false
+    },
+    "z": {
+      "size": 1,
+      "unlimited": false
+    },
+    "time": {
+      "size": 1,
+      "unlimited": false
+    }
+  },
+  "global_attributes": {
+    "Conventions": "CF-1.1",
+    "file_name": "driver_restart.nc",
+    "TimeStamp": "2025-SEP-20 11:51:17 GMT+0800"
+  },
+  "physical_variables": [
+    "nav_lon",
+    "nav_lat",
+    "nav_lev",
+    "time",
+    "time_steps"
+  ],
+  "single_landpoint_scatter": {
+    "index_g": [
+      1
+    ],
+    "grid_shape": [
+      1,
+      1
+    ],
+    "fortran_provenance": {
+      "file": "fortran_source/ORCHIDEE/src_driver/dim2_driver.f90",
+      "subroutine": "dim2_driver main restart block",
+      "lines": "722-796, 1139-1157, 1411-1429 restput_p scatter calls"
+    }
+  },
+  "variables": {
+    "nav_lon": {
+      "dtype": "float32",
+      "dimensions": [
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "degrees_east",
+        "valid_min": -180.0,
+        "valid_max": 180.0,
+        "long_name": "Longitude"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "nav_lat": {
+      "dtype": "float32",
+      "dimensions": [
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "degrees_north",
+        "valid_min": -90.0,
+        "valid_max": 90.0,
+        "long_name": "Latitude"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "nav_lev": {
+      "dtype": "float32",
+      "dimensions": [
+        "z"
+      ],
+      "attributes": {
+        "units": "model_levels",
+        "valid_min": 0.0,
+        "valid_max": 0.0,
+        "long_name": "Model levels"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "time": {
+      "dtype": "float32",
+      "dimensions": [
+        "time"
+      ],
+      "attributes": {
+        "units": "seconds since 1961-01-01 00:00:00",
+        "calendar": "noleap",
+        "title": "Time",
+        "long_name": "Time axis",
+        "time_origin": " 1961-JAN-01 00:00:00"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "time_steps": {
+      "dtype": "int32",
+      "dimensions": [
+        "time"
+      ],
+      "attributes": {
+        "units": "timesteps since 1961-01-01 00:00:00",
+        "title": "Time steps",
+        "tstep_sec": 1800.0,
+        "long_name": "Time step axis",
+        "time_origin": " 1961-JAN-01 00:00:00"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fluxsens": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "vevapp": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "zlev_old": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "qair_old": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "eair_old": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "rau_old": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "petAcoef": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "petBcoef": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "peqAcoef": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "peqBcoef": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "albedo_vis": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "albedo_nir": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "z0": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    }
+  }
+}

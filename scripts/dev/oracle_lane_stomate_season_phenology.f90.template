@@ -1,0 +1,109 @@
+module defprec
+  implicit none
+  integer, parameter :: i_std=kind(1), r_std=kind(1.0)
+end module
+module constantes
+  use defprec
+  implicit none
+  real(r_std), parameter :: zero=0d0, un=1d0, ZeroCelsius=273.15d0, undef=1d20
+  real(r_std), parameter :: one_year=365d0, min_stomate=1d-8
+  integer :: printlev=0, numout=6
+end module
+module stomate_data
+  use defprec
+  implicit none
+  integer, parameter :: nvm=14, nparts=12, nelements=2, nleafages=4, nslm=2
+  integer, parameter :: ileaf=1, iroot=2, isapabove=3, isapbelow=4, iheartabove=5
+  integer, parameter :: iheartbelow=6, ifruit=7, icarbres=8, icarbon=1, initrogen=2
+  integer :: hist_id_stomate=0, itime=0, horipft_index=0
+end module
+module constantes_soil
+  use defprec
+  implicit none
+end module
+module pft_parameters
+  use defprec
+  use stomate_data, only: nvm
+  implicit none
+  logical :: natural(nvm), is_tree(nvm), ok_LAIdev(nvm), always_init=.false.
+  character(len=8) :: pheno_model(nvm)
+  real(r_std) :: min_growthinit_time=300d0, t_always_add=0d0
+  real(r_std) :: lai_initmin(nvm), hum_frac(nvm), hum_min_time(nvm)
+  real(r_std) :: pheno_gdd_crit(nvm,4), ncdgdd_temp(nvm), ncdgdd_moi(nvm)
+  real(r_std) :: ngd_crit(nvm), pheno_moigdd_t_crit(nvm), senescence_temp(nvm)
+  real(r_std) :: t_always, moiavail_always_tree=0d0, moiavail_always_grass=0d0
+  real(r_std) :: gddncd_ref=1d0, gddncd_curve=0d0, gddncd_offset=0d0
+end module
+module xios_orchidee
+  use defprec
+  implicit none
+  interface xios_orchidee_send_field
+    module procedure send_r1,send_r2
+  end interface
+contains
+  subroutine send_r1(n,x); character(*),intent(in)::n; real(r_std),intent(in)::x(:); end
+  subroutine send_r2(n,x); character(*),intent(in)::n; real(r_std),intent(in)::x(:,:); end
+end module
+module ioipsl_para
+  use defprec
+  implicit none
+  interface histwrite_p
+    module procedure hist_r2
+  end interface
+contains
+  subroutine hist_r2(id,n,it,x,k,idx); integer,intent(in)::id,it,k,idx; character(*),intent(in)::n; real(r_std),intent(in)::x(:,:); end
+  subroutine ipslerr_p(level,a,b,c,d); integer,intent(in)::level; character(*),intent(in)::a,b,c,d; error stop 91; end
+end module
+! <PHENOLOGY_MODULE>
+
+program main
+  use defprec
+  use constantes
+  use stomate_data
+  use pft_parameters
+  use stomate_phenology
+  implicit none
+  integer, parameter :: npts=2
+  integer :: u,i,j,m
+  character(len=1024) :: out
+  logical :: present(npts,nvm), senescence(npts,nvm), begin_leaves(npts,nvm)
+  real(r_std) :: veget_max(npts,nvm), tlong(npts), tmonth(npts), tweek(npts)
+  real(r_std) :: gpp(npts,nvm), maxm(npts,nvm), minm(npts,nvm), mm(npts,nvm), mw(npts,nvm)
+  real(r_std) :: gddm5(npts,nvm), gddmid(npts,nvm), ncd(npts,nvm), ngd(npts,nvm), thm(npts,nvm)
+  real(r_std) :: pdlai(npts,nvm), slai(npts,nvm), deltai(npts,nvm), ssla(npts,nvm)
+  real(r_std) :: biomass(npts,nvm,nparts,nelements), lf(npts,nvm,nleafages), la(npts,nvm,nleafages)
+  real(r_std) :: wg(npts,nvm), co2(npts,nvm), sla(npts,nvm)
+  call get_command_argument(1,out)
+  natural=.false.; is_tree=.false.; ok_LAIdev=.false.; pheno_model='none'; lai_initmin=0.1d0
+  hum_frac=0.5d0; hum_min_time=30d0; pheno_gdd_crit=undef; ncdgdd_temp=undef
+  ncdgdd_moi=undef; ngd_crit=undef; pheno_moigdd_t_crit=undef; senescence_temp=undef
+  natural(14)=.true.; pheno_model(14)='none'
+  present=.false.; present(:,14)=.true.; senescence=.false.; begin_leaves=.true.
+  veget_max=0d0; veget_max(:,14)=1d0; tlong=285d0; tmonth=286d0; tweek=287d0
+  gpp=0d0; maxm=0.8d0; minm=0.2d0; mm=0.6d0; mw=0.55d0
+  gddm5=10d0; gddmid=20d0; ncd=30d0; ngd=40d0; thm=5d0
+  pdlai=0d0; slai=0d0; deltai=0d0; ssla=1d0
+  biomass=0d0; biomass(:,14,icarbres,icarbon)=2d0
+  lf=0d0; lf(:,:,1)=1d0; la=4d0; wg=0d0; wg(1,14)=299d0; wg(2,14)=301d0
+  co2=0d0; sla=0.02d0
+  call phenology(npts,1.0,present,veget_max,tlong,tmonth,tweek,gpp,maxm,minm,mm,mw,gddm5,gddmid,ncd,ngd, &
+       senescence,thm,biomass,lf,la,wg,co2,pdlai,slai,deltai,ssla,begin_leaves,sla)
+  call phenology(npts,1.0,present,veget_max,tlong,tmonth,tweek,gpp,maxm,minm,mm,mw,gddm5,gddmid,ncd,ngd, &
+       senescence,thm,biomass,lf,la,wg,co2,pdlai,slai,deltai,ssla,begin_leaves,sla)
+  open(newunit=u,file=trim(out),status='replace',action='write')
+  write(u,'(A)') 'field,value'
+  do j=1,nvm; do i=1,npts
+    write(u,'(A,",",ES26.17)') 'when_growthinit',wg(i,j)
+    write(u,'(A,",",ES26.17)') 'co2_to_bm',co2(i,j)
+    write(u,'(A,",",ES26.17)') 'begin_leaves',merge(1d0,0d0,begin_leaves(i,j))
+    write(u,'(A,",",ES26.17)') 'gdd_midwinter',gddmid(i,j)
+    do m=1,nleafages
+      write(u,'(A,",",ES26.17)') 'leaf_frac',lf(i,j,m)
+      write(u,'(A,",",ES26.17)') 'leaf_age',la(i,j,m)
+    end do
+  end do; end do
+  do m=1,nelements; do j=1,nparts; do i=1,npts
+    write(u,'(A,",",ES26.17)') 'biomass_pft14',biomass(i,14,j,m)
+  end do; end do; end do
+  close(u)
+end program

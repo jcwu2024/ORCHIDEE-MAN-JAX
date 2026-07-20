@@ -1,0 +1,96 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module
+
+module constantes
+  use defprec
+  implicit none
+  integer, parameter :: ileaf=1,isapabove=2,isapbelow=3,iheartabove=4,iheartbelow=5,iroot=6
+  integer, parameter :: ifruit=7,icarbres=8,iagrsapst=9,iagrsappn=10,iagrhrtst=11,iagrhrtpn=12
+  integer, parameter :: nparts=12,nelements=1,icarbon=1,ibare_sechiba=1
+  real(r_std), parameter :: zero=0.d0,un=1.d0,one_day=86400.d0,ZeroCelsius=273.15d0,min_stomate=1.d-8
+  real(r_std) :: dt_sechiba,maint_resp_min_vmax,maint_resp_coeff
+  integer :: printlev=0,numout=6
+contains
+  subroutine ipslerr_p(level,a,b,c,d)
+    integer,intent(in)::level
+    character(*),intent(in)::a,b,c,d
+    error stop 'ipslerr_p'
+  end subroutine
+end module
+
+module constantes_soil
+  use defprec
+  implicit none
+  integer, parameter :: nslm=11
+  real(r_std) :: diaglev(nslm)
+end module
+
+module pft_parameters
+  use defprec
+  use constantes, only:nparts
+  implicit none
+  integer, parameter :: nvm=14
+  logical :: is_tree(nvm),ok_LAIdev(nvm)
+  real(r_std) :: ext_coeff(nvm),maint_resp_slope(nvm,3),coeff_maint_zero(nvm,nparts)
+end module
+
+module stomate_data
+end module
+
+module maintenance_oracle
+  use defprec
+  use stomate_data
+  use pft_parameters
+  use constantes
+  use constantes_soil
+  implicit none
+  logical, save :: firstcall_resp=.true.
+contains
+! <MAINTENANCE_PROCEDURE>
+end module
+
+program oracle_main
+  use defprec
+  use constantes
+  use constantes_soil
+  use pft_parameters
+  use maintenance_oracle
+  implicit none
+  integer, parameter :: npts=48
+  integer :: unit_in,unit_out,i,j,k
+  integer(i_std) :: tree_flags(nvm),laidev_flags(nvm)
+  real(r_std) :: lai(npts,nvm),t2m(npts),tlong(npts),stemp(npts,nslm)
+  real(r_std) :: height(npts,nvm),veget(npts,nvm),rprof(npts,nvm)
+  real(r_std) :: biomass(npts,nvm,nparts,nelements),resp(npts,nvm,nparts),sla(npts,nvm)
+  real(r_std) :: initial_resp(nvm,nparts),accum_resp(nvm,nparts),resp_total(npts,nvm)
+  character(len=512) :: input_path,output_path
+
+  call get_command_argument(1,input_path)
+  call get_command_argument(2,output_path)
+  open(newunit=unit_in,file=trim(input_path),access='stream',form='unformatted',status='old',action='read')
+  read(unit_in) dt_sechiba,maint_resp_min_vmax,maint_resp_coeff
+  read(unit_in) diaglev,tree_flags,laidev_flags,ext_coeff,maint_resp_slope,coeff_maint_zero
+  read(unit_in) t2m,tlong,stemp,height,veget,rprof,biomass,sla,initial_resp
+  close(unit_in)
+  is_tree=tree_flags.ne.0
+  ok_LAIdev=laidev_flags.ne.0
+
+  call maint_respiration(npts,lai,t2m,tlong,stemp,height,veget,rprof,biomass,resp,sla)
+  resp_total=zero
+  accum_resp=initial_resp
+  do i=1,npts
+    do j=2,nvm
+      do k=1,nparts
+        resp_total(i,j)=resp_total(i,j)+resp(i,j,k)
+        accum_resp(j,k)=accum_resp(j,k)+resp(i,j,k)
+      enddo
+    enddo
+  enddo
+
+  open(newunit=unit_out,file=trim(output_path),access='stream',form='unformatted',status='replace',action='write')
+  write(unit_out) lai,resp,resp_total,accum_resp
+  close(unit_out)
+end program

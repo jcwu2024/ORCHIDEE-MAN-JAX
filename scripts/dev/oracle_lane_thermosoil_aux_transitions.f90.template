@@ -1,0 +1,141 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module defprec
+
+module thermosoil_aux_oracle
+  use defprec
+  implicit none
+  integer, parameter :: npts=5, nvm=14, ngrnd=6, nslm=4, nsnow=3, ndeep=ngrnd
+  real(r_std), parameter :: zero=0._r_std, un=1._r_std
+  real(r_std), parameter :: min_sechiba=1.e-8_r_std
+  real(r_std), parameter :: ZeroCelsius=273.15_r_std, fr_dT=2._r_std
+  real(r_std), parameter :: so_capa_dry=1.8e6_r_std, so_capa_wet=3.03e6_r_std
+  real(r_std), parameter :: so_cond_dry=.4_r_std, so_cond_wet=1.89_r_std
+  real(r_std), parameter :: sn_capa=693000._r_std, sn_cond=.3_r_std
+  real(r_std), parameter :: dt_sechiba=1800._r_std
+  integer :: printlev=0, numout=6
+  logical :: satsoil=.false., veget_mask_2d(npts,nvm)=.true.
+  real(r_std) :: znt(ngrnd), zlt(ngrnd), dz5(ngrnd-1), dlt(ngrnd)
+  real(r_std) :: mc_layt(npts,ngrnd), mcl_layt(npts,ngrnd), tmc_layt(npts,ngrnd)
+  real(r_std) :: mc_layt_pft(npts,ngrnd,nvm), mcl_layt_pft(npts,ngrnd,nvm)
+  real(r_std) :: tmc_layt_pft(npts,ngrnd,nvm), shum_ngrnd_perma(npts,ngrnd,nvm)
+  real(r_std) :: pcapa(npts,ngrnd,nvm), pcapa_en(npts,ngrnd,nvm)
+  real(r_std) :: pkappa(npts,ngrnd,nvm), ptn(npts,ngrnd,nvm)
+  real(r_std) :: ptn_beg(npts,ngrnd,nvm), temp_sol_beg(npts)
+  real(r_std) :: coldcont_incr(npts), surfheat_incr(npts), ptn_pftmean(npts,ngrnd)
+contains
+! <THERMOSOIL_HUMLEV>
+! <THERMOSOIL_ENERGY>
+! <ADD_HEAT_ZIMOV>
+! <THERMOSOIL_GETDIFF_THINSNOW>
+end module thermosoil_aux_oracle
+
+program thermosoil_aux_driver
+  use defprec
+  use thermosoil_aux_oracle
+  implicit none
+  integer :: i,j,k,u
+  real(r_std) :: snowdz(npts,nsnow), profil_froz(npts,ngrnd,nvm)
+  real(r_std) :: shumdiag(npts,nslm), thawed(npts)
+  real(r_std) :: mc_h(npts,nslm), mcl_h(npts,nslm), tmc_h(npts,nslm)
+  real(r_std) :: mc_hp(npts,nslm,nvm), mcl_hp(npts,nslm,nvm), tmc_hp(npts,nslm,nvm)
+  real(r_std) :: temp_new(npts), soilcap(npts), veget(npts,nvm)
+  real(r_std) :: heat(npts,ndeep,nvm), veget_bg(npts,nvm)
+  character(512) :: path
+
+  znt=(/.01_r_std,.06_r_std,.20_r_std,.60_r_std,1.20_r_std,2.0_r_std/)
+  zlt=(/.007_r_std,.10_r_std,.30_r_std,.80_r_std,1.50_r_std,3.0_r_std/)
+  dz5=(/.25_r_std,.40_r_std,.60_r_std,.70_r_std,.80_r_std/)
+  dlt=(/.02_r_std,.08_r_std,.20_r_std,.50_r_std,.70_r_std,1.50_r_std/)
+  call get_command_argument(1,path)
+  open(newunit=u,file=trim(path),status='replace')
+  write(u,'(a)') 'field,flat_index,value'
+
+  pcapa=111._r_std; pcapa_en=222._r_std; pkappa=.9_r_std; profil_froz=.25_r_std
+  ptn=273.15_r_std
+  ptn(:,:,1)=270._r_std; ptn(:,:,2)=276._r_std
+  snowdz=zero
+  snowdz(2,1)=.005_r_std
+  snowdz(3,1)=.009_r_std
+  snowdz(4,1)=.020_r_std
+  snowdz(5,1)=.010_r_std
+  shum_ngrnd_perma=.10_r_std
+  do i=1,npts; do j=1,ngrnd; do k=1,nvm
+    shum_ngrnd_perma(i,j,k)=.05_r_std+.01_r_std*i+.002_r_std*j+.001_r_std*k
+  enddo; enddo; enddo
+  call thermosoil_getdiff_thinsnow(npts,ptn,shum_ngrnd_perma,snowdz,profil_froz)
+  call write_3d(u,'thin.pcapa',pcapa)
+  call write_3d(u,'thin.pcapa_en',pcapa_en)
+  call write_3d(u,'thin.pkappa',pkappa)
+  call write_3d(u,'thin.profil_froz',profil_froz)
+
+  ptn=260._r_std
+  do i=1,npts; do j=1,ngrnd; do k=1,nvm
+    ptn(i,j,k)=260._r_std+.1_r_std*i+.01_r_std*j+.001_r_std*k
+  enddo; enddo; enddo
+  ptn_beg=-9._r_std; temp_sol_beg=(/270._r_std,271._r_std,272._r_std,273._r_std,274._r_std/)
+  temp_new=(/271._r_std,269._r_std,273._r_std,275._r_std,272._r_std/)
+  soilcap=(/100._r_std,200._r_std,300._r_std,400._r_std,500._r_std/)
+  veget=zero; veget(:,1)=.2_r_std; veget(:,14)=.8_r_std
+  pcapa_en=1.e6_r_std; pcapa_en(1,1,:)=1.e5_r_std; pcapa_en(3,1,:)=sn_capa
+  call thermosoil_energy(npts,temp_new,soilcap,veget)
+  call write_1d(u,'energy.surfheat_incr',surfheat_incr)
+  call write_1d(u,'energy.coldcont_incr',coldcont_incr)
+  call write_3d(u,'energy.ptn_beg',ptn_beg)
+  call write_1d(u,'energy.temp_sol_beg',temp_sol_beg)
+
+  do i=1,npts; do j=1,nslm
+    shumdiag(i,j)=.1_r_std*i+.01_r_std*j
+    mc_h(i,j)=.15_r_std+.01_r_std*i+.02_r_std*j
+    mcl_h(i,j)=.10_r_std+.008_r_std*i+.015_r_std*j
+    tmc_h(i,j)=10._r_std*i+j
+    do k=1,nvm
+      mc_hp(i,j,k)=mc_h(i,j)+.001_r_std*k
+      mcl_hp(i,j,k)=mcl_h(i,j)+.0005_r_std*k
+      tmc_hp(i,j,k)=tmc_h(i,j)+.1_r_std*k
+    enddo
+  enddo; enddo
+  mc_hp(1,1,1)=zero; mcl_hp(1,1,1)=zero
+  thawed=.4_r_std
+  call thermosoil_humlev(npts,shumdiag,thawed,mc_h,mcl_h,tmc_h,mc_hp,mcl_hp,tmc_hp)
+  call write_2d(u,'humlev.mc_layt',mc_layt)
+  call write_2d(u,'humlev.mcl_layt',mcl_layt)
+  call write_2d(u,'humlev.tmc_layt',tmc_layt)
+  call write_3d(u,'humlev.mc_layt_pft',mc_layt_pft)
+  call write_3d(u,'humlev.mcl_layt_pft',mcl_layt_pft)
+  call write_3d(u,'humlev.tmc_layt_pft',tmc_layt_pft)
+  call write_3d(u,'humlev.shum_ngrnd_perma',shum_ngrnd_perma)
+
+  do i=1,npts; do j=1,ngrnd; do k=1,nvm
+    ptn(i,j,k)=265._r_std+.1_r_std*i+.01_r_std*j+.001_r_std*k
+    heat(i,j,k)=.01_r_std*i+.001_r_std*j+.0001_r_std*k
+    pcapa(i,j,k)=1.5e6_r_std+1000._r_std*j+10._r_std*k
+  enddo; enddo; enddo
+  veget_bg=zero; veget_bg(:,1)=.2_r_std; veget_bg(:,14)=.8_r_std
+  call add_heat_zimov(npts,veget_bg,ptn,heat)
+  call write_3d(u,'zimov.ptn',ptn)
+  call write_2d(u,'zimov.ptn_pftmean',ptn_pftmean)
+  close(u)
+contains
+  subroutine write_1d(unit_out,name,a)
+    integer,intent(in)::unit_out; character(*),intent(in)::name
+    real(r_std),intent(in)::a(:); integer::ii
+    do ii=1,size(a); write(unit_out,'(a,a,i0,a,es25.17)')trim(name),',',ii-1,',',a(ii); enddo
+  end subroutine
+  subroutine write_2d(unit_out,name,a)
+    integer,intent(in)::unit_out; character(*),intent(in)::name
+    real(r_std),intent(in)::a(:,:); integer::ii,jj,idx
+    idx=0; do ii=1,size(a,1); do jj=1,size(a,2)
+      write(unit_out,'(a,a,i0,a,es25.17)')trim(name),',',idx,',',a(ii,jj); idx=idx+1
+    enddo; enddo
+  end subroutine
+  subroutine write_3d(unit_out,name,a)
+    integer,intent(in)::unit_out; character(*),intent(in)::name
+    real(r_std),intent(in)::a(:,:,:); integer::ii,jj,kk,idx
+    idx=0; do ii=1,size(a,1); do jj=1,size(a,2); do kk=1,size(a,3)
+      write(unit_out,'(a,a,i0,a,es25.17)')trim(name),',',idx,',',a(ii,jj,kk); idx=idx+1
+    enddo; enddo; enddo
+  end subroutine
+end program thermosoil_aux_driver

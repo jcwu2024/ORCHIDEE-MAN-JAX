@@ -1,0 +1,230 @@
+program slowproc_main_owners_oracle
+  implicit none
+  integer, parameter :: i_std=4, r_std=8, kjpindex=2, nvm=3, nnobio=2, nslm=1, nctext=3
+  integer, parameter :: ic_clay=1, ic_silt=2, ic_sand=3
+  real(r_std), parameter :: zero=0._r_std, un=1._r_std
+  integer :: printlev_loc=0, numout=6, current_case=0, unit_out
+  integer :: readveget_calls=0
+  interface xios_orchidee_send_field
+    procedure :: xios_send_rank1, xios_send_rank2
+  end interface
+  interface histwrite_p
+    procedure :: histwrite_rank2
+  end interface
+  call run
+contains
+  subroutine run
+    open(newunit=unit_out, file=trim(command_argument()), status="replace", action="write")
+    call run_calendar_cases
+    call run_landuse_cases
+    call run_history_cases
+    close(unit_out)
+  end subroutine
+
+  subroutine run_calendar_cases
+    call calendar_case(1, 1800._r_std, 1800._r_std, 6, 15, .false., .false., 0._r_std, 50._r_std, [10._r_std,20._r_std], [4._r_std,6._r_std], &
+         [0._r_std,0._r_std], [10._r_std,20._r_std], [0._r_std,0._r_std], [1._r_std,2._r_std], [0.1_r_std,0.2_r_std], 10, "cal_base_")
+    call calendar_case(2, 1800._r_std, 1800._r_std, 1, 1, .false., .false., 0._r_std, 50._r_std, [10._r_std,20._r_std], [4._r_std,6._r_std], &
+         [0._r_std,0._r_std], [10._r_std,20._r_std], [0._r_std,0._r_std], [1._r_std,2._r_std], [0.1_r_std,0.2_r_std], 10, "cal_newyear_")
+    call calendar_case(3, 1800._r_std, 1800._r_std, 1, 2, .true., .false., 40._r_std, 50._r_std, [0._r_std,0._r_std], [4._r_std,6._r_std], &
+         [0._r_std,0._r_std], [10._r_std,20._r_std], [0._r_std,0._r_std], [1._r_std,2._r_std], [0.1_r_std,0.2_r_std], 10, "cal_pc_false_")
+    call calendar_case(4, 1800._r_std, 1800._r_std, 1, 2, .true., .false., 60._r_std, 50._r_std, [0._r_std,0._r_std], [4._r_std,6._r_std], &
+         [0._r_std,0._r_std], [10._r_std,20._r_std], [0._r_std,0._r_std], [1._r_std,2._r_std], [0.1_r_std,0.2_r_std], 10, "cal_pc_true_")
+    call calendar_case(5, 1800._r_std, 1800._r_std, 6, 1, .false., .true., 0._r_std, 50._r_std, [7._r_std,8._r_std], [4._r_std,6._r_std], &
+         [1._r_std,2._r_std], [10._r_std,20._r_std], [0.5_r_std,0.75_r_std], [1._r_std,2._r_std], [0.1_r_std,0.2_r_std], 10, "cal_pwt_monthly_")
+    call calendar_case(6, 0._r_std, 1800._r_std, 1, 1, .false., .true., 0._r_std, 50._r_std, [7._r_std,8._r_std], [4._r_std,6._r_std], &
+         [1._r_std,2._r_std], [10._r_std,20._r_std], [0.5_r_std,0.75_r_std], [1._r_std,2._r_std], [0.1_r_std,0.2_r_std], 10, "cal_eoy_not365_")
+    call calendar_case(7, 0._r_std, 1800._r_std, 1, 1, .false., .true., 0._r_std, 50._r_std, [7._r_std,8._r_std], [4._r_std,6._r_std], &
+         [1._r_std,2._r_std], [10._r_std,20._r_std], [0.5_r_std,0.75_r_std], [1._r_std,2._r_std], [0.1_r_std,0.2_r_std], 364, "cal_eoy_365_")
+    call calendar_case(8, 1800._r_std, 1800._r_std, 1, 2, .true., .false., 40._r_std, 50._r_std, [0._r_std,0._r_std], [4._r_std,6._r_std], &
+         [0._r_std,0._r_std], [10._r_std,20._r_std], [0._r_std,0._r_std], [1._r_std,2._r_std], [0.1_r_std,0.2_r_std], 10, "cal_pc_gate_false_")
+    call calendar_case(9, 0._r_std, 1800._r_std, 1, 2, .false., .false., 0._r_std, 50._r_std, [10._r_std,20._r_std], [4._r_std,6._r_std], &
+         [0._r_std,0._r_std], [10._r_std,20._r_std], [0._r_std,0._r_std], [1._r_std,2._r_std], [0.1_r_std,0.2_r_std], 20, "cal_lastday_not_eoy_")
+  end subroutine
+
+  subroutine calendar_case(case_id, sec_in, dt_sechiba_in, month, day, dynpeat_pc_in, dynpeat_pwt_in, peatc_value, pc_lim_in, &
+       growth_day_in, temp_growth_in, precip_this_in, precip_last_in, peatpet_this_in, peatpet_last_in, gsl_in, date_in, prefix)
+    integer, intent(in) :: case_id, month, day, date_in
+    real(r_std), intent(in) :: sec_in, dt_sechiba_in, peatc_value, pc_lim_in
+    logical, intent(in) :: dynpeat_pc_in, dynpeat_pwt_in
+    real(r_std), intent(in) :: growth_day_in(kjpindex), temp_growth_in(kjpindex), precip_this_in(kjpindex), precip_last_in(kjpindex)
+    real(r_std), intent(in) :: peatpet_this_in(kjpindex), peatpet_last_in(kjpindex), gsl_in(kjpindex)
+    character(len=*), intent(in) :: prefix
+    integer :: ji, kjit=1, year_length=365, date, sat_duration(kjpindex)
+    real(r_std) :: sec, dt_sechiba, dt_days=1._r_std, PC_lim, sat_gsl=1._r_std
+    real(r_std) :: growth_day(kjpindex), temp_growth(kjpindex), peatC_ok(kjpindex), peatC(kjpindex)
+    real(r_std) :: precipitation_thissummer(kjpindex), precipitation_lastsummer(kjpindex), precip_rain(kjpindex), precip_snow(kjpindex)
+    real(r_std) :: peatPET_thisyear(kjpindex), peatPET_lastyear(kjpindex), peat_PET(kjpindex), GSL(kjpindex)
+    real(r_std) :: summerp_long(kjpindex), summerpet_long(kjpindex)
+    logical :: FirstTsYear, Judge_PC, LastTsDay, EndOfYear, dyn_peat, FirstTsMonth, update_peatfrac, do_slow, dynpeat_PC, dynpeat_PWT
+    current_case = case_id
+    sec = sec_in; dt_sechiba = dt_sechiba_in; date = date_in; PC_lim = pc_lim_in
+    dyn_peat = dynpeat_pwt_in .or. dynpeat_pc_in
+    dynpeat_PC = dynpeat_pc_in
+    dynpeat_PWT = dynpeat_pwt_in
+    growth_day = growth_day_in
+    temp_growth = temp_growth_in
+    peatC = peatc_value
+    peatC_ok = [0._r_std, 0._r_std]
+    precipitation_thissummer = precip_this_in
+    precipitation_lastsummer = precip_last_in
+    precip_rain = [1._r_std, 2._r_std]
+    precip_snow = [0.5_r_std, 0.25_r_std]
+    peatPET_thisyear = peatpet_this_in
+    peatPET_lastyear = peatpet_last_in
+    peat_PET = [0.1_r_std, 0.2_r_std]
+    GSL = gsl_in
+    summerp_long = [5._r_std, 6._r_std]
+    summerpet_long = [7._r_std, 8._r_std]
+    FirstTsMonth = .false.
+    update_peatfrac = .false.
+! <SLOWPROC_MAIN_CALENDAR_SPAN>
+    call emit1(prefix//'first_ts_year', merge([1._r_std], [0._r_std], FirstTsYear))
+    call emit1(prefix//'last_ts_day', merge([1._r_std], [0._r_std], LastTsDay))
+    call emit1(prefix//'end_of_year', merge([1._r_std], [0._r_std], EndOfYear))
+    call emit1(prefix//'first_ts_month', merge([1._r_std], [0._r_std], FirstTsMonth))
+    call emit1(prefix//'update_peatfrac', merge([1._r_std], [0._r_std], update_peatfrac))
+    call emit1(prefix//'do_slow', merge([1._r_std], [0._r_std], do_slow))
+    call emit1(prefix//'date', [real(date, r_std)])
+    call emit1(prefix//'growth_day', growth_day)
+    call emit1(prefix//'peatC_ok', peatC_ok)
+    call emit1(prefix//'precipitation_thissummer', precipitation_thissummer)
+    call emit1(prefix//'precipitation_lastsummer', precipitation_lastsummer)
+    call emit1(prefix//'peatPET_thisyear', peatPET_thisyear)
+    call emit1(prefix//'peatPET_lastyear', peatPET_lastyear)
+    call emit1(prefix//'GSL', GSL)
+    call emit1(prefix//'sat_duration', real(sat_duration, r_std))
+    call emit1(prefix//'summerp_long', summerp_long)
+    call emit1(prefix//'summerpet_long', summerpet_long)
+  end subroutine
+
+  subroutine run_landuse_cases
+    call landuse_case(10, .true., 0, 1, 1999, 1999, "landuse_off_")
+    call landuse_case(11, .true., 1, 2, 1999, 1999, "landuse_datefalse_")
+    call landuse_case(12, .true., 1, 1, 1999, 1999, "landuse_modtrue_")
+    call landuse_case(13, .true., 2, 1, 1999, 1999, "landuse_modfalse_")
+  end subroutine
+
+  subroutine landuse_case(case_id, map_pft_format, veget_update, date, veget_year, veget_year_orig, prefix)
+    integer, intent(in) :: case_id, veget_update, date, veget_year, veget_year_orig
+    logical, intent(in) :: map_pft_format
+    character(len=*), intent(in) :: prefix
+    integer :: veget_year_tmp
+    integer :: neighbours(1,1)
+    real(r_std) :: lalo(1,2), resolution(1,2), contfrac(1), veget_max(1,nvm), veget_nextyear(1,nvm), frac_nobio_nextyear(1,nnobio)
+    logical :: ok_dgvm=.false., dyn_peat=.false., agri_peat=.false.
+    readveget_calls = 0
+    current_case = case_id
+    veget_year_tmp = 0
+    lalo = 0._r_std; resolution = 1._r_std; contfrac = 1._r_std; neighbours = 0
+    veget_max = reshape([0.2_r_std, 0.3_r_std, 0.5_r_std], shape(veget_max))
+    veget_nextyear = -1._r_std
+    frac_nobio_nextyear = -1._r_std
+! <SLOWPROC_MAIN_LANDUSE_SPAN>
+    call emit1(prefix//'readveget_calls', [real(readveget_calls, r_std)])
+    call emit1(prefix//'veget_year_tmp', [real(veget_year_tmp, r_std)])
+    call emit1(prefix//'veget_nextyear', reshape(veget_nextyear, [size(veget_nextyear)]))
+    call emit1(prefix//'frac_nobio_nextyear', reshape(frac_nobio_nextyear, [size(frac_nobio_nextyear)]))
+  end subroutine
+
+  subroutine run_history_cases
+    call history_case(20, 2, "hist_active_")
+    call history_case(21, 0, "hist_inactive_")
+  end subroutine
+
+  subroutine history_case(case_id, hist2_id, prefix)
+    integer, intent(in) :: case_id, hist2_id
+    character(len=*), intent(in) :: prefix
+    integer :: kjit=5, indexveg(kjpindex*nvm), hist_id=1, j
+    real(r_std) :: bulk_density(kjpindex), bulkdens(kjpindex), bulk_density_default=1.65_r_std
+    real(r_std) :: clayfraction(kjpindex), siltfraction(kjpindex), textfrac(kjpindex,nctext)
+    logical :: done_stomate_lcchange=.false., use_age_class=.false.
+    real(r_std) :: veget_max(kjpindex,nvm), veget_max_new(kjpindex,nvm)
+    real(r_std) :: GSL(kjpindex), peatPET_lastyear(kjpindex), precipitation_lastsummer(kjpindex), summerp_long(kjpindex), summerpet_long(kjpindex)
+    real(r_std) :: resp_maint(kjpindex,nvm), resp_hetero(kjpindex,nvm), resp_growth(kjpindex,nvm), gpp(kjpindex,nvm), npp(kjpindex,nvm)
+    real(r_std) :: dt_sechiba=1800._r_std
+    current_case = case_id
+    do j = 1, size(indexveg)
+      indexveg(j) = j
+    end do
+    bulk_density = [1400._r_std, -1._r_std]
+    clayfraction = [0.2_r_std, 0.3_r_std]
+    siltfraction = [0.3_r_std, 0.1_r_std]
+    veget_max = 0._r_std
+    veget_max_new = veget_max
+    GSL = 0._r_std
+    peatPET_lastyear = 0._r_std
+    precipitation_lastsummer = 0._r_std
+    summerp_long = 0._r_std
+    summerpet_long = 0._r_std
+    gpp = reshape([9._r_std, 8._r_std, 10._r_std, 12._r_std, 20._r_std, 24._r_std], shape(gpp))
+    resp_maint = reshape([3._r_std, 2._r_std, 2._r_std, 1._r_std, 4._r_std, 2._r_std], shape(resp_maint))
+    resp_growth = reshape([2._r_std, 1._r_std, 1._r_std, 1._r_std, 3._r_std, 2._r_std], shape(resp_growth))
+    resp_hetero = reshape([1._r_std, 2._r_std, 5._r_std, 4._r_std, 6._r_std, 3._r_std], shape(resp_hetero))
+! <SLOWPROC_MAIN_HISTORY_SPAN>
+    call emit1(prefix//'bulkdens', bulkdens)
+    call emit2(prefix//'textfrac', textfrac)
+    call emit2(prefix//'npp', npp)
+  end subroutine
+
+  subroutine getin_p(name, value)
+    character(len=*), intent(in) :: name
+    logical, intent(inout) :: value
+    if (trim(name) == 'JUDGE_PC') value = current_case == 4 .or. current_case == 8
+  end subroutine
+
+  subroutine slowproc_readvegetmax(kjpindex, lalo, neighbours, resolution, contfrac, veget_max, veget_nextyear, frac_nobio_nextyear, veget_year, peat_flag)
+    integer, intent(in) :: kjpindex, neighbours(:,:), veget_year
+    real(r_std), intent(in) :: lalo(:,:), resolution(:,:), contfrac(:), veget_max(:,:)
+    real(r_std), intent(out) :: veget_nextyear(:,:), frac_nobio_nextyear(:,:)
+    logical, intent(in) :: peat_flag
+    readveget_calls = readveget_calls + 1
+    veget_nextyear = 0._r_std
+    veget_nextyear(:,1) = 0.1_r_std * real(veget_year - 1998, r_std)
+    veget_nextyear(:,2) = 0.25_r_std
+    veget_nextyear(:,3) = 0.75_r_std - veget_nextyear(:,1)
+    frac_nobio_nextyear = 0._r_std
+    frac_nobio_nextyear(:,1) = merge(0.2_r_std, 0.1_r_std, peat_flag)
+  end subroutine
+
+  subroutine xios_send_rank1(name, value)
+    character(len=*), intent(in) :: name
+    real(r_std), intent(in) :: value(:)
+  end subroutine
+
+  subroutine xios_send_rank2(name, value)
+    character(len=*), intent(in) :: name
+    real(r_std), intent(in) :: value(:,:)
+  end subroutine
+
+  subroutine histwrite_rank2(hist_id, name, kjit, value, count, indexveg)
+    integer, intent(in) :: hist_id, kjit, count, indexveg(:)
+    character(len=*), intent(in) :: name
+    real(r_std), intent(in) :: value(:,:)
+  end subroutine
+
+  function command_argument() result(value)
+    character(len=1024) :: value
+    call get_command_argument(1, value)
+  end function
+
+  subroutine emit1(name, value)
+    character(len=*), intent(in) :: name
+    real(r_std), intent(in) :: value(:)
+    integer :: i
+    do i = 1, size(value)
+      write(unit_out, '(A,",",ES26.17E3)') trim(name), value(i)
+    end do
+  end subroutine
+
+  subroutine emit2(name, value)
+    character(len=*), intent(in) :: name
+    real(r_std), intent(in) :: value(:,:)
+    integer :: i, j
+    do j = 1, size(value, 2)
+      do i = 1, size(value, 1)
+        write(unit_out, '(A,",",ES26.17E3)') trim(name), value(i, j)
+      end do
+    end do
+  end subroutine
+end program

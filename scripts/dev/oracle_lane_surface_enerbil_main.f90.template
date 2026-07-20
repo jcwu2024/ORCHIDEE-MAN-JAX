@@ -1,0 +1,139 @@
+module defprec
+ use,intrinsic::iso_fortran_env,only:int32,real64
+ implicit none
+ integer,parameter::i_std=int32,r_std=real64
+end module
+module constantes
+ use defprec
+ implicit none
+ real(r_std),parameter::zero=0.,un=1.,deux=2.,undemi=.5,quatre=4.
+ real(r_std),parameter::cp_air=1004.675,c_stefan=5.6697e-8,chalev0=2.5008e6,chalsu0=2.8345e6
+ real(r_std),parameter::chalfu0=chalsu0-chalev0,tp_00=273.15,min_wind=.1,min_sechiba=1e-8
+ real(r_std),parameter::msmlr_air=28.964e-3,msmlr_h2o=18.02e-3
+ real(r_std)::dt_sechiba=1800.
+ logical,parameter::diag_qsat=.true.
+ logical::ok_explicitsnow=.true.,almaoutput=.false.,OK_SECHIBA=.true.
+ integer::printlev=0,numout=6
+contains
+ subroutine ipslerr_p(level,a,b,c,d)
+  integer,intent(in)::level;character(*),intent(in)::a,b,c,d
+  ! Error-exit stub: diagnostics are exercised without terminating the harness.
+ end subroutine
+end module
+module constantes_soil
+ implicit none
+end module
+module qsat_moisture
+ use defprec;use constantes
+ implicit none
+ logical,save::l_qsat_first=.true.
+ integer(i_std),parameter::max_temp=370,min_temp=100
+ real(r_std),dimension(max_temp),save::qsfrict
+contains
+! <QSAT_PROCEDURES>
+end module
+module pft_parameters
+ implicit none
+ integer,parameter::nvm=14
+ logical::ok_LAIdev(nvm)=.false.
+end module
+module enerbil_oracle
+ use defprec;use constantes;use pft_parameters;use qsat_moisture
+ implicit none
+ integer,parameter::nsnow=3
+ real(r_std),allocatable::psold(:),psold_pft(:,:),qsol_sat(:),qsol_sat_pft(:,:),pdqsold(:),pdqsold_pft(:,:)
+ real(r_std),allocatable::psnew(:),psnew_pft(:,:),qsol_sat_new(:),qsol_sat_new_pft(:,:),netrad(:),netrad_pft(:,:)
+ real(r_std),allocatable::lwabs(:),lwup(:),lwnet(:),fluxsubli(:),qsat_air(:),tair(:),q_sol_pot(:),temp_sol_pot(:)
+ integer::hist_call_count=0
+ interface xios_orchidee_send_field
+  module procedure xios_field_1d,xios_field_2d
+ end interface
+ interface histwrite_p
+  module procedure histwrite_1d,histwrite_2d
+ end interface
+contains
+! <ENERBIL_PROCEDURES>
+ subroutine xios_field_1d(name,field)
+  character(*),intent(in)::name;real(r_std),intent(in)::field(:)
+ end subroutine
+ subroutine xios_field_2d(name,field)
+  character(*),intent(in)::name;real(r_std),intent(in)::field(:,:)
+ end subroutine
+ subroutine histwrite_1d(id,name,it,field,n,index)
+  integer,intent(in)::id,it,n,index(:);character(*),intent(in)::name;real(r_std),intent(in)::field(:)
+  hist_call_count=hist_call_count+1
+ end subroutine
+ subroutine histwrite_2d(id,name,it,field,n,index)
+  integer,intent(in)::id,it,n,index(:);character(*),intent(in)::name;real(r_std),intent(in)::field(:,:)
+  hist_call_count=hist_call_count+1
+ end subroutine
+end module
+program oracle_main
+ use defprec;use constantes;use pft_parameters;use enerbil_oracle
+ implicit none
+ integer,parameter::n=2
+ integer::i,j,index(n),indexveg(n*nvm)
+ real(r_std)::zlev(n),lwdown(n),swnet(n),epot(n),tair_in(n),u(n),v(n),peta(n),petb(n),qair(n),peqa(n),peqb(n),pb(n),rau(n)
+ real(r_std)::vb(n),vbp(n,nvm),va(n),vb1(n),vb2(n,nvm),vb3(n,nvm),vb3p(n,nvm),vb4(n),vb4p(n,nvm),vb5(n)
+ real(r_std)::emis(n),soilflx(n),soilflxp(n,nvm),soilcap(n),soilcapp(n,nvm),qc(n),qcp(n,nvm),vmax(n,nvm),hum(n,nvm)
+ real(r_std)::fs(n),fl(n),vevapp(n),tr(n,nvm),trp(n,nvm),vnu(n),vnup(n,nvm),vwet(n,nvm),vsno(n),vflo(n),t2(n)
+ real(r_std)::ts(n),tsp(n,nvm),trad(n),tsn(n),tsnp(n,nvm),qsurf(n),evapot(n),ecorr(n),rain(n),sdz(n,nsnow),pg(n),tadd(n)
+ character(len=512)::path
+ index=(/1,2/);do i=1,n*nvm;indexveg(i)=i;enddo
+ zlev=2.;lwdown=(/300.,340./);swnet=(/120.,180./);tair_in=(/285.,278./);pb=(/1013.,980./);rau=(/1.2,1.15/)
+ u=(/2.,.05/);v=(/1.,.02/);qair=(/.006,.003/);epot=tair_in*cp_air;peta=.01;petb=epot;peqa=.1;peqb=qair
+ emis=.98;soilflx=(/8.,5./);soilcap=(/5e5,4e5/);qc=(/.01,.012/)
+ vb=(/.4,.6/);va=1.;vb1=(/.0,.3/);vb4=(/.25,.15/);vb5=0.
+ ts=(/284.,274./);tsp=spread(ts,2,nvm);vbp=spread(vb,2,nvm);soilflxp=spread(soilflx,2,nvm)
+ soilcapp=spread(soilcap,2,nvm);qcp=spread(qc,2,nvm);vmax=0.;vmax(:,14)=.8;hum=1.
+ vb2=0.;vb3=0.;vb3p=0.;vb4p=0.;vb2(:,14)=.05;vb3(:,14)=.25;vb3p(:,14)=.35;vb4p(:,14)=.15
+ rain=(/0.,.001/);sdz=0.;sdz(2,:)=(/.02,.03,.04/);pg=0.;evapot=0.;ecorr=0.;trad=ts;vevapp=0.
+ ok_LAIdev=.false.;ok_LAIdev(14)=.true.
+ allocate(psold(n),psold_pft(n,nvm),qsol_sat(n),qsol_sat_pft(n,nvm),pdqsold(n),pdqsold_pft(n,nvm))
+ allocate(psnew(n),psnew_pft(n,nvm),qsol_sat_new(n),qsol_sat_new_pft(n,nvm),netrad(n),netrad_pft(n,nvm))
+ allocate(lwabs(n),lwup(n),lwnet(n),fluxsubli(n),qsat_air(n),tair(n),q_sol_pot(n),temp_sol_pot(n))
+ q_sol_pot=(/.01,.02/);temp_sol_pot=(/280.,270./)
+ call enerbil_main(1,n,index,indexveg,zlev,lwdown,swnet,epot,tair_in,u,v,peta,petb,qair,peqa,peqb,pb,rau, &
+  vb,vbp,va,vb1,vb2,vb3,vb3p,vb4,vb4p,vb5,emis,soilflx,soilflxp,soilcap,soilcapp,qc,qcp,vmax,hum,fs,fl, &
+  vevapp,tr,trp,vnu,vnup,vwet,vsno,vflo,t2,ts,tsp,trad,tsn,tsnp,qsurf,evapot,ecorr,-1,-1,-1,rain,sdz,pg,tadd)
+ call get_command_argument(1,path);open(10,file=trim(path),status='replace');write(10,'(a)')'field,value'
+ do i=1,n
+  write(10,'(a,es25.17)')'temp_sol_new,',tsn(i);write(10,'(a,es25.17)')'temp_sol_new_pft14,',tsnp(i,14)
+  write(10,'(a,es25.17)')'qsurf,',qsurf(i);write(10,'(a,es25.17)')'evapot,',evapot(i);write(10,'(a,es25.17)')'evapot_corr,',ecorr(i)
+  write(10,'(a,es25.17)')'fluxsens,',fs(i);write(10,'(a,es25.17)')'fluxlat,',fl(i);write(10,'(a,es25.17)')'vevapp,',vevapp(i)
+  write(10,'(a,es25.17)')'vevapnu,',vnu(i);write(10,'(a,es25.17)')'vevapsno,',vsno(i);write(10,'(a,es25.17)')'vevapflo,',vflo(i)
+  write(10,'(a,es25.17)')'transpir14,',tr(i,14);write(10,'(a,es25.17)')'transpot14,',trp(i,14);write(10,'(a,es25.17)')'vevapwet14,',vwet(i,14)
+  write(10,'(a,es25.17)')'vevapnu_pft14,',vnup(i,14);write(10,'(a,es25.17)')'pgflux,',pg(i);write(10,'(a,es25.17)')'temp_sol_add,',tadd(i)
+ enddo
+ almaoutput=.true.
+ call enerbil_main(2,n,index,indexveg,zlev,lwdown,swnet,epot,tair_in,u,v,peta,petb,qair,peqa,peqb,pb,rau, &
+  vb,vbp,va,vb1,vb2,vb3,vb3p,vb4,vb4p,vb5,emis,soilflx,soilflxp,soilcap,soilcapp,qc,qcp,vmax,hum,fs,fl, &
+  vevapp,tr,trp,vnu,vnup,vwet,vsno,vflo,t2,ts,tsp,trad,tsn,tsnp,qsurf,evapot,ecorr,-1,-1,-1,rain,sdz,pg,tadd)
+ write(10,'(a,es25.17)')'history_call_count,',real(hist_call_count,r_std)
+ close(10)
+
+ ! Exercise the mixed valid/invalid diagnostic loop. The first point takes the
+ ! retained false edge while the second point crosses the diagnostic threshold.
+ pb=(/1013.,1.e-10/)
+ call enerbil_begin(n,ts,tsp,lwdown,swnet,pb,psold,psold_pft,qsol_sat,qsol_sat_pft, &
+  pdqsold,pdqsold_pft,netrad,netrad_pft,emis)
+
+ ! A dry surface makes the latent-energy numerator exactly zero.
+ pb=(/1013.,980./)
+ call enerbil_begin(n,ts,tsp,lwdown,swnet,pb,psold,psold_pft,qsol_sat,qsol_sat_pft, &
+  pdqsold,pdqsold_pft,netrad,netrad_pft,emis)
+ vb=0.;vbp=0.;vb1=0.;vb5=0.
+ call enerbil_surftemp(n,zlev,emis,epot,peta,petb,qair,peqa,peqb,soilflx,soilflxp, &
+  rau,u,v,qc,qcp,vb,vbp,va,vb1,vb5,soilcap,soilcapp,lwdown,swnet,psnew, &
+  qsol_sat_new,qsol_sat_new_pft,tsn,tsnp,qsat_air,tair,vmax)
+
+ ! Two-point Milly/snow boundary case: point 1 has zero potential evaporation;
+ ! point 2 has warm snow and a positive but sub-threshold correction denominator.
+ emis=(/.98,1.e-20/);ts=(/284.,284./);rau=(/1.2,1.e-20/);qc=(/.01,1.e-20/)
+ vb=(/.4,1./);va=1.;vb1=0.;vb5=0.;qair=(/1.,0./)
+ epot=(/285.*cp_air,280.*cp_air/);psnew=(/284.*cp_air,281.*cp_air/);tsn=(/284.,281./)
+ netrad=0.;evapot=0.;ecorr=0.;pg=0.;rain=0.;sdz=0.;sdz(2,:)=.01
+ call enerbil_flux(n,emis,ts,rau,u,v,qc,vb,va,vb1,vb5,qair,epot,psnew,qsurf,fs,fl, &
+  fluxsubli,vevapp,tsn,lwdown,swnet,lwup,lwnet,pb,trad,netrad,evapot,ecorr,rain, &
+  sdz,tair_in,pg,soilcap,tadd)
+end program

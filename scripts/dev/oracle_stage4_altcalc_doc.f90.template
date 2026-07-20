@@ -1,0 +1,54 @@
+module altcalc_doc_oracle
+  implicit none
+  integer, parameter :: r_std=8, i_std=4, nvm=14, ndeep=32
+  real(r_std), parameter :: zero=0.d0, ZeroCelsius=273.15d0
+  integer :: printlev=0
+  logical, parameter :: soilc_isspinup=!__SPINUP_MODE__
+  logical :: veget_mask_2d(3,nvm)
+  logical, parameter :: oracle_newaltcalc = !__NEW_MODE__
+contains
+  subroutine getin_p(name,value)
+    character(*),intent(in)::name; logical,intent(inout)::value
+    if (trim(name)=='newaltcalc') then
+      value=oracle_newaltcalc
+    endif
+  end subroutine
+
+!__ORIGINAL_PROCEDURE__
+end module altcalc_doc_oracle
+
+program run_altcalc_doc_oracle
+  use altcalc_doc_oracle
+  implicit none
+  integer :: u, callno
+  character(1024)::outfile
+  real(r_std)::dt,scnd,zprof(ndeep), tprof(3,ndeep,nvm), alt(3,nvm), altmax(3,nvm), altmax_lastyear(3,nvm)
+  integer(i_std)::alt_ind(3,nvm),altmax_ind(3,nvm),altmax_ind_lastyear(3,nvm)
+  call get_command_argument(1,outfile)
+  dt=1800.d0; scnd=0.d0; do callno=1,ndeep; zprof(callno)=2.d0*dble(callno)/dble(ndeep); enddo
+  veget_mask_2d=.false.; veget_mask_2d(1,14)=.true.; veget_mask_2d(2,1)=.true.
+  tprof=268.d0; alt=0.d0; alt_ind=0; altmax=0.d0; altmax_lastyear=0.d0; altmax_ind=0; altmax_ind_lastyear=0
+  altmax(1,14)=zprof(8); altmax(2,1)=zprof(16)
+  call altcalc_DOC(3,dt,1,scnd,tprof,zprof,alt,alt_ind,altmax,altmax_ind,altmax_lastyear,altmax_ind_lastyear)
+  open(newunit=u,file=trim(outfile),access='stream',form='unformatted',status='replace')
+  do callno=1,4
+    tprof=268.d0
+    select case(callno)
+    case(1)
+      tprof(1,1:8,14)=278.d0; tprof(2,1:16,1)=278.d0
+    case(2)
+      tprof(1,:,14)=278.d0; tprof(2,:,1)=278.d0
+    case(3)
+      tprof(1,1:4,14)=278.d0; tprof(1,10:14,14)=278.d0; tprof(2,1,1)=278.d0
+    case(4)
+      tprof(1,1:20,14)=278.d0; tprof(2,1:2,1)=278.d0
+    end select
+    if (callno==3) then
+      call altcalc_DOC(3,dt,2,scnd,tprof,zprof,alt,alt_ind,altmax,altmax_ind,altmax_lastyear,altmax_ind_lastyear)
+    else
+      call altcalc_DOC(3,dt,1,scnd,tprof,zprof,alt,alt_ind,altmax,altmax_ind,altmax_lastyear,altmax_ind_lastyear)
+    endif
+    write(u) alt,alt_ind,altmax,altmax_ind,altmax_lastyear,altmax_ind_lastyear
+  enddo
+  close(u)
+end program run_altcalc_doc_oracle

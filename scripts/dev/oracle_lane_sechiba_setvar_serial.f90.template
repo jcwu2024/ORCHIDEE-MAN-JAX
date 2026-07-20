@@ -1,0 +1,135 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module defprec
+
+module sechiba_setvar_serial_oracle
+  use defprec
+  implicit none
+  integer :: numout=6
+  logical :: long_print_setvar=.false.
+  interface getin
+    module procedure getin_i0,getin_i1,getin_i2,getin_r0,getin_r1,getin_r2
+  end interface
+contains
+  subroutine getin_i0(key,value)
+    character(*),intent(in)::key; integer(i_std),intent(inout)::value
+    value=101_i_std
+  end subroutine
+  subroutine getin_i1(key,value)
+    character(*),intent(in)::key; integer(i_std),intent(inout)::value(:); integer::i
+    do i=1,size(value); value(i)=100_i_std+i; enddo
+  end subroutine
+  subroutine getin_i2(key,value)
+    character(*),intent(in)::key; integer(i_std),intent(inout)::value(:,:); integer::i,j
+    do i=1,size(value,1); do j=1,size(value,2); value(i,j)=100_i_std+10*i+j; enddo; enddo
+  end subroutine
+  subroutine getin_r0(key,value)
+    character(*),intent(in)::key; real(r_std),intent(inout)::value
+    if(index(key,'MISSING')>0)return
+    value=101.5_r_std
+  end subroutine
+  subroutine getin_r1(key,value)
+    character(*),intent(in)::key; real(r_std),intent(inout)::value(:); integer::i
+    do i=1,size(value); value(i)=100.5_r_std+i; enddo
+  end subroutine
+  subroutine getin_r2(key,value)
+    character(*),intent(in)::key; real(r_std),intent(inout)::value(:,:); integer::i,j
+    do i=1,size(value,1); do j=1,size(value,2); value(i,j)=100.5_r_std+10*i+j; enddo; enddo
+  end subroutine
+! <I0SETVAR>
+! <I10SETVAR>
+! <I11SETVAR>
+! <I20SETVAR>
+! <I21SETVAR>
+! <I22SETVAR>
+! <R0SETVAR>
+! <R10SETVAR>
+! <R11SETVAR>
+! <R20SETVAR>
+! <R21SETVAR>
+! <R22SETVAR>
+! <R30SETVAR>
+end module sechiba_setvar_serial_oracle
+
+program sechiba_setvar_serial_driver
+  use defprec
+  use sechiba_setvar_serial_oracle
+  implicit none
+  integer(i_std),parameter::ix=-9_i_std
+  real(r_std),parameter::rx=-9._r_std
+  integer(i_std)::is,iv3(3),im22(2,2),im23(2,3),ip2(2),ip3(3),ip4(4)
+  real(r_std)::rs,rv3(3),rm22(2,2),rm23(2,3),rp2(2),rp3(3),rp4(4),rcube(2,2,2)
+  integer::u
+  character(512)::path,mode
+  call get_command_argument(2,mode)
+  if(trim(mode)=='invalid_i21')then
+    im23=ix; ip4=1_i_std; call i21setvar(im23,ix,'NO_KEYWORD',ip4); stop 97
+  endif
+  if(trim(mode)=='invalid_r21')then
+    rm23=rx; rp4=1._r_std; call r21setvar(rm23,rx,'NO_KEYWORD',rp4); stop 98
+  endif
+  call get_command_argument(1,path); open(newunit=u,file=trim(path),status='replace')
+  write(u,'(a)')'field,flat_index,value'
+
+  is=ix; call i0setvar(is,ix,'NO_KEYWORD',7_i_std); call wi0(u,'i0.no',is)
+  is=ix; call i0setvar(is,ix,'CFG_I0',7_i_std); call wi0(u,'i0.cfg',is)
+  is=5; call i0setvar(is,ix,'CFG_I0',7_i_std); call wi0(u,'i0.keep',is)
+  iv3=ix; call i10setvar(iv3,ix,'NO_KEYWORD',7_i_std); call wi1(u,'i10.no',iv3)
+  iv3=ix; call i10setvar(iv3,ix,'CFG_I0',7_i_std); call wi1(u,'i10.cfg',iv3)
+  iv3=ix; iv3(1)=5; call i10setvar(iv3,ix,'CFG_I0',7_i_std); call wi1(u,'i10.keep',iv3)
+  ip3=(/7_i_std,8_i_std,9_i_std/)
+  iv3=ix; call i11setvar(iv3,ix,'NO_KEYWORD',ip3); call wi1(u,'i11.no',iv3)
+  iv3=ix; call i11setvar(iv3,ix,'CFG_I1',ip3); call wi1(u,'i11.cfg',iv3)
+  iv3=ix; iv3(1)=5; call i11setvar(iv3,ix,'CFG_I1',ip3); call wi1(u,'i11.keep',iv3)
+  im23=ix; call i20setvar(im23,ix,'NO_KEYWORD',7_i_std); call wi2(u,'i20.no',im23)
+  im23=ix; call i20setvar(im23,ix,'CFG_I0',7_i_std); call wi2(u,'i20.cfg',im23)
+  im23=ix; im23(1,1)=5; call i20setvar(im23,ix,'CFG_I0',7_i_std); call wi2(u,'i20.keep',im23)
+  ip2=(/7_i_std,8_i_std/)
+  im22=ix; call i21setvar(im22,ix,'NO_KEYWORD',ip2); call wi2(u,'i21.first.no',im22)
+  im22=ix; call i21setvar(im22,ix,'CFG_I1',ip2); call wi2(u,'i21.first.cfg',im22)
+  im22=ix; im22(1,1)=5; call i21setvar(im22,ix,'CFG_I1',ip2); call wi2(u,'i21.first.keep',im22)
+  im23=ix; call i21setvar(im23,ix,'NO_KEYWORD',ip3); call wi2(u,'i21.second.no',im23)
+  im23=ix; call i21setvar(im23,ix,'CFG_I1',ip3); call wi2(u,'i21.second.cfg',im23)
+  im23=ix; im23(1,1)=5; call i21setvar(im23,ix,'CFG_I1',ip3); call wi2(u,'i21.second.keep',im23)
+  im23=ix; call i22setvar(im23,ix,'NO_KEYWORD',reshape((/1,2,3,4,5,6/),(/2,3/))); call wi2(u,'i22.no',im23)
+  im23=ix; call i22setvar(im23,ix,'CFG_I2',reshape((/1,2,3,4,5,6/),(/2,3/))); call wi2(u,'i22.cfg',im23)
+  im23=ix; im23(1,1)=5; call i22setvar(im23,ix,'CFG_I2',reshape((/1,2,3,4,5,6/),(/2,3/))); call wi2(u,'i22.keep',im23)
+
+  rs=rx; call r0setvar(rs,rx,'NO_KEYWORD',7._r_std); call wr0(u,'r0.no',rs)
+  rs=rx; call r0setvar(rs,rx,'CFG_R0',7._r_std); call wr0(u,'r0.cfg',rs)
+  rs=5._r_std; call r0setvar(rs,rx,'CFG_R0',7._r_std); call wr0(u,'r0.keep',rs)
+  rv3=rx; call r10setvar(rv3,rx,'NO_KEYWORD',7._r_std); call wr1(u,'r10.no',rv3)
+  rv3=rx; call r10setvar(rv3,rx,'CFG_R0',7._r_std); call wr1(u,'r10.cfg',rv3)
+  rv3=rx; rv3(1)=5; call r10setvar(rv3,rx,'CFG_R0',7._r_std); call wr1(u,'r10.keep',rv3)
+  rp3=(/7._r_std,8._r_std,9._r_std/)
+  rv3=rx; call r11setvar(rv3,rx,'NO_KEYWORD',rp3); call wr1(u,'r11.no',rv3)
+  rv3=rx; call r11setvar(rv3,rx,'CFG_R1',rp3); call wr1(u,'r11.cfg',rv3)
+  rv3=rx; rv3(1)=5; call r11setvar(rv3,rx,'CFG_R1',rp3); call wr1(u,'r11.keep',rv3)
+  rm23=rx; call r20setvar(rm23,rx,'NO_KEYWORD',7._r_std); call wr2(u,'r20.no',rm23)
+  rm23=rx; call r20setvar(rm23,rx,'CFG_R0',7._r_std); call wr2(u,'r20.cfg',rm23)
+  rm23=rx; rm23(1,1)=5; call r20setvar(rm23,rx,'CFG_R0',7._r_std); call wr2(u,'r20.keep',rm23)
+  rp2=(/7._r_std,8._r_std/)
+  rm22=rx; call r21setvar(rm22,rx,'NO_KEYWORD',rp2); call wr2(u,'r21.first.no',rm22)
+  rm22=rx; call r21setvar(rm22,rx,'CFG_R1',rp2); call wr2(u,'r21.first.cfg',rm22)
+  rm22=rx; rm22(1,1)=5; call r21setvar(rm22,rx,'CFG_R1',rp2); call wr2(u,'r21.first.keep',rm22)
+  rm23=rx; call r21setvar(rm23,rx,'NO_KEYWORD',rp3); call wr2(u,'r21.second.no',rm23)
+  rm23=rx; call r21setvar(rm23,rx,'CFG_R1',rp3); call wr2(u,'r21.second.cfg',rm23)
+  rm23=rx; rm23(1,1)=5; call r21setvar(rm23,rx,'CFG_R1',rp3); call wr2(u,'r21.second.keep',rm23)
+  rm23=rx; call r22setvar(rm23,rx,'NO_KEYWORD',reshape((/1.,2.,3.,4.,5.,6./),(/2,3/))); call wr2(u,'r22.no',rm23)
+  rm23=rx; call r22setvar(rm23,rx,'CFG_R2',reshape((/1.,2.,3.,4.,5.,6./),(/2,3/))); call wr2(u,'r22.cfg',rm23)
+  rm23=rx; rm23(1,1)=5; call r22setvar(rm23,rx,'CFG_R2',reshape((/1.,2.,3.,4.,5.,6./),(/2,3/))); call wr2(u,'r22.keep',rm23)
+  rcube=rx; call r30setvar(rcube,rx,'NO_KEYWORD',7._r_std); call wr3(u,'r30.no',rcube)
+  rcube=rx; call r30setvar(rcube,rx,'CFG_R0',7._r_std); call wr3(u,'r30.cfg',rcube)
+  rcube=rx; rcube(1,1,1)=5; call r30setvar(rcube,rx,'CFG_R0',7._r_std); call wr3(u,'r30.keep',rcube)
+  close(u)
+contains
+  subroutine wi0(u,n,a);integer,intent(in)::u;character(*),intent(in)::n;integer(i_std),intent(in)::a;write(u,'(a,a,i0,a,i0)')trim(n),',',0,',',a;end subroutine
+  subroutine wi1(u,n,a);integer,intent(in)::u;character(*),intent(in)::n;integer(i_std),intent(in)::a(:);integer::i;do i=1,size(a);write(u,'(a,a,i0,a,i0)')trim(n),',',i-1,',',a(i);enddo;end subroutine
+  subroutine wi2(u,n,a);integer,intent(in)::u;character(*),intent(in)::n;integer(i_std),intent(in)::a(:,:);integer::i,j,q;q=0;do i=1,size(a,1);do j=1,size(a,2);write(u,'(a,a,i0,a,i0)')trim(n),',',q,',',a(i,j);q=q+1;enddo;enddo;end subroutine
+  subroutine wr0(u,n,a);integer,intent(in)::u;character(*),intent(in)::n;real(r_std),intent(in)::a;write(u,'(a,a,i0,a,es25.17)')trim(n),',',0,',',a;end subroutine
+  subroutine wr1(u,n,a);integer,intent(in)::u;character(*),intent(in)::n;real(r_std),intent(in)::a(:);integer::i;do i=1,size(a);write(u,'(a,a,i0,a,es25.17)')trim(n),',',i-1,',',a(i);enddo;end subroutine
+  subroutine wr2(u,n,a);integer,intent(in)::u;character(*),intent(in)::n;real(r_std),intent(in)::a(:,:);integer::i,j,q;q=0;do i=1,size(a,1);do j=1,size(a,2);write(u,'(a,a,i0,a,es25.17)')trim(n),',',q,',',a(i,j);q=q+1;enddo;enddo;end subroutine
+  subroutine wr3(u,n,a);integer,intent(in)::u;character(*),intent(in)::n;real(r_std),intent(in)::a(:,:,:);integer::i,j,k,q;q=0;do i=1,size(a,1);do j=1,size(a,2);do k=1,size(a,3);write(u,'(a,a,i0,a,es25.17)')trim(n),',',q,',',a(i,j,k);q=q+1;enddo;enddo;enddo;end subroutine
+end program sechiba_setvar_serial_driver

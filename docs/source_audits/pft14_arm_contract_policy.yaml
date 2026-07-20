@@ -1,0 +1,233 @@
+schema_version: 1
+scope: >-
+  Evidence-route classification for every PFT14 owner-only control-flow arm.
+  Exact source files and procedure overrides are used so that filesystem naming
+  conventions never silently determine the scientific contract.
+
+allowed_contract_classes:
+  - scientific_state_transition
+  - driver_input_transition
+  - state_io_transition
+  - output_lifecycle_transition
+  - runtime_infrastructure
+  - paper_static_dispatch
+  - inactive_process
+  - valid_input_continuation
+
+allowed_evidence_routes:
+  - fortran_transition_oracle_and_production
+  - fortran_state_io_oracle_and_lifecycle
+  - output_acceptance_and_source_contract
+  - source_proof
+
+source_groups:
+  - id: driver_forcing_geometry_and_parameters
+    contract_class: driver_input_transition
+    evidence_route: fortran_transition_oracle_and_production
+    reason: >-
+      These procedures numerically materialize forcing, coordinates, static
+      fields, interpolation weights, solar geometry, or runtime/PFT parameter
+      values consumed by the scientific timestep. Valid landpoint, forcing,
+      grid, and parameter changes can alter their results.
+    fortran_files:
+      - fortran_source/ORCHIDEE/src_driver/dim2_driver.f90
+      - fortran_source/ORCHIDEE/src_driver/readdim2.f90
+      - fortran_source/ORCHIDEE/src_driver/weather.f90
+      - fortran_source/ORCHIDEE/src_global/gauss_jordan_method.f90
+      - fortran_source/ORCHIDEE/src_global/grid.f90
+      - fortran_source/ORCHIDEE/src_global/haversine.f90
+      - fortran_source/ORCHIDEE/src_global/interpol_help.f90
+      - fortran_source/ORCHIDEE/src_global/interpweight.f90
+      - fortran_source/ORCHIDEE/src_global/interregxy.f90
+      - fortran_source/ORCHIDEE/src_global/module_llxy.f90
+      - fortran_source/ORCHIDEE/src_global/polygones.f90
+      - fortran_source/ORCHIDEE/src_global/solar.f90
+      - fortran_source/ORCHIDEE/src_parameters/constantes.f90
+      - fortran_source/ORCHIDEE/src_parameters/constantes_soil.f90
+      - fortran_source/ORCHIDEE/src_parameters/control.f90
+      - fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+      - fortran_source/ORCHIDEE/src_parameters/vertical_soil.f90
+
+  - id: sechiba_and_stomate_science
+    contract_class: scientific_state_transition
+    evidence_route: fortran_transition_oracle_and_production
+    reason: >-
+      These procedures initialize or mutate PFT14 water, energy, snow,
+      vegetation, carbon, phenology, or coupled timestep state. Reachable
+      numerical and discrete arms require executable Fortran comparison.
+    fortran_files:
+      - fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+      - fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+      - fortran_source/ORCHIDEE/src_sechiba/enerbil.f90
+      - fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90
+      - fortran_source/ORCHIDEE/src_sechiba/hydro_subgrid.f90
+      - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+      - fortran_source/ORCHIDEE/src_sechiba/intersurf.f90
+      - fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90
+      - fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+      - fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+      - fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+      - fortran_source/ORCHIDEE/src_sticslai/Stics_init.f90
+      - fortran_source/ORCHIDEE/src_stomate/lpj_cover.f90
+      - fortran_source/ORCHIDEE/src_stomate/lpj_crown.f90
+      - fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      - fortran_source/ORCHIDEE/src_stomate/stomate_data.f90
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90
+      - fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+      - fortran_source/ORCHIDEE/src_stomate/stomate_permafrost_soilcarbon.f90
+      - fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90
+      - fortran_source/ORCHIDEE/src_stomate/stomate_resp.f90
+      - fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90
+
+  - id: restart_and_state_io
+    contract_class: state_io_transition
+    evidence_route: fortran_state_io_oracle_and_lifecycle
+    reason: >-
+      These procedures restore, default, normalize, or serialize prognostic
+      state. Their contract is exact state value/shape/missing-value behavior
+      and cold-start/restart lifecycle, not a half-hour scientific equation.
+    fortran_files:
+      - fortran_source/ORCHIDEE/src_sechiba/sechiba_io.f90
+      - fortran_source/ORCHIDEE/src_sechiba/sechiba_io_p.f90
+      - fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+
+  - id: output_transport_and_history_registration
+    contract_class: output_lifecycle_transition
+    evidence_route: output_acceptance_and_source_contract
+    reason: >-
+      These procedures configure or transport XIOS/IOIPSL output. They do not
+      mutate prognostic scientific state; field identity, value, masking, and
+      temporal reduction are verified through the modelout contract and final
+      annual-output acceptance rather than a process-equation micro Oracle.
+    fortran_files:
+      - fortran_source/ORCHIDEE/src_parallel/xios_orchidee.f90
+      - fortran_source/ORCHIDEE/src_sechiba/ioipslctrl.f90
+
+procedure_overrides:
+  - id: mpi_single_process_runtime
+    fortran_file: fortran_source/ORCHIDEE/src_parallel/mod_orchidee_mpi_data.F90
+    fortran_procedure: init_orchidee_mpi
+    contract_class: runtime_infrastructure
+    evidence_route: source_proof
+    reason: >-
+      The declared workflow runs one independent ORCHIDEE landpoint process;
+      this routine establishes MPI rank/decomposition metadata and does not
+      define a PFT14 scientific equation or prognostic state transition.
+
+  - id: netcdf_status_guard
+    fortran_file: fortran_source/ORCHIDEE/src_global/utils.f90
+    fortran_procedure: nccheck
+    contract_class: runtime_infrastructure
+    evidence_route: source_proof
+    reason: >-
+      nccheck converts a NetCDF status into diagnostics/fatal termination. On
+      valid input it has no scientific state output.
+
+  - id: print_level_configuration
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/constantes.f90
+    fortran_procedure: get_printlev
+    contract_class: runtime_infrastructure
+    evidence_route: source_proof
+    reason: >-
+      get_printlev only selects diagnostic verbosity and cannot change the
+      valid-run PFT14 scientific state contract.
+
+  - id: condveg_restart_write
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+    fortran_procedure: condveg_finalize
+    contract_class: state_io_transition
+    evidence_route: fortran_state_io_oracle_and_lifecycle
+    reason: condveg_finalize writes restart state and does not advance a timestep.
+
+  - id: diffuco_restart_write
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_procedure: diffuco_finalize
+    contract_class: state_io_transition
+    evidence_route: fortran_state_io_oracle_and_lifecycle
+    reason: diffuco_finalize writes restart state and does not advance a timestep.
+
+  - id: hydrol_restart_write
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_procedure: hydrol_finalize
+    contract_class: state_io_transition
+    evidence_route: fortran_state_io_oracle_and_lifecycle
+    reason: hydrol_finalize writes restart state and does not advance a timestep.
+
+  - id: slowproc_restart_write
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_procedure: slowproc_finalize
+    contract_class: state_io_transition
+    evidence_route: fortran_state_io_oracle_and_lifecycle
+    reason: slowproc_finalize writes restart state and does not advance a timestep.
+
+  - id: thermosoil_restart_write
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_procedure: thermosoil_finalize
+    contract_class: state_io_transition
+    evidence_route: fortran_state_io_oracle_and_lifecycle
+    reason: thermosoil_finalize writes restart state and does not advance a timestep.
+
+  - id: sechiba_restart_write
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_procedure: sechiba_finalize
+    contract_class: state_io_transition
+    evidence_route: fortran_state_io_oracle_and_lifecycle
+    reason: sechiba_finalize coordinates restart writes and does not advance a timestep.
+
+  - id: stomate_restart_write
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_procedure: stomate_finalize
+    contract_class: state_io_transition
+    evidence_route: fortran_state_io_oracle_and_lifecycle
+    reason: stomate_finalize writes STOMATE restart state and does not advance a day.
+
+source_proof_rules:
+  - id: fixed_paper_dispatch
+    selector: automatic_paper_static_active
+    contract_class: paper_static_dispatch
+    evidence_route: source_proof
+    reason: >-
+      The branch condition is evaluated entirely from fixed materialized paper
+      configuration. The selected edge is source/config evidence; scientific
+      statements reached below that edge remain independently classified.
+
+  - id: audited_valid_input_continuation
+    selector: manual_reason_marker_with_excluded_sibling
+    contract_class: valid_input_continuation
+    evidence_route: source_proof
+    reason: >-
+      The manual arm ledger identifies the sibling as an invalid-input fatal
+      path and this arm as its valid continuation. The edge itself performs no
+      scientific calculation; downstream statements retain their own evidence.
+    reason_markers:
+      - direct STOP/fatal path
+      - Allocation failure is outside valid executable runs
+      - rejects an invalid hydrological parameter range
+      - reports an invalid hydrological parameter value
+      - Valid forcing/model timesteps produce
+      - Valid landpoint selection has
+      - Valid dimensions continue
+      - Valid restart/forcing offsets
+      - Valid longitude limits continue
+      - Valid latitude limits continue
+      - Valid variable count stays
+
+  - id: audited_fixed_source_dispatch
+    selector: manual_selected_with_paper_static_inactive_sibling
+    contract_class: paper_static_dispatch
+    evidence_route: source_proof
+    reason: >-
+      The manual arm ledger pins this selected edge from an immutable Fortran
+      parameter or materialized paper switch and marks its sibling
+      paper_static_inactive. The selected edge is source/config evidence; the
+      owner procedure remains independently subject to its numerical, state,
+      or output contract.
+
+  - id: source_ledger_inactive_process
+    selector: equivalence_region_source_reclassification
+    contract_class: inactive_process
+    evidence_route: source_proof
+    reason: >-
+      The process-extension or reachable-process ledger proves that forcing,
+      landpoint, and continuous PFT14 parameter changes cannot activate the
+      process under the declared discrete PFT14 workflow.

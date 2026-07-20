@@ -1,0 +1,320 @@
+schema_version: 1
+scope: >-
+  Source-routed ownership for all 26 typed setvar procedures in sechiba_io.f90
+  and sechiba_io_p.f90. The arm totals follow the static branch ledger: 68
+  serial arms and 74 parallel arms, 142 total. The root/non-root allocation
+  arm in i11setvar_p is retained; the root-only getin call detail remains
+  infrastructure beneath the explicit gather/root-read/scatter boundary.
+
+totals:
+  procedures: 26
+  arms: 142
+  sechiba_io_arms: 68
+  sechiba_io_p_arms: 74
+
+contracts:
+  dispatch: >-
+    Integer/real type and scalar/rank-1/rank-2/rank-3 signatures match the two
+    Fortran generic interfaces. Unsupported combinations are rejected.
+  assignment: >-
+    Assignment occurs only when every target element equals val_exp. Scalar
+    assignment is restricted to the declared *0 variants; equal-rank array
+    assignment requires exact shape. i21/r21 preserve source SPREAD dimensions,
+    axis precedence, and copy counts and reject nonconformable results.
+  keyword: >-
+    NO_KEYWORD and NOKEYWORD use the source's case-sensitive substring test.
+    Other keys require an explicit ConfigurationReader; no final payload or
+    guessed default is accepted by an owner procedure.
+  parallel: >-
+    OPTIONAL is_grid presence is distinct from its logical value. The only
+    procedure that reads it, i11setvar_p, routes a present argument through an
+    explicit gather, root getin, scatter backend. Boundary index order remains
+    Fortran one-based. Optional declarations unused by source remain semantic
+    no-ops in i21setvar_p, i22setvar_p, r11setvar_p, and r21setvar_p.
+
+entries:
+  - id: sechiba.io.i0setvar
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io.f90
+    fortran_subroutine: i0setvar
+    fortran_lines: 48-69
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.i0setvar
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.i0setvar]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io.i10setvar
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io.f90
+    fortran_subroutine: i10setvar
+    fortran_lines: 73-94
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.i10setvar
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.i10setvar]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io.i11setvar
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io.f90
+    fortran_subroutine: i11setvar
+    fortran_lines: 98-122
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.i11setvar
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.i11setvar]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io.i20setvar
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io.f90
+    fortran_subroutine: i20setvar
+    fortran_lines: 126-151
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.i20setvar
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.i20setvar]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io.i21setvar
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io.f90
+    fortran_subroutine: i21setvar
+    fortran_lines: 165-213
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.i21setvar
+    gap: null
+    arm_count: 12
+    state_contract: [jax_orchidee.sechiba.io_contracts.i21setvar]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io.i22setvar
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io.f90
+    fortran_subroutine: i22setvar
+    fortran_lines: 216-240
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.i22setvar
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.i22setvar]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io.r0setvar
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io.f90
+    fortran_subroutine: r0setvar
+    fortran_lines: 244-265
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.r0setvar
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.r0setvar]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io.r10setvar
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io.f90
+    fortran_subroutine: r10setvar
+    fortran_lines: 269-290
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.r10setvar
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.r10setvar]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io.r11setvar
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io.f90
+    fortran_subroutine: r11setvar
+    fortran_lines: 294-318
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.r11setvar
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.r11setvar]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io.r20setvar
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io.f90
+    fortran_subroutine: r20setvar
+    fortran_lines: 322-345
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.r20setvar
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.r20setvar]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io.r21setvar
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io.f90
+    fortran_subroutine: r21setvar
+    fortran_lines: 359-409
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.r21setvar
+    gap: null
+    arm_count: 12
+    state_contract: [jax_orchidee.sechiba.io_contracts.r21setvar]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io.r22setvar
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io.f90
+    fortran_subroutine: r22setvar
+    fortran_lines: 413-439
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.r22setvar
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.r22setvar]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io.r30setvar
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io.f90
+    fortran_subroutine: r30setvar
+    fortran_lines: 442-465
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.r30setvar
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.r30setvar]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io_p.i0setvar_p
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io_p.f90
+    fortran_subroutine: i0setvar_p
+    fortran_lines: 42-65
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.i0setvar_p
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.i0setvar_p]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io_p.i10setvar_p
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io_p.f90
+    fortran_subroutine: i10setvar_p
+    fortran_lines: 69-92
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.i10setvar_p
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.i10setvar_p]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io_p.i11setvar_p
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io_p.f90
+    fortran_subroutine: i11setvar_p
+    fortran_lines: 96-137
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.i11setvar_p
+    gap: null
+    arm_count: 8
+    state_contract: [jax_orchidee.sechiba.io_contracts.i11setvar_p]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io_p.i20setvar_p
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io_p.f90
+    fortran_subroutine: i20setvar_p
+    fortran_lines: 141-164
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.i20setvar_p
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.i20setvar_p]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io_p.i21setvar_p
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io_p.f90
+    fortran_subroutine: i21setvar_p
+    fortran_lines: 178-231
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.i21setvar_p
+    gap: null
+    arm_count: 12
+    state_contract: [jax_orchidee.sechiba.io_contracts.i21setvar_p]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io_p.i22setvar_p
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io_p.f90
+    fortran_subroutine: i22setvar_p
+    fortran_lines: 234-261
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.i22setvar_p
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.i22setvar_p]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io_p.r0setvar_p
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io_p.f90
+    fortran_subroutine: r0setvar_p
+    fortran_lines: 265-288
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.r0setvar_p
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.r0setvar_p]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io_p.r10setvar_p
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io_p.f90
+    fortran_subroutine: r10setvar_p
+    fortran_lines: 292-315
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.r10setvar_p
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.r10setvar_p]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io_p.r11setvar_p
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io_p.f90
+    fortran_subroutine: r11setvar_p
+    fortran_lines: 319-346
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.r11setvar_p
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.r11setvar_p]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io_p.r20setvar_p
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io_p.f90
+    fortran_subroutine: r20setvar_p
+    fortran_lines: 350-375
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.r20setvar_p
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.r20setvar_p]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io_p.r21setvar_p
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io_p.f90
+    fortran_subroutine: r21setvar_p
+    fortran_lines: 389-444
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.r21setvar_p
+    gap: null
+    arm_count: 12
+    state_contract: [jax_orchidee.sechiba.io_contracts.r21setvar_p]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io_p.r22setvar_p
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io_p.f90
+    fortran_subroutine: r22setvar_p
+    fortran_lines: 448-482
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.r22setvar_p
+    gap: null
+    arm_count: 6
+    state_contract: [jax_orchidee.sechiba.io_contracts.r22setvar_p]
+    validation: [tests/unit/test_sechiba_io_contracts.py]
+
+  - id: sechiba.io_p.r30setvar_p
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba_io_p.f90
+    fortran_subroutine: r30setvar_p
+    fortran_lines: 485-508
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.io_contracts.r30setvar_p
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.sechiba.io_contracts.r30setvar_p]
+    validation: [tests/unit/test_sechiba_io_contracts.py]

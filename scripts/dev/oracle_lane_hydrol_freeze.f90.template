@@ -1,0 +1,45 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module
+module hydrol_lane_freeze
+  use defprec
+  implicit none
+  integer, parameter :: nslm=4, nstm=6, nscm=12
+  real(r_std), parameter :: zero=0.0_r_std, min_sechiba=1.0e-8_r_std
+  real(r_std), parameter :: ZeroCelsius=273.15_r_std, lhf=0.3336e6_r_std
+  real(r_std) :: fr_dT=2.0_r_std, froz_frac_corr=1.0_r_std, smtot_corr=2.0_r_std, max_froz_hydro=1.0_r_std
+  logical :: peat_hydro, ok_thermodynamical_freezing
+  real(r_std) :: nvan(nscm), avan(nscm), mcr(nscm), mcs(3), dh(nslm)
+  real(r_std) :: nvan_peat=1.38_r_std, avan_peat=0.00507_r_std, mcr_peat=0.15_r_std, mcs_peat=0.9_r_std
+  real(r_std) :: mc(3,nslm,nstm), temp_hydro(3,nslm), profil_froz_hydro_ns(3,nslm,nstm)
+contains
+! <HYDROL_SOIL_FROZ>
+end module
+program hydrol_freeze_oracle
+  use defprec
+  use hydrol_lane_freeze
+  implicit none
+  integer :: i,j,k, njsc(3)
+  character(512) :: path
+  nvan=(/2.68_r_std,2.28_r_std,1.89_r_std,1.41_r_std,1.37_r_std,1.56_r_std,1.48_r_std,1.23_r_std,1.31_r_std,1.23_r_std,1.09_r_std,1.09_r_std/)
+  avan=(/.0145_r_std,.0124_r_std,.0075_r_std,.002_r_std,.0016_r_std,.0036_r_std,.0059_r_std,.001_r_std,.0019_r_std,.0027_r_std,.0005_r_std,.0008_r_std/)
+  mcr=(/.045_r_std,.057_r_std,.065_r_std,.067_r_std,.034_r_std,.078_r_std,.1_r_std,.089_r_std,.095_r_std,.1_r_std,.07_r_std,.068_r_std/)
+  mcs=(/.43_r_std,.45_r_std,.38_r_std/); njsc=(/1,4,10/); dh=(/20._r_std,40._r_std,80._r_std,160._r_std/)
+  temp_hydro(1,:)=(/275._r_std,273.15_r_std,272.5_r_std,270._r_std/)
+  temp_hydro(2,:)=(/274.15_r_std,273.6_r_std,272.3_r_std,270._r_std/)
+  temp_hydro(3,:)=(/272._r_std,273.15_r_std,274.15_r_std,270._r_std/)
+  mc=.30_r_std; mc(1,2,:)=.045000001_r_std; mc(2,:,:)=.35_r_std; mc(3,:,:)=.2_r_std
+  peat_hydro=.true.; ok_thermodynamical_freezing=.true.; profil_froz_hydro_ns=0._r_std
+  do k=1,nstm; call hydrol_soil_froz(3,k,njsc); enddo
+  call get_command_argument(1,path); open(10,file=trim(path),status='replace'); write(10,'(a)') 'field,i,j,value'
+  do i=1,3; do j=1,nslm; do k=1,nstm
+    write(10,'(a,i0,a,i0,a,es25.17)') 'profil_thermodynamic,',i,',',(j-1)*nstm+k,',',profil_froz_hydro_ns(i,j,k)
+  enddo; enddo; enddo
+  ok_thermodynamical_freezing=.false.; profil_froz_hydro_ns=0._r_std
+  do k=1,nstm; call hydrol_soil_froz(3,k,njsc); enddo
+  do i=1,3; do j=1,nslm; do k=1,nstm
+    write(10,'(a,i0,a,i0,a,es25.17)') 'profil_linear,',i,',',(j-1)*nstm+k,',',profil_froz_hydro_ns(i,j,k)
+  enddo; enddo; enddo; close(10)
+end program

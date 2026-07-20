@@ -1,0 +1,94 @@
+schema_version: 1
+scope: >-
+  Source-routed closure for hydro_subgrid_main, read_refSOCfile,
+  hydrol_finalize, and hydrol_rotation_update. This ledger owns exactly 39
+  audited arms and does not modify the parent sechiba owner ledger.
+
+totals:
+  procedures: 4
+  arms: 39
+  hydro_subgrid_main_arms: 17
+  read_refsocfile_arms: 17
+  hydrol_finalize_arms: 3
+  hydrol_rotation_update_arms: 2
+
+contracts:
+  topmodel_lookup: >-
+    The owner preserves Fortran MINLOC first-tie selection, one-based table
+    indices, INT truncation toward zero, WHERE masks, fixed column-900
+    degeneracy detection, four cumulative wetland bands, and nine-layer
+    frozen-fraction scaling. hydrol_main routes TOPM_calcul=true raw process
+    inputs to this owner and retains the source zero-output false arm.
+  refsoc_io_and_aggregation: >-
+    The owner consumes validated (longitude, latitude, mask,
+    soil_organic_carbon) structured input, or reads those variables from an
+    actual NetCDF path through the default or injected reader. It constructs
+    the source mask and expanded coordinates, starts nbvmax at 16, doubles and
+    recalls aggregate_p until successful, consumes one-based sub_index in
+    source order, area-normalizes successful points, and writes zero when no
+    overlap exists. No SOC values or overlap payloads are inferred.
+  finalize_write_order: >-
+    Current scientific state is selected into individual restput_p requests in
+    lines 1727-1788 order. use_refSOC_hydrol, check_waterbal, and
+    ok_explicitsnow route their exact source branches. The restart writer and
+    explicit-snow finalizer are mandatory callbacks whenever their operations
+    execute; the owner does not accept a precomputed final restart payload.
+  rotation_state: >-
+    The pointwise owner preserves PFT-to-soil one-based preference routing,
+    source loop order, tile-fraction checks, canopy-to-infiltration transfer,
+    target-store dilution, inactive-tile zeroing, tmc/humtot recomputation,
+    optional water-balance failure, and whole-domain resdist writeback. The
+    source-uninitialized soil_upd state for SUM(rot_matrix)<=0 is rejected
+    explicitly instead of assigning a guessed default.
+
+entries:
+  - id: sechiba.hydro_subgrid.hydro_subgrid_main
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydro_subgrid.f90
+    fortran_subroutine: hydro_subgrid_main
+    fortran_lines: 42-248
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol_thermosoil_completion.hydro_subgrid_main
+    gap: null
+    arm_count: 17
+    state_contract: [jax_orchidee.sechiba.hydrol_thermosoil_completion.HydroSubgridResult]
+    validation: [tests/unit/test_hydrol_thermosoil_completion.py, tests/unit/test_hydrol_main.py]
+
+  - id: sechiba.thermosoil.read_refsocfile
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: read_refSOCfile
+    fortran_lines: 3241-3405
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol_thermosoil_completion.read_refsocfile
+    gap: null
+    arm_count: 17
+    state_contract:
+      - jax_orchidee.sechiba.hydrol_thermosoil_completion.RefSocFileData
+      - jax_orchidee.sechiba.hydrol_thermosoil_completion.RefSocReadResult
+      - jax_orchidee.driver.interpolation_core12.AggregateRequest
+      - jax_orchidee.driver.interpolation_core12.AggregatePacket
+    validation: [tests/unit/test_hydrol_thermosoil_completion.py, tests/unit/test_thermosoil_source_owner_completion.py]
+
+  - id: sechiba.hydrol.hydrol_finalize
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_finalize
+    fortran_lines: 1682-1797
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol_thermosoil_completion.hydrol_finalize
+    gap: null
+    arm_count: 3
+    state_contract:
+      - jax_orchidee.sechiba.hydrol_thermosoil_completion.HydrolRestartWriteRequest
+      - jax_orchidee.sechiba.hydrol_thermosoil_completion.HydrolFinalizeResult
+    validation: [tests/unit/test_hydrol_thermosoil_completion.py]
+
+  - id: sechiba.hydrol.hydrol_rotation_update
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_rotation_update
+    fortran_lines: 3591-3807
+    status: implemented
+    paper_path: inactive because OK_ROTATE=FALSE; owner covers explicit non-paper invocations
+    jax_owner: jax_orchidee.sechiba.hydrol_thermosoil_completion.hydrol_rotation_update
+    gap: null
+    arm_count: 2
+    state_contract: [jax_orchidee.sechiba.hydrol_thermosoil_completion.HydrolRotationResult]
+    validation: [tests/unit/test_hydrol_thermosoil_completion.py]

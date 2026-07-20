@@ -1,0 +1,110 @@
+module defprec
+  implicit none
+  integer, parameter :: i_std=kind(1), r_std=kind(1.0d0)
+end module
+module constantes
+  use defprec
+  implicit none
+  integer, parameter :: ileaf=1,isapabove=2,isapbelow=3,iheartabove=4,iheartbelow=5,iroot=6
+  integer, parameter :: ifruit=7,icarbres=8,iagrsapst=9,iagrsappn=10,iagrhrtst=11,iagrhrtpn=12
+  integer, parameter :: nparts=12,nelements=1,icarbon=1,ibare_sechiba=1
+  real(r_std), parameter :: zero=0.d0,un=1.d0,one_day=86400.d0,ZeroCelsius=273.15d0,min_stomate=1.d-8
+  real(r_std) :: dt_sechiba=1800.d0,maint_resp_min_vmax=.3d0,maint_resp_coeff=1.4d0
+  integer :: printlev=0,numout=6
+contains
+  subroutine ipslerr_p(level,a,b,c,d)
+    integer,intent(in)::level
+    character(*),intent(in)::a,b,c,d
+    error stop 'ipslerr_p'
+  end subroutine
+end module
+module constantes_soil
+  use defprec
+  implicit none
+  integer, parameter :: nslm=3
+  real(r_std) :: diaglev(nslm)=(/.1d0,.4d0,1.d0/)
+end module
+module pft_parameters
+  use defprec
+  use constantes, only:nparts
+  implicit none
+  integer, parameter :: nvm=14
+  logical :: is_tree(nvm),ok_LAIdev(nvm)
+  real(r_std) :: ext_coeff(nvm),maint_resp_slope(nvm,3),coeff_maint_zero(nvm,nparts)
+end module
+module stomate_data
+end module
+module daily_oracle
+  use defprec
+  implicit none
+  real(r_std) :: dt_sechiba=1800.d0,dt_stomate=86400.d0
+contains
+! <DAILY_PROCEDURES>
+end module
+module maintenance_oracle
+  use defprec
+  use stomate_data
+  use pft_parameters
+  use constantes
+  use constantes_soil
+  implicit none
+  logical, save :: firstcall_resp=.true.
+contains
+! <MAINTENANCE_PROCEDURE>
+end module
+program oracle_main
+  use defprec
+  use constantes, only:nparts,nelements,icarbon
+  use constantes_soil, only:nslm
+  use pft_parameters
+  use daily_oracle
+  use maintenance_oracle
+  implicit none
+  integer,parameter :: npts=2
+  integer :: i,j,k,step
+  real(r_std) :: in1(2),out1(2),in2(2,3),out2(2,3),in3(2,2,2),out3(2,2,2)
+  real(r_std) :: lai(npts,nvm),t2m(npts),tlong(npts),stemp(npts,nslm),height(npts,nvm)
+  real(r_std) :: veget(npts,nvm),rprof(npts,nvm),biomass(npts,nvm,nparts,nelements)
+  real(r_std) :: resp(npts,nvm,nparts),sla(npts,nvm)
+  character(len=512) :: output_path
+  call get_command_argument(1,output_path)
+  open(10,file=trim(output_path),status='replace',action='write')
+  write(10,'(a)') 'field,i,j,k,value'
+  in1=(/1.25d0,-.5d0/); out1=(/.1d0,-.2d0/)
+  call stomate_accu_r1d(.false.,in1,out1)
+  do i=1,2; write(10,'(a,3(i0,a),es25.17)') 'accu_r1,',i,',',0,',',0,',',out1(i); enddo
+  out1=0.d0
+  call stomate_accu_r1d(.true.,in1,out1)
+  in2=reshape([((dble(i)-3.5d0)/4.d0,i=1,6)],shape(in2)); out2=.25d0
+  call stomate_accu_r2d(.true.,in2,out2)
+  do j=1,3; do i=1,2; write(10,'(a,3(i0,a),es25.17)') 'accu_r2,',i,',',j,',',0,',',out2(i,j); enddo; enddo
+  out2=0.d0
+  call stomate_accu_r2d(.false.,in2,out2)
+  in3=reshape([((dble(i)-4.5d0)/3.d0,i=1,8)],shape(in3)); out3=0.d0
+  do step=1,48
+    call stomate_accu_r3d(step.eq.48,in3,out3)
+  enddo
+  do k=1,2; do j=1,2; do i=1,2
+    write(10,'(a,3(i0,a),es25.17)') 'accu_r3_48,',i,',',j,',',k,',',out3(i,j,k)
+  enddo; enddo; enddo
+  is_tree=.false.; is_tree(14)=.true.; ok_LAIdev=.false.
+  ext_coeff=.5d0; maint_resp_slope=0.d0; maint_resp_slope(:,1)=.01d0
+  coeff_maint_zero=0.d0
+  do j=2,nvm; do k=1,nparts; coeff_maint_zero(j,k)=.0005d0*dble(k); enddo; enddo
+  t2m=(/280.d0,268.d0/); tlong=(/285.d0,260.d0/)
+  stemp(1,:)=(/279.d0,277.d0,275.d0/); stemp(2,:)=(/269.d0,271.d0,273.d0/)
+  height=2.d0; veget=0.d0; veget(:,14)=.8d0; rprof=.5d0; rprof(:,14)=(/.35d0,.8d0/)
+  biomass=0.d0; sla=2.d-2; lai=-999.d0
+  do i=1,npts; do k=1,nparts; biomass(i,14,k,icarbon)=dble(i*k)*2.d0; enddo; enddo
+  biomass(2,14,ileaf,icarbon)=0.d0
+  call maint_respiration(npts,lai,t2m,tlong,stemp,height,veget,rprof,biomass,resp,sla)
+  do j=1,nvm; do i=1,npts
+    write(10,'(a,3(i0,a),es25.17)') 'maint_lai,',i,',',j,',',0,',',lai(i,j)
+    do k=1,nparts
+      write(10,'(a,3(i0,a),es25.17)') 'maint_resp,',i,',',j,',',k,',',resp(i,j,k)
+    enddo
+  enddo; enddo
+  ok_LAIdev(14)=.true.
+  call maint_respiration(npts,lai,t2m,tlong,stemp,height,veget,rprof,biomass,resp,sla)
+  close(10)
+end program

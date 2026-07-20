@@ -1,0 +1,36 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ implicit none;integer,parameter::i_std=int32,r_std=real64
+end module
+module haversine_oracle
+ use defprec;implicit none
+ real(r_std),parameter::pi=acos(-1._r_std),R_Earth=6378000._r_std,mincos=.0001_r_std
+contains
+ subroutine ipslerr(level,a,b,c,d);integer,intent(in)::level;character(*),intent(in)::a,b,c,d;if(level>=3)error stop 'ipslerr';end subroutine
+! <HAVERSINE_DTOR>
+! <HAVERSINE_RTOD>
+! <HAVERSINE_HEADING>
+! <HAVERSINE_DISTANCE>
+! <HAVERSINE_POLYSEGLEN>
+! <HAVERSINE_LALOSEGLEN>
+! <HAVERSINE_CLOCKWISE>
+! <HAVERSINE_LALOAREA>
+end module
+program driver
+ use defprec;use haversine_oracle;implicit none
+ real(r_std)::lon(2,8),lat(2,8),polylen(2,4),lalolen(2,4),heading(8),area(2)
+ integer(i_std)::order(8),order2(8);integer::u,i,j;character(512)::path,mode
+ lon(1,:)=(/0.,5.,10.,10.,10.,5.,0.,0./);lat(1,:)=(/0.,0.,0.,5.,10.,10.,10.,5./)
+ lon(2,:)=(/5.,10.,10.,10.,5.,0.,0.,0./);lat(2,:)=(/0.,0.,5.,10.,10.,10.,5.,0./)
+ call get_command_argument(2,mode)
+ if(trim(mode)=='diagonal')then;lon(1,1)=1.;lat(1,1)=1.;call haversine_laloseglen(2,4,lon,lat,lalolen);stop 97;endif
+ call haversine_polyseglen(2,4,lon,lat,polylen);call haversine_laloseglen(2,4,lon,lat,lalolen)
+ heading=(/0.,45.,90.,135.,180.,225.,270.,315./);call haversine_clockwise(4,heading,0._r_std,order)
+ heading=(/350.,10.,100.,170.,190.,250.,280.,320./);call haversine_clockwise(4,heading,0._r_std,order2)
+ call haversine_laloarea(2,4,lalolen,area)
+ call get_command_argument(1,path);open(newunit=u,file=trim(path),status='replace');write(u,'(a)')'field,flat_index,value'
+ do i=1,2;do j=1,4;write(u,'(a,i0,a,es25.17)')'polyseg,',(i-1)*4+j-1,',',polylen(i,j);write(u,'(a,i0,a,es25.17)')'laloseg,',(i-1)*4+j-1,',',lalolen(i,j);enddo;enddo
+ do i=1,8;write(u,'(a,i0,a,i0)')'clockwise,',i-1,',',order(i);enddo
+ do i=1,8;write(u,'(a,i0,a,i0)')'clockwise_wrap,',i-1,',',order2(i);enddo
+ do i=1,2;write(u,'(a,i0,a,es25.17)')'area,',i-1,',',area(i);enddo;close(u)
+end program

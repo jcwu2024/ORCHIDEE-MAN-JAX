@@ -1,0 +1,1157 @@
+schema_version: 1
+scope: >-
+  Source-driven PFT14 reachable branch and carried-state ledger for the paper
+  configuration. Reachability is not inferred from closure wording.
+allowed_reachability: [active, conditional, inactive]
+allowed_status: [verified, open, unsupported]
+priority_modules: [DRIVER, SECHIBA, HYDROL, DIFFUCO, ENERBIL, THERMOSOIL, CONDVEG, SLOWPROC, ROUTING, STOMATE, RESTART, MODELOUT]
+entries:
+  - id: driver.active.forcing_landpoint_interpolation
+    module: DRIVER
+    fortran_file: fortran_source/ORCHIDEE/src_driver/readdim2.f90
+    fortran_subroutine: forcing_read_interpol
+    fortran_lines: 660-1687,1899-1968
+    condition: >-
+      Every paper half-hour for any independently selected landpoint; read the
+      six-hour CRUNCEP fields in Fortran land order and apply the source time
+      interpolation, precipitation conversion, and solar-angle split.
+    reachability: active
+    kernel: jax_orchidee.driver.domain.read_forcing_model_step_cached
+    production_caller: jax_orchidee.driver.orchestration.paper_1961_driver_cold_start_multiday_modelout_lite_run
+    state_inputs: [forcing_file, forcing_land_indices, model_tstep, dt_force, dt_sechiba, calendar, longitude, latitude]
+    same_step_outputs: [temp_air, pb, qair, u, v, precip_rain, precip_snow, swdown, lwdown, zlev, zlevuv]
+    next_step_restart_behavior: >-
+      Forcing is external input rather than restart state. The driver advances
+      the model timestep while preserving the same Fortran land-index mapping
+      for every independent paper case and every later year.
+    microcase:
+      - tests/unit/test_driver_domain_multigrid.py::test_read_forcing_model_step_cached_handles_multiland_no_solar_split
+      - tests/unit/test_driver_domain_multigrid.py::test_read_forcing_model_step_cached_handles_multiland_solarang_compression
+    validation_evidence:
+      - tests/parity/test_driver_1961_domain.py::test_1961_later_forcing_step_uses_same_fortran_land_point_mapping
+      - tests/parity/test_driver_1961_server_trace_boundary.py::test_driver_first_forcing_domain_matches_server_trace_record
+    status: verified
+
+  - id: driver.active.salinity_bbox
+    module: DRIVER
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_read_annual
+    fortran_lines: 6300-6570
+    condition: >-
+      Fixed READ_SALINITY=y; every independently selected landpoint maps to
+      the annual salinity grid using the source bbox center-count mean and
+      nearest fallback when the bbox is empty.
+    reachability: active
+    kernel: jax_orchidee.driver.static.read_paper_salinity_tide_static_fields
+    production_caller: jax_orchidee.driver.orchestration.paper_1961_driver_cold_start_multiday_modelout_lite_run
+    state_inputs: [landpoint_lalo, landpoint_resolution, salinity_file, salinity_grid_geometry]
+    same_step_outputs: [salinity, salinity_source_count]
+    next_step_restart_behavior: >-
+      Salinity is static external input for a case and feeds every DIFFUCO
+      mangrove-control call; it is not inferred from process state.
+    microcase: [tests/unit/test_driver_static_helpers.py::test_bbox_center_mean_can_use_fortran_nearest_fallback_for_empty_targets]
+    validation_evidence: [tests/parity/test_driver_1961_server_trace_boundary.py::test_local_salinity_and_tide_files_match_slowproc_bbox_trace_with_traced_geometry]
+    status: verified
+
+  - id: driver.active.tide_bbox
+    module: DRIVER
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_read_data
+    fortran_lines: 6029-6297
+    condition: >-
+      Fixed READ_TIDE=y and TIDES=y; every landpoint maps all ITIMETIDE slots
+      with the source bbox mean/fallback rule, then model time selects the tide
+      height and change used by DIFFUCO and HYDROL.
+    reachability: active
+    kernel: jax_orchidee.driver.static.read_paper_salinity_tide_static_fields
+    production_caller: jax_orchidee.driver.orchestration.paper_1961_driver_cold_start_multiday_modelout_lite_run
+    state_inputs: [landpoint_lalo, landpoint_resolution, tide_file, tide_grid_geometry, itimetide, model_tstep]
+    same_step_outputs: [tide_height_sequence, tide_source_count, current_tide_height, tide_height_change]
+    next_step_restart_behavior: >-
+      The immutable tide sequence stays in prepared context; only the model
+      time index and HYDROL above-surface reservoirs advance between steps.
+    microcase: [tests/unit/test_driver_static_helpers.py::test_bbox_center_mean_nearest_fallback_preserves_trailing_time_axis]
+    validation_evidence: [tests/parity/test_driver_1961_server_trace_boundary.py::test_local_salinity_and_tide_files_match_slowproc_bbox_trace_with_traced_geometry]
+    status: verified
+
+  - id: slowproc.active.daily_surface_writeback
+    module: SLOWPROC
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_main
+    fortran_lines: 653-663,1076-1129
+    condition: >-
+      LastTsDay selects the daily branch. STOMATE-updated PFT14 LAI and cover
+      pass through slowproc_veget, qsintmax is recomputed, and tot_bare_soil
+      is always derived; non-daily half-hours preserve the surface state.
+    reachability: active
+    kernel: jax_orchidee.sechiba.slowproc.slowproc_surface_transition_explicit
+    production_caller: jax_orchidee.driver.orchestration.paper_1961_driver_cold_start_multiday_modelout_lite_run
+    state_inputs: [do_slow, lai, frac_nobio, veget_max, veget, soiltile, stomate_daily_state]
+    same_step_outputs: [lai, veget_max, veget, soiltile, qsintmax, tot_bare_soil]
+    next_step_restart_behavior: >-
+      Day-end surface fields are written to the shared SLOWPROC/STOMATE state
+      and mirrored to the next DIFFUCO packet; non-daily calls carry the prior
+      fields exactly.
+    microcase:
+      - tests/unit/test_sechiba_slowproc_time_gate_reachable.py::test_slowproc_non_daily_step_preserves_landpoint_surface_state
+      - tests/unit/test_slowproc.py::test_slowproc_surface_update_explicit_returns_post_stomate_surface_boundary
+    validation_evidence:
+      - tests/parity/test_driver_1961_orchestration.py::test_day_end_packet_carries_active_ok_leak_restart_state_fields
+    status: verified
+
+  - id: routing.active.paper_single_landpoint_zero_branch
+    module: ROUTING
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_main
+    fortran_lines: 1227-1262
+    condition: >-
+      Each of the 669 paper executions has nbp_glo=1. Therefore the fixed
+      RIVER_ROUTING=y switch still selects the source no-routing branch and
+      zeroes routing reservoirs, fluxes, deposition, and flood fractions.
+    reachability: active
+    kernel: jax_orchidee.sechiba.routing.routing_zero_outputs
+    production_caller: jax_orchidee.driver.orchestration.paper_1961_next_step_runtime_result
+    state_inputs: [river_routing, nbp_glo, nflow, nctext, ncarb]
+    same_step_outputs: [riverflow, coastalflow, returnflow, reinfiltration, irrigation, sed_deposition, poc_deposition, flood_frac, stream_frac, flood_res, fastr]
+    next_step_restart_behavior: >-
+      Zero routing fields enter the same-step STOMATE OK_LEAK boundary and are
+      recreated by the source branch each step; no multi-point routing memory
+      is invented for independent one-landpoint paper cases.
+    microcase:
+      - tests/unit/test_coupled.py::test_stomate_static_routing_single_point_with_routing_switch_still_takes_no_routing_branch
+    validation_evidence:
+      - tests/unit/test_stomate_entry.py::test_no_routing_entry_source_reduces_stomate_payload_routing_gaps
+    status: verified
+
+  - id: restart.active.day_and_year_handoff
+    module: RESTART
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+    fortran_subroutine: writerestart
+    fortran_lines: 2200-2948
+    condition: >-
+      Every completed day writes carried SECHIBA and STOMATE state; the final
+      day of a noleap year becomes the first-step input of the next year
+      without re-running cold-start initialization.
+    reachability: active
+    kernel: jax_orchidee.driver.orchestration._paper_day_end_state_packet
+    production_caller: jax_orchidee.driver.orchestration.paper_1961_driver_restart_year_start_day_result
+    state_inputs: [last_half_hour_state, stomate_day_state, daily_accumulators, season_memory, hydrol_state, thermosoil_state]
+    same_step_outputs: [day_end_state_packet, sechiba_component_state, stomate_component_state]
+    next_step_restart_behavior: >-
+      Dynamic process fields replace their prior values, static inputs remain
+      shared, daily accumulators reset at the source boundary, and year handoff
+      rebases only counters rather than fabricating state.
+    microcase:
+      - tests/parity/test_driver_1961_orchestration.py::test_day_end_packet_carries_active_ok_leak_restart_state_fields
+    validation_evidence:
+      - tests/parity/test_driver_1961_orchestration.py::test_multiday_lite_end_state_satisfies_year_handoff_contract_and_rebases_counter
+    status: verified
+
+  - id: modelout.active.paper_history_formula
+    module: MODELOUT
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+    fortran_subroutine: StomateLpj
+    fortran_lines: 1677-1699,2200-2246
+    condition: >-
+      Daily PFT14 biomass, GPP, and NPP fields are sent to yearly STOMATE
+      history; the paper post-processing formula selects PFT14 and derives AGB
+      and BGB from the named carbon pools.
+    reachability: active
+    kernel: jax_orchidee.stomate.modelout.compute_modelout_from_fields
+    production_caller: jax_orchidee.driver.orchestration._driver_modelout_from_outputs
+    state_inputs: [biomass, gpp_daily, npp_daily, yearly_average_contract]
+    same_step_outputs: [LEAF_M, SAP_M_AB, HEART_M_AB, AGR_SAP_ST_M, AGR_HRT_ST_M, AGR_SAP_PN_M, AGR_HRT_PN_M, SAP_M_BE, HEART_M_BE, ROOT_M, GPP, NPP, AGB_model, BGB_model]
+    next_step_restart_behavior: >-
+      Modelout is diagnostic and does not feed prognostic state. The yearly
+      average follows the XIOS/history operation and remains separate from
+      restart writeback.
+    microcase:
+      - tests/unit/test_stomate_modelout.py::test_stomate_lpj_history_fields_from_state_feeds_paper_modelout_formula
+    validation_evidence:
+      - tests/parity/test_stomate_local_closure.py::test_real_history_modelout_formula_closes_for_first_and_last_years
+      - tests/parity/test_stomate_pft14_parameters_modelout.py::test_modelout_formula_mapper_matches_paper_script_formula_for_arrays
+    status: verified
+
+  - id: sechiba.active.module_order
+    module: SECHIBA
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_main
+    fortran_lines: 984-1216
+    condition: >-
+      HYDROL_CWRR=y and STOMATE_OK_STOMATE=y; execute DIFFUCO, ENERBIL,
+      HYDROL, CONDVEG, THERMOSOIL, then SLOWPROC in source order.
+    reachability: active
+    kernel: jax_orchidee.sechiba.sechiba_step.sechiba_explicit_coupled_step_from_local_diffuco
+    production_caller: jax_orchidee.driver.orchestration.paper_1961_next_step_runtime_result
+    state_inputs: [previous_step_state, forcing, static_context, diffuco_local]
+    same_step_outputs: [enerbil, hydrol, condveg, thermosoil]
+    next_step_restart_behavior: >-
+      driver_previous_step_state_from_timestep_scaffold stores component
+      outputs for the next half-hour; year handoff rebases the same packet.
+    microcase: [tests/unit/test_sechiba_step.py::test_sechiba_explicit_coupled_step_from_local_diffuco_matches_payload_entrypoint]
+    validation_evidence: [tests/unit/test_sechiba_step.py::test_sechiba_explicit_coupled_step_runs_current_local_chain_in_source_order]
+    status: verified
+
+  - id: diffuco.active.co2_fvcb
+    module: DIFFUCO
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_trans_co2
+    fortran_lines: 2018-2969
+    condition: >-
+      ok_co2 and veget_max(:,14)>min_sechiba and lai(:,14)>0 with illuminated
+      canopy layers; PFT14 is C3.
+    reachability: active
+    kernel: jax_orchidee.sechiba.diffuco.diffuco_pft14_local_process_boundary_explicit
+    production_caller: jax_orchidee.driver.orchestration.paper_1961_next_step_runtime_result
+    state_inputs: [lai, veget, veget_max, humrel, rprof, vbeta3, atmospheric_forcing, pft_parameters]
+    same_step_outputs: [gpp, gsmean, cimean, rveget, rstruct, vbeta3, vbeta3pot]
+    next_step_restart_behavior: >-
+      GPP enters the same-step STOMATE accumulator; DIFFUCO control memories
+      and aerodynamic surface fields are carried in the driver state packet.
+    microcase: [tests/unit/test_diffuco.py::test_diffuco_pft14_local_process_boundary_runs_drag_qsatt_and_beta_chain_in_source_order]
+    validation_evidence: [tests/unit/test_diffuco.py::test_server_1961_diffuco_trans_co2_pft14_first_active_record_matches_fortran_trace]
+    status: verified
+
+  - id: diffuco.active.mangrove_controls
+    module: DIFFUCO
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_main
+    fortran_lines: 445-622
+    condition: >-
+      jv=14; salinity and tide_height modify control_salinity and
+      control_inudate before the CO2 assimilation path.
+    reachability: active
+    kernel: jax_orchidee.sechiba.diffuco.diffuco_pft14_local_process_boundary_explicit
+    production_caller: jax_orchidee.driver.orchestration.paper_1961_next_step_runtime_result
+    state_inputs: [salinity, tide_height, biomass, rprof, diaglev, saved_control_salinity, saved_control_inudate]
+    same_step_outputs: [control_salinity, control_inudate, controlled_gpp, controlled_cimean]
+    next_step_restart_behavior: >-
+      Updated salinity and inundation controls are saved explicitly and become
+      the next DIFFUCO precall control state, including restart-year step one.
+    microcase: [tests/unit/test_diffuco.py::test_diffuco_pft14_c3_beta_process_chain_matches_manual_source_order_chain]
+    validation_evidence: [tests/unit/test_diffuco.py::test_server_1961_diffuco_pft14_active_main_beta_closure_matches_after_main_trace]
+    status: verified
+
+  - id: diffuco.active.aerodynamic_boundary
+    module: DIFFUCO
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_aero
+    fortran_lines: 940-1144
+    condition: >-
+      Every half-hour with fixed ROUGH_DYN=y; current wind and CONDVEG
+      roughness determine grid and PFT drag coefficients and aerodynamic
+      resistance before all beta and assimilation calculations.
+    reachability: active
+    kernel: jax_orchidee.sechiba.diffuco.diffuco_aero_explicit
+    production_caller: jax_orchidee.sechiba.diffuco.diffuco_pft14_local_process_boundary_explicit
+    state_inputs: [u, v, zlev, z0m, z0h, roughheight, roughheight_pft, temp_sol, temp_sol_pft, temp_air, pb, rough_dyn]
+    same_step_outputs: [q_cdrag, q_cdrag_pft, raero]
+    next_step_restart_behavior: >-
+      Current drag fields feed same-step snow, interception, flood, FvCB, and
+      ENERBIL; dynamic roughness is carried from CONDVEG for the next call.
+    microcase: [tests/unit/test_diffuco.py::test_diffuco_aero_explicit_rough_dyn_disables_snowfact_like_paper_config]
+    validation_evidence: [tests/unit/test_diffuco.py::test_diffuco_pft14_local_process_boundary_runs_drag_qsatt_and_beta_chain_in_source_order]
+    status: verified
+
+  - id: diffuco.conditional.snow_sublimation
+    module: DIFFUCO
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_snow
+    fortran_lines: 1177-1281
+    condition: >-
+      Nonzero vegetation or nobio snow fraction under undersaturated air;
+      forcing and explicit-snow state select storage-limited sublimation.
+    reachability: conditional
+    kernel: jax_orchidee.sechiba.diffuco.diffuco_snow_beta_explicit
+    production_caller: jax_orchidee.sechiba.diffuco.diffuco_pft14_local_process_boundary_explicit
+    state_inputs: [qair, qsatt, rau, u, v, q_cdrag, snow, snow_nobio, frac_snow_veg, frac_snow_nobio, dt_sechiba]
+    same_step_outputs: [vbeta1, sublimation_limit]
+    next_step_restart_behavior: >-
+      vbeta1 feeds same-step ENERBIL evaporation partition; HYDROL writes the
+      resulting snow storage for the next half-hour.
+    microcase: [tests/unit/test_diffuco.py::test_diffuco_snow_beta_explicit_matches_fortran_snow_and_nobio_limiters]
+    validation_evidence: [tests/unit/test_diffuco.py::test_diffuco_pft14_beta_process_chain_can_compute_qsatt_from_temp_sol_and_pb]
+    status: verified
+
+  - id: diffuco.conditional.canopy_interception
+    module: DIFFUCO
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_inter
+    fortran_lines: 1426-1553
+    condition: >-
+      PFT14 veget is active and carried qsintveg is positive; current humidity,
+      wind, canopy capacity, and resistance split intercepted-water evaporation
+      from the residual wetted-foliage transpiration coefficient.
+    reachability: conditional
+    kernel: jax_orchidee.sechiba.diffuco.diffuco_inter_explicit
+    production_caller: jax_orchidee.sechiba.diffuco.diffuco_pft14_local_process_boundary_explicit
+    state_inputs: [qair, qsatt, rau, u, v, q_cdrag, q_cdrag_pft, humrel, veget, qsintveg, qsintmax, rstruct]
+    same_step_outputs: [vbeta2, vbeta23]
+    next_step_restart_behavior: >-
+      The beta split feeds same-step FvCB/ENERBIL; HYDROL updates qsintveg and
+      SLOWPROC updates qsintmax for the following half-hour.
+    microcase: [tests/unit/test_diffuco.py::test_diffuco_pft14_c3_beta_process_chain_matches_manual_source_order_chain]
+    validation_evidence: [tests/unit/test_diffuco.py::test_diffuco_pft14_local_process_boundary_runs_drag_qsatt_and_beta_chain_in_source_order]
+    status: verified
+
+  - id: diffuco.active.cwrr_bare_soil
+    module: DIFFUCO
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_bare
+    fortran_lines: 1593-1690
+    condition: >-
+      Fixed HYDROL_CWRR=y; HYDROL evap_bare_lim and the uncovered fraction of
+      PFT14/bare soil limit grid and PFT bare-soil evaporation beta.
+    reachability: active
+    kernel: jax_orchidee.sechiba.diffuco.diffuco_bare_cwrr_beta
+    production_caller: jax_orchidee.sechiba.diffuco.diffuco_pft14_local_process_boundary_explicit
+    state_inputs: [evap_bare_lim, vbeta2, vbeta3, veget_max]
+    same_step_outputs: [vbeta4, vbeta4_pft]
+    next_step_restart_behavior: >-
+      Bare beta feeds same-step ENERBIL; the scalar HYDROL evaporation limit
+      is carried and recomputed from prognostic soil moisture.
+    microcase: [tests/unit/test_diffuco.py::test_diffuco_bare_cwrr_beta_uses_scalar_hydrol_evap_bare_lim]
+    validation_evidence: [tests/unit/test_diffuco.py::test_diffuco_pft14_c3_beta_closure_chains_trans_bare_and_comb_no_dew]
+    status: verified
+
+  - id: diffuco.conditional.dew_freezing_combination
+    module: DIFFUCO
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_comb
+    fortran_lines: 3070-3271
+    condition: >-
+      Humidity and surface/air temperature may select warm dew, freezing dew,
+      vegetation, snow, or ordinary evaporation assembly for any PFT14 point.
+    reachability: conditional
+    kernel: jax_orchidee.sechiba.diffuco.diffuco_comb_explicit
+    production_caller: jax_orchidee.sechiba.diffuco.diffuco_pft14_local_process_boundary_explicit
+    state_inputs: [qair, qsatt, temp_sol, temp_air, snow, veget, veget_max, lai, tot_bare_soil, vbeta1, vbeta2, vbeta3, vbeta4, vbeta4_pft, qsintmax]
+    same_step_outputs: [vbeta, vbeta_pft, valpha, vbeta1, vbeta2, vbeta3, vbeta4, vbeta4_pft]
+    next_step_restart_behavior: >-
+      Final beta fields feed same-step ENERBIL; dew routed to snow or canopy is
+      reflected in HYDROL prognostic storage before the next call.
+    microcase: [tests/unit/test_diffuco.py::test_diffuco_comb_explicit_freezing_dew_routes_to_snow_beta]
+    validation_evidence: [tests/unit/test_diffuco.py::test_diffuco_pft14_payload_exports_comb_vbeta4_after_warm_dew_rewrite]
+    status: verified
+
+  - id: diffuco.inactive.single_point_flood_beta
+    module: DIFFUCO
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_flood
+    fortran_lines: 1301-1356
+    condition: >-
+      The source call is unconditional, but the paper's independent
+      nbp_glo=1 no-routing branch supplies flood_frac=flood_res=0. No forcing
+      or continuous PFT14 parameter can make vbeta5 nonzero in this workflow.
+    reachability: inactive
+    kernel: jax_orchidee.sechiba.diffuco.diffuco_flood_beta_explicit
+    production_caller: jax_orchidee.sechiba.diffuco.diffuco_pft14_local_process_boundary_explicit
+    state_inputs: [flood_frac, flood_res, atmospheric_state, drag]
+    same_step_outputs: [zero_vbeta5]
+    next_step_restart_behavior: >-
+      The no-routing branch recreates zero flood state every step. A local
+      nonzero flood micro-case is retained only for a promoted routing workflow.
+    microcase: [tests/unit/test_diffuco.py::test_diffuco_flood_beta_explicit_matches_fortran_flood_limiter]
+    validation_evidence: [tests/unit/test_coupled.py::test_stomate_static_routing_single_point_with_routing_switch_still_takes_no_routing_branch]
+    status: verified
+
+  - id: enerbil.active.surface_energy
+    module: ENERBIL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/enerbil.f90
+    fortran_subroutine: enerbil_main
+    fortran_lines: 390-598
+    condition: >-
+      Every SECHIBA timestep after DIFFUCO; use current turbulent beta fields,
+      atmospheric forcing, and previous thermal recurrence state.
+    reachability: active
+    kernel: jax_orchidee.sechiba.enerbil.enerbil_explicit_local_step
+    production_caller: jax_orchidee.sechiba.sechiba_step.sechiba_explicit_coupled_step
+    state_inputs: [temp_sol, qsurf, emis, cgrnd, dgrnd, soilcap, soilflx, swnet, lwdown, diffuco_beta_fields]
+    same_step_outputs: [temp_sol_new, qsurf, evapot, evapot_corr, transpir, vevapnu, vevapsno, pgflux, temp_sol_add]
+    next_step_restart_behavior: >-
+      Surface temperature and humidity are carried to the next step; evaporation
+      fluxes feed same-step HYDROL and thermal fluxes feed THERMOSOIL recurrence.
+    microcase: [tests/unit/test_enerbil.py::test_enerbil_explicit_local_step_orders_closed_kernels_without_sourcing_inputs]
+    validation_evidence: [tests/unit/test_enerbil.py::test_active_enerbil_server_bridge_assembly_matches_fortran_active_trace_outputs]
+    status: verified
+
+  - id: enerbil.conditional.potential_temperature
+    module: ENERBIL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/enerbil.f90
+    fortran_subroutine: enerbil_pottemp
+    fortran_lines: 1263-1317
+    condition: q_sol_pot and temp_sol_pot diagnostics are supplied at the active ENERBIL boundary.
+    reachability: conditional
+    kernel: jax_orchidee.sechiba.enerbil.enerbil_pottemp_pass_through
+    production_caller: jax_orchidee.sechiba.enerbil.enerbil_explicit_local_step
+    state_inputs: [q_sol_pot, temp_sol_pot]
+    same_step_outputs: [q_sol_pot, temp_sol_pot]
+    next_step_restart_behavior: >-
+      Current Fortran sets dtheta and fevap to zero, so SAVE diagnostics pass
+      through unchanged and are carried only when the caller preserves them.
+    microcase: [tests/unit/test_enerbil.py::test_enerbil_pottemp_and_t2mdiag_follow_current_fortran_pass_throughs]
+    validation_evidence: [tests/unit/test_enerbil.py::test_active_enerbil_server_bridge_assembly_matches_fortran_active_trace_outputs]
+    status: verified
+
+  - id: hydrol.active.cwrr_soil_solve
+    module: HYDROL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil
+    fortran_lines: 5800-6805
+    condition: HYDROL_CWRR=y with an active PFT14 soil tile and finite hydraulic state.
+    reachability: active
+    kernel: jax_orchidee.sechiba.hydrol.hydrol_module_explicit_step
+    production_caller: jax_orchidee.sechiba.sechiba_step.sechiba_explicit_coupled_step
+    state_inputs: [mc, mcl, tmc, mcs, mcw, mcf, k, rootsink, vevapnu, transpir, runoff, drainage]
+    same_step_outputs: [mc, mcl, tmc, runoff, drainage, humrel, vegstress, soil_mc, wat_flux]
+    next_step_restart_behavior: >-
+      Prognostic moisture and tile routing reservoirs replace prior HYDROL
+      state; humrel and evap_bare_lim feed next-step DIFFUCO.
+    microcase: [tests/unit/test_hydrol_module_step.py::test_hydrol_module_explicit_step_matches_manual_source_order_assembly]
+    validation_evidence: [tests/unit/test_hydrol_module_step.py::test_hydrol_module_outputs_expose_downstream_soil_flux_fields]
+    status: verified
+
+  - id: hydrol.conditional.peat_tide_routing
+    module: HYDROL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil
+    fortran_lines: 6183-6296
+    condition: >-
+      PFT14 runoff reaches peat/mangrove tiles and the tide or above-surface
+      water-table reservoirs select a runoff2peat/run2man branch.
+    reachability: conditional
+    kernel: jax_orchidee.sechiba.hydrol.hydrol_module_explicit_step
+    production_caller: jax_orchidee.sechiba.sechiba_step.sechiba_explicit_coupled_step
+    state_inputs: [runoff, soiltile, wt_ab, wt_ab_tide, tide_height, ok_ru2peat]
+    same_step_outputs: [runoff2peat, run2peat, run2man, water2infilt, wt_ab, wt_ab_tide, tmc]
+    next_step_restart_behavior: >-
+      Reservoir writeback and reinjected tmc are carried as HYDROL state; no
+      mineral fallback is synthesized when peat coefficients are required.
+    microcase: [tests/unit/test_hydrol_module_step.py::test_hydrol_module_explicit_step_runs_pft14_peat_tide_path]
+    validation_evidence: [tests/unit/test_hydrol_module_step.py::test_hydrol_tide_reservoir_sign_cases_match_fortran_writeback]
+    status: verified
+
+  - id: hydrol.conditional.alt_bare_residual
+    module: HYDROL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil
+    fortran_lines: 6971-7174
+    condition: flux_top>0 and top-layer mcl is below the effective residual threshold.
+    reachability: conditional
+    kernel: jax_orchidee.sechiba.hydrol.hydrol_module_diagnostics
+    production_caller: jax_orchidee.driver.orchestration.paper_1961_next_step_runtime_result
+    state_inputs: [tmcint, evapot, mcl, mcr_eff, flux_top, evap_bare_lim_ns]
+    same_step_outputs: [evap_bare_lim_ns, evap_bare_lim]
+    next_step_restart_behavior: >-
+      Dummy-solve mc/mcl/tmc are restored; only the diagnosed tile and grid
+      evaporation limits carry forward to next-step DIFFUCO.
+    microcase: [tests/unit/test_hydrol_module_step.py::test_hydrol_module_diagnostics_use_same_step_alt_residual_evap_bare_limit]
+    validation_evidence: [docs/source_audits/hydrol_full_solve_trace_contract.md]
+    status: verified
+
+  - id: hydrol.active.dynamic_root_water_stress
+    module: HYDROL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil
+    fortran_lines: 6584-6685
+    condition: >-
+      dyn_nroot_larix=y; for each soil tile update the shared SAVE nroot from
+      the legacy moisture threshold, then use that profile for humrelv and
+      vegstressv. Tree and non-tree tile masks differ at mangrove tile 6.
+    reachability: active
+    kernel: jax_orchidee.sechiba.hydrol.hydrol_water_stress_diagnostics
+    production_caller: jax_orchidee.sechiba.hydrol.hydrol_module_diagnostics
+    state_inputs: [nroot, sm, smw, smf, smw_tmp, smf_tmp, pcent, pcent_peat, is_tree, znt]
+    same_step_outputs: [nroot, us, humrelv, vegstressv]
+    next_step_restart_behavior: >-
+      hydrol_module_diagnostics updates one shared nroot in Fortran soil-tile
+      order; driver_previous_step_state_from_timestep_scaffold stores the final
+      profile in hydrol_previous_step_state for the next half-hour.
+    microcase:
+      - tests/unit/test_hydrol_diagnostics.py::test_hydrol_dynamic_tree_tile6_uses_mineral_root_update_then_peat_stress
+      - tests/unit/test_hydrol_diagnostics.py::test_hydrol_dynamic_root_uses_legacy_threshold_when_new_watstress_enabled
+      - tests/unit/test_hydrol_diagnostics.py::test_hydrol_dynamic_root_normalizes_positive_candidate_below_min_sechiba
+    validation_evidence:
+      - tests/parity/test_driver_1961_orchestration.py::test_previous_step_state_packet_extracts_only_source_backed_timestep_outputs
+    status: verified
+
+  - id: hydrol.conditional.canopy_interception
+    module: HYDROL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_canop
+    fortran_lines: 4992-5117
+    condition: >-
+      Rainfall, canopy evaporation, melt, carried qsintveg, and PFT14 canopy
+      capacity determine interception storage, throughfall, and canopy-to-ground
+      water on every half-hour.
+    reachability: conditional
+    kernel: jax_orchidee.sechiba.hydrol.hydrol_canop_interception
+    production_caller: jax_orchidee.sechiba.hydrol.hydrol_module_explicit_step
+    state_inputs: [precip_rain, vevapwet, veget, veget_max, qsintmax, qsintveg, tot_melt, throughfall_by_pft]
+    same_step_outputs: [qsintveg, precisol, precip2canopy, precip2ground, canopy2ground]
+    next_step_restart_behavior: >-
+      Updated qsintveg is carried to the next DIFFUCO interception calculation;
+      ground precipitation feeds same-step soil infiltration and TF-DOC.
+    microcase: [tests/unit/test_hydrol_canopy_flood.py::test_hydrol_canop_interception_matches_fortran_update_order]
+    validation_evidence: [tests/unit/test_hydrol_module_step.py::test_hydrol_module_explicit_step_matches_manual_source_order_assembly]
+    status: verified
+
+  - id: hydrol.active.freeze_hydraulics
+    module: HYDROL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil_froz
+    fortran_lines: 8332-8460
+    condition: >-
+      Fixed OK_FREEZE_CWRR=true; current THERMOSOIL temperature and total soil
+      moisture determine liquid/frozen partition and hydraulic reduction for
+      every tile, including exact unfrozen and frozen limits.
+    reachability: active
+    kernel: jax_orchidee.sechiba.hydrol.hydrol_soil_froz_profile
+    production_caller: jax_orchidee.sechiba.hydrol.hydrol_module_explicit_step
+    state_inputs: [mc, soil_temperature, njsc, mcs, mcw, mcf, thermodynamic_freezing_parameters]
+    same_step_outputs: [profil_froz_hydro_ns, mcl, hydraulic_freeze_factor]
+    next_step_restart_behavior: >-
+      Frozen profile modifies same-step conductivity and infiltration; total
+      and liquid moisture plus thermal profile are carried independently.
+    microcase: [tests/unit/test_hydrol_module_step.py::test_hydrol_soil_froz_profile_matches_source_linear_and_correction_formula]
+    validation_evidence: [tests/unit/test_hydrol_module_step.py::test_hydrol_first_step_precall_accepts_cold_start_freeze_profile_without_thermosoil_restart]
+    status: verified
+
+  - id: hydrol.conditional.infiltration_and_excess_routing
+    module: HYDROL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil_infilt
+    fortran_lines: 7432-7590
+    condition: >-
+      Positive ground-water input or extraction drives layer infiltration;
+      hydraulic state, freezing, peat/tile masks, and saturation determine
+      retained water, runoff, and drainage before the implicit solve.
+    reachability: conditional
+    kernel: jax_orchidee.sechiba.hydrol.hydrol_soil_infilt_explicit
+    production_caller: jax_orchidee.sechiba.hydrol.hydrol_module_explicit_step
+    state_inputs: [flux_infilt, mc, mcl, mcr, mcs, profil_froz, k, a, b, d, soil_tile]
+    same_step_outputs: [mc, mcl, qinfilt_ns, ru_infilt_ns, infiltration_check]
+    next_step_restart_behavior: >-
+      Updated moisture enters the same-step tridiagonal solve; runoff/drainage
+      reservoirs and final mc/mcl are written to the HYDROL state packet.
+    microcase:
+      - tests/unit/test_hydrol_infilt.py::test_hydrol_soil_infilt_explicit_matches_mineral_fortran_loop
+      - tests/unit/test_hydrol_infilt.py::test_hydrol_soil_infilt_explicit_uses_freeze_and_peat_branches
+    validation_evidence: [tests/unit/test_hydrol_module_step.py::test_hydrol_module_explicit_step_matches_manual_source_order_assembly]
+    status: verified
+
+  - id: hydrol.conditional.explicit_snow_nonzero
+    module: HYDROL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90
+    fortran_subroutine: explicitsnow_main
+    fortran_lines: 108-553
+    condition: >-
+      Fixed paper switch OK_EXPLICITSNOW=y and nonzero snowfall or carried
+      three-layer snow state activates fall, layer transformation, compaction,
+      metamorphism, melt/refreeze, sublimation, and profile updates.
+    reachability: conditional
+    kernel: jax_orchidee.sechiba.hydrol.hydrol_explicit_snow_step
+    production_caller: jax_orchidee.sechiba.hydrol.hydrol_module_explicit_step
+    state_inputs: [precip_rain, precip_snow, temp_air, pb, u, v, snow, snowdz, snowrho, snowtemp, snowheat, snowgrain, snowliq, soilcap, soilflxresid]
+    same_step_outputs: [snow, snowdz, snowrho, snowtemp, snowheat, snowgrain, snowliq, snowmelt, tot_melt, vevapsno, soilflxresid]
+    next_step_restart_behavior: >-
+      The HYDROL module returns all three-layer internal fields and inout energy
+      boundaries for the next half-hour and SECHIBA restart. The module
+      micro-case asserts all snow-layer and snow-energy fields in the
+      production previous-state packet.
+    microcase: [tests/unit/test_hydrol_cold_start.py::test_hydrol_explicit_snow_step_returns_hydrol_state_and_inout_boundaries]
+    validation_evidence: [tests/unit/test_hydrol_module_step.py::test_hydrol_first_step_module_closure_runs_complete_explicit_snow_branch]
+    status: verified
+
+  - id: hydrol.conditional.water_table_forcing
+    module: HYDROL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil
+    fortran_lines: 6116-6180
+    condition: >-
+      Fixed CWRR paper path with finite zwt_force below zmaxh; saturated layers
+      and effective water-table depth vary with forcing, soil profile, and state.
+    reachability: conditional
+    kernel: jax_orchidee.sechiba.hydrol.hydrol_force_water_table_saturation
+    production_caller: jax_orchidee.sechiba.hydrol.hydrol_module_explicit_step
+    state_inputs: [zwt_force, zmaxh_m, zz_mm, mc, mcs, peat_hydro, njsc]
+    same_step_outputs: [mc, dr_force_ns, forced_layer_mask, effective_water_table_depth]
+    next_step_restart_behavior: >-
+      Forced saturation modifies prognostic mc before tmc/mcl reconstruction;
+      the driver carries zwt_force separately. The production module micro-case
+      verifies that finite forcing changes carried mc and drainage.
+    microcase: [tests/unit/test_hydrol_post_solve.py::test_hydrol_force_water_table_saturation_updates_mc_and_dr_force]
+    validation_evidence:
+      - tests/parity/test_driver_1961_bundle.py::test_paper_1961_first_step_bundle_keeps_water_table_sequences_as_inputs
+      - tests/unit/test_hydrol_module_step.py::test_hydrol_module_explicit_step_applies_finite_water_table_forcing_to_prognostic_state
+    status: verified
+
+  - id: hydrol.conditional.peat_hydraulic_coefficients
+    module: HYDROL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil_coef
+    fortran_lines: 8259-8297
+    condition: >-
+      hydrol_soil_coef selects peat CWRR tables only when the runtime SAVE
+      variable peat_hydro is true on tile 4, 5, or 6. The audited paper runtime
+      records peat_hydro=F/branch_peat=F; landpoint, forcing, and continuous
+      PFT14 parameters cannot change that logical SAVE state.
+    reachability: inactive
+    kernel: jax_orchidee.sechiba.hydrol.hydrol_soil_coef_peat_profile_from_tables
+    production_caller: jax_orchidee.sechiba.hydrol.hydrol_module_explicit_step
+    state_inputs: [peat_tables, njsc, mc, mcl, mcs, mcw, mcf, froz, soiltile]
+    same_step_outputs: [k, a, b, d, under_saturation_coefficients, over_saturation_coefficients]
+    next_step_restart_behavior: >-
+      The paper driver pins the trace-backed false branch. The source-local
+      true branch remains implemented and micro-tested for an explicitly
+      different discrete PEAT_HYDRO workflow, but is not counted as reachable
+      paper/PFT14 work.
+    microcase: [tests/unit/test_hydrol_peat_coef.py::test_tile_adapter_uses_peat_tables_for_active_pft14_soil_tile]
+    validation_evidence: [tests/unit/test_hydrol_module_step.py::test_hydrol_module_explicit_step_runs_pft14_peat_tide_path]
+    status: verified
+
+  - id: thermosoil.active.cwrr_recurrence
+    module: THERMOSOIL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: thermosoil_main
+    fortran_lines: 788-1054
+    condition: HYDROL_CWRR=y after same-step HYDROL moisture and ENERBIL surface flux updates.
+    reachability: active
+    kernel: jax_orchidee.sechiba.thermosoil.thermosoil_explicit_step
+    production_caller: jax_orchidee.sechiba.sechiba_step.sechiba_explicit_coupled_step
+    state_inputs: [ptn, cgrnd, dgrnd, pcapa_en, temp_sol_beg, soilcap, mc, mcl, snow_state, pgflux, temp_sol_new, refSOC]
+    same_step_outputs: [ptn, stempdiag, soilcap, soilflx, gtemp, cgrnd, dgrnd, lambda_snow]
+    next_step_restart_behavior: >-
+      Profile and energy consume previous ptn/cgrnd/dgrnd/pcapa_en,
+      temp_sol_beg, and soilcap. Updated ptn, getdiff pcapa_en, surface
+      temperature, and coefficient fields become the next half-hour state.
+    microcase:
+      - tests/unit/test_thermosoil.py::test_thermosoil_explicit_step_composes_profile_getdiff_coef_and_final_state
+      - tests/unit/test_sechiba_thermosoil_recurrence_reachable.py::test_thermosoil_transition_consumes_old_pcapa_and_writes_new_recurrence
+    validation_evidence:
+      - tests/parity/test_driver_1961_orchestration.py::test_previous_step_state_packet_extracts_only_source_backed_timestep_outputs
+    status: verified
+
+  - id: thermosoil.active.refsoc_freeze_properties
+    module: THERMOSOIL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: thermosoil_getdiff
+    fortran_lines: 2566-2863
+    condition: >-
+      Fixed OK_FREEZE_THERMIX=true, USE_SOILC_TEMPDIFF=true, and use_refSOC=y;
+      current PFT14 soil moisture/temperature and reference SOC determine
+      organic mixing, heat capacity, conductivity, and snow thermal properties.
+    reachability: active
+    kernel: jax_orchidee.sechiba.thermosoil.thermosoil_getdiff_explicit
+    production_caller: jax_orchidee.sechiba.thermosoil.thermosoil_explicit_step
+    state_inputs: [ptn, njsc, veget_max, mc_layt, tmc_layt_pft, refsoc, soilc_total, snowrho, snowtemp, pb]
+    same_step_outputs: [pcapa, pcapa_en, pkappa, pcapa_snow, pkappa_snow]
+    next_step_restart_behavior: >-
+      Current properties generate next-step coefficients; pcapa_en is carried
+      explicitly and only consumed by the following half-hour energy update.
+    microcase: [tests/unit/test_thermosoil.py::test_thermosoil_getdiff_explicit_computes_freeze_capacity_conductivity_and_snow]
+    validation_evidence: [tests/unit/test_driver_static_helpers.py::test_read_paper_thermosoil_refsoc_static_field_returns_vertical_profile]
+    status: verified
+
+  - id: thermosoil.conditional.explicit_snow_thermal_profile
+    module: THERMOSOIL
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: thermosoil_profile
+    fortran_lines: 1761-1851
+    condition: >-
+      Fixed OK_EXPLICITSNOW=y; nonzero snow depth/fraction selects the carried
+      snow recurrence coefficients and snow temperature as the soil-profile
+      surface boundary, while zero snow follows the exact weighted limit.
+    reachability: conditional
+    kernel: jax_orchidee.sechiba.thermosoil.thermosoil_profile_explicit_snow
+    production_caller: jax_orchidee.sechiba.thermosoil.thermosoil_explicit_step
+    state_inputs: [ptn, cgrnd, dgrnd, cgrnd_snow, dgrnd_snow, temp_sol_new, snowtemp, veget_max, frac_snow_veg, frac_snow_nobio]
+    same_step_outputs: [ptn, stempdiag, effective_surface_temperature]
+    next_step_restart_behavior: >-
+      Updated ptn is carried; snow temperature is updated by HYDROL/explicit
+      snow and snow recurrence coefficients are replaced after getdiff/coef.
+    microcase: [tests/unit/test_thermosoil.py::test_thermosoil_profile_explicit_snow_uses_snow_surface_coefficients]
+    validation_evidence: [tests/unit/test_thermosoil.py::test_thermosoil_coef_explicit_snow_matches_snow_layer_recurrence_and_blend]
+    status: verified
+
+  - id: condveg.active.dynamic_roughness
+    module: CONDVEG
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+    fortran_subroutine: condveg_z0cdrag_dyn
+    fortran_lines: 1519-1720
+    condition: >-
+      Fixed paper ROUGH_DYN=y and IMPOSE_AZE=false; vegetation, LAI, snow
+      fraction, wind, and canopy height select dynamic roughness sub-branches.
+    reachability: active
+    kernel: jax_orchidee.sechiba.condveg.condveg_z0cdrag_dyn
+    production_caller: jax_orchidee.sechiba.condveg.condveg_main_minimal
+    state_inputs: [veget, veget_max, frac_nobio, totfrac_nobio, zlev, height, temp_air, pb, u, v, lai, frac_snow_veg]
+    same_step_outputs: [z0m, z0h, roughheight, q_cdrag]
+    next_step_restart_behavior: >-
+      Dynamic roughness feeds the next DIFFUCO aerodynamic boundary and is
+      carried in the SECHIBA state packet. Tests cover local dispatch and
+      next-step DIFFUCO consumption without restart aliasing.
+    microcase: [tests/unit/test_condveg.py::test_condveg_z0cdrag_dyn_matches_fortran_algebra_on_small_arrays]
+    validation_evidence:
+      - tests/unit/test_condveg.py::test_condveg_main_minimal_gates_branches_and_returns_active_fields
+      - tests/parity/test_driver_1961_orchestration.py::test_next_step_diffuco_precall_uses_previous_state_without_restart_aliasing
+    status: verified
+
+  - id: condveg.active.emissivity
+    module: CONDVEG
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+    fortran_subroutine: condveg_main
+    fortran_lines: 398-403
+    condition: >-
+      Every SECHIBA half-hour sets surface emissivity from the initialized
+      emis_scal state before ENERBIL uses the next-step surface boundary.
+    reachability: active
+    kernel: jax_orchidee.sechiba.condveg.condveg_main_emissivity
+    production_caller: jax_orchidee.sechiba.condveg.condveg_main_minimal
+    state_inputs: [emis_scal, kjpindex]
+    same_step_outputs: [emis]
+    next_step_restart_behavior: >-
+      Emissivity is deterministic module/static state and is carried in the
+      surface packet consumed by the following ENERBIL step.
+    microcase: [tests/unit/test_enerbil.py::test_condveg_initialized_emis_follows_initialize_impaze_branches]
+    validation_evidence: [tests/unit/test_condveg.py::test_condveg_main_minimal_can_return_albedo_when_explicit_state_is_supplied]
+    status: verified
+
+  - id: condveg.active.snow_fraction
+    module: CONDVEG
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+    fortran_subroutine: condveg_frac_snow
+    fortran_lines: 858-898
+    condition: >-
+      Every half-hour; fixed OK_EXPLICITSNOW=y selects three-layer snow-depth
+      coverage when snow exists and the exact zero branch otherwise.
+    reachability: active
+    kernel: jax_orchidee.sechiba.condveg.condveg_frac_snow
+    production_caller: jax_orchidee.sechiba.condveg.condveg_main_minimal
+    state_inputs: [snow, snow_nobio, snowrho, snowdz, ok_explicitsnow]
+    same_step_outputs: [frac_snow_veg, frac_snow_nobio]
+    next_step_restart_behavior: >-
+      Snow fractions feed same-step roughness, albedo, and THERMOSOIL; the
+      underlying snow state, rather than the diagnostic fractions, is carried.
+    microcase:
+      - tests/unit/test_condveg.py::test_condveg_frac_snow_explicit_and_nobio_follow_fortran_formula
+    validation_evidence:
+      - tests/unit/test_sechiba_step.py::test_sechiba_explicit_coupled_step_runs_current_local_chain_in_source_order
+    status: verified
+
+  - id: condveg.active.background_albedo
+    module: CONDVEG
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+    fortran_subroutine: condveg_albedo
+    fortran_lines: 612-839
+    condition: >-
+      Fixed ALB_BG_MODIS=y and IMPOSE_AZE=false; current vegetation, bare-soil
+      fraction, snow fraction/age, and two-band background state determine
+      visible and near-infrared surface and snow albedo.
+    reachability: active
+    kernel: jax_orchidee.sechiba.condveg.condveg_albedo_explicit
+    production_caller: jax_orchidee.sechiba.condveg.condveg_main_minimal
+    state_inputs: [veget, veget_max, tot_bare_soil, soilalb_bg, alb_leaf_vis, alb_leaf_nir, snow, snow_age, snow_nobio, snow_nobio_age, frac_snow_veg, frac_snow_nobio]
+    same_step_outputs: [albedo, albedo_snow, alb_bare, alb_veget, snowa_veg, snowa_nobio]
+    next_step_restart_behavior: >-
+      Two-band albedo is carried to the offline driver, where it forms the next
+      shortwave-net forcing exactly; background soil albedo remains static.
+    microcase:
+      - tests/unit/test_condveg.py::test_condveg_albedo_explicit_matches_modis_background_soil_branch
+      - tests/unit/test_condveg.py::test_condveg_albedo_explicit_covers_wet_soil_and_fixed_snow_branches
+    validation_evidence:
+      - tests/unit/test_sechiba_step.py::test_sechiba_explicit_coupled_step_from_local_diffuco_matches_payload_entrypoint
+    status: verified
+
+  - id: stomate.inactive.ordinary_cover_dgvm_false
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/lpj_cover.f90
+    fortran_subroutine: cover
+    fortran_lines: 73-387
+    condition: >-
+      StomateLpj calls ordinary cover when update_peatfrac is false, but every
+      mutation in cover is guarded by OK_DGVM. Fixed STOMATE_OK_DGVM=n makes
+      the call an exact no-op for all PFT14 forcing, state, and parameters.
+    reachability: inactive
+    kernel: jax_orchidee.stomate.carbon_kernels.cover_step
+    production_caller: jax_orchidee.stomate.integration.stomate_daily_carbon_kill_gap_turnover_explicit
+    state_inputs: [ok_dgvm, veget_max, biomass, litter, carbon, daily_fluxes]
+    same_step_outputs: [unchanged_cover_state]
+    next_step_restart_behavior: >-
+      Production may skip the pure no-op under the fixed false switch. Local
+      DGVM micro-cases preserve the source implementation for a separately
+      promoted discrete workflow.
+    microcase: [tests/unit/test_stomate_integration.py::test_stomate_daily_carbon_kill_gap_turnover_explicit_wires_ordinary_cover_when_requested]
+    validation_evidence: [docs/source_audits/stomate_branch_microcase_matrix.md]
+    status: verified
+
+  - id: stomate.inactive.harvest_agri_for_peat
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+    fortran_subroutine: harvest
+    fortran_lines: 2502-2566
+    condition: >-
+      Fixed HARVEST_AGRI=y calls harvest, but its update condition requires a
+      non-natural, non-peat PFT. PFT14 is structurally natural peat, so forcing
+      and continuous parameter changes cannot activate the body.
+    reachability: inactive
+    kernel: jax_orchidee.stomate.carbon_kernels.harvest_agri_step
+    production_caller: jax_orchidee.stomate.integration.stomate_daily_carbon_kill_gap_turnover_explicit
+    state_inputs: [harvest_agri, natural, is_peat, turnover_daily, bm_to_litter]
+    same_step_outputs: [unchanged_pft14_turnover_and_litter_transfer]
+    next_step_restart_behavior: >-
+      No PFT14 state changes. The source-local agricultural non-peat branch is
+      retained for explicit micro-cases but is outside fixed PFT14 reachability.
+    microcase: [tests/unit/test_stomate_carbon_kernels.py::test_harvest_agri_step_reduces_non_natural_non_peat_turnover_only]
+    validation_evidence: [docs/source_audits/stomate_branch_microcase_matrix.md]
+    status: verified
+
+  - id: stomate.active.daily_accumulation
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_main
+    fortran_lines: 3198-3208
+    condition: STOMATE_OK_STOMATE=y on every SECHIBA half-hour; fold on the daily slow step.
+    reachability: active
+    kernel: jax_orchidee.stomate.daily.stomate_daily_process_fold_from_entries
+    production_caller: jax_orchidee.driver.orchestration.paper_1961_next_step_runtime_result
+    state_inputs: [gpp, temp_air, temp_sol, soil_temperature, humrel, precip_rain, precip_snow, daily_accumulators]
+    same_step_outputs: [gpp_daily, t2m_daily, tsoil_daily, moiavail_daily, precip_daily]
+    next_step_restart_behavior: >-
+      Half-hour accumulators persist until dt_stomate, then normalized daily
+      fields enter LPJ and the accumulator state resets for the next day.
+    microcase: [tests/unit/test_stomate_daily.py::test_stomate_accumulate_daily_matches_source_formula_before_slow_step]
+    validation_evidence: [tests/unit/test_stomate_daily.py::test_stomate_accumulate_daily_divides_by_dt_stomate_on_slow_step]
+    status: verified
+
+  - id: stomate.active.prescribe_restart_gate
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90
+    fortran_subroutine: prescribe
+    fortran_lines: 257-346
+    condition: >-
+      On firstcall_prescribe, inject prescribed PFT14 sapling biomass only
+      when STOMATE_RESTART_FILEIN is NONE; a restart-backed entry must skip it.
+    reachability: active
+    kernel: jax_orchidee.stomate.carbon_kernels.prescribe_step
+    production_caller: jax_orchidee.coupled.stomate_restart_input_bundles
+    state_inputs: [stomate_restart_none, firstcall, veget_max, biomass, bm_sapl, ind, pft_present]
+    same_step_outputs: [biomass, leaf_frac, when_growthinit, co2_to_bm, pft_present, everywhere]
+    next_step_restart_behavior: >-
+      Cold-start production bundles pass stomate_restart_none=true only on the
+      no-restart first day; restart-backed and later-day bundles pass false.
+      The resulting biomass and plant-status fields enter day-end state.
+    microcase:
+      - tests/unit/test_stomate_pft14_reachable_prescribe_restart.py::test_pft14_restart_default_does_not_inject_cold_start_biomass
+      - tests/unit/test_stomate_pft14_reachable_prescribe_restart.py::test_pft14_explicit_no_restart_still_runs_cold_start_initializer
+      - tests/unit/test_stomate_pft14_reachable_prescribe_restart.py::test_stomate_bundle_contract_forwards_explicit_restart_mode
+    validation_evidence:
+      - tests/parity/test_driver_1961_orchestration.py::test_restart_backed_stomate_chain_bundles_are_constructible_only_at_do_slow_boundary
+      - tests/parity/test_driver_1961_orchestration.py::test_cold_start_day_scaffold_reaches_daily_fold_from_no_restart_sla_state
+    status: verified
+
+  - id: stomate.active.maintenance_respiration
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_main
+    fortran_lines: 3244-3267
+    condition: Daily STOMATE step with PFT14 biomass and temperature state.
+    reachability: active
+    kernel: jax_orchidee.stomate.integration.stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit
+    production_caller: jax_orchidee.driver.orchestration.paper_1961_next_step_runtime_result
+    state_inputs: [biomass, t2m_daily, tsoil_daily, maint_respiration_parameters, resp_maint_part]
+    same_step_outputs: [maint_resp, resp_maint_part]
+    next_step_restart_behavior: >-
+      Maintenance respiration reduces same-day carbon available to allocation;
+      biomass and daily respiration diagnostics enter day-end state/modelout.
+    microcase: [tests/unit/test_stomate_integration.py::test_ok_leak_with_maintenance_adapter_matches_manual_stomate_main_local_order]
+    validation_evidence: [docs/source_audits/stomate_phase1c_state_contract.md]
+    status: verified
+
+  - id: stomate.active.season_memory
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_season.f90
+    fortran_subroutine: season
+    fortran_lines: 167-1584
+    condition: >-
+      Daily paper STOMATE step; forcing and carried climate memory update weekly,
+      monthly, annual, dormancy, GDD, moisture, and long-term state, including
+      firstcall initialization and end-of-year rollover.
+    reachability: active
+    kernel: jax_orchidee.stomate.season.season_memory_step
+    production_caller: jax_orchidee.coupled.stomate_season_memory_input_kwargs
+    state_inputs: [daily_temperature, daily_soil_temperature, daily_moisture, begin_leaves, when_growthinit, restart_season_memory, end_of_year]
+    same_step_outputs: [t2m_week, t2m_month, tsoil_month, soilhum_month, moiavail_week, moiavail_month, tseason, gdd_from_growthinit]
+    next_step_restart_behavior: >-
+      Updated season memory feeds same-day phenology/allocation and is copied
+      into later-day and annual state packets. Tests cover firstcall, ordinary
+      relaxation, end-of-year rollover, bundle composition, and day-end carry.
+    microcase:
+      - tests/unit/test_stomate_season.py::test_season_memory_step_matches_fortran_relaxations_and_ordered_daily_updates
+      - tests/unit/test_stomate_season.py::test_season_memory_firstcall_initializes_unset_restart_memory_before_relaxation
+      - tests/unit/test_stomate_season.py::test_season_memory_end_of_year_derives_tseason_and_resets_only_local_year_fields
+    validation_evidence:
+      - tests/unit/test_coupled.py::test_stomate_restart_input_bundles_accept_static_and_restart_season_kwargs_together
+      - tests/parity/test_driver_1961_orchestration.py::test_first_day_scaffold_stops_at_previous_step_state_after_traced_first_entry
+    status: verified
+
+  - id: stomate.active.phenology
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90
+    fortran_subroutine: phenology
+    fortran_lines: 173-591
+    condition: >-
+      Established PFT14 daily path; forcing and season memory select the fixed
+      PFT14 pheno_model branch and may trigger leaf onset, reserve transfer,
+      leaf-age reset, or schedule-only updates.
+    reachability: active
+    kernel: jax_orchidee.stomate.carbon_kernels.phenology_step
+    production_caller: jax_orchidee.stomate.integration.stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit
+    state_inputs: [pft_present, biomass, leaf_frac, leaf_age, when_growthinit, co2_to_bm, season_memory, gpp_daily, pheno_parameters]
+    same_step_outputs: [biomass, leaf_frac, leaf_age, when_growthinit, co2_to_bm, begin_leaves, gdd_midwinter]
+    next_step_restart_behavior: >-
+      Phenology-mutated biomass and schedule feed allocation immediately;
+      begin_leaves, gdd_midwinter, biomass, leaf classes, and growth-init
+      memories enter the day-end state packet.
+    microcase:
+      - tests/unit/test_stomate_carbon_kernels.py::test_phenology_step_none_model_updates_schedule_without_leaf_onset
+      - tests/unit/test_stomate_carbon_kernels.py::test_phenology_step_humgdd_combines_gdd_temperature_and_humidity
+      - tests/unit/test_stomate_carbon_kernels.py::test_phenology_step_ncdgdd_onset_resets_gdd_midwinter_and_allocates_reserve
+    validation_evidence: [tests/parity/test_driver_1961_orchestration.py::test_static_jit_daily_carbon_matches_explicit_paper_case_bundles]
+    status: verified
+
+  - id: stomate.active.allocation
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90
+    fortran_subroutine: alloc
+    fortran_lines: 146-834
+    condition: >-
+      Daily active PFT14 after phenology; continuous moisture, temperature,
+      age, LAI, reserve biomass, and root-profile state determine allocation.
+    reachability: active
+    kernel: jax_orchidee.stomate.carbon_kernels.allocation_step
+    production_caller: jax_orchidee.stomate.integration.stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit
+    state_inputs: [lai, veget_max, senescence, when_growthinit, moiavail_week, tsoil_month, soilhum_month, biomass, age, leaf_age, leaf_frac, rprof]
+    same_step_outputs: [f_alloc, biomass, leaf_age, leaf_frac, lai_after_alloc]
+    next_step_restart_behavior: >-
+      f_alloc feeds same-day npp_calc and allocation-mutated biomass/leaf state
+      feeds turnover and day-end state. The source-derived PFT14 stress/reserve
+      micro-case and explicit/static-JIT production composition are covered.
+    microcase: [tests/unit/test_stomate_carbon_kernels.py::test_allocation_step_matches_fortran_non_crop_pft14_stress_and_reserve_path]
+    validation_evidence: [tests/parity/test_driver_1961_orchestration.py::test_static_jit_daily_carbon_matches_explicit_paper_case_bundles]
+    status: verified
+
+  - id: stomate.active.constraints
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90
+    fortran_subroutine: constraints
+    fortran_lines: 99-246
+    condition: >-
+      Daily established PFT14 before allocation; temperature-season memories,
+      growth-init timing, and carried adaptation/regeneration state update the
+      constraints memories used by the LPJ sequence.
+    reachability: active
+    kernel: jax_orchidee.stomate.carbon_kernels.constraints_step
+    production_caller: jax_orchidee.stomate.integration.stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_explicit
+    state_inputs: [tseason, when_growthinit, adapted, regenerate, pft_present, veget_max, constraint_parameters]
+    same_step_outputs: [adapted, regenerate]
+    next_step_restart_behavior: >-
+      Updated adaptation and regeneration memories feed the same-day LPJ
+      process chain and replace their prior values in the day-end STOMATE state.
+    microcase:
+      - tests/unit/test_stomate_carbon_kernels.py::test_constraints_step_tree_growthinit_and_tseason_zero_then_memory_relaxes
+      - tests/unit/test_stomate_carbon_kernels.py::test_constraints_step_vernalization_sets_then_decays_and_can_kill_adapted
+    validation_evidence:
+      - tests/parity/test_driver_1961_orchestration.py::test_static_jit_daily_carbon_matches_explicit_paper_case_bundles
+    status: verified
+
+  - id: stomate.active.npp_growth
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90
+    fortran_subroutine: npp_calc
+    fortran_lines: 116-725
+    condition: >-
+      Daily PFT14 after allocation; GPP minus maintenance and growth
+      respiration is distributed over biomass pools using f_alloc, including
+      reserve pumping and leaf-age/SLA bookkeeping branches.
+    reachability: active
+    kernel: jax_orchidee.stomate.carbon_kernels.npp_closed_update
+    production_caller: jax_orchidee.stomate.integration.stomate_daily_carbon_kill_gap_turnover_explicit
+    state_inputs: [biomass, gpp_daily, resp_maint, f_alloc, leaf_age, leaf_frac, sla_calc, age, npp_parameters]
+    same_step_outputs: [biomass, npp_daily, resp_growth, leaf_age, leaf_frac, sla_calc, age]
+    next_step_restart_behavior: >-
+      Post-NPP biomass and age/SLA state feed mortality and turnover in source
+      order and replace prior daily/restart state; NPP and growth respiration
+      enter modelout diagnostics.
+    microcase:
+      - tests/unit/test_stomate_carbon_kernels.py::test_npp_closed_update_matches_source_algebra_with_supplied_alloc_and_maintenance
+      - tests/unit/test_stomate_carbon_kernels.py::test_npp_leaf_age_sla_age_update_matches_source_bookkeeping_for_grass
+    validation_evidence:
+      - tests/unit/test_stomate_integration.py::test_explicit_daily_carbon_adapter_matches_direct_npp_kernel
+      - tests/unit/test_stomate_integration.py::test_npp_age_sla_uses_post_maintenance_leaf_mass_for_leaf_fractions
+    status: verified
+
+  - id: stomate.active.gap_mortality
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90
+    fortran_subroutine: gap
+    fortran_lines: 117-364
+    condition: >-
+      Fixed paper STOMATE_OK_DGVM=n and LPJ_GAP_CONST_MORT=y select constant
+      mortality for the active tree PFT14; mortality transfers biomass to
+      litter before turnover, while inactive kill calls remain source-ordered.
+    reachability: active
+    kernel: jax_orchidee.stomate.carbon_kernels.gap_mortality_step
+    production_caller: jax_orchidee.stomate.integration.stomate_daily_carbon_kill_gap_turnover_explicit
+    state_inputs: [biomass, ind, bm_to_litter, pft_present, npp_longterm, turnover_longterm, lpj_gap_const_mort, is_tree]
+    same_step_outputs: [biomass, ind, bm_to_litter, mortality]
+    next_step_restart_behavior: >-
+      Mortality-mutated biomass and individual density enter turnover and the
+      day-end packet; transferred biomass enters the same-day OK_LEAK litter
+      boundary without a second transfer.
+    microcase:
+      - tests/unit/test_stomate_carbon_kernels.py::test_gap_mortality_constant_tree_mortality_updates_biomass_and_reports_daily_rate
+    validation_evidence:
+      - tests/unit/test_stomate_integration.py::test_explicit_daily_carbon_kill_gap_turnover_adapter_matches_direct_order_composition
+    status: verified
+
+  - id: stomate.active.final_lai_vmax
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90
+    fortran_subroutine: vmax
+    fortran_lines: 105-363
+    condition: >-
+      At the end of every daily PFT14 LPJ sequence, setlai derives LAI from
+      final biomass/SLA and vmax advances leaf-age classes and computes the
+      assimilation capacity consumed by later DIFFUCO steps.
+    reachability: active
+    kernel: jax_orchidee.stomate.carbon_kernels.vmax_step
+    production_caller: jax_orchidee.stomate.integration.stomate_daily_carbon_kill_gap_turnover_explicit
+    state_inputs: [final_biomass, sla_calc, leaf_age, leaf_frac, leafagecrit, pheno_type, leaf_tab, ok_laidev]
+    same_step_outputs: [lai, leaf_age, leaf_frac, vcmax]
+    next_step_restart_behavior: >-
+      Final LAI is written through SLOWPROC to the next DIFFUCO state; updated
+      leaf classes and vcmax are retained in the STOMATE daily state and
+      diagnostics.
+    microcase:
+      - tests/unit/test_stomate_carbon_kernels.py::test_vmax_step_advances_leaf_age_classes_and_computes_weighted_vcmax
+    validation_evidence:
+      - tests/unit/test_stomate_integration.py::test_stomate_daily_carbon_kill_gap_turnover_explicit_wires_setlai_and_vmax_after_cover
+    status: verified
+
+  - id: stomate.active.turnover
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90
+    fortran_subroutine: turn
+    fortran_lines: 169-947
+    condition: >-
+      Daily PFT14 after NPP and gap mortality; forcing and carried leaf-age,
+      moisture, temperature, senescence, and biomass state select leaf fall,
+      fruit, sapwood, and other turnover branches.
+    reachability: active
+    kernel: jax_orchidee.stomate.carbon_kernels.turnover_step
+    production_caller: jax_orchidee.stomate.integration.stomate_daily_carbon_kill_gap_turnover_explicit
+    state_inputs: [pft_present, herbivores, moisture_memory, temperature_memory, gdd_from_growthinit, leaf_age, leaf_frac, age, lai, biomass, senescence]
+    same_step_outputs: [biomass, leaf_age, leaf_frac, lai, turnover_daily, turnover_time]
+    next_step_restart_behavior: >-
+      Biomass and leaf classes replace post-NPP state; turnover_daily enters
+      OK_LEAK litter input and season long-term memory. Mixed senescence,
+      fruit/sapwood conversion, production order, and packet carry are covered.
+    microcase: [tests/unit/test_stomate_carbon_kernels.py::test_turnover_step_closes_tree_mixed_senescence_and_fruit_sapwood_path]
+    validation_evidence: [tests/parity/test_driver_1961_orchestration.py::test_first_day_scaffold_stops_at_previous_step_state_after_traced_first_entry]
+    status: verified
+
+  - id: stomate.active.ok_leak_litter
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90
+    fortran_subroutine: littercalc_leak
+    fortran_lines: 1637-2873
+    condition: >-
+      Fixed paper OK_LEAK=y; daily turnover, litter pools, soil moisture,
+      temperature activity, flooding, and root profile select decomposition
+      and above/below-ground litter transfer branches.
+    reachability: active
+    kernel: jax_orchidee.stomate.carbon_kernels.littercalc_leak_core_with_controls
+    production_caller: jax_orchidee.stomate.integration.stomate_ok_leak_explicit
+    state_inputs: [litter_above, litter_below, lignin_struc_above, lignin_struc_below, dead_leaves, fuel_pools, bm_to_litter, turnover, rprof, fbact_litter, soil_mc_top_by_pft]
+    same_step_outputs: [litter_above, litter_below, lignin_struc_above, lignin_struc_below, soilcarbon_input_doc, floodcarbon_input, resp_hetero_litter, fuel_pools]
+    next_step_restart_behavior: >-
+      Updated litter/lignin/fuel pools are copied into day-end and annual
+      restart state and DOC/carbon inputs feed same-day soilcarbon. The local
+      source-order composition and production writeback are both tested.
+    microcase: [tests/unit/test_stomate_integration.py::test_ok_leak_explicit_adapter_matches_manual_litter_soilcarbon_doc_chain]
+    validation_evidence: [tests/parity/test_driver_1961_orchestration.py::test_day_end_packet_carries_active_ok_leak_restart_state_fields]
+    status: verified
+
+  - id: stomate.active.ok_leak_soilcarbon
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90
+    fortran_subroutine: soilcarbon_leak
+    fortran_lines: 641-2416
+    condition: >-
+      Fixed paper OK_LEAK=y; litter carbon inputs, 32-layer carbon/DOC pools,
+      hydrologic fluxes, temperature/moisture controls, and peat/redox state
+      select decomposition, adsorption, transport, diffusion, and export paths.
+    reachability: active
+    kernel: jax_orchidee.stomate.soilcarbon_kernels.soilcarbon_leak_core_step
+    production_caller: jax_orchidee.stomate.integration.stomate_ok_leak_explicit
+    state_inputs: [carbon_32l, DOC, soilcarbon_input_doc, litter_state, fbact_doc, fbact_soilcarbon, soil_mc, wat_flux, runoff_per_soil, drainage_per_soil, runoff2peat, temperature_profile]
+    same_step_outputs: [carbon_32l, DOC, resp_hetero_soil, resp_flood_soil, doc_exp, flux_red]
+    next_step_restart_behavior: >-
+      Carbon_32l and DOC replace prior restart pools and exports feed modelout
+      and routing boundaries. Source-order decomposition, adsorption,
+      transport, diffusion, export, integration, and day-end carry are covered.
+    microcase:
+      - tests/unit/test_stomate_soilcarbon_kernels.py::test_soilcarbon_leak_decompose_poc_doc_natural_peat_pft14_branch
+      - tests/unit/test_stomate_soilcarbon_kernels.py::test_soilcarbon_leak_adsorption_desorption_matches_source_equilibrium
+      - tests/unit/test_stomate_soilcarbon_kernels.py::test_soilcarbon_leak_water_transport_matches_water_flux_branches
+      - tests/unit/test_stomate_soilcarbon_kernels.py::test_soilcarbon_leak_doc_diffusion_matches_peak_limit_and_temperature_gate
+      - tests/unit/test_stomate_soilcarbon_kernels.py::test_soilcarbon_leak_core_step_matches_explicit_source_order_composition
+      - tests/unit/test_stomate_integration.py::test_ok_leak_explicit_adapter_matches_manual_litter_soilcarbon_doc_chain
+    validation_evidence: [tests/parity/test_driver_1961_orchestration.py::test_day_end_packet_carries_active_ok_leak_restart_state_fields]
+    status: verified
+
+  - id: stomate.active.tf_doc
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90
+    fortran_subroutine: soilcarbon_leak
+    fortran_lines: 1212-1557
+    condition: >-
+      Fixed paper TF_DOC=y with nonzero precipitation-to-ground/canopy,
+      canopy interception storage, dry deposition, and DOC pools.
+    reachability: active
+    kernel: jax_orchidee.stomate.soilcarbon_kernels.soilcarbon_leak_tf_doc_ground_fluxes
+    production_caller: jax_orchidee.stomate.integration.stomate_ok_leak_explicit
+    state_inputs: [doc_precip2ground, doc_precip2canopy, dry_dep_canopy, interception_storage, canopy2ground, veget_max, flood_frac]
+    same_step_outputs: [wet_dep_ground, wet_dep_flood, interception_storage, freedoc_updates]
+    next_step_restart_behavior: >-
+      Updated interception storage and DOC pools enter the OK_LEAK day-end
+      packet and stomate restart. Nonzero deposition, source-boundary
+      derivation, and active day-end writeback are covered without a fallback.
+    microcase: [tests/unit/test_stomate_soilcarbon_kernels.py::test_tf_doc_nonzero_deposition_updates_storage_and_free_doc_pools]
+    validation_evidence: [tests/unit/test_coupled.py::test_sechiba_stomate_ok_leak_explicit_step_derives_tf_doc_from_chain_sources]
+    status: verified
+
+  - id: stomate.active.ok_leak_firstcall_active_layer
+    module: STOMATE
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90
+    fortran_subroutine: soilcarbon_leak
+    fortran_lines: 847-1100
+    condition: >-
+      First OK_LEAK soilcarbon call after executable/restart initialization;
+      initialize SAVE active-layer indices and memories from restart altmax and
+      fixed_cryoturbation_depth, then clear firstcall_soilcarbon.
+    reachability: active
+    kernel: jax_orchidee.coupled.stomate_active_layer_ok_leak_inputs
+    production_caller: jax_orchidee.driver.orchestration.paper_1961_next_step_runtime_result
+    state_inputs: [firstcall_soilcarbon, dayno, restart_altmax, restart_fixed_cryoturbation_depth, tprof, zi_soil, veget_mask]
+    same_step_outputs: [altmax, altmax_ind, altmax_lastyear, altmax_ind_lastyear, fixed_cryoturbation_depth]
+    next_step_restart_behavior: >-
+      Day one derives active-layer SAVE state from restart; later days update
+      maxima without reinitialization. Driver day numbering, local initialize
+      and update masks, boundary composition, and day-end altmax carry are covered.
+    microcase: [tests/unit/test_coupled.py::test_stomate_active_layer_ok_leak_inputs_initializes_and_updates_fortran_mask]
+    validation_evidence:
+      - tests/unit/test_coupled.py::test_sechiba_stomate_ok_leak_explicit_step_derives_active_layer_boundary
+      - tests/parity/test_driver_1961_orchestration.py::test_day_end_packet_carries_active_ok_leak_restart_state_fields
+    status: verified

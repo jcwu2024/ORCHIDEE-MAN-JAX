@@ -1,0 +1,79 @@
+schema_version: 1
+scope: >-
+  Third-batch interpolation closure for interpweight_4D and
+  interpweight_2Dcont. Arm counts are the pft14_active and pft14_conditional
+  dispositions in pft14_arm_dispositions_infrastructure.yaml.
+
+totals:
+  procedures: 2
+  arms: 137
+  interpweight_4D_arms: 71
+  interpweight_2Dcont_arms: 66
+
+contracts:
+  geometry_boundary: >-
+    Routed owners accept InterpolationTarget and an AggregateRequest to
+    AggregatePacket callback. They forward target geometry, expanded source
+    coordinates, the shared mask, source rank, callsign, and current nbvmax to
+    aggregate_p, then consume its one-based overlap packet. Polygon mechanics
+    remain in the existing geometry owner, but scientific routing is not moved
+    to the caller.
+  resolution_and_retry: >-
+    interpweight_4D uses explicit max resolutions only when both differ from
+    -1; otherwise it computes source resolution. It applies max(nix*njx, 200).
+    interpweight_2Dcont always computes source resolution and has no 200 floor.
+    Both owners double nbvmax and reissue the complete aggregate request until
+    AggregatePacket.ok is true.
+  rank_and_time: >-
+    Rank-4 initime selection is positional and Fortran one-based. initime <= 0
+    selects record 1, initime > tml selects tml, and initime == -1 reads the
+    complete contiguous time extent. Calendar and coordinate labels are carried
+    without changing record selection. Rank paths that reach the source's
+    unallocated invar4D/invar2D calls raise FortranUndefinedInputError.
+  shared_mask: >-
+    One rank-2 mask is shared by all levels and times. interpweight_4D preserves
+    unwritten ALLOCATE(mask) cells as UNDEFINED_MASK; interpweight_2Dcont starts
+    them at zero as required by line 2101. Only mask == 1 enters overlap output.
+  numerical_oracle: >-
+    tests/unit/test_interpolation_core4cont.py compiles source-extracted gfortran
+    loops for initime record selection, 4-D fractions, and 2-D continuous
+    interpolation. The Windows oracle prepends C:/msys64/ucrt64/bin to PATH and
+    checks both compile and execution return codes.
+
+entries:
+  - id: global.interpweight.interpweight_4D
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90
+    fortran_subroutine: interpweight_4D
+    fortran_lines: 1378-1806
+    status: implemented
+    jax_owner: jax_orchidee.driver.interpolation_core4cont.interpweight_4d_routed
+    gap: null
+    arm_count: 71
+    state_contract:
+      - jax_orchidee.driver.interpolation_core4cont.Interpweight4DResult
+      - jax_orchidee.driver.interpolation_core4cont.TimeSelection
+      - jax_orchidee.driver.interpolation_core4cont.FortranUndefinedInputError
+      - jax_orchidee.driver.interpolation_core4cont.UNDEFINED_MASK
+      - jax_orchidee.driver.interpolation_core12.InterpolationSource
+      - jax_orchidee.driver.interpolation_core12.InterpolationTarget
+      - jax_orchidee.driver.interpolation_core12.AggregateRequest
+      - jax_orchidee.driver.interpolation_core12.AggregatePacket
+    validation: [tests/unit/test_interpolation_core4cont.py]
+
+  - id: global.interpweight.interpweight_2Dcont
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90
+    fortran_subroutine: interpweight_2Dcont
+    fortran_lines: 1824-2233
+    status: implemented
+    jax_owner: jax_orchidee.driver.interpolation_core4cont.interpweight_2dcont_routed
+    gap: null
+    arm_count: 66
+    state_contract:
+      - jax_orchidee.driver.interpolation_core4cont.InterpolationCoreResult
+      - jax_orchidee.driver.interpolation_core4cont.TimeSelection
+      - jax_orchidee.driver.interpolation_core4cont.FortranUndefinedInputError
+      - jax_orchidee.driver.interpolation_core12.InterpolationSource
+      - jax_orchidee.driver.interpolation_core12.InterpolationTarget
+      - jax_orchidee.driver.interpolation_core12.AggregateRequest
+      - jax_orchidee.driver.interpolation_core12.AggregatePacket
+    validation: [tests/unit/test_interpolation_core4cont.py]

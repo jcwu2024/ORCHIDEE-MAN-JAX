@@ -1,0 +1,20 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ implicit none;integer,parameter::i_std=int32,r_std=real64
+end module
+module condveg_finalize_oracle
+ use defprec;implicit none
+ integer,parameter::npts=2,nbp_glo=2,nvm=14;integer::index_g(2)=(/1,2/),oracle_unit=-1
+ logical::alb_bg_modis=.true.;real(r_std)::soilalb_bg(npts,2),soilalb_dry(npts,2),soilalb_wet(npts,2),soilalb_moy(npts,2)
+ interface restput_p;module procedure put1,put2;end interface
+contains
+ subroutine put1(id,name,d1,d2,d3,kjit,a,scatter,nbp,index);integer,intent(in)::id,d1,d2,d3,kjit,nbp,index(:);character(*),intent(in)::name,scatter;real(r_std),intent(in)::a(:);integer::i;do i=1,size(a);write(oracle_unit,'(a,a,i0,a,es25.17)')trim(name),',',i-1,',',a(i);enddo;end subroutine
+ subroutine put2(id,name,d1,d2,d3,kjit,a,scatter,nbp,index);integer,intent(in)::id,d1,d2,d3,kjit,nbp,index(:);character(*),intent(in)::name,scatter;real(r_std),intent(in)::a(:,:);integer::i,j,q;q=0;do i=1,size(a,1);do j=1,size(a,2);write(oracle_unit,'(a,a,i0,a,es25.17)')trim(name),',',q,',',a(i,j);q=q+1;enddo;enddo;end subroutine
+! <CONDVEG_FINALIZE>
+end module
+program driver
+ use defprec;use condveg_finalize_oracle;implicit none
+ real(r_std)::z0m(2)=(/.1,.2/),z0h(2)=(/.01,.02/),rough(2)=(/1.,2./),roughp(2,14);integer::i,j;character(512)::path
+ do i=1,2;do j=1,14;roughp(i,j)=10*i+.1*j;enddo;enddo;soilalb_bg=reshape((/.11,.21,.12,.22/),(/2,2/))
+ call get_command_argument(1,path);open(newunit=oracle_unit,file=trim(path),status='replace');write(oracle_unit,'(a)')'field,flat_index,value';call condveg_finalize(17,2,4,z0m,z0h,rough,roughp);close(oracle_unit)
+end program

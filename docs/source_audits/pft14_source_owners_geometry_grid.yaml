@@ -1,0 +1,114 @@
+schema_version: 1
+scope: >-
+  Batch-2 source owners for the nine grid.f90 procedures and 70 reachable
+  control-flow arms needed by independent landpoint and variable regular
+  forcing-grid workflows. RegXY geometry is composed from the independently
+  owned geometry_haversine and geometry_llxy numerical kernels with explicit
+  projection and dx/dy inputs. MPI transport remains an infrastructure
+  boundary; no scientific approximation is claimed for it.
+
+entries:
+  - id: geometry_grid.grid_init
+    fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90
+    fortran_subroutine: grid_init
+    fortran_lines: 207-328
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_grid.grid_init
+    gap: null
+    arm_count: 32
+    state_contract: [jax_orchidee.driver.geometry_grid.GridState]
+    validation: [tests/unit/test_geometry_grid.py]
+
+  - id: geometry_grid.grid_set_glo
+    fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90
+    fortran_subroutine: grid_set_glo
+    fortran_lines: 344-353
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_grid.grid_set_glo
+    gap: null
+    arm_count: 2
+    state_contract: [jax_orchidee.driver.geometry_grid.GlobalGridState]
+    validation: [tests/unit/test_geometry_grid.py]
+
+  - id: geometry_grid.grid_allocate_glo
+    fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90
+    fortran_subroutine: grid_allocate_glo
+    fortran_lines: 367-400
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_grid.grid_allocate_glo
+    gap: null
+    arm_count: 2
+    state_contract: [jax_orchidee.driver.geometry_grid.GlobalGridState]
+    validation: [tests/unit/test_geometry_grid.py]
+
+  - id: geometry_grid.grid_stuff
+    fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90
+    fortran_subroutine: grid_stuff
+    fortran_lines: 416-470
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_grid.grid_stuff
+    gap: null
+    arm_count: 2
+    infrastructure_boundary: MPI root/scatter/broadcast requires an external backend; the serial identity contract is implemented.
+    state_contract: [jax_orchidee.driver.geometry_grid.GridState]
+    validation: [tests/unit/test_geometry_grid.py]
+
+  - id: geometry_grid.grid_topolylist
+    fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90
+    fortran_subroutine: grid_topolylist
+    fortran_lines: 490-631
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_grid.grid_topolylist
+    gap: null
+    arm_count: 22
+    dependency_contract: RegXY requires explicit ProjectionInfo, one-based ij_to_latlon, dxwrf, and dywrf inputs; UnStruct follows the source STOP branch and is rejected.
+    state_contract: [jax_orchidee.driver.geometry_grid.PolygonList]
+    validation: [tests/unit/test_geometry_grid.py]
+
+  - id: geometry_grid.grid_scatter
+    fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90
+    fortran_subroutine: grid_scatter
+    fortran_lines: 663-718
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_grid.grid_scatter
+    gap: null
+    arm_count: 4
+    infrastructure_boundary: Multi-rank scatter/gather is rejected unless an MPI backend is supplied; no scientific formula replaces it.
+    state_contract: [jax_orchidee.driver.geometry_grid.GridState]
+    validation: [tests/unit/test_geometry_grid.py]
+
+  - id: geometry_grid.grid_toij_scal
+    fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90
+    fortran_subroutine: grid_toij_scal
+    fortran_lines: 1047-1063
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_grid.grid_toij_scal
+    gap: null
+    arm_count: 2
+    infrastructure_boundary: module_llxy projection formulas are injected through the LatLonToIJ one-based adapter contract.
+    state_contract: [jax_orchidee.driver.geometry_grid.LatLonToIJ]
+    validation: [tests/unit/test_geometry_grid.py]
+
+  - id: geometry_grid.grid_toij_1d
+    fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90
+    fortran_subroutine: grid_toij_1d
+    fortran_lines: 1067-1089
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_grid.grid_toij_1d
+    gap: null
+    arm_count: 2
+    infrastructure_boundary: module_llxy projection formulas are injected through the LatLonToIJ one-based adapter contract.
+    state_contract: [jax_orchidee.driver.geometry_grid.LatLonToIJ]
+    validation: [tests/unit/test_geometry_grid.py]
+
+  - id: geometry_grid.grid_toij_2d
+    fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90
+    fortran_subroutine: grid_toij_2d
+    fortran_lines: 1093-1118
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_grid.grid_toij_2d
+    gap: null
+    arm_count: 2
+    infrastructure_boundary: module_llxy projection formulas are injected through the LatLonToIJ one-based adapter contract.
+    state_contract: [jax_orchidee.driver.geometry_grid.LatLonToIJ]
+    validation: [tests/unit/test_geometry_grid.py]

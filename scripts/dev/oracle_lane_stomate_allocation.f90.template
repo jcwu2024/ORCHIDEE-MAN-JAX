@@ -1,0 +1,47 @@
+module defprec;implicit none;integer,parameter::i_std=kind(1),r_std=selected_real_kind(12,300);end module
+module constantes
+ use defprec;implicit none
+ real(r_std),parameter::zero=0.,un=1.,deux=2.,trois=3.,undemi=.5,ZeroCelsius=273.15,min_stomate=0.,max_possible_lai=10.
+ real(r_std)::reserve_time_cut=20.,lai_happy_cut=.25,tau_leafinit_cut=10.,reserve_time_tree=30.,reserve_time_grass=20.,f_fruit=.1,alloc_sap_above_grass=1.,z_nitrogen=.2,Nlim_tref=25.,Nlim_Q10=10.,min_LtoLSR=.2,max_LtoLSR=.6
+ logical::ok_minres=.false.;integer::printlev=0,numout=6
+contains
+ subroutine ipslerr_p(a,b,c,d,e);integer,intent(in)::a;character(*),intent(in)::b,c,d,e;stop 2;end
+end module
+module constantes_soil
+ use defprec;implicit none;integer,parameter::nslm=2;real(r_std)::diaglev(2)=(/1.,2./)
+end module
+module stomate_data
+ use defprec;implicit none
+ integer,parameter::nvm=14,nparts=12,nelements=1,nleafages=4,ileaf=1,isapabove=2,isapbelow=3,iroot=6,ifruit=7,icarbres=8,iagrsapst=9,iagrsappn=10,icarbon=1
+ integer::hist_id_stomate=0,itime=0,horipft_index=0
+end module
+module pft_parameters
+ use defprec;implicit none
+ logical::natural(14),pasture(14),is_tree(14),ok_LAIdev(14),is_grassland_manag(14)
+ real(r_std)::R0(14),S0(14),L0(14),tau_leafinit(14),ext_coeff(14),lai_max(14),lai_max_to_happy(14),ecureuil(14),alloc_min(14),alloc_max(14),demi_alloc(14),alloc_agr_st(14),alloc_agr_pn(14)
+end module
+module ioipsl_para
+ use defprec
+ interface histwrite_p;module procedure h2,h3,h4;end interface
+contains
+ subroutine h2(a,b,c,x,d,e);integer,intent(in)::a,c,d,e;character(*),intent(in)::b;real(r_std),intent(in)::x(:,:);end
+ subroutine h3(a,b,c,x,d,e);integer,intent(in)::a,c,d,e;character(*),intent(in)::b;real(r_std),intent(in)::x(:,:,:);end
+ subroutine h4(a,b,c,x,d,e);integer,intent(in)::a,c,d,e;character(*),intent(in)::b;real(r_std),intent(in)::x(:,:,:,:);end
+end module
+module alloc_oracle
+ use ioipsl_para;use pft_parameters;use stomate_data;use constantes;use constantes_soil
+ implicit none;logical,save::firstcall_alloc=.true.
+contains
+! <ALLOC_PROCEDURE>
+end module
+program main
+ use defprec;use stomate_data;use pft_parameters;use constantes_soil;use alloc_oracle
+ implicit none
+ integer::u,i,j,k,m;character(len=1024)::out;logical::sen(5,nvm)
+ real(r_std)::lai(5,nvm),veg(5,nvm),wg(5,nvm),mw(5,nvm),ts(5,nslm),sh(5,nslm),bio(5,nvm,nparts,1),age(5,nvm),la(5,nvm,nleafages),lf(5,nvm,nleafages),rp(5,nvm),fa(5,nvm,nparts),di(5,nvm),ss(5,nvm),sl(5,nvm),wgc(5,nvm)
+ call get_command_argument(1,out);natural=.false.;pasture=.false.;is_tree=.false.;ok_LAIdev=.false.;is_grassland_manag=.false.;R0=.35;S0=.35;tau_leafinit=10.;ext_coeff=.5;lai_max=12.;lai_max_to_happy=.5;ecureuil=0.;alloc_min=.2;alloc_max=.8;demi_alloc=100.;alloc_agr_st=0.;alloc_agr_pn=0.;alloc_agr_st(14)=.25;alloc_agr_pn(14)=.05
+ natural(14)=.true.;is_tree(14)=.true.;lai=0.;lai(:,14)=(/.4,0.,20.,.4,.4/);veg=0.;veg(:,14)=1.;sen=.false.;sen(4,14)=.true.;wg=5.;mw=.7;ts(:,1)=283.15;ts(:,2)=293.15;sh(:,1)=.4;sh(:,2)=.8;bio=0.;bio(:,14,ileaf,1)=(/10.,0.,10.,10.,10./);bio(:,14,iroot,1)=5.;bio(:,14,icarbres,1)=(/100.,0.,100.,100.,2000./);age=0.;la=0.;do i=1,5;la(i,14,:)=(/20.,30.,40.,50./);end do;lf=0.;lf(:,14,:)=.25;rp=0.;fa=0.;di=0.;ss=1.;sl=.02;wgc=100.
+ call alloc(5,1._r_std,lai,veg,sen,wg,mw,ts,sh,bio,age,la,lf,rp,fa,di,ss,sl,wgc)
+ call alloc(5,1._r_std,lai,veg,sen,wg,mw,ts,sh,bio,age,la,lf,rp,fa,di,ss,sl,wgc)
+ open(newunit=u,file=trim(out),status='replace');write(u,'(A)')'field,value';do j=1,nvm;do i=1,5;do k=1,nparts;write(u,'(A,",",ES26.17)')'biomass',bio(i,j,k,1);write(u,'(A,",",ES26.17)')'f_alloc',fa(i,j,k);end do;do m=1,nleafages;write(u,'(A,",",ES26.17)')'leaf_age',la(i,j,m);write(u,'(A,",",ES26.17)')'leaf_frac',lf(i,j,m);end do;end do;end do;close(u)
+end program

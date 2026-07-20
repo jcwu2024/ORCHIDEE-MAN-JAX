@@ -1,0 +1,203 @@
+schema_version: 1
+records:
+- ledger_entry: slowproc.active.daily_surface_writeback
+  oracle_family: driver_slowproc_daily
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/slowproc.py
+    symbol: slowproc_surface_transition_explicit
+    start_line: 1164
+    end_line: 1249
+    file_sha256: 3d19ecf3bbdd2b6d1c4a10452d4aa0f2b6adb85cb1503c7f9726adec8b8aee26
+    span_sha256: cad88ebd4053f571d5a670995b0ba8c61687f26e4f088edd1a8506a22584f25b
+  callsites:
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: _paper_day_slowproc_surface_update
+    start_line: 7021
+    end_line: 7055
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 4016309b9651aaec16c2c842f9c6a909516728046e515d43370a1de58d0352e8
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: _paper_day_end_state_packet
+    start_line: 7924
+    end_line: 7981
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 4997e3415ac5a6ca678bcf47345501d19e22c0ddb49cd23be680b122ee7829e6
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_driver_cold_start_day_scaffold
+    start_line: 9757
+    end_line: 9975
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 7db300a362f3600bfd3c9a5464c7f3c15172a569320bfab4b8446c15d6517c53
+  contracts:
+    inputs:
+    - do_slow
+    - lai
+    - frac_nobio
+    - veget_max
+    - veget
+    - soiltile
+    - stomate_daily_state
+    outputs:
+    - lai
+    - veget_max
+    - veget
+    - soiltile
+    - qsintmax
+    - tot_bare_soil
+    state_writeback:
+    - lai
+    - veget_max
+    - veget
+    - soiltile
+    - qsintmax
+    - tot_bare_soil
+  oracle_case_ids:
+  - all_stage3_branch_cases
+  comparison_asset: outputs/reference_mode/production/lifecycle/comparison.json
+- ledger_entry: restart.active.day_and_year_handoff
+  oracle_family: restart_writer_handoff_strict
+  status: verified
+  production_owner:
+    file: jax_orchidee/driver/orchestration.py
+    symbol: _paper_day_end_state_packet
+    start_line: 7924
+    end_line: 7981
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 4997e3415ac5a6ca678bcf47345501d19e22c0ddb49cd23be680b122ee7829e6
+  callsites:
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: _paper_day_end_state_packet
+    start_line: 7924
+    end_line: 7981
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 4997e3415ac5a6ca678bcf47345501d19e22c0ddb49cd23be680b122ee7829e6
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: rebase_driver_state_for_year_start
+    start_line: 2408
+    end_line: 2442
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: a1cc16bd7bfa7eeb340d413b4b01a5feec68023013e80976698df88229e3c50a
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_driver_restart_year_start_day_result
+    start_line: 9394
+    end_line: 9451
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 64867833add6a7adbabc9e4cde9fc897549ae926296447489d8d7fd2c82b0f01
+  - file: jax_orchidee/driver/restart_export.py
+    symbol: stomate_restart_states_from_day_end_packet
+    start_line: 54
+    end_line: 108
+    file_sha256: 4bbe0c75579127c4e27f520804c8eda939f101832ec1dedac7e2352304efa54f
+    span_sha256: ecc6c00644625ac4e9018177ec76152a3db3d98e2558692021c7aa382bf76784
+  contracts:
+    inputs:
+    - last_half_hour_state
+    - stomate_day_state
+    - daily_accumulators
+    - season_memory
+    - hydrol_state
+    - thermosoil_state
+    outputs:
+    - day_end_state_packet
+    - sechiba_component_state
+    - stomate_component_state
+    state_writeback:
+    - day_end_state_packet
+    - sechiba_component_state
+    - stomate_component_state
+  oracle_case_ids:
+  - all_stage3_branch_cases
+  comparison_asset: outputs/reference_mode/production/lifecycle/comparison.json
+- ledger_entry: modelout.active.paper_history_formula
+  oracle_family: driver_modelout_history
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/modelout.py
+    symbol: compute_modelout_from_fields
+    start_line: 273
+    end_line: 307
+    file_sha256: 849080b2f1c36fe1a252b71991544c3875e2f79529e32479b934296836e06f49
+    span_sha256: cc28987c3f0d048ebd8c2641b498bb521f19fb6aa737b19fcb743044d0f1a4db
+  callsites:
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: _driver_modelout_from_outputs
+    start_line: 2180
+    end_line: 2195
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 6619b12c1927a97f2c8ef9ab7764929c621bb34d3122c938e6a74de9a6a2e4f3
+  - file: jax_orchidee/stomate/modelout.py
+    symbol: annual_history_mean_fields_from_daily_modelout
+    start_line: 310
+    end_line: 369
+    file_sha256: 849080b2f1c36fe1a252b71991544c3875e2f79529e32479b934296836e06f49
+    span_sha256: 44d9ce7d59d9f1e989a444e888a3c7268f7bde15e174810ace95798daa740ebb
+  contracts:
+    inputs:
+    - biomass
+    - gpp_daily
+    - npp_daily
+    - yearly_average_contract
+    outputs:
+    - LEAF_M
+    - SAP_M_AB
+    - HEART_M_AB
+    - AGR_SAP_ST_M
+    - AGR_HRT_ST_M
+    - AGR_SAP_PN_M
+    - AGR_HRT_PN_M
+    - SAP_M_BE
+    - HEART_M_BE
+    - ROOT_M
+    - GPP
+    - NPP
+    - AGB_model
+    - BGB_model
+    state_writeback: []
+    no_state_writeback_reason: Modelout is diagnostic and does not modify prognostic
+      state.
+  oracle_case_ids:
+  - all_stage3_branch_cases
+  comparison_asset: outputs/reference_mode/production/lifecycle/comparison.json
+- ledger_entry: sechiba.active.module_order
+  oracle_family: driver_sechiba_module_order
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/sechiba_step.py
+    symbol: sechiba_explicit_coupled_step_from_local_diffuco
+    start_line: 262
+    end_line: 297
+    file_sha256: 445ef03a4143b575abf58ceb01b3795de37acc718befc2c98a2fcf15771fe0e3
+    span_sha256: 34b18bc60ac0d8e5470e8364fa8b2baaf4c1538649966c195766531744a62059
+  callsites:
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_runtime_result
+    start_line: 5986
+    end_line: 6071
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: cc6974ee39e674937292199fbdb4b1ee36d9124d81a214bef373cdc68a505f18
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_driver_later_day_scaffold
+    start_line: 8223
+    end_line: 8508
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 504df84e0f59320966766e434bc0b8fb68b3eb5af7a06a3dc4807926d00c3c4a
+  contracts:
+    inputs:
+    - previous_step_state
+    - forcing
+    - static_context
+    - diffuco_local
+    outputs:
+    - enerbil
+    - hydrol
+    - condveg
+    - thermosoil
+    state_writeback:
+    - enerbil
+    - hydrol
+    - condveg
+    - thermosoil
+  oracle_case_ids:
+  - all_stage3_branch_cases
+  comparison_asset: outputs/reference_mode/production/lifecycle/comparison.json

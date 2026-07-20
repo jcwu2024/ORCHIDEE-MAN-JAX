@@ -1,0 +1,19 @@
+from __future__ import annotations
+import hashlib,json,subprocess,tempfile,sys
+from pathlib import Path
+ROOT=Path(__file__).resolve().parents[2];sys.path.insert(0,str(ROOT))
+from scripts.dev.extract_fortran_micro_oracle import extract_source_fragments
+from scripts.dev.fortran_oracle_common import DEFAULT_COMPILER,compile_fortran,compiler_environment
+SOURCE=ROOT/'fortran_source/ORCHIDEE/src_sechiba/diffuco.f90';TEMPLATE=ROOT/'scripts/dev/diffuco_batch_c_main_output.f90.template';OUT=ROOT/'outputs/reference_mode/micro_oracles/diffuco_batch_c/main_output'
+OUT.mkdir(parents=True,exist_ok=True);span=extract_source_fragments(SOURCE,['714-748'])
+with tempfile.TemporaryDirectory(prefix='di_main_output_') as d:
+ p=Path(d);src=p/'oracle.f90';src.write_bytes(TEMPLATE.read_bytes().replace(b'! <OUTPUT_FRAGMENT>',span.span_bytes));OUT.joinpath('oracle.f90').write_bytes(src.read_bytes());command=[str(DEFAULT_COMPILER),'-std=f2008','-fdefault-real-8','-ffree-line-length-none','-O0','-fprofile-arcs','-ftest-coverage',str(src),'-o',str(p/'oracle.exe')];built=subprocess.run(command,cwd=p,env=compiler_environment(DEFAULT_COMPILER),text=True,capture_output=True);OUT.joinpath('compile.json').write_text(json.dumps({'stderr':built.stderr},indent=2));built.check_returncode();meta={'command':command,'stderr':built.stderr};out=OUT/'fortran_outputs.txt';subprocess.run([str(p/'oracle.exe'),str(out.resolve())],cwd=p,env=compiler_environment(DEFAULT_COMPILER),check=True);g=subprocess.run([str(DEFAULT_COMPILER.parent/'gcov.exe'),'-b',str(src)],cwd=p,text=True,capture_output=True,check=True);(OUT/'oracle.f90.gcov').write_text((p/'oracle.f90.gcov').read_text(),encoding='utf8')
+rows=out.read_text(encoding='ascii').splitlines();required={'xios,q_cdrag','xios,cdrag_pft','xios,raero','xios,wind','xios,qsatt','hist,raero','hist,cdrag','hist,cdrag_pft','hist,Wind','hist,qsatt','hist,cim','hist,control_salinity','hist,control_inudate'}
+import numpy as np
+from jax_orchidee.sechiba.diffuco import diffuco_main_source_routed
+nvm=14; z=np.ones(1); p=np.zeros((1,nvm)); p[:,13]=.5
+routed=diffuco_main_source_routed(ldq_cdrag_from_gcm=True,drag_inputs={'u':z,'v':z,'q_cdrag':z*.1,'nvm':nvm,'zlev':z*10,'z0m':z*.1,'z0h':z*.1,'roughheight':z,'roughheight_pft':np.ones((1,nvm)),'temp_sol':z*290,'temp_sol_pft':np.ones((1,nvm))*290,'temp_air':z*290,'qsurf':z*.006,'qair':z*.005,'snow':z*0},pb=z*1000,temp_sol=z*290,ok_co2=False,trans_inputs={'swnet':z*100,'temp_air':z*290,'pb':z*1000,'qair':z*.005,'rau':z*1.2,'u':z,'v':z,'humrel':p+.5,'veget':p,'veget_max':p,'lai':p+1,'qsintveg':p,'qsintmax':p+.3,'rstruct':np.ones((1,nvm))*50,'vbeta23':p,'kzero':np.ones(nvm)*.01,'rveg_pft':np.ones(nvm)})
+jax_names={'xios,'+name for name,_ in routed.xios};jax_names|={'hist,'+name for name,_ in routed.history_primary};jax_names|={'hist,'+name for name,_ in routed.history_secondary}
+comparison={'name':'transport_field_selection','comparison':'exact_field_names','fortran':sorted(set(rows)),'jax':sorted(jax_names),'passed':jax_names <= set(rows)}
+result={'schema_version':2,'family':'diffuco_batch_c_main_output','status':'passed' if required<=set(rows) and comparison['passed'] else 'failed','comparisons':[comparison],'source_span_sha256':span.span_sha256,'build':meta,'gcov_artifact':'oracle.f90.gcov','gcov_stdout':g.stdout,'fortran_transport_records':rows,'required_transport_records':sorted(required),'measured_source_arm_ids':['fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:726:if:true','fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:728:if:true','fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:734:if:true','fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:736:if:false']}
+(OUT/'comparison.json').write_text(json.dumps(result,indent=2)+'\n',encoding='ascii');print(json.dumps(result,indent=2));raise SystemExit(0 if result['status']=='passed' else 1)

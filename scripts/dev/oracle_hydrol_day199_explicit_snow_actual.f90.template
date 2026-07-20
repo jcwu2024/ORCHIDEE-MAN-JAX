@@ -1,0 +1,57 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ implicit none;integer,parameter::i_std=int32,r_std=real64
+end module
+module explicit_snow_actual
+ use defprec;implicit none
+ integer,parameter::nsnow=3,nnobio=1,iice=1,numout=6
+ real(r_std),parameter::zero=0._r_std,un=1._r_std,deux=2._r_std,trois=3._r_std,undemi=.5_r_std
+ real(r_std),parameter::tp_00=273.15_r_std,min_sechiba=1.e-8_r_std,one_day=86400._r_std,dt_sechiba=1800._r_std
+ real(r_std),parameter::xci=2106._r_std,chalfu0=333600._r_std,ph2o=1000._r_std,cte_grav=9.80665_r_std
+ real(r_std),parameter::chalsu0=2.8345e6_r_std,chalev0=2.5008e6_r_std,xrv=6.0221367e23_r_std*1.380658e-23_r_std/18.0153e-3_r_std
+ real(r_std),parameter::min_wind=.1_r_std,xrhosmin=50._r_std,xrhosmax=750._r_std,xsnowdmin=1.e-6_r_std
+ real(r_std),parameter::snowfall_a_sn=109._r_std,snowfall_b_sn=6._r_std,snowfall_c_sn=26._r_std,dgrain_new_max=2.e-4_r_std
+ real(r_std),parameter::zsnowrad_agrain=1.6e-4_r_std,zsnowrad_bgrain=1.1e-13_r_std,zdgrain_max=2.796e-3_r_std
+ real(r_std),parameter::xwsnowholdmax1=.03_r_std,xwsnowholdmax2=.10_r_std,xsnowrhohold=200._r_std
+ real(r_std),parameter::xsnowcritd=.03_r_std,zsnowtrans=.20_r_std,zsgcoef1(nsnow)=(/.25_r_std,.50_r_std,.25_r_std/),zsgcoef2(2)=(/.05_r_std,.34_r_std/)
+ real(r_std),parameter::ztheta_crit=.02_r_std,zc1_ice=8.047e9_r_std,zc1_liq=5.726e8_r_std,zdeos=.92e-4_r_std,zg1=5.e-7_r_std,zg2=4.e-12_r_std,ztheta_w=.05_r_std,ztheta_crit_w=.14_r_std,zdzmin=.01_r_std
+ real(r_std),parameter::zsnowcmpct_rhod=150._r_std,zsnowcmpct_acm=2.8e-6_r_std,zsnowcmpct_bcm=.04_r_std,zsnowcmpct_ccm=460._r_std,zsnowcmpct_v0=3.7e7_r_std,zsnowcmpct_vt=.081_r_std,zsnowcmpct_vr=.018_r_std
+ real(r_std),parameter::snowcri=1.5_r_std,maxmass_snow=3000._r_std,max_snow_age=50._r_std,snow_trans=.2_r_std
+ integer::printlev=0
+ interface xios_orchidee_send_field
+  module procedure xios_1d,xios_2d
+ end interface
+contains
+ subroutine ipslerr_p(level,a,b,c,d)
+  integer,intent(in)::level;character(*),intent(in)::a,b,c,d
+  if(level>=3)error stop 'ipslerr_p'
+ end subroutine
+ subroutine xios_1d(name,field)
+  character(*),intent(in)::name;real(r_std),intent(in)::field(:)
+ end subroutine
+ subroutine xios_2d(name,field)
+  character(*),intent(in)::name;real(r_std),intent(in)::field(:,:)
+ end subroutine
+! <THERMO_FUNCTIONS>
+! <SNOW_PROCEDURES>
+end module
+program explicit_snow_actual_driver
+ use defprec;use explicit_snow_actual;implicit none
+ integer,parameter::n=48
+ integer::iu,ou
+ real(r_std)::rain(n),fall(n),tair(n),pb(n),u(n),v(n),ts(n),cap(n),pg(n),frac(n,nnobio),totnb(n),gtemp(n),lambda(n),cs(n,nsnow),ds(n,nsnow)
+ real(r_std)::evap(n),age(n),nbage(n,nnobio),nb(n,nnobio),rho(n,nsnow),grain(n,nsnow),dz(n,nsnow),st(n,nsnow),heat(n,nsnow),snow(n),tadd(n),liq(n,nsnow),subnb(n,nnobio),gflux(n),melt(n),totm(n),resid(n),sink(n)
+ character(1024)::input_path,output_path
+ call get_command_argument(1,input_path);call get_command_argument(2,output_path)
+ open(newunit=iu,file=trim(input_path),access='stream',form='unformatted',status='old',action='read')
+ read(iu)rain;read(iu)fall;read(iu)tair;read(iu)pb;read(iu)u;read(iu)v;read(iu)ts;read(iu)cap;read(iu)pg
+ read(iu)frac;read(iu)totnb;read(iu)gtemp;read(iu)lambda;read(iu)cs;read(iu)ds;read(iu)evap;read(iu)age
+ read(iu)nbage;read(iu)nb;read(iu)rho;read(iu)grain;read(iu)dz;read(iu)st;read(iu)heat;read(iu)snow
+ read(iu)tadd;read(iu)liq;read(iu)subnb;read(iu)gflux;read(iu)melt;read(iu)resid;close(iu)
+ sink=zero
+ call explicitsnow_main(n,rain,fall,tair,pb,u,v,ts,cap,pg,frac,totnb,gtemp,lambda,cs,ds,evap,age,nbage,nb,rho,grain,dz,st,heat,snow,tadd,liq,subnb,gflux,melt,totm,resid,sink)
+ open(newunit=ou,file=trim(output_path),access='stream',form='unformatted',status='replace',action='write')
+ write(ou)snow;write(ou)dz;write(ou)rho;write(ou)st;write(ou)heat;write(ou)liq;write(ou)grain;write(ou)age
+ write(ou)nb;write(ou)nbage;write(ou)evap;write(ou)subnb;write(ou)sink;write(ou)gflux;write(ou)melt;write(ou)totm;write(ou)tadd
+ close(ou)
+end program

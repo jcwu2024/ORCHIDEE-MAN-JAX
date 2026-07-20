@@ -1,0 +1,209 @@
+program slowproc_initialize_owner_oracle
+  implicit none
+  integer, parameter :: i_std=4, r_std=8, kjpij=1, kjpindex=1, nvm=14, nnobio=1, nstm=6
+  integer, parameter :: npco2=1, ndeep=1, nleafages=4, nparts=1, nelements=1, nlitt=1, ncarb=1, ndoc=1, npool=1, itimetide=3
+  real(r_std), parameter :: zero=0._r_std, un=1._r_std, one_day=86400._r_std
+  integer :: unit_out, current_case=0, numout=6
+  real(r_std) :: dt_stomate=86400._r_std, dt_sechiba=1800._r_std, qsintcst=0.1_r_std
+  logical :: ok_stomate=.true.
+  call run
+contains
+  subroutine run
+    open(newunit=unit_out, file=trim(command_argument()), status="replace", action="write")
+    call initialize_case("active_")
+    close(unit_out)
+  end subroutine
+
+  subroutine initialize_case(prefix)
+    character(len=*), intent(in) :: prefix
+    integer :: kjit=1, rest_id=1, rest_id_stom=2, hist_id_stom=3, hist_id_stom_ipcc=4
+    integer :: indexland(kjpindex), indexveg(kjpindex*nvm), njsc(kjpindex), lcanop, veget_update, veget_year, neighbours(kjpindex,1)
+    real(r_std) :: date0=0._r_std, dt_days, totfrac_nobio(kjpindex), tot_bare_soil(kjpindex), deadleaf_cover(kjpindex), temp_growth(kjpindex)
+    real(r_std) :: lalo(kjpindex,2), resolution(kjpindex,2), contfrac(kjpindex), soiltile(kjpindex,nstm), reinf_slope(kjpindex), t2m(kjpindex)
+    real(r_std) :: lai(kjpindex,nvm), height(kjpindex,nvm), veget(kjpindex,nvm), veget_max(kjpindex,nvm), assim_param(kjpindex,nvm,npco2), qsintmax(kjpindex,nvm)
+    real(r_std) :: frac_nobio(kjpindex,nnobio), frac_age(kjpindex,nvm,nleafages), co2_flux(kjpindex,nvm), altmax(kjpindex,nvm), fpeat(kjpindex)
+    real(r_std) :: fco2_lu(kjpindex), biomass(kjpindex,nvm,nparts,nelements), litter_above(kjpindex,nlitt,nvm,nelements)
+    real(r_std) :: litter_below(kjpindex,nlitt,nvm,ndeep,nelements), carbon_32l(kjpindex,ncarb,nvm,ndeep)
+    real(r_std) :: doc(kjpindex,nvm,ndeep,ndoc,npool,nelements), lignin_struc_above(kjpindex,nvm), lignin_struc_below(kjpindex,nvm,ndeep)
+    real(r_std) :: soilc_total(kjpindex,ndeep,nvm), thawed_humidity(kjpindex), depth_organic_soil(kjpindex), heat_zimov(kjpindex,ndeep,nvm)
+    real(r_std) :: depth_deepsoil(kjpindex,nvm), salinity(kjpindex), tide_height(kjpindex,itimetide), clayfraction(kjpindex), bulk_density(kjpindex), soil_ph(kjpindex), poor_soils(kjpindex)
+    logical :: f_rot_sech(kjpindex)
+    integer :: j
+
+    do j = 1, size(indexveg)
+      indexveg(j) = j
+    end do
+    indexland = 1
+    neighbours = 0
+    lalo = 0._r_std
+    resolution = 1._r_std
+    contfrac = 1._r_std
+    soiltile = 0._r_std
+    reinf_slope = 0._r_std
+    t2m = 298._r_std
+    deadleaf_cover = -9._r_std
+    assim_param = -9._r_std
+    lai = -9._r_std
+    frac_age = -9._r_std
+    height = -9._r_std
+    veget = -9._r_std
+    frac_nobio = -9._r_std
+    njsc = -9
+    veget_max = -9._r_std
+    totfrac_nobio = -9._r_std
+    qsintmax = -9._r_std
+    co2_flux = -9._r_std
+    fco2_lu = -9._r_std
+    temp_growth = -9._r_std
+    soilc_total = 0._r_std
+    thawed_humidity = 0._r_std
+    depth_organic_soil = 0._r_std
+    heat_zimov = 0._r_std
+    clayfraction = 0.2_r_std
+    bulk_density = 1650._r_std
+    soil_ph = 7._r_std
+    poor_soils = 0._r_std
+    altmax = 0._r_std
+    fpeat = 0._r_std
+    biomass = 0._r_std
+    litter_above = 0._r_std
+    litter_below = 0._r_std
+    carbon_32l = 0._r_std
+    doc = 0._r_std
+    lignin_struc_above = 0._r_std
+    lignin_struc_below = 0._r_std
+    depth_deepsoil = 0._r_std
+    salinity = 31.25_r_std
+    tide_height = reshape([0.1_r_std,-0.2_r_std,0.3_r_std], shape(tide_height))
+    f_rot_sech = .false.
+! <SLOWPROC_INITIALIZE_SPAN>
+    call emit1(prefix//'lai', reshape(lai, [size(lai)]))
+    call emit1(prefix//'veget', reshape(veget, [size(veget)]))
+    call emit1(prefix//'veget_max', reshape(veget_max, [size(veget_max)]))
+    call emit1(prefix//'frac_nobio', reshape(frac_nobio, [size(frac_nobio)]))
+    call emit1(prefix//'soiltile', reshape(soiltile, [size(soiltile)]))
+    call emit1(prefix//'reinf_slope', reinf_slope)
+    call emit1(prefix//'totfrac_nobio', totfrac_nobio)
+    call emit1(prefix//'tot_bare_soil', tot_bare_soil)
+    call emit1(prefix//'qsintmax', reshape(qsintmax, [size(qsintmax)]))
+    call emit1(prefix//'lcanop', [real(lcanop, r_std)])
+    call emit1(prefix//'veget_update', [real(veget_update, r_std)])
+    call emit1(prefix//'dt_days', [dt_days])
+  end subroutine
+
+  subroutine slowproc_init(kjit, date0, kjpindex, indexland, lalo, neighbours, resolution, contfrac, &
+       rest_id, lai, frac_age, veget, frac_nobio, totfrac_nobio, soiltile, reinf_slope, &
+       veget_max, tot_bare_soil, njsc, height, lcanop, veget_update, veget_year, f_rot_sech, &
+       biomass, litter_above, litter_below, carbon_32l, doc, salinity, tide_height)
+    integer, intent(in) :: kjit, kjpindex, rest_id, indexland(:)
+    integer, intent(out) :: njsc(:), lcanop, veget_update, veget_year
+    integer :: neighbours(1,1)
+    real(r_std), intent(in) :: date0, lalo(:,:), resolution(:,:), contfrac(:)
+    logical, intent(in) :: f_rot_sech(:)
+    real(r_std), intent(out) :: lai(:,:), frac_age(:,:,:), veget(:,:), frac_nobio(:,:), totfrac_nobio(:), soiltile(:,:), reinf_slope(:)
+    real(r_std), intent(out) :: veget_max(:,:), tot_bare_soil(:), height(:,:), biomass(:,:,:,:), litter_above(:,:,:,:), litter_below(:,:,:,:,:)
+    real(r_std), intent(out) :: carbon_32l(:,:,:,:), doc(:,:,:,:,:,:), salinity(:), tide_height(:,:)
+    lai = 0._r_std
+    lai(:,14) = 3.6186761_r_std
+    veget = 0._r_std
+    veget(:,14) = 0.97318184_r_std
+    veget_max = 0._r_std
+    veget_max(:,14) = 1._r_std
+    frac_nobio = 0._r_std
+    frac_age = 0._r_std
+    frac_age(:,14,1) = 0.23069987_r_std
+    frac_age(:,14,2) = 0.256_r_std
+    frac_age(:,14,3) = 0.257_r_std
+    frac_age(:,14,4) = 0.25630013_r_std
+    soiltile = 0._r_std
+    soiltile(:,4) = 1._r_std
+    reinf_slope = 0._r_std
+    totfrac_nobio = 0._r_std
+    tot_bare_soil = 1._r_std - veget(:,14)
+    njsc = 2
+    height = 0._r_std
+    height(:,2:3) = 30._r_std
+    height(:,4:6) = 20._r_std
+    height(:,7:9) = 15._r_std
+    height(:,10) = 0.5_r_std
+    height(:,11) = 0.6_r_std
+    height(:,12:13) = 1._r_std
+    height(:,14) = 30._r_std
+    lcanop = 3
+    veget_update = 0
+    veget_year = 0
+    biomass = 0._r_std
+    litter_above = 0._r_std
+    litter_below = 0._r_std
+    carbon_32l = 0._r_std
+    doc = 0._r_std
+    salinity = 31.25_r_std
+    tide_height = reshape([0.1_r_std,-0.2_r_std,0.3_r_std], shape(tide_height))
+  end subroutine
+
+  subroutine stomate_initialize(kjit, kjpij, kjpindex, rest_id_stom, hist_id_stom, hist_id_stom_ipcc, &
+       indexland, lalo, neighbours, resolution, contfrac, totfrac_nobio, clayfraction, t2m, lai, veget, veget_max, &
+       co2_flux, fco2_lu, deadleaf_cover, assim_param, thawed_humidity, depth_organic_soil, soilc_total, heat_zimov, &
+       temp_growth, altmax, fpeat, bulk_density, soil_ph, poor_soils, biomass, litter_above, litter_below, carbon_32l, &
+       doc, lignin_struc_above, lignin_struc_below, depth_deepsoil)
+    integer, intent(in) :: kjit, kjpij, kjpindex, rest_id_stom, hist_id_stom, hist_id_stom_ipcc, indexland(:)
+    integer :: neighbours(1,1)
+    real(r_std), intent(in) :: lalo(:,:), resolution(:,:), contfrac(:), totfrac_nobio(:), clayfraction(:), t2m(:), lai(:,:), veget(:,:), veget_max(:,:)
+    real(r_std), intent(out) :: co2_flux(:,:), fco2_lu(:), deadleaf_cover(:), assim_param(:,:,:), thawed_humidity(:), depth_organic_soil(:)
+    real(r_std), intent(out) :: soilc_total(:,:,:), heat_zimov(:,:,:), temp_growth(:), altmax(:,:), fpeat(:), bulk_density(:), soil_ph(:), poor_soils(:)
+    real(r_std), intent(out) :: biomass(:,:,:,:), litter_above(:,:,:,:), litter_below(:,:,:,:,:), carbon_32l(:,:,:,:), doc(:,:,:,:,:,:), lignin_struc_above(:,:), lignin_struc_below(:,:,:), depth_deepsoil(:,:)
+    co2_flux = 0._r_std
+    fco2_lu = 0._r_std
+    deadleaf_cover = 0._r_std
+    assim_param = 0._r_std
+    thawed_humidity = 0._r_std
+    depth_organic_soil = 0._r_std
+    soilc_total = 0._r_std
+    heat_zimov = 0._r_std
+    temp_growth = 25._r_std
+    altmax = 0._r_std
+    fpeat = 0._r_std
+    bulk_density = 1650._r_std
+    soil_ph = 7._r_std
+    poor_soils = 0._r_std
+    biomass = 0._r_std
+    litter_above = 0._r_std
+    litter_below = 0._r_std
+    carbon_32l = 0._r_std
+    doc = 0._r_std
+    lignin_struc_above = 0._r_std
+    lignin_struc_below = 0._r_std
+    depth_deepsoil = 0._r_std
+  end subroutine
+
+  subroutine slowproc_derivvar(kjpindex, veget, lai, qsintmax, deadleaf_cover, assim_param, height, temp_growth)
+    integer, intent(in) :: kjpindex
+    real(r_std), intent(in) :: veget(:,:), lai(:,:)
+    real(r_std), intent(out) :: qsintmax(:,:), deadleaf_cover(:), assim_param(:,:,:), height(:,:), temp_growth(:)
+    qsintmax = 0._r_std
+    deadleaf_cover = 0._r_std
+    assim_param = 0._r_std
+    height = 0._r_std
+    temp_growth = 25._r_std
+  end subroutine
+
+  subroutine ipslerr_p(level, routine, text1, text2, text3)
+    integer, intent(in) :: level
+    character(len=*), intent(in) :: routine, text1, text2, text3
+    stop 1
+  end subroutine
+
+  function command_argument() result(value)
+    character(len=1024) :: value
+    call get_command_argument(1, value)
+  end function
+
+  subroutine emit1(name, value)
+    character(len=*), intent(in) :: name
+    real(r_std), intent(in) :: value(:)
+    integer :: i
+    do i = 1, size(value)
+      write(unit_out, '(A,",",ES26.17E3)') trim(name), value(i)
+    end do
+  end subroutine
+end program

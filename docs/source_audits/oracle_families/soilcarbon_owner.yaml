@@ -1,0 +1,53 @@
+schema_version: 2
+lane: stomate_soilcarbon_owner
+status: passed
+_family_definition: &soilcarbon_owner_family
+  id: stomate_soilcarbon_owner
+  runner: oracle_lane_soilcarbon_owner_run:run_oracle
+  ledger_entries:
+    - stomate.active.ok_leak_soilcarbon
+    - stomate.active.tf_doc
+    - stomate.active.ok_leak_firstcall_active_layer
+  input_asset: outputs/reference_mode/micro_oracles/stomate_soilcarbon_owner/inputs.json
+  comparison_asset: outputs/reference_mode/micro_oracles/stomate_soilcarbon_owner/point_comparisons.csv
+  branch_coverage_asset: outputs/reference_mode/micro_oracles/stomate_soilcarbon_owner/arm_coverage.json
+  procedures:
+    - {id: soilcarbon_leak, source_file: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90, procedure: soilcarbon_leak, procedure_kind: subroutine, start_line: 641, end_line: 2416, expected_source_sha256: 442842554b17a3f5479a5bcf9ec969bfb6be549c095c5ecea302091224f13e92, expected_span_sha256: 364d2ef9a8c9e85c95c12d25aba0ffa01c9820dab8d47af48ba6df0305898f20, numerical_oracle_status: verified, compilation: {status: passed, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', flags: [-std=legacy, -cpp, -fdefault-real-8, -ffree-line-length-none, -O0, -fcheck=all], harness: scripts/dev/oracle_lane_soilcarbon_owner_harness.f90.template, result_asset: outputs/reference_mode/micro_oracles/stomate_soilcarbon_owner/comparison.json}}
+    - {id: altcalc_DOC, source_file: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90, procedure: altcalc_DOC, procedure_kind: subroutine, start_line: 2438, end_line: 2578, expected_source_sha256: 442842554b17a3f5479a5bcf9ec969bfb6be549c095c5ecea302091224f13e92, expected_span_sha256: a8675d31252158c66ba23e705a715f566205a628253976527b2ec32d79ccdee4, numerical_oracle_status: verified}
+    - {id: cryoturbate_DOC_POC, source_file: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90, procedure: cryoturbate_DOC_POC, procedure_kind: subroutine, start_line: 2599, end_line: 3369, expected_source_sha256: 442842554b17a3f5479a5bcf9ec969bfb6be549c095c5ecea302091224f13e92, expected_span_sha256: 1db06bbd6c484f1990aee03fb0958aeb5010b1563340182428412524c8438816, numerical_oracle_status: verified}
+  compilation:
+    status: passed
+    compiler: C:\msys64\ucrt64\bin\gfortran.exe
+    flags: [-std=legacy, -cpp, -fdefault-real-8, -ffree-line-length-none, -O0, -fcheck=all]
+    harness: scripts/dev/oracle_lane_soilcarbon_owner_harness.f90.template
+    result_asset: outputs/reference_mode/micro_oracles/stomate_soilcarbon_owner/comparison.json
+  components:
+    - ledger_entry: stomate.active.tf_doc
+      status: branch_complete_fortran_oracle
+      covered: [wet-and-dry-deposition, canopy-storage-release, ground-flood-split, pft1-mask, pft14-active]
+    - ledger_entry: stomate.active.ok_leak_firstcall_active_layer
+      status: branch_complete_fortran_oracle
+      covered: [firstcall-allocation, first-altcalc, later-altcalc, integer-index-writeback, save-state-reuse]
+    - ledger_entry: stomate.active.ok_leak_soilcarbon
+      status: branch_complete_fortran_oracle
+      covered: [full-owner-compilation, firstcall, same-day-later-call, day2-later-call, priming-on, priming-off, wet-and-dry-moisture, positive-and-negative-water-flux, adsorption, transport, diffusion, export, perma-peat-transfer-and-no-transfer]
+  branch_cases:
+    - {id: firstcall-warm-cold-flood, calls: [1], scope: [firstcall, tf-doc-positive-cover, warm-and-frozen-diffusion-gates, flood-zero-and-positive, positive-water-flux]}
+    - {id: same-day-later-save-reuse, calls: [2], scope: [later-call, save-state-reuse, zero-new-external-doc-input]}
+    - {id: day2-dry-negative-flux, calls: [3], scope: [day2-active-layer-memory, priming-disabled, pft14-zero-cover, zero-soil-moisture, negative-water-flux, alternating-doc-diffusion-inventory-limits]}
+    - {id: perma-peat-redistribution, calls: [4], scope: [perma-peat-enabled, cmax-exceeded, cmax-not-exceeded, deepc-peat-writeback, priming-enabled]}
+    - {id: alternate-altcalc-spinup-lifecycle, scenarios: [newaltcalc_spinup], calls: [1, 2, 3, 4], scope: [nonzero-restart-altmax, newaltcalc-enabled, spinup-memory, vertical-thaw-mask-arms]}
+  arm_inventory:
+    disposition_asset: docs/source_audits/pft14_arm_dispositions_stomate.yaml
+    owner_spans: [stomate_soilcarbon.f90:641-2416, stomate_soilcarbon.f90:2438-2578]
+    policy: pft14_active_and_pft14_conditional_only
+  excluded_control_flow_arms:
+    - {id: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90:1820:where#true, classification: source_invariant_unreachable, reason: positive Kd equilibrium adsorption cannot exceed total nonnegative free plus adsorbed DOC}
+    - {id: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90:1824:elsewhere#fallthrough, classification: source_invariant_unreachable, reason: positive Kd equilibrium adsorption cannot be negative for nonnegative DOC}
+    - {id: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90:2506:if#false, classification: fortran_undefined_contract, reason: old altcalc leaves INTENT(out) alt and alt_ind undefined where veget_mask_2d is false}
+    - {id: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90:2548:if#true, classification: diagnostic_only_static_unreachable, reason: local SAVE check is initialized false and never configured or assigned}
+  covered_control_flow_policy: exact_arm_execution_mapping_asset
+  numerical_oracle_status: verified
+  tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+  source_sha256: 442842554b17a3f5479a5bcf9ec969bfb6be549c095c5ecea302091224f13e92
+families: [*soilcarbon_owner_family]

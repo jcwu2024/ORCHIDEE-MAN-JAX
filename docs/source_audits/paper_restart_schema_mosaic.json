@@ -1,0 +1,32 @@
+{
+  "schema_version": 1,
+  "scope": "669 independent paper landpoint driver/SECHIBA/STOMATE restart schemas",
+  "mosaic_root": "reference/OUT/orc_calibrate_250919_sen/arg2_1.0",
+  "closed": true,
+  "components": {
+    "driver": {
+      "filename": "driver_start.nc",
+      "template_count": 669,
+      "schema_variants": 1,
+      "all_match_expected": true,
+      "path_list_sha256": "8372655c6c6040715e097995c1d5b730f46035cf27275c8217887eef58aa9175",
+      "expected_structure_sha256": "50f84776e9b711b134b68c2940204097ee0bd8936b67b63e2a951618a403838b"
+    },
+    "sechiba": {
+      "filename": "sechiba_start.nc",
+      "template_count": 669,
+      "schema_variants": 1,
+      "all_match_expected": true,
+      "path_list_sha256": "2bdda46f8604c0d282a59140ed7ef8136cd5d719a987beb2cb3affeca3c229fa",
+      "expected_structure_sha256": "2cbfc0e1b66256b4f29a8c892ad466bc02f1b5b1717b5e2e9c35153ab90173a7"
+    },
+    "stomate": {
+      "filename": "stomate_start.nc",
+      "template_count": 669,
+      "schema_variants": 1,
+      "all_match_expected": true,
+      "path_list_sha256": "a4b2383282161dcef90519916ccfe19567fc5cf7be3f355ab99777a1e649e41a",
+      "expected_structure_sha256": "294a304325f7fad5a0ed53af750141abf5361f6327a7de220eb202372d05a04d"
+    }
+  }
+}

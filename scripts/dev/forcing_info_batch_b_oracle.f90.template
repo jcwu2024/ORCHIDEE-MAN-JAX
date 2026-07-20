@@ -1,0 +1,338 @@
+module forcing_info_batch_b_oracle
+  implicit none
+  integer, parameter :: numout=6
+  real, parameter :: zero=0.0
+  integer :: iim_full=0,jjm_full=0,llm_full=0,ttm_full=0
+  integer :: iim_zoom=0,jjm_zoom=0
+  integer :: iim_g_begin=0,jjm_g_begin=0,iim_g_end=0,jjm_g_end=0
+  integer :: i_test=0,j_test=0,printlev_loc=0,printlev=0
+  integer :: mpi_size=1,mpi_rank=0,jj_begin=1,jj_end=1,jj_nb=2
+  integer :: iim_g=2,jjm_g=2,nbp_glo=0
+  integer :: jj_para_begin(0:0)=(/1/),jj_para_end(0:0)=(/2/)
+  integer, allocatable :: index_g(:)
+  integer, allocatable :: i_index(:),j_index(:),j_index_g(:),itau(:)
+  real, allocatable :: data_full(:,:),lon_full(:,:),lat_full(:,:),lev_full(:)
+  real :: one_year=365.2425,one_day=1.0
+  real :: limit_west=-180.0,limit_east=180.0,limit_north=90.0,limit_south=-90.0
+  real :: merid_res=90.0,zonal_res=180.0
+  real :: lon_g(2,2),lat_g(2,2)
+  real :: zlev_fixed=2.0,zlevuv_fixed=10.0
+  real :: zhybrid_a=0.0,zhybrid_b=0.0,zhybriduv_a=0.0,zhybriduv_b=0.0
+  real :: weather_lon(2,2),weather_lat(2,2)
+  integer :: fixture_case=0,fixture_nbpoint=0,fixture_bcast_nbpoint=0
+  integer :: fixture_vector_bcast_calls=0,fixture_real_bcast_calls=0,fixture_logical_bcast_calls=0
+  integer :: fixture_vertical=0
+  logical :: fixture_root=.true.,fixture_contfrac=.true.,fixture_allow_weather=.false.
+  logical :: fixture_dt_zero=.false.,fixture_calendar_null=.false.
+  character(len=20) :: fixture_calendar='gregorian',fixture_calendar_after='gregorian'
+  logical :: allow_weathergen=.false.,interpol=.false.,daily_interpol=.false.
+  logical :: weathergen=.false.,is_watchout=.false.,have_zaxis=.false.
+  logical :: zfixed=.false.,zsigma=.false.,zhybrid=.false.,zlevels=.false.,zheight=.false.
+  logical :: zsamelev_uv=.true.,is_root_prc=.true.
+  interface bcast
+     module procedure bcast_i_scalar,bcast_i_vector,bcast_r_scalar,bcast_r_matrix,bcast_l_scalar
+  end interface
+  interface ioget_calendar
+     module procedure ioget_calendar_char,ioget_calendar_values
+  end interface
+  interface getin_p
+     module procedure getin_p_logical,getin_p_real
+  end interface
+  interface getin
+     module procedure getin_real
+  end interface
+contains
+  subroutine reset_fixture(case_id)
+    integer,intent(in)::case_id
+    fixture_case=case_id
+    fixture_root=case_id /= 3 .and. case_id /= 5
+    fixture_contfrac=case_id /= 2
+    fixture_allow_weather=case_id == 4 .or. case_id == 5
+    fixture_dt_zero=case_id == 2
+    fixture_vertical=merge(1,0,case_id == 1)
+    fixture_calendar='gregorian'
+    if (case_id == 2) fixture_calendar='gregorian'//achar(0)
+    if (case_id == 4) fixture_calendar='XXXX'//achar(0)
+    fixture_calendar_after='gregorian'
+    if (case_id == 4) fixture_calendar_after='noleap'
+    is_root_prc=fixture_root
+    iim_g=2;jjm_g=2;jj_begin=1;jj_end=1;jj_nb=2
+    fixture_nbpoint=merge(4,3,case_id == 2 .or. case_id == 4 .or. case_id == 5)
+    fixture_bcast_nbpoint=fixture_nbpoint;fixture_vector_bcast_calls=0
+    fixture_real_bcast_calls=0;fixture_logical_bcast_calls=0
+    allow_weathergen=.false.;interpol=.false.;daily_interpol=.false.;weathergen=.false.;is_watchout=.false.
+    have_zaxis=.false.;zfixed=.false.;zsigma=.false.;zhybrid=.false.;zlevels=.false.;zheight=.false.;zsamelev_uv=.true.
+    zlev_fixed=2.0;zlevuv_fixed=10.0;zhybrid_a=0.0;zhybrid_b=0.0;zhybriduv_a=0.0;zhybriduv_b=0.0
+    one_year=365.2425;one_day=1.0;merid_res=90.0;zonal_res=180.0
+    if (allocated(data_full)) deallocate(data_full)
+    if (allocated(lon_full)) deallocate(lon_full)
+    if (allocated(lat_full)) deallocate(lat_full)
+    if (allocated(lev_full)) deallocate(lev_full)
+    if (allocated(itau)) deallocate(itau)
+    if (allocated(i_index)) deallocate(i_index)
+    if (allocated(j_index)) deallocate(j_index)
+    if (allocated(j_index_g)) deallocate(j_index_g)
+    if (allocated(index_g)) deallocate(index_g)
+    weather_lon=-999.0;weather_lat=-999.0
+  end subroutine
+
+  subroutine flininfo(filename,ii,jj,ll,tt,force_id)
+    character(*),intent(in)::filename
+    integer,intent(out)::ii,jj,ll,tt,force_id
+    ii=3;jj=3;ll=fixture_vertical;tt=2;force_id=1
+  end subroutine
+
+  subroutine flinopen(filename,read_data,ii,jj,ll,lon,lat,lev,tt,itime,date0,dt,force_id)
+    character(*),intent(in)::filename
+    logical,intent(in)::read_data
+    integer,intent(in)::ii,jj,ll,tt,force_id
+    real,intent(out)::lon(ii,jj),lat(ii,jj),lev(ll),date0,dt
+    integer,intent(out)::itime(tt)
+    integer::i,j
+    do j=1,jj
+       do i=1,ii
+          lon(i,j)=-120.0+120.0*real(i-1)
+          lat(i,j)=60.0-60.0*real(j-1)
+       enddo
+    enddo
+    if (ll > 0) lev=1.0
+    date0=10.0
+    if (fixture_dt_zero) then
+       dt=0.0;itime=(/0,86400/)
+    else if (fixture_case == 4 .or. fixture_case == 5) then
+       dt=2592000.0;itime=(/0,1/)
+    else
+       dt=21600.0;itime=(/0,1/)
+    endif
+  end subroutine
+
+  subroutine ioget_calendar_char(calendar)
+    character(len=*),intent(out)::calendar
+    calendar=fixture_calendar
+  end subroutine
+  subroutine ioget_calendar_values(year,day)
+    real,intent(out)::year,day
+    if (fixture_calendar_after == 'noleap') then
+       year=365.0
+    else
+       year=365.2425
+    endif
+    day=1.0
+  end subroutine
+  subroutine ioconf_calendar(calendar)
+    character(*),intent(in)::calendar
+    fixture_calendar_after=trim(calendar)
+  end subroutine
+  real function itau2date(it,date0,dt)
+    integer,intent(in)::it
+    real,intent(in)::date0,dt
+    itau2date=date0+real(it)*dt/86400.0
+  end function
+  subroutine getin_p_logical(name,value)
+    character(*),intent(in)::name
+    logical,intent(inout)::value
+    if (trim(name) == 'ALLOW_WEATHERGEN') value=fixture_allow_weather
+  end subroutine
+  subroutine getin_p_real(name,value)
+    character(*),intent(in)::name
+    real,intent(inout)::value
+    select case(trim(name))
+    case('DT_WEATHGEN');value=1800.0
+    case('LIMIT_WEST');if (fixture_case < 4) value=-10.0
+    case('LIMIT_EAST');if (fixture_case < 4) value=120.0
+    case('LIMIT_NORTH');if (fixture_case < 4) value=60.0
+    case('LIMIT_SOUTH');if (fixture_case < 4) value=-1.0
+    case('MERID_RES');value=90.0
+    case('ZONAL_RES');value=180.0
+    end select
+  end subroutine
+  subroutine getin_real(name,value)
+    character(*),intent(in)::name
+    real,intent(inout)::value
+    if (trim(name) == 'HEIGHT_LEV1') value=2.0
+    if (trim(name) == 'HEIGHT_LEVW') value=10.0
+  end subroutine
+  subroutine flinquery_var(force_id,name,exists)
+    integer,intent(in)::force_id
+    character(*),intent(in)::name
+    logical,intent(out)::exists
+    exists=.false.
+    if (trim(name) == 'contfrac') exists=fixture_contfrac
+    if (fixture_vertical == 1) then
+       if (trim(name) == 'Height_Lev1' .or. trim(name) == 'Height_Levuv') exists=.true.
+    endif
+  end subroutine
+  subroutine flinget_buffer(force_id,varname,ii,jj,ll,tt,itb,ite,values)
+    integer,intent(in)::force_id,ii,jj,ll,tt,itb,ite
+    character(*),intent(in)::varname
+    real,intent(out)::values(ii,jj)
+    integer::i,j
+    do j=1,jj
+       do i=1,ii
+          if (trim(varname) == 'contfrac') then
+             values(i,j)=1.0
+             if (i == 2 .and. j == 1) values(i,j)=0.0
+          else
+             values(i,j)=100.0+10.0*real(i)+real(j)
+          endif
+       enddo
+    enddo
+  end subroutine
+  subroutine flinget(force_id,varname,i1,i2,i3,i4,i5,i6,value)
+    integer,intent(in)::force_id,i1,i2,i3,i4,i5,i6
+    character(*),intent(in)::varname
+    real,intent(out)::value
+    select case(trim(varname))
+    case('Height_Lev1');value=2.5
+    case('Height_Levuv');value=12.5
+    case default;value=0.0
+    end select
+  end subroutine
+
+  subroutine bcast_i_scalar(value)
+    integer,intent(inout)::value
+    if (.not. fixture_root .and. value /= 2) value=fixture_bcast_nbpoint
+  end subroutine
+  subroutine bcast_i_vector(value)
+    integer,intent(inout)::value(:)
+    if (.not. fixture_root) then
+       fixture_vector_bcast_calls=fixture_vector_bcast_calls+1
+       if (size(value) == 4) then
+          value=(/1,2,3,4/)
+       else if (fixture_vector_bcast_calls == 1) then
+          value=(/2,3,4/)
+       else if (fixture_vector_bcast_calls == 2) then
+          value=(/2,3,3/)
+       else
+          value=(/1,2,2/)
+       endif
+    endif
+  end subroutine
+  subroutine bcast_r_scalar(value)
+    real,intent(inout)::value
+    if (.not. fixture_root) then
+       fixture_real_bcast_calls=fixture_real_bcast_calls+1
+       if (fixture_real_bcast_calls == 1) value=2.0
+       if (fixture_real_bcast_calls == 2) value=10.0
+       if (fixture_real_bcast_calls > 2) value=0.0
+    endif
+  end subroutine
+  subroutine bcast_r_matrix(value)
+    real,intent(inout)::value(:,:)
+  end subroutine
+  subroutine bcast_l_scalar(value)
+    logical,intent(inout)::value
+    if (.not. fixture_root) then
+       fixture_logical_bcast_calls=fixture_logical_bcast_calls+1
+       value=fixture_logical_bcast_calls == 5
+    endif
+  end subroutine
+  subroutine grid_set_glo(ii,jj,nb)
+    integer,intent(in)::ii,jj,nb
+    integer::k
+    iim_g=ii;jjm_g=jj;jj_begin=1;jj_end=max(1,jj-1);jj_nb=jj;fixture_nbpoint=nb
+    if (allocated(index_g)) deallocate(index_g)
+    allocate(index_g(nb));do k=1,nb;index_g(k)=k;enddo
+  end subroutine
+  subroutine grid_allocate_glo(n)
+    integer,intent(in)::n
+  end subroutine
+  subroutine Init_orchidee_data_para_driver(nb,index)
+    integer,intent(in)::nb,index(:)
+    nbp_glo=nb
+  end subroutine
+  subroutine init_ioipsl_para
+  end subroutine
+  integer function get_printlev(name)
+    character(*),intent(in)::name
+    get_printlev=0
+  end function
+  subroutine weathgen_domain_size(west,east,north,south,zres,mres,ii,jj)
+    real,intent(in)::west,east,north,south,zres,mres
+    integer,intent(out)::ii,jj
+    ii=2;jj=2
+  end subroutine
+  subroutine weathgen_init(filename,dt,force_id,ii,jj,zres,mres,lon,lat,index,nb)
+    character(*),intent(in)::filename
+    integer,intent(in)::force_id,ii,jj
+    real,intent(in)::dt,zres,mres,lon(ii,jj),lat(ii,jj)
+    integer,intent(inout)::index(:),nb
+    integer::k
+    nb=size(index)
+    do k=1,size(index);index(k)=k;enddo
+    weather_lon=lon;weather_lat=lat
+  end subroutine
+  subroutine weathgen_read_file(force_id,ii,jj)
+    integer,intent(in)::force_id,ii,jj
+  end subroutine
+  subroutine ipslerr_p(level,caller,m1,m2,m3)
+    integer,intent(in)::level
+    character(*),intent(in)::caller,m1,m2,m3
+  end subroutine
+  subroutine ipslerr(level,caller,m1,m2,m3)
+    integer,intent(in)::level
+    character(*),intent(in)::caller,m1,m2,m3
+  end subroutine
+
+! <FORCING_LANDIND>
+! <FORCING_GRID>
+! <FORCING_ZOOM>
+! <FORCING_VERTICAL_IOIPSL>
+! <DOMAIN_SIZE>
+! <FORCING_INFO>
+end module
+
+program forcing_info_batch_b_driver
+  use forcing_info_batch_b_oracle
+  implicit none
+  integer::unit,case_id
+  character(512)::path
+  call get_command_argument(1,path)
+  open(newunit=unit,file=trim(path),status='replace',action='write')
+  write(unit,'(a)') 'field,flat_index,value'
+  do case_id=1,5
+     call reset_fixture(case_id)
+     call run_case(unit,case_id)
+  enddo
+  close(unit)
+contains
+  subroutine run_case(unit,case_id)
+    integer,intent(in)::unit,case_id
+    integer::ii,jj,ll,tm,force_id,k
+    real::date0,dt
+    character(32)::prefix
+    call forcing_info('fixture',ii,jj,ll,tm,date0,dt,force_id)
+    write(prefix,'(a,i0,a)') 'case',case_id,'_'
+    call outi(unit,trim(prefix)//'meta',(/ii,jj,ll,tm,force_id,fixture_nbpoint/))
+    call outr(unit,trim(prefix)//'dt',(/dt/));call outr(unit,trim(prefix)//'date0',(/date0/))
+    call outr(unit,trim(prefix)//'calendar_values',(/one_year,one_day/))
+    call outi(unit,trim(prefix)//'flags',(/merge(1,0,interpol),merge(1,0,daily_interpol),merge(1,0,weathergen),merge(1,0,is_watchout),merge(1,0,have_zaxis),merge(1,0,zfixed),merge(1,0,zsigma),merge(1,0,zhybrid),merge(1,0,zlevels),merge(1,0,zheight),merge(1,0,zsamelev_uv)/))
+    call outr(unit,trim(prefix)//'vertical_values',(/zlev_fixed,zlevuv_fixed,zhybrid_a,zhybrid_b,zhybriduv_a,zhybriduv_b/))
+    call outi(unit,trim(prefix)//'index_g',index_g)
+    if (allocated(i_index)) then
+       call outi(unit,trim(prefix)//'i_index',i_index(1:iim_zoom));call outi(unit,trim(prefix)//'j_index_g',j_index_g(1:jjm_zoom))
+    endif
+    if (allocated(data_full) .and. interpol .and. fixture_root) call outr2(unit,trim(prefix)//'data_full',data_full)
+    if (weathergen .and. fixture_root) then
+       call outr2(unit,trim(prefix)//'weather_lon',weather_lon);call outr2(unit,trim(prefix)//'weather_lat',weather_lat)
+    endif
+  end subroutine
+  subroutine outi(unit,name,values)
+    integer,intent(in)::unit,values(:);character(*),intent(in)::name
+    integer::k
+    do k=1,size(values);write(unit,'(a,a,i0,a,i0)')trim(name),',',k-1,',',values(k);enddo
+  end subroutine
+  subroutine outr(unit,name,values)
+    integer,intent(in)::unit;real,intent(in)::values(:);character(*),intent(in)::name
+    integer::k
+    do k=1,size(values);write(unit,'(a,a,i0,a,es25.17)')trim(name),',',k-1,',',values(k);enddo
+  end subroutine
+  subroutine outr2(unit,name,values)
+    integer,intent(in)::unit;real,intent(in)::values(:,:);character(*),intent(in)::name
+    integer::i,j,k
+    k=0
+    do j=1,size(values,2);do i=1,size(values,1)
+       write(unit,'(a,a,i0,a,es25.17)')trim(name),',',k,',',values(i,j);k=k+1
+    enddo;enddo
+  end subroutine
+end program

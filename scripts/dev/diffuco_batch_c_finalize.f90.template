@@ -1,0 +1,44 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ integer,parameter::i_std=int32,r_std=real64
+end module
+module pft_parameters
+ use defprec
+ integer,parameter::nvm=14,nlai=2
+end module
+module IOIPSL
+ use defprec
+ implicit none
+ integer,parameter::numout=6
+ character(512)::output_path
+ interface restput_p
+  module procedure put2,put3
+ end interface
+contains
+ subroutine put2(id,name,a,b,c,kjit,value,mode,d,index)
+  integer,intent(in)::id,a,b,c,kjit,d; character(*),intent(in)::name,mode; integer,intent(in)::index(:); real(r_std),intent(in)::value(:,:)
+  integer::i,j; do i=1,size(value,1);do j=1,size(value,2);write(10,'(a,",",i0,",",i0,",",es25.17)')trim(name),i,j,value(i,j);enddo;enddo
+ end subroutine
+ subroutine put3(id,name,a,b,c,kjit,value,mode,d,index)
+  integer,intent(in)::id,a,b,c,kjit,d; character(*),intent(in)::name,mode; integer,intent(in)::index(:); real(r_std),intent(in)::value(:,:,:)
+  integer::i,j,k; do i=1,size(value,1);do j=1,size(value,2);do k=1,size(value,3);write(10,'(a,",",i0,",",i0,",",es25.17)')trim(name)//'_l'//achar(48+k),i,j,value(i,j,k);enddo;enddo;enddo
+ end subroutine
+end module
+module diffuco_oracle
+ use defprec; use pft_parameters; use IOIPSL
+ implicit none
+ integer::printlev=0,nbp_glo=2
+ integer,dimension(2)::index_g=(/1,2/)
+ logical::ok_co2=.true.
+ real(r_std),allocatable::leaf_ci(:,:,:)
+contains
+! <FINALIZE>
+end module
+program main
+ use defprec;use pft_parameters;use IOIPSL;use diffuco_oracle
+ implicit none
+ real(r_std)::r(2,nvm),q(2,nvm);integer::i,j;character(512)::path
+ call get_command_argument(1,path);open(10,file=trim(path),status='replace');write(10,'(a)')'field,i,j,value'
+ allocate(leaf_ci(2,nvm,nlai));do i=1,2;do j=1,nvm;r(i,j)=10*i+j;q(i,j)=.01*i+.001*j;leaf_ci(i,j,:)=100*i+j;enddo;enddo
+ call diffuco_finalize(7_i_std,2_i_std,99_i_std,r,q);close(10)
+end program

@@ -1,0 +1,88 @@
+schema_version: 1
+scope: >-
+  Calls unreachable when the paper workflow structural switches remain fixed.
+  Landpoint, forcing, static grid state, and continuous PFT14 parameters may
+  vary without changing these classifications.
+run_def: outputs/paper_250919_materialized_run_defs/arg2_1.0/001.0-071.0/I10/S2_63.206_0.0876_0.2019_50.658/used_run.def
+edges:
+  - {file: fortran_source/ORCHIDEE/src_driver/readdim2.f90, line: 422, callee: weathgen_domain_size, guard: "ALLOW_WEATHERGEN branch; paper driver uses forcing interpolation", config: "ALLOW_WEATHERGEN=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_driver/readdim2.f90, line: 438, callee: weathgen_init, guard: "ALLOW_WEATHERGEN branch; paper driver uses forcing interpolation", config: "ALLOW_WEATHERGEN=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_driver/readdim2.f90, line: 477, callee: weathgen_read_file, guard: "ALLOW_WEATHERGEN branch; paper driver uses forcing interpolation", config: "ALLOW_WEATHERGEN=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_driver/readdim2.f90, line: 601, callee: weathgen_main, guard: "weathergen runtime branch; interpol is the active paper forcing path", config: "ALLOW_WEATHERGEN=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_driver/readdim2.f90, line: 608, callee: weathgen_main, guard: "weathergen runtime branch; interpol is the active paper forcing path", config: "ALLOW_WEATHERGEN=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 651, callee: hydrolc_initialize, guard: ".NOT. hydrol_cwrr", config: "HYDROL_CWRR=y"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1030, callee: hydrolc_main, guard: ".NOT. hydrol_cwrr", config: "HYDROL_CWRR=y"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1849, callee: hydrolc_finalize, guard: ".NOT. hydrol_cwrr", config: "HYDROL_CWRR=y"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 751, callee: routing_initialize, guard: "river_routing .AND. nbp_glo .GT. 1; materialized paper domain has nbp_glo=1", config: "RIVER_ROUTING=y; LIMIT_WEST=-180.0; LIMIT_EAST=-178.0; LIMIT_SOUTH=-20.0; LIMIT_NORTH=-18.0"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1229, callee: routing_main, guard: "river_routing .AND. nbp_glo .GT. 1; materialized paper domain has nbp_glo=1", config: "RIVER_ROUTING=y; LIMIT_WEST=-180.0; LIMIT_EAST=-178.0; LIMIT_SOUTH=-20.0; LIMIT_NORTH=-18.0"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1885, callee: routing_finalize, guard: "river_routing .AND. nbp_glo .GT. 1; materialized paper domain has nbp_glo=1", config: "RIVER_ROUTING=y; LIMIT_WEST=-180.0; LIMIT_EAST=-178.0; LIMIT_SOUTH=-20.0; LIMIT_NORTH=-18.0"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90, line: 231, callee: chemistry_initialize, guard: "ok_bvoc", config: "CHEMISTRY_BVOC=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90, line: 687, callee: chemistry_bvoc, guard: "ok_bvoc", config: "CHEMISTRY_BVOC=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1591, callee: histwrite_p, guard: "river_routing .AND. do_floodplains", config: "RIVER_ROUTING=y; DO_FLOODPLAINS=n"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1592, callee: histwrite_p, guard: "river_routing .AND. do_floodplains", config: "RIVER_ROUTING=y; DO_FLOODPLAINS=n"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1654, callee: histwrite_p, guard: "river_routing .AND. do_floodplains", config: "RIVER_ROUTING=y; DO_FLOODPLAINS=n"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1655, callee: histwrite_p, guard: "river_routing .AND. do_floodplains", config: "RIVER_ROUTING=y; DO_FLOODPLAINS=n"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1687, callee: histwrite_p, guard: "hist2_id > 0 .AND. river_routing .AND. do_floodplains", config: "SECHIBA_HISTFILE2=FALSE; RIVER_ROUTING=y; DO_FLOODPLAINS=n"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1688, callee: histwrite_p, guard: "hist2_id > 0 .AND. river_routing .AND. do_floodplains", config: "SECHIBA_HISTFILE2=FALSE; RIVER_ROUTING=y; DO_FLOODPLAINS=n"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1735, callee: histwrite_p, guard: "hist2_id > 0 .AND. river_routing .AND. do_floodplains", config: "SECHIBA_HISTFILE2=FALSE; RIVER_ROUTING=y; DO_FLOODPLAINS=n"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1736, callee: histwrite_p, guard: "hist2_id > 0 .AND. river_routing .AND. do_floodplains", config: "SECHIBA_HISTFILE2=FALSE; RIVER_ROUTING=y; DO_FLOODPLAINS=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 1565, callee: sticslai_io_readstart, guard: "ANY(ok_LAIdev)", config: "OK_LAIDEV__00001=FALSE; OK_LAIDEV__00002=FALSE; OK_LAIDEV__00003=FALSE; OK_LAIDEV__00004=FALSE; OK_LAIDEV__00005=FALSE; OK_LAIDEV__00006=FALSE; OK_LAIDEV__00007=FALSE; OK_LAIDEV__00008=FALSE; OK_LAIDEV__00009=FALSE; OK_LAIDEV__00010=FALSE; OK_LAIDEV__00011=FALSE; OK_LAIDEV__00012=FALSE; OK_LAIDEV__00013=FALSE; OK_LAIDEV__00014=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 2069, callee: getin_p, guard: "TRIM(stomate_Cforcing_name) /= 'NONE'", config: "STOMATE_CFORCING_NAME=NONE"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 2081, callee: getin_p, guard: "TRIM(stomate_Cforcing_name) /= 'NONE'", config: "STOMATE_CFORCING_NAME=NONE"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 2085, callee: ipslerr_p, guard: "TRIM(stomate_Cforcing_name) /= 'NONE' .AND. cumul_Cforcing", config: "STOMATE_CFORCING_NAME=NONE"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 3674, callee: ch4_wet_flux_density_0, guard: "CH4_calcul", config: "CH4_CALCUL=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 3680, callee: ch4_wet_flux_density_wet1, guard: "CH4_calcul .AND. CH4_WTD1", config: "CH4_CALCUL=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 3692, callee: ch4_wet_flux_density_wet2, guard: "CH4_calcul .AND. CH4_WTD2", config: "CH4_CALCUL=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 3704, callee: ch4_wet_flux_density_wet3, guard: "CH4_calcul .AND. CH4_WTD3", config: "CH4_CALCUL=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 3716, callee: ch4_wet_flux_density_wet4, guard: "CH4_calcul .AND. CH4_WTD4", config: "CH4_CALCUL=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 3961, callee: driver_stics, guard: "ok_LAIdev(j)", config: "OK_LAIDEV__00001=FALSE; OK_LAIDEV__00002=FALSE; OK_LAIDEV__00003=FALSE; OK_LAIDEV__00004=FALSE; OK_LAIDEV__00005=FALSE; OK_LAIDEV__00006=FALSE; OK_LAIDEV__00007=FALSE; OK_LAIDEV__00008=FALSE; OK_LAIDEV__00009=FALSE; OK_LAIDEV__00010=FALSE; OK_LAIDEV__00011=FALSE; OK_LAIDEV__00012=FALSE; OK_LAIDEV__00013=FALSE; OK_LAIDEV__00014=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 5501, callee: sticslai_io_writestart, guard: "ANY(ok_LAIdev)", config: "OK_LAIDEV__00001=FALSE; OK_LAIDEV__00002=FALSE; OK_LAIDEV__00003=FALSE; OK_LAIDEV__00004=FALSE; OK_LAIDEV__00005=FALSE; OK_LAIDEV__00006=FALSE; OK_LAIDEV__00007=FALSE; OK_LAIDEV__00008=FALSE; OK_LAIDEV__00009=FALSE; OK_LAIDEV__00010=FALSE; OK_LAIDEV__00011=FALSE; OK_LAIDEV__00012=FALSE; OK_LAIDEV__00013=FALSE; OK_LAIDEV__00014=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 5528, callee: forcing_write, guard: "ok_co2 .AND. allow_forcing_write .AND. TRIM(stomate_forcing_name) /= 'NONE'", config: "STOMATE_FORCING_NAME=NONE"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 8347, callee: Stics_init, guard: "ANY(ok_LAIdev) .AND. f_crop_init", config: "OK_LAIDEV__00001=FALSE; OK_LAIDEV__00002=FALSE; OK_LAIDEV__00003=FALSE; OK_LAIDEV__00004=FALSE; OK_LAIDEV__00005=FALSE; OK_LAIDEV__00006=FALSE; OK_LAIDEV__00007=FALSE; OK_LAIDEV__00008=FALSE; OK_LAIDEV__00009=FALSE; OK_LAIDEV__00010=FALSE; OK_LAIDEV__00011=FALSE; OK_LAIDEV__00012=FALSE; OK_LAIDEV__00013=FALSE; OK_LAIDEV__00014=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 968, callee: pftinout, guard: "ok_dgvm", config: "STOMATE_OK_DGVM=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 980, callee: kill, guard: "ok_dgvm", config: "STOMATE_OK_DGVM=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1011, callee: crown, guard: "ok_dgvm", config: "STOMATE_OK_DGVM=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1145, callee: kill, guard: "ok_dgvm .OR. .NOT.lpj_gap_const_mort", config: "STOMATE_OK_DGVM=n; LPJ_GAP_CONST_MORT=y"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1174, callee: crown, guard: "ok_dgvm .OR. .NOT.lpj_gap_const_mort", config: "STOMATE_OK_DGVM=n; LPJ_GAP_CONST_MORT=y"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1197, callee: spitfire, guard: ".NOT.disable_fire", config: "FIRE_DISABLE=y"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1227, callee: kill, guard: "ok_dgvm", config: "STOMATE_OK_DGVM=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1247, callee: kill, guard: "ok_dgvm", config: "STOMATE_OK_DGVM=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1281, callee: light, guard: "ok_dgvm", config: "STOMATE_OK_DGVM=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1289, callee: kill, guard: "ok_dgvm", config: "STOMATE_OK_DGVM=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1302, callee: establish, guard: "ok_dgvm .OR. .NOT.lpj_gap_const_mort", config: "STOMATE_OK_DGVM=n; LPJ_GAP_CONST_MORT=y"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1314, callee: crown, guard: "ok_dgvm .OR. .NOT.lpj_gap_const_mort", config: "STOMATE_OK_DGVM=n; LPJ_GAP_CONST_MORT=y"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1324, callee: main_grassland_management, guard: "enable_grazing", config: "GRM_ENABLE_GRAZING=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1424, callee: gross_glcchange_SinAgeC_fh, guard: "do_now_stomate_lcchange", config: "LAND_COVER_CHANGE=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 823, callee: gross_glcc_firstday_SinAgeC_fh, guard: "firstcall .AND. do_now_stomate_lcchange", config: "LAND_COVER_CHANGE=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 830, callee: gross_glcc_firstday_fh, guard: "firstcall .AND. do_now_stomate_lcchange", config: "LAND_COVER_CHANGE=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1446, callee: gross_glcchange_fh, guard: "do_now_stomate_lcchange", config: "LAND_COVER_CHANGE=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1471, callee: lcchange_deffire, guard: "do_now_stomate_lcchange", config: "LAND_COVER_CHANGE=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1489, callee: lcchange_main_agripeat, guard: "do_now_stomate_lcchange", config: "LAND_COVER_CHANGE=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1503, callee: lcchange_main, guard: "do_now_stomate_lcchange", config: "LAND_COVER_CHANGE=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 3349, callee: deep_carbcycle, guard: "ok_pc", config: "OK_PC=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 3639, callee: deep_carbcycle, guard: "ok_pc", config: "OK_PC=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90, line: 1359, callee: cryoturbate_doc_poc, guard: "ok_cryoturb", config: "CRYOTURBATE_DOC_POC=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90, line: 1361, callee: cryoturbate_doc_poc, guard: "ok_cryoturb", config: "CRYOTURBATE_DOC_POC=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90, line: 410, callee: crop_bmalloc, guard: "ok_LAIdev(j); all paper PFT entries are fixed false", config: "OK_LAIDEV__00001=FALSE; OK_LAIDEV__00002=FALSE; OK_LAIDEV__00003=FALSE; OK_LAIDEV__00004=FALSE; OK_LAIDEV__00005=FALSE; OK_LAIDEV__00006=FALSE; OK_LAIDEV__00007=FALSE; OK_LAIDEV__00008=FALSE; OK_LAIDEV__00009=FALSE; OK_LAIDEV__00010=FALSE; OK_LAIDEV__00011=FALSE; OK_LAIDEV__00012=FALSE; OK_LAIDEV__00013=FALSE; OK_LAIDEV__00014=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90, line: 1360, callee: lpj_cover_peat, guard: "update_peatfrac SAVE initializes FALSE and has no TRUE assignment in production source; DYN_PEAT is also fixed false", config: "DYN_PEAT=n"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 4400, callee: grain, guard: "ok_LAIdev(j); all paper PFT entries are fixed false", config: "OK_LAIDEV__00001=FALSE; OK_LAIDEV__00002=FALSE; OK_LAIDEV__00003=FALSE; OK_LAIDEV__00004=FALSE; OK_LAIDEV__00005=FALSE; OK_LAIDEV__00006=FALSE; OK_LAIDEV__00007=FALSE; OK_LAIDEV__00008=FALSE; OK_LAIDEV__00009=FALSE; OK_LAIDEV__00010=FALSE; OK_LAIDEV__00011=FALSE; OK_LAIDEV__00012=FALSE; OK_LAIDEV__00013=FALSE; OK_LAIDEV__00014=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 4409, callee: reprac_calc, guard: "ok_LAIdev(j); all paper PFT entries are fixed false", config: "OK_LAIDEV__00001=FALSE; OK_LAIDEV__00002=FALSE; OK_LAIDEV__00003=FALSE; OK_LAIDEV__00004=FALSE; OK_LAIDEV__00005=FALSE; OK_LAIDEV__00006=FALSE; OK_LAIDEV__00007=FALSE; OK_LAIDEV__00008=FALSE; OK_LAIDEV__00009=FALSE; OK_LAIDEV__00010=FALSE; OK_LAIDEV__00011=FALSE; OK_LAIDEV__00012=FALSE; OK_LAIDEV__00013=FALSE; OK_LAIDEV__00014=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90, line: 699, callee: slowproc_readvegetmax, guard: "map_pft_format AND veget_update>0", config: "VEGET_UPDATE=0Y"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90, line: 721, callee: slowproc_readvegetmax, guard: "map_pft_format AND veget_update>0 AND FirstTsYear", config: "VEGET_UPDATE=0Y"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90, line: 724, callee: slowproc_readvegetmax, guard: "map_pft_format AND veget_update>0 AND FirstTsYear", config: "VEGET_UPDATE=0Y"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90, line: 2052, callee: slowproc_readvegetmax, guard: "ELSE IF (.NOT. found_restart) below the impveg branch", config: "IMPOSE_VEG=y"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90, line: 2070, callee: slowproc_readvegetmax, guard: "ELSE IF (.NOT. found_restart) below the impveg branch", config: "IMPOSE_VEG=y"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 732, callee: thermosoilc_initialize, guard: ".NOT. hydrol_cwrr legacy thermal branch", config: "HYDROL_CWRR=y"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1120, callee: thermosoilc_main, guard: ".NOT. hydrol_cwrr legacy thermal branch", config: "HYDROL_CWRR=y"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1878, callee: thermosoilc_finalize, guard: ".NOT. hydrol_cwrr legacy thermal branch", config: "HYDROL_CWRR=y"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 745, callee: erosion_initialize, guard: "erosion_module", config: "EROSION_MODULE=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90, line: 1220, callee: erosion_main, guard: "erosion_module", config: "EROSION_MODULE=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90, line: 855, callee: init_top_main, guard: "TOPM_calcul", config: "TOPM_CALCUL=n"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90, line: 636, callee: read_refsoc_1dfile, guard: "use_refSOC_hydrol", config: "USE_REFSOC_HYDROL=n"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90, line: 872, callee: read_newtopparam_file, guard: "topmodel_new", config: "TOPMODEL_NEW=n"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90, line: 836, callee: stomate_read_cycle, guard: "rotation_update>0 AND FirstTsYear; rotation_update is zero when ok_rotate is false", config: "OK_ROTATE=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90, line: 838, callee: stomate_read_rotation, guard: "rotation_update>0 AND FirstTsYear; rotation_update is zero when ok_rotate is false", config: "OK_ROTATE=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90, line: 840, callee: stomate_read_plantdate, guard: "rotation_update>0 AND FirstTsYear; rotation_update is zero when ok_rotate is false", config: "OK_ROTATE=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 1643, callee: stomate_read_cycle, guard: "ok_rotate", config: "OK_ROTATE=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 1673, callee: stomate_read_rotation, guard: "ok_rotate", config: "OK_ROTATE=FALSE"}
+  - {file: fortran_source/ORCHIDEE/src_stomate/stomate.f90, line: 4522, callee: stomate_rotation, guard: "ok_rotate", config: "OK_ROTATE=FALSE"}

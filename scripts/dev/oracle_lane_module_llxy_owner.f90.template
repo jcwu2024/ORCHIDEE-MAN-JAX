@@ -1,0 +1,188 @@
+module ioipsl
+  implicit none
+  logical :: oracle_nonfatal_errors = .false.
+contains
+  subroutine ipslerr(level, caller, message1, message2, message3)
+    integer, intent(in) :: level
+    character(*), intent(in) :: caller, message1, message2, message3
+    if (level >= 3 .and. .not.oracle_nonfatal_errors) error stop 'ipslerr'
+  end subroutine ipslerr
+end module ioipsl
+
+module constantes_var
+  implicit none
+  real, parameter :: R_Earth = 6378000.0
+end module constantes_var
+
+module module_llxy_oracle
+  use ioipsl
+  use constantes_var
+  implicit none
+  integer, parameter :: HH=4, VV=5, HIGH=8
+  real, parameter :: PI_M=3.141592653589793
+  real, parameter :: DEG_PER_RAD=180.0/PI_M, RAD_PER_DEG=PI_M/180.0
+  real, parameter :: A_WGS84=6378137.0, E_WGS84=0.081819192
+  real, parameter :: A_NAD83=6378137.0, E_NAD83=0.0818187034
+  integer, parameter :: PROJ_CASSINI=0, PROJ_LC=1, PROJ_PS=2
+  integer, parameter :: PROJ_PS_WGS84=102, PROJ_MERC=3, PROJ_GAUSS=4
+  integer, parameter :: PROJ_CYL=5, PROJ_LATLON=6
+  integer, parameter :: PROJ_ALBERS_NAD83=105, PROJ_ROTLL=203
+
+  type proj_info
+    integer :: code=0, nlat=0, nlon=0, ixdim=0, jydim=0, stagger=0
+    real :: phi=0.0, lambda=0.0, lat1=0.0, lon1=0.0, lat0=0.0, lon0=0.0
+    real :: dx=0.0, dy=0.0, latinc=0.0, loninc=0.0, dlat=0.0, dlon=0.0
+    real :: stdlon=0.0, truelat1=0.0, truelat2=0.0, hemi=1.0, cone=0.0
+    real :: polei=0.0, polej=0.0, rsw=0.0, rebydx=0.0
+    real :: knowni=0.0, knownj=0.0, re_m=0.0, rho0=0.0, nc=0.0, bigc=0.0
+    logical :: init=.false., wrap=.false.
+    real, pointer :: gauss_lat(:) => null()
+  end type proj_info
+contains
+! <LATLON_TO_IJ>
+! <IJ_TO_LATLON>
+! <LLIJ_PS>
+! <IJLL_PS>
+! <LLIJ_PS_WGS84>
+! <IJLL_PS_WGS84>
+! <LLIJ_ALBERS_NAD83>
+! <IJLL_ALBERS_NAD83>
+! <IJLL_LC>
+! <LLIJ_LC>
+! <LLIJ_MERC>
+! <IJLL_MERC>
+! <LLIJ_LATLON>
+! <IJLL_LATLON>
+! <LLIJ_CYL>
+! <IJLL_CYL>
+! <LLIJ_CASSINI>
+! <IJLL_CASSINI>
+! <ROTATE_COORDS>
+! <LLIJ_ROTLATLON>
+! <IJLL_ROTLATLON>
+! <LLIJ_GAUSS>
+! <WRF_ERROR_FATAL>
+end module module_llxy_oracle
+
+program driver
+  use module_llxy_oracle
+  use ioipsl, only: oracle_nonfatal_errors
+  implicit none
+  type(proj_info), target :: p(10)
+  integer :: u, k, a, b, s
+  real :: x, y, lat, lon
+  character(512) :: path, mode
+
+  call setup(p)
+  call get_command_argument(1, path)
+  call get_command_argument(2, mode)
+  if (trim(mode) == 'coverage') then
+    oracle_nonfatal_errors=.true.
+    call error_coverage_cases(p)
+    mode=''
+  endif
+  select case (trim(mode))
+  case ('uninit_forward')
+    p(1)%init=.false.; call latlon_to_ij(p(1), 0.0, 0.0, x, y)
+  case ('invalid_forward')
+    p(1)%code=999; call latlon_to_ij(p(1), 0.0, 0.0, x, y)
+  case ('uninit_inverse')
+    p(1)%init=.false.; call ij_to_latlon(p(1), 1.0, 1.0, lat, lon)
+  case ('invalid_inverse')
+    p(1)%code=999; call ij_to_latlon(p(1), 1.0, 1.0, lat, lon)
+  case ('gauss_missing')
+    p(7)%gauss_lat=(/80.0, 60.0, 40.0, 20.0/)
+    call llij_gauss(-30.0, 0.0, p(7), x, y)
+  case default
+    open(newunit=u, file=trim(path), status='replace')
+    write(u,'(a)') 'field,flat_index,value'
+    call numerical_cases(u,p)
+    close(u)
+    call coverage_cases(p)
+  end select
+contains
+  subroutine setup(q)
+    type(proj_info), intent(out), target :: q(:)
+    integer :: n
+    do n=1,size(q); q(n)%init=.true.; end do
+    q(1)%code=PROJ_LATLON; q(1)%lat1=-10.; q(1)%lon1=100.; q(1)%latinc=.5; q(1)%loninc=2.; q(1)%knowni=1.; q(1)%knownj=1.
+    q(2)%code=PROJ_MERC; q(2)%lon1=170.; q(2)%knowni=3.; q(2)%knownj=4.; q(2)%dlon=.02; q(2)%rsw=-2.5
+    q(3)%code=PROJ_PS; q(3)%stdlon=10.; q(3)%truelat1=60.; q(3)%hemi=1.; q(3)%rebydx=100.; q(3)%polei=7.; q(3)%polej=8.
+    q(4)%code=PROJ_PS_WGS84; q(4)%stdlon=0.; q(4)%truelat1=60.; q(4)%hemi=1.; q(4)%dx=10000.; q(4)%knowni=1.; q(4)%knownj=1.
+    q(5)%code=PROJ_ALBERS_NAD83; q(5)%stdlon=0.; q(5)%hemi=1.; q(5)%dx=10000.; q(5)%knowni=1.; q(5)%knownj=1.; q(5)%rho0=100.; q(5)%nc=.5; q(5)%bigc=.5
+    q(6)%code=PROJ_LC; q(6)%stdlon=0.; q(6)%truelat1=30.; q(6)%truelat2=60.; q(6)%hemi=1.; q(6)%cone=.7; q(6)%rebydx=100.; q(6)%polei=0.; q(6)%polej=0.
+    q(7)%code=PROJ_GAUSS; q(7)%nlat=2; q(7)%lon1=0.; q(7)%loninc=90.; allocate(q(7)%gauss_lat(4)); q(7)%gauss_lat=(/80.,30.,-30.,-80./)
+    q(8)%code=PROJ_CYL; q(8)%lat1=-90.; q(8)%lon1=-180.; q(8)%latinc=1.; q(8)%loninc=1.; q(8)%knowni=1.; q(8)%knownj=1.
+    q(9)=q(8); q(9)%code=PROJ_CASSINI; q(9)%lat0=45.; q(9)%lon0=10.; q(9)%stdlon=0.
+    q(10)%code=PROJ_ROTLL; q(10)%ixdim=9; q(10)%jydim=9; q(10)%stagger=HH; q(10)%phi=40.; q(10)%lambda=80.; q(10)%lat1=45.; q(10)%lon1=0.
+  end subroutine setup
+
+  subroutine emit_pair(unit,name,index,v1,v2)
+    integer,intent(in)::unit,index;character(*),intent(in)::name;real,intent(in)::v1,v2
+    write(unit,'(a,i0,a,es25.17)') trim(name)//'_a,',index,',',v1
+    write(unit,'(a,i0,a,es25.17)') trim(name)//'_b,',index,',',v2
+  end subroutine emit_pair
+
+  subroutine numerical_cases(unit,q)
+    integer,intent(in)::unit;type(proj_info),intent(in)::q(:);type(proj_info)::t;integer::n
+    real,parameter::lats(3)=(/-30.,0.,45./), lons(3)=(/179.,-179.,160./)
+    real,parameter::glats(4)=(/90.,55.,0.,-90./)
+    do n=1,3; call llij_merc(lats(n),lons(n),q(2),x,y); call emit_pair(unit,'merc_f',n-1,x,y); call ijll_merc(x,y,q(2),lat,lon); call emit_pair(unit,'merc_i',n-1,lat,lon); enddo
+    do n=1,5; call llij_cyl(-91.+n, -541.+180.*n, q(8),x,y); call emit_pair(unit,'cyl_f',n-1,x,y); call ijll_cyl(x,y,q(8),lat,lon); call emit_pair(unit,'cyl_i',n-1,lat,lon); enddo
+    call ijll_ps(q(3)%polei,q(3)%polej,q(3),lat,lon); call emit_pair(unit,'ps_i',0,lat,lon)
+    call ijll_ps(q(3)%polei+3.,q(3)%polej+4.,q(3),lat,lon); call emit_pair(unit,'ps_i',1,lat,lon)
+    call ijll_ps(q(3)%polei+3.,q(3)%polej-4.,q(3),lat,lon); call emit_pair(unit,'ps_i',2,lat,lon)
+    call llij_lc(30.,190.,q(6),x,y); call emit_pair(unit,'lc_f',0,x,y)
+    call llij_lc(30.,-190.,q(6),x,y); call emit_pair(unit,'lc_f',1,x,y)
+    call ijll_lc(0.,0.,q(6),lat,lon); call emit_pair(unit,'lc_i',0,lat,lon)
+    call ijll_lc(20.,-10.,q(6),lat,lon); call emit_pair(unit,'lc_i',1,lat,lon)
+    t=q(6); t%truelat2=t%truelat1; call ijll_lc(20.,10.,t,lat,lon); call emit_pair(unit,'lc_i',2,lat,lon)
+    call llij_cassini(10.,20.,q(9),x,y); call emit_pair(unit,'cass_f',0,x,y); call ijll_cassini(x,y,q(9),lat,lon); call emit_pair(unit,'cass_i',0,lat,lon)
+    t=q(9);t%lat0=90.;call llij_cassini(10.,20.,t,x,y);call emit_pair(unit,'cass_f',1,x,y);call ijll_cassini(x,y,t,lat,lon);call emit_pair(unit,'cass_i',1,lat,lon)
+    call rotate_coords(10.,20.,lat,lon,45.,10.,0.); call emit_pair(unit,'rotate',0,lat,lon)
+    call rotate_coords(10.,20.,lat,lon,45.,10.,0.,-1); call emit_pair(unit,'rotate',1,lat,lon)
+    call rotate_coords(10.,20.,lat,lon,45.,10.,0.,1); call emit_pair(unit,'rotate',2,lat,lon)
+    do n=1,4;call llij_gauss(glats(n),90.,q(7),x,y);call emit_pair(unit,'gauss',n-1,x,y);enddo
+    call llij_rotlatlon(45.,0.,q(10),x,y);call emit_pair(unit,'rot_f',0,x,y);call ijll_rotlatlon(x,y,q(10),lat,lon);call emit_pair(unit,'rot_i',0,lat,lon)
+    do n=1,10;call latlon_to_ij(q(n),10.,20.,x,y);call emit_pair(unit,'dispatch_f',n-1,x,y);enddo
+    do n=1,10;if(n/=7)then;call ij_to_latlon(q(n),2.,3.,lat,lon);call emit_pair(unit,'dispatch_i',n-1,lat,lon);endif;enddo
+  end subroutine numerical_cases
+
+  subroutine coverage_cases(q)
+    type(proj_info),intent(inout)::q(:);type(proj_info)::t
+    integer::ilat,ilon,ii,jj
+    call llij_merc(0.,-20.,q(2),x,y);call llij_merc(0.,400.,q(2),x,y);call ijll_merc(-20.,0.,q(2),lat,lon);call ijll_merc(30.,0.,q(2),lat,lon);call ijll_merc(-400.,0.,q(2),lat,lon)
+    call llij_cyl(0.,-600.,q(8),x,y);call llij_cyl(0.,1000.,q(8),x,y);call ijll_cyl(-500.,1.,q(8),lat,lon);call ijll_cyl(500.,1.,q(8),lat,lon)
+    t=q(8);t%lon1=170.;call ijll_cyl(100.,1.,t,lat,lon)
+    call rotate_coords(90.,0.,lat,lon,90.,0.,0.,1);call rotate_coords(0.,720.,lat,lon,45.,10.,0.,1);call rotate_coords(0.,-720.,lat,lon,45.,10.,0.,1);call rotate_coords(0.,0.,lat,lon,45.,10.,-720.,1)
+    t=q(10)
+    do s=HH,VV
+      t%stagger=s
+      do ilat=-80,80,2
+        do ilon=-180,180,2
+          call llij_rotlatlon(real(ilat),real(ilon),t,x,y)
+        enddo
+      enddo
+      do ii=-20,30
+        do jj=-10,30
+          call ijll_rotlatlon(real(ii)/2.,real(jj)+merge(.9995,0.,mod(jj,7)==0),t,lat,lon)
+        enddo
+      enddo
+    enddo
+    t=q(10);t%lon1=170.;do ii=-20,30;do jj=-10,30;call ijll_rotlatlon(real(ii),real(jj),t,lat,lon);enddo;enddo
+    t%lon1=-170.;do ii=-20,30;do jj=-10,30;call ijll_rotlatlon(real(ii),real(jj),t,lat,lon);enddo;enddo
+    t%stagger=0;call llij_rotlatlon(0.,0.,t,x,y)
+    call ijll_ps(q(3)%polei-300.,q(3)%polej+1.,q(3),lat,lon);call ijll_ps(q(3)%polei-300.,q(3)%polej-1.,q(3),lat,lon);t=q(3);t%stdlon=-170.;call ijll_ps(t%polei-300.,t%polej-1.,t,lat,lon)
+    t=q(6);t%polei=10.;t%polej=0.;call ijll_lc(100.,1.,t,lat,lon);call ijll_lc(-100.,1.,t,lat,lon);t%stdlon=-1000.;call ijll_lc(10.,-1.,t,lat,lon)
+  end subroutine coverage_cases
+
+  subroutine error_coverage_cases(q)
+    type(proj_info),intent(inout)::q(:);type(proj_info)::t
+    t=q(1);t%init=.false.;call latlon_to_ij(t,0.,0.,x,y)
+    t=q(1);t%code=999;call latlon_to_ij(t,0.,0.,x,y)
+    t=q(1);t%init=.false.;call ij_to_latlon(t,1.,1.,lat,lon)
+    t=q(1);t%code=999;call ij_to_latlon(t,1.,1.,lat,lon)
+    q(7)%gauss_lat=(/80.,60.,40.,20./);call llij_gauss(-30.,0.,q(7),x,y)
+    q(7)%gauss_lat=(/80.,30.,-30.,-80./)
+  end subroutine error_coverage_cases
+end program driver

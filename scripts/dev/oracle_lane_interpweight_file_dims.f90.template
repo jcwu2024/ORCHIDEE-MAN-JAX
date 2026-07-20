@@ -1,0 +1,107 @@
+module netcdf
+  implicit none
+  integer, parameter :: NF90_NOWRITE=0, NF90_NOERR=0
+  integer :: configured_rank=2
+  integer :: configured_sizes(4)=(/7,5,3,2/)
+contains
+  integer function nf90_open(filename, mode, nid)
+    character(*), intent(in) :: filename
+    integer, intent(in) :: mode
+    integer, intent(out) :: nid
+    nid=11; nf90_open=NF90_NOERR
+  end function
+  integer function nf90_inq_varid(nid, varname, vid)
+    integer, intent(in) :: nid
+    character(*), intent(in) :: varname
+    integer, intent(out) :: vid
+    vid=17; nf90_inq_varid=NF90_NOERR
+  end function
+  integer function nf90_inquire_variable(nid, vid, NDIMS, DIMIDS)
+    integer, intent(in) :: nid, vid
+    integer, intent(out), optional :: NDIMS
+    integer, intent(out), optional :: DIMIDS(:)
+    integer :: i
+    if (present(NDIMS)) NDIMS=configured_rank
+    if (present(DIMIDS)) then
+      do i=1,size(DIMIDS); DIMIDS(i)=i; end do
+    end if
+    nf90_inquire_variable=NF90_NOERR
+  end function
+  integer function nf90_inquire_dimension(nid, dimid, LEN)
+    integer, intent(in) :: nid, dimid
+    integer, intent(out), optional :: LEN
+    if (present(LEN)) LEN=configured_sizes(dimid)
+    nf90_inquire_dimension=NF90_NOERR
+  end function
+  integer function nf90_close(nid)
+    integer, intent(in) :: nid
+    nf90_close=NF90_NOERR
+  end function
+  character(len=64) function nf90_strerror(rcode)
+    integer, intent(in) :: rcode
+    nf90_strerror='stub error'
+  end function
+end module
+
+module interpweight_file_dims_oracle
+  implicit none
+  logical :: is_root_prc=.true.
+  integer :: error_count=0
+  interface bcast
+    module procedure bcast_integer_vector
+  end interface
+contains
+  subroutine ipslerr_p(level, caller, message1, message2, message3)
+    integer, intent(in) :: level
+    character(*), intent(in) :: caller, message1, message2, message3
+    error_count=error_count+1
+  end subroutine
+  subroutine bcast_integer_vector(values)
+    integer, intent(inout) :: values(:)
+  end subroutine
+! <INTERPWEIGHT_GET_VAR2DIMS_FILE>
+! <INTERPWEIGHT_GET_VAR3DIMS_FILE>
+! <INTERPWEIGHT_GET_VAR4DIMS_FILE>
+end module
+
+program driver
+  use netcdf
+  use interpweight_file_dims_oracle
+  implicit none
+  integer :: unit, i, d2(2), d3(3), d4(4)
+  character(512) :: path
+  call get_command_argument(1,path)
+  open(newunit=unit,file=trim(path),status='replace')
+  write(unit,'(a)') 'field,flat_index,value'
+
+  configured_rank=2; configured_sizes=(/7,5,3,2/); error_count=0
+  d2=interpweight_get_var2dims_file('stub.nc','field2')
+  do i=1,2; write(unit,'(a,a,i0,a,i0)') 'success2',',',i-1,',',d2(i); end do
+  configured_rank=3; error_count=0
+  d2=interpweight_get_var2dims_file('stub.nc','field2')
+  write(unit,'(a,i0,a,i0)') 'mismatch2_error,0,',error_count
+  configured_rank=2; error_count=0
+  d2=interpweight_get_var2dims_file('stub.nc',' ')
+  write(unit,'(a,i0,a,i0)') 'empty2_error,0,',error_count
+
+  configured_rank=3; error_count=0
+  d3=interpweight_get_var3dims_file('stub.nc','field3')
+  do i=1,3; write(unit,'(a,a,i0,a,i0)') 'success3',',',i-1,',',d3(i); end do
+  configured_rank=2; error_count=0
+  d3=interpweight_get_var3dims_file('stub.nc','field3')
+  write(unit,'(a,i0,a,i0)') 'mismatch3_error,0,',error_count
+  configured_rank=3; error_count=0
+  d3=interpweight_get_var3dims_file('stub.nc',' ')
+  write(unit,'(a,i0,a,i0)') 'empty3_error,0,',error_count
+
+  configured_rank=4; error_count=0
+  d4=interpweight_get_var4dims_file('stub.nc','field4')
+  do i=1,4; write(unit,'(a,a,i0,a,i0)') 'success4',',',i-1,',',d4(i); end do
+  configured_rank=3; error_count=0
+  d4=interpweight_get_var4dims_file('stub.nc','field4')
+  write(unit,'(a,i0,a,i0)') 'mismatch4_error,0,',error_count
+  configured_rank=4; error_count=0
+  d4=interpweight_get_var4dims_file('stub.nc',' ')
+  write(unit,'(a,i0,a,i0)') 'empty4_error,0,',error_count
+  close(unit)
+end program

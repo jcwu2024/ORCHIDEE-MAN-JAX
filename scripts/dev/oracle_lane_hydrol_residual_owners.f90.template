@@ -1,0 +1,84 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ implicit none
+ integer,parameter::i_std=int32,r_std=real64
+end module
+
+module hydrol_residual_owner_oracle
+ use defprec
+ implicit none
+ integer,parameter::nvm=14,nstm=6,nslm=7,nnobio=1,nscm=12,nsnow=3,ndeep=4
+ integer,parameter::numout=6,iice=1
+ real(r_std),parameter::zero=0._r_std,un=1._r_std,deux=2._r_std,trois=3._r_std,huit=8._r_std
+ real(r_std),parameter::min_sechiba=1.e-8_r_std,tp_00=273.15_r_std,dt_sechiba=1800._r_std,one_day=86400._r_std
+ real(r_std),parameter::chalfu0=.3336e6_r_std,snowcri=1.5_r_std,sneige=1.5e-3_r_std
+ real(r_std),parameter::maxmass_snow=3000._r_std,max_snow_age=50._r_std,snow_trans=.2_r_std,sn_dens=330._r_std
+ integer,parameter::imin=1,imax=51
+ integer::printlev=0
+ logical::check_cwrr=.false.
+ integer::pref_soil_veg(nvm)=1
+ real(r_std),allocatable::lalo(:,:)
+! <MODULE_STATE>
+contains
+! <STATE_SETUP>
+ subroutine ipslerr_p(level,a,b,c,d)
+  integer,intent(in)::level;character(*),intent(in)::a,b,c,d
+  if(level>=3) error stop 'ipslerr_p'
+ end subroutine
+ subroutine run_cases(unit_out)
+  integer,intent(in)::unit_out
+  integer::c,i,j
+  integer::index(12)
+  real(r_std)::pr(12),ps(12),ts(12),cap(12),fn(12,1),tfn(12),evs(12),sn(12),sa(12),snb(12,1),snba(12,1)
+  real(r_std)::melt(12),depth(12),smelt(12),q(12,14),soilwet(12)
+  real(r_std)::z(12),wet(12,14),tr(12,14),flux(12)
+  call reset_state(); index=[(i,i=1,12)]; lalo=zero
+  dz=(/2._r_std,4._r_std,8._r_std,12._r_std,18._r_std,24._r_std,30._r_std/)
+  pr=(/0._r_std,1._r_std,0._r_std,0._r_std,0._r_std,0._r_std,0._r_std,0._r_std,0._r_std,0._r_std,0._r_std,0._r_std/)
+  ps=(/0._r_std,.2_r_std,0._r_std,0._r_std,.1_r_std,0._r_std,0._r_std,0._r_std,0._r_std,0._r_std,0._r_std,0._r_std/)
+  ts=(/272._r_std,274._r_std,274._r_std,274._r_std,270._r_std,274._r_std,270._r_std,274._r_std,270._r_std,274._r_std,270._r_std,274._r_std/)
+  cap=1.e6_r_std; fn=zero; fn(2,1)=.2_r_std;fn(3,1)=.2_r_std;fn(6,1)=.2_r_std;fn(7,1)=.2_r_std;fn(8,1)=.2_r_std
+  tfn=fn(:,1);tfn(4)=1._r_std; evs=(/2._r_std,.1_r_std,.1_r_std,2._r_std,.1_r_std,.1_r_std,.1_r_std,.1_r_std,.1_r_std,.1_r_std,.1_r_std,.1_r_std/)
+  sn=(/0._r_std,2._r_std,2._r_std,.001_r_std,2._r_std,4001._r_std,0._r_std,2._r_std,2._r_std,2._r_std,0._r_std,2._r_std/)
+  sa=(/(real(i,r_std),i=1,12)/); snb=zero;snb(2,1)=2;snb(6,1)=4001;snb(8,1)=.01;snb(9,1)=2
+  snba=3._r_std
+  call hydrol_snow(12,pr,ps,ts,cap,fn,tfn,evs,sn,sa,snb,snba,melt,depth,smelt)
+  do i=1,12
+   call emit(unit_out,1,'snow',i,sn(i));call emit(unit_out,1,'snow_age',i,sa(i));call emit(unit_out,1,'snow_nobio',i,snb(i,1))
+   call emit(unit_out,1,'snow_nobio_age',i,snba(i,1));call emit(unit_out,1,'vevapsno',i,evs(i));call emit(unit_out,1,'tot_melt',i,melt(i))
+   call emit(unit_out,1,'snowmelt',i,smelt(i));call emit(unit_out,1,'snowdepth',i,depth(i));call emit(unit_out,1,'subsnowveg',i,subsnowveg(i))
+   call emit(unit_out,1,'subsnownobio',i,subsnownobio(i,1));call emit(unit_out,1,'subsinksoil',i,subsinksoil(i));call emit(unit_out,1,'icemelt',i,icemelt(i))
+  enddo
+  call reset_state(); humtot=(/(10._r_std+i,i=1,12)/);mx_eau_var=(/(merge(100._r_std,0._r_std,mod(i,2)==1),i=1,12)/)
+  q=reshape([(real(i,r_std)/100._r_std,i=1,168)],shape(q));sn=(/(real(i,r_std),i=1,12)/);snb(:,1)=.5_r_std
+  call hydrol_alma(12,index,.true.,q,sn,snb,soilwet)
+  do i=1,12
+   call emit(unit_out,2,'tot_watveg_beg',i,tot_watveg_beg(i));call emit(unit_out,2,'tot_watsoil_beg',i,tot_watsoil_beg(i));call emit(unit_out,2,'snow_beg',i,snow_beg(i))
+  enddo
+  humtot=humtot+1;sn=sn+.2;snb=snb+.1;q=q+.01
+  call hydrol_alma(12,index,.false.,q,sn,snb,soilwet)
+  do i=1,12
+   call emit(unit_out,3,'tot_watveg_beg',i,tot_watveg_beg(i));call emit(unit_out,3,'tot_watsoil_beg',i,tot_watsoil_beg(i));call emit(unit_out,3,'snow_beg',i,snow_beg(i))
+   call emit(unit_out,3,'delintercept',i,delintercept(i));call emit(unit_out,3,'delsoilmoist',i,delsoilmoist(i));call emit(unit_out,3,'delswe',i,delswe(i));call emit(unit_out,3,'soilwet',i,soilwet(i))
+  enddo
+  call reset_state();vegtot=.8_r_std;tfn=.2_r_std;humtot=10._r_std;tot_water_beg=10.5_r_std;q=zero;q(:,14)=.2_r_std;snb=zero;sn=.3_r_std
+  z=zero;wet=zero;tr=zero;flux=zero
+  call hydrol_waterbal(12,index,q,tfn,q,sn,snb,z,z,z,z,z,wet,tr,z,z,z,z,z,z,z)
+  do i=1,12
+   call emit(unit_out,4,'tot_water_end',i,tot_water_end(i));call emit(unit_out,4,'tot_water_beg',i,tot_water_beg(i));call emit(unit_out,4,'tot_flux',i,tot_flux(i))
+  enddo
+ end subroutine
+ subroutine emit(u,c,f,i,x)
+  integer,intent(in)::u,c,i;character(*),intent(in)::f;real(r_std),intent(in)::x
+  write(u,'(I0,A,A,A,I0,A,ES26.17E3)')c,',',trim(f),',',i,',',x
+ end subroutine
+! <HYDROL_PROCEDURES>
+end module
+
+program main
+ use hydrol_residual_owner_oracle
+ implicit none
+ integer::u
+ call allocate_state(12);allocate(lalo(12,2));open(newunit=u,file='fortran_outputs.csv',status='replace');write(u,'(A)')'case_id,field,flat_index,value'
+ call run_cases(u);close(u)
+end program

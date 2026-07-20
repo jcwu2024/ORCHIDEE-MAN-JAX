@@ -1,0 +1,30 @@
+schema_version: 2
+families:
+  - id: restart_writer_handoff_strict
+    certification_status: verified
+    runner: oracle_lane_driver_run:run_restart_oracle
+    ledger_entries: [restart.active.day_and_year_handoff]
+    result_asset: outputs/reference_mode/micro_oracles/driver_restart_handoff/comparison.json
+    branch_coverage_asset: outputs/reference_mode/micro_oracles/driver_restart_handoff/branch_coverage.json
+    output_contract: [writerestart_field_selection, litter_label, level_label, element_label, pool_label, PFTpresent, senescence, begin_leaves, need_adjacent]
+    procedures:
+      - id: restart_writer_handoff_strict.writerestart
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+        procedure: writerestart
+        procedure_kind: subroutine
+        start_line: 1751
+        end_line: 2944
+        expected_source_sha256: f2324dade1416ff5cb16cb4c493554ec34cccdb8b8994d0e5bce56ee6c7b97ae
+        expected_span_sha256: 00ffe9eb2a78440ec1aa67f73d26c9cb05c19624c8b798f79823c993a55a5be3
+        dependencies: {use_modules: [ioipsl_para, stomate_data], module_symbols: [rest_id_stomate, index_g], called_procedures: [restput_p]}
+        compilation:
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          flags: [-std=f2008, -fdefault-real-8, -O0, -fcheck=all]
+          harness: scripts/dev/oracle_lane_driver_restart.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/driver_restart_handoff/comparison.json
+        numerical_oracle_status: verified
+        tolerance: {comparison: exact}

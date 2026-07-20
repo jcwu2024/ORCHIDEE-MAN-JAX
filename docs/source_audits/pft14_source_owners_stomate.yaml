@@ -1,0 +1,623 @@
+schema_version: 1
+entries:
+  - id: stomate.owner.restart.readstart.normalized_state
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+    fortran_subroutine: readstart
+    fortran_lines: 465-1732
+    status: implemented
+    jax_owner: jax_orchidee.stomate.restart_io.read_stomate_readstart_states_from_template
+    gap: null
+    state_contract:
+      - docs/source_audits/restart_state_lifecycle.yaml
+      - docs/source_audits/stomate_restart_state_ledger.md
+      - jax_orchidee.stomate.reference.StomateRestartEntryState
+      - jax_orchidee.stomate.reference.StomateRestartSeasonState
+      - jax_orchidee.stomate.reference.StomateDailyAccumulatorState
+      - jax_orchidee.stomate.reference.StomateReadstartRemainderState
+    validation:
+      - tests/unit/test_stomate_reference.py
+      - tests/unit/test_stomate_restart_io.py
+
+  - id: stomate.owner.restart.readstart.remaining_control
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+    fortran_subroutine: readstart
+    fortran_lines: 34-464,1733-1747
+    status: missing
+    jax_owner: null
+    gap: >-
+      Restart opening/version/configuration control before normalized field reads and
+      the trailing assim_param/finalization statements do not yet have one exact owner.
+    state_contract: []
+    validation: []
+
+  - id: stomate.owner.restart.writerestart.template_roundtrip
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+    fortran_subroutine: writerestart
+    fortran_lines: 1751-2944
+    status: partial
+    jax_owner: jax_orchidee.stomate.restart_io.write_stomate_restart_states_from_template
+    gap: >-
+      The full normalized scientific state is serialized through all 164 Fortran
+      template variables. Independent NetCDF creation, IOIPSL scatter/index_g effects,
+      metadata, and physical file finalization remain external boundaries.
+    state_contract:
+      - docs/source_audits/restart_state_lifecycle.yaml
+      - jax_orchidee.stomate.restart_io.template_backed_restart_field_names
+    validation:
+      - tests/unit/test_stomate_restart_io.py
+      - tests/unit/test_restart_alias_roundtrip.py
+
+  - id: stomate.owner.restart.writerestart.labels.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+    fortran_subroutine: writerestart
+    fortran_lines: 2141-2171
+    status: implemented
+    jax_owner: jax_orchidee.stomate.restart_io.writerestart_index_labels
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.restart_io.StomateWriterestartFieldLedger
+      - jax_orchidee.stomate.restart_io.stomate_writerestart_field_ledger
+    validation:
+      - tests/unit/test_stomate_restart_io.py
+
+  - id: stomate.owner.main.entry_normalization
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_main
+    fortran_lines: 2917-3032
+    status: implemented
+    jax_owner: jax_orchidee.stomate.daily_inputs.stomate_entry_local_prep_explicit
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.daily_inputs.StomateEntryLocalPrepResult
+    validation:
+      - tests/unit/test_stomate_daily_inputs.py
+      - tests/unit/test_stomate_daily.py
+
+  - id: stomate.owner.main.daily_schedule_accumulation
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_main
+    fortran_lines: 3128-3240
+    status: implemented
+    jax_owner: jax_orchidee.stomate.daily.stomate_daily_accumulation_fold_from_entries
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.reference.StomateDailyAccumulatorState
+      - docs/source_audits/stomate_restart_state_ledger.md
+    validation:
+      - tests/unit/test_stomate_daily.py
+      - tests/parity/test_driver_1961_orchestration.py
+
+  - id: stomate.owner.main.maintenance
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_main
+    fortran_lines: 3244-3267
+    status: implemented
+    jax_owner: jax_orchidee.stomate.daily.stomate_maintenance_fold_from_entries
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.daily.StomateMaintenanceFold
+    validation:
+      - tests/unit/test_stomate_daily.py
+      - tests/parity/test_stomate_maintenance_trace_oracle.py
+
+  - id: stomate.owner.main.day_end_packet
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_main
+    fortran_lines: 4585-4726
+    status: implemented
+    jax_owner: jax_orchidee.driver.orchestration._paper_day_end_state_packet
+    gap: null
+    state_contract:
+      - jax_orchidee.driver.orchestration.STOMATE_DAY_END_WRITEBACK_FIELDS
+      - docs/source_audits/stomate_restart_state_ledger.md
+    validation:
+      - tests/unit/test_driver_state_transition_contract.py
+      - tests/parity/test_driver_1961_orchestration.py
+
+  - id: stomate.owner.main.remaining_orchestration
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_main
+    fortran_lines: 2409-2916,3033-3127,3241-3243,3268-5231
+    status: partial
+    jax_owner: jax_orchidee.stomate.main.stomate_main_pft14_step
+    gap: >-
+      The fixed-switch daily carbon, season, StomateLpj, output and reset order is now
+      owned, including activity-control and NEP/monthly reductions. Unused C-forcing
+      buffers, exact history serialization, initialization and target-inactive
+      alternate-switch arms remain external or explicitly rejected.
+    state_contract:
+      - docs/source_audits/stomate_phase1c_state_contract.md
+      - docs/source_audits/stomate_restart_state_ledger.md
+    validation:
+      - tests/unit/test_stomate_integration.py
+      - tests/parity/test_driver_1961_orchestration.py
+
+  - id: stomate.owner.main.fixed_carbon_season_reset.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_main
+    fortran_lines: 3241-3243,3268-3483,4221-4364,4950-5000
+    status: implemented
+    jax_owner: jax_orchidee.stomate.main.stomate_main_pft14_step
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.main.StomateMainPFT14Result
+      - docs/source_audits/stomate_restart_state_ledger.md
+    validation:
+      - tests/unit/test_stomate_main.py
+
+  - id: stomate.owner.main.activity_monthly.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_main
+    fortran_lines: 3035-3124,4851-4937
+    status: implemented
+    jax_owner: jax_orchidee.stomate.main.stomate_main_pft14_step
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.main.StomateActivityControlResult
+      - jax_orchidee.stomate.main.StomateMonthlyCarbonResult
+    validation:
+      - tests/unit/test_stomate_main.py
+
+  - id: stomate.owner.main.output_fluxes.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_main
+    fortran_lines: 5033-5049
+    status: implemented
+    jax_owner: jax_orchidee.stomate.main.stomate_output_fluxes
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.main.StomateOutputFluxResult
+      - bare-soil maintenance respiration is reset before the SECHIBA-facing flux sum
+    validation:
+      - tests/unit/test_stomate_main.py
+
+  - id: stomate.owner.main.fixed_control.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_main
+    fortran_lines: 2896-2916,3514-3766,3940-4220,4365-4584,4732-4839,4938-4938,5108-5226
+    status: implemented
+    jax_owner: jax_orchidee.stomate.main.stomate_fixed_path_control
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.main.StomateFixedPathControlResult
+    validation:
+      - tests/unit/test_stomate_main.py
+
+  - id: stomate.owner.daily.accu_r1d
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_accu_r1d
+    fortran_lines: 9341-9363
+    status: implemented
+    jax_owner: jax_orchidee.stomate.daily.stomate_accumulate_daily
+    gap: null
+    state_contract:
+      - field_out equals field_out plus field_in times dt_sechiba, with do_slow normalization
+    validation:
+      - tests/unit/test_stomate_daily.py
+
+  - id: stomate.owner.daily.accu_r2d
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_accu_r2d
+    fortran_lines: 9365-9387
+    status: implemented
+    jax_owner: jax_orchidee.stomate.daily.stomate_accumulate_daily
+    gap: null
+    state_contract:
+      - field_out equals field_out plus field_in times dt_sechiba, with do_slow normalization
+    validation:
+      - tests/unit/test_stomate_daily.py
+
+  - id: stomate.owner.daily.accu_r3d
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_accu_r3d
+    fortran_lines: 9389-9411
+    status: implemented
+    jax_owner: jax_orchidee.stomate.daily.stomate_accumulate_daily
+    gap: null
+    state_contract:
+      - field_out equals field_out plus field_in times dt_sechiba, with do_slow normalization
+    validation:
+      - tests/unit/test_stomate_daily.py
+
+  - id: stomate.owner.resp.maintenance
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_resp.f90
+    fortran_subroutine: maint_respiration
+    fortran_lines: 122-389
+    status: implemented
+    jax_owner: jax_orchidee.stomate.carbon_kernels.maintenance_respiration
+    gap: null
+    state_contract:
+      - biomass and temperature inputs produce maint_resp and resp_maint_part in Fortran axes
+    validation:
+      - tests/unit/test_stomate_carbon_kernels.py
+      - tests/parity/test_stomate_maintenance_trace_oracle.py
+
+  - id: stomate.owner.permafrost.microactem
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_permafrost_soilcarbon.f90
+    fortran_subroutine: microactem
+    fortran_lines: 2468-2703
+    status: implemented
+    jax_owner: jax_orchidee.stomate.permafrost.microactem
+    gap: null
+    state_contract:
+      - temperature and moisture controls return residence-time controls in seconds
+    validation:
+      - tests/unit/test_stomate_permafrost.py
+      - tests/unit/test_coupled.py
+
+  - id: stomate.owner.season.memory
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_season.f90
+    fortran_subroutine: season
+    fortran_lines: 386-1131
+    status: implemented
+    jax_owner: jax_orchidee.stomate.season.season_memory_step
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.season.SeasonMemoryStepResult
+      - jax_orchidee.stomate.reference.StomateRestartSeasonState
+    validation:
+      - tests/unit/test_stomate_season.py
+      - tests/unit/test_coupled.py
+
+  - id: stomate.owner.season.annual
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_season.f90
+    fortran_subroutine: season
+    fortran_lines: 1147-1580
+    status: implemented
+    jax_owner: jax_orchidee.stomate.season.season_annual_step
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.season.SeasonAnnualStepResult
+      - jax_orchidee.stomate.reference.StomateRestartSeasonState
+    validation:
+      - tests/unit/test_stomate_season.py
+      - tests/unit/test_coupled.py
+
+  - id: stomate.owner.season.remaining
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_season.f90
+    fortran_subroutine: season
+    fortran_lines: 167-385,1132-1146,1581-1584
+    status: partial
+    jax_owner: jax_orchidee.stomate.season.season_memory_step
+    gap: >-
+      Procedure declarations and boundary glue are represented by the split memory and
+      annual owners, but this residual span is not asserted as an independently complete
+      source owner.
+    state_contract:
+      - jax_orchidee.stomate.reference.StomateRestartSeasonState
+    validation:
+      - tests/unit/test_stomate_season.py
+
+  - id: stomate.owner.phenology
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90
+    fortran_subroutine: phenology
+    fortran_lines: 173-591
+    status: implemented
+    jax_owner: jax_orchidee.stomate.carbon_kernels.phenology_step
+    gap: null
+    state_contract:
+      - biomass, leaf classes, growth-init memory, and begin_leaves are explicit outputs
+    validation:
+      - tests/unit/test_stomate_carbon_kernels.py
+      - tests/unit/test_stomate_integration.py
+
+  - id: stomate.owner.litter.leak
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90
+    fortran_subroutine: littercalc_leak
+    fortran_lines: 1637-2873
+    status: implemented
+    jax_owner: jax_orchidee.stomate.carbon_kernels.littercalc_leak_core_with_controls
+    gap: null
+    state_contract:
+      - litter, lignin, fuel, DOC input, and heterotrophic respiration outputs are explicit
+    validation:
+      - tests/unit/test_stomate_carbon_kernels.py
+      - tests/unit/test_stomate_integration.py
+
+  - id: stomate.owner.soilcarbon.leak
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90
+    fortran_subroutine: soilcarbon_leak
+    fortran_lines: 641-2416
+    status: implemented
+    jax_owner: jax_orchidee.stomate.soilcarbon_kernels.soilcarbon_leak_core_step
+    gap: null
+    state_contract:
+      - carbon_32l and DOC are updated in source order with explicit exports and respiration
+    validation:
+      - tests/unit/test_stomate_soilcarbon_kernels.py
+      - tests/unit/test_stomate_integration.py
+
+  - id: stomate.owner.permafrost.snowlevels
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_permafrost_soilcarbon.f90
+    fortran_subroutine: snowlevels
+    fortran_lines: 2726-2802
+    status: implemented
+    jax_owner: jax_orchidee.stomate.soilcarbon_kernels.deep_carbon_snowlevels_step
+    gap: null
+    state_contract:
+      - snow geometry is expanded from grid snow layers to the PFT axis
+    validation:
+      - tests/unit/test_stomate_soilcarbon_kernels.py
+
+  - id: stomate.owner.litter.temperature_control
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90
+    fortran_subroutine: control_temp_func
+    fortran_lines: 1451-1511
+    status: implemented
+    jax_owner: jax_orchidee.stomate.carbon_kernels.litter_control_temperature
+    gap: null
+    state_contract:
+      - litter temperature activity factor retains Fortran branch semantics
+    validation:
+      - tests/unit/test_stomate_carbon_kernels.py
+
+  - id: stomate.owner.litter.moyano_control
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90
+    fortran_subroutine: control_moist_func_moyano
+    fortran_lines: 2904-3037
+    status: implemented
+    jax_owner: jax_orchidee.stomate.carbon_kernels.litter_control_moisture_moyano
+    gap: null
+    state_contract:
+      - soil-layer moisture, density, clay, carbon, and vegetation produce PFT controls
+    validation:
+      - tests/unit/test_stomate_carbon_kernels.py
+      - tests/unit/test_coupled.py
+
+  - id: stomate.owner.soilcarbon.altcalc_doc
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90
+    fortran_subroutine: altcalc_doc
+    fortran_lines: 2438-2578
+    status: implemented
+    jax_owner: jax_orchidee.stomate.soilcarbon_kernels.altcalc_doc
+    gap: null
+    state_contract:
+      - active-layer depth and indices preserve Fortran numeric index values
+    validation:
+      - tests/unit/test_stomate_soilcarbon_kernels.py
+      - tests/unit/test_stomate_integration.py
+
+  - id: stomate.owner.soilcarbon.legacy
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90
+    fortran_subroutine: soilcarbon
+    fortran_lines: 212-632
+    status: implemented
+    jax_owner: jax_orchidee.stomate.soilcarbon_kernels.soilcarbon_pft14_owner
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.soilcarbon_kernels.SoilcarbonResult
+    validation:
+      - tests/unit/test_stomate_soilcarbon_owner.py
+      - tests/unit/test_stomate_soilcarbon_kernels.py
+
+  - id: stomate.owner.lpj.crown
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/lpj_crown.f90
+    fortran_subroutine: crown
+    fortran_lines: 78-201
+    status: implemented
+    jax_owner: jax_orchidee.stomate.carbon_kernels.crown_step
+    gap: null
+    state_contract:
+      - pft_present, biomass, density, and vegetation update crown area and height
+    validation:
+      - tests/unit/test_stomate_carbon_kernels.py
+
+  - id: stomate.owner.lpj.prescribe
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90
+    fortran_subroutine: prescribe
+    fortran_lines: 90-348
+    status: implemented
+    jax_owner: jax_orchidee.stomate.carbon_kernels.prescribe_step
+    gap: null
+    state_contract:
+      - cold-start and restart-backed PFT state updates remain distinct
+    validation:
+      - tests/unit/test_stomate_carbon_kernels.py
+      - tests/unit/test_stomate_pft14_reachable_prescribe_restart.py
+
+  - id: stomate.owner.lpj.orchestration
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+    fortran_subroutine: stomatelpj
+    fortran_lines: 170-2477
+    status: partial
+    jax_owner: jax_orchidee.stomate.integration.stomate_lpj_main_pft14_fixed
+    gap: >-
+      The fixed-switch PFT14 scientific chain and restart-state writeback are source ordered.
+      Exact history serialization, alternate structural switches, and target-external
+      management paths remain external or explicitly rejected.
+    state_contract:
+      - docs/source_audits/stomate_phase1c_state_contract.md
+      - docs/source_audits/stomate_restart_state_ledger.md
+    validation:
+      - tests/unit/test_stomate_integration.py
+      - tests/parity/test_driver_1961_orchestration.py
+
+  - id: stomate.owner.lpj.fixed_path.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+    fortran_subroutine: stomatelpj
+    fortran_lines: 800-2437
+    status: implemented
+    jax_owner: jax_orchidee.stomate.integration.stomate_lpj_main_pft14_fixed
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.integration.StomateLpjPFT14Result
+      - docs/source_audits/stomate_restart_state_ledger.md
+    validation:
+      - tests/unit/test_stomate_lpj_main.py
+
+  - id: stomate.owner.data.parameters
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_data.f90
+    fortran_subroutine: data
+    fortran_lines: 129-725
+    status: partial
+    jax_owner: jax_orchidee.stomate.parameters.load_paper_case_stomate_parameter_bundle
+    gap: >-
+      The materialized paper configuration and PFT parameter bundle are loaded, but the
+      JAX owner does not implement every alternate configuration, diagnostic, and fatal
+      validation arm in the full Fortran data procedure.
+    state_contract:
+      - jax_orchidee.stomate.parameters.PaperCaseStomateParameterBundle
+    validation:
+      - tests/parity/test_stomate_pft14_parameters_modelout.py
+      - tests/parity/test_stomate_pft14_parameters_modelout.py
+
+  - id: stomate.owner.data.source_materialization.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_data.f90
+    fortran_subroutine: data
+    fortran_lines: 261-348,367-400,408-426,453-457,504-538,574-588
+    status: implemented
+    jax_owner: jax_orchidee.stomate.source_helpers.stomate_data_owner
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.source_helpers.StomateDataResult
+    validation:
+      - tests/unit/test_stomate_source_helpers.py
+
+  - id: stomate.owner.initialize
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_initialize
+    fortran_lines: 1309-2365
+    status: partial
+    jax_owner: jax_orchidee.stomate.initialize.stomate_initialize_pft14_explicit
+    gap: >-
+      Fixed-switch scientific lifecycle and state handoff are owned. Physical restart IO,
+      forcing-writer/history handles, allocation internals, and target-external switch arms
+      remain explicit owner boundaries.
+    state_contract:
+      - jax_orchidee.coupled.StomateRestartInputBundles
+      - docs/source_audits/restart_state_lifecycle.yaml
+    validation:
+      - tests/unit/test_coupled.py
+      - tests/parity/test_driver_1961_orchestration.py
+
+  - id: stomate.owner.initialize.fixed_lifecycle.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_initialize
+    fortran_lines: 1465-1848,2234-2261,2272-2350
+    status: implemented
+    jax_owner: jax_orchidee.stomate.initialize.stomate_initialize_pft14_explicit
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.initialize.StomateInitializePFT14Result
+      - docs/source_audits/stomate_restart_state_ledger.md
+    validation:
+      - tests/unit/test_stomate_initialize.py
+
+  - id: stomate.owner.initialize.forcing_gates.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_initialize
+    fortran_lines: 1866-1866,2059-2059,2115-2115,2150-2150,2180-2180,2199-2199,2205-2205,2220-2220
+    status: implemented
+    jax_owner: jax_orchidee.stomate.initialize.stomate_initialize_forcing_boundaries
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.initialize.StomateInitializeBoundaryDisposition
+    validation:
+      - tests/unit/test_stomate_source_helpers.py
+
+  - id: stomate.owner.init
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_init
+    fortran_lines: 6248-8497
+    status: partial
+    jax_owner: jax_orchidee.coupled.stomate_restart_input_bundles
+    gap: >-
+      Array-valued production state initialization is represented by explicit bundles,
+      but allocation, history/restart handle setup, firstcall flags, and every alternate
+      configuration arm are not fully reproduced.
+    state_contract:
+      - jax_orchidee.coupled.StomateRestartInputBundles
+      - docs/source_audits/restart_state_lifecycle.yaml
+    validation:
+      - tests/unit/test_coupled.py
+      - tests/parity/test_driver_1961_orchestration.py
+
+  - id: stomate.owner.init.fixed_lifecycle.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_init
+    fortran_lines: 6296-6330,7178-7379,8250-8275
+    status: implemented
+    jax_owner: jax_orchidee.stomate.source_helpers.stomate_init_lifecycle_owner
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.source_helpers.StomateInitLifecycleResult
+    validation:
+      - tests/unit/test_stomate_source_helpers.py
+
+  - id: stomate.owner.finalize
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_finalize
+    fortran_lines: 5248-6207
+    status: partial
+    jax_owner: jax_orchidee.stomate.finalize.stomate_finalize_pft14_explicit
+    gap: >-
+      The fixed paper gates and state handoff are owned, but independent NetCDF restart
+      creation and the target-inactive crop/general/carbon/permafrost forcing writers
+      remain explicit external or unsupported IO boundaries.
+    state_contract:
+      - docs/source_audits/restart_state_lifecycle.yaml
+    validation:
+      - tests/unit/test_stomate_finalize.py
+      - tests/unit/test_stomate_restart_io.py
+
+  - id: stomate.owner.finalize.fixed_pft14.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_finalize
+    fortran_lines: 5440-6205
+    status: implemented
+    jax_owner: jax_orchidee.stomate.finalize.stomate_finalize_pft14_explicit
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.finalize.StomateFinalizePFT14Result
+      - docs/source_audits/restart_state_lifecycle.yaml
+    validation:
+      - tests/unit/test_stomate_finalize.py
+
+  - id: stomate.owner.var_init
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_var_init
+    fortran_lines: 9249-9321
+    status: implemented
+    jax_owner: jax_orchidee.stomate.initialize.stomate_var_init_carbon_owner
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.initialize.StomateVarInitResult
+    validation:
+      - tests/unit/test_stomate_source_helpers.py
+
+  - id: stomate.owner.sort_ascending
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: sort_ascending
+    fortran_lines: 12278-12311
+    status: implemented
+    jax_owner: jax_orchidee.stomate.source_helpers.sort_ascending_owner
+    gap: null
+    state_contract:
+      - jax_orchidee.stomate.source_helpers.SORT_ASCENDING_PROVENANCE
+    validation:
+      - tests/unit/test_stomate_source_helpers.py
+
+  - id: stomate.owner.read_plantdate
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_read_plantdate
+    fortran_lines: 11875-11990
+    status: missing
+    jax_owner: null
+    gap: >-
+      Crop planting-date input is outside PFT14 but remains unimplemented; reachability
+      disposition does not constitute a JAX source owner.
+    state_contract: []
+    validation: []
+
+  - id: stomate.owner.stics.init
+    fortran_file: fortran_source/ORCHIDEE/src_sticslai/Stics_init.f90
+    fortran_subroutine: stics_init
+    fortran_lines: 4-533
+    status: missing
+    jax_owner: null
+    gap: >-
+      STICS initialization has no JAX source owner. Its active entry and statically
+      disabled crop-development arms remain explicitly visible rather than silently
+      treated as implemented.
+    state_contract: []
+    validation: []

@@ -1,0 +1,72 @@
+module defprec
+ use,intrinsic::iso_fortran_env,only:int32,real64
+ implicit none
+ integer,parameter::i_std=int32,r_std=real64
+end module
+module mangrove_oracle
+ use defprec
+ implicit none
+ integer,parameter::nvm=14,nslm=3,itimetide=1006,nparts=12,nelements=1,icarbon=1
+ integer,parameter::iagrsapst=9,iagrsappn=10,iagrhrtst=11,iagrhrtpn=12
+ real(r_std),parameter::zero=0.,un=1.,control_salinity_min=.5,control_inudate_min=.5
+ real(r_std),parameter::agb_agr_ven_all_st=200.,agb_agr_ven_all_pn=40.,h_agr_max_st=2.,h_agr_max_pn=.4
+ real(r_std)::diaglev(nslm)=(/.1,.4,1.0/)
+ real(r_std),allocatable::control_salinity(:),control_inudate(:),z_soil(:)
+ logical::firstcall_diffuco=.true.
+ integer::numout=6
+contains
+ subroutine ipslerr_p(level,a,b,c,d)
+  integer,intent(in)::level;character(*),intent(in)::a,b,c,d;error stop 'ipslerr_p'
+ end subroutine
+ subroutine run_segment(kjpindex,salinity,rprof,tide_height,biomass,frac_root_soil,n_soil_inudate,frac_root_inudate, &
+  agb_agr_st,agb_agr_pn,h_agr_st,h_agr_pn,frac_root_ven_st,frac_root_ven_pn,frac_root_ventilate,frac_root_anoxia)
+  integer,intent(in)::kjpindex
+  real(r_std),intent(in)::salinity(kjpindex),rprof(kjpindex,nvm),tide_height(kjpindex,itimetide)
+  real(r_std),intent(in)::biomass(kjpindex,nvm,nparts,nelements)
+  real(r_std),intent(out)::frac_root_soil(kjpindex,nvm,nslm)
+  integer,intent(out)::n_soil_inudate(kjpindex,itimetide)
+  real(r_std),intent(out)::frac_root_inudate(kjpindex,nvm,itimetide),agb_agr_st(kjpindex,nvm),agb_agr_pn(kjpindex,nvm)
+  real(r_std),intent(out)::h_agr_st(kjpindex,nvm),h_agr_pn(kjpindex,nvm),frac_root_ven_st(kjpindex,nvm,itimetide)
+  real(r_std),intent(out)::frac_root_ven_pn(kjpindex,nvm,itimetide),frac_root_ventilate(kjpindex,nvm,itimetide)
+  real(r_std),intent(out)::frac_root_anoxia(kjpindex,nvm,itimetide)
+  real(r_std)::rpc(kjpindex),tide_height_neg(kjpindex,itimetide),tide_height_pos(kjpindex,itimetide)
+  integer::ji,jv,jl,jt,ier
+! <MANGROVE_SEGMENT>
+ end subroutine
+end module
+program oracle_main
+ use defprec;use mangrove_oracle
+ implicit none
+ integer,parameter::n=2
+ integer::i,j
+ real(r_std)::sal(n),rp(n,nvm),tide(n,itimetide),bio(n,nvm,nparts,nelements)
+ real(r_std)::frs(n,nvm,nslm),fri(n,nvm,itimetide),ags(n,nvm),agp(n,nvm),hs(n,nvm),hp(n,nvm)
+ integer::nsi(n,itimetide)
+ real(r_std)::fvs(n,nvm,itimetide),fvp(n,nvm,itimetide),fv(n,nvm,itimetide),fa(n,nvm,itimetide)
+ character(len=512)::path
+ allocate(control_salinity(n),control_inudate(n));sal=(/5.,35./);rp=.5;rp(:,14)=(/.35,.8/)
+ tide=0.;tide(1,1:6)=(/-1.2,-.5,-.1,0.,.2,.8/);tide(2,1:6)=(/-2.,-.8,-.2,.1,.5,1.5/)
+ tide(:,7:)=spread(tide(:,6),2,itimetide-6)
+ bio=1.;bio(:,14,iagrsapst,icarbon)=(/20.,150./);bio(:,14,iagrhrtst,icarbon)=(/10.,100./)
+ bio(:,14,iagrsappn,icarbon)=(/5.,30./);bio(:,14,iagrhrtpn,icarbon)=(/3.,20./)
+ bio(:,2,iagrsappn,icarbon)=0.;bio(:,2,iagrhrtpn,icarbon)=0.
+ call run_segment(n,sal,rp,tide,bio,frs,nsi,fri,ags,agp,hs,hp,fvs,fvp,fv,fa)
+ call get_command_argument(1,path);open(10,file=trim(path),status='replace');write(10,'(a)')'field,value'
+ do i=1,n
+  write(10,'(a,es25.17)')'control_salinity,',control_salinity(i);write(10,'(a,es25.17)')'control_inudate,',control_inudate(i)
+  write(10,'(a,es25.17)')'agb_st,',ags(i,14);write(10,'(a,es25.17)')'agb_pn,',agp(i,14)
+  write(10,'(a,es25.17)')'h_st,',hs(i,14);write(10,'(a,es25.17)')'h_pn,',hp(i,14)
+ enddo
+ do j=1,nslm;do i=1,n;write(10,'(a,es25.17)')'frac_root_soil,',frs(i,14,j);enddo;enddo
+ do j=1,itimetide;do i=1,n
+  write(10,'(a,i0)')'n_soil_inudate,',nsi(i,j);write(10,'(a,es25.17)')'frac_root_inudate,',fri(i,14,j)
+  write(10,'(a,es25.17)')'frac_root_ventilate,',fv(i,14,j);write(10,'(a,es25.17)')'frac_root_anoxia,',fa(i,14,j)
+ enddo;enddo
+ call run_segment(n,sal,rp,tide,bio,frs,nsi,fri,ags,agp,hs,hp,fvs,fvp,fv,fa)
+ do i=1,n
+  write(10,'(a,es25.17)')'later_control_salinity,',control_salinity(i)
+  write(10,'(a,es25.17)')'later_control_inudate,',control_inudate(i)
+ enddo
+ write(10,'(a,es25.17)')'later_firstcall_flag,',merge(1._r_std,0._r_std,firstcall_diffuco)
+ close(10)
+end program

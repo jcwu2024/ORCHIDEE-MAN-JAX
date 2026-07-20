@@ -1,0 +1,36 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ implicit none; integer,parameter::i_std=int32,r_std=real64
+end module
+module hydrol_lane_infilt
+ use defprec; implicit none
+ integer,parameter::nslm=4,nstm=6,nscm=12,numout=6
+ real(r_std),parameter::zero=0._r_std,un=1._r_std,deux=2._r_std,trois=3._r_std,huit=8._r_std,one_day=86400._r_std,min_sechiba=1.e-8_r_std,ZeroCelsius=273.15_r_std
+ logical::check_cwrr2=.false.,peat_hydro=.true.,ok_freeze_cwrr=.true.
+ real(r_std)::dt_sechiba=1800._r_std,mcs(3),mcs_peat=.9_r_std,ks(nscm),ks_peat=.25_r_std
+ real(r_std)::dz(nslm),mc(3,nslm,nstm),k(3,nslm),kfact(nslm,nscm),kfact_peat(nslm),kfact_root(3,nslm,nstm),temp_hydro(3,nslm)
+contains
+ subroutine ipslerr_p(level,a,b,c,d)
+  integer,intent(in)::level; character(*),intent(in)::a,b,c,d
+  if(level>=3) error stop 'ipslerr_p'
+ end subroutine
+! <HYDROL_SOIL_INFILT>
+end module
+program hydrol_infilt_oracle
+ use defprec; use hydrol_lane_infilt; implicit none
+ integer::i,j,ins,njsc(3); real(r_std)::flux(3),q(3,nstm),ru(3,nstm),check(3,nstm),initial(3,nslm,nstm); character(512)::path
+ njsc=(/1,4,10/); mcs=(/.43_r_std,.45_r_std,.38_r_std/); ks=.12_r_std; dz=(/10._r_std,30._r_std,70._r_std,150._r_std/)
+ kfact=1._r_std; kfact(1,:)=.8_r_std; kfact(2,:)=.5_r_std; kfact_peat=(/.9_r_std,.7_r_std,.4_r_std,.2_r_std/)
+ kfact_root=1._r_std; k=.08_r_std; temp_hydro=275._r_std; temp_hydro(:,2)=272._r_std
+ mc=.2_r_std; mc(2,1,:)=.449_r_std; mc(3,2,:)=.37_r_std; initial=mc; q=0._r_std; ru=0._r_std; check=0._r_std
+ flux=(/.2_r_std,3._r_std,20._r_std/); ins=1; call hydrol_soil_infilt(3,ins,njsc,flux,q,ru,check)
+ call get_command_argument(1,path); open(10,file=trim(path),status='replace'); write(10,'(a)')'field,i,j,value'
+ do i=1,3; do j=1,nslm; write(10,'(a,i0,a,i0,a,es25.17)')'mineral_mc,',i,',',j,',',mc(i,j,1); enddo
+ write(10,'(a,i0,a,i0,a,es25.17)')'mineral_q,',i,',',0,',',q(i,1); write(10,'(a,i0,a,i0,a,es25.17)')'mineral_ru,',i,',',0,',',ru(i,1); enddo
+ mc=initial; q=0._r_std; ru=0._r_std; ins=4; call hydrol_soil_infilt(3,ins,njsc,flux,q,ru,check)
+ do i=1,3; do j=1,nslm; write(10,'(a,i0,a,i0,a,es25.17)')'peat_mc,',i,',',j,',',mc(i,j,4); enddo
+ write(10,'(a,i0,a,i0,a,es25.17)')'peat_q,',i,',',0,',',q(i,4); write(10,'(a,i0,a,i0,a,es25.17)')'peat_ru,',i,',',0,',',ru(i,4); enddo
+ mc=initial; q=0._r_std; ru=0._r_std; ins=1; ok_freeze_cwrr=.false.; call hydrol_soil_infilt(3,ins,njsc,flux,q,ru,check)
+ do i=1,3; do j=1,nslm; write(10,'(a,i0,a,i0,a,es25.17)')'nofreeze_mc,',i,',',j,',',mc(i,j,1); enddo
+ write(10,'(a,i0,a,i0,a,es25.17)')'nofreeze_q,',i,',',0,',',q(i,1); write(10,'(a,i0,a,i0,a,es25.17)')'nofreeze_ru,',i,',',0,',',ru(i,1); enddo; close(10)
+end program

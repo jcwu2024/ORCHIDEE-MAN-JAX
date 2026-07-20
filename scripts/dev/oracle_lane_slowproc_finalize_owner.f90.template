@@ -1,0 +1,74 @@
+program slowproc_finalize_oracle
+  implicit none
+  integer,parameter::i_std=4,r_std=8,nvm=14,nnobio=2,nleafages=2,npco2=1,ndeep=2
+  integer,parameter::nparts=1,nelements=1,nlitt=1,ncarb=1,ndoc=1,npool=1,nbp_glo=2
+  integer::printlev_loc=0,numout=6,index_g(2)=[1,2],unit_out,veget_year=1999
+  logical::hydrol_cwrr,read_lai,map_pft_format,ok_stomate
+  character(len=16)::case_prefix
+  real(r_std)::clayfraction(2),sandfraction(2),laimap(2,nvm,12)
+  real(r_std)::peatPET_lastyear(2),growth_day(2),GSL(2),peatPET_thisyear(2)
+  real(r_std)::precipitation_lastsummer(2),precipitation_thissummer(2),summerpet_long(2),summerp_long(2)
+  real(r_std)::peatC(2),peatC_ok(2),soil_ph(2),poor_soils(2),bulk_density(2)
+  interface restput_p
+    procedure restput_rank1,restput_rank2,restput_rank3,restput_rank3_short,restput_scalar
+  end interface
+  call run
+contains
+  subroutine run
+    integer::kjit=7,rest_id=3,indexland(2)=[1,2],njsc(2)=[4,12],j
+    real(r_std)::lai(2,nvm),height(2,nvm),veget(2,nvm),frac_nobio(2,nnobio),vmax(2,nvm),reinf(2)
+    real(r_std)::zz(ndeep),zc(ndeep),thaw(2),organic(2),assim(2,nvm,npco2),frac_age(2,nvm,nleafages)
+    real(r_std)::altmax(2,nvm),fpeat(2),biomass(2,nvm,nparts,nelements),la(2,nlitt,nvm,nelements)
+    real(r_std)::lb(2,nlitt,nvm,ndeep,nelements),carbon(2,ncarb,nvm,ndeep),docv(2,nvm,ndeep,ndoc,npool,nelements)
+    real(r_std)::ligna(2,nvm),lignb(2,nvm,ndeep),depth(2,nvm)
+    open(newunit=unit_out,file=trim(command_argument()),status='replace',action='write')
+    lai=reshape([(real(j,r_std),j=1,size(lai))],shape(lai))/10; height=lai+1; veget=lai+2; vmax=lai+3
+    frac_nobio=reshape([0.1_r_std,0.2_r_std,0.3_r_std,0.4_r_std],shape(frac_nobio)); reinf=[0.2_r_std,0.3_r_std]
+    zz=[0.5_r_std,1.5_r_std]; zc=[0.25_r_std,0.75_r_std]; thaw=[0.6_r_std,0.7_r_std]; organic=[1.1_r_std,1.2_r_std]
+    assim=4; frac_age=5; altmax=6; fpeat=[0.7_r_std,0.8_r_std]; biomass=7; la=8; lb=9; carbon=10; docv=11; ligna=12; lignb=13; depth=14
+    clayfraction=[0.11_r_std,0.22_r_std]; sandfraction=[0.33_r_std,0.44_r_std]; laimap=15
+    peatPET_lastyear=[1,2];growth_day=[3,4];GSL=[5,6];peatPET_thisyear=[7,8]
+    precipitation_lastsummer=[9,10];precipitation_thissummer=[11,12];summerpet_long=[13,14];summerp_long=[15,16]
+    peatC=[17,18];peatC_ok=[1,0];soil_ph=[6.5_r_std,7.5_r_std];poor_soils=[0.1_r_std,0.2_r_std];bulk_density=[1100,1200]
+    hydrol_cwrr=.true.;read_lai=.true.;map_pft_format=.true.;ok_stomate=.true.;case_prefix='all_'
+    call slowproc_finalize(kjit,2,rest_id,indexland,njsc,lai,height,veget,frac_nobio,vmax,reinf,zz,zc,thaw,organic,assim,frac_age,altmax,fpeat,biomass,la,lb,carbon,docv,ligna,lignb,depth)
+    hydrol_cwrr=.false.;read_lai=.false.;map_pft_format=.false.;ok_stomate=.false.;case_prefix='base_'
+    call slowproc_finalize(kjit,2,rest_id,indexland,njsc,lai,height,veget,frac_nobio,vmax,reinf,zz,zc,thaw,organic,assim,frac_age,altmax,fpeat,biomass,la,lb,carbon,docv,ligna,lignb,depth)
+    close(unit_out)
+  end subroutine
+
+! <SLOWPROC_FINALIZE>
+
+  subroutine restput_rank1(id,name,d1,d2,d3,t,value,mode,ng,index)
+    integer,intent(in)::id,d1,d2,d3,t,ng,index(:);character(len=*),intent(in)::name,mode;real(r_std),intent(in)::value(:)
+    call emit(trim(case_prefix)//trim(name),value)
+  end subroutine
+  subroutine restput_rank2(id,name,d1,d2,d3,t,value,mode,ng,index)
+    integer,intent(in)::id,d1,d2,d3,t,ng,index(:);character(len=*),intent(in)::name,mode;real(r_std),intent(in)::value(:,:)
+    call emit(trim(case_prefix)//trim(name),reshape(value,[size(value)]))
+  end subroutine
+  subroutine restput_rank3(id,name,d1,d2,d3,t,value,mode,ng,index)
+    integer,intent(in)::id,d1,d2,d3,t,ng,index(:);character(len=*),intent(in)::name,mode;real(r_std),intent(in)::value(:,:,:)
+    call emit(trim(case_prefix)//trim(name),reshape(value,[size(value)]))
+  end subroutine
+  subroutine restput_rank3_short(id,name,d1,d2,d3,t,value)
+    integer,intent(in)::id,d1,d2,d3,t;character(len=*),intent(in)::name;real(r_std),intent(in)::value(:,:,:)
+    call emit(trim(case_prefix)//trim(name),reshape(value,[size(value)]))
+  end subroutine
+  subroutine restput_scalar(id,name,t,value)
+    integer,intent(in)::id,t,value;character(len=*),intent(in)::name
+    call emit(trim(case_prefix)//trim(name),[real(value,r_std)])
+  end subroutine
+  subroutine stomate_finalize(kjit,kjpindex,indexland,clay,zz,zc,thaw,organic,assim,altmax,fpeat,ph,poor,bulk,biomass,la,lb,carbon,docv,ligna,lignb,depth)
+    integer,intent(in)::kjit,kjpindex,indexland(:);real(r_std),intent(in)::clay(:),zz(:),zc(:),assim(:,:,:),ph(:),poor(:),bulk(:),biomass(:,:,:,:),la(:,:,:,:),lb(:,:,:,:,:),carbon(:,:,:,:),docv(:,:,:,:,:,:),ligna(:,:),lignb(:,:,:),depth(:,:)
+    real(r_std),intent(inout)::thaw(:),organic(:),altmax(:,:),fpeat(:)
+    call emit(trim(case_prefix)//'stomate_finalize_called',[1._r_std])
+  end subroutine
+  function command_argument() result(value)
+    character(len=1024)::value;call get_command_argument(1,value)
+  end function
+  subroutine emit(name,value)
+    character(len=*),intent(in)::name;real(r_std),intent(in)::value(:);integer::i
+    do i=1,size(value);write(unit_out,'(A,",",ES26.17E3)')trim(name),value(i);enddo
+  end subroutine
+end program

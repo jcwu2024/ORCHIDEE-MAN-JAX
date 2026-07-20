@@ -1,0 +1,77 @@
+program driver_bbox_oracle
+  implicit none
+  integer,parameter::i_std=4,r_std=8,nbpt=2,ijml=3,tml=2
+  real,parameter::pi=3.1415926535897932384626433832795
+  integer::numout=6,printlev_loc=1,unit
+  open(newunit=unit,file=trim(command_argument()),status='replace',action='write')
+  call annual_preprocess_case(unit);call tide_preprocess_case(unit)
+  call annual_case(unit,.false.,'salinity','salinity_count');call annual_case(unit,.true.,'salinity_wrap','salinity_wrap_count')
+  call tide_case(unit,.false.,'tide','tide_count');call tide_case(unit,.true.,'tide_wrap','tide_wrap_count');close(unit)
+contains
+  subroutine annual_preprocess_case(unit)
+    integer,intent(in)::unit
+    integer,parameter::iml=3,jml=1
+    integer::i,j,iki
+    real::lon_lu(iml),lat_lu(jml),popden_lu(iml,jml),lon_ful(ijml),lat_ful(ijml),popden_orig(ijml),mask(ijml)
+    lon_lu=[0.,1.,2.];lat_lu=0.;popden_lu(:,1)=[2.,-1.,4.];mask=0.
+! <ANNUAL_PREPROCESS_SPAN>
+    call emit1(unit,'salinity_preprocess',popden_orig);call emit1(unit,'salinity_preprocess_mask',mask)
+  end subroutine
+  subroutine tide_preprocess_case(unit)
+    integer,intent(in)::unit
+    integer,parameter::iml=3,jml=1
+    integer::i,j,iki
+    real::lon_lu(iml),lat_lu(jml),lightn_lu(iml,jml,tml),lon_ful(ijml),lat_ful(ijml),lightn_orig(ijml,tml),mask(ijml)
+    lon_lu=[0.,1.,2.];lat_lu=0.;lightn_lu(:,1,1)=[2.,4.,8.];lightn_lu(:,1,2)=[20.,40.,80.];mask=0.
+! <TIDE_PREPROCESS_SPAN>
+    call emit2(unit,'tide_preprocess',lightn_orig);call emit1(unit,'tide_preprocess_mask',mask)
+  end subroutine
+  subroutine annual_case(unit,wrap_case,value_name,count_name)
+    integer,intent(in)::unit;logical,intent(in)::wrap_case;character(len=*),intent(in)::value_name,count_name
+    integer::ilast,ip,iprog,idi,ii,ib,inear
+    integer::n_origpopden(nbpt)
+    real::popd(nbpt),popden_orig(ijml),mask(ijml),lon_ful(ijml),lat_ful(ijml),lon_low(nbpt),lon_up(nbpt),lat_low(nbpt),lat_up(nbpt),lalo(nbpt,2)
+    real::domaine_lon_min,domaine_lon_max,domaine_lat_min,domaine_lat_max
+    logical::found; character(len=20)::field_name='salinity'
+    if(wrap_case)then;lon_ful=[-2.,10.,5.];else;lon_ful=[0.,1.,10.];endif
+    lat_ful=0.; popden_orig=[2.,4.,8.]; mask=1.
+    lon_low=[-1.,9.]; lon_up=[1.,11.]; lat_low=-1.; lat_up=1.; lalo=reshape([0.,0.,0.,10.],[2,2])
+    domaine_lon_min=-1.; domaine_lon_max=11.; domaine_lat_min=-1.; domaine_lat_max=1.
+! <ANNUAL_BBOX_SPAN>
+    call emit1(unit,value_name,popd); call emiti(unit,count_name,n_origpopden)
+  end subroutine
+  subroutine tide_case(unit,wrap_case,value_name,count_name)
+    integer,intent(in)::unit;logical,intent(in)::wrap_case;character(len=*),intent(in)::value_name,count_name
+    integer::ilast,ip,iprog,idi,ii,ib,inear,j
+    integer::n_origlightn(nbpt); real::proxydata(nbpt,tml),lightn_orig(ijml,tml),mask(ijml)
+    real::lon_ful(ijml),lat_ful(ijml),lon_low(nbpt),lon_up(nbpt),lat_low(nbpt),lat_up(nbpt),lalo(nbpt,2)
+    real::domaine_lon_min,domaine_lon_max,domaine_lat_min,domaine_lat_max
+    logical::found; character(len=20)::field_name='tide'
+    if(wrap_case)then;lon_ful=[-2.,10.,5.];else;lon_ful=[0.,1.,10.];endif
+    lat_ful=0.; lightn_orig=reshape([2.,4.,8.,20.,40.,80.],[3,2]); mask=1.
+    lon_low=[-1.,9.]; lon_up=[1.,11.]; lat_low=-1.; lat_up=1.; lalo=reshape([0.,0.,0.,10.],[2,2])
+    domaine_lon_min=-1.; domaine_lon_max=11.; domaine_lat_min=-1.; domaine_lat_max=1.
+! <TIDE_BBOX_SPAN>
+    call emit2(unit,value_name,proxydata); call emiti(unit,count_name,n_origlightn)
+  end subroutine
+! <SLOWPROC_NEAREST_PROCEDURE>
+  subroutine ipslerr_p(level,routine,message,a,b)
+    integer,intent(in)::level; character(len=*),intent(in)::routine,message,a,b
+    error stop 'allocation failure in slowproc_nearest'
+  end subroutine
+  function command_argument() result(value)
+    character(len=1024)::value; call get_command_argument(1,value)
+  end function
+  subroutine emit1(unit,name,value)
+    integer,intent(in)::unit; character(len=*),intent(in)::name; real,intent(in)::value(:); integer::i
+    do i=1,size(value); write(unit,'(A,",",ES26.17E3)') trim(name),value(i); end do
+  end subroutine
+  subroutine emit2(unit,name,value)
+    integer,intent(in)::unit; character(len=*),intent(in)::name; real,intent(in)::value(:,:); integer::i,j
+    do j=1,size(value,2); do i=1,size(value,1); write(unit,'(A,",",ES26.17E3)') trim(name),value(i,j); end do; end do
+  end subroutine
+  subroutine emiti(unit,name,value)
+    integer,intent(in)::unit,value(:); character(len=*),intent(in)::name; integer::i
+    do i=1,size(value); write(unit,'(A,",",I0)') trim(name),value(i); end do
+  end subroutine
+end program

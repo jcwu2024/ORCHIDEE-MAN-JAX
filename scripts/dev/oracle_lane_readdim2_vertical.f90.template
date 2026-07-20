@@ -1,0 +1,104 @@
+module readdim2_vertical_oracle
+  implicit none
+  integer,parameter::numout=6
+  real,parameter::zero=0.
+  logical::zfixed,zsigma,zhybrid,zlevels,zheight,zsamelev_uv
+  real::zlev_fixed,zlevuv_fixed,zhybrid_a,zhybrid_b,zhybriduv_a,zhybriduv_b
+  integer::current_case=0
+  real::cfg_h1=2.,cfg_hw=10.
+contains
+  subroutine flinquery_var(fid,name,exists)
+    integer,intent(in)::fid;character(*),intent(in)::name;logical,intent(out)::exists
+    exists=.false.
+    select case(current_case)
+    case(1);exists=trim(name)=='Sigma'
+    case(2);exists=trim(name)=='Sigma'.or.trim(name)=='Sigma_uv'
+    case(3);exists=trim(name)=='HybSigA'.or.trim(name)=='HybSigB'
+    case(4);exists=trim(name)=='HybSigA'.or.trim(name)=='HybSigB'.or.trim(name)=='HybSigA_uv'.or.trim(name)=='HybSigB_uv'
+    case(5);exists=trim(name)=='Levels'
+    case(6);exists=trim(name)=='Levels'.or.trim(name)=='Levels_uv'
+    case(7);exists=trim(name)=='Height_Lev1'
+    case(8);exists=trim(name)=='Height_Lev1'.or.trim(name)=='Height_Levuv'
+    case(9);exists=trim(name)=='lev'
+    case(12);exists=trim(name)=='HybSigA'
+    case(13);exists=trim(name)=='HybSigA'.or.trim(name)=='HybSigB'.or.trim(name)=='HybSigA_uv'
+    end select
+  end subroutine
+  subroutine flinget(fid,name,i1,i2,i3,i4,i5,i6,value)
+    integer,intent(in)::fid,i1,i2,i3,i4,i5,i6;character(*),intent(in)::name;real,intent(out)::value
+    select case(trim(name))
+    case('Sigma');value=.91
+    case('Sigma_uv');value=.82
+    case('HybSigA');value=12.
+    case('HybSigB');value=.5
+    case('HybSigA_uv');value=22.
+    case('HybSigB_uv');value=.4
+    case('Height_Lev1');value=3.
+    case('Height_Levuv');value=12.
+    case('lev');value=4.
+    case default;error stop 'unknown flinget variable'
+    end select
+  end subroutine
+  subroutine getin(name,value)
+    character(*),intent(in)::name;real,intent(inout)::value
+    if(trim(name)=='HEIGHT_LEV1')value=cfg_h1
+    if(trim(name)=='HEIGHT_LEVW')value=cfg_hw
+  end subroutine
+  subroutine ipslerr(level,caller,m1,m2,m3)
+    integer,intent(in)::level;character(*),intent(in)::caller,m1,m2,m3
+    if(level>=3)error stop 'expected fatal vertical metadata error'
+  end subroutine
+! <FORCING_VERTICAL_IOIPSL>
+end module
+
+program driver
+  use readdim2_vertical_oracle
+  implicit none
+  integer::unit,mode_case
+  character(512)::path,mode
+  call get_command_argument(1,path);call get_command_argument(2,mode)
+  if(trim(mode)=='missing_tq_b')then
+    current_case=12;call reset_state;call forcing_vertical_ioipsl(1);stop 99
+  elseif(trim(mode)=='missing_uv_b')then
+    current_case=13;call reset_state;call forcing_vertical_ioipsl(1);stop 99
+  endif
+  open(newunit=unit,file=trim(path),status='replace');write(unit,'(a)')'field,flat_index,value'
+  do mode_case=1,12
+    current_case=mode_case
+    if(mode_case==11)then;cfg_h1=5.;cfg_hw=5.;endif
+    if(mode_case==12)cycle
+    if(mode_case==10)then;cfg_h1=2.;cfg_hw=10.;call run_case('fallback_positive',1)
+    elseif(mode_case==11)then;call run_case('fallback_same',-1)
+    elseif(mode_case==1)then;call run_case('sigma_same',1)
+    elseif(mode_case==2)then;call run_case('sigma_uv',1)
+    elseif(mode_case==3)then;call run_case('hybrid_same',1)
+    elseif(mode_case==4)then;call run_case('hybrid_uv',1)
+    elseif(mode_case==5)then;call run_case('levels_same',1)
+    elseif(mode_case==6)then;call run_case('levels_uv',1)
+    elseif(mode_case==7)then;call run_case('height_same',1)
+    elseif(mode_case==8)then;call run_case('height_uv',1)
+    elseif(mode_case==9)then;call run_case('legacy',1)
+    endif
+  enddo
+  current_case=10;cfg_h1=6.;cfg_hw=11.;call run_case('fallback_uv',0)
+  close(unit)
+contains
+  subroutine reset_state
+    zfixed=.true.;zsigma=.true.;zhybrid=.true.;zlevels=.true.;zheight=.true.;zsamelev_uv=.false.
+    zlev_fixed=-777.;zlevuv_fixed=-777.;zhybrid_a=-777.;zhybrid_b=-777.;zhybriduv_a=-777.;zhybriduv_b=-777.
+  end subroutine
+  subroutine run_case(prefix,fid)
+    character(*),intent(in)::prefix;integer,intent(in)::fid
+    call reset_state;call forcing_vertical_ioipsl(fid)
+    call out(prefix//'_zfixed',merge(1.,0.,zfixed));call out(prefix//'_zsigma',merge(1.,0.,zsigma))
+    call out(prefix//'_zhybrid',merge(1.,0.,zhybrid));call out(prefix//'_zlevels',merge(1.,0.,zlevels))
+    call out(prefix//'_zheight',merge(1.,0.,zheight));call out(prefix//'_zsamelev_uv',merge(1.,0.,zsamelev_uv))
+    call out(prefix//'_zlev_fixed',zlev_fixed);call out(prefix//'_zlevuv_fixed',zlevuv_fixed)
+    call out(prefix//'_zhybrid_a',zhybrid_a);call out(prefix//'_zhybrid_b',zhybrid_b)
+    call out(prefix//'_zhybriduv_a',zhybriduv_a);call out(prefix//'_zhybriduv_b',zhybriduv_b)
+  end subroutine
+  subroutine out(name,value)
+    character(*),intent(in)::name;real,intent(in)::value
+    write(unit,'(a,a,i0,a,es25.17)')trim(name),',',0,',',value
+  end subroutine
+end program

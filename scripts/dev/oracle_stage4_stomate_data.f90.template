@@ -1,0 +1,96 @@
+! Link against original ORCHIDEE objects. This calls stomate_data:data only.
+! Capture records are the complete PFT14 input boundary of
+! jax_orchidee.stomate.source_helpers.stomate_data_owner.
+program stage4_stomate_data_driver
+  use defprec
+  use constantes
+  use control, only : control_initialize
+  use ioipsl, only : getin_name
+  use mod_orchidee_para, only : Init_orchidee_para
+  use pft_parameters
+  use pft_parameters_var
+  use stomate_data, only : data
+  implicit none
+  integer(i_std), parameter :: npts = 1_i_std
+  integer(i_std), parameter :: pft = 14_i_std
+  real(r_std) :: lalo(npts,2)
+
+  call getin_name('run.def')
+  call Init_orchidee_para()
+  call control_initialize(1800._r_std)
+  call pft_parameters_main()
+  if (nvm /= 14_i_std) error stop 'stage4_stomate_data requires compiled NVM=14'
+  lalo = 0._r_std
+
+  ! Provenance: stomate_data.f90::data lines 261-588. All records below are
+  ! emitted after getin_name -> Init_orchidee_para -> control_initialize ->
+  ! pft_parameters_main and before data mutates its destination arrays.
+  write(*,'(A,1X,I0)') 'STAGE4_SOURCE_CONFIG schema_version', 3
+  write(*,'(A,1X,I0)') 'STAGE4_SOURCE_CONFIG compiled_nvm', nvm
+  write(*,'(A,1X,I0)') 'STAGE4_SOURCE_CONFIG fortran_pft_index', pft
+  write(*,'(A,1X,12(ES24.16E3,1X))') 'STAGE4_SOURCE_CONFIG bm_sapl_initial_pft14', bm_sapl(pft,:,icarbon)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG migrate_initial_pft14', migrate(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG maxdia_initial_pft14', maxdia(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG cn_sapl_initial_pft14', cn_sapl(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG lai_initmin_initial_pft14', lai_initmin(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG sla_pft14', sla(pft)
+  write(*,'(A,1X,L1)') 'STAGE4_SOURCE_CONFIG is_tree_pft14', is_tree(pft)
+  write(*,'(A,1X,I0)') 'STAGE4_SOURCE_CONFIG pheno_type_pft14', pheno_type(pft)
+  write(*,'(A,1X,L1)') 'STAGE4_SOURCE_CONFIG ok_laidev_pft14', ok_LAIdev(pft)
+  write(*,'(A,1X,L1)') 'STAGE4_SOURCE_CONFIG natural_pft14', natural(pft)
+  write(*,'(A,1X,L1)') 'STAGE4_SOURCE_CONFIG is_grassland_manag_pft14', is_grassland_manag(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG sp_densitesem_pft14', SP_densitesem(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG sp_pgrainmaxi_pft14', SP_pgrainmaxi(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG tmin_crit_pft14', tmin_crit(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG tcm_crit_pft14', tcm_crit(pft)
+  write(*,'(A,1X,A)') 'STAGE4_SOURCE_CONFIG pheno_model_pft14', trim(pheno_model(pft))
+  write(*,'(A,1X,3(ES24.16E3,1X))') 'STAGE4_SOURCE_CONFIG pheno_gdd_crit_pft14', pheno_gdd_crit_c(pft), pheno_gdd_crit_b(pft), pheno_gdd_crit_a(pft)
+  write(*,'(A,1X,A)') 'STAGE4_SOURCE_CONFIG senescence_type_pft14', trim(senescence_type(pft))
+  write(*,'(A,1X,3(ES24.16E3,1X))') 'STAGE4_SOURCE_CONFIG senescence_temp_pft14', senescence_temp_c(pft), senescence_temp_b(pft), senescence_temp_a(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG senescence_hum_pft14', senescence_hum(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG nosenescence_hum_pft14', nosenescence_hum(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG leafagecrit_pft14', leafagecrit(pft)
+  write(*,'(A,1X,I0)') 'STAGE4_SOURCE_CONFIG nleafages', nleafages
+  write(*,'(A,1X,L1)') 'STAGE4_SOURCE_CONFIG ok_dgvm', ok_dgvm
+  write(*,'(A,1X,L1)') 'STAGE4_SOURCE_CONFIG use_age_class', use_age_class
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG alpha_tree', alpha_tree
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG alpha_grass', alpha_grass
+  write(*,'(A,1X,4(ES24.16E3,1X))') 'STAGE4_SOURCE_CONFIG bm_sapl_leaf', bm_sapl_leaf
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG pipe_tune1', pipe_tune1
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG mass_ratio_heart_sap', mass_ratio_heart_sap
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG pipe_k1', pipe_k1
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG bm_sapl_carbres', bm_sapl_carbres
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG bm_sapl_sapabove', bm_sapl_sapabove
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG pipe_density', pipe_density
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG pipe_tune2', pipe_tune2
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG pipe_tune3', pipe_tune3
+  write(*,'(A,1X,2(ES24.16E3,1X))') 'STAGE4_SOURCE_CONFIG dia_coeff', dia_coeff
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG bm_sapl_heartabove', bm_sapl_heartabove
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG bm_sapl_heartbelow', bm_sapl_heartbelow
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG init_sapl_mass_leaf_nat', init_sapl_mass_leaf_nat
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG init_sapl_mass_leaf_agri', init_sapl_mass_leaf_agri
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG init_sapl_mass_carbres', init_sapl_mass_carbres
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG init_sapl_mass_root', init_sapl_mass_root
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG init_sapl_mass_fruit', init_sapl_mass_fruit
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG migrate_tree', migrate_tree
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG migrate_grass', migrate_grass
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG pipe_tune4', pipe_tune4
+  write(*,'(A,1X,2(ES24.16E3,1X))') 'STAGE4_SOURCE_CONFIG maxdia_coeff', maxdia_coeff
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG cn_sapl_init', cn_sapl_init
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG lai_initmin_tree', lai_initmin_tree
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG lai_initmin_grass', lai_initmin_grass
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG undef', undef
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG min_stomate', min_stomate
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG zero_celsius', ZeroCelsius
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_SOURCE_CONFIG pi', pi
+
+  call data(npts, lalo)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_DATA migrate_pft14', migrate(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_DATA maxdia_pft14', maxdia(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_DATA cn_sapl_pft14', cn_sapl(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_DATA tmin_crit_pft14', tmin_crit(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_DATA tcm_crit_pft14', tcm_crit(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_DATA leaf_timecst_pft14', leaf_timecst(pft)
+  write(*,'(A,1X,ES24.16E3)') 'STAGE4_DATA lai_initmin_pft14', lai_initmin(pft)
+  write(*,'(A,1X,12(ES24.16E3,1X))') 'STAGE4_DATA bm_sapl_pft14', bm_sapl(pft,:,icarbon)
+end program stage4_stomate_data_driver

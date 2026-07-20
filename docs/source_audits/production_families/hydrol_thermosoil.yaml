@@ -1,0 +1,557 @@
+schema_version: 1
+lane: hydrol_thermosoil
+records:
+- ledger_entry: hydrol.active.cwrr_soil_solve
+  oracle_family: hydrol_soil_owner_cwrr_water_root_peat_alt
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/hydrol.py
+    symbol: hydrol_module_explicit_step
+    start_line: 10655
+    end_line: 10861
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 8402c7c0ccf969993f39269c25169ef0a73e7391fbf7e1bb86e69296841cb8d9
+  callsites:
+  - file: jax_orchidee/sechiba/hydrol.py
+    symbol: run_hydrol_first_step_module_from_precall
+    start_line: 9074
+    end_line: 9481
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 29cb94eaebf4d36c5822c6254b4685643d64b9d3bcad64055ea19d79ee873309
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_hydrol_precall_scaffold
+    start_line: 3775
+    end_line: 4001
+    file_sha256: f22ac3c932ef9a4a37a7bbd90705c13b9baca6d8206121027c61ebe3cd39f600
+    span_sha256: 10e36807348c4a433753e3d740fac4bab82995d165a7e2b76905640a8fe5308a
+  contracts:
+    inputs:
+    - mc
+    - mcl
+    - water2infilt
+    - soiltile
+    - pref_soil_veg
+    - dt_days
+    outputs:
+    - mc
+    - mcl
+    - runoff_per_soil
+    - drainage_per_soil
+    - wat_flux
+    state_writeback:
+    - mc
+    - mcl
+    - water2infilt
+    - soil_mc
+    - wat_flux
+  oracle_case_ids:
+  - cwrr_baseline
+  - pond_storage
+  comparison_asset: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+- ledger_entry: hydrol.conditional.water_table_forcing
+  oracle_family: hydrol_soil_owner_cwrr_water_root_peat_alt
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/hydrol.py
+    symbol: hydrol_module_explicit_step
+    start_line: 10655
+    end_line: 10861
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 8402c7c0ccf969993f39269c25169ef0a73e7391fbf7e1bb86e69296841cb8d9
+  callsites:
+  - file: jax_orchidee/sechiba/hydrol.py
+    symbol: run_hydrol_first_step_module_from_precall
+    start_line: 9074
+    end_line: 9481
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 29cb94eaebf4d36c5822c6254b4685643d64b9d3bcad64055ea19d79ee873309
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_hydrol_precall_scaffold
+    start_line: 3775
+    end_line: 4001
+    file_sha256: f22ac3c932ef9a4a37a7bbd90705c13b9baca6d8206121027c61ebe3cd39f600
+    span_sha256: 10e36807348c4a433753e3d740fac4bab82995d165a7e2b76905640a8fe5308a
+  contracts:
+    inputs:
+    - zwt_force
+    - mc
+    - soiltile
+    - njsc
+    outputs:
+    - mc
+    - drainage_per_soil
+    - wtp
+    state_writeback:
+    - zwt_force
+    - mc
+    - drainage_per_soil
+  oracle_case_ids:
+  - forced_water_table
+  - forced_peat_water_table
+  comparison_asset: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+- ledger_entry: hydrol.active.dynamic_root_water_stress
+  oracle_family: hydrol_soil_owner_cwrr_water_root_peat_alt
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/hydrol.py
+    symbol: hydrol_module_explicit_step
+    start_line: 10655
+    end_line: 10861
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 8402c7c0ccf969993f39269c25169ef0a73e7391fbf7e1bb86e69296841cb8d9
+  callsites:
+  - file: jax_orchidee/sechiba/hydrol.py
+    symbol: run_hydrol_first_step_module_from_precall
+    start_line: 9074
+    end_line: 9481
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 29cb94eaebf4d36c5822c6254b4685643d64b9d3bcad64055ea19d79ee873309
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_hydrol_precall_scaffold
+    start_line: 3775
+    end_line: 4001
+    file_sha256: f22ac3c932ef9a4a37a7bbd90705c13b9baca6d8206121027c61ebe3cd39f600
+    span_sha256: 10e36807348c4a433753e3d740fac4bab82995d165a7e2b76905640a8fe5308a
+  contracts:
+    inputs:
+    - mc
+    - veget_max
+    - humcste
+    - altmax
+    - is_tree
+    outputs:
+    - nroot
+    - us
+    - humrel
+    - vegstress
+    state_writeback:
+    - nroot
+    - us
+    - humrel
+  oracle_case_ids:
+  - dynamic_root
+  - new_water_stress_root_threshold
+  comparison_asset: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+- ledger_entry: hydrol.conditional.peat_tide_routing
+  oracle_family: hydrol_soil_owner_cwrr_water_root_peat_alt
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/hydrol.py
+    symbol: hydrol_module_explicit_step
+    start_line: 10655
+    end_line: 10861
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 8402c7c0ccf969993f39269c25169ef0a73e7391fbf7e1bb86e69296841cb8d9
+  callsites:
+  - file: jax_orchidee/sechiba/hydrol.py
+    symbol: run_hydrol_first_step_module_from_precall
+    start_line: 9074
+    end_line: 9481
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 29cb94eaebf4d36c5822c6254b4685643d64b9d3bcad64055ea19d79ee873309
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_hydrol_precall_scaffold
+    start_line: 3775
+    end_line: 4001
+    file_sha256: f22ac3c932ef9a4a37a7bbd90705c13b9baca6d8206121027c61ebe3cd39f600
+    span_sha256: 10e36807348c4a433753e3d740fac4bab82995d165a7e2b76905640a8fe5308a
+  contracts:
+    inputs:
+    - run2peat
+    - run2man
+    - wt_ab
+    - wt_ab_tide
+    - wtp_tide
+    - dwtp_tide
+    outputs:
+    - run2peat
+    - run2man
+    - wt_ab
+    - wt_ab_tide
+    - runoff2peat
+    state_writeback:
+    - run2peat
+    - run2man
+    - wt_ab
+    - wt_ab_tide
+    - runoff2peat
+  oracle_case_ids:
+  - peat_tide
+  - tide_nonpositive
+  - tide_falling
+  - tide_zero_boundary
+  comparison_asset: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+- ledger_entry: hydrol.conditional.alt_bare_residual
+  oracle_family: hydrol_soil_owner_cwrr_water_root_peat_alt
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/hydrol.py
+    symbol: hydrol_module_explicit_step
+    start_line: 10655
+    end_line: 10861
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 8402c7c0ccf969993f39269c25169ef0a73e7391fbf7e1bb86e69296841cb8d9
+  callsites:
+  - file: jax_orchidee/sechiba/hydrol.py
+    symbol: run_hydrol_first_step_module_from_precall
+    start_line: 9074
+    end_line: 9481
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 29cb94eaebf4d36c5822c6254b4685643d64b9d3bcad64055ea19d79ee873309
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_hydrol_precall_scaffold
+    start_line: 3775
+    end_line: 4001
+    file_sha256: f22ac3c932ef9a4a37a7bbd90705c13b9baca6d8206121027c61ebe3cd39f600
+    span_sha256: 10e36807348c4a433753e3d740fac4bab82995d165a7e2b76905640a8fe5308a
+  contracts:
+    inputs:
+    - mc
+    - mcr
+    - evapot
+    - evapot_corr
+    - evap_bare_lim
+    outputs:
+    - mc
+    - evap_bare_lim
+    - evap_bare_lim_ns
+    state_writeback:
+    - mc
+    - evap_bare_lim
+    - evap_bare_lim_ns
+  oracle_case_ids:
+  - alt_bare_residual
+  - soil_resistance_bare_evaporation
+  comparison_asset: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+- ledger_entry: hydrol.conditional.canopy_interception
+  oracle_family: hydrol_canopy_infiltration_freeze
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/hydrol.py
+    symbol: hydrol_module_explicit_step
+    start_line: 10655
+    end_line: 10861
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 8402c7c0ccf969993f39269c25169ef0a73e7391fbf7e1bb86e69296841cb8d9
+  callsites:
+  - file: jax_orchidee/sechiba/hydrol.py
+    symbol: run_hydrol_first_step_module_from_precall
+    start_line: 9074
+    end_line: 9481
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 29cb94eaebf4d36c5822c6254b4685643d64b9d3bcad64055ea19d79ee873309
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_hydrol_precall_scaffold
+    start_line: 3775
+    end_line: 4001
+    file_sha256: f22ac3c932ef9a4a37a7bbd90705c13b9baca6d8206121027c61ebe3cd39f600
+    span_sha256: 10e36807348c4a433753e3d740fac4bab82995d165a7e2b76905640a8fe5308a
+  contracts:
+    inputs:
+    - precip_rain
+    - vevapwet
+    - veget
+    - veget_max
+    - qsintmax
+    - qsintveg
+    outputs:
+    - qsintveg
+    - precip2canopy
+    - precip2ground
+    - canopy2ground
+    state_writeback:
+    - qsintveg
+    - precip2canopy
+    - precip2ground
+    - canopy2ground
+  oracle_case_ids:
+  - dry_canopy
+  - wet_canopy
+  - throughfall_threshold
+  comparison_asset: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+- ledger_entry: hydrol.active.freeze_hydraulics
+  oracle_family: hydrol_freeze_hydraulics
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/hydrol.py
+    symbol: hydrol_module_explicit_step
+    start_line: 10655
+    end_line: 10861
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 8402c7c0ccf969993f39269c25169ef0a73e7391fbf7e1bb86e69296841cb8d9
+  callsites:
+  - file: jax_orchidee/sechiba/hydrol.py
+    symbol: run_hydrol_first_step_module_from_precall
+    start_line: 9074
+    end_line: 9481
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 29cb94eaebf4d36c5822c6254b4685643d64b9d3bcad64055ea19d79ee873309
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_hydrol_precall_scaffold
+    start_line: 3775
+    end_line: 4001
+    file_sha256: f22ac3c932ef9a4a37a7bbd90705c13b9baca6d8206121027c61ebe3cd39f600
+    span_sha256: 10e36807348c4a433753e3d740fac4bab82995d165a7e2b76905640a8fe5308a
+  contracts:
+    inputs:
+    - profil_froz
+    - temp_hydro
+    - mc
+    - mcr
+    - mcs
+    outputs:
+    - profil_froz_hydro
+    - profil_froz_hydro_ns
+    - liqwt_ratio
+    state_writeback:
+    - profil_froz_hydro_ns
+    - temp_hydro
+    - liqwt_ratio
+  oracle_case_ids:
+  - mineral_warm_transition_frozen
+  - peat_tiles
+  - profile_correction
+  comparison_asset: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+- ledger_entry: hydrol.conditional.infiltration_and_excess_routing
+  oracle_family: hydrol_infiltration
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/hydrol.py
+    symbol: hydrol_module_explicit_step
+    start_line: 10655
+    end_line: 10861
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 8402c7c0ccf969993f39269c25169ef0a73e7391fbf7e1bb86e69296841cb8d9
+  callsites:
+  - file: jax_orchidee/sechiba/hydrol.py
+    symbol: run_hydrol_first_step_module_from_precall
+    start_line: 9074
+    end_line: 9481
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 29cb94eaebf4d36c5822c6254b4685643d64b9d3bcad64055ea19d79ee873309
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_hydrol_precall_scaffold
+    start_line: 3775
+    end_line: 4001
+    file_sha256: f22ac3c932ef9a4a37a7bbd90705c13b9baca6d8206121027c61ebe3cd39f600
+    span_sha256: 10e36807348c4a433753e3d740fac4bab82995d165a7e2b76905640a8fe5308a
+  contracts:
+    inputs:
+    - water2infilt
+    - precisol_ns
+    - reinfiltration_soil
+    - mc
+    - mcs
+    outputs:
+    - water2infilt
+    - runoff_per_soil
+    - mc
+    state_writeback:
+    - water2infilt
+    - runoff_per_soil
+    - mc
+  oracle_case_ids:
+  - dry_infiltration
+  - saturated_excess
+  - pond_reinfiltration
+  comparison_asset: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+- ledger_entry: hydrol.conditional.explicit_snow_nonzero
+  oracle_family: hydrol_explicit_snow_nonzero
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/hydrol.py
+    symbol: hydrol_explicit_snow_step
+    start_line: 4954
+    end_line: 5066
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 0026580af5ae492e276706620fac75673bcc389306284495ffdb96512ad2b6c0
+  callsites:
+  - file: jax_orchidee/sechiba/hydrol.py
+    symbol: run_hydrol_first_step_module_from_precall
+    start_line: 9074
+    end_line: 9481
+    file_sha256: 3950d28d94e0c8b28aa60854b3b841cce73a797996548213006feb9000174cda
+    span_sha256: 29cb94eaebf4d36c5822c6254b4685643d64b9d3bcad64055ea19d79ee873309
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_hydrol_precall_scaffold
+    start_line: 3775
+    end_line: 4001
+    file_sha256: f22ac3c932ef9a4a37a7bbd90705c13b9baca6d8206121027c61ebe3cd39f600
+    span_sha256: 10e36807348c4a433753e3d740fac4bab82995d165a7e2b76905640a8fe5308a
+  contracts:
+    inputs:
+    - precip_rain
+    - precip_snow
+    - snow
+    - snowdz
+    - snowrho
+    - snowtemp
+    - snowliq
+    outputs:
+    - snow
+    - snowdz
+    - snowrho
+    - snowtemp
+    - snowliq
+    - snowmelt
+    - tot_melt
+    state_writeback:
+    - snow
+    - snowdz
+    - snowrho
+    - snowtemp
+    - snowliq
+    - snowmelt
+    - temp_sol_add
+  oracle_case_ids:
+  - cold snowfall
+  - rain-on-snow melt and sublimation
+  - extreme overflow above 1.2 maxmass
+  - warm non-biological snow melt
+  comparison_asset: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+- ledger_entry: thermosoil.active.cwrr_recurrence
+  oracle_family: thermosoil_cwrr_recurrence_complete
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/thermosoil.py
+    symbol: thermosoil_explicit_step
+    start_line: 3021
+    end_line: 3194
+    file_sha256: 66bfe618e3fa59bc5072d77f2c2799347b376f15494306ede44924da001eec43
+    span_sha256: 06c01dd86ea70c22487c770f623028f4c5d2fccaea9e980cbcdf190fb714be2a
+  callsites:
+  - file: jax_orchidee/sechiba/thermosoil.py
+    symbol: run_thermosoil_first_step_module
+    start_line: 3404
+    end_line: 3558
+    file_sha256: 66bfe618e3fa59bc5072d77f2c2799347b376f15494306ede44924da001eec43
+    span_sha256: b26f9a477b561246dd619065f5bfd97b0594d6562a375d64853bd4283b00dee4
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_hydrol_precall_scaffold
+    start_line: 3775
+    end_line: 4001
+    file_sha256: f22ac3c932ef9a4a37a7bbd90705c13b9baca6d8206121027c61ebe3cd39f600
+    span_sha256: 10e36807348c4a433753e3d740fac4bab82995d165a7e2b76905640a8fe5308a
+  contracts:
+    inputs:
+    - ptn
+    - cgrnd
+    - dgrnd
+    - mc_layh
+    - mcl_layh
+    - temp_sol_new
+    outputs:
+    - ptn
+    - stempdiag
+    - cgrnd
+    - dgrnd
+    - soilcap
+    - soilflx
+    state_writeback:
+    - ptn
+    - stempdiag
+    - cgrnd
+    - dgrnd
+    - soilcap
+    - soilflx
+    - temp_sol_beg
+  oracle_case_ids:
+  - humidity direct
+  - humidity long-memory
+  - explicit snow clamp
+  - defined Zimov true
+  - defined Zimov false
+  comparison_asset: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+- ledger_entry: thermosoil.active.refsoc_freeze_properties
+  oracle_family: thermosoil_refsoc_getdiff
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/thermosoil.py
+    symbol: thermosoil_explicit_step
+    start_line: 3021
+    end_line: 3194
+    file_sha256: 66bfe618e3fa59bc5072d77f2c2799347b376f15494306ede44924da001eec43
+    span_sha256: 06c01dd86ea70c22487c770f623028f4c5d2fccaea9e980cbcdf190fb714be2a
+  callsites:
+  - file: jax_orchidee/sechiba/thermosoil.py
+    symbol: run_thermosoil_first_step_module
+    start_line: 3404
+    end_line: 3558
+    file_sha256: 66bfe618e3fa59bc5072d77f2c2799347b376f15494306ede44924da001eec43
+    span_sha256: b26f9a477b561246dd619065f5bfd97b0594d6562a375d64853bd4283b00dee4
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_hydrol_precall_scaffold
+    start_line: 3775
+    end_line: 4001
+    file_sha256: f22ac3c932ef9a4a37a7bbd90705c13b9baca6d8206121027c61ebe3cd39f600
+    span_sha256: 10e36807348c4a433753e3d740fac4bab82995d165a7e2b76905640a8fe5308a
+  contracts:
+    inputs:
+    - refSOC
+    - ptn
+    - mc_layh_pft
+    - veget_mask_2d
+    - njsc
+    outputs:
+    - pcapa_en
+    - pkappa
+    - profil_froz
+    - pcappa_supp
+    state_writeback:
+    - refSOC
+    - pcapa_en
+    - ptn
+  oracle_case_ids:
+  - refsoc
+  - soilc
+  - soilc_no_freeze
+  - soilc_inactive_mask
+  comparison_asset: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+- ledger_entry: thermosoil.conditional.explicit_snow_thermal_profile
+  oracle_family: thermosoil_explicit_snow_profile
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/thermosoil.py
+    symbol: thermosoil_explicit_step
+    start_line: 3021
+    end_line: 3194
+    file_sha256: 66bfe618e3fa59bc5072d77f2c2799347b376f15494306ede44924da001eec43
+    span_sha256: 06c01dd86ea70c22487c770f623028f4c5d2fccaea9e980cbcdf190fb714be2a
+  callsites:
+  - file: jax_orchidee/sechiba/thermosoil.py
+    symbol: run_thermosoil_first_step_module
+    start_line: 3404
+    end_line: 3558
+    file_sha256: 66bfe618e3fa59bc5072d77f2c2799347b376f15494306ede44924da001eec43
+    span_sha256: b26f9a477b561246dd619065f5bfd97b0594d6562a375d64853bd4283b00dee4
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_hydrol_precall_scaffold
+    start_line: 3775
+    end_line: 4001
+    file_sha256: f22ac3c932ef9a4a37a7bbd90705c13b9baca6d8206121027c61ebe3cd39f600
+    span_sha256: 10e36807348c4a433753e3d740fac4bab82995d165a7e2b76905640a8fe5308a
+  contracts:
+    inputs:
+    - snowdz
+    - snowrho
+    - snowtemp
+    - cgrnd_snow
+    - dgrnd_snow
+    - lambda_snow
+    outputs:
+    - ptn
+    - snowtemp
+    - stempdiag
+    - gtemp
+    state_writeback:
+    - ptn
+    - cgrnd_snow
+    - dgrnd_snow
+    - lambda_snow
+    - gtemp
+  oracle_case_ids:
+  - snow-free
+  - shallow snow
+  - three-layer snow
+  - warm clamp
+  comparison_asset: outputs/reference_mode/production/hydrol_thermosoil/comparison.json

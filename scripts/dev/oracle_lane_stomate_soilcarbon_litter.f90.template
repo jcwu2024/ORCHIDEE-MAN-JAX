@@ -1,0 +1,127 @@
+module litter_oracle
+  implicit none
+  integer, parameter :: r_std=8, i_std=4
+  integer, parameter :: nvm=14, nparts=12, nlevs=2, nlitt=2, ncarb=3
+  integer, parameter :: nelements=1, nbpools=7, nmbcomp=5, npool=7
+  integer, parameter :: nslm=11, ndeep=32, nstm=3
+  integer, parameter :: ileaf=1,isapabove=2,isapbelow=3,iheartabove=4,iheartbelow=5
+  integer, parameter :: iroot=6,ifruit=7,icarbres=8,iagrsapst=9,iagrsappn=10,iagrhrtst=11,iagrhrtpn=12
+  integer, parameter :: iabove=1,ibelow=2,imetabolic=1,istructural=2
+  integer, parameter :: iactive=1,islow=2,ipassive=3,icarbon=1
+  integer, parameter :: istructural_above=1,istructural_below=2,imetabolic_above=3,imetabolic_below=4
+  integer, parameter :: iactive_pool=5,islow_pool=6,ipassive_pool=7
+  integer, parameter :: iatm2land=1,iland2atm=2,ilat2out=3,ilat2in=4,ipoolchange=5
+  integer, parameter :: imetabo=1,istrabo=2,imetbel=3,istrbel=4,iact=5,islo=6,ipas=7
+  real(r_std), parameter :: zero=0.d0, un=1.d0, trois=3.d0, one_day=86400.d0, one_year=365.d0
+  real(r_std), parameter :: ZeroCelsius=273.15d0, Q10=10.d0
+  real(r_std), parameter :: min_stomate=1.d-12
+  real(r_std), parameter :: metabolic_ref_frac=.85d0, metabolic_LN_ratio=.018d0
+  real(r_std), parameter :: frac_soil_struct_aa=.55d0, frac_soil_struct_ab=.45d0
+  real(r_std), parameter :: frac_soil_struct_sa=.7d0, frac_soil_struct_sb=.7d0
+  real(r_std), parameter :: frac_soil_metab_aa=.45d0, frac_soil_metab_ab=.45d0
+  real(r_std), parameter :: carbon_tau_iactive=.149d0, carbon_tau_islow=5.48d0, carbon_tau_ipassive=241.d0
+  real(r_std), parameter :: tau_metabolic=.066d0, tau_struct=.245d0, litter_struct_coef=3.d0
+  real(r_std), parameter :: z_decomp=.2d0, min_sechiba=1.d-8
+  real(r_std) :: soil_Q10=.69d0, tsoil_ref=30.d0, moist_coeff(3)=(/1.1d0,2.4d0,.29d0/)
+  real(r_std) :: moistcont_min=.25d0, Dif=1.d-4
+  integer :: sro_bottom=5
+  real(r_std) :: dt_sechiba=1800.d0
+  real(r_std) :: CN(nparts), LC(nparts), diaglev(nslm)
+  integer :: pref_soil_veg(nvm)
+  logical :: is_peat(nvm), is_croppeat(nvm), ld_doc=.false., moist_func_moyano=.false.
+  logical :: is_tree(nvm), natural(nvm), is_grassland_manag(nvm), is_grassland_cut(nvm)
+  logical :: is_grassland_grazed(nvm), ok_LAIdev(nvm)
+  real(r_std) :: SP_profsem(nvm)
+  integer :: printlev=0, numout=6
+  logical, save :: firstcall_litter=.true.
+
+  interface getin_p
+    module procedure getin_i, getin_l
+  end interface
+contains
+  subroutine getin_i(name,value)
+    character(*),intent(in)::name
+    integer,intent(inout)::value
+  end subroutine
+  subroutine getin_l(name,value)
+    character(*),intent(in)::name
+    logical,intent(inout)::value
+  end subroutine
+  subroutine ipslerr_p(level,routine,a,b,c)
+    integer,intent(in)::level
+    character(*),intent(in)::routine,a,b,c
+    error stop 'ipslerr_p'
+  end subroutine
+
+!__ORIGINAL_PROCEDURES__
+end module litter_oracle
+
+program run_litter_oracle
+  use litter_oracle
+  implicit none
+  integer, parameter :: npts=2
+  integer :: i,l,u
+  logical :: do_slow
+  character(1024) :: outfile
+  real(r_std) :: turnover(npts,nvm,nparts,nelements), bm(npts,nvm,nparts,nelements)
+  real(r_std) :: zz(ndeep), veget(npts,nvm), tsurf(npts), tsoil(npts,nslm), soilhum(npts,nslm), litterhum(npts), rprof(npts,nvm)
+  real(r_std) :: litterpart(npts,nvm,nlitt), labove(npts,nlitt,nvm,nelements), lbelow(npts,nlitt,nvm,ndeep,nelements)
+  real(r_std) :: lavail(npts,nlitt,nvm), lnot(npts,nlitt,nvm), lavailfrac(npts,nlitt,nvm)
+  real(r_std) :: fuel1(npts,nvm,nlitt,nelements),fuel10(npts,nvm,nlitt,nelements),fuel100(npts,nvm,nlitt,nelements),fuel1000(npts,nvm,nlitt,nelements)
+  real(r_std) :: dead(npts,nvm,nlitt), lignina(npts,nvm), ligninb(npts,nvm,ndeep), deadcover(npts)
+  real(r_std) :: rhlit(npts,nvm,nlevs), rhflood(npts,nvm), scin(npts,ncarb,nvm), scdoc(npts,nvm,ndeep,npool,nelements)
+  real(r_std) :: floodcin(npts,nvm,npool,nelements), ctempb(npts,ndeep,npool*2,nvm), cmoista(npts,nvm)
+  real(r_std) :: clay(npts), bulk(npts), ph(npts), poor(npts), tprof(npts,ndeep,nvm), carbon(npts,ncarb,nvm,ndeep), fbact(npts,ndeep,nvm), flood(npts)
+  real(r_std) :: soilmc(npts,nslm,nstm), mata(npts,nvm,nbpools,nbpools), vecb(npts,nvm,nbpools)
+  real(r_std) :: tsoilcm(npts,nvm,3), soilhumcm(npts,nvm,3), sla(npts,nvm)
+  real(r_std) :: shpeat(npts,nslm), mcpeat(npts), shcrop(npts,nslm), mccrop(npts), shman(npts,nslm), mcman(npts)
+
+  CN=40.d0; LC=(/.22d0,.35d0,.35d0,.35d0,.35d0,.22d0,.22d0,.22d0,.35d0,.35d0,.35d0,.35d0/)
+  diaglev=(/.01d0,.03d0,.06d0,.1d0,.2d0,.35d0,.55d0,.8d0,1.1d0,1.5d0,2.d0/)
+  pref_soil_veg=1; pref_soil_veg(14)=3
+  is_peat=.false.; is_croppeat=.false.; is_tree=.false.; is_tree(14)=.true.
+  natural=.false.; natural(14)=.true.; is_grassland_manag=.false.; is_grassland_cut=.false.; is_grassland_grazed=.false.
+  ok_LAIdev=.false.; SP_profsem=3.d0
+  turnover=0.d0; bm=0.d0; veget=0.d0; veget(:,14)=(/.7d0,.6d0/)
+  tsurf=(/285.d0,268.d0/); litterhum=0.d0; rprof=.5d0
+  tsoil=280.d0; soilhum=.55d0; soilmc=.45d0; soilmc(2,:,:)=.18d0
+  do i=1,ndeep; zz(i)=2.d0*dble(i)/dble(ndeep); enddo
+  litterpart=0.d0; litterpart(:,14,:)=1.d0
+  labove=0.d0; labove(:,1,14,1)=(/4.d0,3.d0/); labove(:,2,14,1)=(/8.d0,6.d0/)
+  lbelow=0.d0
+  do l=1,ndeep
+    lbelow(:,1,14,l,1)=(/.08d0,.06d0/); lbelow(:,2,14,l,1)=(/.12d0,.09d0/)
+  enddo
+  lavail=0.d0; lnot=0.d0; dead=0.d0; lignina=0.d0; ligninb=0.d0
+  lignina(:,14)=.2d0; ligninb(:,14,:)=.2d0
+  fuel1=0.d0; fuel10=0.d0; fuel100=0.d0; fuel1000=0.d0
+  fuel1(:,14,1,1)=labove(:,1,14,1)*.25d0; fuel10(:,14,1,1)=labove(:,1,14,1)*.25d0
+  fuel100(:,14,1,1)=labove(:,1,14,1)*.25d0; fuel1000(:,14,1,1)=labove(:,1,14,1)*.25d0
+  fuel1(:,14,2,1)=labove(:,2,14,1)*.25d0; fuel10(:,14,2,1)=labove(:,2,14,1)*.25d0
+  fuel100(:,14,2,1)=labove(:,2,14,1)*.25d0; fuel1000(:,14,2,1)=labove(:,2,14,1)*.25d0
+  bm(:,14,ileaf,1)=(/.03d0,.02d0/); bm(:,14,iroot,1)=(/.02d0,.015d0/)
+  turnover(:,14,ileaf,1)=(/.015d0,.01d0/); turnover(:,14,iroot,1)=(/.01d0,.008d0/)
+  clay=(/.25d0,.4d0/); bulk=(/1200.d0,1350.d0/); ph=6.5d0; poor=(/0.d0,.3d0/)
+  tprof=278.d0; carbon=2.d0; fbact=.08d0; flood=(/0.d0,.4d0/)
+  shpeat=.5d0; mcpeat=.5d0; shcrop=.5d0; mccrop=.5d0; shman=.5d0; mcman=.5d0
+  sla=.02d0; tsoilcm=0.d0; soilhumcm=0.d0
+  do_slow=.false.
+  call get_command_argument(1,outfile)
+  open(newunit=u,file=trim(outfile),access='stream',form='unformatted',status='replace')
+  call execute_case(u)
+  turnover=0.d0; bm=0.d0
+  call execute_case(u)
+  do_slow=.true.; bulk=(/.4d0,1350.d0/); labove=0.d0; lbelow=0.d0
+  fuel1=0.d0; fuel10=0.d0; fuel100=0.d0; fuel1000=0.d0; soilmc=0.d0
+  call execute_case(u)
+  close(u)
+contains
+  subroutine execute_case(unit)
+    integer,intent(in)::unit
+    call littercalc_leak(npts,turnover,zz,bm,veget,tsurf,tsoil,soilhum,litterhum,rprof,litterpart,labove,lbelow,lavail,lnot,lavailfrac, &
+      fuel1,fuel10,fuel100,fuel1000,dead,lignina,ligninb,deadcover,rhlit,rhflood,scin,scdoc,floodcin,ctempb,cmoista,clay,bulk,ph,poor, &
+      tprof,carbon,fbact,flood,soilmc,mata,vecb,tsoilcm,soilhumcm,sla,do_slow,shpeat,mcpeat,shcrop,mccrop,shman,mcman)
+    write(unit) labove,lbelow,lignina,ligninb,litterpart,dead,deadcover,rhlit,rhflood,scin,scdoc,floodcin,fuel1,fuel10,fuel100,fuel1000, &
+      lavail,lavailfrac,ctempb,cmoista,bulk,mata,vecb,tsoilcm,soilhumcm
+  end subroutine
+end program

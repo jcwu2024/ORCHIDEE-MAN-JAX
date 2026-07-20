@@ -1,0 +1,261 @@
+program slowproc_soilt_owner_oracle
+  implicit none
+  integer, parameter :: i_std=4, r_std=8, NbNeighb=1, nscm=12, ntext=3
+  real(r_std), parameter :: zero=0._r_std, un=1._r_std, pi=3.14159265358979323846_r_std, R_Earth=6371000._r_std, mincos=1.e-6_r_std, min_sechiba=1.e-8_r_std
+  integer :: unit_out, numout=6, printlev_loc=0, aggregate_call=0
+  logical :: is_root_prc=.true., impsoilt=.false., do_poor_soils=.true.
+  logical :: fatal_mode=.false., retry_mode=.false., impsoilt_mode=.false., complete_mode=.false.
+  character(len=30) :: soil_classif='usda'
+  real(r_std) :: resolution_g(3,2)
+  interface getin_p
+    procedure :: getin_p_char
+  end interface
+  interface bcast
+    procedure :: bcast_i0, bcast_r1, bcast_r2
+  end interface
+  call run
+contains
+  subroutine run
+    character(len=32) :: mode
+    call get_command_argument(1, mode)
+    fatal_mode = trim(mode) == 'fatal'
+    retry_mode = trim(mode) == 'retry'
+    impsoilt_mode = trim(mode) == 'impsoilt'
+    complete_mode = trim(mode) == 'complete'
+    open(newunit=unit_out, file=trim(command_argument(2)), status="replace", action="write")
+    call active_usda_case
+    close(unit_out)
+  end subroutine
+
+  subroutine active_usda_case
+    integer, parameter :: nbpt=3
+    real(r_std) :: lalo(nbpt,2), resolution(nbpt,2), contfrac(nbpt), soilclass(nbpt,nscm)
+    real(r_std) :: clayfraction(nbpt), sandfraction(nbpt), siltfraction(nbpt), bulk_density(nbpt), soil_ph(nbpt), poor_soils(nbpt)
+    aggregate_call = 0
+    is_root_prc = .true.
+    impsoilt = impsoilt_mode
+    do_poor_soils = .not. impsoilt_mode
+    soil_classif = 'usda'
+    lalo = reshape([0._r_std,0._r_std, 10._r_std,10._r_std, 20._r_std,20._r_std], shape(lalo))
+    resolution = 5000._r_std
+    contfrac = 1._r_std
+    resolution_g = resolution
+    call soilt_case(nbpt, lalo, resolution, contfrac, soilclass, clayfraction, sandfraction, &
+         siltfraction, bulk_density, soil_ph, poor_soils, 'active_')
+  end subroutine
+
+  subroutine impsoilt_none_case
+    integer, parameter :: nbpt=1
+    real(r_std) :: lalo(nbpt,2), resolution(nbpt,2), contfrac(nbpt), soilclass(nbpt,nscm)
+    real(r_std) :: clayfraction(nbpt), sandfraction(nbpt), siltfraction(nbpt), bulk_density(nbpt), soil_ph(nbpt), poor_soils(nbpt)
+    aggregate_call = 0
+    is_root_prc = .true.
+    impsoilt = .true.
+    do_poor_soils = .false.
+    soil_classif = 'none'
+    lalo = 0._r_std
+    resolution = 5000._r_std
+    contfrac = 1._r_std
+    resolution_g(1,:) = resolution(1,:)
+    call soilt_case(nbpt, lalo, resolution, contfrac, soilclass, clayfraction, sandfraction, &
+         siltfraction, bulk_density, soil_ph, poor_soils, '')
+  end subroutine
+
+  subroutine soilt_case(nbpt, lalo, resolution, contfrac, soilclass, clayfraction, sandfraction, &
+       siltfraction, bulk_density, soil_ph, poor_soils, prefix)
+    integer, intent(in) :: nbpt
+    real(r_std), intent(in) :: lalo(nbpt,2), resolution(nbpt,2), contfrac(nbpt)
+    real(r_std), intent(out) :: soilclass(nbpt,nscm), clayfraction(nbpt), sandfraction(nbpt), &
+         siltfraction(nbpt), bulk_density(nbpt), soil_ph(nbpt), poor_soils(nbpt)
+    integer :: neighbours(nbpt,NbNeighb)
+    character(len=*), intent(in) :: prefix
+    integer(i_std) :: nbvmax
+    character(len=80) :: filename
+    integer(i_std) :: iml, jml, lml, tml, fid, ib, ip, jp, fopt, ilf, nbexp
+    real(r_std) :: lev(1), datetmp, dttmp
+    integer(i_std) :: itautmp(1)
+    real(r_std), allocatable :: lat_rel(:,:), lon_rel(:,:)
+    real(r_std), allocatable :: soiltext(:,:), soilbd(:,:), soilph(:,:), poorsol(:,:)
+    real(r_std), allocatable :: soiltext2(:,:)
+    integer(i_std), allocatable :: mask(:,:)
+    real(r_std), allocatable :: sub_area(:,:)
+    integer(i_std), allocatable :: sub_index(:,:,:)
+    real(r_std), allocatable :: resol_lu(:,:,:)
+    integer(i_std), allocatable :: solt(:), solt2(:)
+    real(r_std), allocatable :: solbd(:), solph(:), poosol(:)
+    real(r_std) :: soilclass_default_usda(nscm) = [0.28_r_std, 0.52_r_std, 0.20_r_std, 0._r_std, 0._r_std, 0._r_std, 0._r_std, 0._r_std, 0._r_std, 0._r_std, 0._r_std, 0._r_std]
+    real(r_std) :: soilclass_default_fao(nscm) = [0.28_r_std, 0.52_r_std, 0.20_r_std, &
+         0._r_std, 0._r_std, 0._r_std, 0._r_std, 0._r_std, 0._r_std, 0._r_std, 0._r_std, 0._r_std]
+    real(r_std) :: soilclass_default(nscm)
+    real(r_std), parameter :: clayfraction_default=0.2_r_std, sandfraction_default=0.4_r_std, siltfraction_default=0.4_r_std
+    real(r_std), parameter :: bulk_density_default=1.65_r_std, soil_ph_default=7.0_r_std
+    real(r_std) :: sgn, coslat
+    character(len=30) :: callsign
+    real(r_std) :: resol_lon, resol_lat
+    integer(i_std) :: nix, njx
+    integer(i_std), parameter :: nzobler = 7
+    real(r_std), allocatable :: textfrac_table(:,:)
+    logical :: ok_interpol
+    integer :: alloc_err
+    neighbours = 0
+! <SLOWPROC_SOILT_READ_SPAN>
+! <SLOWPROC_SOILT_MASK_SPAN>
+! <SLOWPROC_SOILT_SELECT_SPAN>
+    if (len_trim(prefix) > 0) then
+      call emit1(prefix//'soilclass', reshape(soilclass, [size(soilclass)]))
+      call emit1(prefix//'clayfraction', clayfraction)
+      call emit1(prefix//'sandfraction', sandfraction)
+      call emit1(prefix//'siltfraction', siltfraction)
+      call emit1(prefix//'bulk_density', bulk_density)
+      call emit1(prefix//'soil_ph', soil_ph)
+      call emit1(prefix//'poor_soils', poor_soils)
+    end if
+  end subroutine
+
+  subroutine getin_p_char(name, value)
+    character(len=*), intent(in) :: name
+    character(len=*), intent(inout) :: value
+  end subroutine
+
+  subroutine flininfo(filename, iml, jml, lml, tml, fid)
+    character(len=*), intent(in) :: filename
+    integer, intent(out) :: iml, jml, lml, tml, fid
+    if (trim(soil_classif) == 'usda') then
+      iml = 3; jml = 3
+    else
+      iml = 1; jml = 1
+    end if
+    lml = 1; tml = 1; fid = 99
+  end subroutine
+
+  subroutine flinclo(fid)
+    integer, intent(in) :: fid
+  end subroutine
+
+  subroutine flinopen(filename, readonly, iml, jml, lml, lon_rel, lat_rel, lev, tml, itautmp, datetmp, dttmp, fid)
+    character(len=*), intent(in) :: filename
+    logical, intent(in) :: readonly
+    integer, intent(in) :: iml, jml, lml, tml, fid
+    real(r_std), intent(out) :: lon_rel(iml,jml), lat_rel(iml,jml), lev(1), datetmp, dttmp
+    integer, intent(out) :: itautmp(1)
+    integer :: ip, jp
+    do jp = 1, jml
+      do ip = 1, iml
+        lon_rel(ip,jp) = real(ip - 1, r_std)
+        lat_rel(ip,jp) = real(jp - 1, r_std)
+      end do
+    end do
+    lev = 0._r_std
+    itautmp = 0
+    datetmp = 0._r_std
+    dttmp = 0._r_std
+  end subroutine
+
+  subroutine flinget(fid, name, iml, jml, lml, tml, i1, i2, field)
+    integer, intent(in) :: fid, iml, jml, lml, tml, i1, i2
+    character(len=*), intent(in) :: name
+    real(r_std), intent(out) :: field(iml,jml)
+    field = 0._r_std
+    if (trim(soil_classif) == 'usda') then
+      select case (trim(name))
+      case ('soiltext')
+        field = reshape([1._r_std,0._r_std,merge(13._r_std,0._r_std,fatal_mode), &
+             2._r_std,4._r_std,0._r_std, 0._r_std,0._r_std,0._r_std], shape(field))
+      case ('soil_ph')
+        field = reshape([6.5_r_std,7.0_r_std,5.5_r_std, 6.8_r_std,7.2_r_std,7.1_r_std, 6.9_r_std,6.7_r_std,6.6_r_std], shape(field))
+      case ('poor_soils')
+        field = reshape([0.1_r_std,0.0_r_std,0.2_r_std, 0.2_r_std,0.3_r_std,0.1_r_std, 0._r_std,0._r_std,0._r_std], shape(field))
+      case ('soilbd')
+        field = reshape([1400._r_std,1500._r_std,1700._r_std, 1500._r_std,1600._r_std,1550._r_std, 1450._r_std,1500._r_std,1520._r_std], shape(field))
+      end select
+    else
+      select case (trim(name))
+      case ('soiltext')
+        field = 1._r_std
+      end select
+    end if
+  end subroutine
+
+  subroutine bcast_i0(value)
+    integer, intent(inout) :: value
+  end subroutine
+
+  subroutine bcast_r1(value)
+    real(r_std), intent(inout) :: value(:)
+  end subroutine
+
+  subroutine bcast_r2(value)
+    real(r_std), intent(inout) :: value(:,:)
+  end subroutine
+
+  subroutine aggregate_p(nbpt, lalo, neighbours, resolution, contfrac, iml, jml, lon_rel, lat_rel, mask, callsign, nbvmax, sub_index, sub_area, ok_interpol)
+    integer, intent(in) :: nbpt, neighbours(:,:), iml, jml, nbvmax
+    real(r_std), intent(in) :: lalo(:,:), resolution(:,:), contfrac(:), lon_rel(:,:), lat_rel(:,:)
+    integer(i_std), intent(in) :: mask(:,:)
+    character(len=*), intent(in) :: callsign
+    integer, intent(out) :: sub_index(nbpt,nbvmax,2)
+    real(r_std), intent(out) :: sub_area(nbpt,nbvmax)
+    logical, intent(out) :: ok_interpol
+    aggregate_call = aggregate_call + 1
+    sub_index = 0
+    sub_area = 0._r_std
+    if (retry_mode .and. trim(soil_classif) == 'usda' .and. aggregate_call == 1) then
+      ok_interpol = .false.
+      return
+    end if
+    ok_interpol = .true.
+    if (trim(soil_classif) == 'usda') then
+      sub_index(2,1,:) = [1,1]
+      sub_area(2,1) = 0.25_r_std
+      sub_index(2,2,:) = [2,2]
+      sub_area(2,2) = 0.75_r_std
+      sub_index(3,1,:) = [1,3]
+      sub_area(3,1) = 0.6_r_std
+      sub_index(3,2,:) = [3,1]
+      sub_area(3,2) = 0.4_r_std
+      if (complete_mode) then
+        sub_index(1,1,:) = [1,1]
+        sub_area(1,1) = 1._r_std
+        sub_index(3,1,:) = [1,1]
+        sub_area(3,1) = 1._r_std
+        sub_area(3,2) = 0._r_std
+      endif
+    else
+      sub_index(1,1,:) = [1,1]
+      sub_area(1,1) = 1._r_std
+    end if
+  end subroutine
+
+! <GET_SOILCORR_USDA_PROCEDURE>
+
+  subroutine get_soilcorr_zobler(nz, textfrac_table)
+    integer, intent(in) :: nz
+    real(r_std), intent(out) :: textfrac_table(nz,ntext)
+    integer :: i
+    do i=1,nz
+      textfrac_table(i,:)=[0.4_r_std,0.4_r_std,0.2_r_std]
+    enddo
+  end subroutine
+
+  subroutine ipslerr_p(level, routine, text1, text2, text3)
+    integer, intent(in) :: level
+    character(len=*), intent(in) :: routine, text1, text2, text3
+    write(*,'(A,"|",A,"|",A,"|",A)') trim(routine),trim(text1),trim(text2),trim(text3)
+    error stop 93
+  end subroutine
+
+  function command_argument(position) result(value)
+    integer, intent(in) :: position
+    character(len=1024) :: value
+    call get_command_argument(position, value)
+  end function
+
+  subroutine emit1(name, value)
+    character(len=*), intent(in) :: name
+    real(r_std), intent(in) :: value(:)
+    integer :: i
+    do i = 1, size(value)
+      write(unit_out, '(A,",",ES26.17E3)') trim(name), value(i)
+    end do
+  end subroutine
+end program

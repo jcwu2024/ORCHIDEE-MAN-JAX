@@ -1,0 +1,79 @@
+module readdim2_just_read_oracle
+  implicit none
+  integer,parameter::iim_full=2,jjm_full=2,llm_full=1,iim_zoom=2,jjm_zoom=2,numout=6
+  integer::i_index(2)=(/1,2/),j_index(2)=(/1,2/)
+  real::data_full(2,2),val_exp=1.e20,cte_molr=287.,cte_grav=9.80665
+  logical::daily_interpol=.false.,zheight=.true.,zsigma=.false.,zhybrid=.false.,zlevels=.false.
+  logical::zsamelev_uv=.true.,is_watchout=.false.
+  real::zlev_fixed=2.,zlevuv_fixed=10.,zhybrid_a=100.,zhybrid_b=.9
+  real::zhybriduv_a=200.,zhybriduv_b=.8
+contains
+  subroutine ipslerr(level,caller,m1,m2,m3)
+    integer,intent(in)::level;character(*),intent(in)::caller,m1,m2,m3
+    if(level>=3) error stop 'ipslerr'
+  end subroutine
+  subroutine flinget_buffer(fid,name,ii,jj,ll,tt,itb,ite,data)
+    integer,intent(in)::fid,ii,jj,ll,tt,itb,ite;character(*),intent(in)::name;real,intent(out)::data(:,:)
+    integer::i,j;do j=1,jj;do i=1,ii
+      select case(trim(name))
+      case('Tair');data(i,j)=270.+i+2*j
+      case('Tmin');data(i,j)=merge(1.e21,265.+i+j,i==2.and.j==2)
+      case('precip');data(i,j)=.001*(i+j)
+      case('Rainf');data(i,j)=.0001*i
+      case('Snowf');data(i,j)=.00001*j
+      case('SWdown');data(i,j)=100.+10*i+j
+      case('LWdown');data(i,j)=200.+10*i+j
+      case('PSurf');data(i,j)=90000.+100*i+j
+      case('Qair');data(i,j)=.005+.0001*i
+      case('Wind_N');data(i,j)=2.+i
+      case('Wind_E');data(i,j)=-1.-j
+      case('Wind');data(i,j)=3.+i+j
+      case('Levels');data(i,j)=20.+i
+      case('Levels_uv');data(i,j)=30.+j
+      case('levels');data(i,j)=40.+i+j
+      case('SWnet');data(i,j)=50.+i+j
+      case('Eair');data(i,j)=1000.+10*i+j
+      case('petAcoef');data(i,j)=.1*i
+      case('peqAcoef');data(i,j)=.2*j
+      case('petBcoef');data(i,j)=.3*i
+      case('peqBcoef');data(i,j)=.4*j
+      case('cdrag');data(i,j)=.005*i
+      case('ccanopy');data(i,j)=350.+i+j
+      end select
+    enddo;enddo
+  end subroutine
+! <FORCING_ZOOM>
+! <FORCING_JUST_READ>
+end module
+program driver
+  use readdim2_just_read_oracle
+  implicit none
+  real::z(2,2),zuv(2,2),sw(2,2),rain(2,2),snow(2,2),tair(2,2),u(2,2),v(2,2),q(2,2),pb(2,2),lw(2,2)
+  real::swn(2,2),eair(2,2),peta(2,2),peqa(2,2),petb(2,2),peqb(2,2),drag(2,2),canopy(2,2)
+  integer::unit;character(512)::path
+  call get_command_argument(1,path);open(newunit=unit,file=trim(path),status='replace');write(unit,'(a)')'field,flat_index,value'
+  daily_interpol=.false.;zheight=.true.;zsigma=.false.;zhybrid=.false.;zlevels=.false.;zsamelev_uv=.true.;is_watchout=.false.
+  call run_case('height',.true.)
+  daily_interpol=.true.;zheight=.false.;zsigma=.true.;zhybrid=.false.;zlevels=.false.;zsamelev_uv=.false.;is_watchout=.false.
+  zhybrid_a=100.;zhybrid_b=.9;zhybriduv_a=200.;zhybriduv_b=.8;call run_case('sigma',.true.)
+  daily_interpol=.false.;zheight=.false.;zsigma=.false.;zhybrid=.false.;zlevels=.true.;zsamelev_uv=.false.;is_watchout=.true.
+  call run_case('levels_watch',.true.)
+  daily_interpol=.false.;zheight=.false.;zsigma=.false.;zhybrid=.true.;zlevels=.false.;zsamelev_uv=.false.;is_watchout=.false.
+  zhybrid_a=500.;zhybrid_b=.7;zhybriduv_a=700.;zhybriduv_b=.6;call run_case('hybrid_scalar',.false.)
+  daily_interpol=.false.;zheight=.true.;zsigma=.false.;zhybrid=.false.;zlevels=.false.;zsamelev_uv=.false.;is_watchout=.false.
+  zlev_fixed=2.;zlevuv_fixed=10.;call run_case('height_distinct',.true.)
+  close(unit)
+contains
+  subroutine run_case(prefix,wind_vector)
+    character(*),intent(in)::prefix;logical,intent(in)::wind_vector
+    call forcing_just_read(2,2,z,zuv,4,2,2,sw,rain,snow,tair,u,v,q,pb,lw,swn,eair,peta,peqa,petb,peqb,drag,canopy,1,wind_vector,.false.)
+    call out(prefix//'_zlev',z);call out(prefix//'_zlev_uv',zuv);call out(prefix//'_swdown',sw);call out(prefix//'_rainf',rain)
+    if(.not.daily_interpol)call out(prefix//'_snowf',snow)
+    call out(prefix//'_tair',tair);call out(prefix//'_u',u);call out(prefix//'_v',v);call out(prefix//'_qair',q);call out(prefix//'_pb',pb);call out(prefix//'_lwdown',lw)
+    if(is_watchout)then;call out(prefix//'_SWnet',swn);call out(prefix//'_Eair',eair);call out(prefix//'_petAcoef',peta);call out(prefix//'_peqAcoef',peqa);call out(prefix//'_petBcoef',petb);call out(prefix//'_peqBcoef',peqb);call out(prefix//'_cdrag',drag);call out(prefix//'_ccanopy',canopy);endif
+  end subroutine
+  subroutine out(name,a)
+    character(*),intent(in)::name;real,intent(in)::a(:,:);integer::i,j,k;k=0
+    do j=1,size(a,2);do i=1,size(a,1);write(unit,'(a,a,i0,a,es25.17)')trim(name),',',k,',',a(i,j);k=k+1;enddo;enddo
+  end subroutine
+end program

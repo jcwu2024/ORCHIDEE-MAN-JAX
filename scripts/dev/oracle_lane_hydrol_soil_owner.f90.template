@@ -1,0 +1,78 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ implicit none
+ integer,parameter::i_std=int32,r_std=real64
+end module
+
+module hydrol_soil_owner_oracle
+ use defprec
+ implicit none
+ integer,parameter::nvm=14,nstm=6,nslm=7,nscm=12,nsnow=3,nnobio=1,ndeep=4
+ integer,parameter::numout=6
+ real(r_std),parameter::zero=0._r_std,un=1._r_std,deux=2._r_std,trois=3._r_std,quatre=4._r_std,huit=8._r_std,mille=1000._r_std,undemi=.5_r_std
+ real(r_std),parameter::min_sechiba=1.e-8_r_std,ZeroCelsius=273.15_r_std,tp_00=273.15_r_std
+ real(r_std),parameter::lhf=333600._r_std,one_day=86400._r_std,dt_sechiba=1800._r_std
+ real(r_std),parameter::fr_dT=2._r_std,sn_dens=330._r_std,min_wind=.1_r_std,undef_sechiba=1.e20_r_std
+ real(r_std),parameter::nvan_peat=1.38_r_std,avan_peat=.00507_r_std,mcr_peat=.15_r_std,mcs_peat=.9_r_std,mcw_peat=.21_r_std,mcf_peat=.406_r_std,ks_peat=2120._r_std,pcent_peat=.8_r_std
+ real(r_std),parameter::mc_awet_peat=.5693_r_std,mc_adry_peat=.15_r_std
+ real(r_std),parameter::mx_eau_nobio=150._r_std,poros_org=.92_r_std,soilc_max=100._r_std,val_exp=999999._r_std
+ real(r_std),parameter::zmaxh=2._r_std,w_time=1._r_std,alpha_watstress=1._r_std
+ integer,parameter::imin=1,imax=51
+ logical::ok_LAIdev(nvm)=.false.,permafrost_veg_exists(nvm)=.false.,is_tree(nvm)=.false.
+ logical::ok_pc=.false.,ok_leak=.false.
+ logical::ok_freeze_cwrr=.true.,ok_thermodynamical_freezing=.true.,ok_explicitsnow=.true.
+ logical::check_cwrr=.false.,check_cwrr2=.false.,agri_peat=.false.,tides=.false.,perma_peat=.false.,new_watstress=.false.
+ integer::printlev=0,liqlayers=0,numlayers=0
+ integer::pref_soil_veg(nvm)=1
+ real(r_std)::diaglev(nslm)=(/.05_r_std,.10_r_std,.20_r_std,.40_r_std,.70_r_std,1.20_r_std,2._r_std/)
+ real(r_std)::znt(nslm)=(/.01_r_std,.03_r_std,.07_r_std,.15_r_std,.30_r_std,.60_r_std,1.20_r_std/)
+ real(r_std)::znh(nslm)=(/.001_r_std,.004_r_std,.010_r_std,.020_r_std,.035_r_std,.055_r_std,.080_r_std/)
+ real(r_std)::dnh(nslm)=(/.002_r_std,.004_r_std,.008_r_std,.012_r_std,.018_r_std,.024_r_std,.030_r_std/)
+ real(r_std)::dlh(nslm)=(/.002_r_std,.004_r_std,.008_r_std,.012_r_std,.018_r_std,.024_r_std,.030_r_std/)
+ real(r_std)::humcste(nvm)=1._r_std
+ real(r_std),allocatable::lalo(:,:)
+ interface xios_orchidee_send_field
+  module procedure xios_1d,xios_2d,xios_3d
+ end interface
+ interface getin_p
+  module procedure getin_real_scalar
+ end interface
+! <MODULE_STATE>
+contains
+! <STATE_SETUP>
+! <CASE_DRIVER>
+ subroutine ipslerr_p(level,a,b,c,d)
+  integer,intent(in)::level
+  character(*),intent(in)::a,b,c,d
+  if(level>=3) error stop 'ipslerr_p'
+ end subroutine
+ subroutine getin_real_scalar(name,value)
+  character(*),intent(in)::name
+  real(r_std),intent(inout)::value
+ end subroutine
+ subroutine xios_1d(name,value)
+  character(*),intent(in)::name;real(r_std),intent(in)::value(:)
+ end subroutine
+ subroutine xios_2d(name,value)
+  character(*),intent(in)::name;real(r_std),intent(in)::value(:,:)
+ end subroutine
+ subroutine xios_3d(name,value)
+  character(*),intent(in)::name;real(r_std),intent(in)::value(:,:,:)
+ end subroutine
+! <HYDROL_PROCEDURES>
+end module
+
+program hydrol_soil_owner_main
+ use hydrol_soil_owner_oracle
+ implicit none
+ integer::case_id,unit_out
+ call allocate_state(1)
+ open(newunit=unit_out,file='fortran_outputs.txt',status='replace',action='write')
+ write(unit_out,'(A)') 'case_id,field,flat_index,value'
+ open(unit=103,status='scratch',action='readwrite'); write(103,'(F10.3)') 0.150
+ open(unit=104,status='scratch',action='readwrite'); write(104,'(F10.3)') 0.025
+ do case_id=1,19
+   call run_owner_case(case_id,unit_out)
+ enddo
+ close(unit_out)
+end program

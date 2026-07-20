@@ -1,0 +1,80 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module
+
+module thermosoil_recurrence_oracle
+  use defprec
+  implicit none
+  integer, parameter :: nvm=14, ngrnd=4, ndeep=4
+  real(r_std), parameter :: zero=0.0_r_std
+  integer :: printlev=0, numout=6
+  real(r_std) :: dt_sechiba
+  real(r_std) :: dlt(ngrnd), pcapa(2,ngrnd,nvm)
+  real(r_std) :: ptn_pftmean(2,ngrnd), pkappa(2,ngrnd,nvm)
+  real(r_std) :: pkappa_pftmean(2,ngrnd)
+  real(r_std) :: shum_ngrnd_permalong(2,ndeep,nvm)
+  logical :: veget_mask_2d(2,nvm)
+contains
+! <ADD_HEAT_ZIMOV>
+
+  subroutine run_defined_tail(ok_zimov, veget_max_bg, ptn, heat_zimov, &
+                              gtemp, ptnlev1, deephum_prof, deeptemp_prof)
+    logical, intent(in) :: ok_zimov
+    real(r_std), intent(in) :: veget_max_bg(2,nvm)
+    real(r_std), intent(inout) :: ptn(2,ngrnd,nvm)
+    real(r_std), intent(in) :: heat_zimov(2,ndeep,nvm)
+    real(r_std), intent(out) :: gtemp(2), ptnlev1(2)
+    real(r_std), intent(out) :: deephum_prof(2,ndeep,nvm)
+    real(r_std), intent(out) :: deeptemp_prof(2,ndeep,nvm)
+    integer(i_std), parameter :: kjpindex=2
+    integer(i_std) :: m, jg, ji
+! <MAIN_ZIMOV_AND_FINAL_STATE>
+  end subroutine run_defined_tail
+end module thermosoil_recurrence_oracle
+
+program thermosoil_recurrence_driver
+  use defprec
+  use thermosoil_recurrence_oracle
+  implicit none
+  integer :: i,j,k,c
+  logical :: enabled
+  real(r_std) :: ptn(2,ngrnd,nvm), heat(2,ndeep,nvm), veg(2,nvm)
+  real(r_std) :: gtemp(2), ptnlev1(2), dh(2,ndeep,nvm), dt(2,ndeep,nvm)
+  character(512) :: path
+
+  dt_sechiba=1800._r_std
+  dlt=(/0.1_r_std,0.3_r_std,0.8_r_std,1.7_r_std/)
+  veget_mask_2d=.true.; veget_mask_2d(1,4)=.false.; veget_mask_2d(2,14)=.false.
+  veg=0._r_std; veg(:,1)=0.2_r_std; veg(:,14)=0.8_r_std
+  pcapa=2.0e6_r_std
+  do k=1,nvm; do j=1,ngrnd; do i=1,2
+    pcapa(i,j,k)=pcapa(i,j,k)+1000._r_std*i+100._r_std*j+10._r_std*k
+    pkappa(i,j,k)=0.5_r_std+0.01_r_std*i+0.02_r_std*j+0.001_r_std*k
+    shum_ngrnd_permalong(i,j,k)=0.1_r_std*i+0.01_r_std*j+0.001_r_std*k
+  enddo; enddo; enddo
+  call get_command_argument(1,path)
+  open(10,file=trim(path),status='replace')
+  write(10,'(a)') 'case,field,i,j,k,value'
+  do c=0,1
+    enabled=(c==1)
+    do k=1,nvm; do j=1,ngrnd; do i=1,2
+      ptn(i,j,k)=260._r_std+i+0.1_r_std*j+0.01_r_std*k
+      heat(i,j,k)=real((-1)**(i+j+k),r_std)*(0.02_r_std+0.001_r_std*j)
+    enddo; enddo; enddo
+    call run_defined_tail(enabled,veg,ptn,heat,gtemp,ptnlev1,dh,dt)
+    do k=1,nvm; do j=1,ngrnd; do i=1,2
+      write(10,'(i0,a,a,a,i0,a,i0,a,i0,a,es25.17)') c,',','ptn',',',i,',',j,',',k,',',ptn(i,j,k)
+    enddo; enddo; enddo
+    do j=1,ngrnd; do i=1,2
+      write(10,'(i0,a,a,a,i0,a,i0,a,i0,a,es25.17)') c,',','ptn_pftmean',',',i,',',j,',',1,',',ptn_pftmean(i,j)
+      write(10,'(i0,a,a,a,i0,a,i0,a,i0,a,es25.17)') c,',','pkappa_pftmean',',',i,',',j,',',1,',',pkappa_pftmean(i,j)
+    enddo; enddo
+    do i=1,2
+      write(10,'(i0,a,a,a,i0,a,i0,a,i0,a,es25.17)') c,',','gtemp',',',i,',',1,',',1,',',gtemp(i)
+      write(10,'(i0,a,a,a,i0,a,i0,a,i0,a,es25.17)') c,',','ptnlev1',',',i,',',1,',',1,',',ptnlev1(i)
+    enddo
+  enddo
+  close(10)
+end program thermosoil_recurrence_driver

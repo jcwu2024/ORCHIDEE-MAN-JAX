@@ -1,0 +1,67 @@
+module defprec
+ implicit none;integer,parameter::i_std=kind(1),r_std=selected_real_kind(12,300)
+end module
+module constantes
+ use defprec
+ implicit none
+ real(r_std),parameter::zero=0d0,un=1d0,quatre=4d0,ZeroCelsius=273.15d0,min_stomate=0d0,undef=-9999d0,leaf_age_crit_tref=20d0
+ integer::printlev=0,numout=6
+ logical::ok_herbivores=.false.,ok_dgvm=.false.
+contains
+ subroutine ipslerr_p(a,b,c,d,e);integer,intent(in)::a;character(*),intent(in)::b,c,d,e;stop 2;end
+end module
+module stomate_data
+ use defprec
+ implicit none
+ integer,parameter::nvm=14,nparts=12,nelements=1,nleafages=4
+ integer,parameter::ileaf=1,isapabove=2,isapbelow=3,iheartabove=4,iheartbelow=5,iroot=6,ifruit=7,icarbres=8,iagrsapst=9,iagrsappn=10,iagrhrtst=11,iagrhrtpn=12,icarbon=1
+ real(r_std),parameter::prc_residual=.5d0,leaf_age_crit_coeff(3)=(/1.5d0,.75d0,10d0/)
+ integer::hist_id_stomate=0,itime=0,horipft_index=0
+end module
+module pft_parameters
+ use defprec
+ implicit none
+ character(len=5)::senescence_type(14)
+ logical::is_tree(14),natural(14),is_grassland_manag(14),ok_LAIdev(14)
+ real(r_std)::min_leaf_age_for_senescence(14),gdd_senescence(14),senescence_temp(14,3),hum_frac(14),senescence_hum(14),nosenescence_hum(14),max_turnover_time(14),min_turnover_time(14),leaffall(14),lai_max(14),leafagecrit(14),lai_initmin(14),tau_fruit(14),tau_sap(14),sla(14)
+end module
+module xios_orchidee
+ use defprec
+ interface xios_orchidee_send_field;module procedure s2,s4;end interface
+contains
+ subroutine s2(n,x);character(*),intent(in)::n;real(r_std),intent(in)::x(:,:);end
+ subroutine s4(n,x);character(*),intent(in)::n;real(r_std),intent(in)::x(:,:,:,:);end
+end module
+module ioipsl_para
+ use defprec
+ interface histwrite_p;module procedure h2,h4;end interface
+contains
+ subroutine h2(id,n,it,x,k,idx);integer,intent(in)::id,it,k,idx;character(*),intent(in)::n;real(r_std),intent(in)::x(:,:);end
+ subroutine h4(id,n,it,x,k,idx);integer,intent(in)::id,it,k,idx;character(*),intent(in)::n;real(r_std),intent(in)::x(:,:,:,:);end
+end module
+module turnover_oracle
+ use xios_orchidee;use ioipsl_para;use stomate_data;use constantes;use pft_parameters
+ implicit none;logical,save::firstcall_turnover=.true.
+contains
+! <TURNOVER_PROCEDURE>
+end module
+program main
+ use defprec;use stomate_data;use constantes;use pft_parameters;use turnover_oracle
+ implicit none
+ integer::u,i,j,k,m,nrec(3,nvm);character(len=1024)::out
+ logical::present(3,nvm),sen(3,nvm)
+ real(r_std)::herb(3,nvm),maxm(3,nvm),minm(3,nvm),mw(3,nvm),mm(3,nvm),tl(3),tm(3),tw(3),veg(3,nvm),gdd(3,nvm),lage(3,nvm,nleafages),lfrac(3,nvm,nleafages),age(3,nvm),lai(3,nvm),bio(3,nvm,nparts,1),turnout(3,nvm,nparts,1),tt(3,nvm),ce(3,nvm),slac(3,nvm)
+ call get_command_argument(1,out)
+ senescence_type='none';is_tree=.false.;natural=.true.;is_grassland_manag=.false.;ok_LAIdev=.false.;is_tree(14)=.true.;senescence_type(14)='none'
+ min_leaf_age_for_senescence=30d0;gdd_senescence=100d0;senescence_temp=0d0;hum_frac=.5d0;senescence_hum=.2d0;nosenescence_hum=.8d0;max_turnover_time=80d0;min_turnover_time=10d0;leaffall=10d0;lai_max=4d0;leafagecrit=100d0;lai_initmin=.3d0;tau_fruit=90d0;tau_sap=730d0;sla=.02d0
+ present=.false.;present(:,14)=.true.;herb=0d0;maxm=1d0;minm=0d0;mw=.5d0;mw(:,14)=.1d0;mm=.5d0;tl=293.15d0;tm=293.15d0;tw=293.15d0;veg=0d0;veg(:,14)=1d0;gdd=0d0;lage=0d0;lfrac=0d0;age=10d0;lai=0d0;bio=0d0;turnout=0d0;tt=80d0;ce=0d0;nrec=0;slac=.02d0
+ lage(1,14,1)=60d0;lage(2,14,1)=10d0;lfrac(1:2,14,1)=1d0;bio(1:2,14,ileaf,1)=100d0;bio(1:2,14,iroot,1)=40d0;bio(1:2,14,ifruit,1)=90d0;bio(1:2,14,isapabove,1)=730d0;bio(1,14,iheartabove,1)=10d0
+ call turn(3,1.0_r_std,present,herb,maxm,minm,mw,mm,tl,tm,tw,veg,gdd,lage,lfrac,age,lai,bio,turnout,sen,tt,nrec,ce,slac)
+ call turn(3,1.0_r_std,present,herb,maxm,minm,mw,mm,tl,tm,tw,veg,gdd,lage,lfrac,age,lai,bio,turnout,sen,tt,nrec,ce,slac)
+ open(newunit=u,file=trim(out),status='replace',action='write');write(u,'(A)')'field,value'
+ do j=1,nvm;do i=1,3
+  write(u,'(A,",",ES26.17)')'senescence',merge(1d0,0d0,sen(i,j));write(u,'(A,",",ES26.17)')'age',age(i,j);write(u,'(A,",",ES26.17)')'lai',lai(i,j);write(u,'(A,",",ES26.17)')'turnover_time',tt(i,j);write(u,'(A,",",ES26.17)')'c_export',ce(i,j)
+  do k=1,nparts;write(u,'(A,",",ES26.17)')'biomass',bio(i,j,k,1);write(u,'(A,",",ES26.17)')'turnover',turnout(i,j,k,1);end do
+  do m=1,nleafages;write(u,'(A,",",ES26.17)')'leaf_age',lage(i,j,m);write(u,'(A,",",ES26.17)')'leaf_frac',lfrac(i,j,m);end do
+ end do;end do;close(u)
+end program

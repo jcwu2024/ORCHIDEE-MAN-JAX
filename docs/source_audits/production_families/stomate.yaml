@@ -1,0 +1,461 @@
+schema_version: 1
+lane: stomate
+records:
+- ledger_entry: stomate.active.daily_accumulation
+  oracle_family: stomate_daily_maintenance
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/daily.py
+    symbol: stomate_daily_process_fold_from_entries
+    start_line: 1521
+    end_line: 1636
+    file_sha256: 6ee3b0a43966351130c1aa19bcde8b5d7e2a96767ce6104b16b955535e348aeb
+    span_sha256: d8c7dd5e07fd809ddaab045c4fc7b9c7754df9a7c224054f1fa0f6280d36c18a
+  callsites:
+  - &id001
+    file: jax_orchidee/driver/orchestration.py
+    symbol: _paper_cold_start_day_daily_process_from_completed_entries
+    start_line: 6862
+    end_line: 6914
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 90bc0722ff04584b494f4b6178a4ba6d728e8000a81515d52feed2cdb8bda5bb
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json
+- ledger_entry: stomate.active.maintenance_respiration
+  oracle_family: stomate_daily_maintenance
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/daily.py
+    symbol: stomate_daily_process_fold_from_entries
+    start_line: 1521
+    end_line: 1636
+    file_sha256: 6ee3b0a43966351130c1aa19bcde8b5d7e2a96767ce6104b16b955535e348aeb
+    span_sha256: d8c7dd5e07fd809ddaab045c4fc7b9c7754df9a7c224054f1fa0f6280d36c18a
+  callsites:
+  - *id001
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json
+- ledger_entry: stomate.active.prescribe_restart_gate
+  oracle_family: stomate_prescribe_restart_gate
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/carbon_kernels.py
+    symbol: prescribe_step
+    start_line: 2887
+    end_line: 3061
+    file_sha256: 4ff6ced45d26fbb54bdf1ae46a76084ef5cb62481974e028965d852ae9757e67
+    span_sha256: 76c5238862475121661675b50edd938b5863787cfe5985275eef73deca5e838b
+  callsites:
+  - &id002
+    file: jax_orchidee/driver/orchestration.py
+    symbol: _paper_day_stomate_daily_carbon_from_bundles
+    start_line: 6974
+    end_line: 7002
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 857bcdbc260a0958ee3f9698c8b54e2597b849a6e6a78b56809f0fedfeb2ba04
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json
+- ledger_entry: stomate.active.constraints
+  oracle_family: stomate_constraints
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/carbon_kernels.py
+    symbol: constraints_step
+    start_line: 3064
+    end_line: 3203
+    file_sha256: 4ff6ced45d26fbb54bdf1ae46a76084ef5cb62481974e028965d852ae9757e67
+    span_sha256: 6579a8d890f11db5cf0f6e4f258e768b4dec3d828c5953248d362787736e01bb
+  callsites:
+  - *id002
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json
+- ledger_entry: stomate.active.season_memory
+  oracle_family: stomate_season_memory
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/season.py
+    symbol: season_memory_step
+    start_line: 375
+    end_line: 556
+    file_sha256: 509f0ed4ce76e1420add9eb1cadba7b84e205dba2b599e3f179c56d8fd4d3170
+    span_sha256: b2dbd55e1d314230b7fc625a76c5d58c92c219a071f2c79050951fea89f6050b
+  callsites:
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: _paper_day_season_fields_from_bundle_source
+    start_line: 1447
+    end_line: 1502
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: a239b0106ee1e16a16db0c9ac7b0f723c3fb4b0979b6afb1c7d405dbc53ae632
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json
+- ledger_entry: stomate.active.phenology
+  oracle_family: stomate_phenology
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/carbon_kernels.py
+    symbol: phenology_step
+    start_line: 3247
+    end_line: 3835
+    file_sha256: 4ff6ced45d26fbb54bdf1ae46a76084ef5cb62481974e028965d852ae9757e67
+    span_sha256: 0ac36118089bd95ad7fe54bdf5d13fcccede142adecc7752976468f481b69ccd
+  callsites:
+  - *id002
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json
+- ledger_entry: stomate.active.allocation
+  oracle_family: stomate_allocation
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/carbon_kernels.py
+    symbol: allocation_step
+    start_line: 2628
+    end_line: 2884
+    file_sha256: 4ff6ced45d26fbb54bdf1ae46a76084ef5cb62481974e028965d852ae9757e67
+    span_sha256: 3694eb1f3e01cbd50f1b043d3e86a68bf0cdf285ece0d635ed710ba230e8507f
+  callsites:
+  - *id002
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json
+- ledger_entry: stomate.active.npp_growth
+  oracle_family: stomate_npp_growth
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/integration.py
+    symbol: stomate_daily_carbon_explicit
+    start_line: 1628
+    end_line: 1718
+    file_sha256: 5304a5d46a3c6862060f06c12431d942c4cc286cc939f9e749c4630cabb70906
+    span_sha256: eef717876a8df8150c419f03f9a06008bced930a812fe5f5f4c22754359adf9c
+  callsites:
+  - *id002
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json
+- ledger_entry: stomate.active.gap_mortality
+  oracle_family: stomate_gap_mortality
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/carbon_kernels.py
+    symbol: gap_mortality_step
+    start_line: 4692
+    end_line: 4838
+    file_sha256: 4ff6ced45d26fbb54bdf1ae46a76084ef5cb62481974e028965d852ae9757e67
+    span_sha256: b143f3d6aca91cfcf6658601f3abe44ca103ca3a0db82c7ba81c81bb528cf2b1
+  callsites:
+  - *id002
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json
+- ledger_entry: stomate.active.final_lai_vmax
+  oracle_family: stomate_final_lai_vmax
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/carbon_kernels.py
+    symbol: vmax_step
+    start_line: 7610
+    end_line: 7750
+    file_sha256: 4ff6ced45d26fbb54bdf1ae46a76084ef5cb62481974e028965d852ae9757e67
+    span_sha256: 52262d9f9958aa53fe9f244357f0d7765e6d09fe2bef9287f62d86ed3eb08e97
+  callsites:
+  - *id002
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json
+- ledger_entry: stomate.active.turnover
+  oracle_family: stomate_turnover
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/carbon_kernels.py
+    symbol: turnover_step
+    start_line: 4515
+    end_line: 4689
+    file_sha256: 4ff6ced45d26fbb54bdf1ae46a76084ef5cb62481974e028965d852ae9757e67
+    span_sha256: 663dad084dad28b90b91d9f46751173329d6e09de57cdcda48430c028d729a0e
+  callsites:
+  - *id002
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json
+- ledger_entry: stomate.active.ok_leak_litter
+  oracle_family: stomate_littercalc_leak
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/integration.py
+    symbol: stomate_ok_leak_explicit
+    start_line: 3701
+    end_line: 3936
+    file_sha256: 5304a5d46a3c6862060f06c12431d942c4cc286cc939f9e749c4630cabb70906
+    span_sha256: f5bdc59fa969459223d1f09dc12e4249fa0cbd661959851e7c61dbf5705731bb
+  callsites:
+  - &id003
+    file: jax_orchidee/driver/orchestration.py
+    symbol: _paper_day_ok_leak_from_boundary
+    start_line: 7414
+    end_line: 7433
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: dac791a21a5d30d76ef6433fe066520c2d51ddc8f1f5f01f0eba30aabc325fa8
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json
+- ledger_entry: stomate.active.ok_leak_soilcarbon
+  oracle_family: stomate_soilcarbon_owner
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/integration.py
+    symbol: stomate_ok_leak_explicit
+    start_line: 3701
+    end_line: 3936
+    file_sha256: 5304a5d46a3c6862060f06c12431d942c4cc286cc939f9e749c4630cabb70906
+    span_sha256: f5bdc59fa969459223d1f09dc12e4249fa0cbd661959851e7c61dbf5705731bb
+  callsites:
+  - *id003
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json
+- ledger_entry: stomate.active.tf_doc
+  oracle_family: stomate_soilcarbon_owner
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/integration.py
+    symbol: stomate_ok_leak_explicit
+    start_line: 3701
+    end_line: 3936
+    file_sha256: 5304a5d46a3c6862060f06c12431d942c4cc286cc939f9e749c4630cabb70906
+    span_sha256: f5bdc59fa969459223d1f09dc12e4249fa0cbd661959851e7c61dbf5705731bb
+  callsites:
+  - *id003
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json
+- ledger_entry: stomate.active.ok_leak_firstcall_active_layer
+  oracle_family: stomate_soilcarbon_owner
+  status: verified
+  production_owner:
+    file: jax_orchidee/stomate/integration.py
+    symbol: stomate_ok_leak_explicit
+    start_line: 3701
+    end_line: 3936
+    file_sha256: 5304a5d46a3c6862060f06c12431d942c4cc286cc939f9e749c4630cabb70906
+    span_sha256: f5bdc59fa969459223d1f09dc12e4249fa0cbd661959851e7c61dbf5705731bb
+  callsites:
+  - *id003
+  contracts:
+    inputs:
+    - 48 ordered SECHIBA entry payloads
+    - previous STOMATE state
+    - PFT14 parameters and masks
+    outputs:
+    - daily process result
+    - STOMATE carbon/soil result
+    - day-end state packet
+    state_writeback:
+    - daily_accumulators
+    - slowproc_stomate_previous_step_state
+  oracle_case_ids:
+  - stage3_family_cases
+  - production_cold_start_day1
+  - production_model_state_day2
+  comparison_asset: outputs/reference_mode/production/stomate/comparison.json

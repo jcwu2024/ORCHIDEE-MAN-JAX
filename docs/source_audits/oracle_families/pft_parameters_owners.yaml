@@ -1,0 +1,47 @@
+schema_version: 2
+lane: pft_parameters_owners
+status: passed
+_family_definition: &pft_parameters_owners_family
+  id: pft_parameters_owners
+  runner: oracle_lane_pft_parameters_owners:run_oracle
+  coverage_runner: run_pft_parameters_owner_coverage:run_coverage
+  ledger_entries:
+    - parameters.pft_parameters.pft_parameters_main.branch_contract
+    - parameters.pft_parameters.pft_parameters_init.humcste_depth
+    - parameters.pft_parameters.pft_parameters_init.physiology_labels
+    - parameters.pft_parameters.pft_parameters_init.section_switches
+    - parameters.pft_parameters.config_pft_parameters.constraints
+    - parameters.pft_parameters.config_pft_parameters.physiology_labels
+    - parameters.pft_parameters.config_pft_parameters.crop_rotation_reads
+    - parameters.pft_parameters.config_pft_parameters.age_class_config
+    - parameters.pft_parameters.config_sechiba_pft_parameters.bvoc_switch
+    - parameters.pft_parameters.config_stomate_pft_parameters.age_class_layout
+  input_asset: outputs/reference_mode/micro_oracles/pft_parameters_owners/inputs.json
+  comparison_asset: outputs/reference_mode/micro_oracles/pft_parameters_owners/comparison.json
+  branch_coverage_asset: outputs/reference_mode/micro_oracles/pft_parameters_owners/branch_coverage.json
+  owner_evidence_asset: outputs/reference_mode/micro_oracles/pft_parameters_owners/owner_region_evidence.json
+  procedures:
+    - {id: pft_parameters_main, source_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90, procedure: pft_parameters_main, procedure_kind: subroutine, start_line: 81, end_line: 209, expected_source_sha256: 619b9240ea8e75818fce925036261b96b38ac43cba0882cc5f59cb252f715d64, expected_span_sha256: f3801ac3affe1369bb46ffd821fb1050594753710ac7d446b81b516c03befa55, numerical_oracle_status: verified}
+    - {id: pft_parameters_init, source_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90, procedure: pft_parameters_init, procedure_kind: subroutine, start_line: 235, end_line: 976, expected_source_sha256: 619b9240ea8e75818fce925036261b96b38ac43cba0882cc5f59cb252f715d64, expected_span_sha256: 656a236bba31e4488a3da45ed072ccbc39d9764dad3068c9ef21870eafcfbbf9, numerical_oracle_status: verified}
+    - {id: pft_parameters_alloc, source_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90, procedure: pft_parameters_alloc, procedure_kind: subroutine, start_line: 997, end_line: 2838, expected_source_sha256: 619b9240ea8e75818fce925036261b96b38ac43cba0882cc5f59cb252f715d64, expected_span_sha256: 7dc1734fb995bf39cd33e569db4ec762a77282fd4da60c922e95b617754e12dd, numerical_oracle_status: verified}
+    - {id: config_pft_parameters, source_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90, procedure: config_pft_parameters, procedure_kind: subroutine, start_line: 2858, end_line: 3686, expected_source_sha256: 619b9240ea8e75818fce925036261b96b38ac43cba0882cc5f59cb252f715d64, expected_span_sha256: f936cc9140114c83a557d0b60bd4eae3257b0ec2d6e7a72e608aa92a4675877f, numerical_oracle_status: verified}
+    - {id: config_sechiba_pft_parameters, source_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90, procedure: config_sechiba_pft_parameters, procedure_kind: subroutine, start_line: 3707, end_line: 4111, expected_source_sha256: 619b9240ea8e75818fce925036261b96b38ac43cba0882cc5f59cb252f715d64, expected_span_sha256: f8888ff343f133a8e8708baa64cee87108383d004bab12a6a93049c5b50f0361, numerical_oracle_status: verified}
+    - {id: config_stomate_pft_parameters, source_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90, procedure: config_stomate_pft_parameters, procedure_kind: subroutine, start_line: 4132, end_line: 4759, expected_source_sha256: 619b9240ea8e75818fce925036261b96b38ac43cba0882cc5f59cb252f715d64, expected_span_sha256: dd51a22cef594c7774ce40b9fc67b0b83bb8347f269f6ff07ddcdb7c0a4621ac, numerical_oracle_status: verified}
+  compilation:
+    status: passed
+    compiler: C:\msys64\ucrt64\bin\gfortran.exe
+    flags: [-std=legacy, -fdefault-real-8, -ffree-line-length-none, -O0, -fcheck=all]
+    harness: scripts/dev/oracle_lane_pft_parameters_owners.f90.template
+    result_asset: outputs/reference_mode/micro_oracles/pft_parameters_owners/comparison.json
+  host_policy:
+    kind: original_i4_r8_via_selected_kinds_and_fdefault_real_8
+    constantes_mtc: procedure_references_and_declaration_dependency_closure_only
+    getin_p: deterministic_configuration_writes_and_read_writeback_counters_only
+  branch_cases:
+    - {scope: [section-switches, humcste-2m-4m-fallback, pft1-pft14-labels]}
+    - {scope: [nstm-valid-low-high, where-mask, crop-rotation-1-2-3]}
+    - {scope: [age-disabled-warning-bound-read-bound-skip, tree-and-herb-age-layout]}
+    - {scope: [main-first-reentry, mapping-guards, managed-grassland-error, age-layout-errors]}
+  numerical_oracle_status: verified
+  tolerance: {rtol: 1.0e-12, atol: 1.0e-14, discrete: exact}
+families: [*pft_parameters_owners_family]

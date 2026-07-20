@@ -1,0 +1,291 @@
+schema_version: 2
+manifest_name: fortran_micro_oracles
+scope: >-
+  Byte-exact extracts from original ORCHIDEE Fortran source, compiled inside
+  a minimal dependency-stub harness and compared with the current JAX owner.
+  Extract hashes prove process text provenance; comparison assets record the
+  separately established numerical evidence and tolerances. GNU compilation
+  uses -fdefault-real-8, the kind-policy equivalent of the paper executable's
+  recorded Intel -i4 -r8 flags.
+output_root: outputs/reference_mode/micro_oracles
+oracles_initial: # Anchor preserves the original verified QSAT record during v2 migration.
+  - &qsatcalc_record
+    id: qsat_moisture.qsatcalc
+    source_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90
+    procedure: qsatcalc
+    procedure_kind: subroutine
+    start_line: 79
+    end_line: 179
+    expected_source_sha256: 3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e
+    expected_span_sha256: e2f88c9bb8a7faa186ff2119af3eab2e22521f2f90088168d7ed00cebf78a0bb
+    dependencies:
+      enclosing_module: qsat_moisture
+      use_modules:
+        - defprec
+        - constantes
+        - IOIPSL
+        - constantes_soil
+      module_symbols:
+        - i_std
+        - r_std
+        - l_qsat_first
+        - max_temp
+        - min_temp
+        - qsfrict
+        - diag_qsat
+        - numout
+      called_procedures:
+        - qsfrict_init
+        - ipslerr_p
+    compilation:
+      status: passed
+      standalone_compilable: false
+      compiler_available: true
+      compiler: C:\msys64\ucrt64\bin\gfortran.exe
+      compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+      harness: scripts/dev/qsat_micro_oracle_harness.f90.template
+      build_script: scripts/dev/build_qsat_micro_oracle.py
+      run_script: scripts/dev/run_qsat_micro_oracle.py
+      result_asset: outputs/reference_mode/micro_oracles/qsat_moisture/comparison.json
+    numerical_oracle_status: verified
+    tolerance: {rtol: 1.0e-12, atol: 1.0e-24}
+
+families_definition: &pilot_families
+  - id: diffuco_surface_exchange
+    runner: run_diffuco_surface_exchange_oracle:run_oracle
+    ledger_entries:
+      - diffuco.active.aerodynamic_boundary
+      - diffuco.conditional.snow_sublimation
+      - diffuco.conditional.canopy_interception
+      - diffuco.active.cwrr_bare_soil
+      - diffuco.conditional.dew_freezing_combination
+    harnesses: [scripts/dev/diffuco_surface_exchange_oracle_harness.f90.template]
+    input_asset: outputs/reference_mode/micro_oracles/diffuco_surface_exchange/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/diffuco_surface_exchange/point_comparisons.csv
+    output_contract: [q_cdrag, q_cdrag_pft, q_cdrag_snowfact, vbeta1, vbeta2, vbeta23, vbeta4, vbeta4_pft, vbeta4_non_cwrr, valpha, vbeta, vbeta_pft, humrel]
+    branch_cases:
+      - {id: aero_stable_unstable, ledger_entry: diffuco.active.aerodynamic_boundary, fortran_lines: 984-1135, condition: "PFT1-13 ok_LAIdev=false, PFT14=true; stable and unstable grid/PFT temperatures; ok_snowfact=false; printlev<3", expected_arm: all reachable aerodynamic arms, input_case: minimum-wind_and_temperature_contrast, control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1017:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1040:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1064:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1064:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1072:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1072:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1108:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1129:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1142:if:false"]}
+      - {id: snow_supply, ledger_entry: diffuco.conditional.snow_sublimation, fortran_lines: 1216-1274, condition: "zero/nonzero atmospheric demand and supply-limited/unlimited vegetation and nobio snow; printlev<3", expected_arm: all reachable snow-sublimation arms, input_case: snow_supply_matrix, control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1227:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1227:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1229:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1229:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1264:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1264:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1266:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1266:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1279:if:false"]}
+      - {id: canopy_storage, ledger_entry: diffuco.conditional.canopy_interception, fortran_lines: 1467-1536, condition: "inactive vegetation; active PFT2/PFT3/PFT14; zero/nonzero capacity; LAIdev false/true; demand and supply threshold sides; humrel zero/nonzero; printlev<3", expected_arm: all reachable interception arms, input_case: canopy_storage_matrix, control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1471:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1471:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1474:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1474:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1495:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1513:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1513:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1519:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1519:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1527:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1527:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1551:if:false"]}
+      - {id: cwrr_and_non_cwrr_bare, ledger_entry: diffuco.active.cwrr_bare_soil, fortran_lines: 1634-1688, condition: "hydrol_cwrr true/false; zero/nonzero bare fraction; occupied/unoccupied PFT; printlev<3", expected_arm: all reachable bare-soil arms, input_case: cwrr_bare_matrix_and_non_cwrr_threshold, control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1634:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1654:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1654:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1678:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1678:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:1688:if:false"]}
+      - {id: dew_freeze_primary, ledger_entry: diffuco.conditional.dew_freezing_combination, fortran_lines: 3121-3269, condition: "dry, warm-dew and freezing-dew points; positive bare fraction; LAI=1; PFT1 qsintmax=0 and PFT14 qsintmax>0; printlev<3", expected_arm: primary dew routing, interception and final-beta threshold sides, input_case: dew_temperature_matrix, control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3138:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3138:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3139:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3139:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3158:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3158:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3165:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3174:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3174:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3193:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3193:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3194:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3194:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3197:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3198:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3212:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3224:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3224:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3237:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3237:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3251:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3251:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3261:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3261:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3269:if:false"]}
+      - {id: dew_freeze_zero_bare_lai_thresholds, ledger_entry: diffuco.conditional.dew_freezing_combination, fortran_lines: 3165-3210, condition: "warm-dew point with tot_bare_soil=0, active PFT13 LAI=0 and PFT14 LAI=2", expected_arm: zero-bare and both remaining LAI threshold arms, input_case: dew_zero_bare_lai_matrix, control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3165:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3197:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:3198:if:true"]}
+    procedures:
+      - id: diffuco_surface_exchange.diffuco_aero
+        source_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+        procedure: diffuco_aero
+        procedure_kind: subroutine
+        start_line: 940
+        end_line: 1144
+        expected_source_sha256: 6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba
+        expected_span_sha256: 59f2479a8823c00373f246e4ba1f0de3f3fb2792363f603f54ad29b8df2f689c
+        dependencies: &diffuco_dependencies {use_modules: [constantes, constantes_soil, pft_parameters], module_symbols: [wind]}
+        compilation: &diffuco_compilation
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/diffuco_surface_exchange_oracle_harness.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/diffuco_surface_exchange/comparison.json
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - id: diffuco_surface_exchange.diffuco_snow
+        source_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+        procedure: diffuco_snow
+        procedure_kind: subroutine
+        start_line: 1177
+        end_line: 1281
+        expected_source_sha256: 6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba
+        expected_span_sha256: 9c18da8b4f087bcd531d337d7428c8804b20a175efcea99dc709834b6eed16ee
+        dependencies: *diffuco_dependencies
+        compilation: *diffuco_compilation
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - id: diffuco_surface_exchange.diffuco_inter
+        source_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+        procedure: diffuco_inter
+        procedure_kind: subroutine
+        start_line: 1426
+        end_line: 1553
+        expected_source_sha256: 6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba
+        expected_span_sha256: d304213aba7d53ac04d4ea115e04e2e185585fc2d20aab733e32e3a36b5a91dc
+        dependencies: *diffuco_dependencies
+        compilation: *diffuco_compilation
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - id: diffuco_surface_exchange.diffuco_bare
+        source_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+        procedure: diffuco_bare
+        procedure_kind: subroutine
+        start_line: 1593
+        end_line: 1690
+        expected_source_sha256: 6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba
+        expected_span_sha256: 1e7936e21385d90a437699988150c605b782d4e7d62af84b3cbc90e1e95304b4
+        dependencies: *diffuco_dependencies
+        compilation: *diffuco_compilation
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - id: diffuco_surface_exchange.diffuco_comb
+        source_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+        procedure: diffuco_comb
+        procedure_kind: subroutine
+        start_line: 3070
+        end_line: 3271
+        expected_source_sha256: 6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba
+        expected_span_sha256: bfc8a7d2e1d2b329564643bef965ede273084752fe6126684b7becb0f3b4a63a
+        dependencies: *diffuco_dependencies
+        compilation: *diffuco_compilation
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+
+  - id: stomate_daily_maintenance
+    runner: run_stomate_daily_maintenance_oracle:run_oracle
+    ledger_entries: [stomate.active.daily_accumulation, stomate.active.maintenance_respiration]
+    harnesses: [scripts/dev/stomate_daily_maintenance_oracle_harness.f90.template]
+    input_asset: outputs/reference_mode/micro_oracles/stomate_daily_maintenance/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/stomate_daily_maintenance/point_comparisons.csv
+    output_contract: [r1d_writeback, r2d_writeback, r3d_48step_writeback, lai, resp_maint_part_radia]
+    branch_cases:
+      - {id: daily_rank_and_boundary, ledger_entry: stomate.active.daily_accumulation, fortran_lines: 9341-9411, condition: "rank 1/2/3 and slow boundary", expected_arm: both, input_case: daily_rank_matrix, control_flow_arm_ids: []}
+      - {id: maintenance_bare_pft14, ledger_entry: stomate.active.maintenance_respiration, fortran_lines: 122-389, condition: "bare/PFT14, zero/nonzero biomass, distinct root temperatures", expected_arm: all, input_case: maintenance_pool_matrix, control_flow_arm_ids: []}
+    procedures:
+      - id: stomate_daily_maintenance.stomate_accu_r1d
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+        procedure: stomate_accu_r1d
+        procedure_kind: subroutine
+        start_line: 9341
+        end_line: 9363
+        expected_source_sha256: 6d4ae52af2aa3e1cccf1cfd06f1e955c26b900e7059e3aa97dec39479c03771a
+        expected_span_sha256: 4e65048905b1c21fa33dce99015bc532e76996ae66bf094d4b1cf5c639debbe7
+        dependencies: &accu_dependencies {use_modules: [defprec], module_symbols: [dt_sechiba, dt_stomate]}
+        compilation: &stomate_compilation
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/stomate_daily_maintenance_oracle_harness.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/stomate_daily_maintenance/comparison.json
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - id: stomate_daily_maintenance.stomate_accu_r2d
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+        procedure: stomate_accu_r2d
+        procedure_kind: subroutine
+        start_line: 9365
+        end_line: 9387
+        expected_source_sha256: 6d4ae52af2aa3e1cccf1cfd06f1e955c26b900e7059e3aa97dec39479c03771a
+        expected_span_sha256: d01ad569348e28aa74393f637497ea9549ea412d6c89a0960d695d68d814c5a2
+        dependencies: *accu_dependencies
+        compilation: *stomate_compilation
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - id: stomate_daily_maintenance.stomate_accu_r3d
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+        procedure: stomate_accu_r3d
+        procedure_kind: subroutine
+        start_line: 9389
+        end_line: 9411
+        expected_source_sha256: 6d4ae52af2aa3e1cccf1cfd06f1e955c26b900e7059e3aa97dec39479c03771a
+        expected_span_sha256: b8ab3c82e08ed579f01b11107f1fba2820704056df1855e1863556fc265d3bc3
+        dependencies: *accu_dependencies
+        compilation: *stomate_compilation
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - id: stomate_daily_maintenance.maint_respiration
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_resp.f90
+        procedure: maint_respiration
+        procedure_kind: subroutine
+        start_line: 122
+        end_line: 389
+        expected_source_sha256: 1936216a511508172efbeb79c2ab1c270bcaea24e88c8758de97db2cbf569240
+        expected_span_sha256: 1c171faadde1e8fe06dea234a54b1553376f4249a8071c959a63a0cf6cc818be
+        dependencies: {use_modules: [stomate_data, pft_parameters, constantes, constantes_soil], module_symbols: [firstcall_resp, z_soil]}
+        compilation: *stomate_compilation
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+
+oracles:
+  - *qsatcalc_record
+  - id: qsat_moisture.qsfrict_init
+    source_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90
+    procedure: qsfrict_init
+    procedure_kind: subroutine
+    start_line: 547
+    end_line: 589
+    expected_source_sha256: 3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e
+    expected_span_sha256: 111ec65a159bffd0a05edc78afc13ebb43cd8f888686003b0ae12f669db8de0c
+    dependencies:
+      enclosing_module: qsat_moisture
+      use_modules:
+        - defprec
+        - constantes
+        - IOIPSL
+        - constantes_soil
+      module_symbols:
+        - i_std
+        - r_std
+        - msmlr_h2o
+        - msmlr_air
+        - max_temp
+        - qsfrict
+        - zero
+        - printlev
+        - numout
+      called_procedures: []
+    compilation:
+      status: passed
+      standalone_compilable: false
+      compiler_available: true
+      compiler: C:\msys64\ucrt64\bin\gfortran.exe
+      compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+      harness: scripts/dev/qsat_micro_oracle_harness.f90.template
+      build_script: scripts/dev/build_qsat_micro_oracle.py
+      run_script: scripts/dev/run_qsat_micro_oracle.py
+      result_asset: outputs/reference_mode/micro_oracles/qsat_moisture/comparison.json
+    numerical_oracle_status: verified
+    tolerance: {rtol: 1.0e-12, atol: 1.0e-24}
+
+  - id: qsat_moisture.dev_qsatcalc
+    source_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90
+    procedure: dev_qsatcalc
+    procedure_kind: subroutine
+    start_line: 311
+    end_line: 408
+    expected_source_sha256: 3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e
+    expected_span_sha256: 580e844fc0a7ab8d3e0ac9e89316760c441a84dcaec9986f5d342a9293e5252a
+    dependencies:
+      enclosing_module: qsat_moisture
+      use_modules:
+        - defprec
+        - constantes
+        - IOIPSL
+        - constantes_soil
+      module_symbols:
+        - i_std
+        - r_std
+        - l_qsat_first
+        - max_temp
+        - min_temp
+        - qsfrict
+        - diag_qsat
+        - numout
+        - un
+      called_procedures:
+        - qsfrict_init
+        - ipslerr_p
+    compilation:
+      status: passed
+      standalone_compilable: false
+      compiler_available: true
+      compiler: C:\msys64\ucrt64\bin\gfortran.exe
+      compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+      harness: scripts/dev/qsat_micro_oracle_harness.f90.template
+      build_script: scripts/dev/build_qsat_micro_oracle.py
+      run_script: scripts/dev/run_qsat_micro_oracle.py
+      result_asset: outputs/reference_mode/micro_oracles/qsat_moisture/comparison.json
+    numerical_oracle_status: verified
+    tolerance: {rtol: 1.0e-12, atol: 1.0e-24}
+
+families: *pilot_families

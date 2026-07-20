@@ -1,0 +1,100 @@
+schema_version: 1
+rules:
+  - branch_id: fortran_source/ORCHIDEE/src_sticslai/Stics_init.f90:328:if
+    decisions:
+      true:
+        disposition: pft14_active
+        reason: >-
+          stomate_main enters its ok_pheno block at stomate.f90:3766 and calls
+          Stics_init unconditionally at line 3776. f_crop_init is initialized
+          TRUE at stomate.f90:1025, and its only FALSE assignment at line 8493
+          is nested under ANY(ok_LAIdev), which is FALSE because every paper
+          OK_LAIDEV entry, including OK_LAIDEV__00014, is FALSE. The OR guard
+          is therefore TRUE and performs the source initialization writes.
+      false:
+        disposition: paper_static_inactive
+        reason: >-
+          f_crop_init remains TRUE in the declared paper workflow: its only
+          FALSE assignment at stomate.f90:8493 is below the statically disabled
+          ANY(ok_LAIdev) block. Consequently the OR condition cannot take this
+          false arm, independently of f_crop_recycle(ip,j).
+  - branch_id: fortran_source/ORCHIDEE/src_sticslai/Stics_init.f90:441:if
+    decisions:
+      true:
+        disposition: paper_static_inactive
+        reason: >-
+          The condition requires ANY(ok_LAIdev), but all materialized paper
+          OK_LAIDEV values are FALSE, including OK_LAIDEV__00014. The STICS
+          codlainet=3 box-state initialization body is therefore unreachable.
+      false:
+        disposition: pft14_active
+        reason: >-
+          ANY(ok_LAIdev) is FALSE under the fixed paper configuration, so the
+          condition is FALSE and execution continues past this optional STICS
+          box-state initialization while the surrounding line-328 initializer
+          remains active.
+  - branch_id: fortran_source/ORCHIDEE/src_sticslai/Stics_init.f90:492:if
+    decisions:
+      true:
+        disposition: paper_static_inactive
+        reason: >-
+          The history-array reset requires ANY(ok_LAIdev), which is FALSE for
+          the paper configuration because every OK_LAIDEV entry, including
+          PFT14, is FALSE; SP_codlainet cannot make the conjunction true.
+      false:
+        disposition: pft14_active
+        reason: >-
+          With ANY(ok_LAIdev)=FALSE, the history-array reset is skipped and the
+          active line-328 initialization continues to clear f_crop_recycle.
+  - branch_id: fortran_source/ORCHIDEE/src_sticslai/Stics_init.f90:505:if
+    decisions:
+      true:
+        disposition: paper_static_inactive
+        reason: >-
+          The box_ulai construction block requires ANY(ok_LAIdev), which is
+          statically FALSE because all paper OK_LAIDEV values, including PFT14,
+          are FALSE. No forcing, landpoint, or continuous PFT14 parameter can
+          enter this block without changing the declared structural switch.
+      false:
+        disposition: pft14_active
+        reason: >-
+          The fixed all-FALSE OK_LAIDEV vector makes this condition FALSE, so
+          Stics_init follows the continuation that omits box_ulai construction.
+  - branch_id: fortran_source/ORCHIDEE/src_sticslai/Stics_init.f90:510:if
+    decisions:
+      true:
+        disposition: paper_static_inactive
+        reason: >-
+          This SP_nbox arm is nested inside the line-505 ANY(ok_LAIdev) block,
+          which is statically unreachable for the all-FALSE paper OK_LAIDEV
+          configuration; its local parameter value is never tested.
+      false:
+        disposition: paper_static_inactive
+        reason: >-
+          This SP_nbox arm is nested inside the line-505 ANY(ok_LAIdev) block,
+          which is statically unreachable for the all-FALSE paper OK_LAIDEV
+          configuration; its local parameter value is never tested.
+  - branch_id: fortran_source/ORCHIDEE/src_sticslai/Stics_init.f90:515:if
+    decisions:
+      true:
+        disposition: paper_static_inactive
+        reason: >-
+          The mid lower-bound adjustment is nested inside the statically
+          unreachable line-505 OK_LAIDEV/STICS box-construction block.
+      false:
+        disposition: paper_static_inactive
+        reason: >-
+          The mid lower-bound adjustment is nested inside the statically
+          unreachable line-505 OK_LAIDEV/STICS box-construction block.
+  - branch_id: fortran_source/ORCHIDEE/src_sticslai/Stics_init.f90:517:else_if
+    decisions:
+      true:
+        disposition: paper_static_inactive
+        reason: >-
+          The mid upper-bound adjustment is nested inside the statically
+          unreachable line-505 OK_LAIDEV/STICS box-construction block.
+      false:
+        disposition: paper_static_inactive
+        reason: >-
+          The mid upper-bound adjustment is nested inside the statically
+          unreachable line-505 OK_LAIDEV/STICS box-construction block.

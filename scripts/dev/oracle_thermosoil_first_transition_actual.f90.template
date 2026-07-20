@@ -1,0 +1,86 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module defprec
+
+module thermosoil_first_transition_actual_oracle
+  use defprec
+  implicit none
+  integer, parameter :: kjpindex=1, nvm=14, ngrnd=32, nslm=11, ndeep=32, nsnow=3, nnobio=1
+  real(r_std), parameter :: zero=0._r_std, un=1._r_std
+  real(r_std), parameter :: ZeroCelsius=273.15_r_std, fr_dT=2._r_std
+  integer :: printlev=0, numout=6
+  logical :: ok_explicitsnow=.true., ok_LAIdev(nvm)=.false.
+  logical :: veget_mask_2d(kjpindex,nvm)
+  real(r_std) :: dt_sechiba, lambda, sn_capa
+  real(r_std) :: cgrnd(kjpindex,ngrnd-1,nvm), dgrnd(kjpindex,ngrnd-1,nvm)
+  real(r_std) :: ptn(kjpindex,ngrnd,nvm), pcapa_en(kjpindex,ngrnd,nvm)
+  real(r_std) :: ptn_beg(kjpindex,ngrnd,nvm), temp_sol_beg(kjpindex)
+  real(r_std) :: surfheat_incr(kjpindex), coldcont_incr(kjpindex)
+  real(r_std) :: ptn_pftmean(kjpindex,ngrnd), pkappa(kjpindex,ngrnd,nvm)
+  real(r_std) :: pkappa_pftmean(kjpindex,ngrnd)
+  real(r_std) :: shum_ngrnd_permalong(kjpindex,ngrnd,nvm)
+contains
+! <THERMOSOIL_WLUPDATE>
+! <THERMOSOIL_PROFILE>
+! <THERMOSOIL_DIAGLEV>
+! <THERMOSOIL_ENERGY>
+
+  subroutine oracle_final_state(veget_max_bg,gtemp,ptnlev1,deephum_prof,deeptemp_prof)
+    real(r_std), intent(in) :: veget_max_bg(kjpindex,nvm)
+    real(r_std), intent(out) :: gtemp(kjpindex), ptnlev1(kjpindex)
+    real(r_std), intent(out) :: deephum_prof(kjpindex,ndeep,nvm)
+    real(r_std), intent(out) :: deeptemp_prof(kjpindex,ndeep,nvm)
+    integer(i_std) :: m, jg, ji
+! <THERMOSOIL_MAIN_FINAL_STATE>
+  end subroutine oracle_final_state
+end module thermosoil_first_transition_actual_oracle
+
+program thermosoil_first_transition_actual_driver
+  use defprec
+  use thermosoil_first_transition_actual_oracle
+  implicit none
+  integer :: iu, ou
+  integer(i_std) :: mask_i(kjpindex,nvm)
+  real(r_std) :: scalars(3)
+  real(r_std) :: temp_sol_new(kjpindex), temp_sol_new_pft(kjpindex,nvm)
+  real(r_std) :: snowtemp(kjpindex,nsnow), veget_max(kjpindex,nvm), veget_max_bg(kjpindex,nvm)
+  real(r_std) :: frac_snow_veg(kjpindex), frac_snow_nobio(kjpindex,nnobio), totfrac_nobio(kjpindex)
+  real(r_std) :: cgrnd_snow(kjpindex,nsnow), dgrnd_snow(kjpindex,nsnow)
+  real(r_std) :: hsd(kjpindex,ngrnd,nvm), soilcap(kjpindex)
+  real(r_std) :: stempdiag(kjpindex,nslm), gtemp(kjpindex), ptnlev1(kjpindex)
+  real(r_std) :: deephum_prof(kjpindex,ndeep,nvm), deeptemp_prof(kjpindex,ndeep,nvm)
+  character(1024) :: input_path, output_path
+
+  call get_command_argument(1,input_path)
+  call get_command_argument(2,output_path)
+  open(newunit=iu,file=trim(input_path),access='stream',form='unformatted',status='old',action='read')
+  read(iu) ptn; read(iu) cgrnd; read(iu) dgrnd
+  read(iu) cgrnd_snow; read(iu) dgrnd_snow
+  read(iu) temp_sol_new; read(iu) temp_sol_new_pft; read(iu) snowtemp
+  read(iu) veget_max; read(iu) frac_snow_veg; read(iu) frac_snow_nobio; read(iu) totfrac_nobio
+  read(iu) hsd; read(iu) shum_ngrnd_permalong
+  read(iu) pcapa_en; read(iu) soilcap; read(iu) temp_sol_beg; read(iu) pkappa
+  read(iu) mask_i; read(iu) scalars
+  close(iu)
+
+  veget_mask_2d = mask_i /= 0
+  dt_sechiba=scalars(1); lambda=scalars(2); sn_capa=scalars(3)
+  veget_max_bg(:,2:nvm)=veget_max(:,2:nvm)
+  veget_max_bg(:,1)=max(un-sum(veget_max(:,2:nvm),2),zero)
+
+  call thermosoil_wlupdate(kjpindex,ptn,hsd,shum_ngrnd_permalong)
+  call thermosoil_profile(kjpindex,temp_sol_new,temp_sol_new_pft,ptn,stempdiag, &
+       snowtemp,veget_max,frac_snow_veg,frac_snow_nobio,totfrac_nobio,cgrnd_snow,dgrnd_snow)
+  call thermosoil_energy(kjpindex,temp_sol_new,soilcap,veget_max_bg)
+  call oracle_final_state(veget_max_bg,gtemp,ptnlev1,deephum_prof,deeptemp_prof)
+
+  open(newunit=ou,file=trim(output_path),access='stream',form='unformatted',status='replace',action='write')
+  write(ou) shum_ngrnd_permalong
+  write(ou) ptn; write(ou) stempdiag
+  write(ou) surfheat_incr; write(ou) coldcont_incr; write(ou) ptn_beg; write(ou) temp_sol_beg
+  write(ou) ptn_pftmean; write(ou) pkappa_pftmean; write(ou) gtemp; write(ou) ptnlev1
+  write(ou) deephum_prof; write(ou) deeptemp_prof
+  close(ou)
+end program thermosoil_first_transition_actual_driver

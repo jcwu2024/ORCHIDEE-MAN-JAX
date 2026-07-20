@@ -1,0 +1,182 @@
+schema_version: 2
+families:
+  - id: thermosoil_cwrr_recurrence_complete
+    runner: oracle_lane_thermosoil_main_controls:run_oracle
+    result_asset: outputs/reference_mode/micro_oracles/thermosoil_main_controls/comparison.json
+    ledger_entries: [thermosoil.active.cwrr_recurrence]
+    input_asset: outputs/reference_mode/micro_oracles/thermosoil_main_controls/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/thermosoil_main_controls/point_comparisons.csv
+    branch_coverage_asset: outputs/reference_mode/micro_oracles/thermosoil_main_controls/branch_coverage.json
+    output_contract: [shum_ngrnd_permalong, history_dispatch, temp_sol_new, ptn, coefficients, final_state]
+    fortran_undefined_contract:
+      - id: thermosoil_main.local_ok_zimov
+        field: ok_zimov
+        declaration: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90:877
+        use_span: 991-993
+        reason: Local LOGICAL SAVE has no initialization or assignment and shadows the separately initialized entity in thermosoil_initialize.
+        oracle_policy: Both explicitly controlled scientific paths are verified; no true/false value is assigned to the selector itself.
+    component_result_assets:
+      - outputs/reference_mode/micro_oracles/thermosoil_main_controls/comparison.json
+      - outputs/reference_mode/micro_oracles/thermosoil_cwrr_recurrence_defined_tail/comparison.json
+      - outputs/reference_mode/micro_oracles/thermosoil_cwrr_recurrence_coef/comparison.json
+    procedures:
+      - id: thermosoil_cwrr_recurrence_complete.main_owner_spans
+        source_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+        procedure: thermosoil_main
+        procedure_kind: source_fragments
+        start_line: 899
+        end_line: 1052
+        line_spans: [899-903, 940-988, 1031-1032, 1036-1038, 1042-1052]
+        expected_source_sha256: a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b
+        expected_span_sha256: 8419990607622f81608d25886338f5362121f06e70f0bc553eb4951730a57bf2
+        dependencies: {use_modules: [defprec], called_procedures: [thermosoil_wlupdate, histwrite_p]}
+        compilation: &main_controls_compilation
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/oracle_lane_thermosoil_main_controls.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/thermosoil_main_controls/comparison.json
+        numerical_oracle_status: verified
+      - id: thermosoil_cwrr_recurrence_complete.thermosoil_wlupdate
+        source_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+        procedure: thermosoil_wlupdate
+        procedure_kind: subroutine
+        start_line: 3648
+        end_line: 3672
+        expected_source_sha256: a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b
+        expected_span_sha256: 1f9051134332a139c899966bae143ee4cabd12bc2f73384c7046353a5ae925ea
+        dependencies: {use_modules: [defprec]}
+        compilation: *main_controls_compilation
+        numerical_oracle_status: verified
+      - id: thermosoil_cwrr_recurrence_complete.thermosoil_coef
+        source_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+        procedure: thermosoil_coef
+        procedure_kind: subroutine
+        start_line: 1386
+        end_line: 1729
+        expected_source_sha256: a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b
+        expected_span_sha256: 8224849d3ad6bb61f4de278d68dba9d099066f8217b55d6cc5fc277726b472b0
+        dependencies: {use_modules: [defprec], called_procedures: [thermosoil_getdiff, thermosoil_getdiff_old_thermix_with_snow]}
+        compilation:
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/oracle_lane_thermosoil_recurrence_coef.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/thermosoil_cwrr_recurrence_coef/comparison.json
+        numerical_oracle_status: verified
+      - id: thermosoil_cwrr_recurrence_complete.add_heat_Zimov
+        source_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+        procedure: add_heat_Zimov
+        procedure_kind: subroutine
+        start_line: 3426
+        end_line: 3463
+        expected_source_sha256: a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b
+        expected_span_sha256: 10c4ab59ad8b4075db41dfb1b96861c365c1388a385946eb950fc17480fba57a
+        dependencies: {use_modules: [defprec]}
+        compilation:
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/oracle_lane_thermosoil_recurrence_zimov.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/thermosoil_cwrr_recurrence_defined_tail/comparison.json
+        numerical_oracle_status: verified
+pending_families:
+  - id: thermosoil_cwrr_recurrence_defined_tail
+    runner: oracle_lane_thermosoil_recurrence_run:run_oracle
+    ledger_entries: [thermosoil.active.cwrr_recurrence]
+    numerical_oracle_status: all_defined_behavior_verified
+    component_status: verified
+    resolution_status: candidate_resolved_requires_policy_decision
+    reason: Both explicitly selected Zimov arms, final-state writeback, and the complete active-CWRR explicit-snow thermosoil_coef scientific call graph are compiled from source and verified. The thermosoil_main selector remains undefined and is not assigned a value by this evidence.
+    input_asset: outputs/reference_mode/micro_oracles/thermosoil_cwrr_recurrence_defined_tail/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/thermosoil_cwrr_recurrence_defined_tail/point_comparisons.csv
+    output_contract: [ptn, ptn_pftmean, pkappa_pftmean, gtemp, ptnlev1, pcapa, pcapa_en, pkappa, profil_froz, pcappa_supp, cgrnd, dgrnd, soilcap, soilcap_pft, soilflx, soilflx_pft, pcapa_snow, pkappa_snow, lambda_snow, cgrnd_snow, dgrnd_snow]
+    fortran_undefined_contract:
+      - id: thermosoil_main.local_ok_zimov
+        field: ok_zimov
+        declaration: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90:877
+        use_span: 991-993
+        reason: Local LOGICAL,SAVE has no initialization or assignment in thermosoil_main and shadows distinct same-named locals/module entities. Reading it is undefined by the Fortran language.
+        paper_runtime_evidence: No initialization assignment or compiler option establishing a value was found in the paper run assets; OK_ZIMOV read at line 612 targets a distinct local entity in thermosoil_initialize.
+        oracle_policy: Never infer false or true from compiler/runtime behavior. Validate both explicitly controlled scientific paths separately.
+      - id: thermosoil_getdiff.inactive_mask_outputs
+        field: pcapa, pcapa_en, pkappa, profil_froz, pcappa_supp at inactive PFT slots
+        declaration: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90:2566-2863
+        reason: INTENT(out) arrays are assigned only inside veget_mask_2d; inactive slots have no Fortran-defined numerical value and are excluded from scientific output claims.
+        oracle_policy: Verify all active slots and downstream mask behavior; never compare or certify inactive storage bytes.
+      - id: thermosoil_coef.no_explicit_legacy_outputs
+        field: profil_froz, pcappa_supp, pcapa_snow, pkappa_snow when ok_explicitsnow=false
+        declaration: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90:1499-1507
+        reason: The selected thermosoil_getdiff_old_thermix_with_snow callee does not assign these thermosoil_coef INTENT(out)/module arrays.
+        oracle_policy: Exclude only these undefined storage values; verify every output assigned by the legacy branch.
+    procedures:
+      - id: thermosoil_cwrr_recurrence_defined_tail.add_heat_Zimov
+        source_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+        procedure: add_heat_Zimov
+        procedure_kind: subroutine
+        start_line: 3426
+        end_line: 3463
+        expected_source_sha256: a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b
+        expected_span_sha256: 10c4ab59ad8b4075db41dfb1b96861c365c1388a385946eb950fc17480fba57a
+      - id: thermosoil_cwrr_recurrence_defined_tail.main_defined_fragments
+        source_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+        procedure: thermosoil_main
+        procedure_kind: source_fragments
+        line_spans: [990-993, 1011-1033]
+        expected_source_sha256: a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b
+        expected_span_sha256: 1e2e25156cc0013cca651209adbeae087d93a4d00a83c3deb1d9f449c5350139
+      - id: thermosoil_cwrr_recurrence_defined_tail.thermosoil_coef
+        source_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+        procedure: thermosoil_coef
+        procedure_kind: subroutine
+        start_line: 1386
+        end_line: 1729
+        expected_source_sha256: a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b
+        expected_span_sha256: 8224849d3ad6bb61f4de278d68dba9d099066f8217b55d6cc5fc277726b472b0
+        scientific_callees: [thermosoil_getdiff, thermosoil_getdiff_old_thermix_with_snow, thermosoil_cond, thermosoil_cond_pft, thermosoil_cond_nopft]
+    compilation:
+      status: passed
+      compiler: C:\msys64\ucrt64\bin\gfortran.exe
+      flags: [-std=f2008, -fdefault-real-8, -O0, -fcheck=all]
+      harness: scripts/dev/oracle_lane_thermosoil_recurrence_zimov.f90.template
+      result_asset: outputs/reference_mode/micro_oracles/thermosoil_cwrr_recurrence_defined_tail/comparison.json
+      coefficient_result_asset: outputs/reference_mode/micro_oracles/thermosoil_cwrr_recurrence_coef/comparison.json
+    branch_cases:
+      - id: recurrence.zimov_explicit_false
+        ledger_entry: thermosoil.active.cwrr_recurrence
+        fortran_lines: 990-993,1011-1033
+        condition: harness supplies a defined false selector
+        expected_arm: bypass heat update, then write complete final-state diagnostics
+        input_case: ok_zimov_explicit_false
+        control_flow_arm_ids: [thermosoil_main.zimov.false]
+      - id: recurrence.zimov_explicit_true
+        ledger_entry: thermosoil.active.cwrr_recurrence
+        fortran_lines: 990-993,3426-3463,1011-1033
+        condition: harness supplies a defined true selector with active and inactive masks
+        expected_arm: apply real microbial heat callee and recompute final-state diagnostics
+        input_case: ok_zimov_explicit_true
+        control_flow_arm_ids: [thermosoil_main.zimov.true, add_heat_Zimov.mask.true, add_heat_Zimov.mask.false]
+      - id: recurrence.coef_active_cwrr_explicit_snow
+        ledger_entry: thermosoil.active.cwrr_recurrence
+        fortran_lines: 1386-1729,2007-2231,2566-2863
+        condition: active CWRR, explicit snow, active PFT slots, PFT14 LAIdev plus zero/mixed/full snow cover
+        expected_arm: thermal properties feed soil and snow recurrences, all public outputs and module state are replaced for the next step
+        input_case: outputs/reference_mode/micro_oracles/thermosoil_cwrr_recurrence_coef/inputs.json
+        control_flow_arm_ids: [thermosoil_coef.getdiff.explicit, thermosoil_coef.laidev.false, thermosoil_coef.laidev.true, thermosoil_coef.snow.zero, thermosoil_coef.snow.mixed, thermosoil_coef.snow.full]
+      - id: recurrence.coef_active_cwrr_no_explicit_snow
+        ledger_entry: thermosoil.active.cwrr_recurrence
+        fortran_lines: 1386-1729,1883-1972,2884-3031
+        condition: active CWRR with ok_explicitsnow=false and zero/partial/deep legacy snow mass
+        expected_arm: old thermix properties feed soil recurrence; snow recurrence arrays are zeroed and all defined outputs are replaced
+        input_case: outputs/reference_mode/micro_oracles/thermosoil_cwrr_recurrence_coef/inputs.json
+        control_flow_arm_ids: [thermosoil_coef.getdiff.no_explicit, thermosoil_getdiff_old.snow.zero, thermosoil_getdiff_old.snow.partial, thermosoil_getdiff_old.snow.deep]
+    strict_resolution_recommendation:
+      recommendation: resolved_with_undefined_selector_contract
+      rationale: All Fortran-defined active-CWRR recurrence outputs are directly compiled and numerically verified for both explicitly controlled Zimov scientific arms. The remaining selector read has no language-defined expected value, so no conforming numerical Oracle can validate it. Resolution is valid only if the certificate preserves the undefined contract and does not claim a true/false selector value.
+      prohibited_claim: Do not describe thermosoil_main as fully defined or bit-exact for the uninitialized selector itself.

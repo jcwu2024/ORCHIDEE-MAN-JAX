@@ -1,0 +1,132 @@
+module defprec
+  use, intrinsic :: iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std = int32
+  integer, parameter :: r_std = real64
+end module defprec
+
+module constantes
+  use defprec, only: r_std
+  implicit none
+  real(r_std), parameter :: zero = 0._r_std
+  real(r_std), parameter :: undemi = 0.5_r_std
+  real(r_std), parameter :: un = 1._r_std
+  real(r_std), parameter :: deux = 2._r_std
+  real(r_std), parameter :: msmlr_air = 28.964E-03
+  real(r_std), parameter :: msmlr_h2o = 18.02E-03
+  logical, parameter :: diag_qsat = .true.
+  integer :: printlev = 1
+end module constantes
+
+module IOIPSL
+  implicit none
+  integer, parameter :: numout = 6
+contains
+  subroutine ipslerr_p(level, caller, message1, message2, message3)
+    integer, intent(in) :: level
+    character(len=*), intent(in) :: caller, message1, message2, message3
+    write(numout, '(a,1x,i0,4(1x,a))') 'ipslerr_p', level, caller, message1, message2, message3
+    if (level >= 3) error stop 'fatal ipslerr_p call in qsat micro-oracle'
+  end subroutine ipslerr_p
+end module IOIPSL
+
+module constantes_soil
+  implicit none
+end module constantes_soil
+
+module qsat_moisture
+  use defprec
+  use constantes
+  use IOIPSL
+  use constantes_soil
+  implicit none
+  private
+  public :: qsatcalc, dev_qsatcalc, qsfrict_init, micro_oracle_get_qsfrict
+  public :: micro_oracle_reset_qsat_first
+  logical, save :: l_qsat_first = .true.
+  integer(i_std), parameter :: max_temp = 370
+  integer(i_std), parameter :: min_temp = 100
+  real(r_std), dimension(max_temp), save :: qsfrict
+contains
+! <ORIGINAL_PROCEDURES>
+
+  subroutine micro_oracle_get_qsfrict(indices, values)
+    integer(i_std), intent(in) :: indices(:)
+    real(r_std), intent(out) :: values(size(indices))
+    if (l_qsat_first) then
+      call qsfrict_init
+      l_qsat_first = .false.
+    end if
+    values = qsfrict(indices)
+  end subroutine micro_oracle_get_qsfrict
+
+  subroutine micro_oracle_reset_qsat_first
+    l_qsat_first = .true.
+  end subroutine micro_oracle_reset_qsat_first
+end module qsat_moisture
+
+program qsat_micro_oracle
+  use defprec, only: i_std, r_std
+  use qsat_moisture, only: qsatcalc, dev_qsatcalc, micro_oracle_get_qsfrict
+  use qsat_moisture, only: micro_oracle_reset_qsat_first
+  implicit none
+  character(len=1024) :: input_path, output_dir
+  integer :: input_unit, output_unit, status, ji
+  integer(i_std) :: nq, nd
+  integer(i_std), parameter :: table_indices(6) = [100, 101, 272, 273, 369, 370]
+  real(r_std), allocatable :: temp(:), pres(:), result(:), repeat_result(:)
+  real(r_std) :: table_values(6)
+  real(r_std) :: valid_temp(1), valid_pres(1), valid_result(1)
+
+  call get_command_argument(1, input_path, status=status)
+  if (status /= 0 .or. len_trim(input_path) == 0) error stop 'missing input path'
+  call get_command_argument(2, output_dir, status=status)
+  if (status /= 0 .or. len_trim(output_dir) == 0) error stop 'missing output directory'
+
+  open(newunit=input_unit, file=trim(input_path), status='old', action='read')
+  read(input_unit, *) nq
+  allocate(temp(nq), pres(nq), result(nq), repeat_result(nq))
+  do ji = 1, nq
+    read(input_unit, *) temp(ji), pres(ji)
+  end do
+  call micro_oracle_reset_qsat_first
+  call qsatcalc(nq, temp, pres, result)
+  call qsatcalc(nq, temp, pres, repeat_result)
+  if (any(result /= repeat_result)) error stop 'qsat first/later SAVE mismatch'
+  valid_temp = 280.25_r_std
+  valid_pres = 1000._r_std
+  call qsatcalc(1_i_std, valid_temp, valid_pres, valid_result)
+  open(newunit=output_unit, file=trim(output_dir)//'/fortran_qsatcalc.csv', status='replace', action='write')
+  write(output_unit, '(a)') 'temperature_k,pressure_hpa,qsat'
+  do ji = 1, nq
+    write(output_unit, '(es25.17e3,a,es25.17e3,a,es25.17e3)') temp(ji), ',', pres(ji), ',', result(ji)
+  end do
+  close(output_unit)
+  deallocate(temp, pres, result, repeat_result)
+
+  read(input_unit, *) nd
+  allocate(temp(nd), pres(nd), result(nd), repeat_result(nd))
+  do ji = 1, nd
+    read(input_unit, *) temp(ji), pres(ji)
+  end do
+  close(input_unit)
+  call micro_oracle_reset_qsat_first
+  call dev_qsatcalc(nd, temp, pres, result)
+  call dev_qsatcalc(nd, temp, pres, repeat_result)
+  if (any(result /= repeat_result)) error stop 'dev_qsat first/later SAVE mismatch'
+  call dev_qsatcalc(1_i_std, valid_temp, valid_pres, valid_result)
+  open(newunit=output_unit, file=trim(output_dir)//'/fortran_dev_qsatcalc.csv', status='replace', action='write')
+  write(output_unit, '(a)') 'temperature_k,pressure_hpa,dev_qsat'
+  do ji = 1, nd
+    write(output_unit, '(es25.17e3,a,es25.17e3,a,es25.17e3)') temp(ji), ',', pres(ji), ',', result(ji)
+  end do
+  close(output_unit)
+
+  call micro_oracle_get_qsfrict(table_indices, table_values)
+  open(newunit=output_unit, file=trim(output_dir)//'/fortran_qsfrict.csv', status='replace', action='write')
+  write(output_unit, '(a)') 'temperature_index,qsfrict_hpa'
+  do ji = 1, size(table_indices)
+    write(output_unit, '(i0,a,es25.17e3)') table_indices(ji), ',', table_values(ji)
+  end do
+  close(output_unit)
+end program qsat_micro_oracle

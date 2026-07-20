@@ -1,0 +1,91 @@
+module defprec
+  implicit none
+  integer, parameter :: i_std=kind(1), r_std=kind(1.0d0)
+end module
+module constantes
+  use defprec
+  implicit none
+  real(r_std), parameter :: zero=0d0, un=1d0, one_year=365d0
+  real(r_std), parameter :: ZeroCelsius=273.15d0, undef=1d20
+  integer :: printlev=0, numout=6
+end module
+module stomate_data
+  use defprec
+  implicit none
+  integer, parameter :: nvm=14
+  real(r_std), parameter :: too_long=5d0, large_value=1d33
+  integer :: hist_id_stomate=0, itime=0
+  integer :: horipft_index=0
+end module
+module pft_parameters
+  use defprec
+  implicit none
+  logical :: natural(14), is_tree(14), is_peat(14), agriculture
+  character(len=8) :: pheno_model(14)
+  real(r_std) :: tmin_crit(14), tcm_crit(14)
+end module
+module xios_orchidee
+  use defprec
+  implicit none
+  interface xios_orchidee_send_field
+    module procedure send_r1, send_r2
+  end interface
+contains
+  subroutine send_r1(name,x); character(*),intent(in)::name; real(r_std),intent(in)::x(:); end
+  subroutine send_r2(name,x); character(*),intent(in)::name; real(r_std),intent(in)::x(:,:); end
+end module
+module ioipsl_para
+  use defprec
+  implicit none
+  interface histwrite_p
+    module procedure hist_r1, hist_r2
+  end interface
+contains
+  subroutine hist_r1(id,name,it,x,n,idx); integer,intent(in)::id,it,n,idx; character(*),intent(in)::name; real(r_std),intent(in)::x(:); end
+  subroutine hist_r2(id,name,it,x,n,idx); integer,intent(in)::id,it,n,idx; character(*),intent(in)::name; real(r_std),intent(in)::x(:,:); end
+end module
+module constraints_oracle
+  use defprec
+  use xios_orchidee
+  use ioipsl_para
+  use stomate_data
+  use constantes
+  use pft_parameters
+  implicit none
+  real(r_std), parameter :: grow_limit=7d0+ZeroCelsius
+  logical, save :: firstcall_constraints=.true.
+contains
+! <CONSTRAINTS_PROCEDURE>
+end module
+program main
+  use defprec
+  use stomate_data
+  use pft_parameters
+  use constantes
+  use constraints_oracle
+  implicit none
+  integer :: u,i,j,caseid
+  character(len=1024) :: out
+  real(r_std) :: tm(3),td(3),ts(3),wg(3,nvm),a(3,nvm),r(3,nvm)
+  call get_command_argument(1,out)
+  natural=.false.; is_tree=.false.; is_peat=.false.; agriculture=.false.
+  pheno_model='none'; tmin_crit=undef; tcm_crit=undef
+  natural(14)=.true.; is_tree(14)=.true.; pheno_model(14)='none'
+  open(newunit=u,file=trim(out),status='replace',action='write')
+  write(u,'(A)') 'field,value'
+  do caseid=1,2
+    tm=(/270d0,285d0,280d0/); td=(/260d0,270d0,275d0/); ts=(/285d0,275d0,281d0/)
+    wg=0d0; wg(2,14)=2000d0; a=0.25d0; r=0.5d0; r(1,14)=1d-4
+    if(caseid==1)then
+      tmin_crit(14)=undef; tcm_crit(14)=275d0
+    else
+      tmin_crit(14)=265d0; tcm_crit(14)=undef
+    endif
+    call constraints(3,1d0,tm,td,wg,a,r,ts)
+    do j=1,nvm; do i=1,3
+      write(u,'(A,",",ES26.17)') 'adapted',a(i,j)
+      write(u,'(A,",",ES26.17)') 'regenerate',r(i,j)
+    end do; end do
+  enddo
+  close(u)
+end program

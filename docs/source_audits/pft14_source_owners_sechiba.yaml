@@ -1,0 +1,1000 @@
+schema_version: 1
+scope: >-
+  Exact source-owner ledger for scientific procedures under src_sechiba. An
+  implemented status covers only the stated Fortran line span; partial and
+  missing entries remain open and must not be interpreted as numerical parity.
+
+x-state-contracts:
+  hydrol: &hydrol_state [tests/unit/test_sechiba_state_transition_contract.py]
+  coupled: &coupled_state [tests/unit/test_sechiba_step.py]
+  thermal: &thermal_state [tests/unit/test_sechiba_thermosoil_recurrence_reachable.py]
+  surface: &surface_state [tests/unit/test_sechiba_slowproc_time_gate_reachable.py]
+
+x-validation:
+  hydrol: &hydrol_validation [tests/unit/test_hydrol_module_step.py]
+  snow: &snow_validation [tests/unit/test_hydrol_cold_start.py]
+  diffuco: &diffuco_validation [tests/unit/test_diffuco.py]
+  enerbil: &enerbil_validation [tests/unit/test_enerbil.py]
+  thermosoil: &thermosoil_validation [tests/unit/test_thermosoil.py]
+  condveg: &condveg_validation [tests/unit/test_condveg.py]
+  slowproc: &slowproc_validation [tests/unit/test_slowproc.py]
+  coupled: &coupled_validation [tests/unit/test_sechiba_step.py]
+
+entries:
+  - id: sechiba.condveg_initialize.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+    fortran_subroutine: condveg_initialize
+    fortran_lines: 171-291
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.condveg.condveg_initialize
+    gap: null
+    state_contract: *coupled_state
+    validation: [tests/unit/test_condveg_initialize.py]
+
+  - id: sechiba.condveg_main.partial
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+    fortran_subroutine: condveg_main
+    fortran_lines: 398-476
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.condveg.condveg_main_minimal
+    gap: null
+    state_contract: *coupled_state
+    validation: [tests/unit/test_condveg_source_owner_completion.py]
+
+  - id: sechiba.condveg_finalize.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+    fortran_subroutine: condveg_finalize
+    fortran_lines: 519
+    status: missing
+    jax_owner: null
+    gap: No JAX top-level symbol owns the Fortran finalization arm.
+    state_contract: []
+    validation: []
+
+  - id: sechiba.condveg_soilalb.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+    fortran_subroutine: condveg_soilalb
+    fortran_lines: 1005-1126
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.condveg.condveg_soilalb_from_interpolation
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.condveg.CondvegSoilAlbedoResult
+    validation: [tests/unit/test_condveg_source_owner_completion.py]
+
+  - id: sechiba.condveg_background_soilalb.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+    fortran_subroutine: condveg_background_soilalb
+    fortran_lines: 1226-1277
+    status: missing
+    jax_owner: null
+    gap: Background soil-albedo source processing has no exact JAX source owner.
+    state_contract: []
+    validation: []
+
+  - id: sechiba.condveg_z0cdrag.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+    fortran_subroutine: condveg_z0cdrag
+    fortran_lines: 1325-1474
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.condveg.condveg_z0cdrag
+    gap: null
+    state_contract: *coupled_state
+    validation: *condveg_validation
+
+  - id: sechiba.diffuco_initialize.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_initialize
+    fortran_lines: 167-231
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.diffuco.diffuco_initialize
+    gap: null
+    state_contract: *coupled_state
+    validation: [tests/unit/test_diffuco_initialize.py]
+
+  - id: sechiba.diffuco_main.partial
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_main
+    fortran_lines: 629-736
+    status: partial
+    jax_owner: jax_orchidee.sechiba.diffuco.diffuco_pft14_local_process_boundary_explicit
+    gap: The PFT14 local process chain at lines 649-710 is owned; surrounding setup, diagnostics, and nonlocal arms remain open.
+    state_contract: *coupled_state
+    validation: *diffuco_validation
+
+  - id: sechiba.diffuco_main.local_chain.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_main
+    fortran_lines: 649-710
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.diffuco.diffuco_pft14_local_process_boundary_explicit
+    gap: null
+    state_contract: *coupled_state
+    validation: *diffuco_validation
+
+  - id: sechiba.diffuco_finalize.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_finalize
+    fortran_lines: 792
+    status: missing
+    jax_owner: null
+    gap: No JAX top-level symbol owns the Fortran finalization arm.
+    state_contract: []
+    validation: []
+
+  - id: sechiba.diffuco_trans.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_trans
+    fortran_lines: 1846-1854
+    status: missing
+    jax_owner: null
+    gap: This legacy transpiration procedure is not owned by the PFT14 trans_co2 kernels.
+    state_contract: []
+    validation: []
+
+  - id: sechiba.enerbil_initialize.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/enerbil.f90
+    fortran_subroutine: enerbil_initialize
+    fortran_lines: 241-328
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.enerbil.enerbil_cold_start_surface_state
+    gap: null
+    state_contract: *coupled_state
+    validation: *enerbil_validation
+
+  - id: sechiba.enerbil_begin.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/enerbil.f90
+    fortran_subroutine: enerbil_begin
+    fortran_lines: 735-873
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.enerbil.enerbil_begin_local_diagnostics
+    gap: null
+    state_contract: *coupled_state
+    validation: *enerbil_validation
+
+  - id: sechiba.enerbil_surftemp.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/enerbil.f90
+    fortran_subroutine: enerbil_surftemp
+    fortran_lines: 927-1245
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.enerbil.enerbil_surftemp_explicit_solve
+    gap: null
+    state_contract: *coupled_state
+    validation: *enerbil_validation
+
+  - id: sechiba.enerbil_flux.partial
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/enerbil.f90
+    fortran_subroutine: enerbil_flux
+    fortran_lines: 1445-1640
+    status: partial
+    jax_owner: jax_orchidee.sechiba.enerbil.enerbil_flux_local_diagnostics
+    gap: Local diagnostics are owned; explicit-snow diagnostics and Milly evapot_corr are separate kernels and no single symbol owns the full span.
+    state_contract: *coupled_state
+    validation: *enerbil_validation
+
+  - id: sechiba.enerbil_flux.evapot_corr.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/enerbil.f90
+    fortran_subroutine: enerbil_flux
+    fortran_lines: 1592-1640
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.enerbil.enerbil_flux_evapot_corr
+    gap: null
+    state_contract: *coupled_state
+    validation: *enerbil_validation
+
+  - id: sechiba.enerbil_evapveg.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/enerbil.f90
+    fortran_subroutine: enerbil_evapveg
+    fortran_lines: 1738-1833
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.enerbil.enerbil_evapveg_pft_fluxes
+    gap: null
+    state_contract: *coupled_state
+    validation: *enerbil_validation
+
+  - id: sechiba.enerbil_fusion.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/enerbil.f90
+    fortran_subroutine: enerbil_fusion
+    fortran_lines: 1881-1953
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.enerbil.enerbil_fusion_step
+    gap: null
+    state_contract: *coupled_state
+    validation: *enerbil_validation
+
+  - id: sechiba.explicitsnow_grain.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90
+    fortran_subroutine: explicitsnow_grain
+    fortran_lines: 731
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.explicitsnow_grain_step
+    gap: null
+    state_contract: *hydrol_state
+    validation: *snow_validation
+
+  - id: sechiba.explicitsnow_compactn.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90
+    fortran_subroutine: explicitsnow_compactn
+    fortran_lines: 815-833
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.explicitsnow_compactn_step
+    gap: null
+    state_contract: *hydrol_state
+    validation: *snow_validation
+
+  - id: sechiba.explicitsnow_transf.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90
+    fortran_subroutine: explicitsnow_transf
+    fortran_lines: 891-1132
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.explicitsnow_transf_step
+    gap: null
+    state_contract: *hydrol_state
+    validation: *snow_validation
+
+  - id: sechiba.explicitsnow_fall.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90
+    fortran_subroutine: explicitsnow_fall
+    fortran_lines: 1154-1274
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.explicitsnow_fall_step
+    gap: null
+    state_contract: *hydrol_state
+    validation: *snow_validation
+
+  - id: sechiba.explicitsnow_gone.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90
+    fortran_subroutine: explicitsnow_gone
+    fortran_lines: 1300-1366
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.explicitsnow_gone_step
+    gap: null
+    state_contract: *hydrol_state
+    validation: *snow_validation
+
+  - id: sechiba.explicitsnow_melt_refrz.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90
+    fortran_subroutine: explicitsnow_melt_refrz
+    fortran_lines: 1444
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.explicitsnow_melt_refrz_step
+    gap: null
+    state_contract: *hydrol_state
+    validation: *snow_validation
+
+  - id: sechiba.explicitsnow_levels.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90
+    fortran_subroutine: explicitsnow_levels
+    fortran_lines: 1581-1630
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.explicitsnow_levels_step
+    gap: null
+    state_contract: *hydrol_state
+    validation: *snow_validation
+
+  - id: sechiba.explicitsnow_profile.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90
+    fortran_subroutine: explicitsnow_profile
+    fortran_lines: 1655-1694
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.explicitsnow_profile_step
+    gap: null
+    state_contract: *hydrol_state
+    validation: *snow_validation
+
+  - id: sechiba.hydrol_initialize.partial
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_initialize
+    fortran_lines: 629-897
+    status: partial
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_initialize_pft14_completion
+    gap: The fixed scientific dispatch and state initialization are owned; refSOC/TOPMODEL/tidal file reads and allocation/IO side effects remain explicit boundaries.
+    state_contract: *hydrol_state
+    validation: *hydrol_validation
+
+  - id: sechiba.hydrol_initialize.fixed_dispatch.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_initialize
+    fortran_lines: 625-688,833-904
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_initialize_pft14_completion
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.hydrol.HydrolInitializeCompletionResult
+    validation: [tests/unit/test_hydrol_source_owner_completion.py]
+
+  - id: sechiba.hydrol_main.scientific_transition.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_main
+    fortran_lines: 1159-1395
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_main_step
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_main.py]
+
+  - id: sechiba.hydrol_main.history_output.partial
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_main
+    fortran_lines: 1396-1650
+    status: partial
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_main_step
+    gap: Scientific diagnostic arrays are exposed by the result contract; exact XIOS/IOIPSL history serialization remains a modelout boundary.
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_main.py]
+
+  - id: sechiba.hydrol_main.scientific_output.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_main
+    fortran_lines: 1396-1655
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_main_scientific_output_packet
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.hydrol.HydrolMainOutputPacket
+    validation: [tests/unit/test_hydrol_source_owner_completion.py]
+
+  - id: sechiba.hydrol_finalize.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_finalize
+    fortran_lines: 1748-1791
+    status: missing
+    jax_owner: null
+    gap: No JAX top-level symbol owns finalization/deallocation.
+    state_contract: []
+    validation: []
+
+  - id: sechiba.hydrol_init.partial
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_init
+    fortran_lines: 1827-3120
+    status: partial
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_init_pft14_owner
+    gap: The fixed USDA PFT14 scientific initialization from line 2028 is owned; preceding allocation/error handling, restget_p/getin_p file IO, and the alternate FAO classification remain explicit boundaries.
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_init_owner.py]
+
+  - id: sechiba.hydrol_init.setup_and_explicit_snow.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_init
+    fortran_lines: 2028-2812,3113-3118
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_init_pft14_owner
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_init_owner.py]
+
+  - id: sechiba.hydrol_init.cold_start.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_init
+    fortran_lines: 2813-3112
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_cold_start_state
+    gap: null
+    state_contract: *hydrol_state
+    validation: *snow_validation
+
+  - id: sechiba.hydrol_tmc_update.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_tmc_update
+    fortran_lines: 3314-3588
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_tmc_update
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_tmc_update.py]
+
+  - id: sechiba.hydrol_rotation_update.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_rotation_update
+    fortran_lines: 3677-3761
+    status: missing
+    jax_owner: null
+    gap: Rotation update has no PFT14 JAX owner.
+    state_contract: []
+    validation: []
+
+  - id: sechiba.hydrol_var_init.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_var_init
+    fortran_lines: 3946-4624
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_var_init
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_var_init.py]
+
+  - id: sechiba.hydrol_snow.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_snow
+    fortran_lines: 4693-4966
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_bucket_snow_step
+    gap: null
+    state_contract: *hydrol_state
+    validation: *snow_validation
+
+  - id: sechiba.hydrol_vegupd.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_vegupd
+    fortran_lines: 5191-5248
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_vegupd_static_state
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_vegupd_static.py]
+
+  - id: sechiba.hydrol_soil.partial
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil
+    fortran_lines: 5646-7394
+    status: partial
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_soil_all_tiles_explicit_step
+    gap: Major surface, solve, post-solve, diagnostic, alternate-residual, and peat-water-table spans have owners, but uncovered gaps remain between exact spans.
+    state_contract: *hydrol_state
+    validation: *hydrol_validation
+
+  - id: sechiba.hydrol_soil.routing_split.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil
+    fortran_lines: 5661-5751
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_routing_soil_water_split
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_split_soil.py]
+
+  - id: sechiba.hydrol_soil.tile_solve.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil
+    fortran_lines: 5800-6296
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_soil_all_tiles_explicit_step
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_all_tiles.py]
+
+  - id: sechiba.hydrol_soil.diagnostics.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil
+    fortran_lines: 6395-6741
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_module_diagnostics
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_diagnostics.py]
+
+  - id: sechiba.hydrol_soil.post_loop.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil
+    fortran_lines: 6757-6787
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_runoff_peat_post_loop_reinjection
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_post_solve.py]
+
+  - id: sechiba.hydrol_soil.alt_residual.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil
+    fortran_lines: 6863-7174
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_alt_residual_all_tiles_from_results
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_post_solve.py]
+
+  - id: sechiba.hydrol_soil.peat_diagnostics.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil
+    fortran_lines: 7180-7342
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_peat_water_table_diagnostics
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_diagnostics.py]
+
+  - id: sechiba.hydrol_soil.tail.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil
+    fortran_lines: 5646-5655,6801-6857,7347-7398
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_soil_tail_diagnostics
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.hydrol.HydrolSoilTailDiagnostics
+    validation: [tests/unit/test_hydrol_source_owner_completion.py]
+
+  - id: sechiba.hydrol_soil_smooth_under_mcr.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil_smooth_under_mcr
+    fortran_lines: 7623-7770
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_soil_smooth_under_mcr
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_post_solve.py]
+
+  - id: sechiba.hydrol_soil_smooth_over_mcs2.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil_smooth_over_mcs2
+    fortran_lines: 7935-8026
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_soil_clip_over_mcs2
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_post_solve.py]
+
+  - id: sechiba.hydrol_soil_flux.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil_flux
+    fortran_lines: 8053-8126
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_soil_flux_diagnostics
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_diagnostics.py]
+
+  - id: sechiba.hydrol_soil_tridiag.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil_tridiag
+    fortran_lines: 8147-8198
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_soil_tridiag_solve
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_tridiag.py]
+
+  - id: sechiba.hydrol_soil_coef.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_soil_coef
+    fortran_lines: 8248-8312
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_soil_coef_mineral_profile_from_tables
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_peat_coef.py]
+
+  - id: sechiba.hydrol_split_soil.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_split_soil
+    fortran_lines: 8603-8925
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_split_soil_fluxes
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_split_soil.py]
+
+  - id: sechiba.hydrol_diag_soil.partial
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_diag_soil
+    fortran_lines: 9006-9284
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_diag_soil_source_owner
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_source_owner_completion.py, tests/unit/test_hydrol_diagnostics.py]
+
+  - id: sechiba.hydrol_waterbal.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_waterbal
+    fortran_lines: 9415-9479
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_waterbal_step
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_main.py]
+
+  - id: sechiba.hydrol_alma.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_alma
+    fortran_lines: 9533-9575
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_alma_step
+    gap: null
+    state_contract: *hydrol_state
+    validation: [tests/unit/test_hydrol_main.py]
+
+  - id: sechiba.hydrol_calculate_temp_hydro.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_calculate_temp_hydro
+    fortran_lines: 9597-9662
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_calculate_temp_hydro_profile
+    gap: null
+    state_contract: *hydrol_state
+    validation: *hydrol_validation
+
+  - id: sechiba.qsatcalc.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90
+    fortran_subroutine: qsatcalc
+    fortran_lines: 79-179
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.enerbil.qsat_moisture_qsatcalc
+    gap: null
+    state_contract: *coupled_state
+    validation: [tests/unit/test_qsat_fortran_micro_oracle.py]
+
+  - id: sechiba.dev_qsatcalc.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90
+    fortran_subroutine: dev_qsatcalc
+    fortran_lines: 311-408
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.enerbil.qsat_moisture_dev_qsatcalc
+    gap: null
+    state_contract: *coupled_state
+    validation: [tests/unit/test_qsat_fortran_micro_oracle.py]
+
+  - id: sechiba.qsfrict_init.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90
+    fortran_subroutine: qsfrict_init
+    fortran_lines: 547-589
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.enerbil._qsfrict_table
+    gap: null
+    state_contract: *coupled_state
+    validation: [tests/unit/test_qsat_fortran_micro_oracle.py]
+
+  - id: sechiba.snow3lhold_1d.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90
+    fortran_subroutine: snow3lhold_1d
+    fortran_lines: 659-686
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.snow3lhold_explicit
+    gap: null
+    state_contract: *hydrol_state
+    validation: *snow_validation
+
+  - id: sechiba.snow3ltemp_1d.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90
+    fortran_subroutine: snow3ltemp_1d
+    fortran_lines: 949-972
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.hydrol.snow3ltemp_explicit
+    gap: null
+    state_contract: *hydrol_state
+    validation: *snow_validation
+
+  - id: sechiba.sechiba_initialize.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_initialize
+    fortran_lines: 648-774
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.initialize.sechiba_initialize_pft14_explicit
+    gap: null
+    state_contract: *coupled_state
+    validation: [tests/unit/test_sechiba_initialize.py]
+
+  - id: sechiba.sechiba_main.partial
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_main
+    fortran_lines: 984-1780
+    status: partial
+    jax_owner: jax_orchidee.sechiba.main.sechiba_main_pft14_fixed
+    gap: The 29-arm fixed-tail owner is closed, including full irrigation, integrated crop rotation, post-output LCC, and restart dispatch. Generic multigrid routing, active erosion, and exact XIOS/IOIPSL serialization remain outside this broader partial entry.
+    state_contract: *coupled_state
+    validation: *coupled_validation
+
+  - id: sechiba.sechiba_main.local_order.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_main
+    fortran_lines: 984-1216
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.sechiba_step.sechiba_explicit_coupled_step
+    gap: null
+    state_contract: *coupled_state
+    validation: *coupled_validation
+
+  - id: sechiba.sechiba_main.fixed_tail.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_main
+    fortran_lines: 1219-1418,1768-1780
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.main.sechiba_main_tail_pft14_fixed
+    gap: null
+    state_contract: *coupled_state
+    validation:
+      - tests/unit/test_sechiba_main.py
+      - tests/unit/test_stage4_sechiba_batch_c_owner_evidence.py
+      - outputs/reference_mode/micro_oracles/sechiba_batch_c/owner_region_evidence.json
+
+  - id: sechiba.sechiba_main.output_packet.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_main
+    fortran_lines: 1420-1758
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.main.build_sechiba_main_output_packet_pft14
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.main.SechibaMainOutputPacket
+    validation: [tests/unit/test_sechiba_main.py]
+
+  - id: sechiba.sechiba_end.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_end
+    fortran_lines: 3114-3140
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.main.sechiba_main_tail_pft14_fixed
+    gap: null
+    state_contract: *coupled_state
+    validation: [tests/unit/test_sechiba_main.py]
+
+  - id: sechiba.sechiba_finalize.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_finalize
+    fortran_lines: 1847-1899
+    status: missing
+    jax_owner: null
+    gap: No JAX top-level symbol owns module finalization.
+    state_contract: []
+    validation: []
+
+  - id: sechiba.sechiba_init.partial
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_init
+    fortran_lines: 1983-2553
+    status: partial
+    jax_owner: jax_orchidee.sechiba.initialize.sechiba_init_state
+    gap: Source-assigned allocation values through line 2553 are owned; allocation-only fields, later index construction through line 2818, restart reads and IO side effects remain open.
+    state_contract: *surface_state
+    validation: *slowproc_validation
+
+  - id: sechiba.sechiba_init.assigned_state.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_init
+    fortran_lines: 1983-1987,2025-2039,2056-2058,2063-2077,2112-2132,2158-2176,2184-2206,2213-2247,2252-2257,2271-2281,2320-2444,2453-2481,2501-2515,2541-2553
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.initialize.sechiba_init_state
+    gap: null
+    state_contract: [jax_orchidee.sechiba.initialize.SechibaInitStateResult]
+    validation: [tests/unit/test_sechiba_initialize.py]
+
+  - id: sechiba.sechiba_init.allocation_contract.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_init
+    fortran_lines: 2135-2135,2260-2260,2266-2266,2284-2284,2291-2291,2297-2297,2303-2303,2309-2309,2315-2315,2447-2447,2484-2484,2490-2490,2496-2496
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.initialize._allocation_shape_contract
+    gap: null
+    state_contract: [jax_orchidee.sechiba.initialize.SechibaInitStateResult]
+    validation: [tests/unit/test_sechiba_init_source_owner_completion.py]
+
+  - id: sechiba.sechiba_init.index_tables.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_init
+    fortran_lines: 2761-2806
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.initialize.sechiba_init_index_tables
+    gap: null
+    state_contract: [jax_orchidee.sechiba.initialize.sechiba_init_index_tables]
+    validation: [tests/unit/test_sechiba_init_source_owner_completion.py]
+
+  - id: sechiba.slowproc_initialize.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_initialize
+    fortran_lines: 269-296
+    status: missing
+    jax_owner: null
+    gap: No exact JAX owner covers the initialization dispatcher.
+    state_contract: []
+    validation: []
+
+  - id: sechiba.slowproc_main.partial
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_main
+    fortran_lines: 556-1134
+    status: partial
+    jax_owner: jax_orchidee.sechiba.slowproc.slowproc_main_pft14_step
+    gap: Fixed-switch calendar, STOMATE, soil and vegetation writeback are owned. Active map/LCC/rotation readers, dynamic-peat processing and exact XIOS/history side effects remain explicit external or rejected boundaries.
+    state_contract: *surface_state
+    validation: *slowproc_validation
+
+  - id: sechiba.slowproc_main.surface_transition.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_main
+    fortran_lines: 556-675,685-918,925-963,973-1025,1030-1036,1069-1134
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.slowproc.slowproc_main_pft14_step
+    gap: null
+    state_contract: *surface_state
+    validation: [tests/unit/test_slowproc_main.py]
+
+  - id: sechiba.slowproc_finalize.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_finalize
+    fortran_lines: 1234-1274
+    status: missing
+    jax_owner: null
+    gap: No exact JAX owner covers finalization/deallocation.
+    state_contract: []
+    validation: []
+
+  - id: sechiba.slowproc_init.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_init
+    fortran_lines: 1436-2531
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.slowproc.slowproc_init_pft14_explicit
+    gap: null
+    state_contract: *surface_state
+    validation: [tests/unit/test_slowproc_init.py, tests/parity/test_driver_1961_orchestration.py]
+
+  - id: sechiba.slowproc_veget.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_veget
+    fortran_lines: 2858-2921
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.slowproc.slowproc_veget_explicit
+    gap: null
+    state_contract: *surface_state
+    validation: *slowproc_validation
+
+  - id: sechiba.slowproc_soilt.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_soilt
+    fortran_lines: 4380-4903
+    status: implemented
+    jax_owner: jax_orchidee.driver.static.read_paper_usda_soil_static_fields
+    gap: null
+    state_contract: *surface_state
+    validation: [tests/unit/test_slowproc_soilt.py]
+
+  - id: sechiba.get_soilcorr_usda.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: get_soilcorr_usda
+    fortran_lines: 5588
+    status: missing
+    jax_owner: null
+    gap: No exact JAX owner is bound to this soil-correction arm.
+    state_contract: []
+    validation: []
+
+  - id: sechiba.slowproc_checkveget.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_checkveget
+    fortran_lines: 5862
+    status: missing
+    jax_owner: null
+    gap: Vegetation consistency checking has no exact JAX owner.
+    state_contract: []
+    validation: []
+
+  - id: sechiba.slowproc_change_frac.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_change_frac
+    fortran_lines: 6003
+    status: missing
+    jax_owner: null
+    gap: Fraction remapping has no exact JAX owner.
+    state_contract: []
+    validation: []
+
+  - id: sechiba.thermosoil_initialize.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: thermosoil_initialize
+    fortran_lines: 327-726
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.thermosoil.thermosoil_initialize
+    gap: null
+    state_contract: *thermal_state
+    validation: [tests/unit/test_thermosoil_initialize.py]
+
+  - id: sechiba.thermosoil_finalize.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: thermosoil_finalize
+    fortran_lines: 1065-1142
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.thermosoil.thermosoil_finalize_restart_packet
+    gap: null
+    state_contract: *thermal_state
+    validation: [tests/unit/test_thermosoil_initialize.py]
+
+  - id: sechiba.thermosoil_var_init.partial
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: thermosoil_var_init
+    fortran_lines: 1305-1315
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.thermosoil.thermosoil_initialize
+    gap: null
+    state_contract: *thermal_state
+    validation: *thermosoil_validation
+
+  - id: sechiba.thermosoil_coef.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: thermosoil_coef
+    fortran_lines: 1499-1725
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.thermosoil.thermosoil_coef_no_explicit_snow
+    gap: null
+    state_contract: *thermal_state
+    validation: *thermosoil_validation
+
+  - id: sechiba.thermosoil_cond.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: thermosoil_cond
+    fortran_lines: 1883-1972
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.thermosoil.thermosoil_cond
+    gap: null
+    state_contract: *thermal_state
+    validation: *thermosoil_validation
+
+  - id: sechiba.thermosoil_cond_pft.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: thermosoil_cond_pft
+    fortran_lines: 2064-2108
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.thermosoil.thermosoil_cond_pft
+    gap: null
+    state_contract: *thermal_state
+    validation: *thermosoil_validation
+
+  - id: sechiba.thermosoil_cond_nopft.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: thermosoil_cond_nopft
+    fortran_lines: 2129-2231
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.thermosoil.thermosoil_cond_nopft
+    gap: null
+    state_contract: [jax_orchidee.sechiba.thermosoil.ThermosoilCondResult]
+    validation: [tests/unit/test_thermosoil_source_owner_completion.py]
+
+  - id: sechiba.thermosoil_humlev.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: thermosoil_humlev
+    fortran_lines: 2258-2399
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.thermosoil.thermosoil_humlev
+    gap: null
+    state_contract: *thermal_state
+    validation: *thermosoil_validation
+
+  - id: sechiba.thermosoil_energy.partial
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: thermosoil_energy
+    fortran_lines: 2444
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.thermosoil.thermosoil_energy_diagnostics
+    gap: null
+    state_contract: *thermal_state
+    validation: *thermosoil_validation
+
+  - id: sechiba.read_refsocfile.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: read_refsocfile
+    fortran_lines: 3288-3377
+    status: missing
+    jax_owner: null
+    gap: External refSOC ingestion and interpolation has no exact JAX source owner in sechiba.
+    state_contract: []
+    validation: []
+
+  - id: sechiba.add_heat_zimov.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: add_heat_zimov
+    fortran_lines: 3426-3463
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.thermosoil.add_heat_zimov
+    gap: null
+    state_contract: [jax_orchidee.sechiba.thermosoil.ThermosoilZimovHeatResult]
+    validation: [tests/unit/test_thermosoil_source_owner_completion.py]
+
+  - id: sechiba.thermosoil_wlupdate.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: thermosoil_wlupdate
+    fortran_lines: 3648-3672
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.thermosoil.thermosoil_wlupdate
+    gap: null
+    state_contract: [jax_orchidee.sechiba.thermosoil.ThermosoilWetnessLongResult]
+    validation: [tests/unit/test_thermosoil_source_owner_completion.py]
+
+  - id: sechiba.thermosoil_getdiff_thinsnow.missing
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+    fortran_subroutine: thermosoil_getdiff_thinsnow
+    fortran_lines: 3692-3788
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.thermosoil.thermosoil_getdiff_thinsnow
+    gap: null
+    state_contract: [jax_orchidee.sechiba.thermosoil.ThermosoilThinSnowResult]
+    validation: [tests/unit/test_thermosoil_source_owner_completion.py]

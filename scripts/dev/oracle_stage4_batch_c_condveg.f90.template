@@ -1,0 +1,95 @@
+module defprec
+  implicit none
+  integer, parameter :: i_std=kind(1), r_std=kind(1.0)
+end module
+module constantes
+  use defprec
+  implicit none
+  integer, parameter :: nvm=14, nnobio=1, nsnow=3, NbNeighb=8, ivis=1, inir=2, classnb=3
+  real(r_std), parameter :: zero=0d0, un=1d0, deux=2d0, min_sechiba=1d-8, undef_sechiba=1d20, val_exp=999999d0
+  integer :: printlev=0, printlev_loc=0, numout=6, nbp_glo=3, index_g(3)=(/1,2,3/)
+  logical :: l_first_condveg=.true., alb_bg_modis=.true., impaze=.false., rough_dyn=.true.
+  logical :: restart_missing=.false., invalid_soil_class=.false.
+  integer :: soil_case=1
+  real(r_std) :: emis_scal=0.98d0, z0_scal=.1d0, roughheight_scal=0d0
+  real(r_std), allocatable :: soilalb_bg(:,:), soilalb_dry(:,:), soilalb_wet(:,:), soilalb_moy(:,:)
+  real(r_std) :: vis_dry(classnb)=(/.3d0,.2d0,.1d0/), nir_dry(classnb)=(/.6d0,.4d0,.2d0/)
+  real(r_std) :: vis_wet(classnb)=(/.15d0,.1d0,.05d0/), nir_wet(classnb)=(/.3d0,.2d0,.1d0/)
+  real(r_std) :: albsoil_vis(classnb)=(/.225d0,.15d0,.075d0/), albsoil_nir(classnb)=(/.45d0,.3d0,.15d0/)
+end module
+module interpweight
+  use defprec
+  use constantes, only: classnb, min_sechiba, soil_case, invalid_soil_class
+  implicit none
+contains
+  subroutine interpweight_2D(nbpt,nbclass,vals,lalo,res,nei,cont,file,var,lon,lat,vmin,vmax,noneg,masktype,maskvals,maskname,a,b,c,fractype,x,y,frac,avail)
+    integer(i_std),intent(in)::nbpt,nbclass,a,b,c,nei(nbpt,*); real(r_std),intent(in)::vals(:),lalo(nbpt,2),res(nbpt,2),cont(nbpt),vmin,vmax,maskvals(3),x,y
+    character(*),intent(in)::file,var,lon,lat,masktype,maskname,fractype; logical,intent(in)::noneg
+    real(r_std),intent(out)::frac(nbpt,nbclass),avail(nbpt)
+    frac=0d0; avail=1d0
+    select case(soil_case)
+    case(1); frac(1,1)=1d0; frac(2,1)=.2d0; frac(2,3)=.8d0; avail(3)=0d0
+    case(2); frac(1,:)=1d0/classnb; frac(2,1)=.5d0; frac(2,2)=min_sechiba/2d0; frac(2,3)=.5d0
+    case(3); frac(1,1)=1d0
+    end select
+  end subroutine
+  function interpweight_ValVecR(values,n,value,op) result(vec)
+    real(r_std),intent(in)::values(:),value; integer(i_std),intent(in)::n; character(*),intent(in)::op
+    integer(i_std)::vec(n),i,k; vec=0; if(invalid_soil_class)then;vec(1)=1;vec(2)=classnb+1;return;endif;k=0; do i=1,n; if(values(i)/=value)then;k=k+1; if(k<n)vec(k+1)=i;endif;enddo;vec(1)=k
+  end function
+  subroutine interpweight_2Dcont(nbpt,a,b,lalo,res,nei,cont,file,var,lon,lat,vmin,vmax,noneg,masktype,maskvals,maskname,c,fractype,default,noref,out,avail)
+    integer(i_std),intent(in)::nbpt,a,b,c,nei(nbpt,*); real(r_std),intent(in)::lalo(nbpt,2),res(nbpt,2),cont(nbpt),vmin,vmax,maskvals(3),default,noref
+    character(*),intent(in)::file,var,lon,lat,masktype,maskname,fractype; logical,intent(in)::noneg; real(r_std),intent(out)::out(nbpt),avail(nbpt)
+    if(trim(var)=='bg_alb_vis')then; out=(/.11d0,.12d0,.13d0/);else;out=(/.21d0,.22d0,.23d0/);endif;avail=1d0
+  end subroutine
+end module
+module condveg_oracle
+  use defprec
+  use constantes
+  use interpweight
+  implicit none
+  interface restget_p
+    module procedure restget_1d, restget_2d
+  end interface
+contains
+! <CONDVEG_BATCH_C_PROCEDURES>
+  subroutine getin_p(a,b);character(*),intent(in)::a;character(*),intent(inout)::b;end subroutine
+  integer function get_printlev(a);character(*),intent(in)::a;get_printlev=0;end function
+  subroutine ipslerr_p(a,b,c,d,e);integer,intent(in)::a;character(*),intent(in)::b,c,d,e;error stop 'fatal owner boundary';end subroutine
+  subroutine ioconf_setatt_p(a,b);character(*),intent(in)::a,b;end subroutine
+  subroutine restget_1d(id,name,ng,n1,n2,kjit,flag,out,mode,ig,idx)
+    integer,intent(in)::id,ng,n1,n2,kjit,ig,idx(:);character(*),intent(in)::name,mode;logical,intent(in)::flag;real(r_std),intent(out)::out(:);if(restart_missing)then;out=real(val_exp,r_std);else;out=.1_r_std;endif
+  end subroutine
+  subroutine restget_2d(id,name,ng,n1,n2,kjit,flag,out,mode,ig,idx)
+    integer,intent(in)::id,ng,n1,n2,kjit,ig,idx(:);character(*),intent(in)::name,mode;logical,intent(in)::flag;real(r_std),intent(out)::out(:,:);if(restart_missing)then;out=real(val_exp,r_std);else;out=.2_r_std;endif
+  end subroutine
+  subroutine condveg_frac_snow(n,sn,snb,rho,dz,fv,fn);integer,intent(in)::n;real(r_std),intent(in)::sn(n),snb(n,nnobio),rho(n,nsnow),dz(n,nsnow);real(r_std),intent(out)::fv(n),fn(n,nnobio);fv=0d0;fn=0d0;end subroutine
+  subroutine condveg_z0cdrag_dyn(n,veg,vmax,fn,tfn,zlev,height,ta,pb,u,v,lai,fv,z0m,z0h,rh,rhp);integer,intent(in)::n;real(r_std),intent(in)::veg(n,nvm),vmax(n,nvm),fn(n,nnobio),tfn(n),zlev(n),height(n,nvm),ta(n),pb(n),u(n),v(n),lai(n,nvm),fv(n);real(r_std),intent(out)::z0m(n),z0h(n),rh(n),rhp(n,nvm);z0m=.1d0;z0h=.01d0;rh=1d0;rhp=1d0;end subroutine
+  subroutine condveg_z0cdrag(n,veg,vmax,fn,tfn,zlev,height,bare,z0m,z0h,rh,rhp);integer,intent(in)::n;real(r_std),intent(in)::veg(n,nvm),vmax(n,nvm),fn(n,nnobio),tfn(n),zlev(n),height(n,nvm),bare(n);real(r_std),intent(out)::z0m(n),z0h(n),rh(n),rhp(n,nvm);z0m=.1d0;z0h=.01d0;rh=1d0;rhp=1d0;end subroutine
+  subroutine condveg_albedo(n,veg,vmax,dry,fn,tfn,sn,sa,snb,snba,dz,rho,bare,fv,fsn,alb,asnow,abare,aveg);integer,intent(in)::n;real(r_std),intent(in)::veg(n,nvm),vmax(n,nvm),dry(n),fn(n,nnobio),tfn(n),sn(n),sa(n),snb(n,nnobio),snba(n),dz(n,nsnow),rho(n,nsnow),bare(n),fv(n),fsn(n,nnobio);real(r_std),intent(out)::alb(n,2),asnow(n,2),abare(n,2),aveg(n,2);alb=.2d0;asnow=.3d0;abare=.2d0;aveg=.2d0;end subroutine
+  subroutine xios_orchidee_send_field(a,b);character(*),intent(in)::a;real(r_std),intent(in)::b(:);end subroutine
+end module
+program oracle
+  use defprec; use constantes; use condveg_oracle
+  implicit none
+  integer,parameter::n=3; integer::idx(n)=(/1,2,3/),nei(n,NbNeighb)=0,i,j; character(512)::path,arg
+  real(r_std)::lalo(n,2)=0d0,res(n,2)=1d0,cont(n)=1d0,veg(n,nvm)=.1d0,fn(n,nnobio)=0d0,tfn(n)=0d0,zlev(n)=10d0,dry(n)=.5d0,height(n,nvm)=1d0,dz(n,nsnow)=0d0,rho(n,nsnow)=100d0,bare(n)=.5d0,sn(n)=0d0,sa(n)=0d0,snb(n,nnobio)=0d0,snba(n)=0d0,ta(n)=280d0,pb(n)=1000d0,u(n)=2d0,v(n)=1d0,lai(n,nvm)=1d0,emis(n),alb(n,2),z0m(n),z0h(n),rh(n),rhp(n,nvm),fv(n),fsn(n,nnobio)
+  call get_command_argument(1,path);call get_command_argument(2,arg)
+  if(trim(arg)=='fatal')then
+    invalid_soil_class=.true.;allocate(soilalb_dry(n,2),soilalb_wet(n,2),soilalb_moy(n,2));call condveg_soilalb(n,lalo,nei,res,cont);stop 99
+  endif
+  open(10,file=trim(path),status='replace');write(10,'(a)')'field,value'
+  allocate(soilalb_dry(n,2),soilalb_wet(n,2),soilalb_moy(n,2));soil_case=1;call condveg_soilalb(n,lalo,nei,res,cont)
+  do j=1,2;do i=1,n;write(10,'(a,es25.17)')'soil_dry,',soilalb_dry(i,j);write(10,'(a,es25.17)')'soil_wet,',soilalb_wet(i,j);write(10,'(a,es25.17)')'soil_moy,',soilalb_moy(i,j);enddo;enddo
+  soil_case=2;call condveg_soilalb(n,lalo,nei,res,cont)
+  soil_case=3;call condveg_soilalb(n,lalo,nei,res,cont)
+  deallocate(soilalb_dry,soilalb_wet,soilalb_moy);allocate(soilalb_bg(n,2));call condveg_background_soilalb(n,lalo,nei,res,cont);deallocate(soilalb_bg)
+  restart_missing=.false.;l_first_condveg=.true.;alb_bg_modis=.true.;impaze=.false.;rough_dyn=.true.;call condveg_initialize(1,n,idx,veg,veg,fn,tfn,lalo,nei,res,cont,1,zlev,dry,height,dz,rho,bare,sn,sa,snb,snba,ta,pb,u,v,lai,emis,alb,z0m,z0h,rh,rhp,fv,fsn)
+  write(10,'(a,es25.17)')'init_emis,',emis(1);deallocate(soilalb_bg)
+  restart_missing=.true.;l_first_condveg=.true.;alb_bg_modis=.true.;impaze=.true.;rough_dyn=.true.;call condveg_initialize(1,n,idx,veg,veg,fn,tfn,lalo,nei,res,cont,1,zlev,dry,height,dz,rho,bare,sn,sa,snb,snba,ta,pb,u,v,lai,emis,alb,z0m,z0h,rh,rhp,fv,fsn)
+  deallocate(soilalb_bg)
+  restart_missing=.true.;l_first_condveg=.true.;alb_bg_modis=.false.;impaze=.false.;rough_dyn=.true.;call condveg_initialize(1,n,idx,veg,veg,fn,tfn,lalo,nei,res,cont,1,zlev,dry,height,dz,rho,bare,sn,sa,snb,snba,ta,pb,u,v,lai,emis,alb,z0m,z0h,rh,rhp,fv,fsn)
+  deallocate(soilalb_dry,soilalb_wet,soilalb_moy)
+  restart_missing=.false.;l_first_condveg=.true.;alb_bg_modis=.false.;impaze=.false.;rough_dyn=.true.;call condveg_initialize(1,n,idx,veg,veg,fn,tfn,lalo,nei,res,cont,1,zlev,dry,height,dz,rho,bare,sn,sa,snb,snba,ta,pb,u,v,lai,emis,alb,z0m,z0h,rh,rhp,fv,fsn)
+  close(10)
+end program

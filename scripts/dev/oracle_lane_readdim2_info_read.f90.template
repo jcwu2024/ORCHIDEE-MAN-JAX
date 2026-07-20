@@ -1,0 +1,92 @@
+module readdim2_info_read_oracle
+  implicit none
+  integer,parameter :: numout=6, nbp_glo=2, iim_g=2, jjm_g=2
+  real,parameter :: val_exp=1.e20, cp_air=1004.675, cte_grav=9.80665
+  logical :: interpol=.true., weathergen=.false., is_watchout=.false.
+  real :: limit_west=-180.,limit_east=180.,limit_north=90.,limit_south=-90.
+  real :: zonal_res=2.,merid_res=2.
+  real :: lon_g(2,2)=reshape((/10.,20.,10.,20./),(/2,2/))
+  real :: lat_g(2,2)=reshape((/50.,50.,40.,40./),(/2,2/))
+  integer :: index_g(2)=(/1,4/), neighbours(2,8)
+  real :: resolution(2,2)
+contains
+  subroutine ipslerr_p(level,caller,m1,m2,m3)
+    integer,intent(in)::level;character(*),intent(in)::caller,m1,m2,m3
+    if(level>=3)error stop 'unexpected forcing_read fatal'
+  end subroutine
+  subroutine forcing_read_interpol(filename,itauin,itau_split,split,nb_spread,netrad_cons,date0,dt_force,iim,jjm,lon,lat,zlev,zlevuv,ttm,swdown,coszang,precip,snowf,tair,u,v,qair,pb,lwdown,fcontfrac,fneighbours,fresolution,SWnet,Eair,petAcoef,peqAcoef,petBcoef,peqBcoef,cdrag,ccanopy,kindex,nbindex,force_id)
+    character(*),intent(in)::filename;integer,intent(in)::itauin,itau_split,split,nb_spread,iim,jjm,ttm,force_id
+    logical,intent(in)::netrad_cons;real,intent(in)::date0,dt_force
+    real,intent(inout)::lon(iim,jjm),lat(iim,jjm),zlev(iim,jjm),zlevuv(iim,jjm),swdown(iim,jjm),coszang(iim,jjm),precip(iim,jjm),snowf(iim,jjm),tair(iim,jjm),u(iim,jjm),v(iim,jjm),qair(iim,jjm),pb(iim,jjm),lwdown(iim,jjm),fcontfrac(iim,jjm),SWnet(iim,jjm),Eair(iim,jjm),petAcoef(iim,jjm),peqAcoef(iim,jjm),petBcoef(iim,jjm),peqBcoef(iim,jjm),cdrag(iim,jjm),ccanopy(iim,jjm),fresolution(iim,jjm,2)
+    integer,intent(inout)::fneighbours(iim,jjm,8),kindex(iim*jjm),nbindex
+    integer::i,j,k
+    do j=1,jjm;do i=1,iim
+      zlev(i,j)=2.;zlevuv(i,j)=10.;swdown(i,j)=100+i+10*j;coszang(i,j)=.2*i
+      precip(i,j)=.01*i;snowf(i,j)=.02*j;tair(i,j)=280+i+j;u(i,j)=3+i;v(i,j)=4+j
+      qair(i,j)=.005*i;pb(i,j)=100000.;lwdown(i,j)=300+i+j;fcontfrac(i,j)=.1*i+.2*j
+      SWnet(i,j)=50+i;petAcoef(i,j)=1.;peqAcoef(i,j)=2.;petBcoef(i,j)=3.;peqBcoef(i,j)=4.;cdrag(i,j)=5.;ccanopy(i,j)=6.
+      fresolution(i,j,:)=(/1000.+i,2000.+j/)
+      do k=1,8;fneighbours(i,j,k)=100*i+10*j+k;enddo
+    enddo;enddo
+    tair(iim,jjm)=val_exp*2.;Eair(:,:)=-77.;kindex(1:2)=(/1,iim*jjm/);nbindex=2
+  end subroutine
+  subroutine weathgen_main(itau,istp,filename,force_id,iim,jjm,one,rest_id,lrstread,lrstwrite,west,east,north,south,zres,mres,lon,lat,date0,dt_force,kindex,nbindex,swdown,precip,snowf,tair,u,v,qair,pb,lwdown)
+    integer,intent(in)::itau,istp,force_id,iim,jjm,one,rest_id;character(*),intent(in)::filename
+    logical,intent(in)::lrstread,lrstwrite;real,intent(in)::west,east,north,south,zres,mres,date0,dt_force
+    real,intent(inout)::lon(iim,jjm),lat(iim,jjm),swdown(iim,jjm),precip(iim,jjm),snowf(iim,jjm),tair(iim,jjm),u(iim,jjm),v(iim,jjm),qair(iim,jjm),pb(iim,jjm),lwdown(iim,jjm)
+    integer,intent(inout)::kindex(iim*jjm),nbindex
+    integer::i,j
+    do j=1,jjm;do i=1,iim
+      swdown(i,j)=200+itau+i;precip(i,j)=.03*i;snowf(i,j)=.04*j;tair(i,j)=270+i+j
+      u(i,j)=7+i;v(i,j)=8+j;qair(i,j)=.006*i;pb(i,j)=99000.;lwdown(i,j)=310+i+j
+    enddo;enddo
+    kindex(1:2)=(/1,iim*jjm/);nbindex=2
+  end subroutine
+  subroutine grid_init(n,nvertex,gtype,gname)
+    integer,intent(in)::n,nvertex;character(*),intent(in)::gtype,gname;integer::k
+    do k=1,8;neighbours(:,k)=(/10+k,20+k/);enddo
+    resolution(1,:)=(/111.,222./);resolution(2,:)=(/333.,444./)
+  end subroutine
+  subroutine grid_stuff(n,iim,jjm,lon,lat,index)
+    integer,intent(in)::n,iim,jjm,index(:);real,intent(in)::lon(iim,jjm),lat(iim,jjm)
+  end subroutine
+! <FORCING_READ>
+end module
+
+program driver
+  use readdim2_info_read_oracle
+  implicit none
+  integer,parameter::ni=2,nj=2
+  integer::unit,rest_id=0,itauin,istp=7,itau_split,split=1,spread=1,ttm=3,force_id=1,nbindex,kindex(4),fneighbours(ni,nj,8)
+  logical::lrstread,lrstwrite=.false.,netrad=.false.
+  real::lon(ni,nj),lat(ni,nj),zlev(ni,nj),zlevuv(ni,nj),swdown(ni,nj),coszang(ni,nj),precip(ni,nj),snowf(ni,nj),tair(ni,nj),u(ni,nj),v(ni,nj),qair(ni,nj),pb(ni,nj),lwdown(ni,nj),fcontfrac(ni,nj),fresolution(ni,nj,2),SWnet(ni,nj),Eair(ni,nj),petAcoef(ni,nj),peqAcoef(ni,nj),petBcoef(ni,nj),peqBcoef(ni,nj),cdrag(ni,nj),ccanopy(ni,nj)
+  character(512)::path
+  call get_command_argument(1,path);open(newunit=unit,file=trim(path),status='replace');write(unit,'(a)')'field,flat_index,value'
+  interpol=.true.;weathergen=.false.;is_watchout=.false.;itauin=2;itau_split=1;lrstread=.false.;call reset_arrays
+  call run_case('interp')
+  interpol=.true.;weathergen=.false.;is_watchout=.true.;itauin=2;itau_split=1;lrstread=.false.;call reset_arrays
+  call run_case('watchout')
+  interpol=.false.;weathergen=.true.;is_watchout=.false.;itauin=0;itau_split=0;lrstread=.true.;call reset_arrays
+  call run_case('weather_init')
+  interpol=.false.;weathergen=.true.;is_watchout=.false.;itauin=3;itau_split=1;lrstread=.false.;call reset_arrays
+  call run_case('weather_later')
+  close(unit)
+contains
+  subroutine reset_arrays
+    lon=reshape((/10.,20.,10.,20./),(/ni,nj/));lat=reshape((/50.,50.,40.,40./),(/ni,nj/));zlev=2.;zlevuv=10.
+    swdown=-1.;coszang=-2.;precip=-3.;snowf=-4.;tair=-5.;u=-6.;v=-7.;qair=-8.;pb=-9.;lwdown=-10.
+    fcontfrac=-11.;fneighbours=-12;fresolution=-13.;SWnet=-14.;Eair=-15.;petAcoef=-16.;peqAcoef=-17.;petBcoef=-18.;peqBcoef=-19.;cdrag=-20.;ccanopy=-21.;kindex=-22;nbindex=0
+  end subroutine
+  subroutine run_case(prefix)
+    character(*),intent(in)::prefix
+    call forcing_read('memory',rest_id,lrstread,lrstwrite,itauin,istp,itau_split,split,spread,netrad,0.,1800.,ni,nj,lon,lat,zlev,zlevuv,ttm,swdown,coszang,precip,snowf,tair,u,v,qair,pb,lwdown,fcontfrac,fneighbours,fresolution,SWnet,Eair,petAcoef,peqAcoef,petBcoef,peqBcoef,cdrag,ccanopy,kindex,nbindex,force_id)
+    call outr(prefix//'_tair',tair);call outr(prefix//'_eair',Eair);call outr(prefix//'_contfrac',fcontfrac)
+    call outi(prefix//'_meta',(/nbindex,kindex(1),kindex(2)/),3)
+    call outi3(prefix//'_neighbours',fneighbours);call outr3(prefix//'_resolution',fresolution)
+    call outr(prefix//'_swdown',swdown);call outr(prefix//'_rainf',precip)
+  end subroutine
+  subroutine outr(name,a);character(*),intent(in)::name;real,intent(in)::a(:,:);integer::i,j,k;k=0;do j=1,size(a,2);do i=1,size(a,1);write(unit,'(a,a,i0,a,es25.17)')trim(name),',',k,',',a(i,j);k=k+1;enddo;enddo;end subroutine
+  subroutine outr3(name,a);character(*),intent(in)::name;real,intent(in)::a(:,:,:);integer::i,j,k,n;n=0;do k=1,size(a,3);do j=1,size(a,2);do i=1,size(a,1);write(unit,'(a,a,i0,a,es25.17)')trim(name),',',n,',',a(i,j,k);n=n+1;enddo;enddo;enddo;end subroutine
+  subroutine outi3(name,a);character(*),intent(in)::name;integer,intent(in)::a(:,:,:);integer::i,j,k,n;n=0;do k=1,size(a,3);do j=1,size(a,2);do i=1,size(a,1);write(unit,'(a,a,i0,a,i0)')trim(name),',',n,',',a(i,j,k);n=n+1;enddo;enddo;enddo;end subroutine
+  subroutine outi(name,a,n);character(*),intent(in)::name;integer,intent(in)::a(:),n;integer::i;do i=1,n;write(unit,'(a,a,i0,a,i0)')trim(name),',',i-1,',',a(i);enddo;end subroutine
+end program

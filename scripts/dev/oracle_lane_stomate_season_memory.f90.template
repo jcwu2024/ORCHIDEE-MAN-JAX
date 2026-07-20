@@ -1,0 +1,144 @@
+module defprec
+  implicit none
+  integer, parameter :: i_std=kind(1), r_std=kind(1.0)
+end module
+module constantes
+  use defprec
+  implicit none
+  real(r_std), parameter :: zero=0d0, un=1d0, ZeroCelsius=273.15d0, undef=1d20
+  real(r_std), parameter :: one_year=365d0, min_stomate=1d-8
+  real, parameter :: pi=3.141592653589793
+  integer :: printlev=1, numout=6
+end module
+module stomate_data
+  use defprec
+  implicit none
+  integer, parameter :: nvm=14,nparts=12,nelements=2,nslm=2,ileaf=1,icarbon=1,ibare_sechiba=1
+  integer :: hist_id_stomate=0,itime=0,horipft_index=0
+  integer :: hori_index=0
+  real(r_std), parameter :: tau_hum_month=20d0,tau_hum_week=7d0,tau_t2m_month=20d0,tau_t2m_week=7d0
+  real(r_std), parameter :: tau_t2m_14=14d0,tau_tsoil_month=20d0,tau_soilhum_month=20d0
+  real(r_std), parameter :: tau_gpp_week=7d0,tau_gdd=40d0,tau_ngd=50d0,tau_climatology=20d0
+  real(r_std), parameter :: coeff_tau_longterm=3d0,tlong_ref_min=253.1d0,tlong_ref_max=303.1d0
+  real(r_std), parameter :: spring_days_max=40d0,leaf_frac_hvc=0.33d0,green_age_ever=2d0,green_age_dec=0.5d0
+  real(r_std), parameter :: hvc1=0.3d0,hvc2=0.6d0
+  real(r_std), parameter :: gdd_threshold=5d0,gppfrac_dormance=0.2d0,ncd_max_year=3d0
+  real(r_std), parameter :: large_value=1d33,tau_longterm_max=1095d0
+  logical :: ok_dgvm=.false.,ok_stomate=.true.
+end module
+module constantes_soil
+  use defprec
+end module
+module pft_parameters
+  use defprec
+  use stomate_data, only:nvm
+  implicit none
+  logical :: natural(nvm),pasture(nvm)
+  integer :: leaf_tab(nvm),pheno_type(nvm),pft_to_mtc(nvm)
+  character(len=8) :: pheno_model(nvm)
+  real(r_std) :: pheno_gdd_crit(nvm,4),ncdgdd_temp(nvm),hum_min_time(nvm)
+  real(r_std) :: leaflife_tab(nvm),lai_max(nvm)
+end module
+module grid
+  use defprec
+  implicit none
+  real(r_std) :: julian_diff=100d0
+  character(len=20) :: calendar_str='noleap'
+end module
+module xios_orchidee
+  use defprec
+  implicit none
+  interface xios_orchidee_send_field; module procedure send_r1,send_r2; end interface
+contains
+  subroutine send_r1(n,x); character(*),intent(in)::n; real(r_std),intent(in)::x(:); end
+  subroutine send_r2(n,x); character(*),intent(in)::n; real(r_std),intent(in)::x(:,:); end
+end module
+module ioipsl_para
+  use defprec
+  implicit none
+  interface histwrite_p; module procedure hist_r1,hist_r2; end interface
+  interface getin_p; module procedure getin_real; end interface
+contains
+  subroutine hist_r1(id,n,it,x,k,idx); integer,intent(in)::id,it,k,idx; character(*),intent(in)::n; real(r_std),intent(in)::x(:); end
+  subroutine hist_r2(id,n,it,x,k,idx); integer,intent(in)::id,it,k,idx; character(*),intent(in)::n; real(r_std),intent(in)::x(:,:); end
+  subroutine getin_real(n,x); character(*),intent(in)::n; real(r_std),intent(inout)::x; end
+end module
+module solar
+  use defprec
+  use constantes
+  use ioipsl_para
+  implicit none
+contains
+! <DOWNWARD_SOLAR_FLUX>
+end module
+! <SEASON_MODULE>
+
+program main
+  use defprec; use constantes; use stomate_data; use pft_parameters; use grid; use stomate_season
+  implicit none
+  integer,parameter::npts=2
+  integer::u,i,j,k,m,mode
+  character(len=1024)::out,mode_arg
+  logical::begin(npts,nvm)
+  real(r_std)::v(npts,nvm),vd(npts,nvm),mday(npts,nvm),t2(npts),ts(npts),tsoil(npts,nslm),sh(npts,nslm),lalo(npts,2),pr(npts)
+  real(r_std)::npp(npts,nvm),bio(npts,nvm,nparts,nelements),turn(npts,nvm,nparts,nelements),gpp(npts,nvm),wg(npts,nvm),tmin(npts)
+  real(r_std)::maxl(npts,nvm),maxt(npts,nvm),minl(npts,nvm),mint(npts,nvm),mgpl(npts,nvm),mgpt(npts,nvm)
+  real(r_std)::g0l(npts),g0t(npts),pl(npts),pt(npts),lml(npts,nvm),lmt(npts,nvm),mfpl(npts,nvm),mfpt(npts,nvm)
+  real(r_std)::mm(npts,nvm),mw(npts,nvm),tlong(npts),tau,tm(npts),tw(npts),tsy(npts),tsyt(npts),tsyl(npts)
+  real(r_std)::tmins(npts,nvm),onset(npts,nvm),tsm(npts,nslm),shm(npts,nslm),nppl(npts,nvm),turnl(npts,nvm,nparts,nelements)
+  real(r_std)::gppw(npts,nvm),gddm5(npts,nvm),gddmid(npts,nvm),ncd(npts,nvm),ngd(npts,nvm),thm(npts,nvm),hmd(npts,nvm)
+  real(r_std)::gid(npts,2),gfrom(npts,nvm),herb(npts,nvm),tsurfyear(npts),t14(npts),sla(npts,nvm)
+  call get_command_argument(1,out)
+  call get_command_argument(2,mode_arg);read(mode_arg,*)mode
+  natural=.false.; natural(14)=.true.; pasture=.false.; leaf_tab=0; pheno_type=0; pft_to_mtc=0; pheno_model='none'
+  pheno_gdd_crit=undef; ncdgdd_temp=undef; hum_min_time=undef;leaflife_tab=365d0;lai_max=1d0
+  v=0d0;v(1,14)=.5d0;vd=0d0;vd(1,14)=1d0;mday=0.5d0;mday(1,14)=0d0;t2=(/0d0,290d0/);ts=(/0d0,291d0/);tsoil=285d0;tsoil(1,:)=0d0;sh=0.4d0;sh(1,:)=0d0
+  lalo=0d0;lalo(:,1)=10d0;pr=2d0;npp=0.1d0;npp(1,14)=0d0;bio=0d0;bio(1,14,ileaf,icarbon)=1d0;turn=0d0;turn(2,14,ileaf,icarbon)=.1d0;gpp=0.2d0;gpp(1,14)=0d0;wg=10d0;tmin=275d0;begin=.false.;begin(1,14)=.true.
+  maxl=0.7d0;maxt=0.6d0;minl=0.2d0;mint=0.3d0;mgpl=0.4d0;mgpt=0.3d0;g0l=1d0;g0t=2d0;pl=3d0;pt=4d0
+  lml=0d0;lmt=0d0;mfpl=0d0;mfpt=0d0;tau=100d0;tsy=0d0;tsyt=0d0;tsyl=0d0;tmins=0d0;onset=0d0
+  ngd=0d0;thm=0d0;hmd=0.5d0;gid=0d0;gfrom=0d0;herb=0d0;sla=0.02d0
+  if(mode==1)then
+    mm=0d0;mw=0d0;tlong=0d0;tm=0d0;tw=0d0;tsurfyear=0d0;t14=0d0;tsm=0d0;shm=0d0
+    nppl=0d0;turnl=0d0;gppw=0d0;maxt=0d0;mint=0d0;gddm5=0d0;gddmid=0d0;ncd=0d0
+  else
+    mm=0.45d0;mw=0.4d0;tlong=(/259d0,289d0/);tm=tlong;tw=(/258d0,288d0/);tsurfyear=ts;t14=t2;tsm=284d0;shm=0.35d0
+    nppl=0.05d0;turnl=0d0;gppw=0.1d0;maxt=0.6d0;mint=0.3d0;gddm5=1d0;gddmid=1d0;ncd=1d0
+    gid(1,2)=2000d0
+  endif
+  call season(npts,1.0,.false.,v,vd,mday,t2,ts,tsoil,sh,lalo,pr,npp,bio,turn,gpp,wg,maxl,maxt,minl,mint,mgpl,mgpt,g0l,g0t,pl,pt,lml,lmt,mfpl,mfpt,mm,mw,tlong,tau,tm,tw,tsurfyear,tsm,shm,nppl,turnl,gppw,gddm5,gddmid,ncd,ngd,thm,hmd,gid,gfrom,herb,tsy,tsyl,tsyt,tmins,tmin,begin,onset,t14,sla)
+  call season(npts,1.0,.true.,v,vd,mday,t2,ts,tsoil,sh,lalo,pr,npp,bio,turn,gpp,wg,maxl,maxt,minl,mint,mgpl,mgpt,g0l,g0t,pl,pt,lml,lmt,mfpl,mfpt,mm,mw,tlong,tau,tm,tw,tsurfyear,tsm,shm,nppl,turnl,gppw,gddm5,gddmid,ncd,ngd,thm,hmd,gid,gfrom,herb,tsy,tsyl,tsyt,tmins,tmin,begin,onset,t14,sla)
+  open(newunit=u,file=trim(out),status='replace',action='write');write(u,'(A)')'field,value'
+  do i=1,npts
+    write(u,'(A,",",ES26.17)')'t2m_longterm',tlong(i);write(u,'(A,",",ES26.17)')'t2m_month',tm(i)
+    write(u,'(A,",",ES26.17)')'t2m_week',tw(i);write(u,'(A,",",ES26.17)')'tseason_tmp',tsyt(i)
+    write(u,'(A,",",ES26.17)')'tseason_length',tsyl(i);write(u,'(A,",",ES26.17)')'tsurf_year',tsurfyear(i);write(u,'(A,",",ES26.17)')'t2m_14',t14(i)
+  enddo
+  do j=1,nvm;do i=1,npts
+    write(u,'(A,",",ES26.17)')'moiavail_month',mm(i,j);write(u,'(A,",",ES26.17)')'moiavail_week',mw(i,j)
+    write(u,'(A,",",ES26.17)')'tmin_spring_time',tmins(i,j);write(u,'(A,",",ES26.17)')'onset_date',onset(i,j)
+    write(u,'(A,",",ES26.17)')'gdd_from_growthinit',gfrom(i,j)
+  enddo;enddo
+  do j=1,nslm;do i=1,npts
+    write(u,'(A,",",ES26.17)')'tsoil_month',tsm(i,j);write(u,'(A,",",ES26.17)')'soilhum_month',shm(i,j)
+  enddo;enddo
+  do j=1,nvm;do i=1,npts
+    write(u,'(A,",",ES26.17)')'npp_longterm',nppl(i,j);write(u,'(A,",",ES26.17)')'gpp_week',gppw(i,j)
+    write(u,'(A,",",ES26.17)')'maxmoiavail_lastyear',maxl(i,j);write(u,'(A,",",ES26.17)')'maxmoiavail_thisyear',maxt(i,j)
+    write(u,'(A,",",ES26.17)')'minmoiavail_lastyear',minl(i,j);write(u,'(A,",",ES26.17)')'minmoiavail_thisyear',mint(i,j)
+    write(u,'(A,",",ES26.17)')'maxgppweek_lastyear',mgpl(i,j);write(u,'(A,",",ES26.17)')'maxgppweek_thisyear',mgpt(i,j)
+    write(u,'(A,",",ES26.17)')'lm_lastyearmax',lml(i,j);write(u,'(A,",",ES26.17)')'lm_thisyearmax',lmt(i,j)
+    write(u,'(A,",",ES26.17)')'maxfpc_lastyear',mfpl(i,j);write(u,'(A,",",ES26.17)')'maxfpc_thisyear',mfpt(i,j)
+    write(u,'(A,",",ES26.17)')'gdd_m5_dormance',gddm5(i,j);write(u,'(A,",",ES26.17)')'gdd_midwinter',gddmid(i,j)
+    write(u,'(A,",",ES26.17)')'ncd_dormance',ncd(i,j);write(u,'(A,",",ES26.17)')'ngd_minus5',ngd(i,j)
+    write(u,'(A,",",ES26.17)')'time_hum_min',thm(i,j);write(u,'(A,",",ES26.17)')'hum_min_dormance',hmd(i,j)
+  enddo;enddo
+  do j=1,nvm;do i=1,npts;do k=1,nparts;do m=1,nelements
+    write(u,'(A,",",ES26.17)')'turnover_longterm',turnl(i,j,k,m)
+  enddo;enddo;enddo;enddo
+  do i=1,npts
+    write(u,'(A,",",ES26.17)')'gdd0_lastyear',g0l(i);write(u,'(A,",",ES26.17)')'gdd0_thisyear',g0t(i)
+    write(u,'(A,",",ES26.17)')'precip_lastyear',pl(i);write(u,'(A,",",ES26.17)')'precip_thisyear',pt(i)
+  enddo
+  do j=1,2;do i=1,npts;write(u,'(A,",",ES26.17)')'gdd_init_date',gid(i,j);enddo;enddo
+  close(u)
+end program

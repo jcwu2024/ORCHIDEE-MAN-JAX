@@ -1,0 +1,1597 @@
+{
+  "schema_version": 1,
+  "scope": "ORCHIDEE-MAN PFT14 independent single-landpoint SECHIBA restart",
+  "source_reference": "reference/OUT/orc_calibrate_250919_sen/arg2_1.0/001.0-071.0/I10/S2_63.206_0.0876_0.2019_50.658/sechiba_start.nc",
+  "fortran_provenance": {
+    "file": "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90",
+    "subroutine": "sechiba_finalize and component finalizers",
+    "lines": "1800-1923",
+    "physical_file_owner": "IOIPSL restini/restput_p"
+  },
+  "file_format": "NETCDF4",
+  "dimensions": {
+    "x": {
+      "size": 1,
+      "unlimited": false
+    },
+    "y": {
+      "size": 1,
+      "unlimited": false
+    },
+    "z": {
+      "size": 1,
+      "unlimited": false
+    },
+    "time": {
+      "size": 1,
+      "unlimited": false
+    },
+    "z_a": {
+      "size": 14,
+      "unlimited": false
+    },
+    "l_a": {
+      "size": 4,
+      "unlimited": false
+    },
+    "l_b": {
+      "size": 20,
+      "unlimited": false
+    },
+    "z_b": {
+      "size": 11,
+      "unlimited": false
+    },
+    "l_c": {
+      "size": 6,
+      "unlimited": false
+    },
+    "m_a": {
+      "size": 11,
+      "unlimited": false
+    },
+    "z_c": {
+      "size": 6,
+      "unlimited": false
+    },
+    "z_d": {
+      "size": 3,
+      "unlimited": false
+    },
+    "z_e": {
+      "size": 2,
+      "unlimited": false
+    },
+    "z_f": {
+      "size": 32,
+      "unlimited": false
+    },
+    "l_d": {
+      "size": 14,
+      "unlimited": false
+    },
+    "z_g": {
+      "size": 31,
+      "unlimited": false
+    }
+  },
+  "global_attributes": {
+    "Conventions": "CF-1.1",
+    "file_name": "sechiba_restart.nc",
+    "TimeStamp": "2025-SEP-20 11:51:17 GMT+0800"
+  },
+  "physical_variables": [
+    "nav_lon",
+    "nav_lat",
+    "nav_lev",
+    "time",
+    "time_steps"
+  ],
+  "single_landpoint_scatter": {
+    "index_g": [
+      1
+    ],
+    "grid_shape": [
+      1,
+      1
+    ],
+    "fortran_provenance": {
+      "file": "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90",
+      "subroutine": "sechiba_finalize and component finalizers",
+      "lines": "1800-1923 restput_p scatter calls"
+    }
+  },
+  "variables": {
+    "nav_lon": {
+      "dtype": "float32",
+      "dimensions": [
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "degrees_east",
+        "valid_min": -180.0,
+        "valid_max": 180.0,
+        "long_name": "Longitude"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "nav_lat": {
+      "dtype": "float32",
+      "dimensions": [
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "degrees_north",
+        "valid_min": -90.0,
+        "valid_max": 90.0,
+        "long_name": "Latitude"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "nav_lev": {
+      "dtype": "float32",
+      "dimensions": [
+        "z"
+      ],
+      "attributes": {
+        "units": "model_levels",
+        "valid_min": 0.0,
+        "valid_max": 0.0,
+        "long_name": "Model levels"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "time": {
+      "dtype": "float32",
+      "dimensions": [
+        "time"
+      ],
+      "attributes": {
+        "units": "seconds since 1961-01-01 00:00:00",
+        "calendar": "noleap",
+        "title": "Time",
+        "long_name": "Time axis",
+        "time_origin": " 1961-JAN-01 00:00:00"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "time_steps": {
+      "dtype": "int32",
+      "dimensions": [
+        "time"
+      ],
+      "attributes": {
+        "units": "timesteps since 1961-01-01 00:00:00",
+        "title": "Time steps",
+        "tstep_sec": 1800.0,
+        "long_name": "Time step axis",
+        "time_origin": " 1961-JAN-01 00:00:00"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "veget": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Vegetation fraction",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "veget_max": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Maximum vegetation fraction",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "frac_nobio": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Special soil type fraction",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "reinf_slope": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Slope coef for reinfiltration",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "njsc": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Index of soil type",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "clay_frac": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Fraction of clay in each mesh",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "sand_frac": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Fraction of sand in each mesh",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "lai": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Leaf area index",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "height": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "m",
+        "long_name": "Height of vegetation",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "frac_age": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_a",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Fraction of leaves in leaf age class",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "peatPET_last": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "mm/year",
+        "long_name": "peatPET_lastyear",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "precipitation_last": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "mm",
+        "long_name": "precipitation_lastsummer",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "precipitation_this": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "mm",
+        "long_name": "precipitation_thissummer",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "peatPET_this": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "mm/year",
+        "long_name": "peatPET_thisyear",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "growth_day": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Days with monthly mean air T greater than 0",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "GSL": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "growing season length",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "summerp_longterm": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "mm/year",
+        "long_name": "summerp_long",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "summerpet_longterm": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "mm/year",
+        "long_name": "summerpet_long",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "peatC": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "kg/m2",
+        "long_name": "peatC",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "peatC_ok": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "peatC_ok",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "bulk_dens": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "kg m-3",
+        "long_name": "soil bulk density in each mesh",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "soil_ph": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "pH units",
+        "long_name": "soil pH in each mesh",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "poor_soils": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "proportion of poor soils",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "cdrag_pft": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "rstruct": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "s/m",
+        "long_name": "Structural resistance",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "leaf_ci": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_b",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "ppm",
+        "long_name": "Leaf CO2",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "temp_sol": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "K",
+        "long_name": "Surface temperature",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "temp_sol_pft": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "qsurf": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "g/g",
+        "long_name": "near surface specific humidity",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "evapot": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "mm day^{-1}",
+        "long_name": "Soil Potential Evaporation",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "evapot_corr": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "mm day^{-1}",
+        "long_name": "Corrected Soil Potential Evaporation",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "tsolrad": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "K",
+        "long_name": "Radiative surface temperature",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "evapora": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "Kg/m^2/dt",
+        "long_name": "Evaporation",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fluxlat": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "W/m^2",
+        "long_name": "Latent heat flux",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fluxsens": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "W/m^2",
+        "long_name": "Sensible heat flux",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "tempsolpot": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "K",
+        "long_name": "Potential surface temperature",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "qsolpot": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "kg/m^2",
+        "long_name": "Potential saturated surface humidity",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "moistc": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_c",
+        "z_b",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "moistcl": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_c",
+        "z_b",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "us": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "m_a",
+        "l_c",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "us",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "free_drain_coef": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_c",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Coefficient for free drainage at bottom of soil",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "zwt_force": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_c",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "m",
+        "long_name": "Prescribed water table depth",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "water2infilt": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_c",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Remaining water to be infiltrated on top of the soil",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "ae_ns": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_c",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "kg/m^2",
+        "long_name": "Bare soil evap on each soil type",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "snow": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "kg/m^2",
+        "long_name": "Snow mass",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "snow_age": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "d",
+        "long_name": "Snow age",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "snow_nobio": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "kg/m^2",
+        "long_name": "Snow on other surface types",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "snow_nobio_age": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "d",
+        "long_name": "Snow age on other surface types",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "qsintveg": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "kg/m^2",
+        "long_name": "Intercepted moisture",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fwet_out": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "fwet pr autres routines",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "run2peat": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "mm/d",
+        "long_name": "runoff from soiltile1-3",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "wt_ab": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "mm",
+        "long_name": "water above surface",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "wtp": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "mm",
+        "long_name": "mean water table position per soiltile",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "wt_ab_tide": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "mm",
+        "long_name": "water above surface tide",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "run2man": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "mm/d",
+        "long_name": "runoff from soiltile1-3 to mangroves",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fwet_new": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "fwet calculated using new method",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "liqwt_ratio": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Liquid water for peat veg growth",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "evap_bare_lim_ns": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_c",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "?",
+        "long_name": "?",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "resdist": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_c",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "soiltile values from previous time-step",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "vegtot_old": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "vegtot from previous time-step",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "drysoil_frac": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "",
+        "long_name": "Function of litter wetness",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "vegstress": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Vegetation growth moisture stress",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "humrel": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "",
+        "long_name": "Relative humidity",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "evap_bare_lim": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "",
+        "long_name": "Limitation factor for bare soil evaporation",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "tot_watveg_beg": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "?",
+        "long_name": "?",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "tot_watsoil_beg": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "?",
+        "long_name": "?",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "snow_beg": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "?",
+        "long_name": "?",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "snowrho": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_d",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "snowtemp": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_d",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "snowdz": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_d",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "snowheat": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_d",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "snowgrain": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_d",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "soilalbedo_bg": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_e",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Background soil albedo for visible and near-infrared range",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "z0m": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Roughness for momentum",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "z0h": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Roughness for heat",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "roughheight": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Roughness height",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "roughheight_pft": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "ptn": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_f",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "K",
+        "long_name": "Soil Temperature profile",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "refSOC": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_f",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "shum_ngrnd_prmlng": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_f",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "Long-term soil humidity",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "shum_ngrnd_perma": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_f",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "-",
+        "long_name": "soil humidity",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "e_soil_lat": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "gtemp": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "soilcap": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "J m-2 K-1",
+        "long_name": "Apparent surface heat capacity",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "soilcap_pft": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "soilflx": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "W m-2",
+        "long_name": "Apparent soil heat flux",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "soilflx_pft": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "cgrnd": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_g",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "J m-2 K-1",
+        "long_name": "Integration coefficient for the numerical scheme",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "dgrnd": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_g",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "",
+        "long_name": "Integration coefficient for the numerical scheme",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "cgrnd_snow": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_d",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "",
+        "long_name": "Integration coefficient for the numerical scheme",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "dgrnd_snow": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_d",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "",
+        "long_name": "Integration coefficient for the numerical scheme",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "lambda_snow": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "",
+        "long_name": "Coefficient of the linear extrapolation of surface temperature",
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "veget_year": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    }
+  }
+}

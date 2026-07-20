@@ -1,0 +1,213 @@
+schema_version: 1
+allowed_kinds:
+- point_trace_anchor
+- integration_reference
+- source_formula_only
+- jax_regression_only
+- fortran_micro_oracle
+- production_verified
+entries:
+  driver.active.forcing_landpoint_interpolation:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/driver_forcing_owner.json
+  driver.active.salinity_bbox:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/driver_static_bbox.json
+  driver.active.tide_bbox:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/driver_static_bbox.json
+  slowproc.active.daily_surface_writeback:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/lifecycle/comparison.json
+  routing.active.paper_single_landpoint_zero_branch:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/driver_routing_zero.json
+  restart.active.day_and_year_handoff:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/lifecycle/comparison.json
+  modelout.active.paper_history_formula:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/lifecycle/comparison.json
+  sechiba.active.module_order:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/lifecycle/comparison.json
+  diffuco.active.co2_fvcb:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/surface_diffuco_co2_fvcb.json
+  diffuco.active.mangrove_controls:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/surface_diffuco_mangrove_controls.json
+  diffuco.active.aerodynamic_boundary:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/diffuco_surface_exchange.json
+  diffuco.conditional.snow_sublimation:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/diffuco_surface_exchange.json
+  diffuco.conditional.canopy_interception:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/diffuco_surface_exchange.json
+  diffuco.active.cwrr_bare_soil:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/diffuco_surface_exchange.json
+  diffuco.conditional.dew_freezing_combination:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/diffuco_surface_exchange.json
+  diffuco.inactive.single_point_flood_beta:
+    kind: source_formula_only
+    scope: paper nbp_glo=1 source zero arm
+  enerbil.active.surface_energy:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/surface_enerbil_main.json
+  enerbil.conditional.potential_temperature:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/surface_enerbil_potential_temperature.json
+  hydrol.active.cwrr_soil_solve:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+  hydrol.conditional.peat_tide_routing:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+  hydrol.conditional.alt_bare_residual:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+  hydrol.active.dynamic_root_water_stress:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+  hydrol.conditional.canopy_interception:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+  hydrol.active.freeze_hydraulics:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+  hydrol.conditional.infiltration_and_excess_routing:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+  hydrol.conditional.explicit_snow_nonzero:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+  hydrol.conditional.water_table_forcing:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+  hydrol.conditional.peat_hydraulic_coefficients:
+    kind: jax_regression_only
+    scope: synthetic peat path invariants
+  thermosoil.active.cwrr_recurrence:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+  thermosoil.active.refsoc_freeze_properties:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+  thermosoil.conditional.explicit_snow_thermal_profile:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/hydrol_thermosoil/comparison.json
+  condveg.active.dynamic_roughness:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/surface_condveg_processes.json
+  condveg.active.emissivity:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/surface_condveg_processes.json
+  condveg.active.snow_fraction:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/surface_condveg_processes.json
+  condveg.active.background_albedo:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production_evidence/lane_a/surface_condveg_processes.json
+  stomate.inactive.ordinary_cover_dgvm_false:
+    kind: source_formula_only
+    scope: paper-static inactive DGVM classification
+  stomate.inactive.harvest_agri_for_peat:
+    kind: source_formula_only
+    scope: paper-static inactive harvest classification
+  stomate.active.daily_accumulation:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json
+  stomate.active.prescribe_restart_gate:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json
+  stomate.active.maintenance_respiration:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json
+  stomate.active.season_memory:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json
+  stomate.active.phenology:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json
+  stomate.active.allocation:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json
+  stomate.active.constraints:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json
+  stomate.active.npp_growth:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json
+  stomate.active.gap_mortality:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json
+  stomate.active.final_lai_vmax:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json
+  stomate.active.turnover:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json
+  stomate.active.ok_leak_litter:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json
+  stomate.active.ok_leak_soilcarbon:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json
+  stomate.active.tf_doc:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json
+  stomate.active.ok_leak_firstcall_active_layer:
+    kind: production_verified
+    scope: executed production-path A/B against the branch-complete Fortran Oracle
+    evidence: outputs/reference_mode/production/stomate/comparison.json

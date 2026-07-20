@@ -1,0 +1,216 @@
+schema_version: 1
+
+# This ledger records implementation ownership, not merely PFT14 reachability.
+# A partial owner is deliberately kept open when it implements only the paper
+# input format, one grid family, or one static configuration arm.
+missing_generic: &missing_generic
+  status: missing
+  jax_owner: null
+  gap: No top-level JAX symbol implements the complete Fortran procedure and all PFT14-reachable input, mask, and state-writeback arms.
+  state_contract: []
+  validation: []
+
+entries:
+  - id: driver.dim2_driver.driver
+    fortran_file: fortran_source/ORCHIDEE/src_driver/dim2_driver.f90
+    fortran_subroutine: driver
+    fortran_lines: 1-1464
+    status: partial
+    jax_owner: jax_orchidee.driver.dim2.run_dim2_driver
+    gap: The fixed-switch scientific loop, arbitrary independent-landpoint arrays, forcing cadence split, first-step initialization and driver state packet are owned. IOIPSL/NetCDF serialization, weather generation, relaxation, Watchout and distributed-domain infrastructure remain explicit external or rejected boundaries.
+    state_contract: [jax_orchidee.driver.dim2.Dim2DriverResult, docs/source_audits/restart_state_lifecycle.yaml]
+    validation: [tests/unit/test_dim2_driver.py, tests/parity/test_driver_1961_orchestration.py]
+
+  - id: driver.dim2_driver.fixed_scientific_transition.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_driver/dim2_driver.f90
+    fortran_subroutine: driver
+    fortran_lines: 285-305,379-389,425-430,470-490,495-558,722-787,802-810,817-820,835-837,914-927,974-1021,1051-1058,1108-1180,1293-1309,1341-1346,1372-1372,1392-1409,1415-1429
+    status: implemented
+    jax_owner: jax_orchidee.driver.dim2.run_dim2_driver
+    gap: null
+    state_contract: [jax_orchidee.driver.dim2.Dim2DriverResult]
+    validation: [tests/unit/test_dim2_driver.py]
+
+  - id: driver.dim2_driver.forcing_controls.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_driver/dim2_driver.f90
+    fortran_subroutine: driver
+    fortran_lines: 598-696
+    status: implemented
+    jax_owner: jax_orchidee.driver.dim2.resolve_dim2_forcing_controls
+    gap: null
+    state_contract: [jax_orchidee.driver.dim2.Dim2ForcingControls]
+    validation: [tests/unit/test_dim2_driver.py]
+
+  - id: global.haversine.reglatlontoploy
+    fortran_file: fortran_source/ORCHIDEE/src_global/haversine.f90
+    fortran_subroutine: haversine_reglatlontoploy
+    fortran_lines: 72-250
+    status: partial
+    jax_owner: jax_orchidee.driver.static.regular_lonlat_grid_geometry
+    gap: Regular lon-lat cell polygons, areas, and resolution are implemented, but all cyclic-boundary, pole, degenerate-grid, and orientation arms are not proven complete.
+    state_contract: [jax_orchidee.driver.domain.DomainGrid]
+    validation: [tests/unit/test_driver_static_helpers.py]
+  - {<<: *missing_generic, id: global.haversine.regxytoploy, fortran_file: fortran_source/ORCHIDEE/src_global/haversine.f90, fortran_subroutine: haversine_regxytoploy, fortran_lines: 263-382}
+  - id: global.haversine.singlepointploy
+    fortran_file: fortran_source/ORCHIDEE/src_global/haversine.f90
+    fortran_subroutine: haversine_singlepointploy
+    fortran_lines: 394-488
+    status: partial
+    jax_owner: jax_orchidee.driver.static.paper_single_point_grid_geometry
+    gap: Paper single-point polygon geometry is implemented; arbitrary point resolution and all fallback/error arms are not established.
+    state_contract: [jax_orchidee.driver.domain.DomainGrid]
+    validation: [tests/unit/test_driver_static_helpers.py]
+  - {<<: *missing_generic, id: global.haversine.polyseglen, fortran_file: fortran_source/ORCHIDEE/src_global/haversine.f90, fortran_subroutine: haversine_polyseglen, fortran_lines: 605-655}
+  - {<<: *missing_generic, id: global.haversine.laloseglen, fortran_file: fortran_source/ORCHIDEE/src_global/haversine.f90, fortran_subroutine: haversine_laloseglen, fortran_lines: 667-736}
+  - {<<: *missing_generic, id: global.haversine.clockwise, fortran_file: fortran_source/ORCHIDEE/src_global/haversine.f90, fortran_subroutine: haversine_clockwise, fortran_lines: 749-798}
+  - id: global.haversine.laloarea
+    fortran_file: fortran_source/ORCHIDEE/src_global/haversine.f90
+    fortran_subroutine: haversine_laloarea
+    fortran_lines: 863-888
+    status: partial
+    jax_owner: jax_orchidee.driver.static.haversine_radial_distance
+    gap: Great-circle distance used by the paper geometry is implemented, but the exact general polygon area procedure and every degeneracy/orientation arm are not owned.
+    state_contract: [jax_orchidee.driver.static.haversine_radial_distance]
+    validation: [tests/unit/test_driver_static_helpers.py]
+
+
+  - {id: global.interpweight.calc_resolution_in, fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90, fortran_subroutine: interpweight_calc_resolution_in, fortran_lines: 2688-2741, status: implemented, jax_owner: jax_orchidee.driver.interpolation.interpweight_calc_resolution_in, gap: null, state_contract: [jax_orchidee.driver.interpolation.INTERPWEIGHT_INPUT_PROVENANCE], validation: [tests/unit/test_driver_interpolation.py]}
+  - {id: global.interpweight.modifying_input1d, fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90, fortran_subroutine: interpweight_modifying_input1d, fortran_lines: 2759-2779, status: implemented, jax_owner: jax_orchidee.driver.interpolation.interpweight_modifying_input1d, gap: null, state_contract: [jax_orchidee.driver.interpolation.INTERPWEIGHT_INPUT_PROVENANCE], validation: [tests/unit/test_driver_interpolation.py]}
+  - {id: global.interpweight.modifying_input2d, fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90, fortran_subroutine: interpweight_modifying_input2d, fortran_lines: 2797-2817, status: implemented, jax_owner: jax_orchidee.driver.interpolation.interpweight_modifying_input2d, gap: null, state_contract: [jax_orchidee.driver.interpolation.INTERPWEIGHT_INPUT_PROVENANCE], validation: [tests/unit/test_driver_interpolation.py]}
+  - {id: global.interpweight.modifying_input3d, fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90, fortran_subroutine: interpweight_modifying_input3d, fortran_lines: 2835-2855, status: implemented, jax_owner: jax_orchidee.driver.interpolation.interpweight_modifying_input3d, gap: null, state_contract: [jax_orchidee.driver.interpolation.INTERPWEIGHT_INPUT_PROVENANCE], validation: [tests/unit/test_driver_interpolation.py]}
+  - {id: global.interpweight.modifying_input4d, fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90, fortran_subroutine: interpweight_modifying_input4d, fortran_lines: 2873-2893, status: implemented, jax_owner: jax_orchidee.driver.interpolation.interpweight_modifying_input4d, gap: null, state_contract: [jax_orchidee.driver.interpolation.INTERPWEIGHT_INPUT_PROVENANCE], validation: [tests/unit/test_driver_interpolation.py]}
+  - {id: global.interpweight.masking_input1d, fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90, fortran_subroutine: interpweight_masking_input1d, fortran_lines: 2911-2961, status: implemented, jax_owner: jax_orchidee.driver.interpolation.interpweight_masking_input1d, gap: null, state_contract: [jax_orchidee.driver.interpolation.INTERPWEIGHT_INPUT_PROVENANCE], validation: [tests/unit/test_driver_interpolation.py]}
+  - {id: global.interpweight.masking_input2d, fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90, fortran_subroutine: interpweight_masking_input2d, fortran_lines: 2979-3048, status: implemented, jax_owner: jax_orchidee.driver.interpolation.interpweight_masking_input2d, gap: null, state_contract: [jax_orchidee.driver.interpolation.INTERPWEIGHT_INPUT_PROVENANCE], validation: [tests/unit/test_driver_interpolation.py]}
+  - {id: global.interpweight.masking_input3d, fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90, fortran_subroutine: interpweight_masking_input3d, fortran_lines: 3066-3132, status: implemented, jax_owner: jax_orchidee.driver.interpolation.interpweight_masking_input3d, gap: null, state_contract: [jax_orchidee.driver.interpolation.INTERPWEIGHT_INPUT_PROVENANCE], validation: [tests/unit/test_driver_interpolation.py]}
+  - {id: global.interpweight.masking_input4d, fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90, fortran_subroutine: interpweight_masking_input4d, fortran_lines: 3150-3221, status: implemented, jax_owner: jax_orchidee.driver.interpolation.interpweight_masking_input4d, gap: null, state_contract: [jax_orchidee.driver.interpolation.INTERPWEIGHT_INPUT_PROVENANCE], validation: [tests/unit/test_driver_interpolation.py]}
+  - {id: global.interpweight.provide_fractions1d, fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90, fortran_subroutine: interpweight_provide_fractions1d, fortran_lines: 3239-3346, status: implemented, jax_owner: jax_orchidee.driver.interpolation.interpweight_provide_fractions1d, gap: null, state_contract: [jax_orchidee.driver.interpolation.InterpweightFractionsResult], validation: [tests/unit/test_driver_interpolation.py]}
+  - {id: global.interpweight.provide_fractions2d, fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90, fortran_subroutine: interpweight_provide_fractions2d, fortran_lines: 3364-3473, status: implemented, jax_owner: jax_orchidee.driver.interpolation.interpweight_provide_fractions2d, gap: null, state_contract: [jax_orchidee.driver.interpolation.InterpweightFractionsResult], validation: [tests/unit/test_driver_interpolation.py]}
+  - {id: global.interpweight.provide_fractions4d, fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90, fortran_subroutine: interpweight_provide_fractions4d, fortran_lines: 3661-3778, status: implemented, jax_owner: jax_orchidee.driver.interpolation.interpweight_provide_fractions4d, gap: null, state_contract: [jax_orchidee.driver.interpolation.InterpweightFractionsResult], validation: [tests/unit/test_driver_interpolation.py]}
+  - {id: global.interpweight.provide_interpolation2d, fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90, fortran_subroutine: interpweight_provide_interpolation2d, fortran_lines: 3796-3936, status: implemented, jax_owner: jax_orchidee.driver.interpolation.interpweight_provide_interpolation2d, gap: null, state_contract: [jax_orchidee.driver.interpolation.InterpweightFractionsResult], validation: [tests/unit/test_driver_interpolation.py]}
+  - {id: global.interpweight.valvecr, fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90, fortran_subroutine: interpweight_valvecr, fortran_lines: 4902-4960, status: implemented, jax_owner: jax_orchidee.driver.interpolation.interpweight_valvecr, gap: null, state_contract: [jax_orchidee.driver.interpolation.InterpweightValVecRResult], validation: [tests/unit/test_driver_interpolation.py]}
+
+  - {<<: *missing_generic, id: global.gauss_jordan.solve, fortran_file: fortran_source/ORCHIDEE/src_global/gauss_jordan_method.f90, fortran_subroutine: gauss_jordan_method, fortran_lines: 61-157}
+  - {<<: *missing_generic, id: global.gauss_jordan.error_l1_passive, fortran_file: fortran_source/ORCHIDEE/src_global/gauss_jordan_method.f90, fortran_subroutine: error_l1_passive, fortran_lines: 177-241}
+
+  - id: global.solar.time_zone
+    fortran_file: fortran_source/ORCHIDEE/src_global/solar.f90
+    fortran_subroutine: time_zone
+    fortran_lines: 201-268
+    status: implemented
+    jax_owner: jax_orchidee.driver.domain._fortran_time_zone
+    gap: null
+    state_contract: [jax_orchidee.driver.domain.ForcingStep]
+    validation: [tests/unit/test_driver_domain_multigrid.py]
+  - {<<: *missing_generic, id: global.module_llxy.latlon_to_ij, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: latlon_to_ij, fortran_lines: 593-649}
+  - {<<: *missing_generic, id: global.module_llxy.ij_to_latlon, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: ij_to_latlon, fortran_lines: 652-702}
+  - {<<: *missing_generic, id: global.module_llxy.ijll_ps, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: ijll_ps, fortran_lines: 786-845}
+  - {<<: *missing_generic, id: global.module_llxy.ijll_lc, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: ijll_lc, fortran_lines: 1183-1256}
+  - {<<: *missing_generic, id: global.module_llxy.llij_lc, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: llij_lc, fortran_lines: 1259-1313}
+  - {<<: *missing_generic, id: global.module_llxy.llij_merc, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: llij_merc, fortran_lines: 1343-1364}
+  - {<<: *missing_generic, id: global.module_llxy.ijll_merc, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: ijll_merc, fortran_lines: 1367-1385}
+  - {<<: *missing_generic, id: global.module_llxy.llij_cyl, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: llij_cyl, fortran_lines: 1459-1491}
+  - {<<: *missing_generic, id: global.module_llxy.ijll_cyl, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: ijll_cyl, fortran_lines: 1494-1525}
+  - {<<: *missing_generic, id: global.module_llxy.llij_cassini, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: llij_cassini, fortran_lines: 1558-1581}
+  - {<<: *missing_generic, id: global.module_llxy.ijll_cassini, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: ijll_cassini, fortran_lines: 1584-1607}
+  - {<<: *missing_generic, id: global.module_llxy.rotate_coords, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: rotate_coords, fortran_lines: 1615-1669}
+  - {<<: *missing_generic, id: global.module_llxy.llij_rotlatlon, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: llij_rotlatlon, fortran_lines: 1672-1840}
+  - {<<: *missing_generic, id: global.module_llxy.ijll_rotlatlon, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: ijll_rotlatlon, fortran_lines: 1843-1914}
+  - {<<: *missing_generic, id: global.module_llxy.llij_gauss, fortran_file: fortran_source/ORCHIDEE/src_global/module_llxy.f90, fortran_subroutine: llij_gauss, fortran_lines: 2146-2225}
+
+  - id: global.grid.grid_init
+    fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90
+    fortran_subroutine: grid_init
+    fortran_lines: 207-328
+    status: partial
+    jax_owner: jax_orchidee.driver.domain.read_domain_grid
+    gap: Serial regular-grid coordinates, land indices, area and resolution are built; MPI/global scatter, projected grids, and all restart/grid fallback arms remain open.
+    state_contract: [jax_orchidee.driver.domain.DomainGrid]
+    validation: [tests/unit/test_driver_domain_multigrid.py, tests/unit/test_driver_static_helpers.py]
+  - {<<: *missing_generic, id: global.grid.grid_set_glo, fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90, fortran_subroutine: grid_set_glo, fortran_lines: 344-353}
+  - {<<: *missing_generic, id: global.grid.grid_allocate_glo, fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90, fortran_subroutine: grid_allocate_glo, fortran_lines: 367-400}
+  - {<<: *missing_generic, id: global.grid.grid_stuff, fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90, fortran_subroutine: grid_stuff, fortran_lines: 416-470}
+  - {<<: *missing_generic, id: global.grid.grid_topolylist, fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90, fortran_subroutine: grid_topolylist, fortran_lines: 490-631}
+  - {<<: *missing_generic, id: global.grid.grid_scatter, fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90, fortran_subroutine: grid_scatter, fortran_lines: 663-718}
+  - {<<: *missing_generic, id: global.grid.grid_toij_scal, fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90, fortran_subroutine: grid_toij_scal, fortran_lines: 1047-1063}
+  - {<<: *missing_generic, id: global.grid.grid_toij_1d, fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90, fortran_subroutine: grid_toij_1d, fortran_lines: 1067-1089}
+  - {<<: *missing_generic, id: global.grid.grid_toij_2d, fortran_file: fortran_source/ORCHIDEE/src_global/grid.f90, fortran_subroutine: grid_toij_2d, fortran_lines: 1093-1118}
+  - id: parameters.constantes_soil.config_soil_parameters
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/constantes_soil.f90
+    fortran_subroutine: config_soil_parameters
+    fortran_lines: 54-485
+    status: partial
+    jax_owner: jax_orchidee.driver.init.read_run_scalars
+    gap: Paper soil scalar choices and selected tables are consumed downstream, but the complete soil-parameter configuration, texture schemes, validations, and all indexed overrides are not owned by one JAX initializer.
+    state_contract: [jax_orchidee.driver.init.RunScalars, jax_orchidee.sechiba.hydrol.HydrolRuntimeStaticTables]
+    validation: [tests/parity/test_driver_1961_init.py, tests/unit/test_hydrol_module_step.py]
+  - id: parameters.control.control_initialize
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/control.f90
+    fortran_subroutine: control_initialize
+    fortran_lines: 48-627
+    status: partial
+    jax_owner: jax_orchidee.driver.init.read_run_scalars
+    gap: Paper run.def values are parsed and selected controls validated; complete Fortran defaults, deprecations, aliases, all switch interactions, and fatal consistency checks are not reproduced.
+    state_contract: [jax_orchidee.driver.init.RunScalars, jax_orchidee.driver.run_def_materialization.materialize_run_def_values]
+    validation: [tests/parity/test_driver_1961_init.py, tests/unit/test_run_def_materialization.py]
+  - id: parameters.vertical_soil.vertical_soil_init
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/vertical_soil.f90
+    fortran_subroutine: vertical_soil_init
+    fortran_lines: 144-457
+    status: partial
+    jax_owner: jax_orchidee.driver.stomate_boundary.paper_case_cwrr_vertical_soil_grid_from_used_run_def
+    gap: The paper CWRR and deep-soil vertical grids are materialized, but alternate hydrology schemes, arbitrary layer counts, depth options, and all validation arms are not complete.
+    state_contract: [jax_orchidee.sechiba.hydrol.HydrolRuntimeStaticTables]
+    validation: [tests/unit/test_hydrol_module_step.py, tests/parity/test_driver_1961_sechiba_boundary.py]
+  - id: parameters.pft_parameters.pft_parameters_main
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: pft_parameters_main
+    fortran_lines: 81-209
+    status: partial
+    jax_owner: jax_orchidee.stomate.parameters.load_paper_case_stomate_parameter_bundle
+    gap: PFT14 parameter loading is composed for the paper workflow; complete multi-PFT initialization order, all validation, and inactive structural model families are not implemented.
+    state_contract: [jax_orchidee.stomate.parameters.PaperCaseStomateParameterBundle]
+    validation: [tests/parity/test_stomate_pft14_parameters_modelout.py]
+  - id: parameters.pft_parameters.pft_parameters_init
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: pft_parameters_init
+    fortran_lines: 235-976
+    status: partial
+    jax_owner: jax_orchidee.stomate.parameters.load_pft14_parameters
+    gap: Continuous PFT14 values used by the JAX processes are loaded, but all PFT arrays, inherited defaults, parameter aliases, and consistency/error branches are not complete.
+    state_contract: [jax_orchidee.stomate.parameters.PFT14Parameters]
+    validation: [tests/parity/test_stomate_pft14_parameters_modelout.py]
+  - id: parameters.pft_parameters.config_pft_parameters
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: config_pft_parameters
+    fortran_lines: 2858-3686
+    status: partial
+    jax_owner: jax_orchidee.stomate.parameters.load_paper_case_stomate_parameter_bundle
+    gap: Paper PFT14 indexed values are loaded from materialized run.def files; the generic nvm parameter surface, all inheritance/default rules, and all validation arms are not closed.
+    state_contract: [jax_orchidee.stomate.parameters.PaperCaseStomateParameterBundle]
+    validation: [tests/parity/test_stomate_pft14_parameters_modelout.py]
+  - id: parameters.pft_parameters.config_sechiba_pft_parameters
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: config_sechiba_pft_parameters
+    fortran_lines: 3707-4111
+    status: partial
+    jax_owner: jax_orchidee.driver.init.read_run_scalars
+    gap: Selected PFT14 SECHIBA vectors are parsed, but the complete per-PFT SECHIBA parameter family and all indexed/default validation arms are not represented.
+    state_contract: [jax_orchidee.driver.init.RunScalars]
+    validation: [tests/parity/test_driver_1961_init.py]
+  - id: parameters.pft_parameters.config_stomate_pft_parameters
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: config_stomate_pft_parameters
+    fortran_lines: 4132-4759
+    status: partial
+    jax_owner: jax_orchidee.stomate.parameters.load_paper_case_stomate_parameter_bundle
+    gap: PFT14 STOMATE vectors required by implemented processes are loaded; the complete indexed parameter family, inheritance/default behavior, and all consistency guards remain open.
+    state_contract: [jax_orchidee.stomate.parameters.PaperCaseStomateParameterBundle]
+    validation: [tests/parity/test_stomate_pft14_parameters_modelout.py]
+
+  - {<<: *missing_generic, id: parallel.mpi.init_orchidee_mpi, fortran_file: fortran_source/ORCHIDEE/src_parallel/mod_orchidee_mpi_data.F90, fortran_subroutine: init_orchidee_mpi, fortran_lines: 26-78}
+  - {<<: *missing_generic, id: parallel.xios.init, fortran_file: fortran_source/ORCHIDEE/src_parallel/xios_orchidee.f90, fortran_subroutine: xios_orchidee_init, fortran_lines: 149-511}
+  - {<<: *missing_generic, id: parallel.xios.send_field_r1d, fortran_file: fortran_source/ORCHIDEE/src_parallel/xios_orchidee.f90, fortran_subroutine: xios_orchidee_send_field_r1d, fortran_lines: 652-678}
+  - {<<: *missing_generic, id: parallel.xios.send_field_r2d, fortran_file: fortran_source/ORCHIDEE/src_parallel/xios_orchidee.f90, fortran_subroutine: xios_orchidee_send_field_r2d, fortran_lines: 691-717}
+  - {<<: *missing_generic, id: parallel.xios.send_field_r3d, fortran_file: fortran_source/ORCHIDEE/src_parallel/xios_orchidee.f90, fortran_subroutine: xios_orchidee_send_field_r3d, fortran_lines: 730-761}
+  - {<<: *missing_generic, id: parallel.xios.send_field_r4d, fortran_file: fortran_source/ORCHIDEE/src_parallel/xios_orchidee.f90, fortran_subroutine: xios_orchidee_send_field_r4d, fortran_lines: 773-800}
+  - {<<: *missing_generic, id: parallel.xios.send_field_r5d, fortran_file: fortran_source/ORCHIDEE/src_parallel/xios_orchidee.f90, fortran_subroutine: xios_orchidee_send_field_r5d, fortran_lines: 812-839}

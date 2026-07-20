@@ -1,0 +1,208 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module defprec
+
+module grid
+  implicit none
+  logical :: global=.false.
+end module grid
+
+module stage4_batch_d_thermal_reader_oracle
+  use defprec
+  use iso_c_binding, only: c_char, c_int, c_null_char
+  implicit none
+  integer, parameter :: NbNeighb=8
+  integer, parameter :: max_attempts=8
+  real(r_std), parameter :: zero=0._r_std, un=1._r_std, moins_un=-1._r_std
+  real(r_std), parameter :: pi=3.1415926535897932384626433832795_r_std
+  real(r_std), parameter :: R_Earth=6378000._r_std, mincos=0.0001_r_std
+  integer :: numout=6
+  logical :: check_grid=.false., is_root_prc=.true.
+  character(len=1024) :: oracle_netcdf_path=''
+  real(r_std), allocatable :: refSOC(:,:)
+  real(r_std), allocatable :: oracle_lon_lu(:), oracle_lat_lu(:)
+  real(r_std), allocatable :: oracle_mask_lu(:,:), oracle_refSOC_file(:,:,:)
+  real(r_std), allocatable :: oracle_lon_rel(:,:), oracle_lat_rel(:,:)
+  real(r_std), allocatable :: oracle_sub_area(:,:)
+  integer(i_std), allocatable :: oracle_mask(:,:), oracle_sub_index(:,:,:)
+  integer(i_std) :: oracle_nbvmax=0, oracle_attempt_count=0
+  integer(i_std) :: oracle_attempts(max_attempts)=0
+
+  interface getin_p
+    module procedure getin_p_char
+  end interface
+  interface bcast
+    module procedure bcast_i0, bcast_r1, bcast_r2, bcast_r3
+  end interface
+  interface flinget
+    module procedure flinget_r1, flinget_r2, flinget_r3
+  end interface
+  interface
+    integer(c_int) function orch_nc_open_info(path,iml,jml,lml,tml,fid) bind(C)
+      import c_char, c_int
+      character(kind=c_char), intent(in) :: path(*)
+      integer(c_int), intent(out) :: iml,jml,lml,tml,fid
+    end function
+    integer(c_int) function orch_nc_close(fid) bind(C)
+      import c_int
+      integer(c_int), value :: fid
+    end function
+    integer(c_int) function orch_nc_read_r1(fid,name,n1,output) bind(C)
+      import c_char, c_int
+      integer(c_int), value :: fid,n1
+      character(kind=c_char), intent(in) :: name(*)
+      real(8), intent(out) :: output(*)
+    end function
+    integer(c_int) function orch_nc_read_r2(fid,name,n1,n2,output) bind(C)
+      import c_char, c_int
+      integer(c_int), value :: fid,n1,n2
+      character(kind=c_char), intent(in) :: name(*)
+      real(8), intent(out) :: output(*)
+    end function
+    integer(c_int) function orch_nc_read_r3(fid,name,n1,n2,n3,output) bind(C)
+      import c_char, c_int
+      integer(c_int), value :: fid,n1,n2,n3
+      character(kind=c_char), intent(in) :: name(*)
+      real(8), intent(out) :: output(*)
+    end function
+  end interface
+contains
+  subroutine to_c_string(value, output)
+    character(len=*), intent(in) :: value
+    character(kind=c_char), allocatable, intent(out) :: output(:)
+    integer :: i,n
+    n=len_trim(value)
+    allocate(output(n+1))
+    do i=1,n
+      output(i)=value(i:i)
+    enddo
+    output(n+1)=c_null_char
+  end subroutine
+
+  subroutine getin_p_char(name,value)
+    character(len=*), intent(in) :: name
+    character(len=*), intent(inout) :: value
+    if (trim(name)=='SOIL_REFSOC_FILE') value=trim(oracle_netcdf_path)
+  end subroutine
+
+  subroutine flininfo(filename,iml,jml,lml,tml,fid)
+    character(len=*), intent(in) :: filename
+    integer(i_std), intent(out) :: iml,jml,lml,tml,fid
+    character(kind=c_char), allocatable :: path(:)
+    integer(c_int) :: status,ci,cj,cl,ct,cf
+    call to_c_string(filename,path)
+    status=orch_nc_open_info(path,ci,cj,cl,ct,cf)
+    if (status/=0) then
+      write(*,*) 'netcdf flininfo status=',status,' path=',trim(filename)
+      error stop 'netcdf flininfo failed'
+    endif
+    iml=ci; jml=cj; lml=cl; tml=ct; fid=cf
+  end subroutine
+
+  subroutine flinclo(fid)
+    integer(i_std), intent(in) :: fid
+    integer(c_int) :: status
+    status=orch_nc_close(int(fid,c_int))
+    if (status/=0) error stop 'netcdf flinclo failed'
+  end subroutine
+
+  subroutine flinget_r1(fid,name,n1,n2,n3,n4,first,count,output)
+    integer(i_std), intent(in) :: fid,n1,n2,n3,n4,first,count
+    character(len=*), intent(in) :: name
+    real(r_std), intent(out) :: output(n1)
+    character(kind=c_char), allocatable :: cname(:)
+    integer(c_int) :: status
+    call to_c_string(name,cname)
+    status=orch_nc_read_r1(int(fid,c_int),cname,int(n1,c_int),output)
+    if (status/=0) error stop 'netcdf rank-1 read failed'
+  end subroutine
+
+  subroutine flinget_r2(fid,name,n1,n2,n3,n4,first,count,output)
+    integer(i_std), intent(in) :: fid,n1,n2,n3,n4,first,count
+    character(len=*), intent(in) :: name
+    real(r_std), intent(out) :: output(n1,n2)
+    character(kind=c_char), allocatable :: cname(:)
+    integer(c_int) :: status
+    call to_c_string(name,cname)
+    status=orch_nc_read_r2(int(fid,c_int),cname,int(n1,c_int),int(n2,c_int),output)
+    if (status/=0) error stop 'netcdf rank-2 read failed'
+  end subroutine
+
+  subroutine flinget_r3(fid,name,n1,n2,n3,n4,first,count,output)
+    integer(i_std), intent(in) :: fid,n1,n2,n3,n4,first,count
+    character(len=*), intent(in) :: name
+    real(r_std), intent(out) :: output(n1,n2,n3)
+    character(kind=c_char), allocatable :: cname(:)
+    integer(c_int) :: status
+    call to_c_string(name,cname)
+    status=orch_nc_read_r3(int(fid,c_int),cname,int(n1,c_int),int(n2,c_int),int(n3,c_int),output)
+    if (status/=0) error stop 'netcdf rank-3 read failed'
+  end subroutine
+
+  subroutine bcast_i0(value)
+    integer(i_std), intent(inout) :: value
+  end subroutine
+  subroutine bcast_r1(value)
+    real(r_std), intent(inout) :: value(:)
+  end subroutine
+  subroutine bcast_r2(value)
+    real(r_std), intent(inout) :: value(:,:)
+  end subroutine
+  subroutine bcast_r3(value)
+    real(r_std), intent(inout) :: value(:,:,:)
+  end subroutine
+
+  subroutine aggregate_p(nbpt,lalo,neighbours,resolution,contfrac,iml,jml,lon_rel,lat_rel,mask,callsign,nbvmax,sub_index,sub_area,ok)
+    integer(i_std), intent(in) :: nbpt,neighbours(nbpt,NbNeighb),iml,jml,nbvmax
+    real(r_std), intent(in) :: lalo(nbpt,2),resolution(nbpt,2),contfrac(nbpt),lon_rel(iml,jml),lat_rel(iml,jml)
+    integer(i_std), intent(in) :: mask(iml,jml)
+    character(len=*), intent(in) :: callsign
+    integer(i_std), intent(out) :: sub_index(nbpt,nbvmax,2)
+    real(r_std), intent(out) :: sub_area(nbpt,nbvmax)
+    logical, intent(out) :: ok
+    oracle_attempt_count=oracle_attempt_count+1
+    if (oracle_attempt_count>max_attempts) error stop 'too many aggregate attempts'
+    oracle_attempts(oracle_attempt_count)=nbvmax
+    call aggregate_2d(nbpt,lalo,neighbours,resolution,contfrac,iml,jml,lon_rel,lat_rel,mask,callsign,nbvmax,sub_index,sub_area,ok)
+  end subroutine
+
+  subroutine ipslerr_p(level,routine,text1,text2,text3)
+    integer, intent(in) :: level
+    character(len=*), intent(in) :: routine,text1,text2,text3
+    write(*,*) trim(routine),trim(text1),trim(text2),trim(text3)
+    if (level>=3) error stop 'ipslerr_p'
+  end subroutine
+
+! <AGGREGATE_2D>
+! <READ_REFSOCFILE>
+end module stage4_batch_d_thermal_reader_oracle
+
+program stage4_batch_d_thermal_reader_driver
+  use defprec
+  use stage4_batch_d_thermal_reader_oracle
+  implicit none
+  integer(i_std), parameter :: nbpt=3,nlev=4
+  integer(i_std) :: neighbours(nbpt,NbNeighb),iu,fu,du
+  real(r_std) :: lalo(nbpt,2),resolution(nbpt,2),contfrac(nbpt)
+  character(len=1024) :: geometry_path,float_path,discrete_path
+  call get_command_argument(1,oracle_netcdf_path)
+  call get_command_argument(2,geometry_path)
+  call get_command_argument(3,float_path)
+  call get_command_argument(4,discrete_path)
+  open(newunit=iu,file=trim(geometry_path),access='stream',form='unformatted',status='old',action='read')
+  read(iu) lalo; read(iu) resolution; read(iu) neighbours; read(iu) contfrac
+  close(iu)
+  allocate(refSOC(nbpt,nlev))
+  call read_refSOCfile(nbpt,lalo,neighbours,resolution,contfrac)
+  open(newunit=fu,file=trim(float_path),access='stream',form='unformatted',status='replace',action='write')
+  write(fu) refSOC; write(fu) oracle_lon_lu; write(fu) oracle_lat_lu
+  write(fu) oracle_mask_lu; write(fu) oracle_refSOC_file
+  write(fu) oracle_lon_rel; write(fu) oracle_lat_rel; write(fu) oracle_sub_area
+  close(fu)
+  open(newunit=du,file=trim(discrete_path),access='stream',form='unformatted',status='replace',action='write')
+  write(du) oracle_mask; write(du) oracle_sub_index
+  write(du) oracle_nbvmax; write(du) oracle_attempt_count; write(du) oracle_attempts
+  close(du)
+end program stage4_batch_d_thermal_reader_driver

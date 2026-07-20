@@ -1,0 +1,57 @@
+program driver_slowproc_oracle
+  implicit none
+  integer,parameter::i_std=4,r_std=8,nvm=14,nnobio=2,nstm=3,nparts=1,nelements=1,nlitt=1,ndeep=1,ncarb=1,ndoc=1,npool=1
+  real,parameter::zero=0.,un=1.,min_vegfrac=1.e-6,min_sechiba=1.e-8,qsintcst=0.1
+  integer::printlev_loc=0,numout=6
+  logical::ok_dgvm=.false.
+  real::ext_coeff_vegetfrac(nvm)
+  integer::pref_soil_veg(nvm),unit
+  ext_coeff_vegetfrac=0.5; pref_soil_veg=1; pref_soil_veg(8:14)=2
+  open(newunit=unit,file=trim(command_argument()),status='replace',action='write')
+  call run_case(.true.,unit,'daily_')
+  call run_case(.false.,unit,'carry_')
+  close(unit)
+contains
+  subroutine run_case(LastTsDay,unit,prefix)
+    logical,intent(in)::LastTsDay; integer,intent(in)::unit; character(len=*),intent(in)::prefix
+    integer,parameter::kjpindex=2
+    integer::date=10,year_length=365,kjit=1,ji,jv,month=1,day=1,lcanop=1
+    real::dt_days=1.; logical::do_slow,ok_stomate=.true.
+    real::lai(2,nvm),frac_nobio(2,nnobio),totfrac_nobio(2),veget_max(2,nvm),veget(2,nvm),soiltile(2,nstm)
+    real::biomass(2,nvm,nparts,nelements),litter_above(2,nlitt,nvm,nelements)
+    real::litter_below(2,nlitt,nvm,ndeep,nelements),carbon_32l(2,ncarb,nvm,ndeep),DOC(2,nvm,ndeep,ndoc,npool,nelements)
+    real::qsintmax(2,nvm),frac_age(2,nvm,4),stempdiag(2,1),lalo(2,2),resolution(2,2),laimap(2,nvm,12)
+    real::deadleaf_cover(2),assim_param(2,nvm,1),height(2,nvm),temp_growth(2),tot_bare_soil(2)
+    logical::f_rot_sech(2)
+    lai=0.; lai(:,14)=[2.,1.]; frac_nobio=reshape([0.1,0.0,0.2,0.0],[2,2])
+    veget_max=0.; veget_max(:,1)=[0.2,0.3]; veget_max(:,14)=[0.7,0.5]
+    veget=7.; soiltile=7.; totfrac_nobio=7.; qsintmax=7.; biomass=0.; litter_above=0.; litter_below=0.; carbon_32l=0.; DOC=0.
+    frac_age=0.; stempdiag=0.; lalo=0.; resolution=0.; laimap=0.; deadleaf_cover=0.; assim_param=0.; height=0.; temp_growth=0.; f_rot_sech=.false.
+! <SLOWPROC_GATE_SPAN>
+! <SLOWPROC_DAILY_WRITEBACK_SPAN>
+    call emit2(unit,prefix//'frac_nobio',frac_nobio); call emit2(unit,prefix//'veget_max',veget_max)
+    call emit2(unit,prefix//'veget',veget); call emit2(unit,prefix//'soiltile',soiltile)
+    call emit2(unit,prefix//'qsintmax',qsintmax); call emit1(unit,prefix//'tot_bare_soil',tot_bare_soil)
+    call emit1(unit,prefix//'do_slow',merge([1.],[0.],do_slow))
+  end subroutine
+! <SLOWPROC_VEGET_PROCEDURE>
+  subroutine slowproc_lai(k,l,s,la,re,lai,m,d,map)
+    integer,intent(in)::k,l,m,d; real,intent(in)::s(:,:),la(:,:),re(:,:),map(:,:,:); real,intent(inout)::lai(:,:)
+    error stop 'inactive slowproc_lai stub reached'
+  end subroutine
+  subroutine slowproc_derivvar(k,v,l,q,d,a,h,t)
+    integer,intent(in)::k; real,intent(in)::v(:,:),l(:,:); real,intent(inout)::q(:,:),d(:),a(:,:,:),h(:,:),t(:)
+    error stop 'inactive slowproc_derivvar stub reached'
+  end subroutine
+  function command_argument() result(value)
+    character(len=1024)::value; call get_command_argument(1,value)
+  end function
+  subroutine emit1(unit,name,value)
+    integer,intent(in)::unit; character(len=*),intent(in)::name; real,intent(in)::value(:); integer::i
+    do i=1,size(value); write(unit,'(A,",",ES26.17E3)') trim(name),value(i); end do
+  end subroutine
+  subroutine emit2(unit,name,value)
+    integer,intent(in)::unit; character(len=*),intent(in)::name; real,intent(in)::value(:,:); integer::i,j
+    do j=1,size(value,2); do i=1,size(value,1); write(unit,'(A,",",ES26.17E3)') trim(name),value(i,j); end do; end do
+  end subroutine
+end program

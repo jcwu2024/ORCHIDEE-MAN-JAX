@@ -1,0 +1,373 @@
+schema_version: 2
+families:
+  - id: driver_routing_zero
+    certification_status: verified
+    runner: oracle_lane_driver_run:run_routing_oracle
+    ledger_entries: [routing.active.paper_single_landpoint_zero_branch]
+    input_asset: outputs/reference_mode/micro_oracles/driver_routing_zero/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/driver_routing_zero/point_comparisons.csv
+    output_contract: [riverflow, coastalflow, returnflow, reinfiltration, irrigation, sed_deposition, poc_deposition, flood_frac, stream_frac, streamfl_frac, flood_res, fastr, DOC_to_topsoil, DOC_to_subsoil, sed_deposition_d, poc_deposition_d]
+    procedures:
+      - id: driver_routing_zero.sechiba_main_no_routing
+        source_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+        procedure: sechiba_main
+        procedure_kind: subroutine
+        start_line: 829
+        end_line: 1786
+        expected_source_sha256: c902a886f7a1c0837dec3f6d11b3d93516792e5c4b95e6873bb92e6461864526
+        expected_span_sha256: 4f5125e26e0449f9ae328f508f6982a7d1644b31efdacf7e82658f4cae4f5b17
+        dependencies: {use_modules: [constantes], module_symbols: [zero, mille, one_day], called_procedures: []}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_driver_routing.f90.template, result_asset: outputs/reference_mode/micro_oracles/driver_routing_zero/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {comparison: exact}
+    branch_cases:
+      - {id: paper_single_landpoint, ledger_entry: routing.active.paper_single_landpoint_zero_branch, fortran_lines: 1227-1248, condition: river_routing=true and nbp_glo=1, expected_arm: ELSE no-routing assignments, input_case: arrays prefilled nonzero before the no-routing branch, control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/sechiba.f90:1227:if:false"]}
+      - {id: routing_enabled_daily_writeback, ledger_entry: routing.active.paper_single_landpoint_zero_branch, fortran_lines: 1252-1262, condition: river_routing=true after single-point no-routing assignments, expected_arm: true-arm DOC and deposition daily conversion, input_case: zeroed routing arrays from preceding branch, control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/sechiba.f90:1252:if:true"]}
+
+  - id: driver_modelout_history
+    certification_status: verified
+    runner: oracle_lane_driver_run:run_modelout_oracle
+    ledger_entries: [modelout.active.paper_history_formula]
+    input_asset: outputs/reference_mode/micro_oracles/driver_modelout_history/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/driver_modelout_history/point_comparisons.csv
+    output_contract: [NPP_STOMATE, GPP, LEAF_M, SAP_M_AB, SAP_M_BE, HEART_M_AB, HEART_M_BE, ROOT_M, AGR_SAP_ST_M, AGR_SAP_PN_M, AGR_HRT_ST_M, AGR_HRT_PN_M]
+    procedures:
+      - id: driver_modelout_history.stomate_lpj
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+        procedure: StomateLpj
+        procedure_kind: subroutine
+        start_line: 170
+        end_line: 2477
+        expected_source_sha256: b7acdf2e20378e159b2f523a322b8e418693b435241c068aa9c2f5f5b38fb0c2
+        expected_span_sha256: c997b6ac7caf2600a15d05d7c5756f529308d5559032795d90d34e931346f31c
+        dependencies: {use_modules: [xios_orchidee, stomate_data], module_symbols: [icarbon, biomass_pool_indices], called_procedures: [xios_orchidee_send_field]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_driver_modelout.f90.template, result_asset: outputs/reference_mode/micro_oracles/driver_modelout_history/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {comparison: exact}
+    branch_cases:
+      - {id: pft14_history_expression_capture, ledger_entry: modelout.active.paper_history_formula, fortran_lines: 1677-1699, condition: XIOS history sends enabled, expected_arm: named PFT pool slices and daily GPP/NPP are sent, input_case: unique sentinel value per biomass pool and landpoint, control_flow_arm_ids: []}
+
+  - id: driver_slowproc_daily
+    certification_status: verified
+    runner: oracle_lane_driver_run:run_slowproc_oracle
+    ledger_entries: [slowproc.active.daily_surface_writeback]
+    input_asset: outputs/reference_mode/micro_oracles/driver_slowproc_daily/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/driver_slowproc_daily/point_comparisons.csv
+    output_contract: [daily_frac_nobio, daily_veget_max, daily_veget, daily_soiltile, daily_qsintmax, daily_tot_bare_soil, daily_do_slow, carry_frac_nobio, carry_veget_max, carry_veget, carry_soiltile, carry_qsintmax, carry_tot_bare_soil, carry_do_slow]
+    procedures:
+      - id: driver_slowproc_daily.gate
+        source_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+        procedure: slowproc_main
+        procedure_kind: subroutine
+        start_line: 343
+        end_line: 1140
+        expected_source_sha256: 1589b5a34d05c16f8508280d0e954f266fab0c8b1d5acb0bc7655f7680709f30
+        expected_span_sha256: 5c5a5fb793b4483f35c1eddd2436fb6e43cbd9cac41f12a9fdb1aaa5a1cf6ec9
+        dependencies: {use_modules: [constantes, pft_parameters], module_symbols: [nvm, qsintcst], called_procedures: []}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_driver_slowproc.f90.template, result_asset: outputs/reference_mode/micro_oracles/driver_slowproc_daily/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - id: driver_slowproc_daily.veget
+        source_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+        procedure: slowproc_veget
+        procedure_kind: subroutine
+        start_line: 2820
+        end_line: 2925
+        expected_source_sha256: 1589b5a34d05c16f8508280d0e954f266fab0c8b1d5acb0bc7655f7680709f30
+        expected_span_sha256: 9faebf6849d8f014b176439e3b9099ca49a46eda9b98c186209d53494b31edf9
+        dependencies: {use_modules: [constantes, pft_parameters], module_symbols: [nvm, qsintcst], called_procedures: []}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_driver_slowproc.f90.template, result_asset: outputs/reference_mode/micro_oracles/driver_slowproc_daily/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - {id: last_timestep_daily_writeback, ledger_entry: slowproc.active.daily_surface_writeback, fortran_lines: "654-663,1078-1129,2820-2925", condition: "LastTsDay=true, ok_stomate=true and printlev_loc=0", expected_arm: daily gate, fixed STOMATE path, vegetation/derived-state writeback and checkveget gate, input_case: daily two-point PFT14 state, control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:654:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:660:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:1078:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:1081:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:1107:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:1127:if:true"]}
+      - {id: nondaily_carry, ledger_entry: slowproc.active.daily_surface_writeback, fortran_lines: "654-663,1078,1127", condition: "LastTsDay=false", expected_arm: do_slow false, preserve daily surface arrays and skip checkveget, input_case: carry sentinel state, control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:654:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:1078:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:1127:if:false"]}
+
+  - id: driver_static_bbox
+    certification_status: verified
+    runner: oracle_lane_driver_run:run_bbox_oracle
+    ledger_entries: [driver.active.salinity_bbox, driver.active.tide_bbox]
+    input_asset: outputs/reference_mode/micro_oracles/driver_static_bbox/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/driver_static_bbox/point_comparisons.csv
+    output_contract: [salinity_preprocess, salinity_preprocess_mask, tide_preprocess, tide_preprocess_mask, salinity, salinity_count, salinity_wrap, salinity_wrap_count, tide, tide_count, tide_wrap, tide_wrap_count]
+    procedures:
+      - id: driver_static_bbox.annual_aggregation
+        source_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+        procedure: slowproc_read_annual
+        procedure_kind: subroutine
+        start_line: 6300
+        end_line: 6570
+        expected_source_sha256: 1589b5a34d05c16f8508280d0e954f266fab0c8b1d5acb0bc7655f7680709f30
+        expected_span_sha256: 6400f381a9dc221d16146b2cde9b0789a114f66630aaf40415e7ad677a6dd453
+        dependencies: {use_modules: [constantes], module_symbols: [pi], called_procedures: [slowproc_nearest]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_driver_bbox.f90.template, result_asset: outputs/reference_mode/micro_oracles/driver_static_bbox/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - id: driver_static_bbox.time_aggregation
+        source_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+        procedure: slowproc_read_data
+        procedure_kind: subroutine
+        start_line: 6029
+        end_line: 6297
+        expected_source_sha256: 1589b5a34d05c16f8508280d0e954f266fab0c8b1d5acb0bc7655f7680709f30
+        expected_span_sha256: 8dbebbd93b2640d961fe402dca3b5f358c3848cb7e1798c67ae300be01a47b4e
+        dependencies: {use_modules: [constantes], module_symbols: [pi], called_procedures: [slowproc_nearest]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_driver_bbox.f90.template, result_asset: outputs/reference_mode/micro_oracles/driver_static_bbox/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - id: driver_static_bbox.nearest
+        source_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+        procedure: slowproc_nearest
+        procedure_kind: subroutine
+        start_line: 4209
+        end_line: 4263
+        expected_source_sha256: 1589b5a34d05c16f8508280d0e954f266fab0c8b1d5acb0bc7655f7680709f30
+        expected_span_sha256: acde3ac7d2487b4e24f1c651b15dfdbffbe515350c05198aec527f06d78dc9ad
+        dependencies: {use_modules: [constantes], module_symbols: [pi], called_procedures: [ipslerr_p]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_driver_bbox.f90.template, result_asset: outputs/reference_mode/micro_oracles/driver_static_bbox/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - {id: salinity_preprocess, ledger_entry: driver.active.salinity_bbox, fortran_lines: 6382-6396, condition: "all finite source cells exceed sentinel and values include negative/nonnegative", expected_arm: defined valid mask plus negative clipping and nonnegative retention, input_case: "salinity preprocess points 1-3", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6388:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6394:where:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6394:where:false"]}
+      - {id: salinity_base_and_wrap_search, ledger_entry: driver.active.salinity_bbox, fortran_lines: 6433-6552, condition: "base [0,1,10] and wrap/search [-2,10,5] source longitudes with all masks valid", expected_arm: both longitude wraps, inside/outside domain, fast/search, candidate directions/bounds/matches, mean and nearest fallback, input_case: "salinity base and wrap calls", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6433:where:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6433:where:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6437:where:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6437:where:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6461:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6461:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6471:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6471:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6478:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6498:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6498:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6504:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6504:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6505:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6505:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6510:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6535:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6535:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6552:if:true"]}
+      - {id: tide_preprocess, ledger_entry: driver.active.tide_bbox, fortran_lines: 6109-6118, condition: "all finite two-slot source cells exceed sentinel", expected_arm: defined valid masks and complete time-axis writeback, input_case: "tide preprocess points 1-3", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6115:if:true"]}
+      - {id: tide_base_and_wrap_search, ledger_entry: driver.active.tide_bbox, fortran_lines: 6154-6279, condition: "base [0,1,10] and wrap/search [-2,10,5] source longitudes with all masks valid", expected_arm: both wraps, domain/fast/search/candidate arms, two-slot mean and nearest fallback, input_case: "tide base and wrap calls", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6154:where:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6154:where:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6158:where:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6158:where:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6182:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6182:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6192:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6192:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6199:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6221:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6221:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6227:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6227:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6228:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6228:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6233:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6262:if:true", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6262:if:false", "fortran_source/ORCHIDEE/src_sechiba/slowproc.f90:6279:if:true"]}
+
+  - id: driver_sechiba_module_order
+    certification_status: verified
+    evidence_kind: fortran_micro_oracle
+    runner: oracle_lane_driver_run:run_module_order_oracle
+    ledger_entries: [sechiba.active.module_order]
+    input_asset: outputs/reference_mode/micro_oracles/driver_sechiba_module_order/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/driver_sechiba_module_order/point_comparisons.csv
+    output_contract: [module_order]
+    procedures:
+      - id: driver_sechiba_module_order.sechiba_main
+        source_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+        procedure: sechiba_main
+        procedure_kind: subroutine
+        start_line: 829
+        end_line: 1786
+        expected_source_sha256: c902a886f7a1c0837dec3f6d11b3d93516792e5c4b95e6873bb92e6461864526
+        expected_span_sha256: 4f5125e26e0449f9ae328f508f6982a7d1644b31efdacf7e82658f4cae4f5b17
+        dependencies: {use_modules: [diffuco, enerbil, hydrol, condveg, thermosoil, slowproc], module_symbols: [hydrol_cwrr, ok_explicitsnow, dynpeat_PWT], called_procedures: [diffuco_main, enerbil_main, hydrol_main, condveg_main, thermosoil_main, slowproc_main]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_driver_production.py, result_asset: outputs/reference_mode/micro_oracles/driver_sechiba_module_order/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {comparison: exact}
+    branch_cases:
+      - id: active_pft14_module_order_owner
+        ledger_entry: sechiba.active.module_order
+        fortran_lines: 997-1216
+        condition: hydrol_cwrr=true, ok_explicitsnow=true, dynpeat_PWT=false with call-recording scientific stubs
+        expected_arm: DIFFUCO then ENERBIL then HYDROL then CONDVEG then THERMOSOIL then SLOWPROC
+        input_case: complete byte-exact sechiba_main owner execution with initialized SAVE state
+        control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/sechiba.f90:1027:if:false", "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90:1077:if:false", "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90:1093:if:true", "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90:1139:if:false"]
+
+  - id: driver_forcing_owner
+    certification_status: verified
+    runner: oracle_lane_driver_forcing_owner_run:run_oracle
+    ledger_entries: [driver.active.forcing_landpoint_interpolation]
+    result_asset: outputs/reference_mode/micro_oracles/driver_forcing_owner/comparison.json
+    branch_coverage_asset: outputs/reference_mode/micro_oracles/driver_forcing_owner/branch_coverage.json
+    output_contract: [tair, qair, pb, u, v, lwdown, swdown, rainf, snowf, zlev, zlevuv, swnet, eair, petacoef, peqacoef, petbcoef, peqbcoef, cdrag, ccanopy, contfrac, neighbours, resolution]
+    procedures:
+      - id: driver_forcing_owner.forcing_read_interpol
+        source_file: fortran_source/ORCHIDEE/src_driver/readdim2.f90
+        procedure: forcing_read_interpol
+        procedure_kind: subroutine
+        start_line: 660
+        end_line: 1687
+        expected_source_sha256: eb1f88047de5b6fb8d20c3fb415d4ae653c656b922322428d4b4c314b3145e9a
+        expected_span_sha256: e12d13496bd4c3e7ef41d25b8031efed7fd23c983f89c5bf5d341bd604d28d1d
+        dependencies: {use_modules: [ioipsl_para, weather, constantes, solar, grid, mod_orchidee_para], module_symbols: [one_day, pi], called_procedures: [forcing_just_read, forcing_just_read_tmax, forcing_landind, forcing_zoom, solarang]}
+        compilation:
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          flags: [-cpp, -fdefault-real-8, -ffree-line-length-none]
+          harness: scripts/dev/oracle_lane_driver_forcing_owner_harness.f90
+          result_asset: outputs/reference_mode/micro_oracles/driver_forcing_owner/comparison.json
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+
+pending_families:
+  - id: driver_routing_zero_path_archive
+    certification_status: superseded
+    superseded_by: outputs/reference_mode/micro_oracles/driver_routing_zero/comparison.json
+    pending_reason: case proves the line-1227 no-routing arm but does not execute the paper-static river-routing arm at line 1252
+    runner: oracle_lane_driver_run:run_routing_oracle
+    ledger_entries: []
+    input_asset: outputs/reference_mode/micro_oracles/driver_routing_zero/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/driver_routing_zero/point_comparisons.csv
+    output_contract: [riverflow, coastalflow, returnflow, reinfiltration, irrigation, sed_deposition, poc_deposition, flood_frac, stream_frac, streamfl_frac, flood_res, fastr]
+    procedures:
+      - id: driver_routing_zero.sechiba_main_no_routing
+        source_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+        procedure: sechiba_main
+        procedure_kind: subroutine
+        start_line: 829
+        end_line: 1786
+        expected_source_sha256: c902a886f7a1c0837dec3f6d11b3d93516792e5c4b95e6873bb92e6461864526
+        expected_span_sha256: 4f5125e26e0449f9ae328f508f6982a7d1644b31efdacf7e82658f4cae4f5b17
+        dependencies:
+          use_modules: [constantes]
+          module_symbols: [zero]
+          called_procedures: []
+        compilation:
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/oracle_lane_driver_routing.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/driver_routing_zero/comparison.json
+        numerical_oracle_status: verified
+        tolerance: {comparison: exact}
+    branch_cases:
+      - id: paper_single_landpoint
+        ledger_entry: routing.active.paper_single_landpoint_zero_branch
+        fortran_lines: 1227-1248
+        condition: river_routing=true and nbp_glo=1
+        expected_arm: ELSE no-routing assignments
+        input_case: arrays prefilled nonzero before the no-routing branch
+        control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/sechiba.f90:1227:if:false"]
+
+  - id: driver_forcing_transition
+    certification_status: superseded
+    superseded_by: outputs/reference_mode/micro_oracles/driver_forcing_owner/comparison.json
+    pending_reason: extracted transition fragments do not execute the other scientific arms owned by the ledger's full forcing_read_interpol span
+    runner: oracle_lane_driver_run:run_forcing_oracle
+    ledger_entries: [driver.active.forcing_landpoint_interpolation]
+    input_asset: outputs/reference_mode/micro_oracles/driver_forcing_transition/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/driver_forcing_transition/point_comparisons.csv
+    output_contract: [qair, tair, pb, u, v, lwdown, rainf_active, snowf_active, swdown, coszang, rainf_inactive, snowf_inactive]
+    procedures:
+      - &forcing_linear
+        id: driver_forcing_transition.linear_state
+        source_file: fortran_source/ORCHIDEE/src_driver/readdim2.f90
+        procedure: forcing_read_interpol
+        procedure_kind: subroutine
+        start_line: 660
+        end_line: 1687
+        expected_source_sha256: eb1f88047de5b6fb8d20c3fb415d4ae653c656b922322428d4b4c314b3145e9a
+        expected_span_sha256: e12d13496bd4c3e7ef41d25b8031efed7fd23c983f89c5bf5d341bd604d28d1d
+        dependencies: &forcing_dependencies {use_modules: [], module_symbols: [], called_procedures: []}
+        compilation: &forcing_compilation
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/oracle_lane_driver_forcing.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/driver_forcing_transition/comparison.json
+        numerical_oracle_status: verified
+        tolerance: &forcing_tolerance {rtol: 1.0e-12, atol: 1.0e-14}
+      - {id: driver_forcing_transition.solarang, source_file: fortran_source/ORCHIDEE/src_global/solar.f90, procedure: solarang, procedure_kind: subroutine, start_line: 55, end_line: 181, expected_source_sha256: 5c4366d1bcb5aed8101e46b942b0b37f05cdb13ac3adff30d6db511e5a043c63, expected_span_sha256: 92e5c87a174d44698c777926856dbc4ec1245ad27efbfab959037f23e6b7fae9, dependencies: {use_modules: [calendar], module_symbols: [one_year], called_procedures: [time_zone]}, compilation: *forcing_compilation, numerical_oracle_status: verified, tolerance: *forcing_tolerance}
+      - {id: driver_forcing_transition.time_zone, source_file: fortran_source/ORCHIDEE/src_global/solar.f90, procedure: time_zone, procedure_kind: subroutine, start_line: 201, end_line: 268, expected_source_sha256: 5c4366d1bcb5aed8101e46b942b0b37f05cdb13ac3adff30d6db511e5a043c63, expected_span_sha256: 76e0ac434d7a2f4cba4a807fcf81159738a9982579aca04ee048ecc81ad5199d, dependencies: {use_modules: [], module_symbols: [], called_procedures: []}, compilation: *forcing_compilation, numerical_oracle_status: verified, tolerance: *forcing_tolerance}
+    branch_cases:
+      - {id: linear_state_and_active_precipitation, ledger_entry: driver.active.forcing_landpoint_interpolation, fortran_lines: "1545-1577,1646-1652", condition: "split=12, itau_split=3, nb_spread=6", expected_arm: linear interpolation and precipitation spread, input_case: two land cells, control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_driver/readdim2.f90:1545:if:true", "fortran_source/ORCHIDEE/src_driver/readdim2.f90:1557:if:true", "fortran_source/ORCHIDEE/src_driver/readdim2.f90:1646:if:true"]}
+      - {id: inactive_precipitation, ledger_entry: driver.active.forcing_landpoint_interpolation, fortran_lines: 1646-1652, condition: itau_split exceeds nb_spread, expected_arm: zero rain and snow, input_case: spreading window exhausted, control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_driver/readdim2.f90:1646:if:false"]}
+      - {id: active_solar_redistribution, ledger_entry: driver.active.forcing_landpoint_interpolation, fortran_lines: "1527-1538,1585-1619", condition: dt_force greater than 3600 seconds, expected_arm: solar-angle redistribution and 2000 W/m2 cap, input_case: equatorial and 30-degree-longitude cells, control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_driver/readdim2.f90:1527:if:true", "fortran_source/ORCHIDEE/src_driver/readdim2.f90:1585:if:true"]}
+
+  - id: driver_slowproc_daily_archive
+    certification_status: superseded
+    superseded_by: outputs/reference_mode/micro_oracles/slowproc_main_owners/owner_region_evidence.json
+    pending_reason: current true/false day-boundary cases do not prove every ok_stomate and diagnostic control-flow arm in the ledger span
+    runner: oracle_lane_driver_run:run_slowproc_oracle
+    ledger_entries: []
+    input_asset: outputs/reference_mode/micro_oracles/driver_slowproc_daily/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/driver_slowproc_daily/point_comparisons.csv
+    output_contract: [frac_nobio, veget_max, veget, soiltile, qsintmax, tot_bare_soil, do_slow]
+    procedures:
+      - &slowproc_gate
+        id: driver_slowproc_daily.gate
+        source_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+        procedure: slowproc_main
+        procedure_kind: subroutine
+        start_line: 343
+        end_line: 1140
+        expected_source_sha256: 1589b5a34d05c16f8508280d0e954f266fab0c8b1d5acb0bc7655f7680709f30
+        expected_span_sha256: 5c5a5fb793b4483f35c1eddd2436fb6e43cbd9cac41f12a9fdb1aaa5a1cf6ec9
+        dependencies: &slowproc_dependencies {use_modules: [constantes, pft_parameters], module_symbols: [nvm, qsintcst], called_procedures: []}
+        compilation: &slowproc_compilation {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_driver_slowproc.f90.template, result_asset: outputs/reference_mode/micro_oracles/driver_slowproc_daily/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: &slowproc_tolerance {rtol: 1.0e-12, atol: 1.0e-14}
+      - {id: driver_slowproc_daily.veget, source_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90, procedure: slowproc_veget, procedure_kind: subroutine, start_line: 2820, end_line: 2925, expected_source_sha256: 1589b5a34d05c16f8508280d0e954f266fab0c8b1d5acb0bc7655f7680709f30, expected_span_sha256: 9faebf6849d8f014b176439e3b9099ca49a46eda9b98c186209d53494b31edf9, dependencies: *slowproc_dependencies, compilation: *slowproc_compilation, numerical_oracle_status: verified, tolerance: *slowproc_tolerance}
+    branch_cases:
+      - {id: last_timestep_daily_writeback, ledger_entry: slowproc.active.daily_surface_writeback, fortran_lines: "654-663,1078-1122,2820-2925", condition: LastTsDay=true and ok_stomate=true, expected_arm: normalize vegetation and write derived surface fields, input_case: two PFT14 landpoints, control_flow_arm_ids: []}
+      - {id: nondaily_carry, ledger_entry: slowproc.active.daily_surface_writeback, fortran_lines: "654-663,1116-1122", condition: LastTsDay=false, expected_arm: preserve surface arrays and recompute bare-soil diagnostic, input_case: sentinel surface state, control_flow_arm_ids: []}
+
+  - id: driver_static_bbox_archive
+    certification_status: superseded
+    superseded_by: outputs/reference_mode/micro_oracles/driver_static_bbox/comparison.json
+    pending_reason: mean/fallback path cases do not cover all temporal, allocation, missing-data, and error arms in slowproc_read_data/read_annual
+    runner: oracle_lane_driver_run:run_bbox_oracle
+    ledger_entries: []
+    input_asset: outputs/reference_mode/micro_oracles/driver_static_bbox/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/driver_static_bbox/point_comparisons.csv
+    output_contract: [salinity, salinity_count, tide, tide_count]
+    procedures:
+      - &bbox_annual
+        id: driver_static_bbox.annual_aggregation
+        source_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+        procedure: slowproc_read_annual
+        procedure_kind: subroutine
+        start_line: 6300
+        end_line: 6570
+        expected_source_sha256: 1589b5a34d05c16f8508280d0e954f266fab0c8b1d5acb0bc7655f7680709f30
+        expected_span_sha256: 6400f381a9dc221d16146b2cde9b0789a114f66630aaf40415e7ad677a6dd453
+        dependencies: &bbox_dependencies {use_modules: [constantes], module_symbols: [pi], called_procedures: [slowproc_nearest]}
+        compilation: &bbox_compilation {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_driver_bbox.f90.template, result_asset: outputs/reference_mode/micro_oracles/driver_static_bbox/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: &bbox_tolerance {rtol: 1.0e-12, atol: 1.0e-14}
+      - {id: driver_static_bbox.time_aggregation, source_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90, procedure: slowproc_read_data, procedure_kind: subroutine, start_line: 6029, end_line: 6297, expected_source_sha256: 1589b5a34d05c16f8508280d0e954f266fab0c8b1d5acb0bc7655f7680709f30, expected_span_sha256: 8dbebbd93b2640d961fe402dca3b5f358c3848cb7e1798c67ae300be01a47b4e, dependencies: *bbox_dependencies, compilation: *bbox_compilation, numerical_oracle_status: verified, tolerance: *bbox_tolerance}
+      - {id: driver_static_bbox.nearest, source_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90, procedure: slowproc_nearest, procedure_kind: subroutine, start_line: 4209, end_line: 4263, expected_source_sha256: 1589b5a34d05c16f8508280d0e954f266fab0c8b1d5acb0bc7655f7680709f30, expected_span_sha256: acde3ac7d2487b4e24f1c651b15dfdbffbe515350c05198aec527f06d78dc9ad, dependencies: {use_modules: [constantes], module_symbols: [pi], called_procedures: [ipslerr_p]}, compilation: *bbox_compilation, numerical_oracle_status: verified, tolerance: *bbox_tolerance}
+    branch_cases:
+      - {id: salinity_bbox_mean_and_fallback, ledger_entry: driver.active.salinity_bbox, fortran_lines: "6445-6550,4209-4263", condition: first bbox has a valid center and second has none, expected_arm: center mean and nearest fallback, input_case: three source centers and two targets, control_flow_arm_ids: []}
+      - {id: tide_bbox_mean_and_fallback, ledger_entry: driver.active.tide_bbox, fortran_lines: "6166-6277,4209-4263", condition: preserve two time slots through mean/fallback, expected_arm: trailing-axis aggregation and nearest fallback, input_case: three source centers with two tide slots, control_flow_arm_ids: []}
+
+  - id: driver_restart_handoff
+    certification_status: superseded
+    superseded_by: outputs/reference_mode/micro_oracles/stage4_restart_io/owner_region_evidence.json
+    evidence_kind: schema_and_encoding_partial
+    pending_reason: >-
+      Complete writerestart/readstart owner roundtrip is not yet executable with the local GNU
+      compiler because original readstart line 1570 contains the Intel-accepted double continuation
+      "& &", which GNU 16 rejects even with -std=legacy and -fallow-argument-mismatch. The original
+      procedure bytes were not patched. See outputs/reference_mode/micro_oracles/driver_restart_handoff/compiler_blocker.json.
+    runner: oracle_lane_driver_run:run_restart_oracle
+    ledger_entries: [restart.active.day_and_year_handoff]
+    input_asset: outputs/reference_mode/micro_oracles/driver_restart_handoff/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/driver_restart_handoff/point_comparisons.csv
+    output_contract: [writerestart_field_selection, litter_label, level_label, element_label, pool_label, PFTpresent, senescence, begin_leaves, need_adjacent]
+    procedures:
+      - id: driver_restart_handoff.writerestart
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+        procedure: writerestart
+        procedure_kind: subroutine
+        start_line: 1751
+        end_line: 2944
+        expected_source_sha256: f2324dade1416ff5cb16cb4c493554ec34cccdb8b8994d0e5bce56ee6c7b97ae
+        expected_span_sha256: 00ffe9eb2a78440ec1aa67f73d26c9cb05c19624c8b798f79823c993a55a5be3
+        dependencies: {use_modules: [ioipsl_para, stomate_data], module_symbols: [rest_id_stomate, index_g], called_procedures: [restput_p]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_driver_restart.f90.template, result_asset: outputs/reference_mode/micro_oracles/driver_restart_handoff/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {comparison: exact}
+      - id: driver_restart_handoff.readstart
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+        procedure: readstart
+        procedure_kind: subroutine
+        start_line: 34
+        end_line: 1747
+        expected_source_sha256: f2324dade1416ff5cb16cb4c493554ec34cccdb8b8994d0e5bce56ee6c7b97ae
+        expected_span_sha256: 372b832e7e0a4d38d4baec9525939d351bb46f6a6643601be901cdaf0b01e969
+        dependencies: {use_modules: [ioipsl_para, stomate_data], module_symbols: [rest_id_stomate, index_g], called_procedures: [restget_p]}
+        compilation: {status: not_run, standalone_compilable: false, compiler_available: true, harness: scripts/dev/oracle_lane_driver_production.py, result_asset: outputs/reference_mode/micro_oracles/driver_restart_handoff/compiler_blocker.json}
+        numerical_oracle_status: not_run
+        tolerance: {comparison: exact}
+    branch_cases:
+      - {id: complete_restput_field_selection, ledger_entry: restart.active.day_and_year_handoff, fortran_lines: 2185-2939, condition: all writerestart restput_p calls after excluding commented source, expected_arm: complete physical restart field selection, input_case: source scan compared with production NetCDF writer schema, control_flow_arm_ids: []}
+      - {id: index_labels, ledger_entry: restart.active.day_and_year_handoff, fortran_lines: 2141-2171, condition: paper nlitt/nlevs/nelements indices, expected_arm: original litter level element and pool labels, input_case: 2 litter classes 2 levels 1 carbon element, control_flow_arm_ids: []}
+      - {id: logical_state_encoding, ledger_entry: restart.active.day_and_year_handoff, fortran_lines: "2579-2584,2646-2651,2656-2661,2707-2712", condition: mixed true and false prognostic logical states, expected_arm: exact zero/un real encoding before restput_p, input_case: two landpoints by two PFTs, control_flow_arm_ids: []}

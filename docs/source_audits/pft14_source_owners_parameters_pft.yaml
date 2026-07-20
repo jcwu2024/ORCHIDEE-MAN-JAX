@@ -1,0 +1,106 @@
+schema_version: 1
+
+# Dedicated owner ledger for the pft_parameters.f90 batch-1 closure package.
+# Only scientific backlog branch sites in the five assigned procedures are
+# claimed here. Diagnostic-only and outside-valid-input arms remain classified
+# by the arm-disposition ledger rather than being presented as formulas.
+entries:
+  - id: parameters.pft_parameters.pft_parameters_main.branch_contract
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: pft_parameters_main
+    fortran_lines: 97,127,129,140,149,158
+    status: implemented
+    jax_owner: jax_orchidee.stomate.parameters.resolve_pft_parameter_main
+    gap: null
+    state_contract: [jax_orchidee.stomate.parameters.resolve_pft_parameter_main]
+    validation: [tests/unit/test_pft_parameters_source_owner_completion.py]
+
+  - id: parameters.pft_parameters.pft_parameters_init.humcste_depth
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: pft_parameters_init
+    fortran_lines: 265,268,424,427
+    status: implemented
+    jax_owner: jax_orchidee.stomate.parameters.select_humcste_reference
+    gap: null
+    state_contract: [jax_orchidee.stomate.parameters.select_humcste_reference]
+    validation: [tests/unit/test_pft_parameters_source_owner_completion.py]
+
+  - id: parameters.pft_parameters.pft_parameters_init.physiology_labels
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: pft_parameters_init
+    fortran_lines: 347,352,357,362,498,503,508,513
+    status: implemented
+    jax_owner: jax_orchidee.stomate.parameters.derive_pft_physiology_labels
+    gap: null
+    state_contract: [jax_orchidee.stomate.parameters.PFTPhysiologyLabels]
+    validation: [tests/unit/test_pft_parameters_source_owner_completion.py]
+
+  - id: parameters.pft_parameters.pft_parameters_init.section_switches
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: pft_parameters_init
+    fortran_lines: 370,384,519,833,878
+    status: implemented
+    jax_owner: jax_orchidee.stomate.parameters.resolve_pft_parameter_section_switches
+    gap: null
+    state_contract: [jax_orchidee.stomate.parameters.PFTParameterSectionSwitches]
+    validation: [tests/unit/test_pft_parameters_source_owner_completion.py]
+
+  - id: parameters.pft_parameters.config_pft_parameters.physiology_labels
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: config_pft_parameters
+    fortran_lines: 2967,2972,2977,2982
+    status: implemented
+    jax_owner: jax_orchidee.stomate.parameters.derive_pft_physiology_labels
+    gap: null
+    state_contract: [jax_orchidee.stomate.parameters.PFTPhysiologyLabels]
+    validation: [tests/unit/test_pft_parameters_source_owner_completion.py]
+
+  - id: parameters.pft_parameters.config_pft_parameters.constraints
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: config_pft_parameters
+    fortran_lines: 2885,3020,3420,3424,3426
+    status: implemented
+    jax_owner: jax_orchidee.stomate.parameters.apply_configured_pft_constraints
+    gap: null
+    state_contract: [jax_orchidee.stomate.parameters.apply_configured_pft_constraints]
+    validation: [tests/unit/test_pft_parameters_source_owner_completion.py]
+
+  - id: parameters.pft_parameters.config_pft_parameters.crop_rotation_reads
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: config_pft_parameters
+    fortran_lines: 3479,3482
+    status: implemented
+    jax_owner: jax_orchidee.stomate.parameters.crop_rotation_sowing_keys
+    gap: null
+    state_contract: [jax_orchidee.stomate.parameters.crop_rotation_sowing_keys]
+    validation: [tests/unit/test_pft_parameters_source_owner_completion.py]
+
+  - id: parameters.pft_parameters.config_pft_parameters.age_class_config
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: config_pft_parameters
+    fortran_lines: 3568,3570,3587
+    status: implemented
+    jax_owner: jax_orchidee.stomate.parameters.resolve_age_class_config
+    gap: null
+    state_contract: [jax_orchidee.stomate.parameters.AgeClassConfig]
+    validation: [tests/unit/test_pft_parameters_source_owner_completion.py]
+
+  - id: parameters.pft_parameters.config_sechiba_pft_parameters.bvoc_switch
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: config_sechiba_pft_parameters
+    fortran_lines: 3822
+    status: implemented
+    jax_owner: jax_orchidee.stomate.parameters.resolve_pft_parameter_section_switches
+    gap: null
+    state_contract: [jax_orchidee.stomate.parameters.PFTParameterSectionSwitches]
+    validation: [tests/unit/test_pft_parameters_source_owner_completion.py]
+
+  - id: parameters.pft_parameters.config_stomate_pft_parameters.age_class_layout
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: config_stomate_pft_parameters
+    fortran_lines: 4672,4687,4695,4704,4714,4715,4716,4721
+    status: implemented
+    jax_owner: jax_orchidee.stomate.parameters.build_age_class_layout
+    gap: null
+    state_contract: [jax_orchidee.stomate.parameters.AgeClassLayout]
+    validation: [tests/unit/test_pft_parameters_source_owner_completion.py]

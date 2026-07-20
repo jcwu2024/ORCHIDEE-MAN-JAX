@@ -1,0 +1,379 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module defprec
+
+module constantes_var
+  use defprec
+  implicit none
+  real(r_std), parameter :: pi=acos(-1._r_std), R_Earth=6378000._r_std
+  real(r_std), parameter :: mincos=0.0001_r_std, undef_sechiba=1.e20_r_std
+  real(r_std), parameter :: val_exp=999999._r_std
+  real(r_std), parameter :: zero=0._r_std, one=1._r_std, two=2._r_std, half=0.5_r_std
+end module constantes_var
+
+module ioipsl
+  implicit none
+contains
+  subroutine ipslerr(level, routine, message1, message2, message3)
+    integer, intent(in) :: level
+    character(*), intent(in) :: routine, message1, message2, message3
+    if (level >= 3) error stop 'ipslerr'
+  end subroutine ipslerr
+
+  subroutine strlowercase(value)
+    character(*), intent(inout) :: value
+    integer :: i, code
+    do i=1,len(value)
+      code=iachar(value(i:i))
+      if (code >= iachar('A') .and. code <= iachar('Z')) value(i:i)=achar(code+32)
+    enddo
+  end subroutine strlowercase
+end module ioipsl
+
+! <MODULE_LLXY>
+
+! <HAVERSINE_MODULE>
+
+module mod_orchidee_para
+  use defprec
+  implicit none
+  logical, save :: is_root_prc=.true.
+  integer(i_std), save :: iim_g=0, jjm_g=0, nbp_glo=0
+  integer(i_std), allocatable, save :: index_g(:), neighbours_g(:,:)
+  real(r_std), allocatable, save :: headings_g(:,:), seglength_g(:,:), area_g(:)
+  real(r_std), allocatable, save :: corners_g(:,:,:), resolution_g(:,:), lalo_g(:,:)
+  real(r_std), allocatable, save :: lon_g(:,:), lat_g(:,:), zlev_g(:,:), contfrac_g(:)
+  interface scatter
+    module procedure scatter_i2, scatter_r1, scatter_r2, scatter_r3
+  end interface
+  interface bcast
+    module procedure bcast_i2, bcast_r2
+  end interface
+contains
+  subroutine scatter_i2(source, target)
+    integer(i_std), intent(in) :: source(:,:)
+    integer(i_std), intent(out) :: target(:,:)
+    target=source
+  end subroutine
+  subroutine scatter_r1(source, target)
+    real(r_std), intent(in) :: source(:)
+    real(r_std), intent(out) :: target(:)
+    target=source
+  end subroutine
+  subroutine scatter_r2(source, target)
+    real(r_std), intent(in) :: source(:,:)
+    real(r_std), intent(out) :: target(:,:)
+    target=source
+  end subroutine
+  subroutine scatter_r3(source, target)
+    real(r_std), intent(in) :: source(:,:,:)
+    real(r_std), intent(out) :: target(:,:,:)
+    target=source
+  end subroutine
+  subroutine bcast_i2(value)
+    integer(i_std), intent(inout) :: value(:,:)
+  end subroutine
+  subroutine bcast_r2(value)
+    real(r_std), intent(inout) :: value(:,:)
+  end subroutine
+end module mod_orchidee_para
+
+module grid_oracle
+  use defprec
+  use constantes_var
+  use mod_orchidee_para
+  use haversine
+  use module_llxy
+  use ioipsl
+  implicit none
+  character(len=20), save :: GridType='', GridName=''
+  integer(i_std), save :: NbSegments=0, NbNeighb=0
+  logical, save :: global=.true.
+  real(r_std), parameter :: default_resolution=250000._r_std
+  integer(i_std), parameter :: MAX_DOMAINS=1
+  integer(i_std), parameter :: undef_int=999999999
+  integer, parameter :: numout=6, printlev=0
+  real(r_std), allocatable, save :: lalo(:,:), headings(:,:), seglength(:,:)
+  real(r_std), allocatable, save :: corners(:,:,:), area(:), resolution(:,:), contfrac(:)
+  integer(i_std), allocatable, save :: neighbours(:,:), ilandindex(:), jlandindex(:)
+  type(proj_info), save :: proj_stack(1:MAX_DOMAINS)
+  real(r_std), allocatable, save :: dxwrf(:,:), dywrf(:,:)
+contains
+! <GRID_INIT>
+! <GRID_SET_GLO>
+! <GRID_ALLOCATE_GLO>
+! <GRID_STUFF>
+! <GRID_TOPOLYLIST>
+! <GRID_SCATTER>
+! <GRID_TOIJ_SCAL>
+! <GRID_TOIJ_1D>
+! <GRID_TOIJ_2D>
+
+  subroutine reset_grid()
+    if (allocated(lalo)) deallocate(lalo)
+    if (allocated(headings)) deallocate(headings)
+    if (allocated(seglength)) deallocate(seglength)
+    if (allocated(corners)) deallocate(corners)
+    if (allocated(area)) deallocate(area)
+    if (allocated(resolution)) deallocate(resolution)
+    if (allocated(contfrac)) deallocate(contfrac)
+    if (allocated(neighbours)) deallocate(neighbours)
+    if (allocated(ilandindex)) deallocate(ilandindex)
+    if (allocated(jlandindex)) deallocate(jlandindex)
+    if (allocated(index_g)) deallocate(index_g)
+    if (allocated(neighbours_g)) deallocate(neighbours_g)
+    if (allocated(headings_g)) deallocate(headings_g)
+    if (allocated(seglength_g)) deallocate(seglength_g)
+    if (allocated(area_g)) deallocate(area_g)
+    if (allocated(corners_g)) deallocate(corners_g)
+    if (allocated(resolution_g)) deallocate(resolution_g)
+    if (allocated(lalo_g)) deallocate(lalo_g)
+    if (allocated(lon_g)) deallocate(lon_g)
+    if (allocated(lat_g)) deallocate(lat_g)
+    if (allocated(zlev_g)) deallocate(zlev_g)
+    if (allocated(contfrac_g)) deallocate(contfrac_g)
+    if (allocated(dxwrf)) deallocate(dxwrf)
+    if (allocated(dywrf)) deallocate(dywrf)
+    GridType=''; GridName=''; NbSegments=0; NbNeighb=0; global=.true.
+    iim_g=0; jjm_g=0; nbp_glo=0; proj_stack(1)%code=undef_int; proj_stack(1)%init=.false.
+  end subroutine reset_grid
+end module grid_oracle
+
+program driver
+  use defprec
+  use constantes_var
+  use module_llxy
+  use mod_orchidee_para
+  use grid_oracle
+  implicit none
+  character(512) :: output_path, mode
+  integer :: unit
+  call get_command_argument(1, output_path)
+  call get_command_argument(2, mode)
+  if (len_trim(mode) == 0) mode='oracle'
+  if (trim(mode) == 'bad_init') then
+    call reset_grid(); call grid_set_glo(2,2,4); call grid_allocate_glo(4)
+    call grid_init(4,4,'unknown','bad'); stop 91
+  elseif (trim(mode) == 'bad_topology') then
+    call coverage_bad_topology(); stop 92
+  elseif (trim(mode) == 'bad_scatter') then
+    call coverage_bad_scatter(); stop 93
+  elseif (trim(mode) == 'bad_toij_scal') then
+    call coverage_bad_toij_scal(); stop 94
+  elseif (trim(mode) == 'bad_toij_1d') then
+    call coverage_bad_toij_1d(); stop 94
+  elseif (trim(mode) == 'bad_toij_2d') then
+    call coverage_bad_toij_2d(); stop 94
+  elseif (trim(mode) == 'scatter_unset') then
+    call coverage_scatter_unset(); stop
+  elseif (index(trim(mode),'global_') == 1) then
+    call coverage_global_case(trim(mode)); stop 95
+  endif
+  open(newunit=unit,file=trim(output_path),status='replace')
+  write(unit,'(a)') 'field,flat_index,value'
+  call metadata_cases(unit)
+  call topology_cases(unit)
+  call stuff_cases(unit)
+  call toij_cases(unit)
+  close(unit)
+contains
+  subroutine emit_r0(u,name,value)
+    integer,intent(in)::u; character(*),intent(in)::name; real(r_std),intent(in)::value
+    write(u,'(a,a,i0,a,es25.17)')trim(name),',',0,',',value
+  end subroutine
+  subroutine emit_i0(u,name,value)
+    integer,intent(in)::u; character(*),intent(in)::name; integer,intent(in)::value
+    write(u,'(a,a,i0,a,i0)')trim(name),',',0,',',value
+  end subroutine
+  subroutine emit_l0(u,name,value)
+    integer,intent(in)::u; character(*),intent(in)::name; logical,intent(in)::value
+    call emit_i0(u,name,merge(1,0,value))
+  end subroutine
+  subroutine emit_r1(u,name,value)
+    integer,intent(in)::u; character(*),intent(in)::name; real(r_std),intent(in)::value(:)
+    integer::i
+    do i=1,size(value); write(u,'(a,a,i0,a,es25.17)')trim(name),',',i-1,',',value(i); enddo
+  end subroutine
+  subroutine emit_i1(u,name,value)
+    integer,intent(in)::u; character(*),intent(in)::name; integer(i_std),intent(in)::value(:)
+    integer::i
+    do i=1,size(value); write(u,'(a,a,i0,a,i0)')trim(name),',',i-1,',',value(i); enddo
+  end subroutine
+  subroutine emit_r2(u,name,value)
+    integer,intent(in)::u; character(*),intent(in)::name; real(r_std),intent(in)::value(:,:)
+    call emit_r1(u,name,reshape(value,[size(value)]))
+  end subroutine
+  subroutine emit_i2(u,name,value)
+    integer,intent(in)::u; character(*),intent(in)::name; integer(i_std),intent(in)::value(:,:)
+    call emit_i1(u,name,reshape(value,[size(value)]))
+  end subroutine
+  subroutine emit_r3(u,name,value)
+    integer,intent(in)::u; character(*),intent(in)::name; real(r_std),intent(in)::value(:,:,:)
+    call emit_r1(u,name,reshape(value,[size(value)]))
+  end subroutine
+
+  subroutine prepare_projection()
+    proj_stack(1)%code=PROJ_LATLON; proj_stack(1)%init=.true.
+    proj_stack(1)%lat1=40._r_std; proj_stack(1)%lon1=100._r_std
+    proj_stack(1)%latinc=1._r_std; proj_stack(1)%loninc=2._r_std
+    proj_stack(1)%knowni=1._r_std; proj_stack(1)%knownj=1._r_std
+  end subroutine
+
+  subroutine metadata_cases(u)
+    integer,intent(in)::u
+    call reset_grid(); call grid_set_glo(3,2,6); call grid_allocate_glo(4)
+    call grid_init(6,4,'prefix-RegLonLat-grid','forcing')
+    call emit_i0(u,'meta_reg_nseg',NbSegments); call emit_i0(u,'meta_reg_nneigh',NbNeighb)
+    call emit_l0(u,'meta_reg_global',global); call emit_r2(u,'meta_reg_lalo',lalo)
+    call emit_i2(u,'meta_reg_neighbours',neighbours); call emit_i1(u,'meta_reg_iland',ilandindex)
+    call grid_init(6,4,'RegLonLat','forcing',.false.)
+    call emit_l0(u,'meta_reg_present_global',global)
+    call grid_set_glo(3,2)
+    call emit_i0(u,'meta_optional_nbp',nbp_glo)
+    call reset_grid(); call grid_set_glo(2,2,4); NbSegments=4; NbNeighb=8; call grid_allocate_glo(4)
+    call emit_i0(u,'meta_allocate_existing_nseg',NbSegments)
+    call emit_i0(u,'meta_allocate_neigh_size',size(neighbours_g,2))
+    call grid_init(4,4,'RegXY','xy',.true.)
+    call emit_l0(u,'meta_xy_global',global)
+    call reset_grid(); call grid_set_glo(2,2,4); call grid_allocate_glo(4)
+    call grid_init(4,4,'RegXY','xy_default')
+    call emit_l0(u,'meta_xy_default_global',global)
+    call reset_grid(); call grid_set_glo(1,1,1); call grid_allocate_glo(5)
+    call grid_init(1,5,'UnStruct','mesh')
+    call emit_i0(u,'meta_unstruct_nseg',NbSegments); call emit_l0(u,'meta_unstruct_global',global)
+    call grid_init(1,5,'UnStruct','mesh',.false.)
+    call emit_l0(u,'meta_unstruct_present_global',global)
+  end subroutine
+
+  subroutine fill_regular(lon,lat)
+    real(r_std),intent(out)::lon(:,:),lat(:,:); integer::i,j
+    do j=1,size(lon,2); do i=1,size(lon,1)
+      lon(i,j)=107._r_std+2._r_std*(i-1); lat(i,j)=23._r_std-2._r_std*(j-1)
+    enddo; enddo
+  end subroutine
+
+  subroutine emit_topology(u,prefix,nland,iim,jjm,lon,lat,kindex,gtype)
+    integer,intent(in)::u,nland,iim,jjm; character(*),intent(in)::prefix,gtype
+    real(r_std),intent(in)::lon(iim,jjm),lat(iim,jjm); integer(i_std),intent(in)::kindex(nland)
+    real(r_std)::c(nland,4,2),h(nland,8),s(nland,4),a(nland)
+    integer(i_std)::n(nland,8),ii(nland),jj(nland); logical::gg; character(20)::kind
+    kind=gtype
+    call grid_topolylist(kind,4,nland,iim,jjm,lon,lat,kindex,gg,c,n,h,s,a,ii,jj)
+    call emit_l0(u,trim(prefix)//'_global',gg); call emit_r3(u,trim(prefix)//'_corners',c)
+    call emit_i2(u,trim(prefix)//'_neighbours',n); call emit_r2(u,trim(prefix)//'_headings',h)
+    call emit_r2(u,trim(prefix)//'_seglength',s); call emit_r1(u,trim(prefix)//'_area',a)
+    call emit_i1(u,trim(prefix)//'_iland',ii); call emit_i1(u,trim(prefix)//'_jland',jj)
+  end subroutine
+
+  subroutine topology_cases(u)
+    integer,intent(in)::u
+    real(r_std)::lon(3,3),lat(3,3),lon1(1,1),lat1(1,1)
+    integer(i_std)::idx(3),idx1(1)
+    call reset_grid(); call fill_regular(lon,lat); idx=[1_i_std,5_i_std,9_i_std]
+    call emit_topology(u,'top_reg',3,3,3,lon,lat,idx,'RegLonLat')
+    lon1=109._r_std; lat1=21._r_std; idx1=1
+    call emit_topology(u,'top_single',1,1,1,lon1,lat1,idx1,'RegLonLat')
+    call prepare_projection(); allocate(dxwrf(3,3),dywrf(3,3))
+    dxwrf=reshape([10._r_std,20._r_std,30._r_std,11._r_std,21._r_std,31._r_std,12._r_std,22._r_std,32._r_std],[3,3])
+    dywrf=reshape([2._r_std,5._r_std,8._r_std,3._r_std,6._r_std,9._r_std,4._r_std,7._r_std,10._r_std],[3,3])
+    call make_xy(lon,lat)
+    call emit_topology(u,'top_xy',3,3,3,lon,lat,idx,'RegXY')
+  end subroutine
+
+  subroutine make_xy(lon,lat)
+    real(r_std),intent(out)::lon(:,:),lat(:,:); integer::i,j
+    do j=1,size(lon,2); do i=1,size(lon,1)
+      call ij_to_latlon(proj_stack(1),real(i,r_std),real(j,r_std),lat(i,j),lon(i,j))
+    enddo; enddo
+  end subroutine
+
+  subroutine coverage_global_case(which)
+    character(*),intent(in)::which
+    real(r_std)::lon(4,2),lat(4,2),c(8,4,2),h(8,8),s(8,4),a(8)
+    integer(i_std)::idx(8),n(8,8),ii(8),jj(8); integer::i,j; logical::gg; character(20)::kind
+    idx=[1_i_std,2_i_std,3_i_std,4_i_std,5_i_std,6_i_std,7_i_std,8_i_std]
+    do j=1,2; do i=1,4; lat(i,j)=real(j,r_std); enddo; enddo
+    select case(which)
+    case('global_0360_true'); lon(:,1)=[45._r_std,135._r_std,225._r_std,315._r_std]
+    case('global_0360_false'); lon(:,1)=[50._r_std,130._r_std,210._r_std,290._r_std]
+    case('global_180_true'); lon(:,1)=[-135._r_std,-45._r_std,45._r_std,135._r_std]
+    case('global_180_false'); lon(:,1)=[-120._r_std,-40._r_std,40._r_std,120._r_std]
+    case default; lon(:,1)=[10._r_std,20._r_std,30._r_std,40._r_std]
+    end select
+    lon(:,2)=lon(:,1); kind='RegLonLat'
+    call grid_topolylist(kind,4,8,4,2,lon,lat,idx,gg,c,n,h,s,a,ii,jj)
+  end subroutine
+
+  subroutine prepare_stuff(npts,lon,lat,idx)
+    integer,intent(in)::npts; real(r_std),intent(in)::lon(:,:),lat(:,:); integer(i_std),intent(in)::idx(npts)
+    integer::i
+    call reset_grid(); call grid_set_glo(size(lon,1),size(lon,2),npts); call grid_allocate_glo(4)
+    call grid_init(npts,4,'RegLonLat','forcing')
+    index_g=idx; lon_g=lon; lat_g=lat
+    do i=1,npts; lalo_g(i,1)=lat(mod(idx(i)-1,size(lon,1))+1,(idx(i)-1)/size(lon,1)+1); lalo_g(i,2)=lon(mod(idx(i)-1,size(lon,1))+1,(idx(i)-1)/size(lon,1)+1); enddo
+  end subroutine
+
+  subroutine emit_stuff(u,prefix)
+    integer,intent(in)::u; character(*),intent(in)::prefix
+    call emit_i2(u,trim(prefix)//'_neighbours',neighbours)
+    call emit_r2(u,trim(prefix)//'_headings',headings); call emit_r2(u,trim(prefix)//'_seglength',seglength)
+    call emit_r3(u,trim(prefix)//'_corners',corners); call emit_r1(u,trim(prefix)//'_area',area)
+    call emit_r2(u,trim(prefix)//'_resolution',resolution); call emit_r1(u,trim(prefix)//'_contfrac',contfrac)
+    call emit_i1(u,trim(prefix)//'_iland',ilandindex); call emit_i1(u,trim(prefix)//'_jland',jlandindex)
+  end subroutine
+
+  subroutine stuff_cases(u)
+    integer,intent(in)::u
+    real(r_std)::lon(3,3),lat(3,3),frac(3); integer(i_std)::idx(3)
+    call fill_regular(lon,lat); idx=[1_i_std,5_i_std,9_i_std]; frac=[1._r_std,.4_r_std,0._r_std]
+    call prepare_stuff(3,lon,lat,idx); contfrac_g=-7._r_std
+    call grid_stuff(3,3,3,lon,lat,idx,frac); call emit_stuff(u,'stuff_present')
+    call prepare_stuff(3,lon,lat,idx); contfrac_g=[.2_r_std,.3_r_std,.4_r_std]
+    ilandindex=[9_i_std,8_i_std,7_i_std]; jlandindex=[6_i_std,5_i_std,4_i_std]
+    call grid_stuff(3,3,3,lon,lat,idx); call emit_stuff(u,'stuff_absent')
+  end subroutine
+
+  subroutine toij_cases(u)
+    integer,intent(in)::u
+    real(r_std)::lon1(3),lat1(3),ri1(3),rj1(3),lon2(2,2),lat2(2,2),ri2(2,2),rj2(2,2),ri,rj
+    call reset_grid(); call prepare_projection()
+    call grid_toij_scal(108._r_std,45._r_std,ri,rj); call emit_r0(u,'toij_scal_ri',ri); call emit_r0(u,'toij_scal_rj',rj)
+    lon1=[100._r_std,104._r_std,108._r_std]; lat1=[40._r_std,42._r_std,45._r_std]
+    call grid_toij_1d(lon1,lat1,ri1,rj1); call emit_r1(u,'toij_1d_ri',ri1); call emit_r1(u,'toij_1d_rj',rj1)
+    lon2=reshape([100._r_std,102._r_std,104._r_std,106._r_std],[2,2]); lat2=reshape([40._r_std,41._r_std,42._r_std,43._r_std],[2,2])
+    call grid_toij_2d(lon2,lat2,ri2,rj2); call emit_r2(u,'toij_2d_ri',ri2); call emit_r2(u,'toij_2d_rj',rj2)
+  end subroutine
+
+  subroutine coverage_bad_topology()
+    real(r_std)::lon(2,2),lat(2,2),c(1,4,2),h(1,8),s(1,4),a(1)
+    integer(i_std)::idx(1),n(1,8),ii(1),jj(1); logical::gg; character(20)::kind
+    lon=0._r_std; lat=0._r_std; idx=1; kind='Unknown'
+    call grid_topolylist(kind,4,1,2,2,lon,lat,idx,gg,c,n,h,s,a,ii,jj)
+  end subroutine
+  subroutine coverage_bad_scatter()
+    call reset_grid(); call grid_set_glo(1,1,1); call grid_allocate_glo(4); call grid_init(1,4,'UnStruct','bad')
+    index_g=1; ilandindex=-1; jlandindex=-1; seglength_g=1._r_std; neighbours_g=-1; headings_g=0._r_std
+    corners_g=0._r_std; area_g=1._r_std; contfrac_g=1._r_std
+    call grid_scatter()
+  end subroutine
+  subroutine coverage_scatter_unset()
+    call reset_grid(); call grid_set_glo(2,2,2); call grid_allocate_glo(4); call grid_init(2,4,'RegLonLat','coverage')
+    index_g=[1_i_std,4_i_std]; neighbours_g=-1; headings_g=0._r_std; seglength_g=2._r_std
+    corners_g=0._r_std; area_g=4._r_std; contfrac_g=1._r_std
+    call grid_scatter()
+  end subroutine
+  subroutine coverage_bad_toij_scal()
+    real(r_std)::ri,rj
+    call reset_grid(); call grid_toij_scal(0._r_std,0._r_std,ri,rj)
+  end subroutine
+  subroutine coverage_bad_toij_1d()
+    real(r_std)::lon(1),lat(1),ri(1),rj(1)
+    call reset_grid(); call grid_toij_1d(lon,lat,ri,rj)
+  end subroutine
+  subroutine coverage_bad_toij_2d()
+    real(r_std)::lon(1,1),lat(1,1),ri(1,1),rj(1,1)
+    call reset_grid(); call grid_toij_2d(lon,lat,ri,rj)
+  end subroutine
+end program driver

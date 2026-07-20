@@ -1,0 +1,2533 @@
+{
+  "schema_version": 1,
+  "scope": "ORCHIDEE-MAN PFT14 independent single-landpoint STOMATE restart",
+  "source_reference": "reference/OUT/orc_calibrate_250919_sen/arg2_1.0/001.0-071.0/I10/S2_63.206_0.0876_0.2019_50.658/stomate_start.nc",
+  "fortran_provenance": {
+    "file": "fortran_source/ORCHIDEE/src_stomate/stomate_io.f90",
+    "subroutine": "writerestart",
+    "lines": "1751-2944",
+    "physical_file_owner": "IOIPSL restini/restput_p"
+  },
+  "file_format": "NETCDF4",
+  "dimensions": {
+    "x": {
+      "size": 1,
+      "unlimited": false
+    },
+    "y": {
+      "size": 1,
+      "unlimited": false
+    },
+    "z": {
+      "size": 1,
+      "unlimited": false
+    },
+    "time": {
+      "size": 1,
+      "unlimited": false
+    },
+    "z_a": {
+      "size": 14,
+      "unlimited": false
+    },
+    "z_b": {
+      "size": 2,
+      "unlimited": false
+    },
+    "z_c": {
+      "size": 11,
+      "unlimited": false
+    },
+    "l_a": {
+      "size": 12,
+      "unlimited": false
+    },
+    "m_a": {
+      "size": 1,
+      "unlimited": false
+    },
+    "l_b": {
+      "size": 4,
+      "unlimited": false
+    },
+    "l_c": {
+      "size": 2,
+      "unlimited": false
+    },
+    "l_d": {
+      "size": 14,
+      "unlimited": false
+    },
+    "m_b": {
+      "size": 2,
+      "unlimited": false
+    },
+    "n_a": {
+      "size": 1,
+      "unlimited": false
+    },
+    "z_d": {
+      "size": 3,
+      "unlimited": false
+    },
+    "z_e": {
+      "size": 101,
+      "unlimited": false
+    },
+    "z_f": {
+      "size": 10,
+      "unlimited": false
+    },
+    "z_g": {
+      "size": 100,
+      "unlimited": false
+    },
+    "z_h": {
+      "size": 32,
+      "unlimited": false
+    },
+    "z_i": {
+      "size": 171,
+      "unlimited": false
+    },
+    "z_j": {
+      "size": 360,
+      "unlimited": false
+    },
+    "m_c": {
+      "size": 32,
+      "unlimited": false
+    },
+    "l_e": {
+      "size": 32,
+      "unlimited": false
+    },
+    "m_d": {
+      "size": 7,
+      "unlimited": false
+    },
+    "l_f": {
+      "size": 7,
+      "unlimited": false
+    },
+    "l_g": {
+      "size": 1,
+      "unlimited": false
+    }
+  },
+  "global_attributes": {
+    "Conventions": "CF-1.1",
+    "file_name": "stomate_restart.nc",
+    "TimeStamp": "2025-SEP-20 11:51:17 GMT+0800"
+  },
+  "physical_variables": [
+    "nav_lon",
+    "nav_lat",
+    "nav_lev",
+    "time",
+    "time_steps"
+  ],
+  "single_landpoint_scatter": {
+    "index_g": [
+      1
+    ],
+    "grid_shape": [
+      1,
+      1
+    ],
+    "fortran_provenance": {
+      "file": "fortran_source/ORCHIDEE/src_stomate/stomate_io.f90",
+      "subroutine": "writerestart",
+      "lines": "1751-2944 restput_p scatter calls"
+    }
+  },
+  "variables": {
+    "nav_lon": {
+      "dtype": "float32",
+      "dimensions": [
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "degrees_east",
+        "valid_min": -180.0,
+        "valid_max": 180.0,
+        "long_name": "Longitude"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "nav_lat": {
+      "dtype": "float32",
+      "dimensions": [
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "units": "degrees_north",
+        "valid_min": -90.0,
+        "valid_max": 90.0,
+        "long_name": "Latitude"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "nav_lev": {
+      "dtype": "float32",
+      "dimensions": [
+        "z"
+      ],
+      "attributes": {
+        "units": "model_levels",
+        "valid_min": 0.0,
+        "valid_max": 0.0,
+        "long_name": "Model levels"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "time": {
+      "dtype": "float32",
+      "dimensions": [
+        "time"
+      ],
+      "attributes": {
+        "units": "seconds since 1961-01-01 00:00:00",
+        "calendar": "noleap",
+        "title": "Time",
+        "long_name": "Time axis",
+        "time_origin": " 1961-JAN-01 00:00:00"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "time_steps": {
+      "dtype": "int32",
+      "dimensions": [
+        "time"
+      ],
+      "attributes": {
+        "units": "timesteps since 1961-01-01 00:00:00",
+        "title": "Time steps",
+        "tstep_sec": 1800.0,
+        "long_name": "Time step axis",
+        "time_origin": " 1961-JAN-01 00:00:00"
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "dt_days": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "date": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "moiavail_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "gdd_init_date": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_b",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "litterhum_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "t2m_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "t2m_min_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "t2m_max_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "wspeed_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "tsurf_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "tsoil_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_c",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "soilhum_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_c",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "precip_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "gpp_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "npp_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "turnover_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "m_a",
+        "l_a",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "moiavail_month": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "moiavail_week": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "t2m_longterm": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "tau_longterm": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20,
+        "units": "-",
+        "long_name": ""
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "t2m_month": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "Tseason": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "Tseason_length": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "Tseason_tmp": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "Tmin_spring_time": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "onset_date": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "t2m_week": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "tsoil_month": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_c",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "soilhum_month": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_c",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fireindex": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "firelitter": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "maxmoistr_last": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "maxmoistr_this": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "minmoistr_last": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "minmoistr_this": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "maxgppweek_lastyear": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "maxgppweek_thisyear": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "gdd0_thisyear": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "gdd0_lastyear": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "precip_thisyear": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "precip_lastyear": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "gdd_m5_dormance": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "gdd_from_growthinit": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "gdd_midwinter": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "ncd_dormance": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "ngd_minus5": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "time_hum_min": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "hum_min_dormance": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "PFTpresent": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "ind": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "adapted": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "regenerate": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "npp_longterm": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "lm_lastyearmax": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "lm_thisyearmax": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "maxfpc_lastyear": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "maxfpc_thisyear": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "turnover_time": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "turnover_longterm": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "m_a",
+        "l_a",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "gpp_week": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "biomass": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "m_a",
+        "l_a",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "maint_resp": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_a",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "leaf_age": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_b",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "leaf_frac": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_b",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "senescence": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "begin_leaves": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "when_growthinit": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "age": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "resp_hetero": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "resp_maint": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "resp_growth": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "co2_fire": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "co2_to_bm_dgvm": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "veget_lastlight": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "everywhere": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "need_adjacent": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "RIP_time": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "litterpart": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_c",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "litter": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "n_a",
+        "m_b",
+        "l_d",
+        "z_b",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "dead_leaves": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_c",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "carbon": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_d",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "lignin_struc": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_c",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "ni_acc": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fuel_1hr": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "m_a",
+        "l_c",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fuel_10hr": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "m_a",
+        "l_c",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fuel_100hr": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "m_a",
+        "l_c",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fuel_1000hr": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "m_a",
+        "l_c",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "prod10": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_c",
+        "z_c",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "prod100": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_c",
+        "z_e",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "flux10": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_c",
+        "z_f",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "flux100": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_c",
+        "z_g",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "bm_to_litter": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "m_a",
+        "l_a",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "carb_mass_total": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "deepC_a": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_h",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "deepC_s": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_h",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "deepC_p": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_h",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "O2_soil": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_h",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "CH4_soil": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_h",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "O2_snow": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_d",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "CH4_snow": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_d",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "thawed_humidity": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "depth_organic_soil": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "altmax": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fixed_cryoturb_depth": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "uo_0": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_i",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "uold2_0": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_i",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "uo_wet1": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_i",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "uold2_wet1": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_i",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "uo_wet2": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_i",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "uold2_wet2": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_i",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "uo_wet3": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_i",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "uold2_wet3": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_i",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "uo_wet4": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_i",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "uold2_wet4": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_i",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "tsurf_year": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "height_acro": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "carbon_acro": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "carbon_cato": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fwet_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "liqwt_daily": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fwet_month": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "liqwt_month": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "liqwt_max": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fwet_series": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_j",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "fpeat": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "deepC_peat": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_h",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "carbon_save": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_d",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "deepC_a_save": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_h",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "deepC_s_save": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_h",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "deepC_p_save": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_h",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "delta_fsave": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "litter_above": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "m_a",
+        "l_d",
+        "z_b",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "litter_below": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "n_a",
+        "m_c",
+        "l_d",
+        "z_b",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "lignin_struc_above": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "lig_struc_be": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_e",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "depth_deepsoil": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "carbon_32l_a": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_e",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "carbon_32l_s": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_e",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "carbon_32l_p": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_e",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "freedoc": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "n_a",
+        "m_d",
+        "l_e",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "adsdoc": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "n_a",
+        "m_d",
+        "l_e",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "interception_storage": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "wshtotsum": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "sr_ugb": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "sla_calc": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "nb_ani": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "grazed_frac": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "import_yield": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "t2m_14": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "litter_not_avail": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_d",
+        "z_b",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "nb_grazingdays": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "after_snow": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "after_wet": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "wet1day": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "wet2day": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "Global_years": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "nbp_sum": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "nbp_flux": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "ok_equilibrium": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "MatrixV": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "m_d",
+        "l_f",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "Vector_U": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_f",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "previous_stock": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_f",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "current_stock": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_f",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    },
+    "assim_param": {
+      "dtype": "float64",
+      "dimensions": [
+        "time",
+        "l_g",
+        "z_a",
+        "y",
+        "x"
+      ],
+      "attributes": {
+        "missing_value": 1.0000000200408773e+20
+      },
+      "chunking": "contiguous",
+      "endian": "little"
+    }
+  }
+}

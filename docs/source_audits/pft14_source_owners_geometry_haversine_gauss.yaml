@@ -1,0 +1,99 @@
+schema_version: 1
+scope: >-
+  Independent batch-2 geometry ledger. It owns only seven selected
+  haversine.f90 procedures (78 audited control-flow arms) and the two
+  gauss_jordan_method.f90 procedures (19 audited control-flow arms).
+procedure_count: 9
+control_flow_arms: 97
+source_totals:
+  haversine.f90: {procedures: 7, control_flow_arms: 78}
+  gauss_jordan_method.f90: {procedures: 2, control_flow_arms: 19}
+
+entries:
+  - id: geometry.haversine.reglatlontoploy
+    fortran_file: fortran_source/ORCHIDEE/src_global/haversine.f90
+    fortran_subroutine: haversine_reglatlontoploy
+    fortran_lines: 72-250
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_haversine.haversine_reglatlontoploy
+    gap: null
+    state_contract: [jax_orchidee.driver.geometry_haversine.PolygonGeometry]
+    validation: [tests/unit/test_geometry_haversine.py]
+  - id: geometry.haversine.regxytoploy
+    fortran_file: fortran_source/ORCHIDEE/src_global/haversine.f90
+    fortran_subroutine: haversine_regxytoploy
+    fortran_lines: 263-382
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_haversine.haversine_regxytoploy
+    gap: null
+    state_contract: [jax_orchidee.driver.geometry_haversine.PolygonGeometry]
+    validation: [tests/unit/test_geometry_haversine.py]
+  - id: geometry.haversine.singlepointploy
+    fortran_file: fortran_source/ORCHIDEE/src_global/haversine.f90
+    fortran_subroutine: haversine_singlepointploy
+    fortran_lines: 394-488
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_haversine.haversine_singlepointploy
+    gap: null
+    state_contract: [jax_orchidee.driver.geometry_haversine.PolygonGeometry]
+    validation: [tests/unit/test_geometry_haversine.py]
+  - id: geometry.haversine.polyseglen
+    fortran_file: fortran_source/ORCHIDEE/src_global/haversine.f90
+    fortran_subroutine: haversine_polyseglen
+    fortran_lines: 605-655
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_haversine.haversine_polyseglen
+    gap: null
+    state_contract: [jax_orchidee.driver.geometry_haversine.haversine_polyseglen]
+    validation: [tests/unit/test_geometry_haversine.py]
+  - id: geometry.haversine.laloseglen
+    fortran_file: fortran_source/ORCHIDEE/src_global/haversine.f90
+    fortran_subroutine: haversine_laloseglen
+    fortran_lines: 667-736
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_haversine.haversine_laloseglen
+    gap: null
+    state_contract: [jax_orchidee.driver.geometry_haversine.haversine_laloseglen]
+    validation: [tests/unit/test_geometry_haversine.py]
+  - id: geometry.haversine.clockwise
+    fortran_file: fortran_source/ORCHIDEE/src_global/haversine.f90
+    fortran_subroutine: haversine_clockwise
+    fortran_lines: 749-798
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_haversine.haversine_clockwise
+    gap: null
+    state_contract: [jax_orchidee.driver.geometry_haversine.haversine_clockwise]
+    validation: [tests/unit/test_geometry_haversine.py]
+  - id: geometry.haversine.laloarea
+    fortran_file: fortran_source/ORCHIDEE/src_global/haversine.f90
+    fortran_subroutine: haversine_laloarea
+    fortran_lines: 863-888
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_haversine.haversine_laloarea
+    gap: null
+    state_contract: [jax_orchidee.driver.geometry_haversine.haversine_laloarea]
+    validation: [tests/unit/test_geometry_haversine.py]
+  - id: geometry.gauss_jordan.solve
+    fortran_file: fortran_source/ORCHIDEE/src_global/gauss_jordan_method.f90
+    fortran_subroutine: gauss_jordan_method
+    fortran_lines: 61-157
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_gauss_jordan.gauss_jordan_method
+    gap: null
+    state_contract: [jax_orchidee.driver.geometry_gauss_jordan.GaussJordanResult]
+    validation: [tests/unit/test_geometry_gauss_jordan.py]
+  - id: geometry.gauss_jordan.error_l1_passive
+    fortran_file: fortran_source/ORCHIDEE/src_global/gauss_jordan_method.f90
+    fortran_subroutine: error_l1_passive
+    fortran_lines: 177-241
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_gauss_jordan.error_l1_passive
+    gap: null
+    state_contract: [jax_orchidee.driver.geometry_gauss_jordan.error_l1_passive]
+    validation: [tests/unit/test_geometry_gauss_jordan.py]
+
+validation_evidence:
+  - tests/unit/test_geometry_haversine.py embeds and compiles a source-extracted
+    gfortran micro-oracle for heading, distance, radial destination, and MOD semantics.
+  - tests/unit/test_geometry_gauss_jordan.py embeds and compiles source-extracted
+    gfortran micro-oracles for full-pivot elimination and passive-error propagation.

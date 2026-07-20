@@ -1,0 +1,67 @@
+module defprec
+  implicit none
+  integer,parameter::i_std=kind(1),r_std=kind(1d0)
+end module
+module constantes
+ use defprec
+ implicit none
+ real(r_std),parameter::zero=0d0,un=1d0,one_year=365d0,ZeroCelsius=273.15d0,undef=-9999d0
+ integer::printlev=0,numout=6
+end module
+module stomate_data
+ use defprec
+ implicit none
+ integer,parameter::nvm=14,nparts=12,nelements=1
+ integer,parameter::ileaf=1,isapabove=2,isapbelow=3,iheartabove=4,iheartbelow=5,iroot=6,ifruit=7,icarbon=1,iagrsapst=9,iagrsappn=10
+ real(r_std),parameter::min_stomate=0d0,min_avail=0.01d0,ref_greff=0.035d0,npp_longterm_init=10d0,spring_days_max=40d0
+ logical::ok_dgvm=.false.,lpj_gap_const_mort=.true.
+ integer::hist_id_stomate=0,itime=0,horipft_index=0
+end module
+module pft_parameters
+ use defprec
+ implicit none
+ logical::natural(14),is_tree(14),pasture(14)
+ integer::leaf_tab(14),pheno_type(14)
+ real(r_std)::residence_time(14),availability_fact(14),tmin_crit(14)
+end module
+module xios_orchidee
+ use defprec
+contains
+ subroutine xios_orchidee_send_field(name,x);character(*),intent(in)::name;real(r_std),intent(in)::x(:,:);end
+end module
+module ioipsl_para
+ use defprec
+contains
+ subroutine histwrite_p(id,name,it,x,n,idx);integer,intent(in)::id,it,n,idx;character(*),intent(in)::name;real(r_std),intent(in)::x(:,:);end
+end module
+module gap_oracle
+ use xios_orchidee;use stomate_data;use pft_parameters;use ioipsl_para;use constantes
+ implicit none
+ logical,save::firstcall_gap=.true.
+ real(r_std),parameter::frost_damage_limit=-3d0+ZeroCelsius,coldness_mort=0.04d0
+contains
+! <GAP_PROCEDURE>
+end module
+program main
+ use defprec;use constantes;use stomate_data;use pft_parameters;use gap_oracle
+ implicit none
+ integer::u,i,j,k
+ character(len=1024)::out
+ real(r_std)::npp(3,nvm),tlong(3,nvm,nparts,nelements),lm(3,nvm),bio(3,nvm,nparts,nelements),ind(3,nvm),lit(3,nvm,nparts,nelements),mort(3,nvm),tmin(3),spring(3,nvm),sla(3,nvm)
+ logical::present(3,nvm)
+ call get_command_argument(1,out)
+ natural=.false.;is_tree=.false.;pasture=.false.;leaf_tab=0;pheno_type=0
+ residence_time=30d0;availability_fact=.14d0;tmin_crit=undef
+ natural(14)=.true.;is_tree(14)=.true.
+ npp=20d0;tlong=0d0;lm=50d0;bio=0d0;ind=1d0;lit=0d0;mort=0d0;tmin=280d0;spring=0d0;sla=.02d0;present=.false.
+ present(1:2,14)=.true.;bio(1,14,ileaf,icarbon)=365d0;bio(1,14,iroot,icarbon)=73d0;bio(2,14,ileaf,icarbon)=100d0
+ call gap(3,2d0,npp,tlong,lm,present,bio,ind,lit,mort,tmin,spring,sla)
+ call gap(3,2d0,npp,tlong,lm,present,bio,ind,lit,mort,tmin,spring,sla)
+ open(newunit=u,file=trim(out),status='replace',action='write');write(u,'(A)')'field,value'
+ do j=1,nvm;do i=1,3
+  write(u,'(A,",",ES26.17)')'mortality',mort(i,j);write(u,'(A,",",ES26.17)')'ind',ind(i,j)
+  do k=1,nparts
+   write(u,'(A,",",ES26.17)')'biomass',bio(i,j,k,1);write(u,'(A,",",ES26.17)')'bm_to_litter',lit(i,j,k,1)
+  end do
+ end do;end do;close(u)
+end program

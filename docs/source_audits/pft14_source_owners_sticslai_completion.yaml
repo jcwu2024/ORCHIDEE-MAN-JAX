@@ -1,0 +1,24 @@
+schema_version: 1
+scope: >-
+  Exact source-routed completion owner for the four top-level Stics_init
+  initialization decisions. This completion ledger does not replace or edit
+  the parent STOMATE source-owner ledger.
+
+totals:
+  procedures: 1
+  arms: 4
+
+entries:
+  - id: stomate.completion.sticslai.stics_init
+    fortran_file: fortran_source/ORCHIDEE/src_sticslai/Stics_init.f90
+    fortran_subroutine: stics_init
+    fortran_lines: 4-533
+    status: implemented
+    jax_owner: jax_orchidee.sticslai_completion.stics_init_source_routed
+    gap: null
+    state_contract:
+      - jax_orchidee.sticslai_completion.SticsInitPftParameters
+      - jax_orchidee.sticslai_completion.SticsInitResult
+    validation:
+      - tests/unit/test_sticslai_completion.py
+    arm_count: 4

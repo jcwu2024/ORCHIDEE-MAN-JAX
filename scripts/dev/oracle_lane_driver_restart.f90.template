@@ -1,0 +1,39 @@
+program driver_restart_oracle
+  implicit none
+  integer,parameter::nlitt=2,nlevs=2,nelements=1,nbpools=7,nvm=2
+  integer,parameter::imetabolic=1,istructural=2,iabove=1,ibelow=2,icarbon=1
+  real,parameter::un=1.,zero=0.
+  integer::l,unit
+  character(len=3)::litter_str(nlitt),level_str(nlevs),element_str(nelements)
+  character(len=6)::pools_str(nbpools); character(len=32)::var_name
+  logical::PFTpresent(2,nvm),senescence(2,nvm),begin_leaves(2,nvm),need_adjacent(2,nvm)
+  real::PFTpresent_real(2,nvm),senescence_real(2,nvm),begin_leaves_real(2,nvm),need_adjacent_real(2,nvm)
+! <RESTART_LABEL_SPAN>
+  PFTpresent=reshape([.true.,.false.,.false.,.true.],[2,nvm])
+  senescence=reshape([.false.,.true.,.true.,.false.],[2,nvm])
+  begin_leaves=PFTpresent; need_adjacent=senescence
+! <RESTART_PFTPRESENT_SPAN>
+! <RESTART_SENESCENCE_SPAN>
+! <RESTART_BEGIN_LEAVES_SPAN>
+! <RESTART_NEED_ADJACENT_SPAN>
+  open(newunit=unit,file=trim(command_argument()),status='replace',action='write')
+  do l=1,nlitt; write(unit,'(A,",",A)') 'litter_label',trim(litter_str(l)); end do
+  do l=1,nlevs; write(unit,'(A,",",A)') 'level_label',trim(level_str(l)); end do
+  do l=1,nelements; write(unit,'(A,",",A)') 'element_label',trim(element_str(l)); end do
+  do l=1,nbpools; write(unit,'(A,",",A)') 'pool_label',trim(pools_str(l)); end do
+  call emit(unit,'PFTpresent',PFTpresent_real); call emit(unit,'senescence',senescence_real)
+  call emit(unit,'begin_leaves',begin_leaves_real); call emit(unit,'need_adjacent',need_adjacent_real)
+  close(unit)
+contains
+  subroutine ipslerr_p(level,routine,message,a,b)
+    integer,intent(in)::level;character(len=*),intent(in)::routine,message,a,b
+    error stop 'invalid writerestart index label'
+  end subroutine
+  subroutine emit(unit,name,value)
+    integer,intent(in)::unit;character(len=*),intent(in)::name;real,intent(in)::value(:,:);integer::i,j
+    do j=1,size(value,2);do i=1,size(value,1);write(unit,'(A,",",ES26.17E3)')trim(name),value(i,j);end do;end do
+  end subroutine
+  function command_argument() result(value)
+    character(len=1024)::value;call get_command_argument(1,value)
+  end function
+end program

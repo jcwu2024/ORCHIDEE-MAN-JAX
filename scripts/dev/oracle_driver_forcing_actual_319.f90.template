@@ -1,0 +1,75 @@
+program driver_forcing_actual_319_oracle
+  use readdim2, only: forcing_read_interpol, oracle_load, oracle_lon, oracle_lat, &
+       data_full, i_index, j_index, daily_interpol, interpol, &
+       oracle_last_read, oracle_itau_read_nm1, oracle_itau_read_n, &
+       oracle_mean_coszang, oracle_julian_for, oracle_julian0, &
+       oracle_tair_nm1, oracle_tair_n, oracle_qair_nm1, oracle_qair_n, &
+       oracle_pb_nm1, oracle_pb_n, oracle_u_nm1, oracle_u_n, &
+       oracle_v_nm1, oracle_v_n, oracle_lwdown_nm1, oracle_lwdown_n, &
+       oracle_swdown_nm1, oracle_swdown_n, oracle_rainf_n, oracle_snowf_n
+  implicit none
+
+  integer, parameter :: iim=1, jjm=1, ttm=1460, split=12, spread=6
+  integer, parameter :: nsteps=17520, nreal=29, ninteger=3
+  integer :: kindex(1), nbindex, step, unit_real, unit_integer
+  real :: lon(iim,jjm), lat(iim,jjm), zlev(iim,jjm), zlevuv(iim,jjm)
+  real :: swdown(iim,jjm), coszang(iim,jjm), rainf(iim,jjm), snowf(iim,jjm)
+  real :: tair(iim,jjm), u(iim,jjm), v(iim,jjm), qair(iim,jjm)
+  real :: pb(iim,jjm), lwdown(iim,jjm), contfrac(iim,jjm)
+  real :: resolution(iim,jjm,2), swnet(iim,jjm), eair(iim,jjm)
+  real :: peta(iim,jjm), peqa(iim,jjm), petb(iim,jjm), peqb(iim,jjm)
+  real :: cdrag(iim,jjm), ccanopy(iim,jjm)
+  integer :: neighbours(iim,jjm,8)
+  real :: real_outputs(nreal,nsteps)
+  integer :: integer_outputs(ninteger,nsteps)
+  character(len=1024) :: input_path, real_output_path, integer_output_path
+
+  call get_command_argument(1,input_path)
+  call get_command_argument(2,real_output_path)
+  call get_command_argument(3,integer_output_path)
+  if (len_trim(input_path)==0 .or. len_trim(real_output_path)==0 .or. &
+      len_trim(integer_output_path)==0) error stop 'expected input and two output paths'
+
+  call oracle_load(trim(input_path))
+  lon(1,1)=oracle_lon
+  lat(1,1)=oracle_lat
+  allocate(data_full(iim,jjm),i_index(iim),j_index(jjm))
+  i_index=[1]
+  j_index=[1]
+  interpol=.true.
+  daily_interpol=.false.
+  kindex=0
+  nbindex=0
+
+  call forcing_read_interpol('memory',0,0,split,spread,.false.,0.,21600., &
+       iim,jjm,lon,lat,zlev,zlevuv,ttm,swdown,coszang,rainf,snowf,tair, &
+       u,v,qair,pb,lwdown,contfrac,neighbours,resolution,swnet,eair,peta, &
+       peqa,petb,peqb,cdrag,ccanopy,kindex,nbindex,1)
+
+  do step=1,nsteps
+    call forcing_read_interpol('memory',(step-1)/split+1,mod(step-1,split)+1, &
+         split,spread,.false.,0.,21600.,iim,jjm,lon,lat,zlev,zlevuv,ttm, &
+         swdown,coszang,rainf,snowf,tair,u,v,qair,pb,lwdown,contfrac, &
+         neighbours,resolution,swnet,eair,peta,peqa,petb,peqb,cdrag, &
+         ccanopy,kindex,nbindex,1)
+
+    real_outputs(:,step)=[ &
+         tair(1,1),qair(1,1),pb(1,1),u(1,1),v(1,1), &
+         sqrt(u(1,1)*u(1,1)+v(1,1)*v(1,1)),rainf(1,1),snowf(1,1), &
+         lwdown(1,1),swdown(1,1),oracle_mean_coszang,oracle_julian_for, &
+         oracle_julian0,oracle_tair_nm1,oracle_tair_n,oracle_qair_nm1, &
+         oracle_qair_n,oracle_pb_nm1,oracle_pb_n,oracle_u_nm1,oracle_u_n, &
+         oracle_v_nm1,oracle_v_n,oracle_lwdown_nm1,oracle_lwdown_n, &
+         oracle_swdown_nm1,oracle_swdown_n,oracle_rainf_n,oracle_snowf_n]
+    integer_outputs(:,step)=[oracle_last_read,oracle_itau_read_nm1,oracle_itau_read_n]
+  end do
+
+  open(newunit=unit_real,file=trim(real_output_path),access='stream', &
+       form='unformatted',status='replace',action='write')
+  write(unit_real) real_outputs
+  close(unit_real)
+  open(newunit=unit_integer,file=trim(integer_output_path),access='stream', &
+       form='unformatted',status='replace',action='write')
+  write(unit_integer) integer_outputs
+  close(unit_integer)
+end program driver_forcing_actual_319_oracle

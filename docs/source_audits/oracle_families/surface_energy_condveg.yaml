@@ -1,0 +1,242 @@
+schema_version: 2
+families:
+  - id: surface_condveg_processes
+    certification_status: verified
+    runner: oracle_lane_surface_condveg:run_oracle
+    ledger_entries:
+      - condveg.active.dynamic_roughness
+      - condveg.active.snow_fraction
+      - condveg.active.background_albedo
+      - condveg.active.emissivity
+    input_asset: outputs/reference_mode/micro_oracles/surface_condveg_processes/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/surface_condveg_processes/point_comparisons.csv
+    output_contract: [z0m, z0h, roughheight, roughheight_pft14, snow_veg, snow_nobio, albedo, albedo_snow, alb_bare, alb_veget, mean_albedo, mean_albedo_snow, mean_alb_bare, mean_alb_veget, emis]
+    branch_cases:
+      - {id: rough_zero_sumveg, ledger_entry: condveg.active.dynamic_roughness, fortran_lines: 1577-1718, condition: "all veget_max zero and frac_nobio=1 at point 1", expected_arm: inactive-PFT and sumveg-equals-zero arms with ice roughness aggregation, input_case: "point 1", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/condveg.f90:1611:where:false", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:1641:where:false", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:1645:elsewhere:fallthrough", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:1666:where:false", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:1678:if:true"]}
+      - {id: rough_active_pft14, ledger_entry: condveg.active.dynamic_roughness, fortran_lines: 1596-1718, condition: "PFT14 veget_max > 0 with LAI below and above min_sechiba", expected_arm: active-PFT, both canopy-kB arms, and positive-sumveg normalization, input_case: "points 2-3 and inactive PFT columns", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/condveg.f90:1611:where:true", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:1641:where:true", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:1666:where:true"]}
+      - {id: explicit_snow_zero, ledger_entry: condveg.active.snow_fraction, fortran_lines: 879-896, condition: "OK_EXPLICITSNOW and snowdepth < min_sechiba; printlev < 3", expected_arm: explicit-snow true and zero-depth WHERE arm, input_case: "point 1", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/condveg.f90:879:if:true", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:882:where:true", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:896:if:false"]}
+      - {id: explicit_snow_nonzero, ledger_entry: condveg.active.snow_fraction, fortran_lines: 879-896, condition: "OK_EXPLICITSNOW and snowdepth >= min_sechiba; printlev < 3", expected_arm: explicit-snow true and density/depth ELSEWHERE arm, input_case: "points 2-3", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/condveg.f90:882:where:false", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:884:elsewhere:fallthrough"]}
+      - {id: modis_aged_snow_albedo, ledger_entry: condveg.active.background_albedo, fortran_lines: 670-837, condition: "impaze=false, alb_bg_modis=true, calculated snow, positive and zero vegetation fraction, iice, printlev<3", expected_arm: MODIS background and both vegetation-fraction arms, input_case: "three points", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/condveg.f90:670:if:false", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:694:if:true", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:731:if:false", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:778:if:true", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:778:if:false", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:812:if:true", "fortran_source/ORCHIDEE/src_sechiba/condveg.f90:837:if:false"]}
+      - {id: mean_bare_albedo, ledger_entry: condveg.active.background_albedo, fortran_lines: 694-701, condition: "alb_bg_modis=false and alb_bare_model=false", expected_arm: prescribed mean soil albedo, input_case: "second full condveg_albedo call", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/condveg.f90:697:if:false"]}
+      - {id: main_emissivity_assignment, ledger_entry: condveg.active.emissivity, fortran_lines: 398-403, condition: "normal condveg_main call", expected_arm: emis(:)=emis_scal, input_case: "three points through full real condveg_main callees", control_flow_arm_ids: []}
+    procedures:
+      - &condveg_frac
+        id: surface_condveg_processes.condveg_frac_snow
+        source_file: fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+        procedure: condveg_frac_snow
+        procedure_kind: subroutine
+        start_line: 858
+        end_line: 898
+        expected_source_sha256: c254b5d5d596750f16458dd9e092c2fd4fd49034c04d649174bdffbb83f0dc9c
+        expected_span_sha256: 4d55a88b8b6f38381aae449167b901af0462a4c49bb0dd0da383b90f063e1ae3
+        dependencies: {use_modules: [constantes, constantes_soil], module_symbols: [ok_explicitsnow, snowcri_alb, sn_dens]}
+        compilation: &condveg_compilation {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_surface_condveg.f90.template, result_asset: outputs/reference_mode/micro_oracles/surface_condveg_processes/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - <<: *condveg_frac
+        id: surface_condveg_processes.condveg_albedo
+        procedure: condveg_albedo
+        start_line: 612
+        end_line: 839
+        expected_span_sha256: 09b8bb6b0292e47c4170f787fcad8a62635d563549bcdce2538361e84080a9c0
+        dependencies: {use_modules: [constantes, constantes_soil, pft_parameters], module_symbols: [alb_bg_modis, soilalb_bg, alb_leaf_vis, alb_leaf_nir, snowa_aged_vis, snowa_aged_nir, snowa_dec_vis, snowa_dec_nir]}
+      - <<: *condveg_frac
+        id: surface_condveg_processes.condveg_z0cdrag
+        procedure: condveg_z0cdrag
+        start_line: 1325
+        end_line: 1474
+        expected_span_sha256: 8f4e9e2be5883658725e091608347bcae64be8f180aef2c5eaf8bd06b7d13ace
+        dependencies: {use_modules: [constantes, pft_parameters], module_symbols: [ct_karman, z0_bare, z0_ice, height_displacement, is_tree, z0_over_height, ratio_z0m_z0h]}
+      - <<: *condveg_frac
+        id: surface_condveg_processes.condveg_z0cdrag_dyn
+        procedure: condveg_z0cdrag_dyn
+        start_line: 1519
+        end_line: 1720
+        expected_span_sha256: bd15060a018c36435a339812de2bac338a5ee2eb132609b67a43c54d3f8a3d06
+        dependencies: {use_modules: [constantes, pft_parameters], module_symbols: [ct_karman, pb_std, height_displacement, Cdrag_foliage, Ct, Prandtl, c1, c2, c3]}
+      - <<: *condveg_frac
+        id: surface_condveg_processes.condveg_main
+        procedure: condveg_main
+        start_line: 332
+        end_line: 480
+        expected_span_sha256: 4a1b844abd0d94ba5cf70cfab5825cf0ebb728ab3bc259d1ff7f7eea3750e25f
+        dependencies: {use_modules: [constantes, pft_parameters], module_symbols: [emis_scal, rough_dyn, almaoutput]}
+
+  - id: surface_enerbil_potential_temperature
+    certification_status: verified
+    runner: oracle_lane_surface_enerbil:run_oracle
+    ledger_entries: [enerbil.conditional.potential_temperature]
+    input_asset: outputs/reference_mode/micro_oracles/surface_enerbil_potential_temperature/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/surface_enerbil_potential_temperature/point_comparisons.csv
+    output_contract: [q_sol_pot, temp_sol_pot]
+    branch_cases:
+      - {id: potential_temperature_nonzero_carry, ledger_entry: enerbil.conditional.potential_temperature, fortran_lines: 1304-1313, condition: "nonzero diagnostic state", expected_arm: exact zero-increment pass-through, input_case: "three nonzero values", control_flow_arm_ids: []}
+    procedures:
+      - id: surface_enerbil_potential_temperature.enerbil_pottemp
+        source_file: fortran_source/ORCHIDEE/src_sechiba/enerbil.f90
+        procedure: enerbil_pottemp
+        procedure_kind: subroutine
+        start_line: 1263
+        end_line: 1317
+        expected_source_sha256: 997538e93b622db72a1106deedd3e5beaaec74a3df7041a0d64caaf51d28bd3b
+        expected_span_sha256: 738b87f68b608c7de07247125ec3f1eabc7d1035265b20ecabb4d76adfff21d4
+        dependencies: {use_modules: [constantes], module_symbols: [zero, un, cp_air]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_surface_enerbil.f90.template, result_asset: outputs/reference_mode/micro_oracles/surface_enerbil_potential_temperature/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 0.0}
+
+  - id: surface_enerbil_main
+    certification_status: verified
+    runner: oracle_lane_surface_enerbil_main:run_oracle
+    ledger_entries: [enerbil.active.surface_energy]
+    input_asset: outputs/reference_mode/micro_oracles/surface_enerbil_main/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/surface_enerbil_main/point_comparisons.csv
+    output_contract: [temp_sol_new, temp_sol_new_pft14, qsurf, evapot, evapot_corr, fluxsens, fluxlat, vevapp, vevapnu, vevapsno, vevapflo, transpir14, transpot14, vevapwet14, vevapnu_pft14, pgflux, temp_sol_add, history_call_count]
+    branch_cases:
+      - {id: nonalma_surface_energy, ledger_entry: enerbil.active.surface_energy, fortran_lines: 390-596, condition: "almaoutput=false, hist2_id<=0, printlev<3; warm/no-snow and explicit-snow PFT14 points", expected_arm: complete scientific outputs plus non-ALMA primary-history and disabled-secondary arms, input_case: "points 1-2 call 1", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/enerbil.f90:568:if:true", "fortran_source/ORCHIDEE/src_sechiba/enerbil.f90:575:if:false", "fortran_source/ORCHIDEE/src_sechiba/enerbil.f90:596:if:false"]}
+      - {id: alma_surface_history, ledger_entry: enerbil.active.surface_energy, fortran_lines: 568-596, condition: "almaoutput=true and hist2_id<=0 on second real enerbil_main call", expected_arm: ALMA history and disabled-secondary arm; total real histwrite calls across both calls equals 11, input_case: "points 1-2 call 2", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/enerbil.f90:589:if:false"]}
+    procedures:
+      - &enerbil_main_record
+        id: surface_enerbil_main.enerbil_main
+        source_file: fortran_source/ORCHIDEE/src_sechiba/enerbil.f90
+        procedure: enerbil_main
+        procedure_kind: subroutine
+        start_line: 390
+        end_line: 598
+        expected_source_sha256: 997538e93b622db72a1106deedd3e5beaaec74a3df7041a0d64caaf51d28bd3b
+        expected_span_sha256: d6def4ed8f37ba2d9c09df55bde398ac33b868735115f47573b1b9e3bba3613f
+        dependencies: {use_modules: [constantes, pft_parameters, qsat_moisture], module_symbols: [psold, qsol_sat, pdqsold, psnew, qsol_sat_new, netrad, lwabs, lwup, lwnet, fluxsubli, q_sol_pot, temp_sol_pot]}
+        compilation: &enerbil_main_compilation {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_surface_enerbil_main.f90.template, result_asset: outputs/reference_mode/micro_oracles/surface_enerbil_main/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - <<: *enerbil_main_record
+        id: surface_enerbil_main.enerbil_begin
+        procedure: enerbil_begin
+        start_line: 735
+        end_line: 873
+        expected_span_sha256: e701b94a403f03d9e0603092fbb378e75cfcbcd8ec0f01ed754d62b1a3a391b3
+      - <<: *enerbil_main_record
+        id: surface_enerbil_main.enerbil_surftemp
+        procedure: enerbil_surftemp
+        start_line: 927
+        end_line: 1245
+        expected_span_sha256: 8958aece7cec9727ccb684183ef02955a273a2f95eaf4d01ec58eeca50347cb6
+      - <<: *enerbil_main_record
+        id: surface_enerbil_main.enerbil_pottemp
+        procedure: enerbil_pottemp
+        start_line: 1263
+        end_line: 1317
+        expected_span_sha256: 738b87f68b608c7de07247125ec3f1eabc7d1035265b20ecabb4d76adfff21d4
+      - <<: *enerbil_main_record
+        id: surface_enerbil_main.enerbil_flux
+        procedure: enerbil_flux
+        start_line: 1367
+        end_line: 1651
+        expected_span_sha256: e0a4a180a8be8fd740bd36f00dd45dc3254f2339e2db585910ce6443742b4ec5
+      - <<: *enerbil_main_record
+        id: surface_enerbil_main.enerbil_evapveg
+        procedure: enerbil_evapveg
+        start_line: 1691
+        end_line: 1841
+        expected_span_sha256: f3391ebc773d575e454a43ee2f5caf7157148b57247b461283ec51ece89a2b43
+      - <<: *enerbil_main_record
+        id: surface_enerbil_main.enerbil_t2mdiag
+        procedure: enerbil_t2mdiag
+        start_line: 1993
+        end_line: 2021
+        expected_span_sha256: 33adadac3dc6b320ef66f0cc089b53986a2fa3f58ef402d9cbb22748831f492a
+      - &enerbil_qsat_record
+        id: surface_enerbil_main.qsatcalc
+        source_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90
+        procedure: qsatcalc
+        procedure_kind: subroutine
+        start_line: 79
+        end_line: 179
+        expected_source_sha256: 3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e
+        expected_span_sha256: e2f88c9bb8a7faa186ff2119af3eab2e22521f2f90088168d7ed00cebf78a0bb
+        dependencies: {use_modules: [constantes, constantes_soil], module_symbols: [l_qsat_first, max_temp, min_temp, qsfrict]}
+        compilation: *enerbil_main_compilation
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - <<: *enerbil_qsat_record
+        id: surface_enerbil_main.dev_qsatcalc
+        procedure: dev_qsatcalc
+        start_line: 311
+        end_line: 408
+        expected_span_sha256: 580e844fc0a7ab8d3e0ac9e89316760c441a84dcaec9986f5d342a9293e5252a
+      - <<: *enerbil_qsat_record
+        id: surface_enerbil_main.qsfrict_init
+        procedure: qsfrict_init
+        start_line: 547
+        end_line: 589
+        expected_span_sha256: 111ec65a159bffd0a05edc78afc13ebb43cd8f888686003b0ae12f669db8de0c
+
+
+  - id: surface_diffuco_mangrove_controls
+    certification_status: verified
+    runner: oracle_lane_surface_mangrove:run_oracle
+    ledger_entries: [diffuco.active.mangrove_controls]
+    input_asset: outputs/reference_mode/micro_oracles/surface_diffuco_mangrove_controls/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/surface_diffuco_mangrove_controls/point_comparisons.csv
+    output_contract: [control_salinity, control_inudate, agb_st, agb_pn, h_st, h_pn, frac_root_soil, n_soil_inudate, frac_root_inudate, frac_root_ventilate, frac_root_anoxia, later_control_salinity, later_control_inudate, later_firstcall_flag]
+    branch_cases:
+      - {id: firstcall_salinity_tide_root, ledger_entry: diffuco.active.mangrove_controls, fortran_lines: 445-622, condition: "firstcall=true; clipped/unclipped salinity; successful allocation; capped/uncapped inundation; negative/nonnegative tide; positive stem and zero/positive pneumatophore heights; clamped/unclamped anoxia", expected_arm: complete defined first-call controls and state writeback, input_case: "two points x PFT2/PFT14 x 1006 tide slots", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:446:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:458:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:458:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:471:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:506:where:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:506:where:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:544:where:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:544:where:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:552:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:559:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:559:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:576:where:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:576:where:true"]}
+      - {id: later_save_controls, ledger_entry: diffuco.active.mangrove_controls, fortran_lines: 446-623, condition: "second call with firstcall_diffuco=false", expected_arm: skip initialization and preserve module SAVE controls, input_case: "same executable call 2; local INTENT(out) arrays deliberately not read", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:446:if:false"]}
+    procedures:
+      - id: surface_diffuco_mangrove_controls.diffuco_main_segment
+        source_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+        procedure: diffuco_main
+        procedure_kind: subroutine
+        start_line: 306
+        end_line: 752
+        expected_source_sha256: 6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba
+        expected_span_sha256: c4d599588fbea624d74e2d6271741fa45f5a3f8883e324ef0a25045dd8a6a418
+        dependencies: {use_modules: [constantes, constantes_soil], module_symbols: [firstcall_diffuco, control_salinity, control_inudate, diaglev]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_surface_mangrove.f90.template, result_asset: outputs/reference_mode/micro_oracles/surface_diffuco_mangrove_controls/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+        extracted_scientific_segment: {start_line: 445, end_line: 622, syntactic_closure_line: 623, expected_segment_sha256: 5b3675e730e63cb458fed9a10ec2a3dbb9513e7da3bcb9b6567960ebf872e0de}
+
+
+  - id: surface_diffuco_co2_fvcb
+    certification_status: verified
+    runner: oracle_lane_surface_fvcb:run_oracle
+    ledger_entries: [diffuco.active.co2_fvcb]
+    input_asset: outputs/reference_mode/micro_oracles/surface_diffuco_co2_fvcb/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/surface_diffuco_co2_fvcb/point_comparisons.csv
+    output_contract: [vcmax_no_downreg, vcmax_downreg, activity_assimilate, activity_zqsvegrap, activity_water_lim, empty_assimi, empty_cc, empty_leaf_ci, empty_gs, empty_info, mask_layer1, mask_layer1_nic, mask_layer3, mask_layer3_nic, mask_empty_nic, integrate_assimtot, integrate_rdtot, integrate_gstot, integrate_leaf_gs_top, integrate_ilai, cim, cim_laisum, activity_nia, activity_nina, assimi, cc, leaf_ci, gs, info, assimtot_controlled, gsmean, cimean, gpp, rveget, rstruct, vbeta3, vbeta3pot, cimean_baseline, inactive_gsmean, inactive_cimean, inactive_gpp, inactive_rveget, inactive_rstruct, inactive_vbeta3, inactive_vbeta3pot]
+    branch_cases:
+      - {id: downreg_disabled, ledger_entry: diffuco.active.co2_fvcb, fortran_lines: 2240-2246, condition: "downregulation_co2=false", expected_arm: unchanged vcmax, input_case: "downregulation points 1-3", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2240:if:false"]}
+      - {id: activity_masks, ledger_entry: diffuco.active.co2_fvcb, fortran_lines: 2346-2377, condition: "positive/zero SW, positive/zero LAI, cover and humidity combinations", expected_arm: active and inactive assimilation index sets, input_case: "activity points 1-3", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2346:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2346:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2358:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2358:if:false"]}
+      - {id: interception_capacity_masks, ledger_entry: diffuco.active.co2_fvcb, fortran_lines: 2394-2397, condition: "qsintmax above and at zero", expected_arm: ratio and default zero water limitation, input_case: "activity points 1-3", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2394:where:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2394:where:false"]}
+      - {id: canopy_layer_masks, ledger_entry: diffuco.active.co2_fvcb, fortran_lines: 2519-2530, condition: "nia=2 with layer thresholds 0 and 1.5, then nia=0", expected_arm: nonempty/empty active set and true/false per-point calculate mask, input_case: "mask layer1/layer3/empty", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2522:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2522:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2525:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2525:if:false"]}
+      - {id: pft14_c3_valid_roots, ledger_entry: diffuco.active.co2_fvcb, fortran_lines: 2561,2705-2785, condition: "is_c4(14)=false and two finite normal C3 points", expected_arm: C3 path, Vc/J iterations, accepted roots, lower/retained candidate, normal conductance, input_case: "C3 points 1-2", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2561:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2705:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2714:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2714:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2743:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2746:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2746:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2760:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2779:if:false"]}
+      - {id: c3_empty_and_fallback, ledger_entry: diffuco.active.co2_fvcb, fortran_lines: 2705-2786, condition: "nic=0 call plus finite point with QQ>0 and both cubic ratios outside [-1,1]", expected_arm: empty skip and no-real-root respiration fallback with printlev below 4 and zero gross assimilation guard, input_case: "empty C3 and C3 point 3", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2705:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2743:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2760:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2761:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2779:if:true"]}
+      - {id: canopy_integration_writeback, ledger_entry: diffuco.active.co2_fvcb, fortran_lines: 2789-2831, condition: "nic=2 at jl=1 and jl=2 followed by nic=0", expected_arm: active/empty integration and top/lower-layer writeback, input_case: "integration calls 1-3", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2789:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2789:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2806:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2806:if:false"]}
+      - {id: pft14_controls_and_cim, ledger_entry: diffuco.active.co2_fvcb, fortran_lines: 2834-2872, condition: "jv=14 controls plus LAI 0/0.75/2 across three layers", expected_arm: salinity/inundation controls, contributing/masked layers and positive laisum normalization, input_case: "control and cim points 1-3", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2836:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2865:where:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2865:where:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2870:where:true"]}
+      - {id: output_active_inactive_and_cimean, ledger_entry: diffuco.active.co2_fvcb, fortran_lines: 2878-2954, condition: "nia=3 and nia=0 calls plus gstot equal/not equal to g0var*laisum; ok_LAIdev(14)=true", expected_arm: active/inactive output, computed/baseline cimean and PFT14 drag selection, input_case: "normal/baseline/inactive output calls", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2878:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2878:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2890:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2890:if:false", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2947:if:true"]}
+      - {id: output_humidity_masks, ledger_entry: diffuco.active.co2_fvcb, fortran_lines: 2956-2969, condition: "humrel PFT14 positive and zero", expected_arm: humidity-limited and dry beta writeback, input_case: "output points 1-3", control_flow_arm_ids: ["fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2956:if:true", "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90:2956:if:false"]}
+    procedures:
+      - id: surface_diffuco_co2_fvcb.diffuco_trans_co2
+        source_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+        procedure: diffuco_trans_co2
+        procedure_kind: subroutine
+        start_line: 2018
+        end_line: 2982
+        expected_source_sha256: 6150cf97760e29794ab642fa097caed049222076c04ad9e9817ca4dfe98d17ba
+        expected_span_sha256: 8b5f99c017fabe160bc5d51b771d9755c3bb69ecf320d3a0b71ca04202b094d9
+        dependencies: {use_modules: [constantes, pft_parameters, qsat_moisture], module_symbols: [control_salinity, control_inudate, wind, rveg_pft, min_wind]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_surface_fvcb.f90.template, result_asset: outputs/reference_mode/micro_oracles/surface_diffuco_co2_fvcb/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+        extracted_scientific_segments:
+          - {start_line: 2240, end_line: 2246, expected_segment_sha256: 59fea91e9a15af98513f6d9e19f2b1e3fa0131e5ec4d0c647b18a4f70bde54fc}
+          - {start_line: 2338, end_line: 2400, expected_segment_sha256: fd100d09c3f09072d7417c10408bc2b8161a3a01c51c05961c9395ca29556115, preprocessed_exclusion: 2350-2355 STRICT_CHECK}
+          - {start_line: 2519, end_line: 2530, expected_segment_sha256: ab7b060dba5e4db903ccb7ec7b92b41db471d67084e62e0562a986511a7b994f}
+          - {start_line: 2705, end_line: 2786, expected_segment_sha256: e335b58eb66892181785441e1181e00d29414228d8ed3fe278f8ca27cec53664}
+          - {start_line: 2789, end_line: 2831, expected_segment_sha256: 8d187289b2c8713c05ad16d3cf9fb6bbdee27d767d83cb6f5eba7d508922260b}
+          - {start_line: 2834, end_line: 2844, expected_segment_sha256: 1207c4444cc061b8c450e4b6e8fd35c5de70da65b7dedb7e4d891318b8989754}
+          - {start_line: 2861, end_line: 2872, expected_segment_sha256: 35c689ad77000d080d02d89100ad98ff4b1cbacbb7f1d2e1aa2381d67973375c}
+          - {start_line: 2878, end_line: 2974, expected_segment_sha256: 0f20d5207cc4ba1b0ab0e46fc6c1dde77a75f2e272661fdb9a6926ade3872999}
+
+pending_families: []

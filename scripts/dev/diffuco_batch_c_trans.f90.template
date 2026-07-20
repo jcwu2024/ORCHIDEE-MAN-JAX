@@ -1,0 +1,73 @@
+module defprec
+  use iso_fortran_env, only:int32,real64
+  implicit none
+  integer,parameter::i_std=int32,r_std=real64
+end module
+module IOIPSL
+  implicit none
+  integer,parameter::numout=6
+contains
+  subroutine ipslerr_p(level,a,b,c,d)
+    integer,intent(in)::level; character(*),intent(in)::a,b,c,d
+    if(level>=3) error stop 'ipslerr_p'
+  end subroutine
+end module
+module constantes
+  use defprec
+  implicit none
+  real(r_std),parameter::zero=0.d0,un=1.d0,msmlr_air=28.964d-3,msmlr_h2o=18.02d-3
+  real(r_std),parameter::retv=msmlr_air/msmlr_h2o-un,min_sechiba=1.d-8,tp_00=273.15d0
+  real(r_std)::min_wind=.1d0,rayt_cste=100.d0,defc_plus=23.d0,defc_mult=.5d0,undef_sechiba=1.d20
+  integer::printlev=0
+end module
+module constantes_soil
+  implicit none
+  logical::diag_qsat=.true.
+end module
+module pft_parameters
+  use defprec
+  implicit none
+  integer,parameter::nvm=14
+  real(r_std)::kzero(nvm)=.01d0,rveg_pft(nvm)=1.d0
+end module
+module qsat_moisture
+  use defprec; use constantes; use IOIPSL; use constantes_soil
+  implicit none
+  logical,save::l_qsat_first=.true.
+  integer(i_std),parameter::max_temp=370,min_temp=100
+  real(r_std),dimension(max_temp),save::qsfrict
+contains
+! <QSAT>
+end module
+module diffuco_oracle
+  use defprec; use constantes; use pft_parameters; use qsat_moisture
+  implicit none
+  real(r_std),allocatable,save::wind(:)
+contains
+! <TRANS>
+end module
+program main
+  use defprec; use constantes; use pft_parameters; use diffuco_oracle
+  implicit none
+  integer,parameter::n=3
+  integer::i,j
+  real(r_std)::swnet(n),t(n),pb(n),qair(n),rau(n),u(n),v(n),qc(n)
+  real(r_std)::hum(n,nvm),veg(n,nvm),vmax(n,nvm),lai(n,nvm),qsv(n,nvm),qsm(n,nvm),rs(n,nvm),vb23(n,nvm)
+  real(r_std)::vb3(n,nvm),vb3p(n,nvm),rv(n,nvm),ci(n,nvm),vbc(n,nvm)
+  character(512)::path
+  call get_command_argument(1,path); open(10,file=trim(path),status='replace')
+  write(10,'(a)') 'field,i,j,value'
+  allocate(wind(n)); wind=(/.05d0,2.d0,4.d0/); swnet=(/200.d0,0.d0,150.d0/); t=(/290.d0,285.d0,295.d0/); pb=1000.d0; qair=(/.004d0,.005d0,.2d0/); rau=(/1.2d0,1.1d0,1.3d0/); u=(/.02d0,2.d0,4.d0/); v=0.d0; qc=(/.01d0,.02d0,.03d0/)
+  hum=.7d0; veg=0.d0; vmax=0.d0; lai=0.d0; qsv=0.d0; qsm=.3d0; rs=50.d0; vb23=.2d0
+  veg(:,14)=(/.5d0,.6d0,.7d0/); vmax(:,14)=.8d0; lai(:,14)=(/2.d0,2.d0,2.d0/); qsv(:,14)=(/.15d0,.1d0,.5d0/); qsm(3,14)=0.d0
+  kzero=.01d0; rveg_pft=1.1d0
+  call diffuco_trans(n,swnet,t,pb,qair,rau,u,v,qc,hum,veg,vmax,lai,qsv,qsm,vb3,vb3p,rv,rs,ci,vbc,vb23)
+  do i=1,n; do j=1,nvm
+    write(10,'(a,i0,a,i0,a,es25.17)') 'vbeta3,',i,',',j,',',vb3(i,j)
+    write(10,'(a,i0,a,i0,a,es25.17)') 'vbeta3pot,',i,',',j,',',vb3p(i,j)
+    write(10,'(a,i0,a,i0,a,es25.17)') 'rveget,',i,',',j,',',rv(i,j)
+    write(10,'(a,i0,a,i0,a,es25.17)') 'cimean,',i,',',j,',',ci(i,j)
+    write(10,'(a,i0,a,i0,a,es25.17)') 'vbetaco2,',i,',',j,',',vbc(i,j)
+  enddo; enddo
+  close(10)
+end program

@@ -1,0 +1,343 @@
+module defprec
+  implicit none
+  integer, parameter :: i_std=selected_int_kind(9)
+  integer, parameter :: r_std=selected_real_kind(12,300)
+end module defprec
+
+module oracle_getin_state
+  use defprec
+  implicit none
+  character(len=48), save :: oracle_mode=''
+  integer(i_std), save :: getin_total=0, writeback_total=0
+  integer(i_std), save :: hit_iplt1=0, hit_iplt2=0, hit_age_bound=0
+  integer(i_std), save :: hit_iso_activity=0
+contains
+  subroutine record_key(key,changed)
+    character(*), intent(in) :: key
+    logical, intent(in) :: changed
+    getin_total=getin_total+1
+    if (changed) writeback_total=writeback_total+1
+    if (trim(key)=='SP_IPLT1') hit_iplt1=hit_iplt1+1
+    if (trim(key)=='SP_IPLT2') hit_iplt2=hit_iplt2+1
+    if (trim(key)=='GLUC_AGE_CLASS_BOUND') hit_age_bound=hit_age_bound+1
+    if (trim(key)=='ISO_ACTIVITY') hit_iso_activity=hit_iso_activity+1
+  end subroutine record_key
+end module oracle_getin_state
+
+module constantes
+  use defprec
+  implicit none
+  integer(i_std), parameter :: undef_int=999999999_i_std
+  real(r_std), parameter :: undef=-9999._r_std, zero=0._r_std
+  integer(i_std), parameter :: nleafages=4_i_std, nparts=12_i_std, nelements=1_i_std
+  integer(i_std), save :: numout=6_i_std, printlev=0_i_std
+  integer(i_std), save :: cyc_rot_max=1_i_std, nagec_tree=1_i_std, nagec_herb=1_i_std
+  logical, save :: ok_sechiba=.true., ok_stomate=.true., ok_bvoc=.true.
+  logical, save :: hydrol_cwrr=.false., OFF_LINE_MODE=.false.
+  logical, save :: peat_hydro=.false., tides=.false., use_age_class=.false.
+  logical, save :: SingleAgeClass=.false., use_bound_spa=.false.
+  real(r_std), save :: iso_activity(nleafages)=(/0.5,1.5,1.5,0.5/)
+  real(r_std), save :: methanol_activity(nleafages)=(/1.,1.,0.5,0.5/)
+end module constantes
+
+module vertical_soil_var
+  use defprec
+  implicit none
+  real(r_std), save :: zmaxh=2._r_std
+end module vertical_soil_var
+
+module constantes_soil_var
+  use defprec
+  implicit none
+  integer(i_std), save :: nstm=6_i_std
+end module constantes_soil_var
+
+! <PFT_PARAMETERS_VAR_MODULE>
+
+module constantes_mtc
+  use defprec
+  use constantes
+  implicit none
+! <CONSTANTES_MTC_REFERENCED_DECLARATIONS>
+end module constantes_mtc
+
+module ioipsl
+  implicit none
+contains
+  subroutine strlowercase(value)
+    character(*), intent(inout) :: value
+    integer :: i, c
+    do i=1,len(value)
+      c=iachar(value(i:i))
+      if(c>=65 .and. c<=90)value(i:i)=achar(c+32)
+    enddo
+  end subroutine strlowercase
+end module ioipsl
+
+module ioipsl_para
+  use defprec
+  use constantes, only: undef_int
+  use oracle_getin_state
+  implicit none
+  interface getin_p
+    module procedure getin_i0,getin_i1,getin_i2,getin_i3
+    module procedure getin_r0,getin_r1,getin_r2,getin_r3,getin_r4
+    module procedure getin_l0,getin_l1,getin_l2
+    module procedure getin_c0,getin_c1
+  end interface
+contains
+  subroutine getin_i0(key,value)
+    character(*),intent(in)::key
+    integer(i_std),intent(inout)::value
+    integer(i_std)::before
+    before=value
+    select case(trim(key))
+    case('NSTM')
+      if(index(oracle_mode,'nstm_low')>0)value=4
+      if(index(oracle_mode,'nstm_bad')>0)value=21
+    case('GLUC_NVMAP')
+      if(index(oracle_mode,'age_multi')>0)value=2
+    end select
+    call record_key(key,value/=before)
+  end subroutine getin_i0
+  subroutine getin_i1(key,value)
+    character(*),intent(in)::key
+    integer(i_std),intent(inout)::value(:)
+    integer(i_std),allocatable::before(:)
+    allocate(before(size(value))); before=value
+    if(trim(key)=='PFT_TO_MTC')then
+      if(index(oracle_mode,'main_custom')>0)then
+        value=14; value(1)=1
+      elseif(index(oracle_mode,'main_undef')>0)then
+        value=2; value(1)=undef_int
+      elseif(index(oracle_mode,'main_outside')>0)then
+        value=2; value(1)=1; value(2)=19
+      elseif(index(oracle_mode,'main_first_not_bare')>0)then
+        value=2; value(1)=2
+      elseif(index(oracle_mode,'main_duplicate_bare')>0)then
+        value=2; value(1)=1; value(2)=1
+      endif
+    elseif(trim(key)=='GLUC_AGEC_GROUP'.and.index(oracle_mode,'age_multi')>0)then
+      value=2; value(1)=1
+    endif
+    call record_key(key,any(value/=before))
+  end subroutine getin_i1
+  subroutine getin_i2(key,value)
+    character(*),intent(in)::key; integer(i_std),intent(inout)::value(:,:)
+    call record_key(key,.false.)
+  end subroutine getin_i2
+  subroutine getin_i3(key,value)
+    character(*),intent(in)::key; integer(i_std),intent(inout)::value(:,:,:)
+    call record_key(key,.false.)
+  end subroutine getin_i3
+  subroutine getin_r0(key,value)
+    character(*),intent(in)::key; real(r_std),intent(inout)::value
+    call record_key(key,.false.)
+  end subroutine getin_r0
+  subroutine getin_r1(key,value)
+    character(*),intent(in)::key; real(r_std),intent(inout)::value(:)
+    call record_key(key,.false.)
+  end subroutine getin_r1
+  subroutine getin_r2(key,value)
+    character(*),intent(in)::key; real(r_std),intent(inout)::value(:,:)
+    call record_key(key,.false.)
+  end subroutine getin_r2
+  subroutine getin_r3(key,value)
+    character(*),intent(in)::key; real(r_std),intent(inout)::value(:,:,:)
+    call record_key(key,.false.)
+  end subroutine getin_r3
+  subroutine getin_r4(key,value)
+    character(*),intent(in)::key; real(r_std),intent(inout)::value(:,:,:,:)
+    call record_key(key,.false.)
+  end subroutine getin_r4
+  subroutine getin_l0(key,value)
+    character(*),intent(in)::key; logical,intent(inout)::value
+    call record_key(key,.false.)
+  end subroutine getin_l0
+  subroutine getin_l1(key,value)
+    character(*),intent(in)::key
+    logical,intent(inout)::value(:)
+    logical,allocatable::before(:)
+    allocate(before(size(value))); before=value
+    if(trim(key)=='GRM_IS_GRASSLAND_MANAG'.and.index(oracle_mode,'managed')>0 &
+         .and.index(oracle_mode,'no_managed')==0)then
+      value=.false.; value(min(10,size(value)))=.true.
+    endif
+    call record_key(key,any(value.neqv.before))
+  end subroutine getin_l1
+  subroutine getin_l2(key,value)
+    character(*),intent(in)::key; logical,intent(inout)::value(:,:)
+    call record_key(key,.false.)
+  end subroutine getin_l2
+  subroutine getin_c0(key,value)
+    character(*),intent(in)::key; character(*),intent(inout)::value
+    call record_key(key,.false.)
+  end subroutine getin_c0
+  subroutine getin_c1(key,value)
+    character(*),intent(in)::key; character(*),intent(inout)::value(:)
+    call record_key(key,.false.)
+  end subroutine getin_c1
+  subroutine ipslerr_p(level,routine,message1,message2,message3)
+    integer,intent(in)::level
+    character(*),intent(in)::routine,message1
+    character(*),intent(in),optional::message2,message3
+    if(level>=3)then
+      write(*,'(a)')trim(message1)
+      stop 88
+    endif
+  end subroutine ipslerr_p
+end module ioipsl_para
+
+module pft_parameters_oracle
+  use pft_parameters_var
+  use vertical_soil_var
+  use constantes_mtc
+  use constantes
+  use constantes_soil_var
+  use ioipsl
+  use ioipsl_para
+  use defprec
+  implicit none
+  interface operator(==)
+    module procedure oracle_logical_equal
+  end interface
+contains
+! <PFT_PARAMETERS_MAIN>
+! <PFT_PARAMETERS_INIT>
+! <PFT_PARAMETERS_ALLOC>
+! <CONFIG_PFT_PARAMETERS>
+! <CONFIG_SECHIBA_PFT_PARAMETERS>
+! <CONFIG_STOMATE_PFT_PARAMETERS>
+  logical function oracle_logical_equal(left,right)
+    logical,intent(in)::left,right
+    oracle_logical_equal=left.eqv.right
+  end function oracle_logical_equal
+end module pft_parameters_oracle
+
+program driver
+  use defprec
+  use constantes
+  use constantes_soil_var
+  use vertical_soil_var
+  use pft_parameters_var
+  use pft_parameters_oracle
+  use oracle_getin_state
+  implicit none
+  character(512)::output_path
+  character(48)::mode
+  integer::u,i
+  call get_command_argument(1,output_path)
+  call get_command_argument(2,mode)
+  oracle_mode=trim(mode)
+  call configure_case(trim(mode))
+  open(newunit=u,file=trim(output_path),status='replace')
+  write(u,'(a)')'field,flat_index,value'
+  if(index(mode,'main_')==1)then
+    call pft_parameters_main()
+    call emit_i1(u,'mapping',pft_to_mtc)
+    call emit_l0(u,'first',l_first_pft_parameters)
+    call pft_parameters_main()
+  else
+    call pft_parameters_alloc()
+    if(index(mode,'stomate_tree_multi')>0)then
+      pft_to_mtc=(/1,2,2,2,2/)
+    elseif(index(mode,'stomate_herb_multi')>0)then
+      pft_to_mtc=(/1,10,10/)
+    else
+      do i=1,nvm; pft_to_mtc(i)=i; enddo
+    endif
+    call pft_parameters_init()
+    if(index(mode,'config_nstm_low')>0)pref_soil_veg(14)=6
+    if(index(mode,'stomate_tree_multi')>0)then
+      nvmap=2; agec_group=2; agec_group(1)=1; nagec_tree=4; nagec_herb=1
+    endif
+    if(index(mode,'stomate_herb_multi')>0)then
+      nvmap=2; agec_group=2; agec_group(1)=1; nagec_tree=1; nagec_herb=2
+    endif
+    if(index(mode,'stomate_missing_group')>0)then
+      nvmap=2; agec_group=1
+    endif
+    if(index(mode,'stomate_tree_mismatch')>0)then
+      nvmap=2; agec_group=2; agec_group(1)=1; nagec_tree=3; nagec_herb=1
+    endif
+    if(index(mode,'config_')==1)call config_pft_parameters()
+    if(index(mode,'sechiba_')==1)call config_sechiba_pft_parameters()
+    if(index(mode,'stomate_')==1)call config_stomate_pft_parameters()
+    call emit_r1(u,'humcste',humcste)
+    call emit_i1(u,'leaf_tab',leaf_tab)
+    call emit_l1(u,'is_tree',is_tree)
+    call emit_l1(u,'is_deciduous',is_deciduous)
+    call emit_l1(u,'is_evergreen',is_evergreen)
+    call emit_l1(u,'is_needleleaf',is_needleleaf)
+    call emit_l1(u,'natural',natural)
+    call emit_i1(u,'pref_soil',pref_soil_veg)
+    if(allocated(throughfall_by_pft))call emit_r1(u,'throughfall',throughfall_by_pft)
+    call emit_i1(u,'start_index',start_index)
+    call emit_i1(u,'nagec_pft',nagec_pft)
+  endif
+  call emit_i0(u,'getin_total',getin_total)
+  call emit_i0(u,'writeback_total',writeback_total)
+  call emit_i0(u,'hit_iplt1',hit_iplt1)
+  call emit_i0(u,'hit_iplt2',hit_iplt2)
+  call emit_i0(u,'hit_age_bound',hit_age_bound)
+  call emit_i0(u,'hit_iso_activity',hit_iso_activity)
+  close(u)
+contains
+  subroutine configure_case(name)
+    character(*),intent(in)::name
+    nvm=18; ok_sechiba=.true.; ok_stomate=.true.; ok_bvoc=.true.
+    hydrol_cwrr=.false.; OFF_LINE_MODE=.false.; use_age_class=.false.
+    use_bound_spa=.false.; SingleAgeClass=.false.; cyc_rot_max=1
+    zmaxh=2._r_std; nstm=6; nagec_tree=1; nagec_herb=1
+    l_first_pft_parameters=.true.; printlev=0
+    if(index(name,'main_')==1.and.index(name,'main_default')==0)nvm=2
+    if(index(name,'z4')>0)zmaxh=4._r_std
+    if(index(name,'zother')>0)zmaxh=3._r_std
+    if(index(name,'sections_off')>0)then
+      ok_sechiba=.false.; ok_stomate=.false.; ok_bvoc=.false.
+    endif
+    if(index(name,'offline')>0)then
+      hydrol_cwrr=.true.; OFF_LINE_MODE=.true.
+    endif
+    if(index(name,'crop2')>0)cyc_rot_max=2
+    if(index(name,'crop3')>0)cyc_rot_max=3
+    if(index(name,'config_age')>0)use_age_class=.true.
+    if(index(name,'bound_off')>0)use_bound_spa=.true.
+    if(index(name,'sechiba_bvoc_off')>0)ok_bvoc=.false.
+    if(index(name,'stomate_tree_multi')>0)then
+      nvm=5; use_age_class=.true.; nagec_tree=4; nagec_herb=1
+    endif
+    if(index(name,'stomate_herb_multi')>0)then
+      nvm=3; use_age_class=.true.; nagec_tree=1; nagec_herb=2
+    endif
+    if(index(name,'stomate_missing_group')>0)then
+      nvm=3; use_age_class=.true.
+    endif
+    if(index(name,'stomate_tree_mismatch')>0)then
+      nvm=3; use_age_class=.true.; nagec_tree=3; nagec_herb=1
+    endif
+  end subroutine configure_case
+  subroutine emit_i0(unit,name,value)
+    integer,intent(in)::unit,value; character(*),intent(in)::name
+    write(unit,'(a,a,i0,a,i0)')trim(name),',',0,',',value
+  end subroutine emit_i0
+  subroutine emit_l0(unit,name,value)
+    integer,intent(in)::unit; logical,intent(in)::value; character(*),intent(in)::name
+    call emit_i0(unit,name,merge(1,0,value))
+  end subroutine emit_l0
+  subroutine emit_i1(unit,name,value)
+    integer,intent(in)::unit; integer(i_std),intent(in)::value(:)
+    character(*),intent(in)::name; integer::j
+    do j=1,size(value); write(unit,'(a,a,i0,a,i0)')trim(name),',',j-1,',',value(j); enddo
+  end subroutine emit_i1
+  subroutine emit_r1(unit,name,value)
+    integer,intent(in)::unit; real(r_std),intent(in)::value(:)
+    character(*),intent(in)::name; integer::j
+    do j=1,size(value); write(unit,'(a,a,i0,a,es25.17)')trim(name),',',j-1,',',value(j); enddo
+  end subroutine emit_r1
+  subroutine emit_l1(unit,name,value)
+    integer,intent(in)::unit; logical,intent(in)::value(:)
+    character(*),intent(in)::name; integer::j
+    do j=1,size(value); write(unit,'(a,a,i0,a,i0)')trim(name),',',j-1,',',merge(1,0,value(j)); enddo
+  end subroutine emit_l1
+end program driver

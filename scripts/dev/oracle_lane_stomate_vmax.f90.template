@@ -1,0 +1,55 @@
+module defprec
+ implicit none
+ integer,parameter::i_std=kind(1),r_std=kind(1d0)
+end module
+module constantes
+ use defprec
+ implicit none
+ real(r_std),parameter::zero=0d0,un=1d0
+ integer::printlev=0,numout=6
+contains
+ subroutine getin(name,value);character(*),intent(in)::name;logical,intent(inout)::value;end
+end module
+module stomate_data
+ use defprec
+ implicit none
+ integer,parameter::nvm=14,nleafages=4
+ real(r_std),parameter::min_stomate=0d0,vmax_offset=.3d0,leafage_firstmax=.03d0,leafage_lastmax=.5d0,leafage_old=1d0
+ logical::ok_dgvm=.false.
+end module
+module pft_parameters
+ use defprec
+ implicit none
+ real(r_std)::leaf_timecst(14),leafagecrit(14),vcmax25(14)
+ integer::pheno_type(14),leaf_tab(14)
+ logical::ok_LAIdev(14)
+end module
+module stomate_vmax_oracle
+ use stomate_data;use pft_parameters;use constantes
+ implicit none
+ logical,save::firstcall_vmax=.true.,ok_Nlim=.false.
+contains
+! <VMAX_PROCEDURE>
+end module
+program main
+ use defprec;use stomate_data;use pft_parameters;use stomate_vmax_oracle
+ implicit none
+ integer::u,i,j,m
+ character(len=1024)::out
+ real(r_std)::age(3,nvm,nleafages),frac(3,nvm,nleafages),vc(3,nvm),nf(3,nvm)
+ call get_command_argument(1,out)
+ leaf_timecst=100d0;leafagecrit=200d0;vcmax25=50d0;pheno_type=0;leaf_tab=0;ok_LAIdev=.false.
+ age=0d0;frac=0d0;vc=0d0;nf=1d0
+ age(1,14,:)=(/5d0,40d0,120d0,220d0/);frac(1,14,:)=(/.6d0,.25d0,.1d0,.05d0/)
+ age(2,14,:)=(/0d0,20d0,80d0,180d0/);frac(2,14,:)=(/0d0,.5d0,.3d0,.2d0/)
+ ok_LAIdev(14)=.false.;nf(:,14)=(/0.8d0,1.1d0,1d0/)
+ call vmax(3,1d0,age,frac,vc,nf)
+ call vmax(3,1d0,age,frac,vc,nf)
+ open(newunit=u,file=trim(out),status='replace',action='write');write(u,'(A)')'field,value'
+ do j=1,nvm;do i=1,3
+  write(u,'(A,",",ES26.17)')'vcmax',vc(i,j)
+  do m=1,nleafages
+   write(u,'(A,",",ES26.17)')'leaf_age',age(i,j,m);write(u,'(A,",",ES26.17)')'leaf_frac',frac(i,j,m)
+  end do
+ end do;end do;close(u)
+end program

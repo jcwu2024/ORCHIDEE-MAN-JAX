@@ -1,0 +1,67 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyd
+*.so
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+.venv/
+
+# JAX/XLA runtime caches
+.jax_cache/
+xla_cache/
+
+# Local environments and editors
+.env
+.env.*
+!.env.example
+.idea/
+.vscode/
+/.agents/
+/AGENTS.md
+/SERVER_ACCESS.md
+
+# Build and packaging
+build/
+dist/
+*.egg-info/
+
+# Fortran/compiler artifacts
+*.mod
+*.o
+*.obj
+*.a
+*.lib
+*.gcov
+*.gcda
+*.gcno
+*.exe
+*.stdout.log
+*.stderr.log
+/fortran_run_scripts/paper_250919/out_main.txt
+
+# Large external scientific assets. Keep only documentation/manifests.
+/data/**
+!/data/README.md
+/reference/**
+!/reference/README.md
+/outputs/**
+!/outputs/README.md
+/traces/**
+!/traces/README.md
+/fortran_source/ORCHIDEE/**
+
+# Local secrets and server credentials
+*RsaKeyExpireTime*.txt
+*.pem
+*.key
+
+# Locally downloaded publisher article
+/docs/J Adv Model Earth Syst*.pdf
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini

@@ -1,0 +1,322 @@
+case:
+  id: orchidee_man_250919
+  baseline_label: paper_version_2025_09_19
+  source_job_script: ${ORCHIDEE_REPO_ROOT}/fortran_run_scripts/paper_250919/Job0_bio
+  source_run_def: ${ORCHIDEE_REPO_ROOT}/fortran_run_scripts/paper_250919/run.def.vn
+  description: >
+    Local JAX-facing configuration distilled from Job0_bio + run.def.vn for the
+    mangrove/tide/peat/leak case used in the 2025-09-19 paper-era setup.
+
+paths:
+  workspace_root: ${ORCHIDEE_REPO_ROOT}
+  modipsl_root: ${ORCHIDEE_REPO_ROOT}/fortran_source
+  script_root: ${ORCHIDEE_REPO_ROOT}/fortran_run_scripts/paper_250919
+  xml_root: ${ORCHIDEE_REPO_ROOT}/fortran_run_scripts/paper_250919/peat-leak_xml_zz
+  output_root: ${ORCHIDEE_OUTPUT_ROOT}/orchidee_man_250919
+  data_roots:
+    forcing_cruncep: ${ORCHIDEE_DATA_ROOT}/forcing
+    forcing_water_table: ${ORCHIDEE_DATA_ROOT}/forcing_VN
+    inputdir_zz: ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ
+    inputdir_lw: ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input
+
+domain:
+  west: 108.0
+  east: 110.0
+  south: 20.0
+  north: 22.0
+  forcing_grid_subset:
+    longitude_centers: [109.0]
+    latitude_centers: [21.0]
+    cell_count: 1
+  half_degree_subset:
+    longitude_centers: [108.25, 108.75, 109.25, 109.75]
+    latitude_centers: [21.75, 21.25, 20.75, 20.25]
+  quarter_degree_subset:
+    longitude_count: 8
+    latitude_count: 8
+
+paper_mosaic:
+  execution_unit: independent_single_landpoint
+  expected_landpoint_cases: 669
+  local_reference_root: ${ORCHIDEE_REFERENCE_ROOT}/paper_250919
+  local_raw_reference_root: ${ORCHIDEE_REFERENCE_ROOT}/OUT/orc_calibrate_250919_sen
+  legacy_single_point_reference_root: ${ORCHIDEE_REFERENCE_ROOT}/case_001_071/OUT/orc_calibrate_250919_sen
+  server_reference_root: null
+  example_case: arg2_1.0/001.0-071.0/I10/S2_63.206_0.0876_0.2019_50.658
+  notes:
+    - Paper-scale spatial output is assembled from independent one-landpoint cases, not one nbp_glo>1 routing run.
+    - The normalized local reference root is reference/paper_250919; reference/OUT is the raw copied server layout.
+    - The legacy reference/case_001_071 fixture is kept only for backward-compatible tests and scripts during migration.
+    - The current local reference has complete NetCDF output packages for a subset of cases; modelout CSV targets cover the broader 669 landpoint set.
+    - True multi-landpoint routing remains a separate workflow and is not a blocker for paper mosaic reproduction.
+
+time:
+  first_year: 1961
+  last_year: 2010
+  n_years: 50
+  time_length_per_run: 1Y
+  forcing_calendar: noleap
+  forcing_step_hours: 6
+  forcesoil_step_per_year: 365
+  restart_mode:
+    first_year: cold_start
+    subsequent_years: restart_from_previous_year
+
+runtime_xml:
+  copied_directory: ${ORCHIDEE_REPO_ROOT}/fortran_run_scripts/paper_250919/peat-leak_xml_zz
+  required_files:
+    - iodef.xml
+    - context_orchidee.xml
+    - field_def_orchidee.xml
+    - file_def_orchidee_pods_year_240405.xml
+  runtime_aliases:
+    file_def_orchidee.xml: ${ORCHIDEE_REPO_ROOT}/fortran_run_scripts/paper_250919/peat-leak_xml_zz/file_def_orchidee_pods_year_240405.xml
+  notes:
+    - Job0_bio copies all XML files, then aliases file_def_orchidee_pods_year_240405.xml to file_def_orchidee.xml.
+    - The selected XML enables yearly stomate_history output.
+
+drivers:
+  atmospheric_forcing:
+    file_pattern: ${ORCHIDEE_DATA_ROOT}/forcing/cruncep_twodeg_{year}.nc
+    available_years: [1961, 1962, 1963, 1964, 1965, 1966, 1967, 1968, 1969, 1970, 1971, 1972, 1973, 1974, 1975, 1976, 1977, 1978, 1979, 1980, 1981, 1982, 1983, 1984, 1985, 1986, 1987, 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010]
+    dimensions:
+      tstep: 1460
+      latitude: 90
+      longitude: 180
+    variables:
+      - Tair
+      - PSurf
+      - Qair
+      - Wind_E
+      - Wind_N
+      - Rainf
+      - Snowf
+      - SWdown
+      - LWdown
+      - Areas
+      - contfrac
+      - time
+      - timeplussix
+  co2:
+    mode: annual_lookup
+    file: ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ/global_co2_ann_1700_2017.txt
+    format: tab_separated_two_columns
+    columns:
+      year: 1
+      co2_ppm: 2
+    sample_1961_ppm: 317.27
+  water_table_text:
+    positive_file: ${ORCHIDEE_DATA_ROOT}/forcing_VN/WTM_forcing_pos.txt
+    differential_file: ${ORCHIDEE_DATA_ROOT}/forcing_VN/WTM_forcing_diff.txt
+    format: single_column_float
+    line_count: 17520
+  salinity:
+    enabled: true
+    file: ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ/salinity_05.nc
+    variable: salinity
+    dimensions:
+      time_counter: 1
+      lat: 360
+      lon: 720
+  tide:
+    enabled: true
+    file: ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ/tide_05_584.nc
+    variable: tide
+    itimetide: 584
+    dimensions:
+      time_counter: 584
+      lat: 360
+      lon: 720
+
+mangrove_parameters:
+  ITIMETIDE: 584
+  CONTROL_SALINITY_MIN: 0.5
+  CONTROL_INUDATE_MIN: 0.5
+  AGB_AGR_VEN_ALL_ST: 200.0
+  AGB_AGR_VEN_ALL_PN: 40.0
+  H_AGR_MAX_ST: 2.0
+  H_AGR_MAX_PN: 0.4
+  WEIGHT_VEN_A: 0.5
+  WEIGHT_VEN_B: 0.5
+  DEN_MAN: 1000.0
+
+static_inputs:
+  vegetation_file: ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ/PFT1860_mangr_025deg.nc
+  topmodel_new_file: ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ/catch2_wtd_vkq_socoff_10.nc
+  soilclass_file: ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ/test.nc
+  population_density_file: ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/Population/popd_1901.nc
+  fire_ratio_file: ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/ratio_GFED4s_MICTRef_Opt6.nc
+  soilalb_file: ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/soils_param.nc
+  alb_bg_file: ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/alb_bg_modisopt_2D.nc
+  topography_file: ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/cartepente2d_15min.nc
+  routing_file: ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/routing.nc
+  irrigation_file: ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/floodplains.nc
+  reftemp_file: ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/reftemp.nc
+  soil_reftemp_file: ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/reftemp.nc
+  refsoc_3d_file: ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/refSOC_NCSCD_linear_05deg_v5.nc
+  refsoc_1d_file: ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/refSOC_NCSCD_05deg_v3_0-0.3m.nc
+
+run_def_flags:
+  READ_SALINITY: true
+  READ_TIDE: true
+  XIOS_ORCHIDEE_OK: true
+  IMPOSE_VEG: true
+  LAND_COVER_CHANGE: false
+  tides: true
+  STOMATE_OK_DGVM: false
+  LPJ_GAP_CONST_MORT: true
+  AGRICULTURE: true
+  HARVEST_AGRI: true
+  FIRE_DISABLE: true
+  PEAT_HYDRO: true
+  OK_PEAT: false
+  OK_PC: false
+  PERMA_PEAT: true
+  TOPMODEL_NEW: false
+  PEAT_OCCUR: false
+  dynpeat_PWT: false
+  dynpeat_PC: false
+  DYN_PEAT: false
+  OK_LEAK: true
+  TF_DOC: true
+  RIVER_ROUTING: true
+  DO_FLOODPLAINS: false
+  DO_FLOODINFILT: false
+  NEW_FLOOD_SCHEME: false
+  DO_STREAM_SWELL: false
+  TOPM_CALCUL: false
+  USE_SOILC_TEMPDIFF: true
+  use_refSOC: true
+  use_refSOC_hydrol: false
+  dyn_nroot_larix: true
+  cryoturbate: false
+  use_new_cryoturbation: false
+  cryoturbate_doc_POC: false
+  POOR_SOILS: true
+  PRIMING: true
+  ROUGH_DYN: true
+
+structural_overrides:
+  NVM: 14
+  NSTM: 6
+  PREF_SOIL_VEG__00014: 4
+  PFT_TO_MTC__00014: 2
+  IS_PEAT__00014: true
+  PEAT_NODR: true
+  OK_RU2PEAT: true
+  OK_WT_AB: true
+  max_wt_ab: 100.0
+  MONTHS_NUM: 360
+  SAT_GSL: 1.0
+  PWT_LIM: 60
+  PC_LIM: 50
+  TAU_PEAT: 3.1536e7
+  Z_TAU: 1.5
+  FRAC1: 0.70
+  FRAC2: 0.10
+  NUMLAYERS: 10
+  frozen_respiration_func: 1
+
+prescribed_pft_cover:
+  all_pfts_zero_except_14: true
+  sechiba_vegmax:
+    SECHIBA_VEGMAX__00001: 0.0
+    SECHIBA_VEGMAX__00002: 0.0
+    SECHIBA_VEGMAX__00003: 0.0
+    SECHIBA_VEGMAX__00004: 0.0
+    SECHIBA_VEGMAX__00005: 0.0
+    SECHIBA_VEGMAX__00006: 0.0
+    SECHIBA_VEGMAX__00007: 0.0
+    SECHIBA_VEGMAX__00008: 0.0
+    SECHIBA_VEGMAX__00009: 0.0
+    SECHIBA_VEGMAX__00010: 0.0
+    SECHIBA_VEGMAX__00011: 0.0
+    SECHIBA_VEGMAX__00012: 0.0
+    SECHIBA_VEGMAX__00013: 0.0
+    SECHIBA_VEGMAX__00014: 1.0
+
+pft_parameter_overrides:
+  LEAFAGECRIT__00006: 160
+  LEAFAGECRIT__00008: 220
+  LEAFAGECRIT__00009: 120
+  LEAFAGECRIT__00010: 80
+  SENESCENCE_TEMP_C__00006: 16
+  SENESCENCE_TEMP_C__00008: 14
+  SENESCENCE_TEMP_C__00009: 10
+  SENESCENCE_TEMP_C__00010: 5
+  LEAFFALL__00006: 30
+  LEAFFALL__00008: 5
+  HUM_MIN_TIME__00010: 36
+  NOSENESCENCE_HUM__00010: 0.6
+  VCMAX25__00002: 50
+  VCMAX25__00003: 50
+  VCMAX25__00010: 55
+  VCMAX25__00011: 25
+  VCMAX25__00012: 50
+  VCMAX25__00013: 50
+  SLA__00010: 4.2e-2
+  SLA__00011: 4.1e-2
+  SLA_MAX__00010: 4.2e-2
+  SLA_MAX__00011: 4.1e-2
+  SLA_MIN__00010: 4.2e-2
+  SLA_MIN__00011: 4.1e-2
+
+restart_and_outputs:
+  cold_start:
+    RESTART_FILEIN: NONE
+    SECHIBA_restart_in: NONE
+    STOMATE_RESTART_FILEIN: NONE
+  rolling_restart:
+    RESTART_FILEIN: driver_start.nc
+    SECHIBA_restart_in: sechiba_start.nc
+    STOMATE_RESTART_FILEIN: stomate_start.nc
+  outputs:
+    RESTART_FILEOUT: driver_restart.nc
+    SECHIBA_rest_out: sechiba_restart.nc
+    STOMATE_RESTART_FILEOUT: stomate_restart.nc
+    OUTPUT_FILE: sechiba_history.nc
+    STOMATE_OUTPUT_FILE: stomate_history.nc
+    STOMATE_IPCC_OUTPUT_FILE: stomate_ipcc_history.nc
+  expected_yearly_archives:
+    - stomate_history_{year}.nc
+    - driver_restart.nc
+    - sechiba_restart.nc
+    - stomate_restart.nc
+
+compatibility_notes:
+  job0_bio_overrides_run_def_existing_keys: 53
+  job0_bio_injects_new_keys: 77
+  paths_left_server_style_in_run_def_but_should_be_localized:
+    SALINITY_FILE: ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ/salinity_05.nc
+    TIDE_FILE: ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ/tide_05_584.nc
+    SOIL_REFTEMP_FILE: ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/reftemp.nc
+  fire_related_paths_absent_locally_but_inactive_with_FIRE_DISABLE:
+    - HUMIGN_FILE
+    - LIGHTNING_FILE
+    - RATIO_FLAG_FILE
+    - CF_COARSE_FILE
+    - CF_FINE_FILE
+
+minimal_single_case:
+  year: 1961
+  cold_start: true
+  required_files:
+    - ${ORCHIDEE_DATA_ROOT}/forcing/cruncep_twodeg_1961.nc
+    - ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ/global_co2_ann_1700_2017.txt
+    - ${ORCHIDEE_DATA_ROOT}/forcing_VN/WTM_forcing_pos.txt
+    - ${ORCHIDEE_DATA_ROOT}/forcing_VN/WTM_forcing_diff.txt
+    - ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ/salinity_05.nc
+    - ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ/tide_05_584.nc
+    - ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ/PFT1860_mangr_025deg.nc
+    - ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ/catch2_wtd_vkq_socoff_10.nc
+    - ${ORCHIDEE_DATA_ROOT}/INPUTDIR_ZZ/test.nc
+    - ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/Population/popd_1901.nc
+    - ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/ratio_GFED4s_MICTRef_Opt6.nc
+    - ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/soils_param.nc
+    - ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/alb_bg_modisopt_2D.nc
+    - ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/cartepente2d_15min.nc
+    - ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/routing.nc
+    - ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/floodplains.nc
+    - ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/reftemp.nc
+    - ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/refSOC_NCSCD_linear_05deg_v5.nc
+    - ${ORCHIDEE_DATA_ROOT}/MICT_BIOE/Input/refSOC_NCSCD_05deg_v3_0-0.3m.nc

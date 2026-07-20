@@ -1,0 +1,57 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ implicit none;integer,parameter::i_std=int32,r_std=real64
+end module
+module thermosoil_lane_getdiff
+ use defprec;implicit none
+ integer,parameter::nvm=14,ngrnd=4,nslm=2,ndeep=4,nsnow=3,nscm=12
+ real(r_std),parameter::zero=0._r_std,un=1._r_std,min_sechiba=1.e-8_r_std,ZeroCelsius=273.15_r_std,fr_dT=2._r_std
+ real(r_std),parameter::so_capa_dry=1.8e6_r_std,so_capa_dry_org=2.5e6_r_std,water_capa=4.18e6_r_std,so_capa_wet=3.03e6_r_std
+ real(r_std),parameter::poros=.41_r_std,poros_org=.92_r_std,cond_solid_org=.25_r_std,cond_solid=2.5_r_std,cond_dry_org=.05_r_std,so_cond_dry=.4_r_std
+ real(r_std),parameter::lhf=333600._r_std,rho_water=1000._r_std,mille=1000._r_std,capa_ice=2228._r_std,rho_ice=920._r_std
+ real(r_std),parameter::so_capa_ice=so_capa_dry+poros*capa_ice*rho_ice,THKQTZ=7.7_r_std,THKICE=2.2_r_std,THKW=.57_r_std
+ real(r_std),parameter::xci=2106._r_std,ZSNOWTHRMCOND1=.02_r_std,ZSNOWTHRMCOND2=2.5e-6_r_std,ZSNOWTHRMCOND_AVAP=-.06023_r_std,ZSNOWTHRMCOND_BVAP=-2.5425_r_std,ZSNOWTHRMCOND_CVAP=-289.99_r_std,XP00=100000._r_std
+ real(r_std),parameter::soilc_max=130000._r_std,brk_capa=2.0e6_r_std,brk_cond=3._r_std
+ logical::use_toporganiclayer_tempdiff=.false.,use_soilc_tempdiff=.true.,use_refSOC=.true.,ok_freeze_thermix=.true.
+ logical::ok_LAIdev(nvm)=.false.,veget_mask_2d(4,nvm)=.true.
+ integer::brk_flag=0
+ real(r_std)::zlt(ngrnd),dlt(ngrnd),refSOC(4,ngrnd),SMCMAX(nscm),QZ(nscm),so_capa_dry_ns(nscm)
+ real(r_std)::mc_layt(4,ngrnd),mcl_layt(4,ngrnd),tmc_layt(4,ngrnd),mc_layt_pft(4,ngrnd,nvm),mcl_layt_pft(4,ngrnd,nvm),tmc_layt_pft(4,ngrnd,nvm)
+ real(r_std)::pcapa(4,ngrnd,nvm),pkappa(4,ngrnd,nvm),pcapa_en(4,ngrnd,nvm),pcapa_snow(4,nsnow),pkappa_snow(4,nsnow)
+contains
+ subroutine ipslerr_p(level,a,b,c,d)
+  integer,intent(in)::level;character(*),intent(in)::a,b,c,d
+  if(level>=3)error stop 'ipslerr_p'
+ end subroutine
+! <THERMOSOIL_COND_PFT>
+! <THERMOSOIL_COND_NOPFT>
+! <THERMOSOIL_GETDIFF>
+end module
+program thermosoil_getdiff_oracle
+ use defprec;use thermosoil_lane_getdiff;implicit none
+ integer::i,j,k,njsc(4);real(r_std)::ptn(4,ngrnd,nvm),shum(4,ngrnd,nvm),vmax(4,nvm),prof(4,ngrnd,nvm),supp(4,ngrnd,nvm),org(4),soilc(4,ndeep,nvm),snowrho(4,nsnow),snowtemp(4,nsnow),pb(4);character(512)::path
+ QZ=(/.92_r_std,.82_r_std,.6_r_std,.25_r_std,.1_r_std,.4_r_std,.6_r_std,.1_r_std,.35_r_std,.52_r_std,.1_r_std,.25_r_std/)
+ SMCMAX=(/.43_r_std,.41_r_std,.41_r_std,.45_r_std,.46_r_std,.43_r_std,.39_r_std,.43_r_std,.41_r_std,.38_r_std,.36_r_std,.38_r_std/)
+ so_capa_dry_ns=(/1.47e6_r_std,1.41e6_r_std,1.34e6_r_std,1.27e6_r_std,1.21e6_r_std,1.21e6_r_std,1.18e6_r_std,1.32e6_r_std,1.23e6_r_std,1.18e6_r_std,1.15e6_r_std,1.09e6_r_std/)
+ njsc=(/1,4,10,3/);zlt=(/.05_r_std,.15_r_std,.4_r_std,1._r_std/);dlt=(/.1_r_std,.2_r_std,.5_r_std,1._r_std/)
+ refSOC=0._r_std;refSOC(:,1)=(/0._r_std,65000._r_std,130000._r_std,6916._r_std/);refSOC(:,2)=32500._r_std
+ ptn=273.15_r_std;ptn(1,:,:)=270._r_std;ptn(3,:,:)=276._r_std;ptn(4,:,:)=271._r_std;shum=.6_r_std
+ vmax=0._r_std;vmax(:,1)=.2_r_std;vmax(:,14)=.8_r_std;vmax(4,1)=0._r_std;vmax(4,14)=1._r_std;ok_LAIdev(14)=.true.
+ mc_layt=.3_r_std;mcl_layt=.25_r_std;tmc_layt=100._r_std;mc_layt_pft=spread(mc_layt,3,nvm);mcl_layt_pft=spread(mcl_layt,3,nvm);tmc_layt_pft=100._r_std;tmc_layt_pft(:,:,14)=150._r_std
+ org=0._r_std;soilc=0._r_std;snowrho=200._r_std;snowrho(3,:)=350._r_std;snowtemp=268._r_std;pb=(/1000._r_std,900._r_std,800._r_std,950._r_std/)
+ call get_command_argument(1,path);open(10,file=trim(path),status='replace');write(10,'(a)')'field,i,j,value'
+ call thermosoil_getdiff(4,ptn,njsc,vmax,shum,prof,supp,org,soilc,snowrho,snowtemp,pb);call dump('ref.')
+ use_toporganiclayer_tempdiff=.false.;use_soilc_tempdiff=.true.;use_refSOC=.false.;ok_freeze_thermix=.false.;ok_LAIdev=.false.;brk_flag=1;soilc=0._r_std;soilc(2,1:2,14)=65000._r_std
+ veget_mask_2d(3,2)=.false.
+ call thermosoil_getdiff(4,ptn,njsc,vmax,shum,prof,supp,org,soilc,snowrho,snowtemp,pb);call dump('soilc.')
+ close(10)
+contains
+ subroutine dump(prefix)
+  character(*),intent(in)::prefix
+  do i=1,4;do j=1,ngrnd;do k=1,nvm
+   if(veget_mask_2d(i,k))then
+    write(10,'(a,i0,a,i0,a,es25.17)')prefix//'pcapa,',i,',',(j-1)*nvm+k,',',pcapa(i,j,k);write(10,'(a,i0,a,i0,a,es25.17)')prefix//'pcapa_en,',i,',',(j-1)*nvm+k,',',pcapa_en(i,j,k);write(10,'(a,i0,a,i0,a,es25.17)')prefix//'pkappa,',i,',',(j-1)*nvm+k,',',pkappa(i,j,k);write(10,'(a,i0,a,i0,a,es25.17)')prefix//'profil,',i,',',(j-1)*nvm+k,',',prof(i,j,k);if(prefix/='soilc.')write(10,'(a,i0,a,i0,a,es25.17)')prefix//'supp,',i,',',(j-1)*nvm+k,',',supp(i,j,k)
+   endif
+  enddo;enddo;do j=1,nsnow;write(10,'(a,i0,a,i0,a,es25.17)')prefix//'pcapa_snow,',i,',',j,',',pcapa_snow(i,j);write(10,'(a,i0,a,i0,a,es25.17)')prefix//'pkappa_snow,',i,',',j,',',pkappa_snow(i,j);enddo;enddo
+ end subroutine
+end program

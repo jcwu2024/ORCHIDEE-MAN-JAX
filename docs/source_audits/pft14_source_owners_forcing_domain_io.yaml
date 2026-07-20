@@ -1,0 +1,31 @@
+schema_version: 1
+scope: >-
+  Batch-4 Driver source owners for readdim2.f90::domain_size (24 arms) and
+  flinget_buffer (14 arms), 38 arms total. The contracts cover independent
+  paper landpoints and arbitrary-size regular forcing grids. MPI transport is
+  an explicit infrastructure boundary; only the serial identity is owned.
+
+entries:
+  - id: driver_forcing_domain_io.readdim2.domain_size
+    fortran_file: fortran_source/ORCHIDEE/src_driver/readdim2.f90
+    fortran_subroutine: domain_size
+    fortran_lines: 2263-2341
+    status: implemented
+    jax_owner: jax_orchidee.driver.forcing_domain_io.domain_size
+    gap: null
+    arm_count: 24
+    infrastructure_boundary: Multi-rank index partition/scatter requires an MPI backend and is rejected explicitly.
+    state_contract: [jax_orchidee.driver.forcing_domain_io.DomainSize]
+    validation: [tests/unit/test_forcing_domain_io.py]
+
+  - id: driver_forcing_domain_io.readdim2.flinget_buffer
+    fortran_file: fortran_source/ORCHIDEE/src_driver/readdim2.f90
+    fortran_subroutine: flinget_buffer
+    fortran_lines: 2345-2475
+    status: implemented
+    jax_owner: jax_orchidee.driver.forcing_domain_io.flinget_buffer
+    gap: null
+    arm_count: 14
+    infrastructure_boundary: Multi-rank root-only read and broadcast require an MPI backend and are rejected explicitly.
+    state_contract: [jax_orchidee.driver.forcing_domain_io.FlingetBuffer]
+    validation: [tests/unit/test_forcing_domain_io.py]

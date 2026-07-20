@@ -1,0 +1,198 @@
+module defprec
+ use,intrinsic::iso_fortran_env,only:int32,real64
+ implicit none
+ integer,parameter::i_std=int32,r_std=real64
+end module
+module fvcb_oracle
+ use defprec
+ implicit none
+ real(r_std),parameter::min_sechiba=1e-8,zero=0.,un=1.,PI=3.141592653589793
+ integer,parameter::nvm=14,ivcmax=1
+ logical::downregulation_co2=.false.
+ real(r_std)::downregulation_co2_coeff(nvm),downregulation_co2_baselevel=350.
+ integer::printlev=0,numout=6
+contains
+ subroutine run_downreg(n,assim_param,Ca,vcmax)
+  integer,intent(in)::n;real(r_std),intent(in)::assim_param(n,nvm,1),Ca(n);real(r_std),intent(out)::vcmax(n,nvm)
+  integer::jv
+! <DOWNREG_SEGMENT>
+ end subroutine
+
+ subroutine run_activity(n,swdown,humrel,veget,veget_max,lai,qsintveg,qsintmax,temp_growth,tphoto_min,tphoto_max,ok_LAIdev,assimilate,nia,nina,zqsvegrap,water_lim)
+  integer,intent(in)::n;real(r_std),intent(in)::swdown(n),humrel(n,14),veget(n,14),veget_max(n,14),lai(n,14),qsintveg(n,14),qsintmax(n,14),temp_growth(n),tphoto_min(14),tphoto_max(14)
+  logical,intent(in)::ok_LAIdev(14);logical,intent(out)::assimilate(n);integer,intent(out)::nia,nina
+  real(r_std),intent(out)::zqsvegrap(n),water_lim(n)
+  integer::ji,jv,kjpindex,index_assi(n),index_non_assi(n)
+  real(r_std)::gstot(n),gstop(n),assimtot(n),Rdtot(n),leaf_gs_top(n)
+  kjpindex=n;jv=14;assimilate=.false.;index_assi=0;index_non_assi=0
+! <ACTIVITY_SEGMENT>
+ end subroutine
+
+ subroutine run_c3(n,vc2,JJ,Rd,Ca,gamma_star,KmC,KmO,Sco,gm,gb_co2,g0var,fvpd,assimi,Cc,leaf_ci,gs,info_limitphoto)
+  integer,intent(in)::n
+  real(r_std),intent(in)::vc2(n,1),JJ(n,1),Rd(n,1),Ca(n),gamma_star(n),KmC(n),KmO(n),Sco(n),gm(n),gb_co2(n),g0var(n),fvpd(n)
+  real(r_std),intent(out)::assimi(n,1),Cc(n,1),leaf_ci(n,14,1),gs(n,1),info_limitphoto(n,1)
+  integer::nic,inic,icinic,limit_photo,jl,jv,index_calc(n)
+  real(r_std)::A_1,A_1_tmp,x1,x2,a,b,c,d,m,p,q,r,QQ,UU,PSI,ci_star
+  real(r_std)::t2m(n),vpd(n)
+  nic=n;jl=1;jv=14;index_calc=(/(inic,inic=1,n)/);assimi=0.;Cc=0.;leaf_ci=0.;gs=0.;info_limitphoto=0.;t2m=0.;vpd=0.
+! <C3_SEGMENT>
+ end subroutine
+
+ subroutine run_c3_empty(vc2,JJ,Rd,Ca,gamma_star,KmC,KmO,Sco,gm,gb_co2,g0var,fvpd,assimi,Cc,leaf_ci,gs,info_limitphoto)
+  real(r_std),intent(in)::vc2(1,1),JJ(1,1),Rd(1,1),Ca(1),gamma_star(1),KmC(1),KmO(1),Sco(1),gm(1),gb_co2(1),g0var(1),fvpd(1)
+  real(r_std),intent(out)::assimi(1,1),Cc(1,1),leaf_ci(1,14,1),gs(1,1),info_limitphoto(1,1)
+  integer::nic,inic,icinic,limit_photo,jl,jv,index_calc(1)
+  real(r_std)::A_1,A_1_tmp,x1,x2,a,b,c,d,m,p,q,r,QQ,UU,PSI,ci_star
+  real(r_std)::t2m(1),vpd(1)
+  nic=0;jl=1;jv=14;index_calc=0;assimi=0.;Cc=0.;leaf_ci=Ca(1);gs=0.;info_limitphoto=0.;t2m=0.;vpd=0.
+! <C3_EMPTY_SEGMENT>
+ end subroutine
+
+ subroutine run_layer_mask(n,jl,nia,index_assi,lai,laitab,calculate,nic,index_calc)
+  integer,intent(in)::n,jl,nia,index_assi(n)
+  real(r_std),intent(in)::lai(n,14),laitab(4)
+  logical,intent(out)::calculate(n)
+  integer,intent(out)::nic,index_calc(n)
+  integer::inia,jv
+  jv=14;index_calc=0
+! <MASK_SEGMENT>
+ end subroutine
+
+ subroutine run_integrate(n,jl,nic,index_calc,assimi,Rd,gs,assimtot,Rdtot,gstot,leaf_gs_top,ilai)
+  integer,intent(in)::n,jl,nic,index_calc(n)
+  real(r_std),intent(in)::assimi(n,3),Rd(n,3),gs(n,3)
+  real(r_std),intent(inout)::assimtot(n),Rdtot(n),gstot(n),leaf_gs_top(n)
+  integer,intent(inout)::ilai(n)
+  integer::inic,icinic
+  real(r_std),parameter::laitab(4)=(/0._r_std,.5_r_std,1.5_r_std,3._r_std/)
+! <INTEGRATE_SEGMENT>
+ end subroutine
+
+ subroutine run_cim(n,lai,leaf_ci,cim,laisum)
+  integer,intent(in)::n
+  real(r_std),intent(in)::lai(n,14),leaf_ci(n,14,3)
+  real(r_std),intent(out)::cim(n,14),laisum(n)
+  integer::jl,jv
+  integer,parameter::nlai=3
+  real(r_std),parameter::laitab(4)=(/0._r_std,.5_r_std,1.5_r_std,3._r_std/)
+  jv=14;cim=0.;laisum=0.
+! <CIM_SEGMENT>
+ end subroutine
+
+ subroutine run_outputs(n,nia_in,assimtot,Rdtot,gstot,leaf_gs_top,gamma_star,fvpd,g0var,laisum,ilai,laitab, &
+      veget_max,humrel,zqsvegrap,vbeta23,t2m,pb,wind,q_cdrag,q_cdrag_pft,rveg_pft,ok_LAIdev, &
+      control_salinity,control_inudate,Ca,gsmean,cimean,gpp,rveget,rstruct,vbeta3,vbeta3pot)
+  integer,intent(in)::n,nia_in
+  real(r_std),intent(inout)::assimtot(n),gstot(n)
+  real(r_std),intent(in)::Rdtot(n),leaf_gs_top(n),gamma_star(n),fvpd(n),g0var(n),laisum(n),laitab(4)
+  real(r_std),intent(in)::veget_max(n,14),humrel(n,14),zqsvegrap(n),vbeta23(n,14),t2m(n),pb(n),wind(n)
+  real(r_std),intent(in)::q_cdrag(n),q_cdrag_pft(n,14),rveg_pft(14),control_salinity(n),control_inudate(n)
+  real(r_std),intent(in)::Ca(n)
+  logical,intent(in)::ok_LAIdev(14)
+  integer,intent(in)::ilai(n)
+  real(r_std),intent(out)::gsmean(n,14),cimean(n,14),gpp(n,14),rveget(n,14),rstruct(n,14),vbeta3(n,14),vbeta3pot(n,14)
+  integer::ji,jv,nia,inia,iainia,index_assi(n),kjpindex
+  real(r_std)::gstop(n),cresist,speed
+  real(r_std),parameter::mol_to_m_1=.0244,tp_00=273.15,pb_std=1013.,ratio_H2O_to_CO2=1.6
+  real(r_std),parameter::un=1.,zero=0.,min_wind=.1,dt_sechiba=1800.
+  kjpindex=n;jv=14;nia=nia_in;index_assi=(/(ji,ji=1,n)/)
+  gsmean=0.;cimean=0.;cimean(:,jv)=Ca;gpp=0.;rveget=1e20;rstruct=1e-8;vbeta3=0.;vbeta3pot=0.;gstop=0.
+! <CONTROL_SEGMENT>
+! <OUTPUT_SEGMENT>
+ end subroutine
+end module
+program oracle_main
+ use defprec;use fvcb_oracle
+ implicit none
+ integer,parameter::n=3
+ integer::i
+ real(r_std)::vc(n,1),jj(n,1),rd(n,1),ca(n),gam(n),kmc(n),kmo(n),sco(n),gm(n),gb(n),g0(n),fv(n)
+ real(r_std)::assim(n,1),cc(n,1),ci(n,14,1),gs(n,1),info(n,1)
+ real(r_std)::empty_assim(1,1),empty_cc(1,1),empty_ci(1,14,1),empty_gs(1,1),empty_info(1,1)
+ real(r_std)::at(n),rdt(n),gst(n),lgt(n),gam2(n),fv2(n),g02(n),ls(n),lt(4),vmax(n,14),hr(n,14),zq(n),vb23(n,14)
+ real(r_std)::t(n),pb(n),w(n),qcd(n),qcdp(n,14),rvp(14),cs(n),cin(n),gsm(n,14),cim(n,14),gpp(n,14),rv(n,14),rs(n,14),vb3(n,14),vb3p(n,14)
+ real(r_std)::output_ca(n)
+ integer::il(n)
+ logical::ok(14)
+ logical::activity(n),activity_ok(14)
+ real(r_std)::act_sw(n),act_hum(n,14),act_veg(n,14),act_vmax(n,14),act_lai(n,14),act_qsv(n,14),act_qsm(n,14),act_tg(n),act_tmin(14),act_tmax(14),act_zq(n),act_water(n)
+ integer::act_nia,act_nina
+ real(r_std)::down_assim(n,nvm,1),down_vc(n,nvm)
+ real(r_std)::down_ca(n)
+ real(r_std)::mask_lai(n,14),mask_laitab(4)
+ integer::mask_index(n),mask_calc_index(n),mask_nic
+ logical::mask_calculate(n)
+ real(r_std)::int_assim(n,3),int_rd(n,3),int_gs(n,3),int_at(n),int_rt(n),int_gt(n),int_top(n)
+ integer::int_ilai(n),int_index(n)
+ real(r_std)::cim_lai(n,14),cim_leaf(n,14,3),cim_out(n,14),cim_laisum(n)
+ character(len=512)::path
+ vc(:,1)=(/30.,60.,33.007402396106684/);jj(:,1)=(/60.,120.,6221.1054654979025/);rd(:,1)=(/.5,1.,5.077229369829301e-5/);ca=(/300.,400.,454.544212940868/)
+ gam=(/35.,42.,1676.3152557650226/);kmc=(/350.,400.,33907.936022990296/);kmo=(/250.,280.,848062.7445970513/);sco=(/2500.,2600.,2414.3708895507157/)
+ gm=(/.15,.2,1.3697344303394207e-8/);gb=(/.8,1.,1.3288257015011667e-4/);g0=(/.005,.01,2.573931168052183/);fv=(/3.,5.,175.70077906202914/)
+ call run_c3(n,vc,jj,rd,ca,gam,kmc,kmo,sco,gm,gb,g0,fv,assim,cc,ci,gs,info)
+ call run_c3_empty(vc(1:1,:),jj(1:1,:),rd(1:1,:),ca(1:1),gam(1:1),kmc(1:1),kmo(1:1),sco(1:1),gm(1:1),gb(1:1),g0(1:1),fv(1:1),empty_assim,empty_cc,empty_ci,empty_gs,empty_info)
+ call get_command_argument(1,path);open(10,file=trim(path),status='replace');write(10,'(a)')'field,value'
+ down_assim=50.;down_ca=(/300.,400.,300./);downregulation_co2_coeff=.1;downregulation_co2_coeff(14)=.2;downregulation_co2_baselevel=350.
+ downregulation_co2=.false.;call run_downreg(n,down_assim,down_ca,down_vc)
+ do i=1,n;write(10,'(a,es25.17)')'vcmax_no_downreg,',down_vc(i,14);enddo
+ downregulation_co2=.true.;call run_downreg(n,down_assim,down_ca,down_vc)
+ do i=1,n;write(10,'(a,es25.17)')'vcmax_downreg,',down_vc(i,14);enddo
+ act_sw=(/100.,0.,100./);act_hum=.5;act_hum(3,14)=0.;act_veg=0.;act_veg(:,14)=(/.7,.7,.7/);act_vmax=0.;act_vmax(:,14)=.8
+ act_lai=0.;act_lai(:,14)=(/2.,0.,2./);act_qsv=0.;act_qsv(1,14)=.1;act_qsm=0.;act_qsm(1,14)=.2
+ act_tg=25.;act_tmin=0.;act_tmax=40.;activity_ok=.false.;activity_ok(14)=.true.
+ call run_activity(n,act_sw,act_hum,act_veg,act_vmax,act_lai,act_qsv,act_qsm,act_tg,act_tmin,act_tmax,activity_ok,activity,act_nia,act_nina,act_zq,act_water)
+ do i=1,n
+  write(10,'(a,es25.17)')'activity_assimilate,',merge(1._r_std,0._r_std,activity(i));write(10,'(a,es25.17)')'activity_zqsvegrap,',act_zq(i);write(10,'(a,es25.17)')'activity_water_lim,',act_water(i)
+ enddo
+ write(10,'(a,es25.17)')'empty_assimi,',empty_assim(1,1);write(10,'(a,es25.17)')'empty_cc,',empty_cc(1,1)
+ write(10,'(a,es25.17)')'empty_leaf_ci,',empty_ci(1,14,1);write(10,'(a,es25.17)')'empty_gs,',empty_gs(1,1);write(10,'(a,es25.17)')'empty_info,',empty_info(1,1)
+ mask_lai=0.;mask_lai(:,14)=(/0.,.75,2./);mask_laitab=(/0.,.5,1.5,3./);mask_index=(/1,2,3/)
+ call run_layer_mask(n,1,2,mask_index,mask_lai,mask_laitab,mask_calculate,mask_nic,mask_calc_index)
+ do i=1,n;write(10,'(a,es25.17)')'mask_layer1,',merge(1._r_std,0._r_std,mask_calculate(i));enddo
+ write(10,'(a,es25.17)')'mask_layer1_nic,',real(mask_nic,r_std)
+ call run_layer_mask(n,3,2,mask_index,mask_lai,mask_laitab,mask_calculate,mask_nic,mask_calc_index)
+ do i=1,n;write(10,'(a,es25.17)')'mask_layer3,',merge(1._r_std,0._r_std,mask_calculate(i));enddo
+ write(10,'(a,es25.17)')'mask_layer3_nic,',real(mask_nic,r_std)
+ call run_layer_mask(n,1,0,mask_index,mask_lai,mask_laitab,mask_calculate,mask_nic,mask_calc_index)
+ write(10,'(a,es25.17)')'mask_empty_nic,',real(mask_nic,r_std)
+ int_assim=reshape((/1.,2.,3.,4.,5.,6.,7.,8.,9./),shape(int_assim));int_rd=.1*int_assim;int_gs=.01*int_assim
+ int_at=0.;int_rt=0.;int_gt=0.;int_top=0.;int_ilai=0;int_index=(/1,2,3/)
+ call run_integrate(n,1,2,int_index,int_assim,int_rd,int_gs,int_at,int_rt,int_gt,int_top,int_ilai)
+ call run_integrate(n,2,2,int_index,int_assim,int_rd,int_gs,int_at,int_rt,int_gt,int_top,int_ilai)
+ call run_integrate(n,3,0,int_index,int_assim,int_rd,int_gs,int_at,int_rt,int_gt,int_top,int_ilai)
+ do i=1,n
+  write(10,'(a,es25.17)')'integrate_assimtot,',int_at(i);write(10,'(a,es25.17)')'integrate_rdtot,',int_rt(i)
+  write(10,'(a,es25.17)')'integrate_gstot,',int_gt(i);write(10,'(a,es25.17)')'integrate_leaf_gs_top,',int_top(i);write(10,'(a,es25.17)')'integrate_ilai,',real(int_ilai(i),r_std)
+ enddo
+ cim_lai=0.;cim_lai(:,14)=(/0.,.75,2./);cim_leaf=0.;cim_leaf(:,14,1)=(/300.,310.,320./);cim_leaf(:,14,2)=(/301.,311.,321./);cim_leaf(:,14,3)=(/302.,312.,322./)
+ call run_cim(n,cim_lai,cim_leaf,cim_out,cim_laisum)
+ do i=1,n;write(10,'(a,es25.17)')'cim,',cim_out(i,14);write(10,'(a,es25.17)')'cim_laisum,',cim_laisum(i);enddo
+ write(10,'(a,es25.17)')'activity_nia,',real(act_nia,r_std);write(10,'(a,es25.17)')'activity_nina,',real(act_nina,r_std)
+ do i=1,n
+  write(10,'(a,es25.17)')'assimi,',assim(i,1);write(10,'(a,es25.17)')'cc,',cc(i,1)
+  write(10,'(a,es25.17)')'leaf_ci,',ci(i,14,1);write(10,'(a,es25.17)')'gs,',gs(i,1);write(10,'(a,es25.17)')'info,',info(i,1)
+ enddo
+ at=(/8.,12.,5./);rdt=(/.4,.7,.2/);gst=(/.15,.22,.08/);lgt=(/.06,.08,.04/);gam2=(/40.,42.,45./);fv2=(/3.,5.,4./);g02=(/.005,.01,.008/)
+ ls=(/1.,2.,.5/);il=(/1,2,1/);lt=(/0.,.5,1.5,3./);vmax=0.;hr=0.;vb23=0.;qcdp=0.;vmax(:,14)=(/.7,.8,.4/);hr(:,14)=(/.5,0.,.7/)
+ zq=(/.1,.2,.05/);vb23(:,14)=(/.02,.03,.01/);t=(/298.,285.,275./);pb=(/1000.,950.,1020./);w=(/.05,2.,5./);qcd=(/.01,.02,.015/)
+ qcdp(:,14)=(/.012,.025,.018/);rvp=1.;ok=.false.;ok(14)=.true.;cs=(/1.,.8,.5/);cin=(/1.,.6,.2/)
+ output_ca=(/300.,400.,420./)
+ call run_outputs(n,n,at,rdt,gst,lgt,gam2,fv2,g02,ls,il,lt,vmax,hr,zq,vb23,t,pb,w,qcd,qcdp,rvp,ok,cs,cin,output_ca,gsm,cim,gpp,rv,rs,vb3,vb3p)
+ do i=1,n
+  write(10,'(a,es25.17)')'assimtot_controlled,',at(i);write(10,'(a,es25.17)')'gsmean,',gsm(i,14)
+  write(10,'(a,es25.17)')'cimean,',cim(i,14);write(10,'(a,es25.17)')'gpp,',gpp(i,14)
+  write(10,'(a,es25.17)')'rveget,',rv(i,14);write(10,'(a,es25.17)')'rstruct,',rs(i,14)
+  write(10,'(a,es25.17)')'vbeta3,',vb3(i,14);write(10,'(a,es25.17)')'vbeta3pot,',vb3p(i,14)
+ enddo
+ at=(/8.,12.,5./);rdt=(/.4,.7,.2/);gst=g02*ls;lgt=(/.06,.08,.04/)
+ call run_outputs(n,n,at,rdt,gst,lgt,gam2,fv2,g02,ls,il,lt,vmax,hr,zq,vb23,t,pb,w,qcd,qcdp,rvp,ok,cs,cin,output_ca,gsm,cim,gpp,rv,rs,vb3,vb3p)
+ do i=1,n;write(10,'(a,es25.17)')'cimean_baseline,',cim(i,14);enddo
+ at=(/8.,12.,5./);rdt=(/.4,.7,.2/);gst=(/.15,.22,.08/);lgt=(/.06,.08,.04/)
+ call run_outputs(n,0,at,rdt,gst,lgt,gam2,fv2,g02,ls,il,lt,vmax,hr,zq,vb23,t,pb,w,qcd,qcdp,rvp,ok,cs,cin,output_ca,gsm,cim,gpp,rv,rs,vb3,vb3p)
+ do i=1,n
+  write(10,'(a,es25.17)')'inactive_gsmean,',gsm(i,14);write(10,'(a,es25.17)')'inactive_cimean,',cim(i,14);write(10,'(a,es25.17)')'inactive_gpp,',gpp(i,14)
+  write(10,'(a,es25.17)')'inactive_rveget,',rv(i,14);write(10,'(a,es25.17)')'inactive_rstruct,',rs(i,14);write(10,'(a,es25.17)')'inactive_vbeta3,',vb3(i,14);write(10,'(a,es25.17)')'inactive_vbeta3pot,',vb3p(i,14)
+ enddo
+ close(10)
+end program

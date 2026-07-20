@@ -1,0 +1,292 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std = int32, r_std = real64
+end module defprec
+
+module constantes_var
+  use defprec
+  implicit none
+  real(r_std), parameter :: zero = 0._r_std, un = 1._r_std
+end module constantes_var
+
+module ioipsl_para
+  implicit none
+end module ioipsl_para
+
+module interpweight_helper_oracle
+  use defprec
+  implicit none
+  integer :: printlev = 0, numout = 6
+contains
+  subroutine ipslerr_p(level, a, b, c, d)
+    integer, intent(in) :: level
+    character(*), intent(in) :: a, b, c, d
+    if (level >= 3) error stop 'ipslerr_p'
+  end subroutine ipslerr_p
+! <INTERPWEIGHT_CALC_RESOLUTION_IN>
+! <INTERPWEIGHT_MODIFYING_INPUT1D>
+! <INTERPWEIGHT_MODIFYING_INPUT2D>
+! <INTERPWEIGHT_MODIFYING_INPUT3D>
+! <INTERPWEIGHT_MODIFYING_INPUT4D>
+! <INTERPWEIGHT_MASKING_INPUT1D>
+! <INTERPWEIGHT_MASKING_INPUT2D>
+! <INTERPWEIGHT_MASKING_INPUT3D>
+! <INTERPWEIGHT_MASKING_INPUT4D>
+! <INTERPWEIGHT_PROVIDE_FRACTIONS1D>
+! <INTERPWEIGHT_PROVIDE_FRACTIONS2D>
+! <INTERPWEIGHT_PROVIDE_FRACTIONS4D>
+! <INTERPWEIGHT_PROVIDE_INTERPOLATION2D>
+! <INTERPWEIGHT_VALVECR>
+end module interpweight_helper_oracle
+
+program driver
+  use defprec
+  use constantes_var
+  use interpweight_helper_oracle
+  implicit none
+  character(512) :: path, mode
+  integer :: u
+  character(50), parameter :: c_nomask = 'nomask', c_below = 'mbelow', c_above = 'mabove', &
+    c_sum = 'msumrange', c_default = 'default', c_slope = 'slopecalc', c_bad = 'bad'
+
+  call get_command_argument(1, path)
+  call get_command_argument(2, mode)
+  if (len_trim(mode) > 0) call run_fatal(trim(mode))
+  open(newunit=u, file=trim(path), status='replace')
+  write(u, '(a)') 'field,flat_index,value'
+  call run_resolution(u)
+  call run_modifying(u)
+  call run_masking(u)
+  call run_fractions(u)
+  call run_interpolation(u)
+  call run_valvecr(u)
+  close(u)
+contains
+  subroutine emit_r1(unit, name, value)
+    integer, intent(in) :: unit
+    character(*), intent(in) :: name
+    real(r_std), intent(in) :: value(:)
+    integer :: i
+    do i = 1, size(value)
+      write(unit, '(a,a,i0,a,es25.17)') trim(name), ',', i - 1, ',', value(i)
+    end do
+  end subroutine emit_r1
+
+  subroutine emit_r2(unit, name, value)
+    integer, intent(in) :: unit
+    character(*), intent(in) :: name
+    real(r_std), intent(in) :: value(:, :)
+    integer :: i, j, n
+    n = 0
+    do i = 1, size(value, 1)
+      do j = 1, size(value, 2)
+        write(unit, '(a,a,i0,a,es25.17)') trim(name), ',', n, ',', value(i, j)
+        n = n + 1
+      end do
+    end do
+  end subroutine emit_r2
+
+  subroutine emit_r3(unit, name, value)
+    integer, intent(in) :: unit
+    character(*), intent(in) :: name
+    real(r_std), intent(in) :: value(:, :, :)
+    integer :: i, j, k, n
+    n = 0
+    do i = 1, size(value, 1); do j = 1, size(value, 2); do k = 1, size(value, 3)
+      write(unit, '(a,a,i0,a,es25.17)') trim(name), ',', n, ',', value(i, j, k)
+      n = n + 1
+    end do; end do; end do
+  end subroutine emit_r3
+
+  subroutine emit_r4(unit, name, value)
+    integer, intent(in) :: unit
+    character(*), intent(in) :: name
+    real(r_std), intent(in) :: value(:, :, :, :)
+    integer :: i, j, k, l, n
+    n = 0
+    do i = 1, size(value, 1); do j = 1, size(value, 2)
+      do k = 1, size(value, 3); do l = 1, size(value, 4)
+        write(unit, '(a,a,i0,a,es25.17)') trim(name), ',', n, ',', value(i, j, k, l)
+        n = n + 1
+      end do; end do
+    end do; end do
+  end subroutine emit_r4
+
+  subroutine emit_i1(unit, name, value)
+    integer, intent(in) :: unit, value(:)
+    character(*), intent(in) :: name
+    integer :: i
+    do i = 1, size(value)
+      write(unit, '(a,a,i0,a,i0)') trim(name), ',', i - 1, ',', value(i)
+    end do
+  end subroutine emit_i1
+
+  subroutine emit_i2(unit, name, value)
+    integer, intent(in) :: unit, value(:, :)
+    character(*), intent(in) :: name
+    integer :: i, j, n
+    n = 0
+    do i = 1, size(value, 1); do j = 1, size(value, 2)
+      write(unit, '(a,a,i0,a,i0)') trim(name), ',', n, ',', value(i, j)
+      n = n + 1
+    end do; end do
+  end subroutine emit_i2
+
+  subroutine run_resolution(unit)
+    integer, intent(in) :: unit
+    real(r_std) :: lon(3, 3), lat(3, 3), resolution(3, 3, 2), lon_axis(3), lat_axis(3)
+    integer :: i, j
+    lon_axis = (/0._r_std, 2._r_std, 6._r_std/)
+    lat_axis = (/10._r_std, 13._r_std, 19._r_std/)
+    do i = 1, 3; do j = 1, 3
+      lon(i, j) = lon_axis(i)
+      lat(i, j) = lat_axis(j)
+    end do; end do
+    call interpweight_calc_resolution_in(lon, lat, 3, 3, .001_r_std, 1._r_std, acos(-1._r_std), resolution)
+    call emit_r3(unit, 'resolution', resolution)
+  end subroutine run_resolution
+
+  subroutine run_modifying(unit)
+    integer, intent(in) :: unit
+    real(r_std) :: a1(4), a2(2, 2), a3(1, 2, 2), a4(1, 1, 2, 2)
+    a1 = (/-2._r_std, -1._r_std, 0._r_std, 3._r_std/)
+    a2 = reshape(a1, shape(a2)); a3 = reshape(a1, shape(a3)); a4 = reshape(a1, shape(a4))
+    call interpweight_modifying_input1D(4, 0, 0, 0, 1, 1, -1._r_std, a1)
+    call interpweight_modifying_input2D(2, 2, 0, 0, 1, 1, -1._r_std, a2)
+    call interpweight_modifying_input3D(1, 2, 2, 0, 1, 1, -1._r_std, a3)
+    call interpweight_modifying_input4D(1, 1, 2, 2, 1, 2, -1._r_std, a4)
+    call emit_r1(unit, 'modify1', a1); call emit_r2(unit, 'modify2', a2)
+    call emit_r3(unit, 'modify3', a3); call emit_r4(unit, 'modify4', a4)
+  end subroutine run_modifying
+
+  subroutine run_masking(unit)
+    integer, intent(in) :: unit
+    real(r_std) :: mvalues(3), a1(3), a2(2, 2), a3(2, 2, 2), a4(2, 2, 2, 2)
+    integer(i_std) :: m1(3), m2(2, 2)
+    a1 = (/-1._r_std, 0._r_std, 2._r_std/); mvalues = (/0._r_std, 0._r_std, 0._r_std/)
+    m1 = (/7, 8, 9/); call interpweight_masking_input1D(3, 0, 0, 0, 0, 0, c_nomask, mvalues, a1, m1); call emit_i1(unit, 'mask1_nomask', m1)
+    m1 = (/7, 8, 9/); call interpweight_masking_input1D(3, 0, 0, 0, 0, 0, c_below, mvalues, a1, m1); call emit_i1(unit, 'mask1_below', m1)
+    mvalues(1) = 1._r_std; m1 = (/7, 8, 9/); call interpweight_masking_input1D(3, 0, 0, 0, 0, 0, c_above, mvalues, a1, m1); call emit_i1(unit, 'mask1_above', m1)
+
+    a2 = reshape((/-1._r_std, 2._r_std, 0._r_std, 4._r_std/), shape(a2)); mvalues = zero
+    m2 = 0; call interpweight_masking_input2D(2, 2, 0, 0, 0, 0, c_nomask, mvalues, a2, m2); call emit_i2(unit, 'mask2_nomask', m2)
+    m2 = 0; call interpweight_masking_input2D(2, 2, 0, 0, 0, 0, c_below, mvalues, a2, m2); call emit_i2(unit, 'mask2_below', m2)
+    mvalues(1) = 1._r_std; m2 = 0; call interpweight_masking_input2D(2, 2, 0, 0, 0, 0, c_above, mvalues, a2, m2); call emit_i2(unit, 'mask2_above', m2)
+    a2 = reshape((/2._r_std, .2_r_std, 2._r_std, .2_r_std/), shape(a2)); mvalues = (/3._r_std, 1._r_std, 5._r_std/); m2 = 0
+    call interpweight_masking_input2D(2, 2, 0, 0, 0, 0, c_sum, mvalues, a2, m2); call emit_r2(unit, 'mask2_sum_values', a2); call emit_i2(unit, 'mask2_sum_mask', m2)
+
+    a3 = reshape((/0._r_std, 2._r_std, 1._r_std, 3._r_std, 3._r_std, 0._r_std, 1._r_std, 1._r_std/), shape(a3)); mvalues = (/1._r_std, 0._r_std, 0._r_std/)
+    m2 = 0; call interpweight_masking_input3D(2, 2, 0, 0, 2, 0, c_below, mvalues, a3, m2); call emit_i2(unit, 'mask3_below', m2)
+    m2 = 0; call interpweight_masking_input3D(2, 2, 0, 0, 2, 0, c_above, mvalues, a3, m2); call emit_i2(unit, 'mask3_above', m2)
+    m2 = 0; call interpweight_masking_input3D(2, 2, 0, 0, 2, 0, c_nomask, mvalues, a3, m2); call emit_i2(unit, 'mask3_nomask', m2)
+    a3(1, 1, :) = (/1._r_std, 1._r_std/); a3(1, 2, :) = (/2._r_std, 2._r_std/)
+    a3(2, 1, :) = (/.2_r_std, .2_r_std/); a3(2, 2, :) = (/3._r_std, 3._r_std/)
+    mvalues = (/3._r_std, 1._r_std, 5._r_std/); m2 = 0
+    call interpweight_masking_input3D(2, 2, 0, 0, 2, 0, c_sum, mvalues, a3, m2); call emit_r3(unit, 'mask3_sum_values', a3); call emit_i2(unit, 'mask3_sum_mask', m2)
+
+    a4 = reshape((/-1._r_std, 2._r_std, 1._r_std, 3._r_std, 0._r_std, 4._r_std, 1._r_std, 3._r_std, 2._r_std, 0._r_std, 1._r_std, 3._r_std, 0._r_std, 4._r_std, 1._r_std, 3._r_std/), shape(a4)); mvalues = (/1._r_std, 0._r_std, 0._r_std/)
+    m2 = 0; call interpweight_masking_input4D(2, 2, 0, 0, 2, 2, c_below, mvalues, a4, m2); call emit_i2(unit, 'mask4_below', m2)
+    m2 = 0; call interpweight_masking_input4D(2, 2, 0, 0, 2, 2, c_above, mvalues, a4, m2); call emit_i2(unit, 'mask4_above', m2)
+    m2 = 0; call interpweight_masking_input4D(2, 2, 0, 0, 2, 2, c_nomask, mvalues, a4, m2); call emit_i2(unit, 'mask4_nomask', m2)
+    a4 = .2_r_std
+    a4(1, 1, :, 1) = (/1._r_std, 1._r_std/); a4(1, 1, :, 2) = (/2._r_std, 2._r_std/)
+    a4(1, 2, :, :) = 3._r_std
+    mvalues = (/3._r_std, 1._r_std, 5._r_std/); m2 = 0
+    call interpweight_masking_input4D(2, 2, 0, 0, 2, 2, c_sum, mvalues, a4, m2); call emit_r4(unit, 'mask4_sum_values', a4); call emit_i2(unit, 'mask4_sum_mask', m2)
+  end subroutine run_masking
+
+  subroutine run_fractions(unit)
+    integer, intent(in) :: unit
+    real(r_std) :: types(2), area(2, 2), latlon(2, 2), f12(2, 2), avail(2), vmin, vmax
+    real(r_std) :: v1(3), v2(2, 2), v4(2, 2, 2, 2), f4(2, 2, 2), amin(2), amax(2)
+    integer(i_std) :: ix1(2, 2), ix2(2, 2, 2)
+    types = (/1._r_std, 2._r_std/); area = reshape((/.25_r_std, 0._r_std, .75_r_std, 0._r_std/), shape(area)); latlon = zero
+    ix1 = reshape((/1, 1, 2, 1/), shape(ix1)); v1 = (/1._r_std, 2._r_std, 3._r_std/); vmin = 1._r_std; vmax = 3._r_std
+    call interpweight_provide_fractions1D(c_default, 2, 2, types, 3, 0, 0, 0, 2, zero, v1, area, ix1, vmax, vmin, 2._r_std, latlon, f12, avail)
+    call emit_r2(unit, 'fraction1_values', f12); call emit_r1(unit, 'fraction1_availability', avail)
+    ix2 = reshape((/1, 1, 1, 1, 2, 1, 1, 1/), shape(ix2)); v2 = reshape((/1._r_std, 2._r_std, 2._r_std, 1._r_std/), shape(v2)); vmin = 1._r_std; vmax = 3._r_std
+    call interpweight_provide_fractions2D(c_default, 2, 2, types, 2, 2, 0, 0, 2, zero, v2, area, ix2, vmax, vmin, 2._r_std, latlon, f12, avail)
+    call emit_r2(unit, 'fraction2_values', f12); call emit_r1(unit, 'fraction2_availability', avail)
+    v4 = reshape((/2._r_std, 25._r_std, 0._r_std, 0._r_std, 4._r_std, -1._r_std, 0._r_std, 0._r_std, 2._r_std, 25._r_std, 0._r_std, 0._r_std, 4._r_std, -1._r_std, 0._r_std, 0._r_std/), shape(v4))
+    amin = (/1._r_std, 3._r_std/); amax = (/1._r_std, 1._r_std/)
+    call interpweight_provide_fractions4D(c_default, 2, 2, types, 2, 2, 2, 2, 2, zero, v4, area, ix2, amax, amin, 2._r_std, latlon, f4, avail)
+    call emit_r3(unit, 'fraction4_values', f4); call emit_r1(unit, 'fraction4_availability', avail)
+  end subroutine run_fractions
+
+  subroutine run_interpolation(unit)
+    integer, intent(in) :: unit
+    real(r_std) :: values(2, 2), area(3, 3), latlon(3, 2), out(3), avail(3)
+    integer(i_std) :: indices(3, 3, 2)
+    values = reshape((/2._r_std, 4._r_std, 8._r_std, 16._r_std/), shape(values))
+    area = reshape((/.25_r_std, 0._r_std, .4_r_std, .75_r_std, 1._r_std, 0._r_std, 0._r_std, 0._r_std, 0._r_std/), shape(area))
+    indices = 1; indices(1, 2, :) = (/2, 1/); indices(3, 1, :) = (/2, 2/); latlon = zero
+    call interpweight_provide_interpolation2D(c_default, 3, 0, 0, 2, 2, 0, 0, 3, zero, values, area, indices, 1._r_std, 0._r_std, 1._r_std, 2._r_std, latlon, 9._r_std, 2._r_std, out, avail)
+    call emit_r1(unit, 'interpolation_default', out); call emit_r1(unit, 'interpolation_default_availability', avail)
+    call interpweight_provide_interpolation2D(c_slope, 3, 0, 0, 2, 2, 0, 0, 3, zero, values, area, indices, 1._r_std, 0._r_std, 1._r_std, 2._r_std, latlon, 9._r_std, 2._r_std, out, avail)
+    call emit_r1(unit, 'interpolation_slope', out); call emit_r1(unit, 'interpolation_slope_availability', avail)
+  end subroutine run_interpolation
+
+  subroutine run_valvecr(unit)
+    integer, intent(in) :: unit
+    real :: mixed(4), full(3)
+    integer :: result4(4), result3(3)
+    mixed = (/0., 1., 1., 2./); full = 1.
+    result4 = interpweight_ValVecR(mixed, 4, 1., 'eq'); call emit_i1(unit, 'val_eq_mixed', result4(1:result4(1) + 1))
+    result3 = interpweight_ValVecR(full, 3, 1., 'eq'); call emit_i1(unit, 'val_eq_full', result3(1:result3(1)))
+    result4 = interpweight_ValVecR(mixed, 4, 1., 'ge'); call emit_i1(unit, 'val_ge_mixed', result4(1:result4(1) + 1))
+    result3 = interpweight_ValVecR(full, 3, 1., 'ge'); call emit_i1(unit, 'val_ge_full', result3(1:result3(1)))
+    result4 = interpweight_ValVecR(mixed, 4, 1., 'le'); call emit_i1(unit, 'val_le_mixed', result4(1:result4(1) + 1))
+    result3 = interpweight_ValVecR(full, 3, 1., 'le'); call emit_i1(unit, 'val_le_full', result3(1:result3(1)))
+    result4 = interpweight_ValVecR(mixed, 4, 1., 'neq'); call emit_i1(unit, 'val_neq_mixed', result4(1:result4(1) + 1))
+    result3 = interpweight_ValVecR((/0., 0., 0./), 3, 1., 'neq'); call emit_i1(unit, 'val_neq_full', result3(1:result3(1)))
+  end subroutine run_valvecr
+
+  subroutine run_fatal(which)
+    character(*), intent(in) :: which
+    real(r_std) :: mv(3), a1(3), a2(2, 2), area(1, 2), latlon(1, 2), out2(1, 2), avail(1), vmin, vmax, types(2)
+    real(r_std) :: a4(1, 1, 2, 1), out4(1, 2, 1), out4bad(1, 1, 1), mins(2), maxs(2), outi(1)
+    integer(i_std) :: m1(3), m2(2, 2), ix1(1, 2), ix2(1, 2, 2)
+    integer :: ignored(3)
+    mv = zero; a1 = 1._r_std; a2 = 1._r_std; m1 = 0; area = .5_r_std; latlon = zero
+    ix1 = 1; ix2 = 1; types = (/1._r_std, 1._r_std/); vmin = 1._r_std; vmax = 1._r_std
+    a4 = 1._r_std; mins = 1._r_std; maxs = 1._r_std
+    select case (which)
+    case ('mask1_sum'); call interpweight_masking_input1D(3, 0, 0, 0, 0, 0, c_sum, mv, a1, m1)
+    case ('mask1_bad'); call interpweight_masking_input1D(3, 0, 0, 0, 0, 0, c_bad, mv, a1, m1)
+    case ('mask2_bad'); m2 = 0; call interpweight_masking_input2D(2, 2, 0, 0, 0, 0, c_bad, mv, a2, m2)
+    case ('mask3_bad'); call fatal_mask3(a4)
+    case ('mask4_bad'); call fatal_mask4(a4)
+    case ('frac1_zero'); a1 = zero; call interpweight_provide_fractions1D(c_default, 1, 2, types, 3, 0, 0, 0, 2, zero, a1, area, ix1, vmax, vmin, 2._r_std, latlon, out2, avail)
+    case ('frac1_over'); call interpweight_provide_fractions1D(c_default, 1, 2, types, 3, 0, 0, 0, 2, zero, a1, area, ix1, vmax, vmin, 2._r_std, latlon, out2, avail)
+    case ('frac1_bad'); call interpweight_provide_fractions1D(c_bad, 1, 2, types, 3, 0, 0, 0, 2, zero, a1, area, ix1, vmax, vmin, 2._r_std, latlon, out2, avail)
+    case ('frac2_zero'); a2 = zero; call interpweight_provide_fractions2D(c_default, 1, 2, types, 2, 2, 0, 0, 2, zero, a2, area, ix2, vmax, vmin, 2._r_std, latlon, out2, avail)
+    case ('frac2_over'); call interpweight_provide_fractions2D(c_default, 1, 2, types, 2, 2, 0, 0, 2, zero, a2, area, ix2, vmax, vmin, 2._r_std, latlon, out2, avail)
+    case ('frac2_bad'); call interpweight_provide_fractions2D(c_bad, 1, 2, types, 2, 2, 0, 0, 2, zero, a2, area, ix2, vmax, vmin, 2._r_std, latlon, out2, avail)
+    case ('frac4_dims'); call interpweight_provide_fractions4D(c_default, 1, 1, types(1:1), 1, 1, 2, 1, 2, zero, a4, area, ix2, maxs(1:1), mins(1:1), 2._r_std, latlon, out4bad, avail)
+    case ('frac4_zero'); a4 = zero; call interpweight_provide_fractions4D(c_default, 1, 2, types, 1, 1, 2, 1, 2, zero, a4, area, ix2, maxs, mins, 2._r_std, latlon, out4, avail)
+    case ('frac4_bad'); call interpweight_provide_fractions4D(c_bad, 1, 2, types, 1, 1, 2, 1, 2, zero, a4, area, ix2, maxs, mins, 2._r_std, latlon, out4, avail)
+    case ('interp_default_zero'); a2 = zero; call interpweight_provide_interpolation2D(c_default, 1, 0, 0, 2, 2, 0, 0, 2, zero, a2, area, ix2, vmax, vmin, 1._r_std, 2._r_std, latlon, 9._r_std, 2._r_std, outi, avail)
+    case ('interp_slope_zero'); a2 = zero; call interpweight_provide_interpolation2D(c_slope, 1, 0, 0, 2, 2, 0, 0, 2, zero, a2, area, ix2, vmax, vmin, 1._r_std, 2._r_std, latlon, 9._r_std, 2._r_std, outi, avail)
+    case ('interp_bad'); call interpweight_provide_interpolation2D(c_bad, 1, 0, 0, 2, 2, 0, 0, 2, zero, a2, area, ix2, vmax, vmin, 1._r_std, 2._r_std, latlon, 9._r_std, 2._r_std, outi, avail)
+    case ('val_bad'); ignored = interpweight_ValVecR((/0., 1., 2./), 3, 1., 'bad')
+    end select
+    error stop 'fatal mode did not stop'
+  end subroutine run_fatal
+
+  subroutine fatal_mask3(a4)
+    real(r_std), intent(in) :: a4(1, 1, 2, 1)
+    real(r_std) :: a3(1, 1, 2), mv(3)
+    integer(i_std) :: mask(1, 1)
+    a3 = a4(:, :, :, 1); mv = zero; mask = 0
+    call interpweight_masking_input3D(1, 1, 0, 0, 2, 0, c_bad, mv, a3, mask)
+  end subroutine fatal_mask3
+
+  subroutine fatal_mask4(a4)
+    real(r_std), intent(inout) :: a4(1, 1, 2, 1)
+    real(r_std) :: mv(3)
+    integer(i_std) :: mask(1, 1)
+    mv = zero; mask = 0
+    call interpweight_masking_input4D(1, 1, 0, 0, 2, 1, c_bad, mv, a4, mask)
+  end subroutine fatal_mask4
+end program driver

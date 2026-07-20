@@ -1,0 +1,68 @@
+schema_version: 1
+scope: >-
+  Batch-3 owners for interpweight.f90::interpweight_1D and interpweight_2D.
+  The 112 arms are the 41 arms in the 1D control-flow span 229-420 and the
+  71 arms in the 2D span 580-892. NetCDF and MPI are explicit input/transport
+  boundaries; aggregate_p is injected and no overlap or source value is guessed.
+
+totals:
+  procedures: 2
+  arms: 112
+  interpweight_1d_arms: 41
+  interpweight_2d_arms: 71
+
+contracts:
+  io: jax_orchidee.driver.interpolation_core12.InterpolationSource
+  target_geometry: jax_orchidee.driver.interpolation_core12.InterpolationTarget
+  aggregate: >-
+    AggregateRequest forwards lalo, resolution, neighbours, contfrac, source
+    coordinates, 2D mask where applicable, source-derived callsign, max
+    resolutions, and nbvmax.
+    AggregatePacket supplies exact one-based sub_index/sub_area and ok.
+  ordering: >-
+    dimension/time dispatch, coordinate expansion, noneg modification, mask,
+    source resolution, nbvmax/retry aggregation, variable type dispatch,
+    fraction weighting, and availability scaling follow source order.
+  undefined: >-
+    1D calculated-resolution passes rank-1 arrays to a rank-2 routine; 2D rank
+    3/4 paths unconditionally broadcast and interpolate unallocated invar2D.
+    These paths raise FortranUndefinedVariableError instead of substituting data.
+  oracle: >-
+    tests/unit/test_interpolation_core12.py compiles a source-extracted gfortran
+    oracle for nbvmax, category weighting, fallback, and availability scaling.
+
+entries:
+  - id: interpolation_core12.interpweight_1d
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90
+    fortran_subroutine: interpweight_1D
+    fortran_lines: 95-426
+    control_flow_lines: 229-420
+    status: implemented
+    jax_owner: jax_orchidee.driver.interpolation_core12.interpweight_1d
+    gap: null
+    arm_count: 41
+    state_contract:
+      - jax_orchidee.driver.interpolation_core12.InterpolationSource
+      - jax_orchidee.driver.interpolation_core12.InterpolationTarget
+      - jax_orchidee.driver.interpolation_core12.AggregateRequest
+      - jax_orchidee.driver.interpolation_core12.AggregatePacket
+      - jax_orchidee.driver.interpolation_core12.InterpweightResult
+    validation: [tests/unit/test_interpolation_core12.py]
+
+  - id: interpolation_core12.interpweight_2d
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90
+    fortran_subroutine: interpweight_2D
+    fortran_lines: 444-896
+    control_flow_lines: 580-892
+    status: implemented
+    jax_owner: jax_orchidee.driver.interpolation_core12.interpweight_2d
+    gap: null
+    arm_count: 71
+    state_contract:
+      - jax_orchidee.driver.interpolation_core12.InterpolationSource
+      - jax_orchidee.driver.interpolation_core12.InterpolationTarget
+      - jax_orchidee.driver.interpolation_core12.AggregateRequest
+      - jax_orchidee.driver.interpolation_core12.AggregatePacket
+      - jax_orchidee.driver.interpolation_core12.InterpweightResult
+      - jax_orchidee.driver.interpolation_core12.FortranUndefinedVariableError
+    validation: [tests/unit/test_interpolation_core12.py]

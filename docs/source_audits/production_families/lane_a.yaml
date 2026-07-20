@@ -1,0 +1,825 @@
+schema_version: 1
+records:
+- ledger_entry: driver.active.forcing_landpoint_interpolation
+  oracle_family: driver_forcing_owner
+  status: verified
+  production_owner:
+    file: jax_orchidee/driver/domain.py
+    symbol: read_forcing_model_step_cached
+    start_line: 885
+    end_line: 921
+    file_sha256: 09369fc3712722a0f90af5b4da82a986944f9ed4506977e245c6c6ecc1ed3e33
+    span_sha256: 44323c62c1235af85c39b0dbbac6d76e0e2569b046db9e581431a0c1e3a09096
+  callsites:
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_driver_cold_start_multiday_modelout_lite_run
+    start_line: 9566
+    end_line: 9678
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 190c2485e6fb5ce0ed4b217969e2864f5d5e6cd939ff1804b4fd90b678b97c5f
+  - file: jax_orchidee/driver/bundle.py
+    symbol: iter_paper_year_step_bundles
+    start_line: 443
+    end_line: 497
+    file_sha256: 97fe49526d225c3cd3a14bd9c1e6947424be3b7f26852a1fb718726da63ea1dd
+    span_sha256: d4d4fa4529bb4ef4af0ecaa59c3673addd99e18c7eb0ad436292f1fd75f18831
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: _paper_1961_step_bundle_from_context
+    start_line: 603
+    end_line: 644
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 0358939b1bc850fd6e0367615cd2d82916c81d9e52496a8de439394cff51d95c
+  contracts:
+    inputs:
+    - forcing_file
+    - forcing_land_indices
+    - model_tstep
+    - dt_force
+    - dt_sechiba
+    - calendar
+    - longitude
+    - latitude
+    outputs:
+    - temp_air
+    - pb
+    - qair
+    - u
+    - v
+    - precip_rain
+    - precip_snow
+    - swdown
+    - lwdown
+    - zlev
+    - zlevuv
+    state_writeback:
+    - temp_air
+    - pb
+    - qair
+    - u
+    - v
+    - precip_rain
+    - precip_snow
+    - swdown
+    - lwdown
+    - zlev
+    - zlevuv
+  oracle_case_ids:
+  - standard
+  - watchout
+  - daily
+  - netrad
+  - hourly
+  - scalar_wind
+  - no_contfrac
+  - daily_watchout
+  - daily_wrap
+  - wrap
+  - high_daily
+  - high_standard
+  - daily_split1
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/driver_forcing_owner.json
+- ledger_entry: driver.active.salinity_bbox
+  oracle_family: driver_static_bbox
+  status: verified
+  production_owner:
+    file: jax_orchidee/driver/static.py
+    symbol: read_paper_salinity_tide_static_fields
+    start_line: 548
+    end_line: 572
+    file_sha256: 2e69846fe5df018ede5679da9a4d7f9e414ccbe9e9a6041db834862359c2610e
+    span_sha256: 4d8a79a0ec9a7bbd48d0fad1603ed5cb80ad829ae3f3ff72ea01048c47543127
+  callsites:
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_driver_cold_start_multiday_modelout_lite_run
+    start_line: 9566
+    end_line: 9678
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 190c2485e6fb5ce0ed4b217969e2864f5d5e6cd939ff1804b4fd90b678b97c5f
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: _prepare_paper_1961_driver_context_cached
+    start_line: 430
+    end_line: 586
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: ca69583a4372b8442f1f217f91c61cbc464af22cd082f4a052db3b0c9d995cc9
+  contracts:
+    inputs:
+    - landpoint_lalo
+    - landpoint_resolution
+    - salinity_file
+    - salinity_grid_geometry
+    outputs:
+    - salinity
+    - salinity_source_count
+    state_writeback:
+    - salinity
+    - salinity_source_count
+  oracle_case_ids:
+  - salinity_preprocess
+  - salinity_base_and_wrap_search
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/driver_static_bbox.json
+- ledger_entry: driver.active.tide_bbox
+  oracle_family: driver_static_bbox
+  status: verified
+  production_owner:
+    file: jax_orchidee/driver/static.py
+    symbol: read_paper_salinity_tide_static_fields
+    start_line: 548
+    end_line: 572
+    file_sha256: 2e69846fe5df018ede5679da9a4d7f9e414ccbe9e9a6041db834862359c2610e
+    span_sha256: 4d8a79a0ec9a7bbd48d0fad1603ed5cb80ad829ae3f3ff72ea01048c47543127
+  callsites:
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_driver_cold_start_multiday_modelout_lite_run
+    start_line: 9566
+    end_line: 9678
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 190c2485e6fb5ce0ed4b217969e2864f5d5e6cd939ff1804b4fd90b678b97c5f
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: _prepare_paper_1961_driver_context_cached
+    start_line: 430
+    end_line: 586
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: ca69583a4372b8442f1f217f91c61cbc464af22cd082f4a052db3b0c9d995cc9
+  contracts:
+    inputs:
+    - landpoint_lalo
+    - landpoint_resolution
+    - tide_file
+    - tide_grid_geometry
+    - itimetide
+    - model_tstep
+    outputs:
+    - tide_height_sequence
+    - tide_source_count
+    - current_tide_height
+    - tide_height_change
+    state_writeback:
+    - tide_height_sequence
+    - tide_source_count
+    - current_tide_height
+    - tide_height_change
+  oracle_case_ids:
+  - tide_preprocess
+  - tide_base_and_wrap_search
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/driver_static_bbox.json
+- ledger_entry: routing.active.paper_single_landpoint_zero_branch
+  oracle_family: driver_routing_zero
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/routing.py
+    symbol: routing_zero_outputs
+    start_line: 467
+    end_line: 483
+    file_sha256: 31ff33ad90bd88c2cbcb02ef31c55b8f86b7ac9cfdb5a9d3d528b75fc0daa8ac
+    span_sha256: 6200d7634dd81aa41ec94707ad8ebcd122f744f9be9e498c1723bcd739bbf115
+  callsites:
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_runtime_result
+    start_line: 5986
+    end_line: 6071
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: cc6974ee39e674937292199fbdb4b1ee36d9124d81a214bef373cdc68a505f18
+  - file: jax_orchidee/sechiba/hydrol.py
+    symbol: run_hydrol_first_step_module_from_precall
+    start_line: 9074
+    end_line: 9472
+    file_sha256: e6ca089ce6d8b4ee0b30e276c1834ff3a2db29543582e029e53c51fb4531f6a1
+    span_sha256: 99ac42466f69757bac4d2b9abc8172133d2d335e74c31dbdc4618583c72d15c9
+  contracts:
+    inputs:
+    - river_routing
+    - nbp_glo
+    - nflow
+    - nctext
+    - ncarb
+    outputs:
+    - riverflow
+    - coastalflow
+    - returnflow
+    - reinfiltration
+    - irrigation
+    - sed_deposition
+    - poc_deposition
+    - flood_frac
+    - stream_frac
+    - flood_res
+    - fastr
+    state_writeback:
+    - riverflow
+    - coastalflow
+    - returnflow
+    - reinfiltration
+    - irrigation
+    - sed_deposition
+    - poc_deposition
+    - flood_frac
+    - stream_frac
+    - flood_res
+    - fastr
+  oracle_case_ids:
+  - paper_single_landpoint
+  - routing_enabled_daily_writeback
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/driver_routing_zero.json
+- ledger_entry: diffuco.active.co2_fvcb
+  oracle_family: surface_diffuco_co2_fvcb
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/diffuco.py
+    symbol: diffuco_pft14_local_process_boundary_explicit
+    start_line: 4537
+    end_line: 4673
+    file_sha256: e1a45ce4b8858bd2f3f4cc8bb6d9114ba86e461edf120fc891971602d8efabe4
+    span_sha256: d7f6e08266cbb64f3bb5fad8d9cabcbba8b743a7e373e62ced329b7998b15896
+  callsites:
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_runtime_result
+    start_line: 5986
+    end_line: 6071
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: cc6974ee39e674937292199fbdb4b1ee36d9124d81a214bef373cdc68a505f18
+  - file: jax_orchidee/sechiba/diffuco.py
+    symbol: run_pft14_local_enerbil_precall_from_first_step_precall
+    start_line: 2236
+    end_line: 2272
+    file_sha256: e1a45ce4b8858bd2f3f4cc8bb6d9114ba86e461edf120fc891971602d8efabe4
+    span_sha256: ff24ae859a3745915faf915c6c946a16fa7a76cd265adcd00c1bed1f0a98fcd3
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: _paper_1961_next_step_runtime_result_compact
+    start_line: 5539
+    end_line: 5983
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 00b1a49da3213f018299936faadd423c4a2de1100ea147996a7160a4d467ca22
+  contracts:
+    inputs:
+    - lai
+    - veget
+    - veget_max
+    - humrel
+    - rprof
+    - vbeta3
+    - atmospheric_forcing
+    - pft_parameters
+    outputs:
+    - gpp
+    - gsmean
+    - cimean
+    - rveget
+    - rstruct
+    - vbeta3
+    - vbeta3pot
+    state_writeback:
+    - gpp
+    - gsmean
+    - cimean
+    - rveget
+    - rstruct
+    - vbeta3
+    - vbeta3pot
+  oracle_case_ids:
+  - downreg_disabled
+  - activity_masks
+  - interception_capacity_masks
+  - canopy_layer_masks
+  - pft14_c3_valid_roots
+  - c3_empty_and_fallback
+  - canopy_integration_writeback
+  - pft14_controls_and_cim
+  - output_active_inactive_and_cimean
+  - output_humidity_masks
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/surface_diffuco_co2_fvcb.json
+- ledger_entry: diffuco.active.mangrove_controls
+  oracle_family: surface_diffuco_mangrove_controls
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/diffuco.py
+    symbol: diffuco_pft14_local_process_boundary_explicit
+    start_line: 4537
+    end_line: 4673
+    file_sha256: e1a45ce4b8858bd2f3f4cc8bb6d9114ba86e461edf120fc891971602d8efabe4
+    span_sha256: d7f6e08266cbb64f3bb5fad8d9cabcbba8b743a7e373e62ced329b7998b15896
+  callsites:
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: paper_1961_next_step_runtime_result
+    start_line: 5986
+    end_line: 6071
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: cc6974ee39e674937292199fbdb4b1ee36d9124d81a214bef373cdc68a505f18
+  - file: jax_orchidee/sechiba/diffuco.py
+    symbol: run_pft14_local_enerbil_precall_from_first_step_precall
+    start_line: 2236
+    end_line: 2272
+    file_sha256: e1a45ce4b8858bd2f3f4cc8bb6d9114ba86e461edf120fc891971602d8efabe4
+    span_sha256: ff24ae859a3745915faf915c6c946a16fa7a76cd265adcd00c1bed1f0a98fcd3
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: _paper_1961_next_step_runtime_result_compact
+    start_line: 5539
+    end_line: 5983
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 00b1a49da3213f018299936faadd423c4a2de1100ea147996a7160a4d467ca22
+  contracts:
+    inputs:
+    - salinity
+    - tide_height
+    - biomass
+    - rprof
+    - diaglev
+    - saved_control_salinity
+    - saved_control_inudate
+    outputs:
+    - control_salinity
+    - control_inudate
+    - controlled_gpp
+    - controlled_cimean
+    state_writeback:
+    - control_salinity
+    - control_inudate
+    - controlled_gpp
+    - controlled_cimean
+  oracle_case_ids:
+  - firstcall_salinity_tide_root
+  - later_save_controls
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/surface_diffuco_mangrove_controls.json
+- ledger_entry: diffuco.active.aerodynamic_boundary
+  oracle_family: diffuco_surface_exchange
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/diffuco.py
+    symbol: diffuco_aero_explicit
+    start_line: 4044
+    end_line: 4219
+    file_sha256: e1a45ce4b8858bd2f3f4cc8bb6d9114ba86e461edf120fc891971602d8efabe4
+    span_sha256: 5dd8b23d955be69ed3b06568f70ed37a4950f14af882cf35be8ad71a4545622f
+  callsites:
+  - file: jax_orchidee/sechiba/diffuco.py
+    symbol: diffuco_pft14_local_process_boundary_explicit
+    start_line: 4537
+    end_line: 4673
+    file_sha256: e1a45ce4b8858bd2f3f4cc8bb6d9114ba86e461edf120fc891971602d8efabe4
+    span_sha256: d7f6e08266cbb64f3bb5fad8d9cabcbba8b743a7e373e62ced329b7998b15896
+  contracts:
+    inputs:
+    - u
+    - v
+    - zlev
+    - z0m
+    - z0h
+    - roughheight
+    - roughheight_pft
+    - temp_sol
+    - temp_sol_pft
+    - temp_air
+    - pb
+    - rough_dyn
+    outputs:
+    - q_cdrag
+    - q_cdrag_pft
+    - raero
+    state_writeback:
+    - q_cdrag
+    - q_cdrag_pft
+    - raero
+  oracle_case_ids:
+  - aero_stable_unstable
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/diffuco_surface_exchange.json
+- ledger_entry: diffuco.conditional.snow_sublimation
+  oracle_family: diffuco_surface_exchange
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/diffuco.py
+    symbol: diffuco_snow_beta_explicit
+    start_line: 4247
+    end_line: 4353
+    file_sha256: e1a45ce4b8858bd2f3f4cc8bb6d9114ba86e461edf120fc891971602d8efabe4
+    span_sha256: 1419802f6bfc9f30e5a97f2da9b7af4a35782576490db0216172d9dd0d159750
+  callsites:
+  - file: jax_orchidee/sechiba/diffuco.py
+    symbol: diffuco_pft14_local_process_boundary_explicit
+    start_line: 4537
+    end_line: 4673
+    file_sha256: e1a45ce4b8858bd2f3f4cc8bb6d9114ba86e461edf120fc891971602d8efabe4
+    span_sha256: d7f6e08266cbb64f3bb5fad8d9cabcbba8b743a7e373e62ced329b7998b15896
+  contracts:
+    inputs:
+    - qair
+    - qsatt
+    - rau
+    - u
+    - v
+    - q_cdrag
+    - snow
+    - snow_nobio
+    - frac_snow_veg
+    - frac_snow_nobio
+    - dt_sechiba
+    outputs:
+    - vbeta1
+    - sublimation_limit
+    state_writeback:
+    - vbeta1
+    - sublimation_limit
+  oracle_case_ids:
+  - snow_supply
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/diffuco_surface_exchange.json
+- ledger_entry: diffuco.conditional.canopy_interception
+  oracle_family: diffuco_surface_exchange
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/diffuco.py
+    symbol: diffuco_inter_explicit
+    start_line: 3676
+    end_line: 3782
+    file_sha256: e1a45ce4b8858bd2f3f4cc8bb6d9114ba86e461edf120fc891971602d8efabe4
+    span_sha256: b0c4096fdf33d9a4058c0fda50a1ee6193851e677fae59c7b1e136e06d04e35a
+  callsites:
+  - file: jax_orchidee/sechiba/diffuco.py
+    symbol: diffuco_pft14_local_process_boundary_explicit
+    start_line: 4537
+    end_line: 4673
+    file_sha256: e1a45ce4b8858bd2f3f4cc8bb6d9114ba86e461edf120fc891971602d8efabe4
+    span_sha256: d7f6e08266cbb64f3bb5fad8d9cabcbba8b743a7e373e62ced329b7998b15896
+  contracts:
+    inputs:
+    - qair
+    - qsatt
+    - rau
+    - u
+    - v
+    - q_cdrag
+    - q_cdrag_pft
+    - humrel
+    - veget
+    - qsintveg
+    - qsintmax
+    - rstruct
+    outputs:
+    - vbeta2
+    - vbeta23
+    state_writeback:
+    - vbeta2
+    - vbeta23
+  oracle_case_ids:
+  - canopy_storage
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/diffuco_surface_exchange.json
+- ledger_entry: diffuco.active.cwrr_bare_soil
+  oracle_family: diffuco_surface_exchange
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/diffuco.py
+    symbol: diffuco_bare_cwrr_beta
+    start_line: 4728
+    end_line: 4759
+    file_sha256: e1a45ce4b8858bd2f3f4cc8bb6d9114ba86e461edf120fc891971602d8efabe4
+    span_sha256: e212e7d0ef38110a56b41165482ab7e1f7ffa0bda83ba250a4a476d9c16b03b5
+  callsites:
+  - file: jax_orchidee/sechiba/diffuco.py
+    symbol: diffuco_pft14_local_process_boundary_explicit
+    start_line: 4537
+    end_line: 4673
+    file_sha256: e1a45ce4b8858bd2f3f4cc8bb6d9114ba86e461edf120fc891971602d8efabe4
+    span_sha256: d7f6e08266cbb64f3bb5fad8d9cabcbba8b743a7e373e62ced329b7998b15896
+  contracts:
+    inputs:
+    - evap_bare_lim
+    - vbeta2
+    - vbeta3
+    - veget_max
+    outputs:
+    - vbeta4
+    - vbeta4_pft
+    state_writeback:
+    - vbeta4
+    - vbeta4_pft
+  oracle_case_ids:
+  - cwrr_and_non_cwrr_bare
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/diffuco_surface_exchange.json
+- ledger_entry: diffuco.conditional.dew_freezing_combination
+  oracle_family: diffuco_surface_exchange
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/diffuco.py
+    symbol: diffuco_comb_explicit
+    start_line: 4832
+    end_line: 4962
+    file_sha256: e1a45ce4b8858bd2f3f4cc8bb6d9114ba86e461edf120fc891971602d8efabe4
+    span_sha256: 7d6a061194d2bd050338f31b6158015dbb04b96f128c38ce4ea1f804b5897ed9
+  callsites:
+  - file: jax_orchidee/sechiba/diffuco.py
+    symbol: diffuco_pft14_local_process_boundary_explicit
+    start_line: 4537
+    end_line: 4673
+    file_sha256: e1a45ce4b8858bd2f3f4cc8bb6d9114ba86e461edf120fc891971602d8efabe4
+    span_sha256: d7f6e08266cbb64f3bb5fad8d9cabcbba8b743a7e373e62ced329b7998b15896
+  contracts:
+    inputs:
+    - qair
+    - qsatt
+    - temp_sol
+    - temp_air
+    - snow
+    - veget
+    - veget_max
+    - lai
+    - tot_bare_soil
+    - vbeta1
+    - vbeta2
+    - vbeta3
+    - vbeta4
+    - vbeta4_pft
+    - qsintmax
+    outputs:
+    - vbeta
+    - vbeta_pft
+    - valpha
+    - vbeta1
+    - vbeta2
+    - vbeta3
+    - vbeta4
+    - vbeta4_pft
+    state_writeback:
+    - vbeta
+    - vbeta_pft
+    - valpha
+    - vbeta1
+    - vbeta2
+    - vbeta3
+    - vbeta4
+    - vbeta4_pft
+  oracle_case_ids:
+  - dew_freeze_primary
+  - dew_freeze_zero_bare_lai_thresholds
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/diffuco_surface_exchange.json
+- ledger_entry: enerbil.active.surface_energy
+  oracle_family: surface_enerbil_main
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/enerbil.py
+    symbol: enerbil_explicit_local_step
+    start_line: 2264
+    end_line: 2489
+    file_sha256: 345da8bef46eb36ee16a3b359011d0b4b65ade6cccbcce1b02e6e431f3f9e01d
+    span_sha256: 4dbe71b29f158abe896a7383768a963cce7ac3002883a58a9397d58b51666e43
+  callsites:
+  - file: jax_orchidee/sechiba/sechiba_step.py
+    symbol: sechiba_explicit_coupled_step
+    start_line: 142
+    end_line: 259
+    file_sha256: 445ef03a4143b575abf58ceb01b3795de37acc718befc2c98a2fcf15771fe0e3
+    span_sha256: 54aade4055b3bbaae2eb5f8e504b391c048b223990eb912cafde58e4a56ef9c6
+  - file: jax_orchidee/sechiba/enerbil.py
+    symbol: run_enerbil_first_step_local_from_precall
+    start_line: 1890
+    end_line: 2052
+    file_sha256: 345da8bef46eb36ee16a3b359011d0b4b65ade6cccbcce1b02e6e431f3f9e01d
+    span_sha256: 871ab657a3e2470f15a7a56747b4aca4b6fc2e56d44322cd9e63d720b992155e
+  - file: jax_orchidee/driver/orchestration.py
+    symbol: _paper_1961_next_step_runtime_result_compact
+    start_line: 5539
+    end_line: 5983
+    file_sha256: c0f5388f5ccf0208a7911625aa2d74868a0ffeb847e7002b39cb22f5b15c76ec
+    span_sha256: 00b1a49da3213f018299936faadd423c4a2de1100ea147996a7160a4d467ca22
+  contracts:
+    inputs:
+    - temp_sol
+    - qsurf
+    - emis
+    - cgrnd
+    - dgrnd
+    - soilcap
+    - soilflx
+    - swnet
+    - lwdown
+    - diffuco_beta_fields
+    outputs:
+    - temp_sol_new
+    - qsurf
+    - evapot
+    - evapot_corr
+    - transpir
+    - vevapnu
+    - vevapsno
+    - pgflux
+    - temp_sol_add
+    state_writeback:
+    - temp_sol_new
+    - qsurf
+    - evapot
+    - evapot_corr
+    - transpir
+    - vevapnu
+    - vevapsno
+    - pgflux
+    - temp_sol_add
+  oracle_case_ids:
+  - nonalma_surface_energy
+  - alma_surface_history
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/surface_enerbil_main.json
+- ledger_entry: enerbil.conditional.potential_temperature
+  oracle_family: surface_enerbil_potential_temperature
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/enerbil.py
+    symbol: enerbil_pottemp_pass_through
+    start_line: 1385
+    end_line: 1398
+    file_sha256: 345da8bef46eb36ee16a3b359011d0b4b65ade6cccbcce1b02e6e431f3f9e01d
+    span_sha256: af3b0d0fe3a160f278d5bab24039330b146282fd76053eb825aed2e888e92374
+  callsites:
+  - file: jax_orchidee/sechiba/enerbil.py
+    symbol: enerbil_explicit_local_step
+    start_line: 2264
+    end_line: 2489
+    file_sha256: 345da8bef46eb36ee16a3b359011d0b4b65ade6cccbcce1b02e6e431f3f9e01d
+    span_sha256: 4dbe71b29f158abe896a7383768a963cce7ac3002883a58a9397d58b51666e43
+  contracts:
+    inputs:
+    - q_sol_pot
+    - temp_sol_pot
+    outputs:
+    - q_sol_pot
+    - temp_sol_pot
+    state_writeback:
+    - q_sol_pot
+    - temp_sol_pot
+  oracle_case_ids:
+  - potential_temperature_nonzero_carry
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/surface_enerbil_potential_temperature.json
+- ledger_entry: condveg.active.dynamic_roughness
+  oracle_family: surface_condveg_processes
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/condveg.py
+    symbol: condveg_z0cdrag_dyn
+    start_line: 287
+    end_line: 432
+    file_sha256: 613ee1d815b1edcb3d098f201b050b95697e2f1c9bebb509db7acbb9ea080ba6
+    span_sha256: 5551e6f6e9fa9a12c607446606fdff67ecb26c37b695af3c16b66036a6136667
+  callsites:
+  - file: jax_orchidee/sechiba/condveg.py
+    symbol: condveg_main_minimal
+    start_line: 1066
+    end_line: 1262
+    file_sha256: 613ee1d815b1edcb3d098f201b050b95697e2f1c9bebb509db7acbb9ea080ba6
+    span_sha256: 8e2be40593029a9346541034e0164dd7de8b1661a6ca20d7b6531659d6a902ae
+  - file: jax_orchidee/sechiba/condveg.py
+    symbol: run_condveg_first_step_module
+    start_line: 1342
+    end_line: 1516
+    file_sha256: 613ee1d815b1edcb3d098f201b050b95697e2f1c9bebb509db7acbb9ea080ba6
+    span_sha256: 0674c0edb07b1b1d4ae63d30648d75b39c74be5b4d98f1a7bb4c28024a6fb26c
+  contracts:
+    inputs:
+    - veget
+    - veget_max
+    - frac_nobio
+    - totfrac_nobio
+    - zlev
+    - height
+    - temp_air
+    - pb
+    - u
+    - v
+    - lai
+    - frac_snow_veg
+    outputs:
+    - z0m
+    - z0h
+    - roughheight
+    - q_cdrag
+    state_writeback:
+    - z0m
+    - z0h
+    - roughheight
+    - q_cdrag
+  oracle_case_ids:
+  - rough_zero_sumveg
+  - rough_active_pft14
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/surface_condveg_processes.json
+- ledger_entry: condveg.active.emissivity
+  oracle_family: surface_condveg_processes
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/condveg.py
+    symbol: condveg_main_emissivity
+    start_line: 205
+    end_line: 213
+    file_sha256: 613ee1d815b1edcb3d098f201b050b95697e2f1c9bebb509db7acbb9ea080ba6
+    span_sha256: e77b32ba7c0d1531d7145f3837c16d1ec53c618c6575bf2d27c8976f5efea1d9
+  callsites:
+  - file: jax_orchidee/sechiba/condveg.py
+    symbol: condveg_main_minimal
+    start_line: 1066
+    end_line: 1262
+    file_sha256: 613ee1d815b1edcb3d098f201b050b95697e2f1c9bebb509db7acbb9ea080ba6
+    span_sha256: 8e2be40593029a9346541034e0164dd7de8b1661a6ca20d7b6531659d6a902ae
+  - file: jax_orchidee/sechiba/condveg.py
+    symbol: run_condveg_first_step_module
+    start_line: 1342
+    end_line: 1516
+    file_sha256: 613ee1d815b1edcb3d098f201b050b95697e2f1c9bebb509db7acbb9ea080ba6
+    span_sha256: 0674c0edb07b1b1d4ae63d30648d75b39c74be5b4d98f1a7bb4c28024a6fb26c
+  contracts:
+    inputs:
+    - emis_scal
+    - kjpindex
+    outputs:
+    - emis
+    state_writeback:
+    - emis
+  oracle_case_ids:
+  - main_emissivity_assignment
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/surface_condveg_processes.json
+- ledger_entry: condveg.active.snow_fraction
+  oracle_family: surface_condveg_processes
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/condveg.py
+    symbol: condveg_frac_snow
+    start_line: 216
+    end_line: 262
+    file_sha256: 613ee1d815b1edcb3d098f201b050b95697e2f1c9bebb509db7acbb9ea080ba6
+    span_sha256: 70f55a1fdb806e01fa4a6b46d3643e945362b973c901aa7df11ef9cfffc3241b
+  callsites:
+  - file: jax_orchidee/sechiba/condveg.py
+    symbol: condveg_main_minimal
+    start_line: 1066
+    end_line: 1262
+    file_sha256: 613ee1d815b1edcb3d098f201b050b95697e2f1c9bebb509db7acbb9ea080ba6
+    span_sha256: 8e2be40593029a9346541034e0164dd7de8b1661a6ca20d7b6531659d6a902ae
+  - file: jax_orchidee/sechiba/condveg.py
+    symbol: run_condveg_first_step_module
+    start_line: 1342
+    end_line: 1516
+    file_sha256: 613ee1d815b1edcb3d098f201b050b95697e2f1c9bebb509db7acbb9ea080ba6
+    span_sha256: 0674c0edb07b1b1d4ae63d30648d75b39c74be5b4d98f1a7bb4c28024a6fb26c
+  contracts:
+    inputs:
+    - snow
+    - snow_nobio
+    - snowrho
+    - snowdz
+    - ok_explicitsnow
+    outputs:
+    - frac_snow_veg
+    - frac_snow_nobio
+    state_writeback:
+    - frac_snow_veg
+    - frac_snow_nobio
+  oracle_case_ids:
+  - explicit_snow_zero
+  - explicit_snow_nonzero
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/surface_condveg_processes.json
+- ledger_entry: condveg.active.background_albedo
+  oracle_family: surface_condveg_processes
+  status: verified
+  production_owner:
+    file: jax_orchidee/sechiba/condveg.py
+    symbol: condveg_albedo_explicit
+    start_line: 873
+    end_line: 1063
+    file_sha256: 613ee1d815b1edcb3d098f201b050b95697e2f1c9bebb509db7acbb9ea080ba6
+    span_sha256: 031c4831da5a6a6839f27cc414857fbf21ecfc233a01e6d5a9235c58e7ca87b4
+  callsites:
+  - file: jax_orchidee/sechiba/condveg.py
+    symbol: condveg_main_minimal
+    start_line: 1066
+    end_line: 1262
+    file_sha256: 613ee1d815b1edcb3d098f201b050b95697e2f1c9bebb509db7acbb9ea080ba6
+    span_sha256: 8e2be40593029a9346541034e0164dd7de8b1661a6ca20d7b6531659d6a902ae
+  - file: jax_orchidee/sechiba/condveg.py
+    symbol: run_condveg_first_step_module
+    start_line: 1342
+    end_line: 1516
+    file_sha256: 613ee1d815b1edcb3d098f201b050b95697e2f1c9bebb509db7acbb9ea080ba6
+    span_sha256: 0674c0edb07b1b1d4ae63d30648d75b39c74be5b4d98f1a7bb4c28024a6fb26c
+  contracts:
+    inputs:
+    - veget
+    - veget_max
+    - tot_bare_soil
+    - soilalb_bg
+    - alb_leaf_vis
+    - alb_leaf_nir
+    - snow
+    - snow_age
+    - snow_nobio
+    - snow_nobio_age
+    - frac_snow_veg
+    - frac_snow_nobio
+    outputs:
+    - albedo
+    - albedo_snow
+    - alb_bare
+    - alb_veget
+    - snowa_veg
+    - snowa_nobio
+    state_writeback:
+    - albedo
+    - albedo_snow
+    - alb_bare
+    - alb_veget
+    - snowa_veg
+    - snowa_nobio
+  oracle_case_ids:
+  - modis_aged_snow_albedo
+  - mean_bare_albedo
+  comparison_asset: outputs/reference_mode/production_evidence/lane_a/surface_condveg_processes.json

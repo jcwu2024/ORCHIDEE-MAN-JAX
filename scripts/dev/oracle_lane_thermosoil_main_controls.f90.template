@@ -1,0 +1,61 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ implicit none;integer,parameter::i_std=int32,r_std=real64
+end module
+module thermosoil_main_controls
+ use defprec;implicit none
+ integer,parameter::n=3,nvm=14,ngrnd=4,nslm=4,ndeep=4,nsnow=3
+ real(r_std),parameter::zero=0._r_std,un=1._r_std,tp_00=273.15_r_std,ZeroCelsius=273.15_r_std,fr_dT=2._r_std,dt_sechiba=1800._r_std
+ logical::ok_shum_ngrnd_permalong,almaoutput=.false.,hydrol_cwrr=.true.,ok_freeze_thermix=.true.,ok_explicitsnow=.true.
+ logical::permafrost_veg_exists(nvm)=.false.,veget_mask_2d(n,nvm)=.true.
+ integer::printlev=0,numout=6,hist_calls,low_pft_calls,high_pft_calls
+ real(r_std)::dlt(ngrnd)=(/.1_r_std,.3_r_std,.8_r_std,1.7_r_std/)
+ real(r_std)::ptn(n,ngrnd,nvm),ptn_pftmean(n,ngrnd),pcapa(n,ngrnd,nvm),pcappa_supp(n,ngrnd,nvm),pkappa(n,ngrnd,nvm),ptn_beg(n,ngrnd,nvm)
+ real(r_std)::shum_ngrnd_perma(n,ngrnd,nvm),shum_ngrnd_permalong(n,ngrnd,nvm),soilflx(n),surfheat_incr(n),coldcont_incr(n)
+ interface histwrite_p
+  module procedure hist1,hist2,hist3
+ end interface
+contains
+ subroutine hist1(id,name,kjit,x,size,index);integer,intent(in)::id,kjit,size,index(:);character(*),intent(in)::name;real(r_std),intent(in)::x(:);call mark(name);end subroutine
+ subroutine hist2(id,name,kjit,x,size,index);integer,intent(in)::id,kjit,size,index(:);character(*),intent(in)::name;real(r_std),intent(in)::x(:,:);call mark(name);end subroutine
+ subroutine hist3(id,name,kjit,x,size,index);integer,intent(in)::id,kjit,size,index(:);character(*),intent(in)::name;real(r_std),intent(in)::x(:,:,:);call mark(name);end subroutine
+ subroutine mark(name);character(*),intent(in)::name;hist_calls=hist_calls+1;if(index(name,'_01')>0)low_pft_calls=low_pft_calls+1;if(index(name,'_14')>0)high_pft_calls=high_pft_calls+1;end subroutine
+ subroutine ipslerr_p(level,a,b,c,d);integer,intent(in)::level;character(*),intent(in)::a,b,c,d;if(level>=3)error stop 'ipslerr';end subroutine
+! <THERMOSOIL_WLUPDATE>
+ subroutine run_humidity(enabled)
+  logical,intent(in)::enabled
+  integer,parameter::kjpindex=n
+  ok_shum_ngrnd_permalong=enabled
+! <HUMIDITY_OWNER_BLOCK>
+ end subroutine
+ subroutine run_history()
+  integer,parameter::kjpindex=n
+  integer::jv,ji,m,jg,kjit,hist_id,hist2_id,indexgrnd(n*ngrnd),index(n)
+  character(len=10)::part_str
+  real(r_std)::tmparray(n,ngrnd)
+  kjit=1;hist_id=1;hist2_id=-1;index=1;indexgrnd=1;hist_calls=0;low_pft_calls=0;high_pft_calls=0
+! <HISTORY_OWNER_BLOCK>
+ end subroutine
+ subroutine run_final(temp_sol_new,snowdz,deeptemp_prof,deephum_prof)
+  real(r_std),intent(inout)::temp_sol_new(n);real(r_std),intent(in)::snowdz(n,nsnow)
+  real(r_std),intent(out)::deeptemp_prof(n,ngrnd,nvm),deephum_prof(n,ngrnd,nvm)
+  integer,parameter::kjpindex=n
+  integer::ji
+! <FINAL_OWNER_BLOCK>
+ end subroutine
+end module
+program driver
+ use defprec;use thermosoil_main_controls;implicit none
+ integer::i,j,k;real(r_std)::ts(n),sdz(n,nsnow),dt(n,ngrnd,nvm),dh(n,ngrnd,nvm);character(512)::path
+ dlt=(/.1_r_std,.3_r_std,.8_r_std,1.7_r_std/);permafrost_veg_exists(1)=.true.;permafrost_veg_exists(14)=.true.
+ do k=1,nvm;do j=1,ngrnd;do i=1,n;ptn(i,j,k)=260._r_std+i+.1_r_std*j+.01_r_std*k;shum_ngrnd_perma(i,j,k)=.1_r_std*i+.01_r_std*j+.001_r_std*k;shum_ngrnd_permalong(i,j,k)=.8_r_std;enddo;enddo;enddo
+ pcapa=2.e6_r_std;pcappa_supp=0._r_std;pkappa=.5_r_std;ptn_beg=ptn;soilflx=1._r_std;surfheat_incr=2._r_std;coldcont_incr=3._r_std;ptn_pftmean=sum(ptn,3)/real(nvm,r_std)
+ call get_command_argument(1,path);open(10,file=trim(path),status='replace');write(10,'(a)')'case,field,i,j,k,value'
+ call run_humidity(.false.);call dump3(0,'humidity',shum_ngrnd_permalong);shum_ngrnd_permalong=.8_r_std;call run_humidity(.true.);call dump3(1,'humidity',shum_ngrnd_permalong)
+ call run_history();call out(2,'hist_calls',hist_calls);call out(2,'low_pft_calls',low_pft_calls);call out(2,'high_pft_calls',high_pft_calls)
+ ts=(/275._r_std,275._r_std,270._r_std/);sdz=0._r_std;sdz(1,:)=.01_r_std;sdz(3,:)=.01_r_std;call run_final(ts,sdz,dt,dh);do i=1,n;write(10,'(i0,a,a,a,i0,a,i0,a,i0,a,es25.17)')3,',','temp_sol_new',',',i,',',1,',',1,',',ts(i);enddo
+ close(10)
+contains
+ subroutine dump3(c,name,x);integer,intent(in)::c;character(*),intent(in)::name;real(r_std),intent(in)::x(n,ngrnd,nvm);integer::ii,jj,kk;do kk=1,nvm;do jj=1,ngrnd;do ii=1,n;write(10,'(i0,a,a,a,i0,a,i0,a,i0,a,es25.17)')c,',',name,',',ii,',',jj,',',kk,',',x(ii,jj,kk);enddo;enddo;enddo;end subroutine
+ subroutine out(c,name,x);integer,intent(in)::c,x;character(*),intent(in)::name;write(10,'(i0,a,a,a,i0,a,i0,a,i0,a,es25.17)')c,',',name,',',1,',',1,',',1,',',real(x,r_std);end subroutine
+end program

@@ -1,0 +1,46 @@
+module dim2_controls_transport
+  implicit none
+  integer :: mode
+contains
+  subroutine getin_logical(key, value)
+    character(*), intent(in) :: key
+    logical, intent(inout) :: value
+    if (trim(key) == 'INTER_LIN') value = mode == 2 .or. mode == 3 .or. mode == 4
+    if (trim(key) == 'NETRAD_CONS' .and. mode == 2) value = .false.
+  end subroutine getin_logical
+  subroutine getin_integer(key, value)
+    character(*), intent(in) :: key
+    integer, intent(inout) :: value
+    if (trim(key) == 'SPRED_PREC' .and. mode == 2) value = 99
+    if (trim(key) == 'SPRED_PREC' .and. mode == 3) value = 2
+  end subroutine getin_integer
+end module dim2_controls_transport
+
+program dim2_controls_oracle
+  use dim2_controls_transport
+  implicit none
+  integer, parameter :: numout = 6
+  real, parameter :: one_hour = 3600.0
+  integer :: case_id, split, nb_spread
+  real :: dt_force, dt
+  logical :: no_inter, inter_lin, netrad_cons
+  interface getin_p
+    module procedure getin_logical, getin_integer
+  end interface
+  integer :: unit
+  character(512) :: path
+  call get_command_argument(1, path)
+  open(newunit=unit, file=trim(path), status='replace')
+  do case_id = 1, 4
+    mode = case_id
+    select case (case_id)
+    case (1); dt_force=7200.; dt=1800.; split=4
+    case (2); dt_force=21600.; dt=1800.; split=12
+    case (3); dt_force=21600.; dt=21600.; split=1
+    case (4); dt_force=3600.; dt=1800.; split=2
+    end select
+! <DIM2_CONTROLS>
+    write(unit,'(i0,1x,l1,1x,l1,1x,i0,1x,l1)') case_id,no_inter,inter_lin,nb_spread,netrad_cons
+  end do
+  close(unit)
+end program dim2_controls_oracle

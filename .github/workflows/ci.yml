@@ -1,0 +1,29 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  release-smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          enable-cache: true
+      - run: uv sync --frozen --extra dev
+      - run: uv run --frozen orchidee-jax --version
+      - run: >-
+          uv run --frozen pytest -q
+          tests/unit/test_public_cli.py
+          tests/unit/test_portable_config.py
+          tests/unit/test_paper_landpoint_acceptance.py
+      - run: >-
+          uv run --frozen ruff check
+          jax_orchidee/cli
+          jax_orchidee/runners
+          jax_orchidee/runtime.py
+          tests/unit/test_public_cli.py
+          tests/unit/test_portable_config.py
+          tests/unit/test_paper_landpoint_acceptance.py

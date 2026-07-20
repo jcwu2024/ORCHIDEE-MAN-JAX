@@ -1,0 +1,16 @@
+schema_version: 1
+scope: >-
+  Exact source owner for the 37 PFT14 scientific arms previously missing from
+  control.f90::control_initialize. Downstream parameter-table initializers are
+  represented as an explicit call contract and are not claimed by this entry.
+
+entries:
+  - id: parameters.control.control_initialize.configuration_arms
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/control.f90
+    fortran_subroutine: control_initialize
+    fortran_lines: 84,86,162,168,191,213,227,274,292,328,460-461,466,506,546,550-551,565,567,576,593,605-606,612-613,620-621
+    status: implemented
+    jax_owner: jax_orchidee.parameters.control.control_initialize
+    gap: null
+    state_contract: [jax_orchidee.parameters.control.ControlInitializationState]
+    validation: [tests/unit/test_control_initialize.py]

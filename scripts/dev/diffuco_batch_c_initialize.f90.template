@@ -1,0 +1,54 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ integer,parameter::i_std=int32,r_std=real64
+end module
+module pft_parameters
+ use defprec
+ integer,parameter::nvm=14,nlai=2,NbNeighb=1
+ real(r_std)::rstruct_const(nvm)
+end module
+module IOIPSL
+ use defprec
+ implicit none
+ integer,parameter::numout=6
+ integer::mode=0
+ interface restget_p
+  module procedure get2,get3
+ end interface
+contains
+ subroutine getin_p(name,x);character(*),intent(in)::name;logical,intent(inout)::x;end subroutine
+ subroutine ioconf_setatt_p(a,b);character(*),intent(in)::a,b;end subroutine
+ subroutine ipslerr_p(a,b,c,d,e);integer,intent(in)::a;character(*),intent(in)::b,c,d,e;if(a>=3)error stop;end subroutine
+ subroutine get2(id,name,a,b,c,k,flag,value,layout,d,index)
+  integer,intent(in)::id,a,b,c,k,d;character(*),intent(in)::name,layout;logical,intent(in)::flag;integer,intent(in)::index(:);real(r_std),intent(out)::value(:,:)
+  value=999999.d0;if(mode==1.and.trim(name)=='rstruct') value=42.d0;if(mode==2.and.trim(name)=='cdrag_pft') value=3.d0
+ end subroutine
+ subroutine get3(id,name,a,b,c,k,flag,value,layout,d,index)
+  integer,intent(in)::id,a,b,c,k,d;character(*),intent(in)::name,layout;logical,intent(in)::flag;integer,intent(in)::index(:);real(r_std),intent(out)::value(:,:,:)
+  value=999999.d0;if(mode==3.and.trim(name)=='leaf_ci') value=187.d0
+ end subroutine
+ subroutine setvar_p(value,exp,name,default);real(r_std),intent(inout)::value(:,:,:);real(r_std),intent(in)::exp,default;character(*),intent(in)::name;where(value==exp)value=default;end subroutine
+end module
+subroutine chemistry_initialize(kjpindex,lalo,neighbours,resolution)
+ use defprec
+ integer(i_std),intent(in)::kjpindex
+ real(r_std),intent(in)::lalo(kjpindex,*),resolution(kjpindex,*)
+ integer(i_std),intent(in)::neighbours(kjpindex,*)
+end subroutine
+module diffuco_oracle
+ use defprec;use pft_parameters;use IOIPSL
+ implicit none
+ integer::printlev=0,nbp_glo=2;integer,dimension(2)::index_g=(/1,2/)
+ logical::ok_co2=.true.,ok_bvoc=.false.,ldq_cdrag_from_gcm
+ real(r_std),parameter::val_exp=999999.d0
+ real(r_std),allocatable::leaf_ci(:,:,:),wind(:),control_salinity(:),control_inudate(:)
+contains
+! <INITIALIZE>
+end module
+program main
+ use defprec;use pft_parameters;use IOIPSL;use diffuco_oracle
+ implicit none
+ integer::i,j,c;real(r_std)::q(2),r(2,nvm),qp(2,nvm),lalo(2,2),res(2,2);integer::idx(2),nei(2,1);character(512)::path
+ call get_command_argument(1,path);open(10,file=trim(path),status='replace');write(10,'(a)')'field,case,i,j,value';rstruct_const=[(10.d0+j,j=1,nvm)];idx=(/1,2/);nei=1;lalo=0;res=1
+ do c=0,3;mode=c;q=merge(.2d0,0.d0,c==1);call diffuco_initialize(1_i_std,2_i_std,idx,1_i_std,lalo,nei,res,r, q,qp);do i=1,2;do j=1,nvm;write(10,'(a,",",i0,",",i0,",",i0,",",es25.17)')'rstruct',c,i,j,r(i,j);write(10,'(a,",",i0,",",i0,",",i0,",",es25.17)')'cdrag_pft',c,i,j,qp(i,j);enddo;enddo;do i=1,2;do j=1,nvm;write(10,'(a,",",i0,",",i0,",",i0,",",es25.17)')'leaf_ci_l1',c,i,j,leaf_ci(i,j,1);enddo;enddo;deallocate(leaf_ci,wind,control_salinity,control_inudate);enddo;close(10)
+end program

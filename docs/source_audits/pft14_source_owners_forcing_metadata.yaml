@@ -1,0 +1,47 @@
+schema_version: 1
+scope: >-
+  Batch-4 ownership for the 35 reachable forcing_info arms and all 58
+  forcing_vertical_ioipsl arms. Mandatory source data is rejected when absent.
+  The source-defined absent-contfrac all-land branch, absent-calendar policy,
+  and HEIGHT_LEV1=2/HEIGHT_LEVW=10 run.def defaults are preserved.
+counts:
+  forcing_info_arms: 35
+  forcing_vertical_ioipsl_arms: 58
+  total_arms: 93
+
+entries:
+  - id: forcing_metadata.readdim2.forcing_info
+    fortran_file: fortran_source/ORCHIDEE/src_driver/readdim2.f90
+    fortran_subroutine: forcing_info
+    fortran_lines: 49-495
+    status: implemented
+    jax_owner: jax_orchidee.driver.forcing_metadata.forcing_info
+    gap: null
+    state_contract:
+      - jax_orchidee.driver.forcing_metadata.ForcingInfo
+      - jax_orchidee.driver.forcing_metadata.NetCDFVariableMetadata
+      - jax_orchidee.driver.forcing_metadata.VerticalCoordinate
+    order_contract: >-
+      CDL/xarray dimensions remain in file order and are reversed explicitly
+      for netCDF-Fortran order. Zoom and land indices are one-based; land
+      traversal is j outer, i inner.
+    infrastructure_boundary: >-
+      MPI broadcast/scatter and weather.f90 synthetic-field generation are
+      separate owners. This owner executes their source routing, dimensions,
+      cadence, mask handling, and fatal preconditions.
+    validation: [tests/unit/test_forcing_metadata.py]
+
+  - id: forcing_metadata.readdim2.forcing_vertical_ioipsl
+    fortran_file: fortran_source/ORCHIDEE/src_driver/readdim2.f90
+    fortran_subroutine: forcing_vertical_ioipsl
+    fortran_lines: 2057-2257
+    status: implemented
+    jax_owner: jax_orchidee.driver.forcing_metadata.forcing_vertical_ioipsl
+    gap: null
+    state_contract: [jax_orchidee.driver.forcing_metadata.VerticalCoordinate]
+    order_contract: >-
+      Convention precedence is Sigma, hybrid A/B, time-varying Levels,
+      Height_Lev1/Height_Levuv, legacy lev, then source-defined run.def/default
+      height fallback. A present hybrid A requires its paired B coefficient.
+    infrastructure_boundary: NetCDF metadata and values are inspected locally.
+    validation: [tests/unit/test_forcing_metadata.py]

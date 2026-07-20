@@ -1,0 +1,140 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module defprec
+module constantes
+  use defprec
+  implicit none
+  real(r_std), parameter :: zero=0._r_std, pi=acos(-1._r_std), R_Earth=6378000._r_std
+end module constantes
+module mod_orchidee_para
+  use defprec
+  implicit none
+  integer(i_std), parameter :: NbNeighb=4
+end module mod_orchidee_para
+module grid
+  use defprec
+  implicit none
+  integer(i_std) :: iim_g, jjm_g
+  integer(i_std) :: grid_toij_mode=0
+  real(r_std), allocatable :: dxWRF(:,:), dyWRF(:,:)
+contains
+  subroutine Grid_Toij(lons,lats,ri,rj)
+    real(r_std), intent(in) :: lons(:),lats(:)
+    real(r_std), intent(out) :: ri(:),rj(:)
+    if (grid_toij_mode == 1) then
+      ri=1._r_std; rj=1._r_std
+    else
+      ri=lons + 0.1_r_std; rj=lats + 0.1_r_std
+    endif
+  end subroutine Grid_Toij
+end module grid
+module module_llxy
+  use defprec
+  implicit none
+  integer(i_std), allocatable :: ilandindex(:),jlandindex(:)
+end module module_llxy
+module polygones
+  use defprec
+  implicit none
+  private
+  public :: polygones_pointinside, polygones_extend, polygones_intersection, polygones_cleanup, &
+       & polygones_area, polygones_crossing, polygones_convexhull
+  real(r_std), parameter :: zero=0._r_std
+contains
+! <POLYGONES_POINTINSIDE>
+! <POLYGONES_LINEINTERSECT>
+! <POLYGONES_EXTEND>
+! <POLYGONES_INTERSECTION>
+! <POLYGONES_CLEANUP>
+! <POLYGONES_AREA>
+! <POLYGONES_CROSSING>
+! <POLYGONES_CONVEXHULL>
+end module polygones
+module interregxy
+  use constantes
+  use mod_orchidee_para
+  use grid
+  use module_llxy
+  use polygones
+  implicit none
+  private
+  public :: interregxy_aggr2d, interregxy_aggrve, interregxy_findpoints
+contains
+! <INTERREGXY_AGGR2D>
+! <INTERREGXY_AGGRVE>
+! <INTERREGXY_FINDPOINTS>
+end module interregxy
+program driver
+  use defprec
+  use constantes
+  use grid
+  use module_llxy
+  use interregxy
+  implicit none
+  integer(i_std), parameter :: incmax=8, nbpt=2
+  integer(i_std) :: ind2(nbpt,incmax,2), indv(nbpt,incmax), n1(1,1), si1(1,1,incmax), sj1(1,1,incmax)
+  real(r_std) :: area2(nbpt,incmax), areav(nbpt,incmax), overlap1(1,1,incmax)
+  real(r_std) :: lalo(nbpt,2), resolution(nbpt,2), contfrac(nbpt), lon2(2,2), lat2(2,2), ri(5),rj(5)
+  integer(i_std) :: neighbours(nbpt,4), mask(2,2), u, i, j, k
+  logical :: ok2,okv
+  character(512) :: path,mode
+  call get_command_argument(1,path); call get_command_argument(2,mode)
+  iim_g=3; jjm_g=3; allocate(dxWRF(3,3),dyWRF(3,3),ilandindex(nbpt),jlandindex(nbpt))
+  dxWRF=10._r_std; dyWRF=20._r_std; ilandindex=(/1,2/); jlandindex=(/1,2/)
+  lalo=reshape((/0._r_std,3._r_std,0._r_std,3._r_std/),(/2,2/))
+  neighbours=0; resolution=1._r_std; contfrac=1._r_std; mask=1
+  lon2=reshape((/1._r_std,2._r_std,1._r_std,2._r_std/),(/2,2/)); lat2=reshape((/1._r_std,1._r_std,2._r_std,2._r_std/),(/2,2/))
+  if(trim(mode)=='findpoints_capacity') then
+    n1=0; ri=(/1._r_std,.5_r_std,1.5_r_std,1.5_r_std,.5_r_std/); rj=(/1._r_std,.5_r_std,.5_r_std,1.5_r_std,1.5_r_std/)
+    call interregxy_findpoints(1_i_std,1_i_std,0._r_std,0._r_std,1_i_std,1_i_std,ri,rj,0_i_std,.false.,n1,si1,sj1,overlap1)
+    stop 99
+  endif
+  ind2=-999; area2=-999._r_std
+  call interregxy_aggr2d(nbpt,lalo,neighbours,resolution,contfrac,2_i_std,2_i_std,lon2,lat2,mask,'oracle',incmax,ind2,area2,ok2)
+  indv=-999; areav=-999._r_std
+  call interregxy_aggrve(nbpt,lalo,neighbours,resolution,contfrac,2_i_std,(/1._r_std,2._r_std/),(/1._r_std,2._r_std/), &
+       & .8_r_std*R_Earth/(180._r_std/(2._r_std*pi)),.8_r_std*R_Earth/(180._r_std/(2._r_std*pi)), &
+       & 'oracle',incmax,indv,areav,okv)
+  n1=0; si1=-999; sj1=-999; overlap1=-999._r_std
+  ri=(/1._r_std,.5_r_std,1.5_r_std,1.5_r_std,.5_r_std/); rj=(/1._r_std,.5_r_std,.5_r_std,1.5_r_std,1.5_r_std/)
+  call interregxy_findpoints(1_i_std,1_i_std,0._r_std,0._r_std,7_i_std,9_i_std,ri,rj,incmax,.false.,n1,si1,sj1,overlap1)
+  open(newunit=u,file=trim(path),status='replace'); write(u,'(a)') 'field,flat_index,value'
+  call wi(u,'aggr2d_ok',(/merge(1_i_std,0_i_std,ok2)/)); call wr(u,'aggr2d_area',reshape(area2,(/size(area2)/))); call wi(u,'aggr2d_ind',reshape(ind2,(/size(ind2)/)))
+  call wi(u,'aggrve_ok',(/merge(1_i_std,0_i_std,okv)/)); call wr(u,'aggrve_area',reshape(areav,(/size(areav)/))); call wi(u,'aggrve_ind',reshape(indv,(/size(indv)/)))
+  call wi(u,'find_nbpt',reshape(n1,(/size(n1)/))); call wi(u,'find_sourcei',reshape(si1,(/size(si1)/))); call wi(u,'find_sourcej',reshape(sj1,(/size(sj1)/))); call wr(u,'find_overlap',reshape(overlap1,(/size(overlap1)/))); close(u)
+  call coverage_cases()
+contains
+  subroutine coverage_cases()
+    integer(i_std)::nl(1,1),sil(1,1,1),sjl(1,1,1)
+    real(r_std)::ol(1,1,1),rl(61),ql(61),lalo_save(2,2),lat_save(2,2),lon_save(2,2)
+    integer::t
+    lalo_save=lalo;lat_save=lat2;lon_save=lon2
+    lat2=reshape((/2._r_std,2._r_std,1._r_std,1._r_std/),(/2,2/))
+    call interregxy_aggr2d(nbpt,lalo,neighbours,resolution,contfrac,2_i_std,2_i_std,lon2,lat2,mask,'coverage',incmax,ind2,area2,ok2)
+    grid_toij_mode=1
+    call interregxy_aggr2d(nbpt,lalo,neighbours,resolution,contfrac,2_i_std,2_i_std,lon2,lat2,mask,'coverage',incmax,ind2,area2,ok2)
+    call interregxy_aggrve(nbpt,lalo,neighbours,resolution,contfrac,2_i_std,(/1._r_std,2._r_std/),(/1._r_std,2._r_std/), &
+         & .8_r_std*R_Earth/(180._r_std/(2._r_std*pi)),.8_r_std*R_Earth/(180._r_std/(2._r_std*pi)),'coverage',incmax,indv,areav,okv)
+    grid_toij_mode=0
+    lalo=reshape((/100._r_std,101._r_std,100._r_std,101._r_std/),(/2,2/))
+    call interregxy_aggr2d(nbpt,lalo,neighbours,resolution,contfrac,2_i_std,2_i_std,lon2,lat2,mask,'coverage',incmax,ind2,area2,ok2)
+    call interregxy_aggrve(nbpt,lalo,neighbours,resolution,contfrac,2_i_std,(/1._r_std,2._r_std/),(/1._r_std,2._r_std/), &
+         & .8_r_std*R_Earth/(180._r_std/(2._r_std*pi)),.8_r_std*R_Earth/(180._r_std/(2._r_std*pi)),'coverage',incmax,indv,areav,okv)
+    do t=1,61
+      rl(t)=-5._r_std; ql(t)=-5._r_std
+    enddo
+    nl=0;sil=0;sjl=0;ol=0._r_std
+    call interregxy_findpoints(1_i_std,1_i_std,0._r_std,0._r_std,1_i_std,1_i_std,rl,ql,1_i_std,.false.,nl,sil,sjl,ol)
+    lalo=lalo_save;lat2=lat_save;lon2=lon_save
+  end subroutine coverage_cases
+  subroutine wi(unit,name,a)
+    integer,intent(in)::unit; character(*),intent(in)::name; integer(i_std),intent(in)::a(:); integer::q
+    do q=1,size(a); write(unit,'(a,i0,a,i0)')trim(name)//',',q-1,',',a(q); enddo
+  end subroutine wi
+  subroutine wr(unit,name,a)
+    integer,intent(in)::unit; character(*),intent(in)::name; real(r_std),intent(in)::a(:); integer::q
+    do q=1,size(a); write(unit,'(a,i0,a,es25.17)')trim(name)//',',q-1,',',a(q); enddo
+  end subroutine wr
+end program driver

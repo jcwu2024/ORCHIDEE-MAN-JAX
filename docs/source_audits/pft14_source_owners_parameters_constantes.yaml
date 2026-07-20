@@ -1,0 +1,61 @@
+schema_version: 1
+scope: >-
+  Exact source-owner entries for the first-batch constantes.f90 configuration
+  package. Runtime defaults are caller-owned; only defaults assigned explicitly
+  inside these procedures are owned by the JAX implementation.
+
+entries:
+  - id: parameters.constantes.activate_sub_models
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/constantes.f90
+    fortran_subroutine: activate_sub_models
+    fortran_lines: 62-248
+    status: implemented
+    jax_owner: jax_orchidee.parameters.constantes.activate_sub_models
+    gap: null
+    arm_count: 10
+    state_contract: [jax_orchidee.parameters.constantes.ConfigResult]
+    validation: [tests/unit/test_constantes_config.py]
+
+  - id: parameters.constantes.veget_config
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/constantes.f90
+    fortran_subroutine: veget_config
+    fortran_lines: 268-390
+    status: implemented
+    jax_owner: jax_orchidee.parameters.constantes.veget_config
+    gap: null
+    arm_count: 3
+    state_contract: [jax_orchidee.parameters.constantes.ConfigResult]
+    validation: [tests/unit/test_constantes_config.py]
+
+  - id: parameters.constantes.config_sechiba_parameters
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/constantes.f90
+    fortran_subroutine: config_sechiba_parameters
+    fortran_lines: 410-1012
+    status: implemented
+    jax_owner: jax_orchidee.parameters.constantes.config_sechiba_parameters
+    gap: null
+    arm_count: 3
+    state_contract: [jax_orchidee.parameters.constantes.ConfigResult]
+    validation: [tests/unit/test_constantes_config.py]
+
+  - id: parameters.constantes.config_stomate_parameters
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/constantes.f90
+    fortran_subroutine: config_stomate_parameters
+    fortran_lines: 1081-2309
+    status: implemented
+    jax_owner: jax_orchidee.parameters.constantes.config_stomate_parameters
+    gap: null
+    arm_count: 1
+    state_contract: [jax_orchidee.parameters.constantes.ConfigResult]
+    validation: [tests/unit/test_constantes_config.py]
+
+  - id: parameters.constantes.get_printlev
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/constantes.f90
+    fortran_subroutine: get_printlev
+    fortran_lines: 2473-2520
+    status: implemented
+    jax_owner: jax_orchidee.parameters.constantes.PrintLevelReader
+    gap: null
+    arm_count: 2
+    state_contract: [jax_orchidee.parameters.constantes.PrintLevelReader]
+    validation: [tests/unit/test_constantes_config.py]

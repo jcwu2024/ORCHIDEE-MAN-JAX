@@ -1,0 +1,208 @@
+schema_version: 1
+scope: >-
+  Classification of the largest currently unmapped initialization, state IO,
+  history IO, and static interpolation procedures in the PFT14 control-flow
+  resolution. This is an extension inventory only; it does not alter or close
+  entries in pft14_reachable_ledger.yaml.
+resolution_source: outputs/reference_mode/pft14_control_flow_resolution.json
+allowed_categories:
+  - scientific_process
+  - state_io
+  - driver_regridding
+  - valid_input_infrastructure
+  - paper_static_inactive
+entries:
+  - id: parameters.pft_parameters_alloc
+    category: valid_input_infrastructure
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/pft_parameters.f90
+    fortran_subroutine: pft_parameters_alloc
+    fortran_lines: 997-2838
+    inventory_resolution_sites: 5
+    paper_path: active
+    jax_owner: jax_orchidee.stomate.parameters.load_pft14_parameters
+    gap: null
+    reason: >-
+      The procedure only allocates dimensioned parameter arrays and checks
+      allocation status. Python/JAX obtains the PFT14 values and shapes through
+      the typed parameter loader; allocation guards are valid-input runtime
+      infrastructure, not scientific process equations.
+
+  - id: stomate_io.readstart
+    category: state_io
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+    fortran_subroutine: readstart
+    fortran_lines: 34-1747
+    inventory_resolution_sites: 0
+    paper_path: active
+    jax_owner: jax_orchidee.stomate.reference.read_stomate_restart_entry_state
+    gap: >-
+      Partial owner only: the JAX readers cover the paper restart state bundles,
+      but this audit does not claim every legacy missing-variable fallback and
+      optional restart namespace in readstart is closed.
+    reason: >-
+      readstart reads prognostic STOMATE restart fields and applies source
+      missing-value defaults. Its branches govern state restoration, so they
+      are state IO rather than initialization infrastructure.
+
+  - id: ioipslctrl.ioipslctrl_history
+    category: state_io
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/ioipslctrl.f90
+    fortran_subroutine: ioipslctrl_history
+    fortran_lines: 65-2514
+    inventory_resolution_sites: 122
+    paper_path: active
+    jax_owner: jax_orchidee.stomate.modelout.annual_history_mean_fields_from_daily_modelout
+    gap: >-
+      Partial owner only: the paper modelout history reduction is implemented,
+      while the complete SECHIBA/STOMATE IOIPSL file, axis, level, and optional
+      secondary-history definition surface is not reproduced.
+    reason: >-
+      The procedure defines history files, axes, output levels, and temporal
+      operators. Those branches affect emitted diagnostics, not model-state
+      process equations.
+
+  - id: ioipslctrl.ioipslctrl_histstom
+    category: state_io
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/ioipslctrl.f90
+    fortran_subroutine: ioipslctrl_histstom
+    fortran_lines: 2527-5796
+    inventory_resolution_sites: 51
+    paper_path: active
+    jax_owner: jax_orchidee.stomate.modelout.stomate_lpj_history_fields_from_state
+    gap: >-
+      Partial owner only: required paper PFT14 history fields are exposed, but
+      the full optional STOMATE history-variable registration catalogue is not
+      a JAX output contract.
+    reason: >-
+      ioipslctrl_histstom registers diagnostic variables and history operations;
+      it does not update prognostic vegetation or carbon state.
+
+  - id: interpweight.interpweight_1d
+    category: paper_static_inactive
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90
+    fortran_subroutine: interpweight_1D
+    fortran_lines: 95-426
+    inventory_resolution_sites: 0
+    paper_path: inactive
+    jax_owner: null
+    gap: >-
+      No paper-path JAX owner is required: its slowproc_interpol caller is the
+      legacy Olson vegetation-map path, disabled by IMPOSE_VEG=y and the paper
+      imposed PFT14 fractions.
+    reason: >-
+      This is generic static regridding code, but its only relevant vegetation
+      call path is structurally inactive in the materialized paper run.
+
+  - id: interpweight.interpweight_2d
+    category: driver_regridding
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90
+    fortran_subroutine: interpweight_2D
+    fortran_lines: 444-896
+    inventory_resolution_sites: 0
+    paper_path: active
+    jax_owner: jax_orchidee.driver.static.read_paper_usda_soil_static_fields
+    gap: >-
+      Partial owner only: active paper soil/background-albedo products have
+      explicit-geometry readers, but the generic all-variable interpweight_2D
+      API and every mask/fractype combination are not implemented.
+    reason: >-
+      The routine maps external gridded static fields onto land points. It is
+      driver regridding and must not be counted as a HYDROL soil-water process.
+
+  - id: interpweight.interpweight_2dcont
+    category: driver_regridding
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90
+    fortran_subroutine: interpweight_2Dcont
+    fortran_lines: 1824-2233
+    inventory_resolution_sites: 0
+    paper_path: active
+    jax_owner: jax_orchidee.driver.static.read_paper_thermosoil_reftemp_static_field
+    gap: >-
+      Partial owner only: the paper reference-temperature, reference-carbon,
+      background-albedo, salinity, and tide products use dedicated static
+      readers; the complete generic continuous-field API remains outside scope.
+    reason: >-
+      The procedure reads and spatially aggregates continuous external fields.
+      Its ownership is the driver static-input boundary, not THERMOSOIL or
+      HYDROL scientific evolution.
+
+  - id: interpweight.interpweight_3d
+    category: paper_static_inactive
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90
+    fortran_subroutine: interpweight_3D
+    fortran_lines: 914-1360
+    inventory_resolution_sites: 0
+    paper_path: inactive
+    jax_owner: null
+    gap: >-
+      No paper-path JAX owner is required: slowproc_readvegetmax is bypassed by
+      IMPOSE_VEG=y, even though MAP_PFT_FORMAT=TRUE is present in used_run.def.
+    reason: >-
+      interpweight_3D supplies the external PFT-map branch, while the paper run
+      imposes vegetation fractions directly.
+
+  - id: interpweight.interpweight_4d
+    category: paper_static_inactive
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90
+    fortran_subroutine: interpweight_4D
+    fortran_lines: 1378-1806
+    inventory_resolution_sites: 0
+    paper_path: inactive
+    jax_owner: null
+    gap: >-
+      No paper-path JAX owner is required: interpweight_4D is called by the
+      prescribed monthly LAI-map path and the materialized run fixes LAI_MAP=n.
+    reason: >-
+      The four-dimensional interpolation is static input preparation for an
+      explicitly disabled paper branch, not an unimplemented carbon process.
+
+  - id: sechiba.sechiba_init
+    category: scientific_process
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_init
+    fortran_lines: 1958-2818
+    inventory_resolution_sites: 0
+    paper_path: active
+    jax_owner: jax_orchidee.driver.orchestration.paper_1961_driver_cold_start_multiday_modelout_lite_run
+    gap: >-
+      Partial owner only: paper cold-start assembly owns the active state, but
+      the remaining source branches need branch-level mapping before the full
+      sechiba_init span can be declared closed.
+    reason: >-
+      Besides allocation, sechiba_init establishes restartable surface state
+      and component initialization order. The whole procedure therefore cannot
+      be swept into valid-input infrastructure.
+
+  - id: hydrol.hydrol_init
+    category: scientific_process
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+    fortran_subroutine: hydrol_init
+    fortran_lines: 1827-3120
+    inventory_resolution_sites: 1
+    paper_path: active
+    jax_owner: jax_orchidee.sechiba.hydrol.hydrol_cold_start_state
+    gap: >-
+      Partial owner only: paper cold-start defaults and active hydraulic tables
+      are implemented, but all configuration, restart fallback, and optional
+      snow/water-table initialization branches are not yet branch-level closed.
+    reason: >-
+      hydrol_init sets hydraulic parameters, soil moisture, interception, snow,
+      drainage, and water-table state. These choices affect later water fluxes
+      and are scientific process initialization, not IO infrastructure.
+
+  - id: stomate.stomate_init
+    category: scientific_process
+    fortran_file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+    fortran_subroutine: stomate_init
+    fortran_lines: 6248-8497
+    inventory_resolution_sites: 0
+    paper_path: active
+    jax_owner: jax_orchidee.stomate.reference.stomate_cold_start_entry_state
+    gap: >-
+      Partial owner only: the active paper cold-start state is represented, but
+      optional crop-management, fertilization, forcing, and remaining source
+      initialization branches require explicit branch dispositions.
+    reason: >-
+      stomate_init establishes vegetation, carbon, phenology, soil-carbon, and
+      management state. It is a scientific initialization procedure and must
+      not be reclassified as allocation or generic infrastructure.

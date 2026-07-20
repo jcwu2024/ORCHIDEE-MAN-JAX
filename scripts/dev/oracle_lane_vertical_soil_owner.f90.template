@@ -1,0 +1,90 @@
+module defprec
+  implicit none
+  integer, parameter :: i_std=4, r_std=8
+end module defprec
+
+module oracle_config
+  use defprec
+  implicit none
+  real(r_std) :: depth_max_t, depth_max_h, depth_topthick
+  real(r_std) :: depth_cstthick, depth_geom, ratio_geom_below
+end module oracle_config
+
+module ioipsl_para
+  use defprec
+  use oracle_config
+  implicit none
+  integer, parameter :: numout=6
+contains
+  subroutine getin_p(key, value)
+    character(*), intent(in) :: key
+    real(r_std), intent(inout) :: value
+    select case (trim(key))
+    case ('DEPTH_MAX_T'); value=depth_max_t
+    case ('DEPTH_MAX_H'); value=depth_max_h
+    case ('DEPTH_TOPTHICK'); value=depth_topthick
+    case ('DEPTH_CSTTHICK'); value=depth_cstthick
+    case ('DEPTH_GEOM'); value=depth_geom
+    case ('RATIO_GEOM_BELOW'); value=ratio_geom_below
+    case default; error stop 'unexpected getin_p key'
+    end select
+  end subroutine getin_p
+  subroutine ipslerr_p(level, routine, message, detail, empty)
+    integer, intent(in) :: level
+    character(*), intent(in) :: routine, message, detail, empty
+    write(*,'(a)') trim(routine)//':'//trim(message)
+    if (level >= 3) error stop 1
+  end subroutine ipslerr_p
+end module ioipsl_para
+
+module vertical_soil_var
+  use defprec
+  implicit none
+  integer(i_std), save :: ngrnd, nslm
+  real(r_std), save :: zmaxh, zmaxt
+  real(r_std), allocatable, save :: znt(:), znh(:), dnh(:), dlh(:), dlt(:), zlh(:), zlt(:), diaglev(:)
+end module vertical_soil_var
+
+module vertical_soil
+  use defprec
+  use ioipsl_para
+  use vertical_soil_var
+  implicit none
+contains
+! <VERTICAL_SOIL_INIT>
+end module vertical_soil
+
+program driver
+  use defprec
+  use oracle_config
+  use vertical_soil
+  use vertical_soil_var
+  implicit none
+  integer :: unit
+  character(512) :: path
+  character(64) :: mode
+  call get_command_argument(1,path); call get_command_argument(2,mode)
+  depth_max_t=38._r_std; depth_max_h=2._r_std; depth_topthick=9.77517107e-4_r_std
+  depth_cstthick=2._r_std; depth_geom=2._r_std; ratio_geom_below=1.05_r_std
+  if (trim(mode)=='correct') depth_cstthick=1.5_r_std
+  if (trim(mode)=='geometry') then
+    depth_max_t=12._r_std; depth_max_h=3._r_std; depth_topthick=.002_r_std
+    depth_cstthick=.4_r_std; depth_geom=4._r_std; ratio_geom_below=1.2_r_std
+  endif
+  if (trim(mode)=='bad_hydro') depth_max_h=40._r_std
+  if (trim(mode)=='bad_geom') depth_geom=1._r_std
+  call vertical_soil_init
+  open(newunit=unit,file=trim(path),status='replace'); write(unit,'(a)') 'field,flat_index,value'
+  call wi(unit,'nslm',(/nslm/)); call wi(unit,'ngrnd',(/ngrnd/))
+  call wr(unit,'znh',znh); call wr(unit,'dnh',dnh); call wr(unit,'dlh',dlh); call wr(unit,'zlh',zlh)
+  call wr(unit,'znt',znt); call wr(unit,'dlt',dlt); call wr(unit,'zlt',zlt); close(unit)
+contains
+  subroutine wi(u,name,a)
+    integer,intent(in)::u; character(*),intent(in)::name; integer(i_std),intent(in)::a(:); integer::i
+    do i=1,size(a); write(u,'(a,i0,a,i0)')trim(name)//',',i-1,',',a(i); enddo
+  end subroutine wi
+  subroutine wr(u,name,a)
+    integer,intent(in)::u; character(*),intent(in)::name; real(r_std),intent(in)::a(:); integer::i
+    do i=1,size(a); write(u,'(a,i0,a,es25.17)')trim(name)//',',i-1,',',a(i); enddo
+  end subroutine wr
+end program driver

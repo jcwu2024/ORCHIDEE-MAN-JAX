@@ -1,0 +1,268 @@
+module dim2_driver_batch_b_transport
+  implicit none
+  integer :: config_mode = 0
+  integer :: restart_mode = 0
+  integer :: error_count = 0
+  integer :: error_level = 0
+  integer :: write_count = 0
+  integer :: close_count = 0
+  interface getin_p
+    module procedure getin_l, getin_i, getin_r, getin_c
+  end interface
+  interface bcast
+    module procedure bcast_i, bcast_r
+  end interface
+contains
+  subroutine getin_l(key,value)
+    character(*), intent(in) :: key
+    logical, intent(inout) :: value
+    if (trim(key) == 'INTER_LIN') value = config_mode >= 2
+    if (trim(key) == 'NETRAD_CONS' .and. config_mode == 2) value = .false.
+  end subroutine
+  subroutine getin_i(key,value)
+    character(*), intent(in) :: key
+    integer, intent(inout) :: value
+    if (trim(key) == 'SPRED_PREC' .and. config_mode == 2) value = 99
+    if (trim(key) == 'SPRED_PREC' .and. config_mode == 3) value = 2
+  end subroutine
+  subroutine getin_r(key,value)
+    character(*), intent(in) :: key
+    real, intent(inout) :: value
+  end subroutine
+  subroutine getin_c(key,value)
+    character(*), intent(in) :: key
+    character(*), intent(inout) :: value
+  end subroutine
+  subroutine ipslerr_p(level,caller,message,detail,action)
+    integer, intent(in) :: level
+    character(*), intent(in) :: caller,message,detail,action
+    error_count=error_count+1
+    error_level=level
+  end subroutine
+  subroutine restini(namein,iim,jjm,lon,lat,llm,lev,nameout,itau,date0,dt,id,reset)
+    character(*), intent(in) :: namein,nameout
+    integer, intent(in) :: iim,jjm,llm
+    real, intent(in) :: lon(:,:),lat(:,:),lev(:)
+    integer, intent(out) :: itau,id
+    real, intent(inout) :: date0,dt
+    logical, intent(in) :: reset
+    if (restart_mode == 0) then
+      itau=0
+    else
+      itau=7
+      date0=3.
+      dt=900.
+    endif
+    id=41
+  end subroutine
+  subroutine restget_p(id,name,iim,jjm,k,itau,allow,field)
+    integer, intent(in) :: id,iim,jjm,k,itau
+    character(*), intent(in) :: name
+    logical, intent(in) :: allow
+    real, intent(inout) :: field(:,:)
+    if (restart_mode == 2) then
+      if (trim(name) == 'z0') then
+        field=999999.
+      else
+        field=10.+len_trim(name)
+      endif
+    endif
+  end subroutine
+  subroutine restput_p(id,name,iim,jjm,k,itau,field)
+    integer, intent(in) :: id,iim,jjm,k,itau
+    character(*), intent(in) :: name
+    real, intent(in) :: field(:,:)
+    write_count=write_count+1
+  end subroutine
+  subroutine bcast_i(value)
+    integer, intent(inout) :: value
+  end subroutine
+  subroutine bcast_r(value)
+    real, intent(inout) :: value
+  end subroutine
+  subroutine restclo
+    close_count=close_count+1
+  end subroutine
+  subroutine getin_dump
+  end subroutine
+  subroutine write_load_balance(value)
+    real, intent(in) :: value
+  end subroutine
+  real function get_cpu_time(timer)
+    integer, intent(in) :: timer
+    get_cpu_time=1.
+  end function
+end module
+
+program dim2_driver_batch_b_oracle
+  use dim2_driver_batch_b_transport
+  implicit none
+  integer :: unit
+  character(512) :: path
+  call get_command_argument(1,path)
+  open(newunit=unit,file=trim(path),status='replace')
+  call run_controls(unit)
+  call run_chronology(unit)
+  call run_dimension_errors(unit)
+  call run_output_status(unit)
+  call run_root_dispatch
+  call exercise_state_segments
+  close(unit)
+contains
+  subroutine run_controls(unit)
+    use dim2_driver_batch_b_transport
+    integer, intent(in) :: unit
+    integer :: case_id,split,nb_spread,numout
+    real :: dt_force,dt,one_hour,alpha
+    logical :: relaxation,no_inter,inter_lin,netrad_cons
+    numout=6
+    one_hour=3600.
+    do case_id=1,5
+      config_mode=case_id
+      error_count=0
+      relaxation=.false.
+      no_inter=.true.
+      inter_lin=.false.
+      netrad_cons=.false.
+      if (case_id == 1) then
+        dt_force=7200.;dt=1800.;split=4
+      else if (case_id == 2) then
+        dt_force=21600.;dt=1800.;split=12
+      else if (case_id == 3) then
+        dt_force=21600.;dt=21600.;split=1
+      else if (case_id == 4) then
+        dt_force=3600.;dt=1800.;split=2
+      else
+        dt_force=1800.;dt=1800.;split=1
+      endif
+! <CONTROLS>
+      write(unit,*) 'controls',case_id,merge(1,0,no_inter),merge(1,0,inter_lin),nb_spread,merge(1,0,netrad_cons)
+    enddo
+  end subroutine
+
+  subroutine run_chronology(unit)
+    use dim2_driver_batch_b_transport
+    integer, intent(in) :: unit
+    integer :: case_id,numout,printlev_loc,iim_g,jjm_g,llm,rest_id,itau_dep_rest,itau_dep,itau_fin,tm,split
+    real :: date0,date0_rest,dt,dt_rest,dt_force,for_offset,one_day
+    real :: lon_g(2,2),lat_g(2,2),tmplev(2)
+    logical :: is_root_prc,driver_reset_time,weathergen
+    character(32) :: driv_restname_in,driv_restname_out
+    numout=6;printlev_loc=0;iim_g=2;jjm_g=2;llm=2;tm=5;dt_force=21600.;one_day=86400.
+    lon_g=0.;lat_g=0.;tmplev=0.;driv_restname_in='NONE';driv_restname_out='out'
+    do case_id=1,4
+      config_mode=0
+      restart_mode=merge(1,0,case_id>1)
+      is_root_prc=case_id/=4
+      driver_reset_time=case_id==3
+      weathergen=.false.
+      dt=1800.;date0=1.;date0_rest=date0;dt_rest=dt
+      itau_dep_rest=0;itau_dep=0;itau_fin=tm;for_offset=0.
+! <TIME_STEP>
+! <ROOT_RESTART>
+! <CHRONOLOGY>
+      write(unit,*) 'chronology',case_id,itau_dep,itau_fin,date0_rest,dt_rest,for_offset,1
+    enddo
+  end subroutine
+
+  subroutine run_dimension_errors(unit)
+    use dim2_driver_batch_b_transport
+    integer, intent(in) :: unit
+    integer :: case_id,iim,jjm,llm,im,jm,lm,jtest,itest,nbindex,kindex(4),numout,printlev_loc,tm,itau_len
+    character(32) :: filename
+    numout=6;printlev_loc=0;filename='fixture';kindex=(/1,2,3,4/);nbindex=4
+    do case_id=1,4
+      error_count=0;error_level=0
+      iim=2;jjm=2;llm=3;im=2;jm=2;lm=3;tm=4;itau_len=4
+      if (case_id == 2) then
+        im=9;jm=8;lm=7
+      else if (case_id == 3) then
+        tm=2;itau_len=3
+      else if (case_id == 4) then
+        iim=1;jjm=1;llm=1;im=1;jm=1;lm=1
+      endif
+! <DIMENSIONS>
+! <TIME_GUARD>
+      write(unit,*) 'dimension_errors',case_id,merge(1,0,error_count>0)
+    enddo
+  end subroutine
+
+  subroutine run_output_status(unit)
+    use dim2_driver_batch_b_transport
+    integer, intent(in) :: unit
+    integer :: case_id,rest_id,iim_g,jjm_g,istp_old,it,itau_fin,timer_mpi,numout,printlev_loc
+    real :: fluxsens(2,2),vevapp(2,2),old_zlev(2,2),old_qair(2,2),old_eair(2,2),for_rau(2,2)
+    real :: albedo(2,2,2),z0(2,2),petAcoef(2,2),petBcoef(2,2),peqAcoef(2,2),peqBcoef(2,2)
+    logical :: is_watchout,is_root_prc
+    integer, parameter :: r_std=8
+    rest_id=1;iim_g=2;jjm_g=2;istp_old=1;timer_mpi=1;itau_fin=2;numout=6;printlev_loc=0
+    fluxsens=1.;vevapp=2.;old_zlev=3.;old_qair=4.;old_eair=5.;for_rau=6.
+    albedo=.13;z0=.1;petAcoef=7.;petBcoef=8.;peqAcoef=9.;peqBcoef=10.
+    do case_id=1,3
+      write_count=0;close_count=0
+      is_watchout=case_id==2
+      is_root_prc=case_id/=3
+      it=merge(1,0,case_id==1)
+! <LOAD_BALANCE>
+! <RESTART_WRITES>
+! <ROOT_CLOSE>
+      write(unit,*) 'output_status',case_id,merge(1,0,write_count>=9),merge(1,0,write_count==13),1,merge(1,0,close_count==1)
+    enddo
+  end subroutine
+
+  subroutine run_root_dispatch
+    use dim2_driver_batch_b_transport
+    integer :: mode,printlev_loc,numout,nbindex,ik,i,j,yy,mm,dd,ss,ilandindex(2),jlandindex(2)
+    real :: dt,cp_air,cte_grav,zlev_vec(2,2),for_qair(2,2),for_eair(2,2),for_tair(2,2)
+    real :: peqAcoef(2,2),peqBcoef(2,2),petAcoef(2,2),petBcoef(2,2),vevapp(2,2),fluxsens(2,2)
+    logical :: is_root_prc,relaxation
+    numout=6;printlev_loc=3;nbindex=2;ilandindex=(/1,2/);jlandindex=(/1,2/);yy=2000;mm=1;dd=1;ss=0
+    dt=1800.;cp_air=1004.675;cte_grav=9.80665;zlev_vec=10.
+    for_qair=0.;for_eair=0.;for_tair=0.;peqAcoef=0.;peqBcoef=0.;petAcoef=0.;petBcoef=0.
+    vevapp=0.;fluxsens=0.;relaxation=.false.
+    do mode=0,1
+      is_root_prc=mode==1
+! <ROOT_PRINT>
+! <RELAXATION>
+      endif
+    enddo
+  end subroutine
+
+  subroutine exercise_state_segments
+    use dim2_driver_batch_b_transport
+    integer :: mode,rest_id,iim_g,jjm_g,istp_old,nbindex,ik,i,j,ilandindex(2),jlandindex(2)
+    integer :: it_force,it,itau_dep,itau_fin,is,split,numout,printlev_loc,itau_skip,istp,split_start,itau_dep_rest
+    real :: fluxsens(2,2),vevapp(2,2),old_zlev(2,2),old_qair(2,2),old_eair(2,2),for_rau(2,2)
+    real :: temp_sol_new(2,2),zlev_vec(2,2),qair_obs(2,2),tair_obs(2,2),pb(2,2)
+    real :: petAcoef(2,2),petBcoef(2,2),peqAcoef(2,2),peqBcoef(2,2),cdrag(2,2)
+    real :: albedo(2,2,2),albedo_vis(2,2),albedo_nir(2,2),z0(2,2),tmp_z0(2,2),emis(2,2)
+    real :: swdown(2,2),coszang(2,2),for_swdown(2,2),for_coszang(2,2),for_swnet(2,2),eair_obs(2,2)
+    real :: zero,fill_init,val_exp,cp_air,cte_grav,cte_molr,for_offset
+    real :: limit_west,limit_east,limit_north,limit_south
+    logical :: is_watchout,lstep_last,lstep_init
+    rest_id=1;iim_g=2;jjm_g=2;istp_old=0;nbindex=2;numout=6;printlev_loc=0;for_offset=0.
+    ilandindex=(/1,2/);jlandindex=(/1,2/)
+    zero=0.;fill_init=-9999.;val_exp=999999.;cp_air=1004.675;cte_grav=9.80665;cte_molr=287.05
+    zlev_vec=10.;qair_obs=.002;tair_obs=280.;pb=100000.;swdown=100.;coszang=.5
+    do mode=0,2
+      restart_mode=merge(2,0,mode>=1)
+      is_watchout=mode==2;lstep_last=mode==0;lstep_init=mode==0
+      it_force=merge(-1,1,mode==2);it=merge(1,0,mode==0);itau_dep=0;itau_fin=1;is=1;split=1
+      itau_skip=0;istp=1;split_start=1;itau_dep_rest=0
+      fluxsens=0.;vevapp=0.;old_zlev=0.;old_qair=0.;old_eair=0.;for_rau=0.;temp_sol_new=0.
+      petAcoef=0.;petBcoef=0.;peqAcoef=0.;peqBcoef=0.;cdrag=1.;albedo=.13;z0=.1
+      for_swdown=0.;for_coszang=0.;for_swnet=0.;eair_obs=0.
+! <LANDPOINT_GUARD>
+! <SPLIT_START>
+! <FALLBACKS>
+! <FORCING_INDEX>
+! <LAST_STEP>
+! <WATCHOUT_PREP>
+! <PBL_DEFAULTS>
+! <INITIAL_STEP>
+      endif
+      albedo_vis=val_exp;albedo_nir=val_exp;tmp_z0=z0
+! <ALBEDO_RESTART>
+    enddo
+  end subroutine
+end program

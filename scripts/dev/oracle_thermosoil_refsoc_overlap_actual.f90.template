@@ -1,0 +1,87 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module defprec
+
+module grid
+  implicit none
+  logical :: global=.false.
+end module grid
+
+module refsoc_overlap_oracle
+  use defprec
+  implicit none
+  integer, parameter :: NbNeighb=8
+  real(r_std), parameter :: zero=0._r_std, moins_un=-1._r_std
+  real(r_std), parameter :: pi=3.141592653589793238_r_std
+  real(r_std), parameter :: R_Earth=6378000._r_std, mincos=0.0001_r_std
+  integer :: numout=6
+  logical :: check_grid=.false.
+contains
+  subroutine ipslerr_p(level,a,b,c,d)
+    integer, intent(in) :: level
+    character(*), intent(in) :: a,b,c,d
+    if (level >= 3) error stop 'ipslerr_p'
+  end subroutine ipslerr_p
+! <AGGREGATE_2D>
+end module refsoc_overlap_oracle
+
+program refsoc_overlap_driver
+  use defprec
+  use refsoc_overlap_oracle
+  implicit none
+  integer, parameter :: iml=720, jml=360, nlev=32, nbpt=1, incmax=16
+  integer :: ip,jp,idi,ilev,count_used
+  integer :: neighbours(nbpt,NbNeighb), mask(iml,jml)
+  integer :: sub_index(nbpt,incmax,2)
+  real(r_std) :: lalo(nbpt,2), resolution(nbpt,2), contfrac(nbpt)
+  real(r_std) :: lon(iml,jml),lat(iml,jml),refsoc(iml,jml,nlev)
+  real(r_std) :: sub_area(nbpt,incmax), weighted(nlev),total_area
+  logical :: ok
+  character(512) :: metadata_path,map_path,output_path
+
+  call get_command_argument(1,metadata_path)
+  call get_command_argument(2,map_path)
+  call get_command_argument(3,output_path)
+  open(10,file=trim(metadata_path),status='old',action='read')
+  read(10,*) lalo(1,1),lalo(1,2),resolution(1,1),resolution(1,2),contfrac(1)
+  close(10)
+  open(11,file=trim(map_path),status='old',action='read',access='stream',form='unformatted')
+  read(11) lon
+  read(11) lat
+  read(11) mask
+  read(11) refsoc
+  close(11)
+
+  neighbours=0
+  call aggregate_2d(nbpt,lalo,neighbours,resolution,contfrac,iml,jml,lon,lat,mask, &
+       'soil organic carbon',incmax,sub_index,sub_area,ok)
+  if (.not. ok) error stop 'aggregate_2d failed'
+  weighted=zero
+  total_area=zero
+  count_used=0
+  do idi=1,incmax
+    if (sub_area(1,idi) <= zero) exit
+    ip=sub_index(1,idi,1)
+    jp=sub_index(1,idi,2)
+    weighted(:)=weighted(:)+refsoc(ip,jp,:)*sub_area(1,idi)
+    total_area=total_area+sub_area(1,idi)
+    count_used=count_used+1
+  enddo
+  if (count_used < 1) error stop 'no overlap'
+  weighted=weighted/total_area
+
+  open(12,file=trim(output_path),status='replace',action='write')
+  write(12,'(a)') 'field,index,value'
+  do ilev=1,nlev
+    write(12,'(a,i0,a,es25.17)') 'refsoc,',ilev,',',weighted(ilev)
+  enddo
+  write(12,'(a,i0,a,es25.17)') 'count,',1,',',real(count_used,r_std)
+  do idi=1,count_used
+    write(12,'(a,i0,a,es25.17)') 'ip,',idi,',',real(sub_index(1,idi,1),r_std)
+    write(12,'(a,i0,a,es25.17)') 'jp,',idi,',',real(sub_index(1,idi,2),r_std)
+    write(12,'(a,i0,a,es25.17)') 'area,',idi,',',sub_area(1,idi)
+  enddo
+  close(12)
+end program refsoc_overlap_driver

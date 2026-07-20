@@ -1,0 +1,198 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module defprec
+module constantes
+  use defprec
+  implicit none
+  real(r_std), parameter :: zero=0._r_std, moins_un=-1._r_std, pi=acos(-1._r_std), R_Earth=6378000._r_std, mincos=.001_r_std
+  integer(i_std), parameter :: undef_int=-999999_i_std
+  integer :: numout=6
+end module constantes
+module mod_orchidee_para
+  use defprec
+  use constantes, only: undef_int
+  implicit none
+  integer(i_std), parameter :: NbNeighb=4
+  integer(i_std) :: nbp_glo=2, mpi_rank=0
+  integer(i_std) :: nbp_mpi_para_begin(0:0)=(/1/), nbp_mpi_para_end(0:0)=(/2/)
+  real(r_std) :: lalo_g(2,2), resolution_g(2,2), contfrac_g(2)
+  integer(i_std) :: neighbours_g(2,4)
+  logical :: is_root_prc=.true.
+  character(32) :: GridType='RegLonLat'
+  type projection; integer(i_std)::code=undef_int; end type projection
+  type(projection) :: proj_stack(1)
+end module mod_orchidee_para
+module grid
+  implicit none
+  logical :: global=.false.
+end module grid
+module interregxy
+  use defprec
+  implicit none
+contains
+  subroutine interregxy_aggr2d(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o)
+    integer(i_std),intent(in)::a,f,g,l; real(r_std),intent(in)::b(a,2),d(a,2),e(a),h(f,g),i(f,g); integer(i_std),intent(in)::c(a,4),j(f,g)
+    character(*),intent(in)::k; integer(i_std),intent(out)::m(a,l,2);real(r_std),intent(out)::n(a,l);logical,intent(out),optional::o
+    m=0;n=-1.;if(present(o))o=.false.
+  end subroutine
+  subroutine interregxy_aggrve(a,b,c,d,e,f,g,h,i,j,k,l,m,n,o)
+    integer(i_std),intent(in)::a,f,l;real(r_std),intent(in)::b(a,2),d(a,2),e(a),g(f),h(f),i,j;integer(i_std),intent(in)::c(a,4);character(*),intent(in)::k
+    integer(i_std),intent(out)::m(a,l);real(r_std),intent(out)::n(a,l);logical,intent(out),optional::o
+    m=0;n=-1.;if(present(o))o=.false.
+  end subroutine
+end module interregxy
+module mod_orchidee_transfert_para
+  implicit none
+  interface BCAST; module procedure bcast_logical; end interface
+  interface scatter; module procedure scatter_i2,scatter_i3,scatter_r2; end interface
+contains
+  subroutine bcast_logical(a); logical,intent(inout)::a; end subroutine
+  subroutine scatter_i2(a,b); integer,intent(in)::a(:,:);integer,intent(out)::b(:,:);b=a(1:size(b,1),:);end subroutine
+  subroutine scatter_i3(a,b); integer,intent(in)::a(:,:,:);integer,intent(out)::b(:,:,:);b=a(1:size(b,1),:,:);end subroutine
+  subroutine scatter_r2(a,b); real(8),intent(in)::a(:,:);real(8),intent(out)::b(:,:);b=a(1:size(b,1),:);end subroutine
+end module mod_orchidee_transfert_para
+module interpolation_aggregate_oracle
+  use constantes
+  use mod_orchidee_para
+  use grid
+  use interregxy
+  use mod_orchidee_transfert_para
+  implicit none
+  logical :: check_grid=.false.
+contains
+  subroutine ipslerr_p(level,a,b,c,d);integer,intent(in)::level;character(*),intent(in)::a,b,c,d;write(*,'(4a)')trim(a),'|',trim(b),'|',trim(c);if(level>=3) error stop 'ipslerr_p';end subroutine
+  subroutine ipslerr(level,a,b,c,d);integer,intent(in)::level;character(*),intent(in)::a,b,c,d;write(*,'(4a)')trim(a),'|',trim(b),'|',trim(c);if(level>=3) error stop 'ipslerr';end subroutine
+! <AGGREGATE_2D>
+! <AGGREGATE_VEC>
+! <AGGREGATE_VEC_P>
+! <AGGREGATE_2D_P>
+end module interpolation_aggregate_oracle
+program driver
+  use defprec
+  use constantes
+  use mod_orchidee_para
+  use grid
+  use interpolation_aggregate_oracle
+  implicit none
+  integer(i_std),parameter::n=2,im=3,jm=3,slots=9
+  real(r_std)::lalo(n,2),res(n,2),cf(n),lon(im,jm),lat(im,jm),vlon(5),vlat(5),a2(n,slots),av(n,slots),ap2(n,slots),apv(n,slots)
+  integer(i_std)::nei(n,4),mask(im,jm),i2(n,slots,2),iv(n,slots),ip2(n,slots,2),ipv(n,slots),u
+  logical::ok2,okv,okp2,okpv
+  character(512)::path,mode
+  integer::i,j
+  call get_command_argument(1,path);call get_command_argument(2,mode)
+  lalo=reshape((/0._r_std,0._r_std,0._r_std,1.5_r_std/),(/n,2/));res=240000._r_std;cf=(/1._r_std,0._r_std/);nei=0
+  do j=1,jm; do i=1,im; lon(i,j)=-1._r_std+real(i-1,r_std);lat(i,j)=-1._r_std+real(j-1,r_std);enddo;enddo
+  mask=1;mask(2,2)=0; vlon=(/-1._r_std,-.5_r_std,0._r_std,.5_r_std,1._r_std/);vlat=0._r_std
+  if(len_trim(mode)>0) call fatal_case(trim(mode))
+  call aggregate_2d(n,lalo,nei,res,cf,im,jm,lon,lat,mask,'oracle',slots,i2,a2,ok2)
+  call aggregate_vec(n,lalo,nei,res,cf,5_i_std,vlon,vlat,60000._r_std,60000._r_std,'oracle',slots,iv,av,okv)
+  lalo_g=lalo;resolution_g=res;contfrac_g=cf;neighbours_g=nei;global=.false.;GridType='RegLonLat'
+  call aggregate_2d_p(n,lalo,nei,res,cf,im,jm,lon,lat,mask,'oracle',slots,ip2,ap2,okp2)
+  call aggregate_vec_p(n,lalo,nei,res,cf,5_i_std,vlon,vlat,60000._r_std,60000._r_std,'oracle',slots,ipv,apv,okpv)
+  open(newunit=u,file=trim(path),status='replace');write(u,'(a)')'field,flat_index,value'
+  call wi(u,'aggregate_2d_ind',reshape(i2,(/size(i2)/)));call wr(u,'aggregate_2d_area',reshape(a2,(/size(a2)/)));call wi(u,'aggregate_2d_ok',(/merge(1_i_std,0_i_std,ok2)/))
+  call wi(u,'aggregate_vec_ind',reshape(iv,(/size(iv)/)));call wr(u,'aggregate_vec_area',reshape(av,(/size(av)/)));call wi(u,'aggregate_vec_ok',(/merge(1_i_std,0_i_std,okv)/))
+  call wi(u,'aggregate_2d_p_ind',reshape(ip2,(/size(ip2)/)));call wr(u,'aggregate_2d_p_area',reshape(ap2,(/size(ap2)/)));call wi(u,'aggregate_2d_p_ok',(/merge(1_i_std,0_i_std,okp2)/))
+  call wi(u,'aggregate_vec_p_ind',reshape(ipv,(/size(ipv)/)));call wr(u,'aggregate_vec_p_area',reshape(apv,(/size(apv)/)));call wi(u,'aggregate_vec_p_ok',(/merge(1_i_std,0_i_std,okpv)/));close(u)
+  call coverage_matrix()
+contains
+  subroutine fatal_case(which)
+    character(*),intent(in)::which
+    lalo_g=lalo;resolution_g=res;contfrac_g=cf;neighbours_g=nei
+    select case(which)
+    case('aggregate_2d_capacity')
+      call aggregate_2d(n,lalo,nei,res,cf,im,jm,lon,lat,mask,'fatal',1_i_std,i2(:,1:1,:),a2(:,1:1))
+    case('aggregate_vec_capacity')
+      call aggregate_vec(n,lalo,nei,res,cf,5_i_std,vlon,vlat,60000._r_std,60000._r_std,'fatal',1_i_std,iv(:,1:1),av(:,1:1))
+    case('aggregate_2d_p_grid')
+      GridType='Unsupported';call aggregate_2d_p(n,lalo,nei,res,cf,im,jm,lon,lat,mask,'fatal',slots,ip2,ap2,okp2)
+    case('aggregate_vec_p_grid')
+      GridType='Unsupported';call aggregate_vec_p(n,lalo,nei,res,cf,5_i_std,vlon,vlat,60000._r_std,60000._r_std,'fatal',slots,ipv,apv,okpv)
+    end select
+    error stop 'fatal case unexpectedly returned'
+  end subroutine fatal_case
+  subroutine coverage_matrix()
+    real(r_std)::local_lalo(n,2),local_lat(im,jm),local_lon(im,jm),local_vlon(5),local_vlat(5),offsets(5)
+    integer(i_std)::local_mask(im,jm),p,q
+    local_lalo=lalo;local_lat=lat;local_mask=mask
+    local_mask=0
+    call aggregate_2d(n,local_lalo,nei,res,cf,im,jm,lon,local_lat,local_mask,'masked',slots,i2,a2,ok2)
+    global=.true.
+    call aggregate_2d(n,local_lalo,nei,res,cf,im,jm,lon,local_lat,mask,'global',slots,i2,a2,ok2)
+    global=.false.;local_lat(:,1)=1._r_std;local_lat(:,2)=0._r_std;local_lat(:,3)=-1._r_std
+    call aggregate_2d(n,local_lalo,nei,res,cf,im,jm,lon,local_lat,mask,'reversed',slots,i2,a2,ok2)
+    local_lalo(:,2)=150._r_std
+    call aggregate_2d(n,local_lalo,nei,res,cf,im,jm,lon,lat,mask,'empty',slots,i2,a2,ok2)
+    local_vlon(1)=150._r_std;local_vlat(1)=0._r_std
+    call aggregate_vec(n,local_lalo,nei,res,cf,1_i_std,local_vlon,local_vlat,60000._r_std,60000._r_std,'empty',slots,iv,av,okv)
+    check_grid=.true.
+    call aggregate_2d(n,lalo,nei,res,cf,im,jm,lon,lat,mask,'check',slots,i2,a2,ok2)
+    check_grid=.false.
+    call aggregate_2d(n,lalo,nei,res,cf,im,jm,lon,lat,mask,'no_optional',slots,i2,a2)
+    call aggregate_vec(n,lalo,nei,res,cf,5_i_std,vlon,vlat,60000._r_std,60000._r_std,'no_optional',slots,iv,av)
+    local_lalo=lalo;local_lalo(:,2)=179.9_r_std
+    call aggregate_2d(n,local_lalo,nei,res,cf,im,jm,lon,lat,mask,'east_date_line',slots,i2,a2,ok2)
+    local_lalo(:,2)=-179.9_r_std
+    call aggregate_2d(n,local_lalo,nei,res,cf,im,jm,lon,lat,mask,'west_date_line',slots,i2,a2,ok2)
+    res=50000._r_std
+    call aggregate_vec(n,lalo,nei,res,cf,5_i_std,vlon,vlat,60000._r_std,60000._r_std,'resolution_warning',slots,iv,av,okv)
+    res=240000._r_std
+    call progress_case()
+    GridType='RegXY';proj_stack(1)%code=undef_int-1
+    call aggregate_2d_p(n,lalo,nei,res,cf,im,jm,lon,lat,mask,'regxy',slots,ip2,ap2,okp2)
+    call aggregate_vec_p(n,lalo,nei,res,cf,5_i_std,vlon,vlat,60000._r_std,60000._r_std,'regxy',slots,ipv,apv,okpv)
+    GridType='RegLonLat'
+    offsets=(/-181._r_std,-179._r_std,-1._r_std,0._r_std,179._r_std/)
+    do p=1,5
+      local_lalo=lalo;local_lalo(:,2)=offsets(p)
+      local_lon=lon+local_lalo(1,2); local_lat=lat; local_mask=1
+      if (p == 2) local_mask(2,2)=0
+      call aggregate_2d(n,local_lalo,nei,res,cf,im,jm,local_lon,local_lat,local_mask,'matrix',1_i_std,i2(:,1:1,:),a2(:,1:1),ok2)
+      do q=1,5; local_vlon(q)=local_lalo(1,2)+real(q-3,r_std)*.5_r_std;local_vlat(q)=0._r_std;enddo
+      call aggregate_vec(n,local_lalo,nei,res,cf,5_i_std,local_vlon,local_vlat,60000._r_std,60000._r_std,'matrix',1_i_std,iv(:,1:1),av(:,1:1),okv)
+    enddo
+    local_lon=lon
+    local_lon(:,1)=(/1._r_std,0._r_std,-1._r_std/)
+    local_lon(:,2)=(/1._r_std,0._r_std,-1._r_std/)
+    local_lon(:,3)=(/1._r_std,0._r_std,-1._r_std/)
+    call aggregate_2d(n,lalo,nei,res,cf,im,jm,local_lon,lat,mask,'reverse_lon',slots,i2,a2,ok2)
+    local_lat=lat+10._r_std
+    call aggregate_2d(n,lalo,nei,res,cf,im,jm,lon,local_lat,mask,'lat_miss',slots,i2,a2,ok2)
+    local_lalo=lalo;local_lalo(2,1)=5._r_std;local_lat=lat+5._r_std
+    call aggregate_2d(n,local_lalo,nei,res,cf,im,jm,lon,local_lat,mask,'other_point_lat',slots,i2,a2,ok2)
+    res=500000._r_std
+    call aggregate_2d(n,lalo,nei,res,cf,im,jm,lon,lat,mask,'source_inside',slots,i2,a2,ok2)
+    res=240000._r_std
+    local_lalo=lalo;local_lalo(:,2)=179._r_std;local_lon=lon-179._r_std
+    call aggregate_2d(n,local_lalo,nei,res,cf,im,jm,local_lon,lat,mask,'east_dateline_source',slots,i2,a2,ok2)
+    local_lalo=reshape((/0._r_std,2._r_std,0._r_std,2._r_std/),(/n,2/));res=300000._r_std
+    local_vlon=(/1._r_std,1._r_std,1._r_std,1._r_std,1._r_std/);local_vlat=(/1._r_std,1._r_std,1._r_std,1._r_std,1._r_std/)
+    call aggregate_vec(n,local_lalo,nei,res,cf,5_i_std,local_vlon,local_vlat,200000._r_std,200000._r_std,'corner_candidates',slots,iv,av,okv)
+    local_lalo=reshape((/-1._r_std,50._r_std,1._r_std,50._r_std/),(/n,2/));res=200000._r_std
+    local_vlon=0._r_std;local_vlat=0._r_std
+    call aggregate_vec(n,local_lalo,nei,res,cf,5_i_std,local_vlon,local_vlat,200000._r_std,200000._r_std,'lower_right_only',slots,iv,av,okv)
+    local_lalo=reshape((/0._r_std,50._r_std,0._r_std,50._r_std/),(/n,2/));res=200000._r_std
+    local_vlon=0._r_std;local_vlat=1.8_r_std
+    call aggregate_vec(n,local_lalo,nei,res,cf,5_i_std,local_vlon,local_vlat,200000._r_std,200000._r_std,'rounded_edge_reject',slots,iv,av,okv)
+    res=240000._r_std
+    local_lalo=reshape((/-89._r_std,89._r_std,-179._r_std,179._r_std/),(/n,2/))
+    res=40000000._r_std
+    call aggregate_vec(n,local_lalo,nei,res,cf,5_i_std,vlon,vlat,60000._r_std,60000._r_std,'whole_globe',slots,iv,av,okv)
+    res=10000._r_std
+    call aggregate_vec(n,lalo,nei,res,cf,5_i_std,vlon,vlat,60000._r_std,60000._r_std,'small_resolution',slots,iv,av,okv)
+    res=240000._r_std
+  end subroutine coverage_matrix
+  subroutine progress_case()
+    integer(i_std),parameter::big=100
+    integer(i_std)::bn(big,4),bm(im,jm),bi(big,1,2)
+    real(r_std)::bl(big,2),br(big,2),bc(big),ba(big,1)
+    logical::bok
+    bl=0._r_std;br=240000._r_std;bc=1._r_std;bn=0;bm=0
+    call aggregate_2d(big,bl,bn,br,bc,im,jm,lon,lat,bm,'progress',1_i_std,bi,ba,bok)
+  end subroutine progress_case
+  subroutine wi(unit,name,a);integer,intent(in)::unit;character(*),intent(in)::name;integer(i_std),intent(in)::a(:);integer::q;do q=1,size(a);write(unit,'(a,i0,a,i0)')trim(name)//',',q-1,',',a(q);enddo;end subroutine
+  subroutine wr(unit,name,a);integer,intent(in)::unit;character(*),intent(in)::name;real(r_std),intent(in)::a(:);integer::q;do q=1,size(a);write(unit,'(a,i0,a,es25.17)')trim(name)//',',q-1,',',a(q);enddo;end subroutine
+end program driver

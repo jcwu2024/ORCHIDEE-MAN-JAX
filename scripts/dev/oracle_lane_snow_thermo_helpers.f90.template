@@ -1,0 +1,31 @@
+module snow_thermo_oracle
+  implicit none
+  real, parameter :: xrhosmax=750., xwsnowholdmax1=.03, xwsnowholdmax2=.10
+  real, parameter :: xsnowrhohold=200., ph2o=1000., xci=2106.
+  real, parameter :: tp_00=273.15, chalfu0=333600.
+contains
+! <SNOW3LSCAP_1D>
+! <SNOW3LHOLD_1D>
+! <SNOW3LTEMP_1D>
+end module
+
+program driver
+  use snow_thermo_oracle
+  implicit none
+  real :: rho(5), dz(5), heat(5), hold(5), temp(5), raw(5)
+  integer :: unit, i
+  character(512) :: path
+  rho=(/50.,199.,749.,750.,900./); dz=(/.01,.02,.03,.04,.05/)
+  hold=snow3lhold_1d(rho,dz)
+  raw=(/280.,273.15,250.,100.,50./)
+  heat=dz*(rho*xci*(raw-tp_00)-chalfu0*rho)
+  temp=snow3ltemp_1d(heat,rho,dz)
+  call get_command_argument(1,path)
+  open(newunit=unit,file=trim(path),status='replace')
+  write(unit,'(a)') 'field,flat_index,value'
+  do i=1,5
+    write(unit,'(a,i0,a,es25.17)') 'hold,',i-1,',',hold(i)
+    write(unit,'(a,i0,a,es25.17)') 'temp,',i-1,',',temp(i)
+  end do
+  close(unit)
+end program

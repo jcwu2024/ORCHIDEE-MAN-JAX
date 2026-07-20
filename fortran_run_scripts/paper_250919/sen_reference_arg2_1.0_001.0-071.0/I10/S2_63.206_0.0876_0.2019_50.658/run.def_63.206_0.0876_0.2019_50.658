@@ -1,0 +1,198 @@
+ITIMETIDE=584
+CONTROL_SALINITY_MIN=0.5
+CONTROL_INUDATE_MIN=0.5
+AGB_AGR_VEN_ALL_ST=200
+AGB_AGR_VEN_ALL_PN=40
+H_AGR_MAX_ST=2.0
+H_AGR_MAX_PN=0.4
+
+WEIGHT_VEN_A=0.5
+WEIGHT_VEN_B=0.5
+DEN_MAN=1000
+
+
+READ_SALINITY=TRUE
+SALINITY_FILE=/public/share/qhcess/qhcess2/User/zzhao/INPUTDIR_ZZ/salinity_05.nc
+
+READ_TIDE=TRUE
+TIDE_FILE=/public/share/qhcess/qhcess2/User/zzhao/INPUTDIR_ZZ/tide_05_584.nc
+
+
+VCMAX25__00014=63.2061836
+ARJV__00014=2.45712368323
+SLA__00014=0.0153
+SLA_MAX__00014=0.0153
+SLA_MIN__00014=0.0153
+MAINT_RESP_SLOPE_C__00014=0.0876862
+RESIDENCE_TIME__00014=50.6583452
+ALLOC_MIN__00014=0.2019211
+
+LAI_MAX__00014=12
+LEAFLIFE_TAB__00014=1.4
+
+#CM_ZERO_AGRABOVESAP__00014 =   1.190000000000000E-004
+#CM_ZERO_AGRBELOWSAP__00014 =   1.190000000000000E-004
+#CM_ZERO_AGRABOVEHRT__00014 =   0.004000000000000E+000
+#CM_ZERO_AGRBELOWHRT__00014 =   0.005000000000000E+000
+CM_ZERO_AGRSAPST__00014 =   1.190000000000000E-004
+CM_ZERO_AGRSAPPN__00014 =   1.190000000000000E-004
+CM_ZERO_AGRHRTST__00014 =   0.
+CM_ZERO_AGRHRTPN__00014 =   0.
+
+
+F_FRUIT=0.025
+R0__00014=0.35
+S0__00014=0.35
+#ALLOC_AGR_ABOVE__00014=0.1
+#ALLOC_AGR_BELOW__00014=0.1
+ALLOC_AGR_ST__00014 =   0.25
+ALLOC_AGR_PN__00014 =   0.05
+
+
+cryoturbate = y
+use_new_cryoturbation = y 
+new_carbinput_intdepzlit=y
+cryoturbation_method = 4
+cryoturbation_diff_k = 0.001
+bioturbation_diff_k = 0.0001
+bioturbation_depth = 2.
+
+SOILTYPE_CLASSIF = usda 
+
+
+STOMATE_OK_STOMATE = y
+STOMATE_OK_CO2 = y
+
+#NVM = 13
+#PFT_TO_MTC = 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13
+#OK_LAIDEV=n,n,n,n,n,n,n,n,n,n,n,n,n
+#NSTM = 3
+#PREF_SOIL_VEG = 1, 2, 2, 2, 2, 2, 2, 2, 2, 3, 3, 3, 3
+
+OK_PC = y
+OK_FREEZE = y
+OK_EXPLICITSNOW = y
+HYDROL_CWRR = y
+RIVER_ROUTING = n
+DO_FLOODPLAINS =  n
+DO_FLOODINFILT =  n
+DO_SWAMPS =  n
+
+tides = n
+wtd_filename = /home/orchidee03/vnaipal/MICT-PEAT-LEAK2/script/forcing/WTM_forcing_pos.txt
+wtd_filename2 = /home/orchidee03/vnaipal/MICT-PEAT-LEAK2/script/forcing/WTM_forcing_diff.txt
+
+LAI_MAP = n
+IMPOSE_VEG = n
+
+ALB_BG_MODIS = y
+
+ 
+READ_REFTEMP=y
+
+ENABLE_GRAZING = n
+O2_LIMIT = n
+
+CH4_CALCUL = n
+
+TOPM_CALCUL = n
+
+DOWNREGULATION_CO2 = n
+
+DEPTH_TMAX=38.
+RATIO_GEOM_BELOW=1.05
+
+
+GLUC_USE_AGE_CLASS = n 
+
+  
+FIRE_DISABLE = n
+ALLOW_DEFOREST_FIRE = n
+## IF FIRE_DISABLE = n
+# Read population density? [always set yes, otherwise the model may break]    
+READ_POPDENS = y                                            
+POPDENS_FILE = /home/orchidee03/dzhu/INPUT/TRENDYv5/FIREinput/popd_1700.nc 
+# Read human ignition parameter? [always yes]                                 
+READ_HUMIGN = y                                                               
+HUMIGN_FILE = /home/orchidee03/dzhu/INPUT/TRENDYv5/FIREinput/humign.nc                
+# Lightning flashes input file                                                
+LIGHTNING_FILE = /home/orchidee03/dzhu/INPUT/TRENDYv5/FIREinput/LISOTD_HRMC_V2.3.2011.lightn.nc
+                                                                                
+# Read the ratio flag? [always yes]                                           
+READ_RATIO_FLAG = y                                                           
+# When the flag is greater than 1, BA and CF are forced, otherwise            
+# they are prognositcally determined.                                         
+RATIO_FLAG_FILE = /home/orchidee03/dzhu/INPUT/TRENDYv5/FIREinput/flag_minus_ones.nc
+# Read the ratio? [always y]                                                  
+READ_RATIO = y                                                                
+# Default ratio file with all ratios as 1, i.e., the BA is prognostically     
+# determined. Current GFED3 ratio file is derived by calibrating with GFED BA.
+RATIO_FILE = /home/orchidee03/dzhu/INPUT/TRENDYv5/FIREinput/ratio_GFED3_BvmaxT9_Opt3.nc
+                                                                                
+# Force the combustion fraction for the coarse fuel [default: n]              
+READ_CF_COARSE = n                                                            
+CF_COARSE_FILE = /home/orchidee03/dzhu/INPUT/TRENDYv5/FIREinput/CF_coarse.nc          
+# Force the combustion fraction for the fine fuel [default: n]                
+READ_CF_FINE = n                                                              
+CF_FINE_FILE = /home/orchidee03/dzhu/INPUT/TRENDYv5/FIREinput/CF_fine.nc   
+
+XIOS_ORCHIDEE_OK=y 
+
+FORCING_FILE=/home/orchidee03/dzhu/INPUT/cruncep5.3/twodeg_v5.3.2/cruncep_twodeg_1901.nc 
+SOILALB_FILE=/home/orchideeshare/igcmg/IGCM/SRF/soils_param.nc 
+SOILCLASS_FILE=/home/orchideeshare/igcmg/IGCM/SRF/soils_param_usdatop.nc 
+ALB_BG_FILE=/home/orchideeshare/igcmg/IGCM/SRF/albedo/alb_bg_modisopt_2D.nc 
+TOPOGRAPHY_FILE=/home/orchideeshare/igcmg/IGCM/SRF/cartepente2d_15min.nc 
+ROUTING_FILE=/home/orchideeshare/igcmg/IGCM/SRF/routing.nc 
+IRRIGATION_FILE=/home/orchideeshare/igcmg/IGCM/SRF/floodplains.nc 
+SOIL_REFTEMP_FILE=/home/orchideeshare/igcmg/IGCM/SRF/reftemp.nc 
+REFTEMP_FILE=/home/orchideeshare/igcmg/IGCM/SRF/reftemp.nc 
+
+VEGETATION_FILE=/home/orchidee01/cqiu/INPUT_file/PFT14map_peat_herbaces_1an_corr.nc
+
+TIME_LENGTH=1Y 
+RESTART_FILEOUT=driver_restart.nc 
+SECHIBA_rest_out=sechiba_restart.nc 
+STOMATE_RESTART_FILEOUT=stomate_restart.nc 
+
+WRITE_STEP=2592000 
+SECHIBA_HISTLEVEL=11 
+STOMATE_HISTLEVEL=10 
+STOMATE_HIST_DT=-1 
+OUTPUT_FILE=sechiba_history.nc 
+STOMATE_OUTPUT_FILE=stomate_history.nc 
+ATM_CO2=285
+LIMIT_WEST=-180 
+LIMIT_EAST=180 
+LIMIT_NORTH=90 
+LIMIT_SOUTH=30 
+
+STOMATE_OK_DGVM=n 
+LPJ_GAP_CONST_MORT=y 
+AGRICULTURE=y 
+HARVEST_AGRI=y 
+VEGET_UPDATE=1Y 
+STOMATE_IPCC_OUTPUT_FILE=NONE 
+
+USE_SOILC_TEMPDIFF=y 
+use_refSOC=y 
+use_refSOC_hydrol=y 
+
+SOIL_REFSOC_FILE=/home/orchidee03/dzhu/INPUT/refSOC_NCSCD_linear_05deg_v4.nc 
+SOIL_REFSOC_1d_FILE=/home/orchidee03/dzhu/INPUT/refSOC_NCSCD_05deg_v2.nc 
+
+ROUGH_DYN=y 
+
+STOMATE_FORCING_NAME=NONE 
+STOMATE_CFORCING_NAME=NONE 
+STOMATE_CFORCING_PF_NM=NONE 
+RESTART_FILEIN=NONE 
+SECHIBA_restart_in=NONE 
+STOMATE_RESTART_FILEIN=NONE 
+
+# water stress activated on Vcmax, stomatal conductance (gs),and mesophyll conductance (gm)
+#STRESS_GS=1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.
+#STRESS_GM=1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.
+#STRESS_VCMAX=1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.,1.
+
+NBUFF=1

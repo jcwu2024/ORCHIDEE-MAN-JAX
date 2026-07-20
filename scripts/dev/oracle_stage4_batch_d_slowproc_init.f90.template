@@ -1,0 +1,349 @@
+program slowproc_batch_d_init_oracle
+  implicit none
+  integer, parameter :: i_std=4, r_std=8
+  integer, parameter :: npts=3, nbp_glo=npts, nvm=14, nnobio=1, nstm=6, nslm=3
+  integer, parameter :: nleafages=4, nparts=1, nelements=1, nlitt=1, ndeep=1
+  integer, parameter :: ncarb=1, ndoc=1, npool=1, nscm=12, nvmap=14, itimetide=3
+  integer, parameter :: NbNeighb=1
+  real(r_std), parameter :: zero=0._r_std, un=1._r_std, one_day=86400._r_std
+  real(r_std), parameter :: val_exp=999999._r_std, undef_sechiba=1.e20_r_std
+  real(r_std), parameter :: min_sechiba=1.e-8_r_std, min_vegfrac=1.e-6_r_std
+  integer, parameter :: undef_int=999999999
+  integer :: numout=6, printlev_loc=0, month=1, day=1, current_case=1, unit_out
+  integer :: veget_year_orig=1961
+  character(len=30) :: soil_classif='usda'
+  integer :: index_g(nbp_glo), start_index(nvmap)
+  real(r_std) :: diaglev(nslm)=[0.1_r_std,0.3_r_std,1._r_std]
+  real(r_std) :: stempdiag_bid(npts,nslm)=273.15_r_std
+  real(r_std) :: lalo_g(nbp_glo,2), resolution_g(nbp_glo,2), contfrac_g(nbp_glo)
+  integer :: neighbours_g(nbp_glo,NbNeighb)
+  logical :: map_pft_format=.true., impveg=.true., veget_reinit=.false.
+  logical :: ok_dgvm=.false., agriculture=.false., hydrol_cwrr=.true.
+  logical :: read_lai=.false., ok_stomate=.true., impsoilt=.false.
+  logical :: disable_fire=.true., use_age_class=.false., allow_forestry_harvest=.false.
+  logical :: use_bound_spa=.false.
+  real(r_std) :: qsintcst=0.1_r_std, dt_stomate=one_day
+  real(r_std) :: PWT_lim=60._r_std, PC_lim=50._r_std, sat_gsl=1._r_std
+  real(r_std) :: precip_crit=100._r_std, slope_default=0.1_r_std
+  real(r_std) :: clayfraction_default=0.2_r_std, sandfraction_default=0.4_r_std
+  real(r_std) :: bulk_density_default=1.65_r_std, soil_ph_default=7._r_std
+  real(r_std) :: frac_nobio_fixed_test_1=0._r_std
+  real(r_std) :: veget_ori_fixed_test_1(nvm), llaimax(nvm), height_presc(nvm)
+  real(r_std) :: ext_coeff_vegetfrac(nvm), mcs_fao(3), mcs_usda(nscm)
+  real(r_std) :: m_lightn_default=0.02_r_std, popdens_default=1._r_std
+  real(r_std) :: m_ba_default=0._r_std, m_cf_coarse_default=0._r_std
+  real(r_std) :: m_cf_fine_default=0._r_std, m_ratio_default=0._r_std
+  real(r_std) :: m_ratio_flag_default=0._r_std
+  integer :: pref_soil_veg(nvm)
+  logical :: natural(nvm), pasture(nvm)
+  integer, save :: veget_update=0, veget_year=0, lcanop=0
+  logical, save :: read_popdens=.false., read_humign=.false., read_salinity=.false., read_tide=.false.
+  logical, save :: read_observed_ba=.false., read_cf_coarse=.false., read_cf_fine=.false.
+  logical, save :: read_ratio=.false., read_ratio_flag=.false.
+  real(r_std), allocatable, save :: m_lightn(:,:), glccNetLCC(:,:), glccSecondShift(:,:)
+  real(r_std), allocatable, save :: glccPrimaryShift(:,:), harvest_matrix(:,:), bound_spa(:,:)
+  real(r_std), allocatable, save :: proxy_anidens(:,:), m_observed_ba(:,:), m_cf_coarse(:,:)
+  real(r_std), allocatable, save :: m_cf_fine(:,:), m_ratio(:,:), m_ratio_flag(:,:)
+  real(r_std), allocatable, save :: popd(:), humign(:), clayfraction(:), sandfraction(:), siltfraction(:)
+  real(r_std), allocatable, save :: laimap(:,:,:), soilclass_default(:), veget_max_new(:,:)
+  real(r_std), allocatable, save :: frac_nobio_new(:,:), frac_nobio_lastyear(:,:), vegetnew_firstday(:,:)
+  real(r_std), allocatable, save :: fc_grazing(:), veget_max_adjusted(:,:), peatPET_lastyear(:)
+  real(r_std), allocatable, save :: peatPET_thisyear(:), precipitation_lastsummer(:)
+  real(r_std), allocatable, save :: precipitation_thissummer(:), summerp_long(:), summerpet_long(:)
+  real(r_std), allocatable, save :: peatC(:), peatC_ok(:), growth_day(:), GSL(:)
+  real(r_std), allocatable, save :: bulk_density(:), soil_ph(:), poor_soils(:)
+  logical, save :: read_veg_map_fr_restfile=.false.
+  interface restget_p
+     procedure :: restget_r1_full, restget_r2_full, restget_r3_full, restget_r3_short, restget_i0
+  end interface
+  interface getin_p
+     procedure :: getin_char, getin_logical, getin_real0, getin_real1
+  end interface
+  interface setvar_p
+     procedure :: setvar_real0, setvar_real1, setvar_real1_scalar, setvar_real2
+  end interface
+  interface setvar
+     procedure :: setvar_real1_plain, setvar_real2_plain
+  end interface
+  interface xios_orchidee_send_field
+     procedure :: xios_r1
+  end interface
+  interface scatter
+     procedure :: scatter_r2
+  end interface
+
+  call configure
+  call run_case
+contains
+  subroutine configure
+    character(len=32) :: text
+    integer :: i
+    call get_command_argument(1,text)
+    read(text,*) current_case
+    veget_ori_fixed_test_1=zero; veget_ori_fixed_test_1(14)=un
+    llaimax=zero
+    height_presc=[0._r_std,30._r_std,30._r_std,20._r_std,20._r_std,20._r_std, &
+         15._r_std,15._r_std,15._r_std,0.5_r_std,0.6_r_std,1._r_std,1._r_std,30._r_std]
+    ext_coeff_vegetfrac=0.5_r_std; ext_coeff_vegetfrac(1)=zero
+    pref_soil_veg=1; pref_soil_veg(14)=4
+    mcs_fao=[0.41_r_std,0.43_r_std,0.41_r_std]
+    mcs_usda=[0.43_r_std,0.41_r_std,0.41_r_std,0.45_r_std,0.46_r_std,0.43_r_std, &
+         0.39_r_std,0.43_r_std,0.41_r_std,0.38_r_std,0.36_r_std,0.38_r_std]
+    natural=.true.; natural(1)=.false.; pasture=.false.
+    do i=1,nvmap; start_index(i)=i; enddo
+    do i=1,nbp_glo; index_g(i)=i; enddo
+    lalo_g=zero; resolution_g=1000._r_std; contfrac_g=un; neighbours_g=0
+    impveg=.true.; map_pft_format=.true.; read_lai=.false.; disable_fire=.true.
+    use_age_class=.false.; allow_forestry_harvest=.false.; use_bound_spa=.false.
+    veget_reinit=.false.; ok_dgvm=.false.; agriculture=.false.; impsoilt=.false.
+    select case(current_case)
+    case(3); read_lai=.true.
+    case(4); impveg=.false.
+    case(5); impveg=.false.
+    case(6); impveg=.false.; map_pft_format=.false.
+    case(7); impveg=.false.; disable_fire=.false.; use_age_class=.true.; allow_forestry_harvest=.false.; use_bound_spa=.false.
+    case(8); impveg=.false.; disable_fire=.false.; use_age_class=.true.; allow_forestry_harvest=.true.; use_bound_spa=.true.
+    case(9); impveg=.false.; disable_fire=.false.; use_age_class=.false.
+    case(10); impsoilt=.true.
+    case(11); veget_reinit=.true.; impveg=.false.
+    case(12); read_lai=.true.
+    case(13); impveg=.false.
+    end select
+  end subroutine
+
+  subroutine run_case
+    integer :: kjit=1, rest_id=1, i
+    integer :: indexland(npts), neighbours(npts,NbNeighb), njsc(npts)
+    logical :: f_rot_sech(npts)
+    real(r_std) :: date0=0._r_std, lalo(npts,2), resolution(npts,2), contfrac(npts)
+    real(r_std) :: lai(npts,nvm), frac_age(npts,nvm,nleafages), veget(npts,nvm)
+    real(r_std) :: frac_nobio(npts,nnobio), totfrac_nobio(npts), soiltile(npts,nstm)
+    real(r_std) :: reinf_slope(npts), veget_max(npts,nvm), tot_bare_soil(npts), height(npts,nvm)
+    real(r_std) :: biomass(npts,nvm,nparts,nelements), litter_above(npts,nlitt,nvm,nelements)
+    real(r_std) :: litter_below(npts,nlitt,nvm,ndeep,nelements), carbon_32l(npts,ncarb,nvm,ndeep)
+    real(r_std) :: doc(npts,nvm,ndeep,ndoc,npool,nelements), salinity(npts), tide_height(npts,itimetide)
+    character(len=1024) :: output
+    indexland=[(i,i=1,npts)]; neighbours=0; lalo=zero; resolution=1000._r_std; contfrac=un
+    f_rot_sech=.false.; biomass=0._r_std; litter_above=0._r_std; litter_below=0._r_std
+    carbon_32l=0._r_std; doc=0._r_std; salinity=[31.25_r_std,18._r_std,0._r_std]
+    tide_height=reshape([0.1_r_std,0.2_r_std,0.3_r_std,-0.2_r_std,0._r_std,0.2_r_std, &
+         0.3_r_std,-0.1_r_std,0.4_r_std],shape(tide_height))
+    call slowproc_init(kjit,date0,npts,indexland,lalo,neighbours,resolution,contfrac,rest_id, &
+         lai,frac_age,veget,frac_nobio,totfrac_nobio,soiltile,reinf_slope,veget_max,tot_bare_soil, &
+         njsc,height,lcanop,veget_update,veget_year,f_rot_sech,biomass,litter_above,litter_below, &
+         carbon_32l,doc,salinity,tide_height)
+    if (current_case <= 2) then
+      call get_command_argument(2,output); open(newunit=unit_out,file=trim(output),status='replace')
+      call emit('lai',reshape(lai,[size(lai)])); call emit('height',reshape(height,[size(height)]))
+      call emit('frac_age',reshape(frac_age,[size(frac_age)])); call emit('veget',reshape(veget,[size(veget)]))
+      call emit('veget_max',reshape(veget_max,[size(veget_max)])); call emit('frac_nobio',reshape(frac_nobio,[size(frac_nobio)]))
+      call emit('totfrac_nobio',totfrac_nobio); call emit('soiltile',reshape(soiltile,[size(soiltile)]))
+      call emit('tot_bare_soil',tot_bare_soil); call emit('reinf_slope',reinf_slope)
+      call emit_i('njsc',njsc); call emit('clayfraction',clayfraction); call emit('sandfraction',sandfraction)
+      call emit('siltfraction',siltfraction); call emit('bulk_density',bulk_density); call emit('soil_ph',soil_ph)
+      call emit('poor_soils',poor_soils); call emit('fc_grazing',fc_grazing); call emit('salinity',salinity)
+      call emit('tide_height',reshape(tide_height,[size(tide_height)])); call emit('peatPET_lastyear',peatPET_lastyear)
+      call emit('precipitation_lastsummer',precipitation_lastsummer); call emit('precipitation_thissummer',precipitation_thissummer)
+      call emit('peatPET_thisyear',peatPET_thisyear); call emit('growth_day',growth_day); call emit('GSL',GSL)
+      call emit('summerp_long',summerp_long); call emit('summerpet_long',summerpet_long); call emit('peatC',peatC); call emit('peatC_ok',peatC_ok)
+      call emit('vegetnew_firstday',reshape(vegetnew_firstday,[size(vegetnew_firstday)]))
+      call emit('glccNetLCC',reshape(glccNetLCC,[size(glccNetLCC)])); call emit('glccSecondShift',reshape(glccSecondShift,[size(glccSecondShift)]))
+      call emit('glccPrimaryShift',reshape(glccPrimaryShift,[size(glccPrimaryShift)])); call emit('harvest_matrix',reshape(harvest_matrix,[size(harvest_matrix)]))
+      call emit('bound_spa',reshape(bound_spa,[size(bound_spa)])); call emit('m_lightn',reshape(m_lightn,[size(m_lightn)]))
+      call emit('proxy_anidens',reshape(proxy_anidens,[size(proxy_anidens)])); call emit('popd',popd); call emit('humign',humign)
+      call emit('m_observed_ba',reshape(m_observed_ba,[size(m_observed_ba)])); call emit('m_cf_coarse',reshape(m_cf_coarse,[size(m_cf_coarse)]))
+      call emit('m_cf_fine',reshape(m_cf_fine,[size(m_cf_fine)])); call emit('m_ratio',reshape(m_ratio,[size(m_ratio)])); call emit('m_ratio_flag',reshape(m_ratio_flag,[size(m_ratio_flag)]))
+      call emit_i('scalars',[lcanop,veget_update]); close(unit_out)
+    endif
+  end subroutine
+
+! <SLOWPROC_INIT_PROCEDURE>
+
+! <SLOWPROC_VEGET_PROCEDURE>
+
+  integer function get_printlev(name)
+    character(len=*), intent(in) :: name
+    get_printlev=0
+  end function
+  subroutine ioconf_setatt_p(name,value)
+    character(len=*), intent(in) :: name,value
+  end subroutine
+  subroutine restget_r1_full(id,name,n1,n2,n3,it,readit,a,mode,ng,index)
+    integer,intent(in)::id,n1,n2,n3,it,ng,index(:); logical,intent(in)::readit
+    character(len=*),intent(in)::name,mode; real(r_std),intent(out)::a(:)
+    call restart_r1(name,a)
+  end subroutine
+  subroutine restget_r2_full(id,name,n1,n2,n3,it,readit,a,mode,ng,index)
+    integer,intent(in)::id,n1,n2,n3,it,ng,index(:); logical,intent(in)::readit
+    character(len=*),intent(in)::name,mode; real(r_std),intent(out)::a(:,:)
+    call restart_r2(name,a)
+  end subroutine
+  subroutine restget_r3_full(id,name,n1,n2,n3,it,readit,a,mode,ng,index)
+    integer,intent(in)::id,n1,n2,n3,it,ng,index(:); logical,intent(in)::readit
+    character(len=*),intent(in)::name,mode; real(r_std),intent(out)::a(:,:,:)
+    a=val_exp
+    if (current_case==2 .and. trim(name)=='frac_age') then
+      a=zero; a(:,:,1)=un; a(1,14,:)=[0.23_r_std,0.25_r_std,0.26_r_std,0.26_r_std]
+    endif
+  end subroutine
+  subroutine restget_r3_short(id,name,n1,n2,n3,it,readit,a)
+    integer,intent(in)::id,n1,n2,n3,it; logical,intent(in)::readit
+    character(len=*),intent(in)::name; real(r_std),intent(out)::a(:,:,:)
+    a=val_exp
+    if(current_case==12) a=zero
+  end subroutine
+  subroutine restget_i0(id,name,it,readit,missing,a)
+    integer,intent(in)::id,it; logical,intent(in)::readit; character(len=*),intent(in)::name
+    real(r_std),intent(in)::missing; integer,intent(out)::a
+    if(current_case==2 .or. current_case==5) then; a=1961; else; a=int(missing); endif
+  end subroutine
+  subroutine restart_r1(name,a)
+    character(len=*),intent(in)::name; real(r_std),intent(out)::a(:)
+    a=val_exp
+    if(current_case==2) then
+      select case(trim(name))
+      case('reinf_slope'); a=[0._r_std,0.2_r_std,0.3_r_std]
+      case('njsc'); a=[2._r_std,5._r_std,12._r_std]
+      case('clay_frac'); a=[0.2_r_std,0.1_r_std,0.55_r_std]
+      case('sand_frac'); a=[0.4_r_std,0.06_r_std,0.15_r_std]
+      case('peatPET_last'); a=[2._r_std,3._r_std,4._r_std]
+      case('precipitation_last'); a=[10._r_std,20._r_std,30._r_std]
+      case('precipitation_this'); a=[1._r_std,2._r_std,3._r_std]
+      case('peatPET_this'); a=[0.1_r_std,0.2_r_std,0.3_r_std]
+      case('growth_day'); a=[17._r_std,18._r_std,19._r_std]
+      case('GSL'); a=[0.1_r_std,0.2_r_std,0.3_r_std]
+      case('summerp_longterm'); a=[5._r_std,6._r_std,7._r_std]
+      case('summerpet_longterm'); a=[8._r_std,9._r_std,10._r_std]
+      case('peatC'); a=[11._r_std,12._r_std,13._r_std]
+      case('peatC_ok'); a=[1._r_std,0._r_std,1._r_std]
+      case('bulk_dens'); a=[1650._r_std,1450._r_std,1380._r_std]
+      case('soil_ph'); a=[7._r_std,6.5_r_std,5.8_r_std]
+      case('poor_soils'); a=[0._r_std,0.2_r_std,0.1_r_std]
+      end select
+    endif
+  end subroutine
+  subroutine restart_r2(name,a)
+    character(len=*),intent(in)::name; real(r_std),intent(out)::a(:,:)
+    a=val_exp
+    if(current_case==2 .or. current_case==5) then
+      select case(trim(name))
+      case('veget_max'); a=zero; a(1,14)=1._r_std; a(2,14)=1._r_std; a(3,14)=zero
+      case('veget'); a=zero; a(1,14)=0.97318184_r_std
+      case('frac_nobio'); a=zero
+      case('lai'); a=zero; a(1,14)=3.6186761_r_std
+      case('height'); a=spread(height_presc,1,size(a,1))
+      end select
+    endif
+  end subroutine
+  subroutine getin_char(name,value)
+    character(len=*),intent(in)::name; character(len=*),intent(inout)::value
+    if(trim(name)=='VEGET_UPDATE' .and. current_case>=7 .and. current_case<=8) value='1Y'
+  end subroutine
+  subroutine getin_logical(name,value)
+    character(len=*),intent(in)::name; logical,intent(inout)::value
+    select case(trim(name))
+    case('READ_SALINITY'); value=.true.
+    case('READ_TIDE'); value=.true.
+    case('GET_SLOPE'); value=(current_case==1)
+    case('READ_OBSERVED_BA'); value=(current_case==9)
+    case('read_veg_map_fr_restfile'); value=(current_case==6)
+    end select
+  end subroutine
+  subroutine getin_real0(name,value)
+    character(len=*),intent(in)::name; real(r_std),intent(inout)::value
+  end subroutine
+  subroutine getin_real1(name,value)
+    character(len=*),intent(in)::name; real(r_std),intent(inout)::value(:)
+    if(trim(name)=='SOIL_FRACTIONS') then; value=zero; value(2)=0.8_r_std; value(5)=0.2_r_std; endif
+  end subroutine
+  subroutine setvar_real0(a,missing,name,default)
+    real(r_std),intent(inout)::a; real(r_std),intent(in)::missing,default; character(len=*),intent(in)::name
+    if(a==missing) a=default
+  end subroutine
+  subroutine setvar_real1(a,missing,name,default)
+    real(r_std),intent(inout)::a(:); real(r_std),intent(in)::missing,default(:); character(len=*),intent(in)::name
+    where(a==missing) a=default
+  end subroutine
+  subroutine setvar_real1_scalar(a,missing,name,default)
+    real(r_std),intent(inout)::a(:); real(r_std),intent(in)::missing,default; character(len=*),intent(in)::name
+    where(a==missing) a=default
+  end subroutine
+  subroutine setvar_real2(a,missing,name,default)
+    real(r_std),intent(inout)::a(:,:); real(r_std),intent(in)::missing,default(:); character(len=*),intent(in)::name
+    integer::i; do i=1,size(a,1); where(a(i,:)==missing) a(i,:)=default; enddo
+  end subroutine
+  subroutine setvar_real1_plain(a,missing,name,default)
+    real(r_std),intent(inout)::a(:); real(r_std),intent(in)::missing,default; character(len=*),intent(in)::name
+    where(a==missing) a=default
+  end subroutine
+  subroutine setvar_real2_plain(a,missing,name,default)
+    real(r_std),intent(inout)::a(:,:); real(r_std),intent(in)::missing,default; character(len=*),intent(in)::name
+    where(a==missing) a=default
+  end subroutine
+  subroutine slowproc_soilt(k,lalo,neighbours,resolution,contfrac,soilclass,clay,sand,silt,bd,ph,poor)
+    integer,intent(in)::k,neighbours(:,:); real(r_std),intent(in)::lalo(:,:),resolution(:,:),contfrac(:)
+    real(r_std),intent(out)::soilclass(:,:),clay(:),sand(:),silt(:),bd(:),ph(:),poor(:)
+    soilclass=zero; soilclass(:,2)=un; clay=0.2_r_std; sand=0.4_r_std; silt=0.4_r_std
+    bd=1650._r_std; ph=7._r_std; poor=zero
+  end subroutine
+  subroutine slowproc_slope(k,lalo,neighbours,resolution,contfrac,slope)
+    integer,intent(in)::k,neighbours(:,:); real(r_std),intent(in)::lalo(:,:),resolution(:,:),contfrac(:)
+    real(r_std),intent(out)::slope(:); slope=zero
+  end subroutine
+  subroutine slowproc_interlai(k,lalo,resolution,neighbours,contfrac,a)
+    integer,intent(in)::k,neighbours(:,:); real(r_std),intent(in)::lalo(:,:),resolution(:,:),contfrac(:)
+    real(r_std),intent(out)::a(:,:,:); a=zero
+  end subroutine
+  subroutine slowproc_lai(k,lcan,stemp,lalo,resolution,lai,mm,dd,map)
+    integer,intent(in)::k,lcan,mm,dd; real(r_std),intent(in)::stemp(:,:),lalo(:,:),resolution(:,:),map(:,:,:)
+    real(r_std),intent(out)::lai(:,:); lai=zero
+  end subroutine
+  subroutine slowproc_readvegetmax(k,lalo,neighbours,resolution,contfrac,last,new,nobio,year,init)
+    integer,intent(in)::k,neighbours(:,:),year; logical,intent(in)::init
+    real(r_std),intent(in)::lalo(:,:),resolution(:,:),contfrac(:),last(:,:)
+    real(r_std),intent(out)::new(:,:),nobio(:,:); new=zero; new(:,14)=un; nobio=zero
+    if(current_case==13) then; new(3,:)=zero; nobio(3,1)=un; endif
+  end subroutine
+  subroutine slowproc_interpol_g(k,lalo,neighbours,resolution,contfrac,veg,nobio)
+    integer,intent(in)::k,neighbours(:,:);real(r_std),intent(in)::lalo(:,:),resolution(:,:),contfrac(:)
+    real(r_std),intent(out)::veg(:,:),nobio(:,:);veg=zero;veg(:,14)=un;nobio=zero
+  end subroutine
+  subroutine slowproc_read_veg_restfile(k,lalo,neighbours,resolution,contfrac,veg,nobio)
+    integer,intent(in)::k,neighbours(:,:);real(r_std),intent(in)::lalo(:,:),resolution(:,:),contfrac(:)
+    real(r_std),intent(out)::veg(:,:),nobio(:,:);veg=zero;veg(:,14)=un;nobio=zero
+  end subroutine
+  subroutine slowproc_interpol(k,lalo,neighbours,resolution,contfrac,veg,nobio)
+    integer,intent(in)::k,neighbours(:,:);real(r_std),intent(in)::lalo(:,:),resolution(:,:),contfrac(:)
+    real(r_std),intent(inout)::veg(:,:),nobio(:,:)
+  end subroutine
+  subroutine scatter_r2(global,local)
+    real(r_std),intent(in)::global(:,:);real(r_std),intent(out)::local(:,:);local=global(1:size(local,1),:)
+  end subroutine
+  subroutine slowproc_read_data(k,lalo,resolution,a,file,var)
+    integer,intent(in)::k;real(r_std),intent(in)::lalo(:,:),resolution(:,:);real(r_std),intent(inout)::a(:,:)
+    character(len=*),intent(in)::file,var
+    a=zero
+    if(trim(var)=='tide') a=reshape([0.1_r_std,0.2_r_std,0.3_r_std,-0.2_r_std,0._r_std,0.2_r_std, &
+         0.3_r_std,-0.1_r_std,0.4_r_std],shape(a))
+  end subroutine
+  subroutine slowproc_read_annual(k,lalo,resolution,a,file,var)
+    integer,intent(in)::k;real(r_std),intent(in)::lalo(:,:),resolution(:,:);real(r_std),intent(inout)::a(:)
+    character(len=*),intent(in)::file,var
+    if(trim(var)=='salinity') a=[31.25_r_std,18._r_std,0._r_std]
+  end subroutine
+  subroutine xios_r1(name,a)
+    character(len=*),intent(in)::name;real(r_std),intent(in)::a(:)
+  end subroutine
+  subroutine ipslerr_p(level,routine,text1,text2,text3)
+    integer,intent(in)::level;character(len=*),intent(in)::routine,text1,text2,text3
+    write(*,'(A,"|",A,"|",A,"|",A)') trim(routine),trim(text1),trim(text2),trim(text3); error stop 93
+  end subroutine
+  subroutine emit(name,a)
+    character(len=*),intent(in)::name;real(r_std),intent(in)::a(:);integer::i
+    do i=1,size(a);write(unit_out,'(A,",",ES26.17E3)')trim(name),a(i);enddo
+  end subroutine
+  subroutine emit_i(name,a)
+    character(len=*),intent(in)::name;integer,intent(in)::a(:);integer::i
+    do i=1,size(a);write(unit_out,'(A,",",I0)')trim(name),a(i);enddo
+  end subroutine
+end program

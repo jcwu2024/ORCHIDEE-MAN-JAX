@@ -1,0 +1,43 @@
+schema_version: 1
+description: External assets required by the ORCHIDEE-MAN/PFT14 paper protocol.
+roots:
+  data: ORCHIDEE_DATA_ROOT
+  reference: ORCHIDEE_REFERENCE_ROOT
+  outputs: ORCHIDEE_OUTPUT_ROOT
+groups:
+  forcing:
+    root: data
+    pattern: forcing/cruncep_twodeg_{year}.nc
+    years: [1961, 2010]
+    required: true
+  water_table:
+    root: data
+    files:
+      - forcing_VN/WTM_forcing_pos.txt
+      - forcing_VN/WTM_forcing_diff.txt
+    required: true
+  static:
+    root: data
+    files:
+      - INPUTDIR_ZZ/global_co2_ann_1700_2017.txt
+      - INPUTDIR_ZZ/salinity_05.nc
+      - INPUTDIR_ZZ/tide_05_584.nc
+      - INPUTDIR_ZZ/PFT1860_mangr_025deg.nc
+      - INPUTDIR_ZZ/catch2_wtd_vkq_socoff_10.nc
+      - INPUTDIR_ZZ/test.nc
+      - MICT_BIOE/Input/Population/popd_1901.nc
+      - MICT_BIOE/Input/ratio_GFED4s_MICTRef_Opt6.nc
+      - MICT_BIOE/Input/soils_param.nc
+      - MICT_BIOE/Input/alb_bg_modisopt_2D.nc
+      - MICT_BIOE/Input/cartepente2d_15min.nc
+      - MICT_BIOE/Input/routing.nc
+      - MICT_BIOE/Input/floodplains.nc
+      - MICT_BIOE/Input/reftemp.nc
+      - MICT_BIOE/Input/refSOC_NCSCD_linear_05deg_v5.nc
+      - MICT_BIOE/Input/refSOC_NCSCD_05deg_v3_0-0.3m.nc
+    required: true
+  paper_reference:
+    root: reference
+    pattern: OUT/orc_calibrate_250919_sen/arg2_1.0/{landpoint_id}
+    required_for_model_run: false
+    required_for_acceptance: true

@@ -1,0 +1,44 @@
+module readdim2_buffer_oracle
+  implicit none
+  integer :: numout=6, oracle_nbuff=2, flinget_calls=0
+contains
+  subroutine getin(name,value)
+    character(*),intent(in)::name;integer,intent(inout)::value
+    value=oracle_nbuff
+  end subroutine
+  subroutine ipslerr_p(level,caller,message1,message2,message3)
+    integer,intent(in)::level;character(*),intent(in)::caller,message1,message2,message3
+    if(level>=3) error stop 'ipslerr_p'
+  end subroutine
+  subroutine flinget(fid,name,iim,jjm,llm,ttm,itb,ite,data)
+    integer,intent(in)::fid,iim,jjm,llm,ttm,itb,ite
+    character(*),intent(in)::name
+    real,intent(out)::data(:,:,:)
+    integer::i,j,k,offset
+    offset=merge(1000,0,trim(name)=='B');flinget_calls=flinget_calls+1
+    do k=1,size(data,3);do j=1,jjm;do i=1,iim
+      data(i,j,k)=offset+100*(itb+k-1)+10*i+j
+    enddo;enddo;enddo
+  end subroutine
+! <FLINGET_BUFFER>
+end module
+program driver
+  use readdim2_buffer_oracle
+  implicit none
+  real::data(2,2);integer::unit,i,j,k;character(512)::path,mode
+  call get_command_argument(1,path);call get_command_argument(2,mode)
+  if(trim(mode)=='negative')then
+    oracle_nbuff=-1;call flinget_buffer(1,'A',2,2,1,4,1,1,data);stop
+  endif
+  open(newunit=unit,file=trim(path),status='replace');write(unit,'(a)')'field,flat_index,value'
+  call flinget_buffer(1,'A',2,2,1,4,1,1,data);call out2(unit,'a_t1',data)
+  call flinget_buffer(1,'A',2,2,1,4,2,2,data);call out2(unit,'a_t2',data)
+  call flinget_buffer(1,'A',2,2,1,4,3,3,data);call out2(unit,'a_t3',data)
+  call flinget_buffer(1,'B',2,2,1,4,1,1,data);call out2(unit,'b_t1',data)
+  write(unit,'(a,i0)')'read_count,0,',flinget_calls;close(unit)
+contains
+  subroutine out2(u,name,v)
+    integer,intent(in)::u;character(*),intent(in)::name;real,intent(in)::v(:,:);integer::ii,jj,q
+    q=0;do jj=1,size(v,2);do ii=1,size(v,1);write(u,'(a,a,i0,a,es25.17)')trim(name),',',q,',',v(ii,jj);q=q+1;enddo;enddo
+  end subroutine
+end program

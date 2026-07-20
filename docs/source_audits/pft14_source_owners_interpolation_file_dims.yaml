@@ -1,0 +1,43 @@
+schema_version: 1
+scope: >-
+  Batch-3 ownership for interpweight procedures 11-13. These owners inspect
+  NetCDF variable and coordinate metadata without reading process arrays,
+  preserve nf90 Fortran dimension order, identify CF time/level axes, and
+  reject all metadata/read failures rather than manufacturing defaults.
+
+entries:
+  - id: interpolation_file_dims.interpweight_get_var2dims_file
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90
+    fortran_subroutine: interpweight_get_var2dims_file
+    fortran_lines: 4081-4145
+    status: implemented
+    jax_owner: jax_orchidee.driver.interpolation_file_dims.interpweight_get_var2dims_file
+    gap: null
+    state_contract: [jax_orchidee.driver.interpolation_file_dims.VariableDimensionMetadata]
+    order_contract: xarray/file dimension order is reversed to match nf90 Fortran dimension-ID order.
+    infrastructure_boundary: MPI root/broadcast transport is outside this serial metadata reader.
+    validation: [tests/unit/test_interpolation_file_dims.py]
+
+  - id: interpolation_file_dims.interpweight_get_var3dims_file
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90
+    fortran_subroutine: interpweight_get_var3dims_file
+    fortran_lines: 4163-4229
+    status: implemented
+    jax_owner: jax_orchidee.driver.interpolation_file_dims.interpweight_get_var3dims_file
+    gap: null
+    state_contract: [jax_orchidee.driver.interpolation_file_dims.VariableDimensionMetadata]
+    order_contract: xarray/file dimension order is reversed to match nf90 Fortran dimension-ID order.
+    infrastructure_boundary: MPI root/broadcast transport is outside this serial metadata reader.
+    validation: [tests/unit/test_interpolation_file_dims.py]
+
+  - id: interpolation_file_dims.interpweight_get_var4dims_file
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpweight.f90
+    fortran_subroutine: interpweight_get_var4dims_file
+    fortran_lines: 4247-4316
+    status: implemented
+    jax_owner: jax_orchidee.driver.interpolation_file_dims.interpweight_get_var4dims_file
+    gap: null
+    state_contract: [jax_orchidee.driver.interpolation_file_dims.VariableDimensionMetadata]
+    order_contract: xarray/file dimension order is reversed to match nf90 Fortran dimension-ID order.
+    infrastructure_boundary: MPI root/broadcast transport is outside this serial metadata reader.
+    validation: [tests/unit/test_interpolation_file_dims.py]

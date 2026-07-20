@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=75", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "orchidee-man-jax"
+version = "0.1.0"
+description = "Source-backed JAX implementation of ORCHIDEE-MAN/PFT14"
+readme = "README.md"
+requires-python = ">=3.11,<3.13"
+dependencies = [
+  "jax==0.10.1",
+  "netCDF4>=1.7,<2",
+  "numpy>=2.2,<3",
+  "PyYAML>=6,<7",
+  "xarray>=2025.1",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8,<10",
+  "ruff>=0.11",
+]
+cuda12 = [
+  "jax[cuda12]==0.10.1",
+]
+
+[project.scripts]
+orchidee-jax = "jax_orchidee.cli.main:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["jax_orchidee*"]
+namespaces = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+cache_dir = "outputs/.pytest_cache"
+markers = [
+  "external_data: requires the external ORCHIDEE data package",
+  "fortran_oracle: requires a local Fortran compiler and source tree",
+  "long_running: multiday or multiyear scientific validation",
+]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+cache-dir = "outputs/.ruff_cache"
+
+[tool.ruff.lint]
+select = ["E", "F", "I"]
+ignore = ["E501"]

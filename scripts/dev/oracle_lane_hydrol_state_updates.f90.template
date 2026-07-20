@@ -1,0 +1,71 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ implicit none
+ integer,parameter::i_std=int32,r_std=real64
+end module
+module hydrol_state_update_oracle
+ use defprec
+ implicit none
+ integer,parameter::nvm=14,nstm=6,nslm=7,nscm=12,nnobio=1,nsnow=3,ndeep=4,numout=6,imin=1,imax=51
+ real(r_std),parameter::zero=0._r_std,un=1._r_std,deux=2._r_std,trois=3._r_std,huit=8._r_std,min_sechiba=1.e-8_r_std
+ integer::printlev=0,pref_soil_veg(nvm)=1
+ logical::check_cwrr=.false.
+ real(r_std),allocatable::lalo(:,:)
+! <MODULE_STATE>
+contains
+! <STATE_SETUP>
+ subroutine ipslerr_p(level,a,b,c,d)
+  integer,intent(in)::level;character(*),intent(in)::a,b,c,d
+  if(level>=3) error stop 'ipslerr_p'
+ end subroutine
+ subroutine seed(n,q)
+  integer,intent(in)::n;real(r_std),intent(out)::q(n,nvm);integer::i,j,k
+  call reset_state();dz=(/2._r_std,4._r_std,8._r_std,12._r_std,18._r_std,24._r_std,30._r_std/)
+  pref_soil_veg=(/1,1,2,2,3,3,4,4,5,5,6,6,1,2/)
+  do k=1,nstm;do j=1,nslm;do i=1,n;mc(i,j,k)=.1_r_std+.01_r_std*i+.02_r_std*j+.03_r_std*k;enddo;enddo;enddo
+  water2infilt(1:n,:)=reshape([(real(i,r_std)/10._r_std,i=1,n*nstm)],(/n,nstm/))
+  q=.01_r_std;vegtot_old(1:n)=.8_r_std;vegtot(1:n)=.8_r_std
+  resdist(1:n,:)=un/real(nstm,r_std);tmc(1:n,:)=zero;humtot(1:n)=zero
+ end subroutine
+ subroutine emit(u,c,f,i,x)
+  integer,intent(in)::u,c,i;character(*),intent(in)::f;real(r_std),intent(in)::x
+  write(u,'(I0,A,A,A,I0,A,ES26.17E3)')c,',',trim(f),',',i,',',x
+ end subroutine
+ subroutine emit_state(u,c,n,q,dr,ru)
+  integer,intent(in)::u,c,n;real(r_std),intent(in)::q(n,nvm),dr(n),ru(n);integer::i,j,k,p
+  p=0;do k=1,nstm;do j=1,nslm;do i=1,n;p=p+1;call emit(u,c,'mc',p,mc(i,j,k));enddo;enddo;enddo
+  p=0;do k=1,nstm;do i=1,n;p=p+1;call emit(u,c,'water2infilt',p,water2infilt(i,k));call emit(u,c,'tmc',p,tmc(i,k));call emit(u,c,'resdist',p,resdist(i,k));enddo;enddo
+  p=0;do j=1,nvm;do i=1,n;p=p+1;call emit(u,c,'qsintveg',p,q(i,j));enddo;enddo
+  do i=1,n;call emit(u,c,'drain_upd',i,dr(i));call emit(u,c,'runoff_upd',i,ru(i));call emit(u,c,'humtot',i,humtot(i));enddo
+ end subroutine
+ subroutine run_cases(u)
+  integer,intent(in)::u;integer,parameter::n=6;integer::i,j,k,p
+  real(r_std)::vmax(n,nvm),veget(n,nvm),soil(n,nstm),dr(n),ru(n),old(nvm),rot(nvm,nvm),q(n,nvm)
+  real(r_std)::frac(n,nvm)
+  call seed(n,q);vmax=zero;veget=zero;vmax(:,1)=.2;vmax(:,14)=.6;veget=vmax
+  soil=un/real(nstm,r_std);vegtot_old=(/.5_r_std,.8_r_std,.8_r_std,.8_r_std,.8_r_std,.8_r_std/)
+  vegtot=(/.8_r_std,.5_r_std,zero,.8_r_std,.8_r_std,.8_r_std/);vegtot_old(6)=zero
+  vmax(3,1)=zero;veget(3,1)=zero
+  vmax(4,14)=zero;q(4,14)=.4_r_std
+  soil(1,:)=(/.3_r_std,.2_r_std,.2_r_std,.1_r_std,.1_r_std,.1_r_std/)
+  soil(2,:)=(/.05_r_std,.25_r_std,.2_r_std,.2_r_std,.2_r_std,.1_r_std/)
+  soil(3,:)=(/zero,.2_r_std,.2_r_std,.2_r_std,.2_r_std,.2_r_std/)
+  call hydrol_tmc_update(n,vmax,soil,q,dr,ru);call emit_state(u,1,n,q,dr,ru)
+  call hydrol_vegupd(n,veget,vmax,soil,q,frac,dr,ru);call emit_state(u,2,n,q,dr,ru)
+  p=0;do j=1,nvm;do i=1,n;p=p+1;call emit(u,2,'frac_bare',p,frac(i,j));call emit(u,2,'mask_veget',p,real(mask_veget(i,j),r_std));enddo;enddo
+  p=0;do k=1,nstm;do i=1,n;p=p+1;call emit(u,2,'mask_soiltile',p,real(mask_soiltile(i,k),r_std));call emit(u,2,'frac_bare_ns',p,frac_bare_ns(i,k));enddo;enddo
+  p=0;do k=1,nstm;do j=1,nvm;do i=1,n;p=p+1;call emit(u,2,'vegetmax_soil',p,vegetmax_soil(i,j,k));enddo;enddo;enddo
+  call seed(n,q);vmax=zero;vmax(:,1)=.2;vmax(:,14)=.6;soil=un/real(nstm,r_std)
+  call hydrol_tmc_update(n,vmax,soil,q,dr,ru);check_cwrr=.true.;call hydrol_tmc_update(n,vmax,soil,q,dr,ru);check_cwrr=.false.;call emit_state(u,3,n,q,dr,ru)
+  call seed(n,q);q=zero;q(:,2)=.01_r_std;q(:,14)=.01_r_std;old=zero;old(2)=.2;old(14)=.6;vmax=zero;vmax(:,2)=.35;vmax(:,14)=.45
+  soil=un/real(nstm,r_std);rot=zero;rot(14,2)=.25_r_std
+  call hydrol_rotation_update(1,n,rot,old,vmax,soil,q);dr=zero;ru=zero;call emit_state(u,4,n,q,dr,ru)
+ end subroutine
+! <HYDROL_PROCEDURES>
+end module
+program main
+ use hydrol_state_update_oracle
+ implicit none
+ integer::u
+ call allocate_state(6);allocate(lalo(6,2));open(newunit=u,file='fortran_outputs.csv',status='replace');write(u,'(A)')'case_id,field,flat_index,value';call run_cases(u);close(u)
+end program

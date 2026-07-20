@@ -1,0 +1,87 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module defprec
+
+module thermosoil_finalize_oracle
+  use defprec
+  implicit none
+  integer, parameter :: npts=2, nbp_glo=npts, nvm=14, ngrnd=3, nsnow=3
+  integer :: printlev=0, numout=6, oracle_unit=-1
+  integer(i_std) :: index_g(npts)
+  logical :: ok_shum_ngrnd_permalong=.true., ok_Ecorr=.true.
+  real(r_std) :: ptn(npts,ngrnd,nvm), refSOC(npts,ngrnd)
+  real(r_std) :: shum_ngrnd_permalong(npts,ngrnd,nvm)
+  real(r_std) :: shum_ngrnd_perma(npts,ngrnd,nvm), e_soil_lat(npts,nvm)
+  real(r_std) :: cgrnd(npts,ngrnd-1,nvm), dgrnd(npts,ngrnd-1,nvm)
+  interface restput_p
+    module procedure restput_rank1, restput_rank2, restput_rank3
+  end interface
+contains
+  subroutine restput_rank1(rest_id,name,d1,d2,d3,kjit,a,scatter,nbp,index)
+    integer(i_std),intent(in)::rest_id,d1,d2,d3,kjit,nbp,index(:)
+    character(*),intent(in)::name,scatter; real(r_std),intent(in)::a(:)
+    integer::i
+    do i=1,size(a); write(oracle_unit,'(a,a,i0,a,es25.17)')trim(name),',',i-1,',',a(i); enddo
+  end subroutine
+  subroutine restput_rank2(rest_id,name,d1,d2,d3,kjit,a,scatter,nbp,index)
+    integer(i_std),intent(in)::rest_id,d1,d2,d3,kjit,nbp,index(:)
+    character(*),intent(in)::name,scatter; real(r_std),intent(in)::a(:,:)
+    integer::i,j,idx
+    idx=0; do i=1,size(a,1); do j=1,size(a,2)
+      write(oracle_unit,'(a,a,i0,a,es25.17)')trim(name),',',idx,',',a(i,j); idx=idx+1
+    enddo; enddo
+  end subroutine
+  subroutine restput_rank3(rest_id,name,d1,d2,d3,kjit,a,scatter,nbp,index)
+    integer(i_std),intent(in)::rest_id,d1,d2,d3,kjit,nbp,index(:)
+    character(*),intent(in)::name,scatter; real(r_std),intent(in)::a(:,:,:)
+    integer::i,j,k,idx
+    idx=0; do i=1,size(a,1); do j=1,size(a,2); do k=1,size(a,3)
+      write(oracle_unit,'(a,a,i0,a,es25.17)')trim(name),',',idx,',',a(i,j,k); idx=idx+1
+    enddo; enddo; enddo
+  end subroutine
+! <THERMOSOIL_FINALIZE>
+end module thermosoil_finalize_oracle
+
+program thermosoil_finalize_driver
+  use defprec
+  use thermosoil_finalize_oracle
+  implicit none
+  integer::i,j,k
+  real(r_std)::gtemp(npts),soilcap(npts),soilcap_pft(npts,nvm)
+  real(r_std)::soilflx(npts),soilflx_pft(npts,nvm),lambda_snow(npts)
+  real(r_std)::cgrnd_snow(npts,nsnow),dgrnd_snow(npts,nsnow)
+  character(512)::path
+  index_g=(/1_i_std,2_i_std/)
+  do i=1,npts; do j=1,ngrnd; do k=1,nvm
+    ptn(i,j,k)=260._r_std+i+.1_r_std*j+.001_r_std*k
+    shum_ngrnd_permalong(i,j,k)=.1_r_std*i+.01_r_std*j+.001_r_std*k
+    shum_ngrnd_perma(i,j,k)=.2_r_std*i+.01_r_std*j+.001_r_std*k
+  enddo; enddo; enddo
+  do i=1,npts; do j=1,ngrnd
+    refSOC(i,j)=100._r_std*i+j
+  enddo; enddo
+  do i=1,npts; do j=1,ngrnd-1; do k=1,nvm
+    cgrnd(i,j,k)=10._r_std*i+j+.01_r_std*k
+    dgrnd(i,j,k)=20._r_std*i+j+.01_r_std*k
+  enddo; enddo; enddo
+  do i=1,npts; do k=1,nvm
+    e_soil_lat(i,k)=30._r_std*i+.1_r_std*k
+    soilcap_pft(i,k)=40._r_std*i+.1_r_std*k
+    soilflx_pft(i,k)=50._r_std*i+.1_r_std*k
+  enddo; enddo
+  do i=1,npts; do j=1,nsnow
+    cgrnd_snow(i,j)=60._r_std*i+j
+    dgrnd_snow(i,j)=70._r_std*i+j
+  enddo; enddo
+  gtemp=(/271._r_std,272._r_std/)
+  soilcap=(/81._r_std,82._r_std/); soilflx=(/91._r_std,92._r_std/)
+  lambda_snow=(/.3_r_std,.7_r_std/)
+  call get_command_argument(1,path)
+  open(newunit=oracle_unit,file=trim(path),status='replace')
+  write(oracle_unit,'(a)')'field,flat_index,value'
+  call thermosoil_finalize(17_i_std,npts,4_i_std,gtemp,soilcap,soilcap_pft,soilflx,soilflx_pft, &
+                           lambda_snow,cgrnd_snow,dgrnd_snow)
+  close(oracle_unit)
+end program thermosoil_finalize_driver

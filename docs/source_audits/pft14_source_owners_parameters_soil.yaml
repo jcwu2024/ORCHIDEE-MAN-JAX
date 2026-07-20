@@ -1,0 +1,30 @@
+schema_version: 1
+scope: >-
+  Independent source-owner ledger for the batch-1 soil geometry work package.
+  It intentionally contains only constantes_soil::config_soil_parameters and
+  vertical_soil::vertical_soil_init.
+
+entries:
+  - id: parameters_soil.constantes_soil.config_soil_parameters.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/constantes_soil.f90
+    fortran_subroutine: config_soil_parameters
+    fortran_lines: 54-485
+    control_flow_arms: 38
+    status: implemented
+    jax_owner: jax_orchidee.parameters.soil.config_soil_parameters
+    gap: null
+    state_contract: [jax_orchidee/parameters/soil.py]
+    validation: [tests/unit/test_parameters_soil.py]
+
+  - id: parameters_soil.vertical_soil.vertical_soil_init.implemented
+    fortran_file: fortran_source/ORCHIDEE/src_parameters/vertical_soil.f90
+    fortran_subroutine: vertical_soil_init
+    fortran_lines: 144-457
+    control_flow_arms: 16
+    status: implemented
+    jax_owner: jax_orchidee.parameters.vertical_soil.vertical_soil_init
+    gap: null
+    state_contract: [jax_orchidee/parameters/vertical_soil.py]
+    validation:
+      - tests/unit/test_parameters_vertical_soil.py
+      - tests/fortran_oracles/vertical_soil_geometry_oracle.f90

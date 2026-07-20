@@ -1,0 +1,113 @@
+schema_version: 1
+scope: >-
+  Exact lifecycle/time/history completion ledger. This file owns 68 audited
+  control-flow arms and does not replace the parent SECHIBA source-owner ledger.
+
+totals:
+  procedures: 5
+  arms: 68
+  ioipslctrl_history_arms: 42
+  intersurf_time_arms: 10
+  intersurf_initialize_2d_arms: 6
+  intersurf_main_2d_arms: 6
+  sechiba_finalize_arms: 4
+
+contracts:
+  transport: >-
+    History handle creation and final restart serialization are explicit
+    callbacks. Stream activation, frequency, history-level operations, grid
+    layout, scientific feature selections, state masks, and values are resolved
+    before either callback is invoked.
+  two_dimensional_interface: >-
+    Fortran one-based kindex compression, precipitation conversion to mass per
+    model step, latitude/longitude ordering, shifted itau, undefined ocean
+    fill, scatter, and water-flux conversion back to per-second units are owned.
+  finalization: >-
+    Component finalizers execute in source order. Hydrology/thermosoil and
+    routing/no-routing branches own their exact writeback before slowproc,
+    PFTs 2:nvm form netco2flux, and only then may restart transport run.
+
+entries:
+  - id: sechiba.ioipslctrl_history.lifecycle_completion
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/ioipslctrl.f90
+    fortran_subroutine: ioipslctrl_history
+    fortran_lines: 65-2514
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.lifecycle_completion.ioipslctrl_history
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.lifecycle_completion.HistorySwitches
+      - jax_orchidee.sechiba.lifecycle_completion.HistoryStreamRequest
+      - jax_orchidee.sechiba.lifecycle_completion.HistoryRoutingResult
+    arm_count: 42
+    arm_groups:
+      - {fortran_lines: 204-306, arm_count: 9, disposition: source-routed frequency and level operations}
+      - {fortran_lines: 312-1419, arm_count: 16, disposition: source-routed primary stream grid and scientific definitions}
+      - {fortran_lines: 1455-2252, arm_count: 11, disposition: source-routed secondary stream activation and definitions}
+      - {fortran_lines: 2258-2509, arm_count: 6, disposition: source-routed STOMATE and IPCC frequency and root transport}
+    validation: [tests/unit/test_sechiba_lifecycle_completion.py]
+
+  - id: sechiba.intersurf.intsurf_time.lifecycle_completion
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/intersurf.f90
+    fortran_subroutine: intsurf_time
+    fortran_lines: 1884-1982
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.lifecycle_completion.intersurf_time
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.lifecycle_completion.IntersurfTimeState
+    arm_count: 10
+    arm_groups:
+      - {fortran_lines: 1891-1906, arm_count: 4, disposition: initialization and calendar metadata state}
+      - {fortran_lines: 1913-1938, arm_count: 3, disposition: Gregorian date and year-relative state}
+      - {fortran_lines: 1939-1978, arm_count: 3, disposition: non-Gregorian IOIPSL primitive and derived state}
+    validation: [tests/unit/test_sechiba_lifecycle_completion.py]
+
+  - id: sechiba.intersurf_initialize_2d.lifecycle_completion
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/intersurf.f90
+    fortran_subroutine: intersurf_initialize_2d
+    fortran_lines: 113-443
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.lifecycle_completion.intersurf_initialize_2d
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.lifecycle_completion.Intersurf2DRequest
+      - jax_orchidee.sechiba.lifecycle_completion.Intersurf2DResult
+    arm_count: 6
+    arm_groups:
+      - {fortran_lines: 256-264, arm_count: 2, disposition: allocation status and thermal-level selection}
+      - {fortran_lines: 316-370, arm_count: 4, disposition: diagnostics, STOMATE grid writes, and root synchronization}
+    validation: [tests/unit/test_sechiba_lifecycle_completion.py]
+
+  - id: sechiba.intersurf_main_2d.lifecycle_completion
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/intersurf.f90
+    fortran_subroutine: intersurf_main_2d
+    fortran_lines: 458-761
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.lifecycle_completion.intersurf_main_2d
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.lifecycle_completion.Intersurf2DRequest
+      - jax_orchidee.sechiba.lifecycle_completion.Intersurf2DResult
+    arm_count: 6
+    arm_groups:
+      - {fortran_lines: 603-650, arm_count: 2, disposition: diagnostics and source process dispatch}
+      - {fortran_lines: 698-740, arm_count: 4, disposition: ALMA field selection and root synchronization routing}
+    validation: [tests/unit/test_sechiba_lifecycle_completion.py]
+
+  - id: sechiba.sechiba_finalize.lifecycle_completion
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/sechiba.f90
+    fortran_subroutine: sechiba_finalize
+    fortran_lines: 1800-1923
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.lifecycle_completion.sechiba_finalize
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.lifecycle_completion.SechibaFinalizeSwitches
+      - jax_orchidee.sechiba.lifecycle_completion.SechibaFinalizeResult
+    arm_count: 4
+    arm_groups:
+      - {fortran_lines: 1847-1868, arm_count: 1, disposition: hydrology finalizer and exact branch writeback}
+      - {fortran_lines: 1874-1880, arm_count: 1, disposition: thermal finalizer selection}
+      - {fortran_lines: 1883-1904, arm_count: 2, disposition: routing finalizer or zero/full-irrigation writeback}
+    validation: [tests/unit/test_sechiba_lifecycle_completion.py]

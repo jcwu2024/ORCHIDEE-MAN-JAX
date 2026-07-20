@@ -1,0 +1,32 @@
+module defprec
+ implicit none
+ integer,parameter::i_std=kind(1),r_std=kind(1.0)
+end module
+module enerbil_parameters
+ use defprec
+ implicit none
+ real(r_std),parameter::zero=0d0,un=1d0,cp_air=1004.675d0
+end module
+module enerbil_oracle
+ use defprec
+ use enerbil_parameters
+ implicit none
+contains
+! <ENERBIL_PROCEDURES>
+end module
+program oracle_main
+ use defprec; use enerbil_oracle
+ implicit none
+ integer,parameter::n=3
+ integer::i
+ real(r_std)::x(n),q(n),t(n)
+ character(len=512)::path
+ x=(/1d0,2d0,3d0/); q=(/.001d0,.01d0,.1d0/); t=(/250d0,280d0,310d0/)
+ call enerbil_pottemp(n,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,x,q,t)
+ call get_command_argument(1,path); open(10,file=trim(path),status='replace'); write(10,'(a)') 'field,value'
+ do i=1,n
+  write(10,'(a,es25.17)') 'q_sol_pot,',q(i)
+  write(10,'(a,es25.17)') 'temp_sol_pot,',t(i)
+ enddo
+ close(10)
+end program

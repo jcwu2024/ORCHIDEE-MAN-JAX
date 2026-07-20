@@ -1,0 +1,472 @@
+schema_version: 2
+families:
+  - id: hydrol_canopy_infiltration_freeze
+    runner: oracle_lane_hydrol_canopy:run_oracle
+    ledger_entries: [hydrol.conditional.canopy_interception]
+    input_asset: outputs/reference_mode/micro_oracles/hydrol_canopy_infiltration_freeze/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/hydrol_canopy_infiltration_freeze/point_comparisons.csv
+    output_contract: [qsintveg, precisol, precip2canopy, precip2ground, canopy2ground_pft2_to_pft14]
+    required_control_flow_arm_ids:
+      - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5087:if:false
+      - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5088:if:false
+      - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5089:if:false
+      - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5090:if:false
+      - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5091:if:false
+      - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5101:if:true
+      - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5101:if:false
+      - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5115:if:false
+    fortran_undefined_contract:
+      - field: canopy2ground(:,1)
+        fortran_lines: 5066-5090
+        reason: INTENT(out) bare-soil column is never assigned by hydrol_canop; it is excluded from numerical claims.
+    procedures:
+      - id: hydrol_canopy_infiltration_freeze.hydrol_canop
+        source_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+        procedure: hydrol_canop
+        procedure_kind: subroutine
+        start_line: 4992
+        end_line: 5117
+        expected_source_sha256: 39fa6d4bf4385c89a4370d75d314b07adf43fc1462b0c003d61d4c4dc3f20577
+        expected_span_sha256: fdd98188be43e0a2c90f1ecf6abdea611f2d55f70f23f95a1bd3689206320395
+        dependencies:
+          use_modules: [defprec]
+          module_symbols: [nvm, zero, min_sechiba, throughfall_by_pft, vegtot, printlev, numout]
+        compilation:
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/oracle_lane_hydrol_canopy.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/hydrol_canopy_infiltration_freeze/comparison.json
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - id: canopy.zero_vegetation_no_rain
+        ledger_entry: hydrol.conditional.canopy_interception
+        fortran_lines: 5042-5110
+        condition: vegtot <= min_sechiba, precip_rain = 0, and bare-soil PFT1
+        expected_arm: no melt redistribution; PFT1 storage reset and ground precipitation assigned
+        input_case: point 1 in inputs.json
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5087:if:false
+          - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5088:if:false
+          - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5089:if:false
+          - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5090:if:false
+          - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5091:if:false
+          - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5101:if:false
+          - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5115:if:false
+      - id: canopy.under_capacity_pft14
+        ledger_entry: hydrol.conditional.canopy_interception
+        fortran_lines: 5057-5110
+        condition: active PFT14 canopy remains below qsintmax and vegtot > min_sechiba
+        expected_arm: intercepted rain retained and melt redistributed by veget_max/vegtot
+        input_case: point 2 in inputs.json
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5101:if:true
+      - id: canopy.overflow_pft14
+        ledger_entry: hydrol.conditional.canopy_interception
+        fortran_lines: 5061-5115
+        condition: carried storage plus rain exceeds qsintmax after wet-canopy evaporation
+        expected_arm: excess becomes canopy2ground and capped qsintveg is written back
+        input_case: point 3 in inputs.json
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_sechiba/hydrol.f90:5101:if:true
+
+  - id: hydrol_soil_owner_cwrr_water_root_peat_alt
+    runner: oracle_lane_hydrol_soil_owner:run_oracle
+    ledger_entries:
+      - hydrol.active.cwrr_soil_solve
+      - hydrol.conditional.water_table_forcing
+      - hydrol.active.dynamic_root_water_stress
+      - hydrol.conditional.peat_tide_routing
+      - hydrol.conditional.alt_bare_residual
+    input_asset: outputs/reference_mode/micro_oracles/hydrol_soil_owner_cwrr_water_root_peat_alt/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/hydrol_soil_owner_cwrr_water_root_peat_alt/point_comparisons.csv
+    result_asset: outputs/reference_mode/micro_oracles/hydrol_soil_owner_cwrr_water_root_peat_alt/comparison.json
+    branch_coverage_asset: outputs/reference_mode/micro_oracles/hydrol_soil_owner_cwrr_water_root_peat_alt/branch_coverage.json
+    procedures:
+      - id: hydrol_soil_owner_cwrr_water_root_peat_alt.hydrol_var_init
+        source_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+        procedure: hydrol_var_init
+        procedure_kind: subroutine
+        start_line: 3832
+        end_line: 4650
+        expected_source_sha256: 39fa6d4bf4385c89a4370d75d314b07adf43fc1462b0c003d61d4c4dc3f20577
+        expected_span_sha256: cd6ef5f444d353e7eff693950fcada76406aed731764aaa152e135d62cf44882
+        dependencies: {use_modules: [defprec]}
+        compilation:
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/oracle_lane_hydrol_soil_owner.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/hydrol_soil_owner_cwrr_water_root_peat_alt/comparison.json
+        numerical_oracle_status: verified
+      - {procedure: hydrol_soil, start_line: 5405, end_line: 7402, expected_span_sha256: fefd00cecc0bf5fa2570e8335b8b9af13235c29a27dbff34184fb07f0b56bd56}
+      - {procedure: hydrol_soil_infilt, start_line: 7432, end_line: 7590, expected_span_sha256: 3aaf51c683be624b2781bba23bf7aabafd83be5757328c514f9a0f08e9ab6de4}
+      - {procedure: hydrol_soil_smooth_under_mcr, start_line: 7623, end_line: 7770, expected_span_sha256: 044ad3fd350742370d17068eefb888036f172db838faf663b6b33024ae533ee5}
+      - {procedure: hydrol_soil_smooth_over_mcs2, start_line: 7935, end_line: 8026, expected_span_sha256: dbf88eaae199637d2c6ee7c6c2f59f70d0424137b2b5e9b1c32f8536a2f4bb2c}
+      - {procedure: hydrol_soil_flux, start_line: 8053, end_line: 8126, expected_span_sha256: fcd2eb27a5b4c9b73941a7c4c4785e5224b6c47a9be3a1cae61d2ff1823a388a}
+      - {procedure: hydrol_soil_tridiag, start_line: 8147, end_line: 8198, expected_span_sha256: 941570e260fd9293b98fc0e9e56f448867b43057342543151333002304085010}
+      - {procedure: hydrol_soil_coef, start_line: 8223, end_line: 8312, expected_span_sha256: 41b6618b2d0aba805cb5d137f482db35d10c516910e28d2867430d0b15251c06}
+      - {procedure: hydrol_soil_froz, start_line: 8332, end_line: 8460, expected_span_sha256: f1090f8334b88dccefc6dbc40439f6b7ad75347bcdef4f3c301ab4a71548758b}
+      - {procedure: hydrol_soil_setup, start_line: 8480, end_line: 8568, expected_span_sha256: 1aded513813443745e96ea491623d81de118b61e428b45c31252ed0c7e12b95b}
+      - {procedure: hydrol_split_soil, start_line: 8603, end_line: 8925, expected_span_sha256: dfb3a83c9a97bdae1651fcce01e306636e66372e55120949b52a9dd4135f8dda}
+      - {procedure: hydrol_diag_soil, start_line: 8948, end_line: 9288, expected_span_sha256: 842bf72513d739b8b0e2c483ebc28e80fe24b259c600bc0276e78a80a5b42e65}
+      - {procedure: hydrol_calculate_temp_hydro, start_line: 9597, end_line: 9662, expected_span_sha256: b2fa9038f3e7e30693fddf15eb53a3bbeb0d934335be8ace5dcb8f4b9e20ed47}
+
+  - id: hydrol_freeze_hydraulics
+    runner: oracle_lane_hydrol_freeze:run_oracle
+    ledger_entries: [hydrol.active.freeze_hydraulics]
+    input_asset: outputs/reference_mode/micro_oracles/hydrol_freeze_hydraulics/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/hydrol_freeze_hydraulics/point_comparisons.csv
+    branch_coverage_asset: outputs/reference_mode/micro_oracles/hydrol_freeze_hydraulics/branch_coverage.json
+    output_contract: [profil_froz_hydro_ns]
+    procedures:
+      - id: hydrol_freeze_hydraulics.hydrol_soil_froz
+        source_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+        procedure: hydrol_soil_froz
+        procedure_kind: subroutine
+        start_line: 8332
+        end_line: 8460
+        expected_source_sha256: 39fa6d4bf4385c89a4370d75d314b07adf43fc1462b0c003d61d4c4dc3f20577
+        expected_span_sha256: f1090f8334b88dccefc6dbc40439f6b7ad75347bcdef4f3c301ab4a71548758b
+        dependencies:
+          use_modules: [defprec]
+          module_symbols: [nslm, nstm, mc, temp_hydro, profil_froz_hydro_ns, dh, nvan, avan, mcr, mcs, peat_hydro]
+        compilation:
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/oracle_lane_hydrol_freeze.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/hydrol_freeze_hydraulics/comparison.json
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - id: freeze.mineral_warm_transition_frozen
+        ledger_entry: hydrol.active.freeze_hydraulics
+        fortran_lines: 8387-8420
+        condition: mineral tiles span temperatures above, inside, and below the freezing interval
+        expected_arm: warm x=1, transition thermodynamic x, and frozen x=0
+        input_case: all points, mineral tiles 1-3 in inputs.json
+        control_flow_arm_ids: []
+      - id: freeze.below_residual_linear
+        ledger_entry: hydrol.active.freeze_hydraulics
+        fortran_lines: 8391-8403
+        condition: mc < mcr + min_sechiba inside the freezing interval
+        expected_arm: linear temperature interpolation regardless of thermodynamic switch
+        input_case: point 1 layer 2 in inputs.json
+        control_flow_arm_ids: []
+      - id: freeze.peat_tiles
+        ledger_entry: hydrol.active.freeze_hydraulics
+        fortran_lines: 8360-8385
+        condition: peat_hydro true and ins is 4, 5, or 6
+        expected_arm: peat hydraulic constants drive freezing and moisture normalization
+        input_case: all points, tiles 4-6 in inputs.json
+        control_flow_arm_ids: []
+      - id: freeze.profile_correction
+        ledger_entry: hydrol.active.freeze_hydraulics
+        fortran_lines: 8430-8457
+        condition: nonuniform frozen fraction and moisture across four layers
+        expected_arm: depth-weighted frozen and moisture corrections are applied and capped
+        input_case: all profiles in inputs.json
+        control_flow_arm_ids: []
+
+  - id: hydrol_infiltration
+    runner: oracle_lane_hydrol_infilt:run_oracle
+    ledger_entries: [hydrol.conditional.infiltration_and_excess_routing]
+    input_asset: outputs/reference_mode/micro_oracles/hydrol_infiltration/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/hydrol_infiltration/point_comparisons.csv
+    branch_coverage_asset: outputs/reference_mode/micro_oracles/hydrol_infiltration/branch_coverage.json
+    output_contract: [mc, qinfilt_ns, ru_infilt_ns]
+    procedures:
+      - id: hydrol_infiltration.hydrol_soil_infilt
+        source_file: fortran_source/ORCHIDEE/src_sechiba/hydrol.f90
+        procedure: hydrol_soil_infilt
+        procedure_kind: subroutine
+        start_line: 7432
+        end_line: 7590
+        expected_source_sha256: 39fa6d4bf4385c89a4370d75d314b07adf43fc1462b0c003d61d4c4dc3f20577
+        expected_span_sha256: 3aaf51c683be624b2781bba23bf7aabafd83be5757328c514f9a0f08e9ab6de4
+        dependencies:
+          use_modules: [defprec]
+          module_symbols: [nslm, nstm, mc, k, kfact, kfact_root, dz, mcs, ks, peat_hydro, temp_hydro]
+        compilation:
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/oracle_lane_hydrol_infilt.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/hydrol_infiltration/comparison.json
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - id: infiltration.mineral_small_and_excess
+        ledger_entry: hydrol.conditional.infiltration_and_excess_routing
+        fortran_lines: 7485-7563
+        condition: mineral tile with small, near-saturated, and excess surface flux cases
+        expected_arm: first-layer fill, conductivity-limited descent, and residual runoff
+        input_case: mineral cases in inputs.json
+        control_flow_arm_ids: []
+      - id: infiltration.frozen_layer
+        ledger_entry: hydrol.conditional.infiltration_and_excess_routing
+        fortran_lines: 7516-7520
+        condition: ok_freeze_cwrr and second-layer temperature below ZeroCelsius
+        expected_arm: layer conductivity k replaces the unfrozen arithmetic mean
+        input_case: frozen second layer in inputs.json
+        control_flow_arm_ids: []
+      - id: infiltration.peat_tiles
+        ledger_entry: hydrol.conditional.infiltration_and_excess_routing
+        fortran_lines: 7486-7542
+        condition: peat_hydro true and soil tile 4
+        expected_arm: peat saturation and conductivity profiles control infiltration
+        input_case: peat cases in inputs.json
+        control_flow_arm_ids: []
+
+  - id: thermosoil_explicit_snow_profile
+    runner: oracle_lane_hydrol_thermosoil_profile:run_oracle
+    ledger_entries: [thermosoil.conditional.explicit_snow_thermal_profile]
+    input_asset: outputs/reference_mode/micro_oracles/thermosoil_explicit_snow_profile/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/thermosoil_explicit_snow_profile/point_comparisons.csv
+    branch_coverage_asset: outputs/reference_mode/micro_oracles/thermosoil_explicit_snow_profile/branch_coverage.json
+    output_contract: [ptn, stempdiag]
+    procedures:
+      - id: thermosoil_explicit_snow_profile.thermosoil_profile
+        source_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+        procedure: thermosoil_profile
+        procedure_kind: subroutine
+        start_line: 1761
+        end_line: 1851
+        expected_source_sha256: a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b
+        expected_span_sha256: bd602958e0eec462a5dbef83606fb2ed34cbe17d1ab542e69b62e8a4e0b4d12c
+        dependencies:
+          use_modules: [defprec]
+          module_symbols: [nvm, ngrnd, nslm, nsnow, nnobio, ptn, cgrnd, dgrnd, veget_mask_2d, ok_explicitsnow]
+        compilation: &thermosoil_profile_compilation
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/oracle_lane_hydrol_thermosoil_profile.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/thermosoil_explicit_snow_profile/comparison.json
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - id: thermosoil_explicit_snow_profile.thermosoil_diaglev
+        source_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+        procedure: thermosoil_diaglev
+        procedure_kind: subroutine
+        start_line: 3484
+        end_line: 3513
+        expected_source_sha256: a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b
+        expected_span_sha256: 81b00e9cc3999c09cfd09eb35edd1ab093e08d762af572c14eab4e957a9c39f9
+        dependencies:
+          use_modules: [defprec]
+          module_symbols: [nvm, nslm, ptn, zero, un]
+        compilation: *thermosoil_profile_compilation
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - id: thermosoil_profile.no_to_full_snow
+        ledger_entry: thermosoil.conditional.explicit_snow_thermal_profile
+        fortran_lines: 1806-1835
+        condition: snow cover spans zero, mixed vegetation/nobio, and full vegetation cover
+        expected_arm: effective surface temperature drives snow recurrence then deeper soil recurrence
+        input_case: points 1-3 in inputs.json
+        control_flow_arm_ids: []
+      - id: thermosoil_profile.inactive_mask
+        ledger_entry: thermosoil.conditional.explicit_snow_thermal_profile
+        fortran_lines: 1805-1834
+        condition: veget_mask_2d false for PFT14
+        expected_arm: carried ptn remains unchanged for the inactive column
+        input_case: point 1 PFT14 in inputs.json
+        control_flow_arm_ids: []
+
+  - id: thermosoil_refsoc_getdiff
+    runner: oracle_lane_hydrol_thermosoil_getdiff:run_oracle
+    ledger_entries: [thermosoil.active.refsoc_freeze_properties]
+    input_asset: outputs/reference_mode/micro_oracles/thermosoil_refsoc_getdiff/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/thermosoil_refsoc_getdiff/point_comparisons.csv
+    branch_coverage_asset: outputs/reference_mode/micro_oracles/thermosoil_refsoc_getdiff/branch_coverage.json
+    output_contract: [pcapa, pcapa_en, pkappa, profil_froz, pcappa_supp, pcapa_snow, pkappa_snow]
+    fortran_undefined_contract:
+      - {id: thermosoil_getdiff.toporganic_out_of_bounds, source_lines: 2632-2670, reason: "The true path unconditionally writes zx1 with terminal ji/jg loop indices beyond declared bounds."}
+      - {id: thermosoil_getdiff.inactive_mask_outputs, source_lines: 2698-2806, reason: "Inactive PFT slots leave INTENT(out) arrays undefined before an unconditional PFT reduction."}
+      - {id: thermosoil_getdiff.no_freeze_pcappa_supp, source_lines: 2719-2774, reason: "The ok_freeze_thermix=false branch does not assign pcappa_supp."}
+    procedures:
+      - {id: thermosoil_refsoc_getdiff.thermosoil_getdiff, source_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90, procedure: thermosoil_getdiff, procedure_kind: subroutine, start_line: 2566, end_line: 2863, expected_source_sha256: a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b, expected_span_sha256: 7f7539579024d02cf545ff0dff192c1ebf60d1b7e5d0acb77db74a466ec2bcf9, dependencies: {use_modules: [defprec], called_procedures: [thermosoil_cond_pft, thermosoil_cond_nopft]}, compilation: &refsoc_complete_compilation {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_hydrol_thermosoil_getdiff.f90.template, result_asset: outputs/reference_mode/micro_oracles/thermosoil_refsoc_getdiff/comparison.json}, numerical_oracle_status: verified, tolerance: {rtol: 1.0e-12, atol: 1.0e-14}}
+      - {id: thermosoil_refsoc_getdiff.thermosoil_cond_pft, source_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90, procedure: thermosoil_cond_pft, procedure_kind: subroutine, start_line: 2007, end_line: 2127, expected_source_sha256: a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b, expected_span_sha256: 0f275cfaaa3552f52671ca35567f50eb6c7a0a98b8dbf234bdb0b7834ef68fe1, dependencies: {use_modules: [defprec]}, compilation: *refsoc_complete_compilation, numerical_oracle_status: verified}
+      - {id: thermosoil_refsoc_getdiff.thermosoil_cond_nopft, source_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90, procedure: thermosoil_cond_nopft, procedure_kind: subroutine, start_line: 2129, end_line: 2231, expected_source_sha256: a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b, expected_span_sha256: 4e0f9a478df57c9b0a11244835aa69402ae6ddfa7d4d84f160e0069683d346f7, dependencies: {use_modules: [defprec]}, compilation: *refsoc_complete_compilation, numerical_oracle_status: verified}
+
+  - id: hydrol_explicit_snow_nonzero
+    runner: oracle_lane_hydrol_explicit_snow:run_oracle
+    ledger_entries: [hydrol.conditional.explicit_snow_nonzero]
+    input_asset: outputs/reference_mode/micro_oracles/hydrol_explicit_snow_nonzero/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/hydrol_explicit_snow_nonzero/point_comparisons.csv
+    branch_coverage_asset: outputs/reference_mode/micro_oracles/hydrol_explicit_snow_nonzero/branch_coverage.json
+    output_contract: [snow, snowdz, snowrho, snowtemp, snowheat, snowliq, snowgrain, snow_age, snow_nobio, snow_nobio_age, vevapsno, subsnownobio, subsinksoil, grndflux, snowmelt, tot_melt, temp_sol_add]
+    procedures:
+      - id: hydrol_explicit_snow_nonzero.explicitsnow_main
+        source_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90
+        procedure: explicitsnow_main
+        procedure_kind: subroutine
+        start_line: 108
+        end_line: 553
+        expected_source_sha256: 648551008c5cc6baa0ecf74881ee465de31cbff6f1fe80876cb3fe76e9a033f9
+        expected_span_sha256: db54995f8bc7a5394bc6516b054a319ceeeebd038352b4451d1c0f1bc56c22fe
+        dependencies:
+          use_modules: [defprec]
+          called_procedures: [explicitsnow_fall, explicitsnow_levels, explicitsnow_transf, explicitsnow_compactn, explicitsnow_profile, explicitsnow_gone, explicitsnow_melt_refrz, explicitsnow_grain, snow3lheat_1d, snow3ltemp_1d, snow3lliq_1d]
+        compilation:
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/oracle_lane_hydrol_explicit_snow.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/hydrol_explicit_snow_nonzero/comparison.json
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+
+path_evidence_families: []
+historical_path_evidence_families:
+  - id: thermosoil_refsoc_getdiff
+    runner: oracle_lane_hydrol_thermosoil_getdiff:run_oracle
+    ledger_entries: [thermosoil.active.refsoc_freeze_properties]
+    input_asset: outputs/reference_mode/micro_oracles/thermosoil_refsoc_getdiff/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/thermosoil_refsoc_getdiff/point_comparisons.csv
+    output_contract: [pcapa, pcapa_en, pkappa, profil_froz, pcappa_supp, pcapa_snow, pkappa_snow]
+    procedures:
+      - id: thermosoil_refsoc_getdiff.thermosoil_getdiff
+        source_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+        procedure: thermosoil_getdiff
+        procedure_kind: subroutine
+        start_line: 2566
+        end_line: 2863
+        expected_source_sha256: a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b
+        expected_span_sha256: 7f7539579024d02cf545ff0dff192c1ebf60d1b7e5d0acb77db74a466ec2bcf9
+        dependencies:
+          use_modules: [defprec]
+          module_symbols: [refSOC, mc_layt, mcl_layt, tmc_layt, mc_layt_pft, mcl_layt_pft, tmc_layt_pft, pcapa, pcapa_en, pkappa, pcapa_snow, pkappa_snow]
+          called_procedures: [thermosoil_cond_pft, thermosoil_cond_nopft]
+        compilation: &thermosoil_getdiff_compilation
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/oracle_lane_hydrol_thermosoil_getdiff.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/thermosoil_refsoc_getdiff/comparison.json
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - id: thermosoil_refsoc_getdiff.thermosoil_cond_pft
+        source_file: fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90
+        procedure: thermosoil_cond_pft
+        procedure_kind: subroutine
+        start_line: 2007
+        end_line: 2127
+        expected_source_sha256: a92ebe85f83fceea83601b8103197fd060654a57cccb6b9cb5ae3fadfee72c8b
+        expected_span_sha256: 0f275cfaaa3552f52671ca35567f50eb6c7a0a98b8dbf234bdb0b7834ef68fe1
+        dependencies:
+          use_modules: [defprec]
+          module_symbols: [ngrnd, nvm, nscm, min_sechiba, cond_dry_org, cond_solid_org, THKQTZ, THKICE, THKW]
+        compilation: *thermosoil_getdiff_compilation
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - id: getdiff.freeze_temperature_regimes
+        ledger_entry: thermosoil.active.refsoc_freeze_properties
+        fortran_lines: 2707-2768
+        condition: profiles are below, within, and above the freezing interval
+        expected_arm: frozen, latent-heat transition, and unfrozen thermal capacities
+        input_case: points 1-3 in inputs.json
+        control_flow_arm_ids: []
+      - id: getdiff.refsoc_and_pft14
+        ledger_entry: thermosoil.active.refsoc_freeze_properties
+        fortran_lines: 2673-2780
+        condition: use_refSOC with zero, half, and saturated SOC fractions and PFT14 ok_LAIdev
+        expected_arm: organic mixing and PFT-specific total-moisture heat capacity
+        input_case: all profiles and PFT14 in inputs.json
+        control_flow_arm_ids: []
+      - id: getdiff.conductivity_and_snow
+        ledger_entry: thermosoil.active.refsoc_freeze_properties
+        fortran_lines: 2805-2860
+        condition: three textures plus varying snow density and atmospheric pressure
+        expected_arm: PFT conductivity callee and explicit snow thermal properties
+        input_case: all points in inputs.json
+        control_flow_arm_ids: []
+
+  - id: hydrol_explicit_snow_nonzero
+    runner: oracle_lane_hydrol_explicit_snow:run_oracle
+    ledger_entries: [hydrol.conditional.explicit_snow_nonzero]
+    input_asset: outputs/reference_mode/micro_oracles/hydrol_explicit_snow_nonzero/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/hydrol_explicit_snow_nonzero/point_comparisons.csv
+    output_contract: [snow, snowdz, snowrho, snowtemp, snowheat, snowliq, snowgrain, snow_age, snow_nobio, snow_nobio_age, vevapsno, subsnownobio, subsinksoil, grndflux, snowmelt, tot_melt, temp_sol_add]
+    procedures:
+      - id: hydrol_explicit_snow_nonzero.explicitsnow_main
+        source_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90
+        procedure: explicitsnow_main
+        procedure_kind: subroutine
+        start_line: 108
+        end_line: 553
+        expected_source_sha256: 648551008c5cc6baa0ecf74881ee465de31cbff6f1fe80876cb3fe76e9a033f9
+        expected_span_sha256: db54995f8bc7a5394bc6516b054a319ceeeebd038352b4451d1c0f1bc56c22fe
+        dependencies: &explicit_snow_dependencies
+          use_modules: [defprec]
+          called_procedures: [explicitsnow_fall, explicitsnow_levels, explicitsnow_transf, explicitsnow_compactn, explicitsnow_profile, explicitsnow_gone, explicitsnow_melt_refrz, explicitsnow_grain, snow3lheat_1d, snow3ltemp_1d, snow3lliq_1d]
+        compilation: &explicit_snow_compilation
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: C:\msys64\ucrt64\bin\gfortran.exe
+          compiler_version: GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0
+          harness: scripts/dev/oracle_lane_hydrol_explicit_snow.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/hydrol_explicit_snow_nonzero/comparison.json
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - {id: hydrol_explicit_snow_nonzero.explicitsnow_grain, source_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90, procedure: explicitsnow_grain, procedure_kind: subroutine, start_line: 609, end_line: 756, expected_source_sha256: 648551008c5cc6baa0ecf74881ee465de31cbff6f1fe80876cb3fe76e9a033f9, expected_span_sha256: ddc8577cbac9f8133b800241253a8c6a71a47fa6250e3dfa8c340f670baa77f8, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+      - {id: hydrol_explicit_snow_nonzero.explicitsnow_compactn, source_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90, procedure: explicitsnow_compactn, procedure_kind: subroutine, start_line: 783, end_line: 869, expected_source_sha256: 648551008c5cc6baa0ecf74881ee465de31cbff6f1fe80876cb3fe76e9a033f9, expected_span_sha256: 534f0a0345984a503af90cd70f92abb8851aeac3e5fe74f842dc64df90bd48fa, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+      - {id: hydrol_explicit_snow_nonzero.explicitsnow_transf, source_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90, procedure: explicitsnow_transf, procedure_kind: subroutine, start_line: 891, end_line: 1132, expected_source_sha256: 648551008c5cc6baa0ecf74881ee465de31cbff6f1fe80876cb3fe76e9a033f9, expected_span_sha256: 5c819f013d39f0b3e9b5800ce4f5e72868888d6d4534862c297d46c5370c81f9, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+      - {id: hydrol_explicit_snow_nonzero.explicitsnow_fall, source_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90, procedure: explicitsnow_fall, procedure_kind: subroutine, start_line: 1154, end_line: 1278, expected_source_sha256: 648551008c5cc6baa0ecf74881ee465de31cbff6f1fe80876cb3fe76e9a033f9, expected_span_sha256: 9a5c8fcf1f6fb53d33a2f8deccccf58d070e822d2391f2bf4a6c680e8b71b55a, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+      - {id: hydrol_explicit_snow_nonzero.explicitsnow_gone, source_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90, procedure: explicitsnow_gone, procedure_kind: subroutine, start_line: 1300, end_line: 1366, expected_source_sha256: 648551008c5cc6baa0ecf74881ee465de31cbff6f1fe80876cb3fe76e9a033f9, expected_span_sha256: f32654d09da1a4f169819a2fbe71d0d569789be79da037ed71fb888b975df263, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+      - {id: hydrol_explicit_snow_nonzero.explicitsnow_melt_refrz, source_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90, procedure: explicitsnow_melt_refrz, procedure_kind: subroutine, start_line: 1385, end_line: 1563, expected_source_sha256: 648551008c5cc6baa0ecf74881ee465de31cbff6f1fe80876cb3fe76e9a033f9, expected_span_sha256: 7b2a1feb74c077cc017730d184a48bdafe49c3dde7847cc7dd13db3f0bdb77a1, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+      - {id: hydrol_explicit_snow_nonzero.explicitsnow_levels, source_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90, procedure: explicitsnow_levels, procedure_kind: subroutine, start_line: 1581, end_line: 1635, expected_source_sha256: 648551008c5cc6baa0ecf74881ee465de31cbff6f1fe80876cb3fe76e9a033f9, expected_span_sha256: 4a0ccaefd44d637fe2664b63eb65962a3ea4aba59eef6317960ab5131d40629a, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+      - {id: hydrol_explicit_snow_nonzero.explicitsnow_profile, source_file: fortran_source/ORCHIDEE/src_sechiba/explicitsnow.f90, procedure: explicitsnow_profile, procedure_kind: subroutine, start_line: 1655, end_line: 1694, expected_source_sha256: 648551008c5cc6baa0ecf74881ee465de31cbff6f1fe80876cb3fe76e9a033f9, expected_span_sha256: a4506967315fb8b1d6836f5165c1b69aa227b889b1263575464f39fb3fb1fc81, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+      - {id: hydrol_explicit_snow_nonzero.snow3lgrain_0d, source_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90, procedure: snow3lgrain_0d, procedure_kind: function, start_line: 1071, end_line: 1091, expected_source_sha256: 3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e, expected_span_sha256: 180028d52d09b838e8fd012cb67d00bce58ac31912b5343b51802153371edc46, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+      - {id: hydrol_explicit_snow_nonzero.snow3lgrain_1d, source_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90, procedure: snow3lgrain_1d, procedure_kind: function, start_line: 1032, end_line: 1052, expected_source_sha256: 3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e, expected_span_sha256: b581fd00cd44e079c9c9a770bc17eaa4d860c34d7e6f03c0103ec2a7a1992300, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+      - {id: hydrol_explicit_snow_nonzero.snow3lscap_1d, source_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90, procedure: snow3lscap_1d, procedure_kind: function, start_line: 876, end_line: 886, expected_source_sha256: 3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e, expected_span_sha256: 810c0769d27c12b4ab476b5fb7d281531caef4d19299a075546d74693fb3f894, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+      - {id: hydrol_explicit_snow_nonzero.snow3lhold_1d, source_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90, procedure: snow3lhold_1d, procedure_kind: function, start_line: 659, end_line: 686, expected_source_sha256: 3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e, expected_span_sha256: d4dd18012757b07c3947bdf20f864da60a2148b9f1e3384c3c1049a27e127ea6, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+      - {id: hydrol_explicit_snow_nonzero.snow3lheat_1d, source_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90, procedure: snow3lheat_1d, procedure_kind: function, start_line: 803, end_line: 826, expected_source_sha256: 3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e, expected_span_sha256: c9da3627250c4d3c35f7444cd42c125ebd1c9fa2d510e7a2fd536b9a6f622680, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+      - {id: hydrol_explicit_snow_nonzero.snow3ltemp_1d, source_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90, procedure: snow3ltemp_1d, procedure_kind: function, start_line: 949, end_line: 972, expected_source_sha256: 3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e, expected_span_sha256: ddd84a7e6c28ca813821b8ffadb78407b4ce8eb89901c1f9f8ed21fea17d25bd, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+      - {id: hydrol_explicit_snow_nonzero.snow3lliq_1d, source_file: fortran_source/ORCHIDEE/src_sechiba/qsat_moisture.f90, procedure: snow3lliq_1d, procedure_kind: function, start_line: 1175, end_line: 1204, expected_source_sha256: 3c898cb92bf4dcdc1f365b8ac3341b192a615c532317c1a260298a29e2503f6e, expected_span_sha256: 6bd3b3bcfe696f274eb213fa5e6ff147a7b78bd4134594ae2078c528f2a117ac, dependencies: *explicit_snow_dependencies, compilation: *explicit_snow_compilation, numerical_oracle_status: verified}
+    branch_cases:
+      - {id: explicit_snow.zero_pack, ledger_entry: hydrol.conditional.explicit_snow_nonzero, fortran_lines: 207-254, condition: zero carried snow and no snowfall, expected_arm: empty-pack defaults and no melt, input_case: point 1, control_flow_arm_ids: []}
+      - {id: explicit_snow.cold_fall, ledger_entry: hydrol.conditional.explicit_snow_nonzero, fortran_lines: 207-401, condition: cold snowfall onto a nonzero three-layer pack, expected_arm: "fall, redistribution, compaction, profile and metamorphism", input_case: point 2, control_flow_arm_ids: []}
+      - {id: explicit_snow.rain_melt_sublimation, ledger_entry: hydrol.conditional.explicit_snow_nonzero, fortran_lines: 237-515, condition: rain-on-snow with positive ground heat and sublimation, expected_arm: "melt/refreeze, sublimation, age and complete state writeback", input_case: point 3, control_flow_arm_ids: []}
+pending_families:
+  - id: hydrol_explicit_snow_branch_completion
+    ledger_entries: [hydrol.conditional.explicit_snow_nonzero]
+    reason: The three-point numerical Oracle passes, but its cases do not yet demonstrate all 44 authoritative PFT14 reachable arms.
+  - id: thermosoil_refsoc_getdiff_branch_completion
+    ledger_entries: [thermosoil.active.refsoc_freeze_properties]
+    reason: Numerical path evidence passes, but disposition is missing for thermosoil.f90:2632:if, 2678:if, and 2719:if.
+  - id: thermosoil_cwrr_recurrence
+    ledger_entries: [thermosoil.active.cwrr_recurrence]
+    reason: thermosoil_main dependency closure remains pending; a source-level undefined local SAVE control prevents full-arm verification.
+    blockers:
+      - id: thermosoil_main.local_ok_zimov
+        fortran_lines: 877,991-993
+        detail: A local uninitialized LOGICAL SAVE shadows the initialized module ok_zimov; no paper build flag explicitly initializes local SAVE storage.
+    branch_cases:
+      - id: recurrence.previous_coefficients
+        ledger_entry: thermosoil.active.cwrr_recurrence
+        fortran_lines: 893-913,1002-1032
+        condition: previous ptn/cgrnd/dgrnd/pcapa_en/soilcap feed profile and energy before replacement coefficients are written
+        expected_arm: old-state consumption followed by complete next-state writeback
+        input_case: pending compiled thermosoil_main harness
+        control_flow_arm_ids: []

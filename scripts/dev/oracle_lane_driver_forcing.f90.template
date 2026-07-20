@@ -1,0 +1,72 @@
+module calendar
+  implicit none
+  real :: one_year=365.0
+end module calendar
+
+program driver_forcing_oracle
+  use calendar
+  implicit none
+  integer, parameter :: iim=2, jjm=1
+  integer :: split, itau_split, nb_spread, unit, numout, is
+  real, parameter :: pi=3.1415926535897932384626433832795, zero=0.0, one_day=86400.0
+  real :: rw, dt_force, julian, julian_for, julian0
+  logical :: is_watchout, netrad_cons, check
+  real, dimension(iim,jjm) :: qair, tair, pb, u, v, lwdown, rainf, snowf
+  real, dimension(iim,jjm) :: qair_n, tair_n, pb_n, u_n, v_n, lwdown_n, rainf_n, snowf_n
+  real, dimension(iim,jjm) :: qair_nm1, tair_nm1, pb_nm1, u_nm1, v_nm1, lwdown_nm1
+  real, dimension(iim,jjm) :: zlev, zlevuv, swnet, eair, petacoef, peqacoef
+  real, dimension(iim,jjm) :: petbcoef, peqbcoef, cdrag, ccanopy
+  real, dimension(iim,jjm) :: zlev_n, zlev_nm1, swnet_n, swnet_nm1, eair_n, eair_nm1
+  real, dimension(iim,jjm) :: petacoef_n, petacoef_nm1, peqacoef_n, peqacoef_nm1
+  real, dimension(iim,jjm) :: petbcoef_n, petbcoef_nm1, peqbcoef_n, peqbcoef_nm1
+  real, dimension(iim,jjm) :: cdrag_n, cdrag_nm1, ccanopy_n, ccanopy_nm1
+  real, dimension(iim,jjm) :: lon, lat, coszang, mean_coszang, swdown, swdown_n, swdown_nm1
+
+  split=12; itau_split=3; nb_spread=6; is_watchout=.false.; netrad_cons=.false.; check=.false.; numout=6
+  qair_nm1=reshape([0.002,0.010],[iim,jjm]); qair_n=reshape([0.014,0.022],[iim,jjm])
+  tair_nm1=reshape([270.,280.],[iim,jjm]); tair_n=reshape([282.,292.],[iim,jjm])
+  pb_nm1=reshape([90000.,95000.],[iim,jjm]); pb_n=reshape([96000.,101000.],[iim,jjm])
+  u_nm1=reshape([1.,-2.],[iim,jjm]); u_n=reshape([5.,2.],[iim,jjm])
+  v_nm1=reshape([-1.,3.],[iim,jjm]); v_n=reshape([3.,7.],[iim,jjm])
+  lwdown_nm1=reshape([200.,250.],[iim,jjm]); lwdown_n=reshape([320.,370.],[iim,jjm])
+  rainf_n=reshape([1.e-5,2.e-5],[iim,jjm]); snowf_n=reshape([3.e-6,4.e-6],[iim,jjm])
+  zlev_n=0.; zlev_nm1=0.; swnet_n=0.; swnet_nm1=0.; eair_n=0.; eair_nm1=0.
+  petacoef_n=0.; petacoef_nm1=0.; peqacoef_n=0.; peqacoef_nm1=0.
+  petbcoef_n=0.; petbcoef_nm1=0.; peqbcoef_n=0.; peqbcoef_nm1=0.
+  cdrag_n=0.; cdrag_nm1=0.; ccanopy_n=0.; ccanopy_nm1=0.
+  dt_force=21600.; julian_for=0.; julian0=0.
+  lon=reshape([0.,30.],[iim,jjm]); lat=reshape([0.,20.],[iim,jjm])
+  swdown_n=reshape([400.,2500.],[iim,jjm]); swdown_nm1=0.
+
+! <FORCING_INTERPOLATION_SPAN>
+! <FORCING_PRECIPITATION_SPAN>
+! <FORCING_MEAN_SOLAR_SPAN>
+! <FORCING_SOLAR_SPAN>
+
+  open(newunit=unit,file=trim(command_argument()),status='replace',action='write')
+  call emit(unit,'qair',qair); call emit(unit,'tair',tair); call emit(unit,'pb',pb)
+  call emit(unit,'u',u); call emit(unit,'v',v); call emit(unit,'lwdown',lwdown)
+  call emit(unit,'rainf_active',rainf); call emit(unit,'snowf_active',snowf)
+  call emit(unit,'swdown',swdown); call emit(unit,'coszang',coszang)
+  itau_split=8
+! <FORCING_PRECIPITATION_SPAN_2>
+  call emit(unit,'rainf_inactive',rainf); call emit(unit,'snowf_inactive',snowf)
+  close(unit)
+contains
+! <SOLARANG_PROCEDURE>
+! <TIME_ZONE_PROCEDURE>
+
+  function command_argument() result(value)
+    character(len=1024) :: value
+    call get_command_argument(1,value)
+  end function
+  subroutine emit(unit,name,value)
+    integer,intent(in)::unit
+    character(len=*),intent(in)::name
+    real,dimension(:,:),intent(in)::value
+    integer::i,j
+    do j=1,size(value,2); do i=1,size(value,1)
+      write(unit,'(A,",",ES26.17E3)') trim(name),value(i,j)
+    end do; end do
+  end subroutine
+end program

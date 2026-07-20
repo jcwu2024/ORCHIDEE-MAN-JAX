@@ -1,0 +1,798 @@
+schema_version: 2
+scope:
+  component: STOMATE
+  jax_readers:
+    - jax_orchidee.stomate.reference.StomateRestartEntryState
+    - jax_orchidee.stomate.reference.StomateRestartSeasonState
+    - jax_orchidee.stomate.reference.StomateDailyAccumulatorState
+    - jax_orchidee.stomate.reference.StomateOkPcRestartGasState
+    - jax_orchidee.stomate.reference.StomateReadstartRemainderState
+  packet: jax_orchidee.driver.orchestration.DriverFirstDayStomateStatePacket
+  fortran_source: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+  fortran_read_subroutine: readstart
+  fortran_write_subroutine: writerestart
+
+# These groups declare normalized in-memory JAX axes. They do not describe
+# NetCDF storage order and are not a restart writer specification.
+axis_groups:
+  scalar:
+    axes: []
+    fields:
+      - dt_days_read
+      - date
+      - tau_longterm
+      - Global_years
+      - read_input_thawed_humidity
+      - read_input_depth_organic_soil
+  grid:
+    axes: [npts]
+    fields:
+      - carb_mass_total
+      - fpeat
+      - thawed_humidity
+      - depth_organic_soil
+      - t2m_longterm
+      - t2m_month
+      - t2m_week
+      - tseason
+      - tseason_length
+      - tseason_tmp
+      - gdd0_lastyear
+      - gdd0_thisyear
+      - precip_lastyear
+      - precip_thisyear
+      - litterhum_daily
+      - t2m_daily
+      - t2m_min_daily
+      - t2m_max_daily
+      - wspeed_daily
+      - tsurf_daily
+      - precip_daily
+      - snowfall_daily
+      - snowmass_daily
+      - tmc_topgrass_daily
+      - fwet_daily
+      - liqwt_daily
+      - temp_growth
+      - tot_bare_soil
+      - totfrac_nobio
+      - ni_acc
+      - tsurf_year
+      - height_acro
+      - fwet_month
+      - liqwt_month
+      - liqwt_max
+      - delta_fsave
+      - t2m_14
+      - after_snow
+      - after_wet
+      - wet1day
+      - wet2day
+      - nbp_sum
+      - nbp_flux
+      - ok_equilibrium
+  pft:
+    axes: [npts, nvm]
+    fields:
+      - gpp_daily
+      - npp_daily
+      - resp_maint
+      - resp_growth
+      - age
+      - sla_calc
+      - pft_present
+      - ind
+      - adapted
+      - regenerate
+      - npp_longterm
+      - lm_lastyearmax
+      - turnover_time
+      - senescence
+      - when_growthinit
+      - co2_to_bm
+      - veget_lastlight
+      - everywhere
+      - need_adjacent
+      - rip_time
+      - altmax
+      - fixed_cryoturbation_depth
+      - lignin_struc_above
+      - moiavail_month
+      - moiavail_week
+      - gdd_m5_dormance
+      - gdd_from_growthinit
+      - gdd_midwinter
+      - ncd_dormance
+      - ngd_minus5
+      - time_hum_min
+      - hum_min_dormance
+      - tmin_spring_time
+      - begin_leaves
+      - onset_date
+      - gpp_week
+      - maxmoiavail_lastyear
+      - maxmoiavail_thisyear
+      - minmoiavail_lastyear
+      - minmoiavail_thisyear
+      - maxgppweek_lastyear
+      - maxgppweek_thisyear
+      - maxfpc_lastyear
+      - maxfpc_thisyear
+      - lm_thisyearmax
+      - humrel_daily
+      - cn_ind
+      - lai
+      - veget
+      - veget_max
+      - fireindex
+      - firelitter
+      - resp_hetero
+      - co2_fire
+      - carbon_acro
+      - carbon_cato
+      - depth_deepsoil
+      - wshtotsum
+      - sr_ugb
+      - nb_ani
+      - grazed_frac
+      - import_yield
+      - nb_grazingdays
+      - height
+  soil_layer:
+    axes: [npts, nslm]
+    fields: [tsoil_month, soilhum_month, tsoil_daily, soilhum_daily]
+  gdd_date_pair:
+    axes: [npts, two]
+    fields: [gdd_init_date]
+  pft_part:
+    axes: [npts, nvm, nparts]
+    fields: [resp_maint_part]
+  pft_part_element:
+    axes: [npts, nvm, nparts, nelements]
+    fields: [biomass, turnover_daily, turnover_longterm, bm_to_litter]
+  pft_leaf_age:
+    axes: [npts, nvm, nleafages]
+    fields: [leaf_age, leaf_frac, frac_age]
+  pft_litter:
+    axes: [npts, nvm, nlitt]
+    fields: [litterpart, dead_leaves]
+  legacy_carbon:
+    axes: [npts, ncarb, nvm]
+    fields: [carbon, carbon_save]
+  legacy_litter:
+    axes: [npts, nlitt, nvm, nlevs, nelements]
+    fields: [litter]
+  legacy_lignin:
+    axes: [npts, nvm, nlevs]
+    fields: [lignin_struc]
+  pft_litter_element:
+    axes: [npts, nvm, nlitt, nelements]
+    fields: [fuel_1hr, fuel_10hr, fuel_100hr, fuel_1000hr]
+  product_age:
+    axes: [npts, nage, nwp]
+    fields: [prod10, prod100, flux10, flux100]
+  assimilation:
+    axes: [npts, nvm, npco2]
+    fields: [assim_param]
+  litter_above:
+    axes: [npts, nlitt, nvm, nelements]
+    fields: [litter_above]
+  litter_below:
+    axes: [npts, nlitt, nvm, ndeep, nelements]
+    fields: [litter_below]
+  deep_carbon_32l:
+    axes: [npts, ncarb, nvm, ndeep]
+    fields: [carbon_32l]
+  dissolved_organic_carbon:
+    axes: [npts, nvm, ndeep, ndoc, npool, nelements]
+    fields: [DOC]
+  interception_storage:
+    axes: [npts, nvm, nelements]
+    fields: [interception_storage]
+  pft_deep:
+    axes: [npts, nvm, ndeep]
+    fields: [lignin_struc_below]
+  deep_pft:
+    axes: [npts, ndeep, nvm]
+    fields: [deepC_a, deepC_s, deepC_p, soilc_total, O2_soil, CH4_soil, deepC_peat]
+  snow_pft:
+    axes: [npts, nsnow, nvm]
+    fields: [O2_snow, CH4_snow]
+  wetland_vertical:
+    axes: [npts, nvert]
+    fields: [uo_0, uold2_0, uo_wet1, uold2_wet1, uo_wet2, uold2_wet2, uo_wet3, uold2_wet3, uo_wet4, uold2_wet4]
+  wetland_month_series:
+    axes: [npts, months_num]
+    fields: [fwet_series]
+  deep_grid:
+    axes: [npts, ndeep]
+    fields: [deepC_a_save, deepC_s_save, deepC_p_save]
+  restart_litter_pft:
+    axes: [npts, nlitt, nvm]
+    fields: [litter_not_avail]
+  spinup_matrix:
+    axes: [npts, nvm, nbpools, nbpools]
+    fields: [MatrixV]
+  spinup_vector:
+    axes: [npts, nvm, nbpools]
+    fields: [Vector_U, previous_stock, current_stock]
+  product_total:
+    axes: [npts]
+    fields: [prod10_total, prod100_total]
+  nonbiological_fraction:
+    axes: [npts, nnobio]
+    fields: [frac_nobio]
+  soil_tile:
+    axes: [npts, nstm]
+    fields: [soiltile]
+  accumulator_map:
+    axes: [field_map]
+    fields: [daily_accumulators]
+
+boolean_fields: [pft_present, senescence, need_adjacent, begin_leaves, ok_equilibrium, read_input_thawed_humidity, read_input_depth_organic_soil]
+
+# Contracts below are resolved per field by the lifecycle audit.  They live in
+# this source-audit asset deliberately: the audit must validate declarations,
+# not manufacture successful lifecycle stages in Python.
+mask_contract_groups:
+  npts:
+    compressed_land_domain:
+      fields: [carb_mass_total, fpeat, thawed_humidity, depth_organic_soil, t2m_longterm, t2m_month, t2m_week, tseason, tseason_length, tseason_tmp, gdd0_lastyear, gdd0_thisyear, precip_lastyear, precip_thisyear, litterhum_daily, t2m_daily, t2m_min_daily, t2m_max_daily, wspeed_daily, tsurf_daily, precip_daily, snowfall_daily, snowmass_daily, tmc_topgrass_daily, fwet_daily, liqwt_daily, temp_growth, tot_bare_soil, totfrac_nobio, ni_acc, tsurf_year, height_acro, fwet_month, liqwt_month, liqwt_max, delta_fsave, t2m_14, after_snow, after_wet, wet1day, wet2day, nbp_sum, nbp_flux, ok_equilibrium, gpp_daily, npp_daily, resp_maint, resp_growth, age, sla_calc, pft_present, ind, adapted, regenerate, npp_longterm, lm_lastyearmax, turnover_time, senescence, when_growthinit, co2_to_bm, veget_lastlight, everywhere, need_adjacent, rip_time, altmax, fixed_cryoturbation_depth, lignin_struc_above, moiavail_month, moiavail_week, gdd_m5_dormance, gdd_from_growthinit, gdd_midwinter, ncd_dormance, ngd_minus5, time_hum_min, hum_min_dormance, tmin_spring_time, begin_leaves, onset_date, gpp_week, maxmoiavail_lastyear, maxmoiavail_thisyear, minmoiavail_lastyear, minmoiavail_thisyear, maxgppweek_lastyear, maxgppweek_thisyear, maxfpc_lastyear, maxfpc_thisyear, lm_thisyearmax, humrel_daily, cn_ind, lai, veget, veget_max, fireindex, firelitter, resp_hetero, co2_fire, carbon_acro, carbon_cato, depth_deepsoil, wshtotsum, sr_ugb, nb_ani, grazed_frac, import_yield, nb_grazingdays, height, frac_age, tsoil_month, soilhum_month, tsoil_daily, soilhum_daily, gdd_init_date, resp_maint_part, biomass, turnover_daily, turnover_longterm, bm_to_litter, leaf_age, leaf_frac, litterpart, dead_leaves, carbon, carbon_save, litter, lignin_struc, fuel_1hr, fuel_10hr, fuel_100hr, fuel_1000hr, prod10, prod100, flux10, flux100, assim_param, litter_above, litter_below, carbon_32l, DOC, interception_storage, lignin_struc_below, deepC_a, deepC_s, deepC_p, soilc_total, O2_soil, CH4_soil, deepC_peat, O2_snow, CH4_snow, uo_0, uold2_0, uo_wet1, uold2_wet1, uo_wet2, uold2_wet2, uo_wet3, uold2_wet3, uo_wet4, uold2_wet4, fwet_series, deepC_a_save, deepC_s_save, deepC_p_save, litter_not_avail, MatrixV, Vector_U, previous_stock, current_stock, prod10_total, prod100_total, frac_nobio, soiltile]
+      mode: compressed_land_domain
+      applicability: npts is the local compressed landpoint domain indexed by index_g, not a latitude-longitude raster
+      inactive_write_behavior: no ocean/non-land slots exist in this array; gather/scatter preserves only index_g land entries
+      owner: jax_orchidee.stomate.restart_io.read_stomate_readstart_states_from_template
+      fortran_provenance:
+        file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+        subroutine: readstart/writerestart
+        lines: 170-256, 1761-1960
+  nvm:
+    pftpresent_state:
+      fields: [age, sla_calc, pft_present, ind, adapted, regenerate, npp_longterm, lm_lastyearmax, turnover_time, senescence, when_growthinit, co2_to_bm, everywhere, need_adjacent, rip_time, begin_leaves, cn_ind, biomass, turnover_daily, turnover_longterm, bm_to_litter, leaf_age, leaf_frac]
+      mode: PFTpresent
+      applicability: demographic state is updated where the source PFTpresent/prescribe logic admits the PFT slot
+      inactive_write_behavior: preserve source restart/carry values until prescribe explicitly creates or removes the PFT
+      owner: jax_orchidee.stomate.carbon_kernels.prescribe_step
+      fortran_provenance:
+        file: fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90
+        subroutine: prescribe
+        lines: 126-248
+    crown_tree_state:
+      fields: [height]
+      mode: PFTpresent
+      applicability: crown updates height only for present natural tree PFT slots with wood mass above min_stomate
+      inactive_write_behavior: retain the incoming height for bare, absent, grass, and sub-threshold tree slots
+      owner: jax_orchidee.stomate.carbon_kernels.crown_step
+      fortran_provenance:
+        file: fortran_source/ORCHIDEE/src_stomate/lpj_crown.f90
+        subroutine: crown
+        lines: 78-201
+    lai_map_leaf_fraction_state:
+      fields: [frac_age]
+      mode: veget_mask_2d
+      applicability: with paper LAI_MAP=false, every landpoint/PFT/leaf-age slot receives the final leaf_frac value at the daily boundary
+      inactive_write_behavior: exact leaf_frac copy includes zero-valued inactive PFT and leaf-age slots; no stale frac_age carry is permitted
+      owner: jax_orchidee.driver.orchestration._paper_day_first_stomate_state_packet
+      fortran_provenance:
+        file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+        subroutine: stomate_main
+        lines: 4201-4218
+    vegetated_flux_state:
+      fields: [gpp_daily, npp_daily, resp_maint, resp_growth, veget_lastlight, moiavail_month, moiavail_week, gdd_m5_dormance, gdd_from_growthinit, gdd_midwinter, ncd_dormance, ngd_minus5, time_hum_min, hum_min_dormance, tmin_spring_time, onset_date, gpp_week, maxmoiavail_lastyear, maxmoiavail_thisyear, minmoiavail_lastyear, minmoiavail_thisyear, maxgppweek_lastyear, maxgppweek_thisyear, maxfpc_lastyear, maxfpc_thisyear, lm_thisyearmax, humrel_daily, lai, veget, veget_max, resp_hetero, co2_fire, resp_maint_part]
+      mode: veget_mask_2d
+      applicability: process updates are masked by source vegetation cover and active-PFT state at each landpoint
+      inactive_write_behavior: retain source-backed state or process-defined zero only where the owner applies the same vegetation mask
+      owner: jax_orchidee.driver.orchestration._paper_day_first_stomate_state_packet
+      fortran_provenance:
+        file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+        subroutine: stomate_main
+        lines: 3187-4364
+    peat_permafrost_state:
+      fields: [altmax, fixed_cryoturbation_depth, carbon_acro, carbon_cato, depth_deepsoil, deepC_a, deepC_s, deepC_p, soilc_total, O2_soil, CH4_soil, deepC_peat, O2_snow, CH4_snow]
+      mode: is_peat_or_permafrost
+      applicability: peat/permafrost process masks and vertical-domain switches determine active PFT slots
+      inactive_write_behavior: preserve the exact guarded source carry when the peat/permafrost process is disabled
+      owner: jax_orchidee.driver.orchestration.paper_day_active_restart_producer_fields
+      fortran_provenance:
+        file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+        subroutine: stomate_main
+        lines: 3288-3742
+    all_slots_state:
+      fields: [lignin_struc_above, fireindex, firelitter, wshtotsum, sr_ugb, nb_ani, grazed_frac, import_yield, nb_grazingdays, litterpart, dead_leaves, carbon, carbon_save, litter, lignin_struc, fuel_1hr, fuel_10hr, fuel_100hr, fuel_1000hr, assim_param, litter_above, litter_below, carbon_32l, DOC, interception_storage, lignin_struc_below, litter_not_avail, MatrixV, Vector_U, previous_stock, current_stock]
+      mode: all_slots_state
+      applicability: restart storage spans every configured nvm slot; branch-specific owners decide whether a slot changes
+      inactive_write_behavior: preserve the source-backed slot unless an explicit process owner overwrites it
+      owner: jax_orchidee.stomate.restart_io.read_stomate_readstart_states_from_template
+      fortran_provenance:
+        file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+        subroutine: readstart/writerestart
+        lines: 170-256, 1761-1960
+
+disposition_contracts:
+  restart_variable:
+    serialization: fortran_restart_variable
+    read_owner: jax_orchidee.stomate.restart_io.read_stomate_readstart_states_from_template
+    day_start_owner: jax_orchidee.driver.orchestration.DriverFirstDayStomateStatePacket
+    day_end_owner: jax_orchidee.driver.orchestration._paper_day_end_state_packet
+    write_owner: jax_orchidee.stomate.restart_io.write_stomate_full_writerestart_states_from_template
+    next_read_owner: jax_orchidee.stomate.restart_io.read_stomate_readstart_states_from_template
+    freshness_contract:
+      step_behavior: overwritten by the source-routed production owner or retained only by an explicit source-backed guard
+      guarded_carry_source: fixed_path_carry_fields
+      cross_step: day-end packet becomes the next step/day start state
+      cross_year: serialized restart value is read at the next model start
+  derived:
+    serialization: not_serialized_recomputed
+    freshness_contract:
+      step_behavior: recomputed from declared source inputs at the declared recompute point
+      cross_step: consumers receive the recomputed value; no independent carry authority
+      cross_year: recomputed after restart inputs are read
+  runtime_only:
+    serialization: not_serialized_runtime
+    freshness_contract:
+      step_behavior: initialized and updated by declared executable owners
+      cross_step: runtime owner returns the next accumulator state
+      cross_year: initialized from new-run forcing; no restart value is read or written
+  source_local_control:
+    serialization: not_serialized_source_local
+    freshness_contract:
+      step_behavior: read and consumed locally by the declared owner
+      cross_step: no scientific state carry
+      cross_year: re-evaluated by restart read logic; no restart value is written
+  packet_only:
+    serialization: not_serialized_packet
+    freshness_contract:
+      step_behavior: produced and consumed through the declared packet owners
+      cross_step: field-specific packet disposition
+      cross_year: field-specific packet disposition
+
+# Canonical fields assembled from several restart variables or derived after
+# reading. Source aliases are resolved before lifecycle classification.
+source_aliases:
+  pft_present: [PFTpresent]
+  rip_time: [RIP_time]
+  co2_to_bm: [co2_to_bm_dgvm]
+  resp_maint_part: [maint_resp]
+  lignin_struc_below: [lig_struc_be]
+  fixed_cryoturbation_depth: [fixed_cryoturb_depth]
+  carbon_32l: [carbon_32l_a, carbon_32l_s, carbon_32l_p]
+  DOC: [freedoc, adsdoc]
+  dt_days_read: [dt_days]
+  humrel_daily: [moiavail_daily]
+  tseason: [Tseason]
+  tseason_length: [Tseason_length]
+  tseason_tmp: [Tseason_tmp]
+  tmin_spring_time: [Tmin_spring_time]
+  maxmoiavail_lastyear: [maxmoistr_last]
+  maxmoiavail_thisyear: [maxmoistr_this]
+  minmoiavail_lastyear: [minmoistr_last]
+  minmoiavail_thisyear: [minmoistr_this]
+
+# ``stomate_io`` exposes the restart variable as ``resp_hetero``, but the
+# caller passes the SAVE daily accumulator ``resp_hetero_d``.  It must never
+# be confused with an instantaneous heterotrophic-respiration diagnostic.
+restart_field_contracts:
+  resp_hetero:
+    fortran_state_symbol: resp_hetero_d
+    restart_variable_name: resp_hetero
+    update_owner: jax_orchidee.driver.orchestration._paper_day_first_stomate_state_packet
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main
+      lines: 294-296, 3364-3648, 4958, 5467
+
+# Every restart field must occur in exactly one group below or in
+# fixed_path_carry_fields.  There is deliberately no default update mode.
+restart_update_groups:
+  daily_packet_literal:
+    disposition: production_overwrite
+    owner: jax_orchidee.driver.orchestration._paper_day_first_stomate_state_packet
+    ast_mapping_names: [fields]
+    fields: [DOC, adapted, age, altmax, assim_param, begin_leaves, biomass, bm_to_litter, carb_mass_total, carbon_32l, co2_to_bm, dead_leaves, everywhere, fixed_cryoturbation_depth, fuel_1000hr, fuel_100hr, fuel_10hr, fuel_1hr, gdd_init_date, gpp_daily, ind, interception_storage, leaf_age, leaf_frac, lignin_struc_above, lignin_struc_below, litter_above, litter_below, litterpart, npp_daily, npp_longterm, pft_present, regenerate, resp_growth, resp_maint, resp_maint_part, rip_time, senescence, sla_calc, turnover_daily, turnover_time, when_growthinit]
+  active_restart_producers:
+    disposition: production_overwrite
+    owner: jax_orchidee.driver.orchestration.paper_day_active_restart_producer_fields
+    ast_mapping_names: [$return]
+    fields: [dt_days_read, resp_hetero, deepC_peat, depth_deepsoil]
+  daily_accumulator_outputs:
+    disposition: production_overwrite
+    owner: jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry
+    ast_mapping_names: [current, increments, fields]
+    fields: [fwet_daily, humrel_daily, liqwt_daily, litterhum_daily, precip_daily, soilhum_daily, t2m_daily, t2m_max_daily, t2m_min_daily, tsoil_daily, tsurf_daily, wspeed_daily]
+  season_outputs:
+    disposition: production_overwrite
+    owner: jax_orchidee.driver.orchestration._paper_day_season_fields_from_bundle_source
+    ast_mapping_names: [fields]
+    ast_dynamic_constants: [STOMATE_DAY_SEASON_MEMORY_FIELDS, STOMATE_DAY_SEASON_ANNUAL_FIELDS, STOMATE_DAY_SEASON_BIOMETEOROLOGY_FIELDS]
+    fields: [gdd0_lastyear, gdd0_thisyear, gdd_from_growthinit, gdd_m5_dormance, gdd_midwinter, gpp_week, hum_min_dormance, lm_lastyearmax, lm_thisyearmax, maxfpc_lastyear, maxfpc_thisyear, maxgppweek_lastyear, maxgppweek_thisyear, maxmoiavail_lastyear, maxmoiavail_thisyear, minmoiavail_lastyear, minmoiavail_thisyear, moiavail_month, moiavail_week, ncd_dormance, ngd_minus5, onset_date, precip_lastyear, precip_thisyear, soilhum_month, t2m_14, t2m_longterm, t2m_month, t2m_week, tau_longterm, time_hum_min, tmin_spring_time, tseason, tseason_length, tseason_tmp, tsoil_month, tsurf_year, turnover_longterm]
+
+# The existing line scanner cannot resolve a string literal placed on the
+# continuation line after ``CALL restget_p &``. Keep the exception explicit
+# and source-line-specific rather than silently attributing the previous
+# ``var_name`` assignment.
+source_line_overrides:
+  lignin_struc_below:
+    read_lines: [1530]
+    write_lines: [2374]
+
+# These are local switches set by readstart while probing optional variables.
+# They are represented in the normalized read report but are neither
+# restget_p/restput_p variables nor scientific restart state.
+source_local_fields:
+  read_input_thawed_humidity:
+    read_owner: jax_orchidee.stomate.restart_io.read_stomate_readstart_states_from_template
+    use_owner: jax_orchidee.stomate.restart_io.read_stomate_readstart_states_from_template
+    serialization: not_serialized_source_local
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+      subroutine: readstart
+      lines: 1201-1215
+  read_input_depth_organic_soil:
+    read_owner: jax_orchidee.stomate.restart_io.read_stomate_readstart_states_from_template
+    use_owner: jax_orchidee.stomate.restart_io.read_stomate_readstart_states_from_template
+    serialization: not_serialized_source_local
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+      subroutine: readstart
+      lines: 1218-1225
+
+derived_fields:
+  prod10_total:
+    inputs: [prod10]
+    jax_owner: jax_orchidee.stomate.reference.read_restart_product_total
+    recompute_at: immediately after prod10 restart input is normalized and whenever diagnostics consume the total
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+      subroutine: readstart/writerestart
+      lines: 1104-1139, 2761-2783
+    gap: Derived JAX convenience field is not an independent Fortran restart variable.
+  prod100_total:
+    inputs: [prod100]
+    jax_owner: jax_orchidee.stomate.reference.read_restart_product_total
+    recompute_at: immediately after prod100 restart input is normalized and whenever diagnostics consume the total
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_io.f90
+      subroutine: readstart/writerestart
+      lines: 1104-1139, 2761-2783
+    gap: Derived JAX convenience field is not an independent Fortran restart variable.
+  soilc_total:
+    inputs: [deepC_a, deepC_s, deepC_p]
+    jax_owner: jax_orchidee.stomate.reference.read_restart_deep_carbon_total
+    recompute_at: stomate initialization after the three deep-carbon restart pools are read
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_init
+      lines: 1586-1589
+    gap: Derived runtime total has no independent restart variable.
+
+runtime_initialized_fields:
+  snowfall_daily:
+    initialization_owner: jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry
+    update_owner: jax_orchidee.stomate.daily.stomate_daily_accumulation_fold_from_entries
+    serialization: not_serialized_runtime
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_init
+      lines: 8181-8321
+  snowmass_daily:
+    initialization_owner: jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry
+    update_owner: jax_orchidee.stomate.daily.stomate_daily_accumulation_fold_from_entries
+    serialization: not_serialized_runtime
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_init
+      lines: 8181-8321
+  tmc_topgrass_daily:
+    initialization_owner: jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry
+    update_owner: jax_orchidee.stomate.daily.stomate_daily_accumulation_fold_from_entries
+    serialization: not_serialized_runtime
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_init
+      lines: 8181-8321
+
+packet_only_fields:
+  height:
+    producer: jax_orchidee.stomate.carbon_kernels.crown_step
+    consumer: jax_orchidee.driver.orchestration._paper_day_first_stomate_state_packet
+    day_start: read from the slowproc-managed previous-step state and passed into StomateLpj crown
+    update: final crown result after establishment when present, otherwise the post-NPP crown result
+    day_end: written explicitly to DriverFirstDayStomateStatePacket
+    cross_step: carried by the slowproc STOMATE previous-step packet and consumed on the next daily boundary
+    cross_year: serialized and restored by slowproc restart handling, outside stomate_io writerestart
+    serialization: not_serialized_packet
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/lpj_crown.f90
+      subroutine: crown
+      lines: 78-201
+  frac_age:
+    producer: jax_orchidee.driver.orchestration._paper_day_first_stomate_state_packet
+    consumer: jax_orchidee.driver.orchestration._paper_day_end_state_packet
+    day_start: read from the slowproc-managed previous-step state
+    update: LAI_MAP=false copies final leaf_frac into frac_age after daily LAI calculation
+    day_end: written explicitly to DriverFirstDayStomateStatePacket
+    cross_step: carried by the slowproc STOMATE previous-step packet and consumed by the next SECHIBA day
+    cross_year: serialized and restored by slowproc restart handling, outside stomate_io writerestart
+    serialization: not_serialized_packet
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main
+      lines: 4201-4218
+  cn_ind:
+    producer: jax_orchidee.driver.orchestration._stomate_lpj_initial_cn_ind
+    consumer: jax_orchidee.driver.orchestration._paper_day_first_stomate_state_packet
+    day_start: produced at STOMATE LPJ entry
+    update: updated by source-routed STOMATE carbon/LPJ owners
+    day_end: written to DriverFirstDayStomateStatePacket
+    cross_step: carried by the slowproc STOMATE previous-step packet
+    cross_year: reconstructed by LPJ initialization from restart scientific state
+    serialization: not_serialized_packet
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+      subroutine: StomateLpj
+      lines: 1070-1557
+  daily_accumulators:
+    producer: jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry
+    consumer: jax_orchidee.stomate.daily.stomate_daily_process_fold_from_entries
+    day_start: initialized from the current forcing entry
+    update: accumulated over the half-hour entries
+    day_end: reset/returned by the daily process fold
+    cross_step: returned accumulator state seeds the next half-hour/day fold
+    cross_year: initialized from first forcing entry; not restart state
+    serialization: not_serialized_packet
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main
+      lines: 4944-5000
+  temp_growth:
+    producer: jax_orchidee.driver.orchestration._paper_day_temp_growth_from_season_fields
+    consumer: jax_orchidee.driver.orchestration._paper_day_first_stomate_state_packet
+    day_start: derived from current season temperature memory
+    update: recomputed at the STOMATE daily boundary
+    day_end: emitted in the STOMATE state packet
+    cross_step: consumed from the previous-step slowproc state until the next daily recomputation
+    cross_year: recomputed from restart-backed season memory
+    serialization: not_serialized_packet
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main
+      lines: 5049-5049
+  lai:
+    fortran_provenance: &slowproc_surface
+      file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+      subroutine: slowproc_main
+      lines: 1103-1121
+    producer: &surface_producer jax_orchidee.sechiba.slowproc.slowproc_surface_update_explicit
+    consumer: &surface_consumer jax_orchidee.driver.orchestration._paper_day_first_stomate_state_packet
+    day_start: supplied by slowproc surface state
+    update: updated at the source-routed slowproc/STOMATE daily boundary
+    day_end: emitted in the coupled state packet
+    cross_step: carried by the slowproc previous-step packet
+    cross_year: reconstructed from restart-backed vegetation state and slowproc inputs
+    serialization: not_serialized_packet
+  frac_nobio:
+    fortran_provenance: *slowproc_surface
+    producer: *surface_producer
+    consumer: *surface_consumer
+    day_start: supplied by slowproc surface state
+    update: updated at the source-routed slowproc/STOMATE daily boundary
+    day_end: emitted in the coupled state packet
+    cross_step: carried by the slowproc previous-step packet
+    cross_year: reconstructed from restart-backed vegetation state and slowproc inputs
+    serialization: not_serialized_packet
+  veget_max:
+    fortran_provenance: *slowproc_surface
+    producer: *surface_producer
+    consumer: *surface_consumer
+    day_start: supplied by slowproc surface state
+    update: updated at the source-routed slowproc/STOMATE daily boundary
+    day_end: emitted in the coupled state packet
+    cross_step: carried by the slowproc previous-step packet
+    cross_year: reconstructed from restart-backed vegetation state and slowproc inputs
+    serialization: not_serialized_packet
+  veget:
+    fortran_provenance: *slowproc_surface
+    producer: *surface_producer
+    consumer: *surface_consumer
+    day_start: supplied by slowproc surface state
+    update: updated at the source-routed slowproc/STOMATE daily boundary
+    day_end: emitted in the coupled state packet
+    cross_step: carried by the slowproc previous-step packet
+    cross_year: reconstructed from restart-backed vegetation state and slowproc inputs
+    serialization: not_serialized_packet
+  soiltile:
+    fortran_provenance: *slowproc_surface
+    producer: *surface_producer
+    consumer: *surface_consumer
+    day_start: supplied by slowproc surface state
+    update: updated at the source-routed slowproc/STOMATE daily boundary
+    day_end: emitted in the coupled state packet
+    cross_step: carried by the slowproc previous-step packet
+    cross_year: reconstructed from restart-backed vegetation state and slowproc inputs
+    serialization: not_serialized_packet
+  totfrac_nobio:
+    fortran_provenance: *slowproc_surface
+    producer: *surface_producer
+    consumer: *surface_consumer
+    day_start: supplied by slowproc surface state
+    update: updated at the source-routed slowproc/STOMATE daily boundary
+    day_end: emitted in the coupled state packet
+    cross_step: carried by the slowproc previous-step packet
+    cross_year: reconstructed from restart-backed vegetation state and slowproc inputs
+    serialization: not_serialized_packet
+  tot_bare_soil:
+    fortran_provenance: *slowproc_surface
+    producer: *surface_producer
+    consumer: *surface_consumer
+    day_start: supplied by slowproc surface state
+    update: updated at the source-routed slowproc/STOMATE daily boundary
+    day_end: emitted in the coupled state packet
+    cross_step: carried by the slowproc previous-step packet
+    cross_year: reconstructed from restart-backed vegetation state and slowproc inputs
+    serialization: not_serialized_packet
+
+# Executable carry owner: jax_orchidee.stomate.restart_io::
+# stomate_fixed_path_carry_state. Every field is listed explicitly so a field
+# cannot inherit fixed-path status merely because it shares a restart class.
+fixed_path_carry_fields:
+  veget_lastlight: &carry_dgvm_light
+    guard: STOMATE_OK_DGVM=false
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+      subroutine: StomateLpj/light
+      lines: 1277-1297
+  need_adjacent:
+    guard: STOMATE_OK_DGVM=false and LPJ_GAP_CONST_MORT=true
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+      subroutine: StomateLpj/establish
+      lines: 1299-1320
+  carbon: &carry_ok_leak_legacy
+    guard: OK_LEAK=true selects littercalc_leak/soilcarbon_leak; legacy carbon is not updated
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main
+      lines: 3288-3565
+  litter: *carry_ok_leak_legacy
+  lignin_struc: *carry_ok_leak_legacy
+  prod10: &carry_no_lcc_products
+    guard: LAND_COVER_CHANGE=false makes do_now_stomate_lcchange false
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+      subroutine: StomateLpj/lcchange
+      lines: 1413-1543
+  prod100: *carry_no_lcc_products
+  flux10: *carry_no_lcc_products
+  flux100: *carry_no_lcc_products
+  fpeat:
+    guard: PEAT_OCCUR=false
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main
+      lines: 3593-3630
+  deepC_a: &carry_no_permafrost_or_lcc
+    guard: OK_PC=false and LAND_COVER_CHANGE=false
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main/StomateLpj
+      lines: 3634-3665; stomate_lpj.f90 1413-1543
+  deepC_s: *carry_no_permafrost_or_lcc
+  deepC_p: *carry_no_permafrost_or_lcc
+  thawed_humidity: &carry_no_permafrost_inputs
+    guard: OK_PC=false
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main
+      lines: 3634-3665
+  depth_organic_soil: *carry_no_permafrost_inputs
+  date: &carry_date
+    guard: source contains no post-read assignment
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main
+      lines: 869-872, 2899, 2980
+  O2_soil: &carry_ok_pc
+    guard: OK_PC=false
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main
+      lines: 3342-3370, 3634-3665
+  CH4_soil: *carry_ok_pc
+  O2_snow: *carry_ok_pc
+  CH4_snow: *carry_ok_pc
+  fireindex: &carry_fire
+    guard: FIRE_DISABLE=true
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+      subroutine: StomateLpj
+      lines: 1184-1221
+  firelitter: *carry_fire
+  co2_fire: *carry_fire
+  ni_acc: *carry_fire
+  uo_0: &carry_wetland_ch4
+    guard: CH4_CALCUL=false
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main
+      lines: 3671-3742
+  uold2_0: *carry_wetland_ch4
+  uo_wet1: *carry_wetland_ch4
+  uold2_wet1: *carry_wetland_ch4
+  uo_wet2: *carry_wetland_ch4
+  uold2_wet2: *carry_wetland_ch4
+  uo_wet3: *carry_wetland_ch4
+  uold2_wet3: *carry_wetland_ch4
+  uo_wet4: *carry_wetland_ch4
+  uold2_wet4: *carry_wetland_ch4
+  height_acro: &carry_legacy_peat
+    guard: OK_LEAK=true and OK_PEAT=false
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main
+      lines: 3342-3512
+  carbon_acro: *carry_legacy_peat
+  carbon_cato: *carry_legacy_peat
+  fwet_month: &carry_peat_occurrence
+    guard: PEAT_OCCUR=false
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main
+      lines: 3593-3630
+  liqwt_month: *carry_peat_occurrence
+  liqwt_max: *carry_peat_occurrence
+  fwet_series: *carry_peat_occurrence
+  carbon_save: &carry_dynamic_peat
+    guard: DYN_PEAT=false and LAND_COVER_CHANGE=false
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+      subroutine: StomateLpj/lpj_cover_peat
+      lines: 3089-3187
+  deepC_a_save: *carry_dynamic_peat
+  deepC_s_save: *carry_dynamic_peat
+  deepC_p_save: *carry_dynamic_peat
+  delta_fsave: *carry_dynamic_peat
+  wshtotsum: &carry_grazing
+    guard: ENABLE_GRAZING=false
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate_lpj.f90
+      subroutine: StomateLpj
+      lines: 1323-1356
+  sr_ugb: *carry_grazing
+  nb_ani: *carry_grazing
+  grazed_frac: *carry_grazing
+  import_yield: *carry_grazing
+  litter_not_avail: *carry_grazing
+  nb_grazingdays: *carry_grazing
+  after_snow: *carry_grazing
+  after_wet: *carry_grazing
+  wet1day: *carry_grazing
+  wet2day: *carry_grazing
+  Global_years: &carry_spinup
+    guard: SPINUP_ANALYTIC=false
+    fortran_provenance:
+      file: fortran_source/ORCHIDEE/src_stomate/stomate.f90
+      subroutine: stomate_main
+      lines: 4938-4941, 5122-5226
+  nbp_sum: *carry_spinup
+  nbp_flux: *carry_spinup
+  ok_equilibrium: *carry_spinup
+  MatrixV: *carry_spinup
+  Vector_U: *carry_spinup
+  previous_stock: *carry_spinup
+  current_stock: *carry_spinup
+
+required_lifecycle_stages:
+  restart_variable: [fortran_restart_read, day_start_state, update_or_guarded_carry, day_end_packet, restart_write, next_restart_read]
+  derived: [source_inputs, executable_owner, recompute_point, explicitly_not_serialized]
+  runtime_only: [initialization_owner, update_owner, explicitly_not_serialized]
+  source_local_control: [read_owner, use_owner, explicitly_not_serialized]
+  packet_only: [producer, consumer, day_start, update, day_end, cross_step, cross_year, explicitly_not_serialized]
+
+restart_file_scope:
+  protocol: paper production uses one independent landpoint per ORCHIDEE run
+  netcdf_schema: docs/source_audits/stomate_restart_netcdf_schema.json
+  writer: jax_orchidee.stomate.restart_io.write_stomate_full_writerestart_states
+  scatter: Fortran one-based index_g is exactly [1] on the 1x1 physical grid
+  validation: complete five-state read-write-read plus exact dimensions, variable order, dtype, metadata, chunking, and endian checks
+
+known_global_gaps: []

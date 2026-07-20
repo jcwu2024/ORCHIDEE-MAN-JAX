@@ -1,0 +1,35 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ integer,parameter::i_std=int32,r_std=real64
+end module
+module transport
+ use defprec
+ implicit none
+ integer,parameter::numout=6
+ interface xios_orchidee_send_field
+  module procedure x1,x2
+ end interface
+ interface histwrite_p
+  module procedure h1,h2
+ end interface
+contains
+ subroutine x1(name,value);character(*),intent(in)::name;real(r_std),intent(in)::value(:);write(10,'(a)')'xios,'//trim(name);end subroutine
+ subroutine x2(name,value);character(*),intent(in)::name;real(r_std),intent(in)::value(:,:);write(10,'(a)')'xios,'//trim(name);end subroutine
+ subroutine h1(id,name,k,value,n,index);integer,intent(in)::id,k,n,index(:);character(*),intent(in)::name;real(r_std),intent(in)::value(:);write(10,'(a)')'hist,'//trim(name);end subroutine
+ subroutine h2(id,name,k,value,n,index);integer,intent(in)::id,k,n,index(:);character(*),intent(in)::name;real(r_std),intent(in)::value(:,:);write(10,'(a)')'hist,'//trim(name);end subroutine
+end module
+program main
+ use defprec;use transport
+ implicit none
+ integer,parameter::kjpindex=1,nvm=14
+ integer::kjit=1,hist_id=1,hist2_id,index(1)=(/1/),indexveg(14),i
+ logical::ok_co2,almaoutput
+ real(r_std)::q_cdrag(1)=(/.1d0/),q_cdrag_pft(1,14),raero(1)=(/2.d0/),wind(1)=(/3.d0/),qsatt(1)=(/.01d0/),coszang(1)=(/.5d0/),control_salinity(1)=(/.7d0/),control_inudate(1)=(/.8d0/),cim(1,14)
+ character(512)::path
+ call get_command_argument(1,path);open(10,file=trim(path),status='replace');indexveg=[(i,i=1,14)];q_cdrag_pft=.1d0;cim=300.d0
+ ok_co2=.true.;almaoutput=.false.
+! <OUTPUT_FRAGMENT>
+ ok_co2=.false.;almaoutput=.false.;hist2_id=-1
+! <OUTPUT_FRAGMENT>
+ close(10)
+end program

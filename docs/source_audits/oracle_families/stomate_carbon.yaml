@@ -1,0 +1,351 @@
+schema_version: 2
+families:
+  - id: stomate_prescribe_restart_gate
+    runner: oracle_lane_stomate_carbon:run_prescribe_oracle
+    ledger_entries: [stomate.active.prescribe_restart_gate]
+    input_asset: outputs/reference_mode/micro_oracles/stomate_prescribe_restart_gate/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/stomate_prescribe_restart_gate/point_comparisons.csv
+    output_contract: [cold_present, cold_everywhere, cold_ind, cold_cn, cold_co2, cold_biomass, cold_leaf_frac, restart_present, restart_everywhere, restart_ind, restart_cn, restart_co2, restart_biomass, restart_leaf_frac, tree_present, tree_everywhere, tree_ind, tree_cn, tree_co2, tree_biomass, tree_leaf_frac, grass_present, grass_everywhere, grass_ind, grass_cn, grass_co2, grass_biomass, grass_leaf_frac]
+    procedures:
+      - id: prescribe
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90
+        procedure: prescribe
+        procedure_kind: subroutine
+        start_line: 90
+        end_line: 348
+        expected_source_sha256: cbdbc77377f5256026eedf0ed8b29aceb034de5aeffec1b19fc35621293abc81
+        expected_span_sha256: c6fea05c693144a0c5f053dd950703b7fa4ff92d5c725cf3492e97ad4d6c3485
+        dependencies: {use_modules: [stomate_data, pft_parameters, constantes]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_stomate_prescribe.f90.template, result_asset: outputs/reference_mode/micro_oracles/stomate_prescribe_restart_gate/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - id: prescribe-cold-restart-and-mask
+        ledger_entry: stomate.active.prescribe_restart_gate
+        fortran_lines: 257-333
+        condition: PFT14 firstcall with NONE versus restart plus positive/zero vegetation
+        expected_arm: gated sapling initialization, zero-vegetation mask, and state writeback
+        input_case: prescribe_three_point_cold_restart
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90:257:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90:257:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90:272:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90:280:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90:280:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90:284:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90:299:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90:313:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90:333:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_prescribe.f90:333:if:true
+
+  - id: stomate_constraints
+    runner: oracle_lane_stomate_carbon:run_oracle
+    ledger_entries: [stomate.active.constraints]
+    input_asset: outputs/reference_mode/micro_oracles/stomate_constraints/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/stomate_constraints/point_comparisons.csv
+    output_contract: [adapted, regenerate]
+    procedures:
+      - id: constraints
+        source_file: fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90
+        procedure: constraints
+        procedure_kind: subroutine
+        start_line: 99
+        end_line: 246
+        expected_source_sha256: 3e174c538fba0af96712e84570ef375446bf40bea62cef50d2e03fe58892fa1d
+        expected_span_sha256: a3ab3dc215a4b13f216f09157a703046da5d1cff29487f9b562c2bbccd291f49
+        dependencies: {use_modules: [xios_orchidee, ioipsl_para, stomate_data, constantes, pft_parameters]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_stomate_constraints.f90.template, result_asset: outputs/reference_mode/micro_oracles/stomate_constraints/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - id: constraints-pft14-parameter-and-threshold-matrix
+        ledger_entry: stomate.active.constraints
+        fortran_lines: 131-244
+        condition: two calls with defined/undef climate parameters and mixed thresholds
+        expected_arm: all PFT14-reachable masks, thresholds, and SAVE lifecycle
+        input_case: constraints_two_call_three_point
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:131:if:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:139:if:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:139:if:true
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:163:if:true
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:168:if:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:168:if:true
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:175:if:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:184:if:true
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:185:where:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:185:where:true
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:197:if:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:197:if:true
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:204:where:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:204:where:true
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:217:where:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:217:where:true
+          - fortran_source/ORCHIDEE/src_stomate/lpj_constraints.f90:244:if:false
+
+  - id: stomate_gap_mortality
+    runner: oracle_lane_stomate_carbon:run_gap_oracle
+    ledger_entries: [stomate.active.gap_mortality]
+    input_asset: outputs/reference_mode/micro_oracles/stomate_gap_mortality/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/stomate_gap_mortality/point_comparisons.csv
+    output_contract: [mortality, ind, biomass, bm_to_litter]
+    procedures:
+      - id: gap
+        source_file: fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90
+        procedure: gap
+        procedure_kind: subroutine
+        start_line: 117
+        end_line: 364
+        expected_source_sha256: 96af8f0d8aad63295f70a5b665bd3af46ed469833a1e22799c02545fc85e02d5
+        expected_span_sha256: 43e2711d597aeee340036129d28526251b9e2a0fe519eb782463915073ddff4c
+        dependencies: {use_modules: [xios_orchidee, stomate_data, pft_parameters, ioipsl_para, constantes]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_stomate_gap.f90.template, result_asset: outputs/reference_mode/micro_oracles/stomate_gap_mortality/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - id: gap-constant-pft14-present-absent
+        ledger_entry: stomate.active.gap_mortality
+        fortran_lines: 168-362
+        condition: two calls with PFT14 constant mortality and present/absent points
+        expected_arm: complete static PFT14 path, mask sides, and state writeback
+        input_case: pft14_gap_constant_three_point_two_call
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:168:if:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:168:if:true
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:174:if:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:182:if:true
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:185:if:true
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:188:if:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:230:where:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:230:where:true
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:244:if:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:254:if:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:261:if:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:280:where:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:280:where:true
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:292:if:false
+          - fortran_source/ORCHIDEE/src_stomate/lpj_gap.f90:362:if:false
+
+  - id: stomate_final_lai_vmax
+    runner: oracle_lane_stomate_carbon:run_vmax_oracle
+    ledger_entries: [stomate.active.final_lai_vmax]
+    input_asset: outputs/reference_mode/micro_oracles/stomate_final_lai_vmax/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/stomate_final_lai_vmax/point_comparisons_vmax.csv
+    output_contract: [vcmax, leaf_age, leaf_frac]
+    procedures:
+      - id: vmax
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90
+        procedure: vmax
+        procedure_kind: subroutine
+        start_line: 105
+        end_line: 363
+        expected_source_sha256: 797cda7ef727586df4200e70a6649ea79e7e0acb451b3f3b62f3a42d566db053
+        expected_span_sha256: 6dffcb769d1416b48d1a8520e19b9abbb758bc04d63e621b8ea70f601a9a6aab
+        dependencies: {use_modules: [stomate_data, pft_parameters, constantes]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_stomate_vmax.f90.template, result_asset: outputs/reference_mode/micro_oracles/stomate_final_lai_vmax/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - id: vmax-pft14-age-and-zero-fraction
+        ledger_entry: stomate.active.final_lai_vmax
+        fortran_lines: 155-361
+        condition: two calls with mixed and zero PFT14 leaf fractions
+        expected_arm: all leaf-age transfer masks, normalization sides, and ordinary vcmax
+        input_case: pft14_vmax_three_point_two_call
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:155:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:165:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:165:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:199:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:199:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:237:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:237:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:249:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:249:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:259:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:259:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:302:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:302:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:306:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:325:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:351:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_vmax.f90:361:if:false
+
+  - id: stomate_turnover
+    runner: oracle_lane_stomate_carbon:run_turnover_oracle
+    ledger_entries: [stomate.active.turnover]
+    input_asset: outputs/reference_mode/micro_oracles/stomate_turnover/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/stomate_turnover/point_comparisons.csv
+    output_contract: [senescence, age, lai, turnover_time, c_export, biomass, turnover, leaf_age, leaf_frac]
+    procedures:
+      - id: turn
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90
+        procedure: turn
+        procedure_kind: subroutine
+        start_line: 169
+        end_line: 947
+        expected_source_sha256: 9faf6d496b1357d7e476560df0afde4d8e8524c003223d2d89d138379fce2d6d
+        expected_span_sha256: 643f39aae942f663e6bb7f5f8d77d4827683a5e81beae494e064d8ce1d76a75c
+        dependencies: {use_modules: [xios_orchidee, ioipsl_para, stomate_data, constantes, pft_parameters]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_stomate_turnover.f90.template, result_asset: outputs/reference_mode/micro_oracles/stomate_turnover/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - id: turnover-pft14-none-matrix
+        ledger_entry: stomate.active.turnover
+        fortran_lines: 257-945
+        condition: two calls with PFT14 none-senescence and mixed leaf/heartwood states
+        expected_arm: complete configured PFT14 tree path and all reachable mask sides
+        input_case: pft14_turnover_three_point_two_call
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:257:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:261:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:261:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:307:select_case:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:449:case:case
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:469:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:480:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:489:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:496:else_if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:545:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:577:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:600:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:606:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:606:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:629:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:652:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:652:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:654:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:660:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:702:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:732:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:759:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:770:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:789:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:848:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:867:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:871:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:910:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:915:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:915:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:939:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:941:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_turnover.f90:945:if:false
+
+  - id: stomate_allocation
+    runner: oracle_lane_stomate_carbon:run_allocation_oracle
+    ledger_entries: [stomate.active.allocation]
+    input_asset: outputs/reference_mode/micro_oracles/stomate_allocation/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/stomate_allocation/point_comparisons.csv
+    output_contract: [biomass, f_alloc, leaf_age, leaf_frac]
+    procedures:
+      - id: alloc
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90
+        procedure: alloc
+        procedure_kind: subroutine
+        start_line: 146
+        end_line: 834
+        expected_source_sha256: b424cb7bfded79b629834d56150c985a04d6f22a698143f83b24873e1c70d22a
+        expected_span_sha256: 2583152714249ac55d1200dc8f806538034ca583be94366be3948d559f15d113
+        dependencies: {use_modules: [ioipsl_para, pft_parameters, stomate_data, constantes, constantes_soil]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_stomate_allocation.f90.template, result_asset: outputs/reference_mode/micro_oracles/stomate_allocation/comparison.json, compile_flags: ['-std=legacy', '-fdefault-real-8', '-ffree-line-length-none', '-O0', '-fcheck=all', '-ffpe-trap=invalid,zero,overflow', '-Wall', '-Wextra']}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - id: allocation-pft14-threshold-matrix
+        ledger_entry: stomate.active.allocation
+        fortran_lines: 278-832
+        condition: two calls over five PFT14 leaf/reserve/LAI/senescence states
+        expected_arm: complete non-crop natural-tree allocation and threshold writeback
+        input_case: pft14_allocation_five_point_two_call
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:278:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:283:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:283:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:289:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:300:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:307:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:409:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:427:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:460:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:466:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:494:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:500:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:500:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:526:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:532:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:570:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:570:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:582:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:582:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:594:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:594:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:611:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:624:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:654:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:654:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:663:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:663:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:667:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:747:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:747:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:763:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:763:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:765:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:765:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:798:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:798:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:818:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_alloc.f90:832:if:false
+
+  - id: stomate_npp_growth
+    runner: oracle_lane_stomate_carbon:run_npp_oracle
+    ledger_entries: [stomate.active.npp_growth]
+    input_asset: outputs/reference_mode/micro_oracles/stomate_npp_growth/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/stomate_npp_growth/point_comparisons.csv
+    output_contract: [resp_maint, resp_growth, npp, age, sla_calc, sla_age1, biomass, bm_alloc, leaf_age, leaf_frac]
+    procedures:
+      - {id: npp_calc, source_file: fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90, procedure: npp_calc, procedure_kind: subroutine, start_line: 116, end_line: 725, expected_source_sha256: 74d1a77b38d42bf665a1c286bf89b4cdaef303e7893faef9edf4bff73e403aef, expected_span_sha256: 81a1ecf42d7613574e711f3df64992f5ed655a7c3a938571a50c2eb6aabbbf35, dependencies: {use_modules: [xios_orchidee, ioipsl_para, stomate_data, constantes, constantes_soil, pft_parameters, crop_alloc]}, compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_stomate_npp.f90.template, result_asset: outputs/reference_mode/micro_oracles/stomate_npp_growth/comparison.json, compile_flags: ['-std=legacy', '-fdefault-real-8', '-ffree-line-length-none', '-O0', '-fcheck=all', '-ffpe-trap=invalid,zero,overflow', '-Wall', '-Wextra']}, numerical_oracle_status: verified, tolerance: {rtol: 1.0e-12, atol: 1.0e-14}}
+      - {id: crop_bmalloc, source_file: fortran_source/ORCHIDEE/src_sticslai/crop_alloc.f90, procedure: crop_bmalloc, procedure_kind: subroutine, start_line: 18, end_line: 384, expected_source_sha256: e8b59b0dcdc2d3cd6783613cfc122abbaf3b1c5601adad5d0bc3941ab16c2dbf, expected_span_sha256: 510a9c8ef0caf89c4317bcd1be8fbae1f4072fb33d0dabd44abe8f6e4e424be8, dependencies: {use_modules: [ioipsl, pft_parameters, constantes, stomate_data, netcdf]}, compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_stomate_npp.f90.template, result_asset: outputs/reference_mode/micro_oracles/stomate_npp_growth/comparison.json, compile_flags: ['-std=legacy', '-fdefault-real-8', '-ffree-line-length-none', '-O0', '-fcheck=all', '-ffpe-trap=invalid,zero,overflow', '-Wall', '-Wextra']}, numerical_oracle_status: verified, tolerance: {rtol: 1.0e-12, atol: 1.0e-14}}
+    branch_cases:
+      - id: npp-pft14-threshold-matrix
+        ledger_entry: stomate.active.npp_growth
+        fortran_lines: 252-723
+        condition: two calls over present/absent, GPP, maintenance, biomass and SLA states
+        expected_arm: complete non-crop tree NPP path and all reachable mask sides
+        input_case: pft14_npp_five_point_two_call
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:252:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:257:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:257:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:263:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:319:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:319:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:343:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:343:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:344:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:344:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:397:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:442:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:465:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:465:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:509:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:509:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:552:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:552:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:571:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:571:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:585:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:585:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:596:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:605:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:605:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:628:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:628:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:644:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:644:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:648:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:664:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:723:if:false
+
+pending_families: []

@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "scope": "669 independent paper landpoint STOMATE restart schemas",
+  "mosaic_root": "reference/OUT/orc_calibrate_250919_sen/arg2_1.0",
+  "template_count": 669,
+  "schema_variants": 1,
+  "path_list_sha256": "a4b2383282161dcef90519916ccfe19567fc5cf7be3f355ab99777a1e649e41a",
+  "expected_structure_sha256": "14e71541041cc7e4b8bed7e93f309826452752c342b3cce6687b2472596a4916",
+  "all_match_expected": true
+}

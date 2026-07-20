@@ -1,0 +1,157 @@
+schema_version: 1
+scope: >-
+  Remaining DIFFUCO, ENERBIL, CONDVEG, and SLOWPROC source-routed science
+  completion. Counts are audited control-flow/process arms, not line coverage.
+
+totals:
+  procedures: 12
+  arms: 31
+  diffuco_main_arms: 6
+  diffuco_trans_arms: 4
+  diffuco_finalize_arms: 1
+  enerbil_flux_arms: 5
+  condveg_background_soilalb_arms: 3
+  condveg_finalize_arms: 1
+  slowproc_initialize_arms: 3
+  slowproc_main_arms: 1
+  slowproc_finalize_arms: 4
+  get_soilcorr_usda_arms: 1
+  slowproc_checkveget_arms: 1
+  slowproc_change_frac_arms: 1
+
+entries:
+  - id: sechiba.diffuco_main.source_routed
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_main
+    fortran_lines: 629-648,711-736
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.diffuco.diffuco_main_source_routed
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.science_completion.DiffucoMainRoutingResult
+    arm_count: 6
+    validation: [tests/unit/test_sechiba_science_completion.py]
+  - id: sechiba.diffuco_trans.source_routed
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_trans
+    fortran_lines: 1820-1910
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.diffuco.diffuco_trans_source_routed
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.science_completion.DiffucoTransResult
+    arm_count: 4
+    validation: [tests/unit/test_sechiba_science_completion.py]
+  - id: sechiba.diffuco_finalize.restart
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/diffuco.f90
+    fortran_subroutine: diffuco_finalize
+    fortran_lines: 767-796
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.diffuco.diffuco_finalize_restart_packet
+    gap: null
+    state_contract:
+      - dict[str,jax.Array]
+    arm_count: 1
+    validation: [tests/unit/test_sechiba_science_completion.py]
+  - id: sechiba.enerbil_flux.source_routed
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/enerbil.f90
+    fortran_subroutine: enerbil_flux
+    fortran_lines: 1435-1591,1641-1648
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.enerbil.enerbil_flux_source_routed
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.science_completion.EnerbilFluxRoutingResult
+    arm_count: 5
+    validation: [tests/unit/test_sechiba_science_completion.py]
+  - id: sechiba.condveg_background_soilalb.source_routed
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+    fortran_subroutine: condveg_background_soilalb
+    fortran_lines: 1210-1284
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.condveg.condveg_background_soilalb_source_routed
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.science_completion.CondvegBackgroundSoilAlbedoResult
+    arm_count: 3
+    validation: [tests/unit/test_sechiba_science_completion.py]
+  - id: sechiba.condveg_finalize.restart
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/condveg.f90
+    fortran_subroutine: condveg_finalize
+    fortran_lines: 500-526
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.condveg.condveg_finalize_restart_packet
+    gap: null
+    state_contract:
+      - dict[str,jax.Array]
+    arm_count: 1
+    validation: [tests/unit/test_sechiba_science_completion.py]
+  - id: sechiba.slowproc_initialize.source_routed
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_initialize
+    fortran_lines: 252-304
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.slowproc.slowproc_initialize_source_routed
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.slowproc.SlowprocInitPft14Result
+      - jax.Array
+      - jax_orchidee.sechiba.slowproc.SlowprocDerivvarResult
+    arm_count: 3
+    validation: [tests/unit/test_sechiba_science_completion.py]
+  - id: sechiba.slowproc_main.source_routed
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_main
+    fortran_lines: 1063-1068
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.slowproc.slowproc_main_history_routing
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.science_completion.SlowprocHistoryRoutingResult
+    arm_count: 1
+    validation: [tests/unit/test_sechiba_science_completion.py]
+  - id: sechiba.slowproc_finalize.restart
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_finalize
+    fortran_lines: 1215-1284
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.slowproc.slowproc_finalize_restart_packet
+    gap: null
+    state_contract:
+      - dict[str,jax.Array]
+      - bool
+    arm_count: 4
+    validation: [tests/unit/test_sechiba_science_completion.py]
+  - id: sechiba.get_soilcorr_usda.source_routed
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: get_soilcorr_usda
+    fortran_lines: 5563-5621
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.slowproc.get_soilcorr_usda_source_routed
+    gap: null
+    state_contract:
+      - jax.Array
+    arm_count: 1
+    validation: [tests/unit/test_sechiba_science_completion.py]
+  - id: sechiba.slowproc_checkveget.source_routed
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_checkveget
+    fortran_lines: 5824-5947
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.slowproc.slowproc_checkveget_source_routed
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.science_completion.SlowprocVegetationCheck
+    arm_count: 1
+    validation: [tests/unit/test_sechiba_science_completion.py]
+  - id: sechiba.slowproc_change_frac.source_routed
+    fortran_file: fortran_source/ORCHIDEE/src_sechiba/slowproc.f90
+    fortran_subroutine: slowproc_change_frac
+    fortran_lines: 5967-6026
+    status: implemented
+    jax_owner: jax_orchidee.sechiba.slowproc.slowproc_change_frac_source_routed
+    gap: null
+    state_contract:
+      - jax_orchidee.sechiba.slowproc.SlowprocSurfaceUpdateResult
+    arm_count: 1
+    validation: [tests/unit/test_sechiba_science_completion.py]

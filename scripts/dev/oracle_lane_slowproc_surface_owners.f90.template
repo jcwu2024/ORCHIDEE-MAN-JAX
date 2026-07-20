@@ -1,0 +1,90 @@
+program slowproc_surface_oracle
+  implicit none
+  integer, parameter :: i_std=4, r_std=8, nvm=14, nnobio=2, nstm=3
+  integer, parameter :: nparts=1, nelements=1, nlitt=1, ndeep=1, ncarb=1, ndoc=1, npool=1, ntext=3
+  integer, parameter :: ibare_sechiba=1
+  real(r_std), parameter :: zero=0._r_std, un=1._r_std, min_vegfrac=1.e-6_r_std
+  real(r_std), parameter :: min_sechiba=1.e-8_r_std
+  integer :: printlev_loc=0, numout=6
+  logical :: ok_dgvm=.false., agri_peat=.false.
+  integer :: pref_soil_veg(nvm)
+  real(r_std) :: ext_coeff_vegetfrac(nvm)
+  real(r_std) :: veget_max_new(2,nvm), veget_max_adjusted(2,nvm), frac_nobio_new(2,nnobio)
+
+  pref_soil_veg=1; pref_soil_veg(8:nvm)=2
+  ext_coeff_vegetfrac=0.5_r_std
+  call run_cases
+contains
+  subroutine run_cases
+    integer :: unit
+    real(r_std) :: table(12,ntext)
+    open(newunit=unit,file=trim(command_argument()),status='replace',action='write')
+    call get_soilcorr_usda(12,table)
+    call emit2(unit,'usda_table',table)
+    call veget_case(unit,.false.,'static_')
+    call veget_case(unit,.true.,'dgvm_')
+    call change_case(unit,.false.,'change_base_')
+    call change_case(unit,.true.,'change_peat_')
+    close(unit)
+  end subroutine
+
+  subroutine veget_case(unit,dgvm,prefix)
+    integer,intent(in)::unit; logical,intent(in)::dgvm; character(len=*),intent(in)::prefix
+    real(r_std)::lai(3,nvm),frac(3,nnobio),vmax(3,nvm),veget(3,nvm),tile(3,nstm),tot(3)
+    real(r_std)::biomass(3,nvm,nparts,nelements),la(3,nlitt,nvm,nelements)
+    real(r_std)::lb(3,nlitt,nvm,ndeep,nelements),carbon(3,ncarb,nvm,ndeep)
+    real(r_std)::docv(3,nvm,ndeep,ndoc,npool,nelements); logical::rot(3)
+    integer::j
+    lai=0._r_std; lai(:,14)=[2._r_std,1._r_std,1.5_r_std]
+    frac=0._r_std; frac(1,:)=[0.1_r_std,0.2_r_std]; frac(2,:)=[1._r_std,0._r_std]; frac(3,:)=[1.e-8_r_std,1.e-8_r_std]
+    vmax=0._r_std; vmax(1,1)=0.2_r_std; vmax(1,14)=0.5_r_std; vmax(3,1)=0.3_r_std; vmax(3,14)=0.7_r_std
+    vmax(:,7)=5.e-7_r_std
+    biomass=reshape([(real(j,r_std),j=1,size(biomass))],shape(biomass)); la=2; lb=3; carbon=4; docv=5; rot=[.false.,.true.,.false.]
+    ok_dgvm=dgvm
+    call slowproc_veget(3,rot,lai,frac,tot,vmax,veget,tile,biomass,la,lb,carbon,docv)
+    call emit2(unit,prefix//'frac_nobio',frac); call emit2(unit,prefix//'veget_max',vmax)
+    call emit2(unit,prefix//'veget',veget); call emit2(unit,prefix//'soiltile',tile); call emit1(unit,prefix//'totfrac_nobio',tot)
+    call emit1(unit,prefix//'biomass',reshape(biomass,[size(biomass)]))
+  end subroutine
+
+  subroutine change_case(unit,peat,prefix)
+    integer,intent(in)::unit; logical,intent(in)::peat; character(len=*),intent(in)::prefix
+    real(r_std)::lai(2,nvm),vmax(2,nvm),veget(2,nvm),frac(2,nnobio),tot(2),bare(2),tile(2,nstm)
+    real(r_std)::biomass(2,nvm,nparts,nelements),la(2,nlitt,nvm,nelements)
+    real(r_std)::lb(2,nlitt,nvm,ndeep,nelements),carbon(2,ncarb,nvm,ndeep)
+    real(r_std)::docv(2,nvm,ndeep,ndoc,npool,nelements); logical::rot(2)
+    lai=0; lai(:,14)=[2._r_std,1._r_std]; veget_max_new=0; veget_max_adjusted=0; frac_nobio_new=0
+    veget_max_new(:,1)=[0.2_r_std,0.3_r_std]; veget_max_new(:,14)=[0.7_r_std,0.5_r_std]
+    veget_max_adjusted(:,1)=[0.3_r_std,0.4_r_std]; veget_max_adjusted(:,14)=[0.6_r_std,0.4_r_std]
+    frac_nobio_new(:,1)=0.1_r_std; biomass=1; la=2; lb=3; carbon=4; docv=5; rot=.false.
+    agri_peat=peat; ok_dgvm=.false.
+    call slowproc_change_frac(2,rot,lai,vmax,veget,frac,tot,bare,tile,biomass,la,lb,carbon,docv)
+    call emit2(unit,prefix//'frac_nobio',frac); call emit2(unit,prefix//'veget_max',vmax)
+    call emit2(unit,prefix//'veget',veget); call emit2(unit,prefix//'soiltile',tile)
+    call emit1(unit,prefix//'totfrac_nobio',tot); call emit1(unit,prefix//'tot_bare_soil',bare)
+  end subroutine
+
+! <GET_SOILCORR_USDA>
+! <SLOWPROC_VEGET>
+! <SLOWPROC_CHECKVEGET>
+! <SLOWPROC_CHANGE_FRAC>
+
+  subroutine ipslerr_p(level,caller,m1,m2,m3)
+    integer,intent(in)::level; character(len=*),intent(in)::caller,m1,m2,m3
+    if(level>=3) then
+      write(*,*) trim(caller),trim(m1),trim(m2),trim(m3)
+      error stop 1
+    endif
+  end subroutine
+  function command_argument() result(value)
+    character(len=1024)::value; call get_command_argument(1,value)
+  end function
+  subroutine emit1(unit,name,value)
+    integer,intent(in)::unit; character(len=*),intent(in)::name; real(r_std),intent(in)::value(:); integer::i
+    do i=1,size(value); write(unit,'(A,",",ES26.17E3)')trim(name),value(i); enddo
+  end subroutine
+  subroutine emit2(unit,name,value)
+    integer,intent(in)::unit; character(len=*),intent(in)::name; real(r_std),intent(in)::value(:,:); integer::i,j
+    do j=1,size(value,2); do i=1,size(value,1); write(unit,'(A,",",ES26.17E3)')trim(name),value(i,j); enddo; enddo
+  end subroutine
+end program

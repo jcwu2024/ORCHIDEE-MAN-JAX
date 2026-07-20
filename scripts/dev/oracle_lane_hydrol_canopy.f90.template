@@ -1,0 +1,48 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module
+
+module hydrol_lane_canopy
+  use defprec
+  implicit none
+  integer, parameter :: nvm=14, numout=6
+  real(r_std), parameter :: zero=0.0_r_std, min_sechiba=1.0e-8_r_std
+  integer :: printlev=0
+  real(r_std) :: throughfall_by_pft(nvm), vegtot(3)
+contains
+! <HYDROL_CANOP>
+end module
+
+program hydrol_canopy_oracle
+  use defprec
+  use hydrol_lane_canopy
+  implicit none
+  integer, parameter :: n=3
+  integer :: i,j
+  real(r_std) :: rain(n), wet(n,nvm), vmax(n,nvm), veg(n,nvm), qmax(n,nvm)
+  real(r_std) :: qs(n,nvm), ground(n,nvm), melt(n), pcan(n,nvm), pground(n,nvm), cground(n,nvm)
+  character(512) :: path
+
+  throughfall_by_pft=0.1_r_std; throughfall_by_pft(1)=1.0_r_std; throughfall_by_pft(14)=0.25_r_std
+  vegtot=(/0.0_r_std,0.7_r_std,1.0_r_std/)
+  rain=(/0.0_r_std,2.0_r_std,5.0_r_std/); melt=(/1.0_r_std,0.5_r_std,0.0_r_std/)
+  wet=0.0_r_std; wet(:,14)=(/0.0_r_std,0.1_r_std,0.4_r_std/)
+  vmax=0.0_r_std; vmax(:,1)=0.2_r_std; vmax(:,14)=(/0.0_r_std,0.7_r_std,0.8_r_std/)
+  veg=vmax; veg(2,14)=0.5_r_std
+  qmax=0.0_r_std; qmax(:,14)=(/0.2_r_std,0.5_r_std,0.6_r_std/)
+  qs=0.0_r_std; qs(:,14)=(/0.0_r_std,0.3_r_std,0.9_r_std/)
+  call hydrol_canop(n,rain,wet,vmax,veg,qmax,qs,ground,melt,pcan,pground,cground)
+
+  call get_command_argument(1,path)
+  open(10,file=trim(path),status='replace'); write(10,'(a)') 'field,i,j,value'
+  do i=1,n; do j=1,nvm
+    write(10,'(a,i0,a,i0,a,es25.17)') 'qsintveg,',i,',',j,',',qs(i,j)
+    write(10,'(a,i0,a,i0,a,es25.17)') 'precisol,',i,',',j,',',ground(i,j)
+    write(10,'(a,i0,a,i0,a,es25.17)') 'precip2canopy,',i,',',j,',',pcan(i,j)
+    write(10,'(a,i0,a,i0,a,es25.17)') 'precip2ground,',i,',',j,',',pground(i,j)
+    if (j > 1) write(10,'(a,i0,a,i0,a,es25.17)') 'canopy2ground,',i,',',j,',',cground(i,j)
+  enddo; enddo
+  close(10)
+end program

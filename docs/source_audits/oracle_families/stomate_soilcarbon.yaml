@@ -1,0 +1,249 @@
+schema_version: 2
+families:
+  - id: stomate_littercalc_leak
+    runner: oracle_lane_stomate_soilcarbon_litter:run_oracle
+    ledger_entries: [stomate.active.ok_leak_litter]
+    input_asset: outputs/reference_mode/micro_oracles/stomate_littercalc_leak/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/stomate_littercalc_leak/point_comparisons.csv
+    output_contract: [litter_above, litter_below, lignin_struc_above, lignin_struc_below, litterpart, dead_leaves, deadleaf_cover, resp_hetero_litter, resp_hetero_flood, soilcarbon_input, soilcarbon_input_doc, floodcarbon_input, fuel_1hr, fuel_10hr, fuel_100hr, fuel_1000hr, litter_avail, litter_avail_frac, control_temp_below, control_moist_above, bulk_dens, matrix_a, vector_b, tsoil_cm, soilhum_cm]
+    required_control_flow_arm_ids: &litter_required_arms
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:1971:where:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:1971:where:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:1981:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2008:if:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2008:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2202:if:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2202:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2328:if:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2328:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2331:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2370:where:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2370:where:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2375:elsewhere:fallthrough
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2382:where:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2382:where:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2387:elsewhere:fallthrough
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2397:where:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2397:where:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2402:elsewhere:fallthrough
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2430:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2442:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2491:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2511:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2522:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2567:if:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2567:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2604:if:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2604:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2652:if:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2652:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2681:if:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2681:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2569:where:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2569:where:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2573:elsewhere:fallthrough
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2606:if:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2606:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2627:if:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2627:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2654:where:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2654:where:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2656:elsewhere:fallthrough
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2683:if:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2683:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2703:if:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2703:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2644:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2645:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2646:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2647:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2720:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2721:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2722:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2723:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2753:if:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2753:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2785:if:true
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2785:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2805:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:1905:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2436:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2871:if:false
+      - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2028:if:false
+    procedures:
+      - id: littercalc_leak
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90
+        procedure: littercalc_leak
+        procedure_kind: subroutine
+        start_line: 1637
+        end_line: 2873
+        expected_source_sha256: 282bf0e972a9f24708238f0f58f3305a124ec7618e9f4d618f8242815d854369
+        expected_span_sha256: 611cefe50f12828add8e3496aedd9c667f131e1bc81c5a9ca88abdc75c4e36c2
+        compilation: {status: passed, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', flags: [-std=legacy, -cpp, -fdefault-real-8, -ffree-line-length-none, -O0, -fcheck=all], harness: scripts/dev/oracle_lane_stomate_soilcarbon_litter.f90.template, result_asset: outputs/reference_mode/micro_oracles/stomate_littercalc_leak/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - id: deadleaf
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90
+        procedure: deadleaf
+        procedure_kind: subroutine
+        start_line: 1314
+        end_line: 1364
+        expected_source_sha256: 282bf0e972a9f24708238f0f58f3305a124ec7618e9f4d618f8242815d854369
+        expected_span_sha256: 93018305923e0e498f1a1a7f98f1f9b8c23ea5241996313ed7a3356a5f00f452
+        numerical_oracle_status: verified
+      - {id: control_moist_func, source_file: fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90, procedure: control_moist_func, procedure_kind: function, start_line: 1396, end_line: 1418, expected_source_sha256: 282bf0e972a9f24708238f0f58f3305a124ec7618e9f4d618f8242815d854369, expected_span_sha256: 65ccc6ba21db263947821600996a45825f10dc975d7fdd7283d983b23f5cc4b0, numerical_oracle_status: verified}
+      - {id: control_temp_func, source_file: fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90, procedure: control_temp_func, procedure_kind: function, start_line: 1451, end_line: 1511, expected_source_sha256: 282bf0e972a9f24708238f0f58f3305a124ec7618e9f4d618f8242815d854369, expected_span_sha256: 3bab17ba648ce7348021a2219e5d4a06634021dc1e10c48183bf2889c92aee51, numerical_oracle_status: verified}
+      - {id: control_moist_func_peat, source_file: fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90, procedure: control_moist_func_peat, procedure_kind: function, start_line: 1516, end_line: 1569, expected_source_sha256: 282bf0e972a9f24708238f0f58f3305a124ec7618e9f4d618f8242815d854369, expected_span_sha256: 2b6bd502aa0027a923375dfaf251341b4a8cf4860060c3ca6d0e5a05d587d358, numerical_oracle_status: verified}
+      - {id: control_moist_func_man, source_file: fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90, procedure: control_moist_func_man, procedure_kind: function, start_line: 1576, end_line: 1628, expected_source_sha256: 282bf0e972a9f24708238f0f58f3305a124ec7618e9f4d618f8242815d854369, expected_span_sha256: c9f618c3f4641720503fc364c03a58c0d85b802d168275ef317d6026f51cf4a6, numerical_oracle_status: verified}
+      - {id: control_moist_func_moyano, source_file: fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90, procedure: control_moist_func_moyano, procedure_kind: function, start_line: 2904, end_line: 3037, expected_source_sha256: 282bf0e972a9f24708238f0f58f3305a124ec7618e9f4d618f8242815d854369, expected_span_sha256: f8bbb0bebaeb025556074b58b08edd80ce80e94d6e827dbc1d19c48574fc3ef3, numerical_oracle_status: verified}
+    branch_cases:
+      - id: disabled-options-and-successful-allocations
+        ledger_entry: stomate.active.ok_leak_litter
+        fortran_lines: 1905-2871
+        condition: printlev=0, ld_doc=false, moist_func_moyano=false, ok_LAIdev(:)=false, and all allocations/error guards succeed
+        input_case: all points and calls
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:1905:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:1981:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2028:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2430:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2436:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2442:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2491:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2511:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2522:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2644:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2645:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2646:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2647:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2720:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2721:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2722:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2723:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2805:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2871:if:false
+      - id: firstcall-mixed-landpoints-and-pools
+        ledger_entry: stomate.active.ok_leak_litter
+        fortran_lines: 1971-2785
+        condition: call 1 has firstcall=true, do_slow=false, nonzero PFT14 above/below litter and fuel, dry point 1, wet flooded point 2, and zero inactive-PFT pools
+        input_case: points 1-2 call 1
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2008:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2202:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2202:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2328:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2370:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2370:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2375:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2382:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2382:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2387:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2397:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2397:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2402:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2567:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2567:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2569:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2569:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2573:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2604:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2604:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2606:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2606:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2627:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2627:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2652:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2652:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2654:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2654:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2656:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2681:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2681:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2683:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2683:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2703:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2703:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2753:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2753:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2785:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2785:if:false
+      - id: later-save-state
+        ledger_entry: stomate.active.ok_leak_litter
+        fortran_lines: 2008-2008
+        condition: call 2 reuses initialized SAVE arrays with firstcall_litter=false
+        input_case: points 1-2 call 2
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2008:if:false
+      - id: slow-boundary-zero-stock-and-density-conversion
+        ledger_entry: stomate.active.ok_leak_litter
+        fortran_lines: 1971-2805
+        condition: call 3 has do_slow=true, zero litter/fuel/soil moisture, bulk_dens=(0.4,1350), and all grazing flags false
+        input_case: points 1-2 call 3
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:1971:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:1971:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2328:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2331:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2430:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2442:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2511:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2522:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2569:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2573:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2606:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2627:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2654:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2656:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2683:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90:2703:if:false
+
+pending_families:
+  - id: stomate_soilcarbon_leak
+    ledger_entries:
+      - stomate.active.ok_leak_soilcarbon
+      - stomate.active.tf_doc
+      - stomate.active.ok_leak_firstcall_active_layer
+    procedures:
+      - id: soilcarbon_leak
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90
+        procedure: soilcarbon_leak
+        procedure_kind: subroutine
+        start_line: 641
+        end_line: 2416
+      - id: altcalc_DOC
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90
+        procedure: altcalc_DOC
+        procedure_kind: subroutine
+        start_line: 2438
+        end_line: 2578
+    required_branches:
+      - firstcall-initialize-active-layer-save-state
+      - later-call-update-active-layer-memory
+      - tf-doc-disabled-zero-flux
+      - tf-doc-canopy-and-ground-deposition
+      - tf-doc-canopy-release-and-flood-split
+      - poc-doc-decomposition-and-transfer
+      - adsorption-desorption
+      - runoff-drainage-flood-export
+      - doc-diffusion-temperature-gate
+      - pft1-mask-and-pft14-active
+    numerical_oracle_status: passed_branch_incomplete
+    comparison_asset: outputs/reference_mode/micro_oracles/stomate_soilcarbon_owner/comparison.json
+    branch_cases:
+      - {id: firstcall-warm-cold-flood, calls: [1], covers: [firstcall, tf-doc, priming, warm-and-frozen-diffusion, flood-zero-and-positive]}
+      - {id: same-day-later-save-reuse, calls: [2], covers: [later-call, save-state-reuse]}
+      - {id: day2-dry-negative-flux, calls: [3], covers: [day2-memory, priming-disabled, zero-cover, zero-moisture, negative-water-flux, alternating-doc-diffusion-inventory-limits]}
+      - {id: perma-peat-redistribution, calls: [4], covers: [perma-peat, cmax-transfer-and-no-transfer, deepc-peat-writeback]}
+      - {id: alternate-altcalc-spinup-lifecycle, scenarios: [newaltcalc_spinup], calls: [1, 2, 3, 4], covers: [nonzero-restart-altmax, newaltcalc, spinup-memory, vertical-thaw-mask-arms]}
+    arm_inventory:
+      disposition_asset: docs/source_audits/pft14_arm_dispositions_stomate.yaml
+      owner_spans: [stomate_soilcarbon.f90:641-2416, stomate_soilcarbon.f90:2438-2578]
+      policy: pft14_active_and_pft14_conditional_only
+    excluded_control_flow_arms:
+      - {id: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90:1820:where:true, classification: source_invariant_unreachable}
+      - {id: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90:1824:elsewhere:fallthrough, classification: source_invariant_unreachable}
+      - {id: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90:2506:if:false, classification: fortran_undefined_contract}
+      - {id: fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90:2548:if:true, classification: diagnostic_only_static_unreachable}
+    covered_control_flow_policy: case_matrix_requires_exact_arm_execution_mapping
+    status: pending
+    blocker: exact disposition-arm to executed micro-case mapping remains incomplete despite the passing full-owner matrix

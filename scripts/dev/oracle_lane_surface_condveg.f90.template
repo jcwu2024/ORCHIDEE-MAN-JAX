@@ -1,0 +1,104 @@
+module defprec
+  implicit none
+  integer, parameter :: i_std=kind(1), r_std=kind(1.0)
+end module
+module surface_parameters
+  use defprec
+  implicit none
+  integer, parameter :: nvm=14, nnobio=1, nsnow=3, iice=1, ivis=1, inir=2, NbNeighb=8
+  real(r_std), parameter :: zero=0d0, un=1d0, min_sechiba=1d-8
+  real(r_std), parameter :: snowcri_alb=10d0, sn_dens=330d0
+  real(r_std), parameter :: z0_bare=.01d0, z0_ice=.001d0, ct_karman=.41d0
+  real(r_std), parameter :: min_wind=.1d0, pb_std=1013d0, ZeroCelsius=273.15d0
+  real(r_std), parameter :: height_displacement=.66d0, Cdrag_foliage=.2d0
+  real(r_std), parameter :: Prandtl=.71d0, Ct=.01d0, c1=.320d0, c2=.264d0, c3=15.1d0
+  real(r_std), parameter :: undef_sechiba=1d20, tcst_snowa=10d0
+  logical :: ok_explicitsnow=.true., impaze=.false., alb_bg_modis=.true., alb_bare_model=.false.
+  logical :: rough_dyn=.true., almaoutput=.false., is_tree(nvm)=.false.
+  real(r_std) :: emis_scal=.98d0, z0_scal=.1d0, roughheight_scal=0d0
+  real(r_std) :: z0_over_height(nvm)=.0625d0, ratio_z0m_z0h(nvm)=1d0
+  real(r_std) :: fixed_snow_albedo=undef_sechiba
+  real(r_std) :: albedo_scal(2)=(/.2d0,.3d0/), alb_ice(2)=(/.6d0,.2d0/)
+  real(r_std) :: soilalb_bg(3,2), soilalb_wet(3,2), soilalb_dry(3,2), soilalb_moy(3,2)
+  real(r_std) :: alb_leaf_vis(nvm),alb_leaf_nir(nvm),snowa_aged_vis(nvm),snowa_aged_nir(nvm)
+  real(r_std) :: snowa_dec_vis(nvm),snowa_dec_nir(nvm)
+  integer :: printlev=0,numout=6
+contains
+  subroutine ipslerr_p(level,a,b,c,d)
+    integer,intent(in)::level; character(*),intent(in)::a,b,c,d
+    error stop 'unexpected ipslerr_p'
+  end subroutine
+end module
+module condveg_oracle
+  use defprec
+  use surface_parameters
+  implicit none
+contains
+! <CONDVEG_PROCEDURES>
+  subroutine xios_orchidee_send_field(name,field)
+    character(*),intent(in)::name; real(r_std),intent(in)::field(:)
+  end subroutine
+  subroutine histwrite_p(id,name,it,field,n,index)
+    integer,intent(in)::id,it,n,index(:); character(*),intent(in)::name
+    real(r_std),intent(in)::field(:)
+  end subroutine
+end module
+program oracle_main
+  use defprec
+  use surface_parameters
+  use condveg_oracle
+  implicit none
+  integer,parameter :: n=3
+  integer :: i,j,k
+  real(r_std)::snow(n),snob(n,nnobio),rho(n,nsnow),dz(n,nsnow),fsv(n),fsn(n,nnobio)
+  real(r_std)::veg(n,nvm),vmax(n,nvm),dry(n),fn(n,nnobio),tfn(n),sage(n),snage(n,nnobio)
+  real(r_std)::bare(n),alb(n,2),asnow(n,2),abare(n,2),aveg(n,2)
+  real(r_std)::zlev(n),height(n,nvm),ta(n),pb(n),u(n),v(n),lai(n,nvm),z0m(n),z0h(n),rh(n),rhp(n,nvm)
+  real(r_std)::lalo(n,2),resolution(n,2),contfrac(n),emis(n),albmain(n,2),fsmain(n),fsnmain(n,nnobio)
+  integer::index(n),neighbours(n,NbNeighb)
+  character(len=512)::path
+  call get_command_argument(1,path); open(10,file=trim(path),status='replace'); write(10,'(a)') 'field,value'
+  snow=(/0d0,5d0,20d0/); snob(:,1)=(/0d0,2d0,20d0/)
+  rho=reshape((/100d0,150d0,200d0,200d0,250d0,300d0,300d0,350d0,400d0/),shape(rho))
+  dz=0d0; dz(2,:)=(/.01d0,.02d0,.03d0/); dz(3,:)=(/.1d0,.2d0,.3d0/)
+  call condveg_frac_snow(n,snow,snob,rho,dz,fsv,fsn)
+  do i=1,n; write(10,'(a,es25.17)') 'snow_veg,',fsv(i); write(10,'(a,es25.17)') 'snow_nobio,',fsn(i,1); enddo
+  veg=0d0; vmax=0d0; vmax(:,1)=.2d0; veg(:,1)=.2d0; vmax(:,14)=.7d0; veg(:,14)=(/.1d0,.4d0,.7d0/)
+  fn(:,1)=(/0d0,.1d0,.2d0/); tfn=fn(:,1); dry=(/0d0,.5d0,1d0/); sage=(/0d0,5d0,20d0/); snage(:,1)=sage
+  bare=(/.2d0,.2d0,.1d0/); soilalb_bg(:,1)=(/.12d0,.18d0,.24d0/); soilalb_bg(:,2)=(/.24d0,.32d0,.40d0/)
+  soilalb_wet=soilalb_bg*.7d0; soilalb_dry=soilalb_bg*1.2d0; soilalb_moy=soilalb_bg
+  do j=1,nvm
+    alb_leaf_vis(j)=.08d0+.001d0*j; alb_leaf_nir(j)=.25d0+.002d0*j
+    snowa_aged_vis(j)=.5d0; snowa_aged_nir(j)=.3d0; snowa_dec_vis(j)=.4d0; snowa_dec_nir(j)=.3d0
+  enddo
+  veg(1,:)=0d0; vmax(1,:)=0d0; fn(1,1)=1d0; tfn(1)=1d0
+  is_tree(14)=.true.
+  call condveg_albedo(n,veg,vmax,dry,fn,tfn,snow,sage,snob,snage,dz,rho,bare,fsv,fsn,alb,asnow,abare,aveg)
+  do k=1,2; do i=1,n
+    write(10,'(a,es25.17)') 'albedo,',alb(i,k); write(10,'(a,es25.17)') 'albedo_snow,',asnow(i,k)
+    write(10,'(a,es25.17)') 'alb_bare,',abare(i,k); write(10,'(a,es25.17)') 'alb_veget,',aveg(i,k)
+  enddo; enddo
+  alb_bg_modis=.false.; alb_bare_model=.false.
+  call condveg_albedo(n,veg,vmax,dry,fn,tfn,snow,sage,snob,snage,dz,rho,bare,fsv,fsn,alb,asnow,abare,aveg)
+  do k=1,2; do i=1,n
+    write(10,'(a,es25.17)') 'mean_albedo,',alb(i,k); write(10,'(a,es25.17)') 'mean_albedo_snow,',asnow(i,k)
+    write(10,'(a,es25.17)') 'mean_alb_bare,',abare(i,k); write(10,'(a,es25.17)') 'mean_alb_veget,',aveg(i,k)
+  enddo; enddo
+  alb_bg_modis=.true.
+  zlev=(/20d0,30d0,40d0/); height=1d0; height(:,14)=(/5d0,10d0,20d0/)
+  ta=(/260d0,280d0,300d0/); pb=(/800d0,950d0,1013.25d0/); u=(/0d0,2d0,5d0/); v=(/0d0,1d0,0d0/)
+  lai=0d0; lai(:,14)=(/0d0,2d0,5d0/)
+  call condveg_z0cdrag_dyn(n,veg,vmax,fn,tfn,zlev,height,ta,pb,u,v,lai,fsv,z0m,z0h,rh,rhp)
+  do i=1,n
+    write(10,'(a,es25.17)') 'z0m,',z0m(i); write(10,'(a,es25.17)') 'z0h,',z0h(i); write(10,'(a,es25.17)') 'roughheight,',rh(i)
+    write(10,'(a,es25.17)') 'roughheight_pft14,',rhp(i,14)
+  enddo
+  index=(/1,2,3/); neighbours=0; lalo=0d0; resolution=1d0; contfrac=1d0
+  call condveg_main(1,n,index,lalo,neighbours,resolution,contfrac,veg,vmax,fn,tfn,zlev,snow,sage,snob,sage,bare, &
+       ta,pb,u,v,lai,dry,height,dz,rho,emis,albmain,fsmain,fsnmain,z0m,z0h,rh,rhp,-1,-1,-1)
+  do i=1,n; write(10,'(a,es25.17)') 'emis,',emis(i); enddo
+  close(10)
+  rough_dyn=.false.; bare(1)=0d0
+  call condveg_main(2,n,index,lalo,neighbours,resolution,contfrac,veg,vmax,fn,tfn,zlev,snow,sage,snob,sage,bare, &
+       ta,pb,u,v,lai,dry,height,dz,rho,emis,albmain,fsmain,fsnmain,z0m,z0h,rh,rhp,-1,-1,-1)
+end program

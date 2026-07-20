@@ -1,0 +1,43 @@
+program driver_routing_oracle
+  implicit none
+  integer, parameter :: npts=2,nflow=3,nctext=3,ncarb=3
+  integer :: unit
+  real, parameter :: zero=0.0, mille=1000.0, one_day=86400.0, dt_sechiba=1800.0
+  logical, parameter :: river_routing=.true.
+  real :: riverflow(npts,nflow),coastalflow(npts,nflow),returnflow(npts,nflow)
+  real :: reinfiltration(npts,nflow),irrigation(npts,nflow)
+  real :: sed_deposition(npts,nctext),poc_deposition(npts,ncarb)
+  real :: flood_frac(npts),stream_frac(npts),streamfl_frac(npts),flood_res(npts),fastr(npts)
+  real :: DOC_to_topsoil(npts,nflow),DOC_to_subsoil(npts,nflow)
+  real :: sed_deposition_d(npts),poc_deposition_d(npts,ncarb)
+  riverflow=9.; coastalflow=9.; returnflow=9.; reinfiltration=9.; irrigation=9.
+  sed_deposition=9.; poc_deposition=9.; flood_frac=9.; stream_frac=9.
+  streamfl_frac=9.; flood_res=9.; fastr=9.
+! <ROUTING_ZERO_SPAN>
+! <ROUTING_WRITEBACK_SPAN>
+  open(newunit=unit,file=trim(command_argument()),status='replace',action='write')
+  call emit2(unit,'riverflow',riverflow); call emit2(unit,'coastalflow',coastalflow)
+  call emit2(unit,'returnflow',returnflow); call emit2(unit,'reinfiltration',reinfiltration)
+  call emit2(unit,'irrigation',irrigation); call emit2(unit,'sed_deposition',sed_deposition)
+  call emit2(unit,'poc_deposition',poc_deposition); call emit1(unit,'flood_frac',flood_frac)
+  call emit1(unit,'stream_frac',stream_frac); call emit1(unit,'streamfl_frac',streamfl_frac)
+  call emit1(unit,'flood_res',flood_res); call emit1(unit,'fastr',fastr)
+  call emit2(unit,'DOC_to_topsoil',DOC_to_topsoil); call emit2(unit,'DOC_to_subsoil',DOC_to_subsoil)
+  call emit1(unit,'sed_deposition_d',sed_deposition_d); call emit2(unit,'poc_deposition_d',poc_deposition_d)
+  close(unit)
+contains
+  function command_argument() result(value)
+    character(len=1024) :: value
+    call get_command_argument(1,value)
+  end function
+  subroutine emit1(unit,name,value)
+    integer,intent(in)::unit; character(len=*),intent(in)::name; real,intent(in)::value(:); integer::i
+    do i=1,size(value); write(unit,'(A,",",ES26.17E3)') trim(name),value(i); end do
+  end subroutine
+  subroutine emit2(unit,name,value)
+    integer,intent(in)::unit; character(len=*),intent(in)::name; real,intent(in)::value(:,:); integer::i,j
+    do j=1,size(value,2); do i=1,size(value,1)
+      write(unit,'(A,",",ES26.17E3)') trim(name),value(i,j)
+    end do; end do
+  end subroutine
+end program

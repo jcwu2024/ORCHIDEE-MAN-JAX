@@ -1,0 +1,63 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ implicit none;integer,parameter::i_std=int32,r_std=real64
+end module
+module thermosoil_coef_oracle
+ use defprec;implicit none
+ integer,parameter::nvm=14,ngrnd=4,nslm=4,ndeep=4,nsnow=3,nnobio=2,nscm=12
+ real(r_std),parameter::zero=0._r_std,un=1._r_std,min_sechiba=1.e-8_r_std,ZeroCelsius=273.15_r_std,fr_dT=2._r_std
+ real(r_std),parameter::so_capa_dry=1.8e6_r_std,so_capa_dry_org=2.5e6_r_std,water_capa=4.18e6_r_std,so_capa_wet=3.03e6_r_std
+ real(r_std),parameter::poros=.41_r_std,poros_org=.92_r_std,cond_solid_org=.25_r_std,cond_solid=2.5_r_std,cond_dry_org=.05_r_std,so_cond_dry=.4_r_std
+ real(r_std),parameter::lhf=333600._r_std,rho_water=1000._r_std,mille=1000._r_std,capa_ice=2228._r_std,rho_ice=920._r_std
+ real(r_std),parameter::so_capa_ice=so_capa_dry+poros*capa_ice*rho_ice,THKQTZ=7.7_r_std,THKICE=2.2_r_std,THKW=.57_r_std
+ real(r_std),parameter::xci=2106._r_std,ZSNOWTHRMCOND1=.02_r_std,ZSNOWTHRMCOND2=2.5e-6_r_std,ZSNOWTHRMCOND_AVAP=-.06023_r_std,ZSNOWTHRMCOND_BVAP=-2.5425_r_std,ZSNOWTHRMCOND_CVAP=-289.99_r_std,XP00=100000._r_std
+ real(r_std),parameter::soilc_max=130000._r_std,brk_capa=2.0e6_r_std,brk_cond=3._r_std
+ real(r_std),parameter::dt_sechiba=1800._r_std,lambda=.5_r_std,phigeoth=.05_r_std,psnowdzmin=.0001_r_std
+ real(r_std),parameter::sn_dens=330._r_std,sn_capa=693000._r_std,sn_cond=.3_r_std
+ logical::use_toporganiclayer_tempdiff=.false.,use_soilc_tempdiff=.true.,use_refSOC=.true.,ok_freeze_thermix=.true.,ok_explicitsnow=.true.
+ logical::ok_LAIdev(nvm)=.false.,veget_mask_2d(3,nvm)=.true.
+ integer::brk_flag=0,printlev=0,numout=6
+ real(r_std)::zlt(ngrnd),dlt(ngrnd),dz1(ngrnd-1),refSOC(3,ngrnd),SMCMAX(nscm),mcs(nscm),QZ(nscm),so_capa_dry_ns(nscm)
+ real(r_std)::mc_layt(3,ngrnd),mcl_layt(3,ngrnd),tmc_layt(3,ngrnd),mc_layt_pft(3,ngrnd,nvm),mcl_layt_pft(3,ngrnd,nvm),tmc_layt_pft(3,ngrnd,nvm)
+ real(r_std)::ptn(3,ngrnd,nvm),ptn_pftmean(3,ngrnd),shum_ngrnd_permalong(3,ngrnd,nvm)
+ real(r_std)::pcapa(3,ngrnd,nvm),pkappa(3,ngrnd,nvm),pcapa_en(3,ngrnd,nvm),pcapa_snow(3,nsnow),pkappa_snow(3,nsnow)
+contains
+ subroutine ipslerr_p(level,a,b,c,d)
+  integer,intent(in)::level;character(*),intent(in)::a,b,c,d
+  if(level>=3)then;write(*,*)trim(a),trim(b),trim(c),trim(d);error stop 'ipslerr_p';endif
+ end subroutine
+! <THERMOSOIL_COND_PFT>
+! <THERMOSOIL_COND_NOPFT>
+! <THERMOSOIL_COND>
+! <THERMOSOIL_GETDIFF>
+! <THERMOSOIL_GETDIFF_OLD_THERMIX_WITH_SNOW>
+! <THERMOSOIL_COEF>
+end module
+program thermosoil_coef_driver
+ use defprec;use thermosoil_coef_oracle;implicit none
+ integer::i,j,k,njsc(3);real(r_std)::ts(3),tsp(3,nvm),snow(3),cap(3),capp(3,nvm),flx(3),flxp(3,nvm),cg(3,ngrnd-1,nvm),dg(3,ngrnd-1,nvm),prof(3,ngrnd,nvm),supp(3,ngrnd,nvm),org(3),soilc(3,ndeep,nvm),v(3,nvm),sdz(3,nsnow),srho(3,nsnow),stemp(3,nsnow),pb(3),fsv(3),fsn(3,nnobio),tnb(3),ls(3),cgs(3,nsnow),dgs(3,nsnow);character(512)::path,mode
+ QZ=(/.92_r_std,.82_r_std,.6_r_std,.25_r_std,.1_r_std,.4_r_std,.6_r_std,.1_r_std,.35_r_std,.52_r_std,.1_r_std,.25_r_std/)
+ SMCMAX=(/.43_r_std,.41_r_std,.41_r_std,.45_r_std,.46_r_std,.43_r_std,.39_r_std,.43_r_std,.41_r_std,.38_r_std,.36_r_std,.38_r_std/)
+ mcs=SMCMAX
+ so_capa_dry_ns=(/1.47e6_r_std,1.41e6_r_std,1.34e6_r_std,1.27e6_r_std,1.21e6_r_std,1.21e6_r_std,1.18e6_r_std,1.32e6_r_std,1.23e6_r_std,1.18e6_r_std,1.15e6_r_std,1.09e6_r_std/)
+ njsc=(/1,4,10/);zlt=(/.05_r_std,.15_r_std,.4_r_std,1._r_std/);dlt=(/.1_r_std,.2_r_std,.5_r_std,1._r_std/);dz1=(/20._r_std,8._r_std,3._r_std/)
+ refSOC=0._r_std;refSOC(:,1)=(/0._r_std,65000._r_std,130000._r_std/);refSOC(:,2)=32500._r_std
+ ptn=273.15_r_std;ptn(1,:,:)=270._r_std;ptn(3,:,:)=276._r_std;shum_ngrnd_permalong=.6_r_std
+ v=0._r_std;v(:,1)=.2_r_std;v(:,14)=.8_r_std;ok_LAIdev(14)=.true.
+ do j=1,ngrnd;ptn_pftmean(:,j)=sum(ptn(:,j,:)*v,2);enddo
+ mc_layt=.3_r_std;mcl_layt=.25_r_std;tmc_layt=100._r_std;mc_layt_pft=spread(mc_layt,3,nvm);mcl_layt_pft=spread(mcl_layt,3,nvm);tmc_layt_pft=100._r_std;tmc_layt_pft(:,:,14)=150._r_std
+ ts=(/271._r_std,274._r_std,278._r_std/);tsp=spread(ts,2,nvm);tsp(:,14)=ts+2._r_std;snow=(/0._r_std,10._r_std,50._r_std/)
+ org=0._r_std;soilc=0._r_std;sdz=.02_r_std;sdz(1,1)=0._r_std;sdz(2,:)=(/.01_r_std,.03_r_std,.06_r_std/);srho=200._r_std;srho(3,:)=350._r_std;stemp=268._r_std;pb=(/1000._r_std,900._r_std,800._r_std/)
+ fsv=(/0._r_std,.5_r_std,1._r_std/);fsn=0._r_std;fsn(2,:)=.2_r_std;tnb=(/0._r_std,.1_r_std,.2_r_std/);ls=-9._r_std;cgs=-9._r_std;dgs=-9._r_std
+ call get_command_argument(2,mode)
+ if(index(trim(mode),'no_explicit')>0)ok_explicitsnow=.false.
+ call thermosoil_coef(3,ts,tsp,snow,cap,capp,flx,flxp,njsc,cg,dg,prof,supp,org,soilc,v,sdz,srho,stemp,pb,fsv,fsn,tnb,ls,cgs,dgs)
+ call get_command_argument(1,path);open(10,file=trim(path),status='replace');write(10,'(a)')'field,i,j,k,value'
+ do i=1,3;do j=1,ngrnd;do k=1,nvm
+  write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'pcapa,',i,',',j,',',k,',',pcapa(i,j,k);write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'pcapa_en,',i,',',j,',',k,',',pcapa_en(i,j,k);write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'pkappa,',i,',',j,',',k,',',pkappa(i,j,k);write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'profil,',i,',',j,',',k,',',prof(i,j,k);write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'supp,',i,',',j,',',k,',',supp(i,j,k)
+ enddo;enddo;do j=1,ngrnd-1;do k=1,nvm;write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'cgrnd,',i,',',j,',',k,',',cg(i,j,k);write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'dgrnd,',i,',',j,',',k,',',dg(i,j,k);enddo;enddo
+ do k=1,nvm;write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'soilcap_pft,',i,',',1,',',k,',',capp(i,k);write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'soilflx_pft,',i,',',1,',',k,',',flxp(i,k);enddo
+ do j=1,nsnow;write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'pcapa_snow,',i,',',j,',',1,',',pcapa_snow(i,j);write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'pkappa_snow,',i,',',j,',',1,',',pkappa_snow(i,j);write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'cgrnd_snow,',i,',',j,',',1,',',cgs(i,j);write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'dgrnd_snow,',i,',',j,',',1,',',dgs(i,j);enddo
+ write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'soilcap,',i,',',1,',',1,',',cap(i);write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'soilflx,',i,',',1,',',1,',',flx(i);write(10,'(a,i0,a,i0,a,i0,a,es25.17)')'lambda_snow,',i,',',1,',',1,',',ls(i)
+ enddo;close(10)
+end program

@@ -1,0 +1,162 @@
+schema_version: 1
+scope: >-
+  Second-batch source owners for all 8 polygones.f90 procedures and all 3
+  interregxy.f90 procedures. Arm counts include pft14_active and
+  pft14_conditional dispositions from pft14_arm_dispositions_infrastructure;
+  direct fatal-only outside_declared_workflow arms are represented by Python
+  validation errors but are not included in the declared 139-arm total.
+
+totals:
+  procedures: 11
+  arms: 139
+  polygones_procedures: 8
+  polygones_arms: 94
+  interregxy_procedures: 3
+  interregxy_arms: 45
+
+contracts:
+  polygon_order: >-
+    Inputs are not canonicalized. Last-to-first edge traversal, closed input
+    vertices, repeated points, first-MINLOC ties, repeated crossings, and
+    convex-hull output order follow the Fortran loops.
+  undefined_outputs: >-
+    False line intersections return NaN coordinates because Fortran leaves
+    point_x/point_y undefined. Unwritten aggregation index slots use INT32_MIN
+    and unwritten internal overlap slots use NaN. The all-equal-x convex-hull
+    branch raises FortranUndefinedOutputError because lines 571-573 RETURN
+    before assigning nvert_out or poly_out.
+  external_state: >-
+    Grid_Toij, ilandindex/jlandindex, iim_g/jjm_g, and dxWRF/dyWRF are explicit
+    Python inputs. neighbours, resolution, contfrac, mask, lon_cen, and lat_cen
+    remain accepted but retain their source behavior of not being read.
+  oracle: >-
+    tests/unit/test_geometry_polygons.py embeds source-extracted gfortran
+    pointinside, lineintersect, and area procedures and compiles them in the
+    system temporary directory; interregxy findpoints is validated through
+    analytic full-cell and half-cell overlap cases using the same polygon chain.
+
+entries:
+  - id: global.polygones.pointinside
+    fortran_file: fortran_source/ORCHIDEE/src_global/polygones.f90
+    fortran_subroutine: polygones_pointinside
+    fortran_lines: 20-59
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_polygons.polygones_pointinside
+    gap: null
+    arm_count: 6
+    state_contract: [jax_orchidee.driver.geometry_polygons.POLYGONES_PROVENANCE]
+    validation: [tests/unit/test_geometry_polygons.py]
+
+  - id: global.polygones.lineintersect
+    fortran_file: fortran_source/ORCHIDEE/src_global/polygones.f90
+    fortran_subroutine: polygones_lineintersect
+    fortran_lines: 63-100
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_polygons.polygones_lineintersect
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.driver.geometry_polygons.LineIntersectionResult]
+    validation: [tests/unit/test_geometry_polygons.py]
+
+  - id: global.polygones.extend
+    fortran_file: fortran_source/ORCHIDEE/src_global/polygones.f90
+    fortran_subroutine: polygones_extend
+    fortran_lines: 104-170
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_polygons.polygones_extend
+    gap: null
+    arm_count: 8
+    state_contract: [jax_orchidee.driver.geometry_polygons.PolygonResult]
+    validation: [tests/unit/test_geometry_polygons.py]
+
+  - id: global.polygones.intersection
+    fortran_file: fortran_source/ORCHIDEE/src_global/polygones.f90
+    fortran_subroutine: polygones_intersection
+    fortran_lines: 174-256
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_polygons.polygones_intersection
+    gap: null
+    arm_count: 11
+    state_contract: [jax_orchidee.driver.geometry_polygons.PolygonResult]
+    validation: [tests/unit/test_geometry_polygons.py]
+
+  - id: global.polygones.cleanup
+    fortran_file: fortran_source/ORCHIDEE/src_global/polygones.f90
+    fortran_subroutine: polygones_cleanup
+    fortran_lines: 260-339
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_polygons.polygones_cleanup
+    gap: null
+    arm_count: 6
+    state_contract: [jax_orchidee.driver.geometry_polygons.PolygonResult]
+    validation: [tests/unit/test_geometry_polygons.py]
+
+  - id: global.polygones.area
+    fortran_file: fortran_source/ORCHIDEE/src_global/polygones.f90
+    fortran_subroutine: polygones_area
+    fortran_lines: 343-377
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_polygons.polygones_area
+    gap: null
+    arm_count: 2
+    state_contract: [jax_orchidee.driver.geometry_polygons.POLYGONES_PROVENANCE]
+    validation: [tests/unit/test_geometry_polygons.py]
+
+  - id: global.polygones.crossing
+    fortran_file: fortran_source/ORCHIDEE/src_global/polygones.f90
+    fortran_subroutine: polygones_crossing
+    fortran_lines: 381-465
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_polygons.polygones_crossing
+    gap: null
+    arm_count: 9
+    state_contract: [jax_orchidee.driver.geometry_polygons.PolygonResult]
+    validation: [tests/unit/test_geometry_polygons.py]
+
+  - id: global.polygones.convexhull
+    fortran_file: fortran_source/ORCHIDEE/src_global/polygones.f90
+    fortran_subroutine: polygones_convexhull
+    fortran_lines: 469-731
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_polygons.polygones_convexhull
+    gap: null
+    arm_count: 48
+    state_contract:
+      - jax_orchidee.driver.geometry_polygons.PolygonResult
+      - jax_orchidee.driver.geometry_polygons.FortranUndefinedOutputError
+    validation: [tests/unit/test_geometry_polygons.py]
+
+  - id: global.interregxy.aggr2d
+    fortran_file: fortran_source/ORCHIDEE/src_global/interregxy.f90
+    fortran_subroutine: interregxy_aggr2d
+    fortran_lines: 18-174
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_interregxy.interregxy_aggr2d
+    gap: null
+    arm_count: 14
+    state_contract: [jax_orchidee.driver.geometry_interregxy.Aggregation2DResult]
+    validation: [tests/unit/test_geometry_interregxy.py]
+
+  - id: global.interregxy.aggrve
+    fortran_file: fortran_source/ORCHIDEE/src_global/interregxy.f90
+    fortran_subroutine: interregxy_aggrve
+    fortran_lines: 178-327
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_interregxy.interregxy_aggrve
+    gap: null
+    arm_count: 4
+    state_contract: [jax_orchidee.driver.geometry_interregxy.AggregationVectorResult]
+    validation: [tests/unit/test_geometry_interregxy.py]
+
+  - id: global.interregxy.findpoints
+    fortran_file: fortran_source/ORCHIDEE/src_global/interregxy.f90
+    fortran_subroutine: interregxy_findpoints
+    fortran_lines: 331-488
+    status: implemented
+    jax_owner: jax_orchidee.driver.geometry_interregxy.interregxy_findpoints
+    gap: null
+    arm_count: 27
+    state_contract:
+      - jax_orchidee.driver.geometry_interregxy.FindPointsResult
+      - jax_orchidee.driver.geometry_interregxy.UNDEFINED_INDEX
+    validation: [tests/unit/test_geometry_interregxy.py, tests/unit/test_geometry_polygons.py]

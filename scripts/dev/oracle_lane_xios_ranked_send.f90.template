@@ -1,0 +1,58 @@
+module defprec
+  use iso_fortran_env, only: real64
+  implicit none
+  integer,parameter::r_std=real64
+end module defprec
+module xios_ranked_send_oracle
+  use defprec
+  implicit none
+  integer,parameter::nbp_mpi=2
+  logical::xios_orchidee_ok=.true.,is_omp_root=.true.
+  integer::printlev=0,numout=6,oracle_unit=-1
+  character(32)::current_name
+  interface gather_omp
+    module procedure gather1,gather2,gather3,gather4,gather5
+  end interface
+  interface xios_send_field
+    module procedure send1,send2,send3,send4,send5
+  end interface
+contains
+  subroutine gather1(a,b);real(r_std),intent(in)::a(:);real(r_std),intent(out)::b(:);b=a;call write1(a);end subroutine
+  subroutine gather2(a,b);real(r_std),intent(in)::a(:,:);real(r_std),intent(out)::b(:,:);b=a;call write2(a);end subroutine
+  subroutine gather3(a,b);real(r_std),intent(in)::a(:,:,:);real(r_std),intent(out)::b(:,:,:);b=a;call write3(a);end subroutine
+  subroutine gather4(a,b);real(r_std),intent(in)::a(:,:,:,:);real(r_std),intent(out)::b(:,:,:,:);b=a;call write4(a);end subroutine
+  subroutine gather5(a,b);real(r_std),intent(in)::a(:,:,:,:,:);real(r_std),intent(out)::b(:,:,:,:,:);b=a;call write5(a);end subroutine
+  subroutine send1(name,a);character(*),intent(in)::name;real(r_std),intent(in)::a(:);end subroutine
+  subroutine send2(name,a);character(*),intent(in)::name;real(r_std),intent(in)::a(:,:);end subroutine
+  subroutine send3(name,a);character(*),intent(in)::name;real(r_std),intent(in)::a(:,:,:);end subroutine
+  subroutine send4(name,a);character(*),intent(in)::name;real(r_std),intent(in)::a(:,:,:,:);end subroutine
+  subroutine send5(name,a);character(*),intent(in)::name;real(r_std),intent(in)::a(:,:,:,:,:);end subroutine
+  subroutine emit(v,q);real(r_std),intent(in)::v;integer,intent(inout)::q;write(oracle_unit,'(a,a,i0,a,es25.17)')trim(current_name),',',q,',',v;q=q+1;end subroutine
+  subroutine write1(a);real(r_std),intent(in)::a(:);integer::i,q;q=0;do i=1,size(a);call emit(a(i),q);enddo;end subroutine
+  subroutine write2(a);real(r_std),intent(in)::a(:,:);integer::i,j,q;q=0;do i=1,size(a,1);do j=1,size(a,2);call emit(a(i,j),q);enddo;enddo;end subroutine
+  subroutine write3(a);real(r_std),intent(in)::a(:,:,:);integer::i,j,k,q;q=0;do i=1,size(a,1);do j=1,size(a,2);do k=1,size(a,3);call emit(a(i,j,k),q);enddo;enddo;enddo;end subroutine
+  subroutine write4(a);real(r_std),intent(in)::a(:,:,:,:);integer::i,j,k,l,q;q=0;do i=1,size(a,1);do j=1,size(a,2);do k=1,size(a,3);do l=1,size(a,4);call emit(a(i,j,k,l),q);enddo;enddo;enddo;enddo;end subroutine
+  subroutine write5(a);real(r_std),intent(in)::a(:,:,:,:,:);integer::i,j,k,l,m,q;q=0;do i=1,size(a,1);do j=1,size(a,2);do k=1,size(a,3);do l=1,size(a,4);do m=1,size(a,5);call emit(a(i,j,k,l,m),q);enddo;enddo;enddo;enddo;enddo;end subroutine
+! <XIOS_ORCHIDEE_SEND_FIELD_R1D>
+! <XIOS_ORCHIDEE_SEND_FIELD_R2D>
+! <XIOS_ORCHIDEE_SEND_FIELD_R3D>
+! <XIOS_ORCHIDEE_SEND_FIELD_R4D>
+! <XIOS_ORCHIDEE_SEND_FIELD_R5D>
+end module xios_ranked_send_oracle
+program driver
+  use defprec;use xios_ranked_send_oracle;implicit none
+  real(r_std)::a1(2),a2(2,2),a3(2,2,2),a4(2,2,2,2),a5(2,2,2,2,2)
+  integer::i;character(512)::path
+  a1=reshape([(real(i,r_std),i=1,size(a1))],shape(a1))
+  a2=reshape([(real(i,r_std),i=1,size(a2))],shape(a2))
+  a3=reshape([(real(i,r_std),i=1,size(a3))],shape(a3))
+  a4=reshape([(real(i,r_std),i=1,size(a4))],shape(a4))
+  a5=reshape([(real(i,r_std),i=1,size(a5))],shape(a5))
+  call get_command_argument(1,path);open(newunit=oracle_unit,file=trim(path),status='replace');write(oracle_unit,'(a)')'field,flat_index,value'
+  current_name='rank1';call xios_orchidee_send_field_r1d('rank1',a1)
+  current_name='rank2';call xios_orchidee_send_field_r2d('rank2',a2)
+  current_name='rank3';call xios_orchidee_send_field_r3d('rank3',a3)
+  current_name='rank4';call xios_orchidee_send_field_r4d('rank4',a4)
+  current_name='rank5';call xios_orchidee_send_field_r5d('rank5',a5)
+  close(oracle_unit)
+end program driver

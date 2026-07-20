@@ -1,0 +1,30 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ implicit none;integer,parameter::i_std=int32,r_std=real64
+end module
+module thermosoil_lane_profile
+ use defprec;implicit none
+ integer,parameter::nvm=14,ngrnd=4,nslm=4,nsnow=3,nnobio=2,numout=6
+ real(r_std),parameter::zero=0._r_std,un=1._r_std
+ logical::ok_explicitsnow=.true.,ok_LAIdev(nvm)=.false.,veget_mask_2d(3,nvm)
+ integer::printlev=0
+ real(r_std)::lambda=1._r_std,cgrnd(3,ngrnd-1,nvm),dgrnd(3,ngrnd-1,nvm),ptn(3,ngrnd,nvm)
+contains
+! <THERMOSOIL_PROFILE>
+! <THERMOSOIL_DIAGLEV>
+end module
+program thermosoil_profile_oracle
+ use defprec;use thermosoil_lane_profile;implicit none
+ integer::i,j,k;real(r_std)::ts(3),tsp(3,nvm),vmax(3,nvm),fsv(3),fsn(3,nnobio),tnb(3),snowt(3,nsnow),cs(3,nsnow),ds(3,nsnow),st(3,nslm);character(512)::path
+ ts=(/280._r_std,275._r_std,268._r_std/);tsp=spread(ts,2,nvm);vmax=0._r_std;vmax(:,1)=.2_r_std;vmax(:,14)=(/0._r_std,.7_r_std,.8_r_std/)
+ fsv=(/0._r_std,.5_r_std,1._r_std/);fsn=0._r_std;fsn(2,:)=.2_r_std;tnb=(/0._r_std,.1_r_std,.2_r_std/)
+ snowt=270._r_std;snowt(:,3)=(/271._r_std,269._r_std,265._r_std/);cs=10._r_std;ds=.9_r_std;cgrnd=5._r_std;dgrnd=.8_r_std;ptn=260._r_std
+ veget_mask_2d=.true.;veget_mask_2d(1,14)=.false.
+ call thermosoil_profile(3,ts,tsp,ptn,st,snowt,vmax,fsv,fsn,tnb,cs,ds)
+ call get_command_argument(1,path);open(10,file=trim(path),status='replace');write(10,'(a)')'field,i,j,value'
+ do i=1,3;do j=1,ngrnd;do k=1,nvm;write(10,'(a,i0,a,i0,a,es25.17)')'ptn,',i,',',(j-1)*nvm+k,',',ptn(i,j,k);enddo;enddo
+ do j=1,nslm;write(10,'(a,i0,a,i0,a,es25.17)')'stempdiag,',i,',',j,',',st(i,j);enddo;enddo
+ ptn=260._r_std;ok_explicitsnow=.false.;call thermosoil_profile(3,ts,tsp,ptn,st,snowt,vmax,fsv,fsn,tnb,cs,ds)
+ do i=1,3;do j=1,ngrnd;do k=1,nvm;write(10,'(a,i0,a,i0,a,es25.17)')'noexplicit_ptn,',i,',',(j-1)*nvm+k,',',ptn(i,j,k);enddo;enddo
+ do j=1,nslm;write(10,'(a,i0,a,i0,a,es25.17)')'noexplicit_stempdiag,',i,',',j,',',st(i,j);enddo;enddo;close(10)
+end program

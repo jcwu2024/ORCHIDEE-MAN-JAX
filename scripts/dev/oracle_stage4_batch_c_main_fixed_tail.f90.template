@@ -1,0 +1,250 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module defprec
+
+module sechiba_main_fixed_tail_oracle
+  use defprec
+  implicit none
+  integer, parameter :: nvm=14, nstm=3, nslm=2, ngrnd=2, nnobio=2
+  integer, parameter :: nparts=1, nelements=1, nlitt=1, ndeep=1
+  integer, parameter :: ncarb=1, ndoc=1, npool=1
+  integer, parameter :: kjpindex=2, kjpij=2, nflow=3, rot_cmd_max=2
+  integer, parameter :: numout=6, ibare_sechiba=1
+  real(r_std), parameter :: zero=0._r_std, un=1._r_std, trois=3._r_std
+  real(r_std), parameter :: huit=8._r_std, min_sechiba=1.e-8_r_std
+  real(r_std), parameter :: min_vegfrac=1.e-6_r_std, allowed_err=1.e-8_r_std
+  integer :: printlev=0, printlev_loc=0
+  logical :: check_cwrr=.false., ok_dgvm=.false., agri_peat=.false.
+  logical :: ok_LAIdev(nvm)=.true.
+  integer :: pref_soil_veg(nvm)=1
+  real(r_std) :: ext_coeff(nvm)=.5_r_std, ext_coeff_vegetfrac(nvm)=.5_r_std
+  real(r_std) :: dz(nslm)
+  real(r_std) :: mc(kjpindex,nslm,nstm), water2infilt(kjpindex,nstm)
+  real(r_std) :: tmc(kjpindex,nstm), humtot(kjpindex), resdist(kjpindex,nstm)
+  real(r_std) :: ptn(kjpindex,ngrnd,nvm)
+  real(r_std) :: cgrnd(kjpindex,ngrnd-1,nvm), dgrnd(kjpindex,ngrnd-1,nvm)
+  real(r_std) :: veget_max_new(kjpindex,nvm), veget_max_adjusted(kjpindex,nvm)
+  real(r_std) :: frac_nobio_new(kjpindex,nnobio)
+  integer :: lcc_calls=0, finalize_calls=0
+contains
+  subroutine ipslerr_p(level,a,b,c,d)
+    integer,intent(in)::level
+    character(*),intent(in)::a,b,c,d
+    if (level >= 3) error stop 'ipslerr_p'
+  end subroutine ipslerr_p
+
+  subroutine emit(u,case_id,field,flat_index,value)
+    integer,intent(in)::u,case_id,flat_index
+    character(*),intent(in)::field
+    real(r_std),intent(in)::value
+    write(u,'(I0,A,A,A,I0,A,ES26.17E3)') case_id,',',trim(field),',',flat_index,',',value
+  end subroutine emit
+
+  subroutine seed_rotation(veget_max,veget,lai,totfrac_nobio,soiltile,f_rot_sech,rot_cmd,qsintveg, &
+       co2_flux,temp_sol_new,temp_sol_new_pft,temp_sol,temp_sol_pft,soilcap_pft,soilflx_pft)
+    real(r_std),intent(out)::veget_max(kjpindex,nvm),veget(kjpindex,nvm),lai(kjpindex,nvm)
+    real(r_std),intent(out)::totfrac_nobio(kjpindex),soiltile(kjpindex,nstm)
+    logical,intent(out)::f_rot_sech(kjpindex)
+    integer,intent(out)::rot_cmd(kjpindex,rot_cmd_max)
+    real(r_std),intent(out)::qsintveg(kjpindex,nvm),co2_flux(kjpindex,nvm)
+    real(r_std),intent(out)::temp_sol_new(kjpindex),temp_sol_new_pft(kjpindex,nvm)
+    real(r_std),intent(out)::temp_sol(kjpindex),temp_sol_pft(kjpindex,nvm)
+    real(r_std),intent(out)::soilcap_pft(kjpindex,nvm),soilflx_pft(kjpindex,nvm)
+    integer::i,j,k
+    pref_soil_veg=1;pref_soil_veg(13)=2;pref_soil_veg(14)=3
+    ok_LAIdev=.true.;ok_LAIdev(1)=.false.;dz=(/.5_r_std,1._r_std/)
+    veget_max=zero;veget_max(:,1)=.2_r_std;veget_max(1,13)=.3_r_std
+    veget_max(1,14)=.3_r_std;veget_max(2,14)=.6_r_std
+    do j=1,nvm;do i=1,kjpindex
+      lai(i,j)=.25_r_std+.01_r_std*j+.02_r_std*i
+      veget(i,j)=veget_max(i,j)*(un-exp(-lai(i,j)*ext_coeff(j)))
+      co2_flux(i,j)=real(10*i+j,r_std)/8._r_std
+      temp_sol_new_pft(i,j)=270._r_std+2._r_std*i+real(j,r_std)/4._r_std
+      soilcap_pft(i,j)=10._r_std+real(i+j,r_std)/8._r_std
+      soilflx_pft(i,j)=20._r_std+real(2*i+j,r_std)/16._r_std
+      do k=1,ngrnd;ptn(i,k,j)=260._r_std+2._r_std*i+3._r_std*k+real(j,r_std)/8._r_std;enddo
+      cgrnd(i,1,j)=un+real(i+j,r_std)/16._r_std
+      dgrnd(i,1,j)=deux()+real(2*i+j,r_std)/16._r_std
+    enddo;enddo
+    veget(:,1)=veget_max(:,1);totfrac_nobio=.2_r_std
+    soiltile(1,:)=(/.25_r_std,.375_r_std,.375_r_std/)
+    soiltile(2,:)=(/.25_r_std,zero,.75_r_std/);resdist=soiltile
+    f_rot_sech=(/.true.,.false./);rot_cmd=0;rot_cmd(1,1)=501413
+    qsintveg=zero;qsintveg(1,1)=.001_r_std;qsintveg(1,13)=.013_r_std
+    qsintveg(1,14)=.014_r_std;qsintveg(2,1)=.001_r_std;qsintveg(2,14)=.014_r_std
+    do k=1,nstm;do j=1,nslm;do i=1,kjpindex
+      mc(i,j,k)=un+real(i+2*j+3*k,r_std)/16._r_std
+    enddo;enddo;enddo
+    do k=1,nstm;do i=1,kjpindex
+      water2infilt(i,k)=real(i+2*k,r_std)/32._r_std
+    enddo;enddo
+    tmc=un;humtot=un;temp_sol_new=(/280._r_std,281._r_std/)
+    temp_sol=zero;temp_sol_pft=zero
+  end subroutine seed_rotation
+
+  real(r_std) function deux()
+    deux=2._r_std
+  end function deux
+
+  subroutine emit_rotation_state(u,case_id,veget_max,veget,soiltile,f_rot_sech,rot_cmd,qsintveg, &
+       netco2flux,temp_sol_new_pft,temp_sol,temp_sol_pft,soilcap_pft,soilflx_pft)
+    integer,intent(in)::u,case_id
+    real(r_std),intent(in)::veget_max(kjpindex,nvm),veget(kjpindex,nvm),soiltile(kjpindex,nstm)
+    logical,intent(in)::f_rot_sech(kjpindex)
+    integer,intent(in)::rot_cmd(kjpindex,rot_cmd_max)
+    real(r_std),intent(in)::qsintveg(kjpindex,nvm),netco2flux(kjpindex)
+    real(r_std),intent(in)::temp_sol_new_pft(kjpindex,nvm),temp_sol(kjpindex),temp_sol_pft(kjpindex,nvm)
+    real(r_std),intent(in)::soilcap_pft(kjpindex,nvm),soilflx_pft(kjpindex,nvm)
+    integer::i,j,k,p
+    p=0;do i=1,kjpindex;do j=1,nvm;p=p+1
+      call emit(u,case_id,'veget_max',p,veget_max(i,j));call emit(u,case_id,'veget',p,veget(i,j))
+      call emit(u,case_id,'qsintveg',p,qsintveg(i,j));call emit(u,case_id,'temp_sol_new_pft',p,temp_sol_new_pft(i,j))
+      call emit(u,case_id,'temp_sol_pft',p,temp_sol_pft(i,j));call emit(u,case_id,'soilcap_pft',p,soilcap_pft(i,j))
+      call emit(u,case_id,'soilflx_pft',p,soilflx_pft(i,j))
+    enddo;enddo
+    p=0;do i=1,kjpindex;do k=1,nstm;p=p+1
+      call emit(u,case_id,'soiltile',p,soiltile(i,k));call emit(u,case_id,'water2infilt',p,water2infilt(i,k))
+      call emit(u,case_id,'tmc',p,tmc(i,k));call emit(u,case_id,'resdist',p,resdist(i,k))
+    enddo;enddo
+    p=0;do i=1,kjpindex;do j=1,nslm;do k=1,nstm;p=p+1;call emit(u,case_id,'mc',p,mc(i,j,k));enddo;enddo;enddo
+    p=0;do i=1,kjpindex;do k=1,ngrnd;do j=1,nvm;p=p+1;call emit(u,case_id,'ptn',p,ptn(i,k,j));enddo;enddo;enddo
+    p=0;do i=1,kjpindex;do k=1,ngrnd-1;do j=1,nvm;p=p+1
+      call emit(u,case_id,'cgrnd',p,cgrnd(i,k,j));call emit(u,case_id,'dgrnd',p,dgrnd(i,k,j))
+    enddo;enddo;enddo
+    do i=1,kjpindex
+      call emit(u,case_id,'f_rot_sech',i,merge(un,zero,f_rot_sech(i)))
+      call emit(u,case_id,'humtot',i,humtot(i));call emit(u,case_id,'netco2flux',i,netco2flux(i))
+      call emit(u,case_id,'temp_sol',i,temp_sol(i))
+      do j=1,rot_cmd_max;call emit(u,case_id,'rot_cmd',(i-1)*rot_cmd_max+j,real(rot_cmd(i,j),r_std));enddo
+    enddo
+  end subroutine emit_rotation_state
+
+  subroutine run_rotation(u,case_id,rotate_switch,invalid_fraction)
+    integer,intent(in)::u,case_id
+    logical,intent(in)::rotate_switch,invalid_fraction
+    integer::ji,jv,k,jsrc,jtar,stveg,edveg
+    integer::rot_cmd(kjpindex,rot_cmd_max)
+    real(r_std)::rotprc,matrix_rot(nvm,nvm),temp_veget_max(nvm),old_veget_max(nvm)
+    real(r_std)::temp_temp_sol(nvm),temp_soilcap(nvm),temp_soilflx(nvm)
+    real(r_std)::dilu_temp(nvm),dilu_soilcap(nvm),dilu_soilflx(nvm)
+    real(r_std)::veget_max(kjpindex,nvm),veget(kjpindex,nvm),lai(kjpindex,nvm)
+    real(r_std)::totfrac_nobio(kjpindex),soiltile(kjpindex,nstm),qsintveg(kjpindex,nvm)
+    real(r_std)::co2_flux(kjpindex,nvm),netco2flux(kjpindex)
+    real(r_std)::temp_sol_new(kjpindex),temp_sol_new_pft(kjpindex,nvm)
+    real(r_std)::temp_sol(kjpindex),temp_sol_pft(kjpindex,nvm)
+    real(r_std)::soilcap_pft(kjpindex,nvm),soilflx_pft(kjpindex,nvm)
+    logical::f_rot_sech(kjpindex),ok_rotate
+    call seed_rotation(veget_max,veget,lai,totfrac_nobio,soiltile,f_rot_sech,rot_cmd,qsintveg, &
+         co2_flux,temp_sol_new,temp_sol_new_pft,temp_sol,temp_sol_pft,soilcap_pft,soilflx_pft)
+    ok_rotate=rotate_switch
+    if (invalid_fraction) totfrac_nobio(1)=.1_r_std
+! <ROTATION_FRAGMENT>
+    call emit_rotation_state(u,case_id,veget_max,veget,soiltile,f_rot_sech,rot_cmd,qsintveg, &
+         netco2flux,temp_sol_new_pft,temp_sol,temp_sol_pft,soilcap_pft,soilflx_pft)
+  end subroutine run_rotation
+
+  subroutine seed_control(veget_max,veget,frac_nobio,totfrac_nobio,tot_bare_soil,soiltile,lai, &
+       f_rot_sech,biomass,litter_above,litter_below,carbon_32l,DOC,netco2flux)
+    real(r_std),intent(out)::veget_max(kjpindex,nvm),veget(kjpindex,nvm)
+    real(r_std),intent(out)::frac_nobio(kjpindex,nnobio),totfrac_nobio(kjpindex),tot_bare_soil(kjpindex)
+    real(r_std),intent(out)::soiltile(kjpindex,nstm),lai(kjpindex,nvm)
+    logical,intent(out)::f_rot_sech(kjpindex)
+    real(r_std),intent(out)::biomass(kjpindex,nvm,nparts,nelements)
+    real(r_std),intent(out)::litter_above(kjpindex,nlitt,nvm,nelements)
+    real(r_std),intent(out)::litter_below(kjpindex,nlitt,nvm,ndeep,nelements)
+    real(r_std),intent(out)::carbon_32l(kjpindex,ncarb,nvm,ndeep)
+    real(r_std),intent(out)::DOC(kjpindex,nvm,ndeep,ndoc,npool,nelements),netco2flux(kjpindex)
+    integer::i,j
+    pref_soil_veg=1;veget_max=zero;veget_max(:,1)=.2_r_std;veget_max(:,14)=.6_r_std
+    frac_nobio=zero;frac_nobio(:,1)=.2_r_std;totfrac_nobio=.2_r_std
+    lai=zero;do j=1,nvm;do i=1,kjpindex;lai(i,j)=.25_r_std+.01_r_std*j+.02_r_std*i;enddo;enddo
+    veget=veget_max*(un-exp(-lai*spread(ext_coeff_vegetfrac,1,kjpindex)));veget(:,1)=veget_max(:,1)
+    soiltile=zero;soiltile(:,1)=un;tot_bare_soil=veget_max(:,1)+sum(veget_max(:,2:nvm)-veget(:,2:nvm),dim=2)
+    veget_max_new=zero;veget_max_new(:,1)=.3_r_std;veget_max_new(:,14)=.5_r_std
+    veget_max_adjusted=veget_max_new;frac_nobio_new=zero;frac_nobio_new(:,1)=.2_r_std
+    f_rot_sech=.false.;biomass=3._r_std;litter_above=4._r_std;litter_below=5._r_std
+    carbon_32l=6._r_std;DOC=7._r_std;netco2flux=un;lcc_calls=0;finalize_calls=0
+  end subroutine seed_control
+
+  subroutine emit_control_state(u,case_id,done_stomate_lcchange,veget_max,veget,frac_nobio, &
+       totfrac_nobio,tot_bare_soil,soiltile,biomass,litter_above,litter_below,carbon_32l,DOC,netco2flux)
+    integer,intent(in)::u,case_id
+    logical,intent(in)::done_stomate_lcchange
+    real(r_std),intent(in)::veget_max(kjpindex,nvm),veget(kjpindex,nvm),frac_nobio(kjpindex,nnobio)
+    real(r_std),intent(in)::totfrac_nobio(kjpindex),tot_bare_soil(kjpindex),soiltile(kjpindex,nstm)
+    real(r_std),intent(in)::biomass(kjpindex,nvm,nparts,nelements),litter_above(kjpindex,nlitt,nvm,nelements)
+    real(r_std),intent(in)::litter_below(kjpindex,nlitt,nvm,ndeep,nelements),carbon_32l(kjpindex,ncarb,nvm,ndeep)
+    real(r_std),intent(in)::DOC(kjpindex,nvm,ndeep,ndoc,npool,nelements),netco2flux(kjpindex)
+    integer::i,j,k,p
+    p=0;do i=1,kjpindex;do j=1,nvm;p=p+1
+      call emit(u,case_id,'veget_max',p,veget_max(i,j));call emit(u,case_id,'veget',p,veget(i,j))
+      call emit(u,case_id,'biomass',p,biomass(i,j,1,1));call emit(u,case_id,'litter_above',p,litter_above(i,1,j,1))
+      call emit(u,case_id,'litter_below',p,litter_below(i,1,j,1,1));call emit(u,case_id,'carbon_32l',p,carbon_32l(i,1,j,1))
+      call emit(u,case_id,'DOC',p,DOC(i,j,1,1,1,1))
+    enddo;enddo
+    p=0;do i=1,kjpindex;do k=1,nstm;p=p+1;call emit(u,case_id,'soiltile',p,soiltile(i,k));enddo;enddo
+    p=0;do i=1,kjpindex;do k=1,nnobio;p=p+1;call emit(u,case_id,'frac_nobio',p,frac_nobio(i,k));enddo;enddo
+    do i=1,kjpindex
+      call emit(u,case_id,'totfrac_nobio',i,totfrac_nobio(i));call emit(u,case_id,'tot_bare_soil',i,tot_bare_soil(i))
+      call emit(u,case_id,'netco2flux',i,netco2flux(i))
+    enddo
+    call emit(u,case_id,'done_stomate_lcchange',1,merge(un,zero,done_stomate_lcchange))
+    call emit(u,case_id,'finalize_calls',1,real(finalize_calls,r_std))
+  end subroutine emit_control_state
+
+  subroutine run_control(u,case_id,done_in,dyn_in,age_in,restart_in)
+    integer,intent(in)::u,case_id
+    logical,intent(in)::done_in,dyn_in,age_in,restart_in
+    integer::kjit=1,index(kjpindex)=(/1,2/),rest_id=1
+    logical::done_stomate_lcchange,dyn_peat,use_age_class,ldrestart_write
+    logical::f_rot_sech(kjpindex)
+    real(r_std)::lai(kjpindex,nvm),veget_max(kjpindex,nvm),veget(kjpindex,nvm)
+    real(r_std)::frac_nobio(kjpindex,nnobio),totfrac_nobio(kjpindex),tot_bare_soil(kjpindex)
+    real(r_std)::soiltile(kjpindex,nstm),biomass(kjpindex,nvm,nparts,nelements)
+    real(r_std)::litter_above(kjpindex,nlitt,nvm,nelements)
+    real(r_std)::litter_below(kjpindex,nlitt,nvm,ndeep,nelements)
+    real(r_std)::carbon_32l(kjpindex,ncarb,nvm,ndeep),DOC(kjpindex,nvm,ndeep,ndoc,npool,nelements)
+    real(r_std)::tq_cdrag(kjpindex)=zero,vevapp(kjpindex)=zero,fluxsens(kjpindex)=zero
+    real(r_std)::fluxlat(kjpindex)=zero,tsol_rad(kjpindex)=zero,netco2flux(kjpindex)
+    call seed_control(veget_max,veget,frac_nobio,totfrac_nobio,tot_bare_soil,soiltile,lai, &
+         f_rot_sech,biomass,litter_above,litter_below,carbon_32l,DOC,netco2flux)
+    done_stomate_lcchange=done_in;dyn_peat=dyn_in;use_age_class=age_in;ldrestart_write=restart_in
+! <CONTROL_FRAGMENT>
+    call emit_control_state(u,case_id,done_stomate_lcchange,veget_max,veget,frac_nobio, &
+         totfrac_nobio,tot_bare_soil,soiltile,biomass,litter_above,litter_below,carbon_32l,DOC,netco2flux)
+  end subroutine run_control
+
+  subroutine sechiba_finalize(kjit_in,kjpij_in,kjpindex_in,index_in,rest_id_in,tq_cdrag,vevapp, &
+       fluxsens,fluxlat,tsol_rad,netco2flux)
+    integer,intent(in)::kjit_in,kjpij_in,kjpindex_in,index_in(kjpindex_in),rest_id_in
+    real(r_std),intent(in)::tq_cdrag(kjpindex_in),vevapp(kjpindex_in),fluxsens(kjpindex_in)
+    real(r_std),intent(in)::fluxlat(kjpindex_in),tsol_rad(kjpindex_in)
+    real(r_std),intent(inout)::netco2flux(kjpindex_in)
+    finalize_calls=finalize_calls+1;netco2flux=netco2flux+10._r_std
+  end subroutine sechiba_finalize
+
+! <EXACT_PROCEDURES>
+end module sechiba_main_fixed_tail_oracle
+
+program main
+  use sechiba_main_fixed_tail_oracle
+  implicit none
+  integer::u,mode
+  character(len=32)::arg
+  mode=0;call get_command_argument(1,arg);if(len_trim(arg)>0)read(arg,*)mode
+  if(mode==0)then
+    open(newunit=u,file='fortran_outputs.csv',status='replace')
+    write(u,'(A)')'case_id,field,flat_index,value'
+    call run_rotation(u,1,.true.,.false.)
+    call run_rotation(u,2,.false.,.false.)
+    call run_control(u,11,.false.,.false.,.false.,.false.)
+    call run_control(u,12,.true.,.false.,.false.,.true.)
+    call run_control(u,13,.true.,.false.,.true.,.false.)
+    call run_control(u,14,.true.,.true.,.false.,.false.)
+    close(u)
+  else
+    call run_rotation(6,99,.true.,.true.)
+  endif
+end program main

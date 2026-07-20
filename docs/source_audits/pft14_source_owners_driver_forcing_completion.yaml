@@ -1,0 +1,115 @@
+schema_version: 1
+scope: >-
+  Fourth-batch DRIVER forcing completion. This ledger owns exactly 32 audited
+  control-flow arms. Existing dim2, domain/time-zone, and qsat process owners
+  are reused without modifying their files. NetCDF and IOIPSL transport remain
+  external; only the source status guard and output ownership decisions live here.
+
+totals:
+  procedures: 5
+  arms: 32
+  dim2_driver_driver_arms: 12
+  solarang_arms: 8
+  downward_solar_flux_arms: 8
+  weathgen_qsat_2d_arms: 3
+  nccheck_arms: 1
+
+contracts:
+  driver_dispatch: >-
+    dim2_driver.f90 lines 285-311, 835-837, 1051-1058, 1403-1407, and
+    1425-1446 are represented by explicit weather-timestep, first/final-step,
+    penultimate-load-balance, Watchout restart-field, and root-close states.
+    Time indices are composed from jax_orchidee.driver.dim2 rather than copied.
+  solar_calendar: >-
+    solarang accepts calendar-owned one_year and preserves the source gamma,
+    absolute-Julian GMT fraction, domain time-zone dispatch, strict local-time
+    wrap predicates, separable lon(:,1)/lat(1,:) grid convention, and nonnegative
+    zenith cosine.
+  downward_save_state: >-
+    downward_solar_flux returns explicit immutable SAVE state. Calendar step and
+    orbital parameters initialize only on the first call; later calls retain
+    them. The source trans>0.75 override and nband==2 0.46/0.54 split are exact.
+  weather_qsat: >-
+    weathgen_qsat_2d uses the Lowe water/ice polynomials, strict t>zero_t arm,
+    source temperature clamps, and MAX denominator guard. It is distinct from
+    qsat_moisture.qsatcalc and is therefore not approximated with that table.
+  numerical_oracle: >-
+    tests/unit/test_driver_forcing_completion.py extracts the original solarang,
+    time_zone, downward_solar_flux, and weathgen_qsat_2d procedure bodies into a
+    gfortran harness. It checks first/later SAVE calls, local-time behavior,
+    Gregorian retention, transmission threshold, two/non-two band allocation,
+    and all weather qsat temperature arms against the Python owner.
+
+entries:
+  - id: driver.dim2_driver.dimension_guards
+    fortran_file: fortran_source/ORCHIDEE/src_driver/dim2_driver.f90
+    fortran_subroutine: driver
+    fortran_lines: 443-443,452-452,569-569
+    status: implemented
+    jax_owner: jax_orchidee.driver.driver_forcing_completion.validate_driver_dimensions
+    gap: null
+    arm_count: 5
+    state_contract: [jax_orchidee.driver.driver_forcing_completion.validate_driver_dimensions]
+    validation: [tests/unit/test_driver_forcing_completion.py]
+
+  - id: driver.dim2_driver.root_and_fixed_dispatch
+    fortran_file: fortran_source/ORCHIDEE/src_driver/dim2_driver.f90
+    fortran_subroutine: driver
+    fortran_lines: 361-361,827-827,931-931,1441-1441
+    status: implemented
+    jax_owner: jax_orchidee.driver.dim2.run_dim2_driver
+    gap: null
+    arm_count: 7
+    state_contract:
+      - jax_orchidee.driver.driver_forcing_completion.DriverWeatherTimestep
+      - jax_orchidee.driver.driver_forcing_completion.DriverStepDispatchStatus
+      - jax_orchidee.driver.driver_forcing_completion.DriverOutputStatus
+      - jax_orchidee.driver.dim2.Dim2TimeControl
+      - jax_orchidee.driver.dim2.Dim2TimeIndex
+    validation: [tests/unit/test_driver_forcing_completion.py]
+
+  - id: global.solar.solarang
+    fortran_file: fortran_source/ORCHIDEE/src_global/solar.f90
+    fortran_subroutine: solarang
+    fortran_lines: 55-181
+    status: implemented
+    jax_owner: jax_orchidee.driver.driver_forcing_completion.solarang
+    gap: null
+    arm_count: 8
+    state_contract: [numpy.ndarray, jax_orchidee.driver.domain._fortran_time_zone]
+    validation: [tests/unit/test_driver_forcing_completion.py]
+
+  - id: global.solar.downward_solar_flux
+    fortran_file: fortran_source/ORCHIDEE/src_global/solar.f90
+    fortran_subroutine: downward_solar_flux
+    fortran_lines: 290-597
+    status: implemented
+    jax_owner: jax_orchidee.driver.driver_forcing_completion.downward_solar_flux
+    gap: null
+    arm_count: 8
+    state_contract:
+      - jax_orchidee.driver.driver_forcing_completion.DownwardSolarFluxState
+      - jax_orchidee.driver.driver_forcing_completion.DownwardSolarFluxResult
+    validation: [tests/unit/test_driver_forcing_completion.py]
+
+  - id: driver.weather.weathgen_qsat_2d
+    fortran_file: fortran_source/ORCHIDEE/src_driver/weather.f90
+    fortran_subroutine: weathgen_qsat_2d
+    fortran_lines: 3623-3668
+    status: implemented
+    jax_owner: jax_orchidee.driver.driver_forcing_completion.weathgen_qsat_2d
+    gap: null
+    arm_count: 3
+    state_contract: [numpy.ndarray]
+    validation: [tests/unit/test_driver_forcing_completion.py]
+
+  - id: global.utils.nccheck
+    fortran_file: fortran_source/ORCHIDEE/src_global/utils.f90
+    fortran_subroutine: nccheck
+    fortran_lines: 40-49
+    status: implemented
+    jax_owner: jax_orchidee.driver.driver_forcing_completion.nccheck
+    gap: null
+    arm_count: 1
+    state_contract: [jax_orchidee.driver.driver_forcing_completion.NetCDFStatusError]
+    validation: [tests/unit/test_driver_forcing_completion.py]

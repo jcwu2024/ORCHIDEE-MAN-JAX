@@ -1,0 +1,15 @@
+program driver_order_oracle
+  implicit none
+  integer::unit
+  open(newunit=unit,file=trim(command_argument()),status='replace',action='write')
+! <CALL_SEQUENCE>
+  close(unit)
+contains
+  subroutine record(name)
+    character(len=*),intent(in)::name
+    write(unit,'(A,",",I0)') trim(name),1
+  end subroutine
+  function command_argument() result(value)
+    character(len=1024)::value; call get_command_argument(1,value)
+  end function
+end program

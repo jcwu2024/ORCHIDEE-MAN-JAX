@@ -1,0 +1,160 @@
+module soilcarbon_owner_oracle
+  implicit none
+  integer, parameter :: r_std=8, i_std=4
+  integer, parameter :: nvm=14, ndeep=32, nslm=11, nstm=3, nsnow=3
+  integer, parameter :: nlitt=2, npool=7, nelements=1, nelements_loc=1, nparts=12, nmbcomp=5
+  integer, parameter :: ncarb=3, ndoc=2, nexp=3, nflow=3
+  integer, parameter :: icarbon=1, imetabo=1, istrabo=2, imetbel=3, istrbel=4
+  integer, parameter :: iact=5, islo=6, ipas=7, ifree=1, iadsorbed=2, ibuffer=2
+  integer, parameter :: iactive=1, islow=2, ipassive=3
+  integer, parameter :: irunoff=1, iflooded=2, idrainage=3
+  integer, parameter :: itop=1, ibottom=2, iflood=3, ih2o=1, idocl=2, idocr=3
+  integer, parameter :: iatm2land=1, iland2atm=2, ilat2out=3, ilat2in=4, ipoolchange=5, ileaf=1
+  integer, parameter :: imetabolic=1, istructural=2
+  real(r_std), parameter :: zero=0.d0, un=1.d0, deux=2.d0, trois=3.d0, dix=10.d0, cent=100.d0, undemi=.5d0
+  real(r_std), parameter :: one_day=86400.d0, one_year=365.d0
+  real(r_std), parameter :: min_stomate=1.d-12, ZeroCelsius=273.15d0
+  integer :: printlev=0, numout=6, sro_bottom=5
+  real(r_std) :: dt_sechiba=1800.d0
+  integer :: pref_soil_veg(nvm)
+  logical :: natural(nvm), is_peat(nvm), is_tree(nvm), is_c4(nvm)
+  logical :: ok_TF_DOC=.true., ok_cryoturb=.false., perma_peat=.false., ld_doc=.true.
+  logical :: PRIMING=.true., DANs_restart=.false., soilc_isspinup=.false.
+  logical :: reset_fixed_cryoturbation_depth=.false., use_fixed_cryoturbation_depth=.false.
+  logical :: use_new_cryoturbation=.false., use_new_diffusion_scheme=.false., newaltcalc=.false.
+  integer :: cryoturbation_method=4
+  real(r_std) :: max_cryoturb_alt=3.d0, min_cryoturb_alt=.01d0, bioturbation_depth=2.d0
+  real(r_std) :: cryoturbation_diff_k_in=.001d0, bioturbation_diff_k_in=.0001d0
+  real(r_std) :: cue=0.3d0, docexp_max=20.d0, fastr_ref=25.d0, Dif=1.d-4, D_DOC=1.d-5
+  real(r_std) :: conc_DOC_rain=3.02d0, conc_DOC_max=100.d0, DOC_incr_per_LEAF_M2=.00092d0
+  real(r_std) :: DOC_tau_labile=1.3d0, DOC_tau_stable=60.4d0, flux_red_sro=.5d0
+  real(r_std) :: carbon_tau_iactive=.149d0, carbon_tau_islow=5.48d0, carbon_tau_ipassive=241.d0
+  real(r_std) :: metabolic_ref_frac=.85d0, active_to_pass_clay_frac=.68d0, kd_ads=.00805d0
+  real(r_std) :: frac1=.95d0, frac2=.05d0, z_root_max=2.d0
+  real(r_std) :: priming_param_iactive=493.66d0, priming_param_islow=194.03d0, priming_param_ipassive=136.54d0
+  real(r_std) :: mu_soil
+  integer :: yr_len=365
+  real(r_std) :: diaglev(nslm), peat_bulk_density(ndeep), flux_tot_coeff(ncarb)
+  real(r_std) :: priming_param(ncarb)
+  real(r_std), allocatable, save :: alt(:,:), altmax_lastyear(:,:), z_root(:,:), lalo_global(:,:)
+  real(r_std), allocatable, save :: heights_snow(:,:), carbon_32l_pftmean(:,:,:), carbon_32l_conct(:,:,:)
+  integer, allocatable, save :: alt_ind(:,:), altmax_ind(:,:), altmax_ind_lastyear(:,:), rootlev(:,:)
+  logical, allocatable, save :: veget_mask_2d(:,:)
+  real(r_std), allocatable, save :: zf_soil_b(:), zi_soil(:), zf_snow(:,:,:), zi_snow(:,:,:)
+  real(r_std), allocatable, save :: zf_snow_nopftdim(:,:), zi_snow_nopftdim(:,:)
+  real(r_std), allocatable, save :: xe_ALL(:,:), xc_cryoturb(:,:,:), xd_cryoturb(:,:,:), diff_k(:,:,:)
+  real(r_std), allocatable, save :: alpha_C(:,:,:,:), beta_C(:,:,:,:)
+  real(r_std), allocatable, save :: alpha_DOC(:,:,:,:,:), beta_DOC(:,:,:,:,:)
+  real(r_std), allocatable, save :: alpha_litter_below(:,:,:,:), beta_litter_below(:,:,:,:)
+  logical, allocatable, save :: cryoturb_location(:,:), bioturb_location(:,:)
+  logical, save :: firstcall_soilcarbon=.true.
+  interface getin_p
+    module procedure getin_l, getin_i, getin_r
+  end interface
+contains
+  subroutine getin_l(name,value)
+    character(*),intent(in)::name; logical,intent(inout)::value
+    character(8)::setting
+    if (trim(name)=='cryoturbate_doc_POC') value=.false.
+    if (trim(name)=='newaltcalc') then
+      call get_environment_variable('ORACLE_NEWALTCALC',setting)
+      value=trim(setting)=='1'
+    endif
+  end subroutine
+  subroutine getin_i(name,value); character(*),intent(in)::name; integer,intent(inout)::value; end subroutine
+  subroutine getin_r(name,value); character(*),intent(in)::name; real(r_std),intent(inout)::value; end subroutine
+  subroutine ipslerr_p(level,routine,a,b,c)
+    integer,intent(in)::level; character(*),intent(in)::routine,a,b,c
+    error stop trim(routine)
+  end subroutine
+  subroutine xios_orchidee_send_field(name,value)
+    character(*),intent(in)::name; class(*),intent(in)::value(..)
+  end subroutine
+  subroutine itau2ymds(itau,dt,year,month,day,sec)
+    integer,intent(in)::itau; real(r_std),intent(in)::dt
+    integer,intent(out)::year,month,day; real(r_std),intent(out)::sec
+    year=1961; month=1
+    day=1+int(dble(itau-1)*dt/one_day)
+    sec=mod(dble(itau-1)*dt,one_day)
+  end subroutine
+  subroutine snowlevels(npts,snowdz,zi,zf,veget)
+    integer,intent(in)::npts; real(r_std),intent(in)::snowdz(npts,nsnow),veget(npts,nvm)
+    real(r_std),intent(out)::zi(npts,nsnow,nvm),zf(npts,0:nsnow,nvm)
+    integer::i,j,k
+    zf=0.d0
+    do k=1,npts; do j=1,nvm; do i=1,nsnow
+      zf(k,i,j)=zf(k,i-1,j)+snowdz(k,i); zi(k,i,j)=.5d0*(zf(k,i-1,j)+zf(k,i,j))
+    enddo; enddo; enddo
+  end subroutine
+
+!__ORIGINAL_PROCEDURES__
+end module soilcarbon_owner_oracle
+
+program run_soilcarbon_owner_oracle
+  use soilcarbon_owner_oracle
+  implicit none
+  integer,parameter::npts=2
+  integer::i,l,u,itau
+  character(1024)::outfile
+  character(8)::spinup_setting
+  real(r_std)::dt,zzc(ndeep),zz(ndeep),clay(npts),lalo(npts,2),snow(npts,nsnow),fixed(npts,nvm)
+  real(r_std)::scin(npts,nvm,ndeep,npool,nelements),fcin(npts,nvm,npool,nelements)
+  real(r_std)::carbon(npts,ncarb,nvm),carbon32(npts,ncarb,nvm,ndeep),rh(npts,nvm),rf(npts,nvm),altmax0(npts,nvm)
+  real(r_std)::labove(npts,nlitt,nvm,nelements),lbelow(npts,nlitt,nvm,ndeep,nelements)
+  real(r_std)::doc(npts,nvm,ndeep,ndoc,npool,nelements),docexp(npts,nvm,nexp,npool,nelements)
+  real(r_std)::ligna(npts,nvm),lignb(npts,nvm,ndeep),runoff(npts,nstm),runpeat(npts,nstm),drain(npts,nstm)
+  real(r_std)::wat(npts,nslm,nstm),bulk(npts),ph(npts),poor(npts),veget(npts,nvm)
+  real(r_std)::fb(npts,ndeep,nvm),fbd(npts,ndeep,nvm),tp(npts,ndeep,nvm),mc32(npts,ndeep,nstm),mc(npts,nslm,nstm)
+  real(r_std)::dtop(npts,nflow),dsub(npts,nflow),flood(npts),pg(npts,nvm),pc(npts,nvm),cg(npts,nvm)
+  real(r_std)::dry(npts,nvm,nelements),dpg(npts,nvm,nelements),dpc(npts,nvm,nelements),dcg(npts,nvm,nelements)
+  real(r_std)::storage(npts,nvm,nelements),biomass(npts,nvm,nparts,nelements),fastr(npts),deeppeat(npts,ndeep,nvm)
+  dt=1800.d0/one_day; itau=1
+  call get_environment_variable('ORACLE_SPINUP',spinup_setting)
+  soilc_isspinup=trim(spinup_setting)=='1'
+  diaglev=(/.01d0,.03d0,.06d0,.1d0,.2d0,.35d0,.55d0,.8d0,1.1d0,1.5d0,2.d0/)
+  peat_bulk_density=.12d0; flux_tot_coeff=(/1.2d0,1.4d0,.75d0/)
+  priming_param=(/priming_param_iactive,priming_param_islow,priming_param_ipassive/)
+  pref_soil_veg=1; pref_soil_veg(14)=3; natural=.false.; natural(14)=.true.; is_peat=.false.; is_tree=.false.; is_tree(14)=.true.; is_c4=.false.
+  do l=1,ndeep; zzc(l)=2.d0*dble(l)/dble(ndeep); zz(l)=zzc(l); enddo
+  clay=(/.25d0,.4d0/); lalo=0.d0; lalo(:,1)=(/1.d0,-20.d0/); snow=0.d0; fixed=0.d0
+  scin=0.d0; scin(:,14,:,iact,1)=.002d0; fcin=0.d0
+  carbon=0.d0; carbon32=0.d0; carbon32(:,iactive,14,:)=2.d0
+  altmax0=0.d0; labove=0.d0; labove(:,imetabolic,14,1)=2.d0; labove(:,istructural,14,1)=4.d0
+  if (soilc_isspinup) altmax0=1.d0
+  lbelow=0.d0; lbelow(:,imetabolic,14,:,1)=.05d0; lbelow(:,istructural,14,:,1)=.1d0
+  doc=0.d0
+  do i=1,npool
+    doc(:,14,:,ifree,i,1)=.01d0+.002d0*dble(i)
+  enddo
+  ligna=0.d0; ligna(:,14)=.2d0; lignb=0.d0; lignb(:,14,:)=.2d0
+  runoff=.2d0; runpeat=0.d0; drain=.1d0; wat=.01d0; bulk=(/1200.d0,1350.d0/); ph=6.5d0; poor=(/0.d0,.3d0/)
+  veget=0.d0; veget(:,14)=(/.7d0,.6d0/); fb=.08d0; fbd=.06d0; tp=278.d0; tp(2,:,:)=268.d0
+  mc32=.4d0; mc=.4d0; dtop=0.d0; dsub=0.d0; dtop(:,idocl)=.001d0; dsub(:,idocr)=.0005d0
+  flood=(/0.d0,.3d0/); pg=1.d0; pc=0.d0; pc(:,14)=.2d0; cg=0.d0; cg(:,14)=.05d0
+  storage=0.d0; storage(:,14,1)=.01d0; biomass=0.d0; biomass(:,14,ileaf,1)=5.d0; fastr=(/25.d0,9.d0/); deeppeat=0.d0
+  call get_command_argument(1,outfile); open(newunit=u,file=trim(outfile),access='stream',form='unformatted',status='replace')
+  call execute_case(u)
+  itau=2; scin=0.d0; dtop=0.d0; dsub=0.d0; pc=0.d0; call execute_case(u)
+  itau=49; PRIMING=.false.; veget(2,14)=0.d0; mc32(1,:,:)=0.d0; mc(1,:,:)=0.d0; wat(2,:,:)=-.01d0
+  do l=1,ndeep
+    if (mod(l,2)==0) then
+      doc(1,14,l,ifree,:,1)=1.d0
+    else
+      doc(1,14,l,ifree,:,1)=1.d-9
+    endif
+  enddo
+  call execute_case(u)
+  itau=50; PRIMING=.true.; perma_peat=.true.; is_peat(14)=.true.; veget(:,14)=(/.7d0,.6d0/)
+  mc32=.4d0; mc=.4d0; wat=.01d0; carbon32(1,iactive,14,1)=1.d5
+  call execute_case(u)
+  close(u)
+contains
+  subroutine execute_case(unit)
+    integer,intent(in)::unit
+    call soilcarbon_leak(npts,dt,zzc,clay,.false.,scin,fcin,carbon,carbon32,rh,rf,altmax0,lalo,itau,zz,snow,fixed, &
+      labove,lbelow,doc,docexp,ligna,lignb,runoff,runpeat,drain,wat,bulk,ph,poor,veget,fb,fbd,tp,mc32,mc,dtop,dsub,flood, &
+      pg,pc,cg,dry,dpg,dpc,dcg,storage,biomass,fastr,deeppeat)
+    write(unit) rh,rf,docexp,dry,dpg,dpc,dcg,scin,fcin,carbon,carbon32,altmax0,fixed,lbelow,doc,storage,biomass,bulk,deeppeat
+    write(unit) alt,alt_ind,altmax_lastyear,altmax_ind,altmax_ind_lastyear,z_root,rootlev,veget_mask_2d
+  end subroutine
+end program

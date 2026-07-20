@@ -1,0 +1,170 @@
+module defprec
+  implicit none
+  integer, parameter :: i_std=selected_int_kind(9)
+  integer, parameter :: r_std=selected_real_kind(12,300)
+end module defprec
+
+! <CONSTANTES_VAR_MODULE>
+
+module oracle_state
+  use defprec
+  implicit none
+  character(len=64), save :: oracle_mode=''
+  integer, save :: output_unit=-1, sequence=0, warning_count=0
+contains
+  subroutine emit(key,kind,before,after)
+    character(*),intent(in)::key,kind,before,after
+    sequence=sequence+1
+    write(output_unit,'(i0,a,a,a,a,a,a,a,a)') sequence,',',trim(key),',',trim(kind),',',trim(before),',',trim(after)
+  end subroutine emit
+end module oracle_state
+
+module ioipsl_para
+  use defprec
+  use oracle_state
+  implicit none
+  interface getin_p
+    module procedure getin_l0,getin_i0,getin_r0,getin_r1,getin_r2,getin_c0
+  end interface
+contains
+  logical function override_true(key)
+    character(*),intent(in)::key
+    override_true = &
+      (index(oracle_mode,'fire_off')>0 .and. trim(key)=='FIRE_DISABLE') .or. &
+      (index(oracle_mode,'age_on')>0 .and. trim(key)=='GLUC_USE_AGE_CLASS') .or. &
+      (index(oracle_mode,'lpj_conflict')>0 .and. trim(key)=='LPJ_GAP_CONST_MORT') .or. &
+      (index(oracle_mode,'impveg')>0 .and. trim(key)=='IMPOSE_VEG') .or. &
+      (index(oracle_mode,'map_format')>0 .and. trim(key)=='MAP_PFT_FORMAT') .or. &
+      (index(oracle_mode,'impaze')>0 .and. trim(key)=='IMPOSE_AZE') .or. &
+      (index(oracle_mode,'watstress')>0 .and. trim(key)=='NEW_WATSTRESS')
+  end function override_true
+  subroutine getin_l0(key,value)
+    character(*),intent(in)::key
+    logical,intent(inout)::value
+    logical::before
+    character(8)::b,a
+    before=value
+    if(override_true(trim(key)))value=.true.
+    write(b,'(l1)')before; write(a,'(l1)')value
+    call emit(trim(key),'logical',trim(b),trim(a))
+  end subroutine getin_l0
+  subroutine getin_i0(key,value)
+    character(*),intent(in)::key
+    integer(i_std),intent(inout)::value
+    integer(i_std)::before
+    character(64)::b,a
+    before=value
+    if(index(oracle_mode,'overrides')>0 .and. trim(key)=='NVERT')value=12_i_std
+    write(b,'(i0)')before; write(a,'(i0)')value
+    call emit(trim(key),'integer',trim(b),trim(a))
+  end subroutine getin_i0
+  subroutine getin_r0(key,value)
+    character(*),intent(in)::key
+    real(r_std),intent(inout)::value
+    real(r_std)::before
+    character(64)::b,a
+    before=value
+    if(index(oracle_mode,'overrides')>0 .and. trim(key)=='SNOWCRI')value=2.5_r_std
+    write(b,'(es25.17e3)')before; write(a,'(es25.17e3)')value
+    call emit(trim(key),'real',trim(b),trim(a))
+  end subroutine getin_r0
+  subroutine getin_r1(key,value)
+    character(*),intent(in)::key
+    real(r_std),intent(inout)::value(:)
+    character(4096)::text
+    call real_array_text(value,text)
+    call emit(trim(key),'real_array',trim(text),trim(text))
+  end subroutine getin_r1
+  subroutine getin_r2(key,value)
+    character(*),intent(in)::key
+    real(r_std),intent(inout)::value(:,:)
+    character(4096)::text
+    call real_array_text(pack(value,.true.),text)
+    call emit(trim(key),'real_array',trim(text),trim(text))
+  end subroutine getin_r2
+  subroutine real_array_text(value,text)
+    real(r_std),intent(in)::value(:)
+    character(*),intent(out)::text
+    character(64)::item
+    integer::i
+    text=''
+    do i=1,size(value)
+      write(item,'(es25.17e3)')value(i)
+      if(i>1)text=trim(text)//';'
+      text=trim(text)//trim(item)
+    enddo
+  end subroutine real_array_text
+  subroutine getin_c0(key,value)
+    character(*),intent(in)::key
+    character(*),intent(inout)::value
+    character(len(value))::before
+    before=value
+    call emit(trim(key),'character',trim(before),trim(value))
+  end subroutine getin_c0
+  subroutine ipslerr_p(level,routine,message1,message2,message3)
+    integer,intent(in)::level
+    character(*),intent(in)::routine,message1
+    character(*),intent(in),optional::message2,message3
+    warning_count=warning_count+1
+  end subroutine ipslerr_p
+end module ioipsl_para
+
+module mod_orchidee_para
+  implicit none
+  integer, save :: numout=6
+end module mod_orchidee_para
+
+module constantes_oracle
+  use constantes_var
+  use defprec
+  use ioipsl_para, only:getin_p,ipslerr_p
+  use mod_orchidee_para, only:numout
+  implicit none
+contains
+! <ACTIVATE_SUB_MODELS>
+! <VEGET_CONFIG>
+! <CONFIG_SECHIBA_PARAMETERS>
+! <CONFIG_STOMATE_PARAMETERS>
+end module constantes_oracle
+
+program driver
+  use constantes_var
+  use constantes_oracle
+  use oracle_state
+  implicit none
+  character(512)::output_path
+  character(64)::procedure_name
+  call get_command_argument(1,output_path)
+  call get_command_argument(2,procedure_name)
+  call get_command_argument(3,oracle_mode)
+  open(newunit=output_unit,file=trim(output_path),status='replace')
+  write(output_unit,'(a)')'sequence,key,kind,before,after'
+  if(trim(procedure_name)=='activate_sub_models')then
+    ok_stomate=index(oracle_mode,'stomate_off')==0
+    ok_dgvm=index(oracle_mode,'dgvm_on')>0 .or. index(oracle_mode,'lpj_conflict')>0
+    call activate_sub_models()
+  elseif(trim(procedure_name)=='veget_config')then
+    call veget_config()
+  elseif(trim(procedure_name)=='config_sechiba_parameters')then
+    call config_sechiba_parameters()
+    call emit('SNEIGE','real','derived',real_text(sneige))
+  elseif(trim(procedure_name)=='config_stomate_parameters')then
+    CH4_calcul=index(oracle_mode,'ch4_on')>0
+    call config_stomate_parameters()
+  else
+    error stop 'unknown procedure'
+  endif
+  call emit('__WARNING_COUNT__','integer','0',int_text(warning_count))
+  close(output_unit)
+contains
+  function real_text(value) result(text)
+    real(r_std),intent(in)::value
+    character(64)::text
+    write(text,'(es25.17e3)')value
+  end function real_text
+  function int_text(value) result(text)
+    integer,intent(in)::value
+    character(64)::text
+    write(text,'(i0)')value
+  end function int_text
+end program driver

@@ -1,0 +1,199 @@
+module defprec
+  implicit none
+  integer, parameter :: i_std=selected_int_kind(9)
+  integer, parameter :: r_std=selected_real_kind(12,300)
+end module defprec
+
+module constantes
+  use defprec
+  implicit none
+  real(r_std), parameter :: zero=0._r_std, deux=2._r_std
+  logical, save :: ok_sechiba=.false., impose_param=.false., hydrol_cwrr=.true.
+end module constantes
+
+module vertical_soil_var
+  implicit none
+end module vertical_soil_var
+
+! <CONSTANTES_SOIL_VAR_MODULE>
+
+module oracle_config
+  use defprec
+  implicit none
+  character(len=64), save :: mode=''
+  integer(i_std), save :: getin_total=0, writeback_total=0
+contains
+  logical function changed(key)
+    character(*), intent(in) :: key
+    changed = trim(mode)=='valid_custom_cwrr' .or. trim(mode)=='valid_custom_choisnel' .or. &
+      trim(mode)=='valid_freeze' .or. trim(mode)=='valid_freeze_overrides' .or. &
+      trim(mode)=='valid_thermo_skip' .or. index(trim(mode),'error_')==1
+    if (trim(mode)=='valid_gate_off') changed = trim(key)=='TAU_PEAT'
+  end function changed
+
+  real(r_std) function real_value(key,current)
+    character(*), intent(in) :: key
+    real(r_std), intent(in) :: current
+    real_value=current
+    select case(trim(mode))
+    case('valid_gate_off'); if (trim(key)=='TAU_PEAT') real_value=7._r_std
+    case('valid_custom_cwrr','valid_custom_choisnel')
+      select case(trim(key))
+      case('DRY_SOIL_HEAT_CAPACITY'); real_value=1800001._r_std
+      case('DRY_SOIL_HEAT_COND'); real_value=.41_r_std
+      case('WET_SOIL_HEAT_CAPACITY'); real_value=3030001._r_std
+      case('WET_SOIL_HEAT_COND'); real_value=1.91_r_std
+      case('SNOW_HEAT_COND'); real_value=.31_r_std
+      case('SNOW_DENSITY'); real_value=331._r_std
+      case('NOBIO_WATER_CAPAC_VOLUMETRI'); real_value=151._r_std
+      case('SECHIBA_QSINT'); real_value=.11_r_std
+      case('CHOISNEL_DIFF_MIN'); real_value=.002_r_std
+      case('CHOISNEL_DIFF_MAX'); real_value=.2_r_std
+      case('CHOISNEL_DIFF_EXP'); real_value=1.6_r_std
+      case('CHOISNEL_RSOL_CSTE'); real_value=34000._r_std
+      case('HCRIT_LITTER'); real_value=.09_r_std
+      case('TAU_PEAT'); real_value=315360001._r_std
+      case('Z_TAU'); real_value=1000001._r_std
+      case('POROS'); real_value=.42_r_std
+      case('FR_DT'); real_value=2.1_r_std
+      end select
+    end select
+    if (index(trim(mode),'error_')==1) then
+      select case(trim(mode))
+      case('error_dry_capa'); if(trim(key)=='DRY_SOIL_HEAT_CAPACITY') real_value=0
+      case('error_dry_cond'); if(trim(key)=='DRY_SOIL_HEAT_COND') real_value=0
+      case('error_wet_capa'); if(trim(key)=='WET_SOIL_HEAT_CAPACITY') real_value=0
+      case('error_wet_cond'); if(trim(key)=='WET_SOIL_HEAT_COND') real_value=0
+      case('error_snow_cond'); if(trim(key)=='SNOW_HEAT_COND') real_value=0
+      case('error_snow_dens'); if(trim(key)=='SNOW_DENSITY') real_value=0
+      case('error_nobio'); if(trim(key)=='NOBIO_WATER_CAPAC_VOLUMETRI') real_value=0
+      case('error_qsint'); if(trim(key)=='SECHIBA_QSINT') real_value=0
+      case('error_min'); if(trim(key)=='CHOISNEL_DIFF_MIN') real_value=0
+      case('error_max'); if(trim(key)=='CHOISNEL_DIFF_MAX') real_value=.001_r_std
+      case('error_exp'); if(trim(key)=='CHOISNEL_DIFF_EXP') real_value=0
+      case('error_rsol'); if(trim(key)=='CHOISNEL_RSOL_CSTE') real_value=0
+      case('error_litter'); if(trim(key)=='HCRIT_LITTER') real_value=0
+      end select
+    end if
+  end function real_value
+end module oracle_config
+
+module ioipsl
+  use defprec
+  use oracle_config
+  implicit none
+  interface getin_p
+    module procedure getin_real, getin_integer, getin_logical, getin_real_array
+  end interface
+contains
+  subroutine getin_real(key,value)
+    character(*), intent(in) :: key
+    real(r_std), intent(inout) :: value
+    real(r_std) :: old
+    old=value; getin_total=getin_total+1
+    if (changed(key)) value=real_value(key,value)
+    if (value/=old) writeback_total=writeback_total+1
+  end subroutine getin_real
+  subroutine getin_integer(key,value)
+    character(*), intent(in) :: key
+    integer(i_std), intent(inout) :: value
+    integer(i_std) :: old
+    old=value; getin_total=getin_total+1
+    if (trim(mode)=='valid_custom_cwrr' .or. trim(mode)=='valid_custom_choisnel') value=2
+    if (trim(mode)=='error_method') value=3
+    if (value/=old) writeback_total=writeback_total+1
+  end subroutine getin_integer
+  subroutine getin_logical(key,value)
+    character(*), intent(in) :: key
+    logical, intent(inout) :: value
+    logical :: old
+    old=value; getin_total=getin_total+1
+    if (trim(mode)=='valid_freeze') value=.true.
+    if (trim(mode)=='valid_freeze_overrides') then
+      if (trim(key)=='OK_FREEZE') value=.true.
+      if (trim(key)/='OK_FREEZE' .and. trim(key)/='OK_FREEZE_THERMIX' .and. trim(key)/='OK_FREEZE_CWRR') value=.false.
+    end if
+    if (trim(mode)=='valid_thermo_skip' .and. trim(key)=='OK_THERMODYNAMICAL_FREEZING') value=.true.
+    if (trim(mode)=='error_ecorr') then
+      if (trim(key)=='OK_ECORR') value=.true.
+      if (trim(key)=='OK_FREEZE_THERMIX') value=.false.
+    end if
+    if (value.neqv.old) writeback_total=writeback_total+1
+  end subroutine getin_logical
+  subroutine getin_real_array(key,value)
+    character(*), intent(in) :: key
+    real(r_std), intent(inout) :: value(:)
+    real(r_std) :: old(size(value))
+    old=value; getin_total=getin_total+1
+    if (trim(mode)=='valid_custom_cwrr') value=[.4_r_std,.5_r_std,.6_r_std]
+    if (any(value/=old)) writeback_total=writeback_total+1
+  end subroutine getin_real_array
+  subroutine ipslerr_p(level,where,message1,message2,message3)
+    integer, intent(in) :: level
+    character(*), intent(in) :: where,message1,message2,message3
+    write(*,'(A,1X,A,1X,A,1X,A,1X,I0)') trim(where),trim(message1),trim(message2),trim(message3),level
+    error stop 73
+  end subroutine ipslerr_p
+end module ioipsl
+
+module ioipsl_para
+  use ioipsl, only: getin_p, ipslerr_p
+end module ioipsl_para
+
+module constantes_soil
+  use constantes_soil_var
+  use constantes
+  use ioipsl_para
+  implicit none
+contains
+! <CONFIG_SOIL_PARAMETERS>
+end module constantes_soil
+
+program soil_parameter_owner_oracle
+  use defprec
+  use constantes
+  use constantes_soil
+  use constantes_soil_var
+  use oracle_config
+  implicit none
+  character(len=512) :: output
+  call get_command_argument(1,output); call get_command_argument(2,mode)
+  call reset_state()
+  ok_sechiba=trim(mode)/='valid_gate_off'
+  impose_param=trim(mode)/='valid_gate_off'
+  hydrol_cwrr=trim(mode)/='valid_custom_choisnel' .and. index(trim(mode),'error_min')/=1 .and. &
+    index(trim(mode),'error_max')/=1 .and. index(trim(mode),'error_exp')/=1 .and. &
+    index(trim(mode),'error_rsol')/=1 .and. index(trim(mode),'error_litter')/=1
+  if (trim(mode)=='valid_thermo_skip') ok_thermodynamical_freezing=.false.
+  call config_soil_parameters()
+  call dump_state(trim(output))
+contains
+  subroutine reset_state()
+    so_capa_dry=1.8e6_r_std; so_cond_dry=.4_r_std; so_capa_wet=3.03e6_r_std; so_cond_wet=1.89_r_std
+    sn_cond=.3_r_std; sn_dens=330._r_std; sn_capa=693000._r_std; mx_eau_nobio=150._r_std; qsintcst=.1_r_std
+    SO_DISCRETIZATION_METHOD=9; min_drain=.001_r_std; max_drain=.1_r_std; exp_drain=1.5_r_std
+    rsol_cste=33000._r_std; hcrit_litter=.08_r_std; tau_peat=3.1536e8_r_std; z_tau=1.e6_r_std
+    read_reftemp=.true.; ok_freeze_thermix=.true.; ok_Ecorr=.true.; poros=.9_r_std; fr_dT=9._r_std
+    ok_snowfact=.true.; SMCMAX_fao=[.41_r_std,.43_r_std,.41_r_std]; ok_freeze_cwrr=.true.
+    ok_thermodynamical_freezing=.true.; check_cwrr=.true.; check_cwrr2=.true.; getin_total=0; writeback_total=0
+  end subroutine reset_state
+  subroutine dump_state(path)
+    character(*), intent(in) :: path
+    integer :: u,i
+    open(newunit=u,file=path,status='replace',action='write'); write(u,'(A)') 'field,index,value'
+    call wr(u,'so_capa_dry',so_capa_dry); call wr(u,'so_cond_dry',so_cond_dry); call wr(u,'so_capa_wet',so_capa_wet)
+    call wr(u,'so_cond_wet',so_cond_wet); call wr(u,'sn_cond',sn_cond); call wr(u,'sn_dens',sn_dens); call wr(u,'sn_capa',sn_capa)
+    call wr(u,'mx_eau_nobio',mx_eau_nobio); call wr(u,'qsintcst',qsintcst); call wi(u,'so_discretization_method',SO_DISCRETIZATION_METHOD)
+    call wr(u,'min_drain',min_drain); call wr(u,'max_drain',max_drain); call wr(u,'exp_drain',exp_drain); call wr(u,'rsol_cste',rsol_cste)
+    call wr(u,'hcrit_litter',hcrit_litter); call wr(u,'tau_peat',tau_peat); call wr(u,'z_tau',z_tau); call wl(u,'read_reftemp',read_reftemp)
+    call wl(u,'ok_freeze_thermix',ok_freeze_thermix); call wl(u,'ok_ecorr',ok_Ecorr); call wr(u,'poros',poros); call wr(u,'fr_dt',fr_dT)
+    call wl(u,'ok_snowfact',ok_snowfact); do i=1,3; call wra(u,'smcmax_fao',i,SMCMAX_fao(i)); end do
+    call wl(u,'ok_freeze_cwrr',ok_freeze_cwrr); call wl(u,'ok_thermodynamical_freezing',ok_thermodynamical_freezing)
+    call wl(u,'check_cwrr',check_cwrr); call wl(u,'check_cwrr2',check_cwrr2); call wi(u,'getin_total',getin_total); call wi(u,'writeback_total',writeback_total)
+    close(u)
+  end subroutine dump_state
+  subroutine wr(u,n,v); integer,intent(in)::u; character(*),intent(in)::n; real(r_std),intent(in)::v; write(u,'(A,I0,A,ES25.17E3)') trim(n)//',',1,',',v; end subroutine
+  subroutine wra(u,n,i,v); integer,intent(in)::u,i; character(*),intent(in)::n; real(r_std),intent(in)::v; write(u,'(A,I0,A,ES25.17E3)') trim(n)//',',i,',',v; end subroutine
+  subroutine wi(u,n,v); integer,intent(in)::u; character(*),intent(in)::n; integer,intent(in)::v; write(u,'(A,I0,A,I0)') trim(n)//',',1,',',v; end subroutine
+  subroutine wl(u,n,v); integer,intent(in)::u; character(*),intent(in)::n; logical,intent(in)::v; call wi(u,n,merge(1,0,v)); end subroutine
+end program soil_parameter_owner_oracle

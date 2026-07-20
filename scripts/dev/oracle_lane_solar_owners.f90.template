@@ -1,0 +1,169 @@
+module defprec
+  implicit none
+end module defprec
+
+module constantes
+  implicit none
+  real, parameter :: pi = 3.1415926535897932384626433832795
+  real, parameter :: zero = 0.0
+  real :: one_year = 365.0
+end module constantes
+
+module calendar
+  implicit none
+end module calendar
+
+module ioipsl_para
+  implicit none
+  integer, parameter :: numout = 6
+  logical :: override_orbit = .false.
+  real :: configured_ecc = 0.016724
+  real :: configured_perh = 102.04
+  real :: configured_xob = 23.446
+contains
+  subroutine getin_p(name, value)
+    character(len=*), intent(in) :: name
+    real, intent(inout) :: value
+    if (.not. override_orbit) return
+    select case (trim(name))
+    case ('ECCENTRICITY')
+      value = configured_ecc
+    case ('PERIHELIE')
+      value = configured_perh
+    case ('OBLIQUITY')
+      value = configured_xob
+    end select
+  end subroutine getin_p
+end module ioipsl_para
+
+module solar
+  use defprec
+  use constantes
+  use ioipsl_para
+  implicit none
+contains
+! <SOLARANG>
+! <TIME_ZONE>
+! <DOWNWARD_SOLAR_FLUX>
+end module solar
+
+program solar_owner_oracle
+  use constantes, only: one_year
+  use ioipsl_para, only: override_orbit, configured_ecc, configured_perh, configured_xob
+  use solar
+  implicit none
+  integer, parameter :: iim = 9, jjm = 3, npoi = 5
+  character(len=512) :: output_path, mode
+  character(len=20) :: calendar_name, retained_calendar
+  real :: lon(iim,jjm), lat(iim,jjm), csang(iim,jjm)
+  real :: latitude(npoi), cloud(npoi)
+  real :: solad2(npoi,2), solai2(npoi,2)
+  real :: solad3(npoi,3), solai3(npoi,3)
+  real :: lhour(iim), julian_values(6), gmt_values(3)
+  integer :: zone(iim), unit, call_index
+
+  call get_command_argument(1, output_path)
+  call get_command_argument(2, mode)
+  open(newunit=unit, file=trim(output_path), status='replace', action='write')
+  write(unit,'(a)') 'field,flat_index,value'
+
+  lon(:,1) = (/ -179.0, -172.0, -120.0, -7.0, 0.0, 7.0, 120.0, 172.0, 179.0 /)
+  lon(:,2) = lon(:,1)
+  lon(:,3) = lon(:,1)
+  lat(:,1) = -80.0
+  lat(:,2) = 0.0
+  lat(:,3) = 80.0
+
+  if (trim(mode) == 'gregorian') then
+    one_year = 365.0
+    julian_values = (/ 1.01, 80.41666666666667, 172.99, 266.25, 355.75, 365.0 /)
+    do call_index = 1, size(julian_values)
+      call solarang(julian_values(call_index), 1.0, iim, jjm, lon, lat, csang)
+      call write_real_2d(unit, solar_field(call_index), csang)
+    end do
+
+    gmt_values = (/ 0.0, 12.0, 23.75 /)
+    do call_index = 1, size(gmt_values)
+      call time_zone(gmt_values(call_index), iim, jjm, lon, zone, lhour)
+      call write_integer_1d(unit, timezone_zone_field(call_index), zone)
+      call write_real_1d(unit, timezone_hour_field(call_index), lhour)
+    end do
+    calendar_name = 'gregorian'
+    override_orbit = .false.
+  else if (trim(mode) == 'nongregorian') then
+    one_year = 360.0
+    calendar_name = '360d'
+    override_orbit = .true.
+    configured_ecc = 0.0201
+    configured_perh = 95.25
+    configured_xob = 22.75
+  else
+    error stop 'unknown mode'
+  end if
+
+  latitude = (/ -80.0, -21.0, 0.0, 21.0, 80.0 /)
+  cloud = (/ 0.0, 0.01, 0.5, 0.9, 1.0 /)
+  call downward_solar_flux(npoi, latitude, calendar_name, 1.5, 12.0, cloud, 2, solad2, solai2)
+  call write_real_2d(unit, trim(mode)//'_first_solad', solad2)
+  call write_real_2d(unit, trim(mode)//'_first_solai', solai2)
+
+  ! The second call proves that local SAVE state is retained and covers nband /= 2.
+  retained_calendar = 'opposite-calendar'
+  call downward_solar_flux(npoi, latitude, retained_calendar, 172.75, 0.0, cloud, 3, solad3, solai3)
+  call write_real_2d(unit, trim(mode)//'_later_solad', solad3)
+  call write_real_2d(unit, trim(mode)//'_later_solai', solai3)
+  close(unit)
+
+contains
+  function solar_field(index) result(name)
+    integer, intent(in) :: index
+    character(len=32) :: name
+    write(name,'(a,i0)') 'solarang_', index
+  end function solar_field
+
+  function timezone_zone_field(index) result(name)
+    integer, intent(in) :: index
+    character(len=32) :: name
+    write(name,'(a,i0,a)') 'timezone_', index, '_zone'
+  end function timezone_zone_field
+
+  function timezone_hour_field(index) result(name)
+    integer, intent(in) :: index
+    character(len=32) :: name
+    write(name,'(a,i0,a)') 'timezone_', index, '_lhour'
+  end function timezone_hour_field
+
+  subroutine write_real_1d(target, field, values)
+    integer, intent(in) :: target
+    character(len=*), intent(in) :: field
+    real, intent(in) :: values(:)
+    integer :: index
+    do index = 1, size(values)
+      write(target,'(a,a,i0,a,es25.17)') trim(field), ',', index-1, ',', values(index)
+    end do
+  end subroutine write_real_1d
+
+  subroutine write_integer_1d(target, field, values)
+    integer, intent(in) :: target
+    character(len=*), intent(in) :: field
+    integer, intent(in) :: values(:)
+    integer :: index
+    do index = 1, size(values)
+      write(target,'(a,a,i0,a,i0)') trim(field), ',', index-1, ',', values(index)
+    end do
+  end subroutine write_integer_1d
+
+  subroutine write_real_2d(target, field, values)
+    integer, intent(in) :: target
+    character(len=*), intent(in) :: field
+    real, intent(in) :: values(:,:)
+    integer :: row, column, index
+    index = 0
+    do column = 1, size(values,2)
+      do row = 1, size(values,1)
+        write(target,'(a,a,i0,a,es25.17)') trim(field), ',', index, ',', values(row,column)
+        index = index + 1
+      end do
+    end do
+  end subroutine write_real_2d
+end program solar_owner_oracle

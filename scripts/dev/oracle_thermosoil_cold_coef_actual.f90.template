@@ -1,0 +1,136 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module defprec
+
+module thermosoil_cold_coef_actual_oracle
+  use defprec
+  implicit none
+  integer, parameter :: kjpindex=1, nvm=14, ngrnd=32, nslm=11, ndeep=32, nsnow=3, nnobio=1, nscm=12
+  real(r_std), parameter :: zero=0._r_std, un=1._r_std, min_sechiba=1.e-8_r_std
+  real(r_std), parameter :: ZeroCelsius=273.15_r_std, fr_dT=2._r_std
+  real(r_std), parameter :: so_capa_dry=1.8e6_r_std, so_capa_dry_org=2.5e6_r_std
+  real(r_std), parameter :: water_capa=4.18e6_r_std, so_capa_wet=3.03e6_r_std
+  real(r_std), parameter :: poros=.41_r_std, poros_org=.92_r_std
+  real(r_std), parameter :: cond_solid_org=.25_r_std, cond_solid=2.32_r_std, cond_dry_org=.05_r_std, so_cond_dry=.4_r_std
+  real(r_std), parameter :: lhf=333600._r_std, rho_water=1000._r_std, mille=1000._r_std
+  real(r_std), parameter :: capa_ice=2228._r_std, rho_ice=920._r_std
+  real(r_std), parameter :: so_capa_ice=so_capa_dry+poros*capa_ice*rho_ice
+  real(r_std), parameter :: THKQTZ=7.7_r_std, THKICE=2.2_r_std, THKW=.57_r_std
+  real(r_std), parameter :: xci=2106._r_std, ZSNOWTHRMCOND1=.02_r_std, ZSNOWTHRMCOND2=2.5e-6_r_std
+  real(r_std), parameter :: ZSNOWTHRMCOND_AVAP=-.06023_r_std, ZSNOWTHRMCOND_BVAP=-2.5425_r_std
+  real(r_std), parameter :: ZSNOWTHRMCOND_CVAP=-289.99_r_std, XP00=100000._r_std
+  real(r_std), parameter :: soilc_max=130000._r_std, brk_capa=2.0e6_r_std, brk_cond=3._r_std
+  real(r_std), parameter :: sn_dens=330._r_std, sn_capa=693000._r_std, sn_cond=.3_r_std
+  real(r_std) :: dt_sechiba, lambda, phigeoth, psnowdzmin
+  logical :: use_toporganiclayer_tempdiff, use_soilc_tempdiff, use_refSOC
+  logical :: ok_freeze_thermix, ok_explicitsnow
+  logical :: ok_LAIdev(nvm), veget_mask_2d(kjpindex,nvm)
+  integer :: brk_flag=0, printlev=0, numout=6
+  real(r_std) :: zlt(ngrnd), dlt(ngrnd), dz1(ngrnd-1)
+  real(r_std) :: refSOC(kjpindex,ngrnd), SMCMAX(nscm), mcs(nscm), QZ(nscm), so_capa_dry_ns(nscm)
+  real(r_std) :: mc_layt(kjpindex,ngrnd), mcl_layt(kjpindex,ngrnd), tmc_layt(kjpindex,ngrnd)
+  real(r_std) :: mc_layt_pft(kjpindex,ngrnd,nvm), mcl_layt_pft(kjpindex,ngrnd,nvm)
+  real(r_std) :: tmc_layt_pft(kjpindex,ngrnd,nvm)
+  real(r_std) :: ptn(kjpindex,ngrnd,nvm), ptn_pftmean(kjpindex,ngrnd)
+  real(r_std) :: shum_ngrnd_permalong(kjpindex,ngrnd,nvm)
+  real(r_std) :: pcapa(kjpindex,ngrnd,nvm), pkappa(kjpindex,ngrnd,nvm), pcapa_en(kjpindex,ngrnd,nvm)
+  real(r_std) :: pcapa_snow(kjpindex,nsnow), pkappa_snow(kjpindex,nsnow)
+  real(r_std) :: oracle_porosity(kjpindex,ngrnd,nvm), oracle_zx1(kjpindex,ngrnd,nvm), oracle_zx2(kjpindex,ngrnd,nvm)
+  real(r_std) :: oracle_soilcap_nosnow(kjpindex), oracle_soilflx_nosnow(kjpindex)
+  real(r_std) :: oracle_soilcap_pft_nosnow(kjpindex,nvm), oracle_soilflx_pft_nosnow(kjpindex,nvm)
+  real(r_std) :: oracle_zdz1(kjpindex,ngrnd-1,nvm), oracle_zdz2(kjpindex,ngrnd,nvm)
+  real(r_std) :: oracle_cgrnd_soil(kjpindex), oracle_dgrnd_soil(kjpindex)
+  real(r_std) :: oracle_zdz1_soil(kjpindex), oracle_zdz2_soil(kjpindex)
+  real(r_std) :: oracle_snowcap(kjpindex), oracle_snowflx(kjpindex)
+  real(r_std) :: oracle_dz1_snow(kjpindex,nsnow), oracle_dz2_snow(kjpindex,nsnow)
+  real(r_std) :: oracle_zdz1_snow(kjpindex,nsnow), oracle_zdz2_snow(kjpindex,nsnow)
+contains
+  subroutine ipslerr_p(level,a,b,c,d)
+    integer, intent(in) :: level
+    character(*), intent(in) :: a,b,c,d
+    if (level >= 3) then
+      write(*,*) trim(a),trim(b),trim(c),trim(d)
+      error stop 'ipslerr_p'
+    endif
+  end subroutine ipslerr_p
+  subroutine thermosoil_getdiff_old_thermix_with_snow(kjpindex_in,snow,njsc)
+    integer(i_std), intent(in) :: kjpindex_in
+    real(r_std), intent(in) :: snow(kjpindex_in)
+    integer(i_std), intent(in) :: njsc(kjpindex_in)
+    if (kjpindex_in > 0 .or. size(snow) > 0 .or. size(njsc) > 0) then
+      error stop 'inactive non-explicit-snow branch reached'
+    endif
+  end subroutine thermosoil_getdiff_old_thermix_with_snow
+! <THERMOSOIL_COND_PFT>
+! <THERMOSOIL_COND_NOPFT>
+! <THERMOSOIL_COND>
+! <THERMOSOIL_GETDIFF>
+! <THERMOSOIL_COEF>
+end module thermosoil_cold_coef_actual_oracle
+
+program thermosoil_cold_coef_actual_driver
+  use defprec
+  use thermosoil_cold_coef_actual_oracle
+  implicit none
+  integer :: iu, ou
+  integer(i_std) :: njsc(kjpindex), ok_lai_i(nvm), mask_i(kjpindex,nvm), controls(6)
+  real(r_std) :: scalars(4)
+  real(r_std) :: temp_sol_new(kjpindex), temp_sol_new_pft(kjpindex,nvm), snow(kjpindex)
+  real(r_std) :: organic_layer_thick(kjpindex), soilc_total(kjpindex,ndeep,nvm), veget_max(kjpindex,nvm)
+  real(r_std) :: snowdz(kjpindex,nsnow), snowrho(kjpindex,nsnow), snowtemp(kjpindex,nsnow), pb(kjpindex)
+  real(r_std) :: frac_snow_veg(kjpindex), frac_snow_nobio(kjpindex,nnobio), totfrac_nobio(kjpindex)
+  real(r_std) :: soilcap(kjpindex), soilcap_pft(kjpindex,nvm), soilflx(kjpindex), soilflx_pft(kjpindex,nvm)
+  real(r_std) :: cgrnd(kjpindex,ngrnd-1,nvm), dgrnd(kjpindex,ngrnd-1,nvm)
+  real(r_std) :: profil_froz(kjpindex,ngrnd,nvm), pcappa_supp(kjpindex,ngrnd,nvm)
+  real(r_std) :: lambda_snow(kjpindex), cgrnd_snow(kjpindex,nsnow), dgrnd_snow(kjpindex,nsnow)
+  character(1024) :: input_path, output_path
+
+  call get_command_argument(1,input_path)
+  call get_command_argument(2,output_path)
+  open(newunit=iu,file=trim(input_path),access='stream',form='unformatted',status='old',action='read')
+  read(iu) QZ; read(iu) SMCMAX; read(iu) mcs; read(iu) so_capa_dry_ns
+  read(iu) zlt; read(iu) dlt; read(iu) dz1; read(iu) refSOC
+  read(iu) mc_layt; read(iu) mcl_layt; read(iu) tmc_layt
+  read(iu) mc_layt_pft; read(iu) mcl_layt_pft; read(iu) tmc_layt_pft
+  read(iu) ptn; read(iu) ptn_pftmean; read(iu) shum_ngrnd_permalong
+  read(iu) njsc; read(iu) temp_sol_new; read(iu) temp_sol_new_pft; read(iu) snow
+  read(iu) organic_layer_thick; read(iu) soilc_total; read(iu) veget_max
+  read(iu) snowdz; read(iu) snowrho; read(iu) snowtemp; read(iu) pb
+  read(iu) frac_snow_veg; read(iu) frac_snow_nobio; read(iu) totfrac_nobio
+  read(iu) lambda_snow; read(iu) cgrnd_snow; read(iu) dgrnd_snow
+  read(iu) ok_lai_i; read(iu) mask_i; read(iu) controls; read(iu) scalars
+  close(iu)
+  ok_LAIdev = ok_lai_i /= 0
+  veget_mask_2d = mask_i /= 0
+  use_toporganiclayer_tempdiff = controls(1) /= 0
+  use_soilc_tempdiff = controls(2) /= 0
+  use_refSOC = controls(3) /= 0
+  ok_freeze_thermix = controls(4) /= 0
+  ok_explicitsnow = controls(5) /= 0
+  brk_flag = controls(6)
+  dt_sechiba=scalars(1); lambda=scalars(2); phigeoth=scalars(3); psnowdzmin=scalars(4)
+
+  call thermosoil_getdiff(kjpindex,ptn,njsc,veget_max,shum_ngrnd_permalong,profil_froz,pcappa_supp, &
+       organic_layer_thick,soilc_total,snowrho,snowtemp,pb)
+
+  open(newunit=ou,file=trim(output_path),access='stream',form='unformatted',status='replace',action='write')
+  write(ou) pcapa; write(ou) pcapa_en; write(ou) pkappa; write(ou) profil_froz; write(ou) pcappa_supp
+  write(ou) pcapa_snow; write(ou) pkappa_snow; write(ou) oracle_porosity; write(ou) oracle_zx1; write(ou) oracle_zx2
+
+  call thermosoil_coef(kjpindex,temp_sol_new,temp_sol_new_pft,snow,soilcap,soilcap_pft,soilflx,soilflx_pft, &
+       njsc,cgrnd,dgrnd,profil_froz,pcappa_supp,organic_layer_thick,soilc_total,veget_max,snowdz,snowrho, &
+       snowtemp,pb,frac_snow_veg,frac_snow_nobio,totfrac_nobio,lambda_snow,cgrnd_snow,dgrnd_snow)
+
+  write(ou) cgrnd; write(ou) dgrnd
+  write(ou) oracle_soilcap_nosnow; write(ou) soilcap_pft; write(ou) oracle_soilflx_nosnow; write(ou) soilflx_pft
+  write(ou) oracle_soilcap_pft_nosnow; write(ou) oracle_soilflx_pft_nosnow
+  write(ou) oracle_zdz1; write(ou) oracle_zdz2
+  write(ou) oracle_cgrnd_soil; write(ou) oracle_dgrnd_soil; write(ou) oracle_zdz1_soil; write(ou) oracle_zdz2_soil
+  write(ou) lambda_snow; write(ou) cgrnd_snow; write(ou) dgrnd_snow
+  write(ou) oracle_snowcap; write(ou) oracle_snowflx
+  write(ou) oracle_dz1_snow; write(ou) oracle_dz2_snow; write(ou) oracle_zdz1_snow; write(ou) oracle_zdz2_snow
+  write(ou) soilcap; write(ou) soilflx
+  close(ou)
+end program thermosoil_cold_coef_actual_driver

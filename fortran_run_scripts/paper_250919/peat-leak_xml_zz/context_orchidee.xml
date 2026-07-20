@@ -1,0 +1,127 @@
+<!-- =========================================================================================================== -->
+<!-- ORCHIDEE context                                                                                            -->
+<!-- context_orchidee.xml : Configuration file for ORCHIDEE for production of output files using XIOS            -->
+<!-- =========================================================================================================== -->
+<context id="orchidee">
+  
+  
+  <!-- =========================================================================================================== -->
+  <!-- Definition of all existing variables                                                                        -->
+  <!-- DO NOT CHANGE THIS FILE                                                                                     -->
+  <!-- =========================================================================================================== -->
+  <field_definition src="./field_def_orchidee.xml"/>
+  
+  
+  <!-- =========================================================================================================== -->
+  <!-- Definition of output files                                                                                  -->
+  <!-- Definition of variables or groups included in the different files                                           -->
+  <!-- CHANGE THIS FILE BY ADDING THE FILES AND/OR VARIABLES YOU WANT TO PRODUCE                                   -->
+  <!-- Only variables and groups existing in field_def_orchidee.xml can be used                                    -->
+  <!-- =========================================================================================================== -->
+  <file_definition src="./file_def_orchidee.xml"/>
+  
+  
+  <!-- =========================================================================================================== -->
+  <!-- Definition of horizontal domain                                                                             -->
+  <!-- =========================================================================================================== -->
+  <domain_definition>
+    <domain id="domain_landpoints"/>
+  </domain_definition>
+  
+  <!-- =========================================================================================================== -->
+  <!-- Definition of vertical axis and extra dimensions                                                            -->
+  <!-- =========================================================================================================== -->
+  <axis_definition>
+    <!-- Vertical axis and extra dimensions in sechiba -->
+    <axis id="nvm" name="veget" standard_name="model_level_number" long_name="Vegetation types" unit="1"/>
+    <axis id="nlaip1" name="laiax" standard_name="model_level_number" long_name="Interface of LAI layers" unit="1"/>
+    <axis id="ngrnd" name="solth" standard_name="model_level_number" long_name="Thermal soil levels" unit="m"/>
+    <axis id="nstm" name="soiltyp" standard_name="model_level_number" long_name="Soil tiles" unit="1"/>
+    <axis id="nnobio" name="nobio" standard_name="model_level_number" long_name="Other surface types" unit="1"/>
+    <axis id="albtyp" standard_name="model_level_number" long_name="Albedo types" unit="1"/>
+    <axis id="nslm" name="solay" standard_name="model_level_number" long_name="Hydrological soil levels" unit="1"/>
+    <axis id="nsnow" name="snowlev" standard_name="model_level_number" long_name="Snow levels" unit="1"/>
+    <axis id="ncarb" name="soilcarb" standard_name="model_level_number" long_name="Number of soil carbon pools" unit="1"/>
+    <!-- Vertical axis and extra dimensions in stomate -->
+    <axis id="ndeep" standard_name="model_level_number" long_name="Number of soil layers" unit="1"/> 
+    <axis id="nwp" standard_name="model_level_number" long_name="Number of types of wood product pool considered" unit="1"/> 
+    <axis id="P10" standard_name="model_level_number" long_name="Pool 10 years" unit="1"/>
+    <axis id="P100" standard_name="model_level_number" long_name="Pool 100 years" unit="1"/>
+    <axis id="P11" standard_name="model_level_number" long_name="Pool 10 years + 1" unit="1"/>
+    <axis id="P101" standard_name="model_level_number" long_name="Pool 100 years + 1" unit="1"/>
+  </axis_definition>
+
+  <grid_definition>
+  
+    <!-- Definition of output grids -->
+    <grid id="grid_landpoints">
+      <domain domain_ref="domain_landpoints" />
+    </grid>
+	
+    <grid id="grid_ndeepnvm">
+      <domain id="domain_landpoints" />
+      <axis id="ndeep" />
+      <axis id="nvm" />
+    </grid>
+
+    <grid id="grid_nsnownvm">
+      <domain id="domain_landpoints" />
+      <axis id="nsnow" />
+      <axis id="nvm" />
+    </grid>
+
+    <grid id="grid_P10nwp">
+      <domain id="domain_landpoints" />
+      <axis id="P10" />
+      <axis id="nwp" />
+    </grid>
+	
+    <grid id="grid_P11nwp">
+      <domain id="domain_landpoints" />
+      <axis id="P11" />
+      <axis id="nwp" />
+    </grid>
+	
+    <grid id="grid_P100nwp">
+      <domain id="domain_landpoints" />
+      <axis id="P100" />
+      <axis id="nwp" />
+    </grid>
+	
+    <grid id="grid_P101nwp">
+      <domain id="domain_landpoints" />
+      <axis id="P101" />
+      <axis id="nwp" />
+    </grid>
+
+    <grid id="grid_nslmnstm">
+      <domain id="domain_landpoints" />
+      <axis id="nslm" />
+      <axis id="nstm" />
+    </grid>
+
+    <grid id="grid_nvmnstm">
+      <domain id="domain_landpoints" />
+      <axis id="nvm" />
+      <axis id="nstm" />
+    </grid>
+
+    <grid id="grid_ngrndnvm">
+      <domain id="domain_landpoints" />
+      <axis id="ngrnd" />
+      <axis id="nvm" />
+    </grid>
+	
+	<grid id="grid_nvm">
+      <domain id="domain_landpoints" />
+      <axis id="nvm" />
+    </grid>
+	
+	<grid id="grid_ncarb">
+      <domain id="domain_landpoints" />
+      <axis id="ncarb" />
+    </grid>
+	
+  </grid_definition>
+
+</context>

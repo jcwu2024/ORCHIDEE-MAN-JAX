@@ -1,0 +1,27 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ implicit none;integer,parameter::i_std=int32,r_std=real64
+end module
+module polygon_oracle
+ use defprec;implicit none
+ real(r_std),parameter::zero=0._r_std
+contains
+ subroutine ipslerr(level,a,b,c,d);integer,intent(in)::level;character(*),intent(in)::a,b,c,d;if(level>=3)error stop 'ipslerr';end subroutine
+! <POLYGONES_POINTINSIDE>
+! <POLYGONES_LINEINTERSECT>
+! <POLYGONES_AREA>
+end module
+program driver
+ use defprec;use polygon_oracle;implicit none
+ real(r_std)::square(4,2),la(2,2),lb(2,2),x,y,area;logical::inside,hit;integer::u,i;character(512)::path
+ square=reshape((/0.,2.,2.,0.,0.,0.,2.,2./),(/4,2/))
+ call get_command_argument(1,path);open(newunit=u,file=trim(path),status='replace');write(u,'(a)')'field,flat_index,value'
+ call polygones_pointinside(4,square,1._r_std,1._r_std,inside);write(u,'(a,i0,a,i0)')'point_flags,',0,',',merge(1,0,inside)
+ call polygones_pointinside(4,square,3._r_std,1._r_std,inside);write(u,'(a,i0,a,i0)')'point_flags,',1,',',merge(1,0,inside)
+ call polygones_pointinside(4,square,0._r_std,1._r_std,inside);write(u,'(a,i0,a,i0)')'point_flags,',2,',',merge(1,0,inside)
+ call polygones_pointinside(4,square,2._r_std,1._r_std,inside);write(u,'(a,i0,a,i0)')'point_flags,',3,',',merge(1,0,inside)
+ la=reshape((/0.,2.,0.,2./),(/2,2/));lb=reshape((/0.,2.,2.,0./),(/2,2/));call polygones_lineintersect(la,lb,hit,x,y);write(u,'(a,i0,a,i0)')'line_flags,',0,',',merge(1,0,hit);write(u,'(a,i0,a,es25.17)')'line_point,',0,',',x;write(u,'(a,i0,a,es25.17)')'line_point,',1,',',y
+ la=reshape((/0.,1.,0.,0./),(/2,2/));lb=reshape((/0.,1.,1.,1./),(/2,2/));call polygones_lineintersect(la,lb,hit,x,y);write(u,'(a,i0,a,i0)')'line_flags,',1,',',merge(1,0,hit)
+ la=reshape((/0.,1.,0.,1./),(/2,2/));lb=reshape((/2.,3.,0.,-1./),(/2,2/));call polygones_lineintersect(la,lb,hit,x,y);write(u,'(a,i0,a,i0)')'line_flags,',2,',',merge(1,0,hit)
+ call polygones_area(4,square,3._r_std,4._r_std,area);write(u,'(a,i0,a,es25.17)')'area,',0,',',area;close(u)
+end program

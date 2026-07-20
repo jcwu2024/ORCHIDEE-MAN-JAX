@@ -1,0 +1,71 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module defprec
+
+module thermosoil_cond_matrix_oracle
+  use defprec
+  implicit none
+  integer, parameter :: nvm=14, ngrnd=4, nscm=12
+  real(r_std), parameter :: min_sechiba=1.e-8_r_std
+  real(r_std), parameter :: THKQTZ=7.7_r_std, THKICE=2.2_r_std, THKW=.57_r_std
+  real(r_std), parameter :: cond_dry_org=.05_r_std, cond_solid_org=.25_r_std
+contains
+! <THERMOSOIL_COND>
+! <THERMOSOIL_COND_PFT>
+! <THERMOSOIL_COND_NOPFT>
+end module thermosoil_cond_matrix_oracle
+
+program thermosoil_cond_matrix_driver
+  use defprec
+  use thermosoil_cond_matrix_oracle
+  implicit none
+  integer, parameter :: npts=4
+  integer(i_std) :: njsc(npts), ji, jg, jv, unit_out
+  real(r_std) :: qz(nscm), smcmax(nscm)
+  real(r_std) :: smc(npts,ngrnd), sh2o(npts,ngrnd)
+  real(r_std) :: zx1(npts,ngrnd,nvm), zx2(npts,ngrnd,nvm)
+  real(r_std) :: porosnet(npts,ngrnd,nvm), cnd(npts,ngrnd)
+  real(r_std) :: cnd_pft(npts,ngrnd,nvm)
+  real(r_std) :: zx1_np(npts,ngrnd), zx2_np(npts,ngrnd)
+  real(r_std) :: porosnet_np(npts,ngrnd), cnd_nopft(npts,ngrnd)
+  character(512) :: path
+
+  qz=(/.92_r_std,.82_r_std,.6_r_std,.25_r_std,.1_r_std,.4_r_std, &
+       .6_r_std,.1_r_std,.35_r_std,.52_r_std,.1_r_std,.25_r_std/)
+  smcmax=(/.43_r_std,.41_r_std,.41_r_std,.45_r_std,.46_r_std,.43_r_std, &
+           .39_r_std,.43_r_std,.41_r_std,.38_r_std,.36_r_std,.38_r_std/)
+  njsc=(/1_i_std,5_i_std,4_i_std,10_i_std/)
+  smc(:,1)=.30_r_std
+  smc(:,2)=0._r_std
+  smc(:,3)=.03_r_std
+  smc(:,4)=.01_r_std
+  sh2o=smc
+  sh2o(1,1)=.10_r_std
+  zx1=.20_r_std
+  zx2=.80_r_std
+  porosnet=.40_r_std
+  zx1_np=.20_r_std
+  zx2_np=.80_r_std
+  porosnet_np=.40_r_std
+
+  call thermosoil_cond(npts,njsc,smc,qz,smcmax,sh2o,cnd)
+  call thermosoil_cond_pft(npts,njsc,smc,qz,smcmax,sh2o,zx1,zx2,porosnet,cnd_pft)
+  call thermosoil_cond_nopft(npts,njsc,smc,qz,smcmax,sh2o,zx1_np,zx2_np,porosnet_np,cnd_nopft)
+
+  call get_command_argument(1,path)
+  open(newunit=unit_out,file=trim(path),status='replace')
+  write(unit_out,'(a)') 'field,flat_index,value'
+  do ji=1,npts
+    do jg=1,ngrnd
+      write(unit_out,'(a,i0,a,es25.17)') 'cond,',((ji-1)*ngrnd+jg-1),',',cnd(ji,jg)
+      write(unit_out,'(a,i0,a,es25.17)') 'cond_nopft,',((ji-1)*ngrnd+jg-1),',',cnd_nopft(ji,jg)
+      do jv=1,nvm
+        write(unit_out,'(a,i0,a,es25.17)') 'cond_pft,', &
+          (((ji-1)*ngrnd+jg-1)*nvm+jv-1),',',cnd_pft(ji,jg,jv)
+      enddo
+    enddo
+  enddo
+  close(unit_out)
+end program thermosoil_cond_matrix_driver

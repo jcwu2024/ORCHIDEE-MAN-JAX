@@ -1,0 +1,89 @@
+schema_version: 1
+scope: >-
+  Source-routed completion of MPI initialization, XIOS initialization, and
+  rank-one through rank-five XIOS field sends. MPI/XIOS handles, communicator
+  metadata, gathers, active-field queries, broadcasts, and sends remain explicit
+  callbacks; source-owned communicator selection, state, shapes, indices,
+  domains, axes, field selection, and rank dispatch are resolved locally.
+
+totals: {procedures: 7, arms: 17}
+
+entries:
+  - id: parallel.mpi.init_orchidee_mpi_completion
+    fortran_file: fortran_source/ORCHIDEE/src_parallel/mod_orchidee_mpi_data.F90
+    fortran_subroutine: Init_orchidee_mpi
+    fortran_lines: 26-78
+    status: implemented
+    jax_owner: jax_orchidee.parallel.init_orchidee_mpi
+    gap: null
+    state_contract: [jax_orchidee.parallel.MpiInitializationState]
+    validation: [tests/unit/test_parallel_completion.py]
+    arm_count: 1
+
+  - id: parallel.xios.init_completion
+    fortran_file: fortran_source/ORCHIDEE/src_parallel/xios_orchidee.f90
+    fortran_subroutine: xios_orchidee_init
+    fortran_lines: 149-511
+    status: implemented
+    jax_owner: jax_orchidee.parallel.xios_orchidee_init
+    gap: null
+    state_contract:
+      - jax_orchidee.parallel.XiosInitializationPlan
+      - jax_orchidee.parallel.XiosInitializationState
+    validation: [tests/unit/test_parallel_completion.py]
+    arm_count: 11
+
+  - id: parallel.xios.send_field_r1d_completion
+    fortran_file: fortran_source/ORCHIDEE/src_parallel/xios_orchidee.f90
+    fortran_subroutine: xios_orchidee_send_field_r1d
+    fortran_lines: 652-678
+    status: implemented
+    jax_owner: jax_orchidee.parallel.xios_orchidee_send_field_r1d
+    gap: null
+    state_contract: [jax_orchidee.parallel.XiosFieldSend]
+    validation: [tests/unit/test_parallel_completion.py]
+    arm_count: 1
+
+  - id: parallel.xios.send_field_r2d_completion
+    fortran_file: fortran_source/ORCHIDEE/src_parallel/xios_orchidee.f90
+    fortran_subroutine: xios_orchidee_send_field_r2d
+    fortran_lines: 691-717
+    status: implemented
+    jax_owner: jax_orchidee.parallel.xios_orchidee_send_field_r2d
+    gap: null
+    state_contract: [jax_orchidee.parallel.XiosFieldSend]
+    validation: [tests/unit/test_parallel_completion.py]
+    arm_count: 1
+
+  - id: parallel.xios.send_field_r3d_completion
+    fortran_file: fortran_source/ORCHIDEE/src_parallel/xios_orchidee.f90
+    fortran_subroutine: xios_orchidee_send_field_r3d
+    fortran_lines: 730-761
+    status: implemented
+    jax_owner: jax_orchidee.parallel.xios_orchidee_send_field_r3d
+    gap: null
+    state_contract: [jax_orchidee.parallel.XiosFieldSend]
+    validation: [tests/unit/test_parallel_completion.py]
+    arm_count: 1
+
+  - id: parallel.xios.send_field_r4d_completion
+    fortran_file: fortran_source/ORCHIDEE/src_parallel/xios_orchidee.f90
+    fortran_subroutine: xios_orchidee_send_field_r4d
+    fortran_lines: 773-800
+    status: implemented
+    jax_owner: jax_orchidee.parallel.xios_orchidee_send_field_r4d
+    gap: null
+    state_contract: [jax_orchidee.parallel.XiosFieldSend]
+    validation: [tests/unit/test_parallel_completion.py]
+    arm_count: 1
+
+  - id: parallel.xios.send_field_r5d_completion
+    fortran_file: fortran_source/ORCHIDEE/src_parallel/xios_orchidee.f90
+    fortran_subroutine: xios_orchidee_send_field_r5d
+    fortran_lines: 812-839
+    status: implemented
+    jax_owner: jax_orchidee.parallel.xios_orchidee_send_field_r5d
+    gap: null
+    state_contract: [jax_orchidee.parallel.XiosFieldSend]
+    validation: [tests/unit/test_parallel_completion.py]
+    arm_count: 1

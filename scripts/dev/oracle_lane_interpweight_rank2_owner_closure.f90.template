@@ -1,0 +1,763 @@
+module constantes_var
+  implicit none
+  integer, parameter :: i_std = selected_int_kind(9)
+  integer, parameter :: r_std = selected_real_kind(12, 100)
+  integer(i_std), parameter :: undef_int = 999999999_i_std
+  real(r_std), parameter :: pi = 3.141592653589793238_r_std
+  real(r_std), parameter :: zero = 0._r_std
+  real(r_std), parameter :: un = 1._r_std
+  real(r_std), parameter :: deux = 2._r_std
+  real(r_std), parameter :: moins_un = -1._r_std
+  real(r_std), parameter :: R_Earth = 6378000._r_std
+  real(r_std), parameter :: mincos = 0.0001_r_std
+  integer, save :: printlev = 0
+  integer, save :: numout = 6
+end module constantes_var
+
+module constantes
+  use constantes_var
+  implicit none
+end module constantes
+
+module fixture_data
+  use constantes_var
+  implicit none
+  integer, save :: fixture_id = 1
+  integer, save :: fixture_rank = 2
+  integer, save :: coord_rank = 1
+  integer, save :: iml_fixture = 3
+  integer, save :: jml_fixture = 3
+  integer, save :: lml_fixture = 2
+  integer, save :: tml_fixture = 2
+  integer, save :: transport_i_count = 0
+  integer, save :: transport_r2_count = 0
+  real(r_std), allocatable, save :: values2(:,:), lon1(:), lat1(:)
+  real(r_std), allocatable, save :: lon2(:,:), lat2(:,:), mask2(:,:)
+contains
+  subroutine reset_transport_counts()
+    transport_i_count = 0
+    transport_r2_count = 0
+  end subroutine reset_transport_counts
+
+  subroutine configure_fixture(case_id, rank_value)
+    integer, intent(in) :: case_id, rank_value
+    integer :: i, j
+    fixture_id = case_id
+    fixture_rank = rank_value
+    if (allocated(values2)) deallocate(values2, lon2, lat2, mask2)
+    if (allocated(lon1)) deallocate(lon1, lat1)
+    if (case_id == 4) then
+      iml_fixture = 16
+      jml_fixture = 16
+    else
+      iml_fixture = 3
+      jml_fixture = 3
+    end if
+    allocate(values2(iml_fixture,jml_fixture), lon2(iml_fixture,jml_fixture), &
+             lat2(iml_fixture,jml_fixture), mask2(iml_fixture,jml_fixture))
+    allocate(lon1(iml_fixture), lat1(jml_fixture))
+    select case (case_id)
+    case (1)
+      coord_rank = 1
+      lon1 = (/ 178.5_r_std, 179.5_r_std, 180.5_r_std /)
+      lat1 = (/ -1._r_std, 0._r_std, 1._r_std /)
+    case (2)
+      coord_rank = 2
+      lon1 = (/ -180.5_r_std, -179.5_r_std, -178.5_r_std /)
+      lat1 = (/ -1._r_std, 0._r_std, 1._r_std /)
+    case (3)
+      coord_rank = 1
+      lon1 = (/ -1._r_std, 0._r_std, 1._r_std /)
+      lat1 = (/ -1._r_std, 0._r_std, 1._r_std /)
+    case (4)
+      coord_rank = 1
+      do i = 1, 15
+        lon1(i) = -0.7_r_std + real(i-1,r_std)*0.1_r_std
+        lat1(i) = -0.7_r_std + real(i-1,r_std)*0.1_r_std
+      end do
+      lon1(16) = 5._r_std
+      lat1(16) = 5._r_std
+    case default
+      coord_rank = 1
+      lon1 = (/ -1._r_std, 0._r_std, 1._r_std /)
+      lat1 = (/ -1._r_std, 0._r_std, 1._r_std /)
+    end select
+    do j = 1, jml_fixture
+      do i = 1, iml_fixture
+        lon2(i,j) = lon1(i)
+        lat2(i,j) = lat1(j)
+        values2(i,j) = real(mod(i + 2*j, 3) + 1, r_std)
+        mask2(i,j) = merge(un, zero, mod(i+j,2) == 0)
+      end do
+    end do
+    if (case_id == 2) values2(1,1) = -2._r_std
+    if (case_id == 3) then
+      values2(:,1) = (/ 1._r_std, 1._r_std, 1._r_std /)
+      values2(:,2) = (/ 2._r_std, 3._r_std, 4._r_std /)
+      values2(:,3) = (/ 3._r_std, 2._r_std, 1._r_std /)
+    end if
+  end subroutine configure_fixture
+end module fixture_data
+
+module netcdf
+  use fixture_data
+  implicit none
+  integer, parameter :: NF90_NOWRITE = 0
+  integer, parameter :: NF90_NOERR = 0
+contains
+  integer function nf90_open(filename, mode, nid)
+    character(len=*), intent(in) :: filename
+    integer, intent(in) :: mode
+    integer, intent(out) :: nid
+    nid = 11
+    nf90_open = NF90_NOERR
+  end function nf90_open
+
+  integer function nf90_inq_varid(nid, varname, vid)
+    integer, intent(in) :: nid
+    character(len=*), intent(in) :: varname
+    integer, intent(out) :: vid
+    if (trim(varname) == 'lon' .or. trim(varname) == 'lat') then
+      vid = 2
+    else if (trim(varname) == 'mask') then
+      vid = 3
+    else
+      vid = 1
+    end if
+    nf90_inq_varid = NF90_NOERR
+  end function nf90_inq_varid
+
+  integer function nf90_inquire_variable(nid, vid, ndims, dimids)
+    integer, intent(in) :: nid, vid
+    integer, intent(out), optional :: ndims
+    integer, intent(out), optional :: dimids(:)
+    integer :: rank_value, i
+    if (vid == 2) then
+      rank_value = coord_rank
+    else
+      rank_value = fixture_rank
+    end if
+    if (present(ndims)) ndims = rank_value
+    if (present(dimids)) then
+      do i = 1, size(dimids)
+        dimids(i) = i
+      end do
+    end if
+    nf90_inquire_variable = NF90_NOERR
+  end function nf90_inquire_variable
+
+  integer function nf90_inquire_dimension(nid, dimid, len)
+    integer, intent(in) :: nid, dimid
+    integer, intent(out), optional :: len
+    if (present(len)) then
+      select case (dimid)
+      case (1)
+        len = iml_fixture
+      case (2)
+        len = jml_fixture
+      case (3)
+        len = lml_fixture
+      case default
+        len = tml_fixture
+      end select
+    end if
+    nf90_inquire_dimension = NF90_NOERR
+  end function nf90_inquire_dimension
+
+  integer function nf90_close(nid)
+    integer, intent(in) :: nid
+    nf90_close = NF90_NOERR
+  end function nf90_close
+
+  character(len=32) function nf90_strerror(rcode)
+    integer, intent(in) :: rcode
+    nf90_strerror = 'fixture netcdf status'
+  end function nf90_strerror
+end module netcdf
+
+module ioipsl
+  use fixture_data
+  implicit none
+  interface flinget
+    module procedure flinget_r1, flinget_r2, flinget_r3, flinget_r4
+  end interface
+contains
+  subroutine fliodmpf(filename)
+    character(len=*), intent(in) :: filename
+  end subroutine fliodmpf
+
+  subroutine flioopfd(filename, fid, nb_dim, nb_var, nb_gat)
+    character(len=*), intent(in) :: filename
+    integer, intent(out) :: fid
+    integer, intent(out), optional :: nb_dim, nb_var, nb_gat
+    fid = 11
+    if (present(nb_dim)) nb_dim = 3
+    if (present(nb_var)) nb_var = 4
+    if (present(nb_gat)) nb_gat = 0
+  end subroutine flioopfd
+
+  subroutine flininfo(filename, iml, jml, lml, tml, fid)
+    character(len=*), intent(in) :: filename
+    integer, intent(out) :: iml, jml, lml, tml, fid
+    iml = iml_fixture
+    jml = jml_fixture
+    lml = lml_fixture
+    tml = tml_fixture
+    fid = 11
+  end subroutine flininfo
+
+  subroutine flinclo(fid)
+    integer, intent(in) :: fid
+  end subroutine flinclo
+
+  subroutine flinget_r1(fid, varname, d1, d2, d3, d4, first, count, output)
+    integer, intent(in) :: fid, d1, d2, d3, d4, first, count
+    character(len=*), intent(in) :: varname
+    real(r_std), intent(out) :: output(d1)
+    if (trim(varname) == 'lon') then
+      output = lon1
+    else
+      output = lat1
+    end if
+  end subroutine flinget_r1
+
+  subroutine flinget_r2(fid, varname, d1, d2, d3, d4, first, count, output)
+    integer, intent(in) :: fid, d1, d2, d3, d4, first, count
+    character(len=*), intent(in) :: varname
+    real(r_std), intent(out) :: output(d1,d2)
+    select case (trim(varname))
+    case ('lon')
+      output = lon2
+    case ('lat')
+      output = lat2
+    case ('mask')
+      output = mask2
+    case default
+      output = values2
+    end select
+  end subroutine flinget_r2
+
+  subroutine flinget_r3(fid, varname, d1, d2, d3, d4, first, count, output)
+    integer, intent(in) :: fid, d1, d2, d3, d4, first, count
+    character(len=*), intent(in) :: varname
+    real(r_std), intent(out) :: output(d1,d2,d3)
+    integer :: k
+    do k = 1, d3
+      output(:,:,k) = values2
+    end do
+  end subroutine flinget_r3
+
+  subroutine flinget_r4(fid, varname, d1, d2, d3, d4, first, count, output)
+    integer, intent(in) :: fid, d1, d2, d3, d4, first, count
+    character(len=*), intent(in) :: varname
+    real(r_std), intent(out) :: output(d1,d2,d3,d4)
+    integer :: k, l
+    do l = 1, d4
+      do k = 1, d3
+        output(:,:,k,l) = values2
+      end do
+    end do
+  end subroutine flinget_r4
+end module ioipsl
+
+module mod_orchidee_para
+  use constantes_var
+  use fixture_data
+  implicit none
+  logical, save :: is_root_prc = .true.
+  integer, save :: mpi_rank = 0
+  integer, save :: nbp_glo = 0
+  integer, allocatable, save :: nbp_mpi_para_begin(:), nbp_mpi_para_end(:)
+  real(r_std), allocatable, save :: lalo_g(:,:), resolution_g(:,:), contfrac_g(:)
+  integer(i_std), allocatable, save :: neighbours_g(:,:)
+  interface bcast
+    module procedure bcast_i0, bcast_i1, bcast_i2, bcast_r1, bcast_r2, bcast_r3, bcast_r4, bcast_l0
+  end interface
+contains
+  subroutine configure_parallel(lalo, resolution, neighbours, contfrac)
+    real(r_std), intent(in) :: lalo(:,:), resolution(:,:), contfrac(:)
+    integer(i_std), intent(in) :: neighbours(:,:)
+    if (allocated(lalo_g)) deallocate(lalo_g, resolution_g, neighbours_g, contfrac_g)
+    if (allocated(nbp_mpi_para_begin)) deallocate(nbp_mpi_para_begin, nbp_mpi_para_end)
+    nbp_glo = size(lalo,1)
+    allocate(lalo_g(nbp_glo,2), resolution_g(nbp_glo,2), &
+             neighbours_g(nbp_glo,size(neighbours,2)), contfrac_g(nbp_glo))
+    allocate(nbp_mpi_para_begin(0:0), nbp_mpi_para_end(0:0))
+    lalo_g = lalo
+    resolution_g = resolution
+    neighbours_g = neighbours
+    contfrac_g = contfrac
+    nbp_mpi_para_begin(0) = 1
+    nbp_mpi_para_end(0) = nbp_glo
+  end subroutine configure_parallel
+  subroutine bcast_i0(value)
+    integer, intent(inout) :: value
+    if (.not. is_root_prc) then
+      transport_i_count = transport_i_count + 1
+      select case (transport_i_count)
+      case (1)
+        value = fixture_rank
+      case (2)
+        value = iml_fixture
+      case (3)
+        value = jml_fixture
+      case (4)
+        value = coord_rank
+      case (5)
+        value = 200
+      case default
+        value = 3
+      end select
+    end if
+  end subroutine bcast_i0
+  subroutine bcast_i1(value)
+    integer, intent(inout) :: value(:)
+  end subroutine bcast_i1
+  subroutine bcast_i2(value)
+    integer, intent(inout) :: value(:,:)
+  end subroutine bcast_i2
+  subroutine bcast_r1(value)
+    real(r_std), intent(inout) :: value(:)
+  end subroutine bcast_r1
+  subroutine bcast_r2(value)
+    real(r_std), intent(inout) :: value(:,:)
+    if (.not. is_root_prc) then
+      transport_r2_count = transport_r2_count + 1
+      select case (transport_r2_count)
+      case (1)
+        value = values2
+      case (2)
+        value = lon2
+      case default
+        value = lat2
+      end select
+    end if
+  end subroutine bcast_r2
+  subroutine bcast_r3(value)
+    real(r_std), intent(inout) :: value(:,:,:)
+  end subroutine bcast_r3
+  subroutine bcast_r4(value)
+    real(r_std), intent(inout) :: value(:,:,:,:)
+  end subroutine bcast_r4
+  subroutine bcast_l0(value)
+    logical, intent(inout) :: value
+  end subroutine bcast_l0
+end module mod_orchidee_para
+
+module ioipsl_para
+  use ioipsl
+  use constantes_var
+  implicit none
+contains
+  subroutine ipslerr_p(level, procedure, text1, text2, text3)
+    integer, intent(in) :: level
+    character(len=*), intent(in) :: procedure, text1, text2, text3
+    write(*,'(A,1X,A,1X,A)') 'IPSLERR', trim(procedure), trim(text1)
+    if (level >= 3) error stop 73
+  end subroutine ipslerr_p
+end module ioipsl_para
+
+module grid
+  use constantes_var
+  implicit none
+  integer, parameter :: NbNeighb = 8
+  logical, save :: global = .true.
+end module grid
+
+module interpol_help
+  use constantes
+  use grid
+  use mod_orchidee_para
+  use ioipsl_para, only: ipslerr_p
+  implicit none
+  logical, parameter :: check_grid = .false.
+  integer, save :: aggregate_attempt_count = 0
+  integer, allocatable, save :: aggregate_widths(:)
+  integer(i_std), allocatable, save :: captured_mask(:,:), captured_index(:,:,:)
+  real(r_std), allocatable, save :: captured_area(:,:)
+  interface aggregate_p
+    module procedure transport_aggregate_2d_p
+  end interface
+contains
+  subroutine reset_aggregate_trace()
+    aggregate_attempt_count = 0
+    if (allocated(aggregate_widths)) deallocate(aggregate_widths)
+    if (allocated(captured_mask)) deallocate(captured_mask)
+    if (allocated(captured_index)) deallocate(captured_index)
+    if (allocated(captured_area)) deallocate(captured_area)
+    allocate(aggregate_widths(32))
+    aggregate_widths = 0
+  end subroutine reset_aggregate_trace
+
+  subroutine transport_aggregate_2d_p(nbpt, lalo, neighbours, resolution, contfrac, &
+       iml, jml, lon_ful, lat_ful, mask, callsign, nbvmax, sub_index, sub_area, ok)
+    integer(i_std), intent(in) :: nbpt, iml, jml, nbvmax
+    real(r_std), intent(in) :: lalo(nbpt,2), resolution(nbpt,2), contfrac(nbpt)
+    integer(i_std), intent(in) :: neighbours(nbpt,NbNeighb), mask(iml,jml)
+    real(r_std), intent(in) :: lon_ful(iml,jml), lat_ful(iml,jml)
+    character(len=*), intent(in) :: callsign
+    integer(i_std), intent(out) :: sub_index(nbpt,nbvmax,2)
+    real(r_std), intent(out) :: sub_area(nbpt,nbvmax)
+    logical, optional, intent(out) :: ok
+    aggregate_attempt_count = aggregate_attempt_count + 1
+    aggregate_widths(aggregate_attempt_count) = nbvmax
+    call aggregate_2d(nbpt, lalo, neighbours, resolution, contfrac, iml, jml, &
+         lon_ful, lat_ful, mask, callsign, nbvmax, sub_index, sub_area, ok)
+    if (present(ok)) then
+      if (ok) then
+        if (allocated(captured_mask)) deallocate(captured_mask)
+        if (allocated(captured_index)) deallocate(captured_index)
+        if (allocated(captured_area)) deallocate(captured_area)
+        allocate(captured_mask(iml,jml), captured_index(nbpt,nbvmax,2), &
+                 captured_area(nbpt,nbvmax))
+        captured_mask = mask
+        captured_index = sub_index
+        captured_area = sub_area
+      end if
+    end if
+  end subroutine transport_aggregate_2d_p
+
+! <AGGREGATE_2D>
+end module interpol_help
+
+module interpweight
+  use ioipsl_para
+  use interpol_help
+  use grid
+  use constantes_var
+  use mod_orchidee_para
+  implicit none
+contains
+! <INTERPWEIGHT_2D>
+! <INTERPWEIGHT_2DCONT>
+! <INTERPWEIGHT_GET_VAR3DIMS_FILE>
+! <INTERPWEIGHT_GET_VAR4DIMS_FILE>
+! <INTERPWEIGHT_GET_VARNDIMS_FILE>
+end module interpweight
+
+subroutine ipslerr_p(level, procedure, text1, text2, text3)
+  use ioipsl_para, only: fixture_ipslerr_p => ipslerr_p
+  implicit none
+  integer, intent(in) :: level
+  character(len=*), intent(in) :: procedure, text1, text2, text3
+  call fixture_ipslerr_p(level, procedure, text1, text2, text3)
+end subroutine ipslerr_p
+
+! <INTERPWEIGHT_CALC_RESOLUTION_IN>
+! <INTERPWEIGHT_MODIFYING_INPUT2D>
+! <INTERPWEIGHT_MODIFYING_INPUT3D>
+! <INTERPWEIGHT_MODIFYING_INPUT4D>
+! <INTERPWEIGHT_MASKING_INPUT2D>
+! <INTERPWEIGHT_MASKING_INPUT3D>
+! <INTERPWEIGHT_MASKING_INPUT4D>
+! <INTERPWEIGHT_PROVIDE_FRACTIONS2D>
+! <INTERPWEIGHT_PROVIDE_INTERPOLATION2D>
+
+program oracle_interpweight_rank2_owner_closure
+  use constantes_var
+  use fixture_data
+  use grid
+  use interpweight
+  use interpol_help
+  use mod_orchidee_para
+  implicit none
+  character(len=128) :: mode, output_path
+  integer :: unit
+  call get_command_argument(1, mode)
+  call get_command_argument(2, output_path)
+  if (len_trim(mode) == 0) mode = 'valid'
+  if (trim(mode) == 'valid') then
+    open(newunit=unit, file=trim(output_path), status='replace', action='write')
+    write(unit,'(A)') 'case,field,index,value'
+    call run_fraction(unit, 'frac_east_nomask', 1, 'nomask', .false., .true., 179.75_r_std, 180000._r_std, 0)
+    call run_fraction(unit, 'frac_west_var', 2, 'var', .true., .false., -179.75_r_std, 180000._r_std, 5)
+    call run_fraction(unit, 'frac_boundary_mbelow', 3, 'mbelow', .false., .false., 30._r_std, 120000._r_std, 0)
+    call run_fraction(unit, 'frac_mabove', 3, 'mabove', .false., .false., 0._r_std, 120000._r_std, 0)
+    call run_fraction(unit, 'frac_msumrange', 3, 'msumrange', .false., .false., 0._r_std, 120000._r_std, 0)
+    call run_fraction(unit, 'frac_dense_retry', 4, 'nomask', .false., .false., 0._r_std, 200000._r_std, 0)
+    call run_fraction(unit, 'frac_large_capacity', 3, 'nomask', .false., .false., 0._r_std, 2000000._r_std, 0)
+    call run_continuous(unit, 'cont_east_default', 1, 'nomask', 'default', .false., 179.75_r_std, 180000._r_std, 0)
+    call run_continuous(unit, 'cont_west_slope_var', 2, 'var', 'slopecalc', .true., -179.75_r_std, 180000._r_std, 5)
+    call run_continuous(unit, 'cont_boundary_mbelow', 3, 'mbelow', 'default', .false., 30._r_std, 120000._r_std, 0)
+    call run_continuous(unit, 'cont_mabove', 3, 'mabove', 'default', .false., 0._r_std, 120000._r_std, 0)
+    call run_continuous(unit, 'cont_msumrange', 3, 'msumrange', 'default', .false., 0._r_std, 120000._r_std, 0)
+    call run_continuous(unit, 'cont_dense_retry', 4, 'nomask', 'default', .false., 0._r_std, 200000._r_std, 0)
+    close(unit)
+  else if (trim(mode) == 'coverage_success') then
+    call run_coverage_success()
+  else if (trim(mode) == 'coverage_nonroot') then
+    call run_coverage_nonroot()
+  else
+    call run_contract_mode(trim(mode))
+  end if
+contains
+  subroutine prepare_target(target_lon, target_resolution, lalo, resolution, neighbours, contfrac)
+    real(r_std), intent(in) :: target_lon, target_resolution
+    real(r_std), intent(out) :: lalo(2,2), resolution(2,2), contfrac(2)
+    integer(i_std), intent(out) :: neighbours(2,NbNeighb)
+    lalo(1,:) = (/ 0._r_std, target_lon /)
+    lalo(2,:) = (/ 45._r_std, 90._r_std /)
+    resolution = target_resolution
+    neighbours = 0
+    contfrac = (/ 0.75_r_std, 0.5_r_std /)
+    call configure_parallel(lalo, resolution, neighbours, contfrac)
+  end subroutine prepare_target
+
+  subroutine run_fraction(unit, label, case_id, masktype, noneg, default_types, target_lon, target_resolution, level)
+    integer, intent(in) :: unit, case_id, level
+    character(len=*), intent(in) :: label, masktype
+    logical, intent(in) :: noneg, default_types
+    real(r_std), intent(in) :: target_lon, target_resolution
+    real(r_std) :: lalo(2,2), resolution(2,2), contfrac(2), variabletypes(3)
+    real(r_std) :: output(6), availability(2), maskvalues(3), varmin, varmax
+    integer(i_std) :: neighbours(2,NbNeighb)
+    character(len=80) :: filename, varname, lonname, latname
+    character(len=250) :: maskvarname
+    character(len=50) :: fraction_type, mask_type
+    call configure_fixture(case_id, 2)
+    call prepare_target(target_lon, target_resolution, lalo, resolution, neighbours, contfrac)
+    call reset_aggregate_trace()
+    printlev = level
+    variabletypes = (/ 1._r_std, 2._r_std, 3._r_std /)
+    if (default_types) variabletypes = -un
+    maskvalues = (/ 1.5_r_std, 1._r_std, 5._r_std /)
+    varmin = 1._r_std
+    varmax = 3._r_std
+    output = -999._r_std
+    filename = 'fixture.nc'
+    varname = 'soilcolor'
+    lonname = 'lon'
+    latname = 'lat'
+    maskvarname = 'mask'
+    fraction_type = 'default'
+    mask_type = masktype
+    call interpweight_2D(2, 3, variabletypes, lalo, resolution, neighbours, contfrac, &
+         filename, varname, lonname, latname, varmin, varmax, noneg, mask_type, &
+         maskvalues, maskvarname, 0, 0, -1, fraction_type, &
+         merge(100000._r_std, -un, default_types), merge(100000._r_std, -un, default_types), &
+         output, availability)
+    call emit_real_vector(unit, label, 'output', output)
+    call emit_real_vector(unit, label, 'availability', availability)
+    call emit_real_vector(unit, label, 'source_values', reshape(values2, (/ size(values2) /)))
+    call emit_real_vector(unit, label, 'source_lon', reshape(lon2, (/ size(lon2) /)))
+    call emit_real_vector(unit, label, 'source_lat', reshape(lat2, (/ size(lat2) /)))
+    call emit_trace(unit, label)
+  end subroutine run_fraction
+
+  subroutine run_continuous(unit, label, case_id, masktype, typefrac, noneg, target_lon, target_resolution, level)
+    integer, intent(in) :: unit, case_id, level
+    character(len=*), intent(in) :: label, masktype, typefrac
+    logical, intent(in) :: noneg
+    real(r_std), intent(in) :: target_lon, target_resolution
+    real(r_std) :: lalo(2,2), resolution(2,2), contfrac(2)
+    real(r_std) :: output(2), availability(2), maskvalues(3), varmin, varmax
+    integer(i_std) :: neighbours(2,NbNeighb)
+    character(len=80) :: filename, varname, lonname, latname
+    character(len=250) :: maskvarname
+    character(len=50) :: mask_type, fraction_type
+    call configure_fixture(case_id, 2)
+    call prepare_target(target_lon, target_resolution, lalo, resolution, neighbours, contfrac)
+    call reset_aggregate_trace()
+    printlev = level
+    maskvalues = (/ 1.5_r_std, 1._r_std, 5._r_std /)
+    varmin = 0._r_std
+    varmax = 10._r_std
+    filename = 'fixture.nc'
+    varname = 'topography'
+    lonname = 'lon'
+    latname = 'lat'
+    maskvarname = 'mask'
+    mask_type = masktype
+    fraction_type = typefrac
+    call interpweight_2Dcont(2, 0, 0, lalo, resolution, neighbours, contfrac, &
+         filename, varname, lonname, latname, varmin, varmax, noneg, mask_type, &
+         maskvalues, maskvarname, -1, fraction_type, 7.5_r_std, 4._r_std, output, availability)
+    call emit_real_vector(unit, label, 'output', output)
+    call emit_real_vector(unit, label, 'availability', availability)
+    call emit_real_vector(unit, label, 'source_values', reshape(values2, (/ size(values2) /)))
+    call emit_real_vector(unit, label, 'source_lon', reshape(lon2, (/ size(lon2) /)))
+    call emit_real_vector(unit, label, 'source_lat', reshape(lat2, (/ size(lat2) /)))
+    call emit_trace(unit, label)
+  end subroutine run_continuous
+
+  subroutine emit_trace(unit, label)
+    integer, intent(in) :: unit
+    character(len=*), intent(in) :: label
+    integer :: i
+    call emit_integer(unit, label, 'attempt_count', 1, aggregate_attempt_count)
+    do i = 1, aggregate_attempt_count
+      call emit_integer(unit, label, 'attempt_width', i, aggregate_widths(i))
+    end do
+    call emit_integer_vector(unit, label, 'mask', reshape(captured_mask, (/ size(captured_mask) /)))
+    call emit_integer_vector(unit, label, 'overlap_index', reshape(captured_index, (/ size(captured_index) /)))
+    call emit_real_vector(unit, label, 'overlap_area', reshape(captured_area, (/ size(captured_area) /)))
+  end subroutine emit_trace
+
+  subroutine emit_real_vector(unit, label, field, values)
+    integer, intent(in) :: unit
+    character(len=*), intent(in) :: label, field
+    real(r_std), intent(in) :: values(:)
+    integer :: i
+    do i = 1, size(values)
+      write(unit,'(A,",",A,",",I0,",",ES25.16E3)') trim(label), trim(field), i, values(i)
+    end do
+  end subroutine emit_real_vector
+
+  subroutine emit_integer_vector(unit, label, field, values)
+    integer, intent(in) :: unit
+    character(len=*), intent(in) :: label, field
+    integer, intent(in) :: values(:)
+    integer :: i
+    do i = 1, size(values)
+      call emit_integer(unit, label, field, i, values(i))
+    end do
+  end subroutine emit_integer_vector
+
+  subroutine emit_integer(unit, label, field, index, value)
+    integer, intent(in) :: unit, index, value
+    character(len=*), intent(in) :: label, field
+    write(unit,'(A,",",A,",",I0,",",I0)') trim(label), trim(field), index, value
+  end subroutine emit_integer
+
+  subroutine run_contract_mode(contract_mode)
+    character(len=*), intent(in) :: contract_mode
+    real(r_std) :: lalo(2,2), resolution(2,2), contfrac(2), variabletypes(3)
+    real(r_std) :: output_fraction(6), output_cont(2), availability(2), maskvalues(3)
+    real(r_std) :: varmin, varmax
+    integer(i_std) :: neighbours(2,NbNeighb)
+    integer :: rank_value, initime
+    logical :: continuous
+    character(len=80) :: filename, varname, lonname, latname
+    character(len=250) :: maskvarname
+    character(len=50) :: masktype, fraction_type
+    continuous = index(contract_mode, 'cont_') == 1
+    if (index(contract_mode, 'default') > 0) then
+      rank_value = 1
+      initime = -1
+    else if (index(contract_mode, 'rank3') > 0) then
+      rank_value = 3
+      initime = -1
+    else
+      rank_value = 4
+      if (index(contract_mode, 'zero') > 0) then
+        initime = 0
+      else if (index(contract_mode, 'selected') > 0) then
+        initime = 1
+      else if (index(contract_mode, 'late') > 0) then
+        initime = 99
+      else
+        initime = -1
+      end if
+    end if
+    call configure_fixture(3, rank_value)
+    call prepare_target(0._r_std, 120000._r_std, lalo, resolution, neighbours, contfrac)
+    call reset_aggregate_trace()
+    printlev = 0
+    variabletypes = (/ 1._r_std, 2._r_std, 3._r_std /)
+    maskvalues = zero
+    varmin = zero
+    varmax = 3._r_std
+    filename = 'fixture.nc'
+    lonname = 'lon'
+    latname = 'lat'
+    maskvarname = 'mask'
+    masktype = 'nomask'
+    fraction_type = 'default'
+    if (continuous) then
+      varname = 'topography'
+      call interpweight_2Dcont(2, 0, 0, lalo, resolution, neighbours, contfrac, &
+           filename, varname, lonname, latname, varmin, varmax, rank_value > 1, masktype, &
+           maskvalues, maskvarname, initime, fraction_type, 7.5_r_std, 4._r_std, output_cont, availability)
+    else
+      varname = 'soilcolor'
+      call interpweight_2D(2, 3, variabletypes, lalo, resolution, neighbours, contfrac, &
+           filename, varname, lonname, latname, varmin, varmax, rank_value > 1, masktype, &
+           maskvalues, maskvarname, 0, 0, initime, fraction_type, -un, -un, output_fraction, availability)
+    end if
+    error stop 99
+  end subroutine run_contract_mode
+
+  subroutine run_coverage_success()
+    integer, parameter :: npoint = 5
+    real(r_std) :: lalo(npoint,2), resolution(npoint,2), contfrac(npoint)
+    real(r_std) :: variabletypes(3), fraction_output(npoint*3), continuous_output(npoint)
+    real(r_std) :: availability(npoint), maskvalues(3), varmin, varmax
+    integer(i_std) :: neighbours(npoint,NbNeighb)
+    character(len=80) :: filename, varname, lonname, latname
+    character(len=250) :: maskvarname
+    character(len=50) :: masktype, fraction_type
+    call configure_fixture(3, 2)
+    lalo(:,1) = zero
+    lalo(:,2) = zero
+    resolution = 50000._r_std
+    neighbours = 0
+    contfrac = un
+    call configure_parallel(lalo, resolution, neighbours, contfrac)
+    filename = 'fixture.nc'
+    lonname = 'lon'
+    latname = 'lat'
+    maskvarname = 'mask'
+    masktype = 'nomask'
+    fraction_type = 'default'
+    maskvalues = zero
+    variabletypes = (/ 1._r_std, 2._r_std, 3._r_std /)
+    printlev = 3
+    varmin = un
+    varmax = 3._r_std
+    varname = 'soilcolor'
+    call reset_aggregate_trace()
+    call interpweight_2D(npoint, 3, variabletypes, lalo, resolution, neighbours, contfrac, &
+         filename, varname, lonname, latname, varmin, varmax, .false., masktype, &
+         maskvalues, maskvarname, 0, 0, -1, fraction_type, -un, -un, &
+         fraction_output, availability)
+    varmin = zero
+    varmax = 10._r_std
+    varname = 'topography'
+    call reset_aggregate_trace()
+    call interpweight_2Dcont(npoint, 0, 0, lalo, resolution, neighbours, contfrac, &
+         filename, varname, lonname, latname, varmin, varmax, .false., masktype, &
+         maskvalues, maskvarname, -1, fraction_type, 7.5_r_std, 4._r_std, &
+         continuous_output, availability)
+  end subroutine run_coverage_success
+
+  subroutine run_coverage_nonroot()
+    real(r_std) :: lalo(2,2), resolution(2,2), contfrac(2), variabletypes(3)
+    real(r_std) :: fraction_output(6), continuous_output(2), availability(2)
+    real(r_std) :: maskvalues(3), varmin, varmax
+    integer(i_std) :: neighbours(2,NbNeighb)
+    character(len=80) :: filename, varname, lonname, latname
+    character(len=250) :: maskvarname
+    character(len=50) :: masktype, fraction_type
+    call configure_fixture(2, 2)
+    call prepare_target(-179.75_r_std, 180000._r_std, lalo, resolution, neighbours, contfrac)
+    filename = 'fixture.nc'
+    lonname = 'lon'
+    latname = 'lat'
+    maskvarname = 'mask'
+    masktype = 'nomask'
+    fraction_type = 'default'
+    maskvalues = zero
+    variabletypes = (/ 1._r_std, 2._r_std, 3._r_std /)
+    printlev = 0
+    is_root_prc = .false.
+    call reset_transport_counts()
+    call reset_aggregate_trace()
+    varmin = un
+    varmax = 3._r_std
+    varname = 'soilcolor'
+    call interpweight_2D(2, 3, variabletypes, lalo, resolution, neighbours, contfrac, &
+         filename, varname, lonname, latname, varmin, varmax, .false., masktype, &
+         maskvalues, maskvarname, 0, 0, -1, fraction_type, -un, -un, &
+         fraction_output, availability)
+    call reset_transport_counts()
+    call reset_aggregate_trace()
+    varmin = zero
+    varmax = 10._r_std
+    varname = 'topography'
+    call interpweight_2Dcont(2, 0, 0, lalo, resolution, neighbours, contfrac, &
+         filename, varname, lonname, latname, varmin, varmax, .false., masktype, &
+         maskvalues, maskvarname, -1, fraction_type, 7.5_r_std, 4._r_std, &
+         continuous_output, availability)
+    is_root_prc = .true.
+  end subroutine run_coverage_nonroot
+end program oracle_interpweight_rank2_owner_closure

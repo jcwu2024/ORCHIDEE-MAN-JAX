@@ -1,0 +1,64 @@
+module defprec
+ use iso_fortran_env,only:int32,real64
+ integer,parameter::i_std=int32,r_std=real64
+end module
+module constantes
+ use defprec
+ real(r_std),parameter::zero=0._r_std,un=1._r_std,tp_00=273.15_r_std,chalsu0=2.8345e6_r_std,chalev0=2.5008e6_r_std,chalfu0=chalsu0-chalev0,cp_air=1004.675_r_std,min_sechiba=1.e-8_r_std
+ real(r_std)::dt_sechiba=1800._r_std
+ logical::ok_explicitsnow=.false.
+ integer::printlev=0,numout=6
+end module
+module constantes_soil
+ use defprec
+ integer,parameter::nslm=9
+ real(r_std),parameter::WTD1_borne=.06_r_std,WTD2_borne=.12_r_std,WTD3_borne=.18_r_std,WTD4_borne=.24_r_std
+end module
+module ioipsl
+end module
+module pft_parameters
+ logical::ok_LAIdev(14)=.false.
+ integer,parameter::nvm=14
+end module
+module enerbil_oracle
+ use defprec;use constantes;use pft_parameters
+ integer,parameter::nsnow=3,nbp_glo=2
+ integer::index_g(2)=(/1,2/)
+ real(r_std),parameter::val_exp=-9999._r_std
+ logical::restart_missing=.true.
+ real(r_std),allocatable::psold(:),psold_pft(:,:),qsol_sat(:),qsol_sat_pft(:,:),pdqsold(:),pdqsold_pft(:,:),psnew(:),psnew_pft(:,:),qsol_sat_new(:),qsol_sat_new_pft(:,:),netrad(:),netrad_pft(:,:),lwabs(:),lwup(:),lwnet(:),fluxsubli(:),qsat_air(:),tair(:),q_sol_pot(:),temp_sol_pot(:)
+ interface restget_p;module procedure restget1,restget2;end interface
+ interface setvar_p;module procedure setvar1,setvar2;end interface
+contains
+ subroutine ioconf_setatt_p(a,b);character(*),intent(in)::a,b;end
+ subroutine restget1(a,b,c,d,e,f,g,h,i,j,k);integer,intent(in)::a,c,d,e,f,j;integer,intent(in)::k(:);character(*),intent(in)::b,i;logical,intent(in)::g;real(r_std),intent(out)::h(:);if(restart_missing)then;h=val_exp;else;h=271._r_std;endif;end
+ subroutine restget2(a,b,c,d,e,f,g,h,i,j,k);integer,intent(in)::a,c,d,e,f,j;integer,intent(in)::k(:);character(*),intent(in)::b,i;logical,intent(in)::g;real(r_std),intent(out)::h(:,:);if(restart_missing)then;h=val_exp;else;h=271._r_std;endif;end
+ subroutine setvar1(a,b,c,d);real(r_std),intent(inout)::a(:);real(r_std),intent(in)::b,d;character(*),intent(in)::c;where(a==b)a=d;end
+ subroutine setvar2(a,b,c,d);real(r_std),intent(inout)::a(:,:);real(r_std),intent(in)::b,d;character(*),intent(in)::c;where(a==b)a=d;end
+! <ENERBIL>
+end module
+module hydro_oracle
+ use defprec;use constantes;use constantes_soil;use ioipsl
+contains
+! <HYDRO>
+end module
+program main
+ use defprec;use constantes;use pft_parameters;use enerbil_oracle;use hydro_oracle
+ integer,parameter::n=2;integer::i,index(n);real(r_std)::qair(n),ta(n),ts(n),tsp(n,14),tsn(n),tsnp(n,14),trad(n),t2(n),eva(n),ec(n),qs(n),fs(n),fl(n),ve(n),melt(n),cap(n),capp(n,14),snow(n,3),fu(n),tab(n,1000),out(n),wet(n),w1(n),w2(n),w3(n),w4(n),hum(n),prof(n,9),ruu(n),pm(n),tmin(n),tmax(n),pas(n),dz(10),pd
+ character(512)::path
+ index=(/1,2/);qair=(/.003_r_std,.007_r_std/);ta=(/280._r_std,281._r_std/)
+ call enerbil_initialize(1,n,index,1,ta,qair,ts,tsp,tsn,tsnp,trad,t2,eva,ec,qs,fs,fl,ve)
+ melt=(/.01_r_std,.02_r_std/);cap=(/5.e5_r_std,4.e5_r_std/);capp=5.e5_r_std;snow=0.;snow(1,:)=.01;tsn=(/275._r_std,270._r_std/);tsnp=276._r_std;fu=0.;ok_LAIdev=.false.;ok_LAIdev(14)=.true.;ok_explicitsnow=.true.;call enerbil_fusion(n,melt,cap,capp,snow,tsn,tsnp,fu)
+ do i=1,1000;tab(:,i)=real(i,r_std)/1000.;enddo;tab(2,:)=0.;hum=(/100._r_std,0._r_std/);prof=0.;prof(1,:)=.2;ruu=1.;pm=0.;tmin=0.;tmax=(/1._r_std,-99.99_r_std/);pas=1.;dz=1.;pd=1.;call hydro_subgrid_main(n,tab,tab,hum,prof,out,tab,tab,wet,pd,ruu,w1,w2,w3,w4,pm,tmin,tmax,pas,dz)
+ call get_command_argument(1,path);open(10,file=trim(path),status='replace');write(10,'(a)')'field,value'
+ do i=1,n
+  write(10,'(a,es25.17)')'init_temp_sol,',ts(i);write(10,'(a,es25.17)')'init_temp_sol_pft14,',tsp(i,14);write(10,'(a,es25.17)')'init_temp_sol_new,',ts(i);write(10,'(a,es25.17)')'init_qsurf,',qs(i);write(10,'(a,es25.17)')'init_evapot,',eva(i);write(10,'(a,es25.17)')'init_evapot_corr,',ec(i);write(10,'(a,es25.17)')'init_tsol_rad,',trad(i);write(10,'(a,es25.17)')'init_vevapp,',ve(i);write(10,'(a,es25.17)')'init_fluxlat,',fl(i);write(10,'(a,es25.17)')'init_fluxsens,',fs(i);write(10,'(a,es25.17)')'init_temp_sol_pot,',temp_sol_pot(i);write(10,'(a,es25.17)')'init_q_sol_pot,',q_sol_pot(i);write(10,'(a,es25.17)')'fusion_temp_sol,',tsn(i);write(10,'(a,es25.17)')'fusion_temp_sol_pft14,',tsnp(i,14);write(10,'(a,es25.17)')'fusion,',fu(i);write(10,'(a,es25.17)')'fsat,',out(i);write(10,'(a,es25.17)')'fwet,',wet(i);write(10,'(a,es25.17)')'fwt1,',w1(i);write(10,'(a,es25.17)')'fwt2,',w2(i);write(10,'(a,es25.17)')'fwt3,',w3(i);write(10,'(a,es25.17)')'fwt4,',w4(i)
+ enddo
+ restart_missing=.false.
+ call enerbil_initialize(2,n,index,1,ta,qair,ts,tsp,tsn,tsnp,trad,t2,eva,ec,qs,fs,fl,ve)
+ snow=0.;snow(1,:)=.01;snow(2,:)=.01;tsn=(/275._r_std,270._r_std/);tsnp=276._r_std;fu=0.;call enerbil_fusion(n,melt,cap,capp,snow,tsn,tsnp,fu)
+end program
+subroutine ipslerr_p(level,a,b,c,d)
+ integer,intent(in)::level
+ character(*),intent(in)::a,b,c,d
+end subroutine

@@ -1,0 +1,97 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std = int32, r_std = real64
+end module defprec
+
+module stomate_main_entry_oracle
+  use defprec
+  implicit none
+  integer, parameter :: npts = 3, nvm = 14
+  real(r_std), parameter :: zero = 0._r_std
+  real(r_std), parameter :: one_day = 86400._r_std
+  real(r_std), parameter :: dt_sechiba = 1800._r_std
+  real(r_std), parameter :: min_sechiba = 1.e-8_r_std
+  real(r_std), parameter :: min_stomate = 1.e-8_r_std
+  integer :: date, j
+  logical :: do_now_stomate_lcchange, dyn_peat, update_peatfrac
+  real(r_std) :: precip_rain(npts), precip_snow(npts), precip(npts)
+  real(r_std) :: totfrac_nobio(npts), totfrac_nobio_new(npts)
+  real(r_std) :: veget(npts,nvm), veget_max(npts,nvm)
+  real(r_std) :: veget_cov(npts,nvm), veget_cov_max(npts,nvm)
+  real(r_std) :: glccNetLCC(npts,12), glccSecondShift(npts,12)
+  real(r_std) :: glccPrimaryShift(npts,12), harvest_matrix(npts,12)
+  real(r_std) :: vegetnew_firstday(npts,nvm), veget_max_new(npts,nvm)
+  real(r_std) :: veget_cov_max_new(npts,nvm), gpp(npts,nvm), gpp_d(npts,nvm)
+contains
+  subroutine run_case(case_date, lcchange, peat, peat_update)
+    integer, intent(in) :: case_date
+    logical, intent(in) :: lcchange, peat, peat_update
+    integer :: i
+    date = case_date
+    do_now_stomate_lcchange = lcchange
+    dyn_peat = peat
+    update_peatfrac = peat_update
+    precip_rain = (/ 1._r_std, 2._r_std, 3._r_std /)
+    precip_snow = (/ 0.5_r_std, 0._r_std, 1._r_std /)
+    totfrac_nobio = (/ 0.25_r_std, 1._r_std, 0.999999995_r_std /)
+    totfrac_nobio_new = (/ 0.5_r_std, 1._r_std, 0.999999995_r_std /)
+    do i = 1, npts
+      do j = 1, nvm
+        veget(i,j) = 0.001_r_std * real(100*i+j, r_std)
+        veget_max(i,j) = 0.002_r_std * real(100*i+j, r_std)
+        vegetnew_firstday(i,j) = 0.003_r_std * real(100*i+j, r_std)
+        veget_max_new(i,j) = 0.004_r_std * real(100*i+j, r_std)
+        gpp(i,j) = 0.005_r_std * real(100*i+j, r_std)
+      end do
+      do j = 1, 12
+        glccNetLCC(i,j) = 0.01_r_std * real(10*i+j, r_std)
+        glccSecondShift(i,j) = 0.02_r_std * real(10*i+j, r_std)
+        glccPrimaryShift(i,j) = 0.03_r_std * real(10*i+j, r_std)
+        harvest_matrix(i,j) = 0.04_r_std * real(10*i+j, r_std)
+      end do
+    end do
+    veget_cov = -11._r_std
+    veget_cov_max = -12._r_std
+    veget_cov_max_new = -13._r_std
+    gpp_d = -14._r_std
+! <STOMATE_MAIN_ENTRY_BLOCK>
+  end subroutine run_case
+end module stomate_main_entry_oracle
+
+program driver
+  use defprec
+  use stomate_main_entry_oracle
+  implicit none
+  integer :: unit, ii, jj
+  character(len=1024) :: output_path
+  call get_command_argument(1, output_path)
+  open(newunit=unit, file=trim(output_path), status='replace', action='write')
+  write(unit, '(a)') 'field,flat_index,value'
+  call run_case(1, .true., .false., .false.)
+  call write_case(unit, 'first_lc')
+  call run_case(2, .false., .false., .false.)
+  call write_case(unit, 'later_no_lc')
+  close(unit)
+contains
+  subroutine write_case(unit, prefix)
+    integer, intent(in) :: unit
+    character(len=*), intent(in) :: prefix
+    do ii = 1, npts
+      write(unit, '(a,a,a,i0,a,es25.17)') trim(prefix), '_precip', ',', ii-1, ',', precip(ii)
+      do jj = 1, nvm
+        write(unit, '(a,a,a,i0,a,es25.17)') trim(prefix), '_veget_cov', ',', (ii-1)*nvm+jj-1, ',', veget_cov(ii,jj)
+        write(unit, '(a,a,a,i0,a,es25.17)') trim(prefix), '_veget_cov_max', ',', (ii-1)*nvm+jj-1, ',', veget_cov_max(ii,jj)
+        write(unit, '(a,a,a,i0,a,es25.17)') trim(prefix), '_gpp_d', ',', (ii-1)*nvm+jj-1, ',', gpp_d(ii,jj)
+        write(unit, '(a,a,a,i0,a,es25.17)') trim(prefix), '_vegetnew_firstday', ',', (ii-1)*nvm+jj-1, ',', vegetnew_firstday(ii,jj)
+        write(unit, '(a,a,a,i0,a,es25.17)') trim(prefix), '_veget_cov_max_new', ',', (ii-1)*nvm+jj-1, ',', veget_cov_max_new(ii,jj)
+      end do
+      do jj = 1, 12
+        write(unit, '(a,a,a,i0,a,es25.17)') trim(prefix), '_glccNetLCC', ',', (ii-1)*12+jj-1, ',', glccNetLCC(ii,jj)
+        write(unit, '(a,a,a,i0,a,es25.17)') trim(prefix), '_glccSecondShift', ',', (ii-1)*12+jj-1, ',', glccSecondShift(ii,jj)
+        write(unit, '(a,a,a,i0,a,es25.17)') trim(prefix), '_glccPrimaryShift', ',', (ii-1)*12+jj-1, ',', glccPrimaryShift(ii,jj)
+        write(unit, '(a,a,a,i0,a,es25.17)') trim(prefix), '_harvest_matrix', ',', (ii-1)*12+jj-1, ',', harvest_matrix(ii,jj)
+      end do
+    end do
+  end subroutine write_case
+end program driver

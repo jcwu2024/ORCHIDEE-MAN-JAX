@@ -1,0 +1,283 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module defprec
+
+module stage4_batch_d_thermal_initialize_oracle
+  use defprec
+  implicit none
+  integer, parameter :: kjpindex=3,nvm=14,ngrnd=4,nslm=3,ndeep=4,nsnow=3,nnobio=1
+  integer, parameter :: nscm=12,nscm_usda=12,nscm_fao=3,NbNeighb=8,nbp_glo=kjpindex
+  real(r_std), parameter :: zero=0._r_std,un=1._r_std,min_sechiba=1.e-8_r_std
+  real(r_std), parameter :: val_exp=999999._r_std
+  real(r_std), parameter :: ZeroCelsius=273.15_r_std,fr_dT=2._r_std
+  real(r_std), parameter :: so_capa_dry=1.8e6_r_std,so_capa_dry_org=2.5e6_r_std
+  real(r_std), parameter :: water_capa=4.18e6_r_std,so_capa_wet=3.03e6_r_std
+  real(r_std), parameter :: so_cond_wet=1.89_r_std,so_cond_dry=.4_r_std
+  real(r_std), parameter :: poros=.41_r_std,poros_org=.92_r_std
+  real(r_std), parameter :: cond_solid_org=.25_r_std,cond_solid=2.32_r_std,cond_dry_org=.05_r_std
+  real(r_std), parameter :: lhf=333600._r_std,rho_water=1000._r_std,mille=1000._r_std
+  real(r_std), parameter :: capa_ice=2228._r_std,rho_ice=920._r_std
+  real(r_std), parameter :: THKQTZ=7.7_r_std,THKICE=2.2_r_std,THKW=.57_r_std
+  real(r_std), parameter :: xci=2106._r_std,ZSNOWTHRMCOND1=.02_r_std,ZSNOWTHRMCOND2=2.5e-6_r_std
+  real(r_std), parameter :: ZSNOWTHRMCOND_AVAP=-.06023_r_std,ZSNOWTHRMCOND_BVAP=-2.5425_r_std
+  real(r_std), parameter :: ZSNOWTHRMCOND_CVAP=-289.99_r_std,XP00=100000._r_std
+  real(r_std), parameter :: soilc_max=130000._r_std,brk_capa=2.0e6_r_std,brk_cond=3._r_std
+  real(r_std), parameter :: sn_dens=330._r_std,sn_capa=693000._r_std,sn_cond=.3_r_std
+! <FAO_MCS>
+! <FAO_THERMAL_TABLES>
+! <USDA_MCS>
+! <USDA_THERMAL_TABLES>
+
+  integer(i_std) :: printlev=0,numout=6,index_g(kjpindex)=[1_i_std,2_i_std,3_i_std]
+  integer(i_std) :: brk_flag=0,restart_mode=0
+  real(r_std) :: dt_sechiba=1800._r_std,lambda=0._r_std,phigeoth=.057_r_std,psnowdzmin=1.e-4_r_std
+  real(r_std) :: so_cond=1.5396_r_std,so_capa=2.0514e6_r_std
+  real(r_std) :: so_capa_ice=0._r_std
+  real(r_std) :: znt(ngrnd),zlt(ngrnd),dlt(ngrnd)
+  logical :: ok_freeze_thermix=.true.,ok_pc=.false.,ok_leak=.true.,ok_Ecorr=.true.
+  logical :: ok_explicitsnow=.true.,read_reftemp=.true.,satsoil=.false.
+  logical :: use_toporganiclayer_tempdiff=.false.,use_soilc_tempdiff=.true.,use_refSOC=.true.
+  logical :: ok_LAIdev(nvm)=.false.,ok_shum_ngrnd_permalong=.false.
+
+  real(r_std), allocatable :: ptn(:,:,:),ptn_pftmean(:,:),dz1(:),z1(:),cgrnd(:,:,:),dgrnd(:,:,:)
+  real(r_std), allocatable :: pcapa(:,:,:),pkappa(:,:,:),pcapa_en(:,:,:),pcapa_snow(:,:),pkappa_snow(:,:)
+  real(r_std), allocatable :: ptn_beg(:,:,:),temp_sol_beg(:),surfheat_incr(:),coldcont_incr(:)
+  real(r_std), allocatable :: shum_ngrnd_perma(:,:,:),shum_ngrnd_permalong(:,:,:),profil_froz(:,:,:)
+  real(r_std), allocatable :: pcappa_supp(:,:,:),e_soil_lat(:,:),reftemp(:,:),refSOC(:,:),dz5(:)
+  real(r_std), allocatable :: mcs(:),SMCMAX(:),QZ(:),so_capa_dry_ns(:)
+  real(r_std), allocatable :: mc_layt(:,:),mcl_layt(:,:),tmc_layt(:,:)
+  real(r_std), allocatable :: mc_layt_pft(:,:,:),mcl_layt_pft(:,:,:),tmc_layt_pft(:,:,:)
+  logical, allocatable :: veget_mask_2d(:,:)
+
+  real(r_std) :: external_reftemp(kjpindex,ngrnd),external_refsoc(kjpindex,ngrnd)
+  real(r_std) :: rst_ptn(kjpindex,ngrnd,nvm),rst_refsoc(kjpindex,ngrnd)
+  real(r_std) :: rst_shum_long(kjpindex,ngrnd,nvm),rst_shum_perma(kjpindex,ngrnd,nvm)
+  real(r_std) :: rst_e_soil_lat(kjpindex,nvm),rst_gtemp(kjpindex)
+  real(r_std) :: rst_soilcap(kjpindex),rst_soilcap_pft(kjpindex,nvm)
+  real(r_std) :: rst_soilflx(kjpindex),rst_soilflx_pft(kjpindex,nvm)
+  real(r_std) :: rst_cgrnd(kjpindex,ngrnd-1,nvm),rst_dgrnd(kjpindex,ngrnd-1,nvm)
+  real(r_std) :: rst_cgrnd_snow(kjpindex,nsnow),rst_dgrnd_snow(kjpindex,nsnow),rst_lambda_snow(kjpindex)
+
+  logical :: oracle_calculate_coef=.false.,oracle_ok_zimov=.false.
+  real(r_std) :: oracle_veget_max_bg(kjpindex,nvm),oracle_veget_mask_real(kjpindex,nvm)
+
+  interface getin_p
+    module procedure getin_p_i,getin_p_l
+  end interface
+  interface restget_p
+    module procedure restget_r1,restget_r2,restget_r3
+  end interface
+  interface setvar_p
+    module procedure setvar_r1,setvar_r2,setvar_r3
+  end interface
+contains
+  subroutine getin_p_i(name,value)
+    character(len=*), intent(in) :: name
+    integer(i_std), intent(inout) :: value
+    if (trim(name)=='BEDROCK_FLAG') value=0_i_std
+  end subroutine
+
+  subroutine getin_p_l(name,value)
+    character(len=*), intent(in) :: name
+    logical, intent(inout) :: value
+    select case(trim(name))
+    case('OK_WETDIAGLONG'); value=.false.
+    case('satsoil'); value=.false.
+    case('USE_TOPORGANICLAYER_TEMPDIFF'); value=.false.
+    case('USE_SOILC_TEMPDIFF'); value=.true.
+    case('use_refSOC'); value=.true.
+    case('OK_ZIMOV'); value=.false.
+    case default; error stop 'unknown logical getin_p key'
+    end select
+  end subroutine
+
+  subroutine ioconf_setatt_p(name,value)
+    character(len=*), intent(in) :: name,value
+  end subroutine
+
+  subroutine restget_r1(rest_id,name,d1,d2,d3,kjit,read_restart,value,mode,nglo,index)
+    integer(i_std), intent(in) :: rest_id,d1,d2,d3,kjit,nglo,index(:)
+    character(len=*), intent(in) :: name,mode
+    logical, intent(in) :: read_restart
+    real(r_std), intent(out) :: value(:)
+    if (restart_mode==0) then
+      value=val_exp
+      return
+    endif
+    select case(trim(name))
+    case('gtemp'); value=rst_gtemp
+    case('soilcap'); value=rst_soilcap
+    case('soilflx'); value=rst_soilflx
+    case('lambda_snow'); value=rst_lambda_snow
+    case default; error stop 'unknown rank-1 restart field'
+    end select
+  end subroutine
+
+  subroutine restget_r2(rest_id,name,d1,d2,d3,kjit,read_restart,value,mode,nglo,index)
+    integer(i_std), intent(in) :: rest_id,d1,d2,d3,kjit,nglo,index(:)
+    character(len=*), intent(in) :: name,mode
+    logical, intent(in) :: read_restart
+    real(r_std), intent(out) :: value(:,:)
+    if (restart_mode==0) then
+      value=val_exp
+      return
+    endif
+    select case(trim(name))
+    case('refSOC'); value=rst_refsoc
+    case('e_soil_lat'); value=rst_e_soil_lat
+    case('soilcap_pft'); value=rst_soilcap_pft
+    case('soilflx_pft'); value=rst_soilflx_pft
+    case('cgrnd_snow'); value=rst_cgrnd_snow
+    case('dgrnd_snow'); value=rst_dgrnd_snow
+    case default; error stop 'unknown rank-2 restart field'
+    end select
+  end subroutine
+
+  subroutine restget_r3(rest_id,name,d1,d2,d3,kjit,read_restart,value,mode,nglo,index)
+    integer(i_std), intent(in) :: rest_id,d1,d2,d3,kjit,nglo,index(:)
+    character(len=*), intent(in) :: name,mode
+    logical, intent(in) :: read_restart
+    real(r_std), intent(out) :: value(:,:,:)
+    if (restart_mode==0) then
+      value=val_exp
+      return
+    endif
+    select case(trim(name))
+    case('ptn'); value=rst_ptn
+    case('shum_ngrnd_prmlng'); value=rst_shum_long
+    case('shum_ngrnd_perma'); value=rst_shum_perma
+    case('cgrnd'); value=rst_cgrnd
+    case('dgrnd'); value=rst_dgrnd
+    case default; error stop 'unknown rank-3 restart field'
+    end select
+  end subroutine
+
+  subroutine setvar_r1(value,missing,key,default_value)
+    real(r_std), intent(inout) :: value(:)
+    real(r_std), intent(in) :: missing,default_value
+    character(len=*), intent(in) :: key
+    where(value==missing) value=default_value
+  end subroutine
+  subroutine setvar_r2(value,missing,key,default_value)
+    real(r_std), intent(inout) :: value(:,:)
+    real(r_std), intent(in) :: missing,default_value
+    character(len=*), intent(in) :: key
+    where(value==missing) value=default_value
+  end subroutine
+  subroutine setvar_r3(value,missing,key,default_value)
+    real(r_std), intent(inout) :: value(:,:,:)
+    real(r_std), intent(in) :: missing,default_value
+    character(len=*), intent(in) :: key
+    where(value==missing) value=default_value
+  end subroutine
+
+  subroutine thermosoil_read_reftempfile(npts,lalo,reftemp_output)
+    integer(i_std), intent(in) :: npts
+    real(r_std), intent(in) :: lalo(npts,2)
+    real(r_std), intent(out) :: reftemp_output(npts,ngrnd)
+    reftemp_output=external_reftemp
+  end subroutine
+
+  subroutine read_refSOCfile(npts,lalo,neighbours,resolution,contfrac)
+    integer(i_std), intent(in) :: npts,neighbours(npts,NbNeighb)
+    real(r_std), intent(in) :: lalo(npts,2),resolution(npts,2),contfrac(npts)
+    refSOC=external_refsoc
+  end subroutine
+
+  subroutine thermosoil_getdiff_old_thermix_with_snow(npts,snow,njsc)
+    integer(i_std), intent(in) :: npts,njsc(npts)
+    real(r_std), intent(in) :: snow(npts)
+    error stop 'inactive non-explicit-snow branch reached'
+  end subroutine
+
+  subroutine ipslerr_p(level,routine,text1,text2,text3)
+    integer, intent(in) :: level
+    character(len=*), intent(in) :: routine,text1,text2,text3
+    write(*,*) trim(routine),trim(text1),trim(text2),trim(text3)
+    if (level>=3) error stop 'ipslerr_p'
+  end subroutine
+
+! <THERMOSOIL_INITIALIZE>
+! <THERMOSOIL_VAR_INIT>
+! <THERMOSOIL_HUMLEV>
+! <THERMOSOIL_COND_PFT>
+! <THERMOSOIL_COND_NOPFT>
+! <THERMOSOIL_COND>
+! <THERMOSOIL_GETDIFF>
+! <THERMOSOIL_GETDIFF_THINSNOW>
+! <THERMOSOIL_DIAGLEV>
+! <THERMOSOIL_COEF>
+end module stage4_batch_d_thermal_initialize_oracle
+
+program stage4_batch_d_thermal_initialize_driver
+  use defprec
+  use stage4_batch_d_thermal_initialize_oracle
+  implicit none
+  integer(i_std) :: iu,fu,du,kjit=1,rest_id=1
+  integer(i_std) :: neighbours(kjpindex,NbNeighb),njsc(kjpindex)
+  real(r_std) :: lalo(kjpindex,2),resolution(kjpindex,2),contfrac(kjpindex)
+  real(r_std) :: veget_max(kjpindex,nvm),shumdiag_perma(kjpindex,nslm),snow(kjpindex)
+  real(r_std) :: thawed_humidity(kjpindex),soilc_total(kjpindex,ndeep,nvm)
+  real(r_std) :: temp_sol_new(kjpindex),temp_sol_new_pft(kjpindex,nvm),organic_layer_thick(kjpindex)
+  real(r_std) :: stempdiag(kjpindex,nslm),soilcap(kjpindex),soilcap_pft(kjpindex,nvm)
+  real(r_std) :: soilflx(kjpindex),soilflx_pft(kjpindex,nvm),gtemp(kjpindex)
+  real(r_std) :: mc_layh(kjpindex,nslm),mcl_layh(kjpindex,nslm),tmc_layh(kjpindex,nslm)
+  real(r_std) :: mc_layh_pft(kjpindex,nslm,nvm),mcl_layh_pft(kjpindex,nslm,nvm)
+  real(r_std) :: tmc_layh_pft(kjpindex,nslm,nvm)
+  real(r_std) :: frac_snow_veg(kjpindex),frac_snow_nobio(kjpindex,nnobio),totfrac_nobio(kjpindex)
+  real(r_std) :: snowdz(kjpindex,nsnow),snowrho(kjpindex,nsnow),snowtemp(kjpindex,nsnow),pb(kjpindex)
+  real(r_std) :: lambda_snow(kjpindex),cgrnd_snow(kjpindex,nsnow),dgrnd_snow(kjpindex,nsnow)
+  integer(i_std) :: mask_i(kjpindex,nvm),controls(8)
+  character(len=1024) :: input_path,float_path,discrete_path
+
+  call get_command_argument(1,input_path)
+  call get_command_argument(2,float_path)
+  call get_command_argument(3,discrete_path)
+  open(newunit=iu,file=trim(input_path),access='stream',form='unformatted',status='old',action='read')
+  read(iu) restart_mode; read(iu) znt; read(iu) zlt; read(iu) dlt
+  read(iu) external_reftemp; read(iu) external_refsoc
+  read(iu) lalo; read(iu) neighbours; read(iu) resolution; read(iu) contfrac
+  read(iu) veget_max; read(iu) shumdiag_perma; read(iu) snow; read(iu) thawed_humidity
+  read(iu) soilc_total; read(iu) temp_sol_new; read(iu) temp_sol_new_pft; read(iu) organic_layer_thick
+  read(iu) mc_layh; read(iu) mcl_layh; read(iu) tmc_layh
+  read(iu) mc_layh_pft; read(iu) mcl_layh_pft; read(iu) tmc_layh_pft; read(iu) njsc
+  read(iu) frac_snow_veg; read(iu) frac_snow_nobio; read(iu) totfrac_nobio
+  read(iu) snowdz; read(iu) snowrho; read(iu) snowtemp; read(iu) pb
+  read(iu) rst_ptn; read(iu) rst_refsoc; read(iu) rst_shum_long; read(iu) rst_shum_perma
+  read(iu) rst_e_soil_lat; read(iu) rst_gtemp; read(iu) rst_soilcap; read(iu) rst_soilcap_pft
+  read(iu) rst_soilflx; read(iu) rst_soilflx_pft; read(iu) rst_cgrnd; read(iu) rst_dgrnd
+  read(iu) rst_cgrnd_snow; read(iu) rst_dgrnd_snow; read(iu) rst_lambda_snow
+  close(iu)
+  soilcap=zero; soilcap_pft=zero; soilflx=zero; soilflx_pft=zero
+  lambda_snow=zero; cgrnd_snow=zero; dgrnd_snow=zero
+  call thermosoil_initialize(kjit,kjpindex,lalo,neighbours,resolution,contfrac,rest_id,veget_max, &
+       shumdiag_perma,snow,thawed_humidity,soilc_total,temp_sol_new,temp_sol_new_pft, &
+       organic_layer_thick,stempdiag,soilcap,soilcap_pft,soilflx,soilflx_pft,gtemp, &
+       mc_layh,mcl_layh,tmc_layh,mc_layh_pft,mcl_layh_pft,tmc_layh_pft,njsc, &
+       frac_snow_veg,frac_snow_nobio,totfrac_nobio,snowdz,snowrho,snowtemp, &
+       lambda_snow,cgrnd_snow,dgrnd_snow,pb)
+
+  open(newunit=fu,file=trim(float_path),access='stream',form='unformatted',status='replace',action='write')
+  write(fu) reftemp; write(fu) refSOC; write(fu) ptn; write(fu) ptn_pftmean
+  write(fu) dz1; write(fu) z1; write(fu) cgrnd; write(fu) dgrnd
+  write(fu) pcapa; write(fu) pkappa; write(fu) pcapa_en; write(fu) pcapa_snow; write(fu) pkappa_snow
+  write(fu) ptn_beg; write(fu) temp_sol_beg; write(fu) shum_ngrnd_perma; write(fu) shum_ngrnd_permalong
+  write(fu) profil_froz; write(fu) pcappa_supp; write(fu) e_soil_lat; write(fu) dz5
+  write(fu) mcs; write(fu) SMCMAX; write(fu) QZ; write(fu) so_capa_dry_ns
+  write(fu) mc_layt; write(fu) mcl_layt; write(fu) tmc_layt
+  write(fu) mc_layt_pft; write(fu) mcl_layt_pft; write(fu) tmc_layt_pft
+  write(fu) stempdiag; write(fu) soilcap; write(fu) soilcap_pft; write(fu) soilflx; write(fu) soilflx_pft
+  write(fu) gtemp; write(fu) lambda_snow; write(fu) cgrnd_snow; write(fu) dgrnd_snow
+  write(fu) oracle_veget_max_bg; write(fu) oracle_veget_mask_real; write(fu) organic_layer_thick; write(fu) lambda
+  close(fu)
+  mask_i=merge(1_i_std,0_i_std,veget_mask_2d)
+  controls=[merge(1_i_std,0_i_std,oracle_calculate_coef),merge(1_i_std,0_i_std,oracle_ok_zimov), &
+       merge(1_i_std,0_i_std,ok_shum_ngrnd_permalong),brk_flag,merge(1_i_std,0_i_std,satsoil), &
+       merge(1_i_std,0_i_std,use_toporganiclayer_tempdiff),merge(1_i_std,0_i_std,use_soilc_tempdiff), &
+       merge(1_i_std,0_i_std,use_refSOC)]
+  open(newunit=du,file=trim(discrete_path),access='stream',form='unformatted',status='replace',action='write')
+  write(du) mask_i; write(du) controls
+  close(du)
+end program stage4_batch_d_thermal_initialize_driver

@@ -1,0 +1,241 @@
+schema_version: 2
+families:
+  - id: stomate_season_memory
+    runner: oracle_lane_stomate_season_phenology:run_season_oracle
+    ledger_entries: [stomate.active.season_memory]
+    input_asset: outputs/reference_mode/micro_oracles/stomate_season_memory/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/stomate_season_memory/point_comparisons.csv
+    output_contract: [t2m_longterm, t2m_month, t2m_week, tseason_tmp, tseason_length, tsurf_year, t2m_14, moiavail_month, moiavail_week, tmin_spring_time, onset_date, gdd_from_growthinit, tsoil_month, soilhum_month, npp_longterm, turnover_longterm, gpp_week, maxmoiavail_lastyear, maxmoiavail_thisyear, minmoiavail_lastyear, minmoiavail_thisyear, maxgppweek_lastyear, maxgppweek_thisyear, gdd0_lastyear, gdd0_thisyear, precip_lastyear, precip_thisyear, lm_lastyearmax, lm_thisyearmax, maxfpc_lastyear, maxfpc_thisyear, gdd_m5_dormance, gdd_midwinter, ncd_dormance, ngd_minus5, time_hum_min, hum_min_dormance, gdd_init_date]
+    procedures:
+      - id: season
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_season.f90
+        procedure: season
+        procedure_kind: subroutine
+        start_line: 167
+        end_line: 1584
+        expected_source_sha256: 7653adc089f567836f83e001ce737cebf6272fcf67821010a097cbd38d435e6c
+        expected_span_sha256: 951e432fafc58e2cab16e589bc5822f03b808e42ee1ed5959bdf88684f914736
+        dependencies: {use_modules: [xios_orchidee, ioipsl_para, stomate_data, constantes, constantes_soil, pft_parameters, solar, grid]}
+        compilation:
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: 'C:\msys64\ucrt64\bin\gfortran.exe'
+          compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0'
+          compile_flags: [-std=legacy, -fdec, -fdefault-real-8, -ffree-line-length-none, -O0, -fcheck=all, '-ffpe-trap=invalid,zero,overflow', -Wall, -Wextra]
+          harness: scripts/dev/oracle_lane_stomate_season_memory.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/stomate_season_memory/comparison.json
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+      - id: downward_solar_flux
+        source_file: fortran_source/ORCHIDEE/src_global/solar.f90
+        procedure: downward_solar_flux
+        procedure_kind: subroutine
+        start_line: 290
+        end_line: 597
+        expected_source_sha256: 5c4366d1bcb5aed8101e46b942b0b37f05cdb13ac3adff30d6db511e5a043c63
+        expected_span_sha256: 1e74c29d5acaab5d5fde3eabbf15c8ff4f425f5878198dd5658eb998efcd2244
+        dependencies: {use_modules: [constantes, ioipsl_para]}
+        compilation: {status: passed, standalone_compilable: false, compiler_available: true, compiler: 'C:\msys64\ucrt64\bin\gfortran.exe', compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0', harness: scripts/dev/oracle_lane_stomate_season_memory.f90.template, result_asset: outputs/reference_mode/micro_oracles/stomate_season_memory/comparison.json}
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - id: season-first-later-year
+        ledger_entry: stomate.active.season_memory
+        fortran_lines: 338-1582
+        condition: first call followed by later EndOfYear call with natural PFT14
+        expected_arm: initialization, continuation, year-boundary reset, and fixed PFT14 role
+        input_case: season_two_point_first_later_year
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:338:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:351:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:351:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1271:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1295:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1296:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1389:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1389:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1456:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1507:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1531:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1564:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1582:if:false
+      - id: season-warm-threshold
+        ledger_entry: stomate.active.season_memory
+        fortran_lines: 652-702
+        condition: mixed begin-leaves mask and points on both sides of freezing
+        expected_arm: masked seasonal accumulation and onset-date writeback
+        input_case: season_two_point_first_later_year
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:652:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:652:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:654:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:659:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:684:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:684:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:686:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:694:where:true
+      - id: season-cold-restart-complete-matrix
+        ledger_entry: stomate.active.season_memory
+        fortran_lines: 338-1582
+        condition: zero cold-start and nonzero restart, each followed by EndOfYear, with mixed PFT14 masks and thresholds
+        expected_arm: every authoritative PFT14-reachable season arm not covered by the base lifecycle cases
+        input_case: season_two_mode_two_point_full_owner
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1051:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1051:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1059:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1059:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1068:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1068:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1094:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1162:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1162:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1181:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1181:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1198:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1198:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1203:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1209:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1209:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1227:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1227:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1231:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1231:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1241:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1241:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1252:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1252:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1350:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1350:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1378:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1378:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1420:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1420:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1541:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1541:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1543:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1566:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1566:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:1569:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:360:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:388:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:388:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:398:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:398:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:409:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:409:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:419:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:419:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:428:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:428:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:439:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:439:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:449:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:449:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:458:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:458:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:468:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:468:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:478:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:478:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:484:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:484:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:491:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:491:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:497:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:497:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:502:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:502:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:507:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:507:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:512:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:512:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:520:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:520:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:541:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:541:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:584:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:584:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:597:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:597:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:647:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:647:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:659:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:666:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:694:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:699:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:699:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:702:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:702:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:710:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:731:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:731:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:742:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:742:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:757:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:757:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:771:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:771:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:834:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:852:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:857:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:894:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:908:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:935:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_season.f90:994:if:false
+
+  - id: stomate_phenology
+    runner: oracle_lane_stomate_season_phenology:run_phenology_oracle
+    ledger_entries: [stomate.active.phenology]
+    input_asset: outputs/reference_mode/micro_oracles/stomate_phenology/inputs.json
+    comparison_asset: outputs/reference_mode/micro_oracles/stomate_phenology/point_comparisons.csv
+    output_contract: [when_growthinit, co2_to_bm, begin_leaves, gdd_midwinter, leaf_frac, leaf_age, biomass_pft14]
+    procedures:
+      - id: phenology
+        source_file: fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90
+        procedure: phenology
+        procedure_kind: subroutine
+        start_line: 173
+        end_line: 591
+        expected_source_sha256: fb40866ad2b85760fecd29747146088852229385484d95946515862173ba9e1d
+        expected_span_sha256: 15363e14763ee8a5c23ed88a4509d13812c30be5f97a44355658b71169b23d23
+        dependencies: {use_modules: [xios_orchidee, ioipsl_para, stomate_data, constantes, pft_parameters], in_module_scientific_callees: [pheno_hum, pheno_moi, pheno_humgdd, pheno_moigdd, pheno_ncdgdd, pheno_ngd, pheno_moi_C4, pheno_siggdd]}
+        compilation:
+          status: passed
+          standalone_compilable: false
+          compiler_available: true
+          compiler: 'C:\msys64\ucrt64\bin\gfortran.exe'
+          compiler_version: 'GNU Fortran (Rev5, Built by MSYS2 project) 16.1.0'
+          compile_flags: [-std=legacy, -fdec, -fdefault-real-8, -ffree-line-length-none, -O0, -fcheck=all, '-ffpe-trap=invalid,zero,overflow', -Wall, -Wextra]
+          harness: scripts/dev/oracle_lane_stomate_season_phenology.f90.template
+          result_asset: outputs/reference_mode/micro_oracles/stomate_phenology/comparison.json
+        numerical_oracle_status: verified
+        tolerance: {rtol: 1.0e-12, atol: 1.0e-14}
+    branch_cases:
+      - id: phenology-pft1-pft14-threshold
+        ledger_entry: stomate.active.phenology
+        fortran_lines: 287-589
+        condition: two consecutive calls with PFT14 and growth-init threshold sides
+        expected_arm: first/later scheduling, none-model path, masks, and state writeback
+        input_case: phenology_two_point_none_threshold
+        control_flow_arm_ids:
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:287:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:294:if:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:294:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:326:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:326:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:328:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:334:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:334:where:true
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:336:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:371:select_case:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:432:case:case
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:447:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:449:elsewhere:fallthrough
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:470:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:545:if:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:569:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:573:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:581:where:false
+          - fortran_source/ORCHIDEE/src_stomate/stomate_phenology.f90:589:if:false

@@ -1,0 +1,67 @@
+schema_version: 1
+procedure_count: 4
+control_flow_arms: 43
+scope: >-
+  Source-routed forcing record extraction, land indexing, grid construction,
+  and top-level forcing dispatch. Arrays preserve Fortran (i,j,time) order;
+  missing variables and unsupported process owners are rejected rather than
+  replaced by defaults.
+procedure_count: 4
+control_flow_arms: 43
+source_totals:
+  readdim2.f90: {procedures: 4, control_flow_arms: 43}
+
+entries:
+  - id: forcing_readers.forcing_read
+    fortran_file: fortran_source/ORCHIDEE/src_driver/readdim2.f90
+    fortran_subroutine: forcing_read
+    fortran_lines: 499-655
+    status: implemented
+    jax_owner: jax_orchidee.driver.forcing_readers.forcing_read
+    gap: null
+    arm_count: 6
+    dependency_contract: forcing_read_interpol and weathgen_main are invoked through explicit process-owner callbacks; this owner implements dispatch, restart context routing, and non-WATCHOUT Eair writeback.
+    state_contract: [jax_orchidee.driver.forcing_readers.ForcingDispatchContext, jax_orchidee.driver.forcing_readers.ForcingFields]
+    validation: [tests/unit/test_forcing_readers.py]
+
+  - id: forcing_readers.forcing_just_read
+    fortran_file: fortran_source/ORCHIDEE/src_driver/readdim2.f90
+    fortran_subroutine: forcing_just_read
+    fortran_lines: 1691-1869
+    status: implemented
+    jax_owner: jax_orchidee.driver.forcing_readers.forcing_just_read
+    gap: null
+    arm_count: 23
+    order_contract: input arrays are explicit Fortran (iim_full,jjm_full,ttm) arrays and records are one-based; zoom indices are zero-based Python adapters preserving source i/j order.
+    state_contract: [jax_orchidee.driver.forcing_readers.ForcingFields, jax_orchidee.driver.forcing_readers.VerticalForcingOptions]
+    validation: [tests/unit/test_forcing_readers.py]
+
+  - id: forcing_readers.forcing_grid
+    fortran_file: fortran_source/ORCHIDEE/src_driver/readdim2.f90
+    fortran_subroutine: forcing_grid
+    fortran_lines: 1972-2030
+    status: implemented
+    jax_owner: jax_orchidee.driver.forcing_readers.forcing_grid
+    gap: null
+    arm_count: 2
+    infrastructure_boundary: distributed weather-grid broadcast is represented by explicit global arrays and one-based local j bounds; MPI transport itself owns no scientific values.
+    state_contract: [jax_orchidee.driver.forcing_readers.forcing_grid]
+    validation: [tests/unit/test_forcing_readers.py]
+
+  - id: forcing_readers.forcing_landind
+    fortran_file: fortran_source/ORCHIDEE/src_driver/readdim2.f90
+    fortran_subroutine: forcing_landind
+    fortran_lines: 1899-1968
+    status: implemented
+    jax_owner: jax_orchidee.driver.forcing_readers.forcing_landind
+    gap: null
+    arm_count: 12
+    order_contract: kindex is one-based and traverses j outer/i inner exactly as the Fortran loops.
+    state_contract: [jax_orchidee.driver.forcing_readers.LandIndexResult]
+    validation: [tests/unit/test_forcing_readers.py]
+
+validation_evidence:
+  - tests/unit/test_forcing_readers.py uses both explicit Fortran-order arrays
+    and an asymmetric temporary NetCDF grid to validate record and axis order.
+  - The temporary NetCDF result is cross-checked against the existing
+    jax_orchidee.driver.domain multi-landpoint cache.

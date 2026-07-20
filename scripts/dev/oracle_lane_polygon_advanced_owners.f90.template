@@ -1,0 +1,107 @@
+module defprec
+  use iso_fortran_env, only: int32, real64
+  implicit none
+  integer, parameter :: i_std=int32, r_std=real64
+end module defprec
+
+module polygon_advanced_oracle
+  use defprec
+  implicit none
+  real(r_std), parameter :: zero=0._r_std
+contains
+  subroutine ipslerr(level,a,b,c,d)
+    integer,intent(in)::level
+    character(*),intent(in)::a,b,c,d
+    if(level>=3) error stop 'ipslerr'
+  end subroutine ipslerr
+! <POLYGONES_POINTINSIDE>
+! <POLYGONES_LINEINTERSECT>
+! <POLYGONES_EXTEND>
+! <POLYGONES_INTERSECTION>
+! <POLYGONES_CLEANUP>
+! <POLYGONES_CROSSING>
+! <POLYGONES_CONVEXHULL>
+end module polygon_advanced_oracle
+
+program driver
+  use defprec
+  use polygon_advanced_oracle
+  implicit none
+  real(r_std) :: square(4,2), inner(4,2), disjoint(4,2), diagonal(3,2)
+  real(r_std) :: dirty(6,2), cross_a(4,2), cross_b(4,2)
+  real(r_std) :: hull_a(9,2), hull_b(10,2), hull_work(12,2), out(128,2)
+  integer(i_std) :: n, i, k, u
+  character(512) :: path,mode
+
+  square=reshape((/0.,2.,2.,0., 0.,0.,2.,2./),(/4,2/))
+  inner=reshape((/0.5,1.5,1.5,0.5, 0.5,0.5,1.5,1.5/),(/4,2/))
+  disjoint=reshape((/3.,4.,4.,3., 3.,3.,4.,4./),(/4,2/))
+  diagonal=reshape((/0.,2.,1., 0.,2.,3./),(/3,2/))
+  dirty=reshape((/0.,2.,2.,0.,0.,2., 0.,0.,2.,2.,0.,0./),(/6,2/))
+  cross_a=reshape((/0.,2.,2.,0., 0.,0.,2.,2./),(/4,2/))
+  cross_b=reshape((/2.,4.,4.,2., 2.,2.,4.,4./),(/4,2/))
+  hull_a=reshape((/0.,2.,2.,0.,1.,0.5,1.5,1.,1., 0.,0.,2.,2.,1.,0.5,0.5,1.5,1./),(/9,2/))
+  hull_b=reshape((/3.,-1.,0.,2.,1.,-2.,3.,0.,2.,1., 1.,2.,-1.,0.,3.,0.,2.,1.,-2.,0.5/),(/10,2/))
+
+  call get_command_argument(2,mode)
+  if(trim(mode)=='intersection_capacity') then
+    call polygones_intersection(4,inner,4,square,n,out(1:2,:))
+    stop 97
+  elseif(trim(mode)=='crossing_capacity') then
+    call polygones_crossing(4,cross_a,4,cross_b,n,out(1:1,:))
+    stop 98
+  endif
+
+  call get_command_argument(1,path)
+  open(newunit=u,file=trim(path),status='replace')
+  write(u,'(a)') 'field,flat_index,value'
+
+  call polygones_extend(4,square,2,n,out)
+  call write_polygon(u,'extend_axis',n,out)
+  call polygones_extend(3,diagonal,3,n,out)
+  call write_polygon(u,'extend_mixed',n,out)
+  call polygones_intersection(4,square,4,inner,n,out)
+  call write_polygon(u,'intersection_inner',n,out)
+  call polygones_intersection(4,inner,4,square,n,out)
+  call write_polygon(u,'intersection_reverse',n,out)
+  call polygones_intersection(4,square,4,disjoint,n,out)
+  write(u,'(a,i0,a,i0)') 'intersection_empty_n,',0,',',n
+  call polygones_cleanup(6,dirty,n,out)
+  call write_polygon(u,'cleanup',n,out)
+  call polygones_crossing(4,cross_a,4,cross_b,n,out)
+  call write_polygon(u,'crossing',n,out)
+  call polygones_convexhull(9,hull_a,n,out)
+  call write_polygon(u,'hull_a',n,out)
+  call polygones_convexhull(10,hull_b,n,out)
+  call write_polygon(u,'hull_b',n,out)
+
+  ! Deterministic coverage matrix for every non-fatal algorithm arm.
+  do k=1,16
+    do i=1,12
+      hull_work(i,1)=modulo(real(i*(k+3),r_std),11._r_std)-5._r_std
+      hull_work(i,2)=modulo(real(i*i+3*k*i,r_std),13._r_std)-6._r_std
+    enddo
+    if(mod(k,2)==0) hull_work(:,1)=hull_work(12:1:-1,1)
+    call polygones_convexhull(12,hull_work,n,out)
+  enddo
+  hull_work(1:4,:)=reshape((/1.,1.,1.,1., 3.,0.,2.,1./),(/4,2/))
+  call polygones_convexhull(4,hull_work(1:4,:),n,out)
+  hull_work(1:4,:)=reshape((/1.,1.,1.,1., 0.,3.,2.,1./),(/4,2/))
+  call polygones_convexhull(4,hull_work(1:4,:),n,out)
+  hull_work(1:4,:)=reshape((/1.,1.,1.,1., 1.,1.,1.,1./),(/4,2/))
+  call polygones_convexhull(4,hull_work(1:4,:),n,out)
+  close(u)
+contains
+  subroutine write_polygon(unit,name,nvert,poly)
+    integer,intent(in)::unit
+    character(*),intent(in)::name
+    integer(i_std),intent(in)::nvert
+    real(r_std),intent(in)::poly(:,:)
+    integer::j
+    write(unit,'(a,a,i0,a,i0)') trim(name),'_n,',0,',',nvert
+    do j=1,nvert
+      write(unit,'(a,a,i0,a,es25.17)') trim(name),'_xy,',2*(j-1),',',poly(j,1)
+      write(unit,'(a,a,i0,a,es25.17)') trim(name),'_xy,',2*(j-1)+1,',',poly(j,2)
+    enddo
+  end subroutine write_polygon
+end program driver

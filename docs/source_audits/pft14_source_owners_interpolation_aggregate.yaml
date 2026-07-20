@@ -1,0 +1,76 @@
+schema_version: 1
+scope: >-
+  Third-batch ownership for interpol_help.f90 regular-grid overlap aggregation
+  and its parallel wrappers. The 103 source-driven arms are 57 aggregate_2d,
+  36 aggregate_vec, 5 aggregate_2d_p, and 5 aggregate_vec_p.
+
+totals:
+  procedures: 4
+  arms: 103
+  aggregate_2d_arms: 57
+  aggregate_vec_arms: 36
+  aggregate_2d_p_arms: 5
+  aggregate_vec_p_arms: 5
+
+contracts:
+  overlap: >-
+    Source and target regular lon/lat cells are rectangle polygons. Strict
+    source interval tests, date-line transforms, source scan order, one-based
+    slots, and metric area scaling follow interpol_help.f90. Polygon area is
+    owned by geometry_polygons.polygones_area and is reused unchanged.
+  mask_undef_weights: >-
+    aggregate_2d accepts only mask==1 source cells. Unused slots preserve the
+    Fortran index-zero/area-minus-one contract. Normalized weights include only
+    positive overlap slots and an empty row remains all zero. contfrac remains
+    an ABI input but is not read by either Fortran numerical core.
+  parallel: >-
+    Single-rank RegLonLat wrappers call the same aggregate core directly.
+    Multi-rank gather/broadcast/scatter requires an explicit backend. RegXY
+    delegates only with explicit projection and target geometry inputs.
+
+entries:
+  - id: batch3.interpol_help.aggregate_2d
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpol_help.f90
+    fortran_subroutine: aggregate_2d
+    fortran_lines: 46-466
+    status: implemented
+    jax_owner: jax_orchidee.driver.interpolation_aggregate.aggregate_2d
+    gap: null
+    arm_count: 57
+    state_contract: [jax_orchidee.driver.interpolation_aggregate.Aggregation2DResult]
+    validation: [tests/unit/test_interpolation_aggregate.py]
+
+  - id: batch3.interpol_help.aggregate_vec
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpol_help.f90
+    fortran_subroutine: aggregate_vec
+    fortran_lines: 473-779
+    status: implemented
+    jax_owner: jax_orchidee.driver.interpolation_aggregate.aggregate_vec
+    gap: null
+    arm_count: 36
+    state_contract: [jax_orchidee.driver.interpolation_aggregate.AggregationVectorResult]
+    validation: [tests/unit/test_interpolation_aggregate.py]
+
+  - id: batch3.interpol_help.aggregate_vec_p
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpol_help.f90
+    fortran_subroutine: aggregate_vec_p
+    fortran_lines: 782-828
+    status: implemented
+    jax_owner: jax_orchidee.driver.interpolation_aggregate.aggregate_vec_p
+    gap: null
+    arm_count: 5
+    infrastructure_boundary: Multi-rank transport requires ParallelAggregateBackend.
+    state_contract: [jax_orchidee.driver.interpolation_aggregate.ParallelAggregateBackend]
+    validation: [tests/unit/test_interpolation_aggregate.py]
+
+  - id: batch3.interpol_help.aggregate_2d_p
+    fortran_file: fortran_source/ORCHIDEE/src_global/interpol_help.f90
+    fortran_subroutine: aggregate_2d_p
+    fortran_lines: 830-889
+    status: implemented
+    jax_owner: jax_orchidee.driver.interpolation_aggregate.aggregate_2d_p
+    gap: null
+    arm_count: 5
+    infrastructure_boundary: Multi-rank transport requires ParallelAggregateBackend.
+    state_contract: [jax_orchidee.driver.interpolation_aggregate.ParallelAggregateBackend]
+    validation: [tests/unit/test_interpolation_aggregate.py]

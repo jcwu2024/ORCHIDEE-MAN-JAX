@@ -1,0 +1,118 @@
+program main
+  use defprec
+  use constantes
+  use stomate_data
+  use pft_parameters
+  use grid
+  use stomate_season
+  implicit none
+
+  integer, parameter :: npts=1, ndays=365
+  integer :: input_unit, real_unit, integer_unit, day
+  character(len=1024) :: input_path, real_path, integer_path
+  logical :: begin_leaves(npts,nvm)
+  real(r_std) :: initial_t2m, t2m_input(ndays)
+  real(r_std) :: real_output(7,ndays)
+  integer(i_std) :: integer_output(3,ndays)
+  real(r_std) :: veget(npts,nvm), veget_max(npts,nvm), moiavail_daily(npts,nvm)
+  real(r_std) :: t2m_daily(npts), tsurf_daily(npts), tsoil_daily(npts,nslm)
+  real(r_std) :: soilhum_daily(npts,nslm), lalo(npts,2), precip_daily(npts)
+  real(r_std) :: npp_daily(npts,nvm), biomass(npts,nvm,nparts,nelements)
+  real(r_std) :: turnover_daily(npts,nvm,nparts,nelements), gpp_daily(npts,nvm)
+  real(r_std) :: when_growthinit(npts,nvm), maxhumrel_lastyear(npts,nvm)
+  real(r_std) :: maxhumrel_thisyear(npts,nvm), minhumrel_lastyear(npts,nvm)
+  real(r_std) :: minhumrel_thisyear(npts,nvm), maxgppweek_lastyear(npts,nvm)
+  real(r_std) :: maxgppweek_thisyear(npts,nvm), gdd0_lastyear(npts)
+  real(r_std) :: gdd0_thisyear(npts), precip_lastyear(npts), precip_thisyear(npts)
+  real(r_std) :: lm_lastyearmax(npts,nvm), lm_thisyearmax(npts,nvm)
+  real(r_std) :: maxfpc_lastyear(npts,nvm), maxfpc_thisyear(npts,nvm)
+  real(r_std) :: moiavail_month(npts,nvm), moiavail_week(npts,nvm)
+  real(r_std) :: t2m_longterm(npts), tau_longterm, t2m_month(npts), t2m_week(npts)
+  real(r_std) :: tsurf_year(npts), tsoil_month(npts,nslm), soilhum_month(npts,nslm)
+  real(r_std) :: npp_longterm(npts,nvm)
+  real(r_std) :: turnover_longterm(npts,nvm,nparts,nelements), gpp_week(npts,nvm)
+  real(r_std) :: gdd_m5_dormance(npts,nvm), gdd_midwinter(npts,nvm)
+  real(r_std) :: ncd_dormance(npts,nvm), ngd_minus5(npts,nvm)
+  real(r_std) :: time_hum_min(npts,nvm), hum_min_dormance(npts,nvm)
+  real(r_std) :: gdd_init_date(npts,2), gdd_from_growthinit(npts,nvm)
+  real(r_std) :: herbivores(npts,nvm), tseason(npts), tseason_length(npts)
+  real(r_std) :: tseason_tmp(npts), tmin_spring_time(npts,nvm)
+  real(r_std) :: t2m_min_daily(npts), onset_date(npts,nvm), t2m_14(npts)
+  real(r_std) :: sla_calc(npts,nvm), tau_next, unclamped_longterm
+
+  call get_command_argument(1,input_path)
+  call get_command_argument(2,real_path)
+  call get_command_argument(3,integer_path)
+  open(newunit=input_unit,file=trim(input_path),access='stream',form='unformatted',status='old',action='read')
+  read(input_unit) initial_t2m
+  read(input_unit) t2m_input
+  close(input_unit)
+
+  natural=.false.; natural(14)=.true.; pasture=.false.
+  leaf_tab=0; pheno_type=0; pft_to_mtc=0; pheno_model='none'
+  pheno_gdd_crit=undef; ncdgdd_temp=undef; hum_min_time=undef
+  leaflife_tab=365d0; lai_max=1d0
+  veget=0d0; veget(1,14)=1d0; veget_max=veget
+  moiavail_daily=0d0; tsoil_daily=initial_t2m; soilhum_daily=0d0
+  lalo=0d0; lalo(1,1)=57d0; precip_daily=0d0
+  npp_daily=0d0; biomass=0d0; turnover_daily=0d0; gpp_daily=0d0
+  when_growthinit=0d0; maxhumrel_lastyear=0d0; maxhumrel_thisyear=0d0
+  minhumrel_lastyear=1d0; minhumrel_thisyear=1d0
+  maxgppweek_lastyear=0d0; maxgppweek_thisyear=0d0
+  gdd0_lastyear=150d0; gdd0_thisyear=0d0
+  precip_lastyear=100d0; precip_thisyear=0d0
+  lm_lastyearmax=0d0; lm_thisyearmax=0d0
+  maxfpc_lastyear=0d0; maxfpc_thisyear=0d0
+  moiavail_month=0d0; moiavail_week=0d0
+  t2m_longterm=initial_t2m; tau_longterm=2d0
+  t2m_month=initial_t2m; t2m_week=initial_t2m
+  tsurf_year=initial_t2m; tsoil_month=initial_t2m; soilhum_month=0d0
+  npp_longterm=0d0; turnover_longterm=0d0; gpp_week=0d0
+  gdd_m5_dormance=undef; gdd_midwinter=undef; ncd_dormance=undef
+  ngd_minus5=0d0; time_hum_min=undef; hum_min_dormance=undef
+  gdd_init_date=0d0; gdd_init_date(:,1)=365d0
+  gdd_from_growthinit=0d0; herbivores=0d0
+  tseason=initial_t2m; tseason_length=initial_t2m; tseason_tmp=initial_t2m
+  tmin_spring_time=0d0; t2m_min_daily=initial_t2m
+  begin_leaves=.false.; onset_date=0d0; t2m_14=initial_t2m; sla_calc=0.02d0
+  call season_clear
+
+  do day=1,ndays
+    t2m_daily=t2m_input(day)
+    tsurf_daily=t2m_daily
+    real_output(1,day)=t2m_daily(1)
+    real_output(2,day)=t2m_longterm(1)
+    tau_next=min(tau_longterm+1d0,tau_longterm_max)
+    unclamped_longterm=(t2m_longterm(1)*(tau_next-1d0)+t2m_daily(1))/tau_next
+    integer_output(1,day)=merge(1,0,day==1)
+    integer_output(2,day)=merge(1,0,unclamped_longterm<tlong_ref_min)
+    integer_output(3,day)=merge(1,0,unclamped_longterm>tlong_ref_max)
+
+    call season(npts,1.0,day==ndays,veget,veget_max,moiavail_daily,t2m_daily, &
+         tsurf_daily,tsoil_daily,soilhum_daily,lalo,precip_daily,npp_daily, &
+         biomass,turnover_daily,gpp_daily,when_growthinit,maxhumrel_lastyear, &
+         maxhumrel_thisyear,minhumrel_lastyear,minhumrel_thisyear, &
+         maxgppweek_lastyear,maxgppweek_thisyear,gdd0_lastyear,gdd0_thisyear, &
+         precip_lastyear,precip_thisyear,lm_lastyearmax,lm_thisyearmax, &
+         maxfpc_lastyear,maxfpc_thisyear,moiavail_month,moiavail_week, &
+         t2m_longterm,tau_longterm,t2m_month,t2m_week,tsurf_year,tsoil_month, &
+         soilhum_month,npp_longterm,turnover_longterm,gpp_week, &
+         gdd_m5_dormance,gdd_midwinter,ncd_dormance,ngd_minus5,time_hum_min, &
+         hum_min_dormance,gdd_init_date,gdd_from_growthinit,herbivores, &
+         tseason,tseason_length,tseason_tmp,tmin_spring_time,t2m_min_daily, &
+         begin_leaves,onset_date,t2m_14,sla_calc)
+
+    real_output(3,day)=tau_longterm
+    real_output(4,day)=t2m_longterm(1)
+    real_output(5,day)=t2m_month(1)
+    real_output(6,day)=t2m_week(1)
+    real_output(7,day)=unclamped_longterm
+  end do
+
+  open(newunit=real_unit,file=trim(real_path),access='stream',form='unformatted',status='replace',action='write')
+  write(real_unit) real_output
+  close(real_unit)
+  open(newunit=integer_unit,file=trim(integer_path),access='stream',form='unformatted',status='replace',action='write')
+  write(integer_unit) integer_output
+  close(integer_unit)
+end program main
