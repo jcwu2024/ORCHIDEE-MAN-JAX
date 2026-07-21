@@ -1,0 +1,182 @@
+{
+  "status": "completed",
+  "decision": "cost_gate_passed_tiny_supervised_pilot_may_be_proposed",
+  "cost_gate_passed": true,
+  "neural_learnability": "inconclusive_not_tested",
+  "teacher_git_commit": "7333b46c0b38650fb6c9250582876137831657b8",
+  "experiment_git_head": "e0cc618a668e699bee6d444106e91dbd8345984c",
+  "experiment_worktree_had_research_changes": true,
+  "scope": "PFT14 point 001.0-071.0, synthetic operator cost only",
+  "year": 1962,
+  "days": 8,
+  "operator": {
+    "inputs": [
+      "dynamic_real_day_start_state",
+      "dynamic_forcing_48",
+      "dynamic_parameter_arrays"
+    ],
+    "teacher_targets_as_inputs": false,
+    "forcing_encoder": [
+      14,
+      64
+    ],
+    "state_encoder": [
+      16,
+      64
+    ],
+    "mlp_layers": [
+      [
+        192,
+        128
+      ],
+      [
+        128,
+        128
+      ],
+      [
+        128,
+        64
+      ]
+    ],
+    "output_head": [
+      64,
+      251
+    ],
+    "parameter_count": 67835,
+    "output_head_width": 251,
+    "state_components_updated": [
+      "driver_previous_step_state",
+      "diffuco_previous_step_state",
+      "enerbil_previous_step_state",
+      "hydrol_previous_step_state",
+      "thermosoil_previous_step_state",
+      "sechiba_finalize_state"
+    ],
+    "daily_interface_fields": 17,
+    "ok_leak_fields": [
+      "litter_above",
+      "litter_below",
+      "lignin_struc_above",
+      "lignin_struc_below",
+      "litterpart",
+      "dead_leaves",
+      "fuel_1hr",
+      "fuel_10hr",
+      "fuel_100hr",
+      "fuel_1000hr",
+      "carbon_32l",
+      "DOC",
+      "interception_storage",
+      "deepC_peat"
+    ],
+    "validation_reduction_blocked": true,
+    "validation_checksums_finite": true,
+    "validation_checksums": [
+      73.4627206475237,
+      73.51317085896109,
+      73.7444646798999,
+      73.7408306404431,
+      73.61645688331706,
+      73.69794639033724,
+      73.62721831102463,
+      73.83558113941756
+    ]
+  },
+  "nroot_adapter": {
+    "year_start_present": false,
+    "runtime_present": true,
+    "shape": [
+      1,
+      14,
+      11
+    ],
+    "finite": true,
+    "producer": "synthetic daily operator nroot head from dynamic day-start hydrol.us and dynamic parameters",
+    "teacher_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+    "next_transition_consumer": "run_hydrol_first_step_module_from_precall(nroot_state=hydrol_state.nroot)",
+    "retained_tail_consumer": "day-end state packet, restart/year handoff, and next-day fixed runtime state",
+    "default_or_static_fallback_used": false
+  },
+  "timing_seconds": {
+    "host_preparation_not_in_hot_runtime": 1.6162586999998894,
+    "host_to_device_not_in_hot_runtime": 0.005752199998823926,
+    "synthetic_compile": {
+      "first_day": 13.706680799994501,
+      "later_day_block7": 3.6369217000028584,
+      "total": 17.34360249999736
+    },
+    "schema_bootstrap_execution_not_in_hot_runtime": 0.006770200008759275,
+    "warmup": {
+      "synthetic": 0.07496959999843966,
+      "teacher_first_call_compile_and_run": 155.53553719999036
+    },
+    "teacher_hot_runs": [
+      0.8858481000061147,
+      0.8915419000113616,
+      0.8417637999955332,
+      0.887878699999419,
+      0.9022810999886133
+    ],
+    "synthetic_hot_runs": [
+      0.016778299992438406,
+      0.018041199989966117,
+      0.015998699993360788,
+      0.0183926000026986,
+      0.019065600004978478
+    ],
+    "teacher_hot_statistics": {
+      "min": 0.8417637999955332,
+      "median": 0.887878699999419,
+      "max": 0.9022810999886133,
+      "population_stdev": 0.020835524575699656
+    },
+    "synthetic_hot_statistics": {
+      "min": 0.015998699993360788,
+      "median": 0.018041199989966117,
+      "max": 0.019065600004978478,
+      "population_stdev": 0.0011130973716200136
+    },
+    "paired_speedups": [
+      52.7972500435292,
+      49.41699557164745,
+      52.61451245068987,
+      48.27369158624379,
+      47.32508285881411
+    ],
+    "median_speedup_vs_teacher": 49.213949210320045,
+    "stable_min_paired_speedup_vs_teacher": 47.32508285881411,
+    "synthetic_seconds_per_day": 0.0022551499987457646,
+    "synthetic_50year_extrapolated_seconds": 41.156487477110204,
+    "teacher_seconds_per_day": 0.11098483749992738,
+    "teacher_50year_extrapolated_seconds": 2025.4732843736747,
+    "timed_disk_io_seconds": 0.0
+  },
+  "comparison_contract": {
+    "teacher": "complete Day 1 plus one reusable compiled seven-day complete-day block",
+    "synthetic": "compiled Day 1 schema promotion plus one reusable compiled seven-day retained-tail block",
+    "same_forcing_window": true,
+    "same_initial_state": true,
+    "same_retained_tail": true,
+    "same_block_size": 7,
+    "host_preparation_in_hot_runtime": false,
+    "host_to_device_in_hot_runtime": false,
+    "disk_io_in_hot_runtime": false
+  },
+  "hardware": {
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "jax_backend": "cpu",
+    "jax_devices": [
+      "cpu:0"
+    ],
+    "jax_version": "0.10.1"
+  },
+  "limitations": [
+    "This is a cost-only untrained synthetic operator and provides no learnability or accuracy evidence.",
+    "The tiny residual amplitude keeps the retained tail numerically legal; it is not a physical approximation.",
+    "All boundary arrays feed the retained tail or the blocked validation checksum, but checksum consumption is not a scientific constraint.",
+    "Only one CPU, landpoint, year window, and PFT14 configuration were timed.",
+    "No training, dataset generation, GPU work, or server work was performed.",
+    "XLA logged algebraic-simplifier circular-loop warnings during first compilation; compilation completed and all hot runs completed normally."
+  ]
+}

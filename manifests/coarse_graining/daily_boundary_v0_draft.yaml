@@ -504,3 +504,74 @@ latest_baseline_assessment:
   evidence:
     json: outputs/performance/daily_coarse_graining/persistence_baseline_go_no_go.json
     document: docs/research/daily_coarse_graining/go_no_go_persistence_baseline_20260721.md
+
+nroot_runtime_schema_resolution:
+  status: resolved_in_research_adapter
+  restart_year_start:
+    owner: jax_orchidee.driver.orchestration.rebase_driver_state_for_year_start
+    action: drop_nroot_because_fortran_restart_does_not_write_it
+  teacher_runtime:
+    producer: jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields
+    producer_value: hydrol.diagnostics.nroot
+    consumer: run_hydrol_first_step_module_from_precall.nroot_state
+    retained_consumers: [day_end_packet, next_day_hydrol, restart_year_handoff]
+  coarse_runtime:
+    day1_action: dynamic_operator_must_produce_nroot
+    later_day_action: promote_producer_output_to_fixed_runtime_spec
+    forbidden_fallbacks: [default_value, static_constant, stale_pre_rebase_value]
+  implementation: research/daily_coarse_graining/boundary_adapter.py
+  tests:
+    - tests/parity/test_driver_1961_orchestration.py::test_year_start_rebase_drops_hydrol_nroot_without_mutating_previous_state
+    - tests/unit/test_daily_coarse_synthetic_operator_cost.py::test_teacher_hydrol_owner_writes_the_exact_dynamic_nroot
+    - tests/unit/test_daily_coarse_synthetic_operator_cost.py::test_nroot_runtime_spec_is_promoted_only_from_a_dynamic_producer
+
+latest_synthetic_operator_cost_gate:
+  experiment_id: synthetic_operator_cost_gate_20260721
+  status: synthetic_cost_gate_passed
+  neural_learnability: inconclusive_not_tested
+  next_authorized_scope: tiny_supervised_learnability_pilot_may_be_proposed_not_started
+  teacher_commit: 7333b46c0b38650fb6c9250582876137831657b8
+  experiment_base_commit: e0cc618a668e699bee6d444106e91dbd8345984c
+  inputs: [dynamic_real_day_start_state, dynamic_forcing_48, dynamic_parameter_arrays]
+  teacher_targets_as_inputs: false
+  architecture:
+    parameter_count: 67835
+    forcing_encoder: [14, 64]
+    state_encoder: [16, 64]
+    mlp_layers: [[192, 128], [128, 128], [128, 64]]
+    output_head: [64, 251]
+  output_contract:
+    state_components: 6
+    daily_interface_fields: 17
+    ok_leak_fields_including_deepC_peat: 14
+    final_entry_diagnostics: 2
+    blocked_validation_checksum: true
+    checksums_finite_and_day_varying: true
+  execution:
+    year: 1962
+    days: 8
+    design: compiled_day1_schema_promotion_plus_one_reusable_7day_later_block
+    repeats: 5
+    backend: cpu
+  timing_seconds:
+    synthetic_compile_total: 17.34360249999736
+    host_preparation_not_in_hot_runtime: 1.6162586999998894
+    host_to_device_not_in_hot_runtime: 0.005752199998823926
+    teacher_hot_median_8day: 0.887878699999419
+    synthetic_hot_median_8day: 0.018041199989966117
+    synthetic_seconds_per_day: 0.0022551499987457646
+    synthetic_50year_extrapolated: 41.156487477110204
+    median_speedup_vs_teacher: 49.213949210320045
+    stable_min_paired_speedup_vs_teacher: 47.32508285881411
+    timed_disk_io: 0.0
+  decision_rule:
+    threshold: 3.0
+    observed_stable_speedup: 47.32508285881411
+    result: pass
+  limitations:
+    - cost_only_no_training_or_accuracy_evidence
+    - single_cpu_single_landpoint_single_8day_window
+    - xla_algebraic_simplifier_warning_during_first_compile
+  evidence:
+    json: outputs/performance/daily_coarse_graining/synthetic_operator_cost_gate.json
+    document: docs/research/daily_coarse_graining/synthetic_operator_cost_gate_20260721.md

@@ -1,8 +1,8 @@
 # 日尺度粗化研究开发规范
 
-状态：v0.5 结论复核为 **persistence_baseline_failed /
-neural_learnability_inconclusive**。不批准大规模训练或 Gate 2 schema 冻结；一个极小
-supervised learnability + synthetic operator cost pilot 是否值得执行，需另行决策。
+状态：v0.6 为 **persistence_baseline_failed / synthetic_cost_gate_passed /
+neural_learnability_inconclusive**。不批准大规模训练或 Gate 2 schema 冻结；成本门禁
+只允许下一步另行审批一个极小 supervised learnability pilot，不代表模型可学。
 
 初步 Gate 1 结果见
 [`speed_ceiling_probe_20260720.md`](speed_ceiling_probe_20260720.md)：边界 replay 在
@@ -15,6 +15,11 @@ state/modelout 门禁。随后 persistence baseline 虽达到 `29.13x`，但在 
 persistence；replay 与 baseline 也不是相同 boundary transport A/B，不能据此建立
 架构绝对速度上限。复核证据见
 [`go_no_go_persistence_baseline_20260721.md`](go_no_go_persistence_baseline_20260721.md)。
+动态 synthetic operator 成本门禁见
+[`synthetic_operator_cost_gate_20260721.md`](synthetic_operator_cost_gate_20260721.md)：
+67,835 参数的 forcing encoder + state encoder + MLP + 完整输出头，在相同 Day 1 加
+7 日 compiled block 设计下，5 次热运行的最保守配对加速为 `47.33x`。该结果只证明
+算子成本有空间；没有训练、精度或 rollout 可学习性证据。
 
 上位构想：[`paper_concept_daily_coarse_graining.md`](../../paper_concept_daily_coarse_graining.md)
 
@@ -52,6 +57,13 @@ persistence；replay 与 baseline 也不是相同 boundary transport A/B，不�
 writeback 使用。因此“13 个通用 OK_LEAK carry 字段”不是全部条件分支的固定分母；
 正式 schema 必须把 `deepC_peat` 记录为条件字段。`resp_hetero_soil` 只提供 reset
 数组 shape，可由已有 carry 重建，不是 coarse 预测 target。
+
+`hydrol.nroot` 是运行期动态状态而不是 restart/static 字段。年初
+`rebase_driver_state_for_year_start` 按 Fortran restart 语义删除它；首个 HYDROL
+transition 的 Teacher owner `_add_hydrol_to_previous_fields` 会重新写入，下一步
+HYDROL 通过 `nroot_state=hydrol_state.nroot` 消费。coarse Day 1 必须同样从动态日初
+state/forcing 产生它，然后才能提升为 Days 2+ 的 fixed runtime spec。禁止用默认值、
+静态常量或上一年被删除的值填充。
 
 以下过程继续由 Teacher 的原始 JAX 实现执行：
 
@@ -228,11 +240,17 @@ date/landpoint/parameter metadata
 - 分别报告编译、热运行、数据准备和 IO；
 - 对 1 年和 50 年估算端到端速度上限。
 
-当前 PFT14 单点 30 日结果：canonical-minimal replay 为 `0.01865 s/day`，短窗线性
-外推约 5.7 分钟/50 年；未计入未来 coarse operator 推理。由于未达到数量级收益，
-Gate 1 曾给出“只允许一个低成本无神经 baseline”的有条件继续结论。该 persistence
-baseline 已失败，所以未进入 30 日；这不构成 neural learnability 测试。大规模训练
-仍不允许，最小 learnability/cost pilot 必须单独立项和预注册。
+canonical-minimal replay 为 `0.01865 s/day`，包含动态 Teacher boundary 运输/重建，
+不是架构绝对上限。persistence baseline 已失败，且未进入 30 日；这只否定
+persistence，不构成 neural learnability 测试。
+
+2026-07-21 synthetic cost gate 使用 67,835 个动态参数、14x64 forcing encoder、
+16x64 state encoder、`192x128x128x64` MLP 和 251-head 输出，在 CPU 上得到 Teacher
+中位 `0.88788 s/8 day`、synthetic 中位 `0.01804 s/8 day`，中位加速 `49.21x`，
+5 次最小配对加速 `47.33x`。所有 coarse state、17 个 daily 字段、14 个 OK_LEAK
+字段和末步诊断进入 retained tail 或有限、逐日变化且被 `block_until_ready` 的归约。
+因此 Gate 1 的**成本条件通过**。这不改变 `neural_learnability_inconclusive`，也不
+授权数据生成或训练。
 
 若跳过半小时过程后没有足够的数量级收益，停止粗化主路线。
 
@@ -305,15 +323,13 @@ AGB/BGB/GPP/NPP 不能代替内部状态验收。总量误差不能掩盖垂直�
 
 ## 12. 下一步分析顺序
 
-当前应暂停实现工作，先决定是否批准一个严格受限的 learnability/cost pilot：
+本轮 `nroot` adapter 和 synthetic cost gate 已完成，研究在此自然停止。成本不是当前
+否决项，但科学可学习性完全未测试。唯一可提议、仍需单独批准的下一门禁是：
 
-1. 修复 `hydrol.nroot` fixed-spec/adapter 缺口，不把它计作模型误差；
-2. 用极小 Teacher 样本检查完整 boundary delta 的 one-step supervised learnability，
-   不生成大规模数据；
-3. 用相同输出 PyTree 的动态 synthetic operator 测量同 retained tail、同 executable
-   复用下的 cost，消除 replay transport 与 persistence dead-code 差异；
-4. 只在 one-step holdout、短 7 日自由 rollout和真实 `>=3x` 同时通过后，才讨论
-   learned operator 或 residual 结构。
+1. 只生成极小、内存或临时文件规模的 Teacher one-step 样本；
+2. 检查完整 boundary delta 的 supervised holdout 误差，不扩大网络或训练依赖；
+3. 只有 one-step holdout 合格后才做 7 日自由 rollout；
+4. 7 日没有单向漂移、非法状态或预算崩坏后，才讨论 30 日或 residual 结构。
 
-本规范不授权执行上述 pilot。未单独批准前，不开发神经网络、不生成训练集、不提交
-GPU/服务器任务。完整 Teacher 的气候记忆研究和性能优化仍可独立继续。
+本规范不授权自动执行 supervised pilot。未单独批准前，不开发神经网络、不生成正式
+训练集、不提交 GPU/服务器任务。完整 Teacher 的气候记忆研究和性能优化仍可独立继续。
