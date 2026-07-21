@@ -1,0 +1,137 @@
+{
+  "schema_version": "daily_coarse_gradient_samples_v1",
+  "teacher_commit": "7333b46c0b38650fb6c9250582876137831657b8",
+  "experiment_git_head": "394b324db7cd5928dbfe6e208f5bdeeedf681f4c",
+  "normalization_source": "train_split_only",
+  "samples": [
+    {
+      "year": 1962,
+      "day_index": 1,
+      "input_state_tstep": -1,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 2,
+      "input_state_tstep": 47,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 3,
+      "input_state_tstep": 95,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 4,
+      "input_state_tstep": 143,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 5,
+      "input_state_tstep": 191,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 6,
+      "input_state_tstep": 239,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 7,
+      "input_state_tstep": 287,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 8,
+      "input_state_tstep": 335,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 9,
+      "input_state_tstep": 383,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 10,
+      "input_state_tstep": 431,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 11,
+      "input_state_tstep": 479,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 12,
+      "input_state_tstep": 527,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 13,
+      "input_state_tstep": 575,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 14,
+      "input_state_tstep": 623,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 15,
+      "input_state_tstep": 671,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    },
+    {
+      "year": 1962,
+      "day_index": 16,
+      "input_state_tstep": 719,
+      "parameter_condition_present": true,
+      "landpoint_condition_present": true,
+      "target_role": "supervision_label_only"
+    }
+  ],
+  "binary_samples_committed": false
+}

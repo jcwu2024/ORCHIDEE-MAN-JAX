@@ -1,8 +1,10 @@
 # 日尺度粗化研究开发规范
 
-状态：v0.7 为 **tiny_overfit_passed_holdout_failed**。完整逐元素 decoder 能精确记忆
-12 个训练日，但在 Day 13--16 未见连续日期上没有达到 one-step 技能阈值。因此不做
-7 日自由 rollout，不批准扩大训练、正式数据生成或 Gate 2 schema 冻结。
+状态：v0.8 为 **training_pipeline_blocked_local_overfit**。parameter-conditioned 纯 JAX
+梯度链路已经证明梯度非零且 encoder/decoder 均实际更新，但固定 16 日、600-step 本地
+门禁的 normalized RMSE 为 `0.08738`，未达到预注册 `<=0.05`。因此不批准服务器/GPU、
+扩大训练、正式数据生成或 rollout。证据见
+[`parameter_conditioned_gradient_training_gate_20260721.md`](parameter_conditioned_gradient_training_gate_20260721.md)。
 
 初步 Gate 1 结果见
 [`speed_ceiling_probe_20260720.md`](speed_ceiling_probe_20260720.md)：边界 replay 在
@@ -329,14 +331,14 @@ AGB/BGB/GPP/NPP 不能代替内部状态验收。总量误差不能掩盖垂直�
 
 ## 12. 下一步分析顺序
 
-本轮 `nroot` adapter、synthetic cost gate 和 tiny supervised gate 均已完成，研究在此
-自然停止。成本不是当前否决项，表示容量也通过，但 12 日拟合没有转化为连续未见日期
-技能。按预注册顺序门禁：
+本轮 `nroot` adapter、synthetic cost gate、SVD supervised 诊断和 parameter-conditioned
+梯度门均已完成，研究在此自然停止。成本不是当前否决项，梯度训练 plumbing 可运行，
+但固定本地门禁未达到清楚过拟合阈值。按预注册顺序门禁：
 
 1. 不执行 7 日或 30 日自由 rollout；
 2. 不把训练日数量、网络宽度或训练时长自动扩大；
 3. 不生成正式训练集，不提交 GPU/服务器任务；
-4. 若未来重启，必须先另行提出能改善跨日期泛化的表示/采样假设和小预算验证，而不是
-   直接放大当前 decoder。
+4. 当前 server gate 关闭；若未来重启，必须先另行批准一个能解释 local overfit 缺口的
+   架构/优化假设和固定预算，而不是直接增加 steps、调参或放大 dataset/decoder。
 
 完整 Teacher 的气候记忆研究和性能优化仍可独立继续。

@@ -1,0 +1,12 @@
+{
+  "schema_version": "daily_coarse_local_gradient_gate_config_v1",
+  "train_days": 16,
+  "steps": 600,
+  "learning_rate": 0.003,
+  "log_every": 50,
+  "overfit_normalized_rmse_threshold": 0.05,
+  "batch_size": 16,
+  "checkpoint_directory_contract": "outputs/checkpoints/daily_coarse_graining/<experiment_id>",
+  "sample_manifest_contract": "outputs/performance/daily_coarse_graining/<experiment_id>_samples.json",
+  "cuda_extra_for_future_linux_gpu_only": "cuda12"
+}

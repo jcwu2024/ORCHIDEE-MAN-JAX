@@ -1,0 +1,137 @@
+{
+  "schema_version": "parameter_conditioned_daily_coarse_training_v1",
+  "status": "training_pipeline_blocked_local_overfit",
+  "teacher": {
+    "commit": "7333b46c0b38650fb6c9250582876137831657b8",
+    "scientific_code_modified": false,
+    "allowed_model_label": "teacher-matched/coarse",
+    "forbidden_model_label": "Fortran-equivalent"
+  },
+  "parameter_ownership": [
+    {
+      "network_name": "vcmax25_static_parameter",
+      "run_def_key": "VCMAX25",
+      "paper_symbol": "VCMAX25",
+      "shape": "PFT vector",
+      "direct_fast_day_effect": false,
+      "retained_tail_consumer": "stomate_vmax.vmax -> dynamic vcmax",
+      "next_day_dynamic_path": "vcmax is materialized into slowproc assim_param and consumed by next-day DIFFUCO",
+      "base_run_def_pft14": 50.0,
+      "paper_reference_pft14": 63.2061836,
+      "paper_sample_range": [20.0180641, 70.0],
+      "fortran_owner": "src_parameters/pft_parameters.f90::pft_parameters_read lines 3234-3240",
+      "fortran_consumer": "src_stomate/stomate_vmax.f90::vmax lines 327-354",
+      "jax_owner": "jax_orchidee/stomate/parameters.py::load_paper_case_stomate_parameter_bundle",
+      "jax_consumer": "jax_orchidee/stomate/carbon_kernels.py::vmax_step lines 7614-7742",
+      "distinction": "This static parameter is not the dynamic vcmax/assim_param day-start state. Both are inputs at their respective ownership boundaries."
+    },
+    {
+      "network_name": "maint_resp_slope_c",
+      "run_def_key": "MAINT_RESP_SLOPE_C",
+      "paper_symbol": "S1",
+      "shape": "PFT vector; column C of the full three-coefficient maintenance array",
+      "direct_fast_day_effect": true,
+      "retained_tail_consumer": "none after the pre-daily-STOMATE boundary; retained tail consumes resp_maint_part",
+      "next_day_dynamic_path": "no independent carry; its fast-day maintenance result affects retained carbon state",
+      "base_run_def_pft14": 0.05,
+      "paper_reference_pft14": 0.0876862,
+      "paper_sample_range": [0.0000011, 0.3],
+      "fortran_owner": "src_parameters/pft_parameters.f90 lines 4220-4226; src_stomate/stomate_data.f90 lines 161-164 assembles slope columns",
+      "fortran_consumer": "src_stomate/stomate_resp.f90::maint_respiration lines 292-303",
+      "jax_owner": "jax_orchidee/stomate/parameters.py::load_paper_case_stomate_parameter_bundle",
+      "jax_consumer": "jax_orchidee/stomate/carbon_kernels.py::_maintenance_respiration_core lines 2429-2463"
+    },
+    {
+      "network_name": "alloc_min",
+      "run_def_key": "ALLOC_MIN",
+      "paper_symbol": "fa_min",
+      "shape": "PFT vector",
+      "direct_fast_day_effect": false,
+      "retained_tail_consumer": "stomate_alloc.alloc tree aboveground sapwood allocation",
+      "next_day_dynamic_path": "retained allocation changes biomass, leaf state and related next-day drivers",
+      "base_run_def_pft14": 0.3,
+      "paper_reference_pft14": 0.2019211,
+      "paper_sample_range": [0.1000685, 0.4],
+      "fortran_owner": "src_parameters/pft_parameters.f90 lines 4532-4538",
+      "fortran_consumer": "src_stomate/stomate_alloc.f90::alloc lines 623-627",
+      "jax_owner": "jax_orchidee/stomate/parameters.py::load_paper_case_stomate_parameter_bundle",
+      "jax_consumer": "jax_orchidee/stomate/carbon_kernels.py::allocation_step lines 2652-2810"
+    },
+    {
+      "network_name": "residence_time",
+      "run_def_key": "RESIDENCE_TIME",
+      "paper_symbol": "tau",
+      "shape": "PFT vector",
+      "direct_fast_day_effect": false,
+      "retained_tail_consumer": "lpj_gap.gap constant-mortality arm",
+      "next_day_dynamic_path": "when the arm is active, retained mortality changes biomass and litter carried to the next day",
+      "base_run_def_pft14": 80.0,
+      "paper_reference_pft14": 50.6583452,
+      "paper_sample_range": [5.0023366, 100.0],
+      "fortran_owner": "src_parameters/pft_parameters.f90 lines 4163-4169",
+      "fortran_consumer": "src_stomate/lpj_gap.f90::gap lines 226-234",
+      "jax_owner": "jax_orchidee/stomate/parameters.py::load_paper_case_stomate_parameter_bundle",
+      "jax_consumer": "jax_orchidee/stomate/carbon_kernels.py::gap_mortality_step lines 4701-4796"
+    }
+  ],
+  "input_contract": {
+    "container": "research.daily_coarse_graining.gradient_training_ready.ConditionedDayInput",
+    "dynamic_leaves": [
+      "day_start_state",
+      "ordered_48_step_forcing",
+      "four_parameter_arrays",
+      "landpoint_physics",
+      "calendar_season_context"
+    ],
+    "forbidden_inputs": ["landpoint_id_as_primary_feature", "paper_AGB", "paper_BGB", "paper_GPP", "paper_NPP", "Teacher_day_end_target"],
+    "normalization": "train split only"
+  },
+  "deterministic_output_split": {
+    "fields": ["t2m_daily", "precip_daily", "snowfall_daily", "t2m_min_daily", "t2m_max_daily", "t2mdiag"],
+    "teacher_owners": [
+      "jax_orchidee/sechiba/enerbil.py::enerbil_t2mdiag lines 1397-1402",
+      "jax_orchidee/driver/orchestration.py::_paper_next_step_runtime_entry_payload_from_components lines 5551-5566",
+      "jax_orchidee/stomate/daily.py::_stomate_daily_accumulation_fold_runtime_peat_static_jit lines 428-505"
+    ],
+    "acceptance": "pointwise exact against every captured Teacher day; otherwise field returns to learned target"
+  },
+  "training_contract": {
+    "implementation": "pure JAX encoder + family-structured full-element residual decoder + Adam",
+    "historical_svd_role": "diagnostic evidence only",
+    "checkpoint_schema": "daily_coarse_gradient_checkpoint_v1",
+    "checkpoint_location": "outputs/checkpoints/daily_coarse_graining/<experiment_id>",
+    "binary_samples_committed": false,
+    "deterministic_seed_required": true,
+    "loss_logging": "overall and every process family"
+  },
+  "future_linux_gpu": {
+    "dependency_extra": "cuda12",
+    "smoke_command_template": "python -m research.daily_coarse_graining.gradient_training_ready --state-cache <cache> --experiment-config research/daily_coarse_graining/configs/local_gradient_gate.json",
+    "server_gate": [
+      "local gradient norm is nonzero",
+      "encoder and decoder both update",
+      "16-day preregistered overfit threshold passes",
+      "checkpoint resume test passes",
+      "all deterministic fields pass pointwise exact checks",
+      "Teacher scientific tree remains unchanged"
+    ]
+  },
+  "local_gate_result": {
+    "date": "2026-07-21",
+    "machine_result": "outputs/performance/daily_coarse_graining/gradient_training_ready_gate.json",
+    "sample_manifest": "outputs/performance/daily_coarse_graining/gradient_training_ready_samples.json",
+    "decision": "training_pipeline_blocked_local_overfit",
+    "teacher_days": 16,
+    "gradient_steps": 600,
+    "parameter_count": 519312,
+    "initial_gradient_norm": 0.07253126400554764,
+    "initial_loss": 0.5029475688934326,
+    "final_loss": 0.009931688196957111,
+    "normalized_rmse": 0.08737868673761065,
+    "preregistered_threshold": 0.05,
+    "teacher_capture_seconds": 132.97962680000637,
+    "training_seconds": 30.5596535000077,
+    "server_gate_open": false,
+    "reason": "Gradient plumbing works, but the fixed 16-day/600-step CPU gate did not reach the preregistered overfit threshold."
+  }
+}
