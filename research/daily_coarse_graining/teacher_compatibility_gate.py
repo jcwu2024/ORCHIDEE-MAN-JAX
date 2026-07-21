@@ -182,7 +182,8 @@ def _array_metrics(
         difference = np.abs(actual[finite] - expected[finite])
         denominator = np.maximum(np.abs(expected[finite]), np.finfo(np.float64).tiny)
         max_abs = float(np.max(difference))
-        max_rel = float(np.max(difference / denominator))
+        with np.errstate(over="ignore"):
+            max_rel = float(np.max(difference / denominator))
     else:
         max_abs = 0.0
         max_rel = 0.0
@@ -227,19 +228,35 @@ def compare_fingerprints(
         "config_sha256",
         "run_def_sha256",
         "reference_restart_sha256",
-        "leaves",
     ):
         contract[f"capture.{name}"] = expected_capture[name] == actual_capture[name]
+
+    def leaf_key(leaf):
+        return leaf["family"], leaf["component"], leaf["name"]
+
+    expected_leaves = {leaf_key(leaf): leaf for leaf in expected_capture["leaves"]}
+    actual_leaves = {leaf_key(leaf): leaf for leaf in actual_capture["leaves"]}
+    contract["capture.leaf_keys"] = expected_leaves.keys() == actual_leaves.keys()
+    contract["capture.leaf_shapes"] = all(
+        expected_leaves[key]["shape"] == actual_leaves[key]["shape"]
+        for key in expected_leaves.keys() & actual_leaves.keys()
+    )
 
     continuous_leaves = []
     discrete = {}
     with np.load(expected_npz) as expected_data, np.load(actual_npz) as actual_data:
         expected_continuous = expected_data["continuous"]
         actual_continuous = actual_data["continuous"]
-        for leaf in expected_capture["leaves"]:
+        for key, leaf in expected_leaves.items():
+            actual_leaf = actual_leaves.get(key)
+            if actual_leaf is None:
+                continuous_leaves.append({**leaf, "passed": False, "missing": True})
+                continue
             metrics = _array_metrics(
                 expected_continuous[:, leaf["start"] : leaf["stop"]],
-                actual_continuous[:, leaf["start"] : leaf["stop"]],
+                actual_continuous[
+                    :, actual_leaf["start"] : actual_leaf["stop"]
+                ],
                 atol=atol,
                 rtol=rtol,
             )

@@ -25,8 +25,19 @@ def test_array_metrics_rejects_real_difference():
     assert not result["passed"]
 
 
-def _write_artifact(prefix, continuous, discrete, *, git_head="abc"):
+def _write_artifact(prefix, continuous, discrete, *, git_head="abc", leaves=None):
     np.savez(prefix.with_suffix(".npz"), continuous=continuous, discrete__mask=discrete)
+    if leaves is None:
+        leaves = [
+            {
+                "family": "hydrol",
+                "component": "hydrol_previous_step_state",
+                "name": "mc",
+                "shape": [2],
+                "start": 0,
+                "stop": 2,
+            }
+        ]
     metadata = {
         "schema_version": "teacher_daily_boundary_fingerprint_v1",
         "teacher_commit": "teacher",
@@ -44,16 +55,7 @@ def _write_artifact(prefix, continuous, discrete, *, git_head="abc"):
                 "stomate_start.nc": "stomate",
                 "stomate_restart.nc": "stomate-restart",
             },
-            "leaves": [
-                {
-                    "family": "hydrol",
-                    "component": "hydrol_previous_step_state",
-                    "name": "mc",
-                    "shape": [2],
-                    "start": 0,
-                    "stop": 2,
-                }
-            ],
+            "leaves": leaves,
         },
     }
     prefix.with_suffix(".json").write_text(json.dumps(metadata), encoding="utf-8")
@@ -83,3 +85,46 @@ def test_compare_fingerprints_requires_numeric_discrete_and_contract_parity(tmp_
     )
     assert not report["passed"]
     assert not report["discrete"]["discrete__mask"]["passed"]
+
+
+def test_compare_fingerprints_aligns_continuous_leaves_by_identity(tmp_path):
+    expected = tmp_path / "expected"
+    actual = tmp_path / "actual"
+    first = {
+        "family": "hydrol",
+        "component": "state",
+        "name": "first",
+        "shape": [1],
+        "start": 0,
+        "stop": 1,
+    }
+    second = {
+        "family": "hydrol",
+        "component": "state",
+        "name": "second",
+        "shape": [1],
+        "start": 1,
+        "stop": 2,
+    }
+    actual_second = {**second, "start": 0, "stop": 1}
+    actual_first = {**first, "start": 1, "stop": 2}
+    _write_artifact(
+        expected,
+        np.asarray([[1.0, 2.0]]),
+        np.asarray([[True]]),
+        leaves=[first, second],
+    )
+    _write_artifact(
+        actual,
+        np.asarray([[2.0, 1.0]]),
+        np.asarray([[True]]),
+        leaves=[actual_second, actual_first],
+    )
+    report = compare_fingerprints(
+        expected,
+        actual,
+        output=tmp_path / "report.json",
+        atol=0.0,
+        rtol=0.0,
+    )
+    assert report["passed"]
