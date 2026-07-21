@@ -1,0 +1,20 @@
+# Explore1000 CentOS 7 CPU compatibility profile.
+# Keep this separate from the general project uv.lock: newer binary wheels may
+# require GLIBC 2.27 and cannot run on test01/cnall.
+certifi==2026.6.17
+cftime==1.6.5
+jax==0.4.38
+jaxlib==0.4.38
+ml-dtypes==0.5.1
+netCDF4==1.7.2
+numpy==2.2.6
+opt-einsum==3.4.0
+packaging==26.2
+pandas==2.2.3
+python-dateutil==2.9.0.post0
+pytz==2026.2
+PyYAML==6.0.2
+scipy==1.15.3
+six==1.17.0
+tzdata==2026.3
+xarray==2025.1.2

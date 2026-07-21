@@ -84,3 +84,28 @@ neural-network training. Before a paid Explore1000 submission, benchmark one
 worker on a test node, measure peak memory and landpoint-year wall time, then
 present the requested cores, finite time limit, and worst-case charge for
 approval.
+
+## Explore1000 environments
+
+Use project-scoped uv environments:
+
+- CPU: `/WORK/liwei_work/jcwu/.venvs/orcjax_cpu`
+- GPU: `/WORK/liwei_work/jcwu/.venvs/orcjax_gpu`
+
+Do not create new generic names such as `jc_gpu`. Historical `jc_gpu`,
+`orcj_gpu`, and `orcj_gpu_compat` environments are legacy validation assets;
+keep them read-only until the canonical `orcjax_gpu` environment reproduces
+their accepted results.
+
+Explore1000 CPU nodes run CentOS 7. The general project `uv.lock` may resolve
+new wheels that require GLIBC 2.27, so CPU Teacher generation uses the pinned
+compatibility profile in `scripts/hpc/requirements-orcjax-cpu.txt`. Create or
+reconcile it with:
+
+```bash
+bash scripts/hpc/bootstrap_orcjax_cpu.sh
+```
+
+This remains uv-managed: Conda is not used to resolve or install project
+packages. The profile pins JAX 0.4.38 to match the accepted GPU compatibility
+runtime and pins manylinux2014-compatible numerical wheels for CPU nodes.
