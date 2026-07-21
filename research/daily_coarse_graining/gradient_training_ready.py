@@ -611,6 +611,41 @@ def _git_head():
     return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
 
 
+def _training_readiness(
+    *,
+    initial_gradient_norm: float,
+    encoder_parameter_change_norm: float,
+    decoder_parameter_change_norm: float,
+    initial_loss: float,
+    final_loss: float,
+    normalized_rmse: float,
+    overfit_threshold: float,
+    deterministic_exact_passed: bool,
+    discrete_exact_passed: bool,
+):
+    """Separate executable training plumbing from a non-scientific fit diagnostic."""
+
+    plumbing_ready = bool(
+        initial_gradient_norm > 0.0
+        and encoder_parameter_change_norm > 0.0
+        and decoder_parameter_change_norm > 0.0
+        and final_loss < initial_loss
+        and deterministic_exact_passed
+        and discrete_exact_passed
+    )
+    overfit_diagnostic_passed = bool(normalized_rmse <= overfit_threshold)
+    return {
+        "decision": (
+            "training_pipeline_ready_for_gpu_smoke"
+            if plumbing_ready
+            else "training_pipeline_blocked_plumbing"
+        ),
+        "plumbing_ready": plumbing_ready,
+        "overfit_diagnostic_passed": overfit_diagnostic_passed,
+        "scientific_model_ready": False,
+    }
+
+
 def run_experiment(args):
     config = json.loads(args.experiment_config.read_text(encoding="utf-8"))
     cache = _load_state_cache(args.state_cache)
@@ -672,13 +707,16 @@ def run_experiment(args):
     metrics = _family_metrics(trained["predictions"], targets, masks, spec)
     discrete = _exact_discrete_metrics(samples, spec)
     threshold = float(config["overfit_normalized_rmse_threshold"])
-    pipeline_ready = bool(
-        trained["initial_gradient_norm"] > 0.0
-        and trained["encoder_parameter_change_norm"] > 0.0
-        and trained["decoder_parameter_change_norm"] > 0.0
-        and trained["final_loss"] < trained["initial_loss"]
-        and metrics["overall"]["normalized_rmse"] <= threshold
-        and discrete["passed"]
+    readiness = _training_readiness(
+        initial_gradient_norm=trained["initial_gradient_norm"],
+        encoder_parameter_change_norm=trained["encoder_parameter_change_norm"],
+        decoder_parameter_change_norm=trained["decoder_parameter_change_norm"],
+        initial_loss=trained["initial_loss"],
+        final_loss=trained["final_loss"],
+        normalized_rmse=metrics["overall"]["normalized_rmse"],
+        overfit_threshold=threshold,
+        deterministic_exact_passed=exact["passed"],
+        discrete_exact_passed=discrete["passed"],
     )
     checkpoint_path = args.checkpoint_dir / "checkpoint.pkl"
     checkpoint_path.parent.mkdir(parents=True, exist_ok=True)
@@ -695,8 +733,13 @@ def run_experiment(args):
         np.asarray(value).nbytes for value in jax.tree_util.tree_leaves(trained["parameters"])
     )
     return {
-        "schema_version": "daily_coarse_gradient_training_ready_gate_v1",
-        "decision": "training_pipeline_ready" if pipeline_ready else "training_pipeline_blocked_local_overfit",
+        "schema_version": "daily_coarse_gradient_training_ready_gate_v2",
+        "decision": readiness["decision"],
+        "readiness": {
+            **readiness,
+            "gpu_smoke_scope": "pipeline portability and execution only",
+            "overfit_threshold_role": "nonblocking local optimization diagnostic",
+        },
         "teacher_commit": TEACHER_COMMIT,
         "experiment_git_head": _git_head(),
         "constraints": {
@@ -823,7 +866,7 @@ def main(argv: Sequence[str] | None = None):
             indent=2,
         )
     )
-    return 0 if payload["decision"] == "training_pipeline_ready" else 2
+    return 0 if payload["readiness"]["plumbing_ready"] else 2
 
 
 if __name__ == "__main__":

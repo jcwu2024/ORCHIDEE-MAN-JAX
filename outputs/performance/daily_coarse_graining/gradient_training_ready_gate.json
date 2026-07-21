@@ -1,6 +1,14 @@
 {
-  "schema_version": "daily_coarse_gradient_training_ready_gate_v1",
-  "decision": "training_pipeline_blocked_local_overfit",
+  "schema_version": "daily_coarse_gradient_training_ready_gate_v2",
+  "decision": "training_pipeline_ready_for_gpu_smoke",
+  "readiness": {
+    "decision": "training_pipeline_ready_for_gpu_smoke",
+    "plumbing_ready": true,
+    "overfit_diagnostic_passed": false,
+    "scientific_model_ready": false,
+    "gpu_smoke_scope": "pipeline portability and execution only",
+    "overfit_threshold_role": "nonblocking local optimization diagnostic"
+  },
   "teacher_commit": "7333b46c0b38650fb6c9250582876137831657b8",
   "experiment_git_head": "394b324db7cd5928dbfe6e208f5bdeeedf681f4c",
   "constraints": {

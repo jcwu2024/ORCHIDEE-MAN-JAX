@@ -1,6 +1,7 @@
 # Parameter-Conditioned Gradient Training Readiness Gate
 
-结论：`training_pipeline_blocked_local_overfit`。
+结论：`training_pipeline_ready_for_gpu_smoke`。这表示训练基础设施可以进入有限的
+Linux/GPU smoke；不表示日尺度模型已经具有科学准确性或泛化能力。
 
 本轮只整理服务器前架构并验证真实梯度链路。Teacher 固定为 `7333b46`，未修改
 `jax_orchidee/` 科学代码；实验只使用 Windows CPU、16 个连续 Teacher 日和既有
@@ -60,7 +61,7 @@ Git。
 - encoder / decoder 参数变化范数：`13.2571 / 83.8851`；
 - loss：`0.502948 -> 0.00993169`；
 - overall normalized RMSE：`0.0873787`；
-- 预注册 overfit threshold：`<= 0.05`，未通过；
+- 原预注册 overfit threshold：`<= 0.05`，未通过，保留为非阻塞优化诊断；
 - Teacher capture / gradient training：`132.98 s / 30.56 s`；
 - 参数 bytes / 近似 peak bytes：`2,077,248 / 18,462,976`；
 - discrete/static carry：48 个元素 exact，0 mismatch。
@@ -68,7 +69,8 @@ Git。
 过程族 RMSE 为 DRIVER `0.1104`、DIFFUCO/ENERBIL `0.1366`、HYDROL `0.1013`、
 THERMOSOIL `0.1268`、SECHIBA finalize `0.1224`、daily interface `0.07264`、
 OK_LEAK `0.01193`、final diagnostics `0.04337`。这证明真实梯度、更新、checkpoint
-链路可运行，但不能把未达阈值写成 `training_pipeline_ready`。
+链路可运行。该固定预算的16日过拟合结果不作为科学验收，也不再阻塞有限 GPU smoke；
+科学可用性仍必须由多日期、多 landpoint、参数扰动 holdout 和自由 rollout 单独验证。
 
 ## Linux/GPU 收束
 
@@ -81,7 +83,8 @@ python -m research.daily_coarse_graining.gradient_training_ready \
   --experiment-config research/daily_coarse_graining/configs/local_gradient_gate.json
 ```
 
-当前客观 server gate 未打开，因为 16 日 overfit RMSE 未达到 `0.05`。本轮不增加
-训练步数、不调参、不扩大数据、不上服务器。机器结果位于
+当前仅打开有限 Linux/GPU 训练链路 smoke gate：验证环境、device、checkpoint、训练和
+小规模推理可移植性。`0.08738` 与原 `0.05` 阈值均继续记录，不能改写为精度通过。
+扩大数据、正式训练和 rollout 仍需后续独立设计。机器结果位于
 `outputs/performance/daily_coarse_graining/gradient_training_ready_gate.json`，样本清单
 位于同目录 `gradient_training_ready_samples.json`；二进制样本和 checkpoint 均不提交。

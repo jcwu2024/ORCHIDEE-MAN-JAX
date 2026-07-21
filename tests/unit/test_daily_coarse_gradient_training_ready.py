@@ -13,6 +13,7 @@ from research.daily_coarse_graining.gradient_training_ready import (
     _checkpoint_payload,
     _family_metrics,
     _load_resume,
+    _training_readiness,
     deterministic_boundary_fields,
     encode_day,
     initialize_model,
@@ -133,3 +134,21 @@ def test_checkpoint_resume_contract_roundtrips_parameter_and_optimizer_pytrees(t
     assert len(jax.tree_util.tree_leaves(resumed["parameters"])) == len(
         jax.tree_util.tree_leaves(parameters)
     )
+
+
+def test_gpu_smoke_readiness_does_not_treat_arbitrary_overfit_target_as_plumbing():
+    readiness = _training_readiness(
+        initial_gradient_norm=0.07,
+        encoder_parameter_change_norm=13.0,
+        decoder_parameter_change_norm=83.0,
+        initial_loss=0.50,
+        final_loss=0.01,
+        normalized_rmse=0.087,
+        overfit_threshold=0.05,
+        deterministic_exact_passed=True,
+        discrete_exact_passed=True,
+    )
+    assert readiness["decision"] == "training_pipeline_ready_for_gpu_smoke"
+    assert readiness["plumbing_ready"]
+    assert not readiness["overfit_diagnostic_passed"]
+    assert not readiness["scientific_model_ready"]

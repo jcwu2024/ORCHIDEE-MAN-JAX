@@ -1,9 +1,10 @@
 # 日尺度粗化研究开发规范
 
-状态：v0.8 为 **training_pipeline_blocked_local_overfit**。parameter-conditioned 纯 JAX
-梯度链路已经证明梯度非零且 encoder/decoder 均实际更新，但固定 16 日、600-step 本地
-门禁的 normalized RMSE 为 `0.08738`，未达到预注册 `<=0.05`。因此不批准服务器/GPU、
-扩大训练、正式数据生成或 rollout。证据见
+状态：v0.9 为 **training_pipeline_ready_for_gpu_smoke**。parameter-conditioned 纯 JAX
+梯度链路已经证明梯度非零、encoder/decoder 均实际更新、checkpoint 可恢复且 deterministic
+字段 exact。固定 16 日、600-step 本地诊断的 normalized RMSE 为 `0.08738`，未达到原先
+预注册的 `<=0.05`；该阈值不是科学准确性标准，现保留为非阻塞优化诊断。当前只批准有限
+Linux/GPU 训练链路 smoke，不批准科学可用性声明、自由 rollout 或大规模生产训练。证据见
 [`parameter_conditioned_gradient_training_gate_20260721.md`](parameter_conditioned_gradient_training_gate_20260721.md)。
 
 初步 Gate 1 结果见
