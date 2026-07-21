@@ -650,7 +650,9 @@ def run_experiment(args):
     config = json.loads(args.experiment_config.read_text(encoding="utf-8"))
     cache = _load_state_cache(args.state_cache)
     context = teacher.prepare_paper_1961_driver_context(
-        args.teacher_config, used_run_def_path=args.run_def
+        args.teacher_config,
+        used_run_def_path=args.run_def,
+        reference_run_dir=args.reference_run_dir,
     )
     initial_state = teacher.rebase_driver_state_for_year_start(cache["state"])
     capture_started = time.perf_counter()
@@ -732,6 +734,8 @@ def run_experiment(args):
     parameter_bytes = sum(
         np.asarray(value).nbytes for value in jax.tree_util.tree_leaves(trained["parameters"])
     )
+    backend = jax.default_backend()
+    local_windows_cpu = platform.system() == "Windows" and backend == "cpu"
     return {
         "schema_version": "daily_coarse_gradient_training_ready_gate_v2",
         "decision": readiness["decision"],
@@ -743,8 +747,8 @@ def run_experiment(args):
         "teacher_commit": TEACHER_COMMIT,
         "experiment_git_head": _git_head(),
         "constraints": {
-            "local_windows_cpu_only": True,
-            "server_or_gpu_used": False,
+            "local_windows_cpu_only": local_windows_cpu,
+            "server_or_gpu_used": not local_windows_cpu,
             "teacher_targets_are_labels_only": True,
             "teacher_targets_as_inputs": False,
             "paper_agb_bgb_gpp_npp_as_inputs": False,
@@ -829,6 +833,7 @@ def build_parser():
     parser.add_argument("--state-cache", type=Path, required=True)
     parser.add_argument("--teacher-config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--run-def", type=Path, default=DEFAULT_RUN_DEF)
+    parser.add_argument("--reference-run-dir", type=Path)
     parser.add_argument("--experiment-config", type=Path, default=DEFAULT_EXPERIMENT_CONFIG)
     parser.add_argument("--year", type=int, default=1962)
     parser.add_argument("--seed", type=int, default=20260721)
