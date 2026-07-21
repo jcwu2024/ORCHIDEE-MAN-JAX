@@ -31,6 +31,7 @@ from research.daily_coarse_graining.supervised_learnability_pilot import (
     BoundaryLeafSpec,
     BoundaryVectorSpec,
     _capture_days,
+    _capture_days_compiled_blocks,
     _exact_discrete_metrics,
     _forcing_matrix,
     _make_sample,
@@ -666,13 +667,22 @@ def run_experiment(args):
     )
     initial_state = teacher.rebase_driver_state_for_year_start(cache["state"])
     capture_started = time.perf_counter()
-    states, forcings, records, _ = _capture_days(
+    capture = (
+        _capture_days_compiled_blocks
+        if args.teacher_capture_mode == "compiled-block"
+        else _capture_days
+    )
+    capture_kwargs = {}
+    if args.teacher_capture_mode == "compiled-block":
+        capture_kwargs["block_size"] = args.teacher_capture_block_size
+    states, forcings, records, _ = capture(
         config_path=args.teacher_config,
         context=context,
         previous_state=initial_state,
         year=args.year,
         start_day=1,
         days=int(config["train_days"]),
+        **capture_kwargs,
     )
     capture_seconds = time.perf_counter() - capture_started
     full_spec = build_boundary_vector_spec(records[0])
@@ -812,6 +822,14 @@ def run_experiment(args):
             "teacher_capture": capture_seconds,
             "gradient_training": trained["training_seconds"],
         },
+        "teacher_capture": {
+            "mode": args.teacher_capture_mode,
+            "block_size": (
+                args.teacher_capture_block_size
+                if args.teacher_capture_mode == "compiled-block"
+                else None
+            ),
+        },
         "hardware": {
             "platform": platform.platform(),
             "processor": platform.processor(),
@@ -844,6 +862,12 @@ def build_parser():
     parser.add_argument("--teacher-config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--run-def", type=Path, default=DEFAULT_RUN_DEF)
     parser.add_argument("--reference-run-dir", type=Path)
+    parser.add_argument(
+        "--teacher-capture-mode",
+        choices=("daily", "compiled-block"),
+        default="daily",
+    )
+    parser.add_argument("--teacher-capture-block-size", type=int, default=7)
     parser.add_argument("--experiment-config", type=Path, default=DEFAULT_EXPERIMENT_CONFIG)
     parser.add_argument("--year", type=int, default=1962)
     parser.add_argument("--seed", type=int, default=20260721)

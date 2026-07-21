@@ -2184,6 +2184,16 @@ class DriverDailyModelout:
     )
 
 
+class DriverPreDailyTrainingBoundary(NamedTuple):
+    """Numeric Teacher boundary retained by compiled sample-generation blocks."""
+
+    half_hour_state_values: tuple[tuple[object, ...], ...]
+    daily_fields: Mapping[str, object]
+    ok_leak_updates: Mapping[str, object]
+    deepc_peat: object
+    final_diagnostics: Mapping[str, object]
+
+
 @dataclass(frozen=True)
 class DriverRuntimeDayResult:
     """Compact later-day runtime result for long sequence validation."""
@@ -2197,6 +2207,7 @@ class DriverRuntimeDayResult:
     stopped_at_tstep: int | None
     missing_components: tuple[str, ...]
     daily_process_fold: StomateDailyProcessFold | None = None
+    pre_daily_training_boundary: DriverPreDailyTrainingBoundary | None = None
     provenance: tuple[str, ...] = (
         "fortran_source/ORCHIDEE/src_driver/dim2_driver.f90 lines 839-908 advances forcing steps",
         "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90::sechiba_main lines 997-1224 advances SECHIBA state",
@@ -10198,6 +10209,7 @@ def paper_1961_driver_later_day_runtime_result(
     compiled_stomate_restart_template: StomateRestartEntryState | None = None,
     compiled_stomate_season_template: StomateRestartSeasonState | None = None,
     compiled_diffuco_parameter_values: DriverCompiledDiffucoParameterValues | None = None,
+    capture_pre_daily_training_boundary: bool = False,
 ) -> DriverRuntimeDayResult:
     """Advance one later day and retain only runtime outputs.
 
@@ -10534,6 +10546,25 @@ def paper_1961_driver_later_day_runtime_result(
         missing = ("modelout",)
     if day_end_state is None:
         missing = (*missing, "day_end_state")
+    pre_daily_training_boundary = None
+    if capture_pre_daily_training_boundary:
+        perma_peat = half_hour_ok_leak.soilcarbon.perma_peat
+        if perma_peat is None:
+            raise RuntimeError(
+                "compiled PFT14 training capture requires the active deepC_peat boundary"
+            )
+        pre_daily_training_boundary = DriverPreDailyTrainingBoundary(
+            half_hour_state_values=fast_state_from_previous_packet(
+                half_hour_transition.current_state
+            ).values_by_component,
+            daily_fields=dict(daily_fold.daily_fields),
+            ok_leak_updates=dict(half_hour_updates),
+            deepc_peat=perma_peat.deepc_peat,
+            final_diagnostics={
+                "t2mdiag": completed_payloads[-1]["t2mdiag"],
+                "temp_sol": completed_payloads[-1]["temp_sol"],
+            },
+        )
     return DriverRuntimeDayResult(
         year=year,
         day_index=int(day_index),
@@ -10544,6 +10575,7 @@ def paper_1961_driver_later_day_runtime_result(
         stopped_at_tstep=stopped_at_tstep,
         missing_components=tuple(dict.fromkeys(missing)),
         daily_process_fold=daily_fold,
+        pre_daily_training_boundary=pre_daily_training_boundary,
     )
 
 
@@ -10558,6 +10590,7 @@ def _paper_compiled_later_day_block_executable(
     prebound_hydrol_runtime_static_tables: HydrolRuntimeStaticTables,
     daily_carbon_dispatch: Mapping[str, object],
     stomate_parameter_values: DriverCompiledStomateParameterValues | None = None,
+    capture_pre_daily_training_boundaries: bool = False,
 ):
     """Compile one reusable block of complete later-day state transitions."""
 
@@ -10577,6 +10610,7 @@ def _paper_compiled_later_day_block_executable(
         mineral_imax,
         initial.spec.components,
         initial.spec.field_names_by_component,
+        bool(capture_pre_daily_training_boundaries),
     )
     cached = _COMPILED_LATER_DAY_BLOCK_CACHE.get(cache_key)
     if cached is not None:
@@ -10636,6 +10670,9 @@ def _paper_compiled_later_day_block_executable(
                     provenance=stomate_season_provenance,
                 ),
                 compiled_diffuco_parameter_values=diffuco_parameter_values,
+                capture_pre_daily_training_boundary=(
+                    capture_pre_daily_training_boundaries
+                ),
             )
             packet = day.day_end_state
             next_values = tuple(
@@ -10649,10 +10686,17 @@ def _paper_compiled_later_day_block_executable(
                     strict=True,
                 )
             )
-            return next_values, (
+            outputs = (
                 day.daily_modelout.modelout_fields,
                 day.daily_modelout.modelout,
             )
+            if capture_pre_daily_training_boundaries:
+                outputs = (
+                    *outputs,
+                    day.pre_daily_training_boundary,
+                    next_values,
+                )
+            return next_values, outputs
 
         return jax.lax.scan(
             body,

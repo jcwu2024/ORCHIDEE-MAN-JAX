@@ -36,6 +36,7 @@ from research.daily_coarse_graining.persistence_baseline import (
 from research.daily_coarse_graining.replay_ceiling import (
     DEFAULT_CONFIG,
     DEFAULT_RUN_DEF,
+    PreDailyStomateReplayRecord,
     _block_until_ready,
     _load_state_cache,
     _minimal_daily_fold,
@@ -344,6 +345,203 @@ def _capture_days(
         forcings.append(forcing)
         records.append(record)
         current = record.expected_result.day_end_state
+    return tuple(states), tuple(forcings), tuple(records), current
+
+
+def _indexed_tree(tree, index: int):
+    return jax.tree_util.tree_map(lambda value: np.asarray(value[index]), tree)
+
+
+def _compiled_training_record(
+    *,
+    year: int,
+    day_index: int,
+    day_start_state,
+    day_end_state,
+    boundary,
+    boundary_state_spec,
+    steps_per_day: int,
+):
+    end_tstep = day_index * steps_per_day - 1
+    half_hour_state = teacher.previous_packet_from_fast_state(
+        teacher.DriverFastStateBundle(
+            tstep=end_tstep,
+            values_by_component=boundary.half_hour_state_values,
+            spec=boundary_state_spec,
+        )
+    )
+    transition = SimpleNamespace(
+        current_state=half_hour_state,
+        completed_entry_payloads=(dict(boundary.final_diagnostics),),
+    )
+    ok_leak = SimpleNamespace(
+        soilcarbon=SimpleNamespace(
+            perma_peat=SimpleNamespace(deepc_peat=boundary.deepc_peat)
+        )
+    )
+    return PreDailyStomateReplayRecord(
+        year=int(year),
+        day_index=int(day_index),
+        start_tstep=(day_index - 1) * steps_per_day,
+        input_state_tstep=int(day_start_state.tstep),
+        half_hour_transition=transition,
+        daily_fold=SimpleNamespace(daily_fields=dict(boundary.daily_fields)),
+        pre_step_boundary=None,
+        maintenance_resp_parts=None,
+        ok_leak_result=ok_leak,
+        ok_leak_updates=dict(boundary.ok_leak_updates),
+        expected_result=SimpleNamespace(day_end_state=day_end_state),
+    )
+
+
+def _capture_days_compiled_blocks(
+    *,
+    config_path,
+    context,
+    previous_state,
+    year: int,
+    start_day: int,
+    days: int,
+    block_size: int = 7,
+):
+    """Capture one audited year-start day, then stack later-day labels in JAX."""
+
+    if start_day != 1:
+        raise ValueError("compiled training capture currently requires start_day=1")
+    if days < 1:
+        return (), (), (), previous_state
+    if block_size < 2:
+        raise ValueError("compiled training capture block_size must be at least two")
+    states, forcings, records, current = _capture_days(
+        config_path=config_path,
+        context=context,
+        previous_state=previous_state,
+        year=year,
+        start_day=1,
+        days=1,
+    )
+    states = list(states)
+    forcings = list(forcings)
+    records = list(records)
+    boundary_state_spec = teacher.fast_state_from_previous_packet(
+        records[0].half_hour_transition.current_state
+    ).spec
+    if days == 1:
+        return tuple(states), tuple(forcings), tuple(records), current
+
+    steps_per_day = int(round(context.runtime.dt_stomate / context.runtime.dt_sechiba))
+    first_inputs = teacher._paper_1961_later_day_transition_inputs(
+        context=context,
+        current_state=current,
+        year=year,
+        start=steps_per_day,
+        steps_per_stomate=steps_per_day,
+        fixed_format_trace_dir=None,
+        static_trace_fields=None,
+        prebuild_day_payloads=True,
+    )
+    prebound_tables = first_inputs.hydrol_runtime_static_tables
+    daily_carbon_dispatch = teacher._paper_daily_carbon_static_dispatch(
+        context, current
+    )
+    stomate_parameters = teacher._compiled_stomate_parameter_values(context)
+    landpoint_payload = teacher._compiled_landpoint_payload(
+        first_inputs.compiled_base_payload_template
+    )
+    stomate_restart_template = context.first_step_restart_state.stomate
+    stomate_season_values = {
+        name: value
+        for name, value in teacher.read_stomate_restart_season_state(
+            context.first_step_restart_state.stomate_input
+        )._asdict().items()
+        if name != "provenance"
+    }
+    diffuco_parameters = teacher._compiled_diffuco_parameter_values(context)
+    hydrol_arrays = teacher._compiled_hydrol_table_arrays(prebound_tables)
+    executable = None
+    state_spec = None
+    next_day = 2
+    final_day = start_day + days - 1
+    while next_day <= final_day:
+        block_days = tuple(range(next_day, next_day + block_size))
+        forcing_days = tuple(
+            teacher._paper_compiled_forcing_day(
+                context,
+                year=year,
+                start_tstep=(day_index - 1) * steps_per_day,
+                steps_per_stomate=steps_per_day,
+            )
+            for day_index in block_days
+        )
+        block_forcing = jax.tree_util.tree_map(
+            lambda *values: np.stack(values), *forcing_days
+        )
+        block_day_numbers = np.asarray(block_days, dtype=np.int32)
+        if executable is None:
+            executable, state_spec = teacher._paper_compiled_later_day_block_executable(
+                config_path,
+                context=context,
+                initial_state=current,
+                year=year,
+                block_forcing=block_forcing,
+                block_day_numbers=block_day_numbers,
+                prebound_hydrol_runtime_static_tables=prebound_tables,
+                daily_carbon_dispatch=daily_carbon_dispatch,
+                stomate_parameter_values=stomate_parameters,
+                capture_pre_daily_training_boundaries=True,
+            )
+        initial_values = teacher.fast_state_from_previous_packet(
+            current
+        ).values_by_component
+        final_values, stacked_outputs = executable(
+            initial_values,
+            block_forcing,
+            block_day_numbers,
+            stomate_parameters,
+            hydrol_arrays,
+            landpoint_payload,
+            stomate_restart_template,
+            stomate_season_values,
+            diffuco_parameters,
+        )
+        _block_until_ready((final_values, stacked_outputs))
+        _, _, stacked_boundaries, stacked_day_end_values = stacked_outputs
+        take = min(block_size, final_day - next_day + 1)
+        for offset in range(take):
+            day_index = next_day + offset
+            day_end_state = teacher.previous_packet_from_fast_state(
+                teacher.DriverFastStateBundle(
+                    tstep=day_index * steps_per_day - 1,
+                    values_by_component=_indexed_tree(
+                        stacked_day_end_values, offset
+                    ),
+                    spec=state_spec,
+                )
+            )
+            boundary = _indexed_tree(stacked_boundaries, offset)
+            forcing = _indexed_tree(block_forcing, offset)
+            record = _compiled_training_record(
+                year=year,
+                day_index=day_index,
+                day_start_state=current,
+                day_end_state=day_end_state,
+                boundary=boundary,
+                boundary_state_spec=boundary_state_spec,
+                steps_per_day=steps_per_day,
+            )
+            states.append(current)
+            forcings.append(forcing)
+            records.append(record)
+            current = day_end_state
+        if take == block_size:
+            current = teacher.previous_packet_from_fast_state(
+                teacher.DriverFastStateBundle(
+                    tstep=(next_day + block_size - 1) * steps_per_day - 1,
+                    values_by_component=final_values,
+                    spec=state_spec,
+                )
+            )
+        next_day += block_size
     return tuple(states), tuple(forcings), tuple(records), current
 
 
