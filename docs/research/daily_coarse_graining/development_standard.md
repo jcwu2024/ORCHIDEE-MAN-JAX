@@ -1,6 +1,20 @@
 # 日尺度粗化研究开发规范
 
-状态：初版规范，供可行性分析和原型开发使用。
+状态：v0.5 结论复核为 **persistence_baseline_failed /
+neural_learnability_inconclusive**。不批准大规模训练或 Gate 2 schema 冻结；一个极小
+supervised learnability + synthetic operator cost pilot 是否值得执行，需另行决策。
+
+初步 Gate 1 结果见
+[`speed_ceiling_probe_20260720.md`](speed_ceiling_probe_20260720.md)：边界 replay 在
+30 日内通过完整状态/modelout 容差。逐日 Python replay 相对生产 7 日 block 仅为
+`1.44x`；同等 7 日 compiled block 的固定边界上限为 `14.18x`，但动态边界输入和
+单 executable 复用的 dynamic replay 测得 `4.8--5.7x`，约 5.7 分钟/50 年。
+canonical-minimal 边界为每日期 343 个动态叶子、266426 bytes，已通过 30 日完整
+state/modelout 门禁。随后 persistence baseline 虽达到 `29.13x`，但在 8 日内出现
+物理 state schema 缺失、非零降水下水文库存无响应和显著状态漂移。该误差只否定
+persistence；replay 与 baseline 也不是相同 boundary transport A/B，不能据此建立
+架构绝对速度上限。复核证据见
+[`go_no_go_persistence_baseline_20260721.md`](go_no_go_persistence_baseline_20260721.md)。
 
 上位构想：[`paper_concept_daily_coarse_graining.md`](../../paper_concept_daily_coarse_graining.md)
 
@@ -23,31 +37,42 @@
 
 ## 2. 首版替代边界
 
-首版日尺度模型只替代以下边界：
+首版日尺度模型替代完整的亚日尺度 fast-day 边界：
 
 ```text
 日初完整物理状态
   + 当天 48 步 forcing
   -> 48 次 SECHIBA 状态转移
-  -> STOMATE 所需日累计量
-  -> 日末 SECHIBA 状态 + 日累计边界
+  -> STOMATE 日累计与 maintenance 亚日积分
+  -> 48 次 OK_LEAK 亚日尺度碳/水耦合更新
+  -> 日末 SECHIBA 状态 + 日累计接口 + OK_LEAK 日末状态
 ```
+
+当前 active `PERMA_PEAT` 路径还要求 OK_LEAK 输出 `deepC_peat` 供 retained restart
+writeback 使用。因此“13 个通用 OK_LEAK carry 字段”不是全部条件分支的固定分母；
+正式 schema 必须把 `deepC_peat` 记录为条件字段。`resp_hetero_soil` 只提供 reset
+数组 shape，可由已有 carry 重建，不是 coarse 预测 target。
 
 以下过程继续由 Teacher 的原始 JAX 实现执行：
 
 ```text
-OK_LEAK -> STOMATE 日碳过程 -> modelout -> 日末写回 -> restart/跨年交接
+season -> STOMATE 日碳过程 -> modelout -> 日末写回 -> restart/跨年交接
 ```
 
 采用该边界的理由：
 
-- 计算瓶颈主要来自 48 次半小时物理转移；
+- 当前 Teacher 的 OK_LEAK 在每个半小时步消费 SECHIBA 水文/温度状态并更新
+  litter、32 层土壤碳、DOC 和冠层截留状态，不是独立的纯日尺度后处理；
+- 若保留原始 OK_LEAK 执行，coarse 模型仍需输出 48 步中间序列，不能构成真正的
+  单次日尺度状态转移；
 - STOMATE 长期碳库和慢状态是气候记忆研究的核心，不应在首版同时近似；
-- 日累计量是半小时过程与 STOMATE 的明确接口，可以独立验收；
+- 日末物理状态、日累计量和 OK_LEAK 日末状态共同构成 pre-daily-STOMATE 接口，
+  可以独立验收；
 - 保留原始日碳和 restart 过程可显著降低长期漂移的归因难度。
 
-如果后续证据表明 STOMATE 日过程成为主要瓶颈，应建立新的边界提案和独立验收，
-不得直接扩大首版网络输出。
+首版 coarse operator 可以由显式日尺度基线、守恒投影和可学习 residual 共同组成；
+不要求由一个网络自由预测所有输出。若后续证据表明 season/STOMATE 日过程成为主要
+瓶颈，应建立新的边界提案和独立验收，不得直接扩大首版近似范围。
 
 ## 3. 必须先完成的状态总账
 
@@ -120,6 +145,8 @@ day_start_state
 forcing_48
 teacher_end_sechiba_state
 teacher_daily_accumulators
+teacher_maintenance_interface
+teacher_end_ok_leak_state
 teacher_budget_terms
 static_landpoint_parameters
 date/landpoint/parameter metadata
@@ -195,10 +222,17 @@ date/landpoint/parameter metadata
 
 ### Gate 1：速度上限
 
-- 从内存回放 Teacher 的预日碳边界，不进行逐日磁盘 IO；
-- 保留 OK_LEAK、STOMATE、modelout 和完整状态写回；
+- 从内存回放 Teacher 的 pre-daily-STOMATE 边界，不进行逐日磁盘 IO；
+- 跳过 48 次 SECHIBA、日累计/maintenance fold 和 48 次 OK_LEAK；
+- 保留 season、STOMATE 日碳、modelout 和完整状态写回；
 - 分别报告编译、热运行、数据准备和 IO；
 - 对 1 年和 50 年估算端到端速度上限。
+
+当前 PFT14 单点 30 日结果：canonical-minimal replay 为 `0.01865 s/day`，短窗线性
+外推约 5.7 分钟/50 年；未计入未来 coarse operator 推理。由于未达到数量级收益，
+Gate 1 曾给出“只允许一个低成本无神经 baseline”的有条件继续结论。该 persistence
+baseline 已失败，所以未进入 30 日；这不构成 neural learnability 测试。大规模训练
+仍不允许，最小 learnability/cost pilot 必须单独立项和预注册。
 
 若跳过半小时过程后没有足够的数量级收益，停止粗化主路线。
 
@@ -206,7 +240,9 @@ date/landpoint/parameter metadata
 
 - daily-boundary ledger 无未分类字段；
 - Teacher adapter 往返无字段丢失；
-- replay 模式与 Teacher 后续日过程在相同边界输入下数值一致；
+- pre-daily-STOMATE replay 与 Teacher 后续日过程在相同边界输入下数值一致；
+- coarse 运行时接口不依赖 48 步中间序列；这些序列只能作为 Teacher target 提取、
+  诊断或消融资产；
 - 数据 schema、单位、预算项和 split 均冻结。
 
 ### Gate 3：单日可学习性
@@ -269,14 +305,15 @@ AGB/BGB/GPP/NPP 不能代替内部状态验收。总量误差不能掩盖垂直�
 
 ## 12. 下一步分析顺序
 
-当前不应立即选择网络结构。推荐顺序是：
+当前应暂停实现工作，先决定是否批准一个严格受限的 learnability/cost pilot：
 
-1. 从 compiled complete-day carry 和 restart ledger 提取 daily-boundary 字段清单。
-2. 明确 48 步边界内的水、能量和日累计预算；标出首版无法硬约束的字段。
-3. 实现只用于测量的内存 replay ceiling，不加入神经网络依赖。
-4. 根据速度上限决定是否继续粗化主路线。
-5. 若继续，冻结 state schema、数据 manifest 和空间/时间/事件 split。
-6. 实现无神经日尺度 baseline，再实现最小守恒 residual 原型。
+1. 修复 `hydrol.nroot` fixed-spec/adapter 缺口，不把它计作模型误差；
+2. 用极小 Teacher 样本检查完整 boundary delta 的 one-step supervised learnability，
+   不生成大规模数据；
+3. 用相同输出 PyTree 的动态 synthetic operator 测量同 retained tail、同 executable
+   复用下的 cost，消除 replay transport 与 persistence dead-code 差异；
+4. 只在 one-step holdout、短 7 日自由 rollout和真实 `>=3x` 同时通过后，才讨论
+   learned operator 或 residual 结构。
 
-这六步完成前，不建立大规模训练集、不提交 GPU 长任务，也不开展气候记忆梯度
-分析。
+本规范不授权执行上述 pilot。未单独批准前，不开发神经网络、不生成训练集、不提交
+GPU/服务器任务。完整 Teacher 的气候记忆研究和性能优化仍可独立继续。

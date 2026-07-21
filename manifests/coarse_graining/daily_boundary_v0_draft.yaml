@@ -1,0 +1,506 @@
+schema_version: daily_boundary_v0_draft
+status: draft_not_frozen
+teacher:
+  git_commit: 7333b46c0b38650fb6c9250582876137831657b8
+  label: provisional_teacher
+  final_669_acceptance_complete: false
+scope:
+  pft: 14
+  workflow: paper_case_single_landpoint
+  replacement: complete_subdaily_fast_day_to_pre_daily_stomate_boundary
+  replaced_teacher_processes:
+    - 48_half_hour_sechiba_transitions
+    - daily_accumulator_fold
+    - maintenance_respiration_subdaily_integration
+    - 48_half_hour_ok_leak_updates
+  retained_teacher_processes:
+    - season
+    - stomate_daily_carbon
+    - modelout
+    - daily_reset_and_surface_writeback
+    - restart_and_year_handoff
+  forbidden_claim: Fortran-equivalent
+  allowed_claims: [teacher-matched, coarse]
+
+authoritative_ledgers:
+  sechiba_fields: docs/source_audits/sechiba_state_field_contract.yaml
+  stomate_lifecycle: docs/source_audits/restart_state_lifecycle.yaml
+  stomate_restart_notes: docs/source_audits/stomate_restart_state_ledger.md
+  compiled_boundary: docs/source_audits/compiled_transition_state_ledger.md
+  tolerance_policy: docs/source_audits/numeric_tolerance_ledger.md
+
+known_authoritative_ledger_deltas:
+  - field_id: thermosoil_previous_step_state.e_soil_lat
+    observed_in_runtime_packet: true
+    observed_production_owner: jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields
+    missing_from: docs/source_audits/sechiba_state_field_contract.yaml
+    baseline_test: tests/unit/test_sechiba_state_transition_contract.py
+    status: gate_0_blocker
+
+runtime_inventory_observation:
+  source: outputs/acceptance/compiled_1961_12point_wetdiaglong_fix/001.0-071.0/compiled_checkpoints/paper_driver_1961_year_end_state.pkl
+  role: shape_and_presence_observation_only
+  warning: point_instance_is_not_all_branch_denominator
+  total_packet_leaves: 334
+  components:
+    driver_previous_step_state: 14
+    diffuco_previous_step_state: 36
+    enerbil_previous_step_state: 13
+    hydrol_previous_step_state: 48
+    thermosoil_previous_step_state: 17
+    slowproc_stomate_previous_step_state: 113
+    sechiba_finalize_state: 93
+
+classification_rules:
+  prognostic:
+    definition: canonical dynamic inventory consumed by a future physical transition
+    selection:
+      source: docs/source_audits/sechiba_state_field_contract.yaml
+      contracts: all
+      provisional_supplements:
+        - thermosoil_previous_step_state.e_soil_lat
+    coarse_action: update_or_hard_constrained_projection
+  diagnostic:
+    definition: recomputable output or duplicate mirror without independent carry authority
+    coarse_action: recompute_or_materialize_from_canonical_owner
+    provisional_sets:
+      - component: sechiba_finalize_state
+        fields: all_pending_field_level_lifecycle_review
+  accumulator:
+    definition: source-order daily reduction over the 48 entry payloads
+    coarse_action: direct_output_or_analytic_reduction_with_budget_checks
+    fields: &daily_fold_fields
+      - humrel_daily
+      - litterhum_daily
+      - t2m_daily
+      - tsurf_daily
+      - tsoil_daily
+      - soilhum_daily
+      - precip_daily
+      - gpp_daily
+      - wspeed_daily
+      - snowfall_daily
+      - snowmass_daily
+      - tmc_topgrass_daily
+      - t2m_min_daily
+      - t2m_max_daily
+      - resp_maint_part
+      - resp_maint_radia
+      - flood_root_radia
+  static:
+    definition: immutable context, grid, parameters, masks, and run switches
+    coarse_action: read_only_input
+    owners:
+      - jax_orchidee.driver.orchestration.Paper1961PreparedDriverContext
+      - jax_orchidee.driver.orchestration.DriverDiffucoDayStaticCache
+  discrete:
+    definition: integer, boolean, mask, index, switch, or stage state
+    coarse_action: exact_rule_or_retained_teacher_update
+    known_fields:
+      - driver.tstep
+      - metadata.year
+      - metadata.day_index
+      - hydrol_previous_step_state.njsc
+      - sechiba_finalize_state.veget_year
+      - slowproc_stomate_previous_step_state.pft_present
+      - slowproc_stomate_previous_step_state.need_adjacent
+      - slowproc_stomate_previous_step_state.senescence
+      - slowproc_stomate_previous_step_state.begin_leaves
+    tolerance: exact
+
+day_start:
+  container: jax_orchidee.driver.fast_state.DriverFastStateBundle
+  adapter_from_teacher: jax_orchidee.driver.fast_state.fast_state_from_previous_packet
+  adapter_to_teacher: jax_orchidee.driver.fast_state.previous_packet_from_fast_state
+  producer: jax_orchidee.driver.orchestration._paper_day_end_state_packet
+  cross_year_transform: jax_orchidee.driver.orchestration.rebase_driver_state_for_year_start
+  invariant: lossless_roundtrip_and_fixed_spec_hash
+
+forcing_48:
+  container: jax_orchidee.driver.orchestration.DriverCompiledHalfHourForcing
+  shape_prefix: [steps_per_stomate]
+  steps_per_stomate_paper_case: 48
+  fields:
+    - zlev
+    - zlevuv
+    - u
+    - v
+    - qair
+    - temp_air
+    - pb
+    - precip_rain
+    - precip_snow
+    - lwdown
+    - swdown
+    - ccanopy
+    - salinity
+    - tide_height
+  classification: static_within_sample_input_not_state
+  producer: jax_orchidee.driver.orchestration._paper_compiled_forcing_day
+  consumer: coarse_daily_transition
+
+sechiba_end_state:
+  classification: prognostic_plus_diagnostic_mirrors
+  teacher_producer: jax_orchidee.driver.orchestration._paper_1961_later_day_half_hour_transition
+  retained_consumers:
+    - next_day_sechiba_transition
+    - jax_orchidee.driver.orchestration._paper_day_end_state_packet
+    - restart_and_year_handoff
+  canonical_field_selection:
+    source: docs/source_audits/sechiba_state_field_contract.yaml
+    contracts: all
+    provisional_supplements:
+      - thermosoil_previous_step_state.e_soil_lat
+  stomate_component_policy:
+    component: slowproc_stomate_previous_step_state
+    action_during_fast_day_replacement: carry_all_except_ok_leak_owned_fields
+    coarse_updated_fields_ref: ok_leak_half_hour_carry.fields
+    allowed_later_writers:
+      - jax_orchidee.driver.orchestration._paper_day_first_stomate_state_packet
+      - jax_orchidee.driver.orchestration._paper_day_end_state_packet
+
+teacher_target_extraction_bridge_48:
+  classification: diagnostic_sequence_interface
+  teacher_producer: compact_sechiba_entry_payload
+  coarse_runtime_interface: false
+  purposes:
+    - derive_daily_accumulator_targets
+    - derive_maintenance_targets
+    - derive_ok_leak_end_state_targets
+    - sechiba_only_replay_diagnosis
+  shape_prefix: [steps_per_stomate]
+  fields:
+    - precip_rain
+    - precip_snow
+    - veget
+    - veget_max
+    - totfrac_nobio
+    - gpp
+    - humrel
+    - litterhumdiag
+    - t2m
+    - temp_sol
+    - stempdiag
+    - shumdiag
+    - t2m_min
+    - t2m_max
+    - wspeed
+    - snow
+    - tmc_topgrass
+    - fwet_new
+    - liqwt_ratio
+    - soil_mc
+    - wat_flux
+    - runoff_per_soil
+    - drainage_per_soil
+    - runoff2peat
+    - canopy2ground
+    - precip2ground
+    - precip2canopy
+    - shumdiag_peat
+    - tdeep
+    - hsdeep
+  conditional_fields:
+    fwet_new: PEAT_OCCUR
+    liqwt_ratio: PEAT_OCCUR
+    shumdiag_peat: PERMA_PEAT
+  retained_consumers:
+    daily_accumulator:
+      owner: jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry
+    maintenance:
+      owner: jax_orchidee.stomate.daily.stomate_maintenance_fold_from_entries
+      fields: [t2m, stempdiag]
+    ok_leak:
+      owner: jax_orchidee.driver.orchestration._paper_half_hour_ok_leak_fold_from_entries
+      fields:
+        - soil_mc
+        - wat_flux
+        - runoff_per_soil
+        - drainage_per_soil
+        - runoff2peat
+        - canopy2ground
+        - precip2ground
+        - precip2canopy
+        - temp_sol
+        - tdeep
+        - hsdeep
+        - shumdiag_peat
+  gate: static_consumer_audit_must_prove_no_omitted_target_producer_input
+
+daily_fold:
+  classification: accumulator
+  fields: *daily_fold_fields
+  teacher_producer: jax_orchidee.stomate.daily.stomate_daily_process_fold_from_entries
+  consumers:
+    - season_and_stomate_bundles
+    - stomate_daily_carbon
+    - modelout
+    - daily_reset
+  reset_state_is_distinct_from_same_day_target: true
+  coarse_action: direct_output_or_analytic_calculation
+  replay_action: inject_teacher_target
+
+ok_leak_half_hour_carry:
+  classification: prognostic_carbon_and_water_interface
+  teacher_producer: jax_orchidee.driver.orchestration._paper_half_hour_ok_leak_fold_from_entries
+  fields:
+    - litter_above
+    - litter_below
+    - lignin_struc_above
+    - lignin_struc_below
+    - litterpart
+    - dead_leaves
+    - fuel_1hr
+    - fuel_10hr
+    - fuel_100hr
+    - fuel_1000hr
+    - carbon_32l
+    - DOC
+    - interception_storage
+  conditional_fields:
+    deepC_peat:
+      condition: PERMA_PEAT
+      teacher_source: ok_leak.soilcarbon.perma_peat.deepc_peat
+      retained_consumer: paper_day_active_restart_producer_fields
+  reconstructed_auxiliaries:
+    resp_hetero_soil:
+      coarse_output: false
+      purpose: shape_only_for_daily_resp_hetero_reset
+      reconstruction_source: slowproc_stomate_previous_step_state.resp_hetero
+  consumers:
+    - stomate_daily_input_bundle
+    - modelout
+    - day_end_packet
+  coarse_action: predict_delta_or_end_state_with_conservation_projection
+  replay_action: inject_teacher_target
+
+budgets:
+  water:
+    status: open_source_audit_required
+    state_families:
+      - hydrol_soil_and_canopy_storage
+      - snow_storage
+      - flood_and_water_table_storage
+    interface_fluxes:
+      - precip_rain
+      - precip_snow
+      - wat_flux
+      - runoff_per_soil
+      - drainage_per_soil
+      - runoff2peat
+      - canopy2ground
+      - precip2ground
+      - precip2canopy
+    blocker: no_frozen_daily_residual_formula
+  energy:
+    status: open_source_audit_required
+    state_families:
+      - temp_sol_and_ptn
+      - soil_and_snow_thermal_coefficients
+      - deep_temperature_and_humidity
+    bridge_fields: [temp_sol, stempdiag, tdeep, hsdeep]
+    blocker: no_frozen_daily_flux_integral_or_residual_formula
+  carbon:
+    status: partial_interface_defined
+    coarse_outputs:
+      - gpp_daily_and_maintenance_interface
+      - ok_leak_litter_and_fuel_state
+      - carbon_32l
+      - DOC
+      - interception_storage
+    retained_teacher_updates:
+      - season
+      - stomate_daily_carbon
+    blocker: no_frozen_pre_stomate_carbon_residual_formula
+
+replay_modes:
+  pre_daily_stomate_replay:
+    policy_compliant: true
+    replay:
+      - sechiba_end_state
+      - daily_fold
+      - ok_leak_half_hour_carry
+    execute_teacher:
+      - season
+      - stomate_daily_carbon
+      - modelout
+      - day_end_writeback
+  sechiba_only_replay:
+    policy_compliant: false
+    diagnostic_only: true
+    replay:
+      - sechiba_end_state
+      - teacher_target_extraction_bridge_48
+    execute_teacher:
+      - daily_fold
+      - maintenance
+      - ok_leak_half_hour_carry
+      - season
+      - stomate_daily_carbon
+      - modelout
+      - day_end_writeback
+  compiled_fixed_boundary_replay:
+    policy_compliant: false
+    diagnostic_only: true
+    purpose: optimistic_same_compilation_level_hot_runtime_ceiling
+    boundary_values: compile_time_constants
+    executable_reuse_across_record_blocks: false
+    required_followup: dynamic_boundary_inputs_with_one_reusable_executable
+  compiled_dynamic_boundary_replay:
+    policy_compliant: false
+    diagnostic_only: true
+    purpose: reusable_executable_zero_inference_cost_ceiling
+    boundary_values: dynamic_array_inputs
+    executable_reuse_across_record_blocks: true
+    measured_30day_speedup: 4.800146996991605
+    measured_30day_replay_seconds_per_day: 0.01853552333341213
+    status: superseded_by_canonical_minimal_dynamic_replay
+  compiled_canonical_minimal_dynamic_replay:
+    policy_compliant: false
+    diagnostic_only: true
+    purpose: reusable_executable_zero_inference_cost_ceiling_with_minimal_object_graph
+    boundary_values: dynamic_array_inputs
+    executable_reuse_across_record_blocks: true
+    pre_step_ok_leak_boundary: reconstructed_by_retained_teacher
+    daily_fold_scaffold: reconstructed_by_retained_teacher
+    ok_leak_update_dict: derived_from_ok_leak_interface
+    measured_window_days: 30
+    measured_repeats: 3
+    measured_30day_speedup: 5.67073736152888
+    measured_30day_replay_seconds_per_day: 0.01864928666667159
+    short_window_50year_extrapolated_seconds: 340.3484816667565
+    dynamic_boundary:
+      leaf_count: 343
+      bytes_per_day: 266426
+      families:
+        sechiba_end_state: {leaf_count: 310, bytes_per_day: 187306}
+        final_entry_diagnostics: {leaf_count: 2, bytes_per_day: 16}
+        daily_interface: {leaf_count: 17, bytes_per_day: 2048}
+        ok_leak_interface: {leaf_count: 14, bytes_per_day: 77056}
+    evidence: outputs/performance/daily_coarse_graining/pre_daily_stomate_replay_30day_canonical_dynamic_block7.json
+    required_followup:
+      - field_level_canonical_owner_deduplication
+      - source_backed_water_energy_carbon_budget_ledgers
+      - non_neural_daily_baseline
+  state_copy_only:
+    policy_compliant: false
+    diagnostic_only: true
+    purpose: memory_transport_lower_bound
+
+replay_record:
+  storage_during_timing: memory_only
+  daily_disk_io_allowed_during_timing: false
+  required_metadata:
+    - teacher_git_commit
+    - config_hash
+    - run_def_hash
+    - state_spec_hash
+    - landpoint_id
+    - year
+    - day_index
+    - initial_state_mode
+  required_values:
+    - day_start_values
+    - sechiba_end_values
+    - daily_fold_fields
+    - ok_leak_interface
+    - conditional_ok_leak_restart_fields
+    - first_step_metadata
+    - expected_day_end_values
+    - expected_modelout
+  optional_values_by_mode:
+    sechiba_only_replay:
+      - teacher_target_extraction_bridge_48
+
+validation:
+  floating:
+    atol: 1.0e-8
+    rtol: 1.0e-10
+  exact:
+    - schema
+    - shapes
+    - integer_fields
+    - boolean_fields
+    - masks
+    - discrete_state
+    - adapter_roundtrip
+  semantic_windows:
+    - three_day_later_day
+    - cross_year_day1_day2
+    - independent_restart_roundtrip
+  performance_windows:
+    warmup_days: 7
+    repeated_measurement_days: 30
+    final_ceiling_days: 365
+    fifty_year_policy: extrapolate_only_in_gate_1
+  timing_components:
+    - data_preparation
+    - compilation
+    - first_call
+    - synchronized_warm_runtime
+    - host_device_transfer
+    - optional_io
+
+open_gaps:
+  - sechiba_contract_missing_thermosoil_e_soil_lat
+  - target_extraction_bridge_46_to_30_static_consumer_audit
+  - canonical_vs_duplicate_mirror_field_rules
+  - conditional_sechiba_packet_fields_beyond_123_contracts
+  - water_budget_formula_and_units
+  - energy_budget_formula_and_units
+  - pre_stomate_carbon_budget_formula_and_units
+  - cold_start_day1_adapter
+  - restart_year_day1_adapter
+  - formal_teacher_daily_transition_injection_interface
+  - full_669_teacher_acceptance
+
+promotion_gate:
+  freeze_schema_only_if:
+    - no_unclassified_fields
+    - adapter_roundtrip_exact
+    - retained_teacher_tail_matches_same_boundary_inputs
+    - pre_daily_stomate_replay_speedup_is_scientifically_material
+    - budget_ledgers_are_source_backed
+
+latest_baseline_assessment:
+  experiment_id: persistence_baseline_20260721
+  status: persistence_baseline_failed
+  neural_learnability: inconclusive
+  route_decision: large_scale_training_not_authorized
+  teacher_commit: 7333b46c0b38650fb6c9250582876137831657b8
+  window:
+    year: 1962
+    days: 8
+    design: target_free_day1_plus_one_reusable_7day_later_day_executable
+  baseline:
+    type: non_neural_persistence
+    inputs: [free_rollout_day_start_state, current_day_forcing_48]
+    teacher_targets_as_inputs: false
+    includes_ok_leak_common_fields: true
+    includes_conditional_deepC_peat: true
+  performance:
+    teacher_median_seconds: 0.9044683999964036
+    zero_inference_replay_median_seconds: 0.16681559999415185
+    baseline_median_seconds: 0.031052000005729496
+    baseline_speedup_vs_teacher: 29.127540893646703
+    baseline_seconds_per_day: 0.003881500000716187
+    baseline_50year_extrapolated_seconds: 70.83737501307041
+    directly_comparable_same_boundary_ab: false
+    interpretation:
+      zero_inference_replay: dynamic_teacher_boundary_transport_and_reconstruction_measurement
+      persistence_baseline: lower_cost_reference_subject_to_xla_dead_code_elimination
+      architectural_absolute_ceiling_established: false
+  baseline_failure_observations:
+    - baseline_day_end_schema_missing_teacher_physical_fields
+    - physical_state_did_not_respond_to_nonzero_daily_forcing
+    - eight_day_physical_state_relative_error_exceeds_25_percent
+  evidence_scope:
+    water_and_ok_leak_drift: proves_persistence_baseline_failure_only
+    hydrol_nroot_missing: adapter_schema_defect_not_learnability_evidence
+    daily_operator_learnability: not_tested
+  thirty_day_run_performed: false
+  large_scale_training_authorized: false
+  minimal_supervised_learnability_and_synthetic_cost_pilot: requires_separate_decision
+  evidence:
+    json: outputs/performance/daily_coarse_graining/persistence_baseline_go_no_go.json
+    document: docs/research/daily_coarse_graining/go_no_go_persistence_baseline_20260721.md
