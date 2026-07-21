@@ -85,14 +85,23 @@ def capture_fingerprint(
     state_cache: Path,
     config: Path,
     run_def: Path,
+    reference_run_dir: Path | None,
     year: int,
     days: int,
     output_prefix: Path,
 ) -> dict[str, Any]:
     cache = _load_state_cache(state_cache)
     context = teacher.prepare_paper_1961_driver_context(
-        config, used_run_def_path=run_def
+        config,
+        used_run_def_path=run_def,
+        reference_run_dir=reference_run_dir,
     )
+    restart_state = context.first_step_restart_state
+    restart_paths = {
+        "driver_start.nc": restart_state.driver_start,
+        "sechiba_start.nc": restart_state.sechiba_start,
+        "stomate_start.nc": restart_state.stomate_input,
+    }
     initial_state = teacher.rebase_driver_state_for_year_start(cache["state"])
     _, _, records, _ = _capture_days(
         config_path=config,
@@ -129,6 +138,9 @@ def capture_fingerprint(
             "state_cache_sha256": _sha256(state_cache),
             "config_sha256": _sha256(config),
             "run_def_sha256": _sha256(run_def),
+            "reference_restart_sha256": {
+                name: _sha256(path) for name, path in restart_paths.items()
+            },
             "continuous_shape": list(arrays["continuous"].shape),
             "continuous_dtype": str(arrays["continuous"].dtype),
             "leaves": _leaf_metadata(spec),
@@ -211,6 +223,7 @@ def compare_fingerprints(
         "state_cache_sha256",
         "config_sha256",
         "run_def_sha256",
+        "reference_restart_sha256",
         "leaves",
     ):
         contract[f"capture.{name}"] = expected_capture[name] == actual_capture[name]
@@ -281,6 +294,7 @@ def build_parser() -> argparse.ArgumentParser:
     capture.add_argument("--state-cache", type=Path, required=True)
     capture.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     capture.add_argument("--run-def", type=Path, default=DEFAULT_RUN_DEF)
+    capture.add_argument("--reference-run-dir", type=Path)
     capture.add_argument("--year", type=int, default=1961)
     capture.add_argument("--days", type=int, default=1)
     capture.add_argument("--output-prefix", type=Path, required=True)
@@ -300,6 +314,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             state_cache=args.state_cache,
             config=args.config,
             run_def=args.run_def,
+            reference_run_dir=args.reference_run_dir,
             year=args.year,
             days=args.days,
             output_prefix=args.output_prefix,

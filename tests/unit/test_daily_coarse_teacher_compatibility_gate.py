@@ -38,6 +38,11 @@ def _write_artifact(prefix, continuous, discrete, *, git_head="abc"):
             "state_cache_sha256": "state",
             "config_sha256": "config",
             "run_def_sha256": "run-def",
+            "reference_restart_sha256": {
+                "driver_start.nc": "driver",
+                "sechiba_start.nc": "sechiba",
+                "stomate_start.nc": "stomate",
+            },
             "leaves": [
                 {
                     "family": "hydrol",
