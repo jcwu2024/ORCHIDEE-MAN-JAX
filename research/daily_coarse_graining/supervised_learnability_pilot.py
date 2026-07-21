@@ -458,12 +458,13 @@ def _capture_days_compiled_blocks(
     }
     diffuco_parameters = teacher._compiled_diffuco_parameter_values(context)
     hydrol_arrays = teacher._compiled_hydrol_table_arrays(prebound_tables)
-    executable = None
+    executables = {}
     state_spec = None
     next_day = 2
     final_day = start_day + days - 1
     while next_day <= final_day:
-        block_days = tuple(range(next_day, next_day + block_size))
+        current_block_size = min(block_size, final_day - next_day + 1)
+        block_days = tuple(range(next_day, next_day + current_block_size))
         forcing_days = tuple(
             teacher._paper_compiled_forcing_day(
                 context,
@@ -477,6 +478,7 @@ def _capture_days_compiled_blocks(
             lambda *values: np.stack(values), *forcing_days
         )
         block_day_numbers = np.asarray(block_days, dtype=np.int32)
+        executable = executables.get(current_block_size)
         if executable is None:
             executable, state_spec = teacher._paper_compiled_later_day_block_executable(
                 config_path,
@@ -490,6 +492,7 @@ def _capture_days_compiled_blocks(
                 stomate_parameter_values=stomate_parameters,
                 capture_pre_daily_training_boundaries=True,
             )
+            executables[current_block_size] = executable
         initial_values = teacher.fast_state_from_previous_packet(
             current
         ).values_by_component
@@ -505,8 +508,7 @@ def _capture_days_compiled_blocks(
             diffuco_parameters,
         )
         stacked_boundaries, stacked_day_end_values = jax.device_get(stacked_outputs)
-        take = min(block_size, final_day - next_day + 1)
-        for offset in range(take):
+        for offset in range(current_block_size):
             day_index = next_day + offset
             day_end_state = teacher.previous_packet_from_fast_state(
                 teacher.DriverFastStateBundle(
@@ -532,15 +534,14 @@ def _capture_days_compiled_blocks(
             forcings.append(forcing)
             records.append(record)
             current = day_end_state
-        if take == block_size:
-            current = teacher.previous_packet_from_fast_state(
-                teacher.DriverFastStateBundle(
-                    tstep=(next_day + block_size - 1) * steps_per_day - 1,
-                    values_by_component=final_values,
-                    spec=state_spec,
-                )
+        current = teacher.previous_packet_from_fast_state(
+            teacher.DriverFastStateBundle(
+                tstep=(next_day + current_block_size - 1) * steps_per_day - 1,
+                values_by_component=final_values,
+                spec=state_spec,
             )
-        next_day += block_size
+        )
+        next_day += current_block_size
     return tuple(states), tuple(forcings), tuple(records), current
 
 
