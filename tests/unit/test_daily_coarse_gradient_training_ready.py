@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pickle
+from pathlib import Path
 
 import jax
 import jax.numpy as jnp
@@ -10,6 +11,7 @@ from jax_orchidee.driver.orchestration import DriverCompiledHalfHourForcing
 from research.daily_coarse_graining.gradient_training_ready import (
     ConditionedDayInput,
     _adam_init,
+    _artifact_path,
     _checkpoint_payload,
     _family_metrics,
     _load_resume,
@@ -152,3 +154,10 @@ def test_gpu_smoke_readiness_does_not_treat_arbitrary_overfit_target_as_plumbing
     assert readiness["plumbing_ready"]
     assert not readiness["overfit_diagnostic_passed"]
     assert not readiness["scientific_model_ready"]
+
+
+def test_artifact_path_supports_repository_and_external_output_roots(tmp_path):
+    repository_path = Path(__file__).resolve()
+    assert not Path(_artifact_path(repository_path)).is_absolute()
+    external_path = tmp_path / "checkpoint.pkl"
+    assert Path(_artifact_path(external_path)).is_absolute()

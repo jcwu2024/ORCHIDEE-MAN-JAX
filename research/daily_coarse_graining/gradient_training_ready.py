@@ -611,6 +611,16 @@ def _git_head():
     return subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=ROOT, text=True).strip()
 
 
+def _artifact_path(path: Path) -> str:
+    """Keep repository artifacts portable while allowing external output roots."""
+
+    resolved = path.resolve()
+    try:
+        return str(resolved.relative_to(ROOT.resolve()))
+    except ValueError:
+        return str(resolved)
+
+
 def _training_readiness(
     *,
     initial_gradient_norm: float,
@@ -794,7 +804,7 @@ def run_experiment(args):
             "overfit_threshold_normalized_rmse": threshold,
             "metrics": metrics,
             "exact_discrete": discrete,
-            "checkpoint": str(checkpoint_path.relative_to(ROOT)),
+            "checkpoint": _artifact_path(checkpoint_path),
             "checkpoint_committed": False,
             "resume_contract": "schema+Teacher commit+learned width must match",
         },
