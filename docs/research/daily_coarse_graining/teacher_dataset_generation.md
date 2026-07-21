@@ -106,6 +106,10 @@ reconcile it with:
 bash scripts/hpc/bootstrap_orcjax_cpu.sh
 ```
 
+Run the bootstrap command on `cln01`, which has package-index access. CPU
+compute and test nodes have no DNS access; they use the resulting shared
+environment read-only rather than resolving dependencies themselves.
+
 This remains uv-managed: Conda is not used to resolve or install project
 packages. The profile pins JAX 0.4.38 to match the accepted GPU compatibility
 runtime and pins manylinux2014-compatible numerical wheels for CPU nodes.
