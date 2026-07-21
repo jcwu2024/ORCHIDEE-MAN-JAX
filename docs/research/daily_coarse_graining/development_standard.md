@@ -1,8 +1,8 @@
 # 日尺度粗化研究开发规范
 
-状态：v0.6 为 **persistence_baseline_failed / synthetic_cost_gate_passed /
-neural_learnability_inconclusive**。不批准大规模训练或 Gate 2 schema 冻结；成本门禁
-只允许下一步另行审批一个极小 supervised learnability pilot，不代表模型可学。
+状态：v0.7 为 **tiny_overfit_passed_holdout_failed**。完整逐元素 decoder 能精确记忆
+12 个训练日，但在 Day 13--16 未见连续日期上没有达到 one-step 技能阈值。因此不做
+7 日自由 rollout，不批准扩大训练、正式数据生成或 Gate 2 schema 冻结。
 
 初步 Gate 1 结果见
 [`speed_ceiling_probe_20260720.md`](speed_ceiling_probe_20260720.md)：边界 replay 在
@@ -20,6 +20,12 @@ persistence；replay 与 baseline 也不是相同 boundary transport A/B，不�
 67,835 参数的 forcing encoder + state encoder + MLP + 完整输出头，在相同 Day 1 加
 7 日 compiled block 设计下，5 次热运行的最保守配对加速为 `47.33x`。该结果只证明
 算子成本有空间；没有训练、精度或 rollout 可学习性证据。
+随后执行的极小 supervised gate 见
+[`tiny_supervised_learnability_pilot_20260721.md`](tiny_supervised_learnability_pilot_20260721.md)：
+2,624,286 参数的逐元素 residual decoder 在训练日 normalized RMSE 达
+`2.13e-15`，但未见日期总体 normalized RMSE 为 `1.516`，超过 `1.0` 阈值；daily
+interface 为 `9.451`，超过单族 `2.0` 阈值。结论只允许是
+`tiny_overfit_passed_holdout_failed`。
 
 上位构想：[`paper_concept_daily_coarse_graining.md`](../../paper_concept_daily_coarse_graining.md)
 
@@ -323,13 +329,14 @@ AGB/BGB/GPP/NPP 不能代替内部状态验收。总量误差不能掩盖垂直�
 
 ## 12. 下一步分析顺序
 
-本轮 `nroot` adapter 和 synthetic cost gate 已完成，研究在此自然停止。成本不是当前
-否决项，但科学可学习性完全未测试。唯一可提议、仍需单独批准的下一门禁是：
+本轮 `nroot` adapter、synthetic cost gate 和 tiny supervised gate 均已完成，研究在此
+自然停止。成本不是当前否决项，表示容量也通过，但 12 日拟合没有转化为连续未见日期
+技能。按预注册顺序门禁：
 
-1. 只生成极小、内存或临时文件规模的 Teacher one-step 样本；
-2. 检查完整 boundary delta 的 supervised holdout 误差，不扩大网络或训练依赖；
-3. 只有 one-step holdout 合格后才做 7 日自由 rollout；
-4. 7 日没有单向漂移、非法状态或预算崩坏后，才讨论 30 日或 residual 结构。
+1. 不执行 7 日或 30 日自由 rollout；
+2. 不把训练日数量、网络宽度或训练时长自动扩大；
+3. 不生成正式训练集，不提交 GPU/服务器任务；
+4. 若未来重启，必须先另行提出能改善跨日期泛化的表示/采样假设和小预算验证，而不是
+   直接放大当前 decoder。
 
-本规范不授权自动执行 supervised pilot。未单独批准前，不开发神经网络、不生成正式
-训练集、不提交 GPU/服务器任务。完整 Teacher 的气候记忆研究和性能优化仍可独立继续。
+完整 Teacher 的气候记忆研究和性能优化仍可独立继续。

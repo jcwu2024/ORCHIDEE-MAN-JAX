@@ -575,3 +575,71 @@ latest_synthetic_operator_cost_gate:
   evidence:
     json: outputs/performance/daily_coarse_graining/synthetic_operator_cost_gate.json
     document: docs/research/daily_coarse_graining/synthetic_operator_cost_gate_20260721.md
+
+latest_tiny_supervised_learnability_gate:
+  experiment_id: tiny_supervised_learnability_pilot_20260721
+  status: tiny_overfit_passed_holdout_failed
+  teacher_commit: 7333b46c0b38650fb6c9250582876137831657b8
+  experiment_base_commit: d0554d084d9a5a351411763f96a023351350201f
+  inputs: [dynamic_real_day_start_state, dynamic_forcing_48]
+  teacher_target_role: supervision_label_only
+  teacher_targets_as_inputs: false
+  normalization_source: training_days_only
+  samples:
+    train: {year: 1962, days: [1, 12], count: 12}
+    holdout: {year: 1962, days: [13, 16], count: 4}
+    rollout: {count: 0, reason: one_step_holdout_failed}
+    binary_samples_committed: false
+  schema:
+    continuous_leaves: 250
+    continuous_elements: 19838
+    state_components: 6
+    daily_interface_fields: 17
+    ok_leak_fields_including_deepC_peat: 14
+    final_diagnostics: 2
+    decoder: full_element_structured_residual_not_broadcast_heads
+    discrete_rule: exact_owner_carry
+    nroot_lifecycle: day1_dynamic_producer_then_runtime_fixed_spec
+  model:
+    total_parameters: 2624286
+    supervised_decoder_parameters: 2559102
+    latent_size: 128
+    forcing_encoder: ordered_48step_recurrent
+    state_encoder: train_normalized_ordered_element_chunks
+    decoder_fit: train_only_svd_pseudoinverse
+  gates:
+    tiny_overfit:
+      threshold_normalized_rmse: 1.0e-6
+      observed_normalized_rmse: 2.132006649609062e-15
+      exact_discrete_mismatches: 0
+      result: pass
+    one_step_holdout:
+      overall_threshold: 1.0
+      family_threshold: 2.0
+      observed_overall_normalized_rmse: 1.5163876306856723
+      observed_daily_interface_normalized_rmse: 9.45121066170002
+      exact_discrete_mismatches: 0
+      result: fail
+    seven_day_free_rollout:
+      result: not_run_prior_gate_failed
+  stock_and_legality_proxies:
+    hydrol_and_carried_slow_state_selected_inventory_illegal_count: 0
+    max_water_storage_relative_error: 0.08278236055199686
+    max_ok_leak_carbon_stock_relative_error: 0.007683332236433006
+    ok_leak_total_proxy_is_not_pool_legality_gate: true
+    unit_closed_budget_claim: false
+  trained_runtime_cost:
+    scope: one_step_trained_decoder_plus_retained_tail
+    compile_seconds: 1.493421600011061
+    hot_median_seconds: 0.004188799997791648
+    blocked_checksum_finite: true
+    prior_synthetic_49x_reused: false
+    speedup_claim: none_without_same_level_teacher_ab
+  route_decision:
+    conclusion: tiny_overfit_passed_holdout_failed
+    automatic_scale_up_authorized: false
+    neural_rollout_authorized: false
+  evidence:
+    result_json: outputs/performance/daily_coarse_graining/tiny_supervised_learnability_pilot.json
+    sample_manifest_json: outputs/performance/daily_coarse_graining/tiny_supervised_sample_manifest.json
+    document: docs/research/daily_coarse_graining/tiny_supervised_learnability_pilot_20260721.md

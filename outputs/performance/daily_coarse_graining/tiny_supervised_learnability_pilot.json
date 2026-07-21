@@ -1,0 +1,845 @@
+{
+  "status": "completed",
+  "decision": "tiny_overfit_passed_holdout_failed",
+  "teacher_commit": "7333b46c0b38650fb6c9250582876137831657b8",
+  "experiment_git_head": "d0554d084d9a5a351411763f96a023351350201f",
+  "scope": "PFT14 point 001.0-071.0, local CPU tiny supervised boundary pilot",
+  "constraints": {
+    "teacher_targets_are_labels_only": true,
+    "teacher_targets_as_model_inputs": false,
+    "teacher_daily_rollout_correction": false,
+    "server_or_gpu_used": false,
+    "large_dataset_written": false
+  },
+  "schema": {
+    "continuous_elements": 19838,
+    "continuous_leaves": 250,
+    "families": {
+      "driver": {
+        "elements": 15,
+        "leaves": 14
+      },
+      "diffuco_enerbil": {
+        "elements": 1136,
+        "leaves": 48
+      },
+      "hydrol": {
+        "elements": 1678,
+        "leaves": 47
+      },
+      "thermosoil": {
+        "elements": 3176,
+        "leaves": 17
+      },
+      "sechiba_finalize": {
+        "elements": 3943,
+        "leaves": 91
+      },
+      "daily_interface": {
+        "elements": 256,
+        "leaves": 17
+      },
+      "ok_leak": {
+        "elements": 9632,
+        "leaves": 14
+      },
+      "final_diagnostics": {
+        "elements": 2,
+        "leaves": 2
+      }
+    },
+    "decoder_type": "full_element_structured_residual_decoder",
+    "broadcast_coefficient_heads": false
+  },
+  "model": {
+    "parameter_count": 2624286,
+    "latent_size": 128,
+    "state_encoder": "element_standardization_plus_ordered_64-element_chunks",
+    "forcing_encoder": "48-step recurrent temporal encoder",
+    "decoder": "separate full dense head per process family",
+    "design_rank": 12,
+    "design_rows": 12,
+    "design_condition_number": 96.03817011717896,
+    "fitting_method": "train_only_svd_pseudoinverse_structured_linear_decoder"
+  },
+  "normalization": {
+    "source": "training_days_only",
+    "training_days": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12
+    ],
+    "holdout_days_excluded": true
+  },
+  "gates": {
+    "tiny_overfit": {
+      "threshold_normalized_rmse": 1e-06,
+      "passed": true,
+      "metrics": {
+        "driver": {
+          "normalized_rmse": 6.19418433254725e-15,
+          "max_absolute_error": 5.820766091346741e-11,
+          "max_relative_error": 2.167746034762954e-12,
+          "finite_elements": 180,
+          "masked_nonfinite_elements": 0
+        },
+        "diffuco_enerbil": {
+          "normalized_rmse": 3.0524823926500968e-15,
+          "max_absolute_error": 2.1827872842550278e-11,
+          "max_relative_error": 0.0021198320876436583,
+          "finite_elements": 13620,
+          "masked_nonfinite_elements": 12
+        },
+        "hydrol": {
+          "normalized_rmse": 2.1732802841020412e-15,
+          "max_absolute_error": 1.1368683772161603e-13,
+          "max_relative_error": 0.0009319801874685396,
+          "finite_elements": 20136,
+          "masked_nonfinite_elements": 0
+        },
+        "thermosoil": {
+          "normalized_rmse": 3.306375981042184e-15,
+          "max_absolute_error": 2.3283064365386963e-10,
+          "max_relative_error": 2.7901958883050163e-14,
+          "finite_elements": 38112,
+          "masked_nonfinite_elements": 0
+        },
+        "sechiba_finalize": {
+          "normalized_rmse": 2.687025621857465e-15,
+          "max_absolute_error": 2.1827872842550278e-11,
+          "max_relative_error": 0.0021198320876436583,
+          "finite_elements": 47304,
+          "masked_nonfinite_elements": 12
+        },
+        "daily_interface": {
+          "normalized_rmse": 3.0723826896207184e-15,
+          "max_absolute_error": 5.684341886080802e-14,
+          "max_relative_error": 9.020562075079397e-05,
+          "finite_elements": 3072,
+          "masked_nonfinite_elements": 0
+        },
+        "ok_leak": {
+          "normalized_rmse": 7.488877406231545e-16,
+          "max_absolute_error": 6.938893903907228e-18,
+          "max_relative_error": 3.388129764017736e-06,
+          "finite_elements": 115584,
+          "masked_nonfinite_elements": 0
+        },
+        "final_diagnostics": {
+          "normalized_rmse": 6.578687450677171e-15,
+          "max_absolute_error": 1.1368683772161603e-13,
+          "max_relative_error": 4.0566536194640107e-16,
+          "finite_elements": 24,
+          "masked_nonfinite_elements": 0
+        },
+        "overall": {
+          "normalized_rmse": 2.132006649609062e-15,
+          "max_absolute_error": 2.3283064365386963e-10
+        }
+      },
+      "exact_discrete": {
+        "checked_elements": 36,
+        "mismatches": [],
+        "passed": true
+      }
+    },
+    "one_step_holdout": {
+      "days": [
+        13,
+        14,
+        15,
+        16
+      ],
+      "overall_threshold": 1.0,
+      "family_threshold": 2.0,
+      "passed": false,
+      "metrics": {
+        "driver": {
+          "normalized_rmse": 1.9198982945833893,
+          "max_absolute_error": 21226.82181587111,
+          "max_relative_error": 376.00208714985973,
+          "finite_elements": 60,
+          "masked_nonfinite_elements": 0
+        },
+        "diffuco_enerbil": {
+          "normalized_rmse": 1.4603752162031896,
+          "max_absolute_error": 6813.675812020752,
+          "max_relative_error": 315077660606.5576,
+          "finite_elements": 4540,
+          "masked_nonfinite_elements": 4
+        },
+        "hydrol": {
+          "normalized_rmse": 0.8457531720654713,
+          "max_absolute_error": 25.585609734477657,
+          "max_relative_error": 214147004111.3957,
+          "finite_elements": 6712,
+          "masked_nonfinite_elements": 0
+        },
+        "thermosoil": {
+          "normalized_rmse": 1.7485563380402276,
+          "max_absolute_error": 83467.59666223673,
+          "max_relative_error": 7.254279041543724,
+          "finite_elements": 12704,
+          "masked_nonfinite_elements": 0
+        },
+        "sechiba_finalize": {
+          "normalized_rmse": 1.3267561175573253,
+          "max_absolute_error": 6813.675812020752,
+          "max_relative_error": 315077660606.5576,
+          "finite_elements": 15768,
+          "masked_nonfinite_elements": 4
+        },
+        "daily_interface": {
+          "normalized_rmse": 9.45121066170002,
+          "max_absolute_error": 26.288411028216387,
+          "max_relative_error": 46499820727.90381,
+          "finite_elements": 1024,
+          "masked_nonfinite_elements": 0
+        },
+        "ok_leak": {
+          "normalized_rmse": 0.5003348031625674,
+          "max_absolute_error": 0.11248103364195572,
+          "max_relative_error": 1.0,
+          "finite_elements": 38528,
+          "masked_nonfinite_elements": 0
+        },
+        "final_diagnostics": {
+          "normalized_rmse": 1.9154518944868464,
+          "max_absolute_error": 26.884335796147354,
+          "max_relative_error": 0.09441836822463821,
+          "finite_elements": 8,
+          "masked_nonfinite_elements": 0
+        },
+        "overall": {
+          "normalized_rmse": 1.5163876306856723,
+          "max_absolute_error": 83467.59666223673
+        }
+      },
+      "key_field_metrics": {
+        "diffuco_previous_step_state.temp_sol": {
+          "normalized_rmse": 2.644585407759974,
+          "max_absolute_error": 26.840874195132983,
+          "max_relative_error": 0.0941259828160308
+        },
+        "diffuco_previous_step_state.qsurf": {
+          "normalized_rmse": 2.557135425712279,
+          "max_absolute_error": 0.014663179119128547,
+          "max_relative_error": 1.8592769410008667
+        },
+        "diffuco_previous_step_state.gpp": {
+          "normalized_rmse": 0.8383155580777542,
+          "max_absolute_error": 0.09198270894290858,
+          "max_relative_error": 4.2607391703258015
+        },
+        "enerbil_previous_step_state.temp_sol": {
+          "normalized_rmse": 2.644585407759974,
+          "max_absolute_error": 26.840874195132983,
+          "max_relative_error": 0.0941259828160308
+        },
+        "enerbil_previous_step_state.qsurf": {
+          "normalized_rmse": 2.557135425712279,
+          "max_absolute_error": 0.014663179119128547,
+          "max_relative_error": 1.8592769410008667
+        },
+        "enerbil_previous_step_state.soilcap": {
+          "normalized_rmse": 1.6845513736966282,
+          "max_absolute_error": 6813.675812020752,
+          "max_relative_error": 0.1631518472463227
+        },
+        "hydrol_previous_step_state.mc": {
+          "normalized_rmse": 0.8708232458238483,
+          "max_absolute_error": 0.021747181043336762,
+          "max_relative_error": 0.33259494738857565
+        },
+        "hydrol_previous_step_state.mcl": {
+          "normalized_rmse": 0.8708232458238471,
+          "max_absolute_error": 0.021747181043336762,
+          "max_relative_error": 0.33259494738857565
+        },
+        "hydrol_previous_step_state.nroot": {
+          "normalized_rmse": 2.416112310303955,
+          "max_absolute_error": 0.2141470041113957,
+          "max_relative_error": 214147004111.3957
+        },
+        "hydrol_previous_step_state.soil_mc": {
+          "normalized_rmse": 0.8708232458238483,
+          "max_absolute_error": 0.021747181043336762,
+          "max_relative_error": 0.33259494738857565
+        },
+        "hydrol_previous_step_state.snow": {
+          "normalized_rmse": 0.0,
+          "max_absolute_error": 0.0,
+          "max_relative_error": 0.0
+        },
+        "thermosoil_previous_step_state.ptn": {
+          "normalized_rmse": 2.1524973428789163,
+          "max_absolute_error": 25.784782925293428,
+          "max_relative_error": 0.09038669791838107
+        },
+        "thermosoil_previous_step_state.stempdiag": {
+          "normalized_rmse": 2.1854050473321784,
+          "max_absolute_error": 25.784782925293428,
+          "max_relative_error": 0.09038669791838107
+        },
+        "thermosoil_previous_step_state.tdeep": {
+          "normalized_rmse": 2.1524973428789163,
+          "max_absolute_error": 25.784782925293428,
+          "max_relative_error": 0.09038669791838107
+        },
+        "thermosoil_previous_step_state.hsdeep": {
+          "normalized_rmse": 1.6500281841541315,
+          "max_absolute_error": 0.0007360723250540852,
+          "max_relative_error": 0.0076001111730126525
+        },
+        "daily_interface.humrel_daily": {
+          "normalized_rmse": 0.4037734137049854,
+          "max_absolute_error": 0.10580734823650062,
+          "max_relative_error": 0.11893995097277162
+        },
+        "daily_interface.litterhum_daily": {
+          "normalized_rmse": 0.6664079713531322,
+          "max_absolute_error": 0.20339875798975438,
+          "max_relative_error": 0.3534873374153537
+        },
+        "daily_interface.t2m_daily": {
+          "normalized_rmse": 5.684341886080802e-14,
+          "max_absolute_error": 5.684341886080802e-14,
+          "max_relative_error": 1.969640372071187e-16
+        },
+        "daily_interface.tsurf_daily": {
+          "normalized_rmse": 2.784965388081025,
+          "max_absolute_error": 26.288411028216387,
+          "max_relative_error": 0.09101228191916136
+        },
+        "daily_interface.tsoil_daily": {
+          "normalized_rmse": 2.251711485530822,
+          "max_absolute_error": 25.42481030583434,
+          "max_relative_error": 0.08800337368619592
+        },
+        "daily_interface.soilhum_daily": {
+          "normalized_rmse": 45.40728871739327,
+          "max_absolute_error": 0.712440872016794,
+          "max_relative_error": 2.8360464101678833
+        },
+        "daily_interface.precip_daily": {
+          "normalized_rmse": 0.0,
+          "max_absolute_error": 0.0,
+          "max_relative_error": 0.0
+        },
+        "daily_interface.gpp_daily": {
+          "normalized_rmse": 0.21656339647267936,
+          "max_absolute_error": 0.18398649374942444,
+          "max_relative_error": 0.08296039430261055
+        },
+        "daily_interface.wspeed_daily": {
+          "normalized_rmse": 1.0182370866990214,
+          "max_absolute_error": 1.406456017371549,
+          "max_relative_error": 1.5003284003275281
+        },
+        "daily_interface.snowfall_daily": {
+          "normalized_rmse": 0.0,
+          "max_absolute_error": 0.0,
+          "max_relative_error": 0.0
+        },
+        "daily_interface.snowmass_daily": {
+          "normalized_rmse": 0.0,
+          "max_absolute_error": 0.0,
+          "max_relative_error": 0.0
+        },
+        "daily_interface.tmc_topgrass_daily": {
+          "normalized_rmse": 1.8711710676455693,
+          "max_absolute_error": 0.004565293875145066,
+          "max_relative_error": 4565293875.145065
+        },
+        "daily_interface.t2m_min_daily": {
+          "normalized_rmse": 0.0,
+          "max_absolute_error": 0.0,
+          "max_relative_error": 0.0
+        },
+        "daily_interface.t2m_max_daily": {
+          "normalized_rmse": 0.0,
+          "max_absolute_error": 0.0,
+          "max_relative_error": 0.0
+        },
+        "daily_interface.resp_maint_part": {
+          "normalized_rmse": 0.8008131315537395,
+          "max_absolute_error": 0.046546042477442894,
+          "max_relative_error": 46499820727.90381
+        },
+        "daily_interface.resp_maint_radia": {
+          "normalized_rmse": 0.7591949079472132,
+          "max_absolute_error": 0.01265013849333382,
+          "max_relative_error": 1.0860988120748163
+        },
+        "daily_interface.flood_root_radia": {
+          "normalized_rmse": 0.0,
+          "max_absolute_error": 0.0,
+          "max_relative_error": 0.0
+        },
+        "ok_leak.litter_above": {
+          "normalized_rmse": 0.7924361923509137,
+          "max_absolute_error": 0.004602753072923349,
+          "max_relative_error": 0.00741489282877312
+        },
+        "ok_leak.litter_below": {
+          "normalized_rmse": 0.49068225218321787,
+          "max_absolute_error": 0.001214059805971425,
+          "max_relative_error": 0.02761132728699455
+        },
+        "ok_leak.lignin_struc_above": {
+          "normalized_rmse": 0.7942587935888862,
+          "max_absolute_error": 0.0015956305936006832,
+          "max_relative_error": 0.002140988806898688
+        },
+        "ok_leak.lignin_struc_below": {
+          "normalized_rmse": 0.39936250802420353,
+          "max_absolute_error": 0.0010095717243147062,
+          "max_relative_error": 0.0011894812272529934
+        },
+        "ok_leak.litterpart": {
+          "normalized_rmse": 0.0,
+          "max_absolute_error": 0.0,
+          "max_relative_error": 0.0
+        },
+        "ok_leak.dead_leaves": {
+          "normalized_rmse": 0.8359515580908785,
+          "max_absolute_error": 0.0018805541067295553,
+          "max_relative_error": 0.03068323750754446
+        },
+        "ok_leak.fuel_1hr": {
+          "normalized_rmse": 0.7186664504569904,
+          "max_absolute_error": 0.0020820437119135615,
+          "max_relative_error": 0.0038458685340991665
+        },
+        "ok_leak.fuel_10hr": {
+          "normalized_rmse": 0.8395133205556012,
+          "max_absolute_error": 0.00019796146814212053,
+          "max_relative_error": 0.02871797478412409
+        },
+        "ok_leak.fuel_100hr": {
+          "normalized_rmse": 0.839513320555698,
+          "max_absolute_error": 0.0005542921107979798,
+          "max_relative_error": 0.02871797478412592
+        },
+        "ok_leak.fuel_1000hr": {
+          "normalized_rmse": 0.8395133205555914,
+          "max_absolute_error": 0.0017684557820695362,
+          "max_relative_error": 0.028717974784122868
+        },
+        "ok_leak.carbon_32l": {
+          "normalized_rmse": 3.4238340050832944e-14,
+          "max_absolute_error": 1.035514387461692e-12,
+          "max_relative_error": 0.3231328131447622
+        },
+        "ok_leak.DOC": {
+          "normalized_rmse": 0.5647587302952246,
+          "max_absolute_error": 0.0032835784511782914,
+          "max_relative_error": 1.0
+        },
+        "ok_leak.interception_storage": {
+          "normalized_rmse": 0.5298832185886573,
+          "max_absolute_error": 0.11248103364195572,
+          "max_relative_error": 0.0010923119739556539
+        },
+        "ok_leak.deepC_peat": {
+          "normalized_rmse": 7.556663116641509e-14,
+          "max_absolute_error": 1.5430298963904452e-12,
+          "max_relative_error": 0.1519784152538162
+        },
+        "final_diagnostics.t2mdiag": {
+          "normalized_rmse": 0.0,
+          "max_absolute_error": 0.0,
+          "max_relative_error": 0.0
+        },
+        "final_diagnostics.temp_sol": {
+          "normalized_rmse": 2.708858047256537,
+          "max_absolute_error": 26.884335796147354,
+          "max_relative_error": 0.09441836822463821
+        }
+      },
+      "exact_discrete": {
+        "checked_elements": 12,
+        "mismatches": [],
+        "passed": true
+      },
+      "boundary_diagnostics": {
+        "days": [
+          {
+            "day_index": 13,
+            "state_legality": {
+              "hydrol.mc": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "hydrol.mcl": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "hydrol.snow": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.biomass": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.carbon_32l": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.DOC": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.deepC_peat": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              }
+            },
+            "stocks": {
+              "predicted": {
+                "water_storage_proxy": 2.1559631988845767,
+                "ok_leak_carbon_stock_proxy": 1.1921054012353813
+              },
+              "teacher": {
+                "water_storage_proxy": 2.3089191734099708,
+                "ok_leak_carbon_stock_proxy": 1.2013356622559692
+              },
+              "water_relative_error": -0.06624570330866031,
+              "ok_leak_carbon_relative_error": -0.007683332236433006
+            },
+            "agb_bgb_predriver": {
+              "biomass_carry_exact": true
+            },
+            "gpp_npp_predriver": {
+              "gpp_daily_finite": true,
+              "resp_maint_part_finite": true
+            }
+          },
+          {
+            "day_index": 14,
+            "state_legality": {
+              "hydrol.mc": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "hydrol.mcl": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "hydrol.snow": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.biomass": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.carbon_32l": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.DOC": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.deepC_peat": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              }
+            },
+            "stocks": {
+              "predicted": {
+                "water_storage_proxy": 2.166711229497192,
+                "ok_leak_carbon_stock_proxy": 1.2513144119548378
+              },
+              "teacher": {
+                "water_storage_proxy": 2.2029209619901726,
+                "ok_leak_carbon_stock_proxy": 1.245047112327203
+              },
+              "water_relative_error": -0.016437145552542963,
+              "ok_leak_carbon_relative_error": 0.005033785119922157
+            },
+            "agb_bgb_predriver": {
+              "biomass_carry_exact": true
+            },
+            "gpp_npp_predriver": {
+              "gpp_daily_finite": true,
+              "resp_maint_part_finite": true
+            }
+          },
+          {
+            "day_index": 15,
+            "state_legality": {
+              "hydrol.mc": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "hydrol.mcl": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "hydrol.snow": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.biomass": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.carbon_32l": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.DOC": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.deepC_peat": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              }
+            },
+            "stocks": {
+              "predicted": {
+                "water_storage_proxy": 2.0313874004411456,
+                "ok_leak_carbon_stock_proxy": 1.303892465809226
+              },
+              "teacher": {
+                "water_storage_proxy": 2.2147277953176614,
+                "ok_leak_carbon_stock_proxy": 1.2973026311701283
+              },
+              "water_relative_error": -0.08278236055199686,
+              "ok_leak_carbon_relative_error": 0.005079643315880532
+            },
+            "agb_bgb_predriver": {
+              "biomass_carry_exact": true
+            },
+            "gpp_npp_predriver": {
+              "gpp_daily_finite": true,
+              "resp_maint_part_finite": true
+            }
+          },
+          {
+            "day_index": 16,
+            "state_legality": {
+              "hydrol.mc": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "hydrol.mcl": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "hydrol.snow": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.biomass": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.carbon_32l": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.DOC": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              },
+              "slowproc.deepC_peat": {
+                "nonfinite_count": 0,
+                "negative_count": 0
+              }
+            },
+            "stocks": {
+              "predicted": {
+                "water_storage_proxy": 2.139663679903366,
+                "ok_leak_carbon_stock_proxy": 1.3600938911781983
+              },
+              "teacher": {
+                "water_storage_proxy": 2.2766577968490407,
+                "ok_leak_carbon_stock_proxy": 1.35409367523014
+              },
+              "water_relative_error": -0.06017334582969751,
+              "ok_leak_carbon_relative_error": 0.004431167546099454
+            },
+            "agb_bgb_predriver": {
+              "biomass_carry_exact": true
+            },
+            "gpp_npp_predriver": {
+              "gpp_daily_finite": true,
+              "resp_maint_part_finite": true
+            }
+          }
+        ],
+        "water_proxy_max_absolute_relative_error": 0.08278236055199686,
+        "ok_leak_carbon_proxy_max_absolute_relative_error": 0.007683332236433006,
+        "warning": "These are stock/legality proxies, not frozen unit-closed budget equations."
+      },
+      "agb_bgb_gpp_npp_predrivers": {
+        "agb_bgb_biomass_carry_exact_all_days": true,
+        "gpp_daily": {
+          "normalized_rmse": 0.21656339647267936,
+          "max_absolute_error": 0.18398649374942444,
+          "max_relative_error": 0.08296039430261055
+        },
+        "npp_maintenance_driver": {
+          "normalized_rmse": 0.8008131315537395,
+          "max_absolute_error": 0.046546042477442894,
+          "max_relative_error": 46499820727.90381
+        },
+        "scope_note": "These are pre-daily-STOMATE drivers; retained Teacher computes final AGB/BGB/GPP/NPP modelout."
+      }
+    },
+    "seven_day_free_rollout": {
+      "status": "not_run_prior_gate_failed"
+    }
+  },
+  "sample_manifest": {
+    "train": [
+      {
+        "year": 1962,
+        "day_index": 1,
+        "input_state_tstep": -1,
+        "target_role": "supervision_label_only"
+      },
+      {
+        "year": 1962,
+        "day_index": 2,
+        "input_state_tstep": 47,
+        "target_role": "supervision_label_only"
+      },
+      {
+        "year": 1962,
+        "day_index": 3,
+        "input_state_tstep": 95,
+        "target_role": "supervision_label_only"
+      },
+      {
+        "year": 1962,
+        "day_index": 4,
+        "input_state_tstep": 143,
+        "target_role": "supervision_label_only"
+      },
+      {
+        "year": 1962,
+        "day_index": 5,
+        "input_state_tstep": 191,
+        "target_role": "supervision_label_only"
+      },
+      {
+        "year": 1962,
+        "day_index": 6,
+        "input_state_tstep": 239,
+        "target_role": "supervision_label_only"
+      },
+      {
+        "year": 1962,
+        "day_index": 7,
+        "input_state_tstep": 287,
+        "target_role": "supervision_label_only"
+      },
+      {
+        "year": 1962,
+        "day_index": 8,
+        "input_state_tstep": 335,
+        "target_role": "supervision_label_only"
+      },
+      {
+        "year": 1962,
+        "day_index": 9,
+        "input_state_tstep": 383,
+        "target_role": "supervision_label_only"
+      },
+      {
+        "year": 1962,
+        "day_index": 10,
+        "input_state_tstep": 431,
+        "target_role": "supervision_label_only"
+      },
+      {
+        "year": 1962,
+        "day_index": 11,
+        "input_state_tstep": 479,
+        "target_role": "supervision_label_only"
+      },
+      {
+        "year": 1962,
+        "day_index": 12,
+        "input_state_tstep": 527,
+        "target_role": "supervision_label_only"
+      }
+    ],
+    "holdout": [
+      {
+        "year": 1962,
+        "day_index": 13,
+        "input_state_tstep": 575,
+        "target_role": "supervision_label_only"
+      },
+      {
+        "year": 1962,
+        "day_index": 14,
+        "input_state_tstep": 623,
+        "target_role": "supervision_label_only"
+      },
+      {
+        "year": 1962,
+        "day_index": 15,
+        "input_state_tstep": 671,
+        "target_role": "supervision_label_only"
+      },
+      {
+        "year": 1962,
+        "day_index": 16,
+        "input_state_tstep": 719,
+        "target_role": "supervision_label_only"
+      }
+    ],
+    "rollout": [],
+    "binary_samples_committed": false
+  },
+  "timing_seconds": {
+    "teacher_train_capture": 111.40654150000773,
+    "model_fit": 0.31323080000584014,
+    "teacher_holdout_capture": 1.0304899000038859
+  },
+  "hardware": {
+    "platform": "Windows-10-10.0.26200-SP0",
+    "processor": "Intel64 Family 6 Model 183 Stepping 1, GenuineIntel",
+    "jax_backend": "cpu",
+    "jax_devices": [
+      "cpu:0"
+    ],
+    "jax_version": "0.10.1"
+  },
+  "limitations": [
+    "The decoder is fitted by train-only SVD pseudoinverse to make the tiny overfit gate diagnostic and deterministic.",
+    "Passing tiny overfit proves representation capacity only, not generalization or scientific usability."
+  ],
+  "trained_runtime_cost": {
+    "scope": "trained_decoder_plus_retained_tail_one_step_only_after_holdout_failure",
+    "compile_seconds": 1.493421600011061,
+    "warm_seconds": 0.009587299995473586,
+    "hot_runs_seconds": [
+      0.004188799997791648,
+      0.004078400001162663,
+      0.0046891999954823405
+    ],
+    "hot_median_seconds": 0.004188799997791648,
+    "blocked_checksum": 3642.0089934865046,
+    "blocked_checksum_finite": true,
+    "rollout_performed": false,
+    "d0554d0_49x_reused": false
+  }
+}

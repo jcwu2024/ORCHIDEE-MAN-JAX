@@ -1,0 +1,39 @@
+{
+  "schema_version": "tiny_supervised_daily_boundary_samples_v1",
+  "teacher_commit": "7333b46c0b38650fb6c9250582876137831657b8",
+  "experiment_git_head": "d0554d084d9a5a351411763f96a023351350201f",
+  "normalization_source": "training_days_only",
+  "continuous_schema": {
+    "continuous_elements": 19838,
+    "continuous_leaves": 250,
+    "state_components": 6,
+    "daily_interface_fields": 17,
+    "ok_leak_fields_including_deepC_peat": 14,
+    "final_diagnostics": 2
+  },
+  "samples": {
+    "train": [
+      {"year": 1962, "day_index": 1, "input_state_tstep": -1, "target_role": "supervision_label_only"},
+      {"year": 1962, "day_index": 2, "input_state_tstep": 47, "target_role": "supervision_label_only"},
+      {"year": 1962, "day_index": 3, "input_state_tstep": 95, "target_role": "supervision_label_only"},
+      {"year": 1962, "day_index": 4, "input_state_tstep": 143, "target_role": "supervision_label_only"},
+      {"year": 1962, "day_index": 5, "input_state_tstep": 191, "target_role": "supervision_label_only"},
+      {"year": 1962, "day_index": 6, "input_state_tstep": 239, "target_role": "supervision_label_only"},
+      {"year": 1962, "day_index": 7, "input_state_tstep": 287, "target_role": "supervision_label_only"},
+      {"year": 1962, "day_index": 8, "input_state_tstep": 335, "target_role": "supervision_label_only"},
+      {"year": 1962, "day_index": 9, "input_state_tstep": 383, "target_role": "supervision_label_only"},
+      {"year": 1962, "day_index": 10, "input_state_tstep": 431, "target_role": "supervision_label_only"},
+      {"year": 1962, "day_index": 11, "input_state_tstep": 479, "target_role": "supervision_label_only"},
+      {"year": 1962, "day_index": 12, "input_state_tstep": 527, "target_role": "supervision_label_only"}
+    ],
+    "holdout": [
+      {"year": 1962, "day_index": 13, "input_state_tstep": 575, "target_role": "supervision_label_only"},
+      {"year": 1962, "day_index": 14, "input_state_tstep": 623, "target_role": "supervision_label_only"},
+      {"year": 1962, "day_index": 15, "input_state_tstep": 671, "target_role": "supervision_label_only"},
+      {"year": 1962, "day_index": 16, "input_state_tstep": 719, "target_role": "supervision_label_only"}
+    ],
+    "rollout": []
+  },
+  "teacher_targets_are_labels_only": true,
+  "binary_samples_committed": false
+}
