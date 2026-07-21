@@ -42,6 +42,7 @@ def _write_artifact(prefix, continuous, discrete, *, git_head="abc"):
                 "driver_start.nc": "driver",
                 "sechiba_start.nc": "sechiba",
                 "stomate_start.nc": "stomate",
+                "stomate_restart.nc": "stomate-restart",
             },
             "leaves": [
                 {

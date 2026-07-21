@@ -101,6 +101,9 @@ def capture_fingerprint(
         "driver_start.nc": restart_state.driver_start,
         "sechiba_start.nc": restart_state.sechiba_start,
         "stomate_start.nc": restart_state.stomate_input,
+        "stomate_restart.nc": (
+            context.first_step_stomate_boundary.stomate_files.restart
+        ),
     }
     initial_state = teacher.rebase_driver_state_for_year_start(cache["state"])
     _, _, records, _ = _capture_days(
