@@ -10692,7 +10692,6 @@ def _paper_compiled_later_day_block_executable(
             )
             if capture_pre_daily_training_boundaries:
                 outputs = (
-                    *outputs,
                     day.pre_daily_training_boundary,
                     next_values,
                 )

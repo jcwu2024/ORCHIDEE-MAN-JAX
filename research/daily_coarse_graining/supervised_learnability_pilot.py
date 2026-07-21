@@ -504,8 +504,7 @@ def _capture_days_compiled_blocks(
             stomate_season_values,
             diffuco_parameters,
         )
-        _block_until_ready((final_values, stacked_outputs))
-        _, _, stacked_boundaries, stacked_day_end_values = stacked_outputs
+        stacked_boundaries, stacked_day_end_values = jax.device_get(stacked_outputs)
         take = min(block_size, final_day - next_day + 1)
         for offset in range(take):
             day_index = next_day + offset

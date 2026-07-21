@@ -1,9 +1,14 @@
 from __future__ import annotations
 
 import json
+from types import SimpleNamespace
 
 import numpy as np
 
+from research.daily_coarse_graining.gradient_training_ready import (
+    deterministic_boundary_fields,
+    deterministic_exact_metrics,
+)
 from research.daily_coarse_graining.teacher_compatibility_gate import (
     _array_metrics,
     compare_fingerprints,
@@ -21,6 +26,49 @@ def test_array_metrics_accepts_tolerance_and_matching_nonfinite_pattern():
 def test_array_metrics_rejects_real_difference():
     result = _array_metrics(
         np.asarray([1.0]), np.asarray([1.01]), atol=1.0e-10, rtol=1.0e-10
+    )
+    assert not result["passed"]
+
+
+def _deterministic_sample(*, t2m_offset: float):
+    forcing = SimpleNamespace(
+        temp_air=np.linspace(295.0, 300.0, 48, dtype=np.float64)[:, None],
+        precip_rain=np.zeros((48, 1), dtype=np.float64),
+        precip_snow=np.zeros((48, 1), dtype=np.float64),
+    )
+    expected = deterministic_boundary_fields(
+        forcing, dt_sechiba=1800.0, dt_stomate=86400.0
+    )
+    daily = {name: np.asarray(value) for name, value in expected.items()}
+    daily["t2m_daily"] = daily["t2m_daily"] + t2m_offset
+    return SimpleNamespace(
+        day_index=4,
+        forcing=forcing,
+        record=SimpleNamespace(
+            daily_fold=SimpleNamespace(daily_fields=daily),
+            half_hour_transition=SimpleNamespace(
+                completed_entry_payloads=({"t2mdiag": daily["t2mdiag"]},)
+            ),
+        ),
+    )
+
+
+def test_deterministic_float_gate_reports_ulp_difference_but_accepts_tolerance():
+    result = deterministic_exact_metrics(
+        (_deterministic_sample(t2m_offset=5.684341886080802e-14),),
+        dt_sechiba=1800.0,
+        dt_stomate=86400.0,
+    )
+    assert result["passed"]
+    assert not result["fields"]["t2m_daily"]["exact"]
+    assert result["fields"]["t2m_daily"]["within_tolerance"]
+
+
+def test_deterministic_float_gate_rejects_difference_above_tolerance():
+    result = deterministic_exact_metrics(
+        (_deterministic_sample(t2m_offset=1.0e-9),),
+        dt_sechiba=1800.0,
+        dt_stomate=86400.0,
     )
     assert not result["passed"]
 

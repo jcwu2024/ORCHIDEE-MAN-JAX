@@ -227,7 +227,16 @@ def deterministic_boundary_fields(forcing, *, dt_sechiba: float, dt_stomate: flo
 
 
 def deterministic_exact_metrics(samples, *, dt_sechiba: float, dt_stomate: float):
-    fields = {name: {"max_abs_error": 0.0, "exact": True} for name in (*DETERMINISTIC_DAILY_FIELDS, *DETERMINISTIC_FINAL_FIELDS)}
+    fields = {
+        name: {
+            "max_abs_error": 0.0,
+            "max_abs_error_day": None,
+            "first_mismatch_day": None,
+            "exact": True,
+            "within_tolerance": True,
+        }
+        for name in (*DETERMINISTIC_DAILY_FIELDS, *DETERMINISTIC_FINAL_FIELDS)
+    }
     for sample in samples:
         actual = deterministic_boundary_fields(
             sample.forcing, dt_sechiba=dt_sechiba, dt_stomate=dt_stomate
@@ -239,9 +248,20 @@ def deterministic_exact_metrics(samples, *, dt_sechiba: float, dt_stomate: float
             lhs = np.asarray(actual[name])
             rhs = np.asarray(expected)
             error = float(np.max(np.abs(lhs - rhs)))
-            fields[name]["max_abs_error"] = max(fields[name]["max_abs_error"], error)
-            fields[name]["exact"] = fields[name]["exact"] and bool(np.array_equal(lhs, rhs))
-    return {"fields": fields, "passed": all(value["exact"] for value in fields.values())}
+            if error > fields[name]["max_abs_error"]:
+                fields[name]["max_abs_error"] = error
+                fields[name]["max_abs_error_day"] = int(sample.day_index)
+            exact = bool(np.array_equal(lhs, rhs))
+            if not exact and fields[name]["first_mismatch_day"] is None:
+                fields[name]["first_mismatch_day"] = int(sample.day_index)
+            fields[name]["exact"] = fields[name]["exact"] and exact
+            fields[name]["within_tolerance"] &= error <= 1.0e-12
+    return {
+        "atol": 1.0e-12,
+        "rtol": 0.0,
+        "fields": fields,
+        "passed": all(value["within_tolerance"] for value in fields.values()),
+    }
 
 
 def build_learned_boundary_spec(record) -> BoundaryVectorSpec:
@@ -722,7 +742,10 @@ def run_experiment(args):
         dt_stomate=context.runtime.dt_stomate,
     )
     if not exact["passed"]:
-        raise RuntimeError("source-backed deterministic split failed pointwise exact validation")
+        raise RuntimeError(
+            "source-backed deterministic split failed pointwise numerical validation: "
+            + json.dumps(exact["fields"], sort_keys=True)
+        )
     trained = train_model(
         inputs, targets, masks, spec, config, seed=args.seed, resume_payload=resume
     )
