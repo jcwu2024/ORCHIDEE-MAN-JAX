@@ -1356,7 +1356,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    plan = load_plan(args.plan, require_inputs=args.command == "generate")
+    plan = load_plan(args.plan, require_inputs=args.command in {"validate", "generate"})
     if args.command == "validate":
         print(json.dumps(_plan_summary(plan, args.worker_count), indent=2))
         return 0
