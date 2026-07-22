@@ -157,7 +157,7 @@ def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
     shard = {
         "landpoint_id": "001.0-071.0",
         "year": 1961,
-        "boundary_spec_sha256": "boundary",
+        "markov_contract_sha256": "markov-contract",
         "preceding_checkpoint_sha256": None,
         "input_hashes": shards._input_hashes(plan, plan.entries[0]),
         "shard": "shards/sample.npz",

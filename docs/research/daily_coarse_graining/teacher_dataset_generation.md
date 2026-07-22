@@ -63,15 +63,34 @@ pass final aggregation.
 
 ## Stored arrays
 
-Each shard stores:
+The production schema is `daily_teacher_markov_year_v2`. Each shard stores:
 
-- raw float64 day-start state and its finite mask;
-- all 48 half-hour forcing rows and their finite mask;
-- run-def-controlled parameter conditioning;
-- static landpoint physics without a landpoint-ID feature;
-- calendar conditioning;
-- the complete Teacher daily boundary target and finite mask;
-- all discrete state arrays with their original integer/logical dtype.
+- one canonical continuous state trajectory `state_trajectory[0:T+1]`;
+- exact discrete trajectories under `state_discrete__*` with their original dtype;
+- five native 6-hour source records per day in `forcing_native`, plus their
+  cyclic source indices;
+- run-def-controlled parameters and static landpoint conditions, without a
+  landpoint-ID feature;
+- one named annual-exogenous condition vector (currently atmospheric CO2) and
+  a scalar source year;
+- daily diagnostics `Y[d]` and one-based `day_index`.
+
+The neural transition is therefore trained on
+`S[d] + native_forcing[d] + P -> S[d+1] + Y[d]`. The shard does not store the
+48-step interpolated forcing, separate day-start/day-end copies, or finite
+masks. Interpolation, precipitation spreading, solar redistribution, unit
+conversion, annual CO2, salinity and tide assembly remain deterministic
+preprocessing. Finite masks are derived with `isfinite()` after loading.
+
+`research.daily_coarse_graining.markov_dataset` is the training-side reader.
+It verifies dataset/shard hashes, enforces frozen spatial and temporal splits,
+and collates numerical batches without exposing landpoint identity as a model
+feature. The complete-day argument ownership ledger is
+`manifests/coarse_graining/daily_markov_input_ownership_v2.json`.
+
+The schema and its field provenance are implemented in
+`research/daily_coarse_graining/daily_markov_contract.py`. Existing v1 shards
+remain historical audit evidence, but no new pilot may be generated with v1.
 
 Normalization, target sanitization, and train-time dtype conversion happen
 after split selection. They are not baked into Teacher shards.

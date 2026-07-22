@@ -32,7 +32,18 @@ Teacher defaults are unchanged because all capture hooks default to off.
 
 Completed infrastructure:
 
-- fixed daily-boundary and parameter-conditioning contracts;
+- Daily Markov Contract v2:
+  `S[d] + native 6-hour forcing[d] + P -> S[d+1] + Y[d]`;
+- canonical PFT14 state trajectories with PFT1/PFT14 axis compaction,
+  exact discrete state, deterministic mirror reconstruction and year-start
+  `nroot` handling;
+- exact native-forcing window reconstruction of all 48 Teacher input steps;
+- named condition slices for 84 parameter values, 735 physical/static
+  landpoint values, annual CO2, year, and day index;
+- a machine-audited ownership ledger covering every compiled complete-day
+  Teacher argument;
+- a hash-verifying training reader that enforces frozen splits and excludes
+  landpoint identity from neural inputs;
 - pure-JAX gradient and checkpoint plumbing;
 - compiled Teacher training capture with reduced host transfers;
 - restartable, atomic landpoint-year NPZ shard generation with provenance,
@@ -47,6 +58,8 @@ Current scientific status:
 - no free-running 7-, 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
   acceptance gate is complete.
+- old v1 `forcing_48` shards are audit evidence only and must not be expanded
+  into the planned pilot.
 
 ## CPU and GPU Decision
 
@@ -69,11 +82,10 @@ Current policy:
 
 Before large paid generation or training:
 
-1. run a same-process CPU cold/hot Teacher capture benchmark on explicitly
-   allocated Slurm compute resources; shared test nodes are for correctness
-   smoke tests and must not be used for accepted performance numbers;
-2. freeze a bounded pilot plan with explicit spatial and temporal holdouts;
-3. estimate worker memory, hot landpoint-year time, storage, and worst-case
+1. freeze a bounded v2 pilot plan with explicit spatial and temporal holdouts;
+2. run a same-process CPU cold/hot v2 Teacher capture benchmark on explicitly
+   allocated Slurm compute resources;
+3. estimate worker memory, hot landpoint-year time, v2 storage, and worst-case
    cluster cost;
 4. generate only the approved pilot shards;
 5. train and evaluate one-step accuracy and free rollout before scaling.

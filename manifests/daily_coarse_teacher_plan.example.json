@@ -1,8 +1,8 @@
 {
-  "schema_version": "daily_teacher_generation_plan_v1",
-  "dataset_id": "pft14-teacher-pilot-v1",
+  "schema_version": "daily_teacher_generation_plan_v2",
+  "dataset_id": "pft14-teacher-pilot-v2",
   "teacher_config": "configs/orchidee_man_250919.yaml",
-  "output_root": "outputs/training/pft14-teacher-pilot-v1",
+  "output_root": "outputs/training/pft14-teacher-pilot-v2",
   "block_size": 28,
   "entries": [
     {
@@ -10,17 +10,17 @@
       "year": 1962,
       "spatial_split": "train",
       "temporal_split": "train",
-      "run_def": "outputs/paper_250919_materialized_run_defs/001.0-071.0/used_run.def",
-      "reference_run_dir": "reference/OUT/orc_calibrate_250919_sen/arg2_1.0/001.0-071.0/I0/S0",
-      "state_cache": "outputs/cache/001.0-071.0_1961_year_end.pkl"
+      "run_def": "reference/OUT/orc_calibrate_250919_sen/arg2_1.0/001.0-071.0/I10/S2_63.206_0.0876_0.2019_50.658/z1/used_run.def",
+      "reference_run_dir": "reference/OUT/orc_calibrate_250919_sen/arg2_1.0/001.0-071.0/I10/S2_63.206_0.0876_0.2019_50.658",
+      "state_cache": "outputs/cache/paper_current_checkpoints/paper_driver_1961_year_end_state.pkl"
     },
     {
       "landpoint_id": "001.0-071.0",
       "year": 1963,
       "spatial_split": "train",
       "temporal_split": "train",
-      "run_def": "outputs/paper_250919_materialized_run_defs/001.0-071.0/used_run.def",
-      "reference_run_dir": "reference/OUT/orc_calibrate_250919_sen/arg2_1.0/001.0-071.0/I0/S0"
+      "run_def": "reference/OUT/orc_calibrate_250919_sen/arg2_1.0/001.0-071.0/I10/S2_63.206_0.0876_0.2019_50.658/z1/used_run.def",
+      "reference_run_dir": "reference/OUT/orc_calibrate_250919_sen/arg2_1.0/001.0-071.0/I10/S2_63.206_0.0876_0.2019_50.658"
     }
   ]
 }

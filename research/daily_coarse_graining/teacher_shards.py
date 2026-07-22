@@ -26,26 +26,70 @@ import jax
 import numpy as np
 
 from jax_orchidee.driver import orchestration as teacher
-from research.daily_coarse_graining.persistence_baseline import COMMON_OK_LEAK_FIELDS
+from research.daily_coarse_graining.daily_markov_contract import (
+    SHARD_SCHEMA_VERSION,
+    ConditionLeafSpec,
+    assert_markov_continuity,
+    build_daily_markov_contract,
+    build_state_trajectory,
+    estimated_uncompressed_bytes,
+    extract_diagnostics,
+    native_forcing_days,
+)
 from research.daily_coarse_graining.replay_ceiling import _load_state_cache
 from research.daily_coarse_graining.supervised_learnability_pilot import (
     _capture_days_compiled_blocks,
-    _teacher_target_vector,
-    build_boundary_vector_spec,
 )
-from research.daily_coarse_graining.synthetic_operator_cost import (
-    FORCING_FIELDS,
-    _synthetic_nroot,
-)
-from research.daily_coarse_graining.teacher_compatibility_gate import _discrete_arrays
 
 ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_VERSION = "daily_teacher_generation_plan_v1"
-SHARD_SCHEMA_VERSION = "daily_teacher_landpoint_year_v1"
-MANIFEST_SCHEMA_VERSION = "daily_teacher_worker_manifest_v1"
-DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v1"
+SCHEMA_VERSION = "daily_teacher_generation_plan_v2"
+MANIFEST_SCHEMA_VERSION = "daily_teacher_worker_manifest_v2"
+DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v2"
 SPLITS = frozenset({"train", "validation", "test"})
 SAFE_ID = re.compile(r"^[A-Za-z0-9._-]+$")
+PARAMETER_ORDER = ("alloc_min", "residence_time", "vcmax25", "maint_resp_slope")
+LANDPOINT_STATIC_ORDER = (
+    "hydrol_humcste",
+    "hydrol_throughfall_by_pft",
+    "hydrol_cwrr_ks",
+    "hydrol_zz_mm",
+    "hydrol_dz_mm",
+    "hydrol_reinf_slope",
+    "diaglev",
+    "ext_coeff_vegetfrac",
+    "sechiba_qsint",
+    "pref_soil_veg",
+    "lalo",
+    "lon",
+    "lat",
+    "areas",
+    "contfrac",
+    "resolution",
+    "corners",
+    "seglength",
+    "measurement_heights",
+    "soiltile",
+    "njsc",
+    "clay_frac",
+    "sand_frac",
+    "silt_frac",
+    "bulk_dens",
+    "soil_ph",
+    "poor_soils",
+    "soilclass",
+    "salinity",
+    "tide_height",
+)
+ANNUAL_CONDITION_ORDER = ("annual_co2_ppm",)
+
+_PARAMETER_SOURCE = (
+    "jax_orchidee.driver.orchestration._compiled_stomate_parameter_values; "
+    "run.def-controlled PFT vectors"
+)
+_LANDPOINT_STATIC_SOURCE = (
+    "prepared paper driver context and first-step static input interpolation"
+)
+_ANNUAL_CONDITION_SOURCE = "drivers.co2 annual lookup in the case configuration"
 
 
 @dataclass(frozen=True)
@@ -330,114 +374,164 @@ def _worker_lock(path: Path):
         path.unlink(missing_ok=True)
 
 
-def _leaf_metadata(spec) -> list[dict[str, Any]]:
-    return [
-        {
-            "family": leaf.family,
-            "component": leaf.component,
-            "name": leaf.name,
-            "shape": list(leaf.shape),
-            "start": leaf.start,
-            "stop": leaf.stop,
-        }
-        for leaf in spec.leaves
-    ]
-
-
-def _state_input_numpy(state, spec) -> np.ndarray:
-    values = []
-    for leaf in spec.leaves:
-        if leaf.component is None:
-            continue
-        fields = state.fields_by_component[leaf.component]
-        if leaf.name in fields:
-            value = fields[leaf.name]
-        elif leaf.component == "hydrol_previous_step_state" and leaf.name == "nroot":
-            value = _synthetic_nroot(state, np.asarray(0.0))
-        else:
-            raise ValueError(f"state input is missing {leaf.component}.{leaf.name}")
-        values.append(np.asarray(value, dtype=np.float64).reshape(-1))
-    slow = state.fields_by_component["slowproc_stomate_previous_step_state"]
-    for name in (
-        "biomass",
-        "npp_daily",
-        "resp_maint",
-        "resp_growth",
-        *COMMON_OK_LEAK_FIELDS,
-        "deepC_peat",
-    ):
-        values.append(np.asarray(slow[name], dtype=np.float64).reshape(-1))
-    return np.concatenate(values)
-
-
-def _forcing_numpy(forcing) -> np.ndarray:
-    columns = []
-    for name in FORCING_FIELDS:
-        value = np.asarray(getattr(forcing, name), dtype=np.float64)
-        columns.append(value.reshape((value.shape[0], -1)))
-    return np.concatenate(columns, axis=1)
-
-
-def _parameter_numpy(context) -> np.ndarray:
-    values = teacher._compiled_stomate_parameter_values(context)
-    return np.concatenate(
-        tuple(np.asarray(value, dtype=np.float64).reshape(-1) for value in values)
-    )
-
-
-def _landpoint_physics_numpy(context) -> np.ndarray:
-    values = (
-        context.hydrol_humcste,
-        context.hydrol_throughfall_by_pft,
-        context.hydrol_cwrr_ks,
-        context.hydrol_zz_mm,
-        context.hydrol_dz_mm,
-        context.hydrol_reinf_slope,
-        context.diaglev,
-        context.ext_coeff_vegetfrac,
-        context.sechiba_qsint,
-        context.run_scalars.pref_soil_veg,
-    )
-    return np.concatenate(
-        tuple(np.asarray(value, dtype=np.float64).reshape(-1) for value in values)
-    )
-
-
-def _calendar_numpy(year: int, day_indices: np.ndarray) -> np.ndarray:
-    days = 366.0 if _is_leap_year(year) else 365.0
-    angle = 2.0 * np.pi * (day_indices.astype(np.float64) - 1.0) / days
-    return np.column_stack(
-        (
-            np.sin(angle),
-            np.cos(angle),
-            day_indices.astype(np.float64) / days,
-            np.full(day_indices.shape, days / 366.0),
+def _pack_condition_groups(
+    groups: Sequence[tuple[str, object]],
+    *,
+    temporal_role: str,
+    source: str,
+) -> tuple[np.ndarray, tuple[ConditionLeafSpec, ...]]:
+    cursor = 0
+    arrays = []
+    leaves = []
+    for name, value in groups:
+        array = np.asarray(value, dtype=np.float64)
+        stop = cursor + int(array.size)
+        arrays.append(array.reshape(-1))
+        leaves.append(
+            ConditionLeafSpec(
+                name=name,
+                shape=tuple(array.shape),
+                dtype=str(array.dtype),
+                start=cursor,
+                stop=stop,
+                temporal_role=temporal_role,
+                source=source,
+            )
         )
+        cursor = stop
+    return (
+        np.concatenate(arrays) if arrays else np.empty(0, dtype=np.float64),
+        tuple(leaves),
     )
 
 
-def build_shard_arrays(states, forcings, records, context) -> tuple[dict[str, np.ndarray], Any]:
+def _parameter_groups(context) -> tuple[tuple[str, object], ...]:
+    values = teacher._compiled_stomate_parameter_values(context)
+    return tuple((name, getattr(values, name)) for name in PARAMETER_ORDER)
+
+
+def _landpoint_physics_groups(context) -> tuple[tuple[str, object], ...]:
+    return (
+        ("hydrol_humcste", context.hydrol_humcste),
+        ("hydrol_throughfall_by_pft", context.hydrol_throughfall_by_pft),
+        ("hydrol_cwrr_ks", context.hydrol_cwrr_ks),
+        ("hydrol_zz_mm", context.hydrol_zz_mm),
+        ("hydrol_dz_mm", context.hydrol_dz_mm),
+        ("hydrol_reinf_slope", context.hydrol_reinf_slope),
+        ("diaglev", context.diaglev),
+        ("ext_coeff_vegetfrac", context.ext_coeff_vegetfrac),
+        ("sechiba_qsint", context.sechiba_qsint),
+        ("pref_soil_veg", context.run_scalars.pref_soil_veg),
+    )
+
+
+def _landpoint_static_groups(context) -> tuple[tuple[str, object], ...]:
+    first = context.first_step_bundle
+    if first is None:
+        raise ValueError("landpoint static extraction requires a first-step bundle")
+    domain = first.domain
+    static = first.static_trace_fields
+    groups = (
+        *_landpoint_physics_groups(context),
+        ("lalo", domain.lalo),
+        ("lon", domain.lon),
+        ("lat", domain.lat),
+        ("areas", first.forcing.Areas),
+        ("contfrac", first.forcing.contfrac),
+        ("resolution", domain.resolution),
+        ("corners", domain.corners),
+        ("seglength", domain.seglength),
+        (
+            "measurement_heights",
+            np.asarray([first.forcing.Height_Lev1, first.forcing.Height_Levuv]),
+        ),
+        ("soiltile", first.vegetation.soiltile),
+        ("njsc", static.njsc),
+        ("clay_frac", static.clay_frac),
+        ("sand_frac", static.sand_frac),
+        ("silt_frac", static.silt_frac),
+        ("bulk_dens", static.bulk_dens),
+        ("soil_ph", static.soil_ph),
+        ("poor_soils", static.poor_soils),
+        ("soilclass", static.soilclass),
+        ("salinity", static.salinity),
+        ("tide_height", static.tide_height),
+    )
+    missing = tuple(name for name, value in groups if value is None)
+    if missing:
+        raise ValueError(f"landpoint neural conditions are missing: {missing}")
+    observed_order = tuple(name for name, _value in groups)
+    if observed_order != LANDPOINT_STATIC_ORDER:
+        raise AssertionError("landpoint static condition order drift")
+    return groups
+
+
+def _annual_condition_groups(context, *, year: int) -> tuple[tuple[str, object], ...]:
+    groups = (
+        ("annual_co2_ppm", np.asarray([teacher.read_annual_co2(context.config_path, int(year))])),
+    )
+    if tuple(name for name, _value in groups) != ANNUAL_CONDITION_ORDER:
+        raise AssertionError("annual condition order drift")
+    return groups
+
+
+def build_shard_arrays(
+    states, forcings, records, context, *, final_state=None
+) -> tuple[dict[str, np.ndarray], Any]:
     if not records:
         raise ValueError("cannot build an empty Teacher shard")
-    spec = build_boundary_vector_spec(records[0])
-    target = np.stack([_teacher_target_vector(record, spec) for record in records])
-    state_input = np.stack([_state_input_numpy(state, spec) for state in states])
-    forcing = np.stack([_forcing_numpy(value) for value in forcings])
+    if not (len(states) == len(forcings) == len(records)):
+        raise ValueError("Teacher state, forcing, and record counts must match")
+    if final_state is None:
+        final_state = records[-1].expected_result.day_end_state
     day_index = np.asarray([record.day_index for record in records], dtype=np.int32)
+    year = int(records[0].year)
+    parameters, parameter_leaves = _pack_condition_groups(
+        _parameter_groups(context),
+        temporal_role="landpoint_parameter",
+        source=_PARAMETER_SOURCE,
+    )
+    landpoint_static, landpoint_static_leaves = _pack_condition_groups(
+        _landpoint_static_groups(context),
+        temporal_role="landpoint_static",
+        source=_LANDPOINT_STATIC_SOURCE,
+    )
+    annual_condition, annual_condition_leaves = _pack_condition_groups(
+        _annual_condition_groups(context, year=year),
+        temporal_role="annual_exogenous",
+        source=_ANNUAL_CONDITION_SOURCE,
+    )
+    forcing_native, forcing_record_indices, native_spec = native_forcing_days(
+        context, year=year, day_indices=day_index
+    )
+    contract = build_daily_markov_contract(
+        states[0],
+        records[0],
+        parameter_leaves=parameter_leaves,
+        landpoint_static_leaves=landpoint_static_leaves,
+        annual_condition_leaves=annual_condition_leaves,
+        native_forcing_spec=native_spec,
+    )
+    assert_markov_continuity(states, records, final_state, contract)
+    state_trajectory, discrete = build_state_trajectory(
+        [*states, final_state], contract
+    )
+    diagnostics = np.stack(
+        [extract_diagnostics(record, contract) for record in records]
+    )
     arrays = {
         "day_index": day_index,
-        "day_start_state": state_input,
-        "day_start_state_finite": np.isfinite(state_input),
-        "forcing_48": forcing,
-        "forcing_48_finite": np.isfinite(forcing),
-        "parameters": _parameter_numpy(context),
-        "landpoint_physics": _landpoint_physics_numpy(context),
-        "calendar": _calendar_numpy(int(records[0].year), day_index),
-        "teacher_target": target,
-        "teacher_target_finite": np.isfinite(target),
-        **_discrete_arrays(records),
+        "state_trajectory": state_trajectory,
+        "forcing_native": forcing_native,
+        "forcing_record_indices": forcing_record_indices,
+        "parameters": parameters,
+        "landpoint_static": landpoint_static,
+        "annual_conditions": annual_condition,
+        "diagnostics": diagnostics,
+        "year": np.asarray(year, dtype=np.int32),
+        **{f"state_discrete__{name}": value for name, value in discrete.items()},
     }
-    return arrays, spec
+    return arrays, contract
 
 
 def _array_metadata(arrays: dict[str, np.ndarray]) -> dict[str, dict[str, Any]]:
@@ -566,14 +660,16 @@ def _write_entry(
         flush=True,
     )
     assembly_started = time.perf_counter()
-    arrays, spec = build_shard_arrays(states, forcings, records, context)
+    arrays, contract = build_shard_arrays(
+        states, forcings, records, context, final_state=final_state
+    )
     array_assembly_seconds = time.perf_counter() - assembly_started
     shard, metadata_path, checkpoint = _entry_paths(worker_root, entry)
     npz_started = time.perf_counter()
     _atomic_npz(shard, arrays)
     npz_write_seconds = time.perf_counter() - npz_started
     checkpoint_payload = {
-        "schema_version": "daily_teacher_year_end_checkpoint_v1",
+        "schema_version": "daily_teacher_year_end_checkpoint_v2",
         "teacher_git_head": git_head,
         "plan_sha256": plan.plan_sha256,
         "landpoint_id": entry.landpoint_id,
@@ -623,9 +719,16 @@ def _write_entry(
         },
         "preceding_checkpoint_sha256": preceding_checkpoint_sha256,
         "input_hashes": _input_hashes(plan, entry),
-        "boundary_spec": _leaf_metadata(spec),
-        "boundary_spec_sha256": _sha256_bytes(_canonical_json(_leaf_metadata(spec))),
+        "markov_contract": contract.metadata(),
+        "markov_contract_sha256": contract.sha256,
         "arrays": _array_metadata(arrays),
+        "uncompressed_array_bytes": estimated_uncompressed_bytes(arrays),
+        "omitted_redundancy": [
+            "expanded forcing_48",
+            "duplicated day_start_state/teacher_target state",
+            "persisted finite masks",
+            "sechiba_finalize_state diagnostic mirrors",
+        ],
         "shard": _relative(shard, worker_root),
         "shard_sha256": shard_sha256,
         "shard_bytes": shard.stat().st_size,
@@ -817,9 +920,9 @@ def aggregate_workers(
         if item.get("input_hashes") != _input_hashes(plan, entry):
             raise ValueError(f"generation input drift for {entry.key}")
         preceding_by_landpoint[entry.landpoint_id] = item["checkpoint_sha256"]
-    boundary_hashes = {item["boundary_spec_sha256"] for item in observed.values()}
-    if len(boundary_hashes) != 1:
-        raise ValueError("Teacher boundary schemas differ across shards")
+    contract_hashes = {item["markov_contract_sha256"] for item in observed.values()}
+    if len(contract_hashes) != 1:
+        raise ValueError("Teacher Markov contracts differ across shards")
     manifest = {
         "schema_version": DATASET_SCHEMA_VERSION,
         "dataset_id": plan.dataset_id,
@@ -832,7 +935,7 @@ def aggregate_workers(
         "landpoint_count": len({entry.landpoint_id for entry in plan.entries}),
         "year_count": len({entry.year for entry in plan.entries}),
         "shard_count": len(observed),
-        "boundary_spec_sha256": next(iter(boundary_hashes)),
+        "markov_contract_sha256": next(iter(contract_hashes)),
         "shards": [observed[key] for key in sorted(observed)],
     }
     _atomic_json(output_root / "dataset_manifest.json", manifest)

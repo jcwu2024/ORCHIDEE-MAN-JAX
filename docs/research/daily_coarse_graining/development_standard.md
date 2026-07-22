@@ -54,21 +54,21 @@ interface 为 `9.451`，超过单族 `2.0` 阈值。结论只允许是
 
 ## 2. 首版替代边界
 
-首版日尺度模型替代完整的亚日尺度 fast-day 边界：
+首版日尺度模型表示完整的一日科学状态转移：
 
 ```text
-日初完整物理状态
-  + 当天 48 步 forcing
-  -> 48 次 SECHIBA 状态转移
-  -> STOMATE 日累计与 maintenance 亚日积分
-  -> 48 次 OK_LEAK 亚日尺度碳/水耦合更新
-  -> 日末 SECHIBA 状态 + 日累计接口 + OK_LEAK 日末状态
+S[d] + 当天原始 6 小时 forcing + P
+  -> S[d+1] + Y[d]
 ```
 
-当前 active `PERMA_PEAT` 路径还要求 OK_LEAK 输出 `deepC_peat` 供 retained restart
-writeback 使用。因此“13 个通用 OK_LEAK carry 字段”不是全部条件分支的固定分母；
-正式 schema 必须把 `deepC_peat` 记录为条件字段。`resp_hetero_soil` 只提供 reset
-数组 shape，可由已有 carry 重建，不是 coarse 预测 target。
+其中 `S[d]` 是足以推进下一日的最小跨日预报状态，包含 SECHIBA、HYDROL、
+THERMOSOIL 和 STOMATE 的必要慢状态；`P` 是参数、网格属性和静态开关；`Y[d]` 是不被
+下一日消费的诊断和科学输出。Teacher 的 48 次 SECHIBA、日累计、OK_LEAK、season、
+STOMATE 日碳过程和日末写回都包含在这个监督转移中，不在 surrogate 运行时继续执行。
+
+原始 forcing 是 NetCDF 中九个 6 小时变量。读取、单位转换、线性插值、降水展开、
+太阳高度角短波重分配、日历和静态查表保持为显式确定性预处理，不交给网络学习，
+也不在数据集中保存为 48 步副本。
 
 `hydrol.nroot` 是运行期动态状态而不是 restart/static 字段。年初
 `rebase_driver_state_for_year_start` 按 Fortran restart 语义删除它；首个 HYDROL
@@ -77,26 +77,20 @@ HYDROL 通过 `nroot_state=hydrol_state.nroot` 消费。coarse Day 1 必须同�
 state/forcing 产生它，然后才能提升为 Days 2+ 的 fixed runtime spec。禁止用默认值、
 静态常量或上一年被删除的值填充。
 
-以下过程继续由 Teacher 的原始 JAX 实现执行：
-
-```text
-season -> STOMATE 日碳过程 -> modelout -> 日末写回 -> restart/跨年交接
-```
-
 采用该边界的理由：
 
 - 当前 Teacher 的 OK_LEAK 在每个半小时步消费 SECHIBA 水文/温度状态并更新
   litter、32 层土壤碳、DOC 和冠层截留状态，不是独立的纯日尺度后处理；
 - 若保留原始 OK_LEAK 执行，coarse 模型仍需输出 48 步中间序列，不能构成真正的
   单次日尺度状态转移；
-- STOMATE 长期碳库和慢状态是气候记忆研究的核心，不应在首版同时近似；
-- 日末物理状态、日累计量和 OK_LEAK 日末状态共同构成 pre-daily-STOMATE 接口，
-  可以独立验收；
-- 保留原始日碳和 restart 过程可显著降低长期漂移的归因难度。
+- STOMATE 长期碳库和慢状态是气候记忆研究的核心，因此必须进入跨日状态并接受
+  多日 rollout 约束，而不是藏在网络外部；
+- 单一 Markov 边界避免 Teacher 内部接口泄漏到训练数据和生产推理；
+- 完整日状态转移才允许仅凭上一日状态与当日原始输入长期迭代。
 
 首版 coarse operator 可以由显式日尺度基线、守恒投影和可学习 residual 共同组成；
-不要求由一个网络自由预测所有输出。若后续证据表明 season/STOMATE 日过程成为主要
-瓶颈，应建立新的边界提案和独立验收，不得直接扩大首版近似范围。
+不要求由一个网络自由预测所有输出。确定性可解析字段、离散规则和守恒投影继续
+显式执行，但它们属于日转移实现的一部分，不得调用 48 步 Teacher 过程作为 fallback。
 
 ## 3. 必须先完成的状态总账
 
@@ -106,7 +100,7 @@ season -> STOMATE 日碳过程 -> modelout -> 日末写回 -> restart/跨年交�
 - 稳定字段 ID 和数组形状；
 - 物理单位、有效范围和缺失值规则；
 - `prognostic`、`diagnostic`、`accumulator`、`static`、`discrete` 分类；
-- 日初 producer、半小时 consumer、日末 producer、日过程 consumer；
+- 日初 producer、日内 consumer、日末 producer和下一日 consumer；
 - 是否进入 restart、modelout 或下一日状态；
 - 对应 Fortran/JAX owner；
 - 水量、碳量或能量预算中的角色；
@@ -121,7 +115,9 @@ season -> STOMATE 日碳过程 -> modelout -> 日末写回 -> restart/跨年交�
 - **Discrete**：mask、索引、开关和阶段状态必须精确更新，不允许连续网络自由拟合。
 
 不得用无结构 `dict` 作为正式训练或 rollout carry。正式边界使用固定、版本化的
-PyTree/dataclass，并提供 Teacher state packet 与 coarse state 之间的单一适配器。
+PyTree/dataclass，并提供 Teacher state packet 与 canonical state 之间的单一适配器。
+同一轨迹只保存一次 `S[0:T+1]`；禁止同时保存逐日 start/end 状态副本。restart 和
+finalize 镜像由 canonical owner 重建，不得作为独立自由预测目标。
 
 ## 4. 开发目录约束
 
@@ -162,23 +158,23 @@ $ORCHIDEE_COARSE_DATA_ROOT/
   checkpoints/<experiment_id>/
 ```
 
-每个日样本包含：
+每个 landpoint-year shard 包含：
 
 ```text
-day_start_state
-forcing_48
-teacher_end_sechiba_state
-teacher_daily_accumulators
-teacher_maintenance_interface
-teacher_end_ok_leak_state
-teacher_budget_terms
-static_landpoint_parameters
-date/landpoint/parameter metadata
+state_trajectory[0:T+1]
+state_discrete__*[0:T+1]
+forcing_native[T, 5, D_forcing]
+forcing_record_indices[T, 5]
+parameters
+landpoint_static
+diagnostics[T]
+day_index[T]
 ```
 
 数据要求：
 
-- 不使用 pickle 作为长期科学数据格式；优先 Zarr/NetCDF 等带 schema 的格式。
+- checkpoint 可暂用 pickle 续跑，但训练 shard 不使用 pickle。首批 landpoint-year
+  使用带独立 JSON schema/hash 的 NPZ；规模扩大后按实测吞吐决定是否迁移 Zarr。
 - 按 landpoint-year 或相近大小分 shard，避免逐日小文件。
 - manifest 记录 Teacher git commit、配置 hash、状态 schema hash、数据生成命令和
   变量单位。
@@ -213,7 +209,8 @@ date/landpoint/parameter metadata
 结构要求：
 
 - 首先实现无神经网络的显式日尺度 baseline，作为必要对照组。
-- forcing 表示至少比较日统计量与完整 48 步轻量编码器两种方案。
+- forcing 表示至少比较原始 6 小时序列编码器与其确定性日统计特征；不得把 Teacher
+  插值产生的 48 步 forcing 当成唯一生产输入。
 - 网络只预测无法可靠解析计算的 residual，不自由预测所有状态。
 - 水、碳和可解析库存关系优先硬约束；软损失只用于无法解析投影的量。
 - 离散状态通过规则或分类门更新，不用连续值四舍五入代替过程语义。
@@ -246,9 +243,8 @@ date/landpoint/parameter metadata
 
 ### Gate 1：速度上限
 
-- 从内存回放 Teacher 的 pre-daily-STOMATE 边界，不进行逐日磁盘 IO；
-- 跳过 48 次 SECHIBA、日累计/maintenance fold 和 48 次 OK_LEAK；
-- 保留 season、STOMATE 日碳、modelout 和完整状态写回；
+- 从内存回放完整 `S[d] -> S[d+1] + Y[d]` 边界，不进行逐日磁盘 IO；
+- 跳过一整日 Teacher 科学过程，仅保留确定性 forcing 预处理、surrogate 和输出 IO；
 - 分别报告编译、热运行、数据准备和 IO；
 - 对 1 年和 50 年估算端到端速度上限。
 
@@ -269,8 +265,9 @@ persistence，不构成 neural learnability 测试。
 ### Gate 2：边界与数据
 
 - daily-boundary ledger 无未分类字段；
-- Teacher adapter 往返无字段丢失；
-- pre-daily-STOMATE replay 与 Teacher 后续日过程在相同边界输入下数值一致；
+- Teacher packet 到 canonical state 的抽取、必要镜像重建和 restart 变换无字段丢失；
+- `state_trajectory[d+1]` 与下一日 canonical state 精确连续；
+- 五条原始 forcing 记录可在既定数值容差内重建 Teacher 的全部 48 步输入；
 - coarse 运行时接口不依赖 48 步中间序列；这些序列只能作为 Teacher target 提取、
   诊断或消融资产；
 - 数据 schema、单位、预算项和 split 均冻结。

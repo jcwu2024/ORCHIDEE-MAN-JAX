@@ -1,0 +1,62 @@
+{
+  "schema_version": "daily_markov_input_ownership_v2",
+  "model_boundary": "S[d] + F_native[d] + P[d] -> S[d+1] + Y[d]",
+  "teacher_owner": "jax_orchidee.driver.orchestration._paper_compiled_later_day_block_executable::transition",
+  "compiled_transition_arguments": {
+    "values_by_component": {
+      "owner": "state",
+      "representation": "state_trajectory plus exact state_discrete trajectories",
+      "notes": "Canonical prognostic fields only; packet mirrors and reset daily accumulators are excluded."
+    },
+    "forcing_days": {
+      "owner": "daily_exogenous",
+      "representation": "forcing_native plus deterministic preprocessing, annual_conditions, and landpoint_static",
+      "notes": "The shard stores five native 6-hour records, not expanded 48-step forcing."
+    },
+    "science_day_numbers": {
+      "owner": "calendar",
+      "representation": "year and one-based day_index",
+      "notes": "Calendar features are derived after loading and are not duplicated in the shard."
+    },
+    "stomate_parameters": {
+      "owner": "landpoint_parameter",
+      "representation": "parameters",
+      "notes": "Named alloc_min, residence_time, vcmax25, and maint_resp_slope PFT vectors."
+    },
+    "hydrol_table_arrays": {
+      "owner": "deterministic_derived_static",
+      "representation": "derived from named landpoint_static soil and hydrology conditions plus global constants",
+      "notes": "Derived CWRR interpolation tables are not stored as a second independent input."
+    },
+    "landpoint_payload": {
+      "owner": "mixed",
+      "representation": "dynamic vegetation fields in state; atmospheric fields in forcing; physical point fields in landpoint_static",
+      "notes": "Raw kindex and neighbour IDs are addressing metadata, not neural features."
+    },
+    "stomate_restart_template": {
+      "owner": "state_or_global_template",
+      "representation": "evolving values in state; invariant structural values in code/config",
+      "notes": "The restart object is a Teacher packet-construction template, not an independent daily observation."
+    },
+    "stomate_season_values": {
+      "owner": "state",
+      "representation": "canonical slowproc/STOMATE cross-day state",
+      "notes": "Season memory must not be supplied as a second, potentially inconsistent condition vector."
+    },
+    "diffuco_parameter_values": {
+      "owner": "parameter_or_global_constant",
+      "representation": "vcmax25 and other selected tunable values in parameters; invariant PFT constants in code/config",
+      "notes": "Any newly tunable DIFFUCO parameter must be promoted to a named parameter leaf before dataset generation."
+    }
+  },
+  "external_asset_roles": {
+    "atmospheric_forcing": "daily_exogenous",
+    "annual_co2": "annual_exogenous",
+    "salinity": "landpoint_static",
+    "tide_series": "landpoint_static_periodic_series",
+    "soil_and_geometry_maps": "landpoint_static",
+    "run_def_calibrated_parameters": "landpoint_parameter",
+    "cold_or_restart_files": "initial_state_only"
+  },
+  "promotion_rule": "A value that varies across accepted landpoints, years, forcing products, or supported parameter experiments and can affect the transition must appear in state, daily exogenous input, annual conditions, or a named condition leaf."
+}
