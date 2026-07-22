@@ -13,7 +13,10 @@ runtime/
   logs/      # scheduler and application logs
   outputs/   # generated benchmarks, shards, checkpoints, and results
   transfer/  # Git bundles used to update the server checkout
+  legacy_server_scripts/  # preserved pre-repository diagnostic launchers
 ```
 
 Project-specific uv environments live in the repository-level `.venvs/`
-directory. Large runtime assets and environments must not be committed.
+directory. Superseded environments retained for provenance live under
+`.venvs/legacy/`; they are not production defaults. Large runtime assets and
+environments must not be committed.

@@ -94,10 +94,11 @@ Use project-scoped uv environments:
 - CPU: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu`
 - GPU: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu`
 
-Do not create new generic names such as `jc_gpu`. Historical `jc_gpu`,
-`orcj_gpu`, and `orcj_gpu_compat` environments are legacy validation assets;
-keep them read-only until the canonical `orcjax_gpu` environment reproduces
-their accepted results.
+Do not create new generic names such as `jc_gpu`. Historical `orcj_gpu` and
+`orcj_gpu_compat` environments are legacy validation assets under
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/legacy/`; keep them read-only
+until the canonical `orcjax_gpu` environment reproduces their accepted
+results.
 
 Explore1000 CPU nodes run CentOS 7. The general project `uv.lock` may resolve
 new wheels that require GLIBC 2.27, so CPU Teacher generation uses the pinned

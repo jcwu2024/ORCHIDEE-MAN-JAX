@@ -104,7 +104,8 @@ JAX and may resolve wheels incompatible with the cluster's glibc; do not use
 it to replace the accepted CPU compatibility profile without a new gate.
 
 The canonical `orcjax_gpu` environment has not yet been frozen. Historical
-`jc_gpu`, `orcj_gpu`, and `orcj_gpu_compat` environments are validation assets,
+`orcj_gpu` and `orcj_gpu_compat` environments are retained under
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/legacy/` as validation assets,
 not project-wide defaults. Keep them read-only until `orcjax_gpu` reproduces
 the accepted V100 compatibility gate with the final training dependencies.
 
