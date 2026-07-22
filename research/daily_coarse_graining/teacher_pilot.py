@@ -11,6 +11,11 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 from jax_orchidee.driver.reference_layout import resolve_paper_landpoint_reference
+from jax_orchidee.driver.run_def_materialization import (
+    materialize_run_def_values,
+    read_run_def_values,
+    write_materialized_run_def,
+)
 from research.daily_coarse_graining import teacher_shards
 
 SPEC_SCHEMA_VERSION = "daily_teacher_pilot_spec_v1"
@@ -233,6 +238,15 @@ def build_generation_plan(
     entries = []
     for item in spec.landpoints:
         landpoint_root = asset_root / "landpoints" / item.landpoint_id
+        archived_run_def = landpoint_root / "used_run.def"
+        runtime_run_def = write_materialized_run_def(
+            materialize_run_def_values(read_run_def_values(archived_run_def)),
+            landpoint_root / "runtime_used_run.def",
+            header_lines=(
+                "# Runtime materialization of the archived Fortran getin truth.",
+                f"# Source: {archived_run_def}",
+            ),
+        )
         for year in range(spec.first_year, spec.last_year + 1):
             entry = {
                 "landpoint_id": item.landpoint_id,
@@ -241,7 +255,7 @@ def build_generation_plan(
                 "initialization_mode": teacher_shards.YEAR_START_CHECKPOINT,
                 "spatial_split": item.spatial_split,
                 "temporal_split": spec.temporal_split(year),
-                "run_def": str(landpoint_root / "used_run.def"),
+                "run_def": str(runtime_run_def),
                 "reference_run_dir": str(landpoint_root / "reference"),
             }
             if year == spec.first_year:

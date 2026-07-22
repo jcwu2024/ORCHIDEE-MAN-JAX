@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from jax_orchidee.driver.paper_binding import expected_paper_domain_limits
+from jax_orchidee.driver.run_def_materialization import read_run_def_values
 from research.daily_coarse_graining import teacher_pilot, teacher_shards
 
 
@@ -114,6 +115,12 @@ def test_stage_verify_and_plan_roundtrip(monkeypatch, tmp_path):
     assert len(cold_entries) == 2
     assert all(entry.year == 1961 for entry in cold_entries)
     assert all(entry.acceptance_checkpoint is not None for entry in cold_entries)
+    assert all(entry.run_def.name == "runtime_used_run.def" for entry in plan.entries)
+    runtime_values = read_run_def_values(plan.entries[0].run_def)
+    assert runtime_values["RESTART_FILEIN"] == "NONE"
+    assert runtime_values["SECHIBA_restart_in"] == "NONE"
+    assert runtime_values["STOMATE_RESTART_FILEIN"] == "NONE"
+    assert float(runtime_values["LIMIT_WEST"]) == -180.0
     assert {(entry.year, entry.temporal_split) for entry in plan.entries} == {
         (1961, "train"),
         (1962, "validation"),

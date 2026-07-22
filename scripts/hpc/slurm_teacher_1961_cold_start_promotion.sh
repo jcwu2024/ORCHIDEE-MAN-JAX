@@ -61,13 +61,27 @@ import json
 import sys
 from pathlib import Path
 
+from jax_orchidee.driver.run_def_materialization import (
+    materialize_run_def_values,
+    read_run_def_values,
+    write_materialized_run_def,
+)
+
 plan_path = Path(sys.argv[1])
 dataset_id = sys.argv[2]
 output_root = Path(sys.argv[3])
 assets = Path(sys.argv[4])
 teacher_config = Path(sys.argv[5])
 landpoint_assets = assets / "daily_teacher_pilot_v2" / "landpoints" / "001.0-071.0"
-run_def = landpoint_assets / "used_run.def"
+archived_run_def = landpoint_assets / "used_run.def"
+run_def = write_materialized_run_def(
+    materialize_run_def_values(read_run_def_values(archived_run_def)),
+    landpoint_assets / "runtime_used_run.def",
+    header_lines=(
+        "# Runtime materialization of the archived Fortran getin truth.",
+        f"# Source: {archived_run_def}",
+    ),
+)
 reference = landpoint_assets / "reference"
 accepted_1961 = assets / "checkpoints" / "paper_driver_1961_year_end_state_current.pkl"
 payload = {
