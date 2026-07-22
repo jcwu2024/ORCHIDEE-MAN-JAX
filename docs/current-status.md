@@ -42,8 +42,9 @@ Completed infrastructure:
   landpoint values, annual CO2, year, and day index;
 - a machine-audited ownership ledger covering every compiled complete-day
   Teacher argument;
-- a hash-verifying training reader that enforces frozen splits and excludes
-  landpoint identity from neural inputs;
+- a hash-verifying training reader that enforces frozen splits, excludes
+  landpoint identity, computes train-only streaming statistics, and uses
+  explicit finite masks and bounded prefetch;
 - pure-JAX gradient and checkpoint plumbing;
 - compiled Teacher training capture with reduced host transfers;
 - restartable, atomic landpoint-year NPZ shard generation with provenance,
@@ -82,9 +83,10 @@ Current policy:
 
 Before large paid generation or training:
 
-1. freeze a bounded v2 pilot plan with explicit spatial and temporal holdouts;
-2. run a same-process CPU cold/hot v2 Teacher capture benchmark on explicitly
-   allocated Slurm compute resources;
+1. run the frozen one-point v2 annual resource probe on explicitly allocated
+   Slurm compute resources;
+2. verify the staged 12-point pilot assets and build its frozen generation
+   plan;
 3. estimate worker memory, hot landpoint-year time, v2 storage, and worst-case
    cluster cost;
 4. generate only the approved pilot shards;

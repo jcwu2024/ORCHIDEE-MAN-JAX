@@ -294,15 +294,22 @@ def test_compiled_capture_uses_a_short_tail_block(monkeypatch):
         runtime=SimpleNamespace(dt_stomate=86400.0, dt_sechiba=1800.0),
         first_step_restart_state=SimpleNamespace(stomate="stomate", stomate_input="input"),
     )
-    states, forcings, records, final_state = capture._capture_days_compiled_blocks(
-        config_path=Path("config"),
-        context=context,
-        previous_state="initial",
-        year=1964,
-        start_day=1,
-        days=5,
-        block_size=3,
+    blocks = list(
+        capture._iter_capture_days_compiled_blocks(
+            config_path=Path("config"),
+            context=context,
+            previous_state="initial",
+            year=1964,
+            start_day=1,
+            days=5,
+            block_size=3,
+        )
     )
     assert compiled_sizes == [3, 1]
+    assert [len(block[0]) for block in blocks] == [1, 3, 1]
+    states = tuple(state for block in blocks for state in block[0])
+    forcings = tuple(forcing for block in blocks for forcing in block[1])
+    records = tuple(record for block in blocks for record in block[2])
+    final_state = blocks[-1][3]
     assert len(states) == len(forcings) == len(records) == 5
     assert final_state == "final-5"

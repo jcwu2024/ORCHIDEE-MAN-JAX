@@ -39,6 +39,12 @@ the 56-core node are not implicitly part of this request. A later scaling
 benchmark may request more cores and pack multiple workers only if the first
 result shows that worker packing or resource scaling is material.
 
+The v2 annual shard resource gate is
+`scripts/hpc/slurm_teacher_v2_resource_probe.sh`: one `cnall` task, 8 CPUs,
+one hour, and one complete 001/1962 point-year. Its worst-case CPU charge is
+CNY `8 * 1 * 0.07 = 0.56`. It must pass before the bounded 12-landpoint Daily
+Teacher pilot is assigned production resources.
+
 ## Checkout Transfer
 
 GitHub access from the cluster is unreliable. Transfer a Git bundle from the

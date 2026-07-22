@@ -34,11 +34,12 @@ from research.daily_coarse_graining.daily_markov_contract import (
     build_state_trajectory,
     estimated_uncompressed_bytes,
     extract_diagnostics,
+    extract_state,
     native_forcing_days,
 )
 from research.daily_coarse_graining.replay_ceiling import _load_state_cache
 from research.daily_coarse_graining.supervised_learnability_pilot import (
-    _capture_days_compiled_blocks,
+    _iter_capture_days_compiled_blocks,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -534,6 +535,121 @@ def build_shard_arrays(
     return arrays, contract
 
 
+def build_shard_arrays_from_blocks(blocks, context):
+    """Consume bounded capture blocks into compact annual Markov arrays."""
+
+    parameters, parameter_leaves = _pack_condition_groups(
+        _parameter_groups(context),
+        temporal_role="landpoint_parameter",
+        source=_PARAMETER_SOURCE,
+    )
+    landpoint_static, landpoint_static_leaves = _pack_condition_groups(
+        _landpoint_static_groups(context),
+        temporal_role="landpoint_static",
+        source=_LANDPOINT_STATIC_SOURCE,
+    )
+    continuous_rows = []
+    discrete_rows: dict[str, list[np.ndarray]] = {}
+    diagnostics = []
+    day_indices = []
+    contract = None
+    year = None
+    previous_final = None
+    native_spec = None
+    final_state = None
+
+    for states, forcings, records, block_final in blocks:
+        if not records or not (len(states) == len(forcings) == len(records)):
+            raise ValueError("capture block state, forcing, and record counts must match")
+        block_years = {int(record.year) for record in records}
+        if len(block_years) != 1:
+            raise ValueError("capture block mixes source years")
+        block_year = block_years.pop()
+        if year is None:
+            year = block_year
+            _native, _indices, native_spec = native_forcing_days(
+                context,
+                year=year,
+                day_indices=(int(records[0].day_index),),
+            )
+            annual_conditions, annual_condition_leaves = _pack_condition_groups(
+                _annual_condition_groups(context, year=year),
+                temporal_role="annual_exogenous",
+                source=_ANNUAL_CONDITION_SOURCE,
+            )
+            contract = build_daily_markov_contract(
+                states[0],
+                records[0],
+                parameter_leaves=parameter_leaves,
+                landpoint_static_leaves=landpoint_static_leaves,
+                annual_condition_leaves=annual_condition_leaves,
+                native_forcing_spec=native_spec,
+            )
+            discrete_rows = {leaf.key: [] for leaf in contract.discrete_leaves}
+        elif block_year != year:
+            raise ValueError("capture stream mixes source years")
+        assert contract is not None
+        if previous_final is not None:
+            previous_continuous, previous_discrete = extract_state(
+                previous_final, contract
+            )
+            current_continuous, current_discrete = extract_state(states[0], contract)
+            if not np.array_equal(
+                previous_continuous, current_continuous, equal_nan=True
+            ) or any(
+                not np.array_equal(
+                    previous_discrete[name], current_discrete[name], equal_nan=True
+                )
+                for name in previous_discrete
+            ):
+                raise ValueError("Teacher state continuity failed between capture blocks")
+        assert_markov_continuity(states, records, block_final, contract)
+        for packet, record in zip(states, records, strict=True):
+            day_index = int(record.day_index)
+            if day_indices and day_index != day_indices[-1] + 1:
+                raise ValueError("capture stream day indices are not consecutive")
+            continuous, discrete = extract_state(
+                packet,
+                contract,
+                allow_year_start_missing=not continuous_rows,
+            )
+            continuous_rows.append(continuous)
+            for name, value in discrete.items():
+                discrete_rows[name].append(value)
+            diagnostics.append(extract_diagnostics(record, contract))
+            day_indices.append(day_index)
+        previous_final = block_final
+        final_state = block_final
+
+    if contract is None or year is None or final_state is None or native_spec is None:
+        raise ValueError("cannot build an empty Teacher shard")
+    final_continuous, final_discrete = extract_state(final_state, contract)
+    continuous_rows.append(final_continuous)
+    for name, value in final_discrete.items():
+        discrete_rows[name].append(value)
+    forcing_native, forcing_record_indices, observed_native_spec = native_forcing_days(
+        context, year=year, day_indices=day_indices
+    )
+    if observed_native_spec != native_spec:
+        raise ValueError("native forcing schema drift within capture stream")
+    arrays = {
+        "day_index": np.asarray(day_indices, dtype=np.int32),
+        "state_trajectory": np.stack(continuous_rows),
+        "forcing_native": forcing_native,
+        "forcing_record_indices": forcing_record_indices,
+        "parameters": parameters,
+        "landpoint_static": landpoint_static,
+        "annual_conditions": annual_conditions,
+        "diagnostics": np.stack(diagnostics),
+        "year": np.asarray(year, dtype=np.int32),
+        **{
+            f"state_discrete__{name}": np.stack(values)
+            for name, values in discrete_rows.items()
+        },
+    }
+    return arrays, contract, final_state
+
+
 def _array_metadata(arrays: dict[str, np.ndarray]) -> dict[str, dict[str, Any]]:
     return {
         name: {"shape": list(value.shape), "dtype": str(value.dtype)}
@@ -663,8 +779,7 @@ def _write_entry(
         f"seconds={preparation_seconds:.3f} cache={cache_before}",
         flush=True,
     )
-    started = time.perf_counter()
-    states, forcings, records, final_state = _capture_days_compiled_blocks(
+    capture_blocks = _iter_capture_days_compiled_blocks(
         config_path=plan.teacher_config,
         context=context,
         previous_state=initial_state,
@@ -673,18 +788,33 @@ def _write_entry(
         days=entry.days,
         block_size=plan.block_size,
     )
-    capture_seconds = time.perf_counter() - started
+    capture_seconds = 0.0
+
+    def timed_blocks():
+        nonlocal capture_seconds
+        iterator = iter(capture_blocks)
+        while True:
+            started = time.perf_counter()
+            try:
+                block = next(iterator)
+            except StopIteration:
+                capture_seconds += time.perf_counter() - started
+                return
+            capture_seconds += time.perf_counter() - started
+            yield block
+
+    assembly_started = time.perf_counter()
+    arrays, contract, final_state = build_shard_arrays_from_blocks(
+        timed_blocks(), context
+    )
+    capture_and_assembly_seconds = time.perf_counter() - assembly_started
+    array_assembly_seconds = capture_and_assembly_seconds - capture_seconds
     cache_after = _compiled_cache_entries()
     print(
         f"teacher_entry_captured key={entry.key} seconds={capture_seconds:.3f} "
         f"cache_before={cache_before} cache_after={cache_after}",
         flush=True,
     )
-    assembly_started = time.perf_counter()
-    arrays, contract = build_shard_arrays(
-        states, forcings, records, context, final_state=final_state
-    )
-    array_assembly_seconds = time.perf_counter() - assembly_started
     shard, metadata_path, checkpoint = _entry_paths(worker_root, entry)
     npz_started = time.perf_counter()
     _atomic_npz(shard, arrays)
@@ -717,11 +847,13 @@ def _write_entry(
         "spatial_split": entry.spatial_split,
         "temporal_split": entry.temporal_split,
         "block_size": plan.block_size,
+        "capture_mode": "bounded_compiled_blocks",
         "capture_seconds": capture_seconds,
         "timing_seconds": {
             "context_and_state_preparation": preparation_seconds,
             "capture": capture_seconds,
             "array_assembly": array_assembly_seconds,
+            "capture_and_incremental_assembly": capture_and_assembly_seconds,
             "npz_write": npz_write_seconds,
             "checkpoint_write": checkpoint_write_seconds,
             "total_entry_before_metadata_write": total_entry_seconds,

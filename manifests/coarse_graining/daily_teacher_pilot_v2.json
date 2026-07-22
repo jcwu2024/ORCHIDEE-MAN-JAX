@@ -1,0 +1,33 @@
+{
+  "schema_version": "daily_teacher_pilot_spec_v1",
+  "pilot_id": "pft14-daily-teacher-pilot-v2",
+  "first_year": 1962,
+  "last_year": 2010,
+  "block_size": 28,
+  "temporal_splits": {
+    "train": [1962, 2004],
+    "validation": [2005, 2007],
+    "test": [2008, 2010]
+  },
+  "landpoints": [
+    {"id": "001.0-071.0", "spatial_split": "train", "role": "baseline_wet"},
+    {"id": "103.0-093.0", "spatial_split": "train", "role": "high_biomass"},
+    {"id": "215.0-119.0", "spatial_split": "train", "role": "extremely_dry"},
+    {"id": "281.0-095.0", "spatial_split": "train", "role": "high_productivity_short_residence"},
+    {"id": "283.0-091.0", "spatial_split": "train", "role": "high_maintenance"},
+    {"id": "295.0-113.0", "spatial_split": "train", "role": "low_vcmax_short_residence"},
+    {"id": "299.0-101.0", "spatial_split": "train", "role": "high_biomass"},
+    {"id": "303.0-097.0", "spatial_split": "train", "role": "high_maintenance_low_npp"},
+    {"id": "315.0-097.0", "spatial_split": "validation", "role": "spatial_parameter_holdout"},
+    {"id": "333.0-057.0", "spatial_split": "validation", "role": "spatial_geographic_holdout"},
+    {"id": "069.0-119.0", "spatial_split": "test", "role": "dry_low_productivity_holdout"},
+    {"id": "319.0-057.0", "spatial_split": "test", "role": "explicit_snow_holdout"}
+  ],
+  "required_reference_files": [
+    "driver_start.nc",
+    "sechiba_start.nc",
+    "stomate_start.nc",
+    "stomate_restart.nc"
+  ],
+  "checkpoint_name": "paper_driver_1961_year_end_state.pkl"
+}

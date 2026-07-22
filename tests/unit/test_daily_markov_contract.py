@@ -335,7 +335,17 @@ def test_teacher_shard_builder_emits_only_the_v2_markov_arrays(monkeypatch):
     arrays, contract = teacher_shards.build_shard_arrays(
         [start], [object()], [record], object(), final_state=end
     )
+    streamed, streamed_contract, streamed_final = (
+        teacher_shards.build_shard_arrays_from_blocks(
+            [([start], (object(),), (record,), end)], object()
+        )
+    )
     assert contract.schema_version == markov.CONTRACT_SCHEMA_VERSION
+    assert streamed_contract.metadata() == contract.metadata()
+    assert streamed_final is end
+    assert streamed.keys() == arrays.keys()
+    for name in arrays:
+        np.testing.assert_array_equal(streamed[name], arrays[name])
     assert arrays["state_trajectory"].shape[0] == 2
     assert arrays["forcing_native"].shape == (1, 5, 9)
     assert arrays["annual_conditions"].shape == (1,)

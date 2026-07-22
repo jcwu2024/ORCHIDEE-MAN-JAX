@@ -394,7 +394,7 @@ def _compiled_training_record(
     )
 
 
-def _capture_days_compiled_blocks(
+def _iter_capture_days_compiled_blocks(
     *,
     config_path,
     context,
@@ -404,12 +404,12 @@ def _capture_days_compiled_blocks(
     days: int,
     block_size: int = 7,
 ):
-    """Capture one audited year-start day, then stack later-day labels in JAX."""
+    """Yield one audited first day and bounded compiled later-day blocks."""
 
     if start_day != 1:
         raise ValueError("compiled training capture currently requires start_day=1")
     if days < 1:
-        return (), (), (), previous_state
+        return
     if block_size < 2:
         raise ValueError("compiled training capture block_size must be at least two")
     states, forcings, records, current = _capture_days(
@@ -420,14 +420,12 @@ def _capture_days_compiled_blocks(
         start_day=1,
         days=1,
     )
-    states = list(states)
-    forcings = list(forcings)
-    records = list(records)
     boundary_state_spec = teacher.fast_state_from_previous_packet(
         records[0].half_hour_transition.current_state
     ).spec
+    yield states, forcings, records, current
     if days == 1:
-        return tuple(states), tuple(forcings), tuple(records), current
+        return
 
     steps_per_day = int(round(context.runtime.dt_stomate / context.runtime.dt_sechiba))
     first_inputs = teacher._paper_1961_later_day_transition_inputs(
@@ -508,6 +506,9 @@ def _capture_days_compiled_blocks(
             diffuco_parameters,
         )
         stacked_boundaries, stacked_day_end_values = jax.device_get(stacked_outputs)
+        block_states = []
+        block_forcings = []
+        block_records = []
         for offset in range(current_block_size):
             day_index = next_day + offset
             day_end_state = teacher.previous_packet_from_fast_state(
@@ -530,9 +531,9 @@ def _capture_days_compiled_blocks(
                 boundary_state_spec=boundary_state_spec,
                 steps_per_day=steps_per_day,
             )
-            states.append(current)
-            forcings.append(forcing)
-            records.append(record)
+            block_states.append(current)
+            block_forcings.append(forcing)
+            block_records.append(record)
             current = day_end_state
         current = teacher.previous_packet_from_fast_state(
             teacher.DriverFastStateBundle(
@@ -541,7 +542,45 @@ def _capture_days_compiled_blocks(
                 spec=state_spec,
             )
         )
+        yield (
+            tuple(block_states),
+            tuple(block_forcings),
+            tuple(block_records),
+            current,
+        )
         next_day += current_block_size
+
+
+def _capture_days_compiled_blocks(
+    *,
+    config_path,
+    context,
+    previous_state,
+    year: int,
+    start_day: int,
+    days: int,
+    block_size: int = 7,
+):
+    """Compatibility collector for callers that require all captured records."""
+
+    states = []
+    forcings = []
+    records = []
+    current = previous_state
+    for block_states, block_forcings, block_records, current in (
+        _iter_capture_days_compiled_blocks(
+            config_path=config_path,
+            context=context,
+            previous_state=previous_state,
+            year=year,
+            start_day=start_day,
+            days=days,
+            block_size=block_size,
+        )
+    ):
+        states.extend(block_states)
+        forcings.extend(block_forcings)
+        records.extend(block_records)
     return tuple(states), tuple(forcings), tuple(records), current
 
 

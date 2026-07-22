@@ -14,6 +14,7 @@ mode.
   contract.
 - `daily_boundary_audit.md`: superseded v0 boundary and replay evidence.
 - `teacher_dataset_generation.md`: restartable landpoint-year shard contract.
+- `teacher_pilot_v2.md`: frozen 12-landpoint pilot and promotion gates.
 - `teacher_capture_gpu_benchmark_20260721.md`: accepted V100 Teacher capture
   measurement and its limited conclusion.
 
