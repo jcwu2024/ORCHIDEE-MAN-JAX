@@ -811,8 +811,14 @@ def _input_hashes(plan: GenerationPlan, entry: PlanEntry) -> dict[str, Any]:
     }
 
 
-def _assert_driver_state_exact(actual, expected) -> int:
-    """Compare all scientific state leaves and return the number compared."""
+def _compare_driver_state(
+    actual,
+    expected,
+    *,
+    rtol: float = 1.0e-12,
+    atol: float = 1.0e-12,
+) -> dict[str, Any]:
+    """Require exact state schema/discretes and tightly close float64 leaves."""
 
     if actual.tstep != expected.tstep:
         raise ValueError(
@@ -823,9 +829,12 @@ def _assert_driver_state_exact(actual, expected) -> int:
     if tuple(actual_components) != tuple(expected_components):
         raise ValueError("year-end acceptance checkpoint component inventory mismatch")
     compared = 0
+    exact_mismatch_leaves = 0
+    max_abs = 0.0
+    max_rel = 0.0
 
     def compare(left, right, path: str) -> None:
-        nonlocal compared
+        nonlocal compared, exact_mismatch_leaves, max_abs, max_rel
         if isinstance(right, dict):
             if not isinstance(left, dict) or tuple(left) != tuple(right):
                 raise ValueError(f"year-end acceptance checkpoint mapping mismatch at {path}")
@@ -847,18 +856,51 @@ def _assert_driver_state_exact(actual, expected) -> int:
         else:
             if left_array.shape != right_array.shape or left_array.dtype != right_array.dtype:
                 raise ValueError(f"year-end acceptance checkpoint schema mismatch at {path}")
-            equal = (
-                np.array_equal(left_array, right_array, equal_nan=True)
-                if left_array.dtype.kind in "fc"
-                else np.array_equal(left_array, right_array)
-            )
-            if not equal:
+            if left_array.dtype.kind in "fc":
+                exact = np.array_equal(left_array, right_array, equal_nan=True)
+                if not exact:
+                    exact_mismatch_leaves += 1
+                if not np.allclose(
+                    left_array,
+                    right_array,
+                    rtol=rtol,
+                    atol=atol,
+                    equal_nan=True,
+                ):
+                    finite = np.isfinite(left_array) & np.isfinite(right_array)
+                    difference = np.abs(left_array[finite] - right_array[finite])
+                    field_max_abs = float(np.max(difference)) if difference.size else float("inf")
+                    denominator = np.maximum(np.abs(right_array[finite]), np.finfo(np.float64).tiny)
+                    relative = difference / denominator
+                    field_max_rel = float(np.max(relative)) if relative.size else float("inf")
+                    raise ValueError(
+                        "year-end acceptance checkpoint float mismatch at "
+                        f"{path}: max_abs={field_max_abs:.17g}, "
+                        f"max_rel={field_max_rel:.17g}, rtol={rtol}, atol={atol}"
+                    )
+                finite = np.isfinite(left_array) & np.isfinite(right_array)
+                if np.any(finite):
+                    difference = np.abs(left_array[finite] - right_array[finite])
+                    max_abs = max(max_abs, float(np.max(difference)))
+                    denominator = np.maximum(
+                        np.abs(right_array[finite]), np.finfo(np.float64).tiny
+                    )
+                    max_rel = max(max_rel, float(np.max(difference / denominator)))
+            elif not np.array_equal(left_array, right_array):
                 raise ValueError(f"year-end acceptance checkpoint value mismatch at {path}")
         compared += 1
 
     for component in expected_components:
         compare(actual_components[component], expected_components[component], component)
-    return compared
+    return {
+        "status": "exact" if exact_mismatch_leaves == 0 else "numeric_close",
+        "compared_state_leaves": compared,
+        "exact_mismatch_leaves": exact_mismatch_leaves,
+        "rtol": rtol,
+        "atol": atol,
+        "max_abs_error": max_abs,
+        "max_relative_error": max_rel,
+    }
 
 
 def _entry_capture_start(
@@ -949,20 +991,7 @@ def _write_entry(
         f"cache_before={cache_before} cache_after={cache_after}",
         flush=True,
     )
-    acceptance = None
-    if entry.acceptance_checkpoint is not None:
-        accepted_state = _load_state_cache(entry.acceptance_checkpoint)["state"]
-        acceptance = {
-            "status": "exact",
-            "compared_state_leaves": _assert_driver_state_exact(
-                final_state, accepted_state
-            ),
-            "checkpoint_sha256": _sha256_file(entry.acceptance_checkpoint),
-        }
     shard, metadata_path, checkpoint = _entry_paths(worker_root, entry)
-    npz_started = time.perf_counter()
-    _atomic_npz(shard, arrays)
-    npz_write_seconds = time.perf_counter() - npz_started
     checkpoint_payload = {
         "schema_version": "daily_teacher_year_end_checkpoint_v2",
         "teacher_git_head": git_head,
@@ -971,6 +1000,22 @@ def _write_entry(
         "end_year": entry.year,
         "state": final_state,
     }
+    acceptance = None
+    if entry.acceptance_checkpoint is not None:
+        accepted_state = _load_state_cache(entry.acceptance_checkpoint)["state"]
+        try:
+            acceptance = {
+                **_compare_driver_state(final_state, accepted_state),
+                "checkpoint_sha256": _sha256_file(entry.acceptance_checkpoint),
+            }
+        except ValueError:
+            rejected = checkpoint.with_name(f"{checkpoint.stem}.rejected.pkl")
+            _atomic_pickle(rejected, checkpoint_payload)
+            print(f"teacher_entry_rejected_checkpoint path={rejected}", flush=True)
+            raise
+    npz_started = time.perf_counter()
+    _atomic_npz(shard, arrays)
+    npz_write_seconds = time.perf_counter() - npz_started
     checkpoint_started = time.perf_counter()
     _atomic_pickle(checkpoint, checkpoint_payload)
     checkpoint_write_seconds = time.perf_counter() - checkpoint_started

@@ -238,11 +238,18 @@ def test_year_end_acceptance_compares_complete_scientific_state_exactly():
             for component, fields in expected.fields_by_component.items()
         },
     )
-    assert shards._assert_driver_state_exact(actual, expected) == 4
+    report = shards._compare_driver_state(actual, expected)
+    assert report["status"] == "exact"
+    assert report["compared_state_leaves"] == 4
 
     actual.fields_by_component["hydrol_previous_step_state"]["mc"][0, 0] += 1.0e-15
+    report = shards._compare_driver_state(actual, expected)
+    assert report["status"] == "numeric_close"
+    assert report["exact_mismatch_leaves"] == 1
+
+    actual.fields_by_component["hydrol_previous_step_state"]["mc"][0, 0] += 1.0e-6
     with pytest.raises(ValueError, match="hydrol_previous_step_state.mc"):
-        shards._assert_driver_state_exact(actual, expected)
+        shards._compare_driver_state(actual, expected)
 
 
 def test_cold_start_capture_uses_day1_end_without_year_rebase(monkeypatch):

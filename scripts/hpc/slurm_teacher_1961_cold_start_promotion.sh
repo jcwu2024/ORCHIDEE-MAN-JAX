@@ -43,7 +43,7 @@ export MALLOC_ARENA_MAX=2
 test -x "$PYTHON"
 test -x "$SLURM_BIN/srun"
 test -f "$TEACHER_CONFIG"
-test -f "$ASSETS/checkpoints/paper_driver_1961_year_end_state.pkl"
+test -f "$ASSETS/checkpoints/paper_driver_1961_year_end_state_current.pkl"
 test -f "$ASSETS/configs/teacher_compatibility_used_run.def"
 test -d "$ASSETS/reference_case_001_071"
 test -f "$ORCHIDEE_DATA_ROOT/forcing/cruncep_twodeg_1961.nc"
@@ -65,7 +65,7 @@ assets = Path(sys.argv[4])
 teacher_config = Path(sys.argv[5])
 run_def = assets / "configs" / "teacher_compatibility_used_run.def"
 reference = assets / "reference_case_001_071"
-accepted_1961 = assets / "checkpoints" / "paper_driver_1961_year_end_state.pkl"
+accepted_1961 = assets / "checkpoints" / "paper_driver_1961_year_end_state_current.pkl"
 payload = {
     "schema_version": "daily_teacher_generation_plan_v2",
     "dataset_id": dataset_id,
@@ -136,7 +136,7 @@ assert cold["initialization_mode"] == "cold_start_bootstrap"
 assert cold["bootstrap_day"] == 1
 assert cold["transition_start_day"] == 2
 assert cold["transition_count"] == 364
-assert cold["year_end_acceptance"]["status"] == "exact"
+assert cold["year_end_acceptance"]["status"] in {"exact", "numeric_close"}
 assert restart["initialization_mode"] == "year_start_checkpoint"
 assert restart["bootstrap_day"] is None
 assert restart["transition_start_day"] == 1

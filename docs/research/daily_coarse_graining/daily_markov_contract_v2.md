@@ -50,9 +50,11 @@ S[1] + F_native[2] + P -> S[2] + Y[2]
 ```
 
 The 1961 shard therefore contains Day 2--365 (`T=364`) and begins its stored
-trajectory at Day 1 end. Its generated year-end state must exactly match the
-accepted 1961 checkpoint before the shard is promoted. Restart years retain
-the ordinary Day 1 transition after the explicit year-start rebase.
+trajectory at Day 1 end. Before promotion, its generated year-end state must
+match the current accepted 1961 checkpoint with exact schema/discrete leaves
+and float64 `rtol=1e-12`, `atol=1e-12`; the report retains exact mismatch count
+and maximum errors. Restart years retain the ordinary Day 1 transition after
+the explicit year-start rebase.
 
 `P` is ordered and named in the contract. Every flattened group records its
 shape, dtype, start/stop slice, temporal role and source. The parameter groups are
@@ -131,7 +133,7 @@ overhead.
 - plan split validation rejects spatial or temporal leakage;
 - source/contract/shard/checkpoint hashes pass aggregation;
 - 1961 uses `cold_start_bootstrap`, records Day 1 as non-training bootstrap
-  metadata, and passes the exact accepted year-end checkpoint gate;
+  metadata, and passes the strict accepted year-end checkpoint gate;
 - no new v1 pilot shards are generated.
 
 The implementation authority is

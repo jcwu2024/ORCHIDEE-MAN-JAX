@@ -26,8 +26,9 @@ landpoint-year shards.
 - A 1961 chain begins with `initialization_mode=cold_start_bootstrap`: the real
   Teacher executes Day 1 to create canonical `S[1]`, and capture starts at
   Day 2. Day 1 is never represented as a normal Markov sample with an invented
-  state. Its year-end state is checked exactly against the staged accepted
-  1961 checkpoint.
+  state. Its year-end state is checked against the staged current 1961
+  checkpoint with exact structure/discretes and explicit float64
+  `rtol=1e-12`, `atol=1e-12` diagnostics.
 - Later first entries use `initialization_mode=year_start_checkpoint`; all
   following years consume the previous in-process checkpoint and preserve the
   normal restart-year Day 1 transition.

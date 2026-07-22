@@ -56,7 +56,7 @@ Create the portable package locally:
 conda run -n ORCJAX python -m research.daily_coarse_graining.teacher_pilot `
   --spec manifests/coarse_graining/daily_teacher_pilot_v2.json stage `
   --reference-root . `
-  --checkpoint-root outputs/acceptance/compiled_1961_12point_wetdiaglong_fix `
+  --checkpoint-root outputs/acceptance/compiled_1961_2010_12point_wetdiaglong_fix `
   --destination outputs/transfer/daily_teacher_pilot_v2
 ```
 
