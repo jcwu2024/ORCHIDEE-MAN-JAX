@@ -28,6 +28,10 @@ day records are converted immediately to the 3,724-column Markov state,
 discrete state, and 90 diagnostics, then released. The retained annual arrays
 are about 11.3 MB per point-year before NPZ compression. The full pilot is
 therefore about 6.6 GB uncompressed, not the old multi-terabyte v1 estimate.
+CPU production uses the accepted seven-day complete-day block. The historical
+28-day block is retained only in the V100 capture benchmark, where it improved
+single-point hot throughput but did not establish a CPU cold-compile or memory
+advantage.
 
 Before generating the pilot, run exactly one 001/1962 resource probe with
 `scripts/hpc/slurm_teacher_v2_resource_probe.sh`. It measures:

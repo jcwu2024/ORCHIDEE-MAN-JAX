@@ -3,7 +3,7 @@
   "dataset_id": "pft14-teacher-pilot-v2",
   "teacher_config": "configs/orchidee_man_250919.yaml",
   "output_root": "outputs/training/pft14-teacher-pilot-v2",
-  "block_size": 28,
+  "block_size": 7,
   "entries": [
     {
       "landpoint_id": "001.0-071.0",

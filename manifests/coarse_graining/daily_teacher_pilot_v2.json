@@ -3,7 +3,7 @@
   "pilot_id": "pft14-daily-teacher-pilot-v2",
   "first_year": 1962,
   "last_year": 2010,
-  "block_size": 28,
+  "block_size": 7,
   "temporal_splits": {
     "train": [1962, 2004],
     "validation": [2005, 2007],

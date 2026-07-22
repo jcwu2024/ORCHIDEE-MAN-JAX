@@ -33,7 +33,8 @@ diagnostic because other users can preempt effective CPU time.
 The first Teacher capture benchmark is defined by
 `scripts/hpc/slurm_teacher_cpu_benchmark.sh`: one `cnall` task, 8 allocated
 CPUs, a one-hour limit, one cold capture, and three in-process hot repeats over
-29 requested days. Its worst-case CPU charge is CNY `8 * 1 * 0.07 = 0.56`.
+29 requested days using seven-day blocks. Its worst-case CPU charge is CNY
+`8 * 1 * 0.07 = 0.56`.
 Only the requested CPU cores are allocated and charged; the remaining cores on
 the 56-core node are not implicitly part of this request. A later scaling
 benchmark may request more cores and pack multiple workers only if the first
@@ -41,10 +42,11 @@ result shows that worker packing or resource scaling is material.
 
 The v2 annual shard resource gate is
 `scripts/hpc/slurm_teacher_v2_resource_probe.sh`: one `cnall` task, 1 CPU,
-one hour, and one complete 001/1962 point-year. Its worst-case CPU charge is
-CNY `1 * 1 * 0.07 = 0.07`. It must pass before the bounded 12-landpoint Daily
-Teacher pilot is assigned production resources. The probe excludes the known
-slow node `ibc11b04n04` so its timing is not accepted as representative.
+one hour, seven-day compiled blocks, and one complete 001/1962 point-year. Its
+worst-case CPU charge is CNY `1 * 1 * 0.07 = 0.07`. It must pass before the
+bounded 12-landpoint Daily Teacher pilot is assigned production resources.
+The probe excludes the known slow node `ibc11b04n04` so its timing is not
+accepted as representative.
 
 ## Checkout Transfer
 

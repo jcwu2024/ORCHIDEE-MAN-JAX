@@ -64,7 +64,7 @@ echo "first_capture_kind=$FIRST_CAPTURE_KIND cache=$CACHE"
   --reference-run-dir "$ASSETS/reference_case_001_071" \
   --year 1962 \
   --days 29 \
-  --block-size 28 \
+  --block-size 7 \
   --hot-repeats 3 \
   --first-capture-kind "$FIRST_CAPTURE_KIND" \
   --output "$RESULT"

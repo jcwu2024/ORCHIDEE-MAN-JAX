@@ -64,7 +64,7 @@ payload = {
     "schema_version": "daily_teacher_generation_plan_v2",
     "dataset_id": dataset_id,
     "teacher_config": str(Path("configs/orchidee_man_250919.yaml").resolve()),
-    "block_size": 28,
+    "block_size": 7,
     "output_root": str(output_root),
     "entries": [
         {

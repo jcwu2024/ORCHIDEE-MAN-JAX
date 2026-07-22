@@ -208,7 +208,7 @@ def load_plan(path: Path, *, require_inputs: bool = False) -> GenerationPlan:
         raise ValueError(f"plan schema_version must be {SCHEMA_VERSION!r}")
     dataset_id = str(raw.get("dataset_id", ""))
     _validate_safe_id("dataset_id", dataset_id)
-    block_size = int(raw.get("block_size", 28))
+    block_size = int(raw.get("block_size", 7))
     if block_size < 2:
         raise ValueError("block_size must be at least two")
     teacher_config = _resolve(raw["teacher_config"])

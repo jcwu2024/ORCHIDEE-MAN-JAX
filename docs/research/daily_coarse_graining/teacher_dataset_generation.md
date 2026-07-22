@@ -10,9 +10,9 @@ landpoint-year shards.
 - The input JSON plan freezes both spatial and temporal splits before capture.
 - One landpoint always belongs to one spatial split; one year always belongs to
   one temporal split. The validator rejects leakage.
-- Worker assignment hashes the landpoint ID, so all years of one landpoint stay
-  in one persistent process and can reuse compiled executables and year-end
-  state.
+- Worker assignment deterministically balances complete landpoint chains, so
+  all years of one landpoint stay in one persistent process while worker loads
+  remain as even as possible.
 - Each landpoint-year is one atomic, uncompressed NPZ shard. There are no daily
   files and no per-array files.
 - Each completed shard has SHA256 provenance, a year-end state checkpoint, the
@@ -138,7 +138,10 @@ compatibility; its wall time is not an accepted performance result. Benchmark
 one worker on explicitly allocated Slurm compute resources, measure cold and
 in-process hot time, CPU affinity, peak memory, and landpoint-year storage,
 then present the requested cores, finite time limit, and worst-case charge for
-approval before scaling.
+approval before scaling. CPU generation uses seven-day compiled blocks, which
+match the accepted complete-day Teacher path. The historical 28-day capture
+result remains a GPU-specific throughput experiment rather than the CPU
+production default.
 
 ## Explore1000 environments
 

@@ -74,6 +74,8 @@ Current policy:
 
 - use persistent CPU workers for Teacher shard generation unless a measured
   batched-landpoint GPU implementation changes the result;
+- use the accepted seven-day complete-day block for CPU Teacher generation;
+  the 28-day capture result is a historical V100-specific experiment;
 - use GPU for neural-network training;
 - keep inference backend-neutral and benchmark CPU latency versus batched GPU
   throughput after the network architecture is frozen;
