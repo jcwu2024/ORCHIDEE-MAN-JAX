@@ -26,6 +26,8 @@ import jax
 import numpy as np
 
 from jax_orchidee.driver import orchestration as teacher
+from jax_orchidee.driver.init import parse_run_def
+from jax_orchidee.driver.paper_binding import expected_paper_domain_limits
 from research.daily_coarse_graining.daily_markov_contract import (
     SHARD_SCHEMA_VERSION,
     ConditionLeafSpec,
@@ -206,6 +208,29 @@ def _validate_safe_id(name: str, value: str) -> None:
         raise ValueError(f"{name} must contain only letters, digits, dot, underscore, or hyphen")
 
 
+def _validate_landpoint_run_def_binding(entry: PlanEntry) -> None:
+    values = parse_run_def(entry.run_def)
+    expected = expected_paper_domain_limits(entry.landpoint_id)
+    observed: dict[str, float | None] = {}
+    for name in expected:
+        raw = values.get(name)
+        try:
+            observed[name] = None if raw is None else float(raw)
+        except ValueError as exc:
+            raise ValueError(
+                f"{entry.key} run_def has invalid {name}={raw!r}"
+            ) from exc
+    mismatches = {
+        name: {"expected": target, "observed": observed[name]}
+        for name, target in expected.items()
+        if observed[name] != target
+    }
+    if mismatches:
+        raise ValueError(
+            f"{entry.key} run_def domain does not match landpoint ID: {mismatches}"
+        )
+
+
 def load_plan(path: Path, *, require_inputs: bool = False) -> GenerationPlan:
     path = path.resolve()
     raw = json.loads(path.read_text(encoding="utf-8"))
@@ -301,6 +326,8 @@ def load_plan(path: Path, *, require_inputs: bool = False) -> GenerationPlan:
         missing = [str(value) for value in required if not value.exists()]
         if missing:
             raise FileNotFoundError("missing generation inputs: " + ", ".join(missing[:8]))
+        for entry in entries:
+            _validate_landpoint_run_def_binding(entry)
     return GenerationPlan(
         path=path,
         raw=raw,

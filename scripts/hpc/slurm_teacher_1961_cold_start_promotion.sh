@@ -16,6 +16,9 @@ JCWU_ROOT=/WORK/liwei_work/jcwu
 REPO=$JCWU_ROOT/ORCHIDEE-MAN-JAX
 RUNTIME_ROOT=$REPO/runtime
 ASSETS=$RUNTIME_ROOT/assets
+PILOT_ASSETS=$ASSETS/daily_teacher_pilot_v2
+LANDPOINT_ID=001.0-071.0
+LANDPOINT_ASSETS=$PILOT_ASSETS/landpoints/$LANDPOINT_ID
 TEACHER_CONFIG=$REPO/configs/orchidee_man_250919.yaml
 PYTHON=$REPO/.venvs/orcjax_cpu/bin/python
 SLURM_BIN=/rmprog/slurm/v22.05.7/bin
@@ -44,8 +47,8 @@ test -x "$PYTHON"
 test -x "$SLURM_BIN/srun"
 test -f "$TEACHER_CONFIG"
 test -f "$ASSETS/checkpoints/paper_driver_1961_year_end_state_current.pkl"
-test -f "$ASSETS/configs/teacher_compatibility_used_run.def"
-test -d "$ASSETS/reference_case_001_071"
+test -f "$LANDPOINT_ASSETS/used_run.def"
+test -d "$LANDPOINT_ASSETS/reference"
 test -f "$ORCHIDEE_DATA_ROOT/forcing/cruncep_twodeg_1961.nc"
 test -f "$ORCHIDEE_DATA_ROOT/forcing/cruncep_twodeg_1962.nc"
 mkdir -p "$DATASET_ROOT" "$CACHE" "$RUNTIME_ROOT/logs"
@@ -63,8 +66,9 @@ dataset_id = sys.argv[2]
 output_root = Path(sys.argv[3])
 assets = Path(sys.argv[4])
 teacher_config = Path(sys.argv[5])
-run_def = assets / "configs" / "teacher_compatibility_used_run.def"
-reference = assets / "reference_case_001_071"
+landpoint_assets = assets / "daily_teacher_pilot_v2" / "landpoints" / "001.0-071.0"
+run_def = landpoint_assets / "used_run.def"
+reference = landpoint_assets / "reference"
 accepted_1961 = assets / "checkpoints" / "paper_driver_1961_year_end_state_current.pkl"
 payload = {
     "schema_version": "daily_teacher_generation_plan_v2",

@@ -6,6 +6,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from jax_orchidee.driver.paper_binding import expected_paper_domain_limits
 from research.daily_coarse_graining import teacher_pilot, teacher_shards
 
 
@@ -62,7 +63,12 @@ def test_stage_verify_and_plan_roundtrip(monkeypatch, tmp_path):
         for name in spec.required_reference_files:
             (output / name).write_bytes(f"{item.landpoint_id}:{name}".encode())
         used_run_def = source_root / item.landpoint_id / "used_run.def"
-        used_run_def.write_text("DT_SECHIBA = 1800\n", encoding="utf-8")
+        limits = expected_paper_domain_limits(item.landpoint_id)
+        used_run_def.write_text(
+            "DT_SECHIBA = 1800\n"
+            + "".join(f"{name} = {value}\n" for name, value in limits.items()),
+            encoding="utf-8",
+        )
         checkpoint = checkpoint_root / item.landpoint_id / "compiled_checkpoints"
         checkpoint.mkdir(parents=True)
         (checkpoint / spec.checkpoint_name).write_bytes(b"checkpoint")

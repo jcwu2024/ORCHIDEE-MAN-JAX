@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+from jax_orchidee.driver.paper_binding import expected_paper_domain_limits
 from research.daily_coarse_graining import supervised_learnability_pilot as capture
 from research.daily_coarse_graining import teacher_shards as shards
 
@@ -30,7 +31,11 @@ def _write_plan(tmp_path: Path, entries: list[dict], **overrides) -> Path:
 
 def _entry(tmp_path: Path, landpoint: str, year: int, **overrides) -> dict:
     run_def = tmp_path / f"{landpoint}-{year}.def"
-    run_def.write_text("test\n", encoding="utf-8")
+    limits = expected_paper_domain_limits(landpoint)
+    run_def.write_text(
+        "".join(f"{name}={value}\n" for name, value in limits.items()),
+        encoding="utf-8",
+    )
     reference = tmp_path / f"reference-{landpoint}"
     reference.mkdir(exist_ok=True)
     cache = tmp_path / f"cache-{landpoint}-{year}.pkl"
@@ -106,6 +111,18 @@ def test_plan_accepts_1961_cold_start_only_at_chain_start(tmp_path):
     invalid = dict(cold, year=1962)
     with pytest.raises(ValueError, match="supported only for 1961"):
         shards.load_plan(_write_plan(tmp_path, [invalid]))
+
+
+def test_plan_rejects_run_def_bound_to_another_landpoint(tmp_path):
+    entry = _entry(tmp_path, "001.0-071.0", 1961)
+    Path(entry["run_def"]).write_text(
+        "LIMIT_WEST=108\nLIMIT_EAST=110\n"
+        "LIMIT_SOUTH=20\nLIMIT_NORTH=22\n",
+        encoding="utf-8",
+    )
+
+    with pytest.raises(ValueError, match="run_def domain does not match landpoint ID"):
+        shards.load_plan(_write_plan(tmp_path, [entry]), require_inputs=True)
 
 
 def test_worker_assignment_keeps_complete_landpoint_chain_together(tmp_path):
