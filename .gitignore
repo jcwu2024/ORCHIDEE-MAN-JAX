@@ -8,6 +8,7 @@ __pycache__/
 .coverage
 htmlcov/
 .venv/
+/.venvs/
 
 # JAX/XLA runtime caches
 .jax_cache/
@@ -49,6 +50,8 @@ dist/
 !/reference/README.md
 /outputs/**
 !/outputs/README.md
+/runtime/**
+!/runtime/README.md
 /traces/**
 !/traces/README.md
 /fortran_source/ORCHIDEE/**

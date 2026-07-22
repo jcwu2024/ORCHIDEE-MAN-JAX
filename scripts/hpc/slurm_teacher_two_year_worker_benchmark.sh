@@ -5,29 +5,31 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
 #SBATCH --time=01:15:00
-#SBATCH --output=/WORK/liwei_work/jcwu/out_orcjax_teacher_2y_%j.txt
-#SBATCH --error=/WORK/liwei_work/jcwu/out_orcjax_teacher_2y_%j.txt
+#SBATCH --output=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/orcjax_teacher_2y_%j.txt
+#SBATCH --error=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/orcjax_teacher_2y_%j.txt
 #SBATCH --no-requeue
 
 set -euo pipefail
 
 JCWU_ROOT=/WORK/liwei_work/jcwu
 REPO=$JCWU_ROOT/ORCHIDEE-MAN-JAX
-ASSETS=$JCWU_ROOT/orchidee_man_jax_assets
+RUNTIME_ROOT=$REPO/runtime
+ASSETS=$RUNTIME_ROOT/assets
 TEACHER_CONFIG=$REPO/configs/orchidee_man_250919.yaml
-PYTHON=$JCWU_ROOT/.venvs/orcjax_cpu/bin/python
+PYTHON=$REPO/.venvs/orcjax_cpu/bin/python
 SLURM_BIN=/rmprog/slurm/v22.05.7/bin
-OUTPUT_ROOT=$JCWU_ROOT/orchidee_man_jax_outputs
+OUTPUT_ROOT=$RUNTIME_ROOT/outputs
 DATASET_ID=teacher-two-year-worker-${SLURM_JOB_ID}
 DATASET_ROOT=$OUTPUT_ROOT/training/$DATASET_ID
 PLAN=$DATASET_ROOT/generation_plan.json
 CACHE=$OUTPUT_ROOT/xla_cache/teacher_two_year_worker/${SLURM_JOB_ID}
 
 export ORCHIDEE_REPO_ROOT=$REPO
-export ORCHIDEE_DATA_ROOT=$JCWU_ROOT/orchidee_man_jax_data
+export ORCHIDEE_RUNTIME_ROOT=$RUNTIME_ROOT
+export ORCHIDEE_DATA_ROOT=$RUNTIME_ROOT/data
 export ORCHIDEE_REFERENCE_ROOT=$ASSETS
 export ORCHIDEE_OUTPUT_ROOT=$OUTPUT_ROOT
-export XDG_CACHE_HOME=$JCWU_ROOT/.cache
+export XDG_CACHE_HOME=$RUNTIME_ROOT/cache/xdg
 export JAX_COMPILATION_CACHE_DIR=$CACHE
 export JAX_PLATFORMS=cpu
 export JAX_ENABLE_X64=True

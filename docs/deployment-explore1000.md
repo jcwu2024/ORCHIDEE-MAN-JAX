@@ -49,7 +49,8 @@ On the workstation:
 ```powershell
 git bundle create ORCHIDEE-MAN-JAX-daily.bundle research/daily-coarse-graining
 git bundle verify ORCHIDEE-MAN-JAX-daily.bundle
-scp ORCHIDEE-MAN-JAX-daily.bundle cln01:/WORK/liwei_work/jcwu/transfer/
+scp ORCHIDEE-MAN-JAX-daily.bundle \
+  cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX-bootstrap.bundle
 ```
 
 For the initial cluster checkout:
@@ -57,17 +58,22 @@ For the initial cluster checkout:
 ```bash
 cd /WORK/liwei_work/jcwu
 git clone --branch research/daily-coarse-graining \
-  /WORK/liwei_work/jcwu/transfer/ORCHIDEE-MAN-JAX-daily.bundle \
+  /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX-bootstrap.bundle \
   ORCHIDEE-MAN-JAX
 cd ORCHIDEE-MAN-JAX
+mkdir -p runtime/transfer
+mv /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX-bootstrap.bundle \
+  runtime/transfer/ORCHIDEE-MAN-JAX-daily.bundle
 git rev-parse --short HEAD
 ```
 
 For later updates:
 
 ```bash
+scp ORCHIDEE-MAN-JAX-daily.bundle \
+  cln01:/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/
 cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
-git fetch /WORK/liwei_work/jcwu/transfer/ORCHIDEE-MAN-JAX-daily.bundle \
+git fetch /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/transfer/ORCHIDEE-MAN-JAX-daily.bundle \
   research/daily-coarse-graining
 git merge --ff-only FETCH_HEAD
 git rev-parse --short HEAD
@@ -80,8 +86,9 @@ an implicit merge to hide server-side edits.
 
 Canonical project-scoped environments:
 
-- CPU: `/WORK/liwei_work/jcwu/.venvs/orcjax_cpu`
-- GPU: `/WORK/liwei_work/jcwu/.venvs/orcjax_gpu`
+- Runtime assets: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime`
+- CPU: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu`
+- GPU: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu`
 
 The CPU environment is uv-managed and pinned to CentOS 7-compatible wheels.
 Build or reconcile it on `cln01`:

@@ -5,28 +5,30 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --time=01:00:00
-#SBATCH --output=/WORK/liwei_work/jcwu/out_orcjax_cpu_benchmark_%j.txt
-#SBATCH --error=/WORK/liwei_work/jcwu/out_orcjax_cpu_benchmark_%j.txt
+#SBATCH --output=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/orcjax_cpu_benchmark_%j.txt
+#SBATCH --error=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/orcjax_cpu_benchmark_%j.txt
 #SBATCH --no-requeue
 
 set -euo pipefail
 
 JCWU_ROOT=/WORK/liwei_work/jcwu
 REPO=$JCWU_ROOT/ORCHIDEE-MAN-JAX
-ASSETS=$JCWU_ROOT/orchidee_man_jax_assets
-PYTHON=$JCWU_ROOT/.venvs/orcjax_cpu/bin/python
+RUNTIME_ROOT=$REPO/runtime
+ASSETS=$RUNTIME_ROOT/assets
+PYTHON=$REPO/.venvs/orcjax_cpu/bin/python
 SLURM_BIN=/rmprog/slurm/v22.05.7/bin
-OUTPUT_ROOT=$JCWU_ROOT/orchidee_man_jax_outputs
+OUTPUT_ROOT=$RUNTIME_ROOT/outputs
 RESULT_DIR=$OUTPUT_ROOT/performance/daily_coarse_graining/cpu_slurm
 RESULT=$RESULT_DIR/compiled_training_capture_cpu_job_${SLURM_JOB_ID}.json
 CACHE=${TEACHER_BENCHMARK_CACHE:-$OUTPUT_ROOT/xla_cache/teacher_cpu_benchmark/${SLURM_JOB_ID}}
 FIRST_CAPTURE_KIND=${TEACHER_FIRST_CAPTURE_KIND:-cold}
 
 export ORCHIDEE_REPO_ROOT=$REPO
-export ORCHIDEE_DATA_ROOT=$JCWU_ROOT/orchidee_man_jax_data
+export ORCHIDEE_RUNTIME_ROOT=$RUNTIME_ROOT
+export ORCHIDEE_DATA_ROOT=$RUNTIME_ROOT/data
 export ORCHIDEE_REFERENCE_ROOT=$ASSETS
 export ORCHIDEE_OUTPUT_ROOT=$OUTPUT_ROOT
-export XDG_CACHE_HOME=$JCWU_ROOT/.cache
+export XDG_CACHE_HOME=$RUNTIME_ROOT/cache/xdg
 export JAX_COMPILATION_CACHE_DIR=$CACHE
 export JAX_PLATFORMS=cpu
 export JAX_ENABLE_X64=True

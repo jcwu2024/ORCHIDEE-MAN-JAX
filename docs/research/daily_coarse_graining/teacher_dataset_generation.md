@@ -91,8 +91,8 @@ approval before scaling.
 
 Use project-scoped uv environments:
 
-- CPU: `/WORK/liwei_work/jcwu/.venvs/orcjax_cpu`
-- GPU: `/WORK/liwei_work/jcwu/.venvs/orcjax_gpu`
+- CPU: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu`
+- GPU: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu`
 
 Do not create new generic names such as `jc_gpu`. Historical `jc_gpu`,
 `orcj_gpu`, and `orcj_gpu_compat` environments are legacy validation assets;

@@ -43,12 +43,12 @@ bash scripts/hpc/bootstrap_orcjax_cpu.sh
 ```
 
 This creates or reconciles
-`/WORK/liwei_work/jcwu/.venvs/orcjax_cpu`. Run the bootstrap on `cln01`, which
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_cpu`. Run the bootstrap on `cln01`, which
 has package-index access. Compute and test nodes consume the shared environment
 read-only.
 
 The canonical GPU environment will be
-`/WORK/liwei_work/jcwu/.venvs/orcjax_gpu`, but it is not yet frozen. Existing
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/orcjax_gpu`, but it is not yet frozen. Existing
 legacy GPU environments are validation assets and must not be treated as the
 project-wide runtime. Build `orcjax_gpu` only after neural training
 dependencies are fixed, then reproduce the accepted V100 compatibility gate.
