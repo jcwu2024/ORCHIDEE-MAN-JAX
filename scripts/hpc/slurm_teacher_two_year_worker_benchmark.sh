@@ -93,6 +93,10 @@ PY
 echo "git_head=$(git rev-parse HEAD)"
 echo "job_id=$SLURM_JOB_ID cpus=$SLURM_CPUS_PER_TASK host=$(hostname)"
 echo "plan=$PLAN dataset_root=$DATASET_ROOT cache=$CACHE"
+echo "loadavg=$(cat /proc/loadavg)"
+grep -E '^(MemTotal|MemAvailable):' /proc/meminfo
+grep -E '^(Cpus_allowed_list|Mems_allowed_list):' /proc/self/status
+lscpu
 
 "$PYTHON" -m research.daily_coarse_graining.teacher_shards validate \
   --plan "$PLAN" --worker-count 1
