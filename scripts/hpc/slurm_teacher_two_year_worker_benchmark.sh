@@ -43,6 +43,8 @@ test -f "$TEACHER_CONFIG"
 test -f "$ASSETS/checkpoints/paper_driver_1961_year_end_state.pkl"
 test -f "$ASSETS/configs/teacher_compatibility_used_run.def"
 test -d "$ASSETS/reference_case_001_071"
+test -f "$ORCHIDEE_DATA_ROOT/forcing/cruncep_twodeg_1962.nc"
+test -f "$ORCHIDEE_DATA_ROOT/forcing/cruncep_twodeg_1963.nc"
 mkdir -p "$DATASET_ROOT" "$CACHE"
 
 cd "$REPO"
