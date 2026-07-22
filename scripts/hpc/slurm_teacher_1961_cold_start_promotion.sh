@@ -23,7 +23,7 @@ OUTPUT_ROOT=$RUNTIME_ROOT/outputs
 DATASET_ID=teacher-1961-cold-start-promotion-${SLURM_JOB_ID}
 DATASET_ROOT=$OUTPUT_ROOT/training/$DATASET_ID
 PLAN=$DATASET_ROOT/generation_plan.json
-CACHE=$OUTPUT_ROOT/xla_cache/teacher_1961_cold_start/${SLURM_JOB_ID}
+CACHE=${TEACHER_PROMOTION_CACHE:-$OUTPUT_ROOT/xla_cache/teacher_1961_cold_start/${SLURM_JOB_ID}}
 
 export ORCHIDEE_REPO_ROOT=$REPO
 export ORCHIDEE_RUNTIME_ROOT=$RUNTIME_ROOT
