@@ -590,10 +590,32 @@ def _completed_metadata(
 
 def _initial_state(entry: PlanEntry, chained_state):
     if entry.state_cache is not None:
-        return _load_state_cache(entry.state_cache)["state"]
-    if chained_state is None:
-        raise RuntimeError(f"{entry.key} has no preceding in-process state")
-    return chained_state
+        state = _load_state_cache(entry.state_cache)["state"]
+    else:
+        if chained_state is None:
+            raise RuntimeError(f"{entry.key} has no preceding in-process state")
+        state = chained_state
+    gaps = teacher.driver_year_handoff_state_gaps(state)
+    slowproc = state.fields_by_component.get(
+        "slowproc_stomate_previous_step_state", {}
+    )
+    missing_season = tuple(
+        name for name in teacher.STOMATE_DAY_SEASON_STATE_FIELDS if name not in slowproc
+    )
+    if gaps or missing_season:
+        missing = [
+            f"{gap.component}.{field}"
+            for gap in gaps
+            for field in gap.fields
+        ]
+        missing.extend(
+            f"slowproc_stomate_previous_step_state.{name}"
+            for name in missing_season
+        )
+        raise ValueError(
+            f"{entry.key} year-start checkpoint is incomplete: {missing[:12]}"
+        )
+    return state
 
 
 def _input_hashes(plan: GenerationPlan, entry: PlanEntry) -> dict[str, Any]:
@@ -627,15 +649,14 @@ def _write_entry(
     entry_started = time.perf_counter()
     memory_before = _process_memory_bytes()
     cache_before = _compiled_cache_entries()
+    source_state = _initial_state(entry, previous_state)
     preparation_started = time.perf_counter()
     context = teacher.prepare_paper_1961_driver_context(
         plan.teacher_config,
         used_run_def_path=entry.run_def,
         reference_run_dir=entry.reference_run_dir,
     )
-    initial_state = teacher.rebase_driver_state_for_year_start(
-        _initial_state(entry, previous_state)
-    )
+    initial_state = teacher.rebase_driver_state_for_year_start(source_state)
     preparation_seconds = time.perf_counter() - preparation_started
     print(
         f"teacher_entry_prepared key={entry.key} "

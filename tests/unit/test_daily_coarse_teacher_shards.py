@@ -144,6 +144,27 @@ def test_compiled_cache_entries_reports_both_production_caches(monkeypatch):
     }
 
 
+def test_initial_state_rejects_incomplete_year_handoff_before_compilation(monkeypatch):
+    state = SimpleNamespace(
+        fields_by_component={
+            "slowproc_stomate_previous_step_state": {"t2m_month": np.ones(1)}
+        }
+    )
+    entry = SimpleNamespace(key="point:1962", state_cache=Path("state.pkl"))
+    monkeypatch.setattr(shards, "_load_state_cache", lambda _path: {"state": state})
+    monkeypatch.setattr(shards.teacher, "driver_year_handoff_state_gaps", lambda _state: ())
+    monkeypatch.setattr(
+        shards.teacher,
+        "STOMATE_DAY_SEASON_STATE_FIELDS",
+        ("t2m_month", "date"),
+    )
+    with pytest.raises(ValueError, match="slowproc_stomate_previous_step_state.date"):
+        shards._initial_state(entry, None)
+
+    state.fields_by_component["slowproc_stomate_previous_step_state"]["date"] = 365
+    assert shards._initial_state(entry, None) is state
+
+
 def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
     entry = _entry(tmp_path, "001.0-071.0", 1961)
     plan = shards.load_plan(_write_plan(tmp_path, [entry]))
