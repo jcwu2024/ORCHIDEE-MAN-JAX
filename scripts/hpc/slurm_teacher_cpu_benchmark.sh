@@ -49,7 +49,8 @@ echo "git_head=$(git rev-parse HEAD)"
 echo "job_id=$SLURM_JOB_ID cpus=$SLURM_CPUS_PER_TASK host=$(hostname)"
 echo "result=$RESULT"
 
-/usr/bin/time -v "$SLURM_BIN/srun" --cpu-bind=cores "$PYTHON" \
+"$SLURM_BIN/srun" --cpus-per-task="$SLURM_CPUS_PER_TASK" --cpu-bind=cores \
+  /usr/bin/time -v "$PYTHON" \
   scripts/dev/benchmark_compiled_training_capture.py \
   --state-cache "$ASSETS/checkpoints/paper_driver_1961_year_end_state.pkl" \
   --run-def "$ASSETS/configs/teacher_compatibility_used_run.def" \

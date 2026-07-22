@@ -44,6 +44,21 @@ def _cpu_affinity() -> list[int] | None:
     return sorted(int(value) for value in getter(0))
 
 
+def _validate_slurm_affinity() -> list[int] | None:
+    affinity = _cpu_affinity()
+    requested = os.environ.get("SLURM_CPUS_PER_TASK")
+    if requested is None or affinity is None:
+        return affinity
+    expected = int(requested)
+    if len(affinity) < expected:
+        raise RuntimeError(
+            "Slurm allocated "
+            f"{expected} CPUs per task but the Python affinity exposes only "
+            f"{len(affinity)} CPUs: {affinity}"
+        )
+    return affinity
+
+
 def _peak_rss_bytes() -> int | None:
     try:
         import resource
@@ -163,6 +178,7 @@ def main() -> int:
     if args.hot_repeats < 3:
         raise ValueError("accepted performance benchmarks require at least three hot repeats")
 
+    affinity = _validate_slurm_affinity()
     setup_started = time.perf_counter()
     cache = _load_state_cache(args.state_cache)
     context = teacher.prepare_paper_1961_driver_context(
@@ -189,7 +205,6 @@ def main() -> int:
             }
         )
     timing = _timing_statistics(hot_seconds, days=args.days)
-    affinity = _cpu_affinity()
     threading_environment = {
         name: os.environ.get(name)
         for name in (
