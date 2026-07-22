@@ -119,6 +119,31 @@ def test_generation_rejects_an_uncommitted_teacher_identity(monkeypatch):
         shards._clean_git_head()
 
 
+def test_process_memory_bytes_parses_linux_status(tmp_path):
+    status = tmp_path / "status"
+    status.write_text(
+        "Name:\tpython\nVmHWM:\t  4321 kB\nVmRSS:\t  1234 kB\n",
+        encoding="utf-8",
+    )
+    assert shards._process_memory_bytes(status) == {
+        "current_rss_bytes": 1234 * 1024,
+        "peak_rss_bytes": 4321 * 1024,
+    }
+
+
+def test_compiled_cache_entries_reports_both_production_caches(monkeypatch):
+    monkeypatch.setattr(shards.teacher, "_COMPILED_LATER_DAY_BLOCK_CACHE", {1: "a"})
+    monkeypatch.setattr(
+        shards.teacher,
+        "_COMPILED_SECHIBA_SCAN_CACHE",
+        {1: "a", 2: "b"},
+    )
+    assert shards._compiled_cache_entries() == {
+        "later_day_block": 1,
+        "sechiba_scan": 2,
+    }
+
+
 def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
     entry = _entry(tmp_path, "001.0-071.0", 1961)
     plan = shards.load_plan(_write_plan(tmp_path, [entry]))

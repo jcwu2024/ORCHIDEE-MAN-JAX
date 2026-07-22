@@ -88,6 +88,42 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _process_memory_bytes(
+    status_path: Path = Path("/proc/self/status"),
+) -> dict[str, int | None]:
+    """Return current and peak resident memory without adding a dependency."""
+
+    if status_path.exists():
+        values: dict[str, int] = {}
+        for line in status_path.read_text(encoding="utf-8", errors="replace").splitlines():
+            name, separator, raw_value = line.partition(":")
+            if separator and name in {"VmRSS", "VmHWM"}:
+                fields = raw_value.split()
+                if fields:
+                    values[name] = int(fields[0]) * 1024
+        return {
+            "current_rss_bytes": values.get("VmRSS"),
+            "peak_rss_bytes": values.get("VmHWM"),
+        }
+
+    try:
+        import resource
+    except ImportError:
+        peak_rss = None
+    else:
+        peak_rss = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+        if platform.system() != "Darwin":
+            peak_rss *= 1024
+    return {"current_rss_bytes": None, "peak_rss_bytes": peak_rss}
+
+
+def _compiled_cache_entries() -> dict[str, int]:
+    return {
+        "later_day_block": len(teacher._COMPILED_LATER_DAY_BLOCK_CACHE),
+        "sechiba_scan": len(teacher._COMPILED_SECHIBA_SCAN_CACHE),
+    }
+
+
 def _canonical_json(value: Any) -> bytes:
     return json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
 
@@ -494,6 +530,10 @@ def _write_entry(
     previous_state,
     preceding_checkpoint_sha256: str | None,
 ) -> tuple[dict[str, Any], Any]:
+    entry_started = time.perf_counter()
+    memory_before = _process_memory_bytes()
+    cache_before = _compiled_cache_entries()
+    preparation_started = time.perf_counter()
     context = teacher.prepare_paper_1961_driver_context(
         plan.teacher_config,
         used_run_def_path=entry.run_def,
@@ -502,6 +542,7 @@ def _write_entry(
     initial_state = teacher.rebase_driver_state_for_year_start(
         _initial_state(entry, previous_state)
     )
+    preparation_seconds = time.perf_counter() - preparation_started
     started = time.perf_counter()
     states, forcings, records, final_state = _capture_days_compiled_blocks(
         config_path=plan.teacher_config,
@@ -513,9 +554,14 @@ def _write_entry(
         block_size=plan.block_size,
     )
     capture_seconds = time.perf_counter() - started
+    cache_after = _compiled_cache_entries()
+    assembly_started = time.perf_counter()
     arrays, spec = build_shard_arrays(states, forcings, records, context)
+    array_assembly_seconds = time.perf_counter() - assembly_started
     shard, metadata_path, checkpoint = _entry_paths(worker_root, entry)
+    npz_started = time.perf_counter()
     _atomic_npz(shard, arrays)
+    npz_write_seconds = time.perf_counter() - npz_started
     checkpoint_payload = {
         "schema_version": "daily_teacher_year_end_checkpoint_v1",
         "teacher_git_head": git_head,
@@ -524,7 +570,13 @@ def _write_entry(
         "end_year": entry.year,
         "state": final_state,
     }
+    checkpoint_started = time.perf_counter()
     _atomic_pickle(checkpoint, checkpoint_payload)
+    checkpoint_write_seconds = time.perf_counter() - checkpoint_started
+    shard_sha256 = _sha256_file(shard)
+    checkpoint_sha256 = _sha256_file(checkpoint)
+    memory_after = _process_memory_bytes()
+    total_entry_seconds = time.perf_counter() - entry_started
     metadata = {
         "schema_version": SHARD_SCHEMA_VERSION,
         "status": "complete",
@@ -539,15 +591,37 @@ def _write_entry(
         "temporal_split": entry.temporal_split,
         "block_size": plan.block_size,
         "capture_seconds": capture_seconds,
+        "timing_seconds": {
+            "context_and_state_preparation": preparation_seconds,
+            "capture": capture_seconds,
+            "array_assembly": array_assembly_seconds,
+            "npz_write": npz_write_seconds,
+            "checkpoint_write": checkpoint_write_seconds,
+            "total_entry_before_metadata_write": total_entry_seconds,
+        },
+        "compiled_cache_entries": {
+            "before": cache_before,
+            "after": cache_after,
+            "delta": {
+                name: cache_after[name] - cache_before[name]
+                for name in cache_before
+            },
+        },
+        "process_memory": {
+            "before": memory_before,
+            "after": memory_after,
+        },
         "preceding_checkpoint_sha256": preceding_checkpoint_sha256,
         "input_hashes": _input_hashes(plan, entry),
         "boundary_spec": _leaf_metadata(spec),
         "boundary_spec_sha256": _sha256_bytes(_canonical_json(_leaf_metadata(spec))),
         "arrays": _array_metadata(arrays),
         "shard": _relative(shard, worker_root),
-        "shard_sha256": _sha256_file(shard),
+        "shard_sha256": shard_sha256,
+        "shard_bytes": shard.stat().st_size,
         "checkpoint": _relative(checkpoint, worker_root),
-        "checkpoint_sha256": _sha256_file(checkpoint),
+        "checkpoint_sha256": checkpoint_sha256,
+        "checkpoint_bytes": checkpoint.stat().st_size,
     }
     _atomic_json(metadata_path, metadata)
     return metadata, final_state
