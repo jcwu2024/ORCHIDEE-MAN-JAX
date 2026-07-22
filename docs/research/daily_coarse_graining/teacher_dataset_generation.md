@@ -88,12 +88,46 @@ and collates numerical batches without exposing landpoint identity as a model
 feature. The complete-day argument ownership ledger is
 `manifests/coarse_graining/daily_markov_input_ownership_v2.json`.
 
+`fit_training_statistics` streams only shards whose spatial and temporal
+splits are both `train`. It computes finite-only count, mean, population
+variance and scale per feature column without materializing the full dataset.
+The hash-linked `daily_teacher_training_statistics_v1` JSON/NPZ asset records
+the Teacher commit, Markov contract, source shard hashes and the number of
+never, once and conditionally finite columns. Columns with zero finite values
+use mean zero and scale one; columns with one finite value use that value and
+scale one. `normalize_finite` maps undefined entries to normalized zero and
+returns their explicit boolean mask. Validation and test shards must never
+contribute normalization statistics.
+
+The first real v2 smoke shard (`103.0-095.0`, 1962 Day 1) contains one
+source-defined non-finite state column: the bare-soil/PFT1 slot of
+`diffuco_previous_step_state.roughheight_pft`. CONDVEG intentionally assigns
+roughness height only to vegetated PFT slots, and the existing source-backed
+CONDVEG regression requires this slot to remain NaN. The PFT14 slot is finite
+(`10.2` in this smoke). This slot must remain masked; it is not evidence of a
+Teacher instability and must not be replaced with an invented physical value.
+
+Training input prefetch is bounded by an explicit batch count. Benchmark it
+against a verified local dataset without copying all samples into memory:
+
+```bash
+python -m research.daily_coarse_graining.benchmark_markov_dataset \
+  outputs/training/local-markov-smoke-v2/dataset_manifest.json \
+  --repeats 256 --batch-size 32 --prefetch 2
+```
+
+On the 1962 Day 1 Windows smoke, 256 synthetic replays produced 8 batches at
+about 254 samples/s; the largest collated batch was 3.49 MB and the measured
+`tracemalloc` peak was 9.89 MB. This is a loader-memory gate, not a model
+training-throughput claim.
+
 The schema and its field provenance are implemented in
 `research/daily_coarse_graining/daily_markov_contract.py`. Existing v1 shards
 remain historical audit evidence, but no new pilot may be generated with v1.
 
-Normalization, target sanitization, and train-time dtype conversion happen
-after split selection. They are not baked into Teacher shards.
+Normalization, finite masking, and train-time dtype conversion happen after
+split selection. They are not baked into Teacher shards. Non-finite targets
+are masked rather than silently sanitized into scientific values.
 
 ## Resource policy
 

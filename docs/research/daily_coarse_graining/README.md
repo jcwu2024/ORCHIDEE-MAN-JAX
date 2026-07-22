@@ -29,7 +29,8 @@ Implemented:
 - Daily Markov Contract v2 and native-forcing reconstruction;
 - complete-day input ownership audit and named condition slices;
 - fixed split and provenance-aware v2 shard generation;
-- hash-verifying v2 training dataset reader and batch collation;
+- hash-verifying v2 training dataset reader, streaming train-only statistics,
+  explicit finite masks and bounded-prefetch batch collation;
 - CPU and V100 compatibility gates;
 - parameter-conditioned neural training plumbing.
 
