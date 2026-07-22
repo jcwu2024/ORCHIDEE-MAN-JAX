@@ -84,7 +84,9 @@ Build the final generation plan only after the resource probe passes:
 2. Resource count, wall time, worker count, expected storage, and worst-case
    charge are recalculated from that result before any multi-point `sbatch`.
 3. Pilot generation must preserve one persistent process per landpoint chain,
-   exact source/contract/checkpoint hashes, and frozen splits.
+   assign complete landpoint chains deterministically with balanced worker
+   loads, and preserve exact source/contract/checkpoint hashes and frozen
+   splits.
 4. Train-only statistics are generated from spatial-train/temporal-train
    shards. No validation or test data may influence normalization.
 5. One-step, 7-day, 30-day, and 365-day free rollout gates run before any

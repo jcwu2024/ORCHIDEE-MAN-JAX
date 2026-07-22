@@ -46,6 +46,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_VERSION = "daily_teacher_generation_plan_v2"
 MANIFEST_SCHEMA_VERSION = "daily_teacher_worker_manifest_v2"
 DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v2"
+WORKER_ASSIGNMENT_STRATEGY = "balanced_landpoint_chains_v1"
 SPLITS = frozenset({"train", "validation", "test"})
 SAFE_ID = re.compile(r"^[A-Za-z0-9._-]+$")
 PARAMETER_ORDER = ("alloc_min", "residence_time", "vcmax25", "maint_resp_slope")
@@ -287,22 +288,36 @@ def _is_leap_year(year: int) -> bool:
     return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
 
 
-def worker_for_landpoint(landpoint_id: str, worker_count: int) -> int:
+def worker_assignment(plan: GenerationPlan, worker_count: int) -> dict[str, int]:
     if worker_count < 1:
         raise ValueError("worker_count must be positive")
-    digest = hashlib.sha256(landpoint_id.encode("utf-8")).digest()
-    return int.from_bytes(digest[:8], "big") % worker_count
+    entries_by_landpoint: dict[str, int] = {}
+    for entry in plan.entries:
+        entries_by_landpoint[entry.landpoint_id] = (
+            entries_by_landpoint.get(entry.landpoint_id, 0) + 1
+        )
+    loads = [0] * worker_count
+    assignment = {}
+    for landpoint_id, entry_count in sorted(
+        entries_by_landpoint.items(),
+        key=lambda item: (-item[1], item[0]),
+    ):
+        worker_index = min(range(worker_count), key=lambda index: (loads[index], index))
+        assignment[landpoint_id] = worker_index
+        loads[worker_index] += entry_count
+    return assignment
 
 
 def assigned_entries(plan: GenerationPlan, worker_index: int, worker_count: int) -> tuple[PlanEntry, ...]:
     if worker_index < 0 or worker_index >= worker_count:
         raise ValueError("worker_index must satisfy 0 <= worker_index < worker_count")
+    assignment = worker_assignment(plan, worker_count)
     return tuple(
         sorted(
             (
                 entry
                 for entry in plan.entries
-                if worker_for_landpoint(entry.landpoint_id, worker_count) == worker_index
+                if assignment[entry.landpoint_id] == worker_index
             ),
             key=lambda entry: (entry.landpoint_id, entry.year),
         )
@@ -1002,6 +1017,7 @@ def _worker_manifest(
         "teacher_git_head": git_head,
         "worker_index": worker_index,
         "worker_count": worker_count,
+        "worker_assignment_strategy": WORKER_ASSIGNMENT_STRATEGY,
         "assigned_entries": [entry.key for entry in assigned],
         "completed_entries": sorted(completed_keys),
         "complete": completed_keys == {entry.key for entry in assigned},
@@ -1038,6 +1054,8 @@ def aggregate_workers(
             raise ValueError(f"plan drift in {manifest_path}")
         if manifest.get("worker_index") != index or manifest.get("worker_count") != worker_count:
             raise ValueError(f"worker identity mismatch in {manifest_path}")
+        if manifest.get("worker_assignment_strategy") != WORKER_ASSIGNMENT_STRATEGY:
+            raise ValueError(f"worker assignment strategy mismatch in {manifest_path}")
         heads.add(manifest["teacher_git_head"])
         for shard in manifest["shards"]:
             key = f"{shard['landpoint_id']}:{shard['year']}"
@@ -1085,6 +1103,7 @@ def aggregate_workers(
         "plan_sha256": plan.plan_sha256,
         "teacher_git_head": next(iter(heads)),
         "worker_count": worker_count,
+        "worker_assignment_strategy": WORKER_ASSIGNMENT_STRATEGY,
         "landpoint_count": len({entry.landpoint_id for entry in plan.entries}),
         "year_count": len({entry.year for entry in plan.entries}),
         "shard_count": len(observed),

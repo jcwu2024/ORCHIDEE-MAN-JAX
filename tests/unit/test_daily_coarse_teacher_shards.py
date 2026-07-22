@@ -101,13 +101,38 @@ def test_worker_assignment_keeps_complete_landpoint_chain_together(tmp_path):
         for index, values in enumerate(selected)
         for entry in values
     }
+    assignment = shards.worker_assignment(plan, 4)
     assert sum(len(values) for values in selected) == 3
-    assert owners["001.0-071.0"] == shards.worker_for_landpoint("001.0-071.0", 4)
+    assert owners == assignment
     assert [
         entry.year
         for entry in selected[owners["001.0-071.0"]]
         if entry.landpoint_id == "001.0-071.0"
     ] == [1961, 1962]
+
+
+def test_worker_assignment_balances_complete_landpoint_chains(tmp_path):
+    entries = [
+        _entry(tmp_path, f"{index:03d}.0-071.0", 1961)
+        for index in range(12)
+    ]
+    plan = shards.load_plan(_write_plan(tmp_path, entries))
+
+    for worker_count, expected_loads in (
+        (4, [3, 3, 3, 3]),
+        (8, [2, 2, 2, 2, 1, 1, 1, 1]),
+        (12, [1] * 12),
+    ):
+        selected = [
+            shards.assigned_entries(plan, index, worker_count)
+            for index in range(worker_count)
+        ]
+        assert [len(values) for values in selected] == expected_loads
+        assert {
+            entry.landpoint_id
+            for values in selected
+            for entry in values
+        } == {entry["landpoint_id"] for entry in entries}
 
 
 def test_generation_rejects_an_uncommitted_teacher_identity(monkeypatch):
@@ -194,6 +219,7 @@ def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
             "teacher_git_head": "teacher",
             "worker_index": 0,
             "worker_count": 1,
+            "worker_assignment_strategy": shards.WORKER_ASSIGNMENT_STRATEGY,
             "shards": [shard],
         },
     )
