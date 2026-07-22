@@ -43,7 +43,8 @@ The v2 annual shard resource gate is
 `scripts/hpc/slurm_teacher_v2_resource_probe.sh`: one `cnall` task, 1 CPU,
 one hour, and one complete 001/1962 point-year. Its worst-case CPU charge is
 CNY `1 * 1 * 0.07 = 0.07`. It must pass before the bounded 12-landpoint Daily
-Teacher pilot is assigned production resources.
+Teacher pilot is assigned production resources. The probe excludes the known
+slow node `ibc11b04n04` so its timing is not accepted as representative.
 
 ## Checkout Transfer
 
