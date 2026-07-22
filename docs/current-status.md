@@ -79,6 +79,31 @@ Current policy:
   throughput after the network architecture is frozen;
 - do not describe the research branch as a delivered GPU model.
 
+## Repository and Release Architecture
+
+The intended user-facing release is one codebase with two independent runtime
+choices:
+
+- execution backend: `cpu` or `gpu`;
+- transition implementation: `teacher_half_hour` or `neural_daily`.
+
+CPU and GPU support must not become permanent model forks. They share the
+same state, forcing, parameter, restart, output, and acceptance contracts;
+only batching, compilation, and device execution may differ. The stable
+`main` branch contains accepted user-facing implementations. The
+`research/daily-coarse-graining` branch remains a reproducible development
+line for dataset generation, network training, experiments, and promotion
+evidence, not a separate product.
+
+A released neural checkpoint cannot be the sole training artifact. Its
+provenance must bind the Teacher commit, dataset and split manifests, state
+and input schema hashes, train-only normalization statistics, architecture,
+optimizer and schedule, random seeds, environment lock, checkpoint hash, and
+rollout acceptance report. Reproduction code and compact manifests belong in
+Git; large datasets and weights remain external assets with stable identifiers
+and SHA256 hashes. Accepted training and inference code is merged into
+`main`, while ongoing experiments continue on the research branch.
+
 ## Next Bounded Milestone
 
 Before large paid generation or training:
