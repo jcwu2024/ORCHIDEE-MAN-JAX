@@ -543,6 +543,11 @@ def _write_entry(
         _initial_state(entry, previous_state)
     )
     preparation_seconds = time.perf_counter() - preparation_started
+    print(
+        f"teacher_entry_prepared key={entry.key} "
+        f"seconds={preparation_seconds:.3f} cache={cache_before}",
+        flush=True,
+    )
     started = time.perf_counter()
     states, forcings, records, final_state = _capture_days_compiled_blocks(
         config_path=plan.teacher_config,
@@ -555,6 +560,11 @@ def _write_entry(
     )
     capture_seconds = time.perf_counter() - started
     cache_after = _compiled_cache_entries()
+    print(
+        f"teacher_entry_captured key={entry.key} seconds={capture_seconds:.3f} "
+        f"cache_before={cache_before} cache_after={cache_after}",
+        flush=True,
+    )
     assembly_started = time.perf_counter()
     arrays, spec = build_shard_arrays(states, forcings, records, context)
     array_assembly_seconds = time.perf_counter() - assembly_started
@@ -677,7 +687,9 @@ def generate_worker(
                 chained_state = _load_checkpoint(worker_root, existing)
                 chained_checkpoint_sha256 = existing["checkpoint_sha256"]
                 completed.append(existing)
+                print(f"teacher_entry_reused key={entry.key}", flush=True)
                 continue
+            print(f"teacher_entry_start key={entry.key}", flush=True)
             metadata, chained_state = _write_entry(
                 plan,
                 entry,
@@ -688,6 +700,12 @@ def generate_worker(
             )
             chained_checkpoint_sha256 = metadata["checkpoint_sha256"]
             completed.append(metadata)
+            print(
+                f"teacher_entry_complete key={entry.key} "
+                f"total_seconds={metadata['timing_seconds']['total_entry_before_metadata_write']:.3f} "
+                f"shard_bytes={metadata['shard_bytes']}",
+                flush=True,
+            )
             _atomic_json(
                 manifest_path,
                 _worker_manifest(

@@ -4,7 +4,7 @@
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=1
-#SBATCH --time=00:45:00
+#SBATCH --time=01:15:00
 #SBATCH --output=/WORK/liwei_work/jcwu/out_orcjax_teacher_2y_%j.txt
 #SBATCH --error=/WORK/liwei_work/jcwu/out_orcjax_teacher_2y_%j.txt
 #SBATCH --no-requeue
