@@ -15,6 +15,7 @@ JCWU_ROOT=/WORK/liwei_work/jcwu
 REPO=$JCWU_ROOT/ORCHIDEE-MAN-JAX
 ASSETS=$JCWU_ROOT/orchidee_man_jax_assets
 PYTHON=$JCWU_ROOT/.venvs/orcjax_cpu/bin/python
+SLURM_BIN=/rmprog/slurm/v22.05.7/bin
 OUTPUT_ROOT=$JCWU_ROOT/orchidee_man_jax_outputs
 RESULT_DIR=$OUTPUT_ROOT/performance/daily_coarse_graining/cpu_slurm
 RESULT=$RESULT_DIR/compiled_training_capture_cpu_job_${SLURM_JOB_ID}.json
@@ -35,6 +36,7 @@ export NUMEXPR_NUM_THREADS=1
 export MALLOC_ARENA_MAX=2
 
 test -x "$PYTHON"
+test -x "$SLURM_BIN/srun"
 test -f "$ASSETS/checkpoints/paper_driver_1961_year_end_state.pkl"
 test -f "$ASSETS/configs/teacher_compatibility_used_run.def"
 test -d "$ASSETS/reference_case_001_071"
@@ -47,7 +49,7 @@ echo "git_head=$(git rev-parse HEAD)"
 echo "job_id=$SLURM_JOB_ID cpus=$SLURM_CPUS_PER_TASK host=$(hostname)"
 echo "result=$RESULT"
 
-/usr/bin/time -v srun --cpu-bind=cores "$PYTHON" \
+/usr/bin/time -v "$SLURM_BIN/srun" --cpu-bind=cores "$PYTHON" \
   scripts/dev/benchmark_compiled_training_capture.py \
   --state-cache "$ASSETS/checkpoints/paper_driver_1961_year_end_state.pkl" \
   --run-def "$ASSETS/configs/teacher_compatibility_used_run.def" \
