@@ -27,6 +27,15 @@ the same process and allocation, and record the node, allocated CPUs, thread
 environment, JAX version, command, and workload. A test-node wall time is only
 diagnostic because other users can preempt effective CPU time.
 
+The first Teacher capture benchmark is defined by
+`scripts/hpc/slurm_teacher_cpu_benchmark.sh`: one `cnmix` task, 8 allocated
+CPUs, a one-hour limit, one cold capture, and three in-process hot repeats over
+29 requested days. Its worst-case CPU charge is CNY `8 * 1 * 0.07 = 0.56`.
+This measures an allocated-core worker without paying for an exclusive node;
+shared memory bandwidth and CPU-frequency effects may remain. Run an
+exclusive-node scaling benchmark only if this first result shows that worker
+packing or resource scaling is material.
+
 ## Checkout Transfer
 
 GitHub access from the cluster is unreliable. Transfer a Git bundle from the

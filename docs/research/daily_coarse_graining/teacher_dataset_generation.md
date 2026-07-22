@@ -80,10 +80,12 @@ after split selection. They are not baked into Teacher shards.
 
 The V100 single-landpoint benchmark showed insufficient GPU parallelism. Use
 CPU persistent workers for Teacher generation and reserve GPUs for batched
-neural-network training. Before a paid Explore1000 submission, benchmark one
-worker on a test node, measure peak memory and landpoint-year wall time, then
-present the requested cores, finite time limit, and worst-case charge for
-approval.
+neural-network training. A shared test node may validate only correctness and
+compatibility; its wall time is not an accepted performance result. Benchmark
+one worker on explicitly allocated Slurm compute resources, measure cold and
+in-process hot time, CPU affinity, peak memory, and landpoint-year storage,
+then present the requested cores, finite time limit, and worst-case charge for
+approval before scaling.
 
 ## Explore1000 environments
 

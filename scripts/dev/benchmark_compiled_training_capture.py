@@ -2,6 +2,11 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
+import platform
+import socket
+import statistics
+import subprocess
 import sys
 import time
 from pathlib import Path
@@ -30,6 +35,48 @@ DEFAULT_OUTPUT = (
     / "daily_coarse_graining"
     / "compiled_training_capture_in_process.json"
 )
+
+
+def _cpu_affinity() -> list[int] | None:
+    getter = getattr(os, "sched_getaffinity", None)
+    if getter is None:
+        return None
+    return sorted(int(value) for value in getter(0))
+
+
+def _peak_rss_bytes() -> int | None:
+    try:
+        import resource
+    except ImportError:
+        return None
+    value = int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)
+    return value if platform.system() == "Darwin" else value * 1024
+
+
+def _git_metadata() -> dict[str, object]:
+    try:
+        head = subprocess.check_output(
+            ["git", "rev-parse", "HEAD"], cwd=ROOT, text=True
+        ).strip()
+        status = subprocess.check_output(
+            ["git", "status", "--porcelain", "--untracked-files=all"],
+            cwd=ROOT,
+            text=True,
+        ).strip()
+    except (OSError, subprocess.CalledProcessError):
+        return {"head": None, "clean": None}
+    return {"head": head, "clean": not bool(status)}
+
+
+def _timing_statistics(values: list[float], *, days: int) -> dict[str, object]:
+    return {
+        "runs_seconds": values,
+        "minimum_seconds": min(values),
+        "median_seconds": statistics.median(values),
+        "mean_seconds": statistics.fmean(values),
+        "maximum_seconds": max(values),
+        "median_seconds_per_requested_day": statistics.median(values) / days,
+    }
 
 
 def _capture(*, args, context, initial_state):
@@ -108,11 +155,15 @@ def main() -> int:
     parser.add_argument("--year", type=int, default=1962)
     parser.add_argument("--days", type=int, default=15)
     parser.add_argument("--block-size", type=int, default=7)
+    parser.add_argument("--hot-repeats", type=int, default=3)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     args = parser.parse_args()
     if (args.days - 1) % args.block_size:
         raise ValueError("benchmark days minus the audited first day must fill complete blocks")
+    if args.hot_repeats < 3:
+        raise ValueError("accepted performance benchmarks require at least three hot repeats")
 
+    setup_started = time.perf_counter()
     cache = _load_state_cache(args.state_cache)
     context = teacher.prepare_paper_1961_driver_context(
         args.teacher_config,
@@ -120,31 +171,72 @@ def main() -> int:
         reference_run_dir=args.reference_run_dir,
     )
     initial_state = teacher.rebase_driver_state_for_year_start(cache["state"])
+    setup_seconds = time.perf_counter() - setup_started
     first = _capture(args=args, context=context, initial_state=initial_state)
-    second = _capture(args=args, context=context, initial_state=initial_state)
-    target_metrics = _array_metrics(second[1], first[1])
-    state_metrics = _tree_metrics(second[2], first[2])
+    hot_seconds = []
+    comparisons = []
+    for repeat in range(args.hot_repeats):
+        hot = _capture(args=args, context=context, initial_state=initial_state)
+        hot_seconds.append(hot[0])
+        target_metrics = _array_metrics(hot[1], first[1])
+        state_metrics = _tree_metrics(hot[2], first[2])
+        comparisons.append(
+            {
+                "repeat": repeat + 1,
+                "targets": target_metrics,
+                "final_state": state_metrics,
+                "passed": bool(target_metrics["passed"] and state_metrics["passed"]),
+            }
+        )
+    timing = _timing_statistics(hot_seconds, days=args.days)
+    affinity = _cpu_affinity()
+    threading_environment = {
+        name: os.environ.get(name)
+        for name in (
+            "OMP_NUM_THREADS",
+            "OPENBLAS_NUM_THREADS",
+            "MKL_NUM_THREADS",
+            "NUMEXPR_NUM_THREADS",
+            "XLA_FLAGS",
+            "JAX_PLATFORMS",
+            "SLURM_CPUS_PER_TASK",
+            "SLURM_JOB_ID",
+        )
+    }
     payload = {
-        "schema_version": "compiled_training_capture_in_process_v1",
+        "schema_version": "compiled_training_capture_in_process_v2",
         "year": args.year,
         "days": args.days,
         "block_size": args.block_size,
+        "hot_repeats": args.hot_repeats,
         "backend": jax.default_backend(),
         "jax_version": jax.__version__,
         "timing_seconds": {
+            "setup_not_in_capture": setup_seconds,
             "cold_capture": first[0],
-            "hot_capture": second[0],
             "cold_seconds_per_requested_day": first[0] / args.days,
-            "hot_seconds_per_requested_day": second[0] / args.days,
+            "hot": timing,
         },
         "comparison": {
-            "targets": target_metrics,
-            "final_state": state_metrics,
-            "passed": bool(target_metrics["passed"] and state_metrics["passed"]),
+            "repeats": comparisons,
+            "passed": all(item["passed"] for item in comparisons),
         },
         "cache": {
             "later_day_block_entries": len(teacher._COMPILED_LATER_DAY_BLOCK_CACHE),
             "sechiba_scan_entries": len(teacher._COMPILED_SECHIBA_SCAN_CACHE),
+        },
+        "runtime": {
+            "hostname": socket.gethostname(),
+            "platform": platform.platform(),
+            "python": platform.python_version(),
+            "processor": platform.processor(),
+            "logical_cpu_count": os.cpu_count(),
+            "cpu_affinity": affinity,
+            "cpu_affinity_count": None if affinity is None else len(affinity),
+            "devices": [str(device) for device in jax.devices()],
+            "threading_environment": threading_environment,
+            "peak_rss_bytes": _peak_rss_bytes(),
+            "git": _git_metadata(),
         },
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
