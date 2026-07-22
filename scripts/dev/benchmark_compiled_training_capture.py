@@ -171,6 +171,11 @@ def main() -> int:
     parser.add_argument("--days", type=int, default=15)
     parser.add_argument("--block-size", type=int, default=7)
     parser.add_argument("--hot-repeats", type=int, default=3)
+    parser.add_argument(
+        "--first-capture-kind",
+        choices=("cold", "persistent-cache-reload"),
+        default="cold",
+    )
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)
     args = parser.parse_args()
     if (args.days - 1) % args.block_size:
@@ -214,22 +219,24 @@ def main() -> int:
             "NUMEXPR_NUM_THREADS",
             "XLA_FLAGS",
             "JAX_PLATFORMS",
+            "JAX_COMPILATION_CACHE_DIR",
             "SLURM_CPUS_PER_TASK",
             "SLURM_JOB_ID",
         )
     }
     payload = {
-        "schema_version": "compiled_training_capture_in_process_v2",
+        "schema_version": "compiled_training_capture_in_process_v3",
         "year": args.year,
         "days": args.days,
         "block_size": args.block_size,
         "hot_repeats": args.hot_repeats,
+        "first_capture_kind": args.first_capture_kind,
         "backend": jax.default_backend(),
         "jax_version": jax.__version__,
         "timing_seconds": {
             "setup_not_in_capture": setup_seconds,
-            "cold_capture": first[0],
-            "cold_seconds_per_requested_day": first[0] / args.days,
+            "first_capture": first[0],
+            "first_capture_seconds_per_requested_day": first[0] / args.days,
             "hot": timing,
         },
         "comparison": {

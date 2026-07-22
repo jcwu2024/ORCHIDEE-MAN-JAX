@@ -19,7 +19,8 @@ SLURM_BIN=/rmprog/slurm/v22.05.7/bin
 OUTPUT_ROOT=$JCWU_ROOT/orchidee_man_jax_outputs
 RESULT_DIR=$OUTPUT_ROOT/performance/daily_coarse_graining/cpu_slurm
 RESULT=$RESULT_DIR/compiled_training_capture_cpu_job_${SLURM_JOB_ID}.json
-CACHE=$OUTPUT_ROOT/xla_cache/teacher_cpu_benchmark/${SLURM_JOB_ID}
+CACHE=${TEACHER_BENCHMARK_CACHE:-$OUTPUT_ROOT/xla_cache/teacher_cpu_benchmark/${SLURM_JOB_ID}}
+FIRST_CAPTURE_KIND=${TEACHER_FIRST_CAPTURE_KIND:-cold}
 
 export ORCHIDEE_REPO_ROOT=$REPO
 export ORCHIDEE_DATA_ROOT=$JCWU_ROOT/orchidee_man_jax_data
@@ -41,6 +42,9 @@ test -f "$ASSETS/checkpoints/paper_driver_1961_year_end_state.pkl"
 test -f "$ASSETS/configs/teacher_compatibility_used_run.def"
 test -d "$ASSETS/reference_case_001_071"
 mkdir -p "$RESULT_DIR" "$CACHE"
+if [[ "$FIRST_CAPTURE_KIND" == "persistent-cache-reload" ]]; then
+  test -n "$(find "$CACHE" -type f -print -quit)"
+fi
 
 cd "$REPO"
 test -z "$(git status --porcelain --untracked-files=all)"
@@ -48,6 +52,7 @@ test -z "$(git status --porcelain --untracked-files=all)"
 echo "git_head=$(git rev-parse HEAD)"
 echo "job_id=$SLURM_JOB_ID cpus=$SLURM_CPUS_PER_TASK host=$(hostname)"
 echo "result=$RESULT"
+echo "first_capture_kind=$FIRST_CAPTURE_KIND cache=$CACHE"
 
 "$SLURM_BIN/srun" --cpus-per-task="$SLURM_CPUS_PER_TASK" --cpu-bind=cores \
   /usr/bin/time -v "$PYTHON" \
@@ -59,6 +64,7 @@ echo "result=$RESULT"
   --days 29 \
   --block-size 28 \
   --hot-repeats 3 \
+  --first-capture-kind "$FIRST_CAPTURE_KIND" \
   --output "$RESULT"
 
 test -s "$RESULT"
