@@ -1,11 +1,11 @@
 {
   "schema_version": "daily_teacher_pilot_spec_v1",
   "pilot_id": "pft14-daily-teacher-pilot-v2",
-  "first_year": 1962,
+  "first_year": 1961,
   "last_year": 2010,
   "block_size": 7,
   "temporal_splits": {
-    "train": [1962, 2004],
+    "train": [1961, 2004],
     "validation": [2005, 2007],
     "test": [2008, 2010]
   },

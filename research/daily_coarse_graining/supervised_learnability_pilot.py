@@ -404,10 +404,10 @@ def _iter_capture_days_compiled_blocks(
     days: int,
     block_size: int = 7,
 ):
-    """Yield one audited first day and bounded compiled later-day blocks."""
+    """Yield one audited capture day and bounded compiled following-day blocks."""
 
-    if start_day != 1:
-        raise ValueError("compiled training capture currently requires start_day=1")
+    if start_day < 1:
+        raise ValueError("compiled training capture start_day must be positive")
     if days < 1:
         return
     if block_size < 2:
@@ -417,7 +417,7 @@ def _iter_capture_days_compiled_blocks(
         context=context,
         previous_state=previous_state,
         year=year,
-        start_day=1,
+        start_day=start_day,
         days=1,
     )
     boundary_state_spec = teacher.fast_state_from_previous_packet(
@@ -432,7 +432,7 @@ def _iter_capture_days_compiled_blocks(
         context=context,
         current_state=current,
         year=year,
-        start=steps_per_day,
+        start=start_day * steps_per_day,
         steps_per_stomate=steps_per_day,
         fixed_format_trace_dir=None,
         static_trace_fields=None,
@@ -458,7 +458,7 @@ def _iter_capture_days_compiled_blocks(
     hydrol_arrays = teacher._compiled_hydrol_table_arrays(prebound_tables)
     executables = {}
     state_spec = None
-    next_day = 2
+    next_day = start_day + 1
     final_day = start_day + days - 1
     while next_day <= final_day:
         current_block_size = min(block_size, final_day - next_day + 1)

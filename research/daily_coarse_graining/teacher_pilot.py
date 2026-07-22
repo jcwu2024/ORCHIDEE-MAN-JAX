@@ -238,13 +238,20 @@ def build_generation_plan(
                 "landpoint_id": item.landpoint_id,
                 "year": year,
                 "days": 366 if year % 4 == 0 else 365,
+                "initialization_mode": teacher_shards.YEAR_START_CHECKPOINT,
                 "spatial_split": item.spatial_split,
                 "temporal_split": spec.temporal_split(year),
                 "run_def": str(landpoint_root / "used_run.def"),
                 "reference_run_dir": str(landpoint_root / "reference"),
             }
             if year == spec.first_year:
-                entry["state_cache"] = str(landpoint_root / "checkpoint.pkl")
+                if year == 1961:
+                    entry["initialization_mode"] = teacher_shards.COLD_START_BOOTSTRAP
+                    entry["acceptance_checkpoint"] = str(
+                        landpoint_root / "checkpoint.pkl"
+                    )
+                else:
+                    entry["state_cache"] = str(landpoint_root / "checkpoint.pkl")
             entries.append(entry)
     payload = {
         "schema_version": teacher_shards.SCHEMA_VERSION,

@@ -83,6 +83,31 @@ def test_plan_requires_explicit_state_for_each_new_or_gapped_chain(tmp_path):
         shards.load_plan(_write_plan(tmp_path, [first, third]))
 
 
+def test_plan_accepts_1961_cold_start_only_at_chain_start(tmp_path):
+    cold = _entry(
+        tmp_path,
+        "001.0-071.0",
+        1961,
+        initialization_mode=shards.COLD_START_BOOTSTRAP,
+    )
+    cold.pop("state_cache")
+    acceptance = tmp_path / "accepted-1961.pkl"
+    acceptance.write_bytes(b"accepted")
+    cold["acceptance_checkpoint"] = str(acceptance)
+    next_year = _entry(tmp_path, "001.0-071.0", 1962)
+    next_year.pop("state_cache")
+
+    plan = shards.load_plan(_write_plan(tmp_path, [cold, next_year]), require_inputs=True)
+    assert plan.entries[0].initialization_mode == shards.COLD_START_BOOTSTRAP
+    assert plan.entries[0].state_cache is None
+    assert plan.entries[0].acceptance_checkpoint == acceptance
+    assert plan.entries[1].initialization_mode == shards.YEAR_START_CHECKPOINT
+
+    invalid = dict(cold, year=1962)
+    with pytest.raises(ValueError, match="supported only for 1961"):
+        shards.load_plan(_write_plan(tmp_path, [invalid]))
+
+
 def test_worker_assignment_keeps_complete_landpoint_chain_together(tmp_path):
     second_year = _entry(tmp_path, "001.0-071.0", 1962)
     second_year.pop("state_cache")
@@ -190,6 +215,69 @@ def test_initial_state_rejects_incomplete_year_handoff_before_compilation(monkey
     assert shards._initial_state(entry, None) is state
 
 
+def test_year_end_acceptance_compares_complete_scientific_state_exactly():
+    expected = SimpleNamespace(
+        tstep=17519,
+        fields_by_component={
+            "hydrol_previous_step_state": {
+                "mc": np.asarray([[0.2, np.nan]], dtype=np.float64),
+                "mask": np.asarray([True, False]),
+            },
+            "slowproc_stomate_previous_step_state": {
+                "nested": (np.asarray([1], dtype=np.int32), "source-state")
+            },
+        },
+    )
+    actual = SimpleNamespace(
+        tstep=expected.tstep,
+        fields_by_component={
+            component: {
+                name: value.copy() if isinstance(value, np.ndarray) else value
+                for name, value in fields.items()
+            }
+            for component, fields in expected.fields_by_component.items()
+        },
+    )
+    assert shards._assert_driver_state_exact(actual, expected) == 4
+
+    actual.fields_by_component["hydrol_previous_step_state"]["mc"][0, 0] += 1.0e-15
+    with pytest.raises(ValueError, match="hydrol_previous_step_state.mc"):
+        shards._assert_driver_state_exact(actual, expected)
+
+
+def test_cold_start_capture_uses_day1_end_without_year_rebase(monkeypatch):
+    plan = SimpleNamespace(teacher_config=Path("teacher.yaml"))
+    entry = SimpleNamespace(
+        key="point:1961",
+        initialization_mode=shards.COLD_START_BOOTSTRAP,
+        year=1961,
+        days=365,
+        run_def=Path("used_run.def"),
+        reference_run_dir=Path("reference"),
+    )
+    bootstrap = SimpleNamespace(
+        ready_for_first_day_end_state=True,
+        first_day_end_state="canonical-S1",
+        state_gaps=(),
+    )
+    calls = []
+    monkeypatch.setattr(
+        shards.teacher,
+        "paper_1961_driver_cold_start_day_scaffold",
+        lambda *args, **kwargs: calls.append((args, kwargs)) or bootstrap,
+    )
+    monkeypatch.setattr(
+        shards.teacher,
+        "rebase_driver_state_for_year_start",
+        lambda _state: pytest.fail("cold-start canonical S1 must not be rebased"),
+    )
+
+    result = shards._entry_capture_start(plan, entry, "context", None)
+
+    assert result == ("canonical-S1", 2, 364, 1)
+    assert calls[0][1]["prepared_context"] == "context"
+
+
 def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
     entry = _entry(tmp_path, "001.0-071.0", 1961)
     plan = shards.load_plan(_write_plan(tmp_path, [entry]))
@@ -233,13 +321,20 @@ def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
 
 
 def test_compiled_capture_uses_a_short_tail_block(monkeypatch):
+    audited_calls = []
     first_record = SimpleNamespace(
         half_hour_transition=SimpleNamespace(current_state="boundary-state")
     )
+
+    def capture_first_day(**kwargs):
+        audited_calls.append(kwargs)
+        day = kwargs["start_day"]
+        return ((f"start-{day}",), (f"forcing-{day}",), (first_record,), f"state-{day}")
+
     monkeypatch.setattr(
         capture,
         "_capture_days",
-        lambda **_kwargs: (("start",), ("forcing-1",), (first_record,), "state-1"),
+        capture_first_day,
     )
     monkeypatch.setattr(capture.jax, "device_get", lambda value: value)
     monkeypatch.setattr(
@@ -326,11 +421,12 @@ def test_compiled_capture_uses_a_short_tail_block(monkeypatch):
             context=context,
             previous_state="initial",
             year=1964,
-            start_day=1,
+            start_day=2,
             days=5,
             block_size=3,
         )
     )
+    assert [(call["start_day"], call["days"]) for call in audited_calls] == [(2, 1)]
     assert compiled_sizes == [3, 1]
     assert [len(block[0]) for block in blocks] == [1, 3, 1]
     states = tuple(state for block in blocks for state in block[0])
@@ -338,4 +434,4 @@ def test_compiled_capture_uses_a_short_tail_block(monkeypatch):
     records = tuple(record for block in blocks for record in block[2])
     final_state = blocks[-1][3]
     assert len(states) == len(forcings) == len(records) == 5
-    assert final_state == "final-5"
+    assert final_state == "final-6"

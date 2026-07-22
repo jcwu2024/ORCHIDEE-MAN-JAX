@@ -23,6 +23,14 @@ landpoint-year shards.
   corrupt, schema-drifting, or mixed-commit shards.
 - Generated data remains `provisional_teacher` until the 669-landpoint Teacher
   acceptance gate is complete.
+- A 1961 chain begins with `initialization_mode=cold_start_bootstrap`: the real
+  Teacher executes Day 1 to create canonical `S[1]`, and capture starts at
+  Day 2. Day 1 is never represented as a normal Markov sample with an invented
+  state. Its year-end state is checked exactly against the staged accepted
+  1961 checkpoint.
+- Later first entries use `initialization_mode=year_start_checkpoint`; all
+  following years consume the previous in-process checkpoint and preserve the
+  normal restart-year Day 1 transition.
 
 The example plan at
 `manifests/daily_coarse_teacher_plan.example.json` documents the schema only.
@@ -81,6 +89,10 @@ The neural transition is therefore trained on
 masks. Interpolation, precipitation spreading, solar redistribution, unit
 conversion, annual CO2, salinity and tide assembly remain deterministic
 preprocessing. Finite masks are derived with `isfinite()` after loading.
+
+For a cold-start 1961 shard, `day_index` is `2..365`, `transition_count` is
+364, and `state_trajectory[0]` is canonical Day 1 end. For ordinary/restart
+years, `day_index` begins at 1 and the shard has 365 or 366 transitions.
 
 `research.daily_coarse_graining.markov_dataset` is the training-side reader.
 It verifies dataset/shard hashes, enforces frozen spatial and temporal splits,

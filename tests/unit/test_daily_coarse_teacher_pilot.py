@@ -13,13 +13,13 @@ def _write_spec(tmp_path: Path) -> Path:
     payload = {
         "schema_version": teacher_pilot.SPEC_SCHEMA_VERSION,
         "pilot_id": "test-pilot",
-        "first_year": 1962,
-        "last_year": 1964,
+        "first_year": 1961,
+        "last_year": 1963,
         "block_size": 7,
         "temporal_splits": {
-            "train": [1962, 1962],
-            "validation": [1963, 1963],
-            "test": [1964, 1964],
+            "train": [1961, 1961],
+            "validation": [1962, 1962],
+            "test": [1963, 1963],
         },
         "landpoints": [
             {"id": "001.0-071.0", "spatial_split": "train", "role": "wet"},
@@ -43,8 +43,8 @@ def test_frozen_pilot_has_disjoint_space_and_complete_time_partitions():
     spec = teacher_pilot.load_pilot_spec(root / "manifests/coarse_graining/daily_teacher_pilot_v2.json")
     counts = {split: sum(item.spatial_split == split for item in spec.landpoints) for split in teacher_shards.SPLITS}
     assert counts == {"train": 8, "validation": 2, "test": 2}
-    assert spec.last_year - spec.first_year + 1 == 49
-    assert [spec.temporal_split(year) for year in (1962, 2005, 2008)] == [
+    assert spec.last_year - spec.first_year + 1 == 50
+    assert [spec.temporal_split(year) for year in (1961, 2005, 2008)] == [
         "train",
         "validation",
         "test",
@@ -99,11 +99,19 @@ def test_stage_verify_and_plan_roundtrip(monkeypatch, tmp_path):
     )
     plan = teacher_shards.load_plan(plan_path, require_inputs=True)
     assert len(plan.entries) == 6
-    assert sum(entry.state_cache is not None for entry in plan.entries) == 2
+    assert sum(entry.state_cache is not None for entry in plan.entries) == 0
+    cold_entries = [
+        entry
+        for entry in plan.entries
+        if entry.initialization_mode == teacher_shards.COLD_START_BOOTSTRAP
+    ]
+    assert len(cold_entries) == 2
+    assert all(entry.year == 1961 for entry in cold_entries)
+    assert all(entry.acceptance_checkpoint is not None for entry in cold_entries)
     assert {(entry.year, entry.temporal_split) for entry in plan.entries} == {
-        (1962, "train"),
-        (1963, "validation"),
-        (1964, "test"),
+        (1961, "train"),
+        (1962, "validation"),
+        (1963, "test"),
     }
 
     copied = staged / "landpoints/001.0-071.0/checkpoint.pkl"

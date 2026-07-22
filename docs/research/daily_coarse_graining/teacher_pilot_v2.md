@@ -11,11 +11,11 @@ The frozen specification is
 
 - 12 representative landpoints;
 - 8 spatial train, 2 spatial validation, and 2 spatial test landpoints;
-- complete 1962-2010 trajectories, starting from each point's accepted 1961
-  year-end checkpoint;
-- 1962-2004 train, 2005-2007 temporal validation, and 2008-2010 temporal test;
-- 588 point-years and 214,764 daily transitions in total;
-- 125,648 samples in the strict spatial-train/temporal-train intersection.
+- complete 1961-2010 trajectories; 1961 Day 1 is a deterministic cold-start
+  bootstrap and ordinary neural transitions begin at Day 2;
+- 1961-2004 train, 2005-2007 temporal validation, and 2008-2010 temporal test;
+- 600 point-years and 219,132 daily transitions in total;
+- 128,560 samples in the strict spatial-train/temporal-train intersection.
 
 The dry low-productivity point `069.0-119.0` and explicit-snow point
 `319.0-057.0` are spatial test holdouts. Their samples cannot contribute
@@ -97,4 +97,4 @@ Build the final generation plan only after the resource probe passes:
    larger Teacher dataset or 50-year surrogate claim.
 
 The 12-point pilot can be stopped after any failed gate. It is not an
-automatic authorization to generate all 588 point-years.
+automatic authorization to generate all 600 point-years.

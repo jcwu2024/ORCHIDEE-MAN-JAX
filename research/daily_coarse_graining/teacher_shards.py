@@ -49,6 +49,9 @@ DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v2"
 WORKER_ASSIGNMENT_STRATEGY = "balanced_landpoint_chains_v1"
 SPLITS = frozenset({"train", "validation", "test"})
 SAFE_ID = re.compile(r"^[A-Za-z0-9._-]+$")
+YEAR_START_CHECKPOINT = "year_start_checkpoint"
+COLD_START_BOOTSTRAP = "cold_start_bootstrap"
+INITIALIZATION_MODES = frozenset({YEAR_START_CHECKPOINT, COLD_START_BOOTSTRAP})
 PARAMETER_ORDER = ("alloc_min", "residence_time", "vcmax25", "maint_resp_slope")
 LANDPOINT_STATIC_ORDER = (
     "hydrol_humcste",
@@ -104,6 +107,8 @@ class PlanEntry:
     run_def: Path
     reference_run_dir: Path
     state_cache: Path | None
+    initialization_mode: str
+    acceptance_checkpoint: Path | None
 
     @property
     def key(self) -> str:
@@ -240,6 +245,13 @@ def load_plan(path: Path, *, require_inputs: bool = False) -> GenerationPlan:
         spatial_by_landpoint[landpoint_id] = spatial_split
         temporal_by_year[year] = temporal_split
         state_cache = item.get("state_cache")
+        initialization_mode = str(item.get("initialization_mode", YEAR_START_CHECKPOINT))
+        if initialization_mode not in INITIALIZATION_MODES:
+            raise ValueError(
+                f"{landpoint_id}:{year} uses unknown initialization_mode "
+                f"{initialization_mode!r}"
+            )
+        acceptance_checkpoint = item.get("acceptance_checkpoint")
         entry = PlanEntry(
             landpoint_id=landpoint_id,
             year=year,
@@ -249,9 +261,24 @@ def load_plan(path: Path, *, require_inputs: bool = False) -> GenerationPlan:
             run_def=_resolve(item["run_def"]),
             reference_run_dir=_resolve(item["reference_run_dir"]),
             state_cache=None if state_cache is None else _resolve(state_cache),
+            initialization_mode=initialization_mode,
+            acceptance_checkpoint=(
+                None
+                if acceptance_checkpoint is None
+                else _resolve(acceptance_checkpoint)
+            ),
         )
         previous = previous_by_landpoint.get(landpoint_id)
-        if previous is None and entry.state_cache is None:
+        if entry.initialization_mode == COLD_START_BOOTSTRAP:
+            if previous is not None:
+                raise ValueError(f"{entry.key} cold_start_bootstrap must begin a landpoint chain")
+            if entry.year != 1961:
+                raise ValueError(f"{entry.key} cold_start_bootstrap is supported only for 1961")
+            if entry.state_cache is not None:
+                raise ValueError(f"{entry.key} cold_start_bootstrap must not use state_cache")
+            if entry.days < 2:
+                raise ValueError(f"{entry.key} cold_start_bootstrap requires at least two days")
+        elif previous is None and entry.state_cache is None:
             raise ValueError(f"first entry for {landpoint_id} requires state_cache")
         if previous is not None and entry.year <= previous.year:
             raise ValueError(f"years for {landpoint_id} must be strictly increasing")
@@ -269,6 +296,8 @@ def load_plan(path: Path, *, require_inputs: bool = False) -> GenerationPlan:
             required.extend((entry.run_def, entry.reference_run_dir))
             if entry.state_cache is not None:
                 required.append(entry.state_cache)
+            if entry.acceptance_checkpoint is not None:
+                required.append(entry.acceptance_checkpoint)
         missing = [str(value) for value in required if not value.exists()]
         if missing:
             raise FileNotFoundError("missing generation inputs: " + ", ".join(missing[:8]))
@@ -707,6 +736,14 @@ def _completed_metadata(
         "landpoint_id": entry.landpoint_id,
         "year": entry.year,
         "days": entry.days,
+        "initialization_mode": entry.initialization_mode,
+        "bootstrap_day": 1 if entry.initialization_mode == COLD_START_BOOTSTRAP else None,
+        "transition_start_day": 2 if entry.initialization_mode == COLD_START_BOOTSTRAP else 1,
+        "transition_count": (
+            entry.days - 1
+            if entry.initialization_mode == COLD_START_BOOTSTRAP
+            else entry.days
+        ),
         "preceding_checkpoint_sha256": preceding_checkpoint_sha256,
         "input_hashes": _input_hashes(plan, entry),
     }
@@ -759,13 +796,94 @@ def _input_hashes(plan: GenerationPlan, entry: PlanEntry) -> dict[str, Any]:
     return {
         "teacher_config": _sha256_file(plan.teacher_config),
         "run_def": _sha256_file(entry.run_def),
+        "initialization_mode": entry.initialization_mode,
         "state_cache": None if entry.state_cache is None else _sha256_file(entry.state_cache),
+        "acceptance_checkpoint": (
+            None
+            if entry.acceptance_checkpoint is None
+            else _sha256_file(entry.acceptance_checkpoint)
+        ),
         "reference_restart": {
             name: _sha256_file(entry.reference_run_dir / name)
             for name in restart_names
             if (entry.reference_run_dir / name).exists()
         },
     }
+
+
+def _assert_driver_state_exact(actual, expected) -> int:
+    """Compare all scientific state leaves and return the number compared."""
+
+    if actual.tstep != expected.tstep:
+        raise ValueError(
+            f"year-end acceptance checkpoint tstep mismatch: {actual.tstep} != {expected.tstep}"
+        )
+    actual_components = actual.fields_by_component
+    expected_components = expected.fields_by_component
+    if tuple(actual_components) != tuple(expected_components):
+        raise ValueError("year-end acceptance checkpoint component inventory mismatch")
+    compared = 0
+
+    def compare(left, right, path: str) -> None:
+        nonlocal compared
+        if isinstance(right, dict):
+            if not isinstance(left, dict) or tuple(left) != tuple(right):
+                raise ValueError(f"year-end acceptance checkpoint mapping mismatch at {path}")
+            for name in right:
+                compare(left[name], right[name], f"{path}.{name}")
+            return
+        if isinstance(right, (tuple, list)):
+            if not isinstance(left, type(right)) or len(left) != len(right):
+                raise ValueError(f"year-end acceptance checkpoint sequence mismatch at {path}")
+            for index, (left_item, right_item) in enumerate(zip(left, right, strict=True)):
+                compare(left_item, right_item, f"{path}[{index}]")
+            return
+        try:
+            left_array = np.asarray(left)
+            right_array = np.asarray(right)
+        except (TypeError, ValueError):
+            if left != right:
+                raise ValueError(f"year-end acceptance checkpoint value mismatch at {path}")
+        else:
+            if left_array.shape != right_array.shape or left_array.dtype != right_array.dtype:
+                raise ValueError(f"year-end acceptance checkpoint schema mismatch at {path}")
+            equal = (
+                np.array_equal(left_array, right_array, equal_nan=True)
+                if left_array.dtype.kind in "fc"
+                else np.array_equal(left_array, right_array)
+            )
+            if not equal:
+                raise ValueError(f"year-end acceptance checkpoint value mismatch at {path}")
+        compared += 1
+
+    for component in expected_components:
+        compare(actual_components[component], expected_components[component], component)
+    return compared
+
+
+def _entry_capture_start(
+    plan: GenerationPlan,
+    entry: PlanEntry,
+    context,
+    previous_state,
+):
+    if entry.initialization_mode == COLD_START_BOOTSTRAP:
+        bootstrap = teacher.paper_1961_driver_cold_start_day_scaffold(
+            plan.teacher_config,
+            year=entry.year,
+            used_run_def_path=entry.run_def,
+            reference_run_dir=entry.reference_run_dir,
+            prepared_context=context,
+        )
+        if not bootstrap.ready_for_first_day_end_state:
+            raise RuntimeError(
+                f"{entry.key} cold-start Day 1 did not produce canonical state: "
+                f"state_gaps={bootstrap.state_gaps}"
+            )
+        return bootstrap.first_day_end_state, 2, entry.days - 1, 1
+
+    source_state = _initial_state(entry, previous_state)
+    return teacher.rebase_driver_state_for_year_start(source_state), 1, entry.days, None
 
 
 def _write_entry(
@@ -780,14 +898,15 @@ def _write_entry(
     entry_started = time.perf_counter()
     memory_before = _process_memory_bytes()
     cache_before = _compiled_cache_entries()
-    source_state = _initial_state(entry, previous_state)
     preparation_started = time.perf_counter()
     context = teacher.prepare_paper_1961_driver_context(
         plan.teacher_config,
         used_run_def_path=entry.run_def,
         reference_run_dir=entry.reference_run_dir,
     )
-    initial_state = teacher.rebase_driver_state_for_year_start(source_state)
+    initial_state, start_day, transition_days, bootstrap_day = _entry_capture_start(
+        plan, entry, context, previous_state
+    )
     preparation_seconds = time.perf_counter() - preparation_started
     print(
         f"teacher_entry_prepared key={entry.key} "
@@ -799,8 +918,8 @@ def _write_entry(
         context=context,
         previous_state=initial_state,
         year=entry.year,
-        start_day=1,
-        days=entry.days,
+        start_day=start_day,
+        days=transition_days,
         block_size=plan.block_size,
     )
     capture_seconds = 0.0
@@ -830,6 +949,16 @@ def _write_entry(
         f"cache_before={cache_before} cache_after={cache_after}",
         flush=True,
     )
+    acceptance = None
+    if entry.acceptance_checkpoint is not None:
+        accepted_state = _load_state_cache(entry.acceptance_checkpoint)["state"]
+        acceptance = {
+            "status": "exact",
+            "compared_state_leaves": _assert_driver_state_exact(
+                final_state, accepted_state
+            ),
+            "checkpoint_sha256": _sha256_file(entry.acceptance_checkpoint),
+        }
     shard, metadata_path, checkpoint = _entry_paths(worker_root, entry)
     npz_started = time.perf_counter()
     _atomic_npz(shard, arrays)
@@ -859,6 +988,10 @@ def _write_entry(
         "landpoint_id": entry.landpoint_id,
         "year": entry.year,
         "days": entry.days,
+        "initialization_mode": entry.initialization_mode,
+        "bootstrap_day": bootstrap_day,
+        "transition_start_day": start_day,
+        "transition_count": transition_days,
         "spatial_split": entry.spatial_split,
         "temporal_split": entry.temporal_split,
         "block_size": plan.block_size,
@@ -887,6 +1020,7 @@ def _write_entry(
         },
         "preceding_checkpoint_sha256": preceding_checkpoint_sha256,
         "input_hashes": _input_hashes(plan, entry),
+        "year_end_acceptance": acceptance,
         "markov_contract": contract.metadata(),
         "markov_contract_sha256": contract.sha256,
         "arrays": _array_metadata(arrays),
