@@ -1,6 +1,6 @@
 #!/bin/bash
 #SBATCH --job-name=orcjax-cpu-benchmark
-#SBATCH --partition=cnmix
+#SBATCH --partition=cnall
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
