@@ -1,5 +1,16 @@
 # Project Manifest
 
+## Branch Roles
+
+- `main`: stable PFT14 Teacher and user-facing production CLI.
+- `research/daily-coarse-graining`: the complete Teacher plus isolated
+  capture, dataset, and neural-surrogate research. Research hooks are disabled
+  by default and must not alter Teacher numerical behavior.
+
+The current status authority is `docs/current-status.md`. Dated audit and
+experiment documents remain immutable evidence snapshots rather than current
+roadmaps.
+
 ## Public Repository
 
 - `jax_orchidee/`: production model and user CLI.
@@ -40,3 +51,8 @@ therefore run on a workstation or cluster without editing source files.
 The production PFT14 path uses seven-day compiled complete-day blocks and
 retains per-year restart checkpoints. Scientific acceptance runs should use
 one landpoint per process.
+
+Explore1000 is the current remote compute platform. Its path, environment,
+transfer, node, and cost contracts are in `docs/deployment-explore1000.md`.
+Historical qhcess/Cancon paths inside Fortran protocol and source-audit assets
+remain provenance only.

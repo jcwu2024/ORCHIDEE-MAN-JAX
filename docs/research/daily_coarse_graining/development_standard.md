@@ -1,10 +1,13 @@
 # 日尺度粗化研究开发规范
 
-状态：v0.9 为 **training_pipeline_ready_for_gpu_smoke**。parameter-conditioned 纯 JAX
+状态：v1.0 为 **teacher_capture_and_pilot_dataset_ready**。parameter-conditioned 纯 JAX
 梯度链路已经证明梯度非零、encoder/decoder 均实际更新、checkpoint 可恢复且 deterministic
-字段 exact。固定 16 日、600-step 本地诊断的 normalized RMSE 为 `0.08738`，未达到原先
-预注册的 `<=0.05`；该阈值不是科学准确性标准，现保留为非阻塞优化诊断。当前只批准有限
-Linux/GPU 训练链路 smoke，不批准科学可用性声明、自由 rollout 或大规模生产训练。证据见
+字段 exact。Linux CPU 和 V100 兼容门、编译后的 Teacher 标签捕获，以及具备 provenance、
+恢复、固定时空 split 和聚合校验的 landpoint-year shard 生成器已经完成。固定 16 日、
+600-step 本地诊断的 normalized RMSE 为 `0.08738`，未达到原先预注册的 `<=0.05`；该阈值
+不是科学准确性标准，保留为非阻塞优化诊断。当前批准下一步有边界的 pilot dataset 与
+训练实验，不批准科学可用性声明、无界数据生成或生产替换。当前状态总览见
+[`../../current-status.md`](../../current-status.md)，早期梯度证据见
 [`parameter_conditioned_gradient_training_gate_20260721.md`](parameter_conditioned_gradient_training_gate_20260721.md)。
 
 初步 Gate 1 结果见
@@ -332,14 +335,19 @@ AGB/BGB/GPP/NPP 不能代替内部状态验收。总量误差不能掩盖垂直�
 
 ## 12. 下一步分析顺序
 
-本轮 `nroot` adapter、synthetic cost gate、SVD supervised 诊断和 parameter-conditioned
-梯度门均已完成，研究在此自然停止。成本不是当前否决项，梯度训练 plumbing 可运行，
-但固定本地门禁未达到清楚过拟合阈值。按预注册顺序门禁：
+`nroot` adapter、synthetic cost gate、SVD supervised 诊断、parameter-conditioned 梯度门、
+V100 Teacher capture 和 restartable shard 生成器均已完成。下一轮按以下顺序推进：
 
-1. 不执行 7 日或 30 日自由 rollout；
-2. 不把训练日数量、网络宽度或训练时长自动扩大；
-3. 不生成正式训练集，不提交 GPU/服务器任务；
-4. 当前 server gate 关闭；若未来重启，必须先另行批准一个能解释 local overfit 缺口的
-   架构/优化假设和固定预算，而不是直接增加 steps、调参或放大 dataset/decoder。
+1. 在 Slurm 明确分配的固定 CPU 资源和同一进程内测量 Teacher capture 的 cold/hot
+   基线；共享测试节点只做正确性 smoke，不能用其 wall time 或 cold-only 结果比较
+   CPU 与 GPU；
+2. 冻结一个有明确空间、年份、事件和参数留出的 bounded pilot plan；
+3. 先测单 worker 内存、热 landpoint-year 时间和 shard 大小，再给出总存储、资源与
+   最坏费用；
+4. 只生成获批的 pilot shards，不直接扩到 669 x 50 年；
+5. 在冻结 split 上依次验收 one-step、7 日、30 日和 365 日自由 rollout；
+6. 只有准确性、守恒、restart 和性能门都通过后，才扩大数据和训练规模。
 
-完整 Teacher 的气候记忆研究和性能优化仍可独立继续。
+Teacher 数据生成默认使用持久 CPU workers。V100 保留给批量神经训练；除非未来的多
+landpoint GPU capture A/B 显示稳定优势，否则不使用单点 GPU Teacher 生成。推理同时保留
+CPU/GPU 后端，待网络冻结后按延迟、批量吞吐和成本决定生产后端。

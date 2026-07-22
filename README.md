@@ -21,6 +21,26 @@ Fortran source and carries file, procedure, and line-span provenance.
 This scope statement is deliberately narrower than claiming equivalence for
 other PFTs or unsupported ORCHIDEE configurations.
 
+## Branches and Research Status
+
+- `main` is the stable, user-facing half-hour PFT14 Teacher and production
+  CLI.
+- `research/daily-coarse-graining` contains the complete Teacher plus
+  research-only data capture, dataset generation, and neural-surrogate code.
+  Capture hooks default to off and do not change production Teacher behavior.
+
+The daily neural path is technically connected but is not yet a validated or
+user-facing model. Linux CPU and V100 compatibility, compiled Teacher capture,
+and restartable landpoint-year shard generation are implemented. A bounded
+pilot dataset, learned one-step validation, and free-rollout gates remain.
+GPU is currently intended for batched neural training; neural inference will
+remain CPU/GPU portable and will be selected from measured workload-level
+performance rather than assumed to require GPU.
+
+See [`docs/current-status.md`](docs/current-status.md) for the authoritative
+current state. Dated research and source-audit documents are retained as
+historical evidence and may describe earlier gates.
+
 ## Repository Layout
 
 | Path | Purpose |
@@ -63,6 +83,10 @@ CUDA is optional and must match the server driver:
 ```bash
 uv sync --frozen --extra cuda12
 ```
+
+Explore1000 uses a CentOS 7-compatible pinned environment rather than the
+general lock file. See
+[`docs/deployment-explore1000.md`](docs/deployment-explore1000.md).
 
 ## External Data
 
@@ -135,6 +159,7 @@ project owner before public release. The bundled Fortran source tree has no
 verified top-level redistribution license in this checkout; exclude it from a
 public release unless redistribution permission is confirmed.
 
-See `docs/installation.md`, `docs/data-layout.md`, and `docs/running.md` for
-deployment details. `docs/release-checklist.md` records the remaining license,
-citation, cluster-review, and 669-point acceptance gates.
+See `docs/installation.md`, `docs/data-layout.md`, `docs/running.md`, and
+`docs/deployment-explore1000.md` for deployment details.
+`docs/release-checklist.md` records the remaining license, citation,
+cluster-review, and 669-point acceptance gates.

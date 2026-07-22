@@ -30,3 +30,28 @@ for the scheduler.
 Set `ORCHIDEE_OUTPUT_ROOT` to writable scratch. JAX compilation artifacts are
 stored under `$ORCHIDEE_OUTPUT_ROOT/xla_cache`; the checkout itself may be
 read-only after `uv sync`.
+
+## Explore1000
+
+Explore1000 runs CentOS 7. The general `uv.lock` currently targets a newer JAX
+stack and may select wheels requiring a newer glibc. Use the accepted pinned
+CPU compatibility profile instead:
+
+```bash
+cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+bash scripts/hpc/bootstrap_orcjax_cpu.sh
+```
+
+This creates or reconciles
+`/WORK/liwei_work/jcwu/.venvs/orcjax_cpu`. Run the bootstrap on `cln01`, which
+has package-index access. Compute and test nodes consume the shared environment
+read-only.
+
+The canonical GPU environment will be
+`/WORK/liwei_work/jcwu/.venvs/orcjax_gpu`, but it is not yet frozen. Existing
+legacy GPU environments are validation assets and must not be treated as the
+project-wide runtime. Build `orcjax_gpu` only after neural training
+dependencies are fixed, then reproduce the accepted V100 compatibility gate.
+
+See `deployment-explore1000.md` for node roles, Git-bundle transfer, and paid
+job approval rules.

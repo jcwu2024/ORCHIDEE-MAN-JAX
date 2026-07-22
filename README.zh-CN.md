@@ -20,6 +20,21 @@
 
 这里的范围声明刻意不扩展到其他 PFT 或当前不支持的 ORCHIDEE 配置。
 
+## 分支与研究状态
+
+- `main` 是稳定、面向用户的 PFT14 半小时 Teacher 和正式 CLI。
+- `research/daily-coarse-graining` 包含完整 Teacher，以及仅用于研究的数据捕获、
+  数据集生成和神经代理代码。捕获开关默认关闭，不改变正式 Teacher 行为。
+
+日尺度神经链路已经在技术上接通，但还不是经过科学验收或面向用户的模型。目前已完成
+Linux CPU 与 V100 兼容性、编译后的 Teacher 标签捕获，以及可恢复的 landpoint-year
+数据分片生成。仍需完成有边界的试点数据集、单步学习验证和自由 rollout 门禁。GPU
+目前主要用于批量神经网络训练；神经网络推理继续同时支持 CPU 和 GPU，最终根据完整
+工作负载的实测性能选择，而不是预先规定必须使用 GPU。
+
+权威的当前状态见 [`docs/current-status.md`](docs/current-status.md)。带日期的研究报告和
+源码审计是历史证据快照，可能描述较早的阶段。
+
 ## 仓库结构
 
 | 路径 | 用途 |
@@ -61,6 +76,9 @@ CUDA 是可选项，并且必须与服务器驱动版本匹配：
 ```bash
 uv sync --frozen --extra cuda12
 ```
+
+Explore1000 使用与 CentOS 7 兼容的固定依赖环境，而不是通用 lock 文件。参见
+[`docs/deployment-explore1000.md`](docs/deployment-explore1000.md)。
 
 ## 外置数据
 
@@ -127,6 +145,6 @@ uv run orchidee-jax validate-landpoints \
 Fortran 源码树没有经过确认的顶层再分发许可证；除非确认拥有再分发权限，否则
 公开发布时必须继续排除该源码树。
 
-部署细节参见 `docs/installation.md`、`docs/data-layout.md` 和
-`docs/running.md`。`docs/release-checklist.md` 记录了剩余的许可证、引用、集群审查
-和 669 点验收门禁。
+部署细节参见 `docs/installation.md`、`docs/data-layout.md`、`docs/running.md` 和
+`docs/deployment-explore1000.md`。`docs/release-checklist.md` 记录了剩余的许可证、
+引用、集群审查和 669 点验收门禁。
