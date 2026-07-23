@@ -228,6 +228,30 @@ cache entries. This proves cross-year executable reuse for one landpoint. It
 does not by itself prove cross-landpoint reuse or establish Linux peak memory;
 those are explicit production admission gates.
 
+The Explore1000 cross-landpoint admission probe at Teacher commit `adebf96`
+used one persistent process, a fresh compilation cache, seven-day blocks, and
+two eight-day 1961 cold-start chains (`001.0-071.0` and the explicit-snow
+holdout `319.0-057.0`). On allocated node `ibc12b04n31`:
+
+- the first point took 150.59 seconds to prepare, 1,256.11 seconds to compile
+  and capture, and 1,406.85 seconds in total;
+- the second point took 36.74 seconds to prepare, 3.35 seconds to capture, and
+  40.15 seconds in total;
+- the in-memory compiled cache remained exactly `later_day_block=1` and
+  `sechiba_scan=1` across the second point, proving cross-landpoint executable
+  reuse for equal-shape PFT14 chains;
+- `/usr/bin/time -v` reported a 27,395,160 kB maximum RSS (about 26.1 GiB);
+- the after-success aggregation verified both shards and emitted a complete
+  dataset manifest.
+
+The first conservative production cap is therefore six concurrent workers in
+total, not one worker per advertised CPU core. Six worst-observed processes
+occupy about 156.6 GiB and remain below one CPU node's approximately 187 GiB
+OS-visible memory even if Slurm places all six on one node. Raise this cap only
+after a longer multi-point probe demonstrates a lower stable peak. Worker
+count controls chain assignment; array concurrency must never exceed the
+accepted memory cap.
+
 The V100 single-landpoint benchmark showed insufficient GPU parallelism. Use
 CPU persistent workers for Teacher generation and reserve GPUs for batched
 neural-network training. A shared test node may validate only correctness and
