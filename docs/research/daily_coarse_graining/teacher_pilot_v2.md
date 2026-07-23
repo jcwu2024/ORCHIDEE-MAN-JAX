@@ -46,9 +46,11 @@ path retained all full day records and reached about 26.85 GB peak RSS.
 
 ## Minimal Assets
 
-Only the four start/restart NetCDF files, `used_run.def`, and the accepted 1961
-JAX checkpoint are needed per point. The local inventory passed for all 12
-points and totals 14,598,446 bytes.
+Only the four start/restart NetCDF files, `stomate_history_1961.nc`,
+`used_run.def`, and the accepted 1961 JAX checkpoint are needed per point.
+The annual history supplies the archived STOMATE boundary metadata required
+while constructing the cold-start context; it is not used as a training
+target.
 
 Create the portable package locally:
 

@@ -32,6 +32,7 @@ def _write_spec(tmp_path: Path) -> Path:
             "sechiba_start.nc",
             "stomate_start.nc",
             "stomate_restart.nc",
+            "stomate_history_1961.nc",
         ],
         "checkpoint_name": "paper_driver_1961_year_end_state.pkl",
     }
@@ -93,7 +94,7 @@ def test_stage_verify_and_plan_roundtrip(monkeypatch, tmp_path):
     assert manifest.is_file()
     verified = teacher_pilot.verify_staged_assets(spec, staged)
     assert verified["landpoint_count"] == 2
-    assert verified["verified_files"] == 12
+    assert verified["verified_files"] == 14
 
     config = tmp_path / "teacher.yaml"
     config.write_text("test: true\n", encoding="utf-8")

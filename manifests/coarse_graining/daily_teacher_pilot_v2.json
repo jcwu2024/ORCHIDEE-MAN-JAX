@@ -27,7 +27,8 @@
     "driver_start.nc",
     "sechiba_start.nc",
     "stomate_start.nc",
-    "stomate_restart.nc"
+    "stomate_restart.nc",
+    "stomate_history_1961.nc"
   ],
   "checkpoint_name": "paper_driver_1961_year_end_state.pkl"
 }
