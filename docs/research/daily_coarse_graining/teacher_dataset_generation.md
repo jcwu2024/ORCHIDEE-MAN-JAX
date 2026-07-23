@@ -272,6 +272,10 @@ cap only after a longer multi-point probe demonstrates a lower stable peak.
 Worker count controls chain assignment; array concurrency must never exceed
 the accepted memory cap.
 
+Array workers use separate XLA cache subdirectories. Same-process executable
+reuse is the accepted acceleration mechanism; workers must not contend for or
+silently depend on a shared writable compilation-cache directory.
+
 The V100 single-landpoint benchmark showed insufficient GPU parallelism. Use
 CPU persistent workers for Teacher generation and reserve GPUs for batched
 neural-network training. A shared test node may validate only correctness and

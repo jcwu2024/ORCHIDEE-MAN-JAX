@@ -37,7 +37,8 @@ export ORCHIDEE_DATA_ROOT=$RUNTIME_ROOT/data
 export ORCHIDEE_REFERENCE_ROOT=$RUNTIME_ROOT/assets
 export ORCHIDEE_OUTPUT_ROOT=$RUNTIME_ROOT/outputs
 export XDG_CACHE_HOME=$RUNTIME_ROOT/cache/xdg
-export JAX_COMPILATION_CACHE_DIR=${TEACHER_XLA_CACHE:-$RUNTIME_ROOT/outputs/xla_cache/teacher_production}
+CACHE_ROOT=${TEACHER_XLA_CACHE:-$RUNTIME_ROOT/outputs/xla_cache/teacher_production}
+export JAX_COMPILATION_CACHE_DIR=$CACHE_ROOT/worker-$SLURM_ARRAY_TASK_ID
 export JAX_PLATFORMS=cpu
 export JAX_ENABLE_X64=True
 export OMP_NUM_THREADS=1
@@ -65,4 +66,3 @@ grep -E '^(Cpus_allowed_list|Mems_allowed_list):' /proc/self/status
   --plan "$TEACHER_PLAN" \
   --worker-index "$SLURM_ARRAY_TASK_ID" \
   --worker-count "$TEACHER_WORKER_COUNT"
-
