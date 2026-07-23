@@ -446,6 +446,7 @@ def _worker_lock(path: Path):
                 {
                     "pid": os.getpid(),
                     "host": socket.gethostname(),
+                    "slurm_job_id": os.environ.get("SLURM_JOB_ID"),
                     "created_unix": time.time(),
                 },
                 handle,
@@ -453,6 +454,43 @@ def _worker_lock(path: Path):
         yield
     finally:
         path.unlink(missing_ok=True)
+
+
+def recover_stale_worker_lock(
+    plan: GenerationPlan,
+    *,
+    output_root: Path,
+    worker_index: int,
+    worker_count: int,
+    expected_host: str,
+    expected_pid: int,
+    expected_slurm_job_id: str | None = None,
+) -> dict[str, Any]:
+    assigned_entries(plan, worker_index, worker_count)
+    worker_root = output_root / "workers" / f"worker-{worker_index:03d}-of-{worker_count:03d}"
+    lock_path = worker_root / "generation.lock"
+    if not lock_path.is_file():
+        raise FileNotFoundError(f"worker lock does not exist: {lock_path}")
+    owner = json.loads(lock_path.read_text(encoding="utf-8"))
+    expected = {"host": expected_host, "pid": expected_pid}
+    if any(owner.get(name) != value for name, value in expected.items()):
+        raise ValueError(f"worker lock owner mismatch: expected={expected}, observed={owner}")
+    if expected_slurm_job_id is not None and owner.get("slurm_job_id") != expected_slurm_job_id:
+        raise ValueError(
+            "worker lock Slurm identity mismatch: "
+            f"expected={expected_slurm_job_id!r}, observed={owner.get('slurm_job_id')!r}"
+        )
+    recovered = lock_path.with_name(
+        f"generation.lock.stale-{int(time.time())}-{expected_host}-{expected_pid}"
+    )
+    lock_path.replace(recovered)
+    return {
+        "status": "recovered",
+        "worker_index": worker_index,
+        "worker_count": worker_count,
+        "owner": owner,
+        "preserved_lock": str(recovered),
+    }
 
 
 def _pack_condition_groups(
@@ -1507,6 +1545,14 @@ def build_parser() -> argparse.ArgumentParser:
     aggregate.add_argument("--plan", type=Path, required=True)
     aggregate.add_argument("--output-root", type=Path)
     aggregate.add_argument("--worker-count", type=int, required=True)
+    recover = subparsers.add_parser("recover-lock")
+    recover.add_argument("--plan", type=Path, required=True)
+    recover.add_argument("--output-root", type=Path)
+    recover.add_argument("--worker-index", type=int, required=True)
+    recover.add_argument("--worker-count", type=int, required=True)
+    recover.add_argument("--expected-host", required=True)
+    recover.add_argument("--expected-pid", type=int, required=True)
+    recover.add_argument("--expected-slurm-job-id")
     return parser
 
 
@@ -1541,6 +1587,18 @@ def main(argv: Sequence[str] | None = None) -> int:
             )
         )
         return 0 if result["complete"] else 2
+    if args.command == "recover-lock":
+        result = recover_stale_worker_lock(
+            plan,
+            output_root=output_root,
+            worker_index=args.worker_index,
+            worker_count=args.worker_count,
+            expected_host=args.expected_host,
+            expected_pid=args.expected_pid,
+            expected_slurm_job_id=args.expected_slurm_job_id,
+        )
+        print(json.dumps(result, indent=2))
+        return 0
     result = aggregate_workers(plan, output_root=output_root, worker_count=args.worker_count)
     print(
         json.dumps(

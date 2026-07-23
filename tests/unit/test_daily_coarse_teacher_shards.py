@@ -221,6 +221,42 @@ def test_compiled_cache_entries_reports_both_production_caches(monkeypatch):
     }
 
 
+def test_stale_worker_lock_recovery_requires_exact_owner(tmp_path):
+    plan = SimpleNamespace(entries=())
+    worker_root = tmp_path / "workers" / "worker-000-of-001"
+    worker_root.mkdir(parents=True)
+    lock = worker_root / "generation.lock"
+    owner = {
+        "pid": 42,
+        "host": "compute-01",
+        "slurm_job_id": "12345",
+        "created_unix": 1.0,
+    }
+    lock.write_text(json.dumps(owner), encoding="utf-8")
+    with pytest.raises(ValueError, match="owner mismatch"):
+        shards.recover_stale_worker_lock(
+            plan,
+            output_root=tmp_path,
+            worker_index=0,
+            worker_count=1,
+            expected_host="compute-02",
+            expected_pid=42,
+        )
+    assert lock.is_file()
+    recovered = shards.recover_stale_worker_lock(
+        plan,
+        output_root=tmp_path,
+        worker_index=0,
+        worker_count=1,
+        expected_host="compute-01",
+        expected_pid=42,
+        expected_slurm_job_id="12345",
+    )
+    assert recovered["status"] == "recovered"
+    assert not lock.exists()
+    assert Path(recovered["preserved_lock"]).is_file()
+
+
 def test_initial_state_rejects_incomplete_year_handoff_before_compilation(monkeypatch):
     state = SimpleNamespace(
         fields_by_component={

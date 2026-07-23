@@ -121,6 +121,13 @@ dependency on the complete array. The worker count and array concurrency must
 be selected from an allocated-node peak-RSS and cross-landpoint compile-reuse
 probe, not guessed from logical core count.
 
+If Slurm kills a worker at its wall-time limit, the exclusive lock may remain
+because the process cannot execute its cleanup handler. Confirm that the owner
+job is terminal, read the recorded host/PID/job identity, and use the explicit
+`teacher_shards recover-lock` command before resubmission. Recovery requires an
+exact owner match and preserves the stale lock as an audit file; never delete
+or overwrite `generation.lock` blindly.
+
 ## Stored arrays
 
 The production schema is `daily_teacher_markov_year_v3`. Each shard stores:
