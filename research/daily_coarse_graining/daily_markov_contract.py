@@ -25,8 +25,8 @@ from jax_orchidee.driver.domain import read_annual_co2
 from jax_orchidee.driver.orchestration import DriverCompiledHalfHourForcing
 
 ROOT = Path(__file__).resolve().parents[2]
-CONTRACT_SCHEMA_VERSION = "daily_markov_contract_v2"
-SHARD_SCHEMA_VERSION = "daily_teacher_markov_year_v2"
+CONTRACT_SCHEMA_VERSION = "daily_markov_contract_v3"
+SHARD_SCHEMA_VERSION = "daily_teacher_markov_year_v3"
 NATIVE_FORCING_FIELDS = (
     "Tair",
     "PSurf",
@@ -44,6 +44,30 @@ _SLOW_COMPONENT = "slowproc_stomate_previous_step_state"
 _FINALIZE_COMPONENT = "sechiba_finalize_state"
 _SLOWPROC_DIFFUCO_MIRRORS = frozenset(
     {"lai", "frac_nobio", "veget_max", "veget", "tot_bare_soil"}
+)
+FAST_DAY_STATE_COMPONENTS = (
+    "driver_previous_step_state",
+    "diffuco_previous_step_state",
+    "enerbil_previous_step_state",
+    "hydrol_previous_step_state",
+    "thermosoil_previous_step_state",
+    "sechiba_finalize_state",
+)
+FAST_DAY_OK_LEAK_FIELDS = (
+    "litter_above",
+    "litter_below",
+    "lignin_struc_above",
+    "lignin_struc_below",
+    "litterpart",
+    "dead_leaves",
+    "fuel_1hr",
+    "fuel_10hr",
+    "fuel_100hr",
+    "fuel_1000hr",
+    "carbon_32l",
+    "DOC",
+    "interception_storage",
+    "deepC_peat",
 )
 
 
@@ -152,9 +176,32 @@ class DiagnosticSpec:
 
 
 @dataclass(frozen=True)
+class FastDayTargetLeafSpec:
+    """One learned output owned by the replaced 48-step fast-day operator."""
+
+    family: str
+    component: str | None
+    path: tuple[str, ...]
+    shape: tuple[int, ...]
+    full_shape: tuple[int, ...]
+    dtype: str
+    start: int
+    stop: int
+    owner: str
+    axis_names: tuple[str, ...] = ()
+    selected_pft_indices: tuple[int, ...] = ()
+
+    @property
+    def key(self) -> str:
+        prefix = self.component if self.component is not None else self.family
+        return ".".join((prefix, *self.path))
+
+
+@dataclass(frozen=True)
 class DailyMarkovContract:
     schema_version: str
     state_leaves: tuple[StateLeafSpec, ...]
+    fast_day_target_leaves: tuple[FastDayTargetLeafSpec, ...]
     diagnostic_leaves: tuple[DiagnosticSpec, ...]
     native_forcing: NativeForcingSpec
     static_conditions: StaticConditionSpec
@@ -173,6 +220,10 @@ class DailyMarkovContract:
         return max((leaf.stop for leaf in self.diagnostic_leaves), default=0)
 
     @property
+    def fast_day_target_width(self) -> int:
+        return max((leaf.stop for leaf in self.fast_day_target_leaves), default=0)
+
+    @property
     def discrete_leaves(self) -> tuple[StateLeafSpec, ...]:
         return tuple(leaf for leaf in self.state_leaves if leaf.discrete)
 
@@ -185,12 +236,17 @@ class DailyMarkovContract:
         return {
             "schema_version": self.schema_version,
             "state_leaves": [asdict(leaf) | {"key": leaf.key} for leaf in self.state_leaves],
+            "fast_day_target_leaves": [
+                asdict(leaf) | {"key": leaf.key}
+                for leaf in self.fast_day_target_leaves
+            ],
             "diagnostic_leaves": [asdict(leaf) for leaf in self.diagnostic_leaves],
             "native_forcing": asdict(self.native_forcing) | {"width": self.native_forcing.width},
             "static_conditions": static_conditions,
             "source_hashes": dict(self.source_hashes),
             "active_pft_indices": list(self.active_pft_indices),
             "continuous_state_width": self.continuous_state_width,
+            "fast_day_target_width": self.fast_day_target_width,
             "diagnostic_width": self.diagnostic_width,
         }
 
@@ -202,6 +258,7 @@ class DailyMarkovContract:
 @dataclass(frozen=True)
 class MarkovShard:
     state_trajectory: np.ndarray
+    fast_day_target: np.ndarray
     forcing_native: np.ndarray
     forcing_record_indices: np.ndarray
     parameters: np.ndarray
@@ -235,6 +292,8 @@ class MarkovShard:
             "next_state_finite": np.isfinite(next_state),
             "diagnostics": diagnostics,
             "diagnostics_finite": np.isfinite(diagnostics),
+            "fast_day_target": self.fast_day_target[index],
+            "fast_day_target_finite": np.isfinite(self.fast_day_target[index]),
             "year": self.year,
             "day_index": self.day_index[index],
             "discrete_state": {
@@ -404,6 +463,240 @@ def _diagnostic_inventory(
     return tuple(values)
 
 
+def _fast_day_family(component: str) -> str:
+    if component in {"diffuco_previous_step_state", "enerbil_previous_step_state"}:
+        return "diffuco_enerbil"
+    return component.removesuffix("_previous_step_state").removesuffix("_state")
+
+
+def _fast_day_target_inventory(record):
+    """Return the complete dynamic boundary handed to retained daily STOMATE."""
+
+    state_axes = _state_axis_lookup()
+    slow_axes = _slow_axis_lookup()
+    values = []
+    end_fields = record.half_hour_transition.current_state.fields_by_component
+    for component in FAST_DAY_STATE_COMPONENTS:
+        for path, array in _flatten_mapping(end_fields[component]):
+            if array.dtype.kind != "f":
+                continue
+            top_name = path[0]
+            values.append(
+                (
+                    _fast_day_family(component),
+                    component,
+                    path,
+                    array,
+                    "compiled half-hour SECHIBA state",
+                    state_axes.get((component, top_name), ()),
+                )
+            )
+    for name in sorted(record.daily_fold.daily_fields):
+        array = np.asarray(record.daily_fold.daily_fields[name])
+        values.append(
+            (
+                "daily_interface",
+                None,
+                (name,),
+                array,
+                "stomate_daily_process_fold_from_entries",
+                slow_axes.get(name, ()),
+            )
+        )
+    ok_values = dict(record.ok_leak_updates)
+    perma_peat = record.ok_leak_result.soilcarbon.perma_peat
+    if perma_peat is None:
+        raise ValueError("PFT14 fast-day target requires deepC_peat")
+    ok_values["deepC_peat"] = perma_peat.deepc_peat
+    for name in FAST_DAY_OK_LEAK_FIELDS:
+        array = np.asarray(ok_values[name])
+        values.append(
+            (
+                "ok_leak",
+                None,
+                (name,),
+                array,
+                "stomate_lpj:OK_LEAK half-hour fold",
+                slow_axes.get(name, ()),
+            )
+        )
+    final = record.half_hour_transition.completed_entry_payloads[-1]
+    for name in ("t2mdiag", "temp_sol"):
+        values.append(
+            (
+                "final_diagnostics",
+                None,
+                (name,),
+                np.asarray(final[name]),
+                "compact_sechiba_entry_payload",
+                (),
+            )
+        )
+    return tuple(values)
+
+
+def build_fast_day_target_leaves(
+    record, active_pft_indices: tuple[int, ...]
+) -> tuple[FastDayTargetLeafSpec, ...]:
+    cursor = 0
+    leaves = []
+    for family, component, path, array, owner, axis_names in _fast_day_target_inventory(record):
+        if axis_names and len(axis_names) != array.ndim:
+            raise ValueError(
+                f"fast-day target axis drift for {component or family}.{'.'.join(path)}: "
+                f"{axis_names} vs shape {array.shape}"
+            )
+        selected = _select_pft_axes(array, axis_names, active_pft_indices)
+        stop = cursor + int(selected.size)
+        leaves.append(
+            FastDayTargetLeafSpec(
+                family=family,
+                component=component,
+                path=path,
+                shape=tuple(selected.shape),
+                full_shape=tuple(array.shape),
+                dtype=str(array.dtype),
+                start=cursor,
+                stop=stop,
+                owner=owner,
+                axis_names=axis_names,
+                selected_pft_indices=(
+                    active_pft_indices if "nvm" in axis_names else ()
+                ),
+            )
+        )
+        cursor = stop
+    return tuple(leaves)
+
+
+def extract_fast_day_target(
+    record, leaves: Sequence[FastDayTargetLeafSpec]
+) -> np.ndarray:
+    inventory = {
+        (family, component, path): array
+        for family, component, path, array, _owner, _axes in _fast_day_target_inventory(record)
+    }
+    width = max((leaf.stop for leaf in leaves), default=0)
+    result = np.empty(width, dtype=np.float64)
+    for leaf in leaves:
+        array = _select_pft_axes(
+            inventory[(leaf.family, leaf.component, leaf.path)],
+            leaf.axis_names,
+            leaf.selected_pft_indices,
+        )
+        if tuple(array.shape) != leaf.shape:
+            raise ValueError(f"fast-day target shape drift for {leaf.key}")
+        result[leaf.start : leaf.stop] = array.reshape(-1)
+    return result
+
+
+def _compiled_select_pft_axes(value, leaf):
+    result = jnp.asarray(value)
+    for axis, name in enumerate(leaf.axis_names):
+        if name == "nvm":
+            result = jnp.take(
+                result,
+                jnp.asarray(leaf.selected_pft_indices, dtype=jnp.int32),
+                axis=axis,
+            )
+    return result
+
+
+def _spec_value(values_by_component, spec, component: str, path: tuple[str, ...]):
+    component_index = spec.components.index(component)
+    field_names = spec.field_names_by_component[component_index]
+    field_index = field_names.index(path[0])
+    value = values_by_component[component_index][field_index]
+    for name in path[1:]:
+        value = value[name]
+    return value
+
+
+def make_compiled_training_output_projector(
+    contract: DailyMarkovContract,
+    *,
+    day_start_state_spec,
+    boundary_state_spec,
+):
+    """Build a trace-time projector from large runtime trees to compact rows."""
+
+    continuous_leaves = tuple(
+        leaf for leaf in contract.state_leaves if not leaf.discrete
+    )
+    discrete_leaves = contract.discrete_leaves
+
+    def target_value(boundary, leaf: FastDayTargetLeafSpec):
+        if leaf.component is not None:
+            return _spec_value(
+                boundary.half_hour_state_values,
+                boundary_state_spec,
+                leaf.component,
+                leaf.path,
+            )
+        name = leaf.path[0]
+        if leaf.family == "daily_interface":
+            return boundary.daily_fields[name]
+        if leaf.family == "ok_leak":
+            return (
+                boundary.deepc_peat
+                if name == "deepC_peat"
+                else boundary.ok_leak_updates[name]
+            )
+        return boundary.final_diagnostics[name]
+
+    def projector(current_values, boundary):
+        state = jnp.concatenate(
+            tuple(
+                _compiled_select_pft_axes(
+                    _spec_value(
+                        current_values,
+                        day_start_state_spec,
+                        leaf.component,
+                        leaf.path,
+                    ),
+                    leaf,
+                ).reshape(-1)
+                for leaf in continuous_leaves
+            )
+        )
+        discrete = tuple(
+            _compiled_select_pft_axes(
+                _spec_value(
+                    current_values,
+                    day_start_state_spec,
+                    leaf.component,
+                    leaf.path,
+                ),
+                leaf,
+            )
+            for leaf in discrete_leaves
+        )
+        target = jnp.concatenate(
+            tuple(
+                _compiled_select_pft_axes(target_value(boundary, leaf), leaf).reshape(-1)
+                for leaf in contract.fast_day_target_leaves
+            )
+        )
+        diagnostics = jnp.concatenate(
+            tuple(
+                _compiled_select_pft_axes(
+                    (
+                        boundary.daily_fields[leaf.name.removeprefix("daily_fold.")]
+                        if leaf.name.startswith("daily_fold.")
+                        else boundary.final_diagnostics[
+                            leaf.name.removeprefix("final_half_hour.")
+                        ]
+                    ),
+                    leaf,
+                ).reshape(-1)
+                for leaf in contract.diagnostic_leaves
+            )
+        )
+        return state, discrete, target, diagnostics
+
+    return projector
+
+
 def build_daily_markov_contract(
     packet,
     record,
@@ -483,9 +776,13 @@ def build_daily_markov_contract(
             )
         )
         diagnostic_cursor = stop
+    fast_day_target_leaves = build_fast_day_target_leaves(
+        record, active_pft_indices
+    )
     contract = DailyMarkovContract(
         schema_version=CONTRACT_SCHEMA_VERSION,
         state_leaves=tuple(state_leaves),
+        fast_day_target_leaves=fast_day_target_leaves,
         diagnostic_leaves=tuple(diagnostic_leaves),
         native_forcing=native_forcing_spec,
         static_conditions=StaticConditionSpec(
@@ -860,6 +1157,7 @@ def load_markov_shard(
         arrays = {name: payload[name] for name in payload.files}
     required = {
         "state_trajectory",
+        "fast_day_target",
         "forcing_native",
         "forcing_record_indices",
         "parameters",
@@ -871,11 +1169,16 @@ def load_markov_shard(
     }
     missing = sorted(required - arrays.keys())
     if missing:
-        raise ValueError(f"v2 Markov shard is missing arrays: {missing}")
+        raise ValueError(f"v3 Markov shard is missing arrays: {missing}")
     days = int(arrays["day_index"].size)
     if arrays["state_trajectory"].shape[0] != days + 1:
         raise ValueError("state_trajectory must contain S[0:T+1]")
-    per_day = ("forcing_native", "forcing_record_indices", "diagnostics")
+    per_day = (
+        "forcing_native",
+        "forcing_record_indices",
+        "fast_day_target",
+        "diagnostics",
+    )
     if any(arrays[name].shape[0] != days for name in per_day):
         raise ValueError("forcing and diagnostics must contain one row per day")
     if arrays["year"].ndim != 0 or arrays["day_index"].ndim != 1:
@@ -887,6 +1190,7 @@ def load_markov_shard(
     if contract is not None:
         expected_widths = {
             "state_trajectory": contract.continuous_state_width,
+            "fast_day_target": contract.fast_day_target_width,
             "forcing_native": contract.native_forcing.width,
             "parameters": contract.static_conditions.parameter_width,
             "landpoint_static": contract.static_conditions.landpoint_static_width,
@@ -895,6 +1199,7 @@ def load_markov_shard(
         }
         observed_widths = {
             "state_trajectory": arrays["state_trajectory"].shape[1],
+            "fast_day_target": arrays["fast_day_target"].shape[1],
             "forcing_native": arrays["forcing_native"].shape[2],
             "parameters": arrays["parameters"].size,
             "landpoint_static": arrays["landpoint_static"].size,
@@ -917,6 +1222,7 @@ def load_markov_shard(
         raise ValueError("discrete state trajectories must contain S[0:T+1]")
     return MarkovShard(
         state_trajectory=arrays["state_trajectory"],
+        fast_day_target=arrays["fast_day_target"],
         forcing_native=arrays["forcing_native"],
         forcing_record_indices=arrays["forcing_record_indices"],
         parameters=arrays["parameters"],

@@ -72,9 +72,11 @@ pass final aggregation.
 
 ## Stored arrays
 
-The production schema is `daily_teacher_markov_year_v2`. Each shard stores:
+The production schema is `daily_teacher_markov_year_v3`. Each shard stores:
 
 - one canonical continuous state trajectory `state_trajectory[0:T+1]`;
+- one compact `fast_day_target[d]` containing the complete output of the
+  replaced 48-step SECHIBA/accumulation/maintenance/OK_LEAK block;
 - exact discrete trajectories under `state_discrete__*` with their original dtype;
 - five native 6-hour source records per day in `forcing_native`, plus their
   cyclic source indices;
@@ -84,8 +86,10 @@ The production schema is `daily_teacher_markov_year_v2`. Each shard stores:
   a scalar source year;
 - daily diagnostics `Y[d]` and one-based `day_index`.
 
-The neural transition is therefore trained on
-`S[d] + native_forcing[d] + P -> S[d+1] + Y[d]`. The shard does not store the
+The neural operator is therefore trained on
+`S[d] + native_forcing[d] + P -> B_fast[d]`. The retained source-backed daily
+season/STOMATE tail consumes `B_fast[d]` and writes `S[d+1]`; the stored state
+trajectory provides rollout supervision and continuity checks. The shard does not store the
 48-step interpolated forcing, separate day-start/day-end copies, or finite
 masks. Interpolation, precipitation spreading, solar redistribution, unit
 conversion, annual CO2, salinity and tide assembly remain deterministic
@@ -112,7 +116,7 @@ scale one. `normalize_finite` maps undefined entries to normalized zero and
 returns their explicit boolean mask. Validation and test shards must never
 contribute normalization statistics.
 
-The first real v2 smoke shard (`103.0-095.0`, 1962 Day 1) contains one
+The first real v2 smoke shard (`103.0-095.0`, 1962 Day 1) remains historical evidence and contains one
 source-defined non-finite state column: the bare-soil/PFT1 slot of
 `diffuco_previous_step_state.roughheight_pft`. CONDVEG intentionally assigns
 roughness height only to vegetated PFT slots, and the existing source-backed
@@ -135,14 +139,24 @@ about 254 samples/s; the largest collated batch was 3.49 MB and the measured
 training-throughput claim.
 
 The schema and its field provenance are implemented in
-`research/daily_coarse_graining/daily_markov_contract.py`. Existing v1 shards
-remain historical audit evidence, but no new pilot may be generated with v1.
+`research/daily_coarse_graining/daily_markov_contract.py`. Existing v1/v2 shards
+remain historical audit evidence, but no new pilot may be generated with them.
 
 Normalization, finite masking, and train-time dtype conversion happen after
 split selection. They are not baked into Teacher shards. Non-finite targets
 are masked rather than silently sanitized into scientific values.
 
 ## Resource policy
+
+The first v3 compact-projection A/B on the local CPU used a cold-start Day 1
+and ten Day 2+ transitions. The compact target width was 6,758. Daily state,
+target, diagnostics, discrete state, and final state all passed the explicit
+float64/exact comparison. First compilation plus capture took 146.94 seconds;
+two same-process hot captures took 1.65 and 1.75 seconds, or about 0.17 seconds
+per transition. Large production must therefore use persistent workers and
+reuse the compiled seven-day executable across years and compatible
+landpoints. A process-per-landpoint design that recompiles for every point is
+not accepted.
 
 The V100 single-landpoint benchmark showed insufficient GPU parallelism. Use
 CPU persistent workers for Teacher generation and reserve GPUs for batched

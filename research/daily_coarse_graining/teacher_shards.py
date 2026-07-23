@@ -36,6 +36,7 @@ from research.daily_coarse_graining.daily_markov_contract import (
     build_state_trajectory,
     estimated_uncompressed_bytes,
     extract_diagnostics,
+    extract_fast_day_target,
     extract_state,
     native_forcing_days,
 )
@@ -47,7 +48,7 @@ from research.daily_coarse_graining.supervised_learnability_pilot import (
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_VERSION = "daily_teacher_generation_plan_v2"
 MANIFEST_SCHEMA_VERSION = "daily_teacher_worker_manifest_v2"
-DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v2"
+DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v3"
 WORKER_ASSIGNMENT_STRATEGY = "balanced_landpoint_chains_v1"
 SPLITS = frozenset({"train", "validation", "test"})
 SAFE_ID = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -599,9 +600,16 @@ def build_shard_arrays(
     diagnostics = np.stack(
         [extract_diagnostics(record, contract) for record in records]
     )
+    fast_day_target = np.stack(
+        [
+            extract_fast_day_target(record, contract.fast_day_target_leaves)
+            for record in records
+        ]
+    )
     arrays = {
         "day_index": day_index,
         "state_trajectory": state_trajectory,
+        "fast_day_target": fast_day_target,
         "forcing_native": forcing_native,
         "forcing_record_indices": forcing_record_indices,
         "parameters": parameters,
@@ -630,6 +638,7 @@ def build_shard_arrays_from_blocks(blocks, context):
     continuous_rows = []
     discrete_rows: dict[str, list[np.ndarray]] = {}
     diagnostics = []
+    fast_day_targets = []
     day_indices = []
     contract = None
     year = None
@@ -696,6 +705,9 @@ def build_shard_arrays_from_blocks(blocks, context):
             for name, value in discrete.items():
                 discrete_rows[name].append(value)
             diagnostics.append(extract_diagnostics(record, contract))
+            fast_day_targets.append(
+                extract_fast_day_target(record, contract.fast_day_target_leaves)
+            )
             day_indices.append(day_index)
         previous_final = block_final
         final_state = block_final
@@ -714,6 +726,137 @@ def build_shard_arrays_from_blocks(blocks, context):
     arrays = {
         "day_index": np.asarray(day_indices, dtype=np.int32),
         "state_trajectory": np.stack(continuous_rows),
+        "fast_day_target": np.stack(fast_day_targets),
+        "forcing_native": forcing_native,
+        "forcing_record_indices": forcing_record_indices,
+        "parameters": parameters,
+        "landpoint_static": landpoint_static,
+        "annual_conditions": annual_conditions,
+        "diagnostics": np.stack(diagnostics),
+        "year": np.asarray(year, dtype=np.int32),
+        **{
+            f"state_discrete__{name}": np.stack(values)
+            for name, values in discrete_rows.items()
+        },
+    }
+    return arrays, contract, final_state
+
+
+def _compact_contract_factory(context, *, year: int, first_day_index: int):
+    _parameters, parameter_leaves = _pack_condition_groups(
+        _parameter_groups(context),
+        temporal_role="landpoint_parameter",
+        source=_PARAMETER_SOURCE,
+    )
+    _static, landpoint_static_leaves = _pack_condition_groups(
+        _landpoint_static_groups(context),
+        temporal_role="landpoint_static",
+        source=_LANDPOINT_STATIC_SOURCE,
+    )
+    _annual, annual_condition_leaves = _pack_condition_groups(
+        _annual_condition_groups(context, year=year),
+        temporal_role="annual_exogenous",
+        source=_ANNUAL_CONDITION_SOURCE,
+    )
+    _native, _indices, native_spec = native_forcing_days(
+        context, year=year, day_indices=(first_day_index,)
+    )
+
+    def factory(packet, record):
+        return build_daily_markov_contract(
+            packet,
+            record,
+            parameter_leaves=parameter_leaves,
+            landpoint_static_leaves=landpoint_static_leaves,
+            annual_condition_leaves=annual_condition_leaves,
+            native_forcing_spec=native_spec,
+        )
+
+    return factory
+
+
+def build_shard_arrays_from_compact_blocks(blocks, context):
+    """Assemble one annual shard from already projected compiled outputs."""
+
+    parameters, _parameter_leaves = _pack_condition_groups(
+        _parameter_groups(context),
+        temporal_role="landpoint_parameter",
+        source=_PARAMETER_SOURCE,
+    )
+    landpoint_static, _static_leaves = _pack_condition_groups(
+        _landpoint_static_groups(context),
+        temporal_role="landpoint_static",
+        source=_LANDPOINT_STATIC_SOURCE,
+    )
+    state_rows = []
+    fast_day_targets = []
+    diagnostics = []
+    discrete_rows: dict[str, list[np.ndarray]] = {}
+    day_indices = []
+    contract = None
+    year = None
+    final_state = None
+    previous_final = None
+
+    for block in blocks:
+        if contract is None:
+            contract = block.contract
+            if contract is None:
+                raise ValueError("first compact capture block is missing its contract")
+            year = int(block.year)
+            discrete_rows = {leaf.key: [] for leaf in contract.discrete_leaves}
+        elif int(block.year) != year:
+            raise ValueError("compact capture stream mixes source years")
+        rows = int(block.day_indices.size)
+        if not (
+            block.state_rows.shape[0]
+            == block.fast_day_targets.shape[0]
+            == block.diagnostics.shape[0]
+            == rows
+        ):
+            raise ValueError("compact capture arrays have inconsistent row counts")
+        if previous_final is not None:
+            expected, expected_discrete = extract_state(previous_final, contract)
+            if not np.array_equal(expected, block.state_rows[0], equal_nan=True):
+                raise ValueError("compact Teacher state continuity failed between blocks")
+            for name, value in expected_discrete.items():
+                if not np.array_equal(value, block.discrete_rows[name][0], equal_nan=True):
+                    raise ValueError(
+                        f"compact Teacher discrete continuity failed for {name}"
+                    )
+        for offset, day_index in enumerate(block.day_indices):
+            day_index = int(day_index)
+            if day_indices and day_index != day_indices[-1] + 1:
+                raise ValueError("compact capture day indices are not consecutive")
+            state_rows.append(np.asarray(block.state_rows[offset]))
+            fast_day_targets.append(np.asarray(block.fast_day_targets[offset]))
+            diagnostics.append(np.asarray(block.diagnostics[offset]))
+            for name in discrete_rows:
+                discrete_rows[name].append(np.asarray(block.discrete_rows[name][offset]))
+            day_indices.append(day_index)
+        previous_final = block.final_state
+        final_state = block.final_state
+
+    if contract is None or year is None or final_state is None:
+        raise ValueError("cannot build an empty compact Teacher shard")
+    final_continuous, final_discrete = extract_state(final_state, contract)
+    state_rows.append(final_continuous)
+    for name, value in final_discrete.items():
+        discrete_rows[name].append(value)
+    forcing_native, forcing_record_indices, observed_native_spec = native_forcing_days(
+        context, year=year, day_indices=day_indices
+    )
+    if observed_native_spec != contract.native_forcing:
+        raise ValueError("native forcing schema drift within compact capture")
+    annual_conditions, _annual_leaves = _pack_condition_groups(
+        _annual_condition_groups(context, year=year),
+        temporal_role="annual_exogenous",
+        source=_ANNUAL_CONDITION_SOURCE,
+    )
+    arrays = {
+        "day_index": np.asarray(day_indices, dtype=np.int32),
+        "state_trajectory": np.stack(state_rows),
+        "fast_day_target": np.stack(fast_day_targets),
         "forcing_native": forcing_native,
         "forcing_record_indices": forcing_record_indices,
         "parameters": parameters,
@@ -998,6 +1141,11 @@ def _write_entry(
         start_day=start_day,
         days=transition_days,
         block_size=plan.block_size,
+        compact_contract_factory=_compact_contract_factory(
+            context,
+            year=entry.year,
+            first_day_index=start_day,
+        ),
     )
     capture_seconds = 0.0
 
@@ -1015,7 +1163,7 @@ def _write_entry(
             yield block
 
     assembly_started = time.perf_counter()
-    arrays, contract, final_state = build_shard_arrays_from_blocks(
+    arrays, contract, final_state = build_shard_arrays_from_compact_blocks(
         timed_blocks(), context
     )
     capture_and_assembly_seconds = time.perf_counter() - assembly_started
@@ -1075,7 +1223,7 @@ def _write_entry(
         "spatial_split": entry.spatial_split,
         "temporal_split": entry.temporal_split,
         "block_size": plan.block_size,
-        "capture_mode": "bounded_compiled_blocks",
+        "capture_mode": "compact_projected_compiled_blocks",
         "capture_seconds": capture_seconds,
         "timing_seconds": {
             "context_and_state_preparation": preparation_seconds,

@@ -1,6 +1,6 @@
 {
   "schema_version": "daily_markov_input_ownership_v2",
-  "model_boundary": "S[d] + F_native[d] + P[d] -> S[d+1] + Y[d]",
+  "model_boundary": "S[d] + F_native[d] + P[d] -> B_fast[d]; retained daily STOMATE -> S[d+1]",
   "teacher_owner": "jax_orchidee.driver.orchestration._paper_compiled_later_day_block_executable::transition",
   "compiled_transition_arguments": {
     "values_by_component": {

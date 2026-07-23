@@ -1,8 +1,9 @@
 # 日尺度边界审计与 replay speed-ceiling 方案（v0 历史记录）
 
-> 本文的 pre-daily-STOMATE 边界已被生产数据契约 `daily_markov_contract_v2`
+> 本文的 pre-daily-STOMATE 边界已被生产数据契约 `daily_markov_contract_v3`
 > 取代。本文仅保留旧边界和 speed-ceiling 实验的审计依据。新 Teacher shard 与
-> surrogate 接口必须使用 `S[d] + native forcing[d] + P -> S[d+1] + Y[d]`，不得按
+> surrogate 接口必须使用 `S[d] + native forcing[d] + P -> B_fast[d]`，再由保留的
+> daily STOMATE 生成 `S[d+1]`，不得按
 > 下文的 `forcing_48` 或 retained-STOMATE v0 接口新增数据。
 
 状态：初版审计与 30 日 canonical-minimal replay 已完成，Teacher commit

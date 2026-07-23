@@ -10591,8 +10591,16 @@ def _paper_compiled_later_day_block_executable(
     daily_carbon_dispatch: Mapping[str, object],
     stomate_parameter_values: DriverCompiledStomateParameterValues | None = None,
     capture_pre_daily_training_boundaries: bool = False,
+    training_output_projector=None,
+    training_output_projector_key: str | None = None,
 ):
     """Compile one reusable block of complete later-day state transitions."""
+
+    if training_output_projector is not None:
+        if not capture_pre_daily_training_boundaries:
+            raise ValueError("training projection requires boundary capture")
+        if not training_output_projector_key:
+            raise ValueError("training projection requires a stable cache key")
 
     initial = fast_state_from_previous_packet(initial_state)
     if stomate_parameter_values is None:
@@ -10611,6 +10619,7 @@ def _paper_compiled_later_day_block_executable(
         initial.spec.components,
         initial.spec.field_names_by_component,
         bool(capture_pre_daily_training_boundaries),
+        training_output_projector_key,
     )
     cached = _COMPILED_LATER_DAY_BLOCK_CACHE.get(cache_key)
     if cached is not None:
@@ -10691,10 +10700,16 @@ def _paper_compiled_later_day_block_executable(
                 day.daily_modelout.modelout,
             )
             if capture_pre_daily_training_boundaries:
-                outputs = (
-                    day.pre_daily_training_boundary,
-                    next_values,
-                )
+                if training_output_projector is None:
+                    outputs = (
+                        day.pre_daily_training_boundary,
+                        next_values,
+                    )
+                else:
+                    outputs = training_output_projector(
+                        current_values,
+                        day.pre_daily_training_boundary,
+                    )
             return next_values, outputs
 
         return jax.lax.scan(

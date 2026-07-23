@@ -1,18 +1,24 @@
-# Daily Markov Contract v2
+# Daily Fast-Day Teacher Contract v3
 
 ## Purpose
 
 The production research boundary is:
 
 ```text
-S[d] + F_native[d] + P -> S[d+1] + Y[d]
+S[d] + F_native[d] + P -> B_fast[d]
+B_fast[d] + S[d] -> retained daily season/STOMATE -> S[d+1]
 ```
 
 `S` is the sufficient cross-day prognostic state, `F_native` is the original
-6-hour forcing window, `P` contains parameters and static landpoint conditions,
-and `Y` contains diagnostics that are not consumed by the next day. The learned
-operator represents the complete scientific day, including SECHIBA, daily
-accumulation, OK_LEAK, season, STOMATE carbon processes and day-end writeback.
+6-hour forcing window, and `P` contains parameters and static landpoint
+conditions. `B_fast` is the complete dynamic interface produced by the 48
+half-hour SECHIBA chain, daily accumulation/maintenance fold, and 48-step
+OK_LEAK fold. The learned operator replaces only those fast-day owners. The
+source-backed season, daily STOMATE carbon processes, modelout, and day-end
+writeback remain deterministic JAX code.
+
+Each shard retains the continuous `S` trajectory for inputs and rollout
+validation, but the direct supervised label is `fast_day_target == B_fast`.
 
 ## State ownership
 
@@ -105,6 +111,7 @@ Observed arithmetic-order differences are at float64 rounding scale
 ```text
 state_trajectory          [T + 1, D_state] float64
 state_discrete__*         [T + 1, ...] original integer/logical dtype
+fast_day_target           [T, D_fast] float64
 forcing_native            [T, 5, D_native] float64
 forcing_record_indices    [T, 5] int32
 parameters                [D_parameter] float64
@@ -118,23 +125,24 @@ day_index                 [T] int32
 Finite masks are derived at load time. There is no stored `forcing_48`, no
 separate `day_start_state` and `teacher_target` state copy, and no duplicated
 finite masks. The old measured v1 shard was 224,333,416 bytes per
-landpoint-year; the v2 schema has a regression gate requiring a representative
-PFT14 year to remain below one tenth of that uncompressed size. A real 1962
+landpoint-year; the v3 schema has a regression gate requiring a representative
+PFT14 year to remain below eleven percent of that uncompressed size. A real 1962
 Day 1 packet produced 231 state leaves, 6 discrete leaves, state width 3,724,
 parameter width 84, landpoint-condition width 735 and diagnostic width 90.
-The dominant annual arrays extrapolate to about 11.3 MB before NPZ container
-overhead.
+The compact PFT1/PFT14 fast-day target has width 6,758 rather than the old
+temporary full-PFT width 19,838. Annual storage must be measured from a real
+v3 shard before a large production allocation is approved.
 
 ## Mandatory gates
 
 - `state_trajectory[d+1]` exactly equals the next captured canonical state;
 - discrete state is exact and has `T+1` entries;
-- forcing and diagnostics have exactly `T` entries;
+- forcing, fast-day targets, and diagnostics have exactly `T` entries;
 - plan split validation rejects spatial or temporal leakage;
 - source/contract/shard/checkpoint hashes pass aggregation;
 - 1961 uses `cold_start_bootstrap`, records Day 1 as non-training bootstrap
   metadata, and passes the strict accepted year-end checkpoint gate;
-- no new v1 pilot shards are generated.
+- no new v1/v2 pilot shards are generated.
 
 The implementation authority is
 `research/daily_coarse_graining/daily_markov_contract.py`.

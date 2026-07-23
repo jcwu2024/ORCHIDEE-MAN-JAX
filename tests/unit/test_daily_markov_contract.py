@@ -38,7 +38,9 @@ def _packet(value: float, *, flag: bool = True, include_nroot: bool = False):
                 "albedo": np.asarray([[value, value + 0.5]])
             },
             "diffuco_previous_step_state": {"lai": lai.copy()},
+            "enerbil_previous_step_state": {},
             "hydrol_previous_step_state": hydrol,
+            "thermosoil_previous_step_state": {},
             "slowproc_stomate_previous_step_state": {
                 "lai": lai.copy(),
                 "biomass": biomass,
@@ -57,6 +59,19 @@ def _record(end_state, *, day_index: int = 1):
     final = {"t2mdiag": np.asarray([290.0]), "temp_sol": np.asarray([291.0])}
     gpp_daily = np.zeros((1, 14), dtype=np.float64)
     gpp_daily[:, 13] = 2.0
+    slow_axes = markov._slow_axis_lookup()
+
+    def slow_value(name):
+        return np.zeros(
+            tuple(14 if axis == "nvm" else 1 for axis in slow_axes.get(name, ("npts",))),
+            dtype=np.float64,
+        )
+
+    ok_updates = {
+        name: slow_value(name)
+        for name in markov.FAST_DAY_OK_LEAK_FIELDS
+        if name != "deepC_peat"
+    }
     return SimpleNamespace(
         year=1961,
         day_index=day_index,
@@ -71,6 +86,14 @@ def _record(end_state, *, day_index: int = 1):
             completed_entry_payloads=[final],
         ),
         expected_result=SimpleNamespace(day_end_state=end_state),
+        ok_leak_updates=ok_updates,
+        ok_leak_result=SimpleNamespace(
+            soilcarbon=SimpleNamespace(
+                perma_peat=SimpleNamespace(
+                    deepc_peat=slow_value("deepC_peat")
+                )
+            )
+        ),
     )
 
 
@@ -252,6 +275,7 @@ def test_v2_shard_reader_exposes_state_to_next_state_without_stored_masks(tmp_pa
     np.savez(
         path,
         state_trajectory=np.arange((days + 1) * 4, dtype=np.float64).reshape(days + 1, 4),
+        fast_day_target=np.ones((days, 6), dtype=np.float64),
         forcing_native=np.ones((days, 5, 9), dtype=np.float64),
         forcing_record_indices=np.arange(days * 5, dtype=np.int32).reshape(days, 5),
         parameters=np.ones(2),
@@ -268,6 +292,7 @@ def test_v2_shard_reader_exposes_state_to_next_state_without_stored_masks(tmp_pa
     np.testing.assert_array_equal(sample["next_state"], shard.state_trajectory[2])
     assert sample["discrete_state"]["flag"].item() is False
     assert sample["annual_conditions"].item() == 317.27
+    assert sample["fast_day_target"].shape == (6,)
     assert sample["year"] == 1961
     assert sample["state_finite"].all()
     assert not any("finite" in name for name in np.load(path).files)
@@ -340,13 +365,37 @@ def test_teacher_shard_builder_emits_only_the_v2_markov_arrays(monkeypatch):
             [([start], (object(),), (record,), end)], object()
         )
     )
+    start_continuous, start_discrete = markov.extract_state(
+        start, contract, allow_year_start_missing=True
+    )
+    compact_block = SimpleNamespace(
+        year=1961,
+        day_indices=np.asarray([1], dtype=np.int32),
+        state_rows=start_continuous[None, :],
+        discrete_rows={
+            name: value[None, ...] for name, value in start_discrete.items()
+        },
+        fast_day_targets=arrays["fast_day_target"],
+        diagnostics=arrays["diagnostics"],
+        final_state=end,
+        contract=contract,
+    )
+    compact, compact_contract, compact_final = (
+        teacher_shards.build_shard_arrays_from_compact_blocks(
+            [compact_block], object()
+        )
+    )
     assert contract.schema_version == markov.CONTRACT_SCHEMA_VERSION
     assert streamed_contract.metadata() == contract.metadata()
+    assert compact_contract.metadata() == contract.metadata()
     assert streamed_final is end
+    assert compact_final is end
     assert streamed.keys() == arrays.keys()
     for name in arrays:
         np.testing.assert_array_equal(streamed[name], arrays[name])
+        np.testing.assert_array_equal(compact[name], arrays[name])
     assert arrays["state_trajectory"].shape[0] == 2
+    assert arrays["fast_day_target"].shape == (1, contract.fast_day_target_width)
     assert arrays["forcing_native"].shape == (1, 5, 9)
     assert arrays["annual_conditions"].shape == (1,)
     np.testing.assert_array_equal(arrays["year"], np.asarray(1961, dtype=np.int32))
@@ -362,17 +411,18 @@ def test_teacher_shard_builder_emits_only_the_v2_markov_arrays(monkeypatch):
     assert forbidden.isdisjoint(arrays)
 
 
-def test_v2_schema_has_a_material_size_reduction_against_the_v1_year():
+def test_v3_schema_has_a_material_size_reduction_against_the_v1_year():
     days = 365
     arrays = {
         "state_trajectory": np.empty((days + 1, 3724), dtype=np.float64),
+        "fast_day_target": np.empty((days, 4000), dtype=np.float64),
         "forcing_native": np.empty((days, 5, 9), dtype=np.float64),
         "annual_conditions": np.empty(1, dtype=np.float64),
         "diagnostics": np.empty((days, 90), dtype=np.float64),
         "year": np.asarray(1961, dtype=np.int32),
         "day_index": np.empty(days, dtype=np.int32),
     }
-    assert markov.estimated_uncompressed_bytes(arrays) < 0.1 * 224_333_416
+    assert markov.estimated_uncompressed_bytes(arrays) < 0.11 * 224_333_416
 
 
 @pytest.mark.external_data

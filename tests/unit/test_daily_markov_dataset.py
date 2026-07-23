@@ -17,6 +17,7 @@ def _write_shard(path: Path, *, year: int, offset: float = 0.0) -> str:
     np.savez(
         path,
         state_trajectory=np.arange(12, dtype=np.float64).reshape(3, 4) + offset,
+        fast_day_target=np.full((days, 6), offset),
         forcing_native=np.full((days, 5, 9), offset),
         forcing_record_indices=np.arange(10, dtype=np.int32).reshape(days, 5),
         parameters=np.asarray([1.0, 2.0]),
@@ -83,6 +84,7 @@ def test_collation_stacks_model_values_but_not_landpoint_identity(tmp_path):
     batch = markov_dataset.collate_samples((samples[0], samples[2]))
     assert batch["state"].shape == (2, 4)
     assert batch["forcing_native"].shape == (2, 5, 9)
+    assert batch["fast_day_target"].shape == (2, 6)
     assert batch["parameters"].shape == (2, 2)
     assert batch["annual_conditions"].shape == (2, 1)
     assert batch["discrete_state"]["flag"].shape == (2, 1)

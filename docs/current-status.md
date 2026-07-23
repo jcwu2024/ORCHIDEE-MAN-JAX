@@ -33,7 +33,8 @@ Teacher defaults are unchanged because all capture hooks default to off.
 Completed infrastructure:
 
 - Daily Markov Contract v2:
-  `S[d] + native 6-hour forcing[d] + P -> S[d+1] + Y[d]`;
+  `S[d] + native 6-hour forcing[d] + P -> B_fast[d]`, followed by retained
+  source-backed daily season/STOMATE to produce `S[d+1]`;
 - canonical PFT14 state trajectories with PFT1/PFT14 axis compaction,
   exact discrete state, deterministic mirror reconstruction and year-start
   `nroot` handling;

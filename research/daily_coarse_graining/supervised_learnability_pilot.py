@@ -26,6 +26,12 @@ import numpy as np
 
 from jax_orchidee.driver import orchestration as teacher
 from research.daily_coarse_graining.boundary_adapter import project_packet_values
+from research.daily_coarse_graining.daily_markov_contract import (
+    extract_diagnostics,
+    extract_fast_day_target,
+    extract_state,
+    make_compiled_training_output_projector,
+)
 from research.daily_coarse_graining.persistence_baseline import (
     COMMON_OK_LEAK_FIELDS,
     _legality,
@@ -101,6 +107,18 @@ class PilotSample:
     reference: np.ndarray
     target: np.ndarray
     finite_mask: np.ndarray
+
+
+class CompactTrainingCaptureBlock(NamedTuple):
+    year: int
+    day_indices: np.ndarray
+    state_rows: np.ndarray
+    discrete_rows: dict[str, np.ndarray]
+    fast_day_targets: np.ndarray
+    diagnostics: np.ndarray
+    final_state: Any
+    contract: Any | None = None
+    seed_record: Any | None = None
 
 
 class EncoderParameters(NamedTuple):
@@ -403,6 +421,7 @@ def _iter_capture_days_compiled_blocks(
     start_day: int,
     days: int,
     block_size: int = 7,
+    compact_contract_factory=None,
 ):
     """Yield one audited capture day and bounded compiled following-day blocks."""
 
@@ -423,7 +442,27 @@ def _iter_capture_days_compiled_blocks(
     boundary_state_spec = teacher.fast_state_from_previous_packet(
         records[0].half_hour_transition.current_state
     ).spec
-    yield states, forcings, records, current
+    compact_contract = None
+    if compact_contract_factory is None:
+        yield states, forcings, records, current
+    else:
+        compact_contract = compact_contract_factory(states[0], records[0])
+        state_row, discrete_row = extract_state(
+            states[0], compact_contract, allow_year_start_missing=True
+        )
+        yield CompactTrainingCaptureBlock(
+            year=int(year),
+            day_indices=np.asarray([records[0].day_index], dtype=np.int32),
+            state_rows=state_row[None, :],
+            discrete_rows={name: value[None, ...] for name, value in discrete_row.items()},
+            fast_day_targets=extract_fast_day_target(
+                records[0], compact_contract.fast_day_target_leaves
+            )[None, :],
+            diagnostics=extract_diagnostics(records[0], compact_contract)[None, :],
+            final_state=current,
+            contract=compact_contract,
+            seed_record=records[0],
+        )
     if days == 1:
         return
 
@@ -478,6 +517,18 @@ def _iter_capture_days_compiled_blocks(
         block_day_numbers = np.asarray(block_days, dtype=np.int32)
         executable = executables.get(current_block_size)
         if executable is None:
+            projector = None
+            projector_key = None
+            if compact_contract is not None:
+                day_start_state_spec = teacher.fast_state_from_previous_packet(
+                    current
+                ).spec
+                projector = make_compiled_training_output_projector(
+                    compact_contract,
+                    day_start_state_spec=day_start_state_spec,
+                    boundary_state_spec=boundary_state_spec,
+                )
+                projector_key = compact_contract.sha256
             executable, state_spec = teacher._paper_compiled_later_day_block_executable(
                 config_path,
                 context=context,
@@ -489,6 +540,8 @@ def _iter_capture_days_compiled_blocks(
                 daily_carbon_dispatch=daily_carbon_dispatch,
                 stomate_parameter_values=stomate_parameters,
                 capture_pre_daily_training_boundaries=True,
+                training_output_projector=projector,
+                training_output_projector_key=projector_key,
             )
             executables[current_block_size] = executable
         initial_values = teacher.fast_state_from_previous_packet(
@@ -505,7 +558,37 @@ def _iter_capture_days_compiled_blocks(
             stomate_season_values,
             diffuco_parameters,
         )
-        stacked_boundaries, stacked_day_end_values = jax.device_get(stacked_outputs)
+        stacked_outputs = jax.device_get(stacked_outputs)
+        if compact_contract is not None:
+            stacked_state, stacked_discrete, stacked_targets, stacked_diagnostics = (
+                stacked_outputs
+            )
+            current = teacher.previous_packet_from_fast_state(
+                teacher.DriverFastStateBundle(
+                    tstep=(next_day + current_block_size - 1) * steps_per_day - 1,
+                    values_by_component=final_values,
+                    spec=state_spec,
+                )
+            )
+            yield CompactTrainingCaptureBlock(
+                year=int(year),
+                day_indices=np.asarray(block_days, dtype=np.int32),
+                state_rows=np.asarray(stacked_state),
+                discrete_rows={
+                    leaf.key: np.asarray(value)
+                    for leaf, value in zip(
+                        compact_contract.discrete_leaves,
+                        stacked_discrete,
+                        strict=True,
+                    )
+                },
+                fast_day_targets=np.asarray(stacked_targets),
+                diagnostics=np.asarray(stacked_diagnostics),
+                final_state=current,
+            )
+            next_day += current_block_size
+            continue
+        stacked_boundaries, stacked_day_end_values = stacked_outputs
         block_states = []
         block_forcings = []
         block_records = []

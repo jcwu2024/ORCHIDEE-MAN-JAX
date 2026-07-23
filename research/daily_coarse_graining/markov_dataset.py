@@ -14,11 +14,12 @@ import numpy as np
 
 from research.daily_coarse_graining.daily_markov_contract import load_markov_shard
 
-DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v2"
+DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v3"
 STATISTICS_SCHEMA_VERSION = "daily_teacher_training_statistics_v1"
 SPLITS = frozenset({"train", "validation", "test"})
 CONTINUOUS_ARRAY_NAMES = (
     "state",
+    "fast_day_target",
     "forcing_native",
     "parameters",
     "landpoint_static",
@@ -282,6 +283,9 @@ def fit_training_statistics(
             state_shape = (shard.state_trajectory.shape[1],)
             accumulators = {
                 "state": _FiniteMoments(state_shape),
+                "fast_day_target": _FiniteMoments(
+                    (shard.fast_day_target.shape[-1],)
+                ),
                 "forcing_native": _FiniteMoments((shard.forcing_native.shape[-1],)),
                 "parameters": _FiniteMoments(shard.parameters.shape),
                 "landpoint_static": _FiniteMoments(shard.landpoint_static.shape),
@@ -292,6 +296,7 @@ def fit_training_statistics(
             }
         observed_shapes = {
             "state": (shard.state_trajectory.shape[1],),
+            "fast_day_target": (shard.fast_day_target.shape[-1],),
             "forcing_native": (shard.forcing_native.shape[-1],),
             "parameters": shard.parameters.shape,
             "landpoint_static": shard.landpoint_static.shape,
@@ -312,6 +317,9 @@ def fit_training_statistics(
         state = shard.state_trajectory[:-1]
         next_state = shard.state_trajectory[1:]
         accumulators["state"].update(state, chunk_rows=chunk_rows)
+        accumulators["fast_day_target"].update(
+            shard.fast_day_target, chunk_rows=chunk_rows
+        )
         accumulators["next_state"].update(next_state, chunk_rows=chunk_rows)
         accumulators["state_delta"].update_difference(next_state, state, chunk_rows=chunk_rows)
         accumulators["forcing_native"].update(shard.forcing_native, chunk_rows=chunk_rows)
@@ -438,6 +446,7 @@ def collate_samples(samples: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
         raise ValueError("cannot collate an empty sample sequence")
     array_names = (
         "state",
+        "fast_day_target",
         "forcing_native",
         "parameters",
         "landpoint_static",

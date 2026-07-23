@@ -10,7 +10,7 @@ mode.
 - `../../current-status.md`: current project and research status authority.
 - `development_standard.md`: architecture, evidence, data, split, rollout,
   and performance rules.
-- `daily_markov_contract_v2.md`: current state, native forcing and shard
+- `daily_markov_contract_v3.md`: current state, fast-day target, native forcing and shard
   contract.
 - `daily_boundary_audit.md`: superseded v0 boundary and replay evidence.
 - `teacher_dataset_generation.md`: restartable landpoint-year shard contract.
@@ -27,10 +27,10 @@ gate.
 Implemented:
 
 - Teacher capture and daily target extraction;
-- Daily Markov Contract v2 and native-forcing reconstruction;
+- Daily Fast-Day Teacher Contract v3 and native-forcing reconstruction;
 - complete-day input ownership audit and named condition slices;
-- fixed split and provenance-aware v2 shard generation;
-- hash-verifying v2 training dataset reader, streaming train-only statistics,
+- fixed split and provenance-aware v3 shard generation;
+- hash-verifying v3 training dataset reader, streaming train-only statistics,
   explicit finite masks and bounded-prefetch batch collation;
 - CPU and V100 compatibility gates;
 - parameter-conditioned neural training plumbing.
