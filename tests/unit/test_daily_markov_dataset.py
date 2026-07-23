@@ -177,6 +177,33 @@ def test_statistics_asset_roundtrip_and_safe_normalization(tmp_path):
         markov_dataset.load_training_statistics(metadata)
 
 
+def test_statistics_and_normalization_exclude_orchidee_sentinels(tmp_path):
+    manifest = _manifest(tmp_path)
+    raw = json.loads(manifest.read_text(encoding="utf-8"))
+    shard_path = tmp_path / raw["shards"][0]["shard"]
+    with np.load(shard_path, allow_pickle=False) as stored:
+        arrays = {name: stored[name] for name in stored.files}
+    arrays["state_trajectory"][:, 0] = 1.0e20
+    arrays["fast_day_target"][:, 0] = -1.0e20
+    np.savez(shard_path, **arrays)
+    raw["shards"][0]["shard_sha256"] = hashlib.sha256(
+        shard_path.read_bytes()
+    ).hexdigest()
+    manifest.write_text(json.dumps(raw), encoding="utf-8")
+
+    statistics = markov_dataset.fit_training_statistics(
+        markov_dataset.load_dataset_index(manifest)
+    )
+    assert statistics.arrays["state"].count[0] == 0
+    assert statistics.arrays["fast_day_target"].count[0] == 0
+    normalized, valid = markov_dataset.normalize_finite(
+        np.asarray([[1.0e20, -1.0e20, np.nan, 2.0]]),
+        statistics.arrays["state"],
+    )
+    np.testing.assert_array_equal(valid, [[False, False, False, True]])
+    np.testing.assert_allclose(normalized, [[0.0, 0.0, 0.0, -1.5]])
+
+
 def test_prefetched_batches_preserve_order_and_propagate_errors(tmp_path):
     index = markov_dataset.load_dataset_index(_manifest(tmp_path))
     batches = list(markov_dataset.prefetched_batches(index.samples(), 3, prefetch=1))

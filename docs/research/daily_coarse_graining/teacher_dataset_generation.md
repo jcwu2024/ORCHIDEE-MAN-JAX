@@ -140,7 +140,7 @@ or overwrite `generation.lock` blindly.
 
 ## Stored arrays
 
-The production schema is `daily_teacher_markov_year_v3`. Each shard stores:
+The production schema is `daily_teacher_markov_year_v4`. Each shard stores:
 
 - one canonical continuous state trajectory `state_trajectory[0:T+1]`;
 - one compact `fast_day_target[d]` containing the complete output of the
@@ -161,7 +161,9 @@ trajectory provides rollout supervision and continuity checks. The shard does no
 48-step interpolated forcing, separate day-start/day-end copies, or finite
 masks. Interpolation, precipitation spreading, solar redistribution, unit
 conversion, annual CO2, salinity and tide assembly remain deterministic
-preprocessing. Finite masks are derived with `isfinite()` after loading.
+preprocessing. Validity masks are derived after loading. Values are valid only
+when finite and `abs(value) < 5e19`; this excludes the ORCHIDEE `+/-1e20`
+undefined sentinels as well as NaN and infinity.
 
 For a cold-start 1961 shard, `day_index` is `2..365`, `transition_count` is
 364, and `state_trajectory[0]` is canonical Day 1 end. For ordinary/restart
@@ -188,7 +190,7 @@ assets, including the active five-point noleap production run.
 `fit_training_statistics` streams only shards whose spatial and temporal
 splits are both `train`. It computes finite-only count, mean, population
 variance and scale per feature column without materializing the full dataset.
-The hash-linked `daily_teacher_training_statistics_v1` JSON/NPZ asset records
+The hash-linked `daily_teacher_training_statistics_v2` JSON/NPZ asset records
 the Teacher commit, Markov contract, source shard hashes and the number of
 never, once and conditionally finite columns. Columns with zero finite values
 use mean zero and scale one; columns with one finite value use that value and
@@ -232,9 +234,10 @@ state from the current-day template. A contract roundtrip test requires
 both family-balanced normalized errors and per-leaf physical-scale RMSE, MAE,
 and maximum absolute error.
 
-Normalization, finite masking, and train-time dtype conversion happen after
-split selection. They are not baked into Teacher shards. Non-finite targets
-are masked rather than silently sanitized into scientific values.
+Normalization, defined-value masking, and train-time dtype conversion happen
+after split selection. They are not baked into Teacher shards. NaN, infinity,
+and ORCHIDEE `+/-1e20` sentinels are masked rather than silently sanitized into
+scientific values.
 
 ## Resource policy
 

@@ -49,6 +49,9 @@ def _packet(value: float, *, flag: bool = True, include_nroot: bool = False):
             },
             "sechiba_finalize_state": {
                 "mc": np.asarray([[[value]]]),
+                "leaf_ci": np.full((1, 14, 2), value),
+                "peatPET_lastyear": np.asarray([value]),
+                "summerpet_long": np.asarray([value]),
                 "diagnostic_only": np.asarray([1000.0 + value]),
             },
         }
@@ -143,9 +146,16 @@ def test_contract_uses_canonical_state_and_excludes_packet_mirrors():
     keys = {leaf.key for leaf in contract.state_leaves}
     assert "slowproc_stomate_previous_step_state.lai" in keys
     assert "diffuco_previous_step_state.lai" not in keys
-    assert not any(key.startswith("sechiba_finalize_state.") for key in keys)
+    assert "sechiba_finalize_state.leaf_ci" in keys
+    assert "sechiba_finalize_state.peatPET_lastyear" in keys
+    assert "sechiba_finalize_state.summerpet_long" in keys
+    assert "sechiba_finalize_state.diagnostic_only" not in keys
     assert "hydrol_previous_step_state.njsc" in keys
     assert "hydrol_previous_step_state.nroot" in keys
+    assert not any(
+        leaf.component == "sechiba_finalize_state"
+        for leaf in contract.fast_day_target_leaves
+    )
     assert contract.active_pft_indices == (0, 13)
     assert contract.sha256 == contract.sha256
 

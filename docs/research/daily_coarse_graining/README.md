@@ -12,8 +12,10 @@ mode.
 - `../../current-status.md`: current project and research status authority.
 - `development_standard.md`: architecture, evidence, data, split, rollout,
   and performance rules.
-- `daily_markov_contract_v3.md`: current state, fast-day target, native forcing and shard
+- `daily_markov_contract_v4.md`: current state, fast-day target, native forcing and shard
   contract.
+- `daily_markov_contract_v3.md`: historical contract used by the first bounded
+  dataset and rejected neural baseline.
 - `daily_boundary_audit.md`: superseded v0 boundary and replay evidence.
 - `teacher_dataset_generation.md`: restartable landpoint-year shard contract,
   669-point production planner, asset staging, Slurm array, and aggregation gate.
@@ -30,11 +32,11 @@ gate.
 Implemented:
 
 - Teacher capture and daily target extraction;
-- Daily Fast-Day Teacher Contract v3 and native-forcing reconstruction;
+- Daily Fast-Day Teacher Contract v4 and native-forcing reconstruction;
 - complete-day input ownership audit and named condition slices;
-- fixed split and provenance-aware v3 shard generation;
-- hash-verifying v3 training dataset reader, streaming train-only statistics,
-  explicit finite masks and bounded-prefetch batch collation;
+- fixed split and provenance-aware v4 shard generation;
+- hash-verifying training dataset reader, sentinel-aware streaming train-only
+  statistics, persistence-centered targets, and bounded-prefetch collation;
 - deterministic multi-landpoint production split, cold-start asset staging,
   restartable Slurm worker-array and after-success aggregation plumbing;
 - CPU and V100 compatibility gates;
@@ -49,7 +51,7 @@ Not implemented or not accepted:
 
 ## Current Work
 
-The first frozen v3 architecture-development dataset is being generated for
-five landpoints over 1961-2010. Do not infer its live state from dated reports
-or start a duplicate run. Continue from [`HANDOFF.md`](HANDOFF.md), which owns
-the current Slurm job IDs, acceptance checks, and the single next milestone.
+The first frozen v3 five-point, 1961-2010 dataset completed and exposed two
+contract defects during its first neural experiment. It remains historical
+evidence and must not be reused for v4 training. Continue from
+[`HANDOFF.md`](HANDOFF.md), which owns the single next milestone.

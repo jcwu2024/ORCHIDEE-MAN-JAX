@@ -19,7 +19,9 @@ DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v4"
 SUPPORTED_DATASET_SCHEMA_VERSIONS = frozenset(
     {LEGACY_DATASET_SCHEMA_VERSION, DATASET_SCHEMA_VERSION}
 )
-STATISTICS_SCHEMA_VERSION = "daily_teacher_training_statistics_v1"
+STATISTICS_SCHEMA_VERSION = "daily_teacher_training_statistics_v2"
+ORCHIDEE_UNDEFINED_MAGNITUDE = 1.0e20
+ORCHIDEE_UNDEFINED_THRESHOLD = 0.5 * ORCHIDEE_UNDEFINED_MAGNITUDE
 SPLITS = frozenset({"train", "validation", "test"})
 CONTINUOUS_ARRAY_NAMES = (
     "state",
@@ -32,6 +34,13 @@ CONTINUOUS_ARRAY_NAMES = (
     "state_delta",
     "diagnostics",
 )
+
+
+def defined_numeric_mask(values: np.ndarray) -> np.ndarray:
+    """Return values that are finite and are not ORCHIDEE ±1e20 sentinels."""
+
+    values = np.asarray(values)
+    return np.isfinite(values) & (np.abs(values) < ORCHIDEE_UNDEFINED_THRESHOLD)
 
 
 def _sha256_file(path: Path) -> str:
@@ -155,7 +164,7 @@ class _FiniteMoments:
         rows = np.asarray(values, dtype=np.float64).reshape((-1, self.width))
         for start in range(0, rows.shape[0], chunk_rows):
             chunk = rows[start : start + chunk_rows]
-            finite = np.isfinite(chunk)
+            finite = defined_numeric_mask(chunk)
             safe = np.where(finite, chunk, 0.0)
             batch_count = finite.sum(axis=0, dtype=np.uint64)
             batch_mean = np.zeros(self.width, dtype=np.float64)
@@ -170,7 +179,7 @@ class _FiniteMoments:
 
     def update_constant(self, value: np.ndarray, *, repetitions: int) -> None:
         row = np.asarray(value, dtype=np.float64).reshape(self.width)
-        finite = np.isfinite(row)
+        finite = defined_numeric_mask(row)
         count = finite.astype(np.uint64) * np.uint64(repetitions)
         self._merge(count, np.where(finite, row, 0.0), np.zeros(self.width))
 
@@ -187,10 +196,13 @@ class _FiniteMoments:
             raise ValueError("difference operands must have identical shapes")
         for start in range(0, end_rows.shape[0], chunk_rows):
             stop = start + chunk_rows
-            self.update(
-                end_rows[start:stop] - start_rows[start:stop],
-                chunk_rows=chunk_rows,
+            end_chunk = end_rows[start:stop]
+            start_chunk = start_rows[start:stop]
+            valid = defined_numeric_mask(end_chunk) & defined_numeric_mask(
+                start_chunk
             )
+            difference = np.where(valid, end_chunk - start_chunk, np.nan)
+            self.update(difference, chunk_rows=chunk_rows)
 
     def finalize(self, *, minimum_scale: float) -> FiniteColumnStatistics:
         variance = np.zeros(self.width, dtype=np.float64)
@@ -401,6 +413,11 @@ def write_training_statistics(statistics: TrainingStatistics, path: str | Path) 
         "source_shards": list(statistics.source_shards),
         "statistics_npz": arrays_path.name,
         "statistics_npz_sha256": _sha256_file(arrays_path),
+        "validity_policy": {
+            "finite": True,
+            "excluded_absolute_value_gte": ORCHIDEE_UNDEFINED_THRESHOLD,
+            "source_sentinel_magnitude": ORCHIDEE_UNDEFINED_MAGNITUDE,
+        },
         "arrays": summary,
         "zero_or_one_finite_policy": {"mean": "finite value or zero", "scale": 1.0},
     }
@@ -417,6 +434,13 @@ def load_training_statistics(
     payload = json.loads(metadata_path.read_text(encoding="utf-8"))
     if payload.get("schema_version") != STATISTICS_SCHEMA_VERSION:
         raise ValueError(f"statistics schema must be {STATISTICS_SCHEMA_VERSION!r}")
+    expected_validity = {
+        "finite": True,
+        "excluded_absolute_value_gte": ORCHIDEE_UNDEFINED_THRESHOLD,
+        "source_sentinel_magnitude": ORCHIDEE_UNDEFINED_MAGNITUDE,
+    }
+    if payload.get("validity_policy") != expected_validity:
+        raise ValueError("training statistics validity policy mismatch")
     arrays_path = metadata_path.parent / payload["statistics_npz"]
     if _sha256_file(arrays_path) != payload["statistics_npz_sha256"]:
         raise ValueError("training statistics array hash mismatch")
@@ -450,12 +474,12 @@ def load_training_statistics(
 
 
 def normalize_finite(values: np.ndarray, statistics: FiniteColumnStatistics) -> tuple[np.ndarray, np.ndarray]:
-    """Normalize finite entries and map undefined entries to zero plus a mask."""
+    """Normalize defined entries and map NaN/ORCHIDEE sentinels to zero."""
 
     values = np.asarray(values, dtype=np.float64)
     if values.shape[-statistics.mean.ndim :] != statistics.mean.shape:
         raise ValueError(f"normalization shape mismatch: {values.shape} versus {statistics.mean.shape}")
-    finite = np.isfinite(values)
+    finite = defined_numeric_mask(values)
     normalized = np.zeros_like(values, dtype=np.float64)
     np.subtract(values, statistics.mean, out=normalized, where=finite)
     np.divide(normalized, statistics.scale, out=normalized, where=finite)

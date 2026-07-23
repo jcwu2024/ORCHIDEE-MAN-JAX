@@ -33,9 +33,47 @@ def _write_shard(path: Path, *, year: int, offset: float) -> str:
 def _manifest(tmp_path: Path) -> Path:
     contract = {
         "fast_day_target_width": 6,
+        "state_leaves": [
+            {
+                "component": "diffuco_previous_step_state",
+                "path": ["rveget"],
+                "shape": [1],
+                "start": 0,
+                "stop": 1,
+            },
+            {
+                "component": "hydrol_previous_step_state",
+                "path": ["water"],
+                "shape": [2],
+                "start": 1,
+                "stop": 3,
+            }
+        ],
         "fast_day_target_leaves": [
-            {"family": "hydrol", "start": 0, "stop": 3},
-            {"family": "ok_leak", "start": 3, "stop": 6},
+            {
+                "family": "diffuco_enerbil",
+                "component": "diffuco_previous_step_state",
+                "path": ["rveget"],
+                "key": "diffuco_previous_step_state.rveget",
+                "start": 0,
+                "stop": 1,
+            },
+            {
+                "family": "hydrol",
+                "component": "hydrol_previous_step_state",
+                "path": ["water"],
+                "key": "hydrol_previous_step_state.water",
+                "start": 1,
+                "stop": 3,
+            },
+            {
+                "family": "ok_leak",
+                "component": None,
+                "path": ["DOC"],
+                "key": "ok_leak.DOC",
+                "start": 3,
+                "stop": 6,
+            },
         ],
     }
     contract_hash = hashlib.sha256(
@@ -118,7 +156,11 @@ def test_streamed_fast_day_training_and_resume(tmp_path):
     }
     assert first["history"][0]["validation"]["temporal"]["physical_leaves"]
     assert (output / "checkpoint.pkl").is_file()
+    assert (output / "best_checkpoint.pkl").is_file()
     assert (output / "training_report.json").is_file()
+    assert first["best_epoch"] == 1
+    assert np.isfinite(first["best_validation_score"])
+    assert first["target_representation_audit"]["status"] == "passed"
 
     resumed = training.train_experiment(
         manifest,

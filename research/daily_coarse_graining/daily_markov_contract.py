@@ -23,10 +23,14 @@ from jax_orchidee.driver import domain as forcing_domain
 from jax_orchidee.driver.bundle import ccanopy_from_co2
 from jax_orchidee.driver.domain import read_annual_co2
 from jax_orchidee.driver.orchestration import DriverCompiledHalfHourForcing
+from jax_orchidee.sechiba.restart_io import (
+    SECHIBA_RESTART_COMPONENT_FIELDS,
+    SECHIBA_RESTART_TO_SOURCE_NAMES,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
-CONTRACT_SCHEMA_VERSION = "daily_markov_contract_v3"
-SHARD_SCHEMA_VERSION = "daily_teacher_markov_year_v3"
+CONTRACT_SCHEMA_VERSION = "daily_markov_contract_v4"
+SHARD_SCHEMA_VERSION = "daily_teacher_markov_year_v4"
 NATIVE_FORCING_FIELDS = (
     "Tair",
     "PSurf",
@@ -51,8 +55,29 @@ FAST_DAY_STATE_COMPONENTS = (
     "enerbil_previous_step_state",
     "hydrol_previous_step_state",
     "thermosoil_previous_step_state",
-    "sechiba_finalize_state",
 )
+_FINALIZE_CROSS_DAY_FIELDS = frozenset(
+    {
+        "leaf_ci",
+        "q_sol_pot",
+        "temp_sol_pot",
+        "free_drain_coef",
+        "zwt_force",
+        "resdist",
+        "vegtot_old",
+        "soilalb_bg",
+        "refsoc",
+        "e_soil_lat",
+        *(
+            SECHIBA_RESTART_TO_SOURCE_NAMES.get(name, name)
+            for name in SECHIBA_RESTART_COMPONENT_FIELDS["slowproc"]
+        ),
+    }
+)
+_FINALIZE_AXIS_FALLBACKS = {
+    "leaf_ci": ("npts", "nvm", "nlai"),
+    "e_soil_lat": ("npts", "nvm"),
+}
 FAST_DAY_OK_LEAK_FIELDS = (
     "litter_above",
     "litter_below",
@@ -404,27 +429,43 @@ def _canonical_state_inventory(
         tuple[str, tuple[str, ...], np.ndarray, str, str, tuple[str, ...]]
     ] = []
     for component, field_map in fields.items():
-        if component == _FINALIZE_COMPONENT:
-            continue
         for path, array in _flatten_mapping(field_map):
             top_name = path[0]
+            if (
+                component == _FINALIZE_COMPONENT
+                and top_name not in _FINALIZE_CROSS_DAY_FIELDS
+            ):
+                continue
             if component == _SLOW_COMPONENT and top_name == "daily_accumulators":
                 # The source day-end transition resets these fields. Same-day
                 # accumulated values are Y[d], while next-day zeros are
                 # deterministic and therefore not prognostic state.
                 continue
-            if component != _SLOW_COMPONENT and (component, top_name) not in source_by_key:
+            if component == _FINALIZE_COMPONENT:
+                source_ref = (
+                    "sechiba_main cross-day SAVE/restart carry consumed by "
+                    "_sechiba_finalize_state_from_components"
+                )
+            elif component != _SLOW_COMPONENT and (component, top_name) not in source_by_key:
                 if component == "thermosoil_previous_step_state" and top_name == "e_soil_lat":
                     source_ref = "thermosoil_main"
                 else:
                     continue
             else:
                 source_ref = source_by_key.get((component, top_name), "restart_state_lifecycle")
-            axis_names = (
-                slow_axes.get(path[-1], slow_axes.get(top_name, ()))
-                if component == _SLOW_COMPONENT
-                else state_axes.get((component, top_name), ())
-            )
+            if component == _SLOW_COMPONENT:
+                axis_names = slow_axes.get(
+                    path[-1], slow_axes.get(top_name, ())
+                )
+            elif component == _FINALIZE_COMPONENT:
+                axis_names = slow_axes.get(
+                    path[-1],
+                    slow_axes.get(
+                        top_name, _FINALIZE_AXIS_FALLBACKS.get(top_name, ())
+                    ),
+                )
+            else:
+                axis_names = state_axes.get((component, top_name), ())
             if axis_names and len(axis_names) != array.ndim:
                 raise ValueError(
                     f"axis ledger drift for {component}.{'.'.join(path)}: "

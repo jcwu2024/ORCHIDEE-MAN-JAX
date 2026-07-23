@@ -14,6 +14,8 @@ from research.daily_coarse_graining.canonical_daily_model import (
 from research.daily_coarse_graining.markov_dataset import (
     MarkovDatasetIndex,
     TrainingStatistics,
+    defined_numeric_mask,
+    denormalize,
     load_markov_shard,
     normalize_finite,
 )
@@ -23,6 +25,85 @@ class CanonicalTrainingBatch(NamedTuple):
     model_input: CanonicalDayBatch
     normalized_fast_day_target: Any
     fast_day_target_finite: Any
+    fast_day_target_undefined: Any
+    fast_day_target_undefined_values: Any
+    persistent_fast_day_undefined: Any
+    persistent_fast_day_undefined_values: Any
+    dynamic_undefined_target: Any
+
+
+class FastDayTargetRepresentation(NamedTuple):
+    """Contract mapping from learned outputs to same-owner day-start state."""
+
+    state_indices: np.ndarray
+    dynamic_undefined_indices: np.ndarray
+    dynamic_undefined_fill_values: np.ndarray
+
+
+_DYNAMIC_UNDEFINED_OUTPUTS = {
+    "diffuco_previous_step_state.rveget": 1.0e20,
+}
+
+
+def fast_day_target_representation_from_contract(
+    contract_metadata: Mapping[str, Any],
+) -> FastDayTargetRepresentation:
+    width = int(contract_metadata["fast_day_target_width"])
+    state_by_owner = {}
+    for leaf in contract_metadata["state_leaves"]:
+        if leaf.get("start") is None:
+            continue
+        key = (str(leaf["component"]), tuple(str(item) for item in leaf["path"]))
+        if key in state_by_owner:
+            raise ValueError(f"duplicate continuous state owner {key}")
+        state_by_owner[key] = leaf
+
+    state_indices = np.full(width, -1, dtype=np.int32)
+    dynamic_indices = []
+    dynamic_fill_values = []
+    slow_component = "slowproc_stomate_previous_step_state"
+    for leaf in contract_metadata["fast_day_target_leaves"]:
+        family = str(leaf["family"])
+        component = leaf.get("component")
+        path = tuple(str(item) for item in leaf["path"])
+        key = str(
+            leaf.get("key")
+            or ".".join((str(component or family), *path))
+        )
+        if key in _DYNAMIC_UNDEFINED_OUTPUTS:
+            dynamic_indices.extend(range(int(leaf["start"]), int(leaf["stop"])))
+            dynamic_fill_values.extend(
+                [_DYNAMIC_UNDEFINED_OUTPUTS[key]]
+                * (int(leaf["stop"]) - int(leaf["start"]))
+            )
+        owner = None
+        if component is not None:
+            owner = state_by_owner.get((str(component), path))
+        elif family == "ok_leak":
+            owner = state_by_owner.get((slow_component, path))
+        if owner is None:
+            continue
+        target_start = int(leaf["start"])
+        target_stop = int(leaf["stop"])
+        state_start = int(owner["start"])
+        state_stop = int(owner["stop"])
+        if target_stop - target_start != state_stop - state_start:
+            raise ValueError(
+                "persistence owner width mismatch for "
+                f"{component or family}.{'.'.join(path)}"
+            )
+        state_indices[target_start:target_stop] = np.arange(
+            state_start, state_stop, dtype=np.int32
+        )
+    if not dynamic_indices:
+        raise ValueError("fast-day contract is missing dynamic rveget outputs")
+    return FastDayTargetRepresentation(
+        state_indices=state_indices,
+        dynamic_undefined_indices=np.asarray(dynamic_indices, dtype=np.int32),
+        dynamic_undefined_fill_values=np.asarray(
+            dynamic_fill_values, dtype=np.float64
+        ),
+    )
 
 
 def _calendar_features(year: np.ndarray, day_index: np.ndarray) -> np.ndarray:
@@ -44,6 +125,7 @@ def _calendar_features(year: np.ndarray, day_index: np.ndarray) -> np.ndarray:
 def prepare_canonical_batch(
     batch: Mapping[str, Any],
     statistics: TrainingStatistics,
+    representation: FastDayTargetRepresentation,
 ) -> CanonicalTrainingBatch:
     """Normalize one collated batch using train-only finite statistics."""
 
@@ -68,9 +150,53 @@ def prepare_canonical_batch(
         normalized[name], finite[name] = normalize_finite(
             np.asarray(batch[name]), statistics.arrays[name]
         )
+    target = np.asarray(batch["fast_day_target"], dtype=np.float64)
+    state = np.asarray(batch["state"], dtype=np.float64)
+    indices = np.asarray(representation.state_indices, dtype=np.int32)
+    if indices.shape != (target.shape[-1],):
+        raise ValueError("fast-day target representation width mismatch")
+    matched = indices >= 0
+    selected_indices = np.maximum(indices, 0)
+    persisted = state[:, selected_indices]
+    persisted_defined = defined_numeric_mask(persisted) & matched[None, :]
+    target_defined = defined_numeric_mask(target)
+    persisted_undefined = ~defined_numeric_mask(persisted) & matched[None, :]
+    target_undefined = ~target_defined
+    same_undefined_value = (
+        (np.isnan(target) & np.isnan(persisted))
+        | (np.isfinite(target) & np.isfinite(persisted) & (target == persisted))
+    )
+    undefined_mismatch = (target_undefined != persisted_undefined) | (
+        target_undefined & persisted_undefined & ~same_undefined_value
+    )
+    dynamic_columns = np.zeros(target.shape[-1], dtype=bool)
+    dynamic_columns[representation.dynamic_undefined_indices] = True
+    unexpected_mismatch = undefined_mismatch & ~dynamic_columns[None, :]
+    if np.any(unexpected_mismatch):
+        rows, columns = np.nonzero(unexpected_mismatch)
+        first = int(columns[0])
+        raise ValueError(
+            "fast-day undefined value is not persistent from day-start state: "
+            f"column={first}, mismatches={rows.size}"
+        )
+    target_statistics = statistics.arrays["fast_day_target"]
+    baseline = np.zeros_like(target, dtype=np.float64)
+    np.subtract(
+        persisted,
+        target_statistics.mean,
+        out=baseline,
+        where=persisted_defined,
+    )
+    np.divide(
+        baseline,
+        target_statistics.scale,
+        out=baseline,
+        where=persisted_defined,
+    )
     model_input = CanonicalDayBatch(
         state=normalized["state"].astype(np.float32),
         state_finite=finite["state"],
+        normalized_fast_day_baseline=baseline.astype(np.float32),
         forcing_native=normalized["forcing_native"].astype(np.float32),
         forcing_finite=finite["forcing_native"],
         parameters=normalized["parameters"].astype(np.float32),
@@ -89,7 +215,159 @@ def prepare_canonical_batch(
             np.float32
         ),
         fast_day_target_finite=finite["fast_day_target"],
+        fast_day_target_undefined=target_undefined,
+        fast_day_target_undefined_values=np.where(
+            target_undefined, target, 0.0
+        ),
+        persistent_fast_day_undefined=persisted_undefined,
+        persistent_fast_day_undefined_values=np.where(
+            persisted_undefined, persisted, 0.0
+        ),
+        dynamic_undefined_target=target_undefined[
+            :, representation.dynamic_undefined_indices
+        ],
     )
+
+
+def restore_fast_day_prediction(
+    normalized_prediction: np.ndarray,
+    dynamic_undefined_logits: np.ndarray,
+    batch: CanonicalTrainingBatch,
+    statistics: TrainingStatistics,
+    representation: FastDayTargetRepresentation,
+) -> np.ndarray:
+    """Restore physical values and source-defined undefined input values."""
+
+    physical = denormalize(
+        np.asarray(normalized_prediction), statistics.arrays["fast_day_target"]
+    )
+    undefined = np.asarray(batch.persistent_fast_day_undefined).copy()
+    undefined_values = np.asarray(
+        batch.persistent_fast_day_undefined_values
+    ).copy()
+    dynamic = np.asarray(dynamic_undefined_logits) >= 0.0
+    undefined[:, representation.dynamic_undefined_indices] = dynamic
+    undefined_values[:, representation.dynamic_undefined_indices] = (
+        representation.dynamic_undefined_fill_values[None, :]
+    )
+    return np.where(undefined, undefined_values, physical)
+
+
+def restore_fast_day_target(
+    normalized_target: np.ndarray,
+    batch: CanonicalTrainingBatch,
+    statistics: TrainingStatistics,
+) -> np.ndarray:
+    """Restore physical Teacher values including their exact undefined kind."""
+
+    physical = denormalize(
+        np.asarray(normalized_target), statistics.arrays["fast_day_target"]
+    )
+    return np.where(
+        np.asarray(batch.fast_day_target_undefined),
+        np.asarray(batch.fast_day_target_undefined_values),
+        physical,
+    )
+
+
+def audit_fast_day_target_representation(
+    index: MarkovDatasetIndex,
+    contract_metadata: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Audit that every undefined learned output is restorable from S[d]."""
+
+    representation = fast_day_target_representation_from_contract(
+        contract_metadata
+    )
+    indices = np.asarray(representation.state_indices, dtype=np.int32)
+    matched = indices >= 0
+    selected_indices = np.maximum(indices, 0)
+    leaves = tuple(contract_metadata["fast_day_target_leaves"])
+    leaf_counts = {
+        str(leaf["key"]): {
+            "undefined_values": 0,
+            "nan_values": 0,
+            "sentinel_values": 0,
+            "persistence_mismatches": 0,
+        }
+        for leaf in leaves
+    }
+    transitions = 0
+    undefined_values = 0
+    persistence_mismatches = 0
+    for reference in index.shards:
+        shard = load_markov_shard(reference.path)
+        target = np.asarray(shard.fast_day_target, dtype=np.float64)
+        state = np.asarray(shard.state_trajectory[:-1], dtype=np.float64)
+        if target.shape[-1] != indices.size:
+            raise ValueError(
+                "fast-day target audit width mismatch at "
+                f"{reference.landpoint_id}:{reference.year}"
+            )
+        persisted = state[:, selected_indices]
+        target_undefined = ~defined_numeric_mask(target)
+        persisted_undefined = (
+            ~defined_numeric_mask(persisted) & matched[None, :]
+        )
+        same_undefined_value = (
+            (np.isnan(target) & np.isnan(persisted))
+            | (
+                np.isfinite(target)
+                & np.isfinite(persisted)
+                & (target == persisted)
+            )
+        )
+        mismatch = (target_undefined != persisted_undefined) | (
+            target_undefined & persisted_undefined & ~same_undefined_value
+        )
+        transitions += shard.days
+        undefined_values += int(np.count_nonzero(target_undefined))
+        dynamic_columns = np.zeros(target.shape[-1], dtype=bool)
+        dynamic_columns[representation.dynamic_undefined_indices] = True
+        unexpected_mismatch = mismatch & ~dynamic_columns[None, :]
+        persistence_mismatches += int(
+            np.count_nonzero(unexpected_mismatch)
+        )
+        for leaf in leaves:
+            start = int(leaf["start"])
+            stop = int(leaf["stop"])
+            selected = target[:, start:stop]
+            selected_undefined = target_undefined[:, start:stop]
+            counts = leaf_counts[str(leaf["key"])]
+            counts["undefined_values"] += int(
+                np.count_nonzero(selected_undefined)
+            )
+            counts["nan_values"] += int(np.count_nonzero(np.isnan(selected)))
+            counts["sentinel_values"] += int(
+                np.count_nonzero(
+                    np.isfinite(selected) & ~defined_numeric_mask(selected)
+                )
+            )
+            counts["persistence_mismatches"] += int(
+                np.count_nonzero(unexpected_mismatch[:, start:stop])
+            )
+    active_leaves = {
+        key: value
+        for key, value in leaf_counts.items()
+        if value["undefined_values"] or value["persistence_mismatches"]
+    }
+    return {
+        "dataset_id": index.dataset_id,
+        "teacher_git_head": index.teacher_git_head,
+        "markov_contract_sha256": index.contract_sha256,
+        "shards": len(index.shards),
+        "transitions": transitions,
+        "target_width": int(indices.size),
+        "persistence_mapped_columns": int(np.count_nonzero(matched)),
+        "mean_centered_columns": int(np.count_nonzero(~matched)),
+        "undefined_values": undefined_values,
+        "persistence_mismatches": persistence_mismatches,
+        "dynamic_undefined_columns": int(
+            representation.dynamic_undefined_indices.size
+        ),
+        "status": "passed" if persistence_mismatches == 0 else "failed",
+        "undefined_leaves": active_leaves,
+    }
 
 
 def model_config_from_batch(
@@ -104,6 +382,7 @@ def model_config_from_batch(
         landpoint_static_width=int(inputs.landpoint_static.shape[-1]),
         annual_condition_width=int(inputs.annual_conditions.shape[-1]),
         fast_day_target_width=int(batch.normalized_fast_day_target.shape[-1]),
+        dynamic_undefined_width=int(batch.dynamic_undefined_target.shape[-1]),
         **architecture_widths,
     )
 

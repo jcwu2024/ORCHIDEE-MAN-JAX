@@ -16,6 +16,7 @@ class CanonicalModelConfig(NamedTuple):
     landpoint_static_width: int
     annual_condition_width: int
     fast_day_target_width: int
+    dynamic_undefined_width: int
     state_latent_width: int = 128
     forcing_latent_width: int = 64
     condition_latent_width: int = 64
@@ -27,6 +28,7 @@ class CanonicalDayBatch(NamedTuple):
 
     state: Any
     state_finite: Any
+    normalized_fast_day_baseline: Any
     forcing_native: Any
     forcing_finite: Any
     parameters: Any
@@ -51,10 +53,12 @@ class CanonicalModelParameters(NamedTuple):
     fusion_input: DenseParameters
     fusion_hidden: DenseParameters
     fast_day_target_head: DenseParameters
+    dynamic_undefined_head: DenseParameters
 
 
 class CanonicalPrediction(NamedTuple):
     normalized_fast_day_target: Any
+    dynamic_undefined_logits: Any
 
 
 def _dense_init(key, input_width: int, output_width: int, *, scale: float = 1.0):
@@ -77,7 +81,7 @@ def initialize_canonical_model(
     """Initialize a persistence-centered residual model."""
 
     _validate_config(config)
-    keys = iter(jax.random.split(jax.random.PRNGKey(seed), 7))
+    keys = iter(jax.random.split(jax.random.PRNGKey(seed), 8))
     condition_width = (
         2
         * (
@@ -113,6 +117,12 @@ def initialize_canonical_model(
             next(keys),
             config.hidden_width,
             config.fast_day_target_width,
+            scale=1.0e-2,
+        ),
+        dynamic_undefined_head=_dense_init(
+            next(keys),
+            config.hidden_width,
+            config.dynamic_undefined_width,
             scale=1.0e-2,
         ),
     )
@@ -196,8 +206,12 @@ def canonical_model_apply(
     hidden = jax.nn.silu(_dense(hidden, parameters.fusion_input))
     hidden = hidden + jax.nn.silu(_dense(hidden, parameters.fusion_hidden))
     return CanonicalPrediction(
-        normalized_fast_day_target=_dense(
-            hidden, parameters.fast_day_target_head
+        normalized_fast_day_target=(
+            batch.normalized_fast_day_baseline
+            + _dense(hidden, parameters.fast_day_target_head)
+        ),
+        dynamic_undefined_logits=_dense(
+            hidden, parameters.dynamic_undefined_head
         ),
     )
 
@@ -245,14 +259,22 @@ def canonical_one_step_loss(
     normalized_fast_day_target,
     fast_day_target_finite,
     fast_day_target_weights,
+    dynamic_undefined_target,
+    undefined_loss_weight: float = 0.1,
 ):
     prediction = canonical_model_apply(parameters, batch)
-    return masked_huber_loss(
+    continuous = masked_huber_loss(
         prediction.normalized_fast_day_target,
         normalized_fast_day_target,
         fast_day_target_finite,
         fast_day_target_weights,
     )
+    target = jnp.asarray(dynamic_undefined_target, dtype=jnp.float32)
+    binary = jnp.mean(
+        jax.nn.softplus(prediction.dynamic_undefined_logits)
+        - target * prediction.dynamic_undefined_logits
+    )
+    return continuous + undefined_loss_weight * binary
 
 
 def parameter_count(parameters: CanonicalModelParameters) -> int:

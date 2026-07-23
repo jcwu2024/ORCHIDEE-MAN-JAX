@@ -1,4 +1,4 @@
-"""Streamed training entry point for the canonical v3 fast-day operator."""
+"""Streamed training entry point for the canonical v4 fast-day operator."""
 
 from __future__ import annotations
 
@@ -26,23 +26,27 @@ from research.daily_coarse_graining.canonical_daily_model import (
 )
 from research.daily_coarse_graining.canonical_training import (
     CanonicalTrainingBatch,
+    FastDayTargetRepresentation,
+    audit_fast_day_target_representation,
+    fast_day_target_representation_from_contract,
     loss_weights_from_contract,
     model_config_from_batch,
     prepare_canonical_batch,
+    restore_fast_day_prediction,
+    restore_fast_day_target,
 )
 from research.daily_coarse_graining.daily_markov_contract import load_markov_shard
 from research.daily_coarse_graining.markov_dataset import (
     MarkovDatasetIndex,
     TrainingStatistics,
     collate_samples,
-    denormalize,
     fit_training_statistics,
     load_dataset_index,
     load_training_statistics,
     write_training_statistics,
 )
 
-CHECKPOINT_SCHEMA_VERSION = "canonical_fast_day_checkpoint_v1"
+CHECKPOINT_SCHEMA_VERSION = "canonical_fast_day_checkpoint_v2"
 
 
 class AdamState(NamedTuple):
@@ -178,6 +182,7 @@ def _train_step(parameters, optimizer, batch, weights, learning_rate):
             normalized_fast_day_target=batch.normalized_fast_day_target,
             fast_day_target_finite=batch.fast_day_target_finite,
             fast_day_target_weights=weights,
+            dynamic_undefined_target=batch.dynamic_undefined_target,
         )
 
     loss_value, gradients = jax.value_and_grad(loss)(parameters)
@@ -207,6 +212,7 @@ def _evaluate(
     index: MarkovDatasetIndex,
     statistics: TrainingStatistics,
     contract: Mapping[str, Any],
+    representation: FastDayTargetRepresentation,
     *,
     spatial_split: str,
     temporal_split: str,
@@ -222,7 +228,12 @@ def _evaluate(
     leaf_maximum = defaultdict(float)
     leaf_counts = defaultdict(int)
     leaves = tuple(contract["fast_day_target_leaves"])
-    target_statistics = statistics.arrays["fast_day_target"]
+    undefined_values = 0
+    undefined_exact = 0
+    undefined_true_positive = 0
+    undefined_true_negative = 0
+    undefined_false_positive = 0
+    undefined_false_negative = 0
     batches = 0
     for raw in _iter_epoch_batches(
         index,
@@ -232,15 +243,47 @@ def _evaluate(
         seed=0,
         drop_last=False,
     ):
-        batch = prepare_canonical_batch(raw, statistics)
-        predicted = np.asarray(
-            canonical_model_apply(parameters, batch.model_input)
-            .normalized_fast_day_target
-        )
+        batch = prepare_canonical_batch(raw, statistics, representation)
+        model_prediction = canonical_model_apply(parameters, batch.model_input)
+        predicted = np.asarray(model_prediction.normalized_fast_day_target)
         target = np.asarray(batch.normalized_fast_day_target)
         finite = np.asarray(batch.fast_day_target_finite)
-        predicted_physical = denormalize(predicted, target_statistics)
-        target_physical = denormalize(target, target_statistics)
+        predicted_physical = restore_fast_day_prediction(
+            predicted,
+            np.asarray(model_prediction.dynamic_undefined_logits),
+            batch,
+            statistics,
+            representation,
+        )
+        target_physical = restore_fast_day_target(target, batch, statistics)
+        undefined = np.asarray(batch.fast_day_target_undefined)
+        expected_undefined = np.asarray(batch.fast_day_target_undefined_values)
+        undefined_values += int(np.count_nonzero(undefined))
+        undefined_exact += int(
+            np.count_nonzero(
+                undefined
+                & (
+                    (np.isnan(predicted_physical) & np.isnan(expected_undefined))
+                    | (predicted_physical == expected_undefined)
+                )
+            )
+        )
+        predicted_dynamic = (
+            np.asarray(model_prediction.dynamic_undefined_logits) >= 0.0
+        )
+        expected_dynamic = np.asarray(batch.dynamic_undefined_target)
+        undefined_true_positive += int(
+            np.count_nonzero(predicted_dynamic & expected_dynamic)
+        )
+        undefined_true_negative += int(
+            np.count_nonzero(~predicted_dynamic & ~expected_dynamic)
+        )
+        undefined_false_positive += int(
+            np.count_nonzero(predicted_dynamic & ~expected_dynamic)
+        )
+        undefined_false_negative += int(
+            np.count_nonzero(~predicted_dynamic & expected_dynamic)
+        )
         for family, slices in ranges.items():
             for start, stop in slices:
                 selected = (predicted[:, start:stop] - target[:, start:stop])[
@@ -277,6 +320,16 @@ def _evaluate(
         raise ValueError("evaluation selection produced no batches")
     return {
         "batches": batches,
+        "source_undefined_persistence": {
+            "values": undefined_values,
+            "exact": undefined_exact,
+        },
+        "dynamic_undefined_classification": {
+            "true_positive": undefined_true_positive,
+            "true_negative": undefined_true_negative,
+            "false_positive": undefined_false_positive,
+            "false_negative": undefined_false_negative,
+        },
         "families": {
             family: {
                 "normalized_rmse": float(np.sqrt(squared[family] / counts[family])),
@@ -296,6 +349,22 @@ def _evaluate(
             for key in sorted(leaf_counts)
         },
     }
+
+
+def _validation_selection_score(validation: Mapping[str, Any]) -> float:
+    """Equal-weight validation splits and process families for model selection."""
+
+    split_scores = []
+    for split in ("temporal", "spatial", "joint"):
+        families = validation[split]["families"]
+        values = [
+            float(metrics["normalized_rmse"])
+            for metrics in families.values()
+        ]
+        if not values or not np.all(np.isfinite(values)):
+            raise ValueError(f"non-finite or empty validation families for {split}")
+        split_scores.append(float(np.mean(values)))
+    return float(np.mean(split_scores))
 
 
 def _atomic_pickle(path: Path, value: Any) -> None:
@@ -351,6 +420,13 @@ def train_experiment(
     index = load_dataset_index(manifest_path)
     statistics = load_training_statistics(statistics_path, index=index)
     contract = load_contract_metadata(manifest_path)
+    representation = fast_day_target_representation_from_contract(contract)
+    representation_audit = audit_fast_day_target_representation(index, contract)
+    if representation_audit["status"] != "passed":
+        raise ValueError(
+            "fast-day target representation audit failed with "
+            f"{representation_audit['persistence_mismatches']} mismatches"
+        )
     first_raw = next(
         _iter_epoch_batches(
             index,
@@ -361,10 +437,11 @@ def train_experiment(
             drop_last=True,
         )
     )
-    first = prepare_canonical_batch(first_raw, statistics)
+    first = prepare_canonical_batch(first_raw, statistics, representation)
     config = model_config_from_batch(first, **dict(architecture or {}))
     identity = _checkpoint_identity(index, statistics_path, config)
     checkpoint_path = output_dir / "checkpoint.pkl"
+    best_checkpoint_path = output_dir / "best_checkpoint.pkl"
     if resume and checkpoint_path.exists():
         checkpoint = _load_checkpoint(checkpoint_path, identity)
         parameters = checkpoint["parameters"]
@@ -391,7 +468,7 @@ def train_experiment(
             drop_last=True,
         ):
             batch: CanonicalTrainingBatch = prepare_canonical_batch(
-                raw, statistics
+                raw, statistics, representation
             )
             parameters, optimizer, loss = _COMPILED_TRAIN_STEP(
                 parameters,
@@ -422,11 +499,15 @@ def train_experiment(
                 index,
                 statistics,
                 contract,
+                representation,
                 spatial_split=spatial,
                 temporal_split=temporal,
                 batch_size=batch_size,
                 max_batches=max_eval_batches,
             )
+        record["selection_score"] = _validation_selection_score(
+            record["validation"]
+        )
         history.append(record)
         _atomic_pickle(
             checkpoint_path,
@@ -439,6 +520,26 @@ def train_experiment(
                 "history": history,
             },
         )
+        previous_best = min(
+            (
+                float(item["selection_score"])
+                for item in history[:-1]
+                if "selection_score" in item
+            ),
+            default=float("inf"),
+        )
+        if record["selection_score"] < previous_best:
+            _atomic_pickle(
+                best_checkpoint_path,
+                {
+                    "schema_version": CHECKPOINT_SCHEMA_VERSION,
+                    "identity": identity,
+                    "parameters": jax.device_get(parameters),
+                    "epoch": epoch + 1,
+                    "selection_score": record["selection_score"],
+                },
+            )
+    best_record = min(history, key=lambda item: float(item["selection_score"]))
     summary = {
         "schema_version": "canonical_fast_day_training_report_v1",
         "identity": identity,
@@ -448,6 +549,10 @@ def train_experiment(
         "seed": seed,
         "parameter_count": parameter_count(parameters),
         "checkpoint": str(checkpoint_path),
+        "best_checkpoint": str(best_checkpoint_path),
+        "best_epoch": int(best_record["epoch"]),
+        "best_validation_score": float(best_record["selection_score"]),
+        "target_representation_audit": representation_audit,
         "history": history,
         "test_split_evaluated": False,
     }
@@ -465,6 +570,9 @@ def _parser() -> argparse.ArgumentParser:
     statistics.add_argument("--dataset", type=Path, required=True)
     statistics.add_argument("--output", type=Path, required=True)
     statistics.add_argument("--chunk-rows", type=int, default=64)
+    audit = commands.add_parser("audit-target-representation")
+    audit.add_argument("--dataset", type=Path, required=True)
+    audit.add_argument("--output", type=Path, required=True)
     train = commands.add_parser("train")
     train.add_argument("--dataset", type=Path, required=True)
     train.add_argument("--statistics", type=Path, required=True)
@@ -488,6 +596,14 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         print(json.dumps({"statistics": str(output)}, indent=2))
         return 0
+    if args.command == "audit-target-representation":
+        index = load_dataset_index(args.dataset)
+        contract = load_contract_metadata(args.dataset)
+        report = audit_fast_day_target_representation(index, contract)
+        args.output.parent.mkdir(parents=True, exist_ok=True)
+        args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+        print(json.dumps(report, indent=2))
+        return 0 if report["status"] == "passed" else 1
     summary = train_experiment(
         args.dataset,
         args.statistics,

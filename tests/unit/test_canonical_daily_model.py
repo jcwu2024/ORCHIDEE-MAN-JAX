@@ -24,6 +24,7 @@ def _config():
         landpoint_static_width=5,
         annual_condition_width=1,
         fast_day_target_width=18,
+        dynamic_undefined_width=2,
         state_latent_width=8,
         forcing_latent_width=6,
         condition_latent_width=5,
@@ -38,6 +39,9 @@ def _batch(parameter_shift=0.0):
     return CanonicalDayBatch(
         state=state,
         state_finite=jnp.ones_like(state, dtype=bool),
+        normalized_fast_day_baseline=jnp.zeros(
+            (batch_size, 18), dtype=jnp.float32
+        ),
         forcing_native=forcing,
         forcing_finite=jnp.ones_like(forcing, dtype=bool),
         parameters=jnp.ones((batch_size, 4), dtype=jnp.float32) + parameter_shift,
@@ -74,6 +78,23 @@ def test_dynamic_parameter_conditions_change_predictions():
     )
 
 
+def test_fast_day_prediction_is_centered_on_persistent_baseline():
+    parameters = initialize_canonical_model(_config(), seed=4)
+    batch = _batch()
+    shifted = batch._replace(
+        normalized_fast_day_baseline=jnp.full((3, 18), 2.5)
+    )
+    baseline_prediction = canonical_model_apply(parameters, batch)
+    shifted_prediction = canonical_model_apply(parameters, shifted)
+    np.testing.assert_allclose(
+        np.asarray(shifted_prediction.normalized_fast_day_target)
+        - np.asarray(baseline_prediction.normalized_fast_day_target),
+        2.5,
+        rtol=0.0,
+        atol=1.0e-6,
+    )
+
+
 def test_one_step_loss_has_finite_nonzero_gradients():
     config = _config()
     parameters = initialize_canonical_model(config, seed=5)
@@ -93,6 +114,7 @@ def test_one_step_loss_has_finite_nonzero_gradients():
             normalized_fast_day_target=target,
             fast_day_target_finite=jnp.ones_like(target, dtype=bool),
             fast_day_target_weights=weights,
+            dynamic_undefined_target=jnp.zeros((3, 2), dtype=bool),
         )
 
     value, gradient = jax.value_and_grad(loss)(parameters)

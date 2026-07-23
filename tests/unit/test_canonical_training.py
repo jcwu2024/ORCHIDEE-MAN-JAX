@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from research.daily_coarse_graining.canonical_training import (
+    FastDayTargetRepresentation,
     _calendar_features,
     loss_weights_from_contract,
     model_config_from_batch,
@@ -59,7 +60,12 @@ def test_prepare_canonical_batch_uses_native_forcing_and_explicit_masks():
         }
     )
 
-    prepared = prepare_canonical_batch(batch, statistics)
+    representation = FastDayTargetRepresentation(
+        state_indices=np.full(6, -1, dtype=np.int32),
+        dynamic_undefined_indices=np.asarray([0], dtype=np.int32),
+        dynamic_undefined_fill_values=np.asarray([1.0e20]),
+    )
+    prepared = prepare_canonical_batch(batch, statistics, representation)
 
     assert prepared.model_input.forcing_native.shape == (2, 5, 3)
     assert prepared.model_input.calendar.shape == (2, 4)
@@ -70,6 +76,78 @@ def test_prepare_canonical_batch_uses_native_forcing_and_explicit_masks():
     assert config.forcing_width == 3
     assert config.fast_day_target_width == 6
     assert config.hidden_width == 32
+
+
+def test_prepare_canonical_batch_persists_source_sentinel_and_learns_delta():
+    batch = {
+        "state": np.asarray([[10.0, 1.0e20]]),
+        "forcing_native": np.ones((1, 5, 1)),
+        "parameters": np.ones((1, 1)),
+        "landpoint_static": np.ones((1, 1)),
+        "annual_conditions": np.ones((1, 1)),
+        "fast_day_target": np.asarray([[12.0, 1.0e20]]),
+        "year": np.asarray([1961]),
+        "day_index": np.asarray([2]),
+    }
+    statistics = _statistics(
+        {
+            "state": (2,),
+            "forcing_native": (1,),
+            "parameters": (1,),
+            "landpoint_static": (1,),
+            "annual_conditions": (1,),
+            "fast_day_target": (2,),
+        }
+    )
+    representation = FastDayTargetRepresentation(
+        state_indices=np.asarray([0, 1], dtype=np.int32),
+        dynamic_undefined_indices=np.asarray([1], dtype=np.int32),
+        dynamic_undefined_fill_values=np.asarray([1.0e20]),
+    )
+
+    prepared = prepare_canonical_batch(batch, statistics, representation)
+
+    np.testing.assert_allclose(
+        prepared.model_input.normalized_fast_day_baseline, [[10.0, 0.0]]
+    )
+    np.testing.assert_array_equal(
+        prepared.fast_day_target_finite, [[True, False]]
+    )
+    np.testing.assert_array_equal(
+        prepared.fast_day_target_undefined, [[False, True]]
+    )
+    assert prepared.fast_day_target_undefined_values[0, 1] == 1.0e20
+
+
+def test_prepare_canonical_batch_rejects_nonpersistent_sentinel():
+    batch = {
+        "state": np.asarray([[1.0]]),
+        "forcing_native": np.ones((1, 5, 1)),
+        "parameters": np.ones((1, 1)),
+        "landpoint_static": np.ones((1, 1)),
+        "annual_conditions": np.ones((1, 1)),
+        "fast_day_target": np.asarray([[1.0e20]]),
+        "year": np.asarray([1961]),
+        "day_index": np.asarray([2]),
+    }
+    statistics = _statistics(
+        {
+            "state": (1,),
+            "forcing_native": (1,),
+            "parameters": (1,),
+            "landpoint_static": (1,),
+            "annual_conditions": (1,),
+            "fast_day_target": (1,),
+        }
+    )
+    representation = FastDayTargetRepresentation(
+        state_indices=np.asarray([0], dtype=np.int32),
+        dynamic_undefined_indices=np.asarray([], dtype=np.int32),
+        dynamic_undefined_fill_values=np.asarray([], dtype=np.float64),
+    )
+
+    with np.testing.assert_raises_regex(ValueError, "not persistent"):
+        prepare_canonical_batch(batch, statistics, representation)
 
 
 def test_calendar_features_follow_paper_noleap_calendar():

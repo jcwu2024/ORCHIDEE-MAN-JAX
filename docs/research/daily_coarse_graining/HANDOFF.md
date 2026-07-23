@@ -1,6 +1,6 @@
 # Daily Coarse-Graining Handoff
 
-Snapshot date: 2026-07-23
+Snapshot date: 2026-07-24
 
 This is the single operational handoff page for the daily coarse-graining
 research branch. Read this page before dated experiment reports. Stable
@@ -11,7 +11,7 @@ scientific and release facts remain authoritative in
 
 1. Check out `research/daily-coarse-graining` and confirm a clean worktree.
 2. Read this page, then
-   [`daily_markov_contract_v3.md`](daily_markov_contract_v3.md) and
+   [`daily_markov_contract_v4.md`](daily_markov_contract_v4.md) and
    [`teacher_dataset_generation.md`](teacher_dataset_generation.md).
 3. Check the active Explore1000 jobs listed below. Do not submit a replacement
    while the current worker array is running.
@@ -42,24 +42,27 @@ The learned operator replaces exactly this block:
 Its contract is:
 
 ```text
-S[d] (3,724 values) + native 6-hour forcing[d] + parameters/static conditions
-  -> B_fast[d] (6,758 values)
+S[d] (3,854 continuous + 12 exact discrete values)
+  + native 6-hour forcing[d] + parameters/static conditions
+  -> B_fast[d] (2,815 values)
 B_fast[d] + S[d]
   -> retained source-backed daily season/STOMATE
-  -> S[d+1] (3,724 values)
+  -> S[d+1]
 ```
 
 `B_fast` is a complete same-day interface, not persistent state. `S` is the
-cross-day Markov state. For a 1961 cold start, the real Teacher executes Day 1
+cross-day Markov state. Contract v4 carries only the true cross-day subset of
+the 93-field SECHIBA finalize packet and removes all finalize mirrors from the
+learned target. For a 1961 cold start, the real Teacher executes Day 1
 to construct canonical `S[1]`; the first training sample is Day 2. The shard
-schema is `daily_teacher_markov_year_v3` and uses lossless NPZ compression.
+schema is `daily_teacher_markov_year_v4` and uses lossless NPZ compression.
 
 The intended final repository has independent runtime choices for execution
 backend (`cpu` or `gpu`) and transition implementation
 (`teacher_half_hour` or, after acceptance, `neural_daily`). The research
 branch is temporary development history, not a separate product.
 
-## Current Production Run
+## Accepted Historical Production Run
 
 The bounded architecture-development dataset is frozen by
 [`../../../manifests/coarse_graining/daily_teacher_initial_5point_1961_2010.json`](../../../manifests/coarse_graining/daily_teacher_initial_5point_1961_2010.json):
@@ -94,8 +97,10 @@ Replacement Explore1000 jobs use the noleap fix at commit `3afe92f`:
 The accepted jobs emitted worker-v2 and dataset-v3 manifests from their fixed
 snapshot. The branch now also contains a streamed canonical `B_fast` trainer
 and compact worker-v3/dataset-v4 manifests. The new reader and contract loader
-explicitly support both dataset v3 and v4, so the accepted five-point run must
-not be restarted merely to adopt compact manifests.
+explicitly support both dataset v3 and v4. However, the scientific v4 target
+changed after the first neural experiment exposed sentinel and finalize-state
+contract defects. The v3 five-point run remains valid Teacher/provenance
+evidence but is not a valid input to the revised trainer.
 
 Monitor from `cln01`; never compute on the login node:
 
@@ -158,13 +163,15 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-After the five-point dataset passes the completion gate:
-
-1. use the accepted train-only normalization statistics described below;
-2. train the first parameter-conditioned network to predict `B_fast`;
-3. evaluate train/validation/test one-step errors by field group;
-4. run 7-day free rollout through the retained daily season/STOMATE tail;
-5. only after those gates, decide whether to expand Teacher data or revise the
+1. commit and transfer the contract v4 implementation;
+2. regenerate the same bounded five-point, 1961-2010 dataset as v4;
+3. fit sentinel-aware `daily_teacher_training_statistics_v2` from train/train
+   shards only;
+4. rerun the bounded five-epoch parameter-conditioned network experiment;
+5. evaluate train/validation/test one-step errors by process family, including
+   the dynamic `rveget` defined/undefined classifier;
+6. run 7-day free rollout through the retained daily season/STOMATE tail;
+7. only after those gates, decide whether to expand Teacher data or revise the
    network architecture.
 
 Do not start all 669 x 50 years before this bounded learnability and rollout
@@ -181,7 +188,7 @@ The Explore1000 GPU runtime prerequisite is complete at commit `c566538`:
   `scripts.hpc.run_canonical_gpu_train`;
 - train-only statistics job `14365346` completed in 68 seconds on one `cnall`
   CPU with exit code zero;
-- accepted statistics: `runtime/outputs/training/canonical-initial-5point-1961-2010/training_statistics.json`;
+- obsolete v1 statistics: `runtime/outputs/training/canonical-initial-5point-1961-2010/training_statistics.json`;
 - statistics JSON SHA256:
   `1041c1231fb6c9bb5905e0a9403aefc03666ba745390539cf0ec644531be6885`;
 - statistics NPZ SHA256:
@@ -189,13 +196,15 @@ The Explore1000 GPU runtime prerequisite is complete at commit `c566538`:
 - consumer-level validation passed for dataset identity, contract identity,
   NPZ hash, finite means/variances/scales, positive scales, 32,118 train/train
   samples, and 88 source shards;
-- no paid GPU training job has been submitted yet.
+- first GPU training job `14365446` completed in 5:40 with about 3.1 GiB peak
+  device memory, but is rejected for promotion: contract v3 included finalize
+  mirrors and statistics v1 treated ORCHIDEE sentinels as finite data;
+- its checkpoint and statistics must not be resumed or reused with v4.
 
 Do not bypass the GPU launcher with a direct import of
 `canonical_training_run`: in this container, JAX plugin auto-discovery can
-otherwise initialize CPU first. The next operation is the bounded five-epoch
-GPU training job using the accepted statistics asset. Do not recompute the
-statistics unless the dataset or contract identity changes.
+otherwise initialize CPU first. The next GPU operation comes only after the v4
+five-point dataset and v2 statistics are regenerated and validated.
 
 ## Decisions Not To Reopen
 
@@ -223,7 +232,7 @@ statistics unless the dataset or contract identity changes.
 | --- | --- |
 | Overall Teacher/release status | [`../../current-status.md`](../../current-status.md) |
 | Current operational task | this handoff page |
-| Daily state and target semantics | [`daily_markov_contract_v3.md`](daily_markov_contract_v3.md) |
+| Daily state and target semantics | [`daily_markov_contract_v4.md`](daily_markov_contract_v4.md) |
 | Dataset production and recovery | [`teacher_dataset_generation.md`](teacher_dataset_generation.md) |
 | Research quality gates | [`development_standard.md`](development_standard.md) |
 | Frozen five-point batch | [`../../../manifests/coarse_graining/daily_teacher_initial_5point_1961_2010.json`](../../../manifests/coarse_graining/daily_teacher_initial_5point_1961_2010.json) |
