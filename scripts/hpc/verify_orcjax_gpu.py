@@ -5,21 +5,17 @@ from __future__ import annotations
 import json
 import logging
 
-import jax
-import jax.numpy as jnp
 import numpy as np
-from jax._src import xla_bridge
+
+from scripts.hpc.orcjax_gpu_runtime import initialize_gpu_backend
 
 
 def main() -> int:
     logging.basicConfig(level=logging.INFO)
-    devices = tuple(jax.devices())
-    if not devices or any(device.platform != "gpu" for device in devices):
-        backend_errors = dict(getattr(xla_bridge, "_backend_errors", {}))
-        raise RuntimeError(
-            "orcjax_gpu did not select only GPU devices: "
-            f"devices={devices}, backend_errors={backend_errors}"
-        )
+    jax, devices = initialize_gpu_backend()
+
+    # jax.numpy must be imported only after explicit CUDA plugin discovery.
+    import jax.numpy as jnp
 
     @jax.jit
     def objective(value):

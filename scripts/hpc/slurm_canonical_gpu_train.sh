@@ -35,6 +35,7 @@ env \
   SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \
   SINGULARITYENV_CUDA_VISIBLE_DEVICES=0 \
   SINGULARITYENV_JAX_ENABLE_X64=true \
+  SINGULARITYENV_JAX_PLATFORMS=cuda \
   SINGULARITYENV_JAX_COMPILATION_CACHE_DIR=$ROOT/runtime/cache/jax/orcjax_gpu \
   singularity exec \
     --nv \
@@ -47,13 +48,14 @@ env \
   SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \
   SINGULARITYENV_CUDA_VISIBLE_DEVICES=0 \
   SINGULARITYENV_JAX_ENABLE_X64=true \
+  SINGULARITYENV_JAX_PLATFORMS=cuda \
   SINGULARITYENV_JAX_COMPILATION_CACHE_DIR=$ROOT/runtime/cache/jax/orcjax_gpu \
   singularity exec \
     --nv \
     --bind "$GPU_BINDS" \
     --pwd "$ROOT" \
     "$IMAGE" \
-    "$PYTHON" -m research.daily_coarse_graining.canonical_training_run \
+    "$PYTHON" scripts/hpc/run_canonical_gpu_train.py \
       train \
       --dataset "$DATASET" \
       --statistics "$STATISTICS" \
