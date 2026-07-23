@@ -25,6 +25,11 @@ SEED=${SEED:-20260723}
 
 cd "$ROOT"
 mkdir -p "$OUTPUT_DIR" runtime/logs runtime/cache/jax/orcjax_gpu
+CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
+NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
+test -f "$CUDA_DRIVER"
+test -f "$NVML_DRIVER"
+GPU_BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
 
 env \
   SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \
@@ -33,7 +38,7 @@ env \
   SINGULARITYENV_JAX_COMPILATION_CACHE_DIR=$ROOT/runtime/cache/jax/orcjax_gpu \
   singularity exec \
     --nv \
-    --bind /WORK:/WORK \
+    --bind "$GPU_BINDS" \
     --pwd "$ROOT" \
     "$IMAGE" \
     "$PYTHON" scripts/hpc/verify_orcjax_gpu.py
@@ -45,7 +50,7 @@ env \
   SINGULARITYENV_JAX_COMPILATION_CACHE_DIR=$ROOT/runtime/cache/jax/orcjax_gpu \
   singularity exec \
     --nv \
-    --bind /WORK:/WORK \
+    --bind "$GPU_BINDS" \
     --pwd "$ROOT" \
     "$IMAGE" \
     "$PYTHON" -m research.daily_coarse_graining.canonical_training_run \

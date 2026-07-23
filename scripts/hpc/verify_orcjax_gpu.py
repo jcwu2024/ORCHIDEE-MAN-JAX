@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import logging
 
 import jax
 import jax.numpy as jnp
@@ -11,6 +12,7 @@ from jax._src import xla_bridge
 
 
 def main() -> int:
+    logging.basicConfig(level=logging.INFO)
     devices = tuple(jax.devices())
     if not devices or any(device.platform != "gpu" for device in devices):
         backend_errors = dict(getattr(xla_bridge, "_backend_errors", {}))
