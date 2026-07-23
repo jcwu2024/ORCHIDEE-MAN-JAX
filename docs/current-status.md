@@ -133,16 +133,17 @@ dataset: 250 landpoint-year shards and 91,245 daily transitions. Its first
 submission was rejected before acceptance because the production planner
 incorrectly inserted Gregorian leap days into the paper model's fixed 365-day
 noleap calendar. The planner, plan validator, and training calendar features
-now enforce noleap semantics. A clean replacement dataset is being regenerated
-from 1961 using the fixed plan and an isolated output root. Its operational
-state and exact completion gate are recorded in
+now enforce noleap semantics. The clean replacement completed and passed its
+aggregate gate on 2026-07-23: all five 1961-2010 chains, 250 shards, 91,245
+transitions, source/input hashes, checkpoint links, splits, and the single
+Markov contract are valid. Its operational evidence is recorded in
 [`research/daily_coarse_graining/HANDOFF.md`](research/daily_coarse_graining/HANDOFF.md).
 
 ## Next Bounded Milestone
 
-Complete and hash-validate the five-point v3 dataset. Then fit train-only
-normalization statistics, train the first parameter-conditioned `B_fast`
-predictor, evaluate held-out one-step errors, and attempt a seven-day free
-rollout through retained daily season/STOMATE. Do not generate all
+Fit train-only normalization statistics from the accepted five-point dataset,
+train the first parameter-conditioned `B_fast` predictor, evaluate held-out
+one-step errors, and attempt a seven-day free rollout through retained daily
+season/STOMATE. Do not generate all
 669 x 50 landpoint-years merely to discover whether the surrogate architecture
 can learn the daily transition.

@@ -83,15 +83,19 @@ Replacement Explore1000 jobs use the noleap fix at commit `3afe92f`:
 - plan SHA256: `353f517ddc84a46723a71de11b74a557af030fe367314689b8a6b6fb8e8e68b9`;
 - validated plan: 5 landpoints, 50 years, 250 entries, all exactly 365
   days, worker loads 150 and 100 entries;
-- last observed state: both workers running on `ibc12b04n31`, aggregate
-  waiting on `afterok` dependency;
+- final state: both workers and the aggregate completed with exit code zero;
+- worker elapsed times: 4:47:03 and 3:32:02; peak RSS about 22.4 and 20.8 GiB;
+- aggregate elapsed time: 1:10;
+- accepted asset: five complete 1961-2010 chains, 250 shards, 91,245
+  transitions, one Markov contract, and fixed 365-day noleap semantics;
+- output footprint: about 1.2 GiB, including an 84 MiB legacy v3 manifest;
 - requested worker limit: 8 hours; approved worst-case cost: about CNY 1.13.
 
-The branch now also contains a streamed canonical `B_fast` trainer and compact
-worker-v3/dataset-v4 manifests. The active jobs still emit worker-v2 and
-dataset-v3 manifests from their fixed snapshot. This is accepted: the new
-reader and contract loader explicitly support both dataset v3 and v4, so the
-five-point run must not be restarted merely to adopt compact manifests.
+The accepted jobs emitted worker-v2 and dataset-v3 manifests from their fixed
+snapshot. The branch now also contains a streamed canonical `B_fast` trainer
+and compact worker-v3/dataset-v4 manifests. The new reader and contract loader
+explicitly support both dataset v3 and v4, so the accepted five-point run must
+not be restarted merely to adopt compact manifests.
 
 Monitor from `cln01`; never compute on the login node:
 
@@ -114,10 +118,10 @@ worker log for the exact generated plan path instead of guessing it.
 
 ## Completion Gate
 
-Do not treat Slurm `COMPLETED` alone as dataset acceptance. The aggregate job
-must finish successfully; it reopens every worker manifest and shard, verifies
-hashes and schema consistency, rejects missing or duplicate entries, and emits
-the dataset manifest.
+This gate passed on 2026-07-23. Slurm `COMPLETED` alone was not used as
+acceptance: aggregate job `14363441` reopened every worker manifest and shard,
+verified hashes and schema consistency, rejected missing or duplicate entries,
+and emitted the accepted dataset manifest.
 
 After the jobs finish:
 
