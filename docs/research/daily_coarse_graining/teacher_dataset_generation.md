@@ -175,6 +175,16 @@ and collates numerical batches without exposing landpoint identity as a model
 feature. The complete-day argument ownership ledger is
 `manifests/coarse_graining/daily_markov_input_ownership_v2.json`.
 
+New production uses `daily_teacher_worker_manifest_v3` and
+`daily_teacher_dataset_manifest_v4`. The complete per-year metadata remains
+next to its NPZ shard and is hash-addressed by the compact worker record. The
+dataset manifest stores only shard/metadata/checkpoint paths and hashes,
+frozen splits, checkpoint-chain links, and generation input hashes; the full
+Markov contract is stored once at dataset level. This avoids copying roughly
+0.3 MB of metadata into both aggregate layers for every landpoint-year. The
+reader remains compatible with existing `daily_teacher_dataset_manifest_v3`
+assets, including the active five-point noleap production run.
+
 `fit_training_statistics` streams only shards whose spatial and temporal
 splits are both `train`. It computes finite-only count, mean, population
 variance and scale per feature column without materializing the full dataset.

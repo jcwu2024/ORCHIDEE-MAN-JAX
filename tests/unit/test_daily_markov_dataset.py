@@ -31,14 +31,18 @@ def _write_shard(path: Path, *, year: int, offset: float = 0.0) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def _manifest(tmp_path: Path) -> Path:
+def _manifest(
+    tmp_path: Path,
+    *,
+    schema_version: str = markov_dataset.DATASET_SCHEMA_VERSION,
+) -> Path:
     contract = "contract-sha256"
     first = tmp_path / "workers/first.npz"
     second = tmp_path / "workers/second.npz"
     first_hash = _write_shard(first, year=1961)
     second_hash = _write_shard(second, year=1962, offset=10.0)
     payload = {
-        "schema_version": markov_dataset.DATASET_SCHEMA_VERSION,
+        "schema_version": schema_version,
         "dataset_id": "test-dataset",
         "teacher_git_head": "abc123",
         "markov_contract_sha256": contract,
@@ -78,6 +82,16 @@ def test_dataset_index_verifies_hashes_and_selects_frozen_splits(tmp_path):
     assert samples[0]["year"] == 1962
 
 
+def test_dataset_index_remains_compatible_with_v3_manifests(tmp_path):
+    index = markov_dataset.load_dataset_index(
+        _manifest(
+            tmp_path,
+            schema_version=markov_dataset.LEGACY_DATASET_SCHEMA_VERSION,
+        )
+    )
+    assert len(index.shards) == 2
+
+
 def test_collation_stacks_model_values_but_not_landpoint_identity(tmp_path):
     index = markov_dataset.load_dataset_index(_manifest(tmp_path))
     samples = list(index.samples())
@@ -106,6 +120,13 @@ def test_dataset_index_rejects_corruption_and_contract_drift(tmp_path):
     manifest = _manifest(tmp_path)
     (tmp_path / "workers/first.npz").write_bytes(b"corrupt")
     with pytest.raises(ValueError, match="hash mismatch"):
+        markov_dataset.load_dataset_index(manifest)
+
+    manifest = _manifest(tmp_path)
+    raw = json.loads(manifest.read_text(encoding="utf-8"))
+    raw["markov_contract"] = {"unexpected": True}
+    manifest.write_text(json.dumps(raw), encoding="utf-8")
+    with pytest.raises(ValueError, match="contract metadata hash mismatch"):
         markov_dataset.load_dataset_index(manifest)
 
 

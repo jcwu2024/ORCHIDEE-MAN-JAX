@@ -15,7 +15,7 @@ class CanonicalModelConfig(NamedTuple):
     parameter_width: int
     landpoint_static_width: int
     annual_condition_width: int
-    diagnostic_width: int
+    fast_day_target_width: int
     state_latent_width: int = 128
     forcing_latent_width: int = 64
     condition_latent_width: int = 64
@@ -50,13 +50,11 @@ class CanonicalModelParameters(NamedTuple):
     condition_encoder: DenseParameters
     fusion_input: DenseParameters
     fusion_hidden: DenseParameters
-    state_delta_head: DenseParameters
-    diagnostic_head: DenseParameters
+    fast_day_target_head: DenseParameters
 
 
 class CanonicalPrediction(NamedTuple):
-    normalized_state_delta: Any
-    normalized_diagnostics: Any
+    normalized_fast_day_target: Any
 
 
 def _dense_init(key, input_width: int, output_width: int, *, scale: float = 1.0):
@@ -79,7 +77,7 @@ def initialize_canonical_model(
     """Initialize a persistence-centered residual model."""
 
     _validate_config(config)
-    keys = iter(jax.random.split(jax.random.PRNGKey(seed), 8))
+    keys = iter(jax.random.split(jax.random.PRNGKey(seed), 7))
     condition_width = (
         2
         * (
@@ -111,11 +109,11 @@ def initialize_canonical_model(
         fusion_hidden=_dense_init(
             next(keys), config.hidden_width, config.hidden_width
         ),
-        state_delta_head=_dense_init(
-            next(keys), config.hidden_width, config.state_width, scale=1.0e-2
-        ),
-        diagnostic_head=_dense_init(
-            next(keys), config.hidden_width, config.diagnostic_width, scale=1.0e-2
+        fast_day_target_head=_dense_init(
+            next(keys),
+            config.hidden_width,
+            config.fast_day_target_width,
+            scale=1.0e-2,
         ),
     )
 
@@ -167,7 +165,7 @@ def canonical_model_apply(
     parameters: CanonicalModelParameters,
     batch: CanonicalDayBatch,
 ) -> CanonicalPrediction:
-    """Predict normalized state tendencies and same-day diagnostics."""
+    """Predict the normalized complete fast-day Teacher boundary."""
 
     state = jax.nn.silu(
         _dense(
@@ -198,8 +196,9 @@ def canonical_model_apply(
     hidden = jax.nn.silu(_dense(hidden, parameters.fusion_input))
     hidden = hidden + jax.nn.silu(_dense(hidden, parameters.fusion_hidden))
     return CanonicalPrediction(
-        normalized_state_delta=_dense(hidden, parameters.state_delta_head),
-        normalized_diagnostics=_dense(hidden, parameters.diagnostic_head),
+        normalized_fast_day_target=_dense(
+            hidden, parameters.fast_day_target_head
+        ),
     )
 
 
@@ -243,28 +242,17 @@ def canonical_one_step_loss(
     parameters: CanonicalModelParameters,
     batch: CanonicalDayBatch,
     *,
-    normalized_state_delta,
-    state_delta_finite,
-    normalized_diagnostics,
-    diagnostics_finite,
-    state_weights,
-    diagnostic_weights,
-    diagnostic_loss_weight: float = 0.25,
+    normalized_fast_day_target,
+    fast_day_target_finite,
+    fast_day_target_weights,
 ):
     prediction = canonical_model_apply(parameters, batch)
-    state_loss = masked_huber_loss(
-        prediction.normalized_state_delta,
-        normalized_state_delta,
-        state_delta_finite,
-        state_weights,
+    return masked_huber_loss(
+        prediction.normalized_fast_day_target,
+        normalized_fast_day_target,
+        fast_day_target_finite,
+        fast_day_target_weights,
     )
-    diagnostic_loss = masked_huber_loss(
-        prediction.normalized_diagnostics,
-        normalized_diagnostics,
-        diagnostics_finite,
-        diagnostic_weights,
-    )
-    return state_loss + diagnostic_loss_weight * diagnostic_loss
 
 
 def parameter_count(parameters: CanonicalModelParameters) -> int:

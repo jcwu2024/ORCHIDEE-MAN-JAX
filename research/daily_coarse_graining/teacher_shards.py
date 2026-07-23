@@ -47,8 +47,9 @@ from research.daily_coarse_graining.supervised_learnability_pilot import (
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_VERSION = "daily_teacher_generation_plan_v2"
-MANIFEST_SCHEMA_VERSION = "daily_teacher_worker_manifest_v2"
-DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v3"
+LEGACY_MANIFEST_SCHEMA_VERSION = "daily_teacher_worker_manifest_v2"
+MANIFEST_SCHEMA_VERSION = "daily_teacher_worker_manifest_v3"
+DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v4"
 PAPER_DAYS_PER_YEAR = 365
 WORKER_ASSIGNMENT_STRATEGY = "balanced_landpoint_chains_v1"
 SPLITS = frozenset({"train", "validation", "test"})
@@ -1317,6 +1318,29 @@ def _load_checkpoint(worker_root: Path, metadata: dict[str, Any]):
     return payload["state"]
 
 
+def _compact_worker_shard_record(
+    worker_root: Path,
+    entry: PlanEntry,
+    metadata: dict[str, Any],
+) -> dict[str, Any]:
+    shard_path, metadata_path, checkpoint_path = _entry_paths(worker_root, entry)
+    return {
+        "landpoint_id": metadata["landpoint_id"],
+        "year": metadata["year"],
+        "spatial_split": metadata["spatial_split"],
+        "temporal_split": metadata["temporal_split"],
+        "markov_contract_sha256": metadata["markov_contract_sha256"],
+        "preceding_checkpoint_sha256": metadata["preceding_checkpoint_sha256"],
+        "input_hashes": metadata["input_hashes"],
+        "metadata": _relative(metadata_path, worker_root),
+        "metadata_sha256": _sha256_file(metadata_path),
+        "shard": _relative(shard_path, worker_root),
+        "shard_sha256": metadata["shard_sha256"],
+        "checkpoint": _relative(checkpoint_path, worker_root),
+        "checkpoint_sha256": metadata["checkpoint_sha256"],
+    }
+
+
 def generate_worker(
     plan: GenerationPlan,
     *,
@@ -1357,7 +1381,9 @@ def generate_worker(
             if existing is not None:
                 chained_state = _load_checkpoint(worker_root, existing)
                 chained_checkpoint_sha256 = existing["checkpoint_sha256"]
-                completed.append(existing)
+                completed.append(
+                    _compact_worker_shard_record(worker_root, entry, existing)
+                )
                 print(f"teacher_entry_reused key={entry.key}", flush=True)
                 continue
             print(f"teacher_entry_start key={entry.key}", flush=True)
@@ -1370,7 +1396,9 @@ def generate_worker(
                 preceding_checkpoint_sha256=preceding_checkpoint_sha256,
             )
             chained_checkpoint_sha256 = metadata["checkpoint_sha256"]
-            completed.append(metadata)
+            completed.append(
+                _compact_worker_shard_record(worker_root, entry, metadata)
+            )
             print(
                 f"teacher_entry_complete key={entry.key} "
                 f"total_seconds={metadata['timing_seconds']['total_entry_before_metadata_write']:.3f} "
@@ -1441,14 +1469,20 @@ def aggregate_workers(
 ) -> dict[str, Any]:
     expected = {entry.key for entry in plan.entries}
     observed: dict[str, dict[str, Any]] = {}
+    contracts: list[dict[str, Any]] = []
     heads = set()
+    entries_by_key = {entry.key: entry for entry in plan.entries}
     for index in range(worker_count):
         worker_root = output_root / "workers" / f"worker-{index:03d}-of-{worker_count:03d}"
         manifest_path = worker_root / "manifest.json"
         if not manifest_path.exists():
             raise FileNotFoundError(f"missing worker manifest {manifest_path}")
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
-        if manifest.get("schema_version") != MANIFEST_SCHEMA_VERSION:
+        manifest_schema = manifest.get("schema_version")
+        if manifest_schema not in {
+            LEGACY_MANIFEST_SCHEMA_VERSION,
+            MANIFEST_SCHEMA_VERSION,
+        }:
             raise ValueError(f"invalid worker manifest schema at {manifest_path}")
         if manifest.get("plan_sha256") != plan.plan_sha256:
             raise ValueError(f"plan drift in {manifest_path}")
@@ -1457,20 +1491,66 @@ def aggregate_workers(
         if manifest.get("worker_assignment_strategy") != WORKER_ASSIGNMENT_STRATEGY:
             raise ValueError(f"worker assignment strategy mismatch in {manifest_path}")
         heads.add(manifest["teacher_git_head"])
-        for shard in manifest["shards"]:
-            key = f"{shard['landpoint_id']}:{shard['year']}"
+        for record in manifest["shards"]:
+            key = f"{record['landpoint_id']}:{record['year']}"
             if key in observed:
                 raise ValueError(f"duplicate completed shard {key}")
+            entry = entries_by_key.get(key)
+            if entry is None:
+                raise ValueError(f"unexpected completed shard {key}")
+            if manifest_schema == MANIFEST_SCHEMA_VERSION:
+                metadata_path = worker_root / record["metadata"]
+                if _sha256_file(metadata_path) != record["metadata_sha256"]:
+                    raise ValueError(f"metadata hash mismatch for {key}")
+                shard = json.loads(metadata_path.read_text(encoding="utf-8"))
+                for name in (
+                    "landpoint_id",
+                    "year",
+                    "spatial_split",
+                    "temporal_split",
+                    "markov_contract_sha256",
+                    "preceding_checkpoint_sha256",
+                    "input_hashes",
+                    "shard",
+                    "shard_sha256",
+                    "checkpoint",
+                    "checkpoint_sha256",
+                ):
+                    if record.get(name) != shard.get(name):
+                        raise ValueError(f"worker shard record drift for {key}: {name}")
+            else:
+                shard = record
+                _, metadata_path, _ = _entry_paths(worker_root, entry)
             shard_path = worker_root / shard["shard"]
             checkpoint_path = worker_root / shard["checkpoint"]
             if _sha256_file(shard_path) != shard["shard_sha256"]:
                 raise ValueError(f"shard hash mismatch for {key}")
             if _sha256_file(checkpoint_path) != shard["checkpoint_sha256"]:
                 raise ValueError(f"checkpoint hash mismatch for {key}")
+            contract = shard.get("markov_contract")
+            if contract is None:
+                raise ValueError(f"missing Markov contract metadata for {key}")
+            contract_sha256 = hashlib.sha256(
+                _canonical_json(contract)
+            ).hexdigest()
+            if shard.get("markov_contract_sha256") != contract_sha256:
+                raise ValueError(f"Markov contract hash mismatch for {key}")
+            contracts.append(contract)
             observed[key] = {
-                **shard,
+                "landpoint_id": shard["landpoint_id"],
+                "year": shard["year"],
+                "spatial_split": shard["spatial_split"],
+                "temporal_split": shard["temporal_split"],
+                "preceding_checkpoint_sha256": shard[
+                    "preceding_checkpoint_sha256"
+                ],
+                "input_hashes": shard["input_hashes"],
+                "metadata": _relative(metadata_path, output_root),
+                "metadata_sha256": _sha256_file(metadata_path),
                 "shard": _relative(shard_path, output_root),
+                "shard_sha256": shard["shard_sha256"],
                 "checkpoint": _relative(checkpoint_path, output_root),
+                "checkpoint_sha256": shard["checkpoint_sha256"],
             }
     if len(heads) != 1:
         raise ValueError("workers used different Teacher git commits")
@@ -1491,9 +1571,13 @@ def aggregate_workers(
         if item.get("input_hashes") != _input_hashes(plan, entry):
             raise ValueError(f"generation input drift for {entry.key}")
         preceding_by_landpoint[entry.landpoint_id] = item["checkpoint_sha256"]
-    contract_hashes = {item["markov_contract_sha256"] for item in observed.values()}
+    contract_hashes = {
+        hashlib.sha256(_canonical_json(contract)).hexdigest()
+        for contract in contracts
+    }
     if len(contract_hashes) != 1:
         raise ValueError("Teacher Markov contracts differ across shards")
+    contract = contracts[0]
     manifest = {
         "schema_version": DATASET_SCHEMA_VERSION,
         "dataset_id": plan.dataset_id,
@@ -1508,6 +1592,7 @@ def aggregate_workers(
         "year_count": len({entry.year for entry in plan.entries}),
         "shard_count": len(observed),
         "markov_contract_sha256": next(iter(contract_hashes)),
+        "markov_contract": contract,
         "shards": [observed[key] for key in sorted(observed)],
     }
     _atomic_json(output_root / "dataset_manifest.json", manifest)

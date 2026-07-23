@@ -21,10 +21,8 @@ from research.daily_coarse_graining.markov_dataset import (
 
 class CanonicalTrainingBatch(NamedTuple):
     model_input: CanonicalDayBatch
-    normalized_state_delta: Any
-    state_delta_finite: Any
-    normalized_diagnostics: Any
-    diagnostics_finite: Any
+    normalized_fast_day_target: Any
+    fast_day_target_finite: Any
 
 
 def _calendar_features(year: np.ndarray, day_index: np.ndarray) -> np.ndarray:
@@ -55,8 +53,7 @@ def prepare_canonical_batch(
         "parameters",
         "landpoint_static",
         "annual_conditions",
-        "state_delta",
-        "diagnostics",
+        "fast_day_target",
         "year",
         "day_index",
     )
@@ -65,7 +62,7 @@ def prepare_canonical_batch(
         raise ValueError(f"canonical training batch is missing {missing}")
     normalized = {}
     finite = {}
-    for name in required[:7]:
+    for name in required[:6]:
         if name not in statistics.arrays:
             raise ValueError(f"training statistics are missing {name}")
         normalized[name], finite[name] = normalize_finite(
@@ -88,10 +85,10 @@ def prepare_canonical_batch(
     )
     return CanonicalTrainingBatch(
         model_input=model_input,
-        normalized_state_delta=normalized["state_delta"].astype(np.float32),
-        state_delta_finite=finite["state_delta"],
-        normalized_diagnostics=normalized["diagnostics"].astype(np.float32),
-        diagnostics_finite=finite["diagnostics"],
+        normalized_fast_day_target=normalized["fast_day_target"].astype(
+            np.float32
+        ),
+        fast_day_target_finite=finite["fast_day_target"],
     )
 
 
@@ -106,7 +103,7 @@ def model_config_from_batch(
         parameter_width=int(inputs.parameters.shape[-1]),
         landpoint_static_width=int(inputs.landpoint_static.shape[-1]),
         annual_condition_width=int(inputs.annual_conditions.shape[-1]),
-        diagnostic_width=int(batch.normalized_diagnostics.shape[-1]),
+        fast_day_target_width=int(batch.normalized_fast_day_target.shape[-1]),
         **architecture_widths,
     )
 
@@ -135,22 +132,13 @@ def _balanced_slice_weights(
 
 def loss_weights_from_contract(
     contract_metadata: Mapping[str, Any],
-) -> tuple[np.ndarray, np.ndarray]:
-    state_width = int(contract_metadata["continuous_state_width"])
-    diagnostic_width = int(contract_metadata["diagnostic_width"])
-    state_slices = tuple(
-        (str(leaf["component"]), int(leaf["start"]), int(leaf["stop"]))
-        for leaf in contract_metadata["state_leaves"]
-        if leaf["classification"] != "discrete"
+) -> np.ndarray:
+    target_width = int(contract_metadata["fast_day_target_width"])
+    target_slices = tuple(
+        (str(leaf["family"]), int(leaf["start"]), int(leaf["stop"]))
+        for leaf in contract_metadata["fast_day_target_leaves"]
     )
-    diagnostic_slices = tuple(
-        (str(leaf["name"]), int(leaf["start"]), int(leaf["stop"]))
-        for leaf in contract_metadata["diagnostic_leaves"]
-    )
-    return (
-        _balanced_slice_weights(state_width, state_slices),
-        _balanced_slice_weights(diagnostic_width, diagnostic_slices),
-    )
+    return _balanced_slice_weights(target_width, target_slices)
 
 
 def audit_discrete_persistence(index: MarkovDatasetIndex) -> dict[str, Any]:

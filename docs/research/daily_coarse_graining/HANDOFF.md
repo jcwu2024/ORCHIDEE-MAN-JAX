@@ -23,10 +23,11 @@ git status --short --branch
 git log -1 --oneline
 ```
 
-The implementation snapshot from which the current production jobs were
-submitted is commit `23046a3`. Documentation-only commits after that snapshot
-do not invalidate generated Teacher data; any model, contract, capture, or
-shard-code change does.
+The implementation snapshot from which the current replacement production
+jobs were submitted is commit `3afe92f`. Do not update the server worktree
+while those jobs are running. Later local changes do not alter their fixed
+process image or outputs; any future generation run must record its own exact
+Teacher commit.
 
 ## Current Architecture
 
@@ -85,6 +86,12 @@ Replacement Explore1000 jobs use the noleap fix at commit `3afe92f`:
 - last observed state: both workers running on `ibc12b04n31`, aggregate
   waiting on `afterok` dependency;
 - requested worker limit: 8 hours; approved worst-case cost: about CNY 1.13.
+
+The branch now also contains a streamed canonical `B_fast` trainer and compact
+worker-v3/dataset-v4 manifests. The active jobs still emit worker-v2 and
+dataset-v3 manifests from their fixed snapshot. This is accepted: the new
+reader and contract loader explicitly support both dataset v3 and v4, so the
+five-point run must not be restarted merely to adopt compact manifests.
 
 Monitor from `cln01`; never compute on the login node:
 

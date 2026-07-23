@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 from types import SimpleNamespace
@@ -367,10 +368,16 @@ def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
     shards._atomic_npz(shard_path, {"value": np.asarray([1.0])})
     checkpoint_path.parent.mkdir(parents=True)
     checkpoint_path.write_bytes(b"checkpoint")
-    shard = {
+    contract = {"schema_version": "test_contract_v1", "state_width": 1}
+    contract_hash = hashlib.sha256(shards._canonical_json(contract)).hexdigest()
+    _, metadata_path, _ = shards._entry_paths(worker_root, plan.entries[0])
+    metadata = {
         "landpoint_id": "001.0-071.0",
         "year": 1961,
-        "markov_contract_sha256": "markov-contract",
+        "spatial_split": "train",
+        "temporal_split": "train",
+        "markov_contract": contract,
+        "markov_contract_sha256": contract_hash,
         "preceding_checkpoint_sha256": None,
         "input_hashes": shards._input_hashes(plan, plan.entries[0]),
         "shard": "shards/sample.npz",
@@ -378,6 +385,25 @@ def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
         "checkpoint": "checkpoints/sample.pkl",
         "checkpoint_sha256": shards._sha256_file(checkpoint_path),
     }
+    shards._atomic_json(metadata_path, metadata)
+    shard = {
+        name: metadata[name]
+        for name in (
+            "landpoint_id",
+            "year",
+            "spatial_split",
+            "temporal_split",
+            "markov_contract_sha256",
+            "preceding_checkpoint_sha256",
+            "input_hashes",
+            "shard",
+            "shard_sha256",
+            "checkpoint",
+            "checkpoint_sha256",
+        )
+    }
+    shard["metadata"] = shards._relative(metadata_path, worker_root)
+    shard["metadata_sha256"] = shards._sha256_file(metadata_path)
     shards._atomic_json(
         worker_root / "manifest.json",
         {
@@ -393,6 +419,27 @@ def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
     result = shards.aggregate_workers(plan, output_root=output_root, worker_count=1)
     assert result["status"] == "complete"
     assert result["shard_count"] == 1
+    assert result["markov_contract"] == contract
+    assert "markov_contract" not in result["shards"][0]
+
+    shards._atomic_json(
+        worker_root / "manifest.json",
+        {
+            "schema_version": shards.LEGACY_MANIFEST_SCHEMA_VERSION,
+            "plan_sha256": plan.plan_sha256,
+            "teacher_git_head": "teacher",
+            "worker_index": 0,
+            "worker_count": 1,
+            "worker_assignment_strategy": shards.WORKER_ASSIGNMENT_STRATEGY,
+            "shards": [metadata],
+        },
+    )
+    legacy_result = shards.aggregate_workers(
+        plan,
+        output_root=output_root,
+        worker_count=1,
+    )
+    assert legacy_result["schema_version"] == shards.DATASET_SCHEMA_VERSION
 
     shard_path.write_bytes(b"corrupt")
     with pytest.raises(ValueError, match="shard hash mismatch"):

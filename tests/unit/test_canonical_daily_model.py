@@ -23,7 +23,7 @@ def _config():
         parameter_width=4,
         landpoint_static_width=5,
         annual_condition_width=1,
-        diagnostic_width=6,
+        fast_day_target_width=18,
         state_latent_width=8,
         forcing_latent_width=6,
         condition_latent_width=5,
@@ -54,10 +54,14 @@ def test_canonical_model_is_jittable_and_has_fixed_output_shapes():
     config = _config()
     parameters = initialize_canonical_model(config, seed=3)
     prediction = jax.jit(canonical_model_apply)(parameters, _batch())
-    assert prediction.normalized_state_delta.shape == (3, config.state_width)
-    assert prediction.normalized_diagnostics.shape == (3, config.diagnostic_width)
-    assert parameter_count(parameters) > config.state_width + config.diagnostic_width
-    assert np.all(np.isfinite(np.asarray(prediction.normalized_state_delta)))
+    assert prediction.normalized_fast_day_target.shape == (
+        3,
+        config.fast_day_target_width,
+    )
+    assert parameter_count(parameters) > config.fast_day_target_width
+    assert np.all(
+        np.isfinite(np.asarray(prediction.normalized_fast_day_target))
+    )
 
 
 def test_dynamic_parameter_conditions_change_predictions():
@@ -65,8 +69,8 @@ def test_dynamic_parameter_conditions_change_predictions():
     baseline = canonical_model_apply(parameters, _batch())
     shifted = canonical_model_apply(parameters, _batch(parameter_shift=0.25))
     assert not np.array_equal(
-        np.asarray(baseline.normalized_state_delta),
-        np.asarray(shifted.normalized_state_delta),
+        np.asarray(baseline.normalized_fast_day_target),
+        np.asarray(shifted.normalized_fast_day_target),
     )
 
 
@@ -74,21 +78,21 @@ def test_one_step_loss_has_finite_nonzero_gradients():
     config = _config()
     parameters = initialize_canonical_model(config, seed=5)
     batch = _batch()
-    state_target = jnp.full((3, config.state_width), 0.2, dtype=jnp.float32)
-    diagnostic_target = jnp.full((3, config.diagnostic_width), -0.1, dtype=jnp.float32)
-    state_weights = equal_group_weights(config.state_width, ((0, 4), (4, 12)))
-    diagnostic_weights = equal_group_weights(config.diagnostic_width, ((0, 3), (3, 6)))
+    target = jnp.full(
+        (3, config.fast_day_target_width), 0.2, dtype=jnp.float32
+    )
+    weights = equal_group_weights(
+        config.fast_day_target_width,
+        ((0, 6), (6, 18)),
+    )
 
     def loss(value):
         return canonical_one_step_loss(
             value,
             batch,
-            normalized_state_delta=state_target,
-            state_delta_finite=jnp.ones_like(state_target, dtype=bool),
-            normalized_diagnostics=diagnostic_target,
-            diagnostics_finite=jnp.ones_like(diagnostic_target, dtype=bool),
-            state_weights=state_weights,
-            diagnostic_weights=diagnostic_weights,
+            normalized_fast_day_target=target,
+            fast_day_target_finite=jnp.ones_like(target, dtype=bool),
+            fast_day_target_weights=weights,
         )
 
     value, gradient = jax.value_and_grad(loss)(parameters)

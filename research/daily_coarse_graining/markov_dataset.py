@@ -14,7 +14,11 @@ import numpy as np
 
 from research.daily_coarse_graining.daily_markov_contract import load_markov_shard
 
-DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v3"
+LEGACY_DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v3"
+DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v4"
+SUPPORTED_DATASET_SCHEMA_VERSIONS = frozenset(
+    {LEGACY_DATASET_SCHEMA_VERSION, DATASET_SCHEMA_VERSION}
+)
 STATISTICS_SCHEMA_VERSION = "daily_teacher_training_statistics_v1"
 SPLITS = frozenset({"train", "validation", "test"})
 CONTINUOUS_ARRAY_NAMES = (
@@ -210,10 +214,23 @@ class _FiniteMoments:
 def load_dataset_index(manifest_path: str | Path, *, verify_hashes: bool = True) -> MarkovDatasetIndex:
     manifest_path = Path(manifest_path).resolve()
     raw = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if raw.get("schema_version") != DATASET_SCHEMA_VERSION:
-        raise ValueError(f"dataset schema must be {DATASET_SCHEMA_VERSION!r}")
+    schema_version = raw.get("schema_version")
+    if schema_version not in SUPPORTED_DATASET_SCHEMA_VERSIONS:
+        raise ValueError(
+            "dataset schema must be one of "
+            f"{sorted(SUPPORTED_DATASET_SCHEMA_VERSIONS)!r}"
+        )
     root = manifest_path.parent
     contract_sha256 = str(raw["markov_contract_sha256"])
+    contract_metadata = raw.get("markov_contract")
+    if contract_metadata is not None:
+        encoded = json.dumps(
+            contract_metadata,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode("utf-8")
+        if hashlib.sha256(encoded).hexdigest() != contract_sha256:
+            raise ValueError("dataset Markov contract metadata hash mismatch")
     references = []
     seen = set()
     for item in raw.get("shards", []):
@@ -225,7 +242,13 @@ def load_dataset_index(manifest_path: str | Path, *, verify_hashes: bool = True)
         temporal_split = str(item["temporal_split"])
         if spatial_split not in SPLITS or temporal_split not in SPLITS:
             raise ValueError(f"invalid split for {key[0]}:{key[1]}")
-        if item.get("markov_contract_sha256") != contract_sha256:
+        item_contract = item.get("markov_contract_sha256")
+        if (
+            schema_version == LEGACY_DATASET_SCHEMA_VERSION
+            and item_contract != contract_sha256
+        ):
+            raise ValueError(f"contract drift for {key[0]}:{key[1]}")
+        if item_contract not in {None, contract_sha256}:
             raise ValueError(f"contract drift for {key[0]}:{key[1]}")
         path = (root / item["shard"]).resolve()
         try:
