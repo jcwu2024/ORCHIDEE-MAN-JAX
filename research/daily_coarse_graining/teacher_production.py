@@ -312,6 +312,53 @@ def load_production_spec(path: str | Path) -> ProductionSpec:
     return spec
 
 
+def subset_spec(
+    source: ProductionSpec,
+    output: str | Path,
+    *,
+    dataset_id: str,
+    landpoint_ids: Sequence[str],
+) -> Path:
+    requested = tuple(str(value) for value in landpoint_ids)
+    if not requested or len(requested) != len(set(requested)):
+        raise ValueError("production subset landpoint IDs must be non-empty and unique")
+    source_by_id = {item.landpoint_id: item for item in source.landpoints}
+    unknown = sorted(set(requested) - set(source_by_id))
+    if unknown:
+        raise ValueError(f"production subset is absent from its parent spec: {unknown}")
+    selected = tuple(source_by_id[landpoint_id] for landpoint_id in requested)
+    payload = {
+        "schema_version": SPEC_SCHEMA_VERSION,
+        "dataset_id": dataset_id,
+        "population_manifest": _portable_path(source.population_manifest),
+        "population_manifest_sha256": source.population_manifest_sha256,
+        "population_count": len(source_by_id),
+        "parent_spec": _portable_path(source.path),
+        "parent_spec_sha256": _canonical_json_sha256(source.path),
+        "first_year": source.first_year,
+        "last_year": source.last_year,
+        "block_size": source.block_size,
+        "temporal_splits": {
+            name: [int(bounds[0]), int(bounds[1])]
+            for name, bounds in source.temporal_splits.items()
+        },
+        "spatial_split_strategy": "frozen_parent_spec_subset_v1",
+        "spatial_split_features": list(source.split_features),
+        "spatial_split_counts": {
+            name: sum(item.spatial_split == name for item in selected)
+            for name in sorted(teacher_shards.SPLITS)
+        },
+        "landpoints": [
+            {"id": item.landpoint_id, "spatial_split": item.spatial_split}
+            for item in selected
+        ],
+        "required_reference_files": list(REQUIRED_REFERENCE_FILES),
+    }
+    path = _atomic_json(Path(output).resolve(), payload)
+    load_production_spec(path)
+    return path
+
+
 def source_inventory(spec: ProductionSpec, reference_root: str | Path) -> dict[str, Any]:
     reference_root = Path(reference_root).resolve()
     entries = []
@@ -495,6 +542,11 @@ def _parser() -> argparse.ArgumentParser:
     freeze.add_argument("--validation-landpoints", type=int, default=67)
     freeze.add_argument("--test-landpoints", type=int, default=67)
     freeze.add_argument("--landpoint-id", action="append", dest="landpoint_ids")
+    subset = subparsers.add_parser("subset")
+    subset.add_argument("--spec", type=Path, required=True)
+    subset.add_argument("--output", type=Path, required=True)
+    subset.add_argument("--dataset-id", required=True)
+    subset.add_argument("--landpoint-id", action="append", required=True, dest="landpoint_ids")
     for name in ("inventory", "stage", "verify", "plan"):
         command = subparsers.add_parser(name)
         command.add_argument("--spec", type=Path, required=True)
@@ -526,6 +578,18 @@ def main(argv: Sequence[str] | None = None) -> int:
                     block_size=args.block_size,
                     validation_landpoints=args.validation_landpoints,
                     test_landpoints=args.test_landpoints,
+                    landpoint_ids=args.landpoint_ids,
+                )
+            )
+        }
+    elif args.command == "subset":
+        source = load_production_spec(args.spec)
+        result = {
+            "production_spec": str(
+                subset_spec(
+                    source,
+                    args.output,
+                    dataset_id=args.dataset_id,
                     landpoint_ids=args.landpoint_ids,
                 )
             )

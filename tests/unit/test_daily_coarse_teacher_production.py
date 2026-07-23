@@ -88,6 +88,34 @@ def test_freeze_can_bind_a_probe_subset_to_the_full_population(tmp_path):
     assert len(reloaded.landpoints) == 2
 
 
+def test_subset_preserves_parent_spatial_and_temporal_splits(tmp_path):
+    population = _population(tmp_path)
+    parent_path = teacher_production.freeze_spec(
+        population,
+        tmp_path / "parent.json",
+        dataset_id="parent",
+        validation_landpoints=2,
+        test_landpoints=2,
+    )
+    parent = teacher_production.load_production_spec(parent_path)
+    requested = [
+        next(item.landpoint_id for item in parent.landpoints if item.spatial_split == split)
+        for split in ("train", "validation", "test")
+    ]
+    subset_path = teacher_production.subset_spec(
+        parent,
+        tmp_path / "subset.json",
+        dataset_id="subset",
+        landpoint_ids=requested,
+    )
+    subset = teacher_production.load_production_spec(subset_path)
+    assert [(item.landpoint_id, item.spatial_split) for item in subset.landpoints] == [
+        (landpoint_id, next(item.spatial_split for item in parent.landpoints if item.landpoint_id == landpoint_id))
+        for landpoint_id in requested
+    ]
+    assert subset.temporal_splits == parent.temporal_splits
+
+
 def test_stage_and_plan_use_cold_start_without_prebuilt_checkpoints(
     monkeypatch,
     tmp_path,

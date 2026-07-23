@@ -94,6 +94,16 @@ python -m research.daily_coarse_graining.teacher_production freeze \
   --dataset-id pft14-daily-teacher-669-1961-2010
 ```
 
+Use `teacher_production subset` to create bounded admission or training batches
+from that parent spec. A subset inherits the exact parent spatial assignments
+and temporal ranges and records the canonical parent-spec hash; it must not
+recompute splits on the smaller population. The first complete-trajectory
+batch is frozen in
+`manifests/coarse_graining/daily_teacher_initial_5point_1961_2010.json`: two
+train landpoints, two validation landpoints, one test landpoint, 50 years per
+point, and 250 atomic point-year shards. It is an architecture-development
+dataset, not the final spatial-generalization claim.
+
 Inventory and stage only the six small source-truth files needed by each
 landpoint, then build the executable plan on the target machine so all runtime
 paths are native to that machine:
