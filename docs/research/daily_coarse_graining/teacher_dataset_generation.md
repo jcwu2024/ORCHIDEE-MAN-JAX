@@ -244,13 +244,23 @@ holdout `319.0-057.0`). On allocated node `ibc12b04n31`:
 - the after-success aggregation verified both shards and emitted a complete
   dataset manifest.
 
-The first conservative production cap is therefore six concurrent workers in
-total, not one worker per advertised CPU core. Six worst-observed processes
-occupy about 156.6 GiB and remain below one CPU node's approximately 187 GiB
-OS-visible memory even if Slurm places all six on one node. Raise this cap only
-after a longer multi-point probe demonstrates a lower stable peak. Worker
-count controls chain assignment; array concurrency must never exceed the
-accepted memory cap.
+The follow-up complete-year probe used the same cache and one 1961--1962 chain.
+The cold 1961 entry took 2,395.32 seconds in total. The following in-process
+1962 hot year took 102.30 seconds to capture and 139.20 seconds including shard
+assembly, lossless compression, hashing, checkpointing, and shared-filesystem
+IO. It added no in-memory compiled cache entries. The complete two-year
+dataset aggregated successfully. Peak RSS rose to 30,852,280 kB (about 29.4
+GiB), and a new Slurm process still incurred compilation despite pointing at
+the prior persistent cache. Production may rely on same-process reuse across
+years and landpoints, but not on cross-job cache reuse.
+
+The first conservative production cap is therefore five concurrent workers in
+total, not one worker per advertised CPU core. Five worst-observed processes
+occupy about 147 GiB and leave useful headroom on a CPU node with approximately
+187 GiB OS-visible memory even if Slurm places all five on one node. Raise this
+cap only after a longer multi-point probe demonstrates a lower stable peak.
+Worker count controls chain assignment; array concurrency must never exceed
+the accepted memory cap.
 
 The V100 single-landpoint benchmark showed insufficient GPU parallelism. Use
 CPU persistent workers for Teacher generation and reserve GPUs for batched
