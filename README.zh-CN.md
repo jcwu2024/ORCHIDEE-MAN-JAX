@@ -35,6 +35,10 @@ Linux CPU 与 V100 兼容性、编译后的 Teacher 标签捕获，以及可恢�
 权威的当前状态见 [`docs/current-status.md`](docs/current-status.md)。带日期的研究报告和
 源码审计是历史证据快照，可能描述较早的阶段。
 
+新对话如需接手 `research/daily-coarse-graining`，应首先阅读
+[`docs/research/daily_coarse_graining/HANDOFF.md`](docs/research/daily_coarse_graining/HANDOFF.md)。
+其中记录当前运行任务、严格验收门、唯一下一步，以及不应重新争论或重做的既定决策。
+
 ## 仓库结构
 
 | 路径 | 用途 |

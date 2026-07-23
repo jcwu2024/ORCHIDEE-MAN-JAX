@@ -7,6 +7,8 @@ mode.
 
 ## Read First
 
+- `HANDOFF.md`: current operational snapshot, running jobs, completion gate,
+  next command, and decisions that must not be reopened.
 - `../../current-status.md`: current project and research status authority.
 - `development_standard.md`: architecture, evidence, data, split, rollout,
   and performance rules.
@@ -44,3 +46,10 @@ Not implemented or not accepted:
 - free-running 7-, 30-, 365-day, or 50-year surrogate closure;
 - a user-facing `daily-surrogate` CLI mode;
 - a decision that inference must run on GPU.
+
+## Current Work
+
+The first frozen v3 architecture-development dataset is being generated for
+five landpoints over 1961-2010. Do not infer its live state from dated reports
+or start a duplicate run. Continue from [`HANDOFF.md`](HANDOFF.md), which owns
+the current Slurm job IDs, acceptance checks, and the single next milestone.

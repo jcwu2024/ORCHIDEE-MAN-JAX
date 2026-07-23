@@ -41,6 +41,11 @@ See [`docs/current-status.md`](docs/current-status.md) for the authoritative
 current state. Dated research and source-audit documents are retained as
 historical evidence and may describe earlier gates.
 
+For a new development task on `research/daily-coarse-graining`, start with
+[`docs/research/daily_coarse_graining/HANDOFF.md`](docs/research/daily_coarse_graining/HANDOFF.md).
+It records the active operation, exact completion gate, next milestone, and
+decisions that should not be re-litigated.
+
 ## Repository Layout
 
 | Path | Purpose |

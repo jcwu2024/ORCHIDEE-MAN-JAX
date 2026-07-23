@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-07-22.
+Last updated: 2026-07-23.
 
 This page is the current status authority. Dated files under
 `docs/source_audits/` and `docs/research/` are evidence snapshots and may
@@ -32,9 +32,10 @@ Teacher defaults are unchanged because all capture hooks default to off.
 
 Completed infrastructure:
 
-- Daily Markov Contract v2:
-  `S[d] + native 6-hour forcing[d] + P -> B_fast[d]`, followed by retained
-  source-backed daily season/STOMATE to produce `S[d+1]`;
+- Daily Fast-Day Teacher Contract v3:
+  `S[d] (3,724 values) + native 6-hour forcing[d] + P -> B_fast[d] (6,758
+  values)`, followed by retained source-backed daily season/STOMATE to produce
+  `S[d+1]`;
 - canonical PFT14 state trajectories with PFT1/PFT14 axis compaction,
   exact discrete state, deterministic mirror reconstruction and year-start
   `nroot` handling;
@@ -50,6 +51,9 @@ Completed infrastructure:
 - compiled Teacher training capture with reduced host transfers;
 - restartable, atomic landpoint-year NPZ shard generation with provenance,
   frozen spatial/temporal splits, resume, and aggregate validation;
+- a frozen 669-point production specification and a first five-point,
+  1961-2010 architecture-development subset with two train, two validation,
+  and one test landpoint;
 - Linux CPU and V100 compatibility tests.
 
 Current scientific status:
@@ -60,8 +64,8 @@ Current scientific status:
 - no free-running 7-, 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
   acceptance gate is complete.
-- old v1 `forcing_48` shards are audit evidence only and must not be expanded
-  into the planned pilot.
+- old v1/v2 shards are audit evidence only and must not be expanded into the
+  current v3 dataset.
 
 ## CPU and GPU Decision
 
@@ -107,18 +111,33 @@ Git; large datasets and weights remain external assets with stable identifiers
 and SHA256 hashes. Accepted training and inference code is merged into
 `main`, while ongoing experiments continue on the research branch.
 
+## Teacher Production Evidence
+
+Explore1000 admission measurements established the current production policy:
+
+- a first eight-day landpoint compiled and captured in 1,406.85 seconds;
+- a second landpoint in the same process captured in 3.35 seconds and took
+  40.15 seconds including preparation, proving executable reuse across
+  equal-shape PFT14 landpoints;
+- a cold 1961 full year took 2,395.32 seconds;
+- the following in-process 1962 hot year took 102.30 seconds to capture and
+  139.20 seconds including compression, hashing, checkpoints, and shared IO;
+- peak RSS reached about 29.4 GiB, so the initial total concurrency cap is five
+  persistent workers per approximately 187 GiB node;
+- persistent compilation cache did not eliminate compilation in a new Slurm
+  process, so production relies on same-process reuse rather than cross-job
+  cache reuse.
+
+The first bounded production run is currently the frozen five-point,
+1961-2010 v3 dataset: 250 landpoint-year shards and 91,305 daily transitions.
+Its operational state and exact completion gate are recorded in
+[`research/daily_coarse_graining/HANDOFF.md`](research/daily_coarse_graining/HANDOFF.md).
+
 ## Next Bounded Milestone
 
-Before large paid generation or training:
-
-1. run the frozen one-point v2 annual resource probe on explicitly allocated
-   Slurm compute resources;
-2. verify the staged 12-point pilot assets and build its frozen generation
-   plan;
-3. estimate worker memory, hot landpoint-year time, v2 storage, and worst-case
-   cluster cost;
-4. generate only the approved pilot shards;
-5. train and evaluate one-step accuracy and free rollout before scaling.
-
-Do not generate all 669 x 50 landpoint-years merely to discover whether the
-surrogate architecture can learn the daily transition.
+Complete and hash-validate the five-point v3 dataset. Then fit train-only
+normalization statistics, train the first parameter-conditioned `B_fast`
+predictor, evaluate held-out one-step errors, and attempt a seven-day free
+rollout through retained daily season/STOMATE. Do not generate all
+669 x 50 landpoint-years merely to discover whether the surrogate architecture
+can learn the daily transition.

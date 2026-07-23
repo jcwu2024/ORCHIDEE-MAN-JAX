@@ -7,9 +7,15 @@
   capture, dataset, and neural-surrogate research. Research hooks are disabled
   by default and must not alter Teacher numerical behavior.
 
-The current status authority is `docs/current-status.md`. Dated audit and
-experiment documents remain immutable evidence snapshots rather than current
-roadmaps.
+Documentation authority is deliberately layered:
+
+- `docs/current-status.md` owns stable current scientific and release facts;
+- `docs/research/daily_coarse_graining/HANDOFF.md` owns the current research
+  operation and immediate next action;
+- contract and development-standard documents own durable interfaces and
+  acceptance policy;
+- dated audit and experiment documents are immutable evidence snapshots, not
+  current roadmaps.
 
 ## Public Repository
 
