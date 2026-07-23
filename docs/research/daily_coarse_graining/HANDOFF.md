@@ -163,8 +163,8 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-1. commit and transfer the contract v4 implementation;
-2. regenerate the same bounded five-point, 1961-2010 dataset as v4;
+1. transfer contract v4 commit `d54811b` and the prepared ten-point manifest;
+2. generate the frozen ten-point, 1961-2010 dataset as v4;
 3. fit sentinel-aware `daily_teacher_training_statistics_v2` from train/train
    shards only;
 4. rerun the bounded five-epoch parameter-conditioned network experiment;
@@ -175,8 +175,16 @@ resume only the incomplete worker assignment.
    network architecture.
 
 Do not start all 669 x 50 years before this bounded learnability and rollout
-gate. The five-point dataset tests architecture development; it cannot by
+gate. The ten-point dataset tests architecture development; it cannot by
 itself establish global spatial generalization.
+
+The prepared v4 subset is
+[`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).
+It preserves the frozen 669-point parent split and contains six train, two
+validation, and two test landpoints. The original five are retained; the five
+additions are `069.0-119.0`, `281.0-095.0`, `283.0-091.0`, `295.0-113.0`, and
+`333.0-057.0`, selected to add dry/low-productivity, high-productivity,
+high-maintenance, low-Vcmax/short-residence, and geographic diversity.
 
 The Explore1000 GPU runtime prerequisite is complete at commit `c566538`:
 
@@ -236,6 +244,7 @@ five-point dataset and v2 statistics are regenerated and validated.
 | Dataset production and recovery | [`teacher_dataset_generation.md`](teacher_dataset_generation.md) |
 | Research quality gates | [`development_standard.md`](development_standard.md) |
 | Frozen five-point batch | [`../../../manifests/coarse_graining/daily_teacher_initial_5point_1961_2010.json`](../../../manifests/coarse_graining/daily_teacher_initial_5point_1961_2010.json) |
+| Frozen ten-point v4 batch | [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json) |
 | Frozen 669-point population/splits | [`../../../manifests/coarse_graining/daily_teacher_production_669.json`](../../../manifests/coarse_graining/daily_teacher_production_669.json) |
 | Explore1000 operations | [`../../deployment-explore1000.md`](../../deployment-explore1000.md) |
 

@@ -53,5 +53,6 @@ Not implemented or not accepted:
 
 The first frozen v3 five-point, 1961-2010 dataset completed and exposed two
 contract defects during its first neural experiment. It remains historical
-evidence and must not be reused for v4 training. Continue from
+evidence and must not be reused for v4 training. A ten-point v4 replacement is
+now frozen for the next bounded experiment. Continue from
 [`HANDOFF.md`](HANDOFF.md), which owns the single next milestone.

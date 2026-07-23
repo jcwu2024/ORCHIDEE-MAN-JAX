@@ -159,7 +159,7 @@ Markov contract are valid. Its operational evidence is recorded in
 
 ## Next Bounded Milestone
 
-Regenerate the same bounded five-point trajectories with contract v4, fit
+Generate the frozen ten-point trajectories with contract v4, fit
 sentinel-aware v2 train-only statistics, rerun the inexpensive five-epoch
 parameter-conditioned `B_fast` experiment, and evaluate held-out one-step
 errors before attempting a seven-day free rollout through retained daily
