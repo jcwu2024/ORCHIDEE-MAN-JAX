@@ -31,5 +31,8 @@ if [[ ! -x "$ENV_DIR/bin/python" ]]; then
   "$UV" venv --python "$UV_PYTHON" "$ENV_DIR"
 fi
 
-"$UV" pip sync --python "$ENV_DIR/bin/python" "$REQUIREMENTS"
+"$UV" pip sync \
+  --python "$ENV_DIR/bin/python" \
+  --python-platform x86_64-manylinux_2_28 \
+  "$REQUIREMENTS"
 "$ENV_DIR/bin/python" --version
