@@ -7,12 +7,17 @@ import json
 import jax
 import jax.numpy as jnp
 import numpy as np
+from jax._src import xla_bridge
 
 
 def main() -> int:
     devices = tuple(jax.devices())
     if not devices or any(device.platform != "gpu" for device in devices):
-        raise RuntimeError(f"orcjax_gpu did not select only GPU devices: {devices}")
+        backend_errors = dict(getattr(xla_bridge, "_backend_errors", {}))
+        raise RuntimeError(
+            "orcjax_gpu did not select only GPU devices: "
+            f"devices={devices}, backend_errors={backend_errors}"
+        )
 
     @jax.jit
     def objective(value):
