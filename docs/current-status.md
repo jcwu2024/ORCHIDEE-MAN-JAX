@@ -133,8 +133,9 @@ dataset: 250 landpoint-year shards and 91,245 daily transitions. Its first
 submission was rejected before acceptance because the production planner
 incorrectly inserted Gregorian leap days into the paper model's fixed 365-day
 noleap calendar. The planner, plan validator, and training calendar features
-now enforce noleap semantics; the dataset must be regenerated from 1961. Its
-operational state and exact completion gate are recorded in
+now enforce noleap semantics. A clean replacement dataset is being regenerated
+from 1961 using the fixed plan and an isolated output root. Its operational
+state and exact completion gate are recorded in
 [`research/daily_coarse_graining/HANDOFF.md`](research/daily_coarse_graining/HANDOFF.md).
 
 ## Next Bounded Milestone

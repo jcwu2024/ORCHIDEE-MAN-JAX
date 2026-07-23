@@ -68,26 +68,28 @@ The bounded architecture-development dataset is frozen by
 - 250 atomic landpoint-year shards;
 - 91,245 daily transitions after excluding cold-start Day 1 at each point.
 
-Explore1000 jobs submitted from commit `23046a3`:
+The first submission (`14362790`/`14362791`, commit `23046a3`) was cancelled
+and rejected before acceptance. Its plan incorrectly assigned 366 days to
+Gregorian leap years even though the paper forcing and Teacher lifecycle use a
+fixed 365-day noleap calendar. Those outputs are diagnostic evidence only.
 
-- worker array: `14362790`, two persistent CPU workers;
-- after-success aggregate: `14362791`;
-- status: rejected before acceptance after discovering that the submitted plan
-  incorrectly assigned 366 days to Gregorian leap years even though the paper
-  forcing and Teacher lifecycle use a fixed 365-day noleap calendar;
+Replacement Explore1000 jobs use the noleap fix at commit `3afe92f`:
+
+- worker array: `14363439`, two persistent one-CPU workers on `cnall`;
+- after-success aggregate: `14363441` on `cnmix`;
+- plan: `runtime/plans/teacher_initial_5point_noleap_3afe92f.json`;
+- output: `runtime/outputs/training/pft14-daily-teacher-initial-5point-1961-2010-noleap-3afe92f`;
+- plan SHA256: `353f517ddc84a46723a71de11b74a557af030fe367314689b8a6b6fb8e8e68b9`;
+- validated plan: 5 landpoints, 50 years, 250 entries, all exactly 365
+  days, worker loads 150 and 100 entries;
+- last observed state: both workers running on `ibc12b04n31`, aggregate
+  waiting on `afterok` dependency;
 - requested worker limit: 8 hours; approved worst-case cost: about CNY 1.13.
-
-Do not accept or aggregate shards from these jobs. The 1964 shard repeats Day
-1 forcing as a cyclic Day 366 after the Teacher has already executed its
-365-day year-end transition, contaminating every later checkpoint in that
-landpoint chain. Cancel the worker array and dependent aggregate, deploy the
-noleap fix, create a fresh plan/output root, and rerun from 1961. Preserve the
-rejected output as diagnostic evidence until the replacement dataset passes.
 
 Monitor from `cln01`; never compute on the login node:
 
 ```bash
-/rmprog/slurm/v22.05.7/bin/squeue -j 14362790,14362791 \
+/rmprog/slurm/v22.05.7/bin/squeue -j 14363439,14363441 \
   -o '%i %P %j %T %M %l %R'
 ```
 
@@ -98,9 +100,9 @@ Project runtime files must remain under:
 ```
 
 The two worker logs are expected at
-`runtime/logs/teacher_14362790_0.txt` and
-`runtime/logs/teacher_14362790_1.txt`. The aggregate log is expected at
-`runtime/logs/teacher_aggregate_14362791.txt`. Read the `plan=` line in a
+`runtime/logs/teacher_14363439_0.txt` and
+`runtime/logs/teacher_14363439_1.txt`. The aggregate log is expected at
+`runtime/logs/teacher_aggregate_14363441.txt`. Read the `plan=` line in a
 worker log for the exact generated plan path instead of guessing it.
 
 ## Completion Gate
@@ -114,10 +116,10 @@ After the jobs finish:
 
 ```bash
 SLURM=/rmprog/slurm/v22.05.7/bin
-$SLURM/sacct -j 14362790,14362791 \
+$SLURM/sacct -j 14363439,14363441 \
   --format=JobID,State,Elapsed,ExitCode,MaxRSS,NodeList
-grep -h '^plan=' runtime/logs/teacher_14362790_*.txt
-tail -n 80 runtime/logs/teacher_aggregate_14362791.txt
+grep -h '^plan=' runtime/logs/teacher_14363439_*.txt
+tail -n 80 runtime/logs/teacher_aggregate_14363441.txt
 ```
 
 Then rerun the same aggregate validator explicitly if an independent check is
