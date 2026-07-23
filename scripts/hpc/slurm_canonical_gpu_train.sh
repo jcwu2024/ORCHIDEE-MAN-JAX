@@ -42,7 +42,7 @@ env \
     --bind "$GPU_BINDS" \
     --pwd "$ROOT" \
     "$IMAGE" \
-    "$PYTHON" scripts/hpc/verify_orcjax_gpu.py
+    "$PYTHON" -m scripts.hpc.verify_orcjax_gpu
 
 env \
   SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \
@@ -55,7 +55,7 @@ env \
     --bind "$GPU_BINDS" \
     --pwd "$ROOT" \
     "$IMAGE" \
-    "$PYTHON" scripts/hpc/run_canonical_gpu_train.py \
+    "$PYTHON" -m scripts.hpc.run_canonical_gpu_train \
       train \
       --dataset "$DATASET" \
       --statistics "$STATISTICS" \
