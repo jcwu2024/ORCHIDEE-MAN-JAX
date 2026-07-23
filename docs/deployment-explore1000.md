@@ -112,11 +112,27 @@ environment read-only. The general project `uv.lock` currently targets newer
 JAX and may resolve wheels incompatible with the cluster's glibc; do not use
 it to replace the accepted CPU compatibility profile without a new gate.
 
-The canonical `orcjax_gpu` environment has not yet been frozen. Historical
-`orcj_gpu` and `orcj_gpu_compat` environments are retained under
-`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/legacy/` as validation assets,
-not project-wide defaults. Keep them read-only until `orcjax_gpu` reproduces
-the accepted V100 compatibility gate with the final training dependencies.
+The canonical `orcjax_gpu` environment passed the V100 compatibility gate on
+2026-07-23 with JAX/JAXLIB/CUDA plugin 0.4.38 and the pinned CUDA 12.1 runtime
+profile in `scripts/hpc/requirements-orcjax-gpu.txt`. Rebuild it only through:
+
+```bash
+cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+bash scripts/hpc/bootstrap_orcjax_gpu.sh
+```
+
+The Explore1000 Singularity runtime does not put the host driver libraries in
+the container's safe search path. GPU launchers must preserve the dynamic
+`readlink -f` bindings for `libcuda.so.1` and `libnvidia-ml.so.1` in
+`scripts/hpc/slurm_canonical_gpu_train.sh`; do not hard-code a driver version.
+JAX 0.4.38 also requires the project GPU launcher to register PJRT plugins
+before importing `jax.numpy` or the training module. The accepted smoke test
+reported backend `gpu`, device `cuda:0`, and finite JIT loss and gradients.
+CPU fallback is a failed gate, not a usable training mode.
+
+Historical `orcj_gpu` and `orcj_gpu_compat` environments remain under
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/legacy/` as read-only evidence;
+they are not project-wide defaults.
 
 ## Workload Policy
 

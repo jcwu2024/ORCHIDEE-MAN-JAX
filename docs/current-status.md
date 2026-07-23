@@ -86,6 +86,13 @@ Current policy:
   throughput after the network architecture is frozen;
 - do not describe the research branch as a delivered GPU model.
 
+The project-owned Explore1000 `orcjax_gpu` environment passed its real-V100
+runtime gate on 2026-07-23. JAX 0.4.38 selected backend `gpu` and executed a
+finite JIT loss and gradient after explicit PJRT plugin discovery. The
+canonical verification and training entry points now share that fail-fast
+initialization and reject CPU fallback. This validates the training runtime;
+it is not evidence that the neural surrogate itself is scientifically valid.
+
 ## Repository and Release Architecture
 
 The intended user-facing release is one codebase with two independent runtime

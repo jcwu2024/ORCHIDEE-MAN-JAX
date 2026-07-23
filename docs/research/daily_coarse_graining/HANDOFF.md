@@ -171,6 +171,22 @@ Do not start all 669 x 50 years before this bounded learnability and rollout
 gate. The five-point dataset tests architecture development; it cannot by
 itself establish global spatial generalization.
 
+The Explore1000 GPU runtime prerequisite is complete at commit `c566538`:
+
+- project environment: `.venvs/orcjax_gpu`;
+- JAX/JAXLIB/CUDA plugin: 0.4.38 with the pinned CUDA 12.1 compatibility set;
+- real `gln01` V100 smoke: backend `gpu`, device `cuda:0`, finite JIT loss and
+  gradient;
+- formal entry points: `scripts.hpc.verify_orcjax_gpu` and
+  `scripts.hpc.run_canonical_gpu_train`;
+- no paid statistics or training job has been submitted yet.
+
+Do not bypass the GPU launcher with a direct import of
+`canonical_training_run`: in this container, JAX plugin auto-discovery can
+otherwise initialize CPU first. The next operation is the train-only
+statistics job, followed by the bounded five-epoch GPU training job only after
+the statistics asset passes its hash and schema checks.
+
 ## Decisions Not To Reopen
 
 - Do not redefine the label as the final daily state. The accepted target is
