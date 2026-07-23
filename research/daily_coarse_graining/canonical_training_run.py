@@ -35,6 +35,7 @@ from research.daily_coarse_graining.markov_dataset import (
     MarkovDatasetIndex,
     TrainingStatistics,
     collate_samples,
+    denormalize,
     fit_training_statistics,
     load_dataset_index,
     load_training_statistics,
@@ -216,6 +217,12 @@ def _evaluate(
     squared = defaultdict(float)
     absolute = defaultdict(float)
     counts = defaultdict(int)
+    leaf_squared = defaultdict(float)
+    leaf_absolute = defaultdict(float)
+    leaf_maximum = defaultdict(float)
+    leaf_counts = defaultdict(int)
+    leaves = tuple(contract["fast_day_target_leaves"])
+    target_statistics = statistics.arrays["fast_day_target"]
     batches = 0
     for raw in _iter_epoch_batches(
         index,
@@ -232,6 +239,8 @@ def _evaluate(
         )
         target = np.asarray(batch.normalized_fast_day_target)
         finite = np.asarray(batch.fast_day_target_finite)
+        predicted_physical = denormalize(predicted, target_statistics)
+        target_physical = denormalize(target, target_statistics)
         for family, slices in ranges.items():
             for start, stop in slices:
                 selected = (predicted[:, start:stop] - target[:, start:stop])[
@@ -240,6 +249,27 @@ def _evaluate(
                 squared[family] += float(np.sum(selected * selected))
                 absolute[family] += float(np.sum(np.abs(selected)))
                 counts[family] += int(selected.size)
+        for leaf in leaves:
+            start = int(leaf["start"])
+            stop = int(leaf["stop"])
+            component = leaf.get("component") or leaf["family"]
+            path = tuple(str(name) for name in leaf.get("path", ()))
+            key = (
+                ".".join((str(component), *path))
+                if path
+                else f"{component}[{start}:{stop}]"
+            )
+            selected = (
+                predicted_physical[:, start:stop]
+                - target_physical[:, start:stop]
+            )[finite[:, start:stop]]
+            if selected.size:
+                leaf_squared[key] += float(np.sum(selected * selected))
+                leaf_absolute[key] += float(np.sum(np.abs(selected)))
+                leaf_maximum[key] = max(
+                    leaf_maximum[key], float(np.max(np.abs(selected)))
+                )
+                leaf_counts[key] += int(selected.size)
         batches += 1
         if max_batches is not None and batches >= max_batches:
             break
@@ -255,6 +285,15 @@ def _evaluate(
             }
             for family in sorted(ranges)
             if counts[family]
+        },
+        "physical_leaves": {
+            key: {
+                "rmse": float(np.sqrt(leaf_squared[key] / leaf_counts[key])),
+                "mae": leaf_absolute[key] / leaf_counts[key],
+                "max_absolute_error": leaf_maximum[key],
+                "evaluated_values": leaf_counts[key],
+            }
+            for key in sorted(leaf_counts)
         },
     }
 

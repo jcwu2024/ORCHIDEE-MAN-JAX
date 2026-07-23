@@ -116,6 +116,7 @@ def test_streamed_fast_day_training_and_resume(tmp_path):
         "spatial",
         "temporal",
     }
+    assert first["history"][0]["validation"]["temporal"]["physical_leaves"]
     assert (output / "checkpoint.pkl").is_file()
     assert (output / "training_report.json").is_file()
 

@@ -462,6 +462,18 @@ def normalize_finite(values: np.ndarray, statistics: FiniteColumnStatistics) -> 
     return normalized, finite
 
 
+def denormalize(values: np.ndarray, statistics: FiniteColumnStatistics) -> np.ndarray:
+    """Restore normalized finite model values to their physical scale."""
+
+    values = np.asarray(values, dtype=np.float64)
+    if values.shape[-statistics.mean.ndim :] != statistics.mean.shape:
+        raise ValueError(
+            f"denormalization shape mismatch: {values.shape} "
+            f"versus {statistics.mean.shape}"
+        )
+    return values * statistics.scale + statistics.mean
+
+
 def collate_samples(samples: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     """Stack numerical model inputs/targets without exposing identity as a feature."""
 

@@ -197,6 +197,67 @@ def test_markov_continuity_rejects_a_different_next_day_state():
         markov.assert_markov_continuity([start], [record], observed, contract)
 
 
+def test_fast_day_target_roundtrip_rebuilds_retained_tail_boundary():
+    start = _packet(1.0)
+    end = _packet(2.0, include_nroot=True)
+    end.fields_by_component["diffuco_previous_step_state"]["lai"][0, 5] = 123.0
+    end.fields_by_component["slowproc_stomate_previous_step_state"]["lai"][
+        0, 5
+    ] = 123.0
+    record = _record(end)
+    contract = markov.build_daily_markov_contract(
+        start,
+        record,
+        parameter_leaves=(),
+        landpoint_static_leaves=(),
+        annual_condition_leaves=(),
+        native_forcing_spec=_native_spec(),
+    )
+    target = markov.extract_fast_day_target(
+        record,
+        contract.fast_day_target_leaves,
+    )
+    parsed_leaves = markov.fast_day_target_leaves_from_metadata(
+        contract.metadata()
+    )
+    rebuilt = markov.reconstruct_fast_day_target(
+        target,
+        parsed_leaves,
+        template_fields=end.fields_by_component,
+    )
+    rebuilt_record = SimpleNamespace(
+        half_hour_transition=SimpleNamespace(
+            current_state=SimpleNamespace(
+                fields_by_component=rebuilt.fields_by_component
+            ),
+            completed_entry_payloads=[rebuilt.final_diagnostics],
+        ),
+        daily_fold=SimpleNamespace(daily_fields=rebuilt.daily_fields),
+        ok_leak_updates=rebuilt.ok_leak_updates,
+        ok_leak_result=SimpleNamespace(
+            soilcarbon=SimpleNamespace(
+                perma_peat=SimpleNamespace(
+                    deepc_peat=rebuilt.ok_leak_updates["deepC_peat"]
+                )
+            )
+        ),
+    )
+    np.testing.assert_array_equal(
+        markov.extract_fast_day_target(rebuilt_record, parsed_leaves),
+        target,
+    )
+    assert (
+        rebuilt.fields_by_component["diffuco_previous_step_state"]["lai"][
+            0, 5
+        ]
+        == 123.0
+    )
+    np.testing.assert_array_equal(
+        rebuilt.fields_by_component["hydrol_previous_step_state"]["njsc"],
+        end.fields_by_component["hydrol_previous_step_state"]["njsc"],
+    )
+
+
 def test_native_forcing_window_reconstructs_teacher_units_and_spreading(monkeypatch):
     spec = _native_spec()
     raw_by_field = {

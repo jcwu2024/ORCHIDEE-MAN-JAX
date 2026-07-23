@@ -168,6 +168,8 @@ def test_statistics_asset_roundtrip_and_safe_normalization(tmp_path):
     np.testing.assert_array_equal(finite, [[False, True, True, True]])
     assert normalized[0, 0] == 0.0
     assert np.isfinite(normalized).all()
+    restored = markov_dataset.denormalize(normalized, loaded.arrays["state"])
+    np.testing.assert_allclose(restored[0, 1:], [1.0, 6.0, 7.0])
 
     arrays_path = metadata.with_suffix(".npz")
     arrays_path.write_bytes(arrays_path.read_bytes() + b"corrupt")

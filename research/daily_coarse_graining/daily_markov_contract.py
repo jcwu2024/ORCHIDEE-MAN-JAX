@@ -198,6 +198,16 @@ class FastDayTargetLeafSpec:
 
 
 @dataclass(frozen=True)
+class ReconstructedFastDayTarget:
+    """Physical fast-day boundary rebuilt from the learned flat output."""
+
+    fields_by_component: Mapping[str, Mapping[str, Any]]
+    daily_fields: Mapping[str, Any]
+    ok_leak_updates: Mapping[str, Any]
+    final_diagnostics: Mapping[str, Any]
+
+
+@dataclass(frozen=True)
 class DailyMarkovContract:
     schema_version: str
     state_leaves: tuple[StateLeafSpec, ...]
@@ -590,6 +600,105 @@ def extract_fast_day_target(
     return result
 
 
+def fast_day_target_leaves_from_metadata(
+    contract_metadata: Mapping[str, Any],
+) -> tuple[FastDayTargetLeafSpec, ...]:
+    """Parse and validate the learned-output layout stored in a manifest."""
+
+    leaves = tuple(
+        FastDayTargetLeafSpec(
+            family=str(item["family"]),
+            component=(
+                None
+                if item.get("component") is None
+                else str(item["component"])
+            ),
+            path=tuple(str(name) for name in item["path"]),
+            shape=tuple(int(size) for size in item["shape"]),
+            full_shape=tuple(int(size) for size in item["full_shape"]),
+            dtype=str(item["dtype"]),
+            start=int(item["start"]),
+            stop=int(item["stop"]),
+            owner=str(item["owner"]),
+            axis_names=tuple(str(name) for name in item.get("axis_names", ())),
+            selected_pft_indices=tuple(
+                int(index) for index in item.get("selected_pft_indices", ())
+            ),
+        )
+        for item in contract_metadata["fast_day_target_leaves"]
+    )
+    cursor = 0
+    for leaf in leaves:
+        if leaf.start != cursor or leaf.stop <= leaf.start:
+            raise ValueError(f"non-contiguous fast-day target leaf {leaf.key}")
+        if leaf.stop - leaf.start != int(np.prod(leaf.shape, dtype=np.int64)):
+            raise ValueError(f"fast-day target leaf width mismatch for {leaf.key}")
+        cursor = leaf.stop
+    if cursor != int(contract_metadata["fast_day_target_width"]):
+        raise ValueError("fast-day target metadata width mismatch")
+    return leaves
+
+
+def reconstruct_fast_day_target(
+    target: np.ndarray,
+    leaves: Sequence[FastDayTargetLeafSpec],
+    *,
+    template_fields: Mapping[str, Mapping[str, Any]],
+) -> ReconstructedFastDayTarget:
+    """Inflate one compact PFT14 prediction into the retained-tail boundary."""
+
+    target = np.asarray(target, dtype=np.float64)
+    width = max((leaf.stop for leaf in leaves), default=0)
+    if target.shape != (width,):
+        raise ValueError(
+            f"fast-day target width mismatch: {target.shape} != {(width,)}"
+        )
+    fields = deepcopy(dict(template_fields))
+    groups: dict[str, dict[str, Any]] = {
+        "daily_interface": {},
+        "ok_leak": {},
+        "final_diagnostics": {},
+    }
+
+    def get_path(root: Mapping[str, Any], path: tuple[str, ...]) -> Any | None:
+        value: Any = root
+        for name in path:
+            if not isinstance(value, Mapping) or name not in value:
+                return None
+            value = value[name]
+        return value
+
+    def set_path(root: dict[str, Any], path: tuple[str, ...], value: Any) -> None:
+        current = root
+        for name in path[:-1]:
+            current = current.setdefault(name, {})
+        current[path[-1]] = value
+
+    for leaf in leaves:
+        compact = target[leaf.start : leaf.stop].reshape(leaf.shape).astype(
+            np.dtype(leaf.dtype), copy=False
+        )
+        if leaf.component is not None:
+            component = fields.setdefault(leaf.component, {})
+            full = _inflate_pft_axes(
+                compact,
+                leaf,
+                base=get_path(component, leaf.path),
+            )
+            set_path(component, leaf.path, full)
+        else:
+            if leaf.family not in groups:
+                raise ValueError(f"unknown fast-day target family {leaf.family}")
+            full = _inflate_pft_axes(compact, leaf)
+            set_path(groups[leaf.family], leaf.path, full)
+    return ReconstructedFastDayTarget(
+        fields_by_component=fields,
+        daily_fields=groups["daily_interface"],
+        ok_leak_updates=groups["ok_leak"],
+        final_diagnostics=groups["final_diagnostics"],
+    )
+
+
 def _compiled_select_pft_axes(value, leaf):
     result = jnp.asarray(value)
     for axis, name in enumerate(leaf.axis_names):
@@ -864,7 +973,10 @@ def build_state_trajectory(
 
 
 def _inflate_pft_axes(
-    value: np.ndarray, leaf: StateLeafSpec, *, base: Any | None = None
+    value: np.ndarray,
+    leaf: StateLeafSpec | FastDayTargetLeafSpec,
+    *,
+    base: Any | None = None,
 ) -> np.ndarray:
     if not leaf.selected_pft_indices:
         return np.asarray(value).reshape(leaf.full_shape)

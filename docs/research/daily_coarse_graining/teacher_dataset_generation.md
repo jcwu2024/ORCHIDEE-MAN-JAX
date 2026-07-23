@@ -222,6 +222,16 @@ The schema and its field provenance are implemented in
 `research/daily_coarse_graining/daily_markov_contract.py`. Existing v1/v2 shards
 remain historical audit evidence, but no new pilot may be generated with them.
 
+The same contract now provides the inverse learned-output transformation:
+`reconstruct_fast_day_target` inflates a compact `B_fast` vector into the full
+SECHIBA state fields, daily interface, OK_LEAK updates, and final diagnostics
+consumed by the retained daily tail. It restores active PFT1/PFT14 values from
+the prediction while preserving source-defined inactive-PFT and discrete
+state from the current-day template. A contract roundtrip test requires
+`extract -> reconstruct -> extract` to be exact. Canonical validation reports
+both family-balanced normalized errors and per-leaf physical-scale RMSE, MAE,
+and maximum absolute error.
+
 Normalization, finite masking, and train-time dtype conversion happen after
 split selection. They are not baked into Teacher shards. Non-finite targets
 are masked rather than silently sanitized into scientific values.
