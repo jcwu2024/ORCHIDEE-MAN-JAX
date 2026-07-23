@@ -49,6 +49,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_VERSION = "daily_teacher_generation_plan_v2"
 MANIFEST_SCHEMA_VERSION = "daily_teacher_worker_manifest_v2"
 DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v3"
+PAPER_DAYS_PER_YEAR = 365
 WORKER_ASSIGNMENT_STRATEGY = "balanced_landpoint_chains_v1"
 SPLITS = frozenset({"train", "validation", "test"})
 SAFE_ID = re.compile(r"^[A-Za-z0-9._-]+$")
@@ -260,13 +261,16 @@ def load_plan(path: Path, *, require_inputs: bool = False) -> GenerationPlan:
         landpoint_id = str(item["landpoint_id"])
         _validate_safe_id("landpoint_id", landpoint_id)
         year = int(item["year"])
-        days = int(item.get("days", 366 if _is_leap_year(year) else 365))
+        days = int(item.get("days", PAPER_DAYS_PER_YEAR))
         spatial_split = str(item["spatial_split"])
         temporal_split = str(item["temporal_split"])
         if spatial_split not in SPLITS or temporal_split not in SPLITS:
             raise ValueError(f"{landpoint_id}:{year} uses an unknown split")
-        if days < 1 or days > (366 if _is_leap_year(year) else 365):
-            raise ValueError(f"{landpoint_id}:{year} has invalid days={days}")
+        if days < 1 or days > PAPER_DAYS_PER_YEAR:
+            raise ValueError(
+                f"{landpoint_id}:{year} has invalid days={days}; "
+                "the paper forcing uses a fixed 365-day noleap calendar"
+            )
         key = (landpoint_id, year)
         if key in seen:
             raise ValueError(f"duplicate plan entry {landpoint_id}:{year}")
@@ -347,10 +351,6 @@ def load_plan(path: Path, *, require_inputs: bool = False) -> GenerationPlan:
         output_root=output_root,
         entries=tuple(entries),
     )
-
-
-def _is_leap_year(year: int) -> bool:
-    return year % 4 == 0 and (year % 100 != 0 or year % 400 == 0)
 
 
 def worker_assignment(plan: GenerationPlan, worker_count: int) -> dict[str, int]:

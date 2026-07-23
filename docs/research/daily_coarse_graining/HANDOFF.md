@@ -66,14 +66,23 @@ The bounded architecture-development dataset is frozen by
 - 5 landpoints: 2 train, 2 validation, and 1 test;
 - 1961-2010 complete trajectories;
 - 250 atomic landpoint-year shards;
-- 91,305 daily transitions after excluding cold-start Day 1 at each point.
+- 91,245 daily transitions after excluding cold-start Day 1 at each point.
 
 Explore1000 jobs submitted from commit `23046a3`:
 
 - worker array: `14362790`, two persistent CPU workers;
 - after-success aggregate: `14362791`;
-- last observed state: both workers running; aggregate waiting on dependency;
+- status: rejected before acceptance after discovering that the submitted plan
+  incorrectly assigned 366 days to Gregorian leap years even though the paper
+  forcing and Teacher lifecycle use a fixed 365-day noleap calendar;
 - requested worker limit: 8 hours; approved worst-case cost: about CNY 1.13.
+
+Do not accept or aggregate shards from these jobs. The 1964 shard repeats Day
+1 forcing as a cyclic Day 366 after the Teacher has already executed its
+365-day year-end transition, contaminating every later checkpoint in that
+landpoint chain. Cancel the worker array and dependent aggregate, deploy the
+noleap fix, create a fresh plan/output root, and rerun from 1961. Preserve the
+rejected output as diagnostic evidence until the replacement dataset passes.
 
 Monitor from `cln01`; never compute on the login node:
 
@@ -123,7 +132,7 @@ needed, using the exact plan path printed by the worker:
 Acceptance requires all of the following:
 
 - 5 complete landpoint chains and 250 unique shards;
-- 91,305 transitions with the frozen spatial and temporal split;
+- 91,245 transitions with the frozen spatial and temporal split;
 - every NPZ, checkpoint, plan, contract, and source-asset hash valid;
 - one Teacher commit and one `daily_teacher_markov_year_v3` schema throughout;
 - no partial worker manifest, stale lock, duplicate entry, or missing year;

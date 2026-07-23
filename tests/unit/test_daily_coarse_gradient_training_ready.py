@@ -16,6 +16,7 @@ from research.daily_coarse_graining.gradient_training_ready import (
     _family_metrics,
     _load_resume,
     _training_readiness,
+    calendar_context,
     deterministic_boundary_fields,
     encode_day,
     initialize_model,
@@ -80,6 +81,14 @@ def test_forcing_owned_daily_fields_follow_teacher_source_order_exactly():
     np.testing.assert_array_equal(actual["t2m_max_daily"], np.asarray([272.0]))
     np.testing.assert_array_equal(actual["t2mdiag"], np.asarray([271.0]))
     np.testing.assert_array_equal(actual["precip_daily"], np.asarray([108.0]))
+
+
+def test_calendar_context_uses_fixed_paper_noleap_period():
+    before = np.asarray(calendar_context(1963, 365))
+    gregorian_leap_year = np.asarray(calendar_context(1964, 365))
+    np.testing.assert_array_equal(before, gregorian_leap_year)
+    assert gregorian_leap_year[2] == np.float32(1.0)
+    assert gregorian_leap_year[3] == np.float32(0.0)
 
 
 def test_parameter_arrays_are_dynamic_model_inputs_and_change_output():

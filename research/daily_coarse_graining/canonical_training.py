@@ -30,15 +30,14 @@ class CanonicalTrainingBatch(NamedTuple):
 def _calendar_features(year: np.ndarray, day_index: np.ndarray) -> np.ndarray:
     year = np.asarray(year, dtype=np.int32)
     day = np.asarray(day_index, dtype=np.float64)
-    leap = (year % 4 == 0) & ((year % 100 != 0) | (year % 400 == 0))
-    period = np.where(leap, 366.0, 365.0)
+    period = 365.0
     phase = 2.0 * np.pi * (day - 1.0) / period
     return np.stack(
         (
             np.sin(phase),
             np.cos(phase),
             day / period,
-            leap.astype(np.float64),
+            np.zeros_like(year, dtype=np.float64),
         ),
         axis=-1,
     )

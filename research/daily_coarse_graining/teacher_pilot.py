@@ -251,7 +251,7 @@ def build_generation_plan(
             entry = {
                 "landpoint_id": item.landpoint_id,
                 "year": year,
-                "days": 366 if year % 4 == 0 else 365,
+                "days": teacher_shards.PAPER_DAYS_PER_YEAR,
                 "initialization_mode": teacher_shards.YEAR_START_CHECKPOINT,
                 "spatial_split": item.spatial_split,
                 "temporal_split": spec.temporal_split(year),

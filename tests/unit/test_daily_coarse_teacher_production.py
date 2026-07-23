@@ -183,3 +183,48 @@ def test_stage_and_plan_use_cold_start_without_prebuilt_checkpoints(
     assert all(entry.acceptance_checkpoint is None for entry in plan.entries)
     assert all(entry.days == 8 for entry in plan.entries)
     assert len({entry.run_def for entry in plan.entries}) == 3
+
+
+def test_production_plan_keeps_1964_on_paper_noleap_calendar(monkeypatch, tmp_path):
+    population = _population(tmp_path, count=1)
+    spec_path = teacher_production.freeze_spec(
+        population,
+        tmp_path / "spec.json",
+        dataset_id="noleap-test",
+        last_year=1964,
+        validation_landpoints=0,
+        test_landpoints=0,
+    )
+    spec = teacher_production.load_production_spec(spec_path)
+    landpoint = spec.landpoints[0].landpoint_id
+    asset_root = tmp_path / "assets"
+    landpoint_root = asset_root / "landpoints" / landpoint
+    reference = landpoint_root / "reference"
+    reference.mkdir(parents=True)
+    for name in teacher_production.REQUIRED_REFERENCE_FILES:
+        (reference / name).write_bytes(name.encode())
+    limits = expected_paper_domain_limits(landpoint)
+    (landpoint_root / "used_run.def").write_text(
+        "DT_SECHIBA = 1800\n"
+        + "".join(f"{name} = {value}\n" for name, value in limits.items()),
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        teacher_production,
+        "verify_staged_assets",
+        lambda *_args, **_kwargs: {},
+    )
+    config = tmp_path / "teacher.yaml"
+    config.write_text("test: true\n", encoding="utf-8")
+
+    plan_path = teacher_production.build_generation_plan(
+        spec,
+        asset_root=asset_root,
+        teacher_config=config,
+        output_root=tmp_path / "output",
+        plan_path=tmp_path / "plan.json",
+    )
+    plan = teacher_shards.load_plan(plan_path, require_inputs=True)
+
+    assert [entry.year for entry in plan.entries] == [1961, 1962, 1963, 1964]
+    assert all(entry.days == 365 for entry in plan.entries)

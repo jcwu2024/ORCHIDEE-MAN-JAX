@@ -3,6 +3,7 @@ from __future__ import annotations
 import numpy as np
 
 from research.daily_coarse_graining.canonical_training import (
+    _calendar_features,
     loss_weights_from_contract,
     model_config_from_batch,
     prepare_canonical_batch,
@@ -70,6 +71,16 @@ def test_prepare_canonical_batch_uses_native_forcing_and_explicit_masks():
     assert config.state_width == 4
     assert config.forcing_width == 3
     assert config.hidden_width == 32
+
+
+def test_calendar_features_follow_paper_noleap_calendar():
+    features = _calendar_features(
+        np.asarray([1963, 1964]),
+        np.asarray([365, 365]),
+    )
+    np.testing.assert_allclose(features[0], features[1], rtol=0.0, atol=0.0)
+    assert features[1, 2] == 1.0
+    assert features[1, 3] == 0.0
 
 
 def test_contract_weights_balance_components_and_diagnostic_leaves():

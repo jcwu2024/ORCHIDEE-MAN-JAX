@@ -128,9 +128,13 @@ Explore1000 admission measurements established the current production policy:
   process, so production relies on same-process reuse rather than cross-job
   cache reuse.
 
-The first bounded production run is currently the frozen five-point,
-1961-2010 v3 dataset: 250 landpoint-year shards and 91,305 daily transitions.
-Its operational state and exact completion gate are recorded in
+The first bounded production target is the frozen five-point, 1961-2010 v3
+dataset: 250 landpoint-year shards and 91,245 daily transitions. Its first
+submission was rejected before acceptance because the production planner
+incorrectly inserted Gregorian leap days into the paper model's fixed 365-day
+noleap calendar. The planner, plan validator, and training calendar features
+now enforce noleap semantics; the dataset must be regenerated from 1961. Its
+operational state and exact completion gate are recorded in
 [`research/daily_coarse_graining/HANDOFF.md`](research/daily_coarse_graining/HANDOFF.md).
 
 ## Next Bounded Milestone

@@ -165,7 +165,9 @@ preprocessing. Finite masks are derived with `isfinite()` after loading.
 
 For a cold-start 1961 shard, `day_index` is `2..365`, `transition_count` is
 364, and `state_trajectory[0]` is canonical Day 1 end. For ordinary/restart
-years, `day_index` begins at 1 and the shard has 365 or 366 transitions.
+years, `day_index` begins at 1 and the shard has exactly 365 transitions. The
+paper forcing and Teacher lifecycle use a fixed 365-day noleap calendar;
+Gregorian leap days must never be inserted.
 
 `research.daily_coarse_graining.markov_dataset` is the training-side reader.
 It verifies dataset/shard hashes, enforces frozen spatial and temporal splits,

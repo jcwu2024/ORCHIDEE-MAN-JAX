@@ -498,8 +498,11 @@ def build_generation_plan(
             ),
         )
         for year in range(spec.first_year, spec.last_year + 1):
-            calendar_days = 366 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 365
-            entry_days = calendar_days if days is None else min(int(days), calendar_days)
+            entry_days = (
+                teacher_shards.PAPER_DAYS_PER_YEAR
+                if days is None
+                else min(int(days), teacher_shards.PAPER_DAYS_PER_YEAR)
+            )
             entries.append(
                 {
                     "landpoint_id": item.landpoint_id,

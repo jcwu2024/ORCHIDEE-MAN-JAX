@@ -77,6 +77,15 @@ def test_plan_freezes_spatial_and_temporal_splits(tmp_path):
         shards.load_plan(_write_plan(tmp_path, [first, second]))
 
 
+def test_plan_enforces_paper_noleap_calendar_in_gregorian_leap_year(tmp_path):
+    entry = _entry(tmp_path, "001.0-071.0", 1964)
+    plan = shards.load_plan(_write_plan(tmp_path, [entry]))
+    assert plan.entries[0].days == 365
+
+    with pytest.raises(ValueError, match="fixed 365-day noleap calendar"):
+        shards.load_plan(_write_plan(tmp_path, [dict(entry, days=366)]))
+
+
 def test_plan_requires_explicit_state_for_each_new_or_gapped_chain(tmp_path):
     first = _entry(tmp_path, "001.0-071.0", 1961)
     first.pop("state_cache")

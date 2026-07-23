@@ -184,10 +184,10 @@ def landpoint_physics_from_context(context):
 
 
 def calendar_context(year: int, day_index: int):
-    days = 366.0 if year % 4 == 0 and (year % 100 != 0 or year % 400 == 0) else 365.0
+    days = 365.0
     angle = 2.0 * math.pi * (float(day_index) - 1.0) / days
     return jnp.asarray(
-        [math.sin(angle), math.cos(angle), float(day_index) / days, days / 366.0],
+        [math.sin(angle), math.cos(angle), float(day_index) / days, 0.0],
         dtype=jnp.float32,
     )
 
