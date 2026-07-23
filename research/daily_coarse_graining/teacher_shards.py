@@ -88,6 +88,13 @@ LANDPOINT_STATIC_ORDER = (
     "tide_height",
 )
 ANNUAL_CONDITION_ORDER = ("annual_co2_ppm",)
+REFERENCE_INPUT_NAMES = (
+    "driver_start.nc",
+    "sechiba_start.nc",
+    "stomate_start.nc",
+    "stomate_restart.nc",
+    "stomate_history_1961.nc",
+)
 
 _PARAMETER_SOURCE = (
     "jax_orchidee.driver.orchestration._compiled_stomate_parameter_values; "
@@ -318,7 +325,8 @@ def load_plan(path: Path, *, require_inputs: bool = False) -> GenerationPlan:
     if require_inputs:
         required = [teacher_config]
         for entry in entries:
-            required.extend((entry.run_def, entry.reference_run_dir))
+            required.append(entry.run_def)
+            required.extend(entry.reference_run_dir / name for name in REFERENCE_INPUT_NAMES)
             if entry.state_cache is not None:
                 required.append(entry.state_cache)
             if entry.acceptance_checkpoint is not None:

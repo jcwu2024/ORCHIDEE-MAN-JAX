@@ -38,6 +38,8 @@ def _entry(tmp_path: Path, landpoint: str, year: int, **overrides) -> dict:
     )
     reference = tmp_path / f"reference-{landpoint}"
     reference.mkdir(exist_ok=True)
+    for name in shards.REFERENCE_INPUT_NAMES:
+        (reference / name).write_bytes(name.encode())
     cache = tmp_path / f"cache-{landpoint}-{year}.pkl"
     cache.write_bytes(b"cache")
     return {
@@ -122,6 +124,14 @@ def test_plan_rejects_run_def_bound_to_another_landpoint(tmp_path):
     )
 
     with pytest.raises(ValueError, match="run_def domain does not match landpoint ID"):
+        shards.load_plan(_write_plan(tmp_path, [entry]), require_inputs=True)
+
+
+def test_plan_requires_cold_start_reference_inventory(tmp_path):
+    entry = _entry(tmp_path, "001.0-071.0", 1961)
+    (Path(entry["reference_run_dir"]) / "stomate_history_1961.nc").unlink()
+
+    with pytest.raises(FileNotFoundError, match="stomate_history_1961.nc"):
         shards.load_plan(_write_plan(tmp_path, [entry]), require_inputs=True)
 
 
