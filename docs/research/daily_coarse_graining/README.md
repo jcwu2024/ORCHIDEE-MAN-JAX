@@ -13,7 +13,8 @@ mode.
 - `daily_markov_contract_v3.md`: current state, fast-day target, native forcing and shard
   contract.
 - `daily_boundary_audit.md`: superseded v0 boundary and replay evidence.
-- `teacher_dataset_generation.md`: restartable landpoint-year shard contract.
+- `teacher_dataset_generation.md`: restartable landpoint-year shard contract,
+  669-point production planner, asset staging, Slurm array, and aggregation gate.
 - `teacher_pilot_v2.md`: frozen 12-landpoint pilot and promotion gates.
 - `teacher_capture_gpu_benchmark_20260721.md`: accepted V100 Teacher capture
   measurement and its limited conclusion.
@@ -32,6 +33,8 @@ Implemented:
 - fixed split and provenance-aware v3 shard generation;
 - hash-verifying v3 training dataset reader, streaming train-only statistics,
   explicit finite masks and bounded-prefetch batch collation;
+- deterministic multi-landpoint production split, cold-start asset staging,
+  restartable Slurm worker-array and after-success aggregation plumbing;
 - CPU and V100 compatibility gates;
 - parameter-conditioned neural training plumbing.
 

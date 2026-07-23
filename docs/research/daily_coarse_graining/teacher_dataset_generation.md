@@ -70,6 +70,57 @@ For a bounded smoke run, `generate --max-entries 1` processes only the first
 entry assigned to that worker. A partial worker manifest intentionally cannot
 pass final aggregation.
 
+## Production planning
+
+`research.daily_coarse_graining.teacher_production` converts the complete paper
+landpoint inventory into a portable, frozen production specification. Spatial
+holdouts are selected by deterministic maximin coverage of location and the
+four calibrated PFT14 parameters; archived model outputs are deliberately not
+used to choose the split. The explicit assignments are stored in the spec and
+never recomputed while generating data.
+
+Unlike the stricter 12-point acceptance pilot, production does not require a
+prebuilt 1961 year-end checkpoint for every landpoint. Every chain runs the
+source-backed 1961 Day 1 cold start, stores canonical `S[1]`, and begins normal
+training transitions at Day 2. An external checkpoint is optional acceptance
+evidence, not an input dependency.
+
+Freeze the 669-point, 1961--2010 specification once:
+
+```bash
+python -m research.daily_coarse_graining.teacher_production freeze \
+  --population-manifest manifests/landpoints_669.json \
+  --output manifests/coarse_graining/daily_teacher_production_669.json \
+  --dataset-id pft14-daily-teacher-669-1961-2010
+```
+
+Inventory and stage only the six small source-truth files needed by each
+landpoint, then build the executable plan on the target machine so all runtime
+paths are native to that machine:
+
+```bash
+python -m research.daily_coarse_graining.teacher_production inventory \
+  --spec manifests/coarse_graining/daily_teacher_production_669.json \
+  --reference-root reference
+python -m research.daily_coarse_graining.teacher_production stage \
+  --spec manifests/coarse_graining/daily_teacher_production_669.json \
+  --reference-root reference --destination /absolute/runtime/assets/teacher-669
+python -m research.daily_coarse_graining.teacher_production plan \
+  --spec manifests/coarse_graining/daily_teacher_production_669.json \
+  --asset-root /absolute/runtime/assets/teacher-669 \
+  --teacher-config configs/orchidee_man_250919.yaml \
+  --output-root /absolute/runtime/outputs/training/pft14-teacher-669 \
+  --plan-path /absolute/runtime/plans/pft14-teacher-669.json
+```
+
+The plan is consumed by `scripts/hpc/slurm_teacher_production_worker.sh` as a
+bounded Slurm array. A worker owns complete landpoint chains and remains alive
+across landpoints so compatible JAX executables can be reused. Submit
+`scripts/hpc/slurm_teacher_production_aggregate.sh` with an `afterok`
+dependency on the complete array. The worker count and array concurrency must
+be selected from an allocated-node peak-RSS and cross-landpoint compile-reuse
+probe, not guessed from logical core count.
+
 ## Stored arrays
 
 The production schema is `daily_teacher_markov_year_v3`. Each shard stores:
@@ -163,6 +214,12 @@ The first complete local 1961 v3 shard contained 364 training transitions,
 Its arrays occupied 30,969,096 bytes before compression. Deflate compression
 reduced the NPZ from 30,973,822 to 3,505,248 bytes (11.3%) in 0.19 seconds, so
 production shards use `np.savez_compressed` without changing float64 values.
+
+The immediately following 1962 shard in the same Windows process took 33.15
+seconds end to end, including 31.30 seconds of capture, and added no compiled
+cache entries. This proves cross-year executable reuse for one landpoint. It
+does not by itself prove cross-landpoint reuse or establish Linux peak memory;
+those are explicit production admission gates.
 
 The V100 single-landpoint benchmark showed insufficient GPU parallelism. Use
 CPU persistent workers for Teacher generation and reserve GPUs for batched

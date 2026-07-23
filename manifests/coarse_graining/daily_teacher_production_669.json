@@ -1,0 +1,2723 @@
+{
+  "schema_version": "daily_teacher_production_spec_v1",
+  "dataset_id": "pft14-daily-teacher-669-1961-2010",
+  "population_manifest": "manifests/landpoints_669.json",
+  "population_manifest_sha256": "e446836c53ec9510fb8bb836c47ab50a7492cda2e0c91a39e3dd637f449abf5e",
+  "population_count": 669,
+  "first_year": 1961,
+  "last_year": 2010,
+  "block_size": 7,
+  "temporal_splits": {
+    "train": [
+      1961,
+      2004
+    ],
+    "validation": [
+      2005,
+      2007
+    ],
+    "test": [
+      2008,
+      2010
+    ]
+  },
+  "spatial_split_strategy": "normalized_exogenous_maximin_holdout_v1",
+  "spatial_split_features": [
+    "grid_x",
+    "grid_y",
+    "vcmax25",
+    "maint_resp_slope_c",
+    "alloc_min",
+    "residence_time"
+  ],
+  "spatial_split_counts": {
+    "test": 67,
+    "train": 535,
+    "validation": 67
+  },
+  "landpoints": [
+    {
+      "id": "001.0-071.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "001.0-073.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "003.0-077.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "005.0-069.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "005.0-071.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "007.0-071.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "007.0-077.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "009.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "009.0-077.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "009.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "021.0-071.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "021.0-111.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "023.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "025.0-109.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "029.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "031.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "067.0-115.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "067.0-117.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "067.0-119.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "069.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "069.0-117.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "069.0-119.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "071.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "071.0-117.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "073.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "073.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "075.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "075.0-111.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "075.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "077.0-107.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "077.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "079.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "081.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "081.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "083.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "083.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "083.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "083.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "083.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "083.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "083.0-117.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "085.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "085.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "085.0-109.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "087.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "087.0-107.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "087.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "089.0-089.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "089.0-103.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "089.0-105.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "089.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "089.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "089.0-119.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "091.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "091.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "091.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "091.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "091.0-109.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "091.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "091.0-119.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "093.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "093.0-103.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "093.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "093.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "093.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "095.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "095.0-101.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "095.0-105.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "095.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "095.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "095.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "097.0-099.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "097.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "097.0-103.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "097.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "097.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "097.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "097.0-117.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "097.0-119.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "099.0-085.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "099.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "099.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "099.0-091.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "099.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "099.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "099.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "099.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "099.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "099.0-113.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "099.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "099.0-117.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "099.0-119.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "101.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "101.0-091.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "101.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "101.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "101.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "101.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "101.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "101.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "101.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "101.0-117.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "103.0-093.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "103.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "103.0-097.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "103.0-099.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "103.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "103.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "103.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "103.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "103.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "103.0-117.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "105.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "105.0-101.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "105.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "105.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "105.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "105.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "107.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "107.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "107.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "107.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "107.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "109.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "109.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "109.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "109.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "109.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "109.0-111.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "111.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "111.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "111.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "113.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "113.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "113.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "115.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "115.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "115.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "115.0-123.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "117.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "117.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "117.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "117.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "119.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "119.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "119.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "119.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "119.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "121.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "121.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "121.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "123.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "123.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "125.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "127.0-095.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "129.0-089.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "129.0-091.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "129.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "129.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "131.0-063.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "131.0-065.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "131.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "131.0-091.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "133.0-065.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "133.0-067.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "133.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "135.0-067.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "135.0-087.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "135.0-089.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "137.0-067.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "137.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "139.0-067.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "139.0-069.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "139.0-071.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "139.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "141.0-071.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "141.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "141.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "141.0-077.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "141.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "141.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "143.0-077.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "143.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "143.0-081.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "143.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "145.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "145.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "145.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "163.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "163.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "163.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "163.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "163.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "165.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "165.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "167.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "167.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "167.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "169.0-095.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "169.0-097.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "171.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "173.0-095.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "175.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "177.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "179.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "181.0-095.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "181.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "183.0-097.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "185.0-095.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "185.0-097.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "187.0-091.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "187.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "189.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "189.0-089.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "189.0-091.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "189.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "189.0-095.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "191.0-085.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "191.0-087.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "193.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "193.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "193.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "193.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "207.0-057.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "209.0-057.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "209.0-059.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "211.0-059.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "211.0-061.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "213.0-061.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "213.0-063.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "213.0-065.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "213.0-117.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "215.0-067.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "215.0-069.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "215.0-071.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "215.0-113.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "215.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "215.0-117.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "215.0-119.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "217.0-071.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "217.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "217.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "217.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "217.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "217.0-117.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "219.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "219.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "219.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "219.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "219.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "219.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "219.0-105.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "219.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "219.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "219.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "219.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "219.0-115.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "221.0-067.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "221.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "221.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "221.0-077.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "221.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "221.0-087.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "221.0-089.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "221.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "221.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "221.0-109.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "221.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "223.0-067.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "223.0-069.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "223.0-073.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "223.0-077.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "223.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "223.0-089.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "223.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "223.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "223.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "223.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "225.0-065.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "225.0-069.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "225.0-071.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "225.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "225.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "225.0-077.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "225.0-101.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "227.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "227.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "227.0-077.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "227.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "229.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "229.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "229.0-077.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "229.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "229.0-117.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "231.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "231.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "231.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "231.0-117.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "233.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "233.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "235.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "235.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "235.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "235.0-117.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "237.0-069.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "237.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "237.0-117.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "239.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "239.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "241.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "243.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "245.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "247.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "247.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "249.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "249.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "249.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "251.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "251.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "253.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "253.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "253.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "253.0-107.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "253.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "253.0-111.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "253.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "255.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "255.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "255.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "257.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "257.0-101.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "259.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "259.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "259.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "261.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "261.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "261.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "261.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "261.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "263.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "267.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "267.0-111.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "267.0-113.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "269.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "269.0-113.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "271.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "271.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "273.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "273.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "273.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "273.0-109.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "273.0-111.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "275.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "275.0-105.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "275.0-107.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "275.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "277.0-091.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "277.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "277.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "277.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "277.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "279.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "279.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "279.0-091.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "279.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "279.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "279.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "279.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "279.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "279.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "279.0-105.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "281.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "281.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "281.0-091.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "281.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "281.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "281.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "281.0-099.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "281.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "283.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "283.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "283.0-091.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "283.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "283.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "283.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "283.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "283.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "285.0-083.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "285.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "285.0-087.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "285.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "285.0-091.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "285.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "285.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "285.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "287.0-083.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "287.0-085.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "287.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "287.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "287.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "287.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "287.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "287.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "287.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "289.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "289.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "289.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "289.0-091.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "289.0-093.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "289.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "289.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "289.0-103.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "289.0-105.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "289.0-109.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "289.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "291.0-083.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "291.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "291.0-089.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "291.0-091.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "291.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "291.0-109.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "291.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "293.0-063.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "293.0-065.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "293.0-081.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "293.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "293.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "293.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "293.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "293.0-111.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "293.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "295.0-061.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "295.0-067.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "295.0-069.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "295.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "295.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "295.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "295.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "295.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "295.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "297.0-069.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "297.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "297.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "297.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "297.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "297.0-091.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "297.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "297.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "297.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "297.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "297.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "297.0-115.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "299.0-069.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "299.0-071.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "299.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "299.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "299.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "299.0-089.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "299.0-091.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "299.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "299.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "299.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "299.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "299.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "299.0-107.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "299.0-115.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "299.0-117.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "301.0-071.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "301.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "301.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "301.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "301.0-085.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "301.0-087.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "301.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "301.0-091.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "301.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "301.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "301.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "301.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "301.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "301.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "301.0-109.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "301.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "301.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "301.0-117.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "301.0-119.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "303.0-071.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "303.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "303.0-079.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "303.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "303.0-085.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "303.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "303.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "303.0-091.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "303.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "303.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "303.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "303.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "303.0-105.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "303.0-107.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "303.0-109.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "303.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "305.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "305.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "305.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "305.0-081.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "305.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "305.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "305.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "305.0-091.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "305.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "305.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "305.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "305.0-101.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "305.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "305.0-115.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "307.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "307.0-077.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "307.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "307.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "307.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "307.0-091.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "307.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "307.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "307.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "307.0-099.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "307.0-117.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "309.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "309.0-077.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "309.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "309.0-087.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "309.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "309.0-091.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "309.0-093.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "309.0-117.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "309.0-119.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "311.0-077.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "311.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "311.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "311.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "311.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "311.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "311.0-121.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "313.0-057.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "313.0-077.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "313.0-079.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "313.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "313.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "313.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "315.0-057.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "315.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "315.0-077.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "315.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "315.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "315.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "315.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "315.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "315.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "317.0-055.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "317.0-057.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "317.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "317.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "317.0-077.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "317.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "317.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "317.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "317.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "317.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "317.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "319.0-055.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "319.0-057.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "319.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "319.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "319.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "319.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "319.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "319.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "319.0-099.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "321.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "321.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "321.0-077.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "321.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "321.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "321.0-083.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "321.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "323.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "323.0-077.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "323.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "323.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "323.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "323.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "325.0-051.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "325.0-071.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "325.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "325.0-075.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "325.0-081.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "325.0-083.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "325.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "325.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "325.0-103.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "327.0-051.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "327.0-071.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "327.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "327.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "327.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "327.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "327.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "327.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "329.0-053.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "329.0-067.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "329.0-069.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "329.0-071.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "329.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "329.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "329.0-083.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "329.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "329.0-089.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "331.0-053.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "331.0-055.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "331.0-057.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "331.0-065.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "331.0-067.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "331.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "331.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "331.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "331.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "331.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "331.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "333.0-057.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "333.0-059.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "333.0-061.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "333.0-063.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "333.0-065.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "333.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "333.0-081.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "333.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "333.0-087.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "335.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "335.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "335.0-085.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "337.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "337.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "339.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "339.0-083.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "339.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "341.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "341.0-081.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "343.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "343.0-095.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "345.0-069.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "345.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "347.0-067.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "347.0-069.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "347.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "347.0-079.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "349.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "349.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "353.0-055.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "353.0-091.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "353.0-093.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "355.0-053.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "355.0-055.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "357.0-051.0",
+      "spatial_split": "test"
+    },
+    {
+      "id": "357.0-053.0",
+      "spatial_split": "validation"
+    },
+    {
+      "id": "357.0-071.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "357.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "359.0-071.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "359.0-073.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "359.0-081.0",
+      "spatial_split": "train"
+    }
+  ],
+  "required_reference_files": [
+    "driver_start.nc",
+    "sechiba_start.nc",
+    "stomate_start.nc",
+    "stomate_restart.nc",
+    "stomate_history_1961.nc"
+  ]
+}
