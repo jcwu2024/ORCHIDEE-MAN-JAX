@@ -80,6 +80,13 @@ def test_freeze_can_bind_a_probe_subset_to_the_full_population(tmp_path):
     assert frozen["spatial_split_counts"] == {"test": 0, "train": 2, "validation": 0}
     assert [item["id"] for item in frozen["landpoints"]] == selected
 
+    population.write_text(
+        population.read_text(encoding="utf-8").replace("}", "}\n"),
+        encoding="utf-8",
+    )
+    reloaded = teacher_production.load_production_spec(path)
+    assert len(reloaded.landpoints) == 2
+
 
 def test_stage_and_plan_use_cold_start_without_prebuilt_checkpoints(
     monkeypatch,

@@ -2,7 +2,7 @@
   "schema_version": "daily_teacher_production_spec_v1",
   "dataset_id": "pft14-daily-teacher-669-1961-2010",
   "population_manifest": "manifests/landpoints_669.json",
-  "population_manifest_sha256": "e446836c53ec9510fb8bb836c47ab50a7492cda2e0c91a39e3dd637f449abf5e",
+  "population_manifest_sha256": "e6b9d96bf1638cf7e1a03ea3257138dbe9706ef2e63154d8aac4c4df9a2d5e92",
   "population_count": 669,
   "first_year": 1961,
   "last_year": 2010,

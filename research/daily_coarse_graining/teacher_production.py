@@ -49,6 +49,12 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _canonical_json_sha256(path: Path) -> str:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    encoded = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def _atomic_json(path: Path, payload: Mapping[str, Any]) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.tmp")
@@ -235,7 +241,7 @@ def freeze_spec(
         "schema_version": SPEC_SCHEMA_VERSION,
         "dataset_id": dataset_id,
         "population_manifest": _portable_path(population_manifest),
-        "population_manifest_sha256": _sha256_file(population_manifest),
+        "population_manifest_sha256": _canonical_json_sha256(population_manifest),
         "population_count": len(population_ids),
         "first_year": first_year,
         "last_year": last_year,
@@ -266,7 +272,7 @@ def load_production_spec(path: str | Path) -> ProductionSpec:
     population_manifest = _resolve_path(raw["population_manifest"])
     if not population_manifest.is_file():
         raise FileNotFoundError(population_manifest)
-    if _sha256_file(population_manifest) != raw["population_manifest_sha256"]:
+    if _canonical_json_sha256(population_manifest) != raw["population_manifest_sha256"]:
         raise ValueError("production population manifest hash drift")
     temporal_splits = {
         str(name): (int(bounds[0]), int(bounds[1]))
@@ -378,7 +384,7 @@ def stage_assets(
     payload = {
         "schema_version": ASSET_SCHEMA_VERSION,
         "dataset_id": spec.dataset_id,
-        "production_spec_sha256": _sha256_file(spec.path),
+        "production_spec_sha256": _canonical_json_sha256(spec.path),
         "landpoint_count": len(records),
         "landpoints": records,
     }
@@ -392,7 +398,7 @@ def verify_staged_assets(spec: ProductionSpec, asset_root: str | Path) -> dict[s
         raise ValueError(f"asset schema must be {ASSET_SCHEMA_VERSION!r}")
     if raw.get("dataset_id") != spec.dataset_id:
         raise ValueError("production asset dataset identity mismatch")
-    if raw.get("production_spec_sha256") != _sha256_file(spec.path):
+    if raw.get("production_spec_sha256") != _canonical_json_sha256(spec.path):
         raise ValueError("production asset spec hash drift")
     expected = {item.landpoint_id: item.spatial_split for item in spec.landpoints}
     observed = {item["landpoint_id"]: item["spatial_split"] for item in raw["landpoints"]}
