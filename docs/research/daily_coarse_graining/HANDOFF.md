@@ -186,6 +186,22 @@ additions are `069.0-119.0`, `281.0-095.0`, `283.0-091.0`, `295.0-113.0`, and
 `333.0-057.0`, selected to add dry/low-productivity, high-productivity,
 high-maintenance, low-Vcmax/short-residence, and geographic diversity.
 
+The v4 production run was submitted on 2026-07-24 from fixed Teacher commit
+`1f19ed7`:
+
+- worker array: `14365952`, four one-CPU tasks on `cnall`, array concurrency 4;
+- aggregate: `14365958` on `cnmix`, dependency `afterok:14365952`;
+- plan: `runtime/plans/teacher_initial_10point_v4_1f19ed7.json`;
+- plan SHA256: `b32eef75aafc6793c886bcec5858b4f0b343b8e510d12fb744518d35030d84af`;
+- output: `runtime/outputs/training/pft14-daily-teacher-initial-10point-1961-2010-v4-1f19ed7`;
+- worker loads: 150, 150, 100, and 100 landpoint-years;
+- requested worker wall time: 7 hours; aggregate wall time: 20 minutes;
+- worst-case charge: approximately CNY 1.98, with no GPU allocation.
+
+Do not submit replacement jobs while this array is active. Completion requires
+the aggregate manifest plus the v4 target-representation audit; Slurm
+`COMPLETED` alone is insufficient.
+
 The Explore1000 GPU runtime prerequisite is complete at commit `c566538`:
 
 - project environment: `.venvs/orcjax_gpu`;
