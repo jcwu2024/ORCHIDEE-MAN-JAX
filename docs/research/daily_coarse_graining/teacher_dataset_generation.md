@@ -13,7 +13,7 @@ landpoint-year shards.
 - Worker assignment deterministically balances complete landpoint chains, so
   all years of one landpoint stay in one persistent process while worker loads
   remain as even as possible.
-- Each landpoint-year is one atomic, uncompressed NPZ shard. There are no daily
+- Each landpoint-year is one atomic, losslessly compressed NPZ shard. There are no daily
   files and no per-array files.
 - Each completed shard has SHA256 provenance, a year-end state checkpoint, the
   complete boundary schema, input hashes, and exact discrete state arrays.
@@ -157,6 +157,12 @@ per transition. Large production must therefore use persistent workers and
 reuse the compiled seven-day executable across years and compatible
 landpoints. A process-per-landpoint design that recompiles for every point is
 not accepted.
+
+The first complete local 1961 v3 shard contained 364 training transitions,
+3,724 state columns, 6,758 fast-day target columns, and 90 diagnostic columns.
+Its arrays occupied 30,969,096 bytes before compression. Deflate compression
+reduced the NPZ from 30,973,822 to 3,505,248 bytes (11.3%) in 0.19 seconds, so
+production shards use `np.savez_compressed` without changing float64 values.
 
 The V100 single-landpoint benchmark showed insufficient GPU parallelism. Use
 CPU persistent workers for Teacher generation and reserve GPUs for batched

@@ -423,7 +423,7 @@ def _atomic_npz(path: Path, arrays: dict[str, np.ndarray]) -> None:
     temporary = path.with_name(f".{path.name}.tmp-{os.getpid()}")
     try:
         with temporary.open("wb") as handle:
-            np.savez(handle, **arrays)
+            np.savez_compressed(handle, **arrays)
             handle.flush()
             os.fsync(handle.fileno())
         temporary.replace(path)
