@@ -160,7 +160,7 @@ resume only the incomplete worker assignment.
 
 After the five-point dataset passes the completion gate:
 
-1. fit train-only normalization statistics with the hash-verifying v3 reader;
+1. use the accepted train-only normalization statistics described below;
 2. train the first parameter-conditioned network to predict `B_fast`;
 3. evaluate train/validation/test one-step errors by field group;
 4. run 7-day free rollout through the retained daily season/STOMATE tail;
@@ -179,13 +179,23 @@ The Explore1000 GPU runtime prerequisite is complete at commit `c566538`:
   gradient;
 - formal entry points: `scripts.hpc.verify_orcjax_gpu` and
   `scripts.hpc.run_canonical_gpu_train`;
-- no paid statistics or training job has been submitted yet.
+- train-only statistics job `14365346` completed in 68 seconds on one `cnall`
+  CPU with exit code zero;
+- accepted statistics: `runtime/outputs/training/canonical-initial-5point-1961-2010/training_statistics.json`;
+- statistics JSON SHA256:
+  `1041c1231fb6c9bb5905e0a9403aefc03666ba745390539cf0ec644531be6885`;
+- statistics NPZ SHA256:
+  `584cee4ffbf1d05e79f3e66b3a7998d9d94046539eb8583e3332a5be16f5773d`;
+- consumer-level validation passed for dataset identity, contract identity,
+  NPZ hash, finite means/variances/scales, positive scales, 32,118 train/train
+  samples, and 88 source shards;
+- no paid GPU training job has been submitted yet.
 
 Do not bypass the GPU launcher with a direct import of
 `canonical_training_run`: in this container, JAX plugin auto-discovery can
-otherwise initialize CPU first. The next operation is the train-only
-statistics job, followed by the bounded five-epoch GPU training job only after
-the statistics asset passes its hash and schema checks.
+otherwise initialize CPU first. The next operation is the bounded five-epoch
+GPU training job using the accepted statistics asset. Do not recompute the
+statistics unless the dataset or contract identity changes.
 
 ## Decisions Not To Reopen
 
