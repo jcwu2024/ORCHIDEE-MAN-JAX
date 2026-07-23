@@ -36,6 +36,18 @@ env \
     --bind /WORK:/WORK \
     --pwd "$ROOT" \
     "$IMAGE" \
+    "$PYTHON" scripts/hpc/verify_orcjax_gpu.py
+
+env \
+  SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \
+  SINGULARITYENV_CUDA_VISIBLE_DEVICES=0 \
+  SINGULARITYENV_JAX_ENABLE_X64=true \
+  SINGULARITYENV_JAX_COMPILATION_CACHE_DIR=$ROOT/runtime/cache/jax/orcjax_gpu \
+  singularity exec \
+    --nv \
+    --bind /WORK:/WORK \
+    --pwd "$ROOT" \
+    "$IMAGE" \
     "$PYTHON" -m research.daily_coarse_graining.canonical_training_run \
       train \
       --dataset "$DATASET" \
