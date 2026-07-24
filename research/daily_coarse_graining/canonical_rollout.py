@@ -477,6 +477,7 @@ def _select_reference(
     *,
     landpoint_id: str,
     year: int,
+    allow_training_split_diagnostic: bool = False,
 ) -> MarkovShardRef:
     index = load_dataset_index(dataset_path, verify_hashes=True)
     matches = tuple(
@@ -491,7 +492,10 @@ def _select_reference(
     reference = matches[0]
     if "test" in {reference.spatial_split, reference.temporal_split}:
         raise ValueError("canonical rollout cannot evaluate a sealed test split")
-    if "validation" not in {reference.spatial_split, reference.temporal_split}:
+    if (
+        "validation" not in {reference.spatial_split, reference.temporal_split}
+        and not allow_training_split_diagnostic
+    ):
         raise ValueError("canonical rollout requires a validation split")
     return reference
 
@@ -549,6 +553,7 @@ def run_rollout(args) -> dict[str, Any]:
         dataset_path,
         landpoint_id=args.landpoint_id,
         year=args.year,
+        allow_training_split_diagnostic=args.allow_training_split_diagnostic,
     )
     shard = load_markov_shard(reference.path)
     if args.start_day < 1 or args.days < 1:
@@ -747,6 +752,7 @@ def run_rollout(args) -> dict[str, Any]:
             "start_day": args.start_day,
             "days": args.days,
             "state_feedback": args.state_feedback,
+            "training_split_diagnostic": args.allow_training_split_diagnostic,
             "sealed_test_used": False,
         },
         "teacher_replay_tolerance": args.teacher_replay_tolerance,
@@ -783,6 +789,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--year", type=int, required=True)
     parser.add_argument("--start-day", type=int, default=100)
     parser.add_argument("--days", type=int, default=7)
+    parser.add_argument(
+        "--allow-training-split-diagnostic",
+        action="store_true",
+        help=(
+            "Allow an explicitly marked train/train diagnostic; sealed test "
+            "splits remain prohibited."
+        ),
+    )
     parser.add_argument(
         "--mode",
         choices=("teacher-replay", "neural"),

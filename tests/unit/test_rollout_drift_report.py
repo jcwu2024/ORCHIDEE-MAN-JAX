@@ -4,6 +4,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from research.daily_coarse_graining import canonical_rollout
 from research.daily_coarse_graining.rollout_drift_report import (
     build_drift_report,
     render_markdown,
@@ -110,3 +111,40 @@ def test_drift_report_rejects_legacy_truncated_rollout():
 
     with pytest.raises(ValueError, match="complete field-level"):
         build_drift_report(rollout, contract)
+
+
+def test_rollout_training_diagnostic_is_explicit_and_never_opens_test(monkeypatch):
+    reference = SimpleNamespace(
+        landpoint_id="281.0-095.0",
+        year=2004,
+        spatial_split="train",
+        temporal_split="train",
+    )
+    monkeypatch.setattr(
+        canonical_rollout,
+        "load_dataset_index",
+        lambda *_args, **_kwargs: SimpleNamespace(shards=(reference,)),
+    )
+
+    with pytest.raises(ValueError, match="requires a validation split"):
+        canonical_rollout._select_reference(
+            SimpleNamespace(), landpoint_id=reference.landpoint_id, year=2004
+        )
+    assert (
+        canonical_rollout._select_reference(
+            SimpleNamespace(),
+            landpoint_id=reference.landpoint_id,
+            year=2004,
+            allow_training_split_diagnostic=True,
+        )
+        is reference
+    )
+
+    reference.spatial_split = "test"
+    with pytest.raises(ValueError, match="sealed test split"):
+        canonical_rollout._select_reference(
+            SimpleNamespace(),
+            landpoint_id=reference.landpoint_id,
+            year=2004,
+            allow_training_split_diagnostic=True,
+        )
