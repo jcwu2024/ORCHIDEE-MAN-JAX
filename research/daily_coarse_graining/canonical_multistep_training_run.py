@@ -78,6 +78,11 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _canonical_json_sha256(value: Any) -> str:
+    encoded = json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    return hashlib.sha256(encoded).hexdigest()
+
+
 def parse_curriculum(value: str) -> tuple[CurriculumStage, ...]:
     stages = []
     for raw in value.split(","):
@@ -97,9 +102,9 @@ def parse_curriculum(value: str) -> tuple[CurriculumStage, ...]:
 
 
 def _load_plan(path: Path, expected_sha256: str) -> tuple[Mapping[str, Any], dict[str, Any]]:
-    if _sha256_file(path) != expected_sha256:
-        raise ValueError("generation plan hash does not match the dataset manifest")
     plan = json.loads(path.read_text(encoding="utf-8"))
+    if _canonical_json_sha256(plan) != expected_sha256:
+        raise ValueError("generation plan hash does not match the dataset manifest")
     by_landpoint: dict[str, Any] = {}
     for entry in plan["entries"]:
         landpoint = str(entry["landpoint_id"])
@@ -320,7 +325,7 @@ def train_multistep(args: argparse.Namespace) -> Mapping[str, Any]:
         "acceptance_sha256": _sha256_file(acceptance),
         "model_config": config._asdict(),
         "training_objective": "canonical_multistep_v1",
-        "generation_plan_sha256": _sha256_file(plan_path),
+        "generation_plan_sha256": str(raw_manifest["plan_sha256"]),
         "curriculum": [stage.__dict__ for stage in curriculum],
     }
     parameters = _load_initial_parameters(

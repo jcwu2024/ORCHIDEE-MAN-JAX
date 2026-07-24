@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import hashlib
+import json
+
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -13,6 +16,7 @@ from research.daily_coarse_graining.canonical_multistep import (
     CanonicalMultistepSequence,
 )
 from research.daily_coarse_graining.canonical_multistep_training_run import (
+    _load_plan,
     _make_train_step,
     parse_curriculum,
 )
@@ -62,6 +66,34 @@ def test_curriculum_parser_requires_unique_increasing_supported_horizons():
         parse_curriculum("3:1,1:1")
     with pytest.raises(ValueError, match="1, 3, or 7"):
         parse_curriculum("2:1")
+
+
+def test_load_plan_uses_canonical_json_hash_not_file_formatting(tmp_path):
+    plan = {
+        "entries": [
+            {
+                "landpoint_id": "001.0-071.0",
+                "run_def": "run.def",
+                "reference_run_dir": "reference",
+            }
+        ]
+    }
+    path = tmp_path / "plan.json"
+    path.write_text(json.dumps(plan, indent=2) + "\n", encoding="utf-8")
+    canonical = json.dumps(plan, sort_keys=True, separators=(",", ":")).encode()
+
+    loaded, entries = _load_plan(path, hashlib.sha256(canonical).hexdigest())
+
+    assert loaded == plan
+    assert entries["001.0-071.0"] == plan["entries"][0]
+
+
+def test_load_plan_rejects_wrong_canonical_hash(tmp_path):
+    path = tmp_path / "plan.json"
+    path.write_text('{"entries": []}\n', encoding="utf-8")
+
+    with pytest.raises(ValueError, match="generation plan hash"):
+        _load_plan(path, "0" * 64)
 
 
 def test_compiled_multistep_train_step_updates_parameters_with_finite_gradient():
