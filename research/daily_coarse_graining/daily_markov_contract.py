@@ -11,7 +11,7 @@ from __future__ import annotations
 import hashlib
 import json
 from copy import deepcopy
-from dataclasses import asdict, dataclass
+from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -30,8 +30,9 @@ from jax_orchidee.sechiba.restart_io import (
 from jax_orchidee.sechiba.restart_lifecycle import SECHIBA_FINALIZE_SOURCE_FIELDS
 
 ROOT = Path(__file__).resolve().parents[2]
-CONTRACT_SCHEMA_VERSION = "daily_markov_contract_v4"
-SHARD_SCHEMA_VERSION = "daily_teacher_markov_year_v4"
+CONTRACT_SCHEMA_VERSION = "daily_markov_contract_v5"
+SHARD_SCHEMA_VERSION = "daily_teacher_markov_year_v5"
+LEGACY_CONTRACT_SCHEMA_VERSIONS = frozenset({"daily_markov_contract_v4"})
 NATIVE_FORCING_FIELDS = (
     "Tair",
     "PSurf",
@@ -584,6 +585,17 @@ def _fast_day_target_inventory(record):
                 (),
             )
         )
+    leaf_ci = np.asarray(end_fields[_FINALIZE_COMPONENT]["leaf_ci"])
+    values.append(
+        (
+            "sechiba_finalize",
+            _FINALIZE_COMPONENT,
+            ("leaf_ci",),
+            leaf_ci,
+            "diffuco_aero/trans_co2 fast-day leaf_ci writeback",
+            _FINALIZE_AXIS_FALLBACKS["leaf_ci"],
+        )
+    )
     return tuple(values)
 
 
@@ -686,7 +698,10 @@ def daily_markov_contract_from_metadata(
 ) -> DailyMarkovContract:
     """Restore and strictly validate a serialized daily Markov contract."""
 
-    if metadata.get("schema_version") != CONTRACT_SCHEMA_VERSION:
+    if metadata.get("schema_version") not in {
+        CONTRACT_SCHEMA_VERSION,
+        *LEGACY_CONTRACT_SCHEMA_VERSIONS,
+    }:
         raise ValueError("unsupported daily Markov contract schema")
 
     def state_leaf(item: Mapping[str, Any]) -> StateLeafSpec:
@@ -794,6 +809,70 @@ def daily_markov_contract_from_metadata(
     if _canonical_json(contract.metadata()) != _canonical_json(dict(metadata)):
         raise ValueError("daily Markov contract metadata does not round-trip")
     return contract
+
+
+def upgrade_v4_contract_to_v5(
+    contract: DailyMarkovContract,
+) -> DailyMarkovContract:
+    """Append the omitted fast-owned ``leaf_ci`` output to a v4 contract."""
+
+    if contract.schema_version != "daily_markov_contract_v4":
+        raise ValueError("only a daily_markov_contract_v4 asset can be upgraded")
+    key = f"{_FINALIZE_COMPONENT}.leaf_ci"
+    if any(leaf.key == key for leaf in contract.fast_day_target_leaves):
+        raise ValueError("v4 fast-day target unexpectedly already contains leaf_ci")
+    state_leaf = next(
+        (leaf for leaf in contract.state_leaves if leaf.key == key),
+        None,
+    )
+    if state_leaf is None or state_leaf.discrete:
+        raise ValueError("v4 canonical state is missing continuous leaf_ci")
+    start = contract.fast_day_target_width
+    width = int(np.prod(state_leaf.shape, dtype=np.int64))
+    leaf = FastDayTargetLeafSpec(
+        family="sechiba_finalize",
+        component=_FINALIZE_COMPONENT,
+        path=("leaf_ci",),
+        shape=state_leaf.shape,
+        full_shape=state_leaf.full_shape,
+        dtype=state_leaf.dtype,
+        start=start,
+        stop=start + width,
+        owner="diffuco_aero/trans_co2 fast-day leaf_ci writeback",
+        axis_names=state_leaf.axis_names,
+        selected_pft_indices=state_leaf.selected_pft_indices,
+    )
+    return replace(
+        contract,
+        schema_version=CONTRACT_SCHEMA_VERSION,
+        fast_day_target_leaves=(*contract.fast_day_target_leaves, leaf),
+    )
+
+
+def upgrade_v4_fast_day_target_to_v5(
+    fast_day_target: np.ndarray,
+    state_trajectory: np.ndarray,
+    v4_contract: DailyMarkovContract,
+) -> tuple[np.ndarray, DailyMarkovContract]:
+    """Migrate labels losslessly from already stored canonical next state."""
+
+    v5_contract = upgrade_v4_contract_to_v5(v4_contract)
+    target = np.asarray(fast_day_target, dtype=np.float64)
+    trajectory = np.asarray(state_trajectory, dtype=np.float64)
+    if target.ndim != 2 or target.shape[1] != v4_contract.fast_day_target_width:
+        raise ValueError("v4 fast-day target shape does not match its contract")
+    if trajectory.shape != (
+        target.shape[0] + 1,
+        v4_contract.continuous_state_width,
+    ):
+        raise ValueError("v4 state trajectory shape does not match target days")
+    state_leaf = next(
+        leaf
+        for leaf in v4_contract.state_leaves
+        if leaf.key == f"{_FINALIZE_COMPONENT}.leaf_ci"
+    )
+    leaf_ci = trajectory[1:, state_leaf.start : state_leaf.stop]
+    return np.concatenate((target, leaf_ci), axis=1), v5_contract
 
 
 def reconstruct_fast_day_target(
@@ -1250,6 +1329,184 @@ def reconstruct_state_fields(
                 f"missing={sorted(missing)}"
             )
     return fields
+
+
+def _compiled_inflate_pft_axes(value, leaf, *, base=None):
+    value = jnp.asarray(value, dtype=jnp.dtype(leaf.dtype)).reshape(leaf.shape)
+    if not leaf.selected_pft_indices:
+        return value.reshape(leaf.full_shape)
+    result = (
+        jnp.zeros(leaf.full_shape, dtype=value.dtype)
+        if base is None
+        else jnp.asarray(base, dtype=value.dtype).reshape(leaf.full_shape)
+    )
+    axes = tuple(
+        axis for axis, name in enumerate(leaf.axis_names) if name == "nvm"
+    )
+    if len(axes) != 1:
+        raise ValueError(f"unsupported PFT-axis count for {leaf.key}: {axes}")
+    axis = axes[0]
+    for source_index, target_index in enumerate(leaf.selected_pft_indices):
+        target = [slice(None)] * result.ndim
+        source = [slice(None)] * value.ndim
+        target[axis] = target_index
+        source[axis] = source_index
+        result = result.at[tuple(target)].set(value[tuple(source)])
+    return result
+
+
+def _compiled_get_path(root: Mapping[str, Any], path: tuple[str, ...]):
+    value: Any = root
+    for name in path:
+        if not isinstance(value, Mapping) or name not in value:
+            return None
+        value = value[name]
+    return value
+
+
+def _compiled_set_path(root: dict[str, Any], path: tuple[str, ...], value) -> None:
+    current = root
+    for name in path[:-1]:
+        current = current.setdefault(name, {})
+    current[path[-1]] = value
+
+
+def _compiled_copy_mapping(value: Mapping[str, Any]) -> dict[str, Any]:
+    return {
+        name: _compiled_copy_mapping(item) if isinstance(item, Mapping) else item
+        for name, item in value.items()
+    }
+
+
+def _compiled_zero_tree(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return {name: _compiled_zero_tree(item) for name, item in value.items()}
+    return jnp.zeros_like(jnp.asarray(value))
+
+
+def reconstruct_state_fields_compiled(
+    continuous,
+    discrete: Mapping[str, Any],
+    contract: DailyMarkovContract,
+) -> dict[str, dict[str, Any]]:
+    """JAX-traceable inverse of :func:`extract_state` for canonical rollout."""
+
+    continuous = jnp.asarray(continuous, dtype=jnp.float64)
+    if continuous.shape != (contract.continuous_state_width,):
+        raise ValueError("continuous state width does not match the Markov contract")
+    fields: dict[str, dict[str, Any]] = {}
+    for leaf in contract.state_leaves:
+        if leaf.discrete:
+            if leaf.key not in discrete:
+                raise ValueError(f"missing discrete state leaf {leaf.key}")
+            compact = discrete[leaf.key]
+        else:
+            compact = continuous[leaf.start : leaf.stop].reshape(leaf.shape)
+        component = fields.setdefault(leaf.component, {})
+        _compiled_set_path(
+            component,
+            leaf.path,
+            _compiled_inflate_pft_axes(compact, leaf),
+        )
+
+    slow = fields.get(_SLOW_COMPONENT, {})
+    if "daily_accumulators" in slow:
+        slow["daily_accumulators"] = _compiled_zero_tree(
+            slow["daily_accumulators"]
+        )
+    diffuco = fields.setdefault("diffuco_previous_step_state", {})
+    for name in _SLOWPROC_DIFFUCO_MIRRORS:
+        if name in slow:
+            diffuco[name] = slow[name]
+
+    finalize = fields.get(_FINALIZE_COMPONENT)
+    if finalize is not None:
+        owner_order = (
+            "hydrol_previous_step_state",
+            "thermosoil_previous_step_state",
+            "enerbil_previous_step_state",
+            "diffuco_previous_step_state",
+            "driver_previous_step_state",
+            _SLOW_COMPONENT,
+        )
+        for name, previous in tuple(finalize.items()):
+            for component in owner_order:
+                candidate = fields.get(component, {}).get(name)
+                if candidate is not None and candidate.shape == previous.shape:
+                    finalize[name] = candidate
+                    break
+    return fields
+
+
+def extract_state_compiled(
+    fields: Mapping[str, Mapping[str, Any]],
+    contract: DailyMarkovContract,
+) -> tuple[Any, dict[str, Any]]:
+    """Project a traced runtime field tree back to canonical state arrays."""
+
+    continuous = []
+    discrete = {}
+    for leaf in contract.state_leaves:
+        value = _compiled_get_path(fields[leaf.component], leaf.path)
+        if value is None:
+            raise ValueError(f"compiled state is missing {leaf.key}")
+        compact = _compiled_select_pft_axes(value, leaf)
+        if compact.shape != leaf.shape:
+            raise ValueError(
+                f"compiled state shape drift for {leaf.key}: "
+                f"{compact.shape} != {leaf.shape}"
+            )
+        if leaf.discrete:
+            discrete[leaf.key] = compact
+        else:
+            continuous.append(compact.reshape(-1))
+    return jnp.concatenate(tuple(continuous)), discrete
+
+
+def reconstruct_fast_day_target_compiled(
+    target,
+    leaves: Sequence[FastDayTargetLeafSpec],
+    *,
+    template_fields: Mapping[str, Mapping[str, Any]],
+) -> ReconstructedFastDayTarget:
+    """JAX-traceable reconstruction of the retained-tail fast-day boundary."""
+
+    target = jnp.asarray(target, dtype=jnp.float64)
+    width = max((leaf.stop for leaf in leaves), default=0)
+    if target.shape != (width,):
+        raise ValueError(
+            f"fast-day target width mismatch: {target.shape} != {(width,)}"
+        )
+    fields = _compiled_copy_mapping(template_fields)
+    groups: dict[str, dict[str, Any]] = {
+        "daily_interface": {},
+        "ok_leak": {},
+        "final_diagnostics": {},
+    }
+    for leaf in leaves:
+        compact = target[leaf.start : leaf.stop].reshape(leaf.shape)
+        if leaf.component is not None:
+            component = fields.setdefault(leaf.component, {})
+            full = _compiled_inflate_pft_axes(
+                compact,
+                leaf,
+                base=_compiled_get_path(component, leaf.path),
+            )
+            _compiled_set_path(component, leaf.path, full)
+        else:
+            if leaf.family not in groups:
+                raise ValueError(f"unknown fast-day target family {leaf.family}")
+            _compiled_set_path(
+                groups[leaf.family],
+                leaf.path,
+                _compiled_inflate_pft_axes(compact, leaf),
+            )
+    return ReconstructedFastDayTarget(
+        fields_by_component=fields,
+        daily_fields=groups["daily_interface"],
+        ok_leak_updates=groups["ok_leak"],
+        final_diagnostics=groups["final_diagnostics"],
+    )
 
 
 def assert_markov_continuity(

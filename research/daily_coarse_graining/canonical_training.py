@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections import defaultdict
 from typing import Any, Mapping, NamedTuple, Sequence
 
+import jax.numpy as jnp
 import numpy as np
 
 from research.daily_coarse_graining.canonical_daily_model import (
@@ -12,6 +13,7 @@ from research.daily_coarse_graining.canonical_daily_model import (
     CanonicalModelConfig,
 )
 from research.daily_coarse_graining.markov_dataset import (
+    ORCHIDEE_UNDEFINED_THRESHOLD,
     MarkovDatasetIndex,
     TrainingStatistics,
     defined_numeric_mask,
@@ -280,6 +282,107 @@ def prepare_canonical_inference_batch(
     )
 
 
+def _defined_numeric_mask_compiled(values):
+    values = jnp.asarray(values)
+    return jnp.isfinite(values) & (
+        jnp.abs(values) < jnp.asarray(ORCHIDEE_UNDEFINED_THRESHOLD, values.dtype)
+    )
+
+
+def _normalize_finite_compiled(values, statistics):
+    values = jnp.asarray(values, dtype=jnp.float64)
+    finite = _defined_numeric_mask_compiled(values)
+    normalized = jnp.where(
+        finite,
+        (values - jnp.asarray(statistics.mean)) / jnp.asarray(statistics.scale),
+        0.0,
+    )
+    return normalized, finite
+
+
+def prepare_canonical_inference_batch_compiled(
+    batch: Mapping[str, Any],
+    statistics: TrainingStatistics,
+    representation: FastDayTargetRepresentation,
+) -> CanonicalInferenceBatch:
+    """JAX-traceable target-free adapter for recursive daily training."""
+
+    required = (
+        "state",
+        "forcing_native",
+        "parameters",
+        "landpoint_static",
+        "annual_conditions",
+        "year",
+        "day_index",
+    )
+    missing = tuple(name for name in required if name not in batch)
+    if missing:
+        raise ValueError(f"canonical inference batch is missing {missing}")
+    normalized = {}
+    finite = {}
+    for name in required[:5]:
+        if name not in statistics.arrays:
+            raise ValueError(f"training statistics are missing {name}")
+        normalized[name], finite[name] = _normalize_finite_compiled(
+            batch[name], statistics.arrays[name]
+        )
+
+    state = jnp.asarray(batch["state"], dtype=jnp.float64)
+    indices = jnp.asarray(representation.state_indices, dtype=jnp.int32)
+    matched = indices >= 0
+    selected_indices = jnp.maximum(indices, 0)
+    persisted = jnp.take(state, selected_indices, axis=-1)
+    persisted_defined = _defined_numeric_mask_compiled(persisted) & matched
+    persisted_undefined = ~_defined_numeric_mask_compiled(persisted) & matched
+    target_statistics = statistics.arrays["fast_day_target"]
+    baseline = jnp.where(
+        persisted_defined,
+        (persisted - jnp.asarray(target_statistics.mean))
+        / jnp.asarray(target_statistics.scale),
+        0.0,
+    )
+    dynamic_indices = jnp.asarray(
+        representation.dynamic_undefined_indices, dtype=jnp.int32
+    )
+    year = jnp.asarray(batch["year"], dtype=jnp.float64)
+    day = jnp.asarray(batch["day_index"], dtype=jnp.float64)
+    del year
+    phase = 2.0 * jnp.pi * (day - 1.0) / 365.0
+    calendar = jnp.stack(
+        (
+            jnp.sin(phase),
+            jnp.cos(phase),
+            day / 365.0,
+            jnp.zeros_like(day),
+        ),
+        axis=-1,
+    )
+    return CanonicalInferenceBatch(
+        model_input=CanonicalDayBatch(
+            state=normalized["state"].astype(jnp.float32),
+            state_finite=finite["state"],
+            normalized_fast_day_baseline=baseline.astype(jnp.float32),
+            forcing_native=normalized["forcing_native"].astype(jnp.float32),
+            forcing_finite=finite["forcing_native"],
+            parameters=normalized["parameters"].astype(jnp.float32),
+            parameters_finite=finite["parameters"],
+            landpoint_static=normalized["landpoint_static"].astype(jnp.float32),
+            landpoint_static_finite=finite["landpoint_static"],
+            annual_conditions=normalized["annual_conditions"].astype(jnp.float32),
+            annual_conditions_finite=finite["annual_conditions"],
+            calendar=calendar.astype(jnp.float32),
+        ),
+        persistent_fast_day_undefined=persisted_undefined,
+        persistent_fast_day_undefined_values=jnp.where(
+            persisted_undefined, persisted, 0.0
+        ),
+        persistent_dynamic_undefined=jnp.take(
+            persisted_undefined, dynamic_indices, axis=-1
+        ),
+    )
+
+
 def restore_fast_day_inference_prediction(
     normalized_prediction: np.ndarray,
     dynamic_undefined_flip_logits: np.ndarray,
@@ -306,6 +409,39 @@ def restore_fast_day_inference_prediction(
         representation.dynamic_undefined_fill_values[None, :]
     )
     return np.where(undefined, undefined_values, physical)
+
+
+def restore_fast_day_inference_prediction_compiled(
+    normalized_prediction,
+    dynamic_undefined_flip_logits,
+    batch: CanonicalInferenceBatch,
+    statistics: TrainingStatistics,
+    representation: FastDayTargetRepresentation,
+):
+    """JAX-traceable inverse target representation for recursive rollout."""
+
+    target_statistics = statistics.arrays["fast_day_target"]
+    physical = (
+        jnp.asarray(normalized_prediction, dtype=jnp.float64)
+        * jnp.asarray(target_statistics.scale)
+        + jnp.asarray(target_statistics.mean)
+    )
+    dynamic_indices = jnp.asarray(
+        representation.dynamic_undefined_indices, dtype=jnp.int32
+    )
+    dynamic_flip = jnp.asarray(dynamic_undefined_flip_logits) >= 0.0
+    dynamic_undefined = jnp.logical_xor(
+        jnp.asarray(batch.persistent_dynamic_undefined),
+        dynamic_flip,
+    )
+    undefined = jnp.asarray(batch.persistent_fast_day_undefined).at[
+        ..., dynamic_indices
+    ].set(dynamic_undefined)
+    dynamic_fill = jnp.asarray(representation.dynamic_undefined_fill_values)
+    undefined_values = jnp.asarray(
+        batch.persistent_fast_day_undefined_values
+    ).at[..., dynamic_indices].set(dynamic_fill)
+    return jnp.where(undefined, undefined_values, physical)
 
 
 def restore_fast_day_prediction(

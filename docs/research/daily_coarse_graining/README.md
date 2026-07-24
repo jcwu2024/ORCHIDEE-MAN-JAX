@@ -12,8 +12,10 @@ mode.
 - `../../current-status.md`: current project and research status authority.
 - `development_standard.md`: architecture, evidence, data, split, rollout,
   and performance rules.
-- `daily_markov_contract_v4.md`: current state, fast-day target, native forcing and shard
-  contract.
+- `daily_markov_contract_v5.md`: current state, fast-day target, native forcing
+  and shard contract.
+- `daily_markov_contract_v4.md`: superseded contract retained as migration
+  provenance.
 - `daily_markov_contract_v3.md`: historical contract used by the first bounded
   dataset and rejected neural baseline.
 - `daily_boundary_audit.md`: superseded v0 boundary and replay evidence.
@@ -32,7 +34,7 @@ gate.
 Implemented:
 
 - Teacher capture and daily target extraction;
-- Daily Fast-Day Teacher Contract v4 and native-forcing reconstruction;
+- Daily Fast-Day Teacher Contract v5 and native-forcing reconstruction;
 - complete-day input ownership audit and named condition slices;
 - fixed split and provenance-aware v4 shard generation;
 - hash-verifying training dataset reader, sentinel-aware streaming train-only
@@ -53,6 +55,6 @@ Not implemented or not accepted:
 
 The first frozen v3 five-point, 1961-2010 dataset completed and exposed two
 contract defects during its first neural experiment. It remains historical
-evidence and must not be reused for v4 training. A ten-point v4 replacement is
-now frozen for the next bounded experiment. Continue from
+evidence. The complete nine-point v4 architecture dataset must now be migrated
+losslessly to v5 before the next bounded experiment. Continue from
 [`HANDOFF.md`](HANDOFF.md), which owns the single next milestone.

@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 
 from research.daily_coarse_graining.canonical_training import (
@@ -9,7 +11,9 @@ from research.daily_coarse_graining.canonical_training import (
     model_config_from_batch,
     prepare_canonical_batch,
     prepare_canonical_inference_batch,
+    prepare_canonical_inference_batch_compiled,
     restore_fast_day_inference_prediction,
+    restore_fast_day_inference_prediction_compiled,
     restore_fast_day_prediction,
 )
 from research.daily_coarse_graining.markov_dataset import (
@@ -220,6 +224,68 @@ def test_inference_batch_never_requires_or_reads_teacher_target():
         representation,
     )
     np.testing.assert_array_equal(restored, [[12.0, 1.0e20]])
+
+
+def test_compiled_inference_adapter_matches_numpy_and_preserves_gradients():
+    batch = {
+        "state": np.asarray([[10.0, 1.0e20]]),
+        "forcing_native": np.ones((1, 5, 1)),
+        "parameters": np.ones((1, 1)),
+        "landpoint_static": np.ones((1, 1)),
+        "annual_conditions": np.ones((1, 1)),
+        "year": np.asarray([1961]),
+        "day_index": np.asarray([2]),
+    }
+    statistics = _statistics(
+        {
+            "state": (2,),
+            "forcing_native": (1,),
+            "parameters": (1,),
+            "landpoint_static": (1,),
+            "annual_conditions": (1,),
+            "fast_day_target": (2,),
+        }
+    )
+    representation = FastDayTargetRepresentation(
+        state_indices=np.asarray([0, 1], dtype=np.int32),
+        dynamic_undefined_indices=np.asarray([1], dtype=np.int32),
+        dynamic_undefined_fill_values=np.asarray([1.0e20]),
+    )
+    expected = prepare_canonical_inference_batch(
+        batch, statistics, representation
+    )
+
+    def restore(state, normalized_prediction):
+        dynamic_batch = {**batch, "state": state}
+        prepared = prepare_canonical_inference_batch_compiled(
+            dynamic_batch,
+            statistics,
+            representation,
+        )
+        physical = restore_fast_day_inference_prediction_compiled(
+            normalized_prediction,
+            jnp.asarray([[-4.0]]),
+            prepared,
+            statistics,
+            representation,
+        )
+        return prepared, physical
+
+    actual, physical = jax.jit(restore)(
+        batch["state"], jnp.asarray([[12.0, 5.0]])
+    )
+    for lhs, rhs in zip(
+        jax.tree_util.tree_leaves(actual),
+        jax.tree_util.tree_leaves(expected),
+        strict=True,
+    ):
+        np.testing.assert_allclose(np.asarray(lhs), np.asarray(rhs))
+    np.testing.assert_array_equal(np.asarray(physical), [[12.0, 1.0e20]])
+
+    gradient = jax.grad(
+        lambda prediction: jnp.sum(restore(batch["state"], prediction)[1])
+    )(jnp.asarray([[12.0, 5.0]]))
+    np.testing.assert_array_equal(np.asarray(gradient), [[1.0, 0.0]])
 
 
 def test_prepare_canonical_batch_rejects_nonpersistent_sentinel():

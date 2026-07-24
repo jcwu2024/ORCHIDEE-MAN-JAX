@@ -11,7 +11,7 @@ scientific and release facts remain authoritative in
 
 1. Check out `research/daily-coarse-graining` and confirm a clean worktree.
 2. Read this page, then
-   [`daily_markov_contract_v4.md`](daily_markov_contract_v4.md) and
+   [`daily_markov_contract_v5.md`](daily_markov_contract_v5.md) and
    [`teacher_dataset_generation.md`](teacher_dataset_generation.md).
 3. Use the temporary `cln02` login at `192.168.11.2` until the user confirms
    that `cln01` has been restored.
@@ -46,18 +46,27 @@ Its contract is:
 ```text
 S[d] (3,854 continuous + 12 exact discrete values)
   + native 6-hour forcing[d] + parameters/static conditions
-  -> B_fast[d] (2,815 values)
+  -> B_fast[d] (2,855 values)
 B_fast[d] + S[d]
   -> retained source-backed daily season/STOMATE
   -> S[d+1]
 ```
 
 `B_fast` is a complete same-day interface, not persistent state. `S` is the
-cross-day Markov state. Contract v4 carries only the true cross-day subset of
-the 93-field SECHIBA finalize packet and removes all finalize mirrors from the
-learned target. For a 1961 cold start, the real Teacher executes Day 1
+cross-day Markov state. Contract v5 carries only the true cross-day subset of
+the 93-field SECHIBA finalize packet and learns only its fast-owned `leaf_ci`
+output, not the duplicated finalize packet. For a 1961 cold start, the real Teacher executes Day 1
 to construct canonical `S[1]`; the first training sample is Day 2. The shard
-schema is `daily_teacher_markov_year_v4` and uses lossless NPZ compression.
+schema is `daily_teacher_markov_year_v5` and uses lossless NPZ compression.
+
+Contract v4 is superseded. A real 1962 Day 2 differentiable retained-tail gate
+proved that v4 could not advance `leaf_ci`; all other next-state leaves closed.
+V5 appends 40 compact `leaf_ci` values from existing `S[d+1]`, so the complete
+nine-point v4 dataset can be migrated without rerunning Teacher. The v5 gate
+passes at `5.68e-14` maximum state error with zero mask/discrete mismatches and
+finite gradients for all 2,847 defined target values.
+The reverse compile still emits the nonfatal XLA algebraic-simplifier 50-run
+warning and then completes; keep it as a runtime-version A/B item.
 
 The intended final repository has independent runtime choices for execution
 backend (`cpu` or `gpu`) and transition implementation
@@ -94,16 +103,16 @@ The partial 1961-1969 point-319 chain must not enter this dataset. Results are
 architecture-development evidence only and cannot replace the frozen
 ten-point v4 experiment.
 
-The provisional nine-point dataset, flip-classifier A/B, and fresh 15-epoch
-V100 run are complete. See
+The provisional nine-point v4 dataset, flip-classifier A/B, and fresh 15-epoch
+V100 run are complete historical architecture evidence. See
 [`nine_point_v4_neural_baseline_20260724.md`](nine_point_v4_neural_baseline_20260724.md).
 The accepted flip classifier restored persistence-level defined/undefined
 accuracy. The 15-epoch run reached its best equal-split score of `0.772370` at
 epoch 10 versus `1.064329` for matched persistence. Temporal/spatial/joint
 improvements were `67.0%/28.0%/18.0%`. Longer training did not resolve the
-DIFFUCO/ENERBIL and HYDROL spatial errors. The next operation is a seven-day
-validation-only free rollout through the retained daily season/STOMATE tail;
-do not evaluate the sealed test split or merely add more epochs.
+DIFFUCO/ENERBIL and HYDROL spatial errors. Its seven-day free rollout reached
+`0.921` RMSE and is superseded by the v5 contract correction. Do not evaluate
+the sealed test split or merely add more v4 epochs.
 
 ## Accepted Historical Production Run
 
@@ -207,18 +216,17 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-1. recover and generate only the remaining 41 v4 landpoint-years;
-2. aggregate all 500 shards;
-3. run `canonical_training_run accept-dataset`, which revalidates aggregate
-   status, schema, all hashes, splits, v4 target representation, train-only
-   statistics, and a real-batch finite forward/loss/gradient smoke;
-4. use the resulting `acceptance_report.json` and v2 statistics for the
-   bounded five-epoch parameter-conditioned network experiment;
-5. evaluate train/validation/test one-step errors by process family, including
-   the dynamic `rveget` defined/undefined classifier;
-6. run 7-day free rollout through the retained daily season/STOMATE tail;
-7. only after those gates, decide whether to expand Teacher data or revise the
-   network architecture.
+1. transfer the current code snapshot to the neural server worktree;
+2. migrate the complete nine-point v4 dataset with
+   `migrate_markov_v4_to_v5` and verify every source/output hash;
+3. regenerate train-only v2 statistics and a v5 acceptance report;
+4. connect contiguous 1/3/7-day shard windows to `canonical_multistep.py`;
+5. run one bounded V100 multistep experiment with one-step `B_fast` plus
+   canonical next-state loss;
+6. require seven-day free-rollout final RMSE near the teacher-forced envelope
+   (provisional gate `<=0.29`) with zero mask/discrete mismatch;
+7. only then decide whether more Teacher landpoints or a revised network are
+   justified.
 
 Do not start all 669 x 50 years before this bounded learnability and rollout
 gate. The ten-point dataset tests architecture development; it cannot by
@@ -304,7 +312,7 @@ generated and accepted.
 | --- | --- |
 | Overall Teacher/release status | [`../../current-status.md`](../../current-status.md) |
 | Current operational task | this handoff page |
-| Daily state and target semantics | [`daily_markov_contract_v4.md`](daily_markov_contract_v4.md) |
+| Daily state and target semantics | [`daily_markov_contract_v5.md`](daily_markov_contract_v5.md) |
 | Dataset production and recovery | [`teacher_dataset_generation.md`](teacher_dataset_generation.md) |
 | Research quality gates | [`development_standard.md`](development_standard.md) |
 | Frozen five-point batch | [`../../../manifests/coarse_graining/daily_teacher_initial_5point_1961_2010.json`](../../../manifests/coarse_graining/daily_teacher_initial_5point_1961_2010.json) |

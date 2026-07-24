@@ -140,7 +140,7 @@ or overwrite `generation.lock` blindly.
 
 ## Stored arrays
 
-The production schema is `daily_teacher_markov_year_v4`. Each shard stores:
+The current production schema is `daily_teacher_markov_year_v5`. Each shard stores:
 
 - one canonical continuous state trajectory `state_trajectory[0:T+1]`;
 - one compact `fast_day_target[d]` containing the complete output of the

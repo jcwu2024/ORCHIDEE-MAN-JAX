@@ -85,7 +85,7 @@ def _packet_from_canonical_state(
         require_complete_finalize=require_complete_finalize,
     )
     provenance = {
-        component: ("daily_markov_contract_v4 canonical reconstruction",)
+        component: ("canonical daily Markov contract reconstruction",)
         for component in fields
     }
     return teacher.DriverPreviousStepStatePacket(

@@ -1,10 +1,13 @@
 from __future__ import annotations
 
 import ast
+import hashlib
 import json
 from pathlib import Path
 from types import SimpleNamespace
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 import pytest
 
@@ -25,6 +28,9 @@ from research.daily_coarse_graining.canonical_rollout import (
 from research.daily_coarse_graining.markov_dataset import (
     FiniteColumnStatistics,
     TrainingStatistics,
+)
+from research.daily_coarse_graining.migrate_markov_v4_to_v5 import (
+    migrate_dataset,
 )
 
 
@@ -162,10 +168,12 @@ def test_contract_uses_canonical_state_and_excludes_packet_mirrors():
     assert "sechiba_finalize_state.diagnostic_only" not in keys
     assert "hydrol_previous_step_state.njsc" in keys
     assert "hydrol_previous_step_state.nroot" in keys
-    assert not any(
-        leaf.component == "sechiba_finalize_state"
+    finalize_targets = tuple(
+        leaf
         for leaf in contract.fast_day_target_leaves
+        if leaf.component == "sechiba_finalize_state"
     )
+    assert tuple(leaf.path for leaf in finalize_targets) == (("leaf_ci",),)
     assert contract.active_pft_indices == (0, 13)
     assert contract.sha256 == contract.sha256
     parsed = markov.daily_markov_contract_from_metadata(contract.metadata())
@@ -337,6 +345,228 @@ def test_fast_day_target_roundtrip_rebuilds_retained_tail_boundary():
     np.testing.assert_array_equal(
         rebuilt.fields_by_component["hydrol_previous_step_state"]["njsc"],
         end.fields_by_component["hydrol_previous_step_state"]["njsc"],
+    )
+
+
+def test_compiled_state_adapters_match_canonical_roundtrip_and_are_differentiable():
+    start = _packet(1.0)
+    end = _packet(2.0, flag=False, include_nroot=True)
+    contract = markov.build_daily_markov_contract(
+        start,
+        _record(end),
+        parameter_leaves=(),
+        landpoint_static_leaves=(),
+        annual_condition_leaves=(),
+        native_forcing_spec=_native_spec(),
+    )
+    continuous, discrete = markov.extract_state(end, contract)
+
+    def roundtrip(state, exact_state):
+        fields = markov.reconstruct_state_fields_compiled(
+            state,
+            exact_state,
+            contract,
+        )
+        return markov.extract_state_compiled(fields, contract)
+
+    actual, actual_discrete = jax.jit(roundtrip)(continuous, discrete)
+    np.testing.assert_array_equal(np.asarray(actual), continuous)
+    for name, value in discrete.items():
+        np.testing.assert_array_equal(np.asarray(actual_discrete[name]), value)
+
+    gradient = jax.grad(
+        lambda state: jnp.sum(roundtrip(state, discrete)[0] ** 2)
+    )(continuous)
+    np.testing.assert_allclose(np.asarray(gradient), 2.0 * continuous)
+    assert np.all(np.isfinite(np.asarray(gradient)))
+
+
+def test_compiled_fast_day_adapter_is_jittable_and_differentiable():
+    start = _packet(1.0)
+    end = _packet(2.0, include_nroot=True)
+    record = _record(end)
+    contract = markov.build_daily_markov_contract(
+        start,
+        record,
+        parameter_leaves=(),
+        landpoint_static_leaves=(),
+        annual_condition_leaves=(),
+        native_forcing_spec=_native_spec(),
+    )
+    leaves = contract.fast_day_target_leaves
+    target = markov.extract_fast_day_target(record, leaves)
+    template = jax.tree_util.tree_map(
+        jnp.asarray,
+        end.fields_by_component,
+    )
+
+    def roundtrip(value):
+        rebuilt = markov.reconstruct_fast_day_target_compiled(
+            value,
+            leaves,
+            template_fields=template,
+        )
+        groups = {
+            "daily_interface": rebuilt.daily_fields,
+            "ok_leak": rebuilt.ok_leak_updates,
+            "final_diagnostics": rebuilt.final_diagnostics,
+        }
+        compact = []
+        for leaf in leaves:
+            root = (
+                rebuilt.fields_by_component[leaf.component]
+                if leaf.component is not None
+                else groups[leaf.family]
+            )
+            full = markov._compiled_get_path(root, leaf.path)
+            compact.append(
+                markov._compiled_select_pft_axes(full, leaf).reshape(-1)
+            )
+        return jnp.concatenate(tuple(compact))
+
+    actual = jax.jit(roundtrip)(target)
+    np.testing.assert_array_equal(np.asarray(actual), target)
+    gradient = jax.grad(lambda value: jnp.sum(roundtrip(value) ** 2))(target)
+    np.testing.assert_allclose(np.asarray(gradient), 2.0 * target)
+    assert np.all(np.isfinite(np.asarray(gradient)))
+
+
+def test_v4_contract_and_shard_upgrade_append_next_state_leaf_ci_losslessly():
+    start = _packet(1.0)
+    end = _packet(2.0, include_nroot=True)
+    contract = markov.build_daily_markov_contract(
+        start,
+        _record(end),
+        parameter_leaves=(),
+        landpoint_static_leaves=(),
+        annual_condition_leaves=(),
+        native_forcing_spec=_native_spec(),
+    )
+    v4 = contract.__class__(
+        **{
+            **contract.__dict__,
+            "schema_version": "daily_markov_contract_v4",
+            "fast_day_target_leaves": tuple(
+                leaf
+                for leaf in contract.fast_day_target_leaves
+                if leaf.key != "sechiba_finalize_state.leaf_ci"
+            ),
+        }
+    )
+    trajectory, _ = markov.build_state_trajectory([start, end], contract)
+    old_target = np.arange(v4.fast_day_target_width, dtype=np.float64)[None, :]
+
+    upgraded_target, upgraded = markov.upgrade_v4_fast_day_target_to_v5(
+        old_target,
+        trajectory,
+        v4,
+    )
+
+    assert upgraded.schema_version == markov.CONTRACT_SCHEMA_VERSION
+    assert upgraded.fast_day_target_width == old_target.shape[1] + 4
+    np.testing.assert_array_equal(
+        upgraded_target[:, : old_target.shape[1]], old_target
+    )
+    leaf = next(
+        leaf
+        for leaf in upgraded.state_leaves
+        if leaf.key == "sechiba_finalize_state.leaf_ci"
+    )
+    np.testing.assert_array_equal(
+        upgraded_target[:, old_target.shape[1] :],
+        trajectory[1:, leaf.start : leaf.stop],
+    )
+
+
+def test_v4_dataset_migration_writes_a_hash_verified_resumable_v5_asset(tmp_path):
+    start = _packet(1.0)
+    end = _packet(2.0, include_nroot=True)
+    record = _record(end)
+    contract = markov.build_daily_markov_contract(
+        start,
+        record,
+        parameter_leaves=(),
+        landpoint_static_leaves=(),
+        annual_condition_leaves=(),
+        native_forcing_spec=_native_spec(),
+    )
+    v4 = contract.__class__(
+        **{
+            **contract.__dict__,
+            "schema_version": "daily_markov_contract_v4",
+            "fast_day_target_leaves": tuple(
+                leaf
+                for leaf in contract.fast_day_target_leaves
+                if leaf.key != "sechiba_finalize_state.leaf_ci"
+            ),
+        }
+    )
+    trajectory, discrete = markov.build_state_trajectory([start, end], contract)
+    full_target = markov.extract_fast_day_target(
+        record, contract.fast_day_target_leaves
+    )
+    source_root = tmp_path / "source"
+    source_root.mkdir()
+    shard_path = source_root / "source.npz"
+    np.savez_compressed(
+        shard_path,
+        state_trajectory=trajectory,
+        fast_day_target=full_target[: v4.fast_day_target_width][None, :],
+        forcing_native=np.zeros((1, 5, v4.native_forcing.width)),
+        forcing_record_indices=np.arange(5, dtype=np.int64)[None, :],
+        parameters=np.zeros((0,)),
+        landpoint_static=np.zeros((0,)),
+        annual_conditions=np.zeros((0,)),
+        diagnostics=np.zeros((1, v4.diagnostic_width)),
+        year=np.asarray(1961, dtype=np.int32),
+        day_index=np.asarray([1], dtype=np.int32),
+        **{f"state_discrete__{name}": value for name, value in discrete.items()},
+    )
+    shard_hash = hashlib.sha256(shard_path.read_bytes()).hexdigest()
+    manifest = {
+        "schema_version": "daily_teacher_dataset_manifest_v4",
+        "dataset_id": "source-v4",
+        "teacher_git_head": "teacher",
+        "markov_contract_sha256": v4.sha256,
+        "markov_contract": v4.metadata(),
+        "shards": [
+            {
+                "landpoint_id": "001.0-071.0",
+                "year": 1961,
+                "spatial_split": "train",
+                "temporal_split": "train",
+                "markov_contract_sha256": v4.sha256,
+                "shard": shard_path.name,
+                "shard_sha256": shard_hash,
+            }
+        ],
+    }
+    manifest_path = source_root / "dataset_manifest.json"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+
+    migrated_manifest = migrate_dataset(manifest_path, tmp_path / "v5")
+    migrated_raw = json.loads(migrated_manifest.read_text(encoding="utf-8"))
+    migrated_contract = markov.daily_markov_contract_from_metadata(
+        migrated_raw["markov_contract"]
+    )
+    migrated_shard = markov.load_markov_shard(
+        migrated_manifest.parent / migrated_raw["shards"][0]["shard"],
+        contract=migrated_contract,
+    )
+    assert migrated_contract.schema_version == markov.CONTRACT_SCHEMA_VERSION
+    assert migrated_raw["derived_migration"]["teacher_rerun"] is False
+    np.testing.assert_array_equal(
+        migrated_shard.fast_day_target[:, : v4.fast_day_target_width],
+        full_target[: v4.fast_day_target_width][None, :],
+    )
+    leaf = next(
+        leaf
+        for leaf in migrated_contract.state_leaves
+        if leaf.key == "sechiba_finalize_state.leaf_ci"
+    )
+    np.testing.assert_array_equal(
+        migrated_shard.fast_day_target[:, v4.fast_day_target_width :],
+        trajectory[1:, leaf.start : leaf.stop],
     )
 
 

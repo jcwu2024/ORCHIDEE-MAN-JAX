@@ -32,9 +32,9 @@ Teacher defaults are unchanged because all capture hooks default to off.
 
 Completed infrastructure:
 
-- Daily Fast-Day Teacher Contract v4:
+- Daily Fast-Day Teacher Contract v5:
   `S[d] (3,854 continuous values plus 12 exact discrete values) + native
-  6-hour forcing[d] + P -> B_fast[d] (2,815 values)`, followed by retained
+  6-hour forcing[d] + P -> B_fast[d] (2,855 values)`, followed by retained
   source-backed daily season/STOMATE to produce `S[d+1]`;
 - only the true cross-day subset of `sechiba_finalize_state`, including
   `leaf_ci`, is carried in `S[d]`; the 93-field finalize packet is no longer a
@@ -70,7 +70,7 @@ Current scientific status:
 
 - the neural path is technically connected but is not a validated daily
   surrogate;
-- the first contract-v4 nine-point, five-epoch V100 baseline established
+- the contract-v4 nine-point V100 baselines established
   nontrivial one-step learnability: its equal-split validation score was
   0.812 versus 1.064 for the matched persistence baseline, but spatial and
   joint scores remained 0.855 and 1.438;
@@ -83,7 +83,16 @@ Current scientific status:
   `67.0%/28.0%/18.0%`; additional epochs did not resolve the dominant spatial
   DIFFUCO/ENERBIL and HYDROL errors;
 - no user-facing `daily-surrogate` run mode exists;
-- no free-running 7-, 30-, 365-day, or 50-year neural rollout has passed;
+- the first seven-day v4 free rollout reached `0.921` normalized state RMSE,
+  while teacher-forced daily error stayed near `0.11-0.15`; this identifies
+  recursive state-distribution drift rather than a retained-tail handoff error;
+- contract v4 was then found to omit the fast-owned cross-day `leaf_ci` output.
+  Contract v5 appends it losslessly from stored `S[d+1]`, so no Teacher rerun
+  is required, but all v4 statistics and checkpoints are superseded;
+- the pure-JAX retained-tail transition passes a real Day 2 forward and
+  reverse-mode gate: maximum next-state error `5.68e-14`, zero mask/discrete
+  mismatch, and finite gradients for all 2,847 defined target values;
+- no free-running v5 7-, 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
   acceptance gate is complete.
 - the first five-epoch V100 run is rejected as architecture evidence because
@@ -175,11 +184,10 @@ Markov contract are valid. Its operational evidence is recorded in
 
 ## Next Bounded Milestone
 
-Complete the remaining 41 of 500 frozen ten-point v4 landpoint-years after the
-stuck Explore1000 worker is administratively cleared, aggregate them, run the
-canonical dataset acceptance gate, and rerun the inexpensive five-epoch
-parameter-conditioned `B_fast` experiment, and evaluate held-out one-step
-errors before attempting a seven-day free rollout through retained daily
-season/STOMATE. Do not generate all
+Migrate the complete nine-point v4 dataset to contract v5 without rerunning
+Teacher, regenerate train-only statistics and acceptance assets, then train
+with a 1/3/7-day unrolled objective through the retained daily tail. The
+remaining point-319 v4 generation is not a prerequisite for this architecture
+gate. Do not generate all
 669 x 50 landpoint-years merely to discover whether the surrogate architecture
 can learn the daily transition.
