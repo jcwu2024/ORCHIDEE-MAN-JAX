@@ -49,6 +49,7 @@ cd "$WORKTREE"
 "$PYTHON" -m research.daily_coarse_graining.migrate_markov_v4_to_v5 \
   --source-manifest "$SOURCE_MANIFEST" \
   --output-root "$OUTPUT_ROOT" \
-  --dataset-id "$DATASET_ID"
+  --dataset-id "$DATASET_ID" \
+  --migration-git-head "$EXPECTED_GIT_HEAD"
 
 test -f "$OUTPUT_ROOT/dataset_manifest.json"

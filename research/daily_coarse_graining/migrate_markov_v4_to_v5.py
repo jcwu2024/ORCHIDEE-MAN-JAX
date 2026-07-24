@@ -86,6 +86,7 @@ def migrate_dataset(
     output_root: Path,
     *,
     dataset_id: str | None = None,
+    migration_git_head: str | None = None,
 ) -> Path:
     source_manifest = source_manifest.resolve()
     output_root = output_root.resolve()
@@ -138,7 +139,9 @@ def migrate_dataset(
         "derived_migration": {
             "source_dataset_id": source_index.dataset_id,
             "source_manifest": str(source_manifest),
+            "source_manifest_sha256": _sha256_file(source_manifest),
             "source_contract_sha256": v4_contract.sha256,
+            "migration_git_head": migration_git_head,
             "policy": (
                 "preserve every v4 B_fast column and append "
                 "S[d+1].sechiba_finalize_state.leaf_ci"
@@ -147,6 +150,15 @@ def migrate_dataset(
         },
         "shards": shards,
     }
+    for name in (
+        "plan",
+        "plan_sha256",
+        "worker_count",
+        "worker_assignment_strategy",
+        "derived_subset",
+    ):
+        if name in source_raw:
+            manifest[name] = source_raw[name]
     output_manifest = output_root / "dataset_manifest.json"
     _atomic_json(output_manifest, manifest)
     migrated_index = load_dataset_index(output_manifest, verify_hashes=True)
@@ -160,6 +172,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--source-manifest", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
     parser.add_argument("--dataset-id")
+    parser.add_argument("--migration-git-head")
     return parser
 
 
@@ -169,6 +182,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         args.source_manifest,
         args.output_root,
         dataset_id=args.dataset_id,
+        migration_git_head=args.migration_git_head,
     )
     print(json.dumps({"status": "passed", "manifest": str(manifest)}, indent=2))
     return 0
