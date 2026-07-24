@@ -13,6 +13,7 @@ def test_gpu_runtime_instantiates_registered_cuda_backend_before_devices(monkeyp
     calls = []
     device = SimpleNamespace(platform="gpu")
     backend = SimpleNamespace(devices=lambda: (device,))
+    monkeypatch.setitem(xla_bridge._backend_factories, "cuda", object())
     monkeypatch.setattr(
         xla_bridge,
         "_discover_and_register_pjrt_plugins",
@@ -33,6 +34,7 @@ def test_gpu_runtime_instantiates_registered_cuda_backend_before_devices(monkeyp
 def test_gpu_runtime_rejects_missing_cuda_without_cpu_fallback(monkeypatch):
     from jax._src import xla_bridge
 
+    monkeypatch.setitem(xla_bridge._backend_factories, "cuda", object())
     monkeypatch.setattr(xla_bridge, "_discover_and_register_pjrt_plugins", lambda: None)
     monkeypatch.setattr(xla_bridge, "backends", lambda: {"cpu": object()})
     monkeypatch.setattr(xla_bridge, "_backend_errors", {"cuda": "failed"})
