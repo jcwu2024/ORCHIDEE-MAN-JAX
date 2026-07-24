@@ -36,7 +36,6 @@ env \
   SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \
   SINGULARITYENV_CUDA_VISIBLE_DEVICES=0 \
   SINGULARITYENV_JAX_ENABLE_X64=true \
-  SINGULARITYENV_JAX_PLATFORMS=cuda \
   SINGULARITYENV_JAX_COMPILATION_CACHE_DIR=$ROOT/runtime/cache/jax/orcjax_gpu \
   singularity exec \
     --nv \
@@ -49,7 +48,6 @@ env \
   SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \
   SINGULARITYENV_CUDA_VISIBLE_DEVICES=0 \
   SINGULARITYENV_JAX_ENABLE_X64=true \
-  SINGULARITYENV_JAX_PLATFORMS=cuda \
   SINGULARITYENV_JAX_COMPILATION_CACHE_DIR=$ROOT/runtime/cache/jax/orcjax_gpu \
   singularity exec \
     --nv \
