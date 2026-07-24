@@ -1466,9 +1466,33 @@ def aggregate_workers(
     *,
     output_root: Path,
     worker_count: int,
+    included_landpoints: frozenset[str] | None = None,
+    dataset_id: str | None = None,
+    manifest_name: str = "dataset_manifest.json",
 ) -> dict[str, Any]:
-    expected = {entry.key for entry in plan.entries}
+    all_landpoints = {entry.landpoint_id for entry in plan.entries}
+    selected_landpoints = (
+        all_landpoints
+        if included_landpoints is None
+        else set(included_landpoints)
+    )
+    unknown = sorted(selected_landpoints - all_landpoints)
+    if unknown:
+        raise ValueError(f"unknown subset landpoints: {unknown}")
+    if not selected_landpoints:
+        raise ValueError("aggregate landpoint selection must not be empty")
+    if dataset_id is None:
+        dataset_id = plan.dataset_id
+    _validate_safe_id("dataset_id", dataset_id)
+    if Path(manifest_name).name != manifest_name or not manifest_name.endswith(".json"):
+        raise ValueError("manifest_name must be a local JSON filename")
+
+    selected_entries = tuple(
+        entry for entry in plan.entries if entry.landpoint_id in selected_landpoints
+    )
+    expected = {entry.key for entry in selected_entries}
     observed: dict[str, dict[str, Any]] = {}
+    seen_records: set[str] = set()
     contracts: list[dict[str, Any]] = []
     heads = set()
     entries_by_key = {entry.key: entry for entry in plan.entries}
@@ -1493,11 +1517,14 @@ def aggregate_workers(
         heads.add(manifest["teacher_git_head"])
         for record in manifest["shards"]:
             key = f"{record['landpoint_id']}:{record['year']}"
-            if key in observed:
+            if key in seen_records:
                 raise ValueError(f"duplicate completed shard {key}")
+            seen_records.add(key)
             entry = entries_by_key.get(key)
             if entry is None:
                 raise ValueError(f"unexpected completed shard {key}")
+            if entry.landpoint_id not in selected_landpoints:
+                continue
             if manifest_schema == MANIFEST_SCHEMA_VERSION:
                 metadata_path = worker_root / record["metadata"]
                 if _sha256_file(metadata_path) != record["metadata_sha256"]:
@@ -1559,7 +1586,7 @@ def aggregate_workers(
     if missing or unexpected:
         raise ValueError(f"dataset is incomplete: missing={missing[:8]}, unexpected={unexpected[:8]}")
     preceding_by_landpoint: dict[str, str] = {}
-    for entry in sorted(plan.entries, key=lambda value: (value.landpoint_id, value.year)):
+    for entry in sorted(selected_entries, key=lambda value: (value.landpoint_id, value.year)):
         item = observed[entry.key]
         expected_preceding = (
             None
@@ -1580,7 +1607,7 @@ def aggregate_workers(
     contract = contracts[0]
     manifest = {
         "schema_version": DATASET_SCHEMA_VERSION,
-        "dataset_id": plan.dataset_id,
+        "dataset_id": dataset_id,
         "status": "complete",
         "provisional_teacher": True,
         "plan": str(plan.path),
@@ -1588,14 +1615,22 @@ def aggregate_workers(
         "teacher_git_head": next(iter(heads)),
         "worker_count": worker_count,
         "worker_assignment_strategy": WORKER_ASSIGNMENT_STRATEGY,
-        "landpoint_count": len({entry.landpoint_id for entry in plan.entries}),
-        "year_count": len({entry.year for entry in plan.entries}),
+        "landpoint_count": len(selected_landpoints),
+        "year_count": len({entry.year for entry in selected_entries}),
         "shard_count": len(observed),
         "markov_contract_sha256": next(iter(contract_hashes)),
         "markov_contract": contract,
         "shards": [observed[key] for key in sorted(observed)],
     }
-    _atomic_json(output_root / "dataset_manifest.json", manifest)
+    if included_landpoints is not None:
+        manifest["derived_subset"] = {
+            "source_dataset_id": plan.dataset_id,
+            "source_plan_landpoint_count": len(all_landpoints),
+            "included_landpoints": sorted(selected_landpoints),
+            "excluded_landpoints": sorted(all_landpoints - selected_landpoints),
+            "selection_policy": "complete_landpoint_chains_only",
+        }
+    _atomic_json(output_root / manifest_name, manifest)
     return manifest
 
 
@@ -1630,6 +1665,13 @@ def build_parser() -> argparse.ArgumentParser:
     aggregate.add_argument("--plan", type=Path, required=True)
     aggregate.add_argument("--output-root", type=Path)
     aggregate.add_argument("--worker-count", type=int, required=True)
+    subset = subparsers.add_parser("aggregate-subset")
+    subset.add_argument("--plan", type=Path, required=True)
+    subset.add_argument("--output-root", type=Path)
+    subset.add_argument("--worker-count", type=int, required=True)
+    subset.add_argument("--include-landpoint", action="append", required=True)
+    subset.add_argument("--dataset-id", required=True)
+    subset.add_argument("--manifest-name", default="dataset_manifest_subset.json")
     recover = subparsers.add_parser("recover-lock")
     recover.add_argument("--plan", type=Path, required=True)
     recover.add_argument("--output-root", type=Path)
@@ -1684,13 +1726,29 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         print(json.dumps(result, indent=2))
         return 0
-    result = aggregate_workers(plan, output_root=output_root, worker_count=args.worker_count)
+    if args.command == "aggregate-subset":
+        result = aggregate_workers(
+            plan,
+            output_root=output_root,
+            worker_count=args.worker_count,
+            included_landpoints=frozenset(args.include_landpoint),
+            dataset_id=args.dataset_id,
+            manifest_name=args.manifest_name,
+        )
+        manifest_name = args.manifest_name
+    else:
+        result = aggregate_workers(
+            plan,
+            output_root=output_root,
+            worker_count=args.worker_count,
+        )
+        manifest_name = "dataset_manifest.json"
     print(
         json.dumps(
             {
                 "status": result["status"],
                 "shard_count": result["shard_count"],
-                "manifest": str(output_root / "dataset_manifest.json"),
+                "manifest": str(output_root / manifest_name),
             },
             indent=2,
         )

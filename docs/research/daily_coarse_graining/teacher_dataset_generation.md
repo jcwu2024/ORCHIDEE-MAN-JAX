@@ -216,6 +216,14 @@ finite forward/loss/gradient smoke. It writes `training_statistics.json`,
 requires `--acceptance` and verifies that the report, dataset manifest, and
 statistics still have the accepted hashes and identity.
 
+For bounded architecture work while one production landpoint is incomplete,
+`teacher_shards aggregate-subset` may materialize a separate manifest from
+complete landpoint chains already present in the worker manifests. Every
+included shard, checkpoint chain, input hash, and contract is revalidated.
+The command records included and excluded landpoints and requires a distinct
+dataset ID and manifest filename. Never include a partial landpoint chain or
+overwrite the canonical `dataset_manifest.json`.
+
 The first real v2 smoke shard (`103.0-095.0`, 1962 Day 1) remains historical evidence and contains one
 source-defined non-finite state column: the bare-soil/PFT1 slot of
 `diffuco_previous_step_state.roughheight_pft`. CONDVEG intentionally assigns

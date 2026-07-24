@@ -85,6 +85,15 @@ resume worker index 0 with worker count 4, the same plan/output root, and
 `ibc11b02n13` excluded. Do not rerun any completed shard. Submit a fresh
 aggregate only after the resumed worker completes.
 
+Neural architecture work does not need to wait for that recovery. A
+provisional nine-point dataset may be materialized with `teacher_shards
+aggregate-subset`, selecting the nine complete 1961-2010 landpoint chains and
+excluding point `319.0-057.0` entirely. It must use a distinct dataset ID,
+statistics asset, acceptance report, experiment directory, and checkpoint.
+The partial 1961-1969 point-319 chain must not enter this dataset. Results are
+architecture-development evidence only and cannot replace the frozen
+ten-point v4 experiment.
+
 ## Accepted Historical Production Run
 
 The bounded architecture-development dataset is frozen by

@@ -422,6 +422,35 @@ def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
     assert result["markov_contract"] == contract
     assert "markov_contract" not in result["shards"][0]
 
+    second_entry = _entry(tmp_path, "003.0-071.0", 1961)
+    subset_plan = shards.load_plan(_write_plan(tmp_path, [entry, second_entry]))
+    worker_manifest_path = worker_root / "manifest.json"
+    worker_manifest = json.loads(worker_manifest_path.read_text(encoding="utf-8"))
+    worker_manifest["plan_sha256"] = subset_plan.plan_sha256
+    shards._atomic_json(worker_manifest_path, worker_manifest)
+    subset = shards.aggregate_workers(
+        subset_plan,
+        output_root=output_root,
+        worker_count=1,
+        included_landpoints=frozenset({"001.0-071.0"}),
+        dataset_id="test-dataset-nine-point-provisional",
+        manifest_name="dataset_manifest_subset.json",
+    )
+    assert subset["status"] == "complete"
+    assert subset["dataset_id"] == "test-dataset-nine-point-provisional"
+    assert subset["landpoint_count"] == 1
+    assert subset["derived_subset"]["excluded_landpoints"] == ["003.0-071.0"]
+    assert (output_root / "dataset_manifest_subset.json").is_file()
+    with pytest.raises(ValueError, match="dataset is incomplete"):
+        shards.aggregate_workers(
+            subset_plan,
+            output_root=output_root,
+            worker_count=1,
+        )
+
+    worker_manifest["plan_sha256"] = plan.plan_sha256
+    shards._atomic_json(worker_manifest_path, worker_manifest)
+
     shards._atomic_json(
         worker_root / "manifest.json",
         {
