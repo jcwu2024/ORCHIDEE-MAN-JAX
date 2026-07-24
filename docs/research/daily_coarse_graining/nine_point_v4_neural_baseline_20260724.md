@@ -52,8 +52,27 @@ value target and its statistics are unchanged.
 
 ## Decision
 
-Run a same-budget five-epoch A/B after regenerating the model-plumbing
-acceptance report with the flip-classifier code. Do not extend the old
-checkpoint. Compare continuous family metrics, final absolute undefined
-classification, and the matched persistence baseline before attempting a
-free rollout.
+The same-budget flip-classifier A/B ran as Explore1000 job `14367477` and
+completed in 5:35. It reduced the equal-split selection score from `0.811950`
+to `0.793159`. Final absolute undefined-state errors changed from
+`139/15993/1079` to `18/0/0` on the temporal/spatial/joint validation splits,
+matching the persistence prior. The flip representation is therefore
+accepted and the absolute-state checkpoint remains rejected.
+
+A fresh 15-epoch run at the same learning rate and seed then ran as job
+`14367514`. It completed in 14:22 with about 3.39 GiB peak RSS. Epoch 10 was
+best:
+
+| Split | Persistence baseline | Neural epoch 10 | Relative improvement |
+| --- | ---: | ---: | ---: |
+| temporal | 0.386892 | 0.127768 | 67.0% |
+| spatial | 1.125126 | 0.810324 | 28.0% |
+| joint | 1.680968 | 1.379018 | 18.0% |
+| equal-split selection | 1.064329 | 0.772370 | 27.4% |
+
+Longer training materially improved temporal skill but only modestly improved
+spatial and joint skill. DIFFUCO/ENERBIL and HYDROL spatial errors did not
+improve, so further epochs at the same configuration are not the next
+experiment. The bounded one-step learnability gate is sufficient to justify
+implementing a seven-day validation-only free rollout. The sealed test split
+remains untouched, and no production surrogate claim is made.

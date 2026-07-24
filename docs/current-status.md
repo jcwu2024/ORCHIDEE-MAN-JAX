@@ -75,8 +75,13 @@ Current scientific status:
   0.812 versus 1.064 for the matched persistence baseline, but spatial and
   joint scores remained 0.855 and 1.438;
 - that run exposed an absolute-state `rveget` undefined classifier which
-  damaged a stronger persistence prior; the follow-up model predicts only
-  defined/undefined flips and invalidates the old checkpoint;
+  damaged a stronger persistence prior; the accepted follow-up predicts only
+  defined/undefined flips and reduced temporal/spatial/joint classification
+  errors to `18/0/0`;
+- a fresh 15-epoch run reached its best equal-split score of `0.772` at epoch
+  10, improving temporal/spatial/joint scores over matched persistence by
+  `67.0%/28.0%/18.0%`; additional epochs did not resolve the dominant spatial
+  DIFFUCO/ENERBIL and HYDROL errors;
 - no user-facing `daily-surrogate` run mode exists;
 - no free-running 7-, 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher

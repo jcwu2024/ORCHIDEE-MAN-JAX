@@ -94,14 +94,16 @@ The partial 1961-1969 point-319 chain must not enter this dataset. Results are
 architecture-development evidence only and cannot replace the frozen
 ten-point v4 experiment.
 
-The provisional nine-point dataset and first five-epoch V100 run are complete.
-See [`nine_point_v4_neural_baseline_20260724.md`](nine_point_v4_neural_baseline_20260724.md).
-The network beat the matched one-step persistence baseline by 23.7% overall,
-but spatial and joint generalization remained weak. The first run's absolute
-`rveget` undefined classifier was rejected because it degraded persistence.
-Current code uses a no-flip-centered classifier and checkpoint schema v3; the
-old checkpoint must not be resumed. The next operation is a same-budget
-five-epoch A/B, followed by a rollout decision based on held-out metrics.
+The provisional nine-point dataset, flip-classifier A/B, and fresh 15-epoch
+V100 run are complete. See
+[`nine_point_v4_neural_baseline_20260724.md`](nine_point_v4_neural_baseline_20260724.md).
+The accepted flip classifier restored persistence-level defined/undefined
+accuracy. The 15-epoch run reached its best equal-split score of `0.772370` at
+epoch 10 versus `1.064329` for matched persistence. Temporal/spatial/joint
+improvements were `67.0%/28.0%/18.0%`. Longer training did not resolve the
+DIFFUCO/ENERBIL and HYDROL spatial errors. The next operation is a seven-day
+validation-only free rollout through the retained daily season/STOMATE tail;
+do not evaluate the sealed test split or merely add more epochs.
 
 ## Accepted Historical Production Run
 
