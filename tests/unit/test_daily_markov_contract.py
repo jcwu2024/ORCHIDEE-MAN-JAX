@@ -20,6 +20,11 @@ from research.daily_coarse_graining.canonical_rollout import (
     _contract_finalize_fields,
     _packet_from_canonical_state,
     _projected_finalize_after_slowproc,
+    _state_metrics,
+)
+from research.daily_coarse_graining.markov_dataset import (
+    FiniteColumnStatistics,
+    TrainingStatistics,
 )
 
 
@@ -227,6 +232,34 @@ def test_contract_uses_canonical_state_and_excludes_packet_mirrors():
             {"peatPET_lastyear": updated_peat_pet},
             contract_fields=projected_fields,
         )
+
+    actual = trajectory[1].copy()
+    biomass_leaf = next(
+        leaf
+        for leaf in parsed.state_leaves
+        if leaf.key == "slowproc_stomate_previous_step_state.biomass"
+    )
+    actual[biomass_leaf.start] += 2.0
+    width = parsed.continuous_state_width
+    statistics = TrainingStatistics(
+        dataset_id="test",
+        teacher_git_head="test",
+        contract_sha256=parsed.sha256,
+        sample_count=1,
+        source_shards=("test",),
+        observations_per_column={"state": 1},
+        arrays={
+            "state": FiniteColumnStatistics(
+                count=np.ones(width, dtype=np.uint64),
+                mean=np.zeros(width),
+                variance=np.ones(width),
+                scale=np.ones(width),
+            )
+        },
+    )
+    metrics = _state_metrics(actual, trajectory[1], statistics, parsed)
+    assert metrics["largest_leaves"][0]["key"] == biomass_leaf.key
+    assert metrics["largest_leaves"][0]["max_absolute_error"] == 2.0
 
 
 def test_markov_continuity_rejects_a_different_next_day_state():
