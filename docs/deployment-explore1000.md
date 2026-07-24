@@ -130,6 +130,11 @@ before importing `jax.numpy` or the training module. The accepted smoke test
 reported backend `gpu`, device `cuda:0`, and finite JIT loss and gradients.
 CPU fallback is a failed gate, not a usable training mode.
 
+Before GPU training, run `scripts/hpc/slurm_canonical_dataset_acceptance.sh`
+against the complete v4 aggregate. The training launcher requires the emitted
+`acceptance_report.json` through `ACCEPTANCE` and rejects dataset/statistics
+hash or identity drift.
+
 Historical `orcj_gpu` and `orcj_gpu_compat` environments remain under
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/.venvs/legacy/` as read-only evidence;
 they are not project-wide defaults.

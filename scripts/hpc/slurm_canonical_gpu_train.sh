@@ -17,6 +17,7 @@ PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 DATASET=${DATASET:?set DATASET to the accepted dataset_manifest.json}
 STATISTICS=${STATISTICS:?set STATISTICS to the accepted training statistics JSON}
+ACCEPTANCE=${ACCEPTANCE:?set ACCEPTANCE to the matching passed acceptance_report.json}
 OUTPUT_DIR=${OUTPUT_DIR:?set OUTPUT_DIR to an isolated experiment directory}
 EPOCHS=${EPOCHS:-5}
 BATCH_SIZE=${BATCH_SIZE:-256}
@@ -59,6 +60,7 @@ env \
       train \
       --dataset "$DATASET" \
       --statistics "$STATISTICS" \
+      --acceptance "$ACCEPTANCE" \
       --output-dir "$OUTPUT_DIR" \
       --epochs "$EPOCHS" \
       --batch-size "$BATCH_SIZE" \

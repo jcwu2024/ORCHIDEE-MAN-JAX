@@ -91,6 +91,7 @@ def _manifest(tmp_path: Path) -> Path:
             "validation",
             1.5,
         ),
+        ("test-test", "005.0-071.0", 1963, "test", "test", 2.0),
     )
     shards = []
     for name, landpoint, year, spatial, temporal, offset in definitions:
@@ -111,7 +112,13 @@ def _manifest(tmp_path: Path) -> Path:
             {
                 "schema_version": DATASET_SCHEMA_VERSION,
                 "dataset_id": "canonical-training-test",
+                "status": "complete",
+                "provisional_teacher": True,
+                "plan_sha256": "test-plan-sha256",
                 "teacher_git_head": "teacher-commit",
+                "landpoint_count": 3,
+                "year_count": 3,
+                "shard_count": len(shards),
                 "markov_contract_sha256": contract_hash,
                 "markov_contract": contract,
                 "shards": shards,
@@ -124,11 +131,22 @@ def _manifest(tmp_path: Path) -> Path:
 
 def test_streamed_fast_day_training_and_resume(tmp_path):
     manifest = _manifest(tmp_path)
-    statistics = training.fit_statistics_asset(
+    acceptance_dir = tmp_path / "acceptance"
+    training.accept_training_dataset(
         manifest,
-        tmp_path / "statistics.json",
+        acceptance_dir,
         chunk_rows=1,
+        batch_size=2,
+        seed=7,
+        architecture={
+            "state_latent_width": 4,
+            "forcing_latent_width": 3,
+            "condition_latent_width": 3,
+            "hidden_width": 8,
+        },
     )
+    statistics = acceptance_dir / "training_statistics.json"
+    acceptance = acceptance_dir / "acceptance_report.json"
     output = tmp_path / "training"
     first = training.train_experiment(
         manifest,
@@ -145,6 +163,7 @@ def test_streamed_fast_day_training_and_resume(tmp_path):
             "condition_latent_width": 3,
             "hidden_width": 8,
         },
+        acceptance_path=acceptance,
     )
 
     assert first["epochs"] == 1
@@ -161,6 +180,9 @@ def test_streamed_fast_day_training_and_resume(tmp_path):
     assert first["best_epoch"] == 1
     assert np.isfinite(first["best_validation_score"])
     assert first["target_representation_audit"]["status"] == "passed"
+    assert first["identity"]["acceptance_sha256"] == hashlib.sha256(
+        acceptance.read_bytes()
+    ).hexdigest()
 
     resumed = training.train_experiment(
         manifest,
@@ -177,6 +199,7 @@ def test_streamed_fast_day_training_and_resume(tmp_path):
             "condition_latent_width": 3,
             "hidden_width": 8,
         },
+        acceptance_path=acceptance,
     )
     assert [item["epoch"] for item in resumed["history"]] == [1, 2]
 
@@ -192,3 +215,76 @@ def test_contract_loader_supports_legacy_v3_shard_metadata(tmp_path):
     manifest.write_text(json.dumps(raw), encoding="utf-8")
 
     assert training.load_contract_metadata(manifest) == contract
+
+
+def test_dataset_acceptance_builds_hash_bound_statistics_and_gradient_gate(tmp_path):
+    manifest = _manifest(tmp_path)
+    output = tmp_path / "acceptance"
+
+    report = training.accept_training_dataset(
+        manifest,
+        output,
+        chunk_rows=1,
+        batch_size=2,
+        seed=11,
+        architecture={
+            "state_latent_width": 4,
+            "forcing_latent_width": 3,
+            "condition_latent_width": 3,
+            "hidden_width": 8,
+        },
+    )
+
+    assert report["status"] == "passed"
+    assert report["dataset_validation"]["shards"] == 5
+    assert report["dataset_validation"]["split_pair_shards"]["test/test"] == 1
+    assert report["target_representation_audit"]["status"] == "passed"
+    assert report["training_plumbing_smoke"]["status"] == "passed"
+    assert report["training_plumbing_smoke"]["gradient_norm"] > 0.0
+    statistics = output / "training_statistics.json"
+    acceptance = output / "acceptance_report.json"
+    assert statistics.is_file()
+    assert statistics.with_suffix(".npz").is_file()
+    assert acceptance.is_file()
+    verified = training.verify_training_acceptance(
+        acceptance,
+        manifest,
+        statistics,
+    )
+    assert verified["identity"] == report["identity"]
+
+    statistics.write_text(
+        statistics.read_text(encoding="utf-8") + "\n",
+        encoding="utf-8",
+    )
+    with np.testing.assert_raises_regex(ValueError, "statistics hash mismatch"):
+        training.verify_training_acceptance(
+            acceptance,
+            manifest,
+            statistics,
+        )
+
+
+def test_dataset_acceptance_rejects_nonaggregate_manifest(tmp_path):
+    manifest = _manifest(tmp_path)
+    raw = json.loads(manifest.read_text(encoding="utf-8"))
+    raw["status"] = "incomplete"
+    manifest.write_text(json.dumps(raw), encoding="utf-8")
+
+    with np.testing.assert_raises_regex(ValueError, "complete aggregate"):
+        training.accept_training_dataset(manifest, tmp_path / "acceptance")
+
+
+def test_training_cli_requires_an_acceptance_asset():
+    with np.testing.assert_raises(SystemExit):
+        training._parser().parse_args(
+            [
+                "train",
+                "--dataset",
+                "dataset.json",
+                "--statistics",
+                "statistics.json",
+                "--output-dir",
+                "training",
+            ]
+        )

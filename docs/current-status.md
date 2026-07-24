@@ -54,6 +54,10 @@ Completed infrastructure:
   restoration of persistent undefined values and a dedicated classifier for
   source-dynamic `diffuco.rveget` defined/undefined transitions;
 - pure-JAX gradient and checkpoint plumbing;
+- a hash-bound post-generation acceptance gate that requires a complete v4
+  aggregate, audits target representation, fits sentinel-aware train-only
+  statistics, and passes a real-batch finite forward/loss/gradient smoke
+  before GPU training;
 - compiled Teacher training capture with reduced host transfers;
 - restartable, atomic landpoint-year NPZ shard generation with provenance,
   frozen spatial/temporal splits, resume, and aggregate validation;
@@ -159,8 +163,9 @@ Markov contract are valid. Its operational evidence is recorded in
 
 ## Next Bounded Milestone
 
-Generate the frozen ten-point trajectories with contract v4, fit
-sentinel-aware v2 train-only statistics, rerun the inexpensive five-epoch
+Complete the remaining 41 of 500 frozen ten-point v4 landpoint-years after the
+stuck Explore1000 worker is administratively cleared, aggregate them, run the
+canonical dataset acceptance gate, and rerun the inexpensive five-epoch
 parameter-conditioned `B_fast` experiment, and evaluate held-out one-step
 errors before attempting a seven-day free rollout through retained daily
 season/STOMATE. Do not generate all

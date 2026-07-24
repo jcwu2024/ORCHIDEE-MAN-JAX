@@ -37,6 +37,8 @@ from research.daily_coarse_graining.canonical_training import (
 )
 from research.daily_coarse_graining.daily_markov_contract import load_markov_shard
 from research.daily_coarse_graining.markov_dataset import (
+    DATASET_SCHEMA_VERSION,
+    SPLITS,
     MarkovDatasetIndex,
     TrainingStatistics,
     collate_samples,
@@ -47,6 +49,7 @@ from research.daily_coarse_graining.markov_dataset import (
 )
 
 CHECKPOINT_SCHEMA_VERSION = "canonical_fast_day_checkpoint_v2"
+ACCEPTANCE_SCHEMA_VERSION = "canonical_daily_dataset_acceptance_v1"
 
 
 class AdamState(NamedTuple):
@@ -97,6 +100,250 @@ def fit_statistics_asset(
     index = load_dataset_index(manifest_path)
     statistics = fit_training_statistics(index, chunk_rows=chunk_rows)
     return write_training_statistics(statistics, output_path)
+
+
+def _validate_complete_dataset_manifest(
+    manifest_path: Path,
+    index: MarkovDatasetIndex,
+) -> dict[str, Any]:
+    raw = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if raw.get("schema_version") != DATASET_SCHEMA_VERSION:
+        raise ValueError(
+            f"training acceptance requires {DATASET_SCHEMA_VERSION!r}"
+        )
+    if raw.get("status") != "complete":
+        raise ValueError("training acceptance requires a complete aggregate")
+    if int(raw.get("shard_count", -1)) != len(index.shards):
+        raise ValueError("dataset manifest shard count mismatch")
+    landpoints = {reference.landpoint_id for reference in index.shards}
+    years = {reference.year for reference in index.shards}
+    if int(raw.get("landpoint_count", -1)) != len(landpoints):
+        raise ValueError("dataset manifest landpoint count mismatch")
+    if int(raw.get("year_count", -1)) != len(years):
+        raise ValueError("dataset manifest year count mismatch")
+    if not raw.get("plan_sha256"):
+        raise ValueError("dataset manifest is missing its generation-plan hash")
+
+    split_pairs: dict[str, int] = {}
+    spatial_splits = set()
+    temporal_splits = set()
+    ordered_splits = ("train", "validation", "test")
+    for spatial in ordered_splits:
+        for temporal in ordered_splits:
+            count = len(
+                index.select(
+                    spatial_split=spatial,
+                    temporal_split=temporal,
+                )
+            )
+            split_pairs[f"{spatial}/{temporal}"] = count
+            if count:
+                spatial_splits.add(spatial)
+                temporal_splits.add(temporal)
+    if spatial_splits != set(SPLITS) or temporal_splits != set(SPLITS):
+        raise ValueError(
+            "dataset must contain train, validation, and test spatial and temporal splits"
+        )
+    required_training_pairs = (
+        "train/train",
+        "train/validation",
+        "validation/train",
+        "validation/validation",
+    )
+    missing = [name for name in required_training_pairs if not split_pairs[name]]
+    if missing:
+        raise ValueError(f"dataset is missing required training split pairs: {missing}")
+    return {
+        "schema_version": raw["schema_version"],
+        "status": raw["status"],
+        "provisional_teacher": bool(raw.get("provisional_teacher", False)),
+        "plan_sha256": str(raw["plan_sha256"]),
+        "landpoints": len(landpoints),
+        "years": len(years),
+        "shards": len(index.shards),
+        "split_pair_shards": split_pairs,
+    }
+
+
+def _training_plumbing_smoke(
+    index: MarkovDatasetIndex,
+    statistics: TrainingStatistics,
+    contract: Mapping[str, Any],
+    *,
+    batch_size: int,
+    seed: int,
+    architecture: Mapping[str, int] | None = None,
+) -> dict[str, Any]:
+    if batch_size < 1:
+        raise ValueError("acceptance smoke batch size must be positive")
+    representation = fast_day_target_representation_from_contract(contract)
+    raw = next(
+        _iter_epoch_batches(
+            index,
+            spatial_split="train",
+            temporal_split="train",
+            batch_size=batch_size,
+            seed=seed,
+            drop_last=False,
+        )
+    )
+    batch = prepare_canonical_batch(raw, statistics, representation)
+    config = model_config_from_batch(batch, **dict(architecture or {}))
+    parameters = initialize_canonical_model(config, seed=seed)
+    weights = jnp.asarray(loss_weights_from_contract(contract))
+
+    def loss(value):
+        return canonical_one_step_loss(
+            value,
+            batch.model_input,
+            normalized_fast_day_target=batch.normalized_fast_day_target,
+            fast_day_target_finite=batch.fast_day_target_finite,
+            fast_day_target_weights=weights,
+            dynamic_undefined_target=batch.dynamic_undefined_target,
+        )
+
+    prediction = canonical_model_apply(parameters, batch.model_input)
+    loss_value, gradients = jax.value_and_grad(loss)(parameters)
+    prediction, loss_value, gradients = jax.device_get(
+        (prediction, loss_value, gradients)
+    )
+    prediction_leaves = jax.tree_util.tree_leaves(prediction)
+    gradient_leaves = jax.tree_util.tree_leaves(gradients)
+    prediction_finite = all(np.all(np.isfinite(value)) for value in prediction_leaves)
+    gradient_finite = all(np.all(np.isfinite(value)) for value in gradient_leaves)
+    gradient_squared_norm = sum(
+        float(np.sum(np.asarray(value, dtype=np.float64) ** 2))
+        for value in gradient_leaves
+    )
+    gradient_norm = float(np.sqrt(gradient_squared_norm))
+    passed = bool(
+        prediction_finite
+        and np.isfinite(loss_value)
+        and gradient_finite
+        and gradient_norm > 0.0
+    )
+    report = {
+        "status": "passed" if passed else "failed",
+        "backend": jax.default_backend(),
+        "jax_version": jax.__version__,
+        "batch_size": int(batch.normalized_fast_day_target.shape[0]),
+        "model_config": config._asdict(),
+        "parameter_count": parameter_count(parameters),
+        "prediction_shapes": [list(np.asarray(value).shape) for value in prediction_leaves],
+        "prediction_finite": prediction_finite,
+        "loss": float(loss_value),
+        "loss_finite": bool(np.isfinite(loss_value)),
+        "gradient_leaves": len(gradient_leaves),
+        "gradient_finite": gradient_finite,
+        "gradient_norm": gradient_norm,
+    }
+    if not passed:
+        raise ValueError(f"canonical model plumbing smoke failed: {report}")
+    return report
+
+
+def accept_training_dataset(
+    manifest_path: str | Path,
+    output_dir: str | Path,
+    *,
+    chunk_rows: int = 64,
+    batch_size: int = 8,
+    seed: int = 0,
+    architecture: Mapping[str, int] | None = None,
+) -> dict[str, Any]:
+    """Validate one aggregate and emit the only asset accepted by GPU training."""
+
+    manifest_path = Path(manifest_path).resolve()
+    output_dir = Path(output_dir).resolve()
+    index = load_dataset_index(manifest_path, verify_hashes=True)
+    dataset_validation = _validate_complete_dataset_manifest(manifest_path, index)
+    contract = load_contract_metadata(manifest_path)
+    representation = audit_fast_day_target_representation(index, contract)
+    if representation["status"] != "passed":
+        raise ValueError(
+            "fast-day target representation audit failed with "
+            f"{representation['persistence_mismatches']} mismatches"
+        )
+
+    output_dir.mkdir(parents=True, exist_ok=True)
+    statistics_path = fit_statistics_asset(
+        manifest_path,
+        output_dir / "training_statistics.json",
+        chunk_rows=chunk_rows,
+    )
+    statistics = load_training_statistics(statistics_path, index=index)
+    smoke = _training_plumbing_smoke(
+        index,
+        statistics,
+        contract,
+        batch_size=batch_size,
+        seed=seed,
+        architecture=architecture,
+    )
+    statistics_metadata = json.loads(statistics_path.read_text(encoding="utf-8"))
+    report = {
+        "schema_version": ACCEPTANCE_SCHEMA_VERSION,
+        "status": "passed",
+        "identity": {
+            "dataset_id": index.dataset_id,
+            "teacher_git_head": index.teacher_git_head,
+            "markov_contract_sha256": index.contract_sha256,
+        },
+        "dataset_manifest": {
+            "path": str(manifest_path),
+            "sha256": _sha256_file(manifest_path),
+        },
+        "dataset_validation": dataset_validation,
+        "target_representation_audit": representation,
+        "training_statistics": {
+            "path": str(statistics_path),
+            "sha256": _sha256_file(statistics_path),
+            "arrays_path": str(statistics_path.with_suffix(".npz")),
+            "arrays_sha256": statistics_metadata["statistics_npz_sha256"],
+            "sample_count": statistics.sample_count,
+        },
+        "training_plumbing_smoke": smoke,
+    }
+    report_path = output_dir / "acceptance_report.json"
+    _atomic_json(report_path, report)
+    return report
+
+
+def verify_training_acceptance(
+    acceptance_path: str | Path,
+    manifest_path: str | Path,
+    statistics_path: str | Path,
+) -> Mapping[str, Any]:
+    acceptance_path = Path(acceptance_path).resolve()
+    manifest_path = Path(manifest_path).resolve()
+    statistics_path = Path(statistics_path).resolve()
+    report = json.loads(acceptance_path.read_text(encoding="utf-8"))
+    if report.get("schema_version") != ACCEPTANCE_SCHEMA_VERSION:
+        raise ValueError("unsupported canonical dataset acceptance schema")
+    if report.get("status") != "passed":
+        raise ValueError("canonical dataset acceptance did not pass")
+    if report.get("dataset_validation", {}).get("status") != "complete":
+        raise ValueError("accepted dataset validation is not complete")
+    if report.get("target_representation_audit", {}).get("status") != "passed":
+        raise ValueError("accepted target representation audit did not pass")
+    if report.get("training_plumbing_smoke", {}).get("status") != "passed":
+        raise ValueError("accepted training plumbing smoke did not pass")
+    if report.get("dataset_manifest", {}).get("sha256") != _sha256_file(manifest_path):
+        raise ValueError("accepted dataset manifest hash mismatch")
+    if report.get("training_statistics", {}).get("sha256") != _sha256_file(statistics_path):
+        raise ValueError("accepted training statistics hash mismatch")
+    index = load_dataset_index(manifest_path, verify_hashes=True)
+    statistics = load_training_statistics(statistics_path, index=index)
+    identity = {
+        "dataset_id": index.dataset_id,
+        "teacher_git_head": index.teacher_git_head,
+        "markov_contract_sha256": index.contract_sha256,
+    }
+    if report.get("identity") != identity:
+        raise ValueError("canonical dataset acceptance identity mismatch")
+    if int(report["training_statistics"]["sample_count"]) != statistics.sample_count:
+        raise ValueError("accepted training statistics sample count mismatch")
+    return report
 
 
 def _iter_epoch_batches(
@@ -375,9 +622,17 @@ def _atomic_pickle(path: Path, value: Any) -> None:
     os.replace(temporary, path)
 
 
+def _atomic_json(path: Path, value: Mapping[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+    os.replace(temporary, path)
+
+
 def _checkpoint_identity(
     index: MarkovDatasetIndex,
     statistics_path: Path,
+    acceptance_path: Path,
     config: CanonicalModelConfig,
 ) -> dict[str, Any]:
     return {
@@ -385,6 +640,7 @@ def _checkpoint_identity(
         "teacher_git_head": index.teacher_git_head,
         "markov_contract_sha256": index.contract_sha256,
         "statistics_sha256": _sha256_file(statistics_path),
+        "acceptance_sha256": _sha256_file(acceptance_path),
         "model_config": config._asdict(),
     }
 
@@ -411,12 +667,19 @@ def train_experiment(
     resume: bool = True,
     max_eval_batches: int | None = None,
     architecture: Mapping[str, int] | None = None,
+    acceptance_path: str | Path,
 ) -> dict[str, Any]:
     if epochs < 1 or batch_size < 1 or learning_rate <= 0.0:
         raise ValueError("epochs, batch_size, and learning_rate must be positive")
     manifest_path = Path(manifest_path).resolve()
     statistics_path = Path(statistics_path).resolve()
+    acceptance_path = Path(acceptance_path).resolve()
     output_dir = Path(output_dir).resolve()
+    verify_training_acceptance(
+        acceptance_path,
+        manifest_path,
+        statistics_path,
+    )
     index = load_dataset_index(manifest_path)
     statistics = load_training_statistics(statistics_path, index=index)
     contract = load_contract_metadata(manifest_path)
@@ -439,7 +702,12 @@ def train_experiment(
     )
     first = prepare_canonical_batch(first_raw, statistics, representation)
     config = model_config_from_batch(first, **dict(architecture or {}))
-    identity = _checkpoint_identity(index, statistics_path, config)
+    identity = _checkpoint_identity(
+        index,
+        statistics_path,
+        acceptance_path,
+        config,
+    )
     checkpoint_path = output_dir / "checkpoint.pkl"
     best_checkpoint_path = output_dir / "best_checkpoint.pkl"
     if resume and checkpoint_path.exists():
@@ -573,9 +841,16 @@ def _parser() -> argparse.ArgumentParser:
     audit = commands.add_parser("audit-target-representation")
     audit.add_argument("--dataset", type=Path, required=True)
     audit.add_argument("--output", type=Path, required=True)
+    acceptance = commands.add_parser("accept-dataset")
+    acceptance.add_argument("--dataset", type=Path, required=True)
+    acceptance.add_argument("--output-dir", type=Path, required=True)
+    acceptance.add_argument("--chunk-rows", type=int, default=64)
+    acceptance.add_argument("--batch-size", type=int, default=8)
+    acceptance.add_argument("--seed", type=int, default=0)
     train = commands.add_parser("train")
     train.add_argument("--dataset", type=Path, required=True)
     train.add_argument("--statistics", type=Path, required=True)
+    train.add_argument("--acceptance", type=Path, required=True)
     train.add_argument("--output-dir", type=Path, required=True)
     train.add_argument("--epochs", type=int, default=1)
     train.add_argument("--batch-size", type=int, default=32)
@@ -604,6 +879,16 @@ def main(argv: Sequence[str] | None = None) -> int:
         args.output.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
         print(json.dumps(report, indent=2))
         return 0 if report["status"] == "passed" else 1
+    if args.command == "accept-dataset":
+        report = accept_training_dataset(
+            args.dataset,
+            args.output_dir,
+            chunk_rows=args.chunk_rows,
+            batch_size=args.batch_size,
+            seed=args.seed,
+        )
+        print(json.dumps(report, indent=2))
+        return 0
     summary = train_experiment(
         args.dataset,
         args.statistics,
@@ -614,6 +899,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         seed=args.seed,
         resume=not args.no_resume,
         max_eval_batches=args.max_eval_batches,
+        acceptance_path=args.acceptance,
     )
     print(json.dumps(summary, indent=2))
     return 0

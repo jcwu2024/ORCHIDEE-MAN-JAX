@@ -13,21 +13,23 @@ scientific and release facts remain authoritative in
 2. Read this page, then
    [`daily_markov_contract_v4.md`](daily_markov_contract_v4.md) and
    [`teacher_dataset_generation.md`](teacher_dataset_generation.md).
-3. Check the active Explore1000 jobs listed below. Do not submit a replacement
-   while the current worker array is running.
-4. When aggregation succeeds, validate the resulting dataset before changing
-   the neural model or launching more Teacher generation.
+3. Use the temporary `cln02` login at `192.168.11.2` until the user confirms
+   that `cln01` has been restored.
+4. Check the active ten-point v4 recovery state below. Do not rerun completed
+   shards.
+5. After aggregation, run the canonical dataset-acceptance command before any
+   GPU training.
 
 ```bash
 git status --short --branch
 git log -1 --oneline
 ```
 
-The implementation snapshot from which the current replacement production
-jobs were submitted is commit `3afe92f`. Do not update the server worktree
-while those jobs are running. Later local changes do not alter their fixed
-process image or outputs; any future generation run must record its own exact
-Teacher commit.
+The ten-point v4 production code is fixed at commit `1f19ed7`; later local
+documentation and acceptance-pipeline commits do not alter its process image
+or outputs. Do not update the server worktree until the incomplete worker has
+been recovered. Any future generation run must record its own exact Teacher
+commit.
 
 ## Current Architecture
 
@@ -61,6 +63,27 @@ The intended final repository has independent runtime choices for execution
 backend (`cpu` or `gpu`) and transition implementation
 (`teacher_half_hour` or, after acceptance, `neural_daily`). The research
 branch is temporary development history, not a separate product.
+
+## Active Ten-Point v4 Production
+
+The frozen ten-point v4 run uses plan
+`runtime/plans/teacher_initial_10point_v4_1f19ed7.json`, plan SHA256
+`b32eef75aafc6793c886bcec5858b4f0b343b8e510d12fb744518d35030d84af`,
+four persistent one-CPU workers, and output root
+`runtime/outputs/training/pft14-daily-teacher-initial-10point-1961-2010-v4-1f19ed7`.
+
+Worker array `14365952` completed 459 of 500 landpoint-year entries. Workers
+1-3 completed. Worker 0 timed out after completing all years for points 001
+and 281 plus point 319 through 1969. Its residual internal job `14365953`
+remains stuck in `CG` on `ibc11b02n13`; scheduler cancellation reports
+`Invalid job id`. Administrator cleanup is required. The only unfinished work
+is point 319 for 1970-2010, 41 entries. The obsolete aggregate `14365958`
+cannot pass its `afterok` dependency.
+
+After `CG` clears, read and formally recover the existing worker-0 lock, then
+resume worker index 0 with worker count 4, the same plan/output root, and
+`ibc11b02n13` excluded. Do not rerun any completed shard. Submit a fresh
+aggregate only after the resumed worker completes.
 
 ## Accepted Historical Production Run
 
@@ -102,7 +125,8 @@ changed after the first neural experiment exposed sentinel and finalize-state
 contract defects. The v3 five-point run remains valid Teacher/provenance
 evidence but is not a valid input to the revised trainer.
 
-Monitor from `cln01`; never compute on the login node:
+The historical five-point run was monitored from `cln01`; no computation ran
+on the login node:
 
 ```bash
 /rmprog/slurm/v22.05.7/bin/squeue -j 14363439,14363441 \
@@ -163,11 +187,13 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-1. transfer contract v4 commit `d54811b` and the prepared ten-point manifest;
-2. generate the frozen ten-point, 1961-2010 dataset as v4;
-3. fit sentinel-aware `daily_teacher_training_statistics_v2` from train/train
-   shards only;
-4. rerun the bounded five-epoch parameter-conditioned network experiment;
+1. recover and generate only the remaining 41 v4 landpoint-years;
+2. aggregate all 500 shards;
+3. run `canonical_training_run accept-dataset`, which revalidates aggregate
+   status, schema, all hashes, splits, v4 target representation, train-only
+   statistics, and a real-batch finite forward/loss/gradient smoke;
+4. use the resulting `acceptance_report.json` and v2 statistics for the
+   bounded five-epoch parameter-conditioned network experiment;
 5. evaluate train/validation/test one-step errors by process family, including
    the dynamic `rveget` defined/undefined classifier;
 6. run 7-day free rollout through the retained daily season/STOMATE tail;
@@ -225,10 +251,12 @@ The Explore1000 GPU runtime prerequisite is complete at commit `c566538`:
   mirrors and statistics v1 treated ORCHIDEE sentinels as finite data;
 - its checkpoint and statistics must not be resumed or reused with v4.
 
-Do not bypass the GPU launcher with a direct import of
-`canonical_training_run`: in this container, JAX plugin auto-discovery can
-otherwise initialize CPU first. The next GPU operation comes only after the v4
-five-point dataset and v2 statistics are regenerated and validated.
+GPU training now requires the matching passed `acceptance_report.json`; the
+launcher refuses a missing or hash-mismatched report. Do not bypass the GPU
+launcher with a direct import of `canonical_training_run`: in this container,
+JAX plugin auto-discovery can otherwise initialize CPU first. The next GPU
+operation comes only after the v4 ten-point dataset and v2 statistics are
+generated and accepted.
 
 ## Decisions Not To Reopen
 

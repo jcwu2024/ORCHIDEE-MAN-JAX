@@ -198,6 +198,24 @@ scale one. `normalize_finite` maps undefined entries to normalized zero and
 returns their explicit boolean mask. Validation and test shards must never
 contribute normalization statistics.
 
+After `teacher_shards aggregate` succeeds, use the single acceptance command
+instead of running statistics and representation checks independently:
+
+```bash
+python -m research.daily_coarse_graining.canonical_training_run \
+  accept-dataset \
+  --dataset "$DATASET_ROOT/dataset_manifest.json" \
+  --output-dir "$ACCEPTANCE_ROOT"
+```
+
+This command requires a complete v4 aggregate, reopens and hashes every shard,
+checks split coverage, audits the v4 persistence/sentinel target
+representation, fits train/train-only v2 statistics, and executes a real-batch
+finite forward/loss/gradient smoke. It writes `training_statistics.json`,
+`training_statistics.npz`, and `acceptance_report.json`. The GPU training CLI
+requires `--acceptance` and verifies that the report, dataset manifest, and
+statistics still have the accepted hashes and identity.
+
 The first real v2 smoke shard (`103.0-095.0`, 1962 Day 1) remains historical evidence and contains one
 source-defined non-finite state column: the bare-soil/PFT1 slot of
 `diffuco_previous_step_state.roughheight_pft`. CONDVEG intentionally assigns
