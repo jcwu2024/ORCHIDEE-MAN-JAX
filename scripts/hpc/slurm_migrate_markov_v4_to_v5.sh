@@ -39,7 +39,7 @@ fi
 
 test -x "$PYTHON"
 test -f "$SOURCE_MANIFEST"
-test "$(git -C "$WORKTREE" rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
+test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
 mkdir -p "$OUTPUT_ROOT" "$ROOT/runtime/logs" "$ROOT/runtime/cache/xdg"
 export JAX_PLATFORMS=cpu
 export JAX_ENABLE_X64=true
