@@ -10,6 +10,7 @@ from research.daily_coarse_graining.canonical_daily_model import (
 )
 from research.daily_coarse_graining.canonical_multistep import (
     CanonicalMultistepSequence,
+    canonical_multistep_batch_loss,
     canonical_multistep_rollout,
     sequence_from_markov_window,
 )
@@ -156,6 +157,51 @@ def test_multistep_scan_supports_one_three_and_seven_day_curriculum():
         result = run(_sequence(days))
         assert result.steps.continuous_state.shape == (days, 2)
         assert np.isfinite(np.asarray(result.loss))
+
+
+def test_multistep_batch_loss_vmaps_same_runtime_windows_and_gradients():
+    config = CanonicalModelConfig(
+        state_width=2,
+        forcing_width=1,
+        parameter_width=1,
+        landpoint_static_width=1,
+        annual_condition_width=1,
+        fast_day_target_width=2,
+        dynamic_undefined_width=1,
+        state_latent_width=2,
+        forcing_latent_width=2,
+        condition_latent_width=2,
+        hidden_width=3,
+    )
+    parameters = initialize_canonical_model(config, seed=8)
+    representation = FastDayTargetRepresentation(
+        state_indices=np.asarray([0, 1], dtype=np.int32),
+        dynamic_undefined_indices=np.asarray([1], dtype=np.int32),
+        dynamic_undefined_fill_values=np.asarray([1.0e20]),
+    )
+    sequences = jax.tree_util.tree_map(
+        lambda value: jnp.stack((value, value)),
+        _sequence(3),
+    )
+
+    def loss(model_parameters):
+        return canonical_multistep_batch_loss(
+            model_parameters,
+            jnp.asarray([[0.1, 0.2], [0.2, 0.3]]),
+            {"flag": jnp.asarray([[True], [False]])},
+            sequences,
+            statistics=_statistics(),
+            representation=representation,
+            fast_day_weights=jnp.asarray([0.5, 0.5]),
+            retained_tail_transition=_tail,
+        )
+
+    loss_value, gradients = jax.jit(jax.value_and_grad(loss))(parameters)
+    assert np.isfinite(np.asarray(loss_value))
+    assert all(
+        np.all(np.isfinite(np.asarray(value)))
+        for value in jax.tree_util.tree_leaves(gradients)
+    )
 
 
 def test_verified_markov_window_adapter_requires_matching_tail_horizon():

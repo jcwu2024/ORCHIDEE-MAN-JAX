@@ -131,6 +131,25 @@ def test_contiguous_windows_never_cross_landpoint_or_year_boundaries(tmp_path):
         list(index.windows(0))
 
 
+def test_collate_windows_stacks_equal_horizon_trajectories(tmp_path):
+    index = markov_dataset.load_dataset_index(_manifest(tmp_path))
+    windows = list(index.windows(2))
+    batch = markov_dataset.collate_windows(windows)
+
+    assert batch["initial_state"].shape == (2, 4)
+    assert batch["state_trajectory"].shape == (2, 3, 4)
+    assert batch["teacher_next_state"].shape == (2, 2, 4)
+    assert batch["teacher_fast_day_target"].shape == (2, 2, 6)
+    assert batch["forcing_native"].shape == (2, 2, 5, 9)
+    assert batch["initial_discrete_state"]["flag"].shape == (2, 1)
+    assert batch["discrete_trajectory"]["flag"].shape == (2, 3, 1)
+    assert "sample_landpoint_id" not in batch
+
+    shorter = {**windows[1], "day_index": windows[1]["day_index"][:1]}
+    with pytest.raises(ValueError, match="fixed horizon"):
+        markov_dataset.collate_windows((windows[0], shorter))
+
+
 def test_markov_window_rejects_noncontiguous_day_indices(tmp_path):
     manifest = _manifest(tmp_path)
     raw = json.loads(manifest.read_text(encoding="utf-8"))

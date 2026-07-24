@@ -552,6 +552,47 @@ def collate_samples(samples: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
     return result
 
 
+def collate_windows(windows: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
+    """Stack equal-horizon trajectories without crossing shard boundaries."""
+
+    if not windows:
+        raise ValueError("cannot collate an empty window sequence")
+    horizon = int(np.asarray(windows[0]["day_index"]).shape[0])
+    if horizon < 1 or any(
+        np.asarray(window["day_index"]).shape != (horizon,) for window in windows
+    ):
+        raise ValueError("collated Markov windows must have one fixed horizon")
+    array_names = (
+        "initial_state",
+        "state_trajectory",
+        "teacher_next_state",
+        "teacher_fast_day_target",
+        "forcing_native",
+        "parameters",
+        "landpoint_static",
+        "annual_conditions",
+        "year",
+        "day_index",
+    )
+    result = {
+        name: np.stack([np.asarray(window[name]) for window in windows])
+        for name in array_names
+    }
+    for group in (
+        "initial_discrete_state",
+        "discrete_trajectory",
+        "teacher_next_discrete_state",
+    ):
+        keys = tuple(windows[0][group])
+        if any(tuple(window[group]) != keys for window in windows[1:]):
+            raise ValueError(f"{group} schema drift across windows")
+        result[group] = {
+            key: np.stack([np.asarray(window[group][key]) for window in windows])
+            for key in keys
+        }
+    return result
+
+
 def batched(samples: Iterable[Mapping[str, Any]], batch_size: int) -> Iterator[dict[str, Any]]:
     if batch_size < 1:
         raise ValueError("batch_size must be positive")

@@ -232,3 +232,40 @@ def canonical_multistep_rollout(
         final_carry=final_carry,
         steps=steps,
     )
+
+
+def canonical_multistep_batch_loss(
+    parameters: CanonicalModelParameters,
+    initial_states,
+    initial_discrete_states: Mapping[str, Any],
+    sequences: CanonicalMultistepSequence,
+    *,
+    statistics: TrainingStatistics,
+    representation: FastDayTargetRepresentation,
+    fast_day_weights,
+    retained_tail_transition: RetainedTailTransition,
+    state_loss_weight: float = 1.0,
+    undefined_loss_weight: float = 0.1,
+):
+    """Average recursive loss for a same-runtime batch of trajectory windows."""
+
+    def one(initial_state, initial_discrete_state, sequence):
+        return canonical_multistep_rollout(
+            parameters,
+            initial_state,
+            initial_discrete_state,
+            sequence,
+            statistics=statistics,
+            representation=representation,
+            fast_day_weights=fast_day_weights,
+            retained_tail_transition=retained_tail_transition,
+            state_loss_weight=state_loss_weight,
+            undefined_loss_weight=undefined_loss_weight,
+        ).loss
+
+    losses = jax.vmap(one)(
+        initial_states,
+        initial_discrete_states,
+        sequences,
+    )
+    return jnp.mean(losses)
