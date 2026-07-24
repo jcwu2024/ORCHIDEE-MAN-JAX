@@ -33,6 +33,15 @@ class CanonicalTrainingBatch(NamedTuple):
     dynamic_undefined_flip_target: Any
 
 
+class CanonicalInferenceBatch(NamedTuple):
+    """Target-free model input and persistence metadata for autoregressive use."""
+
+    model_input: CanonicalDayBatch
+    persistent_fast_day_undefined: Any
+    persistent_fast_day_undefined_values: Any
+    persistent_dynamic_undefined: Any
+
+
 class FastDayTargetRepresentation(NamedTuple):
     """Contract mapping from learned outputs to same-owner day-start state."""
 
@@ -130,27 +139,21 @@ def prepare_canonical_batch(
 ) -> CanonicalTrainingBatch:
     """Normalize one collated batch using train-only finite statistics."""
 
+    inference = prepare_canonical_inference_batch(
+        batch,
+        statistics,
+        representation,
+    )
     required = (
-        "state",
-        "forcing_native",
-        "parameters",
-        "landpoint_static",
-        "annual_conditions",
         "fast_day_target",
-        "year",
-        "day_index",
     )
     missing = tuple(name for name in required if name not in batch)
     if missing:
         raise ValueError(f"canonical training batch is missing {missing}")
-    normalized = {}
-    finite = {}
-    for name in required[:6]:
-        if name not in statistics.arrays:
-            raise ValueError(f"training statistics are missing {name}")
-        normalized[name], finite[name] = normalize_finite(
-            np.asarray(batch[name]), statistics.arrays[name]
-        )
+    normalized_target, finite_target = normalize_finite(
+        np.asarray(batch["fast_day_target"]),
+        statistics.arrays["fast_day_target"],
+    )
     target = np.asarray(batch["fast_day_target"], dtype=np.float64)
     state = np.asarray(batch["state"], dtype=np.float64)
     indices = np.asarray(representation.state_indices, dtype=np.int32)
@@ -159,7 +162,6 @@ def prepare_canonical_batch(
     matched = indices >= 0
     selected_indices = np.maximum(indices, 0)
     persisted = state[:, selected_indices]
-    persisted_defined = defined_numeric_mask(persisted) & matched[None, :]
     target_defined = defined_numeric_mask(target)
     persisted_undefined = ~defined_numeric_mask(persisted) & matched[None, :]
     target_undefined = ~target_defined
@@ -180,45 +182,13 @@ def prepare_canonical_batch(
             "fast-day undefined value is not persistent from day-start state: "
             f"column={first}, mismatches={rows.size}"
         )
-    target_statistics = statistics.arrays["fast_day_target"]
-    baseline = np.zeros_like(target, dtype=np.float64)
-    np.subtract(
-        persisted,
-        target_statistics.mean,
-        out=baseline,
-        where=persisted_defined,
-    )
-    np.divide(
-        baseline,
-        target_statistics.scale,
-        out=baseline,
-        where=persisted_defined,
-    )
-    model_input = CanonicalDayBatch(
-        state=normalized["state"].astype(np.float32),
-        state_finite=finite["state"],
-        normalized_fast_day_baseline=baseline.astype(np.float32),
-        forcing_native=normalized["forcing_native"].astype(np.float32),
-        forcing_finite=finite["forcing_native"],
-        parameters=normalized["parameters"].astype(np.float32),
-        parameters_finite=finite["parameters"],
-        landpoint_static=normalized["landpoint_static"].astype(np.float32),
-        landpoint_static_finite=finite["landpoint_static"],
-        annual_conditions=normalized["annual_conditions"].astype(np.float32),
-        annual_conditions_finite=finite["annual_conditions"],
-        calendar=_calendar_features(batch["year"], batch["day_index"]).astype(
-            np.float32
-        ),
-    )
     dynamic_indices = representation.dynamic_undefined_indices
     persistent_dynamic_undefined = persisted_undefined[:, dynamic_indices]
     target_dynamic_undefined = target_undefined[:, dynamic_indices]
     return CanonicalTrainingBatch(
-        model_input=model_input,
-        normalized_fast_day_target=normalized["fast_day_target"].astype(
-            np.float32
-        ),
-        fast_day_target_finite=finite["fast_day_target"],
+        model_input=inference.model_input,
+        normalized_fast_day_target=normalized_target.astype(np.float32),
+        fast_day_target_finite=finite_target,
         fast_day_target_undefined=target_undefined,
         fast_day_target_undefined_values=np.where(
             target_undefined, target, 0.0
@@ -235,14 +205,89 @@ def prepare_canonical_batch(
     )
 
 
-def restore_fast_day_prediction(
+def prepare_canonical_inference_batch(
+    batch: Mapping[str, Any],
+    statistics: TrainingStatistics,
+    representation: FastDayTargetRepresentation,
+) -> CanonicalInferenceBatch:
+    """Build canonical model inputs without reading a Teacher target."""
+
+    required = (
+        "state",
+        "forcing_native",
+        "parameters",
+        "landpoint_static",
+        "annual_conditions",
+        "year",
+        "day_index",
+    )
+    missing = tuple(name for name in required if name not in batch)
+    if missing:
+        raise ValueError(f"canonical inference batch is missing {missing}")
+    normalized = {}
+    finite = {}
+    for name in required[:5]:
+        if name not in statistics.arrays:
+            raise ValueError(f"training statistics are missing {name}")
+        normalized[name], finite[name] = normalize_finite(
+            np.asarray(batch[name]), statistics.arrays[name]
+        )
+
+    state = np.asarray(batch["state"], dtype=np.float64)
+    indices = np.asarray(representation.state_indices, dtype=np.int32)
+    matched = indices >= 0
+    selected_indices = np.maximum(indices, 0)
+    persisted = state[:, selected_indices]
+    persisted_defined = defined_numeric_mask(persisted) & matched[None, :]
+    persisted_undefined = ~defined_numeric_mask(persisted) & matched[None, :]
+    target_statistics = statistics.arrays["fast_day_target"]
+    baseline = np.zeros(persisted.shape, dtype=np.float64)
+    np.subtract(
+        persisted,
+        target_statistics.mean,
+        out=baseline,
+        where=persisted_defined,
+    )
+    np.divide(
+        baseline,
+        target_statistics.scale,
+        out=baseline,
+        where=persisted_defined,
+    )
+    dynamic_indices = representation.dynamic_undefined_indices
+    return CanonicalInferenceBatch(
+        model_input=CanonicalDayBatch(
+            state=normalized["state"].astype(np.float32),
+            state_finite=finite["state"],
+            normalized_fast_day_baseline=baseline.astype(np.float32),
+            forcing_native=normalized["forcing_native"].astype(np.float32),
+            forcing_finite=finite["forcing_native"],
+            parameters=normalized["parameters"].astype(np.float32),
+            parameters_finite=finite["parameters"],
+            landpoint_static=normalized["landpoint_static"].astype(np.float32),
+            landpoint_static_finite=finite["landpoint_static"],
+            annual_conditions=normalized["annual_conditions"].astype(np.float32),
+            annual_conditions_finite=finite["annual_conditions"],
+            calendar=_calendar_features(batch["year"], batch["day_index"]).astype(
+                np.float32
+            ),
+        ),
+        persistent_fast_day_undefined=persisted_undefined,
+        persistent_fast_day_undefined_values=np.where(
+            persisted_undefined, persisted, 0.0
+        ),
+        persistent_dynamic_undefined=persisted_undefined[:, dynamic_indices],
+    )
+
+
+def restore_fast_day_inference_prediction(
     normalized_prediction: np.ndarray,
     dynamic_undefined_flip_logits: np.ndarray,
-    batch: CanonicalTrainingBatch,
+    batch: CanonicalInferenceBatch,
     statistics: TrainingStatistics,
     representation: FastDayTargetRepresentation,
 ) -> np.ndarray:
-    """Restore physical values and source-defined undefined input values."""
+    """Restore one target-free model prediction to physical Teacher units."""
 
     physical = denormalize(
         np.asarray(normalized_prediction), statistics.arrays["fast_day_target"]
@@ -261,6 +306,32 @@ def restore_fast_day_prediction(
         representation.dynamic_undefined_fill_values[None, :]
     )
     return np.where(undefined, undefined_values, physical)
+
+
+def restore_fast_day_prediction(
+    normalized_prediction: np.ndarray,
+    dynamic_undefined_flip_logits: np.ndarray,
+    batch: CanonicalTrainingBatch,
+    statistics: TrainingStatistics,
+    representation: FastDayTargetRepresentation,
+) -> np.ndarray:
+    """Restore physical values and source-defined undefined input values."""
+
+    inference = CanonicalInferenceBatch(
+        model_input=batch.model_input,
+        persistent_fast_day_undefined=batch.persistent_fast_day_undefined,
+        persistent_fast_day_undefined_values=(
+            batch.persistent_fast_day_undefined_values
+        ),
+        persistent_dynamic_undefined=batch.persistent_dynamic_undefined,
+    )
+    return restore_fast_day_inference_prediction(
+        normalized_prediction,
+        dynamic_undefined_flip_logits,
+        inference,
+        statistics,
+        representation,
+    )
 
 
 def restore_fast_day_target(

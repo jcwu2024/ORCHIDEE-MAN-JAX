@@ -16,6 +16,9 @@ from jax_orchidee.driver.orchestration import (
 from jax_orchidee.driver.reference_layout import resolve_paper_landpoint_reference
 from research.daily_coarse_graining import daily_markov_contract as markov
 from research.daily_coarse_graining import teacher_shards
+from research.daily_coarse_graining.canonical_rollout import (
+    _packet_from_canonical_state,
+)
 
 
 def _packet(value: float, *, flag: bool = True, include_nroot: bool = False):
@@ -158,6 +161,9 @@ def test_contract_uses_canonical_state_and_excludes_packet_mirrors():
     )
     assert contract.active_pft_indices == (0, 13)
     assert contract.sha256 == contract.sha256
+    parsed = markov.daily_markov_contract_from_metadata(contract.metadata())
+    assert parsed == contract
+    assert parsed.sha256 == contract.sha256
 
     markov.assert_markov_continuity([start], [record], end, contract)
     trajectory, discrete = markov.build_state_trajectory([start, end], contract)
@@ -177,6 +183,19 @@ def test_contract_uses_canonical_state_and_excludes_packet_mirrors():
     np.testing.assert_array_equal(roundtrip, trajectory[1])
     for name, value in discrete.items():
         np.testing.assert_array_equal(roundtrip_discrete[name], value[1])
+    runtime_packet = _packet_from_canonical_state(
+        trajectory[1],
+        {name: value[1] for name, value in discrete.items()},
+        parsed,
+        tstep=95,
+    )
+    runtime_continuous, runtime_discrete = markov.extract_state(
+        runtime_packet,
+        parsed,
+    )
+    np.testing.assert_array_equal(runtime_continuous, trajectory[1])
+    for name, value in discrete.items():
+        np.testing.assert_array_equal(runtime_discrete[name], value[1])
     np.testing.assert_array_equal(
         reconstructed_fields["diffuco_previous_step_state"]["lai"],
         reconstructed_fields["slowproc_stomate_previous_step_state"]["lai"],

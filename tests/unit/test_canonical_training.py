@@ -8,6 +8,8 @@ from research.daily_coarse_graining.canonical_training import (
     loss_weights_from_contract,
     model_config_from_batch,
     prepare_canonical_batch,
+    prepare_canonical_inference_batch,
+    restore_fast_day_inference_prediction,
     restore_fast_day_prediction,
 )
 from research.daily_coarse_graining.markov_dataset import (
@@ -173,6 +175,51 @@ def test_dynamic_undefined_classifier_learns_flips_from_persistence():
     )
     assert restored[0, 1] == 1.0e20
     assert restored[1, 1] == 5.0
+
+
+def test_inference_batch_never_requires_or_reads_teacher_target():
+    batch = {
+        "state": np.asarray([[10.0, 1.0e20]]),
+        "forcing_native": np.ones((1, 5, 1)),
+        "parameters": np.ones((1, 1)),
+        "landpoint_static": np.ones((1, 1)),
+        "annual_conditions": np.ones((1, 1)),
+        "year": np.asarray([1961]),
+        "day_index": np.asarray([2]),
+    }
+    statistics = _statistics(
+        {
+            "state": (2,),
+            "forcing_native": (1,),
+            "parameters": (1,),
+            "landpoint_static": (1,),
+            "annual_conditions": (1,),
+            "fast_day_target": (2,),
+        }
+    )
+    representation = FastDayTargetRepresentation(
+        state_indices=np.asarray([0, 1], dtype=np.int32),
+        dynamic_undefined_indices=np.asarray([1], dtype=np.int32),
+        dynamic_undefined_fill_values=np.asarray([1.0e20]),
+    )
+
+    prepared = prepare_canonical_inference_batch(
+        batch,
+        statistics,
+        representation,
+    )
+    np.testing.assert_allclose(
+        prepared.model_input.normalized_fast_day_baseline,
+        [[10.0, 0.0]],
+    )
+    restored = restore_fast_day_inference_prediction(
+        np.asarray([[12.0, 5.0]]),
+        np.asarray([[-4.0]]),
+        prepared,
+        statistics,
+        representation,
+    )
+    np.testing.assert_array_equal(restored, [[12.0, 1.0e20]])
 
 
 def test_prepare_canonical_batch_rejects_nonpersistent_sentinel():

@@ -680,6 +680,121 @@ def fast_day_target_leaves_from_metadata(
     return leaves
 
 
+def daily_markov_contract_from_metadata(
+    metadata: Mapping[str, Any],
+) -> DailyMarkovContract:
+    """Restore and strictly validate a serialized daily Markov contract."""
+
+    if metadata.get("schema_version") != CONTRACT_SCHEMA_VERSION:
+        raise ValueError("unsupported daily Markov contract schema")
+
+    def state_leaf(item: Mapping[str, Any]) -> StateLeafSpec:
+        return StateLeafSpec(
+            component=str(item["component"]),
+            path=tuple(str(name) for name in item["path"]),
+            shape=tuple(int(size) for size in item["shape"]),
+            full_shape=tuple(int(size) for size in item["full_shape"]),
+            dtype=str(item["dtype"]),
+            start=(None if item.get("start") is None else int(item["start"])),
+            stop=(None if item.get("stop") is None else int(item["stop"])),
+            classification=str(item["classification"]),
+            source_ref=str(item["source_ref"]),
+            missing_policy=str(item.get("missing_policy", "error")),
+            axis_names=tuple(str(name) for name in item.get("axis_names", ())),
+            selected_pft_indices=tuple(
+                int(index) for index in item.get("selected_pft_indices", ())
+            ),
+        )
+
+    def condition_leaf(item: Mapping[str, Any]) -> ConditionLeafSpec:
+        return ConditionLeafSpec(
+            name=str(item["name"]),
+            shape=tuple(int(size) for size in item["shape"]),
+            dtype=str(item["dtype"]),
+            start=int(item["start"]),
+            stop=int(item["stop"]),
+            temporal_role=str(item["temporal_role"]),
+            source=str(item["source"]),
+        )
+
+    state_leaves = tuple(state_leaf(item) for item in metadata["state_leaves"])
+    diagnostics = tuple(
+        DiagnosticSpec(
+            name=str(item["name"]),
+            shape=tuple(int(size) for size in item["shape"]),
+            dtype=str(item["dtype"]),
+            start=int(item["start"]),
+            stop=int(item["stop"]),
+            owner=str(item["owner"]),
+            axis_names=tuple(str(name) for name in item.get("axis_names", ())),
+            selected_pft_indices=tuple(
+                int(index) for index in item.get("selected_pft_indices", ())
+            ),
+        )
+        for item in metadata["diagnostic_leaves"]
+    )
+    forcing = metadata["native_forcing"]
+    conditions = metadata["static_conditions"]
+    contract = DailyMarkovContract(
+        schema_version=str(metadata["schema_version"]),
+        state_leaves=state_leaves,
+        fast_day_target_leaves=fast_day_target_leaves_from_metadata(metadata),
+        diagnostic_leaves=diagnostics,
+        native_forcing=NativeForcingSpec(
+            fields=tuple(str(name) for name in forcing["fields"]),
+            field_shape=tuple(int(size) for size in forcing["field_shape"]),
+            source_records_per_day=int(forcing["source_records_per_day"]),
+            source_interval_seconds=float(forcing["source_interval_seconds"]),
+            model_interval_seconds=float(forcing["model_interval_seconds"]),
+            split=int(forcing["split"]),
+            precipitation_spread_steps=int(forcing["precipitation_spread_steps"]),
+        ),
+        static_conditions=StaticConditionSpec(
+            parameter_leaves=tuple(
+                condition_leaf(item) for item in conditions["parameter_leaves"]
+            ),
+            landpoint_static_leaves=tuple(
+                condition_leaf(item)
+                for item in conditions["landpoint_static_leaves"]
+            ),
+            annual_condition_leaves=tuple(
+                condition_leaf(item)
+                for item in conditions["annual_condition_leaves"]
+            ),
+            includes=tuple(str(name) for name in conditions["includes"]),
+        ),
+        source_hashes=tuple(
+            (str(name), str(value))
+            for name, value in metadata["source_hashes"].items()
+        ),
+        active_pft_indices=tuple(
+            int(index) for index in metadata["active_pft_indices"]
+        ),
+    )
+
+    continuous_cursor = 0
+    for leaf in contract.state_leaves:
+        if leaf.discrete:
+            if leaf.stop is not None:
+                raise ValueError(f"discrete state leaf has a stop offset: {leaf.key}")
+            continue
+        if leaf.start != continuous_cursor or leaf.stop is None:
+            raise ValueError(f"non-contiguous continuous state leaf {leaf.key}")
+        if leaf.stop - leaf.start != int(np.prod(leaf.shape, dtype=np.int64)):
+            raise ValueError(f"continuous state leaf width mismatch for {leaf.key}")
+        continuous_cursor = leaf.stop
+    diagnostic_cursor = 0
+    for leaf in contract.diagnostic_leaves:
+        if leaf.start != diagnostic_cursor or leaf.stop - leaf.start != int(
+            np.prod(leaf.shape, dtype=np.int64)
+        ):
+            raise ValueError(f"non-contiguous diagnostic leaf {leaf.name}")
+        diagnostic_cursor = leaf.stop
+    if _canonical_json(contract.metadata()) != _canonical_json(dict(metadata)):
+        raise ValueError("daily Markov contract metadata does not round-trip")
+    return contract
+
+
 def reconstruct_fast_day_target(
     target: np.ndarray,
     leaves: Sequence[FastDayTargetLeafSpec],
