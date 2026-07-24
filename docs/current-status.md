@@ -101,6 +101,11 @@ Current scientific status:
 - the v5 dataset acceptance gate passed on 96,354 train/train transitions with
   zero target-representation persistence mismatches and finite forward, loss,
   and gradients for the 1,963,369-parameter canonical model;
+- a real V100 one-window multistep smoke passed at research commit `f68ea59`:
+  one horizon-1 update completed in 104.84 seconds including first compile,
+  with loss `0.0495625`, gradient norm `0.389538`, and a finite 31.4 MB
+  checkpoint; this also closed canonical generation-plan hashing and external
+  server data-root wiring in the multistep launchers;
 - no free-running v5 7-, 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
   acceptance gate is complete.

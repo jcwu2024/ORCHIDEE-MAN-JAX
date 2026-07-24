@@ -126,6 +126,23 @@ mismatches, and finite real-batch forward/loss/gradients. The earlier
 acceptance attempt `14371680` is rejected because its migrated manifest lacked
 the inherited generation-plan hash.
 
+The first real multistep V100 smoke passed on `gln01` at research commit
+`f68ea595dc244419736c6ef412f64100ab792ade`. It used one horizon-1 update and
+batch size 1, completed its compiled stage in 104.84 seconds, reported loss
+`0.04956254117421305` and gradient norm `0.38953763246536255`, and wrote a
+finite checkpoint. Evidence is under
+`runtime/outputs/smoke/multistep-gln01-smoke-f68ea59`; the report SHA256 is
+`a97cbc9cd369336264e19243150c0089476de936e4a6df0782677fe36e2828cb` and the
+best-checkpoint SHA256 is
+`e0b0b6b05f04487d0d115174c2de337d52ca20d0ede3fa1cca157b8986cf7a55`.
+
+This smoke exposed and closed two launcher defects before paid training:
+multistep plan verification now uses the canonical JSON hash recorded by the
+dataset manifest, and both GPU launchers pass the external runtime data roots
+into the container. Slurm job `14371998`, submitted from the superseded
+`aa98334` snapshot, remains pending and is not evidence; if it starts unchanged
+it will fail the old raw-file plan-hash check before training.
+
 ## Accepted Historical Production Run
 
 The bounded architecture-development dataset is frozen by
