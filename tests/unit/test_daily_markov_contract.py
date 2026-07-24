@@ -17,7 +17,9 @@ from jax_orchidee.driver.reference_layout import resolve_paper_landpoint_referen
 from research.daily_coarse_graining import daily_markov_contract as markov
 from research.daily_coarse_graining import teacher_shards
 from research.daily_coarse_graining.canonical_rollout import (
+    _contract_finalize_fields,
     _packet_from_canonical_state,
+    _projected_finalize_after_slowproc,
 )
 
 
@@ -188,7 +190,6 @@ def test_contract_uses_canonical_state_and_excludes_packet_mirrors():
         {name: value[1] for name, value in discrete.items()},
         parsed,
         tstep=95,
-        require_complete_finalize=False,
     )
     runtime_continuous, runtime_discrete = markov.extract_state(
         runtime_packet,
@@ -208,6 +209,24 @@ def test_contract_uses_canonical_state_and_excludes_packet_mirrors():
     assert reconstructed_fields["slowproc_stomate_previous_step_state"][
         "biomass"
     ][0, 5, 0, 0] == 123.0
+
+    projected_fields = _contract_finalize_fields(parsed)
+    projected = runtime_packet.fields_by_component["sechiba_finalize_state"]
+    assert frozenset(projected) == projected_fields
+    updated_peat_pet = np.full_like(projected["peatPET_lastyear"], 7.0)
+    finalized = _projected_finalize_after_slowproc(
+        projected,
+        {"peatPET_lastyear": updated_peat_pet},
+        contract_fields=projected_fields,
+    )
+    np.testing.assert_array_equal(finalized["peatPET_lastyear"], updated_peat_pet)
+    np.testing.assert_array_equal(finalized["leaf_ci"], projected["leaf_ci"])
+    with pytest.raises(ValueError, match="does not match the canonical contract"):
+        _projected_finalize_after_slowproc(
+            {**projected, "fluxlat": np.asarray([1.0])},
+            {"peatPET_lastyear": updated_peat_pet},
+            contract_fields=projected_fields,
+        )
 
 
 def test_markov_continuity_rejects_a_different_next_day_state():

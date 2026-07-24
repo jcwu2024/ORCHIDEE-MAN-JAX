@@ -17,6 +17,11 @@ import jax
 import numpy as np
 
 from jax_orchidee.driver import orchestration as teacher
+from jax_orchidee.sechiba.restart_io import (
+    SECHIBA_RESTART_COMPONENT_FIELDS,
+    SECHIBA_RESTART_TO_SOURCE_NAMES,
+)
+from jax_orchidee.sechiba.restart_lifecycle import SECHIBA_FINALIZE_SOURCE_FIELDS
 from research.daily_coarse_graining.canonical_daily_model import (
     CanonicalModelConfig,
     canonical_model_apply,
@@ -71,7 +76,7 @@ def _packet_from_canonical_state(
     contract: DailyMarkovContract,
     *,
     tstep: int,
-    require_complete_finalize: bool = True,
+    require_complete_finalize: bool = False,
 ):
     fields = reconstruct_state_fields(
         continuous,
@@ -88,6 +93,52 @@ def _packet_from_canonical_state(
         fields_by_component=fields,
         provenance_by_component=provenance,
     )
+
+
+_SLOWPROC_FINALIZE_FIELDS = frozenset(
+    SECHIBA_RESTART_TO_SOURCE_NAMES.get(name, name)
+    for name in SECHIBA_RESTART_COMPONENT_FIELDS["slowproc"]
+)
+
+
+def _contract_finalize_fields(contract: DailyMarkovContract) -> frozenset[str]:
+    fields = frozenset(
+        leaf.path[0]
+        for leaf in contract.state_leaves
+        if leaf.component == "sechiba_finalize_state"
+    )
+    if not fields:
+        raise ValueError("canonical contract has no cross-day SECHIBA finalize fields")
+    unknown = fields - SECHIBA_FINALIZE_SOURCE_FIELDS
+    if unknown:
+        raise ValueError(
+            "canonical contract contains unknown SECHIBA finalize fields: "
+            f"{sorted(unknown)}"
+        )
+    return fields
+
+
+def _projected_finalize_after_slowproc(
+    previous: Mapping[str, Any],
+    slowproc: Mapping[str, Any],
+    *,
+    contract_fields: frozenset[str],
+) -> dict[str, Any]:
+    """Update the contract's cross-day finalize projection without inventing mirrors."""
+
+    actual = frozenset(previous)
+    if actual != contract_fields:
+        raise ValueError(
+            "projected SECHIBA finalize state does not match the canonical contract: "
+            f"missing={sorted(contract_fields - actual)}, "
+            f"extra={sorted(actual - contract_fields)}"
+        )
+    return {
+        name: slowproc[name]
+        if name in _SLOWPROC_FINALIZE_FIELDS and name in slowproc
+        else value
+        for name, value in previous.items()
+    }
 
 
 def _ok_leak_result(
@@ -191,6 +242,7 @@ def _run_retained_tail_day(
     boundary: ReconstructedFastDayTarget,
     compiled_forcing,
     static: Mapping[str, Any],
+    contract_finalize_fields: frozenset[str],
     year: int,
     day_index: int,
 ):
@@ -221,6 +273,17 @@ def _run_retained_tail_day(
                     lambda *args, _value=value, **kwargs: _value,
                 )
             )
+        stack.enter_context(
+            patch.object(
+                teacher,
+                "_sechiba_finalize_state_after_slowproc",
+                lambda previous, slowproc: _projected_finalize_after_slowproc(
+                    previous,
+                    slowproc,
+                    contract_fields=contract_finalize_fields,
+                ),
+            )
+        )
         result = teacher.paper_1961_driver_later_day_runtime_result(
             config_path,
             previous_state=previous_state,
@@ -399,6 +462,7 @@ def run_rollout(args) -> dict[str, Any]:
     metadata = load_contract_metadata(dataset_path)
     contract = daily_markov_contract_from_metadata(metadata)
     representation = fast_day_target_representation_from_contract(metadata)
+    contract_finalize_fields = _contract_finalize_fields(contract)
     statistics = load_training_statistics(statistics_path)
     plan, entry = _plan_entry(
         args.plan.resolve(),
@@ -517,6 +581,7 @@ def run_rollout(args) -> dict[str, Any]:
             boundary=boundary,
             compiled_forcing=compiled_forcing,
             static=static,
+            contract_finalize_fields=contract_finalize_fields,
             year=args.year,
             day_index=day_index,
         )
