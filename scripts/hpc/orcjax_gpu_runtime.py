@@ -17,15 +17,22 @@ def initialize_gpu_backend() -> tuple[Any, tuple[Any, ...]]:
     if "cuda" not in xla_bridge._backend_factories:
         cuda_plugin = importlib.import_module("jax_plugins.xla_cuda12")
         cuda_plugin.initialize()
-    backends = xla_bridge.backends()
-    cuda_backend = backends.get("cuda")
-    devices = () if cuda_backend is None else tuple(cuda_backend.devices())
+    # The generic JAX 0.4.38 backend loop can incorrectly skip an available
+    # CUDA device in this Singularity runtime. Initialize the registered CUDA
+    # factory directly; _init_backend still performs the real device-count gate.
+    with xla_bridge._backend_lock:
+        cuda_backend = xla_bridge._backends.get("cuda")
+        if cuda_backend is None:
+            cuda_backend = xla_bridge._init_backend("cuda")
+            xla_bridge._backends["cuda"] = cuda_backend
+        xla_bridge._default_backend = cuda_backend
+    devices = tuple(cuda_backend.devices())
     if not devices or any(device.platform != "gpu" for device in devices):
         backend_errors = dict(getattr(xla_bridge, "_backend_errors", {}))
         raise RuntimeError(
             "orcjax_gpu did not select only GPU devices: "
             f"factories={tuple(xla_bridge._backend_factories)}, "
-            f"backends={tuple(backends)}, devices={devices}, "
+            f"backends={tuple(xla_bridge._backends)}, devices={devices}, "
             f"backend_errors={backend_errors}"
         )
     return jax, devices
