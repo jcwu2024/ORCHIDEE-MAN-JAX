@@ -354,6 +354,57 @@ def _state_metrics(
             ),
             "evaluated_values": count,
         }
+    leaves = []
+    for leaf in contract.state_leaves:
+        if leaf.discrete:
+            continue
+        selected = slice(leaf.start, leaf.stop)
+        leaf_common = common[selected]
+        count = int(np.count_nonzero(leaf_common))
+        leaf_actual = actual[selected]
+        leaf_expected = expected[selected]
+        leaf_error = normalized_error[selected]
+        leaves.append(
+            {
+                "key": leaf.key,
+                "normalized_rmse": (
+                    float(
+                        np.sqrt(
+                            np.sum(leaf_error[leaf_common] ** 2) / count
+                        )
+                    )
+                    if count
+                    else None
+                ),
+                "max_absolute_error": (
+                    float(
+                        np.max(
+                            np.abs(
+                                leaf_actual[leaf_common]
+                                - leaf_expected[leaf_common]
+                            )
+                        )
+                    )
+                    if count
+                    else None
+                ),
+                "defined_status_mismatches": int(
+                    np.count_nonzero(
+                        actual_defined[selected] != expected_defined[selected]
+                    )
+                ),
+                "evaluated_values": count,
+            }
+        )
+    largest_leaves = sorted(
+        leaves,
+        key=lambda item: (
+            -1.0
+            if item["normalized_rmse"] is None
+            else item["normalized_rmse"]
+        ),
+        reverse=True,
+    )[:12]
     count = int(np.count_nonzero(common))
     return {
         "normalized_rmse": (
@@ -371,6 +422,7 @@ def _state_metrics(
         ),
         "evaluated_values": count,
         "components": result,
+        "largest_leaves": largest_leaves,
     }
 
 
@@ -602,10 +654,16 @@ def run_rollout(args) -> dict[str, Any]:
                 "discrete_mismatches": discrete_mismatches,
             }
         )
-        current_state = np.asarray(next_state)
-        current_discrete = {
-            name: np.asarray(value) for name, value in next_discrete.items()
-        }
+        if args.state_feedback == "teacher":
+            current_state = expected.copy()
+            current_discrete = {
+                name: value.copy() for name, value in expected_discrete.items()
+            }
+        else:
+            current_state = np.asarray(next_state)
+            current_discrete = {
+                name: np.asarray(value) for name, value in next_discrete.items()
+            }
 
     elapsed = time.perf_counter() - started
     replay_gate = all(
@@ -642,6 +700,7 @@ def run_rollout(args) -> dict[str, Any]:
             "temporal_split": reference.temporal_split,
             "start_day": args.start_day,
             "days": args.days,
+            "state_feedback": args.state_feedback,
             "sealed_test_used": False,
         },
         "teacher_replay_tolerance": args.teacher_replay_tolerance,
@@ -684,6 +743,12 @@ def build_parser() -> argparse.ArgumentParser:
         default="neural",
     )
     parser.add_argument("--teacher-replay-tolerance", type=float, default=1.0e-10)
+    parser.add_argument(
+        "--state-feedback",
+        choices=("free", "teacher"),
+        default="free",
+        help="Use predicted or Teacher next-day state as the following input.",
+    )
     parser.add_argument("--output", type=Path, required=True)
     return parser
 
@@ -692,6 +757,8 @@ def main(argv: Sequence[str] | None = None) -> None:
     args = build_parser().parse_args(argv)
     if args.mode == "neural" and args.checkpoint is None:
         raise ValueError("neural rollout requires --checkpoint")
+    if args.mode == "teacher-replay" and args.state_feedback != "free":
+        raise ValueError("Teacher replay does not accept Teacher-forced feedback")
     result = run_rollout(args)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, indent=2), encoding="utf-8")
