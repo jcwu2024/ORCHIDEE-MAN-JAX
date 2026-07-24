@@ -59,6 +59,11 @@ The real 001.0-071.0, 1962 Day 2 gate passed with:
 - 2,847/2,847 defined target gradients finite;
 - nonzero target-to-next-state gradient norm.
 
+A three-day continuation using one `lax.scan` also passed with `1.71e-13`
+maximum trajectory error, zero mask/discrete mismatch, and 8,541/8,541 finite
+defined target gradients. This is the current real recursive-boundary gate;
+the neural operator itself has not yet passed a v5 free rollout.
+
 The Windows CPU reverse compilation emits the known XLA
 `algebraic_simplifier` 50-run warning, then completes in about 5.8 seconds.
 Because compilation terminates and all numerical and gradient gates pass, this

@@ -631,6 +631,46 @@ def test_native_forcing_window_reconstructs_teacher_units_and_spreading(monkeypa
     )
 
 
+def test_compiled_forcing_window_stacks_only_contiguous_source_days(monkeypatch):
+    calls = []
+
+    def fake_day(window, spec, context, *, year, day_index):
+        del spec, context
+        calls.append((year, day_index, np.asarray(window).copy()))
+        return {
+            "temp_air": np.full((48, 1), year + day_index, dtype=np.float64)
+        }
+
+    monkeypatch.setattr(markov, "reconstruct_compiled_forcing_day", fake_day)
+    windows = np.zeros((3, 5, _native_spec().width), dtype=np.float64)
+    stacked = markov.reconstruct_compiled_forcing_window(
+        windows,
+        _native_spec(),
+        object(),
+        years=(1962, 1962, 1962),
+        day_indices=(2, 3, 4),
+    )
+
+    assert stacked["temp_air"].shape == (3, 48, 1)
+    np.testing.assert_array_equal(
+        np.asarray(stacked["temp_air"][:, 0, 0]),
+        [1964.0, 1965.0, 1966.0],
+    )
+    assert [(year, day) for year, day, _ in calls] == [
+        (1962, 2),
+        (1962, 3),
+        (1962, 4),
+    ]
+    with pytest.raises(ValueError, match="not contiguous"):
+        markov.reconstruct_compiled_forcing_window(
+            windows,
+            _native_spec(),
+            object(),
+            years=(1962, 1962, 1962),
+            day_indices=(2, 4, 5),
+        )
+
+
 def test_native_record_indices_preserve_the_fortran_first_day_boundary_rule():
     np.testing.assert_array_equal(
         markov.forcing_record_indices_for_day(day_index=1, raw_steps=1460, split=12),

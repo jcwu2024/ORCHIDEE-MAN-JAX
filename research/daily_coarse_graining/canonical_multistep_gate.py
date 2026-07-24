@@ -20,7 +20,7 @@ from research.daily_coarse_graining.canonical_rollout import (
     _packet_from_canonical_state,
 )
 from research.daily_coarse_graining.daily_markov_contract import (
-    reconstruct_compiled_forcing_day,
+    reconstruct_compiled_forcing_window,
 )
 from research.daily_coarse_graining.markov_dataset import defined_numeric_mask
 from research.daily_coarse_graining.replay_ceiling import (
@@ -59,8 +59,8 @@ def _largest_leaf_errors(actual, expected, contract, *, limit: int = 12):
         if leaf.discrete:
             continue
         selected = slice(leaf.start, leaf.stop)
-        actual_leaf = actual[selected]
-        expected_leaf = expected[selected]
+        actual_leaf = actual[..., selected]
+        expected_leaf = expected[..., selected]
         mask = defined_numeric_mask(actual_leaf) & defined_numeric_mask(expected_leaf)
         absolute, relative = _max_error(actual_leaf, expected_leaf, mask)
         rows.append(
@@ -87,8 +87,8 @@ def _nonfinite_gradient_leaves(gradient, target, contract):
     rows = []
     for leaf in contract.fast_day_target_leaves:
         selected = slice(leaf.start, leaf.stop)
-        numeric = defined_numeric_mask(target[selected])
-        nonfinite = numeric & ~np.isfinite(gradient[selected])
+        numeric = defined_numeric_mask(target[..., selected])
+        nonfinite = numeric & ~np.isfinite(gradient[..., selected])
         if np.any(nonfinite):
             rows.append(
                 {
@@ -98,7 +98,7 @@ def _nonfinite_gradient_leaves(gradient, target, contract):
                         np.count_nonzero(nonfinite)
                     ),
                     "compact_indices": (
-                        np.nonzero(nonfinite)[0].astype(int).tolist()
+                        np.flatnonzero(nonfinite).astype(int).tolist()
                     ),
                 }
             )
@@ -118,38 +118,36 @@ def run_gate(args: argparse.Namespace) -> dict[str, Any]:
         config_path=args.config.resolve(),
         initial_year_end_state=initial_year_end_state,
         year=args.year,
-        days=2,
+        days=args.horizon + 1,
         context=context,
     )
     capture_seconds = time.perf_counter() - capture_started
-    start_packet = records[0].expected_result.day_end_state
-    expected_packet = records[1].expected_result.day_end_state
     arrays, contract = build_shard_arrays(
-        (start_packet,),
-        (None,),
-        (records[1],),
+        tuple(record.expected_result.day_end_state for record in records[:-1]),
+        (None,) * args.horizon,
+        records[1:],
         context,
-        final_state=expected_packet,
+        final_state=records[-1].expected_result.day_end_state,
     )
     state = arrays["state_trajectory"][0]
-    expected_state = arrays["state_trajectory"][1]
+    expected_state = arrays["state_trajectory"][1:]
     discrete = {
         name.removeprefix("state_discrete__"): value[0]
         for name, value in arrays.items()
         if name.startswith("state_discrete__")
     }
     expected_discrete = {
-        name.removeprefix("state_discrete__"): value[1]
+        name.removeprefix("state_discrete__"): value[1:]
         for name, value in arrays.items()
         if name.startswith("state_discrete__")
     }
-    fast_day_target = arrays["fast_day_target"][0]
-    compiled_forcing = reconstruct_compiled_forcing_day(
-        arrays["forcing_native"][0],
+    fast_day_target = arrays["fast_day_target"]
+    compiled_forcing = reconstruct_compiled_forcing_window(
+        arrays["forcing_native"],
         contract.native_forcing,
         context,
-        year=args.year,
-        day_index=2,
+        years=np.full((args.horizon,), args.year, dtype=np.int32),
+        day_indices=arrays["day_index"],
     )
     canonical_packet = _packet_from_canonical_state(
         state,
@@ -158,7 +156,7 @@ def run_gate(args: argparse.Namespace) -> dict[str, Any]:
         tstep=47,
     )
     forcing_batch = jax.tree_util.tree_map(
-        lambda value: np.expand_dims(np.asarray(value), axis=0),
+        np.asarray,
         compiled_forcing,
     )
     static = _tail_static_inputs(
@@ -175,15 +173,33 @@ def run_gate(args: argparse.Namespace) -> dict[str, Any]:
         runtime_year=args.year,
     )
 
-    forward = jax.jit(transition)
+    def rollout(initial_state, initial_discrete, targets, forcing_days, day_indices):
+        def output_body(carry, inputs):
+            target, forcing, science_day = inputs
+            next_carry = transition(
+                carry[0],
+                carry[1],
+                target,
+                forcing,
+                np.asarray(args.year, dtype=np.int32),
+                science_day,
+            )
+            return next_carry, next_carry
+
+        return jax.lax.scan(
+            output_body,
+            (initial_state, initial_discrete),
+            (targets, forcing_days, day_indices),
+        )
+
+    forward = jax.jit(rollout)
     forward_started = time.perf_counter()
-    actual_state, actual_discrete = forward(
+    (_, _), (actual_state, actual_discrete) = forward(
         state,
         discrete,
         fast_day_target,
         compiled_forcing,
-        np.asarray(args.year, dtype=np.int32),
-        np.asarray(2, dtype=np.int32),
+        arrays["day_index"],
     )
     _block_until_ready((actual_state, actual_discrete))
     forward_compile_seconds = time.perf_counter() - forward_started
@@ -208,13 +224,12 @@ def run_gate(args: argparse.Namespace) -> dict[str, Any]:
     probe = np.where(expected_mask, probe, 0.0)
 
     def objective(target):
-        next_state, _ = transition(
+        (_, _), (next_state, _) = rollout(
             state,
             discrete,
             target,
             compiled_forcing,
-            np.asarray(args.year, dtype=np.int32),
-            np.asarray(2, dtype=np.int32),
+            arrays["day_index"],
         )
         return jnp.vdot(jnp.where(expected_mask, next_state, 0.0), probe)
 
@@ -247,7 +262,8 @@ def run_gate(args: argparse.Namespace) -> dict[str, Any]:
         "teacher_label": "provisional_teacher",
         "state_cache": str(args.state_cache.resolve()),
         "year": int(args.year),
-        "teacher_day": 2,
+        "teacher_day_start": 2,
+        "horizon": int(args.horizon),
         "contract_sha256": contract.sha256,
         "capture_seconds": capture_seconds,
         "forward": {
@@ -297,6 +313,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--run-def", type=Path, default=DEFAULT_RUN_DEF)
     parser.add_argument("--year", type=int, default=1962)
+    parser.add_argument("--horizon", type=int, choices=(1, 3, 7), default=1)
     parser.add_argument("--atol", type=float, default=1.0e-10)
     parser.add_argument("--rtol", type=float, default=1.0e-12)
     parser.add_argument("--output", type=Path, default=DEFAULT_OUTPUT)

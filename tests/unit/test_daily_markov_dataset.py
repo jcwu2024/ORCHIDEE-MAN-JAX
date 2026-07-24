@@ -109,6 +109,46 @@ def test_collation_stacks_model_values_but_not_landpoint_identity(tmp_path):
         assert batch[f"{name}_finite"].shape == batch[name].shape
 
 
+def test_contiguous_windows_never_cross_landpoint_or_year_boundaries(tmp_path):
+    index = markov_dataset.load_dataset_index(_manifest(tmp_path))
+    windows = list(index.windows(2))
+
+    assert len(windows) == 2
+    assert {window["sample_landpoint_id"] for window in windows} == {
+        "001.0-071.0",
+        "003.0-071.0",
+    }
+    for window in windows:
+        assert window["state_trajectory"].shape == (3, 4)
+        assert window["teacher_next_state"].shape == (2, 4)
+        assert window["teacher_fast_day_target"].shape == (2, 6)
+        assert window["forcing_native"].shape == (2, 5, 9)
+        assert window["discrete_trajectory"]["flag"].shape == (3, 1)
+        np.testing.assert_array_equal(window["day_index"], [1, 2])
+        assert np.unique(window["year"]).size == 1
+    assert list(index.windows(3)) == []
+    with pytest.raises(ValueError, match="positive"):
+        list(index.windows(0))
+
+
+def test_markov_window_rejects_noncontiguous_day_indices(tmp_path):
+    manifest = _manifest(tmp_path)
+    raw = json.loads(manifest.read_text(encoding="utf-8"))
+    shard_path = tmp_path / raw["shards"][0]["shard"]
+    with np.load(shard_path, allow_pickle=False) as stored:
+        arrays = {name: stored[name] for name in stored.files}
+    arrays["day_index"] = np.asarray([1, 3], dtype=np.int32)
+    np.savez(shard_path, **arrays)
+    raw["shards"][0]["shard_sha256"] = hashlib.sha256(
+        shard_path.read_bytes()
+    ).hexdigest()
+    manifest.write_text(json.dumps(raw), encoding="utf-8")
+
+    index = markov_dataset.load_dataset_index(manifest)
+    with pytest.raises(ValueError, match="not contiguous"):
+        list(index.windows(2, spatial_split="train"))
+
+
 def test_dataset_index_rejects_corruption_and_contract_drift(tmp_path):
     manifest = _manifest(tmp_path)
     raw = json.loads(manifest.read_text(encoding="utf-8"))

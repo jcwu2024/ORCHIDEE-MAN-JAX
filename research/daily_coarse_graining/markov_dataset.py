@@ -106,6 +106,31 @@ class MarkovDatasetIndex:
                     "sample_temporal_split": reference.temporal_split,
                 }
 
+    def windows(
+        self,
+        horizon: int,
+        *,
+        stride: int = 1,
+        spatial_split: str | None = None,
+        temporal_split: str | None = None,
+    ) -> Iterator[dict[str, Any]]:
+        """Yield contiguous windows without crossing a shard or restart boundary."""
+
+        if horizon < 1 or stride < 1:
+            raise ValueError("window horizon and stride must be positive")
+        for reference in self.select(
+            spatial_split=spatial_split,
+            temporal_split=temporal_split,
+        ):
+            shard = load_markov_shard(reference.path)
+            for start in range(0, shard.days - horizon + 1, stride):
+                yield shard.window(start, horizon) | {
+                    "sample_landpoint_id": reference.landpoint_id,
+                    "sample_year": reference.year,
+                    "sample_spatial_split": reference.spatial_split,
+                    "sample_temporal_split": reference.temporal_split,
+                }
+
 
 @dataclass(frozen=True)
 class FiniteColumnStatistics:

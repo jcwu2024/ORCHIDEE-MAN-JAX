@@ -65,6 +65,8 @@ V5 appends 40 compact `leaf_ci` values from existing `S[d+1]`, so the complete
 nine-point v4 dataset can be migrated without rerunning Teacher. The v5 gate
 passes at `5.68e-14` maximum state error with zero mask/discrete mismatches and
 finite gradients for all 2,847 defined target values.
+The three-day real retained-tail scan also passes at `1.71e-13` maximum error
+with 8,541/8,541 finite defined target gradients.
 The reverse compile still emits the nonfatal XLA algebraic-simplifier 50-run
 warning and then completes; keep it as a runtime-version A/B item.
 

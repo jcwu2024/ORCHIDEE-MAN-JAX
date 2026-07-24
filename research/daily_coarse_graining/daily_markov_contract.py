@@ -15,6 +15,7 @@ from dataclasses import asdict, dataclass, replace
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
+import jax
 import jax.numpy as jnp
 import numpy as np
 import yaml
@@ -338,6 +339,50 @@ class MarkovShard:
             },
             "next_discrete_state": {
                 key: value[index + 1] for key, value in self.discrete_trajectories.items()
+            },
+        }
+
+    def window(self, start: int, horizon: int) -> dict[str, Any]:
+        """Return one strictly contiguous within-shard rollout trajectory."""
+
+        if horizon < 1:
+            raise ValueError("Markov window horizon must be positive")
+        stop = start + horizon
+        if start < 0 or stop > self.days:
+            raise IndexError((start, horizon))
+        day_index = np.asarray(self.day_index[start:stop])
+        if day_index.shape != (horizon,) or (
+            horizon > 1 and not np.all(np.diff(day_index) == 1)
+        ):
+            raise ValueError("Markov window day indices are not contiguous")
+        return {
+            "initial_state": self.state_trajectory[start],
+            "state_trajectory": self.state_trajectory[start : stop + 1],
+            "teacher_next_state": self.state_trajectory[start + 1 : stop + 1],
+            "teacher_fast_day_target": self.fast_day_target[start:stop],
+            "forcing_native": self.forcing_native[start:stop],
+            "parameters": np.broadcast_to(
+                self.parameters, (horizon, *self.parameters.shape)
+            ),
+            "landpoint_static": np.broadcast_to(
+                self.landpoint_static, (horizon, *self.landpoint_static.shape)
+            ),
+            "annual_conditions": np.broadcast_to(
+                self.annual_conditions,
+                (horizon, *self.annual_conditions.shape),
+            ),
+            "year": np.full((horizon,), int(self.year), dtype=np.int32),
+            "day_index": day_index,
+            "initial_discrete_state": {
+                key: value[start] for key, value in self.discrete_trajectories.items()
+            },
+            "discrete_trajectory": {
+                key: value[start : stop + 1]
+                for key, value in self.discrete_trajectories.items()
+            },
+            "teacher_next_discrete_state": {
+                key: value[start + 1 : stop + 1]
+                for key, value in self.discrete_trajectories.items()
             },
         }
 
@@ -1693,6 +1738,40 @@ def reconstruct_compiled_forcing_day(
         salinity=jnp.broadcast_to(salinity, (48, *salinity.shape)),
         tide_height=jnp.broadcast_to(tide_height, (48, *tide_height.shape)),
     )
+
+
+def reconstruct_compiled_forcing_window(
+    windows: np.ndarray,
+    spec: NativeForcingSpec,
+    context,
+    *,
+    years: Sequence[int],
+    day_indices: Sequence[int],
+):
+    """Reconstruct and stack a contiguous native-forcing rollout window."""
+
+    windows = np.asarray(windows, dtype=np.float64)
+    years = tuple(int(value) for value in years)
+    day_indices = tuple(int(value) for value in day_indices)
+    horizon = int(windows.shape[0])
+    if horizon < 1 or len(years) != horizon or len(day_indices) != horizon:
+        raise ValueError("forcing window metadata does not match its horizon")
+    if horizon > 1 and any(
+        right != left + 1
+        for left, right in zip(day_indices[:-1], day_indices[1:], strict=True)
+    ):
+        raise ValueError("forcing window day indices are not contiguous")
+    days = tuple(
+        reconstruct_compiled_forcing_day(
+            windows[offset],
+            spec,
+            context,
+            year=years[offset],
+            day_index=day_indices[offset],
+        )
+        for offset in range(horizon)
+    )
+    return jax.tree_util.tree_map(lambda *values: jnp.stack(values), *days)
 
 
 def load_markov_shard(

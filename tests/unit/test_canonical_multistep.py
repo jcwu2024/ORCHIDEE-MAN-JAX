@@ -11,6 +11,7 @@ from research.daily_coarse_graining.canonical_daily_model import (
 from research.daily_coarse_graining.canonical_multistep import (
     CanonicalMultistepSequence,
     canonical_multistep_rollout,
+    sequence_from_markov_window,
 )
 from research.daily_coarse_graining.canonical_training import (
     FastDayTargetRepresentation,
@@ -155,3 +156,26 @@ def test_multistep_scan_supports_one_three_and_seven_day_curriculum():
         result = run(_sequence(days))
         assert result.steps.continuous_state.shape == (days, 2)
         assert np.isfinite(np.asarray(result.loss))
+
+
+def test_verified_markov_window_adapter_requires_matching_tail_horizon():
+    window = {
+        "forcing_native": np.ones((3, 5, 1)),
+        "parameters": np.ones((3, 1)),
+        "landpoint_static": np.ones((3, 1)),
+        "annual_conditions": np.ones((3, 1)),
+        "year": np.full((3,), 1962),
+        "day_index": np.asarray([2, 3, 4]),
+        "teacher_fast_day_target": np.ones((3, 2)),
+        "teacher_next_state": np.ones((3, 2)),
+    }
+    sequence = sequence_from_markov_window(
+        window,
+        retained_tail_inputs={"forcing": np.ones((3, 48, 1))},
+    )
+    assert sequence.teacher_next_state.shape == (3, 2)
+    with np.testing.assert_raises_regex(ValueError, "retained-tail inputs"):
+        sequence_from_markov_window(
+            window,
+            retained_tail_inputs={"forcing": np.ones((2, 48, 1))},
+        )

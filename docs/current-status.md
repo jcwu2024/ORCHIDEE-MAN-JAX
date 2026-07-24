@@ -92,6 +92,9 @@ Current scientific status:
 - the pure-JAX retained-tail transition passes a real Day 2 forward and
   reverse-mode gate: maximum next-state error `5.68e-14`, zero mask/discrete
   mismatch, and finite gradients for all 2,847 defined target values;
+- a real three-day `lax.scan` gate also passes: maximum trajectory error
+  `1.71e-13`, zero mask/discrete mismatch, and finite gradients for all 8,541
+  defined day-target values;
 - no free-running v5 7-, 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
   acceptance gate is complete.

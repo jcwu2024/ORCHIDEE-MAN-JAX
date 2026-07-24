@@ -6,6 +6,7 @@ from typing import Any, Callable, Mapping, NamedTuple
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 
 from research.daily_coarse_graining.canonical_daily_model import (
     CanonicalModelParameters,
@@ -61,6 +62,45 @@ RetainedTailTransition = Callable[
     [Any, Mapping[str, Any], Any, Any, Any, Any],
     tuple[Any, Mapping[str, Any]],
 ]
+
+
+def sequence_from_markov_window(
+    window: Mapping[str, Any],
+    *,
+    retained_tail_inputs,
+) -> CanonicalMultistepSequence:
+    """Adapt one verified contiguous shard window to the compiled scan."""
+
+    required = (
+        "forcing_native",
+        "parameters",
+        "landpoint_static",
+        "annual_conditions",
+        "year",
+        "day_index",
+        "teacher_fast_day_target",
+        "teacher_next_state",
+    )
+    missing = tuple(name for name in required if name not in window)
+    if missing:
+        raise ValueError(f"Markov window is missing multistep fields {missing}")
+    horizon = int(np.shape(window["day_index"])[0])
+    if horizon < 1 or any(np.shape(window[name])[0] != horizon for name in required):
+        raise ValueError("Markov window multistep fields have inconsistent horizons")
+    retained_leaves = jax.tree_util.tree_leaves(retained_tail_inputs)
+    if any(np.shape(value)[0] != horizon for value in retained_leaves):
+        raise ValueError("retained-tail inputs do not match the Markov window horizon")
+    return CanonicalMultistepSequence(
+        forcing_native=window["forcing_native"],
+        parameters=window["parameters"],
+        landpoint_static=window["landpoint_static"],
+        annual_conditions=window["annual_conditions"],
+        year=window["year"],
+        day_index=window["day_index"],
+        teacher_fast_day_target=window["teacher_fast_day_target"],
+        teacher_next_state=window["teacher_next_state"],
+        retained_tail_inputs=retained_tail_inputs,
+    )
 
 
 def _singleton_batch(day, state):
