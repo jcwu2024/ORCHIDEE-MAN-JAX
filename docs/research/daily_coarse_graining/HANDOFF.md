@@ -164,8 +164,23 @@ Three joint-validation rollouts at landpoint `215.0-119.0`, year 2005, days
 Multistep optimization therefore improved free rollout by about 9.3%, but the
 provisional `<=0.29` gate did not pass. The retained-tail handoff remains
 numerically valid; recursive distribution drift is the next optimization
-target. The sealed test split remains untouched. Slurm job `14372761` is still
-pending and would duplicate this completed curriculum if allowed to start.
+target. The sealed test split remains untouched. The duplicate Slurm job
+`14372761` was manually cancelled and must not be resubmitted.
+
+A field-complete rerun at research commit `18471aa` reproduced all seven daily
+RMSE values exactly and generated `drift-diagnostic-18471aa.json` and `.md` in
+the experiment validation directory. The current state loss gives each of the
+3,854 continuous scalar values equal nominal weight. Slowproc/STOMATE therefore
+receives 61.91% nominal weight by width and contributes 76.89% of the realized
+Day-1 Huber state loss. Day-1 leaders are growth respiration (`0.970347`), NPP
+(`0.969258`), maintenance respiration (`0.886929`), biomass (`0.660380`), and
+litter partitioning (`0.406447`); biomass alone contributes 36.39% of Day-1
+state loss and reaches `4.841768` normalized RMSE on Day 7. Thermosoil and
+surface-energy fields then become larger contributors as the feedback error
+propagates. Do not respond by blindly increasing biomass weight: it is already
+the largest realized loss term. Design the next objective around explicit
+process-family balance, state-change/slow-state supervision, and recursive
+stability, then compare it with the frozen baseline under equal compute.
 
 ## Accepted Historical Production Run
 

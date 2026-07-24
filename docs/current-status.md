@@ -116,6 +116,17 @@ Current scientific status:
   mismatches. Teacher-state feedback kept all daily RMSE values below
   `0.086930` and ended at `0.068236`, so recursive state-distribution drift,
   rather than an invalid retained-tail handoff, remains the dominant error;
+- a complete field-level drift diagnostic at research commit `18471aa`
+  reproduced every daily rollout RMSE exactly. The current multistep state
+  loss is uniform over 3,854 scalar values: slowproc/STOMATE owns 2,386 values
+  and 61.91% nominal weight, but already contributes 76.89% of the first-day
+  realized Huber state loss. Biomass alone contributes 36.39% on Day 1 and its
+  normalized RMSE grows from `0.660380` to `4.841768` by Day 7; growth and
+  maintenance respiration, NPP, litter partitioning, and surface energy state
+  are also early divergence leaders. This rules out the simplistic diagnosis
+  that important carbon state is merely invisible to the loss. The next
+  objective must combine process-balanced weighting with explicit recursive
+  stability/state-change supervision, then be tested under a controlled A/B;
 - the provisional seven-day free-rollout gate of `<=0.29` therefore did not
   pass. No v5 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
