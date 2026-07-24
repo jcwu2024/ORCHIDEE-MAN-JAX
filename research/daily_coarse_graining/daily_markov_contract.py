@@ -27,6 +27,7 @@ from jax_orchidee.sechiba.restart_io import (
     SECHIBA_RESTART_COMPONENT_FIELDS,
     SECHIBA_RESTART_TO_SOURCE_NAMES,
 )
+from jax_orchidee.sechiba.restart_lifecycle import SECHIBA_FINALIZE_SOURCE_FIELDS
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_SCHEMA_VERSION = "daily_markov_contract_v4"
@@ -1183,6 +1184,7 @@ def reconstruct_state_fields(
     contract: DailyMarkovContract,
     *,
     template_fields: Mapping[str, Mapping[str, Any]] | None = None,
+    require_complete_finalize: bool = False,
 ) -> dict[str, dict[str, Any]]:
     """Inflate canonical PFT14 state and rebuild deterministic packet mirrors."""
 
@@ -1223,12 +1225,30 @@ def reconstruct_state_fields(
             "driver_previous_step_state",
             _SLOW_COMPONENT,
         )
-        for name, previous in tuple(finalize.items()):
+        required_names = (
+            SECHIBA_FINALIZE_SOURCE_FIELDS
+            if require_complete_finalize
+            else tuple(finalize)
+        )
+        missing = []
+        for name in required_names:
+            previous = finalize.get(name)
+            rebuilt = False
             for component in owner_order:
                 candidate = fields.get(component, {}).get(name)
-                if candidate is not None and np.shape(candidate) == np.shape(previous):
+                if candidate is not None and (
+                    previous is None or np.shape(candidate) == np.shape(previous)
+                ):
                     finalize[name] = np.asarray(candidate).copy()
+                    rebuilt = True
                     break
+            if not rebuilt and previous is None:
+                missing.append(name)
+        if missing:
+            raise ValueError(
+                "canonical state cannot rebuild complete SECHIBA finalize state: "
+                f"missing={sorted(missing)}"
+            )
     return fields
 
 

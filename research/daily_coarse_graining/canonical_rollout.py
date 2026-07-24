@@ -71,8 +71,14 @@ def _packet_from_canonical_state(
     contract: DailyMarkovContract,
     *,
     tstep: int,
+    require_complete_finalize: bool = True,
 ):
-    fields = reconstruct_state_fields(continuous, discrete, contract)
+    fields = reconstruct_state_fields(
+        continuous,
+        discrete,
+        contract,
+        require_complete_finalize=require_complete_finalize,
+    )
     provenance = {
         component: ("daily_markov_contract_v4 canonical reconstruction",)
         for component in fields

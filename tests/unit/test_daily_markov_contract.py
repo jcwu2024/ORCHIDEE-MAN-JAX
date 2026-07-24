@@ -188,6 +188,7 @@ def test_contract_uses_canonical_state_and_excludes_packet_mirrors():
         {name: value[1] for name, value in discrete.items()},
         parsed,
         tstep=95,
+        require_complete_finalize=False,
     )
     runtime_continuous, runtime_discrete = markov.extract_state(
         runtime_packet,
