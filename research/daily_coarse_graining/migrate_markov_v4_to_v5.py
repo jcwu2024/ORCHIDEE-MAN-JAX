@@ -48,9 +48,6 @@ def _write_migrated_shard(
     v4_contract,
     v5_contract,
 ) -> str:
-    if destination.is_file():
-        load_markov_shard(destination, contract=v5_contract)
-        return _sha256_file(destination)
     with np.load(source, allow_pickle=False) as payload:
         arrays = {name: payload[name] for name in payload.files}
     upgraded, observed_contract = upgrade_v4_fast_day_target_to_v5(
@@ -61,6 +58,20 @@ def _write_migrated_shard(
     if observed_contract != v5_contract:
         raise ValueError("v5 contract drift while migrating shard")
     arrays["fast_day_target"] = upgraded
+    if destination.is_file():
+        with np.load(destination, allow_pickle=False) as payload:
+            existing = {name: payload[name] for name in payload.files}
+        if existing.keys() != arrays.keys() or any(
+            existing[name].dtype != expected.dtype
+            or existing[name].shape != expected.shape
+            or not np.array_equal(existing[name], expected, equal_nan=True)
+            for name, expected in arrays.items()
+        ):
+            raise ValueError(
+                f"existing migrated shard is not derived from current source: {destination}"
+            )
+        load_markov_shard(destination, contract=v5_contract)
+        return _sha256_file(destination)
     destination.parent.mkdir(parents=True, exist_ok=True)
     temporary = destination.with_name(f".{destination.name}.{os.getpid()}.tmp")
     with temporary.open("wb") as handle:
@@ -106,6 +117,7 @@ def migrate_dataset(
                 "spatial_split": reference.spatial_split,
                 "temporal_split": reference.temporal_split,
                 "markov_contract_sha256": v5_contract.sha256,
+                "source_shard_sha256": reference.sha256,
                 "shard": relative.as_posix(),
                 "shard_sha256": shard_hash,
             }

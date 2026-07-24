@@ -555,6 +555,7 @@ def test_v4_dataset_migration_writes_a_hash_verified_resumable_v5_asset(tmp_path
     )
     assert migrated_contract.schema_version == markov.CONTRACT_SCHEMA_VERSION
     assert migrated_raw["derived_migration"]["teacher_rerun"] is False
+    assert migrated_raw["shards"][0]["source_shard_sha256"] == shard_hash
     np.testing.assert_array_equal(
         migrated_shard.fast_day_target[:, : v4.fast_day_target_width],
         full_target[: v4.fast_day_target_width][None, :],
@@ -568,6 +569,17 @@ def test_v4_dataset_migration_writes_a_hash_verified_resumable_v5_asset(tmp_path
         migrated_shard.fast_day_target[:, v4.fast_day_target_width :],
         trajectory[1:, leaf.start : leaf.stop],
     )
+
+    # Resuming accepts an exact existing shard but rejects a valid-looking stale one.
+    assert migrate_dataset(manifest_path, tmp_path / "v5") == migrated_manifest
+    migrated_shard_path = migrated_manifest.parent / migrated_raw["shards"][0]["shard"]
+    with np.load(migrated_shard_path, allow_pickle=False) as payload:
+        stale_arrays = {name: payload[name] for name in payload.files}
+    stale_arrays["fast_day_target"] = stale_arrays["fast_day_target"].copy()
+    stale_arrays["fast_day_target"][0, 0] += 1.0
+    np.savez_compressed(migrated_shard_path, **stale_arrays)
+    with pytest.raises(ValueError, match="not derived from current source"):
+        migrate_dataset(manifest_path, tmp_path / "v5")
 
 
 def test_native_forcing_window_reconstructs_teacher_units_and_spreading(monkeypatch):
