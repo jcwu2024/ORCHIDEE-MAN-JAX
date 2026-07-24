@@ -1,6 +1,6 @@
 # Daily Coarse-Graining Handoff
 
-Snapshot date: 2026-07-24
+Snapshot date: 2026-07-25
 
 This is the single operational handoff page for the daily coarse-graining
 research branch. Read this page before dated experiment reports. Stable
@@ -181,6 +181,19 @@ propagates. Do not respond by blindly increasing biomass weight: it is already
 the largest realized loss term. Design the next objective around explicit
 process-family balance, state-change/slow-state supervision, and recursive
 stability, then compare it with the frozen baseline under equal compute.
+
+The follow-up four-way split diagnosis at commit `825935b` is recorded in
+[`four_way_rollout_diagnosis_20260725.md`](four_way_rollout_diagnosis_20260725.md).
+Day-7 global RMSE for train/train, train/validation-year,
+validation-point/train-year, and joint validation was `0.145471`, `0.134233`,
+`0.519886`, and `0.429058`. This separates two real limitations: spatial
+generalization is the dominant global failure, while recursive carbon-state
+drift remains visible even on seen conditions (`litterpart` reaches `3.652`
+normalized RMSE). Do not generate more years of the same points. Before a
+spatial data expansion, complete one equal-budget objective A/B on the current
+dataset and require named slow-state improvement; prepare a small diverse
+landpoint selection independently from parameters/static data/forcing
+climatology, then generate it only after the seen-condition objective gate.
 
 ## Accepted Historical Production Run
 

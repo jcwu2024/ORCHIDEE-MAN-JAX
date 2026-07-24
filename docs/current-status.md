@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-07-24.
+Last updated: 2026-07-25.
 
 This page is the current status authority. Dated files under
 `docs/source_audits/` and `docs/research/` are evidence snapshots and may
@@ -127,6 +127,18 @@ Current scientific status:
   that important carbon state is merely invisible to the loss. The next
   objective must combine process-balanced weighting with explicit recursive
   stability/state-change supervision, then be tested under a controlled A/B;
+- a four-way split diagnosis at research commit `825935b` compared
+  train/train, train/validation-year, validation-point/train-year, and joint
+  validation rollouts on the same Day 100-106 window. Day-7 RMSE was
+  `0.145471`, `0.134233`, `0.519886`, and `0.429058`, respectively. The
+  controlled temporal holdout did not degrade the training landpoint, while
+  the spatial holdout failed even in a training year. Spatial-condition
+  coverage is therefore a demonstrated limitation of the current six
+  training landpoints. Recursive objective failure also remains: train/train
+  `litterpart` grows from `0.541` to `3.652`, proving that the global `<=0.29`
+  gate can hide a scientifically important low-dimensional failure. Do not
+  add more years of the same points; first run one process-balanced/state-
+  increment objective A/B, then add a bounded, source-selected spatial pilot;
 - the provisional seven-day free-rollout gate of `<=0.29` therefore did not
   pass. No v5 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
