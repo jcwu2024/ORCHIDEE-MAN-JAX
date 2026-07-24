@@ -139,9 +139,33 @@ best-checkpoint SHA256 is
 This smoke exposed and closed two launcher defects before paid training:
 multistep plan verification now uses the canonical JSON hash recorded by the
 dataset manifest, and both GPU launchers pass the external runtime data roots
-into the container. Slurm job `14371998`, submitted from the superseded
-`aa98334` snapshot, remains pending and is not evidence; if it starts unchanged
-it will fail the old raw-file plan-hash check before training.
+into the container. The superseded Slurm smoke `14371998` was cancelled before
+allocation and is not evidence.
+
+The complete v5 curriculum then ran directly on the shared `gln01` test GPU
+from the accepted `23a1851` snapshot and finished successfully in 35:03. The
+one-step phase selected epoch 10 with validation score `0.6804387148783407`.
+The multistep phases completed 64 updates each at horizons 1, 3, and 7 with
+finite losses and gradients; their mean losses were `0.0119944`, `0.0178953`,
+and `0.0231536`. The final checkpoint SHA256 is
+`79728593fa78f45f0c77dbe219f983114f76fe39bc0b63443c4af11e612b5bc2`.
+Assets are under
+`runtime/outputs/experiments/canonical-v5-curriculum-gln01-23a1851`.
+
+Three joint-validation rollouts at landpoint `215.0-119.0`, year 2005, days
+100-106 established the current failure mode:
+
+- one-step checkpoint, free feedback: final normalized RMSE `0.473270`;
+- multistep checkpoint, free feedback: final normalized RMSE `0.429058`;
+- multistep checkpoint, Teacher-state feedback: final RMSE `0.068236`, maximum
+  daily RMSE `0.086929`;
+- all three had zero defined-status and discrete mismatches.
+
+Multistep optimization therefore improved free rollout by about 9.3%, but the
+provisional `<=0.29` gate did not pass. The retained-tail handoff remains
+numerically valid; recursive distribution drift is the next optimization
+target. The sealed test split remains untouched. Slurm job `14372761` is still
+pending and would duplicate this completed curriculum if allowed to start.
 
 ## Accepted Historical Production Run
 
@@ -245,14 +269,16 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-1. run one bounded V100 curriculum with matching v5 one-step initialization
-   and fixed-shape 1/3/7-day batches through the retained tail;
-2. run a validation-only seven-day free rollout from the resulting checkpoint;
-3. require both one-step `B_fast` and canonical next-state supervision;
-4. require seven-day free-rollout final RMSE near the teacher-forced envelope
-   (provisional gate `<=0.29`) with zero mask/discrete mismatch;
-5. only then decide whether more Teacher landpoints or a revised network are
-   justified.
+1. treat the completed one-step and `1:64,3:64,7:64` checkpoints as frozen
+   baselines;
+2. increase multistep optimization coverage before changing the Teacher data,
+   while retaining both `B_fast` and canonical next-state supervision;
+3. compare longer warm-start training with a controlled direct/mixed-horizon
+   initialization A/B under the same update budget;
+4. rerun the same validation-only seven-day free rollout and require final
+   RMSE `<=0.29` with zero mask/discrete mismatch;
+5. only after that gate consider 30-, 365-day, or additional-landpoint neural
+   experiments.
 
 Do not start all 669 x 50 years before this bounded learnability and rollout
 gate. The ten-point dataset tests architecture development; it cannot by

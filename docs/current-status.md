@@ -106,7 +106,18 @@ Current scientific status:
   with loss `0.0495625`, gradient norm `0.389538`, and a finite 31.4 MB
   checkpoint; this also closed canonical generation-plan hashing and external
   server data-root wiring in the multistep launchers;
-- no free-running v5 7-, 30-, 365-day, or 50-year neural rollout has passed;
+- the first complete v5 V100 curriculum finished on `gln01` in 35:03. Its
+  ten-epoch one-step initialization selected epoch 10 at validation score
+  `0.680439`; the subsequent `1:64,3:64,7:64` stages remained finite;
+- on the joint spatial-and-temporal validation window at landpoint
+  `215.0-119.0`, year 2005, days 100-106, the seven-day free-rollout final
+  state RMSE improved from `0.473270` for the one-step checkpoint to
+  `0.429058` after multistep training, with zero defined-status or discrete
+  mismatches. Teacher-state feedback kept all daily RMSE values below
+  `0.086930` and ended at `0.068236`, so recursive state-distribution drift,
+  rather than an invalid retained-tail handoff, remains the dominant error;
+- the provisional seven-day free-rollout gate of `<=0.29` therefore did not
+  pass. No v5 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
   acceptance gate is complete.
 - the first five-epoch V100 run is rejected as architecture evidence because
@@ -198,10 +209,9 @@ Markov contract are valid. Its operational evidence is recorded in
 
 ## Next Bounded Milestone
 
-Run one hash-bound V100 curriculum experiment: establish the matching v5
-one-step initialization, then optimize fixed-shape 1/3/7-day windows through
-the retained daily tail and evaluate a seven-day free rollout. The remaining
-point-319 v4 generation is not a prerequisite for this architecture gate. Do
-not generate all
-669 x 50 landpoint-years merely to discover whether the surrogate architecture
-can learn the daily transition.
+Use the completed v5 experiment as the bounded baseline for the next training
+design. Increase the share and coverage of multistep optimization, preserve
+the daily Teacher and next-state losses, and compare against the frozen
+one-step and `1:64,3:64,7:64` checkpoints on the same validation-only rollouts.
+Do not generate all 669 x 50 landpoint-years merely to address a demonstrated
+recursive optimization problem.
