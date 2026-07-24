@@ -18,6 +18,7 @@ PYTHON=$ROOT/.venvs/orcjax_cpu/bin/python
 SOURCE_MANIFEST=${SOURCE_MANIFEST:?set SOURCE_MANIFEST to the v4 dataset manifest}
 OUTPUT_ROOT=${OUTPUT_ROOT:?set OUTPUT_ROOT to a new v5 dataset directory}
 DATASET_ID=${DATASET_ID:?set DATASET_ID to the v5 dataset identity}
+EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD to the approved code snapshot}
 
 case "$WORKTREE" in
   "$ROOT/runtime/worktrees/"*) ;;
@@ -38,7 +39,7 @@ fi
 
 test -x "$PYTHON"
 test -f "$SOURCE_MANIFEST"
-test "$(git -C "$WORKTREE" rev-parse HEAD)" = "37cd0dea84b9e0c2333386057214fac346d1b8f9"
+test "$(git -C "$WORKTREE" rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
 mkdir -p "$OUTPUT_ROOT" "$ROOT/runtime/logs" "$ROOT/runtime/cache/xdg"
 export JAX_PLATFORMS=cpu
 export JAX_ENABLE_X64=true
