@@ -13,11 +13,14 @@ def initialize_gpu_backend() -> tuple[Any, tuple[Any, ...]]:
     # JAX 0.4.38 can miss namespace-package plugin discovery in the
     # Explore1000 container. This must run before jax.numpy or model imports.
     xla_bridge._discover_and_register_pjrt_plugins()
-    devices = tuple(jax.devices())
+    backends = xla_bridge.backends()
+    cuda_backend = backends.get("cuda")
+    devices = () if cuda_backend is None else tuple(cuda_backend.devices())
     if not devices or any(device.platform != "gpu" for device in devices):
         backend_errors = dict(getattr(xla_bridge, "_backend_errors", {}))
         raise RuntimeError(
             "orcjax_gpu did not select only GPU devices: "
-            f"devices={devices}, backend_errors={backend_errors}"
+            f"backends={tuple(backends)}, devices={devices}, "
+            f"backend_errors={backend_errors}"
         )
     return jax, devices
