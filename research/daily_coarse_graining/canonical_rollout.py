@@ -338,6 +338,13 @@ def _state_metrics(
     common = actual_defined & expected_defined
     scale = np.asarray(statistics.arrays["state"].scale)
     normalized_error = np.where(common, (actual - expected) / scale, 0.0)
+    absolute_normalized_error = np.abs(normalized_error)
+    huber = np.where(
+        absolute_normalized_error <= 1.0,
+        0.5 * normalized_error**2,
+        absolute_normalized_error - 0.5,
+    )
+    total_huber = float(np.sum(huber[common]))
     result = {}
     for component in dict.fromkeys(leaf.component for leaf in contract.state_leaves):
         selected = np.zeros(actual.shape[-1], dtype=bool)
@@ -353,6 +360,11 @@ def _state_metrics(
                 else None
             ),
             "evaluated_values": count,
+            "current_uniform_loss_share": (
+                float(np.sum(huber[mask])) / total_huber
+                if count and total_huber > 0.0
+                else None
+            ),
         }
     leaves = []
     for leaf in contract.state_leaves:
@@ -364,15 +376,43 @@ def _state_metrics(
         leaf_actual = actual[selected]
         leaf_expected = expected[selected]
         leaf_error = normalized_error[selected]
+        physical_error = leaf_actual - leaf_expected
         leaves.append(
             {
                 "key": leaf.key,
+                "component": leaf.component,
+                "source_ref": leaf.source_ref,
+                "width": int(leaf.stop - leaf.start),
                 "normalized_rmse": (
                     float(
                         np.sqrt(
                             np.sum(leaf_error[leaf_common] ** 2) / count
                         )
                     )
+                    if count
+                    else None
+                ),
+                "normalized_mae": (
+                    float(np.sum(np.abs(leaf_error[leaf_common])) / count)
+                    if count
+                    else None
+                ),
+                "normalized_bias": (
+                    float(np.sum(leaf_error[leaf_common]) / count)
+                    if count
+                    else None
+                ),
+                "physical_rmse": (
+                    float(
+                        np.sqrt(
+                            np.sum(physical_error[leaf_common] ** 2) / count
+                        )
+                    )
+                    if count
+                    else None
+                ),
+                "physical_mae": (
+                    float(np.sum(np.abs(physical_error[leaf_common])) / count)
                     if count
                     else None
                 ),
@@ -394,6 +434,11 @@ def _state_metrics(
                     )
                 ),
                 "evaluated_values": count,
+                "current_uniform_loss_share": (
+                    float(np.sum(huber[selected][leaf_common])) / total_huber
+                    if count and total_huber > 0.0
+                    else None
+                ),
             }
         )
     largest_leaves = sorted(
@@ -422,6 +467,7 @@ def _state_metrics(
         ),
         "evaluated_values": count,
         "components": result,
+        "leaves": leaves,
         "largest_leaves": largest_leaves,
     }
 
