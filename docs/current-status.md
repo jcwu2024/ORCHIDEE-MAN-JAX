@@ -70,6 +70,13 @@ Current scientific status:
 
 - the neural path is technically connected but is not a validated daily
   surrogate;
+- the first contract-v4 nine-point, five-epoch V100 baseline established
+  nontrivial one-step learnability: its equal-split validation score was
+  0.812 versus 1.064 for the matched persistence baseline, but spatial and
+  joint scores remained 0.855 and 1.438;
+- that run exposed an absolute-state `rveget` undefined classifier which
+  damaged a stronger persistence prior; the follow-up model predicts only
+  defined/undefined flips and invalidates the old checkpoint;
 - no user-facing `daily-surrogate` run mode exists;
 - no free-running 7-, 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher

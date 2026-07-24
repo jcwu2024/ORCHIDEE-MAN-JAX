@@ -8,6 +8,7 @@ from research.daily_coarse_graining.canonical_training import (
     loss_weights_from_contract,
     model_config_from_batch,
     prepare_canonical_batch,
+    restore_fast_day_prediction,
 )
 from research.daily_coarse_graining.markov_dataset import (
     FiniteColumnStatistics,
@@ -117,6 +118,61 @@ def test_prepare_canonical_batch_persists_source_sentinel_and_learns_delta():
         prepared.fast_day_target_undefined, [[False, True]]
     )
     assert prepared.fast_day_target_undefined_values[0, 1] == 1.0e20
+    np.testing.assert_array_equal(
+        prepared.persistent_dynamic_undefined,
+        [[True]],
+    )
+    np.testing.assert_array_equal(
+        prepared.dynamic_undefined_flip_target,
+        [[False]],
+    )
+
+
+def test_dynamic_undefined_classifier_learns_flips_from_persistence():
+    batch = {
+        "state": np.asarray([[10.0, 1.0e20], [10.0, 1.0e20]]),
+        "forcing_native": np.ones((2, 5, 1)),
+        "parameters": np.ones((2, 1)),
+        "landpoint_static": np.ones((2, 1)),
+        "annual_conditions": np.ones((2, 1)),
+        "fast_day_target": np.asarray([[12.0, 1.0e20], [12.0, 5.0]]),
+        "year": np.asarray([1961, 1961]),
+        "day_index": np.asarray([2, 3]),
+    }
+    statistics = _statistics(
+        {
+            "state": (2,),
+            "forcing_native": (1,),
+            "parameters": (1,),
+            "landpoint_static": (1,),
+            "annual_conditions": (1,),
+            "fast_day_target": (2,),
+        }
+    )
+    representation = FastDayTargetRepresentation(
+        state_indices=np.asarray([0, 1], dtype=np.int32),
+        dynamic_undefined_indices=np.asarray([1], dtype=np.int32),
+        dynamic_undefined_fill_values=np.asarray([1.0e20]),
+    )
+    prepared = prepare_canonical_batch(batch, statistics, representation)
+
+    np.testing.assert_array_equal(
+        prepared.persistent_dynamic_undefined,
+        [[True], [True]],
+    )
+    np.testing.assert_array_equal(
+        prepared.dynamic_undefined_flip_target,
+        [[False], [True]],
+    )
+    restored = restore_fast_day_prediction(
+        prepared.normalized_fast_day_target,
+        np.asarray([[-4.0], [4.0]]),
+        prepared,
+        statistics,
+        representation,
+    )
+    assert restored[0, 1] == 1.0e20
+    assert restored[1, 1] == 5.0
 
 
 def test_prepare_canonical_batch_rejects_nonpersistent_sentinel():

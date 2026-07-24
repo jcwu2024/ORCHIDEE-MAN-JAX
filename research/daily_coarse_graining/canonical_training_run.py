@@ -48,7 +48,7 @@ from research.daily_coarse_graining.markov_dataset import (
     write_training_statistics,
 )
 
-CHECKPOINT_SCHEMA_VERSION = "canonical_fast_day_checkpoint_v2"
+CHECKPOINT_SCHEMA_VERSION = "canonical_fast_day_checkpoint_v3"
 ACCEPTANCE_SCHEMA_VERSION = "canonical_daily_dataset_acceptance_v1"
 
 
@@ -199,7 +199,7 @@ def _training_plumbing_smoke(
             normalized_fast_day_target=batch.normalized_fast_day_target,
             fast_day_target_finite=batch.fast_day_target_finite,
             fast_day_target_weights=weights,
-            dynamic_undefined_target=batch.dynamic_undefined_target,
+            dynamic_undefined_flip_target=batch.dynamic_undefined_flip_target,
         )
 
     prediction = canonical_model_apply(parameters, batch.model_input)
@@ -429,7 +429,7 @@ def _train_step(parameters, optimizer, batch, weights, learning_rate):
             normalized_fast_day_target=batch.normalized_fast_day_target,
             fast_day_target_finite=batch.fast_day_target_finite,
             fast_day_target_weights=weights,
-            dynamic_undefined_target=batch.dynamic_undefined_target,
+            dynamic_undefined_flip_target=batch.dynamic_undefined_flip_target,
         )
 
     loss_value, gradients = jax.value_and_grad(loss)(parameters)
@@ -497,7 +497,7 @@ def _evaluate(
         finite = np.asarray(batch.fast_day_target_finite)
         predicted_physical = restore_fast_day_prediction(
             predicted,
-            np.asarray(model_prediction.dynamic_undefined_logits),
+            np.asarray(model_prediction.dynamic_undefined_flip_logits),
             batch,
             statistics,
             representation,
@@ -515,10 +515,13 @@ def _evaluate(
                 )
             )
         )
-        predicted_dynamic = (
-            np.asarray(model_prediction.dynamic_undefined_logits) >= 0.0
+        predicted_dynamic = np.logical_xor(
+            np.asarray(batch.persistent_dynamic_undefined),
+            np.asarray(model_prediction.dynamic_undefined_flip_logits) >= 0.0,
         )
-        expected_dynamic = np.asarray(batch.dynamic_undefined_target)
+        expected_dynamic = np.asarray(batch.fast_day_target_undefined)[
+            :, representation.dynamic_undefined_indices
+        ]
         undefined_true_positive += int(
             np.count_nonzero(predicted_dynamic & expected_dynamic)
         )
@@ -809,7 +812,7 @@ def train_experiment(
             )
     best_record = min(history, key=lambda item: float(item["selection_score"]))
     summary = {
-        "schema_version": "canonical_fast_day_training_report_v1",
+        "schema_version": "canonical_fast_day_training_report_v2",
         "identity": identity,
         "epochs": epochs,
         "batch_size": batch_size,

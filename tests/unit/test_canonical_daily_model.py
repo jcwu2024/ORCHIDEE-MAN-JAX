@@ -66,6 +66,7 @@ def test_canonical_model_is_jittable_and_has_fixed_output_shapes():
     assert np.all(
         np.isfinite(np.asarray(prediction.normalized_fast_day_target))
     )
+    assert np.all(np.asarray(prediction.dynamic_undefined_flip_logits) < 0.0)
 
 
 def test_dynamic_parameter_conditions_change_predictions():
@@ -114,7 +115,7 @@ def test_one_step_loss_has_finite_nonzero_gradients():
             normalized_fast_day_target=target,
             fast_day_target_finite=jnp.ones_like(target, dtype=bool),
             fast_day_target_weights=weights,
-            dynamic_undefined_target=jnp.zeros((3, 2), dtype=bool),
+            dynamic_undefined_flip_target=jnp.zeros((3, 2), dtype=bool),
         )
 
     value, gradient = jax.value_and_grad(loss)(parameters)

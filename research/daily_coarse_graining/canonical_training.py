@@ -29,7 +29,8 @@ class CanonicalTrainingBatch(NamedTuple):
     fast_day_target_undefined_values: Any
     persistent_fast_day_undefined: Any
     persistent_fast_day_undefined_values: Any
-    dynamic_undefined_target: Any
+    persistent_dynamic_undefined: Any
+    dynamic_undefined_flip_target: Any
 
 
 class FastDayTargetRepresentation(NamedTuple):
@@ -209,6 +210,9 @@ def prepare_canonical_batch(
             np.float32
         ),
     )
+    dynamic_indices = representation.dynamic_undefined_indices
+    persistent_dynamic_undefined = persisted_undefined[:, dynamic_indices]
+    target_dynamic_undefined = target_undefined[:, dynamic_indices]
     return CanonicalTrainingBatch(
         model_input=model_input,
         normalized_fast_day_target=normalized["fast_day_target"].astype(
@@ -223,15 +227,17 @@ def prepare_canonical_batch(
         persistent_fast_day_undefined_values=np.where(
             persisted_undefined, persisted, 0.0
         ),
-        dynamic_undefined_target=target_undefined[
-            :, representation.dynamic_undefined_indices
-        ],
+        persistent_dynamic_undefined=persistent_dynamic_undefined,
+        dynamic_undefined_flip_target=np.logical_xor(
+            persistent_dynamic_undefined,
+            target_dynamic_undefined,
+        ),
     )
 
 
 def restore_fast_day_prediction(
     normalized_prediction: np.ndarray,
-    dynamic_undefined_logits: np.ndarray,
+    dynamic_undefined_flip_logits: np.ndarray,
     batch: CanonicalTrainingBatch,
     statistics: TrainingStatistics,
     representation: FastDayTargetRepresentation,
@@ -245,7 +251,11 @@ def restore_fast_day_prediction(
     undefined_values = np.asarray(
         batch.persistent_fast_day_undefined_values
     ).copy()
-    dynamic = np.asarray(dynamic_undefined_logits) >= 0.0
+    dynamic_flip = np.asarray(dynamic_undefined_flip_logits) >= 0.0
+    dynamic = np.logical_xor(
+        np.asarray(batch.persistent_dynamic_undefined),
+        dynamic_flip,
+    )
     undefined[:, representation.dynamic_undefined_indices] = dynamic
     undefined_values[:, representation.dynamic_undefined_indices] = (
         representation.dynamic_undefined_fill_values[None, :]
@@ -382,7 +392,7 @@ def model_config_from_batch(
         landpoint_static_width=int(inputs.landpoint_static.shape[-1]),
         annual_condition_width=int(inputs.annual_conditions.shape[-1]),
         fast_day_target_width=int(batch.normalized_fast_day_target.shape[-1]),
-        dynamic_undefined_width=int(batch.dynamic_undefined_target.shape[-1]),
+        dynamic_undefined_width=int(batch.dynamic_undefined_flip_target.shape[-1]),
         **architecture_widths,
     )
 

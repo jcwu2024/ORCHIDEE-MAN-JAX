@@ -50,8 +50,10 @@ regressed. A representation audit fails if an undefined value changes without
 an explicitly registered source owner. The only current dynamic exception is
 `diffuco_previous_step_state.rveget`: Fortran resets it to `undef_sechiba` and
 writes a finite value only on the `assimilate` branch. The neural model uses a
-separate binary head for that defined/undefined transition and a continuous
-head for the finite value.
+separate binary head for whether defined/undefined status flips relative to
+the day-start owner, with a no-flip initialization, and a continuous head for
+the finite value. Predicting absolute status is rejected because it discards
+the stronger persistence prior.
 
 ## Learned Representation
 

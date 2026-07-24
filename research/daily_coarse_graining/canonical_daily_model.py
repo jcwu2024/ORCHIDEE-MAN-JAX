@@ -58,7 +58,7 @@ class CanonicalModelParameters(NamedTuple):
 
 class CanonicalPrediction(NamedTuple):
     normalized_fast_day_target: Any
-    dynamic_undefined_logits: Any
+    dynamic_undefined_flip_logits: Any
 
 
 def _dense_init(key, input_width: int, output_width: int, *, scale: float = 1.0):
@@ -96,6 +96,15 @@ def initialize_canonical_model(
         + config.forcing_latent_width
         + config.condition_latent_width
     )
+    dynamic_undefined_head = _dense_init(
+        next(keys),
+        config.hidden_width,
+        config.dynamic_undefined_width,
+        scale=1.0e-2,
+    )
+    dynamic_undefined_head = dynamic_undefined_head._replace(
+        bias=jnp.full_like(dynamic_undefined_head.bias, -4.0)
+    )
     return CanonicalModelParameters(
         state_encoder=_dense_init(
             next(keys), 2 * config.state_width, config.state_latent_width
@@ -119,12 +128,7 @@ def initialize_canonical_model(
             config.fast_day_target_width,
             scale=1.0e-2,
         ),
-        dynamic_undefined_head=_dense_init(
-            next(keys),
-            config.hidden_width,
-            config.dynamic_undefined_width,
-            scale=1.0e-2,
-        ),
+        dynamic_undefined_head=dynamic_undefined_head,
     )
 
 
@@ -210,7 +214,7 @@ def canonical_model_apply(
             batch.normalized_fast_day_baseline
             + _dense(hidden, parameters.fast_day_target_head)
         ),
-        dynamic_undefined_logits=_dense(
+        dynamic_undefined_flip_logits=_dense(
             hidden, parameters.dynamic_undefined_head
         ),
     )
@@ -259,7 +263,7 @@ def canonical_one_step_loss(
     normalized_fast_day_target,
     fast_day_target_finite,
     fast_day_target_weights,
-    dynamic_undefined_target,
+    dynamic_undefined_flip_target,
     undefined_loss_weight: float = 0.1,
 ):
     prediction = canonical_model_apply(parameters, batch)
@@ -269,10 +273,10 @@ def canonical_one_step_loss(
         fast_day_target_finite,
         fast_day_target_weights,
     )
-    target = jnp.asarray(dynamic_undefined_target, dtype=jnp.float32)
+    target = jnp.asarray(dynamic_undefined_flip_target, dtype=jnp.float32)
     binary = jnp.mean(
-        jax.nn.softplus(prediction.dynamic_undefined_logits)
-        - target * prediction.dynamic_undefined_logits
+        jax.nn.softplus(prediction.dynamic_undefined_flip_logits)
+        - target * prediction.dynamic_undefined_flip_logits
     )
     return continuous + undefined_loss_weight * binary
 
