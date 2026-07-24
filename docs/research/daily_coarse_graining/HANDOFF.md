@@ -25,11 +25,10 @@ git status --short --branch
 git log -1 --oneline
 ```
 
-The ten-point v4 production code is fixed at commit `1f19ed7`; later local
-documentation and acceptance-pipeline commits do not alter its process image
-or outputs. Do not update the server worktree until the incomplete worker has
-been recovered. Any future generation run must record its own exact Teacher
-commit.
+The ten-point v4 production code is fixed at commit `1f19ed7`; later research
+commits do not alter its process image or outputs. Any recovery of point 319
+must use a dedicated clean worktree at `1f19ed7`, not the advancing neural
+worktree. Any future generation run must record its own exact Teacher commit.
 
 ## Current Architecture
 
@@ -86,10 +85,10 @@ four persistent one-CPU workers, and output root
 Worker array `14365952` completed 459 of 500 landpoint-year entries. Workers
 1-3 completed. Worker 0 timed out after completing all years for points 001
 and 281 plus point 319 through 1969. Its residual internal job `14365953`
-remains stuck in `CG` on `ibc11b02n13`; scheduler cancellation reports
-`Invalid job id`. Administrator cleanup is required. The only unfinished work
-is point 319 for 1970-2010, 41 entries. The obsolete aggregate `14365958`
-cannot pass its `afterok` dependency.
+was finally removed on 2026-07-24; `squeue` no longer recognizes it and its
+worker steps are recorded as cancelled. The only unfinished work is point 319
+for 1970-2010, 41 entries. The obsolete aggregate `14365958` cannot pass its
+`afterok` dependency.
 
 After `CG` clears, read and formally recover the existing worker-0 lock, then
 resume worker index 0 with worker count 4, the same plan/output root, and
@@ -115,6 +114,17 @@ improvements were `67.0%/28.0%/18.0%`. Longer training did not resolve the
 DIFFUCO/ENERBIL and HYDROL spatial errors. Its seven-day free rollout reached
 `0.921` RMSE and is superseded by the v5 contract correction. Do not evaluate
 the sealed test split or merely add more v4 epochs.
+
+The nine complete chains were migrated losslessly to contract v5 at
+`runtime/outputs/training/pft14-daily-teacher-9point-1961-2010-v5-4c0f886`.
+Migration job `14371675` produced 450/450 shards; provenance repair job
+`14371681` rebound the source plan, subset, source-manifest hash, and migration
+snapshot without rewriting shard arrays. Acceptance job `14371682` completed
+in 1:37 with about 203 MiB peak RSS. Its assets are under
+`acceptance-v5-5a16e78`: 96,354 train/train samples, zero target persistence
+mismatches, and finite real-batch forward/loss/gradients. The earlier
+acceptance attempt `14371680` is rejected because its migrated manifest lacked
+the inherited generation-plan hash.
 
 ## Accepted Historical Production Run
 
@@ -218,16 +228,13 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-1. transfer the current code snapshot to the neural server worktree;
-2. migrate the complete nine-point v4 dataset with
-   `migrate_markov_v4_to_v5` and verify every source/output hash;
-3. regenerate train-only v2 statistics and a v5 acceptance report;
-4. connect contiguous 1/3/7-day shard windows to `canonical_multistep.py`;
-5. run one bounded V100 multistep experiment with one-step `B_fast` plus
-   canonical next-state loss;
-6. require seven-day free-rollout final RMSE near the teacher-forced envelope
+1. run one bounded V100 curriculum with matching v5 one-step initialization
+   and fixed-shape 1/3/7-day batches through the retained tail;
+2. run a validation-only seven-day free rollout from the resulting checkpoint;
+3. require both one-step `B_fast` and canonical next-state supervision;
+4. require seven-day free-rollout final RMSE near the teacher-forced envelope
    (provisional gate `<=0.29`) with zero mask/discrete mismatch;
-7. only then decide whether more Teacher landpoints or a revised network are
+5. only then decide whether more Teacher landpoints or a revised network are
    justified.
 
 Do not start all 669 x 50 years before this bounded learnability and rollout

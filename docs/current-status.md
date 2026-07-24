@@ -95,6 +95,12 @@ Current scientific status:
 - a real three-day `lax.scan` gate also passes: maximum trajectory error
   `1.71e-13`, zero mask/discrete mismatch, and finite gradients for all 8,541
   defined day-target values;
+- the complete nine-point v4 asset has been losslessly migrated to v5 without
+  rerunning Teacher: 450/450 landpoint-year shards and about 1.4 GiB passed
+  source/output hash verification;
+- the v5 dataset acceptance gate passed on 96,354 train/train transitions with
+  zero target-representation persistence mismatches and finite forward, loss,
+  and gradients for the 1,963,369-parameter canonical model;
 - no free-running v5 7-, 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
   acceptance gate is complete.
@@ -187,10 +193,10 @@ Markov contract are valid. Its operational evidence is recorded in
 
 ## Next Bounded Milestone
 
-Migrate the complete nine-point v4 dataset to contract v5 without rerunning
-Teacher, regenerate train-only statistics and acceptance assets, then train
-with a 1/3/7-day unrolled objective through the retained daily tail. The
-remaining point-319 v4 generation is not a prerequisite for this architecture
-gate. Do not generate all
+Run one hash-bound V100 curriculum experiment: establish the matching v5
+one-step initialization, then optimize fixed-shape 1/3/7-day windows through
+the retained daily tail and evaluate a seven-day free rollout. The remaining
+point-319 v4 generation is not a prerequisite for this architecture gate. Do
+not generate all
 669 x 50 landpoint-years merely to discover whether the surrogate architecture
 can learn the daily transition.
