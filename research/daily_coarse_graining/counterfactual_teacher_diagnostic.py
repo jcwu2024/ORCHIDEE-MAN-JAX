@@ -6,6 +6,7 @@ import argparse
 import hashlib
 import json
 import time
+import traceback
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -64,6 +65,24 @@ DEFAULT_NAMED_STATES = (
     "resp_maint",
     "resp_hetero",
 )
+
+
+def _teacher_reentry_packet(
+    continuous,
+    discrete: Mapping[str, np.ndarray],
+    contract: DailyMarkovContract,
+    *,
+    tstep: int,
+):
+    """Rebuild the full packet required by the unprojected Teacher transition."""
+
+    return _packet_from_canonical_state(
+        continuous,
+        discrete,
+        contract,
+        tstep=tstep,
+        require_complete_finalize=True,
+    )
 
 
 def _sha256_file(path: Path) -> str:
@@ -415,10 +434,16 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
         if relative_offset in oracle_offsets:
             oracle_started = time.perf_counter()
             try:
+                oracle_packet = _teacher_reentry_packet(
+                    current_state,
+                    current_discrete,
+                    contract,
+                    tstep=(day_index - 1) * steps_per_day - 1,
+                )
                 _, _, oracle_records, oracle_final = _capture_days(
                     config_path=config_path,
                     context=context,
-                    previous_state=current_packet,
+                    previous_state=oracle_packet,
                     year=args.year,
                     start_day=day_index,
                     days=1,
@@ -439,6 +464,7 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
                         "elapsed_seconds": time.perf_counter() - oracle_started,
                         "error_type": type(error).__name__,
                         "error": str(error),
+                        "traceback": traceback.format_exc(),
                     },
                     "model_start_vs_clean_start": _state_metrics(
                         current_state, clean_state, statistics, contract

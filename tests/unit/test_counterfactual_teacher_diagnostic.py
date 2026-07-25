@@ -1,9 +1,11 @@
 import numpy as np
 import pytest
 
+from research.daily_coarse_graining import counterfactual_teacher_diagnostic as diagnostic
 from research.daily_coarse_graining.counterfactual_teacher_diagnostic import (
     _diagnostic_classification,
     _normalized_metrics,
+    _teacher_reentry_packet,
     _validate_oracle_offsets,
 )
 
@@ -33,6 +35,39 @@ def test_oracle_offsets_reject_invalid_windows(offsets, days):
 
 def test_oracle_offsets_accept_selected_model_fed_days():
     assert _validate_oracle_offsets([1, 3, 6], 7) == (1, 3, 6)
+
+
+def test_teacher_reentry_rebuilds_complete_finalize_packet(monkeypatch):
+    sentinel = object()
+    captured = {}
+
+    def fake_packet(continuous, discrete, contract, **kwargs):
+        captured.update(kwargs)
+        captured["continuous"] = continuous
+        captured["discrete"] = discrete
+        captured["contract"] = contract
+        return sentinel
+
+    monkeypatch.setattr(diagnostic, "_packet_from_canonical_state", fake_packet)
+    continuous = np.asarray([1.0])
+    discrete = {"flag": np.asarray([True])}
+    contract = object()
+
+    result = _teacher_reentry_packet(
+        continuous,
+        discrete,
+        contract,
+        tstep=95,
+    )
+
+    assert result is sentinel
+    assert captured == {
+        "continuous": continuous,
+        "discrete": discrete,
+        "contract": contract,
+        "tstep": 95,
+        "require_complete_finalize": True,
+    }
 
 
 def _record(*, operator, sensitivity, completed=True, mask=0, discrete=0):
