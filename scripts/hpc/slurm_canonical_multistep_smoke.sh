@@ -23,6 +23,10 @@ STATISTICS=${STATISTICS:?set STATISTICS to the matching v5 statistics JSON}
 ACCEPTANCE=${ACCEPTANCE:?set ACCEPTANCE to the matching v5 acceptance report}
 PLAN=${PLAN:?set PLAN to the hash-bound Teacher generation plan}
 OUTPUT_DIR=${OUTPUT_DIR:?set OUTPUT_DIR to a new smoke directory}
+INITIALIZE_CHECKPOINT=${INITIALIZE_CHECKPOINT:-}
+MULTISTEP_OBJECTIVE=${MULTISTEP_OBJECTIVE:-canonical_multistep_v1}
+STATE_INCREMENT_LOSS_WEIGHT=${STATE_INCREMENT_LOSS_WEIGHT:-1.0}
+STATE_DELTA_FLOOR_RATIO=${STATE_DELTA_FLOOR_RATIO:-0.001}
 
 case "$WORKTREE" in
   "$ROOT/runtime/worktrees/"*) ;;
@@ -35,6 +39,13 @@ for path in "$DATASET" "$STATISTICS" "$ACCEPTANCE" "$PLAN"; do
   esac
   test -f "$path"
 done
+if [[ -n "$INITIALIZE_CHECKPOINT" ]]; then
+  case "$INITIALIZE_CHECKPOINT" in
+    "$ROOT/runtime/"*) ;;
+    *) echo "INITIALIZE_CHECKPOINT must stay under $ROOT/runtime" >&2; exit 2 ;;
+  esac
+  test -f "$INITIALIZE_CHECKPOINT"
+fi
 case "$OUTPUT_DIR" in
   "$ROOT/runtime/"*) ;;
   *) echo "OUTPUT_DIR must stay under $ROOT/runtime" >&2; exit 2 ;;
@@ -50,6 +61,23 @@ NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
 test -f "$CUDA_DRIVER"
 test -f "$NVML_DRIVER"
 GPU_BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
+TRAIN_ARGS=(
+  --dataset "$DATASET"
+  --statistics "$STATISTICS"
+  --acceptance "$ACCEPTANCE"
+  --plan "$PLAN"
+  --output-dir "$OUTPUT_DIR"
+  --curriculum 1:1
+  --batch-size 1
+  --learning-rate 0.0001
+  --objective "$MULTISTEP_OBJECTIVE"
+  --state-increment-loss-weight "$STATE_INCREMENT_LOSS_WEIGHT"
+  --state-delta-floor-ratio "$STATE_DELTA_FLOOR_RATIO"
+  --seed 20260724
+)
+if [[ -n "$INITIALIZE_CHECKPOINT" ]]; then
+  TRAIN_ARGS+=(--initialize-checkpoint "$INITIALIZE_CHECKPOINT")
+fi
 
 env \
   SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \
@@ -64,15 +92,7 @@ env \
   singularity exec \
     --nv --bind "$GPU_BINDS" --pwd "$WORKTREE" "$IMAGE" \
     "$PYTHON" -m scripts.hpc.run_canonical_multistep_gpu_train \
-      --dataset "$DATASET" \
-      --statistics "$STATISTICS" \
-      --acceptance "$ACCEPTANCE" \
-      --plan "$PLAN" \
-      --output-dir "$OUTPUT_DIR" \
-      --curriculum 1:1 \
-      --batch-size 1 \
-      --learning-rate 0.0001 \
-      --seed 20260724
+      "${TRAIN_ARGS[@]}"
 
 test -f "$OUTPUT_DIR/training_report.json"
 test -f "$OUTPUT_DIR/best_checkpoint.pkl"
