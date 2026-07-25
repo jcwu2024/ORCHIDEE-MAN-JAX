@@ -195,17 +195,23 @@ dataset and require named slow-state improvement; prepare a small diverse
 landpoint selection independently from parameters/static data/forcing
 climatology, then generate it only after the seen-condition objective gate.
 
-The corresponding bounded objective implementation is now ready locally. The
-exact design and stop rules are in
-[`process_increment_objective_ab_20260725.md`](process_increment_objective_ab_20260725.md).
-`process_increment_v2` assigns equal nominal weight to eight source-owned
-state groups and adds a daily state-increment loss normalized by train-only
-statistics with a `0.001 * state_scale` floor. Its production v5 audit covers
-all 3,854 continuous state values exactly once; 249 increment scales use the
-floor and all are finite and positive. The objective, CLI, launcher, mask,
-gradient, v1 compatibility, Markov dataset, and retained-tail focused suite
-passes 70 tests. No real v2 GPU training result exists yet, so do not describe
-the objective as scientifically accepted or change the default from v1.
+The corresponding bounded `process_increment_v2` objective A/B is complete
+and rejected. Its V100 curriculum remained finite, but the frozen four-way
+rollout gate did not improve. On train/train Day 7, global normalized state
+RMSE changed from `0.145471` to `0.146456`, biomass from `0.014259` to
+`0.016716`, and litterpart from `3.651536` to `4.008877`. Train/validation
+global RMSE worsened from `0.134233` to `0.152119`. All defined-status and
+discrete mismatches remained zero. Do not tune this objective further or
+change the default from `canonical_multistep_v1`.
+
+The training-method review is recorded in
+[`autoregressive_training_review_20260725.md`](autoregressive_training_review_20260725.md).
+The next bounded gate is not another training run: re-enter selected model-
+generated Day 2-7 states into the exact JAX Teacher and compare the neural and
+Teacher fast-day transitions at the same state. If the Teacher is valid on
+those states, implement stop-gradient pushforward/on-policy Teacher
+supervision. This addresses model-induced state distribution shift without
+long-horizon backpropagation or a new large Teacher dataset.
 
 ## Accepted Historical Production Run
 

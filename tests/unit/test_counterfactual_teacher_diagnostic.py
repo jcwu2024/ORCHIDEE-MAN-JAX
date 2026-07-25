@@ -1,0 +1,79 @@
+import numpy as np
+import pytest
+
+from research.daily_coarse_graining.counterfactual_teacher_diagnostic import (
+    _diagnostic_classification,
+    _normalized_metrics,
+    _validate_oracle_offsets,
+)
+
+
+def test_normalized_metrics_reports_scale_aware_error_and_defined_status():
+    metrics = _normalized_metrics(
+        np.asarray([3.0, 1.0e20, 8.0]),
+        np.asarray([1.0, 7.0, 4.0]),
+        np.asarray([2.0, 5.0, 4.0]),
+    )
+
+    assert metrics["normalized_rmse"] == pytest.approx(1.0)
+    assert metrics["normalized_mae"] == pytest.approx(1.0)
+    assert metrics["max_absolute_error"] == pytest.approx(4.0)
+    assert metrics["defined_status_mismatches"] == 1
+    assert metrics["evaluated_values"] == 2
+
+
+@pytest.mark.parametrize(
+    ("offsets", "days"),
+    [([], 7), ([0], 7), ([1, 1], 7), ([3, 1], 7), ([7], 7), ([1], 1)],
+)
+def test_oracle_offsets_reject_invalid_windows(offsets, days):
+    with pytest.raises(ValueError):
+        _validate_oracle_offsets(offsets, days)
+
+
+def test_oracle_offsets_accept_selected_model_fed_days():
+    assert _validate_oracle_offsets([1, 3, 6], 7) == (1, 3, 6)
+
+
+def _record(*, operator, sensitivity, completed=True, mask=0, discrete=0):
+    return {
+        "teacher_reentry": {"completed": completed},
+        "teacher_next_vs_clean_next": {
+            "normalized_rmse": sensitivity,
+            "defined_status_mismatches": mask,
+        },
+        "teacher_discrete_vs_clean_next": {"mismatches": discrete},
+        "neural_next_vs_teacher_next": {"normalized_rmse": operator},
+    }
+
+
+def test_classification_identifies_matched_operator_error():
+    result = _diagnostic_classification(
+        [_record(operator=0.4, sensitivity=0.1), _record(operator=0.2, sensitivity=0.1)]
+    )
+
+    assert result["teacher_reentry_valid"]
+    assert (
+        result["classification"]
+        == "matched_operator_error_at_least_as_large_as_state_sensitivity"
+    )
+    assert result["operator_to_state_sensitivity_ratio"] == pytest.approx(3.0)
+
+
+def test_classification_stops_on_reentry_validity_failure():
+    result = _diagnostic_classification(
+        [_record(operator=0.1, sensitivity=0.2, discrete=1)]
+    )
+
+    assert not result["teacher_reentry_valid"]
+    assert result["classification"] == "teacher_reentry_or_state_validity_failure"
+    assert result["operator_to_state_sensitivity_ratio"] is None
+
+
+def test_classification_accepts_structured_teacher_execution_failure():
+    result = _diagnostic_classification(
+        [{"teacher_reentry": {"completed": False, "error_type": "ValueError"}}]
+    )
+
+    assert not result["teacher_reentry_valid"]
+    assert result["mean_operator_normalized_rmse"] is None

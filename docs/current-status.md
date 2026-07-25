@@ -139,15 +139,15 @@ Current scientific status:
   gate can hide a scientifically important low-dimensional failure. Do not
   add more years of the same points; first run one process-balanced/state-
   increment objective A/B, then add a bounded, source-selected spatial pilot;
-- the bounded `process_increment_v2` objective is implemented and locally
-  verified, but has not yet produced GPU training evidence. It preserves the
-  frozen model architecture, data, split, seed, and curriculum; balances the
-  3,854 continuous states across eight source-owned process groups and adds a
-  train-only, state-relative-floor-normalized daily increment loss. The real
-  v5 contract covers every state value exactly once, and 70 focused objective,
-  model, Markov-contract, dataset, and retained-tail tests pass. The accepted
-  v1 behavior remains the default until the equal-budget A/B passes the frozen
-  global and named carbon-state gates;
+- the bounded `process_increment_v2` equal-budget A/B completed and is
+  rejected. On train/train Day 7, global normalized state RMSE changed from
+  `0.145471` to `0.146456`, biomass from `0.014259` to `0.016716`, and
+  litterpart from `3.651536` to `4.008877`. The candidate retained zero
+  defined-status and discrete mismatches but failed all required seen-condition
+  improvement gates. `canonical_multistep_v1` remains the baseline; do not
+  continue tuning process/increment loss weights. The next bounded gate is a
+  counterfactual Teacher-at-model-state diagnostic followed, if valid, by
+  stop-gradient pushforward/on-policy Teacher supervision;
 - the provisional seven-day free-rollout gate of `<=0.29` therefore did not
   pass. No v5 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
