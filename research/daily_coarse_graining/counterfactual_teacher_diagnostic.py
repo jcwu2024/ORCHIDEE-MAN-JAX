@@ -14,7 +14,6 @@ import jax
 import numpy as np
 
 from jax_orchidee.driver import orchestration as teacher
-from jax_orchidee.sechiba.restart_lifecycle import SECHIBA_FINALIZE_SOURCE_FIELDS
 from research.daily_coarse_graining.canonical_daily_model import (
     canonical_model_apply,
 )
@@ -25,6 +24,10 @@ from research.daily_coarse_graining.canonical_rollout import (
     _plan_entry,
     _run_retained_tail_day,
     _select_reference,
+)
+from research.daily_coarse_graining.canonical_teacher_reentry import (
+    query_teacher_day,
+    teacher_reentry_templates,
 )
 from research.daily_coarse_graining.canonical_training import (
     fast_day_target_representation_from_contract,
@@ -38,7 +41,6 @@ from research.daily_coarse_graining.canonical_training_run import (
 from research.daily_coarse_graining.daily_markov_contract import (
     DailyMarkovContract,
     daily_markov_contract_from_metadata,
-    extract_fast_day_target,
     extract_state,
     load_markov_shard,
     reconstruct_compiled_forcing_day,
@@ -49,9 +51,6 @@ from research.daily_coarse_graining.markov_dataset import (
     defined_numeric_mask,
     load_dataset_index,
     load_training_statistics,
-)
-from research.daily_coarse_graining.supervised_learnability_pilot import (
-    _capture_days,
 )
 from research.daily_coarse_graining.synthetic_operator_cost import (
     _tail_static_inputs,
@@ -66,61 +65,6 @@ DEFAULT_NAMED_STATES = (
     "resp_maint",
     "resp_hetero",
 )
-
-
-def _teacher_reentry_packet(
-    continuous,
-    discrete: Mapping[str, np.ndarray],
-    contract: DailyMarkovContract,
-    *,
-    tstep: int,
-    overwritten_finalize_template: Mapping[str, Any],
-    daily_accumulator_template: Mapping[str, Any],
-):
-    """Rebuild the full packet required by the unprojected Teacher transition.
-
-    Template values are allowed only for fields that the half-hour transition
-    overwrites before reading. Carry fields must still come from the canonical
-    model state or one of its deterministic component mirrors.
-    """
-
-    expected_template_names = (
-        SECHIBA_FINALIZE_SOURCE_FIELDS - teacher._SECHIBA_HALF_HOUR_CARRY_FIELDS
-    )
-    if set(overwritten_finalize_template) != expected_template_names:
-        raise ValueError("Teacher re-entry overwrite template has the wrong fields")
-    packet = _packet_from_canonical_state(
-        continuous,
-        discrete,
-        contract,
-        tstep=tstep,
-        template_fields={
-            "sechiba_finalize_state": dict(overwritten_finalize_template),
-            "slowproc_stomate_previous_step_state": {
-                "daily_accumulators": dict(daily_accumulator_template)
-            },
-        },
-        require_complete_finalize=True,
-    )
-    finalize = packet.fields_by_component["sechiba_finalize_state"]
-    hydrol = packet.fields_by_component["hydrol_previous_step_state"]
-    if not np.array_equal(finalize["fwet_new"], hydrol["fwet_new"]):
-        raise ValueError("Teacher re-entry fwet_new mirror did not come from current state")
-    invalid = []
-    for index, value in enumerate(jax.tree_util.tree_leaves(packet.fields_by_component)):
-        dtype = np.asarray(value).dtype
-        if dtype.kind not in "biufc":
-            invalid.append((index, str(dtype)))
-    if invalid:
-        raise ValueError(
-            f"Teacher re-entry packet contains non-numeric dynamic leaves: {invalid}"
-        )
-    daily_accumulators = packet.fields_by_component[
-        "slowproc_stomate_previous_step_state"
-    ]["daily_accumulators"]
-    if any(np.any(np.asarray(value)) for value in daily_accumulators.values()):
-        raise ValueError("Teacher re-entry daily accumulators were not reset to zero")
-    return packet
 
 
 def _sha256_file(path: Path) -> str:
@@ -351,23 +295,7 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
         used_run_def_path=entry["run_def"],
         reference_run_dir=entry["reference_run_dir"],
     )
-    initial_finalize = teacher.sechiba_finalize_source_state_from_restart(
-        context.first_step_restart_state.sechiba_restart_state
-    )
-    overwritten_finalize_template = {
-        name: initial_finalize[name]
-        for name in (
-            SECHIBA_FINALIZE_SOURCE_FIELDS
-            - teacher._SECHIBA_HALF_HOUR_CARRY_FIELDS
-        )
-    }
-    daily_accumulator_template = {
-        name: value
-        for name, value in teacher.read_stomate_daily_accumulator_state(
-            context.first_step_restart_state.stomate_input
-        )._asdict().items()
-        if name != "provenance"
-    }
+    reentry_templates = teacher_reentry_templates(context)
     checkpoint, model_config = _load_neural_checkpoint(
         checkpoint_path,
         dataset_path=dataset_path,
@@ -489,29 +417,19 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
         if relative_offset in oracle_offsets:
             oracle_started = time.perf_counter()
             try:
-                oracle_packet = _teacher_reentry_packet(
-                    current_state,
-                    current_discrete,
-                    contract,
-                    tstep=(day_index - 1) * steps_per_day - 1,
-                    overwritten_finalize_template=overwritten_finalize_template,
-                    daily_accumulator_template=daily_accumulator_template,
-                )
-                _, _, oracle_records, oracle_final = _capture_days(
+                oracle = query_teacher_day(
                     config_path=config_path,
                     context=context,
-                    previous_state=oracle_packet,
+                    templates=reentry_templates,
+                    continuous=current_state,
+                    discrete=current_discrete,
+                    contract=contract,
                     year=args.year,
-                    start_day=day_index,
-                    days=1,
+                    day_index=day_index,
                 )
-                oracle_record = oracle_records[0]
-                oracle_fast = extract_fast_day_target(
-                    oracle_record, contract.fast_day_target_leaves
-                )
-                oracle_next, oracle_next_discrete = extract_state(
-                    oracle_final, contract
-                )
+                oracle_fast = oracle.fast_day_target
+                oracle_next = oracle.next_state
+                oracle_next_discrete = oracle.next_discrete_state
             except Exception as error:  # noqa: BLE001 - failure is diagnostic evidence
                 record = {
                     "relative_day": relative_offset + 1,
@@ -537,7 +455,7 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
                     "relative_day": relative_offset + 1,
                     "day_index": day_index,
                     "teacher_reentry": {
-                        "completed": oracle_final is not None,
+                        "completed": True,
                         "elapsed_seconds": oracle_seconds,
                     },
                     "model_start_vs_clean_start": _state_metrics(

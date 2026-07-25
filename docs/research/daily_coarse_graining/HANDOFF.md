@@ -206,12 +206,20 @@ change the default from `canonical_multistep_v1`.
 
 The training-method review is recorded in
 [`autoregressive_training_review_20260725.md`](autoregressive_training_review_20260725.md).
-The next bounded gate is not another training run: re-enter selected model-
-generated Day 2-7 states into the exact JAX Teacher and compare the neural and
-Teacher fast-day transitions at the same state. If the Teacher is valid on
-those states, implement stop-gradient pushforward/on-policy Teacher
-supervision. This addresses model-induced state distribution shift without
-long-horizon backpropagation or a new large Teacher dataset.
+The counterfactual Teacher re-entry gate is complete and recorded in
+[`counterfactual_teacher_reentry_20260725.md`](counterfactual_teacher_reentry_20260725.md).
+Job `14380170` completed in 12:08. Exact Teacher queries at model-generated
+Days 2, 4, and 7 had mean same-state neural operator error `0.085390`, mean
+Teacher state sensitivity `0.073494`, and zero defined-status/discrete
+mismatches. Teacher re-entry is valid; do not add a physical projection as the
+primary next experiment.
+
+The active implementation gate is a real one-update smoke for detached-prefix
+on-policy Teacher training. Prefixes may be 0, 1, 3, 7, or later 14 days. The
+prefix terminal state is explicitly stop-gradient, the exact Teacher is queried
+at that model-visited state, and only the final matched transition is trained.
+Keep clean prefix-0 samples in the eventual candidate. Do not start an equal-
+budget A/B until the smoke writes a finite checkpoint and report.
 
 ## Accepted Historical Production Run
 

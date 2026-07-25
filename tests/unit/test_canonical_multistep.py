@@ -12,6 +12,7 @@ from research.daily_coarse_graining.canonical_multistep import (
     CanonicalMultistepSequence,
     canonical_multistep_batch_loss,
     canonical_multistep_rollout,
+    canonical_pushforward_prefix,
     sequence_from_markov_window,
 )
 from research.daily_coarse_graining.canonical_training import (
@@ -168,6 +169,36 @@ def test_multistep_scan_supports_one_three_and_seven_day_curriculum():
         result = run(_sequence(days))
         assert result.steps.continuous_state.shape == (days, 2)
         assert np.isfinite(np.asarray(result.loss))
+
+
+def test_pushforward_prefix_detaches_terminal_state_from_parameter_gradients():
+    config = CanonicalModelConfig(2, 1, 1, 1, 1, 2, 1, 2, 2, 2, 3)
+    parameters = initialize_canonical_model(config, seed=5)
+    representation = FastDayTargetRepresentation(
+        np.asarray([0, 1], dtype=np.int32),
+        np.asarray([1], dtype=np.int32),
+        np.asarray([1.0e20]),
+    )
+
+    def terminal_sum(model_parameters):
+        terminal = canonical_pushforward_prefix(
+            model_parameters,
+            jnp.asarray([0.1, 0.2]),
+            {"flag": jnp.asarray([True])},
+            _sequence(3),
+            statistics=_statistics(),
+            representation=representation,
+            retained_tail_transition=_tail,
+        )
+        return jnp.sum(terminal.continuous_state)
+
+    value, gradients = jax.jit(jax.value_and_grad(terminal_sum))(parameters)
+
+    assert np.isfinite(np.asarray(value))
+    assert all(
+        np.all(np.asarray(gradient) == 0.0)
+        for gradient in jax.tree_util.tree_leaves(gradients)
+    )
 
 
 def test_process_increment_objective_is_finite_and_adds_daily_change_loss():

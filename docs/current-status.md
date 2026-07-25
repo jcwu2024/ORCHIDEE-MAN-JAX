@@ -145,9 +145,14 @@ Current scientific status:
   litterpart from `3.651536` to `4.008877`. The candidate retained zero
   defined-status and discrete mismatches but failed all required seen-condition
   improvement gates. `canonical_multistep_v1` remains the baseline; do not
-  continue tuning process/increment loss weights. The next bounded gate is a
-  counterfactual Teacher-at-model-state diagnostic followed, if valid, by
-  stop-gradient pushforward/on-policy Teacher supervision;
+  continue tuning process/increment loss weights;
+- the counterfactual Teacher-at-model-state gate passed at research commit
+  `87e1132`: exact Teacher re-entry completed at model-generated Days 2, 4,
+  and 7 with zero defined-status or discrete mismatch. Mean matched operator
+  error was `0.085390`, mean state sensitivity was `0.073494`, and their ratio
+  was `1.161865`. This supports stop-gradient pushforward with same-state
+  on-policy Teacher labels. The implementation must pass a real one-update
+  smoke before any equal-budget training A/B;
 - the provisional seven-day free-rollout gate of `<=0.29` therefore did not
   pass. No v5 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher

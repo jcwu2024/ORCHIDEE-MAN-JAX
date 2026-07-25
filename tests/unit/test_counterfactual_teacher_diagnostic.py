@@ -3,11 +3,14 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from research.daily_coarse_graining import counterfactual_teacher_diagnostic as diagnostic
+from research.daily_coarse_graining import canonical_teacher_reentry as reentry
+from research.daily_coarse_graining.canonical_teacher_reentry import (
+    TeacherReentryTemplates,
+    teacher_reentry_packet,
+)
 from research.daily_coarse_graining.counterfactual_teacher_diagnostic import (
     _diagnostic_classification,
     _normalized_metrics,
-    _teacher_reentry_packet,
     _validate_oracle_offsets,
 )
 
@@ -43,8 +46,8 @@ def test_teacher_reentry_rebuilds_complete_finalize_packet(monkeypatch):
     sentinel = SimpleNamespace()
     captured = {}
     overwrite_names = (
-        diagnostic.SECHIBA_FINALIZE_SOURCE_FIELDS
-        - diagnostic.teacher._SECHIBA_HALF_HOUR_CARRY_FIELDS
+        reentry.SECHIBA_FINALIZE_SOURCE_FIELDS
+        - reentry.teacher._SECHIBA_HALF_HOUR_CARRY_FIELDS
     )
     template = {name: np.asarray([0.0]) for name in overwrite_names}
     daily_template = {"counter": np.asarray([5.0])}
@@ -63,18 +66,17 @@ def test_teacher_reentry_rebuilds_complete_finalize_packet(monkeypatch):
         captured["contract"] = contract
         return sentinel
 
-    monkeypatch.setattr(diagnostic, "_packet_from_canonical_state", fake_packet)
+    monkeypatch.setattr(reentry, "_packet_from_canonical_state", fake_packet)
     continuous = np.asarray([1.0])
     discrete = {"flag": np.asarray([True])}
     contract = object()
 
-    result = _teacher_reentry_packet(
+    result = teacher_reentry_packet(
         continuous,
         discrete,
         contract,
         tstep=95,
-        overwritten_finalize_template=template,
-        daily_accumulator_template=daily_template,
+        templates=TeacherReentryTemplates(template, daily_template, 48),
     )
 
     assert result is sentinel
@@ -95,8 +97,8 @@ def test_teacher_reentry_rebuilds_complete_finalize_packet(monkeypatch):
 
 def test_teacher_reentry_rejects_non_numeric_dynamic_metadata(monkeypatch):
     overwrite_names = (
-        diagnostic.SECHIBA_FINALIZE_SOURCE_FIELDS
-        - diagnostic.teacher._SECHIBA_HALF_HOUR_CARRY_FIELDS
+        reentry.SECHIBA_FINALIZE_SOURCE_FIELDS
+        - reentry.teacher._SECHIBA_HALF_HOUR_CARRY_FIELDS
     )
     packet = SimpleNamespace(
         fields_by_component={
@@ -111,21 +113,22 @@ def test_teacher_reentry_rejects_non_numeric_dynamic_metadata(monkeypatch):
         }
     )
     monkeypatch.setattr(
-        diagnostic,
+        reentry,
         "_packet_from_canonical_state",
         lambda *args, **kwargs: packet,
     )
 
     with pytest.raises(ValueError, match="non-numeric dynamic leaves"):
-        _teacher_reentry_packet(
+        teacher_reentry_packet(
             np.asarray([1.0]),
             {},
             object(),
             tstep=95,
-            overwritten_finalize_template={
-                name: np.asarray([0.0]) for name in overwrite_names
-            },
-            daily_accumulator_template={"counter": np.asarray([0.0])},
+            templates=TeacherReentryTemplates(
+                {name: np.asarray([0.0]) for name in overwrite_names},
+                {"counter": np.asarray([0.0])},
+                48,
+            ),
         )
 
 

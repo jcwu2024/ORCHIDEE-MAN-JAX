@@ -66,6 +66,50 @@ RetainedTailTransition = Callable[
 ]
 
 
+def canonical_pushforward_prefix(
+    parameters: CanonicalModelParameters,
+    initial_state,
+    initial_discrete_state: Mapping[str, Any],
+    sequence: CanonicalMultistepSequence,
+    *,
+    statistics: TrainingStatistics,
+    representation: FastDayTargetRepresentation,
+    retained_tail_transition: RetainedTailTransition,
+) -> CanonicalRolloutCarry:
+    """Roll out a model prefix and detach the terminal state from gradients."""
+
+    def body(carry: CanonicalRolloutCarry, day):
+        inference = prepare_canonical_inference_batch_compiled(
+            _singleton_batch(day, carry.continuous_state),
+            statistics,
+            representation,
+        )
+        prediction = canonical_model_apply(parameters, inference.model_input)
+        physical_fast_day = restore_fast_day_inference_prediction_compiled(
+            prediction.normalized_fast_day_target,
+            prediction.dynamic_undefined_flip_logits,
+            inference,
+            statistics,
+            representation,
+        )[0]
+        next_state, next_discrete = retained_tail_transition(
+            carry.continuous_state,
+            carry.discrete_state,
+            physical_fast_day,
+            day.retained_tail_inputs,
+            day.year,
+            day.day_index,
+        )
+        return CanonicalRolloutCarry(next_state, next_discrete), None
+
+    final_carry, _ = jax.lax.scan(
+        body,
+        CanonicalRolloutCarry(initial_state, initial_discrete_state),
+        sequence,
+    )
+    return jax.tree_util.tree_map(jax.lax.stop_gradient, final_carry)
+
+
 def sequence_from_markov_window(
     window: Mapping[str, Any],
     *,
