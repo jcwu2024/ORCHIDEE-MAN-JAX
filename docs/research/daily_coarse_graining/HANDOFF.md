@@ -214,12 +214,19 @@ Teacher state sensitivity `0.073494`, and zero defined-status/discrete
 mismatches. Teacher re-entry is valid; do not add a physical projection as the
 primary next experiment.
 
-The active implementation gate is a real one-update smoke for detached-prefix
-on-policy Teacher training. Prefixes may be 0, 1, 3, 7, or later 14 days. The
-prefix terminal state is explicitly stop-gradient, the exact Teacher is queried
-at that model-visited state, and only the final matched transition is trained.
-Keep clean prefix-0 samples in the eventual candidate. Do not start an equal-
-budget A/B until the smoke writes a finite checkpoint and report.
+The detached-prefix implementation gate passed at commit `c3e2d79`; see
+[`pushforward_smoke_20260726.md`](pushforward_smoke_20260726.md). Job
+`14380290` completed a three-day detached prefix, one exact same-state Teacher
+query, and one final-transition update in 6:33. Loss was `0.0836542`, gradient
+norm was `0.1333402`, and the 45 MiB checkpoint is finite.
+
+The next bounded experiment is one equal-update candidate against frozen
+`canonical_multistep_v1`: initialize from the same one-step checkpoint, use
+batch size 4 and `0:48,1:48,3:48,7:48` for 192 total updates, then run only the
+existing four seven-day validation windows. Prefix 0 supplies clean pairs;
+all nonzero prefixes use exact same-state Teacher labels. If the candidate
+does not improve the seen-condition global and named carbon-state gates with
+zero defined-status/discrete regression, reject it without further tuning.
 
 ## Accepted Historical Production Run
 
