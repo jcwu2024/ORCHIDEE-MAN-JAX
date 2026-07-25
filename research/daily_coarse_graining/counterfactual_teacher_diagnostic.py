@@ -75,6 +75,7 @@ def _teacher_reentry_packet(
     *,
     tstep: int,
     overwritten_finalize_template: Mapping[str, Any],
+    daily_accumulator_template: Mapping[str, Any],
 ):
     """Rebuild the full packet required by the unprojected Teacher transition.
 
@@ -94,7 +95,10 @@ def _teacher_reentry_packet(
         contract,
         tstep=tstep,
         template_fields={
-            "sechiba_finalize_state": dict(overwritten_finalize_template)
+            "sechiba_finalize_state": dict(overwritten_finalize_template),
+            "slowproc_stomate_previous_step_state": {
+                "daily_accumulators": dict(daily_accumulator_template)
+            },
         },
         require_complete_finalize=True,
     )
@@ -102,6 +106,11 @@ def _teacher_reentry_packet(
     hydrol = packet.fields_by_component["hydrol_previous_step_state"]
     if not np.array_equal(finalize["fwet_new"], hydrol["fwet_new"]):
         raise ValueError("Teacher re-entry fwet_new mirror did not come from current state")
+    daily_accumulators = packet.fields_by_component[
+        "slowproc_stomate_previous_step_state"
+    ]["daily_accumulators"]
+    if any(np.any(np.asarray(value)) for value in daily_accumulators.values()):
+        raise ValueError("Teacher re-entry daily accumulators were not reset to zero")
     return packet
 
 
@@ -343,6 +352,9 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
             - teacher._SECHIBA_HALF_HOUR_CARRY_FIELDS
         )
     }
+    daily_accumulator_template = teacher.read_stomate_daily_accumulator_state(
+        context.first_step_restart_state.stomate_input
+    )._asdict()
     checkpoint, model_config = _load_neural_checkpoint(
         checkpoint_path,
         dataset_path=dataset_path,
@@ -470,6 +482,7 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
                     contract,
                     tstep=(day_index - 1) * steps_per_day - 1,
                     overwritten_finalize_template=overwritten_finalize_template,
+                    daily_accumulator_template=daily_accumulator_template,
                 )
                 _, _, oracle_records, oracle_final = _capture_days(
                     config_path=config_path,

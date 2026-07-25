@@ -47,9 +47,13 @@ def test_teacher_reentry_rebuilds_complete_finalize_packet(monkeypatch):
         - diagnostic.teacher._SECHIBA_HALF_HOUR_CARRY_FIELDS
     )
     template = {name: np.asarray([0.0]) for name in overwrite_names}
+    daily_template = {"counter": np.asarray([5.0])}
     sentinel.fields_by_component = {
         "sechiba_finalize_state": {"fwet_new": np.asarray([3.0])},
         "hydrol_previous_step_state": {"fwet_new": np.asarray([3.0])},
+        "slowproc_stomate_previous_step_state": {
+            "daily_accumulators": {"counter": np.asarray([0.0])}
+        },
     }
 
     def fake_packet(continuous, discrete, contract, **kwargs):
@@ -70,6 +74,7 @@ def test_teacher_reentry_rebuilds_complete_finalize_packet(monkeypatch):
         contract,
         tstep=95,
         overwritten_finalize_template=template,
+        daily_accumulator_template=daily_template,
     )
 
     assert result is sentinel
@@ -78,7 +83,12 @@ def test_teacher_reentry_rebuilds_complete_finalize_packet(monkeypatch):
         "discrete": discrete,
         "contract": contract,
         "tstep": 95,
-        "template_fields": {"sechiba_finalize_state": template},
+        "template_fields": {
+            "sechiba_finalize_state": template,
+            "slowproc_stomate_previous_step_state": {
+                "daily_accumulators": daily_template
+            },
+        },
         "require_complete_finalize": True,
     }
 
