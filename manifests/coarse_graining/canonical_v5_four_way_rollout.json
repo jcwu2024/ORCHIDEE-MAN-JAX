@@ -1,0 +1,31 @@
+{
+  "schema_version": "canonical_rollout_matrix_v1",
+  "start_day": 100,
+  "days": 7,
+  "cases": [
+    {
+      "id": "train-train-281.0-095.0-2004",
+      "landpoint_id": "281.0-095.0",
+      "year": 2004,
+      "allow_training_split_diagnostic": true
+    },
+    {
+      "id": "train-validation-281.0-095.0-2005",
+      "landpoint_id": "281.0-095.0",
+      "year": 2005,
+      "allow_training_split_diagnostic": false
+    },
+    {
+      "id": "validation-train-215.0-119.0-2004",
+      "landpoint_id": "215.0-119.0",
+      "year": 2004,
+      "allow_training_split_diagnostic": false
+    },
+    {
+      "id": "validation-validation-215.0-119.0-2005",
+      "landpoint_id": "215.0-119.0",
+      "year": 2005,
+      "allow_training_split_diagnostic": false
+    }
+  ]
+}
