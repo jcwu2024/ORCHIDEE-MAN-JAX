@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 
@@ -38,8 +40,17 @@ def test_oracle_offsets_accept_selected_model_fed_days():
 
 
 def test_teacher_reentry_rebuilds_complete_finalize_packet(monkeypatch):
-    sentinel = object()
+    sentinel = SimpleNamespace()
     captured = {}
+    overwrite_names = (
+        diagnostic.SECHIBA_FINALIZE_SOURCE_FIELDS
+        - diagnostic.teacher._SECHIBA_HALF_HOUR_CARRY_FIELDS
+    )
+    template = {name: np.asarray([0.0]) for name in overwrite_names}
+    sentinel.fields_by_component = {
+        "sechiba_finalize_state": {"fwet_new": np.asarray([3.0])},
+        "hydrol_previous_step_state": {"fwet_new": np.asarray([3.0])},
+    }
 
     def fake_packet(continuous, discrete, contract, **kwargs):
         captured.update(kwargs)
@@ -58,6 +69,7 @@ def test_teacher_reentry_rebuilds_complete_finalize_packet(monkeypatch):
         discrete,
         contract,
         tstep=95,
+        overwritten_finalize_template=template,
     )
 
     assert result is sentinel
@@ -66,6 +78,7 @@ def test_teacher_reentry_rebuilds_complete_finalize_packet(monkeypatch):
         "discrete": discrete,
         "contract": contract,
         "tstep": 95,
+        "template_fields": {"sechiba_finalize_state": template},
         "require_complete_finalize": True,
     }
 

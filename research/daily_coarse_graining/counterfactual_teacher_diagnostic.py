@@ -14,6 +14,7 @@ import jax
 import numpy as np
 
 from jax_orchidee.driver import orchestration as teacher
+from jax_orchidee.sechiba.restart_lifecycle import SECHIBA_FINALIZE_SOURCE_FIELDS
 from research.daily_coarse_graining.canonical_daily_model import (
     canonical_model_apply,
 )
@@ -73,16 +74,35 @@ def _teacher_reentry_packet(
     contract: DailyMarkovContract,
     *,
     tstep: int,
+    overwritten_finalize_template: Mapping[str, Any],
 ):
-    """Rebuild the full packet required by the unprojected Teacher transition."""
+    """Rebuild the full packet required by the unprojected Teacher transition.
 
-    return _packet_from_canonical_state(
+    Template values are allowed only for fields that the half-hour transition
+    overwrites before reading. Carry fields must still come from the canonical
+    model state or one of its deterministic component mirrors.
+    """
+
+    expected_template_names = (
+        SECHIBA_FINALIZE_SOURCE_FIELDS - teacher._SECHIBA_HALF_HOUR_CARRY_FIELDS
+    )
+    if set(overwritten_finalize_template) != expected_template_names:
+        raise ValueError("Teacher re-entry overwrite template has the wrong fields")
+    packet = _packet_from_canonical_state(
         continuous,
         discrete,
         contract,
         tstep=tstep,
+        template_fields={
+            "sechiba_finalize_state": dict(overwritten_finalize_template)
+        },
         require_complete_finalize=True,
     )
+    finalize = packet.fields_by_component["sechiba_finalize_state"]
+    hydrol = packet.fields_by_component["hydrol_previous_step_state"]
+    if not np.array_equal(finalize["fwet_new"], hydrol["fwet_new"]):
+        raise ValueError("Teacher re-entry fwet_new mirror did not come from current state")
+    return packet
 
 
 def _sha256_file(path: Path) -> str:
@@ -313,6 +333,16 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
         used_run_def_path=entry["run_def"],
         reference_run_dir=entry["reference_run_dir"],
     )
+    initial_finalize = teacher.sechiba_finalize_source_state_from_restart(
+        context.first_step_restart_state.sechiba_restart_state
+    )
+    overwritten_finalize_template = {
+        name: initial_finalize[name]
+        for name in (
+            SECHIBA_FINALIZE_SOURCE_FIELDS
+            - teacher._SECHIBA_HALF_HOUR_CARRY_FIELDS
+        )
+    }
     checkpoint, model_config = _load_neural_checkpoint(
         checkpoint_path,
         dataset_path=dataset_path,
@@ -439,6 +469,7 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
                     current_discrete,
                     contract,
                     tstep=(day_index - 1) * steps_per_day - 1,
+                    overwritten_finalize_template=overwritten_finalize_template,
                 )
                 _, _, oracle_records, oracle_final = _capture_days(
                     config_path=config_path,

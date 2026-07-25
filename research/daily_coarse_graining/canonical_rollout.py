@@ -76,12 +76,14 @@ def _packet_from_canonical_state(
     contract: DailyMarkovContract,
     *,
     tstep: int,
+    template_fields: Mapping[str, Mapping[str, Any]] | None = None,
     require_complete_finalize: bool = False,
 ):
     fields = reconstruct_state_fields(
         continuous,
         discrete,
         contract,
+        template_fields=template_fields,
         require_complete_finalize=require_complete_finalize,
     )
     provenance = {
