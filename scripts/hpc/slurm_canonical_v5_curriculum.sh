@@ -23,6 +23,7 @@ STATISTICS=${STATISTICS:?set STATISTICS to the matching v5 statistics JSON}
 ACCEPTANCE=${ACCEPTANCE:?set ACCEPTANCE to the matching v5 acceptance report}
 PLAN=${PLAN:?set PLAN to the hash-bound Teacher generation plan}
 OUTPUT_ROOT=${OUTPUT_ROOT:?set OUTPUT_ROOT to a new experiment directory}
+INITIALIZE_CHECKPOINT=${INITIALIZE_CHECKPOINT:-}
 ONE_STEP_EPOCHS=${ONE_STEP_EPOCHS:-10}
 ONE_STEP_BATCH_SIZE=${ONE_STEP_BATCH_SIZE:-256}
 ONE_STEP_LEARNING_RATE=${ONE_STEP_LEARNING_RATE:-0.001}
@@ -45,6 +46,13 @@ for path in "$DATASET" "$STATISTICS" "$ACCEPTANCE" "$PLAN"; do
   esac
   test -f "$path"
 done
+if [[ -n "$INITIALIZE_CHECKPOINT" ]]; then
+  case "$INITIALIZE_CHECKPOINT" in
+    "$ROOT/runtime/"*) ;;
+    *) echo "INITIALIZE_CHECKPOINT must stay under $ROOT/runtime" >&2; exit 2 ;;
+  esac
+  test -f "$INITIALIZE_CHECKPOINT"
+fi
 case "$OUTPUT_ROOT" in
   "$ROOT/runtime/"*) ;;
   *) echo "OUTPUT_ROOT must stay under $ROOT/runtime" >&2; exit 2 ;;
@@ -76,18 +84,23 @@ env "${GPU_ENV[@]}" singularity exec \
   --nv --bind "$GPU_BINDS" --pwd "$WORKTREE" "$IMAGE" \
   "$PYTHON" -m scripts.hpc.verify_orcjax_gpu
 
-env "${GPU_ENV[@]}" singularity exec \
-  --nv --bind "$GPU_BINDS" --pwd "$WORKTREE" "$IMAGE" \
-  "$PYTHON" -m scripts.hpc.run_canonical_gpu_train \
-    train \
-    --dataset "$DATASET" \
-    --statistics "$STATISTICS" \
-    --acceptance "$ACCEPTANCE" \
-    --output-dir "$OUTPUT_ROOT/one_step" \
-    --epochs "$ONE_STEP_EPOCHS" \
-    --batch-size "$ONE_STEP_BATCH_SIZE" \
-    --learning-rate "$ONE_STEP_LEARNING_RATE" \
-    --seed "$SEED"
+if [[ -n "$INITIALIZE_CHECKPOINT" ]]; then
+  MULTISTEP_INITIALIZATION=$INITIALIZE_CHECKPOINT
+else
+  env "${GPU_ENV[@]}" singularity exec \
+    --nv --bind "$GPU_BINDS" --pwd "$WORKTREE" "$IMAGE" \
+    "$PYTHON" -m scripts.hpc.run_canonical_gpu_train \
+      train \
+      --dataset "$DATASET" \
+      --statistics "$STATISTICS" \
+      --acceptance "$ACCEPTANCE" \
+      --output-dir "$OUTPUT_ROOT/one_step" \
+      --epochs "$ONE_STEP_EPOCHS" \
+      --batch-size "$ONE_STEP_BATCH_SIZE" \
+      --learning-rate "$ONE_STEP_LEARNING_RATE" \
+      --seed "$SEED"
+  MULTISTEP_INITIALIZATION=$OUTPUT_ROOT/one_step/best_checkpoint.pkl
+fi
 
 env "${GPU_ENV[@]}" singularity exec \
   --nv --bind "$GPU_BINDS" --pwd "$WORKTREE" "$IMAGE" \
@@ -97,7 +110,7 @@ env "${GPU_ENV[@]}" singularity exec \
     --acceptance "$ACCEPTANCE" \
     --plan "$PLAN" \
     --output-dir "$OUTPUT_ROOT/multistep" \
-    --initialize-checkpoint "$OUTPUT_ROOT/one_step/best_checkpoint.pkl" \
+    --initialize-checkpoint "$MULTISTEP_INITIALIZATION" \
     --curriculum "$CURRICULUM" \
     --batch-size "$MULTISTEP_BATCH_SIZE" \
     --learning-rate "$MULTISTEP_LEARNING_RATE" \
@@ -106,6 +119,8 @@ env "${GPU_ENV[@]}" singularity exec \
     --state-delta-floor-ratio "$STATE_DELTA_FLOOR_RATIO" \
     --seed "$SEED"
 
-test -f "$OUTPUT_ROOT/one_step/training_report.json"
+if [[ -z "$INITIALIZE_CHECKPOINT" ]]; then
+  test -f "$OUTPUT_ROOT/one_step/training_report.json"
+fi
 test -f "$OUTPUT_ROOT/multistep/training_report.json"
 test -f "$OUTPUT_ROOT/multistep/best_checkpoint.pkl"
