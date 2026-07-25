@@ -195,6 +195,18 @@ dataset and require named slow-state improvement; prepare a small diverse
 landpoint selection independently from parameters/static data/forcing
 climatology, then generate it only after the seen-condition objective gate.
 
+The corresponding bounded objective implementation is now ready locally. The
+exact design and stop rules are in
+[`process_increment_objective_ab_20260725.md`](process_increment_objective_ab_20260725.md).
+`process_increment_v2` assigns equal nominal weight to eight source-owned
+state groups and adds a daily state-increment loss normalized by train-only
+statistics with a `0.001 * state_scale` floor. Its production v5 audit covers
+all 3,854 continuous state values exactly once; 249 increment scales use the
+floor and all are finite and positive. The objective, CLI, launcher, mask,
+gradient, v1 compatibility, Markov dataset, and retained-tail focused suite
+passes 70 tests. No real v2 GPU training result exists yet, so do not describe
+the objective as scientifically accepted or change the default from v1.
+
 ## Accepted Historical Production Run
 
 The bounded architecture-development dataset is frozen by
@@ -297,16 +309,18 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-1. treat the completed one-step and `1:64,3:64,7:64` checkpoints as frozen
-   baselines;
-2. increase multistep optimization coverage before changing the Teacher data,
-   while retaining both `B_fast` and canonical next-state supervision;
-3. compare longer warm-start training with a controlled direct/mixed-horizon
-   initialization A/B under the same update budget;
-4. rerun the same validation-only seven-day free rollout and require final
-   RMSE `<=0.29` with zero mask/discrete mismatch;
-5. only after that gate consider 30-, 365-day, or additional-landpoint neural
-   experiments.
+1. commit and synchronize the locally verified `process_increment_v2`
+   implementation;
+2. run one real-v5, one-window GPU smoke to verify production compilation,
+   finite loss, finite gradient, and checkpoint provenance;
+3. run exactly one equal-budget `1:64,3:64,7:64` candidate initialized from
+   the frozen one-step checkpoint, with no architecture, data, split, seed, or
+   update-budget change;
+4. rerun the frozen four-way seven-day matrix and apply the global plus named
+   carbon-state gates in
+   [`process_increment_objective_ab_20260725.md`](process_increment_objective_ab_20260725.md);
+5. stop and reassess if the seen-condition gate fails. If it passes, freeze
+   the objective and generate only a bounded, source-selected spatial pilot.
 
 Do not start all 669 x 50 years before this bounded learnability and rollout
 gate. The ten-point dataset tests architecture development; it cannot by

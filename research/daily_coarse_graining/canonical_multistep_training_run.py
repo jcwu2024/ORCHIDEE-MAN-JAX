@@ -32,6 +32,10 @@ from research.daily_coarse_graining.canonical_retained_tail import (
 from research.daily_coarse_graining.canonical_rollout import (
     _packet_from_canonical_state,
 )
+from research.daily_coarse_graining.canonical_state_objective import (
+    stabilized_state_delta_scale,
+    state_process_weighting_from_contract,
+)
 from research.daily_coarse_graining.canonical_training import (
     fast_day_target_representation_from_contract,
     loss_weights_from_contract,
@@ -210,6 +214,7 @@ def _sequence(batch, compiled_forcing) -> CanonicalMultistepSequence:
         annual_conditions=jnp.asarray(batch["annual_conditions"]),
         year=jnp.asarray(batch["year"]),
         day_index=jnp.asarray(batch["day_index"]),
+        teacher_state=jnp.asarray(batch["state_trajectory"][:, :-1]),
         teacher_fast_day_target=jnp.asarray(batch["teacher_fast_day_target"]),
         teacher_next_state=jnp.asarray(batch["teacher_next_state"]),
         retained_tail_inputs=compiled_forcing,
@@ -262,6 +267,9 @@ def _make_train_step(
     transition,
     state_loss_weight: float,
     undefined_loss_weight: float,
+    state_weights=None,
+    state_delta_scale=None,
+    state_increment_loss_weight: float = 0.0,
 ):
     def train_step(parameters, optimizer, initial_states, discrete_states, sequence, rate):
         def objective(value):
@@ -274,7 +282,10 @@ def _make_train_step(
                 representation=representation,
                 fast_day_weights=weights,
                 retained_tail_transition=transition,
+                state_weights=state_weights,
+                state_delta_scale=state_delta_scale,
                 state_loss_weight=state_loss_weight,
+                state_increment_loss_weight=state_increment_loss_weight,
                 undefined_loss_weight=undefined_loss_weight,
             )
 
@@ -317,6 +328,29 @@ def train_multistep(args: argparse.Namespace) -> Mapping[str, Any]:
     statistics = load_training_statistics(statistics_path, index=index)
     config = _model_config(contract, representation)
     curriculum = parse_curriculum(args.curriculum)
+    if args.objective == "canonical_multistep_v1":
+        state_weights = None
+        state_delta_scale = None
+        state_increment_loss_weight = 0.0
+        state_objective = {
+            "state_weighting": "uniform_per_continuous_state_value",
+            "state_increment_loss_weight": 0.0,
+        }
+    else:
+        process_weighting = state_process_weighting_from_contract(metadata)
+        state_weights = jnp.asarray(process_weighting.weights)
+        stabilized_scale, scale_audit = stabilized_state_delta_scale(
+            statistics,
+            floor_ratio=args.state_delta_floor_ratio,
+        )
+        state_delta_scale = jnp.asarray(stabilized_scale)
+        state_increment_loss_weight = args.state_increment_loss_weight
+        state_objective = {
+            "state_weighting": process_weighting.metadata,
+            "state_weighting_sha256": process_weighting.sha256,
+            "state_delta_scale": scale_audit,
+            "state_increment_loss_weight": state_increment_loss_weight,
+        }
     identity = {
         "dataset_id": index.dataset_id,
         "teacher_git_head": index.teacher_git_head,
@@ -324,7 +358,8 @@ def train_multistep(args: argparse.Namespace) -> Mapping[str, Any]:
         "statistics_sha256": _sha256_file(statistics_path),
         "acceptance_sha256": _sha256_file(acceptance),
         "model_config": config._asdict(),
-        "training_objective": "canonical_multistep_v1",
+        "training_objective": args.objective,
+        "state_objective": state_objective,
         "generation_plan_sha256": str(raw_manifest["plan_sha256"]),
         "curriculum": [stage.__dict__ for stage in curriculum],
     }
@@ -379,6 +414,9 @@ def train_multistep(args: argparse.Namespace) -> Mapping[str, Any]:
                     transition=runtime.transition,
                     state_loss_weight=args.state_loss_weight,
                     undefined_loss_weight=args.undefined_loss_weight,
+                    state_weights=state_weights,
+                    state_delta_scale=state_delta_scale,
+                    state_increment_loss_weight=state_increment_loss_weight,
                 )
             parameters, optimizer, loss, gradient_norm = compiled_steps[key](
                 parameters,
@@ -420,7 +458,10 @@ def train_multistep(args: argparse.Namespace) -> Mapping[str, Any]:
         "identity": identity,
         "seed": args.seed,
         "learning_rate": args.learning_rate,
+        "objective": args.objective,
+        "state_objective": state_objective,
         "state_loss_weight": args.state_loss_weight,
+        "state_increment_loss_weight": state_increment_loss_weight,
         "undefined_loss_weight": args.undefined_loss_weight,
         "history": history,
         "compiled_landpoint_horizons": [list(key) for key in sorted(compiled_steps)],
@@ -440,7 +481,14 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--curriculum", default="1:64,3:64,7:64")
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--learning-rate", type=float, default=1.0e-4)
+    parser.add_argument(
+        "--objective",
+        choices=("canonical_multistep_v1", "process_increment_v2"),
+        default="canonical_multistep_v1",
+    )
     parser.add_argument("--state-loss-weight", type=float, default=1.0)
+    parser.add_argument("--state-increment-loss-weight", type=float, default=1.0)
+    parser.add_argument("--state-delta-floor-ratio", type=float, default=1.0e-3)
     parser.add_argument("--undefined-loss-weight", type=float, default=0.1)
     parser.add_argument("--seed", type=int, default=20260724)
     return parser
@@ -448,8 +496,15 @@ def build_parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
-    if args.batch_size < 1 or args.learning_rate <= 0.0:
-        raise ValueError("batch size and learning rate must be positive")
+    if (
+        args.batch_size < 1
+        or args.learning_rate <= 0.0
+        or args.state_loss_weight < 0.0
+        or args.state_increment_loss_weight < 0.0
+        or args.undefined_loss_weight < 0.0
+        or not 0.0 < args.state_delta_floor_ratio <= 1.0
+    ):
+        raise ValueError("batch size, learning rate, and loss weights are invalid")
     report = train_multistep(args)
     print(json.dumps(report, indent=2))
     return 0

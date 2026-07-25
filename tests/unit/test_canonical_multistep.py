@@ -31,6 +31,7 @@ def _statistics():
         "landpoint_static": (1,),
         "annual_conditions": (1,),
         "fast_day_target": (2,),
+        "state_delta": (2,),
     }
     arrays = {
         name: FiniteColumnStatistics(
@@ -60,6 +61,7 @@ def _sequence(days: int):
         annual_conditions=jnp.ones((days, 1), dtype=jnp.float32),
         year=jnp.full((days,), 1961, dtype=jnp.int32),
         day_index=jnp.arange(2, days + 2, dtype=jnp.int32),
+        teacher_state=jnp.zeros((days, 2)),
         teacher_fast_day_target=jnp.full((days, 2), 0.25),
         teacher_next_state=jnp.full((days, 2), 0.5),
         retained_tail_inputs=jnp.arange(days, dtype=jnp.float32)[:, None],
@@ -119,6 +121,15 @@ def test_multistep_scan_is_jittable_and_differentiates_through_recursive_state()
     leaves = jax.tree_util.tree_leaves(gradients)
     assert all(np.all(np.isfinite(np.asarray(value))) for value in leaves)
     assert sum(float(jnp.sum(jnp.abs(value))) for value in leaves) > 0.0
+    assert np.all(np.asarray(result.steps.state_increment_loss) == 0.0)
+    np.testing.assert_allclose(
+        result.loss,
+        jnp.mean(
+            result.steps.fast_day_loss
+            + 0.1 * result.steps.undefined_loss
+            + result.steps.state_loss
+        ),
+    )
 
 
 def test_multistep_scan_supports_one_three_and_seven_day_curriculum():
@@ -157,6 +168,98 @@ def test_multistep_scan_supports_one_three_and_seven_day_curriculum():
         result = run(_sequence(days))
         assert result.steps.continuous_state.shape == (days, 2)
         assert np.isfinite(np.asarray(result.loss))
+
+
+def test_process_increment_objective_is_finite_and_adds_daily_change_loss():
+    config = CanonicalModelConfig(
+        state_width=2,
+        forcing_width=1,
+        parameter_width=1,
+        landpoint_static_width=1,
+        annual_condition_width=1,
+        fast_day_target_width=2,
+        dynamic_undefined_width=1,
+        state_latent_width=2,
+        forcing_latent_width=2,
+        condition_latent_width=2,
+        hidden_width=3,
+    )
+    parameters = initialize_canonical_model(config, seed=6)
+    representation = FastDayTargetRepresentation(
+        state_indices=np.asarray([0, 1], dtype=np.int32),
+        dynamic_undefined_indices=np.asarray([1], dtype=np.int32),
+        dynamic_undefined_fill_values=np.asarray([1.0e20]),
+    )
+    common = {
+        "statistics": _statistics(),
+        "representation": representation,
+        "fast_day_weights": jnp.asarray([0.5, 0.5]),
+        "retained_tail_transition": _tail,
+        "state_weights": jnp.asarray([0.75, 0.25]),
+    }
+
+    baseline = canonical_multistep_rollout(
+        parameters,
+        jnp.asarray([0.1, 0.2]),
+        {"flag": jnp.asarray([True])},
+        _sequence(3),
+        **common,
+    )
+    candidate = canonical_multistep_rollout(
+        parameters,
+        jnp.asarray([0.1, 0.2]),
+        {"flag": jnp.asarray([True])},
+        _sequence(3),
+        state_delta_scale=jnp.asarray([0.1, 0.2]),
+        state_increment_loss_weight=1.0,
+        **common,
+    )
+
+    assert np.all(np.asarray(candidate.steps.state_increment_loss) > 0.0)
+    np.testing.assert_allclose(
+        candidate.loss,
+        baseline.loss + jnp.mean(candidate.steps.state_increment_loss),
+    )
+    with np.testing.assert_raises_regex(ValueError, "state-delta scale"):
+        canonical_multistep_rollout(
+            parameters,
+            jnp.asarray([0.1, 0.2]),
+            {"flag": jnp.asarray([True])},
+            _sequence(1),
+            state_increment_loss_weight=1.0,
+            **common,
+        )
+
+
+def test_process_increment_objective_masks_undefined_state_changes():
+    config = CanonicalModelConfig(2, 1, 1, 1, 1, 2, 1, 2, 2, 2, 3)
+    parameters = initialize_canonical_model(config, seed=9)
+    representation = FastDayTargetRepresentation(
+        np.asarray([0, 1], dtype=np.int32),
+        np.asarray([1], dtype=np.int32),
+        np.asarray([1.0e20]),
+    )
+    sequence = _sequence(1)._replace(
+        teacher_state=jnp.asarray([[0.1, 1.0e20]]),
+        teacher_next_state=jnp.asarray([[0.2, 1.0e20]]),
+    )
+
+    result = canonical_multistep_rollout(
+        parameters,
+        jnp.asarray([0.1, 1.0e20]),
+        {"flag": jnp.asarray([True])},
+        sequence,
+        statistics=_statistics(),
+        representation=representation,
+        fast_day_weights=jnp.asarray([0.5, 0.5]),
+        retained_tail_transition=_tail,
+        state_weights=jnp.asarray([0.5, 0.5]),
+        state_delta_scale=jnp.asarray([0.1, 0.1]),
+        state_increment_loss_weight=1.0,
+    )
+
+    assert np.isfinite(np.asarray(result.loss))
+    assert np.isfinite(np.asarray(result.steps.state_increment_loss)).all()
 
 
 def test_multistep_batch_loss_vmaps_same_runtime_windows_and_gradients():
@@ -212,6 +315,7 @@ def test_verified_markov_window_adapter_requires_matching_tail_horizon():
         "annual_conditions": np.ones((3, 1)),
         "year": np.full((3,), 1962),
         "day_index": np.asarray([2, 3, 4]),
+        "state_trajectory": np.ones((4, 2)),
         "teacher_fast_day_target": np.ones((3, 2)),
         "teacher_next_state": np.ones((3, 2)),
     }

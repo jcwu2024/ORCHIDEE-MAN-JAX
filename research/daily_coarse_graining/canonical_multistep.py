@@ -32,6 +32,7 @@ class CanonicalMultistepSequence(NamedTuple):
     annual_conditions: Any
     year: Any
     day_index: Any
+    teacher_state: Any
     teacher_fast_day_target: Any
     teacher_next_state: Any
     retained_tail_inputs: Any
@@ -49,6 +50,7 @@ class CanonicalRolloutSteps(NamedTuple):
     fast_day_loss: Any
     undefined_loss: Any
     state_loss: Any
+    state_increment_loss: Any
     state_defined_mismatches: Any
 
 
@@ -78,6 +80,7 @@ def sequence_from_markov_window(
         "annual_conditions",
         "year",
         "day_index",
+        "state_trajectory",
         "teacher_fast_day_target",
         "teacher_next_state",
     )
@@ -85,8 +88,11 @@ def sequence_from_markov_window(
     if missing:
         raise ValueError(f"Markov window is missing multistep fields {missing}")
     horizon = int(np.shape(window["day_index"])[0])
-    if horizon < 1 or any(np.shape(window[name])[0] != horizon for name in required):
+    per_day = tuple(name for name in required if name != "state_trajectory")
+    if horizon < 1 or any(np.shape(window[name])[0] != horizon for name in per_day):
         raise ValueError("Markov window multistep fields have inconsistent horizons")
+    if np.shape(window["state_trajectory"])[0] != horizon + 1:
+        raise ValueError("Markov window state trajectory must include both boundaries")
     retained_leaves = jax.tree_util.tree_leaves(retained_tail_inputs)
     if any(np.shape(value)[0] != horizon for value in retained_leaves):
         raise ValueError("retained-tail inputs do not match the Markov window horizon")
@@ -97,6 +103,7 @@ def sequence_from_markov_window(
         annual_conditions=window["annual_conditions"],
         year=window["year"],
         day_index=window["day_index"],
+        teacher_state=window["state_trajectory"][:-1],
         teacher_fast_day_target=window["teacher_fast_day_target"],
         teacher_next_state=window["teacher_next_state"],
         retained_tail_inputs=retained_tail_inputs,
@@ -125,7 +132,10 @@ def canonical_multistep_rollout(
     representation: FastDayTargetRepresentation,
     fast_day_weights,
     retained_tail_transition: RetainedTailTransition,
+    state_weights=None,
+    state_delta_scale=None,
     state_loss_weight: float = 1.0,
+    state_increment_loss_weight: float = 0.0,
     undefined_loss_weight: float = 0.1,
 ) -> CanonicalMultistepResult:
     """Roll out a 1/3/7-day chain and differentiate through every day boundary.
@@ -135,11 +145,21 @@ def canonical_multistep_rollout(
     ``S[d+1]`` without crossing a host/NumPy boundary.
     """
 
-    state_weights = jnp.full(
-        (jnp.asarray(initial_state).shape[-1],),
-        1.0 / jnp.asarray(initial_state).shape[-1],
-        dtype=jnp.float32,
+    state_width = jnp.asarray(initial_state).shape[-1]
+    state_weights = (
+        jnp.full((state_width,), 1.0 / state_width, dtype=jnp.float32)
+        if state_weights is None
+        else jnp.asarray(state_weights, dtype=jnp.float32)
     )
+    if state_weights.shape != (state_width,):
+        raise ValueError("state loss weights do not match canonical state width")
+    use_increment_loss = state_increment_loss_weight != 0.0
+    if use_increment_loss:
+        if state_delta_scale is None:
+            raise ValueError("state increment loss requires a state-delta scale")
+        state_delta_scale = jnp.asarray(state_delta_scale)
+        if state_delta_scale.shape != (state_width,):
+            raise ValueError("state-delta scale does not match canonical state width")
     dynamic_indices = jnp.asarray(
         representation.dynamic_undefined_indices, dtype=jnp.int32
     )
@@ -205,6 +225,35 @@ def canonical_multistep_rollout(
             common[None, :],
             state_weights,
         )
+        if use_increment_loss:
+            predicted_previous = carry.continuous_state
+            teacher_previous = day.teacher_state
+            predicted_delta = next_state - predicted_previous
+            teacher_delta = day.teacher_next_state - teacher_previous
+            increment_common = (
+                _defined_numeric_mask_compiled(next_state)
+                & _defined_numeric_mask_compiled(predicted_previous)
+                & _defined_numeric_mask_compiled(day.teacher_next_state)
+                & _defined_numeric_mask_compiled(teacher_previous)
+            )
+            normalized_predicted_delta = jnp.where(
+                increment_common,
+                predicted_delta / state_delta_scale,
+                0.0,
+            )
+            normalized_teacher_delta = jnp.where(
+                increment_common,
+                teacher_delta / state_delta_scale,
+                0.0,
+            )
+            state_increment_loss = masked_huber_loss(
+                normalized_predicted_delta[None, :],
+                normalized_teacher_delta[None, :],
+                increment_common[None, :],
+                state_weights,
+            )
+        else:
+            state_increment_loss = jnp.asarray(0.0, dtype=state_loss.dtype)
         next_carry = CanonicalRolloutCarry(next_state, next_discrete)
         outputs = CanonicalRolloutSteps(
             continuous_state=next_state,
@@ -213,6 +262,7 @@ def canonical_multistep_rollout(
             fast_day_loss=fast_day_loss,
             undefined_loss=undefined_loss,
             state_loss=state_loss,
+            state_increment_loss=state_increment_loss,
             state_defined_mismatches=jnp.sum(finite_next != finite_teacher_next),
         )
         return next_carry, outputs
@@ -226,6 +276,7 @@ def canonical_multistep_rollout(
         steps.fast_day_loss
         + undefined_loss_weight * steps.undefined_loss
         + state_loss_weight * steps.state_loss
+        + state_increment_loss_weight * steps.state_increment_loss
     )
     return CanonicalMultistepResult(
         loss=jnp.mean(total),
@@ -244,7 +295,10 @@ def canonical_multistep_batch_loss(
     representation: FastDayTargetRepresentation,
     fast_day_weights,
     retained_tail_transition: RetainedTailTransition,
+    state_weights=None,
+    state_delta_scale=None,
     state_loss_weight: float = 1.0,
+    state_increment_loss_weight: float = 0.0,
     undefined_loss_weight: float = 0.1,
 ):
     """Average recursive loss for a same-runtime batch of trajectory windows."""
@@ -259,7 +313,10 @@ def canonical_multistep_batch_loss(
             representation=representation,
             fast_day_weights=fast_day_weights,
             retained_tail_transition=retained_tail_transition,
+            state_weights=state_weights,
+            state_delta_scale=state_delta_scale,
             state_loss_weight=state_loss_weight,
+            state_increment_loss_weight=state_increment_loss_weight,
             undefined_loss_weight=undefined_loss_weight,
         ).loss
 
