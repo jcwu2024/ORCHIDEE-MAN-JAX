@@ -279,7 +279,29 @@ def capture_pre_daily_stomate_record(
         )
     missing = tuple(name for name in _CAPTURED_OWNER_NAMES if name not in captured)
     if missing:
-        raise RuntimeError(f"Teacher day did not reach replay boundaries: {missing}")
+        daily_fold = captured.get(
+            "_paper_later_day_daily_process_from_completed_entries"
+        )
+        accumulator = getattr(daily_fold, "accumulator", None)
+        maintenance = getattr(daily_fold, "maintenance", None)
+        details = {
+            "missing_boundaries": missing,
+            "runtime_missing_components": tuple(
+                getattr(result, "missing_components", ())
+            ),
+            "daily_fold_missing_inputs": tuple(
+                getattr(daily_fold, "missing_inputs", ())
+            ),
+            "accumulator_missing_inputs": tuple(
+                getattr(accumulator, "missing_inputs", ())
+            ),
+            "maintenance_missing_inputs": tuple(
+                getattr(maintenance, "missing_inputs", ())
+            ),
+            "accumulator_failed_step": getattr(accumulator, "failed_step", None),
+            "maintenance_failed_step": getattr(maintenance, "failed_step", None),
+        }
+        raise RuntimeError(f"Teacher day did not reach replay boundaries: {details}")
     if not bool(getattr(result, "ready_for_day_end_state", True)):
         raise RuntimeError(f"Teacher capture day failed: {getattr(result, 'missing_components', ())}")
     ok_leak_result, ok_leak_updates = captured["_paper_half_hour_ok_leak_fold_from_entries"]
