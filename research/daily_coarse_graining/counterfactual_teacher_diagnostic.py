@@ -106,6 +106,15 @@ def _teacher_reentry_packet(
     hydrol = packet.fields_by_component["hydrol_previous_step_state"]
     if not np.array_equal(finalize["fwet_new"], hydrol["fwet_new"]):
         raise ValueError("Teacher re-entry fwet_new mirror did not come from current state")
+    invalid = []
+    for index, value in enumerate(jax.tree_util.tree_leaves(packet.fields_by_component)):
+        dtype = np.asarray(value).dtype
+        if dtype.kind not in "biufc":
+            invalid.append((index, str(dtype)))
+    if invalid:
+        raise ValueError(
+            f"Teacher re-entry packet contains non-numeric dynamic leaves: {invalid}"
+        )
     daily_accumulators = packet.fields_by_component[
         "slowproc_stomate_previous_step_state"
     ]["daily_accumulators"]
@@ -352,9 +361,13 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
             - teacher._SECHIBA_HALF_HOUR_CARRY_FIELDS
         )
     }
-    daily_accumulator_template = teacher.read_stomate_daily_accumulator_state(
-        context.first_step_restart_state.stomate_input
-    )._asdict()
+    daily_accumulator_template = {
+        name: value
+        for name, value in teacher.read_stomate_daily_accumulator_state(
+            context.first_step_restart_state.stomate_input
+        )._asdict().items()
+        if name != "provenance"
+    }
     checkpoint, model_config = _load_neural_checkpoint(
         checkpoint_path,
         dataset_path=dataset_path,

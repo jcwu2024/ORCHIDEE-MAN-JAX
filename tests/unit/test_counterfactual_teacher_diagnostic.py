@@ -93,6 +93,42 @@ def test_teacher_reentry_rebuilds_complete_finalize_packet(monkeypatch):
     }
 
 
+def test_teacher_reentry_rejects_non_numeric_dynamic_metadata(monkeypatch):
+    overwrite_names = (
+        diagnostic.SECHIBA_FINALIZE_SOURCE_FIELDS
+        - diagnostic.teacher._SECHIBA_HALF_HOUR_CARRY_FIELDS
+    )
+    packet = SimpleNamespace(
+        fields_by_component={
+            "sechiba_finalize_state": {"fwet_new": np.asarray([0.0])},
+            "hydrol_previous_step_state": {"fwet_new": np.asarray([0.0])},
+            "slowproc_stomate_previous_step_state": {
+                "daily_accumulators": {
+                    "counter": np.asarray([0.0]),
+                    "provenance": np.asarray(["metadata"]),
+                }
+            },
+        }
+    )
+    monkeypatch.setattr(
+        diagnostic,
+        "_packet_from_canonical_state",
+        lambda *args, **kwargs: packet,
+    )
+
+    with pytest.raises(ValueError, match="non-numeric dynamic leaves"):
+        _teacher_reentry_packet(
+            np.asarray([1.0]),
+            {},
+            object(),
+            tstep=95,
+            overwritten_finalize_template={
+                name: np.asarray([0.0]) for name in overwrite_names
+            },
+            daily_accumulator_template={"counter": np.asarray([0.0])},
+        )
+
+
 def _record(*, operator, sensitivity, completed=True, mask=0, discrete=0):
     return {
         "teacher_reentry": {"completed": completed},
