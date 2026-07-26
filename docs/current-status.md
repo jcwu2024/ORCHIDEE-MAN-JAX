@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-07-25.
+Last updated: 2026-07-26.
 
 This page is the current status authority. Dated files under
 `docs/source_audits/` and `docs/research/` are evidence snapshots and may
@@ -165,6 +165,21 @@ Current scientific status:
   All mask/discrete gates passed, but the predeclared named-state and spatial
   gates did not. Keep `canonical_multistep_v1`; do not tune this candidate or
   inspect the sealed test split;
+- deterministic replay of that run's single extreme batch proved a separate
+  physical-domain defect in neural rollout reconstruction: the unconstrained
+  network produced negative `carbon_32l`, `DOC`, and `deepC_peat` stocks before
+  exact Teacher re-entry, causing NaNs and a `7.27e8` soil-carbon artifact.
+  Commit `5414d8c` now applies the source-backed nonnegative-stock projection
+  at the shared NumPy/JAX physical reconstruction boundary. The exact four
+  replayed losses changed from `0.0997/0.5658/0.0984/562889` to
+  `0.0999/0.0946/0.0970/0.1165`, with defined-status mismatches falling from
+  980 to zero;
+- the frozen four-way seven-day baseline was rerun after that semantic fix.
+  Day-7 RMSE is now `0.144765`, `0.133391`, `0.519286`, and `0.428353` for
+  train/train, train/validation-year, validation-point/train-year, and joint
+  validation. The small changes leave the scientific diagnosis intact:
+  spatial generalization remains dominant and train/train `litterpart` still
+  reaches `3.651537`;
 - the provisional seven-day free-rollout gate of `<=0.29` therefore did not
   pass. No v5 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher

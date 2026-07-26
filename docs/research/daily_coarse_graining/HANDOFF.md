@@ -1,6 +1,6 @@
 # Daily Coarse-Graining Handoff
 
-Snapshot date: 2026-07-25
+Snapshot date: 2026-07-26
 
 This is the single operational handoff page for the daily coarse-graining
 research branch. Read this page before dated experiment reports. Stable
@@ -229,6 +229,25 @@ biomass regressed 10.6%, and spatial global/litterpart errors worsened. The
 candidate fails the predeclared gate and is rejected. Keep
 `canonical_multistep_v1`; do not tune this objective, inspect the sealed test
 split, or generate more same-point years.
+
+The rejected pushforward run's extreme batch has now been fully attributed and
+fixed at the shared inference boundary; see
+[`physical_domain_projection_20260726.md`](physical_domain_projection_20260726.md).
+The network had produced negative `carbon_32l`, `DOC`, and `deepC_peat`
+material stocks, and the exact `soilcarbon_leak/PERMA_PEAT` re-entry converted
+that invalid state into NaNs and a `7.27e8` artifact. Commit `5414d8c` applies
+the source-backed nonnegative-stock projection before retained STOMATE in both
+NumPy and compiled JAX paths. The exact four-sample maximum loss fell from
+`562889.22` to `0.11654`, and 980 defined-status mismatches fell to zero.
+
+The frozen four-way baseline was rerun with this promoted reconstruction
+semantics. Day-7 RMSE is `0.144765`, `0.133391`, `0.519286`, and `0.428353`;
+all mask/discrete gates pass. These small changes do not alter the diagnosis:
+spatial generalization is still the dominant limitation, while train/train
+`litterpart` still reaches `3.651537`. Do not reopen dynamic undefined-mask
+classification for these carbon fields. The next bounded candidate must use
+process-aware state encoding, persistent structured condition modulation, and
+the promoted stock-domain projection before any spatial-data pilot.
 
 ## Accepted Historical Production Run
 
