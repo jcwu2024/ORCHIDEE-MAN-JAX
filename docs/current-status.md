@@ -180,15 +180,17 @@ Current scientific status:
   validation. The small changes leave the scientific diagnosis intact:
   spatial generalization remains dominant and train/train `litterpart` still
   reaches `3.651537`;
-- the bounded `structured_process_film_v1` candidate is now implemented but
-  not yet scientifically evaluated. It preserves the accepted flat checkpoint
-  exactly at initialization, partitions all 3,854 continuous states into eight
-  source-derived process groups, and persistently modulates both fusion layers
-  with separately encoded parameters, landpoint static attributes, and
-  annual/calendar conditions. The real-width forward/reverse gates and 73
-  related tests pass. Its next gate is a matched continuation A/B against a
-  flat control from the same checkpoint and update sequence; no spatial-data
-  pilot should start before that result;
+- the matched `structured_process_film_v1` architecture A/B is complete and
+  rejected. Relative to an identically continued flat control, structured
+  Day-7 RMSE improves 4.36% and 4.24% on the two spatial-validation cases but
+  regresses 7.68% and 11.32% at the seen landpoint. Its maximum useful
+  parameter/static validation permutation effect is only `5.26e-5`, below the
+  predeclared `1e-4` condition-use threshold; parameter permutation slightly
+  improves loss, showing a wrongly learned association rather than a dead
+  channel. The flat continuation itself worsens all four frozen global scores,
+  so neither checkpoint is promoted. See
+  `structured_architecture_ab_result_20260726.md`. The next bounded variable is
+  a source-selected spatial-data pilot, not additional epochs or FiLM tuning;
 - the provisional seven-day free-rollout gate of `<=0.29` therefore did not
   pass. No v5 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
