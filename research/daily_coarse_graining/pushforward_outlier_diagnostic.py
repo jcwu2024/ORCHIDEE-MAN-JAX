@@ -145,6 +145,53 @@ def _leaf_attribution(
         selected_error = error[:, start:stop]
         selected_weighted = weighted[:, start:stop]
         contribution = float(np.sum(selected_weighted))
+        sample_metrics = []
+        for sample_index in range(actual.shape[0]):
+            sample_common = selected_common[sample_index]
+            sample_count = int(np.count_nonzero(sample_common))
+            sample_error = selected_error[sample_index]
+            sample_metrics.append(
+                {
+                    "sample_index": sample_index,
+                    "evaluated_values": sample_count,
+                    "normalized_rmse": (
+                        float(np.sqrt(np.sum(sample_error**2) / sample_count))
+                        if sample_count
+                        else None
+                    ),
+                    "maximum_absolute_normalized_error": (
+                        float(np.max(np.abs(sample_error))) if sample_count else None
+                    ),
+                    "defined_status_mismatches": int(
+                        np.count_nonzero(
+                            defined_numeric_mask(actual[sample_index, start:stop])
+                            != defined_numeric_mask(
+                                expected[sample_index, start:stop]
+                            )
+                        )
+                    ),
+                    "maximum_absolute_teacher_value": (
+                        float(
+                            np.max(
+                                np.abs(
+                                    expected[sample_index, start:stop][sample_common]
+                                )
+                            )
+                        )
+                        if sample_count
+                        else None
+                    ),
+                    "maximum_absolute_prediction_value": (
+                        float(
+                            np.max(
+                                np.abs(actual[sample_index, start:stop][sample_common])
+                            )
+                        )
+                        if sample_count
+                        else None
+                    ),
+                }
+            )
         records.append(
             {
                 "key": leaf.key,
@@ -175,6 +222,7 @@ def _leaf_attribution(
                         != defined_numeric_mask(expected[:, start:stop])
                     )
                 ),
+                "samples": sample_metrics,
             }
         )
     ranked = sorted(
@@ -307,6 +355,14 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
         owner_name="family",
     )
     state_leaves = tuple(leaf for leaf in contract.state_leaves if not leaf.discrete)
+    terminal_state_attribution = _leaf_attribution(
+        terminal_states,
+        np.asarray(batch["state_trajectory"][:, args.target_prefix]),
+        statistics.arrays["state"].scale,
+        np.full(contract.continuous_state_width, 1.0 / contract.continuous_state_width),
+        state_leaves,
+        owner_name="component",
+    )
     state_attribution = _leaf_attribution(
         predicted_next,
         teacher_next,
@@ -351,12 +407,19 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
             "undefined": np.asarray(result.steps.undefined_loss[:, 0]).tolist(),
         },
         "fast_day_attribution": fast_attribution,
+        "terminal_state_vs_clean_attribution": terminal_state_attribution,
         "next_state_attribution": state_attribution,
         "classification": {
             "extreme_loss_reproduced": bool(np.max(losses) > 1.0e3),
             "extreme_threshold": 1.0e3,
             "dominant_fast_day_leaf": fast_attribution["top_leaves"][0]["key"],
             "dominant_next_state_leaf": state_attribution["top_leaves"][0]["key"],
+            "terminal_state_defined_status_mismatches": terminal_state_attribution[
+                "defined_status_mismatches"
+            ],
+            "dominant_terminal_state_leaf": terminal_state_attribution["top_leaves"][
+                0
+            ]["key"],
             "defined_status_mismatches": (
                 fast_attribution["defined_status_mismatches"]
                 + state_attribution["defined_status_mismatches"]

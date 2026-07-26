@@ -71,4 +71,5 @@ def test_leaf_attribution_identifies_the_dominant_output():
         owner_name="family",
     )
     assert report["top_leaves"][0]["key"] == "large"
+    assert report["top_leaves"][0]["samples"][0]["normalized_rmse"] == 20.0
     assert report["defined_status_mismatches"] == 0

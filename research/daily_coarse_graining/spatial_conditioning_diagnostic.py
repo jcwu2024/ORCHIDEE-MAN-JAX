@@ -438,7 +438,7 @@ def classify_diagnostic(
         ),
         "policy": {
             "condition_use_threshold": 1.0e-4,
-            "coverage_outlier": "combined nearest-train distance exceeds every train leave-one-out distance",
+            "coverage_outlier": "any scientific condition-group nearest-train distance exceeds every matching train leave-one-out distance",
         },
     }
 
