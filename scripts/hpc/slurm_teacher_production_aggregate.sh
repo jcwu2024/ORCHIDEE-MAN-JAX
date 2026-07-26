@@ -14,6 +14,7 @@ set -euo pipefail
 
 REPO=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 RUNTIME_ROOT=$REPO/runtime
+WORKTREE=${WORKTREE:-$REPO}
 PYTHON=$REPO/.venvs/orcjax_cpu/bin/python
 : "${TEACHER_PLAN:?TEACHER_PLAN must be an absolute generation-plan path}"
 : "${TEACHER_WORKER_COUNT:?TEACHER_WORKER_COUNT must be set}"
@@ -22,8 +23,12 @@ case "$TEACHER_PLAN" in
   "$RUNTIME_ROOT"/*) ;;
   *) echo "TEACHER_PLAN must stay under $RUNTIME_ROOT" >&2; exit 2 ;;
 esac
+case "$WORKTREE" in
+  "$REPO"|"$RUNTIME_ROOT/worktrees/"*) ;;
+  *) echo "WORKTREE must be the repository root or stay under runtime/worktrees" >&2; exit 2 ;;
+esac
 
-export ORCHIDEE_REPO_ROOT=$REPO
+export ORCHIDEE_REPO_ROOT=$WORKTREE
 export ORCHIDEE_RUNTIME_ROOT=$RUNTIME_ROOT
 export ORCHIDEE_DATA_ROOT=$RUNTIME_ROOT/data
 export ORCHIDEE_REFERENCE_ROOT=$RUNTIME_ROOT/assets
@@ -35,10 +40,9 @@ export JAX_ENABLE_X64=True
 test -x "$PYTHON"
 test -f "$TEACHER_PLAN"
 mkdir -p "$RUNTIME_ROOT/logs"
-cd "$REPO"
+cd "$WORKTREE"
 test -z "$(git status --porcelain --untracked-files=all)"
 
 "$PYTHON" -m research.daily_coarse_graining.teacher_shards aggregate \
   --plan "$TEACHER_PLAN" \
   --worker-count "$TEACHER_WORKER_COUNT"
-

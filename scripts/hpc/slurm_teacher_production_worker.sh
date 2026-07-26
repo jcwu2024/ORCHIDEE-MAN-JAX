@@ -16,6 +16,7 @@ set -euo pipefail
 
 REPO=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 RUNTIME_ROOT=$REPO/runtime
+WORKTREE=${WORKTREE:-$REPO}
 PYTHON=$REPO/.venvs/orcjax_cpu/bin/python
 SLURM_BIN=/rmprog/slurm/v22.05.7/bin
 : "${TEACHER_PLAN:?TEACHER_PLAN must be an absolute generation-plan path}"
@@ -26,12 +27,16 @@ case "$TEACHER_PLAN" in
   "$RUNTIME_ROOT"/*) ;;
   *) echo "TEACHER_PLAN must stay under $RUNTIME_ROOT" >&2; exit 2 ;;
 esac
+case "$WORKTREE" in
+  "$REPO"|"$RUNTIME_ROOT/worktrees/"*) ;;
+  *) echo "WORKTREE must be the repository root or stay under runtime/worktrees" >&2; exit 2 ;;
+esac
 if (( SLURM_ARRAY_TASK_ID < 0 || SLURM_ARRAY_TASK_ID >= TEACHER_WORKER_COUNT )); then
   echo "array index is outside TEACHER_WORKER_COUNT" >&2
   exit 2
 fi
 
-export ORCHIDEE_REPO_ROOT=$REPO
+export ORCHIDEE_REPO_ROOT=$WORKTREE
 export ORCHIDEE_RUNTIME_ROOT=$RUNTIME_ROOT
 export ORCHIDEE_DATA_ROOT=$RUNTIME_ROOT/data
 export ORCHIDEE_REFERENCE_ROOT=$RUNTIME_ROOT/assets
@@ -51,7 +56,7 @@ test -x "$PYTHON"
 test -x "$SLURM_BIN/srun"
 test -f "$TEACHER_PLAN"
 mkdir -p "$RUNTIME_ROOT/logs" "$JAX_COMPILATION_CACHE_DIR"
-cd "$REPO"
+cd "$WORKTREE"
 test -z "$(git status --porcelain --untracked-files=all)"
 
 echo "git_head=$(git rev-parse HEAD)"
@@ -60,9 +65,19 @@ echo "plan=$TEACHER_PLAN cache=$JAX_COMPILATION_CACHE_DIR"
 grep -E '^(MemTotal|MemAvailable):' /proc/meminfo
 grep -E '^(Cpus_allowed_list|Mems_allowed_list):' /proc/self/status
 
-"$SLURM_BIN/srun" --cpus-per-task="$SLURM_CPUS_PER_TASK" --cpu-bind=cores \
-  /usr/bin/time -v "$PYTHON" \
-  -m research.daily_coarse_graining.teacher_shards generate \
-  --plan "$TEACHER_PLAN" \
-  --worker-index "$SLURM_ARRAY_TASK_ID" \
+COMMAND=(
+  "$PYTHON" -m research.daily_coarse_graining.teacher_shards generate
+  --plan "$TEACHER_PLAN"
+  --worker-index "$SLURM_ARRAY_TASK_ID"
   --worker-count "$TEACHER_WORKER_COUNT"
+)
+if [[ -n "${TEACHER_MAX_NEW_ENTRIES:-}" ]]; then
+  if ! [[ "$TEACHER_MAX_NEW_ENTRIES" =~ ^[1-9][0-9]*$ ]]; then
+    echo "TEACHER_MAX_NEW_ENTRIES must be a positive integer" >&2
+    exit 2
+  fi
+  COMMAND+=(--max-new-entries "$TEACHER_MAX_NEW_ENTRIES")
+fi
+
+"$SLURM_BIN/srun" --cpus-per-task="$SLURM_CPUS_PER_TASK" --cpu-bind=cores \
+  /usr/bin/time -v "${COMMAND[@]}"

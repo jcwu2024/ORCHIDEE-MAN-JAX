@@ -131,6 +131,15 @@ dependency on the complete array. The worker count and array concurrency must
 be selected from an allocated-node peak-RSS and cross-landpoint compile-reuse
 probe, not guessed from logical core count.
 
+For the full 669-point asset, bind `WORKTREE` to the exact clean research
+commit that owns the v5 contract. Use `TEACHER_MAX_NEW_ENTRIES` to stop each
+worker normally after a bounded number of newly generated point-years. This
+limit is resumable: a later invocation verifies and reuses all preceding
+entries, restores their chain checkpoints, and advances to the next unfinished
+entry. It is distinct from the smoke-only `--max-entries`, which always selects
+the first assigned entries. Do not use wall-time termination as the normal
+chunking mechanism because an external kill can leave a recovery lock.
+
 Before staging the full 669-point production asset, run the versioned
 data-product admission. This freezes the exact v5 contract, scientific field
 inventory, cold-start boundary, split counts, and resource basis independently

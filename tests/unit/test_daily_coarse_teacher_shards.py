@@ -197,6 +197,108 @@ def test_worker_assignment_balances_complete_landpoint_chains(tmp_path):
         } == {entry["landpoint_id"] for entry in entries}
 
 
+def test_max_new_entries_advances_across_clean_worker_invocations(
+    monkeypatch,
+    tmp_path,
+):
+    entries = tuple(
+        shards.PlanEntry(
+            landpoint_id="001.0-071.0",
+            year=year,
+            days=365,
+            spatial_split="train",
+            temporal_split="train",
+            run_def=tmp_path / "run.def",
+            reference_run_dir=tmp_path,
+            state_cache=None,
+            initialization_mode=shards.YEAR_START_CHECKPOINT,
+            acceptance_checkpoint=None,
+        )
+        for year in range(1961, 1966)
+    )
+    plan = shards.GenerationPlan(
+        path=tmp_path / "plan.json",
+        raw={},
+        plan_sha256="plan",
+        dataset_id="dataset",
+        teacher_config=tmp_path / "config.yaml",
+        block_size=7,
+        output_root=tmp_path / "output",
+        entries=entries,
+    )
+    completed = {}
+
+    monkeypatch.setattr(shards, "_clean_git_head", lambda: "head")
+    monkeypatch.setattr(
+        shards,
+        "_completed_metadata",
+        lambda _plan, _root, entry, **_kwargs: completed.get(entry.key),
+    )
+    monkeypatch.setattr(
+        shards,
+        "_load_checkpoint",
+        lambda _root, metadata: metadata["state"],
+    )
+
+    def write(_plan, entry, _root, **_kwargs):
+        metadata = {
+            "checkpoint_sha256": entry.key,
+            "state": entry.year,
+            "timing_seconds": {"total_entry_before_metadata_write": 1.0},
+            "shard_bytes": 1,
+        }
+        completed[entry.key] = metadata
+        return metadata, entry.year
+
+    monkeypatch.setattr(shards, "_write_entry", write)
+    monkeypatch.setattr(
+        shards,
+        "_compact_worker_shard_record",
+        lambda _root, entry, _metadata: {
+            "landpoint_id": entry.landpoint_id,
+            "year": entry.year,
+        },
+    )
+
+    first = shards.generate_worker(
+        plan,
+        output_root=plan.output_root,
+        worker_index=0,
+        worker_count=1,
+        max_new_entries=2,
+    )
+    assert first["completed_entries"] == [
+        "001.0-071.0:1961",
+        "001.0-071.0:1962",
+    ]
+    assert not first["complete"]
+
+    second = shards.generate_worker(
+        plan,
+        output_root=plan.output_root,
+        worker_index=0,
+        worker_count=1,
+        max_new_entries=2,
+    )
+    assert second["completed_entries"] == [
+        "001.0-071.0:1961",
+        "001.0-071.0:1962",
+        "001.0-071.0:1963",
+        "001.0-071.0:1964",
+    ]
+    assert not second["complete"]
+
+    third = shards.generate_worker(
+        plan,
+        output_root=plan.output_root,
+        worker_index=0,
+        worker_count=1,
+        max_new_entries=2,
+    )
+    assert third["completed_entries"] == [entry.key for entry in entries]
+    assert third["complete"]
+
+
 def test_generation_rejects_an_uncommitted_teacher_identity(monkeypatch):
     def output(command, **_kwargs):
         return "abc123\n" if command[1:3] == ["rev-parse", "HEAD"] else " M teacher.py\n"

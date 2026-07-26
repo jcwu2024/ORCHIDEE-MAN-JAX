@@ -1348,6 +1348,7 @@ def generate_worker(
     worker_index: int,
     worker_count: int,
     max_entries: int | None = None,
+    max_new_entries: int | None = None,
 ) -> dict[str, Any]:
     git_head = _clean_git_head()
     worker_root = output_root / "workers" / f"worker-{worker_index:03d}-of-{worker_count:03d}"
@@ -1356,11 +1357,14 @@ def generate_worker(
         if max_entries < 1:
             raise ValueError("max_entries must be positive")
         selected = selected[:max_entries]
+    if max_new_entries is not None and max_new_entries < 1:
+        raise ValueError("max_new_entries must be positive")
     manifest_path = worker_root / "manifest.json"
     completed = []
     chained_state = None
     chained_landpoint = None
     chained_checkpoint_sha256 = None
+    new_entry_count = 0
     with _worker_lock(worker_root / "generation.lock"):
         for entry in selected:
             if entry.landpoint_id != chained_landpoint:
@@ -1386,6 +1390,8 @@ def generate_worker(
                 )
                 print(f"teacher_entry_reused key={entry.key}", flush=True)
                 continue
+            if max_new_entries is not None and new_entry_count >= max_new_entries:
+                break
             print(f"teacher_entry_start key={entry.key}", flush=True)
             metadata, chained_state = _write_entry(
                 plan,
@@ -1396,6 +1402,7 @@ def generate_worker(
                 preceding_checkpoint_sha256=preceding_checkpoint_sha256,
             )
             chained_checkpoint_sha256 = metadata["checkpoint_sha256"]
+            new_entry_count += 1
             completed.append(
                 _compact_worker_shard_record(worker_root, entry, metadata)
             )
@@ -1661,6 +1668,7 @@ def build_parser() -> argparse.ArgumentParser:
     generate.add_argument("--worker-index", type=int, required=True)
     generate.add_argument("--worker-count", type=int, required=True)
     generate.add_argument("--max-entries", type=int)
+    generate.add_argument("--max-new-entries", type=int)
     aggregate = subparsers.add_parser("aggregate")
     aggregate.add_argument("--plan", type=Path, required=True)
     aggregate.add_argument("--output-root", type=Path)
@@ -1697,6 +1705,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             worker_index=args.worker_index,
             worker_count=args.worker_count,
             max_entries=args.max_entries,
+            max_new_entries=args.max_new_entries,
         )
         print(
             json.dumps(

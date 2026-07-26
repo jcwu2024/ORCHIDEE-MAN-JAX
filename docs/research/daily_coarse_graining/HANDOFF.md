@@ -274,7 +274,15 @@ The machine policy binds the frozen production spec to Markov Contract v5 and
 reports 33,450 point-years, 12,208,581 transitions, about 104-162 GiB, and an
 estimated 67-91 CNY CPU cost. The next operation is to stage and verify the
 complete source assets, build the canonical generation plan, and present the
-paid Slurm request. Do not create another architecture-specific spatial pilot,
+paid Slurm request. The accepted staging root is
+`runtime/assets/teacher_669_a403cd3`; all 4,014 managed files and
+1,005,163,134 logical bytes verify. The generation plan is
+`runtime/plans/teacher_669_1961_2010_v5_a403cd3.json`, with canonical SHA256
+`8fcd6b84703311e2f848bd3c3ee2e43988240b69a73d91c16ded2a0b710d7f8b`,
+33,450 entries, block size 7, and five-worker loads of
+`6700/6700/6700/6700/6650`. Bind the worker launcher to the clean v5 worktree
+and use bounded `TEACHER_MAX_NEW_ENTRIES` waves so jobs exit normally rather
+than timing out. Do not create another architecture-specific spatial pilot,
 inspect sealed test outputs, add epochs to either rejected arm, or tune FiLM
 widths. After aggregation, run admission with
 `--require-production-dataset`; only that mode can promote the full inventory.
