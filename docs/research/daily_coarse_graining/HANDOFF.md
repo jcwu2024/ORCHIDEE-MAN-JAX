@@ -220,13 +220,15 @@ The detached-prefix implementation gate passed at commit `c3e2d79`; see
 query, and one final-transition update in 6:33. Loss was `0.0836542`, gradient
 norm was `0.1333402`, and the 45 MiB checkpoint is finite.
 
-The next bounded experiment is one equal-update candidate against frozen
-`canonical_multistep_v1`: initialize from the same one-step checkpoint, use
-batch size 4 and `0:48,1:48,3:48,7:48` for 192 total updates, then run only the
-existing four seven-day validation windows. Prefix 0 supplies clean pairs;
-all nonzero prefixes use exact same-state Teacher labels. If the candidate
-does not improve the seen-condition global and named carbon-state gates with
-zero defined-status/discrete regression, reject it without further tuning.
+The equal-update candidate and frozen four-way validation are complete; see
+[`pushforward_objective_ab_20260726.md`](pushforward_objective_ab_20260726.md).
+Job `14383581` trained 192 batch-4 updates and job `14384100` evaluated the
+four frozen windows. Seen-condition global and litterpart errors improved
+strongly, but NPP/growth respiration regressed about 9.6%, validation-year
+biomass regressed 10.6%, and spatial global/litterpart errors worsened. The
+candidate fails the predeclared gate and is rejected. Keep
+`canonical_multistep_v1`; do not tune this objective, inspect the sealed test
+split, or generate more same-point years.
 
 ## Accepted Historical Production Run
 
@@ -330,22 +332,13 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-1. commit and synchronize the locally verified `process_increment_v2`
-   implementation;
-2. run one real-v5, one-window GPU smoke to verify production compilation,
-   finite loss, finite gradient, and checkpoint provenance;
-3. run exactly one equal-budget `1:64,3:64,7:64` candidate initialized from
-   the frozen one-step checkpoint, with no architecture, data, split, seed, or
-   update-budget change;
-4. rerun the frozen four-way seven-day matrix and apply the global plus named
-   carbon-state gates in
-   [`process_increment_objective_ab_20260725.md`](process_increment_objective_ab_20260725.md);
-5. stop and reassess if the seen-condition gate fails. If it passes, freeze
-   the objective and generate only a bounded, source-selected spatial pilot.
-
-Do not start all 669 x 50 years before this bounded learnability and rollout
-gate. The ten-point dataset tests architecture development; it cannot by
-itself establish global spatial generalization.
+Both bounded objective candidates, `process_increment_v2` and
+`on_policy_pushforward_v1`, have now failed their predeclared promotion gates.
+Stop training. Reassess the architecture and spatial-conditioning evidence,
+then define one bounded source-selected spatial-data pilot with an explicit
+acceptance gate before generating any new Teacher shards. Do not start all
+669 x 50 years, add more years of the same points, tune either rejected
+objective, or inspect the sealed test split.
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).

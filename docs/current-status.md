@@ -155,9 +155,16 @@ Current scientific status:
 - the real detached-prefix pushforward smoke passed at research commit
   `c3e2d79`. After a three-day model prefix, one exact same-state Teacher query
   and final-transition update produced finite loss `0.0836542`, gradient norm
-  `0.1333402`, and a finite checkpoint. The next gate is one 192-update,
-  batch-4 A/B initialized from the same one-step checkpoint as the frozen
-  baseline; no broader tuning or data expansion is authorized by this smoke;
+  `0.1333402`, and a finite checkpoint;
+- the corresponding 192-update, batch-4 `on_policy_pushforward_v1` A/B is
+  complete and rejected. On train/train Day 7, global RMSE improved from
+  `0.145471` to `0.092764` and litterpart from `3.651536` to `0.854632`, but
+  NPP and growth respiration regressed about 9.6%. Spatial-validation global
+  RMSE worsened from `0.519886` to `0.550696` and joint validation from
+  `0.429058` to `0.459871`; spatial litterpart also worsened by more than 60%.
+  All mask/discrete gates passed, but the predeclared named-state and spatial
+  gates did not. Keep `canonical_multistep_v1`; do not tune this candidate or
+  inspect the sealed test split;
 - the provisional seven-day free-rollout gate of `<=0.29` therefore did not
   pass. No v5 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
