@@ -227,17 +227,26 @@ def build_coverage_report(
         "active_feature_count": int(next(iter(combined.values())).size),
         **_nearest_training_distances(combined, train_ids, split_by_id),
     }
-    validation = [
-        groups["combined"]["points"][name]
-        for name in raw_features
-        if split_by_id[name] == "validation"
+    validation_ids = tuple(
+        name for name in raw_features if split_by_id[name] == "validation"
+    )
+    outside_groups = [
+        group
+        for group in ("parameters", "landpoint_static", "forcing_climatology")
+        if any(
+            groups[group]["points"][name]["above_all_train_loo"]
+            for name in validation_ids
+        )
     ]
     return {
         "training_landpoints": list(train_ids),
         "evaluated_landpoints": sorted(raw_features),
         "groups": groups,
-        "validation_outside_training_loo": any(
-            item["above_all_train_loo"] for item in validation
+        "validation_outside_training_loo": bool(outside_groups),
+        "validation_outside_training_loo_groups": outside_groups,
+        "validation_outside_combined_training_loo": any(
+            groups["combined"]["points"][name]["above_all_train_loo"]
+            for name in validation_ids
         ),
     }
 

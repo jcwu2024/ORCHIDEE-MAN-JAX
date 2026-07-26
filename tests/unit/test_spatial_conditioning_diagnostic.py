@@ -87,3 +87,19 @@ def test_classification_separates_coverage_and_condition_use():
     result = classify_diagnostic(coverage, condition_use)
     assert result["decision"] == "coverage_not_extreme_architecture_or_representation_remains"
     assert result["spatial_condition_channel_detectably_used"]
+
+
+def test_classification_reports_joint_coverage_and_condition_use_failure():
+    coverage = {"validation_outside_training_loo": True}
+    condition_use = {
+        "groups": {
+            name: {
+                "validation_cross_point_permutation": {
+                    "loss_change_from_full": 0.0
+                }
+            }
+            for name in ("landpoint_static", "parameters")
+        }
+    }
+    result = classify_diagnostic(coverage, condition_use)
+    assert result["decision"] == "spatial_coverage_and_condition_use_both_insufficient"
