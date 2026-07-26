@@ -7,6 +7,7 @@ import numpy as np
 from research.daily_coarse_graining.canonical_training import (
     FastDayTargetRepresentation,
     _calendar_features,
+    fast_day_target_representation_from_contract,
     loss_weights_from_contract,
     model_config_from_batch,
     prepare_canonical_batch,
@@ -286,6 +287,106 @@ def test_compiled_inference_adapter_matches_numpy_and_preserves_gradients():
         lambda prediction: jnp.sum(restore(batch["state"], prediction)[1])
     )(jnp.asarray([[12.0, 5.0]]))
     np.testing.assert_array_equal(np.asarray(gradient), [[1.0, 0.0]])
+
+
+def test_fast_day_restore_projects_declared_carbon_stocks_nonnegative():
+    batch = {
+        "state": np.asarray([[1.0, 2.0, 3.0]]),
+        "forcing_native": np.ones((1, 5, 1)),
+        "parameters": np.ones((1, 1)),
+        "landpoint_static": np.ones((1, 1)),
+        "annual_conditions": np.ones((1, 1)),
+        "year": np.asarray([1961]),
+        "day_index": np.asarray([2]),
+    }
+    statistics = _statistics(
+        {
+            "state": (3,),
+            "forcing_native": (1,),
+            "parameters": (1,),
+            "landpoint_static": (1,),
+            "annual_conditions": (1,),
+            "fast_day_target": (3,),
+        }
+    )
+    representation = FastDayTargetRepresentation(
+        state_indices=np.asarray([0, 1, 2], dtype=np.int32),
+        dynamic_undefined_indices=np.asarray([], dtype=np.int32),
+        dynamic_undefined_fill_values=np.asarray([], dtype=np.float64),
+        nonnegative_indices=(1, 2),
+    )
+    prepared = prepare_canonical_inference_batch(
+        batch, statistics, representation
+    )
+    prediction = np.asarray([[-4.0, -2.0, 5.0]])
+    expected = np.asarray([[-4.0, 0.0, 5.0]])
+    actual = restore_fast_day_inference_prediction(
+        prediction,
+        np.empty((1, 0)),
+        prepared,
+        statistics,
+        representation,
+    )
+    compiled = restore_fast_day_inference_prediction_compiled(
+        jnp.asarray(prediction),
+        jnp.empty((1, 0)),
+        prepared,
+        statistics,
+        representation,
+    )
+    np.testing.assert_array_equal(actual, expected)
+    np.testing.assert_array_equal(np.asarray(compiled), expected)
+
+    gradient = jax.grad(
+        lambda values: jnp.sum(
+            restore_fast_day_inference_prediction_compiled(
+                values,
+                jnp.empty((1, 0)),
+                prepared,
+                statistics,
+                representation,
+            )
+        )
+    )(jnp.asarray(prediction))
+    np.testing.assert_array_equal(np.asarray(gradient), [[1.0, 0.0, 1.0]])
+
+
+def test_contract_registers_only_source_nonnegative_carbon_stock_outputs():
+    metadata = {
+        "fast_day_target_width": 5,
+        "state_leaves": [],
+        "fast_day_target_leaves": [
+            {
+                "family": "diffuco_enerbil",
+                "component": "diffuco_previous_step_state",
+                "path": ["rveget"],
+                "key": "diffuco_previous_step_state.rveget",
+                "start": 0,
+                "stop": 1,
+            },
+            {
+                "family": "ok_leak",
+                "component": None,
+                "path": ["carbon_32l"],
+                "key": "ok_leak.carbon_32l",
+                "start": 1,
+                "stop": 3,
+            },
+            {
+                "family": "driver",
+                "component": "driver_previous_step_state",
+                "path": ["fluxsens"],
+                "key": "driver_previous_step_state.fluxsens",
+                "start": 3,
+                "stop": 5,
+            },
+        ],
+    }
+    representation = fast_day_target_representation_from_contract(metadata)
+    assert representation.nonnegative_indices == (1, 2)
+    np.testing.assert_array_equal(
+        representation.dynamic_undefined_indices, [0]
+    )
 
 
 def test_prepare_canonical_batch_rejects_nonpersistent_sentinel():

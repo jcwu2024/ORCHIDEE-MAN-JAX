@@ -50,11 +50,25 @@ class FastDayTargetRepresentation(NamedTuple):
     state_indices: np.ndarray
     dynamic_undefined_indices: np.ndarray
     dynamic_undefined_fill_values: np.ndarray
+    nonnegative_indices: tuple[int, ...] = ()
 
 
 _DYNAMIC_UNDEFINED_OUTPUTS = {
     "diffuco_previous_step_state.rveget": 1.0e20,
 }
+
+# These are material stocks, not signed fluxes. The source assumes they remain
+# nonnegative before soilcarbon_leak decomposition and PERMA_PEAT redistribution.
+# Fortran provenance: stomate_soilcarbon.f90 soilcarbon_leak lines 1348-1437,
+# 1605-1838, and 2264-2303; cryoturbate_doc_POC lines 2916-3091 explicitly
+# diagnoses negative carbon_32l/DOC as invalid.
+_NONNEGATIVE_FAST_DAY_OUTPUTS = frozenset(
+    {
+        "ok_leak.carbon_32l",
+        "ok_leak.DOC",
+        "ok_leak.deepC_peat",
+    }
+)
 
 
 def fast_day_target_representation_from_contract(
@@ -73,6 +87,7 @@ def fast_day_target_representation_from_contract(
     state_indices = np.full(width, -1, dtype=np.int32)
     dynamic_indices = []
     dynamic_fill_values = []
+    nonnegative_indices = []
     slow_component = "slowproc_stomate_previous_step_state"
     for leaf in contract_metadata["fast_day_target_leaves"]:
         family = str(leaf["family"])
@@ -87,6 +102,10 @@ def fast_day_target_representation_from_contract(
             dynamic_fill_values.extend(
                 [_DYNAMIC_UNDEFINED_OUTPUTS[key]]
                 * (int(leaf["stop"]) - int(leaf["start"]))
+            )
+        if key in _NONNEGATIVE_FAST_DAY_OUTPUTS:
+            nonnegative_indices.extend(
+                range(int(leaf["start"]), int(leaf["stop"]))
             )
         owner = None
         if component is not None:
@@ -115,6 +134,7 @@ def fast_day_target_representation_from_contract(
         dynamic_undefined_fill_values=np.asarray(
             dynamic_fill_values, dtype=np.float64
         ),
+        nonnegative_indices=tuple(nonnegative_indices),
     )
 
 
@@ -395,6 +415,9 @@ def restore_fast_day_inference_prediction(
     physical = denormalize(
         np.asarray(normalized_prediction), statistics.arrays["fast_day_target"]
     )
+    if representation.nonnegative_indices:
+        indices = np.asarray(representation.nonnegative_indices, dtype=np.int32)
+        physical[..., indices] = np.maximum(physical[..., indices], 0.0)
     undefined = np.asarray(batch.persistent_fast_day_undefined).copy()
     undefined_values = np.asarray(
         batch.persistent_fast_day_undefined_values
@@ -425,6 +448,12 @@ def restore_fast_day_inference_prediction_compiled(
         jnp.asarray(normalized_prediction, dtype=jnp.float64)
         * jnp.asarray(target_statistics.scale)
         + jnp.asarray(target_statistics.mean)
+    )
+    nonnegative_indices = jnp.asarray(
+        representation.nonnegative_indices, dtype=jnp.int32
+    )
+    physical = physical.at[..., nonnegative_indices].set(
+        jnp.maximum(jnp.take(physical, nonnegative_indices, axis=-1), 0.0)
     )
     dynamic_indices = jnp.asarray(
         representation.dynamic_undefined_indices, dtype=jnp.int32
