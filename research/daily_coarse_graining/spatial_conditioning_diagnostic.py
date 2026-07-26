@@ -43,6 +43,12 @@ CONDITION_GROUPS = (
     "annual_conditions",
     "forcing_native",
 )
+CONDITION_FINITE_FIELDS = {
+    "parameters": "parameters_finite",
+    "landpoint_static": "landpoint_static_finite",
+    "annual_conditions": "annual_conditions_finite",
+    "forcing_native": "forcing_finite",
+}
 
 
 def _sha256_file(path: Path) -> str:
@@ -298,7 +304,7 @@ def _replace_condition(
         raise ValueError(f"unknown condition group {group!r}")
     replacements = {group: values}
     if finite is not None:
-        replacements[f"{group}_finite"] = finite
+        replacements[CONDITION_FINITE_FIELDS[group]] = finite
     return batch._replace(**replacements)
 
 
@@ -352,7 +358,7 @@ def build_condition_use_report(
     }
     for group in CONDITION_GROUPS:
         values = np.asarray(getattr(model_batch, group))
-        finite = np.asarray(getattr(model_batch, f"{group}_finite"))
+        finite = np.asarray(getattr(model_batch, CONDITION_FINITE_FIELDS[group]))
         mean_prediction = np.asarray(
             jax.device_get(
                 model(
