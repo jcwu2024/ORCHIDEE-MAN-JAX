@@ -1,0 +1,137 @@
+{
+  "schema_version": "daily_teacher_data_product_policy_v1",
+  "policy_id": "pft14-daily-teacher-669-v5",
+  "production_spec": "manifests/coarse_graining/daily_teacher_production_669.json",
+  "production_spec_sha256": "6bb0198f0a313b814e32f980564c03bab4ce7801f639983d59f587d18aa6a27e",
+  "population_manifest_sha256": "e6b9d96bf1638cf7e1a03ea3257138dbe9706ef2e63154d8aac4c4df9a2d5e92",
+  "expected_population": {
+    "landpoints": 669,
+    "first_year": 1961,
+    "last_year": 2010,
+    "block_size": 7,
+    "spatial_split_counts": {
+      "train": 535,
+      "validation": 67,
+      "test": 67
+    },
+    "temporal_splits": {
+      "train": [1961, 2004],
+      "validation": [2005, 2007],
+      "test": [2008, 2010]
+    }
+  },
+  "expected_contract": {
+    "dataset_manifest_schema": "daily_teacher_dataset_manifest_v4",
+    "schema_version": "daily_markov_contract_v5",
+    "sha256": "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442",
+    "continuous_state_width": 3854,
+    "discrete_state_width": 12,
+    "fast_day_target_width": 2855,
+    "diagnostic_width": 90,
+    "active_pft_indices": [0, 13],
+    "native_forcing_fields": [
+      "Tair",
+      "PSurf",
+      "Qair",
+      "Wind_E",
+      "Wind_N",
+      "Rainf",
+      "Snowf",
+      "SWdown",
+      "LWdown"
+    ],
+    "native_forcing_records_per_day": 5,
+    "condition_widths": {
+      "parameters": 84,
+      "landpoint_static": 735,
+      "annual": 1
+    },
+    "required_state_components": [
+      "driver_previous_step_state",
+      "diffuco_previous_step_state",
+      "enerbil_previous_step_state",
+      "hydrol_previous_step_state",
+      "thermosoil_previous_step_state",
+      "slowproc_stomate_previous_step_state",
+      "sechiba_finalize_state"
+    ],
+    "required_state_keys": [
+      "slowproc_stomate_previous_step_state.biomass",
+      "slowproc_stomate_previous_step_state.npp_daily",
+      "slowproc_stomate_previous_step_state.resp_maint",
+      "slowproc_stomate_previous_step_state.resp_growth",
+      "slowproc_stomate_previous_step_state.litter",
+      "slowproc_stomate_previous_step_state.litterpart",
+      "slowproc_stomate_previous_step_state.carbon",
+      "slowproc_stomate_previous_step_state.carbon_32l",
+      "slowproc_stomate_previous_step_state.DOC",
+      "slowproc_stomate_previous_step_state.deepC_peat",
+      "slowproc_stomate_previous_step_state.gpp_daily",
+      "slowproc_stomate_previous_step_state.lai",
+      "sechiba_finalize_state.leaf_ci"
+    ],
+    "required_target_families": [
+      "driver",
+      "diffuco_enerbil",
+      "hydrol",
+      "thermosoil",
+      "daily_interface",
+      "ok_leak",
+      "final_diagnostics",
+      "sechiba_finalize"
+    ],
+    "required_target_keys": [
+      "diffuco_previous_step_state.gpp",
+      "daily_interface.gpp_daily",
+      "daily_interface.resp_maint_part",
+      "ok_leak.carbon_32l",
+      "ok_leak.DOC",
+      "ok_leak.deepC_peat",
+      "sechiba_finalize_state.leaf_ci"
+    ],
+    "required_diagnostics": [
+      "daily_fold.flood_root_radia",
+      "daily_fold.gpp_daily",
+      "daily_fold.humrel_daily",
+      "daily_fold.litterhum_daily",
+      "daily_fold.precip_daily",
+      "daily_fold.resp_maint_part",
+      "daily_fold.resp_maint_radia",
+      "daily_fold.snowfall_daily",
+      "daily_fold.snowmass_daily",
+      "daily_fold.soilhum_daily",
+      "daily_fold.t2m_daily",
+      "daily_fold.t2m_max_daily",
+      "daily_fold.t2m_min_daily",
+      "daily_fold.tmc_topgrass_daily",
+      "daily_fold.tsoil_daily",
+      "daily_fold.tsurf_daily",
+      "daily_fold.wspeed_daily",
+      "final_half_hour.t2mdiag",
+      "final_half_hour.temp_sol"
+    ]
+  },
+  "cold_start_policy": {
+    "initialization_mode": "cold_start_bootstrap",
+    "first_supervised_day": 2,
+    "first_year_transition_count": 364,
+    "ordinary_year_transition_count": 365,
+    "stored_bootstrap_result": "state_trajectory[0] is canonical S[1]",
+    "neural_scope": "Teacher Day 1 bootstrap remains outside the learned operator"
+  },
+  "parameter_extension_policy": {
+    "baseline_scope": "one archived calibrated parameter tuple per landpoint",
+    "independent_response_claim": false,
+    "required_extension": "separate parent-hash-bound train-only parameter perturbation dataset",
+    "must_not_modify_baseline_shards": true,
+    "must_not_use_validation_or_test_landpoints": true
+  },
+  "resource_basis": {
+    "cpu_cost_cny_per_core_hour": 0.07,
+    "hot_capture_seconds_per_point_year": 102.3,
+    "complete_point_year_seconds_upper": 139.2,
+    "compressed_bytes_per_point_year_lower": 3330000,
+    "compressed_bytes_per_point_year_upper": 5200000,
+    "accepted_concurrent_workers": 5
+  }
+}

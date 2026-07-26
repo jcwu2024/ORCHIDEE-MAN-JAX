@@ -268,14 +268,21 @@ not pass the condition-use threshold. The flat continuation also worsens every
 frozen global score. Reject both continuation checkpoints and keep the
 original checkpoint with SHA256 `79728593...b5bc2` as the baseline.
 
-The next operation is source-driven selection for a bounded spatial-data
-pilot. Use only the frozen 669-point inventory's parameter, static-condition,
-and forcing-climatology features; do not select points from neural failures.
-Reduce the existing validation point's static-feature coverage gap, add
-maximin extremes, retain the current validation/test assignments, and produce
-a cost/storage plan before any Teacher generation. Do not inspect sealed test
-outputs, launch all 669 trajectories, add more epochs to either rejected arm,
-or tune FiLM widths.
+The contract-level 669-point Teacher data-product admission now passes; see
+[`teacher_669_data_product_admission_20260726.md`](teacher_669_data_product_admission_20260726.md).
+The machine policy binds the frozen production spec to Markov Contract v5 and
+reports 33,450 point-years, 12,208,581 transitions, about 104-162 GiB, and an
+estimated 67-91 CNY CPU cost. The next operation is to stage and verify the
+complete source assets, build the canonical generation plan, and present the
+paid Slurm request. Do not create another architecture-specific spatial pilot,
+inspect sealed test outputs, add epochs to either rejected arm, or tune FiLM
+widths. After aggregation, run admission with
+`--require-production-dataset`; only that mode can promote the full inventory.
+
+The baseline contains one archived calibrated parameter tuple per landpoint.
+Any controlled parameter perturbations or alternate forcing products must be
+separate parent-hash-bound extension datasets using training landpoints; they
+must not rewrite the immutable 669 baseline.
 
 ## Accepted Historical Production Run
 

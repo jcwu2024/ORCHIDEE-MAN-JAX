@@ -131,6 +131,24 @@ dependency on the complete array. The worker count and array concurrency must
 be selected from an allocated-node peak-RSS and cross-landpoint compile-reuse
 probe, not guessed from logical core count.
 
+Before staging the full 669-point production asset, run the versioned
+data-product admission. This freezes the exact v5 contract, scientific field
+inventory, cold-start boundary, split counts, and resource basis independently
+of any one neural architecture:
+
+```bash
+python -m research.daily_coarse_graining.teacher_data_product_admission \
+  --policy manifests/coarse_graining/daily_teacher_669_data_product_policy.json \
+  --contract-manifest /absolute/path/to/accepted-v5/dataset_manifest.json \
+  --output /absolute/path/to/pre_generation_admission.json
+```
+
+After full aggregation, rerun it against the new 669-point manifest with
+`--require-production-dataset`. Only that mode verifies all 33,450 unique
+point-year shards and their frozen spatial/temporal assignments; a smaller
+contract-evidence dataset cannot satisfy the final production gate. See
+[`teacher_669_data_product_admission_20260726.md`](teacher_669_data_product_admission_20260726.md).
+
 If Slurm kills a worker at its wall-time limit, the exclusive lock may remain
 because the process cannot execute its cleanup handler. Confirm that the owner
 job is terminal, read the recorded host/PID/job identity, and use the explicit

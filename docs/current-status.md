@@ -189,8 +189,17 @@ Current scientific status:
   improves loss, showing a wrongly learned association rather than a dead
   channel. The flat continuation itself worsens all four frozen global scores,
   so neither checkpoint is promoted. See
-  `structured_architecture_ab_result_20260726.md`. The next bounded variable is
-  a source-selected spatial-data pilot, not additional epochs or FiLM tuning;
+  `structured_architecture_ab_result_20260726.md`;
+- the reusable 669-point Teacher data-product admission now passes at the
+  contract level. The versioned machine gate binds the frozen 535/67/67
+  spatial split and 1961-2010 temporal split to Markov Contract v5, verifies
+  all state/target/diagnostic/forcing/condition inventories, and computes
+  33,450 point-years with 12,208,581 transitions. Its final mode additionally
+  requires all 33,450 aggregate shards and exact split assignments. The next
+  data operation is therefore full 669-point baseline generation after
+  staging/plan/resource approval, not another architecture-specific spatial
+  pilot. Parameter perturbations and new forcing products remain separate
+  parent-bound extension datasets;
 - the provisional seven-day free-rollout gate of `<=0.29` therefore did not
   pass. No v5 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
