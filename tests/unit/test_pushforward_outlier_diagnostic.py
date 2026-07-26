@@ -7,6 +7,7 @@ import numpy as np
 from research.daily_coarse_graining.markov_dataset import MarkovShardRef
 from research.daily_coarse_graining.pushforward_outlier_diagnostic import (
     _leaf_attribution,
+    _selected_leaf_values,
     replay_selection,
 )
 
@@ -73,3 +74,11 @@ def test_leaf_attribution_identifies_the_dominant_output():
     assert report["top_leaves"][0]["key"] == "large"
     assert report["top_leaves"][0]["samples"][0]["normalized_rmse"] == 20.0
     assert report["defined_status_mismatches"] == 0
+
+
+def test_selected_leaf_values_keeps_exact_sentinels_and_defined_masks():
+    values = np.asarray([[1.0, 1.0e20, np.nan]])
+    leaves = (_Leaf("keep", 0, 2, "a"), _Leaf("omit", 2, 3, "b"))
+    report = _selected_leaf_values(values, leaves, frozenset({"keep"}))
+    assert report["keep"]["values"] == [[1.0, 1.0e20]]
+    assert report["keep"]["defined"] == [[True, False]]

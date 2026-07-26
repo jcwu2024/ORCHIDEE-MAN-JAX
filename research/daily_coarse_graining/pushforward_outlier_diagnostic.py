@@ -54,6 +54,30 @@ from research.daily_coarse_graining.markov_dataset import (
 
 SCHEMA_VERSION = "pushforward_outlier_diagnostic_v1"
 
+_CONTROL_STATE_KEYS = frozenset(
+    {
+        "slowproc_stomate_previous_step_state.altmax",
+        "slowproc_stomate_previous_step_state.everywhere",
+        "slowproc_stomate_previous_step_state.fixed_cryoturbation_depth",
+        "slowproc_stomate_previous_step_state.veget_max",
+        "sechiba_finalize_state.veget_max",
+    }
+)
+_CARBON_STATE_KEYS = frozenset(
+    {
+        "slowproc_stomate_previous_step_state.carbon_32l",
+        "slowproc_stomate_previous_step_state.DOC",
+        "slowproc_stomate_previous_step_state.deepC_peat",
+    }
+)
+_CARBON_FAST_KEYS = frozenset(
+    {
+        "ok_leak.carbon_32l",
+        "ok_leak.DOC",
+        "ok_leak.deepC_peat",
+    }
+)
+
 
 def _sha256_file(path: Path) -> str:
     digest = hashlib.sha256()
@@ -241,6 +265,28 @@ def _leaf_attribution(
     }
 
 
+def _selected_leaf_values(values, leaves, keys: frozenset[str]) -> dict[str, Any]:
+    """Keep exact values and masks for a small, predeclared diagnostic subset."""
+
+    values = np.asarray(values, dtype=np.float64)
+    selected = {}
+    for leaf in leaves:
+        if leaf.key not in keys:
+            continue
+        start = int(leaf.start)
+        stop = int(leaf.stop)
+        subset = values[:, start:stop]
+        selected[leaf.key] = {
+            "shape": list(getattr(leaf, "shape", (stop - start,))),
+            "values": subset.tolist(),
+            "defined": defined_numeric_mask(subset).tolist(),
+        }
+    missing = sorted(keys - selected.keys())
+    if missing:
+        raise ValueError(f"diagnostic contract is missing selected leaves {missing}")
+    return selected
+
+
 def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
     dataset = args.dataset.resolve()
     statistics_path = args.statistics.resolve()
@@ -355,9 +401,12 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
         owner_name="family",
     )
     state_leaves = tuple(leaf for leaf in contract.state_leaves if not leaf.discrete)
+    clean_terminal_states = np.asarray(
+        batch["state_trajectory"][:, args.target_prefix]
+    )
     terminal_state_attribution = _leaf_attribution(
         terminal_states,
-        np.asarray(batch["state_trajectory"][:, args.target_prefix]),
+        clean_terminal_states,
         statistics.arrays["state"].scale,
         np.full(contract.continuous_state_width, 1.0 / contract.continuous_state_width),
         state_leaves,
@@ -409,6 +458,48 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
         "fast_day_attribution": fast_attribution,
         "terminal_state_vs_clean_attribution": terminal_state_attribution,
         "next_state_attribution": state_attribution,
+        "control_state_values": {
+            "model_terminal": _selected_leaf_values(
+                terminal_states,
+                state_leaves,
+                _CONTROL_STATE_KEYS,
+            ),
+            "clean_terminal": _selected_leaf_values(
+                clean_terminal_states,
+                state_leaves,
+                _CONTROL_STATE_KEYS,
+            ),
+            "model_terminal_discrete": {
+                name: np.asarray(value).tolist()
+                for name, value in terminal_discrete.items()
+            },
+            "clean_terminal_discrete": {
+                name: np.asarray(value)[:, args.target_prefix].tolist()
+                for name, value in batch["discrete_trajectory"].items()
+            },
+        },
+        "carbon_status_values": {
+            "model_terminal": _selected_leaf_values(
+                terminal_states,
+                state_leaves,
+                _CARBON_STATE_KEYS,
+            ),
+            "clean_terminal": _selected_leaf_values(
+                clean_terminal_states,
+                state_leaves,
+                _CARBON_STATE_KEYS,
+            ),
+            "teacher_fast": _selected_leaf_values(
+                teacher_fast,
+                contract.fast_day_target_leaves,
+                _CARBON_FAST_KEYS,
+            ),
+            "model_fast": _selected_leaf_values(
+                predicted_fast,
+                contract.fast_day_target_leaves,
+                _CARBON_FAST_KEYS,
+            ),
+        },
         "classification": {
             "extreme_loss_reproduced": bool(np.max(losses) > 1.0e3),
             "extreme_threshold": 1.0e3,
