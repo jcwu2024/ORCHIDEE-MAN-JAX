@@ -180,6 +180,15 @@ Current scientific status:
   validation. The small changes leave the scientific diagnosis intact:
   spatial generalization remains dominant and train/train `litterpart` still
   reaches `3.651537`;
+- the bounded `structured_process_film_v1` candidate is now implemented but
+  not yet scientifically evaluated. It preserves the accepted flat checkpoint
+  exactly at initialization, partitions all 3,854 continuous states into eight
+  source-derived process groups, and persistently modulates both fusion layers
+  with separately encoded parameters, landpoint static attributes, and
+  annual/calendar conditions. The real-width forward/reverse gates and 73
+  related tests pass. Its next gate is a matched continuation A/B against a
+  flat control from the same checkpoint and update sequence; no spatial-data
+  pilot should start before that result;
 - the provisional seven-day free-rollout gate of `<=0.29` therefore did not
   pass. No v5 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher

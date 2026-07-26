@@ -20,7 +20,9 @@ import numpy as np
 from jax_orchidee.driver import orchestration as teacher
 from research.daily_coarse_graining.canonical_daily_model import (
     CanonicalModelConfig,
+    canonical_model_apply,
     initialize_canonical_model,
+    parameter_count,
 )
 from research.daily_coarse_graining.canonical_multistep import (
     CanonicalMultistepSequence,
@@ -49,6 +51,15 @@ from research.daily_coarse_graining.canonical_training_run import (
 from research.daily_coarse_graining.daily_markov_contract import (
     daily_markov_contract_from_metadata,
     reconstruct_compiled_forcing_window,
+)
+from research.daily_coarse_graining.daily_model_architecture import (
+    CANONICAL_FLAT_V1,
+    MODEL_ARCHITECTURES,
+    STRUCTURED_PROCESS_FILM_V1,
+    DailyModelDefinition,
+    build_daily_model_definition,
+    checkpoint_architecture_id,
+    verify_checkpoint_architecture,
 )
 from research.daily_coarse_graining.markov_dataset import (
     MarkovShardRef,
@@ -142,9 +153,13 @@ def _load_initial_parameters(
     identity: Mapping[str, Any],
     config: CanonicalModelConfig,
     seed: int,
+    model_definition: DailyModelDefinition | None = None,
 ):
+    definition = model_definition
     if path is None:
-        return initialize_canonical_model(config, seed=seed)
+        if definition is None:
+            return initialize_canonical_model(config, seed=seed)
+        return definition.initialize(seed=seed)
     with path.open("rb") as handle:
         checkpoint = pickle.load(handle)
     if checkpoint.get("schema_version") != CHECKPOINT_SCHEMA_VERSION:
@@ -160,7 +175,26 @@ def _load_initial_parameters(
     ):
         if observed.get(name) != identity[name]:
             raise ValueError(f"initialization checkpoint identity mismatch for {name}")
-    return jax.tree_util.tree_map(jnp.asarray, checkpoint["parameters"])
+    source_parameters = jax.tree_util.tree_map(jnp.asarray, checkpoint["parameters"])
+    if definition is None:
+        if checkpoint_architecture_id(observed) != CANONICAL_FLAT_V1:
+            raise ValueError("legacy training path requires a flat canonical checkpoint")
+        return source_parameters
+    source_architecture = checkpoint_architecture_id(observed)
+    if source_architecture == definition.architecture_id:
+        verify_checkpoint_architecture(observed, definition)
+        return source_parameters
+    if (
+        source_architecture == CANONICAL_FLAT_V1
+        and definition.architecture_id == STRUCTURED_PROCESS_FILM_V1
+    ):
+        return definition.initialize(
+            seed=seed,
+            canonical_parameters=source_parameters,
+        )
+    raise ValueError(
+        "initialization checkpoint architecture cannot initialize requested model"
+    )
 
 
 def _atomic_pickle(path: Path, value: Any) -> None:
@@ -270,6 +304,7 @@ def _make_train_step(
     state_weights=None,
     state_delta_scale=None,
     state_increment_loss_weight: float = 0.0,
+    model_apply=canonical_model_apply,
 ):
     def train_step(parameters, optimizer, initial_states, discrete_states, sequence, rate):
         def objective(value):
@@ -287,6 +322,7 @@ def _make_train_step(
                 state_loss_weight=state_loss_weight,
                 state_increment_loss_weight=state_increment_loss_weight,
                 undefined_loss_weight=undefined_loss_weight,
+                model_apply=model_apply,
             )
 
         loss, gradients = jax.value_and_grad(objective)(parameters)
@@ -305,6 +341,14 @@ def _make_train_step(
 
 
 def train_multistep(args: argparse.Namespace) -> Mapping[str, Any]:
+    if (
+        args.model_architecture == STRUCTURED_PROCESS_FILM_V1
+        and args.initialize_checkpoint is None
+    ):
+        raise ValueError(
+            "structured_process_film_v1 requires --initialize-checkpoint so its "
+            "zero-residual start preserves the accepted flat baseline"
+        )
     dataset = args.dataset.resolve()
     statistics_path = args.statistics.resolve()
     acceptance = args.acceptance.resolve()
@@ -327,6 +371,11 @@ def train_multistep(args: argparse.Namespace) -> Mapping[str, Any]:
     representation = fast_day_target_representation_from_contract(metadata)
     statistics = load_training_statistics(statistics_path, index=index)
     config = _model_config(contract, representation)
+    model_definition = build_daily_model_definition(
+        args.model_architecture,
+        config,
+        metadata,
+    )
     curriculum = parse_curriculum(args.curriculum)
     if args.objective == "canonical_multistep_v1":
         state_weights = None
@@ -358,6 +407,12 @@ def train_multistep(args: argparse.Namespace) -> Mapping[str, Any]:
         "statistics_sha256": _sha256_file(statistics_path),
         "acceptance_sha256": _sha256_file(acceptance),
         "model_config": config._asdict(),
+        "model_architecture": model_definition.identity(),
+        "initialization_checkpoint_sha256": (
+            None
+            if args.initialize_checkpoint is None
+            else _sha256_file(args.initialize_checkpoint.resolve())
+        ),
         "training_objective": args.objective,
         "state_objective": state_objective,
         "generation_plan_sha256": str(raw_manifest["plan_sha256"]),
@@ -368,6 +423,7 @@ def train_multistep(args: argparse.Namespace) -> Mapping[str, Any]:
         identity=identity,
         config=config,
         seed=args.seed,
+        model_definition=model_definition,
     )
     optimizer = _adam_init(parameters)
     weights = jnp.asarray(loss_weights_from_contract(metadata))
@@ -417,6 +473,7 @@ def train_multistep(args: argparse.Namespace) -> Mapping[str, Any]:
                     state_weights=state_weights,
                     state_delta_scale=state_delta_scale,
                     state_increment_loss_weight=state_increment_loss_weight,
+                    model_apply=model_definition.apply,
                 )
             parameters, optimizer, loss, gradient_norm = compiled_steps[key](
                 parameters,
@@ -459,6 +516,16 @@ def train_multistep(args: argparse.Namespace) -> Mapping[str, Any]:
         "seed": args.seed,
         "learning_rate": args.learning_rate,
         "objective": args.objective,
+        "model_architecture": model_definition.identity(),
+        "parameter_count": parameter_count(parameters),
+        "initialization_checkpoint": (
+            None
+            if args.initialize_checkpoint is None
+            else {
+                "path": str(args.initialize_checkpoint.resolve()),
+                "sha256": _sha256_file(args.initialize_checkpoint.resolve()),
+            }
+        ),
         "state_objective": state_objective,
         "state_loss_weight": args.state_loss_weight,
         "state_increment_loss_weight": state_increment_loss_weight,
@@ -481,6 +548,11 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--curriculum", default="1:64,3:64,7:64")
     parser.add_argument("--batch-size", type=int, default=4)
     parser.add_argument("--learning-rate", type=float, default=1.0e-4)
+    parser.add_argument(
+        "--model-architecture",
+        choices=MODEL_ARCHITECTURES,
+        default=CANONICAL_FLAT_V1,
+    )
     parser.add_argument(
         "--objective",
         choices=("canonical_multistep_v1", "process_increment_v2"),

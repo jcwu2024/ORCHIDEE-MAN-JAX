@@ -14,9 +14,6 @@ import jax
 import numpy as np
 
 from jax_orchidee.driver import orchestration as teacher
-from research.daily_coarse_graining.canonical_daily_model import (
-    canonical_model_apply,
-)
 from research.daily_coarse_graining.canonical_rollout import (
     _contract_finalize_fields,
     _load_neural_checkpoint,
@@ -296,13 +293,14 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
         reference_run_dir=entry["reference_run_dir"],
     )
     reentry_templates = teacher_reentry_templates(context)
-    checkpoint, model_config = _load_neural_checkpoint(
+    checkpoint, model_definition = _load_neural_checkpoint(
         checkpoint_path,
         dataset_path=dataset_path,
         statistics_path=statistics_path,
         acceptance_path=acceptance_path,
+        contract_metadata=metadata,
     )
-    model = jax.jit(canonical_model_apply)
+    model = jax.jit(model_definition.apply)
     parameters = jax.tree_util.tree_map(jax.numpy.asarray, checkpoint["parameters"])
 
     first_index = args.start_day - 1
@@ -362,7 +360,10 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
             statistics,
             representation,
         )
-        if inference.model_input.state.shape[-1] != model_config.state_width:
+        if (
+            inference.model_input.state.shape[-1]
+            != model_definition.config.state_width
+        ):
             raise ValueError("diagnostic state width does not match checkpoint")
         prediction = jax.device_get(model(parameters, inference.model_input))
         neural_fast = restore_fast_day_inference_prediction(
@@ -522,6 +523,7 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
             "training_objective": checkpoint["identity"].get(
                 "training_objective"
             ),
+            "model_architecture": model_definition.identity(),
         },
         "selection": {
             "landpoint_id": args.landpoint_id,

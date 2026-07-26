@@ -323,6 +323,7 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
         dataset_path=dataset,
         statistics_path=statistics_path,
         acceptance_path=acceptance,
+        contract_metadata=metadata,
     )
     parameters = jax.tree_util.tree_map(jax.numpy.asarray, checkpoint["parameters"])
     config_path = Path(plan["teacher_config"])

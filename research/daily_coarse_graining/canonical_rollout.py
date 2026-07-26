@@ -22,10 +22,7 @@ from jax_orchidee.sechiba.restart_io import (
     SECHIBA_RESTART_TO_SOURCE_NAMES,
 )
 from jax_orchidee.sechiba.restart_lifecycle import SECHIBA_FINALIZE_SOURCE_FIELDS
-from research.daily_coarse_graining.canonical_daily_model import (
-    CanonicalModelConfig,
-    canonical_model_apply,
-)
+from research.daily_coarse_graining.canonical_daily_model import CanonicalModelConfig
 from research.daily_coarse_graining.canonical_training import (
     fast_day_target_representation_from_contract,
     prepare_canonical_inference_batch,
@@ -45,6 +42,11 @@ from research.daily_coarse_graining.daily_markov_contract import (
     reconstruct_compiled_forcing_day,
     reconstruct_fast_day_target,
     reconstruct_state_fields,
+)
+from research.daily_coarse_graining.daily_model_architecture import (
+    build_daily_model_definition,
+    checkpoint_architecture_id,
+    verify_checkpoint_architecture,
 )
 from research.daily_coarse_graining.markov_dataset import (
     MarkovShardRef,
@@ -522,6 +524,7 @@ def _load_neural_checkpoint(
     dataset_path: Path,
     statistics_path: Path,
     acceptance_path: Path,
+    contract_metadata: Mapping[str, Any],
 ):
     with checkpoint_path.open("rb") as handle:
         checkpoint = pickle.load(handle)
@@ -539,7 +542,14 @@ def _load_neural_checkpoint(
     for name, value in expected.items():
         if identity.get(name) != value:
             raise ValueError(f"canonical checkpoint identity mismatch for {name}")
-    return checkpoint, CanonicalModelConfig(**identity["model_config"])
+    config = CanonicalModelConfig(**identity["model_config"])
+    definition = build_daily_model_definition(
+        checkpoint_architecture_id(identity),
+        config,
+        contract_metadata,
+    )
+    verify_checkpoint_architecture(identity, definition)
+    return checkpoint, definition
 
 
 def run_rollout(args) -> dict[str, Any]:
@@ -613,16 +623,17 @@ def run_rollout(args) -> dict[str, Any]:
     )
 
     model = None
-    model_config = None
+    model_definition = None
     checkpoint_identity = None
     if args.mode == "neural":
-        checkpoint, model_config = _load_neural_checkpoint(
+        checkpoint, model_definition = _load_neural_checkpoint(
             args.checkpoint.resolve(),
             dataset_path=dataset_path,
             statistics_path=statistics_path,
             acceptance_path=acceptance_path,
+            contract_metadata=metadata,
         )
-        model = jax.jit(canonical_model_apply)
+        model = jax.jit(model_definition.apply)
         parameters = jax.tree_util.tree_map(jax.numpy.asarray, checkpoint["parameters"])
         checkpoint_identity = checkpoint["identity"]
 
@@ -653,9 +664,10 @@ def run_rollout(args) -> dict[str, Any]:
                 representation,
             )
             if (
-                inference.model_input.state.shape[-1] != model_config.state_width
+                inference.model_input.state.shape[-1]
+                != model_definition.config.state_width
                 or inference.model_input.forcing_native.shape[-1]
-                != model_config.forcing_width
+                != model_definition.config.forcing_width
             ):
                 raise ValueError("rollout input width does not match checkpoint")
             prediction = model(parameters, inference.model_input)

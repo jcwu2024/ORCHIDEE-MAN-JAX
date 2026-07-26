@@ -249,6 +249,25 @@ classification for these carbon fields. The next bounded candidate must use
 process-aware state encoding, persistent structured condition modulation, and
 the promoted stock-domain projection before any spatial-data pilot.
 
+That bounded architecture is now implemented as
+`structured_process_film_v1`; see
+[`structured_conditioned_architecture_20260726.md`](structured_conditioned_architecture_20260726.md).
+It wraps the complete accepted flat trunk with eight source-derived state
+adapters and parameter/static/annual condition FiLM at both fusion layers.
+Zero initialization reproduces the flat checkpoint elementwise on the real v5
+dimensions. Architecture identity, group hash, checkpoint upgrade, training,
+rollout, condition permutation, and counterfactual diagnostics are wired and
+the local forward/reverse gates pass.
+
+The next operation is a matched two-arm GPU continuation A/B. Both arms start
+from the accepted `canonical-v5-curriculum-gln01-23a1851/multistep/
+best_checkpoint.pkl`, use the same seed and `1:64,3:64,7:64` batches, and keep
+`canonical_multistep_v1`; one arm remains `canonical_flat_v1`, the other uses
+`structured_process_film_v1`. Evaluate both on the unchanged four-way rollout
+matrix and condition-permutation diagnostic. Do not treat extra optimization
+steps as an architecture improvement, inspect sealed test data, or generate a
+spatial pilot before this A/B is classified.
+
 ## Accepted Historical Production Run
 
 The bounded architecture-development dataset is frozen by

@@ -9,7 +9,6 @@ import jax.numpy as jnp
 import numpy as np
 
 from research.daily_coarse_graining.canonical_daily_model import (
-    CanonicalModelParameters,
     canonical_model_apply,
     masked_huber_loss,
 )
@@ -67,7 +66,7 @@ RetainedTailTransition = Callable[
 
 
 def canonical_pushforward_prefix(
-    parameters: CanonicalModelParameters,
+    parameters: Any,
     initial_state,
     initial_discrete_state: Mapping[str, Any],
     sequence: CanonicalMultistepSequence,
@@ -75,6 +74,7 @@ def canonical_pushforward_prefix(
     statistics: TrainingStatistics,
     representation: FastDayTargetRepresentation,
     retained_tail_transition: RetainedTailTransition,
+    model_apply: Callable = canonical_model_apply,
 ) -> CanonicalRolloutCarry:
     """Roll out a model prefix and detach the terminal state from gradients."""
 
@@ -84,7 +84,7 @@ def canonical_pushforward_prefix(
             statistics,
             representation,
         )
-        prediction = canonical_model_apply(parameters, inference.model_input)
+        prediction = model_apply(parameters, inference.model_input)
         physical_fast_day = restore_fast_day_inference_prediction_compiled(
             prediction.normalized_fast_day_target,
             prediction.dynamic_undefined_flip_logits,
@@ -167,7 +167,7 @@ def _singleton_batch(day, state):
 
 
 def canonical_multistep_rollout(
-    parameters: CanonicalModelParameters,
+    parameters: Any,
     initial_state,
     initial_discrete_state: Mapping[str, Any],
     sequence: CanonicalMultistepSequence,
@@ -181,6 +181,7 @@ def canonical_multistep_rollout(
     state_loss_weight: float = 1.0,
     state_increment_loss_weight: float = 0.0,
     undefined_loss_weight: float = 0.1,
+    model_apply: Callable = canonical_model_apply,
 ) -> CanonicalMultistepResult:
     """Roll out a 1/3/7-day chain and differentiate through every day boundary.
 
@@ -214,7 +215,7 @@ def canonical_multistep_rollout(
             statistics,
             representation,
         )
-        prediction = canonical_model_apply(parameters, inference.model_input)
+        prediction = model_apply(parameters, inference.model_input)
         physical_fast_day = restore_fast_day_inference_prediction_compiled(
             prediction.normalized_fast_day_target,
             prediction.dynamic_undefined_flip_logits,
@@ -330,7 +331,7 @@ def canonical_multistep_rollout(
 
 
 def canonical_multistep_batch_loss(
-    parameters: CanonicalModelParameters,
+    parameters: Any,
     initial_states,
     initial_discrete_states: Mapping[str, Any],
     sequences: CanonicalMultistepSequence,
@@ -344,6 +345,7 @@ def canonical_multistep_batch_loss(
     state_loss_weight: float = 1.0,
     state_increment_loss_weight: float = 0.0,
     undefined_loss_weight: float = 0.1,
+    model_apply: Callable = canonical_model_apply,
 ):
     """Average recursive loss for a same-runtime batch of trajectory windows."""
 
@@ -362,6 +364,7 @@ def canonical_multistep_batch_loss(
             state_loss_weight=state_loss_weight,
             state_increment_loss_weight=state_increment_loss_weight,
             undefined_loss_weight=undefined_loss_weight,
+            model_apply=model_apply,
         ).loss
 
     losses = jax.vmap(one)(

@@ -25,6 +25,7 @@ PLAN=${PLAN:?set PLAN to the hash-bound Teacher generation plan}
 OUTPUT_DIR=${OUTPUT_DIR:?set OUTPUT_DIR to a new smoke directory}
 INITIALIZE_CHECKPOINT=${INITIALIZE_CHECKPOINT:-}
 MULTISTEP_OBJECTIVE=${MULTISTEP_OBJECTIVE:-canonical_multistep_v1}
+MODEL_ARCHITECTURE=${MODEL_ARCHITECTURE:-canonical_flat_v1}
 STATE_INCREMENT_LOSS_WEIGHT=${STATE_INCREMENT_LOSS_WEIGHT:-1.0}
 STATE_DELTA_FLOOR_RATIO=${STATE_DELTA_FLOOR_RATIO:-0.001}
 
@@ -71,6 +72,7 @@ TRAIN_ARGS=(
   --batch-size 1
   --learning-rate 0.0001
   --objective "$MULTISTEP_OBJECTIVE"
+  --model-architecture "$MODEL_ARCHITECTURE"
   --state-increment-loss-weight "$STATE_INCREMENT_LOSS_WEIGHT"
   --state-delta-floor-ratio "$STATE_DELTA_FLOOR_RATIO"
   --seed 20260724

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import pickle
 
 import jax
 import jax.numpy as jnp
@@ -16,15 +17,25 @@ from research.daily_coarse_graining.canonical_multistep import (
     CanonicalMultistepSequence,
 )
 from research.daily_coarse_graining.canonical_multistep_training_run import (
+    _load_initial_parameters,
     _load_plan,
     _make_train_step,
     build_parser,
     parse_curriculum,
+    train_multistep,
 )
 from research.daily_coarse_graining.canonical_training import (
     FastDayTargetRepresentation,
 )
-from research.daily_coarse_graining.canonical_training_run import _adam_init
+from research.daily_coarse_graining.canonical_training_run import (
+    CHECKPOINT_SCHEMA_VERSION,
+    _adam_init,
+)
+from research.daily_coarse_graining.daily_model_architecture import (
+    CANONICAL_FLAT_V1,
+    STRUCTURED_PROCESS_FILM_V1,
+    build_daily_model_definition,
+)
 from research.daily_coarse_graining.markov_dataset import (
     FiniteColumnStatistics,
     TrainingStatistics,
@@ -87,9 +98,96 @@ def test_multistep_cli_preserves_v1_default_and_accepts_v2_objective():
     candidate = parser.parse_args(required + ["--objective", "process_increment_v2"])
 
     assert baseline.objective == "canonical_multistep_v1"
+    assert baseline.model_architecture == CANONICAL_FLAT_V1
     assert candidate.objective == "process_increment_v2"
     assert candidate.state_increment_loss_weight == 1.0
     assert candidate.state_delta_floor_ratio == 1.0e-3
+
+
+def test_structured_candidate_requires_a_frozen_flat_initialization():
+    with pytest.raises(ValueError, match="requires --initialize-checkpoint"):
+        train_multistep(
+            type(
+                "Args",
+                (),
+                {
+                    "model_architecture": STRUCTURED_PROCESS_FILM_V1,
+                    "initialize_checkpoint": None,
+                },
+            )()
+        )
+
+
+def test_flat_checkpoint_upgrades_to_zero_residual_structured_parameters(tmp_path):
+    config = CanonicalModelConfig(8, 1, 1, 1, 1, 2, 1, 2, 2, 2, 3)
+    metadata = {
+        "continuous_state_width": 8,
+        "state_leaves": [
+            {"component": component, "path": [field], "start": i, "stop": i + 1}
+            for i, (component, field) in enumerate(
+                (
+                    ("slowproc_stomate_previous_step_state", "gpp_daily"),
+                    ("slowproc_stomate_previous_step_state", "biomass"),
+                    ("slowproc_stomate_previous_step_state", "litter"),
+                    ("slowproc_stomate_previous_step_state", "DOC"),
+                    ("slowproc_stomate_previous_step_state", "herbivores"),
+                    ("hydrol_previous_step_state", "soil_moisture"),
+                    ("thermosoil_previous_step_state", "soil_temperature"),
+                    ("diffuco_previous_step_state", "rveget"),
+                )
+            )
+        ],
+    }
+    definition = build_daily_model_definition(
+        STRUCTURED_PROCESS_FILM_V1,
+        config,
+        metadata,
+    )
+    identity = {
+        "dataset_id": "dataset",
+        "teacher_git_head": "teacher",
+        "markov_contract_sha256": "contract",
+        "statistics_sha256": "statistics",
+        "acceptance_sha256": "acceptance",
+        "model_config": config._asdict(),
+        "model_architecture": definition.identity(),
+    }
+    canonical = initialize_canonical_model(config, seed=17)
+    checkpoint = tmp_path / "flat.pkl"
+    checkpoint.write_bytes(
+        pickle.dumps(
+            {
+                "schema_version": CHECKPOINT_SCHEMA_VERSION,
+                "identity": {
+                    key: value
+                    for key, value in identity.items()
+                    if key != "model_architecture"
+                },
+                "parameters": jax.device_get(canonical),
+            }
+        )
+    )
+
+    upgraded = _load_initial_parameters(
+        checkpoint,
+        identity=identity,
+        config=config,
+        seed=17,
+        model_definition=definition,
+    )
+
+    assert all(
+        np.array_equal(np.asarray(actual), np.asarray(expected))
+        for actual, expected in zip(
+            jax.tree_util.tree_leaves(upgraded.canonical),
+            jax.tree_util.tree_leaves(canonical),
+            strict=True,
+        )
+    )
+    assert all(
+        np.all(np.asarray(value.weight) == 0.0)
+        for value in upgraded.state_group_outputs
+    )
 
 
 def test_load_plan_uses_canonical_json_hash_not_file_formatting(tmp_path):

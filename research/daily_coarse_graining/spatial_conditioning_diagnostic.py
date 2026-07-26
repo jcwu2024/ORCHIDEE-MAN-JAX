@@ -338,8 +338,9 @@ def build_condition_use_report(
     weights: np.ndarray,
     sample_landpoints: Sequence[str],
     split_by_id: Mapping[str, str],
+    model_apply=canonical_model_apply,
 ) -> dict[str, Any]:
-    model = jax.jit(canonical_model_apply)
+    model = jax.jit(model_apply)
     full = np.asarray(
         jax.device_get(model(parameters, model_batch).normalized_fast_day_target)
     )
@@ -460,13 +461,14 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
     representation = fast_day_target_representation_from_contract(metadata)
     statistics = load_training_statistics(statistics_path, index=index)
     prepared = prepare_canonical_batch(raw_batch, statistics, representation)
-    checkpoint, model_config = _load_neural_checkpoint(
+    checkpoint, model_definition = _load_neural_checkpoint(
         checkpoint_path,
         dataset_path=dataset,
         statistics_path=statistics_path,
         acceptance_path=acceptance,
+        contract_metadata=metadata,
     )
-    if prepared.model_input.state.shape[-1] != model_config.state_width:
+    if prepared.model_input.state.shape[-1] != model_definition.config.state_width:
         raise ValueError("diagnostic state width does not match checkpoint")
     parameters = jax.tree_util.tree_map(jax.numpy.asarray, checkpoint["parameters"])
     condition_use = build_condition_use_report(
@@ -477,6 +479,7 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
         weights=loss_weights_from_contract(metadata),
         sample_landpoints=sample_landpoints,
         split_by_id=split_by_id,
+        model_apply=model_definition.apply,
     )
     classification = classify_diagnostic(coverage, condition_use)
     return {
@@ -492,6 +495,7 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
             "path": str(checkpoint_path),
             "sha256": _sha256_file(checkpoint_path),
             "training_objective": checkpoint["identity"].get("training_objective"),
+            "model_architecture": model_definition.identity(),
         },
         "sampling": {
             "keys": [{"year": year, "day": day} for year, day in sample_keys],
