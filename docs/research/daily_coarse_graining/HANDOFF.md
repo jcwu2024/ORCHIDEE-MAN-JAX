@@ -322,6 +322,16 @@ commit. Preserve it as admission evidence. Build a fresh canonical plan/output
 root at the accepted post-fix commit before starting production waves; source
 assets do not need to be retransferred.
 
+That post-fix admission passed on 2026-07-27. Array task `14390213_0` ran from
+clean commit `7397d1e` and canonical plan SHA256
+`26c90c58f9a099e485c9cd4779b936e2f83d525f6f2b7a4908813b2c4fe56475`.
+It completed with Slurm state `COMPLETED`, exit code zero, and elapsed time
+42:43. The entry took 2381.0 seconds and reached about 29.5 GiB peak process
+RSS. Its NPZ SHA256 is exactly the same as the original probe,
+`25d704e7315f5fc99c8b6f551f8c90ff70f9b6ebb0d6d66fec96696d412ee363`,
+confirming that the orchestration-only fix did not change the scientific
+arrays. Full production must resume this `7397d1e` output root.
+
 ## Accepted Historical Production Run
 
 The bounded architecture-development dataset is frozen by
@@ -424,12 +434,12 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-Freeze the post-probe generation commit, rebuild the canonical 669-point plan
-with a fresh output root, and repeat the one-shard admission only to bind the
-new provenance identity. After it passes, request the first five-worker
-bounded production wave. Do not start new architecture experiments, inspect
-sealed test outputs, or create another small spatial pilot while baseline
-Teacher production is in progress.
+Request and run the first five-worker bounded production wave from commit
+`7397d1e`, using plan
+`runtime/plans/teacher_669_1961_2010_v5_7397d1e.json` and the matching output
+root. Resume the existing worker-0 shard; do not regenerate it. Do not start
+new architecture experiments, inspect sealed test outputs, or create another
+small spatial pilot while baseline Teacher production is in progress.
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).

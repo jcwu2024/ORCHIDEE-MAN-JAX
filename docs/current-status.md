@@ -209,6 +209,12 @@ Current scientific status:
   semantics now has a regression fix. The `07fe2f9` probe remains immutable
   admission evidence; full production must use one fresh output root bound to
   the accepted post-fix commit rather than mixing commit identities;
+- the post-fix admission at commit `7397d1e` passed: Slurm task `14390213_0`
+  completed with exit code zero in 42:43, the entry took 2381.0 seconds and
+  reached about 29.5 GiB peak process RSS. Its NPZ SHA256 exactly matches the
+  original probe, proving the orchestration-only change did not alter
+  scientific arrays. This is the canonical output root that full bounded
+  production must resume;
 - the provisional seven-day free-rollout gate of `<=0.29` therefore did not
   pass. No v5 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
@@ -302,8 +308,6 @@ Markov contract are valid. Its operational evidence is recorded in
 
 ## Next Bounded Milestone
 
-Freeze the post-probe Teacher-generation commit, rebuild the canonical
-669-point plan with a fresh output root, and repeat one real shard to bind that
-provenance identity. After admission, generate the full baseline in bounded
-five-worker CPU waves and run the final 33,450-shard data-product gate before
-reopening neural architecture or objective work.
+Generate the full 669-point baseline from the admitted `7397d1e` plan/output
+root in bounded five-worker CPU waves. Then run the final 33,450-shard
+data-product gate before reopening neural architecture or objective work.
