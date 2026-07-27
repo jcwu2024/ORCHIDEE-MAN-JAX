@@ -221,12 +221,12 @@ Current scientific status:
   `7397d1e`. Five-minute within-node startup staggering reduces overlapping
   cold-compilation memory peaks. The validated `w100` plan SHA256 is
   `9ba2caf5...5fa17e`; 69 workers own 350 point-years each and 31 own 300 each;
-- the two-node, ten-worker admission job `14391204` exposed a Slurm launcher
-  defect rather than a Teacher failure. Worker 0 completed one hash-matching
-  shard and exited zero; default `srun` first-task wait semantics then killed
-  the nine staggered ranks. The launcher now uses unlimited `--wait=0`.
-  Recover the nine terminal-job locks and repeat the bounded gate before
-  expanding to 100 workers;
+- the first two-node admission job `14391204` exposed default `srun`
+  first-task wait semantics, not a Teacher failure. The explicit `--wait=0`
+  fix was then accepted by rerun `14391639`: all ten ranks exited zero in
+  55:46, all 11 accumulated point-years and hashes passed, no active lock or
+  manifest error remained, and worker 0 closed the 1961-to-1962 restart chain.
+  Cold workers peaked near 31 GB RSS and the resumed worker near 26.2 GB;
 - production recovery and consumption are prepared: a progress auditor
   identifies running/partial/missing/invalid workers, arbitrary worker IDs can
   be resumed without changing the canonical 100-worker assignment, and final
@@ -338,9 +338,12 @@ Markov contract are valid. Its operational evidence is recorded in
 
 ## Next Bounded Milestone
 
-Transfer the `srun --wait=0` launcher fix, recover only the nine stale locks
-left by terminal job `14391204`, and repeat the bounded two-node admission. If
-all ten ranks pass, complete the full 669-point baseline with 20 `cnall` nodes
-and 100 one-CPU workers against the same output root. Use sparse recovery only
-for failed worker IDs, then run the fail-closed 33,450-shard finalization
-pipeline. No model may train on the partial production dataset.
+Measure consecutive same-process point-year throughput with one bounded
+worker before freezing the full-production wall time and cost. The accepted
+admission intentionally ran only one new entry per process, so its cold
+process timings cannot establish the steady-state rate of a worker that will
+run 300-350 entries. After that calibration, complete the full 669-point
+baseline with 20 `cnall` nodes and 100 one-CPU workers against the same output
+root. Use sparse recovery only for failed worker IDs, then run the fail-closed
+33,450-shard finalization pipeline. No model may train on the partial
+production dataset.

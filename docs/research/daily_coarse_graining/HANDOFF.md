@@ -365,6 +365,23 @@ recover only the nine terminal-job locks through the strict documented
 workflow and transfer/fast-forward the launcher fix. Preserve worker 0's
 accepted shard.
 
+The corrected admission `14391639` subsequently passed on 2026-07-27. Slurm
+reported `COMPLETED`, exit code zero, and elapsed time 55:46. All ten ranks
+exited zero; the hash-verifying progress audit found 11 valid point-years,
+ten partial worker manifests, 90 workers not yet started, no active locks, and
+no errors. Worker 0 reused its accepted 1961 shard and completed 1962, closing
+the first restart chain. The other nine ranks completed their 1961 cold
+starts. Cold-process peak RSS was about 31 GB and the resumed worker peaked at
+26,190,848 KiB. The last staggered worker exited normally after earlier ranks,
+which directly accepts the `srun --wait=0` fix.
+
+Do not derive the full-production cost from these one-new-entry process
+timings. Worker 0's resumed entry still started a fresh Python/JAX process and
+compiled its in-memory transition cache. Full workers run 300-350 entries in
+one process. First measure a small consecutive-entry worker wave so cold,
+second-year, and steady-state point-year timings can be separated, then freeze
+the full wall time and worst-case charge.
+
 Production control and consumption preparation is complete:
 
 - `teacher_shards progress` audits all 100 worker directories and lists only
@@ -483,12 +500,12 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-Transfer and validate the explicit `srun --wait=0` launcher fix, recover the
-nine stale locks left by terminal job `14391204`, and rerun the same bounded
-two-node admission against the same output root. After all ten ranks pass,
-submit the complete 20-node, 100-worker job so the accepted shards are reused.
-Do not train on the partial production dataset, inspect sealed test outputs,
-or create another small spatial pilot.
+Run one bounded consecutive-entry throughput calibration against an accepted
+partial worker, preserving all existing shards. Use its within-process entry
+timings to freeze the 20-node, 100-worker wall time and cost before requesting
+full-production approval. The full run must reuse the same output root and
+accepted shards. Do not train on the partial production dataset, inspect
+sealed test outputs, or create another small spatial pilot.
 
 The architecture and rollout-stability decision is frozen in
 [`long_rollout_architecture_review_20260727.md`](long_rollout_architecture_review_20260727.md).
