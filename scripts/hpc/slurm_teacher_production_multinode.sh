@@ -16,7 +16,7 @@ set -euo pipefail
 
 REPO=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 RUNTIME_ROOT=$REPO/runtime
-LAUNCHER_ROOT=$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)
+LAUNCHER_ROOT=${LAUNCHER_ROOT:-${SLURM_SUBMIT_DIR:?SLURM_SUBMIT_DIR is required}}
 TASK_SCRIPT=$LAUNCHER_ROOT/scripts/hpc/run_teacher_production_worker_task.sh
 
 : "${WORKTREE:?WORKTREE must identify the admitted Teacher worktree}"
@@ -39,7 +39,7 @@ fi
 test -f "$TASK_SCRIPT"
 mkdir -p "$RUNTIME_ROOT/logs"
 
-echo "launcher_git_head=$(git -C "$LAUNCHER_ROOT" rev-parse HEAD)"
+echo "launcher_git_head=$(cd "$LAUNCHER_ROOT" && git rev-parse HEAD)"
 echo "teacher_worktree=$WORKTREE expected_teacher_git_head=$TEACHER_EXPECTED_GIT_HEAD"
 echo "job_id=$SLURM_JOB_ID nodes=$SLURM_JOB_NUM_NODES tasks=$SLURM_NTASKS worker_offset=$TEACHER_WORKER_OFFSET"
 echo "plan=$TEACHER_PLAN workers_per_node=${SLURM_NTASKS_PER_NODE:-unknown}"

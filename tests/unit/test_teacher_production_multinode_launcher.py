@@ -28,6 +28,9 @@ def test_multinode_launcher_has_safe_admission_defaults():
     assert "#SBATCH --time=01:30:00" in text
     assert "--kill-on-bad-exit=0" in text
     assert "teacher_${SLURM_JOB_ID}_worker_%t.txt" in text
+    assert "SLURM_SUBMIT_DIR:?SLURM_SUBMIT_DIR is required" in text
+    assert 'git -C "$LAUNCHER_ROOT"' not in text
+    assert 'cd "$LAUNCHER_ROOT" && git rev-parse HEAD' in text
 
 
 def test_multinode_worker_maps_global_rank_and_staggers_by_local_rank():
