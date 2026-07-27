@@ -15,7 +15,16 @@ PYTHON=$REPO/.venvs/orcjax_cpu/bin/python
 
 TEACHER_WORKER_OFFSET=${TEACHER_WORKER_OFFSET:-0}
 TEACHER_STARTUP_STAGGER_SECONDS=${TEACHER_STARTUP_STAGGER_SECONDS:-0}
-WORKER_INDEX=$((TEACHER_WORKER_OFFSET + SLURM_PROCID))
+if [[ -n "${TEACHER_WORKER_INDICES:-}" ]]; then
+  IFS=',' read -r -a WORKER_INDICES <<< "$TEACHER_WORKER_INDICES"
+  if (( SLURM_PROCID >= ${#WORKER_INDICES[@]} )); then
+    echo "SLURM_PROCID is outside TEACHER_WORKER_INDICES" >&2
+    exit 2
+  fi
+  WORKER_INDEX=${WORKER_INDICES[$SLURM_PROCID]}
+else
+  WORKER_INDEX=$((TEACHER_WORKER_OFFSET + SLURM_PROCID))
+fi
 
 case "$TEACHER_PLAN" in
   "$RUNTIME_ROOT"/*) ;;
@@ -31,6 +40,10 @@ if ! [[ "$TEACHER_WORKER_COUNT" =~ ^[1-9][0-9]*$ ]]; then
 fi
 if ! [[ "$TEACHER_WORKER_OFFSET" =~ ^[0-9]+$ ]]; then
   echo "TEACHER_WORKER_OFFSET must be a non-negative integer" >&2
+  exit 2
+fi
+if ! [[ "$WORKER_INDEX" =~ ^[0-9]+$ ]]; then
+  echo "resolved worker index must be a non-negative integer" >&2
   exit 2
 fi
 if ! [[ "$TEACHER_STARTUP_STAGGER_SECONDS" =~ ^[0-9]+$ ]]; then

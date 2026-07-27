@@ -221,6 +221,21 @@ Current scientific status:
   `7397d1e`. Five-minute within-node startup staggering reduces overlapping
   cold-compilation memory peaks. The validated `w100` plan SHA256 is
   `9ba2caf5...5fa17e`; 69 workers own 350 point-years each and 31 own 300 each;
+- the two-node, ten-worker admission job `14391204` is the active bounded gate
+  for that topology. It runs one new point-year per worker and must not be
+  cancelled, resubmitted, or expanded until its ten manifests are accepted;
+- production recovery and consumption are prepared: a progress auditor
+  identifies running/partial/missing/invalid workers, arbitrary worker IDs can
+  be resumed without changing the canonical 100-worker assignment, and final
+  aggregation now requires complete worker inventories, no active lock, all
+  shard/metadata/checkpoint hashes, and exact checkpoint chains;
+- the complete-data training protocol is frozen at
+  `manifests/coarse_graining/daily_teacher_669_training_protocol.json`.
+  It specifies exact-once balanced landpoint/year/day streaming with at most
+  eight open shards, train/train-only normalization, four non-test
+  model-selection slices, sealed final testing, and one-step through
+  complete-chain promotion gates. A local real-shard streaming preflight
+  passed; it is an I/O gate, not neural accuracy evidence;
 - the provisional seven-day free-rollout gate of `<=0.29` therefore did not
   pass. No v5 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
@@ -314,7 +329,9 @@ Markov contract are valid. Its operational evidence is recorded in
 
 ## Next Bounded Milestone
 
-Run the two-node, ten-worker admission for the `w100` plan, then complete the
-full 669-point baseline with 20 `cnall` nodes and 100 one-CPU workers. Run the
-final 33,450-shard data-product gate before reopening neural architecture or
-objective work.
+Accept the running two-node, ten-worker admission `14391204`. If all ten ranks
+pass, complete the full 669-point baseline with 20 `cnall` nodes and 100
+one-CPU workers against the same output root. Use sparse recovery only for
+failed worker IDs, then run the fail-closed 33,450-shard finalization pipeline.
+Literature review and architecture design may proceed while Teacher production
+runs, but no model may train on the partial production dataset.

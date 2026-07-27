@@ -349,6 +349,28 @@ It assigns 350 point-years to workers 0-68 and 300 point-years to workers
 ten-worker, one-new-entry-per-worker admission. The admitted five-worker
 output remains evidence and must not be mixed into the 100-worker aggregate.
 
+That bounded admission is currently job `14391204` on `cnall`: ten one-CPU
+ranks, five per node, `TEACHER_MAX_NEW_ENTRIES=1`, wall limit 01:30, and
+worst-case charge CNY 1.05. It was confirmed running with correct global
+worker indices, local-rank startup staggering, isolated logs, and isolated XLA
+caches. Do not cancel or resubmit it; accept its outputs when it finishes.
+
+Production control and consumption preparation is complete:
+
+- `teacher_shards progress` audits all 100 worker directories and lists only
+  inactive partial/missing worker IDs as sparse recovery candidates;
+- `TEACHER_WORKER_INDICES=3,27,81` maps three Slurm ranks to exactly those
+  canonical workers; duplicate or out-of-range lists fail before launch;
+- full aggregation requires v3 worker manifests whose assigned, completed,
+  and shard inventories agree, no generation lock, one Teacher commit, all
+  hashes, and exact checkpoint chains;
+- `slurm_teacher_production_finalize.sh` gates aggregate, complete 669
+  admission, train-only statistics, target audit, and finite model smoke;
+- `daily_teacher_669_training_protocol.json` freezes balanced streaming,
+  split usage, sealed final testing, and rollout promotion gates;
+- the bounded reader preflight passed on a real local Teacher shard without
+  training a network.
+
 ## Accepted Historical Production Run
 
 The bounded architecture-development dataset is frozen by
@@ -451,11 +473,12 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-Request and run the two-node, ten-worker `cnall` admission for the `w100`
-plan. After all ten ranks pass, submit the complete 20-node, 100-worker job
-against the same output root so those ten shards are reused. Do not start new
-architecture experiments, inspect sealed test outputs, or create another
-small spatial pilot while baseline Teacher production is in progress.
+Accept the running two-node, ten-worker `cnall` admission `14391204`. After all
+ten ranks pass, submit the complete 20-node, 100-worker job against the same
+output root so those ten shards are reused. While production runs, proceed
+with literature-backed architecture and rollout-stability design, but do not
+train on the partial production dataset, inspect sealed test outputs, or
+create another small spatial pilot.
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).

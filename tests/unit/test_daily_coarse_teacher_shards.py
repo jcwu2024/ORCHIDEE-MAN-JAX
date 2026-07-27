@@ -331,6 +331,50 @@ def test_bounded_generate_cli_succeeds_with_an_incomplete_resumable_worker(
     assert exit_code == 0
 
 
+def test_progress_audit_reports_partial_running_and_recovery_workers(tmp_path):
+    entries = [
+        _entry(tmp_path, "001.0-071.0", 1961),
+        _entry(tmp_path, "003.0-071.0", 1961),
+    ]
+    plan = shards.load_plan(_write_plan(tmp_path, entries))
+    output_root = tmp_path / "dataset"
+    first_root = output_root / "workers" / "worker-000-of-002"
+    first_root.mkdir(parents=True)
+    shards._atomic_json(
+        first_root / "manifest.json",
+        {
+            "schema_version": shards.MANIFEST_SCHEMA_VERSION,
+            "plan_sha256": plan.plan_sha256,
+            "teacher_git_head": "teacher",
+            "worker_index": 0,
+            "worker_count": 2,
+            "worker_assignment_strategy": shards.WORKER_ASSIGNMENT_STRATEGY,
+            "assigned_entries": ["001.0-071.0:1961"],
+            "completed_entries": [],
+            "complete": False,
+            "shards": [],
+        },
+    )
+    second_root = output_root / "workers" / "worker-001-of-002"
+    second_root.mkdir(parents=True)
+    (second_root / "generation.lock").write_text(
+        json.dumps({"pid": 1, "host": "node", "slurm_job_id": "job"}),
+        encoding="utf-8",
+    )
+
+    report = shards.audit_worker_progress(
+        plan,
+        output_root=output_root,
+        worker_count=2,
+    )
+
+    assert report["status_counts"] == {"partial": 1, "running": 1}
+    assert report["recovery_candidate_indices"] == [0]
+    assert report["active_worker_indices"] == [1]
+    assert report["remaining_entries"] == 2
+    assert not report["complete"]
+
+
 def test_generation_rejects_an_uncommitted_teacher_identity(monkeypatch):
     def output(command, **_kwargs):
         return "abc123\n" if command[1:3] == ["rev-parse", "HEAD"] else " M teacher.py\n"
@@ -547,6 +591,9 @@ def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
             "worker_index": 0,
             "worker_count": 1,
             "worker_assignment_strategy": shards.WORKER_ASSIGNMENT_STRATEGY,
+            "assigned_entries": ["001.0-071.0:1961"],
+            "completed_entries": ["001.0-071.0:1961"],
+            "complete": True,
             "shards": [shard],
         },
     )
@@ -561,6 +608,11 @@ def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
     worker_manifest_path = worker_root / "manifest.json"
     worker_manifest = json.loads(worker_manifest_path.read_text(encoding="utf-8"))
     worker_manifest["plan_sha256"] = subset_plan.plan_sha256
+    worker_manifest["assigned_entries"] = [
+        "001.0-071.0:1961",
+        "003.0-071.0:1961",
+    ]
+    worker_manifest["complete"] = False
     shards._atomic_json(worker_manifest_path, worker_manifest)
     subset = shards.aggregate_workers(
         subset_plan,
@@ -575,7 +627,7 @@ def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
     assert subset["landpoint_count"] == 1
     assert subset["derived_subset"]["excluded_landpoints"] == ["003.0-071.0"]
     assert (output_root / "dataset_manifest_subset.json").is_file()
-    with pytest.raises(ValueError, match="dataset is incomplete"):
+    with pytest.raises(ValueError, match="worker is not complete"):
         shards.aggregate_workers(
             subset_plan,
             output_root=output_root,
@@ -583,6 +635,8 @@ def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
         )
 
     worker_manifest["plan_sha256"] = plan.plan_sha256
+    worker_manifest["assigned_entries"] = ["001.0-071.0:1961"]
+    worker_manifest["complete"] = True
     shards._atomic_json(worker_manifest_path, worker_manifest)
 
     shards._atomic_json(
@@ -601,9 +655,13 @@ def test_aggregate_requires_complete_hash_verified_worker_outputs(tmp_path):
         plan,
         output_root=output_root,
         worker_count=1,
+        included_landpoints=frozenset({"001.0-071.0"}),
+        dataset_id="legacy-subset",
+        manifest_name="legacy-subset.json",
     )
     assert legacy_result["schema_version"] == shards.DATASET_SCHEMA_VERSION
 
+    shards._atomic_json(worker_root / "manifest.json", worker_manifest)
     shard_path.write_bytes(b"corrupt")
     with pytest.raises(ValueError, match="shard hash mismatch"):
         shards.aggregate_workers(plan, output_root=output_root, worker_count=1)

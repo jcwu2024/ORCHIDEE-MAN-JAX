@@ -58,6 +58,19 @@ python -m research.daily_coarse_graining.teacher_shards generate \
   --worker-count 8
 ```
 
+Audit an incomplete or running production directory without changing it:
+
+```bash
+python -m research.daily_coarse_graining.teacher_shards progress \
+  --plan "$TEACHER_PLAN" --worker-count 100 \
+  --report "$RUNTIME_ROOT/outputs/teacher_progress.json"
+```
+
+The report distinguishes `complete`, `running`, `partial`, `missing`, and
+`invalid` workers. It records the next unfinished entry, active lock owner,
+and sparse recovery candidates. Add `--verify-hashes` for a slow integrity
+pass or `--require-complete` when the command is used as a finalization gate.
+
 After every worker is complete, verify hashes and create the dataset manifest:
 
 ```bash
@@ -158,12 +171,27 @@ point-year shards and their frozen spatial/temporal assignments; a smaller
 contract-evidence dataset cannot satisfy the final production gate. See
 [`teacher_669_data_product_admission_20260726.md`](teacher_669_data_product_admission_20260726.md).
 
+The full production policy additionally binds the exact Teacher commit
+`7397d1e...` and generation-plan SHA256 `9ba2caf5...`. The prepared
+`scripts/hpc/slurm_teacher_production_finalize.sh` runs the fail-closed
+sequence: lightweight complete-worker audit, hash-verifying aggregate,
+`--require-production-dataset` admission, train/train-only statistics, target
+representation audit, and finite forward/loss/gradient smoke. Do not run later
+steps independently after an earlier failure.
+
 If Slurm kills a worker at its wall-time limit, the exclusive lock may remain
 because the process cannot execute its cleanup handler. Confirm that the owner
 job is terminal, read the recorded host/PID/job identity, and use the explicit
 `teacher_shards recover-lock` command before resubmission. Recovery requires an
 exact owner match and preserves the stale lock as an audit file; never delete
 or overwrite `generation.lock` blindly.
+
+After stale locks are explicitly recovered, arbitrary failed workers can be
+resumed without rerunning all 100. Set `TEACHER_WORKER_INDICES` to a
+comma-separated list such as `3,27,81` and allocate exactly three Slurm tasks
+to `slurm_teacher_production_multinode.sh`. Each task retains the canonical
+`worker_count=100` identity and reuses completed entries in its own worker
+directory. Duplicate, malformed, and out-of-range indices fail before `srun`.
 
 ## Stored arrays
 
@@ -224,6 +252,30 @@ use mean zero and scale one; columns with one finite value use that value and
 scale one. `normalize_finite` maps undefined entries to normalized zero and
 returns their explicit boolean mask. Validation and test shards must never
 contribute normalization statistics.
+
+The complete-data consumer policy is frozen in
+`manifests/coarse_graining/daily_teacher_669_training_protocol.json`.
+`production_training_protocol.balanced_samples` uses every selected
+landpoint-year-day once per epoch while round-robining landpoints and keeping
+at most eight decompressed shards open. Landpoint identity remains audit
+metadata, never a model feature. Model selection uses four non-test slices:
+train-point/validation-year, validation-point/train-year, their joint cell,
+and complete validation-landpoint chains through 2007. Test landpoints and
+2008-2010 remain sealed until the architecture and training protocol freeze.
+
+Before full training, run a bounded reader preflight on admitted shards:
+
+```bash
+python -m research.daily_coarse_graining.production_training_protocol preflight \
+  --dataset "$DATASET_ROOT/dataset_manifest.json" \
+  --protocol manifests/coarse_graining/daily_teacher_669_training_protocol.json \
+  --output "$ACCEPTANCE_ROOT/streaming_io_preflight.json" \
+  --max-shards 8 --batch-size 32 --samples-per-shard 32
+```
+
+It verifies input hashes and reports compressed bytes, estimated decompressed
+pool bytes, collated batch bytes, throughput, and process peak RSS where the
+operating system exposes it. It does not initialize or train a neural model.
 
 After `teacher_shards aggregate` succeeds, use the single acceptance command
 instead of running statistics and representation checks independently:

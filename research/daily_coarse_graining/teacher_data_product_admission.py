@@ -146,6 +146,7 @@ def _validate_complete_production_manifest(
     spec: ProductionSpec,
     contract_sha256: str,
 ) -> None:
+    _require_equal("production dataset status", manifest.get("status"), "complete")
     expected_years = range(spec.first_year, spec.last_year + 1)
     expected_shards = {
         (item.landpoint_id, year): (
@@ -333,6 +334,20 @@ def admit_data_product(
         set(expected["required_diagnostics"]),
     )
     if require_production_dataset:
+        expected_plan_sha256 = policy.get("expected_generation_plan_sha256")
+        if expected_plan_sha256 is not None:
+            _require_equal(
+                "production generation plan hash",
+                manifest.get("plan_sha256"),
+                expected_plan_sha256,
+            )
+        expected_teacher_git_head = policy.get("expected_teacher_git_head")
+        if expected_teacher_git_head is not None:
+            _require_equal(
+                "production Teacher git head",
+                manifest.get("teacher_git_head"),
+                expected_teacher_git_head,
+            )
         _validate_complete_production_manifest(
             manifest=manifest,
             spec=spec,

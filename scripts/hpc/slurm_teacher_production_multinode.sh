@@ -31,7 +31,29 @@ if ! [[ "$TEACHER_WORKER_OFFSET" =~ ^[0-9]+$ ]]; then
   echo "TEACHER_WORKER_OFFSET must be a non-negative integer" >&2
   exit 2
 fi
-if (( TEACHER_WORKER_OFFSET + SLURM_NTASKS > TEACHER_WORKER_COUNT )); then
+if [[ -n "${TEACHER_WORKER_INDICES:-}" ]]; then
+  if ! [[ "$TEACHER_WORKER_INDICES" =~ ^[0-9]+(,[0-9]+)*$ ]]; then
+    echo "TEACHER_WORKER_INDICES must be a comma-separated integer list" >&2
+    exit 2
+  fi
+  IFS=',' read -r -a WORKER_INDICES <<< "$TEACHER_WORKER_INDICES"
+  if (( ${#WORKER_INDICES[@]} != SLURM_NTASKS )); then
+    echo "TEACHER_WORKER_INDICES count must equal SLURM_NTASKS" >&2
+    exit 2
+  fi
+  declare -A SEEN_WORKER_INDICES=()
+  for index in "${WORKER_INDICES[@]}"; do
+    if (( index >= TEACHER_WORKER_COUNT )); then
+      echo "TEACHER_WORKER_INDICES contains an out-of-range worker" >&2
+      exit 2
+    fi
+    if [[ -n "${SEEN_WORKER_INDICES[$index]:-}" ]]; then
+      echo "TEACHER_WORKER_INDICES contains a duplicate worker" >&2
+      exit 2
+    fi
+    SEEN_WORKER_INDICES[$index]=1
+  done
+elif (( TEACHER_WORKER_OFFSET + SLURM_NTASKS > TEACHER_WORKER_COUNT )); then
   echo "allocated tasks exceed TEACHER_WORKER_COUNT" >&2
   exit 2
 fi
@@ -41,7 +63,7 @@ mkdir -p "$RUNTIME_ROOT/logs"
 
 echo "launcher_git_head=$(cd "$LAUNCHER_ROOT" && git rev-parse HEAD)"
 echo "teacher_worktree=$WORKTREE expected_teacher_git_head=$TEACHER_EXPECTED_GIT_HEAD"
-echo "job_id=$SLURM_JOB_ID nodes=$SLURM_JOB_NUM_NODES tasks=$SLURM_NTASKS worker_offset=$TEACHER_WORKER_OFFSET"
+echo "job_id=$SLURM_JOB_ID nodes=$SLURM_JOB_NUM_NODES tasks=$SLURM_NTASKS worker_offset=$TEACHER_WORKER_OFFSET worker_indices=${TEACHER_WORKER_INDICES:-contiguous}"
 echo "plan=$TEACHER_PLAN workers_per_node=${SLURM_NTASKS_PER_NODE:-unknown}"
 
 /rmprog/slurm/v22.05.7/bin/srun \

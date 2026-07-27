@@ -305,6 +305,35 @@ def test_final_admission_requires_every_frozen_point_year_and_split(tmp_path):
     report = json.loads(output.read_text(encoding="utf-8"))
     assert report["admission_phase"] == "complete_669_dataset"
 
+    policy_raw = json.loads(policy.read_text(encoding="utf-8"))
+    policy_raw["expected_generation_plan_sha256"] = "frozen-plan"
+    policy_raw["expected_teacher_git_head"] = "frozen-teacher"
+    policy.write_text(json.dumps(policy_raw), encoding="utf-8")
+    with pytest.raises(ValueError, match="production generation plan hash"):
+        admission.admit_data_product(
+            policy_path=policy,
+            contract_manifest_path=manifest_path,
+            output_path=tmp_path / "final.json",
+            require_production_dataset=True,
+        )
+    manifest["plan_sha256"] = "frozen-plan"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="production Teacher git head"):
+        admission.admit_data_product(
+            policy_path=policy,
+            contract_manifest_path=manifest_path,
+            output_path=tmp_path / "final.json",
+            require_production_dataset=True,
+        )
+    manifest["teacher_git_head"] = "frozen-teacher"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    admission.admit_data_product(
+        policy_path=policy,
+        contract_manifest_path=manifest_path,
+        output_path=tmp_path / "final.json",
+        require_production_dataset=True,
+    )
+
     manifest["shards"][-1]["spatial_split"] = "test"
     manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
     with pytest.raises(ValueError, match="production shard split mismatch"):

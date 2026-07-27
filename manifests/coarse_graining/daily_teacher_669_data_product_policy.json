@@ -4,6 +4,8 @@
   "production_spec": "manifests/coarse_graining/daily_teacher_production_669.json",
   "production_spec_sha256": "6bb0198f0a313b814e32f980564c03bab4ce7801f639983d59f587d18aa6a27e",
   "population_manifest_sha256": "e6b9d96bf1638cf7e1a03ea3257138dbe9706ef2e63154d8aac4c4df9a2d5e92",
+  "expected_generation_plan_sha256": "9ba2caf5e4110f25c24908fddc013f2aecc1dc8fe5f0cfe48bdf54ad425fa17e",
+  "expected_teacher_git_head": "7397d1e722629dbf34be4503a18c72fa60510ed6",
   "expected_population": {
     "landpoints": 669,
     "first_year": 1961,

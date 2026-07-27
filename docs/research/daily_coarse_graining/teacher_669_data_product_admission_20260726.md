@@ -43,8 +43,9 @@ SHA256 `6813065b...9d442` and verifies:
 After generation and aggregation, repeat the command with the production
 manifest and add `--require-production-dataset`. This final phase verifies all
 669 landpoints, all 50 years, all 33,450 unique shards, contract hashes, and
-every spatial and temporal split. Contract evidence from a smaller dataset
-cannot pass that final mode.
+every spatial and temporal split. It also requires Teacher commit
+`7397d1e...` and generation-plan SHA256 `9ba2caf5...`; contract evidence from
+a smaller or differently generated dataset cannot pass that final mode.
 
 ## Scale And Use
 
@@ -63,6 +64,13 @@ support one-step supervision, multiday curricula, free rollout, alternative
 architectures and objectives, and spatial/temporal/joint/complete-chain
 validation. Validation and sealed-test samples never contribute statistics or
 training updates.
+
+The machine-readable consumer policy is
+[`../../../manifests/coarse_graining/daily_teacher_669_training_protocol.json`](../../../manifests/coarse_graining/daily_teacher_669_training_protocol.json).
+It freezes train/train-only normalization, exact-once hierarchical
+landpoint/year/day sampling, temporal/spatial/joint/complete-chain validation,
+sealed final testing, and one-step, 7/30-day, 365-day, and complete-chain
+promotion gates.
 
 ## Explicit Boundaries
 

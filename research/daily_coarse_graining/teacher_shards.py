@@ -50,6 +50,7 @@ SCHEMA_VERSION = "daily_teacher_generation_plan_v2"
 LEGACY_MANIFEST_SCHEMA_VERSION = "daily_teacher_worker_manifest_v2"
 MANIFEST_SCHEMA_VERSION = "daily_teacher_worker_manifest_v3"
 DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v4"
+PROGRESS_SCHEMA_VERSION = "daily_teacher_production_progress_v1"
 PAPER_DAYS_PER_YEAR = 365
 WORKER_ASSIGNMENT_STRATEGY = "balanced_landpoint_chains_v1"
 SPLITS = frozenset({"train", "validation", "test"})
@@ -1341,6 +1342,146 @@ def _compact_worker_shard_record(
     }
 
 
+def audit_worker_progress(
+    plan: GenerationPlan,
+    *,
+    output_root: Path,
+    worker_count: int,
+    verify_hashes: bool = False,
+) -> dict[str, Any]:
+    """Audit resumable worker state without requiring a complete dataset."""
+
+    workers = []
+    completed_total = 0
+    status_counts: dict[str, int] = {}
+    recovery_candidates = []
+    active_workers = []
+    for index in range(worker_count):
+        worker_root = output_root / "workers" / f"worker-{index:03d}-of-{worker_count:03d}"
+        manifest_path = worker_root / "manifest.json"
+        lock_path = worker_root / "generation.lock"
+        expected_entries = assigned_entries(plan, index, worker_count)
+        expected_keys = [entry.key for entry in expected_entries]
+        expected_set = set(expected_keys)
+        errors = []
+        records: list[dict[str, Any]] = []
+        declared_complete = False
+        completed_set: set[str] = set()
+        manifest_sha256 = None
+        if manifest_path.is_file():
+            try:
+                manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+                manifest_sha256 = _sha256_file(manifest_path)
+                if manifest.get("schema_version") != MANIFEST_SCHEMA_VERSION:
+                    errors.append("worker manifest schema mismatch")
+                if manifest.get("plan_sha256") != plan.plan_sha256:
+                    errors.append("worker plan hash mismatch")
+                if manifest.get("worker_index") != index:
+                    errors.append("worker index mismatch")
+                if manifest.get("worker_count") != worker_count:
+                    errors.append("worker count mismatch")
+                if manifest.get("worker_assignment_strategy") != WORKER_ASSIGNMENT_STRATEGY:
+                    errors.append("worker assignment strategy mismatch")
+                if manifest.get("assigned_entries") != expected_keys:
+                    errors.append("assigned entry inventory mismatch")
+                declared_completed = manifest.get("completed_entries", [])
+                if not isinstance(declared_completed, list):
+                    errors.append("completed entry inventory is not a list")
+                    declared_completed = []
+                completed_set = {str(value) for value in declared_completed}
+                if len(completed_set) != len(declared_completed):
+                    errors.append("duplicate completed entry declaration")
+                records = list(manifest.get("shards", []))
+                record_keys = [
+                    f"{record.get('landpoint_id')}:{record.get('year')}"
+                    for record in records
+                ]
+                if len(set(record_keys)) != len(record_keys):
+                    errors.append("duplicate worker shard record")
+                if set(record_keys) != completed_set:
+                    errors.append("completed entries and shard records differ")
+                if completed_set - expected_set:
+                    errors.append("worker completed an unassigned entry")
+                declared_complete = manifest.get("complete") is True
+                if declared_complete != (completed_set == expected_set):
+                    errors.append("worker complete flag disagrees with inventory")
+                if verify_hashes:
+                    for record in records:
+                        key = f"{record.get('landpoint_id')}:{record.get('year')}"
+                        for path_key, hash_key in (
+                            ("metadata", "metadata_sha256"),
+                            ("shard", "shard_sha256"),
+                            ("checkpoint", "checkpoint_sha256"),
+                        ):
+                            path = worker_root / str(record.get(path_key, ""))
+                            expected_hash = record.get(hash_key)
+                            if not path.is_file():
+                                errors.append(f"{key} missing {path_key}")
+                            elif _sha256_file(path) != expected_hash:
+                                errors.append(f"{key} {path_key} hash mismatch")
+            except (OSError, ValueError, TypeError, json.JSONDecodeError) as error:
+                errors.append(f"unreadable worker manifest: {error}")
+
+        lock_owner = None
+        if lock_path.is_file():
+            try:
+                lock_owner = json.loads(lock_path.read_text(encoding="utf-8"))
+            except (OSError, ValueError, TypeError, json.JSONDecodeError) as error:
+                errors.append(f"unreadable worker lock: {error}")
+
+        completed_count = len(completed_set & expected_set)
+        completed_total += completed_count
+        if errors:
+            status = "invalid"
+        elif declared_complete and not lock_path.exists():
+            status = "complete"
+        elif lock_path.exists():
+            status = "running"
+            active_workers.append(index)
+        elif manifest_path.exists():
+            status = "partial"
+            recovery_candidates.append(index)
+        else:
+            status = "missing"
+            recovery_candidates.append(index)
+        status_counts[status] = status_counts.get(status, 0) + 1
+        missing = [key for key in expected_keys if key not in completed_set]
+        workers.append(
+            {
+                "worker_index": index,
+                "status": status,
+                "assigned_entries": len(expected_keys),
+                "completed_entries": completed_count,
+                "remaining_entries": len(missing),
+                "next_entry": missing[0] if missing else None,
+                "manifest": str(manifest_path),
+                "manifest_sha256": manifest_sha256,
+                "lock": str(lock_path) if lock_path.exists() else None,
+                "lock_owner": lock_owner,
+                "errors": errors,
+            }
+        )
+    total_entries = len(plan.entries)
+    complete = completed_total == total_entries and status_counts == {"complete": worker_count}
+    return {
+        "schema_version": PROGRESS_SCHEMA_VERSION,
+        "dataset_id": plan.dataset_id,
+        "plan": str(plan.path),
+        "plan_sha256": plan.plan_sha256,
+        "output_root": str(output_root),
+        "worker_count": worker_count,
+        "verify_hashes": verify_hashes,
+        "complete": complete,
+        "assigned_entries": total_entries,
+        "completed_entries": completed_total,
+        "remaining_entries": total_entries - completed_total,
+        "status_counts": status_counts,
+        "active_worker_indices": active_workers,
+        "recovery_candidate_indices": recovery_candidates,
+        "workers": workers,
+    }
+
+
 def generate_worker(
     plan: GenerationPlan,
     *,
@@ -1502,12 +1643,16 @@ def aggregate_workers(
     seen_records: set[str] = set()
     contracts: list[dict[str, Any]] = []
     heads = set()
+    worker_manifests = []
     entries_by_key = {entry.key: entry for entry in plan.entries}
     for index in range(worker_count):
         worker_root = output_root / "workers" / f"worker-{index:03d}-of-{worker_count:03d}"
         manifest_path = worker_root / "manifest.json"
+        lock_path = worker_root / "generation.lock"
         if not manifest_path.exists():
             raise FileNotFoundError(f"missing worker manifest {manifest_path}")
+        if included_landpoints is None and lock_path.exists():
+            raise ValueError(f"worker {index} still has an active generation lock")
         manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
         manifest_schema = manifest.get("schema_version")
         if manifest_schema not in {
@@ -1521,7 +1666,38 @@ def aggregate_workers(
             raise ValueError(f"worker identity mismatch in {manifest_path}")
         if manifest.get("worker_assignment_strategy") != WORKER_ASSIGNMENT_STRATEGY:
             raise ValueError(f"worker assignment strategy mismatch in {manifest_path}")
+        expected_worker_keys = [
+            entry.key for entry in assigned_entries(plan, index, worker_count)
+        ]
+        if manifest_schema == MANIFEST_SCHEMA_VERSION:
+            if manifest.get("assigned_entries") != expected_worker_keys:
+                raise ValueError(f"worker assignment inventory mismatch in {manifest_path}")
+            declared_completed = manifest.get("completed_entries")
+            if not isinstance(declared_completed, list):
+                raise ValueError(f"worker completed inventory missing in {manifest_path}")
+            record_keys = [
+                f"{record['landpoint_id']}:{record['year']}"
+                for record in manifest.get("shards", [])
+            ]
+            if sorted(declared_completed) != sorted(record_keys):
+                raise ValueError(f"worker completed inventory drift in {manifest_path}")
+            if included_landpoints is None:
+                if manifest.get("complete") is not True:
+                    raise ValueError(f"worker is not complete in {manifest_path}")
+                if declared_completed != sorted(expected_worker_keys):
+                    raise ValueError(f"worker completion inventory mismatch in {manifest_path}")
+        elif included_landpoints is None:
+            raise ValueError(
+                "complete production aggregation requires worker manifest v3"
+            )
         heads.add(manifest["teacher_git_head"])
+        worker_manifests.append(
+            {
+                "worker_index": index,
+                "manifest": _relative(manifest_path, output_root),
+                "manifest_sha256": _sha256_file(manifest_path),
+            }
+        )
         for record in manifest["shards"]:
             key = f"{record['landpoint_id']}:{record['year']}"
             if key in seen_records:
@@ -1530,6 +1706,8 @@ def aggregate_workers(
             entry = entries_by_key.get(key)
             if entry is None:
                 raise ValueError(f"unexpected completed shard {key}")
+            if key not in expected_worker_keys:
+                raise ValueError(f"worker {index} completed unassigned shard {key}")
             if entry.landpoint_id not in selected_landpoints:
                 continue
             if manifest_schema == MANIFEST_SCHEMA_VERSION:
@@ -1622,6 +1800,7 @@ def aggregate_workers(
         "teacher_git_head": next(iter(heads)),
         "worker_count": worker_count,
         "worker_assignment_strategy": WORKER_ASSIGNMENT_STRATEGY,
+        "worker_manifests": worker_manifests,
         "landpoint_count": len(selected_landpoints),
         "year_count": len({entry.year for entry in selected_entries}),
         "shard_count": len(observed),
@@ -1673,6 +1852,13 @@ def build_parser() -> argparse.ArgumentParser:
     aggregate.add_argument("--plan", type=Path, required=True)
     aggregate.add_argument("--output-root", type=Path)
     aggregate.add_argument("--worker-count", type=int, required=True)
+    progress = subparsers.add_parser("progress")
+    progress.add_argument("--plan", type=Path, required=True)
+    progress.add_argument("--output-root", type=Path)
+    progress.add_argument("--worker-count", type=int, required=True)
+    progress.add_argument("--verify-hashes", action="store_true")
+    progress.add_argument("--require-complete", action="store_true")
+    progress.add_argument("--report", type=Path)
     subset = subparsers.add_parser("aggregate-subset")
     subset.add_argument("--plan", type=Path, required=True)
     subset.add_argument("--output-root", type=Path)
@@ -1698,6 +1884,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         print(json.dumps(_plan_summary(plan, args.worker_count), indent=2))
         return 0
     output_root = plan.output_root if args.output_root is None else args.output_root.resolve()
+    if args.command == "progress":
+        result = audit_worker_progress(
+            plan,
+            output_root=output_root,
+            worker_count=args.worker_count,
+            verify_hashes=args.verify_hashes,
+        )
+        if args.report is not None:
+            _atomic_json(args.report.resolve(), result)
+        print(json.dumps(result, indent=2))
+        return 0 if result["complete"] or not args.require_complete else 2
     if args.command == "generate":
         result = generate_worker(
             plan,

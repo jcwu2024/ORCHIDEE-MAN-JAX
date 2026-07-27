@@ -1,0 +1,128 @@
+{
+  "schema_version": "daily_teacher_669_training_protocol_v1",
+  "protocol_id": "pft14-daily-surrogate-669-v1",
+  "parent_data_product": {
+    "policy": "manifests/coarse_graining/daily_teacher_669_data_product_policy.json",
+    "policy_sha256": "3e92ecad420c1886a1becf0ed03cabf7469ff09e995231cf90937097dc9394d4",
+    "contract_sha256": "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442",
+    "teacher_git_head": "7397d1e722629dbf34be4503a18c72fa60510ed6",
+    "generation_plan_sha256": "9ba2caf5e4110f25c24908fddc013f2aecc1dc8fe5f0cfe48bdf54ad425fa17e"
+  },
+  "normalization": {
+    "fit_on": {
+      "spatial_split": "train",
+      "temporal_split": "train"
+    },
+    "validity": "finite_and_abs_lt_5e19",
+    "reuse_for_validation_and_test": true
+  },
+  "sampling": {
+    "strategy": "exact_once_hierarchical_shard_pool_v1",
+    "balance_units": [
+      "landpoint",
+      "year",
+      "day"
+    ],
+    "max_open_shards": 8,
+    "shuffle_seeded_per_epoch": true,
+    "landpoint_identity_as_model_feature": false,
+    "cross_shard_or_restart_windows": false
+  },
+  "validation": {
+    "temporal": {
+      "spatial_split": "train",
+      "temporal_split": "validation",
+      "model_selection": true
+    },
+    "spatial": {
+      "spatial_split": "validation",
+      "temporal_split": "train",
+      "model_selection": true
+    },
+    "joint": {
+      "spatial_split": "validation",
+      "temporal_split": "validation",
+      "model_selection": true
+    },
+    "complete_chain": {
+      "spatial_split": "validation",
+      "years": [
+        1961,
+        2007
+      ],
+      "restart_continuity": true,
+      "model_selection": true
+    },
+    "sealed_final": {
+      "spatial_split": "test",
+      "temporal_split": "test",
+      "years": [
+        2008,
+        2010
+      ],
+      "complete_1961_2010_test_chains_after_freeze": true,
+      "model_selection": false
+    }
+  },
+  "promotion_gates": [
+    {
+      "id": "one_step",
+      "horizons_days": [
+        1
+      ],
+      "required_slices": [
+        "temporal",
+        "spatial",
+        "joint"
+      ]
+    },
+    {
+      "id": "multiday",
+      "horizons_days": [
+        7,
+        30
+      ],
+      "teacher_forced_and_free_rollout": true,
+      "required_slices": [
+        "temporal",
+        "spatial",
+        "joint"
+      ]
+    },
+    {
+      "id": "annual_stability",
+      "horizons_days": [
+        365
+      ],
+      "free_rollout": true,
+      "restart_split_equivalence": true,
+      "required_slices": [
+        "temporal",
+        "spatial",
+        "joint"
+      ]
+    },
+    {
+      "id": "complete_chain",
+      "years": [
+        1961,
+        2007
+      ],
+      "free_rollout": true,
+      "required_slices": [
+        "complete_chain"
+      ],
+      "sealed_1961_2010_release_gate_after_model_freeze": true
+    }
+  ],
+  "reported_metrics": [
+    "field_family_normalized_rmse",
+    "field_family_bias",
+    "defined_status_mismatch",
+    "discrete_state_mismatch",
+    "water_carbon_energy_budget_residual",
+    "event_recovery",
+    "rollout_drift_by_horizon",
+    "wall_time_memory_and_cost"
+  ]
+}
