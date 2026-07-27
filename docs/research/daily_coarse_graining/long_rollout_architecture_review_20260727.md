@@ -238,6 +238,57 @@ annual-mean tendencies, stock distributions, and budget closure on unsealed
 validation chains. It does not backpropagate through a 365-day or 50-year
 graph.
 
+### Frozen loss decomposition
+
+The stability experiment uses six distinct controls. They must remain
+separately reported rather than being hidden inside one aggregate score:
+
+1. `L_fast`: normalized, mask-aware Huber loss on the complete predicted
+   `B_fast[d]` Teacher boundary. This anchors the local daily approximation of
+   the replaced half-hour processes.
+2. `L_next`: process- and named-field metrics on the complete
+   `S[d+1]` produced after the differentiable retained STOMATE transition.
+   Gradients therefore teach the neural fast-day operator which interface
+   values are needed for correct downstream GPP, NPP, respiration, biomass,
+   litter, and soil-carbon behavior.
+3. `L_rollout`: mixed `1/3/7/30`-day free-rollout loss. From Day 2 onward the
+   model consumes its own state. A one-day anchor remains present in every
+   stage so longer-horizon training cannot silently trade away local process
+   skill.
+4. `L_bias`: process-family batch-time mean tendency error,
+   `mean(delta_predicted - delta_teacher)`. This targets small same-sign daily
+   errors that ordinary RMSE can tolerate but that integrate into large
+   multiannual stock drift.
+5. `L_science`: explicitly reported and bounded errors for GPP, NPP,
+   growth/maintenance/heterotrophic respiration, biomass and biomass
+   tendency, litter, and soil-carbon stocks. Low-biomass cases use both
+   absolute and relative metrics.
+6. Hard semantic and physical constraints: exact masks and discrete state,
+   restart-split equivalence, deterministic mirrors, retained-tail ownership,
+   and source-backed nonnegative carbon stocks. These are reconstruction or
+   admission rules, not soft penalties.
+
+The conceptual objective is:
+
+```text
+L = L_fast + alpha * L_next + beta * L_rollout
+    + gamma * L_bias + delta * L_science
+```
+
+The coefficients and exact normalized field inventories must be frozen in the
+experiment manifest before results are visible. The rejected
+`process_increment_v2` result prohibits an open-ended search over process
+weights. Complete water or carbon budget penalties may be added only when the
+contract exposes every required source term; an incomplete conservation
+identity must not be invented.
+
+Fluxes and stocks require different long-run gates. GPP, NPP, and respiration
+are evaluated by daily/seasonal skill and monthly or annual integrated bias.
+Biomass, litter, and soil carbon are evaluated by absolute state error,
+relative error where the denominator is scientifically meaningful,
+year-to-year tendency error, and the slope of multiannual drift. A small daily
+flux RMSE does not pass if its mean bias drives an unbounded stock trajectory.
+
 ## Controlled A/B Gates
 
 The screening matrix uses the frozen temporal, spatial, and joint validation
@@ -297,4 +348,3 @@ hyperparameter search.
    the candidate.
 7. Run the validation ladder; expose a user-facing daily surrogate only after
    the sealed release gate passes.
-
