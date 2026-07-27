@@ -1,8 +1,20 @@
+import subprocess
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 LAUNCHER = ROOT / "scripts" / "hpc" / "slurm_teacher_production_multinode.sh"
 TASK = ROOT / "scripts" / "hpc" / "run_teacher_production_worker_task.sh"
+
+
+def test_multinode_shell_entry_points_are_executable_in_git():
+    for path in (LAUNCHER, TASK):
+        relative = path.relative_to(ROOT).as_posix()
+        staged = subprocess.check_output(
+            ["git", "ls-files", "--stage", relative],
+            cwd=ROOT,
+            text=True,
+        )
+        assert staged.startswith("100755 ")
 
 
 def test_multinode_launcher_has_safe_admission_defaults():
