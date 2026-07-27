@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-07-26.
+Last updated: 2026-07-27.
 
 This page is the current status authority. Dated files under
 `docs/source_audits/` and `docs/research/` are evidence snapshots and may
@@ -200,6 +200,15 @@ Current scientific status:
   staging/plan/resource approval, not another architecture-specific spatial
   pilot. Parameter perturbations and new forcing products remain separate
   parent-bound extension datasets;
+- the first real bounded 669 production probe generated and hash-verified the
+  complete `001.0-071.0:1961` v5 shard at contract SHA256
+  `6813065b...9d442`. It took 3084.5 seconds for the entry and reached about
+  29.5 GiB peak process RSS. Slurm's exit code 2 was an orchestration defect:
+  the old CLI reported an intentionally partial `--max-new-entries` worker as
+  failed after successfully writing its resumable manifest. That exit
+  semantics now has a regression fix. The `07fe2f9` probe remains immutable
+  admission evidence; full production must use one fresh output root bound to
+  the accepted post-fix commit rather than mixing commit identities;
 - the provisional seven-day free-rollout gate of `<=0.29` therefore did not
   pass. No v5 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
@@ -293,9 +302,8 @@ Markov contract are valid. Its operational evidence is recorded in
 
 ## Next Bounded Milestone
 
-Use the completed v5 experiment as the bounded baseline for the next training
-design. Increase the share and coverage of multistep optimization, preserve
-the daily Teacher and next-state losses, and compare against the frozen
-one-step and `1:64,3:64,7:64` checkpoints on the same validation-only rollouts.
-Do not generate all 669 x 50 landpoint-years merely to address a demonstrated
-recursive optimization problem.
+Freeze the post-probe Teacher-generation commit, rebuild the canonical
+669-point plan with a fresh output root, and repeat one real shard to bind that
+provenance identity. After admission, generate the full baseline in bounded
+five-worker CPU waves and run the final 33,450-shard data-product gate before
+reopening neural architecture or objective work.

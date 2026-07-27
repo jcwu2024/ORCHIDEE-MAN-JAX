@@ -1722,7 +1722,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                 indent=2,
             )
         )
-        return 0 if result["complete"] else 2
+        # A bounded production wave intentionally stops before the worker's
+        # full assignment is complete. Generation errors still raise; reaching
+        # max_new_entries after writing a valid resumable manifest is success.
+        return 0 if result["complete"] or args.max_new_entries is not None else 2
     if args.command == "recover-lock":
         result = recover_stale_worker_lock(
             plan,

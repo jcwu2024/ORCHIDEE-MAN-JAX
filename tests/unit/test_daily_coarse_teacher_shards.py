@@ -299,6 +299,38 @@ def test_max_new_entries_advances_across_clean_worker_invocations(
     assert third["complete"]
 
 
+def test_bounded_generate_cli_succeeds_with_an_incomplete_resumable_worker(
+    monkeypatch,
+    tmp_path,
+):
+    plan = SimpleNamespace(output_root=tmp_path / "output")
+    monkeypatch.setattr(shards, "load_plan", lambda *_args, **_kwargs: plan)
+    monkeypatch.setattr(
+        shards,
+        "generate_worker",
+        lambda *_args, **_kwargs: {
+            "complete": False,
+            "completed_entries": ["001.0-071.0:1961"],
+        },
+    )
+
+    exit_code = shards.main(
+        [
+            "generate",
+            "--plan",
+            str(tmp_path / "plan.json"),
+            "--worker-index",
+            "0",
+            "--worker-count",
+            "5",
+            "--max-new-entries",
+            "1",
+        ]
+    )
+
+    assert exit_code == 0
+
+
 def test_generation_rejects_an_uncommitted_teacher_identity(monkeypatch):
     def output(command, **_kwargs):
         return "abc123\n" if command[1:3] == ["rev-parse", "HEAD"] else " M teacher.py\n"
