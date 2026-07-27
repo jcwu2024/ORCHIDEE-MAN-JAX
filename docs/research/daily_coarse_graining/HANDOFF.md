@@ -382,6 +382,23 @@ one process. First measure a small consecutive-entry worker wave so cold,
 second-year, and steady-state point-year timings can be separated, then freeze
 the full wall time and worst-case charge.
 
+The consecutive-entry calibration is now accepted. Single-worker `cnmix` job
+`14391864` completed with exit code zero in 40:03 and extended worker 0 through
+1966. The first new entry in the fresh process took 1743.348 seconds. With the
+compiled transition resident, 1964, 1965, and 1966 then took 158.455, 158.915,
+and 160.493 seconds, respectively. Their mean is 159.288 seconds per
+point-year, including array assembly, compression, hashes, and checkpoint
+writing; mean capture alone is 126.767 seconds. The hash-verifying progress
+audit reports 15 completed entries, ten partial workers, 90 not yet started,
+no active lock, and no error.
+
+At that measured rate, a 350-entry worker needs about 16 hours including its
+fresh-process compilation. The five-local-rank startup stagger adds at most 20
+minutes. The full 20-node, 100-worker request should therefore use a 20-hour
+hard limit. Projected actual use is about 1,530 core-hours, or CNY 107 at CNY
+0.07/core-hour; the scheduler hard-limit exposure is
+`100 * 20 * 0.07 = CNY 140`.
+
 Production control and consumption preparation is complete:
 
 - `teacher_shards progress` audits all 100 worker directories and lists only
@@ -500,12 +517,12 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-Run one bounded consecutive-entry throughput calibration against an accepted
-partial worker, preserving all existing shards. Use its within-process entry
-timings to freeze the 20-node, 100-worker wall time and cost before requesting
-full-production approval. The full run must reuse the same output root and
-accepted shards. Do not train on the partial production dataset, inspect
-sealed test outputs, or create another small spatial pilot.
+Request explicit resource and cost approval, then submit the full 20-node,
+100-worker production run with a 20-hour hard limit. It must reuse the same
+output root, plan, Teacher commit, launcher, and 15 accepted shards. After
+completion, use sparse recovery only for named incomplete workers, then run
+the fail-closed finalization pipeline. Do not train on the partial production
+dataset, inspect sealed test outputs, or create another small spatial pilot.
 
 The architecture and rollout-stability decision is frozen in
 [`long_rollout_architecture_review_20260727.md`](long_rollout_architecture_review_20260727.md).

@@ -227,6 +227,13 @@ Current scientific status:
   55:46, all 11 accumulated point-years and hashes passed, no active lock or
   manifest error remained, and worker 0 closed the 1961-to-1962 restart chain.
   Cold workers peaked near 31 GB RSS and the resumed worker near 26.2 GB;
+- consecutive-entry calibration `14391864` passed in 40:03. Its first fresh
+  process entry took 1743.348 seconds, while the next three years in the same
+  process took 158.455, 158.915, and 160.493 seconds. Mean steady-state
+  production is therefore 159.288 seconds per point-year, including capture,
+  compression, hashes, and checkpoint output, or about 0.436 seconds per
+  simulated day. The post-run hash audit found 15 valid point-years and no
+  active lock or manifest error;
 - production recovery and consumption are prepared: a progress auditor
   identifies running/partial/missing/invalid workers, arbitrary worker IDs can
   be resumed without changing the canonical 100-worker assignment, and final
@@ -338,12 +345,10 @@ Markov contract are valid. Its operational evidence is recorded in
 
 ## Next Bounded Milestone
 
-Measure consecutive same-process point-year throughput with one bounded
-worker before freezing the full-production wall time and cost. The accepted
-admission intentionally ran only one new entry per process, so its cold
-process timings cannot establish the steady-state rate of a worker that will
-run 300-350 entries. After that calibration, complete the full 669-point
-baseline with 20 `cnall` nodes and 100 one-CPU workers against the same output
-root. Use sparse recovery only for failed worker IDs, then run the fail-closed
-33,450-shard finalization pipeline. No model may train on the partial
-production dataset.
+Complete the full 669-point baseline with 20 `cnall` nodes and 100 one-CPU
+workers against the same output root. Calibration projects about 16 hours for
+the longest 350-entry worker before startup staggering; request a 20-hour hard
+limit. Expected CPU use is about 1,530 core-hours or CNY 107, while the
+requested hard-limit charge is at most CNY 140. Use sparse recovery only for
+failed worker IDs, then run the fail-closed 33,450-shard finalization pipeline.
+No model may train on the partial production dataset.
