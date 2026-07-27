@@ -330,7 +330,24 @@ It completed with Slurm state `COMPLETED`, exit code zero, and elapsed time
 RSS. Its NPZ SHA256 is exactly the same as the original probe,
 `25d704e7315f5fc99c8b6f551f8c90ff70f9b6ebb0d6d66fec96696d412ee363`,
 confirming that the orchestration-only fix did not change the scientific
-arrays. Full production must resume this `7397d1e` output root.
+arrays. This five-worker output remains immutable admission evidence.
+
+The production topology was subsequently expanded to 100 workers at the
+user's direction: 20 `cnall` nodes, five one-CPU workers per node. The
+orchestration-only launcher is frozen at commit `74bd4eb`; every rank
+fail-closes unless the separate Teacher worktree is clean at `7397d1e`.
+Workers on one node start five minutes apart by local rank to avoid overlapping
+five approximately 29.5 GiB cold-compilation peaks. Per-rank logs and XLA
+caches are isolated.
+
+The dedicated plan is
+`runtime/plans/teacher_669_1961_2010_v5_7397d1e_w100.json`, with canonical
+SHA256 `9ba2caf5e4110f25c24908fddc013f2aecc1dc8fe5f0cfe48bdf54ad425fa17e`.
+It assigns 350 point-years to workers 0-68 and 300 point-years to workers
+69-99, totaling 33,450. Its fresh output root ends in
+`v5-7397d1e-w100`. Before full production, run the prepared two-node,
+ten-worker, one-new-entry-per-worker admission. The admitted five-worker
+output remains evidence and must not be mixed into the 100-worker aggregate.
 
 ## Accepted Historical Production Run
 
@@ -434,11 +451,10 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-Request and run the first five-worker bounded production wave from commit
-`7397d1e`, using plan
-`runtime/plans/teacher_669_1961_2010_v5_7397d1e.json` and the matching output
-root. Resume the existing worker-0 shard; do not regenerate it. Do not start
-new architecture experiments, inspect sealed test outputs, or create another
+Request and run the two-node, ten-worker `cnall` admission for the `w100`
+plan. After all ten ranks pass, submit the complete 20-node, 100-worker job
+against the same output root so those ten shards are reused. Do not start new
+architecture experiments, inspect sealed test outputs, or create another
 small spatial pilot while baseline Teacher production is in progress.
 
 The prepared v4 subset is

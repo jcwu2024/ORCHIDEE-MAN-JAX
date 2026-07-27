@@ -213,8 +213,14 @@ Current scientific status:
   completed with exit code zero in 42:43, the entry took 2381.0 seconds and
   reached about 29.5 GiB peak process RSS. Its NPZ SHA256 exactly matches the
   original probe, proving the orchestration-only change did not alter
-  scientific arrays. This is the canonical output root that full bounded
-  production must resume;
+  scientific arrays. This five-worker output remains immutable admission
+  evidence and is not mixed into the later 100-worker aggregate;
+- the accepted full-production topology is now 20 `cnall` nodes with five
+  one-CPU workers per node, for 100 concurrent workers. The launcher commit is
+  `74bd4eb`, while the separately validated Teacher worktree remains fixed at
+  `7397d1e`. Five-minute within-node startup staggering reduces overlapping
+  cold-compilation memory peaks. The validated `w100` plan SHA256 is
+  `9ba2caf5...5fa17e`; 69 workers own 350 point-years each and 31 own 300 each;
 - the provisional seven-day free-rollout gate of `<=0.29` therefore did not
   pass. No v5 30-, 365-day, or 50-year neural rollout has passed;
 - generated labels remain `provisional_teacher` until the 669-point Teacher
@@ -308,6 +314,7 @@ Markov contract are valid. Its operational evidence is recorded in
 
 ## Next Bounded Milestone
 
-Generate the full 669-point baseline from the admitted `7397d1e` plan/output
-root in bounded five-worker CPU waves. Then run the final 33,450-shard
-data-product gate before reopening neural architecture or objective work.
+Run the two-node, ten-worker admission for the `w100` plan, then complete the
+full 669-point baseline with 20 `cnall` nodes and 100 one-CPU workers. Run the
+final 33,450-shard data-product gate before reopening neural architecture or
+objective work.
