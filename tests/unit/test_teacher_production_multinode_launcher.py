@@ -40,6 +40,7 @@ def test_multinode_launcher_has_safe_admission_defaults():
     assert "#SBATCH --cpus-per-task=1" in text
     assert "#SBATCH --time=01:30:00" in text
     assert "--kill-on-bad-exit=0" in text
+    assert "--wait=0" in text
     assert "teacher_${SLURM_JOB_ID}_worker_%t.txt" in text
     assert "SLURM_SUBMIT_DIR:?SLURM_SUBMIT_DIR is required" in text
     assert 'git -C "$LAUNCHER_ROOT"' not in text

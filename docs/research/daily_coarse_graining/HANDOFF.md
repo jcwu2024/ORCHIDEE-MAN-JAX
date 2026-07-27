@@ -349,11 +349,21 @@ It assigns 350 point-years to workers 0-68 and 300 point-years to workers
 ten-worker, one-new-entry-per-worker admission. The admitted five-worker
 output remains evidence and must not be mixed into the 100-worker aggregate.
 
-That bounded admission is currently job `14391204` on `cnall`: ten one-CPU
-ranks, five per node, `TEACHER_MAX_NEW_ENTRIES=1`, wall limit 01:30, and
-worst-case charge CNY 1.05. It was confirmed running with correct global
-worker indices, local-rank startup staggering, isolated logs, and isolated XLA
-caches. Do not cancel or resubmit it; accept its outputs when it finishes.
+That bounded admission job `14391204` ended `FAILED` after 38:46. Worker 0
+completed `001.0-071.0:1961`, wrote a valid v3 manifest, reproduced the
+accepted shard SHA256 `25d704e7...2ee363`, and exited zero. Its entry took
+1900.5 seconds and reached 30,872,352 KiB peak RSS. The other nine workers had
+started valid entries but were killed before writing shards.
+
+This was an orchestration failure, not a Teacher or memory failure. Slurm
+`srun` waits only about 60 seconds after the first task exits before
+terminating remaining tasks. The local-rank startup staggering made worker 0
+finish first while the other ranks still had legitimate work. The launcher
+now passes `--wait=0`, which means unlimited wait for all ranks on the deployed
+Slurm version, while retaining `--kill-on-bad-exit=0`. Before resubmission,
+recover only the nine terminal-job locks through the strict documented
+workflow and transfer/fast-forward the launcher fix. Preserve worker 0's
+accepted shard.
 
 Production control and consumption preparation is complete:
 
@@ -473,12 +483,17 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-Accept the running two-node, ten-worker `cnall` admission `14391204`. After all
-ten ranks pass, submit the complete 20-node, 100-worker job against the same
-output root so those ten shards are reused. While production runs, proceed
-with literature-backed architecture and rollout-stability design, but do not
-train on the partial production dataset, inspect sealed test outputs, or
-create another small spatial pilot.
+Transfer and validate the explicit `srun --wait=0` launcher fix, recover the
+nine stale locks left by terminal job `14391204`, and rerun the same bounded
+two-node admission against the same output root. After all ten ranks pass,
+submit the complete 20-node, 100-worker job so the accepted shards are reused.
+Do not train on the partial production dataset, inspect sealed test outputs,
+or create another small spatial pilot.
+
+The architecture and rollout-stability decision is frozen in
+[`long_rollout_architecture_review_20260727.md`](long_rollout_architecture_review_20260727.md).
+After complete data admission, compare a matched flat control with the
+process- and axis-aware candidate before changing the rollout objective.
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).

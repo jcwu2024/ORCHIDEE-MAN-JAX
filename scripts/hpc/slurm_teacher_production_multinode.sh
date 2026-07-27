@@ -68,6 +68,7 @@ echo "plan=$TEACHER_PLAN workers_per_node=${SLURM_NTASKS_PER_NODE:-unknown}"
 
 /rmprog/slurm/v22.05.7/bin/srun \
   --kill-on-bad-exit=0 \
+  --wait=0 \
   --output="$RUNTIME_ROOT/logs/teacher_${SLURM_JOB_ID}_worker_%t.txt" \
   --error="$RUNTIME_ROOT/logs/teacher_${SLURM_JOB_ID}_worker_%t.txt" \
   bash "$TASK_SCRIPT"
