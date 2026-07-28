@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -81,13 +82,81 @@ def test_architecture_ab_classification_applies_all_frozen_gates():
     assert failed["checks"]["spatial_improvement"] is False
 
 
-def test_architecture_ab_launcher_uses_one_shared_gpu_run_and_no_test_inputs():
+def test_parallel_preflight_is_hash_bound_and_fails_on_drift(tmp_path):
+    experiment = ab.load_architecture_ab_experiment(EXPERIMENT)
+    paths = {}
+    for name in ("dataset_manifest", "training_statistics", "acceptance_report"):
+        path = tmp_path / f"{name}.json"
+        path.write_text(name, encoding="utf-8")
+        paths[name] = path
+    protocol_path = tmp_path / "protocol.json"
+    protocol_path.write_text("protocol", encoding="utf-8")
+    protocol = SimpleNamespace(path=protocol_path, sha256="protocol-sha")
+    accepted = {
+        "identity": {"dataset_id": "dataset"},
+        "training_statistics": {"sample_count": 123},
+    }
+    payload = ab._preflight_payload(experiment, paths, protocol, accepted)
+    preflight = tmp_path / "preflight.json"
+    preflight.write_text(json.dumps(payload), encoding="utf-8")
+
+    observed = ab._verify_preflight(
+        preflight,
+        experiment=experiment,
+        paths=paths,
+        protocol=protocol,
+        accepted=accepted,
+    )
+    assert observed["expected_training_samples"] == 123
+
+    accepted["training_statistics"]["sample_count"] = 124
+    with pytest.raises(ValueError, match="identity drift"):
+        ab._verify_preflight(
+            preflight,
+            experiment=experiment,
+            paths=paths,
+            protocol=protocol,
+            accepted=accepted,
+        )
+
+
+def test_parallel_arm_report_requires_exact_samples_and_sealed_test():
+    experiment = ab.load_architecture_ab_experiment(EXPERIMENT)
+    arm = experiment.raw["arms"][0]
+    training = experiment.raw["training"]
+    report = _training_report(1.0, parameters=1_963_369)
+    report["model_architecture"] = {"id": "canonical_flat_v1"}
+    report["history"][0]["training_samples"] = 123
+
+    ab._validate_arm_report(
+        report,
+        arm=arm,
+        training=training,
+        expected_samples=123,
+    )
+    report["history"][0]["training_samples"] = 122
+    with pytest.raises(ValueError, match="exact epochs"):
+        ab._validate_arm_report(
+            report,
+            arm=arm,
+            training=training,
+            expected_samples=123,
+        )
+
+
+def test_architecture_ab_launcher_uses_two_parallel_gpu_arms_and_no_test_inputs():
     text = LAUNCHER.read_text(encoding="utf-8")
 
-    assert "#SBATCH --gres=gpu:1" in text
-    assert "#SBATCH --cpus-per-task=4" in text
+    assert "#SBATCH --gres=gpu:2" in text
+    assert "#SBATCH --cpus-per-task=8" in text
     assert "#SBATCH --time=12:00:00" in text
-    assert "run_canonical_architecture_ab_gpu" in text
+    assert "--phase prepare" in text
+    assert "--phase arm --arm flat" in text
+    assert "--phase arm --arm axis_process" in text
+    assert "--phase finalize" in text
+    assert 'SINGULARITYENV_CUDA_VISIBLE_DEVICES="$visible_device"' in text
+    assert 'wait "$FLAT_PID"' in text
+    assert 'wait "$AXIS_PID"' in text
     assert "canonical_669_axis_process_architecture_ab.json" in text
     assert "test -z" in text
     assert "test" not in "\n".join(

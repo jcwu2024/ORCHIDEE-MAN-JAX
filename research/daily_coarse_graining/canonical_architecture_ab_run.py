@@ -26,6 +26,7 @@ from research.daily_coarse_graining.production_training_protocol import (
 
 SCHEMA_VERSION = "canonical_architecture_ab_experiment_v1"
 REPORT_SCHEMA_VERSION = "canonical_architecture_ab_report_v1"
+PREFLIGHT_SCHEMA_VERSION = "canonical_architecture_ab_preflight_v1"
 
 
 @dataclass(frozen=True)
@@ -207,15 +208,20 @@ def classify_architecture_ab(
     }
 
 
-def run_architecture_ab(
+def _verified_inputs(
     *,
     experiment_path: str | Path,
     dataset_path: str | Path,
     statistics_path: str | Path,
     acceptance_path: str | Path,
     protocol_path: str | Path,
-    output_root: str | Path,
-) -> Path:
+    verify_dataset_hashes: bool,
+) -> tuple[
+    ArchitectureABExperiment,
+    dict[str, Path],
+    Any,
+    Mapping[str, Any],
+]:
     experiment = load_architecture_ab_experiment(experiment_path)
     paths = {
         "dataset_manifest": Path(dataset_path).resolve(),
@@ -233,36 +239,210 @@ def run_architecture_ab(
         paths["acceptance_report"],
         paths["dataset_manifest"],
         paths["training_statistics"],
+        verify_dataset_hashes=verify_dataset_hashes,
     )
+    return experiment, paths, protocol, accepted
+
+
+def _preflight_payload(
+    experiment: ArchitectureABExperiment,
+    paths: Mapping[str, Path],
+    protocol: Any,
+    accepted: Mapping[str, Any],
+) -> Mapping[str, Any]:
+    return {
+        "schema_version": PREFLIGHT_SCHEMA_VERSION,
+        "status": "passed",
+        "experiment": {
+            "path": str(experiment.path),
+            "sha256": experiment.sha256,
+            "id": experiment.raw["experiment_id"],
+        },
+        "artifacts": {
+            name: {"path": str(path), "sha256": _sha256_file(path)}
+            for name, path in paths.items()
+        }
+        | {
+            "training_protocol": {
+                "path": str(protocol.path),
+                "sha256": protocol.sha256,
+            }
+        },
+        "accepted_identity": dict(accepted["identity"]),
+        "expected_training_samples": int(
+            accepted["training_statistics"]["sample_count"]
+        ),
+    }
+
+
+def prepare_architecture_ab(
+    *,
+    experiment_path: str | Path,
+    dataset_path: str | Path,
+    statistics_path: str | Path,
+    acceptance_path: str | Path,
+    protocol_path: str | Path,
+    output_root: str | Path,
+) -> Path:
+    experiment, paths, protocol, accepted = _verified_inputs(
+        experiment_path=experiment_path,
+        dataset_path=dataset_path,
+        statistics_path=statistics_path,
+        acceptance_path=acceptance_path,
+        protocol_path=protocol_path,
+        verify_dataset_hashes=True,
+    )
+    output_root = Path(output_root).resolve()
+    output_root.mkdir(parents=True, exist_ok=True)
+    return _atomic_json(
+        output_root / "architecture_ab_preflight.json",
+        _preflight_payload(experiment, paths, protocol, accepted),
+    )
+
+
+def _verify_preflight(
+    preflight_path: str | Path,
+    *,
+    experiment: ArchitectureABExperiment,
+    paths: Mapping[str, Path],
+    protocol: Any,
+    accepted: Mapping[str, Any],
+) -> Mapping[str, Any]:
+    preflight_path = Path(preflight_path).resolve()
+    preflight = json.loads(preflight_path.read_text(encoding="utf-8"))
+    if preflight.get("schema_version") != PREFLIGHT_SCHEMA_VERSION:
+        raise ValueError("unsupported architecture A/B preflight schema")
+    if preflight.get("status") != "passed":
+        raise ValueError("architecture A/B preflight did not pass")
+    expected = _preflight_payload(experiment, paths, protocol, accepted)
+    if preflight != expected:
+        raise ValueError("architecture A/B preflight identity drift")
+    return preflight
+
+
+def _arm_definition(
+    experiment: ArchitectureABExperiment,
+    arm_id: str,
+) -> Mapping[str, Any]:
+    matching = [arm for arm in experiment.raw["arms"] if arm["id"] == arm_id]
+    if len(matching) != 1:
+        raise ValueError(f"unknown architecture A/B arm {arm_id!r}")
+    return matching[0]
+
+
+def _validate_arm_report(
+    report: Mapping[str, Any],
+    *,
+    arm: Mapping[str, Any],
+    training: Mapping[str, Any],
+    expected_samples: int,
+) -> None:
+    observed = [int(item["training_samples"]) for item in report["history"]]
+    if observed != [expected_samples] * int(training["epochs"]):
+        raise ValueError(
+            f"architecture A/B {arm['id']} did not consume exact epochs"
+        )
+    architecture = report.get("model_architecture", {})
+    if architecture.get("id") != arm["model_architecture"]:
+        raise ValueError(f"architecture A/B {arm['id']} model identity drift")
+    if report.get("test_split_evaluated") is not False:
+        raise ValueError(f"architecture A/B {arm['id']} evaluated sealed test data")
+
+
+def run_architecture_ab_arm(
+    *,
+    arm_id: str,
+    preflight_path: str | Path,
+    experiment_path: str | Path,
+    dataset_path: str | Path,
+    statistics_path: str | Path,
+    acceptance_path: str | Path,
+    protocol_path: str | Path,
+    output_root: str | Path,
+) -> Path:
+    experiment, paths, protocol, accepted = _verified_inputs(
+        experiment_path=experiment_path,
+        dataset_path=dataset_path,
+        statistics_path=statistics_path,
+        acceptance_path=acceptance_path,
+        protocol_path=protocol_path,
+        verify_dataset_hashes=False,
+    )
+    preflight = _verify_preflight(
+        preflight_path,
+        experiment=experiment,
+        paths=paths,
+        protocol=protocol,
+        accepted=accepted,
+    )
+    arm = _arm_definition(experiment, arm_id)
     training = experiment.raw["training"]
     output_root = Path(output_root).resolve()
     output_root.mkdir(parents=True, exist_ok=True)
+    arm_dir = output_root / str(arm["id"])
+    report = train_experiment(
+        paths["dataset_manifest"],
+        paths["training_statistics"],
+        arm_dir,
+        epochs=int(training["epochs"]),
+        batch_size=int(training["batch_size"]),
+        learning_rate=float(training["learning_rate"]),
+        seed=int(training["seed"]),
+        resume=True,
+        max_eval_batches=None,
+        acceptance_path=paths["acceptance_report"],
+        model_architecture=str(arm["model_architecture"]),
+        training_protocol_path=protocol.path,
+        prefetch_batches=int(training["prefetch_batches"]),
+        verified_acceptance=accepted,
+    )
+    _validate_arm_report(
+        report,
+        arm=arm,
+        training=training,
+        expected_samples=int(preflight["expected_training_samples"]),
+    )
+    return arm_dir / "training_report.json"
+
+
+def finalize_architecture_ab(
+    *,
+    preflight_path: str | Path,
+    experiment_path: str | Path,
+    dataset_path: str | Path,
+    statistics_path: str | Path,
+    acceptance_path: str | Path,
+    protocol_path: str | Path,
+    output_root: str | Path,
+) -> Path:
+    experiment, paths, protocol, accepted = _verified_inputs(
+        experiment_path=experiment_path,
+        dataset_path=dataset_path,
+        statistics_path=statistics_path,
+        acceptance_path=acceptance_path,
+        protocol_path=protocol_path,
+        verify_dataset_hashes=False,
+    )
+    preflight = _verify_preflight(
+        preflight_path,
+        experiment=experiment,
+        paths=paths,
+        protocol=protocol,
+        accepted=accepted,
+    )
+    training = experiment.raw["training"]
+    output_root = Path(output_root).resolve()
     reports = {}
     for arm in experiment.raw["arms"]:
-        arm_dir = output_root / str(arm["id"])
-        reports[str(arm["id"])] = train_experiment(
-            paths["dataset_manifest"],
-            paths["training_statistics"],
-            arm_dir,
-            epochs=int(training["epochs"]),
-            batch_size=int(training["batch_size"]),
-            learning_rate=float(training["learning_rate"]),
-            seed=int(training["seed"]),
-            resume=True,
-            max_eval_batches=None,
-            acceptance_path=paths["acceptance_report"],
-            model_architecture=str(arm["model_architecture"]),
-            training_protocol_path=protocol.path,
-            prefetch_batches=int(training["prefetch_batches"]),
-            verified_acceptance=accepted,
+        arm_id = str(arm["id"])
+        report_path = output_root / arm_id / "training_report.json"
+        reports[arm_id] = json.loads(report_path.read_text(encoding="utf-8"))
+        _validate_arm_report(
+            reports[arm_id],
+            arm=arm,
+            training=training,
+            expected_samples=int(preflight["expected_training_samples"]),
         )
-    expected_samples = int(
-        accepted["training_statistics"]["sample_count"]
-    )
-    for arm, report in reports.items():
-        observed = [int(item["training_samples"]) for item in report["history"]]
-        if observed != [expected_samples] * int(training["epochs"]):
-            raise ValueError(f"architecture A/B {arm} did not consume exact epochs")
     classification = classify_architecture_ab(
         reports["flat"],
         reports["axis_process"],
@@ -310,8 +490,55 @@ def run_architecture_ab(
     return _atomic_json(output_root / "architecture_ab_report.json", result)
 
 
+def run_architecture_ab(
+    *,
+    experiment_path: str | Path,
+    dataset_path: str | Path,
+    statistics_path: str | Path,
+    acceptance_path: str | Path,
+    protocol_path: str | Path,
+    output_root: str | Path,
+) -> Path:
+    preflight = prepare_architecture_ab(
+        experiment_path=experiment_path,
+        dataset_path=dataset_path,
+        statistics_path=statistics_path,
+        acceptance_path=acceptance_path,
+        protocol_path=protocol_path,
+        output_root=output_root,
+    )
+    experiment = load_architecture_ab_experiment(experiment_path)
+    for arm in experiment.raw["arms"]:
+        run_architecture_ab_arm(
+            arm_id=str(arm["id"]),
+            preflight_path=preflight,
+            experiment_path=experiment_path,
+            dataset_path=dataset_path,
+            statistics_path=statistics_path,
+            acceptance_path=acceptance_path,
+            protocol_path=protocol_path,
+            output_root=output_root,
+        )
+    return finalize_architecture_ab(
+        preflight_path=preflight,
+        experiment_path=experiment_path,
+        dataset_path=dataset_path,
+        statistics_path=statistics_path,
+        acceptance_path=acceptance_path,
+        protocol_path=protocol_path,
+        output_root=output_root,
+    )
+
+
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument(
+        "--phase",
+        choices=("all", "prepare", "arm", "finalize"),
+        default="all",
+    )
+    parser.add_argument("--arm", choices=("flat", "axis_process"))
+    parser.add_argument("--preflight", type=Path)
     parser.add_argument("--experiment", type=Path, required=True)
     parser.add_argument("--dataset", type=Path, required=True)
     parser.add_argument("--statistics", type=Path, required=True)
@@ -323,14 +550,35 @@ def _parser() -> argparse.ArgumentParser:
 
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parser().parse_args(argv)
-    output = run_architecture_ab(
-        experiment_path=args.experiment,
-        dataset_path=args.dataset,
-        statistics_path=args.statistics,
-        acceptance_path=args.acceptance,
-        protocol_path=args.protocol,
-        output_root=args.output_root,
-    )
+    common = {
+        "experiment_path": args.experiment,
+        "dataset_path": args.dataset,
+        "statistics_path": args.statistics,
+        "acceptance_path": args.acceptance,
+        "protocol_path": args.protocol,
+        "output_root": args.output_root,
+    }
+    if args.phase == "all":
+        output = run_architecture_ab(**common)
+    elif args.phase == "prepare":
+        if args.arm is not None or args.preflight is not None:
+            raise ValueError("prepare phase does not accept --arm or --preflight")
+        output = prepare_architecture_ab(**common)
+    elif args.phase == "arm":
+        if args.arm is None or args.preflight is None:
+            raise ValueError("arm phase requires --arm and --preflight")
+        output = run_architecture_ab_arm(
+            arm_id=args.arm,
+            preflight_path=args.preflight,
+            **common,
+        )
+    else:
+        if args.arm is not None or args.preflight is None:
+            raise ValueError("finalize phase requires --preflight and no --arm")
+        output = finalize_architecture_ab(
+            preflight_path=args.preflight,
+            **common,
+        )
     print(json.dumps({"status": "completed", "report": str(output)}, indent=2))
     return 0
 

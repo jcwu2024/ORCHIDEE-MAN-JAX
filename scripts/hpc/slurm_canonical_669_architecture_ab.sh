@@ -1,12 +1,12 @@
 #!/bin/bash
-# Matched from-scratch architecture screen on the admitted 669-point dataset.
+# Matched two-GPU architecture screen on the admitted 669-point dataset.
 # No job is submitted by this file.
 #SBATCH -J orcjax-669-arch-ab
 #SBATCH -p gnall
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
-#SBATCH --cpus-per-task=4
-#SBATCH --gres=gpu:1
+#SBATCH --cpus-per-task=8
+#SBATCH --gres=gpu:2
 #SBATCH --time=12:00:00
 #SBATCH -o /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/canonical_669_architecture_ab_%j.txt
 #SBATCH -e /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/canonical_669_architecture_ab_%j.txt
@@ -54,28 +54,69 @@ test -f "$CUDA_DRIVER"
 test -f "$NVML_DRIVER"
 GPU_BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
 
-env \
-  SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \
-  SINGULARITYENV_CUDA_VISIBLE_DEVICES=0 \
-  SINGULARITYENV_JAX_ENABLE_X64=true \
-  SINGULARITYENV_JAX_COMPILATION_CACHE_DIR="$ROOT/runtime/cache/jax/orcjax_gpu" \
-  SINGULARITYENV_ORCHIDEE_REPO_ROOT="$ROOT" \
-  SINGULARITYENV_ORCHIDEE_RUNTIME_ROOT="$ROOT/runtime" \
-  SINGULARITYENV_ORCHIDEE_DATA_ROOT="$ROOT/runtime/data" \
-  SINGULARITYENV_ORCHIDEE_REFERENCE_ROOT="$ROOT/runtime/assets" \
-  SINGULARITYENV_ORCHIDEE_OUTPUT_ROOT="$ROOT/runtime/outputs" \
-  singularity exec \
-    --nv \
-    --bind "$GPU_BINDS" \
-    --pwd "$WORKTREE" \
-    "$IMAGE" \
-    "$PYTHON" -m scripts.hpc.run_canonical_architecture_ab_gpu \
-      --experiment "$EXPERIMENT" \
-      --dataset "$DATASET" \
-      --statistics "$STATISTICS" \
-      --acceptance "$ACCEPTANCE" \
-      --protocol "$PROTOCOL" \
-      --output-root "$OUTPUT_ROOT"
+run_python() {
+  local visible_device=$1
+  local cache_tag=$2
+  shift 2
+  mkdir -p "$ROOT/runtime/cache/jax/orcjax_gpu/$cache_tag"
+  env \
+    SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \
+    SINGULARITYENV_CUDA_VISIBLE_DEVICES="$visible_device" \
+    SINGULARITYENV_JAX_ENABLE_X64=true \
+    SINGULARITYENV_JAX_COMPILATION_CACHE_DIR="$ROOT/runtime/cache/jax/orcjax_gpu/$cache_tag" \
+    SINGULARITYENV_ORCHIDEE_REPO_ROOT="$ROOT" \
+    SINGULARITYENV_ORCHIDEE_RUNTIME_ROOT="$ROOT/runtime" \
+    SINGULARITYENV_ORCHIDEE_DATA_ROOT="$ROOT/runtime/data" \
+    SINGULARITYENV_ORCHIDEE_REFERENCE_ROOT="$ROOT/runtime/assets" \
+    SINGULARITYENV_ORCHIDEE_OUTPUT_ROOT="$ROOT/runtime/outputs" \
+    singularity exec \
+      --nv \
+      --bind "$GPU_BINDS" \
+      --pwd "$WORKTREE" \
+      "$IMAGE" \
+      "$@"
+}
+
+COMMON_ARGS=(
+  --experiment "$EXPERIMENT"
+  --dataset "$DATASET"
+  --statistics "$STATISTICS"
+  --acceptance "$ACCEPTANCE"
+  --protocol "$PROTOCOL"
+  --output-root "$OUTPUT_ROOT"
+)
+PREFLIGHT="$OUTPUT_ROOT/architecture_ab_preflight.json"
+
+run_python 0 preflight \
+  "$PYTHON" -m research.daily_coarse_graining.canonical_architecture_ab_run \
+  --phase prepare "${COMMON_ARGS[@]}"
+test -f "$PREFLIGHT"
+
+run_python 0 flat \
+  "$PYTHON" -m scripts.hpc.run_canonical_architecture_ab_gpu \
+  --phase arm --arm flat --preflight "$PREFLIGHT" "${COMMON_ARGS[@]}" \
+  >"$OUTPUT_ROOT/flat_worker.log" 2>&1 &
+FLAT_PID=$!
+run_python 1 axis_process \
+  "$PYTHON" -m scripts.hpc.run_canonical_architecture_ab_gpu \
+  --phase arm --arm axis_process --preflight "$PREFLIGHT" "${COMMON_ARGS[@]}" \
+  >"$OUTPUT_ROOT/axis_process_worker.log" 2>&1 &
+AXIS_PID=$!
+
+set +e
+wait "$FLAT_PID"
+FLAT_STATUS=$?
+wait "$AXIS_PID"
+AXIS_STATUS=$?
+set -e
+if [[ "$FLAT_STATUS" -ne 0 || "$AXIS_STATUS" -ne 0 ]]; then
+  echo "architecture workers failed: flat=$FLAT_STATUS axis_process=$AXIS_STATUS" >&2
+  exit 1
+fi
+
+run_python 0 finalize \
+  "$PYTHON" -m research.daily_coarse_graining.canonical_architecture_ab_run \
+  --phase finalize --preflight "$PREFLIGHT" "${COMMON_ARGS[@]}"
 
 test -f "$OUTPUT_ROOT/flat/training_report.json"
 test -f "$OUTPUT_ROOT/flat/best_checkpoint.pkl"

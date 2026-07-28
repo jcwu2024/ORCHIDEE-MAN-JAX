@@ -324,6 +324,8 @@ def verify_training_acceptance(
     acceptance_path: str | Path,
     manifest_path: str | Path,
     statistics_path: str | Path,
+    *,
+    verify_dataset_hashes: bool = True,
 ) -> Mapping[str, Any]:
     acceptance_path = Path(acceptance_path).resolve()
     manifest_path = Path(manifest_path).resolve()
@@ -343,7 +345,10 @@ def verify_training_acceptance(
         raise ValueError("accepted dataset manifest hash mismatch")
     if report.get("training_statistics", {}).get("sha256") != _sha256_file(statistics_path):
         raise ValueError("accepted training statistics hash mismatch")
-    index = load_dataset_index(manifest_path, verify_hashes=True)
+    index = load_dataset_index(
+        manifest_path,
+        verify_hashes=verify_dataset_hashes,
+    )
     statistics = load_training_statistics(statistics_path, index=index)
     identity = {
         "dataset_id": index.dataset_id,
