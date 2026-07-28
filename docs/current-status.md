@@ -350,10 +350,14 @@ The full 669-point baseline is generated and admitted. Finalization job
 accepted all 33,450 point-years and 12,208,581 transitions, found zero target
 persistence mismatches, fitted statistics from the 8,591,565 train/train
 samples only, and passed a finite real-batch JAX forward/loss/gradient smoke.
+The dataset manifest SHA256 is
+`89ea2f24bad8f4b39129937f4106285dd53936c35d8dc610810f865b02d4e508`;
 The statistics JSON SHA256 is
 `c9ed1c6ea4cfca6c0da9504a36d440a2b388375f01acf8bc78edc7645a4ffb37`;
 the statistics NPZ SHA256 is
-`33865286021c39bbdb6511a115da55143789e857c31e701c7417ff1a9c50cdbd`.
+`33865286021c39bbdb6511a115da55143789e857c31e701c7417ff1a9c50cdbd`;
+the acceptance report SHA256 is
+`0b13da5c7f8664f9b3b8fe70f6b8dc8e3aca513ecbf15d4b3d879a07d663b596`.
 
 The next bounded milestone is to freeze and run the matched
 `canonical_flat_v1` versus `axis_process_coupled_v1` architecture A/B. Both
@@ -370,5 +374,15 @@ It uses one exact-once train/train epoch, batch size 256, learning rate
 no test samples. The production trainer now supports both registered
 architectures through the same loss and balanced reader, performs one shared
 asset verification for the two-arm run, and avoids per-batch host loss
-synchronization. Before paid execution, pass the prepared real-shard V100
-compile/update smoke on `gln01`.
+synchronization.
+
+The prepared real-shard V100 compile/update smoke passed on `gln01` at commit
+`0992178`. It hash-verified the train/train shard `001.0-071.0:1961`, used
+zero-based sample indices 0-255 as one batch of 256, and consumed no
+validation or test sample.
+Both arms retained float32 parameters and finite losses. Flat compile/hot
+updates took `2.2506/0.00862 s`; axis/process compile/hot updates took
+`8.7199/0.00757 s`. The report SHA256 is
+`3975eb93000b355b51c565f421f04fdc19342032360c1610e1823dce607f3d16`.
+The next operation is the paid full architecture-only A/B; do not add rollout
+objectives or inspect sealed test outputs before this screen reports.

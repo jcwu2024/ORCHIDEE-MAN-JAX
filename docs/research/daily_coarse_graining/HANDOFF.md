@@ -15,10 +15,10 @@ scientific and release facts remain authoritative in
    [`teacher_dataset_generation.md`](teacher_dataset_generation.md).
 3. Connect through the restored `cln01` alias and submit computation only
    through Slurm.
-4. Check the 669-point production admission state below. Do not mix Teacher
-   commits within one aggregate.
-5. After full aggregation, run the production data-product admission command
-   before any GPU training.
+4. Confirm the admitted 669-point dataset and frozen architecture-screen
+   hashes below. Do not regenerate Teacher data or reuse nine-point assets.
+5. The next computation is the full architecture-only A/B on `gnall`. Show
+   resources, command, hard wall time, and worst-case cost before `sbatch`.
 
 ```bash
 git status --short --branch
@@ -74,9 +74,11 @@ backend (`cpu` or `gpu`) and transition implementation
 (`teacher_half_hour` or, after acceptance, `neural_daily`). The research
 branch is temporary development history, not a separate product.
 
-The next matched architecture candidate, `axis_process_coupled_v1`, is now
-implemented but untrained. It derives exhaustive state-axis partitions and
-eight target families from Contract v5, uses eight source process tokens and
+The next matched architecture candidate, `axis_process_coupled_v1`, is
+implemented and has passed the real-shard V100 execution smoke, but it has not
+completed the full architecture screen or been promoted. It derives exhaustive
+state-axis partitions and eight target families from Contract v5, uses eight
+source process tokens and
 two process-coupling blocks, and carries no hidden cross-day memory outside
 canonical `S[d]`. Its real Contract v5 layout SHA256 is
 `bbe5e694f9bc2e8e4038f955cdbc967464b27bae883e95048ad092d1e734d24d`.
@@ -457,17 +459,20 @@ Its gates report:
 - 12,208,581 total transitions and 8,591,565 train/train samples;
 - zero persistence mismatches across all 2,855 fast-day target columns;
 - 103,153,433 explicitly audited undefined target values;
+- dataset manifest SHA256
+  `89ea2f24bad8f4b39129937f4106285dd53936c35d8dc610810f865b02d4e508`;
 - train-only statistics JSON SHA256
   `c9ed1c6ea4cfca6c0da9504a36d440a2b388375f01acf8bc78edc7645a4ffb37`;
 - statistics NPZ SHA256
   `33865286021c39bbdb6511a115da55143789e857c31e701c7417ff1a9c50cdbd`;
+- acceptance report SHA256
+  `0b13da5c7f8664f9b3b8fe70f6b8dc8e3aca513ecbf15d4b3d879a07d663b596`;
 - a finite batch-8 flat-model CPU smoke with loss `0.01924320124089718`,
   gradient norm `0.10434712955999045`, and all 16 gradient leaves finite.
 
-The complete 669 Teacher labels are now admitted for training. The next
-operation is to freeze the matched architecture-only A/B manifest. Do not
-reuse the nine-point statistics or checkpoint, add mixed-horizon objectives
-to this first comparison, or inspect the sealed test split.
+The complete 669 Teacher labels are admitted for training. Do not reuse the
+nine-point statistics or checkpoint, add mixed-horizon objectives to this
+first comparison, or inspect the sealed test split.
 
 That architecture-only screen is now frozen at
 `manifests/coarse_graining/canonical_669_axis_process_architecture_ab.json`,
@@ -488,11 +493,20 @@ arms sequentially in one GPU process, enforces exact sample counts and the
 does not include retained-tail rollout training or alter accepted Teacher
 semantics.
 
-Before the paid full screen, run
-`canonical_architecture_ab_real_shard_smoke_v1` on `gln01`. It must hash one
-real train/train shard, execute batch-256 compile and hot updates for both
-architectures, report finite losses and parameter leaves, and consume no
-validation or test sample.
+The `canonical_architecture_ab_real_shard_smoke_v1` gate passed on `gln01`
+from clean commit `0992178`. It hash-verified train/train shard
+`001.0-071.0:1961`, used zero-based sample indices 0-255 as one batch of 256,
+and consumed no validation or test sample. Both arms retained float32
+parameters and finite losses:
+
+- flat compile/hot update: `2.2506/0.00862 s`;
+- axis/process compile/hot update: `8.7199/0.00757 s`.
+
+The server report is
+`runtime/outputs/smoke/architecture-ab-real-shard-0992178.json`, SHA256
+`3975eb93000b355b51c565f421f04fdc19342032360c1610e1823dce607f3d16`.
+This closes the execution preflight only. It is not accuracy or promotion
+evidence. The next operation is the paid full architecture-only A/B.
 
 ## Accepted Historical Production Run
 
@@ -596,17 +610,19 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-Request explicit resource and cost approval, then submit the full 20-node,
-100-worker production run with a 20-hour hard limit. It must reuse the same
-output root, plan, Teacher commit, launcher, and 15 accepted shards. After
-completion, use sparse recovery only for named incomplete workers, then run
-the fail-closed finalization pipeline. Do not train on the partial production
-dataset, inspect sealed test outputs, or create another small spatial pilot.
+Request explicit resource and cost approval, then run the frozen
+`canonical_flat_v1` versus `axis_process_coupled_v1` architecture-only screen
+on the complete admitted dataset. Use one `gnall` node, four CPUs, one V100,
+and a 12-hour hard limit. Run
+`scripts/hpc/slurm_canonical_669_architecture_ab.sh` from an exact clean
+server worktree created from the accepted local commit.
 
-The architecture and rollout-stability decision is frozen in
+The screen must consume every train/train sample exactly once per arm, evaluate
+all non-test one-step validation slices, and leave the sealed test split
+untouched. Only if the candidate passes the frozen screening gates does the
+project proceed to the separate mixed-horizon and tendency-bias experiment
+described in
 [`long_rollout_architecture_review_20260727.md`](long_rollout_architecture_review_20260727.md).
-After complete data admission, compare a matched flat control with the
-process- and axis-aware candidate before changing the rollout objective.
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).

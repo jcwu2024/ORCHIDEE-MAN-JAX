@@ -218,6 +218,17 @@ evaluated; test points and test years remain sealed. This first screen can
 only advance the candidate to the rollout-stability experiment. It cannot
 promote a user-facing daily surrogate.
 
+The real-shard V100 execution preflight passed on `gln01` at commit `0992178`.
+It hash-verified train/train shard `001.0-071.0:1961`, used zero-based sample
+indices 0-255 as one batch of 256, and consumed no validation or test sample.
+Both arms retained float32 parameters and finite losses. Flat compile/hot
+updates took `2.2506/0.00862 s`; axis/process compile/hot updates took
+`8.7199/0.00757 s`. The report SHA256 is
+`3975eb93000b355b51c565f421f04fdc19342032360c1610e1823dce607f3d16`.
+This proves that the shared runner, real data path, optimizer dtypes, and both
+compiled update functions execute on the target V100. It is not an accuracy,
+generalization, or promotion result.
+
 ### Capacity control
 
 The flat control and candidate must be matched to within 5% trainable
