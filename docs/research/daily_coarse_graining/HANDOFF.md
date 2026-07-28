@@ -447,6 +447,28 @@ finalization into a new output directory, and require
 `production_admission.json`, train-only statistics, and
 `acceptance_report.json` before freezing or launching the architecture A/B.
 
+That rerun is complete and accepted. Finalization job `14400343` ran from
+clean commit `90f751e`, completed in 4:08:54 with exit code zero, and peaked
+at 24,110,968 KiB RSS. The accepted directory is
+`runtime/outputs/acceptance/pft14-daily-teacher-669-1961-2010-v5-7397d1e-w100-final-20260728-r2`.
+Its gates report:
+
+- 669 landpoints, 50 years, and 33,450 hash-verified shards;
+- 12,208,581 total transitions and 8,591,565 train/train samples;
+- zero persistence mismatches across all 2,855 fast-day target columns;
+- 103,153,433 explicitly audited undefined target values;
+- train-only statistics JSON SHA256
+  `c9ed1c6ea4cfca6c0da9504a36d440a2b388375f01acf8bc78edc7645a4ffb37`;
+- statistics NPZ SHA256
+  `33865286021c39bbdb6511a115da55143789e857c31e701c7417ff1a9c50cdbd`;
+- a finite batch-8 flat-model CPU smoke with loss `0.01924320124089718`,
+  gradient norm `0.10434712955999045`, and all 16 gradient leaves finite.
+
+The complete 669 Teacher labels are now admitted for training. The next
+operation is to freeze the matched architecture-only A/B manifest. Do not
+reuse the nine-point statistics or checkpoint, add mixed-horizon objectives
+to this first comparison, or inspect the sealed test split.
+
 ## Accepted Historical Production Run
 
 The bounded architecture-development dataset is frozen by

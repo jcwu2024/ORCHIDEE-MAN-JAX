@@ -345,17 +345,19 @@ Markov contract are valid. Its operational evidence is recorded in
 
 ## Next Bounded Milestone
 
-The full 669-point baseline generation is complete: 100/100 workers and all
-33,450 point-years finished without active locks or worker errors. Finalization
-job `14399470` generated the complete 53,029,341-byte aggregate manifest, then
-failed in production admission because the reader expected a per-shard
-contract hash that dataset manifest v4 intentionally stores once at top
-level. The aggregator had already hash-verified every shard metadata file and
-the common contract.
+The full 669-point baseline is generated and admitted. Finalization job
+`14400343` completed in 4:08:54 with exit code zero. Its fail-closed gates
+accepted all 33,450 point-years and 12,208,581 transitions, found zero target
+persistence mismatches, fitted statistics from the 8,591,565 train/train
+samples only, and passed a finite real-batch JAX forward/loss/gradient smoke.
+The statistics JSON SHA256 is
+`c9ed1c6ea4cfca6c0da9504a36d440a2b388375f01acf8bc78edc7645a4ffb37`;
+the statistics NPZ SHA256 is
+`33865286021c39bbdb6511a115da55143789e857c31e701c7417ff1a9c50cdbd`.
 
-Rerun only the fail-closed finalization pipeline from a clean snapshot
-containing the admission schema fix. Require complete production admission,
-train-only statistics, target-representation audit, and finite model smoke
-before training. Do not regenerate Teacher shards, train from the partial
-asset, or inspect sealed test outputs. After admission, freeze the matched
-`canonical_flat_v1` versus `axis_process_coupled_v1` A/B manifest.
+The next bounded milestone is to freeze and run the matched
+`canonical_flat_v1` versus `axis_process_coupled_v1` architecture A/B. Both
+arms must use the same admitted samples, update budget, optimizer, schedule,
+seed, physical reconstruction, and canonical objective. Do not regenerate
+Teacher shards, reuse nine-point statistics/checkpoints, inspect sealed test
+outputs, or add rollout-objective changes before the architecture-only gate.

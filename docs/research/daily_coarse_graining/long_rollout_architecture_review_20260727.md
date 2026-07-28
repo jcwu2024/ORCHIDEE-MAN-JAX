@@ -205,9 +205,9 @@ On the real Contract v5 widths:
   and no-hidden-memory gates pass.
 
 These are implementation gates only. They are not accuracy, spatial
-generalization, long-rollout, or promotion evidence. The matched A/B manifest
-must remain unfrozen until the complete 669-point dataset passes final
-production admission.
+generalization, long-rollout, or promotion evidence. The complete 669-point
+dataset passed final production admission in job `14400343`; the matched A/B
+manifest can now be frozen against its dataset and statistics hashes.
 
 ### Capacity control
 
