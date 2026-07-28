@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-07-27.
+Last updated: 2026-07-28.
 
 This page is the current status authority. Dated files under
 `docs/source_audits/` and `docs/research/` are evidence snapshots and may
@@ -345,10 +345,17 @@ Markov contract are valid. Its operational evidence is recorded in
 
 ## Next Bounded Milestone
 
-Complete the full 669-point baseline with 20 `cnall` nodes and 100 one-CPU
-workers against the same output root. Calibration projects about 16 hours for
-the longest 350-entry worker before startup staggering; request a 20-hour hard
-limit. Expected CPU use is about 1,530 core-hours or CNY 107, while the
-requested hard-limit charge is at most CNY 140. Use sparse recovery only for
-failed worker IDs, then run the fail-closed 33,450-shard finalization pipeline.
-No model may train on the partial production dataset.
+The full 669-point baseline generation is complete: 100/100 workers and all
+33,450 point-years finished without active locks or worker errors. Finalization
+job `14399470` generated the complete 53,029,341-byte aggregate manifest, then
+failed in production admission because the reader expected a per-shard
+contract hash that dataset manifest v4 intentionally stores once at top
+level. The aggregator had already hash-verified every shard metadata file and
+the common contract.
+
+Rerun only the fail-closed finalization pipeline from a clean snapshot
+containing the admission schema fix. Require complete production admission,
+train-only statistics, target-representation audit, and finite model smoke
+before training. Do not regenerate Teacher shards, train from the partial
+asset, or inspect sealed test outputs. After admission, freeze the matched
+`canonical_flat_v1` versus `axis_process_coupled_v1` A/B manifest.

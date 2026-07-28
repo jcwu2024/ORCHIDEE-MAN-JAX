@@ -144,7 +144,6 @@ def _validate_complete_production_manifest(
     *,
     manifest: Mapping[str, Any],
     spec: ProductionSpec,
-    contract_sha256: str,
 ) -> None:
     _require_equal("production dataset status", manifest.get("status"), "complete")
     expected_years = range(spec.first_year, spec.last_year + 1)
@@ -177,11 +176,6 @@ def _validate_complete_production_manifest(
         key = (str(shard["landpoint_id"]), int(shard["year"]))
         if key in observed_shards:
             raise ValueError(f"duplicate production shard: {key}")
-        _require_equal(
-            f"shard contract hash for {key}",
-            shard["markov_contract_sha256"],
-            contract_sha256,
-        )
         observed_shards[key] = (
             str(shard["spatial_split"]),
             str(shard["temporal_split"]),
@@ -351,7 +345,6 @@ def admit_data_product(
         _validate_complete_production_manifest(
             manifest=manifest,
             spec=spec,
-            contract_sha256=metadata_sha256,
         )
 
     transitions = _transition_inventory(spec)

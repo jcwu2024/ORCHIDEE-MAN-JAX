@@ -147,19 +147,20 @@ process groups:
 Within each group, contract leaf shapes and `axis_names` determine the
 encoder:
 
-- scalar and short-memory leaves use small shared residual MLPs;
-- ordered soil and snow layers use depth-aware local mixing with an explicit
-  layer-position embedding;
-- carbon pools use factorized mixing over pool, litter/soil layer, and compact
-  PFT axes rather than one flattened dense projection;
-- PFT-bearing arrays share weights over the compact PFT axis while retaining
-  an explicit PFT role embedding;
+- scalar, PFT, ordered-memory, ordered-vertical, carbon-pool, and general
+  tensor leaves enter distinct contract-derived partitions;
+- `axis_process_coupled_v1` applies one independent masked dense encoder to
+  each nonempty partition and averages those partition tokens within the
+  source process;
+- the partition labels preserve the source axis semantics and leave a strict
+  extension point for specialized depth-local or factorized encoders, but v1
+  does not claim convolutional, positional, or tensor-factorized mixing;
 - finite masks are encoded beside values exactly as in the current model.
 
 Each group emits a small set of process tokens. Two lightweight
-cross-process attention/message-passing blocks allow hydrology, thermal,
-surface exchange, and carbon tokens to interact. This is an eight-process
-graph inside one landpoint, not a geographic graph and not a U-Net.
+cross-process residual message-passing blocks combine each process token with
+the mean global process token. This is an eight-process graph inside one
+landpoint, not a geographic graph, attention layer, or U-Net.
 
 ### Persistent conditioning
 
@@ -186,6 +187,27 @@ single complete-day interface.
 
 No learned recurrent memory may exist outside `S[d]`. A restart created after
 any day must reproduce the same next prediction as an uninterrupted rollout.
+
+## Implementation Status
+
+`axis_process_coupled_v1` is implemented behind the shared architecture
+registry but has not been trained or promoted. Its implementation identity is
+bound to the complete process/axis/target layout SHA256
+`bbe5e694f9bc2e8e4038f955cdbc967464b27bae883e95048ad092d1e734d24d`.
+On the real Contract v5 widths:
+
+- the flat control has 1,963,369 trainable parameters;
+- the candidate has 1,954,041 parameters, a ratio of `0.99524898`;
+- a real-width batch-2 JIT forward returns `(2, 2855)` fast-day values and
+  `(2, 2)` dynamic-mask logits;
+- reverse mode produces 117 finite gradient leaves;
+- synthetic restart, checkpoint identity, masks, conditions, multiday scan,
+  and no-hidden-memory gates pass.
+
+These are implementation gates only. They are not accuracy, spatial
+generalization, long-rollout, or promotion evidence. The matched A/B manifest
+must remain unfrozen until the complete 669-point dataset passes final
+production admission.
 
 ### Capacity control
 

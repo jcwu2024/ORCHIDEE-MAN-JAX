@@ -32,6 +32,7 @@ from research.daily_coarse_graining.canonical_training_run import (
     _adam_init,
 )
 from research.daily_coarse_graining.daily_model_architecture import (
+    AXIS_PROCESS_COUPLED_V1,
     CANONICAL_FLAT_V1,
     STRUCTURED_PROCESS_FILM_V1,
     build_daily_model_definition,
@@ -96,12 +97,16 @@ def test_multistep_cli_preserves_v1_default_and_accepts_v2_objective():
 
     baseline = parser.parse_args(required)
     candidate = parser.parse_args(required + ["--objective", "process_increment_v2"])
+    axis_process = parser.parse_args(
+        required + ["--model-architecture", AXIS_PROCESS_COUPLED_V1]
+    )
 
     assert baseline.objective == "canonical_multistep_v1"
     assert baseline.model_architecture == CANONICAL_FLAT_V1
     assert candidate.objective == "process_increment_v2"
     assert candidate.state_increment_loss_weight == 1.0
     assert candidate.state_delta_floor_ratio == 1.0e-3
+    assert axis_process.model_architecture == AXIS_PROCESS_COUPLED_V1
 
 
 def test_structured_candidate_requires_a_frozen_flat_initialization():

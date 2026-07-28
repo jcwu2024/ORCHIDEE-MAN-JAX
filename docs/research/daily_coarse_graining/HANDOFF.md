@@ -1,6 +1,6 @@
 # Daily Coarse-Graining Handoff
 
-Snapshot date: 2026-07-27
+Snapshot date: 2026-07-28
 
 This is the single operational handoff page for the daily coarse-graining
 research branch. Read this page before dated experiment reports. Stable
@@ -73,6 +73,17 @@ The intended final repository has independent runtime choices for execution
 backend (`cpu` or `gpu`) and transition implementation
 (`teacher_half_hour` or, after acceptance, `neural_daily`). The research
 branch is temporary development history, not a separate product.
+
+The next matched architecture candidate, `axis_process_coupled_v1`, is now
+implemented but untrained. It derives exhaustive state-axis partitions and
+eight target families from Contract v5, uses eight source process tokens and
+two process-coupling blocks, and carries no hidden cross-day memory outside
+canonical `S[d]`. Its real Contract v5 layout SHA256 is
+`bbe5e694f9bc2e8e4038f955cdbc967464b27bae883e95048ad092d1e734d24d`.
+The candidate has 1,954,041 parameters versus 1,963,369 for the flat control,
+and its local forward/reverse, checkpoint, restart, masking, conditioning, and
+multiday-scan gates pass. This is implementation evidence only; no accuracy or
+promotion claim has been made.
 
 ## Active Ten-Point v4 Production
 
@@ -414,6 +425,27 @@ Production control and consumption preparation is complete:
   split usage, sealed final testing, and rollout promotion gates;
 - the bounded reader preflight passed on a real local Teacher shard without
   training a network.
+
+Full production generation is now complete. All 100 workers and all 33,450
+landpoint-year entries are complete with no active locks or worker errors.
+Finalization job `14399470` passed the complete-worker gate and wrote the
+53,029,341-byte aggregate
+`runtime/outputs/training/pft14-daily-teacher-669-1961-2010-v5-7397d1e-w100/dataset_manifest.json`.
+It then failed after 1:06:19, at about 24.1 GiB peak RSS, before statistics or
+neural acceptance. The failure was an admission-reader schema defect:
+`teacher_data_product_admission` required a per-shard
+`markov_contract_sha256` even though dataset manifest v4 deliberately stores
+the already cross-shard-verified contract hash once at manifest top level.
+The aggregator had already read and hash-verified every shard metadata file
+and proved that all shard contracts agree.
+
+The local fix makes production admission consume the real dataset-v4 schema
+and retains the top-level contract metadata/hash gate. Its focused aggregation
+and admission regressions pass. Do not rerun Teacher generation or rewrite
+the aggregate. Transfer a clean launcher snapshot containing the fix, rerun
+finalization into a new output directory, and require
+`production_admission.json`, train-only statistics, and
+`acceptance_report.json` before freezing or launching the architecture A/B.
 
 ## Accepted Historical Production Run
 

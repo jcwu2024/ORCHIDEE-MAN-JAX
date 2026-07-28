@@ -280,7 +280,6 @@ def test_final_admission_requires_every_frozen_point_year_and_split(tmp_path):
             "year": year,
             "spatial_split": item.spatial_split,
             "temporal_split": spec.temporal_split(year),
-            "markov_contract_sha256": manifest["markov_contract_sha256"],
         }
         for item in spec.landpoints
         for year in range(spec.first_year, spec.last_year + 1)
@@ -304,6 +303,19 @@ def test_final_admission_requires_every_frozen_point_year_and_split(tmp_path):
     )
     report = json.loads(output.read_text(encoding="utf-8"))
     assert report["admission_phase"] == "complete_669_dataset"
+
+    contract_sha256 = manifest["markov_contract_sha256"]
+    manifest["markov_contract_sha256"] = "drifted-contract"
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
+    with pytest.raises(ValueError, match="dataset contract hash"):
+        admission.admit_data_product(
+            policy_path=policy,
+            contract_manifest_path=manifest_path,
+            output_path=tmp_path / "final.json",
+            require_production_dataset=True,
+        )
+    manifest["markov_contract_sha256"] = contract_sha256
+    manifest_path.write_text(json.dumps(manifest), encoding="utf-8")
 
     policy_raw = json.loads(policy.read_text(encoding="utf-8"))
     policy_raw["expected_generation_plan_sha256"] = "frozen-plan"

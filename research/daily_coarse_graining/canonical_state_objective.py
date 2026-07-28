@@ -78,7 +78,9 @@ def _canonical_sha256(value: Mapping[str, Any]) -> str:
     return hashlib.sha256(encoded).hexdigest()
 
 
-def _state_group(component: str, field: str) -> str:
+def state_process_group(component: str, field: str) -> str:
+    """Return the source-owned process group for one canonical state field."""
+
     if component == "slowproc_stomate_previous_step_state":
         if field in _STOMATE_FLUX_FIELDS:
             return "stomate_carbon_flux"
@@ -128,7 +130,7 @@ def state_process_weighting_from_contract(
         if not path:
             raise ValueError("continuous state leaf has no field path")
         component = str(leaf["component"])
-        group = _state_group(component, path[0])
+        group = state_process_group(component, path[0])
         assignments[group].append(
             {
                 "key": ".".join((component, *path)),
