@@ -519,6 +519,11 @@ without cache or device contention. The GPU 0/GPU 1 report SHA256 values are
 `ec66dac4be68cc0afc12dac5cd59efc2b3b6932377c999fa6ccc6665ed9a680a`
 and
 `4001937f2d22916755d9646cef7227cdb26496b5a6375246d8349070a0322351`.
+The same output root is safe to resubmit after timeout or infrastructure
+failure. The preflight is immutable and must match all frozen asset identities;
+completed arms resume from their accepted epoch checkpoint/report, incomplete
+arms run again, and worker logs append rather than overwrite. Keep the
+12-hour hard limit as an insurance ceiling.
 
 ## Accepted Historical Production Run
 
@@ -635,6 +640,9 @@ untouched. Only if the candidate passes the frozen screening gates does the
 project proceed to the separate mixed-horizon and tendency-bias experiment
 described in
 [`long_rollout_architecture_review_20260727.md`](long_rollout_architecture_review_20260727.md).
+If the job is interrupted, resubmit with the exact same environment exports
+and output root; do not create a new experiment directory or delete its
+preflight/checkpoints.
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).

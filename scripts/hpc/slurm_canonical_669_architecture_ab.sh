@@ -45,7 +45,10 @@ test -f "$EXPERIMENT"
 test -x "$PYTHON"
 test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
 test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
-test ! -e "$OUTPUT_ROOT"
+if [[ -e "$OUTPUT_ROOT" && ! -d "$OUTPUT_ROOT" ]]; then
+  echo "OUTPUT_ROOT exists and is not a directory: $OUTPUT_ROOT" >&2
+  exit 2
+fi
 mkdir -p "$OUTPUT_ROOT" "$ROOT/runtime/logs" "$ROOT/runtime/cache/jax/orcjax_gpu"
 
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
@@ -92,15 +95,21 @@ run_python 0 preflight \
   --phase prepare "${COMMON_ARGS[@]}"
 test -f "$PREFLIGHT"
 
+RUN_STARTED=$(date -u +%Y-%m-%dT%H:%M:%SZ)
+printf '\n=== architecture arm attempt %s ===\n' "$RUN_STARTED" \
+  >>"$OUTPUT_ROOT/flat_worker.log"
+printf '\n=== architecture arm attempt %s ===\n' "$RUN_STARTED" \
+  >>"$OUTPUT_ROOT/axis_process_worker.log"
+
 run_python 0 flat \
   "$PYTHON" -m scripts.hpc.run_canonical_architecture_ab_gpu \
   --phase arm --arm flat --preflight "$PREFLIGHT" "${COMMON_ARGS[@]}" \
-  >"$OUTPUT_ROOT/flat_worker.log" 2>&1 &
+  >>"$OUTPUT_ROOT/flat_worker.log" 2>&1 &
 FLAT_PID=$!
 run_python 1 axis_process \
   "$PYTHON" -m scripts.hpc.run_canonical_architecture_ab_gpu \
   --phase arm --arm axis_process --preflight "$PREFLIGHT" "${COMMON_ARGS[@]}" \
-  >"$OUTPUT_ROOT/axis_process_worker.log" 2>&1 &
+  >>"$OUTPUT_ROOT/axis_process_worker.log" 2>&1 &
 AXIS_PID=$!
 
 set +e

@@ -241,6 +241,10 @@ GPU 0/GPU 1 report SHA256 values are
 `ec66dac4be68cc0afc12dac5cd59efc2b3b6932377c999fa6ccc6665ed9a680a`
 and
 `4001937f2d22916755d9646cef7227cdb26496b5a6375246d8349070a0322351`.
+The launcher accepts a same-identity output directory for recovery: it refuses
+preflight drift, resumes completed epochs from their checkpoints, reruns only
+unfinished arm work, appends worker logs, and reapplies the same final gates.
+The 12-hour job limit remains a safety ceiling rather than an expected runtime.
 
 ### Capacity control
 

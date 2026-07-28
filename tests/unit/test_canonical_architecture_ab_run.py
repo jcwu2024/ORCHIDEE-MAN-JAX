@@ -82,7 +82,10 @@ def test_architecture_ab_classification_applies_all_frozen_gates():
     assert failed["checks"]["spatial_improvement"] is False
 
 
-def test_parallel_preflight_is_hash_bound_and_fails_on_drift(tmp_path):
+def test_parallel_preflight_is_hash_bound_idempotent_and_fails_on_drift(
+    tmp_path,
+    monkeypatch,
+):
     experiment = ab.load_architecture_ab_experiment(EXPERIMENT)
     paths = {}
     for name in ("dataset_manifest", "training_statistics", "acceptance_report"):
@@ -117,6 +120,42 @@ def test_parallel_preflight_is_hash_bound_and_fails_on_drift(tmp_path):
             paths=paths,
             protocol=protocol,
             accepted=accepted,
+        )
+
+    accepted["training_statistics"]["sample_count"] = 123
+    monkeypatch.setattr(
+        ab,
+        "_verified_inputs",
+        lambda **_: (experiment, paths, protocol, accepted),
+    )
+    output_root = tmp_path / "output"
+    first = ab.prepare_architecture_ab(
+        experiment_path=EXPERIMENT,
+        dataset_path=paths["dataset_manifest"],
+        statistics_path=paths["training_statistics"],
+        acceptance_path=paths["acceptance_report"],
+        protocol_path=protocol_path,
+        output_root=output_root,
+    )
+    assert ab.prepare_architecture_ab(
+        experiment_path=EXPERIMENT,
+        dataset_path=paths["dataset_manifest"],
+        statistics_path=paths["training_statistics"],
+        acceptance_path=paths["acceptance_report"],
+        protocol_path=protocol_path,
+        output_root=output_root,
+    ) == first
+    tampered = json.loads(first.read_text(encoding="utf-8"))
+    tampered["expected_training_samples"] = 999
+    first.write_text(json.dumps(tampered), encoding="utf-8")
+    with pytest.raises(ValueError, match="existing.*identity drift"):
+        ab.prepare_architecture_ab(
+            experiment_path=EXPERIMENT,
+            dataset_path=paths["dataset_manifest"],
+            statistics_path=paths["training_statistics"],
+            acceptance_path=paths["acceptance_report"],
+            protocol_path=protocol_path,
+            output_root=output_root,
         )
 
 
@@ -157,6 +196,9 @@ def test_architecture_ab_launcher_uses_two_parallel_gpu_arms_and_no_test_inputs(
     assert 'SINGULARITYENV_CUDA_VISIBLE_DEVICES="$visible_device"' in text
     assert 'wait "$FLAT_PID"' in text
     assert 'wait "$AXIS_PID"' in text
+    assert "test ! -e \"$OUTPUT_ROOT\"" not in text
+    assert '>>"$OUTPUT_ROOT/flat_worker.log"' in text
+    assert '>>"$OUTPUT_ROOT/axis_process_worker.log"' in text
     assert "canonical_669_axis_process_architecture_ab.json" in text
     assert "test -z" in text
     assert "test" not in "\n".join(

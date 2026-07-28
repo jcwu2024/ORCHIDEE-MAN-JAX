@@ -294,10 +294,14 @@ def prepare_architecture_ab(
     )
     output_root = Path(output_root).resolve()
     output_root.mkdir(parents=True, exist_ok=True)
-    return _atomic_json(
-        output_root / "architecture_ab_preflight.json",
-        _preflight_payload(experiment, paths, protocol, accepted),
-    )
+    preflight_path = output_root / "architecture_ab_preflight.json"
+    payload = _preflight_payload(experiment, paths, protocol, accepted)
+    if preflight_path.exists():
+        existing = json.loads(preflight_path.read_text(encoding="utf-8"))
+        if existing != payload:
+            raise ValueError("existing architecture A/B preflight identity drift")
+        return preflight_path
+    return _atomic_json(preflight_path, payload)
 
 
 def _verify_preflight(

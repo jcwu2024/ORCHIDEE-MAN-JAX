@@ -397,3 +397,7 @@ The GPU 0/GPU 1 report SHA256 values are
 `ec66dac4be68cc0afc12dac5cd59efc2b3b6932377c999fa6ccc6665ed9a680a`
 and
 `4001937f2d22916755d9646cef7227cdb26496b5a6375246d8349070a0322351`.
+The launcher is restart-safe under the same output root: an existing preflight
+must match every frozen input exactly, completed arm checkpoints/reports are
+resumed without another epoch, incomplete arms rerun, and worker logs append.
+The 12-hour Slurm limit is retained as a safety ceiling.
