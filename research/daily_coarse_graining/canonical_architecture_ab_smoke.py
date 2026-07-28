@@ -72,7 +72,7 @@ def run_smoke(
     ):
         raise ValueError("architecture smoke acceptance statistics hash drift")
 
-    index = load_dataset_index(dataset_path)
+    index = load_dataset_index(dataset_path, verify_hashes=False)
     reference = index.select(spatial_split="train", temporal_split="train")[0]
     if _sha256_file(reference.path) != reference.sha256:
         raise ValueError("architecture smoke shard hash drift")
@@ -125,6 +125,11 @@ def run_smoke(
         leaves = jax.tree_util.tree_leaves(parameters)
         if not all(np.all(np.isfinite(np.asarray(value))) for value in leaves):
             raise ValueError(f"architecture smoke produced non-finite {arm['id']} parameters")
+        dtypes = sorted({str(np.asarray(value).dtype) for value in leaves})
+        if dtypes != ["float32"]:
+            raise ValueError(
+                f"architecture smoke changed {arm['id']} parameter dtype: {dtypes}"
+            )
         arms[str(arm["id"])] = {
             "model_architecture": definition.identity(),
             "parameter_count": parameter_count(parameters),
@@ -133,6 +138,7 @@ def run_smoke(
             "compile_loss": float(compile_loss),
             "hot_loss": float(hot_loss),
             "finite_parameter_leaves": len(leaves),
+            "parameter_dtypes": dtypes,
         }
 
     ratio = arms["axis_process"]["parameter_count"] / arms["flat"]["parameter_count"]

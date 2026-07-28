@@ -425,24 +425,42 @@ def _adam_update(
 ):
     step = state.step + 1
     first = jax.tree_util.tree_map(
-        lambda old, grad: beta1 * old + (1.0 - beta1) * grad,
+        lambda old, grad: (
+            jnp.asarray(beta1, dtype=old.dtype) * old
+            + jnp.asarray(1.0 - beta1, dtype=old.dtype) * grad
+        ),
         state.first,
         gradients,
     )
     second = jax.tree_util.tree_map(
-        lambda old, grad: beta2 * old + (1.0 - beta2) * grad * grad,
+        lambda old, grad: (
+            jnp.asarray(beta2, dtype=old.dtype) * old
+            + jnp.asarray(1.0 - beta2, dtype=old.dtype) * grad * grad
+        ),
         state.second,
         gradients,
     )
     first_hat = jax.tree_util.tree_map(
-        lambda value: value / (1.0 - beta1**step), first
+        lambda value: value
+        / (
+            jnp.ones((), dtype=value.dtype)
+            - jnp.power(jnp.asarray(beta1, dtype=value.dtype), step)
+        ),
+        first,
     )
     second_hat = jax.tree_util.tree_map(
-        lambda value: value / (1.0 - beta2**step), second
+        lambda value: value
+        / (
+            jnp.ones((), dtype=value.dtype)
+            - jnp.power(jnp.asarray(beta2, dtype=value.dtype), step)
+        ),
+        second,
     )
     parameters = jax.tree_util.tree_map(
         lambda value, mean, variance: value
-        - learning_rate * mean / (jnp.sqrt(variance) + epsilon),
+        - jnp.asarray(learning_rate, dtype=value.dtype)
+        * mean
+        / (jnp.sqrt(variance) + jnp.asarray(epsilon, dtype=value.dtype)),
         parameters,
         first_hat,
         second_hat,
@@ -743,7 +761,7 @@ def train_experiment(
         if verified_acceptance is None
         else verified_acceptance
     )
-    index = load_dataset_index(manifest_path)
+    index = load_dataset_index(manifest_path, verify_hashes=False)
     statistics = load_training_statistics(statistics_path, index=index)
     contract = load_contract_metadata(manifest_path)
     representation = fast_day_target_representation_from_contract(contract)

@@ -2,9 +2,11 @@ from __future__ import annotations
 
 import hashlib
 import json
+import pickle
 from pathlib import Path
 from types import SimpleNamespace
 
+import jax
 import numpy as np
 
 from research.daily_coarse_graining import canonical_training_run as training
@@ -184,6 +186,12 @@ def test_streamed_fast_day_training_and_resume(tmp_path):
     assert first["identity"]["acceptance_sha256"] == hashlib.sha256(
         acceptance.read_bytes()
     ).hexdigest()
+    with (output / "checkpoint.pkl").open("rb") as handle:
+        checkpoint = pickle.load(handle)
+    assert {
+        np.asarray(value).dtype
+        for value in jax.tree_util.tree_leaves(checkpoint["parameters"])
+    } == {np.dtype("float32")}
 
     resumed = training.train_experiment(
         manifest,
