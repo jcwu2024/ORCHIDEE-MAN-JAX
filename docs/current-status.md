@@ -359,14 +359,13 @@ the statistics NPZ SHA256 is
 the acceptance report SHA256 is
 `0b13da5c7f8664f9b3b8fe70f6b8dc8e3aca513ecbf15d4b3d879a07d663b596`.
 
-The next bounded milestone is to freeze and run the matched
-`canonical_flat_v1` versus `axis_process_coupled_v1` architecture A/B. Both
-arms must use the same admitted samples, update budget, optimizer, schedule,
-seed, physical reconstruction, and canonical objective. Do not regenerate
-Teacher shards, reuse nine-point statistics/checkpoints, inspect sealed test
-outputs, or add rollout-objective changes before the architecture-only gate.
+The matched `canonical_flat_v1` versus `axis_process_coupled_v1` architecture
+A/B is complete and passed. Both arms used the same admitted samples, update
+budget, optimizer, schedule, seed, physical reconstruction, and canonical
+objective. Teacher shards were not regenerated and the sealed test split was
+not inspected.
 
-The architecture screen is now frozen in
+The architecture screen was frozen in
 `canonical_669_axis_process_architecture_ab.json`, canonical SHA256
 `39b94a28e51dba67017ac3f06973b7f4fbbfa4a560b249eec49420f4baed8099`.
 It uses one exact-once train/train epoch, batch size 256, learning rate
@@ -384,8 +383,17 @@ Both arms retained float32 parameters and finite losses. Flat compile/hot
 updates took `2.2506/0.00862 s`; axis/process compile/hot updates took
 `8.7199/0.00757 s`. The report SHA256 is
 `3975eb93000b355b51c565f421f04fdc19342032360c1610e1823dce607f3d16`.
-The next operation is the paid full architecture-only A/B; do not add rollout
-objectives or inspect sealed test outputs before this screen reports.
+
+Full job `14403674` completed in `03:00:49` with exit code zero from clean
+commit `4c1fe0c`. The final report SHA256 is
+`1995fb7f9284bde56c8ac5a9cd411d1bf08fc94f795a0ab1fdad69b42814c9a7`.
+Axis/process passed every predeclared gate and produced decision
+`advance_axis_process_to_rollout_stability_experiment`. Its
+temporal/spatial/joint score ratios relative to flat are
+`0.943530/0.960916/0.952866`; the maximum process-family ratio is `0.990947`,
+the parameter ratio is `0.995249`, and test evaluation is false. The selected
+axis/process checkpoint SHA256 is
+`a119999606b063ac9f9ed47e4d1bb664cdfe32b9459e7e7ee24e96a0e944db2e`.
 
 The production screen now performs the full acceptance/hash preflight once,
 runs the flat and axis/process arms concurrently on two isolated V100 devices,
@@ -401,3 +409,17 @@ The launcher is restart-safe under the same output root: an existing preflight
 must match every frozen input exactly, completed arm checkpoints/reports are
 resumed without another epoch, incomplete arms rerun, and worker logs append.
 The 12-hour Slurm limit is retained as a safety ceiling.
+
+The conditional post-architecture rollout-stability experiment is also frozen
+before the parent result in
+[`canonical_669_rollout_stability_protocol.json`](../manifests/coarse_graining/canonical_669_rollout_stability_protocol.json),
+canonical SHA256
+`370011f6d8edc447bd0ebf037249df1a18f3bfb30071204001366a2aecde310b`.
+Its auditor binds the admitted 669-point assets and architecture-screen hash,
+keeps the test split sealed, and rejects drift in the matched arms,
+`1/3/7/30`-day sampling, loss inventory, train-only coefficient calibration,
+hard constraints, screening thresholds, promotion ladder, or stop rules.
+Experiment B runs only if the parent decision is exactly
+`advance_axis_process_to_rollout_stability_experiment`; a rejected architecture
+returns to a named architecture hypothesis rather than silently applying the
+stability objective to the flat model.

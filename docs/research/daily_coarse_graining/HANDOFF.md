@@ -17,9 +17,9 @@ scientific and release facts remain authoritative in
    through Slurm.
 4. Confirm the admitted 669-point dataset and frozen architecture-screen
    hashes below. Do not regenerate Teacher data or reuse nine-point assets.
-5. The next computation is the full two-V100 architecture-only A/B on `gnall`.
-   Show resources, command, hard wall time, and worst-case cost before
-   `sbatch`.
+5. Treat architecture job `14403674` as accepted parent evidence. The next
+   work is implementing and locally gating the frozen rollout-stability
+   protocol; do not submit Experiment B before that implementation is ready.
 
 ```bash
 git status --short --branch
@@ -75,18 +75,17 @@ backend (`cpu` or `gpu`) and transition implementation
 (`teacher_half_hour` or, after acceptance, `neural_daily`). The research
 branch is temporary development history, not a separate product.
 
-The next matched architecture candidate, `axis_process_coupled_v1`, is
-implemented and has passed the real-shard V100 execution smoke, but it has not
-completed the full architecture screen or been promoted. It derives exhaustive
-state-axis partitions and eight target families from Contract v5, uses eight
-source process tokens and
+The matched architecture candidate, `axis_process_coupled_v1`, passed the full
+architecture screen and is promoted only as the parent for the separate
+rollout-stability experiment. It derives exhaustive state-axis partitions and
+eight target families from Contract v5, uses eight source process tokens and
 two process-coupling blocks, and carries no hidden cross-day memory outside
 canonical `S[d]`. Its real Contract v5 layout SHA256 is
 `bbe5e694f9bc2e8e4038f955cdbc967464b27bae883e95048ad092d1e734d24d`.
 The candidate has 1,954,041 parameters versus 1,963,369 for the flat control,
 and its local forward/reverse, checkpoint, restart, masking, conditioning, and
-multiday-scan gates pass. This is implementation evidence only; no accuracy or
-promotion claim has been made.
+multiday-scan gates pass. This is not yet promotion of a user-facing daily
+surrogate; long-rollout stability remains unproven.
 
 ## Active Ten-Point v4 Production
 
@@ -507,7 +506,7 @@ The server report is
 `runtime/outputs/smoke/architecture-ab-real-shard-0992178.json`, SHA256
 `3975eb93000b355b51c565f421f04fdc19342032360c1610e1823dce607f3d16`.
 This closes the execution preflight only. It is not accuracy or promotion
-evidence. The next operation is the paid full architecture-only A/B.
+evidence. The full architecture-only A/B is now running as described below.
 
 The production launcher was subsequently split into one shared full-data
 preflight, two concurrent architecture workers on isolated GPUs, and one
@@ -524,6 +523,33 @@ failure. The preflight is immutable and must match all frozen asset identities;
 completed arms resume from their accepted epoch checkpoint/report, incomplete
 arms run again, and worker logs append rather than overwrite. Keep the
 12-hour hard limit as an insurance ceiling.
+
+The full screen completed as Slurm job `14403674` on `gnall` node
+`ibc13b03n03`, from clean commit `4c1fe0c`, in `03:00:49` with exit code zero.
+The immutable output root is
+`runtime/outputs/training/canonical-669-architecture-ab-4c1fe0c`. Its final
+report SHA256 is
+`1995fb7f9284bde56c8ac5a9cd411d1bf08fc94f795a0ab1fdad69b42814c9a7`.
+All frozen checks passed. The temporal/spatial/joint score ratios are
+`0.943530/0.960916/0.952866`, the maximum family ratio is `0.990947`, and the
+parameter ratio is `0.995249`. The decision is exactly
+`advance_axis_process_to_rollout_stability_experiment`; test evaluation is
+false. The accepted axis/process best-checkpoint SHA256 is
+`a119999606b063ac9f9ed47e4d1bb664cdfe32b9459e7e7ee24e96a0e944db2e`.
+
+The next experiment has been frozen without looking at the architecture result:
+[`../../../manifests/coarse_graining/canonical_669_rollout_stability_protocol.json`](../../../manifests/coarse_graining/canonical_669_rollout_stability_protocol.json),
+canonical SHA256
+`370011f6d8edc447bd0ebf037249df1a18f3bfb30071204001366a2aecde310b`.
+The local auditor is
+`research.daily_coarse_graining.rollout_stability_protocol`. It verifies the
+parent experiment and admitted-data hashes, exact arm inventory, sealed test
+policy, mixed `1/3/7/30`-day sampling, complete loss and science inventories,
+train-only gradient-norm coefficient calibration, hard constraints, screening
+gates, and ordered promotion/stop rules. Experiment B is permitted only if the
+parent report is completed and passed with decision
+`advance_axis_process_to_rollout_stability_experiment`. If axis/process is
+rejected, do not run this protocol on flat by default.
 
 ## Accepted Historical Production Run
 
@@ -627,22 +653,14 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-Request explicit resource and cost approval, then run the frozen
-`canonical_flat_v1` versus `axis_process_coupled_v1` architecture-only screen
-on the complete admitted dataset. Use one `gnall` node, eight CPUs, two V100s,
-and a 12-hour hard limit. Run
-`scripts/hpc/slurm_canonical_669_architecture_ab.sh` from an exact clean
-server worktree created from the accepted local commit.
-
-The screen must consume every train/train sample exactly once per arm, evaluate
-all non-test one-step validation slices, and leave the sealed test split
-untouched. Only if the candidate passes the frozen screening gates does the
-project proceed to the separate mixed-horizon and tendency-bias experiment
-described in
+Implement the frozen mixed-horizon and tendency-bias protocol described in
 [`long_rollout_architecture_review_20260727.md`](long_rollout_architecture_review_20260727.md).
-If the job is interrupted, resubmit with the exact same environment exports
-and output root; do not create a new experiment directory or delete its
-preflight/checkpoints.
+The implementation must consume the accepted axis/process checkpoint above,
+calibrate loss coefficients from train/train data only, preserve the matched
+one-step continuation control, checkpoint horizon-sampler state, and pass a
+real-shard forward/reverse/restart smoke. Only then estimate resources and
+request approval for the paid Experiment B screen. Do not inspect the sealed
+test split or begin 365-day/complete-chain validation at this stage.
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).

@@ -1,0 +1,272 @@
+{
+  "schema_version": "canonical_rollout_stability_protocol_v1",
+  "protocol_id": "canonical-669-rollout-stability-v1",
+  "status": "frozen_before_parent_result",
+  "parent_architecture_screen": {
+    "experiment_manifest": "manifests/coarse_graining/canonical_669_axis_process_architecture_ab.json",
+    "experiment_canonical_sha256": "39b94a28e51dba67017ac3f06973b7f4fbbfa4a560b249eec49420f4baed8099",
+    "required_report_status": "completed",
+    "required_classification_status": "passed",
+    "required_decision": "advance_axis_process_to_rollout_stability_experiment",
+    "report_and_checkpoint_sha256_resolved_in_execution_manifest": true
+  },
+  "artifacts": {
+    "dataset_manifest_sha256": "89ea2f24bad8f4b39129937f4106285dd53936c35d8dc610810f865b02d4e508",
+    "training_statistics_sha256": "c9ed1c6ea4cfca6c0da9504a36d440a2b388375f01acf8bc78edc7645a4ffb37",
+    "acceptance_report_sha256": "0b13da5c7f8664f9b3b8fe70f6b8dc8e3aca513ecbf15d4b3d879a07d663b596",
+    "training_protocol": "manifests/coarse_graining/daily_teacher_669_training_protocol.json",
+    "training_protocol_sha256": "9db3e89ce4c2e1649fa17032cfde34e091b85b1fe274d29969abdeef732829e3"
+  },
+  "data_policy": {
+    "coefficient_calibration": {
+      "spatial_split": "train",
+      "temporal_split": "train"
+    },
+    "training": {
+      "spatial_split": "train",
+      "temporal_split": "train"
+    },
+    "model_selection_slices": [
+      "temporal",
+      "spatial",
+      "joint"
+    ],
+    "sealed_test_used": false,
+    "window_sampling": "balanced_landpoint_year_start_day_v1",
+    "cross_year_or_restart_windows": false,
+    "landpoint_identity_as_feature": false
+  },
+  "comparison": {
+    "initialization": "same_parent_best_checkpoint_and_optimizer",
+    "arms": [
+      {
+        "id": "one_step_continuation_control",
+        "objective": "canonical_one_step_v1"
+      },
+      {
+        "id": "mixed_horizon_stability_v1",
+        "objective": "fast_next_rollout_bias_science_v1"
+      }
+    ],
+    "same_anchor_batches": true,
+    "same_optimizer_updates": true,
+    "same_seed": true,
+    "extra_rollout_windows_are_the_treatment": true
+  },
+  "optimization": {
+    "optimizer": "adam",
+    "learning_rate": 3e-05,
+    "screening_updates": 8192,
+    "anchor_batch_size": 256,
+    "checkpoint_every_updates": 256,
+    "progress_every_updates": 128,
+    "screening_seed": 20260728,
+    "confirmation_seeds_after_pass": [
+      20260729,
+      20260730,
+      20260731
+    ],
+    "confirmation_runs_forbidden_before_screening_pass": true
+  },
+  "mixed_horizon_sampling": {
+    "one_step_anchor_on_every_update": true,
+    "sample_one_rollout_window_on_every_candidate_update": true,
+    "horizons": [
+      {
+        "days": 1,
+        "probability": 0.4,
+        "batch_size": 256,
+        "rematerialize": false
+      },
+      {
+        "days": 3,
+        "probability": 0.3,
+        "batch_size": 64,
+        "rematerialize": false
+      },
+      {
+        "days": 7,
+        "probability": 0.2,
+        "batch_size": 32,
+        "rematerialize": false
+      },
+      {
+        "days": 30,
+        "probability": 0.1,
+        "batch_size": 8,
+        "rematerialize": true
+      }
+    ],
+    "loss_reduction": "mean_over_valid_days_then_batch",
+    "horizon_choice_seeded_and_checkpointed": true
+  },
+  "loss": {
+    "undefined_flip_binary_weight": 0.1,
+    "components": [
+      {
+        "id": "L_fast",
+        "definition": "complete_normalized_fast_day_boundary_masked_huber",
+        "coefficient": 1.0,
+        "present_in_both_arms": true
+      },
+      {
+        "id": "L_next",
+        "definition": "complete_normalized_next_state_after_differentiable_retained_tail",
+        "coefficient_source": "train_only_gradient_calibration",
+        "present_in_both_arms": false
+      },
+      {
+        "id": "L_rollout",
+        "definition": "free_rollout_state_error_from_day_2_through_sampled_horizon",
+        "coefficient_source": "train_only_gradient_calibration",
+        "present_in_both_arms": false
+      },
+      {
+        "id": "L_bias",
+        "definition": "batch_time_mean_normalized_tendency_error_by_eight_process_groups",
+        "coefficient_source": "train_only_gradient_calibration",
+        "present_in_both_arms": false
+      },
+      {
+        "id": "L_science",
+        "definition": "named_flux_stock_and_tendency_objective",
+        "coefficient_source": "train_only_gradient_calibration",
+        "present_in_both_arms": false
+      }
+    ],
+    "coefficient_calibration": {
+      "method": "train_only_median_gradient_norm_ratio_v1",
+      "anchor_component": "L_fast",
+      "fixed_calibration_seed": 20260728,
+      "calibration_batches_per_horizon": 32,
+      "target_gradient_norm_ratios": {
+        "L_next": 1.0,
+        "L_rollout": 1.0,
+        "L_bias": 0.25,
+        "L_science": 0.5
+      },
+      "coefficient_clip": [
+        0.001,
+        1000.0
+      ],
+      "validation_data_forbidden": true,
+      "coefficient_asset_frozen_before_training": true,
+      "coefficient_search_after_validation_forbidden": true
+    },
+    "state_weighting": "equal_total_weight_for_each_of_eight_source_process_groups",
+    "state_delta_scale": "max_empirical_delta_scale_and_0.01_state_scale",
+    "complete_budget_penalties": {
+      "training_status": "disabled_until_complete_source_term_ledger",
+      "reporting_status": "report_only",
+      "invented_or_partial_conservation_identity_forbidden": true
+    }
+  },
+  "science_inventory": {
+    "daily_fluxes": [
+      "gpp_daily",
+      "npp_daily",
+      "resp_growth",
+      "resp_maint",
+      "resp_hetero"
+    ],
+    "vegetation_stocks": [
+      "biomass",
+      "lai",
+      "height"
+    ],
+    "litter_and_soil_carbon": [
+      "litter",
+      "carbon_32l",
+      "DOC",
+      "deepC_peat"
+    ],
+    "required_metrics": [
+      "normalized_rmse",
+      "mean_bias",
+      "absolute_error",
+      "relative_error_where_denominator_is_scientifically_valid",
+      "tendency_error",
+      "multiannual_drift_slope"
+    ],
+    "low_biomass_cases_require_absolute_and_relative_metrics": true
+  },
+  "hard_constraints": {
+    "defined_status_mismatches": 0,
+    "discrete_state_mismatches": 0,
+    "nonfinite_defined_values": 0,
+    "negative_source_nonnegative_carbon_stocks": 0,
+    "restart_split_prediction": "exact",
+    "hidden_cross_day_network_memory": false,
+    "deterministic_mirrors_and_retained_tail_remain_source_backed": true
+  },
+  "screening_validation": {
+    "horizons_days": [
+      1,
+      7,
+      30
+    ],
+    "teacher_forced_and_free_rollout": true,
+    "all_model_selection_samples": true,
+    "required_slices": [
+      "temporal",
+      "spatial",
+      "joint"
+    ],
+    "gates_relative_to_one_step_continuation_control": {
+      "one_step_global_ratio_max": 1.02,
+      "one_step_family_ratio_max": 1.05,
+      "seven_day_free_rollout_global_ratio_max": 0.95,
+      "thirty_day_free_rollout_global_ratio_max": 0.95,
+      "tendency_bias_ratio_max": 0.9,
+      "science_metric_ratio_max": 1.05
+    },
+    "all_hard_constraints_required": true
+  },
+  "post_screening_promotion": [
+    {
+      "id": "three_seed_confirmation",
+      "required_before_next_gate": true
+    },
+    {
+      "id": "annual_365_day",
+      "free_rollout": true,
+      "restart_split_equivalence": true,
+      "required_slices": [
+        "temporal",
+        "spatial",
+        "joint"
+      ],
+      "annual_integrated_flux_median_relative_bias_max": 0.02,
+      "annual_integrated_flux_p95_relative_bias_max": 0.05,
+      "year_end_stock_median_relative_error_max": 0.02,
+      "year_end_stock_p95_relative_error_max": 0.05
+    },
+    {
+      "id": "complete_1961_2007_validation_chains",
+      "free_rollout": true,
+      "model_and_hyperparameters_frozen_after_pass": true
+    },
+    {
+      "id": "sealed_1961_2010_test",
+      "run_once_after_freeze": true,
+      "model_selection_forbidden": true
+    }
+  ],
+  "stop_rules": {
+    "parent_architecture_screen_rejected": "do_not_run_experiment_b",
+    "screening_gate_failed": "stop_and_attribute_named_architecture_or_objective_failure",
+    "open_ended_weight_search": false,
+    "inspect_sealed_test_after_failure": false,
+    "train_through_365_days_or_50_years": false
+  },
+  "execution_manifest_requirements": [
+    "parent_architecture_ab_report_sha256",
+    "selected_parent_checkpoint_sha256",
+    "resolved_model_architecture_identity",
+    "resolved_loss_coefficients_and_calibration_asset_sha256",
+    "dataset_statistics_acceptance_and_training_protocol_sha256",
+    "optimizer_update_budget_and_seed",
+    "environment_lock_sha256",
+    "output_root"
+  ]
+}

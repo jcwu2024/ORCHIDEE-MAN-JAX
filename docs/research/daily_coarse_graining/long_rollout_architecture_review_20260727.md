@@ -191,7 +191,7 @@ any day must reproduce the same next prediction as an uninterrupted rollout.
 ## Implementation Status
 
 `axis_process_coupled_v1` is implemented behind the shared architecture
-registry but has not been trained or promoted. Its implementation identity is
+registry and has passed the architecture-only screen. Its implementation identity is
 bound to the complete process/axis/target layout SHA256
 `bbe5e694f9bc2e8e4038f955cdbc967464b27bae883e95048ad092d1e734d24d`.
 On the real Contract v5 widths:
@@ -204,10 +204,10 @@ On the real Contract v5 widths:
 - synthetic restart, checkpoint identity, masks, conditions, multiday scan,
   and no-hidden-memory gates pass.
 
-These are implementation gates only. They are not accuracy, spatial
-generalization, long-rollout, or promotion evidence. The complete 669-point
-dataset passed final production admission in job `14400343`; the matched A/B
-manifest can now be frozen against its dataset and statistics hashes.
+These implementation gates are supplemented by the matched one-step
+architecture result below. They are still not long-rollout or user-facing
+surrogate promotion evidence. The complete 669-point dataset passed final
+production admission in job `14400343`.
 
 The architecture screen is frozen at canonical manifest SHA256
 `39b94a28e51dba67017ac3f06973b7f4fbbfa4a560b249eec49420f4baed8099`.
@@ -217,6 +217,16 @@ objective. All temporal, spatial, and joint one-step validation samples are
 evaluated; test points and test years remain sealed. This first screen can
 only advance the candidate to the rollout-stability experiment. It cannot
 promote a user-facing daily surrogate.
+
+That screen completed in Slurm job `14403674` from clean commit `4c1fe0c`.
+The final report SHA256 is
+`1995fb7f9284bde56c8ac5a9cd411d1bf08fc94f795a0ab1fdad69b42814c9a7`.
+All checks passed, with temporal/spatial/joint score ratios
+`0.943530/0.960916/0.952866`, maximum family ratio `0.990947`, and parameter
+ratio `0.995249`. The accepted decision is
+`advance_axis_process_to_rollout_stability_experiment`, the test split was
+not evaluated, and the selected checkpoint SHA256 is
+`a119999606b063ac9f9ed47e4d1bb664cdfe32b9459e7e7ee24e96a0e944db2e`.
 
 The real-shard V100 execution preflight passed on `gln01` at commit `0992178`.
 It hash-verified train/train shard `001.0-071.0:1961`, used zero-based sample
@@ -272,6 +282,22 @@ passes the screening gates. The old sparse-data checkpoint is a historical
 baseline, not an initialization for this comparison.
 
 ### Experiment B: rollout stability
+
+This experiment is now machine-frozen before the Experiment A result in
+[`../../../manifests/coarse_graining/canonical_669_rollout_stability_protocol.json`](../../../manifests/coarse_graining/canonical_669_rollout_stability_protocol.json),
+canonical SHA256
+`370011f6d8edc447bd0ebf037249df1a18f3bfb30071204001366a2aecde310b`.
+The protocol is conditional on the exact parent decision
+`advance_axis_process_to_rollout_stability_experiment`; rejection of
+axis/process does not automatically authorize a stability run on flat.
+
+The matched screen compares a one-step continuation control with a
+mixed-horizon stability arm from the same parent checkpoint and optimizer
+state. Both use seed `20260728`, learning rate `3e-5`, and 8,192 optimizer
+updates. Candidate rollout horizons are sampled throughout training as
+`1/3/7/30` days with probabilities `0.4/0.3/0.2/0.1` and batch sizes
+`256/64/32/8`; the 30-day path uses rematerialization. Every candidate update
+also retains a matched one-step anchor.
 
 Only after the architecture candidate passes:
 
@@ -340,6 +366,12 @@ experiment manifest before results are visible. The rejected
 weights. Complete water or carbon budget penalties may be added only when the
 contract exposes every required source term; an incomplete conservation
 identity must not be invented.
+
+For this frozen screen, `alpha/beta/gamma/delta` are set once using median
+train-only gradient norms from 32 fixed-seed batches per horizon. Their target
+gradient-norm ratios relative to `L_fast` are `1.0/1.0/0.25/0.5`, clipped to
+`[0.001, 1000]`. The resulting coefficient asset is frozen before training;
+validation-guided coefficient search is forbidden.
 
 Fluxes and stocks require different long-run gates. GPP, NPP, and respiration
 are evaluated by daily/seasonal skill and monthly or annual integrated bias.
