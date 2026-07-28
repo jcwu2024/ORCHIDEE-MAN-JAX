@@ -209,6 +209,15 @@ generalization, long-rollout, or promotion evidence. The complete 669-point
 dataset passed final production admission in job `14400343`; the matched A/B
 manifest can now be frozen against its dataset and statistics hashes.
 
+The architecture screen is frozen at canonical manifest SHA256
+`39b94a28e51dba67017ac3f06973b7f4fbbfa4a560b249eec49420f4baed8099`.
+It runs one full exact-once train/train epoch for each arm with batch size 256,
+learning rate `1e-4`, seed `20260728`, and the unchanged canonical one-step
+objective. All temporal, spatial, and joint one-step validation samples are
+evaluated; test points and test years remain sealed. This first screen can
+only advance the candidate to the rollout-stability experiment. It cannot
+promote a user-facing daily surrogate.
+
 ### Capacity control
 
 The flat control and candidate must be matched to within 5% trainable

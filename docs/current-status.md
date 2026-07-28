@@ -361,3 +361,14 @@ arms must use the same admitted samples, update budget, optimizer, schedule,
 seed, physical reconstruction, and canonical objective. Do not regenerate
 Teacher shards, reuse nine-point statistics/checkpoints, inspect sealed test
 outputs, or add rollout-objective changes before the architecture-only gate.
+
+The architecture screen is now frozen in
+`canonical_669_axis_process_architecture_ab.json`, canonical SHA256
+`39b94a28e51dba67017ac3f06973b7f4fbbfa4a560b249eec49420f4baed8099`.
+It uses one exact-once train/train epoch, batch size 256, learning rate
+`1e-4`, seed `20260728`, full temporal/spatial/joint one-step validation, and
+no test samples. The production trainer now supports both registered
+architectures through the same loss and balanced reader, performs one shared
+asset verification for the two-arm run, and avoids per-batch host loss
+synchronization. Before paid execution, pass the prepared real-shard V100
+compile/update smoke on `gln01`.

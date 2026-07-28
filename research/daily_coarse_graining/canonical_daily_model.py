@@ -257,7 +257,7 @@ def masked_huber_loss(prediction, target, finite, weights, *, delta: float = 1.0
 
 
 def canonical_one_step_loss(
-    parameters: CanonicalModelParameters,
+    parameters,
     batch: CanonicalDayBatch,
     *,
     normalized_fast_day_target,
@@ -265,8 +265,9 @@ def canonical_one_step_loss(
     fast_day_target_weights,
     dynamic_undefined_flip_target,
     undefined_loss_weight: float = 0.1,
+    model_apply=canonical_model_apply,
 ):
-    prediction = canonical_model_apply(parameters, batch)
+    prediction = model_apply(parameters, batch)
     continuous = masked_huber_loss(
         prediction.normalized_fast_day_target,
         normalized_fast_day_target,

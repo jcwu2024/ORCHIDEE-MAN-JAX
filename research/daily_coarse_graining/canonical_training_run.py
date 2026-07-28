@@ -36,6 +36,12 @@ from research.daily_coarse_graining.canonical_training import (
     restore_fast_day_target,
 )
 from research.daily_coarse_graining.daily_markov_contract import load_markov_shard
+from research.daily_coarse_graining.daily_model_architecture import (
+    CANONICAL_FLAT_V1,
+    MODEL_ARCHITECTURES,
+    build_daily_model_definition,
+    verify_checkpoint_architecture,
+)
 from research.daily_coarse_graining.markov_dataset import (
     DATASET_SCHEMA_VERSION,
     SPLITS,
@@ -45,7 +51,12 @@ from research.daily_coarse_graining.markov_dataset import (
     fit_training_statistics,
     load_dataset_index,
     load_training_statistics,
+    prefetched_batches,
     write_training_statistics,
+)
+from research.daily_coarse_graining.production_training_protocol import (
+    balanced_samples,
+    load_training_protocol,
 )
 
 CHECKPOINT_SCHEMA_VERSION = "canonical_fast_day_checkpoint_v3"
@@ -379,6 +390,24 @@ def _iter_epoch_batches(
         yield collate_samples(pending)
 
 
+def _iter_protocol_epoch_batches(
+    index: MarkovDatasetIndex,
+    *,
+    protocol,
+    batch_size: int,
+    seed: int,
+    prefetch: int,
+) -> Iterator[dict[str, Any]]:
+    samples = balanced_samples(
+        index,
+        seed=seed,
+        max_open_shards=protocol.max_open_shards,
+        spatial_split="train",
+        temporal_split="train",
+    )
+    yield from prefetched_batches(samples, batch_size, prefetch=prefetch)
+
+
 def _adam_init(parameters: CanonicalModelParameters) -> AdamState:
     zeros = jax.tree_util.tree_map(jnp.zeros_like, parameters)
     return AdamState(jnp.asarray(0, dtype=jnp.int32), zeros, zeros)
@@ -421,28 +450,29 @@ def _adam_update(
     return parameters, AdamState(step, first, second)
 
 
-def _train_step(parameters, optimizer, batch, weights, learning_rate):
-    def loss(value):
-        return canonical_one_step_loss(
-            value,
-            batch.model_input,
-            normalized_fast_day_target=batch.normalized_fast_day_target,
-            fast_day_target_finite=batch.fast_day_target_finite,
-            fast_day_target_weights=weights,
-            dynamic_undefined_flip_target=batch.dynamic_undefined_flip_target,
+def _make_train_step(model_apply):
+    def train_step(parameters, optimizer, batch, weights, learning_rate):
+        def loss(value):
+            return canonical_one_step_loss(
+                value,
+                batch.model_input,
+                normalized_fast_day_target=batch.normalized_fast_day_target,
+                fast_day_target_finite=batch.fast_day_target_finite,
+                fast_day_target_weights=weights,
+                dynamic_undefined_flip_target=batch.dynamic_undefined_flip_target,
+                model_apply=model_apply,
+            )
+
+        loss_value, gradients = jax.value_and_grad(loss)(parameters)
+        parameters, optimizer = _adam_update(
+            parameters,
+            gradients,
+            optimizer,
+            learning_rate=learning_rate,
         )
+        return parameters, optimizer, loss_value
 
-    loss_value, gradients = jax.value_and_grad(loss)(parameters)
-    parameters, optimizer = _adam_update(
-        parameters,
-        gradients,
-        optimizer,
-        learning_rate=learning_rate,
-    )
-    return parameters, optimizer, loss_value
-
-
-_COMPILED_TRAIN_STEP = jax.jit(_train_step)
+    return jax.jit(train_step)
 
 
 def _family_ranges(contract: Mapping[str, Any]):
@@ -465,6 +495,7 @@ def _evaluate(
     temporal_split: str,
     batch_size: int,
     max_batches: int | None,
+    model_apply=canonical_model_apply,
 ) -> dict[str, Any]:
     ranges = _family_ranges(contract)
     squared = defaultdict(float)
@@ -491,7 +522,7 @@ def _evaluate(
         drop_last=False,
     ):
         batch = prepare_canonical_batch(raw, statistics, representation)
-        model_prediction = canonical_model_apply(parameters, batch.model_input)
+        model_prediction = model_apply(parameters, batch.model_input)
         predicted = np.asarray(model_prediction.normalized_fast_day_target)
         target = np.asarray(batch.normalized_fast_day_target)
         finite = np.asarray(batch.fast_day_target_finite)
@@ -637,6 +668,9 @@ def _checkpoint_identity(
     statistics_path: Path,
     acceptance_path: Path,
     config: CanonicalModelConfig,
+    *,
+    model_architecture: Mapping[str, Any],
+    training_protocol_sha256: str | None,
 ) -> dict[str, Any]:
     return {
         "dataset_id": index.dataset_id,
@@ -645,6 +679,8 @@ def _checkpoint_identity(
         "statistics_sha256": _sha256_file(statistics_path),
         "acceptance_sha256": _sha256_file(acceptance_path),
         "model_config": config._asdict(),
+        "model_architecture": dict(model_architecture),
+        "training_protocol_sha256": training_protocol_sha256,
     }
 
 
@@ -653,8 +689,17 @@ def _load_checkpoint(path: Path, identity: Mapping[str, Any]):
         payload = pickle.load(handle)
     if payload.get("schema_version") != CHECKPOINT_SCHEMA_VERSION:
         raise ValueError("unsupported canonical checkpoint schema")
-    if payload.get("identity") != identity:
-        raise ValueError("checkpoint dataset or model identity mismatch")
+    observed = payload.get("identity")
+    if observed != identity:
+        legacy_flat_identity = dict(identity)
+        legacy_flat_identity.pop("model_architecture", None)
+        legacy_flat_identity.pop("training_protocol_sha256", None)
+        if (
+            identity.get("model_architecture") != {"id": CANONICAL_FLAT_V1}
+            or identity.get("training_protocol_sha256") is not None
+            or observed != legacy_flat_identity
+        ):
+            raise ValueError("checkpoint dataset or model identity mismatch")
     return payload
 
 
@@ -671,28 +716,59 @@ def train_experiment(
     max_eval_batches: int | None = None,
     architecture: Mapping[str, int] | None = None,
     acceptance_path: str | Path,
+    model_architecture: str = CANONICAL_FLAT_V1,
+    training_protocol_path: str | Path | None = None,
+    prefetch_batches: int = 2,
+    verified_acceptance: Mapping[str, Any] | None = None,
 ) -> dict[str, Any]:
-    if epochs < 1 or batch_size < 1 or learning_rate <= 0.0:
-        raise ValueError("epochs, batch_size, and learning_rate must be positive")
+    if (
+        epochs < 1
+        or batch_size < 1
+        or learning_rate <= 0.0
+        or prefetch_batches < 1
+    ):
+        raise ValueError(
+            "epochs, batch size, learning rate, and prefetch must be positive"
+        )
     manifest_path = Path(manifest_path).resolve()
     statistics_path = Path(statistics_path).resolve()
     acceptance_path = Path(acceptance_path).resolve()
     output_dir = Path(output_dir).resolve()
-    verify_training_acceptance(
-        acceptance_path,
-        manifest_path,
-        statistics_path,
+    accepted = (
+        verify_training_acceptance(
+            acceptance_path,
+            manifest_path,
+            statistics_path,
+        )
+        if verified_acceptance is None
+        else verified_acceptance
     )
     index = load_dataset_index(manifest_path)
     statistics = load_training_statistics(statistics_path, index=index)
     contract = load_contract_metadata(manifest_path)
     representation = fast_day_target_representation_from_contract(contract)
-    representation_audit = audit_fast_day_target_representation(index, contract)
+    representation_audit = dict(accepted["target_representation_audit"])
     if representation_audit["status"] != "passed":
         raise ValueError(
             "fast-day target representation audit failed with "
             f"{representation_audit['persistence_mismatches']} mismatches"
         )
+    protocol = (
+        None
+        if training_protocol_path is None
+        else load_training_protocol(Path(training_protocol_path).resolve())
+    )
+    if protocol is not None:
+        parent = protocol.raw["parent_data_product"]
+        raw_manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        expected_parent = {
+            "teacher_git_head": index.teacher_git_head,
+            "contract_sha256": index.contract_sha256,
+            "generation_plan_sha256": raw_manifest["plan_sha256"],
+        }
+        for name, expected in expected_parent.items():
+            if parent.get(name) != expected:
+                raise ValueError(f"training protocol parent {name} drift")
     first_raw = next(
         _iter_epoch_batches(
             index,
@@ -700,63 +776,86 @@ def train_experiment(
             temporal_split="train",
             batch_size=batch_size,
             seed=seed,
-            drop_last=True,
+            drop_last=False,
         )
     )
     first = prepare_canonical_batch(first_raw, statistics, representation)
     config = model_config_from_batch(first, **dict(architecture or {}))
+    model_definition = build_daily_model_definition(
+        model_architecture,
+        config,
+        contract,
+    )
     identity = _checkpoint_identity(
         index,
         statistics_path,
         acceptance_path,
         config,
+        model_architecture=model_definition.identity(),
+        training_protocol_sha256=None if protocol is None else protocol.sha256,
     )
     checkpoint_path = output_dir / "checkpoint.pkl"
     best_checkpoint_path = output_dir / "best_checkpoint.pkl"
     if resume and checkpoint_path.exists():
         checkpoint = _load_checkpoint(checkpoint_path, identity)
+        verify_checkpoint_architecture(checkpoint["identity"], model_definition)
         parameters = checkpoint["parameters"]
         optimizer = checkpoint["optimizer"]
         completed_epochs = int(checkpoint["completed_epochs"])
         history = list(checkpoint["history"])
     else:
-        parameters = initialize_canonical_model(config, seed=seed)
+        parameters = model_definition.initialize(seed=seed)
         optimizer = _adam_init(parameters)
         completed_epochs = 0
         history = []
     weights = jnp.asarray(loss_weights_from_contract(contract))
     learning_rate_array = jnp.asarray(learning_rate, dtype=jnp.float32)
+    train_step = _make_train_step(model_definition.apply)
     for epoch in range(completed_epochs, epochs):
         started = time.perf_counter()
-        total_loss = 0.0
+        total_loss = jnp.asarray(0.0, dtype=jnp.float32)
         batches = 0
-        for raw in _iter_epoch_batches(
-            index,
-            spatial_split="train",
-            temporal_split="train",
-            batch_size=batch_size,
-            seed=seed + epoch,
-            drop_last=True,
-        ):
+        samples = 0
+        epoch_batches = (
+            _iter_epoch_batches(
+                index,
+                spatial_split="train",
+                temporal_split="train",
+                batch_size=batch_size,
+                seed=seed + epoch,
+                drop_last=True,
+            )
+            if protocol is None
+            else _iter_protocol_epoch_batches(
+                index,
+                protocol=protocol,
+                batch_size=batch_size,
+                seed=seed + epoch,
+                prefetch=prefetch_batches,
+            )
+        )
+        for raw in epoch_batches:
             batch: CanonicalTrainingBatch = prepare_canonical_batch(
                 raw, statistics, representation
             )
-            parameters, optimizer, loss = _COMPILED_TRAIN_STEP(
+            parameters, optimizer, loss = train_step(
                 parameters,
                 optimizer,
                 batch,
                 weights,
                 learning_rate_array,
             )
-            total_loss += float(loss)
+            total_loss = total_loss + loss
             batches += 1
+            samples += int(np.asarray(raw["state"]).shape[0])
         if not batches:
             raise ValueError("training selection is smaller than one batch")
         jax.block_until_ready(parameters)
         record = {
             "epoch": epoch + 1,
-            "mean_training_loss": total_loss / batches,
+            "mean_training_loss": float(total_loss / batches),
             "training_batches": batches,
+            "training_samples": samples,
             "seconds": time.perf_counter() - started,
             "validation": {},
         }
@@ -775,6 +874,7 @@ def train_experiment(
                 temporal_split=temporal,
                 batch_size=batch_size,
                 max_batches=max_eval_batches,
+                model_apply=model_definition.apply,
             )
         record["selection_score"] = _validation_selection_score(
             record["validation"]
@@ -818,6 +918,19 @@ def train_experiment(
         "batch_size": batch_size,
         "learning_rate": learning_rate,
         "seed": seed,
+        "objective": "canonical_one_step_v1",
+        "model_architecture": model_definition.identity(),
+        "training_protocol": (
+            None
+            if protocol is None
+            else {
+                "path": str(protocol.path),
+                "sha256": protocol.sha256,
+                "sampling_strategy": protocol.raw["sampling"]["strategy"],
+                "max_open_shards": protocol.max_open_shards,
+                "prefetch_batches": prefetch_batches,
+            }
+        ),
         "parameter_count": parameter_count(parameters),
         "checkpoint": str(checkpoint_path),
         "best_checkpoint": str(best_checkpoint_path),
@@ -860,6 +973,13 @@ def _parser() -> argparse.ArgumentParser:
     train.add_argument("--learning-rate", type=float, default=1.0e-3)
     train.add_argument("--seed", type=int, default=0)
     train.add_argument("--max-eval-batches", type=int)
+    train.add_argument(
+        "--model-architecture",
+        choices=MODEL_ARCHITECTURES,
+        default=CANONICAL_FLAT_V1,
+    )
+    train.add_argument("--training-protocol", type=Path)
+    train.add_argument("--prefetch-batches", type=int, default=2)
     train.add_argument("--no-resume", action="store_true")
     return parser
 
@@ -903,6 +1023,9 @@ def main(argv: Sequence[str] | None = None) -> int:
         resume=not args.no_resume,
         max_eval_batches=args.max_eval_batches,
         acceptance_path=args.acceptance,
+        model_architecture=args.model_architecture,
+        training_protocol_path=args.training_protocol,
+        prefetch_batches=args.prefetch_batches,
     )
     print(json.dumps(summary, indent=2))
     return 0

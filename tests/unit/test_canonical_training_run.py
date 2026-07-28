@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
 
@@ -202,6 +203,73 @@ def test_streamed_fast_day_training_and_resume(tmp_path):
         acceptance_path=acceptance,
     )
     assert [item["epoch"] for item in resumed["history"]] == [1, 2]
+
+
+def test_production_protocol_training_consumes_partial_final_batch(
+    tmp_path,
+    monkeypatch,
+):
+    manifest = _manifest(tmp_path)
+    acceptance_dir = tmp_path / "acceptance"
+    training.accept_training_dataset(
+        manifest,
+        acceptance_dir,
+        chunk_rows=1,
+        batch_size=2,
+        seed=7,
+        architecture={
+            "state_latent_width": 4,
+            "forcing_latent_width": 3,
+            "condition_latent_width": 3,
+            "hidden_width": 8,
+        },
+    )
+    protocol_path = tmp_path / "protocol.json"
+    protocol_path.write_text("{}", encoding="utf-8")
+    monkeypatch.setattr(
+        training,
+        "load_training_protocol",
+        lambda _path: SimpleNamespace(
+            path=protocol_path,
+            sha256="protocol-sha256",
+            max_open_shards=1,
+            raw={
+                "parent_data_product": {
+                    "teacher_git_head": "teacher-commit",
+                    "contract_sha256": json.loads(
+                        manifest.read_text(encoding="utf-8")
+                    )["markov_contract_sha256"],
+                    "generation_plan_sha256": "test-plan-sha256",
+                },
+                "sampling": {
+                    "strategy": "exact_once_hierarchical_shard_pool_v1"
+                },
+            },
+        ),
+    )
+
+    report = training.train_experiment(
+        manifest,
+        acceptance_dir / "training_statistics.json",
+        tmp_path / "protocol-training",
+        epochs=1,
+        batch_size=3,
+        learning_rate=1.0e-3,
+        seed=7,
+        max_eval_batches=1,
+        architecture={
+            "state_latent_width": 4,
+            "forcing_latent_width": 3,
+            "condition_latent_width": 3,
+            "hidden_width": 8,
+        },
+        acceptance_path=acceptance_dir / "acceptance_report.json",
+        training_protocol_path=protocol_path,
+    )
+
+    assert report["history"][0]["training_samples"] == 2
+    assert report["history"][0]["training_batches"] == 1
+    assert report["identity"]["training_protocol_sha256"] == "protocol-sha256"
 
 
 def test_contract_loader_supports_legacy_v3_shard_metadata(tmp_path):

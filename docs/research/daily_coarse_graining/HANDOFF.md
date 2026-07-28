@@ -469,6 +469,31 @@ operation is to freeze the matched architecture-only A/B manifest. Do not
 reuse the nine-point statistics or checkpoint, add mixed-horizon objectives
 to this first comparison, or inspect the sealed test split.
 
+That architecture-only screen is now frozen at
+`manifests/coarse_graining/canonical_669_axis_process_architecture_ab.json`,
+canonical SHA256
+`39b94a28e51dba67017ac3f06973b7f4fbbfa4a560b249eec49420f4baed8099`.
+Both arms start from scratch with seed `20260728`, consume all 8,591,565
+train/train samples exactly once in the same balanced order, use batch size
+256 and learning rate `1e-4`, and evaluate every temporal, spatial, and joint
+one-step validation sample. The test split remains sealed.
+
+The one-step production trainer now dispatches through the common architecture
+registry, binds checkpoint identity to architecture and training-protocol
+hashes, uses the bounded eight-shard reader with two prefetched batches, and
+accumulates loss on device rather than synchronizing the host after every
+update. The two-arm orchestrator verifies all dataset assets once, runs both
+arms sequentially in one GPU process, enforces exact sample counts and the
+5% parameter budget, and applies the predeclared screening gates. This screen
+does not include retained-tail rollout training or alter accepted Teacher
+semantics.
+
+Before the paid full screen, run
+`canonical_architecture_ab_real_shard_smoke_v1` on `gln01`. It must hash one
+real train/train shard, execute batch-256 compile and hot updates for both
+architectures, report finite losses and parameter leaves, and consume no
+validation or test sample.
+
 ## Accepted Historical Production Run
 
 The bounded architecture-development dataset is frozen by

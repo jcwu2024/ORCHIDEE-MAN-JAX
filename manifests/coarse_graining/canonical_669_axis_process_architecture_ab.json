@@ -1,0 +1,47 @@
+{
+  "schema_version": "canonical_architecture_ab_experiment_v1",
+  "experiment_id": "canonical-669-axis-process-architecture-screen-v1",
+  "artifacts": {
+    "dataset_manifest_sha256": "89ea2f24bad8f4b39129937f4106285dd53936c35d8dc610810f865b02d4e508",
+    "training_statistics_sha256": "c9ed1c6ea4cfca6c0da9504a36d440a2b388375f01acf8bc78edc7645a4ffb37",
+    "acceptance_report_sha256": "0b13da5c7f8664f9b3b8fe70f6b8dc8e3aca513ecbf15d4b3d879a07d663b596",
+    "training_protocol_sha256": "9db3e89ce4c2e1649fa17032cfde34e091b85b1fe274d29969abdeef732829e3"
+  },
+  "arms": [
+    {
+      "id": "flat",
+      "model_architecture": "canonical_flat_v1"
+    },
+    {
+      "id": "axis_process",
+      "model_architecture": "axis_process_coupled_v1"
+    }
+  ],
+  "training": {
+    "objective": "canonical_one_step_v1",
+    "initialization": "from_scratch_same_seed",
+    "sampling": "exact_once_hierarchical_shard_pool_v1",
+    "epochs": 1,
+    "batch_size": 256,
+    "learning_rate": 0.0001,
+    "seed": 20260728,
+    "prefetch_batches": 2
+  },
+  "validation": {
+    "model_selection_slices": [
+      "temporal",
+      "spatial",
+      "joint"
+    ],
+    "evaluate_all_samples": true,
+    "sealed_test_used": false
+  },
+  "screening_gates": {
+    "parameter_ratio_min": 0.95,
+    "parameter_ratio_max": 1.05,
+    "temporal_score_ratio_max": 1.02,
+    "spatial_score_ratio_max": 0.98,
+    "joint_score_ratio_max": 0.98,
+    "family_score_ratio_max": 1.05
+  }
+}
