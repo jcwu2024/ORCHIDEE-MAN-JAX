@@ -17,8 +17,9 @@ scientific and release facts remain authoritative in
    through Slurm.
 4. Confirm the admitted 669-point dataset and frozen architecture-screen
    hashes below. Do not regenerate Teacher data or reuse nine-point assets.
-5. The next computation is the full architecture-only A/B on `gnall`. Show
-   resources, command, hard wall time, and worst-case cost before `sbatch`.
+5. The next computation is the full two-V100 architecture-only A/B on `gnall`.
+   Show resources, command, hard wall time, and worst-case cost before
+   `sbatch`.
 
 ```bash
 git status --short --branch
@@ -508,6 +509,17 @@ The server report is
 This closes the execution preflight only. It is not accuracy or promotion
 evidence. The next operation is the paid full architecture-only A/B.
 
+The production launcher was subsequently split into one shared full-data
+preflight, two concurrent architecture workers on isolated GPUs, and one
+fail-closed finalizer. The sequential Python runner remains available as a
+one-GPU fallback. A concurrent real-shard smoke passed on both free `gln01`
+V100s at commit `ef3ddda`. Both processes reproduced the same flat and
+axis/process losses as each other, retained float32 parameters, and completed
+without cache or device contention. The GPU 0/GPU 1 report SHA256 values are
+`ec66dac4be68cc0afc12dac5cd59efc2b3b6932377c999fa6ccc6665ed9a680a`
+and
+`4001937f2d22916755d9646cef7227cdb26496b5a6375246d8349070a0322351`.
+
 ## Accepted Historical Production Run
 
 The bounded architecture-development dataset is frozen by
@@ -612,7 +624,7 @@ resume only the incomplete worker assignment.
 
 Request explicit resource and cost approval, then run the frozen
 `canonical_flat_v1` versus `axis_process_coupled_v1` architecture-only screen
-on the complete admitted dataset. Use one `gnall` node, four CPUs, one V100,
+on the complete admitted dataset. Use one `gnall` node, eight CPUs, two V100s,
 and a 12-hour hard limit. Run
 `scripts/hpc/slurm_canonical_669_architecture_ab.sh` from an exact clean
 server worktree created from the accepted local commit.

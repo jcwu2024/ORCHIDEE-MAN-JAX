@@ -229,6 +229,19 @@ This proves that the shared runner, real data path, optimizer dtypes, and both
 compiled update functions execute on the target V100. It is not an accuracy,
 generalization, or promotion result.
 
+The accepted production execution is now two-device parallel without changing
+the frozen experiment. A parent phase performs the complete dataset/hash
+preflight once; flat and axis/process workers then run concurrently with
+isolated CUDA visibility and compilation caches; a final phase verifies exact
+sample counts, architecture identities, sealed-test status, checkpoints, and
+the original screening gates. The sequential runner remains a one-device
+fallback. A concurrent real-shard smoke passed on both `gln01` V100s at commit
+`ef3ddda`, with identical losses and float32 parameters in both reports. The
+GPU 0/GPU 1 report SHA256 values are
+`ec66dac4be68cc0afc12dac5cd59efc2b3b6932377c999fa6ccc6665ed9a680a`
+and
+`4001937f2d22916755d9646cef7227cdb26496b5a6375246d8349070a0322351`.
+
 ### Capacity control
 
 The flat control and candidate must be matched to within 5% trainable

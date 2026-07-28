@@ -386,3 +386,14 @@ updates took `2.2506/0.00862 s`; axis/process compile/hot updates took
 `3975eb93000b355b51c565f421f04fdc19342032360c1610e1823dce607f3d16`.
 The next operation is the paid full architecture-only A/B; do not add rollout
 objectives or inspect sealed test outputs before this screen reports.
+
+The production screen now performs the full acceptance/hash preflight once,
+runs the flat and axis/process arms concurrently on two isolated V100 devices,
+and then applies the unchanged aggregate gates. The original single-process
+runner remains a sequential fallback. A real-shard two-process smoke passed on
+both free `gln01` V100s at commit `ef3ddda`: both reports retained float32
+parameters and reproduced identical compile/hot losses for both architectures.
+The GPU 0/GPU 1 report SHA256 values are
+`ec66dac4be68cc0afc12dac5cd59efc2b3b6932377c999fa6ccc6665ed9a680a`
+and
+`4001937f2d22916755d9646cef7227cdb26496b5a6375246d8349070a0322351`.
