@@ -4830,7 +4830,12 @@ def gap_mortality_step(
 
     mortality_fraction = jnp.zeros((npts, nvm), dtype=biomass.dtype)
     if lpj_gap_const_mort:
-        constant = dt_days / (residence_time[None, :] * ONE_YEAR_DAYS)
+        safe_residence_time = jnp.where(
+            tree_active,
+            residence_time[None, :],
+            1.0,
+        )
+        constant = dt_days / (safe_residence_time * ONE_YEAR_DAYS)
         mortality_fraction = jnp.where(tree_active, constant, mortality_fraction)
     else:
         growth = jnp.maximum(min_avail, availability) * dt_days / ONE_YEAR_DAYS

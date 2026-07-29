@@ -1683,6 +1683,26 @@ def test_gap_mortality_constant_tree_mortality_updates_biomass_and_reports_daily
     assert np.allclose(np.asarray(result.bm_to_litter)[0, 0, :, :], 0.0)
 
 
+def test_gap_mortality_inactive_zero_residence_time_has_finite_gradient():
+    params = _gap_fixture()
+    params["pft_present"][:] = False
+    residence_time = np.zeros_like(params.pop("residence_time"))
+
+    def objective(residence):
+        result = gap_mortality_step(
+            **params,
+            residence_time=residence,
+            dt_days=1.0,
+            lpj_gap_const_mort=True,
+        )
+        return jnp.sum(result.mortality_fraction)
+
+    gradient = jax.jit(jax.grad(objective))(residence_time)
+
+    assert np.all(np.isfinite(np.asarray(gradient)))
+    np.testing.assert_array_equal(np.asarray(gradient), residence_time)
+
+
 def test_gap_mortality_growth_efficiency_uses_turnover_longterm_and_sla_vigour():
     params = _gap_fixture()
     params["biomass"][0, PFT14, ILEAF, ICARBON] = 100.0
