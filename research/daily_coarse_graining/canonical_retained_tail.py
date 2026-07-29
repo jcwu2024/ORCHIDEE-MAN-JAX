@@ -48,6 +48,65 @@ class CanonicalRetainedTailDayInputs(NamedTuple):
     diffuco_parameter_values: Any
 
 
+def _daily_carbon_ad_boundaries(daily_carbon):
+    """Return numeric process boundaries needed by narrow AD diagnostics."""
+
+    boundaries = {
+        "prescribe.biomass": daily_carbon.prescribe.biomass,
+        "prescribe.leaf_frac": daily_carbon.prescribe.leaf_frac,
+        "allocation.biomass": daily_carbon.allocation.biomass,
+        "allocation.leaf_age": daily_carbon.allocation.leaf_age,
+        "allocation.leaf_frac": daily_carbon.allocation.leaf_frac,
+        "allocation.f_alloc": daily_carbon.allocation.f_alloc,
+        "allocation.limit_l": daily_carbon.allocation.limit_l,
+        "allocation.limit_w": daily_carbon.allocation.limit_w,
+        "allocation.limit_n": daily_carbon.allocation.limit_n,
+        "allocation.limit_w_or_n": daily_carbon.allocation.limit_w_or_n,
+        "allocation.l_to_lsr": daily_carbon.allocation.l_to_lsr,
+        "allocation.s_to_lsr": daily_carbon.allocation.s_to_lsr,
+        "allocation.r_to_lsr": daily_carbon.allocation.r_to_lsr,
+        "allocation.alloc_sap_above": daily_carbon.allocation.alloc_sap_above,
+        "allocation.transloc_leaf": daily_carbon.allocation.transloc_leaf,
+        "allocation.carb_rescale": daily_carbon.allocation.carb_rescale,
+    }
+    if daily_carbon.phenology is not None:
+        boundaries.update(
+            {
+                "phenology.biomass": daily_carbon.phenology.biomass,
+                "phenology.leaf_frac": daily_carbon.phenology.leaf_frac,
+                "phenology.leaf_age": daily_carbon.phenology.leaf_age,
+                "phenology.when_growthinit": (
+                    daily_carbon.phenology.when_growthinit
+                ),
+                "phenology.co2_to_bm": daily_carbon.phenology.co2_to_bm,
+            }
+        )
+    npp = daily_carbon.post_npp.daily_carbon.npp_update
+    boundaries.update(
+        {
+            "npp.biomass_before_alloc": npp.biomass_before_alloc,
+            "npp.bm_alloc": npp.bm_alloc,
+            "npp.biomass": npp.biomass,
+            "npp.resp_maint": npp.resp_maint,
+            "npp.resp_growth": npp.resp_growth,
+            "npp.npp": npp.npp,
+        }
+    )
+    age_sla = daily_carbon.post_npp.daily_carbon.age_sla
+    if age_sla is not None:
+        boundaries.update(
+            {
+                "age_sla.leaf_age": age_sla.leaf_age,
+                "age_sla.leaf_frac": age_sla.leaf_frac,
+                "age_sla.age": age_sla.age,
+                "age_sla.sla_age1": age_sla.sla_age1,
+                "age_sla.sla_calc": age_sla.sla_calc,
+                "age_sla.leaf_age_weighted": age_sla.leaf_age_weighted,
+            }
+        )
+    return boundaries
+
+
 def canonical_retained_tail_day_inputs(
     compiled_forcing,
     static: Mapping[str, Any],
@@ -127,6 +186,7 @@ def canonical_retained_tail_dynamic_transition(
     metadata: Any,
     season_provenance: Any,
     runtime_year: int,
+    return_ad_boundaries: bool = False,
 ):
     """Advance one canonical day with all landpoint-varying arrays explicit.
 
@@ -186,6 +246,16 @@ def canonical_retained_tail_dynamic_transition(
         ),
     }
     contract_finalize_fields = _contract_finalize_fields(contract)
+    captured_ad_boundaries = []
+    daily_carbon_runner = teacher._paper_day_stomate_daily_carbon_from_bundles
+
+    def capture_daily_carbon(*args, **kwargs):
+        daily_carbon = daily_carbon_runner(*args, **kwargs)
+        captured_ad_boundaries.append(
+            _daily_carbon_ad_boundaries(daily_carbon)
+        )
+        return daily_carbon
+
     with ExitStack() as stack:
         for name, value in replay_values.items():
             stack.enter_context(
@@ -206,6 +276,14 @@ def canonical_retained_tail_dynamic_transition(
                 ),
             )
         )
+        if return_ad_boundaries:
+            stack.enter_context(
+                patch.object(
+                    teacher,
+                    "_paper_day_stomate_daily_carbon_from_bundles",
+                    capture_daily_carbon,
+                )
+            )
         result = teacher.paper_1961_driver_later_day_runtime_result(
             config_path,
             previous_state=previous_state,
@@ -245,10 +323,18 @@ def canonical_retained_tail_dynamic_transition(
             "retained daily tail did not produce day-end state: "
             f"{getattr(result, 'missing_components', ())}"
         )
-    return extract_state_compiled(
+    next_state = extract_state_compiled(
         result.day_end_state.fields_by_component,
         contract,
     )
+    if return_ad_boundaries:
+        if len(captured_ad_boundaries) != 1:
+            raise RuntimeError(
+                "retained-tail AD diagnostic did not capture one daily "
+                "carbon boundary"
+            )
+        return next_state, captured_ad_boundaries[0]
+    return next_state
 
 
 def canonical_retained_tail_transition(
@@ -320,6 +406,46 @@ def bind_canonical_retained_tail_dynamic_transition(
             metadata=trace_static["metadata"],
             season_provenance=trace_static["season"].provenance,
             runtime_year=runtime_year,
+        )
+
+    return transition
+
+
+def bind_canonical_retained_tail_dynamic_ad_boundary_transition(
+    *,
+    config_path: Path,
+    context,
+    contract: DailyMarkovContract,
+    trace_static: Mapping[str, Any],
+    runtime_year: int,
+):
+    """Bind the retained tail and expose numeric process boundaries for AD."""
+
+    def transition(
+        continuous_state,
+        discrete_state,
+        physical_fast_day_target,
+        day_inputs,
+        year,
+        day_index,
+    ):
+        return canonical_retained_tail_dynamic_transition(
+            continuous_state,
+            discrete_state,
+            physical_fast_day_target,
+            day_inputs,
+            year,
+            day_index,
+            config_path=config_path,
+            context=context,
+            contract=contract,
+            mineral_imin=int(trace_static["mineral_imin"]),
+            mineral_imax=int(trace_static["mineral_imax"]),
+            daily_carbon_dispatch=trace_static["daily_carbon_dispatch"],
+            metadata=trace_static["metadata"],
+            season_provenance=trace_static["season"].provenance,
+            runtime_year=runtime_year,
+            return_ad_boundaries=True,
         )
 
     return transition

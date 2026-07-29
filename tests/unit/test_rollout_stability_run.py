@@ -8,6 +8,7 @@ from collections import namedtuple
 from pathlib import Path
 from types import SimpleNamespace
 
+import jax.numpy as jnp
 import numpy as np
 import pytest
 
@@ -40,6 +41,7 @@ from research.daily_coarse_graining.rollout_stability_run import (
     calibrate_gradient_coefficients,
     completed_horizon_counts,
     create_execution_manifest,
+    make_retained_tail_ad_boundary_jvp_diagnostic,
     retained_tail_trace_signature,
     sample_start_indices,
     verify_arm_checkpoint,
@@ -54,6 +56,10 @@ PROTOCOL_PATH = (
     / "canonical_669_rollout_stability_protocol.json"
 )
 ValueTuple = namedtuple("ValueTuple", ("value",))
+DiagnosticSequence = namedtuple(
+    "DiagnosticSequence",
+    ("retained_tail_inputs", "year", "day_index"),
+)
 
 
 class _FakeShard:
@@ -98,6 +104,57 @@ def _canonical_digest(value):
     return hashlib.sha256(
         json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
     ).hexdigest()
+
+
+def test_retained_tail_ad_boundary_jvp_reports_named_process_tangents():
+    def transition(
+        initial_state,
+        initial_discrete_state,
+        target,
+        retained_tail_inputs,
+        year,
+        day_index,
+    ):
+        del (
+            initial_state,
+            initial_discrete_state,
+            retained_tail_inputs,
+            year,
+            day_index,
+        )
+        return target, {
+            "allocation.f_alloc": 2.0 * target,
+            "npp.bm_alloc": target[:2] ** 2,
+        }
+
+    diagnostic = make_retained_tail_ad_boundary_jvp_diagnostic(
+        retained_tail_ad_boundary_transition=transition,
+    )
+    target = jnp.asarray([1.0, 3.0, 5.0])
+    values, tangents = diagnostic(
+        jnp.zeros(1),
+        {"flag": jnp.asarray(False)},
+        target,
+        DiagnosticSequence(
+            retained_tail_inputs=jnp.zeros((1, 1)),
+            year=jnp.asarray([1973]),
+            day_index=jnp.asarray([7]),
+        ),
+        jnp.asarray(1, dtype=jnp.int32),
+    )
+
+    np.testing.assert_allclose(
+        np.asarray(values["allocation.f_alloc"]),
+        [2.0, 6.0, 10.0],
+    )
+    np.testing.assert_allclose(
+        np.asarray(tangents["allocation.f_alloc"]),
+        [0.0, 2.0, 0.0],
+    )
+    np.testing.assert_allclose(
+        np.asarray(tangents["npp.bm_alloc"]),
+        [0.0, 6.0],
+    )
 
 
 def _small_protocol(*, updates: int = 10) -> RolloutStabilityProtocol:

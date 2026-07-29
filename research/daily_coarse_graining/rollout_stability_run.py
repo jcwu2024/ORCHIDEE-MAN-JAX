@@ -37,6 +37,7 @@ from research.daily_coarse_graining.canonical_multistep_training_run import (
 )
 from research.daily_coarse_graining.canonical_retained_tail import (
     CanonicalRetainedTailDayInputs,
+    bind_canonical_retained_tail_dynamic_ad_boundary_transition,
     bind_canonical_retained_tail_dynamic_transition,
     canonical_retained_tail_day_inputs,
 )
@@ -776,6 +777,44 @@ def make_retained_tail_jvp_checkify_diagnostic(
     )
 
 
+def make_retained_tail_ad_boundary_jvp_diagnostic(
+    *,
+    retained_tail_ad_boundary_transition,
+):
+    """Trace one B_fast direction through named daily-carbon boundaries."""
+
+    def diagnose(
+        initial_state,
+        initial_discrete_state,
+        physical_fast_day,
+        sequence,
+        target_index,
+    ):
+        day = jax.tree_util.tree_map(lambda item: item[0], sequence)
+        target_tangent = jnp.zeros_like(physical_fast_day).at[
+            target_index
+        ].set(1.0)
+
+        def transition(target):
+            _, boundaries = retained_tail_ad_boundary_transition(
+                initial_state,
+                initial_discrete_state,
+                target,
+                day.retained_tail_inputs,
+                day.year,
+                day.day_index,
+            )
+            return boundaries
+
+        return jax.jvp(
+            transition,
+            (physical_fast_day,),
+            (target_tangent,),
+        )
+
+    return jax.jit(diagnose)
+
+
 def _state_leaf_records(contract, indices) -> list[Mapping[str, Any]]:
     records = []
     for leaf in contract.state_leaves:
@@ -1276,6 +1315,19 @@ def _bind_dynamic_transition(
     runtime: LandpointRuntime,
 ):
     return bind_canonical_retained_tail_dynamic_transition(
+        config_path=resources.config_path,
+        context=runtime.context,
+        contract=resources.contract,
+        trace_static=runtime.static,
+        runtime_year=1962,
+    )
+
+
+def _bind_dynamic_ad_boundary_transition(
+    resources: RolloutStabilityResources,
+    runtime: LandpointRuntime,
+):
+    return bind_canonical_retained_tail_dynamic_ad_boundary_transition(
         config_path=resources.config_path,
         context=runtime.context,
         contract=resources.contract,
@@ -2478,6 +2530,7 @@ def run_screening_update_diagnostic(
                 }
             )
         directional_jvp_checkify = None
+        ad_boundary_directional_jvp = None
         if bad_target_indices.size:
             jvp_checkify_diagnostic = (
                 make_retained_tail_jvp_checkify_diagnostic(
@@ -2498,6 +2551,61 @@ def run_screening_update_diagnostic(
                     jvp_checkify_error
                 ),
             }
+            ad_boundary_transition = _bind_dynamic_ad_boundary_transition(
+                resources,
+                prepared.runtime,
+            )
+            ad_boundary_diagnostic = (
+                make_retained_tail_ad_boundary_jvp_diagnostic(
+                    retained_tail_ad_boundary_transition=(
+                        ad_boundary_transition
+                    ),
+                )
+            )
+            (
+                ad_boundary_values,
+                ad_boundary_tangents,
+            ) = jax.device_get(
+                ad_boundary_diagnostic(
+                    sample_initial_state,
+                    sample_initial_discrete_state,
+                    physical_fast_day,
+                    sample_sequence,
+                    jnp.asarray(
+                        bad_target_indices[0],
+                        dtype=jnp.int32,
+                    ),
+                )
+            )
+            boundary_records = []
+            for name in sorted(ad_boundary_tangents):
+                values = np.asarray(ad_boundary_values[name])
+                tangents = np.asarray(ad_boundary_tangents[name])
+                finite_tangents = np.isfinite(tangents)
+                boundary_records.append(
+                    {
+                        "name": name,
+                        "nonfinite_value_count": int(
+                            np.count_nonzero(~np.isfinite(values))
+                        ),
+                        "nonfinite_tangent_count": int(
+                            np.count_nonzero(~finite_tangents)
+                        ),
+                        "maximum_absolute_finite_tangent": (
+                            float(
+                                np.max(
+                                    np.abs(tangents[finite_tangents])
+                                )
+                            )
+                            if np.any(finite_tangents)
+                            else None
+                        ),
+                    }
+                )
+            ad_boundary_directional_jvp = {
+                "fast_target_index": int(bad_target_indices[0]),
+                "boundaries": boundary_records,
+            }
         rollout_raw = _collate_reference_windows(
             reference,
             starts=prepared.rollout_starts,
@@ -2515,7 +2623,7 @@ def run_screening_update_diagnostic(
             ),
             {
                 "schema_version": (
-                    "canonical_rollout_screening_sample_gradient_diagnostic_v1"
+                    "canonical_rollout_screening_sample_gradient_diagnostic_v2"
                 ),
                 "status": "completed",
                 "diagnostic_git_head": _current_git_head(),
@@ -2570,6 +2678,9 @@ def run_screening_update_diagnostic(
                 "retained_tail_directional_jvp": directional_jvp_records,
                 "retained_tail_directional_jvp_checkify": (
                     directional_jvp_checkify
+                ),
+                "retained_tail_ad_boundary_directional_jvp": (
+                    ad_boundary_directional_jvp
                 ),
             },
         )
