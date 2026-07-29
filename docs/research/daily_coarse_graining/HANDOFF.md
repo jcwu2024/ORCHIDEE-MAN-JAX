@@ -17,10 +17,10 @@ scientific and release facts remain authoritative in
    through Slurm.
 4. Confirm the admitted 669-point dataset and frozen architecture-screen
    hashes below. Do not regenerate Teacher data or reuse nine-point assets.
-5. Treat architecture job `14403674` as accepted parent evidence. The
-   rollout-stability GPU, gradient, checkpoint, host-preparation, and memory
-   gates pass. Generate the commit-bound preflight, then request explicit
-   approval before submitting paid Experiment B.
+5. Treat architecture job `14403674` as accepted parent evidence. Experiment B
+   job `14410820` is a rejected train-only calibration attempt, not training
+   evidence. Finish protocol-v2 validation and the ordinal-4 free `gln01`
+   smoke before preparing another paid submission.
 
 ```bash
 git status --short --branch
@@ -538,9 +538,9 @@ parameter ratio is `0.995249`. The decision is exactly
 false. The accepted axis/process best-checkpoint SHA256 is
 `a119999606b063ac9f9ed47e4d1bb664cdfe32b9459e7e7ee24e96a0e944db2e`.
 
-The next experiment has been frozen without looking at the architecture result:
+The next experiment was frozen without looking at the architecture result:
 [`../../../manifests/coarse_graining/canonical_669_rollout_stability_protocol.json`](../../../manifests/coarse_graining/canonical_669_rollout_stability_protocol.json),
-canonical SHA256
+v1 canonical SHA256
 `370011f6d8edc447bd0ebf037249df1a18f3bfb30071204001366a2aecde310b`.
 The local auditor is
 `research.daily_coarse_graining.rollout_stability_protocol`. It verifies the
@@ -685,13 +685,31 @@ runtime/outputs/training/canonical-669-architecture-ab-4c1fe0c/axis_process/chec
 
 Their hashes remain the frozen protocol hashes, including optimizer checkpoint
 SHA256 `c516c8fb96f169cf2101e94375d2c4f96809c6f69e497e0ddb8913ff7498d3b5`.
-No paid Experiment B job has been submitted. Final host preparation uses one
-shard load per update, per-landpoint runtime reuse, and exact vectorized
-reconstruction of only the retained tail's five consumed forcing leaves.
+Paid Experiment B job `14410820` failed during train-only coefficient
+calibration before either training arm started. Calibration ordinal 4,
+landpoint `087.0-105.0`, year 1961, contained three `rveget` PFT14
+defined/undefined classification errors and no discrete, nonfinite, or
+negative-stock error. The diagnostic SHA256 is
+`f24eeef2f937c2f828b4b7449cdadbaa5d60ef8cf581d186564eb622e6751a2e`;
+the test split remained sealed. Protocol v2 separates these explicitly
+declared dynamic classification errors from unexpected structural status
+errors. Its canonical SHA256 is
+`a0ecfd4c89ff3c5691f153168f3ba80939582774689b92ff04b0cf77e699cb40`.
+Declared `rveget` errors stay supervised and reported and must not regress
+against control; unexpected status errors and all other hard constraints
+remain exact-zero optimizer vetoes.
+
+Final host preparation uses one shard load per update, per-landpoint runtime
+reuse, and exact vectorized reconstruction of only the retained tail's five
+consumed forcing leaves.
 Horizon-7/30 hot updates are about `0.10/0.20 s`; warm-cache preparation is
 `0.245 s`. A 16-landpoint benchmark measured about `7.8 MiB` RSS growth per
-cached runtime. The sequential calibration plus two arms is expected to take
-about four hours; use a six-hour limit and request explicit approval first.
+cached runtime. Before another paid run, create a clean commit-bound worktree
+and output root, regenerate preflight identities, and run calibration ordinal
+4 on free `gln01`. Acceptance requires exactly three declared dynamic errors,
+zero unexpected/discrete/nonfinite/negative-stock hard counts, and an applied
+candidate update. Only then estimate and request approval for the six-hour
+paid rerun.
 See
 [`rollout_stability_smoke_20260729.md`](rollout_stability_smoke_20260729.md).
 

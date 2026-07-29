@@ -71,7 +71,8 @@ class RolloutStabilityComponents(NamedTuple):
     L_rollout: Any
     L_bias: Any
     L_science: Any
-    defined_status_mismatches: Any
+    unexpected_defined_status_mismatches: Any
+    declared_dynamic_status_mismatches: Any
     discrete_state_mismatches: Any
     nonfinite_defined_values: Any
     negative_source_nonnegative_carbon_stocks: Any
@@ -318,7 +319,27 @@ def rollout_stability_components(
 
     teacher_defined = _defined_numeric_mask_compiled(sequences.teacher_next_state)
     predicted_defined = _defined_numeric_mask_compiled(steps.continuous_state)
-    defined_mismatches = jnp.sum(predicted_defined != teacher_defined)
+    status_mismatch = predicted_defined != teacher_defined
+    dynamic_fast_indices = np.asarray(
+        representation.dynamic_undefined_indices,
+        dtype=np.int32,
+    )
+    dynamic_state_indices = np.asarray(
+        representation.state_indices,
+        dtype=np.int32,
+    )[dynamic_fast_indices]
+    if np.any(dynamic_state_indices < 0):
+        raise ValueError("dynamic undefined output is missing its state owner")
+    dynamic_state_mask = jnp.zeros(
+        (steps.continuous_state.shape[-1],),
+        dtype=bool,
+    ).at[jnp.asarray(dynamic_state_indices)].set(True)
+    unexpected_defined_mismatches = jnp.sum(
+        status_mismatch & ~dynamic_state_mask
+    )
+    declared_dynamic_mismatches = jnp.sum(
+        status_mismatch & dynamic_state_mask
+    )
     nonfinite_defined = jnp.sum(
         teacher_defined & ~jnp.isfinite(steps.continuous_state)
     )
@@ -338,7 +359,8 @@ def rollout_stability_components(
         L_rollout=rollout,
         L_bias=bias,
         L_science=science,
-        defined_status_mismatches=defined_mismatches,
+        unexpected_defined_status_mismatches=unexpected_defined_mismatches,
+        declared_dynamic_status_mismatches=declared_dynamic_mismatches,
         discrete_state_mismatches=discrete_mismatches,
         nonfinite_defined_values=nonfinite_defined,
         negative_source_nonnegative_carbon_stocks=negative_stocks,

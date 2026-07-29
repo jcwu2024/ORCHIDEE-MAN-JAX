@@ -18,13 +18,14 @@ from research.daily_coarse_graining.production_training_protocol import (
 )
 from research.daily_coarse_graining.teacher_production import ROOT
 
-SCHEMA_VERSION = "canonical_rollout_stability_protocol_v1"
+SCHEMA_VERSION = "canonical_rollout_stability_protocol_v2"
 REQUIRED_PARENT_DECISION = "advance_axis_process_to_rollout_stability_experiment"
 
 _TOP_LEVEL_KEYS = {
     "schema_version",
     "protocol_id",
     "status",
+    "amendment",
     "parent_architecture_screen",
     "artifacts",
     "data_policy",
@@ -418,7 +419,8 @@ def _validate_gates_and_stop_rules(raw: Mapping[str, Any]) -> None:
     _require_exact_keys(
         hard,
         {
-            "defined_status_mismatches",
+            "unexpected_defined_status_mismatches",
+            "declared_dynamic_status_mismatches",
             "discrete_state_mismatches",
             "nonfinite_defined_values",
             "negative_source_nonnegative_carbon_stocks",
@@ -429,13 +431,18 @@ def _validate_gates_and_stop_rules(raw: Mapping[str, Any]) -> None:
         context="rollout stability hard constraint",
     )
     for name in (
-        "defined_status_mismatches",
+        "unexpected_defined_status_mismatches",
         "discrete_state_mismatches",
         "nonfinite_defined_values",
         "negative_source_nonnegative_carbon_stocks",
     ):
         if hard.get(name) != 0:
             raise ValueError(f"hard constraint {name} must be zero")
+    if (
+        hard.get("declared_dynamic_status_mismatches")
+        != "supervised_and_reported_not_optimizer_veto"
+    ):
+        raise ValueError("declared dynamic status policy drift")
     if hard.get("restart_split_prediction") != "exact":
         raise ValueError("restart-split prediction must be exact")
     if hard.get("hidden_cross_day_network_memory") is not False:
@@ -474,6 +481,7 @@ def _validate_gates_and_stop_rules(raw: Mapping[str, Any]) -> None:
         "thirty_day_free_rollout_global_ratio_max",
         "tendency_bias_ratio_max",
         "science_metric_ratio_max",
+        "declared_dynamic_status_error_ratio_max",
     }
     _require_exact_keys(gates, expected_gate_keys, context="screening gate")
     if any(float(value) <= 0 for value in gates.values()):
@@ -551,10 +559,49 @@ def load_rollout_stability_protocol(
     _require_exact_keys(raw, _TOP_LEVEL_KEYS, context="rollout stability protocol")
     if raw.get("schema_version") != SCHEMA_VERSION:
         raise ValueError(f"rollout stability protocol schema must be {SCHEMA_VERSION!r}")
-    if raw.get("protocol_id") != "canonical-669-rollout-stability-v1":
+    if raw.get("protocol_id") != "canonical-669-rollout-stability-v2":
         raise ValueError("rollout stability protocol identity drift")
-    if raw.get("status") != "frozen_before_parent_result":
-        raise ValueError("rollout stability protocol was not frozen before parent result")
+    if raw.get("status") != "amended_after_train_only_calibration_failure":
+        raise ValueError("rollout stability protocol amendment status drift")
+    amendment = raw["amendment"]
+    _require_exact_keys(
+        amendment,
+        {
+            "predecessor_protocol_id",
+            "predecessor_canonical_sha256",
+            "trigger",
+            "diagnostic_sha256",
+            "calibration_ordinal",
+            "landpoint_id",
+            "year",
+            "declared_dynamic_status_mismatches",
+            "sealed_test_used",
+            "change",
+        },
+        context="rollout stability protocol amendment",
+    )
+    if (
+        amendment["predecessor_protocol_id"]
+        != "canonical-669-rollout-stability-v1"
+        or amendment["predecessor_canonical_sha256"]
+        != "370011f6d8edc447bd0ebf037249df1a18f3bfb30071204001366a2aecde310b"
+        or amendment["trigger"]
+        != "declared_dynamic_rveget_status_mismatches_in_train_only_coefficient_calibration"
+        or amendment["diagnostic_sha256"]
+        != "f24eeef2f937c2f828b4b7449cdadbaa5d60ef8cf581d186564eb622e6751a2e"
+        or int(amendment["calibration_ordinal"]) != 4
+        or amendment["landpoint_id"] != "087.0-105.0"
+        or int(amendment["year"]) != 1961
+        or int(amendment["declared_dynamic_status_mismatches"]) != 3
+        or amendment["sealed_test_used"] is not False
+        or amendment["change"]
+        != (
+            "declared dynamic rveget status remains supervised and reported but "
+            "does not veto optimizer updates; undeclared status mismatches remain "
+            "exact hard failures"
+        )
+    ):
+        raise ValueError("rollout stability protocol amendment evidence drift")
 
     _validate_parent_and_artifacts(raw)
     _validate_data_and_comparison(raw)

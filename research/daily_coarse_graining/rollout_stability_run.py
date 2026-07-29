@@ -20,6 +20,7 @@ import numpy as np
 from research.daily_coarse_graining.canonical_daily_model import parameter_count
 from research.daily_coarse_graining.canonical_multistep import (
     CanonicalMultistepSequence,
+    canonical_multistep_rollout,
 )
 from research.daily_coarse_graining.canonical_multistep_training_run import (
     LandpointRuntime,
@@ -51,6 +52,7 @@ from research.daily_coarse_graining.canonical_training_run import (
 )
 from research.daily_coarse_graining.daily_markov_contract import (
     daily_markov_contract_from_metadata,
+    reconstruct_compiled_forcing_day,
 )
 from research.daily_coarse_graining.daily_model_architecture import (
     AXIS_PROCESS_COUPLED_V1,
@@ -62,6 +64,7 @@ from research.daily_coarse_graining.markov_dataset import (
     MarkovDatasetIndex,
     MarkovShardRef,
     collate_windows,
+    defined_numeric_mask,
     load_dataset_index,
     load_markov_shard,
     load_training_statistics,
@@ -90,10 +93,14 @@ ARM_CHECKPOINT_SCHEMA_VERSION = "canonical_rollout_stability_arm_checkpoint_v1"
 EXECUTION_MANIFEST_SCHEMA_VERSION = "canonical_rollout_stability_execution_v2"
 ARM_IDS = ("one_step_continuation_control", "mixed_horizon_stability_v1")
 HARD_CONSTRAINT_FIELDS = (
-    "defined_status_mismatches",
+    "unexpected_defined_status_mismatches",
     "discrete_state_mismatches",
     "nonfinite_defined_values",
     "negative_source_nonnegative_carbon_stocks",
+)
+COUNT_COMPONENT_FIELDS = (
+    *HARD_CONSTRAINT_FIELDS,
+    "declared_dynamic_status_mismatches",
 )
 
 
@@ -228,7 +235,8 @@ def _empty_rollout_components(anchor_loss) -> RolloutStabilityComponents:
         L_rollout=zero_float,
         L_bias=zero_float,
         L_science=zero_float,
-        defined_status_mismatches=zero_count,
+        unexpected_defined_status_mismatches=zero_count,
+        declared_dynamic_status_mismatches=zero_count,
         discrete_state_mismatches=zero_count,
         nonfinite_defined_values=zero_count,
         negative_source_nonnegative_carbon_stocks=zero_count,
@@ -239,6 +247,59 @@ def _hard_constraint_count(components: RolloutStabilityComponents):
     return sum(
         jnp.asarray(getattr(components, name), dtype=jnp.int32)
         for name in HARD_CONSTRAINT_FIELDS
+    )
+
+
+def _host_hard_constraint_counts(
+    components: RolloutStabilityComponents,
+) -> dict[str, int]:
+    """Materialize named fail-closed counts after a compiled step returns."""
+
+    return {
+        name: int(np.asarray(getattr(components, name)))
+        for name in HARD_CONSTRAINT_FIELDS
+    }
+
+
+def _write_coefficient_calibration_failure(
+    *,
+    output_root: str | Path,
+    preflight: Mapping[str, Any],
+    protocol: RolloutStabilityProtocol,
+    reference: MarkovShardRef,
+    ordinal: int,
+    total_batches: int,
+    horizon: int,
+    calibration_seed: int,
+    trace_signature: str,
+    hard_constraint_counts: Mapping[str, int],
+    completed_records: int,
+) -> Path:
+    output_root = Path(output_root).resolve()
+    output_root.mkdir(parents=True, exist_ok=True)
+    return _atomic_json(
+        output_root / "coefficient_calibration_failure.json",
+        {
+            "schema_version": "canonical_rollout_stability_calibration_failure_v1",
+            "status": "failed_hard_constraint",
+            "training_git_head": preflight["training_git_head"],
+            "protocol_sha256": protocol.sha256,
+            "calibration_seed": calibration_seed,
+            "schedule_ordinal": ordinal,
+            "batch": ordinal + 1,
+            "total_batches": total_batches,
+            "horizon": horizon,
+            "landpoint_id": reference.landpoint_id,
+            "year": int(reference.year),
+            "reference": {
+                "path": str(reference.path),
+                "sha256": reference.sha256,
+            },
+            "trace_signature": trace_signature,
+            "hard_constraint_counts": dict(hard_constraint_counts),
+            "completed_records": completed_records,
+            "sealed_test_used": False,
+        },
     )
 
 
@@ -1319,9 +1380,25 @@ def run_coefficient_calibration(
         values, norms, nonfinite_counts, components = jax.device_get(
             (values, norms, nonfinite_counts, components)
         )
-        if int(_hard_constraint_count(components)) != 0:
+        hard_constraint_counts = _host_hard_constraint_counts(components)
+        if sum(hard_constraint_counts.values()) != 0:
+            failure_path = _write_coefficient_calibration_failure(
+                output_root=output_root,
+                preflight=preflight,
+                protocol=protocol,
+                reference=reference,
+                ordinal=ordinal,
+                total_batches=len(calibration_schedule),
+                horizon=horizon,
+                calibration_seed=calibration_seed,
+                trace_signature=prepared.trace_signature,
+                hard_constraint_counts=hard_constraint_counts,
+                completed_records=len(records),
+            )
             raise ValueError(
-                "rollout-stability coefficient calibration violated a hard constraint"
+                "rollout-stability coefficient calibration violated a hard "
+                f"constraint: counts={hard_constraint_counts}, "
+                f"failure={failure_path}"
             )
         if (
             not np.all(np.isfinite(values))
@@ -1356,6 +1433,9 @@ def run_coefficient_calibration(
                     name: float(values[index])
                     for index, name in enumerate(names)
                 },
+                "declared_dynamic_status_mismatches": int(
+                    components.declared_dynamic_status_mismatches
+                ),
             }
         )
         print(
@@ -1392,6 +1472,293 @@ def run_coefficient_calibration(
     calibration_path = output_root / "coefficient_calibration.json"
     _atomic_json(calibration_path, calibration)
     return calibration_path
+
+
+def _leaf_for_compact_index(leaves: Sequence[Any], index: int) -> Mapping[str, Any]:
+    matches = [
+        leaf
+        for leaf in leaves
+        if leaf.start is not None and int(leaf.start) <= index < int(leaf.stop)
+    ]
+    if len(matches) != 1:
+        raise ValueError(f"compact index {index} has {len(matches)} owner leaves")
+    leaf = matches[0]
+    return {
+        "key": leaf.key,
+        "offset": index - int(leaf.start),
+        "shape": list(leaf.shape),
+        "axis_names": list(leaf.axis_names),
+        "selected_pft_indices": list(leaf.selected_pft_indices),
+    }
+
+
+def run_calibration_hard_constraint_diagnostic(
+    *,
+    calibration_ordinal: int,
+    preflight_path: str | Path,
+    protocol_path: str | Path,
+    dataset_path: str | Path,
+    statistics_path: str | Path,
+    output_root: str | Path,
+    plan_path: str | Path | None = None,
+) -> Path:
+    """Attribute one train-only calibration batch without computing gradients."""
+
+    protocol = load_rollout_stability_protocol(protocol_path)
+    preflight = _load_verified_preflight(preflight_path, protocol)
+    dataset_path = Path(dataset_path).resolve()
+    statistics_path = Path(statistics_path).resolve()
+    for name, path in (
+        ("dataset_manifest", dataset_path),
+        ("training_statistics", statistics_path),
+    ):
+        if _sha256_file(path) != preflight["artifacts"][name]["sha256"]:
+            raise ValueError(f"rollout-stability diagnostic {name} drift")
+    resources = _load_rollout_resources(
+        dataset_path=dataset_path,
+        statistics_path=statistics_path,
+        plan_path=None if plan_path is None else Path(plan_path),
+    )
+    references = sorted(
+        resources.index.select(spatial_split="train", temporal_split="train"),
+        key=lambda item: (item.landpoint_id, item.year, str(item.path)),
+    )
+    schedule = _calibration_schedule(references, protocol)
+    if not 0 <= calibration_ordinal < len(schedule):
+        raise ValueError("calibration diagnostic ordinal is outside the schedule")
+    ordinal, reference, horizon = schedule[calibration_ordinal]
+    spec = _horizon_spec(protocol, horizon)
+    calibration_seed = int(
+        protocol.raw["loss"]["coefficient_calibration"]["fixed_calibration_seed"]
+    )
+    prepared = prepare_rollout_update(
+        reference=reference,
+        update=ordinal,
+        horizon=horizon,
+        anchor_batch_size=int(protocol.raw["optimization"]["anchor_batch_size"]),
+        rollout_batch_size=int(spec["batch_size"]),
+        seed=calibration_seed,
+        resources=resources,
+    )
+    parameters = _parent_parameters(preflight, resources)
+    transition = _bind_dynamic_transition(resources, prepared.runtime)
+
+    def one(initial_state, initial_discrete_state, sequence):
+        result = canonical_multistep_rollout(
+            parameters,
+            initial_state,
+            initial_discrete_state,
+            sequence,
+            statistics=resources.statistics,
+            representation=resources.representation,
+            fast_day_weights=resources.fast_day_weights,
+            retained_tail_transition=transition,
+            state_weights=resources.process_weighting.weights,
+            state_loss_weight=1.0,
+            undefined_loss_weight=float(
+                protocol.raw["loss"]["undefined_flip_binary_weight"]
+            ),
+            rematerialize=bool(spec["rematerialize"]),
+            model_apply=resources.model_definition.apply,
+        )
+        return (
+            result.steps.continuous_state,
+            result.steps.physical_fast_day_target,
+            result.steps.discrete_state,
+        )
+
+    predicted_next, predicted_fast, predicted_discrete = jax.device_get(
+        jax.jit(jax.vmap(one))(
+            prepared.initial_states,
+            prepared.initial_discrete_states,
+            prepared.sequence,
+        )
+    )
+    predicted_next = np.asarray(predicted_next)
+    predicted_fast = np.asarray(predicted_fast)
+    teacher_next = np.asarray(prepared.sequence.teacher_next_state)
+    teacher_fast = np.asarray(prepared.sequence.teacher_fast_day_target)
+    mismatch = defined_numeric_mask(predicted_next) != defined_numeric_mask(
+        teacher_next
+    )
+    mismatch_positions = np.argwhere(mismatch)
+    state_leaves = tuple(
+        leaf for leaf in resources.contract.state_leaves if not leaf.discrete
+    )
+    dynamic_indices = np.asarray(
+        resources.representation.dynamic_undefined_indices,
+        dtype=np.int64,
+    )
+    dynamic_state_indices = np.asarray(
+        resources.representation.state_indices,
+        dtype=np.int64,
+    )[dynamic_indices]
+    declared_dynamic_positions = np.isin(
+        mismatch_positions[:, 2],
+        dynamic_state_indices,
+    )
+    relevant_names = {
+        "humrel",
+        "lai",
+        "rveget",
+        "temp_growth",
+        "veget",
+        "veget_max",
+    }
+    relevant_fast_leaves = tuple(
+        leaf
+        for leaf in resources.contract.fast_day_target_leaves
+        if leaf.path[-1] in relevant_names
+    )
+    records = []
+    for sample_index in np.unique(mismatch_positions[:, 0]):
+        sample_index = int(sample_index)
+        sample_positions = mismatch_positions[
+            mismatch_positions[:, 0] == sample_index
+        ]
+        sample_year = int(np.asarray(prepared.sequence.year)[sample_index, 0])
+        sample_day_index = int(
+            np.asarray(prepared.sequence.day_index)[sample_index, 0]
+        )
+        compiled_forcing = reconstruct_compiled_forcing_day(
+            np.asarray(prepared.sequence.forcing_native)[sample_index, 0],
+            resources.contract.native_forcing,
+            prepared.runtime.context,
+            year=sample_year,
+            day_index=sample_day_index,
+        )
+        records.append(
+            {
+                "sample_index": sample_index,
+                "rollout_start_zero_based": int(
+                    prepared.rollout_starts[sample_index]
+                ),
+                "day_index": np.asarray(prepared.sequence.day_index)[
+                    sample_index
+                ].astype(int).tolist(),
+                "source_forcing": {
+                    "native_fields": list(resources.contract.native_forcing.fields),
+                    "native_window": np.asarray(
+                        prepared.sequence.forcing_native
+                    )[sample_index, 0].tolist(),
+                    "final_half_hour_swdown": np.asarray(
+                        compiled_forcing.swdown
+                    )[-1].tolist(),
+                    "final_half_hour_temp_air": np.asarray(
+                        compiled_forcing.temp_air
+                    )[-1].tolist(),
+                },
+                "state_mismatches": [
+                    _leaf_for_compact_index(state_leaves, int(state_index))
+                    | {
+                        "horizon_offset": int(horizon_offset),
+                        "predicted_value": float(
+                            predicted_next[
+                                sample_index,
+                                int(horizon_offset),
+                                int(state_index),
+                            ]
+                        ),
+                        "teacher_value": float(
+                            teacher_next[
+                                sample_index,
+                                int(horizon_offset),
+                                int(state_index),
+                            ]
+                        ),
+                        "predicted_defined": bool(
+                            defined_numeric_mask(
+                                predicted_next[
+                                    sample_index,
+                                    int(horizon_offset),
+                                    int(state_index),
+                                ]
+                            )
+                        ),
+                        "teacher_defined": bool(
+                            defined_numeric_mask(
+                                teacher_next[
+                                    sample_index,
+                                    int(horizon_offset),
+                                    int(state_index),
+                                ]
+                            )
+                        ),
+                        "declared_dynamic": bool(
+                            int(state_index) in dynamic_state_indices
+                        ),
+                    }
+                    for _, horizon_offset, state_index in sample_positions
+                ],
+                "dynamic_fast_day": [
+                    _leaf_for_compact_index(
+                        resources.contract.fast_day_target_leaves,
+                        int(index),
+                    )
+                    | {
+                        "predicted": predicted_fast[sample_index, :, index].tolist(),
+                        "teacher": teacher_fast[sample_index, :, index].tolist(),
+                    }
+                    for index in dynamic_indices
+                ],
+                "related_fast_day_leaves": [
+                    {
+                        "key": leaf.key,
+                        "predicted": predicted_fast[
+                            sample_index, :, leaf.start : leaf.stop
+                        ].tolist(),
+                        "teacher": teacher_fast[
+                            sample_index, :, leaf.start : leaf.stop
+                        ].tolist(),
+                    }
+                    for leaf in relevant_fast_leaves
+                ],
+            }
+        )
+    discrete_mismatches = sum(
+        int(
+            np.count_nonzero(
+                np.asarray(predicted_discrete[name])
+                != np.asarray(prepared.teacher_next_discrete_states[name])
+            )
+        )
+        for name in predicted_discrete
+    )
+    output_root = Path(output_root).resolve()
+    output_root.mkdir(parents=True, exist_ok=True)
+    output_path = (
+        output_root
+        / f"coefficient_calibration_diagnostic_{calibration_ordinal:04d}.json"
+    )
+    return _atomic_json(
+        output_path,
+        {
+            "schema_version": "canonical_rollout_calibration_diagnostic_v1",
+            "status": "completed",
+            "training_git_head": preflight["training_git_head"],
+            "protocol_sha256": protocol.sha256,
+            "sealed_test_used": False,
+            "selection": {
+                "calibration_ordinal": ordinal,
+                "horizon": horizon,
+                "landpoint_id": reference.landpoint_id,
+                "year": int(reference.year),
+                "reference_path": str(reference.path),
+                "reference_sha256": reference.sha256,
+                "rollout_batch_size": int(spec["batch_size"]),
+            },
+            "hard_counts": {
+                "declared_dynamic_status_mismatches": int(
+                    np.count_nonzero(declared_dynamic_positions)
+                ),
+                "unexpected_defined_status_mismatches": int(
+                    np.count_nonzero(~declared_dynamic_positions)
+                ),
+                "discrete_state_mismatches": discrete_mismatches,
+            },
+            "records": records,
+        },
+    )
 
 
 def create_execution_manifest(
@@ -1556,7 +1923,7 @@ def _component_record(components: RolloutStabilityComponents) -> Mapping[str, An
     return {
         name: (
             int(getattr(host, name))
-            if name in HARD_CONSTRAINT_FIELDS
+            if name in COUNT_COMPONENT_FIELDS
             else float(getattr(host, name))
         )
         for name in host._fields
@@ -1671,7 +2038,6 @@ def run_rollout_stability_arm(
                 rollout_batch_size=int(spec["batch_size"]),
                 seed=seed,
                 resources=resources,
-                runtime_cache=runtimes,
             )
             result = control_step(
                 parameters,
@@ -1688,6 +2054,7 @@ def run_rollout_stability_arm(
                 rollout_batch_size=int(spec["batch_size"]),
                 seed=seed,
                 resources=resources,
+                runtime_cache=runtimes,
             )
             rematerialize = bool(spec["rematerialize"])
             key = (horizon, rematerialize, prepared.trace_signature)
@@ -1904,7 +2271,7 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--phase",
-        choices=("prepare", "calibrate", "manifest", "arm"),
+        choices=("prepare", "calibrate", "diagnose-calibration", "manifest", "arm"),
         default="prepare",
     )
     parser.add_argument("--protocol", type=Path, required=True)
@@ -1923,6 +2290,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--training-protocol", type=Path)
     parser.add_argument("--environment-lock", type=Path)
     parser.add_argument("--skip-dataset-hash-verification", action="store_true")
+    parser.add_argument("--calibration-ordinal", type=int)
     return parser
 
 
@@ -1963,6 +2331,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.phase == "calibrate":
         _require_args(args, ("preflight",))
         output = run_coefficient_calibration(
+            preflight_path=args.preflight,
+            protocol_path=args.protocol,
+            dataset_path=args.dataset,
+            statistics_path=args.statistics,
+            output_root=args.output_root,
+            plan_path=args.plan,
+        )
+    elif args.phase == "diagnose-calibration":
+        _require_args(args, ("preflight", "calibration_ordinal"))
+        output = run_calibration_hard_constraint_diagnostic(
+            calibration_ordinal=args.calibration_ordinal,
             preflight_path=args.preflight,
             protocol_path=args.protocol,
             dataset_path=args.dataset,

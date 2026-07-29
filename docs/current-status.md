@@ -410,10 +410,10 @@ must match every frozen input exactly, completed arm checkpoints/reports are
 resumed without another epoch, incomplete arms rerun, and worker logs append.
 The 12-hour Slurm limit is retained as a safety ceiling.
 
-The conditional post-architecture rollout-stability experiment is also frozen
+The conditional post-architecture rollout-stability experiment was frozen
 before the parent result in
 [`canonical_669_rollout_stability_protocol.json`](../manifests/coarse_graining/canonical_669_rollout_stability_protocol.json),
-canonical SHA256
+Its v1 canonical SHA256 was
 `370011f6d8edc447bd0ebf037249df1a18f3bfb30071204001366a2aecde310b`.
 Its auditor binds the admitted 669-point assets and architecture-screen hash,
 keeps the test split sealed, and rejects drift in the matched arms,
@@ -444,6 +444,29 @@ are in
 
 Preflight, calibration, execution, and arm checkpoint identities now bind the
 training Git HEAD in addition to protocol, data, schedule, model, and
-environment. No paid Experiment B job has been submitted. The next gate is
-the frozen train-only coefficient calibration followed by the matched
-8,192-update control and mixed-horizon arms; the test split remains sealed.
+environment.
+
+The first paid Experiment B attempt, job `14410820`, failed after `00:07:47`
+during train-only coefficient-calibration ordinal 4, before either training
+arm started and before any checkpoint was written. The exact batch was
+landpoint `087.0-105.0`, year 1961, horizon 1, batch size 256. It contained
+three and only three defined-status errors, all in the PFT14 column of
+`diffuco_previous_step_state.rveget`, on Days 2, 294, and 358. There were zero
+discrete mismatches, nonfinite defined values, or negative source-constrained
+carbon stocks. The sealed test split was not used. The diagnostic SHA256 is
+`f24eeef2f937c2f828b4b7449cdadbaa5d60ef8cf581d186564eb622e6751a2e`.
+
+This exposed a protocol contradiction rather than a new retained-tail defect:
+`rveget` defined/undefined is an explicitly declared learned classification
+target, but v1 also treated every classification mistake as an exact-zero
+optimizer veto. Protocol v2, canonical SHA256
+`a0ecfd4c89ff3c5691f153168f3ba80939582774689b92ff04b0cf77e699cb40`,
+separates declared dynamic `rveget` status errors from unexpected structural
+status errors. Declared errors remain supervised, counted, reported, and
+screened against the matched control; they no longer veto an optimizer update.
+Unexpected status errors, discrete mismatches, nonfinite defined values, and
+negative source-constrained carbon stocks remain exact hard failures. Before
+another paid submission, calibration ordinal 4 must pass a free `gln01` smoke
+with the three declared errors recorded, all hard counts zero, and a real
+candidate update applied. See
+[`rollout_stability_calibration_failure_20260729.md`](research/daily_coarse_graining/rollout_stability_calibration_failure_20260729.md).

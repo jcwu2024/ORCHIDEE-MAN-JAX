@@ -298,6 +298,44 @@ def _candidate_kwargs(setup):
     }
 
 
+def _with_opposite_teacher_defined_status(setup, *, state_index: int):
+    def one(initial_state, initial_discrete_state, sequence):
+        result = canonical_multistep_rollout(
+            setup["parameters"],
+            initial_state,
+            initial_discrete_state,
+            sequence,
+            statistics=setup["statistics"],
+            representation=setup["representation"],
+            fast_day_weights=setup["fast_day_weights"],
+            retained_tail_transition=setup["retained_tail_transition"],
+            state_weights=setup["process_weighting"].weights,
+            state_loss_weight=1.0,
+            undefined_loss_weight=0.1,
+            rematerialize=False,
+            model_apply=canonical_model_apply,
+        )
+        return result.steps.continuous_state
+
+    predicted = np.asarray(
+        jax.vmap(one)(
+            setup["initial_states"],
+            setup["initial_discrete_states"],
+            setup["sequences"],
+        )
+    )
+    teacher = np.asarray(setup["sequences"].teacher_next_state).copy()
+    predicted_defined = np.isfinite(predicted[..., state_index]) & (
+        np.abs(predicted[..., state_index]) < 1.0e19
+    )
+    teacher[..., state_index] = np.where(predicted_defined, 1.0e20, 0.3)
+    return setup | {
+        "sequences": setup["sequences"]._replace(
+            teacher_next_state=jnp.asarray(teacher)
+        )
+    }
+
+
 def test_zero_treatment_candidate_matches_control_optimizer_update_exactly():
     setup = _setup(3)
     anchor_batch = _anchor_batch(setup)
@@ -360,6 +398,75 @@ def test_zero_treatment_candidate_matches_control_optimizer_update_exactly():
             rtol=0.0,
             atol=0.0,
         )
+
+
+def test_declared_dynamic_status_mismatch_is_supervised_without_veto():
+    setup = _with_opposite_teacher_defined_status(_setup(1), state_index=0)
+    candidate = make_candidate_update_step(
+        coefficients={
+            "L_next": 1.0,
+            "L_rollout": 1.0,
+            "L_bias": 0.25,
+            "L_science": 0.5,
+        },
+        fast_day_weights=setup["fast_day_weights"],
+        undefined_loss_weight=0.1,
+        rematerialize=False,
+        model_apply=canonical_model_apply,
+        **_candidate_kwargs(setup),
+    )
+    result = candidate(
+        setup["parameters"],
+        _adam_init(setup["parameters"]),
+        _anchor_batch(setup),
+        setup["initial_states"],
+        setup["initial_discrete_states"],
+        setup["sequences"],
+        setup["teacher_next_discrete_states"],
+        jnp.asarray(3.0e-5),
+    )
+
+    assert bool(result.update_applied)
+    assert int(result.components.declared_dynamic_status_mismatches) > 0
+    assert int(result.components.unexpected_defined_status_mismatches) == 0
+
+
+def test_undeclared_defined_status_mismatch_remains_fail_closed():
+    setup = _with_opposite_teacher_defined_status(_setup(1), state_index=1)
+    optimizer = _adam_init(setup["parameters"])
+    candidate = make_candidate_update_step(
+        coefficients={
+            "L_next": 1.0,
+            "L_rollout": 1.0,
+            "L_bias": 0.25,
+            "L_science": 0.5,
+        },
+        fast_day_weights=setup["fast_day_weights"],
+        undefined_loss_weight=0.1,
+        rematerialize=False,
+        model_apply=canonical_model_apply,
+        **_candidate_kwargs(setup),
+    )
+    result = candidate(
+        setup["parameters"],
+        optimizer,
+        _anchor_batch(setup),
+        setup["initial_states"],
+        setup["initial_discrete_states"],
+        setup["sequences"],
+        setup["teacher_next_discrete_states"],
+        jnp.asarray(3.0e-5),
+    )
+
+    assert not bool(result.update_applied)
+    assert int(result.components.unexpected_defined_status_mismatches) > 0
+    assert int(result.components.declared_dynamic_status_mismatches) == 0
+    for before, after in zip(
+        jax.tree_util.tree_leaves((setup["parameters"], optimizer)),
+        jax.tree_util.tree_leaves((result.parameters, result.optimizer)),
+        strict=True,
+    ):
+        np.testing.assert_array_equal(before, after)
 
 
 def test_candidate_hard_constraint_failure_preserves_parameters_and_optimizer():

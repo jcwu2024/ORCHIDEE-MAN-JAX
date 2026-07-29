@@ -31,6 +31,9 @@ from research.daily_coarse_graining.rollout_stability_run import (
     CALIBRATION_SCHEMA_VERSION,
     EXECUTION_MANIFEST_SCHEMA_VERSION,
     PREFLIGHT_SCHEMA_VERSION,
+    _host_hard_constraint_counts,
+    _leaf_for_compact_index,
+    _write_coefficient_calibration_failure,
     broadcast_retained_tail_day_inputs,
     build_arm_checkpoint,
     build_sampling_schedule,
@@ -362,6 +365,92 @@ def test_gradient_calibration_uses_paired_median_ratios_and_skips_zero_rollout()
 
     with pytest.raises(ValueError, match="horizon 30 count drift"):
         calibrate_gradient_coefficients(records[:-1], protocol)
+
+
+def test_calibration_hard_constraint_failure_records_exact_sample(tmp_path):
+    protocol = _small_protocol()
+    components = rollout_stability_run.RolloutStabilityComponents(
+        L_fast=np.asarray(0.1),
+        L_next=np.asarray(0.2),
+        L_rollout=np.asarray(0.3),
+        L_bias=np.asarray(0.4),
+        L_science=np.asarray(0.5),
+        unexpected_defined_status_mismatches=np.asarray(3, dtype=np.int32),
+        declared_dynamic_status_mismatches=np.asarray(11, dtype=np.int32),
+        discrete_state_mismatches=np.asarray(0, dtype=np.int32),
+        nonfinite_defined_values=np.asarray(2, dtype=np.int32),
+        negative_source_nonnegative_carbon_stocks=np.asarray(7, dtype=np.int32),
+    )
+    counts = _host_hard_constraint_counts(components)
+    reference = MarkovShardRef(
+        landpoint_id="301.0-089.0",
+        year=1964,
+        spatial_split="train",
+        temporal_split="train",
+        path=tmp_path / "sample.npz",
+        sha256="sample-sha",
+        contract_sha256="contract",
+    )
+
+    failure_path = _write_coefficient_calibration_failure(
+        output_root=tmp_path,
+        preflight={"training_git_head": "a" * 40},
+        protocol=protocol,
+        reference=reference,
+        ordinal=3,
+        total_batches=128,
+        horizon=1,
+        calibration_seed=20260728,
+        trace_signature="trace",
+        hard_constraint_counts=counts,
+        completed_records=3,
+    )
+    failure = json.loads(failure_path.read_text(encoding="utf-8"))
+
+    assert counts == {
+        "unexpected_defined_status_mismatches": 3,
+        "discrete_state_mismatches": 0,
+        "nonfinite_defined_values": 2,
+        "negative_source_nonnegative_carbon_stocks": 7,
+    }
+    assert failure["status"] == "failed_hard_constraint"
+    assert failure["batch"] == 4
+    assert failure["landpoint_id"] == "301.0-089.0"
+    assert failure["year"] == 1964
+    assert failure["hard_constraint_counts"] == counts
+    assert failure["completed_records"] == 3
+    assert failure["sealed_test_used"] is False
+
+
+def test_compact_index_attribution_requires_one_exact_owner():
+    leaves = (
+        SimpleNamespace(
+            start=0,
+            stop=2,
+            key="component.first",
+            shape=(2,),
+            axis_names=("nvm",),
+            selected_pft_indices=(0, 13),
+        ),
+        SimpleNamespace(
+            start=2,
+            stop=3,
+            key="component.second",
+            shape=(1,),
+            axis_names=(),
+            selected_pft_indices=(),
+        ),
+    )
+
+    assert _leaf_for_compact_index(leaves, 1) == {
+        "key": "component.first",
+        "offset": 1,
+        "shape": [2],
+        "axis_names": ["nvm"],
+        "selected_pft_indices": [0, 13],
+    }
+    with pytest.raises(ValueError, match="compact index 3 has 0 owner leaves"):
+        _leaf_for_compact_index(leaves, 3)
 
 
 def _retained_static():

@@ -1,7 +1,19 @@
 {
-  "schema_version": "canonical_rollout_stability_protocol_v1",
-  "protocol_id": "canonical-669-rollout-stability-v1",
-  "status": "frozen_before_parent_result",
+  "schema_version": "canonical_rollout_stability_protocol_v2",
+  "protocol_id": "canonical-669-rollout-stability-v2",
+  "status": "amended_after_train_only_calibration_failure",
+  "amendment": {
+    "predecessor_protocol_id": "canonical-669-rollout-stability-v1",
+    "predecessor_canonical_sha256": "370011f6d8edc447bd0ebf037249df1a18f3bfb30071204001366a2aecde310b",
+    "trigger": "declared_dynamic_rveget_status_mismatches_in_train_only_coefficient_calibration",
+    "diagnostic_sha256": "f24eeef2f937c2f828b4b7449cdadbaa5d60ef8cf581d186564eb622e6751a2e",
+    "calibration_ordinal": 4,
+    "landpoint_id": "087.0-105.0",
+    "year": 1961,
+    "declared_dynamic_status_mismatches": 3,
+    "sealed_test_used": false,
+    "change": "declared dynamic rveget status remains supervised and reported but does not veto optimizer updates; undeclared status mismatches remain exact hard failures"
+  },
   "parent_architecture_screen": {
     "experiment_manifest": "manifests/coarse_graining/canonical_669_axis_process_architecture_ab.json",
     "experiment_canonical_sha256": "39b94a28e51dba67017ac3f06973b7f4fbbfa4a560b249eec49420f4baed8099",
@@ -191,7 +203,8 @@
     "low_biomass_cases_require_absolute_and_relative_metrics": true
   },
   "hard_constraints": {
-    "defined_status_mismatches": 0,
+    "unexpected_defined_status_mismatches": 0,
+    "declared_dynamic_status_mismatches": "supervised_and_reported_not_optimizer_veto",
     "discrete_state_mismatches": 0,
     "nonfinite_defined_values": 0,
     "negative_source_nonnegative_carbon_stocks": 0,
@@ -218,7 +231,8 @@
       "seven_day_free_rollout_global_ratio_max": 0.95,
       "thirty_day_free_rollout_global_ratio_max": 0.95,
       "tendency_bias_ratio_max": 0.9,
-      "science_metric_ratio_max": 1.05
+      "science_metric_ratio_max": 1.05,
+      "declared_dynamic_status_error_ratio_max": 1.05
     },
     "all_hard_constraints_required": true
   },
