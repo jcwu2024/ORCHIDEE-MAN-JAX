@@ -847,6 +847,59 @@ def make_fast_target_checkify_diagnostic(
     )
 
 
+def make_retained_tail_state_gradient_checkify_diagnostic(
+    *,
+    statistics,
+    retained_tail_transition,
+    state_weights,
+):
+    """Check direct next-state loss gradients with respect to prior state."""
+
+    state_weights = jnp.asarray(state_weights)
+
+    def gradient(
+        initial_state,
+        initial_discrete_state,
+        physical_fast_day,
+        sequence,
+    ):
+        day = jax.tree_util.tree_map(lambda item: item[0], sequence)
+
+        def objective(state):
+            next_state, _ = retained_tail_transition(
+                state,
+                initial_discrete_state,
+                physical_fast_day,
+                day.retained_tail_inputs,
+                day.year,
+                day.day_index,
+            )
+            normalized_next, finite_next = _normalize_finite_compiled(
+                next_state,
+                statistics.arrays["state"],
+            )
+            normalized_teacher, finite_teacher = _normalize_finite_compiled(
+                day.teacher_next_state,
+                statistics.arrays["state"],
+            )
+            common = finite_next & finite_teacher
+            return masked_huber_loss(
+                normalized_next[None, :],
+                normalized_teacher[None, :],
+                common[None, :],
+                state_weights,
+            )
+
+        return jax.grad(objective)(initial_state)
+
+    return jax.jit(
+        checkify.checkify(
+            gradient,
+            errors=checkify.float_checks,
+        )
+    )
+
+
 def make_retained_tail_directional_jvp_diagnostic(
     *,
     retained_tail_transition,
@@ -2746,6 +2799,19 @@ def run_screening_update_diagnostic(
             detached_bad_target_indices = np.flatnonzero(
                 ~np.isfinite(detached_fast_target_gradient)
             )
+            retained_tail_state_checkify = (
+                make_retained_tail_state_gradient_checkify_diagnostic(
+                    statistics=resources.statistics,
+                    retained_tail_transition=transition,
+                    state_weights=resources.process_weighting.weights,
+                )
+            )
+            retained_tail_state_error, _ = retained_tail_state_checkify(
+                detached_state,
+                detached_discrete_state,
+                detached_physical_fast_day,
+                detached_second_sequence,
+            )
             detached_next_day_record = {
                 "day_index": int(np.asarray(sample_sequence.day_index)[1]),
                 "loss": float(detached_loss),
@@ -2767,6 +2833,12 @@ def run_screening_update_diagnostic(
                 "model_state_path_gradient": state_gradient_record(
                     detached_model_state_gradient
                 ),
+                "retained_tail_state_path_checkify": {
+                    "error": retained_tail_state_error.get(),
+                    "active_error_sources": _active_checkify_error_sources(
+                        retained_tail_state_error
+                    ),
+                },
                 "fast_target_gradient": {
                     "loss": float(detached_fast_target_loss),
                     "nonfinite_gradient_count": int(
