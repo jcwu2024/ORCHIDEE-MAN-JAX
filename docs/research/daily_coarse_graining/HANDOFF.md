@@ -1,6 +1,6 @@
 # Daily Coarse-Graining Handoff
 
-Snapshot date: 2026-07-29
+Snapshot date: 2026-07-30
 
 This is the single operational handoff page for the daily coarse-graining
 research branch. Read this page before dated experiment reports. Stable
@@ -18,9 +18,11 @@ scientific and release facts remain authoritative in
 4. Confirm the admitted 669-point dataset and frozen architecture-screen
    hashes below. Do not regenerate Teacher data or reuse nine-point assets.
 5. Treat architecture job `14403674` as accepted parent evidence. Experiment B
-   job `14410820` is a rejected train-only calibration attempt, not training
-   evidence. The protocol-v2 ordinal-4 free `gln01` smoke passed at `13f09c9`;
-   prepare a new paid submission only from that clean training snapshot.
+   job `14410820` and the later update-226 failure are rejected training
+   attempts. The `min_stomate` fix passed the complete update audit at
+   `f9554c6` and the resumable 256-update gate at `452b743`. Prepare a new
+   formal run only after binding preflight, calibration, and execution to one
+   clean current commit.
 
 ```bash
 git status --short --branch
@@ -709,11 +711,26 @@ cached runtime. The free ordinal-4 `gln01` update smoke passed from clean commit
 unexpected/discrete/nonfinite/negative-stock hard counts, finite loss and
 gradient, and an applied candidate update. Its report SHA256 is
 `66dc952abef5804eabe43ca8a9e9144828caba9649452557ded274f2bf8146a5`.
-The next step is to create a new immutable paid-run output root and preflight
-for this exact training commit, then request explicit approval for the
-six-hour `gnall` rerun.
-See
-[`rollout_stability_smoke_20260729.md`](rollout_stability_smoke_20260729.md).
+The subsequent update-226 failure is closed. The retained NPP transition could
+land one ULP above `min_stomate` after correcting a negative carbon stock and
+therefore activate a strict leaf-fraction division gate. The literal original
+Fortran expression exhibits the same pathology under source-extracted `-O0`
+and `-O3` compilation. Commit `f9554c6` keeps the original carbon-budget
+compensation but pins the corrected stock exactly to the intended threshold.
+The two failing samples now have finite gradients; the complete update audit
+passes 64/64 rollout samples with all hard counts zero and an applied update.
+
+Commit `452b743` added a fail-closed, resumable screening-prefix gate. It
+passed updates 0-128 and then restored the hash-bound checkpoint to pass
+updates 128-256. All 256 updates were applied, horizons 1/3/7/30 were covered,
+and the final hard counts were zero. Evidence is recorded in
+[`rollout_min_stomate_threshold_20260730.md`](rollout_min_stomate_threshold_20260730.md).
+
+The next step is to create a new immutable output root and regenerate
+preflight, train-only calibration, and execution identity from one clean
+current commit. Only then request explicit approval for the formal six-hour
+matched `gnall` rerun. Do not reuse the rejected training root as promotion
+evidence.
 
 The paid runner is
 `scripts/hpc/run_rollout_stability_experiment.sh`. It requires an already

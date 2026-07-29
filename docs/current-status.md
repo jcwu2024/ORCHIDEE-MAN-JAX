@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-07-29.
+Last updated: 2026-07-30.
 
 This page is the current status authority. Dated files under
 `docs/source_audits/` and `docs/research/` are evidence snapshots and may
@@ -473,6 +473,24 @@ unexpected/discrete/nonfinite/negative-stock hard counts, finite loss and
 gradient norm, and `update_applied=true`. The sealed test split was not used.
 The smoke report SHA256 is
 `66dc952abef5804eabe43ca8a9e9144828caba9649452557ded274f2bf8146a5`.
-The next operation is a new paid Experiment B submission using the clean
-`13f09c9` worktree, v2 preflight, and a new immutable training output root. See
-[`rollout_stability_calibration_failure_20260729.md`](research/daily_coarse_graining/rollout_stability_calibration_failure_20260729.md).
+
+A later paid attempt reached mixed-horizon update 226 before failing on two
+rollout samples with nonfinite gradients. Source-owner isolation proved that
+the failure came from the NPP negative-stock add-back landing one ULP above
+`min_stomate`, which activated a strict leaf-fraction division gate. The same
+pathology was reproduced from the original Fortran procedure under both
+`gfortran -O0` and `-O3`. Commit `f9554c6` preserves the source carbon budget
+while pinning the corrected stock exactly to the intended threshold.
+
+After that stabilization, both failing samples had finite gradients, the
+complete update-226 audit passed 64/64 rollout samples with all hard counts
+zero, and the candidate update was applied. A resumable sequential prefix gate
+then passed all 256 mixed-horizon updates at commit `452b743`, including an
+exact checkpoint restart at update 128 and coverage of horizons 1, 3, 7, and
+30. The sealed test split remains unused.
+
+The next operation is to regenerate preflight, train-only calibration, and
+execution identity under one clean current commit and a new immutable output
+root, then request approval for the formal six-hour matched Experiment B
+screen. See
+[`rollout_min_stomate_threshold_20260730.md`](research/daily_coarse_graining/rollout_min_stomate_threshold_20260730.md).
