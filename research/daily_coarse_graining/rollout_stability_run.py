@@ -693,6 +693,77 @@ def make_fast_target_checkify_diagnostic(
     )
 
 
+def make_fast_target_process_gradient_diagnostic(
+    *,
+    statistics,
+    retained_tail_transition,
+    process_weights,
+):
+    """Differentiate process-specific next-state losses with respect to B_fast."""
+
+    process_weights = jnp.asarray(process_weights)
+
+    def diagnose(
+        initial_state,
+        initial_discrete_state,
+        physical_fast_day,
+        sequence,
+    ):
+        day = jax.tree_util.tree_map(lambda item: item[0], sequence)
+
+        def objective(target):
+            next_state, _ = retained_tail_transition(
+                initial_state,
+                initial_discrete_state,
+                target,
+                day.retained_tail_inputs,
+                day.year,
+                day.day_index,
+            )
+            normalized_next, finite_next = _normalize_finite_compiled(
+                next_state,
+                statistics.arrays["state"],
+            )
+            normalized_teacher, finite_teacher = _normalize_finite_compiled(
+                day.teacher_next_state,
+                statistics.arrays["state"],
+            )
+            common = finite_next & finite_teacher
+            losses = jax.vmap(
+                lambda weights: masked_huber_loss(
+                    normalized_next[None, :],
+                    normalized_teacher[None, :],
+                    common[None, :],
+                    weights,
+                )
+            )(process_weights)
+            return losses, losses
+
+        jacobian, losses = jax.jacrev(objective, has_aux=True)(
+            physical_fast_day
+        )
+        return losses, jacobian
+
+    return jax.jit(diagnose)
+
+
+def _state_process_gradient_weights(
+    process_weighting,
+) -> tuple[tuple[str, ...], np.ndarray]:
+    base = np.asarray(process_weighting.weights)
+    names = []
+    rows = []
+    for group in process_weighting.metadata["groups"]:
+        names.append(str(group["id"]))
+        row = np.zeros_like(base)
+        for leaf in group["leaves"]:
+            start = int(leaf["start"])
+            stop = int(leaf["stop"])
+            row[start:stop] = base[start:stop]
+        rows.append(row)
+    return tuple(names), np.stack(rows, axis=0)
+
+
 def _active_checkify_error_sources(error) -> list[Mapping[str, Any]]:
     records = []
     exception = error.get_exception()
@@ -2323,6 +2394,47 @@ def run_screening_update_diagnostic(
             physical_fast_day,
             sample_sequence,
         )
+        process_names, process_weights = _state_process_gradient_weights(
+            resources.process_weighting
+        )
+        process_gradient_diagnostic = (
+            make_fast_target_process_gradient_diagnostic(
+                statistics=resources.statistics,
+                retained_tail_transition=transition,
+                process_weights=process_weights,
+            )
+        )
+        process_losses, process_jacobian = jax.device_get(
+            process_gradient_diagnostic(
+                sample_initial_state,
+                sample_initial_discrete_state,
+                physical_fast_day,
+                sample_sequence,
+            )
+        )
+        process_gradient_records = []
+        for process_name, process_loss, process_gradient in zip(
+            process_names,
+            process_losses,
+            process_jacobian,
+            strict=True,
+        ):
+            bad_process_indices = np.flatnonzero(
+                ~np.isfinite(process_gradient)
+            )
+            process_gradient_records.append(
+                {
+                    "process": process_name,
+                    "loss": float(process_loss),
+                    "nonfinite_gradient_count": int(
+                        bad_process_indices.size
+                    ),
+                    "nonfinite_leaves": _fast_target_leaf_records(
+                        resources.contract,
+                        bad_process_indices,
+                    ),
+                }
+            )
         rollout_raw = _collate_reference_windows(
             reference,
             starts=prepared.rollout_starts,
@@ -2392,6 +2504,7 @@ def run_screening_update_diagnostic(
                         checkify_error
                     ),
                 },
+                "process_gradient_attribution": process_gradient_records,
             },
         )
     if component is not None:
