@@ -1761,6 +1761,151 @@ def run_calibration_hard_constraint_diagnostic(
     )
 
 
+def run_calibration_update_smoke(
+    *,
+    calibration_ordinal: int,
+    preflight_path: str | Path,
+    protocol_path: str | Path,
+    dataset_path: str | Path,
+    statistics_path: str | Path,
+    output_root: str | Path,
+    plan_path: str | Path | None = None,
+) -> Path:
+    """Run one real train-only candidate update at a calibration schedule entry."""
+
+    protocol = load_rollout_stability_protocol(protocol_path)
+    preflight = _load_verified_preflight(preflight_path, protocol)
+    dataset_path = Path(dataset_path).resolve()
+    statistics_path = Path(statistics_path).resolve()
+    for name, path in (
+        ("dataset_manifest", dataset_path),
+        ("training_statistics", statistics_path),
+    ):
+        if _sha256_file(path) != preflight["artifacts"][name]["sha256"]:
+            raise ValueError(f"rollout-stability update smoke {name} drift")
+    resources = _load_rollout_resources(
+        dataset_path=dataset_path,
+        statistics_path=statistics_path,
+        plan_path=None if plan_path is None else Path(plan_path),
+    )
+    references = sorted(
+        resources.index.select(spatial_split="train", temporal_split="train"),
+        key=lambda item: (item.landpoint_id, item.year, str(item.path)),
+    )
+    schedule = _calibration_schedule(references, protocol)
+    if not 0 <= calibration_ordinal < len(schedule):
+        raise ValueError("calibration update smoke ordinal is outside the schedule")
+    ordinal, reference, horizon = schedule[calibration_ordinal]
+    amendment = protocol.raw["amendment"]
+    if (
+        ordinal != int(amendment["calibration_ordinal"])
+        or reference.landpoint_id != amendment["landpoint_id"]
+        or int(reference.year) != int(amendment["year"])
+    ):
+        raise ValueError("calibration update smoke does not reproduce the amendment")
+
+    spec = _horizon_spec(protocol, horizon)
+    calibration_seed = int(
+        protocol.raw["loss"]["coefficient_calibration"]["fixed_calibration_seed"]
+    )
+    prepared = prepare_rollout_update(
+        reference=reference,
+        update=ordinal,
+        horizon=horizon,
+        anchor_batch_size=int(protocol.raw["optimization"]["anchor_batch_size"]),
+        rollout_batch_size=int(spec["batch_size"]),
+        seed=calibration_seed,
+        resources=resources,
+    )
+    parameters = _parent_parameters(preflight, resources)
+    optimizer_checkpoint = _load_pickle(
+        Path(preflight["parent_architecture"]["optimizer_checkpoint"]["path"])
+    )
+    verify_checkpoint_architecture(
+        optimizer_checkpoint["identity"],
+        resources.model_definition,
+    )
+    if not _trees_equal(parameters, optimizer_checkpoint["parameters"]):
+        raise ValueError("calibration update smoke parent parameter drift")
+    optimizer = jax.tree_util.tree_map(
+        jnp.asarray,
+        optimizer_checkpoint["optimizer"],
+    )
+    transition = _bind_dynamic_transition(resources, prepared.runtime)
+    unit_coefficients = {
+        name: 1.0 for name in ("L_next", "L_rollout", "L_bias", "L_science")
+    }
+    step = make_candidate_update_step(
+        coefficients=unit_coefficients,
+        fast_day_weights=resources.fast_day_weights,
+        undefined_loss_weight=float(
+            protocol.raw["loss"]["undefined_flip_binary_weight"]
+        ),
+        rematerialize=bool(spec["rematerialize"]),
+        model_apply=resources.model_definition.apply,
+        **_objective_kwargs(resources, transition),
+    )
+    result = step(
+        parameters,
+        optimizer,
+        prepared.anchor_batch,
+        prepared.initial_states,
+        prepared.initial_discrete_states,
+        prepared.sequence,
+        prepared.teacher_next_discrete_states,
+        jnp.asarray(
+            protocol.raw["optimization"]["learning_rate"],
+            dtype=jnp.float32,
+        ),
+    )
+    components = _component_record(result.components)
+    hard_counts = {
+        name: int(components[name]) for name in HARD_CONSTRAINT_FIELDS
+    }
+    declared_count = int(components["declared_dynamic_status_mismatches"])
+    update_applied = bool(jax.device_get(result.update_applied))
+    nonfinite_gradients = int(jax.device_get(result.nonfinite_gradient_values))
+    if declared_count != int(amendment["declared_dynamic_status_mismatches"]):
+        raise ValueError("calibration update smoke declared dynamic count drift")
+    if sum(hard_counts.values()) != 0:
+        raise ValueError(
+            f"calibration update smoke violated hard constraints: {hard_counts}"
+        )
+    if not update_applied or nonfinite_gradients != 0:
+        raise ValueError("calibration update smoke did not apply a finite update")
+
+    output_root = Path(output_root).resolve()
+    output_root.mkdir(parents=True, exist_ok=True)
+    return _atomic_json(
+        output_root / f"calibration_update_smoke_{calibration_ordinal:04d}.json",
+        {
+            "schema_version": "canonical_rollout_calibration_update_smoke_v1",
+            "status": "passed",
+            "training_git_head": preflight["training_git_head"],
+            "protocol_sha256": protocol.sha256,
+            "sealed_test_used": False,
+            "selection": {
+                "calibration_ordinal": ordinal,
+                "horizon": horizon,
+                "landpoint_id": reference.landpoint_id,
+                "year": int(reference.year),
+                "rollout_batch_size": int(spec["batch_size"]),
+                "reference_sha256": reference.sha256,
+            },
+            "coefficients": {
+                "policy": "unit_coefficients_for_gate_only_not_scientific_calibration",
+                "values": unit_coefficients,
+            },
+            "components": components,
+            "hard_constraint_counts": hard_counts,
+            "update_applied": update_applied,
+            "loss": float(jax.device_get(result.loss)),
+            "gradient_norm": float(jax.device_get(result.gradient_norm)),
+            "nonfinite_gradient_values": nonfinite_gradients,
+        },
+    )
+
+
 def create_execution_manifest(
     *,
     preflight_path: str | Path,
@@ -2271,7 +2416,14 @@ def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument(
         "--phase",
-        choices=("prepare", "calibrate", "diagnose-calibration", "manifest", "arm"),
+        choices=(
+            "prepare",
+            "calibrate",
+            "diagnose-calibration",
+            "smoke-calibration-update",
+            "manifest",
+            "arm",
+        ),
         default="prepare",
     )
     parser.add_argument("--protocol", type=Path, required=True)
@@ -2341,6 +2493,17 @@ def main(argv: Sequence[str] | None = None) -> int:
     elif args.phase == "diagnose-calibration":
         _require_args(args, ("preflight", "calibration_ordinal"))
         output = run_calibration_hard_constraint_diagnostic(
+            calibration_ordinal=args.calibration_ordinal,
+            preflight_path=args.preflight,
+            protocol_path=args.protocol,
+            dataset_path=args.dataset,
+            statistics_path=args.statistics,
+            output_root=args.output_root,
+            plan_path=args.plan,
+        )
+    elif args.phase == "smoke-calibration-update":
+        _require_args(args, ("preflight", "calibration_ordinal"))
+        output = run_calibration_update_smoke(
             calibration_ordinal=args.calibration_ordinal,
             preflight_path=args.preflight,
             protocol_path=args.protocol,
