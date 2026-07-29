@@ -40,6 +40,7 @@ from research.daily_coarse_graining.rollout_stability_run import (
     MIN_STOMATE_DAILY_CARBON_OWNERS,
     PREFLIGHT_SCHEMA_VERSION,
     _bind_min_stomate_variant_transition,
+    _boundary_variant_metrics,
     _daily_carbon_min_stomate_variant,
     _host_hard_constraint_counts,
     _leaf_for_compact_index,
@@ -241,6 +242,31 @@ def test_state_variant_metrics_reports_only_changed_owner_leaves():
     assert metrics["defined_status_mismatches"] == 0
     assert metrics["maximum_absolute_physical_difference"] == 4.0
     assert metrics["weighted_huber_state_loss"] == pytest.approx(0.625)
+
+
+def test_boundary_variant_metrics_orders_first_changed_process_boundary():
+    baseline = {
+        "allocation.biomass": np.asarray([1.0, 2.0]),
+        "npp.biomass": np.asarray([3.0, 4.0]),
+    }
+    values = {
+        "allocation.biomass": np.asarray([1.0, 2.0]),
+        "npp.biomass": np.asarray([3.0, 14.0]),
+    }
+
+    metrics = _boundary_variant_metrics(values, baseline)
+
+    assert metrics["largest_differences"][0]["name"] == "npp.biomass"
+    assert (
+        metrics["largest_differences"][0]["maximum_absolute_difference"]
+        == 10.0
+    )
+    allocation = next(
+        record
+        for record in metrics["boundaries"]
+        if record["name"] == "allocation.biomass"
+    )
+    assert allocation["changed_common_values"] == 0
 
 
 def _canonical_digest(value):

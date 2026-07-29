@@ -1601,6 +1601,34 @@ def _bind_dynamic_ad_boundary_transition(
     )
 
 
+def _bind_min_stomate_variant_ad_boundary_transition(
+    resources: RolloutStabilityResources,
+    runtime: LandpointRuntime,
+    enabled_owners: Sequence[str],
+):
+    """Bind a threshold variant that also returns daily-carbon boundaries."""
+
+    base_transition = _bind_dynamic_ad_boundary_transition(resources, runtime)
+    original_builder = teacher.stomate_restart_input_bundles
+    enabled = tuple(enabled_owners)
+
+    def variant_builder(*args, **kwargs):
+        return _daily_carbon_min_stomate_variant(
+            original_builder(*args, **kwargs),
+            enabled,
+        )
+
+    def transition(*args, **kwargs):
+        with patch.object(
+            teacher,
+            "stomate_restart_input_bundles",
+            variant_builder,
+        ):
+            return base_transition(*args, **kwargs)
+
+    return transition
+
+
 def _state_variant_metrics(
     actual,
     expected,
@@ -1705,6 +1733,74 @@ def _state_variant_metrics(
         ),
         "changed_leaf_count": len(changed_leaves),
         "changed_leaves": changed_leaves,
+    }
+
+
+def _boundary_variant_metrics(
+    values: Mapping[str, Any],
+    baseline: Mapping[str, Any] | None = None,
+) -> Mapping[str, Any]:
+    records = []
+    for name in sorted(values):
+        array = np.asarray(values[name])
+        finite = np.isfinite(array)
+        record = {
+            "name": name,
+            "shape": list(array.shape),
+            "nonfinite_values": int(np.count_nonzero(~finite)),
+            "maximum_absolute_finite_value": (
+                float(np.max(np.abs(array[finite])))
+                if np.any(finite)
+                else None
+            ),
+        }
+        if baseline is not None:
+            reference = np.asarray(baseline[name])
+            common = finite & np.isfinite(reference)
+            difference = array - reference
+            record.update(
+                {
+                    "changed_common_values": (
+                        int(
+                            np.count_nonzero(
+                                difference[common] != 0.0
+                            )
+                        )
+                        if np.any(common)
+                        else 0
+                    ),
+                    "maximum_absolute_difference": (
+                        float(np.max(np.abs(difference[common])))
+                        if np.any(common)
+                        else None
+                    ),
+                }
+            )
+        records.append(record)
+    return {
+        "boundaries": records,
+        "largest_absolute_boundaries": sorted(
+            records,
+            key=lambda item: (
+                -1.0
+                if item["maximum_absolute_finite_value"] is None
+                else item["maximum_absolute_finite_value"]
+            ),
+            reverse=True,
+        )[:12],
+        "largest_differences": (
+            sorted(
+                records,
+                key=lambda item: (
+                    -1.0
+                    if item.get("maximum_absolute_difference") is None
+                    else item["maximum_absolute_difference"]
+                ),
+                reverse=True,
+            )[:12]
+            if baseline is not None
+            else []
+        ),
     }
 
 
@@ -2933,14 +3029,20 @@ def run_screening_update_diagnostic(
                 sample_teacher_next_discrete_states,
             )
             variant_states = {}
+            variant_boundaries = {}
             variant_records = {}
             for variant_id, enabled_owners in variants.items():
-                variant_transition = _bind_min_stomate_variant_transition(
-                    resources,
-                    prepared.runtime,
-                    enabled_owners,
+                variant_transition = (
+                    _bind_min_stomate_variant_ad_boundary_transition(
+                        resources,
+                        prepared.runtime,
+                        enabled_owners,
+                    )
                 )
-                next_state, next_discrete = jax.device_get(
+                (
+                    (next_state, next_discrete),
+                    process_boundaries,
+                ) = jax.device_get(
                     jax.jit(variant_transition)(
                         sample_initial_state,
                         sample_initial_discrete_state,
@@ -2951,6 +3053,7 @@ def run_screening_update_diagnostic(
                     )
                 )
                 variant_states[variant_id] = np.asarray(next_state)
+                variant_boundaries[variant_id] = process_boundaries
                 variant_records[variant_id] = {
                     "enabled_owners": list(enabled_owners),
                     "against_stored_teacher": _state_variant_metrics(
@@ -2964,8 +3067,12 @@ def run_screening_update_diagnostic(
                             teacher_next_discrete,
                         )
                     ),
+                    "process_boundaries": _boundary_variant_metrics(
+                        process_boundaries
+                    ),
                 }
             legacy_state = variant_states["legacy_zero"]
+            legacy_boundaries = variant_boundaries["legacy_zero"]
             for variant_id, state in variant_states.items():
                 variant_records[variant_id]["against_legacy_zero"] = (
                     _state_variant_metrics(
@@ -2973,6 +3080,12 @@ def run_screening_update_diagnostic(
                         legacy_state,
                         resources=resources,
                     )
+                )
+                variant_records[variant_id][
+                    "process_boundaries_against_legacy_zero"
+                ] = _boundary_variant_metrics(
+                    variant_boundaries[variant_id],
+                    legacy_boundaries,
                 )
 
             output_root = Path(output_root).resolve()
