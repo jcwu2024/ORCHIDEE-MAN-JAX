@@ -2839,18 +2839,43 @@ def allocation_step(
 
     leaf_mass_young = leaf_frac[:, :, 0] * lm_old + transloc_leaf
     youngest_update = (transloc_leaf > min_stomate) & (leaf_mass_young > min_stomate) & active_pft[None, :]
+    safe_young_leaf_mass = jnp.where(
+        youngest_update,
+        leaf_mass_young,
+        1.0,
+    )
+    safe_transloc_leaf = jnp.where(
+        youngest_update,
+        transloc_leaf,
+        0.0,
+    )
+    safe_young_leaf_age = jnp.where(
+        youngest_update,
+        leaf_age[:, :, 0],
+        0.0,
+    )
     leaf_age0 = jnp.maximum(
         0.0,
-        leaf_age[:, :, 0] * (leaf_mass_young - transloc_leaf) / jnp.where(leaf_mass_young != 0.0, leaf_mass_young, 1.0),
+        safe_young_leaf_age
+        * (safe_young_leaf_mass - safe_transloc_leaf)
+        / safe_young_leaf_mass,
     )
     leaf_age = leaf_age.at[:, :, 0].set(jnp.where(youngest_update, leaf_age0, leaf_age[:, :, 0]))
     leaf_mass = biomass[:, :, ILEAF, ICARBON]
     has_leaf = (leaf_mass > min_stomate) & active_pft[None, :]
-    safe_leaf_mass = jnp.where(leaf_mass != 0.0, leaf_mass, 1.0)
-    leaf_frac0 = jnp.where(has_leaf, leaf_mass_young / safe_leaf_mass, leaf_frac[:, :, 0])
+    safe_leaf_mass = jnp.where(has_leaf, leaf_mass, 1.0)
+    safe_leaf_mass_young = jnp.where(has_leaf, leaf_mass_young, 0.0)
+    safe_lm_old = jnp.where(has_leaf, lm_old, 0.0)
+    leaf_frac0 = jnp.where(
+        has_leaf,
+        safe_leaf_mass_young / safe_leaf_mass,
+        leaf_frac[:, :, 0],
+    )
     leaf_frac_tail = jnp.where(
         has_leaf[:, :, None],
-        leaf_frac[:, :, 1:] * lm_old[:, :, None] / safe_leaf_mass[:, :, None],
+        leaf_frac[:, :, 1:]
+        * safe_lm_old[:, :, None]
+        / safe_leaf_mass[:, :, None],
         leaf_frac[:, :, 1:],
     )
     leaf_frac = jnp.concatenate((leaf_frac0[:, :, None], leaf_frac_tail), axis=2)
