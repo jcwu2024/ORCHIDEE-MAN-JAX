@@ -4542,7 +4542,12 @@ def turnover_tree_fruit_and_sapwood(
     tau_sap = jnp.asarray(tau_sap)
     tree = is_tree[None, :]
 
-    fruit_loss = biomass[:, :, IFRUIT, :] * dt_days / tau_fruit[None, :, None]
+    safe_tau_fruit = jnp.where(is_tree, tau_fruit, 1.0)
+    fruit_loss = (
+        biomass[:, :, IFRUIT, :]
+        * dt_days
+        / safe_tau_fruit[None, :, None]
+    )
     turnover = turnover.at[:, :, IFRUIT, :].add(jnp.where(tree[:, :, None], fruit_loss, 0.0))
     biomass = biomass.at[:, :, IFRUIT, :].add(jnp.where(tree[:, :, None], -fruit_loss, 0.0))
 
@@ -4554,7 +4559,12 @@ def turnover_tree_fruit_and_sapwood(
     )
     sap_parts = jnp.asarray((ISAPABOVE, ISAPBELOW, IAGRSAPST, IAGRSAPPN))
     heart_parts = jnp.asarray((IHEARTABOVE, IHEARTBELOW, IAGRHRTST, IAGRHRTPN))
-    sapconv = biomass[:, :, sap_parts, :] * dt_days / tau_sap[None, :, None, None]
+    safe_tau_sap = jnp.where(is_tree, tau_sap, 1.0)
+    sapconv = (
+        biomass[:, :, sap_parts, :]
+        * dt_days
+        / safe_tau_sap[None, :, None, None]
+    )
     sap_delta = jnp.where(tree[:, :, None, None], sapconv, 0.0)
     biomass = biomass.at[:, :, sap_parts, :].add(-sap_delta)
     biomass = biomass.at[:, :, heart_parts, :].add(sap_delta)
@@ -4565,7 +4575,13 @@ def turnover_tree_fruit_and_sapwood(
         + biomass[:, :, IAGRHRTST, ICARBON]
         + biomass[:, :, IAGRHRTPN, ICARBON]
     )
-    age = jnp.where((~ok_dgvm) & tree & (hw_new > 0.0), age * hw_old / hw_new, age)
+    age_update = (~ok_dgvm) & tree & (hw_new > 0.0)
+    safe_hw_new = jnp.where(age_update, hw_new, 1.0)
+    age = jnp.where(
+        age_update,
+        age * hw_old / safe_hw_new,
+        age,
+    )
     turnover = turnover.at[:, 0, :, :].set(0.0)
     return biomass, turnover, age
 

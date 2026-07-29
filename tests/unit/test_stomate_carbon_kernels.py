@@ -1634,6 +1634,44 @@ def test_turnover_tree_fruit_and_sapwood_converts_sap_without_turnover():
     assert np.allclose(np.asarray(new_age)[0, PFT14], 10.0 * hw_old / hw_new)
 
 
+def test_turnover_inactive_tree_zero_denominators_have_finite_gradients():
+    npts, nvm = 1, 14
+    biomass = np.zeros((npts, nvm, NPARTS, 1), dtype=np.float64)
+    turnover = np.zeros_like(biomass)
+    is_tree = np.zeros(nvm, dtype=bool)
+    zeros_pft = np.zeros(nvm, dtype=np.float64)
+    age = np.zeros((npts, nvm), dtype=np.float64)
+
+    def objective(tau_fruit, tau_sap, plant_age):
+        new_biomass, new_turnover, new_age = (
+            turnover_tree_fruit_and_sapwood(
+                biomass,
+                turnover,
+                plant_age,
+                is_tree=is_tree,
+                tau_fruit=tau_fruit,
+                tau_sap=tau_sap,
+                dt_days=1.0,
+            )
+        )
+        return (
+            jnp.sum(new_biomass)
+            + jnp.sum(new_turnover)
+            + jnp.sum(new_age)
+        )
+
+    fruit_gradient, sap_gradient, age_gradient = jax.jit(
+        jax.grad(objective, argnums=(0, 1, 2))
+    )(zeros_pft, zeros_pft, age)
+
+    assert np.all(np.isfinite(np.asarray(fruit_gradient)))
+    assert np.all(np.isfinite(np.asarray(sap_gradient)))
+    assert np.all(np.isfinite(np.asarray(age_gradient)))
+    np.testing.assert_array_equal(np.asarray(fruit_gradient), zeros_pft)
+    np.testing.assert_array_equal(np.asarray(sap_gradient), zeros_pft)
+    np.testing.assert_array_equal(np.asarray(age_gradient), np.ones_like(age))
+
+
 def test_turnover_step_closes_tree_mixed_senescence_and_fruit_sapwood_path():
     params = _turnover_fixture()
     params["is_tree"][PFT14] = True
