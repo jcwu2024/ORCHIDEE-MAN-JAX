@@ -693,12 +693,102 @@ def make_detached_next_day_gradient_diagnostic(
             parameters,
             carry.continuous_state,
         )
+        day = jax.tree_util.tree_map(lambda value: value[0], next_day)
+        inference_batch = {
+            "state": carry.continuous_state[None, :],
+            "forcing_native": day.forcing_native[None, ...],
+            "parameters": day.parameters[None, ...],
+            "landpoint_static": day.landpoint_static[None, ...],
+            "annual_conditions": day.annual_conditions[None, ...],
+            "year": day.year[None],
+            "day_index": day.day_index[None],
+        }
+        frozen_inference = prepare_canonical_inference_batch_compiled(
+            inference_batch,
+            statistics,
+            representation,
+        )
+        frozen_prediction = model_apply(
+            parameters,
+            frozen_inference.model_input,
+        )
+        frozen_fast_day = jax.lax.stop_gradient(
+            restore_fast_day_inference_prediction_compiled(
+                frozen_prediction.normalized_fast_day_target,
+                frozen_prediction.dynamic_undefined_flip_logits,
+                frozen_inference,
+                statistics,
+                representation,
+            )[0]
+        )
+        frozen_state = jax.lax.stop_gradient(carry.continuous_state)
+
+        def next_state_loss(next_state):
+            normalized_next, finite_next = _normalize_finite_compiled(
+                next_state,
+                statistics.arrays["state"],
+            )
+            normalized_teacher, finite_teacher = _normalize_finite_compiled(
+                day.teacher_next_state,
+                statistics.arrays["state"],
+            )
+            common = finite_next & finite_teacher
+            return masked_huber_loss(
+                normalized_next[None, :],
+                normalized_teacher[None, :],
+                common[None, :],
+                state_weights,
+            )
+
+        def retained_tail_state_path(candidate_state):
+            next_state, _ = retained_tail_transition(
+                candidate_state,
+                carry.discrete_state,
+                frozen_fast_day,
+                day.retained_tail_inputs,
+                day.year,
+                day.day_index,
+            )
+            return next_state_loss(next_state)
+
+        def model_state_path(candidate_state):
+            inference = prepare_canonical_inference_batch_compiled(
+                inference_batch | {"state": candidate_state[None, :]},
+                statistics,
+                representation,
+            )
+            prediction = model_apply(parameters, inference.model_input)
+            fast_day = restore_fast_day_inference_prediction_compiled(
+                prediction.normalized_fast_day_target,
+                prediction.dynamic_undefined_flip_logits,
+                inference,
+                statistics,
+                representation,
+            )[0]
+            next_state, _ = retained_tail_transition(
+                frozen_state,
+                carry.discrete_state,
+                fast_day,
+                day.retained_tail_inputs,
+                day.year,
+                day.day_index,
+            )
+            return next_state_loss(next_state)
+
+        retained_tail_state_gradient = jax.grad(retained_tail_state_path)(
+            carry.continuous_state
+        )
+        model_state_gradient = jax.grad(model_state_path)(
+            carry.continuous_state
+        )
         return (
             value,
             carry.continuous_state,
             carry.discrete_state,
             parameter_gradients,
             state_gradient,
+            retained_tail_state_gradient,
+            model_state_gradient,
         )
 
     return jax.jit(diagnose)
@@ -2580,6 +2670,8 @@ def run_screening_update_diagnostic(
                 detached_discrete_state,
                 detached_parameter_gradients,
                 detached_state_gradient,
+                detached_retained_tail_state_gradient,
+                detached_model_state_gradient,
             ) = jax.device_get(
                 detached_diagnostic(
                     parameters,
@@ -2614,9 +2706,27 @@ def run_screening_update_diagnostic(
                             "nonfinite_values": nonfinite_count,
                         }
                     )
-            detached_bad_state_indices = np.flatnonzero(
-                ~np.isfinite(detached_state_gradient)
-            )
+            def state_gradient_record(gradient):
+                gradient = np.asarray(gradient)
+                finite_gradient = np.isfinite(gradient)
+                bad_indices = np.flatnonzero(~finite_gradient)
+                return {
+                    "nonfinite_gradient_values": int(bad_indices.size),
+                    "nonfinite_leaves": _state_leaf_records(
+                        resources.contract,
+                        bad_indices,
+                    ),
+                    "physical_values_at_nonfinite_indices": [
+                        float(value)
+                        for value in np.asarray(detached_state)[bad_indices]
+                    ],
+                    "maximum_absolute_finite_gradient": (
+                        float(np.max(np.abs(gradient[finite_gradient])))
+                        if np.any(finite_gradient)
+                        else None
+                    ),
+                }
+
             detached_second_sequence = jax.tree_util.tree_map(
                 lambda value: value[1:2],
                 sample_sequence,
@@ -2648,28 +2758,15 @@ def run_screening_update_diagnostic(
                     ),
                     "nonfinite_leaves": detached_parameter_leaf_records,
                 },
-                "initial_state_gradient": {
-                    "nonfinite_gradient_values": int(
-                        detached_bad_state_indices.size
-                    ),
-                    "nonfinite_leaves": _state_leaf_records(
-                        resources.contract,
-                        detached_bad_state_indices,
-                    ),
-                    "maximum_absolute_finite_gradient": (
-                        float(
-                            np.max(
-                                np.abs(
-                                    np.asarray(detached_state_gradient)[
-                                        np.isfinite(detached_state_gradient)
-                                    ]
-                                )
-                            )
-                        )
-                        if np.any(np.isfinite(detached_state_gradient))
-                        else None
-                    ),
-                },
+                "initial_state_gradient": state_gradient_record(
+                    detached_state_gradient
+                ),
+                "retained_tail_state_path_gradient": state_gradient_record(
+                    detached_retained_tail_state_gradient
+                ),
+                "model_state_path_gradient": state_gradient_record(
+                    detached_model_state_gradient
+                ),
                 "fast_target_gradient": {
                     "loss": float(detached_fast_target_loss),
                     "nonfinite_gradient_count": int(

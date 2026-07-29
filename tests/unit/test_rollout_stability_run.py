@@ -220,7 +220,15 @@ def test_detached_next_day_gradient_excludes_prefix_parameter_path():
         retained_tail_inputs=jnp.zeros((2, 1)),
     )
 
-    value, state, _, parameter_gradient, state_gradient = diagnostic(
+    (
+        value,
+        state,
+        _,
+        parameter_gradient,
+        state_gradient,
+        retained_tail_state_gradient,
+        model_state_gradient,
+    ) = diagnostic(
         {"weight": jnp.asarray(0.2)},
         jnp.asarray([0.2]),
         {"flag": jnp.asarray(False)},
@@ -235,6 +243,16 @@ def test_detached_next_day_gradient_excludes_prefix_parameter_path():
         rtol=1e-6,
     )
     np.testing.assert_allclose(np.asarray(state_gradient), [0.6], rtol=1e-6)
+    np.testing.assert_allclose(
+        np.asarray(retained_tail_state_gradient),
+        [0.6],
+        rtol=1e-6,
+    )
+    np.testing.assert_allclose(
+        np.asarray(model_state_gradient),
+        [0.0],
+        atol=1e-7,
+    )
 
 
 def _small_protocol(*, updates: int = 10) -> RolloutStabilityProtocol:
