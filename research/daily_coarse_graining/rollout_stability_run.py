@@ -2176,6 +2176,60 @@ def run_screening_update_diagnostic(
         reverse=True,
     )[:10]
 
+    rollout_raw = _collate_reference_windows(
+        reference,
+        starts=prepared.rollout_starts,
+        horizon=horizon,
+    )
+    rollout_day_indices = np.asarray(rollout_raw["day_index"])
+    rollout_sample_records = []
+    for sample_index, start in enumerate(prepared.rollout_starts):
+        sample_arguments = (
+            parameters,
+            jax.tree_util.tree_map(
+                lambda value: value[sample_index : sample_index + 1],
+                prepared.initial_states,
+            ),
+            jax.tree_util.tree_map(
+                lambda value: value[sample_index : sample_index + 1],
+                prepared.initial_discrete_states,
+            ),
+            jax.tree_util.tree_map(
+                lambda value: value[sample_index : sample_index + 1],
+                prepared.sequence,
+            ),
+            jax.tree_util.tree_map(
+                lambda value: value[sample_index : sample_index + 1],
+                prepared.teacher_next_discrete_states,
+            ),
+        )
+        sample_components = {}
+        for name in ("L_next", "L_rollout", "L_bias", "L_science"):
+            result = jax.device_get(independent_steps[name](*sample_arguments))
+            sample_components[name] = {
+                "value": float(result[0]),
+                "gradient_norm": float(result[1]),
+                "nonfinite_gradient_values": int(result[2]),
+            }
+        rollout_sample_records.append(
+            {
+                "sample_index": sample_index,
+                "start_zero_based": int(start),
+                "day_indices": [
+                    int(value) for value in rollout_day_indices[sample_index]
+                ],
+                "component_gradients": sample_components,
+            }
+        )
+    bad_rollout_samples = [
+        record
+        for record in rollout_sample_records
+        if any(
+            result["nonfinite_gradient_values"] != 0
+            for result in record["component_gradients"].values()
+        )
+    ]
+
     candidate_step = make_candidate_update_step(
         coefficients=calibration["resolved_coefficients"],
         fast_day_weights=resources.fast_day_weights,
@@ -2235,6 +2289,12 @@ def run_screening_update_diagnostic(
                     for record in anchor_sample_records
                 ),
                 "top_gradient_norm_samples": top_anchor_samples,
+            },
+            "rollout_sample_gradient_audit": {
+                "sample_count": int(prepared.rollout_starts.size),
+                "bad_sample_count": len(bad_rollout_samples),
+                "bad_samples": bad_rollout_samples,
+                "all_samples": rollout_sample_records,
             },
             "components": _component_record(components),
             "weighted_candidate": {
