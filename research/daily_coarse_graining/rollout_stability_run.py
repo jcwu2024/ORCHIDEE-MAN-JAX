@@ -496,6 +496,77 @@ def make_coefficient_calibration_step(
     return jax.jit(calibrate)
 
 
+def make_independent_component_gradient_steps(
+    *,
+    fast_day_weights,
+    undefined_loss_weight: float,
+    rematerialize: bool,
+    model_apply,
+    **objective_kwargs,
+):
+    """Compile independent scalar-gradient diagnostics for each loss component.
+
+    These steps deliberately do not share a vector-valued VJP. A nonfinite
+    derivative in one rollout branch can otherwise contaminate an unrelated
+    zero-cotangent pullback and make every component appear nonfinite.
+    """
+
+    def summarize(loss_function):
+        def evaluate(parameters, *args):
+            loss, gradients = jax.value_and_grad(loss_function)(
+                parameters,
+                *args,
+            )
+            return (
+                loss,
+                _gradient_l2_norm(gradients),
+                _tree_nonfinite_count(gradients),
+            )
+
+        return jax.jit(evaluate)
+
+    def anchor_loss(parameters, anchor_batch):
+        return canonical_fast_day_anchor_loss(
+            parameters,
+            anchor_batch,
+            fast_day_weights=fast_day_weights,
+            undefined_loss_weight=undefined_loss_weight,
+            model_apply=model_apply,
+        )
+
+    def rollout_loss(component_name):
+        def loss(
+            parameters,
+            initial_states,
+            initial_discrete_states,
+            sequences,
+            teacher_next_discrete_states,
+        ):
+            components = rollout_stability_components(
+                parameters,
+                initial_states,
+                initial_discrete_states,
+                sequences,
+                fast_day_weights=fast_day_weights,
+                undefined_loss_weight=undefined_loss_weight,
+                teacher_next_discrete_states=teacher_next_discrete_states,
+                rematerialize=rematerialize,
+                model_apply=model_apply,
+                **objective_kwargs,
+            )
+            return getattr(components, component_name)
+
+        return loss
+
+    return {
+        "L_fast": summarize(anchor_loss),
+        **{
+            name: summarize(rollout_loss(name))
+            for name in ("L_next", "L_rollout", "L_bias", "L_science")
+        },
+    }
+
+
 def broadcast_retained_tail_day_inputs(
     compiled_forcing,
     static: Mapping[str, Any],
@@ -1982,31 +2053,50 @@ def run_screening_update_diagnostic(
     transition = _bind_dynamic_transition(resources, prepared.runtime)
     objective_kwargs = _objective_kwargs(resources, transition)
     undefined_weight = float(protocol.raw["loss"]["undefined_flip_binary_weight"])
-    calibration_step = make_coefficient_calibration_step(
+    independent_steps = make_independent_component_gradient_steps(
         fast_day_weights=resources.fast_day_weights,
         undefined_loss_weight=undefined_weight,
         rematerialize=bool(spec["rematerialize"]),
         model_apply=resources.model_definition.apply,
         **objective_kwargs,
     )
-    values, gradient_norms, nonfinite_counts, components = jax.device_get(
-        calibration_step(
+    independent_results = {}
+    independent_results["L_fast"] = jax.device_get(
+        independent_steps["L_fast"](
             parameters,
             prepared.anchor_batch,
-            prepared.initial_states,
-            prepared.initial_discrete_states,
-            prepared.sequence,
-            prepared.teacher_next_discrete_states,
         )
     )
-    component_names = ("L_fast", "L_next", "L_rollout", "L_bias", "L_science")
+    rollout_arguments = (
+        parameters,
+        prepared.initial_states,
+        prepared.initial_discrete_states,
+        prepared.sequence,
+        prepared.teacher_next_discrete_states,
+    )
+    for name in ("L_next", "L_rollout", "L_bias", "L_science"):
+        independent_results[name] = jax.device_get(
+            independent_steps[name](*rollout_arguments)
+        )
+    components = rollout_stability_components(
+        parameters,
+        prepared.initial_states,
+        prepared.initial_discrete_states,
+        prepared.sequence,
+        fast_day_weights=resources.fast_day_weights,
+        undefined_loss_weight=undefined_weight,
+        teacher_next_discrete_states=prepared.teacher_next_discrete_states,
+        rematerialize=bool(spec["rematerialize"]),
+        model_apply=resources.model_definition.apply,
+        **objective_kwargs,
+    )
     component_gradients = {
         name: {
-            "value": float(values[index]),
-            "gradient_norm": float(gradient_norms[index]),
-            "nonfinite_gradient_values": int(nonfinite_counts[index]),
+            "value": float(result[0]),
+            "gradient_norm": float(result[1]),
+            "nonfinite_gradient_values": int(result[2]),
         }
-        for index, name in enumerate(component_names)
+        for name, result in independent_results.items()
     }
 
     def single_anchor_gradient(value, batch):
@@ -2112,7 +2202,7 @@ def run_screening_update_diagnostic(
     return _atomic_json(
         output_root / f"screening_update_diagnostic_{screening_update:05d}.json",
         {
-            "schema_version": "canonical_rollout_screening_update_diagnostic_v1",
+            "schema_version": "canonical_rollout_screening_update_diagnostic_v2",
             "status": "completed",
             "diagnostic_git_head": _current_git_head(),
             "source_training_git_head": execution["training_git_head"],
@@ -2133,6 +2223,9 @@ def run_screening_update_diagnostic(
                 "rollout_batch_size": int(spec["batch_size"]),
             },
             "component_gradients": component_gradients,
+            "component_gradient_attribution": (
+                "independent_scalar_value_and_grad_per_component"
+            ),
             "anchor_sample_gradient_audit": {
                 "sample_count": int(prepared.anchor_starts.size),
                 "bad_sample_count": len(bad_anchor_samples),

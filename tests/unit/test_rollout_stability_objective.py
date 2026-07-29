@@ -46,6 +46,7 @@ from research.daily_coarse_graining.rollout_stability_run import (
     make_candidate_update_step,
     make_coefficient_calibration_step,
     make_control_update_step,
+    make_independent_component_gradient_steps,
     verify_arm_checkpoint,
 )
 
@@ -537,6 +538,62 @@ def test_paired_gradient_calibration_reports_zero_one_day_rollout_gradient():
     assert float(values[2]) == 0.0
     assert float(gradient_norms[2]) == 0.0
     assert int(components.discrete_state_mismatches) == 0
+
+
+def test_independent_component_gradient_steps_match_scalar_objectives():
+    setup = _setup(3)
+    steps = make_independent_component_gradient_steps(
+        fast_day_weights=setup["fast_day_weights"],
+        undefined_loss_weight=0.1,
+        rematerialize=False,
+        model_apply=canonical_model_apply,
+        **_candidate_kwargs(setup),
+    )
+    anchor_batch = _anchor_batch(setup)
+    anchor_result = steps["L_fast"](setup["parameters"], anchor_batch)
+    rollout_arguments = (
+        setup["parameters"],
+        setup["initial_states"],
+        setup["initial_discrete_states"],
+        setup["sequences"],
+        setup["teacher_next_discrete_states"],
+    )
+    rollout_results = {
+        name: steps[name](*rollout_arguments)
+        for name in ("L_next", "L_rollout", "L_bias", "L_science")
+    }
+    expected_anchor = canonical_fast_day_anchor_loss(
+        setup["parameters"],
+        anchor_batch,
+        fast_day_weights=setup["fast_day_weights"],
+        undefined_loss_weight=0.1,
+        model_apply=canonical_model_apply,
+    )
+    expected_components = rollout_stability_components(
+        setup["parameters"],
+        setup["initial_states"],
+        setup["initial_discrete_states"],
+        setup["sequences"],
+        fast_day_weights=setup["fast_day_weights"],
+        undefined_loss_weight=0.1,
+        teacher_next_discrete_states=setup["teacher_next_discrete_states"],
+        rematerialize=False,
+        model_apply=canonical_model_apply,
+        **_candidate_kwargs(setup),
+    )
+
+    np.testing.assert_allclose(anchor_result[0], expected_anchor, rtol=0.0, atol=0.0)
+    for name, result in rollout_results.items():
+        np.testing.assert_allclose(
+            result[0],
+            getattr(expected_components, name),
+            rtol=0.0,
+            atol=0.0,
+        )
+    for result in (anchor_result, *rollout_results.values()):
+        assert np.isfinite(np.asarray(result[0]))
+        assert np.isfinite(np.asarray(result[1]))
+        assert int(result[2]) == 0
 
 
 def test_control_checkpoint_resume_is_exactly_identical_to_uninterrupted_updates():
