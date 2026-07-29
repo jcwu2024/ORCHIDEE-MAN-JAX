@@ -732,6 +732,50 @@ def make_retained_tail_directional_jvp_diagnostic(
     return jax.jit(diagnose)
 
 
+def make_retained_tail_jvp_checkify_diagnostic(
+    *,
+    retained_tail_transition,
+):
+    """Check one B_fast-to-next-state JVP for its first floating error."""
+
+    def directional_jvp(
+        initial_state,
+        initial_discrete_state,
+        physical_fast_day,
+        sequence,
+        target_index,
+    ):
+        day = jax.tree_util.tree_map(lambda item: item[0], sequence)
+        target_tangent = jnp.zeros_like(physical_fast_day).at[
+            target_index
+        ].set(1.0)
+
+        def transition(target):
+            next_state, _ = retained_tail_transition(
+                initial_state,
+                initial_discrete_state,
+                target,
+                day.retained_tail_inputs,
+                day.year,
+                day.day_index,
+            )
+            return next_state
+
+        _, next_state_tangent = jax.jvp(
+            transition,
+            (physical_fast_day,),
+            (target_tangent,),
+        )
+        return next_state_tangent
+
+    return jax.jit(
+        checkify.checkify(
+            directional_jvp,
+            errors=checkify.float_checks,
+        )
+    )
+
+
 def _state_leaf_records(contract, indices) -> list[Mapping[str, Any]]:
     records = []
     for leaf in contract.state_leaves:
@@ -2433,6 +2477,27 @@ def run_screening_update_diagnostic(
                     ),
                 }
             )
+        directional_jvp_checkify = None
+        if bad_target_indices.size:
+            jvp_checkify_diagnostic = (
+                make_retained_tail_jvp_checkify_diagnostic(
+                    retained_tail_transition=transition,
+                )
+            )
+            jvp_checkify_error, _ = jvp_checkify_diagnostic(
+                sample_initial_state,
+                sample_initial_discrete_state,
+                physical_fast_day,
+                sample_sequence,
+                jnp.asarray(bad_target_indices[0], dtype=jnp.int32),
+            )
+            directional_jvp_checkify = {
+                "fast_target_index": int(bad_target_indices[0]),
+                "error": jvp_checkify_error.get(),
+                "active_error_sources": _active_checkify_error_sources(
+                    jvp_checkify_error
+                ),
+            }
         rollout_raw = _collate_reference_windows(
             reference,
             starts=prepared.rollout_starts,
@@ -2503,6 +2568,9 @@ def run_screening_update_diagnostic(
                     ),
                 },
                 "retained_tail_directional_jvp": directional_jvp_records,
+                "retained_tail_directional_jvp_checkify": (
+                    directional_jvp_checkify
+                ),
             },
         )
     if component is not None:
