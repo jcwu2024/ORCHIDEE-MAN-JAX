@@ -26,6 +26,7 @@ from research.daily_coarse_graining.canonical_daily_model import (
 from research.daily_coarse_graining.canonical_multistep import (
     CanonicalMultistepSequence,
     canonical_multistep_rollout,
+    canonical_pushforward_prefix,
 )
 from research.daily_coarse_graining.canonical_multistep_training_run import (
     LandpointRuntime,
@@ -637,6 +638,68 @@ def make_fast_target_gradient_diagnostic(
 
         value, gradient = jax.value_and_grad(objective)(physical_fast_day)
         return value, physical_fast_day, gradient
+
+    return jax.jit(diagnose)
+
+
+def make_detached_next_day_gradient_diagnostic(
+    *,
+    statistics,
+    representation,
+    fast_day_weights,
+    retained_tail_transition,
+    state_weights,
+    undefined_loss_weight: float,
+    model_apply,
+):
+    """Differentiate Day 2 after detaching the predicted Day 1 carry."""
+
+    def diagnose(parameters, initial_state, initial_discrete_state, sequence):
+        prefix = jax.tree_util.tree_map(lambda value: value[:1], sequence)
+        next_day = jax.tree_util.tree_map(lambda value: value[1:2], sequence)
+        carry = canonical_pushforward_prefix(
+            parameters,
+            initial_state,
+            initial_discrete_state,
+            prefix,
+            statistics=statistics,
+            representation=representation,
+            retained_tail_transition=retained_tail_transition,
+            model_apply=model_apply,
+        )
+
+        def loss(candidate_parameters, candidate_state):
+            result = canonical_multistep_rollout(
+                candidate_parameters,
+                candidate_state,
+                carry.discrete_state,
+                next_day,
+                statistics=statistics,
+                representation=representation,
+                fast_day_weights=fast_day_weights,
+                retained_tail_transition=retained_tail_transition,
+                state_weights=state_weights,
+                state_loss_weight=1.0,
+                undefined_loss_weight=undefined_loss_weight,
+                model_apply=model_apply,
+            )
+            return result.steps.state_loss[0]
+
+        value, parameter_gradients = jax.value_and_grad(loss, argnums=0)(
+            parameters,
+            carry.continuous_state,
+        )
+        _, state_gradient = jax.value_and_grad(loss, argnums=1)(
+            parameters,
+            carry.continuous_state,
+        )
+        return (
+            value,
+            carry.continuous_state,
+            carry.discrete_state,
+            parameter_gradients,
+            state_gradient,
+        )
 
     return jax.jit(diagnose)
 
@@ -2331,6 +2394,7 @@ def run_screening_update_diagnostic(
     screening_update: int,
     rollout_sample_index: int | None = None,
     rollout_prefix_length: int | None = None,
+    detached_next_day: bool = False,
     component: str | None = None,
     execution_path: str | Path,
     protocol_path: str | Path,
@@ -2414,6 +2478,8 @@ def run_screening_update_diagnostic(
     )
     if rollout_prefix_length is not None and rollout_sample_index is None:
         raise ValueError("rollout prefix length requires rollout sample index")
+    if detached_next_day and rollout_sample_index is None:
+        raise ValueError("detached next-day diagnostic requires rollout sample index")
     if rollout_sample_index is not None:
         if component not in ("L_next", "L_rollout", "L_bias", "L_science"):
             raise ValueError(
@@ -2493,6 +2559,134 @@ def run_screening_update_diagnostic(
         bad_target_indices = np.flatnonzero(
             ~np.isfinite(fast_target_gradient)
         )
+        detached_next_day_record = None
+        if detached_next_day:
+            if diagnostic_horizon < 2:
+                raise ValueError(
+                    "detached next-day diagnostic requires at least two days"
+                )
+            detached_diagnostic = make_detached_next_day_gradient_diagnostic(
+                statistics=resources.statistics,
+                representation=resources.representation,
+                fast_day_weights=resources.fast_day_weights,
+                retained_tail_transition=transition,
+                state_weights=jnp.asarray(resources.process_weighting.weights),
+                undefined_loss_weight=undefined_weight,
+                model_apply=resources.model_definition.apply,
+            )
+            (
+                detached_loss,
+                detached_state,
+                detached_discrete_state,
+                detached_parameter_gradients,
+                detached_state_gradient,
+            ) = jax.device_get(
+                detached_diagnostic(
+                    parameters,
+                    sample_initial_state,
+                    sample_initial_discrete_state,
+                    sample_sequence,
+                )
+            )
+            detached_parameter_leaf_records = []
+            detached_parameter_nonfinite = 0
+            detached_parameter_squared_norm = 0.0
+            for path, leaf in jax.tree_util.tree_flatten_with_path(
+                detached_parameter_gradients
+            )[0]:
+                values = np.asarray(leaf)
+                finite_values = np.isfinite(values)
+                nonfinite_count = int(np.count_nonzero(~finite_values))
+                detached_parameter_nonfinite += nonfinite_count
+                if np.any(finite_values):
+                    detached_parameter_squared_norm += float(
+                        np.sum(
+                            np.square(
+                                values[finite_values].astype(np.float64)
+                            )
+                        )
+                    )
+                if nonfinite_count:
+                    detached_parameter_leaf_records.append(
+                        {
+                            "path": jax.tree_util.keystr(path),
+                            "shape": list(values.shape),
+                            "nonfinite_values": nonfinite_count,
+                        }
+                    )
+            detached_bad_state_indices = np.flatnonzero(
+                ~np.isfinite(detached_state_gradient)
+            )
+            detached_second_sequence = jax.tree_util.tree_map(
+                lambda value: value[1:2],
+                sample_sequence,
+            )
+            (
+                detached_fast_target_loss,
+                detached_physical_fast_day,
+                detached_fast_target_gradient,
+            ) = jax.device_get(
+                fast_target_diagnostic(
+                    parameters,
+                    detached_state,
+                    detached_discrete_state,
+                    detached_second_sequence,
+                )
+            )
+            detached_bad_target_indices = np.flatnonzero(
+                ~np.isfinite(detached_fast_target_gradient)
+            )
+            detached_next_day_record = {
+                "day_index": int(np.asarray(sample_sequence.day_index)[1]),
+                "loss": float(detached_loss),
+                "parameter_gradient": {
+                    "finite_l2_norm": float(
+                        np.sqrt(detached_parameter_squared_norm)
+                    ),
+                    "nonfinite_gradient_values": (
+                        detached_parameter_nonfinite
+                    ),
+                    "nonfinite_leaves": detached_parameter_leaf_records,
+                },
+                "initial_state_gradient": {
+                    "nonfinite_gradient_values": int(
+                        detached_bad_state_indices.size
+                    ),
+                    "nonfinite_leaves": _state_leaf_records(
+                        resources.contract,
+                        detached_bad_state_indices,
+                    ),
+                    "maximum_absolute_finite_gradient": (
+                        float(
+                            np.max(
+                                np.abs(
+                                    np.asarray(detached_state_gradient)[
+                                        np.isfinite(detached_state_gradient)
+                                    ]
+                                )
+                            )
+                        )
+                        if np.any(np.isfinite(detached_state_gradient))
+                        else None
+                    ),
+                },
+                "fast_target_gradient": {
+                    "loss": float(detached_fast_target_loss),
+                    "nonfinite_gradient_count": int(
+                        detached_bad_target_indices.size
+                    ),
+                    "nonfinite_leaves": _fast_target_leaf_records(
+                        resources.contract,
+                        detached_bad_target_indices,
+                    ),
+                    "physical_values_at_nonfinite_indices": [
+                        float(value)
+                        for value in np.asarray(detached_physical_fast_day)[
+                            detached_bad_target_indices
+                        ]
+                    ],
+                },
+            }
         checkify_diagnostic = make_fast_target_checkify_diagnostic(
             statistics=resources.statistics,
             retained_tail_transition=transition,
@@ -2644,12 +2838,13 @@ def run_screening_update_diagnostic(
             if rollout_prefix_length is None
             else f"_prefix_{rollout_prefix_length:02d}"
         )
+        detached_suffix = "_detached_next_day" if detached_next_day else ""
         return _atomic_json(
             output_root
             / (
                 "screening_update_"
                 f"{screening_update:05d}_sample_{rollout_sample_index:03d}_"
-                f"{component}{prefix_suffix}.json"
+                f"{component}{prefix_suffix}{detached_suffix}.json"
             ),
             {
                 "schema_version": (
@@ -2714,6 +2909,7 @@ def run_screening_update_diagnostic(
                 "retained_tail_ad_boundary_directional_jvp": (
                     ad_boundary_directional_jvp
                 ),
+                "detached_next_day": detached_next_day_record,
             },
         )
     if component is not None:
@@ -3509,6 +3705,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--screening-update", type=int)
     parser.add_argument("--rollout-sample-index", type=int)
     parser.add_argument("--rollout-prefix-length", type=int)
+    parser.add_argument("--detached-next-day", action="store_true")
     parser.add_argument(
         "--component",
         choices=("L_next", "L_rollout", "L_bias", "L_science"),
@@ -3588,6 +3785,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             screening_update=args.screening_update,
             rollout_sample_index=args.rollout_sample_index,
             rollout_prefix_length=args.rollout_prefix_length,
+            detached_next_day=args.detached_next_day,
             component=args.component,
             execution_path=args.execution,
             protocol_path=args.protocol,

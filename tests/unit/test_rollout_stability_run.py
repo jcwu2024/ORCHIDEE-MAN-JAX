@@ -13,6 +13,12 @@ import numpy as np
 import pytest
 
 from research.daily_coarse_graining import rollout_stability_run
+from research.daily_coarse_graining.canonical_daily_model import (
+    CanonicalPrediction,
+)
+from research.daily_coarse_graining.canonical_multistep import (
+    CanonicalMultistepSequence,
+)
 from research.daily_coarse_graining.canonical_training_run import (
     CHECKPOINT_SCHEMA_VERSION,
 )
@@ -41,6 +47,7 @@ from research.daily_coarse_graining.rollout_stability_run import (
     calibrate_gradient_coefficients,
     completed_horizon_counts,
     create_execution_manifest,
+    make_detached_next_day_gradient_diagnostic,
     make_retained_tail_ad_boundary_jvp_diagnostic,
     retained_tail_trace_signature,
     sample_start_indices,
@@ -155,6 +162,79 @@ def test_retained_tail_ad_boundary_jvp_reports_named_process_tangents():
         np.asarray(tangents["npp.bm_alloc"]),
         [0.0, 6.0],
     )
+
+
+def test_detached_next_day_gradient_excludes_prefix_parameter_path():
+    statistics = SimpleNamespace(
+        arrays={
+            name: SimpleNamespace(mean=np.zeros(shape), scale=np.ones(shape))
+            for name, shape in {
+                "state": (1,),
+                "fast_day_target": (1,),
+                "forcing_native": (1, 1),
+                "parameters": (1,),
+                "landpoint_static": (1,),
+                "annual_conditions": (1,),
+            }.items()
+        }
+    )
+    representation = SimpleNamespace(
+        state_indices=(0,),
+        dynamic_undefined_indices=(0,),
+        dynamic_undefined_fill_values=(np.nan,),
+        nonnegative_indices=(),
+    )
+
+    def model_apply(parameters, batch):
+        batch_size = batch.state.shape[0]
+        return CanonicalPrediction(
+            normalized_fast_day_target=jnp.broadcast_to(
+                parameters["weight"],
+                (batch_size, 1),
+            ),
+            dynamic_undefined_flip_logits=jnp.full((batch_size, 1), -1.0),
+        )
+
+    def transition(state, discrete, target, *_):
+        return state + target, discrete
+
+    diagnostic = make_detached_next_day_gradient_diagnostic(
+        statistics=statistics,
+        representation=representation,
+        fast_day_weights=jnp.ones(1),
+        retained_tail_transition=transition,
+        state_weights=jnp.ones(1),
+        undefined_loss_weight=0.1,
+        model_apply=model_apply,
+    )
+    sequence = CanonicalMultistepSequence(
+        forcing_native=jnp.zeros((2, 1, 1)),
+        parameters=jnp.zeros((2, 1)),
+        landpoint_static=jnp.zeros((2, 1)),
+        annual_conditions=jnp.zeros((2, 1)),
+        year=jnp.asarray([1973, 1973]),
+        day_index=jnp.asarray([7, 8]),
+        teacher_state=jnp.zeros((2, 1)),
+        teacher_fast_day_target=jnp.zeros((2, 1)),
+        teacher_next_state=jnp.zeros((2, 1)),
+        retained_tail_inputs=jnp.zeros((2, 1)),
+    )
+
+    value, state, _, parameter_gradient, state_gradient = diagnostic(
+        {"weight": jnp.asarray(0.2)},
+        jnp.asarray([0.2]),
+        {"flag": jnp.asarray(False)},
+        sequence,
+    )
+
+    np.testing.assert_allclose(np.asarray(state), [0.4], rtol=1e-6)
+    np.testing.assert_allclose(np.asarray(value), 0.18, rtol=1e-6)
+    np.testing.assert_allclose(
+        np.asarray(parameter_gradient["weight"]),
+        0.6,
+        rtol=1e-6,
+    )
+    np.testing.assert_allclose(np.asarray(state_gradient), [0.6], rtol=1e-6)
 
 
 def _small_protocol(*, updates: int = 10) -> RolloutStabilityProtocol:
