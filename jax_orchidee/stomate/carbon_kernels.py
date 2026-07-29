@@ -950,9 +950,11 @@ def update_lignin_fraction(old_lignin, old_structural_litter, lignin_increment, 
     old_structural_litter = jnp.asarray(old_structural_litter)
     lignin_increment = jnp.minimum(jnp.asarray(lignin_increment), jnp.asarray(structural_increment))
     new_structural_litter = old_structural_litter + structural_increment
+    active = new_structural_litter > min_stomate
+    safe_structural_litter = jnp.where(active, new_structural_litter, 1.0)
     return jnp.where(
-        new_structural_litter > min_stomate,
-        (old_lignin * old_structural_litter + lignin_increment) / new_structural_litter,
+        active,
+        (old_lignin * old_structural_litter + lignin_increment) / safe_structural_litter,
         0.0,
     )
 
@@ -1000,7 +1002,18 @@ def littercalc_apply_pool_increments(
 
     numerator = jnp.swapaxes(increments.litter_inc_pft_above[:, :, :, ICARBON], 1, 2)
     denom = litter_above_new[:, :, :, ICARBON]
-    litterpart_new = jnp.where(denom > min_stomate, (jnp.swapaxes(litterpart, 1, 2) * litter_above[:, :, :, ICARBON] + numerator) / denom, 0.0)
+    active_litter = denom > min_stomate
+    safe_denom = jnp.where(active_litter, denom, 1.0)
+    litterpart_new = jnp.where(
+        active_litter,
+        (
+            jnp.swapaxes(litterpart, 1, 2)
+            * litter_above[:, :, :, ICARBON]
+            + numerator
+        )
+        / safe_denom,
+        0.0,
+    )
     litterpart_new = jnp.swapaxes(litterpart_new, 1, 2)
 
     return LitterPoolUpdateResult(
@@ -1104,10 +1117,11 @@ def sync_aboveground_fuel_after_decomposition(
     fuel_total = fuel_1hr + fuel_10hr + fuel_100hr + fuel_1000hr
     qd_carbon = qd[:, :, ICARBON]
     positive = fuel_total[:, :, ICARBON] > min_stomate
-    ratio_1hr_c = jnp.where(positive, fuel_1hr[:, :, ICARBON] / fuel_total[:, :, ICARBON], 0.0)
-    ratio_10hr_c = jnp.where(positive, fuel_10hr[:, :, ICARBON] / fuel_total[:, :, ICARBON], 0.0)
-    ratio_100hr_c = jnp.where(positive, fuel_100hr[:, :, ICARBON] / fuel_total[:, :, ICARBON], 0.0)
-    ratio_1000hr_c = jnp.where(positive, fuel_1000hr[:, :, ICARBON] / fuel_total[:, :, ICARBON], 0.0)
+    safe_fuel_total = jnp.where(positive, fuel_total[:, :, ICARBON], 1.0)
+    ratio_1hr_c = jnp.where(positive, fuel_1hr[:, :, ICARBON] / safe_fuel_total, 0.0)
+    ratio_10hr_c = jnp.where(positive, fuel_10hr[:, :, ICARBON] / safe_fuel_total, 0.0)
+    ratio_100hr_c = jnp.where(positive, fuel_100hr[:, :, ICARBON] / safe_fuel_total, 0.0)
+    ratio_1000hr_c = jnp.where(positive, fuel_1000hr[:, :, ICARBON] / safe_fuel_total, 0.0)
 
     fuel_1hr_after_qd = fuel_1hr.at[:, :, ICARBON].add(-qd_carbon * ratio_1hr_c)
     fuel_10hr_after_qd = fuel_10hr.at[:, :, ICARBON].add(-qd_carbon * ratio_10hr_c)
@@ -1117,7 +1131,8 @@ def sync_aboveground_fuel_after_decomposition(
 
     diff_frac = litter_above_pool[:, :, ICARBON] - total_after_qd[:, :, ICARBON]
     rescale = (jnp.abs(diff_frac) > min_stomate) & (total_after_qd[:, :, ICARBON] > min_stomate)
-    scale = jnp.where(rescale, 1.0 + diff_frac / total_after_qd[:, :, ICARBON], 1.0)
+    safe_total_after_qd = jnp.where(rescale, total_after_qd[:, :, ICARBON], 1.0)
+    scale = jnp.where(rescale, 1.0 + diff_frac / safe_total_after_qd, 1.0)
     fuel_1hr_new = fuel_1hr_after_qd.at[:, :, ICARBON].set(fuel_1hr_after_qd[:, :, ICARBON] * scale)
     fuel_10hr_new = fuel_10hr_after_qd.at[:, :, ICARBON].set(fuel_10hr_after_qd[:, :, ICARBON] * scale)
     fuel_100hr_new = fuel_100hr_after_qd.at[:, :, ICARBON].set(fuel_100hr_after_qd[:, :, ICARBON] * scale)

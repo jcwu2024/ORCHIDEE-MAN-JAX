@@ -142,6 +142,7 @@ from jax_orchidee.stomate.carbon_kernels import (
     turnover_senescence_flags,
     turnover_step,
     turnover_tree_fruit_and_sapwood,
+    update_lignin_fraction,
     vmax_step,
 )
 from jax_orchidee.stomate.reference import encode_restart_pft_bool_field
@@ -469,6 +470,38 @@ def test_sync_aboveground_fuel_after_decomposition_subtracts_qd_then_matches_lit
     assert np.allclose(np.asarray(result.fuel_100hr)[0, 0, 0], expected[2])
     assert np.allclose(np.asarray(result.fuel_1000hr)[0, 0, 0], expected[3])
     assert np.allclose(np.asarray(result.fuel_total)[0, 0, 0], 72.0)
+
+
+def test_zero_litter_and_fuel_branches_have_finite_zero_gradients():
+    zero = jnp.zeros((1,), dtype=jnp.float64)
+
+    lignin_gradient = jax.jit(
+        jax.grad(
+            lambda increment: jnp.sum(
+                update_lignin_fraction(zero, zero, increment, increment)
+            )
+        )
+    )(zero)
+
+    zero_fuel = jnp.zeros((1, 1, 1), dtype=jnp.float64)
+
+    def fuel_objective(qd):
+        result = sync_aboveground_fuel_after_decomposition(
+            zero_fuel,
+            zero_fuel,
+            zero_fuel,
+            zero_fuel,
+            zero_fuel,
+            qd,
+        )
+        return jnp.sum(result.fuel_total)
+
+    fuel_gradient = jax.jit(jax.grad(fuel_objective))(zero_fuel)
+
+    np.testing.assert_array_equal(np.asarray(lignin_gradient), np.zeros(1))
+    assert np.all(np.isfinite(np.asarray(lignin_gradient)))
+    np.testing.assert_array_equal(np.asarray(fuel_gradient), np.zeros((1, 1, 1)))
+    assert np.all(np.isfinite(np.asarray(fuel_gradient)))
 
 
 def test_deadleaf_cover_from_litter_matches_deadleaf_subroutine_formula():
