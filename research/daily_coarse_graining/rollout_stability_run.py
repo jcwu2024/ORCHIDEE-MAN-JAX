@@ -2030,7 +2030,7 @@ def run_screening_update_diagnostic(
         horizon=1,
     )
     anchor_day_indices = np.asarray(anchor_raw["day_index"])[:, 0]
-    bad_anchor_samples = []
+    anchor_sample_records = []
     for sample_index, (start, day_index) in enumerate(
         zip(
             prepared.anchor_starts,
@@ -2046,8 +2046,6 @@ def run_screening_update_diagnostic(
             compiled_single_anchor(parameters, sample)
         )
         sample_nonfinite = int(sample_nonfinite)
-        if sample_nonfinite == 0:
-            continue
         input_summary = {}
         for name, value in zip(
             sample.model_input._fields,
@@ -2063,7 +2061,7 @@ def run_screening_update_diagnostic(
                     float(np.max(np.abs(array[finite]))) if np.any(finite) else None
                 ),
             }
-        bad_anchor_samples.append(
+        anchor_sample_records.append(
             {
                 "sample_index": sample_index,
                 "start_zero_based": int(start),
@@ -2074,6 +2072,19 @@ def run_screening_update_diagnostic(
                 "model_input_summary": input_summary,
             }
         )
+    bad_anchor_samples = [
+        record
+        for record in anchor_sample_records
+        if record["nonfinite_gradient_values"] != 0
+    ]
+    top_anchor_samples = sorted(
+        anchor_sample_records,
+        key=lambda record: (
+            not np.isfinite(record["gradient_norm"]),
+            record["gradient_norm"],
+        ),
+        reverse=True,
+    )[:10]
 
     candidate_step = make_candidate_update_step(
         coefficients=calibration["resolved_coefficients"],
@@ -2126,6 +2137,11 @@ def run_screening_update_diagnostic(
                 "sample_count": int(prepared.anchor_starts.size),
                 "bad_sample_count": len(bad_anchor_samples),
                 "bad_samples": bad_anchor_samples,
+                "nonfinite_gradient_norm_count": sum(
+                    not np.isfinite(record["gradient_norm"])
+                    for record in anchor_sample_records
+                ),
+                "top_gradient_norm_samples": top_anchor_samples,
             },
             "components": _component_record(components),
             "weighted_candidate": {
