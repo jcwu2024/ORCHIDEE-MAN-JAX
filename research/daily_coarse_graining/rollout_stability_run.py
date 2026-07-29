@@ -411,7 +411,14 @@ def make_coefficient_calibration_step(
             )
             for leaf in jax.tree_util.tree_leaves(gradients)
         )
-        return values, jnp.sqrt(squared_norms), components
+        nonfinite_counts = sum(
+            jnp.count_nonzero(
+                ~jnp.isfinite(jnp.asarray(leaf)),
+                axis=tuple(range(1, jnp.asarray(leaf).ndim)),
+            )
+            for leaf in jax.tree_util.tree_leaves(gradients)
+        )
+        return values, jnp.sqrt(squared_norms), nonfinite_counts, components
 
     return jax.jit(calibrate)
 
@@ -1244,7 +1251,7 @@ def run_coefficient_calibration(
                 model_apply=resources.model_definition.apply,
                 **_objective_kwargs(resources, transition),
             )
-        values, norms, components = compiled[key](
+        values, norms, nonfinite_counts, components = compiled[key](
             parameters,
             prepared.anchor_batch,
             prepared.initial_states,
@@ -1252,10 +1259,21 @@ def run_coefficient_calibration(
             prepared.sequence,
             prepared.teacher_next_discrete_states,
         )
-        values, norms, components = jax.device_get((values, norms, components))
+        values, norms, nonfinite_counts, components = jax.device_get(
+            (values, norms, nonfinite_counts, components)
+        )
         if int(_hard_constraint_count(components)) != 0:
             raise ValueError(
                 "rollout-stability coefficient calibration violated a hard constraint"
+            )
+        if (
+            not np.all(np.isfinite(values))
+            or not np.all(np.isfinite(norms))
+            or np.any(np.asarray(nonfinite_counts) != 0)
+        ):
+            raise ValueError(
+                "rollout-stability coefficient calibration produced nonfinite "
+                f"component gradients: {np.asarray(nonfinite_counts).tolist()}"
             )
         names = ("L_fast", "L_next", "L_rollout", "L_bias", "L_science")
         records.append(
@@ -1271,6 +1289,10 @@ def run_coefficient_calibration(
                 "year": int(reference.year),
                 "gradient_norms": {
                     name: float(norms[index])
+                    for index, name in enumerate(names)
+                },
+                "nonfinite_gradient_values": {
+                    name: int(nonfinite_counts[index])
                     for index, name in enumerate(names)
                 },
                 "component_values": {

@@ -412,7 +412,7 @@ def test_paired_gradient_calibration_reports_zero_one_day_rollout_gradient():
         model_apply=canonical_model_apply,
         **_candidate_kwargs(setup),
     )
-    values, gradient_norms, components = calibration(
+    values, gradient_norms, nonfinite_counts, components = calibration(
         setup["parameters"],
         _anchor_batch(setup),
         setup["initial_states"],
@@ -423,8 +423,10 @@ def test_paired_gradient_calibration_reports_zero_one_day_rollout_gradient():
 
     assert values.shape == (5,)
     assert gradient_norms.shape == (5,)
+    assert nonfinite_counts.shape == (5,)
     assert np.all(np.isfinite(np.asarray(values)))
     assert np.all(np.isfinite(np.asarray(gradient_norms)))
+    assert np.array_equal(np.asarray(nonfinite_counts), np.zeros(5, dtype=int))
     assert float(values[2]) == 0.0
     assert float(gradient_norms[2]) == 0.0
     assert int(components.discrete_state_mismatches) == 0

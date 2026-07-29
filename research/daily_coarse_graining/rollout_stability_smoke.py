@@ -204,9 +204,46 @@ def run_real_shard_smoke(
     first = executable(*first_args)
     jax.block_until_ready(first.parameters)
     first_seconds = time.perf_counter() - first_started
+
+    calibration = make_coefficient_calibration_step(
+        fast_day_weights=resources.fast_day_weights,
+        undefined_loss_weight=0.1,
+        rematerialize=rematerialize,
+        model_apply=resources.model_definition.apply,
+        **_objective_kwargs(resources, transition),
+    )
+    (
+        calibration_values,
+        calibration_norms,
+        calibration_nonfinite_counts,
+        calibration_components,
+    ) = calibration(
+        parameters,
+        prepared[0].anchor_batch,
+        prepared[0].initial_states,
+        prepared[0].initial_discrete_states,
+        prepared[0].sequence,
+        prepared[0].teacher_next_discrete_states,
+    )
+    (
+        calibration_values,
+        calibration_norms,
+        calibration_nonfinite_counts,
+    ) = jax.device_get(
+        (
+            calibration_values,
+            calibration_norms,
+            calibration_nonfinite_counts,
+        )
+    )
+    calibration_hard_counts = _hard_counts(calibration_components)
     if not bool(jax.device_get(first.update_applied)):
         raise ValueError(
-            f"first smoke update failed closed: {_failed_update_details(first)}"
+            "first smoke update failed closed: "
+            f"{_failed_update_details(first)}, "
+            "calibration_nonfinite_gradient_values="
+            f"{np.asarray(calibration_nonfinite_counts).tolist()}, "
+            f"calibration_component_values={np.asarray(calibration_values).tolist()}"
         )
 
     second_args = _compiled_args(
@@ -265,28 +302,11 @@ def run_real_shard_smoke(
     if not restart_exact:
         raise ValueError("real-shard smoke checkpoint resume is not exact")
 
-    calibration = make_coefficient_calibration_step(
-        fast_day_weights=resources.fast_day_weights,
-        undefined_loss_weight=0.1,
-        rematerialize=rematerialize,
-        model_apply=resources.model_definition.apply,
-        **_objective_kwargs(resources, transition),
-    )
-    calibration_values, calibration_norms, calibration_components = calibration(
-        parameters,
-        prepared[0].anchor_batch,
-        prepared[0].initial_states,
-        prepared[0].initial_discrete_states,
-        prepared[0].sequence,
-        prepared[0].teacher_next_discrete_states,
-    )
-    calibration_values, calibration_norms = jax.device_get(
-        (calibration_values, calibration_norms)
-    )
     if (
         not np.all(np.isfinite(calibration_values))
         or not np.all(np.isfinite(calibration_norms))
-        or any(_hard_counts(calibration_components).values())
+        or np.any(np.asarray(calibration_nonfinite_counts) != 0)
+        or any(calibration_hard_counts.values())
     ):
         raise ValueError("real-shard smoke coefficient calibration is invalid")
 
@@ -336,6 +356,9 @@ def run_real_shard_smoke(
         ],
         "calibration_gradient_norms": [
             float(value) for value in calibration_norms
+        ],
+        "calibration_nonfinite_gradient_values": [
+            int(value) for value in calibration_nonfinite_counts
         ],
         "state_delta_scale": resources.state_delta_scale_audit,
         "science_layout_sha256": resources.science_layout.sha256,
