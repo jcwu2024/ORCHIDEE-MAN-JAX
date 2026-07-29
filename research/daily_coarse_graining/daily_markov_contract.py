@@ -13,7 +13,7 @@ import json
 from copy import deepcopy
 from dataclasses import asdict, dataclass, replace
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping, NamedTuple, Sequence
 
 import jax
 import jax.numpy as jnp
@@ -81,6 +81,18 @@ _FINALIZE_AXIS_FALLBACKS = {
     "leaf_ci": ("npts", "nvm", "nlai"),
     "e_soil_lat": ("npts", "nvm"),
 }
+
+
+class RetainedTailCompiledForcing(NamedTuple):
+    """Forcing leaves actually consumed after the learned fast-day boundary."""
+
+    temp_air: Any
+    precip_rain: Any
+    precip_snow: Any
+    salinity: Any
+    tide_height: Any
+
+
 FAST_DAY_OK_LEAK_FIELDS = (
     "litter_above",
     "litter_below",
@@ -1735,6 +1747,47 @@ def reconstruct_compiled_forcing_day(
         lwdown=linear("LWdown"),
         swdown=swdown,
         ccanopy=jnp.broadcast_to(jnp.asarray(ccanopy), (48, *np.shape(ccanopy))),
+        salinity=jnp.broadcast_to(salinity, (48, *salinity.shape)),
+        tide_height=jnp.broadcast_to(tide_height, (48, *tide_height.shape)),
+    )
+
+
+def reconstruct_retained_tail_forcing_day(
+    window: np.ndarray,
+    spec: NativeForcingSpec,
+    context,
+) -> RetainedTailCompiledForcing:
+    """Reconstruct only forcing leaves consumed by the retained daily tail."""
+
+    raw = _native_columns(np.asarray(window), spec)
+    offsets = jnp.arange(48, dtype=jnp.int32)
+    interval = offsets // int(spec.split)
+    substep = offsets % int(spec.split) + 1
+    previous_slot = interval
+    current_slot = interval + 1
+    weight = substep.astype(jnp.float64) / float(spec.split)
+
+    def linear(name: str) -> jnp.ndarray:
+        previous = raw[name][previous_slot]
+        current = raw[name][current_slot]
+        return previous + (current - previous) * weight[:, None]
+
+    def spread(name: str) -> jnp.ndarray:
+        current = raw[name][current_slot]
+        scale = jnp.where(
+            substep <= int(spec.precipitation_spread_steps),
+            float(spec.split) / float(spec.precipitation_spread_steps),
+            0.0,
+        )
+        return current * scale[:, None] * float(spec.model_interval_seconds)
+
+    first = context.first_step_bundle
+    salinity = jnp.asarray(first.static_trace_fields.salinity)
+    tide_height = jnp.asarray(first.static_trace_fields.tide_height)
+    return RetainedTailCompiledForcing(
+        temp_air=linear("Tair"),
+        precip_rain=spread("Rainf"),
+        precip_snow=spread("Snowf"),
         salinity=jnp.broadcast_to(salinity, (48, *salinity.shape)),
         tide_height=jnp.broadcast_to(tide_height, (48, *tide_height.shape)),
     )

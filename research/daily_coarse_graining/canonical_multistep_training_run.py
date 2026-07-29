@@ -50,7 +50,7 @@ from research.daily_coarse_graining.canonical_training_run import (
 )
 from research.daily_coarse_graining.daily_markov_contract import (
     daily_markov_contract_from_metadata,
-    reconstruct_compiled_forcing_day,
+    reconstruct_retained_tail_forcing_day,
 )
 from research.daily_coarse_graining.daily_model_architecture import (
     CANONICAL_FLAT_V1,
@@ -255,12 +255,10 @@ def _compiled_forcing_batch(batch, contract, context):
                 )
             if key not in compiled_by_day:
                 native_by_day[key] = native
-                compiled_by_day[key] = reconstruct_compiled_forcing_day(
+                compiled_by_day[key] = reconstruct_retained_tail_forcing_day(
                     native,
                     contract.native_forcing,
                     context,
-                    year=key[0],
-                    day_index=key[1],
                 )
             values.append(compiled_by_day[key])
     return jax.tree_util.tree_map(

@@ -629,6 +629,16 @@ def test_native_forcing_window_reconstructs_teacher_units_and_spreading(monkeypa
     result = markov.reconstruct_compiled_forcing_day(
         window, spec, context, year=1961, day_index=1
     )
+    retained = markov.reconstruct_retained_tail_forcing_day(
+        window,
+        spec,
+        context,
+    )
+    for name in retained._fields:
+        np.testing.assert_array_equal(
+            np.asarray(getattr(retained, name)),
+            np.asarray(getattr(result, name)),
+        )
 
     first_weight = 1.0 / 12.0
     expected_tair = raw_by_field["Tair"][0] + (

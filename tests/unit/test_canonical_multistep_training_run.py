@@ -232,17 +232,13 @@ def test_compiled_forcing_batch_deduplicates_overlapping_calendar_days(
 ):
     calls = []
 
-    def reconstruct(native, _spec, _context, *, year, day_index):
-        calls.append((year, day_index))
-        return {
-            "value": jnp.asarray(
-                [float(year), float(day_index), float(native[0, 0])]
-            )
-        }
+    def reconstruct(native, _spec, _context):
+        calls.append(float(native[0, 0]))
+        return {"value": jnp.asarray([float(native[0, 0])])}
 
     monkeypatch.setattr(
         canonical_multistep_training_run,
-        "reconstruct_compiled_forcing_day",
+        "reconstruct_retained_tail_forcing_day",
         reconstruct,
     )
     batch = {
@@ -262,11 +258,11 @@ def test_compiled_forcing_batch_deduplicates_overlapping_calendar_days(
         object(),
     )
 
-    assert calls == [(1962, 10), (1962, 11), (1962, 12), (1962, 13)]
-    assert result["value"].shape == (2, 3, 3)
+    assert calls == [10.0, 11.0, 12.0, 13.0]
+    assert result["value"].shape == (2, 3, 1)
     assert np.array_equal(
-        np.asarray(result["value"][:, :, 1]),
-        batch["day_index"],
+        np.asarray(result["value"][:, :, 0]),
+        np.asarray([[10.0, 11.0, 12.0], [11.0, 12.0, 13.0]]),
     )
 
     changed = copy.deepcopy(batch)
