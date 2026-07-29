@@ -819,9 +819,11 @@ def season_annual_step(
         1.0,
     )
     consumption = hvc1 * (nlflong_nat**hvc2)
+    herbivory_active = natural_arr[None, :] & (nlflong_nat > 0.0)
+    safe_consumption = jnp.where(herbivory_active, consumption, 1.0)
     herbivores = jnp.where(
-        natural_arr[None, :] & (nlflong_nat > 0.0),
-        one_year * green_age * nlflong_nat / consumption,
+        herbivory_active,
+        one_year * green_age * nlflong_nat / safe_consumption,
         100000.0,
     )
     herbivores = herbivores.at[:, 0].set(0.0)

@@ -224,7 +224,7 @@ def test_season_annual_zero_lastyear_leaf_mass_has_finite_daily_flux_gradient():
         maxfpc_thisyear=zeros_pft,
     )
 
-    def objective(npp_daily):
+    def annual_result(npp_daily):
         result = season_annual_step(
             state,
             dt_days=1.0,
@@ -246,12 +246,26 @@ def test_season_annual_zero_lastyear_leaf_mass_has_finite_daily_flux_gradient():
             pasture=np.zeros(nvm, dtype=bool),
             leaflife_tab=np.ones(nvm, dtype=np.float64),
         )
-        return jnp.sum(result.state.npp_longterm)
+        return result
 
-    gradient = jax.jit(jax.grad(objective))(jnp.zeros((npts, nvm)))
+    def npp_objective(npp_daily):
+        return jnp.sum(annual_result(npp_daily).state.npp_longterm)
 
-    assert np.all(np.isfinite(np.asarray(gradient)))
-    np.testing.assert_allclose(np.asarray(gradient), [[36.5, 0.0]])
+    def herbivore_objective(npp_daily):
+        return jnp.sum(annual_result(npp_daily).herbivores)
+
+    npp_gradient = jax.jit(jax.grad(npp_objective))(jnp.zeros((npts, nvm)))
+    herbivore_gradient = jax.jit(jax.grad(herbivore_objective))(
+        jnp.zeros((npts, nvm))
+    )
+
+    assert np.all(np.isfinite(np.asarray(npp_gradient)))
+    np.testing.assert_allclose(np.asarray(npp_gradient), [[36.5, 0.0]])
+    assert np.all(np.isfinite(np.asarray(herbivore_gradient)))
+    np.testing.assert_array_equal(
+        np.asarray(herbivore_gradient),
+        np.zeros((npts, nvm)),
+    )
 
 
 def test_season_annual_step_matches_longterm_fluxes_and_paper_case_non_dgvm_statistics():
