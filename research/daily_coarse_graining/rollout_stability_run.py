@@ -154,7 +154,8 @@ def _canonical_sha256(value: Any) -> str:
 def _current_git_head() -> str:
     root = Path(__file__).resolve().parents[2]
     return subprocess.check_output(
-        ["git", "-C", str(root), "rev-parse", "HEAD"],
+        ["git", "rev-parse", "HEAD"],
+        cwd=root,
         text=True,
     ).strip()
 
