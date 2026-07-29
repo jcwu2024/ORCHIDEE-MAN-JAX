@@ -256,14 +256,14 @@ def _sequence(batch, compiled_forcing) -> CanonicalMultistepSequence:
     )
 
 
-def _make_runtime(
+def _make_runtime_and_compiled_forcing(
     *,
     landpoint_id: str,
     entry: Mapping[str, Any],
     config_path: Path,
     contract,
     batch,
-) -> LandpointRuntime:
+) -> tuple[LandpointRuntime, Any]:
     context = teacher.prepare_paper_1961_driver_context(
         config_path,
         used_run_def_path=entry["run_def"],
@@ -291,7 +291,28 @@ def _make_runtime(
         runtime_year=1962,
     )
     del landpoint_id
-    return LandpointRuntime(context=context, transition=transition, static=static)
+    return (
+        LandpointRuntime(context=context, transition=transition, static=static),
+        compiled_forcing,
+    )
+
+
+def _make_runtime(
+    *,
+    landpoint_id: str,
+    entry: Mapping[str, Any],
+    config_path: Path,
+    contract,
+    batch,
+) -> LandpointRuntime:
+    runtime, _ = _make_runtime_and_compiled_forcing(
+        landpoint_id=landpoint_id,
+        entry=entry,
+        config_path=config_path,
+        contract=contract,
+        batch=batch,
+    )
+    return runtime
 
 
 def _make_train_step(
@@ -452,8 +473,9 @@ def train_multistep(args: argparse.Namespace) -> Mapping[str, Any]:
                 rng=rng,
             )
             runtime = runtimes.get(reference.landpoint_id)
+            forcing = None
             if runtime is None:
-                runtime = _make_runtime(
+                runtime, forcing = _make_runtime_and_compiled_forcing(
                     landpoint_id=reference.landpoint_id,
                     entry=entries[reference.landpoint_id],
                     config_path=config_path,
@@ -461,7 +483,12 @@ def train_multistep(args: argparse.Namespace) -> Mapping[str, Any]:
                     batch=batch,
                 )
                 runtimes[reference.landpoint_id] = runtime
-            forcing = _compiled_forcing_batch(batch, contract, runtime.context)
+            if forcing is None:
+                forcing = _compiled_forcing_batch(
+                    batch,
+                    contract,
+                    runtime.context,
+                )
             key = (reference.landpoint_id, stage.horizon)
             if key not in compiled_steps:
                 compiled_steps[key] = _make_train_step(

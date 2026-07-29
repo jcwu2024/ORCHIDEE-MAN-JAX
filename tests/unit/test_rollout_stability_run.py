@@ -11,6 +11,7 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+from research.daily_coarse_graining import rollout_stability_run
 from research.daily_coarse_graining.canonical_training_run import (
     CHECKPOINT_SCHEMA_VERSION,
 )
@@ -50,6 +51,44 @@ PROTOCOL_PATH = (
     / "canonical_669_rollout_stability_protocol.json"
 )
 ValueTuple = namedtuple("ValueTuple", ("value",))
+
+
+class _FakeShard:
+    def __init__(self, *, year: int):
+        self.days = 10
+        self.year = year
+
+    def window(self, start: int, horizon: int):
+        values = np.arange(start, start + horizon, dtype=np.float64)
+        return {
+            "initial_state": np.asarray([float(start)]),
+            "state_trajectory": np.arange(
+                start,
+                start + horizon + 1,
+                dtype=np.float64,
+            )[:, None],
+            "teacher_next_state": np.arange(
+                start + 1,
+                start + horizon + 1,
+                dtype=np.float64,
+            )[:, None],
+            "teacher_fast_day_target": values[:, None],
+            "forcing_native": values[:, None, None],
+            "parameters": np.ones((horizon, 1)),
+            "landpoint_static": np.ones((horizon, 1)),
+            "annual_conditions": np.ones((horizon, 1)),
+            "year": np.full((horizon,), self.year, dtype=np.int32),
+            "day_index": np.arange(start + 1, start + horizon + 1),
+            "initial_discrete_state": {
+                "flag": np.asarray([start % 2 == 0]),
+            },
+            "discrete_trajectory": {
+                "flag": np.full((horizon + 1, 1), start % 2 == 0),
+            },
+            "teacher_next_discrete_state": {
+                "flag": np.full((horizon, 1), start % 2 == 0),
+            },
+        }
 
 
 def _canonical_digest(value):
@@ -135,6 +174,158 @@ def test_sample_start_indices_are_restart_reconstructible_and_without_replacemen
     assert np.unique(first[0]).size == 256
     assert np.unique(first[1]).size == 8
     assert np.max(first[1]) < 365 - 30 + 1
+
+
+def test_rollout_preparation_loads_once_and_reuses_only_matching_landpoint_runtime(
+    monkeypatch,
+    tmp_path,
+):
+    references = (
+        MarkovShardRef(
+            landpoint_id="001.0-001.0",
+            year=1961,
+            spatial_split="train",
+            temporal_split="train",
+            path=tmp_path / "first.npz",
+            sha256="first",
+            contract_sha256="contract",
+        ),
+        MarkovShardRef(
+            landpoint_id="001.0-001.0",
+            year=1962,
+            spatial_split="train",
+            temporal_split="train",
+            path=tmp_path / "second.npz",
+            sha256="second",
+            contract_sha256="contract",
+        ),
+        MarkovShardRef(
+            landpoint_id="002.0-002.0",
+            year=1961,
+            spatial_split="train",
+            temporal_split="train",
+            path=tmp_path / "third.npz",
+            sha256="third",
+            contract_sha256="contract",
+        ),
+    )
+    shard_years = {
+        reference.path: reference.year
+        for reference in references
+    }
+    calls = {"load": 0, "make_runtime": 0, "compile_forcing": 0}
+
+    def load(path):
+        calls["load"] += 1
+        return _FakeShard(year=shard_years[path])
+
+    def make_runtime(*, landpoint_id, batch, **_):
+        calls["make_runtime"] += 1
+        runtime = rollout_stability_run.LandpointRuntime(
+            context=f"context-{landpoint_id}",
+            transition=f"transition-{landpoint_id}",
+            static={"landpoint_id": landpoint_id},
+        )
+        return runtime, {"source": "runtime", "batch": batch["forcing_native"]}
+
+    def compile_forcing(batch, _contract, context):
+        calls["compile_forcing"] += 1
+        return {
+            "source": "cached_runtime",
+            "context": context,
+            "batch": batch["forcing_native"],
+        }
+
+    monkeypatch.setattr(rollout_stability_run, "load_markov_shard", load)
+    monkeypatch.setattr(
+        rollout_stability_run,
+        "sample_start_indices",
+        lambda **_: (np.asarray([0, 1]), np.asarray([2, 3])),
+    )
+    monkeypatch.setattr(
+        rollout_stability_run,
+        "_make_runtime_and_compiled_forcing",
+        make_runtime,
+    )
+    monkeypatch.setattr(
+        rollout_stability_run,
+        "_compiled_forcing_batch",
+        compile_forcing,
+    )
+    monkeypatch.setattr(
+        rollout_stability_run,
+        "broadcast_retained_tail_day_inputs",
+        lambda forcing, *_args, **_kwargs: forcing,
+    )
+    monkeypatch.setattr(
+        rollout_stability_run,
+        "_anchor_training_batch",
+        lambda batch, _resources: batch,
+    )
+    monkeypatch.setattr(
+        rollout_stability_run,
+        "_sequence",
+        lambda _batch, forcing: forcing,
+    )
+    monkeypatch.setattr(
+        rollout_stability_run,
+        "retained_tail_trace_signature",
+        lambda static: f"trace-{static['landpoint_id']}",
+    )
+    resources = SimpleNamespace(
+        plan_entries={
+            reference.landpoint_id: {}
+            for reference in references
+        },
+        config_path=tmp_path / "config.json",
+        contract=object(),
+        statistics=object(),
+        representation=object(),
+    )
+    runtimes = {}
+
+    first = rollout_stability_run.prepare_rollout_update(
+        reference=references[0],
+        update=0,
+        horizon=2,
+        anchor_batch_size=2,
+        rollout_batch_size=2,
+        seed=7,
+        resources=resources,
+        runtime_cache=runtimes,
+    )
+    second = rollout_stability_run.prepare_rollout_update(
+        reference=references[1],
+        update=1,
+        horizon=2,
+        anchor_batch_size=2,
+        rollout_batch_size=2,
+        seed=7,
+        resources=resources,
+        runtime_cache=runtimes,
+    )
+    third = rollout_stability_run.prepare_rollout_update(
+        reference=references[2],
+        update=2,
+        horizon=2,
+        anchor_batch_size=2,
+        rollout_batch_size=2,
+        seed=7,
+        resources=resources,
+        runtime_cache=runtimes,
+    )
+
+    assert calls == {"load": 3, "make_runtime": 2, "compile_forcing": 1}
+    assert first.runtime is second.runtime
+    assert first.runtime is not third.runtime
+    assert set(runtimes) == {"001.0-001.0", "002.0-002.0"}
+    assert first.sequence["source"] == "runtime"
+    assert second.sequence["source"] == "cached_runtime"
+    assert third.sequence["source"] == "runtime"
+    assert np.array_equal(first.anchor_starts, np.asarray([0, 1]))
+    assert np.array_equal(first.rollout_starts, np.asarray([2, 3]))
+    assert first.trace_signature == "trace-001.0-001.0"
+    assert third.trace_signature == "trace-002.0-002.0"
 
 
 def test_gradient_calibration_uses_paired_median_ratios_and_skips_zero_rollout():

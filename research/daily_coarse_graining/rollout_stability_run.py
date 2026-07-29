@@ -24,7 +24,7 @@ from research.daily_coarse_graining.canonical_multistep_training_run import (
     LandpointRuntime,
     _compiled_forcing_batch,
     _load_plan,
-    _make_runtime,
+    _make_runtime_and_compiled_forcing,
     _model_config,
     _sequence,
 )
@@ -642,6 +642,15 @@ def _collate_reference_windows(
     horizon: int,
 ) -> Mapping[str, Any]:
     shard = load_markov_shard(reference.path)
+    return _collate_shard_windows(shard, starts=starts, horizon=horizon)
+
+
+def _collate_shard_windows(
+    shard,
+    *,
+    starts: Sequence[int],
+    horizon: int,
+) -> Mapping[str, Any]:
     choices = shard.days - horizon + 1
     indices = np.asarray(starts, dtype=np.int64)
     if indices.ndim != 1 or indices.size < 1:
@@ -685,6 +694,7 @@ def prepare_rollout_update(
     seed: int,
     resources: RolloutStabilityResources,
     runtime: LandpointRuntime | None = None,
+    runtime_cache: dict[str, LandpointRuntime] | None = None,
 ) -> PreparedRolloutUpdate:
     """Materialize one deterministic update without using validation/test data."""
 
@@ -699,29 +709,36 @@ def prepare_rollout_update(
         rollout_batch_size=rollout_batch_size,
         seed=seed,
     )
-    anchor_raw = _collate_reference_windows(
-        reference,
+    anchor_raw = _collate_shard_windows(
+        shard,
         starts=anchor_starts,
         horizon=1,
     )
-    rollout_raw = _collate_reference_windows(
-        reference,
+    rollout_raw = _collate_shard_windows(
+        shard,
         starts=rollout_starts,
         horizon=horizon,
     )
+    compiled_forcing = None
     if runtime is None:
-        runtime = _make_runtime(
-            landpoint_id=reference.landpoint_id,
-            entry=resources.plan_entries[reference.landpoint_id],
-            config_path=resources.config_path,
-            contract=resources.contract,
-            batch=rollout_raw,
+        if runtime_cache is not None:
+            runtime = runtime_cache.get(reference.landpoint_id)
+        if runtime is None:
+            runtime, compiled_forcing = _make_runtime_and_compiled_forcing(
+                landpoint_id=reference.landpoint_id,
+                entry=resources.plan_entries[reference.landpoint_id],
+                config_path=resources.config_path,
+                contract=resources.contract,
+                batch=rollout_raw,
+            )
+            if runtime_cache is not None:
+                runtime_cache[reference.landpoint_id] = runtime
+    if compiled_forcing is None:
+        compiled_forcing = _compiled_forcing_batch(
+            rollout_raw,
+            resources.contract,
+            runtime.context,
         )
-    compiled_forcing = _compiled_forcing_batch(
-        rollout_raw,
-        resources.contract,
-        runtime.context,
-    )
     retained_inputs = broadcast_retained_tail_day_inputs(
         compiled_forcing,
         runtime.static,
@@ -770,8 +787,8 @@ def prepare_anchor_update(
         rollout_batch_size=rollout_batch_size,
         seed=seed,
     )
-    anchor_raw = _collate_reference_windows(
-        reference,
+    anchor_raw = _collate_shard_windows(
+        shard,
         starts=anchor_starts,
         horizon=1,
     )
@@ -1228,6 +1245,7 @@ def run_coefficient_calibration(
     )
     anchor_batch_size = int(protocol.raw["optimization"]["anchor_batch_size"])
     compiled: dict[tuple[int, bool, str], Any] = {}
+    runtimes: dict[str, LandpointRuntime] = {}
     records = []
     calibration_schedule = _calibration_schedule(references, protocol)
     for ordinal, reference, horizon in calibration_schedule:
@@ -1240,7 +1258,7 @@ def run_coefficient_calibration(
             rollout_batch_size=int(spec["batch_size"]),
             seed=calibration_seed,
             resources=resources,
-            runtime=None,
+            runtime_cache=runtimes,
         )
         rematerialize = bool(spec["rematerialize"])
         key = (horizon, rematerialize, prepared.trace_signature)
@@ -1586,6 +1604,7 @@ def run_rollout_stability_arm(
         model_apply=resources.model_definition.apply,
     )
     candidate_steps: dict[tuple[int, bool, str], Any] = {}
+    runtimes: dict[str, LandpointRuntime] = {}
     interval_started = time.perf_counter()
     interval_losses = []
     interval_gradients = []
@@ -1609,6 +1628,7 @@ def run_rollout_stability_arm(
                 rollout_batch_size=int(spec["batch_size"]),
                 seed=seed,
                 resources=resources,
+                runtime_cache=runtimes,
             )
             result = control_step(
                 parameters,
