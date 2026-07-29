@@ -1980,6 +1980,8 @@ def run_calibration_update_smoke(
 def run_screening_update_diagnostic(
     *,
     screening_update: int,
+    rollout_sample_index: int | None = None,
+    component: str | None = None,
     execution_path: str | Path,
     protocol_path: str | Path,
     dataset_path: str | Path,
@@ -2060,6 +2062,96 @@ def run_screening_update_diagnostic(
         model_apply=resources.model_definition.apply,
         **objective_kwargs,
     )
+    if rollout_sample_index is not None:
+        if component not in ("L_next", "L_rollout", "L_bias", "L_science"):
+            raise ValueError(
+                "narrow screening diagnostic requires one rollout component"
+            )
+        if not 0 <= rollout_sample_index < int(prepared.rollout_starts.size):
+            raise ValueError("rollout sample index is outside the prepared batch")
+        sample_arguments = (
+            parameters,
+            jax.tree_util.tree_map(
+                lambda value: value[
+                    rollout_sample_index : rollout_sample_index + 1
+                ],
+                prepared.initial_states,
+            ),
+            jax.tree_util.tree_map(
+                lambda value: value[
+                    rollout_sample_index : rollout_sample_index + 1
+                ],
+                prepared.initial_discrete_states,
+            ),
+            jax.tree_util.tree_map(
+                lambda value: value[
+                    rollout_sample_index : rollout_sample_index + 1
+                ],
+                prepared.sequence,
+            ),
+            jax.tree_util.tree_map(
+                lambda value: value[
+                    rollout_sample_index : rollout_sample_index + 1
+                ],
+                prepared.teacher_next_discrete_states,
+            ),
+        )
+        result = jax.device_get(
+            independent_steps[component](*sample_arguments)
+        )
+        rollout_raw = _collate_reference_windows(
+            reference,
+            starts=prepared.rollout_starts,
+            horizon=horizon,
+        )
+        day_indices = np.asarray(rollout_raw["day_index"])[rollout_sample_index]
+        output_root = Path(output_root).resolve()
+        output_root.mkdir(parents=True, exist_ok=True)
+        return _atomic_json(
+            output_root
+            / (
+                "screening_update_"
+                f"{screening_update:05d}_sample_{rollout_sample_index:03d}_"
+                f"{component}.json"
+            ),
+            {
+                "schema_version": (
+                    "canonical_rollout_screening_sample_gradient_diagnostic_v1"
+                ),
+                "status": "completed",
+                "diagnostic_git_head": _current_git_head(),
+                "source_training_git_head": execution["training_git_head"],
+                "protocol_sha256": protocol.sha256,
+                "source_execution": {
+                    "path": str(execution_path),
+                    "sha256": _sha256_file(execution_path),
+                    "canonical_sha256": execution["canonical_sha256"],
+                },
+                "sealed_test_used": False,
+                "parameter_source": "unchanged_parent_checkpoint_and_optimizer",
+                "selection": {
+                    "screening_update": screening_update,
+                    "horizon": horizon,
+                    "landpoint_id": reference.landpoint_id,
+                    "year": int(reference.year),
+                    "reference_sha256": reference.sha256,
+                    "rollout_sample_index": rollout_sample_index,
+                    "start_zero_based": int(
+                        prepared.rollout_starts[rollout_sample_index]
+                    ),
+                    "day_indices": [int(value) for value in day_indices],
+                    "component": component,
+                },
+                "component_gradient": {
+                    "value": float(result[0]),
+                    "gradient_norm": float(result[1]),
+                    "nonfinite_gradient_values": int(result[2]),
+                },
+                "gradient_attribution": "independent_scalar_value_and_grad",
+            },
+        )
+    if component is not None:
+        raise ValueError("component requires rollout sample index")
     independent_results = {}
     independent_results["L_fast"] = jax.device_get(
         independent_steps["L_fast"](
@@ -2849,6 +2941,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--skip-dataset-hash-verification", action="store_true")
     parser.add_argument("--calibration-ordinal", type=int)
     parser.add_argument("--screening-update", type=int)
+    parser.add_argument("--rollout-sample-index", type=int)
+    parser.add_argument(
+        "--component",
+        choices=("L_next", "L_rollout", "L_bias", "L_science"),
+    )
     return parser
 
 
@@ -2922,6 +3019,8 @@ def main(argv: Sequence[str] | None = None) -> int:
         _require_args(args, ("execution", "screening_update"))
         output = run_screening_update_diagnostic(
             screening_update=args.screening_update,
+            rollout_sample_index=args.rollout_sample_index,
+            component=args.component,
             execution_path=args.execution,
             protocol_path=args.protocol,
             dataset_path=args.dataset,
