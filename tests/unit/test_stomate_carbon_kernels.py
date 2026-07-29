@@ -1693,6 +1693,68 @@ def test_turnover_leaf_age_fall_preserves_fortran_sequential_biomass_updates():
     assert np.allclose(np.asarray(new_leaf_frac)[0, PFT14, 0], 1.0)
 
 
+def test_turnover_leaf_fraction_tiny_active_mass_has_stable_jvp():
+    npts, nvm = 1, 14
+    tiny_mass = 1.0e-300
+    biomass = jnp.zeros((npts, nvm, NPARTS, 1), dtype=jnp.float64).at[
+        0,
+        PFT14,
+        ILEAF,
+        ICARBON,
+    ].set(tiny_mass)
+    biomass_tangent = jnp.zeros_like(biomass).at[
+        0,
+        PFT14,
+        ILEAF,
+        ICARBON,
+    ].set(tiny_mass)
+    turnover = jnp.zeros_like(biomass)
+    leaf_age = jnp.zeros((npts, nvm, NLEAFAGES), dtype=jnp.float64)
+    leaf_frac = jnp.zeros_like(leaf_age).at[0, PFT14, 0].set(1.0)
+
+    def update(biomass_input):
+        _, _, updated_leaf_frac, _ = turnover_leaf_age_fall(
+            biomass_input,
+            turnover,
+            leaf_age,
+            leaf_frac,
+            jnp.asarray([293.15], dtype=jnp.float64),
+            is_tree=jnp.ones(nvm, dtype=bool),
+            natural=jnp.ones(nvm, dtype=bool),
+            ok_laidev=jnp.zeros(nvm, dtype=bool),
+            leafagecrit=jnp.ones(nvm, dtype=jnp.float64) * 100.0,
+            dt_days=1.0,
+        )
+        return updated_leaf_frac
+
+    def directional_update(biomass_input, tangent):
+        return jax.jvp(
+            update,
+            (biomass_input,),
+            (tangent,),
+        )
+
+    error, (updated_leaf_frac, leaf_frac_tangent) = jax.jit(
+        checkify.checkify(
+            directional_update,
+            errors=checkify.float_checks,
+        )
+    )(biomass, biomass_tangent)
+
+    assert error.get() is None
+    np.testing.assert_allclose(
+        np.asarray(updated_leaf_frac)[0, PFT14, 0],
+        1.0,
+        rtol=1.0e-15,
+        atol=0.0,
+    )
+    assert np.all(np.isfinite(np.asarray(leaf_frac_tangent)))
+    np.testing.assert_array_equal(
+        np.asarray(leaf_frac_tangent),
+        np.zeros_like(np.asarray(leaf_frac_tangent)),
+    )
+
+
 def test_turnover_leaf_age_inactive_zero_critical_age_has_finite_gradient():
     npts, nvm = 1, 14
     biomass = np.zeros((npts, nvm, NPARTS, 1), dtype=np.float64)

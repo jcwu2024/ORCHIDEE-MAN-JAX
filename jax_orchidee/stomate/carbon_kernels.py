@@ -10,12 +10,30 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from jax import config, jit
+from jax import config, custom_jvp, jit
 
 config.update("jax_enable_x64", True)
 
 import jax.numpy as jnp
 import numpy as np
+
+
+@custom_jvp
+def _stable_ratio_for_ad(numerator, denominator):
+    """Preserve the primal quotient while avoiding a squared AD denominator."""
+
+    return numerator / denominator
+
+
+@_stable_ratio_for_ad.defjvp
+def _stable_ratio_for_ad_jvp(primals, tangents):
+    numerator, denominator = primals
+    numerator_tangent, denominator_tangent = tangents
+    ratio = numerator / denominator
+    ratio_tangent = (
+        numerator_tangent - ratio * denominator_tangent
+    ) / denominator
+    return ratio, ratio_tangent
 
 
 # Fortran pool indices are 1-based in `constantes_var.f90`, lines 196-208.
@@ -4471,8 +4489,23 @@ def turnover_leaf_age_fall(
         biomass = biomass.at[:, :, ISAPABOVE, ICARBON].add(jnp.where(grass_age_turn, -dturnover, 0.0))
 
     leaf_biomass = biomass[:, :, ILEAF, ICARBON]
-    updated_frac = (leaf_frac * lm_old[:, :, None] + delta_lm) / jnp.where(leaf_biomass[:, :, None] != 0.0, leaf_biomass[:, :, None], 1.0)
-    leaf_frac = jnp.where(leaf_biomass[:, :, None] > 0.0, updated_frac, 0.0)
+    has_leaf_biomass = leaf_biomass[:, :, None] > 0.0
+    fraction_numerator = leaf_frac * lm_old[:, :, None] + delta_lm
+    safe_fraction_numerator = jnp.where(
+        has_leaf_biomass,
+        fraction_numerator,
+        0.0,
+    )
+    safe_leaf_biomass = jnp.where(
+        has_leaf_biomass,
+        leaf_biomass[:, :, None],
+        1.0,
+    )
+    updated_frac = _stable_ratio_for_ad(
+        safe_fraction_numerator,
+        safe_leaf_biomass,
+    )
+    leaf_frac = jnp.where(has_leaf_biomass, updated_frac, 0.0)
     leaf_frac = leaf_frac.at[:, 0, :].set(0.0)
     turnover = turnover.at[:, 0, :, :].set(0.0)
     return biomass, turnover, leaf_frac, leaf_age_crit
