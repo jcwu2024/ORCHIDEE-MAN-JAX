@@ -1,7 +1,7 @@
 module defprec;implicit none;integer,parameter::i_std=kind(1),r_std=selected_real_kind(12,300);end module
 module constantes
  use defprec;implicit none
- real(r_std),parameter::zero=0.,un=1.,one_year=365.,min_stomate=0.,tax_max=.8
+ real(r_std),parameter::zero=0.,un=1.,one_year=365.,min_stomate=1.e-8_r_std,tax_max=.8
  integer::printlev=0,numout=6
 contains
  subroutine ipslerr_p(a,b,c,d,e);integer,intent(in)::a;character(*),intent(in)::b,c,d,e;stop 2;end
@@ -46,7 +46,7 @@ program main
  integer::u,i,j,k,m,tc;character(len=1024)::out;logical::present(5,nvm),inc(5,nvm)
  real(r_std)::t2m(5),ts(5,2),lai(5,nvm),rp(5,nvm),gpp(5,nvm),fa(5,nvm,nparts),ba(5,nvm,nparts,1),rmp(5,nvm,nparts),bio(5,nvm,nparts,1),la(5,nvm,4),lf(5,nvm,4),age(5,nvm),rm(5,nvm),rg(5,nvm),npp(5,nvm),di(5,nvm),ds(5,nvm),ss(5,nvm),pg(5,nvm),dg(5,nvm),repr(5,nvm),cr(5,nvm),cl(5,nvm),slai(5,nvm),veg(5,nvm),slac(5,nvm),sla1(5,nvm),nlim(5,nvm);integer::nger(5,nvm),nlev(5,nvm),ndrp(5,nvm),nlax(5,nvm),nmat(5,nvm),nrec(5,nvm)
  call get_command_argument(1,out);ok_LAIdev=.false.;is_grassland_manag=.false.;is_tree=.true.;frac_growthresp=.25;sla_max=.03;sla_min=.01;SP_densitesem=0.;SP_pgrainmaxi=0.;SP_tigefeuil=0.;SP_slamax=.03
- present=.false.;present(1:4,14)=.true.;inc=.false.;t2m=290.;ts=285.;lai=1.;rp=.5;gpp=0.;gpp(:,14)=(/10.,0.,10.,0.,10./);fa=0.;fa(:,14,ileaf)=.6;fa(:,14,iroot)=.4;ba=0.;rmp=0.;rmp(:,14,ileaf)=(/.7,.7,10.,.7,.7/);rmp(:,14,iroot)=(/.3,.3,0.,.3,.3/);bio=0.;bio(:,14,ileaf,1)=100.;bio(2,14,ileaf,1)=0.;bio(4,14,iroot,1)=-1.;la=20.;lf=.25;age=10.;rm=0.;rg=0.;npp=0.;di=0.;ds=0.;ss=1.;pg=0.;dg=0.;repr=0.;cr=0.;cl=0.;slai=0.;veg=0.;slac=.02;slac(4,14)=.05;sla1=.02;nlim=1.;nger=0;nlev=0;ndrp=0;nlax=0;nmat=0;nrec=0;tc=1
+ present=.false.;present(1:4,14)=.true.;inc=.false.;t2m=290.;ts=285.;lai=1.;rp=.5;gpp=0.;gpp(:,14)=(/10.,0.,10.,0.,10./);fa=0.;fa(:,14,ileaf)=.6;fa(:,14,iroot)=.4;ba=0.;rmp=0.;rmp(:,14,ileaf)=(/.7,.7,10.,.7,.7/);rmp(:,14,iroot)=(/.3,.3,0.,.3,.3/);bio=0.;bio(:,14,ileaf,1)=100.;bio(2,14,ileaf,1)=0.;bio(4,14,ileaf,1)=-1._r_std;la=20.;lf=.25;age=10.;rm=0.;rg=0.;npp=0.;di=0.;ds=0.;ss=1.;pg=0.;dg=0.;repr=0.;cr=0.;cl=0.;slai=0.;veg=0.;slac=.02;slac(4,14)=.05;sla1=.02;nlim=1.;nger=0;nlev=0;ndrp=0;nlax=0;nmat=0;nrec=0;tc=1
  call npp_calc(5,1._r_std,present,t2m,ts,lai,rp,gpp,fa,ba,rmp,bio,la,lf,age,rm,rg,npp,inc,di,ds,ss,pg,dg,repr,nger,nlev,ndrp,nlax,nmat,nrec,cr,cl,slai,tc,veg,slac,sla1,nlim)
  call npp_calc(5,1._r_std,present,t2m,ts,lai,rp,gpp,fa,ba,rmp,bio,la,lf,age,rm,rg,npp,inc,di,ds,ss,pg,dg,repr,nger,nlev,ndrp,nlax,nmat,nrec,cr,cl,slai,tc,veg,slac,sla1,nlim)
  open(newunit=u,file=trim(out),status='replace');write(u,'(A)')'field,value';do j=1,nvm;do i=1,5;write(u,'(A,",",ES26.17)')'resp_maint',rm(i,j);write(u,'(A,",",ES26.17)')'resp_growth',rg(i,j);write(u,'(A,",",ES26.17)')'npp',npp(i,j);write(u,'(A,",",ES26.17)')'age',age(i,j);write(u,'(A,",",ES26.17)')'sla_calc',slac(i,j);write(u,'(A,",",ES26.17)')'sla_age1',sla1(i,j);do k=1,nparts;write(u,'(A,",",ES26.17)')'biomass',bio(i,j,k,1);write(u,'(A,",",ES26.17)')'bm_alloc',ba(i,j,k,1);end do;do m=1,4;write(u,'(A,",",ES26.17)')'leaf_age',la(i,j,m);write(u,'(A,",",ES26.17)')'leaf_frac',lf(i,j,m);end do;end do;end do;close(u)

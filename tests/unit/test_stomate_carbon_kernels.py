@@ -1277,6 +1277,53 @@ def test_npp_closed_update_pumps_only_fortran_explicit_biomass_pools_when_tax_ex
     assert np.asarray(result.bm_alloc).shape == biomass.shape
 
 
+def test_npp_negative_stock_lands_exactly_on_threshold_without_activating_leaf_fraction_gate():
+    npts, nvm = 1, 14
+    min_stomate = 1.0e-8
+    negative_leaf_stock = -4.904524473172416e-9
+    biomass = np.zeros((npts, nvm, NPARTS, 1), dtype=np.float64)
+    biomass[0, PFT14, ILEAF, ICARBON] = negative_leaf_stock
+    pft_present = np.zeros((npts, nvm), dtype=bool)
+    pft_present[0, PFT14] = True
+
+    result = npp_closed_update(
+        biomass=biomass,
+        gpp=np.zeros((npts, nvm), dtype=np.float64),
+        f_alloc=np.zeros((npts, nvm, NPARTS), dtype=np.float64),
+        resp_maint_part=np.zeros((npts, nvm, NPARTS), dtype=np.float64),
+        pft_present=pft_present,
+        frac_growthresp=np.zeros(nvm, dtype=np.float64),
+        min_stomate=min_stomate,
+    )
+
+    corrected_leaf_stock = np.asarray(result.biomass)[0, PFT14, ILEAF, ICARBON]
+    expected_creation = min_stomate - negative_leaf_stock
+    assert corrected_leaf_stock == min_stomate
+    assert np.asarray(result.resp_maint)[0, PFT14] == -expected_creation
+    assert np.asarray(result.npp)[0, PFT14] == expected_creation
+
+    initial_leaf_frac = np.full((npts, nvm, NLEAFAGES), 0.25, dtype=np.float64)
+    age_result = npp_leaf_age_sla_age_update(
+        biomass=result.biomass,
+        biomass_old=result.biomass_before_alloc,
+        bm_alloc=result.bm_alloc,
+        leaf_age=np.full((npts, nvm, NLEAFAGES), 20.0, dtype=np.float64),
+        leaf_frac=initial_leaf_frac,
+        age=np.full((npts, nvm), 10.0, dtype=np.float64),
+        pft_present=pft_present,
+        is_tree=np.ones(nvm, dtype=bool),
+        sla_age1=np.full((npts, nvm), 0.02, dtype=np.float64),
+        sla_calc=np.full((npts, nvm), 0.02, dtype=np.float64),
+        sla_max=np.full(nvm, 0.03, dtype=np.float64),
+        sla_min=np.full(nvm, 0.01, dtype=np.float64),
+        dt_days=1.0,
+        min_stomate=min_stomate,
+    )
+
+    np.testing.assert_array_equal(np.asarray(age_result.leaf_frac), initial_leaf_frac)
+    assert np.all(np.isfinite(np.asarray(age_result.leaf_age)))
+
+
 def test_npp_closed_update_absent_pft_has_finite_zero_maintenance_gradient():
     biomass = np.zeros((1, 14, NPARTS, 1), dtype=np.float64)
     gpp = np.zeros((1, 14), dtype=np.float64)

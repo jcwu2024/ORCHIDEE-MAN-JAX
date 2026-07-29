@@ -4011,7 +4011,14 @@ def npp_closed_update(
 
     negative = (biomass_updated[:, :, :, ICARBON] < 0.0) & fortran_pft[:, :, None]
     bm_create = jnp.where(negative, min_stomate - biomass_updated[:, :, :, ICARBON], 0.0)
-    biomass_updated = biomass_updated.at[:, :, :, ICARBON].add(bm_create)
+    # Pin the intended threshold exactly: add-back roundoff can land one ULP
+    # above it and incorrectly activate the strict gate at Fortran line 571.
+    corrected_carbon = jnp.where(
+        negative,
+        jnp.asarray(min_stomate, dtype=biomass_updated.dtype),
+        biomass_updated[:, :, :, ICARBON],
+    )
+    biomass_updated = biomass_updated.at[:, :, :, ICARBON].set(corrected_carbon)
     resp_maint = resp_maint - jnp.sum(bm_create, axis=2) / dt_days
 
     npp = gpp - resp_growth - resp_maint

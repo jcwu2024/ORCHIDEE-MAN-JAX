@@ -905,7 +905,7 @@ def _npp_jax_values() -> dict[str, np.ndarray]:
     bio = np.zeros((npts, nvm, nparts, 1))
     bio[:, 13, 0, 0] = 100.0
     bio[1, 13, 0, 0] = 0.0
-    bio[3, 13, 5, 0] = -1.0
+    bio[3, 13, 0, 0] = -1.0
     fa = np.zeros((npts, nvm, nparts))
     fa[:, 13, 0] = 0.6
     fa[:, 13, 5] = 0.4
@@ -931,6 +931,7 @@ def _npp_jax_values() -> dict[str, np.ndarray]:
             np.full(nvm, 0.25),
             dt_days=1.0,
             tax_max=0.8,
+            min_stomate=1.0e-8,
         )
         age = npp_leaf_age_sla_age_update(
             closed.biomass,
@@ -946,6 +947,7 @@ def _npp_jax_values() -> dict[str, np.ndarray]:
             np.full(nvm, 0.03),
             np.full(nvm, 0.01),
             dt_days=1.0,
+            min_stomate=1.0e-8,
         )
         biomass = np.asarray(closed.biomass)
         leaf_age = np.asarray(age.leaf_age)
@@ -1008,6 +1010,7 @@ def run_npp_oracle(output_dir: Path, compiler: Path = DEFAULT_COMPILER) -> dict:
                     "PFT1 mask",
                     "PFT14 non-crop GPP-maintenance-growth",
                     "biomass leaf SLA age writeback",
+                    "negative leaf stock threshold and strict leaf-age gate",
                 ],
                 "compiled_callee": "crop_alloc::crop_bmalloc",
             },
