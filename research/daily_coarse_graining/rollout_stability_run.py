@@ -715,6 +715,7 @@ def _active_checkify_error_sources(error) -> list[Mapping[str, Any]]:
             {
                 "error_type": effect.error_type.__name__,
                 "code": code,
+                "metadata": metadata,
                 "project_frames": project_frames,
             }
         )
