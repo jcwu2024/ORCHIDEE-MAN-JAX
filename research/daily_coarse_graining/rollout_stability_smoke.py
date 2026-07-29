@@ -43,7 +43,7 @@ from research.daily_coarse_graining.rollout_stability_run import (
     verify_arm_checkpoint,
 )
 
-SCHEMA_VERSION = "canonical_rollout_stability_real_shard_smoke_v1"
+SCHEMA_VERSION = "canonical_rollout_stability_real_shard_smoke_v2"
 
 
 def _tree_exact(left: Any, right: Any) -> bool:
@@ -58,6 +58,23 @@ def _tree_exact(left: Any, right: Any) -> bool:
 def _hard_counts(components) -> Mapping[str, int]:
     host = jax.device_get(components)
     return {name: int(getattr(host, name)) for name in HARD_CONSTRAINT_FIELDS}
+
+
+def _device_memory_stats() -> Mapping[str, int]:
+    stats = jax.devices()[0].memory_stats()
+    if not stats:
+        return {}
+    fields = (
+        "bytes_in_use",
+        "peak_bytes_in_use",
+        "bytes_limit",
+        "largest_free_block_bytes",
+    )
+    return {
+        name: int(stats[name])
+        for name in fields
+        if stats.get(name) is not None
+    }
 
 
 def _failed_update_details(result) -> Mapping[str, Any]:
@@ -721,6 +738,7 @@ def run_real_shard_smoke(
         "compile_seconds": compile_seconds,
         "first_update_seconds": first_seconds,
         "second_update_seconds": second_seconds,
+        "device_memory_stats": _device_memory_stats(),
         "first_loss": float(jax.device_get(first.loss)),
         "second_loss": float(jax.device_get(uninterrupted.loss)),
         "first_gradient_norm": float(jax.device_get(first.gradient_norm)),
