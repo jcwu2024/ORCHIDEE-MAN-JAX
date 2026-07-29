@@ -321,6 +321,35 @@ def _state_process_gradient_weights(process_weighting) -> tuple[tuple[str, ...],
     return tuple(names), np.stack(rows, axis=0)
 
 
+def _active_checkify_error_sources(error) -> list[Mapping[str, Any]]:
+    records = []
+    for effect, predicate in error._pred.items():
+        if not bool(jax.device_get(predicate)):
+            continue
+        code = int(jax.device_get(error._code[effect]))
+        metadata = repr(error._metadata[code])
+        project_frames = []
+        for line in metadata.splitlines():
+            stripped = line.strip()
+            if (
+                ".py:" in stripped
+                and (
+                    "/jax_orchidee/" in stripped
+                    or "/research/daily_coarse_graining/" in stripped
+                )
+                and stripped not in project_frames
+            ):
+                project_frames.append(stripped)
+        records.append(
+            {
+                "error_type": effect.error_type.__name__,
+                "code": code,
+                "project_frames": project_frames,
+            }
+        )
+    return records
+
+
 def _fast_target_leaf_records(contract, indices) -> list[Mapping[str, Any]]:
     records = []
     for leaf in contract.fast_day_target_leaves:
@@ -576,7 +605,7 @@ def run_real_shard_smoke(
             ),
         )
         checkify_message = checkify_error.get()
-        checkify_metadata = repr(checkify_error._metadata)
+        checkify_sources = _active_checkify_error_sources(checkify_error)
         raise ValueError(
             "first smoke update failed closed: "
             f"{_failed_update_details(first)}, "
@@ -597,7 +626,7 @@ def run_real_shard_smoke(
             "fast_target_nonfinite_values="
             f"{np.asarray(physical_fast_day)[bad_target_indices].tolist()}, "
             f"checkify_float_error={checkify_message!r}, "
-            f"checkify_error_metadata={checkify_metadata}"
+            f"checkify_active_error_sources={checkify_sources}"
         )
 
     second_args = _compiled_args(
