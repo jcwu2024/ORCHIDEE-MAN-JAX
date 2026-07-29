@@ -1379,6 +1379,38 @@ def test_npp_leaf_age_sla_age_update_keeps_tree_age_after_increment_only():
     assert np.allclose(np.asarray(result.age)[0, PFT14], 3.0 + 2.0 / 365.0)
 
 
+def test_npp_leaf_age_zero_biomass_has_finite_allocation_gradient():
+    npts, nvm = 1, 14
+    biomass = np.zeros((npts, nvm, NPARTS, 1), dtype=np.float64)
+    zeros_leaf_age = np.zeros(
+        (npts, nvm, NLEAFAGES),
+        dtype=np.float64,
+    )
+
+    def objective(bm_alloc):
+        result = npp_leaf_age_sla_age_update(
+            biomass,
+            biomass,
+            bm_alloc,
+            zeros_leaf_age,
+            zeros_leaf_age,
+            np.zeros((npts, nvm), dtype=np.float64),
+            np.zeros((npts, nvm), dtype=bool),
+            np.zeros(nvm, dtype=bool),
+            np.zeros((npts, nvm), dtype=np.float64),
+            np.zeros((npts, nvm), dtype=np.float64),
+            np.ones(nvm, dtype=np.float64) * 0.03,
+            np.ones(nvm, dtype=np.float64) * 0.01,
+            dt_days=1.0,
+        )
+        return jnp.sum(result.age)
+
+    gradient = jax.jit(jax.grad(objective))(biomass)
+
+    assert np.all(np.isfinite(np.asarray(gradient)))
+    np.testing.assert_array_equal(np.asarray(gradient), biomass)
+
+
 def _turnover_fixture(npts=1, nvm=14, nelements=1):
     biomass = np.zeros((npts, nvm, NPARTS, nelements), dtype=np.float64)
     leaf_age = np.zeros((npts, nvm, NLEAFAGES), dtype=np.float64)

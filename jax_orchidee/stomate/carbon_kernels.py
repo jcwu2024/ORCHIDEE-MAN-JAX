@@ -4068,7 +4068,12 @@ def npp_leaf_age_sla_age_update(
         + bm_alloc[:, :, IFRUIT, ICARBON]
     )
     age_rescale = (bm_new > 0.0) & (bm_add > 0.0) & (~is_tree[None, :]) & active_pft[None, :]
-    age = jnp.where(age_rescale, age * (bm_new - bm_add) / bm_new, age)
+    safe_bm_new = jnp.where(age_rescale, bm_new, 1.0)
+    age = jnp.where(
+        age_rescale,
+        age * (bm_new - bm_add) / safe_bm_new,
+        age,
+    )
 
     return NPPAgeSLAResult(
         leaf_age=leaf_age,
