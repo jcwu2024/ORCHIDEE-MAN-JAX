@@ -4016,9 +4016,27 @@ def npp_leaf_age_sla_age_update(
     leaf_alloc = bm_alloc[:, :, ILEAF, ICARBON]
     leaf_mass_young = leaf_frac[:, :, 0] * lm_old + leaf_alloc
     youngest_update = (leaf_alloc > 0.0) & (leaf_mass_young > 0.0) & active_pft[None, :]
+    previous_young_mass = leaf_mass_young - leaf_alloc
+    safe_previous_young_mass = jnp.where(
+        youngest_update,
+        previous_young_mass,
+        0.0,
+    )
+    safe_youngest_leaf_age = jnp.where(
+        youngest_update,
+        leaf_age[:, :, 0],
+        0.0,
+    )
+    safe_leaf_mass_young = jnp.where(
+        youngest_update,
+        leaf_mass_young,
+        1.0,
+    )
     leaf_age0 = jnp.maximum(
         0.0,
-        leaf_age[:, :, 0] * (leaf_mass_young - leaf_alloc) / jnp.where(leaf_mass_young != 0.0, leaf_mass_young, 1.0),
+        safe_youngest_leaf_age
+        * safe_previous_young_mass
+        / safe_leaf_mass_young,
     )
     leaf_age = leaf_age.at[:, :, 0].set(jnp.where(youngest_update, leaf_age0, leaf_age[:, :, 0]))
 
@@ -4034,9 +4052,12 @@ def npp_leaf_age_sla_age_update(
     leaf_frac = jnp.concatenate((leaf_frac0[:, :, None], leaf_frac_tail), axis=2)
 
     sla_update = youngest_update
+    safe_sla_age1 = jnp.where(sla_update, sla_age1, 0.0)
+    safe_leaf_alloc = jnp.where(sla_update, leaf_alloc, 0.0)
     new_sla_age1 = (
-        sla_age1 * (leaf_mass_young - leaf_alloc) + sla_max[None, :] * leaf_alloc
-    ) / jnp.where(leaf_mass_young != 0.0, leaf_mass_young, 1.0)
+        safe_sla_age1 * safe_previous_young_mass
+        + sla_max[None, :] * safe_leaf_alloc
+    ) / safe_leaf_mass_young
     sla_age1 = jnp.where(sla_update, new_sla_age1, sla_age1)
     sla_age2 = sla_max * 0.9
     sla_age3 = sla_max * 0.85

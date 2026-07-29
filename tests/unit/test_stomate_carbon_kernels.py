@@ -1411,6 +1411,58 @@ def test_npp_leaf_age_zero_biomass_has_finite_allocation_gradient():
     np.testing.assert_array_equal(np.asarray(gradient), biomass)
 
 
+def test_npp_leaf_age_inactive_where_masks_nonfinite_allocation_tangent():
+    npts, nvm = 1, 14
+    biomass = jnp.zeros((npts, nvm, NPARTS, 1), dtype=jnp.float64)
+    leaf_age = jnp.zeros((npts, nvm, NLEAFAGES), dtype=jnp.float64)
+    leaf_frac = jnp.zeros_like(leaf_age)
+    allocation_tangent = jnp.zeros_like(biomass).at[
+        0,
+        PFT14,
+        ILEAF,
+        ICARBON,
+    ].set(jnp.inf)
+
+    def update(allocation):
+        result = npp_leaf_age_sla_age_update(
+            biomass,
+            biomass,
+            allocation,
+            leaf_age,
+            leaf_frac,
+            jnp.zeros((npts, nvm), dtype=jnp.float64),
+            jnp.zeros((npts, nvm), dtype=bool),
+            jnp.zeros(nvm, dtype=bool),
+            jnp.zeros((npts, nvm), dtype=jnp.float64),
+            jnp.zeros((npts, nvm), dtype=jnp.float64),
+            jnp.ones(nvm, dtype=jnp.float64) * 0.03,
+            jnp.ones(nvm, dtype=jnp.float64) * 0.01,
+            dt_days=1.0,
+        )
+        return (
+            result.leaf_age,
+            result.leaf_frac,
+            result.sla_age1,
+            result.sla_calc,
+            result.age,
+        )
+
+    _, tangents = jax.jit(
+        lambda allocation, tangent: jax.jvp(
+            update,
+            (allocation,),
+            (tangent,),
+        )
+    )(jnp.zeros_like(biomass), allocation_tangent)
+
+    for tangent in tangents:
+        assert np.all(np.isfinite(np.asarray(tangent)))
+        np.testing.assert_array_equal(
+            np.asarray(tangent),
+            np.zeros_like(np.asarray(tangent)),
+        )
+
+
 def _turnover_fixture(npts=1, nvm=14, nelements=1):
     biomass = np.zeros((npts, nvm, NPARTS, nelements), dtype=np.float64)
     leaf_age = np.zeros((npts, nvm, NLEAFAGES), dtype=np.float64)
