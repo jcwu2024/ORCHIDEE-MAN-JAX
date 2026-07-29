@@ -13,6 +13,12 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
+from research.daily_coarse_graining.canonical_daily_model import masked_huber_loss
+from research.daily_coarse_graining.canonical_training import (
+    _normalize_finite_compiled,
+    prepare_canonical_inference_batch_compiled,
+    restore_fast_day_inference_prediction_compiled,
+)
 from research.daily_coarse_graining.daily_model_architecture import (
     verify_checkpoint_architecture,
 )
@@ -133,6 +139,90 @@ def _make_per_sample_next_gradient_diagnostic(
         )
 
     return jax.jit(diagnose)
+
+
+def _make_fast_target_gradient_diagnostic(
+    *,
+    statistics,
+    representation,
+    retained_tail_transition,
+    state_weights,
+    model_apply,
+):
+    def diagnose(parameters, initial_state, initial_discrete_state, sequence):
+        day = jax.tree_util.tree_map(lambda item: item[0], sequence)
+        inference = prepare_canonical_inference_batch_compiled(
+            {
+                "state": initial_state[None, :],
+                "forcing_native": day.forcing_native[None, ...],
+                "parameters": day.parameters[None, ...],
+                "landpoint_static": day.landpoint_static[None, ...],
+                "annual_conditions": day.annual_conditions[None, ...],
+                "year": day.year[None],
+                "day_index": day.day_index[None],
+            },
+            statistics,
+            representation,
+        )
+        prediction = model_apply(parameters, inference.model_input)
+        physical_fast_day = restore_fast_day_inference_prediction_compiled(
+            prediction.normalized_fast_day_target,
+            prediction.dynamic_undefined_flip_logits,
+            inference,
+            statistics,
+            representation,
+        )[0]
+
+        def objective(target):
+            next_state, _ = retained_tail_transition(
+                initial_state,
+                initial_discrete_state,
+                target,
+                day.retained_tail_inputs,
+                day.year,
+                day.day_index,
+            )
+            normalized_next, finite_next = _normalize_finite_compiled(
+                next_state,
+                statistics.arrays["state"],
+            )
+            normalized_teacher, finite_teacher = _normalize_finite_compiled(
+                day.teacher_next_state,
+                statistics.arrays["state"],
+            )
+            common = finite_next & finite_teacher
+            return masked_huber_loss(
+                normalized_next[None, :],
+                normalized_teacher[None, :],
+                common[None, :],
+                state_weights,
+            )
+
+        value, gradient = jax.value_and_grad(objective)(physical_fast_day)
+        return value, physical_fast_day, gradient
+
+    return jax.jit(diagnose)
+
+
+def _fast_target_leaf_records(contract, indices) -> list[Mapping[str, Any]]:
+    records = []
+    for leaf in contract.fast_day_target_leaves:
+        selected = [
+            int(index)
+            for index in indices
+            if int(leaf.start) <= int(index) < int(leaf.stop)
+        ]
+        if selected:
+            records.append(
+                {
+                    "family": str(leaf.family),
+                    "path": [str(value) for value in leaf.path],
+                    "start": int(leaf.start),
+                    "stop": int(leaf.stop),
+                    "nonfinite_indices": selected,
+                }
+            )
+    return records
 
 
 def _smoke_schedule(horizon: int) -> Mapping[str, Any]:
@@ -324,6 +414,33 @@ def run_real_shard_smoke(
             )
         )
         bad_positions = np.flatnonzero(per_sample_nonfinite_counts)
+        first_bad_position = int(bad_positions[0])
+        target_diagnostic = _make_fast_target_gradient_diagnostic(
+            statistics=resources.statistics,
+            representation=resources.representation,
+            retained_tail_transition=transition,
+            state_weights=jnp.asarray(resources.process_weighting.weights),
+            model_apply=resources.model_definition.apply,
+        )
+        (
+            target_loss,
+            physical_fast_day,
+            target_gradient,
+        ) = jax.device_get(
+            target_diagnostic(
+                parameters,
+                prepared[0].initial_states[first_bad_position],
+                jax.tree_util.tree_map(
+                    lambda item: item[first_bad_position],
+                    prepared[0].initial_discrete_states,
+                ),
+                jax.tree_util.tree_map(
+                    lambda item: item[first_bad_position],
+                    prepared[0].sequence,
+                ),
+            )
+        )
+        bad_target_indices = np.flatnonzero(~np.isfinite(target_gradient))
         raise ValueError(
             "first smoke update failed closed: "
             f"{_failed_update_details(first)}, "
@@ -336,7 +453,13 @@ def run_real_shard_smoke(
             "per_sample_bad_nonfinite_counts="
             f"{np.asarray(per_sample_nonfinite_counts)[bad_positions].tolist()}, "
             "per_sample_values="
-            f"{np.asarray(per_sample_values)[bad_positions].tolist()}"
+            f"{np.asarray(per_sample_values)[bad_positions].tolist()}, "
+            f"fast_target_loss={float(target_loss)}, "
+            f"fast_target_nonfinite_gradient_count={bad_target_indices.size}, "
+            "fast_target_nonfinite_leaves="
+            f"{_fast_target_leaf_records(resources.contract, bad_target_indices)}, "
+            "fast_target_nonfinite_values="
+            f"{np.asarray(physical_fast_day)[bad_target_indices].tolist()}"
         )
 
     second_args = _compiled_args(
