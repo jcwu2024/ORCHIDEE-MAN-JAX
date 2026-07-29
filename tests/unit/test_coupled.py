@@ -2155,6 +2155,9 @@ def test_stomate_restart_input_bundles_pass_restart_and_explicit_state_without_d
     np.testing.assert_allclose(bundles.maintenance_inputs["resp_maint_part_current"], state.resp_maint_part)
     assert bundles.alloc_inputs["dt_days"] == 0.25
     assert bundles.post_npp_inputs["dt_days"] == 0.25
+    assert bundles.prescribe_inputs["min_stomate"] == pytest.approx(1.0e-8)
+    assert bundles.alloc_inputs["min_stomate"] == pytest.approx(1.0e-8)
+    assert bundles.post_npp_inputs["min_stomate"] == pytest.approx(1.0e-8)
     assert bundles.prescribe_inputs["ok_dgvm"] is True
     assert bundles.prescribe_inputs["lpj_gap_const_mort"] is False
     assert bundles.post_npp_inputs["ok_dgvm"] is True
