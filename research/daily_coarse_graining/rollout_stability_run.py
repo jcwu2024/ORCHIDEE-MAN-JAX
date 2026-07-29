@@ -16,8 +16,12 @@ from typing import Any, Mapping, NamedTuple, Sequence
 import jax
 import jax.numpy as jnp
 import numpy as np
+from jax.experimental import checkify
 
-from research.daily_coarse_graining.canonical_daily_model import parameter_count
+from research.daily_coarse_graining.canonical_daily_model import (
+    masked_huber_loss,
+    parameter_count,
+)
 from research.daily_coarse_graining.canonical_multistep import (
     CanonicalMultistepSequence,
     canonical_multistep_rollout,
@@ -41,9 +45,12 @@ from research.daily_coarse_graining.canonical_state_objective import (
 )
 from research.daily_coarse_graining.canonical_training import (
     CanonicalTrainingBatch,
+    _normalize_finite_compiled,
     fast_day_target_representation_from_contract,
     loss_weights_from_contract,
     prepare_canonical_batch,
+    prepare_canonical_inference_batch_compiled,
+    restore_fast_day_inference_prediction_compiled,
 )
 from research.daily_coarse_graining.canonical_training_run import (
     CHECKPOINT_SCHEMA_VERSION,
@@ -565,6 +572,174 @@ def make_independent_component_gradient_steps(
             for name in ("L_next", "L_rollout", "L_bias", "L_science")
         },
     }
+
+
+def make_fast_target_gradient_diagnostic(
+    *,
+    statistics,
+    representation,
+    retained_tail_transition,
+    state_weights,
+    model_apply,
+):
+    """Differentiate first-day next-state loss with respect to physical B_fast."""
+
+    def diagnose(parameters, initial_state, initial_discrete_state, sequence):
+        day = jax.tree_util.tree_map(lambda item: item[0], sequence)
+        inference = prepare_canonical_inference_batch_compiled(
+            {
+                "state": initial_state[None, :],
+                "forcing_native": day.forcing_native[None, ...],
+                "parameters": day.parameters[None, ...],
+                "landpoint_static": day.landpoint_static[None, ...],
+                "annual_conditions": day.annual_conditions[None, ...],
+                "year": day.year[None],
+                "day_index": day.day_index[None],
+            },
+            statistics,
+            representation,
+        )
+        prediction = model_apply(parameters, inference.model_input)
+        physical_fast_day = restore_fast_day_inference_prediction_compiled(
+            prediction.normalized_fast_day_target,
+            prediction.dynamic_undefined_flip_logits,
+            inference,
+            statistics,
+            representation,
+        )[0]
+
+        def objective(target):
+            next_state, _ = retained_tail_transition(
+                initial_state,
+                initial_discrete_state,
+                target,
+                day.retained_tail_inputs,
+                day.year,
+                day.day_index,
+            )
+            normalized_next, finite_next = _normalize_finite_compiled(
+                next_state,
+                statistics.arrays["state"],
+            )
+            normalized_teacher, finite_teacher = _normalize_finite_compiled(
+                day.teacher_next_state,
+                statistics.arrays["state"],
+            )
+            common = finite_next & finite_teacher
+            return masked_huber_loss(
+                normalized_next[None, :],
+                normalized_teacher[None, :],
+                common[None, :],
+                state_weights,
+            )
+
+        value, gradient = jax.value_and_grad(objective)(physical_fast_day)
+        return value, physical_fast_day, gradient
+
+    return jax.jit(diagnose)
+
+
+def make_fast_target_checkify_diagnostic(
+    *,
+    statistics,
+    retained_tail_transition,
+    state_weights,
+):
+    """Check first-day retained-tail B_fast gradients for floating errors."""
+
+    state_weights = jnp.asarray(state_weights)
+
+    def gradient(
+        initial_state,
+        initial_discrete_state,
+        physical_fast_day,
+        sequence,
+    ):
+        day = jax.tree_util.tree_map(lambda item: item[0], sequence)
+
+        def objective(target):
+            next_state, _ = retained_tail_transition(
+                initial_state,
+                initial_discrete_state,
+                target,
+                day.retained_tail_inputs,
+                day.year,
+                day.day_index,
+            )
+            normalized_next, finite_next = _normalize_finite_compiled(
+                next_state,
+                statistics.arrays["state"],
+            )
+            normalized_teacher, finite_teacher = _normalize_finite_compiled(
+                day.teacher_next_state,
+                statistics.arrays["state"],
+            )
+            common = finite_next & finite_teacher
+            return masked_huber_loss(
+                normalized_next[None, :],
+                normalized_teacher[None, :],
+                common[None, :],
+                state_weights,
+            )
+
+        return jax.grad(objective)(physical_fast_day)
+
+    return jax.jit(
+        checkify.checkify(
+            gradient,
+            errors=checkify.float_checks,
+        )
+    )
+
+
+def _active_checkify_error_sources(error) -> list[Mapping[str, Any]]:
+    records = []
+    for effect, predicate in error._pred.items():
+        if not bool(jax.device_get(predicate)):
+            continue
+        code = int(jax.device_get(error._code[effect]))
+        metadata = repr(error._metadata[code])
+        project_frames = []
+        for line in metadata.splitlines():
+            stripped = line.strip()
+            if (
+                ".py:" in stripped
+                and (
+                    "/jax_orchidee/" in stripped
+                    or "/research/daily_coarse_graining/" in stripped
+                )
+                and stripped not in project_frames
+            ):
+                project_frames.append(stripped)
+        records.append(
+            {
+                "error_type": effect.error_type.__name__,
+                "code": code,
+                "project_frames": project_frames,
+            }
+        )
+    return records
+
+
+def _fast_target_leaf_records(contract, indices) -> list[Mapping[str, Any]]:
+    records = []
+    for leaf in contract.fast_day_target_leaves:
+        selected = [
+            int(index)
+            for index in indices
+            if int(leaf.start) <= int(index) < int(leaf.stop)
+        ]
+        if selected:
+            records.append(
+                {
+                    "family": str(leaf.family),
+                    "path": [str(value) for value in leaf.path],
+                    "start": int(leaf.start),
+                    "stop": int(leaf.stop),
+                    "nonfinite_indices": selected,
+                }
+            )
+    return records
 
 
 def broadcast_retained_tail_day_inputs(
@@ -2069,25 +2244,25 @@ def run_screening_update_diagnostic(
             )
         if not 0 <= rollout_sample_index < int(prepared.rollout_starts.size):
             raise ValueError("rollout sample index is outside the prepared batch")
+        sample_initial_state = prepared.initial_states[rollout_sample_index]
+        sample_initial_discrete_state = jax.tree_util.tree_map(
+            lambda value: value[rollout_sample_index],
+            prepared.initial_discrete_states,
+        )
+        sample_sequence = jax.tree_util.tree_map(
+            lambda value: value[rollout_sample_index],
+            prepared.sequence,
+        )
         sample_arguments = (
             parameters,
+            sample_initial_state[None, :],
             jax.tree_util.tree_map(
-                lambda value: value[
-                    rollout_sample_index : rollout_sample_index + 1
-                ],
-                prepared.initial_states,
+                lambda value: value[None, ...],
+                sample_initial_discrete_state,
             ),
             jax.tree_util.tree_map(
-                lambda value: value[
-                    rollout_sample_index : rollout_sample_index + 1
-                ],
-                prepared.initial_discrete_states,
-            ),
-            jax.tree_util.tree_map(
-                lambda value: value[
-                    rollout_sample_index : rollout_sample_index + 1
-                ],
-                prepared.sequence,
+                lambda value: value[None, ...],
+                sample_sequence,
             ),
             jax.tree_util.tree_map(
                 lambda value: value[
@@ -2098,6 +2273,39 @@ def run_screening_update_diagnostic(
         )
         result = jax.device_get(
             independent_steps[component](*sample_arguments)
+        )
+        fast_target_diagnostic = make_fast_target_gradient_diagnostic(
+            statistics=resources.statistics,
+            representation=resources.representation,
+            retained_tail_transition=transition,
+            state_weights=jnp.asarray(resources.process_weighting.weights),
+            model_apply=resources.model_definition.apply,
+        )
+        (
+            fast_target_loss,
+            physical_fast_day,
+            fast_target_gradient,
+        ) = jax.device_get(
+            fast_target_diagnostic(
+                parameters,
+                sample_initial_state,
+                sample_initial_discrete_state,
+                sample_sequence,
+            )
+        )
+        bad_target_indices = np.flatnonzero(
+            ~np.isfinite(fast_target_gradient)
+        )
+        checkify_diagnostic = make_fast_target_checkify_diagnostic(
+            statistics=resources.statistics,
+            retained_tail_transition=transition,
+            state_weights=resources.process_weighting.weights,
+        )
+        checkify_error, _ = checkify_diagnostic(
+            sample_initial_state,
+            sample_initial_discrete_state,
+            physical_fast_day,
+            sample_sequence,
         )
         rollout_raw = _collate_reference_windows(
             reference,
@@ -2148,6 +2356,26 @@ def run_screening_update_diagnostic(
                     "nonfinite_gradient_values": int(result[2]),
                 },
                 "gradient_attribution": "independent_scalar_value_and_grad",
+                "fast_target_gradient": {
+                    "loss": float(fast_target_loss),
+                    "nonfinite_gradient_count": int(bad_target_indices.size),
+                    "nonfinite_leaves": _fast_target_leaf_records(
+                        resources.contract,
+                        bad_target_indices,
+                    ),
+                    "physical_values_at_nonfinite_indices": [
+                        float(value)
+                        for value in np.asarray(physical_fast_day)[
+                            bad_target_indices
+                        ]
+                    ],
+                },
+                "retained_tail_checkify": {
+                    "error": checkify_error.get(),
+                    "active_error_sources": _active_checkify_error_sources(
+                        checkify_error
+                    ),
+                },
             },
         )
     if component is not None:
