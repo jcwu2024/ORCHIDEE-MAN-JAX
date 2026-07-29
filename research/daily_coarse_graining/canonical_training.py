@@ -312,9 +312,15 @@ def _defined_numeric_mask_compiled(values):
 def _normalize_finite_compiled(values, statistics):
     values = jnp.asarray(values, dtype=jnp.float64)
     finite = _defined_numeric_mask_compiled(values)
+    mean = jnp.asarray(statistics.mean)
+    scale = jnp.asarray(statistics.scale)
+    safe_values = jnp.where(finite, values, 0.0)
+    safe_mean = jnp.where(finite, mean, 0.0)
+    safe_scale = jnp.where(finite, scale, 1.0)
+    normalized = (safe_values - safe_mean) / safe_scale
     normalized = jnp.where(
         finite,
-        (values - jnp.asarray(statistics.mean)) / jnp.asarray(statistics.scale),
+        normalized,
         0.0,
     )
     return normalized, finite

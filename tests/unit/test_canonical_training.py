@@ -3,10 +3,12 @@ from __future__ import annotations
 import jax
 import jax.numpy as jnp
 import numpy as np
+from jax.experimental import checkify
 
 from research.daily_coarse_graining.canonical_training import (
     FastDayTargetRepresentation,
     _calendar_features,
+    _normalize_finite_compiled,
     fast_day_target_representation_from_contract,
     loss_weights_from_contract,
     model_config_from_batch,
@@ -42,6 +44,36 @@ def _statistics(shapes):
         observations_per_column={name: 4 for name in arrays},
         arrays=arrays,
     )
+
+
+def test_compiled_normalization_masks_undefined_values_before_arithmetic():
+    statistics = FiniteColumnStatistics(
+        count=np.full(3, 4, dtype=np.uint64),
+        mean=np.asarray([1.0, 2.0, 3.0]),
+        variance=np.ones(3),
+        scale=np.asarray([2.0, 4.0, 8.0]),
+    )
+    values = jnp.asarray([5.0, jnp.nan, 1.0e20], dtype=jnp.float64)
+
+    def objective(input_values):
+        normalized, _ = _normalize_finite_compiled(
+            input_values,
+            statistics,
+        )
+        return jnp.sum(normalized)
+
+    error, gradient = jax.jit(
+        checkify.checkify(
+            jax.grad(objective),
+            errors=checkify.float_checks,
+        )
+    )(values)
+    normalized, finite = _normalize_finite_compiled(values, statistics)
+
+    assert error.get() is None
+    np.testing.assert_array_equal(np.asarray(finite), [True, False, False])
+    np.testing.assert_allclose(np.asarray(normalized), [2.0, 0.0, 0.0])
+    np.testing.assert_allclose(np.asarray(gradient), [0.5, 0.0, 0.0])
 
 
 def test_prepare_canonical_batch_uses_native_forcing_and_explicit_masks():
