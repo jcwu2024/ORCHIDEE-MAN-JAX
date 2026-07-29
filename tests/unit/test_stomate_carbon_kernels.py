@@ -2694,6 +2694,48 @@ def test_prescribe_step_firstcall_preserves_nonempty_tree_leaf_fractions():
     np.testing.assert_allclose(np.asarray(result.leaf_frac)[0, pft], leaf_frac[0, pft])
 
 
+def test_prescribe_step_zero_wood_fractional_power_gradients_are_finite():
+    npts, nvm, pft = 1, 14, PFT14
+    biomass = jnp.zeros((npts, nvm, NPARTS, 1), dtype=jnp.float64)
+    biomass = biomass.at[0, pft, ISAPABOVE, ICARBON].set(7.0e-260)
+    veget_max = jnp.zeros((npts, nvm), dtype=jnp.float64).at[0, pft].set(0.6)
+    is_tree = np.zeros(nvm, dtype=bool)
+    is_tree[pft] = True
+
+    def crown_density_loss(candidate_biomass, candidate_veget_max):
+        result = prescribe_step(
+            veget_max=candidate_veget_max,
+            dt_days=1.0,
+            pft_present=np.ones((npts, nvm), dtype=bool),
+            everywhere=np.ones((npts, nvm), dtype=np.float64),
+            when_growthinit=np.ones((npts, nvm), dtype=np.float64),
+            biomass=candidate_biomass,
+            leaf_frac=np.zeros((npts, nvm, NLEAFAGES), dtype=np.float64),
+            ind=np.zeros((npts, nvm), dtype=np.float64),
+            cn_ind=np.zeros((npts, nvm), dtype=np.float64),
+            co2_to_bm=np.zeros((npts, nvm), dtype=np.float64),
+            natural=np.ones(nvm, dtype=bool),
+            pasture=np.zeros(nvm, dtype=bool),
+            is_tree=is_tree,
+            bm_sapl=np.zeros((nvm, NPARTS, 1), dtype=np.float64),
+            maxdia=np.ones(nvm, dtype=np.float64),
+            pheno_is_none=np.ones(nvm, dtype=bool),
+            ok_dgvm=False,
+            lpj_gap_const_mort=True,
+            firstcall=False,
+            min_stomate=1.0e-8,
+        )
+        return jnp.sum(result.cn_ind) + jnp.sum(result.ind)
+
+    value, gradients = jax.value_and_grad(
+        crown_density_loss,
+        argnums=(0, 1),
+    )(biomass, veget_max)
+
+    np.testing.assert_allclose(np.asarray(value), 100.0 + 0.006)
+    assert all(np.all(np.isfinite(np.asarray(leaf))) for leaf in gradients)
+
+
 def _pftinout_base_inputs(npts=1, nvm=14):
     return {
         "adapted": np.ones((npts, nvm), dtype=np.float64),

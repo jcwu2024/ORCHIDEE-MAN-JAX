@@ -3014,18 +3014,29 @@ def prescribe_step(
     positive_cover = veget_max > 0.0
     safe_maxdia = jnp.where(is_tree, maxdia, 1.0)
     woodmass = jnp.sum(biomass[:, :, wood_parts, ICARBON], axis=2) * veget_max
+    active_tree_wood = (
+        static_or_agri[None, :]
+        & is_tree[None, :]
+        & positive_cover
+        & (woodmass > min_stomate)
+    )
+    # The Fortran fractional-power block is inside all four guards above.
+    # Positive placeholders keep inactive vector lanes out of its singular
+    # derivative at zero without changing any value that Fortran computes.
+    active_woodmass = jnp.where(active_tree_wood, woodmass, 1.0)
+    active_veget_max = jnp.where(active_tree_wood, veget_max, 1.0)
     critical = pipe_density * jnp.pi / 4.0 * pipe_tune2 * safe_maxdia[None, :] ** (2.0 + pipe_tune3)
-    provisional_ind = woodmass / critical
-    woodmass_ind = woodmass / jnp.where(provisional_ind != 0.0, provisional_ind, 1.0)
+    provisional_ind = active_woodmass / critical
+    woodmass_ind = active_woodmass / provisional_ind
     dia = (woodmass_ind / (pipe_density * jnp.pi / 4.0 * pipe_tune2)) ** (1.0 / (2.0 + pipe_tune3))
     cn_tree = pipe_tune1 * jnp.minimum(safe_maxdia[None, :], dia) ** pipe_tune_exp_coeff
-    denom = pipe_tune1 * (woodmass / (pipe_density * jnp.pi / 4.0 * pipe_tune2)) ** (
+    denom = pipe_tune1 * (active_woodmass / (pipe_density * jnp.pi / 4.0 * pipe_tune2)) ** (
         pipe_tune_exp_coeff / (2.0 + pipe_tune3)
     )
-    recalculated_ind = (veget_max / jnp.where(denom != 0.0, denom, 1.0)) ** (
+    recalculated_ind = (active_veget_max / denom) ** (
         1.0 / (1.0 - (pipe_tune_exp_coeff / (2.0 + pipe_tune3)))
     )
-    woodmass_ind2 = woodmass / jnp.where(recalculated_ind != 0.0, recalculated_ind, 1.0)
+    woodmass_ind2 = active_woodmass / recalculated_ind
     dia2 = (woodmass_ind2 / (pipe_density * jnp.pi / 4.0 * pipe_tune2)) ** (1.0 / (2.0 + pipe_tune3))
     cn_tree2 = pipe_tune1 * jnp.minimum(safe_maxdia[None, :], dia2) ** pipe_tune_exp_coeff
     cn_positive = jnp.where(cn_tree * provisional_ind > 1.002 * veget_max, cn_tree, cn_tree2)
