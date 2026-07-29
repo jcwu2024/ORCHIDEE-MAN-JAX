@@ -12,6 +12,7 @@ from typing import Any, Mapping, Sequence
 import jax
 import jax.numpy as jnp
 import numpy as np
+from jax.experimental import checkify
 
 from research.daily_coarse_graining.canonical_daily_model import masked_huber_loss
 from research.daily_coarse_graining.canonical_training import (
@@ -252,6 +253,57 @@ def _make_fast_target_process_gradient_diagnostic(
         return losses, jacobian
 
     return jax.jit(diagnose)
+
+
+def _make_fast_target_checkify_diagnostic(
+    *,
+    statistics,
+    retained_tail_transition,
+    state_weights,
+):
+    state_weights = jnp.asarray(state_weights)
+
+    def gradient(
+        initial_state,
+        initial_discrete_state,
+        physical_fast_day,
+        sequence,
+    ):
+        day = jax.tree_util.tree_map(lambda item: item[0], sequence)
+
+        def objective(target):
+            next_state, _ = retained_tail_transition(
+                initial_state,
+                initial_discrete_state,
+                target,
+                day.retained_tail_inputs,
+                day.year,
+                day.day_index,
+            )
+            normalized_next, finite_next = _normalize_finite_compiled(
+                next_state,
+                statistics.arrays["state"],
+            )
+            normalized_teacher, finite_teacher = _normalize_finite_compiled(
+                day.teacher_next_state,
+                statistics.arrays["state"],
+            )
+            common = finite_next & finite_teacher
+            return masked_huber_loss(
+                normalized_next[None, :],
+                normalized_teacher[None, :],
+                common[None, :],
+                state_weights,
+            )
+
+        return jax.grad(objective)(physical_fast_day)
+
+    return jax.jit(
+        checkify.checkify(
+            gradient,
+            errors=checkify.float_checks,
+        )
+    )
 
 
 def _state_process_gradient_weights(process_weighting) -> tuple[tuple[str, ...], np.ndarray]:
@@ -532,6 +584,24 @@ def run_real_shard_smoke(
             ~np.isfinite(process_jacobian),
             axis=1,
         )
+        checkify_diagnostic = _make_fast_target_checkify_diagnostic(
+            statistics=resources.statistics,
+            retained_tail_transition=transition,
+            state_weights=resources.process_weighting.weights,
+        )
+        checkify_error, _ = checkify_diagnostic(
+            prepared[0].initial_states[first_bad_position],
+            jax.tree_util.tree_map(
+                lambda item: item[first_bad_position],
+                prepared[0].initial_discrete_states,
+            ),
+            physical_fast_day,
+            jax.tree_util.tree_map(
+                lambda item: item[first_bad_position],
+                prepared[0].sequence,
+            ),
+        )
+        checkify_message = checkify_error.get()
         raise ValueError(
             "first smoke update failed closed: "
             f"{_failed_update_details(first)}, "
@@ -554,7 +624,8 @@ def run_real_shard_smoke(
             "next_state_process_losses="
             f"{dict(zip(process_names, np.asarray(process_losses).tolist(), strict=True))}, "
             "next_state_process_nonfinite_target_gradients="
-            f"{dict(zip(process_names, process_nonfinite_counts.tolist(), strict=True))}"
+            f"{dict(zip(process_names, process_nonfinite_counts.tolist(), strict=True))}, "
+            f"checkify_float_error={checkify_message!r}"
         )
 
     second_args = _compiled_args(
