@@ -9,6 +9,7 @@ import os
 import pickle
 import subprocess
 import time
+import traceback
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Mapping, NamedTuple, Sequence
@@ -694,6 +695,19 @@ def make_fast_target_checkify_diagnostic(
 
 def _active_checkify_error_sources(error) -> list[Mapping[str, Any]]:
     records = []
+    exception = error.get_exception()
+    traceback_frames = []
+    if exception is not None:
+        python_traceback = exception.traceback_info.as_python_traceback()
+        traceback_frames = [
+            {
+                "file": frame.filename,
+                "line": int(frame.lineno),
+                "function": frame.name,
+                "source": frame.line,
+            }
+            for frame in traceback.extract_tb(python_traceback)
+        ]
     for effect, predicate in error._pred.items():
         if not bool(jax.device_get(predicate)):
             continue
@@ -716,6 +730,7 @@ def _active_checkify_error_sources(error) -> list[Mapping[str, Any]]:
                 "error_type": effect.error_type.__name__,
                 "code": code,
                 "metadata": metadata,
+                "traceback_frames": traceback_frames,
                 "project_frames": project_frames,
             }
         )
