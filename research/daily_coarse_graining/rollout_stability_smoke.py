@@ -204,6 +204,71 @@ def _make_fast_target_gradient_diagnostic(
     return jax.jit(diagnose)
 
 
+def _make_fast_target_process_gradient_diagnostic(
+    *,
+    statistics,
+    retained_tail_transition,
+    process_weights,
+):
+    process_weights = jnp.asarray(process_weights)
+
+    def diagnose(
+        initial_state,
+        initial_discrete_state,
+        physical_fast_day,
+        sequence,
+    ):
+        day = jax.tree_util.tree_map(lambda item: item[0], sequence)
+
+        def objective(target):
+            next_state, _ = retained_tail_transition(
+                initial_state,
+                initial_discrete_state,
+                target,
+                day.retained_tail_inputs,
+                day.year,
+                day.day_index,
+            )
+            normalized_next, finite_next = _normalize_finite_compiled(
+                next_state,
+                statistics.arrays["state"],
+            )
+            normalized_teacher, finite_teacher = _normalize_finite_compiled(
+                day.teacher_next_state,
+                statistics.arrays["state"],
+            )
+            common = finite_next & finite_teacher
+            losses = jax.vmap(
+                lambda weights: masked_huber_loss(
+                    normalized_next[None, :],
+                    normalized_teacher[None, :],
+                    common[None, :],
+                    weights,
+                )
+            )(process_weights)
+            return losses, losses
+
+        jacobian, losses = jax.jacrev(objective, has_aux=True)(physical_fast_day)
+        return losses, jacobian
+
+    return jax.jit(diagnose)
+
+
+def _state_process_gradient_weights(process_weighting) -> tuple[tuple[str, ...], np.ndarray]:
+    base = np.asarray(process_weighting.weights)
+    names = []
+    rows = []
+    for group in process_weighting.metadata["groups"]:
+        names.append(str(group["id"]))
+        row = np.zeros_like(base)
+        for leaf in group["leaves"]:
+            start = int(leaf["start"])
+            stop = int(leaf["stop"])
+            row[start:stop] = base[start:stop]
+        rows.append(row)
+    return tuple(names), np.stack(rows, axis=0)
+
+
 def _fast_target_leaf_records(contract, indices) -> list[Mapping[str, Any]]:
     records = []
     for leaf in contract.fast_day_target_leaves:
@@ -441,6 +506,32 @@ def run_real_shard_smoke(
             )
         )
         bad_target_indices = np.flatnonzero(~np.isfinite(target_gradient))
+        process_names, process_weights = _state_process_gradient_weights(
+            resources.process_weighting
+        )
+        process_diagnostic = _make_fast_target_process_gradient_diagnostic(
+            statistics=resources.statistics,
+            retained_tail_transition=transition,
+            process_weights=process_weights,
+        )
+        process_losses, process_jacobian = jax.device_get(
+            process_diagnostic(
+                prepared[0].initial_states[first_bad_position],
+                jax.tree_util.tree_map(
+                    lambda item: item[first_bad_position],
+                    prepared[0].initial_discrete_states,
+                ),
+                physical_fast_day,
+                jax.tree_util.tree_map(
+                    lambda item: item[first_bad_position],
+                    prepared[0].sequence,
+                ),
+            )
+        )
+        process_nonfinite_counts = np.count_nonzero(
+            ~np.isfinite(process_jacobian),
+            axis=1,
+        )
         raise ValueError(
             "first smoke update failed closed: "
             f"{_failed_update_details(first)}, "
@@ -459,7 +550,11 @@ def run_real_shard_smoke(
             "fast_target_nonfinite_leaves="
             f"{_fast_target_leaf_records(resources.contract, bad_target_indices)}, "
             "fast_target_nonfinite_values="
-            f"{np.asarray(physical_fast_day)[bad_target_indices].tolist()}"
+            f"{np.asarray(physical_fast_day)[bad_target_indices].tolist()}, "
+            "next_state_process_losses="
+            f"{dict(zip(process_names, np.asarray(process_losses).tolist(), strict=True))}, "
+            "next_state_process_nonfinite_target_gradients="
+            f"{dict(zip(process_names, process_nonfinite_counts.tolist(), strict=True))}"
         )
 
     second_args = _compiled_args(
