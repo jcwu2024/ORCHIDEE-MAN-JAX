@@ -13,6 +13,10 @@ PARENT_OPTIMIZER_CHECKPOINT=${PARENT_OPTIMIZER_CHECKPOINT:?set PARENT_OPTIMIZER_
 OUTPUT_ROOT=${OUTPUT_ROOT:?set OUTPUT_ROOT to a new smoke output directory}
 GPU_DEVICE=${GPU_DEVICE:-0}
 HORIZONS=${HORIZONS:-"1 3 7"}
+ANCHOR_BATCH_SIZE=${ANCHOR_BATCH_SIZE:-256}
+ROLLOUT_BATCH_SIZE_OVERRIDE=${ROLLOUT_BATCH_SIZE_OVERRIDE:-}
+SEED=${SEED:-20260728}
+JAX_DEBUG_NANS=${JAX_DEBUG_NANS:-false}
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
@@ -59,6 +63,9 @@ batch_size() {
 
 for horizon in $HORIZONS; do
   rollout_batch_size=$(batch_size "$horizon")
+  if [[ -n "$ROLLOUT_BATCH_SIZE_OVERRIDE" ]]; then
+    rollout_batch_size=$ROLLOUT_BATCH_SIZE_OVERRIDE
+  fi
   report="$OUTPUT_ROOT/horizon${horizon}-protocol-shape.json"
   test ! -e "$report"
   cache="$ROOT/runtime/cache/jax/orcjax_gpu/rollout-stability-h${horizon}"
@@ -67,6 +74,7 @@ for horizon in $HORIZONS; do
     SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \
     SINGULARITYENV_CUDA_VISIBLE_DEVICES="$GPU_DEVICE" \
     SINGULARITYENV_JAX_ENABLE_X64=true \
+    SINGULARITYENV_JAX_DEBUG_NANS="$JAX_DEBUG_NANS" \
     SINGULARITYENV_JAX_COMPILATION_CACHE_DIR="$cache" \
     SINGULARITYENV_ORCHIDEE_REPO_ROOT="$ROOT" \
     SINGULARITYENV_ORCHIDEE_RUNTIME_ROOT="$ROOT/runtime" \
@@ -85,6 +93,7 @@ for horizon in $HORIZONS; do
       --parent-optimizer-checkpoint "$PARENT_OPTIMIZER_CHECKPOINT" \
       --output "$report" \
       --horizon "$horizon" \
-      --anchor-batch-size 256 \
-      --rollout-batch-size "$rollout_batch_size"
+      --anchor-batch-size "$ANCHOR_BATCH_SIZE" \
+      --rollout-batch-size "$rollout_batch_size" \
+      --seed "$SEED"
 done
