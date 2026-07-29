@@ -16,6 +16,9 @@ import numpy as np
 from research.daily_coarse_graining.daily_model_architecture import (
     verify_checkpoint_architecture,
 )
+from research.daily_coarse_graining.rollout_stability_objective import (
+    rollout_stability_components,
+)
 from research.daily_coarse_graining.rollout_stability_run import (
     ARM_IDS,
     HARD_CONSTRAINT_FIELDS,
@@ -24,6 +27,7 @@ from research.daily_coarse_graining.rollout_stability_run import (
     _load_pickle,
     _load_rollout_resources,
     _objective_kwargs,
+    _tree_nonfinite_count,
     _trees_equal,
     build_arm_checkpoint,
     make_candidate_update_step,
@@ -71,6 +75,64 @@ def _compiled_args(parameters, optimizer, prepared, learning_rate):
         prepared.teacher_next_discrete_states,
         learning_rate,
     )
+
+
+def _make_per_sample_next_gradient_diagnostic(
+    *,
+    fast_day_weights,
+    undefined_loss_weight: float,
+    rematerialize: bool,
+    model_apply,
+    **objective_kwargs,
+):
+    def diagnose(
+        parameters,
+        initial_states,
+        initial_discrete_states,
+        sequences,
+        teacher_next_discrete_states,
+    ):
+        def one(inputs):
+            initial_state, initial_discrete, sequence, teacher_discrete = inputs
+
+            def objective(value):
+                components = rollout_stability_components(
+                    value,
+                    initial_state[None, :],
+                    jax.tree_util.tree_map(
+                        lambda item: item[None, ...],
+                        initial_discrete,
+                    ),
+                    jax.tree_util.tree_map(
+                        lambda item: item[None, ...],
+                        sequence,
+                    ),
+                    fast_day_weights=fast_day_weights,
+                    undefined_loss_weight=undefined_loss_weight,
+                    teacher_next_discrete_states=jax.tree_util.tree_map(
+                        lambda item: item[None, ...],
+                        teacher_discrete,
+                    ),
+                    rematerialize=rematerialize,
+                    model_apply=model_apply,
+                    **objective_kwargs,
+                )
+                return components.L_next
+
+            value, gradients = jax.value_and_grad(objective)(parameters)
+            return value, _tree_nonfinite_count(gradients)
+
+        return jax.lax.map(
+            one,
+            (
+                initial_states,
+                initial_discrete_states,
+                sequences,
+                teacher_next_discrete_states,
+            ),
+        )
+
+    return jax.jit(diagnose)
 
 
 def _smoke_schedule(horizon: int) -> Mapping[str, Any]:
@@ -238,12 +300,39 @@ def run_real_shard_smoke(
     )
     calibration_hard_counts = _hard_counts(calibration_components)
     if not bool(jax.device_get(first.update_applied)):
+        per_sample_diagnostic = _make_per_sample_next_gradient_diagnostic(
+            fast_day_weights=resources.fast_day_weights,
+            undefined_loss_weight=0.1,
+            rematerialize=rematerialize,
+            model_apply=resources.model_definition.apply,
+            **_objective_kwargs(resources, transition),
+        )
+        (
+            per_sample_values,
+            per_sample_nonfinite_counts,
+        ) = jax.device_get(
+            per_sample_diagnostic(
+                parameters,
+                prepared[0].initial_states,
+                prepared[0].initial_discrete_states,
+                prepared[0].sequence,
+                prepared[0].teacher_next_discrete_states,
+            )
+        )
+        bad_positions = np.flatnonzero(per_sample_nonfinite_counts)
         raise ValueError(
             "first smoke update failed closed: "
             f"{_failed_update_details(first)}, "
             "calibration_nonfinite_gradient_values="
             f"{np.asarray(calibration_nonfinite_counts).tolist()}, "
-            f"calibration_component_values={np.asarray(calibration_values).tolist()}"
+            f"calibration_component_values={np.asarray(calibration_values).tolist()}, "
+            f"per_sample_bad_positions={bad_positions.tolist()}, "
+            "per_sample_bad_start_indices="
+            f"{prepared[0].rollout_starts[bad_positions].tolist()}, "
+            "per_sample_bad_nonfinite_counts="
+            f"{np.asarray(per_sample_nonfinite_counts)[bad_positions].tolist()}, "
+            "per_sample_values="
+            f"{np.asarray(per_sample_values)[bad_positions].tolist()}"
         )
 
     second_args = _compiled_args(

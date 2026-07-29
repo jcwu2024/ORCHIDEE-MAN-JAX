@@ -133,6 +133,8 @@ class PreparedRolloutUpdate(NamedTuple):
     teacher_next_discrete_states: Any
     runtime: LandpointRuntime
     trace_signature: str
+    anchor_starts: np.ndarray
+    rollout_starts: np.ndarray
 
 
 def _sha256_file(path: Path) -> str:
@@ -740,6 +742,8 @@ def prepare_rollout_update(
         ),
         runtime=runtime,
         trace_signature=retained_tail_trace_signature(runtime.static),
+        anchor_starts=np.asarray(anchor_starts, dtype=np.int64),
+        rollout_starts=np.asarray(rollout_starts, dtype=np.int64),
     )
 
 
