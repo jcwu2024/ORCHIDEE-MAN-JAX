@@ -258,9 +258,13 @@ def run_real_shard_smoke(
         prepared[0],
         rate,
     )
-    compile_started = time.perf_counter()
-    executable = step.lower(*first_args).compile()
-    compile_seconds = time.perf_counter() - compile_started
+    if jax.config.jax_debug_nans:
+        executable = step
+        compile_seconds = None
+    else:
+        compile_started = time.perf_counter()
+        executable = step.lower(*first_args).compile()
+        compile_seconds = time.perf_counter() - compile_started
 
     first_started = time.perf_counter()
     first = executable(*first_args)
