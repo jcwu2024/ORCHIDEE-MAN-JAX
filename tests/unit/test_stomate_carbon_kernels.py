@@ -7,6 +7,7 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
+from jax.experimental import checkify
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -1455,6 +1456,73 @@ def test_npp_leaf_age_inactive_where_masks_nonfinite_allocation_tangent():
         )
     )(jnp.zeros_like(biomass), allocation_tangent)
 
+    for tangent in tangents:
+        assert np.all(np.isfinite(np.asarray(tangent)))
+        np.testing.assert_array_equal(
+            np.asarray(tangent),
+            np.zeros_like(np.asarray(tangent)),
+        )
+
+
+def test_npp_leaf_fraction_inactive_where_does_not_evaluate_nan_tangent():
+    npts, nvm = 1, 14
+    min_stomate = 1.0e-6
+    biomass = jnp.zeros((npts, nvm, NPARTS, 1), dtype=jnp.float64).at[
+        0,
+        PFT14,
+        ILEAF,
+        ICARBON,
+    ].set(min_stomate)
+    biomass_tangent = jnp.zeros_like(biomass).at[
+        0,
+        PFT14,
+        ILEAF,
+        ICARBON,
+    ].set(jnp.inf)
+    leaf_age = jnp.zeros((npts, nvm, NLEAFAGES), dtype=jnp.float64)
+    leaf_frac = jnp.zeros_like(leaf_age).at[0, PFT14, 0].set(1.0)
+    allocation = jnp.zeros_like(biomass)
+
+    def update(biomass_input):
+        result = npp_leaf_age_sla_age_update(
+            biomass_input,
+            biomass_input,
+            allocation,
+            leaf_age,
+            leaf_frac,
+            jnp.zeros((npts, nvm), dtype=jnp.float64),
+            jnp.zeros((npts, nvm), dtype=bool),
+            jnp.zeros(nvm, dtype=bool),
+            jnp.zeros((npts, nvm), dtype=jnp.float64),
+            jnp.zeros((npts, nvm), dtype=jnp.float64),
+            jnp.ones(nvm, dtype=jnp.float64) * 0.03,
+            jnp.ones(nvm, dtype=jnp.float64) * 0.01,
+            dt_days=1.0,
+            min_stomate=min_stomate,
+        )
+        return (
+            result.leaf_age,
+            result.leaf_frac,
+            result.sla_age1,
+            result.sla_calc,
+            result.age,
+        )
+
+    def directional_update(biomass_input, tangent):
+        return jax.jvp(
+            update,
+            (biomass_input,),
+            (tangent,),
+        )[1]
+
+    error, tangents = jax.jit(
+        checkify.checkify(
+            directional_update,
+            errors=checkify.float_checks,
+        )
+    )(biomass, biomass_tangent)
+
+    assert error.get() is None
     for tangent in tangents:
         assert np.all(np.isfinite(np.asarray(tangent)))
         np.testing.assert_array_equal(

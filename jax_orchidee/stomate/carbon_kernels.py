@@ -4042,11 +4042,32 @@ def npp_leaf_age_sla_age_update(
 
     leaf_mass = biomass[:, :, ILEAF, ICARBON]
     has_leaf = (leaf_mass > min_stomate) & active_pft[None, :]
-    safe_leaf_mass = jnp.where(leaf_mass != 0.0, leaf_mass, 1.0)
-    leaf_frac0 = jnp.where(has_leaf, leaf_mass_young / safe_leaf_mass, leaf_frac[:, :, 0])
+    safe_leaf_mass = jnp.where(has_leaf, leaf_mass, 1.0)
+    safe_leaf_mass_young_for_fraction = jnp.where(
+        has_leaf,
+        leaf_mass_young,
+        0.0,
+    )
+    safe_old_leaf_mass_for_fraction = jnp.where(
+        has_leaf,
+        lm_old,
+        0.0,
+    )
+    leaf_frac0 = jnp.where(
+        has_leaf,
+        safe_leaf_mass_young_for_fraction / safe_leaf_mass,
+        leaf_frac[:, :, 0],
+    )
+    safe_leaf_frac_tail = jnp.where(
+        has_leaf[:, :, None],
+        leaf_frac[:, :, 1:],
+        0.0,
+    )
     leaf_frac_tail = jnp.where(
         has_leaf[:, :, None],
-        leaf_frac[:, :, 1:] * lm_old[:, :, None] / safe_leaf_mass[:, :, None],
+        safe_leaf_frac_tail
+        * safe_old_leaf_mass_for_fraction[:, :, None]
+        / safe_leaf_mass[:, :, None],
         leaf_frac[:, :, 1:],
     )
     leaf_frac = jnp.concatenate((leaf_frac0[:, :, None], leaf_frac_tail), axis=2)
@@ -4090,9 +4111,16 @@ def npp_leaf_age_sla_age_update(
     )
     age_rescale = (bm_new > 0.0) & (bm_add > 0.0) & (~is_tree[None, :]) & active_pft[None, :]
     safe_bm_new = jnp.where(age_rescale, bm_new, 1.0)
+    safe_bm_add = jnp.where(age_rescale, bm_add, 0.0)
+    safe_age_for_rescale = jnp.where(age_rescale, age, 0.0)
+    rescaled_age = (
+        safe_age_for_rescale
+        * (safe_bm_new - safe_bm_add)
+        / safe_bm_new
+    )
     age = jnp.where(
         age_rescale,
-        age * (bm_new - bm_add) / safe_bm_new,
+        rescaled_age,
         age,
     )
 
