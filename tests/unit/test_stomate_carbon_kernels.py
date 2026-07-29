@@ -1104,6 +1104,54 @@ def test_allocation_step_matches_fortran_non_crop_pft14_stress_and_reserve_path(
     assert np.allclose(f_alloc[0, 0, :ICARBRES], 0.0)
 
 
+def test_allocation_step_inactive_zero_reserve_denominators_have_finite_gradients():
+    npts, nvm, nslm = 1, 14, 2
+    zeros_pft = np.zeros((npts, nvm), dtype=np.float64)
+    zeros_biomass = np.zeros((npts, nvm, NPARTS, 1), dtype=np.float64)
+    zeros_leaf_age = np.zeros(
+        (npts, nvm, NLEAFAGES),
+        dtype=np.float64,
+    )
+
+    def objective(sla_calc):
+        result = allocation_step(
+            lai=zeros_pft,
+            veget_max=zeros_pft,
+            senescence=np.zeros((npts, nvm), dtype=bool),
+            when_growthinit=zeros_pft,
+            moiavail_week=zeros_pft,
+            tsoil_month=np.full((npts, nslm), 273.15, dtype=np.float64),
+            soilhum_month=np.zeros((npts, nslm), dtype=np.float64),
+            biomass=zeros_biomass,
+            age=zeros_pft,
+            leaf_age=zeros_leaf_age,
+            leaf_frac=zeros_leaf_age,
+            z_soil=np.asarray([0.0, 1.0, 2.0], dtype=np.float64),
+            sla_calc=sla_calc,
+            natural=np.zeros(nvm, dtype=bool),
+            pasture=np.zeros(nvm, dtype=bool),
+            is_tree=np.zeros(nvm, dtype=bool),
+            ok_LAIdev=np.zeros(nvm, dtype=bool),
+            r0=np.full(nvm, 0.35, dtype=np.float64),
+            s0=np.full(nvm, 0.35, dtype=np.float64),
+            ext_coeff=np.full(nvm, 0.5, dtype=np.float64),
+            lai_max=np.full(nvm, 12.0, dtype=np.float64),
+            lai_max_to_happy=np.full(nvm, 0.5, dtype=np.float64),
+            tau_leafinit=np.zeros(nvm, dtype=np.float64),
+            alloc_min=np.full(nvm, 0.2, dtype=np.float64),
+            alloc_max=np.full(nvm, 0.8, dtype=np.float64),
+            demi_alloc=np.full(nvm, 100.0, dtype=np.float64),
+            alloc_agr_st=np.zeros(nvm, dtype=np.float64),
+            alloc_agr_pn=np.zeros(nvm, dtype=np.float64),
+        )
+        return jnp.sum(result.transloc_leaf)
+
+    gradient = jax.jit(jax.grad(objective))(zeros_pft)
+
+    assert np.all(np.isfinite(np.asarray(gradient)))
+    np.testing.assert_array_equal(np.asarray(gradient), zeros_pft)
+
+
 def test_npp_closed_update_matches_source_algebra_with_supplied_alloc_and_maintenance():
     biomass = np.zeros((1, 14, NPARTS, 1), dtype=np.float64)
     biomass[0, PFT14, ILEAF, ICARBON] = 100.0

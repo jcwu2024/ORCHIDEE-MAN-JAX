@@ -2771,10 +2771,23 @@ def allocation_step(
         & (lai < lai_happy[None, :])
         & (when_growthinit < reserve_time[None, :])
     )
-    reserve_demand = 2.0 * dt_days / tau_leafinit[None, :] * lai_happy[None, :] / sla_calc
+    safe_reserve_tau = jnp.where(reserve_active, tau_leafinit[None, :], 1.0)
+    safe_reserve_sla = jnp.where(reserve_active, sla_calc, 1.0)
+    reserve_demand = (
+        2.0
+        * dt_days
+        / safe_reserve_tau
+        * lai_happy[None, :]
+        / safe_reserve_sla
+    )
     use_reserve = jnp.where(reserve_active, jnp.minimum(biomass[:, :, ICARBRES, ICARBON], reserve_demand), 0.0)
-    leaf_share = l0 / (l0 + r0)
-    transloc_leaf = leaf_share[None, :] * use_reserve
+    safe_leaf_root_share = jnp.where(
+        reserve_active,
+        (l0 + r0)[None, :],
+        1.0,
+    )
+    leaf_share = l0[None, :] / safe_leaf_root_share
+    transloc_leaf = leaf_share * use_reserve
     biomass = biomass.at[:, :, ILEAF, ICARBON].add(transloc_leaf)
     biomass = biomass.at[:, :, IROOT, ICARBON].add(use_reserve - transloc_leaf)
     biomass = biomass.at[:, :, ICARBRES, ICARBON].add(-use_reserve)
@@ -2796,7 +2809,11 @@ def allocation_step(
             & (when_growthinit_cut < reserve_time_cut)
             & (lai < lai_happy[None, :])
         )
-        cut_demand = 2.0 * dt_days / tau_leafinit_cut * lai_happy_cut / sla_calc
+        safe_cut_tau = jnp.where(cut_active, tau_leafinit_cut, 1.0)
+        safe_cut_sla = jnp.where(cut_active, sla_calc, 1.0)
+        cut_demand = (
+            2.0 * dt_days / safe_cut_tau * lai_happy_cut / safe_cut_sla
+        )
         use_cut = jnp.where(cut_active, jnp.minimum(biomass[:, :, ICARBRES, ICARBON], cut_demand), 0.0)
         biomass = biomass.at[:, :, ILEAF, ICARBON].add(use_cut)
         biomass = biomass.at[:, :, ICARBRES, ICARBON].add(-use_cut)
