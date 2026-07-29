@@ -2330,6 +2330,7 @@ def run_screening_update_diagnostic(
     *,
     screening_update: int,
     rollout_sample_index: int | None = None,
+    rollout_prefix_length: int | None = None,
     component: str | None = None,
     execution_path: str | Path,
     protocol_path: str | Path,
@@ -2411,6 +2412,8 @@ def run_screening_update_diagnostic(
         model_apply=resources.model_definition.apply,
         **objective_kwargs,
     )
+    if rollout_prefix_length is not None and rollout_sample_index is None:
+        raise ValueError("rollout prefix length requires rollout sample index")
     if rollout_sample_index is not None:
         if component not in ("L_next", "L_rollout", "L_bias", "L_science"):
             raise ValueError(
@@ -2427,6 +2430,28 @@ def run_screening_update_diagnostic(
             lambda value: value[rollout_sample_index],
             prepared.sequence,
         )
+        sample_teacher_next_discrete_states = jax.tree_util.tree_map(
+            lambda value: value[rollout_sample_index],
+            prepared.teacher_next_discrete_states,
+        )
+        if rollout_prefix_length is not None:
+            if not 1 <= rollout_prefix_length <= horizon:
+                raise ValueError(
+                    "rollout prefix length must be within the selected horizon"
+                )
+            sample_sequence = jax.tree_util.tree_map(
+                lambda value: value[:rollout_prefix_length],
+                sample_sequence,
+            )
+            sample_teacher_next_discrete_states = jax.tree_util.tree_map(
+                lambda value: value[:rollout_prefix_length],
+                sample_teacher_next_discrete_states,
+            )
+        diagnostic_horizon = (
+            horizon
+            if rollout_prefix_length is None
+            else rollout_prefix_length
+        )
         sample_arguments = (
             parameters,
             sample_initial_state[None, :],
@@ -2439,10 +2464,8 @@ def run_screening_update_diagnostic(
                 sample_sequence,
             ),
             jax.tree_util.tree_map(
-                lambda value: value[
-                    rollout_sample_index : rollout_sample_index + 1
-                ],
-                prepared.teacher_next_discrete_states,
+                lambda value: value[None, ...],
+                sample_teacher_next_discrete_states,
             ),
         )
         result = jax.device_get(
@@ -2611,15 +2634,22 @@ def run_screening_update_diagnostic(
             starts=prepared.rollout_starts,
             horizon=horizon,
         )
-        day_indices = np.asarray(rollout_raw["day_index"])[rollout_sample_index]
+        day_indices = np.asarray(rollout_raw["day_index"])[
+            rollout_sample_index, :diagnostic_horizon
+        ]
         output_root = Path(output_root).resolve()
         output_root.mkdir(parents=True, exist_ok=True)
+        prefix_suffix = (
+            ""
+            if rollout_prefix_length is None
+            else f"_prefix_{rollout_prefix_length:02d}"
+        )
         return _atomic_json(
             output_root
             / (
                 "screening_update_"
                 f"{screening_update:05d}_sample_{rollout_sample_index:03d}_"
-                f"{component}.json"
+                f"{component}{prefix_suffix}.json"
             ),
             {
                 "schema_version": (
@@ -2643,6 +2673,8 @@ def run_screening_update_diagnostic(
                     "year": int(reference.year),
                     "reference_sha256": reference.sha256,
                     "rollout_sample_index": rollout_sample_index,
+                    "source_horizon": horizon,
+                    "diagnostic_horizon": diagnostic_horizon,
                     "start_zero_based": int(
                         prepared.rollout_starts[rollout_sample_index]
                     ),
@@ -3476,6 +3508,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--calibration-ordinal", type=int)
     parser.add_argument("--screening-update", type=int)
     parser.add_argument("--rollout-sample-index", type=int)
+    parser.add_argument("--rollout-prefix-length", type=int)
     parser.add_argument(
         "--component",
         choices=("L_next", "L_rollout", "L_bias", "L_science"),
@@ -3554,6 +3587,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         output = run_screening_update_diagnostic(
             screening_update=args.screening_update,
             rollout_sample_index=args.rollout_sample_index,
+            rollout_prefix_length=args.rollout_prefix_length,
             component=args.component,
             execution_path=args.execution,
             protocol_path=args.protocol,
