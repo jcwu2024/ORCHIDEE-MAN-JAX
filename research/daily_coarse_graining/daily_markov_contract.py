@@ -1793,6 +1793,68 @@ def reconstruct_retained_tail_forcing_day(
     )
 
 
+def reconstruct_retained_tail_forcing_batch(
+    windows: np.ndarray,
+    spec: NativeForcingSpec,
+    context,
+) -> RetainedTailCompiledForcing:
+    """Vectorize retained-tail forcing reconstruction over batch and horizon."""
+
+    windows = jnp.asarray(windows, dtype=jnp.float64)
+    if windows.ndim < 4 or windows.shape[-2:] != (
+        spec.source_records_per_day,
+        spec.width,
+    ):
+        raise ValueError("retained-tail forcing batch shape does not match contract")
+    batch_shape = windows.shape[:-2]
+    width = int(np.prod(spec.field_shape, dtype=np.int64))
+    raw = {
+        name: windows[
+            ...,
+            :,
+            index * width : (index + 1) * width,
+        ]
+        for index, name in enumerate(spec.fields)
+    }
+    offsets = jnp.arange(48, dtype=jnp.int32)
+    interval = offsets // int(spec.split)
+    substep = offsets % int(spec.split) + 1
+    previous_slot = interval
+    current_slot = interval + 1
+    weight = substep.astype(jnp.float64) / float(spec.split)
+
+    def linear(name: str) -> jnp.ndarray:
+        previous = raw[name][..., previous_slot, :]
+        current = raw[name][..., current_slot, :]
+        return previous + (current - previous) * weight[..., None]
+
+    def spread(name: str) -> jnp.ndarray:
+        current = raw[name][..., current_slot, :]
+        scale = jnp.where(
+            substep <= int(spec.precipitation_spread_steps),
+            float(spec.split) / float(spec.precipitation_spread_steps),
+            0.0,
+        )
+        return current * scale[..., None] * float(spec.model_interval_seconds)
+
+    first = context.first_step_bundle
+    salinity = jnp.asarray(first.static_trace_fields.salinity)
+    tide_height = jnp.asarray(first.static_trace_fields.tide_height)
+    return RetainedTailCompiledForcing(
+        temp_air=linear("Tair"),
+        precip_rain=spread("Rainf"),
+        precip_snow=spread("Snowf"),
+        salinity=jnp.broadcast_to(
+            salinity,
+            (*batch_shape, 48, *salinity.shape),
+        ),
+        tide_height=jnp.broadcast_to(
+            tide_height,
+            (*batch_shape, 48, *tide_height.shape),
+        ),
+    )
+
+
 def reconstruct_compiled_forcing_window(
     windows: np.ndarray,
     spec: NativeForcingSpec,

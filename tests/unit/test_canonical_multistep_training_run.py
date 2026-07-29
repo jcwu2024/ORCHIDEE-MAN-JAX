@@ -232,13 +232,13 @@ def test_compiled_forcing_batch_deduplicates_overlapping_calendar_days(
 ):
     calls = []
 
-    def reconstruct(native, _spec, _context):
-        calls.append(float(native[0, 0]))
-        return {"value": jnp.asarray([float(native[0, 0])])}
+    def reconstruct(windows, _spec, _context):
+        calls.append(np.asarray(windows).copy())
+        return {"value": jnp.asarray(windows[..., 0, :])}
 
     monkeypatch.setattr(
         canonical_multistep_training_run,
-        "reconstruct_retained_tail_forcing_day",
+        "reconstruct_retained_tail_forcing_batch",
         reconstruct,
     )
     batch = {
@@ -258,7 +258,8 @@ def test_compiled_forcing_batch_deduplicates_overlapping_calendar_days(
         object(),
     )
 
-    assert calls == [10.0, 11.0, 12.0, 13.0]
+    assert len(calls) == 1
+    assert np.array_equal(calls[0], batch["forcing_native"])
     assert result["value"].shape == (2, 3, 1)
     assert np.array_equal(
         np.asarray(result["value"][:, :, 0]),

@@ -50,7 +50,7 @@ from research.daily_coarse_graining.canonical_training_run import (
 )
 from research.daily_coarse_graining.daily_markov_contract import (
     daily_markov_contract_from_metadata,
-    reconstruct_retained_tail_forcing_day,
+    reconstruct_retained_tail_forcing_batch,
 )
 from research.daily_coarse_graining.daily_model_architecture import (
     CANONICAL_FLAT_V1,
@@ -239,9 +239,7 @@ def _compiled_forcing_batch(batch, contract, context):
     ):
         raise ValueError("compiled forcing batch calendar shape drift")
 
-    compiled_by_day = {}
     native_by_day = {}
-    values = []
     for batch_index in range(batch_size):
         for horizon_index in range(horizon):
             key = (
@@ -253,19 +251,12 @@ def _compiled_forcing_batch(batch, contract, context):
                 raise ValueError(
                     "duplicate compiled forcing calendar key has different native data"
                 )
-            if key not in compiled_by_day:
+            if key not in native_by_day:
                 native_by_day[key] = native
-                compiled_by_day[key] = reconstruct_retained_tail_forcing_day(
-                    native,
-                    contract.native_forcing,
-                    context,
-                )
-            values.append(compiled_by_day[key])
-    return jax.tree_util.tree_map(
-        lambda *items: jnp.stack(items).reshape(
-            (batch_size, horizon, *np.shape(items[0]))
-        ),
-        *values,
+    return reconstruct_retained_tail_forcing_batch(
+        forcing_native,
+        contract.native_forcing,
+        context,
     )
 
 

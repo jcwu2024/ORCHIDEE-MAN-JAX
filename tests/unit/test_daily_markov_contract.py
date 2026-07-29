@@ -639,6 +639,20 @@ def test_native_forcing_window_reconstructs_teacher_units_and_spreading(monkeypa
             np.asarray(getattr(retained, name)),
             np.asarray(getattr(result, name)),
         )
+    retained_batch = markov.reconstruct_retained_tail_forcing_batch(
+        np.stack([[window, window], [window, window]]),
+        spec,
+        context,
+    )
+    for name in retained._fields:
+        expected = np.broadcast_to(
+            np.asarray(getattr(retained, name)),
+            (2, 2, *np.shape(getattr(retained, name))),
+        )
+        np.testing.assert_array_equal(
+            np.asarray(getattr(retained_batch, name)),
+            expected,
+        )
 
     first_weight = 1.0 / 12.0
     expected_tair = raw_by_field["Tair"][0] + (
