@@ -50,7 +50,7 @@ from research.daily_coarse_graining.canonical_training_run import (
 )
 from research.daily_coarse_graining.daily_markov_contract import (
     daily_markov_contract_from_metadata,
-    reconstruct_compiled_forcing_window,
+    reconstruct_compiled_forcing_day,
 )
 from research.daily_coarse_graining.daily_model_architecture import (
     CANONICAL_FLAT_V1,
@@ -227,18 +227,48 @@ def _sample_batch(
 
 
 def _compiled_forcing_batch(batch, contract, context):
+    forcing_native = np.asarray(batch["forcing_native"])
+    years = np.asarray(batch["year"])
+    day_indices = np.asarray(batch["day_index"])
+    if forcing_native.ndim < 3:
+        raise ValueError("compiled forcing batch requires batch and horizon axes")
+    batch_size, horizon = forcing_native.shape[:2]
+    if years.shape != (batch_size, horizon) or day_indices.shape != (
+        batch_size,
+        horizon,
+    ):
+        raise ValueError("compiled forcing batch calendar shape drift")
+
+    compiled_by_day = {}
+    native_by_day = {}
     values = []
-    for index in range(batch["initial_state"].shape[0]):
-        values.append(
-            reconstruct_compiled_forcing_window(
-                batch["forcing_native"][index],
-                contract.native_forcing,
-                context,
-                years=batch["year"][index],
-                day_indices=batch["day_index"][index],
+    for batch_index in range(batch_size):
+        for horizon_index in range(horizon):
+            key = (
+                int(years[batch_index, horizon_index]),
+                int(day_indices[batch_index, horizon_index]),
             )
-        )
-    return jax.tree_util.tree_map(lambda *items: jnp.stack(items), *values)
+            native = forcing_native[batch_index, horizon_index]
+            if key in native_by_day and not np.array_equal(native_by_day[key], native):
+                raise ValueError(
+                    "duplicate compiled forcing calendar key has different native data"
+                )
+            if key not in compiled_by_day:
+                native_by_day[key] = native
+                compiled_by_day[key] = reconstruct_compiled_forcing_day(
+                    native,
+                    contract.native_forcing,
+                    context,
+                    year=key[0],
+                    day_index=key[1],
+                )
+            values.append(compiled_by_day[key])
+    return jax.tree_util.tree_map(
+        lambda *items: jnp.stack(items).reshape(
+            (batch_size, horizon, *np.shape(items[0]))
+        ),
+        *values,
+    )
 
 
 def _sequence(batch, compiled_forcing) -> CanonicalMultistepSequence:
@@ -263,13 +293,21 @@ def _make_runtime_and_compiled_forcing(
     config_path: Path,
     contract,
     batch,
+    timing: dict[str, float] | None = None,
 ) -> tuple[LandpointRuntime, Any]:
+    started = time.perf_counter()
     context = teacher.prepare_paper_1961_driver_context(
         config_path,
         used_run_def_path=entry["run_def"],
         reference_run_dir=entry["reference_run_dir"],
     )
+    if timing is not None:
+        timing["context"] = time.perf_counter() - started
+    started = time.perf_counter()
     compiled_forcing = _compiled_forcing_batch(batch, contract, context)
+    if timing is not None:
+        timing["compiled_forcing"] = time.perf_counter() - started
+    started = time.perf_counter()
     packet = _packet_from_canonical_state(
         batch["initial_state"][0],
         {name: value[0] for name, value in batch["initial_discrete_state"].items()},
@@ -290,6 +328,8 @@ def _make_runtime_and_compiled_forcing(
         static=static,
         runtime_year=1962,
     )
+    if timing is not None:
+        timing["runtime_static"] = time.perf_counter() - started
     del landpoint_id
     return (
         LandpointRuntime(context=context, transition=transition, static=static),

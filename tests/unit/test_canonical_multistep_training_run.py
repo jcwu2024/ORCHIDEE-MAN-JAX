@@ -1,14 +1,17 @@
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import pickle
+from types import SimpleNamespace
 
 import jax
 import jax.numpy as jnp
 import numpy as np
 import pytest
 
+from research.daily_coarse_graining import canonical_multistep_training_run
 from research.daily_coarse_graining.canonical_daily_model import (
     CanonicalModelConfig,
     initialize_canonical_model,
@@ -17,6 +20,7 @@ from research.daily_coarse_graining.canonical_multistep import (
     CanonicalMultistepSequence,
 )
 from research.daily_coarse_graining.canonical_multistep_training_run import (
+    _compiled_forcing_batch,
     _load_initial_parameters,
     _load_plan,
     _make_train_step,
@@ -221,6 +225,58 @@ def test_load_plan_rejects_wrong_canonical_hash(tmp_path):
 
     with pytest.raises(ValueError, match="generation plan hash"):
         _load_plan(path, "0" * 64)
+
+
+def test_compiled_forcing_batch_deduplicates_overlapping_calendar_days(
+    monkeypatch,
+):
+    calls = []
+
+    def reconstruct(native, _spec, _context, *, year, day_index):
+        calls.append((year, day_index))
+        return {
+            "value": jnp.asarray(
+                [float(year), float(day_index), float(native[0, 0])]
+            )
+        }
+
+    monkeypatch.setattr(
+        canonical_multistep_training_run,
+        "reconstruct_compiled_forcing_day",
+        reconstruct,
+    )
+    batch = {
+        "forcing_native": np.asarray(
+            [
+                [[[10.0]], [[11.0]], [[12.0]]],
+                [[[11.0]], [[12.0]], [[13.0]]],
+            ]
+        ),
+        "year": np.full((2, 3), 1962),
+        "day_index": np.asarray([[10, 11, 12], [11, 12, 13]]),
+    }
+
+    result = _compiled_forcing_batch(
+        batch,
+        SimpleNamespace(native_forcing=object()),
+        object(),
+    )
+
+    assert calls == [(1962, 10), (1962, 11), (1962, 12), (1962, 13)]
+    assert result["value"].shape == (2, 3, 3)
+    assert np.array_equal(
+        np.asarray(result["value"][:, :, 1]),
+        batch["day_index"],
+    )
+
+    changed = copy.deepcopy(batch)
+    changed["forcing_native"][1, 0, 0, 0] = 99.0
+    with pytest.raises(ValueError, match="different native data"):
+        _compiled_forcing_batch(
+            changed,
+            SimpleNamespace(native_forcing=object()),
+            object(),
+        )
 
 
 def test_compiled_multistep_train_step_updates_parameters_with_finite_gradient():

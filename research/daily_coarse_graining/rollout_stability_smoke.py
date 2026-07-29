@@ -460,8 +460,10 @@ def run_real_shard_smoke(
     checkpoints_seconds = time.perf_counter() - checkpoints_started
     prepared = []
     preparation_seconds = []
+    preparation_profiles = []
     for index, reference in enumerate(selected):
         preparation_started = time.perf_counter()
+        profile = {}
         item = prepare_rollout_update(
             reference=reference,
             update=index,
@@ -470,7 +472,9 @@ def run_real_shard_smoke(
             rollout_batch_size=rollout_batch_size,
             seed=seed,
             resources=resources,
+            timing=profile,
         )
+        device_ready_started = time.perf_counter()
         jax.block_until_ready(
             (
                 item.anchor_batch,
@@ -480,8 +484,10 @@ def run_real_shard_smoke(
                 item.teacher_next_discrete_states,
             )
         )
+        profile["device_ready"] = time.perf_counter() - device_ready_started
         prepared.append(item)
         preparation_seconds.append(time.perf_counter() - preparation_started)
+        preparation_profiles.append(profile)
     signatures = [item.trace_signature for item in prepared]
     if signatures[0] != signatures[1]:
         raise ValueError(
@@ -734,6 +740,7 @@ def run_real_shard_smoke(
             "parent_checkpoints": checkpoints_seconds,
             "per_landpoint": preparation_seconds,
             "total_per_landpoint": float(sum(preparation_seconds)),
+            "stage_profiles": preparation_profiles,
         },
         "compile_seconds": compile_seconds,
         "first_update_seconds": first_seconds,

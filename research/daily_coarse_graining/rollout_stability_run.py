@@ -695,12 +695,17 @@ def prepare_rollout_update(
     resources: RolloutStabilityResources,
     runtime: LandpointRuntime | None = None,
     runtime_cache: dict[str, LandpointRuntime] | None = None,
+    timing: dict[str, float] | None = None,
 ) -> PreparedRolloutUpdate:
     """Materialize one deterministic update without using validation/test data."""
 
     if reference.spatial_split != "train" or reference.temporal_split != "train":
         raise ValueError("rollout-stability training attempted to use non-train data")
+    started = time.perf_counter()
     shard = load_markov_shard(reference.path)
+    if timing is not None:
+        timing["load_shard"] = time.perf_counter() - started
+    started = time.perf_counter()
     anchor_starts, rollout_starts = sample_start_indices(
         shard_days=shard.days,
         update=update,
@@ -709,6 +714,9 @@ def prepare_rollout_update(
         rollout_batch_size=rollout_batch_size,
         seed=seed,
     )
+    if timing is not None:
+        timing["sample_starts"] = time.perf_counter() - started
+    started = time.perf_counter()
     anchor_raw = _collate_shard_windows(
         shard,
         starts=anchor_starts,
@@ -719,7 +727,10 @@ def prepare_rollout_update(
         starts=rollout_starts,
         horizon=horizon,
     )
+    if timing is not None:
+        timing["collate"] = time.perf_counter() - started
     compiled_forcing = None
+    started = time.perf_counter()
     if runtime is None:
         if runtime_cache is not None:
             runtime = runtime_cache.get(reference.landpoint_id)
@@ -730,6 +741,7 @@ def prepare_rollout_update(
                 config_path=resources.config_path,
                 contract=resources.contract,
                 batch=rollout_raw,
+                timing=timing,
             )
             if runtime_cache is not None:
                 runtime_cache[reference.landpoint_id] = runtime
@@ -739,13 +751,21 @@ def prepare_rollout_update(
             resources.contract,
             runtime.context,
         )
+        if timing is not None:
+            timing["compiled_forcing"] = time.perf_counter() - started
+    if timing is not None:
+        timing["runtime_and_forcing"] = time.perf_counter() - started
+    started = time.perf_counter()
     retained_inputs = broadcast_retained_tail_day_inputs(
         compiled_forcing,
         runtime.static,
         batch_size=rollout_batch_size,
         horizon=horizon,
     )
-    return PreparedRolloutUpdate(
+    if timing is not None:
+        timing["broadcast_retained_inputs"] = time.perf_counter() - started
+    started = time.perf_counter()
+    prepared = PreparedRolloutUpdate(
         anchor_batch=_anchor_training_batch(anchor_raw, resources),
         initial_states=jnp.asarray(rollout_raw["initial_state"]),
         initial_discrete_states=jax.tree_util.tree_map(
@@ -762,6 +782,9 @@ def prepare_rollout_update(
         anchor_starts=np.asarray(anchor_starts, dtype=np.int64),
         rollout_starts=np.asarray(rollout_starts, dtype=np.int64),
     )
+    if timing is not None:
+        timing["package"] = time.perf_counter() - started
+    return prepared
 
 
 def prepare_anchor_update(
