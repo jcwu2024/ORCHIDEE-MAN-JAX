@@ -4738,6 +4738,41 @@ def test_vmax_step_applies_n_limfert_for_lai_dev_or_global_nlim_and_dgvm_evergre
     assert np.allclose(np.asarray(nlim.vcmax)[0, 2], 50.0 * 0.25 * efficiency)
 
 
+def test_vmax_empty_leaf_classes_have_finite_age_and_fraction_gradients():
+    npts, nvm = 1, 14
+    empty = np.zeros((npts, nvm, NLEAFAGES), dtype=np.float64)
+    leaf_timecst = np.ones(nvm, dtype=np.float64)
+    leaf_timecst[0] = 0.0
+    leafagecrit = np.ones(nvm, dtype=np.float64)
+    leafagecrit[0] = 0.0
+
+    def objective(leaf_age, leaf_frac):
+        result = vmax_step(
+            leaf_age=leaf_age,
+            leaf_frac=leaf_frac,
+            vcmax25=np.zeros(nvm, dtype=np.float64),
+            n_limfert=np.ones((npts, nvm), dtype=np.float64),
+            leaf_timecst=leaf_timecst,
+            leafagecrit=leafagecrit,
+            pheno_type=np.zeros(nvm, dtype=np.int32),
+            leaf_tab=np.zeros(nvm, dtype=np.int32),
+            ok_laidev=np.zeros(nvm, dtype=bool),
+            dt_days=1.0,
+        )
+        return (
+            jnp.sum(result.leaf_age)
+            + jnp.sum(result.leaf_frac)
+            + jnp.sum(result.vcmax)
+        )
+
+    age_gradient, fraction_gradient = jax.jit(
+        jax.grad(objective, argnums=(0, 1))
+    )(empty, empty)
+
+    assert np.all(np.isfinite(np.asarray(age_gradient)))
+    assert np.all(np.isfinite(np.asarray(fraction_gradient)))
+
+
 def test_harvest_agri_step_reduces_non_natural_non_peat_turnover_only():
     npts, nvm = 1, 4
     veget_max = np.asarray([[0.0, 0.5, 0.25, 0.75]], dtype=np.float64)

@@ -7757,28 +7757,44 @@ def vmax_step(
     leaf_age = jnp.where(positive_fraction, leaf_age + dt_days, leaf_age)
 
     zero_leaf_class = jnp.zeros_like(leaf_frac[:, :, :1])
+    safe_leaf_timecst = jnp.where(
+        pft_active_axis,
+        leaf_timecst[None, :, None],
+        1.0,
+    )
     d_leaf_frac = jnp.concatenate(
         (
             zero_leaf_class,
-            leaf_frac[:, :, : NLEAFAGES - 1] * dt_days / leaf_timecst[None, :, None],
+            leaf_frac[:, :, : NLEAFAGES - 1]
+            * dt_days
+            / safe_leaf_timecst,
         ),
         axis=2,
     )
     d_leaf_frac = jnp.where(pft_active_axis, d_leaf_frac, 0.0)
 
     denom_mid = leaf_frac[:, :, 1 : NLEAFAGES - 1] + d_leaf_frac[:, :, 1 : NLEAFAGES - 1] - d_leaf_frac[:, :, 2:NLEAFAGES]
+    update_mid = (
+        d_leaf_frac[:, :, 1 : NLEAFAGES - 1] > min_stomate
+    )
+    safe_denom_mid = jnp.where(update_mid, denom_mid, 1.0)
     updated_mid = (
         (leaf_frac[:, :, 1 : NLEAFAGES - 1] - d_leaf_frac[:, :, 2:NLEAFAGES])
         * leaf_age[:, :, 1 : NLEAFAGES - 1]
         + d_leaf_frac[:, :, 1 : NLEAFAGES - 1] * leaf_age[:, :, : NLEAFAGES - 2]
-    ) / denom_mid
+    ) / safe_denom_mid
     denom_last = leaf_frac[:, :, NLEAFAGES - 1] + d_leaf_frac[:, :, NLEAFAGES - 1]
+    update_last = d_leaf_frac[:, :, NLEAFAGES - 1] > min_stomate
+    safe_denom_last = jnp.where(update_last, denom_last, 1.0)
     updated_last = (
         leaf_frac[:, :, NLEAFAGES - 1] * leaf_age[:, :, NLEAFAGES - 1]
         + d_leaf_frac[:, :, NLEAFAGES - 1] * leaf_age[:, :, NLEAFAGES - 2]
-    ) / denom_last
+    ) / safe_denom_last
     updated_tail = jnp.concatenate((updated_mid, updated_last[:, :, None]), axis=2)
-    update_tail = d_leaf_frac[:, :, 1:NLEAFAGES] > min_stomate
+    update_tail = jnp.concatenate(
+        (update_mid, update_last[:, :, None]),
+        axis=2,
+    )
     leaf_age = jnp.concatenate(
         (
             leaf_age[:, :, :1],
@@ -7802,7 +7818,16 @@ def vmax_step(
     updated_frac = jnp.where(sumfrac[:, :, None] > min_stomate, normalized, 0.0)
     leaf_frac = jnp.where(pft_active_axis, updated_frac, leaf_frac)
 
-    rel_age = leaf_age / leafagecrit[None, :, None]
+    evergreen_dgvm = jnp.asarray(ok_dgvm, dtype=bool) & (pheno_type == 1) & (leaf_tab == 2)
+    efficiency_active = pft_active_axis & (
+        ~evergreen_dgvm[None, :, None]
+    )
+    safe_leafagecrit = jnp.where(
+        efficiency_active,
+        leafagecrit[None, :, None],
+        1.0,
+    )
+    rel_age = leaf_age / safe_leafagecrit
     leaf_efficiency = jnp.maximum(
         vmax_offset,
         jnp.minimum(
@@ -7813,9 +7838,8 @@ def vmax_step(
             ),
         ),
     )
-    evergreen_dgvm = jnp.asarray(ok_dgvm, dtype=bool) & (pheno_type == 1) & (leaf_tab == 2)
     leaf_efficiency_all = jnp.where(
-        pft_active_axis & (~evergreen_dgvm[None, :, None]),
+        efficiency_active,
         leaf_efficiency,
         0.0,
     )
