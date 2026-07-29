@@ -83,6 +83,7 @@ class CurriculumStage:
 class LandpointRuntime:
     context: Any
     transition: Any
+    static: Mapping[str, Any]
 
 
 def _sha256_file(path: Path) -> str:
@@ -290,7 +291,7 @@ def _make_runtime(
         runtime_year=1962,
     )
     del landpoint_id
-    return LandpointRuntime(context=context, transition=transition)
+    return LandpointRuntime(context=context, transition=transition, static=static)
 
 
 def _make_train_step(

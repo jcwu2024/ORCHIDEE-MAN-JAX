@@ -1,0 +1,447 @@
+from __future__ import annotations
+
+import copy
+import hashlib
+import json
+import pickle
+from collections import namedtuple
+from pathlib import Path
+from types import SimpleNamespace
+
+import numpy as np
+import pytest
+
+from research.daily_coarse_graining.canonical_training_run import (
+    CHECKPOINT_SCHEMA_VERSION,
+)
+from research.daily_coarse_graining.daily_model_architecture import (
+    AXIS_PROCESS_COUPLED_V1,
+)
+from research.daily_coarse_graining.markov_dataset import (
+    MarkovDatasetIndex,
+    MarkovShardRef,
+)
+from research.daily_coarse_graining.rollout_stability_protocol import (
+    RolloutStabilityProtocol,
+    load_rollout_stability_protocol,
+)
+from research.daily_coarse_graining.rollout_stability_run import (
+    ARM_CHECKPOINT_SCHEMA_VERSION,
+    CALIBRATION_SCHEMA_VERSION,
+    EXECUTION_MANIFEST_SCHEMA_VERSION,
+    PREFLIGHT_SCHEMA_VERSION,
+    broadcast_retained_tail_day_inputs,
+    build_arm_checkpoint,
+    build_sampling_schedule,
+    calibrate_gradient_coefficients,
+    completed_horizon_counts,
+    create_execution_manifest,
+    retained_tail_trace_signature,
+    sample_start_indices,
+    verify_arm_checkpoint,
+    verify_parent_architecture_assets,
+)
+
+ROOT = Path(__file__).resolve().parents[2]
+PROTOCOL_PATH = (
+    ROOT
+    / "manifests"
+    / "coarse_graining"
+    / "canonical_669_rollout_stability_protocol.json"
+)
+ValueTuple = namedtuple("ValueTuple", ("value",))
+
+
+def _canonical_digest(value):
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+
+def _small_protocol(*, updates: int = 10) -> RolloutStabilityProtocol:
+    loaded = load_rollout_stability_protocol(PROTOCOL_PATH)
+    raw = copy.deepcopy(loaded.raw)
+    raw["optimization"]["screening_updates"] = updates
+    return RolloutStabilityProtocol(
+        path=loaded.path,
+        raw=raw,
+        sha256=f"test-{updates}",
+    )
+
+
+def _index(tmp_path: Path) -> MarkovDatasetIndex:
+    references = []
+    for landpoint in ("001.0-001.0", "002.0-002.0", "003.0-003.0"):
+        for year in range(1961, 1965):
+            references.append(
+                MarkovShardRef(
+                    landpoint_id=landpoint,
+                    year=year,
+                    spatial_split="train",
+                    temporal_split="train",
+                    path=tmp_path / f"{landpoint}-{year}.npz",
+                    sha256=f"{landpoint}-{year}",
+                    contract_sha256="contract",
+                )
+            )
+    references.append(
+        MarkovShardRef(
+            landpoint_id="test",
+            year=2008,
+            spatial_split="test",
+            temporal_split="test",
+            path=tmp_path / "sealed.npz",
+            sha256="sealed",
+            contract_sha256="contract",
+        )
+    )
+    return MarkovDatasetIndex("dataset", "teacher", "contract", tuple(references))
+
+
+def test_sampling_schedule_is_balanced_deterministic_and_exact_horizon_mix(tmp_path):
+    protocol = _small_protocol(updates=10)
+    first = build_sampling_schedule(_index(tmp_path), protocol)
+    second = build_sampling_schedule(_index(tmp_path), protocol)
+
+    assert first == second
+    assert first["horizon_counts"] == {"1": 4, "3": 3, "7": 2, "30": 1}
+    assert first["landpoint_update_count_min"] == 3
+    assert first["landpoint_update_count_max"] == 4
+    assert all(
+        item["landpoint_id"] != "test" for item in first["reference_inventory"]
+    )
+    assert len(first["entries"]) == 10
+
+
+def test_sample_start_indices_are_restart_reconstructible_and_without_replacement():
+    first = sample_start_indices(
+        shard_days=365,
+        update=17,
+        horizon=30,
+        anchor_batch_size=256,
+        rollout_batch_size=8,
+        seed=20260728,
+    )
+    second = sample_start_indices(
+        shard_days=365,
+        update=17,
+        horizon=30,
+        anchor_batch_size=256,
+        rollout_batch_size=8,
+        seed=20260728,
+    )
+
+    assert all(np.array_equal(left, right) for left, right in zip(first, second))
+    assert np.unique(first[0]).size == 256
+    assert np.unique(first[1]).size == 8
+    assert np.max(first[1]) < 365 - 30 + 1
+
+
+def test_gradient_calibration_uses_paired_median_ratios_and_skips_zero_rollout():
+    protocol = _small_protocol()
+    records = []
+    for horizon in (1, 3, 7, 30):
+        for batch in range(32):
+            records.append(
+                {
+                    "horizon": horizon,
+                    "batch": batch,
+                    "gradient_norms": {
+                        "L_fast": 2.0,
+                        "L_next": 4.0,
+                        "L_rollout": 0.0 if horizon == 1 else 1.0,
+                        "L_bias": 0.5,
+                        "L_science": 2.0,
+                    },
+                }
+            )
+
+    calibration = calibrate_gradient_coefficients(records, protocol)
+
+    assert calibration["resolved_coefficients"] == {
+        "L_next": 0.5,
+        "L_rollout": 2.0,
+        "L_bias": 1.0,
+        "L_science": 0.5,
+    }
+    assert calibration["component_audit"]["L_rollout"][
+        "positive_ratio_records"
+    ] == 96
+    assert len(calibration["canonical_sha256"]) == 64
+
+    with pytest.raises(ValueError, match="horizon 30 count drift"):
+        calibrate_gradient_coefficients(records[:-1], protocol)
+
+
+def _retained_static():
+    return {
+        "metadata": SimpleNamespace(
+            pref_soil_veg=np.asarray([1.0, 2.0]),
+            lalo=np.asarray([[3.0, 4.0]]),
+            nstm=11,
+            is_tree=np.asarray([False, True]),
+            is_peat=np.asarray([False, False]),
+            npts=1,
+        ),
+        "stomate_parameter_values": {"value": np.asarray([2.0])},
+        "hydrol_table_arrays": ValueTuple(value=np.asarray([3.0])),
+        "landpoint_payload": {"value": np.asarray([4.0])},
+        "stomate_restart_template": ValueTuple(value=np.asarray([5.0])),
+        "stomate_season_values": {"value": np.asarray([6.0])},
+        "diffuco_parameter_values": ValueTuple(value=np.asarray([7.0])),
+        "mineral_imin": 1,
+        "mineral_imax": 11,
+        "daily_carbon_dispatch": {"enabled": True, "mode": "compiled"},
+        "season": SimpleNamespace(provenance=("restart",)),
+    }
+
+
+def test_dynamic_retained_tail_inputs_broadcast_without_landpoint_static_closure():
+    forcing = {"air_temperature": np.ones((3, 7, 48, 1))}
+    inputs = broadcast_retained_tail_day_inputs(
+        forcing,
+        _retained_static(),
+        batch_size=3,
+        horizon=7,
+    )
+
+    assert inputs.compiled_forcing is forcing
+    assert inputs.metadata.pref_soil_veg.shape == (3, 7, 2)
+    assert inputs.metadata.lalo.shape == (3, 7, 1, 2)
+    assert inputs.stomate_parameter_values["value"].shape == (3, 7, 1)
+    assert np.all(np.asarray(inputs.metadata.pref_soil_veg[:, :, 0]) == 1.0)
+
+    with pytest.raises(ValueError, match="batch and horizon axes"):
+        broadcast_retained_tail_day_inputs(
+            {"forcing": np.ones((2, 7, 1))},
+            _retained_static(),
+            batch_size=3,
+            horizon=7,
+        )
+
+
+def test_trace_signature_changes_only_when_bound_dispatch_changes():
+    first = _retained_static()
+    second = copy.deepcopy(first)
+    second["metadata"].pref_soil_veg[:] = 99.0
+    second["metadata"].lalo[:] = -10.0
+    second["stomate_parameter_values"]["value"][:] = 8.0
+
+    assert retained_tail_trace_signature(first) == retained_tail_trace_signature(
+        second
+    )
+    second["daily_carbon_dispatch"]["mode"] = "different"
+    assert retained_tail_trace_signature(first) != retained_tail_trace_signature(
+        second
+    )
+
+
+def test_arm_checkpoint_binds_exact_schedule_progress_and_rejects_drift(tmp_path):
+    schedule = build_sampling_schedule(_index(tmp_path), _small_protocol(updates=10))
+    identity = {"protocol_sha256": "protocol", "calibration_sha256": "calibration"}
+    checkpoint = build_arm_checkpoint(
+        arm_id="mixed_horizon_stability_v1",
+        identity=identity,
+        parameters={"weight": np.asarray([1.0])},
+        optimizer={"step": np.asarray(4)},
+        next_update=4,
+        schedule=schedule,
+        history=[{"update": 4}],
+    )
+
+    assert checkpoint["schema_version"] == ARM_CHECKPOINT_SCHEMA_VERSION
+    assert checkpoint["completed_horizon_counts"] == completed_horizon_counts(
+        schedule,
+        next_update=4,
+    )
+    verify_arm_checkpoint(
+        checkpoint,
+        arm_id="mixed_horizon_stability_v1",
+        identity=identity,
+        schedule=schedule,
+    )
+
+    changed = copy.deepcopy(checkpoint)
+    changed["next_update"] = 5
+    with pytest.raises(ValueError, match="horizon-count drift"):
+        verify_arm_checkpoint(
+            changed,
+            arm_id="mixed_horizon_stability_v1",
+            identity=identity,
+            schedule=schedule,
+        )
+    changed = copy.deepcopy(checkpoint)
+    changed["schedule_canonical_sha256"] = "drift"
+    with pytest.raises(ValueError, match="schedule drift"):
+        verify_arm_checkpoint(
+            changed,
+            arm_id="mixed_horizon_stability_v1",
+            identity=identity,
+            schedule=schedule,
+        )
+
+
+def test_execution_manifest_binds_calibration_parent_schedule_and_environment(
+    tmp_path,
+):
+    protocol = load_rollout_stability_protocol(PROTOCOL_PATH)
+    schedule = {
+        "canonical_sha256": "schedule-canonical",
+        "entries": [],
+        "horizon_counts": {"1": 0, "3": 0, "7": 0, "30": 0},
+    }
+    schedule_path = tmp_path / "schedule.json"
+    schedule_path.write_text(json.dumps(schedule), encoding="utf-8")
+    records_path = tmp_path / "records.json"
+    records_path.write_text("{}", encoding="utf-8")
+    parent_sha = "parent-best"
+    preflight = {
+        "schema_version": PREFLIGHT_SCHEMA_VERSION,
+        "status": "awaiting_coefficient_calibration",
+        "protocol": {"path": str(PROTOCOL_PATH), "sha256": protocol.sha256},
+        "parent_architecture": {
+            "report": {"path": "report", "sha256": "report"},
+            "best_checkpoint": {"path": "best", "sha256": parent_sha},
+            "optimizer_checkpoint": {"path": "optimizer", "sha256": "optimizer"},
+            "model_architecture": {"id": AXIS_PROCESS_COUPLED_V1},
+        },
+        "artifacts": {
+            "dataset_manifest": {"path": "dataset", "sha256": "dataset"},
+            "training_statistics": {"path": "statistics", "sha256": "statistics"},
+            "acceptance_report": {"path": "acceptance", "sha256": "acceptance"},
+            "training_protocol": {"path": "training", "sha256": "training"},
+            "environment_lock": {"path": "lock", "sha256": "lock"},
+            "sampling_schedule": {
+                "path": str(schedule_path),
+                "sha256": hashlib.sha256(schedule_path.read_bytes()).hexdigest(),
+                "canonical_sha256": schedule["canonical_sha256"],
+            },
+        },
+        "accepted_identity": {},
+        "optimizer_update_budget": 8192,
+        "screening_seed": 20260728,
+        "output_root": str(tmp_path),
+        "sealed_test_used": False,
+    }
+    preflight_path = tmp_path / "preflight.json"
+    preflight_path.write_text(json.dumps(preflight), encoding="utf-8")
+    calibration = {
+        "schema_version": CALIBRATION_SCHEMA_VERSION,
+        "status": "passed",
+        "protocol_sha256": protocol.sha256,
+        "train_only": True,
+        "resolved_coefficients": {
+            "L_next": 1.0,
+            "L_rollout": 2.0,
+            "L_bias": 0.25,
+            "L_science": 0.5,
+        },
+        "records": {
+            "path": str(records_path),
+            "sha256": hashlib.sha256(records_path.read_bytes()).hexdigest(),
+        },
+        "parent_best_checkpoint_sha256": parent_sha,
+    }
+    calibration["canonical_sha256"] = _canonical_digest(calibration)
+    calibration_path = tmp_path / "calibration.json"
+    calibration_path.write_text(json.dumps(calibration), encoding="utf-8")
+
+    execution_path = create_execution_manifest(
+        preflight_path=preflight_path,
+        calibration_path=calibration_path,
+        protocol_path=PROTOCOL_PATH,
+        output_root=tmp_path,
+    )
+    execution = json.loads(execution_path.read_text(encoding="utf-8"))
+
+    assert execution["schema_version"] == EXECUTION_MANIFEST_SCHEMA_VERSION
+    assert execution["status"] == "ready_for_matched_arm_training"
+    assert execution["artifacts"]["environment_lock"]["sha256"] == "lock"
+    assert execution["same_anchor_batches"] is True
+    assert execution["sealed_test_used"] is False
+    assert execution["coefficient_calibration"]["resolved_coefficients"] == (
+        calibration["resolved_coefficients"]
+    )
+
+
+def _write_parent_assets(tmp_path: Path):
+    identity = {"model_architecture": {"id": AXIS_PROCESS_COUPLED_V1}}
+    parameters = {"weight": np.asarray([1.0, 2.0], dtype=np.float32)}
+    best = tmp_path / "best.pkl"
+    best.write_bytes(
+        pickle.dumps(
+            {
+                "schema_version": CHECKPOINT_SCHEMA_VERSION,
+                "identity": identity,
+                "parameters": parameters,
+                "epoch": 1,
+            }
+        )
+    )
+    optimizer = tmp_path / "checkpoint.pkl"
+    optimizer.write_bytes(
+        pickle.dumps(
+            {
+                "schema_version": CHECKPOINT_SCHEMA_VERSION,
+                "identity": identity,
+                "parameters": parameters,
+                "optimizer": {"step": np.asarray(1)},
+                "completed_epochs": 1,
+            }
+        )
+    )
+    return best, optimizer
+
+
+def test_parent_assets_require_passed_report_matching_best_parameters_and_optimizer(
+    tmp_path,
+):
+    protocol = load_rollout_stability_protocol(PROTOCOL_PATH)
+    best, optimizer = _write_parent_assets(tmp_path)
+    best_sha = hashlib.sha256(best.read_bytes()).hexdigest()
+    report = {
+        "schema_version": "canonical_architecture_ab_report_v1",
+        "status": "completed",
+        "experiment": {
+            "sha256": protocol.raw["parent_architecture_screen"][
+                "experiment_canonical_sha256"
+            ]
+        },
+        "classification": {
+            "status": "passed",
+            "decision": "advance_axis_process_to_rollout_stability_experiment",
+        },
+        "arms": {
+            "axis_process": {
+                "model_architecture": {"id": AXIS_PROCESS_COUPLED_V1},
+                "test_split_evaluated": False,
+                "best_checkpoint_sha256": best_sha,
+                "best_epoch": 1,
+            }
+        },
+    }
+    report_path = tmp_path / "report.json"
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+
+    accepted = verify_parent_architecture_assets(
+        protocol=protocol,
+        report_path=report_path,
+        best_checkpoint_path=best,
+        optimizer_checkpoint_path=optimizer,
+    )
+
+    assert accepted["report"]["decision"] == (
+        "advance_axis_process_to_rollout_stability_experiment"
+    )
+    assert accepted["best_checkpoint"]["sha256"] == best_sha
+
+    changed = pickle.loads(optimizer.read_bytes())
+    changed["parameters"] = {"weight": np.asarray([9.0, 2.0], dtype=np.float32)}
+    optimizer.write_bytes(pickle.dumps(changed))
+    with pytest.raises(ValueError, match="best parameters differ"):
+        verify_parent_architecture_assets(
+            protocol=protocol,
+            report_path=report_path,
+            best_checkpoint_path=best,
+            optimizer_checkpoint_path=optimizer,
+        )

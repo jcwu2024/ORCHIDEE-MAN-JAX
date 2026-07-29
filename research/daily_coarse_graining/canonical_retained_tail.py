@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from contextlib import ExitStack
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, NamedTuple
 from unittest.mock import patch
 
 import jax
@@ -26,6 +26,47 @@ from research.daily_coarse_graining.daily_markov_contract import (
 from research.daily_coarse_graining.gradient_training_ready import (
     deterministic_boundary_fields,
 )
+
+
+class CanonicalRetainedTailMetadataInputs(NamedTuple):
+    """Numerical metadata that genuinely varies between compatible landpoints."""
+
+    pref_soil_veg: Any
+    lalo: Any
+
+
+class CanonicalRetainedTailDayInputs(NamedTuple):
+    """All landpoint-varying leaves consumed by one retained daily tail."""
+
+    compiled_forcing: Any
+    metadata: CanonicalRetainedTailMetadataInputs
+    stomate_parameter_values: Any
+    hydrol_table_arrays: Any
+    landpoint_payload: Any
+    stomate_restart_template: Any
+    stomate_season_values: Any
+    diffuco_parameter_values: Any
+
+
+def canonical_retained_tail_day_inputs(
+    compiled_forcing,
+    static: Mapping[str, Any],
+) -> CanonicalRetainedTailDayInputs:
+    """Move every array-valued landpoint dependency into one stable PyTree."""
+
+    return CanonicalRetainedTailDayInputs(
+        compiled_forcing=compiled_forcing,
+        metadata=CanonicalRetainedTailMetadataInputs(
+            pref_soil_veg=static["metadata"].pref_soil_veg,
+            lalo=static["metadata"].lalo,
+        ),
+        stomate_parameter_values=static["stomate_parameter_values"],
+        hydrol_table_arrays=static["hydrol_table_arrays"],
+        landpoint_payload=static["landpoint_payload"],
+        stomate_restart_template=static["stomate_restart_template"],
+        stomate_season_values=static["stomate_season_values"],
+        diffuco_parameter_values=static["diffuco_parameter_values"],
+    )
 
 
 def _retained_tail_fast_target(
@@ -69,21 +110,25 @@ def _retained_tail_fast_target(
     return target
 
 
-def canonical_retained_tail_transition(
+def canonical_retained_tail_dynamic_transition(
     continuous_state,
     discrete_state: Mapping[str, Any],
     physical_fast_day_target,
-    compiled_forcing,
+    day_inputs: CanonicalRetainedTailDayInputs,
     year,
     day_index,
     *,
     config_path: Path,
     context,
     contract: DailyMarkovContract,
-    static: Mapping[str, Any],
+    mineral_imin: int,
+    mineral_imax: int,
+    daily_carbon_dispatch: Mapping[str, Any],
+    metadata: Any,
+    season_provenance: Any,
     runtime_year: int,
 ):
-    """Advance one canonical day without crossing a NumPy or host boundary.
+    """Advance one canonical day with all landpoint-varying arrays explicit.
 
     The executable uses a normalized later-day lifecycle (`tstep=47`,
     `start_tstep=48`) exactly like the accepted dynamic replay scan. The
@@ -107,7 +152,7 @@ def canonical_retained_tail_transition(
     )
     retained_target = _retained_tail_fast_target(
         physical_fast_day_target,
-        compiled_forcing,
+        day_inputs.compiled_forcing,
         contract,
         context,
     )
@@ -116,9 +161,17 @@ def canonical_retained_tail_transition(
         contract.fast_day_target_leaves,
         template_fields=fields,
     )
+    dynamic_metadata = teacher.DriverRuntimeStepMetadata(
+        pref_soil_veg=day_inputs.metadata.pref_soil_veg,
+        nstm=metadata.nstm,
+        is_tree=metadata.is_tree,
+        is_peat=metadata.is_peat,
+        lalo=day_inputs.metadata.lalo,
+        npts=metadata.npts,
+    )
     transition, daily_fold, ok_leak = _runtime_boundary(
         boundary,
-        metadata=static["metadata"],
+        metadata=dynamic_metadata,
         end_tstep=95,
     )
     ok_leak_updates = teacher._paper_half_hour_ok_leak_state_updates(ok_leak)
@@ -168,24 +221,24 @@ def canonical_retained_tail_transition(
             use_compiled_sechiba_day=True,
             prebound_hydrol_runtime_static_tables=teacher.HydrolRuntimeStaticTables(
                 mineral=teacher.MineralCWRRTables(
-                    **static["hydrol_table_arrays"]._asdict(),
-                    imin=static["mineral_imin"],
-                    imax=static["mineral_imax"],
+                    **day_inputs.hydrol_table_arrays._asdict(),
+                    imin=mineral_imin,
+                    imax=mineral_imax,
                 ),
                 peat=None,
             ),
             materialize_compiled_entries=False,
-            outer_compiled_daily_carbon_dispatch=static["daily_carbon_dispatch"],
-            compiled_forcing_series=compiled_forcing,
+            outer_compiled_daily_carbon_dispatch=daily_carbon_dispatch,
+            compiled_forcing_series=day_inputs.compiled_forcing,
             model_day_number=day_index,
-            compiled_stomate_parameter_values=static["stomate_parameter_values"],
-            compiled_landpoint_payload=static["landpoint_payload"],
-            compiled_stomate_restart_template=static["stomate_restart_template"],
+            compiled_stomate_parameter_values=day_inputs.stomate_parameter_values,
+            compiled_landpoint_payload=day_inputs.landpoint_payload,
+            compiled_stomate_restart_template=day_inputs.stomate_restart_template,
             compiled_stomate_season_template=teacher.StomateRestartSeasonState(
-                **static["stomate_season_values"],
-                provenance=static["season"].provenance,
+                **day_inputs.stomate_season_values,
+                provenance=season_provenance,
             ),
-            compiled_diffuco_parameter_values=static["diffuco_parameter_values"],
+            compiled_diffuco_parameter_values=day_inputs.diffuco_parameter_values,
         )
     if result.day_end_state is None:
         raise RuntimeError(
@@ -196,6 +249,80 @@ def canonical_retained_tail_transition(
         result.day_end_state.fields_by_component,
         contract,
     )
+
+
+def canonical_retained_tail_transition(
+    continuous_state,
+    discrete_state: Mapping[str, Any],
+    physical_fast_day_target,
+    compiled_forcing,
+    year,
+    day_index,
+    *,
+    config_path: Path,
+    context,
+    contract: DailyMarkovContract,
+    static: Mapping[str, Any],
+    runtime_year: int,
+):
+    """Backward-compatible transition with a trace-static landpoint bundle."""
+
+    return canonical_retained_tail_dynamic_transition(
+        continuous_state,
+        discrete_state,
+        physical_fast_day_target,
+        canonical_retained_tail_day_inputs(compiled_forcing, static),
+        year,
+        day_index,
+        config_path=config_path,
+        context=context,
+        contract=contract,
+        mineral_imin=int(static["mineral_imin"]),
+        mineral_imax=int(static["mineral_imax"]),
+        daily_carbon_dispatch=static["daily_carbon_dispatch"],
+        metadata=static["metadata"],
+        season_provenance=static["season"].provenance,
+        runtime_year=runtime_year,
+    )
+
+
+def bind_canonical_retained_tail_dynamic_transition(
+    *,
+    config_path: Path,
+    context,
+    contract: DailyMarkovContract,
+    trace_static: Mapping[str, Any],
+    runtime_year: int,
+):
+    """Bind only shape/control identity; landpoint arrays remain call inputs."""
+
+    def transition(
+        continuous_state,
+        discrete_state,
+        physical_fast_day_target,
+        day_inputs,
+        year,
+        day_index,
+    ):
+        return canonical_retained_tail_dynamic_transition(
+            continuous_state,
+            discrete_state,
+            physical_fast_day_target,
+            day_inputs,
+            year,
+            day_index,
+            config_path=config_path,
+            context=context,
+            contract=contract,
+            mineral_imin=int(trace_static["mineral_imin"]),
+            mineral_imax=int(trace_static["mineral_imax"]),
+            daily_carbon_dispatch=trace_static["daily_carbon_dispatch"],
+            metadata=trace_static["metadata"],
+            season_provenance=trace_static["season"].provenance,
+            runtime_year=runtime_year,
+        )
+
+    return transition
 
 
 def bind_canonical_retained_tail_transition(

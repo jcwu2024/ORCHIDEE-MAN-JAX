@@ -181,9 +181,10 @@ def canonical_multistep_rollout(
     state_loss_weight: float = 1.0,
     state_increment_loss_weight: float = 0.0,
     undefined_loss_weight: float = 0.1,
+    rematerialize: bool = False,
     model_apply: Callable = canonical_model_apply,
 ) -> CanonicalMultistepResult:
-    """Roll out a 1/3/7-day chain and differentiate through every day boundary.
+    """Roll out a fixed-horizon chain and differentiate through every boundary.
 
     ``retained_tail_transition`` owns the source-backed daily season/STOMATE
     update. It receives physical ``B_fast`` values and must return canonical
@@ -312,8 +313,9 @@ def canonical_multistep_rollout(
         )
         return next_carry, outputs
 
+    scan_body = jax.checkpoint(body) if rematerialize else body
     final_carry, steps = jax.lax.scan(
-        body,
+        scan_body,
         CanonicalRolloutCarry(initial_state, initial_discrete_state),
         sequence,
     )
@@ -345,6 +347,7 @@ def canonical_multistep_batch_loss(
     state_loss_weight: float = 1.0,
     state_increment_loss_weight: float = 0.0,
     undefined_loss_weight: float = 0.1,
+    rematerialize: bool = False,
     model_apply: Callable = canonical_model_apply,
 ):
     """Average recursive loss for a same-runtime batch of trajectory windows."""
@@ -364,6 +367,7 @@ def canonical_multistep_batch_loss(
             state_loss_weight=state_loss_weight,
             state_increment_loss_weight=state_increment_loss_weight,
             undefined_loss_weight=undefined_loss_weight,
+            rematerialize=rematerialize,
             model_apply=model_apply,
         ).loss
 

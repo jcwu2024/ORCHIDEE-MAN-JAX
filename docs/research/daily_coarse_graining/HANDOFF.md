@@ -1,6 +1,6 @@
 # Daily Coarse-Graining Handoff
 
-Snapshot date: 2026-07-28
+Snapshot date: 2026-07-29
 
 This is the single operational handoff page for the daily coarse-graining
 research branch. Read this page before dated experiment reports. Stable
@@ -17,9 +17,10 @@ scientific and release facts remain authoritative in
    through Slurm.
 4. Confirm the admitted 669-point dataset and frozen architecture-screen
    hashes below. Do not regenerate Teacher data or reuse nine-point assets.
-5. Treat architecture job `14403674` as accepted parent evidence. The next
-   work is implementing and locally gating the frozen rollout-stability
-   protocol; do not submit Experiment B before that implementation is ready.
+5. Treat architecture job `14403674` as accepted parent evidence. The frozen
+   rollout-stability implementation now passes its local gates. Run the
+   two-train-landpoint real-shard GPU smoke next; do not submit paid
+   Experiment B before that report passes.
 
 ```bash
 git status --short --branch
@@ -653,14 +654,41 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-Implement the frozen mixed-horizon and tendency-bias protocol described in
+Run the real-shard GPU gate for the frozen mixed-horizon and tendency-bias
+implementation described in
 [`long_rollout_architecture_review_20260727.md`](long_rollout_architecture_review_20260727.md).
-The implementation must consume the accepted axis/process checkpoint above,
-calibrate loss coefficients from train/train data only, preserve the matched
-one-step continuation control, checkpoint horizon-sampler state, and pass a
-real-shard forward/reverse/restart smoke. Only then estimate resources and
-request approval for the paid Experiment B screen. Do not inspect the sealed
-test split or begin 365-day/complete-chain validation at this stage.
+The local implementation now:
+
+- preserves one identical batch-256 one-step anchor in both arms and adds only
+  `L_next/L_rollout/L_bias/L_science` to the candidate;
+- keeps landpoint arrays in a stable dynamic PyTree and keys JIT reuse by
+  horizon/rematerialization/static-dispatch signature, not landpoint ID;
+- calibrates coefficients from 32 paired train/train batches per horizon;
+- checkpoints exact schedule SHA, `next_update`, and completed horizon counts;
+- fails closed without changing parameters or Adam state on any hard
+  constraint violation;
+- passes local objective, rematerialization, dynamic-input, matched-update,
+  schedule-drift, and exact checkpoint-resume tests.
+
+The real-shard gate is
+`research.daily_coarse_graining.rollout_stability_smoke`. It must use two
+different train landpoints with one compiled executable, finite component
+gradients, zero hard counts, and exact checkpoint-resume results. The accepted
+server inputs are:
+
+```text
+runtime/outputs/training/pft14-daily-teacher-669-1961-2010-v5-7397d1e-w100/dataset_manifest.json
+runtime/outputs/acceptance/pft14-daily-teacher-669-1961-2010-v5-7397d1e-w100-final-20260728-r2/training_statistics.json
+runtime/outputs/training/canonical-669-architecture-ab-4c1fe0c/axis_process/best_checkpoint.pkl
+runtime/outputs/training/canonical-669-architecture-ab-4c1fe0c/axis_process/checkpoint.pkl
+```
+
+Their hashes remain the frozen protocol hashes, including optimizer checkpoint
+SHA256 `c516c8fb96f169cf2101e94375d2c4f96809c6f69e497e0ddb8913ff7498d3b5`.
+No paid Experiment B job has been submitted. After the smoke passes, measure
+compile/hot update time and peak GPU memory, estimate calibration and 8,192
+update costs, then request explicit paid-job approval. Do not inspect the
+sealed test split or begin 365-day/complete-chain validation at this stage.
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).

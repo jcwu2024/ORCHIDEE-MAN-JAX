@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-07-28.
+Last updated: 2026-07-29.
 
 This page is the current status authority. Dated files under
 `docs/source_audits/` and `docs/research/` are evidence snapshots and may
@@ -423,3 +423,15 @@ Experiment B runs only if the parent decision is exactly
 `advance_axis_process_to_rollout_stability_experiment`; a rejected architecture
 returns to a named architecture hypothesis rather than silently applying the
 stability objective to the flat model.
+
+The Experiment B training implementation is now locally complete pending its
+real-shard GPU gate. It provides deterministic balanced update schedules,
+matched one-step anchors for both arms, dynamic landpoint retained-tail
+PyTrees, `1/3/7/30`-day compiled transitions, train-only paired gradient-norm
+coefficient calibration, hard fail-closed state constraints, immutable
+execution manifests, and exact `next_update` checkpoint recovery. Compilation
+is keyed by horizon, rematerialization mode, and static dispatch signature
+rather than landpoint identity. Local objective, update, schedule, dynamic
+input, checkpoint, and resume tests pass. No Experiment B paid job has been
+submitted; the next gate is the two-train-landpoint real-shard
+forward/reverse/restart smoke.
