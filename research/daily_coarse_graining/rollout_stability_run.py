@@ -1906,6 +1906,169 @@ def run_calibration_update_smoke(
     )
 
 
+def run_screening_update_diagnostic(
+    *,
+    screening_update: int,
+    execution_path: str | Path,
+    protocol_path: str | Path,
+    dataset_path: str | Path,
+    statistics_path: str | Path,
+    output_root: str | Path,
+    plan_path: str | Path | None = None,
+) -> Path:
+    """Evaluate one frozen screening update from the unchanged parent state."""
+
+    protocol = load_rollout_stability_protocol(protocol_path)
+    execution_path = Path(execution_path).resolve()
+    execution = json.loads(execution_path.read_text(encoding="utf-8"))
+    if execution.get("schema_version") != EXECUTION_MANIFEST_SCHEMA_VERSION:
+        raise ValueError("unsupported diagnostic execution schema")
+    if execution.get("status") != "ready_for_matched_arm_training":
+        raise ValueError("diagnostic execution is not ready")
+    if execution.get("protocol", {}).get("sha256") != protocol.sha256:
+        raise ValueError("diagnostic execution protocol drift")
+    if execution.get("sealed_test_used") is not False:
+        raise ValueError("diagnostic execution used the sealed test split")
+    dataset_path = Path(dataset_path).resolve()
+    statistics_path = Path(statistics_path).resolve()
+    for name, path in (
+        ("dataset_manifest", dataset_path),
+        ("training_statistics", statistics_path),
+    ):
+        expected = execution["artifacts"][name]["sha256"]
+        if _sha256_file(path) != expected:
+            raise ValueError(f"screening update diagnostic {name} drift")
+    calibration = execution["coefficient_calibration"]
+    if _sha256_file(Path(calibration["path"])) != calibration["sha256"]:
+        raise ValueError("screening update diagnostic calibration drift")
+    schedule_info = execution["artifacts"]["sampling_schedule"]
+    schedule_path = Path(schedule_info["path"]).resolve()
+    if _sha256_file(schedule_path) != schedule_info["sha256"]:
+        raise ValueError("screening update diagnostic schedule drift")
+    schedule = json.loads(schedule_path.read_text(encoding="utf-8"))
+    if schedule.get("canonical_sha256") != schedule_info["canonical_sha256"]:
+        raise ValueError("screening update diagnostic schedule identity drift")
+    entries = schedule["entries"]
+    if not 0 <= screening_update < len(entries):
+        raise ValueError("screening update diagnostic index is outside the schedule")
+    entry = entries[screening_update]
+    if int(entry["update"]) != screening_update:
+        raise ValueError("screening update diagnostic order drift")
+    reference = _reference_from_inventory(
+        schedule["reference_inventory"],
+        int(entry["reference_index"]),
+    )
+    horizon = int(entry["horizon"])
+    spec = _horizon_spec(protocol, horizon)
+
+    resources = _load_rollout_resources(
+        dataset_path=dataset_path,
+        statistics_path=statistics_path,
+        plan_path=None if plan_path is None else Path(plan_path),
+    )
+    prepared = prepare_rollout_update(
+        reference=reference,
+        update=screening_update,
+        horizon=horizon,
+        anchor_batch_size=int(protocol.raw["optimization"]["anchor_batch_size"]),
+        rollout_batch_size=int(spec["batch_size"]),
+        seed=int(protocol.raw["optimization"]["screening_seed"]),
+        resources=resources,
+    )
+    parameters, optimizer = _initial_arm_state(
+        execution=execution,
+        resources=resources,
+    )
+    transition = _bind_dynamic_transition(resources, prepared.runtime)
+    objective_kwargs = _objective_kwargs(resources, transition)
+    undefined_weight = float(protocol.raw["loss"]["undefined_flip_binary_weight"])
+    calibration_step = make_coefficient_calibration_step(
+        fast_day_weights=resources.fast_day_weights,
+        undefined_loss_weight=undefined_weight,
+        rematerialize=bool(spec["rematerialize"]),
+        model_apply=resources.model_definition.apply,
+        **objective_kwargs,
+    )
+    values, gradient_norms, nonfinite_counts, components = jax.device_get(
+        calibration_step(
+            parameters,
+            prepared.anchor_batch,
+            prepared.initial_states,
+            prepared.initial_discrete_states,
+            prepared.sequence,
+            prepared.teacher_next_discrete_states,
+        )
+    )
+    component_names = ("L_fast", "L_next", "L_rollout", "L_bias", "L_science")
+    component_gradients = {
+        name: {
+            "value": float(values[index]),
+            "gradient_norm": float(gradient_norms[index]),
+            "nonfinite_gradient_values": int(nonfinite_counts[index]),
+        }
+        for index, name in enumerate(component_names)
+    }
+    candidate_step = make_candidate_update_step(
+        coefficients=calibration["resolved_coefficients"],
+        fast_day_weights=resources.fast_day_weights,
+        undefined_loss_weight=undefined_weight,
+        rematerialize=bool(spec["rematerialize"]),
+        model_apply=resources.model_definition.apply,
+        **objective_kwargs,
+    )
+    result = candidate_step(
+        parameters,
+        optimizer,
+        prepared.anchor_batch,
+        prepared.initial_states,
+        prepared.initial_discrete_states,
+        prepared.sequence,
+        prepared.teacher_next_discrete_states,
+        jnp.asarray(
+            protocol.raw["optimization"]["learning_rate"],
+            dtype=jnp.float32,
+        ),
+    )
+    output_root = Path(output_root).resolve()
+    output_root.mkdir(parents=True, exist_ok=True)
+    return _atomic_json(
+        output_root / f"screening_update_diagnostic_{screening_update:05d}.json",
+        {
+            "schema_version": "canonical_rollout_screening_update_diagnostic_v1",
+            "status": "completed",
+            "diagnostic_git_head": _current_git_head(),
+            "source_training_git_head": execution["training_git_head"],
+            "protocol_sha256": protocol.sha256,
+            "source_execution": {
+                "path": str(execution_path),
+                "sha256": _sha256_file(execution_path),
+                "canonical_sha256": execution["canonical_sha256"],
+            },
+            "sealed_test_used": False,
+            "parameter_source": "unchanged_parent_checkpoint_and_optimizer",
+            "selection": {
+                "screening_update": screening_update,
+                "horizon": horizon,
+                "landpoint_id": reference.landpoint_id,
+                "year": int(reference.year),
+                "reference_sha256": reference.sha256,
+                "rollout_batch_size": int(spec["batch_size"]),
+            },
+            "component_gradients": component_gradients,
+            "components": _component_record(components),
+            "weighted_candidate": {
+                "coefficients": calibration["resolved_coefficients"],
+                "loss": float(jax.device_get(result.loss)),
+                "gradient_norm": float(jax.device_get(result.gradient_norm)),
+                "nonfinite_gradient_values": int(
+                    jax.device_get(result.nonfinite_gradient_values)
+                ),
+                "update_applied": bool(jax.device_get(result.update_applied)),
+            },
+        },
+    )
+
+
 def create_execution_manifest(
     *,
     preflight_path: str | Path,
@@ -2421,6 +2584,7 @@ def _parser() -> argparse.ArgumentParser:
             "calibrate",
             "diagnose-calibration",
             "smoke-calibration-update",
+            "diagnose-screening-update",
             "manifest",
             "arm",
         ),
@@ -2443,6 +2607,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--environment-lock", type=Path)
     parser.add_argument("--skip-dataset-hash-verification", action="store_true")
     parser.add_argument("--calibration-ordinal", type=int)
+    parser.add_argument("--screening-update", type=int)
     return parser
 
 
@@ -2506,6 +2671,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         output = run_calibration_update_smoke(
             calibration_ordinal=args.calibration_ordinal,
             preflight_path=args.preflight,
+            protocol_path=args.protocol,
+            dataset_path=args.dataset,
+            statistics_path=args.statistics,
+            output_root=args.output_root,
+            plan_path=args.plan,
+        )
+    elif args.phase == "diagnose-screening-update":
+        _require_args(args, ("execution", "screening_update"))
+        output = run_screening_update_diagnostic(
+            screening_update=args.screening_update,
+            execution_path=args.execution,
             protocol_path=args.protocol,
             dataset_path=args.dataset,
             statistics_path=args.statistics,
