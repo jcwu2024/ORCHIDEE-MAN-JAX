@@ -13,12 +13,15 @@ import traceback
 from collections import defaultdict
 from pathlib import Path
 from typing import Any, Mapping, NamedTuple, Sequence
+from unittest.mock import patch
 
 import jax
 import jax.numpy as jnp
 import numpy as np
 from jax.experimental import checkify
 
+from jax_orchidee.driver import orchestration as teacher
+from jax_orchidee.stomate.daily_inputs import MIN_STOMATE
 from research.daily_coarse_graining.canonical_daily_model import (
     masked_huber_loss,
     parameter_count,
@@ -111,6 +114,11 @@ HARD_CONSTRAINT_FIELDS = (
 COUNT_COMPONENT_FIELDS = (
     *HARD_CONSTRAINT_FIELDS,
     "declared_dynamic_status_mismatches",
+)
+MIN_STOMATE_DAILY_CARBON_OWNERS = (
+    "prescribe",
+    "allocation",
+    "post_npp_chain",
 )
 
 
@@ -1529,6 +1537,57 @@ def _bind_dynamic_transition(
     )
 
 
+def _daily_carbon_min_stomate_variant(bundles, enabled_owners: Sequence[str]):
+    """Override only the three daily-carbon threshold consumers for diagnosis."""
+
+    enabled = frozenset(enabled_owners)
+    unknown = enabled.difference(MIN_STOMATE_DAILY_CARBON_OWNERS)
+    if unknown:
+        raise ValueError(f"unknown min_stomate daily-carbon owners: {sorted(unknown)}")
+
+    def inputs_for(owner: str, values: Mapping[str, Any]) -> dict[str, Any]:
+        return {
+            **dict(values),
+            "min_stomate": MIN_STOMATE if owner in enabled else 0.0,
+        }
+
+    return bundles._replace(
+        prescribe_inputs=inputs_for("prescribe", bundles.prescribe_inputs),
+        alloc_inputs=inputs_for("allocation", bundles.alloc_inputs),
+        post_npp_inputs=inputs_for("post_npp_chain", bundles.post_npp_inputs),
+    )
+
+
+def _bind_min_stomate_variant_transition(
+    resources: RolloutStabilityResources,
+    runtime: LandpointRuntime,
+    enabled_owners: Sequence[str],
+):
+    """Bind one diagnostic threshold variant without changing production wiring."""
+
+    base_transition = _bind_dynamic_transition(resources, runtime)
+    original_builder = teacher.stomate_restart_input_bundles
+    enabled = tuple(enabled_owners)
+
+    def variant_builder(*args, **kwargs):
+        return _daily_carbon_min_stomate_variant(
+            original_builder(*args, **kwargs),
+            enabled,
+        )
+
+    def transition(*args, **kwargs):
+        # The orchestration call is traced while this replacement is active;
+        # the compiled executable contains the selected threshold constants.
+        with patch.object(
+            teacher,
+            "stomate_restart_input_bundles",
+            variant_builder,
+        ):
+            return base_transition(*args, **kwargs)
+
+    return transition
+
+
 def _bind_dynamic_ad_boundary_transition(
     resources: RolloutStabilityResources,
     runtime: LandpointRuntime,
@@ -1540,6 +1599,135 @@ def _bind_dynamic_ad_boundary_transition(
         trace_static=runtime.static,
         runtime_year=1962,
     )
+
+
+def _state_variant_metrics(
+    actual,
+    expected,
+    *,
+    resources: RolloutStabilityResources,
+) -> Mapping[str, Any]:
+    """Summarize one physical next-state comparison by canonical owner leaf."""
+
+    actual = np.asarray(actual)
+    expected = np.asarray(expected)
+    actual_defined = defined_numeric_mask(actual)
+    expected_defined = defined_numeric_mask(expected)
+    common = actual_defined & expected_defined
+    scale = np.asarray(resources.statistics.arrays["state"].scale)
+    normalized_error = np.where(common, (actual - expected) / scale, 0.0)
+    absolute = np.abs(normalized_error)
+    huber = np.where(
+        absolute <= 1.0,
+        0.5 * normalized_error**2,
+        absolute - 0.5,
+    )
+    weights = np.asarray(resources.process_weighting.weights)
+    weighted_mask = common.astype(np.float64) * weights
+    denominator = max(float(np.sum(weighted_mask)), 1.0e-12)
+    weighted_huber = float(np.sum(huber * weighted_mask) / denominator)
+
+    changed_leaves = []
+    for leaf in resources.contract.state_leaves:
+        if leaf.discrete:
+            continue
+        selected = slice(leaf.start, leaf.stop)
+        leaf_actual = actual[selected]
+        leaf_expected = expected[selected]
+        leaf_common = common[selected]
+        leaf_difference = leaf_actual - leaf_expected
+        changed = (
+            int(np.count_nonzero(leaf_difference[leaf_common] != 0.0))
+            if np.any(leaf_common)
+            else 0
+        )
+        status_mismatches = int(
+            np.count_nonzero(
+                actual_defined[selected] != expected_defined[selected]
+            )
+        )
+        if changed == 0 and status_mismatches == 0:
+            continue
+        leaf_normalized = normalized_error[selected]
+        changed_leaves.append(
+            {
+                "key": leaf.key,
+                "component": leaf.component,
+                "source_ref": leaf.source_ref,
+                "changed_common_values": changed,
+                "defined_status_mismatches": status_mismatches,
+                "maximum_absolute_physical_difference": (
+                    float(np.max(np.abs(leaf_difference[leaf_common])))
+                    if np.any(leaf_common)
+                    else None
+                ),
+                "maximum_absolute_normalized_difference": (
+                    float(np.max(np.abs(leaf_normalized[leaf_common])))
+                    if np.any(leaf_common)
+                    else None
+                ),
+                "normalized_rmse": (
+                    float(
+                        np.sqrt(
+                            np.mean(leaf_normalized[leaf_common] ** 2)
+                        )
+                    )
+                    if np.any(leaf_common)
+                    else None
+                ),
+            }
+        )
+    changed_leaves.sort(
+        key=lambda item: (
+            item["defined_status_mismatches"],
+            (
+                -1.0
+                if item["maximum_absolute_normalized_difference"] is None
+                else item["maximum_absolute_normalized_difference"]
+            ),
+        ),
+        reverse=True,
+    )
+    return {
+        "weighted_huber_state_loss": weighted_huber,
+        "normalized_rmse": (
+            float(np.sqrt(np.mean(normalized_error[common] ** 2)))
+            if np.any(common)
+            else None
+        ),
+        "maximum_absolute_physical_difference": (
+            float(np.max(np.abs(actual[common] - expected[common])))
+            if np.any(common)
+            else None
+        ),
+        "defined_status_mismatches": int(
+            np.count_nonzero(actual_defined != expected_defined)
+        ),
+        "changed_leaf_count": len(changed_leaves),
+        "changed_leaves": changed_leaves,
+    }
+
+
+def _discrete_variant_metrics(
+    actual: Mapping[str, Any],
+    expected: Mapping[str, Any],
+) -> Mapping[str, Any]:
+    records = {}
+    total = 0
+    for name in sorted(expected):
+        mismatch = int(
+            np.count_nonzero(
+                np.asarray(actual[name]) != np.asarray(expected[name])
+            )
+        )
+        records[name] = mismatch
+        total += mismatch
+    return {
+        "total_mismatches": total,
+        "mismatches_by_field": {
+            name: count for name, count in records.items() if count
+        },
+    }
 
 
 def verify_parent_architecture_assets(
@@ -2538,6 +2726,7 @@ def run_screening_update_diagnostic(
     rollout_sample_index: int | None = None,
     rollout_prefix_length: int | None = None,
     detached_next_day: bool = False,
+    min_stomate_isolation: bool = False,
     component: str | None = None,
     execution_path: str | Path,
     protocol_path: str | Path,
@@ -2623,8 +2812,22 @@ def run_screening_update_diagnostic(
         raise ValueError("rollout prefix length requires rollout sample index")
     if detached_next_day and rollout_sample_index is None:
         raise ValueError("detached next-day diagnostic requires rollout sample index")
+    if min_stomate_isolation and rollout_sample_index is None:
+        raise ValueError("min_stomate isolation requires rollout sample index")
+    if min_stomate_isolation and (
+        rollout_prefix_length is not None
+        or detached_next_day
+        or component is not None
+    ):
+        raise ValueError(
+            "min_stomate isolation does not accept component, prefix, "
+            "or detached-next-day diagnostics"
+        )
     if rollout_sample_index is not None:
-        if component not in ("L_next", "L_rollout", "L_bias", "L_science"):
+        if (
+            not min_stomate_isolation
+            and component not in ("L_next", "L_rollout", "L_bias", "L_science")
+        ):
             raise ValueError(
                 "narrow screening diagnostic requires one rollout component"
             )
@@ -2677,6 +2880,189 @@ def run_screening_update_diagnostic(
                 sample_teacher_next_discrete_states,
             ),
         )
+        if min_stomate_isolation:
+            day = jax.tree_util.tree_map(
+                lambda value: value[0],
+                sample_sequence,
+            )
+
+            def predict_fast_day(value, state):
+                inference = prepare_canonical_inference_batch_compiled(
+                    {
+                        "state": state[None, :],
+                        "forcing_native": day.forcing_native[None, ...],
+                        "parameters": day.parameters[None, ...],
+                        "landpoint_static": day.landpoint_static[None, ...],
+                        "annual_conditions": day.annual_conditions[None, ...],
+                        "year": day.year[None],
+                        "day_index": day.day_index[None],
+                    },
+                    resources.statistics,
+                    resources.representation,
+                )
+                prediction = resources.model_definition.apply(
+                    value,
+                    inference.model_input,
+                )
+                return restore_fast_day_inference_prediction_compiled(
+                    prediction.normalized_fast_day_target,
+                    prediction.dynamic_undefined_flip_logits,
+                    inference,
+                    resources.statistics,
+                    resources.representation,
+                )[0]
+
+            physical_fast_day = jax.device_get(
+                jax.jit(predict_fast_day)(
+                    parameters,
+                    sample_initial_state,
+                )
+            )
+            variants = {
+                "legacy_zero": (),
+                "prescribe_only": ("prescribe",),
+                "allocation_only": ("allocation",),
+                "post_npp_chain_only": ("post_npp_chain",),
+                "fortran_all": MIN_STOMATE_DAILY_CARBON_OWNERS,
+            }
+            teacher_next_state = np.asarray(
+                sample_sequence.teacher_next_state[0]
+            )
+            teacher_next_discrete = jax.tree_util.tree_map(
+                lambda value: value[0],
+                sample_teacher_next_discrete_states,
+            )
+            variant_states = {}
+            variant_records = {}
+            for variant_id, enabled_owners in variants.items():
+                variant_transition = _bind_min_stomate_variant_transition(
+                    resources,
+                    prepared.runtime,
+                    enabled_owners,
+                )
+                next_state, next_discrete = jax.device_get(
+                    jax.jit(variant_transition)(
+                        sample_initial_state,
+                        sample_initial_discrete_state,
+                        physical_fast_day,
+                        day.retained_tail_inputs,
+                        day.year,
+                        day.day_index,
+                    )
+                )
+                variant_states[variant_id] = np.asarray(next_state)
+                variant_records[variant_id] = {
+                    "enabled_owners": list(enabled_owners),
+                    "against_stored_teacher": _state_variant_metrics(
+                        next_state,
+                        teacher_next_state,
+                        resources=resources,
+                    ),
+                    "discrete_against_stored_teacher": (
+                        _discrete_variant_metrics(
+                            next_discrete,
+                            teacher_next_discrete,
+                        )
+                    ),
+                }
+            legacy_state = variant_states["legacy_zero"]
+            for variant_id, state in variant_states.items():
+                variant_records[variant_id]["against_legacy_zero"] = (
+                    _state_variant_metrics(
+                        state,
+                        legacy_state,
+                        resources=resources,
+                    )
+                )
+
+            output_root = Path(output_root).resolve()
+            output_root.mkdir(parents=True, exist_ok=True)
+            return _atomic_json(
+                output_root
+                / (
+                    "screening_update_"
+                    f"{screening_update:05d}_sample_"
+                    f"{rollout_sample_index:03d}_min_stomate_isolation.json"
+                ),
+                {
+                    "schema_version": (
+                        "canonical_rollout_min_stomate_isolation_v1"
+                    ),
+                    "status": "completed",
+                    "diagnostic_git_head": _current_git_head(),
+                    "source_training_git_head": execution[
+                        "training_git_head"
+                    ],
+                    "dataset_teacher_git_head": (
+                        resources.index.teacher_git_head
+                    ),
+                    "protocol_sha256": protocol.sha256,
+                    "source_execution": {
+                        "path": str(execution_path),
+                        "sha256": _sha256_file(execution_path),
+                        "canonical_sha256": execution[
+                            "canonical_sha256"
+                        ],
+                    },
+                    "sealed_test_used": False,
+                    "parameter_source": (
+                        "unchanged_parent_checkpoint_and_optimizer"
+                    ),
+                    "selection": {
+                        "screening_update": screening_update,
+                        "horizon": horizon,
+                        "landpoint_id": reference.landpoint_id,
+                        "year": int(reference.year),
+                        "reference_sha256": reference.sha256,
+                        "rollout_sample_index": rollout_sample_index,
+                        "start_zero_based": int(
+                            prepared.rollout_starts[
+                                rollout_sample_index
+                            ]
+                        ),
+                        "day_index": int(np.asarray(day.day_index)),
+                    },
+                    "threshold": {
+                        "value": MIN_STOMATE,
+                        "fortran_source": (
+                            "fortran_source/ORCHIDEE/src_parameters/"
+                            "constantes_var.f90:177"
+                        ),
+                        "owner_sources": {
+                            "prescribe": (
+                                "src_stomate/stomate_prescribe.f90:"
+                                "157,273,281-284,314-315,333"
+                            ),
+                            "allocation": (
+                                "src_stomate/stomate_alloc.f90:"
+                                "570,582,594,654,747,763"
+                            ),
+                            "post_npp_chain": (
+                                "src_stomate/stomate_npp.f90:"
+                                "501-511,571,585 and downstream "
+                                "daily-carbon owners"
+                            ),
+                        },
+                    },
+                    "physical_fast_day": {
+                        "nonfinite_values": int(
+                            np.count_nonzero(
+                                ~np.isfinite(physical_fast_day)
+                            )
+                        ),
+                        "maximum_absolute_finite_value": float(
+                            np.max(
+                                np.abs(
+                                    physical_fast_day[
+                                        np.isfinite(physical_fast_day)
+                                    ]
+                                )
+                            )
+                        ),
+                    },
+                    "variants": variant_records,
+                },
+            )
         result = jax.device_get(
             independent_steps[component](*sample_arguments)
         )
@@ -3875,6 +4261,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--rollout-sample-index", type=int)
     parser.add_argument("--rollout-prefix-length", type=int)
     parser.add_argument("--detached-next-day", action="store_true")
+    parser.add_argument("--min-stomate-isolation", action="store_true")
     parser.add_argument(
         "--component",
         choices=("L_next", "L_rollout", "L_bias", "L_science"),
@@ -3955,6 +4342,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             rollout_sample_index=args.rollout_sample_index,
             rollout_prefix_length=args.rollout_prefix_length,
             detached_next_day=args.detached_next_day,
+            min_stomate_isolation=args.min_stomate_isolation,
             component=args.component,
             execution_path=args.execution,
             protocol_path=args.protocol,

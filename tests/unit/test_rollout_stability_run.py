@@ -37,9 +37,13 @@ from research.daily_coarse_graining.rollout_stability_run import (
     ARM_CHECKPOINT_SCHEMA_VERSION,
     CALIBRATION_SCHEMA_VERSION,
     EXECUTION_MANIFEST_SCHEMA_VERSION,
+    MIN_STOMATE_DAILY_CARBON_OWNERS,
     PREFLIGHT_SCHEMA_VERSION,
+    _bind_min_stomate_variant_transition,
+    _daily_carbon_min_stomate_variant,
     _host_hard_constraint_counts,
     _leaf_for_compact_index,
+    _state_variant_metrics,
     _write_coefficient_calibration_failure,
     broadcast_retained_tail_day_inputs,
     build_arm_checkpoint,
@@ -63,6 +67,10 @@ PROTOCOL_PATH = (
     / "canonical_669_rollout_stability_protocol.json"
 )
 ValueTuple = namedtuple("ValueTuple", ("value",))
+DailyCarbonBundles = namedtuple(
+    "DailyCarbonBundles",
+    ("prescribe_inputs", "alloc_inputs", "post_npp_inputs"),
+)
 DiagnosticSequence = namedtuple(
     "DiagnosticSequence",
     ("retained_tail_inputs", "year", "day_index"),
@@ -105,6 +113,134 @@ class _FakeShard:
                 "flag": np.full((horizon, 1), start % 2 == 0),
             },
         }
+
+
+def test_daily_carbon_min_stomate_variant_is_owner_explicit_and_non_mutating():
+    bundles = DailyCarbonBundles(
+        prescribe_inputs={"value": 1, "min_stomate": 7.0},
+        alloc_inputs={"value": 2},
+        post_npp_inputs={"value": 3, "min_stomate": 9.0},
+    )
+
+    variant = _daily_carbon_min_stomate_variant(
+        bundles,
+        ("allocation",),
+    )
+
+    assert variant.prescribe_inputs == {"value": 1, "min_stomate": 0.0}
+    assert variant.alloc_inputs == {"value": 2, "min_stomate": 1.0e-8}
+    assert variant.post_npp_inputs == {"value": 3, "min_stomate": 0.0}
+    assert bundles.prescribe_inputs["min_stomate"] == 7.0
+    assert bundles.post_npp_inputs["min_stomate"] == 9.0
+    assert MIN_STOMATE_DAILY_CARBON_OWNERS == (
+        "prescribe",
+        "allocation",
+        "post_npp_chain",
+    )
+    with pytest.raises(ValueError, match="unknown min_stomate"):
+        _daily_carbon_min_stomate_variant(bundles, ("unknown",))
+
+
+def test_min_stomate_variant_transition_replaces_builder_only_during_call(
+    monkeypatch,
+):
+    bundles = DailyCarbonBundles(
+        prescribe_inputs={},
+        alloc_inputs={},
+        post_npp_inputs={},
+    )
+    observed = []
+
+    def original_builder():
+        return bundles
+
+    def base_transition(*args, **kwargs):
+        del args, kwargs
+        result = rollout_stability_run.teacher.stomate_restart_input_bundles()
+        observed.append(result)
+        return "transition-result"
+
+    monkeypatch.setattr(
+        rollout_stability_run.teacher,
+        "stomate_restart_input_bundles",
+        original_builder,
+    )
+    monkeypatch.setattr(
+        rollout_stability_run,
+        "_bind_dynamic_transition",
+        lambda resources, runtime: base_transition,
+    )
+
+    transition = _bind_min_stomate_variant_transition(
+        SimpleNamespace(),
+        SimpleNamespace(),
+        ("prescribe", "post_npp_chain"),
+    )
+
+    assert transition("unused") == "transition-result"
+    assert observed[0].prescribe_inputs["min_stomate"] == 1.0e-8
+    assert observed[0].alloc_inputs["min_stomate"] == 0.0
+    assert observed[0].post_npp_inputs["min_stomate"] == 1.0e-8
+    assert (
+        rollout_stability_run.teacher.stomate_restart_input_bundles
+        is original_builder
+    )
+
+
+def test_state_variant_metrics_reports_only_changed_owner_leaves():
+    leaves = (
+        SimpleNamespace(
+            discrete=False,
+            start=0,
+            stop=2,
+            key="slow.biomass",
+            component="slow",
+            source_ref="fortran:1-2",
+        ),
+        SimpleNamespace(
+            discrete=False,
+            start=2,
+            stop=3,
+            key="slow.npp",
+            component="slow",
+            source_ref="fortran:3",
+        ),
+        SimpleNamespace(
+            discrete=True,
+            start=None,
+            stop=None,
+            key="slow.present",
+            component="slow",
+            source_ref="fortran:4",
+        ),
+    )
+    resources = SimpleNamespace(
+        contract=SimpleNamespace(state_leaves=leaves),
+        statistics=SimpleNamespace(
+            arrays={
+                "state": SimpleNamespace(
+                    scale=np.asarray([1.0, 2.0, 4.0])
+                )
+            }
+        ),
+        process_weighting=SimpleNamespace(
+            weights=np.asarray([0.25, 0.25, 0.5])
+        ),
+    )
+
+    metrics = _state_variant_metrics(
+        np.asarray([1.0, 4.0, 8.0]),
+        np.asarray([1.0, 0.0, 4.0]),
+        resources=resources,
+    )
+
+    assert metrics["changed_leaf_count"] == 2
+    assert {
+        item["key"] for item in metrics["changed_leaves"]
+    } == {"slow.biomass", "slow.npp"}
+    assert metrics["defined_status_mismatches"] == 0
+    assert metrics["maximum_absolute_physical_difference"] == 4.0
+    assert metrics["weighted_huber_state_loss"] == pytest.approx(0.625)
 
 
 def _canonical_digest(value):
