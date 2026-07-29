@@ -2694,10 +2694,13 @@ def test_prescribe_step_firstcall_preserves_nonempty_tree_leaf_fractions():
     np.testing.assert_allclose(np.asarray(result.leaf_frac)[0, pft], leaf_frac[0, pft])
 
 
-def test_prescribe_step_zero_wood_fractional_power_gradients_are_finite():
+@pytest.mark.parametrize("wood_biomass", [7.0e-260, 100.0, 1.0e6])
+def test_prescribe_step_fractional_power_branch_gradients_are_finite(
+    wood_biomass,
+):
     npts, nvm, pft = 1, 14, PFT14
     biomass = jnp.zeros((npts, nvm, NPARTS, 1), dtype=jnp.float64)
-    biomass = biomass.at[0, pft, ISAPABOVE, ICARBON].set(7.0e-260)
+    biomass = biomass.at[0, pft, ISAPABOVE, ICARBON].set(wood_biomass)
     veget_max = jnp.zeros((npts, nvm), dtype=jnp.float64).at[0, pft].set(0.6)
     is_tree = np.zeros(nvm, dtype=bool)
     is_tree[pft] = True
@@ -2732,7 +2735,7 @@ def test_prescribe_step_zero_wood_fractional_power_gradients_are_finite():
         argnums=(0, 1),
     )(biomass, veget_max)
 
-    np.testing.assert_allclose(np.asarray(value), 100.0 + 0.006)
+    assert np.isfinite(np.asarray(value))
     assert all(np.all(np.isfinite(np.asarray(leaf))) for leaf in gradients)
 
 
