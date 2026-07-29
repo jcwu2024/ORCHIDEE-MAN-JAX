@@ -104,6 +104,7 @@ class RolloutStabilityUpdateResult(NamedTuple):
     loss: Any
     components: Any
     gradient_norm: Any
+    nonfinite_gradient_values: Any
     update_applied: Any
 
 
@@ -196,12 +197,13 @@ def _gradient_l2_norm(gradients: Any):
     )
 
 
-def _tree_all_finite(value: Any):
+def _tree_nonfinite_count(value: Any):
     leaves = jax.tree_util.tree_leaves(value)
     if not leaves:
-        return jnp.asarray(True)
-    return jnp.all(
-        jnp.stack([jnp.all(jnp.isfinite(jnp.asarray(leaf))) for leaf in leaves])
+        return jnp.asarray(0, dtype=jnp.int32)
+    return sum(
+        jnp.count_nonzero(~jnp.isfinite(jnp.asarray(leaf)))
+        for leaf in leaves
     )
 
 
@@ -261,7 +263,8 @@ def make_control_update_step(
             optimizer,
             learning_rate=learning_rate,
         )
-        applied = jnp.isfinite(loss) & _tree_all_finite(gradients)
+        nonfinite_gradient_values = _tree_nonfinite_count(gradients)
+        applied = jnp.isfinite(loss) & (nonfinite_gradient_values == 0)
         next_parameters = _select_tree(applied, proposed_parameters, parameters)
         next_optimizer = _select_tree(applied, proposed_optimizer, optimizer)
         return RolloutStabilityUpdateResult(
@@ -270,6 +273,7 @@ def make_control_update_step(
             loss,
             _empty_rollout_components(loss),
             _gradient_l2_norm(gradients),
+            nonfinite_gradient_values,
             applied,
         )
 
@@ -324,10 +328,11 @@ def make_candidate_update_step(
             optimizer,
             learning_rate=learning_rate,
         )
+        nonfinite_gradient_values = _tree_nonfinite_count(gradients)
         applied = (
             (jnp.asarray(_hard_constraint_count(components)) == 0)
             & jnp.isfinite(loss)
-            & _tree_all_finite(gradients)
+            & (nonfinite_gradient_values == 0)
         )
         next_parameters = _select_tree(applied, proposed_parameters, parameters)
         next_optimizer = _select_tree(applied, proposed_optimizer, optimizer)
@@ -337,6 +342,7 @@ def make_candidate_update_step(
             loss,
             components,
             _gradient_l2_norm(gradients),
+            nonfinite_gradient_values,
             applied,
         )
 
@@ -1620,7 +1626,12 @@ def run_rollout_stability_arm(
             component_record = _component_record(result.components)
             raise ValueError(
                 "rollout-stability update failed closed at "
-                f"update={update}: {component_record}"
+                f"update={update}: loss={float(jax.device_get(result.loss))}, "
+                "gradient_norm="
+                f"{float(jax.device_get(result.gradient_norm))}, "
+                "nonfinite_gradient_values="
+                f"{int(jax.device_get(result.nonfinite_gradient_values))}, "
+                f"components={component_record}"
             )
         parameters = result.parameters
         optimizer = result.optimizer

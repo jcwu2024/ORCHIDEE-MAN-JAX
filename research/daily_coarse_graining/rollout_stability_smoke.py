@@ -49,6 +49,17 @@ def _hard_counts(components) -> Mapping[str, int]:
     return {name: int(getattr(host, name)) for name in HARD_CONSTRAINT_FIELDS}
 
 
+def _failed_update_details(result) -> Mapping[str, Any]:
+    return {
+        "loss": float(jax.device_get(result.loss)),
+        "gradient_norm": float(jax.device_get(result.gradient_norm)),
+        "nonfinite_gradient_values": int(
+            jax.device_get(result.nonfinite_gradient_values)
+        ),
+        "hard_counts": _hard_counts(result.components),
+    }
+
+
 def _compiled_args(parameters, optimizer, prepared, learning_rate):
     return (
         parameters,
@@ -194,7 +205,9 @@ def run_real_shard_smoke(
     jax.block_until_ready(first.parameters)
     first_seconds = time.perf_counter() - first_started
     if not bool(jax.device_get(first.update_applied)):
-        raise ValueError(f"first smoke update failed closed: {_hard_counts(first.components)}")
+        raise ValueError(
+            f"first smoke update failed closed: {_failed_update_details(first)}"
+        )
 
     second_args = _compiled_args(
         first.parameters,
@@ -208,7 +221,8 @@ def run_real_shard_smoke(
     second_seconds = time.perf_counter() - second_started
     if not bool(jax.device_get(uninterrupted.update_applied)):
         raise ValueError(
-            f"second smoke update failed closed: {_hard_counts(uninterrupted.components)}"
+            "second smoke update failed closed: "
+            f"{_failed_update_details(uninterrupted)}"
         )
 
     schedule = _smoke_schedule(horizon)
@@ -308,6 +322,12 @@ def run_real_shard_smoke(
         "second_loss": float(jax.device_get(uninterrupted.loss)),
         "first_gradient_norm": float(jax.device_get(first.gradient_norm)),
         "second_gradient_norm": float(jax.device_get(uninterrupted.gradient_norm)),
+        "first_nonfinite_gradient_values": int(
+            jax.device_get(first.nonfinite_gradient_values)
+        ),
+        "second_nonfinite_gradient_values": int(
+            jax.device_get(uninterrupted.nonfinite_gradient_values)
+        ),
         "first_hard_counts": _hard_counts(first.components),
         "second_hard_counts": _hard_counts(uninterrupted.components),
         "checkpoint_resume_exact": restart_exact,
