@@ -693,25 +693,25 @@ def make_fast_target_checkify_diagnostic(
     )
 
 
-def make_fast_target_process_gradient_diagnostic(
+def make_retained_tail_directional_jvp_diagnostic(
     *,
-    statistics,
     retained_tail_transition,
-    process_weights,
 ):
-    """Differentiate process-specific next-state losses with respect to B_fast."""
-
-    process_weights = jnp.asarray(process_weights)
+    """Trace one physical B_fast basis direction into next-state tangents."""
 
     def diagnose(
         initial_state,
         initial_discrete_state,
         physical_fast_day,
         sequence,
+        target_index,
     ):
         day = jax.tree_util.tree_map(lambda item: item[0], sequence)
+        target_tangent = jnp.zeros_like(physical_fast_day).at[
+            target_index
+        ].set(1.0)
 
-        def objective(target):
+        def transition(target):
             next_state, _ = retained_tail_transition(
                 initial_state,
                 initial_discrete_state,
@@ -720,48 +720,39 @@ def make_fast_target_process_gradient_diagnostic(
                 day.year,
                 day.day_index,
             )
-            normalized_next, finite_next = _normalize_finite_compiled(
-                next_state,
-                statistics.arrays["state"],
-            )
-            normalized_teacher, finite_teacher = _normalize_finite_compiled(
-                day.teacher_next_state,
-                statistics.arrays["state"],
-            )
-            common = finite_next & finite_teacher
-            losses = jax.vmap(
-                lambda weights: masked_huber_loss(
-                    normalized_next[None, :],
-                    normalized_teacher[None, :],
-                    common[None, :],
-                    weights,
-                )
-            )(process_weights)
-            return losses, losses
+            return next_state
 
-        jacobian, losses = jax.jacrev(objective, has_aux=True)(
-            physical_fast_day
+        next_state, next_state_tangent = jax.jvp(
+            transition,
+            (physical_fast_day,),
+            (target_tangent,),
         )
-        return losses, jacobian
+        return next_state, next_state_tangent
 
     return jax.jit(diagnose)
 
 
-def _state_process_gradient_weights(
-    process_weighting,
-) -> tuple[tuple[str, ...], np.ndarray]:
-    base = np.asarray(process_weighting.weights)
-    names = []
-    rows = []
-    for group in process_weighting.metadata["groups"]:
-        names.append(str(group["id"]))
-        row = np.zeros_like(base)
-        for leaf in group["leaves"]:
-            start = int(leaf["start"])
-            stop = int(leaf["stop"])
-            row[start:stop] = base[start:stop]
-        rows.append(row)
-    return tuple(names), np.stack(rows, axis=0)
+def _state_leaf_records(contract, indices) -> list[Mapping[str, Any]]:
+    records = []
+    for leaf in contract.state_leaves:
+        if leaf.discrete:
+            continue
+        selected = [
+            int(index)
+            for index in indices
+            if int(leaf.start) <= int(index) < int(leaf.stop)
+        ]
+        if selected:
+            records.append(
+                {
+                    "component": str(leaf.component),
+                    "path": [str(value) for value in leaf.path],
+                    "start": int(leaf.start),
+                    "stop": int(leaf.stop),
+                    "nonfinite_indices": selected,
+                }
+            )
+    return records
 
 
 def _active_checkify_error_sources(error) -> list[Mapping[str, Any]]:
@@ -2394,44 +2385,51 @@ def run_screening_update_diagnostic(
             physical_fast_day,
             sample_sequence,
         )
-        process_names, process_weights = _state_process_gradient_weights(
-            resources.process_weighting
-        )
-        process_gradient_diagnostic = (
-            make_fast_target_process_gradient_diagnostic(
-                statistics=resources.statistics,
+        directional_jvp_diagnostic = (
+            make_retained_tail_directional_jvp_diagnostic(
                 retained_tail_transition=transition,
-                process_weights=process_weights,
             )
         )
-        process_losses, process_jacobian = jax.device_get(
-            process_gradient_diagnostic(
-                sample_initial_state,
-                sample_initial_discrete_state,
-                physical_fast_day,
-                sample_sequence,
+        directional_jvp_records = []
+        for target_index in bad_target_indices:
+            next_state, next_state_tangent = jax.device_get(
+                directional_jvp_diagnostic(
+                    sample_initial_state,
+                    sample_initial_discrete_state,
+                    physical_fast_day,
+                    sample_sequence,
+                    jnp.asarray(target_index, dtype=jnp.int32),
+                )
             )
-        )
-        process_gradient_records = []
-        for process_name, process_loss, process_gradient in zip(
-            process_names,
-            process_losses,
-            process_jacobian,
-            strict=True,
-        ):
-            bad_process_indices = np.flatnonzero(
-                ~np.isfinite(process_gradient)
+            bad_state_indices = np.flatnonzero(
+                ~np.isfinite(next_state_tangent)
             )
-            process_gradient_records.append(
+            finite_tangent = np.isfinite(next_state_tangent)
+            directional_jvp_records.append(
                 {
-                    "process": process_name,
-                    "loss": float(process_loss),
-                    "nonfinite_gradient_count": int(
-                        bad_process_indices.size
-                    ),
-                    "nonfinite_leaves": _fast_target_leaf_records(
+                    "fast_target_index": int(target_index),
+                    "fast_target_leaf": _fast_target_leaf_records(
                         resources.contract,
-                        bad_process_indices,
+                        [target_index],
+                    )[0],
+                    "next_state_nonfinite_values": int(
+                        np.count_nonzero(~np.isfinite(next_state))
+                    ),
+                    "nonfinite_state_tangent_count": int(
+                        bad_state_indices.size
+                    ),
+                    "nonfinite_state_leaves": _state_leaf_records(
+                        resources.contract,
+                        bad_state_indices,
+                    ),
+                    "maximum_absolute_finite_state_tangent": (
+                        float(
+                            np.max(
+                                np.abs(next_state_tangent[finite_tangent])
+                            )
+                        )
+                        if np.any(finite_tangent)
+                        else None
                     ),
                 }
             )
@@ -2504,7 +2502,7 @@ def run_screening_update_diagnostic(
                         checkify_error
                     ),
                 },
-                "process_gradient_attribution": process_gradient_records,
+                "retained_tail_directional_jvp": directional_jvp_records,
             },
         )
     if component is not None:
