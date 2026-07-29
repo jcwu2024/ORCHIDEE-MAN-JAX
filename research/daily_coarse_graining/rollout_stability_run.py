@@ -2008,6 +2008,73 @@ def run_screening_update_diagnostic(
         }
         for index, name in enumerate(component_names)
     }
+
+    def single_anchor_gradient(value, batch):
+        loss, gradients = jax.value_and_grad(canonical_fast_day_anchor_loss)(
+            value,
+            batch,
+            fast_day_weights=resources.fast_day_weights,
+            undefined_loss_weight=undefined_weight,
+            model_apply=resources.model_definition.apply,
+        )
+        return (
+            loss,
+            _gradient_l2_norm(gradients),
+            _tree_nonfinite_count(gradients),
+        )
+
+    compiled_single_anchor = jax.jit(single_anchor_gradient)
+    anchor_raw = _collate_reference_windows(
+        reference,
+        starts=prepared.anchor_starts,
+        horizon=1,
+    )
+    anchor_day_indices = np.asarray(anchor_raw["day_index"])[:, 0]
+    bad_anchor_samples = []
+    for sample_index, (start, day_index) in enumerate(
+        zip(
+            prepared.anchor_starts,
+            anchor_day_indices,
+            strict=True,
+        )
+    ):
+        sample = jax.tree_util.tree_map(
+            lambda value: value[sample_index : sample_index + 1],
+            prepared.anchor_batch,
+        )
+        sample_loss, sample_gradient_norm, sample_nonfinite = jax.device_get(
+            compiled_single_anchor(parameters, sample)
+        )
+        sample_nonfinite = int(sample_nonfinite)
+        if sample_nonfinite == 0:
+            continue
+        input_summary = {}
+        for name, value in zip(
+            sample.model_input._fields,
+            sample.model_input,
+            strict=True,
+        ):
+            array = np.asarray(value)
+            finite = np.isfinite(array)
+            input_summary[name] = {
+                "shape": list(array.shape),
+                "nonfinite_values": int(np.count_nonzero(~finite)),
+                "maximum_absolute_finite_value": (
+                    float(np.max(np.abs(array[finite]))) if np.any(finite) else None
+                ),
+            }
+        bad_anchor_samples.append(
+            {
+                "sample_index": sample_index,
+                "start_zero_based": int(start),
+                "day_index": int(day_index),
+                "loss": float(sample_loss),
+                "gradient_norm": float(sample_gradient_norm),
+                "nonfinite_gradient_values": sample_nonfinite,
+                "model_input_summary": input_summary,
+            }
+        )
+
     candidate_step = make_candidate_update_step(
         coefficients=calibration["resolved_coefficients"],
         fast_day_weights=resources.fast_day_weights,
@@ -2055,6 +2122,11 @@ def run_screening_update_diagnostic(
                 "rollout_batch_size": int(spec["batch_size"]),
             },
             "component_gradients": component_gradients,
+            "anchor_sample_gradient_audit": {
+                "sample_count": int(prepared.anchor_starts.size),
+                "bad_sample_count": len(bad_anchor_samples),
+                "bad_samples": bad_anchor_samples,
+            },
             "components": _component_record(components),
             "weighted_candidate": {
                 "coefficients": calibration["resolved_coefficients"],
