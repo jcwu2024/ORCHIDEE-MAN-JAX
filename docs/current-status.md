@@ -465,8 +465,14 @@ separates declared dynamic `rveget` status errors from unexpected structural
 status errors. Declared errors remain supervised, counted, reported, and
 screened against the matched control; they no longer veto an optimizer update.
 Unexpected status errors, discrete mismatches, nonfinite defined values, and
-negative source-constrained carbon stocks remain exact hard failures. Before
-another paid submission, calibration ordinal 4 must pass a free `gln01` smoke
-with the three declared errors recorded, all hard counts zero, and a real
-candidate update applied. See
+negative source-constrained carbon stocks remain exact hard failures.
+
+The required free `gln01` gate passed at commit `13f09c9`. It reproduced
+calibration ordinal 4 with exactly three declared dynamic errors, zero
+unexpected/discrete/nonfinite/negative-stock hard counts, finite loss and
+gradient norm, and `update_applied=true`. The sealed test split was not used.
+The smoke report SHA256 is
+`66dc952abef5804eabe43ca8a9e9144828caba9649452557ded274f2bf8146a5`.
+The next operation is a new paid Experiment B submission using the clean
+`13f09c9` worktree, v2 preflight, and a new immutable training output root. See
 [`rollout_stability_calibration_failure_20260729.md`](research/daily_coarse_graining/rollout_stability_calibration_failure_20260729.md).

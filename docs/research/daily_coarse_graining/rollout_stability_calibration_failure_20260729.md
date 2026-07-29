@@ -82,3 +82,35 @@ Do not reuse the v1 preflight or output identity. Before another paid job:
    gradients, and an applied candidate update.
 6. Only after that gate passes, request approval for a new paid Experiment B
    run.
+
+## Free GPU Gate Result
+
+The gate passed on `gln01` from clean commit
+`13f09c916953a311d27b8690a028a7a93c632d2f`. It used a new v2 preflight and
+output root and reproduced ordinal 4 without entering a training loop.
+
+Observed result:
+
+- declared dynamic status mismatches: 3;
+- unexpected status mismatches: 0;
+- discrete mismatches: 0;
+- nonfinite defined values: 0;
+- negative source-constrained stocks: 0;
+- loss: `0.009466921856399475`;
+- gradient norm: `1.2575924396514893`;
+- nonfinite gradient values: 0;
+- optimizer update applied: true;
+- sealed test used: false.
+
+The report is:
+
+```text
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/smoke/
+rollout-stability-calibration-update-13f09c9/
+calibration_update_smoke_0004.json
+```
+
+Its SHA256 is
+`66dc952abef5804eabe43ca8a9e9144828caba9649452557ded274f2bf8146a5`.
+This closes the free resubmission gate. It does not replace the full
+train-only coefficient calibration or either matched training arm.

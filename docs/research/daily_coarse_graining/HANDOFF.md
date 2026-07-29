@@ -19,8 +19,8 @@ scientific and release facts remain authoritative in
    hashes below. Do not regenerate Teacher data or reuse nine-point assets.
 5. Treat architecture job `14403674` as accepted parent evidence. Experiment B
    job `14410820` is a rejected train-only calibration attempt, not training
-   evidence. Finish protocol-v2 validation and the ordinal-4 free `gln01`
-   smoke before preparing another paid submission.
+   evidence. The protocol-v2 ordinal-4 free `gln01` smoke passed at `13f09c9`;
+   prepare a new paid submission only from that clean training snapshot.
 
 ```bash
 git status --short --branch
@@ -704,12 +704,14 @@ reuse, and exact vectorized reconstruction of only the retained tail's five
 consumed forcing leaves.
 Horizon-7/30 hot updates are about `0.10/0.20 s`; warm-cache preparation is
 `0.245 s`. A 16-landpoint benchmark measured about `7.8 MiB` RSS growth per
-cached runtime. Before another paid run, create a clean commit-bound worktree
-and output root, regenerate preflight identities, and run calibration ordinal
-4 on free `gln01`. Acceptance requires exactly three declared dynamic errors,
-zero unexpected/discrete/nonfinite/negative-stock hard counts, and an applied
-candidate update. Only then estimate and request approval for the six-hour
-paid rerun.
+cached runtime. The free ordinal-4 `gln01` update smoke passed from clean commit
+`13f09c9`: exactly three declared dynamic errors, zero
+unexpected/discrete/nonfinite/negative-stock hard counts, finite loss and
+gradient, and an applied candidate update. Its report SHA256 is
+`66dc952abef5804eabe43ca8a9e9144828caba9649452557ded274f2bf8146a5`.
+The next step is to create a new immutable paid-run output root and preflight
+for this exact training commit, then request explicit approval for the
+six-hour `gnall` rerun.
 See
 [`rollout_stability_smoke_20260729.md`](rollout_stability_smoke_20260729.md).
 
