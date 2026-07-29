@@ -558,32 +558,6 @@ def run_real_shard_smoke(
             )
         )
         bad_target_indices = np.flatnonzero(~np.isfinite(target_gradient))
-        process_names, process_weights = _state_process_gradient_weights(
-            resources.process_weighting
-        )
-        process_diagnostic = _make_fast_target_process_gradient_diagnostic(
-            statistics=resources.statistics,
-            retained_tail_transition=transition,
-            process_weights=process_weights,
-        )
-        process_losses, process_jacobian = jax.device_get(
-            process_diagnostic(
-                prepared[0].initial_states[first_bad_position],
-                jax.tree_util.tree_map(
-                    lambda item: item[first_bad_position],
-                    prepared[0].initial_discrete_states,
-                ),
-                physical_fast_day,
-                jax.tree_util.tree_map(
-                    lambda item: item[first_bad_position],
-                    prepared[0].sequence,
-                ),
-            )
-        )
-        process_nonfinite_counts = np.count_nonzero(
-            ~np.isfinite(process_jacobian),
-            axis=1,
-        )
         checkify_diagnostic = _make_fast_target_checkify_diagnostic(
             statistics=resources.statistics,
             retained_tail_transition=transition,
@@ -602,6 +576,7 @@ def run_real_shard_smoke(
             ),
         )
         checkify_message = checkify_error.get()
+        checkify_metadata = repr(checkify_error._metadata)
         raise ValueError(
             "first smoke update failed closed: "
             f"{_failed_update_details(first)}, "
@@ -621,11 +596,8 @@ def run_real_shard_smoke(
             f"{_fast_target_leaf_records(resources.contract, bad_target_indices)}, "
             "fast_target_nonfinite_values="
             f"{np.asarray(physical_fast_day)[bad_target_indices].tolist()}, "
-            "next_state_process_losses="
-            f"{dict(zip(process_names, np.asarray(process_losses).tolist(), strict=True))}, "
-            "next_state_process_nonfinite_target_gradients="
-            f"{dict(zip(process_names, process_nonfinite_counts.tolist(), strict=True))}, "
-            f"checkify_float_error={checkify_message!r}"
+            f"checkify_float_error={checkify_message!r}, "
+            f"checkify_error_metadata={checkify_metadata}"
         )
 
     second_args = _compiled_args(
