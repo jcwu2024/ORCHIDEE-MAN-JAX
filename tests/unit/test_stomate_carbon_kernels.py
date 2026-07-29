@@ -3,6 +3,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 import pytest
 
@@ -1135,6 +1137,40 @@ def test_npp_closed_update_pumps_only_fortran_explicit_biomass_pools_when_tax_ex
     assert np.allclose(np.asarray(result.resp_maint)[0, PFT14], 1.0)
     assert np.allclose(np.asarray(result.npp)[0, PFT14], 0.0)
     assert np.asarray(result.bm_alloc).shape == biomass.shape
+
+
+def test_npp_closed_update_absent_pft_has_finite_zero_maintenance_gradient():
+    biomass = np.zeros((1, 14, NPARTS, 1), dtype=np.float64)
+    gpp = np.zeros((1, 14), dtype=np.float64)
+    f_alloc = np.zeros((1, 14, NPARTS), dtype=np.float64)
+    pft_present = np.zeros((1, 14), dtype=bool)
+    frac_growthresp = np.zeros(14, dtype=np.float64)
+    resp_maint_part = jnp.zeros((1, 14, NPARTS), dtype=jnp.float64)
+
+    def biomass_objective(maintenance_parts):
+        result = npp_closed_update(
+            biomass=biomass,
+            gpp=gpp,
+            f_alloc=f_alloc,
+            resp_maint_part=maintenance_parts,
+            pft_present=pft_present,
+            frac_growthresp=frac_growthresp,
+        )
+        return jnp.sum(result.biomass)
+
+    result = npp_closed_update(
+        biomass=biomass,
+        gpp=gpp,
+        f_alloc=f_alloc,
+        resp_maint_part=resp_maint_part,
+        pft_present=pft_present,
+        frac_growthresp=frac_growthresp,
+    )
+    gradient = jax.jit(jax.grad(biomass_objective))(resp_maint_part)
+
+    np.testing.assert_array_equal(np.asarray(result.biomass), biomass)
+    assert np.all(np.isfinite(np.asarray(gradient)))
+    np.testing.assert_array_equal(np.asarray(gradient), np.zeros_like(resp_maint_part))
 
 
 def test_npp_leaf_age_sla_age_update_matches_source_bookkeeping_for_grass():
