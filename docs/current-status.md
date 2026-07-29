@@ -424,14 +424,26 @@ Experiment B runs only if the parent decision is exactly
 returns to a named architecture hypothesis rather than silently applying the
 stability objective to the flat model.
 
-The Experiment B training implementation is now locally complete pending its
-real-shard GPU gate. It provides deterministic balanced update schedules,
-matched one-step anchors for both arms, dynamic landpoint retained-tail
-PyTrees, `1/3/7/30`-day compiled transitions, train-only paired gradient-norm
-coefficient calibration, hard fail-closed state constraints, immutable
-execution manifests, and exact `next_update` checkpoint recovery. Compilation
-is keyed by horizon, rematerialization mode, and static dispatch signature
-rather than landpoint identity. Local objective, update, schedule, dynamic
-input, checkpoint, and resume tests pass. No Experiment B paid job has been
-submitted; the next gate is the two-train-landpoint real-shard
-forward/reverse/restart smoke.
+The Experiment B training implementation and real-shard GPU gate now pass.
+Horizon `1/3/7/30` protocol shapes completed on a V100 with two distinct train
+landpoints sharing one executable, finite first and second updates, zero hard
+counts, and exact checkpoint resume. Horizon-7 and rematerialized horizon-30
+hot updates take about `0.10 s` and `0.20 s`, with peak allocator use below
+`0.55 GiB`.
+
+Host preparation was then reduced without changing any measured loss,
+component value, gradient norm, or hard count. Each shard is loaded once,
+runtime/static state is cached by landpoint, and the five forcing leaves
+actually consumed after the learned fast-day boundary are reconstructed in
+one vectorized batch operation. Steady forcing preparation fell from seconds
+to about `0.015 s`; a complete warm-cache horizon-7 preparation is `0.245 s`.
+A 16-landpoint cache gate measured about `7.8 MiB` RSS growth per added
+landpoint, making the 535-train-landpoint cache safe on a gnall node. Details
+are in
+[`rollout_stability_smoke_20260729.md`](research/daily_coarse_graining/rollout_stability_smoke_20260729.md).
+
+Preflight, calibration, execution, and arm checkpoint identities now bind the
+training Git HEAD in addition to protocol, data, schedule, model, and
+environment. No paid Experiment B job has been submitted. The next gate is
+the frozen train-only coefficient calibration followed by the matched
+8,192-update control and mixed-horizon arms; the test split remains sealed.

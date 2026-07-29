@@ -489,6 +489,7 @@ def test_execution_manifest_binds_calibration_parent_schedule_and_environment(
     preflight = {
         "schema_version": PREFLIGHT_SCHEMA_VERSION,
         "status": "awaiting_coefficient_calibration",
+        "training_git_head": rollout_stability_run._current_git_head(),
         "protocol": {"path": str(PROTOCOL_PATH), "sha256": protocol.sha256},
         "parent_architecture": {
             "report": {"path": "report", "sha256": "report"},
@@ -520,6 +521,7 @@ def test_execution_manifest_binds_calibration_parent_schedule_and_environment(
         "schema_version": CALIBRATION_SCHEMA_VERSION,
         "status": "passed",
         "protocol_sha256": protocol.sha256,
+        "training_git_head": preflight["training_git_head"],
         "train_only": True,
         "resolved_coefficients": {
             "L_next": 1.0,
@@ -547,12 +549,24 @@ def test_execution_manifest_binds_calibration_parent_schedule_and_environment(
 
     assert execution["schema_version"] == EXECUTION_MANIFEST_SCHEMA_VERSION
     assert execution["status"] == "ready_for_matched_arm_training"
+    assert execution["training_git_head"] == preflight["training_git_head"]
     assert execution["artifacts"]["environment_lock"]["sha256"] == "lock"
     assert execution["same_anchor_batches"] is True
     assert execution["sealed_test_used"] is False
     assert execution["coefficient_calibration"]["resolved_coefficients"] == (
         calibration["resolved_coefficients"]
     )
+    with pytest.MonkeyPatch.context() as monkeypatch:
+        monkeypatch.setattr(
+            rollout_stability_run,
+            "_current_git_head",
+            lambda: "0" * 40,
+        )
+        with pytest.raises(ValueError, match="training commit drift"):
+            rollout_stability_run._load_verified_execution_manifest(
+                execution_path,
+                protocol,
+            )
 
 
 def _write_parent_assets(tmp_path: Path):

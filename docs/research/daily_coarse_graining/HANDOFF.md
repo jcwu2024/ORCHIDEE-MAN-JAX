@@ -17,10 +17,10 @@ scientific and release facts remain authoritative in
    through Slurm.
 4. Confirm the admitted 669-point dataset and frozen architecture-screen
    hashes below. Do not regenerate Teacher data or reuse nine-point assets.
-5. Treat architecture job `14403674` as accepted parent evidence. The frozen
-   rollout-stability implementation now passes its local gates. Run the
-   two-train-landpoint real-shard GPU smoke next; do not submit paid
-   Experiment B before that report passes.
+5. Treat architecture job `14403674` as accepted parent evidence. The
+   rollout-stability GPU, gradient, checkpoint, host-preparation, and memory
+   gates pass. Generate the commit-bound preflight, then request explicit
+   approval before submitting paid Experiment B.
 
 ```bash
 git status --short --branch
@@ -654,10 +654,9 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-Run the real-shard GPU gate for the frozen mixed-horizon and tendency-bias
-implementation described in
+Run the frozen matched Experiment B screen described in
 [`long_rollout_architecture_review_20260727.md`](long_rollout_architecture_review_20260727.md).
-The local implementation now:
+The implementation:
 
 - preserves one identical batch-256 one-step anchor in both arms and adds only
   `L_next/L_rollout/L_bias/L_science` to the candidate;
@@ -668,13 +667,14 @@ The local implementation now:
 - fails closed without changing parameters or Adam state on any hard
   constraint violation;
 - passes local objective, rematerialization, dynamic-input, matched-update,
-  schedule-drift, and exact checkpoint-resume tests.
+  schedule-drift, exact checkpoint-resume, and real-shard V100 tests;
+- binds the exact training Git HEAD through preflight, calibration, execution,
+  and arm checkpoint identity.
 
-The real-shard gate is
-`research.daily_coarse_graining.rollout_stability_smoke`. It must use two
-different train landpoints with one compiled executable, finite component
-gradients, zero hard counts, and exact checkpoint-resume results. The accepted
-server inputs are:
+The real-shard gate passed for horizon `1/3/7/30`, including rematerialized
+horizon 30. It used two different train landpoints with one executable,
+finite component gradients, zero hard counts, exact checkpoint resume, and no
+sealed-test access. The accepted server inputs are:
 
 ```text
 runtime/outputs/training/pft14-daily-teacher-669-1961-2010-v5-7397d1e-w100/dataset_manifest.json
@@ -685,10 +685,22 @@ runtime/outputs/training/canonical-669-architecture-ab-4c1fe0c/axis_process/chec
 
 Their hashes remain the frozen protocol hashes, including optimizer checkpoint
 SHA256 `c516c8fb96f169cf2101e94375d2c4f96809c6f69e497e0ddb8913ff7498d3b5`.
-No paid Experiment B job has been submitted. After the smoke passes, measure
-compile/hot update time and peak GPU memory, estimate calibration and 8,192
-update costs, then request explicit paid-job approval. Do not inspect the
-sealed test split or begin 365-day/complete-chain validation at this stage.
+No paid Experiment B job has been submitted. Final host preparation uses one
+shard load per update, per-landpoint runtime reuse, and exact vectorized
+reconstruction of only the retained tail's five consumed forcing leaves.
+Horizon-7/30 hot updates are about `0.10/0.20 s`; warm-cache preparation is
+`0.245 s`. A 16-landpoint benchmark measured about `7.8 MiB` RSS growth per
+cached runtime. The sequential calibration plus two arms is expected to take
+about four hours; use a six-hour limit and request explicit approval first.
+See
+[`rollout_stability_smoke_20260729.md`](rollout_stability_smoke_20260729.md).
+
+The paid runner is
+`scripts/hpc/run_rollout_stability_experiment.sh`. It requires an already
+generated preflight and performs or resumes calibration, execution-manifest
+creation, the one-step control, and the mixed-horizon candidate in that order.
+Do not inspect the sealed test split or begin 365-day/complete-chain
+validation before the screening result passes its declared gates.
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).

@@ -7,6 +7,7 @@ import hashlib
 import json
 import os
 import pickle
+import subprocess
 import time
 from collections import defaultdict
 from pathlib import Path
@@ -81,12 +82,12 @@ from research.daily_coarse_graining.rollout_stability_protocol import (
     load_rollout_stability_protocol,
 )
 
-PREFLIGHT_SCHEMA_VERSION = "canonical_rollout_stability_preflight_v1"
+PREFLIGHT_SCHEMA_VERSION = "canonical_rollout_stability_preflight_v2"
 SCHEDULE_SCHEMA_VERSION = "canonical_rollout_stability_sampling_schedule_v1"
-CALIBRATION_SCHEMA_VERSION = "canonical_rollout_stability_coefficient_calibration_v1"
+CALIBRATION_SCHEMA_VERSION = "canonical_rollout_stability_coefficient_calibration_v2"
 PARENT_REPORT_SCHEMA_VERSION = "canonical_architecture_ab_report_v1"
 ARM_CHECKPOINT_SCHEMA_VERSION = "canonical_rollout_stability_arm_checkpoint_v1"
-EXECUTION_MANIFEST_SCHEMA_VERSION = "canonical_rollout_stability_execution_v1"
+EXECUTION_MANIFEST_SCHEMA_VERSION = "canonical_rollout_stability_execution_v2"
 ARM_IDS = ("one_step_continuation_control", "mixed_horizon_stability_v1")
 HARD_CONSTRAINT_FIELDS = (
     "defined_status_mismatches",
@@ -148,6 +149,14 @@ def _sha256_file(path: Path) -> str:
 def _canonical_sha256(value: Any) -> str:
     encoded = json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
     return hashlib.sha256(encoded).hexdigest()
+
+
+def _current_git_head() -> str:
+    root = Path(__file__).resolve().parents[2]
+    return subprocess.check_output(
+        ["git", "-C", str(root), "rev-parse", "HEAD"],
+        text=True,
+    ).strip()
 
 
 def _atomic_json(path: Path, value: Mapping[str, Any]) -> Path:
@@ -1153,6 +1162,8 @@ def _load_verified_preflight(
         raise ValueError("rollout-stability preflight has an invalid status")
     if preflight.get("protocol", {}).get("sha256") != protocol.sha256:
         raise ValueError("rollout-stability preflight protocol drift")
+    if preflight.get("training_git_head") != _current_git_head():
+        raise ValueError("rollout-stability preflight training commit drift")
     if preflight.get("sealed_test_used") is not False:
         raise ValueError("rollout-stability preflight used the sealed test split")
     schedule_info = preflight["artifacts"]["sampling_schedule"]
@@ -1361,6 +1372,7 @@ def run_coefficient_calibration(
         {
             "schema_version": "canonical_rollout_stability_gradient_records_v1",
             "protocol_sha256": protocol.sha256,
+            "training_git_head": preflight["training_git_head"],
             "train_only": True,
             "records": records,
         },
@@ -1374,6 +1386,7 @@ def run_coefficient_calibration(
     calibration["parent_best_checkpoint_sha256"] = preflight[
         "parent_architecture"
     ]["best_checkpoint"]["sha256"]
+    calibration["training_git_head"] = preflight["training_git_head"]
     calibration["canonical_sha256"] = _canonical_sha256(calibration)
     calibration_path = output_root / "coefficient_calibration.json"
     _atomic_json(calibration_path, calibration)
@@ -1399,6 +1412,8 @@ def create_execution_manifest(
         raise ValueError("rollout-stability coefficient calibration did not pass")
     if calibration.get("protocol_sha256") != protocol.sha256:
         raise ValueError("rollout-stability calibration protocol drift")
+    if calibration.get("training_git_head") != preflight["training_git_head"]:
+        raise ValueError("rollout-stability calibration training commit drift")
     if calibration.get("train_only") is not True:
         raise ValueError("rollout-stability calibration was not train-only")
     calibration_payload = dict(calibration)
@@ -1416,6 +1431,7 @@ def create_execution_manifest(
     payload = {
         "schema_version": EXECUTION_MANIFEST_SCHEMA_VERSION,
         "status": "ready_for_matched_arm_training",
+        "training_git_head": preflight["training_git_head"],
         "protocol": preflight["protocol"],
         "parent_architecture_ab_report": parent["report"],
         "selected_parent_checkpoint": parent["best_checkpoint"],
@@ -1465,6 +1481,8 @@ def _load_verified_execution_manifest(
         raise ValueError("rollout-stability execution manifest is not ready")
     if execution.get("protocol", {}).get("sha256") != protocol.sha256:
         raise ValueError("rollout-stability execution protocol drift")
+    if execution.get("training_git_head") != _current_git_head():
+        raise ValueError("rollout-stability execution training commit drift")
     canonical_sha256 = execution.get("canonical_sha256")
     canonical_payload = dict(execution)
     canonical_payload.pop("canonical_sha256", None)
@@ -1494,6 +1512,7 @@ def _arm_identity(
 ) -> Mapping[str, Any]:
     return {
         "execution_canonical_sha256": execution["canonical_sha256"],
+        "training_git_head": execution["training_git_head"],
         "protocol_sha256": execution["protocol"]["sha256"],
         "arm_id": arm_id,
         "dataset_id": resources.index.dataset_id,
@@ -1838,6 +1857,7 @@ def prepare_rollout_stability(
     payload = {
         "schema_version": PREFLIGHT_SCHEMA_VERSION,
         "status": "awaiting_coefficient_calibration",
+        "training_git_head": _current_git_head(),
         "protocol": {
             "path": str(protocol.path),
             "sha256": protocol.sha256,
