@@ -973,6 +973,41 @@ def test_execution_manifest_binds_calibration_parent_schedule_and_environment(
                 execution_path,
                 protocol,
             )
+        diagnostic_execution = (
+            rollout_stability_run._load_verified_execution_manifest(
+                execution_path,
+                protocol,
+                require_current_training_head=False,
+            )
+        )
+        assert diagnostic_execution["training_git_head"] == preflight[
+            "training_git_head"
+        ]
+
+
+def test_screening_prefix_gate_cli_requires_an_explicit_stop():
+    parser = rollout_stability_run._parser()
+    args = parser.parse_args(
+        [
+            "--phase",
+            "screening-prefix-gate",
+            "--protocol",
+            "protocol.json",
+            "--dataset",
+            "dataset.json",
+            "--statistics",
+            "statistics.json",
+            "--output-root",
+            "output",
+            "--execution",
+            "execution.json",
+            "--stop-after-updates",
+            "128",
+        ]
+    )
+
+    assert args.phase == "screening-prefix-gate"
+    assert args.stop_after_updates == 128
 
 
 def _write_parent_assets(tmp_path: Path):

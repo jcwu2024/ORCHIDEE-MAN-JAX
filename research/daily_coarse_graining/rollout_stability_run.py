@@ -3911,6 +3911,8 @@ def create_execution_manifest(
 def _load_verified_execution_manifest(
     execution_path: str | Path,
     protocol: RolloutStabilityProtocol,
+    *,
+    require_current_training_head: bool = True,
 ) -> Mapping[str, Any]:
     execution_path = Path(execution_path).resolve()
     execution = json.loads(execution_path.read_text(encoding="utf-8"))
@@ -3920,7 +3922,10 @@ def _load_verified_execution_manifest(
         raise ValueError("rollout-stability execution manifest is not ready")
     if execution.get("protocol", {}).get("sha256") != protocol.sha256:
         raise ValueError("rollout-stability execution protocol drift")
-    if execution.get("training_git_head") != _current_git_head():
+    if (
+        require_current_training_head
+        and execution.get("training_git_head") != _current_git_head()
+    ):
         raise ValueError("rollout-stability execution training commit drift")
     canonical_sha256 = execution.get("canonical_sha256")
     canonical_payload = dict(execution)
@@ -4010,13 +4015,19 @@ def run_rollout_stability_arm(
     statistics_path: str | Path,
     output_root: str | Path,
     plan_path: str | Path | None = None,
+    stop_after_updates: int | None = None,
+    allow_training_head_drift: bool = False,
 ) -> Path:
     """Run or exactly resume one arm of the matched Experiment B screen."""
 
     if arm_id not in ARM_IDS:
         raise ValueError(f"unknown rollout-stability arm {arm_id!r}")
     protocol = load_rollout_stability_protocol(protocol_path)
-    execution = _load_verified_execution_manifest(execution_path, protocol)
+    execution = _load_verified_execution_manifest(
+        execution_path,
+        protocol,
+        require_current_training_head=not allow_training_head_drift,
+    )
     dataset_path = Path(dataset_path).resolve()
     statistics_path = Path(statistics_path).resolve()
     for name, path in (
@@ -4035,6 +4046,8 @@ def run_rollout_stability_arm(
         arm_id=arm_id,
         resources=resources,
     )
+    if allow_training_head_drift:
+        identity = dict(identity) | {"diagnostic_git_head": _current_git_head()}
     schedule_path = Path(
         execution["artifacts"]["sampling_schedule"]["path"]
     ).resolve()
@@ -4064,11 +4077,19 @@ def run_rollout_stability_arm(
         )
         next_update = 0
         history = []
+    resumed_from_update = next_update
 
     optimization = protocol.raw["optimization"]
     budget = int(optimization["screening_updates"])
     if len(schedule["entries"]) != budget:
         raise ValueError("rollout-stability update budget and schedule differ")
+    target_update = budget
+    if stop_after_updates is not None:
+        target_update = int(stop_after_updates)
+        if not 1 <= target_update <= budget:
+            raise ValueError("screening prefix target must be within the update budget")
+        if target_update < next_update:
+            raise ValueError("screening prefix target precedes the existing checkpoint")
     seed = int(optimization["screening_seed"])
     anchor_batch_size = int(optimization["anchor_batch_size"])
     learning_rate = jnp.asarray(
@@ -4090,7 +4111,7 @@ def run_rollout_stability_arm(
     interval_losses = []
     interval_gradients = []
 
-    for update in range(next_update, budget):
+    for update in range(next_update, target_update):
         entry = schedule["entries"][update]
         if int(entry["update"]) != update:
             raise ValueError("rollout-stability schedule update order drift")
@@ -4166,7 +4187,7 @@ def run_rollout_stability_arm(
         interval_gradients.append(result.gradient_norm)
         completed = update + 1
 
-        if completed % progress_every == 0 or completed == budget:
+        if completed % progress_every == 0 or completed == target_update:
             loss_values = np.asarray(
                 jax.device_get(jnp.stack(interval_losses)),
                 dtype=np.float64,
@@ -4194,11 +4215,11 @@ def run_rollout_stability_arm(
             interval_gradients.clear()
             print(
                 "rollout_training "
-                f"arm={arm_id} update={completed}/{budget} "
+                f"arm={arm_id} update={completed}/{target_update} "
                 f"horizon={horizon} loss={record['last_loss']:.8g}",
                 flush=True,
             )
-        if completed % checkpoint_every == 0 or completed == budget:
+        if completed % checkpoint_every == 0 or completed == target_update:
             checkpoint = build_arm_checkpoint(
                 arm_id=arm_id,
                 identity=identity,
@@ -4217,8 +4238,39 @@ def run_rollout_stability_arm(
         identity=identity,
         schedule=schedule,
     )
-    if int(final_checkpoint["next_update"]) != budget:
-        raise ValueError("rollout-stability arm stopped before its update budget")
+    if int(final_checkpoint["next_update"]) != target_update:
+        raise ValueError("rollout-stability arm stopped before its target update")
+    if stop_after_updates is not None:
+        report = {
+            "schema_version": "canonical_rollout_screening_prefix_gate_v1",
+            "status": "passed",
+            "gate": "mixed_horizon_sequential_prefix",
+            "arm_id": arm_id,
+            "diagnostic_git_head": _current_git_head(),
+            "source_training_git_head": execution["training_git_head"],
+            "source_execution": {
+                "path": str(Path(execution_path).resolve()),
+                "sha256": _sha256_file(Path(execution_path).resolve()),
+                "canonical_sha256": execution["canonical_sha256"],
+            },
+            "protocol_sha256": protocol.sha256,
+            "resumed_from_update": resumed_from_update,
+            "updates": target_update,
+            "all_updates_applied": True,
+            "parameter_count": parameter_count(final_checkpoint["parameters"]),
+            "checkpoint": str(checkpoint_path),
+            "checkpoint_sha256": _sha256_file(checkpoint_path),
+            "completed_horizon_counts": final_checkpoint[
+                "completed_horizon_counts"
+            ],
+            "compiled_candidate_executables_this_invocation": len(candidate_steps),
+            "history": final_checkpoint["history"],
+            "sealed_test_used": False,
+        }
+        return _atomic_json(
+            arm_root / f"screening_prefix_gate_{target_update:05d}.json",
+            report,
+        )
     report = {
         "schema_version": "canonical_rollout_stability_arm_report_v1",
         "status": "completed",
@@ -4348,6 +4400,7 @@ def _parser() -> argparse.ArgumentParser:
             "diagnose-calibration",
             "smoke-calibration-update",
             "diagnose-screening-update",
+            "screening-prefix-gate",
             "manifest",
             "arm",
         ),
@@ -4371,6 +4424,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--skip-dataset-hash-verification", action="store_true")
     parser.add_argument("--calibration-ordinal", type=int)
     parser.add_argument("--screening-update", type=int)
+    parser.add_argument("--stop-after-updates", type=int)
     parser.add_argument("--rollout-sample-index", type=int)
     parser.add_argument("--rollout-prefix-length", type=int)
     parser.add_argument("--detached-next-day", action="store_true")
@@ -4463,6 +4517,19 @@ def main(argv: Sequence[str] | None = None) -> int:
             statistics_path=args.statistics,
             output_root=args.output_root,
             plan_path=args.plan,
+        )
+    elif args.phase == "screening-prefix-gate":
+        _require_args(args, ("execution", "stop_after_updates"))
+        output = run_rollout_stability_arm(
+            arm_id="mixed_horizon_stability_v1",
+            execution_path=args.execution,
+            protocol_path=args.protocol,
+            dataset_path=args.dataset,
+            statistics_path=args.statistics,
+            output_root=args.output_root,
+            plan_path=args.plan,
+            stop_after_updates=args.stop_after_updates,
+            allow_training_head_drift=True,
         )
     elif args.phase == "manifest":
         _require_args(args, ("preflight", "calibration"))
