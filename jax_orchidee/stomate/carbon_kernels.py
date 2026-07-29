@@ -4377,12 +4377,31 @@ def turnover_leaf_age_fall(
     active_pft = jnp.arange(nvm) > 0
     do_age_turn = (~ok_laidev)[None, :] & active_pft[None, :]
     for leaf_class in range(NLEAFAGES):
+        rate_active = do_age_turn & (
+            leaf_age[:, :, leaf_class] > leaf_age_crit / 2.0
+        )
+        safe_leaf_age = jnp.where(
+            rate_active,
+            leaf_age[:, :, leaf_class],
+            1.0,
+        )
+        safe_leaf_age_crit = jnp.where(
+            rate_active,
+            leaf_age_crit,
+            1.0,
+        )
         rate = jnp.where(
-            leaf_age[:, :, leaf_class] > leaf_age_crit / 2.0,
-            jnp.minimum(0.99, dt_days / (leaf_age_crit * (leaf_age_crit / leaf_age[:, :, leaf_class]) ** 4)),
+            rate_active,
+            jnp.minimum(
+                0.99,
+                dt_days
+                / (
+                    safe_leaf_age_crit
+                    * (safe_leaf_age_crit / safe_leaf_age) ** 4
+                ),
+            ),
             0.0,
         )
-        rate = jnp.where(do_age_turn, rate, 0.0)
 
         dturnover = biomass[:, :, ILEAF, ICARBON] * leaf_frac[:, :, leaf_class] * rate
         turnover = turnover.at[:, :, ILEAF, ICARBON].add(dturnover)

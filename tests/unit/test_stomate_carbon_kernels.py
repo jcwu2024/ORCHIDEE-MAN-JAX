@@ -1573,6 +1573,34 @@ def test_turnover_leaf_age_fall_preserves_fortran_sequential_biomass_updates():
     assert np.allclose(np.asarray(new_leaf_frac)[0, PFT14, 0], 1.0)
 
 
+def test_turnover_leaf_age_inactive_zero_critical_age_has_finite_gradient():
+    npts, nvm = 1, 14
+    biomass = np.zeros((npts, nvm, NPARTS, 1), dtype=np.float64)
+    turnover = np.zeros_like(biomass)
+    leaf_frac = np.zeros((npts, nvm, NLEAFAGES), dtype=np.float64)
+
+    def objective(leaf_age):
+        _, updated_turnover, _, _ = turnover_leaf_age_fall(
+            biomass,
+            turnover,
+            leaf_age,
+            leaf_frac,
+            np.asarray([273.15], dtype=np.float64),
+            is_tree=np.zeros(nvm, dtype=bool),
+            natural=np.ones(nvm, dtype=bool),
+            ok_laidev=np.zeros(nvm, dtype=bool),
+            leafagecrit=np.zeros(nvm, dtype=np.float64),
+            dt_days=1.0,
+        )
+        return jnp.sum(updated_turnover)
+
+    leaf_age = np.zeros((npts, nvm, NLEAFAGES), dtype=np.float64)
+    gradient = jax.jit(jax.grad(objective))(leaf_age)
+
+    assert np.all(np.isfinite(np.asarray(gradient)))
+    np.testing.assert_array_equal(np.asarray(gradient), leaf_age)
+
+
 def test_turnover_tree_fruit_and_sapwood_converts_sap_without_turnover():
     biomass = np.zeros((1, 14, NPARTS, 1), dtype=np.float64)
     biomass[0, PFT14, IFRUIT, ICARBON] = 90.0
