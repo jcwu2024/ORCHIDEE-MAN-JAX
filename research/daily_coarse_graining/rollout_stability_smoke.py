@@ -92,11 +92,13 @@ def run_real_shard_smoke(
 
     if horizon not in {1, 3, 7, 30}:
         raise ValueError("rollout-stability smoke horizon must be 1, 3, 7, or 30")
+    resources_started = time.perf_counter()
     resources = _load_rollout_resources(
         dataset_path=Path(dataset_path).resolve(),
         statistics_path=Path(statistics_path).resolve(),
         plan_path=None if plan_path is None else Path(plan_path),
     )
+    resources_seconds = time.perf_counter() - resources_started
     references = sorted(
         resources.index.select(spatial_split="train", temporal_split="train"),
         key=lambda item: (item.landpoint_id, item.year, str(item.path)),
@@ -112,6 +114,7 @@ def run_real_shard_smoke(
     if len(selected) != 2:
         raise ValueError("real-shard smoke requires two train landpoints")
 
+    checkpoints_started = time.perf_counter()
     best = _load_pickle(Path(parent_best_checkpoint_path).resolve())
     optimizer_checkpoint = _load_pickle(
         Path(parent_optimizer_checkpoint_path).resolve()
@@ -128,8 +131,12 @@ def run_real_shard_smoke(
         jnp.asarray,
         optimizer_checkpoint["optimizer"],
     )
-    prepared = [
-        prepare_rollout_update(
+    checkpoints_seconds = time.perf_counter() - checkpoints_started
+    prepared = []
+    preparation_seconds = []
+    for index, reference in enumerate(selected):
+        preparation_started = time.perf_counter()
+        item = prepare_rollout_update(
             reference=reference,
             update=index,
             horizon=horizon,
@@ -138,8 +145,17 @@ def run_real_shard_smoke(
             seed=seed,
             resources=resources,
         )
-        for index, reference in enumerate(selected)
-    ]
+        jax.block_until_ready(
+            (
+                item.anchor_batch,
+                item.initial_states,
+                item.initial_discrete_states,
+                item.sequence,
+                item.teacher_next_discrete_states,
+            )
+        )
+        prepared.append(item)
+        preparation_seconds.append(time.perf_counter() - preparation_started)
     signatures = [item.trace_signature for item in prepared]
     if signatures[0] != signatures[1]:
         raise ValueError(
@@ -279,6 +295,12 @@ def run_real_shard_smoke(
         "rollout_batch_size": rollout_batch_size,
         "trace_static_signature": signatures[0],
         "single_executable_reused_across_landpoints": True,
+        "host_preparation_seconds": {
+            "resources": resources_seconds,
+            "parent_checkpoints": checkpoints_seconds,
+            "per_landpoint": preparation_seconds,
+            "total_per_landpoint": float(sum(preparation_seconds)),
+        },
         "compile_seconds": compile_seconds,
         "first_update_seconds": first_seconds,
         "second_update_seconds": second_seconds,
