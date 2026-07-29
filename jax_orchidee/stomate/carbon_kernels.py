@@ -4816,7 +4816,16 @@ def gap_mortality_step(
     )
     valid_vigour = tree_active & (lm_lastyearmax > min_stomate)
     delta_biomass = jnp.where(valid_vigour, jnp.maximum(npp_longterm - turnover_sum, 0.0), 0.0)
-    vigour = jnp.where(valid_vigour, delta_biomass / (lm_lastyearmax * sla_calc), 0.0)
+    safe_vigour_denominator = jnp.where(
+        valid_vigour,
+        lm_lastyearmax * sla_calc,
+        1.0,
+    )
+    vigour = jnp.where(
+        valid_vigour,
+        delta_biomass / safe_vigour_denominator,
+        0.0,
+    )
     availability = availability_fact[None, :] / (1.0 + ref_greff * vigour)
 
     mortality_fraction = jnp.zeros((npts, nvm), dtype=biomass.dtype)

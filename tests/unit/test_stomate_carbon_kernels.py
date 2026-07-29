@@ -1705,6 +1705,28 @@ def test_gap_mortality_growth_efficiency_uses_turnover_longterm_and_sla_vigour()
     assert np.allclose(np.asarray(result.mortality_fraction)[0, PFT14], expected_fraction)
 
 
+def test_gap_mortality_inactive_zero_vigour_denominator_has_finite_gradient():
+    params = _gap_fixture()
+    params["pft_present"][:] = False
+    params["lm_lastyearmax"][:] = 0.0
+    params["sla_calc"][:] = 0.0
+    npp_longterm = params.pop("npp_longterm")
+
+    def objective(npp):
+        result = gap_mortality_step(
+            **params,
+            npp_longterm=npp,
+            dt_days=1.0,
+            lpj_gap_const_mort=False,
+        )
+        return jnp.sum(result.vigour)
+
+    gradient = jax.jit(jax.grad(objective))(npp_longterm)
+
+    assert np.all(np.isfinite(np.asarray(gradient)))
+    np.testing.assert_array_equal(np.asarray(gradient), npp_longterm)
+
+
 def test_gap_mortality_dgvm_low_npp_kills_tree_and_updates_individuals():
     params = _gap_fixture()
     params["biomass"][0, PFT14, ILEAF, ICARBON] = 10.0
