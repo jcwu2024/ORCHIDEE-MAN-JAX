@@ -582,7 +582,11 @@ def _load_rollout_resources(
         resolved_plan_path,
         str(raw_manifest["plan_sha256"]),
     )
-    index = load_dataset_index(dataset_path, verify_hashes=False)
+    index = load_dataset_index(
+        dataset_path,
+        verify_hashes=False,
+        verify_files=False,
+    )
     metadata = raw_manifest["markov_contract"]
     contract = daily_markov_contract_from_metadata(metadata)
     representation = fast_day_target_representation_from_contract(metadata)

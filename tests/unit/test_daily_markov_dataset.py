@@ -92,6 +92,23 @@ def test_dataset_index_remains_compatible_with_v3_manifests(tmp_path):
     assert len(index.shards) == 2
 
 
+def test_post_acceptance_index_can_skip_redundant_shard_existence_scan(tmp_path):
+    manifest = _manifest(tmp_path)
+    (tmp_path / "workers/first.npz").unlink()
+
+    with pytest.raises(FileNotFoundError):
+        markov_dataset.load_dataset_index(manifest, verify_hashes=False)
+    index = markov_dataset.load_dataset_index(
+        manifest,
+        verify_hashes=False,
+        verify_files=False,
+    )
+
+    assert len(index.shards) == 2
+    with pytest.raises(FileNotFoundError):
+        list(index.samples(spatial_split="train"))
+
+
 def test_collation_stacks_model_values_but_not_landpoint_identity(tmp_path):
     index = markov_dataset.load_dataset_index(_manifest(tmp_path))
     samples = list(index.samples())

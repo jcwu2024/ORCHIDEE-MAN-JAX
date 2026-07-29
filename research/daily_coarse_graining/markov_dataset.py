@@ -248,7 +248,20 @@ class _FiniteMoments:
         )
 
 
-def load_dataset_index(manifest_path: str | Path, *, verify_hashes: bool = True) -> MarkovDatasetIndex:
+def load_dataset_index(
+    manifest_path: str | Path,
+    *,
+    verify_hashes: bool = True,
+    verify_files: bool = True,
+) -> MarkovDatasetIndex:
+    """Load dataset identity and shard references.
+
+    ``verify_files=False`` is reserved for post-acceptance execution phases
+    that already bind a hash-verified manifest and reopen every selected shard.
+    It avoids repeating tens of thousands of metadata-only filesystem probes
+    before each matched training arm.
+    """
+
     manifest_path = Path(manifest_path).resolve()
     raw = json.loads(manifest_path.read_text(encoding="utf-8"))
     schema_version = raw.get("schema_version")
@@ -292,7 +305,7 @@ def load_dataset_index(manifest_path: str | Path, *, verify_hashes: bool = True)
             path.relative_to(root)
         except ValueError as error:
             raise ValueError(f"shard path escapes dataset root: {path}") from error
-        if not path.is_file():
+        if verify_files and not path.is_file():
             raise FileNotFoundError(path)
         expected_hash = str(item["shard_sha256"])
         if verify_hashes and _sha256_file(path) != expected_hash:
