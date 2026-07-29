@@ -3596,6 +3596,15 @@ def _remap_litter_doc_export(export_pool, pool: int, lignin_above, lignin_below)
     return export_pool
 
 
+def _sqrt_with_finite_zero_tangent(value):
+    """Preserve sqrt values while choosing the zero subgradient at zero."""
+
+    value = jnp.asarray(value)
+    is_zero = value == 0.0
+    safe_value = jnp.where(is_zero, jnp.ones_like(value), value)
+    return jnp.where(is_zero, jnp.zeros_like(value), jnp.sqrt(safe_value))
+
+
 def soilcarbon_leak_doc_export(
     doc,
     soilwater_31mm,
@@ -3680,7 +3689,11 @@ def soilcarbon_leak_doc_export(
     if cue_coef.shape != (npts,):
         raise ValueError("cue_coef must be scalar or have shape (npts,)")
 
-    fastr_corr = jnp.maximum(jnp.sqrt(fastr) / jnp.sqrt(jnp.asarray(fastr_ref, dtype=doc.dtype)), 0.0)
+    fastr_corr = jnp.maximum(
+        _sqrt_with_finite_zero_tangent(fastr)
+        / jnp.sqrt(jnp.asarray(fastr_ref, dtype=doc.dtype)),
+        0.0,
+    )
     doc_run = jnp.zeros((npts, nvm, NPOOL, nelements), dtype=doc.dtype)
     doc_drain = jnp.zeros_like(doc_run)
     doc_flood = jnp.zeros_like(doc_run)

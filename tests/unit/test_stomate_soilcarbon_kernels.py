@@ -3,6 +3,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 import pytest
 
@@ -39,6 +41,7 @@ from jax_orchidee.stomate.soilcarbon_kernels import (
     IFLOODED,
     IRUNOFF,
     NEXP,
+    _sqrt_with_finite_zero_tangent,
     altcalc_doc,
     deep_carbon_altcalc_step,
     deep_carbon_cryoturbation_coefficients,
@@ -75,6 +78,16 @@ from jax_orchidee.stomate.soilcarbon_kernels import (
 
 PFT14 = 13
 IFREE = 0
+
+
+def test_soilcarbon_fastr_sqrt_preserves_values_with_finite_zero_tangent():
+    values = jnp.asarray([0.0, 4.0, -1.0], dtype=jnp.float64)
+    result = _sqrt_with_finite_zero_tangent(values)
+
+    np.testing.assert_array_equal(np.asarray(result[:2]), [0.0, 2.0])
+    assert np.isnan(np.asarray(result[2]))
+    assert float(jax.grad(lambda value: _sqrt_with_finite_zero_tangent(value))(0.0)) == 0.0
+    assert float(jax.grad(lambda value: _sqrt_with_finite_zero_tangent(value))(4.0)) == 0.25
 
 
 def test_altcalc_doc_firstcall_initializes_altmax_indices_from_depth():
