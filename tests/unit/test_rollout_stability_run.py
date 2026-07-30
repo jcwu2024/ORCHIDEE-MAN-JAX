@@ -52,6 +52,7 @@ from research.daily_coarse_graining.rollout_stability_run import (
     calibrate_gradient_coefficients,
     completed_horizon_counts,
     create_execution_manifest,
+    make_detached_day_gradient_diagnostic,
     make_detached_next_day_gradient_diagnostic,
     make_retained_tail_ad_boundary_jvp_diagnostic,
     retained_tail_trace_signature,
@@ -408,6 +409,98 @@ def test_detached_next_day_gradient_excludes_prefix_parameter_path():
     np.testing.assert_allclose(
         np.asarray(retained_tail_state_gradient),
         [0.6],
+        rtol=1e-6,
+    )
+    np.testing.assert_allclose(
+        np.asarray(model_state_gradient),
+        [0.0],
+        atol=1e-7,
+    )
+
+
+def test_detached_day_gradient_accepts_a_multi_day_prefix():
+    statistics = SimpleNamespace(
+        arrays={
+            name: SimpleNamespace(mean=np.zeros(shape), scale=np.ones(shape))
+            for name, shape in {
+                "state": (1,),
+                "fast_day_target": (1,),
+                "forcing_native": (1, 1),
+                "parameters": (1,),
+                "landpoint_static": (1,),
+                "annual_conditions": (1,),
+            }.items()
+        }
+    )
+    representation = SimpleNamespace(
+        state_indices=(0,),
+        dynamic_undefined_indices=(0,),
+        dynamic_undefined_fill_values=(np.nan,),
+        nonnegative_indices=(),
+    )
+
+    def model_apply(parameters, batch):
+        batch_size = batch.state.shape[0]
+        return CanonicalPrediction(
+            normalized_fast_day_target=jnp.broadcast_to(
+                parameters["weight"],
+                (batch_size, 1),
+            ),
+            dynamic_undefined_flip_logits=jnp.full((batch_size, 1), -1.0),
+        )
+
+    def transition(state, discrete, target, *_):
+        return state + target, discrete
+
+    diagnostic = make_detached_day_gradient_diagnostic(
+        prefix_length=2,
+        statistics=statistics,
+        representation=representation,
+        fast_day_weights=jnp.ones(1),
+        retained_tail_transition=transition,
+        state_weights=jnp.ones(1),
+        undefined_loss_weight=0.1,
+        model_apply=model_apply,
+    )
+    sequence = CanonicalMultistepSequence(
+        forcing_native=jnp.zeros((3, 1, 1)),
+        parameters=jnp.zeros((3, 1)),
+        landpoint_static=jnp.zeros((3, 1)),
+        annual_conditions=jnp.zeros((3, 1)),
+        year=jnp.asarray([1973, 1973, 1973]),
+        day_index=jnp.asarray([7, 8, 9]),
+        teacher_state=jnp.zeros((3, 1)),
+        teacher_fast_day_target=jnp.zeros((3, 1)),
+        teacher_next_state=jnp.zeros((3, 1)),
+        retained_tail_inputs=jnp.zeros((3, 1)),
+    )
+
+    (
+        value,
+        state,
+        _,
+        parameter_gradient,
+        state_gradient,
+        retained_tail_state_gradient,
+        model_state_gradient,
+    ) = diagnostic(
+        {"weight": jnp.asarray(0.2)},
+        jnp.asarray([0.2]),
+        {"flag": jnp.asarray(False)},
+        sequence,
+    )
+
+    np.testing.assert_allclose(np.asarray(state), [0.6], rtol=1e-6)
+    np.testing.assert_allclose(np.asarray(value), 0.32, rtol=1e-6)
+    np.testing.assert_allclose(
+        np.asarray(parameter_gradient["weight"]),
+        0.8,
+        rtol=1e-6,
+    )
+    np.testing.assert_allclose(np.asarray(state_gradient), [0.8], rtol=1e-6)
+    np.testing.assert_allclose(
+        np.asarray(retained_tail_state_gradient),
+        [0.8],
         rtol=1e-6,
     )
     np.testing.assert_allclose(
@@ -1030,11 +1123,14 @@ def test_screening_update_diagnostic_cli_accepts_candidate_checkpoint():
             "302",
             "--parameter-checkpoint",
             "checkpoint.pkl",
+            "--detached-day-offset",
+            "28",
         ]
     )
 
     assert args.screening_update == 302
     assert args.parameter_checkpoint == "checkpoint.pkl"
+    assert args.detached_day_offset == 28
 
 
 def _write_parent_assets(tmp_path: Path):

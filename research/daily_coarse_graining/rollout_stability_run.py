@@ -650,8 +650,9 @@ def make_fast_target_gradient_diagnostic(
     return jax.jit(diagnose)
 
 
-def make_detached_next_day_gradient_diagnostic(
+def make_detached_day_gradient_diagnostic(
     *,
+    prefix_length: int,
     statistics,
     representation,
     fast_day_weights,
@@ -660,11 +661,20 @@ def make_detached_next_day_gradient_diagnostic(
     undefined_loss_weight: float,
     model_apply,
 ):
-    """Differentiate Day 2 after detaching the predicted Day 1 carry."""
+    """Differentiate one day after detaching a predicted multi-day carry."""
+
+    if prefix_length < 1:
+        raise ValueError("detached diagnostic prefix length must be positive")
 
     def diagnose(parameters, initial_state, initial_discrete_state, sequence):
-        prefix = jax.tree_util.tree_map(lambda value: value[:1], sequence)
-        next_day = jax.tree_util.tree_map(lambda value: value[1:2], sequence)
+        prefix = jax.tree_util.tree_map(
+            lambda value: value[:prefix_length],
+            sequence,
+        )
+        next_day = jax.tree_util.tree_map(
+            lambda value: value[prefix_length : prefix_length + 1],
+            sequence,
+        )
         carry = canonical_pushforward_prefix(
             parameters,
             initial_state,
@@ -800,6 +810,30 @@ def make_detached_next_day_gradient_diagnostic(
         )
 
     return jax.jit(diagnose)
+
+
+def make_detached_next_day_gradient_diagnostic(
+    *,
+    statistics,
+    representation,
+    fast_day_weights,
+    retained_tail_transition,
+    state_weights,
+    undefined_loss_weight: float,
+    model_apply,
+):
+    """Differentiate Day 2 after detaching the predicted Day 1 carry."""
+
+    return make_detached_day_gradient_diagnostic(
+        prefix_length=1,
+        statistics=statistics,
+        representation=representation,
+        fast_day_weights=fast_day_weights,
+        retained_tail_transition=retained_tail_transition,
+        state_weights=state_weights,
+        undefined_loss_weight=undefined_loss_weight,
+        model_apply=model_apply,
+    )
 
 
 def make_fast_target_checkify_diagnostic(
@@ -2822,6 +2856,7 @@ def run_screening_update_diagnostic(
     rollout_sample_index: int | None = None,
     rollout_prefix_length: int | None = None,
     detached_next_day: bool = False,
+    detached_day_offset: int | None = None,
     min_stomate_isolation: bool = False,
     component: str | None = None,
     execution_path: str | Path,
@@ -2945,13 +2980,20 @@ def run_screening_update_diagnostic(
     )
     if rollout_prefix_length is not None and rollout_sample_index is None:
         raise ValueError("rollout prefix length requires rollout sample index")
-    if detached_next_day and rollout_sample_index is None:
+    if detached_next_day and detached_day_offset is not None:
+        raise ValueError(
+            "detached next-day and detached day-offset diagnostics are exclusive"
+        )
+    resolved_detached_day_offset = (
+        1 if detached_next_day else detached_day_offset
+    )
+    if resolved_detached_day_offset is not None and rollout_sample_index is None:
         raise ValueError("detached next-day diagnostic requires rollout sample index")
     if min_stomate_isolation and rollout_sample_index is None:
         raise ValueError("min_stomate isolation requires rollout sample index")
     if min_stomate_isolation and (
         rollout_prefix_length is not None
-        or detached_next_day
+        or resolved_detached_day_offset is not None
         or component is not None
     ):
         raise ValueError(
@@ -3240,12 +3282,13 @@ def run_screening_update_diagnostic(
             ~np.isfinite(fast_target_gradient)
         )
         detached_next_day_record = None
-        if detached_next_day:
-            if diagnostic_horizon < 2:
+        if resolved_detached_day_offset is not None:
+            if not 1 <= resolved_detached_day_offset < diagnostic_horizon:
                 raise ValueError(
-                    "detached next-day diagnostic requires at least two days"
+                    "detached day offset must be within the diagnostic horizon"
                 )
-            detached_diagnostic = make_detached_next_day_gradient_diagnostic(
+            detached_diagnostic = make_detached_day_gradient_diagnostic(
+                prefix_length=resolved_detached_day_offset,
                 statistics=resources.statistics,
                 representation=resources.representation,
                 fast_day_weights=resources.fast_day_weights,
@@ -3318,7 +3361,10 @@ def run_screening_update_diagnostic(
                 }
 
             detached_second_sequence = jax.tree_util.tree_map(
-                lambda value: value[1:2],
+                lambda value: value[
+                    resolved_detached_day_offset : resolved_detached_day_offset
+                    + 1
+                ],
                 sample_sequence,
             )
             (
@@ -3350,7 +3396,12 @@ def run_screening_update_diagnostic(
                 detached_second_sequence,
             )
             detached_next_day_record = {
-                "day_index": int(np.asarray(sample_sequence.day_index)[1]),
+                "prefix_length": resolved_detached_day_offset,
+                "day_index": int(
+                    np.asarray(sample_sequence.day_index)[
+                        resolved_detached_day_offset
+                    ]
+                ),
                 "loss": float(detached_loss),
                 "parameter_gradient": {
                     "finite_l2_norm": float(
@@ -3544,7 +3595,14 @@ def run_screening_update_diagnostic(
             if rollout_prefix_length is None
             else f"_prefix_{rollout_prefix_length:02d}"
         )
-        detached_suffix = "_detached_next_day" if detached_next_day else ""
+        if detached_next_day:
+            detached_suffix = "_detached_next_day"
+        elif resolved_detached_day_offset is not None:
+            detached_suffix = (
+                f"_detached_day_{resolved_detached_day_offset:03d}"
+            )
+        else:
+            detached_suffix = ""
         return _atomic_json(
             output_root
             / (
@@ -4469,6 +4527,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--rollout-sample-index", type=int)
     parser.add_argument("--rollout-prefix-length", type=int)
     parser.add_argument("--detached-next-day", action="store_true")
+    parser.add_argument("--detached-day-offset", type=int)
     parser.add_argument("--min-stomate-isolation", action="store_true")
     parser.add_argument(
         "--component",
@@ -4550,6 +4609,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             rollout_sample_index=args.rollout_sample_index,
             rollout_prefix_length=args.rollout_prefix_length,
             detached_next_day=args.detached_next_day,
+            detached_day_offset=args.detached_day_offset,
             min_stomate_isolation=args.min_stomate_isolation,
             component=args.component,
             execution_path=args.execution,
