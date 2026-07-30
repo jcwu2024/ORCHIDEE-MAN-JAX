@@ -1174,6 +1174,12 @@ def _slice_sequence(sequence, start: int, stop: int):
     return jax.tree_util.tree_map(lambda value: value[start:stop], sequence)
 
 
+def _array_equal_including_nan(left, right):
+    left = jnp.asarray(left)
+    right = jnp.asarray(right)
+    return jnp.all((left == right) | (jnp.isnan(left) & jnp.isnan(right)))
+
+
 def _restart_split_probe(
     *,
     parameters,
@@ -1227,11 +1233,20 @@ def _restart_split_probe(
             first.final_carry.discrete_state,
             _slice_sequence(selected, split_day, horizon),
         )
-        continuous_equal = jnp.array_equal(
+        continuous_equal = _array_equal_including_nan(
             complete.final_carry.continuous_state,
             second.final_carry.continuous_state,
         )
-        continuous_max = jnp.max(jnp.abs(complete.final_carry.continuous_state - second.final_carry.continuous_state))
+        common_defined = _defined_numeric_mask_compiled(
+            complete.final_carry.continuous_state
+        ) & _defined_numeric_mask_compiled(second.final_carry.continuous_state)
+        continuous_max = jnp.max(
+            jnp.where(
+                common_defined,
+                jnp.abs(complete.final_carry.continuous_state - second.final_carry.continuous_state),
+                0.0,
+            )
+        )
         left, tree_left = jax.tree_util.tree_flatten(complete.final_carry.discrete_state)
         right, tree_right = jax.tree_util.tree_flatten(second.final_carry.discrete_state)
         if tree_left != tree_right:
@@ -1239,7 +1254,7 @@ def _restart_split_probe(
         discrete_equal = jnp.all(
             jnp.stack(
                 [
-                    jnp.array_equal(first_value, second_value)
+                    _array_equal_including_nan(first_value, second_value)
                     for first_value, second_value in zip(left, right, strict=True)
                 ]
             )

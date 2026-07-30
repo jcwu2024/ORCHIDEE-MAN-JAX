@@ -19,6 +19,7 @@ from research.daily_coarse_graining.rollout_stability_screening import (
     REQUIRED_FEEDBACK,
     REQUIRED_HORIZONS,
     REQUIRED_SLICES,
+    _array_equal_including_nan,
     _cell_id,
     _evaluation_identity,
     _expected_cell_counts,
@@ -176,6 +177,21 @@ def test_ratio_gate_refuses_nonzero_candidate_over_zero_control():
     assert record["ratio"] is None
     assert record["passed"] is False
     assert record["zero_denominator_policy"] == ("failed_nonzero_candidate_over_zero_control")
+
+
+def test_restart_comparison_treats_matching_nan_as_exact_but_not_sentinels():
+    assert bool(
+        _array_equal_including_nan(
+            np.asarray([1.0, np.nan, 1.0e20]),
+            np.asarray([1.0, np.nan, 1.0e20]),
+        )
+    )
+    assert not bool(
+        _array_equal_including_nan(
+            np.asarray([1.0, np.nan, 1.0e20]),
+            np.asarray([1.0, np.nan, -1.0e20]),
+        )
+    )
 
 
 def _metric(value: float):
