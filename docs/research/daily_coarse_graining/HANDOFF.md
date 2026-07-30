@@ -90,6 +90,34 @@ and its local forward/reverse, checkpoint, restart, masking, conditioning, and
 multiday-scan gates pass. This is not yet promotion of a user-facing daily
 surrogate; long-rollout stability remains unproven.
 
+## Conditional Physical-Parameter Gradient Gate
+
+Do not confuse the gradients required by current training with scientifically
+validated physical-parameter gradients:
+
+- the current Experiment B validates loss gradients with respect to network
+  weights and differentiable propagation through cross-day state;
+- it does not validate that neural derivatives with respect to `alloc_min`,
+  `residence_time`, `vcmax25`, or `maint_resp_slope` reproduce the
+  Teacher/Fortran response.
+
+This gate is not a prerequisite for forward surrogate training, spatial and
+temporal generalization tests, or long-rollout acceptance. It becomes
+mandatory before any gradient-based parameter calibration, physical
+sensitivity or Jacobian analysis, or claim that the neural model's
+physical-parameter derivatives are scientifically valid.
+
+When triggered, create a separately versioned, parent-bound controlled
+parameter-perturbation Teacher dataset. Freeze valid parameter ranges,
+perturbation amplitudes, held-out parameter combinations, outputs, horizons,
+and tolerances before evaluation. Compare neural automatic differentiation
+against Teacher/Fortran central finite differences at process, one-day,
+multiday, and cross-year scales. Classify inactive and mathematically
+nonsmooth branch points explicitly rather than averaging them into the smooth
+gradient score. Bind the dataset, code, environment, finite-difference
+settings, and reports by SHA256. Do not treat the existing 669-point baseline
+dataset as parameter-gradient evidence.
+
 ## Active Ten-Point v4 Production
 
 The frozen ten-point v4 run uses plan
@@ -829,6 +857,10 @@ generated and accepted.
 - Do not restart PFT14 source-branch equivalence work merely because a neural
   experiment fails. First distinguish Teacher-data integrity, supervised
   optimization, and autoregressive rollout error.
+- Do not treat finite network-weight or cross-day-state gradients as evidence
+  that physical-parameter gradients are scientifically correct. Trigger the
+  dedicated parameter-gradient gate before gradient-based calibration or
+  sensitivity claims.
 
 ## Authority Map
 

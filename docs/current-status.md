@@ -315,6 +315,20 @@ Git; large datasets and weights remain external assets with stable identifiers
 and SHA256 hashes. Accepted training and inference code is merged into
 `main`, while ongoing experiments continue on the research branch.
 
+Physical-parameter gradient validation is a separate, conditional promotion
+gate. The current rollout experiment validates gradients with respect to
+network weights and cross-day state; it does not establish that neural AD with
+respect to `alloc_min`, `residence_time`, `vcmax25`, or `maint_resp_slope`
+matches the Teacher/Fortran parameter response. This is not a prerequisite for
+forward surrogate training or rollout acceptance. It becomes mandatory before
+using the neural model for gradient-based parameter calibration, reporting
+parameter sensitivities or Jacobians, or calling those physical-parameter
+gradients scientifically validated. That gate must use a parent-bound
+controlled-parameter-perturbation Teacher dataset, freeze parameter ranges and
+held-out combinations before evaluation, compare neural AD against
+Teacher/Fortran central finite differences at process, one-day, multiday, and
+cross-year scales, and report nonsmooth or inactive branches separately.
+
 ## Teacher Production Evidence
 
 Explore1000 admission measurements established the current production policy:
