@@ -2830,6 +2830,7 @@ def run_screening_update_diagnostic(
     statistics_path: str | Path,
     output_root: str | Path,
     plan_path: str | Path | None = None,
+    parameter_checkpoint_path: str | Path | None = None,
 ) -> Path:
     """Evaluate one frozen screening update from the unchanged parent state."""
 
@@ -2890,10 +2891,48 @@ def run_screening_update_diagnostic(
         seed=int(protocol.raw["optimization"]["screening_seed"]),
         resources=resources,
     )
-    parameters, optimizer = _initial_arm_state(
-        execution=execution,
-        resources=resources,
-    )
+    parameter_source = "unchanged_parent_checkpoint_and_optimizer"
+    parameter_checkpoint_record = None
+    if parameter_checkpoint_path is None:
+        parameters, optimizer = _initial_arm_state(
+            execution=execution,
+            resources=resources,
+        )
+    else:
+        parameter_checkpoint_path = Path(parameter_checkpoint_path).resolve()
+        checkpoint = _load_pickle(parameter_checkpoint_path)
+        identity = _arm_identity(
+            execution=execution,
+            arm_id="mixed_horizon_stability_v1",
+            resources=resources,
+        )
+        verify_arm_checkpoint(
+            checkpoint,
+            arm_id="mixed_horizon_stability_v1",
+            identity=identity,
+            schedule=schedule,
+        )
+        if int(checkpoint["next_update"]) != screening_update:
+            raise ValueError(
+                "screening diagnostic parameter checkpoint must end "
+                "immediately before the selected update"
+            )
+        parameters = jax.tree_util.tree_map(
+            jnp.asarray,
+            checkpoint["parameters"],
+        )
+        optimizer = jax.tree_util.tree_map(
+            jnp.asarray,
+            checkpoint["optimizer"],
+        )
+        parameter_source = (
+            f"mixed_horizon_candidate_checkpoint_update_{screening_update}"
+        )
+        parameter_checkpoint_record = {
+            "path": str(parameter_checkpoint_path),
+            "sha256": _sha256_file(parameter_checkpoint_path),
+            "next_update": int(checkpoint["next_update"]),
+        }
     transition = _bind_dynamic_transition(resources, prepared.runtime)
     objective_kwargs = _objective_kwargs(resources, transition)
     undefined_weight = float(protocol.raw["loss"]["undefined_flip_binary_weight"])
@@ -3118,9 +3157,8 @@ def run_screening_update_diagnostic(
                         ],
                     },
                     "sealed_test_used": False,
-                    "parameter_source": (
-                        "unchanged_parent_checkpoint_and_optimizer"
-                    ),
+                    "parameter_source": parameter_source,
+                    "parameter_checkpoint": parameter_checkpoint_record,
                     "selection": {
                         "screening_update": screening_update,
                         "horizon": horizon,
@@ -3528,7 +3566,8 @@ def run_screening_update_diagnostic(
                     "canonical_sha256": execution["canonical_sha256"],
                 },
                 "sealed_test_used": False,
-                "parameter_source": "unchanged_parent_checkpoint_and_optimizer",
+                "parameter_source": parameter_source,
+                "parameter_checkpoint": parameter_checkpoint_record,
                 "selection": {
                     "screening_update": screening_update,
                     "horizon": horizon,
@@ -3789,7 +3828,8 @@ def run_screening_update_diagnostic(
                 "canonical_sha256": execution["canonical_sha256"],
             },
             "sealed_test_used": False,
-            "parameter_source": "unchanged_parent_checkpoint_and_optimizer",
+            "parameter_source": parameter_source,
+            "parameter_checkpoint": parameter_checkpoint_record,
             "selection": {
                 "screening_update": screening_update,
                 "horizon": horizon,
@@ -4424,6 +4464,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--skip-dataset-hash-verification", action="store_true")
     parser.add_argument("--calibration-ordinal", type=int)
     parser.add_argument("--screening-update", type=int)
+    parser.add_argument("--parameter-checkpoint")
     parser.add_argument("--stop-after-updates", type=int)
     parser.add_argument("--rollout-sample-index", type=int)
     parser.add_argument("--rollout-prefix-length", type=int)
@@ -4517,6 +4558,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             statistics_path=args.statistics,
             output_root=args.output_root,
             plan_path=args.plan,
+            parameter_checkpoint_path=args.parameter_checkpoint,
         )
     elif args.phase == "screening-prefix-gate":
         _require_args(args, ("execution", "stop_after_updates"))

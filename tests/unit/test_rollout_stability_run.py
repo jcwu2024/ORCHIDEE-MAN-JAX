@@ -1010,6 +1010,33 @@ def test_screening_prefix_gate_cli_requires_an_explicit_stop():
     assert args.stop_after_updates == 128
 
 
+def test_screening_update_diagnostic_cli_accepts_candidate_checkpoint():
+    parser = rollout_stability_run._parser()
+    args = parser.parse_args(
+        [
+            "--phase",
+            "diagnose-screening-update",
+            "--protocol",
+            "protocol.json",
+            "--dataset",
+            "dataset.json",
+            "--statistics",
+            "statistics.json",
+            "--output-root",
+            "output",
+            "--execution",
+            "execution.json",
+            "--screening-update",
+            "302",
+            "--parameter-checkpoint",
+            "checkpoint.pkl",
+        ]
+    )
+
+    assert args.screening_update == 302
+    assert args.parameter_checkpoint == "checkpoint.pkl"
+
+
 def _write_parent_assets(tmp_path: Path):
     identity = {"model_architecture": {"id": AXIS_PROCESS_COUPLED_V1}}
     parameters = {"weight": np.asarray([1.0, 2.0], dtype=np.float32)}
