@@ -21,7 +21,9 @@ from research.daily_coarse_graining.rollout_stability_screening import (
     REQUIRED_SLICES,
     _cell_id,
     _evaluation_identity,
+    _expected_cell_counts,
     _ratio_record,
+    _reference_key,
     _require_complete_arm_report,
     _teacher_window_weights,
     build_model_selection_inventory,
@@ -130,6 +132,37 @@ def test_teacher_forced_weights_cover_every_possible_window_exactly():
         assert int(np.sum(terminal_weights[index])) == windows
     assert np.all(all_weights[0] == 1)
     assert np.all(terminal_weights[0] == 1)
+
+
+def test_expected_counts_accept_cold_start_364_and_normal_365_day_shards():
+    first = _reference(
+        landpoint="point",
+        year=1961,
+        spatial="train",
+        temporal="validation",
+    )
+    later = _reference(
+        landpoint="point",
+        year=1962,
+        spatial="train",
+        temporal="validation",
+    )
+    references = (("temporal", first), ("temporal", later))
+    days = {
+        _reference_key("temporal", first): 364,
+        _reference_key("temporal", later): 365,
+    }
+
+    counts = _expected_cell_counts(
+        references,
+        30,
+        reference_days=days,
+    )
+
+    assert counts == {
+        "windows": (364 - 30 + 1) + (365 - 30 + 1),
+        "predicted_days": ((364 - 30 + 1) + (365 - 30 + 1)) * 30,
+    }
 
 
 def test_ratio_gate_refuses_nonzero_candidate_over_zero_control():

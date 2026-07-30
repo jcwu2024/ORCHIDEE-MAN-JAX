@@ -59,14 +59,13 @@ from research.daily_coarse_graining.rollout_stability_run import (
 )
 
 REPORT_SCHEMA_VERSION = "canonical_rollout_stability_screening_report_v1"
-PROGRESS_SCHEMA_VERSION = "canonical_rollout_stability_screening_progress_v1"
+PROGRESS_SCHEMA_VERSION = "canonical_rollout_stability_screening_progress_v2"
 ARM_REPORT_SCHEMA_VERSION = "canonical_rollout_stability_screening_arm_v1"
 REQUIRED_SLICES = ("temporal", "spatial", "joint")
 REQUIRED_HORIZONS = (1, 7, 30)
 REQUIRED_FEEDBACK = ("teacher_forced", "free")
 RELATIVE_DENOMINATOR_SCALE_RATIO = 1.0e-6
 CHECKPOINT_EVERY_REFERENCES = 5
-FIXED_NOLEAP_DAYS = 365
 
 
 class WeightedErrorSums(NamedTuple):
@@ -897,8 +896,26 @@ def _finalize_cell(cell: Mapping[str, Any], *, resources) -> Mapping[str, Any]:
     }
 
 
-def _expected_cell_counts(references: Sequence[MarkovShardRef], horizon: int):
-    windows = len(references) * (FIXED_NOLEAP_DAYS - horizon + 1)
+def _reference_key(slice_id: str, reference: MarkovShardRef) -> str:
+    return "|".join(
+        (
+            slice_id,
+            reference.landpoint_id,
+            str(int(reference.year)),
+            str(reference.path),
+        )
+    )
+
+
+def _expected_cell_counts(
+    references: Sequence[tuple[str, MarkovShardRef]],
+    horizon: int,
+    *,
+    reference_days: Mapping[str, int],
+):
+    windows = sum(
+        int(reference_days[_reference_key(slice_id, reference)]) - horizon + 1 for slice_id, reference in references
+    )
     return {
         "windows": int(windows),
         "predicted_days": int(windows * horizon),
@@ -1376,11 +1393,13 @@ def run_screening(args: argparse.Namespace) -> Path:
         accumulators = progress["accumulators"]
         next_task = int(progress["next_task"])
         structural_gates = progress["structural_gates"]
+        reference_days = progress["reference_days"]
     else:
         output_root.mkdir(parents=True, exist_ok=True)
         accumulators = _empty_accumulators()
         next_task = 0
         structural_gates = {}
+        reference_days = {}
 
     runtime = None
     runtime_landpoint = None
@@ -1392,8 +1411,10 @@ def run_screening(args: argparse.Namespace) -> Path:
     for task_index in range(next_task, len(tasks)):
         slice_id, reference = tasks[task_index]
         shard = load_markov_shard(reference.path)
-        if shard.days != FIXED_NOLEAP_DAYS:
-            raise ValueError("screening requires the admitted fixed 365-day noleap shards")
+        reference_key = _reference_key(slice_id, reference)
+        previous_days = reference_days.setdefault(reference_key, int(shard.days))
+        if int(previous_days) != int(shard.days):
+            raise ValueError("screening shard transition count drift")
         first_batch_for_runtime = runtime_landpoint != reference.landpoint_id
 
         for raw, valid, starts in _padded_window_batches(
@@ -1527,6 +1548,7 @@ def run_screening(args: argparse.Namespace) -> Path:
                     "next_task": next_task,
                     "accumulators": accumulators,
                     "structural_gates": structural_gates,
+                    "reference_days": reference_days,
                 },
             )
             elapsed = time.perf_counter() - interval_started
@@ -1541,7 +1563,7 @@ def run_screening(args: argparse.Namespace) -> Path:
 
     full_evidence = args.max_shards_per_slice is None
     selected_by_slice = {
-        slice_id: tuple(reference for task_slice, reference in tasks if task_slice == slice_id)
+        slice_id: tuple((task_slice, reference) for task_slice, reference in tasks if task_slice == slice_id)
         for slice_id in REQUIRED_SLICES
     }
     expected_counts = {
@@ -1549,6 +1571,7 @@ def run_screening(args: argparse.Namespace) -> Path:
             horizon: _expected_cell_counts(
                 selected_by_slice[slice_id],
                 horizon,
+                reference_days=reference_days,
             )
             for horizon in REQUIRED_HORIZONS
         }
