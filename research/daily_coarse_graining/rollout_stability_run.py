@@ -1307,6 +1307,33 @@ def verify_arm_checkpoint(
         raise ValueError("rollout-stability checkpoint state is incomplete")
 
 
+def fork_arm_checkpoint_for_diagnostic(
+    checkpoint: Mapping[str, Any],
+    *,
+    arm_id: str,
+    source_identity: Mapping[str, Any],
+    diagnostic_identity: Mapping[str, Any],
+    schedule: Mapping[str, Any],
+) -> Mapping[str, Any]:
+    """Rebind one verified training checkpoint to a diagnostic Git identity."""
+
+    verify_arm_checkpoint(
+        checkpoint,
+        arm_id=arm_id,
+        identity=source_identity,
+        schedule=schedule,
+    )
+    return build_arm_checkpoint(
+        arm_id=arm_id,
+        identity=diagnostic_identity,
+        parameters=checkpoint["parameters"],
+        optimizer=checkpoint["optimizer"],
+        next_update=int(checkpoint["next_update"]),
+        schedule=schedule,
+        history=checkpoint["history"],
+    )
+
+
 def _load_rollout_resources(
     *,
     dataset_path: Path,
@@ -4115,6 +4142,7 @@ def run_rollout_stability_arm(
     plan_path: str | Path | None = None,
     stop_after_updates: int | None = None,
     allow_training_head_drift: bool = False,
+    diagnostic_source_checkpoint_path: str | Path | None = None,
 ) -> Path:
     """Run or exactly resume one arm of the matched Experiment B screen."""
 
@@ -4139,13 +4167,18 @@ def run_rollout_stability_arm(
         statistics_path=statistics_path,
         plan_path=None if plan_path is None else Path(plan_path),
     )
-    identity = _arm_identity(
+    source_identity = _arm_identity(
         execution=execution,
         arm_id=arm_id,
         resources=resources,
     )
+    identity = source_identity
     if allow_training_head_drift:
         identity = dict(identity) | {"diagnostic_git_head": _current_git_head()}
+    elif diagnostic_source_checkpoint_path is not None:
+        raise ValueError(
+            "diagnostic source checkpoint requires training-head drift mode"
+        )
     schedule_path = Path(
         execution["artifacts"]["sampling_schedule"]["path"]
     ).resolve()
@@ -4163,6 +4196,44 @@ def run_rollout_stability_arm(
             arm_id=arm_id,
             identity=identity,
             schedule=schedule,
+        )
+        parameters = jax.tree_util.tree_map(jnp.asarray, checkpoint["parameters"])
+        optimizer = jax.tree_util.tree_map(jnp.asarray, checkpoint["optimizer"])
+        next_update = int(checkpoint["next_update"])
+        history = list(checkpoint["history"])
+    elif diagnostic_source_checkpoint_path is not None:
+        diagnostic_source_checkpoint_path = Path(
+            diagnostic_source_checkpoint_path
+        ).resolve()
+        source_checkpoint = _load_pickle(diagnostic_source_checkpoint_path)
+        checkpoint = fork_arm_checkpoint_for_diagnostic(
+            source_checkpoint,
+            arm_id=arm_id,
+            source_identity=source_identity,
+            diagnostic_identity=identity,
+            schedule=schedule,
+        )
+        _atomic_pickle(checkpoint_path, checkpoint)
+        _atomic_json(
+            arm_root / "diagnostic_checkpoint_fork.json",
+            {
+                "schema_version": "canonical_rollout_checkpoint_fork_v1",
+                "status": "completed",
+                "arm_id": arm_id,
+                "source_checkpoint": {
+                    "path": str(diagnostic_source_checkpoint_path),
+                    "sha256": _sha256_file(
+                        diagnostic_source_checkpoint_path
+                    ),
+                    "next_update": int(source_checkpoint["next_update"]),
+                },
+                "diagnostic_git_head": _current_git_head(),
+                "destination_checkpoint": {
+                    "path": str(checkpoint_path),
+                    "sha256": _sha256_file(checkpoint_path),
+                },
+                "sealed_test_used": False,
+            },
         )
         parameters = jax.tree_util.tree_map(jnp.asarray, checkpoint["parameters"])
         optimizer = jax.tree_util.tree_map(jnp.asarray, checkpoint["optimizer"])
@@ -4523,6 +4594,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--calibration-ordinal", type=int)
     parser.add_argument("--screening-update", type=int)
     parser.add_argument("--parameter-checkpoint")
+    parser.add_argument("--source-checkpoint")
     parser.add_argument("--stop-after-updates", type=int)
     parser.add_argument("--rollout-sample-index", type=int)
     parser.add_argument("--rollout-prefix-length", type=int)
@@ -4632,6 +4704,7 @@ def main(argv: Sequence[str] | None = None) -> int:
             plan_path=args.plan,
             stop_after_updates=args.stop_after_updates,
             allow_training_head_drift=True,
+            diagnostic_source_checkpoint_path=args.source_checkpoint,
         )
     elif args.phase == "manifest":
         _require_args(args, ("preflight", "calibration"))

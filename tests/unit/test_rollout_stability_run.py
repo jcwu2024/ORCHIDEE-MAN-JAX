@@ -52,6 +52,7 @@ from research.daily_coarse_graining.rollout_stability_run import (
     calibrate_gradient_coefficients,
     completed_horizon_counts,
     create_execution_manifest,
+    fork_arm_checkpoint_for_diagnostic,
     make_detached_day_gradient_diagnostic,
     make_detached_next_day_gradient_diagnostic,
     make_retained_tail_ad_boundary_jvp_diagnostic,
@@ -971,6 +972,57 @@ def test_arm_checkpoint_binds_exact_schedule_progress_and_rejects_drift(tmp_path
         )
 
 
+def test_diagnostic_checkpoint_fork_rebinds_only_identity(tmp_path):
+    schedule = build_sampling_schedule(_index(tmp_path), _small_protocol(updates=10))
+    source_identity = {"training_git_head": "source"}
+    diagnostic_identity = {
+        "training_git_head": "source",
+        "diagnostic_git_head": "diagnostic",
+    }
+    source = build_arm_checkpoint(
+        arm_id="mixed_horizon_stability_v1",
+        identity=source_identity,
+        parameters={"weight": np.asarray([1.0])},
+        optimizer={"step": np.asarray(4)},
+        next_update=4,
+        schedule=schedule,
+        history=[{"update": 4}],
+    )
+
+    forked = fork_arm_checkpoint_for_diagnostic(
+        source,
+        arm_id="mixed_horizon_stability_v1",
+        source_identity=source_identity,
+        diagnostic_identity=diagnostic_identity,
+        schedule=schedule,
+    )
+
+    verify_arm_checkpoint(
+        forked,
+        arm_id="mixed_horizon_stability_v1",
+        identity=diagnostic_identity,
+        schedule=schedule,
+    )
+    assert forked["next_update"] == source["next_update"]
+    assert forked["history"] == source["history"]
+    np.testing.assert_array_equal(
+        forked["parameters"]["weight"],
+        source["parameters"]["weight"],
+    )
+    np.testing.assert_array_equal(
+        forked["optimizer"]["step"],
+        source["optimizer"]["step"],
+    )
+    with pytest.raises(ValueError, match="identity drift"):
+        fork_arm_checkpoint_for_diagnostic(
+            source,
+            arm_id="mixed_horizon_stability_v1",
+            source_identity={"training_git_head": "wrong"},
+            diagnostic_identity=diagnostic_identity,
+            schedule=schedule,
+        )
+
+
 def test_execution_manifest_binds_calibration_parent_schedule_and_environment(
     tmp_path,
 ):
@@ -1096,11 +1148,14 @@ def test_screening_prefix_gate_cli_requires_an_explicit_stop():
             "execution.json",
             "--stop-after-updates",
             "128",
+            "--source-checkpoint",
+            "checkpoint.pkl",
         ]
     )
 
     assert args.phase == "screening-prefix-gate"
     assert args.stop_after_updates == 128
+    assert args.source_checkpoint == "checkpoint.pkl"
 
 
 def test_screening_update_diagnostic_cli_accepts_candidate_checkpoint():
