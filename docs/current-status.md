@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-07-30.
+Last updated: 2026-07-31.
 
 This page is the current status authority. Dated files under
 `docs/source_audits/` and `docs/research/` are evidence snapshots and may
@@ -520,8 +520,38 @@ for 1/3/7/30 days, all exact hard counts stayed zero, and the sealed test split
 was not used. The failed formal root remains rejected. See
 [`rollout_turnover_ratio_gradient_20260730.md`](research/daily_coarse_graining/rollout_turnover_ratio_gradient_20260730.md).
 
-The next operation is to regenerate preflight, train-only calibration, and
-execution identity under one clean current commit and a new immutable output
-root, then request approval for the formal six-hour matched Experiment B
-screen. See
-[`rollout_turnover_ratio_gradient_20260730.md`](research/daily_coarse_graining/rollout_turnover_ratio_gradient_20260730.md).
+The clean formal Experiment B rerun is complete. Slurm job `14425151` ran on
+one V100 from training commit
+`d6e43cc79f590e494f79fe54adba4ac2c28779b6`, completed in `04:16:53`, and
+returned exit code zero. Both matched arms completed all 8,192 updates with
+identical horizon counts `3277/2458/1638/819` for 1/3/7/30 days and did not
+access the sealed test split. The immutable output root is
+`runtime/outputs/training/canonical-669-rollout-stability-v2-d6e43cc`.
+Control/candidate checkpoint SHA256 values are
+`8a099c85f8c869398ffe2203b0fa1d558735b0f819ac606d112d452db2fb2ec1`
+and
+`4f36bb39839f8fba7a9cbd0283610bced3bd45c0688891bcdb4d051917320300`;
+their training-report SHA256 values are
+`6ca7985edd5b5b61beecd534a7f341a7173a6ef549b39ddccca3b93be2237069`
+and
+`ffd25be74ab739d15c45f66d04fc79d304e4877821b91f23f12d85da5749184c`.
+This proves successful matched training, not promotion.
+
+Commit `a9d2390` adds the fail-closed full-data screening evaluator. Local
+validation passes 64 tests, Ruff, `py_compile`, shell syntax, and diff checks.
+Real V100 smokes cover temporal, spatial, and joint model-selection shards,
+large batches `512/512/256`, and a bit-exact 30-day versus `15+15`
+restart-split probe with maximum difference zero. The evaluator covers every
+valid 1/7/30-day teacher-forced and free-rollout window, the complete state,
+process families, tendency bias, 12 named science fields, dynamic status and
+hard constraints; incomplete evidence cannot be classified.
+
+The formal matched screen is Slurm job `14430377`, currently pending on
+`gnall` for priority. It requests one V100, four CPUs and `07:30:00`; the
+worst-case additive charge is CNY 18.60. Its immutable output root is
+`runtime/outputs/screening/canonical-669-rollout-stability-screening-a9d2390`.
+Do not submit a duplicate while this job is active. Promotion or rejection
+must be decided only by its completed `matched_screening_report.json`. If it
+passes, the next gate is three confirmation seeds; if it fails, stop and
+attribute the predeclared named architecture/objective gates without opening
+the sealed test split.

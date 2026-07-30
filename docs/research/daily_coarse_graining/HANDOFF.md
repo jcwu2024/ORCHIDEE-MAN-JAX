@@ -1,6 +1,6 @@
 # Daily Coarse-Graining Handoff
 
-Snapshot date: 2026-07-30
+Snapshot date: 2026-07-31
 
 This is the single operational handoff page for the daily coarse-graining
 research branch. Read this page before dated experiment reports. Stable
@@ -18,11 +18,10 @@ scientific and release facts remain authoritative in
 4. Confirm the admitted 669-point dataset and frozen architecture-screen
    hashes below. Do not regenerate Teacher data or reuse nine-point assets.
 5. Treat architecture job `14403674` as accepted parent evidence. Experiment B
-   jobs `14410820` and `14419242` are rejected. The `min_stomate` fix closed
-   update 226; the turnover-ratio JVP fix at `90113c0` closed update 302 and
-   passed an audited sequential gate through update 1024 at `b8c8dee`. Prepare
-   a new formal run only after binding preflight, calibration, and execution
-   to one clean current commit.
+   jobs `14410820` and `14419242` are rejected. Clean rerun `14425151`
+   completed both matched 8,192-update arms at commit `d6e43cc`. Formal
+   all-sample screen `14430377` is pending on `gnall`; do not submit a
+   duplicate or inspect the sealed test split.
 
 ```bash
 git status --short --branch
@@ -684,7 +683,7 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-Run the frozen matched Experiment B screen described in
+Complete the frozen matched Experiment B screen described in
 [`long_rollout_architecture_review_20260727.md`](long_rollout_architecture_review_20260727.md).
 The implementation:
 
@@ -771,11 +770,59 @@ through 1024: 768 consecutive post-fix updates, horizon counts
 is recorded in
 [`rollout_turnover_ratio_gradient_20260730.md`](rollout_turnover_ratio_gradient_20260730.md).
 
-The next step is to create a new immutable output root and regenerate
-preflight, train-only calibration, and execution identity from one clean
-current commit. Only then request explicit approval for the formal six-hour
-matched `gnall` rerun. Do not reuse the rejected training root as promotion
-evidence.
+The clean formal rerun completed as Slurm job `14425151` on
+`ibc13b03n04` in `04:16:53` with exit code zero. It is fixed at training
+commit `d6e43cc79f590e494f79fe54adba4ac2c28779b6` and immutable output root:
+
+```text
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/canonical-669-rollout-stability-v2-d6e43cc
+```
+
+Both matched arms completed 8,192 updates with identical 1/3/7/30 horizon
+counts `3277/2458/1638/819`; neither used sealed test data. Evidence hashes:
+
+```text
+control checkpoint:
+8a099c85f8c869398ffe2203b0fa1d558735b0f819ac606d112d452db2fb2ec1
+control training report:
+6ca7985edd5b5b61beecd534a7f341a7173a6ef549b39ddccca3b93be2237069
+candidate checkpoint:
+4f36bb39839f8fba7a9cbd0283610bced3bd45c0688891bcdb4d051917320300
+candidate training report:
+ffd25be74ab739d15c45f66d04fc79d304e4877821b91f23f12d85da5749184c
+```
+
+This closes training execution only. It does not promote the candidate.
+
+The fail-closed evaluator is fixed at commit `a9d2390`. Its local suite passes
+64 tests plus Ruff, `py_compile`, shell syntax, and diff checks. Real `gln01`
+smokes covered temporal, spatial, and joint model-selection shards, accepted
+large batches `512/512/256`, and proved the 30-day versus `15+15`
+restart-split probe bit-exact with maximum difference zero. The evaluator
+checks every valid 1/7/30-day teacher-forced and free-rollout window and
+refuses classification if any slice or window is incomplete.
+
+Formal all-sample screening job `14430377` is submitted to `gnall` and is
+currently pending for priority. Resources are one node, four CPUs, one V100,
+and `07:30:00`; worst-case additive cost is CNY 2.10 CPU plus CNY 16.50 GPU,
+or CNY 18.60. The output root is:
+
+```text
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/screening/canonical-669-rollout-stability-screening-a9d2390
+```
+
+The expected log is:
+
+```text
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/rollout_stability_screening_14430377.txt
+```
+
+Do not submit a duplicate while this job is active. When it finishes, verify
+Slurm state, report/progress hashes, and the final
+`matched_screening_report.json`, then download the compact JSON evidence. If
+the screen passes, run the protocol's three confirmation seeds. If it rejects,
+stop and attribute the named architecture/objective gates; do not tune against
+sealed test data or begin 365-day validation.
 
 The paid runner is
 `scripts/hpc/run_rollout_stability_experiment.sh`. It requires an already
