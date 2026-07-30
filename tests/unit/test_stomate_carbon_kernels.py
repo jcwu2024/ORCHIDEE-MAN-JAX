@@ -52,6 +52,7 @@ from jax_orchidee.stomate.carbon_kernels import (
     SENESCENCE_DRY,
     SENESCENCE_MIXED,
     SENESCENCE_NONE,
+    _stable_ratio_for_ad,
     agripeat_adjust_fractions_step,
     agr_allocation_split,
     allocation_step,
@@ -1856,6 +1857,33 @@ def test_turnover_leaf_fraction_tiny_active_mass_has_stable_jvp():
         np.asarray(leaf_frac_tangent),
         np.zeros_like(np.asarray(leaf_frac_tangent)),
     )
+
+
+def test_stable_ratio_preserves_primal_and_masks_unrepresentable_jvp():
+    tangent_floor = np.sqrt(np.finfo(np.float64).tiny)
+    denominator = jnp.asarray(tangent_floor / 2.0, dtype=jnp.float64)
+    numerator = denominator / 4.0
+
+    def directional_ratio(numerator_value, denominator_value):
+        return jax.jvp(
+            _stable_ratio_for_ad,
+            (numerator_value, denominator_value),
+            (
+                jnp.asarray(1.0, dtype=jnp.float64),
+                jnp.asarray(0.0, dtype=jnp.float64),
+            ),
+        )
+
+    error, (ratio, tangent) = jax.jit(
+        checkify.checkify(
+            directional_ratio,
+            errors=checkify.float_checks,
+        )
+    )(numerator, denominator)
+
+    assert error.get() is None
+    np.testing.assert_array_equal(np.asarray(ratio), np.asarray(0.25))
+    np.testing.assert_array_equal(np.asarray(tangent), np.asarray(0.0))
 
 
 def test_turnover_leaf_age_inactive_zero_critical_age_has_finite_gradient():

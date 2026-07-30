@@ -20,7 +20,7 @@ import numpy as np
 
 @custom_jvp
 def _stable_ratio_for_ad(numerator, denominator):
-    """Preserve the primal quotient while avoiding a squared AD denominator."""
+    """Preserve the quotient and mask unrepresentable quotient tangents."""
 
     return numerator / denominator
 
@@ -30,9 +30,28 @@ def _stable_ratio_for_ad_jvp(primals, tangents):
     numerator, denominator = primals
     numerator_tangent, denominator_tangent = tangents
     ratio = numerator / denominator
+    representable_gradient_denominator = (
+        jnp.abs(denominator)
+        >= jnp.sqrt(jnp.finfo(denominator.dtype).tiny)
+    )
+    safe_denominator = jnp.where(
+        representable_gradient_denominator,
+        denominator,
+        1.0,
+    )
+    safe_numerator_tangent = jnp.where(
+        representable_gradient_denominator,
+        numerator_tangent,
+        0.0,
+    )
+    safe_denominator_tangent = jnp.where(
+        representable_gradient_denominator,
+        denominator_tangent,
+        0.0,
+    )
     ratio_tangent = (
-        numerator_tangent - ratio * denominator_tangent
-    ) / denominator
+        safe_numerator_tangent - ratio * safe_denominator_tangent
+    ) / safe_denominator
     return ratio, ratio_tangent
 
 
