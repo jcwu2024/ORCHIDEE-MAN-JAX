@@ -651,7 +651,6 @@ def _verify_execution_artifacts(
         ("dataset_manifest", "dataset_manifest_sha256"),
         ("training_statistics", "training_statistics_sha256"),
         ("acceptance_report", "acceptance_report_sha256"),
-        ("training_protocol", "training_protocol_sha256"),
     )
     for execution_name, protocol_name in names:
         asset = artifacts[execution_name]
@@ -661,6 +660,12 @@ def _verify_execution_artifacts(
             raise ValueError(f"screening execution artifact drift for {execution_name}")
         if observed != expected_protocol_artifacts[protocol_name]:
             raise ValueError(f"screening protocol artifact drift for {execution_name}")
+    training_protocol = load_training_protocol(artifacts["training_protocol"]["path"])
+    if (
+        training_protocol.sha256 != artifacts["training_protocol"]["sha256"]
+        or training_protocol.sha256 != expected_protocol_artifacts["training_protocol_sha256"]
+    ):
+        raise ValueError("screening protocol artifact drift for training_protocol")
     verify_training_acceptance(
         artifacts["acceptance_report"]["path"],
         artifacts["dataset_manifest"]["path"],
