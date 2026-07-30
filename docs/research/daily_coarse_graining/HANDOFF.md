@@ -18,11 +18,11 @@ scientific and release facts remain authoritative in
 4. Confirm the admitted 669-point dataset and frozen architecture-screen
    hashes below. Do not regenerate Teacher data or reuse nine-point assets.
 5. Treat architecture job `14403674` as accepted parent evidence. Experiment B
-   job `14410820` and the later update-226 failure are rejected training
-   attempts. The `min_stomate` fix passed the complete update audit at
-   `f9554c6` and the resumable 256-update gate at `452b743`. Prepare a new
-   formal run only after binding preflight, calibration, and execution to one
-   clean current commit.
+   jobs `14410820` and `14419242` are rejected. The `min_stomate` fix closed
+   update 226; the turnover-ratio JVP fix at `90113c0` closed update 302 and
+   passed an audited sequential gate through update 1024 at `b8c8dee`. Prepare
+   a new formal run only after binding preflight, calibration, and execution
+   to one clean current commit.
 
 ```bash
 git status --short --branch
@@ -725,6 +725,23 @@ passed updates 0-128 and then restored the hash-bound checkpoint to pass
 updates 128-256. All 256 updates were applied, horizons 1/3/7/30 were covered,
 and the final hard counts were zero. Evidence is recorded in
 [`rollout_min_stomate_threshold_20260730.md`](rollout_min_stomate_threshold_20260730.md).
+
+Formal rerun `14419242` completed the 8,192-update control but failed closed at
+candidate update 302. Exact replay localized the first bad transition to
+landpoint `221.0-107.0`, year 1973, Day 355. The forward state and loss were
+finite; the local reverse derivative failed in
+`turnover_leaf_age_fall -> _stable_ratio_for_ad_jvp` at a
+`3.705819757041253e-311` leaf stock. Commit `90113c0` preserves the quotient
+primal and masks only quotient tangents below the float64 representable
+gradient boundary. The complete update-302 audit then passed with zero bad
+samples and an applied update.
+
+Commit `b8c8dee` added an identity-checked diagnostic checkpoint fork. Starting
+from the formal update-256 checkpoint, the candidate passed every update
+through 1024: 768 consecutive post-fix updates, horizon counts
+`431/317/182/94`, all exact hard counts zero, and no sealed-test use. Evidence
+is recorded in
+[`rollout_turnover_ratio_gradient_20260730.md`](rollout_turnover_ratio_gradient_20260730.md).
 
 The next step is to create a new immutable output root and regenerate
 preflight, train-only calibration, and execution identity from one clean

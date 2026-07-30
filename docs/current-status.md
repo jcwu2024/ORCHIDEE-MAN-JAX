@@ -489,8 +489,25 @@ then passed all 256 mixed-horizon updates at commit `452b743`, including an
 exact checkpoint restart at update 128 and coverage of horizons 1, 3, 7, and
 30. The sealed test split remains unused.
 
+Formal Experiment B rerun `14419242` completed the full 8,192-update control
+but failed closed at candidate update 302. Exact checkpoint replay and
+horizon-prefix bisection localized the first bad transition to 1973 Day 355.
+The forward model remained finite; reverse-mode AD failed in the STOMATE
+leaf-age turnover quotient at a `3.7058e-311` leaf stock. Commit `90113c0`
+preserves the source-equivalent quotient primal and masks only quotient
+tangents below the float64 representable-gradient boundary. The complete
+update-302 audit then passed with zero bad samples, finite independent
+component gradients, all hard counts zero, and an applied update.
+
+An identity-checked diagnostic checkpoint fork at commit `b8c8dee` resumed the
+formal update-256 state and passed every mixed-horizon update through 1024.
+All 768 post-fix updates were applied; horizon counts were `431/317/182/94`
+for 1/3/7/30 days, all exact hard counts stayed zero, and the sealed test split
+was not used. The failed formal root remains rejected. See
+[`rollout_turnover_ratio_gradient_20260730.md`](research/daily_coarse_graining/rollout_turnover_ratio_gradient_20260730.md).
+
 The next operation is to regenerate preflight, train-only calibration, and
 execution identity under one clean current commit and a new immutable output
 root, then request approval for the formal six-hour matched Experiment B
 screen. See
-[`rollout_min_stomate_threshold_20260730.md`](research/daily_coarse_graining/rollout_min_stomate_threshold_20260730.md).
+[`rollout_turnover_ratio_gradient_20260730.md`](research/daily_coarse_graining/rollout_turnover_ratio_gradient_20260730.md).
