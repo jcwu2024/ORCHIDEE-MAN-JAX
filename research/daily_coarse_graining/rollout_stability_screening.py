@@ -65,7 +65,7 @@ REQUIRED_SLICES = ("temporal", "spatial", "joint")
 REQUIRED_HORIZONS = (1, 7, 30)
 REQUIRED_FEEDBACK = ("teacher_forced", "free")
 RELATIVE_DENOMINATOR_SCALE_RATIO = 1.0e-6
-CHECKPOINT_EVERY_REFERENCES = 5
+CHECKPOINT_EVERY_REFERENCES = 100
 
 
 class WeightedErrorSums(NamedTuple):
@@ -1669,9 +1669,9 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--protocol", type=Path, required=True)
     parser.add_argument("--experiment-root", type=Path, required=True)
     parser.add_argument("--output-root", type=Path, required=True)
-    parser.add_argument("--batch-size-1", type=int, default=256)
-    parser.add_argument("--batch-size-7", type=int, default=256)
-    parser.add_argument("--batch-size-30", type=int, default=128)
+    parser.add_argument("--batch-size-1", type=int, default=512)
+    parser.add_argument("--batch-size-7", type=int, default=512)
+    parser.add_argument("--batch-size-30", type=int, default=256)
     parser.add_argument("--max-shards-per-slice", type=int)
     parser.add_argument(
         "--skip-dataset-content-hash-verification",

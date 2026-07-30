@@ -6,7 +6,7 @@
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
-#SBATCH --time=07:00:00
+#SBATCH --time=07:30:00
 #SBATCH -o /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/rollout_stability_screening_%j.txt
 #SBATCH -e /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/rollout_stability_screening_%j.txt
 #SBATCH --no-requeue
