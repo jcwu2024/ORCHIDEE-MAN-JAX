@@ -946,7 +946,27 @@ d930c39579c13c91290597c85a6e9f12a1157b5b799b7b7ac334fb2e8f274afd
 ```
 
 The limited smoke is not promotion-eligible, but it authorizes the paid
-all-sample screen. Do not inspect the sealed test split or begin
+all-sample screen.
+
+Paid job `14436672` failed after two seconds before evaluator startup because
+the Slurm wrapper directly executed the checkout's non-executable `0644`
+runner. Commit `7091e1d` changes only the wrapper to explicit `bash` and adds
+a regression test. The numerical evaluator and all frozen gates are unchanged,
+so the completed smoke remains valid. Replacement job `14436716` is running
+on one `gnall` V100 from:
+
+```text
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/causal-carbon-screening-7091e1d
+```
+
+Its log and output root are:
+
+```text
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/causal_carbon_screening_14436716.txt
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/screening/causal-carbon-adapter-full-7091e1d
+```
+
+Do not inspect the sealed test split or begin
 365-day/complete-chain validation before that screen passes. The frozen rules
 are in
 [`causal_carbon_adapter_screening_protocol_20260731.md`](causal_carbon_adapter_screening_protocol_20260731.md).

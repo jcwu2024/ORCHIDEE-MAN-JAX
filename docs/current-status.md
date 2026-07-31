@@ -636,5 +636,12 @@ counts zero. Both restart-split probes passed, and sealed test data remained
 unread. The top-level smoke report SHA256 is
 `f05d88d97ec93152487f22697e50361de705a6e1223964971bdfccdcd777b7cb`.
 As preregistered, this limited smoke is not promotion-eligible; it authorizes
-the paid all-sample screen. See
+the paid all-sample screen.
+
+The first paid submission, job `14436672`, exited after two seconds before
+starting the evaluator because the Slurm wrapper directly executed a
+non-executable checkout file. Commit `7091e1d` changes only that invocation to
+explicit `bash` and adds a regression test; it does not alter the evaluator or
+frozen gates. Replacement job `14436716` is running on one `gnall` V100 from
+the immutable `7091e1d` checkout. See
 [`causal_carbon_adapter_screening_protocol_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_screening_protocol_20260731.md).
