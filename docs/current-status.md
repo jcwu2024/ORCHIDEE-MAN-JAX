@@ -704,3 +704,13 @@ carbon endpoint or next-state gate. The next action is a deterministic bounded
 train-only capture design followed by the remaining cheap conservation,
 feasibility, finite-gradient, and parent-no-regression checks. See
 [`ok_leak_driver_capture_probe_20260731.md`](research/daily_coarse_graining/ok_leak_driver_capture_probe_20260731.md).
+
+A deterministic bounded selection tool is now ready for the existing
+server-side v5 shards. It admits only the six spatial-train/temporal-train
+landpoints and selects 16 days per point: cold-start anchor, low/high extrema
+of six dynamic process metrics, and rank-space farthest fill. The intended 96
+days require about 44.58 MiB of uncompressed driver labels. Source shard,
+day-start state, and endpoint hashes are mandatory, and sealed references are
+filtered before file access. The real 96-day plan has not yet been generated
+or frozen. See
+[`ok_leak_auxiliary_capture_selection_protocol_20260731.md`](research/daily_coarse_graining/ok_leak_auxiliary_capture_selection_protocol_20260731.md).

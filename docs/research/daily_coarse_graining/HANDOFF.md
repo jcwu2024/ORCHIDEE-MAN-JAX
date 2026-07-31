@@ -1029,6 +1029,16 @@ audit in
 The real capture evidence is in
 [`ok_leak_driver_capture_probe_20260731.md`](ok_leak_driver_capture_probe_20260731.md).
 
+The deterministic bounded selector is also implemented and tested. Its
+frozen policy selects 16 days per each of the six train landpoints: earliest
+train day, low/high extrema for six dynamic process metrics, then rank-space
+farthest fill. The intended real plan has 96 days and about 44.58 MiB of
+uncompressed driver labels. It verifies every admitted shard hash and filters
+all non-train/train references before opening a shard. The real server-side
+plan has not yet been generated; run and review it before implementing the
+batch capture. See
+[`ok_leak_auxiliary_capture_selection_protocol_20260731.md`](ok_leak_auxiliary_capture_selection_protocol_20260731.md).
+
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).
 It preserves the frozen 669-point parent split and contains six train, two
