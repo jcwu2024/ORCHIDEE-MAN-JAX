@@ -23,8 +23,9 @@ scientific and release facts remain authoritative in
 6. Experiment C formal training `14434127` and screening `14436716` are
    complete. The candidate is rejected because independent stock correction
    worsened `carbon_32l` by `7.33-9.32x` and `deepC_peat` by `5.66-7.45x`.
-   Do not retune, confirm, or promote it. The only active operation is the
-   frozen one-shard-per-slice stock-adapter ablation described below.
+   Its stock-adapter ablation also failed. Do not retune, confirm, or promote
+   it. The active operation is now the bounded exact-`OK_LEAK` driver capture
+   and conservative micro-gate described below.
 
 ```bash
 git status --short --branch
@@ -989,6 +990,32 @@ It leaves the trained flux adapter active, sets only
 the deterministic one-shard-per-slice smoke. This is not retraining and cannot
 revive Experiment C. Its result decides whether to invest in a source-backed,
 flux-form conservation-constrained successor or stop that architecture family.
+
+That ablation has now completed at commit `7c53f79` and failed the frozen
+gate. The old and new control evidence is exactly equal, all hard and guard
+gates pass, and the retained flux metrics differ from the original candidate
+by at most about 0.31%. Temporal and joint stock error recover sharply, but
+spatial `carbon_32l/deepC_peat` remain `13.71x/16.20x` worse than control.
+Do not reuse the exact-zero stock candidate. Next audit source carbon-budget
+ownership and admit a successor only if learned transfers drive an explicit
+conservative stock update. Full evidence is in
+[`causal_carbon_adapter_stock_ablation_result_20260731.md`](causal_carbon_adapter_stock_ablation_result_20260731.md).
+
+The source ownership audit is complete. Of the 1,376 compact `OK_LEAK`
+targets, 1,222 are independent carbon inventory, 64 are the derived
+`deepC_peat` diagnostic, and 90 are ratios or overlapping tracer/partition
+state. Contract v5 has endpoint supervision but contains neither aggregate
+transfer labels nor the 13 half-hour driver series required to execute the
+exact 48-step scan. The preferred successor predicts those driver series and
+runs the existing `_paper_compiled_ok_leak_fold`; it does not independently
+predict any carbon stock or `deepC_peat`.
+
+The next operation is a small, train-only auxiliary driver capture and exact
+replay gate, not a 669-point regeneration and not paid training. Use the
+machine ownership/capture guard in
+`research/daily_coarse_graining/carbon_budget_ownership.py` and the frozen
+audit in
+[`carbon_budget_ownership_audit_20260731.md`](carbon_budget_ownership_audit_20260731.md).
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).

@@ -669,3 +669,27 @@ recover `carbon_32l` and `deepC_peat`, retain at least 24/27 flux-bias gates,
 and keep every hard and litter/DOC guard gate. It does not retrain or revive
 Experiment C. See
 [`causal_carbon_adapter_stock_ablation_protocol_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_stock_ablation_protocol_20260731.md).
+
+That one-shard-per-slice ablation is complete at commit `7c53f79` and fails
+its predeclared gate. It exactly preserves the original candidate's direct
+flux interface, and its 27 downstream flux-bias metrics change by only about
+`-0.23%` to `+0.31%`. It strongly repairs temporal and joint carbon-stock
+error, but spatial `carbon_32l` and `deepC_peat` remain `13.71x` and `16.20x`
+worse than the matched control. Thus neither independent stock residuals nor
+an unconditional return to parent-owned stocks is acceptable. The next
+candidate requires source-backed learned transfers with a conservative stock
+update. No paid training is authorized yet. See
+[`causal_carbon_adapter_stock_ablation_result_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_stock_ablation_result_20260731.md).
+
+The subsequent source audit closes the ownership ambiguity. Contract v5's
+1,376 compact `OK_LEAK` values contain 1,222 independent inventory values,
+64 derived `deepC_peat` values, and 90 ratio or overlapping tracer/partition
+values. `deepC_peat` is reset from `carbon_32l` before decomposition and must
+not be a neural stock owner. Existing shards provide endpoint supervision but
+not aggregate transfer labels or the 13 half-hour driver series required by
+the exact source-backed scan. The preferred bounded successor therefore
+predicts those drivers and executes the existing 48-step
+`_paper_compiled_ok_leak_fold`. No paid training or 669-point regeneration is
+authorized before a small auxiliary capture passes exact replay, conservation,
+nonnegative-stock, finite-gradient, and parent-no-regression gates. See
+[`carbon_budget_ownership_audit_20260731.md`](research/daily_coarse_graining/carbon_budget_ownership_audit_20260731.md).
