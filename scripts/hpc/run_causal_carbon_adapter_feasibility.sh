@@ -21,7 +21,8 @@ PROTOCOL=$WORKTREE/manifests/coarse_graining/canonical_669_causal_carbon_adapter
 OUTPUT_ROOT=${OUTPUT_ROOT:-$ROOT/runtime/outputs/training/causal-carbon-adapter-feasibility-${EXPECTED_GIT_HEAD:0:7}}
 CACHE_ROOT=$ROOT/runtime/cache/jax/orcjax_gpu/causal-carbon-adapter
 
-test "$(hostname)" = gln01
+command -v nvidia-smi >/dev/null
+nvidia-smi -L >/dev/null
 test -x "$PYTHON"
 for path in \
   "$DATASET" \
