@@ -1,0 +1,234 @@
+{
+  "schema_version": "causal_carbon_adapter_experiment_v1",
+  "experiment_id": "canonical-669-causal-carbon-adapter-v1",
+  "status": "frozen_before_feasibility_and_validation",
+  "scientific_hypothesis": "A zero-initialized adapter restricted to the PFT14 same-day carbon interface can correct GPP, maintenance respiration, and fast soil-carbon inputs before retained STOMATE without trading away protected fast-day processes.",
+  "rejected_predecessor": {
+    "experiment_id": "canonical-669-rollout-stability-v2",
+    "candidate_arm": "mixed_horizon_stability_v1",
+    "screening_report_sha256": "1387448b0b0831661daaaffc8985ef22602540e0c7e91fea7bfe96c085828bb0",
+    "decision": "rejected",
+    "reuse_candidate_checkpoint": false
+  },
+  "parent": {
+    "arm_id": "one_step_continuation_control",
+    "model_architecture": "axis_process_coupled_v1",
+    "checkpoint_sha256": "8a099c85f8c869398ffe2203b0fa1d558735b0f819ac606d112d452db2fb2ec1",
+    "training_report_sha256": "6ca7985edd5b5b61beecd534a7f341a7173a6ef549b39ddccca3b93be2237069",
+    "parameters_frozen": true,
+    "optimizer_state_reused": false
+  },
+  "artifacts": {
+    "dataset_manifest_sha256": "89ea2f24bad8f4b39129937f4106285dd53936c35d8dc610810f865b02d4e508",
+    "training_statistics_sha256": "c9ed1c6ea4cfca6c0da9504a36d440a2b388375f01acf8bc78edc7645a4ffb37",
+    "acceptance_report_sha256": "0b13da5c7f8664f9b3b8fe70f6b8dc8e3aca513ecbf15d4b3d879a07d663b596",
+    "training_protocol": "manifests/coarse_graining/daily_teacher_669_training_protocol.json",
+    "training_protocol_sha256": "9db3e89ce4c2e1649fa17032cfde34e091b85b1fe274d29969abdeef732829e3"
+  },
+  "architecture": {
+    "id": "causal_carbon_adapter_v1",
+    "pft_index": 13,
+    "adapter_hidden_width": 64,
+    "adapter_layout_sha256": "2ed9111105ddb8bad68f776fd806914e8e9a68f45d531140a7d7dfb6613b0797",
+    "objective_layout_sha256": "aae7bcc69a16d672c20e931a1edf98caec4bd472858ee116a47943ec0ccfa1fe",
+    "output_initialization": "exact_zero",
+    "base_prediction_at_initialization": "bit_exact",
+    "protected_fast_day_columns": 2714,
+    "adapted_fast_day_columns": 141,
+    "hidden_cross_day_memory": false
+  },
+  "data_policy": {
+    "optimization_and_coefficient_calibration": {
+      "spatial_split": "train",
+      "temporal_split": "train"
+    },
+    "model_selection_slices": [
+      "temporal",
+      "spatial",
+      "joint"
+    ],
+    "sealed_test_used": false,
+    "landpoint_identity_as_feature": false,
+    "new_teacher_data_required": false,
+    "cross_year_training_windows": false
+  },
+  "comparison": {
+    "arms": [
+      {
+        "id": "causal_interface_one_step_control",
+        "objective": "field_balanced_causal_interface_v1"
+      },
+      {
+        "id": "causal_interface_rollout_candidate",
+        "objective": "causal_interface_next_rollout_signed_bias_v1"
+      }
+    ],
+    "same_frozen_parent": true,
+    "same_zero_initialized_adapter": true,
+    "same_anchor_batches": true,
+    "same_optimizer_updates": true,
+    "same_seed": true,
+    "candidate_only_treatment": "causal_next_state_rollout_and_signed_bias"
+  },
+  "objective": {
+    "fast_interface_fields_equal_weight": [
+      "daily_interface.gpp_daily",
+      "daily_interface.resp_maint_part",
+      "ok_leak.carbon_32l",
+      "ok_leak.deepC_peat"
+    ],
+    "primary_next_state_fields_equal_weight": [
+      "npp_daily",
+      "resp_growth",
+      "resp_maint",
+      "biomass",
+      "lai",
+      "carbon_32l",
+      "deepC_peat"
+    ],
+    "flux_bias_fields": [
+      "npp_daily",
+      "resp_growth",
+      "resp_maint"
+    ],
+    "stock_tendency_bias_fields": [
+      "biomass",
+      "lai",
+      "carbon_32l",
+      "deepC_peat"
+    ],
+    "no_regression_guard_fields": [
+      "litter",
+      "DOC"
+    ],
+    "day_end_gpp_state_supervision": false,
+    "loss_components": [
+      {
+        "id": "L_interface",
+        "present_in_both_arms": true,
+        "coefficient": 1.0
+      },
+      {
+        "id": "L_next",
+        "present_in_both_arms": false,
+        "coefficient_source": "train_only_gradient_calibration"
+      },
+      {
+        "id": "L_rollout",
+        "present_in_both_arms": false,
+        "coefficient_source": "train_only_gradient_calibration"
+      },
+      {
+        "id": "L_flux_bias",
+        "present_in_both_arms": false,
+        "coefficient_source": "train_only_gradient_calibration"
+      },
+      {
+        "id": "L_stock_tendency_bias",
+        "present_in_both_arms": false,
+        "coefficient_source": "train_only_gradient_calibration"
+      }
+    ],
+    "coefficient_calibration": {
+      "method": "train_only_median_gradient_norm_ratio_v1",
+      "batches_per_horizon": 16,
+      "target_gradient_norm_ratios": {
+        "L_next": 1.0,
+        "L_rollout": 1.0,
+        "L_flux_bias": 0.5,
+        "L_stock_tendency_bias": 0.5
+      },
+      "coefficient_clip": [
+        0.001,
+        1000.0
+      ],
+      "validation_data_forbidden": true,
+      "frozen_before_matched_training": true
+    }
+  },
+  "optimization": {
+    "optimizer": "adam",
+    "learning_rate": 0.0001,
+    "screening_updates": 4096,
+    "anchor_batch_size": 256,
+    "checkpoint_every_updates": 256,
+    "progress_every_updates": 128,
+    "seed": 20260801
+  },
+  "mixed_horizon_sampling": [
+    {
+      "days": 1,
+      "probability": 0.5,
+      "batch_size": 128,
+      "rematerialize": false
+    },
+    {
+      "days": 3,
+      "probability": 0.3,
+      "batch_size": 32,
+      "rematerialize": false
+    },
+    {
+      "days": 7,
+      "probability": 0.2,
+      "batch_size": 16,
+      "rematerialize": false
+    }
+  ],
+  "train_only_feasibility_gate": {
+    "updates_per_arm": 8,
+    "required_horizon_coverage": [
+      1,
+      3,
+      7
+    ],
+    "real_shards_required": true,
+    "finite_loss_and_gradients": true,
+    "every_update_applied": true,
+    "frozen_parent_bit_exact": true,
+    "protected_fast_day_columns_bit_exact": true,
+    "unexpected_defined_status_mismatches": 0,
+    "discrete_state_mismatches": 0,
+    "nonfinite_defined_values": 0,
+    "negative_source_nonnegative_carbon_stocks": 0,
+    "sealed_test_used": false
+  },
+  "screening_validation": {
+    "all_model_selection_samples": true,
+    "required_slices": [
+      "temporal",
+      "spatial",
+      "joint"
+    ],
+    "horizons_days": [
+      1,
+      7,
+      30
+    ],
+    "gates_relative_to_control": {
+      "one_step_interface_ratio_max": 1.02,
+      "one_step_primary_state_ratio_max": 0.98,
+      "seven_day_primary_state_ratio_max": 0.95,
+      "thirty_day_primary_state_ratio_max": 0.95,
+      "global_state_ratio_max": 1.02,
+      "flux_bias_ratio_max": 0.9,
+      "stock_tendency_bias_ratio_max": 0.9,
+      "guard_field_ratio_max": 1.05
+    },
+    "all_hard_constraints_required": true
+  },
+  "promotion_order": [
+    "three_seed_confirmation",
+    "annual_365_day_validation",
+    "complete_validation_chains",
+    "sealed_test_once_after_freeze"
+  ],
+  "stop_rules": {
+    "feasibility_gate_failed": "stop_before_paid_matched_training",
+    "screening_gate_failed": "reject_candidate_without_weight_tuning",
+    "validation_weight_search": false,
+    "inspect_sealed_test_after_failure": false,
+    "train_through_365_days_or_50_years": false,
+    "fallback_to_rejected_predecessor": false
+  }
+}

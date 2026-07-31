@@ -40,36 +40,21 @@ class AxisProcessCoupledModelSpec:
 
     @property
     def condition_width(self) -> int:
-        return (
-            self.parameter_latent_width
-            + self.landpoint_static_latent_width
-            + self.annual_calendar_latent_width
-        )
+        return self.parameter_latent_width + self.landpoint_static_latent_width + self.annual_calendar_latent_width
 
     def identity(self) -> dict[str, Any]:
         return {
             "id": "axis_process_coupled_v1",
             "process_axis_layout_sha256": self.layout.sha256,
-            "process_group_ids": [
-                group.id for group in self.layout.process_groups
-            ],
-            "process_group_widths": [
-                len(group.state_indices) for group in self.layout.process_groups
-            ],
+            "process_group_ids": [group.id for group in self.layout.process_groups],
+            "process_group_widths": [len(group.state_indices) for group in self.layout.process_groups],
             "axis_partition_widths": {
-                group.id: {
-                    partition.encoder_kind: len(partition.indices)
-                    for partition in group.axis_partitions
-                }
+                group.id: {partition.encoder_kind: len(partition.indices) for partition in group.axis_partitions}
                 for group in self.layout.process_groups
             },
-            "target_family_widths": {
-                family.id: len(family.target_indices)
-                for family in self.layout.target_families
-            },
+            "target_family_widths": {family.id: len(family.target_indices) for family in self.layout.target_families},
             "target_family_sources": {
-                family.id: list(family.source_process_ids)
-                for family in self.layout.target_families
+                family.id: list(family.source_process_ids) for family in self.layout.target_families
             },
             "process_latent_width": self.process_latent_width,
             "forcing_latent_width": self.forcing_latent_width,
@@ -98,6 +83,15 @@ class AxisProcessCoupledModelParameters(NamedTuple):
     target_family_inputs: tuple[DenseParameters, ...]
     target_family_outputs: tuple[DenseParameters, ...]
     dynamic_undefined_head: DenseParameters
+
+
+class AxisProcessFeatures(NamedTuple):
+    """Reusable latent boundary before the family-specific output heads."""
+
+    tokens: Any
+    global_token: Any
+    forcing: Any
+    condition: Any
 
 
 def axis_process_spec_from_contract(
@@ -131,16 +125,9 @@ def _validate_spec(spec: AxisProcessCoupledModelSpec) -> None:
     if any(width < 1 for width in widths):
         raise ValueError("axis-process architecture widths must be positive")
     state_indices = [
-        index
-        for group in layout.process_groups
-        for partition in group.axis_partitions
-        for index in partition.indices
+        index for group in layout.process_groups for partition in group.axis_partitions for index in partition.indices
     ]
-    target_indices = [
-        index
-        for family in layout.target_families
-        for index in family.target_indices
-    ]
+    target_indices = [index for family in layout.target_families for index in family.target_indices]
     if sorted(state_indices) != list(range(config.state_width)):
         raise ValueError("axis partitions must cover model state exactly once")
     if sorted(target_indices) != list(range(config.fast_day_target_width)):
@@ -156,15 +143,8 @@ def initialize_axis_process_coupled_model(
 
     _validate_spec(spec)
     config = spec.base_config
-    partition_count = sum(
-        len(group.axis_partitions) for group in spec.layout.process_groups
-    )
-    key_count = (
-        partition_count
-        + 9
-        + 2 * spec.coupling_blocks
-        + 2 * len(spec.layout.target_families)
-    )
+    partition_count = sum(len(group.axis_partitions) for group in spec.layout.process_groups)
+    key_count = partition_count + 9 + 2 * spec.coupling_blocks + 2 * len(spec.layout.target_families)
     keys = iter(jax.random.split(jax.random.PRNGKey(seed), key_count))
     state_axis_encoders = tuple(
         tuple(
@@ -234,24 +214,15 @@ def initialize_axis_process_coupled_model(
         )
         for _ in range(spec.coupling_blocks)
     )
-    process_indices = {
-        group.id: index for index, group in enumerate(spec.layout.process_groups)
-    }
+    process_indices = {group.id: index for index, group in enumerate(spec.layout.process_groups)}
     target_family_inputs = []
     target_family_outputs = []
     for family in spec.layout.target_families:
         source_width = len(family.source_process_ids) * spec.process_latent_width
-        input_width = (
-            source_width
-            + spec.process_latent_width
-            + spec.forcing_latent_width
-            + spec.condition_width
-        )
+        input_width = source_width + spec.process_latent_width + spec.forcing_latent_width + spec.condition_width
         if any(source not in process_indices for source in family.source_process_ids):
             raise ValueError(f"target family {family.id} has an unknown process source")
-        target_family_inputs.append(
-            _dense_init(next(keys), input_width, spec.target_head_width)
-        )
+        target_family_inputs.append(_dense_init(next(keys), input_width, spec.target_head_width))
         target_family_outputs.append(
             _dense_init(
                 next(keys),
@@ -262,15 +233,11 @@ def initialize_axis_process_coupled_model(
         )
     dynamic_undefined_head = _dense_init(
         next(keys),
-        spec.process_latent_width
-        + spec.forcing_latent_width
-        + spec.condition_width,
+        spec.process_latent_width + spec.forcing_latent_width + spec.condition_width,
         config.dynamic_undefined_width,
         scale=1.0e-2,
     )
-    dynamic_undefined_head = dynamic_undefined_head._replace(
-        bias=jnp.full_like(dynamic_undefined_head.bias, -4.0)
-    )
+    dynamic_undefined_head = dynamic_undefined_head._replace(bias=jnp.full_like(dynamic_undefined_head.bias, -4.0))
     try:
         next(keys)
     except StopIteration:
@@ -301,9 +268,7 @@ def _condition(
 ):
     annual_calendar = jnp.concatenate(
         (
-            _masked_features(
-                batch.annual_conditions, batch.annual_conditions_finite
-            ),
+            _masked_features(batch.annual_conditions, batch.annual_conditions_finite),
             jnp.asarray(batch.calendar, dtype=jnp.float32),
         ),
         axis=-1,
@@ -318,26 +283,22 @@ def _condition(
             ),
             jax.nn.silu(
                 _dense(
-                    _masked_features(
-                        batch.landpoint_static, batch.landpoint_static_finite
-                    ),
+                    _masked_features(batch.landpoint_static, batch.landpoint_static_finite),
                     parameters.landpoint_static_encoder,
                 )
             ),
-            jax.nn.silu(
-                _dense(annual_calendar, parameters.annual_calendar_encoder)
-            ),
+            jax.nn.silu(_dense(annual_calendar, parameters.annual_calendar_encoder)),
         ),
         axis=-1,
     )
 
 
-def axis_process_coupled_model_apply(
+def axis_process_coupled_features(
     parameters: AxisProcessCoupledModelParameters,
     batch: CanonicalDayBatch,
     spec: AxisProcessCoupledModelSpec,
-) -> CanonicalPrediction:
-    """Predict one complete fast-day boundary from explicit Markov state."""
+) -> AxisProcessFeatures:
+    """Encode one day while preserving the process-token ownership boundary."""
 
     process_tokens = []
     for group, encoders in zip(
@@ -346,9 +307,7 @@ def axis_process_coupled_model_apply(
         strict=True,
     ):
         axis_tokens = []
-        for partition, encoder in zip(
-            group.axis_partitions, encoders, strict=True
-        ):
+        for partition, encoder in zip(group.axis_partitions, encoders, strict=True):
             indices = jnp.asarray(partition.indices, dtype=jnp.int32)
             features = _masked_features(
                 jnp.take(batch.state, indices, axis=-1),
@@ -370,27 +329,38 @@ def axis_process_coupled_model_apply(
         len(spec.layout.process_groups),
         spec.process_latent_width,
     )
-    tokens = tokens + jnp.reshape(
-        _dense(condition, parameters.condition_to_process), process_shape
-    )
-    tokens = tokens + jnp.reshape(
-        _dense(forcing, parameters.forcing_to_process), process_shape
-    )
+    tokens = tokens + jnp.reshape(_dense(condition, parameters.condition_to_process), process_shape)
+    tokens = tokens + jnp.reshape(_dense(forcing, parameters.forcing_to_process), process_shape)
     for self_parameters, global_parameters in zip(
         parameters.coupling_self,
         parameters.coupling_global,
         strict=True,
     ):
         global_token = jnp.mean(tokens, axis=1)
-        update = _dense(tokens, self_parameters) + _dense(
-            global_token, global_parameters
-        )[:, None, :]
+        update = _dense(tokens, self_parameters) + _dense(global_token, global_parameters)[:, None, :]
         tokens = tokens + jax.nn.silu(update)
     global_token = jnp.mean(tokens, axis=1)
+    return AxisProcessFeatures(
+        tokens=tokens,
+        global_token=global_token,
+        forcing=forcing,
+        condition=condition,
+    )
 
-    process_indices = {
-        group.id: index for index, group in enumerate(spec.layout.process_groups)
-    }
+
+def axis_process_coupled_prediction_from_features(
+    parameters: AxisProcessCoupledModelParameters,
+    batch: CanonicalDayBatch,
+    spec: AxisProcessCoupledModelSpec,
+    features: AxisProcessFeatures,
+) -> CanonicalPrediction:
+    """Decode all Contract-v5 target families from one encoded day."""
+
+    process_indices = {group.id: index for index, group in enumerate(spec.layout.process_groups)}
+    tokens = features.tokens
+    global_token = features.global_token
+    forcing = features.forcing
+    condition = features.condition
     residual = jnp.zeros_like(batch.normalized_fast_day_baseline)
     for family, input_parameters, output_parameters in zip(
         spec.layout.target_families,
@@ -402,12 +372,8 @@ def axis_process_coupled_model_apply(
             [process_indices[source] for source in family.source_process_ids],
             dtype=jnp.int32,
         )
-        source_tokens = jnp.take(tokens, source_indices, axis=1).reshape(
-            tokens.shape[0], -1
-        )
-        features = jnp.concatenate(
-            (source_tokens, global_token, forcing, condition), axis=-1
-        )
+        source_tokens = jnp.take(tokens, source_indices, axis=1).reshape(tokens.shape[0], -1)
+        features = jnp.concatenate((source_tokens, global_token, forcing, condition), axis=-1)
         family_residual = _dense(
             jax.nn.silu(_dense(features, input_parameters)),
             output_parameters,
@@ -415,14 +381,24 @@ def axis_process_coupled_model_apply(
         target_indices = jnp.asarray(family.target_indices, dtype=jnp.int32)
         residual = residual.at[:, target_indices].set(family_residual)
 
-    undefined_features = jnp.concatenate(
-        (global_token, forcing, condition), axis=-1
-    )
+    undefined_features = jnp.concatenate((global_token, forcing, condition), axis=-1)
     return CanonicalPrediction(
-        normalized_fast_day_target=(
-            batch.normalized_fast_day_baseline + residual
-        ),
-        dynamic_undefined_flip_logits=_dense(
-            undefined_features, parameters.dynamic_undefined_head
-        ),
+        normalized_fast_day_target=(batch.normalized_fast_day_baseline + residual),
+        dynamic_undefined_flip_logits=_dense(undefined_features, parameters.dynamic_undefined_head),
+    )
+
+
+def axis_process_coupled_model_apply(
+    parameters: AxisProcessCoupledModelParameters,
+    batch: CanonicalDayBatch,
+    spec: AxisProcessCoupledModelSpec,
+) -> CanonicalPrediction:
+    """Predict one complete fast-day boundary from explicit Markov state."""
+
+    features = axis_process_coupled_features(parameters, batch, spec)
+    return axis_process_coupled_prediction_from_features(
+        parameters,
+        batch,
+        spec,
+        features,
     )

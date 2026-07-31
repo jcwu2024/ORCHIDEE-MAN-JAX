@@ -22,6 +22,11 @@ scientific and release facts remain authoritative in
    all-sample screen `14430377` rejected `mixed_horizon_stability_v1`.
    Do not run confirmation seeds, inspect sealed test data, or begin 365-day
    validation for this candidate.
+6. Experiment C is frozen locally but has not passed its real-shard
+   feasibility gate. Its only next compute action is the eight-update
+   train/train V100 feasibility command in
+   `causal_carbon_adapter_run.py`. Do not submit the 4,096-update matched
+   screen before that report passes.
 
 ```bash
 git status --short --branch
@@ -837,6 +842,32 @@ quality, not execution or state integrity. Do not run confirmation seeds,
 inspect sealed test data, relax gates, or use 365-day rollout to tune this
 candidate. Full interpretation is in
 [`rollout_stability_screening_20260731.md`](rollout_stability_screening_20260731.md).
+
+Experiment C preparation is complete in the local worktree. It starts from
+the one-step control checkpoint, never the rejected B candidate, freezes the
+axis/process parent, and trains only an exact-zero adapter restricted to 141
+causal PFT14 carbon-interface columns. Its direct field widths are
+`1/12/96/32` for GPP, maintenance respiration, `carbon_32l`, and
+`deepC_peat`; 2,714 protected columns remain bit-exact. The objective gives
+equal field weight to the causal interface, separates downstream state,
+signed flux bias, and stock-tendency bias, and keeps DOC/litter as
+no-regression guards. Reset day-end `gpp_daily` is not treated as same-day GPP
+supervision.
+
+The frozen protocol is
+`manifests/coarse_graining/canonical_669_causal_carbon_adapter_experiment.json`
+with canonical SHA256
+`35ede512bbc5f55881317cb700d7512d71993391c65f36ed8a5de087c4d4c3e7`.
+The adapter/objective/protocol suite and a complete synthetic two-day JIT
+reverse path pass locally. Next run only the eight-update real-shard
+feasibility gate using
+`research.daily_coarse_graining.causal_carbon_adapter_run`. It must cover
+1/3/7-day horizons, keep the parent and all protected columns bit-exact,
+apply every update with finite gradients, and keep all exact hard counts at
+zero. Its unit coefficients are plumbing-only; after it passes, run formal
+train-only gradient calibration before any paid 4,096-update matched A/B.
+Detailed rationale and stop rules are in
+[`causal_carbon_adapter_experiment_20260731.md`](causal_carbon_adapter_experiment_20260731.md).
 
 The paid runner is
 `scripts/hpc/run_rollout_stability_experiment.sh`. It requires an already

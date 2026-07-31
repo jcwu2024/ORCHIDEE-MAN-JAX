@@ -565,3 +565,25 @@ not a numerical-integrity or orchestration failure. Do not run confirmation
 seeds, inspect the sealed test split, or begin 365-day validation for this
 candidate. See
 [`rollout_stability_screening_20260731.md`](research/daily_coarse_graining/rollout_stability_screening_20260731.md).
+
+Experiment C is now frozen as a bounded causal-carbon hypothesis, but has not
+yet run on a real GPU shard. It keeps the Experiment B one-step control as a
+frozen 1,954,041-parameter parent and attaches an exact-zero
+76,877-parameter adapter. The adapter can alter only 141 PFT14 columns:
+same-day GPP, 12-part maintenance respiration, 32-layer carbon, and deep peat
+carbon. The other 2,714 fast-day columns and the dynamic undefined head remain
+parent-owned and bit-exact. The objective directly supervises this causal
+`B_fast` interface, then separately supervises downstream carbon state,
+signed flux bias, and stock-tendency bias; reset day-end `gpp_daily` is
+explicitly excluded as a proxy for same-day GPP. DOC and litter are
+no-regression guards.
+
+The protocol SHA256 is
+`35ede512bbc5f55881317cb700d7512d71993391c65f36ed8a5de087c4d4c3e7`.
+Local architecture/objective/protocol regression and a complete synthetic
+two-day retained-transition reverse-mode path pass. Paid matched training is
+forbidden until an eight-update, real train/train-shard V100 feasibility gate
+passes all 1/3/7-day, frozen-parent, protected-column, gradient, and hard-state
+checks. This preparation does not establish that Experiment C improves
+rollout quality. See
+[`causal_carbon_adapter_experiment_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_experiment_20260731.md).
