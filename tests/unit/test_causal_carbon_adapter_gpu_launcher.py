@@ -31,3 +31,11 @@ def test_causal_adapter_screening_slurm_wrapper_uses_bash_for_non_executable_che
     source = path.read_text(encoding="utf-8")
 
     assert 'exec bash "$WORKTREE/scripts/hpc/run_causal_carbon_adapter_screening.sh"' in source
+
+
+def test_causal_adapter_screening_launcher_forwards_declared_group_ablations():
+    path = Path(__file__).resolve().parents[2] / "scripts" / "hpc" / "run_causal_carbon_adapter_screening.sh"
+    source = path.read_text(encoding="utf-8")
+
+    assert "CANDIDATE_DISABLED_GROUPS=${CANDIDATE_DISABLED_GROUPS:-}" in source
+    assert 'args+=(--candidate-disabled-group "$group_id")' in source

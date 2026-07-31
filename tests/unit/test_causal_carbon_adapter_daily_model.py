@@ -21,6 +21,7 @@ from research.daily_coarse_graining.causal_carbon_adapter_daily_model import (
     causal_carbon_adapter_spec_from_contract,
     causal_carbon_adapter_trainable_parameters,
     causal_carbon_interface_layout_from_contract,
+    disable_causal_carbon_adapter_groups,
     initialize_causal_carbon_adapter,
 )
 from research.daily_coarse_graining.daily_model_architecture import (
@@ -375,3 +376,47 @@ def test_nonzero_adapter_cannot_modify_protected_target_columns():
     protected = [index for index in range(22) if index not in adapted]
     np.testing.assert_array_equal(changed[:, protected], baseline[:, protected])
     assert np.any(np.asarray(changed[:, sorted(adapted)]) != np.asarray(baseline[:, sorted(adapted)]))
+
+
+def test_group_ablation_exactly_disables_only_selected_correction():
+    _, adapter_spec, _, parameters = _spec_and_parameters()
+    outputs = tuple(
+        output._replace(
+            weight=jnp.ones_like(output.weight) * (0.01 + index * 0.01),
+            bias=jnp.ones_like(output.bias) * (0.02 + index * 0.01),
+        )
+        for index, output in enumerate(parameters.group_outputs)
+    )
+    changed_parameters = parameters._replace(group_outputs=outputs)
+    ablated_parameters = disable_causal_carbon_adapter_groups(
+        changed_parameters,
+        adapter_spec,
+        ("carbon_stock_interface",),
+    )
+    baseline = causal_carbon_adapter_model_apply(
+        parameters,
+        _batch(),
+        adapter_spec,
+    ).normalized_fast_day_target
+    changed = causal_carbon_adapter_model_apply(
+        changed_parameters,
+        _batch(),
+        adapter_spec,
+    ).normalized_fast_day_target
+    ablated = causal_carbon_adapter_model_apply(
+        ablated_parameters,
+        _batch(),
+        adapter_spec,
+    ).normalized_fast_day_target
+
+    flux_indices = adapter_spec.interface_layout.groups[0].target_indices
+    stock_indices = adapter_spec.interface_layout.groups[1].target_indices
+    np.testing.assert_array_equal(ablated[:, flux_indices], changed[:, flux_indices])
+    np.testing.assert_array_equal(ablated[:, stock_indices], baseline[:, stock_indices])
+
+    with pytest.raises(ValueError, match="unknown causal carbon adapter groups"):
+        disable_causal_carbon_adapter_groups(
+            changed_parameters,
+            adapter_spec,
+            ("not_a_group",),
+        )

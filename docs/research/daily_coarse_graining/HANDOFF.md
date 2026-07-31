@@ -17,16 +17,14 @@ scientific and release facts remain authoritative in
    through Slurm.
 4. Confirm the admitted 669-point dataset and frozen architecture-screen
    hashes below. Do not regenerate Teacher data or reuse nine-point assets.
-5. Treat architecture job `14403674` as accepted parent evidence. Experiment B
-   clean rerun `14425151` completed both matched 8,192-update arms, but formal
-   all-sample screen `14430377` rejected `mixed_horizon_stability_v1`.
-   Do not run confirmation seeds, inspect sealed test data, or begin 365-day
-   validation for this candidate.
-6. Experiment C passed its eight-update real-shard train/train feasibility
-   gate at commit `79258fd`. Its next operation is formal train-only
-   independent-component gradient calibration followed by the frozen matched
-   4,096-update arms. The resumable formal lifecycle is prepared locally but
-   not yet submitted. Do not initialize from either smoke checkpoint.
+5. Experiment B formal all-sample screen `14430377` rejected
+   `mixed_horizon_stability_v1`. Do not run confirmation seeds, inspect sealed
+   test data, or begin 365-day validation for that candidate.
+6. Experiment C formal training `14434127` and screening `14436716` are
+   complete. The candidate is rejected because independent stock correction
+   worsened `carbon_32l` by `7.33-9.32x` and `deepC_peat` by `5.66-7.45x`.
+   Do not retune, confirm, or promote it. The only active operation is the
+   frozen one-shard-per-slice stock-adapter ablation described below.
 
 ```bash
 git status --short --branch
@@ -983,6 +981,14 @@ result. The frozen rules and full interpretation are in
 [`causal_carbon_adapter_screening_protocol_20260731.md`](causal_carbon_adapter_screening_protocol_20260731.md)
 and
 [`causal_carbon_adapter_screening_20260731.md`](causal_carbon_adapter_screening_20260731.md).
+
+The only authorized post-rejection attribution is
+[`causal_carbon_adapter_stock_ablation_protocol_20260731.md`](causal_carbon_adapter_stock_ablation_protocol_20260731.md).
+It leaves the trained flux adapter active, sets only
+`carbon_stock_interface` output weights and biases to exact zero, and reruns
+the deterministic one-shard-per-slice smoke. This is not retraining and cannot
+revive Experiment C. Its result decides whether to invest in a source-backed,
+flux-form conservation-constrained successor or stop that architecture family.
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).

@@ -18,6 +18,7 @@ from research.daily_coarse_graining.canonical_multistep_training_run import (
 )
 from research.daily_coarse_graining.causal_carbon_adapter_daily_model import (
     assemble_causal_carbon_adapter_parameters,
+    disable_causal_carbon_adapter_groups,
 )
 from research.daily_coarse_graining.causal_carbon_adapter_protocol import (
     ARM_IDS,
@@ -328,7 +329,14 @@ def classify_screening(
     }
 
 
-def _load_arms(experiment_root, execution, schedule, experiment):
+def _load_arms(
+    experiment_root,
+    execution,
+    schedule,
+    experiment,
+    *,
+    candidate_disabled_group_ids: tuple[str, ...] = (),
+):
     parameters = {}
     identities = {}
     budget = int(schedule["updates"])
@@ -362,10 +370,19 @@ def _load_arms(experiment_root, execution, schedule, experiment):
             jnp.asarray,
             checkpoint["parameters"],
         )
-        parameters[arm_id] = assemble_causal_carbon_adapter_parameters(
+        arm_parameters = assemble_causal_carbon_adapter_parameters(
             experiment.base_parameters,
             trainable,
         )
+        disabled_group_ids = ()
+        if arm_id == ARM_IDS[1]:
+            disabled_group_ids = candidate_disabled_group_ids
+            arm_parameters = disable_causal_carbon_adapter_groups(
+                arm_parameters,
+                experiment.adapter_definition.causal_carbon_adapter_spec,
+                disabled_group_ids,
+            )
+        parameters[arm_id] = arm_parameters
         identities[arm_id] = {
             "training_report": {
                 "path": str(report_path),
@@ -376,6 +393,11 @@ def _load_arms(experiment_root, execution, schedule, experiment):
                 "sha256": report["checkpoint_sha256"],
             },
             "identity": identity,
+            "post_training_transform": {
+                "id": "exact_zero_adapter_group_ablation_v1",
+                "disabled_group_ids": list(disabled_group_ids),
+                "training_checkpoint_unchanged": True,
+            },
         }
     return parameters, identities
 
@@ -410,6 +432,7 @@ def _evaluation_identity(
 
 def run_screening(args: argparse.Namespace) -> Path:
     started = time.perf_counter()
+    candidate_disabled_group_ids = tuple(dict.fromkeys(args.candidate_disabled_group))
     experiment_root = args.experiment_root.resolve()
     execution_path = experiment_root / "training_execution.json"
     raw_execution = json.loads(execution_path.read_text(encoding="utf-8"))
@@ -452,6 +475,7 @@ def run_screening(args: argparse.Namespace) -> Path:
         execution,
         schedule,
         experiment,
+        candidate_disabled_group_ids=candidate_disabled_group_ids,
     )
     batch_sizes = {
         1: int(args.batch_size_1),
@@ -699,6 +723,7 @@ def run_screening(args: argparse.Namespace) -> Path:
             "arm_id": arm_id,
             "identity": arm_identities[arm_id],
             "model_architecture": experiment.adapter_definition.identity(),
+            "post_training_transform": arm_identities[arm_id]["post_training_transform"],
             "slices": slices,
             "structural_gates": {
                 "restart_split_exact": bool(structural_gates[arm_id]["passed"]),
@@ -755,6 +780,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--batch-size-7", type=int, default=512)
     parser.add_argument("--batch-size-30", type=int, default=256)
     parser.add_argument("--max-shards-per-slice", type=int)
+    parser.add_argument(
+        "--candidate-disabled-group",
+        action="append",
+        default=[],
+        help="evaluation-only exact-zero ablation applied to the trained candidate",
+    )
     parser.add_argument(
         "--skip-dataset-content-hash-verification",
         action="store_true",

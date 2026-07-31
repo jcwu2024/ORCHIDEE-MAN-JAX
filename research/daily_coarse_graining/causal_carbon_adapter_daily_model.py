@@ -241,6 +241,36 @@ def assemble_causal_carbon_adapter_parameters(
     )
 
 
+def disable_causal_carbon_adapter_groups(
+    parameters: CausalCarbonAdapterParameters,
+    spec: CausalCarbonAdapterModelSpec,
+    group_ids: tuple[str, ...],
+) -> CausalCarbonAdapterParameters:
+    """Return an evaluation-only ablation with selected corrections set to zero."""
+
+    requested = tuple(dict.fromkeys(group_ids))
+    available = {group.id for group in spec.interface_layout.groups}
+    unknown = set(requested) - available
+    if unknown:
+        raise ValueError(f"unknown causal carbon adapter groups: {sorted(unknown)}")
+    outputs = tuple(
+        (
+            output._replace(
+                weight=jnp.zeros_like(output.weight),
+                bias=jnp.zeros_like(output.bias),
+            )
+            if group.id in requested
+            else output
+        )
+        for group, output in zip(
+            spec.interface_layout.groups,
+            parameters.group_outputs,
+            strict=True,
+        )
+    )
+    return parameters._replace(group_outputs=outputs)
+
+
 def causal_carbon_adapter_spec_from_contract(
     base_spec: AxisProcessCoupledModelSpec,
     contract_metadata: Mapping[str, Any],

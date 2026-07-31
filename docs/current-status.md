@@ -660,3 +660,12 @@ or sealed test for this candidate. See
 [`causal_carbon_adapter_screening_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_screening_20260731.md)
 and
 [`causal_carbon_adapter_screening_protocol_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_screening_protocol_20260731.md).
+
+A single post-rejection attribution is now frozen before any successor is
+built. It evaluates the rejected checkpoint with only
+`carbon_stock_interface` set to exact zero while retaining the trained flux
+adapter. The one-shard-per-slice smoke must reproduce the prior control,
+recover `carbon_32l` and `deepC_peat`, retain at least 24/27 flux-bias gates,
+and keep every hard and litter/DOC guard gate. It does not retrain or revive
+Experiment C. See
+[`causal_carbon_adapter_stock_ablation_protocol_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_stock_ablation_protocol_20260731.md).

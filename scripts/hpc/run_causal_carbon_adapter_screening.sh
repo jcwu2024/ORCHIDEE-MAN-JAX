@@ -13,6 +13,7 @@ MAX_SHARDS_PER_SLICE=${MAX_SHARDS_PER_SLICE:-}
 BATCH_SIZE_1=${BATCH_SIZE_1:-512}
 BATCH_SIZE_7=${BATCH_SIZE_7:-512}
 BATCH_SIZE_30=${BATCH_SIZE_30:-256}
+CANDIDATE_DISABLED_GROUPS=${CANDIDATE_DISABLED_GROUPS:-}
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 CACHE_ROOT=$ROOT/runtime/cache/jax/orcjax_gpu/causal-carbon-adapter-screening
@@ -56,6 +57,12 @@ args=(
 )
 if [[ -n "$MAX_SHARDS_PER_SLICE" ]]; then
   args+=(--max-shards-per-slice "$MAX_SHARDS_PER_SLICE")
+fi
+if [[ -n "$CANDIDATE_DISABLED_GROUPS" ]]; then
+  IFS=',' read -r -a disabled_groups <<< "$CANDIDATE_DISABLED_GROUPS"
+  for group_id in "${disabled_groups[@]}"; do
+    args+=(--candidate-disabled-group "$group_id")
+  done
 fi
 
 env \
