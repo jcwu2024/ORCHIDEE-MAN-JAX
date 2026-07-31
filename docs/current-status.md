@@ -546,12 +546,22 @@ valid 1/7/30-day teacher-forced and free-rollout window, the complete state,
 process families, tendency bias, 12 named science fields, dynamic status and
 hard constraints; incomplete evidence cannot be classified.
 
-The formal matched screen is Slurm job `14430377`, currently pending on
-`gnall` for priority. It requests one V100, four CPUs and `07:30:00`; the
-worst-case additive charge is CNY 18.60. Its immutable output root is
-`runtime/outputs/screening/canonical-669-rollout-stability-screening-a9d2390`.
-Do not submit a duplicate while this job is active. Promotion or rejection
-must be decided only by its completed `matched_screening_report.json`. If it
-passes, the next gate is three confirmation seeds; if it fails, stop and
-attribute the predeclared named architecture/objective gates without opening
-the sealed test split.
+The formal matched screen completed as Slurm job `14430377` in `04:21:26`
+with exit code zero. All 4,754 point-year references and every valid
+teacher-forced/free 1/7/30-day window were evaluated; the report SHA256 is
+`1387448b0b0831661daaaffc8985ef22602540e0c7e91fea7bfe96c085828bb0`.
+The candidate is rejected: 114 of 223 relative gates fail. All one-step global
+no-regression gates and all three 30-day global rollout gates pass, with
+30-day temporal/spatial/joint error ratios `0.9181/0.7539/0.8047`. However,
+none of the 7-day global gates reaches the required 5% improvement, 46/54
+tendency-bias gates fail, and 57/108 named science-field gates fail. NPP,
+growth and maintenance respiration, biomass, LAI, `carbon_32l`, and
+`deepC_peat` are the repeated failures.
+
+All exact hard and structural constraints pass, including zero unexpected
+status/discrete/nonfinite/negative-stock errors and a bit-exact 30-day
+`15+15` restart split. This is therefore an objective/architecture failure,
+not a numerical-integrity or orchestration failure. Do not run confirmation
+seeds, inspect the sealed test split, or begin 365-day validation for this
+candidate. See
+[`rollout_stability_screening_20260731.md`](research/daily_coarse_graining/rollout_stability_screening_20260731.md).

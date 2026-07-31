@@ -18,10 +18,10 @@ scientific and release facts remain authoritative in
 4. Confirm the admitted 669-point dataset and frozen architecture-screen
    hashes below. Do not regenerate Teacher data or reuse nine-point assets.
 5. Treat architecture job `14403674` as accepted parent evidence. Experiment B
-   jobs `14410820` and `14419242` are rejected. Clean rerun `14425151`
-   completed both matched 8,192-update arms at commit `d6e43cc`. Formal
-   all-sample screen `14430377` is pending on `gnall`; do not submit a
-   duplicate or inspect the sealed test split.
+   clean rerun `14425151` completed both matched 8,192-update arms, but formal
+   all-sample screen `14430377` rejected `mixed_horizon_stability_v1`.
+   Do not run confirmation seeds, inspect sealed test data, or begin 365-day
+   validation for this candidate.
 
 ```bash
 git status --short --branch
@@ -683,8 +683,12 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-Complete the frozen matched Experiment B screen described in
-[`long_rollout_architecture_review_20260727.md`](long_rollout_architecture_review_20260727.md).
+Define the next bounded architecture/objective hypothesis after the rejected
+Experiment B result in
+[`rollout_stability_screening_20260731.md`](rollout_stability_screening_20260731.md).
+Do not continue or retune `mixed_horizon_stability_v1`.
+
+The completed Experiment B implementation:
 The implementation:
 
 - preserves one identical batch-256 one-step anchor in both arms and adds only
@@ -802,27 +806,37 @@ restart-split probe bit-exact with maximum difference zero. The evaluator
 checks every valid 1/7/30-day teacher-forced and free-rollout window and
 refuses classification if any slice or window is incomplete.
 
-Formal all-sample screening job `14430377` is submitted to `gnall` and is
-currently pending for priority. Resources are one node, four CPUs, one V100,
-and `07:30:00`; worst-case additive cost is CNY 2.10 CPU plus CNY 16.50 GPU,
-or CNY 18.60. The output root is:
+Formal all-sample screening job `14430377` completed in `04:21:26` with exit
+code zero. Resources were one node, four CPUs, and one V100; elapsed additive
+cost was approximately CNY 10.81. The output root is:
 
 ```text
 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/screening/canonical-669-rollout-stability-screening-a9d2390
 ```
 
-The expected log is:
+The log is:
 
 ```text
 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/rollout_stability_screening_14430377.txt
 ```
 
-Do not submit a duplicate while this job is active. When it finishes, verify
-Slurm state, report/progress hashes, and the final
-`matched_screening_report.json`, then download the compact JSON evidence. If
-the screen passes, run the protocol's three confirmation seeds. If it rejects,
-stop and attribute the named architecture/objective gates; do not tune against
-sealed test data or begin 365-day validation.
+The report SHA256 is
+`1387448b0b0831661daaaffc8985ef22602540e0c7e91fea7bfe96c085828bb0`.
+Classification is `rejected` with decision
+`stop_and_attribute_declared_screening_failure`. The evaluator completed all
+4,754 references. Of 223 relative gates, 114 fail: 8/48 one-step process
+families, 3/6 global free-rollout gates, 46/54 tendency-bias gates, and 57/108
+named science gates. The 30-day temporal/spatial/joint global ratios improve
+to `0.9181/0.7539/0.8047`, but all 7-day ratios miss the required 5%
+improvement and carbon-process errors materially regress.
+
+All hard and structural constraints pass, including the bit-exact 30-day
+`15+15` restart split. The dynamic `rveget` status-rate ratio is `0.9880` and
+also passes. The failure is therefore scientific objective/architecture
+quality, not execution or state integrity. Do not run confirmation seeds,
+inspect sealed test data, relax gates, or use 365-day rollout to tune this
+candidate. Full interpretation is in
+[`rollout_stability_screening_20260731.md`](rollout_stability_screening_20260731.md).
 
 The paid runner is
 `scripts/hpc/run_rollout_stability_experiment.sh`. It requires an already
