@@ -601,19 +601,33 @@ independent-component gradient calibration must precede a fresh matched A/B
 from the exact-zero adapter. See
 [`causal_carbon_adapter_feasibility_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_feasibility_20260731.md).
 
-The formal Experiment C lifecycle is implemented at commit `8d24fd0`. Paid
-job `14434127` is running on one `gnall` V100 from an immutable detached
-checkout. Its 48 deterministic train/train calibration records and the
-4,096-update one-step control arm have completed; the rollout candidate is
-running. The exact schedule contains `2048/1229/819` updates for 1/3/7 days.
-Calibration, source assets, schedule, execution identity, checkpoints, and
-reports are hash-bound. Training returns only scalar metrics to the host per
-update; parameter and Adam state transfer only at 256-update checkpoints.
+The formal Experiment C lifecycle completed as paid job `14434127` at training
+commit `8d24fd0`. It ran for `02:33:11` on one `gnall` V100 and exited zero.
+All 48 deterministic train/train calibration records and both matched
+4,096-update arms completed. Each arm has exact horizon counts
+`2048/1229/819` for 1/3/7 days. Both final parent-invariance checks report
+bit-exact protected columns and dynamic undefined head with maximum protected
+absolute difference `0.0`; neither arm used sealed test data. Evidence hashes:
+
+```text
+control checkpoint:
+4ee68de505f0163a62231e0310369882d46a0b72663b87d2a394c0e4ffeef720
+control training report:
+7400144a2f7143d5591e7a1bf2b49cfcd0c50d55385cee71dcd481c554e2170c
+candidate checkpoint:
+ea7193453e279bd94eb55984c629a0f530d0275466c1cd0daccf142754497892
+candidate training report:
+0a358a32f9b156c2d2434a0d11b6e0a8a35ceae47f3f6f0fdd7f3b78d7dc0eaf
+```
+
+This closes formal training execution only; it does not establish that the
+candidate improves model-selection rollout quality.
 
 The post-training screen was frozen before any candidate validation output was
 available. It evaluates all temporal, spatial, and joint model-selection
 windows at Day 1 teacher-forced and Day 7/30 free rollout. Classification
 requires all 165 relative, 108 exact-zero, and six structural gates to pass;
 the sealed test remains unread. After training, run a one-shard-per-slice free
-`gln01` smoke before requesting the paid all-sample screen. See
+`gln01` smoke before requesting the paid all-sample screen. The smoke is
+currently waiting for a free test GPU. See
 [`causal_carbon_adapter_screening_protocol_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_screening_protocol_20260731.md).

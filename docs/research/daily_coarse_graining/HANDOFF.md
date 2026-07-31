@@ -907,18 +907,34 @@ Its output and log are:
 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/causal_carbon_adapter_14434127.txt
 ```
 
-The 48-record gradient calibration and complete 4,096-update one-step control
-arm have finished. The rollout candidate is running. Do not modify or replace
-that checkout while the job is active.
+Job `14434127` completed in `02:33:11` with exit code zero. The 48-record
+gradient calibration and both 4,096-update arms finished with exact
+1/3/7-day horizon counts `2048/1229/819`. Both final parent-invariance checks
+are bit-exact with maximum protected-column difference `0.0`, and neither arm
+used sealed test data. Evidence hashes are:
+
+```text
+control checkpoint:
+4ee68de505f0163a62231e0310369882d46a0b72663b87d2a394c0e4ffeef720
+control training report:
+7400144a2f7143d5591e7a1bf2b49cfcd0c50d55385cee71dcd481c554e2170c
+candidate checkpoint:
+ea7193453e279bd94eb55984c629a0f530d0275466c1cd0daccf142754497892
+candidate training report:
+0a358a32f9b156c2d2434a0d11b6e0a8a35ceae47f3f6f0fdd7f3b78d7dc0eaf
+```
+
+This completes training execution only and does not promote the candidate.
 
 The post-training screen was frozen before candidate validation output
 existed. It covers every temporal, spatial, and joint model-selection window
 at Day 1 teacher-forced and Day 7/30 free rollout, with 165 relative gates,
 108 exact-zero gates, and six structural gates. The sealed test remains
-unread. First run a free one-shard-per-slice `gln01` smoke; only a valid smoke
-authorizes a paid all-sample screen. Do not inspect the sealed test split or
-begin 365-day/complete-chain validation before that screen passes. The frozen
-rules are in
+unread. First run a free one-shard-per-slice `gln01` smoke; both test GPUs were
+occupied at the first post-training check, so no concurrent smoke was started.
+Only a valid smoke authorizes a paid all-sample screen. Do not inspect the
+sealed test split or begin 365-day/complete-chain validation before that
+screen passes. The frozen rules are in
 [`causal_carbon_adapter_screening_protocol_20260731.md`](causal_carbon_adapter_screening_protocol_20260731.md).
 
 The prepared v4 subset is
