@@ -628,6 +628,13 @@ available. It evaluates all temporal, spatial, and joint model-selection
 windows at Day 1 teacher-forced and Day 7/30 free rollout. Classification
 requires all 165 relative, 108 exact-zero, and six structural gates to pass;
 the sealed test remains unread. After training, run a one-shard-per-slice free
-`gln01` smoke before requesting the paid all-sample screen. The smoke is
-currently waiting for a free test GPU. See
+`gln01` smoke before requesting the paid all-sample screen. The smoke
+subsequently completed on GPU 1 in `286.46` seconds at evaluation commit
+`375b8d2`. It covered one complete temporal, spatial, and joint shard for both
+arms, with all unexpected-status, discrete, nonfinite, and negative-stock
+counts zero. Both restart-split probes passed, and sealed test data remained
+unread. The top-level smoke report SHA256 is
+`f05d88d97ec93152487f22697e50361de705a6e1223964971bdfccdcd777b7cb`.
+As preregistered, this limited smoke is not promotion-eligible; it authorizes
+the paid all-sample screen. See
 [`causal_carbon_adapter_screening_protocol_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_screening_protocol_20260731.md).

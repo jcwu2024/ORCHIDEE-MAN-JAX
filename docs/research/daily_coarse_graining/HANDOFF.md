@@ -930,11 +930,25 @@ The post-training screen was frozen before candidate validation output
 existed. It covers every temporal, spatial, and joint model-selection window
 at Day 1 teacher-forced and Day 7/30 free rollout, with 165 relative gates,
 108 exact-zero gates, and six structural gates. The sealed test remains
-unread. First run a free one-shard-per-slice `gln01` smoke; both test GPUs were
-occupied at the first post-training check, so no concurrent smoke was started.
-Only a valid smoke authorizes a paid all-sample screen. Do not inspect the
-sealed test split or begin 365-day/complete-chain validation before that
-screen passes. The frozen rules are in
+unread. The free one-shard-per-slice `gln01` smoke completed in `286.46`
+seconds at evaluation commit `375b8d2`. It covered one complete temporal,
+spatial, and joint shard for both arms. All unexpected-status, discrete,
+nonfinite, and negative-stock counts were zero; both restart-split probes
+passed; sealed test data remained unread. Evidence hashes are:
+
+```text
+top-level smoke report:
+f05d88d97ec93152487f22697e50361de705a6e1223964971bdfccdcd777b7cb
+control arm smoke report:
+58e552edf046921729463004ad8f1b2e0e85d51f8ad74a94d153957baa8cd394
+candidate arm smoke report:
+d930c39579c13c91290597c85a6e9f12a1157b5b799b7b7ac334fb2e8f274afd
+```
+
+The limited smoke is not promotion-eligible, but it authorizes the paid
+all-sample screen. Do not inspect the sealed test split or begin
+365-day/complete-chain validation before that screen passes. The frozen rules
+are in
 [`causal_carbon_adapter_screening_protocol_20260731.md`](causal_carbon_adapter_screening_protocol_20260731.md).
 
 The prepared v4 subset is
