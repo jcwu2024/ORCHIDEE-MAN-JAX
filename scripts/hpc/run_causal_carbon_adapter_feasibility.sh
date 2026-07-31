@@ -69,6 +69,7 @@ env \
     --pwd "$WORKTREE" \
     "$IMAGE" \
     "$PYTHON" -m scripts.hpc.run_causal_carbon_adapter_gpu \
+      --phase feasibility \
       --protocol "$PROTOCOL" \
       --dataset "$DATASET" \
       --statistics "$STATISTICS" \

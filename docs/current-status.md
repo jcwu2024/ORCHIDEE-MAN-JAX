@@ -587,3 +587,27 @@ passes all 1/3/7-day, frozen-parent, protected-column, gradient, and hard-state
 checks. This preparation does not establish that Experiment C improves
 rollout quality. See
 [`causal_carbon_adapter_experiment_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_experiment_20260731.md).
+
+The Experiment C real-shard feasibility gate subsequently passed at commit
+`79258fd`. Eight matched train/train updates covered 1/3/7-day horizons on a
+free `gln01` V100. Every update was applied with finite gradients; all
+unexpected/dynamic status, discrete, nonfinite, and negative-stock counts were
+zero. The frozen 1,954,041-parameter parent stayed outside the optimizer, all
+2,714 protected columns and the dynamic undefined head remained bit-exact,
+and the maximum protected-column difference was `0.0`. Report SHA256 is
+`ca8cacdccb42f20b94b5cd64796118cb170f7fbc7813c036cbc6b1edc8aa7fa8`.
+The smoke checkpoints are not training parents. Formal train-only
+independent-component gradient calibration must precede a fresh matched A/B
+from the exact-zero adapter. See
+[`causal_carbon_adapter_feasibility_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_feasibility_20260731.md).
+
+The formal Experiment C lifecycle is now implemented locally. It calibrates
+the four candidate-only coefficients on 48 deterministic train/train batches,
+freezes an exact 4,096-update schedule with horizon counts
+`2048/1229/819` for 1/3/7 days, and runs or exactly resumes both matched arms
+from the same exact-zero adapter. Calibration, source assets, schedule,
+execution identity, checkpoints, and reports are hash-bound. Training returns
+only scalar metrics to the host per update; parameter and Adam state transfer
+only at 256-update checkpoints. The one-V100 paid launcher is prepared but
+has not been submitted. Passing formal training will authorize the declared
+model-selection screen, not promotion by itself.

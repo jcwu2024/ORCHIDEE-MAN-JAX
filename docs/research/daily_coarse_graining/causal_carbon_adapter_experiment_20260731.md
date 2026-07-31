@@ -4,9 +4,10 @@ Date: 2026-07-31
 
 ## Status
 
-Experiment C is frozen and locally implementation-complete, but it has not
-yet passed a real-shard GPU feasibility run. It is a bounded hypothesis, not a
-validated neural daily surrogate.
+Experiment C is frozen and has passed its bounded real-shard GPU feasibility
+gate. The formal train-only calibration and matched-training lifecycle is
+implemented but has not yet been submitted. It remains a bounded hypothesis,
+not a validated neural daily surrogate.
 
 The rejected `mixed_horizon_stability_v1` checkpoint is not reused. Both C
 arms start from the completed Experiment B one-step control checkpoint:
@@ -88,9 +89,8 @@ SHA256 35ede512bbc5f55881317cb700d7512d71993391c65f36ed8a5de087c4d4c3e7
 
 ## Execution Gate
 
-Paid matched training is forbidden until the bounded real-shard feasibility
-gate passes. That gate performs eight matched updates, covers 1/3/7-day
-horizons, and requires:
+The bounded real-shard feasibility gate passed at commit `79258fd`. It
+performed eight matched updates across 1/3/7-day horizons and established:
 
 - finite loss and adapter gradients;
 - every control and candidate update applied;
@@ -99,17 +99,26 @@ horizons, and requires:
   source-constrained carbon-stock failures;
 - train/train data only and no sealed-test access.
 
-Its provisional unit coefficients test plumbing only. They are not carried
-into formal training. Formal train-only gradient calibration remains required
-after feasibility passes.
+All eight updates were applied. The frozen parent, 2,714 protected columns,
+and dynamic undefined head remained bit-exact; every hard count was zero.
+The report SHA256 is
+`ca8cacdccb42f20b94b5cd64796118cb170f7fbc7813c036cbc6b1edc8aa7fa8`.
+The provisional smoke coefficients and checkpoints are not carried into
+formal training.
 
-Local evidence before the real-shard gate:
+Formal execution now has four ordered, hash-bound phases:
 
-- adapter architecture, objective, protocol, and surrounding regression:
-  69 tests passed;
-- a complete synthetic two-day JIT/reverse-mode path passed through physical
-  `B_fast` restoration and a retained transition;
-- Ruff, `py_compile`, and diff checks passed.
+1. Compute independent component gradient norms on 48 deterministic
+   train/train batches and freeze the four candidate-only coefficients.
+2. Freeze the complete 4,096-update shard/horizon schedule with exact
+   1/3/7-day counts `2048/1229/819`.
+3. Run or resume the interface-only control from the exact-zero adapter.
+4. Run or resume the rollout candidate from the same exact-zero adapter.
+
+Both arms use the same anchors, schedule, seed, optimizer update count, and
+frozen parent. Atomic checkpoints are written every 256 updates. Per-update
+host transfer is restricted to scalar metrics; trainable and optimizer state
+remain on GPU between checkpoints.
 
 ## Stop Rule
 

@@ -22,11 +22,11 @@ scientific and release facts remain authoritative in
    all-sample screen `14430377` rejected `mixed_horizon_stability_v1`.
    Do not run confirmation seeds, inspect sealed test data, or begin 365-day
    validation for this candidate.
-6. Experiment C is frozen locally but has not passed its real-shard
-   feasibility gate. Its only next compute action is the eight-update
-   train/train V100 feasibility command in
-   `causal_carbon_adapter_run.py`. Do not submit the 4,096-update matched
-   screen before that report passes.
+6. Experiment C passed its eight-update real-shard train/train feasibility
+   gate at commit `79258fd`. Its next operation is formal train-only
+   independent-component gradient calibration followed by the frozen matched
+   4,096-update arms. The resumable formal lifecycle is prepared locally but
+   not yet submitted. Do not initialize from either smoke checkpoint.
 
 ```bash
 git status --short --branch
@@ -869,12 +869,35 @@ train-only gradient calibration before any paid 4,096-update matched A/B.
 Detailed rationale and stop rules are in
 [`causal_carbon_adapter_experiment_20260731.md`](causal_carbon_adapter_experiment_20260731.md).
 
-The paid runner is
-`scripts/hpc/run_rollout_stability_experiment.sh`. It requires an already
-generated preflight and performs or resumes calibration, execution-manifest
-creation, the one-step control, and the mixed-horizon candidate in that order.
-Do not inspect the sealed test split or begin 365-day/complete-chain
-validation before the screening result passes its declared gates.
+The real-shard feasibility gate then passed on the free `gln01` V100 at
+commit `79258fd`. All eight matched updates were applied across 1/3/7-day
+horizons with finite gradients. Every exact hard count was zero, all 2,714
+protected columns and the dynamic undefined head stayed bit-exact, and the
+maximum protected-column difference was `0.0`. The report SHA256 is
+`ca8cacdccb42f20b94b5cd64796118cb170f7fbc7813c036cbc6b1edc8aa7fa8`.
+The two smoke checkpoints are plumbing evidence only and must not seed formal
+training. Next create a train/train-only independent-component coefficient
+asset, freeze it, and restart both matched arms from the exact-zero adapter.
+See
+[`causal_carbon_adapter_feasibility_20260731.md`](causal_carbon_adapter_feasibility_20260731.md).
+
+The Experiment C paid runner is
+`scripts/hpc/run_causal_carbon_adapter_formal.sh`, wrapped by
+`scripts/hpc/slurm_causal_carbon_adapter_formal.sh`. It verifies the accepted
+feasibility report, calibrates four independent gradient coefficients on 48
+deterministic train/train batches, freezes the execution manifest and exact
+4,096-update `1/3/7` schedule, then performs or resumes the control and
+candidate in order. The schedule contains exactly `2048/1229/819` updates by
+horizon. Parameters and Adam state remain on device between updates and are
+copied only for 256-update atomic checkpoints. A repeated job validates and
+skips a completed arm, so a wall-time interruption does not discard the
+other arm's progress.
+
+This runner has passed local unit, lint, bytecode, and shell-syntax gates but
+has not yet been submitted to `gnall`. After both arms finish, run the
+predeclared temporal/spatial/joint 1/7/30-day model-selection screen. Do not
+inspect the sealed test split or begin 365-day/complete-chain validation
+before that screen passes.
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).

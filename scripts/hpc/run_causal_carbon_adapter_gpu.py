@@ -1,4 +1,4 @@
-"""GPU-only launcher for the causal-carbon adapter feasibility gate."""
+"""GPU-only launcher for all causal-carbon adapter experiment phases."""
 
 from __future__ import annotations
 

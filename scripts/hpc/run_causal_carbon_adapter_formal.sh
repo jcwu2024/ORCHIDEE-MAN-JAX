@@ -1,0 +1,129 @@
+#!/bin/bash
+# Run or exactly resume formal Experiment C calibration and matched training.
+
+set -euo pipefail
+
+ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+WORKTREE=${WORKTREE:?set WORKTREE to the approved Experiment C worktree}
+EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD}
+EXPERIMENT_ROOT=${EXPERIMENT_ROOT:?set EXPERIMENT_ROOT to a new runtime output directory}
+FEASIBILITY_REPORT=${FEASIBILITY_REPORT:?set FEASIBILITY_REPORT to the accepted report}
+GPU_DEVICE=${GPU_DEVICE:-0}
+PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
+IMAGE=/apps/soft/sif/foundationpose
+
+DATASET=${DATASET:-$ROOT/runtime/outputs/training/pft14-daily-teacher-669-1961-2010-v5-7397d1e-w100/dataset_manifest.json}
+STATISTICS=${STATISTICS:-$ROOT/runtime/outputs/acceptance/pft14-daily-teacher-669-1961-2010-v5-7397d1e-w100-final-20260728-r2/training_statistics.json}
+ACCEPTANCE=${ACCEPTANCE:-$ROOT/runtime/outputs/acceptance/pft14-daily-teacher-669-1961-2010-v5-7397d1e-w100-final-20260728-r2/acceptance_report.json}
+PARENT_ROOT=${PARENT_ROOT:-$ROOT/runtime/outputs/training/canonical-669-rollout-stability-v2-d6e43cc/one_step_continuation_control}
+PARENT_CHECKPOINT=${PARENT_CHECKPOINT:-$PARENT_ROOT/checkpoint.pkl}
+PARENT_REPORT=${PARENT_REPORT:-$PARENT_ROOT/training_report.json}
+PLAN=${PLAN:-$ROOT/runtime/plans/teacher_669_1961_2010_v5_7397d1e_w100.json}
+PROTOCOL=$WORKTREE/manifests/coarse_graining/canonical_669_causal_carbon_adapter_experiment.json
+CALIBRATION_ROOT=$EXPERIMENT_ROOT/calibration
+CALIBRATION=$CALIBRATION_ROOT/coefficient_calibration.json
+EXECUTION=$EXPERIMENT_ROOT/training_execution.json
+CACHE_ROOT=$ROOT/runtime/cache/jax/orcjax_gpu/causal-carbon-adapter-formal
+
+case "$WORKTREE" in
+  "$ROOT/runtime/worktrees/"*) ;;
+  *) echo "WORKTREE must stay under $ROOT/runtime/worktrees" >&2; exit 2 ;;
+esac
+for path in \
+  "$DATASET" \
+  "$STATISTICS" \
+  "$ACCEPTANCE" \
+  "$PARENT_CHECKPOINT" \
+  "$PARENT_REPORT" \
+  "$PLAN" \
+  "$FEASIBILITY_REPORT" \
+  "$EXPERIMENT_ROOT" \
+  "$CACHE_ROOT"; do
+  case "$path" in
+    "$ROOT/runtime/"*) ;;
+    *) echo "runtime path escaped the project root: $path" >&2; exit 2 ;;
+  esac
+done
+
+test -x "$PYTHON"
+for path in \
+  "$DATASET" \
+  "$STATISTICS" \
+  "$ACCEPTANCE" \
+  "$PARENT_CHECKPOINT" \
+  "$PARENT_REPORT" \
+  "$PLAN" \
+  "$FEASIBILITY_REPORT" \
+  "$PROTOCOL"; do
+  test -f "$path"
+done
+test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
+test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
+mkdir -p "$EXPERIMENT_ROOT" "$CALIBRATION_ROOT" "$CACHE_ROOT"
+
+CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
+NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
+test -f "$CUDA_DRIVER"
+test -f "$NVML_DRIVER"
+GPU_BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
+
+run_adapter() {
+  env \
+    SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \
+    SINGULARITYENV_CUDA_VISIBLE_DEVICES="$GPU_DEVICE" \
+    SINGULARITYENV_JAX_ENABLE_X64=true \
+    SINGULARITYENV_JAX_PLATFORMS=cuda \
+    SINGULARITYENV_JAX_COMPILATION_CACHE_DIR="$CACHE_ROOT" \
+    SINGULARITYENV_ORCHIDEE_REPO_ROOT="$ROOT" \
+    SINGULARITYENV_ORCHIDEE_RUNTIME_ROOT="$ROOT/runtime" \
+    SINGULARITYENV_ORCHIDEE_DATA_ROOT="$ROOT/runtime/data" \
+    SINGULARITYENV_ORCHIDEE_REFERENCE_ROOT="$ROOT/runtime/assets" \
+    SINGULARITYENV_ORCHIDEE_OUTPUT_ROOT="$ROOT/runtime/outputs" \
+    SINGULARITYENV_PYTHONPATH="$WORKTREE" \
+    singularity exec \
+      --nv \
+      --bind "$GPU_BINDS" \
+      --pwd "$WORKTREE" \
+      "$IMAGE" \
+      "$PYTHON" -m scripts.hpc.run_causal_carbon_adapter_gpu "$@"
+}
+
+COMMON_ARGS=(
+  --protocol "$PROTOCOL"
+  --dataset "$DATASET"
+  --statistics "$STATISTICS"
+  --acceptance "$ACCEPTANCE"
+  --parent-checkpoint "$PARENT_CHECKPOINT"
+  --parent-report "$PARENT_REPORT"
+  --plan "$PLAN"
+)
+
+run_adapter \
+  --phase calibrate \
+  "${COMMON_ARGS[@]}" \
+  --feasibility-report "$FEASIBILITY_REPORT" \
+  --output-root "$CALIBRATION_ROOT"
+test -f "$CALIBRATION"
+
+run_adapter \
+  --phase manifest \
+  "${COMMON_ARGS[@]}" \
+  --feasibility-report "$FEASIBILITY_REPORT" \
+  --calibration "$CALIBRATION" \
+  --output-root "$EXPERIMENT_ROOT"
+test -f "$EXECUTION"
+
+for arm in \
+  causal_interface_one_step_control \
+  causal_interface_rollout_candidate; do
+  run_adapter \
+    --phase arm \
+    "${COMMON_ARGS[@]}" \
+    --execution "$EXECUTION" \
+    --arm "$arm" \
+    --output-root "$EXPERIMENT_ROOT" \
+    2>&1 | tee -a "$EXPERIMENT_ROOT/${arm}_worker.log"
+  test -f "$EXPERIMENT_ROOT/$arm/training_report.json"
+done
+
+echo "Experiment C formal calibration and matched training completed."
