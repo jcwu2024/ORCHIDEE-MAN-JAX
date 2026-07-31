@@ -20,4 +20,4 @@ EXPERIMENT_ROOT=${EXPERIMENT_ROOT:?set EXPERIMENT_ROOT}
 OUTPUT_ROOT=${OUTPUT_ROOT:?set OUTPUT_ROOT}
 
 export WORKTREE EXPECTED_GIT_HEAD EXPERIMENT_ROOT OUTPUT_ROOT
-exec "$WORKTREE/scripts/hpc/run_causal_carbon_adapter_screening.sh"
+exec bash "$WORKTREE/scripts/hpc/run_causal_carbon_adapter_screening.sh"
