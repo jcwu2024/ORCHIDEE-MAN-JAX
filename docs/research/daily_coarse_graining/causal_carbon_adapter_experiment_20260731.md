@@ -106,7 +106,7 @@ after feasibility passes.
 Local evidence before the real-shard gate:
 
 - adapter architecture, objective, protocol, and surrounding regression:
-  68 tests passed;
+  69 tests passed;
 - a complete synthetic two-day JIT/reverse-mode path passed through physical
   `B_fast` restoration and a retained transition;
 - Ruff, `py_compile`, and diff checks passed.
