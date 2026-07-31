@@ -601,13 +601,19 @@ independent-component gradient calibration must precede a fresh matched A/B
 from the exact-zero adapter. See
 [`causal_carbon_adapter_feasibility_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_feasibility_20260731.md).
 
-The formal Experiment C lifecycle is now implemented locally. It calibrates
-the four candidate-only coefficients on 48 deterministic train/train batches,
-freezes an exact 4,096-update schedule with horizon counts
-`2048/1229/819` for 1/3/7 days, and runs or exactly resumes both matched arms
-from the same exact-zero adapter. Calibration, source assets, schedule,
-execution identity, checkpoints, and reports are hash-bound. Training returns
-only scalar metrics to the host per update; parameter and Adam state transfer
-only at 256-update checkpoints. The one-V100 paid launcher is prepared but
-has not been submitted. Passing formal training will authorize the declared
-model-selection screen, not promotion by itself.
+The formal Experiment C lifecycle is implemented at commit `8d24fd0`. Paid
+job `14434127` is running on one `gnall` V100 from an immutable detached
+checkout. Its 48 deterministic train/train calibration records and the
+4,096-update one-step control arm have completed; the rollout candidate is
+running. The exact schedule contains `2048/1229/819` updates for 1/3/7 days.
+Calibration, source assets, schedule, execution identity, checkpoints, and
+reports are hash-bound. Training returns only scalar metrics to the host per
+update; parameter and Adam state transfer only at 256-update checkpoints.
+
+The post-training screen was frozen before any candidate validation output was
+available. It evaluates all temporal, spatial, and joint model-selection
+windows at Day 1 teacher-forced and Day 7/30 free rollout. Classification
+requires all 165 relative, 108 exact-zero, and six structural gates to pass;
+the sealed test remains unread. After training, run a one-shard-per-slice free
+`gln01` smoke before requesting the paid all-sample screen. See
+[`causal_carbon_adapter_screening_protocol_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_screening_protocol_20260731.md).

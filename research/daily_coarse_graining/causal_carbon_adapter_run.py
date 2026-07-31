@@ -1016,6 +1016,8 @@ def create_training_execution(
 def _load_verified_execution(
     path: str | Path,
     experiment: PreparedAdapterExperiment,
+    *,
+    require_current_training_head: bool = True,
 ) -> tuple[Path, Mapping[str, Any], Mapping[str, Any]]:
     path = Path(path).resolve()
     execution = json.loads(path.read_text(encoding="utf-8"))
@@ -1023,7 +1025,7 @@ def _load_verified_execution(
         raise ValueError("unsupported causal adapter execution schema")
     if execution.get("status") != "ready":
         raise ValueError("causal adapter execution is not ready")
-    if execution.get("training_git_head") != _current_git_head():
+    if require_current_training_head and execution.get("training_git_head") != _current_git_head():
         raise ValueError("causal adapter execution training head drift")
     if execution.get("protocol", {}).get("sha256") != experiment.protocol.sha256:
         raise ValueError("causal adapter execution protocol drift")

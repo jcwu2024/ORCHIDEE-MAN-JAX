@@ -893,11 +893,33 @@ copied only for 256-update atomic checkpoints. A repeated job validates and
 skips a completed arm, so a wall-time interruption does not discard the
 other arm's progress.
 
-This runner has passed local unit, lint, bytecode, and shell-syntax gates but
-has not yet been submitted to `gnall`. After both arms finish, run the
-predeclared temporal/spatial/joint 1/7/30-day model-selection screen. Do not
-inspect the sealed test split or begin 365-day/complete-chain validation
-before that screen passes.
+This runner is fixed at commit `8d24fd0`. Paid job `14434127` is running on
+one `gnall` V100 from the immutable detached checkout:
+
+```text
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/causal-carbon-adapter-8d24fd
+```
+
+Its output and log are:
+
+```text
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/training/causal-carbon-adapter-formal-8d24fd
+/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/causal_carbon_adapter_14434127.txt
+```
+
+The 48-record gradient calibration and complete 4,096-update one-step control
+arm have finished. The rollout candidate is running. Do not modify or replace
+that checkout while the job is active.
+
+The post-training screen was frozen before candidate validation output
+existed. It covers every temporal, spatial, and joint model-selection window
+at Day 1 teacher-forced and Day 7/30 free rollout, with 165 relative gates,
+108 exact-zero gates, and six structural gates. The sealed test remains
+unread. First run a free one-shard-per-slice `gln01` smoke; only a valid smoke
+authorizes a paid all-sample screen. Do not inspect the sealed test split or
+begin 365-day/complete-chain validation before that screen passes. The frozen
+rules are in
+[`causal_carbon_adapter_screening_protocol_20260731.md`](causal_carbon_adapter_screening_protocol_20260731.md).
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).
