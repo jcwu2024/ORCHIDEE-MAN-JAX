@@ -211,6 +211,15 @@ Failure of item 1 is a capture/plumbing defect. Failure of items 2-5 is an
 architecture defect. Failure only of item 6 means the driver prediction is
 not yet learnable at the bounded scale; it does not authorize a larger run.
 
+The first real-day implementation check now closes item 1. For 1961 Day 2 at
+train-only landpoint `001.0-071.0`, all 13 captured driver arrays and the
+persisted-driver scan replay are bit-exact, all 14 `ok_leak.*` endpoints are
+bit-exact, next continuous state closes at `2.84e-14`, and all discrete state
+is exact. The full evidence and the isolated unrelated historical
+`t2m_min_daily` drift are recorded in
+[`ok_leak_driver_capture_probe_20260731.md`](ok_leak_driver_capture_probe_20260731.md).
+Items 2-6 remain gates; this result does not authorize paid training.
+
 ## Implemented Guard
 
 `research/daily_coarse_graining/carbon_budget_ownership.py` now provides:

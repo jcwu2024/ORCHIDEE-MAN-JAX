@@ -693,3 +693,14 @@ predicts those drivers and executes the existing 48-step
 authorized before a small auxiliary capture passes exact replay, conservation,
 nonnegative-stock, finite-gradient, and parent-no-regression gates. See
 [`carbon_budget_ownership_audit_20260731.md`](research/daily_coarse_graining/carbon_budget_ownership_audit_20260731.md).
+
+The first real train-only capture now passes the exact-replay portion of that
+gate. For `001.0-071.0`, 1961 Day 2, all 13 captured driver arrays match their
+live scan inputs bit-exactly; persisted replay and all 14 `ok_leak.*`
+endpoints are bit-exact; next continuous state differs by only `2.84e-14`;
+and all discrete state is exact. A `299.47` mismatch is isolated to the old-v4
+transient `daily_interface.t2m_min_daily` target and does not affect the
+carbon endpoint or next-state gate. The next action is a deterministic bounded
+train-only capture design followed by the remaining cheap conservation,
+feasibility, finite-gradient, and parent-no-regression checks. See
+[`ok_leak_driver_capture_probe_20260731.md`](research/daily_coarse_graining/ok_leak_driver_capture_probe_20260731.md).

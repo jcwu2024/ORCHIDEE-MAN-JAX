@@ -24,8 +24,9 @@ scientific and release facts remain authoritative in
    complete. The candidate is rejected because independent stock correction
    worsened `carbon_32l` by `7.33-9.32x` and `deepC_peat` by `5.66-7.45x`.
    Its stock-adapter ablation also failed. Do not retune, confirm, or promote
-   it. The active operation is now the bounded exact-`OK_LEAK` driver capture
-   and conservative micro-gate described below.
+   it. The first real-day exact-`OK_LEAK` driver capture/replay gate now
+   passes. The active operation is the deterministic bounded train-only
+   capture design and the remaining conservative micro-gates described below.
 
 ```bash
 git status --short --branch
@@ -1010,12 +1011,23 @@ exact 48-step scan. The preferred successor predicts those driver series and
 runs the existing `_paper_compiled_ok_leak_fold`; it does not independently
 predict any carbon stock or `deepC_peat`.
 
-The next operation is a small, train-only auxiliary driver capture and exact
-replay gate, not a 669-point regeneration and not paid training. Use the
-machine ownership/capture guard in
+The first real-day auxiliary capture/replay gate is complete. On train-only
+landpoint `001.0-071.0`, 1961 Day 2, all 13 captured driver series equal the
+original scan inputs bit-exactly, persisted replay is bit-exact, all 14
+`ok_leak.*` endpoints are exact, next continuous state closes at `2.84e-14`,
+and all discrete state is exact. The only old-v4 whole-target mismatch is the
+unrelated transient `daily_interface.t2m_min_daily`; it is reported but does
+not enter the carbon-interface gate.
+
+The next operation is to define the deterministic bounded train-only capture
+set and close the conservation, feasibility, finite-gradient, and tiny-fit
+no-regression gates. It is not a 669-point regeneration and not paid training.
+Use the machine ownership/capture guard in
 `research/daily_coarse_graining/carbon_budget_ownership.py` and the frozen
 audit in
 [`carbon_budget_ownership_audit_20260731.md`](carbon_budget_ownership_audit_20260731.md).
+The real capture evidence is in
+[`ok_leak_driver_capture_probe_20260731.md`](ok_leak_driver_capture_probe_20260731.md).
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).
