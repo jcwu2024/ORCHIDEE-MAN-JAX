@@ -20,7 +20,7 @@ def _report():
                 {
                     "id": f"interface/{slice_id}/{field}",
                     "ratio": 0.8,
-                    "threshold": 1.02,
+                    "threshold_max": 1.02,
                     "candidate": 0.8,
                     "control": 1.0,
                     "passed": True,
@@ -40,7 +40,7 @@ def _report():
                         {
                             "id": f"{family}/{slice_id}/horizon_{horizon}/{field}",
                             "ratio": 0.8,
-                            "threshold": 0.95,
+                            "threshold_max": 0.95,
                             "candidate": 0.8,
                             "control": 1.0,
                             "passed": True,

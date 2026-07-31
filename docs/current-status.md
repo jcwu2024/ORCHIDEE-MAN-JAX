@@ -642,6 +642,21 @@ The first paid submission, job `14436672`, exited after two seconds before
 starting the evaluator because the Slurm wrapper directly executed a
 non-executable checkout file. Commit `7091e1d` changes only that invocation to
 explicit `bash` and adds a regression test; it does not alter the evaluator or
-frozen gates. Replacement job `14436716` is running on one `gnall` V100 from
-the immutable `7091e1d` checkout. See
+frozen gates. Replacement job `14436716` completed all 4,754 references in
+`04:25:50` with exit code zero from the immutable `7091e1d` checkout.
+
+Experiment C is rejected with decision
+`stop_and_attribute_declared_screening_failure`. All 108 hard and six
+structural gates passed, but 73/165 scientific relative gates failed:
+11/12 causal-interface, 46/63 primary-state, 3/27 flux-bias, and 13/36
+stock-tendency gates. All nine global terminal-state and all 18 litter/DOC
+guard gates passed. The dominant failure is direct damage to the carbon-stock
+boundary: `carbon_32l` interface error worsened by `7.33-9.32x` and
+`deepC_peat` by `5.66-7.45x` across all three model-selection slices. The
+matched report SHA256 is
+`2b636981a5aeb73479c354558c09ed99cf398559c7f315bd56774f7f9822b5dd`.
+Do not run confirmation seeds, 365-day validation, complete-chain validation,
+or sealed test for this candidate. See
+[`causal_carbon_adapter_screening_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_screening_20260731.md)
+and
 [`causal_carbon_adapter_screening_protocol_20260731.md`](research/daily_coarse_graining/causal_carbon_adapter_screening_protocol_20260731.md).

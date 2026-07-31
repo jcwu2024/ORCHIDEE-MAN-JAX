@@ -952,8 +952,8 @@ Paid job `14436672` failed after two seconds before evaluator startup because
 the Slurm wrapper directly executed the checkout's non-executable `0644`
 runner. Commit `7091e1d` changes only the wrapper to explicit `bash` and adds
 a regression test. The numerical evaluator and all frozen gates are unchanged,
-so the completed smoke remains valid. Replacement job `14436716` is running
-on one `gnall` V100 from:
+so the completed smoke remains valid. Replacement job `14436716` completed
+all 4,754 references in `04:25:50` with exit code zero from:
 
 ```text
 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/worktrees/causal-carbon-screening-7091e1d
@@ -966,10 +966,23 @@ Its log and output root are:
 /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/screening/causal-carbon-adapter-full-7091e1d
 ```
 
-Do not inspect the sealed test split or begin
-365-day/complete-chain validation before that screen passes. The frozen rules
-are in
-[`causal_carbon_adapter_screening_protocol_20260731.md`](causal_carbon_adapter_screening_protocol_20260731.md).
+Experiment C is rejected with decision
+`stop_and_attribute_declared_screening_failure`. All 108 hard and six
+structural gates passed, while 73/165 scientific relative gates failed.
+Failures include 11/12 causal-interface, 46/63 primary-state, 3/27 flux-bias,
+and 13/36 stock-tendency gates. All nine global terminal-state and all 18
+litter/DOC guards passed. The main failure is direct carbon-stock damage:
+`carbon_32l` interface error worsened `7.33-9.32x` and `deepC_peat` worsened
+`5.66-7.45x` across temporal, spatial, and joint slices.
+
+The matched report SHA256 is
+`2b636981a5aeb73479c354558c09ed99cf398559c7f315bd56774f7f9822b5dd`.
+Do not run confirmation seeds, 365-day validation, complete-chain validation,
+or sealed test for this candidate. Do not retune Experiment C against this
+result. The frozen rules and full interpretation are in
+[`causal_carbon_adapter_screening_protocol_20260731.md`](causal_carbon_adapter_screening_protocol_20260731.md)
+and
+[`causal_carbon_adapter_screening_20260731.md`](causal_carbon_adapter_screening_20260731.md).
 
 The prepared v4 subset is
 [`../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json`](../../../manifests/coarse_graining/daily_teacher_initial_10point_1961_2010_v4.json).

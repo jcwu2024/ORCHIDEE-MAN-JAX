@@ -113,7 +113,7 @@ def summarize_screening(report: Mapping[str, Any]) -> Mapping[str, Any]:
                 {
                     "id": gate_id,
                     "ratio": record.get("ratio"),
-                    "threshold": record.get("threshold"),
+                    "threshold_max": record.get("threshold_max"),
                     "candidate": record.get("candidate"),
                     "control": record.get("control"),
                 }
@@ -123,7 +123,7 @@ def summarize_screening(report: Mapping[str, Any]) -> Mapping[str, Any]:
         ratio = record["ratio"]
         if ratio is None:
             return float("inf")
-        threshold = float(record["threshold"])
+        threshold = float(record["threshold_max"])
         return float(ratio) / threshold
 
     failed_ratio_records.sort(key=_severity, reverse=True)
