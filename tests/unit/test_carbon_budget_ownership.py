@@ -15,6 +15,7 @@ from research.daily_coarse_graining.carbon_budget_ownership import (
     OK_LEAK_DRIVER_SERIES,
     audit_aggregate_transfer_source_map,
     audit_carbon_budget_contract,
+    extract_compiled_ok_leak_driver_steps,
     extract_ok_leak_driver_series,
     ok_leak_driver_capture_metadata,
 )
@@ -101,6 +102,20 @@ def test_driver_capture_rejects_missing_source_array():
     )
     with pytest.raises(ValueError, match="wat_flux"):
         extract_ok_leak_driver_series(record)
+
+
+def test_outer_compiled_driver_steps_use_the_same_capture_schema():
+    steps = SimpleNamespace(
+        **{
+            item.field: np.zeros((48, 1), dtype=np.float64)
+            for item in OK_LEAK_DRIVER_SERIES
+        }
+    )
+
+    arrays = extract_compiled_ok_leak_driver_steps(steps)
+
+    assert tuple(arrays) == tuple(item.field for item in OK_LEAK_DRIVER_SERIES)
+    assert all(value.shape[0] == 48 for value in arrays.values())
 
 
 def test_aggregate_transfer_source_map_is_complete_but_not_state_sufficient():

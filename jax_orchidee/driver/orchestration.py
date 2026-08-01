@@ -2190,6 +2190,7 @@ class DriverPreDailyTrainingBoundary(NamedTuple):
     half_hour_state_values: tuple[tuple[object, ...], ...]
     daily_fields: Mapping[str, object]
     ok_leak_updates: Mapping[str, object]
+    ok_leak_driver_steps: object
     deepc_peat: object
     final_diagnostics: Mapping[str, object]
 
@@ -7995,7 +7996,10 @@ def _paper_half_hour_ok_leak_fold_from_entries(
     dayno: int,
     use_compiled_ok_leak: bool = False,
     compiled_entry_stacks: Mapping[str, object] | None = None,
-) -> tuple[object, dict[str, object]]:
+    capture_compiled_driver_steps: bool = False,
+) -> tuple[object, dict[str, object]] | tuple[
+    object, dict[str, object], DriverCompiledOkLeakStepInputs
+]:
     """Advance the OK_LEAK state on each SECHIBA entry of one STOMATE day.
 
     The previous day's ``turnover_daily`` and ``bm_to_litter`` remain fixed
@@ -8010,6 +8014,8 @@ def _paper_half_hour_ok_leak_fold_from_entries(
         raise ValueError("OK_LEAK compiled maintenance stack must match entry payload count")
     if not entry_payloads:
         raise ValueError("OK_LEAK half-hour fold requires at least one entry payload")
+    if capture_compiled_driver_steps and not use_compiled_ok_leak:
+        raise ValueError("OK_LEAK driver-step capture requires the compiled fold")
 
     state = initial_state.fields_by_component["slowproc_stomate_previous_step_state"]
     required = (*_OK_LEAK_HALF_HOUR_STATE_FIELDS, "turnover_daily", "bm_to_litter", "biomass", "veget_max", "sla_calc")
@@ -8194,7 +8200,10 @@ def _paper_half_hour_ok_leak_fold_from_entries(
                 perma_peat=parse_run_def_bool(run_def_values["PERMA_PEAT"]),
                 conc_doc_rain=parse_run_def_float(run_def_values, "CONC_DOC_RAIN"),
             )
-            return last_result, _compiled_ok_leak_updates(final_carry)
+            updates = _compiled_ok_leak_updates(final_carry)
+            if capture_compiled_driver_steps:
+                return last_result, updates, series
+            return last_result, updates
         last_result = stomate_ok_leak_explicit(**ok_args)
         current = _paper_half_hour_ok_leak_state_updates(last_result)
 
@@ -10434,7 +10443,7 @@ def paper_1961_driver_later_day_runtime_result(
                 stempdiag_stack=half_hour_transition.compiled_entry_stacks["stempdiag"],
                 **maintenance_kwargs,
             )
-    half_hour_ok_leak, half_hour_updates = _paper_half_hour_ok_leak_fold_from_entries(
+    ok_leak_fold = _paper_half_hour_ok_leak_fold_from_entries(
         entry_payloads=completed_payloads,
         maintenance_step_results=daily_fold.maintenance.step_results,
         maintenance_resp_parts=maintenance_resp_parts,
@@ -10449,7 +10458,13 @@ def paper_1961_driver_later_day_runtime_result(
         dayno=science_day_number,
         use_compiled_ok_leak=use_compiled_sechiba_day,
         compiled_entry_stacks=half_hour_transition.compiled_entry_stacks,
+        capture_compiled_driver_steps=capture_pre_daily_training_boundary,
     )
+    if capture_pre_daily_training_boundary:
+        half_hour_ok_leak, half_hour_updates, ok_leak_driver_steps = ok_leak_fold
+    else:
+        half_hour_ok_leak, half_hour_updates = ok_leak_fold
+        ok_leak_driver_steps = None
     state_after_ok_leak = _paper_previous_state_with_stomate_updates(previous_state, half_hour_updates)
     stomate_bundle_source, stomate_bundles, stomate_bundle_gaps = _paper_later_day_stomate_input_bundles(
         config_path=config_path,
@@ -10559,6 +10574,7 @@ def paper_1961_driver_later_day_runtime_result(
             ).values_by_component,
             daily_fields=dict(daily_fold.daily_fields),
             ok_leak_updates=dict(half_hour_updates),
+            ok_leak_driver_steps=ok_leak_driver_steps,
             deepc_peat=perma_peat.deepc_peat,
             final_diagnostics={
                 "t2mdiag": completed_payloads[-1]["t2mdiag"],

@@ -12,10 +12,10 @@ from research.daily_coarse_graining.ok_leak_capture_selection import (
     verify_bounded_capture_plan,
 )
 from research.daily_coarse_graining.teacher_shards import load_plan
-from scripts.dev.probe_ok_leak_driver_capture import (
-    _atomic_write_json,
-    _sha256_file,
+from scripts.dev.probe_ok_leak_driver_capture import _atomic_write_json, _sha256_file
+from scripts.dev.probe_ok_leak_outer_block_reentry import (
     run_probe,
+    teacher_block_for_day,
 )
 
 
@@ -40,7 +40,25 @@ def _next_state_diagnostic_passed(report: Mapping[str, Any]) -> bool:
     )
 
 
+def _capture_interface_passed(report: Mapping[str, Any]) -> bool:
+    value = report.get("capture_interface_passed")
+    return bool(report.get("passed")) if value is None else bool(value)
+
+
 def _capture_interface_failure_reasons(report: Mapping[str, Any]) -> list[str]:
+    if report.get("capture_interface_passed") is not None:
+        if _capture_interface_passed(report):
+            return []
+        reasons = []
+        if report.get("capture") is None:
+            reasons.append("compiled_driver_capture")
+        if not report.get("ok_leak_endpoint_within_1e-12"):
+            reasons.append("ok_leak_endpoint_within_1e-12")
+        discrete = report.get("next_discrete_state", {})
+        if not discrete or not all(item.get("exact") for item in discrete.values()):
+            reasons.append("next_discrete_state_exact")
+        return reasons or ["outer_block_capture_interface_gate"]
+
     reasons = []
     drivers = report.get("source_driver_comparisons", {})
     if not drivers or not all(item.get("exact") for item in drivers.values()):
@@ -121,6 +139,7 @@ def _existing_capture_summary(
         raise ValueError(f"partial capture output requires inspection: {output}")
     report = json.loads(report_path.read_text(encoding="utf-8"))
     expected = {
+        "schema_version": "ok_leak_outer_block_reentry_probe_v2",
         "landpoint_id": record["landpoint_id"],
         "year": int(record["year"]),
         "day_index": int(record["day_index"]),
@@ -139,8 +158,11 @@ def _existing_capture_summary(
             report.get("capture_npz_sha256"),
             observed_arrays_hash,
         )
-    if not report.get("passed"):
-        drift["passed"] = (report.get("passed"), True)
+    if not _capture_interface_passed(report):
+        drift["capture_interface_passed"] = (
+            report.get("capture_interface_passed"),
+            True,
+        )
     if drift:
         raise ValueError(f"existing capture identity/status drift at {output}: {drift}")
     return {
@@ -166,7 +188,8 @@ def run_batch(args: argparse.Namespace) -> Mapping[str, Any]:
     if generation_plan.plan_sha256 != dataset_manifest.get("plan_sha256"):
         raise ValueError("Teacher generation plan hash does not match the dataset manifest")
     generation_entries = {
-        (item.landpoint_id, int(item.year)) for item in generation_plan.entries
+        (item.landpoint_id, int(item.year)): item
+        for item in generation_plan.entries
     }
     missing_generation_entries = [
         (item["landpoint_id"], int(item["year"]))
@@ -228,19 +251,31 @@ def run_batch(args: argparse.Namespace) -> Mapping[str, Any]:
             )
             summaries.append(dict(promoted) | {"resumed": True})
             continue
+        plan_entry = generation_entries[
+            (record["landpoint_id"], int(record["year"]))
+        ]
+        block_start_day, block_days, _target_offset = teacher_block_for_day(
+            int(record["day_index"]),
+            block_size=generation_plan.block_size,
+            days_in_year=plan_entry.days,
+        )
         probe_args = SimpleNamespace(
             dataset_manifest=dataset_manifest_path,
             plan=teacher_plan_path,
             landpoint_id=record["landpoint_id"],
             year=int(record["year"]),
             day_index=int(record["day_index"]),
-            output=staging_output,
+            block_start_day=block_start_day,
+            block_days=block_days,
+            doc_sqrt_mode="production",
+            output=staging_output / "report.json",
+            capture_npz=staging_output / "ok_leak_driver_series.npz",
             capture_plan_sha256=capture_plan_sha256,
             expected_day_start_state_sha256=record["day_start_state_sha256"],
             expected_fast_day_target_sha256=record["fast_day_target_sha256"],
         )
         report = run_probe(probe_args)
-        if not report["passed"]:
+        if not _capture_interface_passed(report):
             failures.append(_capture_failure_summary(staging_output, record, report))
             _atomic_write_json(
                 output / "capture_manifest.json",
