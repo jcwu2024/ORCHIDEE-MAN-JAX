@@ -62,6 +62,7 @@ cd "$CHECKOUT_ROOT"
   --landpoint-id 069.0-119.0 \
   --year 1963 \
   --day-index 184 \
+  --block-days 7 \
   --doc-sqrt-mode production \
   --output "$OUTPUT"
 
