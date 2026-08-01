@@ -104,6 +104,7 @@ def _install_fakes(monkeypatch, calls, *, failed_days=()):
             },
             "source_driver_comparisons": {"soil_mc": {"exact": True}},
             "exact_scan_replay": {"exact": True},
+            "target_ok_leak_endpoint_within_1e-12": capture_passed,
             "ok_leak_endpoint_within_1e-12": capture_passed,
             "next_discrete_state": {"date": {"exact": True}},
         }
@@ -179,7 +180,7 @@ def test_batch_collects_scientific_failures_and_attempts_remaining_days(
     assert result["capture_interface_passed_count"] == 1
     assert result["capture_interface_failed_count"] == 1
     assert result["failed_records"][0]["failure_reasons"] == [
-        "ok_leak_endpoint_within_1e-12"
+        "target_ok_leak_endpoint_within_1e-12"
     ]
     failed = _capture_directory(args.output.resolve(), records[0])
     assert failed.with_name(failed.name + ".incomplete").is_dir()

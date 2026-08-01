@@ -71,6 +71,20 @@ def teacher_block_for_day(
     return block_start, observed_size, day_index - block_start
 
 
+def _ok_leak_endpoint_passed(
+    comparisons: dict[str, dict[str, object]],
+    *,
+    tolerance: float = 1.0e-12,
+) -> bool:
+    return bool(
+        comparisons
+        and all(
+            _within_tolerance(item, tolerance)
+            for item in comparisons.values()
+        )
+    )
+
+
 def _normalize_daily_accumulator_schema(packet, produced_packet):
     component = "slowproc_stomate_previous_step_state"
     field = "daily_accumulators"
@@ -333,13 +347,12 @@ def run_probe(args: argparse.Namespace):
         ok_leak_comparisons_by_day[str(day_index)] = (
             _ok_leak_endpoint_comparisons(comparisons)
         )
-    ok_leak_passed = bool(
-        ok_leak_comparisons_by_day
-        and all(
-            _within_tolerance(item, 1.0e-12)
-            for comparisons in ok_leak_comparisons_by_day.values()
-            for item in comparisons.values()
-        )
+    target_ok_leak_passed = _ok_leak_endpoint_passed(
+        ok_leak_comparisons_by_day[str(args.day_index)]
+    )
+    all_days_ok_leak_passed = all(
+        _ok_leak_endpoint_passed(comparisons)
+        for comparisons in ok_leak_comparisons_by_day.values()
     )
     final_packet = teacher.previous_packet_from_fast_state(
         teacher.DriverFastStateBundle(
@@ -371,7 +384,7 @@ def run_probe(args: argparse.Namespace):
         for name, values in shard.discrete_trajectories.items()
     }
     passed = bool(
-        ok_leak_passed
+        all_days_ok_leak_passed
         and state_comparison["within_tolerance"]
         and all(item["exact"] for item in discrete_comparisons.values())
     )
@@ -393,7 +406,7 @@ def run_probe(args: argparse.Namespace):
         if capture_npz is None
         else bool(
             capture is not None
-            and ok_leak_passed
+            and target_ok_leak_passed
             and all(item["exact"] for item in discrete_comparisons.values())
         )
     )
@@ -425,7 +438,8 @@ def run_probe(args: argparse.Namespace):
         "fast_day_target": target_comparison,
         "fast_day_target_leaves": target_leaf_comparisons,
         "ok_leak_endpoint_comparisons_by_day": ok_leak_comparisons_by_day,
-        "ok_leak_endpoint_within_1e-12": ok_leak_passed,
+        "target_ok_leak_endpoint_within_1e-12": target_ok_leak_passed,
+        "ok_leak_endpoint_within_1e-12": all_days_ok_leak_passed,
         "next_continuous_state": state_comparison,
         "next_state_diagnostic_passed": state_comparison["within_tolerance"],
         "next_continuous_state_leaves": state_leaf_comparisons,
