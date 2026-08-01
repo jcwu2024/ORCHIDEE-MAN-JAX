@@ -8,8 +8,12 @@ import numpy as np
 import pytest
 
 from research.daily_coarse_graining.carbon_budget_ownership import (
+    AGGREGATE_TRANSFER_LABEL_OWNERSHIP,
+    AGGREGATE_TRANSFER_LABELS,
+    FULL_STATE_INTERNAL_TRANSFER_REQUIREMENTS,
     OK_LEAK_CARBON_FIELD_OWNERSHIP,
     OK_LEAK_DRIVER_SERIES,
+    audit_aggregate_transfer_source_map,
     audit_carbon_budget_contract,
     extract_ok_leak_driver_series,
     ok_leak_driver_capture_metadata,
@@ -97,3 +101,32 @@ def test_driver_capture_rejects_missing_source_array():
     )
     with pytest.raises(ValueError, match="wat_flux"):
         extract_ok_leak_driver_series(record)
+
+
+def test_aggregate_transfer_source_map_is_complete_but_not_state_sufficient():
+    report = audit_aggregate_transfer_source_map()
+
+    assert tuple(item.field for item in AGGREGATE_TRANSFER_LABEL_OWNERSHIP) == (
+        AGGREGATE_TRANSFER_LABELS
+    )
+    assert report["all_labels_source_backed"]
+    assert report["aggregate_conservation_diagnostic_ready"]
+    assert not report["full_resolved_state_update_ready"]
+    assert set(report["additional_internal_transfer_requirements"]) == set(
+        FULL_STATE_INTERNAL_TRANSFER_REQUIREMENTS
+    )
+    assert report["decision"] == (
+        "capture_resolved_source_terms_before_daily_tendency_training"
+    )
+
+
+def test_external_doc_input_does_not_double_count_canopy_drip():
+    owner = next(
+        item
+        for item in AGGREGATE_TRANSFER_LABEL_OWNERSHIP
+        if item.field == "doc_external_input"
+    )
+
+    assert "canopy2ground" not in owner.source_terms
+    assert "doc_precip2canopy" in owner.source_terms
+    assert "dry_dep_canopy" in owner.source_terms

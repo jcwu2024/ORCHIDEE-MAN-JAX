@@ -25,6 +25,19 @@ class OkLeakDriverSeries:
     provenance: tuple[str, ...]
 
 
+@dataclass(frozen=True)
+class CarbonTransferLabelOwnership:
+    """Source ownership of one aggregate carbon-transfer diagnostic."""
+
+    field: str
+    conservation_role: str
+    availability: str
+    source_terms: tuple[str, ...]
+    native_units: str
+    provenance: tuple[str, ...]
+    notes: str
+
+
 OK_LEAK_CARBON_FIELD_OWNERSHIP = (
     CarbonFieldOwnership(
         "litter_above",
@@ -267,6 +280,181 @@ AGGREGATE_TRANSFER_LABELS = (
     "doc_external_input",
     "doc_export",
 )
+
+
+AGGREGATE_TRANSFER_LABEL_OWNERSHIP = (
+    CarbonTransferLabelOwnership(
+        "litter_input",
+        "external_input_to_litter_inventory",
+        "direct_result",
+        (
+            "littercalc.increments.litter_inc_above",
+            "littercalc.increments.litter_inc_below",
+        ),
+        "carbon amount per OK_LEAK call before veget_max aggregation",
+        (
+            "fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90::"
+            "littercalc_leak lines 2138-2243",
+            "jax_orchidee/stomate/carbon_kernels.py::littercalc_litter_increments",
+        ),
+        "Retain the resolved increment arrays; a grid-cell sum is only a conservation diagnostic.",
+    ),
+    CarbonTransferLabelOwnership(
+        "litter_respiration",
+        "external_loss_to_atmosphere",
+        "direct_result",
+        (
+            "littercalc.resp_hetero_litter",
+            "littercalc.resp_hetero_flood",
+        ),
+        "carbon rate per day before dt_days and veget_max aggregation",
+        (
+            "fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90::"
+            "littercalc_leak lines 2563-2794, 2825-2828",
+        ),
+        "Multiply by dt_days and veget_max exactly once for a grid-cell amount.",
+    ),
+    CarbonTransferLabelOwnership(
+        "litter_to_doc",
+        "internal_litter_to_doc_transfer",
+        "direct_result",
+        (
+            "littercalc.soilcarbon_input_doc",
+            "littercalc.floodcarbon_input",
+        ),
+        "carbon rate per day before dt_days and veget_max aggregation",
+        (
+            "fortran_source/ORCHIDEE/src_stomate/stomate_litter.f90::"
+            "littercalc_leak lines 2563-2794, 2831-2848",
+        ),
+        "This transfer cancels inside the combined litter-plus-soil inventory.",
+    ),
+    CarbonTransferLabelOwnership(
+        "poc_respiration",
+        "external_loss_to_atmosphere",
+        "exact_derived_from_result",
+        ("soilcarbon.fluxtot", "soilcarbon.fluxtot_flood", "cue"),
+        "carbon amount per OK_LEAK call before veget_max aggregation",
+        (
+            "fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90::"
+            "soilcarbon_leak lines 1605-1691",
+        ),
+        "Derive as (1-CUE) times gross POC decomposition; resp_hetero_soil also contains DOC respiration.",
+    ),
+    CarbonTransferLabelOwnership(
+        "poc_to_doc",
+        "internal_poc_to_doc_transfer",
+        "exact_derived_from_result",
+        ("soilcarbon.fluxtot", "soilcarbon.fluxtot_flood", "cue", "sro_bottom"),
+        "carbon amount per OK_LEAK call before veget_max aggregation",
+        (
+            "fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90::"
+            "soilcarbon_leak lines 1746-1771",
+        ),
+        "Flood-derived POC enters DOC only below sro_bottom; preserve the layer mask.",
+    ),
+    CarbonTransferLabelOwnership(
+        "doc_to_poc",
+        "internal_doc_to_poc_transfer",
+        "exact_derived_from_result",
+        (
+            "soilcarbon.fluxtot_doc",
+            "soilcarbon.fluxtot_doc_flood",
+            "cue",
+            "frac_carb",
+            "lignin_struc_above",
+            "lignin_struc_below",
+        ),
+        "carbon amount per OK_LEAK call before veget_max aggregation",
+        (
+            "fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90::"
+            "soilcarbon_leak lines 1693-1744",
+        ),
+        "The aggregate is CUE times gross DOC decomposition, but pool destinations require source fractions and lignin.",
+    ),
+    CarbonTransferLabelOwnership(
+        "doc_respiration",
+        "external_loss_to_atmosphere",
+        "exact_derived_from_result",
+        ("soilcarbon.fluxtot_doc", "soilcarbon.fluxtot_doc_flood", "cue"),
+        "carbon amount per OK_LEAK call before veget_max aggregation",
+        (
+            "fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90::"
+            "soilcarbon_leak lines 1693-1713",
+        ),
+        "Derive separately from DOC gross decomposition instead of subtracting mixed respiration diagnostics.",
+    ),
+    CarbonTransferLabelOwnership(
+        "doc_external_input",
+        "external_input_to_doc_and_canopy_inventory",
+        "requires_call_inputs",
+        (
+            "doc_to_topsoil",
+            "doc_to_subsoil",
+            "doc_precip2ground",
+            "doc_precip2canopy",
+            "dry_dep_canopy",
+        ),
+        "mixed source rates/amounts normalized to carbon amount per OK_LEAK call",
+        (
+            "fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90::"
+            "soilcarbon_leak lines 1206-1284, 1495-1557",
+        ),
+        "Use original deposition inputs; canopy-to-ground drip is internal and must not be counted as new carbon.",
+    ),
+    CarbonTransferLabelOwnership(
+        "doc_export",
+        "external_loss_from_doc_inventory",
+        "direct_result",
+        (
+            "soilcarbon.doc_run",
+            "soilcarbon.doc_drain",
+            "soilcarbon.doc_flood",
+        ),
+        "carbon amount per OK_LEAK call before veget_max aggregation",
+        (
+            "fortran_source/ORCHIDEE/src_stomate/stomate_soilcarbon.f90::"
+            "soilcarbon_leak lines 2052-2303",
+        ),
+        "Use source export amounts, not the mixed DOC/DIC model-output aggregate.",
+    ),
+)
+
+
+FULL_STATE_INTERNAL_TRANSFER_REQUIREMENTS = (
+    "doc_free_adsorbed_equilibration",
+    "doc_vertical_water_transport",
+    "doc_vertical_diffusion",
+    "cryoturbation_redistribution",
+    "perma_peat_redistribution",
+)
+
+
+def audit_aggregate_transfer_source_map() -> dict[str, Any]:
+    """Report whether aggregate labels are source-backed and state-complete."""
+
+    labels = tuple(item.field for item in AGGREGATE_TRANSFER_LABEL_OWNERSHIP)
+    expected = tuple(AGGREGATE_TRANSFER_LABELS)
+    if labels != expected:
+        raise RuntimeError("aggregate transfer ownership must follow the frozen label order")
+    return {
+        "schema_version": "aggregate_carbon_transfer_source_audit_v1",
+        "labels": [asdict(item) for item in AGGREGATE_TRANSFER_LABEL_OWNERSHIP],
+        "all_labels_source_backed": all(
+            item.availability in {
+                "direct_result",
+                "exact_derived_from_result",
+                "requires_call_inputs",
+            }
+            for item in AGGREGATE_TRANSFER_LABEL_OWNERSHIP
+        ),
+        "aggregate_conservation_diagnostic_ready": True,
+        "full_resolved_state_update_ready": False,
+        "additional_internal_transfer_requirements": list(
+            FULL_STATE_INTERNAL_TRANSFER_REQUIREMENTS
+        ),
+        "decision": "capture_resolved_source_terms_before_daily_tendency_training",
+    }
 
 
 def _validate_ownership_table() -> None:
