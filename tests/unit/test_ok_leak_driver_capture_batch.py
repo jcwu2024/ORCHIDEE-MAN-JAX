@@ -85,6 +85,9 @@ def _install_fakes(monkeypatch, calls):
             "fast_day_target_sha256": arguments.expected_fast_day_target_sha256,
             "capture_plan_sha256": arguments.capture_plan_sha256,
             "capture_npz_sha256": _sha256_file(arrays_path),
+            "next_continuous_state": {
+                "within_tolerance": arguments.day_index == 2,
+            },
         }
         _atomic_write_json(arguments.output / "report.json", report)
         return report
@@ -101,6 +104,8 @@ def test_batch_is_atomic_and_resumes_completed_days(tmp_path, monkeypatch):
 
     assert first["status"] == "complete"
     assert first["completed_record_count"] == 2
+    assert first["capture_interface_passed_count"] == 2
+    assert first["next_state_diagnostic_passed_count"] == 1
     assert calls == [("001.0-071.0", 1961, 2), ("001.0-071.0", 1961, 3)]
     for record in records:
         output = _capture_directory(args.output.resolve(), record)
@@ -110,6 +115,7 @@ def test_batch_is_atomic_and_resumes_completed_days(tmp_path, monkeypatch):
     calls.clear()
     second = run_batch(args)
     assert second["status"] == "complete"
+    assert second["next_state_diagnostic_passed_count"] == 1
     assert calls == []
     assert all(item["resumed"] for item in second["records"])
 

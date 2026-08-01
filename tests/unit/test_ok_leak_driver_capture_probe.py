@@ -58,18 +58,11 @@ def test_scaled_state_tolerance_is_relative_away_from_zero_and_absolute_near_zer
     assert not near_zero["within_tolerance"]
 
 
-def test_probe_gate_uses_declared_scaled_tolerance_for_continuous_state():
-    state = _array_comparison(
-        np.asarray([2.0e6 + 9.313225746154785e-8]),
-        np.asarray([2.0e6]),
-        atol=1.0e-12,
-        rtol=1.0e-12,
-    )
+def test_capture_interface_gate_is_independent_of_full_state_reentry_diagnostic():
     assert _capture_probe_passes(
         {"soil_mc": _comparison()},
         {"exact": True},
         {"ok_leak.DOC": _comparison()},
-        state,
         {"date": _comparison()},
     )
 
@@ -95,7 +88,6 @@ def test_probe_gate_ignores_unrelated_historical_fast_target_drift():
         {"soil_mc": _comparison()},
         {"exact": True},
         ok_leak,
-        _comparison(exact=False, error=2.842170943040401e-14),
         {"date": _comparison()},
     )
 
@@ -105,7 +97,6 @@ def test_probe_gate_rejects_ok_leak_or_empty_endpoint_evidence():
         {"soil_mc": _comparison()},
         {"exact": True},
         {"ok_leak.DOC": _comparison(exact=False, error=2.0e-12)},
-        _comparison(),
         {"date": _comparison()},
     )
     assert not _capture_probe_passes(*arguments)
@@ -114,5 +105,4 @@ def test_probe_gate_rejects_ok_leak_or_empty_endpoint_evidence():
         arguments[1],
         {},
         arguments[3],
-        arguments[4],
     )

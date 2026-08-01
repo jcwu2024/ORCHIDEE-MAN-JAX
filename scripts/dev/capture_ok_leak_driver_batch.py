@@ -28,6 +28,18 @@ def _capture_directory(root: Path, record: Mapping[str, Any]) -> Path:
     )
 
 
+def _next_state_diagnostic_passed(report: Mapping[str, Any]) -> bool:
+    comparison = report.get("next_continuous_state", {})
+    if "within_tolerance" in comparison:
+        return bool(comparison["within_tolerance"])
+    return bool(
+        comparison.get("shape_equal")
+        and comparison.get("defined_status_mismatches", 0) == 0
+        and comparison.get("max_absolute_error") is not None
+        and comparison["max_absolute_error"] <= 1.0e-12
+    )
+
+
 def _existing_capture_summary(
     output: Path,
     record: Mapping[str, Any],
@@ -70,6 +82,7 @@ def _existing_capture_summary(
         "day_index": int(record["day_index"]),
         "report": str(report_path.relative_to(output.parents[2])),
         "capture_npz_sha256": observed_arrays_hash,
+        "next_state_diagnostic_passed": _next_state_diagnostic_passed(report),
         "resumed": True,
     }
 
@@ -187,6 +200,11 @@ def run_batch(args: argparse.Namespace) -> Mapping[str, Any]:
                 "requested_record_count": len(records),
                 "full_plan_record_count": len(all_records),
                 "completed_record_count": len(summaries),
+                "capture_interface_passed_count": len(summaries),
+                "next_state_diagnostic_passed_count": sum(
+                    bool(item["next_state_diagnostic_passed"])
+                    for item in summaries
+                ),
                 "records": summaries,
             },
         )
@@ -202,6 +220,11 @@ def run_batch(args: argparse.Namespace) -> Mapping[str, Any]:
         "requested_record_count": len(records),
         "full_plan_record_count": len(all_records),
         "completed_record_count": len(summaries),
+        "capture_interface_passed_count": len(summaries),
+        "next_state_diagnostic_passed_count": sum(
+            bool(item["next_state_diagnostic_passed"])
+            for item in summaries
+        ),
         "records": summaries,
     }
     _atomic_write_json(output / "capture_manifest.json", manifest)

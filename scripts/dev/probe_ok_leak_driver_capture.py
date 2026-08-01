@@ -224,7 +224,6 @@ def _capture_probe_passes(
     source_driver_comparisons: Mapping[str, Mapping[str, Any]],
     replay_tree: Mapping[str, Any],
     ok_leak_comparisons: Mapping[str, Mapping[str, Any]],
-    state_comparison: Mapping[str, Any],
     discrete_comparison: Mapping[str, Mapping[str, Any]],
     *,
     tolerance: float = 1.0e-12,
@@ -237,10 +236,6 @@ def _capture_probe_passes(
         and all(
             _within_tolerance(item, tolerance)
             for item in ok_leak_comparisons.values()
-        )
-        and state_comparison.get(
-            "within_tolerance",
-            _within_tolerance(state_comparison, tolerance),
         )
         and all(item["exact"] for item in discrete_comparison.values())
     )
@@ -394,12 +389,12 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
         source_driver_comparisons,
         replay_tree,
         ok_leak_comparisons,
-        state_comparison,
         discrete_comparison,
     )
     report = {
-        "schema_version": "ok_leak_driver_capture_probe_v1",
+        "schema_version": "ok_leak_driver_capture_probe_v2",
         "passed": passed,
+        "capture_interface_passed": passed,
         "dataset_manifest": str(manifest_path),
         "dataset_id": manifest["dataset_id"],
         "teacher_git_head": manifest["teacher_git_head"],
@@ -424,6 +419,7 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
             for item in ok_leak_comparisons.values()
         ),
         "next_continuous_state": state_comparison,
+        "next_state_diagnostic_passed": state_comparison["within_tolerance"],
         "next_continuous_state_leaves": state_leaf_comparisons,
         "next_discrete_state": discrete_comparison,
         "sealed_test_used": False,
