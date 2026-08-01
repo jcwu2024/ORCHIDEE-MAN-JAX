@@ -83,8 +83,12 @@ IFREE = 0
 def test_soilcarbon_fastr_sqrt_preserves_values_with_finite_zero_tangent():
     values = jnp.asarray([0.0, 4.0, -1.0], dtype=jnp.float64)
     result = _sqrt_with_finite_zero_tangent(values)
+    compiled = jax.jit(_sqrt_with_finite_zero_tangent)(values)
 
     np.testing.assert_array_equal(np.asarray(result[:2]), [0.0, 2.0])
+    np.testing.assert_array_equal(
+        np.asarray(compiled[:2]), np.asarray(jnp.sqrt(values[:2]))
+    )
     assert np.isnan(np.asarray(result[2]))
     assert float(jax.grad(lambda value: _sqrt_with_finite_zero_tangent(value))(0.0)) == 0.0
     assert float(jax.grad(lambda value: _sqrt_with_finite_zero_tangent(value))(4.0)) == 0.25
