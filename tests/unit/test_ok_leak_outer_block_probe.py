@@ -78,7 +78,11 @@ def test_normalize_outer_block_accumulator_schema_rejects_unknown_drift():
 
 
 def test_raw_doc_sqrt_mode_restores_the_teacher_primal_graph():
-    original = soilcarbon_kernels._sqrt_with_finite_zero_tangent
+    original = getattr(
+        soilcarbon_kernels,
+        "_sqrt_with_finite_zero_tangent",
+        None,
+    )
     try:
         _configure_doc_sqrt_mode("raw_sqrt")
         values = jnp.asarray([0.0, 4.0], dtype=jnp.float64)
@@ -89,7 +93,10 @@ def test_raw_doc_sqrt_mode_restores_the_teacher_primal_graph():
 
         assert str(actual) == str(expected)
     finally:
-        soilcarbon_kernels._sqrt_with_finite_zero_tangent = original
+        if original is None:
+            del soilcarbon_kernels._sqrt_with_finite_zero_tangent
+        else:
+            soilcarbon_kernels._sqrt_with_finite_zero_tangent = original
 
 
 def test_doc_sqrt_mode_rejects_unknown_mode():
