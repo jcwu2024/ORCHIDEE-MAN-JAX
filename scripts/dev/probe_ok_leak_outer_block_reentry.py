@@ -21,6 +21,9 @@ from research.daily_coarse_graining.daily_markov_contract import (
     load_markov_shard,
     make_compiled_training_output_projector,
 )
+from research.daily_coarse_graining.replay_ceiling import (
+    capture_pre_daily_stomate_record,
+)
 from scripts.dev.probe_ok_leak_driver_capture import (
     _array_comparison,
     _atomic_write_json,
@@ -102,10 +105,28 @@ def run_probe(args: argparse.Namespace):
         prebuild_day_payloads=True,
     )
     initial = teacher.fast_state_from_previous_packet(packet)
+    schema_record = capture_pre_daily_stomate_record(
+        config_path,
+        previous_state=packet,
+        year=args.year,
+        day_index=args.day_index,
+        start_tstep=(args.day_index - 1) * steps_per_day,
+        used_run_def_path=context.run_def_path,
+        prepared_context=context,
+        module_jit=True,
+        diffuco_local_jit=True,
+        use_static_jit_daily_carbon=True,
+        use_compiled_sechiba_day=True,
+        retain_stomate_step_results=False,
+        prebuild_day_payloads=True,
+    )
+    boundary_state_spec = teacher.fast_state_from_previous_packet(
+        schema_record.half_hour_transition.current_state
+    ).spec
     projector = make_compiled_training_output_projector(
         contract,
         day_start_state_spec=initial.spec,
-        boundary_state_spec=initial.spec,
+        boundary_state_spec=boundary_state_spec,
     )
 
     def target_projector(current_values, boundary):
