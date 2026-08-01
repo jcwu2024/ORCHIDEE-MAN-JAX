@@ -143,6 +143,9 @@ def test_persisted_replay_compares_carry_and_derived_peat_endpoints():
             key="ok_leak.litter_above",
             start=0,
             stop=2,
+            shape=(2,),
+            axis_names=(),
+            selected_pft_indices=(),
         ),
         SimpleNamespace(
             family="ok_leak",
@@ -150,6 +153,9 @@ def test_persisted_replay_compares_carry_and_derived_peat_endpoints():
             key="ok_leak.DOC",
             start=2,
             stop=3,
+            shape=(1,),
+            axis_names=(),
+            selected_pft_indices=(),
         ),
         SimpleNamespace(
             family="ok_leak",
@@ -157,6 +163,9 @@ def test_persisted_replay_compares_carry_and_derived_peat_endpoints():
             key="ok_leak.deepC_peat",
             start=3,
             stop=4,
+            shape=(1,),
+            axis_names=(),
+            selected_pft_indices=(),
         ),
     )
 

@@ -23,6 +23,7 @@ from research.daily_coarse_graining.carbon_budget_ownership import (
     ok_leak_driver_capture_metadata,
 )
 from research.daily_coarse_graining.daily_markov_contract import (
+    _select_pft_axes,
     daily_markov_contract_from_metadata,
     extract_fast_day_target,
     extract_state,
@@ -276,8 +277,15 @@ def _replayed_ok_leak_endpoint_comparisons(
             continue
         if len(leaf.path) != 1 or leaf.path[0] not in actual:
             raise ValueError(f"unsupported persisted OK_LEAK endpoint: {leaf.key}")
+        compact = _select_pft_axes(
+            np.asarray(actual[leaf.path[0]]),
+            leaf.axis_names,
+            leaf.selected_pft_indices,
+        )
+        if tuple(compact.shape) != leaf.shape:
+            raise ValueError(f"persisted OK_LEAK endpoint shape drift: {leaf.key}")
         comparisons[f"{leaf.family}.{leaf.path[0]}"] = _array_comparison(
-            np.asarray(actual[leaf.path[0]]).reshape(-1),
+            compact.reshape(-1),
             np.asarray(expected_target)[leaf.start : leaf.stop],
         )
     return comparisons
