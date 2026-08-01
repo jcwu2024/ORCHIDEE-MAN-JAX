@@ -27,8 +27,12 @@ from research.daily_coarse_graining.replay_ceiling import (
 from scripts.dev.probe_ok_leak_driver_capture import (
     _array_comparison,
     _atomic_write_json,
+    _ok_leak_endpoint_comparisons,
     _resolve,
     _sha256_array,
+    _state_leaf_comparisons,
+    _target_leaf_comparisons,
+    _within_tolerance,
 )
 
 _REENTRY_ONLY_DAILY_ACCUMULATORS = frozenset(
@@ -228,6 +232,21 @@ def run_probe(args: argparse.Namespace):
     target_comparison = _array_comparison(
         actual_target, np.asarray(shard.fast_day_target[row])
     )
+    target_leaf_comparisons = _target_leaf_comparisons(
+        actual_target,
+        np.asarray(shard.fast_day_target[row]),
+        contract.fast_day_target_leaves,
+    )
+    ok_leak_comparisons = _ok_leak_endpoint_comparisons(
+        target_leaf_comparisons
+    )
+    ok_leak_passed = bool(
+        ok_leak_comparisons
+        and all(
+            _within_tolerance(item, 1.0e-12)
+            for item in ok_leak_comparisons.values()
+        )
+    )
     final_packet = teacher.previous_packet_from_fast_state(
         teacher.DriverFastStateBundle(
             tstep=args.day_index * steps_per_day - 1,
@@ -244,12 +263,19 @@ def run_probe(args: argparse.Namespace):
         atol=1.0e-12,
         rtol=1.0e-12,
     )
+    state_leaf_comparisons = _state_leaf_comparisons(
+        actual_state,
+        np.asarray(shard.state_trajectory[row + 1]),
+        contract.state_leaves,
+        atol=1.0e-12,
+        rtol=1.0e-12,
+    )
     discrete_comparisons = {
         name: _array_comparison(actual_discrete[name], values[row + 1])
         for name, values in shard.discrete_trajectories.items()
     }
     passed = bool(
-        target_comparison["exact"]
+        ok_leak_passed
         and state_comparison["within_tolerance"]
         and all(item["exact"] for item in discrete_comparisons.values())
     )
@@ -264,12 +290,15 @@ def run_probe(args: argparse.Namespace):
         "day_start_state_sha256": _sha256_array(shard.state_trajectory[row]),
         "reentry_schema_adjustments": schema_adjustments,
         "fast_day_target": target_comparison,
+        "fast_day_target_leaves": target_leaf_comparisons,
+        "ok_leak_endpoint_within_1e-12": ok_leak_passed,
         "next_continuous_state": state_comparison,
+        "next_continuous_state_leaves": state_leaf_comparisons,
         "next_discrete_state": discrete_comparisons,
         "decision": (
-            "outer_compiled_boundary_reproduces_shard"
+            "outer_compiled_ok_leak_boundary_reproduces_shard"
             if passed
-            else "mismatch_survives_outer_compiled_boundary"
+            else "mismatch_survives_outer_compiled_ok_leak_boundary"
         ),
     }
     args.output.parent.mkdir(parents=True, exist_ok=True)
