@@ -110,6 +110,10 @@ def run_probe(args: argparse.Namespace):
     if matches.size != 1:
         raise ValueError("outer-block probe day is absent or duplicated")
     row = int(matches[0])
+    if args.block_days < 1:
+        raise ValueError("block_days must be positive")
+    if row + args.block_days > shard.fast_day_target.shape[0]:
+        raise ValueError("requested block extends beyond the source shard")
 
     plan_path = args.plan.resolve()
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
@@ -143,16 +147,23 @@ def run_probe(args: argparse.Namespace):
     )
 
     steps_per_day = templates.steps_per_day
-    forcing = teacher._paper_compiled_forcing_day(
-        context,
-        year=args.year,
-        start_tstep=(args.day_index - 1) * steps_per_day,
-        steps_per_stomate=steps_per_day,
+    day_numbers = tuple(
+        range(args.day_index, args.day_index + args.block_days)
+    )
+    forcing_days = tuple(
+        teacher._paper_compiled_forcing_day(
+            context,
+            year=args.year,
+            start_tstep=(day_index - 1) * steps_per_day,
+            steps_per_stomate=steps_per_day,
+        )
+        for day_index in day_numbers
     )
     block_forcing = jax.tree_util.tree_map(
-        lambda value: np.expand_dims(np.asarray(value), axis=0), forcing
+        lambda *values: np.stack(tuple(np.asarray(value) for value in values)),
+        *forcing_days,
     )
-    block_day_numbers = np.asarray([args.day_index], dtype=np.int32)
+    block_day_numbers = np.asarray(day_numbers, dtype=np.int32)
     schema_record = capture_pre_daily_stomate_record(
         config_path,
         previous_state=packet,
@@ -241,28 +252,41 @@ def run_probe(args: argparse.Namespace):
         season_values,
         teacher._compiled_diffuco_parameter_values(context),
     )
-    actual_target = np.asarray(jax.device_get(stacked_targets))[0]
+    actual_targets = np.asarray(jax.device_get(stacked_targets))
+    expected_targets = np.asarray(
+        shard.fast_day_target[row : row + args.block_days]
+    )
+    actual_target = actual_targets[0]
+    expected_target = expected_targets[0]
     target_comparison = _array_comparison(
-        actual_target, np.asarray(shard.fast_day_target[row])
+        actual_targets, expected_targets
     )
     target_leaf_comparisons = _target_leaf_comparisons(
         actual_target,
-        np.asarray(shard.fast_day_target[row]),
+        expected_target,
         contract.fast_day_target_leaves,
     )
-    ok_leak_comparisons = _ok_leak_endpoint_comparisons(
-        target_leaf_comparisons
-    )
+    ok_leak_comparisons_by_day = {}
+    for offset, day_index in enumerate(day_numbers):
+        comparisons = _target_leaf_comparisons(
+            actual_targets[offset],
+            expected_targets[offset],
+            contract.fast_day_target_leaves,
+        )
+        ok_leak_comparisons_by_day[str(day_index)] = (
+            _ok_leak_endpoint_comparisons(comparisons)
+        )
     ok_leak_passed = bool(
-        ok_leak_comparisons
+        ok_leak_comparisons_by_day
         and all(
             _within_tolerance(item, 1.0e-12)
-            for item in ok_leak_comparisons.values()
+            for comparisons in ok_leak_comparisons_by_day.values()
+            for item in comparisons.values()
         )
     )
     final_packet = teacher.previous_packet_from_fast_state(
         teacher.DriverFastStateBundle(
-            tstep=args.day_index * steps_per_day - 1,
+            tstep=(args.day_index + args.block_days - 1) * steps_per_day - 1,
             values_by_component=jax.tree_util.tree_map(
                 lambda value: value, final_values
             ),
@@ -271,20 +295,21 @@ def run_probe(args: argparse.Namespace):
     )
     actual_state, actual_discrete = extract_state(final_packet, contract)
     state_comparison = _array_comparison(
-        actual_state,
-        np.asarray(shard.state_trajectory[row + 1]),
+        actual_state, np.asarray(shard.state_trajectory[row + args.block_days]),
         atol=1.0e-12,
         rtol=1.0e-12,
     )
     state_leaf_comparisons = _state_leaf_comparisons(
         actual_state,
-        np.asarray(shard.state_trajectory[row + 1]),
+        np.asarray(shard.state_trajectory[row + args.block_days]),
         contract.state_leaves,
         atol=1.0e-12,
         rtol=1.0e-12,
     )
     discrete_comparisons = {
-        name: _array_comparison(actual_discrete[name], values[row + 1])
+        name: _array_comparison(
+            actual_discrete[name], values[row + args.block_days]
+        )
         for name, values in shard.discrete_trajectories.items()
     }
     passed = bool(
@@ -299,12 +324,15 @@ def run_probe(args: argparse.Namespace):
         "landpoint_id": args.landpoint_id,
         "year": args.year,
         "day_index": args.day_index,
+        "block_days": args.block_days,
+        "block_day_numbers": day_numbers,
         "doc_sqrt_mode": args.doc_sqrt_mode,
         "source_shard": str(shard_path),
         "day_start_state_sha256": _sha256_array(shard.state_trajectory[row]),
         "reentry_schema_adjustments": schema_adjustments,
         "fast_day_target": target_comparison,
         "fast_day_target_leaves": target_leaf_comparisons,
+        "ok_leak_endpoint_comparisons_by_day": ok_leak_comparisons_by_day,
         "ok_leak_endpoint_within_1e-12": ok_leak_passed,
         "next_continuous_state": state_comparison,
         "next_continuous_state_leaves": state_leaf_comparisons,
@@ -327,6 +355,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--landpoint-id", required=True)
     parser.add_argument("--year", type=int, required=True)
     parser.add_argument("--day-index", type=int, required=True)
+    parser.add_argument("--block-days", type=int, default=1)
     parser.add_argument(
         "--doc-sqrt-mode",
         choices=("production", "raw_sqrt"),

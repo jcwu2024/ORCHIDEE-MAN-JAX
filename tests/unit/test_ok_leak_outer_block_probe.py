@@ -10,6 +10,7 @@ from jax_orchidee.stomate import soilcarbon_kernels
 from scripts.dev.probe_ok_leak_outer_block_reentry import (
     _configure_doc_sqrt_mode,
     _normalize_daily_accumulator_schema,
+    build_parser,
 )
 
 
@@ -93,3 +94,26 @@ def test_raw_doc_sqrt_mode_restores_the_teacher_primal_graph():
 def test_doc_sqrt_mode_rejects_unknown_mode():
     with pytest.raises(ValueError, match="unsupported DOC sqrt mode"):
         _configure_doc_sqrt_mode("unknown")
+
+
+def test_outer_probe_parser_accepts_the_teacher_seven_day_block():
+    args = build_parser().parse_args(
+        [
+            "--dataset-manifest",
+            "dataset.json",
+            "--plan",
+            "plan.json",
+            "--landpoint-id",
+            "069.0-119.0",
+            "--year",
+            "1963",
+            "--day-index",
+            "184",
+            "--block-days",
+            "7",
+            "--output",
+            "report.json",
+        ]
+    )
+
+    assert args.block_days == 7

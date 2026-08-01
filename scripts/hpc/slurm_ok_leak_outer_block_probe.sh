@@ -17,6 +17,7 @@ PYTHON=$ROOT/.venvs/orcjax_cpu/bin/python
 EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set the approved Git commit}
 OUTPUT=${OUTPUT:?set an output JSON under runtime/outputs}
 DOC_SQRT_MODE=${DOC_SQRT_MODE:-production}
+BLOCK_DAYS=${BLOCK_DAYS:-1}
 DATASET_ROOT=$ROOT/runtime/outputs/training/pft14-daily-teacher-9point-1961-2010-v5-4c0f886
 DATASET_MANIFEST=$DATASET_ROOT/dataset_manifest.json
 TEACHER_PLAN=$ROOT/runtime/plans/teacher_initial_10point_v4_1f19ed7.json
@@ -56,6 +57,7 @@ cd "$ROOT"
   --landpoint-id 069.0-119.0 \
   --year 1963 \
   --day-index 184 \
+  --block-days "$BLOCK_DAYS" \
   --doc-sqrt-mode "$DOC_SQRT_MODE" \
   --output "$OUTPUT"
 
