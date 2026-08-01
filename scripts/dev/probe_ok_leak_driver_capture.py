@@ -94,15 +94,33 @@ def _max_tree_difference(actual: Any, expected: Any) -> Mapping[str, Any]:
     }
 
 
-def _array_comparison(actual: Any, expected: Any) -> Mapping[str, Any]:
+def _array_comparison(
+    actual: Any,
+    expected: Any,
+    *,
+    atol: float | None = None,
+    rtol: float | None = None,
+) -> Mapping[str, Any]:
+    if (atol is None) != (rtol is None):
+        raise ValueError("atol and rtol must be declared together")
     actual_array = np.asarray(actual)
     expected_array = np.asarray(expected)
     if actual_array.shape != expected_array.shape:
-        return {
+        result = {
             "shape_equal": False,
             "exact": False,
             "max_absolute_error": None,
         }
+        if atol is not None and rtol is not None:
+            result.update(
+                {
+                    "atol": atol,
+                    "rtol": rtol,
+                    "within_tolerance": False,
+                    "max_tolerance_ratio": None,
+                }
+            )
+        return result
     exact = bool(np.array_equal(actual_array, expected_array, equal_nan=True))
     defined_status_mismatches = int(
         np.count_nonzero(np.isfinite(actual_array) != np.isfinite(expected_array))
@@ -115,12 +133,41 @@ def _array_comparison(actual: Any, expected: Any) -> Mapping[str, Any]:
         )
         finite = np.isfinite(difference)
         maximum = float(np.max(difference[finite])) if np.any(finite) else 0.0
-    return {
+    result = {
         "shape_equal": True,
         "exact": exact,
         "max_absolute_error": maximum,
         "defined_status_mismatches": defined_status_mismatches,
     }
+    if atol is not None and rtol is not None:
+        close = np.isclose(
+            actual_array,
+            expected_array,
+            atol=atol,
+            rtol=rtol,
+            equal_nan=True,
+        )
+        difference = np.abs(
+            actual_array.astype(np.float64) - expected_array.astype(np.float64)
+        )
+        allowed = atol + rtol * np.abs(expected_array.astype(np.float64))
+        finite = np.isfinite(difference) & np.isfinite(allowed)
+        ratios = np.divide(
+            difference,
+            allowed,
+            out=np.zeros_like(difference),
+            where=finite & (allowed > 0.0),
+        )
+        max_ratio = float(np.max(ratios[finite])) if np.any(finite) else 0.0
+        result.update(
+            {
+                "atol": atol,
+                "rtol": rtol,
+                "within_tolerance": bool(np.all(close)),
+                "max_tolerance_ratio": max_ratio,
+            }
+        )
+    return result
 
 
 def _target_leaf_comparisons(actual, expected, leaves) -> Mapping[str, Any]:
@@ -132,6 +179,26 @@ def _target_leaf_comparisons(actual, expected, leaves) -> Mapping[str, Any]:
             np.asarray(expected)[leaf.start : leaf.stop],
         )
     return result
+
+
+def _state_leaf_comparisons(
+    actual,
+    expected,
+    leaves,
+    *,
+    atol: float,
+    rtol: float,
+) -> Mapping[str, Any]:
+    return {
+        leaf.key: _array_comparison(
+            np.asarray(actual)[leaf.start : leaf.stop],
+            np.asarray(expected)[leaf.start : leaf.stop],
+            atol=atol,
+            rtol=rtol,
+        )
+        for leaf in leaves
+        if not leaf.discrete
+    }
 
 
 def _within_tolerance(comparison: Mapping[str, Any], tolerance: float) -> bool:
@@ -171,7 +238,10 @@ def _capture_probe_passes(
             _within_tolerance(item, tolerance)
             for item in ok_leak_comparisons.values()
         )
-        and _within_tolerance(state_comparison, tolerance)
+        and state_comparison.get(
+            "within_tolerance",
+            _within_tolerance(state_comparison, tolerance),
+        )
         and all(item["exact"] for item in discrete_comparison.values())
     )
 
@@ -292,7 +362,22 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
         record.expected_result.day_end_state,
         contract,
     )
-    state_comparison = _array_comparison(observed_state, shard.state_trajectory[row + 1])
+    state_atol = 1.0e-12
+    state_rtol = 1.0e-12
+    expected_state = shard.state_trajectory[row + 1]
+    state_comparison = _array_comparison(
+        observed_state,
+        expected_state,
+        atol=state_atol,
+        rtol=state_rtol,
+    )
+    state_leaf_comparisons = _state_leaf_comparisons(
+        observed_state,
+        expected_state,
+        contract.state_leaves,
+        atol=state_atol,
+        rtol=state_rtol,
+    )
     discrete_comparison = {
         name: _array_comparison(observed_discrete[name], values[row + 1])
         for name, values in shard.discrete_trajectories.items()
@@ -339,6 +424,7 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
             for item in ok_leak_comparisons.values()
         ),
         "next_continuous_state": state_comparison,
+        "next_continuous_state_leaves": state_leaf_comparisons,
         "next_discrete_state": discrete_comparison,
         "sealed_test_used": False,
     }

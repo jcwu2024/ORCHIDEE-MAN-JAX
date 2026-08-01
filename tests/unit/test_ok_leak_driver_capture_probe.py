@@ -38,6 +38,42 @@ def test_array_comparison_tracks_value_and_defined_status_mismatches():
     assert not _within_tolerance(status, 1.0e-12)
 
 
+def test_scaled_state_tolerance_is_relative_away_from_zero_and_absolute_near_zero():
+    scaled = _array_comparison(
+        np.asarray([2.0e6 + 9.313225746154785e-8]),
+        np.asarray([2.0e6]),
+        atol=1.0e-12,
+        rtol=1.0e-12,
+    )
+    assert scaled["max_absolute_error"] > 1.0e-12
+    assert scaled["within_tolerance"]
+    assert scaled["max_tolerance_ratio"] < 1.0
+
+    near_zero = _array_comparison(
+        np.asarray([2.0e-12]),
+        np.asarray([0.0]),
+        atol=1.0e-12,
+        rtol=1.0e-12,
+    )
+    assert not near_zero["within_tolerance"]
+
+
+def test_probe_gate_uses_declared_scaled_tolerance_for_continuous_state():
+    state = _array_comparison(
+        np.asarray([2.0e6 + 9.313225746154785e-8]),
+        np.asarray([2.0e6]),
+        atol=1.0e-12,
+        rtol=1.0e-12,
+    )
+    assert _capture_probe_passes(
+        {"soil_mc": _comparison()},
+        {"exact": True},
+        {"ok_leak.DOC": _comparison()},
+        state,
+        {"date": _comparison()},
+    )
+
+
 def test_probe_gate_ignores_unrelated_historical_fast_target_drift():
     all_targets = {
         "daily_interface.t2m_min_daily": _comparison(
