@@ -92,13 +92,36 @@ seven-day compiled block reproduces every unrelated Teacher field. Historical
 Teacher shards were generated in seven-day compiled blocks, so the accepted
 verification boundary is the isolated persisted-driver exact scan.
 
-## Next Gate
+## Conservation Smoke
+
+Commit `dc7d601` connects a diagnostic-only full-step return to the existing
+scan and applies the combined independent-stock budget from the source litter
+and soil-carbon mass-balance sections. The production scan still defaults to
+its final-result-only boundary.
+
+Real smoke `14446767` passed for `001.0-071.0`, 1961 Day 2:
+
+- elapsed time: `00:06:38`
+- exit code: `0:0`
+- peak batch RSS: `6245656K` (about 5.96 GiB)
+- finite 48-step balances and stocks: passed
+- negative litter/POC/DOC/canopy stock values below `-1e-12`: zero
+- diagnostic final carry versus ordinary replay: bit-exact
+- maximum absolute closure: `2.9293322073575823e-9`
+- source closure threshold: `min_stomate=1e-8`
+- maximum relative closure, reported only as a diagnostic: `1.1884142572250605e-8`
+
+The maximum occurs at zero-based step index 1 in a low-stock transition. The
+source defines an absolute `min_stomate` verdict, not a relative rejection
+rule. Rejected jobs `14446560` and `14446688` used respectively an invented
+`1e-12` absolute gate and an invented `1e-12` relative gate; neither policy
+should be restored.
+
+## Remaining Gates
 
 Before a paid matched neural A/B, complete:
 
-1. source-backed combined carbon-inventory conservation;
-2. physically feasible driver perturbations and nonnegative stock endpoints;
-3. real forward- and reverse-mode finite gradients through the 48-step scan;
-4. bounded tiny-set fitting while `carbon_32l`, `DOC`, and `deepC_peat` remain
+1. physically feasible driver perturbations and nonnegative stock endpoints;
+2. real forward- and reverse-mode finite gradients through the 48-step scan;
+3. bounded tiny-set fitting while `carbon_32l`, `DOC`, and `deepC_peat` remain
    exact-scan-owned and do not regress relative to the parent.
-

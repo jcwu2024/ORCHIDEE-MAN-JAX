@@ -715,6 +715,18 @@ forward/reverse finite-gradient, and bounded tiny-fit parent-no-regression
 micro-gates before any paid neural A/B. See
 [`ok_leak_auxiliary_capture_replay_20260801.md`](research/daily_coarse_graining/ok_leak_auxiliary_capture_replay_20260801.md).
 
+The source-backed combined carbon-inventory diagnostic is now connected to a
+diagnostic-only full-step output of the same 48-step scan. The production
+return boundary remains unchanged. A real persisted-driver smoke for
+`001.0-071.0`, 1961 Day 2 passes all 48 steps: all values are finite, all five
+independent stock families are nonnegative, the diagnostic final carry is
+bit-exact to ordinary replay, and maximum absolute closure is `2.9293e-9`.
+The closure policy uses the source `min_stomate=1e-8` verdict from
+`constantes_var.f90`; relative closure (`1.1884e-8` at the worst low-stock
+step) is retained as a diagnostic and is not an invented source gate. Job
+`14446767` completed in `00:06:38` with exit code zero. Feasible perturbation,
+real forward/reverse gradient, and bounded tiny-fit gates remain.
+
 A deterministic bounded selection tool is now ready for the existing
 server-side v5 shards. It admits only the six spatial-train/temporal-train
 landpoints and selects 16 days per point: cold-start anchor, low/high extrema

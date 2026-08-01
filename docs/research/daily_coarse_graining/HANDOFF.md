@@ -25,9 +25,10 @@ scientific and release facts remain authoritative in
    worsened `carbon_32l` by `7.33-9.32x` and `deepC_peat` by `5.66-7.45x`.
    Its stock-adapter ablation also failed. Do not retune, confirm, or promote
    it. The bounded 96-day exact-`OK_LEAK` capture and persisted replay gates
-   now pass. The active operation is the remaining conservative micro-gates:
-   conservation, feasible perturbations/nonnegative stocks, real scan
-   gradients, and bounded tiny-fit parent no-regression.
+   now pass. A real 48-step source-backed conservation smoke also passes. The
+   active operation is the remaining conservative micro-gates: feasible
+   perturbations/nonnegative stocks, real scan gradients, and bounded tiny-fit
+   parent no-regression.
 
 ```bash
 git status --short --branch
@@ -1034,6 +1035,23 @@ is the persisted-driver exact scan. The next operation is to close
 conservation, feasibility/nonnegative-stock, real forward/reverse gradient,
 and bounded tiny-fit no-regression gates. It is not a 669-point regeneration
 and not paid training.
+
+The first real source-backed conservation smoke is complete at commit
+`dc7d601`. It uses a diagnostic-only `retain_step_results=True` static branch
+of the existing scan; the default production output and numerical carry are
+unchanged. For `001.0-071.0`, 1961 Day 2, all 48 steps are finite, all
+independent litter/POC/DOC/canopy stock arrays are nonnegative, and the final
+diagnostic carry is bit-exact to ordinary replay. Maximum absolute closure is
+`2.9293322073575823e-9`, below the source `min_stomate=1e-8` verdict. The
+worst step's relative closure is `1.1884142572250605e-8` and remains reported
+as a diagnostic; Fortran defines no relative rejection gate. Job `14446767`
+completed in `00:06:38` with exit code zero and about 5.96 GiB peak RSS.
+
+Two preceding smoke reports are intentionally rejected evidence. Job
+`14446560` incorrectly applied `1e-12` as an absolute inventory-closure gate.
+Job `14446688` added an invented `1e-12` relative rejection gate. Both still
+proved finite, nonnegative, bit-exact final carry and the same `2.9293e-9`
+closure. Do not restore either policy or rerun these rejected jobs.
 Use the machine ownership/capture guard in
 `research/daily_coarse_graining/carbon_budget_ownership.py` and the frozen
 audit in
