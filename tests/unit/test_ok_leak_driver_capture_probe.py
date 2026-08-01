@@ -131,7 +131,9 @@ def test_persisted_replay_compares_carry_and_derived_peat_endpoints():
     replayed = (
         carry,
         SimpleNamespace(
-            soilcarbon=SimpleNamespace(deepc_peat=np.asarray([4.0]))
+            soilcarbon=SimpleNamespace(
+                perma_peat=SimpleNamespace(deepc_peat=np.asarray([4.0]))
+            )
         ),
     )
     leaves = (

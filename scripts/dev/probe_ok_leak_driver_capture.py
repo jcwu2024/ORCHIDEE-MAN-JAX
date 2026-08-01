@@ -264,7 +264,12 @@ def _replayed_ok_leak_endpoint_comparisons(
 ) -> Mapping[str, Mapping[str, Any]]:
     final_carry, last_result = replayed
     actual = teacher._compiled_ok_leak_updates(final_carry)
-    actual["deepC_peat"] = last_result.soilcarbon.deepc_peat
+    perma_peat = last_result.soilcarbon.perma_peat
+    if perma_peat is None:
+        raise ValueError(
+            "persisted PFT14 replay requires the active PERMA_PEAT endpoint"
+        )
+    actual["deepC_peat"] = perma_peat.deepc_peat
     comparisons = {}
     for leaf in leaves:
         if leaf.family != "ok_leak":
