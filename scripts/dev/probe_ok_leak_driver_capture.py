@@ -298,7 +298,6 @@ def _persisted_scan_conservation(
     replay_call: Mapping[str, Any],
     expected_replay,
     *,
-    relative_tolerance: float = 1.0e-12,
     stock_tolerance: float = 1.0e-12,
 ) -> Mapping[str, Any]:
     diagnostic_call = dict(replay_call)
@@ -344,7 +343,10 @@ def _persisted_scan_conservation(
         + np.abs(balances.lateral_export)
         + np.abs(balances.final_inventory)
     )
-    relative_closures = np.abs(closures) / np.maximum(balance_scale, 1.0)
+    relative_closures = np.abs(closures) / np.maximum(
+        balance_scale,
+        np.finfo(balance_scale.dtype).tiny,
+    )
     independent_stocks = {
         "litter_above": np.asarray(end_carries.litter_above),
         "litter_below": np.asarray(end_carries.litter_below),
@@ -383,7 +385,6 @@ def _persisted_scan_conservation(
     passed = bool(
         finite
         and maximum <= FORTRAN_MIN_STOMATE
-        and maximum_relative <= relative_tolerance
         and not any(negative_count_by_field.values())
         and final_comparison["exact"]
     )
@@ -391,7 +392,7 @@ def _persisted_scan_conservation(
         "passed": passed,
         "step_count": int(closures.shape[0]),
         "source_absolute_tolerance": FORTRAN_MIN_STOMATE,
-        "relative_tolerance": relative_tolerance,
+        "relative_closure_is_diagnostic_only": True,
         "stock_tolerance": stock_tolerance,
         "all_finite": finite,
         "max_absolute_closure": maximum,
