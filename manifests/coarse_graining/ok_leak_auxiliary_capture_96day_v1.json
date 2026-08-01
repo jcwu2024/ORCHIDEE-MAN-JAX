@@ -1,0 +1,2557 @@
+{
+  "schema_version": "ok_leak_auxiliary_capture_plan_v1",
+  "dataset_id": "pft14-daily-teacher-9point-1961-2010-v5-4c0f886",
+  "teacher_git_head": "1f19ed782fa5b8c0443c3aab1d05c62ba3e962ee",
+  "dataset_manifest_sha256": "a23e03e8c97159bada1f3481a112c768e74cc761543f75861d4052c5a04c8752",
+  "markov_contract_sha256": "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442",
+  "sealed_test_used": false,
+  "split_policy": {
+    "spatial_split": "train",
+    "temporal_split": "train"
+  },
+  "selection_policy": {
+    "method": "per_landpoint_extrema_then_rank_space_farthest_v1",
+    "samples_per_landpoint": 16,
+    "dynamic_metrics": [
+      "soil_wetness",
+      "soil_temperature_k",
+      "pft14_gpp_daily",
+      "soil_carbon_proxy",
+      "precip_daily",
+      "hydrologic_export"
+    ],
+    "condition_metrics": [
+      "soil_wetness",
+      "soil_temperature_k",
+      "pft14_gpp_daily",
+      "soil_carbon_proxy",
+      "precip_daily",
+      "hydrologic_export",
+      "peat_hydrology_activity",
+      "peat_cover_fraction"
+    ],
+    "mandatory_anchors": [
+      "earliest_train_day",
+      "minimum",
+      "maximum"
+    ]
+  },
+  "execution_contract": {
+    "paper_hydrol_soil_peat_hydro": false,
+    "inactive_zero_driver_fields": [
+      "runoff2peat",
+      "shumdiag_peat"
+    ],
+    "provenance": [
+      "jax_orchidee/driver/orchestration.py::PAPER_1961_HYDROL_SOIL_PEAT_HYDRO",
+      "traces/hydrol_1961_v9: peat_hydro=F, branch_peat=F"
+    ]
+  },
+  "candidate_shard_count": 264,
+  "candidate_day_count": 96354,
+  "selected_landpoints": [
+    "001.0-071.0",
+    "069.0-119.0",
+    "281.0-095.0",
+    "295.0-113.0",
+    "315.0-097.0",
+    "333.0-057.0"
+  ],
+  "selected_day_count": 96,
+  "estimated_uncompressed_driver_bytes": 46743552,
+  "source_shards": {
+    "shards/001.0-071.0/1961.npz": "25d704e7315f5fc99c8b6f551f8c90ff70f9b6ebb0d6d66fec96696d412ee363",
+    "shards/001.0-071.0/1962.npz": "b1db652702c16607e2167354a280f846d505c55fd625978dbb977f30e5155e4e",
+    "shards/001.0-071.0/1963.npz": "97a5750d074ff17a3e09c973b01f6979d96bb3cbbd1d542611730d632676a169",
+    "shards/001.0-071.0/1964.npz": "c8481eedd2ab852ea506bb59cdb2a0f30db9b30c26a9642bfecd303a9ee91cf8",
+    "shards/001.0-071.0/1965.npz": "7c9cf5bea780d6cfa1b11b212eedc27e286f432085a8cd0b5c946cadc1f64657",
+    "shards/001.0-071.0/1966.npz": "36b69fc5db8fbb18777f184a7805f26b04551765fc99044e228db8226c85df44",
+    "shards/001.0-071.0/1967.npz": "8d2c78b63d9d61fa399f123ec661e6c6785ec1f92529f1428fbd60d6358e967f",
+    "shards/001.0-071.0/1968.npz": "94b80a064d7e77557f4bf28bdad57828f77b5db3443e230d02d4fc37c24da869",
+    "shards/001.0-071.0/1969.npz": "45b4292ef247a7a67733beb7ef58b33627a2d25efeef2e1993b5d04152c67013",
+    "shards/001.0-071.0/1970.npz": "da47996b6a3d84276b99347e02d14930994ef2164a48f42d401fb07bc0fd1171",
+    "shards/001.0-071.0/1971.npz": "cdda0358ce51273484b7fc7ae8ab862040890ccef3f76ec7cdd4f1684ac1801b",
+    "shards/001.0-071.0/1972.npz": "f422e9b090c1f99a054169c19487696402fc07e061a2b3ccb3afa38dacaa03bb",
+    "shards/001.0-071.0/1973.npz": "068c60269002d55fdf93987728496069c0c5776fbe09c2cf54c396162f9320ca",
+    "shards/001.0-071.0/1974.npz": "b4968a93c4385775f74c0238c9de3cb18ccb5e25b317cc06537c65be48853e76",
+    "shards/001.0-071.0/1975.npz": "468c3ab67693f2167b2b4db8d9458358722b40d9ae438d9e2a1fd59d9ce97c1f",
+    "shards/001.0-071.0/1976.npz": "9b96d0efd33e99229428581f1d1801d8a23bd6e376ee7a226979a9aa18444158",
+    "shards/001.0-071.0/1977.npz": "98cf688ac76a202f7582b4f20300d97e923ab639323f7f899e7e8cb0c6537753",
+    "shards/001.0-071.0/1978.npz": "1ef40856a2053c4344be95f7e7bb8c3a7641cdb0a10a9f60e095db6ab692820f",
+    "shards/001.0-071.0/1979.npz": "2ba2b0a21a1a06e960306034b859f3daa586c3307488645cef72f804f11c63ab",
+    "shards/001.0-071.0/1980.npz": "17f8b51c81749816ac1bb5e0fa28b1935c37206007c14171693278ae2478c843",
+    "shards/001.0-071.0/1981.npz": "c605aebc2d558454640b48d424233a08d52f6c37ae46981c2d3789c6f04b75e1",
+    "shards/001.0-071.0/1982.npz": "e9ad1853509c5fff59b0bff3361645d46d5d41c000e0eeb0ac1e707d356f7f4a",
+    "shards/001.0-071.0/1983.npz": "348d33a29997fbe37acaf459f7922e8687d60060c2b34077167605605b0c983c",
+    "shards/001.0-071.0/1984.npz": "a373e56b9e64cd074b55c781d5d29aacfd4c3a0c63730fbcb3f1ca6606e2b533",
+    "shards/001.0-071.0/1985.npz": "2f370d82b39814c9ff8c17e636dd1ee472b0a1e6c6b7d09cf748089fd889044d",
+    "shards/001.0-071.0/1986.npz": "9cfac095b4cbe4a6a2dd12ae8e13fe665336ccf62575db2bbc9feeceac39e47f",
+    "shards/001.0-071.0/1987.npz": "294e87290a32fa982e46a14e22cfe4ea2a6c6a9f5d6c648c45697da1fc245cd5",
+    "shards/001.0-071.0/1988.npz": "67265bc41cd7d292ed6df2dced8f6a9e0ffcc47d4131619873c08e0a68cbad2d",
+    "shards/001.0-071.0/1989.npz": "3cd5e924fd806f459ea63ccf4b3c855c76c7689971e0bd7ac2910c0b17d83e49",
+    "shards/001.0-071.0/1990.npz": "f10e8d68e39f7566d930980218e65f0936c42a50fedb083e6cc3da7ab0e202dd",
+    "shards/001.0-071.0/1991.npz": "45f374a6037f3c0905eb8d2fb902a42afb3c0575a2199b6398ff220db9d84aef",
+    "shards/001.0-071.0/1992.npz": "9975157a8fa9661fc3acbb4c72627472e14cb44d3079537e3d58c1714b1abde0",
+    "shards/001.0-071.0/1993.npz": "7e1215cb91be03a8edbc6f2c1ade0d20a20b6d08117d7224682321f1240588fa",
+    "shards/001.0-071.0/1994.npz": "0ec25cb3633643850ff3883fad3bca49c25c7b791afca793309dc6684b7afe32",
+    "shards/001.0-071.0/1995.npz": "deeb99cbee9c52f7b2e4bbab8481c5e04ee9488b3e680e8d9d0227538fa2cad6",
+    "shards/001.0-071.0/1996.npz": "7d1507592d00ef86725acd62b91a2e31f351ab117572475b91da24fc3284ad84",
+    "shards/001.0-071.0/1997.npz": "30edd45371c257d1b46ac06c3be517226e37a8460e394522741e5df46762a01f",
+    "shards/001.0-071.0/1998.npz": "454221b9e02da648304abd15b25115849beb506d9c43186a9d89f33087eb66b2",
+    "shards/001.0-071.0/1999.npz": "9225add75db0bf5e0dbfb98009ea58db0c134693e9b2284d027946de0058bd8e",
+    "shards/001.0-071.0/2000.npz": "30a5bb101fffdcf972cb0b75216ea5782487e747725b8152546d955847a025fd",
+    "shards/001.0-071.0/2001.npz": "17bd388232b710fa01d9204caca1ee61a98c3e5d5678ea27cb620e5a94efddc0",
+    "shards/001.0-071.0/2002.npz": "eb77a50f56e5d35fffc24314ebedf3af067d142bab253cbc8a43c3b55d8e390c",
+    "shards/001.0-071.0/2003.npz": "9347461c792e7f03f6091cfd9dd06a202a48763e2d0d84522b4e5806d97d63b4",
+    "shards/001.0-071.0/2004.npz": "7f30f40e886081eda36b61b3e701cfeb6b5a63c20dee5484085ee21ff2091798",
+    "shards/069.0-119.0/1961.npz": "5240dda8dcd379504fd33dd474557b8b2019936fc233064d9f9fbb0edb800b48",
+    "shards/069.0-119.0/1962.npz": "f1cf969de90836356801670f3ec27eb4591f098216a7e90bcfd1a348dcc1206b",
+    "shards/069.0-119.0/1963.npz": "18095d1580a1417d7ed37a514dc8f33eb8b8f87482506147fbf2c733754ff5ab",
+    "shards/069.0-119.0/1964.npz": "37022268635a1c47ae4dff3a456e0cbfbae1f1bf0c90daa12ad39068167d7355",
+    "shards/069.0-119.0/1965.npz": "e53126efa4582f6c99357b4a7f785b82d3bb6196f366a4c5d12350a34dbb22f2",
+    "shards/069.0-119.0/1966.npz": "585c22cb5944afe393f7b4e245943a723a2616f8655b391da21e2978a10d3ede",
+    "shards/069.0-119.0/1967.npz": "eaba190a9ef8abfc622c5144f2ec5e24a3324d1323eec95d16c2617544aad669",
+    "shards/069.0-119.0/1968.npz": "150e2a41d57c4f523829bab559bdd4a430426dd665fa1e1f2781a544e8597022",
+    "shards/069.0-119.0/1969.npz": "77405fcbcc42fcbfa8417b4d20ff5e5301a4a45a7a4774c727213c6cd876ee49",
+    "shards/069.0-119.0/1970.npz": "2ea3281ee74044450a5ee5246e4c4572e7865c9b13a29485549a0a5a737abaa2",
+    "shards/069.0-119.0/1971.npz": "3e02088550a0ccbeeb9812917a8a89e3b5aa20cce41a9302323d36cbf3bbb14a",
+    "shards/069.0-119.0/1972.npz": "76ec748eb355dfa763570d6bafccdfdc20912488564bc94d56430bd764e0150a",
+    "shards/069.0-119.0/1973.npz": "0cb04baa501b9cd723b6eab2198f2804af7730f1a1d2fe8b25d6e45339f503f1",
+    "shards/069.0-119.0/1974.npz": "2522761c9a91a8e1701f8a2f73ddb146f2c5baf9df828b54822bdf6f7e8be7b4",
+    "shards/069.0-119.0/1975.npz": "7fcbc3f1fa63a30326bdd224e75b1cfdcf356e73dc5727f3d0a2213dd519fdfa",
+    "shards/069.0-119.0/1976.npz": "a20b266d029f894729dcd58904ba87d5fe5556a4f22102926f1153e081861022",
+    "shards/069.0-119.0/1977.npz": "06ebfb6f8997851fecaba540e2f46482fe887278f46af1f0a5999d8f4e884847",
+    "shards/069.0-119.0/1978.npz": "63b6adde2abaad48a96e739500f6ac21b92966b19b37b6555bcf9114187bce03",
+    "shards/069.0-119.0/1979.npz": "2fbf1902062a8b6f3f31930a37e6ba77f0f10d712328f36bbf2c7bfeef584fc0",
+    "shards/069.0-119.0/1980.npz": "2610706fb5ed98c65a17d3e470d74e266bae71fc3d4a5f7e32de81ec4cff4402",
+    "shards/069.0-119.0/1981.npz": "df179a7a6791ba7c89f1624294362c33950407dad1ecd5255c9951b6834e2575",
+    "shards/069.0-119.0/1982.npz": "78d41b1f404e2113a1b3e4f09adef653d59a72553ad71909d02b8c764ba87630",
+    "shards/069.0-119.0/1983.npz": "0d7b9e8b7b5a2a6844783bec71f7ace7b016a5b7b20b43ca240f3807fabf5019",
+    "shards/069.0-119.0/1984.npz": "61ac6fba4dcfea535f8e26bfadf7b7481cee2e80295cef3e7d39f4c77d03abb8",
+    "shards/069.0-119.0/1985.npz": "ea6c5c26520bc7496a908d979dc8d863ce6155070fa780c1514f99566cc8b0a1",
+    "shards/069.0-119.0/1986.npz": "9425bcaa24e9604ad0c99fdc1d5ec9a8a6872925e86458256ce9e72b0dbf0e4f",
+    "shards/069.0-119.0/1987.npz": "6b466d376a72ec7bc51f5743bd293bfc1782f9f12473d495fc3d5959222dfd2b",
+    "shards/069.0-119.0/1988.npz": "14011718029f77f8f58783f20f156bd4e8c83812436a0c7589e87cba6507df30",
+    "shards/069.0-119.0/1989.npz": "c606a619d2b8bf73a1da63eacf6cb9b2b851ce112d5c14122da92819e1f64a0e",
+    "shards/069.0-119.0/1990.npz": "b4316abab158eac3ae24e9e72de7013b34a96ea85e89866731b2f1b01121ef1e",
+    "shards/069.0-119.0/1991.npz": "074f1df2e0385e4a04da817c6acc413d7a2bd6944049d36cf218637e2d0fc62c",
+    "shards/069.0-119.0/1992.npz": "52dc42e0c23b494f8284ba11ec86e832d04fc1d3c3f1b26dd7306ec5eb6a1cc5",
+    "shards/069.0-119.0/1993.npz": "f86db52c861ff7a4b8f4b370795b48f6e1869c3f6fbc322e2a1752e0328171cc",
+    "shards/069.0-119.0/1994.npz": "dbfb5aa00cb9fa7a74f235ab043912cc7434e709438f2a87349e1fae216a06ca",
+    "shards/069.0-119.0/1995.npz": "a29afd57da5733261ffd1eb3d7588e832fc8c9101bb6e1b35d2c6afe39080b62",
+    "shards/069.0-119.0/1996.npz": "05b830ea4b9232d2c430c238b2bdb29373e90cc34d324e33e9ffe61e1127dfb6",
+    "shards/069.0-119.0/1997.npz": "3cd00972a2c81226ab7b4af03f1fe510974947d1a6466fd20532c133fcaad789",
+    "shards/069.0-119.0/1998.npz": "ee4f2020bbc331cf0d5ed5573a8854a672b85268027e0f93877eeacd109a57f8",
+    "shards/069.0-119.0/1999.npz": "967e4f88aca1b614952f8716cfed5358ec9d338edcd86f7180b09e4920034a3d",
+    "shards/069.0-119.0/2000.npz": "0f962a88a64329546c82885a9e5a36005a51ea506f7572f73c7c5e459c4f8dfe",
+    "shards/069.0-119.0/2001.npz": "dcd0b5690b68f4036e993541cee4c1cb6139ea9789ce1c054da44fd0cf129c3c",
+    "shards/069.0-119.0/2002.npz": "98dfde994fff444bf5000d38d57c5141ed7e40deee07dda05f4e16c04320267b",
+    "shards/069.0-119.0/2003.npz": "aae310545732c55a863965097f1381b3229bfcc72ce434363f6058820edad23d",
+    "shards/069.0-119.0/2004.npz": "d606fb18e4880c9b064cc440307391fa9ab994c737c397d081bc42a22e1d5ec5",
+    "shards/281.0-095.0/1961.npz": "86a1b1ccf01f62d012b19bb11db339c2941dcafa574d5dfabcf62cc14ed041b0",
+    "shards/281.0-095.0/1962.npz": "0cb252f19187851b1770512882b2b218b0f82a184e7858633e9235c0111a5aa6",
+    "shards/281.0-095.0/1963.npz": "e282825fdce3a89bd6eb7d5b682295bf9dd42fb76d3916a01c464279e607586f",
+    "shards/281.0-095.0/1964.npz": "f59eff8db9df392425a9ae4634f39e71aff7ea77ca306777e20cb71623941a87",
+    "shards/281.0-095.0/1965.npz": "ec4aca32b6341d1c44db2a934549f0676713e75a2f5bf8964b7393db25fa7a29",
+    "shards/281.0-095.0/1966.npz": "0dd08f0f765ab8088e6dc023d94e64015643d885049dec1f552fa339a782a64b",
+    "shards/281.0-095.0/1967.npz": "1407733439a391ba4abb013084ca37e906aae1ff7dc7b78d86e5bd0f603792f8",
+    "shards/281.0-095.0/1968.npz": "5bf592fb29e8d904f42b93eb05aaf47630aa050b856f19acc625d8e81d6c3623",
+    "shards/281.0-095.0/1969.npz": "276ac237917df1914d9f566de4088e04a11bdc797718ea305856254f74d6f392",
+    "shards/281.0-095.0/1970.npz": "2787215fab76595728c7a1b1ad0ed84fa4ef79d37fd3bf5b550400603d936fa0",
+    "shards/281.0-095.0/1971.npz": "456e35a7086ceb25a71d0de884ad910edaf3e63bb2c5acece6f5eeb84acf8c77",
+    "shards/281.0-095.0/1972.npz": "a97c341989280e8f04e67aa1927f1ffe1c899a4b0f15381101006739df67e6d6",
+    "shards/281.0-095.0/1973.npz": "810538579d966ab16914affa93a7f285704e592ba72e21d39652bf1ac330f31f",
+    "shards/281.0-095.0/1974.npz": "902a32aa0ed69ebec1ef23184cc3a518c50e7094aaaa28952926cba5b500ec52",
+    "shards/281.0-095.0/1975.npz": "f5ee1054708d7df076f1d443f9376513c1d6de4817a3479846f035353638fced",
+    "shards/281.0-095.0/1976.npz": "24a3d7315e9d9a716645cfe9764d12813291c4953fcea1b75a897f803485227b",
+    "shards/281.0-095.0/1977.npz": "6c2de7f3f6073b2451b2edf3cc59abaf39d2fc0ab6b02e917994989f24600c39",
+    "shards/281.0-095.0/1978.npz": "17cda490433f00325a921c7c6b9112113a441a32cd6d4c299eecd1ddce690186",
+    "shards/281.0-095.0/1979.npz": "58fb071c91099b4261088a6f170923d84dd990a357dced8e0320806b1c66a7d9",
+    "shards/281.0-095.0/1980.npz": "826713e9f7aa698cff0b8fdb8ed4c4de37c16b6154e81e69a957721fc25420ac",
+    "shards/281.0-095.0/1981.npz": "b70f3db86d2d647817336cee2b4505ce4d1e166eaec9c345f729ff278def3c1b",
+    "shards/281.0-095.0/1982.npz": "19dec1de4eceaedf464bd2f4ca17e38482541580bf303eb2755f34b55ccc8812",
+    "shards/281.0-095.0/1983.npz": "148b88e632fdaa1998280d565dceeb593fe7d86557c9c3ff357951f22a6d82fc",
+    "shards/281.0-095.0/1984.npz": "6ef3441744a60d28ec72cb31cdffcacca1ed9b65c50f397fde6ad749cc115795",
+    "shards/281.0-095.0/1985.npz": "28666e46def1ca16d440ceeb6eb25d2d2c91a0f15b0fcf097fac37bbc7166047",
+    "shards/281.0-095.0/1986.npz": "313a892ca9e5aeb8c63b07de04f4952d7c61d4b8d9fe2c2a1e6933a70abbfc90",
+    "shards/281.0-095.0/1987.npz": "ca5bcc550d2a1f67e1d1d0ea52cb90a3f2dd22dc23f21d585ecd23220f053d58",
+    "shards/281.0-095.0/1988.npz": "b1e5460fce18b5c592aa9f0c21342fd89868345c2c07809d10333bcb2d0eb2d3",
+    "shards/281.0-095.0/1989.npz": "2e10900386c93ff450a1eca44301624b9e4fcfd30b2bb44542324873d16b3cfc",
+    "shards/281.0-095.0/1990.npz": "f1746588c234fcc45879c5d74d2e90c493a6f07cbe217058ff9c8d42674a71b7",
+    "shards/281.0-095.0/1991.npz": "d1e45d1cbd7bbd29a1c7338f0884245502c2b3057cc61d6177ea8f43f7a8c292",
+    "shards/281.0-095.0/1992.npz": "d92ee55c3aa70a9f8cb49e77c7e332ae47d6af63ded9120f619c6889654b12ba",
+    "shards/281.0-095.0/1993.npz": "b381337909bb57f4fdbf6bb6610ec2f53f544a51151ee6845a45ec32bf333066",
+    "shards/281.0-095.0/1994.npz": "ca97e1af86400aa3747852f408f8bd8255c328462e7b5fc75c34cea40e5c15be",
+    "shards/281.0-095.0/1995.npz": "523c2284d17852630d1195e783443dc46ad8c6835c121ad4b507f8711c257d68",
+    "shards/281.0-095.0/1996.npz": "0ee58db87d5b528a7c4147ee5ee7450b38e526108e980be6e05f1f9546bbd333",
+    "shards/281.0-095.0/1997.npz": "4cd75aa21989c441fc7aca6bd78eca412771ba91e000ae9c34470bd83772c4b2",
+    "shards/281.0-095.0/1998.npz": "40ae65edea3130e5da4cdcee148eae65abbc9b07bf98e65b7671954ff2ecfd56",
+    "shards/281.0-095.0/1999.npz": "3ea4793859dd710a5a110579e8994b8ac50c99573e5881a59d36b6038ce8ce9e",
+    "shards/281.0-095.0/2000.npz": "91c1ea5c34dee866769f7e0b90a27a81c8c6dd3cecef949f35e64308f55f1c0e",
+    "shards/281.0-095.0/2001.npz": "7034d5d5dad22b2f79cf110fe182eed65067fd0811157e18563e7726e225dffb",
+    "shards/281.0-095.0/2002.npz": "b105b0c07f35ed8439805471587a7d9cc06d7b60fecb7ff98f65b3fef21594e4",
+    "shards/281.0-095.0/2003.npz": "2828c40dd4f0a60a383a70a4dcd41dd9cdb1bb60e8468aaca95c3e0ae391f7c9",
+    "shards/281.0-095.0/2004.npz": "9c15ff622eb878632f3c150f6214c0b1271a701d716bb035f369d9a4a8293129",
+    "shards/295.0-113.0/1961.npz": "8df12a8c6d330f59d4c1ae7de21ff74aff6e52b945b7777c6b0b77ebd470e44c",
+    "shards/295.0-113.0/1962.npz": "d63dab0b3db6b146ab9867ec811e4c454127eb764783e446f4dd51c93f9b0893",
+    "shards/295.0-113.0/1963.npz": "5e6423760a5dbbda79ae51e2988d65831f303aa2e8517438267af450b5ae85dc",
+    "shards/295.0-113.0/1964.npz": "1795b155534e2842e68c1fa055b54dc5e20be80aa14f2271e6fcedad360571c2",
+    "shards/295.0-113.0/1965.npz": "03d256860db0c1343e1ebc646bdad9cbac14219047bc41bf618eeb20182eda90",
+    "shards/295.0-113.0/1966.npz": "75483332ca883e17d1adac3e5f83503522d50630b225d6b03e13096235e4e03e",
+    "shards/295.0-113.0/1967.npz": "275c21d6aca4715df30f9c1365418c45329b0e927190de510519a231ab4072b0",
+    "shards/295.0-113.0/1968.npz": "74ad3cf506563665553c3e2e51928f90cdef3c16646c2b88a22defdc85f9eaf6",
+    "shards/295.0-113.0/1969.npz": "65e683b33079a37438085ebfd9e2c6c12825b9b2351b7e17805958e533513e6f",
+    "shards/295.0-113.0/1970.npz": "2bff7eb66e912d9880f2b77612d62eb37055e505658690e74dcd2f8881a0d45a",
+    "shards/295.0-113.0/1971.npz": "3f81b0bcdc9497675c4791687f9f4fca4b34340ec9f846678fe5a3cdfcdcc3c5",
+    "shards/295.0-113.0/1972.npz": "c2d5137a7633fd60921a0544b0e606522e082b6771be82ac924857202b07a4e0",
+    "shards/295.0-113.0/1973.npz": "ce6b9a08e22eabbeb75f5f183ab2263de657ea5f0db6556cb266a9864e63eafc",
+    "shards/295.0-113.0/1974.npz": "f594b912344f221545664e75aa3eb69217a393168881466ce69202624cc7294b",
+    "shards/295.0-113.0/1975.npz": "52c4170ddafeb43eded11c1b7388e4c7233378f9e71303109675b4e0abca0edd",
+    "shards/295.0-113.0/1976.npz": "0dd5ee586ae1edaffc5e477e72c7607dd13187e7814918a613e6ffab334b810a",
+    "shards/295.0-113.0/1977.npz": "96ab3fcee09bbdc26a511f6efe3aae5eaedcb40253e8051dc5077ada3ee77450",
+    "shards/295.0-113.0/1978.npz": "e58a791435b7e2229c7af54edbf7b02da18dcf11e32d38b296370506bfd824f6",
+    "shards/295.0-113.0/1979.npz": "341aae3d0b51d7cd91084a700a9df9c4ba68cd1adabf1a8f28dda779f23ef1f3",
+    "shards/295.0-113.0/1980.npz": "245ac64ac41994425ee3539eee4d95aa16dd1bdb09ebe6201a4872ecb10d3803",
+    "shards/295.0-113.0/1981.npz": "12d4e1b2165a0bef5e5422334ea462fd3d5b8c9d17e289225bbb4375cc23842e",
+    "shards/295.0-113.0/1982.npz": "ef0b1563d3648a6c00784cc97cafc6da05159bb7e3ba9f2eebbcddbec4bdc2da",
+    "shards/295.0-113.0/1983.npz": "6c07e7d1ee42d0b17288fc9658d7eead4e9caee93d26c557432dab55e420f43b",
+    "shards/295.0-113.0/1984.npz": "074cf8105eeaabf31add1717e3466a35d0f110fefaf4290bea61a543b0b65674",
+    "shards/295.0-113.0/1985.npz": "d4e14f9004c305e4d43d421cc50b1fa131a03614f624ef3d5fb4d376640119de",
+    "shards/295.0-113.0/1986.npz": "4824bb035124dadacec830b4932b978ca30dfe7a33b59e5761c6464329cba41d",
+    "shards/295.0-113.0/1987.npz": "de4fdf6ac117f6b16e614539a75c70e888863cc09aa839a497af18ea99e4ac29",
+    "shards/295.0-113.0/1988.npz": "f3694ece444a2e907ea71e1b7dafe0b9679e850bfd83495cd4ea50b4ed8c7b7c",
+    "shards/295.0-113.0/1989.npz": "55c44f172eda12bc3ac29bae7bc9b4a78a82272af32a349cbd57393b5d28affb",
+    "shards/295.0-113.0/1990.npz": "29f782a0dc7c24d647218eb6bfb072c41f9650786007c1dcd79aeb56aefc10eb",
+    "shards/295.0-113.0/1991.npz": "687057bf27d3577f26b7fc97767d73448fe22f65541433a7e3950efc3694c3e4",
+    "shards/295.0-113.0/1992.npz": "ea717de80ca78adc728d024b735238f243e26e05ae54b1cf58119750b3574373",
+    "shards/295.0-113.0/1993.npz": "6f700cc63e835668fc000842c5f2f9dd930ba06d8bd9a012dc07382ca9bf1ebb",
+    "shards/295.0-113.0/1994.npz": "2c56c886ed1b188b027fc6733e6b89e7cd91d1be2b336bbafa4fb9b5568cbd64",
+    "shards/295.0-113.0/1995.npz": "f717ffa149a0c0224674f9e1a237c506e26abc77d822b48d1d33196f3bc48199",
+    "shards/295.0-113.0/1996.npz": "0f83a9d1f3a847239205bdce6cddf2b2f179adb1810e364697f13202e402b737",
+    "shards/295.0-113.0/1997.npz": "794eddff8dc3931462b683884da8be8d6c608580e54c32b0a67dc7148c1341db",
+    "shards/295.0-113.0/1998.npz": "a853b1df6cc379d57e9ad6c1ee0755e6c2cb48e0fe94ae782383df3975a5097c",
+    "shards/295.0-113.0/1999.npz": "88df1a001ac63eca72cdba9ebfdac6b04cac7ec829b6c85ef1ecc8f9d9fcac7a",
+    "shards/295.0-113.0/2000.npz": "bb83c54be21bb5ed4b6201bb22c7ffaf70480608ae5700819c9f5dc63b3f4bf9",
+    "shards/295.0-113.0/2001.npz": "229c29d6d337e770395026a8424132b45f6c3d7c526dfc361325be5fd244f714",
+    "shards/295.0-113.0/2002.npz": "0ad94100cd8cc54ab88e418a47f0b3f3c184cfa12119fe7c5053a3b82efd339a",
+    "shards/295.0-113.0/2003.npz": "6e33864efdb970f849228913c208d27f9a1a32ea61d438316da0a1bfa7701966",
+    "shards/295.0-113.0/2004.npz": "3975cffd01b1994596c36f7801d6188563592e99705aececa128f9997fd38d9b",
+    "shards/315.0-097.0/1961.npz": "d0aa0f7850c62498a0485bd2c1321e98daf799e7eb016982fcac639775264b3a",
+    "shards/315.0-097.0/1962.npz": "6949e0d0bc55e0042dc160da467671528a5e5484d2a7b5a41999ac86f5354e0a",
+    "shards/315.0-097.0/1963.npz": "ac0a0695a744599d8f287837287d1b101ab7d865965ac68ebfd0ec01305549d2",
+    "shards/315.0-097.0/1964.npz": "721315af998713e32ac41bfe60a027e1c919fa8748f35d8767153ee37a116449",
+    "shards/315.0-097.0/1965.npz": "562a05686ef51db88364bbbbd234a5156e1563140ad9f87d0d60eeb795488e79",
+    "shards/315.0-097.0/1966.npz": "adb2e26d7f038f7f54fd9eafadd0226d12adce72faefa15d442169b5a8dd7acf",
+    "shards/315.0-097.0/1967.npz": "512ce5f695a0cfb8ade15504582b9be98b731ba7772971ef30018cc7431a6095",
+    "shards/315.0-097.0/1968.npz": "b2029ff0a2e2140516e06c54485a127e7b8419d1b217012b4fd6ca550821fe80",
+    "shards/315.0-097.0/1969.npz": "912729224bf67dca893f492eba57d4d9a5ab57d41400c5b25405f469e29386f7",
+    "shards/315.0-097.0/1970.npz": "0efb732439b35c6f6cb2fb8d2289b661e8786a420f5935310788c1469300839c",
+    "shards/315.0-097.0/1971.npz": "4e3b414f8936ab8486ab834cc57ae00ae1c47714ab59e79cc3cd63776fd2d733",
+    "shards/315.0-097.0/1972.npz": "2c19a704d411dabbec3e3723b0bcab8f7a6d5eda309e2827724c0ebc1cab249b",
+    "shards/315.0-097.0/1973.npz": "be93a22d1d536e0ebd9bf9de3d18c18898ad88ab4bf3d73d12a1f8934897f7bf",
+    "shards/315.0-097.0/1974.npz": "e6823d43ddf07580d5a73ef9459080edba2d57d7e48b025d106772536310dd68",
+    "shards/315.0-097.0/1975.npz": "a5a81472dc371d8d099b579c28ed09f7ebf0716fdf10d2fcfd9700e7905f8c2c",
+    "shards/315.0-097.0/1976.npz": "452fc31d856a76bdda9dabf485778e262ff8e9e7c79365c841c6b630a496a62d",
+    "shards/315.0-097.0/1977.npz": "cc5bd7f1e6f00dbc97e8addcbdcd1dff7b149315ceb4ea4ca89a735114212c48",
+    "shards/315.0-097.0/1978.npz": "e67241734afac38ec663760998554912cc2c3a1a2851ede989d9bfaed4dca269",
+    "shards/315.0-097.0/1979.npz": "a1d48890bb99208cef3f10528e4381e56ee84f83445639b3685fc8bbc590f7d0",
+    "shards/315.0-097.0/1980.npz": "4bed383323919a4399587937f808936d296b2f82d6901c277b7a68b3d64e1539",
+    "shards/315.0-097.0/1981.npz": "b4f13a375af9211d6ad6581335ea6145c559c194379bdca170d99d548370703b",
+    "shards/315.0-097.0/1982.npz": "98060c18d661831d75f97a6e587a4bd0df5e45400fd636132ad71720388cc599",
+    "shards/315.0-097.0/1983.npz": "5d02737622a81c30f48b8f3963bd8f84ac1befd3d53ecb424d6bfe0c3f146e31",
+    "shards/315.0-097.0/1984.npz": "5a129e492e602300d77cac9c7558db33885bb1b3ca851745e2b1c27e931ef867",
+    "shards/315.0-097.0/1985.npz": "750799dafaaaf3431e0265b1c368d1303690c2aaabdc704f498f73e4dacdd2a0",
+    "shards/315.0-097.0/1986.npz": "35f8eaed254bbb378ceb8511f855ee5f416b362a3d56c2963b4e64fb2da91602",
+    "shards/315.0-097.0/1987.npz": "13dc4a8d900bc950915d68ef2454f06395909d5edb8ccf471e1f7a821f12b8cd",
+    "shards/315.0-097.0/1988.npz": "d9ddcd2883b75f736bfda02808d14dac70d08f5729ab9648e37033af99ce6d33",
+    "shards/315.0-097.0/1989.npz": "a35fd6c85b645c9fbc32a1e779aee632f6ac4625dec1f8eebbe5cdd577e7fd3a",
+    "shards/315.0-097.0/1990.npz": "b70c36e727a9503f026ce81f71c96241910c7554d98d3badecf62e9d622cf6c7",
+    "shards/315.0-097.0/1991.npz": "6764d4ff508d78df29b9b76e9772839cf07280d4e570445b71007211e2b0cbb4",
+    "shards/315.0-097.0/1992.npz": "0843c989d3abb96532494199ff935f5da1c36d3e8a519d941b6d36311047ec5d",
+    "shards/315.0-097.0/1993.npz": "e98c5500bdc8ddecc334c13aa4a4b32855f857cf3918962bb261759e08d4af2d",
+    "shards/315.0-097.0/1994.npz": "593c8e86bef4e179b995e75b7344dcc09d48513b92fd43f3ba9e661bd5f14cdf",
+    "shards/315.0-097.0/1995.npz": "6801ea01a02e33832799eddd9bd88cc075b5103e8319dade11f3b446ba016143",
+    "shards/315.0-097.0/1996.npz": "c1ee1b21581b1e5ade409cb86561a46813e26ba7536c3a209391c488dd742dc4",
+    "shards/315.0-097.0/1997.npz": "936ebb49222e64e8c5a4e1dbfd5fcb1d861c632fe2333bd037e65316aee92feb",
+    "shards/315.0-097.0/1998.npz": "f24dbbc558f58fea844ef5d1b40b6f998ede03fe6db3d4c6fc36c711f80048f2",
+    "shards/315.0-097.0/1999.npz": "28ec20f2849c496e65a17194043706b05954a7f8e7521edf923575572ea8f869",
+    "shards/315.0-097.0/2000.npz": "b83fe21f55117155aba6c9f90b4d572081c1940a260ba373f4fbadfd100fd789",
+    "shards/315.0-097.0/2001.npz": "82af21649da66659e63f0718511c0d2255b81bc095b1d1e2fe5558fef4e3c0f7",
+    "shards/315.0-097.0/2002.npz": "3f92ca5ea9061806d8cdd9633225232817ca326e439dcc9c238289681b5bb6f1",
+    "shards/315.0-097.0/2003.npz": "dd2c3009eb2a8fac3cd37f2354e8f51f02976098998c80c92aaf9761fb2cc9ea",
+    "shards/315.0-097.0/2004.npz": "743c31715b8be1f93fbf34e8f04cd61bebd7f369937eb2a8f4b0c7b52f91b538",
+    "shards/333.0-057.0/1961.npz": "2218b535e3f67736a7161ebf45816d5d927ac81fce036b52d8cf1de1a77e6ea9",
+    "shards/333.0-057.0/1962.npz": "3ae9c2ee11c96ecf37bd08fb41d18b931e9041a6debabc2ea910cda8688240cf",
+    "shards/333.0-057.0/1963.npz": "13a7dec21de86b5b6f96affaaa4bc442571ce85904bb121910016dbdb7a20e0b",
+    "shards/333.0-057.0/1964.npz": "1237e5cea649c70edc8080dc0a4313acf80c38101d72792b3a12074e18c17e18",
+    "shards/333.0-057.0/1965.npz": "805d507560eebb8bff8140718ecd264d664a6ae202a49c9badd87ac77acab66a",
+    "shards/333.0-057.0/1966.npz": "77030be0181be22e93ca7b417008565e86b76b91e8150b229af3a307c8ecc6eb",
+    "shards/333.0-057.0/1967.npz": "47ca49838dc852ffad6aee544d9da7c87d5c8c9dc545ccd0348c1b301792041b",
+    "shards/333.0-057.0/1968.npz": "2237fd9e90f69672ec974ff7823106e77a27f8e69e348cdf559c7d91c908414d",
+    "shards/333.0-057.0/1969.npz": "cbdcdc8c6a8e69cdd9aedd6259498161327bdbb90a20a8cb945d038222c70092",
+    "shards/333.0-057.0/1970.npz": "8d4d016877a1aa8149a4d91d4eedb0a05a26dc1c0acb56d124d05fe61df1ec48",
+    "shards/333.0-057.0/1971.npz": "e3f40f6107fb2096ed4e9de093751e33d754226f73c5b20c05b0f62898c45119",
+    "shards/333.0-057.0/1972.npz": "f73057e74d5e43922da2bf925831b05ea472c2276409a7f42ec6916c0ec04227",
+    "shards/333.0-057.0/1973.npz": "f3117937e6c3d7a9ec7122b9901a8bf810741527b1d0bc1db16be836677b6af9",
+    "shards/333.0-057.0/1974.npz": "f1301a65ba9304d8f9e3aa76ae17803e71095f3dfdc307671eb7d7aa589831b1",
+    "shards/333.0-057.0/1975.npz": "8024dc8988c8da63164e889c0c8e474ec88e05c44f099c2b8cb83017608a7a93",
+    "shards/333.0-057.0/1976.npz": "317014a76ff25ee8e208a1aa194df1314179fce15fc66eb0c52d18ac00f983fc",
+    "shards/333.0-057.0/1977.npz": "cd96cf5843ea14c99eb2efb3a1fc775ed785f9f0b195ab8433c25364009d4f56",
+    "shards/333.0-057.0/1978.npz": "5d285c23be4e8dfe8635e8d639edce0d6c337f8a96d39c385694b7ebbfc3df35",
+    "shards/333.0-057.0/1979.npz": "eac8a0875624e149b26806e6f8754ff0142b8dca0b17706727adc13ad36b1a4e",
+    "shards/333.0-057.0/1980.npz": "37f030e6110efbf95faaf3c66679c600559b4be6b65741661f1f3091515bbf7e",
+    "shards/333.0-057.0/1981.npz": "fe3b8bcab078cb7cce72adfaad02f5d27e5d007a7b8234b329e33bbb7250a6b0",
+    "shards/333.0-057.0/1982.npz": "548889566a3f46cb9943aedb6154ee9002f9cc20ab61f043329c6e2170c8f16e",
+    "shards/333.0-057.0/1983.npz": "1c28db3ab069f22210b8e4b58791ae0bd92785364b5bcf65adfaaf84fd0851a3",
+    "shards/333.0-057.0/1984.npz": "e6b55f0bb847df730eb9490f9dda2dadb7e2cdedd341a2169f39f8fd89deea26",
+    "shards/333.0-057.0/1985.npz": "f5e1a5442758897e5a0b890fd42a98c1b4dd792daa3f9c01df692265dfd42630",
+    "shards/333.0-057.0/1986.npz": "371b6d513f8045940f53fa2a999a376788f6e6f38989a0dcf61d26a93114c9b6",
+    "shards/333.0-057.0/1987.npz": "c964661ba9d422e6b206c41c1228c9bb5129e11fc29f7fc9287bca052c6f6473",
+    "shards/333.0-057.0/1988.npz": "d1570a4c16f93cd9aa8af7348d9c27cdfae046afffabd578ef1567cab2e4585e",
+    "shards/333.0-057.0/1989.npz": "54ebc893715dd2dfa18ff9afc7d97101011a05176d6272a5d9baee716bafe60e",
+    "shards/333.0-057.0/1990.npz": "be751a71d5580b969d03767dc409c814f6cea94130b27a617b0e637bfa26a679",
+    "shards/333.0-057.0/1991.npz": "5d5f64c62f8fe1719731009c183e982d654eca2232f67de3cba6de1d5fcce286",
+    "shards/333.0-057.0/1992.npz": "64a29144a70f4f4b8bdc4ce8d9afb1311e4e2f5edea67bddca5d3777dcc9c7ce",
+    "shards/333.0-057.0/1993.npz": "21120ae8ae9fa89b51e4d97c270bf8b87717ef7fb2b101b3841b436d7c267e67",
+    "shards/333.0-057.0/1994.npz": "9934f5dc9fa95ca32e2590920b94b7acb89cfc1ea2d6fedf626321cf1e633680",
+    "shards/333.0-057.0/1995.npz": "bc2219a4e4f9a2b3c9cbc187404d4d0581642045894c490573e74d17a25c0fdc",
+    "shards/333.0-057.0/1996.npz": "8d35e466d5c63f560971deca1ca2766da543f5eb879f035cae3cf6b14afd0d56",
+    "shards/333.0-057.0/1997.npz": "fba452c32628867778cf76afdcf0969c87b54f78ed7a2f31dc36c546b73e0b44",
+    "shards/333.0-057.0/1998.npz": "ab3789c790975ea2280cea54d9ce51ae27459a8022bbf07056941c08822fc11f",
+    "shards/333.0-057.0/1999.npz": "c2fa85401ff19544902bcfd3690bd9232d6426230605fab1777834db91f0d6a5",
+    "shards/333.0-057.0/2000.npz": "1c183d7fd8e290acd87acef4ba5ce4f0622f5ea2b0d22a0cf7fb81d912e9c781",
+    "shards/333.0-057.0/2001.npz": "3e4b40613bb71cbc3c8519813e5b3e89f1d682bfc455e139836737635fbf1216",
+    "shards/333.0-057.0/2002.npz": "c7fc963d83d55952512953b9d5df85fd19d063890be6670cc69760cd052174da",
+    "shards/333.0-057.0/2003.npz": "6b29715cdf556dc4cdbec09ae79b2ac40af2a87a6a3414bfcfb0e45aa755bc18",
+    "shards/333.0-057.0/2004.npz": "5ecd8aa3817d3590c7de138d108490439d8961841e32960572c2c015455da1f3"
+  },
+  "records": [
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 1961,
+      "day_index": 2,
+      "row": 0,
+      "source_shard": "shards/001.0-071.0/1961.npz",
+      "source_shard_sha256": "25d704e7315f5fc99c8b6f551f8c90ff70f9b6ebb0d6d66fec96696d412ee363",
+      "metrics": {
+        "soil_wetness": 0.032414513936523046,
+        "soil_temperature_k": 300.60745775880474,
+        "pft14_gpp_daily": 0.5301776170758776,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 17.515182512579486,
+        "hydrologic_export": 0.8011548326099517,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "earliest_train_day",
+        "hydrologic_export:maximum",
+        "soil_carbon_proxy:maximum",
+        "soil_carbon_proxy:minimum"
+      ],
+      "day_start_state_sha256": "09147368271e919628c6e56fd61f10bc854e4b6fa6d7cc538ce358f606db301e",
+      "fast_day_target_sha256": "7cdd47c68a9a6bbf23051b903771e8e3813f2684cf6ab63de7365493ad3cf63b"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 1961,
+      "day_index": 64,
+      "row": 62,
+      "source_shard": "shards/001.0-071.0/1961.npz",
+      "source_shard_sha256": "25d704e7315f5fc99c8b6f551f8c90ff70f9b6ebb0d6d66fec96696d412ee363",
+      "metrics": {
+        "soil_wetness": 0.024003243263367544,
+        "soil_temperature_k": 300.3185805052662,
+        "pft14_gpp_daily": 1.2235286335274904,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 0.0691948339448125,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "precip_daily:minimum"
+      ],
+      "day_start_state_sha256": "92ce9ba9ed3e2681d259ac85ed243d260a3c35ac1b002bec9064e301f493ff81",
+      "fast_day_target_sha256": "dec69ad3cd7418c5dd2bb23dd19f5be48f60bd62fd30451ee6fac1dfa5db5420"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 1962,
+      "day_index": 255,
+      "row": 254,
+      "source_shard": "shards/001.0-071.0/1962.npz",
+      "source_shard_sha256": "b1db652702c16607e2167354a280f846d505c55fd625978dbb977f30e5155e4e",
+      "metrics": {
+        "soil_wetness": 0.021246015296226557,
+        "soil_temperature_k": 297.1662552164053,
+        "pft14_gpp_daily": 1.9855291883240807,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 23.783699388150126,
+        "hydrologic_export": 0.0070964635065789506,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "576e36dda1c3af82ab80aeb4474acf92a3de4548f7aea307104bb3a2c2cd7319",
+      "fast_day_target_sha256": "28311a17808da8737b39b6bee9b3052a807e7b6be8f4e21d8f4d64310f16d431"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 1964,
+      "day_index": 89,
+      "row": 88,
+      "source_shard": "shards/001.0-071.0/1964.npz",
+      "source_shard_sha256": "c8481eedd2ab852ea506bb59cdb2a0f30db9b30c26a9642bfecd303a9ee91cf8",
+      "metrics": {
+        "soil_wetness": 0.03513975546348041,
+        "soil_temperature_k": 299.7969743645977,
+        "pft14_gpp_daily": 1.2115043647564776,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 28.757408713863697,
+        "hydrologic_export": 0.7042977832338037,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_wetness:maximum"
+      ],
+      "day_start_state_sha256": "95734550e3a0ddc3c9fb1824043fbb0f5b084eb07d3fd6753ec29b603220e3ff",
+      "fast_day_target_sha256": "e9065c5b035402c9134ce9396510b736a2b0cac5de38c0b7f27ad7d825139c50"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 1965,
+      "day_index": 168,
+      "row": 167,
+      "source_shard": "shards/001.0-071.0/1965.npz",
+      "source_shard_sha256": "7c9cf5bea780d6cfa1b11b212eedc27e286f432085a8cd0b5c946cadc1f64657",
+      "metrics": {
+        "soil_wetness": 0.01822278070089914,
+        "soil_temperature_k": 296.0530772176017,
+        "pft14_gpp_daily": 0.5291625358982445,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 0.040848859366364926,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "pft14_gpp_daily:minimum"
+      ],
+      "day_start_state_sha256": "a35d9c4d3d72eaa810764450b78c3423571019b5a6f45f56e451675f2e452117",
+      "fast_day_target_sha256": "b550934bee968a49b87d1cbb1e3947912e47a554320f4815f04147dfed1ef79a"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 1965,
+      "day_index": 218,
+      "row": 217,
+      "source_shard": "shards/001.0-071.0/1965.npz",
+      "source_shard_sha256": "7c9cf5bea780d6cfa1b11b212eedc27e286f432085a8cd0b5c946cadc1f64657",
+      "metrics": {
+        "soil_wetness": 0.01987975122226003,
+        "soil_temperature_k": 294.15206736586833,
+        "pft14_gpp_daily": 0.6157007498110346,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 0.026794777810967917,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_temperature_k:minimum"
+      ],
+      "day_start_state_sha256": "f97eefccb494aed4deb807cb54c04a05bbbbcd38fd12e5aefb27d1f99baf38d6",
+      "fast_day_target_sha256": "4d6fcf8d5de14b7a1b0ac0153f38300083e8baf82b420025bbf9b1f39695099a"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 1966,
+      "day_index": 6,
+      "row": 5,
+      "source_shard": "shards/001.0-071.0/1966.npz",
+      "source_shard_sha256": "36b69fc5db8fbb18777f184a7805f26b04551765fc99044e228db8226c85df44",
+      "metrics": {
+        "soil_wetness": 0.018136063836977512,
+        "soil_temperature_k": 300.69253261889475,
+        "pft14_gpp_daily": 0.8498448223677355,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 10.718901867221575,
+        "hydrologic_export": 0.0187461146115583,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "5cef8ed771ff76cc6fdf0a6d585bce981a1382d4746f1a5d4e6bcfc1064813e5",
+      "fast_day_target_sha256": "7800be2b2fbb47850aa4288461ffabf664b278544a4c89b0d1872c5df186e9d1"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 1977,
+      "day_index": 361,
+      "row": 360,
+      "source_shard": "shards/001.0-071.0/1977.npz",
+      "source_shard_sha256": "98cf688ac76a202f7582b4f20300d97e923ab639323f7f899e7e8cb0c6537753",
+      "metrics": {
+        "soil_wetness": 0.027080722642994756,
+        "soil_temperature_k": 300.78977781480796,
+        "pft14_gpp_daily": 2.242041326230576,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 4.5426796859828755,
+        "hydrologic_export": 0.0017826142139903503,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "c64212991265c671b253232a978d71d390d1f0e6f04ff02a3efefcbe384c70a6",
+      "fast_day_target_sha256": "9ac27c6b383ab89d0c66bff660a257b72083280b3209fbc60832fffcd6c4c042"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 1987,
+      "day_index": 325,
+      "row": 324,
+      "source_shard": "shards/001.0-071.0/1987.npz",
+      "source_shard_sha256": "294e87290a32fa982e46a14e22cfe4ea2a6c6a9f5d6c648c45697da1fc245cd5",
+      "metrics": {
+        "soil_wetness": 0.014127657279367082,
+        "soil_temperature_k": 300.4894993187749,
+        "pft14_gpp_daily": 3.026794212309991,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 13.605254294816405,
+        "hydrologic_export": 0.0048925203415955965,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_wetness:minimum"
+      ],
+      "day_start_state_sha256": "eef46d48a7da8cf7bd850ee9db1145b411171332584e84e3690c50d04f0fd547",
+      "fast_day_target_sha256": "34cf70d674eee5a3794abcfbf1a192546fdac934f52195eeb4acee17c5105428"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 1993,
+      "day_index": 266,
+      "row": 265,
+      "source_shard": "shards/001.0-071.0/1993.npz",
+      "source_shard_sha256": "7e1215cb91be03a8edbc6f2c1ade0d20a20b6d08117d7224682321f1240588fa",
+      "metrics": {
+        "soil_wetness": 0.01762477961712555,
+        "soil_temperature_k": 296.52425608971805,
+        "pft14_gpp_daily": 2.6703662097571086,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 2.498670258501079,
+        "hydrologic_export": 0.06238612484913404,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "d4b03800f370d73370b2189453cab0235392d684fac95246a027b49bcd77edd5",
+      "fast_day_target_sha256": "f99567d69d4b42baa59918786b8feb093b7d51d6a350df38a87942d14c34a714"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 1998,
+      "day_index": 272,
+      "row": 271,
+      "source_shard": "shards/001.0-071.0/1998.npz",
+      "source_shard_sha256": "454221b9e02da648304abd15b25115849beb506d9c43186a9d89f33087eb66b2",
+      "metrics": {
+        "soil_wetness": 0.019509479575417727,
+        "soil_temperature_k": 298.9010305636578,
+        "pft14_gpp_daily": 3.2104125124552376,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 0.0006814301846078156,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "hydrologic_export:minimum"
+      ],
+      "day_start_state_sha256": "15d3db6146edb5d365c8c80418fbafa8bc80a175a0010ad2e092d3810a6bae7e",
+      "fast_day_target_sha256": "6825f3ac082dbb5d73fb376c3d0d478fcba526a9874759dcbc25874ede20ca0c"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 2001,
+      "day_index": 40,
+      "row": 39,
+      "source_shard": "shards/001.0-071.0/2001.npz",
+      "source_shard_sha256": "17bd388232b710fa01d9204caca1ee61a98c3e5d5678ea27cb620e5a94efddc0",
+      "metrics": {
+        "soil_wetness": 0.018573577381016847,
+        "soil_temperature_k": 302.3190058849462,
+        "pft14_gpp_daily": 3.375693887144508,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 1.6215685381212097,
+        "hydrologic_export": 0.06178096187548533,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_temperature_k:maximum"
+      ],
+      "day_start_state_sha256": "ae42400961e1ce23a06ee2806e55a1af9ee50736d82e254d56c6f0aa8d5755f3",
+      "fast_day_target_sha256": "d349ef94298dbc5197c1b6cb7641a5fd2d96ccd74b512c7f6fa2def96d292c65"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 2003,
+      "day_index": 3,
+      "row": 2,
+      "source_shard": "shards/001.0-071.0/2003.npz",
+      "source_shard_sha256": "9347461c792e7f03f6091cfd9dd06a202a48763e2d0d84522b4e5806d97d63b4",
+      "metrics": {
+        "soil_wetness": 0.01997127863657153,
+        "soil_temperature_k": 300.1908134869547,
+        "pft14_gpp_daily": 3.753450383907477,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 0.005886148618665318,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "pft14_gpp_daily:maximum"
+      ],
+      "day_start_state_sha256": "9905e878e88f8a9b33ed069a2ee7a6ad436c00d705b47387dd0fcdef1b682d77",
+      "fast_day_target_sha256": "2fce66c5c4f8da935f88170796a37a82f78e19b77cac278a0bdab2d6f6dddb24"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 2003,
+      "day_index": 28,
+      "row": 27,
+      "source_shard": "shards/001.0-071.0/2003.npz",
+      "source_shard_sha256": "9347461c792e7f03f6091cfd9dd06a202a48763e2d0d84522b4e5806d97d63b4",
+      "metrics": {
+        "soil_wetness": 0.03167650624542731,
+        "soil_temperature_k": 300.6520281732672,
+        "pft14_gpp_daily": 3.6418043864211547,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 18.90363083803095,
+        "hydrologic_export": 0.1664139895827635,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "75ffdd95d6113dd8743b337a8caa9973f68c87cf0b22689779b0173df5817839",
+      "fast_day_target_sha256": "c029dca0a09a0dd78e361e45402b46bb05450b619194b32d3a16f5e9c318e640"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 2004,
+      "day_index": 252,
+      "row": 251,
+      "source_shard": "shards/001.0-071.0/2004.npz",
+      "source_shard_sha256": "7f30f40e886081eda36b61b3e701cfeb6b5a63c20dee5484085ee21ff2091798",
+      "metrics": {
+        "soil_wetness": 0.02415258143201718,
+        "soil_temperature_k": 297.96251306280806,
+        "pft14_gpp_daily": 2.9189320830242695,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 80.63670680858195,
+        "hydrologic_export": 0.017696461840452447,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "precip_daily:maximum"
+      ],
+      "day_start_state_sha256": "4f4b87bd73642a87604b38fd10ee9e03734c054b6f46327cf11c39d60c5ca4f3",
+      "fast_day_target_sha256": "0cec3b1fd88cf2e656676649c1a05361c6ecc78fe36b18392081064b3ebe288a"
+    },
+    {
+      "landpoint_id": "001.0-071.0",
+      "year": 2004,
+      "day_index": 263,
+      "row": 262,
+      "source_shard": "shards/001.0-071.0/2004.npz",
+      "source_shard_sha256": "7f30f40e886081eda36b61b3e701cfeb6b5a63c20dee5484085ee21ff2091798",
+      "metrics": {
+        "soil_wetness": 0.028708276437226593,
+        "soil_temperature_k": 298.1103996246292,
+        "pft14_gpp_daily": 3.2565358104295354,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 0.16143791331388951,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "e9d46fedf2cd7275ad0d2c23a020e686a251677eb40be01dc33d334df41f1698",
+      "fast_day_target_sha256": "89f7356e3c00ea081b15c24f4a10966fac84bd313a6f43d94de12fdfe7ea08ef"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 1961,
+      "day_index": 2,
+      "row": 0,
+      "source_shard": "shards/069.0-119.0/1961.npz",
+      "source_shard_sha256": "5240dda8dcd379504fd33dd474557b8b2019936fc233064d9f9fbb0edb800b48",
+      "metrics": {
+        "soil_wetness": 0.03829833954762207,
+        "soil_temperature_k": 289.77468541861515,
+        "pft14_gpp_daily": 0.362436979153099,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 0.02032541329008261,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "earliest_train_day",
+        "precip_daily:minimum",
+        "soil_carbon_proxy:maximum",
+        "soil_carbon_proxy:minimum"
+      ],
+      "day_start_state_sha256": "d8bb04cd1bda17b841329147353c68cb4ad8bc5cf35f622b8f709c6d457f03e4",
+      "fast_day_target_sha256": "a4d8d2b2e9295cfe10e98d552f552247afb6dec61c2518d70359b6dad7840d35"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 1961,
+      "day_index": 7,
+      "row": 5,
+      "source_shard": "shards/069.0-119.0/1961.npz",
+      "source_shard_sha256": "5240dda8dcd379504fd33dd474557b8b2019936fc233064d9f9fbb0edb800b48",
+      "metrics": {
+        "soil_wetness": 0.03684119328929662,
+        "soil_temperature_k": 287.2872015440323,
+        "pft14_gpp_daily": 0.5124815511082983,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.6378326763524456,
+        "hydrologic_export": 0.11546255077638853,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "hydrologic_export:maximum"
+      ],
+      "day_start_state_sha256": "bb2c14cb92d9b210e6a332b71c33c0964c5f0294281ace4e4da91c490257b4d6",
+      "fast_day_target_sha256": "d581438bc0ad154a763c1ab999d26917fe9927e104130ed4b42d2e0d5e8add12"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 1961,
+      "day_index": 28,
+      "row": 26,
+      "source_shard": "shards/069.0-119.0/1961.npz",
+      "source_shard_sha256": "5240dda8dcd379504fd33dd474557b8b2019936fc233064d9f9fbb0edb800b48",
+      "metrics": {
+        "soil_wetness": 0.04109430929294134,
+        "soil_temperature_k": 287.93961474666065,
+        "pft14_gpp_daily": 0.9156757561001075,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 3.952885615581181,
+        "hydrologic_export": 0.03392973087239658,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_wetness:maximum"
+      ],
+      "day_start_state_sha256": "4d5f485e11b73f5cdd30c38e9e7d84130540c414a2911317a0b7a1ce4b41cb6b",
+      "fast_day_target_sha256": "cd8f60b82c431a91decb554b7c5c456e3a66c88e5591dc933c8c40f29df7a126"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 1961,
+      "day_index": 149,
+      "row": 147,
+      "source_shard": "shards/069.0-119.0/1961.npz",
+      "source_shard_sha256": "5240dda8dcd379504fd33dd474557b8b2019936fc233064d9f9fbb0edb800b48",
+      "metrics": {
+        "soil_wetness": 0.01233713965523393,
+        "soil_temperature_k": 298.1271373012664,
+        "pft14_gpp_daily": 0.8523638907433471,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 1.1804245112989804e-09,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "d96aa47670f5ad4fcbf057b2b67810eb399de7ce6a87bae46428037aeac1f812",
+      "fast_day_target_sha256": "b5a5adf7ee34d472b8339fa0096a382a32dae8c000d5d77daf6731ad11f1f0af"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 1961,
+      "day_index": 170,
+      "row": 168,
+      "source_shard": "shards/069.0-119.0/1961.npz",
+      "source_shard_sha256": "5240dda8dcd379504fd33dd474557b8b2019936fc233064d9f9fbb0edb800b48",
+      "metrics": {
+        "soil_wetness": 0.013487037592424145,
+        "soil_temperature_k": 302.47979791456805,
+        "pft14_gpp_daily": 0.22286630588652226,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.2239940316940192,
+        "hydrologic_export": 0.0,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "hydrologic_export:minimum"
+      ],
+      "day_start_state_sha256": "c975aec05d220763646299ac821805601dcfd66be4406c73585d40c8c001c317",
+      "fast_day_target_sha256": "5ed8f246c064bb69f0cacbe55c66ac5ba97a6d4aeef1829318836de11920e568"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 1961,
+      "day_index": 256,
+      "row": 254,
+      "source_shard": "shards/069.0-119.0/1961.npz",
+      "source_shard_sha256": "5240dda8dcd379504fd33dd474557b8b2019936fc233064d9f9fbb0edb800b48",
+      "metrics": {
+        "soil_wetness": 0.021074194625720515,
+        "soil_temperature_k": 300.4192591383049,
+        "pft14_gpp_daily": 1.3348656817439095,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 1.3585335553216282,
+        "hydrologic_export": 1.0625047875804086e-14,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "pft14_gpp_daily:maximum"
+      ],
+      "day_start_state_sha256": "723342f856ed7a3b5a336cca0263153bdbe1260a888b003e77b7c6ac177bc993",
+      "fast_day_target_sha256": "d03445cdd9ee1e9936121d2190abcb702def2a274c5ca225929f02522bda9c92"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 1961,
+      "day_index": 274,
+      "row": 272,
+      "source_shard": "shards/069.0-119.0/1961.npz",
+      "source_shard_sha256": "5240dda8dcd379504fd33dd474557b8b2019936fc233064d9f9fbb0edb800b48",
+      "metrics": {
+        "soil_wetness": 0.012130598581436896,
+        "soil_temperature_k": 301.2766586094437,
+        "pft14_gpp_daily": 0.0,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 1.0625047875804086e-14,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "pft14_gpp_daily:minimum"
+      ],
+      "day_start_state_sha256": "eacc4958d72774db194c66f24d14f9beab1786fe6eb11d19387b438b3b93e02f",
+      "fast_day_target_sha256": "e5872d113a177e2f9f76d69eaf7e775c01ca0e21da010bd4788ca54311aeda76"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 1962,
+      "day_index": 309,
+      "row": 308,
+      "source_shard": "shards/069.0-119.0/1962.npz",
+      "source_shard_sha256": "f1cf969de90836356801670f3ec27eb4591f098216a7e90bcfd1a348dcc1206b",
+      "metrics": {
+        "soil_wetness": 0.010812464690589892,
+        "soil_temperature_k": 295.2076503373833,
+        "pft14_gpp_daily": 0.0,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 0.0,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_wetness:minimum"
+      ],
+      "day_start_state_sha256": "7d0a751093789c21567c861e7bb681cf6212a69dcd7372aec431c473bb22996c",
+      "fast_day_target_sha256": "48d218dc052dc6d6387e3bbf950cfb27d1bdd84d14cf6f03263af8b5c5ca3404"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 1963,
+      "day_index": 184,
+      "row": 183,
+      "source_shard": "shards/069.0-119.0/1963.npz",
+      "source_shard_sha256": "18095d1580a1417d7ed37a514dc8f33eb8b8f87482506147fbf2c733754ff5ab",
+      "metrics": {
+        "soil_wetness": 0.013934787865632525,
+        "soil_temperature_k": 302.4655786931748,
+        "pft14_gpp_daily": 0.0,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 12.84864763438236,
+        "hydrologic_export": 3.904675730620809e-14,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "65b18b0f7e388b5b71da5f434d939867db259c483ce842864d628fe8fbb68a64",
+      "fast_day_target_sha256": "59be4ea53904d101d8031232474da59d05d5837caeaf228d0733a6157a736361"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 1985,
+      "day_index": 33,
+      "row": 32,
+      "source_shard": "shards/069.0-119.0/1985.npz",
+      "source_shard_sha256": "ea6c5c26520bc7496a908d979dc8d863ce6155070fa780c1514f99566cc8b0a1",
+      "metrics": {
+        "soil_wetness": 0.019971820306837293,
+        "soil_temperature_k": 281.19065457933357,
+        "pft14_gpp_daily": 0.16834691962977477,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 1.0625047875804086e-14,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_temperature_k:minimum"
+      ],
+      "day_start_state_sha256": "636f529a6a568813f3d3b5ac9b66ac5630b48a33ef708c04a0a7a52964fc13e8",
+      "fast_day_target_sha256": "1a3f66cb5bc2d67d23b8a950f8cfda0e41eeac79588bf06567b2c9d18f26a67e"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 1989,
+      "day_index": 181,
+      "row": 180,
+      "source_shard": "shards/069.0-119.0/1989.npz",
+      "source_shard_sha256": "c606a619d2b8bf73a1da63eacf6cb9b2b851ce112d5c14122da92819e1f64a0e",
+      "metrics": {
+        "soil_wetness": 0.012493941417990586,
+        "soil_temperature_k": 308.08455028618033,
+        "pft14_gpp_daily": 0.022657417994524115,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.00364951757774179,
+        "hydrologic_export": 0.0,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_temperature_k:maximum"
+      ],
+      "day_start_state_sha256": "93d531bbe69d1164ab2e16b886327067250a1e114c51aa40612df0ae9257cd1d",
+      "fast_day_target_sha256": "ffa7e981e895945628561231078b5004aba2de66cb28b3cba893d3a81df938ec"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 1994,
+      "day_index": 73,
+      "row": 72,
+      "source_shard": "shards/069.0-119.0/1994.npz",
+      "source_shard_sha256": "dbfb5aa00cb9fa7a74f235ab043912cc7434e709438f2a87349e1fae216a06ca",
+      "metrics": {
+        "soil_wetness": 0.01244843369734522,
+        "soil_temperature_k": 288.9794913315719,
+        "pft14_gpp_daily": 0.2808644729607718,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 3.78408641504393,
+        "hydrologic_export": 1.823228460762682e-12,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "e842fc8cec6828fa694d6d6934b96d79537be74f6495d6587fb902dd2648d065",
+      "fast_day_target_sha256": "5e13b6e21bf734e5cd62427e600b5a45fa4c0454ba873946ab8014d39146fc38"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 1994,
+      "day_index": 357,
+      "row": 356,
+      "source_shard": "shards/069.0-119.0/1994.npz",
+      "source_shard_sha256": "dbfb5aa00cb9fa7a74f235ab043912cc7434e709438f2a87349e1fae216a06ca",
+      "metrics": {
+        "soil_wetness": 0.018190380103891502,
+        "soil_temperature_k": 288.48806498711457,
+        "pft14_gpp_daily": 0.019996322848480255,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 47.70042900927365,
+        "hydrologic_export": 1.0625047875804086e-14,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "precip_daily:maximum"
+      ],
+      "day_start_state_sha256": "de5314f07395c11fd90adc603cc7e041d6b96484f81959b498a9bc059333bddb",
+      "fast_day_target_sha256": "2292185b46c2adffc8784333fb245fc73a2c85bbb0e0e13a4b0681b7cc412e38"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 2002,
+      "day_index": 26,
+      "row": 25,
+      "source_shard": "shards/069.0-119.0/2002.npz",
+      "source_shard_sha256": "98dfde994fff444bf5000d38d57c5141ed7e40deee07dda05f4e16c04320267b",
+      "metrics": {
+        "soil_wetness": 0.012819240924369967,
+        "soil_temperature_k": 285.83576032551713,
+        "pft14_gpp_daily": 0.05379178414871997,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 1.0625047875804086e-14,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "1e7a5114691293849065c7d1a7cc0dfb4218414eb5dbac7b8a60d58102fef5d6",
+      "fast_day_target_sha256": "a5f675ea53f41954e10ff33064440e59fa6a07ca93b96ca38ce0050e83abc530"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 2003,
+      "day_index": 237,
+      "row": 236,
+      "source_shard": "shards/069.0-119.0/2003.npz",
+      "source_shard_sha256": "aae310545732c55a863965097f1381b3229bfcc72ce434363f6058820edad23d",
+      "metrics": {
+        "soil_wetness": 0.018327088635736934,
+        "soil_temperature_k": 302.9278969768425,
+        "pft14_gpp_daily": 0.12449771428124234,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 27.98366073402576,
+        "hydrologic_export": 1.0625047875804086e-14,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "fe0331ec0684cb2563f5e0d3d3a755809e4c3098bab0f1dad941fc16830a2730",
+      "fast_day_target_sha256": "cc93cbef4e1e6f0da35daaa668dd924ad23d6b510d2eef39585a6ae4061247a3"
+    },
+    {
+      "landpoint_id": "069.0-119.0",
+      "year": 2004,
+      "day_index": 221,
+      "row": 220,
+      "source_shard": "shards/069.0-119.0/2004.npz",
+      "source_shard_sha256": "d606fb18e4880c9b064cc440307391fa9ab994c737c397d081bc42a22e1d5ec5",
+      "metrics": {
+        "soil_wetness": 0.018609399709163803,
+        "soil_temperature_k": 306.17071241182697,
+        "pft14_gpp_daily": 0.12871695401069655,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.1556724022520939,
+        "hydrologic_export": 3.023806840282521e-11,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "9e8c360c4a6dc714f76dde5dca0e5ddd3ec0d650d99a7ce5e442565f7af0d66e",
+      "fast_day_target_sha256": "fd8c12e63312f55b697812529b1579bfb6fde1037caecdce78fbe8f1b939347b"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 1961,
+      "day_index": 2,
+      "row": 0,
+      "source_shard": "shards/281.0-095.0/1961.npz",
+      "source_shard_sha256": "86a1b1ccf01f62d012b19bb11db339c2941dcafa574d5dfabcf62cc14ed041b0",
+      "metrics": {
+        "soil_wetness": 0.05122261906356785,
+        "soil_temperature_k": 298.5441728119597,
+        "pft14_gpp_daily": 0.9273851599419425,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 1.7241159657714888,
+        "hydrologic_export": 2.617767284075788e-06,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "earliest_train_day",
+        "pft14_gpp_daily:minimum",
+        "soil_carbon_proxy:maximum",
+        "soil_carbon_proxy:minimum"
+      ],
+      "day_start_state_sha256": "f7f2610d2f55f4cf6a13e6e8858f2e94f667926408b75355a1c923eac1aca3cc",
+      "fast_day_target_sha256": "86d92b2ca6931356da094e6ac2ea1c2ee564291f791feba2f54918d84939a7ca"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 1961,
+      "day_index": 24,
+      "row": 22,
+      "source_shard": "shards/281.0-095.0/1961.npz",
+      "source_shard_sha256": "86a1b1ccf01f62d012b19bb11db339c2941dcafa574d5dfabcf62cc14ed041b0",
+      "metrics": {
+        "soil_wetness": 0.05663015325229441,
+        "soil_temperature_k": 297.7872735347859,
+        "pft14_gpp_daily": 2.220938738462837,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 5.168065128331318e-07,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "precip_daily:minimum"
+      ],
+      "day_start_state_sha256": "3a0f43c00cf240f0b529d8732b8bcf5ad047085b9f9f9153009443344f719171",
+      "fast_day_target_sha256": "e6183ae4cda7307d0a71e33c5379b7f653c11dbbfee7e0f8d5b473318bda18e3"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 1961,
+      "day_index": 52,
+      "row": 50,
+      "source_shard": "shards/281.0-095.0/1961.npz",
+      "source_shard_sha256": "86a1b1ccf01f62d012b19bb11db339c2941dcafa574d5dfabcf62cc14ed041b0",
+      "metrics": {
+        "soil_wetness": 0.06008427607059597,
+        "soil_temperature_k": 298.8369233093333,
+        "pft14_gpp_daily": 2.8774413194240713,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 3.6656262458564015,
+        "hydrologic_export": 4.609570320212831e-07,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "hydrologic_export:minimum"
+      ],
+      "day_start_state_sha256": "9d9f963d9aa37cf7c4b5f808791cb1536a2eef2996102e28223c405122ca1b8f",
+      "fast_day_target_sha256": "7361031d01ea095c7b2cd0ab42f818a060d7c8d90402c1c38b18ae6a8065c7b5"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 1961,
+      "day_index": 102,
+      "row": 100,
+      "source_shard": "shards/281.0-095.0/1961.npz",
+      "source_shard_sha256": "86a1b1ccf01f62d012b19bb11db339c2941dcafa574d5dfabcf62cc14ed041b0",
+      "metrics": {
+        "soil_wetness": 0.06638895908230193,
+        "soil_temperature_k": 299.43895671367125,
+        "pft14_gpp_daily": 3.834603304404941,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 18.110214080661535,
+        "hydrologic_export": 0.0006074048149511793,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "e88288b07a77f8c8ad08a0b096f5c1ff24b5fb046a131abddc0a31a5e03517cb",
+      "fast_day_target_sha256": "020d8697f12a6d636a4faff43fe75cb7cc21bd6307224938c023a6fe4a6766f1"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 1963,
+      "day_index": 87,
+      "row": 86,
+      "source_shard": "shards/281.0-095.0/1963.npz",
+      "source_shard_sha256": "e282825fdce3a89bd6eb7d5b682295bf9dd42fb76d3916a01c464279e607586f",
+      "metrics": {
+        "soil_wetness": 0.06252515042224183,
+        "soil_temperature_k": 298.5636207540471,
+        "pft14_gpp_daily": 11.52482518535143,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 14.171507069841027,
+        "hydrologic_export": 0.0013411197932705814,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "c6675b7651a51956aa3d205ec724cdd8de97b2d8573dbcfec3c1c30a6f7bd597",
+      "fast_day_target_sha256": "c2a5fd3cbf62e522e9387ba48bde0edff941d10a0efdce82ae2c02d785187bb4"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 1964,
+      "day_index": 126,
+      "row": 125,
+      "source_shard": "shards/281.0-095.0/1964.npz",
+      "source_shard_sha256": "f59eff8db9df392425a9ae4634f39e71aff7ea77ca306777e20cb71623941a87",
+      "metrics": {
+        "soil_wetness": 0.06654287470287885,
+        "soil_temperature_k": 299.86906958724245,
+        "pft14_gpp_daily": 9.216691212689156,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 2.8049483182599033,
+        "hydrologic_export": 0.1050754028815384,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "121a58bdff96cc94794aca267fa86ff9ed2ccd193976fbbe1405d977f02cce1e",
+      "fast_day_target_sha256": "05e82205af217087d33aa02c3b7ac4fefabfae8ca3315146e7ddb8480ea21d52"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 1967,
+      "day_index": 6,
+      "row": 5,
+      "source_shard": "shards/281.0-095.0/1967.npz",
+      "source_shard_sha256": "1407733439a391ba4abb013084ca37e906aae1ff7dc7b78d86e5bd0f603792f8",
+      "metrics": {
+        "soil_wetness": 0.07078268306642922,
+        "soil_temperature_k": 297.905945265419,
+        "pft14_gpp_daily": 8.834908518522886,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 76.66249154135585,
+        "hydrologic_export": 0.993717463672644,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "hydrologic_export:maximum"
+      ],
+      "day_start_state_sha256": "4b706b32687ab294e78460e80c20af434e556bb4e1568d97c8ace8d0887992c4",
+      "fast_day_target_sha256": "07b6e21894ee1346844552f7bfc2e3e878c01fc76cc5d863b0d4268de8c8a2fe"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 1968,
+      "day_index": 66,
+      "row": 65,
+      "source_shard": "shards/281.0-095.0/1968.npz",
+      "source_shard_sha256": "5bf592fb29e8d904f42b93eb05aaf47630aa050b856f19acc625d8e81d6c3623",
+      "metrics": {
+        "soil_wetness": 0.037127885338466456,
+        "soil_temperature_k": 298.14943264235,
+        "pft14_gpp_daily": 9.474306687651255,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 1.7894694290589541,
+        "hydrologic_export": 0.00029734110585001637,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_wetness:minimum"
+      ],
+      "day_start_state_sha256": "c4f211bfb3398653bf80a986dbef967ca44e563ee4f784da1c6d675ca7d10e9e",
+      "fast_day_target_sha256": "4f75511754347b0dc5d72042ebc7be8a484a2d9f8ce54cfb48821cf9a9483311"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 1973,
+      "day_index": 365,
+      "row": 364,
+      "source_shard": "shards/281.0-095.0/1973.npz",
+      "source_shard_sha256": "810538579d966ab16914affa93a7f285704e592ba72e21d39652bf1ac330f31f",
+      "metrics": {
+        "soil_wetness": 0.0623815714121092,
+        "soil_temperature_k": 296.6528132398044,
+        "pft14_gpp_daily": 9.240866288972969,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 6.921119191974867,
+        "hydrologic_export": 0.03385108254668589,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_temperature_k:minimum"
+      ],
+      "day_start_state_sha256": "3f47ae07ce6b5911bfd5206b1eb8c640c5d85212b8d16ad9b2253e551fe09f5b",
+      "fast_day_target_sha256": "893610d6b02dad2fd5951080558501f6f45331f253b74f258f66a00872de7638"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 1975,
+      "day_index": 355,
+      "row": 354,
+      "source_shard": "shards/281.0-095.0/1975.npz",
+      "source_shard_sha256": "f5ee1054708d7df076f1d443f9376513c1d6de4817a3479846f035353638fced",
+      "metrics": {
+        "soil_wetness": 0.0707365036842321,
+        "soil_temperature_k": 297.2409238712576,
+        "pft14_gpp_daily": 9.244063286639946,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 84.49143092148006,
+        "hydrologic_export": 0.7608768878524039,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "precip_daily:maximum"
+      ],
+      "day_start_state_sha256": "ccfe56559992007ba9cbe5cf3552cb5aaa97d23f33d4b54f3757cd934e657229",
+      "fast_day_target_sha256": "2fd74bdc9b2313b1f72997f432f3c59af17cd175cdeffe602120b40785ceba08"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 1988,
+      "day_index": 337,
+      "row": 336,
+      "source_shard": "shards/281.0-095.0/1988.npz",
+      "source_shard_sha256": "b1e5460fce18b5c592aa9f0c21342fd89868345c2c07809d10333bcb2d0eb2d3",
+      "metrics": {
+        "soil_wetness": 0.07079247145181564,
+        "soil_temperature_k": 298.3507348486692,
+        "pft14_gpp_daily": 9.391453594448812,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 26.785141410073265,
+        "hydrologic_export": 0.5035343080417441,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_wetness:maximum"
+      ],
+      "day_start_state_sha256": "2066b24662a9c2c1b97206df13d7a44a8e5b89e5926671930e80a86aa57bbac8",
+      "fast_day_target_sha256": "994f789e89a3df0816c44d83cacccf9d34f5959c71acbe0d1194187c075041ca"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 1991,
+      "day_index": 139,
+      "row": 138,
+      "source_shard": "shards/281.0-095.0/1991.npz",
+      "source_shard_sha256": "d1e45d1cbd7bbd29a1c7338f0884245502c2b3057cc61d6177ea8f43f7a8c292",
+      "metrics": {
+        "soil_wetness": 0.06777986342141235,
+        "soil_temperature_k": 300.51873468772993,
+        "pft14_gpp_daily": 10.941421151904402,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 14.13694586372003,
+        "hydrologic_export": 0.22104071048553559,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "859173eeae0db8cf067cde1dafa7b49c7f3ffaee3a5a1346a30c7b42ec80a299",
+      "fast_day_target_sha256": "a48ed309f485bc528a0c0021f62790bc33bdce08092356794f7d2389768831dc"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 1998,
+      "day_index": 133,
+      "row": 132,
+      "source_shard": "shards/281.0-095.0/1998.npz",
+      "source_shard_sha256": "40ae65edea3130e5da4cdcee148eae65abbc9b07bf98e65b7671954ff2ecfd56",
+      "metrics": {
+        "soil_wetness": 0.06117979298887532,
+        "soil_temperature_k": 301.26564331516084,
+        "pft14_gpp_daily": 10.60546606030784,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 10.130010134889744,
+        "hydrologic_export": 0.0003066453278402414,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_temperature_k:maximum"
+      ],
+      "day_start_state_sha256": "951b05a6ea1cbc7fa5696f069625d417bdd046649b37e48625e729c06a97c126",
+      "fast_day_target_sha256": "bef2955c4bf5cd0f5a20b4caa081c4a20b58864e9987a2173078e1d6b1cc987d"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 2000,
+      "day_index": 21,
+      "row": 20,
+      "source_shard": "shards/281.0-095.0/2000.npz",
+      "source_shard_sha256": "91c1ea5c34dee866769f7e0b90a27a81c8c6dd3cecef949f35e64308f55f1c0e",
+      "metrics": {
+        "soil_wetness": 0.06692413451173473,
+        "soil_temperature_k": 298.5082826050086,
+        "pft14_gpp_daily": 11.079873965259129,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 1.4448235131567344,
+        "hydrologic_export": 0.13238285478946726,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "2a34a6f3a7f7fc6170a40fadc5a93327f60cd91ff0038b589f85abd565489c77",
+      "fast_day_target_sha256": "99fec00478c6e261ee7a2b2262c38f2b2818a22e5e1374a811a25fe3fe565065"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 2001,
+      "day_index": 274,
+      "row": 273,
+      "source_shard": "shards/281.0-095.0/2001.npz",
+      "source_shard_sha256": "7034d5d5dad22b2f79cf110fe182eed65067fd0811157e18563e7726e225dffb",
+      "metrics": {
+        "soil_wetness": 0.06349408716476976,
+        "soil_temperature_k": 299.54058088568496,
+        "pft14_gpp_daily": 9.53100853802053,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 2.3419306075084023,
+        "hydrologic_export": 0.036915958678744795,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "39d9a661982614991d8f32a385a7b003b351f23007015489ed51d708dd098540",
+      "fast_day_target_sha256": "ba3c89396a867de9d98cca64f23720f217a4db2693ea92a3e27f18c76481d8ac"
+    },
+    {
+      "landpoint_id": "281.0-095.0",
+      "year": 2004,
+      "day_index": 101,
+      "row": 100,
+      "source_shard": "shards/281.0-095.0/2004.npz",
+      "source_shard_sha256": "9c15ff622eb878632f3c150f6214c0b1271a701d716bb035f369d9a4a8293129",
+      "metrics": {
+        "soil_wetness": 0.058857476887792345,
+        "soil_temperature_k": 300.49449090917375,
+        "pft14_gpp_daily": 12.17979840180056,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.33971392570038006,
+        "hydrologic_export": 0.0006175089939629592,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "pft14_gpp_daily:maximum"
+      ],
+      "day_start_state_sha256": "1a5a2639770d10392ef3476e3795c69e40a2a6b021c610d5d7a7c059c038ae22",
+      "fast_day_target_sha256": "a9143ef5d6a558654c025229622f2b964670e44e1192cff63a4065ff0dca0c8f"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 1961,
+      "day_index": 2,
+      "row": 0,
+      "source_shard": "shards/295.0-113.0/1961.npz",
+      "source_shard_sha256": "8df12a8c6d330f59d4c1ae7de21ff74aff6e52b945b7777c6b0b77ebd470e44c",
+      "metrics": {
+        "soil_wetness": 0.0505996083700557,
+        "soil_temperature_k": 291.643676571154,
+        "pft14_gpp_daily": 0.32601014617864366,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 2.2398874225473264,
+        "hydrologic_export": 8.160774468451862e-07,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "earliest_train_day",
+        "pft14_gpp_daily:minimum",
+        "soil_carbon_proxy:maximum",
+        "soil_carbon_proxy:minimum"
+      ],
+      "day_start_state_sha256": "9ebedb380a7f9fe75228c0a0c0cd727c5fd927a2f36d29a486d9b2d02505100b",
+      "fast_day_target_sha256": "b5177fcd25e807488ab89bb9b76b993adfcda95e47866232ce9a76ca84d2ef6b"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 1961,
+      "day_index": 13,
+      "row": 11,
+      "source_shard": "shards/295.0-113.0/1961.npz",
+      "source_shard_sha256": "8df12a8c6d330f59d4c1ae7de21ff74aff6e52b945b7777c6b0b77ebd470e44c",
+      "metrics": {
+        "soil_wetness": 0.041557893196364194,
+        "soil_temperature_k": 285.5773498046585,
+        "pft14_gpp_daily": 0.44744163093768385,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 7.575872401868777e-07,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "precip_daily:minimum"
+      ],
+      "day_start_state_sha256": "1c92220bceb6393146f27d5a9bfcf2de8fdf1584dea57971abd9e15b850efa22",
+      "fast_day_target_sha256": "168fd8efad546d65a9f569dde55a2338f5bc034aaea7549ebee738b9efe3a677"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 1961,
+      "day_index": 114,
+      "row": 112,
+      "source_shard": "shards/295.0-113.0/1961.npz",
+      "source_shard_sha256": "8df12a8c6d330f59d4c1ae7de21ff74aff6e52b945b7777c6b0b77ebd470e44c",
+      "metrics": {
+        "soil_wetness": 0.06785244868952986,
+        "soil_temperature_k": 295.731558035443,
+        "pft14_gpp_daily": 1.5034292361001107,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 23.60945675172843,
+        "hydrologic_export": 1.3308289793673887e-08,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "hydrologic_export:minimum"
+      ],
+      "day_start_state_sha256": "6fae8b5f3f8494734906c8ad2bc99d2c82bf024a995900d79e1020e4f8dac4e9",
+      "fast_day_target_sha256": "4787c28f85b5ef2ae221ba6a4b36cc563928eba4ec0f67e9eedfcc497949e5a9"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 1963,
+      "day_index": 146,
+      "row": 145,
+      "source_shard": "shards/295.0-113.0/1963.npz",
+      "source_shard_sha256": "5e6423760a5dbbda79ae51e2988d65831f303aa2e8517438267af450b5ae85dc",
+      "metrics": {
+        "soil_wetness": 0.02726364559291091,
+        "soil_temperature_k": 299.48768762489885,
+        "pft14_gpp_daily": 2.353359938419473,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 2.918539003303522,
+        "hydrologic_export": 3.2093051300474356e-06,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_wetness:minimum"
+      ],
+      "day_start_state_sha256": "9cf4fc22e1467f525762568b0274ab5c8fc894bb631a6227bff6e1c9f11a322d",
+      "fast_day_target_sha256": "941fcae5edf701bc852187c9f843a9a3e16fce0ee66b05cb4161866e18490ea4"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 1966,
+      "day_index": 158,
+      "row": 157,
+      "source_shard": "shards/295.0-113.0/1966.npz",
+      "source_shard_sha256": "75483332ca883e17d1adac3e5f83503522d50630b225d6b03e13096235e4e03e",
+      "metrics": {
+        "soil_wetness": 0.07336413046572922,
+        "soil_temperature_k": 298.0573652769956,
+        "pft14_gpp_daily": 4.029355701849427,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 28.886508475989103,
+        "hydrologic_export": 0.30362852142353,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_wetness:maximum"
+      ],
+      "day_start_state_sha256": "01d1e1050e92fa353729862d3448a4518082afe71e8c4b0c3be5471d2010c32c",
+      "fast_day_target_sha256": "6c7cc4e9d449564a495faf69993507d111322e187b6f97509eebb6b83037cf2a"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 1966,
+      "day_index": 235,
+      "row": 234,
+      "source_shard": "shards/295.0-113.0/1966.npz",
+      "source_shard_sha256": "75483332ca883e17d1adac3e5f83503522d50630b225d6b03e13096235e4e03e",
+      "metrics": {
+        "soil_wetness": 0.06740982703707399,
+        "soil_temperature_k": 300.83690205791623,
+        "pft14_gpp_daily": 4.067735136841326,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 0.0650908636132804,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "1624feed682bda0c0cdee5f18c242e627cd27ff9ddf5843c8ce29f6fbf98a442",
+      "fast_day_target_sha256": "1653a2f1755de606bf4944e91a755395e785a515eaa435e3175d985961b59897"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 1969,
+      "day_index": 36,
+      "row": 35,
+      "source_shard": "shards/295.0-113.0/1969.npz",
+      "source_shard_sha256": "65e683b33079a37438085ebfd9e2c6c12825b9b2351b7e17805958e533513e6f",
+      "metrics": {
+        "soil_wetness": 0.06430317492785043,
+        "soil_temperature_k": 282.7269026390522,
+        "pft14_gpp_daily": 2.226372791389096,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.872273185495942,
+        "hydrologic_export": 0.00013424518193479298,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_temperature_k:minimum"
+      ],
+      "day_start_state_sha256": "84358e746c2c0d36608eb2a599cf70d5adfc4f5526fab07f684ff1965a2487e3",
+      "fast_day_target_sha256": "40c53a61ba48d75fa718e5b2502ea0ccabcbaa250c13b725412074ba3dcb1bb8"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 1974,
+      "day_index": 132,
+      "row": 131,
+      "source_shard": "shards/295.0-113.0/1974.npz",
+      "source_shard_sha256": "f594b912344f221545664e75aa3eb69217a393168881466ce69202624cc7294b",
+      "metrics": {
+        "soil_wetness": 0.06450149612677387,
+        "soil_temperature_k": 297.37898995448165,
+        "pft14_gpp_daily": 6.049963549466102,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.12640161583021836,
+        "hydrologic_export": 8.501302015007848e-06,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "cc162cf899a7568bce12542fe08e577d9534e41657a9dbd82bde209397a5bbf8",
+      "fast_day_target_sha256": "8f2bf43d92757b84637545e3ea78ba7f0bb04956fa0ba1d1e0815835d6a8cadc"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 1974,
+      "day_index": 291,
+      "row": 290,
+      "source_shard": "shards/295.0-113.0/1974.npz",
+      "source_shard_sha256": "f594b912344f221545664e75aa3eb69217a393168881466ce69202624cc7294b",
+      "metrics": {
+        "soil_wetness": 0.07308579156236311,
+        "soil_temperature_k": 297.370798916702,
+        "pft14_gpp_daily": 5.066646640559989,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 112.94021420180798,
+        "hydrologic_export": 0.8691484571674984,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "hydrologic_export:maximum",
+        "precip_daily:maximum"
+      ],
+      "day_start_state_sha256": "ca17d7a0347c5f4eeaf4a631c6c3e2380ba949f4c8a44ef971e51ac0e1521d3c",
+      "fast_day_target_sha256": "1134c591d968e380235cd5b37365f4c6bccd61303ed9aba9b52878b42185f974"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 1987,
+      "day_index": 105,
+      "row": 104,
+      "source_shard": "shards/295.0-113.0/1987.npz",
+      "source_shard_sha256": "de4fdf6ac117f6b16e614539a75c70e888863cc09aa839a497af18ea99e4ac29",
+      "metrics": {
+        "soil_wetness": 0.0701690909868653,
+        "soil_temperature_k": 292.36746100247694,
+        "pft14_gpp_daily": 5.755484676811065,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.02914424137543392,
+        "hydrologic_export": 0.14492186581421754,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "a485c1348d4b64a0db5bd2907d3a465d09ba2cca10a9dedc088a077b847dfc22",
+      "fast_day_target_sha256": "8958cf6638843a60d9e0abf6e036391f287d2648b1398826eaf444c231ad7d22"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 1998,
+      "day_index": 50,
+      "row": 49,
+      "source_shard": "shards/295.0-113.0/1998.npz",
+      "source_shard_sha256": "a853b1df6cc379d57e9ad6c1ee0755e6c2cb48e0fe94ae782383df3975a5097c",
+      "metrics": {
+        "soil_wetness": 0.07121539192685912,
+        "soil_temperature_k": 291.8688743056114,
+        "pft14_gpp_daily": 5.578540251151301,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 20.94230462098494,
+        "hydrologic_export": 0.00010151067850972305,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "d1c3150697b631e473f3e4a585a807d03a85aa3ae41aac15ad1f703a23701353",
+      "fast_day_target_sha256": "cdf5050f45ebd43a63a356de5563bb55b90d8bc07929a94a3c07e90fcd62f70e"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 2003,
+      "day_index": 166,
+      "row": 165,
+      "source_shard": "shards/295.0-113.0/2003.npz",
+      "source_shard_sha256": "6e33864efdb970f849228913c208d27f9a1a32ea61d438316da0a1bfa7701966",
+      "metrics": {
+        "soil_wetness": 0.07157179683218422,
+        "soil_temperature_k": 298.97619118448836,
+        "pft14_gpp_daily": 7.250173128171631,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 22.277154827315826,
+        "hydrologic_export": 0.29868174275052106,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "70e0c5653479345f52d1791e7a786d88cd246bcf55bd1e8b106fcffaeb6a80a4",
+      "fast_day_target_sha256": "6e9af62b5f37f7030c7e0d86bb85fb6050e7f5c85948174bca7e94e65ce59a5a"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 2003,
+      "day_index": 198,
+      "row": 197,
+      "source_shard": "shards/295.0-113.0/2003.npz",
+      "source_shard_sha256": "6e33864efdb970f849228913c208d27f9a1a32ea61d438316da0a1bfa7701966",
+      "metrics": {
+        "soil_wetness": 0.061835656009891604,
+        "soil_temperature_k": 302.47699974575534,
+        "pft14_gpp_daily": 6.83332263562619,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 1.2121198511977127,
+        "hydrologic_export": 0.004427570194822376,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_temperature_k:maximum"
+      ],
+      "day_start_state_sha256": "304304b099849ec7d26c9d7408b324da511cb58dedc838088909b438cf4c830f",
+      "fast_day_target_sha256": "d1cdf1783b10ba0acd1b56d08d27a41ac90d55b51f826fd5cf1c7423bb034896"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 2004,
+      "day_index": 35,
+      "row": 34,
+      "source_shard": "shards/295.0-113.0/2004.npz",
+      "source_shard_sha256": "3975cffd01b1994596c36f7801d6188563592e99705aececa128f9997fd38d9b",
+      "metrics": {
+        "soil_wetness": 0.04567187182525112,
+        "soil_temperature_k": 286.11712416659276,
+        "pft14_gpp_daily": 3.8773329099495606,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 27.42846136461594,
+        "hydrologic_export": 0.00012054057566443713,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "465425af349d42849d9ba74b470d7e81dc4aa5e27856ff47098334e72e47ad54",
+      "fast_day_target_sha256": "4408bcff4760417147e52d2fc1bed83ee199973d9aeb1303f08cdd0c55f91e8d"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 2004,
+      "day_index": 69,
+      "row": 68,
+      "source_shard": "shards/295.0-113.0/2004.npz",
+      "source_shard_sha256": "3975cffd01b1994596c36f7801d6188563592e99705aececa128f9997fd38d9b",
+      "metrics": {
+        "soil_wetness": 0.043789123230289544,
+        "soil_temperature_k": 290.3338380351954,
+        "pft14_gpp_daily": 5.861439189609349,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.008967967437456537,
+        "hydrologic_export": 5.212828728338998e-05,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "24a4ebad7b0c3c46ff1d484c80e31de107a6d02151e48804297d08b176601613",
+      "fast_day_target_sha256": "7637562b0c550196f46b0aa9ed4812e31fa7a9820c8b9f31ad00cd25f13ca345"
+    },
+    {
+      "landpoint_id": "295.0-113.0",
+      "year": 2004,
+      "day_index": 196,
+      "row": 195,
+      "source_shard": "shards/295.0-113.0/2004.npz",
+      "source_shard_sha256": "3975cffd01b1994596c36f7801d6188563592e99705aececa128f9997fd38d9b",
+      "metrics": {
+        "soil_wetness": 0.06579769593161902,
+        "soil_temperature_k": 300.50879849896825,
+        "pft14_gpp_daily": 7.4984478148444715,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 2.6171400536270526,
+        "hydrologic_export": 1.3791333763888076e-06,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "pft14_gpp_daily:maximum"
+      ],
+      "day_start_state_sha256": "0ec3b0ae59c6f9ff459a670c0917e6e253932956f80883cb25d5c08617961c61",
+      "fast_day_target_sha256": "91da5936af1a37aa4923f5669b3039122583d423167461ca029b20cb16f00a70"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 1961,
+      "day_index": 2,
+      "row": 0,
+      "source_shard": "shards/315.0-097.0/1961.npz",
+      "source_shard_sha256": "d0aa0f7850c62498a0485bd2c1321e98daf799e7eb016982fcac639775264b3a",
+      "metrics": {
+        "soil_wetness": 0.03354781539129807,
+        "soil_temperature_k": 301.20380221653244,
+        "pft14_gpp_daily": 0.3053394833896594,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 15.177679632324725,
+        "hydrologic_export": 0.8070824419498621,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "earliest_train_day",
+        "pft14_gpp_daily:minimum",
+        "soil_carbon_proxy:maximum",
+        "soil_carbon_proxy:minimum"
+      ],
+      "day_start_state_sha256": "77cf657374dab58f78a664738afa63076baf693c1fddf8bcc3acbcebdf42d53f",
+      "fast_day_target_sha256": "83886898fb0bcb3afa6ce7a2d3be5159a9b57ea9449ae7c1d90f451532eb53c9"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 1961,
+      "day_index": 89,
+      "row": 87,
+      "source_shard": "shards/315.0-097.0/1961.npz",
+      "source_shard_sha256": "d0aa0f7850c62498a0485bd2c1321e98daf799e7eb016982fcac639775264b3a",
+      "metrics": {
+        "soil_wetness": 0.021182253254142573,
+        "soil_temperature_k": 301.0714863073777,
+        "pft14_gpp_daily": 1.0451290063958147,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 0.044928728743632,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "precip_daily:minimum"
+      ],
+      "day_start_state_sha256": "69b1e5527b30070c893a5832a19049b6f3ead788c06bf15bb4df24d2448dc851",
+      "fast_day_target_sha256": "4d38581203be4b6d97efef5d1d10ae7b721f024278217298eaeb1a96bc2136da"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 1961,
+      "day_index": 122,
+      "row": 120,
+      "source_shard": "shards/315.0-097.0/1961.npz",
+      "source_shard_sha256": "d0aa0f7850c62498a0485bd2c1321e98daf799e7eb016982fcac639775264b3a",
+      "metrics": {
+        "soil_wetness": 0.02745380259469172,
+        "soil_temperature_k": 300.6354368530967,
+        "pft14_gpp_daily": 1.0684420462189108,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 27.7499170624651,
+        "hydrologic_export": 0.033257200002393066,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "675aa2455eba16c73d33b99232b98de81d741b3ecd9106d9e2083b6449afab10",
+      "fast_day_target_sha256": "1ef94ffb1b6e33e595ac4e0fcf89766b373e1611b939ef96d39bbe3bb4361f13"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 1961,
+      "day_index": 304,
+      "row": 302,
+      "source_shard": "shards/315.0-097.0/1961.npz",
+      "source_shard_sha256": "d0aa0f7850c62498a0485bd2c1321e98daf799e7eb016982fcac639775264b3a",
+      "metrics": {
+        "soil_wetness": 0.028822195160699397,
+        "soil_temperature_k": 299.97147136049,
+        "pft14_gpp_daily": 1.4986831036377903,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 1.4077240883125341,
+        "hydrologic_export": 0.20327099364777723,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "718f52045d120f6d1742782df19ec4cf2c9b1f30abe34a2c7119120bd1a75133",
+      "fast_day_target_sha256": "cf4146ebc65e178f0b1e4afa78873861baa9bc75d6775430c681f81fe6244e2f"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 1970,
+      "day_index": 174,
+      "row": 173,
+      "source_shard": "shards/315.0-097.0/1970.npz",
+      "source_shard_sha256": "0efb732439b35c6f6cb2fb8d2289b661e8786a420f5935310788c1469300839c",
+      "metrics": {
+        "soil_wetness": 0.02966129960488224,
+        "soil_temperature_k": 301.4776579915049,
+        "pft14_gpp_daily": 1.703721406746157,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 6.686795990390237,
+        "hydrologic_export": 0.04392013051430161,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "ed0ef86436daec476881a4d6b91cf52477b955934ce9eca806c3c28e89afe2bd",
+      "fast_day_target_sha256": "cd1ebb073262709146bb40e9db56ad75801c34f12fe894c9a633111b76d5008a"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 1976,
+      "day_index": 100,
+      "row": 99,
+      "source_shard": "shards/315.0-097.0/1976.npz",
+      "source_shard_sha256": "452fc31d856a76bdda9dabf485778e262ff8e9e7c79365c841c6b630a496a62d",
+      "metrics": {
+        "soil_wetness": 0.027786675864723408,
+        "soil_temperature_k": 301.8269535341801,
+        "pft14_gpp_daily": 2.0492527050836205,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.5227966541724527,
+        "hydrologic_export": 0.6301173459778909,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "be1b64fdc8fa4814c6a261253745fbdf4e99bb851fced16cea53d541e5a48753",
+      "fast_day_target_sha256": "1b28c62d4eeeec7e429a49fb52cb7eb7d591eaa9a9a4dce185c5b86fec274cf6"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 1977,
+      "day_index": 260,
+      "row": 259,
+      "source_shard": "shards/315.0-097.0/1977.npz",
+      "source_shard_sha256": "cc5bd7f1e6f00dbc97e8addcbdcd1dff7b149315ceb4ea4ca89a735114212c48",
+      "metrics": {
+        "soil_wetness": 0.022219759729638022,
+        "soil_temperature_k": 301.66268038747415,
+        "pft14_gpp_daily": 2.130136573288391,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 14.868969999952242,
+        "hydrologic_export": 0.15893588810566744,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "0ae72e47168cef49ece08f09d69d1b8ce285adfd6d0d0de9d3c9a1355326a082",
+      "fast_day_target_sha256": "3f7ed61eaefcb1a6baf8fda7328d8860202656d9cd22bc8af5e69db1d34d70ba"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 1979,
+      "day_index": 103,
+      "row": 102,
+      "source_shard": "shards/315.0-097.0/1979.npz",
+      "source_shard_sha256": "a1d48890bb99208cef3f10528e4381e56ee84f83445639b3685fc8bbc590f7d0",
+      "metrics": {
+        "soil_wetness": 0.03636859865447124,
+        "soil_temperature_k": 300.76111839510355,
+        "pft14_gpp_daily": 2.166552892797056,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 75.68766153417528,
+        "hydrologic_export": 1.1748498692303069,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "precip_daily:maximum"
+      ],
+      "day_start_state_sha256": "e37bf3797388bc1d59e498c227fb0eb4e1cc64142911aa4defc9b429266ec8e3",
+      "fast_day_target_sha256": "72637911c09c06524a267e1543dcf4a7cf88d7a7b03122aca355d9864d01641f"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 1990,
+      "day_index": 315,
+      "row": 314,
+      "source_shard": "shards/315.0-097.0/1990.npz",
+      "source_shard_sha256": "b70c36e727a9503f026ce81f71c96241910c7554d98d3badecf62e9d622cf6c7",
+      "metrics": {
+        "soil_wetness": 0.03748500547632326,
+        "soil_temperature_k": 300.6148387205282,
+        "pft14_gpp_daily": 3.41181789986681,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 44.75729721598327,
+        "hydrologic_export": 1.2849488217767622,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_wetness:maximum"
+      ],
+      "day_start_state_sha256": "ed0165b03ead7226569614cdb878842040db0a17964f53343f6a60a1ea23e8b8",
+      "fast_day_target_sha256": "12bd290446a22b2efdb05a69d15461ad601814b741f43764ace3ffde0e539e59"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 1992,
+      "day_index": 17,
+      "row": 16,
+      "source_shard": "shards/315.0-097.0/1992.npz",
+      "source_shard_sha256": "0843c989d3abb96532494199ff935f5da1c36d3e8a519d941b6d36311047ec5d",
+      "metrics": {
+        "soil_wetness": 0.028955280323797596,
+        "soil_temperature_k": 299.4840060715687,
+        "pft14_gpp_daily": 3.51372436464292,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 10.693725589953829,
+        "hydrologic_export": 0.10691119358692136,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_temperature_k:minimum"
+      ],
+      "day_start_state_sha256": "60525a1d00f67d977c17669c56e4e7b010b19122242fe0582c1cfdbb9e5a4884",
+      "fast_day_target_sha256": "7a4dc45c9230c4f5c14b05fda7fa7f03d82b4e10ae79d20d198577dba818f8f0"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 1992,
+      "day_index": 50,
+      "row": 49,
+      "source_shard": "shards/315.0-097.0/1992.npz",
+      "source_shard_sha256": "0843c989d3abb96532494199ff935f5da1c36d3e8a519d941b6d36311047ec5d",
+      "metrics": {
+        "soil_wetness": 0.018456146229908238,
+        "soil_temperature_k": 299.927179764118,
+        "pft14_gpp_daily": 3.379264263389365,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 2.0929369152327126,
+        "hydrologic_export": 0.03649564659398234,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "65692c32272d21102ad89e52149e985237c88117f2d42efe02bdd224b11110f6",
+      "fast_day_target_sha256": "9cf5c89b9c0e456b7aa5c6e195ef921bed0f4c269ec9140d8b53af21743bedda"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 1998,
+      "day_index": 111,
+      "row": 110,
+      "source_shard": "shards/315.0-097.0/1998.npz",
+      "source_shard_sha256": "f24dbbc558f58fea844ef5d1b40b6f998ede03fe6db3d4c6fc36c711f80048f2",
+      "metrics": {
+        "soil_wetness": 0.011678096258932156,
+        "soil_temperature_k": 301.6502221234697,
+        "pft14_gpp_daily": 3.1472007129524853,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 2.4622937286039814,
+        "hydrologic_export": 7.911573390973602e-05,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_wetness:minimum"
+      ],
+      "day_start_state_sha256": "f6d98ce6a1619864bed478957b6fe5337640bc9a1c28480d0afc6e55a2ebbf79",
+      "fast_day_target_sha256": "e690ebd7772ef95c04c76f75715b208579572c1175023c4cf1b90263fb77d95d"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 1998,
+      "day_index": 145,
+      "row": 144,
+      "source_shard": "shards/315.0-097.0/1998.npz",
+      "source_shard_sha256": "f24dbbc558f58fea844ef5d1b40b6f998ede03fe6db3d4c6fc36c711f80048f2",
+      "metrics": {
+        "soil_wetness": 0.021416858939407833,
+        "soil_temperature_k": 302.40439004648687,
+        "pft14_gpp_daily": 3.814837931554,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 5.493385194131406,
+        "hydrologic_export": 1.8981457258347224e-06,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_temperature_k:maximum"
+      ],
+      "day_start_state_sha256": "ad355a13799e86e517c02c9f434910701717c9f575deb08d4b0caeb0bce0c268",
+      "fast_day_target_sha256": "45d1b65183b1d082d19183d6776816e7a63a2f34c46acbb4d278b53a5cb72144"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 1998,
+      "day_index": 161,
+      "row": 160,
+      "source_shard": "shards/315.0-097.0/1998.npz",
+      "source_shard_sha256": "f24dbbc558f58fea844ef5d1b40b6f998ede03fe6db3d4c6fc36c711f80048f2",
+      "metrics": {
+        "soil_wetness": 0.02656881446929595,
+        "soil_temperature_k": 301.43511623642604,
+        "pft14_gpp_daily": 3.812589906651506,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 11.946754545351723,
+        "hydrologic_export": 1.6853352719496387e-07,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "hydrologic_export:minimum"
+      ],
+      "day_start_state_sha256": "48bde66e9c2b7252c1d66a90fd56be2f8c5c3123494bc594106e29ec9cc7542b",
+      "fast_day_target_sha256": "bb6717bae2a02c1e894d6ccc07ffc0be05cb69fbd227ff652ab6a20b11225752"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 2001,
+      "day_index": 183,
+      "row": 182,
+      "source_shard": "shards/315.0-097.0/2001.npz",
+      "source_shard_sha256": "82af21649da66659e63f0718511c0d2255b81bc095b1d1e2fe5558fef4e3c0f7",
+      "metrics": {
+        "soil_wetness": 0.03720046077601566,
+        "soil_temperature_k": 301.0284425312603,
+        "pft14_gpp_daily": 3.99289337353761,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 65.92521825805306,
+        "hydrologic_export": 1.407031484124824,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "hydrologic_export:maximum"
+      ],
+      "day_start_state_sha256": "8a0b4c1e44ade8df602bcdb30437dffd782c7027d01ef64b8e240eebb814a993",
+      "fast_day_target_sha256": "e13de252d548a7f3a3069a09fc14c83b82443307909954475d1afbfe1af871b4"
+    },
+    {
+      "landpoint_id": "315.0-097.0",
+      "year": 2004,
+      "day_index": 183,
+      "row": 182,
+      "source_shard": "shards/315.0-097.0/2004.npz",
+      "source_shard_sha256": "743c31715b8be1f93fbf34e8f04cd61bebd7f369937eb2a8f4b0c7b52f91b538",
+      "metrics": {
+        "soil_wetness": 0.026828857959648778,
+        "soil_temperature_k": 301.14843444856336,
+        "pft14_gpp_daily": 4.548934843000178,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 2.0617945881667765,
+        "hydrologic_export": 0.11260222927185123,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "pft14_gpp_daily:maximum"
+      ],
+      "day_start_state_sha256": "0a124997efe827566458a3914ed4658eb99c3cc5aab95ae51ebf8677ffc715eb",
+      "fast_day_target_sha256": "b7da7a7ee0690b3c8262099c56917ccf36a3af78a4bb7f90d9dbd395060715d8"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 1961,
+      "day_index": 2,
+      "row": 0,
+      "source_shard": "shards/333.0-057.0/1961.npz",
+      "source_shard_sha256": "2218b535e3f67736a7161ebf45816d5d927ac81fce036b52d8cf1de1a77e6ea9",
+      "metrics": {
+        "soil_wetness": 0.029761749142913192,
+        "soil_temperature_k": 295.9737352774757,
+        "pft14_gpp_daily": 0.5735899582826187,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 1.6278948474791832,
+        "hydrologic_export": 0.7968988538489975,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "earliest_train_day",
+        "soil_carbon_proxy:maximum",
+        "soil_carbon_proxy:minimum"
+      ],
+      "day_start_state_sha256": "2a14fd84ba31283d9fc9a39b6871b2eda8a0eccc8acd2c12b6bc73f53ec5ef0f",
+      "fast_day_target_sha256": "ebbc5bc7a6cc1a7084b48b3d233721fcdea37fd008d3ef434c4c9eded41bbf7c"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 1961,
+      "day_index": 9,
+      "row": 7,
+      "source_shard": "shards/333.0-057.0/1961.npz",
+      "source_shard_sha256": "2218b535e3f67736a7161ebf45816d5d927ac81fce036b52d8cf1de1a77e6ea9",
+      "metrics": {
+        "soil_wetness": 0.02193268977371935,
+        "soil_temperature_k": 295.00987318943754,
+        "pft14_gpp_daily": 0.8771134274324918,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 0.14691196595040523,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "precip_daily:minimum"
+      ],
+      "day_start_state_sha256": "681bee124db3b0afe019ac712592e99aa968d4cc36884fa4588d748897163f7d",
+      "fast_day_target_sha256": "3488ed1903822f275080501e010d6d55b50e3ed78ccd35b7283e83664345e5c7"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 1963,
+      "day_index": 118,
+      "row": 117,
+      "source_shard": "shards/333.0-057.0/1963.npz",
+      "source_shard_sha256": "13a7dec21de86b5b6f96affaaa4bc442571ce85904bb121910016dbdb7a20e0b",
+      "metrics": {
+        "soil_wetness": 0.03568438483130849,
+        "soil_temperature_k": 290.8849765475436,
+        "pft14_gpp_daily": 2.5793156409311933,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 58.50650032516569,
+        "hydrologic_export": 0.9923632999897232,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "hydrologic_export:maximum"
+      ],
+      "day_start_state_sha256": "6f89c131cc35084f568ed7d329d14bd9ead817c86aaa724f2e44606c8877511b",
+      "fast_day_target_sha256": "d76dbc403ae50f7f8dee6eb27811d89ace79cefcf66a03f54e32baba4edd11b2"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 1964,
+      "day_index": 236,
+      "row": 235,
+      "source_shard": "shards/333.0-057.0/1964.npz",
+      "source_shard_sha256": "1237e5cea649c70edc8080dc0a4313acf80c38101d72792b3a12074e18c17e18",
+      "metrics": {
+        "soil_wetness": 0.013428197204981318,
+        "soil_temperature_k": 286.7501543616626,
+        "pft14_gpp_daily": 2.47531855634208,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 20.04487185040489,
+        "hydrologic_export": 8.464593062946477e-05,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "708ff8a3f394cef65859c5567eb649735e9461a8c8190bdd2d8da16bc0a051a1",
+      "fast_day_target_sha256": "7b2ad215553aac03146938ccba9732df2f3b2a4fce05e194e1714cdaded89eba"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 1964,
+      "day_index": 339,
+      "row": 338,
+      "source_shard": "shards/333.0-057.0/1964.npz",
+      "source_shard_sha256": "1237e5cea649c70edc8080dc0a4313acf80c38101d72792b3a12074e18c17e18",
+      "metrics": {
+        "soil_wetness": 0.0094986704585159,
+        "soil_temperature_k": 295.0802239739324,
+        "pft14_gpp_daily": 0.0,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 4.251894452896959e-12,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "pft14_gpp_daily:minimum"
+      ],
+      "day_start_state_sha256": "a56f5eb5f822dfd5f1aa620ae8696c2b5e65686ff793ac05e305c24a53cca594",
+      "fast_day_target_sha256": "b986a74ecda042cc4f636292ca3cef490239b788f18ac030af5538a4bc24648f"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 1968,
+      "day_index": 61,
+      "row": 60,
+      "source_shard": "shards/333.0-057.0/1968.npz",
+      "source_shard_sha256": "2237fd9e90f69672ec974ff7823106e77a27f8e69e348cdf559c7d91c908414d",
+      "metrics": {
+        "soil_wetness": 0.014094805448269502,
+        "soil_temperature_k": 295.9841938339643,
+        "pft14_gpp_daily": 4.3367191227032995,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 2.086424542358145,
+        "hydrologic_export": 0.0046607041848569335,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "f1b3d92bd3f9d3365dfebc1e4e56b0d1a58afda530d187ff41ac055843c08567",
+      "fast_day_target_sha256": "fe1bdd764171c6233af6e01464a29cf3ef1edf8701a65b51c7ab925d5b6241ed"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 1968,
+      "day_index": 209,
+      "row": 208,
+      "source_shard": "shards/333.0-057.0/1968.npz",
+      "source_shard_sha256": "2237fd9e90f69672ec974ff7823106e77a27f8e69e348cdf559c7d91c908414d",
+      "metrics": {
+        "soil_wetness": 0.01958995331842844,
+        "soil_temperature_k": 282.31389781308917,
+        "pft14_gpp_daily": 3.129571267999066,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 0.00024754725336046947,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_temperature_k:minimum"
+      ],
+      "day_start_state_sha256": "11a906e21a18c4da908b1604e26045ebb71de9a892918a6a557a6677e0bd7294",
+      "fast_day_target_sha256": "9685cedb2d60f3d52351488ae13738bc4675fe82b1c122862bd6e4db8e9b2539"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 1977,
+      "day_index": 138,
+      "row": 137,
+      "source_shard": "shards/333.0-057.0/1977.npz",
+      "source_shard_sha256": "cd96cf5843ea14c99eb2efb3a1fc775ed785f9f0b195ab8433c25364009d4f56",
+      "metrics": {
+        "soil_wetness": 0.035702328345987425,
+        "soil_temperature_k": 288.882057175117,
+        "pft14_gpp_daily": 2.773663462338703,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 61.039391183294356,
+        "hydrologic_export": 0.20759102819162928,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_wetness:maximum"
+      ],
+      "day_start_state_sha256": "e6a587691a83d4de96d7938bcb1b3f76c6774670e5acdc64d06724cbeeb4ae99",
+      "fast_day_target_sha256": "7ed5f09a6fb8561df8536041d859e269b4c94a0f27dd42191ef08278321bd5eb"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 1983,
+      "day_index": 41,
+      "row": 40,
+      "source_shard": "shards/333.0-057.0/1983.npz",
+      "source_shard_sha256": "1c28db3ab069f22210b8e4b58791ae0bd92785364b5bcf65adfaaf84fd0851a3",
+      "metrics": {
+        "soil_wetness": 0.013157578709914533,
+        "soil_temperature_k": 300.32612234018256,
+        "pft14_gpp_daily": 0.0032169290602124486,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 4.308737871757767e-12,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_temperature_k:maximum"
+      ],
+      "day_start_state_sha256": "d4e50bd11a3d6b1620cc7e2dfaa180b9c87df3e074d9809ff4f4f3ab919b882b",
+      "fast_day_target_sha256": "d8578e54a9d23d5defed7cd6e22770e3dfb6588d13023d467d23194a5133097b"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 1990,
+      "day_index": 4,
+      "row": 3,
+      "source_shard": "shards/333.0-057.0/1990.npz",
+      "source_shard_sha256": "be751a71d5580b969d03767dc409c814f6cea94130b27a617b0e637bfa26a679",
+      "metrics": {
+        "soil_wetness": 0.009484977101573764,
+        "soil_temperature_k": 297.35055681191517,
+        "pft14_gpp_daily": 0.0,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.4612644283042755,
+        "hydrologic_export": 4.195051034036151e-12,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "soil_wetness:minimum"
+      ],
+      "day_start_state_sha256": "255bd7e92d4aefe9beb096353ef763858854d1a869de10c16ead13a58268a12e",
+      "fast_day_target_sha256": "1c78d3085fd033b4e1d93608e419228f7d50f2192e0f8a591629bf3ff5d2dd1b"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 2000,
+      "day_index": 3,
+      "row": 2,
+      "source_shard": "shards/333.0-057.0/2000.npz",
+      "source_shard_sha256": "1c183d7fd8e290acd87acef4ba5ce4f0622f5ea2b0d22a0cf7fb81d912e9c781",
+      "metrics": {
+        "soil_wetness": 0.01903825748489404,
+        "soil_temperature_k": 293.5160752308929,
+        "pft14_gpp_daily": 6.672347719681581,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0,
+        "hydrologic_export": 0.0005915709520228339,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "pft14_gpp_daily:maximum"
+      ],
+      "day_start_state_sha256": "cb63a236af8b4566751cc28475167817023543137478e5b15a3f3aa224c301cf",
+      "fast_day_target_sha256": "9e10c3bb1c703a82d1bc0fc0c38f77672a59081c329bb45d491f7f2e7b44e82f"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 2000,
+      "day_index": 81,
+      "row": 80,
+      "source_shard": "shards/333.0-057.0/2000.npz",
+      "source_shard_sha256": "1c183d7fd8e290acd87acef4ba5ce4f0622f5ea2b0d22a0cf7fb81d912e9c781",
+      "metrics": {
+        "soil_wetness": 0.02599546976246588,
+        "soil_temperature_k": 293.4582478867415,
+        "pft14_gpp_daily": 4.468975924515671,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 86.71913081780076,
+        "hydrologic_export": 0.0,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "hydrologic_export:minimum"
+      ],
+      "day_start_state_sha256": "800ffe3ca7e8c24c646f1fdee815ce80e37d0545b13459099d024b5c7f2a703a",
+      "fast_day_target_sha256": "3bdc6a386a05e19e2ab2f7f2151010b52540807c1448fcba081f15d33d9dd948"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 2001,
+      "day_index": 165,
+      "row": 164,
+      "source_shard": "shards/333.0-057.0/2001.npz",
+      "source_shard_sha256": "3e4b40613bb71cbc3c8519813e5b3e89f1d682bfc455e139836737635fbf1216",
+      "metrics": {
+        "soil_wetness": 0.017436489536572997,
+        "soil_temperature_k": 287.1143555834534,
+        "pft14_gpp_daily": 0.16089593786566994,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 0.0054517752232641215,
+        "hydrologic_export": 0.05469919313373868,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "80328c43a2a3d22caa5e865679943f2c66481f263d083fa618ae07ffa3d1f657",
+      "fast_day_target_sha256": "0470c333b23cd2071a9ab45b4de5c4080f411c23087ed1a6bfc5b507f879ff07"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 2004,
+      "day_index": 55,
+      "row": 54,
+      "source_shard": "shards/333.0-057.0/2004.npz",
+      "source_shard_sha256": "5ecd8aa3817d3590c7de138d108490439d8961841e32960572c2c015455da1f3",
+      "metrics": {
+        "soil_wetness": 0.011115109780386528,
+        "soil_temperature_k": 295.34746802607395,
+        "pft14_gpp_daily": 2.651212330941565,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 88.46570606692694,
+        "hydrologic_export": 5.9571970187211995e-12,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "precip_daily:maximum"
+      ],
+      "day_start_state_sha256": "42e47b4ed4ad869f8745fa89845c22e010b32aa7b436863147f44608bfb4df7c",
+      "fast_day_target_sha256": "bfdf22afd59024db7bed1bba6e028c8d35ebc6bb8e3d120f489d81a4f503825c"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 2004,
+      "day_index": 200,
+      "row": 199,
+      "source_shard": "shards/333.0-057.0/2004.npz",
+      "source_shard_sha256": "5ecd8aa3817d3590c7de138d108490439d8961841e32960572c2c015455da1f3",
+      "metrics": {
+        "soil_wetness": 0.017933951879209417,
+        "soil_temperature_k": 283.89674994276015,
+        "pft14_gpp_daily": 2.604507533798492,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 7.950838000397198,
+        "hydrologic_export": 0.0006914093972426053,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "704ae1131c3e1d877b2ef6e6b267a8d71bac64d05d4c00dc2137b9a17700c8e2",
+      "fast_day_target_sha256": "0940101a78de53b50c2ed1b07f6bde52a6920dbac98b4cb1d17019fad0b8a4ae"
+    },
+    {
+      "landpoint_id": "333.0-057.0",
+      "year": 2004,
+      "day_index": 310,
+      "row": 309,
+      "source_shard": "shards/333.0-057.0/2004.npz",
+      "source_shard_sha256": "5ecd8aa3817d3590c7de138d108490439d8961841e32960572c2c015455da1f3",
+      "metrics": {
+        "soil_wetness": 0.01676395095026973,
+        "soil_temperature_k": 292.489512585819,
+        "pft14_gpp_daily": 4.634231586929647,
+        "soil_carbon_proxy": 0.0,
+        "precip_daily": 15.019505457894411,
+        "hydrologic_export": 0.05465302845765536,
+        "peat_hydrology_activity": 0.0,
+        "peat_cover_fraction": 0.0
+      },
+      "selection_reasons": [
+        "rank_space_farthest_fill"
+      ],
+      "day_start_state_sha256": "164edbdc29461d1a0b2eaf2de860e38a2a1adacd91a1cbca00dd65261b0d8edc",
+      "fast_day_target_sha256": "88c863988ed0973048cbe78bd2a7577294f9777a19b8af359e68ed490b2d2f64"
+    }
+  ],
+  "plan_sha256": "8ebe5345ec53a449f41acd46f9a54e692ad71e7ed3ba768e7c1af83863b922c7"
+}

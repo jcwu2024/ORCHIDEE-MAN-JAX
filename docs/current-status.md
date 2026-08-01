@@ -720,6 +720,9 @@ filtered before file access. The first real plan
 `500979ab...d9166a3` is rejected because its old static-`fpeat` proxy was zero.
 The second `f7967d70...09d0f92` plan is also rejected because it required an
 unreachable peat-hydrology branch and ranked tied zeros by date. Neither is a
-capture asset. The replacement must use equal-tie ranks and pass the
-independent selected-row verifier; no accepted real 96-day plan is frozen yet. See
+capture asset. The accepted replacement is frozen at
+`manifests/coarse_graining/ok_leak_auxiliary_capture_96day_v1.json`, canonical
+SHA256 `8ebe5345...3b922c7`. It passes all 19 independent checks over 96 unique
+train-only days, including exact selected-row state and target hashes. The
+next operation is the restartable batch capture implementation. See
 [`ok_leak_auxiliary_capture_selection_protocol_20260731.md`](research/daily_coarse_graining/ok_leak_auxiliary_capture_selection_protocol_20260731.md).

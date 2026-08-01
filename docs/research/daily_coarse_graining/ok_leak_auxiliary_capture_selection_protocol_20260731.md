@@ -10,9 +10,22 @@ capturing the 13 half-hour driver series required by the exact 48-step
 becoming training evidence and prevents a premature 669-point recapture.
 
 The selector and an independent verifier are implemented and unit tested.
-The accepted real 96-day plan has not yet been frozen.
+The accepted real plan is frozen at
+[`../../../manifests/coarse_graining/ok_leak_auxiliary_capture_96day_v1.json`](../../../manifests/coarse_graining/ok_leak_auxiliary_capture_96day_v1.json).
 
-## Superseded First Plan
+- canonical plan SHA256:
+  `8ebe5345ec53a449f41acd46f9a54e692ad71e7ed3ba768e7c1af83863b922c7`;
+- plan-file SHA256:
+  `638cb1c9e5642f49f5c761390ebb32602f9ad2e89688ab6e09e9b2c21eaaf55b`;
+- verifier-report SHA256:
+  `4aacf50e0456a7733efce1b42ddea49982d5a69ba27a218fd6fc9feeb08e1d5a`;
+- verifier result: 19/19 checks passed, sealed test unused.
+
+The plan contains 96 unique days, 16 for each of six train landpoints. Every
+point includes 1961 Day 2 and reaches 2004. Selected PFT14 daily GPP spans
+zero-productivity cases through `12.1798` in the plan's source units.
+
+## Superseded Plans
 
 The first server-side selection attempt on 2026-08-01 produced plan SHA256
 `500979ab01357c9f1acde59513667f6a98034438b4c70590f15ebfff3d9166a3`.
@@ -20,10 +33,12 @@ Its source hashes, split isolation, counts, and 96 unique days were correct,
 but all six train landpoints had `fpeat == 0`. The attempt exposed that static
 peat-cover fraction was the wrong proxy for active PERMA_PEAT driver coverage.
 
-That plan is rejected and must not be used for capture or training. The
-selector now uses direct `shumdiag_peat + runoff2peat` activity as a seventh
-dynamic metric. A replacement plan must pass the independent verifier before
-it is frozen.
+That plan is rejected and must not be used for capture or training. A second
+plan, canonical SHA256
+`f7967d70850f980a102f088069d6a51789183825d9be76fa5753e0fdf09d0f92`,
+is also rejected: it exposed zero peat-hydrology activity but incorrectly
+required an unreachable HYDROL-local branch to vary and ranked tied zeros by
+date. Only the accepted `8ebe5345...3b922c7` plan may be used.
 
 ## Admitted Source
 
@@ -107,9 +122,9 @@ python -m scripts.dev.plan_ok_leak_driver_capture \
   --output runtime/plans/ok_leak_auxiliary_capture_96day.json
 ```
 
-Do not capture drivers until the generated plan is reviewed for all expected
-landpoints, anchor reasons, year/day ranges, source hashes, selected count,
-and `sealed_test_used: false`, then frozen by its `plan_sha256`.
+The accepted plan has been reviewed for all expected landpoints, anchor
+reasons, year/day ranges, source hashes, selected count, and
+`sealed_test_used: false`.
 
 Verify the replacement plan independently against the real selected shard
 rows:

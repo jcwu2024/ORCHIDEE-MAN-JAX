@@ -1039,14 +1039,19 @@ contract fields because the audited HYDROL-local SAVE state is statically
 `peat_hydro=F/branch_peat=F`; changing landpoint or forcing cannot activate
 them. `PERMA_PEAT` carbon redistribution remains in the exact scan. Static
 `fpeat` is report-only. The selector verifies every admitted shard hash and
-filters all non-train/train references before opening a shard. The real server-side
-accepted plan has not yet been frozen. The first server plan
+filters all non-train/train references before opening a shard. The accepted
+plan is frozen at
+`manifests/coarse_graining/ok_leak_auxiliary_capture_96day_v1.json`, canonical
+SHA256 `8ebe5345...3b922c7`. Its independent verifier passes all 19 checks,
+including exact selected-row state/target hashes and sealed-test exclusion.
+The first server plan
 `500979ab...d9166a3` is rejected because it used static `fpeat`. The second
 plan `f7967d70...09d0f92` is also rejected: its verifier correctly exposed
 zero peat activity, but that gate confused an unreachable HYDROL branch with
 required coverage and the old rank logic ordered tied zeros. Never use either
-plan for capture. Regenerate with equal-tie ranks and require the independent
-selected-row verifier to pass before implementing the batch capture. See
+plan for capture. The accepted plan uses equal-tie ranks and passes the
+independent selected-row verifier. The next operation is the restartable batch
+capture implementation, not another selection run. See
 [`ok_leak_auxiliary_capture_selection_protocol_20260731.md`](ok_leak_auxiliary_capture_selection_protocol_20260731.md).
 
 The prepared v4 subset is
