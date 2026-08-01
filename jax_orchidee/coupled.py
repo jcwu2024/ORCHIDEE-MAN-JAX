@@ -36,7 +36,6 @@ from jax_orchidee.stomate.entry import (
     stomate_driver_entry_source,
     stomate_no_routing_entry_source,
 )
-from jax_orchidee.stomate.daily_inputs import MIN_STOMATE
 from jax_orchidee.stomate.integration import (
     ExplicitDailyCarbonScheduledGppMaintenancePrescribeConstraintsAllocKillGapTurnoverResult,
     ExplicitOkLeakFromPostNppResult,
@@ -2959,7 +2958,6 @@ def stomate_restart_input_bundles(
         "pheno_is_none": pheno_is_none,
         "ok_dgvm": ok_dgvm,
         "lpj_gap_const_mort": lpj_gap_const_mort,
-        "min_stomate": MIN_STOMATE,
     }
     if bool(stomate_restart_none):
         prescribe_inputs["stomate_restart_none"] = True
@@ -3008,7 +3006,6 @@ def stomate_restart_input_bundles(
         "alloc_agr_st": alloc_agr_st,
         "alloc_agr_pn": alloc_agr_pn,
         "dt_days": dt_days,
-        "min_stomate": MIN_STOMATE,
     }
     post_npp_inputs = {
         "frac_growthresp": frac_growthresp,
@@ -3066,7 +3063,6 @@ def stomate_restart_input_bundles(
         "lpj_gap_const_mort": lpj_gap_const_mort,
         "ok_dgvm": ok_dgvm,
         "dt_days": dt_days,
-        "min_stomate": MIN_STOMATE,
         "vcmax25": vcmax25,
         "n_limfert": n_limfert_value,
         "leaf_timecst": leaf_timecst,

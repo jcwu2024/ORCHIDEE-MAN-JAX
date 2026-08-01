@@ -807,23 +807,11 @@ def season_annual_step(
     green_age = jnp.where(
         natural_arr[None, :], green_age_base[None, :] * lm_lastyearmax, 0.0
     )
-    has_lastyear_leaf_mass = lm_lastyearmax > 0.0
-    safe_lm_lastyearmax = jnp.where(
-        has_lastyear_leaf_mass,
-        lm_lastyearmax,
-        1.0,
-    )
-    green_age = jnp.where(
-        has_lastyear_leaf_mass,
-        green_age / safe_lm_lastyearmax,
-        1.0,
-    )
+    green_age = jnp.where(lm_lastyearmax > 0.0, green_age / lm_lastyearmax, 1.0)
     consumption = hvc1 * (nlflong_nat**hvc2)
-    herbivory_active = natural_arr[None, :] & (nlflong_nat > 0.0)
-    safe_consumption = jnp.where(herbivory_active, consumption, 1.0)
     herbivores = jnp.where(
-        herbivory_active,
-        one_year * green_age * nlflong_nat / safe_consumption,
+        natural_arr[None, :] & (nlflong_nat > 0.0),
+        one_year * green_age * nlflong_nat / consumption,
         100000.0,
     )
     herbivores = herbivores.at[:, 0].set(0.0)

@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from jax import config, core, custom_jvp, jit
+from jax import config, core, jit
 
 config.update("jax_enable_x64", True)
 
@@ -3596,22 +3596,6 @@ def _remap_litter_doc_export(export_pool, pool: int, lignin_above, lignin_below)
     return export_pool
 
 
-@custom_jvp
-def _sqrt_with_finite_zero_tangent(value):
-    """Keep the source primal while choosing the zero subgradient at zero."""
-
-    return jnp.sqrt(jnp.asarray(value))
-
-
-@_sqrt_with_finite_zero_tangent.defjvp
-def _sqrt_with_finite_zero_tangent_jvp(primals, tangents):
-    (value,), (tangent,) = primals, tangents
-    result = jnp.sqrt(value)
-    safe_result = jnp.where(value == 0.0, jnp.ones_like(result), result)
-    derivative = jnp.where(value == 0.0, jnp.zeros_like(result), 0.5 / safe_result)
-    return result, derivative * tangent
-
-
 def soilcarbon_leak_doc_export(
     doc,
     soilwater_31mm,
@@ -3696,11 +3680,7 @@ def soilcarbon_leak_doc_export(
     if cue_coef.shape != (npts,):
         raise ValueError("cue_coef must be scalar or have shape (npts,)")
 
-    fastr_corr = jnp.maximum(
-        _sqrt_with_finite_zero_tangent(fastr)
-        / jnp.sqrt(jnp.asarray(fastr_ref, dtype=doc.dtype)),
-        0.0,
-    )
+    fastr_corr = jnp.maximum(jnp.sqrt(fastr) / jnp.sqrt(jnp.asarray(fastr_ref, dtype=doc.dtype)), 0.0)
     doc_run = jnp.zeros((npts, nvm, NPOOL, nelements), dtype=doc.dtype)
     doc_drain = jnp.zeros_like(doc_run)
     doc_flood = jnp.zeros_like(doc_run)
