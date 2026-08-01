@@ -18,6 +18,7 @@ from research.daily_coarse_graining.canonical_teacher_reentry import (
     teacher_reentry_templates,
 )
 from research.daily_coarse_graining.carbon_budget_ownership import (
+    OK_LEAK_DRIVER_SERIES,
     extract_ok_leak_driver_series,
     ok_leak_driver_capture_metadata,
 )
@@ -241,6 +242,42 @@ def _capture_probe_passes(
     )
 
 
+def _load_replay_driver_steps(path: Path) -> teacher.DriverCompiledOkLeakStepInputs:
+    expected = tuple(item.field for item in OK_LEAK_DRIVER_SERIES)
+    with np.load(path, allow_pickle=False) as payload:
+        if tuple(payload.files) != expected:
+            raise ValueError("persisted OK_LEAK driver schema/order drift")
+        arrays = {name: np.asarray(payload[name]).copy() for name in expected}
+    if {int(value.shape[0]) for value in arrays.values()} != {48}:
+        raise ValueError("persisted OK_LEAK drivers must contain exactly 48 steps")
+    if not all(np.issubdtype(value.dtype, np.floating) for value in arrays.values()):
+        raise ValueError("persisted OK_LEAK drivers must be floating point")
+    if not all(np.all(np.isfinite(value)) for value in arrays.values()):
+        raise ValueError("persisted OK_LEAK drivers contain nonfinite values")
+    return teacher.DriverCompiledOkLeakStepInputs(**arrays)
+
+
+def _replayed_ok_leak_endpoint_comparisons(
+    replayed,
+    expected_target,
+    leaves,
+) -> Mapping[str, Mapping[str, Any]]:
+    final_carry, last_result = replayed
+    actual = teacher._compiled_ok_leak_updates(final_carry)
+    actual["deepC_peat"] = last_result.soilcarbon.deepc_peat
+    comparisons = {}
+    for leaf in leaves:
+        if leaf.family != "ok_leak":
+            continue
+        if len(leaf.path) != 1 or leaf.path[0] not in actual:
+            raise ValueError(f"unsupported persisted OK_LEAK endpoint: {leaf.key}")
+        comparisons[f"{leaf.family}.{leaf.path[0]}"] = _array_comparison(
+            np.asarray(actual[leaf.path[0]]).reshape(-1),
+            np.asarray(expected_target)[leaf.start : leaf.stop],
+        )
+    return comparisons
+
+
 def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
     manifest_path = args.dataset_manifest.resolve()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -338,8 +375,13 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
         name: _array_comparison(arrays[name], getattr(original_steps, name))
         for name in arrays
     }
+    replay_driver_npz = getattr(args, "replay_driver_npz", None)
     replay_call = dict(captured_call)
-    replay_call["steps"] = teacher.DriverCompiledOkLeakStepInputs(**arrays)
+    replay_call["steps"] = (
+        teacher.DriverCompiledOkLeakStepInputs(**arrays)
+        if replay_driver_npz is None
+        else _load_replay_driver_steps(replay_driver_npz.resolve())
+    )
     replayed = original_scan(**replay_call)
     replay_tree = _max_tree_difference(replayed, captured_return["value"])
 
@@ -353,6 +395,26 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
         contract.fast_day_target_leaves,
     )
     ok_leak_comparisons = _ok_leak_endpoint_comparisons(target_leaf_comparisons)
+    persisted_replay_comparisons = (
+        None
+        if replay_driver_npz is None
+        else _replayed_ok_leak_endpoint_comparisons(
+            replayed,
+            shard.fast_day_target[row],
+            contract.fast_day_target_leaves,
+        )
+    )
+    persisted_replay_passed = (
+        None
+        if persisted_replay_comparisons is None
+        else bool(
+            persisted_replay_comparisons
+            and all(
+                _within_tolerance(item, 1.0e-12)
+                for item in persisted_replay_comparisons.values()
+            )
+        )
+    )
     observed_state, observed_discrete = extract_state(
         record.expected_result.day_end_state,
         contract,
@@ -385,11 +447,15 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
         np.savez_compressed(handle, **arrays)
     arrays_temporary.replace(arrays_path)
     capture_metadata = ok_leak_driver_capture_metadata(arrays)
-    passed = _capture_probe_passes(
-        source_driver_comparisons,
-        replay_tree,
-        ok_leak_comparisons,
-        discrete_comparison,
+    passed = (
+        _capture_probe_passes(
+            source_driver_comparisons,
+            replay_tree,
+            ok_leak_comparisons,
+            discrete_comparison,
+        )
+        if persisted_replay_passed is None
+        else persisted_replay_passed
     )
     report = {
         "schema_version": "ok_leak_driver_capture_probe_v2",
@@ -412,6 +478,16 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
         "capture_npz_sha256": _sha256_file(arrays_path),
         "source_driver_comparisons": source_driver_comparisons,
         "exact_scan_replay": replay_tree,
+        "persisted_driver_npz": (
+            None if replay_driver_npz is None else str(replay_driver_npz.resolve())
+        ),
+        "persisted_driver_npz_sha256": (
+            None
+            if replay_driver_npz is None
+            else _sha256_file(replay_driver_npz.resolve())
+        ),
+        "persisted_ok_leak_endpoint_comparisons": persisted_replay_comparisons,
+        "persisted_ok_leak_endpoint_within_1e-12": persisted_replay_passed,
         "fast_day_target": target_comparison,
         "fast_day_target_leaves": target_leaf_comparisons,
         "ok_leak_endpoint_within_1e-12": all(
@@ -437,6 +513,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--year", type=int, required=True)
     parser.add_argument("--day-index", type=int, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--replay-driver-npz", type=Path)
     return parser
 
 

@@ -1,12 +1,16 @@
 from __future__ import annotations
 
+from types import SimpleNamespace
+
 import numpy as np
 import pytest
 
+from jax_orchidee.driver.orchestration import DriverCompiledOkLeakCarry
 from scripts.dev.probe_ok_leak_driver_capture import (
     _array_comparison,
     _capture_probe_passes,
     _ok_leak_endpoint_comparisons,
+    _replayed_ok_leak_endpoint_comparisons,
     _within_tolerance,
 )
 
@@ -106,3 +110,63 @@ def test_probe_gate_rejects_ok_leak_or_empty_endpoint_evidence():
         {},
         arguments[3],
     )
+
+
+def test_persisted_replay_compares_carry_and_derived_peat_endpoints():
+    carry = DriverCompiledOkLeakCarry(
+        litter_above=np.asarray([1.0, 2.0]),
+        litter_below=np.asarray([0.0]),
+        lignin_struc_above=np.asarray([0.0]),
+        lignin_struc_below=np.asarray([0.0]),
+        litterpart=np.asarray([0.0]),
+        dead_leaves=np.asarray([0.0]),
+        fuel_1hr=np.asarray([0.0]),
+        fuel_10hr=np.asarray([0.0]),
+        fuel_100hr=np.asarray([0.0]),
+        fuel_1000hr=np.asarray([0.0]),
+        carbon_32l=np.asarray([0.0]),
+        doc=np.asarray([3.0]),
+        interception_storage=np.asarray([0.0]),
+    )
+    replayed = (
+        carry,
+        SimpleNamespace(
+            soilcarbon=SimpleNamespace(deepc_peat=np.asarray([4.0]))
+        ),
+    )
+    leaves = (
+        SimpleNamespace(
+            family="ok_leak",
+            path=("litter_above",),
+            key="ok_leak.litter_above",
+            start=0,
+            stop=2,
+        ),
+        SimpleNamespace(
+            family="ok_leak",
+            path=("DOC",),
+            key="ok_leak.DOC",
+            start=2,
+            stop=3,
+        ),
+        SimpleNamespace(
+            family="ok_leak",
+            path=("deepC_peat",),
+            key="ok_leak.deepC_peat",
+            start=3,
+            stop=4,
+        ),
+    )
+
+    comparisons = _replayed_ok_leak_endpoint_comparisons(
+        replayed,
+        np.asarray([1.0, 2.0, 3.0, 4.0]),
+        leaves,
+    )
+
+    assert set(comparisons) == {
+        "ok_leak.litter_above",
+        "ok_leak.DOC",
+        "ok_leak.deepC_peat",
+    }
+    assert all(item["exact"] for item in comparisons.values())
