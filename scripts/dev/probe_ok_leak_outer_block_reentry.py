@@ -11,6 +11,7 @@ import jax
 import numpy as np
 
 from jax_orchidee.driver import orchestration as teacher
+from jax_orchidee.stomate import soilcarbon_kernels
 from research.daily_coarse_graining.canonical_teacher_reentry import (
     teacher_reentry_packet,
     teacher_reentry_templates,
@@ -38,6 +39,17 @@ from scripts.dev.probe_ok_leak_driver_capture import (
 _REENTRY_ONLY_DAILY_ACCUMULATORS = frozenset(
     {"flood_root_radia", "resp_maint_part", "resp_maint_radia"}
 )
+
+
+def _configure_doc_sqrt_mode(mode: str) -> None:
+    """Select a diagnostic-only DOC sqrt graph before the first JAX trace."""
+
+    if mode == "production":
+        return
+    if mode == "raw_sqrt":
+        soilcarbon_kernels._sqrt_with_finite_zero_tangent = jax.numpy.sqrt
+        return
+    raise ValueError(f"unsupported DOC sqrt mode: {mode}")
 
 
 def _normalize_daily_accumulator_schema(packet, produced_packet):
@@ -79,6 +91,7 @@ def _normalize_daily_accumulator_schema(packet, produced_packet):
 
 
 def run_probe(args: argparse.Namespace):
+    _configure_doc_sqrt_mode(args.doc_sqrt_mode)
     manifest_path = args.dataset_manifest.resolve()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     contract = daily_markov_contract_from_metadata(manifest["markov_contract"])
@@ -286,6 +299,7 @@ def run_probe(args: argparse.Namespace):
         "landpoint_id": args.landpoint_id,
         "year": args.year,
         "day_index": args.day_index,
+        "doc_sqrt_mode": args.doc_sqrt_mode,
         "source_shard": str(shard_path),
         "day_start_state_sha256": _sha256_array(shard.state_trajectory[row]),
         "reentry_schema_adjustments": schema_adjustments,
@@ -313,6 +327,12 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--landpoint-id", required=True)
     parser.add_argument("--year", type=int, required=True)
     parser.add_argument("--day-index", type=int, required=True)
+    parser.add_argument(
+        "--doc-sqrt-mode",
+        choices=("production", "raw_sqrt"),
+        default="production",
+        help="Diagnostic DOC sqrt graph; raw_sqrt reproduces the Teacher formula graph.",
+    )
     parser.add_argument("--output", type=Path, required=True)
     return parser
 
