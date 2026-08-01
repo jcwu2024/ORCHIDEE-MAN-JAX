@@ -1031,12 +1031,18 @@ The real capture evidence is in
 
 The deterministic bounded selector is also implemented and tested. Its
 frozen policy selects 16 days per each of the six train landpoints: earliest
-train day, low/high extrema for six dynamic process metrics, then rank-space
+train day, low/high extrema for seven dynamic process metrics, then rank-space
 farthest fill. The intended real plan has 96 days and about 44.58 MiB of
-uncompressed driver labels. It verifies every admitted shard hash and filters
+uncompressed driver labels. The seventh dynamic metric is direct
+`shumdiag_peat + runoff2peat` activity; static `fpeat` is report-only and
+cannot establish peat-process coverage. The selector verifies every admitted
+shard hash and filters
 all non-train/train references before opening a shard. The real server-side
-plan has not yet been generated; run and review it before implementing the
-batch capture. See
+accepted plan has not yet been frozen. The first server plan
+`500979ab...d9166a3` is rejected because it used static `fpeat`, which was zero
+for all six train points; never use it for capture. Regenerate with the direct
+peat-activity metric and require the independent selected-row verifier to
+pass before implementing the batch capture. See
 [`ok_leak_auxiliary_capture_selection_protocol_20260731.md`](ok_leak_auxiliary_capture_selection_protocol_20260731.md).
 
 The prepared v4 subset is

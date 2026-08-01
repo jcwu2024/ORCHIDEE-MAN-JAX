@@ -14,6 +14,7 @@ from research.daily_coarse_graining.ok_leak_capture_selection import (
     build_bounded_capture_plan,
     capture_selection_metrics,
     select_bounded_capture_records,
+    verify_bounded_capture_plan,
 )
 
 
@@ -48,6 +49,8 @@ def _synthetic_contract():
             _leaf("daily_interface.precip_daily", 4, 5, (1,)),
             _leaf("hydrol_previous_step_state.runoff_per_soil", 5, 7, (1, 2)),
             _leaf("hydrol_previous_step_state.drainage_per_soil", 7, 9, (1, 2)),
+            _leaf("hydrol_previous_step_state.runoff2peat", 9, 11, (1, 2)),
+            _leaf("hydrol_previous_step_state.shumdiag_peat", 11, 13, (1, 2)),
         ),
     )
 
@@ -65,10 +68,10 @@ def _synthetic_shard():
     )
     targets = np.asarray(
         [
-            [280.0, 282.0, 999.0, 1.0, 0.0, 0.0, 0.1, 0.0, 0.2],
-            [282.0, 284.0, 999.0, 2.0, 1.0, 0.1, 0.2, 0.2, 0.3],
-            [284.0, 286.0, 999.0, 3.0, 2.0, 0.2, 0.3, 0.3, 0.4],
-            [286.0, 288.0, 999.0, 4.0, 3.0, 0.3, 0.4, 0.4, 0.5],
+            [280.0, 282.0, 999.0, 1.0, 0.0, 0.0, 0.1, 0.0, 0.2, 0.0, 0.1, 0.2, 0.3],
+            [282.0, 284.0, 999.0, 2.0, 1.0, 0.1, 0.2, 0.2, 0.3, 0.1, 0.2, 0.3, 0.4],
+            [284.0, 286.0, 999.0, 3.0, 2.0, 0.2, 0.3, 0.3, 0.4, 0.2, 0.3, 0.4, 0.5],
+            [286.0, 288.0, 999.0, 4.0, 3.0, 0.3, 0.4, 0.4, 0.5, 0.3, 0.4, 0.5, 0.6],
         ],
         dtype=np.float64,
     )
@@ -97,7 +100,8 @@ def test_capture_selection_metrics_use_pft14_and_source_fields():
     np.testing.assert_allclose(metrics["soil_carbon_proxy"], [3.0, 5.0, 7.0, 9.0])
     np.testing.assert_allclose(metrics["precip_daily"], [0.0, 1.0, 2.0, 3.0])
     np.testing.assert_allclose(metrics["hydrologic_export"], [0.3, 0.8, 1.2, 1.6])
-    np.testing.assert_allclose(metrics["peat_fraction"], 0.25)
+    np.testing.assert_allclose(metrics["peat_hydrology_activity"], [0.6, 1.0, 1.4, 1.8])
+    np.testing.assert_allclose(metrics["peat_cover_fraction"], 0.25)
 
 
 def _candidate_records():
@@ -108,7 +112,7 @@ def _candidate_records():
                 name: float((metric_index + 1) * index + point_offset)
                 for metric_index, name in enumerate(DYNAMIC_SELECTION_METRICS)
             }
-            metrics["peat_fraction"] = float(point_offset)
+            metrics["peat_cover_fraction"] = float(point_offset)
             records.append(
                 {
                     "landpoint_id": landpoint_id,
@@ -174,7 +178,7 @@ def test_plan_builder_never_opens_sealed_split(tmp_path, monkeypatch):
         days = 30
         shards[path.resolve()] = MarkovShard(
             state_trajectory=np.arange((days + 1) * 5, dtype=np.float64).reshape(days + 1, 5),
-            fast_day_target=np.arange(days * 9, dtype=np.float64).reshape(days, 9),
+            fast_day_target=np.arange(days * 13, dtype=np.float64).reshape(days, 13),
             forcing_native=np.zeros((days, 1, 1)),
             forcing_record_indices=np.zeros((days, 1), dtype=np.int32),
             parameters=np.zeros((1,)),
@@ -214,7 +218,7 @@ def test_plan_builder_never_opens_sealed_split(tmp_path, monkeypatch):
         return {
             name: base * (index + 1)
             for index, name in enumerate(DYNAMIC_SELECTION_METRICS)
-        } | {"peat_fraction": np.full(shard.days, 0.5)}
+        } | {"peat_cover_fraction": np.full(shard.days, 0.5)}
 
     monkeypatch.setattr(selection, "capture_selection_metrics", fake_metrics)
 
@@ -227,3 +231,9 @@ def test_plan_builder_never_opens_sealed_split(tmp_path, monkeypatch):
     assert plan["selected_landpoints"] == ["001.0-071.0", "069.0-119.0"]
     assert len(plan["plan_sha256"]) == 64
     assert all(item["landpoint_id"] != "sealed" for item in plan["records"])
+
+    plan_path = tmp_path / "capture_plan.json"
+    plan_path.write_text(json.dumps(plan), encoding="utf-8")
+    verification = verify_bounded_capture_plan(plan_path, manifest_path, root)
+    assert verification["passed"]
+    assert all(item["passed"] for item in verification["checks"])

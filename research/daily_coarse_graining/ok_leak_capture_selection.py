@@ -24,8 +24,9 @@ DYNAMIC_SELECTION_METRICS = (
     "soil_carbon_proxy",
     "precip_daily",
     "hydrologic_export",
+    "peat_hydrology_activity",
 )
-ALL_SELECTION_METRICS = (*DYNAMIC_SELECTION_METRICS, "peat_fraction")
+ALL_SELECTION_METRICS = (*DYNAMIC_SELECTION_METRICS, "peat_cover_fraction")
 DEFAULT_SAMPLES_PER_LANDPOINT = 16
 MINIMUM_EXTREMA_CAPACITY = 1 + 2 * len(DYNAMIC_SELECTION_METRICS)
 
@@ -153,6 +154,16 @@ def capture_selection_metrics(
         target_leaves,
         "hydrol_previous_step_state.drainage_per_soil",
     )
+    runoff2peat = _leaf_values(
+        targets,
+        target_leaves,
+        "hydrol_previous_step_state.runoff2peat",
+    )
+    shumdiag_peat = _leaf_values(
+        targets,
+        target_leaves,
+        "hydrol_previous_step_state.shumdiag_peat",
+    )
     peat = _leaf_values(
         states,
         state_leaves,
@@ -165,7 +176,9 @@ def capture_selection_metrics(
         "soil_carbon_proxy": _row_sum(soil_carbon),
         "precip_daily": _row_sum(precipitation),
         "hydrologic_export": _row_sum(runoff) + _row_sum(drainage),
-        "peat_fraction": _row_mean(peat),
+        "peat_hydrology_activity": _row_sum(np.abs(runoff2peat))
+        + _row_sum(np.abs(shumdiag_peat)),
+        "peat_cover_fraction": _row_mean(peat),
     }
     invalid = {
         name: int(np.count_nonzero(~np.isfinite(value)))
@@ -345,3 +358,156 @@ def build_bounded_capture_plan(
         "records": final_records,
     }
     return plan | {"plan_sha256": _canonical_sha256(plan)}
+
+
+def verify_bounded_capture_plan(
+    plan_path: Path,
+    dataset_manifest: Path,
+    dataset_root: Path,
+) -> Mapping[str, Any]:
+    """Independently verify plan identity, split scope, anchors, and selected rows."""
+
+    plan = json.loads(plan_path.resolve().read_text(encoding="utf-8"))
+    manifest_path = dataset_manifest.resolve()
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    root = dataset_root.resolve()
+    checks = []
+
+    def check(check_id: str, passed: bool, detail: Any) -> None:
+        checks.append({"id": check_id, "passed": bool(passed), "detail": detail})
+
+    unsigned_plan = {key: value for key, value in plan.items() if key != "plan_sha256"}
+    observed_plan_hash = _canonical_sha256(unsigned_plan)
+    check("schema", plan.get("schema_version") == "ok_leak_auxiliary_capture_plan_v1", plan.get("schema_version"))
+    check("plan_sha256", plan.get("plan_sha256") == observed_plan_hash, observed_plan_hash)
+    check("sealed_test_unused", plan.get("sealed_test_used") is False, plan.get("sealed_test_used"))
+    check(
+        "split_policy",
+        plan.get("split_policy") == {"spatial_split": "train", "temporal_split": "train"},
+        plan.get("split_policy"),
+    )
+    for field in ("dataset_id", "teacher_git_head", "markov_contract_sha256"):
+        check(f"manifest_{field}", plan.get(field) == manifest.get(field), plan.get(field))
+    check(
+        "dataset_manifest_sha256",
+        plan.get("dataset_manifest_sha256") == _sha256_file(manifest_path),
+        plan.get("dataset_manifest_sha256"),
+    )
+
+    references = tuple(
+        item
+        for item in manifest["shards"]
+        if item["spatial_split"] == "train" and item["temporal_split"] == "train"
+    )
+    expected_sources = {
+        item["shard"]: item["shard_sha256"]
+        for item in references
+    }
+    check("source_shard_inventory", plan.get("source_shards") == expected_sources, len(expected_sources))
+    check("candidate_shard_count", plan.get("candidate_shard_count") == len(references), len(references))
+
+    records = tuple(plan.get("records", ()))
+    policy = plan.get("selection_policy", {})
+    samples_per_landpoint = int(policy.get("samples_per_landpoint", -1))
+    expected_landpoints = sorted({item["landpoint_id"] for item in references})
+    expected_days = len(expected_landpoints) * samples_per_landpoint
+    check("selected_landpoints", plan.get("selected_landpoints") == expected_landpoints, expected_landpoints)
+    check("selected_day_count", len(records) == plan.get("selected_day_count") == expected_days, len(records))
+    check(
+        "estimated_driver_bytes",
+        plan.get("estimated_uncompressed_driver_bytes") == len(records) * 486_912,
+        plan.get("estimated_uncompressed_driver_bytes"),
+    )
+    identities = tuple(_record_key(item) for item in records)
+    check("unique_day_identity", len(identities) == len(set(identities)), len(set(identities)))
+
+    grouped: dict[str, list[Mapping[str, Any]]] = defaultdict(list)
+    for record in records:
+        grouped[str(record["landpoint_id"])].append(record)
+    count_detail = {name: len(grouped.get(name, ())) for name in expected_landpoints}
+    check(
+        "per_landpoint_count",
+        all(value == samples_per_landpoint for value in count_detail.values()),
+        count_detail,
+    )
+    missing_reasons = []
+    for landpoint_id in expected_landpoints:
+        reasons = {
+            reason
+            for record in grouped.get(landpoint_id, ())
+            for reason in record.get("selection_reasons", ())
+        }
+        required = {"earliest_train_day"} | {
+            f"{name}:{bound}"
+            for name in DYNAMIC_SELECTION_METRICS
+            for bound in ("minimum", "maximum")
+        }
+        missing_reasons.extend(
+            f"{landpoint_id}:{reason}" for reason in sorted(required - reasons)
+        )
+    check("mandatory_anchor_reasons", not missing_reasons, missing_reasons)
+
+    metric_errors = []
+    for record in records:
+        metrics = record.get("metrics", {})
+        if tuple(metrics) != ALL_SELECTION_METRICS:
+            metric_errors.append(f"{_record_key(record)}:schema")
+        elif not all(np.isfinite(float(value)) for value in metrics.values()):
+            metric_errors.append(f"{_record_key(record)}:nonfinite")
+    check("metric_schema_and_finiteness", not metric_errors, metric_errors)
+    peat_activity = np.asarray(
+        [item.get("metrics", {}).get("peat_hydrology_activity", np.nan) for item in records],
+        dtype=np.float64,
+    )
+    peat_detail = {
+        "minimum": float(np.nanmin(peat_activity)) if peat_activity.size else None,
+        "maximum": float(np.nanmax(peat_activity)) if peat_activity.size else None,
+    }
+    check(
+        "peat_hydrology_activity_covered",
+        bool(
+            peat_activity.size
+            and np.all(np.isfinite(peat_activity))
+            and np.max(peat_activity) > np.min(peat_activity)
+            and np.max(peat_activity) > 0.0
+        ),
+        peat_detail,
+    )
+
+    contract = daily_markov_contract_from_metadata(manifest["markov_contract"])
+    shard_cache = {}
+    selected_row_errors = []
+    for record in records:
+        shard_name = record["source_shard"]
+        if shard_name not in expected_sources or record.get("source_shard_sha256") != expected_sources.get(shard_name):
+            selected_row_errors.append(f"{_record_key(record)}:source")
+            continue
+        if shard_name not in shard_cache:
+            shard_path = (root / shard_name).resolve()
+            if _sha256_file(shard_path) != expected_sources[shard_name]:
+                selected_row_errors.append(f"{shard_name}:file_hash")
+                continue
+            shard_cache[shard_name] = load_markov_shard(shard_path, contract=contract)
+        shard = shard_cache.get(shard_name)
+        if shard is None:
+            continue
+        row = int(record["row"])
+        if row < 0 or row >= shard.days:
+            selected_row_errors.append(f"{_record_key(record)}:row")
+            continue
+        if int(shard.year) != int(record["year"]) or int(shard.day_index[row]) != int(record["day_index"]):
+            selected_row_errors.append(f"{_record_key(record)}:identity")
+        if _sha256_array(shard.state_trajectory[row]) != record.get("day_start_state_sha256"):
+            selected_row_errors.append(f"{_record_key(record)}:state_hash")
+        if _sha256_array(shard.fast_day_target[row]) != record.get("fast_day_target_sha256"):
+            selected_row_errors.append(f"{_record_key(record)}:target_hash")
+    check("selected_source_rows", not selected_row_errors, selected_row_errors)
+
+    return {
+        "schema_version": "ok_leak_auxiliary_capture_plan_verification_v1",
+        "passed": all(item["passed"] for item in checks),
+        "plan": str(plan_path.resolve()),
+        "plan_sha256": plan.get("plan_sha256"),
+        "sealed_test_used": False,
+        "checks": checks,
+    }

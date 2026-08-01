@@ -9,9 +9,21 @@ capturing the 13 half-hour driver series required by the exact 48-step
 `OK_LEAK` scan. This protocol prevents an arbitrary one-point smoke from
 becoming training evidence and prevents a premature 669-point recapture.
 
-The selector is implemented, unit tested, and ready to run against the
-existing server-side v5 dataset. The real 96-day plan has not yet been
-materialized or frozen.
+The selector and an independent verifier are implemented and unit tested.
+The accepted real 96-day plan has not yet been frozen.
+
+## Superseded First Plan
+
+The first server-side selection attempt on 2026-08-01 produced plan SHA256
+`500979ab01357c9f1acde59513667f6a98034438b4c70590f15ebfff3d9166a3`.
+Its source hashes, split isolation, counts, and 96 unique days were correct,
+but all six train landpoints had `fpeat == 0`. The attempt exposed that static
+peat-cover fraction was the wrong proxy for active PERMA_PEAT driver coverage.
+
+That plan is rejected and must not be used for capture or training. The
+selector now uses direct `shumdiag_peat + runoff2peat` activity as a seventh
+dynamic metric. A replacement plan must pass the independent verifier before
+it is frozen.
 
 ## Admitted Source
 
@@ -31,7 +43,7 @@ fast-day target by SHA256.
 
 ## Metrics
 
-For each candidate day the selector reads seven source-backed condition
+For each candidate day the selector reads eight source-backed condition
 metrics:
 
 1. `soil_wetness`: mean day-start `hydrol.soil_mc`;
@@ -42,7 +54,10 @@ metrics:
    diversity ranking and not claimed as the full scientific carbon inventory;
 5. `precip_daily`: Teacher daily precipitation;
 6. `hydrologic_export`: endpoint runoff plus drainage across soil tiles;
-7. `peat_fraction`: day-start `stomate.fpeat`.
+7. `peat_hydrology_activity`: absolute endpoint `shumdiag_peat` plus
+   `runoff2peat`, the direct available proxy for the PERMA_PEAT scan drivers;
+8. `peat_cover_fraction`: day-start `stomate.fpeat`, retained as a reported
+   static condition but not used as the dynamic peat-activity gate.
 
 Nonfinite values and ORCHIDEE `+/-1e20` sentinels are excluded. A candidate
 set with an invalid metric row is rejected rather than silently imputed.
@@ -54,16 +69,16 @@ total:
 
 1. retain the earliest available train day, normally 1961 Day 2 after the
    canonical cold-start day;
-2. retain the minimum and maximum of each of the six dynamic metrics within
+2. retain the minimum and maximum of each of the seven dynamic metrics within
    that landpoint;
 3. merge duplicate anchors and fill the remaining slots by deterministic
    farthest-point selection in per-landpoint metric-rank plus time-rank space;
 4. break all ties by landpoint, year, and day order.
 
 This gives every train landpoint equal representation, preserves cold-start
-and named process extremes, and adds multidimensional interior coverage. Peat
-fraction is a condition metric and is covered across landpoints; it is not
-used as a within-landpoint dynamic axis because it is normally static.
+and named process extremes, and adds multidimensional interior coverage.
+`peat_cover_fraction` is not accepted as evidence of active peat hydrology;
+the dynamic selection uses `shumdiag_peat` and `runoff2peat` instead.
 
 At the measured 486,912 uncompressed bytes per selected day, 96 captures
 require 46,743,552 bytes, or 44.58 MiB, before NPZ compression. This is small
@@ -85,6 +100,23 @@ python -m scripts.dev.plan_ok_leak_driver_capture \
 Do not capture drivers until the generated plan is reviewed for all expected
 landpoints, anchor reasons, year/day ranges, source hashes, selected count,
 and `sealed_test_used: false`, then frozen by its `plan_sha256`.
+
+Verify the replacement plan independently against the real selected shard
+rows:
+
+```bash
+PYTHONPATH="$PWD" \
+python -m scripts.dev.verify_ok_leak_driver_capture_plan \
+  --plan runtime/plans/ok_leak_auxiliary_capture_96day_CURRENT.json \
+  --dataset-manifest runtime/outputs/training/pft14-daily-teacher-9point-1961-2010-v5-4c0f886/dataset_manifest.json \
+  --dataset-root runtime/outputs/training/pft14-daily-teacher-9point-1961-2010-v5-4c0f886 \
+  --output runtime/outputs/diagnostics/ok_leak_auxiliary_capture_plan_verification.json
+```
+
+The verifier recomputes the self-hash, source-manifest identity, exact
+train-only source inventory, quotas and mandatory anchors, nonzero/varying
+peat-hydrology activity, and every selected row's year/day, state hash, and
+target hash.
 
 ## Next Implementation Boundary
 
