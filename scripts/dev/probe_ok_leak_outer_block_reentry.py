@@ -16,6 +16,10 @@ from research.daily_coarse_graining.canonical_teacher_reentry import (
     teacher_reentry_packet,
     teacher_reentry_templates,
 )
+from research.daily_coarse_graining.carbon_budget_ownership import (
+    extract_compiled_ok_leak_driver_steps,
+    ok_leak_driver_capture_metadata,
+)
 from research.daily_coarse_graining.daily_markov_contract import (
     daily_markov_contract_from_metadata,
     extract_state,
@@ -31,6 +35,7 @@ from scripts.dev.probe_ok_leak_driver_capture import (
     _ok_leak_endpoint_comparisons,
     _resolve,
     _sha256_array,
+    _sha256_file,
     _state_leaf_comparisons,
     _target_leaf_comparisons,
     _within_tolerance,
@@ -50,6 +55,20 @@ def _configure_doc_sqrt_mode(mode: str) -> None:
         soilcarbon_kernels._sqrt_with_finite_zero_tangent = jax.numpy.sqrt
         return
     raise ValueError(f"unsupported DOC sqrt mode: {mode}")
+
+
+def teacher_block_for_day(
+    day_index: int, *, block_size: int = 7, days_in_year: int = 365
+) -> tuple[int, int, int]:
+    """Return the original Teacher block start, size, and target offset."""
+
+    if day_index < 2 or day_index > days_in_year:
+        raise ValueError("later-day Teacher block capture requires Day 2..year end")
+    if block_size < 2:
+        raise ValueError("Teacher block size must be at least two")
+    block_start = 2 + ((day_index - 2) // block_size) * block_size
+    observed_size = min(block_size, days_in_year - block_start + 1)
+    return block_start, observed_size, day_index - block_start
 
 
 def _normalize_daily_accumulator_schema(packet, produced_packet):
@@ -91,7 +110,9 @@ def _normalize_daily_accumulator_schema(packet, produced_packet):
 
 
 def run_probe(args: argparse.Namespace):
-    _configure_doc_sqrt_mode(args.doc_sqrt_mode)
+    doc_sqrt_mode = getattr(args, "doc_sqrt_mode", "production")
+    capture_npz = getattr(args, "capture_npz", None)
+    _configure_doc_sqrt_mode(doc_sqrt_mode)
     manifest_path = args.dataset_manifest.resolve()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
     contract = daily_markov_contract_from_metadata(manifest["markov_contract"])
@@ -106,14 +127,38 @@ def run_probe(args: argparse.Namespace):
     reference = references[0]
     shard_path = (manifest_path.parent / reference["shard"]).resolve()
     shard = load_markov_shard(shard_path)
-    matches = np.flatnonzero(np.asarray(shard.day_index) == args.day_index)
-    if matches.size != 1:
+    target_matches = np.flatnonzero(
+        np.asarray(shard.day_index) == args.day_index
+    )
+    if target_matches.size != 1:
         raise ValueError("outer-block probe day is absent or duplicated")
-    row = int(matches[0])
+    target_row = int(target_matches[0])
+    block_start_day = (
+        args.day_index
+        if getattr(args, "block_start_day", None) is None
+        else int(args.block_start_day)
+    )
+    block_matches = np.flatnonzero(
+        np.asarray(shard.day_index) == block_start_day
+    )
+    if block_matches.size != 1:
+        raise ValueError("outer-block start day is absent or duplicated")
+    block_row = int(block_matches[0])
     if args.block_days < 1:
         raise ValueError("block_days must be positive")
-    if row + args.block_days > shard.fast_day_target.shape[0]:
+    if block_row + args.block_days > shard.fast_day_target.shape[0]:
         raise ValueError("requested block extends beyond the source shard")
+    target_offset = args.day_index - block_start_day
+    if target_offset < 0 or target_offset >= args.block_days:
+        raise ValueError("target day must fall inside the replay block")
+    day_start_state_sha256 = _sha256_array(shard.state_trajectory[target_row])
+    fast_day_target_sha256 = _sha256_array(shard.fast_day_target[target_row])
+    expected_state_hash = getattr(args, "expected_day_start_state_sha256", None)
+    expected_target_hash = getattr(args, "expected_fast_day_target_sha256", None)
+    if expected_state_hash is not None and day_start_state_sha256 != expected_state_hash:
+        raise ValueError("capture plan day-start state hash mismatch")
+    if expected_target_hash is not None and fast_day_target_sha256 != expected_target_hash:
+        raise ValueError("capture plan fast-day target hash mismatch")
 
     plan_path = args.plan.resolve()
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
@@ -135,21 +180,19 @@ def run_probe(args: argparse.Namespace):
     )
     templates = teacher_reentry_templates(context)
     discrete = {
-        name: np.asarray(values[row])
+        name: np.asarray(values[block_row])
         for name, values in shard.discrete_trajectories.items()
     }
     packet = teacher_reentry_packet(
-        np.asarray(shard.state_trajectory[row]),
+        np.asarray(shard.state_trajectory[block_row]),
         discrete,
         contract,
-        tstep=(args.day_index - 1) * templates.steps_per_day - 1,
+        tstep=(block_start_day - 1) * templates.steps_per_day - 1,
         templates=templates,
     )
 
     steps_per_day = templates.steps_per_day
-    day_numbers = tuple(
-        range(args.day_index, args.day_index + args.block_days)
-    )
+    day_numbers = tuple(range(block_start_day, block_start_day + args.block_days))
     forcing_days = tuple(
         teacher._paper_compiled_forcing_day(
             context,
@@ -168,8 +211,8 @@ def run_probe(args: argparse.Namespace):
         config_path,
         previous_state=packet,
         year=args.year,
-        day_index=args.day_index,
-        start_tstep=(args.day_index - 1) * steps_per_day,
+        day_index=block_start_day,
+        start_tstep=(block_start_day - 1) * steps_per_day,
         used_run_def_path=context.run_def_path,
         prepared_context=context,
         module_jit=True,
@@ -186,7 +229,7 @@ def run_probe(args: argparse.Namespace):
         context=context,
         current_state=packet,
         year=args.year,
-        start=(args.day_index - 1) * steps_per_day,
+        start=(block_start_day - 1) * steps_per_day,
         steps_per_stomate=steps_per_day,
         fixed_format_trace_dir=None,
         static_trace_fields=None,
@@ -206,6 +249,8 @@ def run_probe(args: argparse.Namespace):
         _state, _discrete, target, _diagnostics = projector(
             current_values, boundary
         )
+        if capture_npz is not None:
+            return target, boundary.ok_leak_driver_steps
         return target
 
     executable, state_spec = teacher._paper_compiled_later_day_block_executable(
@@ -227,7 +272,9 @@ def run_probe(args: argparse.Namespace):
         capture_pre_daily_training_boundaries=True,
         training_output_projector=target_projector,
         training_output_projector_key=(
-            f"ok_leak_outer_block_probe_v1:{contract.sha256}"
+            "ok_leak_outer_block_probe_v2:"
+            f"{'drivers' if capture_npz is not None else 'target'}:"
+            f"{contract.sha256}"
         ),
     )
     season_values = {
@@ -237,7 +284,7 @@ def run_probe(args: argparse.Namespace):
         )._asdict().items()
         if name != "provenance"
     }
-    final_values, stacked_targets = executable(
+    final_values, stacked_outputs = executable(
         initial.values_by_component,
         block_forcing,
         block_day_numbers,
@@ -252,12 +299,22 @@ def run_probe(args: argparse.Namespace):
         season_values,
         teacher._compiled_diffuco_parameter_values(context),
     )
+    capture_arrays = None
+    if capture_npz is None:
+        stacked_targets = stacked_outputs
+    else:
+        stacked_targets, stacked_driver_steps = stacked_outputs
+        selected_steps = jax.tree_util.tree_map(
+            lambda value: np.asarray(jax.device_get(value))[target_offset],
+            stacked_driver_steps,
+        )
+        capture_arrays = extract_compiled_ok_leak_driver_steps(selected_steps)
     actual_targets = np.asarray(jax.device_get(stacked_targets))
     expected_targets = np.asarray(
-        shard.fast_day_target[row : row + args.block_days]
+        shard.fast_day_target[block_row : block_row + args.block_days]
     )
-    actual_target = actual_targets[0]
-    expected_target = expected_targets[0]
+    actual_target = actual_targets[target_offset]
+    expected_target = expected_targets[target_offset]
     target_comparison = _array_comparison(
         actual_targets, expected_targets
     )
@@ -286,7 +343,7 @@ def run_probe(args: argparse.Namespace):
     )
     final_packet = teacher.previous_packet_from_fast_state(
         teacher.DriverFastStateBundle(
-            tstep=(args.day_index + args.block_days - 1) * steps_per_day - 1,
+            tstep=(block_start_day + args.block_days - 1) * steps_per_day - 1,
             values_by_component=jax.tree_util.tree_map(
                 lambda value: value, final_values
             ),
@@ -295,20 +352,21 @@ def run_probe(args: argparse.Namespace):
     )
     actual_state, actual_discrete = extract_state(final_packet, contract)
     state_comparison = _array_comparison(
-        actual_state, np.asarray(shard.state_trajectory[row + args.block_days]),
+        actual_state,
+        np.asarray(shard.state_trajectory[block_row + args.block_days]),
         atol=1.0e-12,
         rtol=1.0e-12,
     )
     state_leaf_comparisons = _state_leaf_comparisons(
         actual_state,
-        np.asarray(shard.state_trajectory[row + args.block_days]),
+        np.asarray(shard.state_trajectory[block_row + args.block_days]),
         contract.state_leaves,
         atol=1.0e-12,
         rtol=1.0e-12,
     )
     discrete_comparisons = {
         name: _array_comparison(
-            actual_discrete[name], values[row + args.block_days]
+            actual_discrete[name], values[block_row + args.block_days]
         )
         for name, values in shard.discrete_trajectories.items()
     }
@@ -317,26 +375,65 @@ def run_probe(args: argparse.Namespace):
         and state_comparison["within_tolerance"]
         and all(item["exact"] for item in discrete_comparisons.values())
     )
+    capture = None
+    if capture_npz is not None:
+        assert capture_arrays is not None
+        capture_npz.parent.mkdir(parents=True, exist_ok=True)
+        temporary = capture_npz.with_suffix(capture_npz.suffix + ".tmp")
+        with temporary.open("wb") as handle:
+            np.savez_compressed(handle, **capture_arrays)
+        temporary.replace(capture_npz)
+        capture = {
+            **ok_leak_driver_capture_metadata(capture_arrays),
+            "path": str(capture_npz),
+            "sha256": _sha256_file(capture_npz),
+        }
+    capture_interface_passed = (
+        None
+        if capture_npz is None
+        else bool(
+            capture is not None
+            and ok_leak_passed
+            and all(item["exact"] for item in discrete_comparisons.values())
+        )
+    )
     report = {
-        "schema_version": "ok_leak_outer_block_reentry_probe_v1",
+        "schema_version": "ok_leak_outer_block_reentry_probe_v2",
         "passed": passed,
+        "capture_interface_passed": capture_interface_passed,
+        "dataset_manifest": str(manifest_path),
         "dataset_id": manifest["dataset_id"],
+        "teacher_git_head": manifest.get("teacher_git_head"),
+        "markov_contract_sha256": manifest.get("markov_contract_sha256"),
         "landpoint_id": args.landpoint_id,
         "year": args.year,
         "day_index": args.day_index,
+        "target_offset": target_offset,
+        "block_start_day": block_start_day,
         "block_days": args.block_days,
         "block_day_numbers": day_numbers,
-        "doc_sqrt_mode": args.doc_sqrt_mode,
+        "doc_sqrt_mode": doc_sqrt_mode,
         "source_shard": str(shard_path),
-        "day_start_state_sha256": _sha256_array(shard.state_trajectory[row]),
+        "source_shard_sha256": reference.get("shard_sha256"),
+        "day_start_state_sha256": day_start_state_sha256,
+        "fast_day_target_sha256": fast_day_target_sha256,
+        "capture_plan_sha256": getattr(args, "capture_plan_sha256", None),
+        "block_start_state_sha256": _sha256_array(
+            shard.state_trajectory[block_row]
+        ),
         "reentry_schema_adjustments": schema_adjustments,
         "fast_day_target": target_comparison,
         "fast_day_target_leaves": target_leaf_comparisons,
         "ok_leak_endpoint_comparisons_by_day": ok_leak_comparisons_by_day,
         "ok_leak_endpoint_within_1e-12": ok_leak_passed,
         "next_continuous_state": state_comparison,
+        "next_state_diagnostic_passed": state_comparison["within_tolerance"],
         "next_continuous_state_leaves": state_leaf_comparisons,
         "next_discrete_state": discrete_comparisons,
+        "capture": capture,
+        "capture_npz": None if capture_npz is None else capture_npz.name,
+        "capture_npz_sha256": None if capture is None else capture["sha256"],
+        "sealed_test_used": False,
         "decision": (
             "outer_compiled_ok_leak_boundary_reproduces_shard"
             if passed
@@ -355,6 +452,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--landpoint-id", required=True)
     parser.add_argument("--year", type=int, required=True)
     parser.add_argument("--day-index", type=int, required=True)
+    parser.add_argument("--block-start-day", type=int)
     parser.add_argument("--block-days", type=int, default=1)
     parser.add_argument(
         "--doc-sqrt-mode",
@@ -363,6 +461,7 @@ def build_parser() -> argparse.ArgumentParser:
         help="Diagnostic DOC sqrt graph; raw_sqrt reproduces the Teacher formula graph.",
     )
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--capture-npz", type=Path)
     return parser
 
 

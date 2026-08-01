@@ -501,12 +501,39 @@ def extract_ok_leak_driver_series(record: Any) -> dict[str, np.ndarray]:
     maintenance = getattr(record, "maintenance_resp_parts", None)
     if maintenance is None:
         raise ValueError("OK_LEAK driver capture requires maintenance_resp_parts")
-    arrays = {
-        item.field: np.asarray(
-            maintenance if item.field == "resp_maint_part_radia" else stacks[item.field]
-        )
+    return _validate_ok_leak_driver_arrays(
+        {
+            item.field: np.asarray(
+                maintenance
+                if item.field == "resp_maint_part_radia"
+                else stacks[item.field]
+            )
+            for item in OK_LEAK_DRIVER_SERIES
+        }
+    )
+
+
+def extract_compiled_ok_leak_driver_steps(steps: Any) -> dict[str, np.ndarray]:
+    """Extract source-order arrays emitted by an outer compiled day block."""
+
+    missing = tuple(
+        item.field
         for item in OK_LEAK_DRIVER_SERIES
-    }
+        if not hasattr(steps, item.field)
+    )
+    if missing:
+        raise ValueError(f"compiled OK_LEAK steps are missing drivers: {missing}")
+    return _validate_ok_leak_driver_arrays(
+        {
+            item.field: np.asarray(getattr(steps, item.field))
+            for item in OK_LEAK_DRIVER_SERIES
+        }
+    )
+
+
+def _validate_ok_leak_driver_arrays(
+    arrays: dict[str, np.ndarray],
+) -> dict[str, np.ndarray]:
     step_counts = {int(value.shape[0]) for value in arrays.values()}
     if step_counts != {48}:
         raise ValueError(f"OK_LEAK driver series must contain 48 steps, got {sorted(step_counts)}")

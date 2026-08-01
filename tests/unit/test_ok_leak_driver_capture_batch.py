@@ -65,20 +65,32 @@ def _install_fakes(monkeypatch, calls, *, failed_days=()):
         "load_plan",
         lambda *_args, **_kwargs: SimpleNamespace(
             plan_sha256="teacher-plan-hash",
+            block_size=7,
             entries=(
-                SimpleNamespace(landpoint_id="001.0-071.0", year=1961),
+                SimpleNamespace(landpoint_id="001.0-071.0", year=1961, days=365),
             ),
         ),
     )
 
     def fake_probe(arguments):
-        calls.append((arguments.landpoint_id, arguments.year, arguments.day_index))
-        arguments.output.mkdir(parents=True, exist_ok=True)
-        arrays_path = arguments.output / "ok_leak_driver_series.npz"
+        calls.append(
+            (
+                arguments.landpoint_id,
+                arguments.year,
+                arguments.day_index,
+                arguments.block_start_day,
+                arguments.block_days,
+            )
+        )
+        arguments.output.parent.mkdir(parents=True, exist_ok=True)
+        arrays_path = arguments.capture_npz
         arrays_path.write_bytes(f"capture-{arguments.day_index}".encode())
-        passed = arguments.day_index not in failed_days
+        capture_passed = arguments.day_index not in failed_days
+        passed = capture_passed and arguments.day_index == 2
         report = {
+            "schema_version": "ok_leak_outer_block_reentry_probe_v2",
             "passed": passed,
+            "capture_interface_passed": capture_passed,
             "landpoint_id": arguments.landpoint_id,
             "year": arguments.year,
             "day_index": arguments.day_index,
@@ -86,15 +98,16 @@ def _install_fakes(monkeypatch, calls, *, failed_days=()):
             "fast_day_target_sha256": arguments.expected_fast_day_target_sha256,
             "capture_plan_sha256": arguments.capture_plan_sha256,
             "capture_npz_sha256": _sha256_file(arrays_path),
+            "capture": {"schema_version": "ok_leak_driver_capture_v1"},
             "next_continuous_state": {
                 "within_tolerance": arguments.day_index == 2,
             },
             "source_driver_comparisons": {"soil_mc": {"exact": True}},
             "exact_scan_replay": {"exact": True},
-            "ok_leak_endpoint_within_1e-12": passed,
+            "ok_leak_endpoint_within_1e-12": capture_passed,
             "next_discrete_state": {"date": {"exact": True}},
         }
-        _atomic_write_json(arguments.output / "report.json", report)
+        _atomic_write_json(arguments.output, report)
         return report
 
     monkeypatch.setattr(batch, "run_probe", fake_probe)
@@ -111,7 +124,10 @@ def test_batch_is_atomic_and_resumes_completed_days(tmp_path, monkeypatch):
     assert first["completed_record_count"] == 2
     assert first["capture_interface_passed_count"] == 2
     assert first["next_state_diagnostic_passed_count"] == 1
-    assert calls == [("001.0-071.0", 1961, 2), ("001.0-071.0", 1961, 3)]
+    assert calls == [
+        ("001.0-071.0", 1961, 2, 2, 7),
+        ("001.0-071.0", 1961, 3, 2, 7),
+    ]
     for record in records:
         output = _capture_directory(args.output.resolve(), record)
         assert output.is_dir()
@@ -154,7 +170,10 @@ def test_batch_collects_scientific_failures_and_attempts_remaining_days(
 
     result = run_batch(args)
 
-    assert calls == [("001.0-071.0", 1961, 2), ("001.0-071.0", 1961, 3)]
+    assert calls == [
+        ("001.0-071.0", 1961, 2, 2, 7),
+        ("001.0-071.0", 1961, 3, 2, 7),
+    ]
     assert result["status"] == "capture_interface_failed"
     assert result["attempted_record_count"] == 2
     assert result["capture_interface_passed_count"] == 1

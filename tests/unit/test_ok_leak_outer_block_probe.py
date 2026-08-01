@@ -11,6 +11,7 @@ from scripts.dev.probe_ok_leak_outer_block_reentry import (
     _configure_doc_sqrt_mode,
     _normalize_daily_accumulator_schema,
     build_parser,
+    teacher_block_for_day,
 )
 
 
@@ -117,3 +118,18 @@ def test_outer_probe_parser_accepts_the_teacher_seven_day_block():
     )
 
     assert args.block_days == 7
+
+
+@pytest.mark.parametrize(
+    ("day_index", "expected"),
+    [
+        (2, (2, 7, 0)),
+        (8, (2, 7, 6)),
+        (9, (9, 7, 0)),
+        (184, (184, 7, 0)),
+        (190, (184, 7, 6)),
+        (365, (359, 7, 6)),
+    ],
+)
+def test_teacher_block_for_day_matches_generation_partition(day_index, expected):
+    assert teacher_block_for_day(day_index) == expected
