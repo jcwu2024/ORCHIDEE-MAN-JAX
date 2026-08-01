@@ -19,6 +19,7 @@ from research.daily_coarse_graining.canonical_teacher_reentry import (
     teacher_reentry_templates,
 )
 from research.daily_coarse_graining.carbon_budget_ownership import (
+    FORTRAN_MIN_STOMATE,
     OK_LEAK_DRIVER_SERIES,
     combined_ok_leak_carbon_balance,
     extract_ok_leak_driver_series,
@@ -297,7 +298,8 @@ def _persisted_scan_conservation(
     replay_call: Mapping[str, Any],
     expected_replay,
     *,
-    tolerance: float = 1.0e-12,
+    relative_tolerance: float = 1.0e-12,
+    stock_tolerance: float = 1.0e-12,
 ) -> Mapping[str, Any]:
     diagnostic_call = dict(replay_call)
     diagnostic_call["retain_step_results"] = True
@@ -335,6 +337,14 @@ def _persisted_scan_conservation(
 
     balances = jax.vmap(step_balance)(start_carries, step_results)
     closures = np.asarray(balances.closure)
+    balance_scale = np.asarray(
+        np.abs(balances.initial_inventory)
+        + np.abs(balances.external_input)
+        + np.abs(balances.atmospheric_loss)
+        + np.abs(balances.lateral_export)
+        + np.abs(balances.final_inventory)
+    )
+    relative_closures = np.abs(closures) / np.maximum(balance_scale, 1.0)
     independent_stocks = {
         "litter_above": np.asarray(end_carries.litter_above),
         "litter_below": np.asarray(end_carries.litter_below),
@@ -346,26 +356,49 @@ def _persisted_scan_conservation(
         name: float(np.min(value)) for name, value in independent_stocks.items()
     }
     negative_count_by_field = {
-        name: int(np.count_nonzero(value < -tolerance))
+        name: int(np.count_nonzero(value < -stock_tolerance))
         for name, value in independent_stocks.items()
     }
     finite = bool(
         np.all(np.isfinite(closures))
         and all(np.all(np.isfinite(value)) for value in independent_stocks.values())
     )
-    maximum = float(np.max(np.abs(closures)))
+    maximum_index = np.unravel_index(
+        int(np.argmax(np.abs(closures))),
+        closures.shape,
+    )
+    maximum = float(np.abs(closures[maximum_index]))
+    maximum_relative = float(np.max(relative_closures))
+    worst_components = {
+        name: float(np.asarray(getattr(balances, name))[maximum_index])
+        for name in (
+            "initial_inventory",
+            "external_input",
+            "atmospheric_loss",
+            "lateral_export",
+            "final_inventory",
+            "closure",
+        )
+    }
     passed = bool(
         finite
-        and maximum <= tolerance
+        and maximum <= FORTRAN_MIN_STOMATE
+        and maximum_relative <= relative_tolerance
         and not any(negative_count_by_field.values())
         and final_comparison["exact"]
     )
     return {
         "passed": passed,
         "step_count": int(closures.shape[0]),
-        "tolerance": tolerance,
+        "source_absolute_tolerance": FORTRAN_MIN_STOMATE,
+        "relative_tolerance": relative_tolerance,
+        "stock_tolerance": stock_tolerance,
         "all_finite": finite,
         "max_absolute_closure": maximum,
+        "max_relative_closure": maximum_relative,
+        "max_absolute_step_index": int(maximum_index[0]),
+        "max_absolute_landpoint_index": int(maximum_index[1]),
+        "max_absolute_components": worst_components,
         "minimum_stock_by_field": minimum_by_field,
         "negative_stock_count_by_field": negative_count_by_field,
         "diagnostic_final_carry": final_comparison,

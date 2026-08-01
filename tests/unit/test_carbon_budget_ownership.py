@@ -10,6 +10,7 @@ import pytest
 from research.daily_coarse_graining.carbon_budget_ownership import (
     AGGREGATE_TRANSFER_LABEL_OWNERSHIP,
     AGGREGATE_TRANSFER_LABELS,
+    FORTRAN_MIN_STOMATE,
     FULL_STATE_INTERNAL_TRANSFER_REQUIREMENTS,
     OK_LEAK_CARBON_FIELD_OWNERSHIP,
     OK_LEAK_DRIVER_SERIES,
@@ -145,3 +146,7 @@ def test_external_doc_input_does_not_double_count_canopy_drip():
     assert "canopy2ground" not in owner.source_terms
     assert "doc_precip2canopy" in owner.source_terms
     assert "dry_dep_canopy" in owner.source_terms
+
+
+def test_conservation_absolute_threshold_matches_fortran_min_stomate():
+    assert FORTRAN_MIN_STOMATE == 1.0e-8

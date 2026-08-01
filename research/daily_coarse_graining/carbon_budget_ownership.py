@@ -10,6 +10,10 @@ import numpy as np
 
 from jax_orchidee.stomate.soilcarbon_kernels import IDOCL, IDOCR
 
+# Fortran: src_parameters/constantes_var.f90 line 177. The source mass-balance
+# verdict uses this absolute threshold at stomate_soilcarbon.f90 lines 2362-2363.
+FORTRAN_MIN_STOMATE = 1.0e-8
+
 
 @dataclass(frozen=True)
 class CarbonFieldOwnership:
