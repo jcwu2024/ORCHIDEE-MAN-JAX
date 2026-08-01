@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-07-31.
+Last updated: 2026-08-01.
 
 This page is the current status authority. Dated files under
 `docs/source_audits/` and `docs/research/` are evidence snapshots and may
@@ -694,16 +694,26 @@ authorized before a small auxiliary capture passes exact replay, conservation,
 nonnegative-stock, finite-gradient, and parent-no-regression gates. See
 [`carbon_budget_ownership_audit_20260731.md`](research/daily_coarse_graining/carbon_budget_ownership_audit_20260731.md).
 
-The first real train-only capture now passes the exact-replay portion of that
-gate. For `001.0-071.0`, 1961 Day 2, all 13 captured driver arrays match their
-live scan inputs bit-exactly; persisted replay and all 14 `ok_leak.*`
-endpoints are bit-exact; next continuous state differs by only `2.84e-14`;
-and all discrete state is exact. A `299.47` mismatch is isolated to the old-v4
-transient `daily_interface.t2m_min_daily` target and does not affect the
-carbon endpoint or next-state gate. The next action is a deterministic bounded
-train-only capture design followed by the remaining cheap conservation,
-feasibility, finite-gradient, and parent-no-regression checks. See
-[`ok_leak_driver_capture_probe_20260731.md`](research/daily_coarse_graining/ok_leak_driver_capture_probe_20260731.md).
+The bounded train-only auxiliary asset and persisted replay gate are now
+complete. The accepted plan selects 16 days from each of six training
+landpoints across years and process conditions. All `96/96` target-day
+captures pass the exact capture interface with no failed record; the
+hash-bound reader verifies every source shard, state/target row, report, and
+driver NPZ. Replaying each persisted 13-driver sequence through the current
+exact 48-step scan reproduces all 14 `ok_leak.*` endpoints within `1e-12` for
+`96/96` days. The global maximum absolute error is `4.5401182813264995e-14`;
+six records are fully bit-exact and 77 have 13/14 bit-exact endpoints. The
+remaining differences are float64 evaluation-order noise below the frozen
+tolerance, not relaxed acceptance. The sealed test split was not used.
+
+This closes capture-interface and persisted-scan replay sufficiency. It does
+not assert equivalence of a reconstructed full outer seven-day Teacher block:
+historical shards were produced in seven-day compiled blocks, and one-day
+outer replay is not the accepted verification boundary. The next action is to
+close conservation, feasible-perturbation/nonnegative-stock, real
+forward/reverse finite-gradient, and bounded tiny-fit parent-no-regression
+micro-gates before any paid neural A/B. See
+[`ok_leak_auxiliary_capture_replay_20260801.md`](research/daily_coarse_graining/ok_leak_auxiliary_capture_replay_20260801.md).
 
 A deterministic bounded selection tool is now ready for the existing
 server-side v5 shards. It admits only the six spatial-train/temporal-train
@@ -724,12 +734,12 @@ capture asset. The accepted replacement is frozen at
 `manifests/coarse_graining/ok_leak_auxiliary_capture_96day_v1.json`, canonical
 SHA256 `8ebe5345...3b922c7`. It passes all 19 independent checks over 96 unique
 train-only days, including exact selected-row state and target hashes. The
-next operation is the restartable batch capture smoke. See
+complete capture and replay result is recorded in
+[`ok_leak_auxiliary_capture_replay_20260801.md`](research/daily_coarse_graining/ok_leak_auxiliary_capture_replay_20260801.md).
+See also
 [`ok_leak_auxiliary_capture_selection_protocol_20260731.md`](research/daily_coarse_graining/ok_leak_auxiliary_capture_selection_protocol_20260731.md).
 
-The restartable one-process batch runner and CPU Slurm wrapper are implemented
-locally. They verify the source generation plan, stage each day atomically,
-and resume only hash-identical passed captures. No real batch capture has run
-yet. The mandatory next gate is one planned day with `CAPTURE_LIMIT=1`; the
-96-day capture remains unauthorized until that smoke's scientific gates,
-wall time, and peak memory are accepted.
+The restartable one-process capture and persisted-replay runners are now
+validated on all 96 accepted records. They verify the source generation plan,
+stage each day atomically, and resume only hash-identical passed records.
+Capture-interface failures and persisted-replay failures are both zero.

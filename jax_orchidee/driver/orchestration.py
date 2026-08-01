@@ -7821,6 +7821,14 @@ def _compiled_ok_leak_updates(carry: DriverCompiledOkLeakCarry) -> dict[str, obj
     return values
 
 
+def _select_compiled_ok_leak_scan_outputs(outputs, *, retain_step_results: bool):
+    """Keep full scan diagnostics only when an explicit audit requests them."""
+
+    if retain_step_results:
+        return outputs
+    return jax.tree_util.tree_map(lambda value: value[-1], outputs)
+
+
 def _paper_compiled_ok_leak_fold(
     *,
     initial: DriverCompiledOkLeakCarry,
@@ -7844,6 +7852,7 @@ def _paper_compiled_ok_leak_fold(
     ok_tf_doc: bool,
     perma_peat: bool,
     conc_doc_rain: float,
+    retain_step_results: bool = False,
 ):
     """Compile the 48 source-ordered half-hour OK_LEAK state transitions."""
 
@@ -7960,8 +7969,11 @@ def _paper_compiled_ok_leak_fold(
         return next_carry, result
 
     final_carry, outputs = jax.lax.scan(body, initial, steps)
-    last_result = jax.tree_util.tree_map(lambda value: value[-1], outputs)
-    return final_carry, last_result
+    selected_outputs = _select_compiled_ok_leak_scan_outputs(
+        outputs,
+        retain_step_results=retain_step_results,
+    )
+    return final_carry, selected_outputs
 
 
 _paper_compiled_ok_leak_fold_jit = jax.jit(
@@ -7976,6 +7988,7 @@ _paper_compiled_ok_leak_fold_jit = jax.jit(
         "ok_tf_doc",
         "perma_peat",
         "conc_doc_rain",
+        "retain_step_results",
     ),
 )
 

@@ -5,7 +5,10 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from jax_orchidee.driver.orchestration import DriverCompiledOkLeakCarry
+from jax_orchidee.driver.orchestration import (
+    DriverCompiledOkLeakCarry,
+    _select_compiled_ok_leak_scan_outputs,
+)
 from scripts.dev.probe_ok_leak_driver_capture import (
     _array_comparison,
     _capture_probe_passes,
@@ -110,6 +113,26 @@ def test_probe_gate_rejects_ok_leak_or_empty_endpoint_evidence():
         {},
         arguments[3],
     )
+
+
+def test_compiled_scan_retains_step_results_only_for_explicit_diagnostics():
+    outputs = {
+        "pool": np.arange(12, dtype=np.float64).reshape(4, 3),
+        "nested": (np.arange(4, dtype=np.float64),),
+    }
+
+    retained = _select_compiled_ok_leak_scan_outputs(
+        outputs,
+        retain_step_results=True,
+    )
+    final = _select_compiled_ok_leak_scan_outputs(
+        outputs,
+        retain_step_results=False,
+    )
+
+    assert retained is outputs
+    np.testing.assert_array_equal(final["pool"], outputs["pool"][-1])
+    np.testing.assert_array_equal(final["nested"][0], outputs["nested"][0][-1])
 
 
 def test_persisted_replay_compares_carry_and_derived_peat_endpoints():

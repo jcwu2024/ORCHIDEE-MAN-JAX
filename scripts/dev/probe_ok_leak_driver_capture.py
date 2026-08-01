@@ -10,6 +10,7 @@ from typing import Any, Mapping, Sequence
 from unittest.mock import patch
 
 import jax
+import jax.numpy as jnp
 import numpy as np
 
 from jax_orchidee.driver import orchestration as teacher
@@ -19,6 +20,7 @@ from research.daily_coarse_graining.canonical_teacher_reentry import (
 )
 from research.daily_coarse_graining.carbon_budget_ownership import (
     OK_LEAK_DRIVER_SERIES,
+    combined_ok_leak_carbon_balance,
     extract_ok_leak_driver_series,
     ok_leak_driver_capture_metadata,
 )
@@ -291,6 +293,85 @@ def _replayed_ok_leak_endpoint_comparisons(
     return comparisons
 
 
+def _persisted_scan_conservation(
+    replay_call: Mapping[str, Any],
+    expected_replay,
+    *,
+    tolerance: float = 1.0e-12,
+) -> Mapping[str, Any]:
+    diagnostic_call = dict(replay_call)
+    diagnostic_call["retain_step_results"] = True
+    final_carry, step_results = teacher._paper_compiled_ok_leak_fold_jit(
+        **diagnostic_call
+    )
+    final_comparison = _max_tree_difference(final_carry, expected_replay[0])
+    end_carries = teacher._compiled_ok_leak_carry_from_mapping(
+        teacher._paper_half_hour_ok_leak_state_updates(step_results)
+    )
+    start_carries = jax.tree_util.tree_map(
+        lambda initial, ends: jnp.concatenate(
+            (jnp.expand_dims(initial, axis=0), ends[:-1]),
+            axis=0,
+        ),
+        replay_call["initial"],
+        end_carries,
+    )
+    dt_days = float(replay_call["dt_sechiba"]) / 86400.0
+    turnover = jnp.asarray(replay_call["turnover_daily"]) * dt_days
+    bm_to_litter = jnp.asarray(replay_call["bm_to_litter_daily"]) * dt_days
+    static_inputs = replay_call["static_inputs"]
+
+    def step_balance(initial, result):
+        return combined_ok_leak_carbon_balance(
+            initial=initial,
+            result=result,
+            turnover=turnover,
+            bm_to_litter=bm_to_litter,
+            veget_max=replay_call["veget_max"],
+            doc_to_topsoil=static_inputs["doc_to_topsoil"],
+            doc_to_subsoil=static_inputs["doc_to_subsoil"],
+            dt_days=dt_days,
+        )
+
+    balances = jax.vmap(step_balance)(start_carries, step_results)
+    closures = np.asarray(balances.closure)
+    independent_stocks = {
+        "litter_above": np.asarray(end_carries.litter_above),
+        "litter_below": np.asarray(end_carries.litter_below),
+        "carbon_32l": np.asarray(end_carries.carbon_32l),
+        "DOC": np.asarray(end_carries.doc),
+        "interception_storage": np.asarray(end_carries.interception_storage),
+    }
+    minimum_by_field = {
+        name: float(np.min(value)) for name, value in independent_stocks.items()
+    }
+    negative_count_by_field = {
+        name: int(np.count_nonzero(value < -tolerance))
+        for name, value in independent_stocks.items()
+    }
+    finite = bool(
+        np.all(np.isfinite(closures))
+        and all(np.all(np.isfinite(value)) for value in independent_stocks.values())
+    )
+    maximum = float(np.max(np.abs(closures)))
+    passed = bool(
+        finite
+        and maximum <= tolerance
+        and not any(negative_count_by_field.values())
+        and final_comparison["exact"]
+    )
+    return {
+        "passed": passed,
+        "step_count": int(closures.shape[0]),
+        "tolerance": tolerance,
+        "all_finite": finite,
+        "max_absolute_closure": maximum,
+        "minimum_stock_by_field": minimum_by_field,
+        "negative_stock_count_by_field": negative_count_by_field,
+        "diagnostic_final_carry": final_comparison,
+    }
+
+
 def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
     manifest_path = args.dataset_manifest.resolve()
     manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
@@ -397,6 +478,11 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
     )
     replayed = original_scan(**replay_call)
     replay_tree = _max_tree_difference(replayed, captured_return["value"])
+    conservation = (
+        _persisted_scan_conservation(replay_call, replayed)
+        if bool(getattr(args, "audit_conservation", False))
+        else None
+    )
 
     observed_target = np.asarray(
         extract_fast_day_target(record, contract.fast_day_target_leaves)
@@ -470,6 +556,8 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
         if persisted_replay_passed is None
         else persisted_replay_passed
     )
+    if conservation is not None:
+        passed = bool(passed and conservation["passed"])
     report = {
         "schema_version": "ok_leak_driver_capture_probe_v2",
         "passed": passed,
@@ -501,6 +589,7 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
         ),
         "persisted_ok_leak_endpoint_comparisons": persisted_replay_comparisons,
         "persisted_ok_leak_endpoint_within_1e-12": persisted_replay_passed,
+        "persisted_scan_conservation": conservation,
         "fast_day_target": target_comparison,
         "fast_day_target_leaves": target_leaf_comparisons,
         "ok_leak_endpoint_within_1e-12": all(
@@ -527,6 +616,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--day-index", type=int, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--replay-driver-npz", type=Path)
+    parser.add_argument("--audit-conservation", action="store_true")
     return parser
 
 

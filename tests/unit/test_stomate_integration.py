@@ -91,6 +91,7 @@ from jax_orchidee.stomate.modelout import compute_modelout_from_fields, stomate_
 from jax_orchidee.stomate.reference import StomateOkPcRestartGasState, stomate_cold_start_entry_state, stomate_cold_start_season_state
 from jax_orchidee.stomate.soilcarbon_kernels import (
     IDOCL,
+    IDOCR,
     deep_carbon_altcalc_step,
     deep_carbon_cryoturbation_coefficients,
     deep_carbon_gasdiff_properties_step,
@@ -103,6 +104,10 @@ from jax_orchidee.stomate.soilcarbon_kernels import (
     soilcarbon_leak_core_step,
     soilcarbon_leak_doc_export_aggregate,
     soilcarbon_leak_tf_doc_ground_fluxes,
+)
+from jax_orchidee.driver.orchestration import DriverCompiledOkLeakCarry
+from research.daily_coarse_graining.carbon_budget_ownership import (
+    combined_ok_leak_carbon_balance,
 )
 
 
@@ -4463,6 +4468,46 @@ def test_ok_leak_explicit_adapter_matches_manual_litter_soilcarbon_doc_chain():
     assert np.allclose(np.asarray(result.soilcarbon.doc_exp), np.asarray(soilcarbon.doc_exp))
     assert np.allclose(np.asarray(result.doc_export.doc_exp_agg), np.asarray(doc_export.doc_exp_agg))
     assert np.allclose(np.asarray(result.wet_dep_ground), np.asarray(tf_doc.wet_dep_ground))
+
+
+def test_ok_leak_explicit_step_closes_combined_source_carbon_inventory():
+    args = _ok_leak_inputs()
+    args["doc_to_topsoil"][0, IDOCL] = 0.12
+    args["doc_to_subsoil"][0, IDOCR] = 0.08
+    args["doc_precip2ground"][0, PFT14, ICARBON] = 0.04
+    args["doc_precip2canopy"][0, PFT14, ICARBON] = 0.03
+    args["dry_dep_canopy"][0, PFT14, ICARBON] = 0.02
+    args["interception_storage"][0, PFT14, ICARBON] = 0.10
+    args["canopy2ground"][0, PFT14] = 0.01
+    result = stomate_ok_leak_explicit(**args)
+    initial = DriverCompiledOkLeakCarry(
+        litter_above=args["litter_above"],
+        litter_below=args["litter_below"],
+        lignin_struc_above=args["lignin_struc_above"],
+        lignin_struc_below=args["lignin_struc_below"],
+        litterpart=args["litterpart"],
+        dead_leaves=args["dead_leaves"],
+        fuel_1hr=args["fuel_1hr"],
+        fuel_10hr=args["fuel_10hr"],
+        fuel_100hr=args["fuel_100hr"],
+        fuel_1000hr=args["fuel_1000hr"],
+        carbon_32l=args["carbon_32l"],
+        doc=args["doc"],
+        interception_storage=args["interception_storage"],
+    )
+
+    balance = combined_ok_leak_carbon_balance(
+        initial=initial,
+        result=result,
+        turnover=args["turnover"],
+        bm_to_litter=args["bm_to_litter"],
+        veget_max=args["veget_max"],
+        doc_to_topsoil=args["doc_to_topsoil"],
+        doc_to_subsoil=args["doc_to_subsoil"],
+        dt_days=args["dt_days"],
+    )
+
+    assert np.max(np.abs(np.asarray(balance.closure))) <= 1.0e-12
 
 
 def test_ok_leak_explicit_adapter_requires_explicit_litter_controls():

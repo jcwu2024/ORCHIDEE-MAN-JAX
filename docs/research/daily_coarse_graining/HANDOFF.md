@@ -1,6 +1,6 @@
 # Daily Coarse-Graining Handoff
 
-Snapshot date: 2026-07-31
+Snapshot date: 2026-08-01
 
 This is the single operational handoff page for the daily coarse-graining
 research branch. Read this page before dated experiment reports. Stable
@@ -24,9 +24,10 @@ scientific and release facts remain authoritative in
    complete. The candidate is rejected because independent stock correction
    worsened `carbon_32l` by `7.33-9.32x` and `deepC_peat` by `5.66-7.45x`.
    Its stock-adapter ablation also failed. Do not retune, confirm, or promote
-   it. The first real-day exact-`OK_LEAK` driver capture/replay gate now
-   passes. The active operation is the deterministic bounded train-only
-   capture design and the remaining conservative micro-gates described below.
+   it. The bounded 96-day exact-`OK_LEAK` capture and persisted replay gates
+   now pass. The active operation is the remaining conservative micro-gates:
+   conservation, feasible perturbations/nonnegative stocks, real scan
+   gradients, and bounded tiny-fit parent no-regression.
 
 ```bash
 git status --short --branch
@@ -1011,17 +1012,28 @@ exact 48-step scan. The preferred successor predicts those driver series and
 runs the existing `_paper_compiled_ok_leak_fold`; it does not independently
 predict any carbon stock or `deepC_peat`.
 
-The first real-day auxiliary capture/replay gate is complete. On train-only
-landpoint `001.0-071.0`, 1961 Day 2, all 13 captured driver series equal the
-original scan inputs bit-exactly, persisted replay is bit-exact, all 14
-`ok_leak.*` endpoints are exact, next continuous state closes at `2.84e-14`,
-and all discrete state is exact. The only old-v4 whole-target mismatch is the
-unrelated transient `daily_interface.t2m_min_daily`; it is reported but does
-not enter the carbon-interface gate.
+The complete bounded auxiliary capture/replay gate is now closed. The
+accepted plan contains 96 train-only days: 16 days for each of six training
+landpoints. All 96 target-day captures pass, the complete hash-bound reader
+passes, and the sealed test split is unused. `91/96` unrelated full next-state
+diagnostics also pass, but those diagnostics are not the capture acceptance
+boundary.
 
-The next operation is to define the deterministic bounded train-only capture
-set and close the conservation, feasibility, finite-gradient, and tiny-fit
-no-regression gates. It is not a 669-point regeneration and not paid training.
+At evaluation commit `332ab26`, all 96 persisted 13-driver sequences replay
+through the exact 48-step scan and reproduce all 14 `ok_leak.*` endpoints
+within `1e-12`. The maximum absolute error is
+`4.5401182813264995e-14` at `069.0-119.0`, 1961 Day 7. Exact endpoint-count
+distribution is `{4: 3, 5: 3, 8: 1, 10: 1, 11: 3, 12: 2, 13: 77, 14: 6}`.
+Job `14446150` completed in `00:29:34` with exit code zero and about 8.64 GiB
+peak RSS. Full evidence is in
+[`ok_leak_auxiliary_capture_replay_20260801.md`](ok_leak_auxiliary_capture_replay_20260801.md).
+
+Do not reopen full outer seven-day replay equivalence. Historical Teacher
+shards were generated inside seven-day compiled blocks; the accepted boundary
+is the persisted-driver exact scan. The next operation is to close
+conservation, feasibility/nonnegative-stock, real forward/reverse gradient,
+and bounded tiny-fit no-regression gates. It is not a 669-point regeneration
+and not paid training.
 Use the machine ownership/capture guard in
 `research/daily_coarse_graining/carbon_budget_ownership.py` and the frozen
 audit in
@@ -1050,11 +1062,9 @@ plan `f7967d70...09d0f92` is also rejected: its verifier correctly exposed
 zero peat activity, but that gate confused an unreachable HYDROL branch with
 required coverage and the old rank logic ordered tied zeros. Never use either
 plan for capture. The accepted plan uses equal-tie ranks and passes the
-independent selected-row verifier. The next operation is the restartable batch
-capture smoke, not another selection run. The runner and Slurm wrapper are
-implemented but have not executed on real server data. Start with
-`CAPTURE_LIMIT=1`; inspect all scientific/hash gates and resources before the
-96-day capture. See
+independent selected-row verifier. The restartable capture and replay runners
+have completed all 96 records; do not rerun selection or recapture this asset.
+See
 [`ok_leak_auxiliary_capture_selection_protocol_20260731.md`](ok_leak_auxiliary_capture_selection_protocol_20260731.md).
 
 The prepared v4 subset is

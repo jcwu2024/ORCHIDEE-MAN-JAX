@@ -60,6 +60,10 @@ export NUMEXPR_NUM_THREADS=1
 export MALLOC_ARENA_MAX=2
 
 cd "$ROOT"
+EXTRA_ARGS=()
+if [[ "${AUDIT_CONSERVATION:-0}" == "1" ]]; then
+  EXTRA_ARGS+=(--audit-conservation)
+fi
 "$PYTHON" -m scripts.dev.probe_ok_leak_driver_capture \
   --dataset-manifest "$DATASET_MANIFEST" \
   --plan "$TEACHER_PLAN" \
@@ -67,6 +71,7 @@ cd "$ROOT"
   --year "$YEAR" \
   --day-index "$DAY_INDEX" \
   --replay-driver-npz "$DRIVER_NPZ" \
-  --output "$OUTPUT_DIR"
+  --output "$OUTPUT_DIR" \
+  "${EXTRA_ARGS[@]}"
 
 test -f "$OUTPUT_DIR/report.json"

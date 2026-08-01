@@ -3,9 +3,12 @@
 from __future__ import annotations
 
 from dataclasses import asdict, dataclass
-from typing import Any, Mapping
+from typing import Any, Mapping, NamedTuple
 
+import jax.numpy as jnp
 import numpy as np
+
+from jax_orchidee.stomate.soilcarbon_kernels import IDOCL, IDOCR
 
 
 @dataclass(frozen=True)
@@ -36,6 +39,17 @@ class CarbonTransferLabelOwnership:
     native_units: str
     provenance: tuple[str, ...]
     notes: str
+
+
+class CombinedCarbonBalance(NamedTuple):
+    """Per-landpoint source-backed carbon inventory balance for one scan step."""
+
+    initial_inventory: object
+    final_inventory: object
+    external_input: object
+    atmospheric_loss: object
+    lateral_export: object
+    closure: object
 
 
 OK_LEAK_CARBON_FIELD_OWNERSHIP = (
@@ -428,6 +442,144 @@ FULL_STATE_INTERNAL_TRANSFER_REQUIREMENTS = (
     "cryoturbation_redistribution",
     "perma_peat_redistribution",
 )
+
+
+def _weighted_carbon_inventory(
+    *,
+    litter_above,
+    litter_below,
+    carbon_32l,
+    doc,
+    interception_storage,
+    veget_max,
+):
+    """Return the independent litter, POC, DOC, and canopy carbon inventory."""
+
+    veget_max = jnp.asarray(veget_max)
+    litter_above = jnp.asarray(litter_above)
+    litter_below = jnp.asarray(litter_below)
+    carbon_32l = jnp.asarray(carbon_32l)
+    doc = jnp.asarray(doc)
+    interception_storage = jnp.asarray(interception_storage)
+    litter = jnp.sum(
+        litter_above[..., 0] * veget_max[:, None, :],
+        axis=(1, 2),
+    ) + jnp.sum(
+        litter_below[..., 0] * veget_max[:, None, :, None],
+        axis=(1, 2, 3),
+    )
+    particulate = jnp.sum(
+        carbon_32l * veget_max[:, None, :, None],
+        axis=(1, 2, 3),
+    )
+    dissolved = jnp.sum(
+        doc[..., 0] * veget_max[:, :, None, None, None],
+        axis=(1, 2, 3, 4),
+    )
+    canopy = jnp.sum(interception_storage[..., 0], axis=1)
+    return litter + particulate + dissolved + canopy
+
+
+def combined_ok_leak_carbon_balance(
+    *,
+    initial,
+    result,
+    turnover,
+    bm_to_litter,
+    veget_max,
+    doc_to_topsoil,
+    doc_to_subsoil,
+    dt_days,
+) -> CombinedCarbonBalance:
+    """Audit one exact OK_LEAK step using the source mass-balance ownership.
+
+    Fortran provenance: ``stomate_litter.f90`` ``littercalc_leak`` lines
+    1975-2004 and 2801-2845; ``stomate_soilcarbon.f90``
+    ``soilcarbon_leak`` lines 1235-1286 and 2306-2357. Internal litter-to-DOC,
+    adsorption, vertical transport, diffusion, cryoturbation, and peat
+    redistribution cancel inside this combined independent-stock inventory.
+    """
+
+    veget_max = jnp.asarray(veget_max)
+    turnover = jnp.asarray(turnover)
+    bm_to_litter = jnp.asarray(bm_to_litter)
+    dt_days = jnp.asarray(dt_days)
+    littercalc = result.littercalc
+    soilcarbon = result.soilcarbon
+    initial_inventory = _weighted_carbon_inventory(
+        litter_above=initial.litter_above,
+        litter_below=initial.litter_below,
+        carbon_32l=initial.carbon_32l,
+        doc=initial.doc,
+        interception_storage=initial.interception_storage,
+        veget_max=veget_max,
+    )
+    final_inventory = _weighted_carbon_inventory(
+        litter_above=littercalc.litter_above,
+        litter_below=soilcarbon.litter_below,
+        carbon_32l=soilcarbon.carbon_32l,
+        doc=soilcarbon.doc,
+        interception_storage=result.interception_storage,
+        veget_max=veget_max,
+    )
+
+    litter_input = jnp.sum(
+        (turnover[..., 0] + bm_to_litter[..., 0])
+        * veget_max[:, :, None],
+        axis=(1, 2),
+    )
+    bio_frac = jnp.sum(veget_max[:, 1:], axis=1)
+    routing_input = (
+        jnp.asarray(doc_to_topsoil)[:, IDOCL]
+        + jnp.asarray(doc_to_topsoil)[:, IDOCR]
+        + jnp.asarray(doc_to_subsoil)[:, IDOCL]
+        + jnp.asarray(doc_to_subsoil)[:, IDOCR]
+    ) * dt_days
+    routing_input = jnp.where(bio_frac > 0.0, routing_input, 0.0)
+    wet_ground = jnp.sum(result.wet_dep_ground[..., 0], axis=1)
+    wet_flood = jnp.sum(result.wet_dep_flood[..., 0], axis=1)
+    canopy_change = jnp.sum(
+        result.interception_storage[..., 0]
+        - jnp.asarray(initial.interception_storage)[..., 0],
+        axis=1,
+    )
+    external_input = (
+        litter_input + routing_input + wet_ground + wet_flood + canopy_change
+    )
+
+    litter_respiration = jnp.sum(
+        (
+            jnp.sum(littercalc.resp_hetero_litter, axis=2)
+            + littercalc.resp_hetero_flood
+        )
+        * veget_max,
+        axis=1,
+    )
+    soil_respiration = jnp.sum(
+        (soilcarbon.resp_hetero_soil + soilcarbon.resp_flood_soil)
+        * veget_max,
+        axis=1,
+    )
+    atmospheric_loss = (litter_respiration + soil_respiration) * dt_days
+    lateral_export = jnp.sum(
+        soilcarbon.doc_exp[..., 0] * veget_max[:, :, None, None],
+        axis=(1, 2, 3),
+    ) * dt_days
+    closure = (
+        initial_inventory
+        + external_input
+        - atmospheric_loss
+        - lateral_export
+        - final_inventory
+    )
+    return CombinedCarbonBalance(
+        initial_inventory=initial_inventory,
+        final_inventory=final_inventory,
+        external_input=external_input,
+        atmospheric_loss=atmospheric_loss,
+        lateral_export=lateral_export,
+        closure=closure,
+    )
 
 
 def audit_aggregate_transfer_source_map() -> dict[str, Any]:
