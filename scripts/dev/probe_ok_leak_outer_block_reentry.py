@@ -31,6 +31,48 @@ from scripts.dev.probe_ok_leak_driver_capture import (
     _sha256_array,
 )
 
+_REENTRY_ONLY_DAILY_ACCUMULATORS = frozenset(
+    {"flood_root_radia", "resp_maint_part", "resp_maint_radia"}
+)
+
+
+def _normalize_daily_accumulator_schema(packet, produced_packet):
+    component = "slowproc_stomate_previous_step_state"
+    field = "daily_accumulators"
+    current = dict(packet.fields_by_component[component][field])
+    produced = dict(produced_packet.fields_by_component[component][field])
+    missing = tuple(sorted(set(produced) - set(current)))
+    dropped = tuple(sorted(set(current) - set(produced)))
+    reset_fields = frozenset(teacher.PAPER_DAY_ZERO_DAILY_RESET_FIELDS)
+    if not set(missing) <= reset_fields:
+        raise ValueError(
+            f"outer-block reentry has non-reset missing accumulators: {missing}"
+        )
+    if not set(dropped) <= _REENTRY_ONLY_DAILY_ACCUMULATORS:
+        raise ValueError(
+            f"outer-block reentry has unexplained dropped accumulators: {dropped}"
+        )
+    normalized = {
+        name: (
+            current[name]
+            if name in current
+            else np.zeros_like(np.asarray(produced_value))
+        )
+        for name, produced_value in produced.items()
+    }
+    if any(np.any(np.asarray(value)) for value in normalized.values()):
+        raise ValueError("outer-block reentry accumulators must remain zero")
+    fields = {
+        name: dict(values) for name, values in packet.fields_by_component.items()
+    }
+    fields[component][field] = normalized
+    normalized_packet = teacher.DriverPreviousStepStatePacket(
+        tstep=packet.tstep,
+        fields_by_component=fields,
+        provenance_by_component=dict(packet.provenance_by_component),
+    )
+    return normalized_packet, {"zero_filled": missing, "dropped": dropped}
+
 
 def run_probe(args: argparse.Namespace):
     manifest_path = args.dataset_manifest.resolve()
@@ -94,17 +136,6 @@ def run_probe(args: argparse.Namespace):
         lambda value: np.expand_dims(np.asarray(value), axis=0), forcing
     )
     block_day_numbers = np.asarray([args.day_index], dtype=np.int32)
-    transition_inputs = teacher._paper_1961_later_day_transition_inputs(
-        context=context,
-        current_state=packet,
-        year=args.year,
-        start=(args.day_index - 1) * steps_per_day,
-        steps_per_stomate=steps_per_day,
-        fixed_format_trace_dir=None,
-        static_trace_fields=None,
-        prebuild_day_payloads=True,
-    )
-    initial = teacher.fast_state_from_previous_packet(packet)
     schema_record = capture_pre_daily_stomate_record(
         config_path,
         previous_state=packet,
@@ -120,6 +151,20 @@ def run_probe(args: argparse.Namespace):
         retain_stomate_step_results=False,
         prebuild_day_payloads=True,
     )
+    packet, schema_adjustments = _normalize_daily_accumulator_schema(
+        packet, schema_record.expected_result.day_end_state
+    )
+    transition_inputs = teacher._paper_1961_later_day_transition_inputs(
+        context=context,
+        current_state=packet,
+        year=args.year,
+        start=(args.day_index - 1) * steps_per_day,
+        steps_per_stomate=steps_per_day,
+        fixed_format_trace_dir=None,
+        static_trace_fields=None,
+        prebuild_day_payloads=True,
+    )
+    initial = teacher.fast_state_from_previous_packet(packet)
     boundary_state_spec = teacher.fast_state_from_previous_packet(
         schema_record.half_hour_transition.current_state
     ).spec
@@ -217,6 +262,7 @@ def run_probe(args: argparse.Namespace):
         "day_index": args.day_index,
         "source_shard": str(shard_path),
         "day_start_state_sha256": _sha256_array(shard.state_trajectory[row]),
+        "reentry_schema_adjustments": schema_adjustments,
         "fast_day_target": target_comparison,
         "next_continuous_state": state_comparison,
         "next_discrete_state": discrete_comparisons,
