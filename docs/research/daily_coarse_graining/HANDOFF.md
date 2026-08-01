@@ -1051,7 +1051,10 @@ zero peat activity, but that gate confused an unreachable HYDROL branch with
 required coverage and the old rank logic ordered tied zeros. Never use either
 plan for capture. The accepted plan uses equal-tie ranks and passes the
 independent selected-row verifier. The next operation is the restartable batch
-capture implementation, not another selection run. See
+capture smoke, not another selection run. The runner and Slurm wrapper are
+implemented but have not executed on real server data. Start with
+`CAPTURE_LIMIT=1`; inspect all scientific/hash gates and resources before the
+96-day capture. See
 [`ok_leak_auxiliary_capture_selection_protocol_20260731.md`](ok_leak_auxiliary_capture_selection_protocol_20260731.md).
 
 The prepared v4 subset is

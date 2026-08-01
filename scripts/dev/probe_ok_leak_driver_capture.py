@@ -40,6 +40,21 @@ def _sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _sha256_array(value: Any) -> str:
+    array = np.ascontiguousarray(value)
+    digest = hashlib.sha256()
+    digest.update(str(array.dtype).encode("ascii"))
+    digest.update(json.dumps(array.shape, separators=(",", ":")).encode("ascii"))
+    digest.update(array.tobytes())
+    return digest.hexdigest()
+
+
+def _atomic_write_json(path: Path, value: Mapping[str, Any]) -> None:
+    temporary = path.with_suffix(path.suffix + ".tmp")
+    temporary.write_text(json.dumps(value, indent=2) + "\n", encoding="utf-8")
+    temporary.replace(path)
+
+
 def _resolve(base: Path, value: str | Path) -> Path:
     path = Path(value)
     return path.resolve() if path.is_absolute() else (base / path).resolve()
@@ -179,6 +194,14 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
     if matches.size != 1:
         raise ValueError("capture probe day is absent or duplicated in the shard")
     row = int(matches[0])
+    day_start_state_sha256 = _sha256_array(shard.state_trajectory[row])
+    fast_day_target_sha256 = _sha256_array(shard.fast_day_target[row])
+    expected_state_hash = getattr(args, "expected_day_start_state_sha256", None)
+    expected_target_hash = getattr(args, "expected_fast_day_target_sha256", None)
+    if expected_state_hash is not None and day_start_state_sha256 != expected_state_hash:
+        raise ValueError("capture plan day-start state hash mismatch")
+    if expected_target_hash is not None and fast_day_target_sha256 != expected_target_hash:
+        raise ValueError("capture plan fast-day target hash mismatch")
 
     plan_path = args.plan.resolve() if args.plan is not None else _resolve(manifest_path.parents[3], manifest["plan"])
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
@@ -277,7 +300,10 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
 
     args.output.mkdir(parents=True, exist_ok=True)
     arrays_path = args.output / "ok_leak_driver_series.npz"
-    np.savez_compressed(arrays_path, **arrays)
+    arrays_temporary = arrays_path.with_suffix(".npz.tmp")
+    with arrays_temporary.open("wb") as handle:
+        np.savez_compressed(handle, **arrays)
+    arrays_temporary.replace(arrays_path)
     capture_metadata = ok_leak_driver_capture_metadata(arrays)
     passed = _capture_probe_passes(
         source_driver_comparisons,
@@ -298,6 +324,9 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
         "day_index": args.day_index,
         "source_shard": str(shard_path),
         "source_shard_sha256": reference["shard_sha256"],
+        "day_start_state_sha256": day_start_state_sha256,
+        "fast_day_target_sha256": fast_day_target_sha256,
+        "capture_plan_sha256": getattr(args, "capture_plan_sha256", None),
         "capture": capture_metadata,
         "capture_npz": arrays_path.name,
         "capture_npz_sha256": _sha256_file(arrays_path),
@@ -314,7 +343,7 @@ def run_probe(args: argparse.Namespace) -> Mapping[str, Any]:
         "sealed_test_used": False,
     }
     report_path = args.output / "report.json"
-    report_path.write_text(json.dumps(report, indent=2) + "\n", encoding="utf-8")
+    _atomic_write_json(report_path, report)
     return report
 
 

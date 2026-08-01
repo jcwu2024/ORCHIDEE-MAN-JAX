@@ -724,5 +724,12 @@ capture asset. The accepted replacement is frozen at
 `manifests/coarse_graining/ok_leak_auxiliary_capture_96day_v1.json`, canonical
 SHA256 `8ebe5345...3b922c7`. It passes all 19 independent checks over 96 unique
 train-only days, including exact selected-row state and target hashes. The
-next operation is the restartable batch capture implementation. See
+next operation is the restartable batch capture smoke. See
 [`ok_leak_auxiliary_capture_selection_protocol_20260731.md`](research/daily_coarse_graining/ok_leak_auxiliary_capture_selection_protocol_20260731.md).
+
+The restartable one-process batch runner and CPU Slurm wrapper are implemented
+locally. They verify the source generation plan, stage each day atomically,
+and resume only hash-identical passed captures. No real batch capture has run
+yet. The mandatory next gate is one planned day with `CAPTURE_LIMIT=1`; the
+96-day capture remains unauthorized until that smoke's scientific gates,
+wall time, and peak memory are accepted.

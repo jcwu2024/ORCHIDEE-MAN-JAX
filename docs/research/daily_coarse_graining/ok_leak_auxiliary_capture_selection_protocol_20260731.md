@@ -145,9 +145,16 @@ target hash.
 
 ## Next Implementation Boundary
 
-After the real plan is accepted, add one batch capture runner which reuses
-compiled Teacher executables across selected days and writes one atomic,
-restartable asset per planned day. It must invoke the existing capture hook;
-it must not duplicate formulas or launch one Python/compiler process per day.
-Only after those assets pass exact replay may the conservation, feasible
-perturbation, reverse-gradient, and tiny parent-no-regression gates proceed.
+The batch runner is implemented as
+`scripts.dev.capture_ok_leak_driver_batch`, with the Slurm wrapper
+`scripts/hpc/slurm_ok_leak_auxiliary_capture.sh`. It invokes the accepted
+single-day capture hook in one Python process, reuses JIT caches, verifies the
+v5 generation-plan hash, writes each day through an `.incomplete` staging
+directory, atomically promotes only passed outputs, and resumes passed days
+without rerunning them.
+
+The required next gate is one selected day with `CAPTURE_LIMIT=1`. Only after
+its capture manifest, NPZ hash, exact scan replay, endpoint/state gates, peak
+memory, and wall time are accepted may the same runner capture all 96 days.
+Only after all assets pass may the conservation, feasible-perturbation,
+reverse-gradient, and tiny parent-no-regression gates proceed.
