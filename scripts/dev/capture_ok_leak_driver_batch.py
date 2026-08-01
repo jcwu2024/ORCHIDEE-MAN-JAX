@@ -52,8 +52,11 @@ def _capture_interface_failure_reasons(report: Mapping[str, Any]) -> list[str]:
         reasons = []
         if report.get("capture") is None:
             reasons.append("compiled_driver_capture")
-        if not report.get("ok_leak_endpoint_within_1e-12"):
-            reasons.append("ok_leak_endpoint_within_1e-12")
+        if not report.get(
+            "target_ok_leak_endpoint_within_1e-12",
+            report.get("ok_leak_endpoint_within_1e-12"),
+        ):
+            reasons.append("target_ok_leak_endpoint_within_1e-12")
         discrete = report.get("next_discrete_state", {})
         if not discrete or not all(item.get("exact") for item in discrete.values()):
             reasons.append("next_discrete_state_exact")

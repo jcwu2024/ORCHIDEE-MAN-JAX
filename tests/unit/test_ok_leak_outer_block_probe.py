@@ -7,9 +7,11 @@ import pytest
 
 from jax_orchidee.driver.orchestration import DriverPreviousStepStatePacket
 from jax_orchidee.stomate import soilcarbon_kernels
+from scripts.dev.probe_ok_leak_driver_capture import _array_comparison
 from scripts.dev.probe_ok_leak_outer_block_reentry import (
     _configure_doc_sqrt_mode,
     _normalize_daily_accumulator_schema,
+    _ok_leak_endpoint_passed,
     build_parser,
     teacher_block_for_day,
 )
@@ -125,6 +127,24 @@ def test_outer_probe_parser_accepts_the_teacher_seven_day_block():
     )
 
     assert args.block_days == 7
+
+
+def test_target_day_capture_gate_is_independent_of_later_block_drift():
+    target = {
+        "ok_leak.DOC": _array_comparison(
+            np.asarray([1.0 + 5.0e-13]),
+            np.asarray([1.0]),
+        )
+    }
+    later = {
+        "ok_leak.DOC": _array_comparison(
+            np.asarray([1.0 + 2.0e-12]),
+            np.asarray([1.0]),
+        )
+    }
+
+    assert _ok_leak_endpoint_passed(target)
+    assert not _ok_leak_endpoint_passed(later)
 
 
 @pytest.mark.parametrize(
