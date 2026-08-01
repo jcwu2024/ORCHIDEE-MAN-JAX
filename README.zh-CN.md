@@ -22,17 +22,21 @@
 
 ## 分支与研究状态
 
-- `main` 是稳定、面向用户的 PFT14 半小时 Teacher 和正式 CLI。
+- `main` 是已经发布的 PFT14 半小时 Teacher 基线和预定的面向用户分支。正式发布前
+  还需把研究分支中应进入生产的共享核心修改经过筛选和回归后晋级，不能把全部神经网络
+  研究历史直接合并进 `main`。详见 `docs/branch-alignment-20260802.md`。
 - `research/daily-coarse-graining` 包含完整 Teacher，以及仅用于研究的数据捕获、
   数据集生成和神经代理代码。捕获开关默认关闭，不改变正式 Teacher 行为。
 
-日尺度神经链路已经在技术上接通，但还不是经过科学验收或面向用户的模型。目前已完成
-Linux CPU 与 V100 兼容性、编译后的 Teacher 标签捕获，以及可恢复的 landpoint-year
-数据分片生成。仍需完成有边界的试点数据集、单步学习验证和自由 rollout 门禁。GPU
+日尺度神经链路已经在技术上接通，但还不是经过科学验收或面向用户的模型。此前直接预测
+状态的候选已经被否决。当前目标是真正的守恒型日尺度过程算子：读取原生 6 小时 forcing，
+预测日累计通量和转移比例，并只执行一次受约束的日状态更新；最终代理模型不再执行
+48 步状态递推。GPU
 目前主要用于批量神经网络训练；神经网络推理继续同时支持 CPU 和 GPU，最终根据完整
 工作负载的实测性能选择，而不是预先规定必须使用 GPU。
 
-权威的当前状态见 [`docs/current-status.md`](docs/current-status.md)。带日期的研究报告和
+新接手者先阅读 [`docs/START_HERE.md`](docs/START_HERE.md)，权威的当前状态见
+[`docs/current-status.md`](docs/current-status.md)。带日期的研究报告和
 源码审计是历史证据快照，可能描述较早的阶段。
 
 新对话如需接手 `research/daily-coarse-graining`，应首先阅读

@@ -9,6 +9,8 @@ mode.
 
 - `HANDOFF.md`: current operational snapshot, running jobs, completion gate,
   next command, and decisions that must not be reopened.
+- `conservative_daily_process_operator_v1.md`: active true-daily architecture,
+  PFT extensibility, parameter ownership, and the pre-training admission gate.
 - `../../current-status.md`: current project and research status authority.
 - `development_standard.md`: architecture, evidence, data, split, rollout,
   and performance rules.
@@ -30,6 +32,12 @@ conditions and conclusions; do not edit an old report to describe a newer
 gate.
 
 ## Current Boundary
+
+The implemented v5 boundary and its 669-point dataset remain accepted Teacher
+and historical neural assets. They are not the active final surrogate design.
+The final inference target consumes native six-hour records, predicts daily
+process fluxes/rates, and performs one constrained state update without
+reconstructing 48 forcing steps or running a 48-step state scan.
 
 Implemented:
 
@@ -53,8 +61,12 @@ Not implemented or not accepted:
 
 ## Current Work
 
-The first frozen v3 five-point, 1961-2010 dataset completed and exposed two
-contract defects during its first neural experiment. It remains historical
-evidence. The complete nine-point v4 architecture dataset must now be migrated
-losslessly to v5 before the next bounded experiment. Continue from
-[`HANDOFF.md`](HANDOFF.md), which owns the single next milestone.
+Do not start another neural training experiment. First freeze a source-backed
+parameter-ownership contract and a daily water/carbon/energy flux-label
+contract. Audit the existing 669-point shards at schema level, capture only
+labels that are absent and cannot be derived, and pass a non-neural replay in
+which true Teacher daily fluxes reconstruct the constrained next-day state.
+
+The network interface must be PFT-extensible even though the current data and
+scientific claim remain PFT14-only. Continue from [`HANDOFF.md`](HANDOFF.md),
+which owns the single next milestone.

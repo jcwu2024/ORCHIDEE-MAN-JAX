@@ -23,21 +23,24 @@ other PFTs or unsupported ORCHIDEE configurations.
 
 ## Branches and Research Status
 
-- `main` is the stable, user-facing half-hour PFT14 Teacher and production
-  CLI.
+- `main` is the published half-hour PFT14 Teacher baseline and intended
+  user-facing branch. A curated promotion of later shared-core changes remains
+  before release; see `docs/branch-alignment-20260802.md`.
 - `research/daily-coarse-graining` contains the complete Teacher plus
   research-only data capture, dataset generation, and neural-surrogate code.
   Capture hooks default to off and do not change production Teacher behavior.
 
 The daily neural path is technically connected but is not yet a validated or
-user-facing model. Linux CPU and V100 compatibility, compiled Teacher capture,
-and restartable landpoint-year shard generation are implemented. A bounded
-pilot dataset, learned one-step validation, and free-rollout gates remain.
+user-facing model. Earlier direct-state candidates were rejected. The active
+target is now a true daily conservative process operator consuming native
+six-hour forcing and performing one constrained daily state update; the final
+surrogate will not execute a 48-step state scan.
 GPU is currently intended for batched neural training; neural inference will
 remain CPU/GPU portable and will be selected from measured workload-level
 performance rather than assumed to require GPU.
 
-See [`docs/current-status.md`](docs/current-status.md) for the authoritative
+Start with [`docs/START_HERE.md`](docs/START_HERE.md), then see
+[`docs/current-status.md`](docs/current-status.md) for the authoritative
 current state. Dated research and source-audit documents are retained as
 historical evidence and may describe earlier gates.
 

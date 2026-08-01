@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-01.
+Last updated: 2026-08-02.
 
 This page is the current status authority. Dated files under
 `docs/source_audits/` and `docs/research/` are evidence snapshots and may
@@ -8,10 +8,20 @@ describe an earlier gate without being rewritten.
 
 ## Stable Teacher
 
-The `main` branch is the stable, user-facing PFT14 Teacher implementation. It
-contains the full half-hour ORCHIDEE-MAN path, daily STOMATE processing,
+The intended user-facing product is the PFT14 Teacher on `main`. The Git branch
+has not yet received the curated production promotion: at this snapshot
+`main` is `7333b46`, while `research/daily-coarse-graining` is a strict
+descendant at `072e136` and contains later source-threshold, autodiff-safety,
+capture, and research changes. There are no main-only commits, but the two
+branches are not code-identical. See
+[`branch-alignment-20260802.md`](branch-alignment-20260802.md).
+
+The complete Teacher implementation available on the research integration
+branch contains the full half-hour ORCHIDEE-MAN path, daily STOMATE processing,
 restart handoff, annual modelout, compiled complete-day blocks, and the
-production CLI.
+production CLI. Research capture hooks default to off. `main` must be updated
+through a curated, regression-gated promotion rather than by merging all
+neural research history.
 
 Current evidence:
 
@@ -29,6 +39,34 @@ ORCHIDEE configurations.
 The `research/daily-coarse-graining` branch contains the complete Teacher plus
 research-only capture, dataset, and neural-surrogate code. The production
 Teacher defaults are unchanged because all capture hooks default to off.
+
+### Active architecture decision
+
+The final surrogate target is now a true conservative daily process operator:
+
+```text
+day-start state + native 6-hour forcing + parameters/static conditions
+  -> daily fluxes, transfer fractions, and bounded tendencies
+  -> one constrained water/carbon/energy update
+  -> retained source-backed daily processes
+  -> next-day state
+```
+
+Final inference must not reconstruct 48 interpolated forcing steps or execute
+a 48-step state scan. The accepted 96-day `OK_LEAK` driver capture and exact
+48-step replay remain Teacher/Oracle evidence, not the final neural boundary.
+Direct neural ownership of `carbon_32l`, DOC, or `deepC_peat` remains rejected.
+
+PFT14 is the current training and acceptance scope, but the architecture must
+use shared PFT-axis processing conditioned on source-backed traits, parameters,
+fractions, and masks. Supporting another PFT later will require Teacher branch
+coverage and training data, but must not require redesigning the neural
+interface. See
+[`research/daily_coarse_graining/conservative_daily_process_operator_v1.md`](research/daily_coarse_graining/conservative_daily_process_operator_v1.md).
+
+No new GPU training is authorized before parameter ownership, daily flux
+labels, existing-shard availability, and a true-label non-neural constrained
+replay are frozen and pass their gates.
 
 Completed infrastructure:
 
@@ -357,7 +395,11 @@ transitions, source/input hashes, checkpoint links, splits, and the single
 Markov contract are valid. Its operational evidence is recorded in
 [`research/daily_coarse_graining/HANDOFF.md`](research/daily_coarse_graining/HANDOFF.md).
 
-## Next Bounded Milestone
+## Historical Neural Milestones
+
+The material below records completed v3-v5 dataset and rejected-model
+evidence. It is not the active work queue. The active milestone is the
+parameter/flux contract and non-neural daily replay described above.
 
 The full 669-point baseline is generated and admitted. Finalization job
 `14400343` completed in 4:08:54 with exit code zero. Its fail-closed gates
@@ -687,11 +729,11 @@ The subsequent source audit closes the ownership ambiguity. Contract v5's
 values. `deepC_peat` is reset from `carbon_32l` before decomposition and must
 not be a neural stock owner. Existing shards provide endpoint supervision but
 not aggregate transfer labels or the 13 half-hour driver series required by
-the exact source-backed scan. The preferred bounded successor therefore
-predicts those drivers and executes the existing 48-step
-`_paper_compiled_ok_leak_fold`. No paid training or 669-point regeneration is
-authorized before a small auxiliary capture passes exact replay, conservation,
-nonnegative-stock, finite-gradient, and parent-no-regression gates. See
+the exact source-backed scan. At that historical decision point, a bounded
+successor predicted those drivers and executed the existing 48-step
+`_paper_compiled_ok_leak_fold`. Its capture and replay evidence remains valid,
+but the 2026-08-02 true-daily decision supersedes it as the final surrogate
+design. See
 [`carbon_budget_ownership_audit_20260731.md`](research/daily_coarse_graining/carbon_budget_ownership_audit_20260731.md).
 
 The bounded train-only auxiliary asset and persisted replay gate are now

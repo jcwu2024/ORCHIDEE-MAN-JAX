@@ -1,6 +1,6 @@
 # Daily Coarse-Graining Handoff
 
-Snapshot date: 2026-08-01
+Snapshot date: 2026-08-02
 
 This is the single operational handoff page for the daily coarse-graining
 research branch. Read this page before dated experiment reports. Stable
@@ -10,25 +10,17 @@ scientific and release facts remain authoritative in
 ## Five-Minute Startup
 
 1. Check out `research/daily-coarse-graining` and confirm a clean worktree.
-2. Read this page, then
-   [`daily_markov_contract_v5.md`](daily_markov_contract_v5.md) and
-   [`teacher_dataset_generation.md`](teacher_dataset_generation.md).
+2. Read [`../../START_HERE.md`](../../START_HERE.md), then
+   [`conservative_daily_process_operator_v1.md`](conservative_daily_process_operator_v1.md).
 3. Connect through the restored `cln01` alias and submit computation only
    through Slurm.
-4. Confirm the admitted 669-point dataset and frozen architecture-screen
-   hashes below. Do not regenerate Teacher data or reuse nine-point assets.
-5. Experiment B formal all-sample screen `14430377` rejected
-   `mixed_horizon_stability_v1`. Do not run confirmation seeds, inspect sealed
-   test data, or begin 365-day validation for that candidate.
-6. Experiment C formal training `14434127` and screening `14436716` are
-   complete. The candidate is rejected because independent stock correction
-   worsened `carbon_32l` by `7.33-9.32x` and `deepC_peat` by `5.66-7.45x`.
-   Its stock-adapter ablation also failed. Do not retune, confirm, or promote
-   it. The bounded 96-day exact-`OK_LEAK` capture and persisted replay gates
-   now pass. A real 48-step source-backed conservation smoke also passes. The
-   active operation is the remaining conservative micro-gates: feasible
-   perturbations/nonnegative stocks, real scan gradients, and bounded tiny-fit
-   parent no-regression.
+4. Do not regenerate Teacher data, inspect sealed test data, resume a rejected
+   checkpoint, or submit another neural training job.
+5. The active operation is to freeze the parameter-ownership and daily-flux
+   contracts, audit existing shard labels, and pass a non-neural constrained
+   daily replay gate.
+6. The 96-day exact `OK_LEAK` asset and 48-step scan remain accepted Oracle
+   evidence. They are no longer the final surrogate architecture.
 
 ```bash
 git status --short --branch
@@ -40,9 +32,37 @@ commits do not alter its process image or outputs. Any recovery of point 319
 must use a dedicated clean worktree at `1f19ed7`, not the advancing neural
 worktree. Any future generation run must record its own exact Teacher commit.
 
-## Current Architecture
+## Active Target Architecture
 
-The learned operator replaces exactly this block:
+The final surrogate is a true daily conservative process operator:
+
+```text
+S[d] + native 6-hour forcing[d] + parameters/static conditions
+  -> process-structured daily fluxes and transfer fractions
+  -> one constrained water/carbon/energy state update
+  -> retained source-backed daily processes
+  -> S[d+1]
+```
+
+Final inference must not reconstruct 48 interpolated forcing steps or execute
+a 48-step state scan. PFT14 is the current training and acceptance scope, but
+the model interface must use shared PFT-axis weights, traits, parameters,
+fractions, and masks rather than hard-code PFT index 13. See
+[`conservative_daily_process_operator_v1.md`](conservative_daily_process_operator_v1.md).
+
+Before implementation or GPU training, complete these gates in order:
+
+1. parameter ownership, tunability, bounds, and training-variation inventory;
+2. daily water/carbon/energy flux and transfer-label contract;
+3. existing-shard label availability audit;
+4. diagnostic-only supplemental capture only for non-identifiable missing
+   labels;
+5. true-label constrained daily replay with budgets, nonnegative stocks,
+   restart behavior, and finite parameter gradients.
+
+## Implemented Historical Boundary
+
+Contract v5 and its rejected neural candidates modeled exactly this block:
 
 ```text
 48 half-hour SECHIBA/HYDROL/THERMOSOIL/DIFFUCO/ENERBIL transitions
@@ -690,10 +710,15 @@ resume only the incomplete worker assignment.
 
 ## Next Single Milestone
 
-Define the next bounded architecture/objective hypothesis after the rejected
-Experiment B result in
-[`rollout_stability_screening_20260731.md`](rollout_stability_screening_20260731.md).
-Do not continue or retune `mixed_horizon_stability_v1`.
+Freeze the parameter-ownership and daily-flux contracts, then prove the
+non-neural constrained updater with true Teacher daily labels. The milestone
+ends with a machine-readable report that classifies every required label as
+present, exactly derivable, or requiring supplemental capture. Do not build a
+new neural candidate before this gate passes.
+
+The material below this paragraph is retained historical execution evidence
+for the v3-v5 datasets and rejected experiments. It is not the current work
+queue.
 
 The completed Experiment B implementation:
 The implementation:
@@ -1009,9 +1034,11 @@ targets, 1,222 are independent carbon inventory, 64 are the derived
 `deepC_peat` diagnostic, and 90 are ratios or overlapping tracer/partition
 state. Contract v5 has endpoint supervision but contains neither aggregate
 transfer labels nor the 13 half-hour driver series required to execute the
-exact 48-step scan. The preferred successor predicts those driver series and
-runs the existing `_paper_compiled_ok_leak_fold`; it does not independently
-predict any carbon stock or `deepC_peat`.
+exact 48-step scan. At that historical decision point, the bounded successor
+predicted those driver series and ran the existing
+`_paper_compiled_ok_leak_fold`; it did not independently predict any carbon
+stock or `deepC_peat`. Its capture/replay evidence remains valid, but the
+2026-08-02 true-daily decision supersedes it as the final surrogate design.
 
 The complete bounded auxiliary capture/replay gate is now closed. The
 accepted plan contains 96 train-only days: 16 days for each of six training
@@ -1141,10 +1168,12 @@ generated and accepted.
 
 ## Decisions Not To Reopen
 
-- Do not redefine the label as the final daily state. The accepted target is
-  the complete `B_fast` boundary, while `S[d+1]` remains rollout supervision.
+- Do not revive direct next-stock prediction or independent neural ownership
+  of `carbon_32l`, DOC, or `deepC_peat`.
+- Do not promote the neural 13-driver plus exact 48-step `OK_LEAK` scan as the
+  final surrogate. It remains an Oracle and label-attribution asset.
 - Do not store all 48 interpolated forcing steps. Store native 6-hour forcing
-  and reconstruct deterministic preprocessing.
+  and use native record times/durations in the final surrogate.
 - Do not invent a cold-start `S[0]`; bootstrap canonical `S[1]` with Teacher
   Day 1.
 - Do not generate v1 or v2 shards. They are historical evidence only.
@@ -1162,6 +1191,12 @@ generated and accepted.
   that physical-parameter gradients are scientifically correct. Trigger the
   dedicated parameter-gradient gate before gradient-based calibration or
   sensitivity claims.
+- Do not hard-code PFT14 into neural weights, shapes, or output ownership.
+  PFT14 is the current data scope; shared PFT-axis processing is the interface
+  contract.
+- Do not assume that including a parameter which is constant in all training
+  samples teaches its sensitivity. Retain its exact mathematical role or add
+  controlled Teacher perturbations.
 
 ## Authority Map
 
@@ -1169,6 +1204,7 @@ generated and accepted.
 | --- | --- |
 | Overall Teacher/release status | [`../../current-status.md`](../../current-status.md) |
 | Current operational task | this handoff page |
+| Active daily architecture | [`conservative_daily_process_operator_v1.md`](conservative_daily_process_operator_v1.md) |
 | Daily state and target semantics | [`daily_markov_contract_v5.md`](daily_markov_contract_v5.md) |
 | Dataset production and recovery | [`teacher_dataset_generation.md`](teacher_dataset_generation.md) |
 | Research quality gates | [`development_standard.md`](development_standard.md) |

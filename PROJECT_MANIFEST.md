@@ -2,13 +2,20 @@
 
 ## Branch Roles
 
-- `main`: stable PFT14 Teacher and user-facing production CLI.
+- `main`: published PFT14 Teacher baseline and intended user-facing production
+  branch. At the 2026-08-02 audit it still requires a curated promotion of
+  later shared-core changes; it must not be fast-forwarded through all neural
+  research history.
 - `research/daily-coarse-graining`: the complete Teacher plus isolated
   capture, dataset, and neural-surrogate research. Research hooks are disabled
   by default and must not alter Teacher numerical behavior.
 
+The exact branch relationship and promotion gate are recorded in
+`docs/branch-alignment-20260802.md`.
+
 Documentation authority is deliberately layered:
 
+- `docs/START_HERE.md` is the shortest contributor entry point;
 - `docs/current-status.md` owns stable current scientific and release facts;
 - `docs/research/daily_coarse_graining/HANDOFF.md` owns the current research
   operation and immediate next action;
@@ -62,3 +69,8 @@ Explore1000 is the current remote compute platform. Its path, environment,
 transfer, node, and cost contracts are in `docs/deployment-explore1000.md`.
 Historical qhcess/Cancon paths inside Fortran protocol and source-audit assets
 remain provenance only.
+
+The active daily-surrogate architecture is a native-forcing, conservative
+daily process operator. The exact 48-step Teacher remains the data and Oracle
+source; no 48-step forcing reconstruction or state scan belongs in final
+surrogate inference.
