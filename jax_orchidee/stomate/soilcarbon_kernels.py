@@ -4,11 +4,13 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from jax import config, core, custom_jvp, jit
+from jax import config, core, jit
 
 config.update("jax_enable_x64", True)
 
 import jax.numpy as jnp
+
+from jax_orchidee.ad_primitives import source_sqrt_with_finite_zero_tangent
 
 from jax_orchidee.stomate.carbon_kernels import (
     IACTIVE,
@@ -3596,20 +3598,10 @@ def _remap_litter_doc_export(export_pool, pool: int, lignin_above, lignin_below)
     return export_pool
 
 
-@custom_jvp
 def _sqrt_with_finite_zero_tangent(value):
     """Keep the source primal while choosing the zero subgradient at zero."""
 
-    return jnp.sqrt(jnp.asarray(value))
-
-
-@_sqrt_with_finite_zero_tangent.defjvp
-def _sqrt_with_finite_zero_tangent_jvp(primals, tangents):
-    (value,), (tangent,) = primals, tangents
-    result = jnp.sqrt(value)
-    safe_result = jnp.where(value == 0.0, jnp.ones_like(result), result)
-    derivative = jnp.where(value == 0.0, jnp.zeros_like(result), 0.5 / safe_result)
-    return result, derivative * tangent
+    return source_sqrt_with_finite_zero_tangent(jnp.asarray(value))
 
 
 def soilcarbon_leak_doc_export(

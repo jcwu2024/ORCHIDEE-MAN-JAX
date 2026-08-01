@@ -10,49 +10,19 @@ from __future__ import annotations
 
 from typing import NamedTuple
 
-from jax import config, custom_jvp, jit
+from jax import config, jit
 
 config.update("jax_enable_x64", True)
 
 import jax.numpy as jnp
 import numpy as np
 
+from jax_orchidee.ad_primitives import source_ratio_with_finite_tangent
 
-@custom_jvp
 def _stable_ratio_for_ad(numerator, denominator):
     """Preserve the quotient and mask unrepresentable quotient tangents."""
 
-    return numerator / denominator
-
-
-@_stable_ratio_for_ad.defjvp
-def _stable_ratio_for_ad_jvp(primals, tangents):
-    numerator, denominator = primals
-    numerator_tangent, denominator_tangent = tangents
-    ratio = numerator / denominator
-    representable_gradient_denominator = (
-        jnp.abs(denominator)
-        >= jnp.sqrt(jnp.finfo(denominator.dtype).tiny)
-    )
-    safe_denominator = jnp.where(
-        representable_gradient_denominator,
-        denominator,
-        1.0,
-    )
-    safe_numerator_tangent = jnp.where(
-        representable_gradient_denominator,
-        numerator_tangent,
-        0.0,
-    )
-    safe_denominator_tangent = jnp.where(
-        representable_gradient_denominator,
-        denominator_tangent,
-        0.0,
-    )
-    ratio_tangent = (
-        safe_numerator_tangent - ratio * safe_denominator_tangent
-    ) / safe_denominator
-    return ratio, ratio_tangent
+    return source_ratio_with_finite_tangent(numerator, denominator)
 
 
 # Fortran pool indices are 1-based in `constantes_var.f90`, lines 196-208.
@@ -987,11 +957,12 @@ def update_lignin_fraction(old_lignin, old_structural_litter, lignin_increment, 
     old_structural_litter = jnp.asarray(old_structural_litter)
     lignin_increment = jnp.minimum(jnp.asarray(lignin_increment), jnp.asarray(structural_increment))
     new_structural_litter = old_structural_litter + structural_increment
-    active = new_structural_litter > min_stomate
-    safe_structural_litter = jnp.where(active, new_structural_litter, 1.0)
     return jnp.where(
-        active,
-        (old_lignin * old_structural_litter + lignin_increment) / safe_structural_litter,
+        new_structural_litter > min_stomate,
+        source_ratio_with_finite_tangent(
+            old_lignin * old_structural_litter + lignin_increment,
+            new_structural_litter,
+        ),
         0.0,
     )
 
@@ -1039,16 +1010,14 @@ def littercalc_apply_pool_increments(
 
     numerator = jnp.swapaxes(increments.litter_inc_pft_above[:, :, :, ICARBON], 1, 2)
     denom = litter_above_new[:, :, :, ICARBON]
-    active_litter = denom > min_stomate
-    safe_denom = jnp.where(active_litter, denom, 1.0)
     litterpart_new = jnp.where(
-        active_litter,
-        (
+        denom > min_stomate,
+        source_ratio_with_finite_tangent(
             jnp.swapaxes(litterpart, 1, 2)
             * litter_above[:, :, :, ICARBON]
-            + numerator
-        )
-        / safe_denom,
+            + numerator,
+            denom,
+        ),
         0.0,
     )
     litterpart_new = jnp.swapaxes(litterpart_new, 1, 2)
@@ -1154,11 +1123,34 @@ def sync_aboveground_fuel_after_decomposition(
     fuel_total = fuel_1hr + fuel_10hr + fuel_100hr + fuel_1000hr
     qd_carbon = qd[:, :, ICARBON]
     positive = fuel_total[:, :, ICARBON] > min_stomate
-    safe_fuel_total = jnp.where(positive, fuel_total[:, :, ICARBON], 1.0)
-    ratio_1hr_c = jnp.where(positive, fuel_1hr[:, :, ICARBON] / safe_fuel_total, 0.0)
-    ratio_10hr_c = jnp.where(positive, fuel_10hr[:, :, ICARBON] / safe_fuel_total, 0.0)
-    ratio_100hr_c = jnp.where(positive, fuel_100hr[:, :, ICARBON] / safe_fuel_total, 0.0)
-    ratio_1000hr_c = jnp.where(positive, fuel_1000hr[:, :, ICARBON] / safe_fuel_total, 0.0)
+    ratio_1hr_c = jnp.where(
+        positive,
+        source_ratio_with_finite_tangent(
+            fuel_1hr[:, :, ICARBON], fuel_total[:, :, ICARBON]
+        ),
+        0.0,
+    )
+    ratio_10hr_c = jnp.where(
+        positive,
+        source_ratio_with_finite_tangent(
+            fuel_10hr[:, :, ICARBON], fuel_total[:, :, ICARBON]
+        ),
+        0.0,
+    )
+    ratio_100hr_c = jnp.where(
+        positive,
+        source_ratio_with_finite_tangent(
+            fuel_100hr[:, :, ICARBON], fuel_total[:, :, ICARBON]
+        ),
+        0.0,
+    )
+    ratio_1000hr_c = jnp.where(
+        positive,
+        source_ratio_with_finite_tangent(
+            fuel_1000hr[:, :, ICARBON], fuel_total[:, :, ICARBON]
+        ),
+        0.0,
+    )
 
     fuel_1hr_after_qd = fuel_1hr.at[:, :, ICARBON].add(-qd_carbon * ratio_1hr_c)
     fuel_10hr_after_qd = fuel_10hr.at[:, :, ICARBON].add(-qd_carbon * ratio_10hr_c)
@@ -1168,8 +1160,14 @@ def sync_aboveground_fuel_after_decomposition(
 
     diff_frac = litter_above_pool[:, :, ICARBON] - total_after_qd[:, :, ICARBON]
     rescale = (jnp.abs(diff_frac) > min_stomate) & (total_after_qd[:, :, ICARBON] > min_stomate)
-    safe_total_after_qd = jnp.where(rescale, total_after_qd[:, :, ICARBON], 1.0)
-    scale = jnp.where(rescale, 1.0 + diff_frac / safe_total_after_qd, 1.0)
+    scale = jnp.where(
+        rescale,
+        1.0
+        + source_ratio_with_finite_tangent(
+            diff_frac, total_after_qd[:, :, ICARBON]
+        ),
+        1.0,
+    )
     fuel_1hr_new = fuel_1hr_after_qd.at[:, :, ICARBON].set(fuel_1hr_after_qd[:, :, ICARBON] * scale)
     fuel_10hr_new = fuel_10hr_after_qd.at[:, :, ICARBON].set(fuel_10hr_after_qd[:, :, ICARBON] * scale)
     fuel_100hr_new = fuel_100hr_after_qd.at[:, :, ICARBON].set(fuel_100hr_after_qd[:, :, ICARBON] * scale)
