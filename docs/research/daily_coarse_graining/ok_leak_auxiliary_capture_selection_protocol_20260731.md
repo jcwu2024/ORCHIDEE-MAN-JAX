@@ -55,9 +55,9 @@ metrics:
 5. `precip_daily`: Teacher daily precipitation;
 6. `hydrologic_export`: endpoint runoff plus drainage across soil tiles;
 7. `peat_hydrology_activity`: absolute endpoint `shumdiag_peat` plus
-   `runoff2peat`, the direct available proxy for the PERMA_PEAT scan drivers;
+   `runoff2peat`, retained as an execution-contract check;
 8. `peat_cover_fraction`: day-start `stomate.fpeat`, retained as a reported
-   static condition but not used as the dynamic peat-activity gate.
+   static condition but not used as a dynamic selection axis.
 
 Nonfinite values and ORCHIDEE `+/-1e20` sentinels are excluded. A candidate
 set with an invalid metric row is rejected rather than silently imputed.
@@ -69,16 +69,26 @@ total:
 
 1. retain the earliest available train day, normally 1961 Day 2 after the
    canonical cold-start day;
-2. retain the minimum and maximum of each of the seven dynamic metrics within
-   that landpoint;
+2. retain the minimum and maximum of each of the six reachable dynamic metrics
+   within that landpoint;
 3. merge duplicate anchors and fill the remaining slots by deterministic
    farthest-point selection in per-landpoint metric-rank plus time-rank space;
 4. break all ties by landpoint, year, and day order.
 
 This gives every train landpoint equal representation, preserves cold-start
 and named process extremes, and adds multidimensional interior coverage.
-`peat_cover_fraction` is not accepted as evidence of active peat hydrology;
-the dynamic selection uses `shumdiag_peat` and `runoff2peat` instead.
+The paper run's audited HYDROL-local SAVE state is
+`PAPER_1961_HYDROL_SOIL_PEAT_HYDRO=False`, even though `used_run.def` carries a
+same-named `PEAT_HYDRO=TRUE` parameter switch. Therefore `shumdiag_peat` and
+`runoff2peat` are structurally zero in this production execution contract and
+are not dynamic selection axes. They remain in the 13-driver schema as exact
+zero fields. `PERMA_PEAT` carbon redistribution remains active in the exact
+scan and is still endpoint-validated. A future implementation which makes the
+HYDROL-local peat branch reachable requires a new contract and dedicated
+Teacher data; changing landpoint or forcing does not change this static fact.
+
+Equal metric values receive equal ranks. The selector must never manufacture
+coverage by ordering tied zero values by date.
 
 At the measured 486,912 uncompressed bytes per selected day, 96 captures
 require 46,743,552 bytes, or 44.58 MiB, before NPZ compression. This is small
@@ -114,8 +124,8 @@ python -m scripts.dev.verify_ok_leak_driver_capture_plan \
 ```
 
 The verifier recomputes the self-hash, source-manifest identity, exact
-train-only source inventory, quotas and mandatory anchors, nonzero/varying
-peat-hydrology activity, and every selected row's year/day, state hash, and
+train-only source inventory, quotas and mandatory anchors, structurally zero
+peat-hydrology drivers, and every selected row's year/day, state hash, and
 target hash.
 
 ## Next Implementation Boundary

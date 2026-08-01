@@ -708,14 +708,18 @@ feasibility, finite-gradient, and parent-no-regression checks. See
 A deterministic bounded selection tool is now ready for the existing
 server-side v5 shards. It admits only the six spatial-train/temporal-train
 landpoints and selects 16 days per point: cold-start anchor, low/high extrema
-of seven dynamic process metrics, including direct
-`shumdiag_peat + runoff2peat` activity, and rank-space farthest fill. Static
-`fpeat` is report-only and cannot establish peat-process coverage. The intended 96
+of six reachable dynamic process metrics and rank-space farthest fill.
+`shumdiag_peat` and `runoff2peat` remain exact-zero contract fields because
+the audited HYDROL-local SAVE branch is statically
+`peat_hydro=F/branch_peat=F`; changing forcing or landpoint cannot activate
+it. `PERMA_PEAT` carbon redistribution remains in the exact scan. Static
+`fpeat` is report-only. The intended 96
 days require about 44.58 MiB of uncompressed driver labels. Source shard,
 day-start state, and endpoint hashes are mandatory, and sealed references are
 filtered before file access. The first real plan
-`500979ab...d9166a3` is rejected because its old static-`fpeat` proxy was zero
-for every train point. It is not a capture asset. The replacement must use
-direct `shumdiag_peat + runoff2peat` activity and pass the independent
-selected-row verifier; no accepted real 96-day plan is frozen yet. See
+`500979ab...d9166a3` is rejected because its old static-`fpeat` proxy was zero.
+The second `f7967d70...09d0f92` plan is also rejected because it required an
+unreachable peat-hydrology branch and ranked tied zeros by date. Neither is a
+capture asset. The replacement must use equal-tie ranks and pass the
+independent selected-row verifier; no accepted real 96-day plan is frozen yet. See
 [`ok_leak_auxiliary_capture_selection_protocol_20260731.md`](research/daily_coarse_graining/ok_leak_auxiliary_capture_selection_protocol_20260731.md).

@@ -112,6 +112,7 @@ def _candidate_records():
                 name: float((metric_index + 1) * index + point_offset)
                 for metric_index, name in enumerate(DYNAMIC_SELECTION_METRICS)
             }
+            metrics["peat_hydrology_activity"] = 0.0
             metrics["peat_cover_fraction"] = float(point_offset)
             records.append(
                 {
@@ -218,7 +219,10 @@ def test_plan_builder_never_opens_sealed_split(tmp_path, monkeypatch):
         return {
             name: base * (index + 1)
             for index, name in enumerate(DYNAMIC_SELECTION_METRICS)
-        } | {"peat_cover_fraction": np.full(shard.days, 0.5)}
+        } | {
+            "peat_hydrology_activity": np.zeros(shard.days),
+            "peat_cover_fraction": np.full(shard.days, 0.5),
+        }
 
     monkeypatch.setattr(selection, "capture_selection_metrics", fake_metrics)
 

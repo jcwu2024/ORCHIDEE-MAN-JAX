@@ -24,9 +24,13 @@ DYNAMIC_SELECTION_METRICS = (
     "soil_carbon_proxy",
     "precip_daily",
     "hydrologic_export",
-    "peat_hydrology_activity",
 )
-ALL_SELECTION_METRICS = (*DYNAMIC_SELECTION_METRICS, "peat_cover_fraction")
+ALL_SELECTION_METRICS = (
+    *DYNAMIC_SELECTION_METRICS,
+    "peat_hydrology_activity",
+    "peat_cover_fraction",
+)
+PAPER_INACTIVE_DRIVER_FIELDS = ("runoff2peat", "shumdiag_peat")
 DEFAULT_SAMPLES_PER_LANDPOINT = 16
 MINIMUM_EXTREMA_CAPACITY = 1 + 2 * len(DYNAMIC_SELECTION_METRICS)
 
@@ -202,9 +206,12 @@ def _rank_features(records: Sequence[Mapping[str, Any]]) -> np.ndarray:
     columns = []
     for name in DYNAMIC_SELECTION_METRICS:
         values = np.asarray([item["metrics"][name] for item in records])
-        order = np.argsort(values, kind="stable")
-        ranks = np.empty(values.size, dtype=np.float64)
-        ranks[order] = np.linspace(0.0, 1.0, values.size)
+        unique, inverse = np.unique(values, return_inverse=True)
+        ranks = (
+            np.zeros(values.size, dtype=np.float64)
+            if unique.size == 1
+            else inverse.astype(np.float64) / (unique.size - 1)
+        )
         columns.append(ranks)
     time_order = np.arange(len(records), dtype=np.float64)
     columns.append(time_order / max(1, len(records) - 1))
@@ -349,6 +356,14 @@ def build_bounded_capture_plan(
             "condition_metrics": list(ALL_SELECTION_METRICS),
             "mandatory_anchors": ["earliest_train_day", "minimum", "maximum"],
         },
+        "execution_contract": {
+            "paper_hydrol_soil_peat_hydro": False,
+            "inactive_zero_driver_fields": list(PAPER_INACTIVE_DRIVER_FIELDS),
+            "provenance": [
+                "jax_orchidee/driver/orchestration.py::PAPER_1961_HYDROL_SOIL_PEAT_HYDRO",
+                "traces/hydrol_1961_v9: peat_hydro=F, branch_peat=F",
+            ],
+        },
         "candidate_shard_count": len(references),
         "candidate_day_count": len(candidates),
         "selected_landpoints": landpoints,
@@ -464,12 +479,14 @@ def verify_bounded_capture_plan(
         "maximum": float(np.nanmax(peat_activity)) if peat_activity.size else None,
     }
     check(
-        "peat_hydrology_activity_covered",
+        "inactive_peat_hydrology_zero",
         bool(
             peat_activity.size
             and np.all(np.isfinite(peat_activity))
-            and np.max(peat_activity) > np.min(peat_activity)
-            and np.max(peat_activity) > 0.0
+            and np.all(peat_activity == 0.0)
+            and plan.get("execution_contract", {}).get("paper_hydrol_soil_peat_hydro") is False
+            and tuple(plan.get("execution_contract", {}).get("inactive_zero_driver_fields", ()))
+            == PAPER_INACTIVE_DRIVER_FIELDS
         ),
         peat_detail,
     )
