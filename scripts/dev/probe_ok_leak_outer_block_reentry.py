@@ -44,13 +44,13 @@ def _normalize_daily_accumulator_schema(packet, produced_packet):
     missing = tuple(sorted(set(produced) - set(current)))
     dropped = tuple(sorted(set(current) - set(produced)))
     reset_fields = frozenset(teacher.PAPER_DAY_ZERO_DAILY_RESET_FIELDS)
-    if not set(missing) <= reset_fields:
+    if not set(missing) <= _REENTRY_ONLY_DAILY_ACCUMULATORS:
         raise ValueError(
-            f"outer-block reentry has non-reset missing accumulators: {missing}"
+            f"outer-block reentry has unexplained missing accumulators: {missing}"
         )
-    if not set(dropped) <= _REENTRY_ONLY_DAILY_ACCUMULATORS:
+    if not set(dropped) <= reset_fields:
         raise ValueError(
-            f"outer-block reentry has unexplained dropped accumulators: {dropped}"
+            f"outer-block reentry has non-reset dropped accumulators: {dropped}"
         )
     normalized = {
         name: (

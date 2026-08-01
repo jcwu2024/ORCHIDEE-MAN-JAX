@@ -28,16 +28,16 @@ def test_normalize_outer_block_accumulator_schema_only_changes_audited_fields():
     packet = _packet(
         {
             "humrel_daily": np.asarray([0.0]),
-            "flood_root_radia": np.asarray([0.0]),
-            "resp_maint_part": np.asarray([0.0]),
-            "resp_maint_radia": np.asarray([0.0]),
+            "fwet_daily": np.asarray([0.0]),
+            "liqwt_daily": np.asarray([0.0]),
         }
     )
     produced = _packet(
         {
             "humrel_daily": np.asarray([4.0]),
-            "fwet_daily": np.asarray([3.0]),
-            "liqwt_daily": np.asarray([5.0]),
+            "flood_root_radia": np.asarray([3.0]),
+            "resp_maint_part": np.asarray([5.0]),
+            "resp_maint_radia": np.asarray([6.0]),
         }
     )
 
@@ -46,15 +46,20 @@ def test_normalize_outer_block_accumulator_schema_only_changes_audited_fields():
         "slowproc_stomate_previous_step_state"
     ]["daily_accumulators"]
 
-    assert tuple(values) == ("humrel_daily", "fwet_daily", "liqwt_daily")
+    assert tuple(values) == (
+        "humrel_daily",
+        "flood_root_radia",
+        "resp_maint_part",
+        "resp_maint_radia",
+    )
     assert all(np.array_equal(value, [0.0]) for value in values.values())
     assert changes == {
-        "zero_filled": ("fwet_daily", "liqwt_daily"),
-        "dropped": (
+        "zero_filled": (
             "flood_root_radia",
             "resp_maint_part",
             "resp_maint_radia",
         ),
+        "dropped": ("fwet_daily", "liqwt_daily"),
     }
 
 
@@ -62,5 +67,5 @@ def test_normalize_outer_block_accumulator_schema_rejects_unknown_drift():
     packet = _packet({"humrel_daily": np.asarray([0.0]), "unknown": np.asarray([0.0])})
     produced = _packet({"humrel_daily": np.asarray([1.0])})
 
-    with pytest.raises(ValueError, match="unexplained dropped"):
+    with pytest.raises(ValueError, match="non-reset dropped"):
         _normalize_daily_accumulator_schema(packet, produced)
