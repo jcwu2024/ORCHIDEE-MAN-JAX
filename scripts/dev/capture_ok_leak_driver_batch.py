@@ -40,6 +40,73 @@ def _next_state_diagnostic_passed(report: Mapping[str, Any]) -> bool:
     )
 
 
+def _capture_interface_failure_reasons(report: Mapping[str, Any]) -> list[str]:
+    reasons = []
+    drivers = report.get("source_driver_comparisons", {})
+    if not drivers or not all(item.get("exact") for item in drivers.values()):
+        reasons.append("source_driver_exact")
+    if not report.get("exact_scan_replay", {}).get("exact"):
+        reasons.append("exact_scan_replay")
+    if not report.get("ok_leak_endpoint_within_1e-12"):
+        reasons.append("ok_leak_endpoint_within_1e-12")
+    discrete = report.get("next_discrete_state", {})
+    if not discrete or not all(item.get("exact") for item in discrete.values()):
+        reasons.append("next_discrete_state_exact")
+    return reasons or ["unspecified_capture_interface_gate"]
+
+
+def _capture_failure_summary(
+    output: Path,
+    record: Mapping[str, Any],
+    report: Mapping[str, Any],
+) -> Mapping[str, Any]:
+    report_path = output / "report.json"
+    arrays_path = output / "ok_leak_driver_series.npz"
+    return {
+        "landpoint_id": record["landpoint_id"],
+        "year": int(record["year"]),
+        "day_index": int(record["day_index"]),
+        "report": str(report_path.relative_to(output.parents[2])),
+        "capture_npz_sha256": _sha256_file(arrays_path),
+        "failure_reasons": _capture_interface_failure_reasons(report),
+        "next_state_diagnostic_passed": _next_state_diagnostic_passed(report),
+    }
+
+
+def _batch_manifest(
+    *,
+    status: str,
+    capture_plan_path: Path,
+    capture_plan_sha256: str,
+    dataset_id: str,
+    generation_plan_sha256: str,
+    requested_record_count: int,
+    full_plan_record_count: int,
+    summaries: Sequence[Mapping[str, Any]],
+    failures: Sequence[Mapping[str, Any]],
+) -> Mapping[str, Any]:
+    return {
+        "schema_version": "ok_leak_auxiliary_capture_manifest_v2",
+        "status": status,
+        "capture_plan": str(capture_plan_path),
+        "capture_plan_sha256": capture_plan_sha256,
+        "dataset_id": dataset_id,
+        "generation_plan_sha256": generation_plan_sha256,
+        "sealed_test_used": False,
+        "requested_record_count": requested_record_count,
+        "full_plan_record_count": full_plan_record_count,
+        "attempted_record_count": len(summaries) + len(failures),
+        "completed_record_count": len(summaries),
+        "capture_interface_passed_count": len(summaries),
+        "capture_interface_failed_count": len(failures),
+        "next_state_diagnostic_passed_count": sum(
+            bool(item["next_state_diagnostic_passed"]) for item in summaries
+        ),
+        "records": list(summaries),
+        "failed_records": list(failures),
+    }
+
+
 def _existing_capture_summary(
     output: Path,
     record: Mapping[str, Any],
@@ -126,6 +193,7 @@ def run_batch(args: argparse.Namespace) -> Mapping[str, Any]:
     if not records:
         raise ValueError("batch capture has no requested records")
     summaries = []
+    failures = []
     capture_plan_sha256 = capture_plan["plan_sha256"]
     for record in records:
         day_output = _capture_directory(output, record)
@@ -173,7 +241,22 @@ def run_batch(args: argparse.Namespace) -> Mapping[str, Any]:
         )
         report = run_probe(probe_args)
         if not report["passed"]:
-            raise ValueError(f"capture scientific gate failed: {staging_output}")
+            failures.append(_capture_failure_summary(staging_output, record, report))
+            _atomic_write_json(
+                output / "capture_manifest.json",
+                _batch_manifest(
+                    status="partial_with_capture_interface_failures",
+                    capture_plan_path=capture_plan_path,
+                    capture_plan_sha256=capture_plan_sha256,
+                    dataset_id=capture_plan["dataset_id"],
+                    generation_plan_sha256=generation_plan.plan_sha256,
+                    requested_record_count=len(records),
+                    full_plan_record_count=len(all_records),
+                    summaries=summaries,
+                    failures=failures,
+                ),
+            )
+            continue
         _existing_capture_summary(
             staging_output,
             record,
@@ -189,44 +272,40 @@ def run_batch(args: argparse.Namespace) -> Mapping[str, Any]:
         summaries.append(dict(summary) | {"resumed": False})
         _atomic_write_json(
             output / "capture_manifest.json",
-            {
-                "schema_version": "ok_leak_auxiliary_capture_manifest_v1",
-                "status": "partial",
-                "capture_plan": str(capture_plan_path),
-                "capture_plan_sha256": capture_plan_sha256,
-                "dataset_id": capture_plan["dataset_id"],
-                "generation_plan_sha256": generation_plan.plan_sha256,
-                "sealed_test_used": False,
-                "requested_record_count": len(records),
-                "full_plan_record_count": len(all_records),
-                "completed_record_count": len(summaries),
-                "capture_interface_passed_count": len(summaries),
-                "next_state_diagnostic_passed_count": sum(
-                    bool(item["next_state_diagnostic_passed"])
-                    for item in summaries
+            _batch_manifest(
+                status=(
+                    "partial_with_capture_interface_failures"
+                    if failures
+                    else "partial"
                 ),
-                "records": summaries,
-            },
+                capture_plan_path=capture_plan_path,
+                capture_plan_sha256=capture_plan_sha256,
+                dataset_id=capture_plan["dataset_id"],
+                generation_plan_sha256=generation_plan.plan_sha256,
+                requested_record_count=len(records),
+                full_plan_record_count=len(all_records),
+                summaries=summaries,
+                failures=failures,
+            ),
         )
 
-    manifest = {
-        "schema_version": "ok_leak_auxiliary_capture_manifest_v1",
-        "status": "complete" if len(records) == len(all_records) else "bounded_smoke_complete",
-        "capture_plan": str(capture_plan_path),
-        "capture_plan_sha256": capture_plan_sha256,
-        "dataset_id": capture_plan["dataset_id"],
-        "generation_plan_sha256": generation_plan.plan_sha256,
-        "sealed_test_used": False,
-        "requested_record_count": len(records),
-        "full_plan_record_count": len(all_records),
-        "completed_record_count": len(summaries),
-        "capture_interface_passed_count": len(summaries),
-        "next_state_diagnostic_passed_count": sum(
-            bool(item["next_state_diagnostic_passed"])
-            for item in summaries
-        ),
-        "records": summaries,
-    }
+    if failures:
+        status = "capture_interface_failed"
+    elif len(records) == len(all_records):
+        status = "complete"
+    else:
+        status = "bounded_smoke_complete"
+    manifest = _batch_manifest(
+        status=status,
+        capture_plan_path=capture_plan_path,
+        capture_plan_sha256=capture_plan_sha256,
+        dataset_id=capture_plan["dataset_id"],
+        generation_plan_sha256=generation_plan.plan_sha256,
+        requested_record_count=len(records),
+        full_plan_record_count=len(all_records),
+        summaries=summaries,
+        failures=failures,
+    )
     _atomic_write_json(output / "capture_manifest.json", manifest)
     return manifest
 
@@ -248,7 +327,7 @@ def main(argv: Sequence[str] | None = None) -> int:
         raise ValueError("--limit must be positive")
     manifest = run_batch(args)
     print(json.dumps({key: value for key, value in manifest.items() if key != "records"}, indent=2))
-    return 0
+    return 1 if manifest["capture_interface_failed_count"] else 0
 
 
 if __name__ == "__main__":

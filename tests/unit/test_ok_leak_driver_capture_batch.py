@@ -52,7 +52,7 @@ def _arguments(tmp_path: Path):
     ), records
 
 
-def _install_fakes(monkeypatch, calls):
+def _install_fakes(monkeypatch, calls, *, failed_days=()):
     import scripts.dev.capture_ok_leak_driver_batch as batch
 
     monkeypatch.setattr(
@@ -76,8 +76,9 @@ def _install_fakes(monkeypatch, calls):
         arguments.output.mkdir(parents=True, exist_ok=True)
         arrays_path = arguments.output / "ok_leak_driver_series.npz"
         arrays_path.write_bytes(f"capture-{arguments.day_index}".encode())
+        passed = arguments.day_index not in failed_days
         report = {
-            "passed": True,
+            "passed": passed,
             "landpoint_id": arguments.landpoint_id,
             "year": arguments.year,
             "day_index": arguments.day_index,
@@ -88,6 +89,10 @@ def _install_fakes(monkeypatch, calls):
             "next_continuous_state": {
                 "within_tolerance": arguments.day_index == 2,
             },
+            "source_driver_comparisons": {"soil_mc": {"exact": True}},
+            "exact_scan_replay": {"exact": True},
+            "ok_leak_endpoint_within_1e-12": passed,
+            "next_discrete_state": {"date": {"exact": True}},
         }
         _atomic_write_json(arguments.output / "report.json", report)
         return report
@@ -137,3 +142,26 @@ def test_batch_promotes_complete_staging_directory_without_rerun(tmp_path, monke
     assert calls == []
     assert final.is_dir()
     assert not staging.exists()
+
+
+def test_batch_collects_scientific_failures_and_attempts_remaining_days(
+    tmp_path,
+    monkeypatch,
+):
+    args, records = _arguments(tmp_path)
+    calls = []
+    _install_fakes(monkeypatch, calls, failed_days={2})
+
+    result = run_batch(args)
+
+    assert calls == [("001.0-071.0", 1961, 2), ("001.0-071.0", 1961, 3)]
+    assert result["status"] == "capture_interface_failed"
+    assert result["attempted_record_count"] == 2
+    assert result["capture_interface_passed_count"] == 1
+    assert result["capture_interface_failed_count"] == 1
+    assert result["failed_records"][0]["failure_reasons"] == [
+        "ok_leak_endpoint_within_1e-12"
+    ]
+    failed = _capture_directory(args.output.resolve(), records[0])
+    assert failed.with_name(failed.name + ".incomplete").is_dir()
+    assert _capture_directory(args.output.resolve(), records[1]).is_dir()
