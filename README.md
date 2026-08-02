@@ -23,12 +23,12 @@ other PFTs or unsupported ORCHIDEE configurations.
 
 ## Branches and Research Status
 
-- `main` is the published half-hour PFT14 Teacher baseline and intended
-  user-facing branch. A curated promotion of later shared-core changes remains
-  before release; see `docs/branch-alignment-20260802.md`.
+- `main` is the frozen, user-facing half-hour PFT14 Teacher baseline.
 - `research/daily-coarse-graining` contains the complete Teacher plus
   research-only data capture, dataset generation, and neural-surrogate code.
-  Capture hooks default to off and do not change production Teacher behavior.
+  It remains separate while the surrogate is experimental. Capture hooks
+  default to off, and ordinary Teacher mode is required to stay behaviorally
+  aligned with `main`; see `docs/branch-alignment-20260802.md`.
 
 The daily neural path is technically connected but is not yet a validated or
 user-facing model. Earlier direct-state candidates were rejected. The active

@@ -2,15 +2,14 @@
 
 ## Branch Roles
 
-- `main`: published PFT14 Teacher baseline and intended user-facing production
-  branch. At the 2026-08-02 audit it still requires a curated promotion of
-  later shared-core changes; it must not be fast-forwarded through all neural
-  research history.
+- `main`: frozen, user-facing PFT14 Teacher baseline. It remains separate while
+  daily coarse-graining is experimental.
 - `research/daily-coarse-graining`: the complete Teacher plus isolated
   capture, dataset, and neural-surrogate research. Research hooks are disabled
-  by default and must not alter Teacher numerical behavior.
+  by default. Its ordinary Teacher mode must remain behaviorally aligned with
+  `main`, except for explicitly audited source corrections.
 
-The exact branch relationship and promotion gate are recorded in
+The exact branch relationship and cross-branch Teacher parity gate are recorded in
 `docs/branch-alignment-20260802.md`.
 
 Documentation authority is deliberately layered:

@@ -42,7 +42,7 @@ diagnostic, and Oracle assets only.
 4. [`research/daily_coarse_graining/conservative_daily_process_operator_v1.md`](research/daily_coarse_graining/conservative_daily_process_operator_v1.md):
    the active daily architecture decision.
 5. [`branch-alignment-20260802.md`](branch-alignment-20260802.md): current
-   `main`/research relationship and production-promotion work.
+   `main`/research relationship and cross-branch Teacher parity work.
 
 Read dated experiment reports only when investigating their named result.
 They are evidence snapshots, not roadmaps.

@@ -8,20 +8,19 @@ describe an earlier gate without being rewritten.
 
 ## Stable Teacher
 
-The intended user-facing product is the PFT14 Teacher on `main`. The Git branch
-has not yet received the curated production promotion: at this snapshot
-`main` is `7333b46`, while `research/daily-coarse-graining` is a strict
-descendant at `072e136` and contains later source-threshold, autodiff-safety,
-capture, and research changes. There are no main-only commits, but the two
-branches are not code-identical. See
+The stable user-facing PFT14 Teacher is frozen on `main` at `7333b46` while
+daily coarse-graining remains experimental. The
+`research/daily-coarse-graining` branch is a strict descendant and contains
+later source-threshold, autodiff-safety, capture, and research changes. There
+are no main-only commits, but the two branches are not code-identical. See
 [`branch-alignment-20260802.md`](branch-alignment-20260802.md).
 
-The complete Teacher implementation available on the research integration
-branch contains the full half-hour ORCHIDEE-MAN path, daily STOMATE processing,
-restart handoff, annual modelout, compiled complete-day blocks, and the
-production CLI. Research capture hooks default to off. `main` must be updated
-through a curated, regression-gated promotion rather than by merging all
-neural research history.
+The research branch contains a complete copy of the Teacher plus experimental
+infrastructure. Research capture hooks default to off, and `jax_orchidee/`
+does not import research modules. However, because six shared Teacher files
+have changed, exact cross-branch Teacher behavior has not yet been established
+by a current-head cold/restart/annual A/B. The branches must remain separate;
+the required action is a parity test, not a merge.
 
 Current evidence:
 
