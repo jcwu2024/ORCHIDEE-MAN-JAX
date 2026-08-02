@@ -20,6 +20,10 @@ from jax_orchidee.stomate.reference import (  # noqa: E402
 from jax_orchidee.driver.restart_export import (  # noqa: E402
     write_stomate_restart_from_day_end_packet,
 )
+from jax_orchidee.parameters.pft_catalog import (  # noqa: E402
+    build_pft_run_layout,
+    load_pft_catalog,
+)
 from jax_orchidee.stomate.restart_io import (  # noqa: E402
     DEFAULT_STOMATE_RESTART_SCHEMA,
     StomateRestartPhysicalState,
@@ -167,6 +171,31 @@ def test_standalone_skeleton_rejects_nonpaper_scatter_and_wrong_axes(
                 **{**physical.__dict__, "nav_lon": np.zeros((2, 1))}
             ),
         )
+
+
+def test_standalone_restart_records_stable_pft_layout_metadata(tmp_path: Path) -> None:
+    catalog = load_pft_catalog(
+        ROOT / "configs" / "pft_catalogs" / "orchidee_man_paper_250919.json"
+    )
+    layout = build_pft_run_layout(
+        catalog,
+        layout_id="paper_250919_legacy14",
+        fractions=[0.0] * 13 + [1.0],
+    )
+    output = tmp_path / "stable_pft_layout.nc"
+
+    create_stomate_restart_skeleton_from_schema(
+        output,
+        _physical(_template()),
+        pft_layout=layout,
+    )
+
+    with Dataset(output) as dataset:
+        assert dataset.orchidee_jax_pft_catalog_id == "orchidee_man_paper_250919"
+        assert dataset.orchidee_jax_pft_layout_id == "paper_250919_legacy14"
+        assert json.loads(dataset.orchidee_jax_pft_ids_json)[-1] == "mangrove_pft14"
+        assert json.loads(dataset.orchidee_jax_fortran_pft_ids_json) == list(range(1, 15))
+        assert json.loads(dataset.orchidee_jax_mtc_ids_json)[-1] == 2
 
 
 def test_day_end_packet_exports_directly_to_standalone_restart(tmp_path: Path) -> None:

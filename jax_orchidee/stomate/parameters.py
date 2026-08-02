@@ -15,6 +15,7 @@ import numpy as np
 
 from jax_orchidee.driver.domain import load_case_config
 from jax_orchidee.driver.init import parse_run_def_bool, read_run_scalars
+from jax_orchidee.parameters.pft_catalog import PFTRunLayout
 from jax_orchidee.stomate.carbon_kernels import (
     NPARTS,
     NLEAFAGES,
@@ -221,6 +222,9 @@ class PaperCaseStomateParameterBundle:
     """
 
     nvm: int
+    pft_layout: PFTRunLayout
+    pft_ids: tuple[str, ...]
+    fortran_pft_ids: np.ndarray
     pft_to_mtc: np.ndarray
     natural: np.ndarray
     pasture: np.ndarray
@@ -677,10 +681,14 @@ def _merge_run_def_values(paths: tuple[Path, ...]) -> dict[str, str]:
     return merged
 
 
-def _indexed_float_vector(values: dict[str, str], name: str, nvm: int) -> np.ndarray:
+def _indexed_float_vector(
+    values: dict[str, str],
+    name: str,
+    fortran_pft_ids: Sequence[int],
+) -> np.ndarray:
     result = []
     missing = []
-    for index in range(1, nvm + 1):
+    for index in fortran_pft_ids:
         key = _pft_key(name, index)
         if key not in values:
             missing.append(key)
@@ -691,12 +699,23 @@ def _indexed_float_vector(values: dict[str, str], name: str, nvm: int) -> np.nda
     return np.asarray(result, dtype=np.float64)
 
 
-def _indexed_bool_vector(values: dict[str, str], name: str, nvm: int) -> np.ndarray:
-    return np.asarray([parse_run_def_bool(values[_pft_key(name, index)]) for index in range(1, nvm + 1)], dtype=bool)
+def _indexed_bool_vector(
+    values: dict[str, str],
+    name: str,
+    fortran_pft_ids: Sequence[int],
+) -> np.ndarray:
+    return np.asarray(
+        [parse_run_def_bool(values[_pft_key(name, index)]) for index in fortran_pft_ids],
+        dtype=bool,
+    )
 
 
-def _indexed_string_vector(values: dict[str, str], name: str, nvm: int) -> tuple[str, ...]:
-    return tuple(values[_pft_key(name, index)].strip() for index in range(1, nvm + 1))
+def _indexed_string_vector(
+    values: dict[str, str],
+    name: str,
+    fortran_pft_ids: Sequence[int],
+) -> tuple[str, ...]:
+    return tuple(values[_pft_key(name, index)].strip() for index in fortran_pft_ids)
 
 
 def _scalar_bool(values: dict[str, str], name: str) -> bool:
@@ -750,10 +769,14 @@ def load_paper_case_stomate_parameter_bundle(
         scalar_run_def_path = used_path
     run_scalars = read_run_scalars(config_path, run_def_path=scalar_run_def_path)
     nvm = int(run_scalars.nvm)
+    fortran_pft_ids = tuple(int(value) for value in run_scalars.fortran_pft_ids)
 
-    float_vectors = {name: _indexed_float_vector(values, name, nvm) for name in PAPER_CASE_INDEXED_FLOAT_KEYS}
-    ok_laidev = _indexed_bool_vector(values, "OK_LAIDEV", nvm)
-    senescence_labels = _indexed_string_vector(values, "SENESCENCE_TYPE", nvm)
+    float_vectors = {
+        name: _indexed_float_vector(values, name, fortran_pft_ids)
+        for name in PAPER_CASE_INDEXED_FLOAT_KEYS
+    }
+    ok_laidev = _indexed_bool_vector(values, "OK_LAIDEV", fortran_pft_ids)
+    senescence_labels = _indexed_string_vector(values, "SENESCENCE_TYPE", fortran_pft_ids)
     mtc_index = np.asarray(run_scalars.pft_to_mtc, dtype=np.int32) - 1
     leaf_tab = _LEAF_TAB_MTC[mtc_index].astype(np.int32)
     pheno_model = tuple(_PHENO_MODEL_MTC[int(index)] for index in mtc_index)
@@ -766,6 +789,9 @@ def load_paper_case_stomate_parameter_bundle(
 
     return PaperCaseStomateParameterBundle(
         nvm=nvm,
+        pft_layout=run_scalars.pft_layout,
+        pft_ids=run_scalars.pft_ids,
+        fortran_pft_ids=np.asarray(run_scalars.fortran_pft_ids, dtype=np.int32),
         pft_to_mtc=np.asarray(run_scalars.pft_to_mtc, dtype=np.int32),
         natural=np.asarray(run_scalars.natural, dtype=bool),
         pasture=_PASTURE_MTC[mtc_index].astype(bool),
@@ -780,17 +806,17 @@ def load_paper_case_stomate_parameter_bundle(
         r0=float_vectors["R0"],
         s0=float_vectors["S0"],
         ext_coeff=float_vectors["EXT_COEFF"],
-        lai_max=_indexed_float_vector(values, "LAI_MAX", nvm),
+        lai_max=_indexed_float_vector(values, "LAI_MAX", fortran_pft_ids),
         lai_max_to_happy=float_vectors["LAI_MAX_TO_HAPPY"],
         tau_leafinit=float_vectors["TAU_LEAFINIT"],
-        alloc_min=_indexed_float_vector(values, "ALLOC_MIN", nvm),
+        alloc_min=_indexed_float_vector(values, "ALLOC_MIN", fortran_pft_ids),
         alloc_max=float_vectors["ALLOC_MAX"],
         demi_alloc=float_vectors["DEMI_ALLOC"],
-        alloc_agr_st=_indexed_float_vector(values, "ALLOC_AGR_ST", nvm),
-        alloc_agr_pn=_indexed_float_vector(values, "ALLOC_AGR_PN", nvm),
+        alloc_agr_st=_indexed_float_vector(values, "ALLOC_AGR_ST", fortran_pft_ids),
+        alloc_agr_pn=_indexed_float_vector(values, "ALLOC_AGR_PN", fortran_pft_ids),
         frac_growthresp=float_vectors["FRAC_GROWTHRESP"],
         availability_fact=float_vectors["AVAILABILITY_FACT"],
-        residence_time=_indexed_float_vector(values, "RESIDENCE_TIME", nvm),
+        residence_time=_indexed_float_vector(values, "RESIDENCE_TIME", fortran_pft_ids),
         leaf_tab=leaf_tab,
         pheno_type=float_vectors["PHENO_TYPE"].astype(np.int32),
         tmin_crit=tmin_crit,

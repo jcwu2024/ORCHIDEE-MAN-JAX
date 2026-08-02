@@ -96,6 +96,7 @@ from jax_orchidee.driver.init import (
     parse_run_def,
     parse_run_def_bool,
     parse_run_def_float,
+    parse_run_def_indexed_selection,
     parse_run_def_indexed_vector,
     parse_run_def_int,
     read_run_scalars,
@@ -477,16 +478,30 @@ def _prepare_paper_1961_driver_context_cached(
         stomate_ok_stomate=parse_run_def_bool(values["STOMATE_OK_STOMATE"]),
         stomate_ok_dgvm=parse_run_def_bool(values["STOMATE_OK_DGVM"]),
     )
-    nvm = parse_run_def_int(values, "NVM")
+    run_scalars = read_run_scalars(config_path, run_def_path=run_def_path)
+    nvm = int(run_scalars.nvm)
+    if parse_run_def_int(values, "NVM") != nvm:
+        raise ValueError("runtime run.def NVM disagrees with the selected stable PFT layout")
+    fortran_pft_ids = tuple(int(value) for value in run_scalars.fortran_pft_ids)
     cwrr_grid = paper_case_cwrr_vertical_soil_grid_from_used_run_def(run_def_path)
     diaglev, zlt, znt = paper_case_vertical_grids_from_used_run_def(run_def_path)
     dt_sechiba = runtime.dt_sechiba
-    ext_coeff = parse_run_def_indexed_vector(values, "EXT_COEFF", nvm)
-    ext_coeff_vegetfrac = parse_run_def_indexed_vector(values, "EXT_COEFF_VEGETFRAC", nvm)
-    hydrol_humcste = parse_run_def_indexed_vector(values, "HYDROL_HUMCSTE", nvm)
-    pft_to_mtc = parse_run_def_indexed_vector(values, "PFT_TO_MTC", nvm, dtype=int)
-    vcmax_fix = parse_run_def_indexed_vector(values, "VCMAX_FIX", nvm)
-    slowproc_height = parse_run_def_indexed_vector(values, "SLOWPROC_HEIGHT", nvm)
+    ext_coeff = parse_run_def_indexed_selection(values, "EXT_COEFF", fortran_pft_ids)
+    ext_coeff_vegetfrac = parse_run_def_indexed_selection(
+        values, "EXT_COEFF_VEGETFRAC", fortran_pft_ids
+    )
+    hydrol_humcste = parse_run_def_indexed_selection(
+        values, "HYDROL_HUMCSTE", fortran_pft_ids
+    )
+    pft_to_mtc = parse_run_def_indexed_selection(
+        values, "PFT_TO_MTC", fortran_pft_ids, dtype=int
+    )
+    if not np.array_equal(pft_to_mtc, run_scalars.pft_to_mtc):
+        raise ValueError("runtime PFT_TO_MTC disagrees with the selected stable PFT layout")
+    vcmax_fix = parse_run_def_indexed_selection(values, "VCMAX_FIX", fortran_pft_ids)
+    slowproc_height = parse_run_def_indexed_selection(
+        values, "SLOWPROC_HEIGHT", fortran_pft_ids
+    )
     first_step_bundle = load_paper_1961_first_step_bundle(
         config_path,
         run_def_path=run_def_path,

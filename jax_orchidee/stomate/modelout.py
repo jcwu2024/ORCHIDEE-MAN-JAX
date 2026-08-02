@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass
 from typing import NamedTuple
 
 from jax import config
@@ -11,11 +12,12 @@ config.update("jax_enable_x64", True)
 
 import jax.numpy as jnp
 
+from jax_orchidee.parameters.pft_catalog import PFTRunLayout
 from jax_orchidee.stomate.carbon_kernels import (
-    IAGRHRTST,
     IAGRHRTPN,
-    IAGRSAPST,
+    IAGRHRTST,
     IAGRSAPPN,
+    IAGRSAPST,
     ICARBON,
     ICARBRES,
     IFRUIT,
@@ -26,7 +28,6 @@ from jax_orchidee.stomate.carbon_kernels import (
     ISAPABOVE,
     ISAPBELOW,
 )
-
 
 MODEL_OUTPUT_FIELD_NAMES = (
     "LEAF_M",
@@ -84,6 +85,28 @@ class ModeloutFieldSource(NamedTuple):
     history_write_lines: tuple[int, int]
     xml_field_def_line: int
     xml_file_line: int
+
+
+@dataclass(frozen=True)
+class ModeloutPFTSelection:
+    """Stable PFT identity recorded beside a positional history selection."""
+
+    catalog_id: str
+    layout_id: str
+    pft_id: str
+    pft_index: int
+    fortran_pft_id: int
+    mtc_id: int
+
+    def metadata(self) -> dict[str, str | int]:
+        return {
+            "catalog_id": self.catalog_id,
+            "layout_id": self.layout_id,
+            "pft_id": self.pft_id,
+            "pft_index": self.pft_index,
+            "fortran_pft_id": self.fortran_pft_id,
+            "mtc_id": self.mtc_id,
+        }
 
 
 MODEL_OUTPUT_FIELD_SOURCES: dict[str, ModeloutFieldSource] = {
@@ -268,6 +291,43 @@ def select_history_point_fields(
             raise ValueError(f"{name} must have shape (time, vegetation, lat, lon)")
         selected[name] = value[time_index, pft_index, lat_index, lon_index]
     return selected
+
+
+def modelout_pft_selection(layout: PFTRunLayout, pft_id: str) -> ModeloutPFTSelection:
+    """Resolve a modelout column from stable identity and retain provenance."""
+
+    index = layout.index_for_id(pft_id)
+    entry = layout.entries[index]
+    return ModeloutPFTSelection(
+        catalog_id=layout.catalog_id,
+        layout_id=layout.layout_id,
+        pft_id=entry.pft_id,
+        pft_index=index,
+        fortran_pft_id=entry.fortran_pft_id,
+        mtc_id=entry.mtc_id,
+    )
+
+
+def select_history_point_fields_for_pft_id(
+    fields: dict[str, object],
+    *,
+    layout: PFTRunLayout,
+    pft_id: str,
+    time_index: int = 0,
+    lat_index: int = 0,
+    lon_index: int = 0,
+) -> tuple[dict[str, jnp.ndarray], ModeloutPFTSelection]:
+    """Select history fields by stable PFT identity instead of slot number."""
+
+    selection = modelout_pft_selection(layout, pft_id)
+    selected = select_history_point_fields(
+        fields,
+        time_index=time_index,
+        pft_index=selection.pft_index,
+        lat_index=lat_index,
+        lon_index=lon_index,
+    )
+    return selected, selection
 
 
 def compute_modelout_from_fields(fields: dict[str, object]) -> ModeloutResult:

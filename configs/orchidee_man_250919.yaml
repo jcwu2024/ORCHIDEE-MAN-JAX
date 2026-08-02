@@ -62,6 +62,10 @@ time:
     first_year: cold_start
     subsequent_years: restart_from_previous_year
 
+pft_catalog:
+  path: ${ORCHIDEE_REPO_ROOT}/configs/pft_catalogs/orchidee_man_paper_250919.json
+  layout_id: paper_250919_legacy14
+
 runtime_xml:
   copied_directory: ${ORCHIDEE_REPO_ROOT}/fortran_run_scripts/paper_250919/peat-leak_xml_zz
   required_files:

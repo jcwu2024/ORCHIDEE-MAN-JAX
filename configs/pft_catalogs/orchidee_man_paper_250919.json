@@ -1,0 +1,150 @@
+{
+  "schema_version": 1,
+  "catalog_id": "orchidee_man_paper_250919",
+  "capabilities": {
+    "bare_soil_surface": {
+      "status": "supported",
+      "jax_owner": "jax_orchidee.sechiba",
+      "fortran_provenance": ["src_sechiba/diffuco.f90::diffuco_bare lines 1593-1690"]
+    },
+    "sechiba_vegetation": {
+      "status": "supported",
+      "jax_owner": "jax_orchidee.sechiba",
+      "fortran_provenance": ["src_sechiba/sechiba.f90::sechiba_main lines 317-827"]
+    },
+    "stomate_natural": {
+      "status": "supported",
+      "jax_owner": "jax_orchidee.stomate",
+      "fortran_provenance": ["src_stomate/stomate_lpj.f90::StomateLpj lines 406-2250"]
+    },
+    "stomate_crop": {
+      "status": "unvalidated",
+      "jax_owner": "jax_orchidee.stomate",
+      "fortran_provenance": ["src_stomate/stomate_lpj.f90::StomateLpj crop and STICS dispatch lines 1007-1272"]
+    },
+    "mangrove_tide": {
+      "status": "supported",
+      "jax_owner": "jax_orchidee.sechiba.diffuco",
+      "fortran_provenance": ["src_sechiba/diffuco.f90::control_inundation and control_salinity lines 4521-4754"]
+    },
+    "peat_hydrology": {
+      "status": "supported",
+      "jax_owner": "jax_orchidee.sechiba.hydrol",
+      "fortran_provenance": ["src_sechiba/hydrol.f90::hydrol_soil peat and water-table branches lines 3544-4247"]
+    },
+    "leak_carbon": {
+      "status": "supported",
+      "jax_owner": "jax_orchidee.stomate.soilcarbon_kernels",
+      "fortran_provenance": ["src_stomate/stomate.f90::stomate_main OK_LEAK dispatch lines 3288-3565"]
+    }
+  },
+  "entries": [
+    {
+      "pft_id": "bare_soil",
+      "fortran_pft_id": 1,
+      "mtc_id": 1,
+      "role": "bare_soil",
+      "support_status": "paper_validated",
+      "traits": {"natural": true, "is_tree": false, "is_peat": false, "is_c4": false, "pref_soil_veg": 1},
+      "parameter_source": "constantes_mtc:MTC1 + run.def indexed PFT1",
+      "capabilities": ["bare_soil_surface"],
+      "fortran_provenance": ["src_parameters/pft_parameters.f90::pft_parameters_main lines 97-169", "src_parameters/constantes_mtc.f90 MTC1"]
+    },
+    {
+      "pft_id": "canonical_pft02",
+      "fortran_pft_id": 2,
+      "mtc_id": 2,
+      "role": "vegetated",
+      "support_status": "structural_only",
+      "traits": {"natural": true, "is_tree": true, "is_peat": false, "is_c4": false, "pref_soil_veg": 2},
+      "parameter_source": "constantes_mtc:MTC2 + run.def indexed PFT2",
+      "capabilities": ["sechiba_vegetation", "stomate_natural"],
+      "fortran_provenance": ["src_parameters/constantes_mtc.f90 MTC2", "src_parameters/pft_parameters.f90::config_pft_parameters lines 247-293"]
+    },
+    {
+      "pft_id": "canonical_pft03", "fortran_pft_id": 3, "mtc_id": 3, "role": "vegetated", "support_status": "structural_only",
+      "traits": {"natural": true, "is_tree": true, "is_peat": false, "is_c4": false, "pref_soil_veg": 2},
+      "parameter_source": "constantes_mtc:MTC3 + run.def indexed PFT3", "capabilities": ["sechiba_vegetation", "stomate_natural"],
+      "fortran_provenance": ["src_parameters/constantes_mtc.f90 MTC3", "src_parameters/pft_parameters.f90::config_pft_parameters lines 247-293"]
+    },
+    {
+      "pft_id": "canonical_pft04", "fortran_pft_id": 4, "mtc_id": 4, "role": "vegetated", "support_status": "structural_only",
+      "traits": {"natural": true, "is_tree": true, "is_peat": false, "is_c4": false, "pref_soil_veg": 2},
+      "parameter_source": "constantes_mtc:MTC4 + run.def indexed PFT4", "capabilities": ["sechiba_vegetation", "stomate_natural"],
+      "fortran_provenance": ["src_parameters/constantes_mtc.f90 MTC4", "src_parameters/pft_parameters.f90::config_pft_parameters lines 247-293"]
+    },
+    {
+      "pft_id": "canonical_pft05", "fortran_pft_id": 5, "mtc_id": 5, "role": "vegetated", "support_status": "structural_only",
+      "traits": {"natural": true, "is_tree": true, "is_peat": false, "is_c4": false, "pref_soil_veg": 2},
+      "parameter_source": "constantes_mtc:MTC5 + run.def indexed PFT5", "capabilities": ["sechiba_vegetation", "stomate_natural"],
+      "fortran_provenance": ["src_parameters/constantes_mtc.f90 MTC5", "src_parameters/pft_parameters.f90::config_pft_parameters lines 247-293"]
+    },
+    {
+      "pft_id": "canonical_pft06", "fortran_pft_id": 6, "mtc_id": 6, "role": "vegetated", "support_status": "structural_only",
+      "traits": {"natural": true, "is_tree": true, "is_peat": false, "is_c4": false, "pref_soil_veg": 2},
+      "parameter_source": "constantes_mtc:MTC6 + run.def indexed PFT6", "capabilities": ["sechiba_vegetation", "stomate_natural"],
+      "fortran_provenance": ["src_parameters/constantes_mtc.f90 MTC6", "src_parameters/pft_parameters.f90::config_pft_parameters lines 247-293"]
+    },
+    {
+      "pft_id": "canonical_pft07", "fortran_pft_id": 7, "mtc_id": 7, "role": "vegetated", "support_status": "structural_only",
+      "traits": {"natural": true, "is_tree": true, "is_peat": false, "is_c4": false, "pref_soil_veg": 2},
+      "parameter_source": "constantes_mtc:MTC7 + run.def indexed PFT7", "capabilities": ["sechiba_vegetation", "stomate_natural"],
+      "fortran_provenance": ["src_parameters/constantes_mtc.f90 MTC7", "src_parameters/pft_parameters.f90::config_pft_parameters lines 247-293"]
+    },
+    {
+      "pft_id": "canonical_pft08", "fortran_pft_id": 8, "mtc_id": 8, "role": "vegetated", "support_status": "structural_only",
+      "traits": {"natural": true, "is_tree": true, "is_peat": false, "is_c4": false, "pref_soil_veg": 2},
+      "parameter_source": "constantes_mtc:MTC8 + run.def indexed PFT8", "capabilities": ["sechiba_vegetation", "stomate_natural"],
+      "fortran_provenance": ["src_parameters/constantes_mtc.f90 MTC8", "src_parameters/pft_parameters.f90::config_pft_parameters lines 247-293"]
+    },
+    {
+      "pft_id": "canonical_pft09", "fortran_pft_id": 9, "mtc_id": 9, "role": "vegetated", "support_status": "structural_only",
+      "traits": {"natural": true, "is_tree": true, "is_peat": false, "is_c4": false, "pref_soil_veg": 2},
+      "parameter_source": "constantes_mtc:MTC9 + run.def indexed PFT9", "capabilities": ["sechiba_vegetation", "stomate_natural"],
+      "fortran_provenance": ["src_parameters/constantes_mtc.f90 MTC9", "src_parameters/pft_parameters.f90::config_pft_parameters lines 247-293"]
+    },
+    {
+      "pft_id": "canonical_pft10", "fortran_pft_id": 10, "mtc_id": 10, "role": "vegetated", "support_status": "structural_only",
+      "traits": {"natural": true, "is_tree": false, "is_peat": false, "is_c4": false, "pref_soil_veg": 3},
+      "parameter_source": "constantes_mtc:MTC10 + run.def indexed PFT10", "capabilities": ["sechiba_vegetation", "stomate_natural"],
+      "fortran_provenance": ["src_parameters/constantes_mtc.f90 MTC10", "src_parameters/pft_parameters.f90::config_pft_parameters lines 247-293"]
+    },
+    {
+      "pft_id": "canonical_pft11", "fortran_pft_id": 11, "mtc_id": 11, "role": "vegetated", "support_status": "structural_only",
+      "traits": {"natural": true, "is_tree": false, "is_peat": false, "is_c4": true, "pref_soil_veg": 3},
+      "parameter_source": "constantes_mtc:MTC11 + run.def indexed PFT11", "capabilities": ["sechiba_vegetation", "stomate_natural"],
+      "fortran_provenance": ["src_parameters/constantes_mtc.f90 MTC11", "src_parameters/pft_parameters.f90::config_pft_parameters lines 247-293"]
+    },
+    {
+      "pft_id": "canonical_pft12", "fortran_pft_id": 12, "mtc_id": 12, "role": "vegetated", "support_status": "structural_only",
+      "traits": {"natural": false, "is_tree": false, "is_peat": false, "is_c4": false, "pref_soil_veg": 3},
+      "parameter_source": "constantes_mtc:MTC12 + run.def indexed PFT12", "capabilities": ["sechiba_vegetation", "stomate_crop"],
+      "fortran_provenance": ["src_parameters/constantes_mtc.f90 MTC12", "src_parameters/pft_parameters.f90::config_pft_parameters lines 247-293"]
+    },
+    {
+      "pft_id": "canonical_pft13", "fortran_pft_id": 13, "mtc_id": 13, "role": "vegetated", "support_status": "structural_only",
+      "traits": {"natural": false, "is_tree": false, "is_peat": false, "is_c4": true, "pref_soil_veg": 3},
+      "parameter_source": "constantes_mtc:MTC13 + run.def indexed PFT13", "capabilities": ["sechiba_vegetation", "stomate_crop"],
+      "fortran_provenance": ["src_parameters/constantes_mtc.f90 MTC13", "src_parameters/pft_parameters.f90::config_pft_parameters lines 247-293"]
+    },
+    {
+      "pft_id": "mangrove_pft14",
+      "fortran_pft_id": 14,
+      "mtc_id": 2,
+      "role": "vegetated",
+      "support_status": "paper_validated",
+      "traits": {"natural": true, "is_tree": true, "is_peat": true, "is_c4": false, "pref_soil_veg": 4},
+      "parameter_source": "constantes_mtc:MTC2 + calibrated run.def indexed PFT14",
+      "capabilities": ["sechiba_vegetation", "stomate_natural", "mangrove_tide", "peat_hydrology", "leak_carbon"],
+      "fortran_provenance": ["src_parameters/pft_parameters.f90::config_pft_parameters lines 247-293", "fortran_run_scripts/paper_250919/Job0_bio lines 141-162"]
+    }
+  ],
+  "layouts": {
+    "paper_250919_legacy14": [
+      "bare_soil", "canonical_pft02", "canonical_pft03", "canonical_pft04",
+      "canonical_pft05", "canonical_pft06", "canonical_pft07", "canonical_pft08",
+      "canonical_pft09", "canonical_pft10", "canonical_pft11", "canonical_pft12",
+      "canonical_pft13", "mangrove_pft14"
+    ]
+  }
+}

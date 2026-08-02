@@ -16,6 +16,10 @@ from typing import Mapping
 import numpy as np
 from netCDF4 import Dataset
 
+from jax_orchidee.parameters.pft_catalog import (
+    PFTRunLayout,
+    pft_layout_netcdf_attributes,
+)
 from jax_orchidee.stomate.reference import (
     StomateDailyAccumulatorState,
     StomateOkPcRestartGasState,
@@ -1396,6 +1400,7 @@ def create_stomate_restart_skeleton_from_schema(
     physical_state: StomateRestartPhysicalState,
     *,
     schema_path: str | Path = DEFAULT_STOMATE_RESTART_SCHEMA,
+    pft_layout: PFTRunLayout | None = None,
 ) -> Path:
     """Create the complete paper-protocol NetCDF structure without a template.
 
@@ -1436,6 +1441,8 @@ def create_stomate_restart_skeleton_from_schema(
         global_attributes["file_name"] = output.name
         if physical_state.global_attributes is not None:
             global_attributes.update(dict(physical_state.global_attributes))
+        if pft_layout is not None:
+            global_attributes.update(pft_layout_netcdf_attributes(pft_layout))
         dataset.setncatts(global_attributes)
 
         for name, declaration in schema["variables"].items():
@@ -1841,6 +1848,7 @@ def write_stomate_full_writerestart_states(
     gas_state: StomateOkPcRestartGasState,
     remainder_state: StomateReadstartRemainderState,
     schema_path: str | Path = DEFAULT_STOMATE_RESTART_SCHEMA,
+    pft_layout: PFTRunLayout | None = None,
 ) -> StomateRestartWriteReport:
     """Construct and populate a paper-protocol STOMATE restart independently.
 
@@ -1862,6 +1870,7 @@ def write_stomate_full_writerestart_states(
             skeleton,
             physical_state,
             schema_path=schema_path,
+            pft_layout=pft_layout,
         )
         return write_stomate_full_writerestart_states_from_template(
             skeleton,
