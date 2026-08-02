@@ -13,19 +13,20 @@ describe an earlier gate without being rewritten.
 
 ## Stable Teacher
 
-The stable user-facing PFT14 Teacher is frozen on `main` at `7333b46` while
-daily coarse-graining remains experimental. The
-`research/daily-coarse-graining` branch is a strict descendant and contains
-later source-threshold, autodiff-safety, capture, and research changes. There
-are no main-only commits, but the two branches are not code-identical. See
-[`branch-alignment-20260802.md`](branch-alignment-20260802.md).
+The user-facing PFT14 release baseline remains frozen on `main` at `7333b46`.
+The sole Teacher development authority for subsequent research and PFT work
+is the shared core on `research/daily-coarse-graining` at `a779663`. The
+research branch is a strict descendant and also contains experimental code,
+so the branches remain separate rather than being merged.
 
-The research branch contains a complete copy of the Teacher plus experimental
-infrastructure. Research capture hooks default to off, and `jax_orchidee/`
-does not import research modules. However, because six shared Teacher files
-have changed, exact cross-branch Teacher behavior has not yet been established
-by a current-head cold/restart/annual A/B. The branches must remain separate;
-the required action is a parity test, not a merge.
+Gate A cross-branch parity is complete. Seven detached-worktree cases cover
+cold start, later day, restart, two 365-day cold runs, a 365-day restart run,
+three landpoints, and a true 1961-to-1962 year handoff. Six cases have no
+differing state or modelout leaf. One low-stock case activates the research
+branch's source `min_stomate` correction on day 274; its first fields,
+magnitude, continuous-only behavior, and source-extracted Fortran Oracle are
+hash-bound in the admission gate. See
+[`teacher-branch-parity-acceptance.md`](teacher-branch-parity-acceptance.md).
 
 Current evidence:
 

@@ -60,10 +60,11 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
-Do not launch another neural training experiment. First run the isolated
-cross-branch Teacher parity matrix described as Gate A in `NEXT_STEPS.md` and
-select one canonical Teacher commit. Then freeze the parameter/PFT ownership
-and daily flux-label contracts and pass non-neural constrained replay.
+Gate A is complete and the research shared core is the canonical Teacher for
+future development. Do not launch another neural training experiment yet.
+The next work is Gate B: freeze the Teacher PFT registry and parameter
+ownership. Gate C then freezes daily flux labels and proves non-neural
+constrained replay before a new network is trained.
 
 ## New Task Bootstrap
 
@@ -77,10 +78,11 @@ git log -1 --oneline
 ```
 
 Then read `NEXT_STEPS.md`, `CODE_MAP.md`, and `DOCUMENT_STATUS.md`. Report the
-active gate before editing or submitting a job. The only active technical task
-is the task packet at the end of `NEXT_STEPS.md`; later gates are queued work,
-not parallel instructions. A local `AGENTS.md`, when present, adds workspace
-and server rules but is deliberately not required for a clean Git handoff.
+active gate before editing or submitting a job. Gate A must not be reopened
+unless the six shared Teacher files change or its evidence hashes drift. The
+active technical task is Gate B; later gates are queued work, not parallel
+instructions. A local `AGENTS.md`, when present, adds workspace and server
+rules but is deliberately not required for a clean Git handoff.
 
 A Git clone contains source, tests, contracts, and small manifests. It does
 not contain forcing, Fortran reference packages, generated Teacher shards,

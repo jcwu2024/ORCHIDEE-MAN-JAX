@@ -28,8 +28,11 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
 - `main` at `7333b46` is the frozen user-facing PFT14 Teacher baseline.
 - `research/daily-coarse-graining` contains all of `main` plus research code
   and changes to six shared `jax_orchidee/` files.
-- The research branch's capture switches default to off, but current-head
-  numerical Teacher parity with `main` has not been run.
+- Gate A detached-worktree parity is complete. Seven lifecycle/multilandpoint
+  cases are accepted; six are numerically identical and one has a fail-closed,
+  Fortran-Oracle-bound `min_stomate` source correction.
+- The research shared core at `a779663` is the sole Teacher development
+  authority. `main` at `7333b46` remains the frozen user-facing baseline.
 - The existing 669-point v5 Teacher dataset is accepted as a provenance-bound
   data product. Its old fast-day target remains useful evidence, but it is not
   the final daily-surrogate boundary.
@@ -46,12 +49,11 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
 
 ## Dependency-Ordered Gates
 
-### Gate A: Select One Canonical Teacher
+### Gate A: Select One Canonical Teacher - Complete
 
-Run an isolated-worktree A/B between `main` and the research branch with all
-capture and surrogate switches disabled. Cover cold start, an ordinary later
-day, restart split, 365 days, and multiple landpoints. Compare full canonical
-continuous state, exact discrete state, modelout, and restart packets.
+The isolated-worktree A/B between `main` and the research branch passed its
+declared matrix. The accepted decision and evidence hashes are in
+[`teacher-branch-parity-acceptance.md`](teacher-branch-parity-acceptance.md).
 
 Acceptance:
 
@@ -196,69 +198,63 @@ training loss is easy to optimize.
 
 ## Immediate Work Order
 
-The next technical task is Gate A, not another GPU experiment. After Gate A,
-Gates B and C define the new model boundary. D1 can then validate the selected
-Teacher while the non-neural replay is completed. Only then should the new
-daily neural implementation begin.
+The next technical task is Gate B, not another GPU experiment. Implement B1's
+Teacher-side catalog and capability registry first, then freeze B2's neural
+PFT-axis and physical-parameter ownership contract. Gate C follows with label
+inventory and non-neural replay. D1 can validate physical-parameter gradients
+against the selected Teacher while Gate C is completed. Only then should the
+new daily neural implementation begin.
 
-## Active Task Packet: Gate A
+## Active Task Packet: Gate B1
 
-This is the only task to start from a new clone. Gates B-F remain queued until
-this packet is closed.
+This is the only implementation task to start from a new clone. Gate A is
+closed and must not be rerun unless shared Teacher code changes. Gates B2-F
+remain queued until this packet is closed.
 
 ### Inputs
 
-- baseline branch/commit: `main` at `7333b46`;
-- candidate branch: current `research/daily-coarse-graining` head;
-- ordinary PFT14 Teacher mode with every research capture/surrogate option
-  disabled;
-- the same environment, external data roots, run configuration, landpoints,
-  initial state, and forcing files for both branches.
+- canonical Teacher shared core: `a779663`;
+- source-backed target design:
+  [`porting/pft14_extensible_design.md`](porting/pft14_extensible_design.md);
+- current PFT14 layout, parameter loaders, restart schemas, modelout selection,
+  and hard-coded PFT/MTC capability branches;
+- existing Fortran source ownership and PFT14 Oracle evidence.
 
 ### Implementation steps
 
-1. Create two isolated Git worktrees. Do not switch the source tree underneath
-   a running Python process.
-2. Add one manifest-driven comparison runner, preferably under `scripts/dev/`,
-   that launches the existing production Teacher entry point from each
-   worktree and records exact commit and input identities.
-3. Start with a short cold/later-day/restart smoke. After it is deterministic,
-   run the declared 365-day multi-landpoint matrix.
-4. Compare canonical continuous state, discrete/defined-status state,
-   modelout, and restart packets. Record the first differing day and field,
-   maximum absolute/relative error, and ULP information where meaningful.
-5. Classify every difference as forward-primal-preserving AD infrastructure,
-   intentional Fortran-source correction, diagnostic leakage, or a defect.
-   Repair defects and rerun the same manifest.
-6. Select and record one canonical Teacher commit. Do not merge the neural
-   research product into `main` as part of this gate.
+1. Introduce a machine-readable PFT catalog with stable semantic IDs,
+   canonical Fortran PFT/MTC identities, traits, parameters, capabilities, and
+   active fractions.
+2. Replace paper-driver ownership of positional PFT identity with a per-run
+   layout derived from the catalog; preserve the named paper PFT14 layout.
+3. Make restart and modelout metadata retain stable IDs across slot removal,
+   addition, and reordering.
+4. Move genuinely distinct source process families behind an explicit,
+   source-backed capability registry. Keep ordinary trait/parameter changes
+   data driven.
+5. Add removal, coexistence, and slot-permutation tests before claiming any
+   additional PFT as scientifically supported.
 
 ### Required artifacts
 
-Write generated artifacts below `outputs/branch_parity/`:
-
-```text
-manifest.json
-branch_runs/<case-id>/<branch-id>/...
-field_comparisons.csv
-comparison.json
-report.md
-```
-
-The manifest binds Git commits, environment/JAX versions, configuration and
-input hashes, case matrix, tolerances, and command lines. Large run products
-remain outside Git; the concise accepted report and reusable runner belong in
-Git.
+- one versioned PFT catalog schema and the paper PFT14 catalog instance;
+- one capability registry with Fortran provenance;
+- stable-ID restart/modelout layout metadata;
+- focused tests for removal, coexistence, and permutation;
+- an updated ownership inventory consumed by Gate B2.
 
 ### Definition of done
 
-- all declared cases complete from both isolated worktrees;
-- exact discrete/defined-status equality;
-- every floating difference satisfies a field-aware existing policy or has an
-  explicit source-backed disposition;
-- no default-off capture option changes ordinary Teacher output;
-- the canonical Teacher commit and treatment of the six shared-core file
-  differences are recorded in `branch-alignment-20260802.md` and this roadmap;
+- PFT14 reproduces the existing canonical Teacher path under the catalog;
+- array shapes and parameter ownership derive from the selected layout rather
+  than a global `NVM=14` assumption;
+- removing one supported PFT cannot change another PFT's state;
+- two supported PFTs coexist with isolated state and fractions;
+- slot reordering with stable IDs preserves remapped outputs;
+- numbered source branches are explicit capabilities rather than falsely
+  generalized behavior;
+- adding a new PFT still requires its own source closure and numerical
+  validation before scientific support is claimed;
 - targeted regression tests, `git diff --check`, Ruff, and Python compilation
   pass;
 - no neural training or 669-point production run is started by this task.

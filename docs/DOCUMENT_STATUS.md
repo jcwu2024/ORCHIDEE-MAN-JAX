@@ -23,7 +23,8 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `branch-alignment-20260802.md` | Open Gate A audit | Working on Teacher parity |
+| `branch-alignment-20260802.md` | Completed Gate A audit | Checking branch provenance |
+| `teacher-branch-parity-acceptance.md` | Accepted Gate A decision | Checking canonical Teacher identity |
 | `porting/pft14_extensible_design.md` | Active Teacher extensibility target, not yet implemented | Working on Gate B |
 | `research/daily_coarse_graining/conservative_daily_process_operator_v1.md` | Active, not implemented | Designing the daily model |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |

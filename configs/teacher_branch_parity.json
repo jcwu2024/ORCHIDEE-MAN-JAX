@@ -1,0 +1,114 @@
+{
+  "schema_version": 1,
+  "baseline": {
+    "id": "main",
+    "revision": "7333b46c0b38650fb6c9250582876137831657b8"
+  },
+  "candidate": {
+    "id": "research",
+    "revision": "HEAD"
+  },
+  "tolerances": {
+    "atol": 1e-12,
+    "rtol": 1e-12
+  },
+  "runtime": {
+    "module_jit": true,
+    "diffuco_local_jit": true,
+    "use_static_jit_daily_carbon": true,
+    "prebuild_day_payloads": true,
+    "use_compiled_sechiba_day": true
+  },
+  "dispositions": [
+    {
+      "id": "fortran_min_stomate_threshold",
+      "case_id": "cold_365_069_119",
+      "classification": "intentional_fortran_source_correction",
+      "first_differing_day": 274,
+      "first_day_max_abs_error": 1.1e-8,
+      "first_day_fields": [
+        "root/days/day_0274/modelout/modelout/NPP_model",
+        "root/days/day_0274/modelout/modelout_fields/MAINT_RESP",
+        "root/days/day_0274/modelout/modelout_fields/NPP",
+        "root/days/day_0274/modelout/modelout_fields/RESERVE_M",
+        "root/days/day_0274/state/fields_by_component/slowproc_stomate_previous_step_state/biomass",
+        "root/days/day_0274/state/fields_by_component/slowproc_stomate_previous_step_state/npp_daily",
+        "root/days/day_0274/state/fields_by_component/slowproc_stomate_previous_step_state/resp_maint"
+      ],
+      "fortran_source": "fortran_source/ORCHIDEE/src_stomate/stomate_npp.f90:499-517",
+      "jax_owner": "jax_orchidee/stomate/carbon_kernels.py:npp_closed_update",
+      "oracle": {
+        "path": "outputs/reference_mode/micro_oracles/stomate_npp_growth/comparison.json",
+        "sha256": "75bf99152e801f3bb8e9ba08f2c4bea6cc099ff8b684407a1f583d9536320b26",
+        "required_status": "passed"
+      }
+    }
+  ],
+  "cases": [
+    {
+      "id": "cold_smoke_001_071",
+      "group": "smoke",
+      "scenario": "cold",
+      "landpoint_id": "001.0-071.0",
+      "year": 1961,
+      "days": 2
+    },
+    {
+      "id": "later_smoke_069_119",
+      "group": "smoke",
+      "scenario": "reference_start",
+      "landpoint_id": "069.0-119.0",
+      "year": 1961,
+      "days": 2
+    },
+    {
+      "id": "restart_smoke_319_057",
+      "group": "smoke",
+      "scenario": "restart",
+      "source_scenario": "reference_start",
+      "source_year": 1961,
+      "source_days": 14,
+      "landpoint_id": "319.0-057.0",
+      "year": 1962,
+      "days": 2
+    },
+    {
+      "id": "cold_365_001_071",
+      "group": "promotion",
+      "scenario": "cold",
+      "landpoint_id": "001.0-071.0",
+      "year": 1961,
+      "days": 365
+    },
+    {
+      "id": "cold_365_069_119",
+      "group": "promotion",
+      "scenario": "cold",
+      "landpoint_id": "069.0-119.0",
+      "year": 1961,
+      "days": 365
+    },
+    {
+      "id": "restart_365_319_057",
+      "group": "promotion",
+      "scenario": "restart",
+      "source_scenario": "reference_start",
+      "source_year": 1961,
+      "source_days": 14,
+      "landpoint_id": "319.0-057.0",
+      "year": 1962,
+      "days": 365
+    },
+    {
+      "id": "year_handoff_001_071",
+      "group": "promotion",
+      "scenario": "restart",
+      "source_scenario": "cold",
+      "source_year": 1961,
+      "source_days": 365,
+      "landpoint_id": "001.0-071.0",
+      "year": 1962,
+      "days": 2
+    }
+  ]
+}
