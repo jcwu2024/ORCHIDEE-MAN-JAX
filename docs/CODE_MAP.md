@@ -31,13 +31,14 @@ admission evidence are preserved in `branch-alignment-20260802.md` and
 | `jax_orchidee/coupled.py` | Source-order cross-module composition helpers |
 | `jax_orchidee/ad_primitives.py` | Canonical derivative rules that preserve forward primals |
 
-Although many scientific kernels accept arbitrary `nvm` shapes, the complete
-Teacher is currently a PFT14 paper-case product rather than a selectable PFT
-framework. `configs/orchidee_man_250919.yaml` fixes `NVM=14`;
-`driver/init.py`, `stomate/parameters.py`, `driver/orchestration.py`, and the
-multiyear modelout path contain paper/PFT14 bindings. These are legitimate
-current-scope boundaries, not evidence that adding or removing PFTs already
-works.
+The Teacher now has a versioned PFT catalog and per-run stable-ID layout in
+`jax_orchidee/parameters/pft_catalog.py`. Parameter rows are selected by
+canonical Fortran PFT identity, and modelout/checkpoint/restart-write metadata
+retain that identity. The complete Teacher is still a PFT14 paper-case
+product: restart reads and some orchestration helpers retain positional
+assumptions, and PFT2-PFT13 are deliberately `structural_only`. The catalog is
+an extensibility boundary, not evidence that another PFT is scientifically
+supported.
 
 The normal user path is approximately:
 
@@ -132,6 +133,7 @@ accepted.
 | Path | Use |
 | --- | --- |
 | `configs/` | Portable user configuration |
+| `configs/pft_catalogs/` | Versioned PFT identities, traits, parameter ownership, capabilities, and layouts |
 | `manifests/` | Machine-readable data, split, landpoint, and experiment identities |
 | `docs/source_audits/` | Fortran provenance and equivalence evidence |
 | `docs/research/daily_coarse_graining/` | Architecture decisions and dated research evidence |

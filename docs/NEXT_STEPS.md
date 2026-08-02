@@ -25,7 +25,7 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
 
 ## Current Facts
 
-- `main` at `deba027` contains the canonical user-facing PFT14 Teacher core.
+- `main` at `488cc64` contains the canonical user-facing PFT14 Teacher core.
 - `research/daily-coarse-graining` contains the same complete
   `jax_orchidee/` tree plus research-only code.
 - Gate A detached-worktree parity is complete. Seven lifecycle/multilandpoint
@@ -39,11 +39,12 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
   the final daily-surrogate boundary.
 - Previous direct-state and causal-carbon neural candidates were rejected.
 - The active true-daily architecture is specified but not implemented.
-- The current Teacher and data are scientifically scoped to PFT14. Many
-  process kernels use a dynamic `nvm` axis, but the paper driver, parameter
-  loaders, orchestration helpers, modelout selection, and some source-specific
-  branches still assume PFT14 or canonical PFT numbers. The Teacher is not yet
-  a plug-in/selectable PFT system.
+- The current Teacher and data are scientifically scoped to PFT14. Gate B1's
+  catalog foundation now gives PFTs stable IDs, source PFT/MTC identities,
+  traits, parameter ownership, capabilities, and named execution layouts.
+  PFT2-PFT13 remain structurally declared but scientifically unsupported and
+  fail closed when active. Restart reads, remaining generic orchestration
+  selectors, and a compact-layout cold/restart lifecycle are not yet closed.
 - Existing gradient tests establish training plumbing and finite derivatives
   in selected JAX paths. They do not yet establish physical-parameter gradient
   correctness for the complete Teacher or future daily surrogate.
@@ -199,8 +200,11 @@ training loss is easy to optimize.
 
 ## Immediate Work Order
 
-The next technical task is Gate B, not another GPU experiment. Implement B1's
-Teacher-side catalog and capability registry first, then freeze B2's neural
+The next technical task is to finish Gate B1, not another GPU experiment. Its
+catalog, capability registry, stable parameter-row selection, modelout
+selection, and write-side metadata foundation are implemented. Close every
+restart read/remap boundary, remove remaining generic positional selectors,
+and prove a compact-layout cold/restart lifecycle. Then freeze B2's neural
 PFT-axis and physical-parameter ownership contract. Gate C follows with label
 inventory and non-neural replay. D1 can validate physical-parameter gradients
 against the selected Teacher while Gate C is completed. Only then should the
@@ -214,8 +218,8 @@ remain queued until this packet is closed.
 
 ### Inputs
 
-- canonical Teacher core: `main` at `deba027` (identical in the research
-  branch after merge `8c9c75b`);
+- canonical Teacher core: `main` at `488cc64` (identical in the research
+  branch after merge `5743a02`);
 - source-backed target design:
   [`porting/pft14_extensible_design.md`](porting/pft14_extensible_design.md);
 - current PFT14 layout, parameter loaders, restart schemas, modelout selection,
@@ -236,6 +240,12 @@ remain queued until this packet is closed.
    data driven.
 5. Add removal, coexistence, and slot-permutation tests before claiming any
    additional PFT as scientifically supported.
+
+Current progress: steps 1 and 2 are implemented; step 3 is complete for
+modelout, multiyear checkpoints, and restart writes but not restart reads;
+step 4 has a fail-closed capability registry; and step 5 has identity/remap
+unit coverage but not a complete compact-layout model lifecycle. No additional
+PFT has been promoted beyond `structural_only`.
 
 ### Required artifacts
 

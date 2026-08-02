@@ -10,8 +10,9 @@ Gate A is complete. Its historical A/B selected the Teacher core at
 `7333b46c0b38650fb6c9250582876137831657b8`.
 
 The accepted six-file core and its Teacher-only tests were subsequently
-synchronized into `main` at `deba027`. The updated `main` was merged into the
-research branch at `8c9c75b`, and
+synchronized into `main` at `deba027`. Gate B1's shared PFT-catalog foundation
+advanced the canonical Teacher to `main` commit `488cc64`, which was merged
+into the research branch at `5743a02`. At both synchronization points,
 `git diff --exit-code main..research/daily-coarse-graining -- jax_orchidee`
 is empty. Thus the current Teacher implementation is one shared code tree,
 not two numerically admitted variants. The branches remain separate because
@@ -89,6 +90,10 @@ The current manifest resolves baseline revision `main` and candidate revision
 `HEAD`. Because both branches now contain the accepted correction, every case
 must pass raw comparison; `dispositions` is empty. The old correction cannot
 mask a future regression in either direction.
+
+After the Gate B1 foundation merge, the smoke group was rerun between
+`488cc64` and `5743a02`. Cold start, later day, and restart all passed raw:
+3/3 cases, 3,693 compared leaves, zero failures, and no disposition.
 
 ## Historical Evidence
 
