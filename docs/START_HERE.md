@@ -76,10 +76,11 @@ git status --short --branch
 git log -1 --oneline
 ```
 
-Then read `AGENTS.md`, `NEXT_STEPS.md`, `CODE_MAP.md`, and
-`DOCUMENT_STATUS.md`. Report the active gate before editing or submitting a
-job. The only active technical task is the task packet at the end of
-`NEXT_STEPS.md`; later gates are queued work, not parallel instructions.
+Then read `NEXT_STEPS.md`, `CODE_MAP.md`, and `DOCUMENT_STATUS.md`. Report the
+active gate before editing or submitting a job. The only active technical task
+is the task packet at the end of `NEXT_STEPS.md`; later gates are queued work,
+not parallel instructions. A local `AGENTS.md`, when present, adds workspace
+and server rules but is deliberately not required for a clean Git handoff.
 
 A Git clone contains source, tests, contracts, and small manifests. It does
 not contain forcing, Fortran reference packages, generated Teacher shards,
