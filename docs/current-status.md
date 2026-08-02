@@ -13,11 +13,11 @@ describe an earlier gate without being rewritten.
 
 ## Stable Teacher
 
-The user-facing PFT14 release baseline remains frozen on `main` at `7333b46`.
-The sole Teacher development authority for subsequent research and PFT work
-is the shared core on `research/daily-coarse-graining` at `a779663`. The
-research branch is a strict descendant and also contains experimental code,
-so the branches remain separate rather than being merged.
+The canonical user-facing PFT14 Teacher core is on `main` at `deba027`.
+`research/daily-coarse-graining` merged that commit at `8c9c75b`; its complete
+`jax_orchidee/` tree is byte-identical to `main`. The branches remain separate
+only because the research branch also contains experimental dataset and
+neural code.
 
 Gate A cross-branch parity is complete. Seven detached-worktree cases cover
 cold start, later day, restart, two 365-day cold runs, a 365-day restart run,
@@ -25,7 +25,9 @@ three landpoints, and a true 1961-to-1962 year handoff. Six cases have no
 differing state or modelout leaf. One low-stock case activates the research
 branch's source `min_stomate` correction on day 274; its first fields,
 magnitude, continuous-only behavior, and source-extracted Fortran Oracle are
-hash-bound in the admission gate. See
+hash-bound in the historical admission evidence. The accepted six-file core
+was then synchronized into `main`, so the current drift gate requires raw
+parity and has no source-correction exception. See
 [`teacher-branch-parity-acceptance.md`](teacher-branch-parity-acceptance.md).
 
 Current evidence:

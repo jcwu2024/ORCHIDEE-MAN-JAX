@@ -25,14 +25,15 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
 
 ## Current Facts
 
-- `main` at `7333b46` is the frozen user-facing PFT14 Teacher baseline.
-- `research/daily-coarse-graining` contains all of `main` plus research code
-  and changes to six shared `jax_orchidee/` files.
+- `main` at `deba027` contains the canonical user-facing PFT14 Teacher core.
+- `research/daily-coarse-graining` contains the same complete
+  `jax_orchidee/` tree plus research-only code.
 - Gate A detached-worktree parity is complete. Seven lifecycle/multilandpoint
   cases are accepted; six are numerically identical and one has a fail-closed,
   Fortran-Oracle-bound `min_stomate` source correction.
-- The research shared core at `a779663` is the sole Teacher development
-  authority. `main` at `7333b46` remains the frozen user-facing baseline.
+- The old `7333b46` versus `a779663` comparison is preserved as historical
+  Gate A evidence. The accepted core is now synchronized into `main`, and
+  future Teacher changes must keep both branches aligned.
 - The existing 669-point v5 Teacher dataset is accepted as a provenance-bound
   data product. Its old fast-day target remains useful evidence, but it is not
   the final daily-surrogate boundary.
@@ -213,7 +214,8 @@ remain queued until this packet is closed.
 
 ### Inputs
 
-- canonical Teacher shared core: `a779663`;
+- canonical Teacher core: `main` at `deba027` (identical in the research
+  branch after merge `8c9c75b`);
 - source-backed target design:
   [`porting/pft14_extensible_design.md`](porting/pft14_extensible_design.md);
 - current PFT14 layout, parameter loaders, restart schemas, modelout selection,

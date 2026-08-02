@@ -129,6 +129,9 @@ def test_disposition_is_fail_closed_and_oracle_bound(tmp_path: Path) -> None:
 
 def test_manifest_declares_required_lifecycle_matrix() -> None:
     manifest = json.loads((ROOT / "configs" / "teacher_branch_parity.json").read_text(encoding="utf-8"))
+    assert manifest["baseline"] == {"id": "main", "revision": "main"}
+    assert manifest["candidate"] == {"id": "research", "revision": "HEAD"}
+    assert manifest["dispositions"] == []
     cases = manifest["cases"]
     assert {case["scenario"] for case in cases} == {"cold", "reference_start", "restart"}
     assert any(case["days"] == 365 for case in cases)

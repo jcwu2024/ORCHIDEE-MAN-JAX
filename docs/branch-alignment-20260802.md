@@ -2,6 +2,14 @@
 
 Audit date: 2026-08-02.
 
+## Post-Audit Synchronization
+
+This document first records the pre-synchronization audit below. After its
+numerical gate passed, the accepted six-file Teacher core was copied into
+`main` at `deba027` and merged back into the research branch at `8c9c75b`.
+The current `jax_orchidee/` trees are identical. The old hashes and difference
+table remain here as historical provenance, not as the present branch state.
+
 ## Repository Facts
 
 At the audited snapshot:
@@ -38,7 +46,7 @@ Only these six `jax_orchidee/` files differ:
 Research-only model, training, dataset, experiment, and Slurm files remain on
 the research branch. This audit does not authorize or propose a branch merge.
 
-## Current Branch Contract
+## Audited Pre-Synchronization Branch Contract
 
 - `main` is the frozen PFT14 Teacher baseline and user-facing branch.
 - `research/daily-coarse-graining` is an experimental descendant containing
@@ -100,6 +108,7 @@ The 2026-08-02 worktree audit verified:
 - all relative Markdown links in the changed contributor documentation
   resolve, and `git diff --check` passes.
 
-Together with the completed numerical matrix, these checks close Gate A. The
-research shared core is the sole Teacher development authority; `main`
-remains a frozen release baseline.
+Together with the completed numerical matrix, these checks closed the
+pre-synchronization part of Gate A. The accepted research core was then
+synchronized into `main` as described at the top of this document; neither
+branch now carries a distinct Teacher implementation.

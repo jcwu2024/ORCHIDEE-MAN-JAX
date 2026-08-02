@@ -9,12 +9,14 @@ research, evidence, or generated assets.
 
 | Branch | Role | Current restriction |
 | --- | --- | --- |
-| `main` | Frozen user-facing PFT14 half-hour Teacher baseline | Do not add experimental daily-model code |
-| `research/daily-coarse-graining` | Teacher descendant plus data and neural research | Ordinary Teacher mode must pass Gate A against `main` |
+| `main` | User-facing PFT14 half-hour Teacher and canonical Teacher core | Do not add experimental daily-model code |
+| `research/daily-coarse-graining` | Identical Teacher core plus data and neural research | Keep `jax_orchidee/` identical to `main` |
 
-The branches are intentionally separate. The research branch is not simply
-`main` plus new files: six shared Teacher files differ. See
-`branch-alignment-20260802.md`.
+The branches remain separate because research code is not a user-facing
+product. Their production Teacher packages are synchronized: there is no
+`jax_orchidee/` difference. The earlier six-file difference and its numerical
+admission evidence are preserved in `branch-alignment-20260802.md` and
+`teacher-branch-parity-acceptance.md`.
 
 ## Production Teacher
 
@@ -27,7 +29,7 @@ The branches are intentionally separate. The research branch is not simply
 | `jax_orchidee/stomate/` | Daily vegetation/carbon processes, restart, and modelout |
 | `jax_orchidee/parameters/` | Source-backed control, soil, and vertical parameter materialization |
 | `jax_orchidee/coupled.py` | Source-order cross-module composition helpers |
-| `jax_orchidee/ad_primitives.py` | Research-branch custom derivative rules that must preserve forward primals |
+| `jax_orchidee/ad_primitives.py` | Canonical derivative rules that preserve forward primals |
 
 Although many scientific kernels accept arbitrary `nvm` shapes, the complete
 Teacher is currently a PFT14 paper-case product rather than a selectable PFT

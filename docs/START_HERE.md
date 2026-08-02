@@ -60,8 +60,10 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
-Gate A is complete and the research shared core is the canonical Teacher for
-future development. Do not launch another neural training experiment yet.
+Gate A is complete. `main` and `research/daily-coarse-graining` now contain
+the same canonical `jax_orchidee` Teacher core; the research branch adds only
+research infrastructure around it. Do not launch another neural training
+experiment yet.
 The next work is Gate B: freeze the Teacher PFT registry and parameter
 ownership. Gate C then freezes daily flux labels and proves non-neural
 constrained replay before a new network is trained.
@@ -79,10 +81,10 @@ git log -1 --oneline
 
 Then read `NEXT_STEPS.md`, `CODE_MAP.md`, and `DOCUMENT_STATUS.md`. Report the
 active gate before editing or submitting a job. Gate A must not be reopened
-unless the six shared Teacher files change or its evidence hashes drift. The
-active technical task is Gate B; later gates are queued work, not parallel
-instructions. A local `AGENTS.md`, when present, adds workspace and server
-rules but is deliberately not required for a clean Git handoff.
+unless `jax_orchidee` drifts between the two branches or its evidence hashes
+drift. The active technical task is Gate B; later gates are queued work, not
+parallel instructions. A local `AGENTS.md`, when present, adds workspace and
+server rules but is deliberately not required for a clean Git handoff.
 
 A Git clone contains source, tests, contracts, and small manifests. It does
 not contain forcing, Fortran reference packages, generated Teacher shards,

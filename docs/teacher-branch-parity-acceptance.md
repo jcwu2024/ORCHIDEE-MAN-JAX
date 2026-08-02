@@ -4,16 +4,19 @@ Acceptance date: 2026-08-02.
 
 ## Decision
 
-Gate A is complete. The canonical Teacher implementation for all subsequent
-research and PFT-extensibility work is the shared Teacher core at
+Gate A is complete. Its historical A/B selected the Teacher core at
 `research/daily-coarse-graining` commit
-`a7796635f892af51c0902763d4938ae9179839db`.
+`a7796635f892af51c0902763d4938ae9179839db` over the old `main` baseline
+`7333b46c0b38650fb6c9250582876137831657b8`.
 
-`main` commit `7333b46c0b38650fb6c9250582876137831657b8` remains the frozen
-user-facing release baseline. It is not a second development authority. The
-branches remain separate because the research branch also contains
-experimental dataset and neural code; this decision does not merge that code
-into `main`.
+The accepted six-file core and its Teacher-only tests were subsequently
+synchronized into `main` at `deba027`. The updated `main` was merged into the
+research branch at `8c9c75b`, and
+`git diff --exit-code main..research/daily-coarse-graining -- jax_orchidee`
+is empty. Thus the current Teacher implementation is one shared code tree,
+not two numerically admitted variants. The branches remain separate because
+the research branch also contains experimental dataset and neural code; none
+of that code was copied into `main`.
 
 ## Executed Matrix
 
@@ -51,10 +54,9 @@ The first differing day contains exactly seven continuous fields:
 
 The initial absolute change is at most `1.0e-8`; no discrete or defined-status
 field differs. Later continuous differences are propagation from that state
-change. The disposition is fail closed in
-`configs/teacher_branch_parity.json`: it fixes the first day, exact first-day
-field set, maximum initial magnitude, source owner, JAX owner, and the SHA256
-of the passed source-extracted `stomate_npp_growth` Oracle. Any additional
+change. The historical disposition was fail closed: it fixed the first day,
+exact first-day field set, maximum initial magnitude, source owner, JAX owner,
+and the SHA256 of the passed source-extracted `stomate_npp_growth` Oracle. Any additional
 first-day field, discrete mismatch, larger initial change, missing Oracle, or
 Oracle hash drift fails the gate.
 
@@ -77,11 +79,18 @@ the source comment's intended threshold. See
 | `stomate/season.py` | inactive-lane safe divisions preserve forward primals |
 | `stomate/soilcarbon_kernels.py` | DOC square-root derivative rule preserves the source primal |
 
-## Reproduction
+## Current Drift Gate
 
 ```bash
 conda run -n ORCJAX python scripts/dev/run_teacher_branch_parity.py --group all
 ```
+
+The current manifest resolves baseline revision `main` and candidate revision
+`HEAD`. Because both branches now contain the accepted correction, every case
+must pass raw comparison; `dispositions` is empty. The old correction cannot
+mask a future regression in either direction.
+
+## Historical Evidence
 
 `--resume` may reuse a snapshot only when its commit, case, and runtime flags
 match. Generated evidence remains under `outputs/branch_parity/` and is not
@@ -94,7 +103,7 @@ field_comparisons.csv  4787e497065716a2c6bd5fb02a66de15215e43b2eb18b8c3c3775b00f
 report.md              cf48981f1f266855fe98a5e3095c58daf8e81f6a6357820aa60aaae81393fb8d
 ```
 
-The final targeted regression covered the parity runner, AD primitives,
+The historical final targeted regression covered the parity runner, AD primitives,
 source-backed carbon, season, soil-carbon, coupled state assembly, and
 default-off OK_LEAK capture: `333 passed`. Ruff, `py_compile`, and
 `git diff --check` also passed.
