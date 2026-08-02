@@ -8,11 +8,12 @@ import numpy as np
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+from jax_orchidee.parameters.pft_catalog import build_pft_run_layout, load_pft_catalog
 from jax_orchidee.stomate.carbon_kernels import (
-    IAGRHRTST,
     IAGRHRTPN,
-    IAGRSAPST,
+    IAGRHRTST,
     IAGRSAPPN,
+    IAGRSAPST,
     ICARBON,
     IHEARTABOVE,
     IHEARTBELOW,
@@ -27,8 +28,10 @@ from jax_orchidee.stomate.modelout import (
     MODEL_OUTPUT_FIELD_SOURCES,
     annual_history_mean_fields_from_daily_modelout,
     compute_modelout_from_fields,
+    modelout_pft_selection,
     modelout_source_gaps,
     select_history_point_fields,
+    select_history_point_fields_for_pft_id,
     stomate_lpj_history_fields_from_state,
 )
 
@@ -175,3 +178,35 @@ def test_annual_history_mean_fields_from_daily_modelout_can_return_runtime_axes(
 
     assert np.asarray(averaged["LEAF_M"]).shape == (2, 14)
     assert np.allclose(np.asarray(averaged["LEAF_M"]), 3.0)
+
+
+def test_modelout_selection_uses_stable_pft_identity_and_records_metadata():
+    catalog = load_pft_catalog(
+        ROOT / "configs" / "pft_catalogs" / "orchidee_man_paper_250919.json"
+    )
+    layout = build_pft_run_layout(
+        catalog,
+        layout_id="paper_250919_legacy14",
+        fractions=[0.0] * 13 + [1.0],
+    )
+    fields = {
+        name: np.arange(14, dtype=np.float64).reshape(1, 14, 1, 1)
+        for name in MODEL_OUTPUT_FIELD_NAMES
+    }
+
+    selected, metadata = select_history_point_fields_for_pft_id(
+        fields,
+        layout=layout,
+        pft_id="mangrove_pft14",
+    )
+
+    assert np.asarray(selected["GPP"]) == 13.0
+    assert metadata == modelout_pft_selection(layout, "mangrove_pft14")
+    assert metadata.metadata() == {
+        "catalog_id": "orchidee_man_paper_250919",
+        "layout_id": "paper_250919_legacy14",
+        "pft_id": "mangrove_pft14",
+        "pft_index": 13,
+        "fortran_pft_id": 14,
+        "mtc_id": 2,
+    }

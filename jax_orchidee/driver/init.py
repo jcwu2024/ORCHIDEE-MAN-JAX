@@ -15,6 +15,12 @@ from typing import Any
 import numpy as np
 
 from jax_orchidee.driver.domain import load_case_config
+from jax_orchidee.parameters.pft_catalog import (
+    PFTRunLayout,
+    build_pft_run_layout,
+    load_pft_catalog,
+    validate_active_capabilities,
+)
 
 
 DEFAULT_REFERENCE_RUN_DEF = Path(
@@ -97,17 +103,29 @@ def _parse_bool(value: Any) -> bool:
     raise ValueError(f"cannot parse boolean value {value!r}")
 
 
-def _apply_indexed_overrides(values: np.ndarray, overrides: dict[str, Any], prefix: str, *, dtype=None) -> np.ndarray:
+def _apply_indexed_overrides_for_ids(
+    values: np.ndarray,
+    fortran_pft_ids: tuple[int, ...],
+    overrides: dict[str, Any],
+    prefix: str,
+    *,
+    dtype=None,
+) -> np.ndarray:
+    """Apply one-based source overrides to stable-ID-selected execution rows."""
+
     result = np.asarray(values, dtype=dtype).copy()
+    positions = {pft_id: index for index, pft_id in enumerate(fortran_pft_ids)}
     for key, value in overrides.items():
-        if key.startswith(prefix):
-            pft_index = int(key.rsplit("__", 1)[1])
-            if pft_index < 1 or pft_index > result.shape[0]:
-                raise ValueError(f"{prefix} override index is outside 1..NVM")
-            if result.dtype == np.dtype(bool):
-                result[pft_index - 1] = _parse_bool(value)
-            else:
-                result[pft_index - 1] = value
+        if not key.startswith(prefix):
+            continue
+        pft_id = int(key.rsplit("__", 1)[1])
+        if pft_id not in positions:
+            continue
+        position = positions[pft_id]
+        if result.dtype == np.dtype(bool):
+            result[position] = _parse_bool(value)
+        else:
+            result[position] = value
     return result
 
 
@@ -119,6 +137,10 @@ class RunScalars:
     impose_veg: bool
     nvm: int
     nstm: int
+    pft_layout: PFTRunLayout
+    pft_ids: tuple[str, ...]
+    fortran_pft_ids: np.ndarray
+    active_pft_mask: np.ndarray
     pft_to_mtc: np.ndarray
     pref_soil_veg: np.ndarray
     natural: np.ndarray
@@ -235,6 +257,21 @@ def parse_run_def_indexed_vector(
     )
 
 
+def parse_run_def_indexed_selection(
+    values: dict[str, str],
+    name: str,
+    fortran_pft_ids: tuple[int, ...],
+    *,
+    dtype=np.float64,
+) -> np.ndarray:
+    """Read indexed source rows in a stable-ID-selected execution order."""
+
+    return np.asarray(
+        [parse_run_def_indexed_float(values, name, index) for index in fortran_pft_ids],
+        dtype=dtype,
+    )
+
+
 def reference_run_def_path(config_path: str | Path) -> Path:
     """Resolve the local reference run.def file used for scalar inspection.
 
@@ -310,19 +347,43 @@ def read_run_scalars(config_path: str | Path, run_def_path: str | Path | None = 
     config = load_case_config(config_path)
     run_def = parse_run_def(run_def_path or reference_run_def_path(config_path))
 
-    nvm = int(config["structural_overrides"]["NVM"])
+    catalog_config = config["pft_catalog"]
+    catalog = load_pft_catalog(catalog_config["path"])
+    layout_id = str(catalog_config["layout_id"])
+    if layout_id not in catalog.layouts:
+        raise KeyError(f"configured PFT layout {layout_id!r} is absent from the catalog")
+    catalog_entries = tuple(catalog.entries_by_id[pft_id] for pft_id in catalog.layouts[layout_id])
+    fortran_pft_ids = tuple(entry.fortran_pft_id for entry in catalog_entries)
+    nvm = len(catalog_entries)
+    configured_nvm = int(config["structural_overrides"]["NVM"])
+    if configured_nvm != nvm:
+        raise ValueError(
+            f"structural NVM={configured_nvm} disagrees with PFT layout {layout_id!r} length {nvm}"
+        )
     nstm = int(config["structural_overrides"]["NSTM"])
     impose_veg = bool(config["run_def_flags"]["IMPOSE_VEG"])
     structural_overrides = config["structural_overrides"]
 
     vegmax_by_key = config["prescribed_pft_cover"]["sechiba_vegmax"]
     sechiba_vegmax = np.asarray(
-        [float(vegmax_by_key[f"SECHIBA_VEGMAX__{jv:05d}"]) for jv in range(1, nvm + 1)],
+        [float(vegmax_by_key[f"SECHIBA_VEGMAX__{pft_id:05d}"]) for pft_id in fortran_pft_ids],
         dtype=np.float64,
     )
 
-    pft_to_mtc = np.arange(1, nvm + 1, dtype=np.int32)
-    pft_to_mtc = _apply_indexed_overrides(pft_to_mtc, structural_overrides, "PFT_TO_MTC__", dtype=np.int32)
+    pft_layout = build_pft_run_layout(
+        catalog,
+        layout_id=layout_id,
+        fractions=sechiba_vegmax,
+    )
+    validate_active_capabilities(catalog, pft_layout)
+
+    pft_to_mtc = np.asarray([entry.mtc_id for entry in catalog_entries], dtype=np.int32)
+    pft_to_mtc = _apply_indexed_overrides_for_ids(
+        pft_to_mtc, fortran_pft_ids, structural_overrides, "PFT_TO_MTC__", dtype=np.int32
+    )
+    catalog_mtc = np.asarray([entry.mtc_id for entry in catalog_entries], dtype=np.int32)
+    if not np.array_equal(pft_to_mtc, catalog_mtc):
+        raise ValueError("PFT_TO_MTC overrides disagree with the selected source-backed catalog")
     if np.any(pft_to_mtc < 1) or np.any(pft_to_mtc > _NATURAL_MTC.shape[0]):
         raise ValueError("pft_to_mtc contains an MTC outside the Fortran constantes_mtc table")
 
@@ -334,24 +395,50 @@ def read_run_scalars(config_path: str | Path, run_def_path: str | Path | None = 
     is_c4 = _IS_C4_MTC[mtc_index].astype(bool)
     z0_over_height = _Z0_OVER_HEIGHT_MTC[mtc_index].astype(np.float64)
 
-    if pref_soil_veg.shape[0] != nvm:
-        raise ValueError("Phase 1C active path expects NVM=14")
-    pref_soil_veg = _apply_indexed_overrides(pref_soil_veg, structural_overrides, "PREF_SOIL_VEG__", dtype=np.int32)
-    natural = _apply_indexed_overrides(natural, structural_overrides, "NATURAL__", dtype=bool)
-    is_peat = _apply_indexed_overrides(is_peat, structural_overrides, "IS_PEAT__", dtype=bool)
-    is_c4 = _apply_indexed_overrides(is_c4, structural_overrides, "IS_C4__", dtype=bool)
+    pref_soil_veg = _apply_indexed_overrides_for_ids(
+        pref_soil_veg, fortran_pft_ids, structural_overrides, "PREF_SOIL_VEG__", dtype=np.int32
+    )
+    natural = _apply_indexed_overrides_for_ids(
+        natural, fortran_pft_ids, structural_overrides, "NATURAL__", dtype=bool
+    )
+    is_peat = _apply_indexed_overrides_for_ids(
+        is_peat, fortran_pft_ids, structural_overrides, "IS_PEAT__", dtype=bool
+    )
+    is_c4 = _apply_indexed_overrides_for_ids(
+        is_c4, fortran_pft_ids, structural_overrides, "IS_C4__", dtype=bool
+    )
     if np.any(pref_soil_veg < 1) or np.any(pref_soil_veg > nstm):
         raise ValueError("pref_soil_veg contains a soil tile outside 1..NSTM")
 
+    trait_arrays = {
+        "natural": natural,
+        "is_tree": is_tree,
+        "is_peat": is_peat,
+        "is_c4": is_c4,
+        "pref_soil_veg": pref_soil_veg,
+    }
+    for position, entry in enumerate(catalog_entries):
+        for trait_name, values in trait_arrays.items():
+            if trait_name in entry.traits and values[position] != entry.traits[trait_name]:
+                raise ValueError(
+                    f"catalog trait {entry.pft_id}.{trait_name} disagrees with source-derived runtime value"
+                )
+
     indexed_default_keys = tuple(
-        [f"EXT_COEFF_VEGETFRAC__{jv:05d}" for jv in range(1, nvm + 1)]
-        + [f"SLOWPROC_HEIGHT__{jv:05d}" for jv in range(1, nvm + 1)]
-        + [f"RATIO_Z0M_Z0H__{jv:05d}" for jv in range(1, nvm + 1)]
+        [f"EXT_COEFF_VEGETFRAC__{pft_id:05d}" for pft_id in fortran_pft_ids]
+        + [f"SLOWPROC_HEIGHT__{pft_id:05d}" for pft_id in fortran_pft_ids]
+        + [f"RATIO_Z0M_Z0H__{pft_id:05d}" for pft_id in fortran_pft_ids]
     )
     run_def_with_defaults = _values_with_materialized_defaults(config_path, run_def, indexed_default_keys)
-    ext_coeff_vegetfrac = parse_run_def_indexed_vector(run_def_with_defaults, "EXT_COEFF_VEGETFRAC", nvm)
-    slowproc_height = parse_run_def_indexed_vector(run_def_with_defaults, "SLOWPROC_HEIGHT", nvm)
-    ratio_z0m_z0h = parse_run_def_indexed_vector(run_def_with_defaults, "RATIO_Z0M_Z0H", nvm)
+    ext_coeff_vegetfrac = parse_run_def_indexed_selection(
+        run_def_with_defaults, "EXT_COEFF_VEGETFRAC", fortran_pft_ids
+    )
+    slowproc_height = parse_run_def_indexed_selection(
+        run_def_with_defaults, "SLOWPROC_HEIGHT", fortran_pft_ids
+    )
+    ratio_z0m_z0h = parse_run_def_indexed_selection(
+        run_def_with_defaults, "RATIO_Z0M_Z0H", fortran_pft_ids
+    )
     nleafages = parse_run_def_int(run_def_with_defaults, "NLEAFAGES") if "NLEAFAGES" in run_def_with_defaults else 4
     read_lai = parse_run_def_bool(run_def_with_defaults.get("READ_LAI", "FALSE"))
     ok_stomate = parse_run_def_bool(run_def_with_defaults.get("STOMATE_OK_STOMATE", "TRUE"))
@@ -361,6 +448,10 @@ def read_run_scalars(config_path: str | Path, run_def_path: str | Path | None = 
         impose_veg=impose_veg,
         nvm=nvm,
         nstm=nstm,
+        pft_layout=pft_layout,
+        pft_ids=pft_layout.pft_ids,
+        fortran_pft_ids=np.asarray(fortran_pft_ids, dtype=np.int32),
+        active_pft_mask=np.asarray(pft_layout.active_mask, dtype=bool),
         pft_to_mtc=pft_to_mtc,
         pref_soil_veg=pref_soil_veg,
         natural=natural,

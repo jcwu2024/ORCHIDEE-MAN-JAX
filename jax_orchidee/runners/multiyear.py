@@ -27,6 +27,7 @@ from jax_orchidee.driver.orchestration import (  # noqa: E402
     paper_1961_driver_multiday_modelout_lite_run,
     paper_1961_driver_restart_year_multiday_modelout_lite_run,
 )
+from jax_orchidee.driver.init import read_run_scalars  # noqa: E402
 from jax_orchidee.driver.reference_layout import resolve_paper_landpoint_reference  # noqa: E402
 from jax_orchidee.driver.run_def_materialization import (  # noqa: E402
     materialize_case_run_def_values,
@@ -36,6 +37,7 @@ from jax_orchidee.stomate.modelout import (  # noqa: E402
     MODEL_OUTPUT_FIELD_NAMES,
     annual_history_mean_fields_from_daily_modelout,
     compute_modelout_from_fields,
+    modelout_pft_selection,
     select_history_point_fields,
 )
 from jax_orchidee.stomate.reference import (  # noqa: E402
@@ -106,14 +108,14 @@ def _block_until_ready(value) -> None:
         pass
 
 
-def _pft14_scalar(value) -> float:
+def _pft_scalar(value, *, pft_index: int) -> float:
     try:
         import jax
 
         value = jax.device_get(value)
     except Exception:
         pass
-    return float(np.asarray(value, dtype=np.float64).reshape(-1)[13])
+    return float(np.asarray(value, dtype=np.float64).reshape(-1)[int(pft_index)])
 
 
 def _scalar(value) -> float:
@@ -126,11 +128,11 @@ def _scalar(value) -> float:
     return float(np.asarray(value, dtype=np.float64).reshape(-1)[0])
 
 
-def _field_series(run, field: str) -> list[float]:
+def _field_series(run, field: str, *, pft_index: int) -> list[float]:
     series: list[float] = []
     for day in run.daily_modelout:
         if field in day.modelout_fields:
-            series.append(_pft14_scalar(day.modelout_fields[field]))
+            series.append(_pft_scalar(day.modelout_fields[field], pft_index=pft_index))
     return series
 
 
@@ -209,10 +211,12 @@ def _summarize_year(
     handoff_gap_count: int | None,
     paper_csv_targets: dict[int, tuple[object, ...]],
     landpoint_id: str,
+    pft_index: int,
+    pft_metadata: dict[str, object],
 ) -> dict[str, object]:
     field_summary: dict[str, object] = {}
     for field in fields:
-        series = _field_series(run, field)
+        series = _field_series(run, field, pft_index=pft_index)
         if series:
             values = np.asarray(series, dtype=np.float64)
             field_summary[field] = {
@@ -231,7 +235,7 @@ def _summarize_year(
             [day.modelout_fields for day in run.daily_modelout],
             field_names=MODEL_OUTPUT_FIELD_NAMES,
         )
-        annual_selected = select_history_point_fields(annual_fields)
+        annual_selected = select_history_point_fields(annual_fields, pft_index=pft_index)
         annual_result = compute_modelout_from_fields(annual_selected)
         annual_modelout = {
             "aggregation": "arithmetic mean of completed daily STOMATE output sends",
@@ -290,6 +294,7 @@ def _summarize_year(
         )
     return {
         "year": int(run.year),
+        "pft_selection": pft_metadata,
         "requested_days": int(run.requested_days),
         "closed_modelout_days": len(run.daily_modelout),
         "ready_for_requested_days": bool(run.ready_for_requested_days),
@@ -346,6 +351,7 @@ def _write_year_checkpoint(
     summaries: list[dict[str, object]],
     started_at: float,
     previous_state_cache_metadata: dict[str, object] | None,
+    pft_layout_metadata: dict[str, object],
 ) -> dict[str, str]:
     checkpoint_dir.mkdir(parents=True, exist_ok=True)
     state_path = checkpoint_dir / f"paper_driver_{int(year)}_year_end_state.pkl"
@@ -359,6 +365,7 @@ def _write_year_checkpoint(
         "days_per_year": int(ndays),
         "previous_state_cache": None if args.previous_state_cache is None else str(args.previous_state_cache),
         "previous_state_cache_metadata": previous_state_cache_metadata,
+        "pft_layout": pft_layout_metadata,
         "created_elapsed_seconds": time.perf_counter() - started_at,
         "year_summaries": summaries,
         "state": state,
@@ -500,6 +507,11 @@ def main(argv: list[str] | None = None) -> int:
         paper_csv_targets = paper_modelout_csv_targets_by_year(args.paper_modelout_csv, landpoint_id=args.landpoint_id)
         paper_modelout_csv_label = str(args.paper_modelout_csv)
 
+    run_scalars = read_run_scalars(args.config, run_def_path=args.run_def)
+    pft_selection = modelout_pft_selection(run_scalars.pft_layout, "mangrove_pft14")
+    pft_layout_metadata = run_scalars.pft_layout.metadata()
+    pft_selection_metadata = pft_selection.metadata()
+
     overall_start = time.perf_counter()
     previous_state: DriverPreviousStepStatePacket | None = None
     previous_state_cache_metadata = None
@@ -509,6 +521,11 @@ def main(argv: list[str] | None = None) -> int:
         cache_payload = _read_year_end_state_cache(args.previous_state_cache)
         if int(cache_payload.get("end_year", -9999)) != int(args.start_year) - 1:
             raise ValueError("--previous-state-cache must end at start_year - 1")
+        cached_layout = cache_payload.get("pft_layout")
+        if cached_layout is not None and cached_layout != pft_layout_metadata:
+            raise ValueError("--previous-state-cache PFT layout does not match the configured stable IDs")
+        if cached_layout is None and run_scalars.pft_layout.layout_id != "paper_250919_legacy14":
+            raise ValueError("legacy state cache without stable PFT metadata is valid only for paper_250919_legacy14")
         previous_state = cache_payload["state"]
         previous_state_cache_metadata = {
             key: cache_payload.get(key)
@@ -520,6 +537,8 @@ def main(argv: list[str] | None = None) -> int:
             cache_payload = _read_year_end_state_cache(latest_checkpoint)
             if int(cache_payload.get("start_year", -9999)) != int(args.start_year):
                 raise ValueError("checkpoint start_year does not match --start-year")
+            if cache_payload.get("pft_layout") != pft_layout_metadata:
+                raise ValueError("checkpoint PFT layout does not match the configured stable IDs")
             cached_end_year = int(cache_payload.get("end_year", -9999))
             start_offset = cached_end_year - int(args.start_year) + 1
             if start_offset < 0 or start_offset > int(args.years):
@@ -625,6 +644,8 @@ def main(argv: list[str] | None = None) -> int:
                 handoff_gap_count=handoff_gap_count,
                 paper_csv_targets=paper_csv_targets,
                 landpoint_id=args.landpoint_id,
+                pft_index=pft_selection.pft_index,
+                pft_metadata=pft_selection_metadata,
             )
         )
         previous_state = run.last_day_end_state
@@ -639,6 +660,7 @@ def main(argv: list[str] | None = None) -> int:
                     summaries=summaries,
                     started_at=overall_start,
                     previous_state_cache_metadata=previous_state_cache_metadata,
+                    pft_layout_metadata=pft_layout_metadata,
                 )
             )
         if not run.ready_for_requested_days:
@@ -666,6 +688,8 @@ def main(argv: list[str] | None = None) -> int:
         "previous_state_cache": None if args.previous_state_cache is None else str(args.previous_state_cache),
         "previous_state_cache_metadata": previous_state_cache_metadata,
         "landpoint_id": args.landpoint_id,
+        "pft_layout": pft_layout_metadata,
+        "pft_selection": pft_selection_metadata,
         "module_jit": args.module_jit,
         "diffuco_local_jit": args.diffuco_local_jit,
         "single_pass_daily_fold": args.single_pass_daily_fold,
