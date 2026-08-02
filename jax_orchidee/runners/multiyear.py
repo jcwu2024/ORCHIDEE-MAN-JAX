@@ -20,6 +20,7 @@ from jax_orchidee.runtime import configure_jax_compilation_cache  # noqa: E402
 
 configure_jax_compilation_cache(ROOT)
 
+from jax_orchidee.driver.init import read_run_scalars  # noqa: E402
 from jax_orchidee.driver.orchestration import (  # noqa: E402
     DriverPreviousStepStatePacket,
     driver_year_handoff_state_gaps,
@@ -27,7 +28,6 @@ from jax_orchidee.driver.orchestration import (  # noqa: E402
     paper_1961_driver_multiday_modelout_lite_run,
     paper_1961_driver_restart_year_multiday_modelout_lite_run,
 )
-from jax_orchidee.driver.init import read_run_scalars  # noqa: E402
 from jax_orchidee.driver.reference_layout import resolve_paper_landpoint_reference  # noqa: E402
 from jax_orchidee.driver.run_def_materialization import (  # noqa: E402
     materialize_case_run_def_values,
