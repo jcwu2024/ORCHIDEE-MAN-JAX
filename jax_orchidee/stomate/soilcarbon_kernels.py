@@ -10,6 +10,8 @@ config.update("jax_enable_x64", True)
 
 import jax.numpy as jnp
 
+from jax_orchidee.ad_primitives import source_sqrt_with_finite_zero_tangent
+
 from jax_orchidee.stomate.carbon_kernels import (
     IACTIVE,
     IACT,
@@ -3596,6 +3598,12 @@ def _remap_litter_doc_export(export_pool, pool: int, lignin_above, lignin_below)
     return export_pool
 
 
+def _sqrt_with_finite_zero_tangent(value):
+    """Keep the source primal while choosing the zero subgradient at zero."""
+
+    return source_sqrt_with_finite_zero_tangent(jnp.asarray(value))
+
+
 def soilcarbon_leak_doc_export(
     doc,
     soilwater_31mm,
@@ -3680,7 +3688,11 @@ def soilcarbon_leak_doc_export(
     if cue_coef.shape != (npts,):
         raise ValueError("cue_coef must be scalar or have shape (npts,)")
 
-    fastr_corr = jnp.maximum(jnp.sqrt(fastr) / jnp.sqrt(jnp.asarray(fastr_ref, dtype=doc.dtype)), 0.0)
+    fastr_corr = jnp.maximum(
+        _sqrt_with_finite_zero_tangent(fastr)
+        / jnp.sqrt(jnp.asarray(fastr_ref, dtype=doc.dtype)),
+        0.0,
+    )
     doc_run = jnp.zeros((npts, nvm, NPOOL, nelements), dtype=doc.dtype)
     doc_drain = jnp.zeros_like(doc_run)
     doc_flood = jnp.zeros_like(doc_run)

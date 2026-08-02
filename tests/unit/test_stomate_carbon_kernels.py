@@ -3,8 +3,11 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 import pytest
+from jax.experimental import checkify
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
@@ -49,6 +52,7 @@ from jax_orchidee.stomate.carbon_kernels import (
     SENESCENCE_DRY,
     SENESCENCE_MIXED,
     SENESCENCE_NONE,
+    _stable_ratio_for_ad,
     agripeat_adjust_fractions_step,
     agr_allocation_split,
     allocation_step,
@@ -140,6 +144,7 @@ from jax_orchidee.stomate.carbon_kernels import (
     turnover_senescence_flags,
     turnover_step,
     turnover_tree_fruit_and_sapwood,
+    update_lignin_fraction,
     vmax_step,
 )
 from jax_orchidee.stomate.reference import encode_restart_pft_bool_field
@@ -467,6 +472,38 @@ def test_sync_aboveground_fuel_after_decomposition_subtracts_qd_then_matches_lit
     assert np.allclose(np.asarray(result.fuel_100hr)[0, 0, 0], expected[2])
     assert np.allclose(np.asarray(result.fuel_1000hr)[0, 0, 0], expected[3])
     assert np.allclose(np.asarray(result.fuel_total)[0, 0, 0], 72.0)
+
+
+def test_zero_litter_and_fuel_branches_have_finite_zero_gradients():
+    zero = jnp.zeros((1,), dtype=jnp.float64)
+
+    lignin_gradient = jax.jit(
+        jax.grad(
+            lambda increment: jnp.sum(
+                update_lignin_fraction(zero, zero, increment, increment)
+            )
+        )
+    )(zero)
+
+    zero_fuel = jnp.zeros((1, 1, 1), dtype=jnp.float64)
+
+    def fuel_objective(qd):
+        result = sync_aboveground_fuel_after_decomposition(
+            zero_fuel,
+            zero_fuel,
+            zero_fuel,
+            zero_fuel,
+            zero_fuel,
+            qd,
+        )
+        return jnp.sum(result.fuel_total)
+
+    fuel_gradient = jax.jit(jax.grad(fuel_objective))(zero_fuel)
+
+    np.testing.assert_array_equal(np.asarray(lignin_gradient), np.zeros(1))
+    assert np.all(np.isfinite(np.asarray(lignin_gradient)))
+    np.testing.assert_array_equal(np.asarray(fuel_gradient), np.zeros((1, 1, 1)))
+    assert np.all(np.isfinite(np.asarray(fuel_gradient)))
 
 
 def test_deadleaf_cover_from_litter_matches_deadleaf_subroutine_formula():
@@ -1069,6 +1106,110 @@ def test_allocation_step_matches_fortran_non_crop_pft14_stress_and_reserve_path(
     assert np.allclose(f_alloc[0, 0, :ICARBRES], 0.0)
 
 
+def test_allocation_step_inactive_zero_reserve_denominators_have_finite_gradients():
+    npts, nvm, nslm = 1, 14, 2
+    zeros_pft = np.zeros((npts, nvm), dtype=np.float64)
+    zeros_biomass = np.zeros((npts, nvm, NPARTS, 1), dtype=np.float64)
+    zeros_leaf_age = np.zeros(
+        (npts, nvm, NLEAFAGES),
+        dtype=np.float64,
+    )
+
+    def objective(sla_calc):
+        result = allocation_step(
+            lai=zeros_pft,
+            veget_max=zeros_pft,
+            senescence=np.zeros((npts, nvm), dtype=bool),
+            when_growthinit=zeros_pft,
+            moiavail_week=zeros_pft,
+            tsoil_month=np.full((npts, nslm), 273.15, dtype=np.float64),
+            soilhum_month=np.zeros((npts, nslm), dtype=np.float64),
+            biomass=zeros_biomass,
+            age=zeros_pft,
+            leaf_age=zeros_leaf_age,
+            leaf_frac=zeros_leaf_age,
+            z_soil=np.asarray([0.0, 1.0, 2.0], dtype=np.float64),
+            sla_calc=sla_calc,
+            natural=np.zeros(nvm, dtype=bool),
+            pasture=np.zeros(nvm, dtype=bool),
+            is_tree=np.zeros(nvm, dtype=bool),
+            ok_LAIdev=np.zeros(nvm, dtype=bool),
+            r0=np.full(nvm, 0.35, dtype=np.float64),
+            s0=np.full(nvm, 0.35, dtype=np.float64),
+            ext_coeff=np.full(nvm, 0.5, dtype=np.float64),
+            lai_max=np.full(nvm, 12.0, dtype=np.float64),
+            lai_max_to_happy=np.full(nvm, 0.5, dtype=np.float64),
+            tau_leafinit=np.zeros(nvm, dtype=np.float64),
+            alloc_min=np.full(nvm, 0.2, dtype=np.float64),
+            alloc_max=np.full(nvm, 0.8, dtype=np.float64),
+            demi_alloc=np.full(nvm, 100.0, dtype=np.float64),
+            alloc_agr_st=np.zeros(nvm, dtype=np.float64),
+            alloc_agr_pn=np.zeros(nvm, dtype=np.float64),
+        )
+        return jnp.sum(result.transloc_leaf)
+
+    gradient = jax.jit(jax.grad(objective))(zeros_pft)
+
+    assert np.all(np.isfinite(np.asarray(gradient)))
+    np.testing.assert_array_equal(np.asarray(gradient), zeros_pft)
+
+
+def test_allocation_step_subthreshold_leaf_age_fraction_gradients_are_finite():
+    npts, nvm, nslm = 1, 14, 2
+    zeros_pft = np.zeros((npts, nvm), dtype=np.float64)
+    biomass = jnp.zeros((npts, nvm, NPARTS, 1), dtype=jnp.float64)
+    biomass = biomass.at[0, PFT14, ILEAF, ICARBON].set(7.0e-260)
+    leaf_age = jnp.zeros((npts, nvm, NLEAFAGES), dtype=jnp.float64)
+    leaf_age = leaf_age.at[0, PFT14, 0].set(2.0)
+    leaf_frac = jnp.zeros((npts, nvm, NLEAFAGES), dtype=jnp.float64)
+    leaf_frac = leaf_frac.at[0, PFT14, 0].set(0.0013)
+
+    def objective(candidate_biomass, candidate_leaf_age, candidate_leaf_frac):
+        result = allocation_step(
+            lai=zeros_pft,
+            veget_max=zeros_pft,
+            senescence=np.ones((npts, nvm), dtype=bool),
+            when_growthinit=zeros_pft,
+            moiavail_week=zeros_pft,
+            tsoil_month=np.full((npts, nslm), 273.15, dtype=np.float64),
+            soilhum_month=np.zeros((npts, nslm), dtype=np.float64),
+            biomass=candidate_biomass,
+            age=zeros_pft,
+            leaf_age=candidate_leaf_age,
+            leaf_frac=candidate_leaf_frac,
+            z_soil=np.asarray([0.0, 1.0, 2.0], dtype=np.float64),
+            sla_calc=np.ones((npts, nvm), dtype=np.float64),
+            natural=np.ones(nvm, dtype=bool),
+            pasture=np.zeros(nvm, dtype=bool),
+            is_tree=np.zeros(nvm, dtype=bool),
+            ok_LAIdev=np.zeros(nvm, dtype=bool),
+            r0=np.full(nvm, 0.35, dtype=np.float64),
+            s0=np.full(nvm, 0.35, dtype=np.float64),
+            ext_coeff=np.full(nvm, 0.5, dtype=np.float64),
+            lai_max=np.full(nvm, 12.0, dtype=np.float64),
+            lai_max_to_happy=np.full(nvm, 0.5, dtype=np.float64),
+            tau_leafinit=np.full(nvm, 10.0, dtype=np.float64),
+            alloc_min=np.full(nvm, 0.2, dtype=np.float64),
+            alloc_max=np.full(nvm, 0.8, dtype=np.float64),
+            demi_alloc=np.full(nvm, 100.0, dtype=np.float64),
+            alloc_agr_st=np.zeros(nvm, dtype=np.float64),
+            alloc_agr_pn=np.zeros(nvm, dtype=np.float64),
+            min_stomate=1.0e-8,
+        )
+        return (
+            jnp.sum(result.leaf_age)
+            + jnp.sum(result.leaf_frac)
+            + jnp.sum(result.biomass)
+        )
+
+    _, gradients = jax.value_and_grad(
+        objective,
+        argnums=(0, 1, 2),
+    )(biomass, leaf_age, leaf_frac)
+
+    assert all(np.all(np.isfinite(np.asarray(leaf))) for leaf in gradients)
+
+
 def test_npp_closed_update_matches_source_algebra_with_supplied_alloc_and_maintenance():
     biomass = np.zeros((1, 14, NPARTS, 1), dtype=np.float64)
     biomass[0, PFT14, ILEAF, ICARBON] = 100.0
@@ -1135,6 +1276,87 @@ def test_npp_closed_update_pumps_only_fortran_explicit_biomass_pools_when_tax_ex
     assert np.allclose(np.asarray(result.resp_maint)[0, PFT14], 1.0)
     assert np.allclose(np.asarray(result.npp)[0, PFT14], 0.0)
     assert np.asarray(result.bm_alloc).shape == biomass.shape
+
+
+def test_npp_negative_stock_lands_exactly_on_threshold_without_activating_leaf_fraction_gate():
+    npts, nvm = 1, 14
+    min_stomate = 1.0e-8
+    negative_leaf_stock = -4.904524473172416e-9
+    biomass = np.zeros((npts, nvm, NPARTS, 1), dtype=np.float64)
+    biomass[0, PFT14, ILEAF, ICARBON] = negative_leaf_stock
+    pft_present = np.zeros((npts, nvm), dtype=bool)
+    pft_present[0, PFT14] = True
+
+    result = npp_closed_update(
+        biomass=biomass,
+        gpp=np.zeros((npts, nvm), dtype=np.float64),
+        f_alloc=np.zeros((npts, nvm, NPARTS), dtype=np.float64),
+        resp_maint_part=np.zeros((npts, nvm, NPARTS), dtype=np.float64),
+        pft_present=pft_present,
+        frac_growthresp=np.zeros(nvm, dtype=np.float64),
+        min_stomate=min_stomate,
+    )
+
+    corrected_leaf_stock = np.asarray(result.biomass)[0, PFT14, ILEAF, ICARBON]
+    expected_creation = min_stomate - negative_leaf_stock
+    assert corrected_leaf_stock == min_stomate
+    assert np.asarray(result.resp_maint)[0, PFT14] == -expected_creation
+    assert np.asarray(result.npp)[0, PFT14] == expected_creation
+
+    initial_leaf_frac = np.full((npts, nvm, NLEAFAGES), 0.25, dtype=np.float64)
+    age_result = npp_leaf_age_sla_age_update(
+        biomass=result.biomass,
+        biomass_old=result.biomass_before_alloc,
+        bm_alloc=result.bm_alloc,
+        leaf_age=np.full((npts, nvm, NLEAFAGES), 20.0, dtype=np.float64),
+        leaf_frac=initial_leaf_frac,
+        age=np.full((npts, nvm), 10.0, dtype=np.float64),
+        pft_present=pft_present,
+        is_tree=np.ones(nvm, dtype=bool),
+        sla_age1=np.full((npts, nvm), 0.02, dtype=np.float64),
+        sla_calc=np.full((npts, nvm), 0.02, dtype=np.float64),
+        sla_max=np.full(nvm, 0.03, dtype=np.float64),
+        sla_min=np.full(nvm, 0.01, dtype=np.float64),
+        dt_days=1.0,
+        min_stomate=min_stomate,
+    )
+
+    np.testing.assert_array_equal(np.asarray(age_result.leaf_frac), initial_leaf_frac)
+    assert np.all(np.isfinite(np.asarray(age_result.leaf_age)))
+
+
+def test_npp_closed_update_absent_pft_has_finite_zero_maintenance_gradient():
+    biomass = np.zeros((1, 14, NPARTS, 1), dtype=np.float64)
+    gpp = np.zeros((1, 14), dtype=np.float64)
+    f_alloc = np.zeros((1, 14, NPARTS), dtype=np.float64)
+    pft_present = np.zeros((1, 14), dtype=bool)
+    frac_growthresp = np.zeros(14, dtype=np.float64)
+    resp_maint_part = jnp.zeros((1, 14, NPARTS), dtype=jnp.float64)
+
+    def biomass_objective(maintenance_parts):
+        result = npp_closed_update(
+            biomass=biomass,
+            gpp=gpp,
+            f_alloc=f_alloc,
+            resp_maint_part=maintenance_parts,
+            pft_present=pft_present,
+            frac_growthresp=frac_growthresp,
+        )
+        return jnp.sum(result.biomass)
+
+    result = npp_closed_update(
+        biomass=biomass,
+        gpp=gpp,
+        f_alloc=f_alloc,
+        resp_maint_part=resp_maint_part,
+        pft_present=pft_present,
+        frac_growthresp=frac_growthresp,
+    )
+    gradient = jax.jit(jax.grad(biomass_objective))(resp_maint_part)
+
+    np.testing.assert_array_equal(np.asarray(result.biomass), biomass)
+    assert np.all(np.isfinite(np.asarray(gradient)))
+    np.testing.assert_array_equal(np.asarray(gradient), np.zeros_like(resp_maint_part))
 
 
 def test_npp_leaf_age_sla_age_update_matches_source_bookkeeping_for_grass():
@@ -1260,6 +1482,157 @@ def test_npp_leaf_age_sla_age_update_keeps_tree_age_after_increment_only():
     )
 
     assert np.allclose(np.asarray(result.age)[0, PFT14], 3.0 + 2.0 / 365.0)
+
+
+def test_npp_leaf_age_zero_biomass_has_finite_allocation_gradient():
+    npts, nvm = 1, 14
+    biomass = np.zeros((npts, nvm, NPARTS, 1), dtype=np.float64)
+    zeros_leaf_age = np.zeros(
+        (npts, nvm, NLEAFAGES),
+        dtype=np.float64,
+    )
+
+    def objective(bm_alloc):
+        result = npp_leaf_age_sla_age_update(
+            biomass,
+            biomass,
+            bm_alloc,
+            zeros_leaf_age,
+            zeros_leaf_age,
+            np.zeros((npts, nvm), dtype=np.float64),
+            np.zeros((npts, nvm), dtype=bool),
+            np.zeros(nvm, dtype=bool),
+            np.zeros((npts, nvm), dtype=np.float64),
+            np.zeros((npts, nvm), dtype=np.float64),
+            np.ones(nvm, dtype=np.float64) * 0.03,
+            np.ones(nvm, dtype=np.float64) * 0.01,
+            dt_days=1.0,
+        )
+        return jnp.sum(result.age)
+
+    gradient = jax.jit(jax.grad(objective))(biomass)
+
+    assert np.all(np.isfinite(np.asarray(gradient)))
+    np.testing.assert_array_equal(np.asarray(gradient), biomass)
+
+
+def test_npp_leaf_age_inactive_where_masks_nonfinite_allocation_tangent():
+    npts, nvm = 1, 14
+    biomass = jnp.zeros((npts, nvm, NPARTS, 1), dtype=jnp.float64)
+    leaf_age = jnp.zeros((npts, nvm, NLEAFAGES), dtype=jnp.float64)
+    leaf_frac = jnp.zeros_like(leaf_age)
+    allocation_tangent = jnp.zeros_like(biomass).at[
+        0,
+        PFT14,
+        ILEAF,
+        ICARBON,
+    ].set(jnp.inf)
+
+    def update(allocation):
+        result = npp_leaf_age_sla_age_update(
+            biomass,
+            biomass,
+            allocation,
+            leaf_age,
+            leaf_frac,
+            jnp.zeros((npts, nvm), dtype=jnp.float64),
+            jnp.zeros((npts, nvm), dtype=bool),
+            jnp.zeros(nvm, dtype=bool),
+            jnp.zeros((npts, nvm), dtype=jnp.float64),
+            jnp.zeros((npts, nvm), dtype=jnp.float64),
+            jnp.ones(nvm, dtype=jnp.float64) * 0.03,
+            jnp.ones(nvm, dtype=jnp.float64) * 0.01,
+            dt_days=1.0,
+        )
+        return (
+            result.leaf_age,
+            result.leaf_frac,
+            result.sla_age1,
+            result.sla_calc,
+            result.age,
+        )
+
+    _, tangents = jax.jit(
+        lambda allocation, tangent: jax.jvp(
+            update,
+            (allocation,),
+            (tangent,),
+        )
+    )(jnp.zeros_like(biomass), allocation_tangent)
+
+    for tangent in tangents:
+        assert np.all(np.isfinite(np.asarray(tangent)))
+        np.testing.assert_array_equal(
+            np.asarray(tangent),
+            np.zeros_like(np.asarray(tangent)),
+        )
+
+
+def test_npp_leaf_fraction_inactive_where_does_not_evaluate_nan_tangent():
+    npts, nvm = 1, 14
+    min_stomate = 1.0e-6
+    biomass = jnp.zeros((npts, nvm, NPARTS, 1), dtype=jnp.float64).at[
+        0,
+        PFT14,
+        ILEAF,
+        ICARBON,
+    ].set(min_stomate)
+    biomass_tangent = jnp.zeros_like(biomass).at[
+        0,
+        PFT14,
+        ILEAF,
+        ICARBON,
+    ].set(jnp.inf)
+    leaf_age = jnp.zeros((npts, nvm, NLEAFAGES), dtype=jnp.float64)
+    leaf_frac = jnp.zeros_like(leaf_age).at[0, PFT14, 0].set(1.0)
+    allocation = jnp.zeros_like(biomass)
+
+    def update(biomass_input):
+        result = npp_leaf_age_sla_age_update(
+            biomass_input,
+            biomass_input,
+            allocation,
+            leaf_age,
+            leaf_frac,
+            jnp.zeros((npts, nvm), dtype=jnp.float64),
+            jnp.zeros((npts, nvm), dtype=bool),
+            jnp.zeros(nvm, dtype=bool),
+            jnp.zeros((npts, nvm), dtype=jnp.float64),
+            jnp.zeros((npts, nvm), dtype=jnp.float64),
+            jnp.ones(nvm, dtype=jnp.float64) * 0.03,
+            jnp.ones(nvm, dtype=jnp.float64) * 0.01,
+            dt_days=1.0,
+            min_stomate=min_stomate,
+        )
+        return (
+            result.leaf_age,
+            result.leaf_frac,
+            result.sla_age1,
+            result.sla_calc,
+            result.age,
+        )
+
+    def directional_update(biomass_input, tangent):
+        return jax.jvp(
+            update,
+            (biomass_input,),
+            (tangent,),
+        )[1]
+
+    error, tangents = jax.jit(
+        checkify.checkify(
+            directional_update,
+            errors=checkify.float_checks,
+        )
+    )(biomass, biomass_tangent)
+
+    assert error.get() is None
+    for tangent in tangents:
+        assert np.all(np.isfinite(np.asarray(tangent)))
+        np.testing.assert_array_equal(
+            np.asarray(tangent),
+            np.zeros_like(np.asarray(tangent)),
+        )
 
 
 def _turnover_fixture(npts=1, nvm=14, nelements=1):
@@ -1424,6 +1797,123 @@ def test_turnover_leaf_age_fall_preserves_fortran_sequential_biomass_updates():
     assert np.allclose(np.asarray(new_leaf_frac)[0, PFT14, 0], 1.0)
 
 
+def test_turnover_leaf_fraction_tiny_active_mass_has_stable_jvp():
+    npts, nvm = 1, 14
+    tiny_mass = 1.0e-300
+    biomass = jnp.zeros((npts, nvm, NPARTS, 1), dtype=jnp.float64).at[
+        0,
+        PFT14,
+        ILEAF,
+        ICARBON,
+    ].set(tiny_mass)
+    biomass_tangent = jnp.zeros_like(biomass).at[
+        0,
+        PFT14,
+        ILEAF,
+        ICARBON,
+    ].set(tiny_mass)
+    turnover = jnp.zeros_like(biomass)
+    leaf_age = jnp.zeros((npts, nvm, NLEAFAGES), dtype=jnp.float64)
+    leaf_frac = jnp.zeros_like(leaf_age).at[0, PFT14, 0].set(1.0)
+
+    def update(biomass_input):
+        _, _, updated_leaf_frac, _ = turnover_leaf_age_fall(
+            biomass_input,
+            turnover,
+            leaf_age,
+            leaf_frac,
+            jnp.asarray([293.15], dtype=jnp.float64),
+            is_tree=jnp.ones(nvm, dtype=bool),
+            natural=jnp.ones(nvm, dtype=bool),
+            ok_laidev=jnp.zeros(nvm, dtype=bool),
+            leafagecrit=jnp.ones(nvm, dtype=jnp.float64) * 100.0,
+            dt_days=1.0,
+        )
+        return updated_leaf_frac
+
+    def directional_update(biomass_input, tangent):
+        return jax.jvp(
+            update,
+            (biomass_input,),
+            (tangent,),
+        )
+
+    error, (updated_leaf_frac, leaf_frac_tangent) = jax.jit(
+        checkify.checkify(
+            directional_update,
+            errors=checkify.float_checks,
+        )
+    )(biomass, biomass_tangent)
+
+    assert error.get() is None
+    np.testing.assert_allclose(
+        np.asarray(updated_leaf_frac)[0, PFT14, 0],
+        1.0,
+        rtol=1.0e-15,
+        atol=0.0,
+    )
+    assert np.all(np.isfinite(np.asarray(leaf_frac_tangent)))
+    np.testing.assert_array_equal(
+        np.asarray(leaf_frac_tangent),
+        np.zeros_like(np.asarray(leaf_frac_tangent)),
+    )
+
+
+def test_stable_ratio_preserves_primal_and_masks_unrepresentable_jvp():
+    tangent_floor = np.sqrt(np.finfo(np.float64).tiny)
+    denominator = jnp.asarray(tangent_floor / 2.0, dtype=jnp.float64)
+    numerator = denominator / 4.0
+
+    def directional_ratio(numerator_value, denominator_value):
+        return jax.jvp(
+            _stable_ratio_for_ad,
+            (numerator_value, denominator_value),
+            (
+                jnp.asarray(1.0, dtype=jnp.float64),
+                jnp.asarray(0.0, dtype=jnp.float64),
+            ),
+        )
+
+    error, (ratio, tangent) = jax.jit(
+        checkify.checkify(
+            directional_ratio,
+            errors=checkify.float_checks,
+        )
+    )(numerator, denominator)
+
+    assert error.get() is None
+    np.testing.assert_array_equal(np.asarray(ratio), np.asarray(0.25))
+    np.testing.assert_array_equal(np.asarray(tangent), np.asarray(0.0))
+
+
+def test_turnover_leaf_age_inactive_zero_critical_age_has_finite_gradient():
+    npts, nvm = 1, 14
+    biomass = np.zeros((npts, nvm, NPARTS, 1), dtype=np.float64)
+    turnover = np.zeros_like(biomass)
+    leaf_frac = np.zeros((npts, nvm, NLEAFAGES), dtype=np.float64)
+
+    def objective(leaf_age):
+        _, updated_turnover, _, _ = turnover_leaf_age_fall(
+            biomass,
+            turnover,
+            leaf_age,
+            leaf_frac,
+            np.asarray([273.15], dtype=np.float64),
+            is_tree=np.zeros(nvm, dtype=bool),
+            natural=np.ones(nvm, dtype=bool),
+            ok_laidev=np.zeros(nvm, dtype=bool),
+            leafagecrit=np.zeros(nvm, dtype=np.float64),
+            dt_days=1.0,
+        )
+        return jnp.sum(updated_turnover)
+
+    leaf_age = np.zeros((npts, nvm, NLEAFAGES), dtype=np.float64)
+    gradient = jax.jit(jax.grad(objective))(leaf_age)
+
+    assert np.all(np.isfinite(np.asarray(gradient)))
+    np.testing.assert_array_equal(np.asarray(gradient), leaf_age)
+
+
 def test_turnover_tree_fruit_and_sapwood_converts_sap_without_turnover():
     biomass = np.zeros((1, 14, NPARTS, 1), dtype=np.float64)
     biomass[0, PFT14, IFRUIT, ICARBON] = 90.0
@@ -1455,6 +1945,44 @@ def test_turnover_tree_fruit_and_sapwood_converts_sap_without_turnover():
     hw_old = 10.0 + 10.0 + 5.0 + 5.0
     hw_new = 11.0 + 10.5 + 5.1 + 5.2
     assert np.allclose(np.asarray(new_age)[0, PFT14], 10.0 * hw_old / hw_new)
+
+
+def test_turnover_inactive_tree_zero_denominators_have_finite_gradients():
+    npts, nvm = 1, 14
+    biomass = np.zeros((npts, nvm, NPARTS, 1), dtype=np.float64)
+    turnover = np.zeros_like(biomass)
+    is_tree = np.zeros(nvm, dtype=bool)
+    zeros_pft = np.zeros(nvm, dtype=np.float64)
+    age = np.zeros((npts, nvm), dtype=np.float64)
+
+    def objective(tau_fruit, tau_sap, plant_age):
+        new_biomass, new_turnover, new_age = (
+            turnover_tree_fruit_and_sapwood(
+                biomass,
+                turnover,
+                plant_age,
+                is_tree=is_tree,
+                tau_fruit=tau_fruit,
+                tau_sap=tau_sap,
+                dt_days=1.0,
+            )
+        )
+        return (
+            jnp.sum(new_biomass)
+            + jnp.sum(new_turnover)
+            + jnp.sum(new_age)
+        )
+
+    fruit_gradient, sap_gradient, age_gradient = jax.jit(
+        jax.grad(objective, argnums=(0, 1, 2))
+    )(zeros_pft, zeros_pft, age)
+
+    assert np.all(np.isfinite(np.asarray(fruit_gradient)))
+    assert np.all(np.isfinite(np.asarray(sap_gradient)))
+    assert np.all(np.isfinite(np.asarray(age_gradient)))
+    np.testing.assert_array_equal(np.asarray(fruit_gradient), zeros_pft)
+    np.testing.assert_array_equal(np.asarray(sap_gradient), zeros_pft)
+    np.testing.assert_array_equal(np.asarray(age_gradient), np.ones_like(age))
 
 
 def test_turnover_step_closes_tree_mixed_senescence_and_fruit_sapwood_path():
@@ -1534,6 +2062,26 @@ def test_gap_mortality_constant_tree_mortality_updates_biomass_and_reports_daily
     assert np.allclose(np.asarray(result.bm_to_litter)[0, 0, :, :], 0.0)
 
 
+def test_gap_mortality_inactive_zero_residence_time_has_finite_gradient():
+    params = _gap_fixture()
+    params["pft_present"][:] = False
+    residence_time = np.zeros_like(params.pop("residence_time"))
+
+    def objective(residence):
+        result = gap_mortality_step(
+            **params,
+            residence_time=residence,
+            dt_days=1.0,
+            lpj_gap_const_mort=True,
+        )
+        return jnp.sum(result.mortality_fraction)
+
+    gradient = jax.jit(jax.grad(objective))(residence_time)
+
+    assert np.all(np.isfinite(np.asarray(gradient)))
+    np.testing.assert_array_equal(np.asarray(gradient), residence_time)
+
+
 def test_gap_mortality_growth_efficiency_uses_turnover_longterm_and_sla_vigour():
     params = _gap_fixture()
     params["biomass"][0, PFT14, ILEAF, ICARBON] = 100.0
@@ -1554,6 +2102,28 @@ def test_gap_mortality_growth_efficiency_uses_turnover_longterm_and_sla_vigour()
     assert np.allclose(np.asarray(result.vigour)[0, PFT14], vigour)
     assert np.allclose(np.asarray(result.availability)[0, PFT14], availability)
     assert np.allclose(np.asarray(result.mortality_fraction)[0, PFT14], expected_fraction)
+
+
+def test_gap_mortality_inactive_zero_vigour_denominator_has_finite_gradient():
+    params = _gap_fixture()
+    params["pft_present"][:] = False
+    params["lm_lastyearmax"][:] = 0.0
+    params["sla_calc"][:] = 0.0
+    npp_longterm = params.pop("npp_longterm")
+
+    def objective(npp):
+        result = gap_mortality_step(
+            **params,
+            npp_longterm=npp,
+            dt_days=1.0,
+            lpj_gap_const_mort=False,
+        )
+        return jnp.sum(result.vigour)
+
+    gradient = jax.jit(jax.grad(objective))(npp_longterm)
+
+    assert np.all(np.isfinite(np.asarray(gradient)))
+    np.testing.assert_array_equal(np.asarray(gradient), npp_longterm)
 
 
 def test_gap_mortality_dgvm_low_npp_kills_tree_and_updates_individuals():
@@ -2253,6 +2823,51 @@ def test_prescribe_step_firstcall_preserves_nonempty_tree_leaf_fractions():
     )
 
     np.testing.assert_allclose(np.asarray(result.leaf_frac)[0, pft], leaf_frac[0, pft])
+
+
+@pytest.mark.parametrize("wood_biomass", [7.0e-260, 100.0, 1.0e6])
+def test_prescribe_step_fractional_power_branch_gradients_are_finite(
+    wood_biomass,
+):
+    npts, nvm, pft = 1, 14, PFT14
+    biomass = jnp.zeros((npts, nvm, NPARTS, 1), dtype=jnp.float64)
+    biomass = biomass.at[0, pft, ISAPABOVE, ICARBON].set(wood_biomass)
+    veget_max = jnp.zeros((npts, nvm), dtype=jnp.float64).at[0, pft].set(0.6)
+    is_tree = np.zeros(nvm, dtype=bool)
+    is_tree[pft] = True
+
+    def crown_density_loss(candidate_biomass, candidate_veget_max):
+        result = prescribe_step(
+            veget_max=candidate_veget_max,
+            dt_days=1.0,
+            pft_present=np.ones((npts, nvm), dtype=bool),
+            everywhere=np.ones((npts, nvm), dtype=np.float64),
+            when_growthinit=np.ones((npts, nvm), dtype=np.float64),
+            biomass=candidate_biomass,
+            leaf_frac=np.zeros((npts, nvm, NLEAFAGES), dtype=np.float64),
+            ind=np.zeros((npts, nvm), dtype=np.float64),
+            cn_ind=np.zeros((npts, nvm), dtype=np.float64),
+            co2_to_bm=np.zeros((npts, nvm), dtype=np.float64),
+            natural=np.ones(nvm, dtype=bool),
+            pasture=np.zeros(nvm, dtype=bool),
+            is_tree=is_tree,
+            bm_sapl=np.zeros((nvm, NPARTS, 1), dtype=np.float64),
+            maxdia=np.ones(nvm, dtype=np.float64),
+            pheno_is_none=np.ones(nvm, dtype=bool),
+            ok_dgvm=False,
+            lpj_gap_const_mort=True,
+            firstcall=False,
+            min_stomate=1.0e-8,
+        )
+        return jnp.sum(result.cn_ind) + jnp.sum(result.ind)
+
+    value, gradients = jax.value_and_grad(
+        crown_density_loss,
+        argnums=(0, 1),
+    )(biomass, veget_max)
+
+    assert np.isfinite(np.asarray(value))
+    assert all(np.all(np.isfinite(np.asarray(leaf))) for leaf in gradients)
 
 
 def _pftinout_base_inputs(npts=1, nvm=14):
@@ -4479,6 +5094,41 @@ def test_vmax_step_applies_n_limfert_for_lai_dev_or_global_nlim_and_dgvm_evergre
         dt_days=0.0,
     )
     assert np.allclose(np.asarray(nlim.vcmax)[0, 2], 50.0 * 0.25 * efficiency)
+
+
+def test_vmax_empty_leaf_classes_have_finite_age_and_fraction_gradients():
+    npts, nvm = 1, 14
+    empty = np.zeros((npts, nvm, NLEAFAGES), dtype=np.float64)
+    leaf_timecst = np.ones(nvm, dtype=np.float64)
+    leaf_timecst[0] = 0.0
+    leafagecrit = np.ones(nvm, dtype=np.float64)
+    leafagecrit[0] = 0.0
+
+    def objective(leaf_age, leaf_frac):
+        result = vmax_step(
+            leaf_age=leaf_age,
+            leaf_frac=leaf_frac,
+            vcmax25=np.zeros(nvm, dtype=np.float64),
+            n_limfert=np.ones((npts, nvm), dtype=np.float64),
+            leaf_timecst=leaf_timecst,
+            leafagecrit=leafagecrit,
+            pheno_type=np.zeros(nvm, dtype=np.int32),
+            leaf_tab=np.zeros(nvm, dtype=np.int32),
+            ok_laidev=np.zeros(nvm, dtype=bool),
+            dt_days=1.0,
+        )
+        return (
+            jnp.sum(result.leaf_age)
+            + jnp.sum(result.leaf_frac)
+            + jnp.sum(result.vcmax)
+        )
+
+    age_gradient, fraction_gradient = jax.jit(
+        jax.grad(objective, argnums=(0, 1))
+    )(empty, empty)
+
+    assert np.all(np.isfinite(np.asarray(age_gradient)))
+    assert np.all(np.isfinite(np.asarray(fraction_gradient)))
 
 
 def test_harvest_agri_step_reduces_non_natural_non_peat_turnover_only():

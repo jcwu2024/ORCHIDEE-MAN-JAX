@@ -17,6 +17,13 @@ config.update("jax_enable_x64", True)
 import jax.numpy as jnp
 import numpy as np
 
+from jax_orchidee.ad_primitives import source_ratio_with_finite_tangent
+
+def _stable_ratio_for_ad(numerator, denominator):
+    """Preserve the quotient and mask unrepresentable quotient tangents."""
+
+    return source_ratio_with_finite_tangent(numerator, denominator)
+
 
 # Fortran pool indices are 1-based in `constantes_var.f90`, lines 196-208.
 ILEAF = 0
@@ -952,7 +959,10 @@ def update_lignin_fraction(old_lignin, old_structural_litter, lignin_increment, 
     new_structural_litter = old_structural_litter + structural_increment
     return jnp.where(
         new_structural_litter > min_stomate,
-        (old_lignin * old_structural_litter + lignin_increment) / new_structural_litter,
+        source_ratio_with_finite_tangent(
+            old_lignin * old_structural_litter + lignin_increment,
+            new_structural_litter,
+        ),
         0.0,
     )
 
@@ -1000,7 +1010,16 @@ def littercalc_apply_pool_increments(
 
     numerator = jnp.swapaxes(increments.litter_inc_pft_above[:, :, :, ICARBON], 1, 2)
     denom = litter_above_new[:, :, :, ICARBON]
-    litterpart_new = jnp.where(denom > min_stomate, (jnp.swapaxes(litterpart, 1, 2) * litter_above[:, :, :, ICARBON] + numerator) / denom, 0.0)
+    litterpart_new = jnp.where(
+        denom > min_stomate,
+        source_ratio_with_finite_tangent(
+            jnp.swapaxes(litterpart, 1, 2)
+            * litter_above[:, :, :, ICARBON]
+            + numerator,
+            denom,
+        ),
+        0.0,
+    )
     litterpart_new = jnp.swapaxes(litterpart_new, 1, 2)
 
     return LitterPoolUpdateResult(
@@ -1104,10 +1123,34 @@ def sync_aboveground_fuel_after_decomposition(
     fuel_total = fuel_1hr + fuel_10hr + fuel_100hr + fuel_1000hr
     qd_carbon = qd[:, :, ICARBON]
     positive = fuel_total[:, :, ICARBON] > min_stomate
-    ratio_1hr_c = jnp.where(positive, fuel_1hr[:, :, ICARBON] / fuel_total[:, :, ICARBON], 0.0)
-    ratio_10hr_c = jnp.where(positive, fuel_10hr[:, :, ICARBON] / fuel_total[:, :, ICARBON], 0.0)
-    ratio_100hr_c = jnp.where(positive, fuel_100hr[:, :, ICARBON] / fuel_total[:, :, ICARBON], 0.0)
-    ratio_1000hr_c = jnp.where(positive, fuel_1000hr[:, :, ICARBON] / fuel_total[:, :, ICARBON], 0.0)
+    ratio_1hr_c = jnp.where(
+        positive,
+        source_ratio_with_finite_tangent(
+            fuel_1hr[:, :, ICARBON], fuel_total[:, :, ICARBON]
+        ),
+        0.0,
+    )
+    ratio_10hr_c = jnp.where(
+        positive,
+        source_ratio_with_finite_tangent(
+            fuel_10hr[:, :, ICARBON], fuel_total[:, :, ICARBON]
+        ),
+        0.0,
+    )
+    ratio_100hr_c = jnp.where(
+        positive,
+        source_ratio_with_finite_tangent(
+            fuel_100hr[:, :, ICARBON], fuel_total[:, :, ICARBON]
+        ),
+        0.0,
+    )
+    ratio_1000hr_c = jnp.where(
+        positive,
+        source_ratio_with_finite_tangent(
+            fuel_1000hr[:, :, ICARBON], fuel_total[:, :, ICARBON]
+        ),
+        0.0,
+    )
 
     fuel_1hr_after_qd = fuel_1hr.at[:, :, ICARBON].add(-qd_carbon * ratio_1hr_c)
     fuel_10hr_after_qd = fuel_10hr.at[:, :, ICARBON].add(-qd_carbon * ratio_10hr_c)
@@ -1117,7 +1160,14 @@ def sync_aboveground_fuel_after_decomposition(
 
     diff_frac = litter_above_pool[:, :, ICARBON] - total_after_qd[:, :, ICARBON]
     rescale = (jnp.abs(diff_frac) > min_stomate) & (total_after_qd[:, :, ICARBON] > min_stomate)
-    scale = jnp.where(rescale, 1.0 + diff_frac / total_after_qd[:, :, ICARBON], 1.0)
+    scale = jnp.where(
+        rescale,
+        1.0
+        + source_ratio_with_finite_tangent(
+            diff_frac, total_after_qd[:, :, ICARBON]
+        ),
+        1.0,
+    )
     fuel_1hr_new = fuel_1hr_after_qd.at[:, :, ICARBON].set(fuel_1hr_after_qd[:, :, ICARBON] * scale)
     fuel_10hr_new = fuel_10hr_after_qd.at[:, :, ICARBON].set(fuel_10hr_after_qd[:, :, ICARBON] * scale)
     fuel_100hr_new = fuel_100hr_after_qd.at[:, :, ICARBON].set(fuel_100hr_after_qd[:, :, ICARBON] * scale)
@@ -2756,10 +2806,23 @@ def allocation_step(
         & (lai < lai_happy[None, :])
         & (when_growthinit < reserve_time[None, :])
     )
-    reserve_demand = 2.0 * dt_days / tau_leafinit[None, :] * lai_happy[None, :] / sla_calc
+    safe_reserve_tau = jnp.where(reserve_active, tau_leafinit[None, :], 1.0)
+    safe_reserve_sla = jnp.where(reserve_active, sla_calc, 1.0)
+    reserve_demand = (
+        2.0
+        * dt_days
+        / safe_reserve_tau
+        * lai_happy[None, :]
+        / safe_reserve_sla
+    )
     use_reserve = jnp.where(reserve_active, jnp.minimum(biomass[:, :, ICARBRES, ICARBON], reserve_demand), 0.0)
-    leaf_share = l0 / (l0 + r0)
-    transloc_leaf = leaf_share[None, :] * use_reserve
+    safe_leaf_root_share = jnp.where(
+        reserve_active,
+        (l0 + r0)[None, :],
+        1.0,
+    )
+    leaf_share = l0[None, :] / safe_leaf_root_share
+    transloc_leaf = leaf_share * use_reserve
     biomass = biomass.at[:, :, ILEAF, ICARBON].add(transloc_leaf)
     biomass = biomass.at[:, :, IROOT, ICARBON].add(use_reserve - transloc_leaf)
     biomass = biomass.at[:, :, ICARBRES, ICARBON].add(-use_reserve)
@@ -2781,7 +2844,11 @@ def allocation_step(
             & (when_growthinit_cut < reserve_time_cut)
             & (lai < lai_happy[None, :])
         )
-        cut_demand = 2.0 * dt_days / tau_leafinit_cut * lai_happy_cut / sla_calc
+        safe_cut_tau = jnp.where(cut_active, tau_leafinit_cut, 1.0)
+        safe_cut_sla = jnp.where(cut_active, sla_calc, 1.0)
+        cut_demand = (
+            2.0 * dt_days / safe_cut_tau * lai_happy_cut / safe_cut_sla
+        )
         use_cut = jnp.where(cut_active, jnp.minimum(biomass[:, :, ICARBRES, ICARBON], cut_demand), 0.0)
         biomass = biomass.at[:, :, ILEAF, ICARBON].add(use_cut)
         biomass = biomass.at[:, :, ICARBRES, ICARBON].add(-use_cut)
@@ -2789,18 +2856,43 @@ def allocation_step(
 
     leaf_mass_young = leaf_frac[:, :, 0] * lm_old + transloc_leaf
     youngest_update = (transloc_leaf > min_stomate) & (leaf_mass_young > min_stomate) & active_pft[None, :]
+    safe_young_leaf_mass = jnp.where(
+        youngest_update,
+        leaf_mass_young,
+        1.0,
+    )
+    safe_transloc_leaf = jnp.where(
+        youngest_update,
+        transloc_leaf,
+        0.0,
+    )
+    safe_young_leaf_age = jnp.where(
+        youngest_update,
+        leaf_age[:, :, 0],
+        0.0,
+    )
     leaf_age0 = jnp.maximum(
         0.0,
-        leaf_age[:, :, 0] * (leaf_mass_young - transloc_leaf) / jnp.where(leaf_mass_young != 0.0, leaf_mass_young, 1.0),
+        safe_young_leaf_age
+        * (safe_young_leaf_mass - safe_transloc_leaf)
+        / safe_young_leaf_mass,
     )
     leaf_age = leaf_age.at[:, :, 0].set(jnp.where(youngest_update, leaf_age0, leaf_age[:, :, 0]))
     leaf_mass = biomass[:, :, ILEAF, ICARBON]
     has_leaf = (leaf_mass > min_stomate) & active_pft[None, :]
-    safe_leaf_mass = jnp.where(leaf_mass != 0.0, leaf_mass, 1.0)
-    leaf_frac0 = jnp.where(has_leaf, leaf_mass_young / safe_leaf_mass, leaf_frac[:, :, 0])
+    safe_leaf_mass = jnp.where(has_leaf, leaf_mass, 1.0)
+    safe_leaf_mass_young = jnp.where(has_leaf, leaf_mass_young, 0.0)
+    safe_lm_old = jnp.where(has_leaf, lm_old, 0.0)
+    leaf_frac0 = jnp.where(
+        has_leaf,
+        safe_leaf_mass_young / safe_leaf_mass,
+        leaf_frac[:, :, 0],
+    )
     leaf_frac_tail = jnp.where(
         has_leaf[:, :, None],
-        leaf_frac[:, :, 1:] * lm_old[:, :, None] / safe_leaf_mass[:, :, None],
+        leaf_frac[:, :, 1:]
+        * safe_lm_old[:, :, None]
+        / safe_leaf_mass[:, :, None],
         leaf_frac[:, :, 1:],
     )
     leaf_frac = jnp.concatenate((leaf_frac0[:, :, None], leaf_frac_tail), axis=2)
@@ -2964,21 +3056,45 @@ def prescribe_step(
     positive_cover = veget_max > 0.0
     safe_maxdia = jnp.where(is_tree, maxdia, 1.0)
     woodmass = jnp.sum(biomass[:, :, wood_parts, ICARBON], axis=2) * veget_max
+    active_tree_wood = (
+        static_or_agri[None, :]
+        & is_tree[None, :]
+        & positive_cover
+        & (woodmass > min_stomate)
+    )
+    # The Fortran fractional-power block is inside all four guards above.
+    # Positive placeholders keep inactive vector lanes out of its singular
+    # derivative at zero without changing any value that Fortran computes.
+    active_woodmass = jnp.where(active_tree_wood, woodmass, 1.0)
     critical = pipe_density * jnp.pi / 4.0 * pipe_tune2 * safe_maxdia[None, :] ** (2.0 + pipe_tune3)
-    provisional_ind = woodmass / critical
-    woodmass_ind = woodmass / jnp.where(provisional_ind != 0.0, provisional_ind, 1.0)
+    provisional_ind = active_woodmass / critical
+    woodmass_ind = active_woodmass / provisional_ind
     dia = (woodmass_ind / (pipe_density * jnp.pi / 4.0 * pipe_tune2)) ** (1.0 / (2.0 + pipe_tune3))
     cn_tree = pipe_tune1 * jnp.minimum(safe_maxdia[None, :], dia) ** pipe_tune_exp_coeff
-    denom = pipe_tune1 * (woodmass / (pipe_density * jnp.pi / 4.0 * pipe_tune2)) ** (
+    provisional_crown_exceeds = (
+        cn_tree * provisional_ind > 1.002 * veget_max
+    )
+    recalculate_tree_density = active_tree_wood & ~provisional_crown_exceeds
+    recalculation_woodmass = jnp.where(
+        recalculate_tree_density,
+        woodmass,
+        1.0,
+    )
+    recalculation_veget_max = jnp.where(
+        recalculate_tree_density,
+        veget_max,
+        1.0,
+    )
+    denom = pipe_tune1 * (recalculation_woodmass / (pipe_density * jnp.pi / 4.0 * pipe_tune2)) ** (
         pipe_tune_exp_coeff / (2.0 + pipe_tune3)
     )
-    recalculated_ind = (veget_max / jnp.where(denom != 0.0, denom, 1.0)) ** (
+    recalculated_ind = (recalculation_veget_max / denom) ** (
         1.0 / (1.0 - (pipe_tune_exp_coeff / (2.0 + pipe_tune3)))
     )
-    woodmass_ind2 = woodmass / jnp.where(recalculated_ind != 0.0, recalculated_ind, 1.0)
+    woodmass_ind2 = recalculation_woodmass / recalculated_ind
     dia2 = (woodmass_ind2 / (pipe_density * jnp.pi / 4.0 * pipe_tune2)) ** (1.0 / (2.0 + pipe_tune3))
     cn_tree2 = pipe_tune1 * jnp.minimum(safe_maxdia[None, :], dia2) ** pipe_tune_exp_coeff
-    cn_positive = jnp.where(cn_tree * provisional_ind > 1.002 * veget_max, cn_tree, cn_tree2)
+    cn_positive = jnp.where(provisional_crown_exceeds, cn_tree, cn_tree2)
     cn_zero_wood = pipe_tune1 * safe_maxdia[None, :] ** pipe_tune_exp_coeff
     cn_tree_value = jnp.where(woodmass > min_stomate, cn_positive, cn_zero_wood)
     cn_candidate = jnp.where(is_tree[None, :], cn_tree_value, 1.0)
@@ -3883,7 +3999,9 @@ def npp_closed_update(
     bm_after_maint = jnp.where(fortran_pft, bm_after_maint, 0.0)
 
     bm_pump = jnp.where(over_tax & fortran_pft, resp_maint * dt_days - bm_tax_max, 0.0)
-    maint_fraction = jnp.where(resp_maint[:, :, None] != 0.0, resp_maint_part / resp_maint[:, :, None], 0.0)
+    maintenance_active = resp_maint[:, :, None] != 0.0
+    safe_resp_maint = jnp.where(maintenance_active, resp_maint[:, :, None], 1.0)
+    maint_fraction = jnp.where(maintenance_active, resp_maint_part / safe_resp_maint, 0.0)
     pump_delta = jnp.zeros_like(maint_fraction).at[:, :, jnp.asarray(PUMPED_BIOMASS_PARTS)].set(
         -bm_pump[:, :, None] * maint_fraction[:, :, jnp.asarray(PUMPED_BIOMASS_PARTS)]
     )
@@ -3910,7 +4028,14 @@ def npp_closed_update(
 
     negative = (biomass_updated[:, :, :, ICARBON] < 0.0) & fortran_pft[:, :, None]
     bm_create = jnp.where(negative, min_stomate - biomass_updated[:, :, :, ICARBON], 0.0)
-    biomass_updated = biomass_updated.at[:, :, :, ICARBON].add(bm_create)
+    # Pin the intended threshold exactly: add-back roundoff can land one ULP
+    # above it and incorrectly activate the strict gate at Fortran line 571.
+    corrected_carbon = jnp.where(
+        negative,
+        jnp.asarray(min_stomate, dtype=biomass_updated.dtype),
+        biomass_updated[:, :, :, ICARBON],
+    )
+    biomass_updated = biomass_updated.at[:, :, :, ICARBON].set(corrected_carbon)
     resp_maint = resp_maint - jnp.sum(bm_create, axis=2) / dt_days
 
     npp = gpp - resp_growth - resp_maint
@@ -3982,27 +4107,69 @@ def npp_leaf_age_sla_age_update(
     leaf_alloc = bm_alloc[:, :, ILEAF, ICARBON]
     leaf_mass_young = leaf_frac[:, :, 0] * lm_old + leaf_alloc
     youngest_update = (leaf_alloc > 0.0) & (leaf_mass_young > 0.0) & active_pft[None, :]
+    previous_young_mass = leaf_mass_young - leaf_alloc
+    safe_previous_young_mass = jnp.where(
+        youngest_update,
+        previous_young_mass,
+        0.0,
+    )
+    safe_youngest_leaf_age = jnp.where(
+        youngest_update,
+        leaf_age[:, :, 0],
+        0.0,
+    )
+    safe_leaf_mass_young = jnp.where(
+        youngest_update,
+        leaf_mass_young,
+        1.0,
+    )
     leaf_age0 = jnp.maximum(
         0.0,
-        leaf_age[:, :, 0] * (leaf_mass_young - leaf_alloc) / jnp.where(leaf_mass_young != 0.0, leaf_mass_young, 1.0),
+        safe_youngest_leaf_age
+        * safe_previous_young_mass
+        / safe_leaf_mass_young,
     )
     leaf_age = leaf_age.at[:, :, 0].set(jnp.where(youngest_update, leaf_age0, leaf_age[:, :, 0]))
 
     leaf_mass = biomass[:, :, ILEAF, ICARBON]
     has_leaf = (leaf_mass > min_stomate) & active_pft[None, :]
-    safe_leaf_mass = jnp.where(leaf_mass != 0.0, leaf_mass, 1.0)
-    leaf_frac0 = jnp.where(has_leaf, leaf_mass_young / safe_leaf_mass, leaf_frac[:, :, 0])
+    safe_leaf_mass = jnp.where(has_leaf, leaf_mass, 1.0)
+    safe_leaf_mass_young_for_fraction = jnp.where(
+        has_leaf,
+        leaf_mass_young,
+        0.0,
+    )
+    safe_old_leaf_mass_for_fraction = jnp.where(
+        has_leaf,
+        lm_old,
+        0.0,
+    )
+    leaf_frac0 = jnp.where(
+        has_leaf,
+        safe_leaf_mass_young_for_fraction / safe_leaf_mass,
+        leaf_frac[:, :, 0],
+    )
+    safe_leaf_frac_tail = jnp.where(
+        has_leaf[:, :, None],
+        leaf_frac[:, :, 1:],
+        0.0,
+    )
     leaf_frac_tail = jnp.where(
         has_leaf[:, :, None],
-        leaf_frac[:, :, 1:] * lm_old[:, :, None] / safe_leaf_mass[:, :, None],
+        safe_leaf_frac_tail
+        * safe_old_leaf_mass_for_fraction[:, :, None]
+        / safe_leaf_mass[:, :, None],
         leaf_frac[:, :, 1:],
     )
     leaf_frac = jnp.concatenate((leaf_frac0[:, :, None], leaf_frac_tail), axis=2)
 
     sla_update = youngest_update
+    safe_sla_age1 = jnp.where(sla_update, sla_age1, 0.0)
+    safe_leaf_alloc = jnp.where(sla_update, leaf_alloc, 0.0)
     new_sla_age1 = (
-        sla_age1 * (leaf_mass_young - leaf_alloc) + sla_max[None, :] * leaf_alloc
-    ) / jnp.where(leaf_mass_young != 0.0, leaf_mass_young, 1.0)
+        safe_sla_age1 * safe_previous_young_mass
+        + sla_max[None, :] * safe_leaf_alloc
+    ) / safe_leaf_mass_young
     sla_age1 = jnp.where(sla_update, new_sla_age1, sla_age1)
     sla_age2 = sla_max * 0.9
     sla_age3 = sla_max * 0.85
@@ -4034,7 +4201,19 @@ def npp_leaf_age_sla_age_update(
         + bm_alloc[:, :, IFRUIT, ICARBON]
     )
     age_rescale = (bm_new > 0.0) & (bm_add > 0.0) & (~is_tree[None, :]) & active_pft[None, :]
-    age = jnp.where(age_rescale, age * (bm_new - bm_add) / bm_new, age)
+    safe_bm_new = jnp.where(age_rescale, bm_new, 1.0)
+    safe_bm_add = jnp.where(age_rescale, bm_add, 0.0)
+    safe_age_for_rescale = jnp.where(age_rescale, age, 0.0)
+    rescaled_age = (
+        safe_age_for_rescale
+        * (safe_bm_new - safe_bm_add)
+        / safe_bm_new
+    )
+    age = jnp.where(
+        age_rescale,
+        rescaled_age,
+        age,
+    )
 
     return NPPAgeSLAResult(
         leaf_age=leaf_age,
@@ -4338,12 +4517,31 @@ def turnover_leaf_age_fall(
     active_pft = jnp.arange(nvm) > 0
     do_age_turn = (~ok_laidev)[None, :] & active_pft[None, :]
     for leaf_class in range(NLEAFAGES):
+        rate_active = do_age_turn & (
+            leaf_age[:, :, leaf_class] > leaf_age_crit / 2.0
+        )
+        safe_leaf_age = jnp.where(
+            rate_active,
+            leaf_age[:, :, leaf_class],
+            1.0,
+        )
+        safe_leaf_age_crit = jnp.where(
+            rate_active,
+            leaf_age_crit,
+            1.0,
+        )
         rate = jnp.where(
-            leaf_age[:, :, leaf_class] > leaf_age_crit / 2.0,
-            jnp.minimum(0.99, dt_days / (leaf_age_crit * (leaf_age_crit / leaf_age[:, :, leaf_class]) ** 4)),
+            rate_active,
+            jnp.minimum(
+                0.99,
+                dt_days
+                / (
+                    safe_leaf_age_crit
+                    * (safe_leaf_age_crit / safe_leaf_age) ** 4
+                ),
+            ),
             0.0,
         )
-        rate = jnp.where(do_age_turn, rate, 0.0)
 
         dturnover = biomass[:, :, ILEAF, ICARBON] * leaf_frac[:, :, leaf_class] * rate
         turnover = turnover.at[:, :, ILEAF, ICARBON].add(dturnover)
@@ -4364,8 +4562,23 @@ def turnover_leaf_age_fall(
         biomass = biomass.at[:, :, ISAPABOVE, ICARBON].add(jnp.where(grass_age_turn, -dturnover, 0.0))
 
     leaf_biomass = biomass[:, :, ILEAF, ICARBON]
-    updated_frac = (leaf_frac * lm_old[:, :, None] + delta_lm) / jnp.where(leaf_biomass[:, :, None] != 0.0, leaf_biomass[:, :, None], 1.0)
-    leaf_frac = jnp.where(leaf_biomass[:, :, None] > 0.0, updated_frac, 0.0)
+    has_leaf_biomass = leaf_biomass[:, :, None] > 0.0
+    fraction_numerator = leaf_frac * lm_old[:, :, None] + delta_lm
+    safe_fraction_numerator = jnp.where(
+        has_leaf_biomass,
+        fraction_numerator,
+        0.0,
+    )
+    safe_leaf_biomass = jnp.where(
+        has_leaf_biomass,
+        leaf_biomass[:, :, None],
+        1.0,
+    )
+    updated_frac = _stable_ratio_for_ad(
+        safe_fraction_numerator,
+        safe_leaf_biomass,
+    )
+    leaf_frac = jnp.where(has_leaf_biomass, updated_frac, 0.0)
     leaf_frac = leaf_frac.at[:, 0, :].set(0.0)
     turnover = turnover.at[:, 0, :, :].set(0.0)
     return biomass, turnover, leaf_frac, leaf_age_crit
@@ -4484,7 +4697,12 @@ def turnover_tree_fruit_and_sapwood(
     tau_sap = jnp.asarray(tau_sap)
     tree = is_tree[None, :]
 
-    fruit_loss = biomass[:, :, IFRUIT, :] * dt_days / tau_fruit[None, :, None]
+    safe_tau_fruit = jnp.where(is_tree, tau_fruit, 1.0)
+    fruit_loss = (
+        biomass[:, :, IFRUIT, :]
+        * dt_days
+        / safe_tau_fruit[None, :, None]
+    )
     turnover = turnover.at[:, :, IFRUIT, :].add(jnp.where(tree[:, :, None], fruit_loss, 0.0))
     biomass = biomass.at[:, :, IFRUIT, :].add(jnp.where(tree[:, :, None], -fruit_loss, 0.0))
 
@@ -4496,7 +4714,12 @@ def turnover_tree_fruit_and_sapwood(
     )
     sap_parts = jnp.asarray((ISAPABOVE, ISAPBELOW, IAGRSAPST, IAGRSAPPN))
     heart_parts = jnp.asarray((IHEARTABOVE, IHEARTBELOW, IAGRHRTST, IAGRHRTPN))
-    sapconv = biomass[:, :, sap_parts, :] * dt_days / tau_sap[None, :, None, None]
+    safe_tau_sap = jnp.where(is_tree, tau_sap, 1.0)
+    sapconv = (
+        biomass[:, :, sap_parts, :]
+        * dt_days
+        / safe_tau_sap[None, :, None, None]
+    )
     sap_delta = jnp.where(tree[:, :, None, None], sapconv, 0.0)
     biomass = biomass.at[:, :, sap_parts, :].add(-sap_delta)
     biomass = biomass.at[:, :, heart_parts, :].add(sap_delta)
@@ -4507,7 +4730,13 @@ def turnover_tree_fruit_and_sapwood(
         + biomass[:, :, IAGRHRTST, ICARBON]
         + biomass[:, :, IAGRHRTPN, ICARBON]
     )
-    age = jnp.where((~ok_dgvm) & tree & (hw_new > 0.0), age * hw_old / hw_new, age)
+    age_update = (~ok_dgvm) & tree & (hw_new > 0.0)
+    safe_hw_new = jnp.where(age_update, hw_new, 1.0)
+    age = jnp.where(
+        age_update,
+        age * hw_old / safe_hw_new,
+        age,
+    )
     turnover = turnover.at[:, 0, :, :].set(0.0)
     return biomass, turnover, age
 
@@ -4777,12 +5006,26 @@ def gap_mortality_step(
     )
     valid_vigour = tree_active & (lm_lastyearmax > min_stomate)
     delta_biomass = jnp.where(valid_vigour, jnp.maximum(npp_longterm - turnover_sum, 0.0), 0.0)
-    vigour = jnp.where(valid_vigour, delta_biomass / (lm_lastyearmax * sla_calc), 0.0)
+    safe_vigour_denominator = jnp.where(
+        valid_vigour,
+        lm_lastyearmax * sla_calc,
+        1.0,
+    )
+    vigour = jnp.where(
+        valid_vigour,
+        delta_biomass / safe_vigour_denominator,
+        0.0,
+    )
     availability = availability_fact[None, :] / (1.0 + ref_greff * vigour)
 
     mortality_fraction = jnp.zeros((npts, nvm), dtype=biomass.dtype)
     if lpj_gap_const_mort:
-        constant = dt_days / (residence_time[None, :] * ONE_YEAR_DAYS)
+        safe_residence_time = jnp.where(
+            tree_active,
+            residence_time[None, :],
+            1.0,
+        )
+        constant = dt_days / (safe_residence_time * ONE_YEAR_DAYS)
         mortality_fraction = jnp.where(tree_active, constant, mortality_fraction)
     else:
         growth = jnp.maximum(min_avail, availability) * dt_days / ONE_YEAR_DAYS
@@ -7669,28 +7912,44 @@ def vmax_step(
     leaf_age = jnp.where(positive_fraction, leaf_age + dt_days, leaf_age)
 
     zero_leaf_class = jnp.zeros_like(leaf_frac[:, :, :1])
+    safe_leaf_timecst = jnp.where(
+        pft_active_axis,
+        leaf_timecst[None, :, None],
+        1.0,
+    )
     d_leaf_frac = jnp.concatenate(
         (
             zero_leaf_class,
-            leaf_frac[:, :, : NLEAFAGES - 1] * dt_days / leaf_timecst[None, :, None],
+            leaf_frac[:, :, : NLEAFAGES - 1]
+            * dt_days
+            / safe_leaf_timecst,
         ),
         axis=2,
     )
     d_leaf_frac = jnp.where(pft_active_axis, d_leaf_frac, 0.0)
 
     denom_mid = leaf_frac[:, :, 1 : NLEAFAGES - 1] + d_leaf_frac[:, :, 1 : NLEAFAGES - 1] - d_leaf_frac[:, :, 2:NLEAFAGES]
+    update_mid = (
+        d_leaf_frac[:, :, 1 : NLEAFAGES - 1] > min_stomate
+    )
+    safe_denom_mid = jnp.where(update_mid, denom_mid, 1.0)
     updated_mid = (
         (leaf_frac[:, :, 1 : NLEAFAGES - 1] - d_leaf_frac[:, :, 2:NLEAFAGES])
         * leaf_age[:, :, 1 : NLEAFAGES - 1]
         + d_leaf_frac[:, :, 1 : NLEAFAGES - 1] * leaf_age[:, :, : NLEAFAGES - 2]
-    ) / denom_mid
+    ) / safe_denom_mid
     denom_last = leaf_frac[:, :, NLEAFAGES - 1] + d_leaf_frac[:, :, NLEAFAGES - 1]
+    update_last = d_leaf_frac[:, :, NLEAFAGES - 1] > min_stomate
+    safe_denom_last = jnp.where(update_last, denom_last, 1.0)
     updated_last = (
         leaf_frac[:, :, NLEAFAGES - 1] * leaf_age[:, :, NLEAFAGES - 1]
         + d_leaf_frac[:, :, NLEAFAGES - 1] * leaf_age[:, :, NLEAFAGES - 2]
-    ) / denom_last
+    ) / safe_denom_last
     updated_tail = jnp.concatenate((updated_mid, updated_last[:, :, None]), axis=2)
-    update_tail = d_leaf_frac[:, :, 1:NLEAFAGES] > min_stomate
+    update_tail = jnp.concatenate(
+        (update_mid, update_last[:, :, None]),
+        axis=2,
+    )
     leaf_age = jnp.concatenate(
         (
             leaf_age[:, :, :1],
@@ -7714,7 +7973,16 @@ def vmax_step(
     updated_frac = jnp.where(sumfrac[:, :, None] > min_stomate, normalized, 0.0)
     leaf_frac = jnp.where(pft_active_axis, updated_frac, leaf_frac)
 
-    rel_age = leaf_age / leafagecrit[None, :, None]
+    evergreen_dgvm = jnp.asarray(ok_dgvm, dtype=bool) & (pheno_type == 1) & (leaf_tab == 2)
+    efficiency_active = pft_active_axis & (
+        ~evergreen_dgvm[None, :, None]
+    )
+    safe_leafagecrit = jnp.where(
+        efficiency_active,
+        leafagecrit[None, :, None],
+        1.0,
+    )
+    rel_age = leaf_age / safe_leafagecrit
     leaf_efficiency = jnp.maximum(
         vmax_offset,
         jnp.minimum(
@@ -7725,9 +7993,8 @@ def vmax_step(
             ),
         ),
     )
-    evergreen_dgvm = jnp.asarray(ok_dgvm, dtype=bool) & (pheno_type == 1) & (leaf_tab == 2)
     leaf_efficiency_all = jnp.where(
-        pft_active_axis & (~evergreen_dgvm[None, :, None]),
+        efficiency_active,
         leaf_efficiency,
         0.0,
     )

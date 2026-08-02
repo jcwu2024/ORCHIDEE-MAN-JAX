@@ -2184,6 +2184,17 @@ class DriverDailyModelout:
     )
 
 
+class DriverPreDailyTrainingBoundary(NamedTuple):
+    """Numeric Teacher boundary retained by compiled sample-generation blocks."""
+
+    half_hour_state_values: tuple[tuple[object, ...], ...]
+    daily_fields: Mapping[str, object]
+    ok_leak_updates: Mapping[str, object]
+    ok_leak_driver_steps: object
+    deepc_peat: object
+    final_diagnostics: Mapping[str, object]
+
+
 @dataclass(frozen=True)
 class DriverRuntimeDayResult:
     """Compact later-day runtime result for long sequence validation."""
@@ -2197,6 +2208,7 @@ class DriverRuntimeDayResult:
     stopped_at_tstep: int | None
     missing_components: tuple[str, ...]
     daily_process_fold: StomateDailyProcessFold | None = None
+    pre_daily_training_boundary: DriverPreDailyTrainingBoundary | None = None
     provenance: tuple[str, ...] = (
         "fortran_source/ORCHIDEE/src_driver/dim2_driver.f90 lines 839-908 advances forcing steps",
         "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90::sechiba_main lines 997-1224 advances SECHIBA state",
@@ -7809,6 +7821,14 @@ def _compiled_ok_leak_updates(carry: DriverCompiledOkLeakCarry) -> dict[str, obj
     return values
 
 
+def _select_compiled_ok_leak_scan_outputs(outputs, *, retain_step_results: bool):
+    """Keep full scan diagnostics only when an explicit audit requests them."""
+
+    if retain_step_results:
+        return outputs
+    return jax.tree_util.tree_map(lambda value: value[-1], outputs)
+
+
 def _paper_compiled_ok_leak_fold(
     *,
     initial: DriverCompiledOkLeakCarry,
@@ -7832,6 +7852,7 @@ def _paper_compiled_ok_leak_fold(
     ok_tf_doc: bool,
     perma_peat: bool,
     conc_doc_rain: float,
+    retain_step_results: bool = False,
 ):
     """Compile the 48 source-ordered half-hour OK_LEAK state transitions."""
 
@@ -7948,8 +7969,11 @@ def _paper_compiled_ok_leak_fold(
         return next_carry, result
 
     final_carry, outputs = jax.lax.scan(body, initial, steps)
-    last_result = jax.tree_util.tree_map(lambda value: value[-1], outputs)
-    return final_carry, last_result
+    selected_outputs = _select_compiled_ok_leak_scan_outputs(
+        outputs,
+        retain_step_results=retain_step_results,
+    )
+    return final_carry, selected_outputs
 
 
 _paper_compiled_ok_leak_fold_jit = jax.jit(
@@ -7964,6 +7988,7 @@ _paper_compiled_ok_leak_fold_jit = jax.jit(
         "ok_tf_doc",
         "perma_peat",
         "conc_doc_rain",
+        "retain_step_results",
     ),
 )
 
@@ -7984,7 +8009,10 @@ def _paper_half_hour_ok_leak_fold_from_entries(
     dayno: int,
     use_compiled_ok_leak: bool = False,
     compiled_entry_stacks: Mapping[str, object] | None = None,
-) -> tuple[object, dict[str, object]]:
+    capture_compiled_driver_steps: bool = False,
+) -> tuple[object, dict[str, object]] | tuple[
+    object, dict[str, object], DriverCompiledOkLeakStepInputs
+]:
     """Advance the OK_LEAK state on each SECHIBA entry of one STOMATE day.
 
     The previous day's ``turnover_daily`` and ``bm_to_litter`` remain fixed
@@ -7999,6 +8027,8 @@ def _paper_half_hour_ok_leak_fold_from_entries(
         raise ValueError("OK_LEAK compiled maintenance stack must match entry payload count")
     if not entry_payloads:
         raise ValueError("OK_LEAK half-hour fold requires at least one entry payload")
+    if capture_compiled_driver_steps and not use_compiled_ok_leak:
+        raise ValueError("OK_LEAK driver-step capture requires the compiled fold")
 
     state = initial_state.fields_by_component["slowproc_stomate_previous_step_state"]
     required = (*_OK_LEAK_HALF_HOUR_STATE_FIELDS, "turnover_daily", "bm_to_litter", "biomass", "veget_max", "sla_calc")
@@ -8183,7 +8213,10 @@ def _paper_half_hour_ok_leak_fold_from_entries(
                 perma_peat=parse_run_def_bool(run_def_values["PERMA_PEAT"]),
                 conc_doc_rain=parse_run_def_float(run_def_values, "CONC_DOC_RAIN"),
             )
-            return last_result, _compiled_ok_leak_updates(final_carry)
+            updates = _compiled_ok_leak_updates(final_carry)
+            if capture_compiled_driver_steps:
+                return last_result, updates, series
+            return last_result, updates
         last_result = stomate_ok_leak_explicit(**ok_args)
         current = _paper_half_hour_ok_leak_state_updates(last_result)
 
@@ -10198,6 +10231,7 @@ def paper_1961_driver_later_day_runtime_result(
     compiled_stomate_restart_template: StomateRestartEntryState | None = None,
     compiled_stomate_season_template: StomateRestartSeasonState | None = None,
     compiled_diffuco_parameter_values: DriverCompiledDiffucoParameterValues | None = None,
+    capture_pre_daily_training_boundary: bool = False,
 ) -> DriverRuntimeDayResult:
     """Advance one later day and retain only runtime outputs.
 
@@ -10422,7 +10456,7 @@ def paper_1961_driver_later_day_runtime_result(
                 stempdiag_stack=half_hour_transition.compiled_entry_stacks["stempdiag"],
                 **maintenance_kwargs,
             )
-    half_hour_ok_leak, half_hour_updates = _paper_half_hour_ok_leak_fold_from_entries(
+    ok_leak_fold = _paper_half_hour_ok_leak_fold_from_entries(
         entry_payloads=completed_payloads,
         maintenance_step_results=daily_fold.maintenance.step_results,
         maintenance_resp_parts=maintenance_resp_parts,
@@ -10437,7 +10471,13 @@ def paper_1961_driver_later_day_runtime_result(
         dayno=science_day_number,
         use_compiled_ok_leak=use_compiled_sechiba_day,
         compiled_entry_stacks=half_hour_transition.compiled_entry_stacks,
+        capture_compiled_driver_steps=capture_pre_daily_training_boundary,
     )
+    if capture_pre_daily_training_boundary:
+        half_hour_ok_leak, half_hour_updates, ok_leak_driver_steps = ok_leak_fold
+    else:
+        half_hour_ok_leak, half_hour_updates = ok_leak_fold
+        ok_leak_driver_steps = None
     state_after_ok_leak = _paper_previous_state_with_stomate_updates(previous_state, half_hour_updates)
     stomate_bundle_source, stomate_bundles, stomate_bundle_gaps = _paper_later_day_stomate_input_bundles(
         config_path=config_path,
@@ -10534,6 +10574,26 @@ def paper_1961_driver_later_day_runtime_result(
         missing = ("modelout",)
     if day_end_state is None:
         missing = (*missing, "day_end_state")
+    pre_daily_training_boundary = None
+    if capture_pre_daily_training_boundary:
+        perma_peat = half_hour_ok_leak.soilcarbon.perma_peat
+        if perma_peat is None:
+            raise RuntimeError(
+                "compiled PFT14 training capture requires the active deepC_peat boundary"
+            )
+        pre_daily_training_boundary = DriverPreDailyTrainingBoundary(
+            half_hour_state_values=fast_state_from_previous_packet(
+                half_hour_transition.current_state
+            ).values_by_component,
+            daily_fields=dict(daily_fold.daily_fields),
+            ok_leak_updates=dict(half_hour_updates),
+            ok_leak_driver_steps=ok_leak_driver_steps,
+            deepc_peat=perma_peat.deepc_peat,
+            final_diagnostics={
+                "t2mdiag": completed_payloads[-1]["t2mdiag"],
+                "temp_sol": completed_payloads[-1]["temp_sol"],
+            },
+        )
     return DriverRuntimeDayResult(
         year=year,
         day_index=int(day_index),
@@ -10544,6 +10604,7 @@ def paper_1961_driver_later_day_runtime_result(
         stopped_at_tstep=stopped_at_tstep,
         missing_components=tuple(dict.fromkeys(missing)),
         daily_process_fold=daily_fold,
+        pre_daily_training_boundary=pre_daily_training_boundary,
     )
 
 
@@ -10558,8 +10619,17 @@ def _paper_compiled_later_day_block_executable(
     prebound_hydrol_runtime_static_tables: HydrolRuntimeStaticTables,
     daily_carbon_dispatch: Mapping[str, object],
     stomate_parameter_values: DriverCompiledStomateParameterValues | None = None,
+    capture_pre_daily_training_boundaries: bool = False,
+    training_output_projector=None,
+    training_output_projector_key: str | None = None,
 ):
     """Compile one reusable block of complete later-day state transitions."""
+
+    if training_output_projector is not None:
+        if not capture_pre_daily_training_boundaries:
+            raise ValueError("training projection requires boundary capture")
+        if not training_output_projector_key:
+            raise ValueError("training projection requires a stable cache key")
 
     initial = fast_state_from_previous_packet(initial_state)
     if stomate_parameter_values is None:
@@ -10577,6 +10647,8 @@ def _paper_compiled_later_day_block_executable(
         mineral_imax,
         initial.spec.components,
         initial.spec.field_names_by_component,
+        bool(capture_pre_daily_training_boundaries),
+        training_output_projector_key,
     )
     cached = _COMPILED_LATER_DAY_BLOCK_CACHE.get(cache_key)
     if cached is not None:
@@ -10636,6 +10708,9 @@ def _paper_compiled_later_day_block_executable(
                     provenance=stomate_season_provenance,
                 ),
                 compiled_diffuco_parameter_values=diffuco_parameter_values,
+                capture_pre_daily_training_boundary=(
+                    capture_pre_daily_training_boundaries
+                ),
             )
             packet = day.day_end_state
             next_values = tuple(
@@ -10649,10 +10724,22 @@ def _paper_compiled_later_day_block_executable(
                     strict=True,
                 )
             )
-            return next_values, (
+            outputs = (
                 day.daily_modelout.modelout_fields,
                 day.daily_modelout.modelout,
             )
+            if capture_pre_daily_training_boundaries:
+                if training_output_projector is None:
+                    outputs = (
+                        day.pre_daily_training_boundary,
+                        next_values,
+                    )
+                else:
+                    outputs = training_output_projector(
+                        current_values,
+                        day.pre_daily_training_boundary,
+                    )
+            return next_values, outputs
 
         return jax.lax.scan(
             body,

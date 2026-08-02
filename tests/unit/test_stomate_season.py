@@ -3,6 +3,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -197,6 +199,73 @@ def test_season_memory_end_of_year_derives_tseason_and_resets_only_local_year_fi
     np.testing.assert_allclose(result.tseason_length, 0.0)
     np.testing.assert_allclose(result.tmin_spring_time, 0.0)
     np.testing.assert_allclose(result.onset_date, 0.0)
+
+
+def test_season_annual_zero_lastyear_leaf_mass_has_finite_daily_flux_gradient():
+    npts, nvm, nparts = 1, 2, 1
+    zeros_pft = np.zeros((npts, nvm), dtype=np.float64)
+    state = SeasonAnnualState(
+        npp_longterm=zeros_pft,
+        turnover_longterm=np.zeros((npts, nvm, nparts, 1), dtype=np.float64),
+        gpp_week=zeros_pft,
+        maxmoiavail_lastyear=zeros_pft,
+        maxmoiavail_thisyear=zeros_pft,
+        minmoiavail_lastyear=zeros_pft,
+        minmoiavail_thisyear=zeros_pft,
+        maxgppweek_lastyear=zeros_pft,
+        maxgppweek_thisyear=zeros_pft,
+        gdd0_lastyear=np.zeros(npts, dtype=np.float64),
+        gdd0_thisyear=np.zeros(npts, dtype=np.float64),
+        precip_lastyear=np.zeros(npts, dtype=np.float64),
+        precip_thisyear=np.zeros(npts, dtype=np.float64),
+        lm_lastyearmax=zeros_pft,
+        lm_thisyearmax=zeros_pft,
+        maxfpc_lastyear=zeros_pft,
+        maxfpc_thisyear=zeros_pft,
+    )
+
+    def annual_result(npp_daily):
+        result = season_annual_step(
+            state,
+            dt_days=1.0,
+            tau_longterm=10.0,
+            end_of_year=False,
+            veget=zeros_pft,
+            veget_max=zeros_pft,
+            moiavail_daily=zeros_pft,
+            t2m_daily=np.full(npts, 273.15, dtype=np.float64),
+            precip_daily=np.zeros(npts, dtype=np.float64),
+            biomass=np.zeros((npts, nvm, nparts, 1), dtype=np.float64),
+            npp_daily=npp_daily,
+            turnover_daily=np.zeros(
+                (npts, nvm, nparts, 1),
+                dtype=np.float64,
+            ),
+            gpp_daily=zeros_pft,
+            natural=np.ones(nvm, dtype=bool),
+            pasture=np.zeros(nvm, dtype=bool),
+            leaflife_tab=np.ones(nvm, dtype=np.float64),
+        )
+        return result
+
+    def npp_objective(npp_daily):
+        return jnp.sum(annual_result(npp_daily).state.npp_longterm)
+
+    def herbivore_objective(npp_daily):
+        return jnp.sum(annual_result(npp_daily).herbivores)
+
+    npp_gradient = jax.jit(jax.grad(npp_objective))(jnp.zeros((npts, nvm)))
+    herbivore_gradient = jax.jit(jax.grad(herbivore_objective))(
+        jnp.zeros((npts, nvm))
+    )
+
+    assert np.all(np.isfinite(np.asarray(npp_gradient)))
+    np.testing.assert_allclose(np.asarray(npp_gradient), [[36.5, 0.0]])
+    assert np.all(np.isfinite(np.asarray(herbivore_gradient)))
+    np.testing.assert_array_equal(
+        np.asarray(herbivore_gradient),
+        np.zeros((npts, nvm)),
+    )
 
 
 def test_season_annual_step_matches_longterm_fluxes_and_paper_case_non_dgvm_statistics():
