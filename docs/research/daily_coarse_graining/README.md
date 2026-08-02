@@ -7,11 +7,15 @@ mode.
 
 ## Read First
 
-- `HANDOFF.md`: current operational snapshot, running jobs, completion gate,
-  next command, and decisions that must not be reopened.
+- `../../NEXT_STEPS.md`: current operation, dependency order, and acceptance
+  gates.
+- `../../CODE_MAP.md`: active and historical code classification.
+- `../../DOCUMENT_STATUS.md`: active, conditional, and historical documents.
 - `conservative_daily_process_operator_v1.md`: active true-daily architecture,
   PFT extensibility, parameter ownership, and the pre-training admission gate.
 - `../../current-status.md`: current project and research status authority.
+- `HANDOFF.md`: historical chronological log; consult only for a named past
+  experiment or server job.
 - `development_standard.md`: architecture, evidence, data, split, rollout,
   and performance rules.
 - `daily_markov_contract_v5.md`: current state, fast-day target, native forcing
@@ -68,5 +72,5 @@ labels that are absent and cannot be derived, and pass a non-neural replay in
 which true Teacher daily fluxes reconstruct the constrained next-day state.
 
 The network interface must be PFT-extensible even though the current data and
-scientific claim remain PFT14-only. Continue from [`HANDOFF.md`](HANDOFF.md),
-which owns the single next milestone.
+scientific claim remain PFT14-only. Continue from
+[`../../NEXT_STEPS.md`](../../NEXT_STEPS.md), which owns the next milestone.

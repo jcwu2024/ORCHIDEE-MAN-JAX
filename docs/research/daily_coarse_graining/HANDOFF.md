@@ -1,26 +1,25 @@
 # Daily Coarse-Graining Handoff
 
+> **Status: historical chronological log.** This file is preserved for
+> experiment and server-job provenance, but it is no longer the onboarding or
+> current-operation authority. Start with
+> [`../../START_HERE.md`](../../START_HERE.md),
+> [`../../NEXT_STEPS.md`](../../NEXT_STEPS.md), and
+> [`../../CODE_MAP.md`](../../CODE_MAP.md). Do not restart the last experiment
+> recorded below merely because it appears latest in this log.
+
 Snapshot date: 2026-08-02
 
-This is the single operational handoff page for the daily coarse-graining
-research branch. Read this page before dated experiment reports. Stable
-scientific and release facts remain authoritative in
-[`../../current-status.md`](../../current-status.md).
+This was the operational handoff page during the experiments recorded below.
+It now serves as detailed provenance only. Stable scientific and release facts
+remain in [`../../current-status.md`](../../current-status.md), while current
+work is controlled by [`../../NEXT_STEPS.md`](../../NEXT_STEPS.md).
 
-## Five-Minute Startup
+## Historical Reading Rule
 
-1. Check out `research/daily-coarse-graining` and confirm a clean worktree.
-2. Read [`../../START_HERE.md`](../../START_HERE.md), then
-   [`conservative_daily_process_operator_v1.md`](conservative_daily_process_operator_v1.md).
-3. Connect through the restored `cln01` alias and submit computation only
-   through Slurm.
-4. Do not regenerate Teacher data, inspect sealed test data, resume a rejected
-   checkpoint, or submit another neural training job.
-5. The active operation is to freeze the parameter-ownership and daily-flux
-   contracts, audit existing shard labels, and pass a non-neural constrained
-   daily replay gate.
-6. The 96-day exact `OK_LEAK` asset and 48-step scan remain accepted Oracle
-   evidence. They are no longer the final surrogate architecture.
+Use this file only to reconstruct a named experiment, asset, report, or server
+job. Do not use its chronological tail as a command to resume work. New work
+starts from `docs/NEXT_STEPS.md`.
 
 ```bash
 git status --short --branch
@@ -1203,7 +1202,7 @@ generated and accepted.
 | Question | Authoritative file |
 | --- | --- |
 | Overall Teacher/release status | [`../../current-status.md`](../../current-status.md) |
-| Current operational task | this handoff page |
+| Current operational task | [`../../NEXT_STEPS.md`](../../NEXT_STEPS.md) |
 | Active daily architecture | [`conservative_daily_process_operator_v1.md`](conservative_daily_process_operator_v1.md) |
 | Daily state and target semantics | [`daily_markov_contract_v5.md`](daily_markov_contract_v5.md) |
 | Dataset production and recovery | [`teacher_dataset_generation.md`](teacher_dataset_generation.md) |
@@ -1213,6 +1212,6 @@ generated and accepted.
 | Frozen 669-point population/splits | [`../../../manifests/coarse_graining/daily_teacher_production_669.json`](../../../manifests/coarse_graining/daily_teacher_production_669.json) |
 | Explore1000 operations | [`../../deployment-explore1000.md`](../../deployment-explore1000.md) |
 
-Dated reports in this directory preserve evidence under their original
-conditions. They are not current roadmaps and must not override this page or
+Dated reports and this log preserve evidence under their original conditions.
+They are not current roadmaps and must not override `docs/NEXT_STEPS.md` or
 `docs/current-status.md`.

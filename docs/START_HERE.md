@@ -2,7 +2,8 @@
 
 This page is the shortest reliable entry point for a new contributor. It
 separates the stable Teacher, the daily-surrogate research program, historical
-evidence, and generated data.
+evidence, and generated data. A new contributor should not read the full
+research `HANDOFF.md` before understanding this page.
 
 ## Two Model Products
 
@@ -33,19 +34,18 @@ diagnostic, and Oracle assets only.
 
 ## Read Order
 
-1. [`current-status.md`](current-status.md): stable scientific and release
-   facts.
-2. [`../PROJECT_MANIFEST.md`](../PROJECT_MANIFEST.md): repository and external
-   asset ownership.
-3. [`research/daily_coarse_graining/HANDOFF.md`](research/daily_coarse_graining/HANDOFF.md):
-   the current research operation.
-4. [`research/daily_coarse_graining/conservative_daily_process_operator_v1.md`](research/daily_coarse_graining/conservative_daily_process_operator_v1.md):
-   the active daily architecture decision.
-5. [`branch-alignment-20260802.md`](branch-alignment-20260802.md): current
-   `main`/research relationship and cross-branch Teacher parity work.
+1. [`NEXT_STEPS.md`](NEXT_STEPS.md): the four separate claims, dependency
+   order, and immediate next technical gate.
+2. [`CODE_MAP.md`](CODE_MAP.md): production, research, historical, test, and
+   generated code ownership.
+3. [`DOCUMENT_STATUS.md`](DOCUMENT_STATUS.md): which documents are active,
+   conditional, superseded, or historical.
+4. [`current-status.md`](current-status.md): detailed facts when a gate needs
+   its evidence history. It is not necessary to read all of it during
+   onboarding.
 
-Read dated experiment reports only when investigating their named result.
-They are evidence snapshots, not roadmaps.
+Read `PROJECT_MANIFEST.md`, named contracts, and dated reports only when the
+three pages above direct you to them.
 
 ## Code and Data Boundaries
 
@@ -60,14 +60,32 @@ They are evidence snapshots, not roadmaps.
 
 ## Current Next Milestone
 
-Do not launch another neural training experiment yet. First freeze and verify:
+Do not launch another neural training experiment. First run the isolated
+cross-branch Teacher parity matrix described as Gate A in `NEXT_STEPS.md` and
+select one canonical Teacher commit. Then freeze the parameter/PFT ownership
+and daily flux-label contracts and pass non-neural constrained replay.
 
-1. a parameter-ownership contract;
-2. a daily water/carbon/energy flux-label contract;
-3. a Teacher-label inventory showing which labels already exist, which are
-   exactly derivable, and which require supplemental diagnostic capture;
-4. a non-neural replay gate proving that true daily Teacher fluxes reconstruct
-   the accepted next-day boundary with valid budgets and stocks.
+## New Task Bootstrap
 
-Only after that replay gate passes should the new neural architecture be
-implemented or GPU training resume.
+A new contributor can resume from a clean clone with:
+
+```bash
+git switch research/daily-coarse-graining
+git pull --ff-only
+git status --short --branch
+git log -1 --oneline
+```
+
+Then read `AGENTS.md`, `NEXT_STEPS.md`, `CODE_MAP.md`, and
+`DOCUMENT_STATUS.md`. Report the active gate before editing or submitting a
+job. The only active technical task is the task packet at the end of
+`NEXT_STEPS.md`; later gates are queued work, not parallel instructions.
+
+A Git clone contains source, tests, contracts, and small manifests. It does
+not contain forcing, Fortran reference packages, generated Teacher shards,
+checkpoints, or server runtime outputs. Resolve those through
+`PROJECT_MANIFEST.md`, `data-layout.md`, environment variables, and the
+Explore1000 deployment document only when the active gate needs them.
+
+Do not infer current work from the newest dated experiment report and do not
+restart an old GPU job.

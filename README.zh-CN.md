@@ -35,13 +35,11 @@
 目前主要用于批量神经网络训练；神经网络推理继续同时支持 CPU 和 GPU，最终根据完整
 工作负载的实测性能选择，而不是预先规定必须使用 GPU。
 
-新接手者先阅读 [`docs/START_HERE.md`](docs/START_HERE.md)，权威的当前状态见
-[`docs/current-status.md`](docs/current-status.md)。带日期的研究报告和
-源码审计是历史证据快照，可能描述较早的阶段。
-
-新对话如需接手 `research/daily-coarse-graining`，应首先阅读
-[`docs/research/daily_coarse_graining/HANDOFF.md`](docs/research/daily_coarse_graining/HANDOFF.md)。
-其中记录当前运行任务、严格验收门、唯一下一步，以及不应重新争论或重做的既定决策。
+新接手者先阅读 [`docs/START_HERE.md`](docs/START_HERE.md)，再用
+[`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md) 确认当前工作顺序，用
+[`docs/CODE_MAP.md`](docs/CODE_MAP.md) 确认代码归属。带日期的研究报告和源码审计
+只是历史证据快照。超长的 `HANDOFF.md` 现在保留为实验与服务器任务历史，不再规定
+下一步。
 
 ## 仓库结构
 

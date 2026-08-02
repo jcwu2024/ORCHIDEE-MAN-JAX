@@ -15,9 +15,13 @@ The exact branch relationship and cross-branch Teacher parity gate are recorded 
 Documentation authority is deliberately layered:
 
 - `docs/START_HERE.md` is the shortest contributor entry point;
+- `docs/NEXT_STEPS.md` owns the current work order and acceptance gates;
+- `docs/CODE_MAP.md` classifies production, research, historical, test, and
+  generated code;
+- `docs/DOCUMENT_STATUS.md` classifies active and historical documentation;
 - `docs/current-status.md` owns stable current scientific and release facts;
-- `docs/research/daily_coarse_graining/HANDOFF.md` owns the current research
-  operation and immediate next action;
+- `docs/research/daily_coarse_graining/HANDOFF.md` is a preserved chronological
+  research log, not the current-operation authority;
 - contract and development-standard documents own durable interfaces and
   acceptance policy;
 - dated audit and experiment documents are immutable evidence snapshots, not

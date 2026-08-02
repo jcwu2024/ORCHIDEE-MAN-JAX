@@ -2,6 +2,11 @@
 
 Last updated: 2026-08-02.
 
+This is the detailed status and evidence authority, not the shortest
+onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
+code ownership is in [`CODE_MAP.md`](CODE_MAP.md), and document status is in
+[`DOCUMENT_STATUS.md`](DOCUMENT_STATUS.md).
+
 This page is the current status authority. Dated files under
 `docs/source_audits/` and `docs/research/` are evidence snapshots and may
 describe an earlier gate without being rewritten.

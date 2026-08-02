@@ -39,15 +39,12 @@ GPU is currently intended for batched neural training; neural inference will
 remain CPU/GPU portable and will be selected from measured workload-level
 performance rather than assumed to require GPU.
 
-Start with [`docs/START_HERE.md`](docs/START_HERE.md), then see
-[`docs/current-status.md`](docs/current-status.md) for the authoritative
-current state. Dated research and source-audit documents are retained as
-historical evidence and may describe earlier gates.
-
-For a new development task on `research/daily-coarse-graining`, start with
-[`docs/research/daily_coarse_graining/HANDOFF.md`](docs/research/daily_coarse_graining/HANDOFF.md).
-It records the active operation, exact completion gate, next milestone, and
-decisions that should not be re-litigated.
+Start with [`docs/START_HERE.md`](docs/START_HERE.md), then use
+[`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md) for the current work order and
+[`docs/CODE_MAP.md`](docs/CODE_MAP.md) for repository ownership. Dated
+research and source-audit documents are historical evidence and may describe
+earlier gates. The long research `HANDOFF.md` is a chronology, not the active
+roadmap.
 
 ## Repository Layout
 
