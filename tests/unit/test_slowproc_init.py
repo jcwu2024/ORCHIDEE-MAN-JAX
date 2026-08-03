@@ -54,6 +54,7 @@ def _call(restart=None, **overrides):
         "ext_coeff_vegetfrac": EXT_COEFF,
         "nstm": 6,
         "diaglev": np.asarray([0.1, 0.3, 1.0]),
+        "active_pft_index": 13,
         "salinity_data": np.asarray([31.25]),
         "tide_height_data": np.asarray([[0.1, -0.2, 0.3]]),
     }

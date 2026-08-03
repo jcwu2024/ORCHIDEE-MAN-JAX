@@ -1633,6 +1633,7 @@ def slowproc_init_pft14_explicit(
     ext_coeff_vegetfrac,
     nstm: int,
     diaglev,
+    active_pft_index: int,
     soil_boundary: Mapping[str, object] | None = None,
     salinity_data=None,
     tide_height_data=None,
@@ -1662,7 +1663,6 @@ def slowproc_init_pft14_explicit(
     PWT_lim: float = 60.0,
     PC_lim: float = 50.0,
     sat_gsl: float = 1.0,
-    active_pft_fortran: int = 14,
 ) -> SlowprocInitPft14Result:
     """Close the reachable paper-case ``slowproc_init`` state transition.
 
@@ -1719,9 +1719,9 @@ def slowproc_init_pft14_explicit(
     if default_veg.ndim != 2 or default_veg.shape[0] < 1:
         raise ValueError("veget_max_default must have shape (nvm,) or (npts,nvm)")
     npts, nvm = map(int, default_veg.shape)
-    active_pft = int(active_pft_fortran) - 1
+    active_pft = int(active_pft_index)
     if active_pft < 0 or active_pft >= nvm:
-        raise ValueError("active_pft_fortran must be a Fortran index inside 1..nvm")
+        raise ValueError("active_pft_index must be an execution slot inside 0..nvm-1")
     height_presc = _as_float64(height_presc)
     if height_presc.shape != (nvm,):
         raise ValueError("height_presc must have shape (nvm,)")

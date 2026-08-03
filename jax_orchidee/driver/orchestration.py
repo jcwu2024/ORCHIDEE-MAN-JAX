@@ -4365,6 +4365,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
         ),
         nstm=run_scalars.nstm,
         diaglev=diaglev,
+        active_pft_index=_paper_mangrove_pft_index(run_scalars),
         soil_boundary={
             "soilclass": payload.soilclass,
             "clay_frac": payload.clay_frac,

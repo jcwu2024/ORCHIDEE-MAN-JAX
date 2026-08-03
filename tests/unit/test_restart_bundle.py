@@ -1,11 +1,14 @@
 from __future__ import annotations
 
+import json
 import sys
 from types import SimpleNamespace
 from pathlib import Path
 
 import numpy as np
 import pytest
+import yaml
+from netCDF4 import Dataset
 
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -27,6 +30,22 @@ from jax_orchidee.sechiba.restart_io import (  # noqa: E402
 
 
 CONFIG = ROOT / "configs" / "orchidee_man_250919.yaml"
+CATALOG = ROOT / "configs" / "pft_catalogs" / "orchidee_man_paper_250919.json"
+
+
+def _compact_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    catalog_payload = json.loads(CATALOG.read_text(encoding="utf-8"))
+    catalog_payload["layouts"]["paper_compact"] = ["bare_soil", "mangrove_pft14"]
+    catalog_path = tmp_path / "catalog.json"
+    catalog_path.write_text(json.dumps(catalog_payload), encoding="utf-8")
+
+    config_payload = yaml.safe_load(CONFIG.read_text(encoding="utf-8"))
+    config_payload["pft_catalog"] = {"path": str(catalog_path), "layout_id": "paper_compact"}
+    config_payload["structural_overrides"]["NVM"] = 2
+    config_path = tmp_path / "compact.yaml"
+    config_path.write_text(yaml.safe_dump(config_payload), encoding="utf-8")
+    monkeypatch.setenv("ORCHIDEE_REPO_ROOT", str(ROOT))
+    return config_path
 
 
 def _reference_run() -> Path:
@@ -107,6 +126,64 @@ def test_three_file_bundle_is_directly_readable_as_next_year_start(
             physical_state=physical,
             pft_layout=original.pft_layout,
         )
+
+
+def test_compact_layout_restart_bundle_writes_reads_and_preserves_stable_identity(
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run = _reference_run()
+    config = _compact_config(tmp_path, monkeypatch)
+    original = reference_case_first_step_restart_state(
+        config,
+        root=ROOT,
+        run_dir=run,
+        stomate_filename="stomate_start.nc",
+    )
+    bundle_state = PaperRestartBundleState(
+        driver=read_dim2_driver_restart(run / "driver_start.nc"),
+        sechiba=original.sechiba_restart_state,
+        stomate=original.stomate_readstart,
+    )
+    physical = PaperRestartBundlePhysicalState(
+        driver=read_restart_physical_state(run / "driver_start.nc"),
+        sechiba=read_restart_physical_state(run / "sechiba_start.nc"),
+        stomate=read_restart_physical_state(run / "stomate_start.nc"),
+    )
+
+    report = write_paper_restart_start_bundle(
+        tmp_path / "compact_restart",
+        state=bundle_state,
+        physical_state=physical,
+        pft_layout=original.pft_layout,
+    )
+    restored = reference_case_first_step_restart_state(
+        config,
+        root=ROOT,
+        run_dir=report.output_directory,
+        stomate_filename="stomate_start.nc",
+    )
+
+    assert original.pft_layout.pft_ids == ("bare_soil", "mangrove_pft14")
+    assert restored.pft_layout == original.pft_layout
+    assert restored.sechiba_source_pft_layout.pft_ids == original.pft_layout.pft_ids
+    assert restored.stomate_source_pft_layout.pft_ids == original.pft_layout.pft_ids
+    for path in (report.sechiba.output_path, report.stomate.output_path):
+        with Dataset(path) as dataset:
+            assert len(dataset.dimensions["z_a"]) == 2
+            assert len(dataset.dimensions["l_d"]) == 2
+            assert json.loads(dataset.orchidee_jax_pft_ids_json) == [
+                "bare_soil",
+                "mangrove_pft14",
+            ]
+    for name, expected in original.sechiba_restart_state.fields.items():
+        np.testing.assert_array_equal(restored.sechiba_restart_state.fields[name], expected)
+    np.testing.assert_array_equal(restored.stomate.biomass, original.stomate.biomass)
+    np.testing.assert_array_equal(restored.stomate.carbon_32l, original.stomate.carbon_32l)
+    np.testing.assert_array_equal(
+        restored.stomate_readstart.remainder_state.MatrixV,
+        original.stomate_readstart.remainder_state.MatrixV,
+    )
 
 
 def test_complete_day_end_packet_constructs_all_three_scientific_states() -> None:
