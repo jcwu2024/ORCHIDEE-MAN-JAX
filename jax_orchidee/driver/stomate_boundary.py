@@ -131,19 +131,36 @@ def paper_1961_first_step_stomate_boundary(
     run_def_path = Path(used_run_def_path) if used_run_def_path is not None else default_used_run_def_path(config_path)
     values = parse_run_def(run_def_path)
     diaglev, zz_coef_deep, zz_deep = paper_case_vertical_grids_from_used_run_def(run_def_path)
-    stomate_files = (
-        stomate_reference_files_from_run_dir(run_dir)
-        if run_dir is not None
-        else find_stomate_reference_files(Path(root) if root is not None else Path(config_path).resolve().parents[1])
-    )
+    if run_dir is not None:
+        run_dir_path = Path(run_dir)
+        archived_restart = run_dir_path / "stomate_restart.nc"
+        if archived_restart.exists():
+            stomate_files = stomate_reference_files_from_run_dir(run_dir_path)
+            stomate_state_path = stomate_files.restart
+        else:
+            handoff_start = run_dir_path / "stomate_start.nc"
+            if not handoff_start.exists():
+                raise FileNotFoundError(handoff_start)
+            stomate_files = StomateReferenceFiles(
+                run_dir=run_dir_path,
+                start=handoff_start,
+                restart=handoff_start,
+                histories=(),
+            )
+            stomate_state_path = handoff_start
+    else:
+        stomate_files = find_stomate_reference_files(
+            Path(root) if root is not None else Path(config_path).resolve().parents[1]
+        )
+        stomate_state_path = stomate_files.restart
     catalog = load_pft_catalog(load_case_config(config_path)["pft_catalog"]["path"])
     source_pft_layout = read_pft_layout_from_netcdf(
-        stomate_files.restart,
+        stomate_state_path,
         catalog,
         legacy_layout_id="paper_250919_legacy14",
     )
     state = read_stomate_restart_entry_state(
-        stomate_files.restart,
+        stomate_state_path,
         source_pft_layout=source_pft_layout,
         target_pft_layout=bundle.run_scalars.pft_layout,
     )

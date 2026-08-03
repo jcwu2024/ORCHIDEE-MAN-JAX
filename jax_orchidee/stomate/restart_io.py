@@ -68,6 +68,10 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_STOMATE_RESTART_SCHEMA = (
     ROOT / "docs" / "source_audits" / "stomate_restart_netcdf_schema.json"
 )
+# IOIPSL generated two independent dimension names for the same PFT axis,
+# depending on whether PFT precedes or follows another scientific dimension.
+# Both STOMATE and SECHIBA paper schemas use these exact names.
+PAPER_RESTART_PFT_DIMENSIONS = frozenset({"z_a", "l_d"})
 STOMATE_REMAINDER_PFT_AXES = {
     **{
         name: 1
@@ -1494,8 +1498,20 @@ def create_stomate_restart_skeleton_from_schema(
     if output.exists():
         raise FileExistsError(output)
     with Dataset(output, "w", format=str(schema["file_format"])) as dataset:
+        if pft_layout is not None:
+            missing_pft_dimensions = PAPER_RESTART_PFT_DIMENSIONS - set(schema["dimensions"])
+            if missing_pft_dimensions:
+                raise ValueError(
+                    "restart schema is missing source PFT dimensions: "
+                    + ", ".join(sorted(missing_pft_dimensions))
+                )
         for name, declaration in schema["dimensions"].items():
-            size = None if declaration["unlimited"] else int(declaration["size"])
+            if name in PAPER_RESTART_PFT_DIMENSIONS and pft_layout is not None:
+                if declaration["unlimited"]:
+                    raise ValueError(f"restart PFT dimension {name} cannot be unlimited")
+                size = pft_layout.n_pft
+            else:
+                size = None if declaration["unlimited"] else int(declaration["size"])
             dataset.createDimension(name, size)
 
         global_attributes = dict(schema.get("global_attributes", {}))
