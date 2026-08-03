@@ -25,7 +25,6 @@ from .run_def_materialization import (
     read_run_def_values,
 )
 
-
 PAPER_POINT_VARYING_RUN_DEF_KEYS = (
     "LIMIT_WEST",
     "LIMIT_EAST",
@@ -37,17 +36,18 @@ PAPER_POINT_VARYING_RUN_DEF_KEYS = (
     "ALLOC_MIN__00014",
     "RESIDENCE_TIME__00014",
 )
+PAPER_MANGROVE_PFT_ID = "mangrove_pft14"
 
 PAPER_POINT_BINDING_OWNERS = {
     "LIMIT_WEST": "driver.orchestration._domain_override_from_run_def_values -> forcing domain",
     "LIMIT_EAST": "driver.orchestration._domain_override_from_run_def_values -> forcing domain",
     "LIMIT_SOUTH": "driver.orchestration._domain_override_from_run_def_values -> forcing domain",
     "LIMIT_NORTH": "driver.orchestration._domain_override_from_run_def_values -> forcing domain",
-    "VCMAX25__00014": "stomate.parameters.PaperCaseStomateParameterBundle.vcmax25[13]",
+    "VCMAX25__00014": "stomate.parameters bundle selected by stable ID mangrove_pft14",
     "ARJV__00014": "sechiba.diffuco.pft14_trans_co2_parameter_inputs_from_run_def['arjv']",
-    "MAINT_RESP_SLOPE_C__00014": "stomate.parameters.PaperCaseStomateParameterBundle.maint_resp_slope[13,0]",
-    "ALLOC_MIN__00014": "stomate.parameters.PaperCaseStomateParameterBundle.alloc_min[13]",
-    "RESIDENCE_TIME__00014": "stomate.parameters.PaperCaseStomateParameterBundle.residence_time[13]",
+    "MAINT_RESP_SLOPE_C__00014": "stomate.parameters bundle selected by stable ID mangrove_pft14",
+    "ALLOC_MIN__00014": "stomate.parameters bundle selected by stable ID mangrove_pft14",
+    "RESIDENCE_TIME__00014": "stomate.parameters bundle selected by stable ID mangrove_pft14",
 }
 
 
@@ -202,15 +202,20 @@ def audit_paper_landpoint_binding(
             root / "configs" / "orchidee_man_250919.yaml",
             used_run_def=reference.used_run_def,
         )
+        mangrove_index = stomate.pft_layout.index_for_id(PAPER_MANGROVE_PFT_ID)
+        mangrove_fortran_id = stomate.pft_layout.entries[mangrove_index].fortran_pft_id
         consumer_values.update(
             {
-                "VCMAX25__00014": float(stomate.vcmax25[13]),
-                "MAINT_RESP_SLOPE_C__00014": float(stomate.maint_resp_slope[13, 0]),
-                "ALLOC_MIN__00014": float(stomate.alloc_min[13]),
-                "RESIDENCE_TIME__00014": float(stomate.residence_time[13]),
+                "VCMAX25__00014": float(stomate.vcmax25[mangrove_index]),
+                "MAINT_RESP_SLOPE_C__00014": float(stomate.maint_resp_slope[mangrove_index, 0]),
+                "ALLOC_MIN__00014": float(stomate.alloc_min[mangrove_index]),
+                "RESIDENCE_TIME__00014": float(stomate.residence_time[mangrove_index]),
             }
         )
-        diffuco = pft14_trans_co2_parameter_inputs_from_run_def(used)
+        diffuco = pft14_trans_co2_parameter_inputs_from_run_def(
+            used,
+            pft_fortran_index=mangrove_fortran_id,
+        )
         consumer_values["ARJV__00014"] = float(diffuco["arjv"])
     except Exception as exc:  # The audit must retain the failing package row.
         errors.append(f"consumer assembly failed: {type(exc).__name__}: {exc}")

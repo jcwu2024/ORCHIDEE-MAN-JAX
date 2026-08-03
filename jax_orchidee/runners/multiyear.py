@@ -20,6 +20,7 @@ from jax_orchidee.runtime import configure_jax_compilation_cache  # noqa: E402
 
 configure_jax_compilation_cache(ROOT)
 
+from jax_orchidee.driver.domain import load_case_config  # noqa: E402
 from jax_orchidee.driver.init import read_run_scalars  # noqa: E402
 from jax_orchidee.driver.orchestration import (  # noqa: E402
     DriverPreviousStepStatePacket,
@@ -33,6 +34,7 @@ from jax_orchidee.driver.run_def_materialization import (  # noqa: E402
     materialize_case_run_def_values,
     write_materialized_run_def,
 )
+from jax_orchidee.parameters.pft_catalog import load_pft_catalog  # noqa: E402
 from jax_orchidee.stomate.modelout import (  # noqa: E402
     MODEL_OUTPUT_FIELD_NAMES,
     annual_history_mean_fields_from_daily_modelout,
@@ -65,6 +67,16 @@ DIAGNOSTIC_HISTORY_FIELDS = (
 )
 PRODUCTION_COMPILED_SECHIBA_DAY_DEFAULT = "on"
 PRODUCTION_NUMPY_ACCUMULATOR_DEFAULT = "off"
+PAPER_REFERENCE_PFT_LAYOUT_ID = "paper_250919_legacy14"
+PAPER_MANGROVE_PFT_ID = "mangrove_pft14"
+
+
+def _paper_reference_pft_index(config_path: str | Path) -> int:
+    """Resolve the archived Fortran-history slot from its named stable layout."""
+
+    config = load_case_config(config_path)
+    catalog = load_pft_catalog(config["pft_catalog"]["path"])
+    return catalog.layouts[PAPER_REFERENCE_PFT_LAYOUT_ID].index(PAPER_MANGROVE_PFT_ID)
 
 
 def _materialized_runtime_run_def(reference, *, output_root: Path = DEFAULT_MATERIALIZED_RUN_DEF_ROOT) -> Path:
@@ -167,12 +179,20 @@ def _paper_csv_delta(annual_modelout: dict[str, float] | None, csv_row) -> dict[
     }
 
 
-def _reference_annual_modelout(year: int, *, landpoint_id: str) -> dict[str, float] | None:
+def _reference_annual_modelout(
+    year: int,
+    *,
+    landpoint_id: str,
+    reference_pft_index: int,
+) -> dict[str, float] | None:
     histories = {path.name: path for path in find_stomate_reference_files(ROOT, landpoint_id=landpoint_id).histories}
     path = histories.get(f"stomate_history_{int(year)}.nc")
     if path is None:
         return None
-    fields = select_history_point_fields(pack_history_modelout_fields(path))
+    fields = select_history_point_fields(
+        pack_history_modelout_fields(path),
+        pft_index=reference_pft_index,
+    )
     modelout = compute_modelout_from_fields(fields)
     return {
         "AGB_model": _scalar(modelout.AGB_model),
@@ -182,23 +202,36 @@ def _reference_annual_modelout(year: int, *, landpoint_id: str) -> dict[str, flo
     }
 
 
-def _reference_annual_fields(year: int, *, landpoint_id: str) -> dict[str, float] | None:
+def _reference_annual_fields(
+    year: int,
+    *,
+    landpoint_id: str,
+    reference_pft_index: int,
+) -> dict[str, float] | None:
     histories = {path.name: path for path in find_stomate_reference_files(ROOT, landpoint_id=landpoint_id).histories}
     path = histories.get(f"stomate_history_{int(year)}.nc")
     if path is None:
         return None
-    selected = select_history_point_fields(pack_history_modelout_fields(path))
+    selected = select_history_point_fields(
+        pack_history_modelout_fields(path),
+        pft_index=reference_pft_index,
+    )
     return {name: _scalar(selected[name]) for name in MODEL_OUTPUT_FIELD_NAMES}
 
 
-def _reference_annual_diagnostics(year: int, *, landpoint_id: str) -> dict[str, float] | None:
+def _reference_annual_diagnostics(
+    year: int,
+    *,
+    landpoint_id: str,
+    reference_pft_index: int,
+) -> dict[str, float] | None:
     histories = {path.name: path for path in find_stomate_reference_files(ROOT, landpoint_id=landpoint_id).histories}
     path = histories.get(f"stomate_history_{int(year)}.nc")
     if path is None:
         return None
     fields = read_variables(path, DIAGNOSTIC_HISTORY_FIELDS)
     return {
-        name: float(np.asarray(value, dtype=np.float64)[0, 13, 0, 0])
+        name: float(np.asarray(value, dtype=np.float64)[0, reference_pft_index, 0, 0])
         for name, value in fields.items()
     }
 
@@ -213,6 +246,7 @@ def _summarize_year(
     landpoint_id: str,
     pft_index: int,
     pft_metadata: dict[str, object],
+    reference_pft_index: int,
 ) -> dict[str, object]:
     field_summary: dict[str, object] = {}
     for field in fields:
@@ -246,14 +280,26 @@ def _summarize_year(
             "NPP_model": _scalar(annual_result.NPP_model),
         }
     completed_days = len(run.daily_modelout)
-    reference_annual_modelout = _reference_annual_modelout(int(run.year), landpoint_id=landpoint_id)
+    reference_annual_modelout = _reference_annual_modelout(
+        int(run.year),
+        landpoint_id=landpoint_id,
+        reference_pft_index=reference_pft_index,
+    )
     reference_annual_fields = (
-        _reference_annual_fields(int(run.year), landpoint_id=landpoint_id)
+        _reference_annual_fields(
+            int(run.year),
+            landpoint_id=landpoint_id,
+            reference_pft_index=reference_pft_index,
+        )
         if completed_days == 365
         else None
     )
     reference_annual_diagnostics = (
-        _reference_annual_diagnostics(int(run.year), landpoint_id=landpoint_id)
+        _reference_annual_diagnostics(
+            int(run.year),
+            landpoint_id=landpoint_id,
+            reference_pft_index=reference_pft_index,
+        )
         if completed_days == 365
         else None
     )
@@ -508,7 +554,8 @@ def main(argv: list[str] | None = None) -> int:
         paper_modelout_csv_label = str(args.paper_modelout_csv)
 
     run_scalars = read_run_scalars(args.config, run_def_path=args.run_def)
-    pft_selection = modelout_pft_selection(run_scalars.pft_layout, "mangrove_pft14")
+    pft_selection = modelout_pft_selection(run_scalars.pft_layout, PAPER_MANGROVE_PFT_ID)
+    reference_pft_index = _paper_reference_pft_index(args.config)
     pft_layout_metadata = run_scalars.pft_layout.metadata()
     pft_selection_metadata = pft_selection.metadata()
 
@@ -646,6 +693,7 @@ def main(argv: list[str] | None = None) -> int:
                 landpoint_id=args.landpoint_id,
                 pft_index=pft_selection.pft_index,
                 pft_metadata=pft_selection_metadata,
+                reference_pft_index=reference_pft_index,
             )
         )
         previous_state = run.last_day_end_state
