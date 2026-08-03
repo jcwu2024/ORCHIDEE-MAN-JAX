@@ -73,6 +73,7 @@ PAPER_CASE_PEAT_BULK_DENSITY = np.asarray(
 # water-stress, and dynamic-root branches. It is distinct from the same-named
 # pft_parameters variable that does read run.def.
 PAPER_1961_HYDROL_SOIL_PEAT_HYDRO = False
+PAPER_MANGROVE_PFT_ID = "mangrove_pft14"
 
 from jax_orchidee.driver.bundle import (
     DriverStepBundle,
@@ -461,6 +462,64 @@ def _validate_stomate_main_supported_switches(values: Mapping[str, str]) -> None
         )
 
 
+def _paper_mangrove_pft_index(run_scalars: RunScalars) -> int:
+    """Resolve the paper mangrove execution slot from stable PFT identity."""
+
+    return run_scalars.pft_layout.index_for_id(PAPER_MANGROVE_PFT_ID)
+
+
+def _paper_mangrove_fortran_pft_id(run_scalars: RunScalars) -> int:
+    """Resolve the source parameter row for the paper mangrove capability."""
+
+    index = _paper_mangrove_pft_index(run_scalars)
+    return int(run_scalars.pft_layout.entries[index].fortran_pft_id)
+
+
+def _runtime_fortran_pft_ids(run_scalars: RunScalars, *, nvm: int | None = None) -> tuple[int, ...]:
+    """Return source parameter rows after validating the dense execution axis."""
+
+    fortran_pft_ids = tuple(int(value) for value in run_scalars.fortran_pft_ids)
+    expected = int(run_scalars.nvm)
+    if len(fortran_pft_ids) != expected:
+        raise ValueError("run-scalars PFT identities disagree with NVM")
+    if nvm is not None and int(nvm) != expected:
+        raise ValueError("model-state PFT axis disagrees with the selected stable PFT layout")
+    return fortran_pft_ids
+
+
+def _select_run_def_pft_vector(
+    values: dict[str, str],
+    name: str,
+    run_scalars: RunScalars,
+    *,
+    nvm: int | None = None,
+    dtype=np.float64,
+) -> np.ndarray:
+    """Read a PFT-indexed run.def vector in stable execution-layout order."""
+
+    return parse_run_def_indexed_selection(
+        values,
+        name,
+        _runtime_fortran_pft_ids(run_scalars, nvm=nvm),
+        dtype=dtype,
+    )
+
+
+def _validated_prepared_pft_axis(
+    values,
+    *,
+    context: Paper1961PreparedDriverContext,
+    nvm: int,
+    name: str,
+):
+    """Reject positional truncation when prepared arrays and state layouts differ."""
+
+    _runtime_fortran_pft_ids(context.run_scalars, nvm=nvm)
+    if len(values) != int(nvm):
+        raise ValueError(f"prepared {name} PFT axis disagrees with the selected stable PFT layout")
+    return values
+
+
 @lru_cache(maxsize=8)
 def _prepare_paper_1961_driver_context_cached(
     config_path: str,
@@ -481,6 +540,8 @@ def _prepare_paper_1961_driver_context_cached(
     if parse_run_def_int(values, "NVM") != nvm:
         raise ValueError("runtime run.def NVM disagrees with the selected stable PFT layout")
     fortran_pft_ids = tuple(int(value) for value in run_scalars.fortran_pft_ids)
+    mangrove_pft_index = _paper_mangrove_pft_index(run_scalars)
+    mangrove_fortran_pft_id = _paper_mangrove_fortran_pft_id(run_scalars)
     cwrr_grid = paper_case_cwrr_vertical_soil_grid_from_used_run_def(run_def_path)
     diaglev, zlt, znt = paper_case_vertical_grids_from_used_run_def(run_def_path)
     dt_sechiba = runtime.dt_sechiba
@@ -544,11 +605,16 @@ def _prepare_paper_1961_driver_context_cached(
         nvm=nvm,
         forcing_split=forcing_split,
         forcing_nb_spread=paper_forcing_nb_spread(forcing_split),
-        ok_laidev=tuple(parse_run_def_bool(values[f"OK_LAIDEV__{index:05d}"]) for index in range(1, nvm + 1)),
+        ok_laidev=tuple(
+            parse_run_def_bool(values[f"OK_LAIDEV__{fortran_id:05d}"])
+            for fortran_id in fortran_pft_ids
+        ),
         ext_coeff=ext_coeff,
         ext_coeff_vegetfrac=ext_coeff_vegetfrac,
         hydrol_humcste=hydrol_humcste,
-        hydrol_throughfall_by_pft=parse_run_def_indexed_vector(values, "PERCENT_THROUGHFALL_PFT", nvm),
+        hydrol_throughfall_by_pft=parse_run_def_indexed_selection(
+            values, "PERCENT_THROUGHFALL_PFT", fortran_pft_ids
+        ),
         hydrol_cwrr_ks=parse_run_def_indexed_vector(values, "CWRR_KS", 12),
         hydrol_zz_mm=cwrr_grid.znh * 1000.0,
         hydrol_dz_mm=cwrr_grid.dnh * 1000.0,
@@ -612,13 +678,15 @@ def _prepare_paper_1961_driver_context_cached(
             ratio_geom_below=parse_run_def_float(values, "RATIO_GEOM_BELOW"),
             pft_to_mtc=pft_to_mtc,
             hydrol_humcste=hydrol_humcste,
-            pft_index=13,
+            pft_index=mangrove_pft_index,
         ),
         diffuco_pft14_static_kwargs={
-            "rstruct_const": parse_run_def_indexed_vector(values, "RSTRUCT_CONST", nvm),
+            "rstruct_const": parse_run_def_indexed_selection(
+                values, "RSTRUCT_CONST", fortran_pft_ids
+            ),
             "trans_co2_pft_params": pft14_trans_co2_parameter_inputs_from_run_def(
                 values,
-                pft_fortran_index=14,
+                pft_fortran_index=mangrove_fortran_pft_id,
             ),
             "dt_sechiba": dt_sechiba,
             "laimax": parse_run_def_float(values, "LAIMAX"),
@@ -627,7 +695,10 @@ def _prepare_paper_1961_driver_context_cached(
             "snowcri": parse_run_def_float(values, "SNOWCRI"),
             "ok_snowfact": parse_run_def_bool(values["OK_SNOWFACT"]),
             "rough_dyn": parse_run_def_bool(values["ROUGH_DYN"]),
-            "ok_laidev": tuple(parse_run_def_bool(values[f"OK_LAIDEV__{index:05d}"]) for index in range(1, nvm + 1)),
+            "ok_laidev": tuple(
+                parse_run_def_bool(values[f"OK_LAIDEV__{fortran_id:05d}"])
+                for fortran_id in fortran_pft_ids
+            ),
         },
         stomate_static=stomate_static,
         stomate_boundary=stomate_boundary,
@@ -944,7 +1015,9 @@ def _previous_step_state_from_cold_start_payloads(payloads: dict[str, object]) -
     if diffuco_local is not None:
         active_leaf_ci = diffuco_local.result.boundary.process_chain.trans_co2.canopy.leaf_ci
         npts, nlai = np.asarray(active_leaf_ci).shape
-        nvm = np.asarray(slowproc_full.veget).shape[1] if slowproc_full is not None else 14
+        if slowproc_full is None:
+            raise ValueError("DIFFUCO cold-start state requires explicit slowproc PFT axes")
+        nvm = np.asarray(slowproc_full.veget).shape[1]
         # diffuco_initialize lines 212-225 applies DIFFUCO_LEAFCI=233 when
         # the cold-start restart field is absent; trans_co2 then overwrites
         # the active PFT14 slice during the first production step.
@@ -3339,7 +3412,6 @@ def _paper_pft14_control_inundation_from_prepared_context(
     *,
     tide_height,
     biomass,
-    pft_index: int = 13,
 ) -> DiffucoControlInundationAssembly:
     """Reuse prepared source-backed static inundation inputs for DIFFUCO.
 
@@ -3368,7 +3440,7 @@ def _paper_pft14_control_inundation_from_prepared_context(
             rprof=payload["rprof"],
             tide_height=tide_height,
             biomass=biomass,
-            pft_index=pft_index,
+            pft_index=_paper_mangrove_pft_index(context.run_scalars),
         )
         result = mangrove_control_inundation(
             inputs,
@@ -3503,8 +3575,12 @@ def _paper_diffuco_day_static_cache_from_previous_state(
     slowproc_derivvar_payload: dict[str, object] = {}
     slowproc_derivvar, slowproc_derivvar_payload = _paper_later_day_slowproc_derivvar_payload(
         slowproc_state,
-        vcmax_fix=context.vcmax_fix[:nvm],
-        height_presc=context.slowproc_height[:nvm],
+        vcmax_fix=_validated_prepared_pft_axis(
+            context.vcmax_fix, context=context, nvm=nvm, name="VCMAX_FIX"
+        ),
+        height_presc=_validated_prepared_pft_axis(
+            context.slowproc_height, context=context, nvm=nvm, name="SLOWPROC_HEIGHT"
+        ),
         qsintcst=context.sechiba_qsint,
     )
     return DriverDiffucoDayStaticCache(
@@ -3547,12 +3623,15 @@ def _paper_diffuco_day_static_cache_from_firstcall_inputs(
         context,
         tide_height=tide_height,
         biomass=biomass,
-        pft_index=13,
     )
     slowproc_derivvar, slowproc_derivvar_payload = _paper_later_day_slowproc_derivvar_payload(
         slowproc_state,
-        vcmax_fix=context.vcmax_fix[:nvm],
-        height_presc=context.slowproc_height[:nvm],
+        vcmax_fix=_validated_prepared_pft_axis(
+            context.vcmax_fix, context=context, nvm=nvm, name="VCMAX_FIX"
+        ),
+        height_presc=_validated_prepared_pft_axis(
+            context.slowproc_height, context=context, nvm=nvm, name="SLOWPROC_HEIGHT"
+        ),
         qsintcst=context.sechiba_qsint,
     )
     return DriverDiffucoDayStaticCache(
@@ -3633,8 +3712,12 @@ def paper_1961_next_step_diffuco_precall_scaffold(
         slowproc_derivvar = day_static_cache.slowproc_derivvar
         slowproc_derivvar_payload = dict(day_static_cache.slowproc_derivvar_payload)
     else:
-        pft_to_mtc = context.pft_to_mtc[:nvm]
-        hydrol_humcste = context.hydrol_humcste[:nvm]
+        pft_to_mtc = _validated_prepared_pft_axis(
+            context.pft_to_mtc, context=context, nvm=nvm, name="PFT_TO_MTC"
+        )
+        hydrol_humcste = _validated_prepared_pft_axis(
+            context.hydrol_humcste, context=context, nvm=nvm, name="HYDROL_HUMCSTE"
+        )
         if int(tstep) == 0:
             diffuco_control_salinity = assemble_pft14_control_salinity_first_step(
                 salinity=payload.salinity,
@@ -3645,7 +3728,6 @@ def paper_1961_next_step_diffuco_precall_scaffold(
                     context,
                     tide_height=payload.tide_height,
                     biomass=biomass,
-                    pft_index=13,
                 )
             else:
                 diffuco_control_inundation = assemble_pft14_control_inundation_first_step(
@@ -3664,7 +3746,7 @@ def paper_1961_next_step_diffuco_precall_scaffold(
                     agb_agr_ven_all_pn=context.agb_agr_ven_all_pn,
                     h_agr_max_st=context.h_agr_max_st,
                     h_agr_max_pn=context.h_agr_max_pn,
-                    pft_index=13,
+                    pft_index=_paper_mangrove_pft_index(context.run_scalars),
                 )
         else:
             (
@@ -3677,8 +3759,12 @@ def paper_1961_next_step_diffuco_precall_scaffold(
         slowproc_derivvar = None
         slowproc_derivvar, slowproc_derivvar_payload = _paper_later_day_slowproc_derivvar_payload(
             slowproc_state,
-            vcmax_fix=context.vcmax_fix[:nvm],
-            height_presc=context.slowproc_height[:nvm],
+            vcmax_fix=_validated_prepared_pft_axis(
+                context.vcmax_fix, context=context, nvm=nvm, name="VCMAX_FIX"
+            ),
+            height_presc=_validated_prepared_pft_axis(
+                context.slowproc_height, context=context, nvm=nvm, name="SLOWPROC_HEIGHT"
+            ),
             qsintcst=context.sechiba_qsint,
         )
     diffuco_precall = assemble_diffuco_first_step_precall_payload(
@@ -3788,7 +3874,7 @@ def paper_1961_next_step_enerbil_precall_scaffold(
         diffuco_local = run_pft14_local_enerbil_precall_from_first_step_precall(
             diffuco.diffuco_precall,
             run_def_values=run_def_values,
-            pft_index=13,
+            pft_index=_paper_mangrove_pft_index(context.run_scalars),
             static_kwargs=context.diffuco_pft14_static_kwargs if prepared_context is not None else None,
             use_jit=diffuco_local_jit,
         )
@@ -3807,7 +3893,9 @@ def paper_1961_next_step_enerbil_precall_scaffold(
         nvm = int(np.asarray(enerbil_precall.payload["veget_max"]).shape[1])
         enerbil_local = run_enerbil_first_step_local_from_precall(
             enerbil_precall,
-            ok_laidev=context.ok_laidev[:nvm],
+            ok_laidev=_validated_prepared_pft_axis(
+                context.ok_laidev, context=context, nvm=nvm, name="OK_LAIDEV"
+            ),
             dt_sechiba=context.dt_sechiba,
             ok_explicitsnow=context.ok_explicitsnow,
             min_wind=context.min_wind,
@@ -3907,18 +3995,30 @@ def paper_1961_next_step_hydrol_precall_scaffold(
     nvm = int(np.asarray(previous_state.fields_by_component["slowproc_stomate_previous_step_state"]["lai"]).shape[1])
     cwrr_grid = context.cwrr_grid
     diaglev = context.diaglev
-    hydrol_humcste = context.hydrol_humcste[:nvm]
+    hydrol_humcste = _validated_prepared_pft_axis(
+        context.hydrol_humcste, context=context, nvm=nvm, name="HYDROL_HUMCSTE"
+    )
     hydrol_zz_mm = context.hydrol_zz_mm
     if prepared_context is not None and hydrol_static_template is None:
         hydrol_static_template = hydrol_static_precall_template_from_slowproc(
             slowproc_restart=SimpleNamespace(**previous_state.fields_by_component["slowproc_stomate_previous_step_state"]),
             pref_soil_veg=enerbil.step.run_scalars.pref_soil_veg,
             nstm=enerbil.step.run_scalars.nstm,
-            ext_coeff_vegetfrac=context.ext_coeff_vegetfrac[:nvm],
+            ext_coeff_vegetfrac=_validated_prepared_pft_axis(
+                context.ext_coeff_vegetfrac,
+                context=context,
+                nvm=nvm,
+                name="EXT_COEFF_VEGETFRAC",
+            ),
             hydrol_njsc=getattr(hydrol_state, "njsc", None),
             refSOC_1d=getattr(hydrol_state, "refSOC_1d", None),
             use_refSOC_hydrol=parse_run_def_bool(run_def_values.get("use_refSOC_hydrol", "FALSE")),
-            throughfall_by_pft=context.hydrol_throughfall_by_pft[:nvm],
+            throughfall_by_pft=_validated_prepared_pft_axis(
+                context.hydrol_throughfall_by_pft,
+                context=context,
+                nvm=nvm,
+                name="PERCENT_THROUGHFALL_PFT",
+            ),
             humcste=hydrol_humcste,
             zz_mm=hydrol_zz_mm,
             peat_hydro=context.hydrol_soil_peat_hydro,
@@ -3931,7 +4031,12 @@ def paper_1961_next_step_hydrol_precall_scaffold(
         slowproc_restart=SimpleNamespace(**previous_state.fields_by_component["slowproc_stomate_previous_step_state"]),
         pref_soil_veg=enerbil.step.run_scalars.pref_soil_veg,
         nstm=enerbil.step.run_scalars.nstm,
-        ext_coeff_vegetfrac=context.ext_coeff_vegetfrac[:nvm],
+        ext_coeff_vegetfrac=_validated_prepared_pft_axis(
+            context.ext_coeff_vegetfrac,
+            context=context,
+            nvm=nvm,
+            name="EXT_COEFF_VEGETFRAC",
+        ),
         precip_rain=enerbil.payload.precip_rain,
         precip_snow=enerbil.payload.precip_snow,
         diffuco_payload=_hydrol_current_diffuco_payload(
@@ -3945,7 +4050,12 @@ def paper_1961_next_step_hydrol_precall_scaffold(
                 if name in previous_state.fields_by_component["thermosoil_previous_step_state"]
             }
         ),
-        throughfall_by_pft=context.hydrol_throughfall_by_pft[:nvm],
+        throughfall_by_pft=_validated_prepared_pft_axis(
+            context.hydrol_throughfall_by_pft,
+            context=context,
+            nvm=nvm,
+            name="PERCENT_THROUGHFALL_PFT",
+        ),
         humcste=hydrol_humcste,
         zz_mm=hydrol_zz_mm,
         diaglev_m=diaglev,
@@ -4074,7 +4184,9 @@ def paper_1961_next_step_hydrol_precall_scaffold(
                 znt=cwrr_grid.znt,
                 dz5=cwrr_grid.dz5,
                 dt_sechiba=context.dt_sechiba,
-                ok_laidev=context.ok_laidev[:nvm],
+                ok_laidev=_validated_prepared_pft_axis(
+                    context.ok_laidev, context=context, nvm=nvm, name="OK_LAIDEV"
+                ),
                 satsoil=context.thermosoil_satsoil,
                 ok_shum_ngrnd_permalong=_effective_thermosoil_wetdiaglong(context.run_def_values),
                 use_jit=bool(module_jit) and prepared_context is not None,
@@ -4172,8 +4284,13 @@ def paper_1961_driver_cold_start_first_step_coverage(
     run_scalars = read_run_scalars(config_path, run_def_path=run_def_path)
     vegetation = initialize_imposed_vegetation_state(run_scalars, npts=payload.kjpindex)
     nvm = int(run_scalars.nvm)
-    pft_to_mtc = parse_run_def_indexed_vector(run_def_values, "PFT_TO_MTC", nvm, dtype=int)
-    hydrol_humcste = parse_run_def_indexed_vector(run_def_values, "HYDROL_HUMCSTE", nvm)
+    fortran_pft_ids = tuple(int(value) for value in run_scalars.fortran_pft_ids)
+    pft_to_mtc = parse_run_def_indexed_selection(
+        run_def_values, "PFT_TO_MTC", fortran_pft_ids, dtype=int
+    )
+    hydrol_humcste = parse_run_def_indexed_selection(
+        run_def_values, "HYDROL_HUMCSTE", fortran_pft_ids
+    )
     if prepared_context is not None:
         cwrr_grid = prepared_context.cwrr_grid
         diaglev, deep_zlt, deep_znt = prepared_context.diaglev, prepared_context.zlt, prepared_context.znt
@@ -4224,8 +4341,12 @@ def paper_1961_driver_cold_start_first_step_coverage(
         veget_max=vegetation.veget_max,
         frac_nobio=vegetation.frac_nobio,
         pref_soil_veg=run_scalars.pref_soil_veg,
-        ext_coeff_vegetfrac=parse_run_def_indexed_vector(run_def_values, "EXT_COEFF_VEGETFRAC", nvm),
-        height_presc=parse_run_def_indexed_vector(run_def_values, "SLOWPROC_HEIGHT", nvm),
+        ext_coeff_vegetfrac=_select_run_def_pft_vector(
+            run_def_values, "EXT_COEFF_VEGETFRAC", run_scalars, nvm=nvm
+        ),
+        height_presc=_select_run_def_pft_vector(
+            run_def_values, "SLOWPROC_HEIGHT", run_scalars, nvm=nvm
+        ),
         nstm=run_scalars.nstm,
         nleafages=parse_run_def_int(run_def_values, "NLEAFAGES") if "NLEAFAGES" in run_def_values else 4,
         read_lai=parse_run_def_bool(run_def_values.get("READ_LAI", "FALSE")),
@@ -4235,9 +4356,13 @@ def paper_1961_driver_cold_start_first_step_coverage(
         restart={},
         veget_max_default=vegetation.veget_max,
         frac_nobio_default=vegetation.frac_nobio,
-        height_presc=parse_run_def_indexed_vector(run_def_values, "SLOWPROC_HEIGHT", nvm),
+        height_presc=_select_run_def_pft_vector(
+            run_def_values, "SLOWPROC_HEIGHT", run_scalars, nvm=nvm
+        ),
         pref_soil_veg=run_scalars.pref_soil_veg,
-        ext_coeff_vegetfrac=parse_run_def_indexed_vector(run_def_values, "EXT_COEFF_VEGETFRAC", nvm),
+        ext_coeff_vegetfrac=_select_run_def_pft_vector(
+            run_def_values, "EXT_COEFF_VEGETFRAC", run_scalars, nvm=nvm
+        ),
         nstm=run_scalars.nstm,
         diaglev=diaglev,
         soil_boundary={
@@ -4396,12 +4521,12 @@ def paper_1961_driver_cold_start_first_step_coverage(
             impaze=parse_run_def_bool(run_def_values.get("IMPOSE_AZE", "FALSE")),
             alb_bg_modis=True,
             soilalb_bg=soilalbedo_bg,
-            alb_leaf_vis=parse_run_def_indexed_vector(run_def_values, "ALB_LEAF_VIS", nvm),
-            alb_leaf_nir=parse_run_def_indexed_vector(run_def_values, "ALB_LEAF_NIR", nvm),
-            snowa_aged_vis=parse_run_def_indexed_vector(run_def_values, "SNOWA_AGED_VIS", nvm),
-            snowa_aged_nir=parse_run_def_indexed_vector(run_def_values, "SNOWA_AGED_NIR", nvm),
-            snowa_dec_vis=parse_run_def_indexed_vector(run_def_values, "SNOWA_DEC_VIS", nvm),
-            snowa_dec_nir=parse_run_def_indexed_vector(run_def_values, "SNOWA_DEC_NIR", nvm),
+            alb_leaf_vis=parse_run_def_indexed_selection(run_def_values, "ALB_LEAF_VIS", fortran_pft_ids),
+            alb_leaf_nir=parse_run_def_indexed_selection(run_def_values, "ALB_LEAF_NIR", fortran_pft_ids),
+            snowa_aged_vis=parse_run_def_indexed_selection(run_def_values, "SNOWA_AGED_VIS", fortran_pft_ids),
+            snowa_aged_nir=parse_run_def_indexed_selection(run_def_values, "SNOWA_AGED_NIR", fortran_pft_ids),
+            snowa_dec_vis=parse_run_def_indexed_selection(run_def_values, "SNOWA_DEC_VIS", fortran_pft_ids),
+            snowa_dec_nir=parse_run_def_indexed_selection(run_def_values, "SNOWA_DEC_NIR", fortran_pft_ids),
             fixed_snow_albedo=float(run_def_values.get("CONDVEG_SNOWA", 1.0e20)),
             tcst_snowa=float(run_def_values.get("TCST_SNOWA", 10.0)),
             alb_ice=tuple(parse_run_def_float(run_def_values, f"ALB_ICE__{index:05d}") for index in range(1, 3)),
@@ -4427,7 +4552,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
         nelements=1,
         dt_days=parse_run_def_float(run_def_values, "DT_STOMATE") / 86400.0,
         date=0,
-        sla=parse_run_def_indexed_vector(run_def_values, "SLA", nvm),
+        sla=parse_run_def_indexed_selection(run_def_values, "SLA", fortran_pft_ids),
     )
     thermosoil_cold_coef = thermosoil_cold_start_coef_closure(
         ptn=ptn_constant,
@@ -4453,7 +4578,10 @@ def paper_1961_driver_cold_start_first_step_coverage(
         use_refSOC=parse_run_def_bool(run_def_values.get("use_refSOC", "FALSE")),
         use_soilc_tempdiff=parse_run_def_bool(run_def_values.get("USE_SOILC_TEMPDIFF", "FALSE")),
         ok_laidev=np.asarray(
-            [parse_run_def_bool(run_def_values.get(f"OK_LAIDEV__{index:05d}", "FALSE")) for index in range(1, nvm + 1)],
+            [
+                parse_run_def_bool(run_def_values.get(f"OK_LAIDEV__{fortran_id:05d}", "FALSE"))
+                for fortran_id in fortran_pft_ids
+            ],
             dtype=bool,
         ),
         shum_ngrnd_permalong=np.ones_like(ptn_constant, dtype=np.float64),
@@ -4480,13 +4608,13 @@ def paper_1961_driver_cold_start_first_step_coverage(
         agb_agr_ven_all_pn=parse_run_def_float(run_def_values, "AGB_AGR_VEN_ALL_PN"),
         h_agr_max_st=parse_run_def_float(run_def_values, "H_AGR_MAX_ST"),
         h_agr_max_pn=parse_run_def_float(run_def_values, "H_AGR_MAX_PN"),
-        pft_index=13,
+        pft_index=_paper_mangrove_pft_index(run_scalars),
     )
     slowproc_derivvar = slowproc_derivvar_explicit(
         veget=slowproc_veg_cold.vegetation.veget,
         lai=slowproc_veg_cold.lai,
-        vcmax_fix=parse_run_def_indexed_vector(run_def_values, "VCMAX_FIX", nvm),
-        height_presc=parse_run_def_indexed_vector(run_def_values, "SLOWPROC_HEIGHT", nvm),
+        vcmax_fix=parse_run_def_indexed_selection(run_def_values, "VCMAX_FIX", fortran_pft_ids),
+        height_presc=parse_run_def_indexed_selection(run_def_values, "SLOWPROC_HEIGHT", fortran_pft_ids),
         qsintcst=parse_run_def_float(run_def_values, "SECHIBA_QSINT"),
     )
     condveg_initial_surface = condveg_main_minimal(
@@ -4516,12 +4644,12 @@ def paper_1961_driver_cold_start_first_step_coverage(
         alb_bg_modis=parse_run_def_bool(run_def_values.get("ALB_BG_MODIS", "FALSE")),
         alb_bare_model=parse_run_def_bool(run_def_values.get("ALB_BARE_MODEL", "FALSE")),
         soilalb_bg=soilalbedo_bg,
-        alb_leaf_vis=parse_run_def_indexed_vector(run_def_values, "ALB_LEAF_VIS", nvm),
-        alb_leaf_nir=parse_run_def_indexed_vector(run_def_values, "ALB_LEAF_NIR", nvm),
-        snowa_aged_vis=parse_run_def_indexed_vector(run_def_values, "SNOWA_AGED_VIS", nvm),
-        snowa_aged_nir=parse_run_def_indexed_vector(run_def_values, "SNOWA_AGED_NIR", nvm),
-        snowa_dec_vis=parse_run_def_indexed_vector(run_def_values, "SNOWA_DEC_VIS", nvm),
-        snowa_dec_nir=parse_run_def_indexed_vector(run_def_values, "SNOWA_DEC_NIR", nvm),
+        alb_leaf_vis=parse_run_def_indexed_selection(run_def_values, "ALB_LEAF_VIS", fortran_pft_ids),
+        alb_leaf_nir=parse_run_def_indexed_selection(run_def_values, "ALB_LEAF_NIR", fortran_pft_ids),
+        snowa_aged_vis=parse_run_def_indexed_selection(run_def_values, "SNOWA_AGED_VIS", fortran_pft_ids),
+        snowa_aged_nir=parse_run_def_indexed_selection(run_def_values, "SNOWA_AGED_NIR", fortran_pft_ids),
+        snowa_dec_vis=parse_run_def_indexed_selection(run_def_values, "SNOWA_DEC_VIS", fortran_pft_ids),
+        snowa_dec_nir=parse_run_def_indexed_selection(run_def_values, "SNOWA_DEC_NIR", fortran_pft_ids),
         fixed_snow_albedo=float(run_def_values.get("CONDVEG_SNOWA", 1.0e20)),
         tcst_snowa=float(run_def_values.get("TCST_SNOWA", 10.0)),
         alb_ice=tuple(parse_run_def_float(run_def_values, f"ALB_ICE__{index:05d}") for index in range(1, 3)),
@@ -4541,7 +4669,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
         "lai": slowproc_veg_cold.lai,
         "qsintveg": hydrol_cold.qsintveg,
         "rstruct": np.broadcast_to(
-            parse_run_def_indexed_vector(run_def_values, "RSTRUCT_CONST", nvm)[None, :],
+            parse_run_def_indexed_selection(run_def_values, "RSTRUCT_CONST", fortran_pft_ids)[None, :],
             (payload.kjpindex, nvm),
         ),
         "roughheight": condveg_initial_surface.roughheight,
@@ -4588,7 +4716,7 @@ def paper_1961_driver_cold_start_first_step_coverage(
         diffuco_local = run_pft14_local_enerbil_precall_from_first_step_precall(
             diffuco_precall,
             run_def_values=run_def_values,
-            pft_index=13,
+            pft_index=_paper_mangrove_pft_index(run_scalars),
         )
     after_diffuco_payload = diffuco_precall.payload if diffuco_local is None else diffuco_local.result.payload.payload
     enerbil_precall = assemble_enerbil_first_step_precall_payload(
@@ -4604,8 +4732,8 @@ def paper_1961_driver_cold_start_first_step_coverage(
         enerbil_local = run_enerbil_first_step_local_from_precall(
             enerbil_precall,
             ok_laidev=[
-                parse_run_def_bool(run_def_values.get(f"OK_LAIDEV__{index:05d}", "FALSE"))
-                for index in range(1, nvm + 1)
+                parse_run_def_bool(run_def_values.get(f"OK_LAIDEV__{fortran_id:05d}", "FALSE"))
+                for fortran_id in fortran_pft_ids
             ],
             dt_sechiba=parse_run_def_float(run_def_values, "DT_SECHIBA"),
             ok_explicitsnow=parse_run_def_bool(run_def_values["OK_EXPLICITSNOW"]),
@@ -4647,14 +4775,18 @@ def paper_1961_driver_cold_start_first_step_coverage(
             ),
             pref_soil_veg=run_scalars.pref_soil_veg,
             nstm=run_scalars.nstm,
-            ext_coeff_vegetfrac=parse_run_def_indexed_vector(run_def_values, "EXT_COEFF_VEGETFRAC", nvm),
+            ext_coeff_vegetfrac=parse_run_def_indexed_selection(
+                run_def_values, "EXT_COEFF_VEGETFRAC", fortran_pft_ids
+            ),
             refSOC_1d=hydrol_refsoc_1d,
             use_refSOC_hydrol=parse_run_def_bool(run_def_values.get("use_refSOC_hydrol", "FALSE")),
             precip_rain=payload.precip_rain,
             precip_snow=payload.precip_snow,
             diffuco_payload=_hydrol_current_diffuco_payload(diffuco_precall.payload, after_diffuco_payload),
             thermosoil_restart=None,
-            throughfall_by_pft=parse_run_def_indexed_vector(run_def_values, "PERCENT_THROUGHFALL_PFT", nvm),
+            throughfall_by_pft=parse_run_def_indexed_selection(
+                run_def_values, "PERCENT_THROUGHFALL_PFT", fortran_pft_ids
+            ),
             humcste=hydrol_humcste,
             zz_mm=cwrr_grid.znh * 1000.0,
             diaglev_m=paper_case_vertical_grids_from_used_run_def(run_def_path)[0],
@@ -4771,8 +4903,8 @@ def paper_1961_driver_cold_start_first_step_coverage(
                         dz5=cwrr_grid.dz5,
                         dt_sechiba=parse_run_def_float(run_def_values, "DT_SECHIBA"),
                         ok_laidev=[
-                            parse_run_def_bool(run_def_values.get(f"OK_LAIDEV__{index:05d}", "FALSE"))
-                            for index in range(1, nvm + 1)
+                            parse_run_def_bool(run_def_values.get(f"OK_LAIDEV__{fortran_id:05d}", "FALSE"))
+                            for fortran_id in fortran_pft_ids
                         ],
                         satsoil=parse_run_def_bool(run_def_values["satsoil"]),
                         ok_shum_ngrnd_permalong=_effective_thermosoil_wetdiaglong(run_def_values),
@@ -5155,8 +5287,12 @@ def _paper_first_step_restart_entry_sources(
     derivvar = slowproc_derivvar_explicit(
         veget=restart_state.slowproc.veget,
         lai=restart_state.slowproc.lai,
-        vcmax_fix=parse_run_def_indexed_vector(run_def_values, "VCMAX_FIX", nvm),
-        height_presc=parse_run_def_indexed_vector(run_def_values, "SLOWPROC_HEIGHT", nvm),
+        vcmax_fix=_select_run_def_pft_vector(
+            run_def_values, "VCMAX_FIX", run_scalars, nvm=nvm
+        ),
+        height_presc=_select_run_def_pft_vector(
+            run_def_values, "SLOWPROC_HEIGHT", run_scalars, nvm=nvm
+        ),
         qsintcst=parse_run_def_float(run_def_values, "SECHIBA_QSINT"),
     )
     no_lcc = slowproc_no_lcc_entry_state(
@@ -5183,9 +5319,13 @@ def _paper_first_step_restart_entry_sources(
     static = slowproc_static_entry_state(
         njsc=restart_state.sechiba_static.njsc,
         soil_classif=run_def_values["SOILTYPE_CLASSIF"],
-        pft_to_mtc=parse_run_def_indexed_vector(run_def_values, "PFT_TO_MTC", nvm, dtype=int),
+        pft_to_mtc=_select_run_def_pft_vector(
+            run_def_values, "PFT_TO_MTC", run_scalars, nvm=nvm, dtype=int
+        ),
         zmaxh=parse_run_def_float(run_def_values, "DEPTH_MAX_H"),
-        hydrol_humcste=parse_run_def_indexed_vector(run_def_values, "HYDROL_HUMCSTE", nvm),
+        hydrol_humcste=_select_run_def_pft_vector(
+            run_def_values, "HYDROL_HUMCSTE", run_scalars, nvm=nvm
+        ),
     )
     erosion = slowproc_erosion_daily_zero_entry_state(kjpindex=restart_state.slowproc.lai.shape[0])
 
@@ -5291,12 +5431,21 @@ def _paper_next_step_entry_payload(
     )
     slowproc_state = scaffold.enerbil.previous_state.fields_by_component["slowproc_stomate_previous_step_state"]
     nvm = int(np.asarray(slowproc_state["lai"]).shape[1])
+    run_scalars = scaffold.enerbil.step.run_scalars
     if prepared_context is None:
-        vcmax_fix = parse_run_def_indexed_vector(run_def_values, "VCMAX_FIX", nvm)
-        height_presc = parse_run_def_indexed_vector(run_def_values, "SLOWPROC_HEIGHT", nvm)
+        vcmax_fix = _select_run_def_pft_vector(
+            run_def_values, "VCMAX_FIX", run_scalars, nvm=nvm
+        )
+        height_presc = _select_run_def_pft_vector(
+            run_def_values, "SLOWPROC_HEIGHT", run_scalars, nvm=nvm
+        )
         qsintcst = parse_run_def_float(run_def_values, "SECHIBA_QSINT")
-        pft_to_mtc = parse_run_def_indexed_vector(run_def_values, "PFT_TO_MTC", nvm, dtype=int)
-        hydrol_humcste = parse_run_def_indexed_vector(run_def_values, "HYDROL_HUMCSTE", nvm)
+        pft_to_mtc = _select_run_def_pft_vector(
+            run_def_values, "PFT_TO_MTC", run_scalars, nvm=nvm, dtype=int
+        )
+        hydrol_humcste = _select_run_def_pft_vector(
+            run_def_values, "HYDROL_HUMCSTE", run_scalars, nvm=nvm
+        )
         zmaxh = parse_run_def_float(run_def_values, "DEPTH_MAX_H")
         use_age_class = parse_run_def_bool(run_def_values["GLUC_USE_AGE_CLASS"])
         fire_disable = parse_run_def_bool(run_def_values["FIRE_DISABLE"])
@@ -5305,11 +5454,31 @@ def _paper_next_step_entry_payload(
         erosion_module = parse_run_def_bool(run_def_values["EROSION_MODULE"])
         impose_veg = parse_run_def_bool(run_def_values.get("IMPOSE_VEG", "TRUE"))
     else:
-        vcmax_fix = prepared_context.vcmax_fix[:nvm]
-        height_presc = prepared_context.slowproc_height[:nvm]
+        vcmax_fix = _validated_prepared_pft_axis(
+            prepared_context.vcmax_fix,
+            context=prepared_context,
+            nvm=nvm,
+            name="VCMAX_FIX",
+        )
+        height_presc = _validated_prepared_pft_axis(
+            prepared_context.slowproc_height,
+            context=prepared_context,
+            nvm=nvm,
+            name="SLOWPROC_HEIGHT",
+        )
         qsintcst = prepared_context.sechiba_qsint
-        pft_to_mtc = prepared_context.pft_to_mtc[:nvm]
-        hydrol_humcste = prepared_context.hydrol_humcste[:nvm]
+        pft_to_mtc = _validated_prepared_pft_axis(
+            prepared_context.pft_to_mtc,
+            context=prepared_context,
+            nvm=nvm,
+            name="PFT_TO_MTC",
+        )
+        hydrol_humcste = _validated_prepared_pft_axis(
+            prepared_context.hydrol_humcste,
+            context=prepared_context,
+            nvm=nvm,
+            name="HYDROL_HUMCSTE",
+        )
         zmaxh = prepared_context.hydrol_depth_max_h
         use_age_class = prepared_context.gluc_use_age_class
         fire_disable = prepared_context.fire_disable
@@ -5823,12 +5992,15 @@ def _paper_1961_next_step_runtime_result_compact(
             context,
             tide_height=payload.tide_height,
             biomass=biomass,
-            pft_index=13,
         )
         slowproc_derivvar, slowproc_derivvar_payload = _paper_later_day_slowproc_derivvar_payload(
             slowproc_state,
-            vcmax_fix=context.vcmax_fix[:nvm],
-            height_presc=context.slowproc_height[:nvm],
+            vcmax_fix=_validated_prepared_pft_axis(
+                context.vcmax_fix, context=context, nvm=nvm, name="VCMAX_FIX"
+            ),
+            height_presc=_validated_prepared_pft_axis(
+                context.slowproc_height, context=context, nvm=nvm, name="SLOWPROC_HEIGHT"
+            ),
             qsintcst=context.sechiba_qsint,
         )
 
@@ -5872,7 +6044,7 @@ def _paper_1961_next_step_runtime_result_compact(
         diffuco_local = run_pft14_local_enerbil_precall_from_first_step_precall(
             diffuco_precall,
             run_def_values=context.run_def_values,
-            pft_index=13,
+            pft_index=_paper_mangrove_pft_index(context.run_scalars),
             static_kwargs=(
                 context.diffuco_pft14_static_kwargs
                 if compiled_diffuco_static_kwargs is None
@@ -5893,7 +6065,9 @@ def _paper_1961_next_step_runtime_result_compact(
     if enerbil_precall.ok and not combined_missing:
         enerbil_local = run_enerbil_first_step_local_from_precall(
             enerbil_precall,
-            ok_laidev=context.ok_laidev[:nvm],
+            ok_laidev=_validated_prepared_pft_axis(
+                context.ok_laidev, context=context, nvm=nvm, name="OK_LAIDEV"
+            ),
             dt_sechiba=context.dt_sechiba,
             ok_explicitsnow=context.ok_explicitsnow,
             min_wind=context.min_wind,
@@ -5907,18 +6081,30 @@ def _paper_1961_next_step_runtime_result_compact(
     condveg_module = None
     thermosoil_module = None
     if enerbil_local is not None:
-        hydrol_humcste = context.hydrol_humcste[:nvm]
+        hydrol_humcste = _validated_prepared_pft_axis(
+            context.hydrol_humcste, context=context, nvm=nvm, name="HYDROL_HUMCSTE"
+        )
         hydrol_zz_mm = context.hydrol_zz_mm
         if hydrol_static_template is None:
             hydrol_static_template = hydrol_static_precall_template_from_slowproc(
                 slowproc_restart=SimpleNamespace(**slowproc_state),
                 pref_soil_veg=step.run_scalars.pref_soil_veg,
                 nstm=step.run_scalars.nstm,
-            ext_coeff_vegetfrac=context.ext_coeff_vegetfrac[:nvm],
+            ext_coeff_vegetfrac=_validated_prepared_pft_axis(
+                context.ext_coeff_vegetfrac,
+                context=context,
+                nvm=nvm,
+                name="EXT_COEFF_VEGETFRAC",
+            ),
             hydrol_njsc=getattr(hydrol_state, "njsc", None),
             refSOC_1d=getattr(hydrol_state, "refSOC_1d", None),
             use_refSOC_hydrol=parse_run_def_bool(context.run_def_values.get("use_refSOC_hydrol", "FALSE")),
-            throughfall_by_pft=context.hydrol_throughfall_by_pft[:nvm],
+            throughfall_by_pft=_validated_prepared_pft_axis(
+                context.hydrol_throughfall_by_pft,
+                context=context,
+                nvm=nvm,
+                name="PERCENT_THROUGHFALL_PFT",
+            ),
             humcste=hydrol_humcste,
             zz_mm=hydrol_zz_mm,
                 peat_hydro=context.hydrol_soil_peat_hydro,
@@ -5931,7 +6117,12 @@ def _paper_1961_next_step_runtime_result_compact(
             slowproc_restart=SimpleNamespace(**slowproc_state),
             pref_soil_veg=step.run_scalars.pref_soil_veg,
             nstm=step.run_scalars.nstm,
-            ext_coeff_vegetfrac=context.ext_coeff_vegetfrac[:nvm],
+            ext_coeff_vegetfrac=_validated_prepared_pft_axis(
+                context.ext_coeff_vegetfrac,
+                context=context,
+                nvm=nvm,
+                name="EXT_COEFF_VEGETFRAC",
+            ),
             precip_rain=payload.precip_rain,
             precip_snow=payload.precip_snow,
             diffuco_payload=_hydrol_current_diffuco_payload(diffuco_precall.payload, after_diffuco_payload),
@@ -5942,7 +6133,12 @@ def _paper_1961_next_step_runtime_result_compact(
                     if name in _previous_state_component_fields(previous_state, "thermosoil_previous_step_state")
                 }
             ),
-            throughfall_by_pft=context.hydrol_throughfall_by_pft[:nvm],
+            throughfall_by_pft=_validated_prepared_pft_axis(
+                context.hydrol_throughfall_by_pft,
+                context=context,
+                nvm=nvm,
+                name="PERCENT_THROUGHFALL_PFT",
+            ),
             humcste=hydrol_humcste,
             zz_mm=hydrol_zz_mm,
             diaglev_m=context.diaglev,
@@ -6068,7 +6264,9 @@ def _paper_1961_next_step_runtime_result_compact(
                     znt=context.cwrr_grid.znt,
                     dz5=context.cwrr_grid.dz5,
                     dt_sechiba=context.dt_sechiba,
-                    ok_laidev=context.ok_laidev[:nvm],
+                    ok_laidev=_validated_prepared_pft_axis(
+                        context.ok_laidev, context=context, nvm=nvm, name="OK_LAIDEV"
+                    ),
                     satsoil=context.thermosoil_satsoil,
                     ok_shum_ngrnd_permalong=_effective_thermosoil_wetdiaglong(context.run_def_values),
                     use_jit=bool(module_jit),
@@ -6403,8 +6601,15 @@ def paper_1961_driver_timestep_scaffold(
             control_salinity_min=parse_run_def_float(run_def_values, "CONTROL_SALINITY_MIN"),
         )
         nvm = int(first_step_restart_state.stomate.biomass.shape[1])
-        pft_to_mtc = parse_run_def_indexed_vector(run_def_values, "PFT_TO_MTC", nvm, dtype=int)
-        hydrol_humcste = parse_run_def_indexed_vector(run_def_values, "HYDROL_HUMCSTE", nvm)
+        fortran_pft_ids = tuple(int(value) for value in step.run_scalars.fortran_pft_ids)
+        if len(fortran_pft_ids) != nvm:
+            raise ValueError("restart state PFT axis disagrees with the selected run layout")
+        pft_to_mtc = parse_run_def_indexed_selection(
+            run_def_values, "PFT_TO_MTC", fortran_pft_ids, dtype=int
+        )
+        hydrol_humcste = parse_run_def_indexed_selection(
+            run_def_values, "HYDROL_HUMCSTE", fortran_pft_ids
+        )
         diffuco_control_assembly = assemble_pft14_control_inundation_first_step(
             depth_max_h=parse_run_def_float(run_def_values, "DEPTH_MAX_H"),
             depth_max_t=parse_run_def_float(run_def_values, "DEPTH_MAX_T"),
@@ -6421,13 +6626,15 @@ def paper_1961_driver_timestep_scaffold(
             agb_agr_ven_all_pn=parse_run_def_float(run_def_values, "AGB_AGR_VEN_ALL_PN"),
             h_agr_max_st=parse_run_def_float(run_def_values, "H_AGR_MAX_ST"),
             h_agr_max_pn=parse_run_def_float(run_def_values, "H_AGR_MAX_PN"),
-            pft_index=13,
+            pft_index=_paper_mangrove_pft_index(step.run_scalars),
         )
         slowproc_derivvar = slowproc_derivvar_explicit(
             veget=first_step_restart_state.slowproc.veget,
             lai=first_step_restart_state.slowproc.lai,
-            vcmax_fix=parse_run_def_indexed_vector(run_def_values, "VCMAX_FIX", nvm),
-            height_presc=parse_run_def_indexed_vector(run_def_values, "SLOWPROC_HEIGHT", nvm),
+            vcmax_fix=parse_run_def_indexed_selection(run_def_values, "VCMAX_FIX", fortran_pft_ids),
+            height_presc=parse_run_def_indexed_selection(
+                run_def_values, "SLOWPROC_HEIGHT", fortran_pft_ids
+            ),
             qsintcst=parse_run_def_float(run_def_values, "SECHIBA_QSINT"),
         )
         diffuco_first_step_precall = assemble_diffuco_first_step_precall_payload(
@@ -6464,7 +6671,7 @@ def paper_1961_driver_timestep_scaffold(
             diffuco_first_step_local_enerbil_precall = run_pft14_local_enerbil_precall_from_first_step_precall(
                 diffuco_first_step_precall,
                 run_def_values=run_def_values,
-                pft_index=13,
+                pft_index=_paper_mangrove_pft_index(step.run_scalars),
             )
             after_diffuco_payload = diffuco_first_step_local_enerbil_precall.result.payload.payload
         enerbil_first_step_coverage = enerbil_first_step_input_coverage(
@@ -6487,8 +6694,8 @@ def paper_1961_driver_timestep_scaffold(
         )
         if diffuco_first_step_local_enerbil_precall is not None:
             ok_laidev = [
-                parse_run_def_bool(run_def_values[f"OK_LAIDEV__{index:05d}"])
-                for index in range(1, nvm + 1)
+                parse_run_def_bool(run_def_values[f"OK_LAIDEV__{fortran_id:05d}"])
+                for fortran_id in fortran_pft_ids
             ]
             enerbil_first_step_local = run_enerbil_first_step_local_from_precall(
                 enerbil_first_step_precall,
@@ -6516,7 +6723,9 @@ def paper_1961_driver_timestep_scaffold(
                 slowproc_restart=first_step_restart_state.slowproc,
                 pref_soil_veg=step.run_scalars.pref_soil_veg,
                 nstm=nflow,
-                ext_coeff_vegetfrac=parse_run_def_indexed_vector(run_def_values, "EXT_COEFF_VEGETFRAC", nvm),
+                ext_coeff_vegetfrac=_select_run_def_pft_vector(
+                    run_def_values, "EXT_COEFF_VEGETFRAC", step.run_scalars, nvm=nvm
+                ),
                 precip_rain=payload.precip_rain,
                 precip_snow=payload.precip_snow,
                 diffuco_payload=_hydrol_current_diffuco_payload(
@@ -6524,8 +6733,12 @@ def paper_1961_driver_timestep_scaffold(
                     after_diffuco_payload,
                 ),
                 thermosoil_restart=first_step_restart_state.thermosoil,
-                throughfall_by_pft=parse_run_def_indexed_vector(run_def_values, "PERCENT_THROUGHFALL_PFT", nvm),
-                humcste=parse_run_def_indexed_vector(run_def_values, "HYDROL_HUMCSTE", nvm),
+                throughfall_by_pft=_select_run_def_pft_vector(
+                    run_def_values, "PERCENT_THROUGHFALL_PFT", step.run_scalars, nvm=nvm
+                ),
+                humcste=_select_run_def_pft_vector(
+                    run_def_values, "HYDROL_HUMCSTE", step.run_scalars, nvm=nvm
+                ),
                 zz_mm=cwrr_grid.znh * 1000.0,
                 diaglev_m=diaglev,
                 peat_hydro=PAPER_1961_HYDROL_SOIL_PEAT_HYDRO,
@@ -6545,7 +6758,9 @@ def paper_1961_driver_timestep_scaffold(
                 pb=payload.pb,
                 u=payload.u,
                 v=payload.v,
-                humcste=parse_run_def_indexed_vector(run_def_values, "HYDROL_HUMCSTE", nvm),
+                humcste=_select_run_def_pft_vector(
+                    run_def_values, "HYDROL_HUMCSTE", step.run_scalars, nvm=nvm
+                ),
                 dz_mm=cwrr_grid.dnh * 1000.0,
                 dh_mm=cwrr_grid.dlh * 1000.0,
                 zz_mm=cwrr_grid.znh * 1000.0,
@@ -6620,8 +6835,8 @@ def paper_1961_driver_timestep_scaffold(
                     dz5=cwrr_grid.dz5,
                     dt_sechiba=parse_run_def_float(run_def_values, "DT_SECHIBA"),
                     ok_laidev=[
-                        parse_run_def_bool(run_def_values[f"OK_LAIDEV__{index:05d}"])
-                        for index in range(1, nvm + 1)
+                        parse_run_def_bool(run_def_values[f"OK_LAIDEV__{fortran_id:05d}"])
+                        for fortran_id in fortran_pft_ids
                     ],
                     satsoil=parse_run_def_bool(run_def_values["satsoil"]),
                         ok_shum_ngrnd_permalong=_effective_thermosoil_wetdiaglong(run_def_values),
@@ -7144,13 +7359,20 @@ def _paper_day_post_npp_owned_daily_fields(bundles: StomateRestartInputBundles) 
     }
 
 
-def _paper_day_allocation_kwargs(*, run_def_values: dict[str, str], nvm: int) -> dict[str, object]:
+def _paper_day_allocation_kwargs(
+    *,
+    run_def_values: dict[str, str],
+    run_scalars: RunScalars,
+    nvm: int,
+) -> dict[str, object]:
     return {
         # Fortran provenance: constantes.f90::config_stomate_parameters
         # lines 1193-1231 read these keys through getin_p; stomate_alloc.f90
         # lines 775-812 consumes them in the allocation fractions.
         "f_fruit": parse_run_def_float(run_def_values, "F_FRUIT"),
-        "ecureuil": parse_run_def_indexed_vector(run_def_values, "ECUREUIL", nvm),
+        "ecureuil": _select_run_def_pft_vector(
+            run_def_values, "ECUREUIL", run_scalars, nvm=nvm
+        ),
         "alloc_sap_above_grass": parse_run_def_float(run_def_values, "ALLOC_SAP_ABOVE_GRASS"),
         "min_l_to_lsr": parse_run_def_float(run_def_values, "MIN_LTOLSR"),
         "max_l_to_lsr": parse_run_def_float(run_def_values, "MAX_LTOLSR"),
@@ -7162,6 +7384,7 @@ def _paper_day_stomate_daily_carbon_from_bundles(
     bundles: StomateRestartInputBundles | None,
     *,
     run_def_values: dict[str, str],
+    run_scalars: RunScalars,
     use_static_jit: bool = False,
     outer_compiled_static_dispatch: Mapping[str, object] | None = None,
 ) -> ExplicitDailyCarbonPrescribeConstraintsAllocKillGapTurnoverResult | None:
@@ -7170,7 +7393,11 @@ def _paper_day_stomate_daily_carbon_from_bundles(
     if bundles is None:
         return None
     nvm = int(bundles.prescribe_inputs["veget_max"].shape[1])
-    allocation_kwargs = _paper_day_allocation_kwargs(run_def_values=run_def_values, nvm=nvm)
+    allocation_kwargs = _paper_day_allocation_kwargs(
+        run_def_values=run_def_values,
+        run_scalars=run_scalars,
+        nvm=nvm,
+    )
     post_npp_inputs = {
         **bundles.post_npp_inputs,
         **_paper_day_post_npp_owned_daily_fields(bundles),
@@ -7280,7 +7507,9 @@ def _paper_day_slowproc_surface_update(
         frac_nobio=restart.slowproc.frac_nobio,
         veget_max=veget_max,
         pref_soil_veg=first.step.run_scalars.pref_soil_veg,
-        ext_coeff_vegetfrac=parse_run_def_indexed_vector(run_def_values, "EXT_COEFF_VEGETFRAC", nvm),
+        ext_coeff_vegetfrac=_select_run_def_pft_vector(
+            run_def_values, "EXT_COEFF_VEGETFRAC", first.step.run_scalars, nvm=nvm
+        ),
         nstm=first.step.run_scalars.nstm,
         ok_dgvm=parse_run_def_bool(run_def_values["STOMATE_OK_DGVM"]),
     )
@@ -7310,7 +7539,12 @@ def _paper_later_day_slowproc_surface_update(
         frac_nobio=slowproc_state["frac_nobio"],
         veget_max=veget_max,
         pref_soil_veg=step.enerbil.step.run_scalars.pref_soil_veg,
-        ext_coeff_vegetfrac=parse_run_def_indexed_vector(run_def_values, "EXT_COEFF_VEGETFRAC", nvm),
+        ext_coeff_vegetfrac=_select_run_def_pft_vector(
+            run_def_values,
+            "EXT_COEFF_VEGETFRAC",
+            step.enerbil.step.run_scalars,
+            nvm=nvm,
+        ),
         nstm=step.enerbil.step.run_scalars.nstm,
         ok_dgvm=parse_run_def_bool(run_def_values["STOMATE_OK_DGVM"]),
     )
@@ -7322,6 +7556,7 @@ def _paper_later_day_slowproc_surface_update_from_runtime(
     run_def_values: dict[str, str],
     daily_carbon: ExplicitDailyCarbonPrescribeConstraintsAllocKillGapTurnoverResult | None,
     metadata: DriverRuntimeStepMetadata,
+    run_scalars: RunScalars,
 ):
     if daily_carbon is None:
         return None
@@ -7338,7 +7573,9 @@ def _paper_later_day_slowproc_surface_update_from_runtime(
         frac_nobio=slowproc_state["frac_nobio"],
         veget_max=veget_max,
         pref_soil_veg=metadata.pref_soil_veg,
-        ext_coeff_vegetfrac=parse_run_def_indexed_vector(run_def_values, "EXT_COEFF_VEGETFRAC", nvm),
+        ext_coeff_vegetfrac=_select_run_def_pft_vector(
+            run_def_values, "EXT_COEFF_VEGETFRAC", run_scalars, nvm=nvm
+        ),
         nstm=metadata.nstm,
         ok_dgvm=parse_run_def_bool(run_def_values["STOMATE_OK_DGVM"]),
     )
@@ -8884,12 +9121,27 @@ def paper_1961_driver_day_scaffold(
                 slowproc_restart=SimpleNamespace(**previous_state.fields_by_component["slowproc_stomate_previous_step_state"]),
                 pref_soil_veg=first.step.run_scalars.pref_soil_veg,
                 nstm=first.step.run_scalars.nstm,
-                ext_coeff_vegetfrac=parse_run_def_indexed_vector(run_def_values, "EXT_COEFF_VEGETFRAC", day_nvm),
+                ext_coeff_vegetfrac=_select_run_def_pft_vector(
+                    run_def_values,
+                    "EXT_COEFF_VEGETFRAC",
+                    first.step.run_scalars,
+                    nvm=day_nvm,
+                ),
                 hydrol_njsc=getattr(first_hydrol_state, "njsc", None),
                 refSOC_1d=getattr(first_hydrol_state, "refSOC_1d", None),
                 use_refSOC_hydrol=parse_run_def_bool(run_def_values.get("use_refSOC_hydrol", "FALSE")),
-                throughfall_by_pft=parse_run_def_indexed_vector(run_def_values, "PERCENT_THROUGHFALL_PFT", day_nvm),
-                humcste=parse_run_def_indexed_vector(run_def_values, "HYDROL_HUMCSTE", day_nvm),
+                throughfall_by_pft=_select_run_def_pft_vector(
+                    run_def_values,
+                    "PERCENT_THROUGHFALL_PFT",
+                    first.step.run_scalars,
+                    nvm=day_nvm,
+                ),
+                humcste=_select_run_def_pft_vector(
+                    run_def_values,
+                    "HYDROL_HUMCSTE",
+                    first.step.run_scalars,
+                    nvm=day_nvm,
+                ),
                 zz_mm=context.cwrr_grid.znh * 1000.0,
                 peat_hydro=PAPER_1961_HYDROL_SOIL_PEAT_HYDRO,
                 ok_dgvm=parse_run_def_bool(run_def_values["STOMATE_OK_DGVM"]),
@@ -9015,6 +9267,7 @@ def paper_1961_driver_day_scaffold(
             stomate_daily_carbon = _paper_day_stomate_daily_carbon_from_bundles(
                 stomate_bundles,
                 run_def_values=run_def_values,
+                run_scalars=first.step.run_scalars,
                 use_static_jit=use_static_jit_daily_carbon,
             )
             ok_leak_boundary = first.stomate_pre_step.pre_step.boundary_inputs if first.stomate_pre_step is not None else None
@@ -9168,12 +9421,18 @@ def paper_1961_driver_later_day_scaffold(
             slowproc_restart=SimpleNamespace(**current_state.fields_by_component["slowproc_stomate_previous_step_state"]),
             pref_soil_veg=run_scalars.pref_soil_veg,
             nstm=run_scalars.nstm,
-            ext_coeff_vegetfrac=parse_run_def_indexed_vector(run_def_values, "EXT_COEFF_VEGETFRAC", day_nvm),
+            ext_coeff_vegetfrac=_select_run_def_pft_vector(
+                run_def_values, "EXT_COEFF_VEGETFRAC", run_scalars, nvm=day_nvm
+            ),
             hydrol_njsc=getattr(first_hydrol_state, "njsc", None),
             refSOC_1d=getattr(first_hydrol_state, "refSOC_1d", None),
             use_refSOC_hydrol=parse_run_def_bool(run_def_values.get("use_refSOC_hydrol", "FALSE")),
-            throughfall_by_pft=parse_run_def_indexed_vector(run_def_values, "PERCENT_THROUGHFALL_PFT", day_nvm),
-            humcste=parse_run_def_indexed_vector(run_def_values, "HYDROL_HUMCSTE", day_nvm),
+            throughfall_by_pft=_select_run_def_pft_vector(
+                run_def_values, "PERCENT_THROUGHFALL_PFT", run_scalars, nvm=day_nvm
+            ),
+            humcste=_select_run_def_pft_vector(
+                run_def_values, "HYDROL_HUMCSTE", run_scalars, nvm=day_nvm
+            ),
             zz_mm=cwrr_grid.znh * 1000.0,
             peat_hydro=PAPER_1961_HYDROL_SOIL_PEAT_HYDRO,
             ok_dgvm=parse_run_def_bool(run_def_values["STOMATE_OK_DGVM"]),
@@ -9281,6 +9540,7 @@ def paper_1961_driver_later_day_scaffold(
             stomate_daily_carbon = _paper_day_stomate_daily_carbon_from_bundles(
                 stomate_bundles,
                 run_def_values=run_def_values,
+                run_scalars=first_step_scaffold.enerbil.step.run_scalars,
             )
             pre_step_boundary = context.first_step_stomate_boundary
             if pre_step_boundary is None:
@@ -10526,6 +10786,7 @@ def paper_1961_driver_later_day_runtime_result(
     stomate_daily_carbon = _paper_day_stomate_daily_carbon_from_bundles(
         stomate_bundles,
         run_def_values=run_def_values,
+        run_scalars=context.run_scalars,
         use_static_jit=use_static_jit_daily_carbon,
         outer_compiled_static_dispatch=outer_compiled_daily_carbon_dispatch,
     )
@@ -10551,6 +10812,7 @@ def paper_1961_driver_later_day_runtime_result(
         run_def_values=run_def_values,
         daily_carbon=stomate_daily_carbon,
         metadata=first_step_metadata,
+        run_scalars=context.run_scalars,
     )
     season_memory_fields = _paper_day_season_fields_from_bundle_source(
         stomate_bundle_source,
@@ -11545,6 +11807,7 @@ def paper_1961_driver_cold_start_day_scaffold(
             stomate_daily_carbon = _paper_day_stomate_daily_carbon_from_bundles(
                 stomate_bundles,
                 run_def_values=run_def_values,
+                run_scalars=run_scalars,
             )
             ok_leak_boundary = base_boundary
             stomate_ok_leak = ExplicitOkLeakFromPostNppResult(
@@ -11565,6 +11828,7 @@ def paper_1961_driver_cold_start_day_scaffold(
             stomate_daily_carbon = _paper_day_stomate_daily_carbon_from_bundles(
                 stomate_bundles,
                 run_def_values=run_def_values,
+                run_scalars=run_scalars,
             )
             ok_leak_boundary, ok_leak_gaps = _paper_cold_start_ok_leak_boundary(
                 first_step_coverage=first,
@@ -11606,8 +11870,10 @@ def paper_1961_driver_cold_start_day_scaffold(
                 lai=lai,
                 frac_nobio=slowproc_state["frac_nobio"],
                 veget_max=veget_max,
-                pref_soil_veg=read_run_scalars(config_path, run_def_path=run_def_path).pref_soil_veg,
-                ext_coeff_vegetfrac=parse_run_def_indexed_vector(run_def_values, "EXT_COEFF_VEGETFRAC", nvm),
+                pref_soil_veg=run_scalars.pref_soil_veg,
+                ext_coeff_vegetfrac=_select_run_def_pft_vector(
+                    run_def_values, "EXT_COEFF_VEGETFRAC", run_scalars, nvm=nvm
+                ),
                 nstm=context.nflow,
                 ok_dgvm=parse_run_def_bool(run_def_values["STOMATE_OK_DGVM"]),
             )

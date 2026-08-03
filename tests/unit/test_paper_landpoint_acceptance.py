@@ -12,6 +12,7 @@ from jax_orchidee.runners.multiyear import (
     PRODUCTION_COMPILED_SECHIBA_DAY_DEFAULT,
     PRODUCTION_NUMPY_ACCUMULATOR_DEFAULT,
     _latest_year_checkpoint,
+    _paper_reference_pft_index,
 )
 from scripts.dev.aggregate_paper_landpoint_acceptance import aggregate_summaries
 
@@ -117,6 +118,10 @@ def test_production_defaults_enable_compiled_day_and_reject_numpy_accumulator(tm
     assert compiled_options["--numpy-accumulator"] == "off"
     assert strict_options["--compiled-sechiba-day"] == "off"
     assert strict_options["--numpy-accumulator"] == "off"
+
+
+def test_archived_fortran_history_pft_slot_resolves_from_named_stable_layout():
+    assert _paper_reference_pft_index("configs/orchidee_man_250919.yaml") == 13
 
 
 def test_cached_acceptance_requires_identical_run_protocol():

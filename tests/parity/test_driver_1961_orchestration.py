@@ -53,7 +53,7 @@ from jax_orchidee.driver.orchestration import (  # noqa: E402
     rebase_driver_state_for_year_start,
 )
 from jax_orchidee.driver.bundle import load_paper_1961_step_bundle  # noqa: E402
-from jax_orchidee.driver.init import parse_run_def_float, parse_run_def_indexed_vector  # noqa: E402
+from jax_orchidee.driver.init import parse_run_def_float, parse_run_def_indexed_selection  # noqa: E402
 from jax_orchidee.driver.fast_state import (  # noqa: E402
     fast_state_from_previous_packet,
     previous_packet_from_fast_state,
@@ -1156,10 +1156,13 @@ def test_static_jit_daily_carbon_matches_explicit_paper_case_bundles():
     )
     bundles = day.stomate_restart_input_bundles
     assert bundles is not None
-    nvm = int(np.asarray(bundles.prescribe_inputs["veget_max"]).shape[1])
     allocation_kwargs = {
         "f_fruit": parse_run_def_float(context.run_def_values, "F_FRUIT"),
-        "ecureuil": parse_run_def_indexed_vector(context.run_def_values, "ECUREUIL", nvm),
+        "ecureuil": parse_run_def_indexed_selection(
+            context.run_def_values,
+            "ECUREUIL",
+            tuple(int(value) for value in context.run_scalars.fortran_pft_ids),
+        ),
         "alloc_sap_above_grass": parse_run_def_float(context.run_def_values, "ALLOC_SAP_ABOVE_GRASS"),
         "min_l_to_lsr": parse_run_def_float(context.run_def_values, "MIN_LTOLSR"),
         "max_l_to_lsr": parse_run_def_float(context.run_def_values, "MAX_LTOLSR"),
@@ -1168,6 +1171,7 @@ def test_static_jit_daily_carbon_matches_explicit_paper_case_bundles():
     explicit = _paper_day_stomate_daily_carbon_from_bundles(
         bundles,
         run_def_values=context.run_def_values,
+        run_scalars=context.run_scalars,
     )
     compiled = stomate_daily_prescribe_constraints_alloc_kill_gap_turnover_static_jit(
         prescribe_inputs=bundles.prescribe_inputs,
