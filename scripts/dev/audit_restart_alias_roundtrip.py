@@ -196,7 +196,10 @@ def _run_production_roundtrip() -> dict[str, Any]:
 
     with tempfile.TemporaryDirectory(prefix="orchjax_restart_alias_") as temporary:
         report = write_paper_restart_start_bundle(
-            Path(temporary) / "next_year", state=state, physical_state=physical
+            Path(temporary) / "next_year",
+            state=state,
+            physical_state=physical,
+            pft_layout=original.pft_layout,
         )
         restored = reference_case_first_step_restart_state(
             CONFIG,

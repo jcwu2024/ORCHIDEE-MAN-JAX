@@ -1707,7 +1707,12 @@ def _require_first_step_diffuco_restart_shapes(fields: Mapping[str, np.ndarray])
         raise ValueError("soilalbedo_bg must have shape (npts, 2)")
 
 
-def read_diffuco_first_step_restart_state(path: str | Path) -> DiffucoFirstStepRestartState:
+def read_diffuco_first_step_restart_state(
+    path: str | Path,
+    *,
+    source_pft_layout=None,
+    target_pft_layout=None,
+) -> DiffucoFirstStepRestartState:
     """Read exact SECHIBA restart fields used before first-step DIFFUCO.
 
     Fortran provenance follows the initialization reads that populate the
@@ -1716,7 +1721,12 @@ def read_diffuco_first_step_restart_state(path: str | Path) -> DiffucoFirstStepR
     does not apply cold-start ``setvar_p`` fallbacks.
     """
 
-    fields = read_restart_fields(path, DIFFUCO_FIRST_STEP_PRECALL_RESTART_FIELDS)
+    fields = read_restart_fields(
+        path,
+        DIFFUCO_FIRST_STEP_PRECALL_RESTART_FIELDS,
+        source_pft_layout=source_pft_layout,
+        target_pft_layout=target_pft_layout,
+    )
     _require_first_step_diffuco_restart_shapes(fields)
     return DiffucoFirstStepRestartState(
         path=Path(path),

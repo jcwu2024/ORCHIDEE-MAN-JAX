@@ -8,6 +8,7 @@ from typing import Mapping
 
 import numpy as np
 
+from jax_orchidee.parameters.pft_catalog import PFTRunLayout
 from jax_orchidee.stomate.reference import (
     StomateDailyAccumulatorState,
     StomateRestartEntryState,
@@ -114,6 +115,7 @@ def write_stomate_restart_from_day_end_packet(
     *,
     base_states: StomateReadstartStates,
     physical_state: StomateRestartPhysicalState,
+    pft_layout: PFTRunLayout,
     schema_path: str | Path = DEFAULT_STOMATE_RESTART_SCHEMA,
 ) -> tuple[StomateRestartWriteReport, StomateRestartPacketMergeReport]:
     """Merge a production day-end packet and write a standalone restart.
@@ -129,6 +131,8 @@ def write_stomate_restart_from_day_end_packet(
 
     if not isinstance(base_states, StomateReadstartStates):
         raise TypeError("base_states must be StomateReadstartStates")
+    if not isinstance(pft_layout, PFTRunLayout):
+        raise TypeError("pft_layout must be a PFTRunLayout")
     entry, season, daily, merge_report = stomate_restart_states_from_day_end_packet(
         packet,
         base_entry=base_states.entry_state,
@@ -144,5 +148,6 @@ def write_stomate_restart_from_day_end_packet(
         gas_state=base_states.gas_state,
         remainder_state=base_states.remainder_state,
         schema_path=schema_path,
+        pft_layout=pft_layout,
     )
     return write_report, merge_report

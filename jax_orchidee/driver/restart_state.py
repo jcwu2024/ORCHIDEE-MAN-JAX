@@ -7,30 +7,36 @@ from pathlib import Path
 
 from netCDF4 import Dataset
 
+from jax_orchidee.driver.domain import load_case_config
+from jax_orchidee.driver.init import read_run_scalars
 from jax_orchidee.driver.restart import SechibaStaticRestart, read_sechiba_static_restart, reference_restart_path
+from jax_orchidee.parameters.pft_catalog import (
+    PFTRunLayout,
+    load_pft_catalog,
+    read_pft_layout_from_netcdf,
+)
+from jax_orchidee.sechiba.diffuco import DiffucoFirstStepRestartState, read_diffuco_first_step_restart_state
 from jax_orchidee.sechiba.enerbil import (
     DriverAlbedoRestart,
     EnerbilSoilThermalStateRestart,
     read_driver_albedo_restart,
     read_enerbil_soil_thermal_state_restart,
 )
-from jax_orchidee.sechiba.diffuco import DiffucoFirstStepRestartState, read_diffuco_first_step_restart_state
 from jax_orchidee.sechiba.hydrol_reference import HydrolRestartAnchors, read_hydrol_restart_anchors
+from jax_orchidee.sechiba.restart_io import SechibaRestartState, read_sechiba_restart_state
 from jax_orchidee.sechiba.slowproc import SlowprocRestartEntryState, read_slowproc_restart_entry_state
 from jax_orchidee.sechiba.thermosoil import ThermosoilRestartState, read_thermosoil_restart_state
-from jax_orchidee.sechiba.restart_io import SechibaRestartState, read_sechiba_restart_state
 from jax_orchidee.stomate.reference import (
     StomateRestartEntryState,
     find_stomate_reference_files,
-    read_stomate_restart_entry_state,
     read_stomate_daily_accumulator_state,
+    read_stomate_restart_entry_state,
     read_stomate_restart_season_state,
 )
 from jax_orchidee.stomate.restart_io import (
     StomateReadstartStates,
     read_stomate_readstart_states_from_template,
 )
-
 
 FIRST_STEP_RESTART_STATE_PROVENANCE = (
     "fortran_run_scripts/paper_250919/Job0_bio lines 277-322",
@@ -64,6 +70,9 @@ class ReferenceCaseFirstStepRestartState:
     stomate: StomateRestartEntryState
     stomate_readstart: StomateReadstartStates
     sechiba_restart_state: SechibaRestartState
+    pft_layout: PFTRunLayout
+    stomate_source_pft_layout: PFTRunLayout
+    sechiba_source_pft_layout: PFTRunLayout
     provenance: tuple[str, ...] = FIRST_STEP_RESTART_STATE_PROVENANCE
 
 
@@ -72,6 +81,7 @@ def reference_case_first_step_restart_state(
     *,
     root: str | Path | None = None,
     run_dir: str | Path | None = None,
+    run_def_path: str | Path | None = None,
     stomate_filename: str = "stomate_start.nc",
 ) -> ReferenceCaseFirstStepRestartState:
     """Read exact first-step restart state from the local paper reference.
@@ -102,9 +112,36 @@ def reference_case_first_step_restart_state(
     if not stomate_input.exists():
         raise FileNotFoundError(stomate_input)
 
-    stomate = read_stomate_restart_entry_state(stomate_input)
-    stomate_daily = read_stomate_daily_accumulator_state(stomate_input)
-    stomate_season = read_stomate_restart_season_state(stomate_input)
+    config = load_case_config(config_path)
+    catalog = load_pft_catalog(config["pft_catalog"]["path"])
+    target_pft_layout = read_run_scalars(config_path, run_def_path).pft_layout
+    legacy_layout_id = "paper_250919_legacy14"
+    stomate_source_pft_layout = read_pft_layout_from_netcdf(
+        stomate_input,
+        catalog,
+        legacy_layout_id=legacy_layout_id,
+    )
+    sechiba_source_pft_layout = read_pft_layout_from_netcdf(
+        sechiba_start,
+        catalog,
+        legacy_layout_id=legacy_layout_id,
+    )
+
+    stomate = read_stomate_restart_entry_state(
+        stomate_input,
+        source_pft_layout=stomate_source_pft_layout,
+        target_pft_layout=target_pft_layout,
+    )
+    stomate_daily = read_stomate_daily_accumulator_state(
+        stomate_input,
+        source_pft_layout=stomate_source_pft_layout,
+        target_pft_layout=target_pft_layout,
+    )
+    stomate_season = read_stomate_restart_season_state(
+        stomate_input,
+        source_pft_layout=stomate_source_pft_layout,
+        target_pft_layout=target_pft_layout,
+    )
     with Dataset(stomate_input) as dataset:
         nvert = int(dataset.variables["uo_0"].shape[1])
         months_num = int(dataset.variables["fwet_series"].shape[1])
@@ -113,7 +150,7 @@ def reference_case_first_step_restart_state(
     readstart = read_stomate_readstart_states_from_template(
         stomate_input,
         t2m=stomate_daily.t2m_daily,
-        nvm=stomate.age.shape[1],
+        nvm=stomate_source_pft_layout.n_pft,
         nslm=stomate_season.tsoil_month.shape[1],
         ndeep=stomate.carbon_32l.shape[3],
         nsnow=nsnow,
@@ -122,6 +159,8 @@ def reference_case_first_step_restart_state(
         ncarb=stomate.carbon.shape[1],
         nlitt=stomate.litter.shape[1],
         nbpools=nbpools,
+        source_pft_layout=stomate_source_pft_layout,
+        target_pft_layout=target_pft_layout,
     )
 
     return ReferenceCaseFirstStepRestartState(
@@ -130,13 +169,44 @@ def reference_case_first_step_restart_state(
         sechiba_start=sechiba_start,
         stomate_input=stomate_input,
         driver_albedo=read_driver_albedo_restart(driver_start),
-        sechiba_static=read_sechiba_static_restart(sechiba_start),
-        diffuco_precall=read_diffuco_first_step_restart_state(sechiba_start),
-        hydrol=read_hydrol_restart_anchors(sechiba_start),
-        enerbil_thermal=read_enerbil_soil_thermal_state_restart(sechiba_start),
-        thermosoil=read_thermosoil_restart_state(sechiba_start),
-        slowproc=read_slowproc_restart_entry_state(sechiba_start),
+        sechiba_static=read_sechiba_static_restart(
+            sechiba_start,
+            source_pft_layout=sechiba_source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        ),
+        diffuco_precall=read_diffuco_first_step_restart_state(
+            sechiba_start,
+            source_pft_layout=sechiba_source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        ),
+        hydrol=read_hydrol_restart_anchors(
+            sechiba_start,
+            source_pft_layout=sechiba_source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        ),
+        enerbil_thermal=read_enerbil_soil_thermal_state_restart(
+            sechiba_start,
+            source_pft_layout=sechiba_source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        ),
+        thermosoil=read_thermosoil_restart_state(
+            sechiba_start,
+            source_pft_layout=sechiba_source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        ),
+        slowproc=read_slowproc_restart_entry_state(
+            sechiba_start,
+            source_pft_layout=sechiba_source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        ),
         stomate=stomate,
         stomate_readstart=readstart,
-        sechiba_restart_state=read_sechiba_restart_state(sechiba_start),
+        sechiba_restart_state=read_sechiba_restart_state(
+            sechiba_start,
+            source_pft_layout=sechiba_source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        ),
+        pft_layout=target_pft_layout,
+        stomate_source_pft_layout=stomate_source_pft_layout,
+        sechiba_source_pft_layout=sechiba_source_pft_layout,
     )

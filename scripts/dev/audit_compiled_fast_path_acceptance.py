@@ -356,7 +356,12 @@ def _split_restart_packet(reference: PaperLandpointReference, state: Any, output
         sechiba=read_restart_physical_state(reference.output_dir / "sechiba_start.nc"),
         stomate=read_restart_physical_state(reference.output_dir / "stomate_start.nc"),
     )
-    report = write_paper_restart_start_bundle(output, state=bundle, physical_state=physical)
+    report = write_paper_restart_start_bundle(
+        output,
+        state=bundle,
+        physical_state=physical,
+        pft_layout=context.first_step_restart_state.pft_layout,
+    )
     shutil.copyfile(output / "stomate_start.nc", output / "stomate_restart.nc")
     histories = sorted(reference.output_dir.glob("stomate_history_*.nc"))
     if histories:

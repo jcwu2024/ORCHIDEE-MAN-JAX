@@ -12,6 +12,8 @@ from jax_orchidee.driver.bundle import DriverFirstStepBundle, DriverStepBundle
 from jax_orchidee.driver.init import parse_run_def, parse_run_def_bool, parse_run_def_float, parse_run_def_int
 from jax_orchidee.driver.restart import reference_case_output_dir
 from jax_orchidee.driver.sechiba_boundary import IntersurfFirstStepPayload, build_intersurf_first_step_payload
+from jax_orchidee.parameters.pft_catalog import load_pft_catalog, read_pft_layout_from_netcdf
+from jax_orchidee.driver.domain import load_case_config
 from jax_orchidee.sechiba.diffuco import cwrr_diaglev_from_vertical_soil_params, cwrr_vertical_soil_grid_from_params
 from jax_orchidee.stomate.reference import (
     StomateReferenceFiles,
@@ -134,7 +136,17 @@ def paper_1961_first_step_stomate_boundary(
         if run_dir is not None
         else find_stomate_reference_files(Path(root) if root is not None else Path(config_path).resolve().parents[1])
     )
-    state = read_stomate_restart_entry_state(stomate_files.restart)
+    catalog = load_pft_catalog(load_case_config(config_path)["pft_catalog"]["path"])
+    source_pft_layout = read_pft_layout_from_netcdf(
+        stomate_files.restart,
+        catalog,
+        legacy_layout_id="paper_250919_legacy14",
+    )
+    state = read_stomate_restart_entry_state(
+        stomate_files.restart,
+        source_pft_layout=source_pft_layout,
+        target_pft_layout=bundle.run_scalars.pft_layout,
+    )
     nflow = parse_run_def_int(values, "NSTM")
     river_routing = parse_run_def_bool(values["RIVER_ROUTING"])
 

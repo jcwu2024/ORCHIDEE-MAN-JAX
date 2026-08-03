@@ -219,6 +219,13 @@ def test_day_end_packet_exports_directly_to_standalone_restart(tmp_path: Path) -
         packet,
         base_states=base,
         physical_state=_physical(template),
+        pft_layout=build_pft_run_layout(
+            load_pft_catalog(
+                ROOT / "configs" / "pft_catalogs" / "orchidee_man_paper_250919.json"
+            ),
+            layout_id="paper_250919_legacy14",
+            fractions=[0.0] * 13 + [1.0],
+        ),
     )
     restored = _states(output)
 

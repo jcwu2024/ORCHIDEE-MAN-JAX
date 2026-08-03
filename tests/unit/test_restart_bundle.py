@@ -74,7 +74,10 @@ def test_three_file_bundle_is_directly_readable_as_next_year_start(
     )
 
     report = write_paper_restart_start_bundle(
-        tmp_path / "next_year", state=bundle_state, physical_state=physical
+        tmp_path / "next_year",
+        state=bundle_state,
+        physical_state=physical,
+        pft_layout=original.pft_layout,
     )
     restored = reference_case_first_step_restart_state(
         CONFIG,
@@ -87,6 +90,8 @@ def test_three_file_bundle_is_directly_readable_as_next_year_start(
     assert len(report.driver.written_fields) == 13
     assert len(report.sechiba.written_fields) == 93
     assert len(report.stomate.written_fields) == 161
+    assert restored.sechiba_source_pft_layout.pft_ids == original.pft_layout.pft_ids
+    assert restored.stomate_source_pft_layout.pft_ids == original.pft_layout.pft_ids
     for name, expected in original.sechiba_restart_state.fields.items():
         np.testing.assert_array_equal(restored.sechiba_restart_state.fields[name], expected)
     np.testing.assert_array_equal(restored.stomate.age, original.stomate.age)
@@ -97,7 +102,10 @@ def test_three_file_bundle_is_directly_readable_as_next_year_start(
 
     with pytest.raises(FileExistsError):
         write_paper_restart_start_bundle(
-            report.output_directory, state=bundle_state, physical_state=physical
+            report.output_directory,
+            state=bundle_state,
+            physical_state=physical,
+            pft_layout=original.pft_layout,
         )
 
 

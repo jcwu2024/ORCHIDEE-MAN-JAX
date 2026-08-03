@@ -35,6 +35,7 @@ from jax_orchidee.driver.trace import (
     apply_fixed_format_grid_trace_to_domain,
     read_static_fields_from_fixed_format_trace_dir,
 )
+from jax_orchidee.parameters.pft_catalog import load_pft_catalog, read_pft_layout_from_netcdf
 
 
 MISSING_GEOMETRY_FIELDS = (
@@ -326,14 +327,24 @@ def load_paper_1961_first_step_bundle(
     ccanopy = ccanopy_from_co2(co2_ppm, domain.nbindex)
     water_table = read_water_table_sequences(config_path)
 
-    try:
-        sechiba_start = (
-            Path(reference_run_dir) / "sechiba_start.nc"
-            if reference_run_dir is not None
-            else reference_restart_path(config_path, "sechiba_start.nc")
+    sechiba_start = (
+        Path(reference_run_dir) / "sechiba_start.nc"
+        if reference_run_dir is not None
+        else reference_restart_path(config_path, "sechiba_start.nc")
+    )
+    if sechiba_start.exists():
+        catalog = load_pft_catalog(load_case_config(config_path)["pft_catalog"]["path"])
+        source_pft_layout = read_pft_layout_from_netcdf(
+            sechiba_start,
+            catalog,
+            legacy_layout_id="paper_250919_legacy14",
         )
-        restart_anchors = read_sechiba_static_restart(sechiba_start)
-    except FileNotFoundError:
+        restart_anchors = read_sechiba_static_restart(
+            sechiba_start,
+            source_pft_layout=source_pft_layout,
+            target_pft_layout=run_scalars.pft_layout,
+        )
+    else:
         restart_anchors = None
 
     if fixed_format_trace_dir is not None and static_trace_fields is not None:

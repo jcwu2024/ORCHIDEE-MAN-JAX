@@ -252,8 +252,6 @@ from jax_orchidee.stomate.reference import (
     stomate_cold_start_daily_accumulator_state,
     stomate_cold_start_entry_state,
     stomate_cold_start_season_state,
-    read_stomate_daily_accumulator_state,
-    read_stomate_restart_season_state,
 )
 from jax_orchidee.stomate.restart_io import (
     STOMATE_FIXED_PATH_CARRY_FIELDS,
@@ -514,6 +512,7 @@ def _prepare_paper_1961_driver_context_cached(
         config_path,
         root=Path(config_path).resolve().parents[1],
         run_dir=reference_run_dir,
+        run_def_path=run_def_path,
     )
     first_step_stomate_boundary = paper_1961_first_step_stomate_boundary(
         config_path,
@@ -1117,8 +1116,8 @@ def _paper_first_step_stomate_restart_input_bundles(
     if not do_slow:
         raise ValueError("STOMATE main-chain bundles are only valid at a do_slow boundary")
 
-    season_state = read_stomate_restart_season_state(restart_state.stomate_input)
-    daily_state = read_stomate_daily_accumulator_state(restart_state.stomate_input)
+    season_state = restart_state.stomate_readstart.season_state
+    daily_state = restart_state.stomate_readstart.daily_state
     source_daily_state = (
         SimpleNamespace(**{**daily_state._asdict(), **daily_fields})
         if daily_fields is not None
@@ -1448,7 +1447,7 @@ def _paper_later_day_stomate_input_bundles(
         return None, None, gaps
     slowproc_state = previous_state.fields_by_component["slowproc_stomate_previous_step_state"]
     season_template = (
-        read_stomate_restart_season_state(restart_state.stomate_input)
+        restart_state.stomate_readstart.season_state
         if stomate_season_template is None
         else stomate_season_template
     )
@@ -3114,7 +3113,7 @@ def driver_previous_step_state_from_timestep_scaffold(
         if daily is not None and daily.ok:
             fields["slowproc_stomate_previous_step_state"]["daily_accumulators"] = daily.fields
         if scaffold.first_step_restart_state.stomate_input is not None:
-            season = read_stomate_restart_season_state(scaffold.first_step_restart_state.stomate_input)
+            season = scaffold.first_step_restart_state.stomate_readstart.season_state
             fields["slowproc_stomate_previous_step_state"]["t2m_longterm"] = season.t2m_longterm
         readstart = scaffold.first_step_restart_state.stomate_readstart
         fields["slowproc_stomate_previous_step_state"].update(
@@ -6362,6 +6361,7 @@ def paper_1961_driver_timestep_scaffold(
             config_path,
             root=root,
             run_dir=context.reference_run_dir,
+            run_def_path=run_def_path,
         )
         payload = build_intersurf_first_step_payload(
             step,
@@ -6687,7 +6687,7 @@ def paper_1961_driver_timestep_scaffold(
             used_run_def_path=run_def_path,
             root=root,
         )
-        daily_accumulators = read_stomate_daily_accumulator_state(first_step_restart_state.stomate_input)
+        daily_accumulators = first_step_restart_state.stomate_readstart.daily_state
         stomate_first_step_daily_accumulation = stomate_first_step_daily_accumulation_from_entry(
             entry_payload=stomate_entry_assembly.payload,
             accumulator_state=daily_accumulators,
@@ -6905,8 +6905,8 @@ def _paper_day_daily_process_from_completed_entries(
         tstep=tstep,
         run_def_values=run_def_values,
     )
-    daily_state = read_stomate_daily_accumulator_state(restart_state.stomate_input)
-    season_state = read_stomate_restart_season_state(restart_state.stomate_input)
+    daily_state = restart_state.stomate_readstart.daily_state
+    season_state = restart_state.stomate_readstart.season_state
     values = parse_run_def(run_def_path) if run_def_values is None else run_def_values
     flags = tuple(_paper_first_step_do_slow(index, runtime) for index in range(steps_per_stomate))
     folded = stomate_daily_process_fold_from_entries(
@@ -9052,7 +9052,7 @@ def paper_1961_driver_day_scaffold(
                 )
                 season_memory_fields = _paper_day_season_fields_from_bundle_source(
                     stomate_bundle_source,
-                    season_state=read_stomate_restart_season_state(first.first_step_restart_state.stomate_input),
+                    season_state=first.first_step_restart_state.stomate_readstart.season_state,
                     prior_fields=previous_state.fields_by_component["slowproc_stomate_previous_step_state"],
                     dt_days=runtime.dt_days,
                     tsurf_daily=daily_fold.daily_fields["tsurf_daily"],
@@ -9264,6 +9264,7 @@ def paper_1961_driver_later_day_scaffold(
             config_path,
             root=Path(config_path).resolve().parents[1],
             run_dir=context.reference_run_dir,
+            run_def_path=run_def_path,
         )
         stomate_bundle_source, stomate_bundles, stomate_bundle_gaps = _paper_later_day_stomate_input_bundles(
             config_path=config_path,
@@ -10368,6 +10369,7 @@ def paper_1961_driver_later_day_runtime_result(
         config_path,
         root=Path(config_path).resolve().parents[1],
         run_dir=context.reference_run_dir,
+        run_def_path=run_def_path,
     )
     entry_state, entry_state_gaps = _paper_later_day_stomate_entry_state_from_previous(
         template=(
@@ -10652,9 +10654,9 @@ def _paper_compiled_later_day_block_executable(
     block_size = int(np.asarray(block_day_numbers).shape[0])
     mineral_imin = int(prebound_hydrol_runtime_static_tables.mineral.imin)
     mineral_imax = int(prebound_hydrol_runtime_static_tables.mineral.imax)
-    stomate_season_provenance = read_stomate_restart_season_state(
-        context.first_step_restart_state.stomate_input
-    ).provenance
+    stomate_season_provenance = (
+        context.first_step_restart_state.stomate_readstart.season_state.provenance
+    )
     cache_key = (
         str(context.config_path.resolve()),
         block_size,
@@ -10783,9 +10785,7 @@ def _paper_compiled_later_day_block_executable(
         context.first_step_restart_state.stomate,
         {
             name: value
-            for name, value in read_stomate_restart_season_state(
-                context.first_step_restart_state.stomate_input
-            )._asdict().items()
+            for name, value in context.first_step_restart_state.stomate_readstart.season_state._asdict().items()
             if name != "provenance"
         },
         _compiled_diffuco_parameter_values(context),
@@ -10836,9 +10836,7 @@ def _paper_run_compiled_later_day_blocks(
     stomate_restart_template = context.first_step_restart_state.stomate
     stomate_season_values = {
         name: value
-        for name, value in read_stomate_restart_season_state(
-            context.first_step_restart_state.stomate_input
-        )._asdict().items()
+        for name, value in context.first_step_restart_state.stomate_readstart.season_state._asdict().items()
         if name != "provenance"
     }
     diffuco_parameter_values = _compiled_diffuco_parameter_values(context)

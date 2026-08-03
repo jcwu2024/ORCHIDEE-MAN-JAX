@@ -19,6 +19,7 @@ import numpy as np
 from netCDF4 import Dataset
 
 from jax_orchidee.driver.reference_layout import LEGACY_LANDPOINT_ID, resolve_paper_landpoint_reference
+from jax_orchidee.parameters.pft_catalog import PFTRunLayout, remap_pft_axis
 from jax_orchidee.stomate.carbon_kernels import (
     ICARBON,
     IAGRSAPPN,
@@ -473,6 +474,94 @@ class StomateRestartSeasonState(NamedTuple):
         "fortran_source/ORCHIDEE/src_stomate/stomate_io.f90::readstart lines 647-670 reads Tseason and Tmin_spring_time",
         "fortran_source/ORCHIDEE/src_stomate/stomate_io.f90::writerestart lines 2419-2567 writes the same season state variables",
         "fortran_source/ORCHIDEE/src_stomate/stomate_season.f90::season uses these fields before phenology/allocation/turnover",
+    )
+
+
+STOMATE_ENTRY_PFT_AXES = {
+    **{
+        name: 1
+        for name in (
+            "biomass", "resp_maint_part", "gpp_daily", "npp_daily",
+            "turnover_daily", "resp_maint", "resp_growth", "leaf_age",
+            "leaf_frac", "age", "sla_calc", "pft_present", "ind",
+            "adapted", "regenerate", "npp_longterm", "lm_lastyearmax",
+            "turnover_time", "turnover_longterm", "senescence",
+            "when_growthinit", "co2_to_bm", "veget_lastlight", "everywhere",
+            "need_adjacent", "litterpart", "dead_leaves", "lignin_struc",
+            "fuel_1hr", "fuel_10hr", "fuel_100hr", "fuel_1000hr",
+            "bm_to_litter", "rip_time", "assim_param", "altmax",
+            "fixed_cryoturbation_depth", "DOC", "interception_storage",
+            "lignin_struc_above", "lignin_struc_below",
+        )
+    },
+    **{
+        name: 2
+        for name in (
+            "carbon", "litter", "litter_above", "litter_below",
+            "carbon_32l", "deepC_a", "deepC_s", "deepC_p", "soilc_total",
+        )
+    },
+}
+STOMATE_SEASON_PFT_AXES = {
+    name: 1
+    for name in (
+        "moiavail_month", "moiavail_week", "gdd_m5_dormance",
+        "gdd_from_growthinit", "gdd_midwinter", "ncd_dormance",
+        "ngd_minus5", "time_hum_min", "hum_min_dormance",
+        "tmin_spring_time", "begin_leaves", "onset_date", "gpp_week",
+        "maxmoiavail_lastyear", "maxmoiavail_thisyear",
+        "minmoiavail_lastyear", "minmoiavail_thisyear",
+        "maxgppweek_lastyear", "maxgppweek_thisyear", "maxfpc_lastyear",
+        "maxfpc_thisyear", "lm_thisyearmax",
+    )
+}
+STOMATE_DAILY_PFT_AXES = {"humrel_daily": 1, "gpp_daily": 1}
+STOMATE_GAS_PFT_AXES = {
+    "O2_soil": 2,
+    "CH4_soil": 2,
+    "O2_snow": 2,
+    "CH4_snow": 2,
+}
+
+
+def remap_stomate_state_by_pft_id(
+    state,
+    *,
+    pft_axes: Mapping[str, int],
+    source_pft_layout: PFTRunLayout,
+    target_pft_layout: PFTRunLayout,
+):
+    """Remap one normalized STOMATE state tuple by declared PFT axes."""
+
+    values = state._asdict()
+    for field, axis in pft_axes.items():
+        if values[field] is None:
+            continue
+        values[field] = remap_pft_axis(
+            values[field],
+            source=source_pft_layout,
+            target=target_pft_layout,
+            axis=axis,
+        )
+    return type(state)(**values)
+
+
+def _maybe_remap_stomate_state(
+    state,
+    *,
+    pft_axes: Mapping[str, int],
+    source_pft_layout: PFTRunLayout | None,
+    target_pft_layout: PFTRunLayout | None,
+):
+    if (source_pft_layout is None) != (target_pft_layout is None):
+        raise ValueError("source and target PFT layouts must be provided together")
+    if source_pft_layout is None or target_pft_layout is None:
+        return state
+    return remap_stomate_state_by_pft_id(
+        state,
+        pft_axes=pft_axes,
+        source_pft_layout=source_pft_layout,
+        target_pft_layout=target_pft_layout,
     )
 
 
@@ -1399,7 +1488,12 @@ def read_restart_deep_carbon_total(path: str | Path) -> np.ndarray:
     return pools[0] + pools[1] + pools[2]
 
 
-def read_stomate_ok_pc_restart_gas_state(path: str | Path) -> StomateOkPcRestartGasState:
+def read_stomate_ok_pc_restart_gas_state(
+    path: str | Path,
+    *,
+    source_pft_layout: PFTRunLayout | None = None,
+    target_pft_layout: PFTRunLayout | None = None,
+) -> StomateOkPcRestartGasState:
     """Read OK_PC soil/snow gas restart state without inferring SAVE fields.
 
     Fortran provenance: ``src_stomate/stomate_io.f90::readstart`` lines
@@ -1411,15 +1505,26 @@ def read_stomate_ok_pc_restart_gas_state(path: str | Path) -> StomateOkPcRestart
     concentrations.
     """
 
-    return StomateOkPcRestartGasState(
+    state = StomateOkPcRestartGasState(
         O2_soil=read_restart_pft_vertical_field(path, "O2_soil"),
         CH4_soil=read_restart_pft_vertical_field(path, "CH4_soil"),
         O2_snow=read_restart_pft_vertical_field(path, "O2_snow"),
         CH4_snow=read_restart_pft_vertical_field(path, "CH4_snow"),
     )
+    return _maybe_remap_stomate_state(
+        state,
+        pft_axes=STOMATE_GAS_PFT_AXES,
+        source_pft_layout=source_pft_layout,
+        target_pft_layout=target_pft_layout,
+    )
 
 
-def read_stomate_restart_entry_state(path: str | Path) -> StomateRestartEntryState:
+def read_stomate_restart_entry_state(
+    path: str | Path,
+    *,
+    source_pft_layout: PFTRunLayout | None = None,
+    target_pft_layout: PFTRunLayout | None = None,
+) -> StomateRestartEntryState:
     """Read restart fields needed at the ``slowproc_main -> stomate_main`` edge.
 
     This is a restart/state boundary reader, not a process implementation.
@@ -1439,7 +1544,7 @@ def read_stomate_restart_entry_state(path: str | Path) -> StomateRestartEntrySta
     deepC_s = read_restart_deep_carbon_pool(path, "deepC_s")
     deepC_p = read_restart_deep_carbon_pool(path, "deepC_p")
 
-    return StomateRestartEntryState(
+    state = StomateRestartEntryState(
         biomass=read_restart_biomass_carbon(path),
         resp_maint_part=read_restart_maint_resp_part(path),
         gpp_daily=read_restart_pft_field(path, "gpp_daily"),
@@ -1501,9 +1606,20 @@ def read_stomate_restart_entry_state(path: str | Path) -> StomateRestartEntrySta
         thawed_humidity=read_restart_grid_field(path, "thawed_humidity"),
         depth_organic_soil=read_restart_grid_field(path, "depth_organic_soil"),
     )
+    return _maybe_remap_stomate_state(
+        state,
+        pft_axes=STOMATE_ENTRY_PFT_AXES,
+        source_pft_layout=source_pft_layout,
+        target_pft_layout=target_pft_layout,
+    )
 
 
-def read_stomate_restart_season_state(path: str | Path) -> StomateRestartSeasonState:
+def read_stomate_restart_season_state(
+    path: str | Path,
+    *,
+    source_pft_layout: PFTRunLayout | None = None,
+    target_pft_layout: PFTRunLayout | None = None,
+) -> StomateRestartSeasonState:
     """Read restart-backed season memory used before STOMATE carbon processes.
 
     This is a restart/state boundary reader. It exposes variables that
@@ -1512,7 +1628,7 @@ def read_stomate_restart_season_state(path: str | Path) -> StomateRestartSeasonS
     the restart file.
     """
 
-    return StomateRestartSeasonState(
+    state = StomateRestartSeasonState(
         dt_days_read=read_restart_scalar(path, "dt_days"),
         date=int(round(read_restart_scalar(path, "date"))),
         tau_longterm=read_restart_scalar(path, "tau_longterm"),
@@ -1552,9 +1668,20 @@ def read_stomate_restart_season_state(path: str | Path) -> StomateRestartSeasonS
         maxfpc_thisyear=read_restart_pft_field(path, "maxfpc_thisyear"),
         lm_thisyearmax=read_restart_pft_field(path, "lm_thisyearmax"),
     )
+    return _maybe_remap_stomate_state(
+        state,
+        pft_axes=STOMATE_SEASON_PFT_AXES,
+        source_pft_layout=source_pft_layout,
+        target_pft_layout=target_pft_layout,
+    )
 
 
-def read_stomate_daily_accumulator_state(path: str | Path) -> StomateDailyAccumulatorState:
+def read_stomate_daily_accumulator_state(
+    path: str | Path,
+    *,
+    source_pft_layout: PFTRunLayout | None = None,
+    target_pft_layout: PFTRunLayout | None = None,
+) -> StomateDailyAccumulatorState:
     """Read restart-backed daily accumulators for the first ``stomate_main`` call.
 
     This is a restart/state boundary reader. It does not reset or advance
@@ -1562,7 +1689,7 @@ def read_stomate_daily_accumulator_state(path: str | Path) -> StomateDailyAccumu
     """
 
     t2m_daily = read_restart_grid_field(path, "t2m_daily")
-    return StomateDailyAccumulatorState(
+    state = StomateDailyAccumulatorState(
         humrel_daily=read_restart_pft_field(path, "moiavail_daily"),
         litterhum_daily=read_restart_grid_field(path, "litterhum_daily"),
         t2m_daily=t2m_daily,
@@ -1579,6 +1706,12 @@ def read_stomate_daily_accumulator_state(path: str | Path) -> StomateDailyAccumu
         tmc_topgrass_daily=np.zeros_like(t2m_daily),
         fwet_daily=read_restart_grid_field(path, "fwet_daily"),
         liqwt_daily=read_restart_grid_field(path, "liqwt_daily"),
+    )
+    return _maybe_remap_stomate_state(
+        state,
+        pft_axes=STOMATE_DAILY_PFT_AXES,
+        source_pft_layout=source_pft_layout,
+        target_pft_layout=target_pft_layout,
     )
 
 

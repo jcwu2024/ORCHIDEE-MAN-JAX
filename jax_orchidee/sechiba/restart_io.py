@@ -10,6 +10,11 @@ from typing import Mapping
 import numpy as np
 from netCDF4 import Dataset
 
+from jax_orchidee.driver.restart import (
+    SECHIBA_RESTART_PFT_AXES,
+    remap_restart_fields_by_pft_id,
+)
+from jax_orchidee.parameters.pft_catalog import PFTRunLayout
 from jax_orchidee.stomate.restart_io import (
     StomateRestartPhysicalState,
     StomateRestartWriteReport,
@@ -24,6 +29,10 @@ DEFAULT_SECHIBA_RESTART_SCHEMA = (
 PHYSICAL_RESTART_VARIABLES = frozenset(
     {"nav_lon", "nav_lat", "nav_lev", "time", "time_steps"}
 )
+SECHIBA_NORMALIZED_RESTART_PFT_AXES = {
+    **SECHIBA_RESTART_PFT_AXES,
+    "frac_age": 1,
+}
 
 SECHIBA_RESTART_COMPONENT_FIELDS = {
     "diffuco": frozenset({"rstruct", "cdrag_pft", "leaf_ci"}),
@@ -263,7 +272,12 @@ def _write_science_variable(variable: object, field: str, value: object) -> None
         variable[:] = stored
 
 
-def read_sechiba_restart_state(path: str | Path) -> SechibaRestartState:
+def read_sechiba_restart_state(
+    path: str | Path,
+    *,
+    source_pft_layout: PFTRunLayout | None = None,
+    target_pft_layout: PFTRunLayout | None = None,
+) -> SechibaRestartState:
     """Read all SECHIBA component-finalize state without defaults.
 
     Fortran provenance: ``sechiba.f90::sechiba_finalize`` lines 1800-1923 and
@@ -273,6 +287,15 @@ def read_sechiba_restart_state(path: str | Path) -> SechibaRestartState:
     with Dataset(path) as dataset:
         names = _science_variable_names(dataset)
         fields = {name: _read_science_variable(dataset.variables[name]) for name in names}
+    if (source_pft_layout is None) != (target_pft_layout is None):
+        raise ValueError("source and target PFT layouts must be provided together")
+    if source_pft_layout is not None and target_pft_layout is not None:
+        fields = remap_restart_fields_by_pft_id(
+            fields,
+            source_pft_layout=source_pft_layout,
+            target_pft_layout=target_pft_layout,
+            pft_axes=SECHIBA_NORMALIZED_RESTART_PFT_AXES,
+        )
     provenance = {
         name: (
             "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90::sechiba_finalize lines 1800-1923",
@@ -289,6 +312,7 @@ def write_sechiba_restart_state(
     state: SechibaRestartState,
     physical_state: StomateRestartPhysicalState,
     schema_path: str | Path = DEFAULT_SECHIBA_RESTART_SCHEMA,
+    pft_layout: PFTRunLayout | None = None,
 ) -> StomateRestartWriteReport:
     """Construct and populate every scientific SECHIBA restart variable."""
 
@@ -306,6 +330,7 @@ def write_sechiba_restart_state(
         output_path,
         physical_state,
         schema_path=schema_path,
+        pft_layout=pft_layout,
     )
     with Dataset(output, "r+") as dataset:
         for name in _science_variable_names(dataset):

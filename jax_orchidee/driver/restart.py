@@ -16,7 +16,7 @@ import numpy as np
 import xarray as xr
 
 from jax_orchidee.driver.domain import load_case_config
-
+from jax_orchidee.parameters.pft_catalog import PFTRunLayout, remap_pft_axis
 
 REFERENCE_CASE_OUTPUT = Path(
     "reference/case_001_071/OUT/orc_calibrate_250919_sen/"
@@ -36,6 +36,31 @@ SECHIBA_STATIC_FIELDS = (
     "wtp",
     "wt_ab_tide",
 )
+
+SECHIBA_RESTART_PFT_AXES = {
+    "veget": 1,
+    "veget_max": 1,
+    "lai": 1,
+    "height": 1,
+    "frac_age": 2,
+    "cdrag_pft": 1,
+    "rstruct": 1,
+    "leaf_ci": 1,
+    "temp_sol_pft": 1,
+    "us": 1,
+    "qsintveg": 1,
+    "vegstress": 1,
+    "humrel": 1,
+    "roughheight_pft": 1,
+    "ptn": 2,
+    "shum_ngrnd_prmlng": 2,
+    "shum_ngrnd_perma": 2,
+    "e_soil_lat": 1,
+    "soilcap_pft": 1,
+    "soilflx_pft": 1,
+    "cgrnd": 2,
+    "dgrnd": 2,
+}
 
 
 @dataclass(frozen=True)
@@ -145,7 +170,35 @@ def _flatten_restart_variable(values: xr.DataArray) -> np.ndarray:
     return np.asarray(values.values)
 
 
-def read_restart_fields(path: str | Path, names: Iterable[str]) -> dict[str, np.ndarray]:
+def remap_restart_fields_by_pft_id(
+    fields: dict[str, np.ndarray],
+    *,
+    source_pft_layout: PFTRunLayout,
+    target_pft_layout: PFTRunLayout,
+    pft_axes: dict[str, int] = SECHIBA_RESTART_PFT_AXES,
+) -> dict[str, np.ndarray]:
+    """Remap declared restart PFT axes by stable identity."""
+
+    return {
+        name: remap_pft_axis(
+            value,
+            source=source_pft_layout,
+            target=target_pft_layout,
+            axis=pft_axes[name],
+        )
+        if name in pft_axes
+        else np.asarray(value)
+        for name, value in fields.items()
+    }
+
+
+def read_restart_fields(
+    path: str | Path,
+    names: Iterable[str],
+    *,
+    source_pft_layout: PFTRunLayout | None = None,
+    target_pft_layout: PFTRunLayout | None = None,
+) -> dict[str, np.ndarray]:
     """Read selected restart variables and normalize to model-point axes.
 
     Fortran provenance: `slowproc.f90`, subroutine `slowproc_init`, lines
@@ -162,10 +215,23 @@ def read_restart_fields(path: str | Path, names: Iterable[str]) -> dict[str, np.
             raise KeyError(f"{Path(path).name} is missing restart variables: {missing}")
         for name in names:
             out[name] = _flatten_restart_variable(ds[name])
+    if (source_pft_layout is None) != (target_pft_layout is None):
+        raise ValueError("source and target PFT layouts must be provided together")
+    if source_pft_layout is not None and target_pft_layout is not None:
+        out = remap_restart_fields_by_pft_id(
+            out,
+            source_pft_layout=source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        )
     return out
 
 
-def read_sechiba_static_restart(path: str | Path) -> SechibaStaticRestart:
+def read_sechiba_static_restart(
+    path: str | Path,
+    *,
+    source_pft_layout: PFTRunLayout | None = None,
+    target_pft_layout: PFTRunLayout | None = None,
+) -> SechibaStaticRestart:
     """Read exact local SECHIBA restart fields relevant to Phase 1D.
 
     Fortran provenance: `slowproc.f90`, subroutine `slowproc_init`, lines
@@ -177,7 +243,12 @@ def read_sechiba_static_restart(path: str | Path) -> SechibaStaticRestart:
     """
 
     inventory = inventory_restart_fields(path, SECHIBA_STATIC_FIELDS)
-    fields = read_restart_fields(path, inventory.present)
+    fields = read_restart_fields(
+        path,
+        inventory.present,
+        source_pft_layout=source_pft_layout,
+        target_pft_layout=target_pft_layout,
+    )
 
     def get(name: str) -> np.ndarray | None:
         return fields.get(name)
