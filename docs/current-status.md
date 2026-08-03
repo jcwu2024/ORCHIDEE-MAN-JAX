@@ -13,8 +13,8 @@ describe an earlier gate without being rewritten.
 
 ## Stable Teacher
 
-The canonical user-facing PFT14 Teacher core is on `main` at `87f1f50`.
-`research/daily-coarse-graining` merged that commit at `cd2835f`; its complete
+The canonical user-facing PFT14 Teacher core is on `main` at `ed2ff6d`.
+`research/daily-coarse-graining` merged that commit at `d0c4bce`; its complete
 `jax_orchidee/` tree is byte-identical to `main`. The branches remain separate
 only because the research branch also contains experimental dataset and
 neural code.
@@ -41,7 +41,7 @@ Current evidence:
 The project must not claim equivalence for other PFTs or unsupported
 ORCHIDEE configurations.
 
-Gate B1 now has a source-backed foundation. The versioned PFT catalog records
+Gate B1 is complete. The versioned PFT catalog records
 stable semantic IDs, canonical Fortran PFT/MTC identities, traits, parameter
 row ownership, and explicit process capabilities. Runtime parameter loading,
 modelout selection, state checkpoints, and newly created SECHIBA/STOMATE
@@ -52,8 +52,21 @@ stable ID. The paper layout still activates only bare soil and
 Generic orchestration now resolves PFT-indexed run.def rows, PFT14 capability
 slots, daily allocation inputs, and production/reference modelout selection
 through stable identities or explicitly named legacy layouts. State/layout
-axis mismatches fail closed. Remaining B1 work is a complete compact-layout
-cold/restart lifecycle proof.
+axis mismatches fail closed. A compact bare-soil-plus-PFT14 lifecycle now
+passes cold start, one complete day, three-file restart write/readback, and a
+restart-backed continuation day while retaining a two-slot PFT axis.
+
+Gate B2 is complete. The frozen machine contract
+`manifests/coarse_graining/daily_neural_pft_interface_v1.json` defines the
+leading variable PFT axis, named parameter and trait channels, exact mask
+semantics, forbidden identity shortcuts, and physical-parameter ownership.
+Tests cover PFT permutation equivariance, inactive-slot isolation, named
+channel completeness, and variable legal `n_pft`. `VCMAX25` and the
+maintenance-temperature polynomial remain explicit fast-process factors;
+`ALLOC_MIN` and `RESIDENCE_TIME` remain in exact daily processes. Constant
+parameters cannot be claimed as learnably invertible without controlled
+Teacher perturbations. This closes structural extensibility only; PFT2-PFT13
+remain scientifically unsupported.
 
 ## Daily Coarse-Graining Research
 
@@ -85,9 +98,9 @@ coverage and training data, but must not require redesigning the neural
 interface. See
 [`research/daily_coarse_graining/conservative_daily_process_operator_v1.md`](research/daily_coarse_graining/conservative_daily_process_operator_v1.md).
 
-No new GPU training is authorized before parameter ownership, daily flux
-labels, existing-shard availability, and a true-label non-neural constrained
-replay are frozen and pass their gates.
+No new GPU training is authorized before daily flux labels,
+existing-shard availability, and a true-label non-neural constrained replay
+are frozen and pass Gate C. The six prerequisite sequence is now `4/6`.
 
 Completed infrastructure:
 

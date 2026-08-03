@@ -84,6 +84,10 @@ not rounded continuous outputs.
 
 ## PFT-Extensible Contract
 
+This section is frozen by the machine-readable
+`manifests/coarse_graining/daily_neural_pft_interface_v1.json` contract and its
+validated adapter in `research/daily_coarse_graining/daily_pft_interface.py`.
+
 PFT14 is the current training and acceptance scope, not an architecture limit.
 The model consumes arrays with an explicit PFT axis:
 

@@ -25,7 +25,7 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
 
 ## Current Facts
 
-- `main` at `87f1f50` contains the canonical user-facing PFT14 Teacher core.
+- `main` at `ed2ff6d` contains the canonical user-facing PFT14 Teacher core.
 - `research/daily-coarse-graining` contains the same complete
   `jax_orchidee/` tree plus research-only code.
 - Gate A detached-worktree parity is complete. Seven lifecycle/multilandpoint
@@ -45,7 +45,12 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
   PFT2-PFT13 remain structurally declared but scientifically unsupported and
   fail closed when active. Restart reads now verify/remap stable identity, and
   production orchestration resolves PFT rows and mangrove execution slots by
-  stable ID. A compact-layout cold/restart lifecycle is not yet closed.
+  stable ID. A compact bare-soil-plus-PFT14 cold/restart lifecycle now passes.
+- Gate B2's neural PFT interface is frozen in
+  `daily_neural_pft_interface_v1.json`: named parameter/trait channels,
+  exact mask semantics, permutation equivariance, inactive-slot isolation,
+  and variable legal `n_pft` are machine-validated. This is structural
+  extensibility, not scientific support for PFT2-PFT13.
 - Existing gradient tests establish training plumbing and finite derivatives
   in selected JAX paths. They do not yet establish physical-parameter gradient
   correctness for the complete Teacher or future daily surrogate.
@@ -201,76 +206,63 @@ training loss is easy to optimize.
 
 ## Immediate Work Order
 
-The next technical task is to finish Gate B1, not another GPU experiment. Its
-catalog, capability registry, stable parameter-row selection, modelout
-selection, restart read/write metadata, and generic orchestration selection
-are implemented. Prove a compact-layout cold/restart lifecycle. Then freeze B2's neural
-PFT-axis and physical-parameter ownership contract. Gate C follows with label
-inventory and non-neural replay. D1 can validate physical-parameter gradients
-against the selected Teacher while Gate C is completed. Only then should the
-new daily neural implementation begin.
+Gates A and B are complete. The six prerequisites before neural implementation
+are now `4/6`: restart identity, positional-selector removal, compact
+cold/restart lifecycle, and the neural PFT/parameter contract are closed.
+The next technical task is Gate C, not another GPU experiment or Teacher data
+regeneration. First inventory the labels already present or exactly derivable;
+then capture only genuinely missing labels and prove non-neural replay.
 
-## Active Task Packet: Gate B1
+## Active Task Packet: Gate C
 
-This is the only implementation task to start from a new clone. Gate A is
-closed and must not be rerun unless shared Teacher code changes. Gates B2-F
-remain queued until this packet is closed.
+This is the only implementation task to start from a new clone. Gates A-B are
+closed and must not be rerun unless shared Teacher code or a frozen contract
+changes. Gates D-F remain queued.
 
 ### Inputs
 
-- canonical Teacher core: `main` at `87f1f50` (identical in the research
-  branch after merge `cd2835f`);
-- source-backed target design:
-  [`porting/pft14_extensible_design.md`](porting/pft14_extensible_design.md);
-- current PFT14 layout, parameter loaders, restart schemas, modelout selection,
-  and hard-coded PFT/MTC capability branches;
-- existing Fortran source ownership and PFT14 Oracle evidence.
+- canonical Teacher core: `main` at `ed2ff6d`, synchronized into the research
+  branch at merge `d0c4bce`;
+- true-daily design:
+  [`research/daily_coarse_graining/conservative_daily_process_operator_v1.md`](research/daily_coarse_graining/conservative_daily_process_operator_v1.md);
+- frozen PFT interface: `manifests/coarse_graining/daily_neural_pft_interface_v1.json`;
+- existing v5 shard contract and dataset manifests;
+- source-backed carbon ownership audit and Teacher state/target leaf metadata.
 
 ### Implementation steps
 
-1. Introduce a machine-readable PFT catalog with stable semantic IDs,
-   canonical Fortran PFT/MTC identities, traits, parameters, capabilities, and
-   active fractions.
-2. Replace paper-driver ownership of positional PFT identity with a per-run
-   layout derived from the catalog; preserve the named paper PFT14 layout.
-3. Make restart and modelout metadata retain stable IDs across slot removal,
-   addition, and reordering.
-4. Move genuinely distinct source process families behind an explicit,
-   source-backed capability registry. Keep ordinary trait/parameter changes
-   data driven.
-5. Add removal, coexistence, and slot-permutation tests before claiming any
-   additional PFT as scientifically supported.
-
-Current progress: steps 1-3 are implemented. Restart readers parse stable
-NetCDF identity or require the explicit legacy paper layout, remap every
-declared SECHIBA/STOMATE PFT axis, and production year handoff writes identity
-metadata. Generic orchestration now selects run.def rows, mangrove controls,
-daily allocation inputs, and modelout/reference slots through named layouts
-and stable identities; mismatched state/layout axes fail closed. Step 4 has a
-fail-closed capability registry; step 5 has exhaustive restart-axis
-identity/remap coverage but not a complete compact-layout model lifecycle. No
-additional PFT has been promoted beyond `structural_only`.
+1. Enumerate the constrained updater's daily water inputs, outputs, internal
+   transfers, inventories, and budget residual.
+2. Repeat for carbon production, respiration, export, litter/pool transfers,
+   inventories, and for energy/thermal tendencies.
+3. Classify every required label as `present`, `exactly_derivable`, or
+   `missing_non_identifiable`, with source owner and existing-shard leaf.
+4. Define the minimal supplemental Teacher capture for the last class only;
+   do not regenerate the 669-point dataset speculatively.
+5. Implement a non-neural constrained updater driven by true Teacher labels,
+   followed by retained exact daily processes.
+6. Prove next-day state reconstruction, budgets, nonnegative inventories,
+   exact discrete behavior, cold/later/restart/mask coverage, and restart
+   roundtrip without a 48-step reconstruction or state scan.
 
 ### Required artifacts
 
-- one versioned PFT catalog schema and the paper PFT14 catalog instance;
-- one capability registry with Fortran provenance;
-- stable-ID restart/modelout layout metadata;
-- focused tests for removal, coexistence, and permutation;
-- an updated ownership inventory consumed by Gate B2.
+- one versioned daily water/carbon/energy label inventory;
+- a field-to-shard/source ownership report;
+- a minimal missing-label capture specification, if needed;
+- one non-neural constrained updater and retained-tail composition;
+- replay, budget, mask, lifecycle, and restart evidence.
 
 ### Definition of done
 
-- PFT14 reproduces the existing canonical Teacher path under the catalog;
-- array shapes and parameter ownership derive from the selected layout rather
-  than a global `NVM=14` assumption;
-- removing one supported PFT cannot change another PFT's state;
-- two supported PFTs coexist with isolated state and fractions;
-- slot reordering with stable IDs preserves remapped outputs;
-- numbered source branches are explicit capabilities rather than falsely
-  generalized behavior;
-- adding a new PFT still requires its own source closure and numerical
-  validation before scientific support is claimed;
+- every updater-required label has exactly one evidence classification;
+- true Teacher labels reconstruct the accepted next-day canonical state at
+  declared field-aware tolerances;
+- discrete and defined-status behavior is exact;
+- water and carbon budgets close and thermal residual semantics are explicit;
+- physical inventories stay nonnegative by construction rather than clipping;
+- cold, later-day, restart-year, and active/inactive-mask cases pass;
 - targeted regression tests, `git diff --check`, Ruff, and Python compilation
   pass;
-- no neural training or 669-point production run is started by this task.
+- no neural training, 48-step candidate inference, or 669-point regeneration
+  is started by this task.

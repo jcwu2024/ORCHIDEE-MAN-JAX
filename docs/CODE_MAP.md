@@ -75,6 +75,9 @@ historical prototypes. Use the following classification.
   the new daily budget contract.
 - `daily_process_axis_layout.py`: axis/process metadata that may inform the new
   interface, but does not itself implement PFT-generic computation.
+- `daily_pft_interface.py`: active Gate B2 parser, named-channel packer, mask,
+  aggregation, and PFT-axis validation boundary. Its machine contract is
+  `manifests/coarse_graining/daily_neural_pft_interface_v1.json`.
 
 ### Diagnostic and Oracle assets
 
@@ -99,8 +102,9 @@ historical prototypes. Use the following classification.
 
 There is no accepted implementation yet. The specification is
 `docs/research/daily_coarse_graining/conservative_daily_process_operator_v1.md`.
-New implementation code should be placed in a clearly named package under
-`research/daily_coarse_graining/` only after Gates A-C pass.
+The PFT interface is frozen, but state/flux labels and the updater are not.
+New neural implementation code should be placed in a clearly named package
+under `research/daily_coarse_graining/` only after Gate C passes.
 
 ## Scripts
 

@@ -66,12 +66,12 @@ research infrastructure around it. Do not launch another neural training
 experiment yet.
 
 Gate B1's PFT catalog, restart identity, and production-selection boundaries
-are implemented. PFT identity, source parameter rows, capabilities, modelout
-selection, checkpoints, restart reads/writes, and generic orchestration now
-have stable-ID contracts, while only PFT14 is scientifically supported. The
-next work is to prove a compact-layout cold/restart lifecycle. Gate B2 then
-freezes the neural PFT-axis and physical-parameter ownership contract. Gate C
-follows with daily flux labels and non-neural constrained replay.
+are implemented, including a compact bare-soil-plus-PFT14 cold/restart
+lifecycle. Gate B2 is also complete: the variable-length neural PFT axis,
+named parameter/trait channels, mask semantics, and physical-parameter
+ownership are frozen and tested. Only PFT14 is scientifically supported.
+The next work is Gate C: inventory the daily water/carbon/energy labels and
+then prove true-label non-neural constrained replay.
 
 ## New Task Bootstrap
 
@@ -85,9 +85,9 @@ git log -1 --oneline
 ```
 
 Then read `NEXT_STEPS.md`, `CODE_MAP.md`, and `DOCUMENT_STATUS.md`. Report the
-active gate before editing or submitting a job. Gate A must not be reopened
+active gate before editing or submitting a job. Gates A-B must not be reopened
 unless `jax_orchidee` drifts between the two branches or its evidence hashes
-drift. The active technical task is Gate B; later gates are queued work, not
+drift. The active technical task is Gate C; later gates are queued work, not
 parallel instructions. A local `AGENTS.md`, when present, adds workspace and
 server rules but is deliberately not required for a clean Git handoff.
 

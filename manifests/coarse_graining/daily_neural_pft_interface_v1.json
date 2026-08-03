@@ -1,0 +1,181 @@
+{
+  "schema_version": "daily_neural_pft_interface_v1",
+  "status": "frozen_preimplementation",
+  "architecture_contract": "docs/research/daily_coarse_graining/conservative_daily_process_operator_v1.md",
+  "scope": {
+    "scientific_training_scope": "paper_250919_pft14",
+    "structural_scope": "variable_n_pft",
+    "parameter_registry_scope": "paper_calibrated_parameters_and_required_maintenance_polynomial_coefficients",
+    "state_channel_registry": "Gate C daily label and constrained-updater contract",
+    "scientific_support_rule": "A structurally legal PFT is not scientifically supported until its Teacher branches, data, and held-out validation pass."
+  },
+  "pft_axis": {
+    "name": "n_pft",
+    "position": 0,
+    "minimum_size": 1,
+    "dynamic_size_requires_recompilation": true,
+    "weights_shared_across_axis": true,
+    "identity_metadata": "stable pft_id is retained by the data adapter for remapping and provenance but is not a network input"
+  },
+  "network_inputs": [
+    {
+      "name": "pft_state",
+      "dtype": "float64",
+      "shape": ["n_pft", "n_pft_state_features"],
+      "axis_owner": "canonical day-start state; feature registry is frozen by Gate C"
+    },
+    {
+      "name": "pft_parameters",
+      "dtype": "float64",
+      "shape": ["n_pft", "n_parameter_channels"],
+      "axis_owner": "named physical parameter channels in this manifest"
+    },
+    {
+      "name": "pft_traits",
+      "dtype": "float64",
+      "shape": ["n_pft", "n_trait_channels"],
+      "axis_owner": "source-backed structural trait channels in this manifest"
+    },
+    {
+      "name": "pft_fraction",
+      "dtype": "float64",
+      "shape": ["n_pft"],
+      "axis_owner": "run layout vegetation fraction"
+    },
+    {
+      "name": "active_pft_mask",
+      "dtype": "bool",
+      "shape": ["n_pft"],
+      "axis_owner": "exact run-layout compute/state-valid mask"
+    }
+  ],
+  "forbidden_network_inputs": [
+    "landpoint_id",
+    "pft_id",
+    "fortran_pft_id",
+    "mtc_id_embedding",
+    "pft14_embedding",
+    "teacher_day_end_target"
+  ],
+  "mask_semantics": {
+    "inactive_requires_zero_fraction": true,
+    "active_does_not_require_positive_fraction": true,
+    "reason": "bare-soil process state can be active at zero vegetation fraction",
+    "inactive_outputs_must_be_zero": true,
+    "aggregate_outputs_use_fraction_and_mask": true
+  },
+  "ownership_classes": {
+    "retained_exact": "Consumed by a retained source-backed daily formula and not relearned.",
+    "explicit_parameterized_fast_process_factor": "The physical parameter remains explicit around a learned environmental modifier or flux head.",
+    "learned_conditional": "A network condition whose response is learnable only from controlled Teacher perturbations."
+  },
+  "parameter_channels": [
+    {
+      "index": 0,
+      "name": "vcmax25",
+      "dtype": "float64",
+      "units": "umol_CO2 m-2_leaf s-1",
+      "axis_owner": "pft",
+      "ownership_class": "explicit_parameterized_fast_process_factor",
+      "source_owner": "src_parameters/pft_parameters.f90::config_stomate_pft_parameters lines 3234-3240",
+      "jax_source": "jax_orchidee.stomate.parameters.PaperCaseStomateParameterBundle.vcmax25",
+      "consumers": [
+        "replaced canopy photosynthesis/GPP process head",
+        "jax_orchidee.stomate.carbon_kernels.vmax_step for retained dynamic-vcmax ownership"
+      ],
+      "explicit_factor_rule": "Preserve named VCMAX25 dependence; the network may learn environmental response but must not absorb this parameter into an opaque PFT embedding.",
+      "paper_calibrated": true,
+      "controlled_perturbation": {"status": "available_in_paper_sensitivity_design", "required_for_formula_factor": false}
+    },
+    {
+      "index": 1,
+      "name": "maint_resp_slope_a",
+      "dtype": "float64",
+      "units": "K-3",
+      "axis_owner": "pft",
+      "ownership_class": "explicit_parameterized_fast_process_factor",
+      "source_owner": "src_parameters/pft_parameters.f90::config_stomate_pft_parameters lines 4228-4242",
+      "jax_source": "jax_orchidee.stomate.parameters.PaperCaseStomateParameterBundle.maint_resp_slope[:,2]",
+      "consumers": ["maintenance respiration temperature polynomial"],
+      "explicit_factor_rule": "Retain slope(T_longterm)=c+b*T+a*T^2 explicitly around the maintenance flux prediction.",
+      "paper_calibrated": false,
+      "controlled_perturbation": {"status": "not_varied", "required_for_formula_factor": false}
+    },
+    {
+      "index": 2,
+      "name": "maint_resp_slope_b",
+      "dtype": "float64",
+      "units": "K-2",
+      "axis_owner": "pft",
+      "ownership_class": "explicit_parameterized_fast_process_factor",
+      "source_owner": "src_parameters/pft_parameters.f90::config_stomate_pft_parameters lines 4228-4234",
+      "jax_source": "jax_orchidee.stomate.parameters.PaperCaseStomateParameterBundle.maint_resp_slope[:,1]",
+      "consumers": ["maintenance respiration temperature polynomial"],
+      "explicit_factor_rule": "Retain slope(T_longterm)=c+b*T+a*T^2 explicitly around the maintenance flux prediction.",
+      "paper_calibrated": false,
+      "controlled_perturbation": {"status": "not_varied", "required_for_formula_factor": false}
+    },
+    {
+      "index": 3,
+      "name": "maint_resp_slope_c",
+      "dtype": "float64",
+      "units": "K-1",
+      "axis_owner": "pft",
+      "ownership_class": "explicit_parameterized_fast_process_factor",
+      "source_owner": "src_parameters/pft_parameters.f90::config_stomate_pft_parameters lines 4220-4226",
+      "jax_source": "jax_orchidee.stomate.parameters.PaperCaseStomateParameterBundle.maint_resp_slope[:,0]",
+      "consumers": ["maintenance respiration temperature polynomial"],
+      "explicit_factor_rule": "Retain slope(T_longterm)=c+b*T+a*T^2 explicitly around the maintenance flux prediction.",
+      "paper_calibrated": true,
+      "controlled_perturbation": {"status": "available_in_paper_sensitivity_design", "required_for_formula_factor": false}
+    },
+    {
+      "index": 4,
+      "name": "alloc_min",
+      "dtype": "float64",
+      "units": "1",
+      "axis_owner": "pft",
+      "ownership_class": "retained_exact",
+      "source_owner": "src_parameters/pft_parameters.f90::config_stomate_pft_parameters lines 4532-4538",
+      "jax_source": "jax_orchidee.stomate.parameters.PaperCaseStomateParameterBundle.alloc_min",
+      "consumers": ["jax_orchidee.stomate.carbon_kernels.allocation_step"],
+      "exact_formula_owner": "retained daily STOMATE allocation",
+      "paper_calibrated": true,
+      "controlled_perturbation": {"status": "available_in_paper_sensitivity_design", "required_for_formula_factor": false}
+    },
+    {
+      "index": 5,
+      "name": "residence_time",
+      "dtype": "float64",
+      "units": "year",
+      "axis_owner": "pft",
+      "ownership_class": "retained_exact",
+      "source_owner": "src_parameters/pft_parameters.f90::config_stomate_pft_parameters lines 4163-4169",
+      "jax_source": "jax_orchidee.stomate.parameters.PaperCaseStomateParameterBundle.residence_time",
+      "consumers": ["jax_orchidee.stomate.carbon_kernels.gap_mortality_step"],
+      "exact_formula_owner": "retained daily STOMATE constant-mortality arm",
+      "paper_calibrated": true,
+      "controlled_perturbation": {"status": "available_in_paper_sensitivity_design", "required_for_formula_factor": false}
+    }
+  ],
+  "trait_channels": [
+    {"index": 0, "name": "role_bare_soil", "dtype": "float64", "units": "binary", "axis_owner": "pft", "source_owner": "PFTCatalogEntry.role == bare_soil", "consumer": "process-family routing"},
+    {"index": 1, "name": "natural", "dtype": "float64", "units": "binary", "axis_owner": "pft", "source_owner": "PFTCatalogEntry.traits.natural", "consumer": "retained process-family routing"},
+    {"index": 2, "name": "is_tree", "dtype": "float64", "units": "binary", "axis_owner": "pft", "source_owner": "PFTCatalogEntry.traits.is_tree", "consumer": "shared structural encoder and process heads"},
+    {"index": 3, "name": "is_peat", "dtype": "float64", "units": "binary", "axis_owner": "pft", "source_owner": "PFTCatalogEntry.traits.is_peat", "consumer": "peat capability context"},
+    {"index": 4, "name": "is_c4", "dtype": "float64", "units": "binary", "axis_owner": "pft", "source_owner": "PFTCatalogEntry.traits.is_c4", "consumer": "photosynthesis process context"},
+    {"index": 5, "name": "managed", "dtype": "float64", "units": "binary", "axis_owner": "pft", "source_owner": "logical complement of PFTCatalogEntry.traits.natural", "consumer": "retained process-family routing"},
+    {"index": 6, "name": "pref_soil_veg_1", "dtype": "float64", "units": "one_hot", "axis_owner": "pft", "source_owner": "PFTCatalogEntry.traits.pref_soil_veg", "consumer": "soil preference context"},
+    {"index": 7, "name": "pref_soil_veg_2", "dtype": "float64", "units": "one_hot", "axis_owner": "pft", "source_owner": "PFTCatalogEntry.traits.pref_soil_veg", "consumer": "soil preference context"},
+    {"index": 8, "name": "pref_soil_veg_3", "dtype": "float64", "units": "one_hot", "axis_owner": "pft", "source_owner": "PFTCatalogEntry.traits.pref_soil_veg", "consumer": "soil preference context"},
+    {"index": 9, "name": "pref_soil_veg_4", "dtype": "float64", "units": "one_hot", "axis_owner": "pft", "source_owner": "PFTCatalogEntry.traits.pref_soil_veg", "consumer": "soil preference context"}
+  ],
+  "acceptance": {
+    "pft_permutation_equivariance": "required",
+    "inactive_pft_isolation": "required",
+    "variable_legal_n_pft": "required",
+    "discrete_mask_comparison": "exact",
+    "float_dtype": "float64",
+    "constant_parameter_invertibility_claim": "forbidden_without_controlled_perturbation_data"
+  }
+}
