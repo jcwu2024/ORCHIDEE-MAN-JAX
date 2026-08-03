@@ -6,12 +6,15 @@ from pathlib import Path
 import numpy as np
 import pytest
 import yaml
+from netCDF4 import Dataset
 
 from jax_orchidee.driver.init import read_run_scalars
 from jax_orchidee.parameters.pft_catalog import (
     build_pft_run_layout,
     build_selected_pft_run_layout,
     load_pft_catalog,
+    pft_layout_netcdf_attributes,
+    read_pft_layout_from_netcdf,
     remap_pft_axis,
     validate_active_capabilities,
 )
@@ -171,3 +174,62 @@ def test_active_unvalidated_crop_capability_is_rejected() -> None:
 
     with pytest.raises(ValueError, match="canonical_pft12:stomate_crop=unvalidated"):
         validate_active_capabilities(catalog, crop)
+
+
+def test_restart_layout_metadata_roundtrips_and_rejects_partial_identity(
+    tmp_path: Path,
+) -> None:
+    catalog = _catalog()
+    source = build_selected_pft_run_layout(
+        catalog,
+        layout_id="compact_paper",
+        pft_ids=("bare_soil", "mangrove_pft14"),
+        fractions=(0.0, 1.0),
+    )
+    path = tmp_path / "restart.nc"
+    with Dataset(path, "w") as dataset:
+        dataset.setncatts(pft_layout_netcdf_attributes(source))
+
+    restored = read_pft_layout_from_netcdf(path, catalog)
+
+    assert restored.layout_id == "compact_paper"
+    assert restored.pft_ids == source.pft_ids
+    assert restored.fortran_pft_ids == (1, 14)
+    with Dataset(path, "r+") as dataset:
+        dataset.delncattr("orchidee_jax_mtc_ids_json")
+    with pytest.raises(ValueError, match="metadata is incomplete"):
+        read_pft_layout_from_netcdf(path, catalog)
+
+
+def test_legacy_restart_layout_requires_an_explicit_named_source(tmp_path: Path) -> None:
+    catalog = _catalog()
+    path = tmp_path / "legacy.nc"
+    with Dataset(path, "w"):
+        pass
+
+    with pytest.raises(ValueError, match="explicit legacy_layout_id"):
+        read_pft_layout_from_netcdf(path, catalog)
+
+    restored = read_pft_layout_from_netcdf(
+        path,
+        catalog,
+        legacy_layout_id="paper_250919_legacy14",
+    )
+    assert restored.pft_ids == catalog.layouts["paper_250919_legacy14"]
+
+
+def test_restart_layout_metadata_rejects_catalog_identity_mismatch(tmp_path: Path) -> None:
+    catalog = _catalog()
+    source = build_pft_run_layout(
+        catalog,
+        layout_id="paper_250919_legacy14",
+        fractions=[0.0] * 13 + [1.0],
+    )
+    attributes = pft_layout_netcdf_attributes(source)
+    attributes["orchidee_jax_mtc_ids_json"] = json.dumps([1] * source.n_pft)
+    path = tmp_path / "mismatched.nc"
+    with Dataset(path, "w") as dataset:
+        dataset.setncatts(attributes)
+
+    with pytest.raises(ValueError, match="MTC identities disagree"):
+        read_pft_layout_from_netcdf(path, catalog)

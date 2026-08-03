@@ -25,6 +25,7 @@ from jax_orchidee.sechiba.restart_export import (  # noqa: E402
     paper_sechiba_restart_state_from_finalize_state,
 )
 from jax_orchidee.sechiba.enerbil import enerbil_finalize_restart_packet  # noqa: E402
+from jax_orchidee.driver.init import read_run_scalars  # noqa: E402
 from jax_orchidee.sechiba.hydrol_thermosoil_completion import (  # noqa: E402
     explicitsnow_finalize_restart_packet,
 )
@@ -89,6 +90,9 @@ def test_sechiba_standalone_restart_roundtrips_all_93_scientific_variables(
         output,
         state=changed,
         physical_state=_physical(template),
+        pft_layout=read_run_scalars(
+            ROOT / "configs" / "orchidee_man_250919.yaml"
+        ).pft_layout,
     )
     restored = read_sechiba_restart_state(output)
 
@@ -101,6 +105,8 @@ def test_sechiba_standalone_restart_roundtrips_all_93_scientific_variables(
     assert restored.fields["moistc"].shape == (1, 11, 6)
     assert restored.fields["us"].shape == (1, 14, 6, 11)
     assert restored.fields["ptn"].shape == (1, 32, 14)
+    with Dataset(output) as dataset:
+        assert dataset.orchidee_jax_pft_layout_id == "paper_250919_legacy14"
 
 
 def test_sechiba_writer_requires_exact_file_field_denominator(tmp_path: Path) -> None:

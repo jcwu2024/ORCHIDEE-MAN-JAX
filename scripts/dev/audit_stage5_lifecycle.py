@@ -239,6 +239,7 @@ def run(config: Path = CONFIG) -> dict[str, Any]:
             Path(temporary) / "1962_start",
             state=bundle_state,
             physical_state=physical,
+            pft_layout=base.pft_layout,
         )
         restored = reference_case_first_step_restart_state(
             config,

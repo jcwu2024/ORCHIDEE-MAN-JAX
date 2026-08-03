@@ -455,7 +455,12 @@ def slowproc_totfrac_nobio(frac_nobio):
     return jnp.sum(frac_nobio, axis=1)
 
 
-def read_slowproc_restart_entry_state(path) -> SlowprocRestartEntryState:
+def read_slowproc_restart_entry_state(
+    path,
+    *,
+    source_pft_layout=None,
+    target_pft_layout=None,
+) -> SlowprocRestartEntryState:
     """Read SECHIBA restart state needed by ``slowproc_main`` before STOMATE.
 
     Fortran provenance: ``slowproc.f90::slowproc_init`` lines 1685-1707 reads
@@ -465,7 +470,12 @@ def read_slowproc_restart_entry_state(path) -> SlowprocRestartEntryState:
     fallbacks.
     """
 
-    fields = read_restart_fields(path, SLOWPROC_RESTART_STOMATE_ENTRY_FIELDS)
+    fields = read_restart_fields(
+        path,
+        SLOWPROC_RESTART_STOMATE_ENTRY_FIELDS,
+        source_pft_layout=source_pft_layout,
+        target_pft_layout=target_pft_layout,
+    )
     frac_age = fields["frac_age"]
     if frac_age.ndim != 3:
         raise ValueError("frac_age must have shape (npts, nleafages, nvm) in the SECHIBA restart")

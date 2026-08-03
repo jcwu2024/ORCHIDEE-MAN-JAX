@@ -2120,7 +2120,12 @@ def read_driver_albedo_restart(path: str | Path) -> DriverAlbedoRestart:
     )
 
 
-def read_enerbil_soil_thermal_state_restart(path: str | Path) -> EnerbilSoilThermalStateRestart:
+def read_enerbil_soil_thermal_state_restart(
+    path: str | Path,
+    *,
+    source_pft_layout=None,
+    target_pft_layout=None,
+) -> EnerbilSoilThermalStateRestart:
     """Read exact THERMOSOIL restart fields for ENERBIL first-step inputs.
 
     Fortran provenance:
@@ -2140,7 +2145,12 @@ def read_enerbil_soil_thermal_state_restart(path: str | Path) -> EnerbilSoilTher
     defaults.
     """
 
-    fields = read_restart_fields(path, ENERBIL_SOIL_THERMAL_STATE_FIELDS)
+    fields = read_restart_fields(
+        path,
+        ENERBIL_SOIL_THERMAL_STATE_FIELDS,
+        source_pft_layout=source_pft_layout,
+        target_pft_layout=target_pft_layout,
+    )
     return EnerbilSoilThermalStateRestart(
         path=Path(path),
         soilcap=fields["soilcap"],

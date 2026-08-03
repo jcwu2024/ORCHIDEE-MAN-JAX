@@ -9,10 +9,11 @@ import numpy as np
 from netCDF4 import Dataset
 
 from jax_orchidee.driver.dim2 import Dim2DriverRestart
-from jax_orchidee.driver.restart_file_io import write_dim2_driver_restart
 from jax_orchidee.driver.restart_export import stomate_restart_states_from_day_end_packet
-from jax_orchidee.sechiba.restart_io import SechibaRestartState, write_sechiba_restart_state
+from jax_orchidee.driver.restart_file_io import write_dim2_driver_restart
+from jax_orchidee.parameters.pft_catalog import PFTRunLayout
 from jax_orchidee.sechiba.restart_export import paper_sechiba_restart_state_from_finalize_state
+from jax_orchidee.sechiba.restart_io import SechibaRestartState, write_sechiba_restart_state
 from jax_orchidee.stomate.restart_io import (
     StomateReadstartStates,
     StomateRestartPhysicalState,
@@ -128,6 +129,7 @@ def write_paper_restart_start_bundle(
     *,
     state: PaperRestartBundleState,
     physical_state: PaperRestartBundlePhysicalState,
+    pft_layout: PFTRunLayout,
 ) -> PaperRestartBundleWriteReport:
     """Write the three files consumed by the next paper-protocol year.
 
@@ -144,6 +146,8 @@ def write_paper_restart_start_bundle(
         raise TypeError("state must be a PaperRestartBundleState")
     if not isinstance(physical_state, PaperRestartBundlePhysicalState):
         raise TypeError("physical_state must be a PaperRestartBundlePhysicalState")
+    if not isinstance(pft_layout, PFTRunLayout):
+        raise TypeError("pft_layout must be a PFTRunLayout")
     output = Path(output_directory)
     output.mkdir(parents=True, exist_ok=True)
     paths = {
@@ -159,7 +163,10 @@ def write_paper_restart_start_bundle(
         paths["driver"], state=state.driver, physical_state=physical_state.driver
     )
     sechiba_report = write_sechiba_restart_state(
-        paths["sechiba"], state=state.sechiba, physical_state=physical_state.sechiba
+        paths["sechiba"],
+        state=state.sechiba,
+        physical_state=physical_state.sechiba,
+        pft_layout=pft_layout,
     )
     stomate = state.stomate
     stomate_report = write_stomate_full_writerestart_states(
@@ -170,6 +177,7 @@ def write_paper_restart_start_bundle(
         daily_state=stomate.daily_state,
         gas_state=stomate.gas_state,
         remainder_state=stomate.remainder_state,
+        pft_layout=pft_layout,
     )
     return PaperRestartBundleWriteReport(
         output_directory=output,

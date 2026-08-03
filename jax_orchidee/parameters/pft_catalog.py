@@ -16,6 +16,13 @@ import numpy as np
 
 SUPPORTED_CAPABILITY_STATUS = "supported"
 SUPPORTED_PFT_STATUS = frozenset({"paper_validated", "source_validated"})
+PFT_LAYOUT_NETCDF_ATTRIBUTE_NAMES = (
+    "orchidee_jax_pft_catalog_id",
+    "orchidee_jax_pft_layout_id",
+    "orchidee_jax_pft_ids_json",
+    "orchidee_jax_fortran_pft_ids_json",
+    "orchidee_jax_mtc_ids_json",
+)
 
 
 @dataclass(frozen=True)
@@ -283,6 +290,102 @@ def pft_layout_netcdf_attributes(layout: PFTRunLayout) -> dict[str, str]:
         ),
         "orchidee_jax_mtc_ids_json": json.dumps(layout.mtc_ids, separators=(",", ":")),
     }
+
+
+def pft_layout_from_netcdf_attributes(
+    catalog: PFTCatalog,
+    attributes: Mapping[str, object],
+    *,
+    legacy_layout_id: str | None = None,
+) -> PFTRunLayout:
+    """Validate and reconstruct a restart PFT layout from stable metadata.
+
+    Legacy Fortran restart files predate these attributes. Their positional
+    identity is accepted only when the caller explicitly supplies the named
+    source layout; a compact or reordered run must never infer it from shape.
+    """
+
+    present = {
+        name for name in PFT_LAYOUT_NETCDF_ATTRIBUTE_NAMES if name in attributes
+    }
+    if not present:
+        if legacy_layout_id is None:
+            raise ValueError(
+                "restart has no stable PFT metadata; an explicit legacy_layout_id is required"
+            )
+        if legacy_layout_id not in catalog.layouts:
+            raise KeyError(f"unknown legacy PFT layout {legacy_layout_id!r}")
+        return build_pft_run_layout(
+            catalog,
+            layout_id=legacy_layout_id,
+            fractions=(0.0,) * len(catalog.layouts[legacy_layout_id]),
+        )
+    missing = set(PFT_LAYOUT_NETCDF_ATTRIBUTE_NAMES) - present
+    if missing:
+        raise ValueError(
+            "restart PFT metadata is incomplete: missing " + ", ".join(sorted(missing))
+        )
+
+    catalog_id = str(attributes["orchidee_jax_pft_catalog_id"])
+    if catalog_id != catalog.catalog_id:
+        raise ValueError(
+            f"restart PFT catalog {catalog_id!r} does not match {catalog.catalog_id!r}"
+        )
+    layout_id = str(attributes["orchidee_jax_pft_layout_id"])
+    pft_ids = tuple(json.loads(str(attributes["orchidee_jax_pft_ids_json"])))
+    fortran_pft_ids = tuple(
+        int(value)
+        for value in json.loads(
+            str(attributes["orchidee_jax_fortran_pft_ids_json"])
+        )
+    )
+    mtc_ids = tuple(
+        int(value)
+        for value in json.loads(str(attributes["orchidee_jax_mtc_ids_json"]))
+    )
+    if not pft_ids:
+        raise ValueError("restart PFT metadata declares an empty layout")
+    if len(pft_ids) != len(fortran_pft_ids) or len(pft_ids) != len(mtc_ids):
+        raise ValueError("restart PFT metadata arrays must have the same length")
+    if layout_id in catalog.layouts and tuple(catalog.layouts[layout_id]) != pft_ids:
+        raise ValueError(
+            f"restart layout {layout_id!r} disagrees with its catalog declaration"
+        )
+
+    layout = build_selected_pft_run_layout(
+        catalog,
+        layout_id=layout_id,
+        pft_ids=pft_ids,
+        fractions=(0.0,) * len(pft_ids),
+    )
+    if layout.fortran_pft_ids != fortran_pft_ids:
+        raise ValueError("restart Fortran PFT identities disagree with the catalog")
+    if layout.mtc_ids != mtc_ids:
+        raise ValueError("restart MTC identities disagree with the catalog")
+    return layout
+
+
+def read_pft_layout_from_netcdf(
+    path: str | Path,
+    catalog: PFTCatalog,
+    *,
+    legacy_layout_id: str | None = None,
+) -> PFTRunLayout:
+    """Read stable PFT identity from a restart NetCDF global-attribute set."""
+
+    from netCDF4 import Dataset
+
+    with Dataset(path) as dataset:
+        attributes = {
+            name: dataset.getncattr(name)
+            for name in PFT_LAYOUT_NETCDF_ATTRIBUTE_NAMES
+            if name in dataset.ncattrs()
+        }
+    return pft_layout_from_netcdf_attributes(
+        catalog,
+        attributes,
+        legacy_layout_id=legacy_layout_id,
+    )
 
 
 def remap_pft_axis(

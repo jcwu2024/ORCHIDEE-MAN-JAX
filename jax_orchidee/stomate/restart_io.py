@@ -21,6 +21,10 @@ from jax_orchidee.parameters.pft_catalog import (
     pft_layout_netcdf_attributes,
 )
 from jax_orchidee.stomate.reference import (
+    STOMATE_DAILY_PFT_AXES,
+    STOMATE_ENTRY_PFT_AXES,
+    STOMATE_GAS_PFT_AXES,
+    STOMATE_SEASON_PFT_AXES,
     StomateDailyAccumulatorState,
     StomateOkPcRestartGasState,
     StomateReadstartRemainderState,
@@ -47,6 +51,7 @@ from jax_orchidee.stomate.reference import (
     read_restart_product_pool,
     read_restart_scalar,
     read_restart_soil_layer_field,
+    remap_stomate_state_by_pft_id,
     stomate_cold_start_daily_accumulator_state,
     stomate_cold_start_entry_state,
     stomate_cold_start_season_state,
@@ -63,6 +68,21 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_STOMATE_RESTART_SCHEMA = (
     ROOT / "docs" / "source_audits" / "stomate_restart_netcdf_schema.json"
 )
+STOMATE_REMAINDER_PFT_AXES = {
+    **{
+        name: 1
+        for name in (
+            "fireindex", "firelitter", "resp_hetero", "co2_fire",
+            "carbon_acro", "carbon_cato", "depth_deepsoil", "wshtotsum",
+            "sr_ugb", "nb_ani", "grazed_frac", "import_yield",
+            "nb_grazingdays", "MatrixV", "Vector_U", "previous_stock",
+            "current_stock",
+        )
+    },
+    "deepC_peat": 2,
+    "carbon_save": 2,
+    "litter_not_avail": 2,
+}
 
 
 @dataclass(frozen=True)
@@ -756,6 +776,8 @@ def read_stomate_readstart_states_from_template(
     t2m: object,
     nvm: int,
     nslm: int,
+    source_pft_layout: PFTRunLayout | None = None,
+    target_pft_layout: PFTRunLayout | None = None,
     dt_days_default: float = 1.0,
     date_default: int = 0,
     ndeep: int = 32,
@@ -1134,7 +1156,7 @@ def read_stomate_readstart_states_from_template(
             f"fortran_source/ORCHIDEE/src_stomate/stomate_io.f90::readstart lines {lines}"
         )
 
-    return StomateReadstartStates(
+    states = StomateReadstartStates(
         entry_state=StomateRestartEntryState(**entry),
         season_state=StomateRestartSeasonState(**season),
         daily_state=StomateDailyAccumulatorState(**daily),
@@ -1149,6 +1171,45 @@ def read_stomate_readstart_states_from_template(
             uncovered_reachable_fields=(),
             out_of_span_fields=(),
         ),
+    )
+    if (source_pft_layout is None) != (target_pft_layout is None):
+        raise ValueError("source and target PFT layouts must be provided together")
+    if source_pft_layout is None or target_pft_layout is None:
+        return states
+    if int(nvm) != source_pft_layout.n_pft:
+        raise ValueError("readstart nvm must match the declared source PFT layout")
+    return StomateReadstartStates(
+        entry_state=remap_stomate_state_by_pft_id(
+            states.entry_state,
+            pft_axes=STOMATE_ENTRY_PFT_AXES,
+            source_pft_layout=source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        ),
+        season_state=remap_stomate_state_by_pft_id(
+            states.season_state,
+            pft_axes=STOMATE_SEASON_PFT_AXES,
+            source_pft_layout=source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        ),
+        daily_state=remap_stomate_state_by_pft_id(
+            states.daily_state,
+            pft_axes=STOMATE_DAILY_PFT_AXES,
+            source_pft_layout=source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        ),
+        gas_state=remap_stomate_state_by_pft_id(
+            states.gas_state,
+            pft_axes=STOMATE_GAS_PFT_AXES,
+            source_pft_layout=source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        ),
+        remainder_state=remap_stomate_state_by_pft_id(
+            states.remainder_state,
+            pft_axes=STOMATE_REMAINDER_PFT_AXES,
+            source_pft_layout=source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        ),
+        report=states.report,
     )
 
 

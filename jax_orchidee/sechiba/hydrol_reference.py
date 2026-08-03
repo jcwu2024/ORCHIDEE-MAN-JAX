@@ -14,7 +14,11 @@ from typing import Iterable
 import numpy as np
 import xarray as xr
 
-from jax_orchidee.driver.restart import reference_restart_path
+from jax_orchidee.driver.restart import (
+    reference_restart_path,
+    remap_restart_fields_by_pft_id,
+)
+from jax_orchidee.parameters.pft_catalog import PFTRunLayout
 
 
 HYDROL_RESTART_FIELDS = (
@@ -147,7 +151,13 @@ def _flatten_hydrol_restart_variable(values: xr.DataArray) -> np.ndarray:
     return np.asarray(values.values)
 
 
-def read_hydrol_restart_fields(path: str | Path, names: Iterable[str]) -> dict[str, np.ndarray]:
+def read_hydrol_restart_fields(
+    path: str | Path,
+    names: Iterable[str],
+    *,
+    source_pft_layout: PFTRunLayout | None = None,
+    target_pft_layout: PFTRunLayout | None = None,
+) -> dict[str, np.ndarray]:
     """Read explicitly selected HYDROL restart variables.
 
     Reference/history reader validation boundary. Missing variables raise
@@ -162,10 +172,23 @@ def read_hydrol_restart_fields(path: str | Path, names: Iterable[str]) -> dict[s
             raise KeyError(f"{Path(path).name} is missing HYDROL restart variables: {missing}")
         for name in wanted:
             out[name] = _flatten_hydrol_restart_variable(ds[name])
+    if (source_pft_layout is None) != (target_pft_layout is None):
+        raise ValueError("source and target PFT layouts must be provided together")
+    if source_pft_layout is not None and target_pft_layout is not None:
+        out = remap_restart_fields_by_pft_id(
+            out,
+            source_pft_layout=source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        )
     return out
 
 
-def read_hydrol_restart_anchors(path: str | Path) -> HydrolRestartAnchors:
+def read_hydrol_restart_anchors(
+    path: str | Path,
+    *,
+    source_pft_layout: PFTRunLayout | None = None,
+    target_pft_layout: PFTRunLayout | None = None,
+) -> HydrolRestartAnchors:
     """Read local HYDROL restart anchors, without timestep parity claims.
 
     Reference/history reader validation boundary. Fortran restart write
@@ -173,7 +196,12 @@ def read_hydrol_restart_anchors(path: str | Path) -> HydrolRestartAnchors:
     """
 
     inventory = inventory_hydrol_restart_fields(path, HYDROL_RESTART_FIELDS)
-    fields = read_hydrol_restart_fields(path, inventory.present)
+    fields = read_hydrol_restart_fields(
+        path,
+        inventory.present,
+        source_pft_layout=source_pft_layout,
+        target_pft_layout=target_pft_layout,
+    )
 
     def get(name: str) -> np.ndarray | None:
         return fields.get(name)

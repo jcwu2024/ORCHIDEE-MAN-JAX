@@ -20,6 +20,8 @@ import jax.numpy as jnp  # noqa: E402
 import numpy as np  # noqa: E402
 import xarray as xr  # noqa: E402
 
+from jax_orchidee.driver.restart import remap_restart_fields_by_pft_id  # noqa: E402
+from jax_orchidee.parameters.pft_catalog import PFTRunLayout  # noqa: E402
 from jax_orchidee.sechiba.hydrol_thermosoil_completion import (  # noqa: E402
     read_refsocfile as _read_refsocfile,
 )
@@ -719,7 +721,12 @@ def _flatten_thermosoil_restart_variable(values: xr.DataArray) -> np.ndarray:
     return np.asarray(values.values)
 
 
-def read_thermosoil_restart_state(path: str | Path) -> ThermosoilRestartState:
+def read_thermosoil_restart_state(
+    path: str | Path,
+    *,
+    source_pft_layout: PFTRunLayout | None = None,
+    target_pft_layout: PFTRunLayout | None = None,
+) -> ThermosoilRestartState:
     """Read exact THERMOSOIL recurrence state from ``sechiba_start.nc``.
 
     Fortran provenance: ``thermosoil_initialize`` reads these fields before
@@ -737,6 +744,14 @@ def read_thermosoil_restart_state(path: str | Path) -> ThermosoilRestartState:
             name: _flatten_thermosoil_restart_variable(ds[name])
             for name in THERMOSOIL_RESTART_FIELDS
         }
+    if (source_pft_layout is None) != (target_pft_layout is None):
+        raise ValueError("source and target PFT layouts must be provided together")
+    if source_pft_layout is not None and target_pft_layout is not None:
+        fields = remap_restart_fields_by_pft_id(
+            fields,
+            source_pft_layout=source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        )
     return ThermosoilRestartState(
         path=path,
         ptn=fields["ptn"],
@@ -752,7 +767,12 @@ def read_thermosoil_restart_state(path: str | Path) -> ThermosoilRestartState:
     )
 
 
-def read_thermosoil_initialize_restart_fields(path: str | Path) -> dict[str, np.ndarray]:
+def read_thermosoil_initialize_restart_fields(
+    path: str | Path,
+    *,
+    source_pft_layout: PFTRunLayout | None = None,
+    target_pft_layout: PFTRunLayout | None = None,
+) -> dict[str, np.ndarray]:
     """Read the optional restart fields consumed by ``thermosoil_initialize``.
 
     Unlike :func:`read_thermosoil_restart_state`, this boundary preserves the
@@ -769,11 +789,20 @@ def read_thermosoil_initialize_restart_fields(path: str | Path) -> dict[str, np.
     if not path.is_file():
         raise FileNotFoundError(f"THERMOSOIL restart file does not exist: {path}")
     with xr.open_dataset(path, decode_times=False) as ds:
-        return {
+        fields = {
             name: _flatten_thermosoil_restart_variable(ds[name])
             for name in THERMOSOIL_INITIALIZE_RESTART_FIELDS
             if name in ds.variables
         }
+    if (source_pft_layout is None) != (target_pft_layout is None):
+        raise ValueError("source and target PFT layouts must be provided together")
+    if source_pft_layout is not None and target_pft_layout is not None:
+        fields = remap_restart_fields_by_pft_id(
+            fields,
+            source_pft_layout=source_pft_layout,
+            target_pft_layout=target_pft_layout,
+        )
+    return fields
 
 
 def read_thermosoil_initialize_static_inputs(
