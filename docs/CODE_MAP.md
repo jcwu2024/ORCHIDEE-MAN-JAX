@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-08-02.
+Last updated: 2026-08-03.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -33,9 +33,10 @@ admission evidence are preserved in `branch-alignment-20260802.md` and
 
 The Teacher now has a versioned PFT catalog and per-run stable-ID layout in
 `jax_orchidee/parameters/pft_catalog.py`. Parameter rows are selected by
-canonical Fortran PFT identity, and modelout/checkpoint/restart-write metadata
-retain that identity. The complete Teacher is still a PFT14 paper-case
-product: restart reads and some orchestration helpers retain positional
+canonical Fortran PFT identity, and modelout/checkpoint/restart metadata retain
+that identity. Restart readers parse stable metadata or require the explicit
+legacy paper layout and remap declared PFT axes by ID. The complete Teacher is
+still a PFT14 paper-case product: some orchestration helpers retain positional
 assumptions, and PFT2-PFT13 are deliberately `structural_only`. The catalog is
 an extensibility boundary, not evidence that another PFT is scientifically
 supported.

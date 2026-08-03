@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-02.
+Last updated: 2026-08-03.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -13,8 +13,8 @@ describe an earlier gate without being rewritten.
 
 ## Stable Teacher
 
-The canonical user-facing PFT14 Teacher core is on `main` at `488cc64`.
-`research/daily-coarse-graining` merged that commit at `5743a02`; its complete
+The canonical user-facing PFT14 Teacher core is on `main` at `7eb41be`.
+`research/daily-coarse-graining` merged that commit at `dda3627`; its complete
 `jax_orchidee/` tree is byte-identical to `main`. The branches remain separate
 only because the research branch also contains experimental dataset and
 neural code.
@@ -44,12 +44,13 @@ ORCHIDEE configurations.
 Gate B1 now has a source-backed foundation. The versioned PFT catalog records
 stable semantic IDs, canonical Fortran PFT/MTC identities, traits, parameter
 row ownership, and explicit process capabilities. Runtime parameter loading,
-modelout selection, state checkpoints, and newly created STOMATE restart files
-retain this identity. The paper layout still activates only bare soil and
+modelout selection, state checkpoints, and newly created SECHIBA/STOMATE
+restart files retain this identity. Restart reads now parse stable metadata or
+require an explicit legacy paper layout, then remap all declared PFT axes by
+stable ID. The paper layout still activates only bare soil and
 `mangrove_pft14`; PFT2-PFT13 are `structural_only` and fail closed if activated.
-Remaining B1 work is stable-ID verification/remapping on every restart read
-path, removal of remaining positional selectors at generic orchestration
-boundaries, and a complete compact-layout cold/restart lifecycle proof.
+Remaining B1 work is removal of positional selectors at generic orchestration
+boundaries and a complete compact-layout cold/restart lifecycle proof.
 
 ## Daily Coarse-Graining Research
 

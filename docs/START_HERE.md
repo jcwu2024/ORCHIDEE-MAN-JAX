@@ -65,13 +65,14 @@ the same canonical `jax_orchidee` Teacher core; the research branch adds only
 research infrastructure around it. Do not launch another neural training
 experiment yet.
 
-Gate B1's PFT catalog foundation is implemented. PFT identity, source
-parameter rows, capabilities, modelout selection, checkpoints, and restart
-writes now have stable-ID contracts, while only PFT14 is scientifically
-supported. The next work is to close restart reads, remaining positional
-orchestration selectors, and a compact-layout cold/restart lifecycle. Gate B2
-then freezes the neural PFT-axis and physical-parameter ownership contract.
-Gate C follows with daily flux labels and non-neural constrained replay.
+Gate B1's PFT catalog and restart identity boundaries are implemented. PFT
+identity, source parameter rows, capabilities, modelout selection,
+checkpoints, and restart reads/writes now have stable-ID contracts, while only
+PFT14 is scientifically supported. The next work is to remove remaining
+positional orchestration selectors and prove a compact-layout cold/restart
+lifecycle. Gate B2 then freezes the neural PFT-axis and physical-parameter
+ownership contract. Gate C follows with daily flux labels and non-neural
+constrained replay.
 
 ## New Task Bootstrap
 
