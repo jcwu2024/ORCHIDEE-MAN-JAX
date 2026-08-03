@@ -25,7 +25,7 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
 
 ## Current Facts
 
-- `main` at `7eb41be` contains the canonical user-facing PFT14 Teacher core.
+- `main` at `87f1f50` contains the canonical user-facing PFT14 Teacher core.
 - `research/daily-coarse-graining` contains the same complete
   `jax_orchidee/` tree plus research-only code.
 - Gate A detached-worktree parity is complete. Seven lifecycle/multilandpoint
@@ -43,9 +43,9 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
   catalog foundation now gives PFTs stable IDs, source PFT/MTC identities,
   traits, parameter ownership, capabilities, and named execution layouts.
   PFT2-PFT13 remain structurally declared but scientifically unsupported and
-  fail closed when active. Restart reads now verify/remap stable identity;
-  remaining generic positional selectors and a compact-layout cold/restart
-  lifecycle are not yet closed.
+  fail closed when active. Restart reads now verify/remap stable identity, and
+  production orchestration resolves PFT rows and mangrove execution slots by
+  stable ID. A compact-layout cold/restart lifecycle is not yet closed.
 - Existing gradient tests establish training plumbing and finite derivatives
   in selected JAX paths. They do not yet establish physical-parameter gradient
   correctness for the complete Teacher or future daily surrogate.
@@ -203,9 +203,8 @@ training loss is easy to optimize.
 
 The next technical task is to finish Gate B1, not another GPU experiment. Its
 catalog, capability registry, stable parameter-row selection, modelout
-selection, and restart read/write metadata are implemented. Remove remaining
-generic positional selectors and prove a compact-layout cold/restart
-lifecycle. Then freeze B2's neural
+selection, restart read/write metadata, and generic orchestration selection
+are implemented. Prove a compact-layout cold/restart lifecycle. Then freeze B2's neural
 PFT-axis and physical-parameter ownership contract. Gate C follows with label
 inventory and non-neural replay. D1 can validate physical-parameter gradients
 against the selected Teacher while Gate C is completed. Only then should the
@@ -219,8 +218,8 @@ remain queued until this packet is closed.
 
 ### Inputs
 
-- canonical Teacher core: `main` at `7eb41be` (identical in the research
-  branch after merge `dda3627`);
+- canonical Teacher core: `main` at `87f1f50` (identical in the research
+  branch after merge `cd2835f`);
 - source-backed target design:
   [`porting/pft14_extensible_design.md`](porting/pft14_extensible_design.md);
 - current PFT14 layout, parameter loaders, restart schemas, modelout selection,
@@ -245,9 +244,12 @@ remain queued until this packet is closed.
 Current progress: steps 1-3 are implemented. Restart readers parse stable
 NetCDF identity or require the explicit legacy paper layout, remap every
 declared SECHIBA/STOMATE PFT axis, and production year handoff writes identity
-metadata. Step 4 has a fail-closed capability registry; step 5 has exhaustive
-restart-axis identity/remap coverage but not a complete compact-layout model
-lifecycle. No additional PFT has been promoted beyond `structural_only`.
+metadata. Generic orchestration now selects run.def rows, mangrove controls,
+daily allocation inputs, and modelout/reference slots through named layouts
+and stable identities; mismatched state/layout axes fail closed. Step 4 has a
+fail-closed capability registry; step 5 has exhaustive restart-axis
+identity/remap coverage but not a complete compact-layout model lifecycle. No
+additional PFT has been promoted beyond `structural_only`.
 
 ### Required artifacts
 

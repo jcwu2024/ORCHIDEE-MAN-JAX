@@ -35,10 +35,12 @@ The Teacher now has a versioned PFT catalog and per-run stable-ID layout in
 `jax_orchidee/parameters/pft_catalog.py`. Parameter rows are selected by
 canonical Fortran PFT identity, and modelout/checkpoint/restart metadata retain
 that identity. Restart readers parse stable metadata or require the explicit
-legacy paper layout and remap declared PFT axes by ID. The complete Teacher is
-still a PFT14 paper-case product: some orchestration helpers retain positional
-assumptions, and PFT2-PFT13 are deliberately `structural_only`. The catalog is
-an extensibility boundary, not evidence that another PFT is scientifically
+legacy paper layout and remap declared PFT axes by ID. Production orchestration
+resolves PFT-indexed parameters and PFT14 capability slots from that layout;
+fixed-slot history handling is confined to an explicitly named legacy
+Fortran-history boundary. The complete Teacher is still a PFT14 paper-case
+product, and PFT2-PFT13 are deliberately `structural_only`. The catalog is an
+extensibility boundary, not evidence that another PFT is scientifically
 supported.
 
 The normal user path is approximately:

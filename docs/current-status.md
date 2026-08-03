@@ -13,8 +13,8 @@ describe an earlier gate without being rewritten.
 
 ## Stable Teacher
 
-The canonical user-facing PFT14 Teacher core is on `main` at `7eb41be`.
-`research/daily-coarse-graining` merged that commit at `dda3627`; its complete
+The canonical user-facing PFT14 Teacher core is on `main` at `87f1f50`.
+`research/daily-coarse-graining` merged that commit at `cd2835f`; its complete
 `jax_orchidee/` tree is byte-identical to `main`. The branches remain separate
 only because the research branch also contains experimental dataset and
 neural code.
@@ -49,8 +49,11 @@ restart files retain this identity. Restart reads now parse stable metadata or
 require an explicit legacy paper layout, then remap all declared PFT axes by
 stable ID. The paper layout still activates only bare soil and
 `mangrove_pft14`; PFT2-PFT13 are `structural_only` and fail closed if activated.
-Remaining B1 work is removal of positional selectors at generic orchestration
-boundaries and a complete compact-layout cold/restart lifecycle proof.
+Generic orchestration now resolves PFT-indexed run.def rows, PFT14 capability
+slots, daily allocation inputs, and production/reference modelout selection
+through stable identities or explicitly named legacy layouts. State/layout
+axis mismatches fail closed. Remaining B1 work is a complete compact-layout
+cold/restart lifecycle proof.
 
 ## Daily Coarse-Graining Research
 
