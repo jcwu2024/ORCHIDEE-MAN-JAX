@@ -243,10 +243,13 @@ def condveg_frac_snow(
         snowdz = _as_float64(snowdz)
         snowdepth = jnp.sum(snowdz, axis=1)
         snowrho_snowdz = jnp.sum(snowrho * snowdz, axis=1)
-        safe_depth = jnp.where(snowdepth < min_sechiba, 1.0, snowdepth)
+        active_snow = snowdepth >= min_sechiba
+        safe_depth = jnp.where(active_snow, snowdepth, 1.0)
         snowrho_ave = snowrho_snowdz / safe_depth
-        explicit_frac = jnp.tanh(snowdepth / (0.025 * (snowrho_ave / 50.0)))
-        frac_snow_veg = jnp.where(snowdepth < min_sechiba, 0.0, explicit_frac)
+        explicit_denominator = 0.025 * (snowrho_ave / 50.0)
+        safe_explicit_denominator = jnp.where(active_snow, explicit_denominator, 1.0)
+        explicit_frac = jnp.tanh(snowdepth / safe_explicit_denominator)
+        frac_snow_veg = jnp.where(active_snow, explicit_frac, 0.0)
     else:
         positive_snow = jnp.maximum(snow, 0.0)
         frac_snow_veg = jnp.minimum(
@@ -362,9 +365,12 @@ def condveg_z0cdrag_dyn(
 
     for jv in range(1, nvm):
         active = veget_max[:, jv] > 0.0
-        eta = c1 - c2 * jnp.exp(-c3 * cdrag_foliage * lai[:, jv])
+        working_height = jnp.where(active, height[:, jv], 0.0)
+        working_lai = jnp.where(active, lai[:, jv], 0.0)
+        working_veget = jnp.where(active, veget[:, jv], 0.0)
+        eta = c1 - c2 * jnp.exp(-c3 * cdrag_foliage * working_lai)
         z0m_pft = (
-            height[:, jv]
+            working_height
             * (1.0 - height_displacement)
             * (jnp.exp(-ct_karman / eta) - jnp.exp(-ct_karman / (c1 - c2)))
         ) + z0_ground
@@ -373,13 +379,13 @@ def condveg_z0cdrag_dyn(
         z0m = jnp.where(active, z0m + z0m_add, z0m)
 
         safe_veget_max = jnp.where(active, veget_max[:, jv], 1.0)
-        fc = veget[:, jv] / safe_veget_max
+        fc = working_veget / safe_veget_max
         fs = 1.0 - fc
-        eta_ec = (cdrag_foliage * lai[:, jv]) / (2.0 * eta * eta)
+        eta_ec = (cdrag_foliage * working_lai) / (2.0 * eta * eta)
         u_star = (
             ct_karman
             * jnp.maximum(min_wind, wind)
-            / jnp.log((zlev + height[:, jv] * (1.0 - height_displacement)) / z0m_pft)
+            / jnp.log((zlev + working_height * (1.0 - height_displacement)) / z0m_pft)
         )
         reynolds = (
             z0_ground
@@ -388,15 +394,19 @@ def condveg_z0cdrag_dyn(
         )
         kbs_m1 = 2.46 * reynolds ** (1.0 / 4.0) - jnp.log(7.4)
         ct_star = prandtl ** (-2.0 / 3.0) * jnp.sqrt(1.0 / reynolds)
+        canopy_active = active & (working_lai > min_sechiba)
+        canopy_gap = 1.0 - jnp.exp(-eta_ec / 2.0)
+        safe_canopy_gap = jnp.where(canopy_active, canopy_gap, 1.0)
+        safe_canopy_height = jnp.where(canopy_active, working_height, 1.0)
         canopy_kb = (
             (ct_karman * cdrag_foliage)
-            / (4.0 * ct_leaf * eta * (1.0 - jnp.exp(-eta_ec / 2.0)))
+            / (4.0 * ct_leaf * eta * safe_canopy_gap)
             * fc**2.0
-            + 2.0 * fc * fs * (ct_karman * eta * z0m_pft / height[:, jv]) / ct_star
+            + 2.0 * fc * fs * (ct_karman * eta * z0m_pft / safe_canopy_height) / ct_star
             + kbs_m1 * fs**2.0
         )
         soil_kb = kbs_m1 * fs**2.0
-        kb_m1 = jnp.where(lai[:, jv] > min_sechiba, canopy_kb, soil_kb)
+        kb_m1 = jnp.where(canopy_active, canopy_kb, soil_kb)
         z0h_pft = z0m_pft / jnp.exp(kb_m1)
         z0h_add = veget_max[:, jv] * (ct_karman / jnp.log(ztmp / z0h_pft)) ** 2
         z0h = jnp.where(active, z0h + z0h_add, z0h)
@@ -409,8 +419,9 @@ def condveg_z0cdrag_dyn(
         )
 
     has_veg = sumveg > 0.0
-    z0h = jnp.where(has_veg, z0h / sumveg, z0h)
-    z0m = jnp.where(has_veg, z0m / sumveg, z0m)
+    safe_sumveg = jnp.where(has_veg, sumveg, 1.0)
+    z0h = jnp.where(has_veg, z0h / safe_sumveg, z0h)
+    z0m = jnp.where(has_veg, z0m / safe_sumveg, z0m)
     z0h = (1.0 - totfrac_nobio) * z0h
     z0m = (1.0 - totfrac_nobio) * z0m
 

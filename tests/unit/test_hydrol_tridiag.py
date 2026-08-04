@@ -3,6 +3,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -86,6 +88,29 @@ def test_hydrol_soil_tridiag_resolv_false_preserves_initial_profile():
     actual = np.asarray(result.mcl)
     assert np.allclose(actual[0], solved_first, rtol=0.0, atol=1e-13)
     assert np.array_equal(actual[1], initial[1])
+
+
+def test_hydrol_soil_tridiag_resolv_false_zero_coefficients_have_finite_gradient():
+    zeros = jnp.zeros((1, 3), dtype=jnp.float64)
+    initial = jnp.asarray([[6.0, 5.0, 4.0]], dtype=jnp.float64)
+
+    def objective(rhs_offset):
+        result = hydrol_soil_tridiag_solve(
+            e=zeros,
+            f=zeros,
+            g1=zeros,
+            rhs=zeros + rhs_offset,
+            resolv=jnp.asarray([False]),
+            initial_mcl=initial,
+        )
+        return jnp.sum(result.mcl)
+
+    value = jnp.asarray(0.0, dtype=jnp.float64)
+    forward = jax.jacfwd(objective)(value)
+    reverse = jax.grad(objective)(value)
+
+    assert np.asarray(forward) == 0.0
+    assert np.asarray(reverse) == 0.0
 
 
 def test_hydrol_soil_tridiag_accepts_setup_coefficients_and_residual_is_small():

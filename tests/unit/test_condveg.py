@@ -3,6 +3,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 import pytest
 
@@ -10,10 +12,10 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from jax_orchidee.sechiba.condveg import (  # noqa: E402
-    CDRAG_FOLIAGE,
     CANOPY_C1,
     CANOPY_C2,
     CANOPY_C3,
+    CDRAG_FOLIAGE,
     CT_KARMAN,
     CT_LEAF,
     HEIGHT_DISPLACEMENT,
@@ -21,8 +23,8 @@ from jax_orchidee.sechiba.condveg import (  # noqa: E402
     MIN_WIND,
     PB_STD,
     PRANDTL,
-    SNOWCRI_ALB,
     SN_DENS,
+    SNOWCRI_ALB,
     Z0_BARE,
     Z0_ICE,
     ZERO_CELSIUS,
@@ -32,9 +34,9 @@ from jax_orchidee.sechiba.condveg import (  # noqa: E402
     condveg_main_minimal,
     condveg_main_minimal_coverage,
     condveg_prescribed_roughness,
-    run_condveg_first_step_module,
     condveg_z0cdrag,
     condveg_z0cdrag_dyn,
+    run_condveg_first_step_module,
 )
 
 
@@ -289,6 +291,25 @@ def test_condveg_frac_snow_explicit_and_nobio_follow_fortran_formula():
     np.testing.assert_allclose(np.asarray(result.frac_snow_nobio), expected_nobio)
 
 
+def test_condveg_frac_snow_zero_depth_has_finite_zero_gradient():
+    def objective(depth):
+        result = condveg_frac_snow(
+            snow=jnp.asarray([0.0]),
+            snow_nobio=jnp.asarray([[0.0]]),
+            snowrho=jnp.asarray([[100.0, 150.0]]),
+            snowdz=jnp.stack((depth, depth))[None, :],
+            ok_explicitsnow=True,
+        )
+        return result.frac_snow_veg[0]
+
+    value = jnp.asarray(0.0, dtype=jnp.float64)
+    forward = jax.jacfwd(objective)(value)
+    reverse = jax.grad(objective)(value)
+
+    assert np.asarray(forward) == pytest.approx(0.0)
+    assert np.asarray(reverse) == pytest.approx(0.0)
+
+
 def test_condveg_frac_snow_default_branch_uses_snow_mass_constants():
     result = condveg_frac_snow(
         snow=np.array([-1.0, 33.0]),
@@ -395,6 +416,30 @@ def test_condveg_z0cdrag_dyn_matches_fortran_algebra_on_small_arrays():
     np.testing.assert_allclose(np.asarray(result.roughheight), expected[2])
     np.testing.assert_allclose(np.asarray(result.roughheight_pft)[:, 1:], expected[3][:, 1:])
     assert np.isnan(np.asarray(result.roughheight_pft)[0, 0])
+
+
+def test_condveg_z0cdrag_dyn_inactive_and_zero_lai_branches_have_finite_reverse_gradient():
+    def objective(active_lai):
+        result = condveg_z0cdrag_dyn(
+            veget=jnp.asarray([[0.0, 0.4, 0.0]], dtype=jnp.float64),
+            veget_max=jnp.asarray([[0.0, 0.6, 0.0]], dtype=jnp.float64),
+            frac_nobio=jnp.asarray([[0.0]], dtype=jnp.float64),
+            totfrac_nobio=jnp.asarray([0.0], dtype=jnp.float64),
+            zlev=jnp.asarray([20.0], dtype=jnp.float64),
+            height=jnp.asarray([[jnp.nan, 5.0, jnp.nan]], dtype=jnp.float64),
+            temp_air=jnp.asarray([290.0], dtype=jnp.float64),
+            pb=jnp.asarray([1000.0], dtype=jnp.float64),
+            u=jnp.asarray([2.0], dtype=jnp.float64),
+            v=jnp.asarray([1.0], dtype=jnp.float64),
+            lai=jnp.asarray([[jnp.nan, active_lai, 0.0]], dtype=jnp.float64),
+            frac_snow_veg=jnp.asarray([0.0], dtype=jnp.float64),
+        )
+        return result.z0m[0] + result.z0h[0]
+
+    for lai in (0.0, 2.0):
+        primal, reverse = jax.value_and_grad(objective)(jnp.asarray(lai, dtype=jnp.float64))
+        assert np.isfinite(float(primal))
+        assert np.isfinite(float(reverse))
 
 
 def test_condveg_z0cdrag_static_branch_matches_fortran_algebra_on_small_arrays():
