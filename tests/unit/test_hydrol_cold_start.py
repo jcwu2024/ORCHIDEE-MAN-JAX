@@ -817,7 +817,18 @@ def _reference_melt_refrz_one_point(snowtemp, snowdz, snowrho, snowliq, snowmelt
     snowmelt = snowmelt + zflowliqt[nsnow] * ph2o
     meltxs = np.sum(zmeltxs) / dt_sechiba
     grndflux = grndflux + meltxs
-    return snowtemp, snowdz, snowrho, snowliq, snowmelt, grndflux, meltxs
+    return (
+        snowtemp,
+        snowdz,
+        snowrho,
+        snowliq,
+        snowmelt,
+        grndflux,
+        meltxs,
+        zsnowmelt * ph2o,
+        zphase2 / chalfu0,
+        zflowliqt[1:] * ph2o,
+    )
 
 
 def test_explicitsnow_melt_refrz_matches_source_reference_for_melt_refreeze_and_flow():
@@ -859,6 +870,11 @@ def test_explicitsnow_melt_refrz_matches_source_reference_for_melt_refreeze_and_
     np.testing.assert_allclose(np.asarray(result.snowmelt), [ref[4]])
     np.testing.assert_allclose(np.asarray(result.grndflux), [ref[5]])
     np.testing.assert_allclose(np.asarray(result.meltxs), [ref[6]])
+    np.testing.assert_allclose(np.asarray(result.melt_mass_by_layer)[0], ref[7])
+    np.testing.assert_allclose(np.asarray(result.refreeze_mass_by_layer)[0], ref[8])
+    np.testing.assert_allclose(
+        np.asarray(result.liquid_percolation_by_interface)[0], ref[9]
+    )
     assert any("explicitsnow_melt_refrz lines 1385-1563" in item for item in result.provenance)
 
 
@@ -888,6 +904,9 @@ def test_explicitsnow_melt_refrz_snow_free_branch_clears_depth_and_liquid_only()
     np.testing.assert_allclose(np.asarray(result.snowtemp), snowtemp)
     np.testing.assert_allclose(np.asarray(result.snowmelt), [7.0])
     np.testing.assert_allclose(np.asarray(result.grndflux), [8.0])
+    np.testing.assert_allclose(np.asarray(result.melt_mass_by_layer), 0.0)
+    np.testing.assert_allclose(np.asarray(result.refreeze_mass_by_layer), 0.0)
+    np.testing.assert_allclose(np.asarray(result.liquid_percolation_by_interface), 0.0)
 
 
 def test_explicitsnow_sublimation_depletes_vegetated_snow_and_limits_vevapsno():

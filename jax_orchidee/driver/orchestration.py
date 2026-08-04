@@ -1868,18 +1868,25 @@ class DriverWaterTransferStepV1(NamedTuple):
     canopy2ground: object
     vevapwet: object
     transpir: object
+    rootsink: object
     vevapnu_pft: object
     vevapnu: object
+    vevapnu_ns: object
     vevapsno: object
     subsnownobio: object
     vevapflo: object
     snowmelt: object
     snowmelt_from_maxmass: object
+    snow_melt_mass_by_layer: object
+    snow_refreeze_mass_by_layer: object
+    snow_liquid_percolation_by_interface: object
     soil_infiltration: object
     water2infilt: object
     wat_flux: object
     runoff_per_soil: object
     drainage_per_soil: object
+    runoff: object
+    drainage: object
     runoff2peat: object
     floodout: object
     returnflow: object
@@ -1893,12 +1900,18 @@ class DriverEnergyFluxStepV1(NamedTuple):
     netrad: object
     netrad_pft: object
     fluxsens: object
+    fluxsens_pft: object
     fluxlat: object
     fluxsubli: object
+    lareva: object
+    lareva_pft: object
+    larsub: object
+    larsub_pft: object
     pgflux: object
     soilflx: object
     soilflx_pft: object
     precipitation_snow_heat: object
+    fusion: object
     snow_melt_refreeze: object
     snow_liquid_excess: object
 
@@ -5997,8 +6010,10 @@ def _runtime_daily_flux_step_from_components(
             canopy2ground=hydrol.outputs.canopy2ground,
             vevapwet=enerbil.evapveg_pft.vevapwet,
             transpir=enerbil.evapveg_pft.transpir,
+            rootsink=hydrol.module.split.rootsink,
             vevapnu_pft=enerbil.evapveg_pft.vevapnu_pft,
             vevapnu=enerbil.evapveg_grid.vevapnu,
+            vevapnu_ns=hydrol.module.split.vevapnu_ns,
             vevapsno=(
                 enerbil.evapveg_grid.vevapsno
                 if snow_step is None
@@ -6010,11 +6025,24 @@ def _runtime_daily_flux_step_from_components(
             snowmelt_from_maxmass=(
                 zeros_grid if snow_step is None else snow_step.snowmelt_from_maxmass
             ),
+            snow_melt_mass_by_layer=(
+                zeros_snow_layers if snow_step is None else snow_step.melt_mass_by_layer
+            ),
+            snow_refreeze_mass_by_layer=(
+                zeros_snow_layers if snow_step is None else snow_step.refreeze_mass_by_layer
+            ),
+            snow_liquid_percolation_by_interface=(
+                zeros_snow_layers
+                if snow_step is None
+                else snow_step.liquid_percolation_by_interface
+            ),
             soil_infiltration=soil_infiltration,
             water2infilt=hydrol.module.soil.water2infilt,
             wat_flux=hydrol.outputs.wat_flux,
             runoff_per_soil=hydrol.outputs.runoff_per_soil,
             drainage_per_soil=hydrol.outputs.drainage_per_soil,
+            runoff=hydrol.diagnostics.runoff,
+            drainage=hydrol.diagnostics.drainage,
             runoff2peat=hydrol.outputs.runoff2peat,
             floodout=hydrol.outputs.floodout,
             returnflow=routing.get("returnflow", zeros_grid),
@@ -6025,8 +6053,13 @@ def _runtime_daily_flux_step_from_components(
             netrad=enerbil.flux.netrad,
             netrad_pft=enerbil.begin.netrad_pft,
             fluxsens=enerbil.flux.fluxsens,
+            fluxsens_pft=enerbil.surftemp.sensfl_pft,
             fluxlat=enerbil.flux.fluxlat,
             fluxsubli=enerbil.flux.fluxsubli,
+            lareva=enerbil.surftemp.lareva,
+            lareva_pft=enerbil.surftemp.lareva_pft,
+            larsub=enerbil.surftemp.larsub,
+            larsub_pft=enerbil.surftemp.larsub_pft,
             pgflux=(
                 thermosoil_module.downstream_payload["soilflx"]
                 if explicit_energy is None
@@ -6037,6 +6070,7 @@ def _runtime_daily_flux_step_from_components(
             precipitation_snow_heat=(
                 zeros_grid if explicit_energy is None else explicit_energy.phpsnow
             ),
+            fusion=zeros_grid,
             snow_melt_refreeze=(
                 zeros_grid if snow_step is None else snow_step.melt_refreeze_energy
             ),
