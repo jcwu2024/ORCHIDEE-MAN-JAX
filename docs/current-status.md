@@ -420,6 +420,16 @@ finite differences over frozen parameter ranges and held-out combinations.
 Network-weight and cross-day state gradients remain training checks and cannot
 satisfy Gate D2.
 
+The source-driven physical-parameter candidate registry is accepted. It binds
+34 parameter families and 91 scalar components to hashed Fortran source and
+classifies them as 9 inversion candidates, 17 sensitivity-only families, 2
+discrete controls, and 6 currently non-identifiable families. The first wave
+remains `VCMAX25`, `MAINT_RESP_SLOPE_C`, `ALLOC_MIN`, and `RESIDENCE_TIME`.
+Five second-wave PFT14 families require priors, controlled perturbations, and
+new gradient evidence before promotion. Registry membership does not expand
+the public parameter interface. See
+[`physical_parameter_candidate_registry_v1.md`](research/daily_coarse_graining/physical_parameter_candidate_registry_v1.md).
+
 ## Teacher Production Evidence
 
 Explore1000 admission measurements established the current production policy:
@@ -451,8 +461,8 @@ Markov contract are valid. Its operational evidence is recorded in
 ## Historical Neural Milestones
 
 The material below records completed v3-v5 dataset and rejected-model
-evidence. It is not the active work queue. The active milestone is the
-parameter/flux contract and non-neural daily replay described above.
+evidence. It is not the active work queue. The active milestone is Gate E1
+true-daily operator implementation from the accepted contracts above.
 
 The full 669-point baseline is generated and admitted. Finalization job
 `14400343` completed in 4:08:54 with exit code zero. Its fail-closed gates

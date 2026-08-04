@@ -75,9 +75,10 @@ transfers, all three daily-only capture families now run inside compiled
 Teacher folds, and true-label constrained replay passes cold continuation,
 ordinary later-day, and restart-year cases. The replay uses no 48-step
 candidate graph, preserves exact discrete/defined status, and closes declared
-water, carbon, and energy identities. The next dependency gate is D1,
-canonical Teacher physical-parameter gradient validation; Gate E neural
-implementation is structurally unblocked, but paid training remains deferred.
+water, carbon, and energy identities. Gate D1 canonical-Teacher gradients and
+the source-driven physical-parameter candidate registry are also complete.
+The active task is Gate E1 true-daily operator implementation; paid training
+remains deferred until its local architecture and budget boundaries pass.
 
 ## New Task Bootstrap
 
@@ -93,10 +94,10 @@ git log -1 --oneline
 Then read `NEXT_STEPS.md`, `CODE_MAP.md`, and `DOCUMENT_STATUS.md`. Report the
 active gate before editing or submitting a job. Gates A-D1 must not be reopened
 unless `jax_orchidee` drifts between the two branches or its evidence hashes
-drift. The active technical task is the bounded physical-parameter candidate
-registry described in `NEXT_STEPS.md`; later gates are queued work, not
-parallel instructions. A local `AGENTS.md`, when present, adds workspace and
-server rules but is deliberately not required for a clean Git handoff.
+drift. The active technical task is Gate E1 described in `NEXT_STEPS.md`; later
+gates are queued work, not parallel instructions. A local `AGENTS.md`, when
+present, adds workspace and server rules but is deliberately not required for
+a clean Git handoff.
 
 A Git clone contains source, tests, contracts, and small manifests. It does
 not contain forcing, Fortran reference packages, generated Teacher shards,

@@ -13,6 +13,8 @@ mode.
 - `../../DOCUMENT_STATUS.md`: active, conditional, and historical documents.
 - `conservative_daily_process_operator_v1.md`: active true-daily architecture,
   PFT extensibility, parameter ownership, and the pre-training admission gate.
+- `physical_parameter_candidate_registry_v1.md`: accepted source-driven
+  sensitivity/inversion candidate classification and PFT14 shortlist.
 - `../../current-status.md`: current project and research status authority.
 - `HANDOFF.md`: historical chronological log; consult only for a named past
   experiment or server job.
@@ -69,11 +71,11 @@ Not implemented or not accepted:
 ## Current Work
 
 Gate C's parameter ownership, daily water/carbon/energy labels, supplemental
-capture, and non-neural constrained replay are complete. Do not reopen them or
-regenerate 669-point data unless their frozen contracts drift. The active next
-gate is D1 canonical Teacher physical-parameter gradient validation; the new
-neural implementation must use the accepted Gate C updater rather than a
-direct next-stock predictor.
+capture, and non-neural constrained replay are complete. Gate D1 Teacher
+gradients and the physical-parameter candidate registry are also accepted. Do
+not reopen them or regenerate 669-point data unless their frozen contracts
+drift. The active next task is Gate E1 true-daily operator implementation; it
+must use the accepted Gate C updater rather than a direct next-stock predictor.
 
 The network interface must be PFT-extensible even though the current data and
 scientific claim remain PFT14-only. Continue from

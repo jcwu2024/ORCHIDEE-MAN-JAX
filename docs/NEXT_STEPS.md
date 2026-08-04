@@ -63,6 +63,12 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
   pairs, and two source-extracted Fortran finite-difference pairs pass the
   frozen forward/reverse/finite-difference policy. This does not validate a
   future daily surrogate; that remains Gate D2.
+- The source-driven physical-parameter candidate registry is complete. It
+  classifies 34 process-owned families (91 scalar components) as 9 inversion
+  candidates, 17 sensitivity-only families, 2 discrete controls, and 6
+  currently non-identifiable families. The first wave remains the four
+  paper-calibrated parameters; no additional public tuning channel was
+  enabled.
 
 ## Dependency-Ordered Gates
 
@@ -219,21 +225,23 @@ training loss is easy to optimize.
 
 ## Immediate Work Order
 
-Gates A-D1 are complete. Before exposing additional inversion channels, the
-next bounded task is a source-driven physical-parameter candidate registry:
-classify continuous scientific parameters, discrete/configuration controls,
-non-identifiable or redundant values, lifecycle-only inputs, valid ranges,
-observable constraints, and ownership by retained exact versus learned
-processes. This inventory does not expand the public parameter interface by
-itself. Gate E daily-operator implementation remains structurally unblocked;
-Gate D2 and Gate F remain later acceptance work.
+Gates A-D1 and the physical-parameter candidate registry are complete. The
+next bounded task is Gate E1: implement the true-daily operator skeleton from
+the accepted Gate C label and constrained-updater contracts. It must consume
+native six-hour forcing, preserve the explicit PFT axis and first-wave named
+parameter channels, produce process-structured daily fluxes/transfer
+fractions, and perform one conservative daily update followed by retained
+exact daily processes. Start with deterministic shape, mask, budget, and
+one-day true-label plumbing tests; do not launch paid training until the
+non-neural and untrained architecture boundaries pass locally. Gate D2 and
+Gate F remain later acceptance work.
 
 ## Completed Task Packet: Gate C
 
 This packet is complete and retained as its acceptance contract. Gates A-C
 must not be rerun unless shared Teacher code or a frozen contract changes.
-Gate D1 is complete; the physical-parameter candidate registry is the active
-next task, while Gates E-F remain queued.
+Gate D1 and the candidate registry are complete; Gate E1 is the active next
+task, while Gates D2 and F remain queued.
 
 ### Inputs
 

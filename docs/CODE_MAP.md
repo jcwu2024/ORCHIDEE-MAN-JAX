@@ -78,6 +78,9 @@ historical prototypes. Use the following classification.
 - `daily_pft_interface.py`: active Gate B2 parser, named-channel packer, mask,
   aggregation, and PFT-axis validation boundary. Its machine contract is
   `manifests/coarse_graining/daily_neural_pft_interface_v1.json`.
+- `physical_parameter_registry.py`: accepted source-hash and classification
+  validator for sensitivity/inversion candidates. Its machine contract is
+  `manifests/coarse_graining/physical_parameter_candidate_registry_v1.json`.
 - `daily_flux_label_inventory.py`: active Gate C1 parser and v5 contract audit.
   Its machine contract is
   `manifests/coarse_graining/daily_flux_label_inventory_v1.json`.
