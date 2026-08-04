@@ -147,6 +147,7 @@ class SoilcarbonAdsorptionResult(NamedTuple):
     doc: jnp.ndarray
     kd: jnp.ndarray
     doc_re: jnp.ndarray
+    transfer_to_adsorbed: jnp.ndarray
 
 
 class SoilcarbonWaterTransportResult(NamedTuple):
@@ -201,6 +202,7 @@ class SoilcarbonLeakCoreResult(NamedTuple):
     soil_doc_corr: jnp.ndarray
     cryoturbation_coefficients: SoilcarbonCryoturbationCoefficients | None
     perma_peat: SoilcarbonPermaPeatResult | None
+    transfers: SoilcarbonTransferDiagnostics | None
 
 
 class SoilcarbonResult(NamedTuple):
@@ -256,6 +258,21 @@ class SoilcarbonPermaPeatResult(NamedTuple):
     deepc_peat: jnp.ndarray
     deepc_pt: jnp.ndarray
     peat_olt: jnp.ndarray
+    carbon_transfer: jnp.ndarray
+
+
+class SoilcarbonTransferDiagnostics(NamedTuple):
+    """Source-resolved transfers from one ``soilcarbon_leak`` call."""
+
+    doc_input_total: jnp.ndarray
+    doc_free_to_adsorbed: jnp.ndarray
+    doc_advective_interface: jnp.ndarray
+    doc_diffusive_interface: jnp.ndarray
+    doc_run_2_peat: jnp.ndarray
+    cryoturbation_carbon_transfer: jnp.ndarray
+    cryoturbation_doc_transfer: jnp.ndarray
+    cryoturbation_litter_transfer: jnp.ndarray
+    perma_peat_carbon_transfer: jnp.ndarray
 
 
 class DeepCarbonVerticalIntegralResult(NamedTuple):
@@ -2702,6 +2719,7 @@ def soilcarbon_perma_peat_redistribute(
     """
 
     carbon = jnp.asarray(carbon_32l)
+    carbon_before = carbon
     cmax = jnp.asarray(cmax)
     zf = jnp.asarray(zf_soil_b)
     is_peat = jnp.asarray(is_peat, dtype=bool)
@@ -2756,6 +2774,7 @@ def soilcarbon_perma_peat_redistribute(
         deepc_peat=deepc_peat,
         deepc_pt=deepc_pt,
         peat_olt=peat_olt,
+        carbon_transfer=carbon - carbon_before,
     )
 
 
@@ -3307,7 +3326,12 @@ def soilcarbon_leak_adsorption_desorption(
     )
     doc = doc.at[:, :, :, IFREE, :, :].set(new_free)
     doc = doc.at[:, :, :, IADSORBED, :, :].set(new_ads)
-    return SoilcarbonAdsorptionResult(doc=doc, kd=kd, doc_re=doc_re)
+    return SoilcarbonAdsorptionResult(
+        doc=doc,
+        kd=kd,
+        doc_re=doc_re,
+        transfer_to_adsorbed=new_ads - old_ads,
+    )
 
 
 def soilcarbon_leak_water_transport(
@@ -3877,6 +3901,7 @@ def soilcarbon_leak_core_step(
     frac1=0.95,
     frac2=0.05,
     min_stomate=0.0,
+    capture_transfers: bool = False,
 ) -> SoilcarbonLeakCoreResult:
     """Run the source-backed ``soilcarbon_leak`` core in Fortran order.
 
@@ -3894,6 +3919,9 @@ def soilcarbon_leak_core_step(
         dif_doc = jnp.full((jnp.asarray(doc).shape[0],), 1.0e-5 * dt_days, dtype=jnp.asarray(doc).dtype)
 
     new_cryoturbation_coefficients = cryoturbation_coefficients
+    carbon_before_cryoturbation = jnp.asarray(carbon_32l)
+    doc_before_cryoturbation = jnp.asarray(doc)
+    litter_before_cryoturbation = jnp.asarray(litter_below)
     if ok_cryoturb:
         required = {
             "altmax_ind": altmax_ind,
@@ -3930,6 +3958,10 @@ def soilcarbon_leak_core_step(
         doc = cryo_result.doc
         litter_below = cryo_result.litter_below
 
+    cryoturbation_carbon_transfer = jnp.asarray(carbon_32l) - carbon_before_cryoturbation
+    cryoturbation_doc_transfer = jnp.asarray(doc) - doc_before_cryoturbation
+    cryoturbation_litter_transfer = jnp.asarray(litter_below) - litter_before_cryoturbation
+
     perma_peat_result = None
     if perma_peat:
         required = {
@@ -3952,6 +3984,7 @@ def soilcarbon_leak_core_step(
         carbon_32l = perma_peat_result.carbon_32l
 
     controls = soilcarbon_leak_activity_factors(fbact_doc, fbact)
+    doc_before_inputs = jnp.asarray(doc)
     doc_after_inputs = soilcarbon_leak_doc_inputs(
         doc,
         soilcarbon_input_doc,
@@ -4021,6 +4054,25 @@ def soilcarbon_leak_core_step(
         sro_bottom=sro_bottom,
         nslm=nslm,
     )
+    transfers = None
+    if capture_transfers:
+        transfers = SoilcarbonTransferDiagnostics(
+            # This is a process-local delta around the exact input owner, not
+            # a day-end stock inference. No other process can contribute here.
+            doc_input_total=doc_after_inputs - doc_before_inputs,
+            doc_free_to_adsorbed=ads.transfer_to_adsorbed,
+            doc_advective_interface=water.doc_flux,
+            doc_diffusive_interface=diffusion.doc_flux_diff,
+            doc_run_2_peat=export.doc_run_2_peat,
+            cryoturbation_carbon_transfer=cryoturbation_carbon_transfer,
+            cryoturbation_doc_transfer=cryoturbation_doc_transfer,
+            cryoturbation_litter_transfer=cryoturbation_litter_transfer,
+            perma_peat_carbon_transfer=(
+                jnp.zeros_like(carbon_32l)
+                if perma_peat_result is None
+                else perma_peat_result.carbon_transfer
+            ),
+        )
     return SoilcarbonLeakCoreResult(
         carbon_32l=decomp.carbon_32l,
         doc=export.doc,
@@ -4044,6 +4096,7 @@ def soilcarbon_leak_core_step(
         soil_doc_corr=export.soil_doc_corr,
         cryoturbation_coefficients=new_cryoturbation_coefficients,
         perma_peat=perma_peat_result,
+        transfers=transfers,
     )
 
 
@@ -4056,6 +4109,7 @@ SOILCARBON_LEAK_CORE_STEP_JIT_STATIC_ARGNAMES = (
     "cryoturbation_method",
     "use_fixed_cryoturbation_depth",
     "perma_peat",
+    "capture_transfers",
 )
 
 

@@ -858,6 +858,8 @@ class HydrolExplicitSnowStepResult(NamedTuple):
     snowmelt: jnp.ndarray
     temp_sol_add: jnp.ndarray
     snowmelt_from_maxmass: jnp.ndarray
+    melt_refreeze_energy: jnp.ndarray
+    liquid_excess_energy: jnp.ndarray
     provenance: tuple[str, ...]
     notes: tuple[str, ...]
 
@@ -1040,6 +1042,8 @@ class ExplicitSnowMainResult(NamedTuple):
     tot_melt: jnp.ndarray
     temp_sol_add: jnp.ndarray
     snowmelt_from_maxmass: jnp.ndarray
+    melt_refreeze_energy: jnp.ndarray
+    liquid_excess_energy: jnp.ndarray
     provenance: tuple[str, ...]
     notes: tuple[str, ...]
 
@@ -4161,6 +4165,8 @@ def explicitsnow_main_step(
         tot_melt=tot_melt,
         temp_sol_add=temp_sol_add,
         snowmelt_from_maxmass=snowmelt_from_maxmass,
+        melt_refreeze_energy=melt.meltxs,
+        liquid_excess_energy=liquid_excess.zliqheatxs,
         provenance=EXPLICITSNOW_MAIN_PROVENANCE,
         notes=(
             "Full adapter is source-ordered for nsnow=3 and nnobio=1.",
@@ -5062,6 +5068,8 @@ def hydrol_explicit_snow_step(
         snowmelt=main.snowmelt,
         temp_sol_add=main.temp_sol_add,
         snowmelt_from_maxmass=main.snowmelt_from_maxmass,
+        melt_refreeze_energy=main.melt_refreeze_energy,
+        liquid_excess_energy=main.liquid_excess_energy,
         provenance=(
             "fortran_source/ORCHIDEE/src_sechiba/hydrol.f90::hydrol_main lines 1177-1197",
             *EXPLICITSNOW_MAIN_PROVENANCE,

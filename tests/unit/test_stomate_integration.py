@@ -4510,6 +4510,49 @@ def test_ok_leak_explicit_step_closes_combined_source_carbon_inventory():
     assert np.max(np.abs(np.asarray(balance.closure))) <= 1.0e-12
 
 
+def test_ok_leak_transfer_capture_is_default_off_and_preserves_scientific_outputs():
+    args = _ok_leak_inputs()
+    ordinary = stomate_ok_leak_explicit(**args)
+    captured = stomate_ok_leak_explicit(**args, capture_transfers=True)
+
+    assert ordinary.transfers is None
+    assert ordinary.soilcarbon.transfers is None
+    assert captured.transfers is not None
+    assert captured.soilcarbon.transfers is not None
+    for name in (
+        "litter_above",
+        "litter_below",
+        "resp_hetero_litter",
+        "soilcarbon_input_doc",
+    ):
+        np.testing.assert_array_equal(
+            np.asarray(getattr(captured.littercalc, name)),
+            np.asarray(getattr(ordinary.littercalc, name)),
+        )
+    for name in ("carbon_32l", "doc", "doc_exp", "doc_run", "doc_drain", "doc_flood"):
+        np.testing.assert_array_equal(
+            np.asarray(getattr(captured.soilcarbon, name)),
+            np.asarray(getattr(ordinary.soilcarbon, name)),
+        )
+
+    transfers = captured.transfers
+    np.testing.assert_allclose(
+        transfers.litter_to_doc,
+        captured.littercalc.soilcarbon_input_doc * args["dt_days"],
+        rtol=0,
+        atol=0,
+    )
+    np.testing.assert_allclose(
+        transfers.poc_gross_decomposition,
+        captured.soilcarbon.fluxtot,
+        rtol=0,
+        atol=0,
+    )
+    assert np.isfinite(np.asarray(transfers.doc_free_to_adsorbed)).all()
+    assert np.isfinite(np.asarray(transfers.doc_advective_interface)).all()
+    assert np.isfinite(np.asarray(transfers.doc_diffusive_interface)).all()
+
+
 def test_ok_leak_explicit_adapter_requires_explicit_litter_controls():
     args = _ok_leak_inputs()
     args["control_temp_above"] = None
