@@ -10,6 +10,11 @@ Gate E1 establishes the executable boundary for the new neural research
 program. It does not choose a final network by accident, train a scientific
 model, or claim surrogate-gradient equivalence.
 
+Read [`failed_architecture_lessons.md`](failed_architecture_lessons.md) before
+implementation. It records the rejected state-prediction, objective,
+conditioning, carbon-stock, and 48-step designs that this skeleton must not
+silently recreate.
+
 The required transition is:
 
 ```text

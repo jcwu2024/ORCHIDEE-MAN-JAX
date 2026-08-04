@@ -17,6 +17,9 @@ mode.
   sensitivity/inversion candidate classification and PFT14 shortlist.
 - `gate_e1_daily_operator_skeleton.md`: active implementation packet for the
   next true-daily neural boundary, local acceptance tests, and forbidden paths.
+- `failed_architecture_lessons.md`: active negative-design authority; read it
+  before selecting an architecture or objective so rejected experiments are
+  not repeated.
 - `../../current-status.md`: current project and research status authority.
 - `HANDOFF.md`: historical chronological log; consult only for a named past
   experiment or server job.

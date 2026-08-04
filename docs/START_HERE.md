@@ -95,9 +95,12 @@ Then read `NEXT_STEPS.md`, `CODE_MAP.md`, and `DOCUMENT_STATUS.md`. Report the
 active gate before editing or submitting a job. Gates A-D1 must not be reopened
 unless `jax_orchidee` drifts between the two branches or its evidence hashes
 drift. The active technical task is Gate E1 described in `NEXT_STEPS.md`; later
-gates are queued work, not parallel instructions. A local `AGENTS.md`, when
-present, adds workspace and server rules but is deliberately not required for
-a clean Git handoff.
+gates are queued work, not parallel instructions. Before choosing or inheriting
+a neural architecture, read
+`research/daily_coarse_graining/failed_architecture_lessons.md`; it replaces
+the need to inspect every dated negative-result report. A local `AGENTS.md`,
+when present, adds workspace and server rules but is deliberately not required
+for a clean Git handoff.
 
 A Git clone contains source, tests, contracts, and small manifests. It does
 not contain forcing, Fortran reference packages, generated Teacher shards,

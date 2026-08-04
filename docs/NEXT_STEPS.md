@@ -211,7 +211,9 @@ day-start state + native six-hour forcing + parameters/traits/static data
 Promote in order: supervised flux fit, one-day state/budget checks, 7- and
 30-day free rollout, 365-day validation, long-period held-out validation, and
 CPU/GPU performance. Do not revive a rejected prototype merely because its
-training loss is easy to optimize.
+training loss is easy to optimize. The binding negative-design decisions and
+conditions for reopening an old idea are in
+[`failed_architecture_lessons.md`](research/daily_coarse_graining/failed_architecture_lessons.md).
 
 ### Gate F: Product Acceptance
 

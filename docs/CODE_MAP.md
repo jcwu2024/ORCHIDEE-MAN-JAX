@@ -97,6 +97,12 @@ historical prototypes. Use the following classification.
 
 ### Historical or rejected neural prototypes
 
+Read
+`docs/research/daily_coarse_graining/failed_architecture_lessons.md` before
+reusing any historical neural code. It records the evidence-backed rejection
+reason, retained lesson, reusable infrastructure, and conditions for reopening
+an idea.
+
 - `canonical_*`, `structured_canonical_daily_model.py`,
   `axis_process_coupled_daily_model.py`, `causal_carbon_*`,
   `rollout_stability_*`, `persistence_baseline.py`,
