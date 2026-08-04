@@ -243,7 +243,39 @@ class ExplicitOkLeakResult(NamedTuple):
     wet_dep_ground: jnp.ndarray
     wet_dep_flood: jnp.ndarray
     interception_storage: jnp.ndarray
+    transfers: OkLeakTransferStepV1 | None
     requires_trace: tuple[str, ...]
+
+
+class OkLeakTransferStepV1(NamedTuple):
+    """Source-resolved amount tensors from one OK_LEAK call."""
+
+    litter_respiration: jnp.ndarray
+    litter_flood_respiration: jnp.ndarray
+    litter_to_doc: jnp.ndarray
+    floodcarbon_input: jnp.ndarray
+    poc_gross_decomposition: jnp.ndarray
+    poc_flood_gross_decomposition: jnp.ndarray
+    doc_gross_decomposition: jnp.ndarray
+    doc_flood_gross_decomposition: jnp.ndarray
+    doc_to_topsoil: jnp.ndarray
+    doc_to_subsoil: jnp.ndarray
+    doc_precip2ground: jnp.ndarray
+    doc_precip2canopy: jnp.ndarray
+    dry_dep_canopy: jnp.ndarray
+    wet_dep_ground: jnp.ndarray
+    wet_dep_flood: jnp.ndarray
+    doc_run: jnp.ndarray
+    doc_drain: jnp.ndarray
+    doc_flood: jnp.ndarray
+    doc_run_2_peat: jnp.ndarray
+    doc_free_to_adsorbed: jnp.ndarray
+    doc_advective_interface: jnp.ndarray
+    doc_diffusive_interface: jnp.ndarray
+    cryoturbation_carbon_transfer: jnp.ndarray
+    cryoturbation_doc_transfer: jnp.ndarray
+    cryoturbation_litter_transfer: jnp.ndarray
+    perma_peat_carbon_transfer: jnp.ndarray
 
 
 class ExplicitOkLeakWithMaintenanceResult(NamedTuple):
@@ -3830,6 +3862,7 @@ def stomate_ok_leak_explicit(
     perma_peat_veget_mask=None,
     frac1=0.95,
     frac2=0.05,
+    capture_transfers: bool = False,
 ) -> ExplicitOkLeakResult:
     """Compose the audited OK_LEAK litter and soilcarbon path from explicit inputs.
 
@@ -3958,6 +3991,7 @@ def stomate_ok_leak_explicit(
         perma_peat_veget_mask=perma_peat_veget_mask,
         frac1=frac1,
         frac2=frac2,
+        capture_transfers=capture_transfers,
     )
     doc_export = soilcarbon_leak_doc_export_aggregate(
         soilcarbon.doc_exp,
@@ -3975,6 +4009,39 @@ def stomate_ok_leak_explicit(
         dt_days=dt_days,
         min_sechiba=min_sechiba,
     )
+    transfers = None
+    if capture_transfers:
+        if soilcarbon.transfers is None:
+            raise RuntimeError("soilcarbon transfer capture was requested but not returned")
+        core_transfers = soilcarbon.transfers
+        transfers = OkLeakTransferStepV1(
+            litter_respiration=littercalc.resp_hetero_litter * dt_days,
+            litter_flood_respiration=littercalc.resp_hetero_flood * dt_days,
+            litter_to_doc=littercalc.soilcarbon_input_doc * dt_days,
+            floodcarbon_input=littercalc.floodcarbon_input * dt_days,
+            poc_gross_decomposition=soilcarbon.fluxtot,
+            poc_flood_gross_decomposition=soilcarbon.fluxtot_flood,
+            doc_gross_decomposition=soilcarbon.fluxtot_doc,
+            doc_flood_gross_decomposition=soilcarbon.fluxtot_doc_flood,
+            doc_to_topsoil=jnp.asarray(doc_to_topsoil) * dt_days,
+            doc_to_subsoil=jnp.asarray(doc_to_subsoil) * dt_days,
+            doc_precip2ground=jnp.asarray(doc_precip2ground),
+            doc_precip2canopy=jnp.asarray(doc_precip2canopy),
+            dry_dep_canopy=jnp.asarray(dry_dep_canopy),
+            wet_dep_ground=tf_doc.wet_dep_ground,
+            wet_dep_flood=tf_doc.wet_dep_flood,
+            doc_run=soilcarbon.doc_run,
+            doc_drain=soilcarbon.doc_drain,
+            doc_flood=soilcarbon.doc_flood,
+            doc_run_2_peat=core_transfers.doc_run_2_peat,
+            doc_free_to_adsorbed=core_transfers.doc_free_to_adsorbed,
+            doc_advective_interface=core_transfers.doc_advective_interface,
+            doc_diffusive_interface=core_transfers.doc_diffusive_interface,
+            cryoturbation_carbon_transfer=core_transfers.cryoturbation_carbon_transfer,
+            cryoturbation_doc_transfer=core_transfers.cryoturbation_doc_transfer,
+            cryoturbation_litter_transfer=core_transfers.cryoturbation_litter_transfer,
+            perma_peat_carbon_transfer=core_transfers.perma_peat_carbon_transfer,
+        )
     return ExplicitOkLeakResult(
         littercalc=littercalc,
         soilcarbon=soilcarbon,
@@ -3982,6 +4049,7 @@ def stomate_ok_leak_explicit(
         wet_dep_ground=tf_doc.wet_dep_ground,
         wet_dep_flood=tf_doc.wet_dep_flood,
         interception_storage=tf_doc.interception_storage,
+        transfers=transfers,
         requires_trace=(),
     )
 

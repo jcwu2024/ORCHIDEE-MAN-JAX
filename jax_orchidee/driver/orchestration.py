@@ -1860,6 +1860,96 @@ class DriverRuntimeStepMetadata:
     npts: int
 
 
+class DriverWaterTransferStepV1(NamedTuple):
+    """Source-resolved water terms from one SECHIBA step."""
+
+    precip2canopy: object
+    precip2ground: object
+    canopy2ground: object
+    vevapwet: object
+    transpir: object
+    vevapnu_pft: object
+    vevapnu: object
+    vevapsno: object
+    subsnownobio: object
+    vevapflo: object
+    snowmelt: object
+    snowmelt_from_maxmass: object
+    soil_infiltration: object
+    water2infilt: object
+    wat_flux: object
+    runoff_per_soil: object
+    drainage_per_soil: object
+    runoff2peat: object
+    floodout: object
+    returnflow: object
+    reinfiltration: object
+    irrigation: object
+
+
+class DriverEnergyFluxStepV1(NamedTuple):
+    """Source energy fluxes from one ENERBIL/THERMOSOIL/snow step."""
+
+    netrad: object
+    netrad_pft: object
+    fluxsens: object
+    fluxlat: object
+    fluxsubli: object
+    pgflux: object
+    soilflx: object
+    soilflx_pft: object
+    precipitation_snow_heat: object
+    snow_melt_refreeze: object
+    snow_liquid_excess: object
+
+
+class DriverDailyFluxStepV1(NamedTuple):
+    water: DriverWaterTransferStepV1
+    energy: DriverEnergyFluxStepV1
+
+
+class DriverSechibaDailyFluxV1(NamedTuple):
+    """Daily-only SECHIBA transfer capture with no retained step axis."""
+
+    water: DriverWaterTransferStepV1
+    energy: DriverEnergyFluxStepV1
+
+
+class DriverDailyFluxLabelsV1(NamedTuple):
+    """Three frozen Gate-C capture families for one complete Teacher day."""
+
+    sechiba: DriverSechibaDailyFluxV1
+    ok_leak: object
+
+
+def _reduce_daily_flux_steps(
+    steps: DriverDailyFluxStepV1,
+    *,
+    dt_sechiba: float,
+) -> DriverSechibaDailyFluxV1:
+    return DriverSechibaDailyFluxV1(
+        water=jax.tree_util.tree_map(lambda value: jnp.sum(value, axis=0), steps.water),
+        energy=jax.tree_util.tree_map(
+            lambda value: jnp.sum(value, axis=0) * jnp.asarray(dt_sechiba),
+            steps.energy,
+        ),
+    )
+
+
+def _single_step_daily_flux(
+    step: DriverDailyFluxStepV1,
+    *,
+    dt_sechiba: float,
+) -> DriverSechibaDailyFluxV1:
+    return DriverSechibaDailyFluxV1(
+        water=step.water,
+        energy=jax.tree_util.tree_map(
+            lambda value: value * jnp.asarray(dt_sechiba),
+            step.energy,
+        ),
+    )
+
+
 @dataclass(frozen=True)
 class DriverRuntimeStepResult:
     """Compact half-hour runtime step result."""
@@ -1869,6 +1959,7 @@ class DriverRuntimeStepResult:
     next_state: object | None
     metadata: DriverRuntimeStepMetadata | None
     missing_components: tuple[str, ...]
+    daily_flux_step: DriverDailyFluxStepV1 | None = None
     provenance: tuple[str, ...] = (
         "fortran_source/ORCHIDEE/src_driver/dim2_driver.f90 lines 839-908 advances forcing steps",
         "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90::sechiba_main lines 997-1224 advances SECHIBA state",
@@ -1976,6 +2067,7 @@ class DriverRuntimeDayStepTransition:
     stopped_at_tstep: int | None
     state_gaps: tuple[DriverDayStateGap, ...]
     compiled_entry_stacks: Mapping[str, object] | None = None
+    sechiba_daily_fluxes: DriverSechibaDailyFluxV1 | None = None
 
     @property
     def ok(self) -> bool:
@@ -2296,6 +2388,7 @@ class DriverRuntimeDayResult:
     missing_components: tuple[str, ...]
     daily_process_fold: StomateDailyProcessFold | None = None
     pre_daily_training_boundary: DriverPreDailyTrainingBoundary | None = None
+    daily_flux_labels: DriverDailyFluxLabelsV1 | None = None
     provenance: tuple[str, ...] = (
         "fortran_source/ORCHIDEE/src_driver/dim2_driver.f90 lines 839-908 advances forcing steps",
         "fortran_source/ORCHIDEE/src_sechiba/sechiba.f90::sechiba_main lines 997-1224 advances SECHIBA state",
@@ -5877,6 +5970,83 @@ def _runtime_next_state_from_components(
     return _packet_from_previous_step_fields(tstep=int(tstep), fields=fields)
 
 
+def _runtime_daily_flux_step_from_components(
+    *,
+    enerbil_local: EnerbilFirstStepLocalAssembly,
+    hydrol_module: HydrolFirstStepModuleClosure,
+    thermosoil_module: ThermosoilFirstStepModuleClosure,
+) -> DriverDailyFluxStepV1:
+    """Expose exact process terms without changing the runtime state packet."""
+
+    enerbil = enerbil_local.step
+    hydrol = hydrol_module
+    snow_step = hydrol.snow_step
+    zeros_grid = jnp.zeros_like(enerbil.flux.netrad)
+    zeros_snow = jnp.zeros_like(hydrol.snow_state.snow_nobio)
+    zeros_snow_layers = jnp.zeros_like(hydrol.snow_state.snowdz)
+    routing = hydrol.routing_zero or {}
+    soil_infiltration = jnp.stack(
+        tuple(tile.infilt.infilt_tot for tile in hydrol.module.soil.tile_results),
+        axis=1,
+    )
+    explicit_energy = enerbil.explicit_snow
+    return DriverDailyFluxStepV1(
+        water=DriverWaterTransferStepV1(
+            precip2canopy=hydrol.outputs.precip2canopy,
+            precip2ground=hydrol.outputs.precip2ground,
+            canopy2ground=hydrol.outputs.canopy2ground,
+            vevapwet=enerbil.evapveg_pft.vevapwet,
+            transpir=enerbil.evapveg_pft.transpir,
+            vevapnu_pft=enerbil.evapveg_pft.vevapnu_pft,
+            vevapnu=enerbil.evapveg_grid.vevapnu,
+            vevapsno=(
+                enerbil.evapveg_grid.vevapsno
+                if snow_step is None
+                else snow_step.vevapsno
+            ),
+            subsnownobio=zeros_snow if snow_step is None else snow_step.subsnownobio,
+            vevapflo=hydrol.module.flood.vevapflo,
+            snowmelt=zeros_grid if snow_step is None else snow_step.snowmelt,
+            snowmelt_from_maxmass=(
+                zeros_grid if snow_step is None else snow_step.snowmelt_from_maxmass
+            ),
+            soil_infiltration=soil_infiltration,
+            water2infilt=hydrol.module.soil.water2infilt,
+            wat_flux=hydrol.outputs.wat_flux,
+            runoff_per_soil=hydrol.outputs.runoff_per_soil,
+            drainage_per_soil=hydrol.outputs.drainage_per_soil,
+            runoff2peat=hydrol.outputs.runoff2peat,
+            floodout=hydrol.outputs.floodout,
+            returnflow=routing.get("returnflow", zeros_grid),
+            reinfiltration=routing.get("reinfiltration", zeros_grid[:, None]),
+            irrigation=routing.get("irrigation", zeros_grid[:, None]),
+        ),
+        energy=DriverEnergyFluxStepV1(
+            netrad=enerbil.flux.netrad,
+            netrad_pft=enerbil.begin.netrad_pft,
+            fluxsens=enerbil.flux.fluxsens,
+            fluxlat=enerbil.flux.fluxlat,
+            fluxsubli=enerbil.flux.fluxsubli,
+            pgflux=(
+                thermosoil_module.downstream_payload["soilflx"]
+                if explicit_energy is None
+                else explicit_energy.pgflux
+            ),
+            soilflx=thermosoil_module.downstream_payload["soilflx"],
+            soilflx_pft=thermosoil_module.downstream_payload["soilflx_pft"],
+            precipitation_snow_heat=(
+                zeros_grid if explicit_energy is None else explicit_energy.phpsnow
+            ),
+            snow_melt_refreeze=(
+                zeros_grid if snow_step is None else snow_step.melt_refreeze_energy
+            ),
+            snow_liquid_excess=(
+                zeros_snow_layers if snow_step is None else snow_step.liquid_excess_energy
+            ),
+        ),
+    )
+
+
 def _paper_1961_next_step_runtime_result_compact(
     config_path: str | Path,
     *,
@@ -5899,6 +6069,7 @@ def _paper_1961_next_step_runtime_result_compact(
     prebuilt_base_payload: IntersurfFirstStepPayload | None = None,
     runtime_run_scalars: RunScalars | None = None,
     runtime_forcing=None,
+    capture_daily_flux_step: bool = False,
 ) -> DriverRuntimeStepResult:
     """Advance one half-hour step without retaining audit scaffold objects."""
 
@@ -6352,6 +6523,15 @@ def _paper_1961_next_step_runtime_result_compact(
         next_state=next_state,
         metadata=metadata,
         missing_components=(),
+        daily_flux_step=(
+            _runtime_daily_flux_step_from_components(
+                enerbil_local=enerbil_local,
+                hydrol_module=hydrol_module,
+                thermosoil_module=thermosoil_module,
+            )
+            if capture_daily_flux_step
+            else None
+        ),
     )
 
 
@@ -8106,6 +8286,7 @@ def _paper_compiled_ok_leak_fold(
     perma_peat: bool,
     conc_doc_rain: float,
     retain_step_results: bool = False,
+    capture_daily_transfers: bool = False,
 ):
     """Compile the 48 source-ordered half-hour OK_LEAK state transitions."""
 
@@ -8216,7 +8397,10 @@ def _paper_compiled_ok_leak_fold(
             sro_bottom=sro_bottom,
             perma_peat=perma_peat,
         )
-        result = stomate_ok_leak_explicit(**ok_args)
+        result = stomate_ok_leak_explicit(
+            **ok_args,
+            capture_transfers=capture_daily_transfers,
+        )
         updates = _paper_half_hour_ok_leak_state_updates(result)
         next_carry = _compiled_ok_leak_carry_from_mapping(updates)
         return next_carry, result
@@ -8226,7 +8410,15 @@ def _paper_compiled_ok_leak_fold(
         outputs,
         retain_step_results=retain_step_results,
     )
-    return final_carry, selected_outputs
+    daily_transfers = None
+    if capture_daily_transfers:
+        daily_transfers = jax.tree_util.tree_map(
+            lambda value: jnp.sum(value, axis=0),
+            outputs.transfers,
+        )
+        if not retain_step_results:
+            selected_outputs = selected_outputs._replace(transfers=None)
+    return final_carry, selected_outputs, daily_transfers
 
 
 _paper_compiled_ok_leak_fold_jit = jax.jit(
@@ -8242,6 +8434,7 @@ _paper_compiled_ok_leak_fold_jit = jax.jit(
         "perma_peat",
         "conc_doc_rain",
         "retain_step_results",
+        "capture_daily_transfers",
     ),
 )
 
@@ -8263,6 +8456,7 @@ def _paper_half_hour_ok_leak_fold_from_entries(
     use_compiled_ok_leak: bool = False,
     compiled_entry_stacks: Mapping[str, object] | None = None,
     capture_compiled_driver_steps: bool = False,
+    capture_daily_transfers: bool = False,
 ) -> tuple[object, dict[str, object]] | tuple[
     object, dict[str, object], DriverCompiledOkLeakStepInputs
 ]:
@@ -8282,6 +8476,8 @@ def _paper_half_hour_ok_leak_fold_from_entries(
         raise ValueError("OK_LEAK half-hour fold requires at least one entry payload")
     if capture_compiled_driver_steps and not use_compiled_ok_leak:
         raise ValueError("OK_LEAK driver-step capture requires the compiled fold")
+    if capture_daily_transfers and not use_compiled_ok_leak:
+        raise ValueError("OK_LEAK daily transfer capture requires the compiled fold")
 
     state = initial_state.fields_by_component["slowproc_stomate_previous_step_state"]
     required = (*_OK_LEAK_HALF_HOUR_STATE_FIELDS, "turnover_daily", "bm_to_litter", "biomass", "veget_max", "sla_calc")
@@ -8439,7 +8635,7 @@ def _paper_half_hour_ok_leak_fold_from_entries(
                 if name not in _COMPILED_OK_LEAK_DYNAMIC_NAMES
                 and name not in {"nslm", "ndeep"}
             }
-            final_carry, last_result = _paper_compiled_ok_leak_fold_jit(
+            final_carry, last_result, daily_transfers = _paper_compiled_ok_leak_fold_jit(
                 initial=_compiled_ok_leak_carry_from_mapping(current),
                 steps=series,
                 static_inputs=static_inputs,
@@ -8465,10 +8661,15 @@ def _paper_half_hour_ok_leak_fold_from_entries(
                 ok_tf_doc=parse_run_def_bool(run_def_values["TF_DOC"]),
                 perma_peat=parse_run_def_bool(run_def_values["PERMA_PEAT"]),
                 conc_doc_rain=parse_run_def_float(run_def_values, "CONC_DOC_RAIN"),
+                capture_daily_transfers=capture_daily_transfers,
             )
             updates = _compiled_ok_leak_updates(final_carry)
+            if capture_compiled_driver_steps and capture_daily_transfers:
+                return last_result, updates, series, daily_transfers
             if capture_compiled_driver_steps:
                 return last_result, updates, series
+            if capture_daily_transfers:
+                return last_result, updates, daily_transfers
             return last_result, updates
         last_result = stomate_ok_leak_explicit(**ok_args)
         current = _paper_half_hour_ok_leak_state_updates(last_result)
@@ -10043,6 +10244,7 @@ def _paper_compiled_sechiba_scan(
     runtime_spec,
     hydrol_static_template: Mapping[str, object],
     hydrol_runtime_static_tables,
+    capture_daily_flux_labels: bool = False,
 ):
     hydrol_dynamic_names = tuple(
         name
@@ -10073,6 +10275,7 @@ def _paper_compiled_sechiba_scan(
         int(hydrol_runtime_static_tables.mineral.imax),
         hydrol_dynamic_names,
         diffuco_dynamic_names,
+        bool(capture_daily_flux_labels),
     )
     cached = _COMPILED_SECHIBA_SCAN_CACHE.get(cache_key)
     if cached is not None:
@@ -10166,9 +10369,15 @@ def _paper_compiled_sechiba_scan(
             prebuilt_base_payload=payload,
             runtime_run_scalars=run_scalars,
             runtime_forcing=runtime_forcing,
+            capture_daily_flux_step=capture_daily_flux_labels,
         )
         entry_values = tuple(result.entry_payload[name] for name in _COMPILED_STOMATE_ENTRY_FIELDS)
-        return result.next_state.values_by_component, entry_values
+        outputs = (
+            (entry_values, result.daily_flux_step)
+            if capture_daily_flux_labels
+            else entry_values
+        )
+        return result.next_state.values_by_component, outputs
 
     def scan_transition(
         initial_values,
@@ -10190,7 +10399,18 @@ def _paper_compiled_sechiba_scan(
                 diffuco_parameter_values,
             )
 
-        return jax.lax.scan(body, initial_values, forcing_series)
+        final_values, outputs = jax.lax.scan(body, initial_values, forcing_series)
+        if not capture_daily_flux_labels:
+            return final_values, outputs, None
+        entry_values, flux_steps = outputs
+        return (
+            final_values,
+            entry_values,
+            _reduce_daily_flux_steps(
+                flux_steps,
+                dt_sechiba=context.dt_sechiba,
+            ),
+        )
 
     compiled = jax.jit(scan_transition)
     if len(_COMPILED_SECHIBA_SCAN_CACHE) >= 8:
@@ -10213,6 +10433,7 @@ def _paper_1961_later_day_half_hour_transition(
     use_compiled_sechiba_day: bool = False,
     materialize_compiled_entries: bool = True,
     compiled_diffuco_parameter_values: DriverCompiledDiffucoParameterValues | None = None,
+    capture_daily_flux_labels: bool = False,
 ) -> DriverRuntimeDayStepTransition:
     """Advance the 48 half-hour SECHIBA/STOMATE-entry steps for one day.
 
@@ -10248,6 +10469,8 @@ def _paper_1961_later_day_half_hour_transition(
         and not bool(context.hydrol_soil_peat_hydro)
         and not bool(use_fast_state_loop)
     )
+    if capture_daily_flux_labels and not can_compile_day:
+        raise ValueError("daily flux capture requires the complete-day compiled SECHIBA path")
     if can_compile_day:
         first_tstep = day_inputs.start
         first_compiled_forcing = (
@@ -10326,6 +10549,7 @@ def _paper_1961_later_day_half_hour_transition(
             ),
             module_jit=True,
             diffuco_local_jit=True,
+            capture_daily_flux_step=capture_daily_flux_labels,
         )
         if first_step.ok:
             runtime_state = fast_state_from_previous_packet(first_step.next_state)
@@ -10368,8 +10592,9 @@ def _paper_1961_later_day_half_hour_transition(
                 runtime_spec=runtime_state.spec,
                 hydrol_static_template=day_inputs.hydrol_static_template,
                 hydrol_runtime_static_tables=day_inputs.hydrol_runtime_static_tables,
+                capture_daily_flux_labels=capture_daily_flux_labels,
             )
-            final_values, stacked_entries = compiled_scan(
+            final_values, stacked_entries, sechiba_daily_fluxes = compiled_scan(
                 runtime_state.values_by_component,
                 forcing_series,
                 landpoint_payload,
@@ -10378,6 +10603,16 @@ def _paper_1961_later_day_half_hour_transition(
                 diffuco_day_inputs,
                 diffuco_parameter_values,
             )
+            if capture_daily_flux_labels:
+                first_daily_flux = _single_step_daily_flux(
+                    first_step.daily_flux_step,
+                    dt_sechiba=context.dt_sechiba,
+                )
+                sechiba_daily_fluxes = jax.tree_util.tree_map(
+                    lambda first, rest: first + rest,
+                    first_daily_flux,
+                    sechiba_daily_fluxes,
+                )
             compiled_entry_stacks = {
                 name: jnp.concatenate(
                     (
@@ -10416,6 +10651,7 @@ def _paper_1961_later_day_half_hour_transition(
                 stopped_at_tstep=None,
                 state_gaps=(),
                 compiled_entry_stacks=compiled_entry_stacks,
+                sechiba_daily_fluxes=sechiba_daily_fluxes,
             )
     for tstep in range(day_inputs.start, day_inputs.start + day_inputs.steps_per_stomate):
         current_state = current_loop_state
@@ -10509,6 +10745,7 @@ def paper_1961_driver_later_day_runtime_result(
     compiled_stomate_season_template: StomateRestartSeasonState | None = None,
     compiled_diffuco_parameter_values: DriverCompiledDiffucoParameterValues | None = None,
     capture_pre_daily_training_boundary: bool = False,
+    capture_daily_flux_labels: bool = False,
 ) -> DriverRuntimeDayResult:
     """Advance one later day and retain only runtime outputs.
 
@@ -10576,6 +10813,7 @@ def paper_1961_driver_later_day_runtime_result(
         use_compiled_sechiba_day=use_compiled_sechiba_day,
         materialize_compiled_entries=materialize_compiled_entries,
         compiled_diffuco_parameter_values=compiled_diffuco_parameter_values,
+        capture_daily_flux_labels=capture_daily_flux_labels,
     )
     completed_payloads = half_hour_transition.completed_entry_payloads
     current_state = half_hour_transition.current_state
@@ -10750,12 +10988,25 @@ def paper_1961_driver_later_day_runtime_result(
         use_compiled_ok_leak=use_compiled_sechiba_day,
         compiled_entry_stacks=half_hour_transition.compiled_entry_stacks,
         capture_compiled_driver_steps=capture_pre_daily_training_boundary,
+        capture_daily_transfers=capture_daily_flux_labels,
     )
-    if capture_pre_daily_training_boundary:
+    if capture_pre_daily_training_boundary and capture_daily_flux_labels:
+        (
+            half_hour_ok_leak,
+            half_hour_updates,
+            ok_leak_driver_steps,
+            ok_leak_daily_transfers,
+        ) = ok_leak_fold
+    elif capture_pre_daily_training_boundary:
         half_hour_ok_leak, half_hour_updates, ok_leak_driver_steps = ok_leak_fold
+        ok_leak_daily_transfers = None
+    elif capture_daily_flux_labels:
+        half_hour_ok_leak, half_hour_updates, ok_leak_daily_transfers = ok_leak_fold
+        ok_leak_driver_steps = None
     else:
         half_hour_ok_leak, half_hour_updates = ok_leak_fold
         ok_leak_driver_steps = None
+        ok_leak_daily_transfers = None
     state_after_ok_leak = _paper_previous_state_with_stomate_updates(previous_state, half_hour_updates)
     stomate_bundle_source, stomate_bundles, stomate_bundle_gaps = _paper_later_day_stomate_input_bundles(
         config_path=config_path,
@@ -10874,6 +11125,14 @@ def paper_1961_driver_later_day_runtime_result(
                 "temp_sol": completed_payloads[-1]["temp_sol"],
             },
         )
+    daily_flux_labels = None
+    if capture_daily_flux_labels:
+        if half_hour_transition.sechiba_daily_fluxes is None or ok_leak_daily_transfers is None:
+            raise RuntimeError("complete-day flux capture did not return all three families")
+        daily_flux_labels = DriverDailyFluxLabelsV1(
+            sechiba=half_hour_transition.sechiba_daily_fluxes,
+            ok_leak=ok_leak_daily_transfers,
+        )
     return DriverRuntimeDayResult(
         year=year,
         day_index=int(day_index),
@@ -10885,6 +11144,7 @@ def paper_1961_driver_later_day_runtime_result(
         missing_components=tuple(dict.fromkeys(missing)),
         daily_process_fold=daily_fold,
         pre_daily_training_boundary=pre_daily_training_boundary,
+        daily_flux_labels=daily_flux_labels,
     )
 
 
