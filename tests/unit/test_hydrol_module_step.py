@@ -12,7 +12,21 @@ import pytest
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+from jax_orchidee.driver.init import (  # noqa: E402
+    parse_run_def,
+    parse_run_def_bool,
+    parse_run_def_float,
+    parse_run_def_indexed_vector,
+)
+from jax_orchidee.driver.orchestration import (  # noqa: E402
+    _add_hydrol_to_previous_fields,
+    _empty_previous_step_state_fields,
+    paper_1961_driver_timestep_scaffold,
+)
+from jax_orchidee.driver.stomate_boundary import paper_case_cwrr_vertical_soil_grid_from_used_run_def  # noqa: E402
+from jax_orchidee.driver.trace import read_static_fields_from_fixed_format_trace_dir  # noqa: E402
 from jax_orchidee.sechiba.hydrol import (  # noqa: E402
+    HYDROL_FIRST_STEP_PRECALL_REQUIRED_FIELDS,
     PEAT_MCR,
     PEAT_MCS,
     POROS_ORG,
@@ -26,15 +40,13 @@ from jax_orchidee.sechiba.hydrol import (  # noqa: E402
     USDA_VG_M,
     USDA_VG_PSI_FC,
     USDA_VG_PSI_WP,
-    HYDROL_FIRST_STEP_PRECALL_REQUIRED_FIELDS,
     assemble_hydrol_first_step_precall_payload,
     build_mineral_cwrr_tables,
     build_peat_cwrr_tables,
     hydrol_after_under_mcr_runoff_peat_tide_routing,
     hydrol_canop_interception,
-    hydrol_flood_reservoir,
     hydrol_first_step_profil_froz_from_restart_thermosoil,
-    hydrol_static_precall_template_from_slowproc,
+    hydrol_flood_reservoir,
     hydrol_initial_tmc_from_restart_mc,
     hydrol_layer_moisture_content,
     hydrol_module_diagnostics,
@@ -43,22 +55,14 @@ from jax_orchidee.sechiba.hydrol import (  # noqa: E402
     hydrol_nroot_from_humcste,
     hydrol_refsoc_1d_thresholds,
     hydrol_runoff_peat_post_loop_reinjection,
-    run_hydrol_first_step_module_from_precall,
-    hydrol_soil_froz_profile,
     hydrol_soil_all_tiles_explicit_step,
+    hydrol_soil_froz_profile,
     hydrol_split_soil_fluxes,
+    hydrol_static_precall_template_from_slowproc,
     hydrol_to_thermosoil_moisture_inputs,
     hydrol_vegupd_static_state,
+    run_hydrol_first_step_module_from_precall,
 )
-from jax_orchidee.driver.init import parse_run_def, parse_run_def_bool, parse_run_def_float, parse_run_def_indexed_vector  # noqa: E402
-from jax_orchidee.driver.orchestration import (  # noqa: E402
-    _add_hydrol_to_previous_fields,
-    _empty_previous_step_state_fields,
-    paper_1961_driver_timestep_scaffold,
-)
-from jax_orchidee.driver.stomate_boundary import paper_case_cwrr_vertical_soil_grid_from_used_run_def  # noqa: E402
-from jax_orchidee.driver.trace import read_static_fields_from_fixed_format_trace_dir  # noqa: E402
-
 
 CONFIG = ROOT / "configs" / "orchidee_man_250919.yaml"
 USED_RUN_DEF = ROOT / "outputs" / "server_1961_trace_full_20260623" / "run" / "used_run.def"
@@ -483,6 +487,41 @@ def test_hydrol_soil_froz_profile_matches_source_linear_and_correction_formula()
     smtot_moy = np.sum(dh[:-1] * (mc[0, :-1, 0] / 0.41)) / np.sum(dh[:-1])
     expected = base * froz_frac_moy * smtot_moy**2
     np.testing.assert_allclose(np.asarray(result)[0, :, 0], expected[0])
+
+
+def test_hydrol_warm_frozen_profile_skips_inactive_thermodynamic_singularity_in_reverse_ad():
+    mcr = float(USDA_MCR[1])
+
+    def objective(temp):
+        profile = hydrol_soil_froz_profile(
+            temp_hydro=jnp.full((1, 3), temp, dtype=jnp.float64),
+            mc=jnp.full((1, 3, 1), mcr, dtype=jnp.float64),
+            njsc=jnp.asarray([2], dtype=jnp.int32),
+            dh_mm=jnp.asarray([1.0, 2.0, 3.0], dtype=jnp.float64),
+            ok_thermodynamical_freezing=True,
+        )
+        return jnp.sum(profile)
+
+    primal, reverse = jax.value_and_grad(objective)(jnp.asarray(275.0, dtype=jnp.float64))
+    assert float(primal) == 0.0
+    assert float(reverse) == 0.0
+
+
+def test_hydrol_nroot_accepts_traced_altmax_with_finite_reverse_gradient():
+    def objective(altmax):
+        nroot = hydrol_nroot_from_humcste(
+            humcste=jnp.asarray([1.0, 2.0], dtype=jnp.float64),
+            dz_mm=jnp.asarray([10.0, 30.0, 60.0], dtype=jnp.float64),
+            zz_mm=jnp.asarray([5.0, 25.0, 70.0], dtype=jnp.float64),
+            altmax=altmax,
+            ok_leak=True,
+        )
+        return jnp.sum(nroot)
+
+    altmax = jnp.asarray([[0.0, 0.04]], dtype=jnp.float64)
+    primal, reverse = jax.value_and_grad(objective)(altmax)
+    assert np.isfinite(float(primal))
+    assert np.isfinite(np.asarray(reverse)).all()
 
 
 def test_hydrol_first_step_precall_assembly_closes_enerbil_boundary_without_fabricating_hydrol_internals():

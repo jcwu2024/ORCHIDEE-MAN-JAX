@@ -1855,11 +1855,25 @@ def hydrol_soil_froz_profile(
             / zero_celsius
             / 10.0
         )
-        thermo_liq = ((mcs_use - mcr_use)[:, None] * (thermo_base ** nvan_use[:, None] + 1.0) ** (-m_vg[:, None])) / (
-            mc_tile - mcr_use[:, None]
+        use_linear = (not bool(ok_thermodynamical_freezing)) | (
+            mc_tile < (mcr_use[:, None] + min_sechiba)
         )
+        thermo_active = (
+            (~use_linear)
+            & (temp_hydro >= lower)
+            & (temp_hydro < upper)
+        )
+        safe_thermo_base = jnp.where(thermo_active, thermo_base, 1.0)
+        safe_moisture = jnp.where(
+            thermo_active,
+            mc_tile - mcr_use[:, None],
+            1.0,
+        )
+        thermo_liq = (
+            (mcs_use - mcr_use)[:, None]
+            * (safe_thermo_base ** nvan_use[:, None] + 1.0) ** (-m_vg[:, None])
+        ) / safe_moisture
         thermo_x = jnp.where(temp_hydro >= upper, 1.0, jnp.where(temp_hydro >= lower, jnp.minimum(thermo_liq, 1.0), 0.0))
-        use_linear = (not bool(ok_thermodynamical_freezing)) | (mc_tile < (mcr_use[:, None] + min_sechiba))
         x = jnp.where(use_linear, linear_x, thermo_x)
         profil_tile = 1.0 - x
 
@@ -2036,7 +2050,13 @@ def hydrol_nroot_from_humcste(
         active = (altmax[:, :, None] > 0.0) & (znh_m[None, None, :] >= altmax[:, :, None])
         nroot = jnp.where(active, 0.0, nroot)
         normalizer = jnp.sum(nroot, axis=2)
-        nroot = jnp.where(normalizer[:, :, None] > 0.0, nroot / normalizer[:, :, None], nroot)
+        positive_normalizer = normalizer > 0.0
+        safe_normalizer = jnp.where(positive_normalizer, normalizer, 1.0)
+        nroot = jnp.where(
+            positive_normalizer[:, :, None],
+            nroot / safe_normalizer[:, :, None],
+            nroot,
+        )
     return nroot
 
 
@@ -3197,9 +3217,17 @@ def explicitsnow_melt_refrz_step(
     zwholdmax = snow3lhold_explicit(snowrho, snowdz)
     denom = zsnowlwe - jnp.minimum(snowliq, zwholdmax)
     numer = zsnowlwe - jnp.minimum(snowliq + zsnowmelt, zwholdmax)
-    zcmprsfact = jnp.where(denom != 0.0, numer / denom, 1.0)
+    nonzero_denom = denom != 0.0
+    safe_denom = jnp.where(nonzero_denom, denom, 1.0)
+    zcmprsfact = jnp.where(nonzero_denom, numer / safe_denom, 1.0)
     melted_dz = snowdz * zcmprsfact
-    melted_rho = jnp.where(melted_dz != 0.0, zsnowlwe * ph2o / melted_dz, snowrho)
+    nonzero_melted_dz = melted_dz != 0.0
+    safe_melted_dz = jnp.where(nonzero_melted_dz, melted_dz, 1.0)
+    melted_rho = jnp.where(
+        nonzero_melted_dz,
+        zsnowlwe * ph2o / safe_melted_dz,
+        snowrho,
+    )
     melted_liq = snowliq + zsnowmelt
 
     zscap = melted_rho * jnp.asarray(xci, dtype=dtype)
@@ -3216,7 +3244,11 @@ def explicitsnow_melt_refrz_step(
     zwholdmax2 = snow3lhold_explicit(melted_rho, melted_dz)
     flowliq = jnp.maximum(0.0, refrozen_liq - zwholdmax2)
     drained_liq = refrozen_liq - flowliq
-    drained_dz = jnp.maximum(0.0, melted_dz - flowliq * ph2o / melted_rho)
+    safe_melted_rho = jnp.where(melted_rho != 0.0, melted_rho, 1.0)
+    drained_dz = jnp.maximum(
+        0.0,
+        melted_dz - flowliq * ph2o / safe_melted_rho,
+    )
 
     zflowliqt = jnp.zeros((snowdz.shape[0], nsnow + 1), dtype=dtype)
     for jj in range(nsnow):
@@ -6766,14 +6798,17 @@ def hydrol_soil_tridiag_solve(
     mcl = initial_mcl
 
     bet0 = f[:, 0]
-    mcl0 = rhs[:, 0] / bet0
+    safe_bet0 = jnp.where(resolv, bet0, 1.0)
+    mcl0 = rhs[:, 0] / safe_bet0
     bet = bet.at[:, 0].set(jnp.where(resolv, bet0, bet[:, 0]))
     mcl = mcl.at[:, 0].set(jnp.where(resolv, mcl0, mcl[:, 0]))
 
     for jsl in range(1, nslm):
-        gam_j = g1[:, jsl - 1] / bet[:, jsl - 1]
+        safe_previous_bet = jnp.where(resolv, bet[:, jsl - 1], 1.0)
+        gam_j = g1[:, jsl - 1] / safe_previous_bet
         bet_j = f[:, jsl] - e[:, jsl] * gam_j
-        mcl_j = (rhs[:, jsl] - e[:, jsl] * mcl[:, jsl - 1]) / bet_j
+        safe_bet_j = jnp.where(resolv, bet_j, 1.0)
+        mcl_j = (rhs[:, jsl] - e[:, jsl] * mcl[:, jsl - 1]) / safe_bet_j
         gam = gam.at[:, jsl].set(jnp.where(resolv, gam_j, gam[:, jsl]))
         bet = bet.at[:, jsl].set(jnp.where(resolv, bet_j, bet[:, jsl]))
         mcl = mcl.at[:, jsl].set(jnp.where(resolv, mcl_j, mcl[:, jsl]))
@@ -7030,29 +7065,42 @@ def hydrol_water_stress_diagnostics(
     if peat_active:
         pcent_values = jnp.full((npts,), pcent_peat, dtype=layer.sm.dtype)
 
+    # hydrol.f90:6574-6670 assigns the top layer to zero and evaluates only
+    # layers 2:nslm. Avoid constructing the source-absent top-layer 0/0 in the
+    # AD graph, and mirror NEW_WATSTRESS as static Fortran control flow.
+    active_layer = jnp.arange(nslm) > 0
+    threshold_span = layer.smf_tmp - layer.smw_tmp
+    safe_threshold_span = jnp.where(active_layer[None, :], threshold_span, 1.0)
     old_factor = jnp.clip(
         (layer.sm - layer.smw_tmp)
-        / (pcent_values[:, None] * (layer.smf_tmp - layer.smw_tmp))
+        / (pcent_values[:, None] * safe_threshold_span)
         * (layer.smf - layer.smw)
-        / (layer.smf_tmp - layer.smw_tmp),
+        / safe_threshold_span,
         0.0,
         1.0,
     )
-    positive = (layer.sm - layer.smw) > min_sechiba
-    new_factor = jnp.where(
-        positive,
-        jnp.clip(
-            jnp.exp(
-                -jnp.asarray(alpha_watstress, dtype=layer.sm.dtype)
-                * ((layer.smf - layer.smw) / (layer.sm_nostress - layer.smw))
-                * ((layer.sm_nostress - layer.sm) / (layer.sm - layer.smw))
+    old_factor = jnp.where(active_layer[None, :], old_factor, 0.0)
+    if bool(new_watstress):
+        moisture_above_wilt = layer.sm - layer.smw
+        positive = (moisture_above_wilt > min_sechiba) & active_layer[None, :]
+        safe_moisture_above_wilt = jnp.where(positive, moisture_above_wilt, 1.0)
+        nostress_span = layer.sm_nostress - layer.smw
+        safe_nostress_span = jnp.where(positive, nostress_span, 1.0)
+        stress_factor = jnp.where(
+            positive,
+            jnp.clip(
+                jnp.exp(
+                    -jnp.asarray(alpha_watstress, dtype=layer.sm.dtype)
+                    * ((layer.smf - layer.smw) / safe_nostress_span)
+                    * ((layer.sm_nostress - layer.sm) / safe_moisture_above_wilt)
+                ),
+                0.0,
+                1.0,
             ),
             0.0,
-            1.0,
-        ),
-        0.0,
-    )
-    stress_factor = jnp.where(bool(new_watstress), new_factor, old_factor)
+        )
+    else:
+        stress_factor = old_factor
 
     nroot_work = nroot
     if bool(dyn_nroot_larix):
@@ -7096,7 +7144,13 @@ def hydrol_water_stress_diagnostics(
             allowed = allowed & depth_allowed[None, :]
             candidate = jnp.where(allowed, dyn_base, 0.0)
             denom = jnp.sum(candidate, axis=1)
-            updated = jnp.where(denom[:, None] > 0.0, candidate / denom[:, None], nroot_work[:, jv, :])
+            positive_denom = denom > 0.0
+            safe_denom = jnp.where(positive_denom, denom, 1.0)
+            updated = jnp.where(
+                positive_denom[:, None],
+                candidate / safe_denom[:, None],
+                nroot_work[:, jv, :],
+            )
             nroot_work = nroot_work.at[:, jv, :].set(updated)
 
     us = stress_factor[:, None, :] * nroot_work
@@ -9405,17 +9459,31 @@ def run_hydrol_first_step_module_from_precall(
 
     selected_module_inputs = {name: module_inputs[name] for name in HYDROL_MODULE_EXPLICIT_STEP_FIELDS if name in module_inputs}
     if nroot_state is None:
-        altmax_key = None
-        if bool(ok_pc) or bool(ok_leak):
-            altmax_key = tuple(tuple(float(value) for value in row) for row in np.asarray(altmax, dtype=np.float64))
-        nroot = _cached_hydrol_nroot_from_humcste(
-            _array_cache_key(humcste),
-            _array_cache_key(dz_mm),
-            _array_cache_key(zz_mm),
-            altmax_key,
-            bool(ok_pc),
-            bool(ok_leak),
-        )
+        nroot_inputs = (humcste, dz_mm, zz_mm, altmax)
+        if any(isinstance(value, jax.core.Tracer) for value in nroot_inputs if value is not None):
+            nroot = hydrol_nroot_from_humcste(
+                humcste=humcste,
+                dz_mm=dz_mm,
+                zz_mm=zz_mm,
+                altmax=altmax,
+                ok_pc=ok_pc,
+                ok_leak=ok_leak,
+            )
+        else:
+            altmax_key = None
+            if bool(ok_pc) or bool(ok_leak):
+                altmax_key = tuple(
+                    tuple(float(value) for value in row)
+                    for row in np.asarray(altmax, dtype=np.float64)
+                )
+            nroot = _cached_hydrol_nroot_from_humcste(
+                _array_cache_key(humcste),
+                _array_cache_key(dz_mm),
+                _array_cache_key(zz_mm),
+                altmax_key,
+                bool(ok_pc),
+                bool(ok_leak),
+            )
     else:
         nroot = _as_3d("nroot_state", nroot_state)
     if bool(use_jit):

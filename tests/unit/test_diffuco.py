@@ -3,6 +3,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 import pytest
 
@@ -1666,6 +1668,26 @@ def test_diffuco_trans_co2_c3_pft_explicit_matches_source_order_helpers():
     np.testing.assert_allclose(np.asarray(result.output.vbeta3pot), np.asarray(expected.vbeta3pot))
 
 
+def test_diffuco_trans_co2_g0_reverse_gradient_is_finite_with_inactive_canopy_layers():
+    inputs = _pft14_c3_trans_inputs()
+    inputs["swdown"] = np.asarray([500.0, 0.0], dtype=np.float64)
+    inputs["lai"] = np.asarray([0.7, 0.0], dtype=np.float64)
+
+    def objective(g0):
+        return jnp.sum(diffuco_trans_co2_c3_pft_explicit(**{**inputs, "g0": g0}).output.gpp)
+
+    value = jnp.asarray(inputs["g0"], dtype=jnp.float64)
+    forward = jax.jacfwd(objective)(value)
+    reverse = jax.grad(objective)(value)
+    step = 1.0e-6
+    finite_difference = (objective(value + step) - objective(value - step)) / (2.0 * step)
+
+    assert np.isfinite(np.asarray(forward))
+    assert np.isfinite(np.asarray(reverse))
+    np.testing.assert_allclose(np.asarray(reverse), np.asarray(forward), rtol=1.0e-10, atol=1.0e-12)
+    np.testing.assert_allclose(np.asarray(reverse), np.asarray(finite_difference), rtol=1.0e-6, atol=1.0e-10)
+
+
 def _server_pft14_trans_inputs(row: dict[str, object]) -> dict[str, object]:
     used = DIFFUCO_USED_RUN_DEF
     return {
@@ -2583,6 +2605,36 @@ def test_diffuco_aero_explicit_rough_dyn_disables_snowfact_like_paper_config():
     assert np.asarray(snow_smoothed.q_cdrag)[0] != pytest.approx(np.asarray(paper_config.q_cdrag)[0])
 
 
+def test_diffuco_aero_inactive_undefined_pft_inputs_do_not_pollute_active_reverse_gradient():
+    inputs = {
+        "u": np.asarray([2.0]),
+        "v": np.asarray([0.5]),
+        "zlev": np.asarray([30.0]),
+        "z0h": np.asarray([0.05]),
+        "z0m": np.asarray([0.15]),
+        "roughheight": np.asarray([3.0]),
+        "roughheight_pft": np.asarray([[np.nan, np.nan, 5.0]]),
+        "temp_sol": np.asarray([290.0]),
+        "temp_sol_pft": np.asarray([[np.nan, np.nan, 292.0]]),
+        "temp_air": np.asarray([295.0]),
+        "qair": np.asarray([0.01]),
+        "snow": np.asarray([0.0]),
+        "ok_laidev": np.asarray([False, False, True]),
+    }
+
+    def objective(qsurf):
+        result = diffuco_aero_explicit(**inputs, qsurf=jnp.asarray([qsurf]))
+        return result.q_cdrag_pft[0, 2]
+
+    value = jnp.asarray(0.012, dtype=jnp.float64)
+    forward = jax.jacfwd(objective)(value)
+    reverse = jax.grad(objective)(value)
+
+    assert np.isfinite(np.asarray(forward))
+    assert np.isfinite(np.asarray(reverse))
+    np.testing.assert_allclose(np.asarray(reverse), np.asarray(forward), rtol=1.0e-12, atol=1.0e-12)
+
+
 def test_diffuco_aero_explicit_validates_shapes():
     base = {
         "u": np.asarray([1.0], dtype=np.float64),
@@ -3333,6 +3385,85 @@ def test_diffuco_pft14_local_process_boundary_keeps_explicit_gcm_drag_branch():
     np.testing.assert_allclose(np.asarray(result.drag.q_cdrag), np.asarray(expected_drag.q_cdrag))
     np.testing.assert_allclose(np.asarray(result.drag.q_cdrag_pft), np.asarray(expected_drag.q_cdrag_pft))
     assert np.asarray(result.drag.q_cdrag_pft)[0, 2] == pytest.approx(inputs["q_cdrag"][0])
+
+
+@pytest.mark.parametrize("boundary", ["process_chain", "local_boundary"])
+def test_diffuco_pft14_source_order_boundaries_have_finite_g0_reverse_gradient(boundary):
+    inputs = _pft14_local_boundary_inputs(ldq_cdrag_from_gcm=False)
+
+    def local_objective(g0):
+        trans_co2_inputs = {**inputs["trans_co2_inputs"], "g0": g0}
+        result = diffuco_pft14_local_process_boundary_explicit(
+            **{**inputs, "trans_co2_inputs": trans_co2_inputs}
+        )
+        return jnp.sum(result.process_chain.trans_co2.output.gpp)
+
+    drag = diffuco_drag_boundary_explicit(
+        ldq_cdrag_from_gcm=False,
+        u=inputs["u"],
+        v=inputs["v"],
+        zlev=inputs["zlev"],
+        z0h=inputs["z0h"],
+        z0m=inputs["z0m"],
+        roughheight=inputs["roughheight"],
+        roughheight_pft=inputs["roughheight_pft"],
+        temp_sol=inputs["temp_sol"],
+        temp_sol_pft=inputs["temp_sol_pft"],
+        temp_air=inputs["temp_air"],
+        qsurf=inputs["qsurf"],
+        qair=inputs["qair"],
+        snow=inputs["snow"],
+        ok_laidev=inputs["ok_laidev"],
+        ok_snowfact=inputs["ok_snowfact"],
+        rough_dyn=inputs["rough_dyn"],
+    )
+
+    def chain_objective(g0):
+        trans_co2_inputs = {**inputs["trans_co2_inputs"], "g0": g0}
+        result = diffuco_pft14_c3_beta_process_chain_explicit(
+            pft_index=inputs["pft_index"],
+            trans_co2_inputs=trans_co2_inputs,
+            qair=inputs["qair"],
+            qsatt=diffuco_qsatt_explicit(temp_sol=inputs["temp_sol"], pb=inputs["pb"]),
+            temp_air=inputs["temp_air"],
+            rau=inputs["rau"],
+            u=inputs["u"],
+            v=inputs["v"],
+            q_cdrag=drag.q_cdrag,
+            q_cdrag_pft=drag.q_cdrag_pft,
+            humrel=inputs["humrel"],
+            veget=inputs["veget"],
+            veget_max=inputs["veget_max"],
+            lai=inputs["lai"],
+            qsintveg=inputs["qsintveg"],
+            qsintmax=inputs["qsintmax"],
+            rstruct=inputs["rstruct"],
+            ok_laidev=inputs["ok_laidev"],
+            snow=inputs["snow"],
+            frac_nobio=inputs["frac_nobio"],
+            totfrac_nobio=inputs["totfrac_nobio"],
+            snow_nobio=inputs["snow_nobio"],
+            frac_snow_veg=inputs["frac_snow_veg"],
+            frac_snow_nobio=inputs["frac_snow_nobio"],
+            evapot=inputs["evapot"],
+            evapot_corr=inputs["evapot_corr"],
+            flood_frac=inputs["flood_frac"],
+            flood_res=inputs["flood_res"],
+            tot_bare_soil=inputs["tot_bare_soil"],
+            evap_bare_lim=inputs["evap_bare_lim"],
+            vbeta3_background=inputs["vbeta3_background"],
+            dt_sechiba=inputs["dt_sechiba"],
+        )
+        return jnp.sum(result.trans_co2.output.gpp)
+
+    objective = chain_objective if boundary == "process_chain" else local_objective
+    value = jnp.asarray(inputs["trans_co2_inputs"]["g0"], dtype=jnp.float64)
+    forward = jax.jacfwd(objective)(value)
+    reverse = jax.grad(objective)(value)
+
+    assert np.isfinite(np.asarray(forward))
+    assert np.isfinite(np.asarray(reverse))
+    np.testing.assert_allclose(np.asarray(reverse), np.asarray(forward), rtol=1.0e-10, atol=1.0e-12)
 
 
 def test_diffuco_pft14_local_enerbil_precall_payload_exports_local_boundary_fields():

@@ -1041,6 +1041,12 @@ def enerbil_surftemp_explicit_solve(
 
     ok = ok_laidev[None, :]
     active_pft = ok & (veget_max > zero)
+    # PFT1 begin diagnostics intentionally retain NaN because the Fortran
+    # loops leave them undefined. surftemp only consumes PFT values under
+    # ok_LAIdev, so use the source grid fallback in all inactive calculations.
+    qsol_sat_pft = jnp.where(ok, qsol_sat_pft, qsol_sat[:, None])
+    pdqsold_pft = jnp.where(ok, pdqsold_pft, pdqsold[:, None])
+    netrad_pft = jnp.where(ok, netrad_pft, netrad[:, None])
 
     sensfl_old = (petBcoef - psold) / (zikt - petAcoef)
     sensfl_old_pft_formula = (petBcoef[:, None] - psold_pft) / (zikt_pft - petAcoef[:, None])
@@ -1070,7 +1076,13 @@ def enerbil_surftemp_explicit_solve(
         / (zikq - evap_beta * peqAcoef)
         + chalev0 * vbeta5 * (peqBcoef - qsol_sat) / (zikq - vbeta5 * peqAcoef)
     )
-    vbeta_pft_fraction = jnp.where(veget_max > zero, vbeta_pft / veget_max, zero)
+    has_vegetation = veget_max > zero
+    safe_veget_max = jnp.where(has_vegetation, veget_max, one)
+    vbeta_pft_fraction = jnp.where(
+        has_vegetation,
+        vbeta_pft / safe_veget_max,
+        zero,
+    )
     evap_beta_pft = (one - vbeta1[:, None]) * (one - vbeta5[:, None]) * vbeta_pft_fraction
     lareva_old_pft_formula = (
         chalev0
@@ -3386,20 +3398,24 @@ def _wind_speed(u, v, *, min_wind):
 
 def _qsfrict_table():
     temp = jnp.arange(371, dtype=jnp.float64)
+    # qsfrict_init only evaluates the saturation formulas for valid table
+    # indices; lower entries are assigned zero. Keep those source-absent
+    # divisions and logarithms out of the AD graph.
+    formula_temp = jnp.where(temp >= 101.0, temp, 101.0)
     zrapp = jnp.asarray(MSMLR_H2O / MSMLR_AIR, dtype=jnp.float64)
     zcorr = jnp.asarray(0.00320991, dtype=jnp.float64)
     solid = zrapp * 10.0 ** (
         2.07023
-        - zcorr * temp
-        - 2484.896 / temp
-        + 3.56654 * jnp.log10(temp)
+        - zcorr * formula_temp
+        - 2484.896 / formula_temp
+        + 3.56654 * jnp.log10(formula_temp)
     )
     liquid = zrapp * 10.0 ** (
         23.8319
-        - 2948.964 / temp
-        - 5.028 * jnp.log10(temp)
-        - 29810.16 * jnp.exp(-0.0699382 * temp)
-        + 25.21935 * jnp.exp(-2999.924 / temp)
+        - 2948.964 / formula_temp
+        - 5.028 * jnp.log10(formula_temp)
+        - 29810.16 * jnp.exp(-0.0699382 * formula_temp)
+        + 25.21935 * jnp.exp(-2999.924 / formula_temp)
     )
     table = jnp.where(temp < 273.0, solid, liquid)
     return table.at[:101].set(0.0)

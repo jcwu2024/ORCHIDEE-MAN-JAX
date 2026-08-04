@@ -3,6 +3,8 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 import pytest
 
@@ -127,6 +129,35 @@ def test_hydrol_water_stress_diagnostics_old_stress_absent_and_under_mcr_gates()
     np.testing.assert_allclose(np.asarray(result.us[1]), np.zeros_like(nroot[1]))
     np.testing.assert_allclose(np.asarray(result.soil_wet_ns[1]), np.zeros(3))
     np.testing.assert_array_equal(np.asarray(result.undermcr_increment), np.asarray([0.0, 1.0]))
+
+
+def test_hydrol_old_water_stress_has_finite_reverse_gradient_at_source_zero_top_layer():
+    base = hydrol_soil_layer_diagnostics(
+        mc=np.asarray([[0.20, 0.30, 0.40]], dtype=np.float64),
+        mcl=np.asarray([[0.20, 0.30, 0.40]], dtype=np.float64),
+        dz_mm=np.asarray([0.0, 2.0, 4.0], dtype=np.float64),
+        njsc=np.asarray([3], dtype=np.int32),
+    )
+
+    def objective(offset):
+        layer = base._replace(sm=base.sm + offset)
+        result = hydrol_water_stress_diagnostics(
+            layer=layer,
+            nroot=jnp.asarray([[[0.0, 0.4, 0.6], [0.0, 0.25, 0.75]]]),
+            vegetmax_soil_tile=jnp.asarray([[0.0, 0.5]]),
+            is_under_mcr=jnp.asarray([False]),
+            njsc=jnp.asarray([3], dtype=jnp.int32),
+            new_watstress=False,
+        )
+        return result.humrelv[0, 1]
+
+    value = jnp.asarray(0.0, dtype=jnp.float64)
+    forward = jax.jacfwd(objective)(value)
+    reverse = jax.grad(objective)(value)
+
+    assert np.isfinite(np.asarray(forward))
+    assert np.isfinite(np.asarray(reverse))
+    np.testing.assert_allclose(np.asarray(reverse), np.asarray(forward), rtol=1.0e-12, atol=1.0e-12)
 
 
 def test_hydrol_water_stress_dynamic_root_requires_source_inputs():

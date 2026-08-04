@@ -4158,7 +4158,17 @@ def diffuco_aero_explicit(
     zdphi = zg / cp_air
     ztvd = (temp_air + zdphi / (1.0 + rvtmp2 * qair)) * (1.0 + retv * qair)
     ztvs = temp_sol * (1.0 + retv * qsurf)
-    ztvs_pft = temp_sol_pft * (1.0 + retv * qsurf[:, None])
+
+    pft_active = ok_laidev[None, :]
+    loop_pft = jnp.arange(pft_shape[1])[None, :] >= 1
+    pft_compute = pft_active & loop_pft
+    safe_temp_sol_pft = jnp.where(pft_compute, temp_sol_pft, temp_sol[:, None])
+    safe_roughheight_pft = jnp.where(
+        pft_compute,
+        roughheight_pft,
+        roughheight[:, None],
+    )
+    ztvs_pft = safe_temp_sol_pft * (1.0 + retv * qsurf[:, None])
 
     zdu2 = jnp.maximum(cepdu2, speed * speed)
     zri = zg * (ztvd - ztvs) / (zdu2 * ztvd)
@@ -4166,9 +4176,6 @@ def diffuco_aero_explicit(
 
     zri_pft_raw = zg[:, None] * (ztvd[:, None] - ztvs_pft) / (zdu2[:, None] * ztvd[:, None])
     zri_pft_raw = jnp.maximum(jnp.minimum(zri_pft_raw, 5.0), -5.0)
-    pft_active = ok_laidev[None, :]
-    loop_pft = jnp.arange(pft_shape[1])[None, :] >= 1
-    pft_compute = pft_active & loop_pft
     zri_pft = jnp.where(pft_compute, zri_pft_raw, zri[:, None])
 
     snowfact = jnp.where((snow > snowcri) & bool(ok_snowfact) & (not bool(rough_dyn)), 10.0, 1.0)
@@ -4177,8 +4184,8 @@ def diffuco_aero_explicit(
         jnp.log((zlev + roughheight) / z0m) * jnp.log((zlev + roughheight) / z0h)
     )
     cd_neut_pft = ct_karman**2 / (
-        jnp.log((zlev[:, None] + roughheight_pft) / z0m[:, None])
-        * jnp.log((zlev[:, None] + roughheight_pft) / z0h[:, None])
+        jnp.log((zlev[:, None] + safe_roughheight_pft) / z0m[:, None])
+        * jnp.log((zlev[:, None] + safe_roughheight_pft) / z0h[:, None])
     )
 
     grid_stable = zri >= 0.0
@@ -4204,7 +4211,10 @@ def diffuco_aero_explicit(
         * louis_cb
         * louis_cc
         * cd_neut_pft
-        * jnp.sqrt(jnp.abs(zri_pft) * ((zlev[:, None] + roughheight_pft) / z0m[:, None] / snowfact[:, None]))
+        * jnp.sqrt(
+            jnp.abs(zri_pft)
+            * ((zlev[:, None] + safe_roughheight_pft) / z0m[:, None] / snowfact[:, None])
+        )
     )
     cd_tmp_pft_unstable = cd_neut_pft * (1.0 - 3.0 * louis_cb * zri_pft * zscf_pft_unstable)
     cd_tmp_pft_candidate = jnp.where(pft_stable, cd_tmp_pft_stable, cd_tmp_pft_unstable)

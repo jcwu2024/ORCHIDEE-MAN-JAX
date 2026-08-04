@@ -3,46 +3,57 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
+import jax
+import jax.numpy as jnp
 import numpy as np
 import pytest
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
+from jax_orchidee.driver.init import (  # noqa: E402
+    parse_run_def,
+    parse_run_def_bool,
+    parse_run_def_float,
+    parse_run_def_indexed_bool,
+)
+from jax_orchidee.driver.orchestration import paper_1961_driver_timestep_scaffold  # noqa: E402
+from jax_orchidee.driver.trace import read_static_fields_from_fixed_format_trace_dir  # noqa: E402
 from jax_orchidee.sechiba.diffuco import diffuco_bare_cwrr_beta  # noqa: E402
+from jax_orchidee.sechiba.diffuco_bridge import first_pft14_diffuco_after_main_payload  # noqa: E402
 from jax_orchidee.sechiba.enerbil import (  # noqa: E402
+    C_STEFAN,
     CHALEV0,
     CHALSU0,
-    C_STEFAN,
     CP_AIR,
-    MSMLR_AIR,
-    MSMLR_H2O,
     CTE_GRAV,
     CTE_MOLR,
+    MSMLR_AIR,
+    MSMLR_H2O,
     PA_PAR_HPA,
     TP_00,
+    assemble_enerbil_explicit_local_step_from_server_bridge,
     assemble_enerbil_first_step_precall_payload,
     condveg_initialized_emis,
-    assemble_enerbil_explicit_local_step_from_server_bridge,
     dim2_driver_non_watchout_energy_coupling_inputs,
     driver_swnet_from_swdown_albedo,
-    enerbil_cold_start_surface_state,
     enerbil_begin_local_diagnostics,
+    enerbil_cold_start_surface_state,
+    enerbil_evapveg_grid_fluxes,
+    enerbil_evapveg_pft_fluxes,
     enerbil_explicit_local_step,
     enerbil_first_step_input_coverage,
-    enerbil_fusion_step,
     enerbil_flux_evapot_corr,
     enerbil_flux_explicit_snow_diagnostics,
     enerbil_flux_inputs_contract,
     enerbil_flux_local_diagnostics,
+    enerbil_fusion_step,
     enerbil_pottemp_pass_through,
-    enerbil_swnet_input_chain_coverage,
     enerbil_surface_state_input_coverage,
     enerbil_surftemp_explicit_solve,
     enerbil_surftemp_qsol_sat_update,
+    enerbil_swnet_input_chain_coverage,
     enerbil_t2mdiag,
-    enerbil_evapveg_grid_fluxes,
-    enerbil_evapveg_pft_fluxes,
     qsat_moisture_dev_qsatcalc,
     qsat_moisture_qsatcalc,
     read_driver_albedo_restart,
@@ -50,21 +61,16 @@ from jax_orchidee.sechiba.enerbil import (  # noqa: E402
     run_enerbil_first_step_local_from_precall,
     sechiba_air_density_from_pb_temp_air,
 )
-from jax_orchidee.sechiba.diffuco_bridge import first_pft14_diffuco_after_main_payload  # noqa: E402
-from jax_orchidee.sechiba.enerbil_bridge import read_enerbil_after_main_payload  # noqa: E402
 from jax_orchidee.sechiba.enerbil_bridge import (  # noqa: E402
     ENERBIL_ACTIVE_AFTER_TAG,
     ENERBIL_ACTIVE_BEFORE_TAG,
     ENERBIL_POTTEMP_AFTER_TAG,
     ENERBIL_POTTEMP_BEFORE_TAG,
     read_enerbil_active_payload,
+    read_enerbil_after_main_payload,  # noqa: E402
     read_enerbil_pottemp_active_payload,
 )
 from jax_orchidee.trace.server_1961 import BRIDGE_TRACE_ROOT, read_server_records  # noqa: E402
-from jax_orchidee.driver.init import parse_run_def, parse_run_def_bool, parse_run_def_float, parse_run_def_indexed_bool  # noqa: E402
-from jax_orchidee.driver.orchestration import paper_1961_driver_timestep_scaffold  # noqa: E402
-from jax_orchidee.driver.trace import read_static_fields_from_fixed_format_trace_dir  # noqa: E402
-
 
 REFERENCE_SECHIBA_START = (
     ROOT
@@ -531,6 +537,49 @@ def test_enerbil_surftemp_explicit_solve_matches_linearized_fortran_update():
     )
     np.testing.assert_allclose(np.asarray(result.temp_sol_new_pft)[:, 0], expected_temp_new)
     np.testing.assert_allclose(np.asarray(result.qsol_sat_new_pft)[:, 2], expected_qsat_new)
+
+
+def test_enerbil_zero_vegetation_pft_has_finite_zero_reverse_influence_on_grid_temperature():
+    def objective(inactive_vbeta):
+        result = enerbil_surftemp_explicit_solve(
+            psold=jnp.asarray([281000.0]),
+            psold_pft=jnp.asarray([[281000.0, 281000.0]]),
+            qsol_sat=jnp.asarray([0.007]),
+            qsol_sat_pft=jnp.asarray([[0.007, 0.007]]),
+            pdqsold=jnp.asarray([0.001]),
+            pdqsold_pft=jnp.asarray([[0.001, 0.001]]),
+            netrad=jnp.asarray([100.0]),
+            netrad_pft=jnp.asarray([[100.0, 100.0]]),
+            emis=jnp.asarray([0.96]),
+            epot_air=jnp.asarray([282000.0]),
+            petAcoef=jnp.asarray([0.01]),
+            petBcoef=jnp.asarray([281500.0]),
+            qair=jnp.asarray([0.006]),
+            peqAcoef=jnp.asarray([0.1]),
+            peqBcoef=jnp.asarray([0.012]),
+            soilflx=jnp.asarray([5.0]),
+            soilflx_pft=jnp.asarray([[5.0, 5.0]]),
+            rau=jnp.asarray([1.2]),
+            u=jnp.asarray([2.0]),
+            v=jnp.asarray([1.0]),
+            q_cdrag=jnp.asarray([0.01]),
+            q_cdrag_pft=jnp.asarray([[0.01, 0.01]]),
+            vbeta=jnp.asarray([0.4]),
+            vbeta_pft=jnp.asarray([[0.4, inactive_vbeta]]),
+            valpha=jnp.asarray([1.0]),
+            vbeta1=jnp.asarray([0.0]),
+            vbeta5=jnp.asarray([0.0]),
+            soilcap=jnp.asarray([5.0e5]),
+            soilcap_pft=jnp.asarray([[5.0e5, 5.0e5]]),
+            veget_max=jnp.asarray([[1.0, 0.0]]),
+            ok_laidev=jnp.asarray([False, True]),
+            dt_sechiba=1800.0,
+        )
+        return result.temp_sol_new[0]
+
+    primal, reverse = jax.value_and_grad(objective)(jnp.asarray(0.0, dtype=jnp.float64))
+    assert np.isfinite(float(primal))
+    assert float(reverse) == 0.0
 
 
 def test_enerbil_explicit_local_step_orders_closed_kernels_without_sourcing_inputs():
