@@ -105,6 +105,12 @@ class EnerbilSurftempResult(NamedTuple):
     temp_sol_new_pft: jnp.ndarray
     qair_new: jnp.ndarray
     epot_air_new: jnp.ndarray
+    sensfl: jnp.ndarray
+    sensfl_pft: jnp.ndarray
+    larsub: jnp.ndarray
+    larsub_pft: jnp.ndarray
+    lareva: jnp.ndarray
+    lareva_pft: jnp.ndarray
 
 
 class EnerbilPottempResult(NamedTuple):
@@ -1156,6 +1162,12 @@ def enerbil_surftemp_explicit_solve(
     temp_sol_new_pft = jnp.where(ok, temp_sol_new_pft_formula, temp_sol_new[:, None])
 
     epot_air_new = zikt * (sensfl_old - sensfl_sns * dtheta) + psnew
+    sensfl = sensfl_old - sensfl_sns * dtheta
+    sensfl_pft = sensfl_old_pft - sensfl_sns_pft * dtheta_pft
+    larsub = larsub_old - larsub_sns * dtheta
+    larsub_pft = larsub_old_pft - larsub_sns_pft * dtheta_pft
+    lareva = lareva_old - lareva_sns * dtheta
+    lareva_pft = lareva_old_pft - lareva_sns_pft * dtheta_pft
     fevap = (lareva_old - lareva_sns * dtheta) + (larsub_old - larsub_sns * dtheta)
     qair_new_formula = (
         zikq
@@ -1179,6 +1191,12 @@ def enerbil_surftemp_explicit_solve(
         temp_sol_new_pft=temp_sol_new_pft,
         qair_new=qair_new,
         epot_air_new=epot_air_new,
+        sensfl=sensfl,
+        sensfl_pft=sensfl_pft,
+        larsub=larsub,
+        larsub_pft=larsub_pft,
+        lareva=lareva,
+        lareva_pft=lareva_pft,
     )
 
 

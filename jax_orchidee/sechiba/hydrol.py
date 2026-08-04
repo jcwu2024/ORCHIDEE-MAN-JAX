@@ -858,6 +858,9 @@ class HydrolExplicitSnowStepResult(NamedTuple):
     snowmelt: jnp.ndarray
     temp_sol_add: jnp.ndarray
     snowmelt_from_maxmass: jnp.ndarray
+    melt_mass_by_layer: jnp.ndarray
+    refreeze_mass_by_layer: jnp.ndarray
+    liquid_percolation_by_interface: jnp.ndarray
     melt_refreeze_energy: jnp.ndarray
     liquid_excess_energy: jnp.ndarray
     provenance: tuple[str, ...]
@@ -964,6 +967,9 @@ class ExplicitSnowMeltRefreezeResult(NamedTuple):
     snowmelt: jnp.ndarray
     grndflux: jnp.ndarray
     meltxs: jnp.ndarray
+    melt_mass_by_layer: jnp.ndarray
+    refreeze_mass_by_layer: jnp.ndarray
+    liquid_percolation_by_interface: jnp.ndarray
     provenance: tuple[str, ...]
 
 
@@ -1042,6 +1048,9 @@ class ExplicitSnowMainResult(NamedTuple):
     tot_melt: jnp.ndarray
     temp_sol_add: jnp.ndarray
     snowmelt_from_maxmass: jnp.ndarray
+    melt_mass_by_layer: jnp.ndarray
+    refreeze_mass_by_layer: jnp.ndarray
+    liquid_percolation_by_interface: jnp.ndarray
     melt_refreeze_energy: jnp.ndarray
     liquid_excess_energy: jnp.ndarray
     provenance: tuple[str, ...]
@@ -3248,6 +3257,13 @@ def explicitsnow_melt_refrz_step(
         snowmelt=out_snowmelt,
         grndflux=out_grndflux,
         meltxs=out_meltxs,
+        melt_mass_by_layer=jnp.where(active[:, None], zsnowmelt * ph2o, 0.0),
+        refreeze_mass_by_layer=jnp.where(active[:, None], zphase2 / chalfu0, 0.0),
+        liquid_percolation_by_interface=jnp.where(
+            active[:, None],
+            zflowliqt[:, 1:] * ph2o,
+            0.0,
+        ),
         provenance=EXPLICITSNOW_MELT_REFREEZE_PROVENANCE,
     )
 
@@ -4165,6 +4181,9 @@ def explicitsnow_main_step(
         tot_melt=tot_melt,
         temp_sol_add=temp_sol_add,
         snowmelt_from_maxmass=snowmelt_from_maxmass,
+        melt_mass_by_layer=melt.melt_mass_by_layer,
+        refreeze_mass_by_layer=melt.refreeze_mass_by_layer,
+        liquid_percolation_by_interface=melt.liquid_percolation_by_interface,
         melt_refreeze_energy=melt.meltxs,
         liquid_excess_energy=liquid_excess.zliqheatxs,
         provenance=EXPLICITSNOW_MAIN_PROVENANCE,
@@ -5068,6 +5087,9 @@ def hydrol_explicit_snow_step(
         snowmelt=main.snowmelt,
         temp_sol_add=main.temp_sol_add,
         snowmelt_from_maxmass=main.snowmelt_from_maxmass,
+        melt_mass_by_layer=main.melt_mass_by_layer,
+        refreeze_mass_by_layer=main.refreeze_mass_by_layer,
+        liquid_percolation_by_interface=main.liquid_percolation_by_interface,
         melt_refreeze_energy=main.melt_refreeze_energy,
         liquid_excess_energy=main.liquid_excess_energy,
         provenance=(

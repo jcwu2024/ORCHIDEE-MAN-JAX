@@ -450,6 +450,18 @@ def test_enerbil_surftemp_explicit_solve_matches_linearized_fortran_update():
     np.testing.assert_allclose(np.asarray(result.temp_sol_new), expected_temp_new)
     np.testing.assert_allclose(np.asarray(result.epot_air_new), expected_epot_air_new)
     np.testing.assert_allclose(np.asarray(result.qair_new), expected_qair_new)
+    np.testing.assert_allclose(
+        np.asarray(result.sensfl),
+        sensfl_old - sensfl_sns * expected_dtheta,
+    )
+    np.testing.assert_allclose(
+        np.asarray(result.larsub),
+        larsub_old - larsub_sns * expected_dtheta,
+    )
+    np.testing.assert_allclose(
+        np.asarray(result.lareva),
+        lareva_old - lareva_sns * expected_dtheta,
+    )
 
     jv = 1
     sensfl_old_pft = (petBcoef - np.asarray(begin.psold_pft)[:, jv]) / (zikt_pft[:, jv] - petAcoef)
@@ -501,6 +513,18 @@ def test_enerbil_surftemp_explicit_solve_matches_linearized_fortran_update():
     )
 
     np.testing.assert_allclose(np.asarray(result.dtheta_pft)[:, jv], expected_dtheta_pft)
+    np.testing.assert_allclose(
+        np.asarray(result.sensfl_pft)[:, jv],
+        sensfl_old_pft - sensfl_sns_pft * expected_dtheta_pft,
+    )
+    np.testing.assert_allclose(
+        np.asarray(result.larsub_pft)[:, jv],
+        larsub_old_pft - larsub_sns_pft * expected_dtheta_pft,
+    )
+    np.testing.assert_allclose(
+        np.asarray(result.lareva_pft)[:, jv],
+        lareva_old_pft - lareva_sns_pft * expected_dtheta_pft,
+    )
     np.testing.assert_allclose(
         np.asarray(result.qsol_sat_new_pft)[:, jv],
         np.asarray(begin.qsol_sat_pft)[:, jv] + zicp * np.asarray(begin.pdqsold_pft)[:, jv] * expected_dtheta_pft,
