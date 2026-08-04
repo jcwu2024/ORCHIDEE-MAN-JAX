@@ -114,6 +114,8 @@ There is no accepted neural implementation yet. The specification is
 The PFT interface, state/flux labels, and non-neural updater are frozen. New
 neural implementation code should be placed in a clearly named package under
 `research/daily_coarse_graining/`; it must compose with the accepted updater.
+The bounded implementation sequence and acceptance tests are in
+`docs/research/daily_coarse_graining/gate_e1_daily_operator_skeleton.md`.
 
 ## Scripts
 

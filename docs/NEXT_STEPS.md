@@ -234,7 +234,9 @@ fractions, and perform one conservative daily update followed by retained
 exact daily processes. Start with deterministic shape, mask, budget, and
 one-day true-label plumbing tests; do not launch paid training until the
 non-neural and untrained architecture boundaries pass locally. Gate D2 and
-Gate F remain later acceptance work.
+Gate F remain later acceptance work. The executable task packet and definition
+of done are in
+[`gate_e1_daily_operator_skeleton.md`](research/daily_coarse_graining/gate_e1_daily_operator_skeleton.md).
 
 ## Completed Task Packet: Gate C
 

@@ -15,6 +15,8 @@ mode.
   PFT extensibility, parameter ownership, and the pre-training admission gate.
 - `physical_parameter_candidate_registry_v1.md`: accepted source-driven
   sensitivity/inversion candidate classification and PFT14 shortlist.
+- `gate_e1_daily_operator_skeleton.md`: active implementation packet for the
+  next true-daily neural boundary, local acceptance tests, and forbidden paths.
 - `../../current-status.md`: current project and research status authority.
 - `HANDOFF.md`: historical chronological log; consult only for a named past
   experiment or server job.
