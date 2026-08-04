@@ -55,6 +55,9 @@ Implemented:
   restartable Slurm worker-array and after-success aggregation plumbing;
 - CPU and V100 compatibility gates;
 - parameter-conditioned neural training plumbing.
+- the frozen 50-label water/carbon/energy inventory, three default-off
+  daily-reduced Teacher capture families, and accepted non-neural constrained
+  replay through the retained exact daily tail.
 
 Not implemented or not accepted:
 
@@ -65,11 +68,12 @@ Not implemented or not accepted:
 
 ## Current Work
 
-Do not start another neural training experiment. First freeze a source-backed
-parameter-ownership contract and a daily water/carbon/energy flux-label
-contract. Audit the existing 669-point shards at schema level, capture only
-labels that are absent and cannot be derived, and pass a non-neural replay in
-which true Teacher daily fluxes reconstruct the constrained next-day state.
+Gate C's parameter ownership, daily water/carbon/energy labels, supplemental
+capture, and non-neural constrained replay are complete. Do not reopen them or
+regenerate 669-point data unless their frozen contracts drift. The active next
+gate is D1 canonical Teacher physical-parameter gradient validation; the new
+neural implementation must use the accepted Gate C updater rather than a
+direct next-stock predictor.
 
 The network interface must be PFT-extensible even though the current data and
 scientific claim remain PFT14-only. Continue from

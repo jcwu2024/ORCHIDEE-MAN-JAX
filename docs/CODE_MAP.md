@@ -81,6 +81,9 @@ historical prototypes. Use the following classification.
 - `daily_flux_label_inventory.py`: active Gate C1 parser and v5 contract audit.
   Its machine contract is
   `manifests/coarse_graining/daily_flux_label_inventory_v1.json`.
+- `daily_flux_capture.py`, `constrained_daily_replay.py`: accepted Gate C2
+  capture serialization, bounded inventory/tendency updates, and budget
+  audits. They define the non-neural admission boundary for the new operator.
 
 ### Diagnostic and Oracle assets
 
@@ -103,11 +106,11 @@ historical prototypes. Use the following classification.
 
 ### Active final daily implementation
 
-There is no accepted implementation yet. The specification is
+There is no accepted neural implementation yet. The specification is
 `docs/research/daily_coarse_graining/conservative_daily_process_operator_v1.md`.
-The PFT interface is frozen, but state/flux labels and the updater are not.
-New neural implementation code should be placed in a clearly named package
-under `research/daily_coarse_graining/` only after Gate C passes.
+The PFT interface, state/flux labels, and non-neural updater are frozen. New
+neural implementation code should be placed in a clearly named package under
+`research/daily_coarse_graining/`; it must compose with the accepted updater.
 
 ## Scripts
 

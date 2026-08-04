@@ -56,9 +56,10 @@ pass the non-neural replay gate on a small lifecycle matrix. Once replay
 passes, supplemental labels can be produced separately and bound to the
 existing shard identities.
 
-## Next Gate
+## Gate C2 Result
 
-Gate C2 feeds true captured daily labels through one non-neural constrained
-updater, then executes retained exact daily processes. It must reconstruct the
-canonical next-day state, preserve exact discrete behavior, close declared
-budgets, avoid negative inventories, and pass cold/later/restart/mask cases.
+Gate C2 now passes. True captured daily labels feed one non-neural constrained
+updater followed by retained exact daily processes. Cold continuation,
+ordinary later-day, restart-year, mask, budget, and restart-composition checks
+are accepted in
+[`gate_c2_constrained_replay_v1.md`](gate_c2_constrained_replay_v1.md).

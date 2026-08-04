@@ -52,6 +52,7 @@ class PreDailyStomateReplayRecord:
     ok_leak_result: Any
     ok_leak_updates: Mapping[str, Any]
     expected_result: Any
+    daily_flux_labels: Any | None = None
 
 
 @dataclass(frozen=True)
@@ -304,7 +305,12 @@ def capture_pre_daily_stomate_record(
         raise RuntimeError(f"Teacher day did not reach replay boundaries: {details}")
     if not bool(getattr(result, "ready_for_day_end_state", True)):
         raise RuntimeError(f"Teacher capture day failed: {getattr(result, 'missing_components', ())}")
-    ok_leak_result, ok_leak_updates = captured["_paper_half_hour_ok_leak_fold_from_entries"]
+    ok_leak_fold = captured["_paper_half_hour_ok_leak_fold_from_entries"]
+    if len(ok_leak_fold) not in {2, 3, 4}:
+        raise RuntimeError(
+            "Teacher replay capture received an unsupported OK_LEAK return contract"
+        )
+    ok_leak_result, ok_leak_updates = ok_leak_fold[:2]
     return PreDailyStomateReplayRecord(
         year=int(year),
         day_index=int(day_index),
@@ -317,6 +323,7 @@ def capture_pre_daily_stomate_record(
         ok_leak_result=ok_leak_result,
         ok_leak_updates=dict(ok_leak_updates),
         expected_result=result,
+        daily_flux_labels=getattr(result, "daily_flux_labels", None),
     )
 
 

@@ -62,19 +62,22 @@ three pages above direct you to them.
 
 Gate A is complete. `main` and `research/daily-coarse-graining` now contain
 the same canonical `jax_orchidee` Teacher core; the research branch adds only
-research infrastructure around it. Do not launch another neural training
-experiment yet.
+research infrastructure around it. Do not launch a paid neural training
+experiment before the next declared gate.
 
 Gate B1's PFT catalog, restart identity, and production-selection boundaries
 are implemented, including a compact bare-soil-plus-PFT14 cold/restart
 lifecycle. Gate B2 is also complete: the variable-length neural PFT axis,
 named parameter/trait channels, mask semantics, and physical-parameter
 ownership are frozen and tested. Only PFT14 is scientifically supported.
-Gate C1's daily water/carbon/energy label inventory is now frozen. It proves
-that existing v5 shards do not uniquely identify 29 required transfers, but
-that all missing labels reduce to three daily-only supplemental capture
-families. The next work is Gate C2: implement those bounded diagnostic folds
-and prove true-label non-neural constrained replay before producing more data.
+Gate C is complete. Its 50-label inventory identified 29 non-identifiable
+transfers, all three daily-only capture families now run inside compiled
+Teacher folds, and true-label constrained replay passes cold continuation,
+ordinary later-day, and restart-year cases. The replay uses no 48-step
+candidate graph, preserves exact discrete/defined status, and closes declared
+water, carbon, and energy identities. The next dependency gate is D1,
+canonical Teacher physical-parameter gradient validation; Gate E neural
+implementation is structurally unblocked, but paid training remains deferred.
 
 ## New Task Bootstrap
 
@@ -90,7 +93,7 @@ git log -1 --oneline
 Then read `NEXT_STEPS.md`, `CODE_MAP.md`, and `DOCUMENT_STATUS.md`. Report the
 active gate before editing or submitting a job. Gates A-B must not be reopened
 unless `jax_orchidee` drifts between the two branches or its evidence hashes
-drift. The active technical task is Gate C; later gates are queued work, not
+drift. The active technical task is Gate D1; later gates are queued work, not
 parallel instructions. A local `AGENTS.md`, when present, adds workspace and
 server rules but is deliberately not required for a clean Git handoff.
 

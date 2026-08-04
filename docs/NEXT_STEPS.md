@@ -25,7 +25,7 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
 
 ## Current Facts
 
-- `main` at `ed2ff6d` contains the canonical user-facing PFT14 Teacher core.
+- `main` at `0d4f053` contains the canonical user-facing PFT14 Teacher core.
 - `research/daily-coarse-graining` contains the same complete
   `jax_orchidee/` tree plus research-only code.
 - Gate A detached-worktree parity is complete. Seven lifecycle/multilandpoint
@@ -51,10 +51,12 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
   exact mask semantics, permutation equivariance, inactive-slot isolation,
   and variable legal `n_pft` are machine-validated. This is structural
   extensibility, not scientific support for PFT2-PFT13.
-- Gate C1's 50-label water/carbon/energy inventory is frozen and audited
-  against the real v5 contract hash. Existing shards provide or exactly derive
-  21 labels; 29 non-identifiable labels reduce to three daily-only capture
-  families. No 669-point regeneration is authorized before replay admission.
+- Gate C is complete. Its 50-label water/carbon/energy inventory is frozen;
+  29 non-identifiable labels are supplied by three daily-reduced compiled
+  capture families. True-label constrained replay passes cold continuation,
+  ordinary later-day, restart-year, mask, budget, and restart-composition
+  gates without a 48-step candidate graph. No 669-point regeneration has
+  been authorized yet.
 - Existing gradient tests establish training plumbing and finite derivatives
   in selected JAX paths. They do not yet establish physical-parameter gradient
   correctness for the complete Teacher or future daily surrogate.
@@ -210,21 +212,22 @@ training loss is easy to optimize.
 
 ## Immediate Work Order
 
-Gates A, B, and C1 are complete. The six prerequisites before neural
-implementation are now `5/6`. The next technical task is Gate C2, not another
-GPU experiment or 669-point regeneration: implement the three declared
-daily-reduced capture families and prove non-neural constrained replay.
+Gates A-C are complete. The six prerequisites before neural implementation
+are now `6/6`. The next dependency gate is D1: validate canonical Teacher
+physical-parameter gradients before paid neural training or parameter
+inversion. Gate E implementation is structurally unblocked, but no GPU search
+or 669-point regeneration should begin merely because C2 passed.
 
-## Active Task Packet: Gate C
+## Completed Task Packet: Gate C
 
-This is the only implementation task to start from a new clone. Gates A-B and
-C1 are closed and must not be rerun unless shared Teacher code or a frozen
-contract changes. Gates D-F remain queued.
+This packet is complete and retained as its acceptance contract. Gates A-C
+must not be rerun unless shared Teacher code or a frozen contract changes.
+Gate D1 is the active next task; Gates E-F remain queued.
 
 ### Inputs
 
-- canonical Teacher core: `main` at `ed2ff6d`, synchronized into the research
-  branch at merge `d0c4bce`;
+- canonical Teacher core: `main` at `0d4f053`, synchronized into the research
+  branch at merge `f72aac7`;
 - true-daily design:
   [`research/daily_coarse_graining/conservative_daily_process_operator_v1.md`](research/daily_coarse_graining/conservative_daily_process_operator_v1.md);
 - frozen PFT interface: `manifests/coarse_graining/daily_neural_pft_interface_v1.json`;

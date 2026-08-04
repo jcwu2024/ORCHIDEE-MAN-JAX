@@ -1,6 +1,7 @@
 # Conservative Daily Process Operator v1
 
-Status: active architecture decision, not yet implemented or validated.
+Status: active architecture decision; Gate C non-neural boundary validated,
+neural operator not yet implemented.
 
 Date: 2026-08-02.
 

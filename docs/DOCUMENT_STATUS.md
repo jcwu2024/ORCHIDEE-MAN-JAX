@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-03.
+Last updated: 2026-08-04.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -25,10 +25,11 @@ an earlier experiment and does not control current work.
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
 | `branch-alignment-20260802.md` | Completed Gate A audit | Checking branch provenance |
 | `teacher-branch-parity-acceptance.md` | Accepted Gate A decision | Checking canonical Teacher identity |
-| `porting/pft14_extensible_design.md` | Active Teacher extensibility target, not yet implemented | Working on Gate B |
-| `research/daily_coarse_graining/conservative_daily_process_operator_v1.md` | Active, not implemented | Designing the daily model |
+| `porting/pft14_extensible_design.md` | Accepted Gate B structural design; new PFT science remains unsupported | Extending Teacher PFT support |
+| `research/daily_coarse_graining/conservative_daily_process_operator_v1.md` | Active architecture; non-neural boundary accepted | Designing the daily neural model |
 | `research/daily_coarse_graining/daily_pft_interface_v1.md` | Frozen Gate B2 contract | Assembling PFT-axis inputs or adding parameter/trait channels |
-| `research/daily_coarse_graining/daily_flux_label_inventory_v1.md` | Frozen Gate C1 contract | Implementing daily capture or constrained replay |
+| `research/daily_coarse_graining/daily_flux_label_inventory_v1.md` | Frozen Gate C1 contract | Reading daily label ownership |
+| `research/daily_coarse_graining/gate_c2_constrained_replay_v1.md` | Accepted Gate C2 evidence | Implementing the conservative daily operator |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

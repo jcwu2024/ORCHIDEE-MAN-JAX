@@ -13,8 +13,8 @@ describe an earlier gate without being rewritten.
 
 ## Stable Teacher
 
-The canonical user-facing PFT14 Teacher core is on `main` at `ed2ff6d`.
-`research/daily-coarse-graining` merged that commit at `d0c4bce`; its complete
+The canonical user-facing PFT14 Teacher core is on `main` at `0d4f053`.
+`research/daily-coarse-graining` merged that commit at `f72aac7`; its complete
 `jax_orchidee/` tree is byte-identical to `main`. The branches remain separate
 only because the research branch also contains experimental dataset and
 neural code.
@@ -98,17 +98,24 @@ coverage and training data, but must not require redesigning the neural
 interface. See
 [`research/daily_coarse_graining/conservative_daily_process_operator_v1.md`](research/daily_coarse_graining/conservative_daily_process_operator_v1.md).
 
-Gate C1 is complete. Its source-backed inventory classifies 50 required daily
+Gate C is complete. Its source-backed inventory classifies 50 required daily
 labels against the real v5 Teacher contract: 10 are present, 11 are exactly
-derivable, and 29 are missing/non-identifiable. The missing labels reduce to
-three daily-only diagnostic families for water transfers, resolved OK_LEAK
-carbon transfers, and integrated energy fluxes. Endpoint differences are not
-accepted as process labels, and the supplemental captures must not store a
-48-step trajectory. The existing 669-point shards will not be regenerated
-before the bounded non-neural replay gate passes.
+derivable, and 29 are supplied by three daily-reduced compiled capture
+families. Capture is default-off and stores no 48-step trajectory. The
+true-label constrained updater represents ordinary inventories with bounded
+outgoing fractions and nonnegative inputs; source-signed `qsintveg` is
+represented as nonnegative storage minus nonnegative evaporation debt.
 
-No new GPU training is authorized before true-label non-neural constrained
-replay passes Gate C2. The six prerequisite sequence is now `5/6`.
+The Gate C2 lifecycle matrix passes cold-start continuation, an ordinary
+later day, and a 1962 restart-year day. All 349 day-end state leaves, 26
+modelout fields, and four modelout leaves pass; maximum state error is
+`2.78e-17`. Maximum water, carbon, and flux-side energy residuals are
+`4.70e-13`, `8.05e-9`, and `6.98e-9`, respectively. Defined masks and inactive
+PFT slots are explicit, no post-hoc clipping is used, and the accepted exact
+three-file restart roundtrip composes with the restart-day constrained replay.
+Evidence is described in
+[`gate_c2_constrained_replay_v1.md`](research/daily_coarse_graining/gate_c2_constrained_replay_v1.md).
+The six prerequisite sequence is now `6/6`.
 
 Completed infrastructure:
 
