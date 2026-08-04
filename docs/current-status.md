@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-03.
+Last updated: 2026-08-04.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -13,11 +13,11 @@ describe an earlier gate without being rewritten.
 
 ## Stable Teacher
 
-The canonical user-facing PFT14 Teacher core is on `main` at `0d4f053`.
-`research/daily-coarse-graining` merged that commit at `f72aac7`; its complete
-`jax_orchidee/` tree is byte-identical to `main`. The branches remain separate
-only because the research branch also contains experimental dataset and
-neural code.
+The canonical user-facing PFT14 Teacher core is on `main` at `5910ba9`.
+The corresponding research-branch core commit is `10030eb`; their complete
+`jax_orchidee/` trees are byte-identical. The branches remain separate only
+because the research branch also contains experimental dataset and neural
+code.
 
 Gate A cross-branch parity is complete. Seven detached-worktree cases cover
 cold start, later day, restart, two 365-day cold runs, a 365-day restart run,
@@ -402,19 +402,23 @@ Git; large datasets and weights remain external assets with stable identifiers
 and SHA256 hashes. Accepted training and inference code is merged into
 `main`, while ongoing experiments continue on the research branch.
 
-Physical-parameter gradient validation is a separate, conditional promotion
-gate. The current rollout experiment validates gradients with respect to
-network weights and cross-day state; it does not establish that neural AD with
-respect to `alloc_min`, `residence_time`, `vcmax25`, or `maint_resp_slope`
-matches the Teacher/Fortran parameter response. This is not a prerequisite for
-forward surrogate training or rollout acceptance. It becomes mandatory before
-using the neural model for gradient-based parameter calibration, reporting
-parameter sensitivities or Jacobians, or calling those physical-parameter
-gradients scientifically validated. That gate must use a parent-bound
-controlled-parameter-perturbation Teacher dataset, freeze parameter ranges and
-held-out combinations before evaluation, compare neural AD against
-Teacher/Fortran central finite differences at process, one-day, multiday, and
-cross-year scales, and report nonsmooth or inactive branches separately.
+Canonical-Teacher physical-parameter gradient Gate D1 is accepted. Its matrix
+covers seven source-backed process pairs, seven complete Day-2 pairs, three
+two-day propagation pairs, four restart-year pairs, and two source-extracted
+Fortran finite-difference pairs. JAX forward and reverse AD agree with centered
+`h`/`h2` Richardson finite differences under the frozen 1% active-pair policy;
+inactive and threshold-adjacent cases are classified separately. The gate
+found and repaired dormant-branch reverse-AD pollution across half-hour state
+and a traced `altmax` host cache conversion at the yearly HYDROL first step.
+The accepted evidence and exact scope are documented in
+[`gate_d1_physical_parameter_gradients_v1.md`](research/daily_coarse_graining/gate_d1_physical_parameter_gradients_v1.md).
+
+Gate D1 does not validate physical-parameter gradients of a future daily
+surrogate. Before neural parameter calibration, sensitivities, or Jacobian
+claims, Gate D2 must compare surrogate AD against canonical Teacher/Fortran
+finite differences over frozen parameter ranges and held-out combinations.
+Network-weight and cross-day state gradients remain training checks and cannot
+satisfy Gate D2.
 
 ## Teacher Production Evidence
 

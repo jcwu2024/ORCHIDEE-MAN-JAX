@@ -1,0 +1,146 @@
+{
+  "schema_version": "teacher_physical_parameter_gradient_v1",
+  "status": "accepted",
+  "scope": {
+    "model": "canonical PFT14 Teacher",
+    "main_teacher_commit": "5910ba9",
+    "research_teacher_commit": "10030eb",
+    "claim": "physical-parameter derivatives, not network-weight derivatives",
+    "pft_index": 13,
+    "pft_id": "mangrove_pft14"
+  },
+  "acceptance_policy": {
+    "smooth_active_relative_error_max": 0.01,
+    "absolute_error_floor": 1e-10,
+    "inactive_absolute_derivative_max": 1e-10,
+    "finite_difference_step_stability_relative_error_max": 0.01,
+    "finite_difference": "centered at h and h/2 with Richardson extrapolation",
+    "threshold_adjacent": "report finite one-sided/central behavior separately; do not claim a smooth derivative at a discontinuity"
+  },
+  "parameters": [
+    {
+      "id": "vcmax25",
+      "run_def_key": "VCMAX25",
+      "paper_calibrated": true,
+      "runtime_owner": "DriverCompiledStomateParameterValues.vcmax25",
+      "fortran_owner": "src_parameters/pft_parameters.f90::config_stomate_pft_parameters lines 3234-3240",
+      "fortran_consumer": "src_stomate/stomate_vmax.f90::vmax lines 327-354",
+      "jax_consumer": "jax_orchidee.stomate.carbon_kernels.vmax_step",
+      "reference_value": 63.2061836,
+      "declared_range": [20.0180641, 70.0],
+      "finite_difference_step": 0.000632061836
+    },
+    {
+      "id": "maint_resp_slope_c",
+      "run_def_key": "MAINT_RESP_SLOPE_C",
+      "paper_calibrated": true,
+      "runtime_owner": "DriverCompiledStomateParameterValues.maint_resp_slope[:,0]",
+      "fortran_owner": "src_parameters/pft_parameters.f90::config_stomate_pft_parameters lines 4220-4226",
+      "fortran_consumer": "src_stomate/stomate_resp.f90::maint_respiration lines 292-303",
+      "jax_consumer": "jax_orchidee.stomate.carbon_kernels._maintenance_respiration_core",
+      "reference_value": 0.0876862,
+      "declared_range": [1.1e-06, 0.3],
+      "finite_difference_step": 1e-06
+    },
+    {
+      "id": "alloc_min",
+      "run_def_key": "ALLOC_MIN",
+      "paper_calibrated": true,
+      "runtime_owner": "DriverCompiledStomateParameterValues.alloc_min",
+      "fortran_owner": "src_parameters/pft_parameters.f90::config_stomate_pft_parameters lines 4532-4538",
+      "fortran_consumer": "src_stomate/stomate_alloc.f90::alloc lines 623-627",
+      "jax_consumer": "jax_orchidee.stomate.carbon_kernels.allocation_step",
+      "reference_value": 0.2019211,
+      "declared_range": [0.1000685, 0.4],
+      "finite_difference_step": 2e-06
+    },
+    {
+      "id": "residence_time",
+      "run_def_key": "RESIDENCE_TIME",
+      "paper_calibrated": true,
+      "runtime_owner": "DriverCompiledStomateParameterValues.residence_time",
+      "fortran_owner": "src_parameters/pft_parameters.f90::config_stomate_pft_parameters lines 4163-4169",
+      "fortran_consumer": "src_stomate/lpj_gap.f90::gap lines 226-234",
+      "jax_consumer": "jax_orchidee.stomate.carbon_kernels.gap_mortality_step",
+      "reference_value": 50.6583452,
+      "declared_range": [5.0023366, 100.0],
+      "finite_difference_step": 0.000506583452
+    },
+    {
+      "id": "maint_resp_slope_b",
+      "run_def_key": "MAINT_RESP_SLOPE_B",
+      "paper_calibrated": false,
+      "extension_role": "prove that Gate D is not hard-coded to the four paper parameters",
+      "runtime_owner": "DriverCompiledStomateParameterValues.maint_resp_slope[:,1]",
+      "fortran_owner": "src_parameters/pft_parameters.f90::config_stomate_pft_parameters lines 4228-4234",
+      "fortran_consumer": "src_stomate/stomate_resp.f90::maint_respiration lines 292-303",
+      "jax_consumer": "jax_orchidee.stomate.carbon_kernels._maintenance_respiration_core",
+      "finite_difference_step": 1e-07
+    },
+    {
+      "id": "g0",
+      "run_def_key": "G0",
+      "paper_calibrated": false,
+      "extension_role": "exercise a non-paper DIFFUCO photosynthesis parameter family",
+      "runtime_owner": "DriverCompiledDiffucoParameterValues.trans_co2.g0",
+      "fortran_owner": "src_parameters/pft_parameters.f90::config_sechiba_pft_parameters line 3320",
+      "jax_consumer": "jax_orchidee.sechiba.diffuco photosynthesis/conductance path",
+      "finite_difference_step": 1e-07
+    },
+    {
+      "id": "availability_fact",
+      "run_def_key": "AVAILABILITY_FACT",
+      "paper_calibrated": false,
+      "extension_role": "exercise the real min_avail mortality threshold and separate nonsmooth reporting",
+      "fortran_consumer": "src_stomate/lpj_gap.f90::gap growth-efficiency mortality arm",
+      "jax_consumer": "jax_orchidee.stomate.carbon_kernels.gap_mortality_step",
+      "gradient_scope": "process-level threshold-adjacent diagnostic in Gate D1"
+    }
+  ],
+  "required_case_classes": [
+    "process_smooth_active",
+    "process_inactive",
+    "process_threshold_adjacent",
+    "complete_teacher_one_day",
+    "complete_teacher_multiday",
+    "complete_teacher_restart_year_boundary"
+  ],
+  "declared_matrices": {
+    "process": {
+      "pair_count": 7,
+      "coverage": [
+        "smooth active",
+        "inactive",
+        "threshold adjacent",
+        "paper and non-paper parameters"
+      ]
+    },
+    "complete_teacher_one_day": {
+      "pair_count": 7,
+      "lifecycle": "1961 Day 2 after one model-produced seed day"
+    },
+    "complete_teacher_multiday": {
+      "pair_count": 3,
+      "lifecycle": "1961 Days 2-3 in one 96-half-hour differentiable transition"
+    },
+    "complete_teacher_restart_year_boundary": {
+      "pair_count": 4,
+      "lifecycle": "model-produced 1961 state, yearly rebase, 1962 Day 1 firstcall transition"
+    },
+    "selected_fortran_finite_differences": {
+      "pair_count": 2,
+      "pairs": [
+        "vcmax25 -> VCMAX",
+        "maint_resp_slope_c -> maintenance respiration"
+      ],
+      "source_policy": "original procedure bytes in dependency-only harnesses"
+    }
+  },
+  "evidence_assets": {
+    "one_day": "outputs/research/daily_coarse_graining/gate_d1_physical_parameter_gradients/one_day_comparison.json",
+    "multiday": "outputs/research/daily_coarse_graining/gate_d1_physical_parameter_gradients/multiday_comparison.json",
+    "restart_year_boundary": "outputs/research/daily_coarse_graining/gate_d1_physical_parameter_gradients/restart_comparison.json",
+    "selected_fortran": "outputs/research/daily_coarse_graining/gate_d1_physical_parameter_gradients/selected_fortran_finite_differences.json"
+  },
+  "evidence_output": "outputs/research/daily_coarse_graining/gate_d1_physical_parameter_gradients/comparison.json"
+}

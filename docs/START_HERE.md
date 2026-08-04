@@ -91,9 +91,10 @@ git log -1 --oneline
 ```
 
 Then read `NEXT_STEPS.md`, `CODE_MAP.md`, and `DOCUMENT_STATUS.md`. Report the
-active gate before editing or submitting a job. Gates A-B must not be reopened
+active gate before editing or submitting a job. Gates A-D1 must not be reopened
 unless `jax_orchidee` drifts between the two branches or its evidence hashes
-drift. The active technical task is Gate D1; later gates are queued work, not
+drift. The active technical task is the bounded physical-parameter candidate
+registry described in `NEXT_STEPS.md`; later gates are queued work, not
 parallel instructions. A local `AGENTS.md`, when present, adds workspace and
 server rules but is deliberately not required for a clean Git handoff.
 

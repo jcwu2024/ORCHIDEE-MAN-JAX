@@ -66,7 +66,8 @@ program oracle_main
   real(r_std) :: lai(npts,nvm),t2m(npts),tlong(npts),stemp(npts,nslm),height(npts,nvm)
   real(r_std) :: veget(npts,nvm),rprof(npts,nvm),biomass(npts,nvm,nparts,nelements)
   real(r_std) :: resp(npts,nvm,nparts),sla(npts,nvm)
-  character(len=512) :: output_path
+  character(len=512) :: output_path,param_arg
+  real(r_std) :: parameter_value
   call get_command_argument(1,output_path)
   open(10,file=trim(output_path),status='replace',action='write')
   write(10,'(a)') 'field,i,j,k,value'
@@ -89,6 +90,10 @@ program oracle_main
   enddo; enddo; enddo
   is_tree=.false.; is_tree(14)=.true.; ok_LAIdev=.false.
   ext_coeff=.5d0; maint_resp_slope=0.d0; maint_resp_slope(:,1)=.01d0
+  if(command_argument_count()>=2)then
+    call get_command_argument(2,param_arg); read(param_arg,*)parameter_value
+    maint_resp_slope(14,1)=parameter_value
+  endif
   coeff_maint_zero=0.d0
   do j=2,nvm; do k=1,nparts; coeff_maint_zero(j,k)=.0005d0*dble(k); enddo; enddo
   t2m=(/280.d0,268.d0/); tlong=(/285.d0,260.d0/)
