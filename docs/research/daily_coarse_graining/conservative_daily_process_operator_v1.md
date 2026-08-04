@@ -144,6 +144,10 @@ parameter factors.
 
 ## Data Contract Before Training
 
+The completed Gate C1 inventory is
+`manifests/coarse_graining/daily_flux_label_inventory_v1.json`; its readable
+decision record is `daily_flux_label_inventory_v1.md`.
+
 Existing shards contain day-start state, native forcing, named conditions,
 the historical `B_fast` target, next-day state, and selected diagnostics. They
 do not necessarily contain every internal daily transfer needed by the new

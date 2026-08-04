@@ -28,6 +28,7 @@ an earlier experiment and does not control current work.
 | `porting/pft14_extensible_design.md` | Active Teacher extensibility target, not yet implemented | Working on Gate B |
 | `research/daily_coarse_graining/conservative_daily_process_operator_v1.md` | Active, not implemented | Designing the daily model |
 | `research/daily_coarse_graining/daily_pft_interface_v1.md` | Frozen Gate B2 contract | Assembling PFT-axis inputs or adding parameter/trait channels |
+| `research/daily_coarse_graining/daily_flux_label_inventory_v1.md` | Frozen Gate C1 contract | Implementing daily capture or constrained replay |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

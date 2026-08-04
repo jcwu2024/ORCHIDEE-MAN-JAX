@@ -98,9 +98,17 @@ coverage and training data, but must not require redesigning the neural
 interface. See
 [`research/daily_coarse_graining/conservative_daily_process_operator_v1.md`](research/daily_coarse_graining/conservative_daily_process_operator_v1.md).
 
-No new GPU training is authorized before daily flux labels,
-existing-shard availability, and a true-label non-neural constrained replay
-are frozen and pass Gate C. The six prerequisite sequence is now `4/6`.
+Gate C1 is complete. Its source-backed inventory classifies 50 required daily
+labels against the real v5 Teacher contract: 10 are present, 11 are exactly
+derivable, and 29 are missing/non-identifiable. The missing labels reduce to
+three daily-only diagnostic families for water transfers, resolved OK_LEAK
+carbon transfers, and integrated energy fluxes. Endpoint differences are not
+accepted as process labels, and the supplemental captures must not store a
+48-step trajectory. The existing 669-point shards will not be regenerated
+before the bounded non-neural replay gate passes.
+
+No new GPU training is authorized before true-label non-neural constrained
+replay passes Gate C2. The six prerequisite sequence is now `5/6`.
 
 Completed infrastructure:
 

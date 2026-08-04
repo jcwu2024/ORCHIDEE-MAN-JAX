@@ -70,8 +70,11 @@ are implemented, including a compact bare-soil-plus-PFT14 cold/restart
 lifecycle. Gate B2 is also complete: the variable-length neural PFT axis,
 named parameter/trait channels, mask semantics, and physical-parameter
 ownership are frozen and tested. Only PFT14 is scientifically supported.
-The next work is Gate C: inventory the daily water/carbon/energy labels and
-then prove true-label non-neural constrained replay.
+Gate C1's daily water/carbon/energy label inventory is now frozen. It proves
+that existing v5 shards do not uniquely identify 29 required transfers, but
+that all missing labels reduce to three daily-only supplemental capture
+families. The next work is Gate C2: implement those bounded diagnostic folds
+and prove true-label non-neural constrained replay before producing more data.
 
 ## New Task Bootstrap
 

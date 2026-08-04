@@ -51,6 +51,10 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
   exact mask semantics, permutation equivariance, inactive-slot isolation,
   and variable legal `n_pft` are machine-validated. This is structural
   extensibility, not scientific support for PFT2-PFT13.
+- Gate C1's 50-label water/carbon/energy inventory is frozen and audited
+  against the real v5 contract hash. Existing shards provide or exactly derive
+  21 labels; 29 non-identifiable labels reduce to three daily-only capture
+  families. No 669-point regeneration is authorized before replay admission.
 - Existing gradient tests establish training plumbing and finite derivatives
   in selected JAX paths. They do not yet establish physical-parameter gradient
   correctness for the complete Teacher or future daily surrogate.
@@ -206,18 +210,16 @@ training loss is easy to optimize.
 
 ## Immediate Work Order
 
-Gates A and B are complete. The six prerequisites before neural implementation
-are now `4/6`: restart identity, positional-selector removal, compact
-cold/restart lifecycle, and the neural PFT/parameter contract are closed.
-The next technical task is Gate C, not another GPU experiment or Teacher data
-regeneration. First inventory the labels already present or exactly derivable;
-then capture only genuinely missing labels and prove non-neural replay.
+Gates A, B, and C1 are complete. The six prerequisites before neural
+implementation are now `5/6`. The next technical task is Gate C2, not another
+GPU experiment or 669-point regeneration: implement the three declared
+daily-reduced capture families and prove non-neural constrained replay.
 
 ## Active Task Packet: Gate C
 
-This is the only implementation task to start from a new clone. Gates A-B are
-closed and must not be rerun unless shared Teacher code or a frozen contract
-changes. Gates D-F remain queued.
+This is the only implementation task to start from a new clone. Gates A-B and
+C1 are closed and must not be rerun unless shared Teacher code or a frozen
+contract changes. Gates D-F remain queued.
 
 ### Inputs
 
@@ -226,20 +228,21 @@ changes. Gates D-F remain queued.
 - true-daily design:
   [`research/daily_coarse_graining/conservative_daily_process_operator_v1.md`](research/daily_coarse_graining/conservative_daily_process_operator_v1.md);
 - frozen PFT interface: `manifests/coarse_graining/daily_neural_pft_interface_v1.json`;
+- frozen label inventory: `manifests/coarse_graining/daily_flux_label_inventory_v1.json`;
 - existing v5 shard contract and dataset manifests;
 - source-backed carbon ownership audit and Teacher state/target leaf metadata.
 
 ### Implementation steps
 
-1. Enumerate the constrained updater's daily water inputs, outputs, internal
-   transfers, inventories, and budget residual.
-2. Repeat for carbon production, respiration, export, litter/pool transfers,
-   inventories, and for energy/thermal tendencies.
-3. Classify every required label as `present`, `exactly_derivable`, or
-   `missing_non_identifiable`, with source owner and existing-shard leaf.
-4. Define the minimal supplemental Teacher capture for the last class only;
-   do not regenerate the 669-point dataset speculatively.
-5. Implement a non-neural constrained updater driven by true Teacher labels,
+1. Implement `water_transfer_daily_v1` as source-resolved daily sums inside
+   the complete-day SECHIBA diagnostic fold.
+2. Implement `ok_leak_transfer_daily_v1` as resolved daily transfer sums
+   inside a diagnostic variant of the compiled OK_LEAK fold.
+3. Implement `energy_flux_daily_v1` as source-flux time integrals inside the
+   complete-day ENERBIL/THERMOSOIL/explicit-snow diagnostic fold.
+4. Prove each capture on a bounded real Teacher day without changing ordinary
+   production outputs or storing a 48-step trajectory.
+5. Implement a non-neural constrained updater driven by those true labels,
    followed by retained exact daily processes.
 6. Prove next-day state reconstruction, budgets, nonnegative inventories,
    exact discrete behavior, cold/later/restart/mask coverage, and restart
@@ -247,15 +250,14 @@ changes. Gates D-F remain queued.
 
 ### Required artifacts
 
-- one versioned daily water/carbon/energy label inventory;
-- a field-to-shard/source ownership report;
-- a minimal missing-label capture specification, if needed;
+- three daily-reduced diagnostic capture families;
 - one non-neural constrained updater and retained-tail composition;
 - replay, budget, mask, lifecycle, and restart evidence.
 
 ### Definition of done
 
-- every updater-required label has exactly one evidence classification;
+- every frozen inventory label is supplied by v5, exact derivation, or one of
+  the three declared daily captures;
 - true Teacher labels reconstruct the accepted next-day canonical state at
   declared field-aware tolerances;
 - discrete and defined-status behavior is exact;

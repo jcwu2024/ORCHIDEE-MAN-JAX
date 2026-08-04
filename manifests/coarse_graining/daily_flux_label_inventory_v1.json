@@ -1,0 +1,658 @@
+{
+  "schema_version": "daily_flux_label_inventory_v1",
+  "status": "frozen_inventory",
+  "teacher_contract": {
+    "schema_version": "daily_markov_contract_v5",
+    "sha256": "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442"
+  },
+  "availability_classes": [
+    "present",
+    "exactly_derivable",
+    "missing_non_identifiable"
+  ],
+  "policy": {
+    "endpoint_differences_are_not_flux_decompositions": true,
+    "candidate_inference_must_not_store_or_reconstruct_48_steps": true,
+    "supplemental_capture_is_daily_reduced": true,
+    "regenerate_existing_669_shards_before_replay_gate": false
+  },
+  "retained_exact_boundaries": [
+    "season and phenology lifecycle",
+    "daily allocation",
+    "daily NPP, growth respiration, turnover and mortality",
+    "daily STOMATE restart/discrete writeback"
+  ],
+  "capture_families": [
+    {
+      "id": "water_transfer_daily_v1",
+      "owner": "compiled complete-day SECHIBA fold",
+      "reduction": "sum source-resolved amount tensors across 48 source-order steps and discard step axis",
+      "stores_step_axis": false
+    },
+    {
+      "id": "ok_leak_transfer_daily_v1",
+      "owner": "compiled complete-day OK_LEAK fold",
+      "reduction": "sum resolved litter/POC/DOC input, loss and destination-transfer tensors across 48 source-order calls",
+      "stores_step_axis": false
+    },
+    {
+      "id": "energy_flux_daily_v1",
+      "owner": "compiled complete-day ENERBIL/THERMOSOIL/explicit-snow fold",
+      "reduction": "time-integrate source fluxes over the day and discard step axis",
+      "stores_step_axis": false
+    }
+  ],
+  "labels": [
+    {
+      "id": "water.canopy_inventory_endpoints",
+      "domain": "water",
+      "role": "inventory_endpoint",
+      "units": "kg m-2",
+      "availability": "present",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "src_sechiba/hydrol.f90::hydrol_canop; jax_orchidee.sechiba.hydrol.hydrol_canop_interception",
+      "contract_refs": [
+        {"collection": "state_leaves", "key": "hydrol_previous_step_state.qsintveg"},
+        {"collection": "fast_day_target_leaves", "key": "hydrol_previous_step_state.qsintveg"}
+      ]
+    },
+    {
+      "id": "water.soil_inventory_endpoints",
+      "domain": "water",
+      "role": "inventory_endpoint",
+      "units": "soil moisture state plus source geometry",
+      "availability": "present",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "src_sechiba/hydrol.f90::hydrol_soil; hydrol_initial_tmc_from_restart_mc",
+      "contract_refs": [
+        {"collection": "state_leaves", "key": "hydrol_previous_step_state.mc"},
+        {"collection": "state_leaves", "key": "hydrol_previous_step_state.mcl"},
+        {"collection": "fast_day_target_leaves", "key": "hydrol_previous_step_state.mc"},
+        {"collection": "fast_day_target_leaves", "key": "hydrol_previous_step_state.mcl"}
+      ]
+    },
+    {
+      "id": "water.snow_inventory_endpoints",
+      "domain": "water",
+      "role": "inventory_endpoint",
+      "units": "kg m-2 and layer geometry",
+      "availability": "present",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "src_sechiba/explicitsnow.f90; jax_orchidee.sechiba.hydrol explicit-snow state",
+      "contract_refs": [
+        {"collection": "state_leaves", "key": "hydrol_previous_step_state.snow"},
+        {"collection": "state_leaves", "key": "hydrol_previous_step_state.snow_nobio"},
+        {"collection": "state_leaves", "key": "hydrol_previous_step_state.snowliq"},
+        {"collection": "fast_day_target_leaves", "key": "hydrol_previous_step_state.snow"},
+        {"collection": "fast_day_target_leaves", "key": "hydrol_previous_step_state.snow_nobio"},
+        {"collection": "fast_day_target_leaves", "key": "hydrol_previous_step_state.snowliq"}
+      ]
+    },
+    {
+      "id": "water.flood_inventory_endpoints",
+      "domain": "water",
+      "role": "inventory_endpoint",
+      "units": "kg m-2",
+      "availability": "present",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "src_sechiba/hydrol.f90 flood reservoir; jax_orchidee.sechiba.hydrol.hydrol_flood_reservoir",
+      "contract_refs": [
+        {"collection": "state_leaves", "key": "hydrol_previous_step_state.flood_res"},
+        {"collection": "fast_day_target_leaves", "key": "hydrol_previous_step_state.flood_res"}
+      ]
+    },
+    {
+      "id": "water.rain_input",
+      "domain": "water",
+      "role": "external_input",
+      "units": "kg m-2 day-1",
+      "availability": "present",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "stomate daily accumulation of driver precip_rain",
+      "contract_refs": [
+        {"collection": "fast_day_target_leaves", "key": "daily_interface.precip_daily"},
+        {"collection": "native_forcing", "key": "Rainf"}
+      ]
+    },
+    {
+      "id": "water.snowfall_input",
+      "domain": "water",
+      "role": "external_input",
+      "units": "kg m-2 day-1",
+      "availability": "present",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "stomate daily accumulation of driver precip_snow",
+      "contract_refs": [
+        {"collection": "fast_day_target_leaves", "key": "daily_interface.snowfall_daily"},
+        {"collection": "native_forcing", "key": "Snowf"}
+      ]
+    },
+    {
+      "id": "water.canopy_precipitation_partition",
+      "domain": "water",
+      "role": "internal_transfer",
+      "units": "kg m-2 day-1 by PFT",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "src_sechiba/hydrol.f90::hydrol_canop; precip2canopy and precip2ground",
+      "capture": {"family": "water_transfer_daily_v1", "source_terms": ["precip2canopy", "precip2ground"], "aggregation": "daily sum retaining PFT axis"},
+      "reason": "Daily precipitation and canopy endpoints do not identify intercepted versus direct-throughfall amounts."
+    },
+    {
+      "id": "water.canopy_to_ground",
+      "domain": "water",
+      "role": "internal_transfer",
+      "units": "kg m-2 day-1 by PFT",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "src_sechiba/hydrol.f90::hydrol_canop canopy2ground",
+      "capture": {"family": "water_transfer_daily_v1", "source_terms": ["canopy2ground"], "aggregation": "daily sum retaining PFT axis"},
+      "reason": "Canopy storage endpoints confound drip, throughfall and wet-canopy evaporation."
+    },
+    {
+      "id": "water.wet_canopy_evaporation",
+      "domain": "water",
+      "role": "external_output",
+      "units": "kg m-2 day-1 by PFT",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "src_sechiba/hydrol.f90::hydrol_canop vevapwet",
+      "capture": {"family": "water_transfer_daily_v1", "source_terms": ["vevapwet"], "aggregation": "daily sum retaining PFT axis"},
+      "reason": "The shard stores only the last-step evaporation state and the canopy endpoint."
+    },
+    {
+      "id": "water.transpiration",
+      "domain": "water",
+      "role": "external_output",
+      "units": "kg m-2 day-1 by PFT",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "src_sechiba/hydrol.f90::hydrol_soil rootsink and transpir",
+      "capture": {"family": "water_transfer_daily_v1", "source_terms": ["transpir", "rootsink"], "aggregation": "daily sum retaining PFT and soil-layer destinations"},
+      "reason": "Soil endpoint changes cannot separate transpiration from vertical flow, drainage and runoff."
+    },
+    {
+      "id": "water.bare_soil_evaporation",
+      "domain": "water",
+      "role": "external_output",
+      "units": "kg m-2 day-1 by soil tile",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "src_sechiba/hydrol.f90::hydrol_soil vevapnu/vevapnu_ns",
+      "capture": {"family": "water_transfer_daily_v1", "source_terms": ["vevapnu", "vevapnu_ns"], "aggregation": "daily sum retaining soil-tile axis"},
+      "reason": "The endpoint soil profile and final-step vevapnu do not identify the daily loss."
+    },
+    {
+      "id": "water.snow_sublimation",
+      "domain": "water",
+      "role": "external_output",
+      "units": "kg m-2 day-1 by snow owner",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "src_sechiba/explicitsnow.f90 and hydrol.f90 vevapsno/subsnownobio",
+      "capture": {"family": "water_transfer_daily_v1", "source_terms": ["vevapsno", "subsnownobio"], "aggregation": "daily sum retaining vegetated/non-biological partition"},
+      "reason": "Snow endpoints also include snowfall, melt, refreeze and compaction."
+    },
+    {
+      "id": "water.flood_evaporation",
+      "domain": "water",
+      "role": "external_output",
+      "units": "kg m-2 day-1",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "src_sechiba/hydrol.f90 flood reservoir vevapflo",
+      "capture": {"family": "water_transfer_daily_v1", "source_terms": ["vevapflo"], "aggregation": "daily sum"},
+      "reason": "Flood-reservoir endpoint changes confound evaporation and exchange with soil/flood routing."
+    },
+    {
+      "id": "water.snow_phase_and_melt_transfer",
+      "domain": "water",
+      "role": "internal_transfer",
+      "units": "kg m-2 day-1 by snow layer",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "src_sechiba/explicitsnow.f90 snow melt/refreeze/percolation",
+      "capture": {"family": "water_transfer_daily_v1", "source_terms": ["snowmelt", "snow liquid/ice phase transfer", "snow layer percolation"], "aggregation": "daily resolved transfer sum"},
+      "reason": "Layer mass and liquid endpoints do not identify opposing same-day phase transfers."
+    },
+    {
+      "id": "water.soil_infiltration",
+      "domain": "water",
+      "role": "internal_transfer",
+      "units": "kg m-2 day-1 by soil tile",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "src_sechiba/hydrol.f90 soil infiltration and water2infilt",
+      "capture": {"family": "water_transfer_daily_v1", "source_terms": ["infiltration accepted by each tile", "surface excess"], "aggregation": "daily sum retaining soil-tile axis"},
+      "reason": "The saved water2infilt is a step state, not a daily accepted-infiltration amount."
+    },
+    {
+      "id": "water.soil_vertical_transfer",
+      "domain": "water",
+      "role": "internal_transfer",
+      "units": "kg m-2 day-1 by interface and soil tile",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "src_sechiba/hydrol.f90::hydrol_soil wat_flux",
+      "capture": {"family": "water_transfer_daily_v1", "source_terms": ["wat_flux"], "aggregation": "daily signed interface sum retaining layer and soil-tile axes"},
+      "reason": "The target stores only final-step wat_flux while profile endpoints provide only net layer change."
+    },
+    {
+      "id": "water.runoff",
+      "domain": "water",
+      "role": "external_output",
+      "units": "kg m-2 day-1 by soil tile",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "src_sechiba/hydrol.f90::hydrol_soil runoff/runoff_per_soil/runoff2peat",
+      "capture": {"family": "water_transfer_daily_v1", "source_terms": ["runoff", "runoff_per_soil", "runoff2peat"], "aggregation": "daily sum retaining soil-tile destinations"},
+      "reason": "The v5 target runoff fields are the final half-hour values, not daily totals."
+    },
+    {
+      "id": "water.drainage",
+      "domain": "water",
+      "role": "external_output",
+      "units": "kg m-2 day-1 by soil tile",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "src_sechiba/hydrol.f90::hydrol_soil drainage/drainage_per_soil",
+      "capture": {"family": "water_transfer_daily_v1", "source_terms": ["drainage", "drainage_per_soil"], "aggregation": "daily sum retaining soil-tile axis"},
+      "reason": "The v5 target drainage fields are the final half-hour values, not daily totals."
+    },
+    {
+      "id": "water.routing_exchange",
+      "domain": "water",
+      "role": "external_input",
+      "units": "kg m-2 day-1 by routing role",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "src_sechiba/hydrol.f90 hydrol_waterbal returnflow/reinfiltration/irrigation/floodout",
+      "capture": {"family": "water_transfer_daily_v1", "source_terms": ["returnflow", "reinfiltration", "irrigation", "floodout"], "aggregation": "daily signed totals retaining named roles"},
+      "reason": "Paper-case zeros may be derivable for one configuration, but future forcing/PFT/routing activation makes them conditional inputs."
+    },
+    {
+      "id": "water.budget_closure",
+      "domain": "water",
+      "role": "budget_residual",
+      "units": "kg m-2 day-1",
+      "availability": "exactly_derivable",
+      "required_for": ["budget"],
+      "source_owner": "src_sechiba/hydrol.f90::hydrol_waterbal lines 9407-9475; jax_orchidee.sechiba.hydrol.hydrol_waterbal_step",
+      "dependencies": [
+        "water.canopy_inventory_endpoints", "water.soil_inventory_endpoints", "water.snow_inventory_endpoints", "water.flood_inventory_endpoints",
+        "water.rain_input", "water.snowfall_input", "water.wet_canopy_evaporation", "water.transpiration", "water.bare_soil_evaporation",
+        "water.snow_sublimation", "water.flood_evaporation", "water.runoff", "water.drainage", "water.routing_exchange"
+      ],
+      "derivation": "source inventory delta minus named external input/output totals; internal transfers cancel"
+    },
+
+    {
+      "id": "carbon.fast_gpp",
+      "domain": "carbon",
+      "role": "external_input",
+      "units": "gC m-2 day-1 by PFT",
+      "availability": "present",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "DIFFUCO assimilation accumulated by stomate_daily_process_fold_from_entries",
+      "contract_refs": [{"collection": "fast_day_target_leaves", "key": "daily_interface.gpp_daily"}]
+    },
+    {
+      "id": "carbon.fast_maintenance_respiration",
+      "domain": "carbon",
+      "role": "external_output",
+      "units": "gC m-2 day-1 by PFT and plant part",
+      "availability": "present",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "src_stomate/stomate_resp.f90::maint_respiration accumulated by daily fold",
+      "contract_refs": [{"collection": "fast_day_target_leaves", "key": "daily_interface.resp_maint_part"}]
+    },
+    {
+      "id": "carbon.ok_leak_inventory_endpoints",
+      "domain": "carbon",
+      "role": "inventory_endpoint",
+      "units": "gC m-2 on source pool/layer/PFT axes",
+      "availability": "present",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "stomate_litter.f90::littercalc_leak and stomate_soilcarbon.f90::soilcarbon_leak",
+      "contract_refs": [
+        {"collection": "state_leaves", "key": "slowproc_stomate_previous_step_state.litter_above"},
+        {"collection": "state_leaves", "key": "slowproc_stomate_previous_step_state.litter_below"},
+        {"collection": "state_leaves", "key": "slowproc_stomate_previous_step_state.carbon_32l"},
+        {"collection": "state_leaves", "key": "slowproc_stomate_previous_step_state.DOC"},
+        {"collection": "state_leaves", "key": "slowproc_stomate_previous_step_state.interception_storage"},
+        {"collection": "fast_day_target_leaves", "key": "ok_leak.litter_above"},
+        {"collection": "fast_day_target_leaves", "key": "ok_leak.litter_below"},
+        {"collection": "fast_day_target_leaves", "key": "ok_leak.carbon_32l"},
+        {"collection": "fast_day_target_leaves", "key": "ok_leak.DOC"},
+        {"collection": "fast_day_target_leaves", "key": "ok_leak.interception_storage"}
+      ]
+    },
+    {
+      "id": "carbon.litter_input",
+      "domain": "carbon",
+      "role": "external_input",
+      "units": "gC m-2 day-1 on litter destination axes",
+      "availability": "exactly_derivable",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "stomate_litter.f90::littercalc_leak; carbon_kernels.littercalc_litter_increments",
+      "contract_refs": [
+        {"collection": "state_leaves", "key": "slowproc_stomate_previous_step_state.bm_to_litter"},
+        {"collection": "state_leaves", "key": "slowproc_stomate_previous_step_state.turnover_daily"}
+      ],
+      "dependencies": [],
+      "derivation": "apply the retained exact litter increment partition once for one day to day-start bm_to_litter and turnover_daily"
+    },
+    {
+      "id": "carbon.litter_respiration",
+      "domain": "carbon",
+      "role": "external_output",
+      "units": "gC m-2 day-1 on source PFT/layer axes",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "stomate_litter.f90::littercalc_leak resp_hetero_litter/resp_hetero_flood",
+      "capture": {"family": "ok_leak_transfer_daily_v1", "source_terms": ["resp_hetero_litter", "resp_hetero_flood"], "aggregation": "daily amount retaining resolved source axes"},
+      "reason": "Litter endpoint loss also includes transfers to DOC and opposing litter input."
+    },
+    {
+      "id": "carbon.litter_to_doc",
+      "domain": "carbon",
+      "role": "internal_transfer",
+      "units": "gC m-2 day-1 on DOC destination axes",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "stomate_litter.f90::littercalc_leak soilcarbon_input_doc/floodcarbon_input",
+      "capture": {"family": "ok_leak_transfer_daily_v1", "source_terms": ["soilcarbon_input_doc", "floodcarbon_input"], "aggregation": "daily amount retaining pool/layer/PFT destinations"},
+      "reason": "The internal transfer cancels in total carbon and cannot be recovered from combined endpoints."
+    },
+    {
+      "id": "carbon.poc_gross_decomposition",
+      "domain": "carbon",
+      "role": "internal_transfer",
+      "units": "gC m-2 day-1 on POC source axes",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "stomate_soilcarbon.f90::soilcarbon_leak fluxtot/fluxtot_flood",
+      "capture": {"family": "ok_leak_transfer_daily_v1", "source_terms": ["fluxtot", "fluxtot_flood"], "aggregation": "daily amount retaining pool/layer/PFT axes"},
+      "reason": "POC endpoint loss cannot distinguish respiration from transfer to DOC or same-day inputs."
+    },
+    {
+      "id": "carbon.poc_respiration",
+      "domain": "carbon",
+      "role": "external_output",
+      "units": "gC m-2 day-1",
+      "availability": "exactly_derivable",
+      "required_for": ["budget", "supervision"],
+      "source_owner": "stomate_soilcarbon.f90::soilcarbon_leak lines 1605-1691",
+      "dependencies": ["carbon.poc_gross_decomposition"],
+      "derivation": "(1-CUE) times resolved gross POC decomposition, weighted exactly once"
+    },
+    {
+      "id": "carbon.poc_to_doc",
+      "domain": "carbon",
+      "role": "internal_transfer",
+      "units": "gC m-2 day-1 on DOC destination axes",
+      "availability": "exactly_derivable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "stomate_soilcarbon.f90::soilcarbon_leak lines 1746-1771",
+      "dependencies": ["carbon.poc_gross_decomposition"],
+      "derivation": "CUE times gross POC decomposition with flood and sro_bottom destination masks"
+    },
+    {
+      "id": "carbon.doc_gross_decomposition",
+      "domain": "carbon",
+      "role": "internal_transfer",
+      "units": "gC m-2 day-1 on DOC source axes",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "stomate_soilcarbon.f90::soilcarbon_leak fluxtot_doc/fluxtot_doc_flood",
+      "capture": {"family": "ok_leak_transfer_daily_v1", "source_terms": ["fluxtot_doc", "fluxtot_doc_flood"], "aggregation": "daily amount retaining pool/layer/PFT axes"},
+      "reason": "DOC endpoint loss also includes export, adsorption and vertical redistribution."
+    },
+    {
+      "id": "carbon.doc_to_poc",
+      "domain": "carbon",
+      "role": "internal_transfer",
+      "units": "gC m-2 day-1 on POC destination axes",
+      "availability": "exactly_derivable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "stomate_soilcarbon.f90::soilcarbon_leak lines 1693-1744",
+      "dependencies": ["carbon.doc_gross_decomposition"],
+      "derivation": "CUE times gross DOC decomposition partitioned by source fractions and lignin"
+    },
+    {
+      "id": "carbon.doc_respiration",
+      "domain": "carbon",
+      "role": "external_output",
+      "units": "gC m-2 day-1",
+      "availability": "exactly_derivable",
+      "required_for": ["budget", "supervision"],
+      "source_owner": "stomate_soilcarbon.f90::soilcarbon_leak lines 1693-1713",
+      "dependencies": ["carbon.doc_gross_decomposition"],
+      "derivation": "(1-CUE) times resolved gross DOC decomposition, weighted exactly once"
+    },
+    {
+      "id": "carbon.doc_external_input",
+      "domain": "carbon",
+      "role": "external_input",
+      "units": "gC m-2 day-1 on canopy/DOC destination axes",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "stomate_soilcarbon.f90::soilcarbon_leak deposition and TF-DOC inputs",
+      "capture": {"family": "ok_leak_transfer_daily_v1", "source_terms": ["doc_to_topsoil", "doc_to_subsoil", "doc_precip2ground", "doc_precip2canopy", "dry_dep_canopy"], "aggregation": "daily amount retaining destinations"},
+      "reason": "Original deposition inputs cannot be isolated from canopy storage and DOC endpoints."
+    },
+    {
+      "id": "carbon.doc_export",
+      "domain": "carbon",
+      "role": "external_output",
+      "units": "gC m-2 day-1 by export route",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "budget", "supervision"],
+      "source_owner": "stomate_soilcarbon.f90::soilcarbon_leak doc_run/doc_drain/doc_flood",
+      "capture": {"family": "ok_leak_transfer_daily_v1", "source_terms": ["doc_run", "doc_drain", "doc_flood", "doc_run_2_peat"], "aggregation": "daily amount retaining export route and source pool"},
+      "reason": "DOC endpoint loss cannot distinguish export from decomposition and redistribution."
+    },
+    {
+      "id": "carbon.doc_free_adsorbed_equilibration",
+      "domain": "carbon",
+      "role": "internal_transfer",
+      "units": "gC m-2 day-1 on DOC pool/layer axes",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "stomate_soilcarbon.f90::soilcarbon_leak free/adsorbed equilibration",
+      "capture": {"family": "ok_leak_transfer_daily_v1", "source_terms": ["free_to_adsorbed", "adsorbed_to_free"], "aggregation": "daily resolved transfer sum"},
+      "reason": "Opposing internal transfers cancel in total DOC and are not endpoint-identifiable."
+    },
+    {
+      "id": "carbon.doc_vertical_water_transport",
+      "domain": "carbon",
+      "role": "internal_transfer",
+      "units": "gC m-2 day-1 by layer interface",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "stomate_soilcarbon.f90::soilcarbon_leak vertical transport driven by wat_flux",
+      "capture": {"family": "ok_leak_transfer_daily_v1", "source_terms": ["resolved DOC advective interface transfer"], "aggregation": "daily signed interface sum"},
+      "reason": "Layer endpoints do not identify transport when decomposition, diffusion and inputs act concurrently."
+    },
+    {
+      "id": "carbon.doc_vertical_diffusion",
+      "domain": "carbon",
+      "role": "internal_transfer",
+      "units": "gC m-2 day-1 by layer interface",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "stomate_soilcarbon.f90::soilcarbon_leak DOC diffusion",
+      "capture": {"family": "ok_leak_transfer_daily_v1", "source_terms": ["resolved DOC diffusive interface transfer"], "aggregation": "daily signed interface sum"},
+      "reason": "Diffusion is an internal redistribution and cancels in total DOC."
+    },
+    {
+      "id": "carbon.cryoturbation_redistribution",
+      "domain": "carbon",
+      "role": "internal_transfer",
+      "units": "gC m-2 day-1 by POC layer interface",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "stomate_soilcarbon.f90 OK_LEAK cryoturbation redistribution",
+      "capture": {"family": "ok_leak_transfer_daily_v1", "source_terms": ["resolved POC cryoturbation transfer"], "aggregation": "daily signed interface sum"},
+      "reason": "Internal layer redistribution cannot be inferred from aggregate carbon conservation."
+    },
+    {
+      "id": "carbon.perma_peat_redistribution",
+      "domain": "carbon",
+      "role": "internal_transfer",
+      "units": "gC m-2 day-1 by POC pool/layer/PFT",
+      "availability": "missing_non_identifiable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "stomate_soilcarbon.f90::soilcarbon_leak PERMA_PEAT redistribution",
+      "capture": {"family": "ok_leak_transfer_daily_v1", "source_terms": ["resolved PERMA_PEAT source and destination amounts"], "aggregation": "daily resolved transfer sum"},
+      "reason": "deepC_peat is derived from carbon_32l and is not an independent stock label."
+    },
+    {
+      "id": "carbon.budget_closure",
+      "domain": "carbon",
+      "role": "budget_residual",
+      "units": "gC m-2 day-1",
+      "availability": "exactly_derivable",
+      "required_for": ["budget"],
+      "source_owner": "carbon_budget_ownership.combined_ok_leak_carbon_balance",
+      "dependencies": [
+        "carbon.ok_leak_inventory_endpoints", "carbon.litter_input", "carbon.litter_respiration", "carbon.poc_respiration",
+        "carbon.doc_respiration", "carbon.doc_external_input", "carbon.doc_export"
+      ],
+      "derivation": "initial independent inventory plus external input minus atmospheric loss and lateral export minus final inventory"
+    },
+
+    {
+      "id": "energy.surface_temperature_tendency",
+      "domain": "energy",
+      "role": "tendency",
+      "units": "K day-1",
+      "availability": "exactly_derivable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "src_sechiba/enerbil.f90::enerbil_surftemp",
+      "contract_refs": [
+        {"collection": "state_leaves", "key": "enerbil_previous_step_state.temp_sol"},
+        {"collection": "fast_day_target_leaves", "key": "enerbil_previous_step_state.temp_sol"}
+      ],
+      "dependencies": [],
+      "derivation": "fast-day target temp_sol minus day-start temp_sol"
+    },
+    {
+      "id": "energy.soil_temperature_tendency",
+      "domain": "energy",
+      "role": "tendency",
+      "units": "K day-1 on thermal depth/PFT axes",
+      "availability": "exactly_derivable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "src_sechiba/thermosoil.f90::thermosoil_main",
+      "contract_refs": [
+        {"collection": "state_leaves", "key": "thermosoil_previous_step_state.ptn"},
+        {"collection": "state_leaves", "key": "thermosoil_previous_step_state.stempdiag"},
+        {"collection": "fast_day_target_leaves", "key": "thermosoil_previous_step_state.ptn"},
+        {"collection": "fast_day_target_leaves", "key": "thermosoil_previous_step_state.stempdiag"}
+      ],
+      "dependencies": [],
+      "derivation": "fast-day thermal profiles minus day-start profiles"
+    },
+    {
+      "id": "energy.snow_thermal_tendency",
+      "domain": "energy",
+      "role": "tendency",
+      "units": "source snow heat and temperature state per day",
+      "availability": "exactly_derivable",
+      "required_for": ["state_update", "supervision"],
+      "source_owner": "src_sechiba/explicitsnow.f90 snowheat/snowtemp",
+      "contract_refs": [
+        {"collection": "state_leaves", "key": "hydrol_previous_step_state.snowheat"},
+        {"collection": "state_leaves", "key": "hydrol_previous_step_state.snowtemp"},
+        {"collection": "fast_day_target_leaves", "key": "hydrol_previous_step_state.snowheat"},
+        {"collection": "fast_day_target_leaves", "key": "hydrol_previous_step_state.snowtemp"}
+      ],
+      "dependencies": [],
+      "derivation": "fast-day snow thermal states minus day-start states"
+    },
+    {
+      "id": "energy.daily_temperature_context",
+      "domain": "energy",
+      "role": "diagnostic_context",
+      "units": "K",
+      "availability": "present",
+      "required_for": ["retained_exact", "supervision"],
+      "source_owner": "stomate_daily_process_fold_from_entries",
+      "contract_refs": [
+        {"collection": "fast_day_target_leaves", "key": "daily_interface.tsurf_daily"},
+        {"collection": "fast_day_target_leaves", "key": "daily_interface.tsoil_daily"}
+      ]
+    },
+    {
+      "id": "energy.net_radiation_integral",
+      "domain": "energy",
+      "role": "external_input",
+      "units": "J m-2 day-1",
+      "availability": "missing_non_identifiable",
+      "required_for": ["budget", "supervision"],
+      "source_owner": "src_sechiba/enerbil.f90::enerbil_flux netrad",
+      "capture": {"family": "energy_flux_daily_v1", "source_terms": ["netrad", "netrad_pft"], "aggregation": "sum flux times dt retaining grid/PFT owner"},
+      "reason": "Native radiation forcing does not determine absorbed net radiation without evolving albedo, emissivity and surface temperature."
+    },
+    {
+      "id": "energy.sensible_heat_integral",
+      "domain": "energy",
+      "role": "external_output",
+      "units": "J m-2 day-1",
+      "availability": "missing_non_identifiable",
+      "required_for": ["budget", "supervision"],
+      "source_owner": "src_sechiba/enerbil.f90::enerbil_flux fluxsens",
+      "capture": {"family": "energy_flux_daily_v1", "source_terms": ["fluxsens", "fluxsens_pft"], "aggregation": "sum flux times dt retaining grid/PFT owner"},
+      "reason": "The target stores only the final-step sensible heat flux."
+    },
+    {
+      "id": "energy.latent_heat_integral",
+      "domain": "energy",
+      "role": "external_output",
+      "units": "J m-2 day-1",
+      "availability": "missing_non_identifiable",
+      "required_for": ["budget", "supervision"],
+      "source_owner": "src_sechiba/enerbil.f90::enerbil_flux fluxlat/lareva/larsub",
+      "capture": {"family": "energy_flux_daily_v1", "source_terms": ["fluxlat", "lareva", "larsub"], "aggregation": "sum flux times dt retaining process partition"},
+      "reason": "Daily water totals alone do not preserve source temperature/phase-dependent latent-heat accounting."
+    },
+    {
+      "id": "energy.ground_heat_integral",
+      "domain": "energy",
+      "role": "internal_transfer",
+      "units": "J m-2 day-1",
+      "availability": "missing_non_identifiable",
+      "required_for": ["budget", "supervision"],
+      "source_owner": "src_sechiba/enerbil.f90 and thermosoil.f90 pgflux/soilflx",
+      "capture": {"family": "energy_flux_daily_v1", "source_terms": ["pgflux", "soilflx", "soilflx_pft"], "aggregation": "sum flux times dt retaining grid/PFT owner"},
+      "reason": "Final soilflx and endpoint temperatures do not identify the integrated ground-energy exchange."
+    },
+    {
+      "id": "energy.phase_change_integral",
+      "domain": "energy",
+      "role": "internal_transfer",
+      "units": "J m-2 day-1",
+      "availability": "missing_non_identifiable",
+      "required_for": ["budget", "supervision"],
+      "source_owner": "src_sechiba/enerbil.f90::enerbil_fusion and explicit-snow phase changes",
+      "capture": {"family": "energy_flux_daily_v1", "source_terms": ["fusion", "snow melt/refreeze latent energy"], "aggregation": "daily signed energy sum"},
+      "reason": "Opposing melt/refreeze events are not identifiable from final snow mass and heat."
+    },
+    {
+      "id": "energy.declared_thermal_residual",
+      "domain": "energy",
+      "role": "budget_residual",
+      "units": "J m-2 day-1 plus field-aware K reconstruction residuals",
+      "availability": "exactly_derivable",
+      "required_for": ["budget"],
+      "source_owner": "conservative daily operator thermal admission contract",
+      "dependencies": [
+        "energy.surface_temperature_tendency", "energy.soil_temperature_tendency", "energy.snow_thermal_tendency",
+        "energy.net_radiation_integral", "energy.sensible_heat_integral", "energy.latent_heat_integral",
+        "energy.ground_heat_integral", "energy.phase_change_integral"
+      ],
+      "derivation": "report source-flux energy residual separately from field-aware endpoint tendency reconstruction; do not claim a hard inventory identity where source enthalpy ownership is incomplete"
+    }
+  ]
+}
