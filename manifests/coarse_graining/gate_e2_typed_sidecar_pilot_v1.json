@@ -1,13 +1,18 @@
 {
   "schema_version": "gate_e2_typed_sidecar_pilot_v1",
   "status": "frozen_pre_execution",
-  "pilot_sha256": "05f2cca82c4c7f08046b25ec4065d97ace083865b3a0257c69b9e439722fd338",
+  "pilot_sha256": "42df43461e3c797224ea570199d78f33147447f654d9dfc976cde19e02ddae76",
   "parent": {
     "dataset_id": "pft14-daily-teacher-669-1961-2010",
     "dataset_manifest_sha256": "89ea2f24bad8f4b39129937f4106285dd53936c35d8dc610810f865b02d4e508",
     "markov_contract_sha256": "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442",
     "production_spec": "manifests/coarse_graining/daily_teacher_production_669.json",
     "production_spec_canonical_sha256": "6bb0198f0a313b814e32f980564c03bab4ce7801f639983d59f587d18aa6a27e"
+  },
+  "teacher_runtime": {
+    "config": "configs/orchidee_man_250919.yaml",
+    "config_canonical_sha256": "ed039389937442c988cf42156f699671bfe6eb2dc26a63a1dfb29a20c0e75fa3",
+    "generation_plan_role": "immutable landpoint/run.def/reference input inventory only"
   },
   "sidecar_contract": {
     "path": "manifests/coarse_graining/daily_typed_sidecar_v1.json",

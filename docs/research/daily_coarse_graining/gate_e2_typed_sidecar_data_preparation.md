@@ -147,6 +147,14 @@ Windows and Linux line-ending checkout policies cannot create false drift.
 Generated parent shards, parent dataset manifests, and sidecar archives retain
 exact byte SHA256 identities.
 
+The historical 669 generation plan owns only the admitted landpoint,
+`run.def`, reference-input, split, and parent-dataset inventory. It points to
+the configuration snapshot used when the parent dataset was generated, before
+the current PFT-catalog interface existed. Pilot execution therefore binds the
+current repository `configs/orchidee_man_250919.yaml` separately by canonical
+YAML hash. Exact comparison against every immutable parent day remains the
+scientific drift gate.
+
 PFT masks are process-typed rather than one generic active-slot flag:
 `active_pft` retains legal surface outputs including bare soil,
 `vegetation_pft` excludes bare soil, `leak_carbon_pft` requires the catalogued

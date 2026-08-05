@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 import numpy as np
+import yaml
 
 from jax_orchidee.driver import orchestration as teacher
 from research.daily_coarse_graining.daily_flux_capture import (
@@ -165,6 +166,19 @@ def load_pilot_plan(path: str | Path = DEFAULT_PILOT_PLAN) -> PilotPlan:
     )
     if sidecar_contract.sha256 != raw["sidecar_contract"]["contract_sha256"]:
         raise ValueError("pilot typed-sidecar contract identity mismatch")
+    teacher_config = (ROOT / str(raw["teacher_runtime"]["config"])).resolve()
+    try:
+        teacher_config.relative_to(ROOT)
+    except ValueError as error:
+        raise ValueError(
+            f"pilot Teacher config path escapes repository: {teacher_config}"
+        ) from error
+    config_raw = yaml.safe_load(teacher_config.read_text(encoding="utf-8"))
+    if (
+        _canonical_sha256(config_raw)
+        != raw["teacher_runtime"]["config_canonical_sha256"]
+    ):
+        raise ValueError("pilot Teacher config hash mismatch")
     entries = tuple(
         PilotEntry(
             task_index=int(item["task_index"]),
@@ -182,6 +196,10 @@ def load_pilot_plan(path: str | Path = DEFAULT_PILOT_PLAN) -> PilotPlan:
     if any(entry.year != int(execution["year"]) for entry in entries):
         raise ValueError("pilot entries must use the frozen execution year")
     return PilotPlan(path=path, sha256=actual_hash, raw=raw, entries=entries)
+
+
+def _pilot_teacher_config(pilot: PilotPlan) -> Path:
+    return (ROOT / str(pilot.raw["teacher_runtime"]["config"])).resolve()
 
 
 def capability_masks_from_context(context) -> CapabilityMasks:
@@ -327,6 +345,24 @@ def _selected_teacher_entry(plan, entry: PilotEntry) -> PlanEntry:
     return selected
 
 
+def _require_selected_teacher_inputs(
+    entry: PlanEntry,
+    *,
+    teacher_config: Path,
+) -> None:
+    required = [
+        teacher_config,
+        entry.run_def,
+        *(entry.reference_run_dir / name for name in REFERENCE_INPUT_NAMES),
+    ]
+    missing = [str(path) for path in required if not path.is_file()]
+    if missing:
+        raise FileNotFoundError(
+            "selected Teacher inputs are missing: " + ", ".join(missing)
+        )
+    _validate_landpoint_run_def_binding(entry)
+
+
 def preflight_pilot(
     pilot: PilotPlan,
     *,
@@ -356,6 +392,7 @@ def preflight_pilot(
     contract = load_typed_sidecar_contract()
     if contract.sha256 != pilot.raw["sidecar_contract"]["contract_sha256"]:
         raise ValueError("runtime typed-sidecar contract identity mismatch")
+    teacher_config = _pilot_teacher_config(pilot)
     selected = pilot.entries
     if task_index is not None:
         if task_index < 0 or task_index >= len(selected):
@@ -386,17 +423,10 @@ def preflight_pilot(
         ):
             raise ValueError(f"selected parent shard day inventory drift: {entry}")
         teacher_entry = _selected_teacher_entry(generation_plan, entry)
-        required = [
-            generation_plan.teacher_config,
-            teacher_entry.run_def,
-            *(teacher_entry.reference_run_dir / name for name in REFERENCE_INPUT_NAMES),
-        ]
-        missing = [str(path) for path in required if not path.is_file()]
-        if missing:
-            raise FileNotFoundError(
-                "selected Teacher inputs are missing: " + ", ".join(missing)
-            )
-        _validate_landpoint_run_def_binding(teacher_entry)
+        _require_selected_teacher_inputs(
+            teacher_entry,
+            teacher_config=teacher_config,
+        )
         reports.append(
             {
                 "task_index": entry.task_index,
@@ -413,6 +443,9 @@ def preflight_pilot(
         "git_head": git_head,
         "parent_dataset_manifest_sha256": _sha256_file(parent_manifest),
         "teacher_plan_sha256": _sha256_file(generation_plan.path),
+        "teacher_config_canonical_sha256": pilot.raw["teacher_runtime"][
+            "config_canonical_sha256"
+        ],
         "entries": reports,
     }
 
@@ -472,17 +505,22 @@ def generate_task(
     markov_contract = daily_markov_contract_from_metadata(parent_raw["markov_contract"])
     parent = load_markov_shard(parent_ref.path, contract=markov_contract)
 
-    generation_plan = load_plan(teacher_plan_path.resolve(), require_inputs=True)
+    generation_plan = load_plan(teacher_plan_path.resolve(), require_inputs=False)
     if generation_plan.dataset_id != parent_index.dataset_id:
         raise ValueError("Teacher generation plan and parent dataset ID differ")
     teacher_entry = _selected_teacher_entry(generation_plan, entry)
+    teacher_config = _pilot_teacher_config(pilot)
+    _require_selected_teacher_inputs(
+        teacher_entry,
+        teacher_config=teacher_config,
+    )
     context = teacher.prepare_paper_1961_driver_context(
-        generation_plan.teacher_config,
+        teacher_config,
         used_run_def_path=teacher_entry.run_def,
         reference_run_dir=teacher_entry.reference_run_dir,
     )
     bootstrap = teacher.paper_1961_driver_cold_start_day_scaffold(
-        generation_plan.teacher_config,
+        teacher_config,
         year=entry.year,
         used_run_def_path=teacher_entry.run_def,
         reference_run_dir=teacher_entry.reference_run_dir,
@@ -525,7 +563,7 @@ def generate_task(
         )
         capture_started = time.perf_counter()
         record = capture_pre_daily_stomate_record(
-            generation_plan.teacher_config,
+            teacher_config,
             previous_state=current,
             year=entry.year,
             day_index=int(day_index),
@@ -603,6 +641,9 @@ def generate_task(
         "temporal_split": parent_ref.temporal_split,
         "parent_shard_sha256": parent_ref.sha256,
         "sidecar_contract_sha256": contract.sha256,
+        "teacher_config_canonical_sha256": pilot.raw["teacher_runtime"][
+            "config_canonical_sha256"
+        ],
         "day_count": parent.days,
         "first_day": int(parent.day_index[0]),
         "last_day": int(parent.day_index[-1]),
@@ -679,6 +720,10 @@ def aggregate_pilot(
             raise ValueError(f"pilot parent is outside the frozen train/train split: {path}")
         if report.get("sidecar_contract_sha256") != contract.sha256:
             raise ValueError(f"pilot task contract drift: {path}")
+        if report.get("teacher_config_canonical_sha256") != pilot.raw[
+            "teacher_runtime"
+        ]["config_canonical_sha256"]:
+            raise ValueError(f"pilot task Teacher config drift: {path}")
         if (
             report.get("day_count"),
             report.get("first_day"),

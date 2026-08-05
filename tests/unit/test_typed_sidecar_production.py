@@ -207,6 +207,9 @@ def _synthetic_aggregate(tmp_path: Path):
                 "markov_contract_sha256": contract.parent_contract_sha256,
             },
             "sidecar_contract": {"contract_sha256": contract.sha256},
+            "teacher_runtime": {
+                "config_canonical_sha256": "teacher-config-hash"
+            },
             "execution": {
                 "expected_day_start": 2,
                 "expected_day_stop": 3,
@@ -264,6 +267,7 @@ def _synthetic_aggregate(tmp_path: Path):
         "temporal_split": "train",
         "parent_shard_sha256": parent_shard_hash,
         "sidecar_contract_sha256": contract.sha256,
+        "teacher_config_canonical_sha256": "teacher-config-hash",
         "day_count": 2,
         "first_day": 2,
         "last_day": 3,
