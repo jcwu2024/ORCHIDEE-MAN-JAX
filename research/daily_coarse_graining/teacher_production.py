@@ -19,6 +19,9 @@ from jax_orchidee.driver.run_def_materialization import (
     write_materialized_run_def,
 )
 from research.daily_coarse_graining import teacher_shards
+from research.daily_coarse_graining.teacher_data_release import (
+    load_teacher_data_release,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 SPEC_SCHEMA_VERSION = "daily_teacher_production_spec_v1"
@@ -97,6 +100,8 @@ class ProductionSpec:
     split_strategy: str
     split_features: tuple[str, ...]
     landpoints: tuple[ProductionLandpoint, ...]
+    parent_spec: Path | None = None
+    parent_spec_sha256: str | None = None
 
     def temporal_split(self, year: int) -> str:
         matches = [
@@ -292,6 +297,18 @@ def load_production_spec(path: str | Path) -> ProductionSpec:
         raise ValueError("production landpoint IDs must be unique")
     if any(item.spatial_split not in teacher_shards.SPLITS for item in landpoints):
         raise ValueError("production spec contains an unknown spatial split")
+    parent_spec_value = raw.get("parent_spec")
+    parent_spec_hash = raw.get("parent_spec_sha256")
+    if (parent_spec_value is None) != (parent_spec_hash is None):
+        raise ValueError("production subset must bind both parent path and hash")
+    parent_spec = None
+    if parent_spec_value is not None:
+        parent_spec = _resolve_path(parent_spec_value)
+        if (
+            not parent_spec.is_file()
+            or _canonical_json_sha256(parent_spec) != parent_spec_hash
+        ):
+            raise ValueError("production parent spec hash drift")
     spec = ProductionSpec(
         path=path,
         dataset_id=str(raw["dataset_id"]),
@@ -304,6 +321,10 @@ def load_production_spec(path: str | Path) -> ProductionSpec:
         split_strategy=str(raw["spatial_split_strategy"]),
         split_features=tuple(raw["spatial_split_features"]),
         landpoints=landpoints,
+        parent_spec=parent_spec,
+        parent_spec_sha256=(
+            None if parent_spec_hash is None else str(parent_spec_hash)
+        ),
     )
     if spec.first_year != 1961 or spec.first_year > spec.last_year or spec.block_size < 2:
         raise ValueError("production spec requires a valid 1961-starting chain")
@@ -318,6 +339,7 @@ def subset_spec(
     *,
     dataset_id: str,
     landpoint_ids: Sequence[str],
+    last_year: int | None = None,
 ) -> Path:
     requested = tuple(str(value) for value in landpoint_ids)
     if not requested or len(requested) != len(set(requested)):
@@ -327,6 +349,9 @@ def subset_spec(
     if unknown:
         raise ValueError(f"production subset is absent from its parent spec: {unknown}")
     selected = tuple(source_by_id[landpoint_id] for landpoint_id in requested)
+    selected_last_year = source.last_year if last_year is None else int(last_year)
+    if not source.first_year <= selected_last_year <= source.last_year:
+        raise ValueError("production subset last year is outside its parent spec")
     payload = {
         "schema_version": SPEC_SCHEMA_VERSION,
         "dataset_id": dataset_id,
@@ -336,7 +361,7 @@ def subset_spec(
         "parent_spec": _portable_path(source.path),
         "parent_spec_sha256": _canonical_json_sha256(source.path),
         "first_year": source.first_year,
-        "last_year": source.last_year,
+        "last_year": selected_last_year,
         "block_size": source.block_size,
         "temporal_splits": {
             name: [int(bounds[0]), int(bounds[1])]
@@ -445,15 +470,26 @@ def verify_staged_assets(spec: ProductionSpec, asset_root: str | Path) -> dict[s
         raise ValueError(f"asset schema must be {ASSET_SCHEMA_VERSION!r}")
     if raw.get("dataset_id") != spec.dataset_id:
         raise ValueError("production asset dataset identity mismatch")
-    if raw.get("production_spec_sha256") != _canonical_json_sha256(spec.path):
+    asset_spec_hash = raw.get("production_spec_sha256")
+    direct_assets = asset_spec_hash == _canonical_json_sha256(spec.path)
+    parent_assets = (
+        spec.parent_spec_sha256 is not None
+        and asset_spec_hash == spec.parent_spec_sha256
+    )
+    if not direct_assets and not parent_assets:
         raise ValueError("production asset spec hash drift")
     expected = {item.landpoint_id: item.spatial_split for item in spec.landpoints}
     observed = {item["landpoint_id"]: item["spatial_split"] for item in raw["landpoints"]}
-    if observed != expected:
+    if direct_assets and observed != expected:
         raise ValueError("production asset landpoint inventory mismatch")
+    if parent_assets and any(observed.get(name) != split for name, split in expected.items()):
+        raise ValueError("production subset differs from its parent asset inventory")
+    selected = [item for item in raw["landpoints"] if item["landpoint_id"] in expected]
+    if len(selected) != len(expected):
+        raise ValueError("production asset subset inventory is incomplete")
     total_bytes = 0
     file_count = 0
-    for item in raw["landpoints"]:
+    for item in selected:
         for metadata in item["files"].values():
             path = asset_root / metadata["path"]
             if not path.is_file() or _sha256_file(path) != metadata["sha256"]:
@@ -464,7 +500,7 @@ def verify_staged_assets(spec: ProductionSpec, asset_root: str | Path) -> dict[s
             file_count += 1
     return {
         "dataset_id": spec.dataset_id,
-        "landpoint_count": len(observed),
+        "landpoint_count": len(selected),
         "verified_files": file_count,
         "verified_bytes": total_bytes,
     }
@@ -478,6 +514,8 @@ def build_generation_plan(
     output_root: str | Path,
     plan_path: str | Path,
     days: int | None = None,
+    data_release: str | Path | None = None,
+    production_scope: str | None = None,
 ) -> Path:
     asset_root = Path(asset_root).resolve()
     verify_staged_assets(spec, asset_root)
@@ -519,12 +557,40 @@ def build_generation_plan(
                     "reference_run_dir": str(landpoint_root / "reference"),
                 }
             )
+    release = (
+        None
+        if data_release is None
+        else load_teacher_data_release(_resolve_path(data_release))
+    )
+    if release is not None:
+        if release.dataset_id != spec.dataset_id:
+            raise ValueError("production spec dataset ID differs from data release")
+        if release.teacher_config != Path(teacher_config).resolve():
+            raise ValueError("generation Teacher config differs from data release")
+        if production_scope not in {"pilot", "full"}:
+            raise ValueError("coherent generation requires --production-scope")
+    elif production_scope is not None:
+        raise ValueError("legacy generation cannot declare production scope")
     payload = {
-        "schema_version": teacher_shards.SCHEMA_VERSION,
+        "schema_version": (
+            teacher_shards.COHERENT_PLAN_SCHEMA_VERSION
+            if release is not None
+            else teacher_shards.SCHEMA_VERSION
+        ),
         "dataset_id": spec.dataset_id,
         "teacher_config": str(Path(teacher_config).resolve()),
         "output_root": str(Path(output_root).resolve()),
         "block_size": spec.block_size,
+        **(
+            {"data_release": str(release.path)}
+            if release is not None
+            else {}
+        ),
+        **(
+            {"production_scope": production_scope}
+            if release is not None
+            else {}
+        ),
         "entries": entries,
     }
     plan_path = _atomic_json(Path(plan_path).resolve(), payload)
@@ -550,6 +616,7 @@ def _parser() -> argparse.ArgumentParser:
     subset.add_argument("--output", type=Path, required=True)
     subset.add_argument("--dataset-id", required=True)
     subset.add_argument("--landpoint-id", action="append", required=True, dest="landpoint_ids")
+    subset.add_argument("--last-year", type=int)
     for name in ("inventory", "stage", "verify", "plan"):
         command = subparsers.add_parser(name)
         command.add_argument("--spec", type=Path, required=True)
@@ -564,6 +631,8 @@ def _parser() -> argparse.ArgumentParser:
             command.add_argument("--output-root", type=Path, required=True)
             command.add_argument("--plan-path", type=Path, required=True)
             command.add_argument("--days", type=int)
+            command.add_argument("--data-release", type=Path)
+            command.add_argument("--production-scope", choices=("pilot", "full"))
     return parser
 
 
@@ -594,6 +663,7 @@ def main(argv: Sequence[str] | None = None) -> int:
                     args.output,
                     dataset_id=args.dataset_id,
                     landpoint_ids=args.landpoint_ids,
+                    last_year=args.last_year,
                 )
             )
         }
@@ -623,6 +693,8 @@ def main(argv: Sequence[str] | None = None) -> int:
                         output_root=args.output_root,
                         plan_path=args.plan_path,
                         days=args.days,
+                        data_release=args.data_release,
+                        production_scope=args.production_scope,
                     )
                 )
             }

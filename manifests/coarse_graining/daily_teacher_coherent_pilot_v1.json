@@ -1,0 +1,73 @@
+{
+  "schema_version": "daily_teacher_production_spec_v1",
+  "dataset_id": "pft14-daily-teacher-669-1961-2010",
+  "population_manifest": "manifests/landpoints_669.json",
+  "population_manifest_sha256": "e6b9d96bf1638cf7e1a03ea3257138dbe9706ef2e63154d8aac4c4df9a2d5e92",
+  "population_count": 669,
+  "parent_spec": "manifests/coarse_graining/daily_teacher_production_669.json",
+  "parent_spec_sha256": "6bb0198f0a313b814e32f980564c03bab4ce7801f639983d59f587d18aa6a27e",
+  "first_year": 1961,
+  "last_year": 1961,
+  "block_size": 7,
+  "temporal_splits": {
+    "train": [
+      1961,
+      2004
+    ],
+    "validation": [
+      2005,
+      2007
+    ],
+    "test": [
+      2008,
+      2010
+    ]
+  },
+  "spatial_split_strategy": "frozen_parent_spec_subset_v1",
+  "spatial_split_features": [
+    "grid_x",
+    "grid_y",
+    "vcmax25",
+    "maint_resp_slope_c",
+    "alloc_min",
+    "residence_time"
+  ],
+  "spatial_split_counts": {
+    "test": 0,
+    "train": 6,
+    "validation": 0
+  },
+  "landpoints": [
+    {
+      "id": "001.0-071.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "069.0-119.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "281.0-095.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "295.0-113.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "315.0-097.0",
+      "spatial_split": "train"
+    },
+    {
+      "id": "333.0-057.0",
+      "spatial_split": "train"
+    }
+  ],
+  "required_reference_files": [
+    "driver_start.nc",
+    "sechiba_start.nc",
+    "stomate_start.nc",
+    "stomate_restart.nc",
+    "stomate_history_1961.nc"
+  ]
+}

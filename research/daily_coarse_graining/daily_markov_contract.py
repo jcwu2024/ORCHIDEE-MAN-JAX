@@ -1049,7 +1049,7 @@ def make_compiled_training_output_projector(
             )
         return boundary.final_diagnostics[name]
 
-    def projector(current_values, boundary):
+    def projector(current_values, boundary, _daily_flux_labels=None):
         state = jnp.concatenate(
             tuple(
                 _compiled_select_pft_axes(

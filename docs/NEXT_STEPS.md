@@ -41,12 +41,12 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
 - Previous direct-state and causal-carbon neural candidates were rejected.
 - Gate E1 is accepted. Its unique canonical input assembler, typed process
   boundary, conservative updater, reusable canonical retained-tail adapter,
-  and bounded real-Teacher lifecycle/AD evidence pass locally. Gate E2 data
-  preparation has reached its local acceptance point: the 29-label/66-field
-  sidecar contract, immutable-parent hash join, typed collation, explicit
-  masks, train/train-only statistics, and bounded lossless OK_LEAK layout
-  benchmark pass. Candidate selection remains unstarted; a representative
-  six-point-year production pilot is still required before full generation.
+  and bounded real-Teacher lifecycle/AD evidence pass locally. Gate E2 now has
+  a frozen coherent Teacher data release: base Markov rows, 66 typed fields,
+  masks, and year-end checkpoints are emitted by the same continuous Teacher
+  execution and share one manifest. The old immutable-parent sidecar proposal
+  is rejected. Candidate selection remains unstarted; a representative
+  six-point-year coherent production pilot is required before full generation.
 - The current Teacher and data are scientifically scoped to PFT14. Gate B1's
   catalog foundation now gives PFTs stable IDs, source PFT/MTC identities,
   traits, parameter ownership, capabilities, and named execution layouts.
@@ -235,24 +235,25 @@ conditions for reopening an old idea are in
 ## Immediate Work Order
 
 Gates A-D1 and the physical-parameter candidate registry are complete. The
-formal architecture/data-readiness review accepts Gate E1. Gate E2 local data
-preparation is recorded in
-[`gate_e2_typed_sidecar_data_preparation.md`](research/daily_coarse_graining/gate_e2_typed_sidecar_data_preparation.md).
-The next bounded task is its train-only six-point-year production pilot, which
-must calibrate annual dense/hybrid compression, wall time, memory, hashes, and
-restart continuity before any full 669 request. Its frozen manifest, guarded
-runner, Slurm launcher, and local fail-closed tests are prepared. Task 0's
-one-day diagnostic found only two one-ULP continuous differences, with maximum
-absolute error `2.84e-14`, maximum relative error `2.07e-16`, and exact
-discrete state. Gate E2 therefore reuses the already accepted Gate A
-`atol=1e-12, rtol=1e-12` continuous policy while retaining exact discrete and
-bit-exact sidecar storage checks. Execute the complete task-0 point-year and
-require its annual error summary to pass before tasks 1-5. Sidecar production
-must teacher-force every day from the immutable parent `S[d]`; it must not
-free-run the current Teacher and join labels from a numerically drifted state
-to the old parent trajectory. Once task 0 passes,
-execute the remaining five and aggregate only after all six pass. Then
-admit the first candidate only through the stable
+formal architecture/data-readiness review accepts Gate E1. Gate E2 is governed
+by
+[`coherent_teacher_dataset_generation_v1.md`](research/daily_coarse_graining/coherent_teacher_dataset_generation_v1.md).
+The frozen release `pft14-daily-teacher-coherent-v1` binds the Teacher source,
+configuration, PFT catalog, Markov contract, typed contract, and producer
+sources. A real 1961 three-day cold-start A/B proves that enabling typed
+capture leaves all ordinary compiled outputs and final state unchanged; all
+66 typed fields pass the fixed `atol=1e-8, rtol=1e-10` production gate, and
+discrete state is exact. One hundred related tests pass.
+
+The next bounded task is the six-point 1961 coherent production pilot. Build
+its machine-specific plan from the existing staged raw assets, verify the
+release and plan, then run six persistent CPU workers. Each point-year must
+atomically produce its base shard, typed shard, checkpoint, and shared
+metadata; aggregation must pass hashes, day inventory, and checkpoint chains.
+Measure annual wall time, peak RSS, base bytes, and typed bytes before costing
+or authorizing all 669 points. Do not read or join the historical v5 output
+shards. After the coherent pilot passes, decide whether to authorize complete
+data generation, then admit the first candidate only through the stable
 `bind_daily_operator(input_assembler=canonical_assembler,
 process_head=candidate_head,
 retained_tail=canonical_retained_tail_adapter)` boundary and the predeclared local/small
@@ -266,9 +267,9 @@ the executable evidence packet remains
 
 This packet is complete and retained as its acceptance contract. Gates A-C
 must not be rerun unless shared Teacher code or a frozen contract changes.
-Gate D1, the candidate registry, and Gate E1 are complete. Gate E2 local data
-preparation is complete and its representative production pilot is next;
-Gates D2 and F remain queued.
+Gate D1, the candidate registry, and Gate E1 are complete. Gate E2 coherent
+local implementation is complete and its representative production pilot is
+next; Gates D2 and F remain queued.
 
 ### Inputs
 

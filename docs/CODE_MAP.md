@@ -13,10 +13,13 @@ research, evidence, or generated assets.
 | `research/daily-coarse-graining` | Identical Teacher core plus data and neural research | Keep `jax_orchidee/` identical to `main` |
 
 The branches remain separate because research code is not a user-facing
-product. Their production Teacher packages are synchronized: there is no
-`jax_orchidee/` difference. The earlier six-file difference and its numerical
-admission evidence are preserved in `branch-alignment-20260802.md` and
-`teacher-branch-parity-acceptance.md`.
+product. Their scientific Teacher code is synchronized. The research branch
+currently adds one default-off compiled-output projection hook in
+`jax_orchidee/driver/orchestration.py` for coherent data capture; its
+capture-off/capture-on A/B is accepted, and it must be promoted to `main`
+without modification before the next branch-parity claim. The earlier
+six-file difference and its numerical admission evidence are preserved in
+`branch-alignment-20260802.md` and `teacher-branch-parity-acceptance.md`.
 
 ## Production Teacher
 
@@ -65,8 +68,12 @@ historical prototypes. Use the following classification.
 
 - `daily_markov_contract.py`: implemented v5 shard/state contract. It remains
   the reader contract for existing data, not the final surrogate architecture.
+- `teacher_data_release.py`: freezes and verifies the exact Teacher tree,
+  configuration, PFT catalog, contracts, and producer source identity.
 - `teacher_shards.py`, `teacher_production.py`, `teacher_pilot.py`: Teacher
-  capture, restartable shard production, and production planning.
+  capture, restartable shard production, and production planning. Their v3
+  plan/v5 manifest path co-generates base, typed, and checkpoint assets under
+  one release and worker transaction.
 - `markov_dataset.py`, `production_training_protocol.py`: hash-bound dataset,
   split, statistics, and batching infrastructure.
 - `teacher_data_product_admission.py`, `teacher_compatibility_gate.py`: dataset
@@ -87,13 +94,13 @@ historical prototypes. Use the following classification.
 - `daily_flux_capture.py`, `constrained_daily_replay.py`: accepted Gate C2
   capture serialization, bounded inventory/tendency updates, and budget
   audits. They define the non-neural admission boundary for the new operator.
-- `typed_sidecar.py`: active Gate E2 contract parser, immutable-parent hash
-  join, lossless typed sidecar reader/writer, supplemental collation, defined
-  masks, and train/train-only statistics.
-- `typed_sidecar_production.py`: bounded Gate E2 six-point-year capture,
-  parent-state replay checks, capability-mask construction, dual-layout
-  writing, and fail-closed pilot aggregation. It is data production tooling,
-  not a surrogate inference dependency.
+- `typed_sidecar.py`: lossless typed storage, supplemental collation,
+  train-only statistics, historical v1 reader, and coherent v2 single-manifest
+  reader.
+- `typed_capture_masks.py`: shared capability/defined-mask owner for coherent
+  and historical typed storage.
+- `typed_sidecar_production.py`: historical immutable-parent Gate E2 runner.
+  It remains reproducibility tooling and must not produce the formal dataset.
 
 ### Diagnostic and Oracle assets
 
@@ -134,11 +141,10 @@ the bounded implementation and evidence are in
 `docs/research/daily_coarse_graining/gate_e1_daily_operator_skeleton.md`.
 The controlling review and 47-label readiness matrix are in
 `docs/research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md`.
-Gate E2 begins with typed supplemental-data preparation and candidate admission;
-architecture selection and training remain unstarted.
-The local data-preparation packet is
-`gate_e2_typed_sidecar_data_preparation.md`; a representative production pilot
-remains required before full supplemental generation.
+Gate E2 now uses one frozen coherent Teacher release. Its active contract is
+`coherent_teacher_dataset_generation_v1.md`; a six-point production pilot
+remains required before full generation. Architecture selection and training
+remain unstarted. The old immutable-parent packet is historical evidence.
 
 ## Scripts
 

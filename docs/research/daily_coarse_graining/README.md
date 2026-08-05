@@ -32,8 +32,10 @@ mode.
 - `daily_markov_contract_v3.md`: historical contract used by the first bounded
   dataset and rejected neural baseline.
 - `daily_boundary_audit.md`: superseded v0 boundary and replay evidence.
-- `teacher_dataset_generation.md`: restartable landpoint-year shard contract,
-  669-point production planner, asset staging, Slurm array, and aggregation gate.
+- `teacher_dataset_generation.md`: historical v4/v5 landpoint-year production
+  planner, asset staging, Slurm array, and aggregation contract.
+- `coherent_teacher_dataset_generation_v1.md`: active formal training-data
+  release, co-generation transaction, six-point pilot, and promotion gate.
 - `teacher_pilot_v2.md`: frozen 12-landpoint pilot and promotion gates.
 - `teacher_capture_gpu_benchmark_20260721.md`: accepted V100 Teacher capture
   measurement and its limited conclusion.
@@ -77,10 +79,10 @@ Not implemented or not accepted:
 
 Gate C's parameter ownership, daily water/carbon/energy labels, supplemental
 capture, and non-neural constrained replay are complete. Gate D1 Teacher
-gradients and the physical-parameter candidate registry are also accepted. Do
-not reopen them or regenerate 669-point data unless their frozen contracts
-drift. The active next task is Gate E1 true-daily operator implementation; it
-must use the accepted Gate C updater rather than a direct next-stock predictor.
+gradients, the physical-parameter candidate registry, and Gate E1 are also
+accepted. The active next task is the coherent Gate E2 six-point Teacher-data
+pilot. It generates base and typed rows together and does not join against the
+historical 669-point v5 trajectories.
 
 The network interface must be PFT-extensible even though the current data and
 scientific claim remain PFT14-only. Continue from

@@ -25,7 +25,9 @@ import jax.numpy as jnp
 import numpy as np
 
 from jax_orchidee.driver import orchestration as teacher
+from jax_orchidee.stomate.reference import read_stomate_restart_season_state
 from research.daily_coarse_graining.boundary_adapter import project_packet_values
+from research.daily_coarse_graining.daily_flux_capture import daily_flux_capture_arrays
 from research.daily_coarse_graining.daily_markov_contract import (
     extract_diagnostics,
     extract_fast_day_target,
@@ -54,6 +56,10 @@ from research.daily_coarse_graining.synthetic_operator_cost import (
     FORCING_FIELDS,
     _synthetic_nroot,
     _tail_static_inputs,
+)
+from research.daily_coarse_graining.typed_sidecar import (
+    TypedSidecarContract,
+    compiled_daily_flux_fields,
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -119,6 +125,7 @@ class CompactTrainingCaptureBlock(NamedTuple):
     final_state: Any
     contract: Any | None = None
     seed_record: Any | None = None
+    typed_capture_rows: dict[str, np.ndarray] | None = None
 
 
 class EncoderParameters(NamedTuple):
@@ -325,7 +332,14 @@ def _make_sample(*, state, forcing, record, spec, min_wind: float):
 
 
 def _capture_days(
-    *, config_path, context, previous_state, year: int, start_day: int, days: int
+    *,
+    config_path,
+    context,
+    previous_state,
+    year: int,
+    start_day: int,
+    days: int,
+    capture_daily_flux_labels: bool = False,
 ):
     records = []
     states = []
@@ -340,6 +354,7 @@ def _capture_days(
         "use_compiled_sechiba_day": True,
         "retain_stomate_step_results": False,
         "prebuild_day_payloads": True,
+        "capture_daily_flux_labels": capture_daily_flux_labels,
     }
     current = previous_state
     for day_index in range(start_day, start_day + days):
@@ -422,6 +437,7 @@ def _iter_capture_days_compiled_blocks(
     days: int,
     block_size: int = 7,
     compact_contract_factory=None,
+    typed_capture_contract: TypedSidecarContract | None = None,
 ):
     """Yield one audited capture day and bounded compiled following-day blocks."""
 
@@ -438,6 +454,7 @@ def _iter_capture_days_compiled_blocks(
         year=year,
         start_day=start_day,
         days=1,
+        capture_daily_flux_labels=typed_capture_contract is not None,
     )
     boundary_state_spec = teacher.fast_state_from_previous_packet(
         records[0].half_hour_transition.current_state
@@ -462,6 +479,19 @@ def _iter_capture_days_compiled_blocks(
             final_state=current,
             contract=compact_contract,
             seed_record=records[0],
+            typed_capture_rows=(
+                {
+                    field.path: np.asarray(
+                        daily_flux_capture_arrays(records[0].daily_flux_labels)[
+                            field.path
+                        ][0],
+                        dtype=np.float64,
+                    )[None, ...]
+                    for field in typed_capture_contract.fields
+                }
+                if typed_capture_contract is not None
+                else None
+            ),
         )
     if days == 1:
         return
@@ -488,7 +518,7 @@ def _iter_capture_days_compiled_blocks(
     stomate_restart_template = context.first_step_restart_state.stomate
     stomate_season_values = {
         name: value
-        for name, value in teacher.read_stomate_restart_season_state(
+        for name, value in read_stomate_restart_season_state(
             context.first_step_restart_state.stomate_input
         )._asdict().items()
         if name != "provenance"
@@ -528,7 +558,27 @@ def _iter_capture_days_compiled_blocks(
                     day_start_state_spec=day_start_state_spec,
                     boundary_state_spec=boundary_state_spec,
                 )
-                projector_key = compact_contract.sha256
+                if typed_capture_contract is not None:
+                    base_projector = projector
+
+                    def projector(current_values, boundary, daily_flux_labels):
+                        return (
+                            *base_projector(
+                                current_values,
+                                boundary,
+                                daily_flux_labels,
+                            ),
+                            compiled_daily_flux_fields(
+                                daily_flux_labels,
+                                contract=typed_capture_contract,
+                            ),
+                        )
+
+                projector_key = (
+                    compact_contract.sha256
+                    if typed_capture_contract is None
+                    else f"{compact_contract.sha256}:{typed_capture_contract.sha256}"
+                )
             executable, state_spec = teacher._paper_compiled_later_day_block_executable(
                 config_path,
                 context=context,
@@ -540,6 +590,7 @@ def _iter_capture_days_compiled_blocks(
                 daily_carbon_dispatch=daily_carbon_dispatch,
                 stomate_parameter_values=stomate_parameters,
                 capture_pre_daily_training_boundaries=True,
+                capture_daily_flux_labels=typed_capture_contract is not None,
                 training_output_projector=projector,
                 training_output_projector_key=projector_key,
             )
@@ -560,9 +611,27 @@ def _iter_capture_days_compiled_blocks(
         )
         stacked_outputs = jax.device_get(stacked_outputs)
         if compact_contract is not None:
-            stacked_state, stacked_discrete, stacked_targets, stacked_diagnostics = (
-                stacked_outputs
-            )
+            if typed_capture_contract is None:
+                stacked_state, stacked_discrete, stacked_targets, stacked_diagnostics = (
+                    stacked_outputs
+                )
+                stacked_typed = None
+            else:
+                (
+                    stacked_state,
+                    stacked_discrete,
+                    stacked_targets,
+                    stacked_diagnostics,
+                    stacked_typed_values,
+                ) = stacked_outputs
+                stacked_typed = {
+                    field.path: np.asarray(value)
+                    for field, value in zip(
+                        typed_capture_contract.fields,
+                        stacked_typed_values,
+                        strict=True,
+                    )
+                }
             current = teacher.previous_packet_from_fast_state(
                 teacher.DriverFastStateBundle(
                     tstep=(next_day + current_block_size - 1) * steps_per_day - 1,
@@ -585,6 +654,7 @@ def _iter_capture_days_compiled_blocks(
                 fast_day_targets=np.asarray(stacked_targets),
                 diagnostics=np.asarray(stacked_diagnostics),
                 final_state=current,
+                typed_capture_rows=stacked_typed,
             )
             next_day += current_block_size
             continue

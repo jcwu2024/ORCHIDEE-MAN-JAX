@@ -12,6 +12,9 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from jax_orchidee.driver import orchestration as teacher  # noqa: E402
+from research.daily_coarse_graining.daily_flux_capture import (  # noqa: E402
+    daily_flux_capture_arrays,
+)
 from research.daily_coarse_graining.daily_markov_contract import (  # noqa: E402
     extract_diagnostics,
     extract_fast_day_target,
@@ -33,6 +36,9 @@ from research.daily_coarse_graining.supervised_learnability_pilot import (  # no
 from research.daily_coarse_graining.teacher_shards import (  # noqa: E402
     _compact_contract_factory,
     build_shard_arrays_from_compact_blocks,
+)
+from research.daily_coarse_graining.typed_sidecar import (  # noqa: E402
+    load_typed_sidecar_contract,
 )
 
 
@@ -87,13 +93,16 @@ def run(args):
         year=args.year,
         start_day=start_day,
         days=args.days,
+        capture_daily_flux_labels=args.typed_capture,
     )
     daily_seconds = time.perf_counter() - started
     daily_states, daily_forcings, daily_records, daily_final = daily
     hot_capture_seconds = []
     hot_capture_parity = []
     if args.capture_mode == "compact":
-        def compact_capture():
+        typed_contract = load_typed_sidecar_contract() if args.typed_capture else None
+
+        def compact_capture(active_typed_contract):
             started = time.perf_counter()
             blocks = _iter_capture_days_compiled_blocks(
                 config_path=args.config,
@@ -108,13 +117,66 @@ def run(args):
                     year=args.year,
                     first_day_index=start_day,
                 ),
+                typed_capture_contract=active_typed_contract,
             )
-            result = build_shard_arrays_from_compact_blocks(blocks, context)
+            result = build_shard_arrays_from_compact_blocks(
+                blocks,
+                context,
+                typed_capture_contract=active_typed_contract,
+            )
             return (*result, time.perf_counter() - started)
 
-        arrays, contract, compiled_final, compiled_seconds = compact_capture()
+        arrays, contract, compiled_final, compiled_seconds = compact_capture(
+            typed_contract
+        )
+        instrumentation_comparison = None
+        if typed_contract is not None:
+            ordinary_arrays, ordinary_contract, ordinary_final, ordinary_seconds = (
+                compact_capture(None)
+            )
+            shared_names = sorted(
+                name
+                for name in ordinary_arrays
+                if not name.startswith("__typed_capture__.")
+            )
+            instrumentation_comparison = {
+                "ordinary_compiled_seconds": ordinary_seconds,
+                "contract_equal": ordinary_contract.sha256 == contract.sha256,
+                "arrays": {
+                    name: _target_metrics(
+                        ordinary_arrays[name],
+                        arrays[name],
+                        atol=args.atol,
+                        rtol=args.rtol,
+                    )
+                    for name in shared_names
+                    if ordinary_arrays[name].dtype.kind == "f"
+                },
+                "discrete_exact": all(
+                    np.array_equal(ordinary_arrays[name], arrays[name])
+                    for name in shared_names
+                    if ordinary_arrays[name].dtype.kind != "f"
+                ),
+                "final_state": _compare_trees(
+                    ordinary_final.fields_by_component,
+                    compiled_final.fields_by_component,
+                    atol=args.atol,
+                    rtol=args.rtol,
+                ),
+            }
+            instrumentation_comparison["passed"] = bool(
+                instrumentation_comparison["contract_equal"]
+                and instrumentation_comparison["discrete_exact"]
+                and instrumentation_comparison["final_state"]["passed"]
+                and all(
+                    value["passed"]
+                    for value in instrumentation_comparison["arrays"].values()
+                )
+            )
         for _repeat in range(args.hot_repeats):
-            hot_arrays, hot_contract, hot_final, hot_seconds = compact_capture()
+            hot_arrays, hot_contract, hot_final, hot_seconds = compact_capture(
+                typed_contract
+            )
             hot_capture_seconds.append(hot_seconds)
             hot_capture_parity.append(
                 bool(
@@ -186,6 +248,26 @@ def run(args):
                         atol=args.atol,
                         rtol=args.rtol,
                     ),
+                    **(
+                        {
+                            "typed_capture": {
+                                field.path: _target_metrics(
+                                    np.asarray(
+                                        daily_flux_capture_arrays(
+                                            daily_record.daily_flux_labels
+                                        )[field.path][0],
+                                        dtype=np.float64,
+                                    ),
+                                    arrays[f"__typed_capture__.{field.path}"][offset],
+                                    atol=args.atol,
+                                    rtol=args.rtol,
+                                )
+                                for field in typed_contract.fields
+                            }
+                        }
+                        if typed_contract is not None
+                        else {}
+                    ),
                 }
             )
         spec_size = contract.fast_day_target_width
@@ -252,8 +334,14 @@ def run(args):
         and item.get("forcing", {"passed": True})["passed"]
         and item["target"]["passed"]
         and item.get("diagnostics", {"passed": True})["passed"]
+        and all(
+            value["passed"]
+            for value in item.get("typed_capture", {}).values()
+        )
         for item in comparisons
     )
+    if args.capture_mode == "compact" and instrumentation_comparison is not None:
+        passed = passed and instrumentation_comparison["passed"]
     return {
         "schema_version": "compiled_training_capture_parity_v1",
         "passed": passed,
@@ -263,6 +351,7 @@ def run(args):
         "days": args.days,
         "block_size": args.block_size,
         "capture_mode": args.capture_mode,
+        "typed_capture": bool(args.typed_capture),
         "target_elements": spec_size,
         "timing_seconds": {
             "daily_capture": daily_seconds,
@@ -270,6 +359,11 @@ def run(args):
             "compact_hot_capture": hot_capture_seconds,
         },
         "hot_capture_parity": hot_capture_parity,
+        "capture_instrumentation_ab": (
+            instrumentation_comparison
+            if args.capture_mode == "compact"
+            else None
+        ),
         "comparisons": comparisons,
         "final_state": final_state,
     }
@@ -289,6 +383,7 @@ def main() -> int:
         "--capture-mode", choices=("compact", "legacy"), default="compact"
     )
     parser.add_argument("--hot-repeats", type=int, default=0)
+    parser.add_argument("--typed-capture", action="store_true")
     parser.add_argument("--atol", type=float, default=1.0e-8)
     parser.add_argument("--rtol", type=float, default=1.0e-10)
     parser.add_argument("--output", type=Path, required=True)

@@ -729,7 +729,7 @@ def test_compiled_capture_uses_a_short_tail_block(monkeypatch):
     }.items():
         monkeypatch.setattr(capture.teacher, name, lambda *_args, _value=value, **_kwargs: _value)
     monkeypatch.setattr(
-        capture.teacher,
+        capture,
         "read_stomate_restart_season_state",
         lambda *_args, **_kwargs: SimpleNamespace(_asdict=lambda: {"provenance": "test"}),
     )

@@ -44,12 +44,26 @@ from research.daily_coarse_graining.replay_ceiling import _load_state_cache
 from research.daily_coarse_graining.supervised_learnability_pilot import (
     _iter_capture_days_compiled_blocks,
 )
+from research.daily_coarse_graining.teacher_data_release import (
+    TeacherDataRelease,
+    load_teacher_data_release,
+)
+from research.daily_coarse_graining.typed_capture_masks import (
+    build_defined_masks,
+    capability_masks_from_context,
+)
+from research.daily_coarse_graining.typed_sidecar import (
+    read_typed_sidecar_shard,
+    write_typed_sidecar_shard,
+)
 
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_VERSION = "daily_teacher_generation_plan_v2"
+COHERENT_PLAN_SCHEMA_VERSION = "daily_teacher_generation_plan_v3"
 LEGACY_MANIFEST_SCHEMA_VERSION = "daily_teacher_worker_manifest_v2"
 MANIFEST_SCHEMA_VERSION = "daily_teacher_worker_manifest_v3"
 DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v4"
+COHERENT_DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v5"
 PROGRESS_SCHEMA_VERSION = "daily_teacher_production_progress_v1"
 PAPER_DAYS_PER_YEAR = 365
 WORKER_ASSIGNMENT_STRATEGY = "balanced_landpoint_chains_v1"
@@ -108,6 +122,7 @@ _LANDPOINT_STATIC_SOURCE = (
     "prepared paper driver context and first-step static input interpolation"
 )
 _ANNUAL_CONDITION_SOURCE = "drivers.co2 annual lookup in the case configuration"
+_TYPED_ARRAY_PREFIX = "__typed_capture__."
 
 
 @dataclass(frozen=True)
@@ -138,6 +153,8 @@ class GenerationPlan:
     block_size: int
     output_root: Path
     entries: tuple[PlanEntry, ...]
+    data_release: TeacherDataRelease | None = None
+    production_scope: str = "legacy"
 
 
 def _sha256_bytes(value: bytes) -> str:
@@ -245,14 +262,34 @@ def _validate_landpoint_run_def_binding(entry: PlanEntry) -> None:
 def load_plan(path: Path, *, require_inputs: bool = False) -> GenerationPlan:
     path = path.resolve()
     raw = json.loads(path.read_text(encoding="utf-8"))
-    if raw.get("schema_version") != SCHEMA_VERSION:
-        raise ValueError(f"plan schema_version must be {SCHEMA_VERSION!r}")
+    schema_version = raw.get("schema_version")
+    if schema_version not in {SCHEMA_VERSION, COHERENT_PLAN_SCHEMA_VERSION}:
+        raise ValueError(
+            "plan schema_version must be a supported legacy or coherent schema"
+        )
     dataset_id = str(raw.get("dataset_id", ""))
     _validate_safe_id("dataset_id", dataset_id)
     block_size = int(raw.get("block_size", 7))
     if block_size < 2:
         raise ValueError("block_size must be at least two")
     teacher_config = _resolve(raw["teacher_config"])
+    data_release = None
+    if schema_version == COHERENT_PLAN_SCHEMA_VERSION:
+        release_path = raw.get("data_release")
+        if not release_path:
+            raise ValueError("coherent generation plan requires data_release")
+        data_release = load_teacher_data_release(_resolve(release_path))
+        if data_release.dataset_id != dataset_id:
+            raise ValueError("coherent generation plan dataset ID differs from release")
+        if data_release.teacher_config != teacher_config:
+            raise ValueError("coherent generation plan Teacher config differs from release")
+        production_scope = str(raw.get("production_scope", ""))
+        if production_scope not in {"pilot", "full"}:
+            raise ValueError("coherent generation plan requires pilot or full scope")
+    elif raw.get("data_release") is not None:
+        raise ValueError("legacy generation plan cannot declare data_release")
+    else:
+        production_scope = "legacy"
     output_root = _resolve(raw.get("output_root", f"outputs/training/{dataset_id}"))
     entries = []
     seen = set()
@@ -352,6 +389,8 @@ def load_plan(path: Path, *, require_inputs: bool = False) -> GenerationPlan:
         block_size=block_size,
         output_root=output_root,
         entries=tuple(entries),
+        data_release=data_release,
+        production_scope=production_scope,
     )
 
 
@@ -815,7 +854,12 @@ def _compact_contract_factory(context, *, year: int, first_day_index: int):
     return factory
 
 
-def build_shard_arrays_from_compact_blocks(blocks, context):
+def build_shard_arrays_from_compact_blocks(
+    blocks,
+    context,
+    *,
+    typed_capture_contract=None,
+):
     """Assemble one annual shard from already projected compiled outputs."""
 
     parameters, _parameter_leaves = _pack_condition_groups(
@@ -837,6 +881,11 @@ def build_shard_arrays_from_compact_blocks(blocks, context):
     year = None
     final_state = None
     previous_final = None
+    typed_rows = (
+        {field.path: [] for field in typed_capture_contract.fields}
+        if typed_capture_contract is not None
+        else None
+    )
 
     for block in blocks:
         if contract is None:
@@ -855,6 +904,19 @@ def build_shard_arrays_from_compact_blocks(blocks, context):
             == rows
         ):
             raise ValueError("compact capture arrays have inconsistent row counts")
+        if typed_rows is None:
+            if getattr(block, "typed_capture_rows", None) is not None:
+                raise ValueError("unexpected typed capture in ordinary Teacher shard")
+        else:
+            observed = getattr(block, "typed_capture_rows", None)
+            if observed is None or set(observed) != set(typed_rows):
+                raise ValueError("coherent Teacher block is missing typed capture fields")
+            for field in typed_capture_contract.fields:
+                value = np.asarray(observed[field.path])
+                expected_shape = (rows, *field.feature_shape)
+                if value.shape != expected_shape or value.dtype != np.dtype(np.float64):
+                    raise ValueError(f"typed capture shape/dtype drift for {field.path}")
+                typed_rows[field.path].append(value)
         if previous_final is not None:
             expected, expected_discrete = extract_state(previous_final, contract)
             if not np.array_equal(expected, block.state_rows[0], equal_nan=True):
@@ -908,6 +970,14 @@ def build_shard_arrays_from_compact_blocks(blocks, context):
             f"state_discrete__{name}": np.stack(values)
             for name, values in discrete_rows.items()
         },
+        **(
+            {
+                f"{_TYPED_ARRAY_PREFIX}{path}": np.concatenate(values, axis=0)
+                for path, values in typed_rows.items()
+            }
+            if typed_rows is not None
+            else {}
+        ),
     }
     return arrays, contract, final_state
 
@@ -934,6 +1004,12 @@ def _entry_paths(worker_root: Path, entry: PlanEntry) -> tuple[Path, Path, Path]
     )
 
 
+def _entry_typed_path(worker_root: Path, entry: PlanEntry) -> Path:
+    stem = f"{entry.landpoint_id}_{entry.year}"
+    split = f"spatial-{entry.spatial_split}_temporal-{entry.temporal_split}"
+    return worker_root / "typed" / split / f"{stem}.npz"
+
+
 def _completed_metadata(
     plan: GenerationPlan,
     worker_root: Path,
@@ -944,13 +1020,31 @@ def _completed_metadata(
     preceding_checkpoint_sha256: str | None,
 ) -> dict[str, Any] | None:
     shard, metadata, checkpoint = _entry_paths(worker_root, entry)
-    if not (shard.exists() and metadata.exists() and checkpoint.exists()):
+    typed_path = _entry_typed_path(worker_root, entry)
+    required_typed = plan.data_release is not None
+    if not (
+        shard.exists()
+        and metadata.exists()
+        and checkpoint.exists()
+        and (not required_typed or typed_path.exists())
+    ):
         return None
     payload = json.loads(metadata.read_text(encoding="utf-8"))
     expected = {
         "schema_version": SHARD_SCHEMA_VERSION,
         "plan_sha256": plan_sha256,
         "teacher_git_head": git_head,
+        **(
+            {
+                "data_release_id": plan.data_release.release_id,
+                "data_release_sha256": plan.data_release.sha256,
+                "teacher_source_sha256": plan.data_release.teacher_source_sha256,
+                "typed_contract_sha256": plan.data_release.typed_contract.sha256,
+                "production_scope": plan.production_scope,
+            }
+            if plan.data_release is not None
+            else {}
+        ),
         "landpoint_id": entry.landpoint_id,
         "year": entry.year,
         "days": entry.days,
@@ -970,6 +1064,8 @@ def _completed_metadata(
     if payload.get("shard_sha256") != _sha256_file(shard):
         return None
     if payload.get("checkpoint_sha256") != _sha256_file(checkpoint):
+        return None
+    if required_typed and payload.get("typed_shard_sha256") != _sha256_file(typed_path):
         return None
     return payload
 
@@ -1186,6 +1282,11 @@ def _write_entry(
             year=entry.year,
             first_day_index=start_day,
         ),
+        typed_capture_contract=(
+            None
+            if plan.data_release is None
+            else plan.data_release.typed_contract
+        ),
     )
     capture_seconds = 0.0
 
@@ -1204,8 +1305,19 @@ def _write_entry(
 
     assembly_started = time.perf_counter()
     arrays, contract, final_state = build_shard_arrays_from_compact_blocks(
-        timed_blocks(), context
+        timed_blocks(),
+        context,
+        typed_capture_contract=(
+            None
+            if plan.data_release is None
+            else plan.data_release.typed_contract
+        ),
     )
+    if (
+        plan.data_release is not None
+        and contract.sha256 != plan.data_release.markov_contract_sha256
+    ):
+        raise ValueError("runtime Markov contract differs from the frozen data release")
     capture_and_assembly_seconds = time.perf_counter() - assembly_started
     array_assembly_seconds = capture_and_assembly_seconds - capture_seconds
     cache_after = _compiled_cache_entries()
@@ -1215,12 +1327,38 @@ def _write_entry(
         flush=True,
     )
     shard, metadata_path, checkpoint = _entry_paths(worker_root, entry)
+    typed_path = _entry_typed_path(worker_root, entry)
+    typed_values = {
+        name.removeprefix(_TYPED_ARRAY_PREFIX): value
+        for name, value in arrays.items()
+        if name.startswith(_TYPED_ARRAY_PREFIX)
+    }
+    arrays = {
+        name: value
+        for name, value in arrays.items()
+        if not name.startswith(_TYPED_ARRAY_PREFIX)
+    }
+    if plan.data_release is None and typed_values:
+        raise AssertionError("ordinary Teacher capture unexpectedly produced typed labels")
+    if plan.data_release is not None:
+        expected_typed = set(plan.data_release.typed_contract.fields_by_path)
+        if set(typed_values) != expected_typed:
+            raise ValueError("coherent Teacher capture has incomplete typed labels")
     checkpoint_payload = {
         "schema_version": "daily_teacher_year_end_checkpoint_v2",
         "teacher_git_head": git_head,
         "plan_sha256": plan.plan_sha256,
         "landpoint_id": entry.landpoint_id,
         "end_year": entry.year,
+        **(
+            {
+                "data_release_id": plan.data_release.release_id,
+                "data_release_sha256": plan.data_release.sha256,
+                "teacher_source_sha256": plan.data_release.teacher_source_sha256,
+            }
+            if plan.data_release is not None
+            else {}
+        ),
         "state": final_state,
     }
     acceptance = None
@@ -1239,6 +1377,47 @@ def _write_entry(
     npz_started = time.perf_counter()
     _atomic_npz(shard, arrays)
     npz_write_seconds = time.perf_counter() - npz_started
+    typed_write_seconds = 0.0
+    typed_sha256 = None
+    typed_bytes = None
+    typed_defined_counts = None
+    if plan.data_release is not None:
+        typed_started = time.perf_counter()
+        typed_defined = build_defined_masks(
+            typed_values,
+            contract=plan.data_release.typed_contract,
+            capability=capability_masks_from_context(context),
+        )
+        write_typed_sidecar_shard(
+            typed_path,
+            contract=plan.data_release.typed_contract,
+            day_index=arrays["day_index"],
+            values=typed_values,
+            defined=typed_defined,
+            layouts={
+                field.path: "dense"
+                for field in plan.data_release.typed_contract.fields
+            },
+        )
+        restored, restored_defined, restored_days = read_typed_sidecar_shard(
+            typed_path,
+            contract=plan.data_release.typed_contract,
+            expected_days=int(arrays["day_index"].size),
+        )
+        if not np.array_equal(restored_days, arrays["day_index"]):
+            raise ValueError("typed shard day inventory changed during serialization")
+        for name in typed_values:
+            if not np.array_equal(restored[name], typed_values[name], equal_nan=True):
+                raise ValueError(f"typed shard value roundtrip drift for {name}")
+            if not np.array_equal(restored_defined[name], typed_defined[name]):
+                raise ValueError(f"typed shard mask roundtrip drift for {name}")
+        typed_write_seconds = time.perf_counter() - typed_started
+        typed_sha256 = _sha256_file(typed_path)
+        typed_bytes = typed_path.stat().st_size
+        typed_defined_counts = {
+            name: int(np.count_nonzero(mask))
+            for name, mask in typed_defined.items()
+        }
     checkpoint_started = time.perf_counter()
     _atomic_pickle(checkpoint, checkpoint_payload)
     checkpoint_write_seconds = time.perf_counter() - checkpoint_started
@@ -1249,7 +1428,7 @@ def _write_entry(
     metadata = {
         "schema_version": SHARD_SCHEMA_VERSION,
         "status": "complete",
-        "provisional_teacher": True,
+        "provisional_teacher": plan.data_release is None,
         "dataset_id": plan.dataset_id,
         "plan_sha256": plan.plan_sha256,
         "teacher_git_head": git_head,
@@ -1263,7 +1442,11 @@ def _write_entry(
         "spatial_split": entry.spatial_split,
         "temporal_split": entry.temporal_split,
         "block_size": plan.block_size,
-        "capture_mode": "compact_projected_compiled_blocks",
+        "capture_mode": (
+            "coherent_compact_projected_compiled_blocks"
+            if plan.data_release is not None
+            else "compact_projected_compiled_blocks"
+        ),
         "capture_seconds": capture_seconds,
         "timing_seconds": {
             "context_and_state_preparation": preparation_seconds,
@@ -1271,6 +1454,7 @@ def _write_entry(
             "array_assembly": array_assembly_seconds,
             "capture_and_incremental_assembly": capture_and_assembly_seconds,
             "npz_write": npz_write_seconds,
+            "typed_write_and_roundtrip": typed_write_seconds,
             "checkpoint_write": checkpoint_write_seconds,
             "total_entry_before_metadata_write": total_entry_seconds,
         },
@@ -1288,6 +1472,22 @@ def _write_entry(
         },
         "preceding_checkpoint_sha256": preceding_checkpoint_sha256,
         "input_hashes": _input_hashes(plan, entry),
+        **(
+            {
+                "data_release_id": plan.data_release.release_id,
+                "data_release_sha256": plan.data_release.sha256,
+                "teacher_source_sha256": plan.data_release.teacher_source_sha256,
+                "typed_contract_sha256": plan.data_release.typed_contract.sha256,
+                "production_scope": plan.production_scope,
+                "typed_shard": _relative(typed_path, worker_root),
+                "typed_shard_sha256": typed_sha256,
+                "typed_shard_bytes": typed_bytes,
+                "typed_layout": "dense",
+                "typed_defined_counts": typed_defined_counts,
+            }
+            if plan.data_release is not None
+            else {}
+        ),
         "year_end_acceptance": acceptance,
         "markov_contract": contract.metadata(),
         "markov_contract_sha256": contract.sha256,
@@ -1316,6 +1516,13 @@ def _load_checkpoint(worker_root: Path, metadata: dict[str, Any]):
         payload = pickle.load(handle)
     if payload.get("teacher_git_head") != metadata["teacher_git_head"]:
         raise ValueError(f"checkpoint provenance mismatch at {path}")
+    for name in (
+        "data_release_id",
+        "data_release_sha256",
+        "teacher_source_sha256",
+    ):
+        if name in metadata and payload.get(name) != metadata[name]:
+            raise ValueError(f"checkpoint data-release mismatch at {path}: {name}")
     return payload["state"]
 
 
@@ -1339,6 +1546,19 @@ def _compact_worker_shard_record(
         "shard_sha256": metadata["shard_sha256"],
         "checkpoint": _relative(checkpoint_path, worker_root),
         "checkpoint_sha256": metadata["checkpoint_sha256"],
+        **(
+            {
+                "data_release_id": metadata["data_release_id"],
+                "data_release_sha256": metadata["data_release_sha256"],
+                "teacher_source_sha256": metadata["teacher_source_sha256"],
+                "typed_contract_sha256": metadata["typed_contract_sha256"],
+                "production_scope": metadata["production_scope"],
+                "typed_shard": metadata["typed_shard"],
+                "typed_shard_sha256": metadata["typed_shard_sha256"],
+            }
+            if "data_release_id" in metadata
+            else {}
+        ),
     }
 
 
@@ -1591,6 +1811,17 @@ def _worker_manifest(
         "dataset_id": plan.dataset_id,
         "plan_sha256": plan.plan_sha256,
         "teacher_git_head": git_head,
+        **(
+            {
+                "data_release_id": plan.data_release.release_id,
+                "data_release_sha256": plan.data_release.sha256,
+                "teacher_source_sha256": plan.data_release.teacher_source_sha256,
+                "typed_contract_sha256": plan.data_release.typed_contract.sha256,
+                "production_scope": plan.production_scope,
+            }
+            if plan.data_release is not None
+            else {}
+        ),
         "worker_index": worker_index,
         "worker_count": worker_count,
         "worker_assignment_strategy": WORKER_ASSIGNMENT_STRATEGY,
@@ -1662,6 +1893,19 @@ def aggregate_workers(
             raise ValueError(f"invalid worker manifest schema at {manifest_path}")
         if manifest.get("plan_sha256") != plan.plan_sha256:
             raise ValueError(f"plan drift in {manifest_path}")
+        if plan.data_release is not None:
+            expected_release = {
+                "data_release_id": plan.data_release.release_id,
+                "data_release_sha256": plan.data_release.sha256,
+                "teacher_source_sha256": plan.data_release.teacher_source_sha256,
+                "typed_contract_sha256": plan.data_release.typed_contract.sha256,
+                "production_scope": plan.production_scope,
+            }
+            if any(
+                manifest.get(name) != value
+                for name, value in expected_release.items()
+            ):
+                raise ValueError(f"data-release drift in {manifest_path}")
         if manifest.get("worker_index") != index or manifest.get("worker_count") != worker_count:
             raise ValueError(f"worker identity mismatch in {manifest_path}")
         if manifest.get("worker_assignment_strategy") != WORKER_ASSIGNMENT_STRATEGY:
@@ -1727,6 +1971,19 @@ def aggregate_workers(
                     "shard_sha256",
                     "checkpoint",
                     "checkpoint_sha256",
+                    *(
+                        (
+                            "data_release_id",
+                            "data_release_sha256",
+                            "teacher_source_sha256",
+                            "typed_contract_sha256",
+                            "production_scope",
+                            "typed_shard",
+                            "typed_shard_sha256",
+                        )
+                        if plan.data_release is not None
+                        else ()
+                    ),
                 ):
                     if record.get(name) != shard.get(name):
                         raise ValueError(f"worker shard record drift for {key}: {name}")
@@ -1739,6 +1996,19 @@ def aggregate_workers(
                 raise ValueError(f"shard hash mismatch for {key}")
             if _sha256_file(checkpoint_path) != shard["checkpoint_sha256"]:
                 raise ValueError(f"checkpoint hash mismatch for {key}")
+            typed_path = None
+            if plan.data_release is not None:
+                typed_path = worker_root / shard["typed_shard"]
+                if _sha256_file(typed_path) != shard["typed_shard_sha256"]:
+                    raise ValueError(f"typed shard hash mismatch for {key}")
+                _values, _defined, typed_days = read_typed_sidecar_shard(
+                    typed_path,
+                    contract=plan.data_release.typed_contract,
+                    expected_days=int(shard["transition_count"]),
+                )
+                with np.load(shard_path) as parent_arrays:
+                    if not np.array_equal(typed_days, parent_arrays["day_index"]):
+                        raise ValueError(f"typed shard day inventory drift for {key}")
             contract = shard.get("markov_contract")
             if contract is None:
                 raise ValueError(f"missing Markov contract metadata for {key}")
@@ -1763,6 +2033,15 @@ def aggregate_workers(
                 "shard_sha256": shard["shard_sha256"],
                 "checkpoint": _relative(checkpoint_path, output_root),
                 "checkpoint_sha256": shard["checkpoint_sha256"],
+                **(
+                    {
+                        "day_count": int(shard["transition_count"]),
+                        "typed_shard": _relative(typed_path, output_root),
+                        "typed_shard_sha256": shard["typed_shard_sha256"],
+                    }
+                    if typed_path is not None
+                    else {}
+                ),
             }
     if len(heads) != 1:
         raise ValueError("workers used different Teacher git commits")
@@ -1789,15 +2068,38 @@ def aggregate_workers(
     }
     if len(contract_hashes) != 1:
         raise ValueError("Teacher Markov contracts differ across shards")
+    if (
+        plan.data_release is not None
+        and next(iter(contract_hashes)) != plan.data_release.markov_contract_sha256
+    ):
+        raise ValueError("aggregated Markov contract differs from the data release")
     contract = contracts[0]
     manifest = {
-        "schema_version": DATASET_SCHEMA_VERSION,
+        "schema_version": (
+            COHERENT_DATASET_SCHEMA_VERSION
+            if plan.data_release is not None
+            else DATASET_SCHEMA_VERSION
+        ),
         "dataset_id": dataset_id,
         "status": "complete",
-        "provisional_teacher": True,
+        "provisional_teacher": plan.data_release is None,
         "plan": str(plan.path),
         "plan_sha256": plan.plan_sha256,
         "teacher_git_head": next(iter(heads)),
+        **(
+            {
+                "data_release": {
+                    "release_id": plan.data_release.release_id,
+                    "release_sha256": plan.data_release.sha256,
+                    "teacher_source_sha256": plan.data_release.teacher_source_sha256,
+                    "typed_contract_sha256": plan.data_release.typed_contract.sha256,
+                    "transition_policy": "single_pass_continuous_teacher",
+                    "production_scope": plan.production_scope,
+                }
+            }
+            if plan.data_release is not None
+            else {}
+        ),
         "worker_count": worker_count,
         "worker_assignment_strategy": WORKER_ASSIGNMENT_STRATEGY,
         "worker_manifests": worker_manifests,

@@ -11194,6 +11194,7 @@ def _paper_compiled_later_day_block_executable(
     daily_carbon_dispatch: Mapping[str, object],
     stomate_parameter_values: DriverCompiledStomateParameterValues | None = None,
     capture_pre_daily_training_boundaries: bool = False,
+    capture_daily_flux_labels: bool = False,
     training_output_projector=None,
     training_output_projector_key: str | None = None,
 ):
@@ -11222,6 +11223,7 @@ def _paper_compiled_later_day_block_executable(
         initial.spec.components,
         initial.spec.field_names_by_component,
         bool(capture_pre_daily_training_boundaries),
+        bool(capture_daily_flux_labels),
         training_output_projector_key,
     )
     cached = _COMPILED_LATER_DAY_BLOCK_CACHE.get(cache_key)
@@ -11285,6 +11287,7 @@ def _paper_compiled_later_day_block_executable(
                 capture_pre_daily_training_boundary=(
                     capture_pre_daily_training_boundaries
                 ),
+                capture_daily_flux_labels=capture_daily_flux_labels,
             )
             packet = day.day_end_state
             next_values = tuple(
@@ -11312,6 +11315,7 @@ def _paper_compiled_later_day_block_executable(
                     outputs = training_output_projector(
                         current_values,
                         day.pre_daily_training_boundary,
+                        day.daily_flux_labels,
                     )
             return next_values, outputs
 

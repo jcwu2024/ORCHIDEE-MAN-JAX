@@ -1,0 +1,76 @@
+{
+  "schema_version": "canonical_teacher_data_release_v1",
+  "status": "frozen_pre_production",
+  "release_id": "pft14-daily-teacher-coherent-v1",
+  "dataset_id": "pft14-daily-teacher-669-1961-2010",
+  "teacher_source": {
+    "path": "jax_orchidee",
+    "python_tree_sha256": "ffae1ec0db2b167fa02dc514b62ae0c8d35932e67e8bc2866565e7b0ae457223",
+    "hash_mode": "utf8_lf"
+  },
+  "runtime": {
+    "config": {
+      "path": "configs/orchidee_man_250919.yaml",
+      "sha256": "3e3ec5c4518ebf4d470c60eda3e9bd6ddfd22e5c6dee473694f2409f17e619af"
+    },
+    "pft_catalog": {
+      "path": "configs/pft_catalogs/orchidee_man_paper_250919.json",
+      "sha256": "de1da5c23c3002c98e7cb534e71bcfcc870afa4f59dda6778cce53e93d2fc461"
+    }
+  },
+  "contracts": {
+    "markov_contract_sha256": "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442",
+    "typed_supplement": {
+      "path": "manifests/coarse_graining/daily_typed_supplement_v2.json",
+      "sha256": "9abcd3fa943269ae67565065bd9943ffd9101d92763d89fdc9d964c77cd377ac",
+      "contract_sha256": "fd67deb3fb88a7293ad211945bc742b78318dd692039b38497eb2d587d5afe73"
+    }
+  },
+  "producer_source_files": [
+    {
+      "path": "research/daily_coarse_graining/daily_markov_contract.py",
+      "sha256": "7b2a9d41afdb94e3fa04be7f2c2c5ae4c56ff4ed42933d4fde9539fa4345cd1f",
+      "hash_mode": "utf8_lf"
+    },
+    {
+      "path": "research/daily_coarse_graining/supervised_learnability_pilot.py",
+      "sha256": "e5aa55b45a7e324a4529a17cf4ad02b5943ab7953352e8f5d17fd3a8fc5a9708",
+      "hash_mode": "utf8_lf"
+    },
+    {
+      "path": "research/daily_coarse_graining/teacher_data_release.py",
+      "sha256": "894499c5e13aaafca2550079bb58b9dc2ec4f46681bbf9a1ad048b977af8c9d1",
+      "hash_mode": "utf8_lf"
+    },
+    {
+      "path": "research/daily_coarse_graining/teacher_production.py",
+      "sha256": "9d1387fc50c6749211f5ce9986524d608436a4e1aa114bc2954efe074d9b1042",
+      "hash_mode": "utf8_lf"
+    },
+    {
+      "path": "research/daily_coarse_graining/teacher_shards.py",
+      "sha256": "1d4b31be2f09efe920fa6ac80d410eadbff4a9ade74a761c37047b71fb7d4d67",
+      "hash_mode": "utf8_lf"
+    },
+    {
+      "path": "research/daily_coarse_graining/typed_capture_masks.py",
+      "sha256": "7f4802ce2fa7b6d0989827337cab2965d2a5fb75b2e79a6a1ab5a0b89e3812c3",
+      "hash_mode": "utf8_lf"
+    },
+    {
+      "path": "research/daily_coarse_graining/typed_sidecar.py",
+      "sha256": "b48a5f40dd163ef3cbb996f297c869c056ec7b9057008a9805aa5fc563ec7bb9",
+      "hash_mode": "utf8_lf"
+    }
+  ],
+  "generation": {
+    "transition_policy": "single_pass_continuous_teacher",
+    "artifacts": [
+      "base_shard",
+      "typed_shard",
+      "year_end_checkpoint"
+    ],
+    "dataset_manifest_schema": "daily_teacher_dataset_manifest_v5"
+  },
+  "release_sha256": "843d559b1dd1b5dbc494b22f478ded1b1cfc474716753f43021851c0428b6f7d"
+}

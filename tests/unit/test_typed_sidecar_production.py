@@ -7,13 +7,17 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
+from research.daily_coarse_graining.typed_capture_masks import (
+    CapabilityMasks,
+    build_defined_masks,
+    capability_masks_from_context,
+)
 from research.daily_coarse_graining.typed_sidecar import (
     load_typed_sidecar_contract,
     write_typed_sidecar_shard,
 )
 from research.daily_coarse_graining.typed_sidecar_production import (
     DEFAULT_PILOT_PLAN,
-    CapabilityMasks,
     PilotEntry,
     PilotPlan,
     _canonical_sha256,
@@ -23,8 +27,6 @@ from research.daily_coarse_graining.typed_sidecar_production import (
     _sha256_file,
     _state_comparison_report,
     aggregate_pilot,
-    build_defined_masks,
-    capability_masks_from_context,
     load_pilot_plan,
 )
 

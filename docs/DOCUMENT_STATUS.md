@@ -34,7 +34,7 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/physical_parameter_candidate_registry_v1.md` | Accepted source-driven candidate inventory | Selecting sensitivity or inversion parameters |
 | `research/daily_coarse_graining/gate_e1_daily_operator_skeleton.md` | Accepted Gate E1 implementation evidence | Using the true-daily operator boundary |
 | `research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md` | Accepted Gate E1 architecture/data decision | Starting Gate E2 data preparation or candidate admission |
-| `research/daily_coarse_graining/gate_e2_typed_sidecar_data_preparation.md` | Active Gate E2 local data contract/evidence; production pilot pending | Reading or producing supplemental typed labels |
+| `research/daily_coarse_graining/coherent_teacher_dataset_generation_v1.md` | Active Gate E2 production contract; six-point pilot pending | Producing formal Teacher training data |
 | `research/daily_coarse_graining/failed_architecture_lessons.md` | Active negative-design authority | Selecting or reviewing a neural architecture or objective |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
@@ -46,7 +46,8 @@ an earlier experiment and does not control current work.
   reading existing v5 Teacher shards. It is superseded as the final neural
   boundary by the conservative daily operator decision.
 - `research/daily_coarse_graining/teacher_dataset_generation.md` remains the
-  production and provenance contract for the existing Teacher data product.
+  production and provenance contract for the historical v4/v5 Teacher data
+  product. New formal data use the coherent generation contract above.
 - `docs/source_audits/*.yaml`, `oracle_families/`, and
   `production_families/` are machine/evidence contracts used by their audit
   commands. They are not general onboarding material.
@@ -59,6 +60,8 @@ an earlier experiment and does not control current work.
   authority.
 - Dated `*_202607*.md` and `*_202608*.md` research reports are immutable
   experiment snapshots.
+- `research/daily_coarse_graining/gate_e2_typed_sidecar_data_preparation.md`
+  records the rejected immutable-parent sidecar design and server attempts.
 - `daily_boundary_v0_draft.yaml`, `daily_markov_contract_v3.md`, and
   `daily_markov_contract_v4.md` are superseded contracts retained for
   migration provenance.

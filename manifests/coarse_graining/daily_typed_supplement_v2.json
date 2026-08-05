@@ -1,0 +1,40 @@
+{
+  "schema_version": "daily_typed_supplement_contract_v2",
+  "status": "frozen_coherent_teacher_release",
+  "contract_sha256": "fd67deb3fb88a7293ad211945bc742b78318dd692039b38497eb2d587d5afe73",
+  "label_schema": {
+    "path": "manifests/coarse_graining/daily_typed_sidecar_v1.json",
+    "sha256": "63be6bd48f2f6ff52dc47bab5e588f5f5dbe95ad0d6d1c4ea62b9f28d563b9b2",
+    "contract_sha256": "bcb1ccb0831a1bbcb64294c3896000c63000c3e22df90c0dac9be13343c734bf",
+    "reuse_scope": "labels_axes_units_masks_and_field_order_only"
+  },
+  "dataset": {
+    "dataset_id": "pft14-daily-teacher-669-1961-2010",
+    "dataset_manifest_schema": "daily_teacher_dataset_manifest_v5",
+    "markov_contract_schema": "daily_markov_contract_v5",
+    "markov_contract_sha256": "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442"
+  },
+  "generation": {
+    "transition_policy": "single_pass_continuous_teacher",
+    "worker_transaction": [
+      "base_shard",
+      "typed_shard",
+      "year_end_checkpoint",
+      "shared_metadata"
+    ],
+    "required_identity": [
+      "data_release_sha256",
+      "teacher_source_sha256",
+      "landpoint_id",
+      "year",
+      "preceding_checkpoint_sha256"
+    ]
+  },
+  "storage": {
+    "base_and_typed_files_may_be_separate": true,
+    "single_dataset_manifest_required": true,
+    "lossless_float64": true,
+    "explicit_defined_masks": true,
+    "typed_layout": "dense_deflate"
+  }
+}

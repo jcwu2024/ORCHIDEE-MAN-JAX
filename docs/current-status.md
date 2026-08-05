@@ -139,18 +139,28 @@ and `6.99e-9`. The graph contains no callback and no length-48 scan. All 47
 frozen labels have exactly one owner binding.
 
 The frozen data-readiness matrix is `10` labels already present, `8` exactly
-derivable, and `29` requiring full-coverage supplemental sidecars. Gate E2 has
-now reached its local data-preparation acceptance point: a 29-label/66-field
-typed contract, immutable-parent hash join, typed supplemental collation,
-explicit masks, strict train/train-only statistics, and fail-closed drift tests
-pass. The bounded Gate C ordinary-day OK_LEAK sample measures 279,872 raw value
-bytes versus 16,004 bytes for bit-exact dense Deflate including explicit masks,
-a 17.49x raw-value ratio. This single-day result does not authorize full
-generation; a representative six-train-point-year production pilot remains
-the active next operation. Its six-entry manifest, guarded production runner,
-typed active/vegetation/OK_LEAK/peat PFT capability masks, dual-layout
-aggregator, preflight command, Slurm launcher, and fail-closed local tests are
-prepared. Pilot task 0 has not passed. Job `14481274_0` stopped in preflight
+derivable, and `29` requiring 66 full-coverage typed fields. Gate E2's active
+design now generates those fields and the base Markov rows in the same
+continuous Teacher execution. The canonical release
+`pft14-daily-teacher-coherent-v1` binds Teacher source SHA256
+`ffae1ec0...457223`, release SHA256 `843d559b...8b6f7d`, configuration, PFT
+catalog, Markov contract, coherent typed contract, and producer sources. A
+point-year is complete only when its base shard, lossless typed shard plus
+exact masks, year-end checkpoint, and common metadata all exist and hash
+verify. The unified dataset schema is `daily_teacher_dataset_manifest_v5`.
+
+A real three-day 1961 cold-start instrumentation A/B passed: capture-on and
+capture-off compiled base arrays and final state were elementwise equal,
+discrete state was exact, and all 66 typed fields passed the fixed compiled
+production gate `atol=1e-8, rtol=1e-10`. The complete related regression is
+`100 passed`; Ruff and Python compilation pass. The six-point 1961 production
+spec is frozen, but no coherent server job has been submitted. Its pilot is
+the active next operation and must measure wall time, RSS, and both archive
+sizes before any full-generation request.
+
+The former immutable-parent Gate E2 attempts below are historical negative
+evidence. They explain why old v5 state rows cannot be joined to labels from a
+new Teacher execution. Job `14481274_0` stopped in preflight
 because the historical generation-plan configuration predates the current PFT
 catalog; execution is now correctly bound to the current repository
 configuration while the historical plan owns only the immutable input
@@ -163,11 +173,10 @@ bounded diagnostic subsequently classified the difference in job
 maximum absolute and relative errors are `2.842170943040401e-14` and
 `2.063503050227843e-16`, and all discrete state is exact. This is safely
 inside Gate A's existing `atol=1e-12, rtol=1e-12` policy and is not a
-scientific Teacher regression. Gate E2 now reuses that declared continuous
-policy, retains exact discrete comparisons, records all non-bit-exact owners
-and annual maxima, and keeps sidecar encoding itself bit-exact. The next
-operation is the complete task-0 point-year; tasks 1-5, parent regeneration,
-and neural training remain unauthorized until it passes.
+scientific Teacher regression. The historical design then reused that
+declared continuous policy, retained exact discrete comparisons, and kept
+sidecar encoding itself bit-exact. Its planned task-0 continuation was later
+abandoned in favor of coherent regeneration.
 The first full task-0 submission, `14482172_0`, stopped before Python execution
 because the cluster's older Bash treats an empty array expansion as unbound
 under `set -u`. The launcher now uses explicit diagnostic and full-generation
@@ -179,14 +188,10 @@ only examples outside the Gate A combined tolerance were three mirrors of
 all discrete state remained exact. This is accumulated free-run roundoff from
 joining a current-Teacher trajectory to an immutable old-Teacher parent, not
 an admissible sidecar transition policy. The tolerance was not widened.
-Gate E2 now reconstructs every day from the immutable parent `S[d]` through
-the existing validated `canonical_teacher_reentry` boundary, captures labels,
-and compares the one-day result to parent `S[d+1]`. Cold bootstrap remains a
-separate comparison. This makes each supplemental record conditional on the
-same state row to which it will be joined and prevents cross-day numerical
-drift from contaminating the sidecar.
-See
-[`gate_e1_architecture_data_readiness_review.md`](research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md).
+That teacher-forced workaround was not promoted. Historical v5 remains
+experiment evidence only; the coherent release regenerates both sides of the
+training record together. See
+[`coherent_teacher_dataset_generation_v1.md`](research/daily_coarse_graining/coherent_teacher_dataset_generation_v1.md).
 
 Completed infrastructure:
 
@@ -533,8 +538,7 @@ Markov contract are valid. Its operational evidence is recorded in
 
 The material below records completed v3-v5 dataset and rejected-model
 evidence. It is not the active work queue. Gate E1 is accepted; the next active
-work is Gate E2 data preparation and candidate admission through the new stable
-boundary.
+work is the coherent Gate E2 six-point production pilot.
 
 The full 669-point baseline is generated and admitted. Finalization job
 `14400343` completed in 4:08:54 with exit code zero. Its fail-closed gates
