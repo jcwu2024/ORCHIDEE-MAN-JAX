@@ -90,6 +90,10 @@ historical prototypes. Use the following classification.
 - `typed_sidecar.py`: active Gate E2 contract parser, immutable-parent hash
   join, lossless typed sidecar reader/writer, supplemental collation, defined
   masks, and train/train-only statistics.
+- `typed_sidecar_production.py`: bounded Gate E2 six-point-year capture,
+  parent-state replay checks, capability-mask construction, dual-layout
+  writing, and fail-closed pilot aggregation. It is data production tooling,
+  not a surrogate inference dependency.
 
 ### Diagnostic and Oracle assets
 

@@ -240,8 +240,10 @@ preparation is recorded in
 [`gate_e2_typed_sidecar_data_preparation.md`](research/daily_coarse_graining/gate_e2_typed_sidecar_data_preparation.md).
 The next bounded task is its train-only six-point-year production pilot, which
 must calibrate annual dense/hybrid compression, wall time, memory, hashes, and
-restart continuity before any full 669 request. Then admit the first candidate
-only through the stable
+restart continuity before any full 669 request. Its frozen manifest, guarded
+runner, Slurm launcher, and local fail-closed tests are prepared; execute one
+task before the remaining five and aggregate only after all six pass. Then
+admit the first candidate only through the stable
 `bind_daily_operator(input_assembler=canonical_assembler,
 process_head=candidate_head,
 retained_tail=canonical_retained_tail_adapter)` boundary and the predeclared local/small

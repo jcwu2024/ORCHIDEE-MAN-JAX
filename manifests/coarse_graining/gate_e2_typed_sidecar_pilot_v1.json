@@ -1,0 +1,50 @@
+{
+  "schema_version": "gate_e2_typed_sidecar_pilot_v1",
+  "status": "frozen_pre_execution",
+  "pilot_sha256": "6bc4b130c727a0b099c8375d816fabf174e2ccb192dc38dc6b101997815708ba",
+  "parent": {
+    "dataset_id": "pft14-daily-teacher-669-1961-2010",
+    "dataset_manifest_sha256": "89ea2f24bad8f4b39129937f4106285dd53936c35d8dc610810f865b02d4e508",
+    "markov_contract_sha256": "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442",
+    "production_spec": "manifests/coarse_graining/daily_teacher_production_669.json",
+    "production_spec_sha256": "59c36af1c8f047c507d7a46ae394c1f3637705816a3e18ffb642cf54c5811a13"
+  },
+  "sidecar_contract": {
+    "path": "manifests/coarse_graining/daily_typed_sidecar_v1.json",
+    "file_sha256": "63be6bd48f2f6ff52dc47bab5e588f5f5dbe95ad0d6d1c4ea62b9f28d563b9b2",
+    "contract_sha256": "bcb1ccb0831a1bbcb64294c3896000c63000c3e22df90c0dac9be13343c734bf"
+  },
+  "selection_source": {
+    "path": "manifests/coarse_graining/ok_leak_auxiliary_capture_96day_v1.json",
+    "sha256": "638cb1c9e5642f49f5c761390ebb32602f9ad2e89688ab6e09e9b2c21eaaf55b",
+    "policy": "the six accepted train landpoints; one cold-continuation 1961 point-year each"
+  },
+  "execution": {
+    "year": 1961,
+    "expected_day_start": 2,
+    "expected_day_stop": 365,
+    "expected_days_per_entry": 364,
+    "spatial_split": "train",
+    "temporal_split": "train",
+    "layouts": ["dense", "hybrid_auto"],
+    "candidate_inference_executes_teacher_steps": false,
+    "teacher_capture_only": true
+  },
+  "entries": [
+    {"task_index": 0, "landpoint_id": "001.0-071.0", "year": 1961},
+    {"task_index": 1, "landpoint_id": "069.0-119.0", "year": 1961},
+    {"task_index": 2, "landpoint_id": "281.0-095.0", "year": 1961},
+    {"task_index": 3, "landpoint_id": "295.0-113.0", "year": 1961},
+    {"task_index": 4, "landpoint_id": "315.0-097.0", "year": 1961},
+    {"task_index": 5, "landpoint_id": "333.0-057.0", "year": 1961}
+  ],
+  "admission": {
+    "all_parent_day_indices_exact": true,
+    "all_day_start_and_next_states_exact": true,
+    "all_66_fields_present": true,
+    "all_defined_masks_source_capability_backed": true,
+    "both_layouts_bit_exact": true,
+    "restart_continuity": "cold bootstrap Day 1 end must equal the immutable parent Day 2 start",
+    "full_generation_authorized": false
+  }
+}

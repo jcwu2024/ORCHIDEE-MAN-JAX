@@ -12,7 +12,7 @@ job, modify the canonical Teacher, or rewrite any accepted v5 parent shard.
 
 The frozen machine contract is
 `manifests/coarse_graining/daily_typed_sidecar_v1.json`, canonical SHA256
-`f4e3873c885298f19d219e0215cf1bc2d63b9becedd60c16914953cc6d2f2d1e`.
+`bcb1ccb0831a1bbcb64294c3896000c63000c3e22df90c0dac9be13343c734bf`.
 It covers exactly the 29 `missing_non_identifiable` labels and their 66 unique
 required source fields. Every label has a capture owner and physical unit;
 every field has named axes, symbolic and concrete shape, `float64` dtype, and
@@ -125,11 +125,41 @@ Before full generation, run two bounded stages:
    archive size, and exact replay/hash checks before the full request is
    frozen.
 
+The six-point-year pilot is now frozen in
+`manifests/coarse_graining/gate_e2_typed_sidecar_pilot_v1.json`. It selects
+the 1961 train split for `001.0-071.0`, `069.0-119.0`, `281.0-095.0`,
+`295.0-113.0`, `315.0-097.0`, and `333.0-057.0`. Each parent shard contains
+364 transitions for Day 2 through Day 365; the cold-start Day 1 end state is
+required to equal the immutable parent Day 2 start.
+
+`research/daily_coarse_graining/typed_sidecar_production.py` is the sole pilot
+runner. It keeps one Teacher process alive for one point-year, captures the 66
+typed fields during each compiled complete day, verifies every day start and
+next state against the immutable parent, derives capability plus finite masks,
+and writes both dense-Deflate and per-field hybrid layouts. Aggregation
+reopens both layouts, requires bit-exact values and exact masks, re-derives the
+declared capability masks, and rejects source, parent, contract, split, day,
+task, or file-hash drift. Pilot manifests and task reports remain explicitly
+unauthorized for full generation.
+
+PFT masks are process-typed rather than one generic active-slot flag:
+`active_pft` retains legal surface outputs including bare soil,
+`vegetation_pft` excludes bare soil, `leak_carbon_pft` requires the catalogued
+OK_LEAK capability, and `peat_pft` additionally requires the source peat
+trait. This prevents structurally absent PFT1 carbon/peat processes from being
+treated as supervised zero-valued transfers.
+
+Execution proceeds in three bounded steps: run task index 0 first; after it
+passes, run indices 1-5 with concurrency at most five; then run `aggregate`
+and inspect `pilot_report.json`. The prepared Slurm launcher is
+`scripts/hpc/slurm_gate_e2_typed_sidecar_pilot.sh`. Its pilot output root is
+`runtime/outputs/data/gate-e2-typed-sidecar-v1-pilot`; the unsuffixed full-data
+root remains reserved and must not be created by the pilot.
+
 Both stages use the project CPU environment and write only below
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime`. The planned working directory
-is `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`; the planned output root is
-`runtime/outputs/data/gate-e2-typed-sidecar-v1`. No launcher or submission is
-authorized by this document.
+is `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`. No submission is authorized by
+this document.
 
 For capacity planning only, the accepted parent upper bound is 139.2 seconds
 per point-year. Reserving 1.5x for the three supplemental reductions and

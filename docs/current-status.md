@@ -147,8 +147,11 @@ pass. The bounded Gate C ordinary-day OK_LEAK sample measures 279,872 raw value
 bytes versus 16,004 bytes for bit-exact dense Deflate including explicit masks,
 a 17.49x raw-value ratio. This single-day result does not authorize full
 generation; a representative six-train-point-year production pilot remains
-the active next operation. No clipping, training, paid task, Teacher-core
-change, or dataset regeneration occurred.
+the active next operation. Its six-entry manifest, guarded production runner,
+typed active/vegetation/OK_LEAK/peat PFT capability masks, dual-layout
+aggregator, preflight command, Slurm launcher, and fail-closed local tests are
+prepared. No clipping, training, paid task, Teacher-core change, or dataset
+regeneration occurred.
 See
 [`gate_e1_architecture_data_readiness_review.md`](research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md).
 
