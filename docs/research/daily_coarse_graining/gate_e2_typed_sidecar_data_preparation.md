@@ -169,6 +169,24 @@ and inspect `pilot_report.json`. The prepared Slurm launcher is
 `runtime/outputs/data/gate-e2-typed-sidecar-v1-pilot`; the unsuffixed full-data
 root remains reserved and must not be created by the pilot.
 
+The first two task-0 attempts did not produce sidecars. Job `14481274_0`
+failed before Teacher execution because the historical generation plan named
+an obsolete configuration without the current PFT catalog. The corrected
+runner uses that plan only for immutable run/reference inputs and binds the
+current repository configuration separately. Job `14481314_0` then passed
+preflight and cold start but failed the exact Day 2 end-state comparison after
+one current-Teacher transition. The immutable parent was generated at Teacher
+commit `7397d1e`; later source-backed Teacher changes must therefore be
+attributed before these assets are joined.
+
+`diagnose-state --max-days 1` is the only authorized next execution mode. It
+writes `state_comparison.json` below the selected task directory, attributes
+continuous differences to contract state owners and source references,
+reports absolute/relative/ULP errors, and reports discrete differences
+separately. A mismatch remains a nonzero failure. Tasks 1-5, tolerance
+relaxation, parent regeneration, and full sidecar generation remain blocked
+until this bounded report establishes a scientifically consistent policy.
+
 Both stages use the project CPU environment and write only below
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime`. The planned working directory
 is `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`. No submission is authorized by

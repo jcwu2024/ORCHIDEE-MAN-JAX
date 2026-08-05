@@ -17,6 +17,8 @@ from research.daily_coarse_graining.typed_sidecar_production import (
     PilotEntry,
     PilotPlan,
     _canonical_sha256,
+    _continuous_state_mismatches,
+    _discrete_state_mismatches,
     _layout_metadata,
     _sha256_file,
     aggregate_pilot,
@@ -45,6 +47,61 @@ def _all_values(contract, *, days: int) -> dict[str, np.ndarray]:
         field.path: np.zeros((days, *field.feature_shape), dtype=np.float64)
         for field in contract.fields
     }
+
+
+def test_state_mismatch_report_attributes_continuous_index_to_owner():
+    leaf = SimpleNamespace(
+        key="hydrol_previous_step_state.mc",
+        component="hydrol_previous_step_state",
+        source_ref="hydrol.f90:hydrol_soil",
+        classification="continuous",
+        discrete=False,
+        start=0,
+        stop=4,
+        shape=(2, 2),
+        axis_names=("soil", "nvm"),
+        selected_pft_indices=(0, 13),
+    )
+    contract = SimpleNamespace(state_leaves=(leaf,))
+    expected = np.asarray([1.0, 2.0, 3.0, 4.0], dtype=np.float64)
+    observed = expected.copy()
+    observed[2] = np.nextafter(observed[2], np.inf)
+
+    report = _continuous_state_mismatches(observed, expected, contract)
+
+    assert len(report) == 1
+    assert report[0]["owner"] == "hydrol_previous_step_state"
+    assert report[0]["key"] == "hydrol_previous_step_state.mc"
+    assert report[0]["mismatch_count"] == 1
+    assert report[0]["max_ulp_error"] == 1
+    assert report[0]["examples"][0]["leaf_index"] == [1, 0]
+
+
+def test_state_mismatch_report_keeps_discrete_differences_separate():
+    leaf = SimpleNamespace(
+        key="slow_process_state.begin_leaves",
+        component="slow_process_state",
+        source_ref="stomate.f90",
+    )
+    contract = SimpleNamespace(discrete_leaves=(leaf,))
+
+    report = _discrete_state_mismatches(
+        {leaf.key: np.asarray([True, False])},
+        {leaf.key: np.asarray([True, True])},
+        contract,
+    )
+
+    assert report == [
+        {
+            "key": leaf.key,
+            "owner": "slow_process_state",
+            "source_ref": "stomate.f90",
+            "status": "different",
+            "shape": [2],
+            "mismatch_count": 1,
+            "examples": [{"index": [1], "expected": True, "observed": False}],
+        }
+    ]
 
 
 def test_frozen_pilot_plan_has_exact_train_only_inventory():

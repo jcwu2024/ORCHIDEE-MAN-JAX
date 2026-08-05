@@ -51,7 +51,9 @@ PILOT_SCHEMA_VERSION = "gate_e2_typed_sidecar_pilot_v1"
 TASK_SCHEMA_VERSION = "gate_e2_typed_sidecar_pilot_task_v1"
 REPORT_SCHEMA_VERSION = "gate_e2_typed_sidecar_pilot_report_v1"
 SIDECAR_DATASET_SCHEMA_VERSION = "daily_typed_sidecar_dataset_v1"
+STATE_COMPARISON_SCHEMA_VERSION = "gate_e2_state_comparison_v1"
 FULL_PARENT_TRANSITIONS = 12_208_581
+MAX_MISMATCH_EXAMPLES = 8
 
 
 def _sha256_file(path: Path) -> str:
@@ -274,13 +276,238 @@ def build_defined_masks(
     return result
 
 
-def _assert_state_matches(packet, expected, contract, *, label: str) -> None:
+def _json_number(value: float) -> float | str:
+    if np.isnan(value):
+        return "nan"
+    if np.isposinf(value):
+        return "inf"
+    if np.isneginf(value):
+        return "-inf"
+    return float(value)
+
+
+def _float64_ulp_distance(observed: np.ndarray, expected: np.ndarray) -> np.ndarray:
+    observed = np.ascontiguousarray(observed, dtype=np.float64)
+    expected = np.ascontiguousarray(expected, dtype=np.float64)
+    sign = np.uint64(1 << 63)
+
+    def ordered(values: np.ndarray) -> np.ndarray:
+        bits = values.view(np.uint64)
+        return np.where((bits & sign) != 0, ~bits, bits | sign)
+
+    observed_ordered = ordered(observed)
+    expected_ordered = ordered(expected)
+    return np.maximum(observed_ordered, expected_ordered) - np.minimum(
+        observed_ordered, expected_ordered
+    )
+
+
+def _continuous_state_mismatches(
+    observed: np.ndarray,
+    expected: np.ndarray,
+    contract,
+) -> list[dict[str, Any]]:
+    equal = (observed == expected) | (np.isnan(observed) & np.isnan(expected))
+    mismatched = ~equal
+    reports: list[dict[str, Any]] = []
+    for leaf in contract.state_leaves:
+        if leaf.discrete:
+            continue
+        start = int(leaf.start)
+        stop = int(leaf.stop)
+        local_positions = np.flatnonzero(mismatched[start:stop])
+        if not local_positions.size:
+            continue
+        observed_values = observed[start:stop][local_positions]
+        expected_values = expected[start:stop][local_positions]
+        absolute = np.abs(observed_values - expected_values)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            relative = absolute / np.abs(expected_values)
+        finite_pairs = np.isfinite(observed_values) & np.isfinite(expected_values)
+        ulp = np.full(local_positions.size, np.uint64(0), dtype=np.uint64)
+        ulp[finite_pairs] = _float64_ulp_distance(
+            observed_values[finite_pairs], expected_values[finite_pairs]
+        )
+        examples = []
+        for index in range(min(local_positions.size, MAX_MISMATCH_EXAMPLES)):
+            local_flat = int(local_positions[index])
+            examples.append(
+                {
+                    "compact_index": start + local_flat,
+                    "leaf_flat_index": local_flat,
+                    "leaf_index": list(np.unravel_index(local_flat, leaf.shape)),
+                    "expected": _json_number(float(expected_values[index])),
+                    "observed": _json_number(float(observed_values[index])),
+                    "absolute_error": _json_number(float(absolute[index])),
+                    "relative_error": _json_number(float(relative[index])),
+                    "ulp_error": int(ulp[index]) if finite_pairs[index] else None,
+                }
+            )
+        reports.append(
+            {
+                "key": leaf.key,
+                "owner": leaf.component,
+                "source_ref": leaf.source_ref,
+                "classification": leaf.classification,
+                "compact_span": [start, stop],
+                "shape": list(leaf.shape),
+                "axis_names": list(leaf.axis_names),
+                "selected_pft_indices": list(leaf.selected_pft_indices),
+                "mismatch_count": int(local_positions.size),
+                "max_absolute_error": _json_number(float(np.max(absolute))),
+                "max_relative_error": _json_number(float(np.max(relative))),
+                "max_ulp_error": (
+                    int(np.max(ulp[finite_pairs])) if np.any(finite_pairs) else None
+                ),
+                "examples": examples,
+            }
+        )
+    return reports
+
+
+def _discrete_state_mismatches(
+    observed: Mapping[str, np.ndarray],
+    expected: Mapping[str, np.ndarray],
+    contract,
+) -> list[dict[str, Any]]:
+    leaves = {leaf.key: leaf for leaf in contract.discrete_leaves}
+    reports: list[dict[str, Any]] = []
+    for name in sorted(set(observed) | set(expected)):
+        leaf = leaves.get(name)
+        if name not in observed or name not in expected:
+            reports.append(
+                {
+                    "key": name,
+                    "owner": None if leaf is None else leaf.component,
+                    "source_ref": None if leaf is None else leaf.source_ref,
+                    "status": "missing_observed" if name not in observed else "missing_expected",
+                }
+            )
+            continue
+        actual = np.asarray(observed[name])
+        wanted = np.asarray(expected[name])
+        if actual.shape != wanted.shape:
+            reports.append(
+                {
+                    "key": name,
+                    "owner": None if leaf is None else leaf.component,
+                    "source_ref": None if leaf is None else leaf.source_ref,
+                    "status": "shape_drift",
+                    "observed_shape": list(actual.shape),
+                    "expected_shape": list(wanted.shape),
+                }
+            )
+            continue
+        equal = (actual == wanted) | (
+            np.issubdtype(actual.dtype, np.floating)
+            and np.issubdtype(wanted.dtype, np.floating)
+            and np.isnan(actual)
+            & np.isnan(wanted)
+        )
+        positions = np.argwhere(~equal)
+        if not positions.size:
+            continue
+        examples = []
+        for position in positions[:MAX_MISMATCH_EXAMPLES]:
+            index = tuple(int(item) for item in position)
+            expected_value = np.asarray(wanted[index]).item()
+            observed_value = np.asarray(actual[index]).item()
+            examples.append(
+                {
+                    "index": list(index),
+                    "expected": expected_value,
+                    "observed": observed_value,
+                }
+            )
+        reports.append(
+            {
+                "key": name,
+                "owner": None if leaf is None else leaf.component,
+                "source_ref": None if leaf is None else leaf.source_ref,
+                "status": "different",
+                "shape": list(actual.shape),
+                "mismatch_count": int(positions.shape[0]),
+                "examples": examples,
+            }
+        )
+    return reports
+
+
+def _maximum_error(
+    reports: Sequence[Mapping[str, Any]], key: str
+) -> float | str | int | None:
+    values = [item[key] for item in reports if item.get(key) is not None]
+    if not values:
+        return None
+    if "inf" in values or "-inf" in values:
+        return "inf"
+    finite = [float(value) for value in values if value != "nan"]
+    if not finite:
+        return "nan"
+    maximum = max(finite)
+    return int(maximum) if key == "max_ulp_error" else maximum
+
+
+def _state_comparison_report(packet, expected, contract, *, label: str) -> dict[str, Any]:
     continuous, discrete = extract_state(packet, contract)
-    if not np.array_equal(continuous, expected[0], equal_nan=True):
-        raise ValueError(f"{label} continuous state differs from immutable parent")
-    for name, wanted in expected[1].items():
-        if not np.array_equal(discrete[name], wanted, equal_nan=True):
-            raise ValueError(f"{label} discrete state differs for {name}")
+    wanted_continuous = np.asarray(expected[0], dtype=np.float64)
+    if continuous.shape != wanted_continuous.shape:
+        raise ValueError(
+            f"{label} continuous state shape drift: "
+            f"{continuous.shape} != {wanted_continuous.shape}"
+        )
+    continuous_reports = _continuous_state_mismatches(
+        continuous, wanted_continuous, contract
+    )
+    discrete_reports = _discrete_state_mismatches(discrete, expected[1], contract)
+    return {
+        "schema_version": STATE_COMPARISON_SCHEMA_VERSION,
+        "status": "passed" if not continuous_reports and not discrete_reports else "mismatch",
+        "label": label,
+        "continuous_width": int(continuous.size),
+        "continuous_mismatch_count": int(
+            sum(item["mismatch_count"] for item in continuous_reports)
+        ),
+        "continuous_mismatch_leaf_count": len(continuous_reports),
+        "max_absolute_error": _maximum_error(
+            continuous_reports, "max_absolute_error"
+        ),
+        "max_relative_error": _maximum_error(
+            continuous_reports, "max_relative_error"
+        ),
+        "max_ulp_error": _maximum_error(continuous_reports, "max_ulp_error"),
+        "continuous_leaves": continuous_reports,
+        "discrete_mismatch_leaf_count": len(discrete_reports),
+        "discrete_leaves": discrete_reports,
+    }
+
+
+def _assert_state_matches(
+    packet,
+    expected,
+    contract,
+    *,
+    label: str,
+    report_path: Path | None = None,
+    report_context: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
+    report = _state_comparison_report(packet, expected, contract, label=label)
+    if report["status"] == "passed":
+        return report
+    persisted = dict(report_context or {}) | report
+    if report_path is not None:
+        _atomic_json(report_path, persisted)
+    if report["continuous_leaves"]:
+        first = report["continuous_leaves"][0]
+        detail = (
+            f"first_owner={first['owner']} first_key={first['key']} "
+            f"max_abs={first['max_absolute_error']} max_ulp={first['max_ulp_error']}"
+        )
+    else:
+        first = report["discrete_leaves"][0]
+        detail = f"first_discrete_key={first['key']}"
+    location = "" if report_path is None else f"; report={report_path}"
+    raise ValueError(f"{label} state differs from immutable parent; {detail}{location}")
 
 
 def _layout_metadata(path: Path) -> dict[str, Any]:
@@ -484,6 +711,7 @@ def generate_task(
     parent_manifest: Path,
     teacher_plan_path: Path,
     output_root: Path,
+    diagnostic_day_limit: int | None = None,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     git_head = _clean_git_head()
@@ -534,6 +762,8 @@ def generate_task(
     expected_index = np.arange(expected_start, expected_stop + 1, dtype=np.int32)
     if not np.array_equal(parent.day_index, expected_index) or parent.days != expected_days:
         raise ValueError("immutable parent does not match the frozen pilot day inventory")
+    if diagnostic_day_limit is not None and not 1 <= diagnostic_day_limit <= parent.days:
+        raise ValueError("diagnostic day limit must be within the parent day inventory")
 
     current = bootstrap.first_day_end_state
     contract = load_typed_sidecar_contract()
@@ -545,7 +775,24 @@ def generate_task(
     capability = capability_masks_from_context(context)
     steps_per_day = int(round(context.runtime.dt_stomate / context.runtime.dt_sechiba))
     capture_seconds = 0.0
-    for row, day_index in enumerate(parent.day_index):
+    task_root = output_root.resolve() / "tasks" / entry.landpoint_id / str(entry.year)
+    comparison_path = task_root / "state_comparison.json"
+    report_context = {
+        "pilot_sha256": pilot.sha256,
+        "teacher_git_head": git_head,
+        "parent_shard_sha256": parent_ref.sha256,
+        "task_index": entry.task_index,
+        "landpoint_id": entry.landpoint_id,
+        "year": entry.year,
+        "diagnostic_day_limit": diagnostic_day_limit,
+    }
+    day_inventory = (
+        parent.day_index
+        if diagnostic_day_limit is None
+        else parent.day_index[:diagnostic_day_limit]
+    )
+    final_comparison = None
+    for row, day_index in enumerate(day_inventory):
         expected_discrete = {
             name: value[row] for name, value in parent.discrete_trajectories.items()
         }
@@ -554,6 +801,8 @@ def generate_task(
             (parent.state_trajectory[row], expected_discrete),
             markov_contract,
             label=f"Day {int(day_index)} start",
+            report_path=comparison_path,
+            report_context=report_context,
         )
         forcing = teacher._paper_compiled_forcing_day(
             context,
@@ -592,19 +841,45 @@ def generate_task(
         expected_next_discrete = {
             name: value[row + 1] for name, value in parent.discrete_trajectories.items()
         }
-        _assert_state_matches(
+        final_comparison = _assert_state_matches(
             current,
             (parent.state_trajectory[row + 1], expected_next_discrete),
             markov_contract,
             label=f"Day {int(day_index)} end",
+            report_path=comparison_path,
+            report_context=report_context,
         )
+
+    if diagnostic_day_limit is not None:
+        report = report_context | {
+            "status": "passed",
+            "checked_transition_count": int(diagnostic_day_limit),
+            "first_day": int(day_inventory[0]),
+            "last_day": int(day_inventory[-1]),
+            "last_state_comparison": final_comparison,
+            "teacher_capture_seconds": capture_seconds,
+        }
+        _atomic_json(comparison_path, report)
+        return report
+
+    _atomic_json(
+        comparison_path,
+        report_context
+        | {
+            "status": "passed",
+            "checked_transition_count": int(parent.days),
+            "first_day": int(day_inventory[0]),
+            "last_day": int(day_inventory[-1]),
+            "last_state_comparison": final_comparison,
+            "teacher_capture_seconds": capture_seconds,
+        },
+    )
 
     values = {
         path: np.stack(rows).astype(np.float64, copy=False)
         for path, rows in values_by_field.items()
     }
     defined = build_defined_masks(values, contract=contract, capability=capability)
-    task_root = output_root.resolve() / "tasks" / entry.landpoint_id / str(entry.year)
     task_root.mkdir(parents=True, exist_ok=True)
     layouts = {
         "dense": {field.path: "dense" for field in contract.fields},
@@ -863,6 +1138,13 @@ def build_parser() -> argparse.ArgumentParser:
     generate.add_argument("--parent-manifest", type=Path, required=True)
     generate.add_argument("--teacher-plan", type=Path, required=True)
     generate.add_argument("--output-root", type=Path, required=True)
+    diagnose = subparsers.add_parser("diagnose-state")
+    diagnose.add_argument("--pilot-plan", type=Path, default=DEFAULT_PILOT_PLAN)
+    diagnose.add_argument("--task-index", type=int, required=True)
+    diagnose.add_argument("--parent-manifest", type=Path, required=True)
+    diagnose.add_argument("--teacher-plan", type=Path, required=True)
+    diagnose.add_argument("--output-root", type=Path, required=True)
+    diagnose.add_argument("--max-days", type=int, default=1)
     aggregate = subparsers.add_parser("aggregate")
     aggregate.add_argument("--pilot-plan", type=Path, default=DEFAULT_PILOT_PLAN)
     aggregate.add_argument("--parent-manifest", type=Path, required=True)
@@ -893,13 +1175,16 @@ def main(argv: Sequence[str] | None = None) -> int:
             teacher_plan_path=args.teacher_plan,
             expected_git_head=args.expected_git_head,
         )
-    elif args.command == "generate":
+    elif args.command in {"generate", "diagnose-state"}:
         result = generate_task(
             pilot,
             task_index=args.task_index,
             parent_manifest=args.parent_manifest,
             teacher_plan_path=args.teacher_plan,
             output_root=args.output_root,
+            diagnostic_day_limit=(
+                args.max_days if args.command == "diagnose-state" else None
+            ),
         )
     else:
         result = aggregate_pilot(

@@ -150,8 +150,18 @@ generation; a representative six-train-point-year production pilot remains
 the active next operation. Its six-entry manifest, guarded production runner,
 typed active/vegetation/OK_LEAK/peat PFT capability masks, dual-layout
 aggregator, preflight command, Slurm launcher, and fail-closed local tests are
-prepared. No clipping, training, paid task, Teacher-core change, or dataset
-regeneration occurred.
+prepared. Pilot task 0 has not passed. Job `14481274_0` stopped in preflight
+because the historical generation-plan configuration predates the current PFT
+catalog; execution is now correctly bound to the current repository
+configuration while the historical plan owns only the immutable input
+inventory. Replacement job `14481314_0` passed preflight and cold start but
+stopped after the first captured transition: current-Teacher Day 2 end state
+is not bit-exact to the parent shard generated at Teacher commit `7397d1e`.
+It ran for `00:10:02`, peaked at about 9.22 GB RSS, and wrote no sidecar. The
+runner now has a one-day bounded diagnostic that maps every mismatch to its
+state owner and reports absolute, relative, and ULP errors. Tasks 1-5, parent
+regeneration, tolerance changes, and neural training remain unauthorized
+until that version difference is classified.
 See
 [`gate_e1_architecture_data_readiness_review.md`](research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md).
 
