@@ -75,6 +75,7 @@ def test_state_mismatch_report_attributes_continuous_index_to_owner():
     assert report[0]["mismatch_count"] == 1
     assert report[0]["max_ulp_error"] == 1
     assert report[0]["examples"][0]["leaf_index"] == [1, 0]
+    json.dumps(report)
 
 
 def test_state_mismatch_report_keeps_discrete_differences_separate():

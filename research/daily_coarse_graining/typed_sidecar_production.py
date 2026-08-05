@@ -335,7 +335,9 @@ def _continuous_state_mismatches(
                 {
                     "compact_index": start + local_flat,
                     "leaf_flat_index": local_flat,
-                    "leaf_index": list(np.unravel_index(local_flat, leaf.shape)),
+                    "leaf_index": [
+                        int(item) for item in np.unravel_index(local_flat, leaf.shape)
+                    ],
                     "expected": _json_number(float(expected_values[index])),
                     "observed": _json_number(float(observed_values[index])),
                     "absolute_error": _json_number(float(absolute[index])),
