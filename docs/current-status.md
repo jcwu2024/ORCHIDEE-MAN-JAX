@@ -168,6 +168,11 @@ policy, retains exact discrete comparisons, records all non-bit-exact owners
 and annual maxima, and keeps sidecar encoding itself bit-exact. The next
 operation is the complete task-0 point-year; tasks 1-5, parent regeneration,
 and neural training remain unauthorized until it passes.
+The first full task-0 submission, `14482172_0`, stopped before Python execution
+because the cluster's older Bash treats an empty array expansion as unbound
+under `set -u`. The launcher now uses explicit diagnostic and full-generation
+branches and has a regression guard against reintroducing the empty-array
+dispatch. No Teacher transition or new sidecar was produced by that job.
 See
 [`gate_e1_architecture_data_readiness_review.md`](research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md).
 

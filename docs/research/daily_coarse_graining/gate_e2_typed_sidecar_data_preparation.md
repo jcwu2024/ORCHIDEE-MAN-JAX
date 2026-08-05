@@ -195,6 +195,12 @@ authorized next production run. Tasks 1-5 and full generation remain blocked
 until its 364 transitions pass and its annual state-comparison summary is
 written.
 
+Submission `14482172_0` did not begin that run: the cluster's older Bash
+rejected an empty array expansion under `set -u` in the launcher. The launcher
+now spells out separate `diagnose-state` and `generate` command branches, and
+a local regression forbids the incompatible `EXTRA_ARGS` dispatch. This was
+an operational pre-execution failure and produced no new scientific asset.
+
 Both stages use the project CPU environment and write only below
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime`. The planned working directory
 is `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`. No submission is authorized by

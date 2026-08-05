@@ -36,6 +36,7 @@ EXPECTED_PILOT_ENTRIES = (
     (4, "315.0-097.0", 1961),
     (5, "333.0-057.0", 1961),
 )
+SLURM_LAUNCHER = Path("scripts/hpc/slurm_gate_e2_typed_sidecar_pilot.sh")
 
 
 def _write_plan(path: Path, raw: dict) -> None:
@@ -48,6 +49,14 @@ def _all_values(contract, *, days: int) -> dict[str, np.ndarray]:
         field.path: np.zeros((days, *field.feature_shape), dtype=np.float64)
         for field in contract.fields
     }
+
+
+def test_slurm_launcher_has_explicit_full_and_diagnostic_commands():
+    launcher = SLURM_LAUNCHER.read_text(encoding="utf-8")
+
+    assert "typed_sidecar_production diagnose-state" in launcher
+    assert "typed_sidecar_production generate" in launcher
+    assert "EXTRA_ARGS" not in launcher
 
 
 def test_state_mismatch_report_attributes_continuous_index_to_owner():

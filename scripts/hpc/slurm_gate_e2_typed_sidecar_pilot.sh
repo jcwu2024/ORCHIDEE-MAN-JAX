@@ -78,16 +78,19 @@ grep -E '^(Cpus_allowed_list|Mems_allowed_list):' /proc/self/status
   --teacher-plan "$GATE_E2_TEACHER_PLAN" \
   --expected-git-head "$GATE_E2_EXPECTED_GIT_HEAD"
 
-MODE=generate
-EXTRA_ARGS=()
 if [[ -n "${GATE_E2_DIAGNOSTIC_MAX_DAYS:-}" ]]; then
-  MODE=diagnose-state
-  EXTRA_ARGS=(--max-days "$GATE_E2_DIAGNOSTIC_MAX_DAYS")
+  /usr/bin/time -v "$PYTHON" -m research.daily_coarse_graining.typed_sidecar_production diagnose-state \
+    --pilot-plan "$PILOT_PLAN" \
+    --task-index "$SLURM_ARRAY_TASK_ID" \
+    --parent-manifest "$GATE_E2_PARENT_MANIFEST" \
+    --teacher-plan "$GATE_E2_TEACHER_PLAN" \
+    --output-root "$OUTPUT_ROOT" \
+    --max-days "$GATE_E2_DIAGNOSTIC_MAX_DAYS"
+else
+  /usr/bin/time -v "$PYTHON" -m research.daily_coarse_graining.typed_sidecar_production generate \
+    --pilot-plan "$PILOT_PLAN" \
+    --task-index "$SLURM_ARRAY_TASK_ID" \
+    --parent-manifest "$GATE_E2_PARENT_MANIFEST" \
+    --teacher-plan "$GATE_E2_TEACHER_PLAN" \
+    --output-root "$OUTPUT_ROOT"
 fi
-/usr/bin/time -v "$PYTHON" -m research.daily_coarse_graining.typed_sidecar_production "$MODE" \
-  --pilot-plan "$PILOT_PLAN" \
-  --task-index "$SLURM_ARRAY_TASK_ID" \
-  --parent-manifest "$GATE_E2_PARENT_MANIFEST" \
-  --teacher-plan "$GATE_E2_TEACHER_PLAN" \
-  --output-root "$OUTPUT_ROOT" \
-  "${EXTRA_ARGS[@]}"
