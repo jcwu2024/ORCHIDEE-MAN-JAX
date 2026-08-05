@@ -247,7 +247,10 @@ absolute error `2.84e-14`, maximum relative error `2.07e-16`, and exact
 discrete state. Gate E2 therefore reuses the already accepted Gate A
 `atol=1e-12, rtol=1e-12` continuous policy while retaining exact discrete and
 bit-exact sidecar storage checks. Execute the complete task-0 point-year and
-require its annual error summary to pass before tasks 1-5. Once task 0 passes,
+require its annual error summary to pass before tasks 1-5. Sidecar production
+must teacher-force every day from the immutable parent `S[d]`; it must not
+free-run the current Teacher and join labels from a numerically drifted state
+to the old parent trajectory. Once task 0 passes,
 execute the remaining five and aggregate only after all six pass. Then
 admit the first candidate only through the stable
 `bind_daily_operator(input_assembler=canonical_assembler,

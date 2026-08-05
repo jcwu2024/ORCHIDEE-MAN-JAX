@@ -17,6 +17,10 @@ import numpy as np
 import yaml
 
 from jax_orchidee.driver import orchestration as teacher
+from research.daily_coarse_graining.canonical_teacher_reentry import (
+    teacher_reentry_packet,
+    teacher_reentry_templates,
+)
 from research.daily_coarse_graining.daily_flux_capture import (
     daily_flux_capture_arrays,
 )
@@ -53,7 +57,8 @@ REPORT_SCHEMA_VERSION = "gate_e2_typed_sidecar_pilot_report_v1"
 SIDECAR_DATASET_SCHEMA_VERSION = "daily_typed_sidecar_dataset_v1"
 STATE_COMPARISON_SCHEMA_VERSION = "gate_e2_state_comparison_v1"
 STATE_REPLAY_MODE = (
-    "continuous_within_gate_a_tolerance_discrete_exact_every_day_start_and_next_state"
+    "parent_teacher_forced_continuous_within_gate_a_tolerance_"
+    "discrete_exact_every_day_start_and_next_state"
 )
 FULL_PARENT_TRANSITIONS = 12_208_581
 MAX_MISMATCH_EXAMPLES = 8
@@ -208,6 +213,8 @@ def load_pilot_plan(path: str | Path = DEFAULT_PILOT_PLAN) -> PilotPlan:
         "provenance": "configs/teacher_branch_parity.json",
     }:
         raise ValueError("pilot state-comparison policy drift")
+    if execution.get("state_input") != "immutable_parent_day_start_teacher_forcing":
+        raise ValueError("pilot state-input policy drift")
     return PilotPlan(path=path, sha256=actual_hash, raw=raw, entries=entries)
 
 
@@ -848,7 +855,7 @@ def generate_task(
     if diagnostic_day_limit is not None and not 1 <= diagnostic_day_limit <= parent.days:
         raise ValueError("diagnostic day limit must be within the parent day inventory")
 
-    current = bootstrap.first_day_end_state
+    bootstrap_state = bootstrap.first_day_end_state
     contract = load_typed_sidecar_contract()
     if contract.sha256 != pilot.raw["sidecar_contract"]["contract_sha256"]:
         raise ValueError("runtime typed-sidecar contract identity mismatch")
@@ -857,6 +864,9 @@ def generate_task(
     }
     capability = capability_masks_from_context(context)
     steps_per_day = int(round(context.runtime.dt_stomate / context.runtime.dt_sechiba))
+    reentry_templates = teacher_reentry_templates(context)
+    if reentry_templates.steps_per_day != steps_per_day:
+        raise ValueError("Teacher re-entry timestep count differs from pilot runtime")
     capture_seconds = 0.0
     task_root = output_root.resolve() / "tasks" / entry.landpoint_id / str(entry.year)
     comparison_path = task_root / "state_comparison.json"
@@ -868,6 +878,7 @@ def generate_task(
         "landpoint_id": entry.landpoint_id,
         "year": entry.year,
         "diagnostic_day_limit": diagnostic_day_limit,
+        "state_input": pilot.raw["execution"]["state_input"],
     }
     comparison_policy = pilot.raw["execution"]["state_comparison"]
     continuous_atol = float(comparison_policy["continuous_atol"])
@@ -875,6 +886,19 @@ def generate_task(
     comparison_summary = _new_state_comparison_summary(
         atol=continuous_atol,
         rtol=continuous_rtol,
+    )
+    bootstrap_discrete = {
+        name: value[0] for name, value in parent.discrete_trajectories.items()
+    }
+    bootstrap_comparison = _assert_state_matches(
+        bootstrap_state,
+        (parent.state_trajectory[0], bootstrap_discrete),
+        markov_contract,
+        label=f"Day {int(parent.day_index[0])} cold-bootstrap start",
+        report_path=comparison_path,
+        report_context=report_context,
+        continuous_atol=continuous_atol,
+        continuous_rtol=continuous_rtol,
     )
     day_inventory = (
         parent.day_index
@@ -886,6 +910,14 @@ def generate_task(
         expected_discrete = {
             name: value[row] for name, value in parent.discrete_trajectories.items()
         }
+        start_tstep = (int(day_index) - 1) * steps_per_day
+        current = teacher_reentry_packet(
+            parent.state_trajectory[row],
+            expected_discrete,
+            markov_contract,
+            tstep=start_tstep - 1,
+            templates=reentry_templates,
+        )
         start_comparison = _assert_state_matches(
             current,
             (parent.state_trajectory[row], expected_discrete),
@@ -896,11 +928,15 @@ def generate_task(
             continuous_atol=continuous_atol,
             continuous_rtol=continuous_rtol,
         )
+        if not start_comparison["bit_exact"]:
+            raise ValueError(
+                f"Day {int(day_index)} parent state reconstruction is not bit-exact"
+            )
         _update_state_comparison_summary(comparison_summary, start_comparison)
         forcing = teacher._paper_compiled_forcing_day(
             context,
             year=entry.year,
-            start_tstep=(int(day_index) - 1) * steps_per_day,
+            start_tstep=start_tstep,
             steps_per_stomate=steps_per_day,
         )
         capture_started = time.perf_counter()
@@ -909,7 +945,7 @@ def generate_task(
             previous_state=current,
             year=entry.year,
             day_index=int(day_index),
-            start_tstep=(int(day_index) - 1) * steps_per_day,
+            start_tstep=start_tstep,
             used_run_def_path=context.run_def_path,
             prepared_context=context,
             module_jit=True,
@@ -930,12 +966,12 @@ def generate_task(
             if array.shape != (1, *field.feature_shape):
                 raise ValueError(f"captured source shape drift for {field.path}")
             values_by_field[field.path].append(np.ascontiguousarray(array[0]))
-        current = record.expected_result.day_end_state
+        day_end_state = record.expected_result.day_end_state
         expected_next_discrete = {
             name: value[row + 1] for name, value in parent.discrete_trajectories.items()
         }
         final_comparison = _assert_state_matches(
-            current,
+            day_end_state,
             (parent.state_trajectory[row + 1], expected_next_discrete),
             markov_contract,
             label=f"Day {int(day_index)} end",
@@ -953,6 +989,7 @@ def generate_task(
             "first_day": int(day_inventory[0]),
             "last_day": int(day_inventory[-1]),
             "last_state_comparison": final_comparison,
+            "cold_bootstrap_comparison": bootstrap_comparison,
             "state_comparison_summary": comparison_summary,
             "teacher_capture_seconds": capture_seconds,
         }
@@ -968,6 +1005,7 @@ def generate_task(
             "first_day": int(day_inventory[0]),
             "last_day": int(day_inventory[-1]),
             "last_state_comparison": final_comparison,
+            "cold_bootstrap_comparison": bootstrap_comparison,
             "state_comparison_summary": comparison_summary,
             "teacher_capture_seconds": capture_seconds,
         },
@@ -1021,6 +1059,8 @@ def generate_task(
         "first_day": int(parent.day_index[0]),
         "last_day": int(parent.day_index[-1]),
         "state_replay": STATE_REPLAY_MODE,
+        "state_input": pilot.raw["execution"]["state_input"],
+        "cold_bootstrap_comparison": bootstrap_comparison,
         "state_comparison_summary": comparison_summary,
         "capability_masks": capability.metadata(),
         "defined_counts": {
@@ -1119,6 +1159,10 @@ def aggregate_pilot(
             or comparison.get("checked_state_count") != 2 * expected_days
         ):
             raise ValueError(f"pilot task state-comparison summary drift: {path}")
+        if report.get("cold_bootstrap_comparison", {}).get("status") != "passed":
+            raise ValueError(f"pilot task cold-bootstrap comparison drift: {path}")
+        if report.get("state_input") != pilot.raw["execution"]["state_input"]:
+            raise ValueError(f"pilot task state-input policy drift: {path}")
 
         decoded = {}
         for layout in ("dense", "hybrid_auto"):

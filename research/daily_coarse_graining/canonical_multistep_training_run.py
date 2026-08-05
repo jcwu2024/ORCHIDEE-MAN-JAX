@@ -31,9 +31,6 @@ from research.daily_coarse_graining.canonical_multistep import (
 from research.daily_coarse_graining.canonical_retained_tail import (
     bind_canonical_retained_tail_transition,
 )
-from research.daily_coarse_graining.canonical_rollout import (
-    _packet_from_canonical_state,
-)
 from research.daily_coarse_graining.canonical_state_objective import (
     stabilized_state_delta_scale,
     state_process_weighting_from_contract,
@@ -51,6 +48,7 @@ from research.daily_coarse_graining.canonical_training_run import (
 from research.daily_coarse_graining.daily_markov_contract import (
     daily_markov_contract_from_metadata,
     reconstruct_retained_tail_forcing_batch,
+    reconstruct_state_packet,
 )
 from research.daily_coarse_graining.daily_model_architecture import (
     CANONICAL_FLAT_V1,
@@ -297,7 +295,7 @@ def _make_runtime_and_compiled_forcing(
     if timing is not None:
         timing["compiled_forcing"] = time.perf_counter() - started
     started = time.perf_counter()
-    packet = _packet_from_canonical_state(
+    packet = reconstruct_state_packet(
         batch["initial_state"][0],
         {name: value[0] for name, value in batch["initial_discrete_state"].items()},
         contract,

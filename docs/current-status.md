@@ -173,6 +173,18 @@ because the cluster's older Bash treats an empty array expansion as unbound
 under `set -u`. The launcher now uses explicit diagnostic and full-generation
 branches and has a regression guard against reintroducing the empty-array
 dispatch. No Teacher transition or new sidecar was produced by that job.
+Replacement `14482331_0` entered Teacher execution and stopped at Day 21. The
+only examples outside the Gate A combined tolerance were three mirrors of
+`soilflx`, with absolute error `4.5773e-11` and relative error `1.3124e-12`;
+all discrete state remained exact. This is accumulated free-run roundoff from
+joining a current-Teacher trajectory to an immutable old-Teacher parent, not
+an admissible sidecar transition policy. The tolerance was not widened.
+Gate E2 now reconstructs every day from the immutable parent `S[d]` through
+the existing validated `canonical_teacher_reentry` boundary, captures labels,
+and compares the one-day result to parent `S[d+1]`. Cold bootstrap remains a
+separate comparison. This makes each supplemental record conditional on the
+same state row to which it will be joined and prevents cross-day numerical
+drift from contaminating the sidecar.
 See
 [`gate_e1_architecture_data_readiness_review.md`](research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md).
 

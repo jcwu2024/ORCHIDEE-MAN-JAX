@@ -66,7 +66,7 @@ def test_teacher_reentry_rebuilds_complete_finalize_packet(monkeypatch):
         captured["contract"] = contract
         return sentinel
 
-    monkeypatch.setattr(reentry, "_packet_from_canonical_state", fake_packet)
+    monkeypatch.setattr(reentry, "reconstruct_state_packet", fake_packet)
     continuous = np.asarray([1.0])
     discrete = {"flag": np.asarray([True])}
     contract = object()
@@ -114,7 +114,7 @@ def test_teacher_reentry_rejects_non_numeric_dynamic_metadata(monkeypatch):
     )
     monkeypatch.setattr(
         reentry,
-        "_packet_from_canonical_state",
+        "reconstruct_state_packet",
         lambda *args, **kwargs: packet,
     )
 

@@ -21,7 +21,6 @@ from research.daily_coarse_graining import daily_markov_contract as markov
 from research.daily_coarse_graining import teacher_shards
 from research.daily_coarse_graining.canonical_rollout import (
     _contract_finalize_fields,
-    _packet_from_canonical_state,
     _projected_finalize_after_slowproc,
     _state_metrics,
 )
@@ -198,7 +197,7 @@ def test_contract_uses_canonical_state_and_excludes_packet_mirrors():
     np.testing.assert_array_equal(roundtrip, trajectory[1])
     for name, value in discrete.items():
         np.testing.assert_array_equal(roundtrip_discrete[name], value[1])
-    runtime_packet = _packet_from_canonical_state(
+    runtime_packet = markov.reconstruct_state_packet(
         trajectory[1],
         {name: value[1] for name, value in discrete.items()},
         parsed,

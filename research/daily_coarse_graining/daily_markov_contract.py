@@ -23,7 +23,10 @@ import yaml
 from jax_orchidee.driver import domain as forcing_domain
 from jax_orchidee.driver.bundle import ccanopy_from_co2
 from jax_orchidee.driver.domain import read_annual_co2
-from jax_orchidee.driver.orchestration import DriverCompiledHalfHourForcing
+from jax_orchidee.driver.orchestration import (
+    DriverCompiledHalfHourForcing,
+    DriverPreviousStepStatePacket,
+)
 from jax_orchidee.sechiba.restart_io import (
     SECHIBA_RESTART_COMPONENT_FIELDS,
     SECHIBA_RESTART_TO_SOURCE_NAMES,
@@ -1386,6 +1389,35 @@ def reconstruct_state_fields(
                 f"missing={sorted(missing)}"
             )
     return fields
+
+
+def reconstruct_state_packet(
+    continuous: np.ndarray,
+    discrete: Mapping[str, np.ndarray],
+    contract: DailyMarkovContract,
+    *,
+    tstep: int,
+    template_fields: Mapping[str, Mapping[str, Any]] | None = None,
+    require_complete_finalize: bool = False,
+) -> DriverPreviousStepStatePacket:
+    """Rebuild one runtime packet from an immutable canonical day-start state."""
+
+    fields = reconstruct_state_fields(
+        continuous,
+        discrete,
+        contract,
+        template_fields=template_fields,
+        require_complete_finalize=require_complete_finalize,
+    )
+    provenance = {
+        component: ("canonical daily Markov contract reconstruction",)
+        for component in fields
+    }
+    return DriverPreviousStepStatePacket(
+        tstep=int(tstep),
+        fields_by_component=fields,
+        provenance_by_component=provenance,
+    )
 
 
 def _compiled_inflate_pft_axes(value, leaf, *, base=None):

@@ -17,7 +17,6 @@ from jax_orchidee.driver import orchestration as teacher
 from research.daily_coarse_graining.canonical_rollout import (
     _contract_finalize_fields,
     _load_neural_checkpoint,
-    _packet_from_canonical_state,
     _plan_entry,
     _run_retained_tail_day,
     _select_reference,
@@ -42,6 +41,7 @@ from research.daily_coarse_graining.daily_markov_contract import (
     load_markov_shard,
     reconstruct_compiled_forcing_day,
     reconstruct_fast_day_target,
+    reconstruct_state_packet,
 )
 from research.daily_coarse_graining.markov_dataset import (
     TrainingStatistics,
@@ -310,7 +310,7 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
         for name, values in shard.discrete_trajectories.items()
     }
     steps_per_day = int(round(context.runtime.dt_stomate / context.runtime.dt_sechiba))
-    first_packet = _packet_from_canonical_state(
+    first_packet = reconstruct_state_packet(
         current_state,
         current_discrete,
         contract,
@@ -341,7 +341,7 @@ def run_diagnostic(args: argparse.Namespace) -> Mapping[str, Any]:
             name: np.asarray(values[offset + 1])
             for name, values in shard.discrete_trajectories.items()
         }
-        current_packet = _packet_from_canonical_state(
+        current_packet = reconstruct_state_packet(
             current_state,
             current_discrete,
             contract,

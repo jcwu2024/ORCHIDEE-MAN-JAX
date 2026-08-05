@@ -11,13 +11,11 @@ import numpy as np
 
 from jax_orchidee.driver import orchestration as teacher
 from jax_orchidee.sechiba.restart_lifecycle import SECHIBA_FINALIZE_SOURCE_FIELDS
-from research.daily_coarse_graining.canonical_rollout import (
-    _packet_from_canonical_state,
-)
 from research.daily_coarse_graining.daily_markov_contract import (
     DailyMarkovContract,
     extract_fast_day_target,
     extract_state,
+    reconstruct_state_packet,
 )
 from research.daily_coarse_graining.supervised_learnability_pilot import (
     _capture_days,
@@ -81,7 +79,7 @@ def teacher_reentry_packet(
     )
     if set(templates.overwritten_finalize) != expected_template_names:
         raise ValueError("Teacher re-entry overwrite template has the wrong fields")
-    packet = _packet_from_canonical_state(
+    packet = reconstruct_state_packet(
         continuous,
         discrete,
         contract,

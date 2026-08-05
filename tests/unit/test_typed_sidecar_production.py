@@ -163,6 +163,10 @@ def test_frozen_pilot_plan_has_exact_train_only_inventory():
     assert plan.raw["execution"]["spatial_split"] == "train"
     assert plan.raw["execution"]["temporal_split"] == "train"
     assert plan.raw["execution"]["expected_days_per_entry"] == 364
+    assert (
+        plan.raw["execution"]["state_input"]
+        == "immutable_parent_day_start_teacher_forcing"
+    )
 
 
 def test_pilot_plan_rejects_self_hash_and_source_hash_drift(tmp_path):
@@ -328,6 +332,7 @@ def _synthetic_aggregate(tmp_path: Path):
                     "discrete": "exact",
                     "provenance": "configs/teacher_branch_parity.json",
                 },
+                "state_input": "immutable_parent_day_start_teacher_forcing",
             },
         },
         entries=(PilotEntry(0, "001.0-071.0", 1961),),
@@ -384,8 +389,11 @@ def _synthetic_aggregate(tmp_path: Path):
         "first_day": 2,
         "last_day": 3,
         "state_replay": (
-            "continuous_within_gate_a_tolerance_discrete_exact_every_day_start_and_next_state"
+            "parent_teacher_forced_continuous_within_gate_a_tolerance_"
+            "discrete_exact_every_day_start_and_next_state"
         ),
+        "state_input": "immutable_parent_day_start_teacher_forcing",
+        "cold_bootstrap_comparison": {"status": "passed"},
         "state_comparison_summary": {
             "continuous_atol": 1.0e-12,
             "continuous_rtol": 1.0e-12,

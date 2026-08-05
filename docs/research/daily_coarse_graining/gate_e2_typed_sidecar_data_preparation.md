@@ -201,6 +201,24 @@ now spells out separate `diagnose-state` and `generate` command branches, and
 a local regression forbids the incompatible `EXTRA_ARGS` dispatch. This was
 an operational pre-execution failure and produced no new scientific asset.
 
+Replacement `14482331_0` ran through Day 21 before the current-Teacher free
+trajectory exceeded the frozen comparison tolerance. The actual violating
+quantity was `soilflx` and its two mirrors: absolute error `4.5773e-11`,
+relative error `1.3124e-12`, with exact discrete state. The first-day one-ULP
+difference had propagated through repeated current-Teacher states. Widening
+the tolerance would not fix the data-ownership error: labels generated from a
+drifted current state cannot be joined as if they were conditioned on the
+immutable parent state.
+
+Production now uses immutable-parent teacher forcing. For every day it
+reconstructs a complete runtime packet from parent `S[d]` through the existing
+`canonical_teacher_reentry` templates, verifies that start state, captures one
+Teacher transition, and compares the result with parent `S[d+1]`. Cold
+bootstrap remains separately checked. The shared reconstruction helper is now
+public in `daily_markov_contract.py`, and all prior research callers use that
+single implementation. The original Gate A continuous tolerance, exact
+discrete policy, and bit-exact sidecar encoding remain unchanged.
+
 Both stages use the project CPU environment and write only below
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime`. The planned working directory
 is `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`. No submission is authorized by

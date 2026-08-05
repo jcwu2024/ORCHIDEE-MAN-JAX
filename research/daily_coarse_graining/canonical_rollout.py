@@ -41,7 +41,7 @@ from research.daily_coarse_graining.daily_markov_contract import (
     load_markov_shard,
     reconstruct_compiled_forcing_day,
     reconstruct_fast_day_target,
-    reconstruct_state_fields,
+    reconstruct_state_packet,
 )
 from research.daily_coarse_graining.daily_model_architecture import (
     build_daily_model_definition,
@@ -70,33 +70,6 @@ def _sha256_file(path: Path) -> str:
         for chunk in iter(lambda: handle.read(1024 * 1024), b""):
             digest.update(chunk)
     return digest.hexdigest()
-
-
-def _packet_from_canonical_state(
-    continuous: np.ndarray,
-    discrete: Mapping[str, np.ndarray],
-    contract: DailyMarkovContract,
-    *,
-    tstep: int,
-    template_fields: Mapping[str, Mapping[str, Any]] | None = None,
-    require_complete_finalize: bool = False,
-):
-    fields = reconstruct_state_fields(
-        continuous,
-        discrete,
-        contract,
-        template_fields=template_fields,
-        require_complete_finalize=require_complete_finalize,
-    )
-    provenance = {
-        component: ("canonical daily Markov contract reconstruction",)
-        for component in fields
-    }
-    return teacher.DriverPreviousStepStatePacket(
-        tstep=int(tstep),
-        fields_by_component=fields,
-        provenance_by_component=provenance,
-    )
 
 
 _SLOWPROC_FINALIZE_FIELDS = frozenset(
@@ -598,7 +571,7 @@ def run_rollout(args) -> dict[str, Any]:
         for name, values in shard.discrete_trajectories.items()
     }
     steps_per_day = int(round(context.runtime.dt_stomate / context.runtime.dt_sechiba))
-    current_packet = _packet_from_canonical_state(
+    current_packet = reconstruct_state_packet(
         current_state,
         current_discrete,
         contract,
@@ -641,7 +614,7 @@ def run_rollout(args) -> dict[str, Any]:
     started = time.perf_counter()
     for day_index in range(args.start_day, stop_day + 1):
         offset = day_index - 1
-        current_packet = _packet_from_canonical_state(
+        current_packet = reconstruct_state_packet(
             current_state,
             current_discrete,
             contract,

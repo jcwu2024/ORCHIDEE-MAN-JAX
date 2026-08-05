@@ -16,11 +16,9 @@ from jax_orchidee.driver import orchestration as teacher
 from research.daily_coarse_graining.canonical_retained_tail import (
     bind_canonical_retained_tail_transition,
 )
-from research.daily_coarse_graining.canonical_rollout import (
-    _packet_from_canonical_state,
-)
 from research.daily_coarse_graining.daily_markov_contract import (
     reconstruct_compiled_forcing_window,
+    reconstruct_state_packet,
 )
 from research.daily_coarse_graining.markov_dataset import defined_numeric_mask
 from research.daily_coarse_graining.replay_ceiling import (
@@ -149,7 +147,7 @@ def run_gate(args: argparse.Namespace) -> dict[str, Any]:
         years=np.full((args.horizon,), args.year, dtype=np.int32),
         day_indices=arrays["day_index"],
     )
-    canonical_packet = _packet_from_canonical_state(
+    canonical_packet = reconstruct_state_packet(
         state,
         discrete,
         contract,
