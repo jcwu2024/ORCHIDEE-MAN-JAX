@@ -87,6 +87,9 @@ historical prototypes. Use the following classification.
 - `daily_flux_capture.py`, `constrained_daily_replay.py`: accepted Gate C2
   capture serialization, bounded inventory/tendency updates, and budget
   audits. They define the non-neural admission boundary for the new operator.
+- `typed_sidecar.py`: active Gate E2 contract parser, immutable-parent hash
+  join, lossless typed sidecar reader/writer, supplemental collation, defined
+  masks, and train/train-only statistics.
 
 ### Diagnostic and Oracle assets
 
@@ -129,6 +132,9 @@ The controlling review and 47-label readiness matrix are in
 `docs/research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md`.
 Gate E2 begins with typed supplemental-data preparation and candidate admission;
 architecture selection and training remain unstarted.
+The local data-preparation packet is
+`gate_e2_typed_sidecar_data_preparation.md`; a representative production pilot
+remains required before full supplemental generation.
 
 ## Scripts
 

@@ -139,11 +139,16 @@ and `6.99e-9`. The graph contains no callback and no length-48 scan. All 47
 frozen labels have exactly one owner binding.
 
 The frozen data-readiness matrix is `10` labels already present, `8` exactly
-derivable, and `29` requiring full-coverage supplemental sidecars. The existing
-96-day capture is evidence, not training coverage. Typed sidecar manifest,
-hash join, collation/statistics, and bounded OK_LEAK representation work are E2
-data preparation, not E1 blockers. No clipping, training, paid task,
-Teacher-core change, or dataset regeneration occurred. Gate E2 is not started.
+derivable, and `29` requiring full-coverage supplemental sidecars. Gate E2 has
+now reached its local data-preparation acceptance point: a 29-label/66-field
+typed contract, immutable-parent hash join, typed supplemental collation,
+explicit masks, strict train/train-only statistics, and fail-closed drift tests
+pass. The bounded Gate C ordinary-day OK_LEAK sample measures 279,872 raw value
+bytes versus 16,004 bytes for bit-exact dense Deflate including explicit masks,
+a 17.49x raw-value ratio. This single-day result does not authorize full
+generation; a representative six-train-point-year production pilot remains
+the active next operation. No clipping, training, paid task, Teacher-core
+change, or dataset regeneration occurred.
 See
 [`gate_e1_architecture_data_readiness_review.md`](research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md).
 

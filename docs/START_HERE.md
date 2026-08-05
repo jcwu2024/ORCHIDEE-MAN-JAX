@@ -77,8 +77,9 @@ ordinary later-day, and restart-year cases. The replay uses no 48-step
 candidate graph, preserves exact discrete/defined status, and closes declared
 water, carbon, and energy identities. Gate D1 canonical-Teacher gradients and
 the source-driven physical-parameter candidate registry are also complete.
-The active task is Gate E1 true-daily operator implementation; paid training
-remains deferred until its local architecture and budget boundaries pass.
+Gate E1 is accepted. Gate E2 local typed-sidecar preparation is implemented;
+its representative production pilot remains pending. Paid training and full
+supplemental generation remain deferred.
 
 ## New Task Bootstrap
 
@@ -94,8 +95,9 @@ git log -1 --oneline
 Then read `NEXT_STEPS.md`, `CODE_MAP.md`, and `DOCUMENT_STATUS.md`. Report the
 active gate before editing or submitting a job. Gates A-D1 must not be reopened
 unless `jax_orchidee` drifts between the two branches or its evidence hashes
-drift. The active technical task is Gate E1 described in `NEXT_STEPS.md`; later
-gates are queued work, not parallel instructions. Before choosing or inheriting
+drift. The active technical task is the bounded Gate E2 production pilot
+described in `NEXT_STEPS.md`; later gates are queued work, not parallel
+instructions. Before choosing or inheriting
 a neural architecture, read
 `research/daily_coarse_graining/failed_architecture_lessons.md`; it replaces
 the need to inspect every dated negative-result report. A local `AGENTS.md`,

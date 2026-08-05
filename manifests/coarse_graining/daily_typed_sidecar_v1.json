@@ -1,0 +1,240 @@
+{
+  "schema_version": "daily_typed_sidecar_contract_v1",
+  "status": "frozen_gate_e2",
+  "contract_sha256": "f4e3873c885298f19d219e0215cf1bc2d63b9becedd60c16914953cc6d2f2d1e",
+  "inventory": {
+    "path": "manifests/coarse_graining/daily_flux_label_inventory_v1.json",
+    "schema_version": "daily_flux_label_inventory_v1",
+    "sha256": "35198dadeec576ea14adad081b1f587f54a266c2597839872d673d2fd13b057d"
+  },
+  "parent": {
+    "dataset_id": "pft14-daily-teacher-669-1961-2010",
+    "dataset_manifest_schema": "daily_teacher_dataset_manifest_v4",
+    "markov_contract_schema": "daily_markov_contract_v5",
+    "markov_contract_sha256": "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442",
+    "join_key": ["landpoint_id", "year"],
+    "row_key": "day_index",
+    "required_identity": [
+      "dataset_id",
+      "markov_contract_sha256",
+      "landpoint_id",
+      "year",
+      "parent_shard_sha256"
+    ]
+  },
+  "storage": {
+    "one_sidecar_per_parent_shard": true,
+    "parent_shards_immutable": true,
+    "point_axis_is_parent_identity": true,
+    "stored_shape_rule": "strip the singleton source npts axis and prepend the parent day axis",
+    "allowed_lossless_layouts": ["dense", "coo", "constant_zero"],
+    "coo_index": "zero-based C-order flat uint32 index",
+    "coo_values": "bit-preserving float64 values",
+    "defined_mask": "one required bool array per field with exactly the decoded field shape",
+    "compression": "ZIP Deflate container; layout selection must be lossless",
+    "hash_rules": {
+      "contract_sha256": "SHA256 of canonical JSON after removing the top-level contract_sha256 member",
+      "inventory_sha256": "SHA256 of the exact inventory file bytes",
+      "parent_shard_sha256": "SHA256 of the exact immutable v5 parent NPZ bytes",
+      "sidecar_sha256": "SHA256 of the exact sidecar NPZ bytes",
+      "dataset_manifest_sha256": "SHA256 of the exact parent dataset manifest bytes"
+    }
+  },
+  "axes": {
+    "day": "D: ordered parent-shard transition rows",
+    "pft": "P=14 source PFT slots",
+    "soil_layer": "Z=11 hydrology layers/interfaces",
+    "soil_tile": "T=6 source soil tiles",
+    "snow_layer": "K=3 explicit-snow layers/interfaces",
+    "snow_nonbio": "N=1 non-biological snow owner",
+    "carbon_pool": "C=3 POC pools",
+    "litter_pool": "R=2 litter pools",
+    "deep_layer": "L=32 soil-carbon layers/interfaces",
+    "doc_pool": "Q=7 DOC pools",
+    "element": "E=1 carbon element",
+    "transfer_direction": "X=2 resolved source/destination directions",
+    "routing_role": "U=1 paper-case routing role"
+  },
+  "mask_components": {
+    "finite": "capture value is finite and not an ORCHIDEE undefined sentinel",
+    "pft": "parent active-PFT and process-capability mask",
+    "soil_tile": "parent soil-tile/process-capability mask",
+    "snow": "source snow owner/layer is defined",
+    "interface": "source interface is a legal transfer interface",
+    "routing": "routing role is enabled and defined",
+    "peat": "PERMA_PEAT capability is active"
+  },
+  "labels": [
+    {
+      "id": "water.canopy_precipitation_partition", "family": "water_transfer_daily_v1", "owner": "compiled complete-day SECHIBA fold; hydrol_canop precip2canopy/precip2ground", "unit": "kg m-2 day-1",
+      "fields": [
+        {"path": "water.precip2canopy", "axes": ["day", "pft"], "shape": ["D", 14], "dtype": "float64", "mask": ["pft", "finite"]},
+        {"path": "water.precip2ground", "axes": ["day", "pft"], "shape": ["D", 14], "dtype": "float64", "mask": ["pft", "finite"]}
+      ]
+    },
+    {"id": "water.canopy_to_ground", "family": "water_transfer_daily_v1", "owner": "compiled complete-day SECHIBA fold; hydrol_canop canopy2ground", "unit": "kg m-2 day-1", "fields": [{"path": "water.canopy2ground", "axes": ["day", "pft"], "shape": ["D", 14], "dtype": "float64", "mask": ["pft", "finite"]}]},
+    {"id": "water.wet_canopy_evaporation", "family": "water_transfer_daily_v1", "owner": "compiled complete-day SECHIBA fold; hydrol_canop vevapwet", "unit": "kg m-2 day-1", "fields": [{"path": "water.vevapwet", "axes": ["day", "pft"], "shape": ["D", 14], "dtype": "float64", "mask": ["pft", "finite"]}]},
+    {
+      "id": "water.transpiration", "family": "water_transfer_daily_v1", "owner": "compiled complete-day SECHIBA fold; hydrol_soil transpir/rootsink", "unit": "kg m-2 day-1",
+      "fields": [
+        {"path": "water.transpir", "axes": ["day", "pft"], "shape": ["D", 14], "dtype": "float64", "mask": ["pft", "finite"]},
+        {"path": "water.rootsink", "axes": ["day", "soil_layer", "soil_tile"], "shape": ["D", 11, 6], "dtype": "float64", "mask": ["soil_tile", "finite"]}
+      ]
+    },
+    {
+      "id": "water.bare_soil_evaporation", "family": "water_transfer_daily_v1", "owner": "compiled complete-day SECHIBA fold; hydrol_soil vevapnu/vevapnu_ns", "unit": "kg m-2 day-1",
+      "fields": [
+        {"path": "water.vevapnu", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["finite"]},
+        {"path": "water.vevapnu_ns", "axes": ["day", "soil_tile"], "shape": ["D", 6], "dtype": "float64", "mask": ["soil_tile", "finite"]}
+      ]
+    },
+    {
+      "id": "water.snow_sublimation", "family": "water_transfer_daily_v1", "owner": "compiled complete-day SECHIBA fold; explicitsnow/hydrol sublimation", "unit": "kg m-2 day-1",
+      "fields": [
+        {"path": "water.vevapsno", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["snow", "finite"]},
+        {"path": "water.subsnownobio", "axes": ["day", "snow_nonbio"], "shape": ["D", 1], "dtype": "float64", "mask": ["snow", "finite"]}
+      ]
+    },
+    {"id": "water.flood_evaporation", "family": "water_transfer_daily_v1", "owner": "compiled complete-day SECHIBA fold; hydrol flood reservoir vevapflo", "unit": "kg m-2 day-1", "fields": [{"path": "water.vevapflo", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["finite"]}]},
+    {
+      "id": "water.snow_phase_and_melt_transfer", "family": "water_transfer_daily_v1", "owner": "compiled complete-day SECHIBA fold; explicitsnow melt/refreeze/percolation", "unit": "kg m-2 day-1",
+      "fields": [
+        {"path": "water.snowmelt", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["snow", "finite"]},
+        {"path": "water.snowmelt_from_maxmass", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["snow", "finite"]},
+        {"path": "water.snow_melt_mass_by_layer", "axes": ["day", "snow_layer"], "shape": ["D", 3], "dtype": "float64", "mask": ["snow", "finite"]},
+        {"path": "water.snow_refreeze_mass_by_layer", "axes": ["day", "snow_layer"], "shape": ["D", 3], "dtype": "float64", "mask": ["snow", "finite"]},
+        {"path": "water.snow_liquid_percolation_by_interface", "axes": ["day", "snow_layer"], "shape": ["D", 3], "dtype": "float64", "mask": ["snow", "interface", "finite"]}
+      ]
+    },
+    {
+      "id": "water.soil_infiltration", "family": "water_transfer_daily_v1", "owner": "compiled complete-day SECHIBA fold; hydrol soil infiltration", "unit": "kg m-2 day-1",
+      "fields": [
+        {"path": "water.soil_infiltration", "axes": ["day", "soil_tile"], "shape": ["D", 6], "dtype": "float64", "mask": ["soil_tile", "finite"]},
+        {"path": "water.water2infilt", "axes": ["day", "soil_tile"], "shape": ["D", 6], "dtype": "float64", "mask": ["soil_tile", "finite"]}
+      ]
+    },
+    {"id": "water.soil_vertical_transfer", "family": "water_transfer_daily_v1", "owner": "compiled complete-day SECHIBA fold; hydrol_soil wat_flux", "unit": "kg m-2 day-1", "fields": [{"path": "water.wat_flux", "axes": ["day", "soil_layer", "soil_tile"], "shape": ["D", 11, 6], "dtype": "float64", "mask": ["interface", "soil_tile", "finite"]}]},
+    {
+      "id": "water.runoff", "family": "water_transfer_daily_v1", "owner": "compiled complete-day SECHIBA fold; hydrol_soil runoff", "unit": "kg m-2 day-1",
+      "fields": [
+        {"path": "water.runoff", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["finite"]},
+        {"path": "water.runoff_per_soil", "axes": ["day", "soil_tile"], "shape": ["D", 6], "dtype": "float64", "mask": ["soil_tile", "finite"]},
+        {"path": "water.runoff2peat", "axes": ["day", "soil_tile"], "shape": ["D", 6], "dtype": "float64", "mask": ["soil_tile", "peat", "finite"]}
+      ]
+    },
+    {
+      "id": "water.drainage", "family": "water_transfer_daily_v1", "owner": "compiled complete-day SECHIBA fold; hydrol_soil drainage", "unit": "kg m-2 day-1",
+      "fields": [
+        {"path": "water.drainage", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["finite"]},
+        {"path": "water.drainage_per_soil", "axes": ["day", "soil_tile"], "shape": ["D", 6], "dtype": "float64", "mask": ["soil_tile", "finite"]}
+      ]
+    },
+    {
+      "id": "water.routing_exchange", "family": "water_transfer_daily_v1", "owner": "compiled complete-day SECHIBA fold; hydrol_waterbal routing exchange", "unit": "kg m-2 day-1",
+      "fields": [
+        {"path": "water.returnflow", "axes": ["day", "routing_role"], "shape": ["D", 1], "dtype": "float64", "mask": ["routing", "finite"]},
+        {"path": "water.reinfiltration", "axes": ["day", "routing_role"], "shape": ["D", 1], "dtype": "float64", "mask": ["routing", "finite"]},
+        {"path": "water.irrigation", "axes": ["day", "routing_role"], "shape": ["D", 1], "dtype": "float64", "mask": ["routing", "finite"]},
+        {"path": "water.floodout", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["routing", "finite"]}
+      ]
+    },
+    {
+      "id": "carbon.litter_respiration", "family": "ok_leak_transfer_daily_v1", "owner": "compiled complete-day OK_LEAK fold; littercalc_leak respiration", "unit": "gC m-2 day-1",
+      "fields": [
+        {"path": "ok_leak.litter_respiration", "axes": ["day", "pft", "litter_pool"], "shape": ["D", 14, 2], "dtype": "float64", "mask": ["pft", "finite"]},
+        {"path": "ok_leak.litter_flood_respiration", "axes": ["day", "pft"], "shape": ["D", 14], "dtype": "float64", "mask": ["pft", "finite"]}
+      ]
+    },
+    {
+      "id": "carbon.litter_to_doc", "family": "ok_leak_transfer_daily_v1", "owner": "compiled complete-day OK_LEAK fold; littercalc_leak DOC inputs", "unit": "gC m-2 day-1",
+      "fields": [
+        {"path": "ok_leak.litter_to_doc", "axes": ["day", "pft", "deep_layer", "doc_pool", "element"], "shape": ["D", 14, 32, 7, 1], "dtype": "float64", "mask": ["pft", "finite"]},
+        {"path": "ok_leak.floodcarbon_input", "axes": ["day", "pft", "doc_pool", "element"], "shape": ["D", 14, 7, 1], "dtype": "float64", "mask": ["pft", "finite"]}
+      ]
+    },
+    {
+      "id": "carbon.poc_gross_decomposition", "family": "ok_leak_transfer_daily_v1", "owner": "compiled complete-day OK_LEAK fold; soilcarbon_leak POC decomposition", "unit": "gC m-2 day-1",
+      "fields": [
+        {"path": "ok_leak.poc_gross_decomposition", "axes": ["day", "carbon_pool", "element", "pft", "deep_layer"], "shape": ["D", 3, 1, 14, 32], "dtype": "float64", "mask": ["pft", "finite"]},
+        {"path": "ok_leak.poc_flood_gross_decomposition", "axes": ["day", "carbon_pool", "element", "pft", "deep_layer"], "shape": ["D", 3, 1, 14, 32], "dtype": "float64", "mask": ["pft", "finite"]}
+      ]
+    },
+    {
+      "id": "carbon.doc_gross_decomposition", "family": "ok_leak_transfer_daily_v1", "owner": "compiled complete-day OK_LEAK fold; soilcarbon_leak DOC decomposition", "unit": "gC m-2 day-1",
+      "fields": [
+        {"path": "ok_leak.doc_gross_decomposition", "axes": ["day", "pft", "deep_layer", "doc_pool"], "shape": ["D", 14, 32, 7], "dtype": "float64", "mask": ["pft", "finite"]},
+        {"path": "ok_leak.doc_flood_gross_decomposition", "axes": ["day", "pft", "deep_layer", "doc_pool"], "shape": ["D", 14, 32, 7], "dtype": "float64", "mask": ["pft", "finite"]}
+      ]
+    },
+    {
+      "id": "carbon.doc_external_input", "family": "ok_leak_transfer_daily_v1", "owner": "compiled complete-day OK_LEAK fold; soilcarbon_leak deposition and TF-DOC", "unit": "gC m-2 day-1",
+      "fields": [
+        {"path": "ok_leak.doc_to_topsoil", "axes": ["day", "soil_tile"], "shape": ["D", 6], "dtype": "float64", "mask": ["soil_tile", "finite"]},
+        {"path": "ok_leak.doc_to_subsoil", "axes": ["day", "soil_tile"], "shape": ["D", 6], "dtype": "float64", "mask": ["soil_tile", "finite"]},
+        {"path": "ok_leak.doc_precip2ground", "axes": ["day", "pft", "element"], "shape": ["D", 14, 1], "dtype": "float64", "mask": ["pft", "finite"]},
+        {"path": "ok_leak.doc_precip2canopy", "axes": ["day", "pft", "element"], "shape": ["D", 14, 1], "dtype": "float64", "mask": ["pft", "finite"]},
+        {"path": "ok_leak.dry_dep_canopy", "axes": ["day", "pft", "element"], "shape": ["D", 14, 1], "dtype": "float64", "mask": ["pft", "finite"]}
+      ]
+    },
+    {
+      "id": "carbon.doc_export", "family": "ok_leak_transfer_daily_v1", "owner": "compiled complete-day OK_LEAK fold; soilcarbon_leak DOC export", "unit": "gC m-2 day-1",
+      "fields": [
+        {"path": "ok_leak.doc_run", "axes": ["day", "pft", "doc_pool", "element"], "shape": ["D", 14, 7, 1], "dtype": "float64", "mask": ["pft", "finite"]},
+        {"path": "ok_leak.doc_drain", "axes": ["day", "pft", "doc_pool", "element"], "shape": ["D", 14, 7, 1], "dtype": "float64", "mask": ["pft", "finite"]},
+        {"path": "ok_leak.doc_flood", "axes": ["day", "pft", "doc_pool", "element"], "shape": ["D", 14, 7, 1], "dtype": "float64", "mask": ["pft", "finite"]},
+        {"path": "ok_leak.doc_run_2_peat", "axes": ["day", "pft", "doc_pool", "deep_layer", "element"], "shape": ["D", 14, 7, 32, 1], "dtype": "float64", "mask": ["pft", "peat", "finite"]}
+      ]
+    },
+    {"id": "carbon.doc_free_adsorbed_equilibration", "family": "ok_leak_transfer_daily_v1", "owner": "compiled complete-day OK_LEAK fold; DOC free/adsorbed equilibration", "unit": "gC m-2 day-1", "fields": [{"path": "ok_leak.doc_free_to_adsorbed", "axes": ["day", "pft", "deep_layer", "doc_pool", "element"], "shape": ["D", 14, 32, 7, 1], "dtype": "float64", "mask": ["pft", "finite"]}]},
+    {"id": "carbon.doc_vertical_water_transport", "family": "ok_leak_transfer_daily_v1", "owner": "compiled complete-day OK_LEAK fold; DOC advective transfer", "unit": "gC m-2 day-1", "fields": [{"path": "ok_leak.doc_advective_interface", "axes": ["day", "pft", "deep_layer", "doc_pool", "element"], "shape": ["D", 14, 32, 7, 1], "dtype": "float64", "mask": ["pft", "interface", "finite"]}]},
+    {"id": "carbon.doc_vertical_diffusion", "family": "ok_leak_transfer_daily_v1", "owner": "compiled complete-day OK_LEAK fold; DOC diffusive transfer", "unit": "gC m-2 day-1", "fields": [{"path": "ok_leak.doc_diffusive_interface", "axes": ["day", "pft", "deep_layer", "doc_pool", "element"], "shape": ["D", 14, 32, 7, 1], "dtype": "float64", "mask": ["pft", "interface", "finite"]}]},
+    {
+      "id": "carbon.cryoturbation_redistribution", "family": "ok_leak_transfer_daily_v1", "owner": "compiled complete-day OK_LEAK fold; cryoturbation redistribution", "unit": "gC m-2 day-1",
+      "fields": [
+        {"path": "ok_leak.cryoturbation_carbon_transfer", "axes": ["day", "carbon_pool", "pft", "deep_layer"], "shape": ["D", 3, 14, 32], "dtype": "float64", "mask": ["pft", "interface", "finite"]},
+        {"path": "ok_leak.cryoturbation_doc_transfer", "axes": ["day", "pft", "deep_layer", "transfer_direction", "doc_pool", "element"], "shape": ["D", 14, 32, 2, 7, 1], "dtype": "float64", "mask": ["pft", "interface", "finite"]},
+        {"path": "ok_leak.cryoturbation_litter_transfer", "axes": ["day", "litter_pool", "pft", "deep_layer", "element"], "shape": ["D", 2, 14, 32, 1], "dtype": "float64", "mask": ["pft", "interface", "finite"]}
+      ]
+    },
+    {"id": "carbon.perma_peat_redistribution", "family": "ok_leak_transfer_daily_v1", "owner": "compiled complete-day OK_LEAK fold; PERMA_PEAT redistribution", "unit": "gC m-2 day-1", "fields": [{"path": "ok_leak.perma_peat_carbon_transfer", "axes": ["day", "carbon_pool", "pft", "deep_layer"], "shape": ["D", 3, 14, 32], "dtype": "float64", "mask": ["peat", "pft", "finite"]}]},
+    {
+      "id": "energy.net_radiation_integral", "family": "energy_flux_daily_v1", "owner": "compiled complete-day ENERBIL/THERMOSOIL/explicit-snow fold; netrad", "unit": "J m-2 day-1",
+      "fields": [
+        {"path": "energy.netrad", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["finite"]},
+        {"path": "energy.netrad_pft", "axes": ["day", "pft"], "shape": ["D", 14], "dtype": "float64", "mask": ["pft", "finite"]}
+      ]
+    },
+    {
+      "id": "energy.sensible_heat_integral", "family": "energy_flux_daily_v1", "owner": "compiled complete-day ENERBIL/THERMOSOIL/explicit-snow fold; fluxsens", "unit": "J m-2 day-1",
+      "fields": [
+        {"path": "energy.fluxsens", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["finite"]},
+        {"path": "energy.fluxsens_pft", "axes": ["day", "pft"], "shape": ["D", 14], "dtype": "float64", "mask": ["pft", "finite"]}
+      ]
+    },
+    {
+      "id": "energy.latent_heat_integral", "family": "energy_flux_daily_v1", "owner": "compiled complete-day ENERBIL/THERMOSOIL/explicit-snow fold; latent heat", "unit": "J m-2 day-1",
+      "fields": [
+        {"path": "energy.fluxlat", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["finite"]},
+        {"path": "energy.fluxsubli", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["finite"]},
+        {"path": "energy.lareva", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["finite"]},
+        {"path": "energy.larsub", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["finite"]}
+      ]
+    },
+    {
+      "id": "energy.ground_heat_integral", "family": "energy_flux_daily_v1", "owner": "compiled complete-day ENERBIL/THERMOSOIL/explicit-snow fold; pgflux/soilflx", "unit": "J m-2 day-1",
+      "fields": [
+        {"path": "energy.pgflux", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["finite"]},
+        {"path": "energy.soilflx", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["finite"]},
+        {"path": "energy.soilflx_pft", "axes": ["day", "pft"], "shape": ["D", 14], "dtype": "float64", "mask": ["pft", "finite"]}
+      ]
+    },
+    {
+      "id": "energy.phase_change_integral", "family": "energy_flux_daily_v1", "owner": "compiled complete-day ENERBIL/THERMOSOIL/explicit-snow fold; phase change", "unit": "J m-2 day-1",
+      "fields": [
+        {"path": "energy.fusion", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["finite"]},
+        {"path": "energy.snow_melt_refreeze", "axes": ["day"], "shape": ["D"], "dtype": "float64", "mask": ["snow", "finite"]},
+        {"path": "energy.snow_liquid_excess", "axes": ["day", "snow_layer"], "shape": ["D", 3], "dtype": "float64", "mask": ["snow", "finite"]}
+      ]
+    }
+  ]
+}

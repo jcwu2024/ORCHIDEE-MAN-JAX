@@ -42,7 +42,11 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
 - Gate E1 is accepted. Its unique canonical input assembler, typed process
   boundary, conservative updater, reusable canonical retained-tail adapter,
   and bounded real-Teacher lifecycle/AD evidence pass locally. Gate E2 data
-  preparation and candidate selection remain unstarted.
+  preparation has reached its local acceptance point: the 29-label/66-field
+  sidecar contract, immutable-parent hash join, typed collation, explicit
+  masks, train/train-only statistics, and bounded lossless OK_LEAK layout
+  benchmark pass. Candidate selection remains unstarted; a representative
+  six-point-year production pilot is still required before full generation.
 - The current Teacher and data are scientifically scoped to PFT14. Gate B1's
   catalog foundation now gives PFTs stable IDs, source PFT/MTC identities,
   traits, parameter ownership, capabilities, and named execution layouts.
@@ -231,11 +235,13 @@ conditions for reopening an old idea are in
 ## Immediate Work Order
 
 Gates A-D1 and the physical-parameter candidate registry are complete. The
-formal architecture/data-readiness review accepts Gate E1. The next bounded
-task is Gate E2 data preparation: freeze the typed supplemental sidecar
-contract, add hash-joined reader/collation/statistics support, and measure a
-bounded lossless representation for the large OK_LEAK family before proposing
-full generation. Then admit the first candidate only through the stable
+formal architecture/data-readiness review accepts Gate E1. Gate E2 local data
+preparation is recorded in
+[`gate_e2_typed_sidecar_data_preparation.md`](research/daily_coarse_graining/gate_e2_typed_sidecar_data_preparation.md).
+The next bounded task is its train-only six-point-year production pilot, which
+must calibrate annual dense/hybrid compression, wall time, memory, hashes, and
+restart continuity before any full 669 request. Then admit the first candidate
+only through the stable
 `bind_daily_operator(input_assembler=canonical_assembler,
 process_head=candidate_head,
 retained_tail=canonical_retained_tail_adapter)` boundary and the predeclared local/small
@@ -249,8 +255,9 @@ the executable evidence packet remains
 
 This packet is complete and retained as its acceptance contract. Gates A-C
 must not be rerun unless shared Teacher code or a frozen contract changes.
-Gate D1, the candidate registry, and Gate E1 are complete. Gate E2 data
-preparation is next; Gates D2 and F remain queued.
+Gate D1, the candidate registry, and Gate E1 are complete. Gate E2 local data
+preparation is complete and its representative production pilot is next;
+Gates D2 and F remain queued.
 
 ### Inputs
 

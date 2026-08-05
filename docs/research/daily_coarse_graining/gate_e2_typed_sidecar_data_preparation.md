@@ -1,0 +1,157 @@
+# Gate E2 Typed-Sidecar Data Preparation
+
+Status: **local preparation complete; representative production pilot pending**.
+
+Date: 2026-08-05.
+
+## Boundary
+
+Gate E1 remains accepted and unchanged. This work does not select or train a
+network, generate the complete 669-point supplemental dataset, submit a paid
+job, modify the canonical Teacher, or rewrite any accepted v5 parent shard.
+
+The frozen machine contract is
+`manifests/coarse_graining/daily_typed_sidecar_v1.json`, canonical SHA256
+`f4e3873c885298f19d219e0215cf1bc2d63b9becedd60c16914953cc6d2f2d1e`.
+It covers exactly the 29 `missing_non_identifiable` labels and their 66 unique
+required source fields. Every label has a capture owner and physical unit;
+every field has named axes, symbolic and concrete shape, `float64` dtype, and
+explicit mask components.
+
+One sidecar owns one immutable v5 parent shard. The join key is
+`(landpoint_id, year)` and the row key is the ordered one-based `day_index`.
+The dataset ID, Markov contract hash, exact parent dataset-manifest hash,
+exact parent-shard hash, sidecar-contract hash, and exact sidecar hash are all
+required. Missing or duplicate days/shards, split drift, path escape, shape,
+dtype, unit, mask, contract, parent, and sidecar hash drift fail closed.
+
+## Local Implementation
+
+`research/daily_coarse_graining/typed_sidecar.py` provides:
+
+- contract parsing and inventory/hash audit;
+- immutable-parent hash join and split inheritance;
+- bit-preserving dense, flat-COO, and constant-positive-zero decoding;
+- a required explicit bool defined mask for every stored field;
+- label-owned `SupplementalProcessPrediction` collation under water, carbon,
+  and energy without exposing the anonymous historical `fast_day_target`;
+- parent next-state/discrete-state targets kept separately from process labels;
+- explicit-mask, finite, non-sentinel statistics fitted only by the hard-coded
+  `spatial_split=train, temporal_split=train` selection;
+- hash-linked statistics write/read bound to the exact parent and sidecar
+  dataset-manifest bytes as well as every source-sidecar hash.
+
+The Gate E1 binding audit now checks the 29 typed schemas as well as unique
+ownership of all 47 non-budget labels. The supplemental type is intentionally
+limited to the 29 sidecar labels; present v5 fields and the eight exact
+derivations retain their existing owners and are not duplicated into sidecars.
+
+## Bounded OK_LEAK Measurement
+
+The local evidence is the existing bounded Gate C ordinary-day capture,
+SHA256 `c5c14ea6d0ac9db860864c6a49a241e84b229c2afbc829a12c1bfc4b9f9f165b`.
+The benchmark reads only the 24 required OK_LEAK fields, adds all 24 explicit
+bool mask arrays required by the new contract, writes each candidate layout,
+and requires bit-exact values plus exact masks after decoding. The existing
+capture supplies finite status but not every parent capability mask, so these
+masks are a finite-only storage-overhead proxy. Scientific production masks
+must additionally compose the parent active/process-capability masks and are
+part of the representative pilot gate.
+
+| Layout | Stored bytes/point-day | Raw-value ratio | Mechanical 669 projection |
+| --- | ---: | ---: | ---: |
+| Dense float64 + Deflate | 16,004 | 17.49x | 181.97 GiB |
+| Flat COO + Deflate | 22,034 | 12.70x | 250.53 GiB |
+| Per-field auto dense/COO/zero + Deflate | 18,861 | 14.84x | 214.45 GiB |
+
+The raw OK_LEAK value payload is 279,872 bytes per point-day. Only 347 of
+34,984 float64 elements have nonzero bits in this sample, but the per-field
+COO metadata and indices cost more than dense Deflate. Dense Deflate is
+therefore the accepted local baseline. It preserves all scientific axes and
+uses no quantization, dtype reduction, thresholding, or lossy transform.
+
+The `181.97 GiB` number repeats one compressed point-day over the exact
+12,208,581 admitted parent transitions. It is a sizing signal, not an accepted
+production estimate: annual archives change compression overhead and other
+landpoints/seasons may have different sparsity. Full generation remains
+unauthorized until dense and hybrid layouts are compared on the representative
+pilot below.
+
+The generated report is
+`outputs/research/daily_coarse_graining/gate_e2_typed_sidecar/ok_leak_layout_benchmark.json`,
+local SHA256
+`e3a9aa32e2c2a86a37d59afca600ea484d1602a7c5b126e01f88a812a18815f4`.
+
+## Existing Data Reuse
+
+The 669 v5 parent shards remain immutable and supply all inputs, splits,
+endpoints, and the following ten present labels:
+
+- water: four inventory endpoints plus rain and snowfall input;
+- carbon: fast GPP, fast maintenance respiration, and OK_LEAK inventory
+  endpoints;
+- energy: daily temperature context.
+
+The following eight labels are recomputed after prediction from their frozen
+owners and must not be stored in a supplemental sidecar:
+
+- carbon: litter input, POC respiration, POC-to-DOC, DOC-to-POC, and DOC
+  respiration;
+- energy: surface, soil, and snow thermal tendencies.
+
+All 29 supplemental labels must be generated for every admitted parent day:
+13 water labels from `water_transfer_daily_v1`, 11 carbon labels from
+`ok_leak_transfer_daily_v1`, and five energy labels from
+`energy_flux_daily_v1`. The one-day Gate C asset proves capture and layout
+only. The historical 96-day OK_LEAK driver asset stores a different 13-driver,
+48-step Oracle boundary and cannot substitute for these transfer labels.
+
+## Production Proposal
+
+The exact admitted scope is 669 landpoints, 50 years, 33,450 parent shards,
+and 12,208,581 transitions. Sidecars follow the same shard/split identities.
+Generation is CPU work; no GPU is justified.
+
+Before full generation, run two bounded stages:
+
+1. Free correctness smoke on `test01`-`test04`: one train-only point-year,
+   verifying parent/day hashes, all 66 fields, masks, restart continuity, and
+   dense/hybrid bit-exact reads. Test-node timing is diagnostic only.
+2. Paid calibration on `cnall`: six train-only point-years spanning the six
+   already accepted bounded-capture landpoints, one task and one CPU per
+   point-year, array concurrency at most five, `--time=02:00:00`. Worst-case
+   charge is `6 * 1 CPU * 2 h * CNY 0.07 = CNY 0.84`. This stage must report
+   cold/hot wall time, peak RSS, per-family and per-field compression, annual
+   archive size, and exact replay/hash checks before the full request is
+   frozen.
+
+Both stages use the project CPU environment and write only below
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime`. The planned working directory
+is `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`; the planned output root is
+`runtime/outputs/data/gate-e2-typed-sidecar-v1`. No launcher or submission is
+authorized by this document.
+
+For capacity planning only, the accepted parent upper bound is 139.2 seconds
+per point-year. Reserving 1.5x for the three supplemental reductions and
+compression gives 1,940.1 CPU-hours, about 16.2 elapsed days at five concurrent
+one-CPU workers, and `1,940.1 * CNY 0.07 = CNY 135.81` expected-upper cost.
+The provisional full Slurm shape would be `cnall`, 669 one-CPU landpoint-chain
+array tasks, `%5` concurrency, and `--time=04:00:00` per task. Its scheduler
+worst case is `669 * 1 CPU * 4 h * CNY 0.07 = CNY 187.32`, with 22.3 elapsed
+days at the concurrency cap. Those limits must be replaced by the six-year
+pilot measurements before seeking approval.
+
+Reserve 0.50 TiB for final sidecars and 1.0 TiB working free space for atomic
+writes/checkpoints during the pilot. These are conservative operational caps,
+not a claim that the final asset will occupy 0.50 TiB. Exceeding either the
+pilot-derived wall-time or storage gate stops generation rather than silently
+changing dtype, masks, axes, or compression semantics.
+
+## Local Acceptance
+
+The natural local stop is reached when the contract/audit, reader, typed
+collation, strict statistics, fail-closed tests, and bounded compression report
+pass while `jax_orchidee/` remains unchanged. Gate E2 is not globally complete:
+the six-point-year representative layout/resource pilot and an explicitly
+approved full-generation request remain pending. Network selection and
+training remain outside this data-preparation packet.

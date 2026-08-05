@@ -11,6 +11,11 @@ import jax
 from research.daily_coarse_graining.daily_flux_label_inventory import (
     load_daily_flux_label_inventory,
 )
+from research.daily_coarse_graining.typed_sidecar import (
+    DEFAULT_CONTRACT_PATH,
+    audit_typed_sidecar_contract,
+    load_typed_sidecar_contract,
+)
 
 from .process_heads import PROCESS_LABEL_BINDINGS
 from .types import (
@@ -212,8 +217,12 @@ def audit_inference_source_graph(package_root: str | Path = PACKAGE_ROOT) -> dic
     }
 
 
-def audit_process_label_bindings(inventory_path: str | Path | None = None) -> dict[str, Any]:
-    """Require one owner binding for every non-budget state/supervision label."""
+def audit_process_label_bindings(
+    inventory_path: str | Path | None = None,
+    *,
+    sidecar_contract_path: str | Path = DEFAULT_CONTRACT_PATH,
+) -> dict[str, Any]:
+    """Require one owner binding and typed schema for every supplemental label."""
 
     inventory = (
         load_daily_flux_label_inventory()
@@ -229,14 +238,32 @@ def audit_process_label_bindings(inventory_path: str | Path | None = None) -> di
     }
     missing = sorted(required - set(bound))
     unknown = sorted(set(bound) - set(inventory.labels_by_id))
+    sidecar = load_typed_sidecar_contract(sidecar_contract_path)
+    sidecar_audit = audit_typed_sidecar_contract(sidecar_contract_path)
+    supplemental_bindings = {
+        f"fluxes.{label_id}": label_id for label_id in sidecar.labels
+    }
+    missing_typed_bindings = sorted(
+        binding
+        for binding, label_id in supplemental_bindings.items()
+        if PROCESS_LABEL_BINDINGS.get(binding) != (label_id,)
+    )
     return {
-        "schema_version": "gate_e1_process_label_binding_audit_v1",
+        "schema_version": "gate_e2_process_label_binding_audit_v2",
         "required_label_count": len(required),
         "bound_label_count": len(set(bound)),
         "missing": missing,
         "unknown": unknown,
         "duplicates": duplicates,
-        "passed": not missing and not unknown and not duplicates,
+        "supplemental_schema": sidecar_audit,
+        "missing_typed_bindings": missing_typed_bindings,
+        "passed": (
+            not missing
+            and not unknown
+            and not duplicates
+            and not missing_typed_bindings
+            and sidecar_audit["passed"]
+        ),
     }
 
 
