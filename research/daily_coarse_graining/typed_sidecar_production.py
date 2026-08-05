@@ -52,6 +52,9 @@ TASK_SCHEMA_VERSION = "gate_e2_typed_sidecar_pilot_task_v1"
 REPORT_SCHEMA_VERSION = "gate_e2_typed_sidecar_pilot_report_v1"
 SIDECAR_DATASET_SCHEMA_VERSION = "daily_typed_sidecar_dataset_v1"
 STATE_COMPARISON_SCHEMA_VERSION = "gate_e2_state_comparison_v1"
+STATE_REPLAY_MODE = (
+    "continuous_within_gate_a_tolerance_discrete_exact_every_day_start_and_next_state"
+)
 FULL_PARENT_TRANSITIONS = 12_208_581
 MAX_MISMATCH_EXAMPLES = 8
 
@@ -197,6 +200,14 @@ def load_pilot_plan(path: str | Path = DEFAULT_PILOT_PLAN) -> PilotPlan:
     execution = raw["execution"]
     if any(entry.year != int(execution["year"]) for entry in entries):
         raise ValueError("pilot entries must use the frozen execution year")
+    comparison = execution.get("state_comparison", {})
+    if comparison != {
+        "continuous_atol": 1.0e-12,
+        "continuous_rtol": 1.0e-12,
+        "discrete": "exact",
+        "provenance": "configs/teacher_branch_parity.json",
+    }:
+        raise ValueError("pilot state-comparison policy drift")
     return PilotPlan(path=path, sha256=actual_hash, raw=raw, entries=entries)
 
 
@@ -450,7 +461,15 @@ def _maximum_error(
     return int(maximum) if key == "max_ulp_error" else maximum
 
 
-def _state_comparison_report(packet, expected, contract, *, label: str) -> dict[str, Any]:
+def _state_comparison_report(
+    packet,
+    expected,
+    contract,
+    *,
+    label: str,
+    continuous_atol: float,
+    continuous_rtol: float,
+) -> dict[str, Any]:
     continuous, discrete = extract_state(packet, contract)
     wanted_continuous = np.asarray(expected[0], dtype=np.float64)
     if continuous.shape != wanted_continuous.shape:
@@ -462,10 +481,31 @@ def _state_comparison_report(packet, expected, contract, *, label: str) -> dict[
         continuous, wanted_continuous, contract
     )
     discrete_reports = _discrete_state_mismatches(discrete, expected[1], contract)
+    continuous_accepted = bool(
+        np.allclose(
+            continuous,
+            wanted_continuous,
+            atol=continuous_atol,
+            rtol=continuous_rtol,
+            equal_nan=True,
+        )
+    )
+    bit_exact = not continuous_reports and not discrete_reports
     return {
         "schema_version": STATE_COMPARISON_SCHEMA_VERSION,
-        "status": "passed" if not continuous_reports and not discrete_reports else "mismatch",
+        "status": "passed" if continuous_accepted and not discrete_reports else "mismatch",
         "label": label,
+        "bit_exact": bit_exact,
+        "accepted_by": (
+            "exact"
+            if bit_exact
+            else "declared_float_tolerance"
+            if continuous_accepted and not discrete_reports
+            else None
+        ),
+        "continuous_atol": continuous_atol,
+        "continuous_rtol": continuous_rtol,
+        "discrete_policy": "exact",
         "continuous_width": int(continuous.size),
         "continuous_mismatch_count": int(
             sum(item["mismatch_count"] for item in continuous_reports)
@@ -492,8 +532,17 @@ def _assert_state_matches(
     label: str,
     report_path: Path | None = None,
     report_context: Mapping[str, Any] | None = None,
+    continuous_atol: float,
+    continuous_rtol: float,
 ) -> dict[str, Any]:
-    report = _state_comparison_report(packet, expected, contract, label=label)
+    report = _state_comparison_report(
+        packet,
+        expected,
+        contract,
+        label=label,
+        continuous_atol=continuous_atol,
+        continuous_rtol=continuous_rtol,
+    )
     if report["status"] == "passed":
         return report
     persisted = dict(report_context or {}) | report
@@ -510,6 +559,38 @@ def _assert_state_matches(
         detail = f"first_discrete_key={first['key']}"
     location = "" if report_path is None else f"; report={report_path}"
     raise ValueError(f"{label} state differs from immutable parent; {detail}{location}")
+
+
+def _new_state_comparison_summary(*, atol: float, rtol: float) -> dict[str, Any]:
+    return {
+        "continuous_atol": atol,
+        "continuous_rtol": rtol,
+        "discrete_policy": "exact",
+        "checked_state_count": 0,
+        "non_bit_exact_state_count": 0,
+        "max_absolute_error": 0.0,
+        "max_relative_error": 0.0,
+        "max_ulp_error": 0,
+        "affected_continuous_keys": [],
+    }
+
+
+def _update_state_comparison_summary(
+    summary: dict[str, Any], report: Mapping[str, Any]
+) -> None:
+    if report["status"] != "passed":
+        raise ValueError("cannot summarize a failed state comparison")
+    summary["checked_state_count"] += 1
+    if report["bit_exact"]:
+        return
+    summary["non_bit_exact_state_count"] += 1
+    for key in ("max_absolute_error", "max_relative_error", "max_ulp_error"):
+        value = report[key]
+        if isinstance(value, (int, float)):
+            summary[key] = max(summary[key], value)
+    keys = set(summary["affected_continuous_keys"])
+    keys.update(item["key"] for item in report["continuous_leaves"])
+    summary["affected_continuous_keys"] = sorted(keys)
 
 
 def _layout_metadata(path: Path) -> dict[str, Any]:
@@ -788,6 +869,13 @@ def generate_task(
         "year": entry.year,
         "diagnostic_day_limit": diagnostic_day_limit,
     }
+    comparison_policy = pilot.raw["execution"]["state_comparison"]
+    continuous_atol = float(comparison_policy["continuous_atol"])
+    continuous_rtol = float(comparison_policy["continuous_rtol"])
+    comparison_summary = _new_state_comparison_summary(
+        atol=continuous_atol,
+        rtol=continuous_rtol,
+    )
     day_inventory = (
         parent.day_index
         if diagnostic_day_limit is None
@@ -798,14 +886,17 @@ def generate_task(
         expected_discrete = {
             name: value[row] for name, value in parent.discrete_trajectories.items()
         }
-        _assert_state_matches(
+        start_comparison = _assert_state_matches(
             current,
             (parent.state_trajectory[row], expected_discrete),
             markov_contract,
             label=f"Day {int(day_index)} start",
             report_path=comparison_path,
             report_context=report_context,
+            continuous_atol=continuous_atol,
+            continuous_rtol=continuous_rtol,
         )
+        _update_state_comparison_summary(comparison_summary, start_comparison)
         forcing = teacher._paper_compiled_forcing_day(
             context,
             year=entry.year,
@@ -850,7 +941,10 @@ def generate_task(
             label=f"Day {int(day_index)} end",
             report_path=comparison_path,
             report_context=report_context,
+            continuous_atol=continuous_atol,
+            continuous_rtol=continuous_rtol,
         )
+        _update_state_comparison_summary(comparison_summary, final_comparison)
 
     if diagnostic_day_limit is not None:
         report = report_context | {
@@ -859,6 +953,7 @@ def generate_task(
             "first_day": int(day_inventory[0]),
             "last_day": int(day_inventory[-1]),
             "last_state_comparison": final_comparison,
+            "state_comparison_summary": comparison_summary,
             "teacher_capture_seconds": capture_seconds,
         }
         _atomic_json(comparison_path, report)
@@ -873,6 +968,7 @@ def generate_task(
             "first_day": int(day_inventory[0]),
             "last_day": int(day_inventory[-1]),
             "last_state_comparison": final_comparison,
+            "state_comparison_summary": comparison_summary,
             "teacher_capture_seconds": capture_seconds,
         },
     )
@@ -924,7 +1020,8 @@ def generate_task(
         "day_count": parent.days,
         "first_day": int(parent.day_index[0]),
         "last_day": int(parent.day_index[-1]),
-        "state_replay": "exact_every_day_start_and_next_state",
+        "state_replay": STATE_REPLAY_MODE,
+        "state_comparison_summary": comparison_summary,
         "capability_masks": capability.metadata(),
         "defined_counts": {
             field.path: int(np.count_nonzero(defined[field.path]))
@@ -1010,9 +1107,18 @@ def aggregate_pilot(
             expected_days,
             expected_start,
             expected_stop,
-            "exact_every_day_start_and_next_state",
+            STATE_REPLAY_MODE,
         ):
             raise ValueError(f"pilot task day/state admission drift: {path}")
+        comparison = report.get("state_comparison_summary", {})
+        policy = pilot.raw["execution"]["state_comparison"]
+        if (
+            comparison.get("continuous_atol") != policy["continuous_atol"]
+            or comparison.get("continuous_rtol") != policy["continuous_rtol"]
+            or comparison.get("discrete_policy") != policy["discrete"]
+            or comparison.get("checked_state_count") != 2 * expected_days
+        ):
+            raise ValueError(f"pilot task state-comparison summary drift: {path}")
 
         decoded = {}
         for layout in ("dense", "hybrid_auto"):

@@ -179,13 +179,21 @@ one current-Teacher transition. The immutable parent was generated at Teacher
 commit `7397d1e`; later source-backed Teacher changes must therefore be
 attributed before these assets are joined.
 
-`diagnose-state --max-days 1` is the only authorized next execution mode. It
-writes `state_comparison.json` below the selected task directory, attributes
-continuous differences to contract state owners and source references,
-reports absolute/relative/ULP errors, and reports discrete differences
-separately. A mismatch remains a nonzero failure. Tasks 1-5, tolerance
-relaxation, parent regeneration, and full sidecar generation remain blocked
-until this bounded report establishes a scientifically consistent policy.
+`diagnose-state --max-days 1` completed its scientific attribution in job
+`14481448_0`. Of 3,854 continuous values, only PFT14 `cn_ind` and `ind`
+differed, each by one ULP. The maximum absolute and relative errors were
+`2.842170943040401e-14` and `2.063503050227843e-16`; all discrete state was
+exact. This passes the existing Gate A branch-parity policy of
+`atol=1e-12, rtol=1e-12` by a wide margin and does not indicate a Teacher
+semantic regression.
+
+The pilot manifest now declares that same continuous policy with provenance
+to `configs/teacher_branch_parity.json`. Discrete state remains exact, every
+non-bit-exact owner and annual maximum remains reportable, and sidecar
+encode/decode remains bit-exact. The complete task-0 point-year is the only
+authorized next production run. Tasks 1-5 and full generation remain blocked
+until its 364 transitions pass and its annual state-comparison summary is
+written.
 
 Both stages use the project CPU environment and write only below
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime`. The planned working directory

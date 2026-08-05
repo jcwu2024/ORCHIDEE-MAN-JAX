@@ -242,12 +242,12 @@ The next bounded task is its train-only six-point-year production pilot, which
 must calibrate annual dense/hybrid compression, wall time, memory, hashes, and
 restart continuity before any full 669 request. Its frozen manifest, guarded
 runner, Slurm launcher, and local fail-closed tests are prepared. Task 0's
-first real transition exposed a current-Teacher versus immutable-parent state
-difference at Day 2 end. Run the prepared `diagnose-state --max-days 1`
-command first, classify the named owner against the `7397d1e` to current
-Teacher commit range, and decide whether the old parent remains scientifically
-admissible. Do not relax equality, regenerate the parent, or execute tasks 1-5
-before that attribution. Once task 0 passes under the accepted dataset policy,
+one-day diagnostic found only two one-ULP continuous differences, with maximum
+absolute error `2.84e-14`, maximum relative error `2.07e-16`, and exact
+discrete state. Gate E2 therefore reuses the already accepted Gate A
+`atol=1e-12, rtol=1e-12` continuous policy while retaining exact discrete and
+bit-exact sidecar storage checks. Execute the complete task-0 point-year and
+require its annual error summary to pass before tasks 1-5. Once task 0 passes,
 execute the remaining five and aggregate only after all six pass. Then
 admit the first candidate only through the stable
 `bind_daily_operator(input_assembler=canonical_assembler,

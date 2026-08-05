@@ -1,7 +1,7 @@
 {
   "schema_version": "gate_e2_typed_sidecar_pilot_v1",
   "status": "frozen_pre_execution",
-  "pilot_sha256": "42df43461e3c797224ea570199d78f33147447f654d9dfc976cde19e02ddae76",
+  "pilot_sha256": "d062f54a07e27b1adcad25a58d3687a0b7e2bef73fc5289625b5ee7d90a2f2d0",
   "parent": {
     "dataset_id": "pft14-daily-teacher-669-1961-2010",
     "dataset_manifest_sha256": "89ea2f24bad8f4b39129937f4106285dd53936c35d8dc610810f865b02d4e508",
@@ -29,6 +29,12 @@
     "expected_day_start": 2,
     "expected_day_stop": 365,
     "expected_days_per_entry": 364,
+    "state_comparison": {
+      "continuous_atol": 1e-12,
+      "continuous_rtol": 1e-12,
+      "discrete": "exact",
+      "provenance": "configs/teacher_branch_parity.json"
+    },
     "spatial_split": "train",
     "temporal_split": "train",
     "layouts": ["dense", "hybrid_auto"],
@@ -45,7 +51,8 @@
   ],
   "admission": {
     "all_parent_day_indices_exact": true,
-    "all_day_start_and_next_states_exact": true,
+    "all_day_start_and_next_continuous_states_within_gate_a_tolerance": true,
+    "all_day_start_and_next_discrete_states_exact": true,
     "all_66_fields_present": true,
     "all_defined_masks_source_capability_backed": true,
     "both_layouts_bit_exact": true,

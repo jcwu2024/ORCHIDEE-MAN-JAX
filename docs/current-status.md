@@ -158,10 +158,16 @@ inventory. Replacement job `14481314_0` passed preflight and cold start but
 stopped after the first captured transition: current-Teacher Day 2 end state
 is not bit-exact to the parent shard generated at Teacher commit `7397d1e`.
 It ran for `00:10:02`, peaked at about 9.22 GB RSS, and wrote no sidecar. The
-runner now has a one-day bounded diagnostic that maps every mismatch to its
-state owner and reports absolute, relative, and ULP errors. Tasks 1-5, parent
-regeneration, tolerance changes, and neural training remain unauthorized
-until that version difference is classified.
+bounded diagnostic subsequently classified the difference in job
+`14481448_0`: only `cn_ind` and `ind` differ, both by one ULP; the global
+maximum absolute and relative errors are `2.842170943040401e-14` and
+`2.063503050227843e-16`, and all discrete state is exact. This is safely
+inside Gate A's existing `atol=1e-12, rtol=1e-12` policy and is not a
+scientific Teacher regression. Gate E2 now reuses that declared continuous
+policy, retains exact discrete comparisons, records all non-bit-exact owners
+and annual maxima, and keeps sidecar encoding itself bit-exact. The next
+operation is the complete task-0 point-year; tasks 1-5, parent regeneration,
+and neural training remain unauthorized until it passes.
 See
 [`gate_e1_architecture_data_readiness_review.md`](research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md).
 

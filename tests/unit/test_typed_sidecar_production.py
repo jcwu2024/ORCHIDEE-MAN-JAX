@@ -21,6 +21,7 @@ from research.daily_coarse_graining.typed_sidecar_production import (
     _discrete_state_mismatches,
     _layout_metadata,
     _sha256_file,
+    _state_comparison_report,
     aggregate_pilot,
     build_defined_masks,
     capability_masks_from_context,
@@ -103,6 +104,44 @@ def test_state_mismatch_report_keeps_discrete_differences_separate():
             "examples": [{"index": [1], "expected": True, "observed": False}],
         }
     ]
+
+
+def test_state_comparison_accepts_one_ulp_under_declared_gate_a_tolerance():
+    leaf = SimpleNamespace(
+        key="slow.cn_ind",
+        component="slow",
+        path=("cn_ind",),
+        source_ref="restart_state_lifecycle",
+        classification="prognostic",
+        discrete=False,
+        start=0,
+        stop=1,
+        shape=(1,),
+        axis_names=(),
+        selected_pft_indices=(),
+    )
+    contract = SimpleNamespace(
+        state_leaves=(leaf,),
+        discrete_leaves=(),
+        continuous_state_width=1,
+    )
+    expected = np.asarray([137.73524312099178], dtype=np.float64)
+    observed = np.nextafter(expected, -np.inf)
+    packet = SimpleNamespace(fields_by_component={"slow": {"cn_ind": observed}})
+
+    report = _state_comparison_report(
+        packet,
+        (expected, {}),
+        contract,
+        label="Day 2 end",
+        continuous_atol=1.0e-12,
+        continuous_rtol=1.0e-12,
+    )
+
+    assert report["status"] == "passed"
+    assert not report["bit_exact"]
+    assert report["accepted_by"] == "declared_float_tolerance"
+    assert report["max_ulp_error"] == 1
 
 
 def test_frozen_pilot_plan_has_exact_train_only_inventory():
@@ -274,6 +313,12 @@ def _synthetic_aggregate(tmp_path: Path):
                 "expected_days_per_entry": 2,
                 "spatial_split": "train",
                 "temporal_split": "train",
+                "state_comparison": {
+                    "continuous_atol": 1.0e-12,
+                    "continuous_rtol": 1.0e-12,
+                    "discrete": "exact",
+                    "provenance": "configs/teacher_branch_parity.json",
+                },
             },
         },
         entries=(PilotEntry(0, "001.0-071.0", 1961),),
@@ -329,7 +374,20 @@ def _synthetic_aggregate(tmp_path: Path):
         "day_count": 2,
         "first_day": 2,
         "last_day": 3,
-        "state_replay": "exact_every_day_start_and_next_state",
+        "state_replay": (
+            "continuous_within_gate_a_tolerance_discrete_exact_every_day_start_and_next_state"
+        ),
+        "state_comparison_summary": {
+            "continuous_atol": 1.0e-12,
+            "continuous_rtol": 1.0e-12,
+            "discrete_policy": "exact",
+            "checked_state_count": 4,
+            "non_bit_exact_state_count": 0,
+            "max_absolute_error": 0.0,
+            "max_relative_error": 0.0,
+            "max_ulp_error": 0,
+            "affected_continuous_keys": [],
+        },
         "capability_masks": capability.metadata(),
         "defined_counts": {
             field.path: int(np.count_nonzero(defined[field.path]))
