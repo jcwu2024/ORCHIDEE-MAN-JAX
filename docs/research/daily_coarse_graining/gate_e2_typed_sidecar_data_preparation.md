@@ -142,6 +142,11 @@ declared capability masks, and rejects source, parent, contract, split, day,
 task, or file-hash drift. Pilot manifests and task reports remain explicitly
 unauthorized for full generation.
 
+Git-tracked JSON inputs use sorted compact canonical-JSON SHA256 identities so
+Windows and Linux line-ending checkout policies cannot create false drift.
+Generated parent shards, parent dataset manifests, and sidecar archives retain
+exact byte SHA256 identities.
+
 PFT masks are process-typed rather than one generic active-slot flag:
 `active_pft` retains legal surface outputs including bare soil,
 `vegetation_pft` excludes bare soil, `leak_carbon_pft` requires the catalogued

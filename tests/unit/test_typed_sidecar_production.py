@@ -68,7 +68,7 @@ def test_pilot_plan_rejects_self_hash_and_source_hash_drift(tmp_path):
         load_pilot_plan(stale)
 
     raw = json.loads(DEFAULT_PILOT_PLAN.read_text(encoding="utf-8"))
-    raw["parent"]["production_spec_sha256"] = "0" * 64
+    raw["parent"]["production_spec_canonical_sha256"] = "0" * 64
     source_drift = tmp_path / "source-drift.json"
     _write_plan(source_drift, raw)
     with pytest.raises(ValueError, match="source hash mismatch"):

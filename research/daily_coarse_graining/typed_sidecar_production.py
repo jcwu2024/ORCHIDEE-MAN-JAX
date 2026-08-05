@@ -144,16 +144,21 @@ def load_pilot_plan(path: str | Path = DEFAULT_PILOT_PLAN) -> PilotPlan:
     if raw.get("pilot_sha256") != actual_hash:
         raise ValueError("Gate-E2 pilot self-hash mismatch")
     for section, path_key, hash_key in (
-        (raw["parent"], "production_spec", "production_spec_sha256"),
-        (raw["sidecar_contract"], "path", "file_sha256"),
-        (raw["selection_source"], "path", "sha256"),
+        (
+            raw["parent"],
+            "production_spec",
+            "production_spec_canonical_sha256",
+        ),
+        (raw["sidecar_contract"], "path", "canonical_sha256"),
+        (raw["selection_source"], "path", "canonical_sha256"),
     ):
         source = (ROOT / str(section[path_key])).resolve()
         try:
             source.relative_to(ROOT)
         except ValueError as error:
             raise ValueError(f"pilot source path escapes repository: {source}") from error
-        if _sha256_file(source) != section[hash_key]:
+        source_raw = json.loads(source.read_text(encoding="utf-8"))
+        if _canonical_sha256(source_raw) != section[hash_key]:
             raise ValueError(f"pilot source hash mismatch: {source}")
     sidecar_contract = load_typed_sidecar_contract(
         ROOT / str(raw["sidecar_contract"]["path"])

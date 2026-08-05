@@ -1,22 +1,22 @@
 {
   "schema_version": "gate_e2_typed_sidecar_pilot_v1",
   "status": "frozen_pre_execution",
-  "pilot_sha256": "6bc4b130c727a0b099c8375d816fabf174e2ccb192dc38dc6b101997815708ba",
+  "pilot_sha256": "05f2cca82c4c7f08046b25ec4065d97ace083865b3a0257c69b9e439722fd338",
   "parent": {
     "dataset_id": "pft14-daily-teacher-669-1961-2010",
     "dataset_manifest_sha256": "89ea2f24bad8f4b39129937f4106285dd53936c35d8dc610810f865b02d4e508",
     "markov_contract_sha256": "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442",
     "production_spec": "manifests/coarse_graining/daily_teacher_production_669.json",
-    "production_spec_sha256": "59c36af1c8f047c507d7a46ae394c1f3637705816a3e18ffb642cf54c5811a13"
+    "production_spec_canonical_sha256": "6bb0198f0a313b814e32f980564c03bab4ce7801f639983d59f587d18aa6a27e"
   },
   "sidecar_contract": {
     "path": "manifests/coarse_graining/daily_typed_sidecar_v1.json",
-    "file_sha256": "63be6bd48f2f6ff52dc47bab5e588f5f5dbe95ad0d6d1c4ea62b9f28d563b9b2",
+    "canonical_sha256": "e33ff451b6288af9c497f48f2effafc79299311d6ed00a4b5c72e85828b21b48",
     "contract_sha256": "bcb1ccb0831a1bbcb64294c3896000c63000c3e22df90c0dac9be13343c734bf"
   },
   "selection_source": {
     "path": "manifests/coarse_graining/ok_leak_auxiliary_capture_96day_v1.json",
-    "sha256": "638cb1c9e5642f49f5c761390ebb32602f9ad2e89688ab6e09e9b2c21eaaf55b",
+    "canonical_sha256": "21316a06cbb5564319f87263c275ed98d6a916fffbc7af7d3d2349d448a33574",
     "policy": "the six accepted train landpoints; one cold-continuation 1961 point-year each"
   },
   "execution": {
