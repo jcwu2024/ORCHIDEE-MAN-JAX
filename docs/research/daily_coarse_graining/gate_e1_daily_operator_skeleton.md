@@ -1,8 +1,8 @@
 # Gate E1: True-Daily Operator Skeleton
 
-Status: active implementation packet; not yet implemented.
+Status: **accepted**. Gate E1 is complete; Gate E2 has not started.
 
-Date: 2026-08-04.
+Date: 2026-08-05.
 
 ## Purpose
 
@@ -204,3 +204,69 @@ frozen inventory. Promotion proceeds through supervised flux fit, one-day
 state/budget accuracy, 7/30/365-day free rollout, held-out landpoints and
 years, and performance measurement. Gate D2 follows only after one surrogate
 candidate is scientifically accepted.
+
+## Implementation Evidence And Review Result
+
+The Gate E1 candidate skeleton is implemented under
+`research/daily_coarse_graining/daily_operator/`. The package provides named
+JAX PyTrees, a masked variable-record native-forcing encoder, grouped
+state/PFT features, explicitly constrained process heads, a pure conservative
+inventory updater, a narrow retained-tail callable adapter, a one-day
+composition root, and source/JAXPR graph audits. The included minimal linear
+head and identity retained-tail adapter are named unit-test plumbing fixtures;
+they are not promoted architectures and must not be trained as scientific
+candidates. Real lifecycle and differentiation evidence uses the formal
+canonical retained-tail adapter. The accepted review is
+[`gate_e1_architecture_data_readiness_review.md`](gate_e1_architecture_data_readiness_review.md).
+
+`tests/unit/test_daily_operator_e1.py` passes 30 local structural tests. These
+cover 3-, 5-, and 7-record forcing inputs; masked padding and record order;
+float64 input PyTrees; PFT permutation, bare-soil/PFT14 process masks, and
+inactive-slot isolation; bounded fractions, nonnegative inputs, normalized
+transfer shares, signed storage/debt and energy components; water/carbon
+conservation without clipping; deterministic/exact label ownership outside
+neural heads; true endpoint-label plumbing; exact masks,
+discrete state and restart serialization; eager/JIT agreement; finite forward
+and reverse gradients; explicit inactive/threshold-adjacent classification;
+frozen-label ownership; and source/JAXPR graph audits. They also load the
+frozen v5 contract and reject contradictory cached water, carbon, thermal,
+litter/turnover, lignin, and process-static views. The staged five-record test
+graph contains one scan of length five, no callback primitive, and no scan of
+length 48.
+
+The local real-Teacher Oracle command is:
+
+```bash
+python scripts/dev/verify_gate_e1_daily_operator_skeleton.py
+```
+
+It passes the cold-continuation, ordinary later-day, and restart-year evidence
+matrix. Each case actually executes `daily_operator_transition`, the injected
+true-label Oracle head, the new conservative updater, and the package-level
+`CanonicalRetainedTailAdapter`. The adapter consumes predicted daily fields
+and the predicted OK_LEAK boundary and does not inject the captured pre-step
+boundary. All cases reproduce every continuous and discrete canonical
+next-state leaf plus 26 modelout fields and 4 modelout leaves. The largest
+canonical state error is below `3.94e-13`; the largest water, carbon, and
+flux-side thermal residuals are `4.698463840213662e-13`,
+`8.6811269284226e-9`, and
+`6.984919309616089e-9`. The accepted restart roundtrip composes successfully.
+Endpoint encoding occurs only before Oracle-head construction; it is absent
+from `daily_operator_transition`, the Oracle `__call__`, and the audited JAXPR.
+The real adapter passes eager/JIT agreement to `5.69e-14`, finite forward JVP,
+and finite reverse VJP. Its graph contains only length-5 and length-14 scans,
+no callback primitive, and no length-48 scan.
+The generated comparison is
+`outputs/research/daily_coarse_graining/gate_e1_daily_operator_skeleton/comparison.json`
+with local SHA256
+`83238ee006f4f705bac825a936e63241a60b0c3f35e78acf3168a5753b2d71cd`.
+
+No optimizer, training run, paid task, Teacher-core edit, or 669-point data
+regeneration was performed. The formal review confirms unique canonical input
+assembly and a reusable differentiable canonical retained-tail adapter. Gate
+E1 is accepted and Gate E2 has not started.
+
+The final targeted regression run passes 70 tests covering Gate B2, Gate C,
+Gate D1 evidence, the physical-parameter registry, and Gate E1. Changed-file
+Ruff, Python compilation with an external temporary bytecode cache,
+`git diff --check`, and the unchanged-`jax_orchidee/` check also pass.

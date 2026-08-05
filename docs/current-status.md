@@ -117,6 +117,36 @@ Evidence is described in
 [`gate_c2_constrained_replay_v1.md`](research/daily_coarse_graining/gate_c2_constrained_replay_v1.md).
 The six prerequisite sequence is now `6/6`.
 
+Gate E1 is **accepted**. The
+`research/daily_coarse_graining/daily_operator/` package consumes a masked
+variable-length native forcing sequence, retains explicit PFT inputs, predicts
+constrained process quantities, applies one pure-JAX conservative
+water/carbon/thermal update, and composes through the reusable canonical
+retained-tail adapter. `DailyOperatorInput` contains only canonical day-start
+state and allowed forcing/PFT/static/annual/calendar inputs; the unique
+`CanonicalDailyOperatorInputAssembler` derives every overlapping grouped,
+litter/lignin, mask, and process-static view. Its fail-closed cache gate rejects
+all tested contradictory copies.
+
+Thirty E1 unit tests and the 70-test B2/C/D1/registry/E1 suite pass. The real
+adapter, not the identity fixture, passes eager/JIT agreement to `5.69e-14`, a
+finite forward JVP, and a finite reverse VJP. A real-Teacher Oracle matrix
+passes cold continuation, ordinary later day, restart-year, and restart
+composition through `daily_operator_transition`. Every per-case canonical
+continuous/discrete next state passes with maximum error below `3.94e-13`;
+maximum water, carbon, and thermal flux residuals are `4.70e-13`, `8.69e-9`,
+and `6.99e-9`. The graph contains no callback and no length-48 scan. All 47
+frozen labels have exactly one owner binding.
+
+The frozen data-readiness matrix is `10` labels already present, `8` exactly
+derivable, and `29` requiring full-coverage supplemental sidecars. The existing
+96-day capture is evidence, not training coverage. Typed sidecar manifest,
+hash join, collation/statistics, and bounded OK_LEAK representation work are E2
+data preparation, not E1 blockers. No clipping, training, paid task,
+Teacher-core change, or dataset regeneration occurred. Gate E2 is not started.
+See
+[`gate_e1_architecture_data_readiness_review.md`](research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md).
+
 Completed infrastructure:
 
 - Daily Fast-Day Teacher Contract v5:
@@ -461,8 +491,9 @@ Markov contract are valid. Its operational evidence is recorded in
 ## Historical Neural Milestones
 
 The material below records completed v3-v5 dataset and rejected-model
-evidence. It is not the active work queue. The active milestone is Gate E1
-true-daily operator implementation from the accepted contracts above.
+evidence. It is not the active work queue. Gate E1 is accepted; the next active
+work is Gate E2 data preparation and candidate admission through the new stable
+boundary.
 
 The full 669-point baseline is generated and admitted. Finalization job
 `14400343` completed in 4:08:54 with exit code zero. Its fail-closed gates

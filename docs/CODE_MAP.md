@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-08-03.
+Last updated: 2026-08-05.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -115,13 +115,20 @@ an idea.
 
 ### Active final daily implementation
 
-There is no accepted neural implementation yet. The specification is
-`docs/research/daily_coarse_graining/conservative_daily_process_operator_v1.md`.
-The PFT interface, state/flux labels, and non-neural updater are frozen. New
-neural implementation code should be placed in a clearly named package under
-`research/daily_coarse_graining/`; it must compose with the accepted updater.
-The bounded implementation sequence and acceptance tests are in
+The Gate E1 executable boundary is in
+`research/daily_coarse_graining/daily_operator/`. It owns named PyTrees,
+native-record encoding, grouped state/PFT features, constrained process-head
+parameterizations, the pure conservative updater, unique canonical input
+assembler, reusable canonical retained-tail adapter, composition root, and
+graph/label audits. Its minimal linear head is a plumbing fixture, not a
+selected neural architecture. Gate E1 is accepted. The specification is
+`docs/research/daily_coarse_graining/conservative_daily_process_operator_v1.md`;
+the bounded implementation and evidence are in
 `docs/research/daily_coarse_graining/gate_e1_daily_operator_skeleton.md`.
+The controlling review and 47-label readiness matrix are in
+`docs/research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md`.
+Gate E2 begins with typed supplemental-data preparation and candidate admission;
+architecture selection and training remain unstarted.
 
 ## Scripts
 

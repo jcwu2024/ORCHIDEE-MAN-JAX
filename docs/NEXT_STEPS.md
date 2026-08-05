@@ -39,7 +39,10 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
   data product. Its old fast-day target remains useful evidence, but it is not
   the final daily-surrogate boundary.
 - Previous direct-state and causal-carbon neural candidates were rejected.
-- The active true-daily architecture is specified but not implemented.
+- Gate E1 is accepted. Its unique canonical input assembler, typed process
+  boundary, conservative updater, reusable canonical retained-tail adapter,
+  and bounded real-Teacher lifecycle/AD evidence pass locally. Gate E2 data
+  preparation and candidate selection remain unstarted.
 - The current Teacher and data are scientifically scoped to PFT14. Gate B1's
   catalog foundation now gives PFTs stable IDs, source PFT/MTC identities,
   traits, parameter ownership, capabilities, and named execution layouts.
@@ -228,24 +231,26 @@ conditions for reopening an old idea are in
 ## Immediate Work Order
 
 Gates A-D1 and the physical-parameter candidate registry are complete. The
-next bounded task is Gate E1: implement the true-daily operator skeleton from
-the accepted Gate C label and constrained-updater contracts. It must consume
-native six-hour forcing, preserve the explicit PFT axis and first-wave named
-parameter channels, produce process-structured daily fluxes/transfer
-fractions, and perform one conservative daily update followed by retained
-exact daily processes. Start with deterministic shape, mask, budget, and
-one-day true-label plumbing tests; do not launch paid training until the
-non-neural and untrained architecture boundaries pass locally. Gate D2 and
-Gate F remain later acceptance work. The executable task packet and definition
-of done are in
+formal architecture/data-readiness review accepts Gate E1. The next bounded
+task is Gate E2 data preparation: freeze the typed supplemental sidecar
+contract, add hash-joined reader/collation/statistics support, and measure a
+bounded lossless representation for the large OK_LEAK family before proposing
+full generation. Then admit the first candidate only through the stable
+`bind_daily_operator(input_assembler=canonical_assembler,
+process_head=candidate_head,
+retained_tail=canonical_retained_tail_adapter)` boundary and the predeclared local/small
+gates. Do not train in this Gate E1 handoff. The accepted review and full
+47-label data matrix are in
+[`gate_e1_architecture_data_readiness_review.md`](research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md);
+the executable evidence packet remains
 [`gate_e1_daily_operator_skeleton.md`](research/daily_coarse_graining/gate_e1_daily_operator_skeleton.md).
 
 ## Completed Task Packet: Gate C
 
 This packet is complete and retained as its acceptance contract. Gates A-C
 must not be rerun unless shared Teacher code or a frozen contract changes.
-Gate D1 and the candidate registry are complete; Gate E1 is the active next
-task, while Gates D2 and F remain queued.
+Gate D1, the candidate registry, and Gate E1 are complete. Gate E2 data
+preparation is next; Gates D2 and F remain queued.
 
 ### Inputs
 

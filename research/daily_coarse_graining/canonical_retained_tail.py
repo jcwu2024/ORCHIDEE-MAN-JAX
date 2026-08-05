@@ -186,13 +186,18 @@ def canonical_retained_tail_dynamic_transition(
     metadata: Any,
     season_provenance: Any,
     runtime_year: int,
+    lifecycle_start_tstep: int = 48,
+    result_day_index: int | None = None,
     return_ad_boundaries: bool = False,
+    return_modelout: bool = False,
 ):
     """Advance one canonical day with all landpoint-varying arrays explicit.
 
-    The executable uses a normalized later-day lifecycle (`tstep=47`,
-    `start_tstep=48`) exactly like the accepted dynamic replay scan. The
-    scientific day number remains a dynamic input to season/STOMATE.
+    The executable defaults to the normalized later-day lifecycle
+    (`tstep=47`, `start_tstep=48`) used by the accepted dynamic replay scan.
+    A caller may bind the restart lifecycle (`tstep=-1`, `start_tstep=0`)
+    explicitly; the scientific day number remains a dynamic input to
+    season/STOMATE.
     """
 
     del year
@@ -205,8 +210,11 @@ def canonical_retained_tail_dynamic_transition(
         component: ("canonical differentiable retained-tail transition",)
         for component in fields
     }
+    start_tstep = int(lifecycle_start_tstep)
+    if start_tstep < 0 or start_tstep % 48 != 0:
+        raise ValueError("retained-tail lifecycle start must be a nonnegative day boundary")
     previous_state = teacher.DriverPreviousStepStatePacket(
-        tstep=47,
+        tstep=start_tstep - 1,
         fields_by_component=fields,
         provenance_by_component=provenance,
     )
@@ -232,7 +240,7 @@ def canonical_retained_tail_dynamic_transition(
     transition, daily_fold, ok_leak = _runtime_boundary(
         boundary,
         metadata=dynamic_metadata,
-        end_tstep=95,
+        end_tstep=start_tstep + 47,
     )
     ok_leak_updates = teacher._paper_half_hour_ok_leak_state_updates(ok_leak)
     replay_values = {
@@ -287,9 +295,13 @@ def canonical_retained_tail_dynamic_transition(
         result = teacher.paper_1961_driver_later_day_runtime_result(
             config_path,
             previous_state=previous_state,
-            day_index=2,
+            day_index=(
+                (1 if start_tstep == 0 else 2)
+                if result_day_index is None
+                else int(result_day_index)
+            ),
             year=runtime_year,
-            start_tstep=48,
+            start_tstep=start_tstep,
             used_run_def_path=context.run_def_path,
             prepared_context=context,
             module_jit=True,
@@ -333,8 +345,18 @@ def canonical_retained_tail_dynamic_transition(
                 "retained-tail AD diagnostic did not capture one daily "
                 "carbon boundary"
             )
-        return next_state, captured_ad_boundaries[0]
-    return next_state
+        result_value = (next_state, captured_ad_boundaries[0])
+    else:
+        result_value = next_state
+    if return_modelout:
+        if result.daily_modelout is None:
+            raise RuntimeError("retained daily tail did not produce modelout")
+        return (
+            result_value,
+            result.daily_modelout.modelout_fields,
+            result.daily_modelout.modelout,
+        )
+    return result_value
 
 
 def canonical_retained_tail_transition(
