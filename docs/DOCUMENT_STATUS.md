@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-05.
+Last updated: 2026-08-06.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -34,7 +34,8 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/physical_parameter_candidate_registry_v1.md` | Accepted source-driven candidate inventory | Selecting sensitivity or inversion parameters |
 | `research/daily_coarse_graining/gate_e1_daily_operator_skeleton.md` | Accepted Gate E1 implementation evidence | Using the true-daily operator boundary |
 | `research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md` | Accepted Gate E1 architecture/data decision | Starting Gate E2 data preparation or candidate admission |
-| `research/daily_coarse_graining/coherent_teacher_dataset_generation_v1.md` | Active Gate E2 production contract; six-point pilot pending | Producing formal Teacher training data |
+| `research/daily_coarse_graining/coherent_teacher_dataset_generation_v1.md` | Active Gate E2 v6 production contract; six-point pilot accepted | Producing formal Teacher training data |
+| `research/daily_coarse_graining/coherent_teacher_pilot_20260806.md` | Accepted bounded production evidence | Sizing or reviewing coherent Teacher production |
 | `research/daily_coarse_graining/failed_architecture_lessons.md` | Active negative-design authority | Selecting or reviewing a neural architecture or objective |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |

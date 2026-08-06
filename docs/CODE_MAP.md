@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-08-05.
+Last updated: 2026-08-06.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -142,9 +142,12 @@ the bounded implementation and evidence are in
 The controlling review and 47-label readiness matrix are in
 `docs/research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md`.
 Gate E2 now uses one frozen coherent Teacher release. Its active contract is
-`coherent_teacher_dataset_generation_v1.md`; a six-point production pilot
-remains required before full generation. Architecture selection and training
-remain unstarted. The old immutable-parent packet is historical evidence.
+`coherent_teacher_dataset_generation_v1.md`; its six-point production pilot
+passed, and the accepted measurements are in
+`coherent_teacher_pilot_20260806.md`. The formal data product is manifest v6,
+typed contract v3, and canonical release v2. Its first production batch is
+next. Architecture selection and training remain unstarted. The old
+immutable-parent packet is historical evidence.
 
 ## Scripts
 

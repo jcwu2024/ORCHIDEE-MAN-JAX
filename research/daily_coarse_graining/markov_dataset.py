@@ -16,11 +16,13 @@ from research.daily_coarse_graining.daily_markov_contract import load_markov_sha
 
 LEGACY_DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v3"
 DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v4"
-COHERENT_DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v5"
+LEGACY_COHERENT_DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v5"
+COHERENT_DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v6"
 SUPPORTED_DATASET_SCHEMA_VERSIONS = frozenset(
     {
         LEGACY_DATASET_SCHEMA_VERSION,
         DATASET_SCHEMA_VERSION,
+        LEGACY_COHERENT_DATASET_SCHEMA_VERSION,
         COHERENT_DATASET_SCHEMA_VERSION,
     }
 )

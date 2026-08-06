@@ -28,11 +28,19 @@ ROOT = Path(__file__).resolve().parents[2]
 DEFAULT_CONTRACT_PATH = (
     ROOT / "manifests" / "coarse_graining" / "daily_typed_sidecar_v1.json"
 )
-COHERENT_CONTRACT_PATH = (
+LEGACY_COHERENT_CONTRACT_PATH = (
     ROOT / "manifests" / "coarse_graining" / "daily_typed_supplement_v2.json"
 )
+COHERENT_CONTRACT_PATH = (
+    ROOT / "manifests" / "coarse_graining" / "daily_typed_supplement_v3.json"
+)
 LEGACY_CONTRACT_SCHEMA_VERSION = "daily_typed_sidecar_contract_v1"
-COHERENT_CONTRACT_SCHEMA_VERSION = "daily_typed_supplement_contract_v2"
+LEGACY_COHERENT_CONTRACT_SCHEMA_VERSION = "daily_typed_supplement_contract_v2"
+COHERENT_CONTRACT_SCHEMA_VERSION = "daily_typed_supplement_contract_v3"
+COHERENT_DATASET_SCHEMAS = {
+    LEGACY_COHERENT_CONTRACT_SCHEMA_VERSION: "daily_teacher_dataset_manifest_v5",
+    COHERENT_CONTRACT_SCHEMA_VERSION: "daily_teacher_dataset_manifest_v6",
+}
 SIDECAR_DATASET_SCHEMA_VERSION = "daily_typed_sidecar_dataset_v1"
 SIDECAR_STATISTICS_SCHEMA_VERSION = "daily_typed_sidecar_statistics_v1"
 
@@ -82,6 +90,7 @@ class TypedSidecarContract:
     inventory_sha256: str
     parent_dataset_id: str
     parent_contract_sha256: str
+    dataset_manifest_schema: str | None
     fields: tuple[TypedSidecarField, ...]
 
     @property
@@ -99,7 +108,7 @@ def load_typed_sidecar_contract(
     path = Path(path).resolve()
     raw = json.loads(path.read_text(encoding="utf-8"))
     schema_version = str(raw.get("schema_version", ""))
-    if schema_version == COHERENT_CONTRACT_SCHEMA_VERSION:
+    if schema_version in COHERENT_DATASET_SCHEMAS:
         actual_hash = _contract_sha256(raw)
         if raw.get("contract_sha256") != actual_hash:
             raise ValueError("typed-supplement contract self-hash mismatch")
@@ -118,7 +127,8 @@ def load_typed_sidecar_contract(
         policy = str(generation.get("transition_policy", ""))
         if policy != "single_pass_continuous_teacher":
             raise ValueError("typed-supplement generation policy drift")
-        if dataset.get("dataset_manifest_schema") != "daily_teacher_dataset_manifest_v5":
+        expected_dataset_schema = COHERENT_DATASET_SCHEMAS[schema_version]
+        if dataset.get("dataset_manifest_schema") != expected_dataset_schema:
             raise ValueError("typed-supplement dataset schema drift")
         return TypedSidecarContract(
             path=path,
@@ -128,6 +138,7 @@ def load_typed_sidecar_contract(
             inventory_sha256=label_contract.inventory_sha256,
             parent_dataset_id=str(dataset["dataset_id"]),
             parent_contract_sha256=str(dataset["markov_contract_sha256"]),
+            dataset_manifest_schema=expected_dataset_schema,
             fields=label_contract.fields,
         )
     if schema_version != LEGACY_CONTRACT_SCHEMA_VERSION:
@@ -213,6 +224,7 @@ def load_typed_sidecar_contract(
         inventory_sha256=inventory_hash,
         parent_dataset_id=str(raw["parent"]["dataset_id"]),
         parent_contract_sha256=str(raw["parent"]["markov_contract_sha256"]),
+        dataset_manifest_schema=None,
         fields=tuple(fields),
     )
 
@@ -437,8 +449,10 @@ def load_coherent_typed_sidecar_index(
     contract = load_typed_sidecar_contract(contract_path)
     manifest_path = Path(manifest_path).resolve()
     raw = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if raw.get("schema_version") != "daily_teacher_dataset_manifest_v5":
-        raise ValueError("coherent typed reader requires dataset manifest v5")
+    if raw.get("schema_version") != contract.dataset_manifest_schema:
+        raise ValueError(
+            "coherent typed reader requires the manifest schema bound by its contract"
+        )
     if raw.get("status") != "complete" or raw.get("provisional_teacher") is not False:
         raise ValueError("coherent Teacher dataset is not complete")
     release = raw.get("data_release", {})

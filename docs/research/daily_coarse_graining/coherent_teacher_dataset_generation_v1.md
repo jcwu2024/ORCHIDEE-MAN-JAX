@@ -1,8 +1,8 @@
 # Coherent Teacher Dataset Generation v1
 
-Status: **active production contract; six-point pilot pending**.
+Status: **active v6 production contract; six-point pilot accepted**.
 
-Date: 2026-08-05.
+Contract frozen: 2026-08-05. Pilot accepted: 2026-08-06.
 
 ## Decision
 
@@ -18,27 +18,30 @@ if they came from the same Teacher execution.
 
 ## Frozen Identity
 
-The canonical release is
-`manifests/coarse_graining/canonical_teacher_data_release_v1.json`:
+The canonical production release is
+`manifests/coarse_graining/canonical_teacher_data_release_v2.json`:
 
-- release ID: `pft14-daily-teacher-coherent-v1`;
-- release SHA256: `843d559b1dd1b5dbc494b22f478ded1b1cfc474716753f43021851c0428b6f7d`;
+- release ID: `pft14-daily-teacher-v6`;
+- release SHA256: `1affefd9b3166005cdd868477ba25e68b682c7394438e5a79c4fcf087c8496a8`;
 - Teacher Python-tree SHA256:
   `ffae1ec0db2b167fa02dc514b62ae0c8d35932e67e8bc2866565e7b0ae457223`;
 - Markov contract SHA256:
   `6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442`;
 - coherent typed-supplement contract SHA256:
-  `fd67deb3fb88a7293ad211945bc742b78318dd692039b38497eb2d587d5afe73`.
+  `395c35585ec4fcb04d15f3d189af3f7957646fc38f9f27245c5136ba9a123423`.
 
-`daily_typed_supplement_v2.json` reuses only the frozen 29-label/66-field
+`daily_typed_supplement_v3.json` reuses only the frozen 29-label/66-field
 schema from historical v1. It replaces the old immutable-parent packaging
-semantics with `single_pass_continuous_teacher` and dataset manifest v5.
+semantics with `single_pass_continuous_teacher` and binds the formal dataset
+manifest v6. The Markov state contract remains v5. Typed v2 and release v1 are
+preserved as the exact identity of the accepted six-point pilot, not as the
+formal production product.
 
 Verify the release before planning or running data production:
 
 ```bash
 python -m research.daily_coarse_graining.teacher_data_release verify \
-  --release manifests/coarse_graining/canonical_teacher_data_release_v1.json
+  --release manifests/coarse_graining/canonical_teacher_data_release_v2.json
 ```
 
 Any Teacher, config, PFT catalog, contract, or producer-source hash drift is a
@@ -54,7 +57,7 @@ A coherent worker completion is one transaction with four required assets:
 4. shared metadata binding all hashes and the preceding checkpoint.
 
 Physical base and typed NPZ files remain separate for streaming and
-compression. They are exposed by one `daily_teacher_dataset_manifest_v5` and
+compression. They are exposed by one `daily_teacher_dataset_manifest_v6` and
 one release identity. Missing typed output means the point-year is incomplete.
 Workers own complete landpoint chains, so year `Y+1` must name the exact
 checkpoint SHA256 from year `Y`. Aggregation reopens all files, verifies hashes
@@ -65,9 +68,18 @@ only compiled outputs: a three-day 1961 cold-start A/B found elementwise equal
 capture-off and capture-on base arrays and final state, exact discrete state,
 and all 66 typed fields within the fixed compiled-production gate
 `atol=1e-8, rtol=1e-10`. The accepted run completed with `passed=true`; the
-100-test data/contract/operator regression and Ruff/compile checks also pass.
+102-test v5/v6 data/contract/operator regression and Ruff/compile checks also
+pass.
 
 ## Six-Point Pilot
+
+The accepted pilot used predecessor release `pft14-daily-teacher-coherent-v1`
+and manifest v5 packaging. It validated the same single-pass transaction,
+Markov v5 arrays, 66 typed fields, masks, and checkpoint artifacts now bound by
+v6. The following command is retained as historical provenance, not the next
+production command.
+Reproducing that exact command requires commit `2eb6384`; current production
+must use release v2 below.
 
 The pilot production spec is
 `manifests/coarse_graining/daily_teacher_coherent_pilot_v1.json`. It contains
@@ -91,19 +103,40 @@ $REPO/.venvs/orcjax_cpu/bin/python \
   --production-scope pilot
 ```
 
-Run `teacher_shards validate` on that plan before `sbatch`. The proposed paid
-shape is `cnall`, two nodes, six tasks, three one-CPU workers per node, and a
-two-hour limit. Worst-case charge is `6 * 2 * CNY 0.07 = CNY 0.84`. Submission
-still requires explicit approval under the Explore1000 policy.
+Run `teacher_shards validate` on that plan before `sbatch`. The accepted paid
+shape was `cnall`, two nodes, six tasks, three one-CPU workers per node, and a
+two-hour limit. Job `14486923` completed in `01:41:21`; all six workers exited
+zero. Its worst-case charge was CNY 0.84 and approximate allocation cost was
+CNY 0.71.
 
-Pilot acceptance requires six complete point-years, one release and Markov
-contract, exact discrete/mask/serialization checks, valid restart chains, no
-source drift, and measured wall time, peak RSS, base bytes, and typed bytes.
-Only those measurements may set the full 669-point resource request.
+Pilot acceptance required six complete point-years, one release and Markov
+contract, exact discrete/mask/serialization checks, valid checkpoint metadata,
+no source drift, and measured wall time, peak RSS, base bytes, and typed bytes.
+All gates passed. The formal evidence and measurements are in
+[`coherent_teacher_pilot_20260806.md`](coherent_teacher_pilot_20260806.md).
 
 ## Next Gate
 
-After the pilot passes, decide whether to authorize the complete coherent
-Teacher dataset. Neural architecture selection begins only after enough
-coherent training data exists. The old immutable-parent producer and its job
-history remain reproducibility assets, not fallback production paths.
+Build the formal plan directly from the frozen 669-point production spec:
+
+```bash
+REPO=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+RUNTIME=$REPO/runtime
+$REPO/.venvs/orcjax_cpu/bin/python \
+  -m research.daily_coarse_graining.teacher_production plan \
+  --spec manifests/coarse_graining/daily_teacher_production_669.json \
+  --asset-root "$RUNTIME/assets/teacher_669_a403cd3" \
+  --teacher-config configs/orchidee_man_250919.yaml \
+  --output-root "$RUNTIME/outputs/training/pft14-daily-teacher-v6" \
+  --plan-path "$RUNTIME/plans/pft14-daily-teacher-v6.json" \
+  --data-release manifests/coarse_graining/canonical_teacher_data_release_v2.json \
+  --production-scope full
+```
+
+Validate the release and plan, then launch a first subset of the formal worker
+inventory. Its complete landpoint chains are retained for the final aggregate;
+the first 1961-to-1962 handoff and hot-year timing are production measurements,
+not another disposable test. Later jobs resume the same plan and output root.
+Neural candidate training begins once enough v6 data exist. The old
+immutable-parent producer and its job history remain reproducibility assets,
+not fallback production paths.

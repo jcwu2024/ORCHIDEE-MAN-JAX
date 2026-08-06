@@ -14,6 +14,9 @@ from research.daily_coarse_graining.supervised_learnability_pilot import (
     CompactTrainingCaptureBlock,
 )
 from research.daily_coarse_graining.teacher_data_release import (
+    SCHEMA_VERSION as RELEASE_SCHEMA_VERSION,
+)
+from research.daily_coarse_graining.teacher_data_release import (
     canonical_sha256,
     freeze_teacher_data_release,
     load_teacher_data_release,
@@ -23,6 +26,7 @@ from research.daily_coarse_graining.teacher_data_release import (
 )
 from research.daily_coarse_graining.typed_sidecar import (
     COHERENT_CONTRACT_PATH,
+    LEGACY_COHERENT_CONTRACT_PATH,
     compiled_daily_flux_fields,
     load_coherent_typed_sidecar_index,
     load_typed_sidecar_contract,
@@ -42,7 +46,7 @@ def _release_manifest(tmp_path: Path) -> Path:
     producer = tmp_path / "producer.py"
     producer.write_text("def produce():\n    return 1\n", encoding="utf-8")
     raw = {
-        "schema_version": "canonical_teacher_data_release_v1",
+        "schema_version": RELEASE_SCHEMA_VERSION,
         "status": "frozen_pre_production",
         "release_id": "test-release-v1",
         "dataset_id": contract.parent_dataset_id,
@@ -76,6 +80,7 @@ def _release_manifest(tmp_path: Path) -> Path:
         "generation": {
             "transition_policy": "single_pass_continuous_teacher",
             "artifacts": ["base_shard", "typed_shard", "year_end_checkpoint"],
+            "dataset_manifest_schema": contract.dataset_manifest_schema,
         },
     }
     raw["release_sha256"] = canonical_sha256(raw)
@@ -233,8 +238,15 @@ def test_compact_assembly_keeps_typed_rows_out_of_the_base_contract(
         )
 
 
-def test_coherent_reader_uses_one_manifest_for_base_and_typed_shards(tmp_path):
-    contract = load_typed_sidecar_contract(COHERENT_CONTRACT_PATH)
+@pytest.mark.parametrize(
+    "contract_path",
+    (LEGACY_COHERENT_CONTRACT_PATH, COHERENT_CONTRACT_PATH),
+)
+def test_coherent_reader_uses_one_manifest_for_base_and_typed_shards(
+    tmp_path,
+    contract_path,
+):
+    contract = load_typed_sidecar_contract(contract_path)
     base = tmp_path / "base.npz"
     np.savez(base, marker=np.asarray(1, dtype=np.int32))
     day_index = np.asarray([2, 3], dtype=np.int32)
@@ -250,7 +262,7 @@ def test_coherent_reader_uses_one_manifest_for_base_and_typed_shards(tmp_path):
         layouts={field.path: "dense" for field in contract.fields},
     )
     manifest = {
-        "schema_version": "daily_teacher_dataset_manifest_v5",
+        "schema_version": contract.dataset_manifest_schema,
         "dataset_id": contract.parent_dataset_id,
         "status": "complete",
         "provisional_teacher": False,
@@ -277,7 +289,7 @@ def test_coherent_reader_uses_one_manifest_for_base_and_typed_shards(tmp_path):
     path = tmp_path / "dataset_manifest.json"
     path.write_text(json.dumps(manifest), encoding="utf-8")
 
-    index = load_coherent_typed_sidecar_index(path)
+    index = load_coherent_typed_sidecar_index(path, contract_path=contract_path)
 
     assert index.parent_manifest_sha256 == index.sidecar_manifest_sha256
     assert index.shards[0].parent.path == base

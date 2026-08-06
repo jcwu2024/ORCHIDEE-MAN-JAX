@@ -36,6 +36,8 @@ mode.
   planner, asset staging, Slurm array, and aggregation contract.
 - `coherent_teacher_dataset_generation_v1.md`: active formal training-data
   release, co-generation transaction, six-point pilot, and promotion gate.
+- `coherent_teacher_pilot_20260806.md`: accepted six-point production evidence,
+  resource measurements, and the v6 production promotion decision.
 - `teacher_pilot_v2.md`: frozen 12-landpoint pilot and promotion gates.
 - `teacher_capture_gpu_benchmark_20260721.md`: accepted V100 Teacher capture
   measurement and its limited conclusion.
@@ -80,9 +82,11 @@ Not implemented or not accepted:
 Gate C's parameter ownership, daily water/carbon/energy labels, supplemental
 capture, and non-neural constrained replay are complete. Gate D1 Teacher
 gradients, the physical-parameter candidate registry, and Gate E1 are also
-accepted. The active next task is the coherent Gate E2 six-point Teacher-data
-pilot. It generates base and typed rows together and does not join against the
-historical 669-point v5 trajectories.
+accepted. The coherent Gate E2 six-point Teacher-data pilot also passed. The
+formal product is frozen as manifest v6, typed contract v3, and release v2.
+The active next task is its first resumable production batch. It generates base
+and typed rows together and does not join against historical 669-point v5
+trajectories.
 
 The network interface must be PFT-extensible even though the current data and
 scientific claim remain PFT14-only. Continue from

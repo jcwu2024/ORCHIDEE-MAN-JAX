@@ -63,7 +63,8 @@ COHERENT_PLAN_SCHEMA_VERSION = "daily_teacher_generation_plan_v3"
 LEGACY_MANIFEST_SCHEMA_VERSION = "daily_teacher_worker_manifest_v2"
 MANIFEST_SCHEMA_VERSION = "daily_teacher_worker_manifest_v3"
 DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v4"
-COHERENT_DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v5"
+LEGACY_COHERENT_DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v5"
+COHERENT_DATASET_SCHEMA_VERSION = "daily_teacher_dataset_manifest_v6"
 PROGRESS_SCHEMA_VERSION = "daily_teacher_production_progress_v1"
 PAPER_DAYS_PER_YEAR = 365
 WORKER_ASSIGNMENT_STRATEGY = "balanced_landpoint_chains_v1"
@@ -283,6 +284,11 @@ def load_plan(path: Path, *, require_inputs: bool = False) -> GenerationPlan:
             raise ValueError("coherent generation plan dataset ID differs from release")
         if data_release.teacher_config != teacher_config:
             raise ValueError("coherent generation plan Teacher config differs from release")
+        if data_release.typed_contract.dataset_manifest_schema not in {
+            LEGACY_COHERENT_DATASET_SCHEMA_VERSION,
+            COHERENT_DATASET_SCHEMA_VERSION,
+        }:
+            raise ValueError("coherent generation plan uses an unsupported dataset schema")
         production_scope = str(raw.get("production_scope", ""))
         if production_scope not in {"pilot", "full"}:
             raise ValueError("coherent generation plan requires pilot or full scope")
@@ -2076,7 +2082,7 @@ def aggregate_workers(
     contract = contracts[0]
     manifest = {
         "schema_version": (
-            COHERENT_DATASET_SCHEMA_VERSION
+            plan.data_release.typed_contract.dataset_manifest_schema
             if plan.data_release is not None
             else DATASET_SCHEMA_VERSION
         ),

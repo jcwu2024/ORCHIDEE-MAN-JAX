@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-04.
+Last updated: 2026-08-06.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -141,22 +141,35 @@ frozen labels have exactly one owner binding.
 The frozen data-readiness matrix is `10` labels already present, `8` exactly
 derivable, and `29` requiring 66 full-coverage typed fields. Gate E2's active
 design now generates those fields and the base Markov rows in the same
-continuous Teacher execution. The canonical release
-`pft14-daily-teacher-coherent-v1` binds Teacher source SHA256
-`ffae1ec0...457223`, release SHA256 `843d559b...8b6f7d`, configuration, PFT
-catalog, Markov contract, coherent typed contract, and producer sources. A
+continuous Teacher execution. The formal sixth dataset release
+`pft14-daily-teacher-v6` binds Teacher source SHA256
+`ffae1ec0...457223`, configuration, PFT catalog, Markov contract, coherent
+typed contract, and producer sources. A
 point-year is complete only when its base shard, lossless typed shard plus
 exact masks, year-end checkpoint, and common metadata all exist and hash
-verify. The unified dataset schema is `daily_teacher_dataset_manifest_v5`.
+verify. The release SHA256 is
+`1affefd9b3166005cdd868477ba25e68b682c7394438e5a79c4fcf087c8496a8`;
+the unified dataset schema is `daily_teacher_dataset_manifest_v6`, the typed
+packaging contract is v3, and the underlying Markov state contract remains v5.
 
 A real three-day 1961 cold-start instrumentation A/B passed: capture-on and
 capture-off compiled base arrays and final state were elementwise equal,
 discrete state was exact, and all 66 typed fields passed the fixed compiled
 production gate `atol=1e-8, rtol=1e-10`. The complete related regression is
-`100 passed`; Ruff and Python compilation pass. The six-point 1961 production
-spec is frozen, but no coherent server job has been submitted. Its pilot is
-the active next operation and must measure wall time, RSS, and both archive
-sizes before any full-generation request.
+The current v5/v6 compatibility and data/operator regression is `102 passed`;
+Ruff and Python compilation pass. The six-point 1961 production
+pilot passed on Explore1000 as job `14486923`: all six workers exited zero,
+and unified aggregation plus the formal coherent reader accepted six shards,
+2,184 transitions, all exact masks, and all year-end checkpoint metadata. The
+dataset manifest SHA256 is
+`a7e44cc536a1c1bae4f707a5097d379c8019fe1e1fbe146fad48084ef0042d88`.
+Peak process RSS was 31.4 GiB; base, typed, and checkpoint assets total
+28,221,594 bytes. The provisional full storage projection is 146.5 GiB.
+This cold-year pilot did not measure a later hot year or execute a real
+1961-to-1962 chain. Those measurements will come from the first resumable v6
+production batch rather than a separate calibration product. The pilot details
+remain in
+[`coherent_teacher_pilot_20260806.md`](research/daily_coarse_graining/coherent_teacher_pilot_20260806.md).
 
 The former immutable-parent Gate E2 attempts below are historical negative
 evidence. They explain why old v5 state rows cannot be joined to labels from a
@@ -537,8 +550,9 @@ Markov contract are valid. Its operational evidence is recorded in
 ## Historical Neural Milestones
 
 The material below records completed v3-v5 dataset and rejected-model
-evidence. It is not the active work queue. Gate E1 is accepted; the next active
-work is the coherent Gate E2 six-point production pilot.
+evidence. It is not the active work queue. Gate E1 is accepted; the coherent
+Gate E2 six-point production pilot has passed, and the v6 data product is
+frozen. The next active work is the first formal resumable v6 production batch.
 
 The full 669-point baseline is generated and admitted. Finalization job
 `14400343` completed in 4:08:54 with exit code zero. Its fail-closed gates

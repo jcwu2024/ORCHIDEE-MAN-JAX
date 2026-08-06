@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-04.
+Last updated: 2026-08-06.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -46,7 +46,10 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
   masks, and year-end checkpoints are emitted by the same continuous Teacher
   execution and share one manifest. The old immutable-parent sidecar proposal
   is rejected. Candidate selection remains unstarted; a representative
-  six-point-year coherent production pilot is required before full generation.
+  six-point-year coherent production pilot passed. The formal product is now
+  frozen as dataset manifest v6, typed contract v3, and canonical release v2.
+  Formal generation begins with a reusable first batch, not another standalone
+  calibration.
 - The current Teacher and data are scientifically scoped to PFT14. Gate B1's
   catalog foundation now gives PFTs stable IDs, source PFT/MTC identities,
   traits, parameter ownership, capabilities, and named execution layouts.
@@ -238,22 +241,30 @@ Gates A-D1 and the physical-parameter candidate registry are complete. The
 formal architecture/data-readiness review accepts Gate E1. Gate E2 is governed
 by
 [`coherent_teacher_dataset_generation_v1.md`](research/daily_coarse_graining/coherent_teacher_dataset_generation_v1.md).
-The frozen release `pft14-daily-teacher-coherent-v1` binds the Teacher source,
+The frozen release `pft14-daily-teacher-v6` binds the Teacher source,
 configuration, PFT catalog, Markov contract, typed contract, and producer
 sources. A real 1961 three-day cold-start A/B proves that enabling typed
 capture leaves all ordinary compiled outputs and final state unchanged; all
 66 typed fields pass the fixed `atol=1e-8, rtol=1e-10` production gate, and
-discrete state is exact. One hundred related tests pass.
+discrete state is exact. The current v5/v6 compatibility and data/operator
+regression passes 102 tests.
 
-The next bounded task is the six-point 1961 coherent production pilot. Build
-its machine-specific plan from the existing staged raw assets, verify the
-release and plan, then run six persistent CPU workers. Each point-year must
-atomically produce its base shard, typed shard, checkpoint, and shared
-metadata; aggregation must pass hashes, day inventory, and checkpoint chains.
-Measure annual wall time, peak RSS, base bytes, and typed bytes before costing
-or authorizing all 669 points. Do not read or join the historical v5 output
-shards. After the coherent pilot passes, decide whether to authorize complete
-data generation, then admit the first candidate only through the stable
+The six-point 1961 coherent production pilot passed under job `14486923`.
+All six workers exited zero, and the formal reader accepted 2,184 transitions,
+six base shards, six typed shards, exact masks, and six year-end checkpoints.
+The complete core assets occupy 28,221,594 bytes and peak process RSS was
+31.4 GiB. The provisional 669 x 50-year storage projection is 146.5 GiB.
+The hash-bound evidence is in
+[`coherent_teacher_pilot_20260806.md`](research/daily_coarse_graining/coherent_teacher_pilot_20260806.md).
+
+The next task is to build and verify the full 669-landpoint, 1961-2010 plan
+against `canonical_teacher_data_release_v2.json`, then launch a reusable first
+worker batch under production scope `full`. Its point-year assets belong to the
+formal v6 dataset and remain resumable by later batches. Record the first
+cross-year checkpoint and hot-year timing from that production batch, but do
+not create a separate calibration product. Do not read or join historical v5
+output shards. Once enough v6 training rows exist, admit the first candidate
+only through the stable
 `bind_daily_operator(input_assembler=canonical_assembler,
 process_head=candidate_head,
 retained_tail=canonical_retained_tail_adapter)` boundary and the predeclared local/small
@@ -268,8 +279,9 @@ the executable evidence packet remains
 This packet is complete and retained as its acceptance contract. Gates A-C
 must not be rerun unless shared Teacher code or a frozen contract changes.
 Gate D1, the candidate registry, and Gate E1 are complete. Gate E2 coherent
-local implementation is complete and its representative production pilot is
-next; Gates D2 and F remain queued.
+local implementation, representative six-point production pilot, and formal
+v6 product freeze are complete; the first resumable v6 production batch is
+next. Gates D2 and F remain queued.
 
 ### Inputs
 

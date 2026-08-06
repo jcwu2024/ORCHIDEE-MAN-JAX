@@ -16,7 +16,8 @@ from research.daily_coarse_graining.typed_sidecar import (
 )
 
 ROOT = Path(__file__).resolve().parents[2]
-SCHEMA_VERSION = "canonical_teacher_data_release_v1"
+LEGACY_SCHEMA_VERSION = "canonical_teacher_data_release_v1"
+SCHEMA_VERSION = "canonical_teacher_data_release_v2"
 DEFAULT_CONFIG = ROOT / "configs" / "orchidee_man_250919.yaml"
 DEFAULT_PFT_CATALOG = ROOT / "configs" / "pft_catalogs" / "orchidee_man_paper_250919.json"
 DEFAULT_PRODUCER_SOURCES = (
@@ -168,7 +169,7 @@ def freeze_teacher_data_release(
         "generation": {
             "transition_policy": "single_pass_continuous_teacher",
             "artifacts": ["base_shard", "typed_shard", "year_end_checkpoint"],
-            "dataset_manifest_schema": "daily_teacher_dataset_manifest_v5",
+            "dataset_manifest_schema": contract.dataset_manifest_schema,
         },
     }
     payload["release_sha256"] = canonical_sha256(payload)
@@ -184,7 +185,7 @@ def load_teacher_data_release(
 ) -> TeacherDataRelease:
     path = Path(path).resolve()
     raw = json.loads(path.read_text(encoding="utf-8"))
-    if raw.get("schema_version") != SCHEMA_VERSION:
+    if raw.get("schema_version") not in {LEGACY_SCHEMA_VERSION, SCHEMA_VERSION}:
         raise ValueError("unsupported Teacher data-release schema")
     actual_release_hash = canonical_sha256(raw, omit="release_sha256")
     if raw.get("release_sha256") != actual_release_hash:
@@ -233,6 +234,15 @@ def load_teacher_data_release(
         raise ValueError("typed supplement Markov contract mismatch")
     if raw.get("generation", {}).get("transition_policy") != "single_pass_continuous_teacher":
         raise ValueError("Teacher data release does not require single-pass generation")
+    declared_dataset_schema = raw.get("generation", {}).get(
+        "dataset_manifest_schema"
+    )
+    if declared_dataset_schema is not None and (
+        declared_dataset_schema != typed_contract.dataset_manifest_schema
+    ):
+        raise ValueError("Teacher data release dataset-manifest schema drift")
+    if raw.get("schema_version") == SCHEMA_VERSION and declared_dataset_schema is None:
+        raise ValueError("Teacher data release does not bind its dataset schema")
 
     return TeacherDataRelease(
         path=path,
