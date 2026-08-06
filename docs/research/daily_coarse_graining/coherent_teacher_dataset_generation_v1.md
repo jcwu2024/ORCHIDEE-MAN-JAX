@@ -1,6 +1,6 @@
 # Coherent Teacher Dataset Generation v1
 
-Status: **active v6 production contract; six-point pilot accepted**.
+Status: **active v6 production contract; production shape accepted**.
 
 Contract frozen: 2026-08-05. Pilot accepted: 2026-08-06.
 
@@ -115,6 +115,22 @@ no source drift, and measured wall time, peak RSS, base bytes, and typed bytes.
 All gates passed. The formal evidence and measurements are in
 [`coherent_teacher_pilot_20260806.md`](coherent_teacher_pilot_20260806.md).
 
+## Production Sizing Gate
+
+Explore1000 job `14490208` tested the formal v6 producer on ten representative
+landpoints, two years per point, with five one-CPU workers on one node. All
+`20/20` point-years passed complete hash verification and aggregation. The
+first cold entry averaged 2148.84 seconds total, while steady hot capture was
+about 82 seconds per point-year. Changing landpoint in the same process did
+not create another compiled executable. Five workers peaked at about 31.2 GiB
+RSS each and completed without swap or OOM.
+
+The accepted full-production topology is 100 long-lived workers on 20 nodes,
+five workers per node, with a 180-second local startup stagger. Expected wall
+time is 8.6-10 hours and expected CPU charge is about CNY 60. Use a 12-hour
+limit for a CNY 84 worst-case cap. Full evidence is in
+[`teacher_v6_reuse_benchmark_20260806.md`](teacher_v6_reuse_benchmark_20260806.md).
+
 ## Next Gate
 
 Build the formal plan directly from the frozen 669-point production spec:
@@ -133,10 +149,9 @@ $REPO/.venvs/orcjax_cpu/bin/python \
   --production-scope full
 ```
 
-Validate the release and plan, then launch a first subset of the formal worker
-inventory. Its complete landpoint chains are retained for the final aggregate;
-the first 1961-to-1962 handoff and hot-year timing are production measurements,
-not another disposable test. Later jobs resume the same plan and output root.
+The release and full plan are already verified on Explore1000. Launch the
+formal resumable worker inventory with the accepted topology above, then run
+complete hash verification, unified aggregation, and dataset admission.
 Neural candidate training begins once enough v6 data exist. The old
 immutable-parent producer and its job history remain reproducibility assets,
 not fallback production paths.

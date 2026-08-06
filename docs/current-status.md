@@ -166,9 +166,18 @@ dataset manifest SHA256 is
 Peak process RSS was 31.4 GiB; base, typed, and checkpoint assets total
 28,221,594 bytes. The provisional full storage projection is 146.5 GiB.
 This cold-year pilot did not measure a later hot year or execute a real
-1961-to-1962 chain. Those measurements will come from the first resumable v6
-production batch rather than a separate calibration product. The pilot details
-remain in
+1961-to-1962 chain. That gap is now closed by Explore1000 job `14490208`, a
+ten-landpoint, two-year v6 reuse benchmark at commit `19087b1`. All five
+workers and `20/20` point-years passed hash verification and unified
+aggregation. First-process cold entries averaged 2148.84 seconds total;
+same-point hot capture averaged 82.73 seconds; after switching landpoints,
+capture averaged 91.07 seconds with no compiled-cache growth; and the second
+point's hot year averaged 81.97 seconds. Peak RSS was about 31.2 GiB per
+worker, and five staggered workers completed safely on one node. The accepted
+global shape is 100 workers on 20 nodes, with about 8.6-10 hours projected
+wall time and about CNY 60 expected CPU charge. See
+[`teacher_v6_reuse_benchmark_20260806.md`](research/daily_coarse_graining/teacher_v6_reuse_benchmark_20260806.md).
+The pilot details remain in
 [`coherent_teacher_pilot_20260806.md`](research/daily_coarse_graining/coherent_teacher_pilot_20260806.md).
 
 The former immutable-parent Gate E2 attempts below are historical negative
@@ -551,8 +560,9 @@ Markov contract are valid. Its operational evidence is recorded in
 
 The material below records completed v3-v5 dataset and rejected-model
 evidence. It is not the active work queue. Gate E1 is accepted; the coherent
-Gate E2 six-point production pilot has passed, and the v6 data product is
-frozen. The next active work is the first formal resumable v6 production batch.
+Gate E2 six-point production pilot, the v6 data-product freeze, the formal
+669-point plan, and the five-worker reuse benchmark have passed. The next
+active work is full resumable v6 production, aggregation, and admission.
 
 The full 669-point baseline is generated and admitted. Finalization job
 `14400343` completed in 4:08:54 with exit code zero. Its fail-closed gates

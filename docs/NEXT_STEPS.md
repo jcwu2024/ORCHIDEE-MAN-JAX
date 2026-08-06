@@ -257,13 +257,20 @@ The complete core assets occupy 28,221,594 bytes and peak process RSS was
 The hash-bound evidence is in
 [`coherent_teacher_pilot_20260806.md`](research/daily_coarse_graining/coherent_teacher_pilot_20260806.md).
 
-The next task is to build and verify the full 669-landpoint, 1961-2010 plan
-against `canonical_teacher_data_release_v2.json`, then launch a reusable first
-worker batch under production scope `full`. Its point-year assets belong to the
-formal v6 dataset and remain resumable by later batches. Record the first
-cross-year checkpoint and hot-year timing from that production batch, but do
-not create a separate calibration product. Do not read or join historical v5
-output shards. Once enough v6 training rows exist, admit the first candidate
+The full 669-landpoint, 1961-2010 v6 plan is built and verified. Job `14490208`
+then accepted the production process shape on ten representative landpoints:
+all `20/20` point-years hash-verified, same-process compilation survived a
+landpoint switch without a new executable, steady hot capture was about 82
+seconds per point-year, and five staggered workers completed safely on one CPU
+node. Use 100 workers on 20 nodes, five workers per node, with a 180-second
+local startup stagger. The measured projection is about 8.6-10 hours and CNY
+60; a 12-hour request caps CPU charge at CNY 84. See
+[`teacher_v6_reuse_benchmark_20260806.md`](research/daily_coarse_graining/teacher_v6_reuse_benchmark_20260806.md).
+
+The next task is the resumable full v6 production launch, followed by hash
+verification, unified aggregation, and formal dataset admission. Do not read
+or join historical v5 output shards. Once enough v6 training rows exist,
+admit the first candidate
 only through the stable
 `bind_daily_operator(input_assembler=canonical_assembler,
 process_head=candidate_head,
@@ -279,9 +286,10 @@ the executable evidence packet remains
 This packet is complete and retained as its acceptance contract. Gates A-C
 must not be rerun unless shared Teacher code or a frozen contract changes.
 Gate D1, the candidate registry, and Gate E1 are complete. Gate E2 coherent
-local implementation, representative six-point production pilot, and formal
-v6 product freeze are complete; the first resumable v6 production batch is
-next. Gates D2 and F remain queued.
+local implementation, representative six-point production pilot, formal v6
+product freeze, global-plan verification, and the five-worker reuse benchmark
+are complete; full resumable v6 production is next. Gates D2 and F remain
+queued.
 
 ### Inputs
 
