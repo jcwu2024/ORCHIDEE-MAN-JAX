@@ -194,6 +194,15 @@ acceptance-report SHA256 is
 See
 [`teacher_v6_full_production_acceptance_20260807.md`](research/daily_coarse_graining/teacher_v6_full_production_acceptance_20260807.md).
 
+Explore1000 runtime cleanup subsequently archived the 100 historical v5 worker
+directories as individually verified tar files while leaving the formal v6
+product unchanged. The operation reduced the project runtime by 153,803 files
+and 21.475 GiB. Historical v5 scripts must restore the required worker tar
+before reading its old loose-file path; v5 remains prohibited as an input or
+join source for formal v6 training. Archive paths, hashes, restoration, and
+post-cleanup v6 evidence are recorded in
+[`storage_cleanup_20260807.md`](research/daily_coarse_graining/storage_cleanup_20260807.md).
+
 The former immutable-parent Gate E2 attempts below are historical negative
 evidence. They explain why old v5 state rows cannot be joined to labels from a
 new Teacher execution. Job `14481274_0` stopped in preflight
