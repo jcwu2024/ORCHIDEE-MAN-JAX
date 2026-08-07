@@ -1,6 +1,6 @@
 # Coherent Teacher Dataset Generation v1
 
-Status: **active v6 production contract; production shape accepted**.
+Status: **accepted v6 production contract; full dataset admitted**.
 
 Contract frozen: 2026-08-05. Pilot accepted: 2026-08-06.
 
@@ -131,9 +131,10 @@ time is 8.6-10 hours and expected CPU charge is about CNY 60. Use a 12-hour
 limit for a CNY 84 worst-case cap. Full evidence is in
 [`teacher_v6_reuse_benchmark_20260806.md`](teacher_v6_reuse_benchmark_20260806.md).
 
-## Next Gate
+## Full Production Acceptance
 
-Build the formal plan directly from the frozen 669-point production spec:
+The accepted formal plan was built from the frozen 669-point production spec
+with:
 
 ```bash
 REPO=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
@@ -149,9 +150,13 @@ $REPO/.venvs/orcjax_cpu/bin/python \
   --production-scope full
 ```
 
-The release and full plan are already verified on Explore1000. Launch the
-formal resumable worker inventory with the accepted topology above, then run
-complete hash verification, unified aggregation, and dataset admission.
-Neural candidate training begins once enough v6 data exist. The old
-immutable-parent producer and its job history remain reproducibility assets,
-not fallback production paths.
+Full production, aggregation, and admission completed on 2026-08-07. The
+accepted aggregate contains 669 landpoints, 33,450 point-years, and 12,208,581
+daily transitions. Its manifest SHA256 is `5fc2c069...dc13aa99`; all coherent
+assets and checkpoint chains passed, and the canonical training acceptance
+report SHA256 is `8784ed42...aa8e3`. See
+[`teacher_v6_full_production_acceptance_20260807.md`](teacher_v6_full_production_acceptance_20260807.md).
+
+Gate E2 is closed. Neural candidate training must use the accepted manifest,
+statistics, and acceptance report. The old immutable-parent producer and its
+job history remain reproducibility assets, not fallback production paths.

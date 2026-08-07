@@ -155,9 +155,9 @@ packaging contract is v3, and the underlying Markov state contract remains v5.
 A real three-day 1961 cold-start instrumentation A/B passed: capture-on and
 capture-off compiled base arrays and final state were elementwise equal,
 discrete state was exact, and all 66 typed fields passed the fixed compiled
-production gate `atol=1e-8, rtol=1e-10`. The complete related regression is
-The current v5/v6 compatibility and data/operator regression is `102 passed`;
-Ruff and Python compilation pass. The six-point 1961 production
+production gate `atol=1e-8, rtol=1e-10`. The complete v5/v6 compatibility and
+data/operator regression is `102 passed`; Ruff and Python compilation pass.
+The six-point 1961 production
 pilot passed on Explore1000 as job `14486923`: all six workers exited zero,
 and unified aggregation plus the formal coherent reader accepted six shards,
 2,184 transitions, all exact masks, and all year-end checkpoint metadata. The
@@ -179,6 +179,20 @@ wall time and about CNY 60 expected CPU charge. See
 [`teacher_v6_reuse_benchmark_20260806.md`](research/daily_coarse_graining/teacher_v6_reuse_benchmark_20260806.md).
 The pilot details remain in
 [`coherent_teacher_pilot_20260806.md`](research/daily_coarse_graining/coherent_teacher_pilot_20260806.md).
+
+Full v6 production and admission are now complete. The accepted aggregate has
+669 landpoints, 50 noleap years, 33,450 point-year shards, and 12,208,581 daily
+transitions. Its dataset-manifest SHA256 is
+`5fc2c0691bfa53252f875f7646f3c1a5bea203c2759a6e947b26bb51dc13aa99`.
+All base and typed shards, metadata, input identities, checkpoints, and
+year-to-year links passed aggregation. Finalizer job `14500801` completed in
+`02:17:57` with exit code zero. Target representation has zero persistence
+mismatches; statistics use 8,591,565 train/train samples only; and a real
+batch-8 JAX smoke produced finite predictions, loss, and gradients. The
+acceptance-report SHA256 is
+`8784ed42dc64ef77c9642f613eb2e5940635edc6e744a1af4ea8634293baa8e3`.
+See
+[`teacher_v6_full_production_acceptance_20260807.md`](research/daily_coarse_graining/teacher_v6_full_production_acceptance_20260807.md).
 
 The former immutable-parent Gate E2 attempts below are historical negative
 evidence. They explain why old v5 state rows cannot be joined to labels from a
@@ -560,9 +574,9 @@ Markov contract are valid. Its operational evidence is recorded in
 
 The material below records completed v3-v5 dataset and rejected-model
 evidence. It is not the active work queue. Gate E1 is accepted; the coherent
-Gate E2 six-point production pilot, the v6 data-product freeze, the formal
-669-point plan, and the five-worker reuse benchmark have passed. The next
-active work is full resumable v6 production, aggregation, and admission.
+Gate E2 coherent production and formal v6 dataset admission have passed. The
+next active work is neural candidate training against the accepted v6
+manifest, statistics, and acceptance report.
 
 The full 669-point baseline is generated and admitted. Finalization job
 `14400343` completed in 4:08:54 with exit code zero. Its fail-closed gates

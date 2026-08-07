@@ -267,16 +267,20 @@ local startup stagger. The measured projection is about 8.6-10 hours and CNY
 60; a 12-hour request caps CPU charge at CNY 84. See
 [`teacher_v6_reuse_benchmark_20260806.md`](research/daily_coarse_graining/teacher_v6_reuse_benchmark_20260806.md).
 
-The next task is the resumable full v6 production launch, followed by hash
-verification, unified aggregation, and formal dataset admission. Do not read
-or join historical v5 output shards. Once enough v6 training rows exist,
-admit the first candidate
-only through the stable
+Full v6 production and admission are complete. The accepted dataset contains
+669 landpoints, 33,450 point-years, and 12,208,581 transitions; all worker,
+shard, typed-label, checkpoint-chain, representation, statistics, and real
+gradient gates passed. Its manifest SHA256 is `5fc2c069...dc13aa99`, and the
+acceptance report SHA256 is `8784ed42...aa8e3`. The full evidence is in
+[`teacher_v6_full_production_acceptance_20260807.md`](research/daily_coarse_graining/teacher_v6_full_production_acceptance_20260807.md).
+
+Do not regenerate this dataset or read and join historical v5 rows. The next
+task is to admit the first neural candidate only through the stable
 `bind_daily_operator(input_assembler=canonical_assembler,
 process_head=candidate_head,
 retained_tail=canonical_retained_tail_adapter)` boundary and the predeclared local/small
-gates. Do not train in this Gate E1 handoff. The accepted review and full
-47-label data matrix are in
+gates. Training must bind the accepted v6 manifest, statistics, and acceptance
+report. The accepted review and full 47-label data matrix are in
 [`gate_e1_architecture_data_readiness_review.md`](research/daily_coarse_graining/gate_e1_architecture_data_readiness_review.md);
 the executable evidence packet remains
 [`gate_e1_daily_operator_skeleton.md`](research/daily_coarse_graining/gate_e1_daily_operator_skeleton.md).
@@ -287,9 +291,9 @@ This packet is complete and retained as its acceptance contract. Gates A-C
 must not be rerun unless shared Teacher code or a frozen contract changes.
 Gate D1, the candidate registry, and Gate E1 are complete. Gate E2 coherent
 local implementation, representative six-point production pilot, formal v6
-product freeze, global-plan verification, and the five-worker reuse benchmark
-are complete; full resumable v6 production is next. Gates D2 and F remain
-queued.
+product freeze, global-plan verification, five-worker reuse benchmark, full
+production, aggregation, and formal admission are complete. Neural candidate
+training is next. Gates D2 and F remain queued.
 
 ### Inputs
 
