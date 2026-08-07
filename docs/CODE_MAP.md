@@ -145,9 +145,11 @@ Gate E2 now uses one frozen coherent Teacher release. Its active contract is
 `coherent_teacher_dataset_generation_v1.md`; its six-point production pilot
 passed, and the accepted measurements are in
 `coherent_teacher_pilot_20260806.md`. The formal data product is manifest v6,
-typed contract v3, and canonical release v2. Its first production batch is
-next. Architecture selection and training remain unstarted. The old
-immutable-parent packet is historical evidence.
+typed contract v3, and canonical release v2. Full 669-landpoint, 1961-2010
+production and admission are complete. Architecture selection and training
+remain unstarted; the first candidate must enter through the existing Gate E1
+composition boundary. The old immutable-parent packet and archived loose v5
+workers are historical evidence.
 
 ## Scripts
 

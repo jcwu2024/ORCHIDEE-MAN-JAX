@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-06.
+Last updated: 2026-08-07.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -45,11 +45,10 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
   a frozen coherent Teacher data release: base Markov rows, 66 typed fields,
   masks, and year-end checkpoints are emitted by the same continuous Teacher
   execution and share one manifest. The old immutable-parent sidecar proposal
-  is rejected. Candidate selection remains unstarted; a representative
-  six-point-year coherent production pilot passed. The formal product is now
-  frozen as dataset manifest v6, typed contract v3, and canonical release v2.
-  Formal generation begins with a reusable first batch, not another standalone
-  calibration.
+  is rejected. Candidate selection remains unstarted. The formal product is
+  frozen as dataset manifest v6, typed contract v3, and canonical release v2;
+  full 669-landpoint, 1961-2010 generation and admission are complete. No more
+  calibration or Teacher-data generation precedes the first neural candidate.
 - The current Teacher and data are scientifically scoped to PFT14. Gate B1's
   catalog foundation now gives PFTs stable IDs, source PFT/MTC identities,
   traits, parameter ownership, capabilities, and named execution layouts.
