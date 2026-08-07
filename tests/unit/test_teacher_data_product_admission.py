@@ -10,6 +10,8 @@ from research.daily_coarse_graining import daily_markov_contract as markov
 from research.daily_coarse_graining import teacher_data_product_admission as admission
 from research.daily_coarse_graining import teacher_production
 
+ROOT = Path(__file__).resolve().parents[2]
+
 
 def _canonical_hash(value) -> str:
     encoded = json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
@@ -355,3 +357,36 @@ def test_final_admission_requires_every_frozen_point_year_and_split(tmp_path):
             output_path=tmp_path / "final.json",
             require_production_dataset=True,
         )
+
+
+def test_canonical_v6_policy_binds_the_frozen_release_and_production_plan():
+    policy = json.loads(
+        (
+            ROOT
+            / "manifests/coarse_graining/daily_teacher_669_data_product_policy_v2.json"
+        ).read_text(encoding="utf-8")
+    )
+    release = json.loads(
+        (
+            ROOT
+            / "manifests/coarse_graining/canonical_teacher_data_release_v2.json"
+        ).read_text(encoding="utf-8")
+    )
+    spec_path = ROOT / policy["production_spec"]
+
+    assert policy["policy_id"] == "pft14-daily-teacher-669-v6"
+    assert policy["production_spec_sha256"] == _canonical_hash(
+        json.loads(spec_path.read_text(encoding="utf-8"))
+    )
+    assert policy["expected_generation_plan_sha256"] == (
+        "90fa26605b6baf02b67da14096c6de4da4c8363f0938a3cc6623f8545f6639dd"
+    )
+    assert policy["expected_teacher_git_head"] == (
+        "19087b171564f44b49eb96fa1217169deca5d57a"
+    )
+    assert policy["expected_contract"]["dataset_manifest_schema"] == (
+        release["generation"]["dataset_manifest_schema"]
+    )
+    assert policy["expected_contract"]["sha256"] == (
+        release["contracts"]["markov_contract_sha256"]
+    )

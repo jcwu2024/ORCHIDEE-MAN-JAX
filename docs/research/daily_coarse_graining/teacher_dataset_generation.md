@@ -160,8 +160,8 @@ of any one neural architecture:
 
 ```bash
 python -m research.daily_coarse_graining.teacher_data_product_admission \
-  --policy manifests/coarse_graining/daily_teacher_669_data_product_policy.json \
-  --contract-manifest /absolute/path/to/accepted-v5/dataset_manifest.json \
+  --policy manifests/coarse_graining/daily_teacher_669_data_product_policy_v2.json \
+  --contract-manifest /absolute/path/to/accepted-v6/dataset_manifest.json \
   --output /absolute/path/to/pre_generation_admission.json
 ```
 

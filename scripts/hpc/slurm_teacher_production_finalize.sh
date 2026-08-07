@@ -22,11 +22,12 @@ TEACHER_PLAN=${TEACHER_PLAN:?set TEACHER_PLAN to the frozen generation plan}
 TEACHER_WORKER_COUNT=${TEACHER_WORKER_COUNT:?set TEACHER_WORKER_COUNT}
 DATASET=${DATASET:?set DATASET to the plan output dataset_manifest.json}
 OUTPUT_DIR=${OUTPUT_DIR:?set OUTPUT_DIR to a new finalization directory}
-POLICY=$WORKTREE/manifests/coarse_graining/daily_teacher_669_data_product_policy.json
+POLICY=${POLICY:-$WORKTREE/manifests/coarse_graining/daily_teacher_669_data_product_policy_v2.json}
 
 case "$WORKTREE" in
+  "$ROOT") ;;
   "$RUNTIME_ROOT/worktrees/"*) ;;
-  *) echo "WORKTREE must stay under $RUNTIME_ROOT/worktrees" >&2; exit 2 ;;
+  *) echo "WORKTREE must be the repository root or stay under $RUNTIME_ROOT/worktrees" >&2; exit 2 ;;
 esac
 for path in "$TEACHER_PLAN" "$DATASET" "$OUTPUT_DIR"; do
   case "$path" in
