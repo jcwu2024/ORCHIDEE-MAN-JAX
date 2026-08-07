@@ -1,4 +1,4 @@
-"""Streamed training entry point for the canonical v4 fast-day operator."""
+"""Streamed training entry point for canonical fast-day datasets."""
 
 from __future__ import annotations
 
@@ -43,6 +43,7 @@ from research.daily_coarse_graining.daily_model_architecture import (
     verify_checkpoint_architecture,
 )
 from research.daily_coarse_graining.markov_dataset import (
+    COHERENT_DATASET_SCHEMA_VERSION,
     DATASET_SCHEMA_VERSION,
     SPLITS,
     MarkovDatasetIndex,
@@ -61,6 +62,9 @@ from research.daily_coarse_graining.production_training_protocol import (
 
 CHECKPOINT_SCHEMA_VERSION = "canonical_fast_day_checkpoint_v3"
 ACCEPTANCE_SCHEMA_VERSION = "canonical_daily_dataset_acceptance_v1"
+ACCEPTED_DATASET_SCHEMA_VERSIONS = frozenset(
+    {DATASET_SCHEMA_VERSION, COHERENT_DATASET_SCHEMA_VERSION}
+)
 
 
 class AdamState(NamedTuple):
@@ -118,9 +122,10 @@ def _validate_complete_dataset_manifest(
     index: MarkovDatasetIndex,
 ) -> dict[str, Any]:
     raw = json.loads(manifest_path.read_text(encoding="utf-8"))
-    if raw.get("schema_version") != DATASET_SCHEMA_VERSION:
+    if raw.get("schema_version") not in ACCEPTED_DATASET_SCHEMA_VERSIONS:
         raise ValueError(
-            f"training acceptance requires {DATASET_SCHEMA_VERSION!r}"
+            "training acceptance requires a formal aggregate schema in "
+            f"{sorted(ACCEPTED_DATASET_SCHEMA_VERSIONS)!r}"
         )
     if raw.get("status") != "complete":
         raise ValueError("training acceptance requires a complete aggregate")

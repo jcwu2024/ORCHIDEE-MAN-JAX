@@ -10,7 +10,10 @@ import jax
 import numpy as np
 
 from research.daily_coarse_graining import canonical_training_run as training
-from research.daily_coarse_graining.markov_dataset import DATASET_SCHEMA_VERSION
+from research.daily_coarse_graining.markov_dataset import (
+    COHERENT_DATASET_SCHEMA_VERSION,
+    DATASET_SCHEMA_VERSION,
+)
 
 
 def _write_shard(path: Path, *, year: int, offset: float) -> str:
@@ -339,6 +342,33 @@ def test_dataset_acceptance_builds_hash_bound_statistics_and_gradient_gate(tmp_p
             manifest,
             statistics,
         )
+
+
+def test_dataset_acceptance_supports_coherent_v6_aggregate(tmp_path):
+    manifest = _manifest(tmp_path)
+    raw = json.loads(manifest.read_text(encoding="utf-8"))
+    raw["schema_version"] = COHERENT_DATASET_SCHEMA_VERSION
+    raw["provisional_teacher"] = False
+    manifest.write_text(json.dumps(raw), encoding="utf-8")
+
+    report = training.accept_training_dataset(
+        manifest,
+        tmp_path / "coherent-acceptance",
+        chunk_rows=1,
+        batch_size=2,
+        seed=11,
+        architecture={
+            "state_latent_width": 4,
+            "forcing_latent_width": 3,
+            "condition_latent_width": 3,
+            "hidden_width": 8,
+        },
+    )
+
+    assert report["status"] == "passed"
+    assert report["dataset_validation"]["schema_version"] == (
+        COHERENT_DATASET_SCHEMA_VERSION
+    )
 
 
 def test_dataset_acceptance_rejects_nonaggregate_manifest(tmp_path):
