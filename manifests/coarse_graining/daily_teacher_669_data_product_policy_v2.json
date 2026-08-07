@@ -3,7 +3,7 @@
   "policy_id": "pft14-daily-teacher-669-v6",
   "production_spec": "manifests/coarse_graining/daily_teacher_production_669.json",
   "production_spec_sha256": "6bb0198f0a313b814e32f980564c03bab4ce7801f639983d59f587d18aa6a27e",
-  "population_manifest_sha256": "e6b9d96bf1638cf2e1a03ea3257138dbe9706ef2e63154d8aac4c4df9a2d5e92",
+  "population_manifest_sha256": "e6b9d96bf1638cf7e1a03ea3257138dbe9706ef2e63154d8aac4c4df9a2d5e92",
   "expected_generation_plan_sha256": "90fa26605b6baf02b67da14096c6de4da4c8363f0938a3cc6623f8545f6639dd",
   "expected_teacher_git_head": "19087b171564f44b49eb96fa1217169deca5d57a",
   "expected_population": {

@@ -373,11 +373,15 @@ def test_canonical_v6_policy_binds_the_frozen_release_and_production_plan():
         ).read_text(encoding="utf-8")
     )
     spec_path = ROOT / policy["production_spec"]
+    spec = json.loads(spec_path.read_text(encoding="utf-8"))
 
     assert policy["policy_id"] == "pft14-daily-teacher-669-v6"
     assert policy["production_spec_sha256"] == _canonical_hash(
-        json.loads(spec_path.read_text(encoding="utf-8"))
+        spec
     )
+    assert policy["population_manifest_sha256"] == spec[
+        "population_manifest_sha256"
+    ]
     assert policy["expected_generation_plan_sha256"] == (
         "90fa26605b6baf02b67da14096c6de4da4c8363f0938a3cc6623f8545f6639dd"
     )

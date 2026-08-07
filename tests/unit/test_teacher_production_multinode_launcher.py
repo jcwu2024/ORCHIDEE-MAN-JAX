@@ -28,6 +28,9 @@ def test_production_finalize_orders_all_fail_closed_gates():
     assert progress < aggregate < production < acceptance
     assert "--require-complete" in text
     assert "--require-production-dataset" in text
+    assert "FINALIZE_FROM_AGGREGATE" in text
+    assert "EXPECTED_DATASET_MANIFEST_SHA256" in text
+    assert "dataset manifest hash mismatch while resuming finalization" in text
 
 
 def test_multinode_launcher_has_safe_admission_defaults():

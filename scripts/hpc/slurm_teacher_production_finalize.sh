@@ -23,6 +23,7 @@ TEACHER_WORKER_COUNT=${TEACHER_WORKER_COUNT:?set TEACHER_WORKER_COUNT}
 DATASET=${DATASET:?set DATASET to the plan output dataset_manifest.json}
 OUTPUT_DIR=${OUTPUT_DIR:?set OUTPUT_DIR to a new finalization directory}
 POLICY=${POLICY:-$WORKTREE/manifests/coarse_graining/daily_teacher_669_data_product_policy_v2.json}
+FINALIZE_FROM_AGGREGATE=${FINALIZE_FROM_AGGREGATE:-0}
 
 case "$WORKTREE" in
   "$ROOT") ;;
@@ -37,6 +38,10 @@ for path in "$TEACHER_PLAN" "$DATASET" "$OUTPUT_DIR"; do
 done
 if ! [[ "$TEACHER_WORKER_COUNT" =~ ^[1-9][0-9]*$ ]]; then
   echo "TEACHER_WORKER_COUNT must be a positive integer" >&2
+  exit 2
+fi
+if [[ "$FINALIZE_FROM_AGGREGATE" != 0 && "$FINALIZE_FROM_AGGREGATE" != 1 ]]; then
+  echo "FINALIZE_FROM_AGGREGATE must be 0 or 1" >&2
   exit 2
 fi
 
@@ -58,9 +63,19 @@ cd "$WORKTREE"
   --require-complete \
   --report "$OUTPUT_DIR/worker_progress.json"
 
-"$PYTHON" -m research.daily_coarse_graining.teacher_shards aggregate \
-  --plan "$TEACHER_PLAN" \
-  --worker-count "$TEACHER_WORKER_COUNT"
+if [[ "$FINALIZE_FROM_AGGREGATE" == 1 ]]; then
+  : "${EXPECTED_DATASET_MANIFEST_SHA256:?required when resuming after aggregation}"
+  test -f "$DATASET"
+  OBSERVED_DATASET_MANIFEST_SHA256=$(sha256sum "$DATASET" | awk '{print $1}')
+  if [[ "$OBSERVED_DATASET_MANIFEST_SHA256" != "$EXPECTED_DATASET_MANIFEST_SHA256" ]]; then
+    echo "dataset manifest hash mismatch while resuming finalization" >&2
+    exit 2
+  fi
+else
+  "$PYTHON" -m research.daily_coarse_graining.teacher_shards aggregate \
+    --plan "$TEACHER_PLAN" \
+    --worker-count "$TEACHER_WORKER_COUNT"
+fi
 test -f "$DATASET"
 
 "$PYTHON" -m research.daily_coarse_graining.teacher_data_product_admission \
