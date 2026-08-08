@@ -414,6 +414,22 @@ def _case_report(
     water_residual = float(np.asarray(result.diagnostics["water_budget_residual"]))
     carbon_residual = float(np.asarray(result.diagnostics["carbon_budget_residual"]))
     mask_mismatches = int(np.count_nonzero(observed_defined != expected_defined))
+    mask_mismatches_by_leaf = {
+        leaf.key: int(
+            np.count_nonzero(
+                observed_defined[leaf.start : leaf.stop]
+                != expected_defined[leaf.start : leaf.stop]
+            )
+        )
+        for leaf in contract.state_leaves
+        if not leaf.discrete
+        and np.any(
+            observed_defined[leaf.start : leaf.stop]
+            != expected_defined[leaf.start : leaf.stop]
+        )
+    }
+    if sum(mask_mismatches_by_leaf.values()) != mask_mismatches:
+        raise ValueError("defined-mask mismatch accounting drift")
     nonfinite_defined = int(
         np.count_nonzero(observed_defined & ~np.isfinite(observed))
     )
@@ -471,6 +487,7 @@ def _case_report(
         "defined_count": int(np.count_nonzero(observed_defined)),
         "nonfinite_defined_count": nonfinite_defined,
         "defined_mask_mismatch_count": mask_mismatches,
+        "defined_mask_mismatches_by_leaf": mask_mismatches_by_leaf,
         "discrete_state_mismatch_count": discrete_mismatches,
         "teacher_state_max_absolute_error": (
             float(np.max(difference[admitted])) if np.any(admitted) else 0.0
