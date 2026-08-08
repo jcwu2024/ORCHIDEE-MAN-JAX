@@ -271,6 +271,29 @@ class DailyProcessTrainingAdapter:
             day_index=np.asarray(sample["day_index"], dtype=np.int32),
         )
 
+    def assemble_input(self, parent_sample: Mapping[str, Any]) -> DailyOperatorInput:
+        """Assemble inference-owned inputs without decoding a training target."""
+
+        required = {
+            "state",
+            "forcing_native",
+            "parameters",
+            "landpoint_static",
+            "annual_conditions",
+            "year",
+            "day_index",
+            "discrete_state",
+        }
+        missing = sorted(required - set(parent_sample))
+        if missing:
+            raise ValueError(f"v6 process input sample is missing fields: {missing}")
+        fields = reconstruct_state_fields(
+            np.asarray(parent_sample["state"], dtype=np.float64),
+            parent_sample["discrete_state"],
+            self.contract,
+        )
+        return self._operator_input(parent_sample, fields)
+
     def _compact_inventory(self, value: Any, field: str) -> np.ndarray:
         axis = PFT_AXES.get(field)
         return np.asarray(value) if axis is None else self._select_pft(value, axis)
@@ -471,21 +494,14 @@ class DailyProcessTrainingAdapter:
             reconstructed.fields_by_component,
             reconstructed.ok_leak_updates,
         )
-        supervision.update(
-            self._thermal_supervision(start_fields, reconstructed.fields_by_component)
-        )
+        supervision.update(self._thermal_supervision(start_fields, reconstructed.fields_by_component))
         supervision.update(self._daily_supervision(reconstructed.daily_fields))
-        supervision.update(
-            self._supplemental_supervision(supplemental_values, supplemental_defined)
-        )
+        supervision.update(self._supplemental_supervision(supplemental_values, supplemental_defined))
         expected_labels = self.field_labels()
         if set(supervision) != set(expected_labels):
             missing_targets = sorted(set(expected_labels) - set(supervision))
             extra_targets = sorted(set(supervision) - set(expected_labels))
-            raise ValueError(
-                "process supervision registry drift; "
-                f"missing={missing_targets}, extra={extra_targets}"
-            )
+            raise ValueError(f"process supervision registry drift; missing={missing_targets}, extra={extra_targets}")
 
         next_input = inputs._replace(
             continuous_state=np.asarray(parent_sample["next_state"], dtype=np.float64),

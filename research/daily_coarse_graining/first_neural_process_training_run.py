@@ -36,6 +36,7 @@ from research.daily_coarse_graining.daily_operator.training_loss import (
 from research.daily_coarse_graining.daily_operator.training_statistics import (
     ProcessTrainingStatistics,
     load_process_training_statistics,
+    vectorized_process_targets,
 )
 from research.daily_coarse_graining.markov_dataset import load_training_statistics
 from research.daily_coarse_graining.typed_sidecar import (
@@ -288,14 +289,23 @@ def iter_process_training_batches(
             )
             if not np.array_equal(day_index, parent.day_index):
                 raise ValueError("coherent process batch day index drift")
+            vectorized_targets = vectorized_process_targets(
+                parent,
+                values,
+                defined,
+                prepared.adapter,
+            )
             for row in selected:
-                example = prepared.adapter.assemble(
-                    parent.sample(int(row)),
-                    supplemental_values={name: value[int(row)] for name, value in values.items()},
-                    supplemental_defined={name: value[int(row)] for name, value in defined.items()},
+                inputs.append(prepared.adapter.assemble_input(parent.sample(int(row))))
+                targets.append(
+                    {
+                        name: type(target)(
+                            target.value[int(row)],
+                            target.defined[int(row)],
+                        )
+                        for name, target in vectorized_targets.items()
+                    }
                 )
-                inputs.append(prepared.adapter.input_assembler.assemble(example.inputs))
-                targets.append(example.targets.supervision)
                 if len(inputs) == batch_size:
                     yield _stack_trees(inputs), _stack_trees(targets)
                     yielded += 1
@@ -349,7 +359,7 @@ def initialize_process_parameters(
         jax.random.PRNGKey(seed),
         schema=prepared.process_statistics.schema,
         axis_layout=prepared.axis_layout,
-        inputs=jax.tree_util.tree_map(lambda value: value[0], inputs),
+        inputs=prepared.adapter.input_assembler.assemble(jax.tree_util.tree_map(lambda value: value[0], inputs)),
     )
 
 
@@ -371,9 +381,10 @@ def build_process_batch_loss(prepared: PreparedProcessTraining, *, arm: str):
             assemble_neural_process_context,
         )
 
+        assembled = prepared.adapter.input_assembler.assemble(inputs)
         context = assemble_neural_process_context(
             parameters,
-            inputs,
+            assembled,
             normalization=normalization,
             axis_layout=prepared.axis_layout,
         )
