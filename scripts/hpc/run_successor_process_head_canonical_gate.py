@@ -454,6 +454,96 @@ def _retained_adapter(
     )
 
 
+def _nested_value(value: Mapping[str, Any], path: tuple[str, ...]) -> Any:
+    current: Any = value
+    for name in path:
+        current = current[name]
+    return current
+
+
+def _retained_boundary_report(
+    prediction: Any,
+    sample: Mapping[str, Any],
+    contract: Any,
+) -> dict[str, Any]:
+    from research.daily_coarse_graining.markov_dataset import defined_numeric_mask
+
+    groups = {
+        "daily_interface": prediction.retained_boundary.daily_fields,
+        "ok_leak": prediction.retained_boundary.ok_leak_result,
+        "final_diagnostics": prediction.retained_boundary.final_entry_diagnostics,
+    }
+    expected = np.asarray(sample["fast_day_target"], dtype=np.float64)
+    records = []
+    exact_leaf_count = 0
+    for leaf in contract.fast_day_target_leaves:
+        source = (
+            _nested_value(
+                prediction.retained_boundary.fast_state_fields[leaf.component],
+                leaf.path,
+            )
+            if leaf.component is not None
+            else _nested_value(groups[leaf.family], leaf.path)
+        )
+        compact = np.asarray(source)
+        for axis, axis_name in enumerate(leaf.axis_names):
+            if axis_name == "nvm":
+                compact = np.take(
+                    compact,
+                    np.asarray(leaf.selected_pft_indices, dtype=np.int64),
+                    axis=axis,
+                )
+        if compact.shape != leaf.shape:
+            raise ValueError(
+                f"retained boundary diagnostic shape drift for {leaf.key}: "
+                f"{compact.shape} != {leaf.shape}"
+            )
+        observed = np.asarray(compact, dtype=np.float64).reshape(-1)
+        wanted = expected[leaf.start : leaf.stop]
+        observed_defined = defined_numeric_mask(observed)
+        wanted_defined = defined_numeric_mask(wanted)
+        common = observed_defined & wanted_defined
+        mask_mismatches = int(np.count_nonzero(observed_defined != wanted_defined))
+        maximum_error = (
+            float(np.max(np.abs(observed[common] - wanted[common])))
+            if np.any(common)
+            else 0.0
+        )
+        exact = (
+            mask_mismatches == 0
+            and np.allclose(
+                observed[common],
+                wanted[common],
+                atol=1.0e-8,
+                rtol=1.0e-10,
+            )
+        )
+        exact_leaf_count += int(exact)
+        if not exact:
+            records.append(
+                {
+                    "leaf": leaf.key,
+                    "mask_mismatch_count": mask_mismatches,
+                    "maximum_absolute_error": maximum_error,
+                }
+            )
+    records.sort(
+        key=lambda item: (
+            item["mask_mismatch_count"],
+            item["maximum_absolute_error"],
+        ),
+        reverse=True,
+    )
+    return {
+        "leaf_count": len(contract.fast_day_target_leaves),
+        "exact_leaf_count": exact_leaf_count,
+        "nonexact_leaf_count": len(records),
+        "atol": 1.0e-8,
+        "rtol": 1.0e-10,
+        "top_nonexact_leaves": records[:25],
+    }
+
+
 def _case_report(
     result: Any,
     sample: Mapping[str, Any],
@@ -640,6 +730,11 @@ def _case_report(
             "maximum_absolute_errors": exact_fast_errors,
         },
         "fast_carbon_driver": carbon_driver,
+        "retained_boundary_vs_teacher": _retained_boundary_report(
+            result.prediction,
+            sample,
+            contract,
+        ),
     }
 
 
