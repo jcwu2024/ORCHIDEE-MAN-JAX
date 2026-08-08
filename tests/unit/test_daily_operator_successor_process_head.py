@@ -304,6 +304,58 @@ def test_successor_layout_parameter_match_and_named_output_shapes(successor_setu
         np.all(np.isfinite(np.asarray(value)))
         for value in compiled_outputs.values()
     )
+    forcing_indices = setup["head"].forcing_indices
+    forcing_values = np.asarray(assembled.forcing.values).copy()
+    forcing_values[:, forcing_indices["Tair"]] = 280.0
+    forcing_values[:, forcing_indices["PSurf"]] = 101325.0
+    forcing_values[:, forcing_indices["Qair"]] = 0.01
+    driver_inputs = assembled._replace(
+        forcing=assembled.forcing._replace(values=forcing_values)
+    )
+    prediction = setup["head"].prediction_from_named_outputs(
+        outputs,
+        driver_inputs,
+    )
+
+    def get_path(root, path):
+        value = root
+        for name in path:
+            value = value[name]
+        return value
+
+    for leaf in setup["adapter"].contract.fast_day_target_leaves:
+        if leaf.component is not None:
+            value = get_path(
+                prediction.retained_boundary.fast_state_fields[leaf.component],
+                leaf.path,
+            )
+            assert np.asarray(value).shape == leaf.full_shape
+
+    driver = prediction.retained_boundary.fast_state_fields[
+        "driver_previous_step_state"
+    ]
+    forcing = np.asarray(driver_inputs.forcing.values)
+    height_leaf = next(
+        leaf
+        for leaf in setup["adapter"].contract.static_conditions.landpoint_static_leaves
+        if leaf.name == "measurement_heights"
+    )
+    heights = np.asarray(assembled.static_conditions)[
+        height_leaf.start : height_leaf.stop
+    ].reshape(height_leaf.shape)
+    temperature = forcing[-1, forcing_indices["Tair"]]
+    pressure = forcing[-1, forcing_indices["PSurf"]]
+    humidity = forcing[-1, forcing_indices["Qair"]]
+    np.testing.assert_allclose(driver["old_zlev"], heights[:1])
+    np.testing.assert_allclose(driver["old_qair"], [humidity])
+    np.testing.assert_allclose(
+        driver["old_eair"],
+        [1004.675 * temperature + 9.80665 * heights[0]],
+    )
+    np.testing.assert_allclose(
+        driver["rau_old"],
+        [pressure / (287.05 * temperature)],
+    )
 
 
 def test_successor_attention_forward_loss_and_gradient_are_finite(successor_setup):

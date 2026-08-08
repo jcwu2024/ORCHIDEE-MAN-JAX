@@ -31,6 +31,7 @@ from .neural_architecture import (
 from .process_derivations import (
     NativeForcingFieldLayout,
     derive_carbon_decomposition,
+    derive_end_of_day_driver_fields,
     derive_litter_input,
     derive_native_daily_deterministic_fields,
     integrate_native_precipitation,
@@ -376,6 +377,19 @@ class NeuralProcessHead:
             return jnp.min(jnp.where(mask, values, jnp.inf))
         return jnp.sum(selected) / count
 
+    def _static_condition(self, inputs: AssembledDailyOperatorInput, name: str) -> Any:
+        matches = tuple(
+            leaf
+            for leaf in self.contract.static_conditions.landpoint_static_leaves
+            if leaf.name == name
+        )
+        if len(matches) != 1:
+            raise ValueError(f"static condition requires exactly one {name!r} leaf")
+        leaf = matches[0]
+        return jnp.asarray(inputs.static_conditions, dtype=jnp.float64)[
+            leaf.start : leaf.stop
+        ].reshape(leaf.shape)
+
     def _daily_fields(
         self,
         outputs: Mapping[str, Any],
@@ -454,6 +468,16 @@ class NeuralProcessHead:
                 key = f"typed.energy.{name}"
                 if key in outputs and name in component_fields:
                     component_fields[name] = _ensure_landpoint_axis(outputs[key], component_fields[name])
+
+        measurement_heights = self._static_condition(inputs, "measurement_heights")
+        driver_fields = derive_end_of_day_driver_fields(
+            inputs.forcing,
+            self.forcing_indices,
+            scalar_measurement_height=measurement_heights[0],
+        )
+        fields.setdefault("driver_previous_step_state", {}).update(
+            driver_fields._asdict()
+        )
 
         rain, snow = integrate_native_precipitation(inputs.forcing, self.forcing_layout)
         daily = self._daily_fields(outputs, inputs, fields)

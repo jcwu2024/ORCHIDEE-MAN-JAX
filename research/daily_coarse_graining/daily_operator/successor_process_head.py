@@ -107,4 +107,13 @@ class SuccessorProcessHead:
         inputs: AssembledDailyOperatorInput,
     ) -> ProcessPrediction:
         outputs = self.named_outputs(parameters, context, inputs)
+        return self.prediction_from_named_outputs(outputs, inputs)
+
+    def prediction_from_named_outputs(
+        self,
+        outputs: Mapping[str, Any],
+        inputs: AssembledDailyOperatorInput,
+    ) -> ProcessPrediction:
+        """Apply only the accepted named-output scientific mapping."""
+
         return self._named_output_adapter.prediction_from_named_outputs(outputs, inputs)

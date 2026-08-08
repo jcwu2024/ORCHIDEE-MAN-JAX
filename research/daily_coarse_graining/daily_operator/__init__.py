@@ -66,8 +66,10 @@ from .parameter_routing import (
     select_retained_exact_channels,
 )
 from .process_derivations import (
+    EndOfDayDriverFields,
     NativeForcingFieldLayout,
     derive_carbon_decomposition,
+    derive_end_of_day_driver_fields,
     derive_litter_input,
     integrate_native_precipitation,
 )
@@ -137,6 +139,7 @@ __all__ = [
     "FACTORIZED_CONTROL",
     "DEFAULT_PFT_PARAMETER_ROUTING",
     "FastProcessParameterFactors",
+    "EndOfDayDriverFields",
     "NeuralArchitectureConfig",
     "NeuralInputNormalization",
     "NeuralOutputNormalization",
@@ -178,6 +181,7 @@ __all__ = [
     "combine_signed_inventory",
     "daily_operator_transition",
     "derive_carbon_decomposition",
+    "derive_end_of_day_driver_fields",
     "derive_area_weighted_biomass_carbon",
     "derive_area_weighted_pft_carbon_pool",
     "derive_ecosystem_carbon",

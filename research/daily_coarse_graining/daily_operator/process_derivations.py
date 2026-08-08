@@ -2,10 +2,15 @@
 
 from __future__ import annotations
 
-from typing import Any, NamedTuple
+from typing import Any, Mapping, NamedTuple
 
 import jax.numpy as jnp
 
+from jax_orchidee.driver.dim2 import (
+    CP_AIR,
+    GRAVITY,
+    MOLAR_GAS_CONSTANT_AIR,
+)
 from jax_orchidee.stomate.carbon_kernels import (
     IAGRHRTPN,
     IAGRHRTST,
@@ -66,6 +71,15 @@ class NativeDailyDeterministicFields(NamedTuple):
     t2m_min_daily: Any
     t2m_max_daily: Any
     t2mdiag: Any
+
+
+class EndOfDayDriverFields(NamedTuple):
+    """DIM2 restart fields owned by the final supplied forcing record."""
+
+    old_zlev: Any
+    old_qair: Any
+    old_eair: Any
+    rau_old: Any
 
 
 class DerivedCarbonDecomposition(NamedTuple):
@@ -162,6 +176,51 @@ def derive_native_daily_deterministic_fields(
         t2m_min_daily=jnp.where(any_current, minimum, 0.0),
         t2m_max_daily=jnp.where(any_current, maximum, 0.0),
         t2mdiag=diagnostic,
+    )
+
+
+def derive_end_of_day_driver_fields(
+    forcing: NativeForcingInput,
+    forcing_indices: Mapping[str, int],
+    *,
+    scalar_measurement_height: Any,
+) -> EndOfDayDriverFields:
+    """Derive the four forcing-owned DIM2 restart fields without a 48-step scan.
+
+    Fortran provenance: ``src_driver/dim2_driver.f90:1395-1397`` assigns the
+    final interpolated forcing values, while lines 742-747 define
+    ``old_eair = cp_air*Tair + cte_grav*zlev``. The accepted JAX source uses
+    the same formulas in ``driver/dim2.py::_boundary`` lines 432-433. At the
+    daily boundary the final active native record is the interpolation
+    endpoint, so no half-hour forcing reconstruction is needed.
+    """
+
+    required = ("Tair", "PSurf", "Qair")
+    if any(name not in forcing_indices for name in required):
+        raise ValueError("end-of-day driver derivation is missing a forcing field")
+    values = jnp.asarray(forcing.values, dtype=jnp.float64)
+    active = jnp.asarray(forcing.record_mask, dtype=jnp.bool_) & ~jnp.asarray(
+        forcing.predecessor_mask,
+        dtype=jnp.bool_,
+    )
+    positions = jnp.arange(values.shape[0], dtype=jnp.int32)
+    final_index = jnp.maximum(
+        jnp.max(jnp.where(active, positions, -1)),
+        jnp.asarray(0, dtype=jnp.int32),
+    )
+
+    def final(name: str) -> Any:
+        return values[final_index, int(forcing_indices[name])].reshape(1)
+
+    temperature = final("Tair")
+    pressure = final("PSurf")
+    humidity = final("Qair")
+    zlev = jnp.asarray(scalar_measurement_height, dtype=jnp.float64).reshape(1)
+    return EndOfDayDriverFields(
+        old_zlev=zlev,
+        old_qair=humidity,
+        old_eair=CP_AIR * temperature + GRAVITY * zlev,
+        rau_old=pressure / (MOLAR_GAS_CONSTANT_AIR * temperature),
     )
 
 

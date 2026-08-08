@@ -34,6 +34,16 @@ TARGET_GRADIENT_RATIOS = {
     "terminal_stock_mse": 0.10,
     "terminal_stock_bias_squared": 0.15,
 }
+EXACT_RETAINED_FAST_FIELDS = (
+    ("driver_previous_step_state", "old_eair"),
+    ("driver_previous_step_state", "old_qair"),
+    ("driver_previous_step_state", "old_zlev"),
+    ("driver_previous_step_state", "rau_old"),
+    ("diffuco_previous_step_state", "frac_nobio"),
+    ("diffuco_previous_step_state", "lai"),
+    ("diffuco_previous_step_state", "veget"),
+    ("diffuco_previous_step_state", "veget_max"),
+)
 
 
 def _sha256(path: Path) -> str:
@@ -375,7 +385,15 @@ def _retained_adapter(
     )
 
 
-def _case_report(result: Any, sample: Mapping[str, Any]) -> dict[str, Any]:
+def _case_report(
+    result: Any,
+    sample: Mapping[str, Any],
+    contract: Any,
+) -> dict[str, Any]:
+    from research.daily_coarse_graining.daily_markov_contract import (
+        reconstruct_fast_day_target,
+        reconstruct_state_fields,
+    )
     from research.daily_coarse_graining.markov_dataset import defined_numeric_mask
 
     observed = np.asarray(result.next_state.other, dtype=np.float64)
@@ -401,6 +419,38 @@ def _case_report(result: Any, sample: Mapping[str, Any]) -> dict[str, Any]:
     )
     water_minimum = float(np.min(np.asarray(result.fast_update.water.inventory)))
     carbon_minimum = float(np.min(np.asarray(result.fast_update.carbon.inventory)))
+    start_fields = reconstruct_state_fields(
+        np.asarray(sample["state"], dtype=np.float64),
+        sample["discrete_state"],
+        contract,
+    )
+    teacher_fast = reconstruct_fast_day_target(
+        np.asarray(sample["fast_day_target"], dtype=np.float64),
+        contract.fast_day_target_leaves,
+        template_fields=start_fields,
+    )
+    predicted_fast = result.prediction.retained_boundary.fast_state_fields
+    exact_fast_errors = {}
+    for component, field in EXACT_RETAINED_FAST_FIELDS:
+        expected_fast = np.asarray(
+            teacher_fast.fields_by_component[component][field],
+            dtype=np.float64,
+        )
+        observed_fast = np.asarray(predicted_fast[component][field], dtype=np.float64)
+        if observed_fast.shape != expected_fast.shape:
+            raise ValueError(f"exact fast-field shape drift for {component}.{field}")
+        exact_fast_errors[f"{component}.{field}"] = float(
+            np.max(np.abs(observed_fast - expected_fast))
+        )
+    exact_fast_passed = all(
+        np.allclose(
+            np.asarray(predicted_fast[component][field]),
+            np.asarray(teacher_fast.fields_by_component[component][field]),
+            atol=1.0e-12,
+            rtol=1.0e-12,
+        )
+        for component, field in EXACT_RETAINED_FAST_FIELDS
+    )
     passed = (
         observed.shape == expected.shape
         and nonfinite_defined == 0
@@ -411,6 +461,7 @@ def _case_report(result: Any, sample: Mapping[str, Any]) -> dict[str, Any]:
         and water_minimum >= -2.0e-12
         and carbon_minimum >= -2.0e-12
         and int(np.asarray(result.diagnostics["retained_tail_executed"])) == 1
+        and exact_fast_passed
     )
     return {
         "status": "passed" if passed else "failed",
@@ -430,6 +481,12 @@ def _case_report(result: Any, sample: Mapping[str, Any]) -> dict[str, Any]:
         "water_minimum_inventory": water_minimum,
         "carbon_minimum_inventory": carbon_minimum,
         "retained_tail_executed": True,
+        "exact_retained_fast_fields": {
+            "status": "passed" if exact_fast_passed else "failed",
+            "atol": 1.0e-12,
+            "rtol": 1.0e-12,
+            "maximum_absolute_errors": exact_fast_errors,
+        },
     }
 
 
@@ -494,14 +551,17 @@ def _lifecycle_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
             "cold_start_continuation_day2": _case_report(
                 cold_result,
                 ordinary_samples[0],
+                runtime["contract"],
             ),
             "ordinary_later_day3": _case_report(
                 ordinary_result,
                 ordinary_samples[1],
+                runtime["contract"],
             ),
             "restart_year_boundary_1962_day1": _case_report(
                 restart_result,
                 restart_sample,
+                runtime["contract"],
             ),
         }
         passed = all(item["status"] == "passed" for item in cases.values())
