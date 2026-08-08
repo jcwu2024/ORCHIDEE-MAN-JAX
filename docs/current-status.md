@@ -76,9 +76,29 @@ parameter gradients, one-day conservation, synthetic free rollout, 5+7
 trajectory extraction, and bounded train/train coefficient calibration pass.
 The inference audit reports zero violations. See
 [`successor_process_head_local_foundation_20260809.md`](research/daily_coarse_graining/successor_process_head_local_foundation_20260809.md).
-The next gate is a no-checkpoint real-v6 `gln01` smoke with the canonical
-retained tail. No paid job is authorized; bounded small fit, 365-day,
-long-held-point, Gate D2 and product acceptance remain closed.
+The real-v6 lifecycle smoke is not accepted. On Day 2 it loses 37
+Teacher-defined values from the active vegetation slot. Initialization and
+baseline probes do not repair the failure, and replacing all 101 named outputs
+with Teacher values still reconstructs only `87/160` canonical fast-target
+leaves and loses the same 37 next-state masks. The failure is therefore in the
+named-output-to-fast-boundary adapter, not evidence against either attention or
+the matched graph control.
+
+Commit `e705b68` adds a 160-leaf ownership ledger. It identifies 14 leaves/113
+columns where daily-integrated typed fluxes are written into same-named
+instantaneous state, and 106 leaves/1,204 columns still carried from day start.
+A read-only `test01` scan of 18 existing v6 annual shards and 6,564 transitions
+shows 62 of those carried leaves, totaling 1,007 columns, actually change
+within the day. Gate C2 had required non-inventory fast fields to remain
+explicit endpoint reconstruction targets; the current 101-output schema does
+not implement that layer. See
+[`successor_fast_boundary_coverage_20260809.md`](research/daily_coarse_graining/successor_fast_boundary_coverage_20260809.md).
+
+The active gate is to freeze a canonical-owner reconstruction design before
+modifying the network. The all-Teacher oracle must reach `160/160` exact fast
+leaves before cold/ordinary/restart lifecycle acceptance or any small fit. No
+paid job is authorized; 7/30-day rollout, 365-day, long-held-point, Gate D2,
+and product acceptance remain closed.
 
 ## Stable Teacher
 

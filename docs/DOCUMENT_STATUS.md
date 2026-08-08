@@ -46,7 +46,8 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/long_horizon_biomass_productivity_objective_v1.md` | Active source ledger and implemented 1/7/30-day objective contract | Reviewing successor rollout loss and scientific metrics |
 | `research/daily_coarse_graining/daily_operator_parameter_routing_v1.md` | Implemented local parameter-ownership boundary used by the successor | Routing physical parameters or planning Gate D2 |
 | `research/daily_coarse_graining/successor_process_head_architecture_options_v1.md` | Accepted decision package; attention/graph pair selected and frozen | Reviewing the selected successor mechanism and control |
-| `research/daily_coarse_graining/successor_process_head_local_foundation_20260809.md` | Accepted local synthetic foundation; real-v6 `gln01` smoke pending | Reviewing implementation evidence or preparing the next smoke |
+| `research/daily_coarse_graining/successor_process_head_local_foundation_20260809.md` | Accepted local synthetic foundation; real-v6 lifecycle later exposed an incomplete fast boundary | Reviewing implementation evidence before the boundary diagnosis |
+| `research/daily_coarse_graining/successor_fast_boundary_coverage_20260809.md` | Active blocking boundary evidence; owner reconstruction decision required | Designing or reviewing the successor fast-state output boundary |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

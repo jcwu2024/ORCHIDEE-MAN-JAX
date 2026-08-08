@@ -354,13 +354,23 @@ parameter-route, conservative one-day, synthetic free-rollout, 5+7 trajectory,
 and train/train coefficient-preflight tests. See
 [`successor_process_head_local_foundation_20260809.md`](research/daily_coarse_graining/successor_process_head_local_foundation_20260809.md).
 
-The active task is the no-checkpoint real-v6 smoke on free `gln01`. It must
-bind the accepted v6 manifest/statistics, use the complete canonical retained
-tail, and cover both arms, real forward/loss/JVP/VJP, one-day
-state/mask/discrete/budget, and one bounded train/train rollout/coefficient
-probe. Synthetic plumbing does not satisfy this lifecycle gate. No paid GPU
-task is authorized, and bounded small fit remains closed until the smoke
-passes.
+The real-v6 lifecycle smoke exposed a blocking output-boundary omission. The
+strict Day-2 case loses 37 Teacher-defined active-vegetation state values, and
+replacing all 101 named process outputs with Teacher values does not repair it.
+That all-Teacher oracle reconstructs only `87/160` fast-target leaves. A
+contract ledger also identifies 14 daily-integral/instantaneous-state name
+collisions, while a read-only 18-shard v6 scan finds that 62 currently carried
+leaves totaling 1,007 columns actually change within the day. The evidence is
+[`successor_fast_boundary_coverage_20260809.md`](research/daily_coarse_graining/successor_fast_boundary_coverage_20260809.md).
+
+The active gate is now to freeze the missing canonical fast-state owner
+reconstruction boundary before changing either network. Preserve the selected
+attention/graph pair and the 101 source-backed process outputs unless the new
+decision explicitly supersedes them; add no anonymous fast vector, 48-record
+forcing reconstruction, or 48-step scan. Before any training, an all-Teacher
+oracle must reconstruct `160/160` fast leaves and cold/ordinary/restart
+lifecycle cases must have exact masks and discrete state. No paid GPU task is
+authorized, and bounded small fit remains closed.
 
 The process-statistics implementation is present in
 `daily_operator/training_statistics.py`. It vectorizes all 101 named targets
@@ -388,8 +398,9 @@ local implementation, representative six-point production pilot, formal v6
 product freeze, global-plan verification, five-worker reuse benchmark, full
 production, aggregation, and formal admission are complete. The successor
 pair is selected, frozen, and locally implemented. Its synthetic foundation
-is accepted, while the real-v6 `gln01` smoke is the current stop point before
-any bounded fit. Gates D2 and F remain queued.
+is accepted, but the real-v6 lifecycle exposed an incomplete canonical
+fast-state output boundary. Owner reconstruction is the current stop point
+before any bounded fit. Gates D2 and F remain queued.
 
 ### Inputs
 
