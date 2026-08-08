@@ -27,6 +27,7 @@ from research.daily_coarse_graining.daily_markov_contract import (
 )
 
 from .input_assembly import PFT_AXES, CanonicalDailyOperatorInputAssembler
+from .parameter_routing import route_retained_stomate_parameters
 from .process_derivations import (
     NativeForcingFieldLayout,
     derive_native_daily_deterministic_fields,
@@ -216,6 +217,14 @@ class CanonicalRetainedTailAdapter:
             return jnp.where(token == token, array, array)
 
         day_inputs = jax.tree_util.tree_map(lift, self.day_inputs)
+        day_inputs = day_inputs._replace(
+            stomate_parameter_values=route_retained_stomate_parameters(
+                day_inputs.stomate_parameter_values,
+                value.pft_parameters,
+                value.canonical_input.pft.active_pft_mask,
+                self.static_owner.contract.active_pft_indices,
+            )
+        )
         deterministic = derive_native_daily_deterministic_fields(
             value.canonical_input.forcing,
             self.static_owner.forcing_layout,

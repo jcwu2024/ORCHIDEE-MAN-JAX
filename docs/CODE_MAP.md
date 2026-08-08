@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-08-06.
+Last updated: 2026-08-09.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -159,7 +159,7 @@ hash-bound statistics artifact. Its CLI and proposed paid CPU launcher are
 `scripts/hpc/fit_first_neural_process_statistics.py` and
 `scripts/hpc/slurm_first_neural_process_statistics.sh`.
 `daily_operator/neural_architecture.py` and
-`daily_operator/neural_process_head.py` own the implemented Transformer
+`daily_operator/neural_process_head.py` own the first implemented Transformer
 candidate and exactly parameter-matched control. Their local and bounded
 real-v6 pre-training smoke is accepted in
 `first_neural_process_head_smoke_acceptance_20260808.md`. Host-only sampling,
@@ -167,12 +167,41 @@ optimization, validation, and checkpoint ownership are in
 `research/daily_coarse_graining/first_neural_process_training_run.py`; the
 GPU entry points and paid array launcher are in `scripts/hpc/`. The final
 no-checkpoint streaming/validation preflight is accepted in
-`first_neural_process_training_preflight_20260808.md`; neither arm has been
-formally trained. The full-v6 process statistics artifact is accepted from eight
+`first_neural_process_training_preflight_20260808.md`. One formal matched seed
+pair later completed and was stopped for practical equivalence without
+promotion; its controlling decision is
+`first_neural_process_head_first_pair_decision_20260808.md`. The full-v6 process statistics artifact is accepted from eight
 retained train/train partitions and an independent `test01` merge/load audit;
 its evidence and hashes are in `first_neural_process_head_candidate_v1.md`.
 Both arms enter through the existing Gate E1 composition boundary. The old
 immutable-parent packet and archived loose v5 workers are historical evidence.
+
+`daily_operator/long_horizon_objective.py` owns the architecture-neutral
+1/7/30-day cumulative productivity, terminal carbon-stock, signed-bias, AGB/BGB
+derivation, and hard-gate foundation. Its source ledger and objective contract
+are `long_horizon_biomass_productivity_objective_v1.md` and the matching
+manifest. It does not select or implement the successor neural architecture.
+
+`daily_operator/parameter_routing.py` owns the active ownership-aware split of
+the full operator parameter carrier. It supplies named `vcmax25` and
+maintenance-temperature factors to replaced fast processes and dynamically
+routes `alloc_min`, `residence_time`, and the retained `vcmax25` consumer into
+canonical STOMATE. Its contract is
+`daily_operator_parameter_routing_v1.md`. The closed first Transformer A/B did
+not consume this boundary and is not retroactively promoted.
+
+The selected successor decision is
+`successor_process_head_architecture_options_v1.md`, with frozen machine
+identity in `manifests/coarse_graining/successor_process_head_candidate_v1.json`.
+`daily_operator/successor_contract.py` owns host-side contract admission;
+`successor_architecture.py` owns source tokens, masks, matched attention/graph
+arms, decoders, and named fast parameter factors; `successor_process_head.py`
+owns the Gate-E process binding; and `successor_training.py` owns free daily
+rollout, predicted PFT-view refresh, the 5+7 trajectory adapter, combined
+objective, and one train/train gradient-ratio preflight. The local acceptance
+record is `successor_process_head_local_foundation_20260809.md`.
+`daily_operator/neural_architecture.py` remains the closed first-pair
+implementation and is not the successor default.
 
 ## Scripts
 

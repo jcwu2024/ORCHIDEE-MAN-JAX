@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-08.
+Last updated: 2026-08-09.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -39,9 +39,14 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/teacher_v6_full_production_acceptance_20260807.md` | Accepted full v6 data evidence | Starting or auditing neural training |
 | `research/daily_coarse_graining/storage_cleanup_20260807.md` | Current external-asset archive map | Locating or restoring historical v5 workers |
 | `research/daily_coarse_graining/failed_architecture_lessons.md` | Active negative-design authority | Selecting or reviewing a neural architecture or objective |
-| `research/daily_coarse_graining/first_neural_process_head_candidate_v1.md` | Implemented first candidate; pre-training admission and full-v6 statistics passed | Reviewing the first formal neural process head or planning fixed-budget training |
+| `research/daily_coarse_graining/first_neural_process_head_candidate_v1.md` | First matched seed completed; comparison closed without promotion | Reviewing the first formal neural process-head design and outcome |
 | `research/daily_coarse_graining/first_neural_process_head_smoke_acceptance_20260808.md` | Accepted local and real-v6 pre-training smoke | Reviewing candidate admission or planning the next bounded gate |
-| `research/daily_coarse_graining/first_neural_process_training_preflight_20260808.md` | Accepted final no-checkpoint training preflight; paid training awaits approval | Reviewing the active training gate, timing, or cost bound |
+| `research/daily_coarse_graining/first_neural_process_training_preflight_20260808.md` | Accepted historical preflight; first pair later completed and the remaining array was stopped | Reviewing timing, cost, or preflight provenance |
+| `research/daily_coarse_graining/first_neural_process_head_first_pair_decision_20260808.md` | Controlling stop decision after one matched pair | Reviewing why neither attention nor factorized arm is being continued |
+| `research/daily_coarse_graining/long_horizon_biomass_productivity_objective_v1.md` | Active source ledger and implemented 1/7/30-day objective contract | Reviewing successor rollout loss and scientific metrics |
+| `research/daily_coarse_graining/daily_operator_parameter_routing_v1.md` | Implemented local parameter-ownership boundary used by the successor | Routing physical parameters or planning Gate D2 |
+| `research/daily_coarse_graining/successor_process_head_architecture_options_v1.md` | Accepted decision package; attention/graph pair selected and frozen | Reviewing the selected successor mechanism and control |
+| `research/daily_coarse_graining/successor_process_head_local_foundation_20260809.md` | Accepted local synthetic foundation; real-v6 `gln01` smoke pending | Reviewing implementation evidence or preparing the next smoke |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

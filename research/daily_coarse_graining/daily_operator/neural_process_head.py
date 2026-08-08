@@ -507,6 +507,19 @@ class NeuralProcessHead:
             arm=self.arm,
             config=self.config,
         )
+        return self.prediction_from_named_outputs(outputs, inputs)
+
+    def prediction_from_named_outputs(
+        self,
+        outputs: Mapping[str, Any],
+        inputs: AssembledDailyOperatorInput,
+    ) -> ProcessPrediction:
+        """Adapt already-decoded named fields without invoking this network.
+
+        The successor architecture reuses this accepted scientific mapping,
+        not the closed first-pair encoder, parameter tree, or checkpoint.
+        """
+
         pft = self._pft_prediction(outputs, inputs)
         temperature = DailyTemperatureContext(
             tsurf_daily=outputs["daily.temperature_context.tsurf"],

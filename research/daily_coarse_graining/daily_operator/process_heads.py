@@ -11,6 +11,7 @@ from typing import Any
 import jax
 import jax.numpy as jnp
 
+from .parameter_routing import fast_process_parameter_factors
 from .process_derivations import (
     NativeForcingFieldLayout,
     derive_carbon_decomposition,
@@ -38,10 +39,6 @@ from .types import (
 )
 
 SECONDS_PER_DAY = 86400.0
-PFT_PARAMETER_VCMAX25 = 0
-PFT_PARAMETER_MAINT_A = 1
-PFT_PARAMETER_MAINT_B = 2
-PFT_PARAMETER_MAINT_C = 3
 PFT_TRAIT_BARE_SOIL = 0
 
 
@@ -132,19 +129,19 @@ def _pft_process_head(parameters, context, inputs: AssembledDailyOperatorInput) 
     traits = jnp.asarray(inputs.pft.pft_traits, dtype=jnp.float64)
     bare = active & (fraction > 0.0) & (traits[:, PFT_TRAIT_BARE_SOIL] > 0.5)
     vegetation = active & (fraction > 0.0) & ~bare
-    parameters_by_pft = jnp.asarray(inputs.pft.pft_parameters, dtype=jnp.float64)
-    vcmax25 = parameters_by_pft[:, PFT_PARAMETER_VCMAX25]
     # The environmental temperature proxy is a bounded named head output. The
     # explicit polynomial is the frozen source rule from
     # pft_parameters.f90::config_stomate_pft_parameters, lines 4220-4242.
     temperature_celsius = 40.0 * jnp.tanh(raw[:, 5])
-    slope = (
-        parameters_by_pft[:, PFT_PARAMETER_MAINT_C]
-        + parameters_by_pft[:, PFT_PARAMETER_MAINT_B] * temperature_celsius
-        + parameters_by_pft[:, PFT_PARAMETER_MAINT_A] * temperature_celsius**2
+    factors = fast_process_parameter_factors(
+        inputs.pft.pft_parameters,
+        temperature_celsius,
     )
-    gpp = jax.nn.softplus(raw[:, 0]) * jnp.maximum(vcmax25, 0.0)
-    maintenance = jax.nn.softplus(raw[:, 1]) * jnp.maximum(slope, 0.0)
+    gpp = jax.nn.softplus(raw[:, 0]) * jnp.maximum(factors.vcmax25, 0.0)
+    maintenance = jax.nn.softplus(raw[:, 1]) * jnp.maximum(
+        factors.maintenance_temperature_slope,
+        0.0,
+    )
     transpiration = jax.nn.softplus(raw[:, 2])
     wet_evaporation = jax.nn.softplus(raw[:, 3])
     bare_evaporation = jax.nn.softplus(raw[:, 4])

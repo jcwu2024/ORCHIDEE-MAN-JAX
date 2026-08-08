@@ -22,6 +22,13 @@ pft_fraction[n_pft]
 active_pft_mask[n_pft]
 ```
 
+Here `pft_parameters` is the complete operator-level carrier shared by the
+composition boundary. It is not a dense feature matrix to concatenate into a
+neural encoder. The process head receives only named fast-process factors;
+retained-exact columns bypass the neural encoder and go directly to their
+source-backed formulas. The implemented routing is recorded in
+`daily_operator_parameter_routing_v1.md`.
+
 Stable PFT IDs remain adapter metadata for restart remapping and provenance.
 They are not network features. Landpoint ID, Fortran PFT number, MTC embedding,
 and a PFT14 embedding are also forbidden. Model weights are shared across the
@@ -52,6 +59,11 @@ avoid baking a PFT-specific constant into the model:
 | `maint_resp_slope_a/b/c` | explicit parameterized fast-process factor |
 | `alloc_min` | retained exact daily allocation |
 | `residence_time` | retained exact daily mortality |
+
+`vcmax25` has two named consumers: the replaced GPP/photosynthesis path and
+the retained daily `vmax_step` state update. It is routed to both without
+becoming an opaque neural feature. Ownership classes are exclusive; consumer
+paths need not be.
 
 A parameter that is constant in available Teacher samples cannot be claimed
 as learnably invertible. It must retain an explicit formula or receive a

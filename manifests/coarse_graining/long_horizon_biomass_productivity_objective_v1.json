@@ -1,0 +1,180 @@
+{
+  "schema_version": "long_horizon_biomass_productivity_objective_v1",
+  "status": "objective_and_metric_foundation_frozen_architecture_pending",
+  "contract_sha256": "0ab0a79af538f62225c7b2a7ba7ec675a2f9a122228582479fc6a03d24ca1559",
+  "dataset": {
+    "dataset_id": "pft14-daily-teacher-v6",
+    "historical_v5_forbidden": true,
+    "teacher_regeneration_forbidden": true,
+    "sealed_test_forbidden_for_selection": true
+  },
+  "operator_boundary": "bind_daily_operator(input_assembler=canonical_assembler, process_head=candidate_head, retained_tail=canonical_retained_tail_adapter)",
+  "inference_constraints": {
+    "native_forcing_only": true,
+    "reconstruct_48_forcing_records": false,
+    "execute_48_step_state_scan": false
+  },
+  "horizons_days": [1, 7, 30],
+  "normalization": {
+    "cumulative_flux": "sum H daily values, require all H source-defined masks, divide residual by H times the frozen train/train daily field scale",
+    "terminal_stock": "use the complete daily-operator state after day H and divide residual by the frozen train/train stock scale",
+    "macro": "equal weight over named fields within a component and equal weight over 1, 7 and 30 day horizons",
+    "systematic_bias": "square of the signed mean normalized residual; never replace with unsigned RMSE"
+  },
+  "objective_components": {
+    "existing_one_day_process_anchor": {
+      "required": true,
+      "owner": "daily_operator.training_loss.masked_equal_label_macro_mse",
+      "note": "preserved separately so long-horizon improvement cannot erase one-day process supervision"
+    },
+    "cumulative_flux_mse": {"implemented": true, "coefficient": "architecture_preflight_required"},
+    "cumulative_flux_bias_squared": {"implemented": true, "coefficient": "architecture_preflight_required"},
+    "terminal_stock_mse": {"implemented": true, "coefficient": "architecture_preflight_required"},
+    "terminal_stock_bias_squared": {"implemented": true, "coefficient": "architecture_preflight_required"}
+  },
+  "coefficient_policy": {
+    "implicit_defaults_forbidden": true,
+    "freeze_before_training": true,
+    "required_preflight": "one bounded gradient-norm and loss-magnitude calibration on train/train plus non-test validation only",
+    "open_ended_weight_search_forbidden": true
+  },
+  "cumulative_flux_fields": [
+    {
+      "id": "gpp",
+      "units": "gC m-2 land day-1",
+      "teacher": "daily_interface.gpp_daily, active PFT weighted by pft_fraction",
+      "model_owner": "direct process-head fast GPP followed by the complete operator",
+      "fortran": ["src_stomate/stomate.f90::stomate_main:3198-3208"]
+    },
+    {
+      "id": "npp",
+      "units": "gC m-2 land day-1",
+      "teacher": "next_state.slowproc_stomate_previous_step_state.npp_daily, active PFT weighted by pft_fraction",
+      "model_owner": "retained exact npp_calc result; never a second independent head output",
+      "fortran": ["src_stomate/stomate_npp.f90::npp_calc:116-725", "src_stomate/stomate_lpj.f90::StomateLpj:1118-1131"]
+    },
+    {
+      "id": "maintenance_respiration",
+      "units": "gC m-2 land day-1",
+      "teacher": "sum next-state resp_maint over active PFTs with pft_fraction; resp_maint_part remains the direct fast label",
+      "model_owner": "direct part-resolved fast prediction consumed by retained exact npp_calc",
+      "fortran": ["src_stomate/stomate_resp.f90::maint_respiration:122-389", "src_stomate/stomate_npp.f90::npp_calc:314-380"]
+    },
+    {
+      "id": "growth_respiration",
+      "units": "gC m-2 land day-1",
+      "teacher": "next_state.slowproc_stomate_previous_step_state.resp_growth, active PFT weighted by pft_fraction",
+      "model_owner": "retained exact npp_calc result",
+      "fortran": ["src_stomate/stomate_npp.f90::npp_calc:455-530"]
+    },
+    {
+      "id": "heterotrophic_respiration",
+      "units": "gC m-2 land day-1",
+      "teacher": "next_state.slowproc_stomate_previous_step_state.resp_hetero, checked against typed litter/soil respiration components",
+      "model_owner": "process-head OK_LEAK transfers plus exact derivations and conservative update",
+      "fortran": ["src_stomate/stomate_litter.f90::littercalc_leak:1637-2873", "src_stomate/stomate_soilcarbon.f90::soilcarbon_leak:641-2416"]
+    }
+  ],
+  "terminal_stock_fields": [
+    {
+      "id": "aboveground_biomass_carbon",
+      "units": "gC m-2 land",
+      "teacher": "next-state biomass carbon in source above-litter parts, weighted by pft_fraction",
+      "derivation": "parts leaf, sapabove, heartabove, fruit, reserve, AGR sap/heart stilt and pneumatophore",
+      "fortran": ["src_stomate/stomate_litter.f90::littercalc_leak:1637-2873"],
+      "note": "operational source partition; reserve is included because Fortran routes it to above litter"
+    },
+    {
+      "id": "belowground_biomass_carbon",
+      "units": "gC m-2 land",
+      "teacher": "next-state biomass carbon in source below-litter parts, weighted by pft_fraction",
+      "derivation": "parts sapbelow, heartbelow and root",
+      "fortran": ["src_stomate/stomate_litter.f90::littercalc_leak:1637-2873"]
+    },
+    {
+      "id": "total_live_biomass_carbon",
+      "units": "gC m-2 land",
+      "teacher": "sum all 12 next-state biomass carbon parts, weighted by pft_fraction",
+      "identity": "aboveground_biomass_carbon + belowground_biomass_carbon"
+    },
+    {
+      "id": "litter_carbon",
+      "units": "gC m-2 land",
+      "teacher": "next-state litter above and below carbon, weighted once by source PFT fraction",
+      "fortran": ["src_stomate/stomate_litter.f90::littercalc_leak:1637-2873"]
+    },
+    {
+      "id": "soil_particulate_organic_carbon",
+      "units": "gC m-2 land",
+      "teacher": "next-state carbon_32l summed over carbon pool and depth, weighted once by source PFT fraction",
+      "fortran": ["src_stomate/stomate_soilcarbon.f90::soilcarbon_leak:641-2416"]
+    },
+    {
+      "id": "dissolved_organic_carbon",
+      "units": "gC m-2 land",
+      "teacher": "next-state DOC summed over depth, free/adsorbed and DOC pool axes, weighted once by source PFT fraction",
+      "fortran": ["src_stomate/stomate_soilcarbon.f90::soilcarbon_leak:641-2416"]
+    },
+    {
+      "id": "ecosystem_carbon",
+      "units": "gC m-2 land",
+      "teacher": "total live biomass + litter + particulate soil carbon + DOC + declared canopy/interception organic-carbon inventory",
+      "gate": "must reconcile with the existing combined OK_LEAK carbon balance; deepC_peat is not added because it is derived from carbon_32l"
+    }
+  ],
+  "process_ledger": [
+    {
+      "process": "biomass_allocation",
+      "fortran": ["src_stomate/stomate_alloc.f90::alloc:146-834", "src_stomate/stomate_npp.f90::npp_calc:393-491"],
+      "v6_coverage": "biomass endpoints and retained npp_calc outputs only",
+      "supervision_gap": "bm_alloc is not a frozen independent v6 process label and cannot be isolated from endpoints when respiration, mortality and turnover co-occur",
+      "ownership": "retained exact; do not invent a direct allocation target from endpoint subtraction"
+    },
+    {
+      "process": "turnover",
+      "fortran": ["src_stomate/stomate_turnover.f90::turn:169-947", "src_stomate/stomate_lpj.f90::StomateLpj:1260-1268"],
+      "v6_coverage": "turnover_daily and biomass are carried by the coherent Markov state",
+      "ownership": "retained exact; evaluate its contribution through terminal biomass and litter input"
+    },
+    {
+      "process": "mortality",
+      "fortran": ["src_stomate/lpj_gap.f90::gap:117-364", "src_stomate/stomate_lpj.f90::StomateLpj:1234-1243"],
+      "v6_coverage": "effects enter biomass and bm_to_litter; no admitted standalone neural mortality label",
+      "supervision_gap": "bm_to_litter mixes mortality with other kill/fire routes",
+      "ownership": "retained exact; a future learned mortality mechanism requires a new source-backed capture contract"
+    },
+    {
+      "process": "litter_input",
+      "fortran": ["src_stomate/stomate_litter.f90::littercalc_leak:1637-2873"],
+      "v6_coverage": "exactly derived from day-start bm_to_litter plus turnover_daily by the accepted Gate C derivation",
+      "ownership": "exact derivation, not an independent neural output"
+    },
+    {
+      "process": "soil_carbon_and_doc",
+      "fortran": ["src_stomate/stomate_soilcarbon.f90::soilcarbon_leak:641-2416"],
+      "v6_coverage": "typed gross decomposition/export/transport labels plus carbon_32l and DOC endpoints",
+      "ownership": "source-backed process quantities and conservative transfer update"
+    }
+  ],
+  "hard_gates": {
+    "budget_residual_absolute_tolerance": 2e-12,
+    "stock_negative_absolute_tolerance": 2e-12,
+    "required_zero_counts": [
+      "nonfinite_defined_prediction",
+      "negative_declared_stock",
+      "defined_mask_mismatch",
+      "discrete_state_mismatch",
+      "budget_residual_failure"
+    ]
+  },
+  "promotion_order": [
+    "local_forward_loss_gradient",
+    "single_day_state_and_budget",
+    "7_day_free_rollout",
+    "30_day_free_rollout",
+    "365_day_validation",
+    "long_held_point_validation",
+    "gate_d2",
+    "product_acceptance"
+  ]
+}

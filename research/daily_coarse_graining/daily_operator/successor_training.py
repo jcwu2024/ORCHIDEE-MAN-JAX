@@ -1,0 +1,526 @@
+"""Daily rollout and bounded loss calibration for the successor pair."""
+
+from __future__ import annotations
+
+from typing import Any, Callable, Mapping, NamedTuple, Sequence
+
+import jax
+import jax.numpy as jnp
+
+from research.daily_coarse_graining.daily_markov_contract import (
+    DailyMarkovContract,
+    reconstruct_state_fields_compiled,
+)
+
+from .long_horizon_objective import (
+    DEFAULT_HORIZONS,
+    ECOSYSTEM_CARBON_COMPONENTS,
+    LongHorizonObjectiveResult,
+    MaskedTrajectory,
+    derive_area_weighted_biomass_carbon,
+    derive_area_weighted_pft_carbon_pool,
+    derive_ecosystem_carbon,
+    long_horizon_biomass_productivity_objective,
+)
+from .types import DailyOperatorInput, DailyOperatorResult, PFTAxisInput
+
+CUMULATIVE_FLUX_FIELDS = (
+    "gpp",
+    "npp",
+    "maintenance_respiration",
+    "growth_respiration",
+    "heterotrophic_respiration",
+)
+TERMINAL_STOCK_FIELDS = (
+    "aboveground_biomass_carbon",
+    "belowground_biomass_carbon",
+    "total_live_biomass_carbon",
+    "litter_carbon",
+    "soil_particulate_organic_carbon",
+    "dissolved_organic_carbon",
+    "ecosystem_carbon",
+)
+LONG_HORIZON_COMPONENTS = (
+    "cumulative_flux_mse",
+    "cumulative_flux_bias_squared",
+    "terminal_stock_mse",
+    "terminal_stock_bias_squared",
+)
+
+
+class DailyOperatorRolloutTrace(NamedTuple):
+    result: DailyOperatorResult
+    pft_fraction: Any
+    active_pft_mask: Any
+
+
+class BiomassProductivityTrajectories(NamedTuple):
+    fluxes: Mapping[str, MaskedTrajectory]
+    stocks: Mapping[str, MaskedTrajectory]
+
+
+class SuccessorTrainingObjective(NamedTuple):
+    total: Any
+    one_day_anchor: Any
+    long_horizon: LongHorizonObjectiveResult
+
+
+class GradientRatioPreflight(NamedTuple):
+    split_label: str
+    anchor_loss: Any
+    component_losses: Mapping[str, Any]
+    anchor_gradient_norm: Any
+    component_gradient_norms: Mapping[str, Any]
+    target_gradient_ratios: Mapping[str, float]
+    resolved_coefficients: Mapping[str, float]
+    achieved_gradient_ratios: Mapping[str, float]
+
+
+def _compact_pft_views(
+    continuous_state: Any,
+    discrete_state: Mapping[str, Any],
+    template: PFTAxisInput,
+    contract: DailyMarkovContract,
+) -> PFTAxisInput:
+    fields = reconstruct_state_fields_compiled(
+        continuous_state,
+        discrete_state,
+        contract,
+    )
+    slow = fields["slowproc_stomate_previous_step_state"]
+    active_indices = jnp.asarray(contract.active_pft_indices, dtype=jnp.int32)
+    if template.pft_state.shape[0] != active_indices.size:
+        raise ValueError("rollout template and Markov active PFT widths differ")
+    state_parts = []
+    for name in ("veget_max", "lai", "biomass"):
+        selected = jnp.take(slow[name], active_indices, axis=1)
+        state_parts.append(
+            jnp.moveaxis(selected, 1, 0).reshape((active_indices.size, -1))
+        )
+    active = jnp.asarray(template.active_pft_mask, dtype=jnp.bool_)
+    pft_state = jnp.concatenate(tuple(state_parts), axis=1)
+    pft_state = jnp.where(active[:, None], pft_state, 0.0)
+    fraction = jnp.take(slow["veget_max"], active_indices, axis=1)[0]
+    fraction = jnp.where(active, fraction, 0.0)
+    return template._replace(pft_state=pft_state, pft_fraction=fraction)
+
+
+def rollout_input_from_template(
+    template: DailyOperatorInput,
+    continuous_state: Any,
+    discrete_state: Mapping[str, Any],
+    contract: DailyMarkovContract,
+) -> DailyOperatorInput:
+    """Replace every state-derived cached PFT view before one rollout day."""
+
+    continuous_state = jnp.asarray(continuous_state, dtype=jnp.float64)
+    if continuous_state.shape != (contract.continuous_state_width,):
+        raise ValueError("rollout continuous-state width drift")
+    pft = _compact_pft_views(
+        continuous_state,
+        discrete_state,
+        template.pft,
+        contract,
+    )
+    return template._replace(
+        continuous_state=continuous_state,
+        discrete_state=discrete_state,
+        pft=pft,
+    )
+
+
+def rollout_daily_operator(
+    parameters: Any,
+    templates: DailyOperatorInput,
+    *,
+    transition: Callable[[Any, DailyOperatorInput], DailyOperatorResult],
+    contract: DailyMarkovContract,
+) -> DailyOperatorRolloutTrace:
+    """Run one free daily scan without consulting future teacher states."""
+
+    continuous = jnp.asarray(templates.continuous_state, dtype=jnp.float64)
+    if continuous.ndim != 2 or continuous.shape[1] != contract.continuous_state_width:
+        raise ValueError("rollout templates require [day, continuous_state]")
+    if continuous.shape[0] < 1:
+        raise ValueError("rollout window cannot be empty")
+    initial_discrete = jax.tree_util.tree_map(
+        lambda value: jnp.asarray(value)[0],
+        templates.discrete_state,
+    )
+
+    def step(carry, template):
+        current = rollout_input_from_template(template, carry[0], carry[1], contract)
+        result = transition(parameters, current)
+        trace = DailyOperatorRolloutTrace(
+            result=result,
+            pft_fraction=current.pft.pft_fraction,
+            active_pft_mask=current.pft.active_pft_mask,
+        )
+        return (result.next_state.other, result.next_discrete_state), trace
+
+    _, trace = jax.lax.scan(
+        step,
+        (continuous[0], initial_discrete),
+        templates,
+    )
+    return trace
+
+
+def _state_leaf(contract: DailyMarkovContract, field: str) -> Any:
+    matches = tuple(
+        leaf
+        for leaf in contract.state_leaves
+        if leaf.component == "slowproc_stomate_previous_step_state"
+        and leaf.path == (field,)
+        and leaf.start is not None
+    )
+    if len(matches) != 1:
+        raise ValueError(f"long-horizon state field owner drift for {field}")
+    return matches[0]
+
+
+def _trajectory_field(
+    continuous: Any,
+    defined: Any,
+    contract: DailyMarkovContract,
+    field: str,
+) -> tuple[Any, Any]:
+    leaf = _state_leaf(contract, field)
+    days = continuous.shape[0]
+    shape = (days,) + tuple(int(value) for value in leaf.shape)
+    return (
+        continuous[:, leaf.start : leaf.stop].reshape(shape),
+        defined[:, leaf.start : leaf.stop].reshape(shape),
+    )
+
+
+def _normalized_pft_context(
+    pft_fraction: Any,
+    active_pft_mask: Any,
+    *,
+    days: int,
+    pft_width: int,
+) -> tuple[Any, Any]:
+    fraction = jnp.asarray(pft_fraction, dtype=jnp.float64)
+    active = jnp.asarray(active_pft_mask, dtype=jnp.bool_)
+    if fraction.ndim == 2:
+        fraction = fraction[:, None, :]
+    if active.ndim == 2:
+        active = active[:, None, :]
+    expected = (days, 1, pft_width)
+    if fraction.shape != expected or active.shape != expected:
+        raise ValueError(f"trajectory PFT context must have shape {expected}")
+    return fraction, active
+
+
+def _weighted_pft_flux(
+    value: Any,
+    defined: Any,
+    fraction: Any,
+    active: Any,
+) -> MaskedTrajectory:
+    value = jnp.asarray(value, dtype=jnp.float64)
+    defined = jnp.asarray(defined, dtype=jnp.bool_)
+    if value.shape != fraction.shape or defined.shape != value.shape:
+        raise ValueError("PFT flux and area context shapes differ")
+    admitted = active & defined
+    weighted = jnp.sum(jnp.where(admitted, value * fraction, 0.0), axis=-1)
+    output_defined = jnp.all((~active) | defined, axis=-1)
+    return MaskedTrajectory(weighted, output_defined)
+
+
+def _reduced_stock_defined(mask: Any, active: Any, *, pft_axis: int) -> Any:
+    mask = jnp.asarray(mask, dtype=jnp.bool_)
+    normalized_axis = pft_axis % mask.ndim
+    active_shape = [1] * mask.ndim
+    active_shape[0] = active.shape[0]
+    active_shape[1] = active.shape[1]
+    active_shape[normalized_axis] = active.shape[-1]
+    relevant = jnp.broadcast_to(jnp.reshape(active, tuple(active_shape)), mask.shape)
+    return jnp.all((~relevant) | mask, axis=tuple(range(2, mask.ndim)))
+
+
+def extract_biomass_productivity_trajectories(
+    continuous_state: Any,
+    continuous_defined: Any,
+    *,
+    daily_fast_gpp: Any,
+    daily_fast_gpp_defined: Any,
+    pft_fraction: Any,
+    active_pft_mask: Any,
+    contract: DailyMarkovContract,
+) -> BiomassProductivityTrajectories:
+    """Extract the frozen five fluxes and seven stocks from daily states."""
+
+    continuous = jnp.asarray(continuous_state, dtype=jnp.float64)
+    defined = jnp.asarray(continuous_defined, dtype=jnp.bool_)
+    if (
+        continuous.ndim != 2
+        or continuous.shape[1] != contract.continuous_state_width
+        or defined.shape != continuous.shape
+    ):
+        raise ValueError("trajectory state arrays require [day, continuous_state]")
+    days = continuous.shape[0]
+    pft_width = len(contract.active_pft_indices)
+    fraction, active = _normalized_pft_context(
+        pft_fraction,
+        active_pft_mask,
+        days=days,
+        pft_width=pft_width,
+    )
+    gpp = jnp.asarray(daily_fast_gpp, dtype=jnp.float64)
+    gpp_defined = jnp.asarray(daily_fast_gpp_defined, dtype=jnp.bool_)
+    if gpp.ndim == 2:
+        gpp = gpp[:, None, :]
+    if gpp_defined.ndim == 2:
+        gpp_defined = gpp_defined[:, None, :]
+
+    fluxes: dict[str, MaskedTrajectory] = {
+        "gpp": _weighted_pft_flux(gpp, gpp_defined, fraction, active)
+    }
+    for output_name, state_name in (
+        ("npp", "npp_daily"),
+        ("maintenance_respiration", "resp_maint"),
+        ("growth_respiration", "resp_growth"),
+        ("heterotrophic_respiration", "resp_hetero"),
+    ):
+        value, mask = _trajectory_field(continuous, defined, contract, state_name)
+        fluxes[output_name] = _weighted_pft_flux(value, mask, fraction, active)
+
+    biomass, biomass_defined = _trajectory_field(
+        continuous, defined, contract, "biomass"
+    )
+    biomass_stocks = derive_area_weighted_biomass_carbon(
+        biomass,
+        fraction,
+        active,
+    )
+    biomass_mask = _reduced_stock_defined(biomass_defined, active, pft_axis=2)
+
+    litter_above, litter_above_defined = _trajectory_field(
+        continuous, defined, contract, "litter_above"
+    )
+    litter_below, litter_below_defined = _trajectory_field(
+        continuous, defined, contract, "litter_below"
+    )
+    litter = derive_area_weighted_pft_carbon_pool(
+        litter_above,
+        fraction,
+        active,
+        pft_axis=3,
+        element_axis=-1,
+    ) + derive_area_weighted_pft_carbon_pool(
+        litter_below,
+        fraction,
+        active,
+        pft_axis=3,
+        element_axis=-1,
+    )
+    litter_defined = _reduced_stock_defined(
+        litter_above_defined, active, pft_axis=3
+    ) & _reduced_stock_defined(litter_below_defined, active, pft_axis=3)
+
+    particulate, particulate_defined = _trajectory_field(
+        continuous, defined, contract, "carbon_32l"
+    )
+    particulate_stock = derive_area_weighted_pft_carbon_pool(
+        particulate,
+        fraction,
+        active,
+        pft_axis=3,
+    )
+    particulate_mask = _reduced_stock_defined(
+        particulate_defined, active, pft_axis=3
+    )
+
+    doc, doc_defined = _trajectory_field(continuous, defined, contract, "DOC")
+    doc_stock = derive_area_weighted_pft_carbon_pool(
+        doc,
+        fraction,
+        active,
+        pft_axis=2,
+        element_axis=-1,
+    )
+    doc_mask = _reduced_stock_defined(doc_defined, active, pft_axis=2)
+
+    interception, interception_defined = _trajectory_field(
+        continuous, defined, contract, "interception_storage"
+    )
+    interception_stock = derive_area_weighted_pft_carbon_pool(
+        interception,
+        fraction,
+        active,
+        pft_axis=2,
+        element_axis=-1,
+    )
+    interception_mask = _reduced_stock_defined(
+        interception_defined, active, pft_axis=2
+    )
+
+    components = {
+        "live_biomass": biomass_stocks.total,
+        "litter": litter,
+        "soil_particulate": particulate_stock,
+        "dissolved_organic": doc_stock,
+        "canopy_interception_organic": interception_stock,
+    }
+    if tuple(components) != ECOSYSTEM_CARBON_COMPONENTS:
+        raise ValueError("ecosystem-carbon component order drift")
+    ecosystem = derive_ecosystem_carbon(components)
+    ecosystem_defined = (
+        biomass_mask
+        & litter_defined
+        & particulate_mask
+        & doc_mask
+        & interception_mask
+    )
+    stocks = {
+        "aboveground_biomass_carbon": MaskedTrajectory(
+            biomass_stocks.aboveground, biomass_mask
+        ),
+        "belowground_biomass_carbon": MaskedTrajectory(
+            biomass_stocks.belowground, biomass_mask
+        ),
+        "total_live_biomass_carbon": MaskedTrajectory(
+            biomass_stocks.total, biomass_mask
+        ),
+        "litter_carbon": MaskedTrajectory(litter, litter_defined),
+        "soil_particulate_organic_carbon": MaskedTrajectory(
+            particulate_stock, particulate_mask
+        ),
+        "dissolved_organic_carbon": MaskedTrajectory(doc_stock, doc_mask),
+        "ecosystem_carbon": MaskedTrajectory(ecosystem, ecosystem_defined),
+    }
+    if tuple(fluxes) != CUMULATIVE_FLUX_FIELDS or tuple(stocks) != TERMINAL_STOCK_FIELDS:
+        raise ValueError("biomass/productivity trajectory registry drift")
+    return BiomassProductivityTrajectories(fluxes=fluxes, stocks=stocks)
+
+
+def trajectories_from_rollout(
+    trace: DailyOperatorRolloutTrace,
+    contract: DailyMarkovContract,
+) -> BiomassProductivityTrajectories:
+    gpp = trace.result.prediction.named_outputs["daily.fast_gpp"]
+    gpp_defined = jnp.broadcast_to(
+        jnp.asarray(trace.active_pft_mask, dtype=jnp.bool_)[:, None, :],
+        jnp.asarray(gpp).shape,
+    )
+    return extract_biomass_productivity_trajectories(
+        trace.result.next_state.other,
+        trace.result.next_state_defined.other,
+        daily_fast_gpp=gpp,
+        daily_fast_gpp_defined=gpp_defined,
+        pft_fraction=trace.pft_fraction,
+        active_pft_mask=trace.active_pft_mask,
+        contract=contract,
+    )
+
+
+def successor_training_objective(
+    one_day_anchor: Any,
+    predicted: BiomassProductivityTrajectories,
+    expected: BiomassProductivityTrajectories,
+    *,
+    flux_scales: Mapping[str, Any],
+    stock_scales: Mapping[str, Any],
+    coefficients: Mapping[str, Any],
+    horizons: Sequence[int] = DEFAULT_HORIZONS,
+) -> SuccessorTrainingObjective:
+    """Join the unit-weight one-day anchor to the calibrated rollout terms."""
+
+    anchor = jnp.asarray(one_day_anchor, dtype=jnp.float64)
+    long_horizon = long_horizon_biomass_productivity_objective(
+        predicted.fluxes,
+        expected.fluxes,
+        predicted.stocks,
+        expected.stocks,
+        flux_scales=flux_scales,
+        stock_scales=stock_scales,
+        coefficients=coefficients,
+        horizons=horizons,
+    )
+    return SuccessorTrainingObjective(
+        total=anchor + long_horizon.total,
+        one_day_anchor=anchor,
+        long_horizon=long_horizon,
+    )
+
+
+def _tree_l2_norm(tree: Any) -> Any:
+    leaves = jax.tree_util.tree_leaves(tree)
+    if not leaves:
+        return jnp.asarray(0.0, dtype=jnp.float64)
+    squared = sum(
+        (
+            jnp.sum(jnp.asarray(leaf, dtype=jnp.float64) ** 2)
+            for leaf in leaves
+        ),
+        jnp.asarray(0.0, dtype=jnp.float64),
+    )
+    return jnp.sqrt(squared)
+
+
+def calibrate_gradient_ratio_coefficients(
+    parameters: Any,
+    anchor_loss: Callable[[Any], Any],
+    component_losses: Mapping[str, Callable[[Any], Any]],
+    *,
+    target_gradient_ratios: Mapping[str, float],
+    coefficient_minimum: float,
+    coefficient_maximum: float,
+    split_label: str,
+) -> GradientRatioPreflight:
+    """Resolve coefficients once from one train/train gradient measurement."""
+
+    if split_label != "train/train":
+        raise ValueError("successor coefficient preflight is restricted to train/train")
+    if tuple(component_losses) != LONG_HORIZON_COMPONENTS or set(
+        target_gradient_ratios
+    ) != set(LONG_HORIZON_COMPONENTS):
+        raise ValueError("successor gradient-ratio component registry drift")
+    if not 0.0 < coefficient_minimum <= coefficient_maximum:
+        raise ValueError("successor coefficient interval is invalid")
+    anchor_value, anchor_gradient = jax.value_and_grad(anchor_loss)(parameters)
+    anchor_norm = _tree_l2_norm(anchor_gradient)
+    anchor_norm_host = float(anchor_norm)
+    if not jnp.isfinite(anchor_value) or not jnp.isfinite(anchor_norm):
+        raise ValueError("one-day anchor loss/gradient is nonfinite")
+    if anchor_norm_host <= 0.0:
+        raise ValueError("one-day anchor gradient norm must be positive")
+
+    component_values = {}
+    component_norms = {}
+    resolved = {}
+    achieved = {}
+    for name in LONG_HORIZON_COMPONENTS:
+        target = float(target_gradient_ratios[name])
+        if not 0.0 < target < 1.0:
+            raise ValueError(f"invalid target gradient ratio for {name}")
+        value, gradient = jax.value_and_grad(component_losses[name])(parameters)
+        norm = _tree_l2_norm(gradient)
+        norm_host = float(norm)
+        if not jnp.isfinite(value) or not jnp.isfinite(norm) or norm_host <= 0.0:
+            raise ValueError(f"nonfinite or zero rollout gradient for {name}")
+        coefficient = target * anchor_norm_host / norm_host
+        if not coefficient_minimum <= coefficient <= coefficient_maximum:
+            raise ValueError(
+                f"resolved coefficient for {name} lies outside the frozen interval"
+            )
+        component_values[name] = value
+        component_norms[name] = norm
+        resolved[name] = coefficient
+        achieved[name] = coefficient * norm_host / anchor_norm_host
+
+    return GradientRatioPreflight(
+        split_label=split_label,
+        anchor_loss=anchor_value,
+        component_losses=component_values,
+        anchor_gradient_norm=anchor_norm,
+        component_gradient_norms=component_norms,
+        target_gradient_ratios={
+            name: float(target_gradient_ratios[name])
+            for name in LONG_HORIZON_COMPONENTS
+        },
+        resolved_coefficients=resolved,
+        achieved_gradient_ratios=achieved,
+    )

@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-07.
+Last updated: 2026-08-09.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -45,10 +45,11 @@ and a PFT-axis-shaped network does not prove scientific support for a new PFT.
   a frozen coherent Teacher data release: base Markov rows, 66 typed fields,
   masks, and year-end checkpoints are emitted by the same continuous Teacher
   execution and share one manifest. The old immutable-parent sidecar proposal
-  is rejected. Candidate selection remains unstarted. The formal product is
+  is rejected. The first candidate/control seed pair later completed and was
+  stopped for practical equivalence without promotion. The formal product is
   frozen as dataset manifest v6, typed contract v3, and canonical release v2;
   full 669-landpoint, 1961-2010 generation and admission are complete. No more
-  calibration or Teacher-data generation precedes the first neural candidate.
+  Teacher-data generation is authorized for the successor candidate.
 - The current Teacher and data are scientifically scoped to PFT14. Gate B1's
   catalog foundation now gives PFTs stable IDs, source PFT/MTC identities,
   traits, parameter ownership, capabilities, and named execution layouts.
@@ -273,8 +274,8 @@ gradient gates passed. Its manifest SHA256 is `5fc2c069...dc13aa99`, and the
 acceptance report SHA256 is `8784ed42...aa8e3`. The full evidence is in
 [`teacher_v6_full_production_acceptance_20260807.md`](research/daily_coarse_graining/teacher_v6_full_production_acceptance_20260807.md).
 
-Do not regenerate this dataset or read and join historical v5 rows. The next
-task is to admit the first neural candidate only through the stable
+Do not regenerate this dataset or read and join historical v5 rows. Every
+successor candidate must still enter only through the stable
 `bind_daily_operator(input_assembler=canonical_assembler,
 process_head=candidate_head,
 retained_tail=canonical_retained_tail_adapter)` boundary and the predeclared local/small
@@ -285,7 +286,7 @@ the executable evidence packet remains
 [`gate_e1_daily_operator_skeleton.md`](research/daily_coarse_graining/gate_e1_daily_operator_skeleton.md).
 
 The first-candidate mechanism, matched control, fixed training budget, and
-bounded gates are frozen in
+bounded gates were frozen in
 [`first_neural_process_head_candidate_v1.md`](research/daily_coarse_graining/first_neural_process_head_candidate_v1.md)
 and its machine contract. The declared Transformer and parameter-matched
 control are implemented under `daily_operator/`; local regression and the
@@ -293,7 +294,7 @@ bounded `gln01` real-v6 forward/loss/JVP/VJP, PFT, inactive-slot, and
 conservative construction smoke have passed. The evidence is
 [`first_neural_process_head_smoke_acceptance_20260808.md`](research/daily_coarse_graining/first_neural_process_head_smoke_acceptance_20260808.md).
 
-No formal network training has started. The retained-tail construction-time
+The retained-tail construction-time
 48-record forcing expansion has been replaced by source-exact native-record
 closed-form daily inputs; cold/ordinary/restart next-state, modelout,
 eager/JIT, derivative, and graph gates pass. The declared 100-update
@@ -302,18 +303,64 @@ candidate/control tiny-fit has passed with finite losses and reductions of
 typed-field statistics with PFT-axis moments shared across active slots are
 now frozen and pass identity, scale, merge, and independent-load audits.
 
-The final no-checkpoint `gln01` training preflight also passes. Both arms ran
+The final no-checkpoint `gln01` training preflight also passed. Both arms ran
 100 real changing train/train batches with bounded prefetch, finite loss and
 gradients, and all three non-test validation slices. Streaming cost was about
 `0.170-0.171 s/update`; the probe report SHA256 is
 `127ef3289af776d5c5bb994f9129f5d220aa8b8574b18c50e7e8a77aba739277`.
-The active gate is explicit resource and cost approval for the fixed six-run
-GPU training protocol. Use
-[`first_neural_process_training_preflight_20260808.md`](research/daily_coarse_graining/first_neural_process_training_preflight_20260808.md)
-and `scripts/hpc/slurm_first_neural_process_gpu_train.sh`. Start with one array
-task, then a small batch, before scaling to all arm/seed pairs. Do not start
-7/30-day rollout until both matched arms finish and pass post-training hard
-physical admission.
+One formal matched seed pair then completed. The axial candidate scored
+`0.8219892971` and the factorized control `0.8433795294` on the runner's macro
+MSE selection score. The candidate was modestly better overall and on
+temporal/spatial slices but worse on the joint slice. The user stopped the
+comparison for practical equivalence after this pair. Remaining seeds and the
+pair's 7/30-day rollout are cancelled, neither arm is promoted, and no formal
+three-seed equivalence or full-protocol rejection is claimed. The controlling
+record is
+[`first_neural_process_head_first_pair_decision_20260808.md`](research/daily_coarse_graining/first_neural_process_head_first_pair_decision_20260808.md).
+
+The source-backed long-horizon biomass and productivity foundation is now
+implemented in
+[`long_horizon_biomass_productivity_objective_v1.md`](research/daily_coarse_graining/long_horizon_biomass_productivity_objective_v1.md).
+Preserve the one-day named-process anchor and separately evaluate 1/7/30-day
+cumulative GPP/NPP/respiration, signed bias, and terminal AGB/BGB/litter/soil
+carbon under hard conservation/state gates.
+
+The ownership-aware parameter boundary is also implemented in
+[`daily_operator_parameter_routing_v1.md`](research/daily_coarse_graining/daily_operator_parameter_routing_v1.md).
+The full six-column PFT matrix is an operator carrier, not a generic neural
+feature matrix. `vcmax25` and the three maintenance coefficients reach named
+fast-process factors; `alloc_min` and `residence_time` bypass the neural
+encoder and reach retained allocation/mortality. `vcmax25` is additionally
+routed to the retained daily `vmax_step`. The closed first A/B omitted its
+fast parameter dependence and remains ineligible for Gate D2.
+
+The successor architecture-family analysis is complete in
+[`successor_process_head_architecture_options_v1.md`](research/daily_coarse_graining/successor_process_head_architecture_options_v1.md).
+It proposes `source_routed_process_attention_v2` against an exactly matched
+`source_routed_graph_mlp_control_v2`: both remove premature domain/global
+pooling, use 101 source-routed field queries, obey the ownership-aware
+parameter boundary, and train against the one-day plus 1/7/30-day objective.
+The attention arm differs only by content-dependent weighting along the same
+admitted source edges. A day-local RNN remains legal but is not preferred for
+five forcing records; cross-day neural memory is not proposed.
+
+The user selected the proposed attention/graph pair. Its machine-readable
+source adjacency, exact configuration, bounded coefficient rule, small-fit
+ceiling, and stop gates are frozen in
+`manifests/coarse_graining/successor_process_head_candidate_v1.json` at SHA256
+`bb8bb349...92b5c`. The local implementation has exactly `8,679,681`
+parameters in each arm and passes eager/JIT forward, loss/JVP/VJP, PFT,
+parameter-route, conservative one-day, synthetic free-rollout, 5+7 trajectory,
+and train/train coefficient-preflight tests. See
+[`successor_process_head_local_foundation_20260809.md`](research/daily_coarse_graining/successor_process_head_local_foundation_20260809.md).
+
+The active task is the no-checkpoint real-v6 smoke on free `gln01`. It must
+bind the accepted v6 manifest/statistics, use the complete canonical retained
+tail, and cover both arms, real forward/loss/JVP/VJP, one-day
+state/mask/discrete/budget, and one bounded train/train rollout/coefficient
+probe. Synthetic plumbing does not satisfy this lifecycle gate. No paid GPU
+task is authorized, and bounded small fit remains closed until the smoke
+passes.
 
 The process-statistics implementation is present in
 `daily_operator/training_statistics.py`. It vectorizes all 101 named targets
@@ -339,8 +386,10 @@ must not be rerun unless shared Teacher code or a frozen contract changes.
 Gate D1, the candidate registry, and Gate E1 are complete. Gate E2 coherent
 local implementation, representative six-point production pilot, formal v6
 product freeze, global-plan verification, five-worker reuse benchmark, full
-production, aggregation, and formal admission are complete. Neural candidate
-training is next. Gates D2 and F remain queued.
+production, aggregation, and formal admission are complete. The successor
+pair is selected, frozen, and locally implemented. Its synthetic foundation
+is accepted, while the real-v6 `gln01` smoke is the current stop point before
+any bounded fit. Gates D2 and F remain queued.
 
 ### Inputs
 

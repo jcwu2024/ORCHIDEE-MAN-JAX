@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-08.
+Last updated: 2026-08-09.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -26,8 +26,22 @@ permutation, inactive-slot, conservative budget, retained-tail, and
 closed-form reductions and does not construct 48 forcing records or execute a
 48-step state scan.
 
-No formal training has started. The full train/train process statistics
-artifact is accepted. A vectorized, deterministic, partition-mergeable fitter
+The first formal matched seed pair completed. The axial candidate job
+`14507225_0` reached its best score `0.8219892971` at update 8750; the
+factorized control job `14508831_1` reached `0.8433795294` at update 9000.
+The candidate improved the overall runner macro-MSE score by `2.54%`, temporal
+by `5.08%`, and spatial by `1.83%`, while regressing the joint slice by
+`4.41%`. Both trained stably with nearly identical final training loss.
+
+The user stopped the experiment for practical equivalence after this first
+pair. Seeds `20260808/20260809` and the pair's 7/30-day rollout will not be
+run; neither arm is promoted. Because the original contract named NRMSE while
+the runner reported macro MSE and did not define three-seed aggregation, this
+is not a formal equivalence claim or a complete-protocol rejection. See
+[`first_neural_process_head_first_pair_decision_20260808.md`](research/daily_coarse_graining/first_neural_process_head_first_pair_decision_20260808.md).
+
+The full train/train process statistics artifact remains accepted. A
+vectorized, deterministic, partition-mergeable fitter
 covers all 101 named process outputs plus semantic water/carbon/thermal input
 scales, with PFT-shared moments and hash-bound loading. Approved `cnmix` job
 `14506391` completed all eight fit steps over 8,591,565 rows and 23,540 source
@@ -39,15 +53,32 @@ rescan. The final JSON SHA256 is
 the NPZ SHA256 is
 `addf957afbd8338f4aa250155dcd299d568c1070b644e30279f9bf0ea37f9bf8`.
 
-The final `gln01` no-checkpoint training preflight passes at commit `492f2c0`.
+The final `gln01` no-checkpoint training preflight passed at commit `492f2c0`.
 Both arms completed 100 real changing train/train updates at about
 `0.170-0.171 s/update`, with finite loss, gradient norm, and clip scale. Each
 of the temporal, spatial, and joint non-test validation slices completed its
 bounded four-batch probe; sealed test data remained unread. The report SHA256
 is `127ef3289af776d5c5bb994f9129f5d220aa8b8574b18c50e7e8a77aba739277`.
-The next active gate is explicit approval for the fixed six-run GPU training
-array. Post-training physical admission and 7/30-day rollout follow; 365-day,
-long-held-point, Gate D2, and product acceptance remain gated downstream.
+The source-backed long-horizon objective foundation and ownership-aware
+parameter boundary are now implemented. The latter separates named
+`vcmax25`/maintenance fast factors from retained `alloc_min`/`residence_time`
+and also routes `vcmax25` to retained daily `vmax_step`. The closed first A/B
+did not consume its packed fast-process parameter columns and cannot support
+parameter-conditioned or Gate-D2 claims. See
+[`daily_operator_parameter_routing_v1.md`](research/daily_coarse_graining/daily_operator_parameter_routing_v1.md).
+The user selected source-routed field-level attention against an exactly
+matched source-graph MLP control. The v1 contract is frozen at SHA256
+`bb8bb349...92b5c`; both implemented arms contain exactly `8,679,681`
+parameters and share the 20-family source registry, 101 field queries,
+process graph, decoder, parameter routing, and loss boundary. Local eager/JIT
+forward, loss/JVP/VJP, PFT permutation, inactive isolation, fast/retained
+parameter gradients, one-day conservation, synthetic free rollout, 5+7
+trajectory extraction, and bounded train/train coefficient calibration pass.
+The inference audit reports zero violations. See
+[`successor_process_head_local_foundation_20260809.md`](research/daily_coarse_graining/successor_process_head_local_foundation_20260809.md).
+The next gate is a no-checkpoint real-v6 `gln01` smoke with the canonical
+retained tail. No paid job is authorized; bounded small fit, 365-day,
+long-held-point, Gate D2 and product acceptance remain closed.
 
 ## Stable Teacher
 
@@ -622,8 +653,10 @@ Markov contract are valid. Its operational evidence is recorded in
 The material below records completed v3-v5 dataset and rejected-model
 evidence. It is not the active work queue. Gate E1 is accepted; the coherent
 Gate E2 coherent production and formal v6 dataset admission have passed. The
-next active work is neural candidate training against the accepted v6
-manifest, statistics, and acceptance report.
+first formal neural pair is closed without promotion. The long-horizon and
+parameter-routing foundations are complete. The successor options analysis is
+complete, the pair is selected, and the local synthetic foundation is
+accepted. The real-v6 `gln01` smoke is the active stop point before fitting.
 
 The full 669-point baseline is generated and admitted. Finalization job
 `14400343` completed in 4:08:54 with exit code zero. Its fail-closed gates

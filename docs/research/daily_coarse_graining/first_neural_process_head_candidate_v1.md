@@ -1,6 +1,6 @@
 # First Neural Process-Head Candidate v1
 
-Status: **implemented; pre-training admission and full-v6 statistics passed**.
+Status: **first matched seed completed; comparison closed for practical equivalence without promotion**.
 
 Date: 2026-08-07.
 
@@ -153,8 +153,7 @@ updates, a wider model, 365-day evaluation, Gate D2, or product acceptance.
 The candidate and control are implemented with an exactly shared parameter
 tree of 5,464,321 float64 parameters. The bounded `gln01` real-v6
 forward/loss/JVP/VJP, permutation, inactive-slot, budget, retained-tail, and
-100-update tiny-fit gates have passed. No formal optimization checkpoint has
-been produced.
+100-update tiny-fit gates passed.
 
 The full train/train process statistics artifact is accepted. Its
 implementation streams coherent base and typed v6
@@ -177,9 +176,17 @@ SHA256 is
 the NPZ SHA256 is
 `addf957afbd8338f4aa250155dcd299d568c1070b644e30279f9bf0ea37f9bf8`.
 
-The next active step is formal small GPU candidate/control training followed
-by the declared 7/30-day rollout gates. It remains blocked on separate GPU
-resource and cost approval. Each paid submission must state partition,
-resources, wall time, working directory, command, and worst-case cost. Passing
-that stage is required before 365-day, long-held-point, Gate D2, or product
-acceptance work begins.
+One formal seed pair then completed. The axial candidate's selection score was
+`0.8219892971` and the factorized control's was `0.8433795294`; the candidate
+was better overall and on temporal/spatial slices but worse on the joint
+slice. The user judged the difference practically immaterial and stopped the
+comparison after this pair. Remaining seeds and the pair's 7/30-day rollout
+were not run, neither arm is promoted, and no formal three-seed equivalence or
+full-protocol rejection is claimed. The controlling record is
+[`first_neural_process_head_first_pair_decision_20260808.md`](first_neural_process_head_first_pair_decision_20260808.md).
+
+The active work is the source-backed long-horizon biomass/productivity target
+and metric foundation in
+[`long_horizon_biomass_productivity_objective_v1.md`](long_horizon_biomass_productivity_objective_v1.md),
+followed by an explicit successor-architecture discussion before any new
+network implementation or GPU submission.
