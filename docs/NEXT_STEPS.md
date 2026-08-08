@@ -297,23 +297,29 @@ No formal network training has started. The retained-tail construction-time
 48-record forcing expansion has been replaced by source-exact native-record
 closed-form daily inputs; cold/ordinary/restart next-state, modelout,
 eager/JIT, derivative, and graph gates pass. The immediate work order is:
-(1) fit and freeze train/train-only typed-field statistics with PFT-axis
-moments shared across active slots. The declared 100-update candidate/control
-tiny-fit has passed with finite losses and reductions of 82.39% and 67.87%,
-without retaining a checkpoint. After the statistics artifact passes its
-identity and scale audit, a separately approved small GPU training run and
-7/30-day rollout may begin.
+(1) request separate resource and cost approval for the fixed-budget small GPU
+candidate/control training and 7/30-day rollout. The declared 100-update
+candidate/control tiny-fit has passed with finite losses and reductions of
+82.39% and 67.87%, without retaining a checkpoint. The full train/train-only
+typed-field statistics with PFT-axis moments shared across active slots are
+now frozen and pass identity, scale, merge, and independent-load audits.
 
-The process-statistics implementation is now present in
+The process-statistics implementation is present in
 `daily_operator/training_statistics.py`. It vectorizes all 101 named targets
 over coherent annual shards, keeps mergeable count/mean/M2 accumulators,
 shares applicable output and semantic-domain moments across active PFT slots,
 and writes a candidate/data/contract/source-hash-bound JSON/NPZ pair. Local
 equivalence, accumulator merge, PFT sharing, bounded-loss-scale, and artifact
-tamper tests pass. The accepted 8,591,565 train/train rows have not yet been
-scanned. The proposed eight-partition `cnmix` launcher is
-`scripts/hpc/slurm_first_neural_process_statistics.sh`; it remains unsubmitted
-pending the required paid-resource and cost approval.
+tamper tests pass. Approved `cnmix` job `14506391` completed all eight fit
+steps over 8,591,565 train/train rows and 23,540 source shards in about 30.5
+minutes per partition. Its batch then failed only at the small merge call due
+to an API-wiring error; commit `9e8d4e9` corrected the call without rescanning
+data, and the retained partials merged and independently reloaded on `test01`.
+The final JSON SHA256 is
+`9bc2cab43b3279e39a0fc2876ca298b2b371d6890986d44ef035859ca925eaab`;
+the NPZ SHA256 is
+`addf957afbd8338f4aa250155dcd299d568c1070b644e30279f9bf0ea37f9bf8`.
+No GPU training submission is authorized by this acceptance.
 
 ## Completed Task Packet: Gate C
 

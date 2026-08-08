@@ -1,6 +1,6 @@
 # First Neural Process-Head Candidate v1
 
-Status: **implemented; pre-training admission passed; full-v6 statistics pending**.
+Status: **implemented; pre-training admission and full-v6 statistics passed**.
 
 Date: 2026-08-07.
 
@@ -156,18 +156,30 @@ forward/loss/JVP/VJP, permutation, inactive-slot, budget, retained-tail, and
 100-update tiny-fit gates have passed. No formal optimization checkpoint has
 been produced.
 
-The remaining pre-training dependency is the full train/train process
-statistics artifact. Its implementation streams coherent base and typed v6
+The full train/train process statistics artifact is accepted. Its
+implementation streams coherent base and typed v6
 shards, computes all 101 named output moments and independent loss scales,
 computes semantic water/carbon/thermal input scales, shares every applicable
 PFT moment across active slots, supports deterministic partition merging, and
 hash-binds the candidate, dataset, contracts, source inventory, and accepted
 base statistics. Local vectorized-versus-single-day, accumulator merge, PFT
-sharing, and artifact-tamper tests pass. The full 8,591,565-row fit has not yet
-run.
+sharing, and artifact-tamper tests pass.
 
-The full statistics scan is a separately approved paid CPU job. Formal small
-GPU training and 7/30-day rollout remain blocked until its final artifact is
-loaded and audited. Each paid CPU or GPU submission must separately state
-partition, resources, wall time, working directory, command, and worst-case
-cost.
+Approved `cnmix` job `14506391` completed all eight fit steps over 8,591,565
+train/train rows and 23,540 source shards. Its batch failed after 31:22 at the
+merge call only: the CLI passed an unsupported `base_statistics` argument.
+Commit `9e8d4e9` corrected that wiring without changing any statistic or
+rescanning data. The eight retained JSON/NPZ partial pairs then merged and a
+separate Python process independently loaded the final artifact on `test01`.
+Both audits reported 8,591,565 samples and 23,540 shards. The final JSON
+SHA256 is
+`9bc2cab43b3279e39a0fc2876ca298b2b371d6890986d44ef035859ca925eaab`;
+the NPZ SHA256 is
+`addf957afbd8338f4aa250155dcd299d568c1070b644e30279f9bf0ea37f9bf8`.
+
+The next active step is formal small GPU candidate/control training followed
+by the declared 7/30-day rollout gates. It remains blocked on separate GPU
+resource and cost approval. Each paid submission must state partition,
+resources, wall time, working directory, command, and worst-case cost. Passing
+that stage is required before 365-day, long-held-point, Gate D2, or product
+acceptance work begins.

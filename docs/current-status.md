@@ -26,14 +26,21 @@ permutation, inactive-slot, conservative budget, retained-tail, and
 closed-form reductions and does not construct 48 forcing records or execute a
 48-step state scan.
 
-No formal training has started. The only current blocker is the full
-train/train process statistics artifact. A vectorized, deterministic,
-partition-mergeable fitter now covers all 101 named process outputs plus
-semantic water/carbon/thermal input scales, with PFT-shared moments and
-hash-bound loading. Its local equivalence, merge, PFT-sharing, bounded-scale,
-and tamper tests pass; the 8,591,565-row v6 scan remains unrun and requires a
-separately approved paid CPU job. Formal GPU training and 7/30-day rollout
-remain downstream of that artifact.
+No formal training has started. The full train/train process statistics
+artifact is accepted. A vectorized, deterministic, partition-mergeable fitter
+covers all 101 named process outputs plus semantic water/carbon/thermal input
+scales, with PFT-shared moments and hash-bound loading. Approved `cnmix` job
+`14506391` completed all eight fit steps over 8,591,565 rows and 23,540 source
+shards. The batch failed after 31:22 only because its merge CLI passed one
+unsupported argument; commit `9e8d4e9` fixed that wiring, after which the
+retained partials merged and independently reloaded on `test01` without a
+rescan. The final JSON SHA256 is
+`9bc2cab43b3279e39a0fc2876ca298b2b371d6890986d44ef035859ca925eaab` and
+the NPZ SHA256 is
+`addf957afbd8338f4aa250155dcd299d568c1070b644e30279f9bf0ea37f9bf8`.
+The next active work is the separately approved small GPU candidate/control
+training and 7/30-day rollout; 365-day, long-held-point, Gate D2, and product
+acceptance remain gated downstream.
 
 ## Stable Teacher
 

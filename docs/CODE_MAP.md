@@ -163,10 +163,11 @@ hash-bound statistics artifact. Its CLI and proposed paid CPU launcher are
 candidate and exactly parameter-matched control. Their local and bounded
 real-v6 pre-training smoke is accepted in
 `first_neural_process_head_smoke_acceptance_20260808.md`; neither arm has been
-trained. The statistics fitter passes local fixtures but its full-v6 artifact
-has not been produced. Both arms enter through the existing Gate E1
-composition boundary. The old immutable-parent packet and archived loose v5
-workers are historical evidence.
+trained. The full-v6 process statistics artifact is accepted from eight
+retained train/train partitions and an independent `test01` merge/load audit;
+its evidence and hashes are in `first_neural_process_head_candidate_v1.md`.
+Both arms enter through the existing Gate E1 composition boundary. The old
+immutable-parent packet and archived loose v5 workers are historical evidence.
 
 ## Scripts
 
