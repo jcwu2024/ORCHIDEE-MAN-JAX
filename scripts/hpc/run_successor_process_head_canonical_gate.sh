@@ -18,7 +18,7 @@ PROCESS_STATISTICS=$ROOT/runtime/outputs/training/first-neural-process-head-v1-s
 HEAD_SHORT=${EXPECTED_GIT_HEAD:0:7}
 REPORT_ROOT=$ROOT/runtime/outputs/training/successor-process-head-v2-canonical-$HEAD_SHORT
 OUTPUT=${OUTPUT:-$REPORT_ROOT/${STAGE}_report.json}
-CACHE_ROOT=$ROOT/runtime/cache/jax/orcjax_gpu/successor-process-head-v2-canonical-$HEAD_SHORT-$STAGE
+CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/successor-process-head-v2-canonical-$HEAD_SHORT-$STAGE}
 
 case "$STAGE" in
   attribution|baseline|carbon_baseline|initialization|lifecycle|rollout) ;;

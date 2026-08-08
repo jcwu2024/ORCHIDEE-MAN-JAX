@@ -545,6 +545,69 @@ def _retained_boundary_report(
     }
 
 
+def _flat_fast_target_report(
+    observed: Any,
+    sample: Mapping[str, Any],
+    contract: Any,
+) -> dict[str, Any]:
+    from research.daily_coarse_graining.markov_dataset import defined_numeric_mask
+
+    observed = np.asarray(observed, dtype=np.float64)
+    expected = np.asarray(sample["fast_day_target"], dtype=np.float64)
+    if observed.shape != expected.shape:
+        raise ValueError(
+            f"canonical internal fast-target shape drift: {observed.shape} != {expected.shape}"
+        )
+    records = []
+    exact_leaf_count = 0
+    for leaf in contract.fast_day_target_leaves:
+        actual = observed[leaf.start : leaf.stop]
+        wanted = expected[leaf.start : leaf.stop]
+        actual_defined = defined_numeric_mask(actual)
+        wanted_defined = defined_numeric_mask(wanted)
+        common = actual_defined & wanted_defined
+        mask_mismatches = int(np.count_nonzero(actual_defined != wanted_defined))
+        maximum_error = (
+            float(np.max(np.abs(actual[common] - wanted[common])))
+            if np.any(common)
+            else 0.0
+        )
+        exact = (
+            mask_mismatches == 0
+            and np.allclose(
+                actual[common],
+                wanted[common],
+                atol=1.0e-8,
+                rtol=1.0e-10,
+            )
+        )
+        exact_leaf_count += int(exact)
+        if not exact:
+            records.append(
+                {
+                    "leaf": leaf.key,
+                    "mask_mismatch_count": mask_mismatches,
+                    "maximum_absolute_error": maximum_error,
+                }
+            )
+    records.sort(
+        key=lambda item: (
+            item["mask_mismatch_count"],
+            item["maximum_absolute_error"],
+        ),
+        reverse=True,
+    )
+    return {
+        "width": int(observed.size),
+        "leaf_count": len(contract.fast_day_target_leaves),
+        "exact_leaf_count": exact_leaf_count,
+        "nonexact_leaf_count": len(records),
+        "atol": 1.0e-8,
+        "rtol": 1.0e-10,
+        "top_nonexact_leaves": records[:25],
+    }
+
+
 def _case_report(
     result: Any,
     sample: Mapping[str, Any],
@@ -1082,6 +1145,9 @@ def _carbon_baseline_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
 def _attribution_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
     from jax_orchidee.driver import orchestration as teacher
     from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
+    from research.daily_coarse_graining.daily_operator.retained_tail import (
+        retained_tail_input,
+    )
     from research.daily_coarse_graining.daily_operator.successor_architecture import (
         SOURCE_ROUTED_ATTENTION,
     )
@@ -1095,6 +1161,7 @@ def _attribution_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
     )
     sample = runtime["ordinary_parent"].sample(ANCHOR_ROWS[0])
     inputs = runtime["examples"][ANCHOR_ROWS[0]].inputs
+    assembled = runtime["adapter"].input_assembler.assemble(inputs)
     retained_tail = _retained_adapter(
         runtime,
         teacher_context,
@@ -1180,6 +1247,20 @@ def _attribution_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
         result = compiled(parameters, inputs)
         jax.block_until_ready(result)
         report = _case_report(result, sample, runtime["contract"])
+        internal_target = retained_tail._typed_fast_target(
+            retained_tail_input(
+                assembled,
+                result.prediction,
+                result.fast_update,
+            )
+        )
+        report["canonical_internal_fast_target_vs_teacher"] = (
+            _flat_fast_target_report(
+                internal_target,
+                sample,
+                runtime["contract"],
+            )
+        )
         cases[name] = {
             "status": report["status"],
             "seconds": time.perf_counter() - started,
