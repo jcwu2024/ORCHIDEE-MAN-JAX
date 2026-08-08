@@ -143,7 +143,6 @@ def _merge(args) -> int:
         index=index,
         adapter=adapter,
         candidate_contract=candidate,
-        base_statistics=_base,
     )
     output = write_process_training_statistics(statistics, args.output)
     load_process_training_statistics(
@@ -151,6 +150,7 @@ def _merge(args) -> int:
         index=index,
         adapter=adapter,
         candidate_contract=candidate,
+        base_statistics=_base,
     )
     print(
         json.dumps(
