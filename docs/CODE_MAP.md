@@ -162,8 +162,13 @@ hash-bound statistics artifact. Its CLI and proposed paid CPU launcher are
 `daily_operator/neural_process_head.py` own the implemented Transformer
 candidate and exactly parameter-matched control. Their local and bounded
 real-v6 pre-training smoke is accepted in
-`first_neural_process_head_smoke_acceptance_20260808.md`; neither arm has been
-trained. The full-v6 process statistics artifact is accepted from eight
+`first_neural_process_head_smoke_acceptance_20260808.md`. Host-only sampling,
+optimization, validation, and checkpoint ownership are in
+`research/daily_coarse_graining/first_neural_process_training_run.py`; the
+GPU entry points and paid array launcher are in `scripts/hpc/`. The final
+no-checkpoint streaming/validation preflight is accepted in
+`first_neural_process_training_preflight_20260808.md`; neither arm has been
+formally trained. The full-v6 process statistics artifact is accepted from eight
 retained train/train partitions and an independent `test01` merge/load audit;
 its evidence and hashes are in `first_neural_process_head_candidate_v1.md`.
 Both arms enter through the existing Gate E1 composition boundary. The old

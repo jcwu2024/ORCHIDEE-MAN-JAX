@@ -41,6 +41,7 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/failed_architecture_lessons.md` | Active negative-design authority | Selecting or reviewing a neural architecture or objective |
 | `research/daily_coarse_graining/first_neural_process_head_candidate_v1.md` | Implemented first candidate; pre-training admission and full-v6 statistics passed | Reviewing the first formal neural process head or planning fixed-budget training |
 | `research/daily_coarse_graining/first_neural_process_head_smoke_acceptance_20260808.md` | Accepted local and real-v6 pre-training smoke | Reviewing candidate admission or planning the next bounded gate |
+| `research/daily_coarse_graining/first_neural_process_training_preflight_20260808.md` | Accepted final no-checkpoint training preflight; paid training awaits approval | Reviewing the active training gate, timing, or cost bound |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

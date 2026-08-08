@@ -38,9 +38,16 @@ rescan. The final JSON SHA256 is
 `9bc2cab43b3279e39a0fc2876ca298b2b371d6890986d44ef035859ca925eaab` and
 the NPZ SHA256 is
 `addf957afbd8338f4aa250155dcd299d568c1070b644e30279f9bf0ea37f9bf8`.
-The next active work is the separately approved small GPU candidate/control
-training and 7/30-day rollout; 365-day, long-held-point, Gate D2, and product
-acceptance remain gated downstream.
+
+The final `gln01` no-checkpoint training preflight passes at commit `492f2c0`.
+Both arms completed 100 real changing train/train updates at about
+`0.170-0.171 s/update`, with finite loss, gradient norm, and clip scale. Each
+of the temporal, spatial, and joint non-test validation slices completed its
+bounded four-batch probe; sealed test data remained unread. The report SHA256
+is `127ef3289af776d5c5bb994f9129f5d220aa8b8574b18c50e7e8a77aba739277`.
+The next active gate is explicit approval for the fixed six-run GPU training
+array. Post-training physical admission and 7/30-day rollout follow; 365-day,
+long-held-point, Gate D2, and product acceptance remain gated downstream.
 
 ## Stable Teacher
 

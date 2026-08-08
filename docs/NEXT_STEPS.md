@@ -296,13 +296,24 @@ conservative construction smoke have passed. The evidence is
 No formal network training has started. The retained-tail construction-time
 48-record forcing expansion has been replaced by source-exact native-record
 closed-form daily inputs; cold/ordinary/restart next-state, modelout,
-eager/JIT, derivative, and graph gates pass. The immediate work order is:
-(1) request separate resource and cost approval for the fixed-budget small GPU
-candidate/control training and 7/30-day rollout. The declared 100-update
+eager/JIT, derivative, and graph gates pass. The declared 100-update
 candidate/control tiny-fit has passed with finite losses and reductions of
 82.39% and 67.87%, without retaining a checkpoint. The full train/train-only
 typed-field statistics with PFT-axis moments shared across active slots are
 now frozen and pass identity, scale, merge, and independent-load audits.
+
+The final no-checkpoint `gln01` training preflight also passes. Both arms ran
+100 real changing train/train batches with bounded prefetch, finite loss and
+gradients, and all three non-test validation slices. Streaming cost was about
+`0.170-0.171 s/update`; the probe report SHA256 is
+`127ef3289af776d5c5bb994f9129f5d220aa8b8574b18c50e7e8a77aba739277`.
+The active gate is explicit resource and cost approval for the fixed six-run
+GPU training protocol. Use
+[`first_neural_process_training_preflight_20260808.md`](research/daily_coarse_graining/first_neural_process_training_preflight_20260808.md)
+and `scripts/hpc/slurm_first_neural_process_gpu_train.sh`. Start with one array
+task, then a small batch, before scaling to all arm/seed pairs. Do not start
+7/30-day rollout until both matched arms finish and pass post-training hard
+physical admission.
 
 The process-statistics implementation is present in
 `daily_operator/training_statistics.py`. It vectorizes all 101 named targets
@@ -319,7 +330,7 @@ The final JSON SHA256 is
 `9bc2cab43b3279e39a0fc2876ca298b2b371d6890986d44ef035859ca925eaab`;
 the NPZ SHA256 is
 `addf957afbd8338f4aa250155dcd299d568c1070b644e30279f9bf0ea37f9bf8`.
-No GPU training submission is authorized by this acceptance.
+No GPU training submission is authorized without the separate approval block.
 
 ## Completed Task Packet: Gate C
 
