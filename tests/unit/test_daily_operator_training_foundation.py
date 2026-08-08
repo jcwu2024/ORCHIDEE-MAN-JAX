@@ -82,14 +82,24 @@ from research.daily_coarse_graining.typed_sidecar import (
 
 ROOT = Path(__file__).resolve().parents[2]
 CONTRACT_MANIFEST = (
-    ROOT / "outputs" / "research" / "daily_coarse_graining" / "dataset-manifest-v5" / "dataset_manifest.json"
+    ROOT
+    / "outputs"
+    / "research"
+    / "daily_coarse_graining"
+    / "dataset-manifest-v5"
+    / "dataset_manifest.json"
 )
 
 
 def _markov_contract():
-    metadata = json.loads(CONTRACT_MANIFEST.read_text(encoding="utf-8"))["markov_contract"]
+    metadata = json.loads(CONTRACT_MANIFEST.read_text(encoding="utf-8"))[
+        "markov_contract"
+    ]
     contract = daily_markov_contract_from_metadata(metadata)
-    assert contract.sha256 == "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442"
+    assert (
+        contract.sha256
+        == "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442"
+    )
     return contract
 
 
@@ -101,17 +111,28 @@ def _set_condition(vector, leaves, name, value):
 def _synthetic_parent(adapter: DailyProcessTrainingAdapter):
     contract = adapter.contract
     state = np.zeros((contract.continuous_state_width,), dtype=np.float64)
-    veget = next(leaf for leaf in contract.state_leaves if leaf.key == "slowproc_stomate_previous_step_state.veget_max")
+    veget = next(
+        leaf
+        for leaf in contract.state_leaves
+        if leaf.key == "slowproc_stomate_previous_step_state.veget_max"
+    )
     state[veget.start : veget.stop] = np.asarray([0.5, 0.5], dtype=np.float64)
-    discrete = {leaf.key: np.zeros(leaf.shape, dtype=np.dtype(leaf.dtype)) for leaf in contract.discrete_leaves}
-    parameters = np.zeros((contract.static_conditions.parameter_width,), dtype=np.float64)
+    discrete = {
+        leaf.key: np.zeros(leaf.shape, dtype=np.dtype(leaf.dtype))
+        for leaf in contract.discrete_leaves
+    }
+    parameters = np.zeros(
+        (contract.static_conditions.parameter_width,), dtype=np.float64
+    )
     _set_condition(
         parameters,
         contract.static_conditions.parameter_leaves,
         "maint_resp_slope",
         np.ones((14, 3), dtype=np.float64),
     )
-    static = np.zeros((contract.static_conditions.landpoint_static_width,), dtype=np.float64)
+    static = np.zeros(
+        (contract.static_conditions.landpoint_static_width,), dtype=np.float64
+    )
     _set_condition(
         static,
         contract.static_conditions.landpoint_static_leaves,
@@ -130,10 +151,14 @@ def _synthetic_parent(adapter: DailyProcessTrainingAdapter):
         "clay_frac",
         np.asarray([0.3], dtype=np.float64),
     )
-    annual = np.zeros((contract.static_conditions.annual_condition_width,), dtype=np.float64)
+    annual = np.zeros(
+        (contract.static_conditions.annual_condition_width,), dtype=np.float64
+    )
     parent = {
         "state": state,
-        "fast_day_target": np.zeros((contract.fast_day_target_width,), dtype=np.float64),
+        "fast_day_target": np.zeros(
+            (contract.fast_day_target_width,), dtype=np.float64
+        ),
         "forcing_native": np.zeros(
             (
                 contract.native_forcing.source_records_per_day,
@@ -151,8 +176,13 @@ def _synthetic_parent(adapter: DailyProcessTrainingAdapter):
         "discrete_state": discrete,
         "next_discrete_state": {name: value.copy() for name, value in discrete.items()},
     }
-    values = {field.path: np.zeros(field.feature_shape, dtype=np.float64) for field in adapter.typed_contract.fields}
-    defined = {name: np.ones(value.shape, dtype=np.bool_) for name, value in values.items()}
+    values = {
+        field.path: np.zeros(field.feature_shape, dtype=np.float64)
+        for field in adapter.typed_contract.fields
+    }
+    defined = {
+        name: np.ones(value.shape, dtype=np.bool_) for name, value in values.items()
+    }
     return parent, values, defined
 
 
@@ -203,7 +233,9 @@ def test_v6_adapter_builds_only_named_input_and_process_targets():
     assert example.inputs.pft.pft_parameters.shape == (2, 6)
     assert example.inputs.pft.pft_traits.shape == (2, 10)
     assert example.inputs.static_registry.rprof.shape == (1, 2)
-    assert example.targets.supervision["inventory.carbon.carbon_32l.outgoing_fraction"].value.shape == (1, 3, 2, 32)
+    assert example.targets.supervision[
+        "inventory.carbon.carbon_32l.outgoing_fraction"
+    ].value.shape == (1, 3, 2, 32)
     assert len(example.targets.supervision) == 101
     assert len(set(adapter.field_labels().values())) == 40
     assert set(example.targets.supervision) == set(adapter.field_labels())
@@ -215,7 +247,10 @@ def test_v6_adapter_builds_only_named_input_and_process_targets():
 def _synthetic_shard_and_typed(adapter, *, days=2):
     parent, values, defined = _synthetic_parent(adapter)
     state_trajectory = np.stack([parent["state"]] * (days + 1))
-    discrete = {name: np.stack([value] * (days + 1)) for name, value in parent["discrete_state"].items()}
+    discrete = {
+        name: np.stack([value] * (days + 1))
+        for name, value in parent["discrete_state"].items()
+    }
     shard = MarkovShard(
         state_trajectory=state_trajectory,
         fast_day_target=np.stack([parent["fast_day_target"]] * days),
@@ -270,7 +305,9 @@ def test_vectorized_process_statistics_targets_match_single_day_adapter():
             )
         for name, target in semantic.items():
             np.testing.assert_array_equal(target.value[row], getattr(assembled.state, name))
-            np.testing.assert_array_equal(target.defined[row], getattr(assembled.state_defined, name))
+            np.testing.assert_array_equal(
+                target.defined[row], getattr(assembled.state_defined, name)
+            )
 
 
 def test_masked_moments_merge_and_share_pft_slots():
@@ -324,7 +361,12 @@ def test_process_statistics_artifact_fits_loads_and_rejects_hash_drift(tmp_path)
         "year": shard.year,
         "day_index": shard.day_index,
     }
-    base_arrays.update({f"state_discrete__{name}": value for name, value in shard.discrete_trajectories.items()})
+    base_arrays.update(
+        {
+            f"state_discrete__{name}": value
+            for name, value in shard.discrete_trajectories.items()
+        }
+    )
     np.savez_compressed(base_path, **base_arrays)
     typed_path = tmp_path / "typed.npz"
     write_typed_sidecar_shard(
@@ -480,14 +522,12 @@ def test_process_loss_is_equal_weighted_by_label_and_differentiable():
     assert float(result.total) == pytest.approx(5.0)
 
     gradient = jax.grad(
-        lambda value: (
-            masked_equal_label_macro_mse(
-                {"large": value, "small": predicted["small"]},
-                targets,
-                scales=scales,
-                field_labels=labels,
-            ).total
-        )
+        lambda value: masked_equal_label_macro_mse(
+            {"large": value, "small": predicted["small"]},
+            targets,
+            scales=scales,
+            field_labels=labels,
+        ).total
     )(predicted["large"])
     assert np.all(np.isfinite(np.asarray(gradient)))
 
@@ -515,14 +555,12 @@ def test_process_loss_is_equal_weighted_by_label_and_differentiable():
         field_labels=labels,
     )
     masked_gradient = jax.grad(
-        lambda value: (
-            masked_equal_label_macro_mse(
-                {"large": value, "small": predicted["small"]},
-                masked_undefined,
-                scales=scales,
-                field_labels=labels,
-            ).total
-        )
+        lambda value: masked_equal_label_macro_mse(
+            {"large": value, "small": predicted["small"]},
+            masked_undefined,
+            scales=scales,
+            field_labels=labels,
+        ).total
     )(predicted["large"])
     assert np.isfinite(float(masked_result.total))
     assert np.all(np.isfinite(np.asarray(masked_gradient)))
@@ -593,10 +631,16 @@ def test_first_candidate_and_matched_control_share_formal_parameter_tree_and_out
 
     permutation = np.asarray([1, 0])
     permuted_pft = assembled.pft._replace(
-        **{name: np.asarray(getattr(assembled.pft, name))[permutation] for name in assembled.pft._fields}
+        **{
+            name: np.asarray(getattr(assembled.pft, name))[permutation]
+            for name in assembled.pft._fields
+        }
     )
     permuted_state = assembled.state._replace(
-        **{layout.name: permute_domain(getattr(assembled.state, layout.name), layout) for layout in axis_layout.domains}
+        **{
+            layout.name: permute_domain(getattr(assembled.state, layout.name), layout)
+            for layout in axis_layout.domains
+        }
     )
     permuted_defined = assembled.state_defined._replace(
         **{
@@ -644,7 +688,9 @@ def test_first_candidate_and_matched_control_share_formal_parameter_tree_and_out
             err_msg=field.name,
         )
 
-    inactive_pft = assembled.pft._replace(active_pft_mask=np.asarray([True, False], dtype=np.bool_))
+    inactive_pft = assembled.pft._replace(
+        active_pft_mask=np.asarray([True, False], dtype=np.bool_)
+    )
     inactive_input = assembled._replace(pft=inactive_pft)
     perturbed_pft = inactive_pft._replace(
         pft_state=np.asarray(inactive_pft.pft_state).copy(),
@@ -759,7 +805,10 @@ def _state_and_masks():
         }
     )
     masks = StateDefinedMasks(
-        **{name: np.ones_like(getattr(state, name), dtype=np.bool_) for name in StateFeatureGroups._fields}
+        **{
+            name: np.ones_like(getattr(state, name), dtype=np.bool_)
+            for name in StateFeatureGroups._fields
+        }
     )
     return state, masks
 

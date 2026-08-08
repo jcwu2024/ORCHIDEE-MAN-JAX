@@ -494,14 +494,21 @@ class DailyProcessTrainingAdapter:
             reconstructed.fields_by_component,
             reconstructed.ok_leak_updates,
         )
-        supervision.update(self._thermal_supervision(start_fields, reconstructed.fields_by_component))
+        supervision.update(
+            self._thermal_supervision(start_fields, reconstructed.fields_by_component)
+        )
         supervision.update(self._daily_supervision(reconstructed.daily_fields))
-        supervision.update(self._supplemental_supervision(supplemental_values, supplemental_defined))
+        supervision.update(
+            self._supplemental_supervision(supplemental_values, supplemental_defined)
+        )
         expected_labels = self.field_labels()
         if set(supervision) != set(expected_labels):
             missing_targets = sorted(set(expected_labels) - set(supervision))
             extra_targets = sorted(set(supervision) - set(expected_labels))
-            raise ValueError(f"process supervision registry drift; missing={missing_targets}, extra={extra_targets}")
+            raise ValueError(
+                "process supervision registry drift; "
+                f"missing={missing_targets}, extra={extra_targets}"
+            )
 
         next_input = inputs._replace(
             continuous_state=np.asarray(parent_sample["next_state"], dtype=np.float64),
