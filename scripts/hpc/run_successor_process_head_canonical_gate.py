@@ -28,6 +28,7 @@ ROLLOUT_YEAR = 1961
 ROLLOUT_START_ROW = 0
 ROLLOUT_DAYS = 30
 ANCHOR_ROWS = (0, 1)
+INITIALIZATION_DECODER_SCALES = (1.0, 0.3, 0.1, 0.03, 0.01, 0.0)
 TARGET_GRADIENT_RATIOS = {
     "cumulative_flux_mse": 0.10,
     "cumulative_flux_bias_squared": 0.15,
@@ -463,6 +464,52 @@ def _case_report(
         contract.fast_day_target_leaves,
         template_fields=start_fields,
     )
+    active_pft_indices = np.asarray(contract.active_pft_indices, dtype=np.int64)
+    teacher_gpp = np.take(
+        np.asarray(teacher_fast.daily_fields["gpp_daily"], dtype=np.float64),
+        active_pft_indices,
+        axis=1,
+    )
+    teacher_maintenance = np.take(
+        np.asarray(teacher_fast.daily_fields["resp_maint_part"], dtype=np.float64),
+        active_pft_indices,
+        axis=1,
+    )
+    predicted_gpp = np.asarray(
+        result.prediction.named_outputs["daily.fast_gpp"], dtype=np.float64
+    )
+    predicted_maintenance = np.asarray(
+        result.prediction.named_outputs["daily.fast_maintenance_respiration"],
+        dtype=np.float64,
+    )
+    if predicted_gpp.shape != teacher_gpp.shape:
+        raise ValueError("daily GPP lifecycle comparison shape drift")
+    if predicted_maintenance.shape != teacher_maintenance.shape:
+        raise ValueError("maintenance lifecycle comparison shape drift")
+    vegetation_slots = np.flatnonzero(
+        np.asarray(result.prediction.pft.vegetation_process_mask)
+    )
+    if vegetation_slots.size != 1:
+        raise ValueError("frozen lifecycle case must have exactly one vegetation slot")
+    vegetation_slot = int(vegetation_slots[0])
+    carbon_driver = {
+        "vegetation_compact_pft_index": vegetation_slot,
+        "predicted_gpp": float(predicted_gpp[0, vegetation_slot]),
+        "teacher_gpp": float(teacher_gpp[0, vegetation_slot]),
+        "predicted_maintenance_respiration": float(
+            np.sum(predicted_maintenance[0, vegetation_slot])
+        ),
+        "teacher_maintenance_respiration": float(
+            np.sum(teacher_maintenance[0, vegetation_slot])
+        ),
+    }
+    carbon_driver["predicted_gpp_minus_maintenance"] = (
+        carbon_driver["predicted_gpp"]
+        - carbon_driver["predicted_maintenance_respiration"]
+    )
+    carbon_driver["teacher_gpp_minus_maintenance"] = (
+        carbon_driver["teacher_gpp"] - carbon_driver["teacher_maintenance_respiration"]
+    )
     predicted_fast = result.prediction.retained_boundary.fast_state_fields
     exact_fast_errors = {}
     for component, field in EXACT_RETAINED_FAST_FIELDS:
@@ -524,10 +571,14 @@ def _case_report(
             "rtol": 1.0e-12,
             "maximum_absolute_errors": exact_fast_errors,
         },
+        "fast_carbon_driver": carbon_driver,
     }
 
 
-def _lifecycle_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
+def _evaluate_lifecycle_parameters(
+    runtime: Mapping[str, Any],
+    parameter_sets: Mapping[str, Any],
+) -> dict[str, Any]:
     from jax_orchidee.driver import orchestration as teacher
     from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
     from research.daily_coarse_graining.daily_operator.successor_architecture import (
@@ -564,7 +615,6 @@ def _lifecycle_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
     )
     arms = {}
     for arm in (SOURCE_ROUTED_ATTENTION, SOURCE_ROUTED_GRAPH_CONTROL):
-        started = time.perf_counter()
         head = _head(runtime, arm)
         later = bind_daily_operator(
             input_assembler=runtime["adapter"].input_assembler,
@@ -577,36 +627,61 @@ def _lifecycle_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
             retained_tail=restart_tail,
         )
         compiled_later = jax.jit(later)
-        cold_result = compiled_later(runtime["parameters"], ordinary_inputs[0])
-        jax.block_until_ready(cold_result)
-        ordinary_result = compiled_later(runtime["parameters"], ordinary_inputs[1])
-        jax.block_until_ready(ordinary_result)
         compiled_restart = jax.jit(restart)
-        restart_result = compiled_restart(runtime["parameters"], restart_input)
-        jax.block_until_ready(restart_result)
-        cases = {
-            "cold_start_continuation_day2": _case_report(
-                cold_result,
-                ordinary_samples[0],
-                runtime["contract"],
-            ),
-            "ordinary_later_day3": _case_report(
-                ordinary_result,
-                ordinary_samples[1],
-                runtime["contract"],
-            ),
-            "restart_year_boundary_1962_day1": _case_report(
-                restart_result,
-                restart_sample,
-                runtime["contract"],
-            ),
-        }
-        passed = all(item["status"] == "passed" for item in cases.values())
-        arms[arm] = {
-            "status": "passed" if passed else "failed",
-            "seconds": time.perf_counter() - started,
-            "cases": cases,
-        }
+        evaluations = {}
+        for name, parameters in parameter_sets.items():
+            started = time.perf_counter()
+            cold_result = compiled_later(parameters, ordinary_inputs[0])
+            jax.block_until_ready(cold_result)
+            ordinary_result = compiled_later(parameters, ordinary_inputs[1])
+            jax.block_until_ready(ordinary_result)
+            restart_result = compiled_restart(parameters, restart_input)
+            jax.block_until_ready(restart_result)
+            cases = {
+                "cold_start_continuation_day2": _case_report(
+                    cold_result,
+                    ordinary_samples[0],
+                    runtime["contract"],
+                ),
+                "ordinary_later_day3": _case_report(
+                    ordinary_result,
+                    ordinary_samples[1],
+                    runtime["contract"],
+                ),
+                "restart_year_boundary_1962_day1": _case_report(
+                    restart_result,
+                    restart_sample,
+                    runtime["contract"],
+                ),
+            }
+            passed = all(item["status"] == "passed" for item in cases.values())
+            evaluations[name] = {
+                "status": "passed" if passed else "failed",
+                "seconds": time.perf_counter() - started,
+                "cases": cases,
+            }
+        arms[arm] = evaluations
+    return arms
+
+
+def _scaled_final_decoder(parameters: Mapping[str, Any], scale: float) -> dict[str, Any]:
+    result = dict(parameters)
+    decoder = dict(parameters["decoder_second"])
+    decoder["kernel"] = decoder["kernel"] * float(scale)
+    result["decoder_second"] = decoder
+    return result
+
+
+def _lifecycle_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
+    jax = runtime["jax"]
+    evaluations = _evaluate_lifecycle_parameters(
+        runtime,
+        {"declared_initialization": runtime["parameters"]},
+    )
+    arms = {
+        arm: results["declared_initialization"]
+        for arm, results in evaluations.items()
+    }
     passed = all(item["status"] == "passed" for item in arms.values())
     return {
         "schema_version": "successor_process_head_real_v6_canonical_lifecycle_v1",
@@ -636,6 +711,67 @@ def _lifecycle_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
         },
         "arms": arms,
         "pending_required_gate": "real_30_day_rollout_and_train_train_gradient_ratio_preflight",
+    }
+
+
+def _initialization_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
+    jax = runtime["jax"]
+    names_by_scale = {
+        scale: f"decoder_kernel_scale_{scale:g}"
+        for scale in INITIALIZATION_DECODER_SCALES
+    }
+    parameter_sets = {
+        names_by_scale[scale]: _scaled_final_decoder(runtime["parameters"], scale)
+        for scale in INITIALIZATION_DECODER_SCALES
+    }
+    arms = _evaluate_lifecycle_parameters(runtime, parameter_sets)
+    passing_scales = [
+        scale
+        for scale in INITIALIZATION_DECODER_SCALES
+        if all(
+            results[names_by_scale[scale]]["status"] == "passed"
+            for results in arms.values()
+        )
+    ]
+    positive_passing_scales = [scale for scale in passing_scales if scale > 0.0]
+    passed = bool(positive_passing_scales)
+    return {
+        "schema_version": "successor_process_head_real_v6_initialization_probe_v1",
+        "status": "passed" if passed else "failed",
+        "promotion_authorized": False,
+        "checkpoint_written": False,
+        "historical_v5_used": False,
+        "backend": jax.default_backend(),
+        "devices": [str(device) for device in runtime["devices"]],
+        "successor_contract_sha256": EXPECTED["successor_contract"],
+        "data": {
+            "dataset_manifest_sha256": EXPECTED["dataset_manifest"],
+            "process_statistics_json_sha256": EXPECTED["process_statistics_json"],
+            "landpoint_id": FROZEN_LANDPOINT,
+            "ordinary_year": 1961,
+            "ordinary_rows": list(ANCHOR_ROWS),
+            "restart_year": 1962,
+            "restart_row": 0,
+        },
+        "probe": {
+            "parameter_changed": "decoder_second.kernel_initial_scale",
+            "bias_changed": False,
+            "parameter_count_changed": False,
+            "scales": list(INITIALIZATION_DECODER_SCALES),
+            "passing_scales": passing_scales,
+            "largest_positive_passing_scale": (
+                max(positive_passing_scales) if positive_passing_scales else None
+            ),
+            "training_updates": 0,
+        },
+        "canonical_boundary": {
+            "binding": "bind_daily_operator(canonical_assembler, successor_head, canonical_retained_tail_adapter)",
+            "native_forcing_only": True,
+            "reconstructs_48_forcing_records": False,
+            "executes_48_step_state_scan": False,
+        },
+        "arms": arms,
+        "pending_required_gate": "freeze_stable_initialization_then_repeat_strict_lifecycle",
     }
 
 
@@ -898,7 +1034,11 @@ def _rollout_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
 
 def main() -> int:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--stage", choices=("lifecycle", "rollout"), required=True)
+    parser.add_argument(
+        "--stage",
+        choices=("initialization", "lifecycle", "rollout"),
+        required=True,
+    )
     parser.add_argument("--dataset-manifest", type=Path, required=True)
     parser.add_argument("--acceptance-report", type=Path, required=True)
     parser.add_argument("--base-statistics", type=Path, required=True)
@@ -906,11 +1046,12 @@ def main() -> int:
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
     runtime = _load_runtime(args)
-    report = (
-        _lifecycle_stage(runtime)
-        if args.stage == "lifecycle"
-        else _rollout_stage(runtime)
-    )
+    stages = {
+        "initialization": _initialization_stage,
+        "lifecycle": _lifecycle_stage,
+        "rollout": _rollout_stage,
+    }
+    report = stages[args.stage](runtime)
     _atomic_json(args.output.resolve(), report)
     print(json.dumps(_json_value(report), indent=2, sort_keys=True))
     return 0 if report["status"] == "passed" else 1
