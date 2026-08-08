@@ -147,7 +147,24 @@ passed, and the accepted measurements are in
 `coherent_teacher_pilot_20260806.md`. The formal data product is manifest v6,
 typed contract v3, and canonical release v2. Full 669-landpoint, 1961-2010
 production and admission are complete. Architecture selection and training
-remain unstarted; the first candidate must enter through the existing Gate E1
+now have a frozen first-candidate contract in
+`first_neural_process_head_candidate_v1.md` and
+`manifests/coarse_graining/first_neural_process_head_candidate_v1.json`.
+`daily_operator/training_data.py` owns the host-side coherent-v6 input and
+named-target adapter; `daily_operator/training_loss.py` owns equal-label macro
+supervision and local one-day hard metrics.
+`daily_operator/training_statistics.py` owns vectorized train/train target
+extraction, mergeable masked moments, PFT-shared output/input scales, and the
+hash-bound statistics artifact. Its CLI and proposed paid CPU launcher are
+`scripts/hpc/fit_first_neural_process_statistics.py` and
+`scripts/hpc/slurm_first_neural_process_statistics.sh`.
+`daily_operator/neural_architecture.py` and
+`daily_operator/neural_process_head.py` own the implemented Transformer
+candidate and exactly parameter-matched control. Their local and bounded
+real-v6 pre-training smoke is accepted in
+`first_neural_process_head_smoke_acceptance_20260808.md`; neither arm has been
+trained. The statistics fitter passes local fixtures but its full-v6 artifact
+has not been produced. Both arms enter through the existing Gate E1
 composition boundary. The old immutable-parent packet and archived loose v5
 workers are historical evidence.
 

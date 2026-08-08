@@ -284,6 +284,37 @@ report. The accepted review and full 47-label data matrix are in
 the executable evidence packet remains
 [`gate_e1_daily_operator_skeleton.md`](research/daily_coarse_graining/gate_e1_daily_operator_skeleton.md).
 
+The first-candidate mechanism, matched control, fixed training budget, and
+bounded gates are frozen in
+[`first_neural_process_head_candidate_v1.md`](research/daily_coarse_graining/first_neural_process_head_candidate_v1.md)
+and its machine contract. The declared Transformer and parameter-matched
+control are implemented under `daily_operator/`; local regression and the
+bounded `gln01` real-v6 forward/loss/JVP/VJP, PFT, inactive-slot, and
+conservative construction smoke have passed. The evidence is
+[`first_neural_process_head_smoke_acceptance_20260808.md`](research/daily_coarse_graining/first_neural_process_head_smoke_acceptance_20260808.md).
+
+No formal network training has started. The retained-tail construction-time
+48-record forcing expansion has been replaced by source-exact native-record
+closed-form daily inputs; cold/ordinary/restart next-state, modelout,
+eager/JIT, derivative, and graph gates pass. The immediate work order is:
+(1) fit and freeze train/train-only typed-field statistics with PFT-axis
+moments shared across active slots. The declared 100-update candidate/control
+tiny-fit has passed with finite losses and reductions of 82.39% and 67.87%,
+without retaining a checkpoint. After the statistics artifact passes its
+identity and scale audit, a separately approved small GPU training run and
+7/30-day rollout may begin.
+
+The process-statistics implementation is now present in
+`daily_operator/training_statistics.py`. It vectorizes all 101 named targets
+over coherent annual shards, keeps mergeable count/mean/M2 accumulators,
+shares applicable output and semantic-domain moments across active PFT slots,
+and writes a candidate/data/contract/source-hash-bound JSON/NPZ pair. Local
+equivalence, accumulator merge, PFT sharing, bounded-loss-scale, and artifact
+tamper tests pass. The accepted 8,591,565 train/train rows have not yet been
+scanned. The proposed eight-partition `cnmix` launcher is
+`scripts/hpc/slurm_first_neural_process_statistics.sh`; it remains unsubmitted
+pending the required paid-resource and cost approval.
+
 ## Completed Task Packet: Gate C
 
 This packet is complete and retained as its acceptance contract. Gates A-C

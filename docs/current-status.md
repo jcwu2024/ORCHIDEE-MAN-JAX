@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-06.
+Last updated: 2026-08-08.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -10,6 +10,30 @@ code ownership is in [`CODE_MAP.md`](CODE_MAP.md), and document status is in
 This page is the current status authority. Dated files under
 `docs/source_audits/` and `docs/research/` are evidence snapshots and may
 describe an earlier gate without being rewritten.
+
+## First Formal Neural Candidate
+
+`axial_process_operator_v1` and its exactly parameter-matched
+`factorized_process_control_v1` are implemented at 5,464,321 float64
+parameters. The candidate uses native-record forcing attention and four
+scientific-domain axial process blocks; the control replaces interactions
+with token-local transforms and masked pooling while retaining the same
+parameter tree. Neither arm inherits a rejected model or checkpoint.
+
+Local regression and bounded real-v6 `gln01` forward, loss, JVP/VJP, PFT
+permutation, inactive-slot, conservative budget, retained-tail, and
+100-update tiny-fit gates pass. The retained tail uses native interval
+closed-form reductions and does not construct 48 forcing records or execute a
+48-step state scan.
+
+No formal training has started. The only current blocker is the full
+train/train process statistics artifact. A vectorized, deterministic,
+partition-mergeable fitter now covers all 101 named process outputs plus
+semantic water/carbon/thermal input scales, with PFT-shared moments and
+hash-bound loading. Its local equivalence, merge, PFT-sharing, bounded-scale,
+and tamper tests pass; the 8,591,565-row v6 scan remains unrun and requires a
+separately approved paid CPU job. Formal GPU training and 7/30-day rollout
+remain downstream of that artifact.
 
 ## Stable Teacher
 

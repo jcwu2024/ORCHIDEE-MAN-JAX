@@ -28,6 +28,14 @@ from .types import (
 )
 
 PACKAGE_ROOT = Path(__file__).resolve().parent
+HOST_ONLY_TRAINING_MODULES = frozenset(
+    {
+        "training_contract.py",
+        "training_data.py",
+        "training_loss.py",
+        "training_statistics.py",
+    }
+)
 FORBIDDEN_INFERENCE_SYMBOLS = frozenset(
     {
         "encode_inventory_endpoints",
@@ -140,8 +148,12 @@ def audit_inference_source_graph(package_root: str | Path = PACKAGE_ROOT) -> dic
     root = Path(package_root)
     violations: list[dict[str, Any]] = []
     audited = []
+    host_only = []
     for path in sorted(root.glob("*.py")):
         if path.name == "audit.py":
+            continue
+        if path.name in HOST_ONLY_TRAINING_MODULES:
+            host_only.append(path.name)
             continue
         audited.append(path.name)
         tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
@@ -155,6 +167,14 @@ def audit_inference_source_graph(package_root: str | Path = PACKAGE_ROOT) -> dic
                 if isinstance(node, ast.ImportFrom) and node.module:
                     names.append(node.module)
                 for name in names:
+                    if f"{name.rsplit('.', maxsplit=1)[-1]}.py" in HOST_ONLY_TRAINING_MODULES:
+                        violations.append(
+                            {
+                                "file": path.name,
+                                "line": node.lineno,
+                                "symbol": f"host-only import {name}",
+                            }
+                        )
                     if any(fragment in name for fragment in FORBIDDEN_MODEL_MODULE_FRAGMENTS):
                         violations.append({"file": path.name, "line": node.lineno, "symbol": name})
             if (
@@ -205,6 +225,7 @@ def audit_inference_source_graph(package_root: str | Path = PACKAGE_ROOT) -> dic
     return {
         "schema_version": "gate_e1_inference_source_graph_audit_v1",
         "audited_files": audited,
+        "host_only_training_files": host_only,
         "allowed_input_fields": list(ALLOWED_DAILY_OPERATOR_INPUT_FIELDS),
         "actual_input_fields": list(actual_inputs),
         "missing_input_fields": missing_inputs,

@@ -305,6 +305,7 @@ def run_minimal_process_heads(
             daily_fields=daily_fields,
             ok_leak_result=None,
         ),
+        named_outputs={},
     )
 
 

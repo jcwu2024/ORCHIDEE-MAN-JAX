@@ -53,6 +53,19 @@ class NativeForcingFieldLayout(NamedTuple):
     rain_stop: int
     snow_start: int
     snow_stop: int
+    temperature_start: int = -1
+    temperature_stop: int = -1
+
+
+class NativeDailyDeterministicFields(NamedTuple):
+    """Exact daily forcing-owned fields without half-hour reconstruction."""
+
+    t2m_daily: Any
+    precip_daily: Any
+    snowfall_daily: Any
+    t2m_min_daily: Any
+    t2m_max_daily: Any
+    t2mdiag: Any
 
 
 class DerivedCarbonDecomposition(NamedTuple):
@@ -85,6 +98,71 @@ def integrate_native_precipitation(
         raise ValueError("Rainf and Snowf slices must be nonempty and shape matched")
     seconds = jnp.where(active, duration, 0.0)[:, None]
     return jnp.sum(rain_rate * seconds, axis=0), jnp.sum(snow_rate * seconds, axis=0)
+
+
+def derive_native_daily_deterministic_fields(
+    forcing: NativeForcingInput,
+    layout: NativeForcingFieldLayout,
+    *,
+    model_interval_seconds: float,
+) -> NativeDailyDeterministicFields:
+    """Close the retained forcing fold directly over native records.
+
+    Source ownership: the linear forcing interpolation in
+    ``daily_markov_contract.reconstruct_compiled_forcing_day`` followed by
+    ``stomate_daily.f90::stomate_accu``. For an interval with ``n`` model
+    steps, the discrete linear sum is evaluated analytically as
+    ``n*x0 + (x1-x0)*(n+1)/2``; no length-48 array is materialized.
+    """
+
+    if layout.temperature_start < 0 or layout.temperature_stop <= layout.temperature_start:
+        raise ValueError("native daily forcing requires a nonempty Tair slice")
+    model_dt = jnp.asarray(model_interval_seconds, dtype=jnp.float64)
+    if float(model_interval_seconds) <= 0.0:
+        raise ValueError("model forcing interval must be positive")
+    values = jnp.asarray(forcing.values, dtype=jnp.float64)
+    mask = jnp.asarray(forcing.record_mask, dtype=jnp.bool_)
+    predecessor = jnp.asarray(forcing.predecessor_mask, dtype=jnp.bool_)
+    duration = jnp.asarray(forcing.duration_seconds, dtype=jnp.float64)
+    temperature = values[:, int(layout.temperature_start) : int(layout.temperature_stop)]
+    width = int(temperature.shape[1])
+    temperature_sum = jnp.zeros((width,), dtype=jnp.float64)
+    minimum = jnp.full((width,), jnp.inf, dtype=jnp.float64)
+    maximum = jnp.full((width,), -jnp.inf, dtype=jnp.float64)
+    diagnostic = jnp.zeros((width,), dtype=jnp.float64)
+    day_seconds = jnp.asarray(0.0, dtype=jnp.float64)
+    for index in range(1, int(values.shape[0])):
+        valid = mask[index] & ~predecessor[index] & mask[index - 1]
+        interval_seconds = jnp.where(valid, duration[index], 0.0)
+        steps = interval_seconds / model_dt
+        previous = jnp.where(valid, temperature[index - 1], 0.0)
+        current = jnp.where(valid, temperature[index], 0.0)
+        difference = current - previous
+        temperature_sum += model_dt * (
+            steps * previous + difference * (steps + 1.0) / 2.0
+        )
+        first_step = previous + difference / jnp.maximum(steps, 1.0)
+        minimum = jnp.minimum(
+            minimum,
+            jnp.where(valid, jnp.minimum(first_step, current), jnp.inf),
+        )
+        maximum = jnp.maximum(
+            maximum,
+            jnp.where(valid, jnp.maximum(first_step, current), -jnp.inf),
+        )
+        diagnostic = jnp.where(valid, current, diagnostic)
+        day_seconds += interval_seconds
+    safe_day = jnp.maximum(day_seconds, model_dt)
+    rain, snow = integrate_native_precipitation(forcing, layout)
+    any_current = jnp.any(mask & ~predecessor)
+    return NativeDailyDeterministicFields(
+        t2m_daily=temperature_sum / safe_day,
+        precip_daily=(rain + snow) * (86400.0 / safe_day),
+        snowfall_daily=snow * (model_dt / safe_day),
+        t2m_min_daily=jnp.where(any_current, minimum, 0.0),
+        t2m_max_daily=jnp.where(any_current, maximum, 0.0),
+        t2mdiag=diagnostic,
+    )
 
 
 def derive_litter_input(inputs: AssembledDailyOperatorInput) -> LitterInputPrediction:

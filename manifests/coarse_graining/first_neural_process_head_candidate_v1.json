@@ -1,0 +1,86 @@
+{
+  "schema_version": "first_neural_process_head_candidate_v1",
+  "status": "frozen_design_before_network_implementation",
+  "contract_sha256": "59bd5da7ea7eef78e151aef5339167ed640a12c7700d74ef62e744049a8218e6",
+  "experiment_id": "pft14-axial-process-operator-v1",
+  "architecture_document": "docs/research/daily_coarse_graining/first_neural_process_head_candidate_v1.md",
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "dataset_id": "pft14-daily-teacher-669-1961-2010",
+    "dataset_manifest_sha256": "5fc2c0691bfa53252f875f7646f3c1a5bea203c2759a6e947b26bb51dc13aa99",
+    "acceptance_report_sha256": "8784ed42dc64ef77c9642f613eb2e5940635edc6e744a1af4ea8634293baa8e3",
+    "training_statistics_json_sha256": "ab7f040a930071bd5604c17355a6493b23f3c76cba1e3084dcd5d5653101a4bf",
+    "training_statistics_npz_sha256": "e88d7cec504c6051aab6c9feacb619dca94961730ffa18f840563a48fc815a3a",
+    "markov_contract_sha256": "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442",
+    "typed_contract_sha256": "395c35585ec4fcb04d15f3d189af3f7957646fc38f9f27245c5136ba9a123423",
+    "historical_v5_allowed": false,
+    "test_split_sealed": true
+  },
+  "hypothesis": "Axis-wise process interaction improves held-out typed process accuracy and 7/30-day rollout relative to parameter-matched independent token heads.",
+  "candidate": {
+    "id": "axial_process_operator_v1",
+    "family": "hierarchical_axial_process_transformer",
+    "d_model": 192,
+    "attention_heads": 6,
+    "ffn_width": 768,
+    "forcing_blocks": 2,
+    "axial_process_blocks": 4,
+    "global_all_token_attention": false,
+    "parameter_count_minimum": 4000000,
+    "parameter_count_maximum": 6000000,
+    "dtype": "float64"
+  },
+  "control": {
+    "id": "factorized_process_control_v1",
+    "same_forcing_transformer": true,
+    "interaction": "independent_token_mlp_plus_shared_masked_pool",
+    "maximum_parameter_count_relative_difference": 0.02
+  },
+  "training": {
+    "optimizer": "adamw",
+    "learning_rate": 0.0003,
+    "warmup_updates": 500,
+    "final_learning_rate": 0.00003,
+    "schedule": "linear_warmup_cosine_decay",
+    "weight_decay": 0.00001,
+    "global_gradient_norm_clip": 1.0,
+    "batch_size": 16,
+    "maximum_updates": 10000,
+    "seeds": [20260807, 20260808, 20260809],
+    "checkpoint_interval_updates": 250,
+    "rollout_loss": false,
+    "loss": "masked_standardized_equal_label_macro_mse",
+    "bounded_target_loss_scale": "unit_range"
+  },
+  "tiny_fit": {
+    "batch_size": 16,
+    "updates": 100,
+    "optimizer": "adamw",
+    "learning_rate": 0.0003,
+    "weight_decay": 0.00001,
+    "global_gradient_norm_clip": 1.0,
+    "minimum_relative_loss_reduction": 0.20,
+    "checkpoint_written": false
+  },
+  "gates": {
+    "budget_absolute_tolerance": 2e-12,
+    "pft_permutation_atol": 1e-10,
+    "pft_permutation_rtol": 1e-12,
+    "inactive_slot_isolation_atol": 1e-10,
+    "candidate_macro_process_improvement_minimum": 0.05,
+    "named_label_regression_maximum": 0.05,
+    "rollout_macro_improvement_minimum": 0.05,
+    "key_rollout_field_regression_maximum": 0.10,
+    "hard_failure_count": 0,
+    "rollout_days_before_long_validation": [7, 30]
+  },
+  "forbidden": [
+    "historical_neural_checkpoint_initialization",
+    "historical_v5_training_rows",
+    "landpoint_or_pft_identity_embedding",
+    "anonymous_next_state_prediction",
+    "48_record_forcing_reconstruction",
+    "48_step_state_scan",
+    "post_result_budget_or_width_expansion"
+  ]
+}

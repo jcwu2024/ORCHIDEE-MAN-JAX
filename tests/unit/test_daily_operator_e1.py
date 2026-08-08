@@ -35,6 +35,7 @@ from research.daily_coarse_graining.daily_operator.native_forcing import (
 )
 from research.daily_coarse_graining.daily_operator.process_derivations import (
     NativeForcingFieldLayout,
+    derive_native_daily_deterministic_fields,
 )
 from research.daily_coarse_graining.daily_operator.process_heads import (
     classify_differentiability_case,
@@ -416,6 +417,48 @@ def test_native_forcing_encoder_is_order_sensitive_and_ignores_masked_padding() 
 
     assert not np.allclose(original, reversed_result)
     np.testing.assert_allclose(original, padded_result, rtol=0.0, atol=1.0e-14)
+
+
+def test_native_daily_forcing_fold_matches_explicit_half_hour_values() -> None:
+    values = np.asarray(
+        [
+            [280.0, 1.0e-6, 2.0e-7],
+            [284.0, 2.0e-6, 4.0e-7],
+            [276.0, 0.0, 1.0e-7],
+            [288.0, 3.0e-6, 0.0],
+            [282.0, 1.0e-6, 3.0e-7],
+        ],
+        dtype=np.float64,
+    )
+    forcing = NativeForcingInput(
+        values=values,
+        record_time_seconds=np.arange(-1, 4, dtype=np.float64) * 21600.0,
+        duration_seconds=np.full((5,), 21600.0, dtype=np.float64),
+        predecessor_mask=np.asarray([True, False, False, False, False]),
+        record_mask=np.ones((5,), dtype=np.bool_),
+    )
+    actual = derive_native_daily_deterministic_fields(
+        forcing,
+        NativeForcingFieldLayout(1, 2, 2, 3, 0, 1),
+        model_interval_seconds=1800.0,
+    )
+    expanded_temperature = np.concatenate(
+        tuple(
+            values[index - 1, 0]
+            + (values[index, 0] - values[index - 1, 0])
+            * np.arange(1, 13, dtype=np.float64)
+            / 12.0
+            for index in range(1, 5)
+        )
+    )
+    rain_amount = np.sum(values[1:, 1] * 21600.0)
+    snow_amount = np.sum(values[1:, 2] * 21600.0)
+    np.testing.assert_allclose(actual.t2m_daily, [np.mean(expanded_temperature)])
+    np.testing.assert_allclose(actual.t2m_min_daily, [np.min(expanded_temperature)])
+    np.testing.assert_allclose(actual.t2m_max_daily, [np.max(expanded_temperature)])
+    np.testing.assert_allclose(actual.t2mdiag, [expanded_temperature[-1]])
+    np.testing.assert_allclose(actual.precip_daily, [rain_amount + snow_amount])
+    np.testing.assert_allclose(actual.snowfall_daily, [snow_amount / 48.0])
 
 
 def test_interface_validation_and_named_pytree_boundary() -> None:

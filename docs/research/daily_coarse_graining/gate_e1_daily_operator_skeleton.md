@@ -256,10 +256,13 @@ from `daily_operator_transition`, the Oracle `__call__`, and the audited JAXPR.
 The real adapter passes eager/JIT agreement to `5.69e-14`, finite forward JVP,
 and finite reverse VJP. Its graph contains only length-5 and length-14 scans,
 no callback primitive, and no length-48 scan.
-The generated comparison is
+The retained adapter now evaluates the forcing-owned daily/final fields by
+closed-form discrete interpolation sums over the supplied native records; it
+does not construct a length-48 forcing object outside the staged graph. The
+generated comparison is
 `outputs/research/daily_coarse_graining/gate_e1_daily_operator_skeleton/comparison.json`
 with local SHA256
-`83238ee006f4f705bac825a936e63241a60b0c3f35e78acf3168a5753b2d71cd`.
+`f953fcecc3819d049f4fcc3c69caee8297f6cf3cb110bbc380b16594f170a3d0`.
 
 No optimizer, training run, paid task, Teacher-core edit, or 669-point data
 regeneration was performed. The formal review confirms unique canonical input

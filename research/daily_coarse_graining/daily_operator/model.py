@@ -33,6 +33,16 @@ class ProcessHead(Protocol):
     ) -> Any: ...
 
 
+class ContextAwareProcessHead(ProcessHead, Protocol):
+    """Formal heads that own their encoder rather than the E1 fixture encoder."""
+
+    def assemble_context(
+        self,
+        parameters: Any,
+        inputs: AssembledDailyOperatorInput,
+    ) -> Any: ...
+
+
 class InputAssembler(Protocol):
     """Unique canonical-to-derived-view assembly boundary."""
 
@@ -55,7 +65,7 @@ def assemble_operator_context(
 
 
 def daily_operator_transition(
-    parameters: DailyOperatorParameters,
+    parameters: Any,
     inputs: DailyOperatorInput,
     *,
     input_assembler: InputAssembler,
@@ -65,7 +75,12 @@ def daily_operator_transition(
     """Execute one constrained daily update followed by the retained exact tail."""
 
     assembled = input_assembler.assemble(inputs)
-    context = assemble_operator_context(parameters, assembled)
+    context_builder = getattr(process_head, "assemble_context", None)
+    context = (
+        context_builder(parameters, assembled)
+        if context_builder is not None
+        else assemble_operator_context(parameters, assembled)
+    )
     prediction = process_head(parameters, context, assembled)
     fast_update = apply_conservative_update(assembled, prediction)
     tail = retained_tail(retained_tail_input(assembled, prediction, fast_update))
@@ -93,10 +108,10 @@ def bind_daily_operator(
     input_assembler: InputAssembler,
     process_head: ProcessHead,
     retained_tail: RetainedTailAdapter,
-) -> Callable[[DailyOperatorParameters, DailyOperatorInput], DailyOperatorResult]:
+) -> Callable[[Any, DailyOperatorInput], DailyOperatorResult]:
     """Bind static scientific ownership while keeping all arrays explicit."""
 
-    def transition(parameters: DailyOperatorParameters, inputs: DailyOperatorInput) -> DailyOperatorResult:
+    def transition(parameters: Any, inputs: DailyOperatorInput) -> DailyOperatorResult:
         return daily_operator_transition(
             parameters,
             inputs,

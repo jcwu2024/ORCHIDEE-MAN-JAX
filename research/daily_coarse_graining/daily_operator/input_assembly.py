@@ -36,7 +36,7 @@ PFT_AXES = {
     "qsintveg": 1,
     "litter_above": 2,
     "litter_below": 2,
-    "carbon_32l": 3,
+    "carbon_32l": 2,
     "DOC": 1,
     "interception_storage": 1,
 }

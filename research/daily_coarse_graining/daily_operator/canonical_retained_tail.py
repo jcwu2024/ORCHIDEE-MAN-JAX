@@ -13,6 +13,7 @@ from jax_orchidee.driver import orchestration as teacher
 from jax_orchidee.stomate.reference import read_stomate_restart_season_state
 from research.daily_coarse_graining.canonical_retained_tail import (
     CanonicalRetainedTailDayInputs,
+    CanonicalRetainedTailNativeForcing,
     canonical_retained_tail_day_inputs,
     canonical_retained_tail_dynamic_transition,
 )
@@ -26,6 +27,10 @@ from research.daily_coarse_graining.daily_markov_contract import (
 )
 
 from .input_assembly import PFT_AXES, CanonicalDailyOperatorInputAssembler
+from .process_derivations import (
+    NativeForcingFieldLayout,
+    derive_native_daily_deterministic_fields,
+)
 from .types import RetainedTailInput, RetainedTailResult
 
 
@@ -59,6 +64,7 @@ class CanonicalRetainedTailStaticOwner:
     runtime_year: int
     lifecycle_start_tstep: int
     result_day_index: int
+    forcing_layout: NativeForcingFieldLayout
 
     def __post_init__(self) -> None:
         start = int(self.lifecycle_start_tstep)
@@ -73,7 +79,6 @@ def build_canonical_retained_tail_adapter(
     config_path: Path,
     context: Any,
     initial_state: Any,
-    compiled_forcing: Any,
     contract: DailyMarkovContract,
     input_assembler: CanonicalDailyOperatorInputAssembler,
     runtime_year: int,
@@ -81,6 +86,41 @@ def build_canonical_retained_tail_adapter(
     result_day_index: int,
 ) -> CanonicalRetainedTailAdapter:
     """Bind accepted retained-owner configuration without script-local wiring."""
+
+    forcing_width = 1
+    for extent in contract.native_forcing.field_shape:
+        forcing_width *= int(extent)
+
+    def forcing_slice(name: str) -> tuple[int, int]:
+        index = contract.native_forcing.fields.index(name)
+        start = index * forcing_width
+        return start, start + forcing_width
+
+    rain_start, rain_stop = forcing_slice("Rainf")
+    snow_start, snow_stop = forcing_slice("Snowf")
+    temperature_start, temperature_stop = forcing_slice("Tair")
+    forcing_layout = NativeForcingFieldLayout(
+        rain_start=rain_start,
+        rain_stop=rain_stop,
+        snow_start=snow_start,
+        snow_stop=snow_stop,
+        temperature_start=temperature_start,
+        temperature_stop=temperature_stop,
+    )
+    trace_fields = context.first_step_bundle.static_trace_fields
+    salinity = jnp.asarray(trace_fields.salinity, dtype=jnp.float64)[None, ...]
+    tide_height = jnp.asarray(trace_fields.tide_height, dtype=jnp.float64)[None, ...]
+    zeros = jnp.zeros((forcing_width,), dtype=jnp.float64)
+    native_placeholder = CanonicalRetainedTailNativeForcing(
+        t2m_daily=zeros,
+        precip_daily=zeros,
+        snowfall_daily=zeros,
+        t2m_min_daily=zeros,
+        t2m_max_daily=zeros,
+        t2mdiag=zeros,
+        salinity=salinity,
+        tide_height=tide_height,
+    )
 
     steps_per_day = int(
         round(context.runtime.dt_stomate / context.runtime.dt_sechiba)
@@ -94,7 +134,7 @@ def build_canonical_retained_tail_adapter(
         fixed_format_trace_dir=None,
         static_trace_fields=None,
         prebuild_day_payloads=True,
-        compiled_forcing_series=compiled_forcing,
+        compiled_forcing_series=native_placeholder,
     )
     tables = transition_inputs.hydrol_runtime_static_tables
     season = read_stomate_restart_season_state(
@@ -127,7 +167,7 @@ def build_canonical_retained_tail_adapter(
             context
         ),
     }
-    day_inputs = canonical_retained_tail_day_inputs(compiled_forcing, static)
+    day_inputs = canonical_retained_tail_day_inputs(native_placeholder, static)
     return CanonicalRetainedTailAdapter(
         static_owner=CanonicalRetainedTailStaticOwner(
             config_path=config_path,
@@ -145,6 +185,7 @@ def build_canonical_retained_tail_adapter(
             runtime_year=int(runtime_year),
             lifecycle_start_tstep=int(lifecycle_start_tstep),
             result_day_index=int(result_day_index),
+            forcing_layout=forcing_layout,
         ),
         day_inputs=jax.tree_util.tree_map(jnp.asarray, day_inputs),
     )
@@ -174,7 +215,21 @@ class CanonicalRetainedTailAdapter:
             array = jnp.asarray(leaf)
             return jnp.where(token == token, array, array)
 
-        return jax.tree_util.tree_map(lift, self.day_inputs)
+        day_inputs = jax.tree_util.tree_map(lift, self.day_inputs)
+        deterministic = derive_native_daily_deterministic_fields(
+            value.canonical_input.forcing,
+            self.static_owner.forcing_layout,
+            model_interval_seconds=float(
+                self.static_owner.contract.native_forcing.model_interval_seconds
+            ),
+        )
+        static_forcing = day_inputs.compiled_forcing
+        native_forcing = CanonicalRetainedTailNativeForcing(
+            **deterministic._asdict(),
+            salinity=static_forcing.salinity,
+            tide_height=static_forcing.tide_height,
+        )
+        return day_inputs._replace(compiled_forcing=native_forcing)
 
     def _select_pft(self, value: Any, axis: int) -> Any:
         return jnp.take(

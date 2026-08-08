@@ -37,7 +37,6 @@ from research.daily_coarse_graining.daily_markov_contract import (  # noqa: E402
     build_daily_markov_contract,
     extract_state,
     native_forcing_days,
-    reconstruct_compiled_forcing_day,
     reconstruct_state_fields,
 )
 from research.daily_coarse_graining.daily_operator.audit import (  # noqa: E402
@@ -108,7 +107,7 @@ PFT_AXES = {
     "qsintveg": 1,
     "litter_above": 2,
     "litter_below": 2,
-    "carbon_32l": 3,
+    "carbon_32l": 2,
     "DOC": 1,
     "interception_storage": 1,
 }
@@ -263,7 +262,15 @@ def _forcing_layout(spec: Any) -> NativeForcingFieldLayout:
 
     rain_start, rain_stop = span("Rainf")
     snow_start, snow_stop = span("Snowf")
-    return NativeForcingFieldLayout(rain_start, rain_stop, snow_start, snow_stop)
+    temperature_start, temperature_stop = span("Tair")
+    return NativeForcingFieldLayout(
+        rain_start,
+        rain_stop,
+        snow_start,
+        snow_stop,
+        temperature_start,
+        temperature_stop,
+    )
 
 
 def _native_forcing(value: np.ndarray, spec: Any) -> NativeForcingInput:
@@ -556,6 +563,7 @@ class TrueLabelOracleHead:
             ),
             daily_temperature_context=temperature,
             retained_boundary=self.retained_boundary,
+            named_outputs={},
         )
 
 
@@ -655,18 +663,10 @@ def _case(
     )
     oracle = _prepare_oracle_head(prepared_labels, _forcing_layout(native_spec))
     parameters = _dummy_parameters(assembled_inputs)
-    compiled_forcing = reconstruct_compiled_forcing_day(
-        native_values[0],
-        contract.native_forcing,
-        context,
-        year=year,
-        day_index=day_index,
-    )
     adapter = build_canonical_retained_tail_adapter(
         config_path=config,
         context=context,
         initial_state=previous_state,
-        compiled_forcing=compiled_forcing,
         contract=contract,
         input_assembler=assembler,
         runtime_year=year,

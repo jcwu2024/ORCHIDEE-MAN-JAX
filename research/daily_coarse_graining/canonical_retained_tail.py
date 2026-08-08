@@ -48,6 +48,19 @@ class CanonicalRetainedTailDayInputs(NamedTuple):
     diffuco_parameter_values: Any
 
 
+class CanonicalRetainedTailNativeForcing(NamedTuple):
+    """Daily closed-form forcing fields consumed after the fast boundary."""
+
+    t2m_daily: Any
+    precip_daily: Any
+    snowfall_daily: Any
+    t2m_min_daily: Any
+    t2m_max_daily: Any
+    t2mdiag: Any
+    salinity: Any
+    tide_height: Any
+
+
 def _daily_carbon_ad_boundaries(daily_carbon):
     """Return numeric process boundaries needed by narrow AD diagnostics."""
 
@@ -137,11 +150,24 @@ def _retained_tail_fast_target(
     """Install exact forcing outputs and detach structurally inactive bare pools."""
 
     target = jnp.asarray(physical_fast_day_target, dtype=jnp.float64)
-    deterministic = deterministic_boundary_fields(
-        compiled_forcing,
-        dt_sechiba=context.runtime.dt_sechiba,
-        dt_stomate=context.runtime.dt_stomate,
-    )
+    if isinstance(compiled_forcing, CanonicalRetainedTailNativeForcing):
+        deterministic = {
+            name: getattr(compiled_forcing, name)
+            for name in (
+                "t2m_daily",
+                "precip_daily",
+                "snowfall_daily",
+                "t2m_min_daily",
+                "t2m_max_daily",
+                "t2mdiag",
+            )
+        }
+    else:
+        deterministic = deterministic_boundary_fields(
+            compiled_forcing,
+            dt_sechiba=context.runtime.dt_sechiba,
+            dt_stomate=context.runtime.dt_stomate,
+        )
     for leaf in contract.fast_day_target_leaves:
         if leaf.path[0] in deterministic and leaf.family in {
             "daily_interface",
