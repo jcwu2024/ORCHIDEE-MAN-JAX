@@ -486,13 +486,14 @@ def _retained_boundary_report(
             else _nested_value(groups[leaf.family], leaf.path)
         )
         compact = np.asarray(source)
-        for axis, axis_name in enumerate(leaf.axis_names):
-            if axis_name == "nvm":
-                compact = np.take(
-                    compact,
-                    np.asarray(leaf.selected_pft_indices, dtype=np.int64),
-                    axis=axis,
-                )
+        if compact.shape != leaf.shape:
+            for axis, axis_name in enumerate(leaf.axis_names):
+                if axis_name == "nvm":
+                    compact = np.take(
+                        compact,
+                        np.asarray(leaf.selected_pft_indices, dtype=np.int64),
+                        axis=axis,
+                    )
         if compact.shape != leaf.shape:
             raise ValueError(
                 f"retained boundary diagnostic shape drift for {leaf.key}: "
