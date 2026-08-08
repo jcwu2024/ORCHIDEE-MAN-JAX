@@ -6,6 +6,8 @@ import hashlib
 import json
 import os
 import pickle
+import queue
+import threading
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator, Mapping, NamedTuple, Sequence
@@ -105,6 +107,7 @@ def load_process_training_protocol(
         "arms": [AXIAL_CANDIDATE, FACTORIZED_CONTROL],
         "seeds": [20260807, 20260808, 20260809],
         "batch_size": 16,
+        "prefetch_batches": 2,
         "maximum_updates": 10000,
         "checkpoint_interval_updates": 250,
         "optimizer": "adamw",
@@ -316,6 +319,58 @@ def iter_process_training_batches(
             break
     if inputs or yielded != maximum_batches:
         raise ValueError("first-process deterministic sampler produced an incomplete batch plan")
+
+
+@dataclass(frozen=True)
+class _PrefetchFailure:
+    error: BaseException
+
+
+def prefetched_process_training_batches(
+    prepared: PreparedProcessTraining,
+    *,
+    seed: int,
+    batch_size: int,
+    start_batch: int = 0,
+    maximum_batches: int,
+    prefetch_batches: int,
+) -> Iterator[tuple[Any, Any]]:
+    """Overlap bounded host preparation with GPU work without changing order."""
+
+    if prefetch_batches < 1:
+        raise ValueError("first-process prefetch must be positive")
+    pending: queue.Queue[Any] = queue.Queue(maxsize=prefetch_batches)
+    finished = object()
+
+    def produce() -> None:
+        try:
+            for batch in iter_process_training_batches(
+                prepared,
+                seed=seed,
+                batch_size=batch_size,
+                start_batch=start_batch,
+                maximum_batches=maximum_batches,
+            ):
+                pending.put(batch)
+        except BaseException as error:
+            pending.put(_PrefetchFailure(error))
+        finally:
+            pending.put(finished)
+
+    worker = threading.Thread(
+        target=produce,
+        name="first-process-training-prefetch",
+        daemon=True,
+    )
+    worker.start()
+    while True:
+        value = pending.get()
+        if value is finished:
+            break
+        if isinstance(value, _PrefetchFailure):
+            raise value.error
+        yield value
+    worker.join()
 
 
 class AdamWState(NamedTuple):

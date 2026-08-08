@@ -6,6 +6,7 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
+from research.daily_coarse_graining import first_neural_process_training_run as run
 from research.daily_coarse_graining.first_neural_process_training_run import (
     AdamWState,
     checkpoint_identity,
@@ -14,6 +15,7 @@ from research.daily_coarse_graining.first_neural_process_training_run import (
     load_process_training_protocol,
     load_training_checkpoint,
     make_adamw_train_step,
+    prefetched_process_training_batches,
     write_training_checkpoint,
 )
 
@@ -98,3 +100,25 @@ def test_checkpoint_roundtrip_and_identity_drift(tmp_path):
     drifted["seed"] = 20260808
     with pytest.raises(ValueError, match="identity drift"):
         load_training_checkpoint(path, identity=drifted, maximum_updates=10_000)
+
+
+def test_bounded_prefetch_preserves_batch_order(monkeypatch):
+    expected = [(np.asarray([index]), np.asarray([-index])) for index in range(4)]
+
+    def batches(*_args, **_kwargs):
+        yield from expected
+
+    monkeypatch.setattr(run, "iter_process_training_batches", batches)
+    observed = list(
+        prefetched_process_training_batches(
+            object(),
+            seed=1,
+            batch_size=16,
+            maximum_batches=4,
+            prefetch_batches=2,
+        )
+    )
+    assert len(observed) == len(expected)
+    for actual, wanted in zip(observed, expected, strict=True):
+        np.testing.assert_array_equal(actual[0], wanted[0])
+        np.testing.assert_array_equal(actual[1], wanted[1])
