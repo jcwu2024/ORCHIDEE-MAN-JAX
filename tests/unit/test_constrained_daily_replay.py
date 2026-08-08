@@ -45,6 +45,17 @@ def test_signed_canopy_carry_uses_nonnegative_storage_and_debt_components():
     assert np.min(encoded.debt.reconstructed[encoded.debt.defined]) >= 0.0
 
 
+def test_signed_canopy_debt_uses_outer_reconstruction_tolerance():
+    start = np.asarray([[0.0, -0.0007181543103497965]])
+    end = np.asarray([[0.0, -1.9156282021935387e-08]])
+
+    encoded = encode_signed_inventory_endpoints(start, end, name="water.qsintveg")
+
+    np.testing.assert_allclose(encoded.reconstructed, end, atol=1.0e-12, rtol=1.0e-12)
+    assert encoded.debt.incoming_amount[0, 1] == 0.0
+    assert 0.0 <= encoded.debt.outgoing_fraction[0, 1] <= 1.0
+
+
 def test_bounded_inventory_and_tendency_updates_have_finite_gradients():
     inventory_gradient = jax.grad(lambda fraction: apply_bounded_inventory_transition(2.0, fraction, 0.5))(0.25)
     tendency_gradient = jax.grad(lambda normalized: apply_bounded_tendency(280.0, normalized, 100.0))(0.05)

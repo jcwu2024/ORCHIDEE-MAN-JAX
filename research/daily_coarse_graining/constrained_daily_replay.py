@@ -112,11 +112,15 @@ def encode_inventory_endpoints(
     *,
     name: str,
     atol: float = 1.0e-12,
+    reconstruction_atol: float | None = None,
 ) -> BoundedInventoryTransition:
     """Encode valid Teacher endpoints in the conservative stock parameterization."""
 
     start_array = np.asarray(start)
     end_array = np.asarray(end)
+    reconstruction_atol = float(atol if reconstruction_atol is None else reconstruction_atol)
+    if reconstruction_atol < 0.0:
+        raise ValueError("inventory reconstruction tolerance must be nonnegative")
     if start_array.shape != end_array.shape:
         raise ValueError(f"{name} endpoint shape drift")
     start_defined = np.isfinite(start_array) & (np.abs(start_array) < ORCHIDEE_UNDEFINED_MAGNITUDE)
@@ -156,7 +160,13 @@ def encode_inventory_endpoints(
         )
     )
     reconstructed = np.where(start_defined, reconstructed - float(atol), end_array)
-    if not np.allclose(reconstructed, end_array, atol=atol, rtol=1.0e-12, equal_nan=True):
+    if not np.allclose(
+        reconstructed,
+        end_array,
+        atol=reconstruction_atol,
+        rtol=1.0e-12,
+        equal_nan=True,
+    ):
         raise ValueError(f"{name} bounded reconstruction does not recover its endpoint")
     return BoundedInventoryTransition(
         outgoing_fraction=outgoing_fraction,
@@ -223,12 +233,14 @@ def encode_signed_inventory_endpoints(
         np.maximum(end_array, 0.0),
         name=f"{name}.storage",
         atol=0.0,
+        reconstruction_atol=atol,
     )
     debt = encode_inventory_endpoints(
         np.maximum(-start_array, 0.0),
         np.maximum(-end_array, 0.0),
         name=f"{name}.evaporation_debt",
         atol=0.0,
+        reconstruction_atol=atol,
     )
     reconstructed = np.asarray(positive.reconstructed) - np.asarray(debt.reconstructed)
     if not np.allclose(reconstructed, end_array, atol=atol, rtol=1.0e-12, equal_nan=True):
