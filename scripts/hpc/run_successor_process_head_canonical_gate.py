@@ -29,6 +29,15 @@ ROLLOUT_START_ROW = 0
 ROLLOUT_DAYS = 30
 ANCHOR_ROWS = (0, 1)
 INITIALIZATION_DECODER_SCALES = (1.0, 0.3, 0.1, 0.03, 0.01, 0.0)
+INITIALIZATION_NONNEGATIVE_BASELINE_SCALES = (
+    1.0,
+    0.3,
+    0.1,
+    0.03,
+    0.01,
+    0.003,
+    0.001,
+)
 TARGET_GRADIENT_RATIOS = {
     "cumulative_flux_mse": 0.10,
     "cumulative_flux_bias_squared": 0.15,
@@ -349,6 +358,32 @@ def _head(runtime: Mapping[str, Any], arm: str) -> Any:
     )
 
 
+class _NonnegativeScaleProbeHead:
+    """Scale bounded nonnegative outputs only for initialization diagnosis."""
+
+    def __init__(self, base: Any, schema: Any):
+        self.base = base
+        self.nonnegative_fields = frozenset(
+            field.name for field in schema.fields if field.constraint == "nonnegative"
+        )
+
+    def assemble_context(self, parameters: Mapping[str, Any], inputs: Any) -> Any:
+        return self.base.assemble_context(parameters["model"], inputs)
+
+    def __call__(
+        self,
+        parameters: Mapping[str, Any],
+        context: Any,
+        inputs: Any,
+    ) -> Any:
+        outputs = self.base.named_outputs(parameters["model"], context, inputs)
+        scale = parameters["nonnegative_scale"]
+        scaled = {
+            name: value * scale if name in self.nonnegative_fields else value
+            for name, value in outputs.items()
+        }
+        return self.base.prediction_from_named_outputs(scaled, inputs)
+
 def _retained_adapter(
     runtime: Mapping[str, Any],
     teacher_context: Any,
@@ -578,6 +613,8 @@ def _case_report(
 def _evaluate_lifecycle_parameters(
     runtime: Mapping[str, Any],
     parameter_sets: Mapping[str, Any],
+    *,
+    probe_nonnegative_scale: bool = False,
 ) -> dict[str, Any]:
     from jax_orchidee.driver import orchestration as teacher
     from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
@@ -616,6 +653,8 @@ def _evaluate_lifecycle_parameters(
     arms = {}
     for arm in (SOURCE_ROUTED_ATTENTION, SOURCE_ROUTED_GRAPH_CONTROL):
         head = _head(runtime, arm)
+        if probe_nonnegative_scale:
+            head = _NonnegativeScaleProbeHead(head, runtime["schema"])
         later = bind_daily_operator(
             input_assembler=runtime["adapter"].input_assembler,
             process_head=head,
@@ -772,6 +811,72 @@ def _initialization_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
         },
         "arms": arms,
         "pending_required_gate": "freeze_stable_initialization_then_repeat_strict_lifecycle",
+    }
+
+
+def _baseline_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
+    jax = runtime["jax"]
+    names_by_scale = {
+        scale: f"nonnegative_baseline_scale_{scale:g}"
+        for scale in INITIALIZATION_NONNEGATIVE_BASELINE_SCALES
+    }
+    model = _scaled_final_decoder(runtime["parameters"], 0.01)
+    parameter_sets = {
+        names_by_scale[scale]: {
+            "model": model,
+            "nonnegative_scale": np.asarray(scale, dtype=np.float64),
+        }
+        for scale in INITIALIZATION_NONNEGATIVE_BASELINE_SCALES
+    }
+    arms = _evaluate_lifecycle_parameters(
+        runtime,
+        parameter_sets,
+        probe_nonnegative_scale=True,
+    )
+    passing_scales = [
+        scale
+        for scale in INITIALIZATION_NONNEGATIVE_BASELINE_SCALES
+        if all(
+            results[names_by_scale[scale]]["status"] == "passed"
+            for results in arms.values()
+        )
+    ]
+    passed = bool(passing_scales)
+    return {
+        "schema_version": "successor_process_head_real_v6_nonnegative_baseline_probe_v1",
+        "status": "passed" if passed else "failed",
+        "promotion_authorized": False,
+        "checkpoint_written": False,
+        "historical_v5_used": False,
+        "backend": jax.default_backend(),
+        "devices": [str(device) for device in runtime["devices"]],
+        "successor_contract_sha256": EXPECTED["successor_contract"],
+        "data": {
+            "dataset_manifest_sha256": EXPECTED["dataset_manifest"],
+            "process_statistics_json_sha256": EXPECTED["process_statistics_json"],
+            "landpoint_id": FROZEN_LANDPOINT,
+            "ordinary_year": 1961,
+            "ordinary_rows": list(ANCHOR_ROWS),
+            "restart_year": 1962,
+            "restart_row": 0,
+        },
+        "probe": {
+            "parameter_changed": "none",
+            "diagnostic_transform": "scale_all_nonnegative_named_outputs",
+            "candidate_decoder_kernel_scale": 0.01,
+            "scales": list(INITIALIZATION_NONNEGATIVE_BASELINE_SCALES),
+            "passing_scales": passing_scales,
+            "largest_passing_scale": max(passing_scales) if passing_scales else None,
+            "training_updates": 0,
+        },
+        "canonical_boundary": {
+            "binding": "bind_daily_operator(canonical_assembler, successor_head, canonical_retained_tail_adapter)",
+            "native_forcing_only": True,
+            "reconstructs_48_forcing_records": False,
+            "executes_48_step_state_scan": False,
+        },
+        "arms": arms,
+        "pending_required_gate": "freeze_coherent_nonnegative_baseline_then_repeat_strict_lifecycle",
     }
 
 
@@ -1036,7 +1141,7 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--stage",
-        choices=("initialization", "lifecycle", "rollout"),
+        choices=("baseline", "initialization", "lifecycle", "rollout"),
         required=True,
     )
     parser.add_argument("--dataset-manifest", type=Path, required=True)
@@ -1047,6 +1152,7 @@ def main() -> int:
     args = parser.parse_args()
     runtime = _load_runtime(args)
     stages = {
+        "baseline": _baseline_stage,
         "initialization": _initialization_stage,
         "lifecycle": _lifecycle_stage,
         "rollout": _rollout_stage,
