@@ -116,9 +116,12 @@ def _select_references(index: Any) -> tuple[Any, Any]:
 
 def _plan_context(manifest: Mapping[str, Any], landpoint_id: str) -> dict[str, Path]:
     plan_path = Path(str(manifest["plan"])).resolve()
-    if _sha256(plan_path) != str(manifest["plan_sha256"]):
-        raise ValueError("v6 generation plan hash drift")
     plan = json.loads(plan_path.read_text(encoding="utf-8"))
+    canonical_plan_sha256 = hashlib.sha256(
+        json.dumps(plan, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+    if canonical_plan_sha256 != str(manifest["plan_sha256"]):
+        raise ValueError("v6 generation plan hash drift")
     entries = tuple(
         item
         for item in plan["entries"]
