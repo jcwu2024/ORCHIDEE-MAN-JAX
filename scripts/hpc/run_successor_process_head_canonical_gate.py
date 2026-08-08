@@ -389,6 +389,34 @@ class _NonnegativeScaleProbeHead:
             scaled[name] = value * scale if name in self.nonnegative_fields else value
         return self.base.prediction_from_named_outputs(scaled, inputs)
 
+
+class _TeacherReplacementProbeHead:
+    """Replace selected named outputs by same-row Teacher labels."""
+
+    def __init__(self, base: Any, schema: Any):
+        self.base = base
+        self.field_names = tuple(field.name for field in schema.fields)
+
+    def assemble_context(self, parameters: Mapping[str, Any], inputs: Any) -> Any:
+        return self.base.assemble_context(parameters["model"], inputs)
+
+    def __call__(
+        self,
+        parameters: Mapping[str, Any],
+        context: Any,
+        inputs: Any,
+    ) -> Any:
+        import jax.numpy as jnp
+
+        outputs = self.base.named_outputs(parameters["model"], context, inputs)
+        replacement_mask = jnp.asarray(parameters["replacement_mask"], dtype=jnp.bool_)
+        teacher_outputs = parameters["teacher_outputs"]
+        hybrid = {
+            name: jnp.where(replacement_mask[index], teacher_outputs[name], outputs[name])
+            for index, name in enumerate(self.field_names)
+        }
+        return self.base.prediction_from_named_outputs(hybrid, inputs)
+
 def _retained_adapter(
     runtime: Mapping[str, Any],
     teacher_context: Any,
@@ -955,6 +983,151 @@ def _carbon_baseline_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def _attribution_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
+    from jax_orchidee.driver import orchestration as teacher
+    from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
+    from research.daily_coarse_graining.daily_operator.successor_architecture import (
+        SOURCE_ROUTED_ATTENTION,
+    )
+
+    jax = runtime["jax"]
+    paths = runtime["context_paths"]
+    teacher_context = teacher.prepare_paper_1961_driver_context(
+        paths["config"],
+        used_run_def_path=paths["run_def"],
+        reference_run_dir=paths["reference_run_dir"],
+    )
+    sample = runtime["ordinary_parent"].sample(ANCHOR_ROWS[0])
+    inputs = runtime["examples"][ANCHOR_ROWS[0]].inputs
+    retained_tail = _retained_adapter(
+        runtime,
+        teacher_context,
+        sample,
+        lifecycle_start_tstep=48,
+        result_day_index=2,
+    )
+    base_head = _head(runtime, SOURCE_ROUTED_ATTENTION)
+    head = _TeacherReplacementProbeHead(base_head, runtime["schema"])
+    transition = bind_daily_operator(
+        input_assembler=runtime["adapter"].input_assembler,
+        process_head=head,
+        retained_tail=retained_tail,
+    )
+    compiled = jax.jit(transition)
+    field_names = tuple(field.name for field in runtime["schema"].fields)
+    teacher_targets = runtime["examples"][ANCHOR_ROWS[0]].targets.supervision
+    if set(teacher_targets) != set(field_names):
+        raise ValueError("attribution Teacher target registry drift")
+    teacher_outputs = {
+        name: np.asarray(teacher_targets[name].value, dtype=np.float64)
+        for name in field_names
+    }
+
+    groups = {
+        "daily_carbon": {
+            "daily.fast_gpp",
+            "daily.fast_maintenance_respiration",
+        },
+        "daily_temperature": {
+            "daily.temperature_context.tsoil",
+            "daily.temperature_context.tsurf",
+        },
+        "water": {
+            name
+            for name in field_names
+            if name.startswith(("inventory.water.", "typed.water."))
+        },
+        "carbon": {
+            name
+            for name in field_names
+            if name.startswith(("inventory.carbon.", "typed.ok_leak."))
+        },
+        "thermal_energy": {
+            name
+            for name in field_names
+            if name.startswith(("thermal.", "typed.energy."))
+        },
+    }
+    assigned = set().union(*groups.values())
+    if assigned != set(field_names):
+        raise ValueError(
+            f"attribution group registry drift: {sorted(set(field_names) - assigned)}"
+        )
+    index = {name: position for position, name in enumerate(field_names)}
+
+    def replacement_mask(names: set[str]) -> np.ndarray:
+        mask = np.zeros((len(field_names),), dtype=np.bool_)
+        mask[[index[name] for name in names]] = True
+        return mask
+
+    modes = {
+        "all_predicted": set(),
+        "all_teacher": set(field_names),
+        **{f"predicted_plus_teacher_{name}": values for name, values in groups.items()},
+        **{
+            f"teacher_except_{name}": set(field_names) - values
+            for name, values in groups.items()
+        },
+        **{
+            f"predicted_plus_teacher_{name.removeprefix('daily.')}": {name}
+            for name in groups["daily_carbon"] | groups["daily_temperature"]
+        },
+    }
+    cases = {}
+    for name, replacements in modes.items():
+        started = time.perf_counter()
+        parameters = {
+            "model": runtime["parameters"],
+            "teacher_outputs": teacher_outputs,
+            "replacement_mask": replacement_mask(replacements),
+        }
+        result = compiled(parameters, inputs)
+        jax.block_until_ready(result)
+        report = _case_report(result, sample, runtime["contract"])
+        cases[name] = {
+            "status": report["status"],
+            "seconds": time.perf_counter() - started,
+            "teacher_field_count": len(replacements),
+            "case": report,
+        }
+    diagnostic_passed = (
+        cases["all_predicted"]["status"] == "failed"
+        and cases["all_teacher"]["status"] == "passed"
+    )
+    return {
+        "schema_version": "successor_process_head_real_v6_day2_owner_attribution_v1",
+        "status": "passed" if diagnostic_passed else "failed",
+        "promotion_authorized": False,
+        "checkpoint_written": False,
+        "historical_v5_used": False,
+        "backend": jax.default_backend(),
+        "devices": [str(device) for device in runtime["devices"]],
+        "successor_contract_sha256": EXPECTED["successor_contract"],
+        "data": {
+            "dataset_manifest_sha256": EXPECTED["dataset_manifest"],
+            "process_statistics_json_sha256": EXPECTED["process_statistics_json"],
+            "landpoint_id": FROZEN_LANDPOINT,
+            "year": 1961,
+            "row": ANCHOR_ROWS[0],
+            "day_index": int(np.asarray(sample["day_index"])),
+        },
+        "probe": {
+            "arm": SOURCE_ROUTED_ATTENTION,
+            "field_count": len(field_names),
+            "groups": {name: sorted(values) for name, values in groups.items()},
+            "training_updates": 0,
+        },
+        "canonical_boundary": {
+            "binding": "bind_daily_operator(canonical_assembler, hybrid_named_outputs, canonical_retained_tail_adapter)",
+            "native_forcing_only": True,
+            "reconstructs_48_forcing_records": False,
+            "executes_48_step_state_scan": False,
+        },
+        "cases": cases,
+        "pending_required_gate": "identify_minimal_restoring_owner_then_repair_initialization_or_boundary",
+    }
+
+
 def _rollout_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
     import jax.numpy as jnp
 
@@ -1217,6 +1390,7 @@ def main() -> int:
     parser.add_argument(
         "--stage",
         choices=(
+            "attribution",
             "baseline",
             "carbon_baseline",
             "initialization",
@@ -1233,6 +1407,7 @@ def main() -> int:
     args = parser.parse_args()
     runtime = _load_runtime(args)
     stages = {
+        "attribution": _attribution_stage,
         "baseline": _baseline_stage,
         "carbon_baseline": _carbon_baseline_stage,
         "initialization": _initialization_stage,

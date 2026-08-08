@@ -7,7 +7,7 @@ ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 WORKTREE=${WORKTREE:-$ROOT}
 EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD}
 GPU_DEVICE=${GPU_DEVICE:-0}
-STAGE=${STAGE:?set STAGE to baseline, carbon_baseline, initialization, lifecycle, or rollout}
+STAGE=${STAGE:?set STAGE to attribution, baseline, carbon_baseline, initialization, lifecycle, or rollout}
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
@@ -21,7 +21,7 @@ OUTPUT=${OUTPUT:-$REPORT_ROOT/${STAGE}_report.json}
 CACHE_ROOT=$ROOT/runtime/cache/jax/orcjax_gpu/successor-process-head-v2-canonical-$HEAD_SHORT-$STAGE
 
 case "$STAGE" in
-  baseline|carbon_baseline|initialization|lifecycle|rollout) ;;
+  attribution|baseline|carbon_baseline|initialization|lifecycle|rollout) ;;
   *) echo "unsupported canonical gate stage: $STAGE" >&2; exit 2 ;;
 esac
 case "$WORKTREE" in
