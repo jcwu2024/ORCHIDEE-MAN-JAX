@@ -414,20 +414,38 @@ def _case_report(
     water_residual = float(np.asarray(result.diagnostics["water_budget_residual"]))
     carbon_residual = float(np.asarray(result.diagnostics["carbon_budget_residual"]))
     mask_mismatches = int(np.count_nonzero(observed_defined != expected_defined))
-    mask_mismatches_by_leaf = {
-        leaf.key: int(
+    mask_mismatches_by_leaf = {}
+    mask_mismatch_details_by_leaf = {}
+    for leaf in contract.state_leaves:
+        if leaf.discrete:
+            continue
+        observed_leaf = observed_defined[leaf.start : leaf.stop].reshape(leaf.shape)
+        expected_leaf = expected_defined[leaf.start : leaf.stop].reshape(leaf.shape)
+        teacher_defined_model_undefined = expected_leaf & ~observed_leaf
+        teacher_undefined_model_defined = ~expected_leaf & observed_leaf
+        leaf_mismatches = int(
             np.count_nonzero(
-                observed_defined[leaf.start : leaf.stop]
-                != expected_defined[leaf.start : leaf.stop]
+                teacher_defined_model_undefined | teacher_undefined_model_defined
             )
         )
-        for leaf in contract.state_leaves
-        if not leaf.discrete
-        and np.any(
-            observed_defined[leaf.start : leaf.stop]
-            != expected_defined[leaf.start : leaf.stop]
-        )
-    }
+        if leaf_mismatches == 0:
+            continue
+        mask_mismatches_by_leaf[leaf.key] = leaf_mismatches
+        mask_mismatch_details_by_leaf[leaf.key] = {
+            "shape": list(leaf.shape),
+            "teacher_defined_model_undefined_count": int(
+                np.count_nonzero(teacher_defined_model_undefined)
+            ),
+            "teacher_defined_model_undefined_indices": np.argwhere(
+                teacher_defined_model_undefined
+            ).tolist(),
+            "teacher_undefined_model_defined_count": int(
+                np.count_nonzero(teacher_undefined_model_defined)
+            ),
+            "teacher_undefined_model_defined_indices": np.argwhere(
+                teacher_undefined_model_defined
+            ).tolist(),
+        }
     if sum(mask_mismatches_by_leaf.values()) != mask_mismatches:
         raise ValueError("defined-mask mismatch accounting drift")
     nonfinite_defined = int(
@@ -485,9 +503,11 @@ def _case_report(
         "day_index": int(np.asarray(sample["day_index"])),
         "state_width": int(observed.size),
         "defined_count": int(np.count_nonzero(observed_defined)),
+        "teacher_defined_count": int(np.count_nonzero(expected_defined)),
         "nonfinite_defined_count": nonfinite_defined,
         "defined_mask_mismatch_count": mask_mismatches,
         "defined_mask_mismatches_by_leaf": mask_mismatches_by_leaf,
+        "defined_mask_mismatch_details_by_leaf": mask_mismatch_details_by_leaf,
         "discrete_state_mismatch_count": discrete_mismatches,
         "teacher_state_max_absolute_error": (
             float(np.max(difference[admitted])) if np.any(admitted) else 0.0
