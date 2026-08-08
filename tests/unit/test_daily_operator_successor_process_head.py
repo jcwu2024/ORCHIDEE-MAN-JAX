@@ -48,6 +48,7 @@ from research.daily_coarse_graining.daily_operator.successor_training import (
     LONG_HORIZON_COMPONENTS,
     TERMINAL_STOCK_FIELDS,
     calibrate_gradient_ratio_coefficients,
+    derive_long_horizon_scales,
     extract_biomass_productivity_trajectories,
     rollout_daily_operator,
     rollout_input_from_template,
@@ -634,10 +635,21 @@ def test_rollout_refreshes_state_derived_pft_views_and_ignores_future_teacher_st
         transition=increment_transition,
         contract=setup["adapter"].contract,
     )
+    rematerialized = rollout_daily_operator(
+        jnp.asarray(1.0, dtype=jnp.float64),
+        templates,
+        transition=increment_transition,
+        contract=setup["adapter"].contract,
+        rematerialize=True,
+    )
     expected = float(np.asarray(source.continuous_state)[0]) + np.arange(1.0, 4.0)
     np.testing.assert_allclose(
         np.asarray(trace.result.next_state.other)[:, 0],
         expected,
+    )
+    np.testing.assert_array_equal(
+        np.asarray(rematerialized.result.next_state.other),
+        np.asarray(trace.result.next_state.other),
     )
 
 
@@ -697,6 +709,27 @@ def test_thirty_day_trajectory_extraction_and_training_objective(successor_setup
     assert float(objective.long_horizon.total) == 0.0
 
 
+def test_long_horizon_scales_are_derived_from_frozen_column_scales(successor_setup):
+    setup = successor_setup
+    contract = setup["adapter"].contract
+    gpp_shape = next(
+        field.shape for field in setup["schema"].fields if field.name == "daily.fast_gpp"
+    )
+    scales = derive_long_horizon_scales(
+        np.ones((contract.continuous_state_width,), dtype=np.float64),
+        np.ones(gpp_shape, dtype=np.float64),
+        contract,
+    )
+    assert tuple(scales.fluxes) == CUMULATIVE_FLUX_FIELDS
+    assert tuple(scales.stocks) == TERMINAL_STOCK_FIELDS
+    assert all(np.isfinite(value) and value > 0.0 for value in scales.fluxes.values())
+    assert all(np.isfinite(value) and value > 0.0 for value in scales.stocks.values())
+    assert (
+        scales.stocks["ecosystem_carbon"]
+        > scales.stocks["total_live_biomass_carbon"]
+    )
+
+
 def test_train_train_gradient_ratio_preflight_is_single_and_bounded():
     parameters = {"weight": jnp.asarray([1.0, -2.0], dtype=jnp.float64)}
 
@@ -704,6 +737,10 @@ def test_train_train_gradient_ratio_preflight_is_single_and_bounded():
         return jnp.sum(values["weight"] ** 2)
 
     components = {name: quadratic for name in LONG_HORIZON_COMPONENTS}
+    def combined(values):
+        return jnp.stack(
+            tuple(quadratic(values) for _name in LONG_HORIZON_COMPONENTS)
+        )
     targets = {
         "cumulative_flux_mse": 0.10,
         "cumulative_flux_bias_squared": 0.15,
@@ -718,6 +755,8 @@ def test_train_train_gradient_ratio_preflight_is_single_and_bounded():
         coefficient_minimum=0.001,
         coefficient_maximum=10.0,
         split_label="train/train",
+        compile_gradients=True,
+        combined_component_loss=combined,
     )
     assert preflight.split_label == "train/train"
     assert preflight.resolved_coefficients == targets

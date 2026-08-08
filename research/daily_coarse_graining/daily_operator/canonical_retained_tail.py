@@ -66,6 +66,7 @@ class CanonicalRetainedTailStaticOwner:
     lifecycle_start_tstep: int
     result_day_index: int
     forcing_layout: NativeForcingFieldLayout
+    include_modelout_diagnostics: bool
 
     def __post_init__(self) -> None:
         start = int(self.lifecycle_start_tstep)
@@ -85,6 +86,7 @@ def build_canonical_retained_tail_adapter(
     runtime_year: int,
     lifecycle_start_tstep: int,
     result_day_index: int,
+    include_modelout_diagnostics: bool = True,
 ) -> CanonicalRetainedTailAdapter:
     """Bind accepted retained-owner configuration without script-local wiring."""
 
@@ -187,6 +189,7 @@ def build_canonical_retained_tail_adapter(
             lifecycle_start_tstep=int(lifecycle_start_tstep),
             result_day_index=int(result_day_index),
             forcing_layout=forcing_layout,
+            include_modelout_diagnostics=bool(include_modelout_diagnostics),
         ),
         day_inputs=jax.tree_util.tree_map(jnp.asarray, day_inputs),
     )
@@ -371,13 +374,7 @@ class CanonicalRetainedTailAdapter:
     def __call__(self, value: RetainedTailInput) -> RetainedTailResult:
         owner = self.static_owner
         internal_target = self._typed_fast_target(value)
-        state_result, modelout_fields, modelout = canonical_retained_tail_dynamic_transition(
-            value.fast_update.state.other,
-            value.fast_update.discrete_state,
-            internal_target,
-            self._dynamic_day_inputs(value),
-            value.canonical_input.year,
-            value.canonical_input.day_index,
+        transition_arguments = dict(
             config_path=owner.config_path,
             context=owner.context,
             contract=owner.contract,
@@ -389,8 +386,37 @@ class CanonicalRetainedTailAdapter:
             runtime_year=int(owner.runtime_year),
             lifecycle_start_tstep=int(owner.lifecycle_start_tstep),
             result_day_index=int(owner.result_day_index),
-            return_modelout=True,
         )
+        dynamic_arguments = (
+            value.fast_update.state.other,
+            value.fast_update.discrete_state,
+            internal_target,
+            self._dynamic_day_inputs(value),
+            value.canonical_input.year,
+            value.canonical_input.day_index,
+        )
+        if owner.include_modelout_diagnostics:
+            state_result, modelout_fields, modelout = (
+                canonical_retained_tail_dynamic_transition(
+                    *dynamic_arguments,
+                    **transition_arguments,
+                    return_modelout=True,
+                )
+            )
+            diagnostics = {
+                "retained_tail_executed": jnp.asarray(1, dtype=jnp.int32),
+                "modelout_fields": modelout_fields,
+                "modelout": modelout,
+            }
+        else:
+            state_result = canonical_retained_tail_dynamic_transition(
+                *dynamic_arguments,
+                **transition_arguments,
+                return_modelout=False,
+            )
+            diagnostics = {
+                "retained_tail_executed": jnp.asarray(1, dtype=jnp.int32),
+            }
         next_continuous, next_discrete = state_result
         next_input = value.canonical_input._replace(
             continuous_state=next_continuous,
@@ -401,9 +427,5 @@ class CanonicalRetainedTailAdapter:
             state=assembled.state,
             state_defined=assembled.state_defined,
             discrete_state=next_discrete,
-            diagnostics={
-                "retained_tail_executed": jnp.asarray(1, dtype=jnp.int32),
-                "modelout_fields": modelout_fields,
-                "modelout": modelout,
-            },
+            diagnostics=diagnostics,
         )

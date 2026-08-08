@@ -6,13 +6,17 @@ from typing import Any, Callable, Mapping, NamedTuple, Sequence
 
 import jax
 import jax.numpy as jnp
+import numpy as np
 
+from jax_orchidee.stomate.carbon_kernels import ICARBON
 from research.daily_coarse_graining.daily_markov_contract import (
     DailyMarkovContract,
     reconstruct_state_fields_compiled,
 )
 
 from .long_horizon_objective import (
+    ABOVEGROUND_BIOMASS_PARTS,
+    BELOWGROUND_BIOMASS_PARTS,
     DEFAULT_HORIZONS,
     ECOSYSTEM_CARBON_COMPONENTS,
     LongHorizonObjectiveResult,
@@ -76,6 +80,11 @@ class GradientRatioPreflight(NamedTuple):
     achieved_gradient_ratios: Mapping[str, float]
 
 
+class LongHorizonScales(NamedTuple):
+    fluxes: Mapping[str, float]
+    stocks: Mapping[str, float]
+
+
 def _compact_pft_views(
     continuous_state: Any,
     discrete_state: Mapping[str, Any],
@@ -135,6 +144,7 @@ def rollout_daily_operator(
     *,
     transition: Callable[[Any, DailyOperatorInput], DailyOperatorResult],
     contract: DailyMarkovContract,
+    rematerialize: bool = False,
 ) -> DailyOperatorRolloutTrace:
     """Run one free daily scan without consulting future teacher states."""
 
@@ -158,8 +168,9 @@ def rollout_daily_operator(
         )
         return (result.next_state.other, result.next_discrete_state), trace
 
+    scan_step = jax.checkpoint(step) if rematerialize else step
     _, trace = jax.lax.scan(
-        step,
+        scan_step,
         (continuous[0], initial_discrete),
         templates,
     )
@@ -177,6 +188,117 @@ def _state_leaf(contract: DailyMarkovContract, field: str) -> Any:
     if len(matches) != 1:
         raise ValueError(f"long-horizon state field owner drift for {field}")
     return matches[0]
+
+
+def _positive_l2_scale(value: Any, *, name: str) -> float:
+    array = np.asarray(value, dtype=np.float64)
+    if array.size < 1 or not np.all(np.isfinite(array)) or np.any(array <= 0.0):
+        raise ValueError(f"invalid frozen train/train scale for {name}")
+    result = float(np.sqrt(np.sum(array * array, dtype=np.float64)))
+    if not np.isfinite(result) or result <= 0.0:
+        raise ValueError(f"invalid derived long-horizon scale for {name}")
+    return result
+
+
+def derive_long_horizon_scales(
+    next_state_scale: Any,
+    fast_gpp_scale: Any,
+    contract: DailyMarkovContract,
+) -> LongHorizonScales:
+    """Propagate accepted train/train column scales to scalar science fields.
+
+    The base statistics do not retain cross-column covariance. Root-sum-square
+    propagation therefore supplies one deterministic, positive scale per
+    reduced field without rescanning v6 or tuning against rollout results.
+    """
+
+    state_scale = np.asarray(next_state_scale, dtype=np.float64)
+    if state_scale.shape != (contract.continuous_state_width,):
+        raise ValueError("next-state scale width does not match the Markov contract")
+    def state_field(field: str) -> np.ndarray:
+        leaf = _state_leaf(contract, field)
+        value = state_scale[leaf.start : leaf.stop].reshape(leaf.shape)
+        if "nvm" not in leaf.axis_names:
+            raise ValueError(f"long-horizon state field {field} has no PFT axis")
+        pft_axis = leaf.axis_names.index("nvm")
+        if value.shape[pft_axis] != len(contract.active_pft_indices):
+            raise ValueError(
+                f"long-horizon state field {field} is not on the compact PFT axis"
+            )
+        return value
+
+    fluxes = {
+        "gpp": _positive_l2_scale(fast_gpp_scale, name="gpp"),
+        "npp": _positive_l2_scale(state_field("npp_daily"), name="npp"),
+        "maintenance_respiration": _positive_l2_scale(
+            state_field("resp_maint"),
+            name="maintenance_respiration",
+        ),
+        "growth_respiration": _positive_l2_scale(
+            state_field("resp_growth"),
+            name="growth_respiration",
+        ),
+        "heterotrophic_respiration": _positive_l2_scale(
+            state_field("resp_hetero"),
+            name="heterotrophic_respiration",
+        ),
+    }
+
+    biomass = np.take(state_field("biomass"), ICARBON, axis=-1)
+    aboveground = _positive_l2_scale(
+        np.take(biomass, ABOVEGROUND_BIOMASS_PARTS, axis=-1),
+        name="aboveground_biomass_carbon",
+    )
+    belowground = _positive_l2_scale(
+        np.take(biomass, BELOWGROUND_BIOMASS_PARTS, axis=-1),
+        name="belowground_biomass_carbon",
+    )
+    total_live = _positive_l2_scale(
+        biomass,
+        name="total_live_biomass_carbon",
+    )
+    litter = _positive_l2_scale(
+        np.concatenate(
+            (
+                np.take(state_field("litter_above"), ICARBON, axis=-1).reshape(-1),
+                np.take(state_field("litter_below"), ICARBON, axis=-1).reshape(-1),
+            )
+        ),
+        name="litter_carbon",
+    )
+    particulate = _positive_l2_scale(
+        state_field("carbon_32l"),
+        name="soil_particulate_organic_carbon",
+    )
+    dissolved = _positive_l2_scale(
+        np.take(state_field("DOC"), ICARBON, axis=-1),
+        name="dissolved_organic_carbon",
+    )
+    interception = _positive_l2_scale(
+        np.take(state_field("interception_storage"), ICARBON, axis=-1),
+        name="canopy_interception_organic_carbon",
+    )
+    ecosystem = float(
+        np.sqrt(
+            total_live**2
+            + litter**2
+            + particulate**2
+            + dissolved**2
+            + interception**2
+        )
+    )
+    stocks = {
+        "aboveground_biomass_carbon": aboveground,
+        "belowground_biomass_carbon": belowground,
+        "total_live_biomass_carbon": total_live,
+        "litter_carbon": litter,
+        "soil_particulate_organic_carbon": particulate,
+        "dissolved_organic_carbon": dissolved,
+        "ecosystem_carbon": ecosystem,
+    }
+    if tuple(fluxes) != CUMULATIVE_FLUX_FIELDS or tuple(stocks) != TERMINAL_STOCK_FIELDS:
+        raise ValueError("derived long-horizon scale registry drift")
+    return LongHorizonScales(fluxes=fluxes, stocks=stocks)
 
 
 def _trajectory_field(
@@ -469,6 +591,8 @@ def calibrate_gradient_ratio_coefficients(
     coefficient_minimum: float,
     coefficient_maximum: float,
     split_label: str,
+    compile_gradients: bool = False,
+    combined_component_loss: Callable[[Any], Any] | None = None,
 ) -> GradientRatioPreflight:
     """Resolve coefficients once from one train/train gradient measurement."""
 
@@ -480,7 +604,10 @@ def calibrate_gradient_ratio_coefficients(
         raise ValueError("successor gradient-ratio component registry drift")
     if not 0.0 < coefficient_minimum <= coefficient_maximum:
         raise ValueError("successor coefficient interval is invalid")
-    anchor_value, anchor_gradient = jax.value_and_grad(anchor_loss)(parameters)
+    anchor_measurement = jax.value_and_grad(anchor_loss)
+    if compile_gradients:
+        anchor_measurement = jax.jit(anchor_measurement)
+    anchor_value, anchor_gradient = anchor_measurement(parameters)
     anchor_norm = _tree_l2_norm(anchor_gradient)
     anchor_norm_host = float(anchor_norm)
     if not jnp.isfinite(anchor_value) or not jnp.isfinite(anchor_norm):
@@ -488,15 +615,49 @@ def calibrate_gradient_ratio_coefficients(
     if anchor_norm_host <= 0.0:
         raise ValueError("one-day anchor gradient norm must be positive")
 
+    component_names = tuple(LONG_HORIZON_COMPONENTS)
+
+    def stacked_component_losses(current_parameters):
+        values = (
+            jnp.stack(
+                tuple(
+                    component_losses[name](current_parameters)
+                    for name in component_names
+                )
+            )
+            if combined_component_loss is None
+            else jnp.asarray(
+                combined_component_loss(current_parameters),
+                dtype=jnp.float64,
+            )
+        )
+        if values.shape != (len(component_names),):
+            raise ValueError("combined rollout component loss shape drift")
+        return values
+
+    def component_measurement(current_parameters):
+        values, pullback = jax.vjp(stacked_component_losses, current_parameters)
+        basis = jnp.eye(len(component_names), dtype=jnp.float64)
+        jacobian = jax.lax.map(lambda seed: pullback(seed)[0], basis)
+        return values, jacobian
+
+    if compile_gradients:
+        component_measurement = jax.jit(component_measurement)
+    measured_values, measured_gradients = component_measurement(parameters)
+
     component_values = {}
     component_norms = {}
     resolved = {}
     achieved = {}
-    for name in LONG_HORIZON_COMPONENTS:
+    for index, name in enumerate(component_names):
         target = float(target_gradient_ratios[name])
         if not 0.0 < target < 1.0:
             raise ValueError(f"invalid target gradient ratio for {name}")
-        value, gradient = jax.value_and_grad(component_losses[name])(parameters)
+        value = measured_values[index]
+        gradient = jax.tree_util.tree_map(
+            lambda leaf: leaf[index],
+            measured_gradients,
+        )
         norm = _tree_l2_norm(gradient)
         norm_host = float(norm)
         if not jnp.isfinite(value) or not jnp.isfinite(norm) or norm_host <= 0.0:
