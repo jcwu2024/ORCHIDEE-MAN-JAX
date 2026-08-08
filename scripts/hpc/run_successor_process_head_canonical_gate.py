@@ -38,6 +38,7 @@ INITIALIZATION_NONNEGATIVE_BASELINE_SCALES = (
     0.003,
     0.001,
 )
+INITIALIZATION_COHERENT_CARBON_SCALES = (0.3, 0.1, 0.03, 0.01, 0.003)
 TARGET_GRADIENT_RATIOS = {
     "cumulative_flux_mse": 0.10,
     "cumulative_flux_bias_squared": 0.15,
@@ -377,11 +378,15 @@ class _NonnegativeScaleProbeHead:
         inputs: Any,
     ) -> Any:
         outputs = self.base.named_outputs(parameters["model"], context, inputs)
-        scale = parameters["nonnegative_scale"]
-        scaled = {
-            name: value * scale if name in self.nonnegative_fields else value
-            for name, value in outputs.items()
-        }
+        generic_scale = parameters["nonnegative_scale"]
+        scaled = {}
+        for name, value in outputs.items():
+            scale = generic_scale
+            if name == "daily.fast_gpp":
+                scale = parameters.get("gpp_scale", generic_scale)
+            elif name == "daily.fast_maintenance_respiration":
+                scale = parameters.get("maintenance_scale", generic_scale)
+            scaled[name] = value * scale if name in self.nonnegative_fields else value
         return self.base.prediction_from_named_outputs(scaled, inputs)
 
 def _retained_adapter(
@@ -880,6 +885,76 @@ def _baseline_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def _carbon_baseline_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
+    jax = runtime["jax"]
+    names_by_scale = {
+        scale: f"coherent_carbon_baseline_scale_{scale:g}"
+        for scale in INITIALIZATION_COHERENT_CARBON_SCALES
+    }
+    model = _scaled_final_decoder(runtime["parameters"], 0.01)
+    parameter_sets = {
+        names_by_scale[scale]: {
+            "model": model,
+            "nonnegative_scale": np.asarray(scale, dtype=np.float64),
+            "gpp_scale": np.asarray(scale, dtype=np.float64),
+            "maintenance_scale": np.asarray(scale / 12.0, dtype=np.float64),
+        }
+        for scale in INITIALIZATION_COHERENT_CARBON_SCALES
+    }
+    arms = _evaluate_lifecycle_parameters(
+        runtime,
+        parameter_sets,
+        probe_nonnegative_scale=True,
+    )
+    passing_scales = [
+        scale
+        for scale in INITIALIZATION_COHERENT_CARBON_SCALES
+        if all(
+            results[names_by_scale[scale]]["status"] == "passed"
+            for results in arms.values()
+        )
+    ]
+    passed = bool(passing_scales)
+    return {
+        "schema_version": "successor_process_head_real_v6_coherent_carbon_baseline_probe_v1",
+        "status": "passed" if passed else "failed",
+        "promotion_authorized": False,
+        "checkpoint_written": False,
+        "historical_v5_used": False,
+        "backend": jax.default_backend(),
+        "devices": [str(device) for device in runtime["devices"]],
+        "successor_contract_sha256": EXPECTED["successor_contract"],
+        "data": {
+            "dataset_manifest_sha256": EXPECTED["dataset_manifest"],
+            "process_statistics_json_sha256": EXPECTED["process_statistics_json"],
+            "landpoint_id": FROZEN_LANDPOINT,
+            "ordinary_year": 1961,
+            "ordinary_rows": list(ANCHOR_ROWS),
+            "restart_year": 1962,
+            "restart_row": 0,
+        },
+        "probe": {
+            "parameter_changed": "none",
+            "diagnostic_transform": "scale_nonnegative_outputs_with_part_aware_maintenance_baseline",
+            "candidate_decoder_kernel_scale": 0.01,
+            "maintenance_part_count": 12,
+            "maintenance_scale_rule": "generic_nonnegative_scale / maintenance_part_count",
+            "scales": list(INITIALIZATION_COHERENT_CARBON_SCALES),
+            "passing_scales": passing_scales,
+            "largest_passing_scale": max(passing_scales) if passing_scales else None,
+            "training_updates": 0,
+        },
+        "canonical_boundary": {
+            "binding": "bind_daily_operator(canonical_assembler, successor_head, canonical_retained_tail_adapter)",
+            "native_forcing_only": True,
+            "reconstructs_48_forcing_records": False,
+            "executes_48_step_state_scan": False,
+        },
+        "arms": arms,
+        "pending_required_gate": "freeze_part_aware_baseline_then_repeat_strict_lifecycle",
+    }
+
+
 def _rollout_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
     import jax.numpy as jnp
 
@@ -1141,7 +1216,13 @@ def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument(
         "--stage",
-        choices=("baseline", "initialization", "lifecycle", "rollout"),
+        choices=(
+            "baseline",
+            "carbon_baseline",
+            "initialization",
+            "lifecycle",
+            "rollout",
+        ),
         required=True,
     )
     parser.add_argument("--dataset-manifest", type=Path, required=True)
@@ -1153,6 +1234,7 @@ def main() -> int:
     runtime = _load_runtime(args)
     stages = {
         "baseline": _baseline_stage,
+        "carbon_baseline": _carbon_baseline_stage,
         "initialization": _initialization_stage,
         "lifecycle": _lifecycle_stage,
         "rollout": _rollout_stage,
