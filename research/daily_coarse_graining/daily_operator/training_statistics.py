@@ -687,7 +687,18 @@ def fit_process_training_statistics(
         )
         if not np.array_equal(day_index, shard.day_index):
             raise ValueError("coherent process-statistics day index drift")
-        targets = vectorized_process_targets(shard, typed_values, typed_defined, adapter)
+        try:
+            targets = vectorized_process_targets(
+                shard,
+                typed_values,
+                typed_defined,
+                adapter,
+            )
+        except ValueError as error:
+            raise ValueError(
+                "process target construction failed for "
+                f"{reference.parent.landpoint_id}:{reference.parent.year}"
+            ) from error
         domains = vectorized_semantic_state(shard, adapter)
         if output_moments is None:
             template = {

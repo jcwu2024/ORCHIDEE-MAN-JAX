@@ -207,7 +207,19 @@ def encode_thermal_endpoints(
         )
     )
     reconstructed = np.where(start_defined, reconstructed, end_array)
-    if not np.allclose(reconstructed, end_array, atol=atol, rtol=1.0e-12, equal_nan=True):
+    # The subtraction/division/multiplication/addition chain can end in
+    # cancellation at an exactly zero Teacher endpoint. Bound its float64
+    # forward error from the magnitudes of the actual arithmetic terms.
+    roundoff = 8.0 * np.finfo(np.float64).eps * (
+        np.abs(start_array)
+        + np.abs(end_array)
+        + np.abs(normalized * float(bound))
+    )
+    reconstruction_error = np.abs(reconstructed - end_array)
+    reconstruction_tolerance = (
+        float(atol) + 1.0e-12 * np.abs(end_array) + roundoff
+    )
+    if np.any(start_defined & (reconstruction_error > reconstruction_tolerance)):
         raise ValueError(f"{name} bounded tendency does not recover its endpoint")
     return BoundedTendencyTransition(
         normalized_tendency=normalized,

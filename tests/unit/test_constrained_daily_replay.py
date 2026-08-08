@@ -80,3 +80,18 @@ def test_thermal_endpoint_encoding_preserves_undefined_mask_and_declared_bound()
 
     with np.testing.assert_raises_regex(ValueError, "exceeds"):
         encode_thermal_endpoints([280.0], [291.0], name="test.temperature", bound=10.0)
+
+
+def test_thermal_endpoint_zero_cancellation_uses_float64_roundoff_bound():
+    start = np.asarray([-32327.199980995603])
+    end = np.asarray([0.0])
+
+    encoded = encode_thermal_endpoints(
+        start,
+        end,
+        name="energy.snowheat",
+        bound=1.0e9,
+    )
+
+    np.testing.assert_allclose(encoded.reconstructed, end, atol=1.0e-11, rtol=0.0)
+    np.testing.assert_allclose(encoded.normalized_tendency, (end - start) / 1.0e9)

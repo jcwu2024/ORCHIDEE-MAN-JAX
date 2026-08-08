@@ -69,9 +69,16 @@ for partition in $(seq 0 $((PARTITIONS - 1))); do
       > "$OUTPUT_DIR/partials/part-$partition.log" 2>&1 &
   pids+=("$!")
 done
+worker_failure=0
 for pid in "${pids[@]}"; do
-  wait "$pid"
+  if ! wait "$pid"; then
+    worker_failure=1
+  fi
 done
+if [[ "$worker_failure" != 0 ]]; then
+  echo "one or more process-statistics partitions failed" >&2
+  exit 1
+fi
 
 "$PYTHON" -m scripts.hpc.fit_first_neural_process_statistics merge \
   --dataset-manifest "$DATASET" \
