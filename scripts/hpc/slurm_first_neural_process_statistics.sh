@@ -22,6 +22,7 @@ ACCEPTANCE=${ACCEPTANCE:?set ACCEPTANCE to the accepted v6 acceptance_report.jso
 BASE_STATISTICS=${BASE_STATISTICS:?set BASE_STATISTICS to accepted training_statistics.json}
 OUTPUT_DIR=${OUTPUT_DIR:?set OUTPUT_DIR to a new runtime output directory}
 PYTHON=$ROOT/.venvs/orcjax_cpu/bin/python
+SRUN=/rmprog/slurm/v22.05.7/bin/srun
 PARTITIONS=8
 
 case "$WORKTREE" in
@@ -37,6 +38,7 @@ for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" "$OUTPUT_DIR"; do
 done
 
 test -x "$PYTHON"
+test -x "$SRUN"
 test -f "$DATASET"
 test -f "$ACCEPTANCE"
 test -f "$BASE_STATISTICS"
@@ -55,7 +57,7 @@ cd "$WORKTREE"
 
 pids=()
 for partition in $(seq 0 $((PARTITIONS - 1))); do
-  srun --exclusive --nodes=1 --ntasks=1 --cpus-per-task=1 \
+  "$SRUN" --exclusive --nodes=1 --ntasks=1 --cpus-per-task=1 \
     "$PYTHON" -m scripts.hpc.fit_first_neural_process_statistics fit \
       --dataset-manifest "$DATASET" \
       --acceptance-report "$ACCEPTANCE" \
