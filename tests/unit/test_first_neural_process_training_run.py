@@ -11,6 +11,7 @@ from research.daily_coarse_graining.first_neural_process_training_run import (
     AdamWState,
     checkpoint_identity,
     initialize_adamw,
+    iter_process_validation_batches,
     learning_rate_at_update,
     load_process_training_protocol,
     load_training_checkpoint,
@@ -22,6 +23,7 @@ from research.daily_coarse_graining.first_neural_process_training_run import (
 
 def test_frozen_first_process_training_protocol_and_schedule():
     protocol = load_process_training_protocol()
+    assert protocol.payload["status"] == "ready_unsubmitted"
     assert protocol.payload["sampling"]["test_split_allowed"] is False
     assert learning_rate_at_update(protocol, 1) == pytest.approx(6.0e-7)
     assert learning_rate_at_update(protocol, 500) == pytest.approx(3.0e-4)
@@ -122,3 +124,17 @@ def test_bounded_prefetch_preserves_batch_order(monkeypatch):
     for actual, wanted in zip(observed, expected, strict=True):
         np.testing.assert_array_equal(actual[0], wanted[0])
         np.testing.assert_array_equal(actual[1], wanted[1])
+
+
+def test_validation_slices_remain_declared_and_test_closed():
+    with pytest.raises(ValueError, match="not declared"):
+        list(
+            iter_process_validation_batches(
+                object(),
+                spatial_split="test",
+                temporal_split="train",
+                seed=1,
+                batch_size=16,
+                maximum_batches=1,
+            )
+        )

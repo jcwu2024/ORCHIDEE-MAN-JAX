@@ -39,11 +39,13 @@ def main() -> int:
     )
     from research.daily_coarse_graining.first_neural_process_training_run import (
         build_process_batch_loss,
+        evaluate_process_validation,
         initialize_adamw,
         initialize_process_parameters,
         iter_process_training_batches,
         learning_rate_at_update,
         make_adamw_train_step,
+        prefetched_process_training_batches,
         prepare_process_training,
     )
 
@@ -132,9 +134,79 @@ def main() -> int:
             "minimum_clip_scale": min(clip_scales),
             "finite": finite,
         }
+        streaming_started = time.perf_counter()
+        streaming_losses = []
+        streaming_gradient_norms = []
+        streaming_clip_scales = []
+        streaming_first = stop
+        streaming_batches = prefetched_process_training_batches(
+            prepared,
+            seed=seed,
+            batch_size=batch_size,
+            start_batch=1,
+            maximum_batches=int(preflight["streaming_updates"]),
+            prefetch_batches=int(preflight["streaming_prefetch_batches"]),
+        )
+        for update, (inputs, targets) in enumerate(
+            streaming_batches,
+            start=streaming_first,
+        ):
+            learning_rate = jnp.asarray(
+                learning_rate_at_update(prepared.protocol, update),
+                dtype=jnp.float64,
+            )
+            parameters, optimizer, loss, gradient_norm, clip_scale = step(
+                parameters,
+                optimizer,
+                inputs,
+                targets,
+                learning_rate,
+            )
+            jax.block_until_ready((parameters, loss, gradient_norm, clip_scale))
+            streaming_losses.append(float(loss))
+            streaming_gradient_norms.append(float(gradient_norm))
+            streaming_clip_scales.append(float(clip_scale))
+        streaming_seconds = time.perf_counter() - streaming_started
+        validation_started = time.perf_counter()
+        validation = evaluate_process_validation(
+            prepared,
+            parameters,
+            arm=arm,
+            seed=seed,
+            maximum_batches=int(preflight["validation_batches_per_slice"]),
+        )
+        validation_seconds = time.perf_counter() - validation_started
+        streaming_finite = all(
+            np.all(np.isfinite(values))
+            for values in (
+                streaming_losses,
+                streaming_gradient_norms,
+                streaming_clip_scales,
+            )
+        )
+        arms[arm]["streaming"] = {
+            "status": "passed" if streaming_finite else "failed",
+            "updates": len(streaming_losses),
+            "prefetch_batches": int(preflight["streaming_prefetch_batches"]),
+            "seconds": streaming_seconds,
+            "seconds_per_update": streaming_seconds / len(streaming_losses),
+            "first_loss": streaming_losses[0],
+            "last_loss": streaming_losses[-1],
+            "maximum_gradient_norm": max(streaming_gradient_norms),
+            "minimum_clip_scale": min(streaming_clip_scales),
+            "finite": streaming_finite,
+        }
+        arms[arm]["validation_probe"] = {
+            "seconds": validation_seconds,
+            **validation,
+        }
     report = {
         "schema_version": "first_neural_process_training_probe_v1",
-        "status": "passed" if all(value["status"] == "passed" for value in arms.values()) else "failed",
+        "status": (
+            "passed"
+            if all(value["status"] == "passed" and value["streaming"]["status"] == "passed" for value in arms.values())
+            else "failed"
+        ),
         "checkpoint_written": False,
         "devices": [str(device) for device in devices],
         "parameter_count": count,

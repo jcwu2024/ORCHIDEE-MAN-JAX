@@ -8,6 +8,7 @@ import os
 import pickle
 import queue
 import threading
+import time
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterator, Mapping, NamedTuple, Sequence
@@ -90,6 +91,8 @@ def load_process_training_protocol(
     payload = json.loads(source_path.read_text(encoding="utf-8"))
     if payload.get("schema_version") != PROTOCOL_SCHEMA_VERSION:
         raise ValueError("unsupported first-process training protocol")
+    if payload.get("status") != "ready_unsubmitted":
+        raise ValueError("first-process training protocol is not ready and unsubmitted")
     observed = _canonical_sha256(payload, "protocol_sha256")
     if payload.get("protocol_sha256") != observed:
         raise ValueError("first-process training protocol hash mismatch")
@@ -139,6 +142,9 @@ def load_process_training_protocol(
         "batch_size": 16,
         "warmup_updates": 3,
         "measured_updates": 20,
+        "streaming_updates": 100,
+        "streaming_prefetch_batches": 2,
+        "validation_batches_per_slice": 4,
         "reuse_one_real_train_batch": True,
         "checkpoint_written": False,
     }:
@@ -251,21 +257,28 @@ def _stack_trees(values: Sequence[Any]) -> Any:
     return jax.tree_util.tree_map(lambda *items: np.stack(items), *values)
 
 
-def iter_process_training_batches(
+def _iter_process_batches(
     prepared: PreparedProcessTraining,
     *,
+    spatial_split: str,
+    temporal_split: str,
     seed: int,
     batch_size: int,
     start_batch: int = 0,
     maximum_batches: int,
 ) -> Iterator[tuple[Any, Any]]:
-    """Yield deterministic train/train batches without replacement or test access."""
+    """Yield deterministic coherent batches without replacement."""
 
     if batch_size < 1 or start_batch < 0 or maximum_batches < 1:
         raise ValueError("invalid first-process batch request")
-    references = list(prepared.index.select(spatial_split="train", temporal_split="train"))
+    references = list(
+        prepared.index.select(
+            spatial_split=spatial_split,
+            temporal_split=temporal_split,
+        )
+    )
     if not references:
-        raise ValueError("coherent v6 dataset has no train/train shards")
+        raise ValueError(f"coherent v6 dataset has no {spatial_split}/{temporal_split} shards")
     order_rng = np.random.default_rng(seed)
     order_rng.shuffle(references)
     start_sample = start_batch * batch_size
@@ -319,6 +332,55 @@ def iter_process_training_batches(
             break
     if inputs or yielded != maximum_batches:
         raise ValueError("first-process deterministic sampler produced an incomplete batch plan")
+
+
+def iter_process_training_batches(
+    prepared: PreparedProcessTraining,
+    *,
+    seed: int,
+    batch_size: int,
+    start_batch: int = 0,
+    maximum_batches: int,
+) -> Iterator[tuple[Any, Any]]:
+    """Yield train/train only; no caller can override this split."""
+
+    yield from _iter_process_batches(
+        prepared,
+        spatial_split="train",
+        temporal_split="train",
+        seed=seed,
+        batch_size=batch_size,
+        start_batch=start_batch,
+        maximum_batches=maximum_batches,
+    )
+
+
+def iter_process_validation_batches(
+    prepared: PreparedProcessTraining,
+    *,
+    spatial_split: str,
+    temporal_split: str,
+    seed: int,
+    batch_size: int,
+    maximum_batches: int,
+) -> Iterator[tuple[Any, Any]]:
+    """Yield only one of the three declared, non-test validation slices."""
+
+    allowed = {
+        ("train", "validation"),
+        ("validation", "train"),
+        ("validation", "validation"),
+    }
+    if (spatial_split, temporal_split) not in allowed:
+        raise ValueError("first-process validation split is not declared")
+    yield from _iter_process_batches(
+        prepared,
+        spatial_split=spatial_split,
+        temporal_split=temporal_split,
+        seed=seed,
+        batch_size=batch_size,
+        maximum_batches=maximum_batches,
+    )
 
 
 @dataclass(frozen=True)
@@ -581,3 +643,231 @@ def load_training_checkpoint(
     if not 0 <= update <= maximum_updates:
         raise ValueError("first-process checkpoint update is invalid")
     return payload
+
+
+def _atomic_json(path: Path, payload: Mapping[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    temporary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    os.replace(temporary, path)
+
+
+def evaluate_process_validation(
+    prepared: PreparedProcessTraining,
+    parameters: Any,
+    *,
+    arm: str,
+    seed: int,
+    maximum_batches: int | None = None,
+) -> dict[str, Any]:
+    """Evaluate the fixed non-test panel used only for checkpoint selection."""
+
+    import jax
+
+    batch_size = int(prepared.protocol.training["batch_size"])
+    frozen_maximum = int(prepared.protocol.payload["validation"]["maximum_batches_per_slice"])
+    maximum_batches = frozen_maximum if maximum_batches is None else maximum_batches
+    if not 1 <= maximum_batches <= frozen_maximum:
+        raise ValueError("first-process validation batch request is outside the panel")
+    evaluate = jax.jit(build_process_batch_loss(prepared, arm=arm))
+    slices = (
+        ("temporal", "train", "validation", 100_003),
+        ("spatial", "validation", "train", 200_003),
+        ("joint", "validation", "validation", 300_007),
+    )
+    result = {}
+    for name, spatial, temporal, offset in slices:
+        losses = []
+        for inputs, targets in iter_process_validation_batches(
+            prepared,
+            spatial_split=spatial,
+            temporal_split=temporal,
+            seed=seed + offset,
+            batch_size=batch_size,
+            maximum_batches=maximum_batches,
+        ):
+            loss = evaluate(parameters, inputs, targets)
+            losses.append(float(loss))
+        if len(losses) != maximum_batches or not np.all(np.isfinite(losses)):
+            raise ValueError(f"first-process {name} validation is incomplete or nonfinite")
+        result[name] = {
+            "spatial_split": spatial,
+            "temporal_split": temporal,
+            "batches": maximum_batches,
+            "samples": maximum_batches * batch_size,
+            "macro_process_loss": float(np.mean(losses)),
+        }
+    result["selection_score"] = float(np.mean([result[name]["macro_process_loss"] for name, *_ in slices]))
+    result["test_split_evaluated"] = False
+    return result
+
+
+def train_first_process_arm(
+    prepared: PreparedProcessTraining,
+    *,
+    arm: str,
+    seed: int,
+    source_git_head: str,
+    output_dir: str | Path,
+    resume: bool = True,
+) -> dict[str, Any]:
+    """Run one fixed-budget arm/seed; post-training physical gates remain separate."""
+
+    import jax
+    import jax.numpy as jnp
+
+    if prepared.protocol.payload.get("status") != "ready_unsubmitted":
+        raise ValueError("first-process protocol is not frozen ready for formal training")
+    training = prepared.protocol.training
+    if arm not in training["arms"] or seed not in training["seeds"]:
+        raise ValueError("first-process arm or seed is outside the frozen protocol")
+    output = Path(output_dir).resolve()
+    latest_path = output / "checkpoint.pkl"
+    best_path = output / "best_checkpoint.pkl"
+    report_path = output / "training_report.json"
+    identity = checkpoint_identity(
+        prepared,
+        arm=arm,
+        seed=seed,
+        source_git_head=source_git_head,
+    )
+    maximum_updates = int(training["maximum_updates"])
+    checkpoint_interval = int(training["checkpoint_interval_updates"])
+    batch_size = int(training["batch_size"])
+    prefetch = int(training["prefetch_batches"])
+    if resume and latest_path.exists():
+        checkpoint = load_training_checkpoint(
+            latest_path,
+            identity=identity,
+            maximum_updates=maximum_updates,
+        )
+        parameters = checkpoint["parameters"]
+        optimizer = checkpoint["optimizer"]
+        completed = int(checkpoint["update"])
+        history = list(checkpoint["history"])
+    else:
+        if output.exists() and any(output.iterdir()):
+            raise ValueError("new first-process output directory is not empty")
+        first_inputs, _first_targets = next(
+            iter_process_training_batches(
+                prepared,
+                seed=seed,
+                batch_size=batch_size,
+                maximum_batches=1,
+            )
+        )
+        parameters = initialize_process_parameters(
+            prepared,
+            first_inputs,
+            seed=seed,
+        )
+        optimizer = initialize_adamw(parameters)
+        completed = 0
+        history = []
+    if completed == maximum_updates:
+        if not report_path.exists():
+            raise ValueError("completed checkpoint has no training report")
+        return json.loads(report_path.read_text(encoding="utf-8"))
+    loss_function = build_process_batch_loss(prepared, arm=arm)
+    train_step = make_adamw_train_step(loss_function, prepared.protocol)
+    window_losses: list[float] = []
+    window_gradient_norms: list[float] = []
+    window_clip_scales: list[float] = []
+    window_started = time.perf_counter()
+    batches = prefetched_process_training_batches(
+        prepared,
+        seed=seed,
+        batch_size=batch_size,
+        start_batch=completed,
+        maximum_batches=maximum_updates - completed,
+        prefetch_batches=prefetch,
+    )
+    for update, (inputs, targets) in enumerate(batches, start=completed + 1):
+        learning_rate = jnp.asarray(
+            learning_rate_at_update(prepared.protocol, update),
+            dtype=jnp.float64,
+        )
+        parameters, optimizer, loss, gradient_norm, clip_scale = train_step(
+            parameters,
+            optimizer,
+            inputs,
+            targets,
+            learning_rate,
+        )
+        loss_value = float(loss)
+        gradient_value = float(gradient_norm)
+        clip_value = float(clip_scale)
+        if not np.all(np.isfinite((loss_value, gradient_value, clip_value))):
+            raise ValueError(f"first-process training became nonfinite at update {update}")
+        window_losses.append(loss_value)
+        window_gradient_norms.append(gradient_value)
+        window_clip_scales.append(clip_value)
+        if update % checkpoint_interval:
+            continue
+        validation_started = time.perf_counter()
+        validation = evaluate_process_validation(
+            prepared,
+            parameters,
+            arm=arm,
+            seed=seed,
+        )
+        record = {
+            "update": update,
+            "mean_training_loss": float(np.mean(window_losses)),
+            "maximum_gradient_norm": max(window_gradient_norms),
+            "minimum_clip_scale": min(window_clip_scales),
+            "learning_rate": float(learning_rate),
+            "training_seconds": time.perf_counter() - window_started,
+            "validation_seconds": time.perf_counter() - validation_started,
+            "validation": validation,
+            "selection_score": validation["selection_score"],
+        }
+        history.append(record)
+        host_parameters = jax.device_get(parameters)
+        host_optimizer = jax.device_get(optimizer)
+        write_training_checkpoint(
+            latest_path,
+            identity=identity,
+            update=update,
+            parameters=host_parameters,
+            optimizer=host_optimizer,
+            history=history,
+        )
+        previous_best = min(
+            (float(item["selection_score"]) for item in history[:-1]),
+            default=float("inf"),
+        )
+        if float(record["selection_score"]) < previous_best:
+            write_training_checkpoint(
+                best_path,
+                identity=identity,
+                update=update,
+                parameters=host_parameters,
+                optimizer=host_optimizer,
+                history=history,
+            )
+        progress = {
+            "schema_version": "first_neural_process_training_report_v1",
+            "status": "running" if update < maximum_updates else "passed",
+            "identity": identity,
+            "arm": arm,
+            "seed": seed,
+            "completed_updates": update,
+            "maximum_updates": maximum_updates,
+            "batch_size": batch_size,
+            "prefetch_batches": prefetch,
+            "checkpoint_interval_updates": checkpoint_interval,
+            "history": history,
+            "best_update": int(min(history, key=lambda item: float(item["selection_score"]))["update"]),
+            "best_checkpoint": str(best_path),
+            "best_checkpoint_sha256": (sha256_file(best_path) if best_path.exists() else None),
+            "test_split_evaluated": False,
+            "hard_physical_gate_status": "pending_post_training_admission",
+            "rollout_status": "pending_7_and_30_day_gate",
+        }
+        _atomic_json(report_path, progress)
+        window_losses.clear()
+        window_gradient_norms.clear()
+        window_clip_scales.clear()
+        window_started = time.perf_counter()
+    return json.loads(report_path.read_text(encoding="utf-8"))
