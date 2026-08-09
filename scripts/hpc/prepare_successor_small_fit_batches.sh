@@ -43,6 +43,7 @@ test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
 mkdir -p "$OUTPUT_DIR" "$ROOT/runtime/cache/xdg"
 export JAX_PLATFORMS=cpu
 export JAX_ENABLE_X64=true
+export PYTHONHASHSEED=0
 export XDG_CACHE_HOME=$ROOT/runtime/cache/xdg
 export ORCHIDEE_REPO_ROOT=$WORKTREE
 export ORCHIDEE_RUNTIME_ROOT=$ROOT/runtime

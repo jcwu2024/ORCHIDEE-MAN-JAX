@@ -290,6 +290,7 @@ def test_production_launcher_preserves_contract_and_dual_backend_boundary():
     launcher = (root / "scripts" / "hpc" / "run_successor_small_fit.sh").read_text()
 
     assert "SINGULARITYENV_JAX_PLATFORMS=cuda,cpu \\" in launcher
+    assert "SINGULARITYENV_PYTHONHASHSEED=0 \\" in launcher
     assert '--updates "$UPDATES" \\' in launcher
     assert "UPDATES must lie in [2, 500]" in launcher
     assert "successor_small_fit_runner_v1.json" in launcher
@@ -377,6 +378,7 @@ def test_cpu_preparer_launcher_is_bounded_and_workspace_clean():
 
     assert "$ROOT/.venvs/orcjax_cpu/bin/python" in launcher
     assert "JAX_PLATFORMS=cpu" in launcher
+    assert "PYTHONHASHSEED=0" in launcher
     assert "ORCHIDEE_DATA_ROOT=$ROOT/runtime/data" in launcher
     assert "ORCHIDEE_REFERENCE_ROOT=$ROOT/runtime/assets" in launcher
     assert 'test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"' in launcher
