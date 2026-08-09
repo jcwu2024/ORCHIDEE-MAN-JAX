@@ -377,6 +377,8 @@ def test_cpu_preparer_launcher_is_bounded_and_workspace_clean():
 
     assert "$ROOT/.venvs/orcjax_cpu/bin/python" in launcher
     assert "JAX_PLATFORMS=cpu" in launcher
+    assert "ORCHIDEE_DATA_ROOT=$ROOT/runtime/data" in launcher
+    assert "ORCHIDEE_REFERENCE_ROOT=$ROOT/runtime/assets" in launcher
     assert 'test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"' in launcher
     assert "prepare_successor_small_fit_batches" in launcher
 

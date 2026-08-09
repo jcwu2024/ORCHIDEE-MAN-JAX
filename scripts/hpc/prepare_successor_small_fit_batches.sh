@@ -44,6 +44,12 @@ mkdir -p "$OUTPUT_DIR" "$ROOT/runtime/cache/xdg"
 export JAX_PLATFORMS=cpu
 export JAX_ENABLE_X64=true
 export XDG_CACHE_HOME=$ROOT/runtime/cache/xdg
+export ORCHIDEE_REPO_ROOT=$WORKTREE
+export ORCHIDEE_RUNTIME_ROOT=$ROOT/runtime
+export ORCHIDEE_DATA_ROOT=$ROOT/runtime/data
+export ORCHIDEE_REFERENCE_ROOT=$ROOT/runtime/assets
+export ORCHIDEE_OUTPUT_ROOT=$ROOT/runtime/outputs
+export PYTHONPATH=$WORKTREE
 export OMP_NUM_THREADS=1
 export OPENBLAS_NUM_THREADS=1
 export MKL_NUM_THREADS=1
