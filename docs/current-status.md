@@ -146,9 +146,17 @@ The canonical transition passed with water/carbon residual magnitudes below
 `5bb1f885367b3fc5183216c476a6bbe8d37122cb698d990bd5ca346006c0aaa7`.
 See
 [`successor_fast_owner_gpu_probe_acceptance_20260809.md`](research/daily_coarse_graining/successor_fast_owner_gpu_probe_acceptance_20260809.md).
-The active task is bounded-small-fit runner validation and paid resource
-freezing. No training submission, 7/30-day rollout, 365-day,
-long-held-point, Gate D2, or product acceptance is authorized yet.
+The free bounded-small-fit preflight is accepted at commit `d1ae419`. Both
+real-v6 Teacher replay days pass all state, mask, representation, discrete and
+budget gates. The candidate coefficient preflight has finite nonzero gradients
+and bounded coefficients; both matched arms complete one update with all
+8,722,689 gradient elements finite, all 155 parameter leaves nonzero, finite
+updated parameters and zero rollout hard failures. The report SHA256 is
+`1e79bc76b97098ecf0725d94edfe144363420dba18792f05105e8f0707d543b6`.
+The active task is the 500-update/arm production runner, update-to-update
+compile-reuse validation, and paid resource freezing. No paid training
+submission, 7/30-day screen, 365-day rollout, long-held-point, Gate D2, or
+product acceptance is authorized yet.
 
 ## Stable Teacher
 

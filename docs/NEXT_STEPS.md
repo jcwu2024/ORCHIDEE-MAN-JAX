@@ -436,13 +436,27 @@ SHA256 is
 See
 [`successor_fast_owner_gpu_probe_acceptance_20260809.md`](research/daily_coarse_graining/successor_fast_owner_gpu_probe_acceptance_20260809.md).
 
-The active task is now to validate and freeze the bounded-small-fit runner and
-its paid resource envelope. The machine contract allows exactly one matched
-seed, at most 500 updates per arm, no checkpoint, one-day batch size 16, and
-rollout batch size 2. No paid GPU submission is authorized without a separate
-resource, wall-time, command, working-directory, and worst-case-cost approval
-block. The 7/30-day screen, 365-day, long-held-point, Gate D2, and product
-acceptance remain closed.
+The free bounded-small-fit GPU preflight is accepted at commit `d1ae419`.
+Teacher replay passed both sampled days at `160/160`, exact masks, source-exact
+undefined representation, exact discrete state, and zero water/carbon budget
+residual. The candidate coefficient preflight produced four finite nonzero
+gradient norms and bounded coefficients. Both matched arms then completed one
+AdamW update with all 8,722,689 gradient elements finite, all 155 parameter
+leaves nonzero, finite updated parameters, and zero rollout hard failures.
+The report SHA256 is
+`1e79bc76b97098ecf0725d94edfe144363420dba18792f05105e8f0707d543b6`;
+see
+[`successor_small_fit_gpu_probe_acceptance_20260809.md`](research/daily_coarse_graining/successor_small_fit_gpu_probe_acceptance_20260809.md).
+
+The active task is now to implement and validate the contract-bound production
+runner for at most 500 updates per arm and freeze its paid resource envelope.
+The accepted probe intentionally executes only one update per arm; its 30.1
+minute cold wall time is not a defensible 500-update projection. Prove
+update-to-update compile/runtime reuse on a free bounded case before presenting
+the `gnall` approval block. No paid GPU submission is authorized without exact
+resources, wall time, command, working directory, and worst-case cost. The
+7/30-day screen, 365-day, long-held-point, Gate D2, and product acceptance
+remain closed.
 
 ## Completed Task Packet: Gate C
 
@@ -456,8 +470,10 @@ pair is selected, frozen, and locally implemented. Its synthetic foundation is
 accepted, and the revised canonical fast-state owner schema plus non-neural
 materializer now pass formal cold/ordinary/restart `160/160` acceptance. The
 79-value-head plus mask decoder extension, its full train/train statistics,
-and the no-checkpoint real-v6 GPU probe are accepted. Bounded-small-fit runner
-validation and resource freezing are next; no paid fit is authorized yet.
+and the no-checkpoint real-v6 GPU probe are accepted. The bounded-small-fit
+single-update GPU preflight is also accepted; production-runner implementation,
+compile-reuse validation, and resource freezing are next. No paid fit is
+authorized yet.
 Gates D2 and F remain queued.
 
 ### Inputs

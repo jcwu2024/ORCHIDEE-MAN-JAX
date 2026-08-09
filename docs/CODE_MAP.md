@@ -241,7 +241,11 @@ assembly, 16-row one-day anchor, two-window 30-day objective, Teacher replay
 conversion, hard gates and AdamW update. The machine contract is
 `manifests/coarse_graining/successor_small_fit_runner_v1.json`.
 `scripts/hpc/run_successor_small_fit_probe.py` and its shell wrapper execute
-the no-checkpoint, one-update-per-arm free-`gln01` resource preflight.
+the accepted no-checkpoint, one-update-per-arm free-`gln01` resource preflight.
+Its evidence is
+`successor_small_fit_gpu_probe_acceptance_20260809.md`. The production
+500-update/arm runner does not yet exist; do not treat the probe launcher as a
+paid training command.
 
 ## Scripts
 
