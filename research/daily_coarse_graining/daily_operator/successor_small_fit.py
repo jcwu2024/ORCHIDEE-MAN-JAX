@@ -20,6 +20,7 @@ from .long_horizon_objective import (
     long_horizon_biomass_productivity_objective,
     rollout_hard_gate_counts,
 )
+from .successor_fast_owner_decoder import DAY_START_DELTA, DEFINED_LOGIT
 from .successor_fast_owner_training import (
     build_successor_fast_owner_targets,
     successor_fast_owner_loss,
@@ -371,13 +372,13 @@ def successor_teacher_physical_outputs(
     for field in schema.fields:
         target = targets[field.name]
         value = jnp.asarray(target.value, dtype=jnp.float64)
-        if field.value_representation == "day_start_delta":
+        if field.value_representation == DAY_START_DELTA:
             start = int(field.day_start_state_start)
             stop = int(field.day_start_state_stop)
             base = state[start:stop].reshape(field.shape)
             defined = jnp.isfinite(base) & (jnp.abs(base) < 0.5e20)
             value = value + jnp.where(defined, base, 0.0)
-        elif field.value_representation == "defined_logit":
+        elif field.value_representation == DEFINED_LOGIT:
             value = jnp.where(value >= 0.5, 20.0, -20.0)
         result[field.name] = value
     return result

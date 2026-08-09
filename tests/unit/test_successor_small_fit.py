@@ -9,6 +9,10 @@ import numpy as np
 import pytest
 
 import research.daily_coarse_graining.daily_operator.successor_small_fit as small_fit
+from research.daily_coarse_graining.daily_operator.successor_fast_owner_decoder import (
+    DAY_START_DELTA,
+    DEFINED_LOGIT,
+)
 from research.daily_coarse_graining.daily_operator.successor_small_fit import (
     build_successor_small_fit_schedule,
     initialize_successor_adamw,
@@ -157,14 +161,14 @@ def test_teacher_replay_inverts_delta_and_defined_logit_representations():
         ),
         SimpleNamespace(
             name="delta",
-            value_representation="day_start_delta",
+            value_representation=DAY_START_DELTA,
             shape=(1,),
             day_start_state_start=1,
             day_start_state_stop=2,
         ),
         SimpleNamespace(
             name="status",
-            value_representation="defined_logit",
+            value_representation=DEFINED_LOGIT,
             shape=(2,),
             day_start_state_start=None,
             day_start_state_stop=None,
