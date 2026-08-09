@@ -436,7 +436,29 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     context_seconds = time.perf_counter() - context_started
     teacher_replay = _teacher_replay_gate(runtime, batch, retained_tail)
     if teacher_replay["status"] != "passed":
-        raise ValueError("annual-shard retained-tail Teacher replay failed")
+        report = {
+            "schema_version": "successor_small_fit_real_v6_single_update_probe_v1",
+            "status": "failed",
+            "failed_stage": "annual_shard_teacher_replay",
+            "checkpoint_written": False,
+            "training_updates_per_arm": 0,
+            "teacher_data_regenerated": False,
+            "historical_v5_used": False,
+            "backend": jax.default_backend(),
+            "devices": [str(device) for device in runtime["devices"]],
+            "identity": dict(identity)
+            | {
+                "runner_contract_sha256": runner_contract.sha256,
+                "schedule_sha256": schedule["schedule_sha256"],
+            },
+            "schedule_entry": entry,
+            "host_preparation_seconds": preparation_seconds,
+            "teacher_context_and_retained_adapter_seconds": context_seconds,
+            "annual_shard_teacher_replay": teacher_replay,
+            "next_gate": "repair_annual_shard_retained_tail_runtime",
+        }
+        _atomic_json(args.output, report)
+        return report
 
     first_input = jax.tree_util.tree_map(lambda value: value[0], batch.anchor_inputs)
     assembled = runtime["adapter"].input_assembler.assemble(first_input)
