@@ -235,6 +235,14 @@ two-arm forward/loss/full-gradient and canonical-transition probe;
 runtime and fail-closed identities. Its acceptance record is
 `successor_fast_owner_gpu_probe_acceptance_20260809.md`.
 
+`daily_operator/successor_small_fit.py` owns the derived bounded-fit contract,
+deterministic train/train annual-shard schedule, coherent typed-v6 batch
+assembly, 16-row one-day anchor, two-window 30-day objective, Teacher replay
+conversion, hard gates and AdamW update. The machine contract is
+`manifests/coarse_graining/successor_small_fit_runner_v1.json`.
+`scripts/hpc/run_successor_small_fit_probe.py` and its shell wrapper execute
+the no-checkpoint, one-update-per-arm free-`gln01` resource preflight.
+
 ## Scripts
 
 | Path | Classification | Use |
