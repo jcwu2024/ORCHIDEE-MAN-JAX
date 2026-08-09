@@ -50,7 +50,8 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_fast_boundary_coverage_20260809.md` | Accepted blocking diagnosis; superseded for current action by the owner schema | Tracing why the original 101-output boundary failed |
 | `research/daily_coarse_graining/successor_fast_owner_reconstruction_contract_v1.md` | Accepted 160/160 owner/materializer boundary; decoder extension implemented | Auditing the 79-value-head plus mask ownership contract |
 | `research/daily_coarse_graining/successor_fast_owner_decoder_local_acceptance_20260809.md` | Accepted local 181-field decoder/statistics foundation | Reviewing decoder semantics or local gates |
-| `research/daily_coarse_graining/successor_fast_owner_statistics_acceptance_20260809.md` | Accepted formal v6 79-value statistics artifact; GPU probe is next | Reviewing statistics identity, counts, hashes, or the next gate |
+| `research/daily_coarse_graining/successor_fast_owner_statistics_acceptance_20260809.md` | Accepted formal v6 79-value statistics artifact | Reviewing statistics identity, counts, or hashes |
+| `research/daily_coarse_graining/successor_fast_owner_gpu_probe_acceptance_20260809.md` | Accepted real-v6 GPU execution/gradient gate; bounded-fit preparation is next | Reviewing GPU evidence, threshold policy, or the next gate |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

@@ -427,10 +427,22 @@ The final JSON SHA256 is
 the NPZ SHA256 is
 `addf957afbd8338f4aa250155dcd299d568c1070b644e30279f9bf0ea37f9bf8`.
 No GPU training submission is authorized without the separate approval block.
-The active gate is now a free-`gln01`, no-checkpoint forward/loss/gradient
-probe for both arms using the accepted 181-field statistics artifact. Only a
-passing probe can reopen a bounded small fit; 7/30-day rollout, 365-day,
-long-held-point, Gate D2, and product acceptance remain closed.
+The free-`gln01` no-checkpoint probe is accepted at commit `7c555d1`. Both
+arms produced 181 finite constrained fields, finite fitted losses, finite and
+nonzero gradients in all 155 parameter leaves, exact inactive-PFT isolation,
+and canonical-transition water/carbon residuals below `1.1e-14`. The report
+SHA256 is
+`5bb1f885367b3fc5183216c476a6bbe8d37122cb698d990bd5ca346006c0aaa7`.
+See
+[`successor_fast_owner_gpu_probe_acceptance_20260809.md`](research/daily_coarse_graining/successor_fast_owner_gpu_probe_acceptance_20260809.md).
+
+The active task is now to validate and freeze the bounded-small-fit runner and
+its paid resource envelope. The machine contract allows exactly one matched
+seed, at most 500 updates per arm, no checkpoint, one-day batch size 16, and
+rollout batch size 2. No paid GPU submission is authorized without a separate
+resource, wall-time, command, working-directory, and worst-case-cost approval
+block. The 7/30-day screen, 365-day, long-held-point, Gate D2, and product
+acceptance remain closed.
 
 ## Completed Task Packet: Gate C
 
@@ -443,9 +455,10 @@ production, aggregation, and formal admission are complete. The successor
 pair is selected, frozen, and locally implemented. Its synthetic foundation is
 accepted, and the revised canonical fast-state owner schema plus non-neural
 materializer now pass formal cold/ordinary/restart `160/160` acceptance. The
-79-value-head plus mask decoder extension and its full train/train statistics
-artifact are accepted. The no-checkpoint `gln01` two-arm probe is next; no
-bounded fit is open yet. Gates D2 and F remain queued.
+79-value-head plus mask decoder extension, its full train/train statistics,
+and the no-checkpoint real-v6 GPU probe are accepted. Bounded-small-fit runner
+validation and resource freezing are next; no paid fit is authorized yet.
+Gates D2 and F remain queued.
 
 ### Inputs
 

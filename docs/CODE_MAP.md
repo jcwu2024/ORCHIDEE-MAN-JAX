@@ -229,6 +229,11 @@ accepted 8,591,565-row artifact under job `14515519`. Local decoder evidence
 is in `successor_fast_owner_decoder_local_acceptance_20260809.md`; formal
 statistics evidence is in
 `successor_fast_owner_statistics_acceptance_20260809.md`.
+`scripts/hpc/run_successor_fast_owner_gpu_probe.py` owns the accepted real-v6
+two-arm forward/loss/full-gradient and canonical-transition probe;
+`run_successor_fast_owner_gpu_probe.sh` binds the Explore1000 Singularity GPU
+runtime and fail-closed identities. Its acceptance record is
+`successor_fast_owner_gpu_probe_acceptance_20260809.md`.
 
 ## Scripts
 

@@ -137,9 +137,18 @@ and the NPZ SHA256 is
 `890d1fd6110912a835c760b4fe58e9320481a929797858cad5b70b1bf03eb99f`.
 See
 [`successor_fast_owner_statistics_acceptance_20260809.md`](research/daily_coarse_graining/successor_fast_owner_statistics_acceptance_20260809.md).
-The active gate is a free `gln01` no-checkpoint forward/loss/gradient probe
-for both arms. Training, 7/30-day rollout, 365-day, long-held-point, Gate D2,
-and product acceptance remain closed.
+The free `gln01` no-checkpoint GPU probe is also accepted at commit `7c555d1`.
+Both matched arms produced 181 finite constrained fields and finite fitted
+losses; all 155 parameter leaves and 8,722,689 gradient elements were finite
+and nonzero. All 78 PFT-axis outputs were exactly zero in the disabled slot.
+The canonical transition passed with water/carbon residual magnitudes below
+`1.1e-14`. The report SHA256 is
+`5bb1f885367b3fc5183216c476a6bbe8d37122cb698d990bd5ca346006c0aaa7`.
+See
+[`successor_fast_owner_gpu_probe_acceptance_20260809.md`](research/daily_coarse_graining/successor_fast_owner_gpu_probe_acceptance_20260809.md).
+The active task is bounded-small-fit runner validation and paid resource
+freezing. No training submission, 7/30-day rollout, 365-day,
+long-held-point, Gate D2, or product acceptance is authorized yet.
 
 ## Stable Teacher
 
