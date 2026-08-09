@@ -101,6 +101,9 @@ def _teacher_replay_gate(
     retained_tail: Any,
 ) -> Mapping[str, Any]:
     from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
+    from research.daily_coarse_graining.daily_operator.retained_tail import (
+        retained_tail_input,
+    )
     from research.daily_coarse_graining.daily_operator.successor_architecture import (
         SOURCE_ROUTED_ATTENTION,
     )
@@ -136,6 +139,27 @@ def _teacher_replay_gate(
         )
         result = transition(outputs, inputs)
         jax.block_until_ready(result)
+        internal_target = np.asarray(
+            retained_tail._typed_fast_target(
+                retained_tail_input(
+                    assembled,
+                    result.prediction,
+                    result.fast_update,
+                )
+            )
+        )
+        expected_target = np.asarray(batch.expected_fast_day_target[batch_index, 0])
+        internal_defined = np.isfinite(internal_target) & (np.abs(internal_target) < 0.5e20)
+        target_defined = np.isfinite(expected_target) & (np.abs(expected_target) < 0.5e20)
+        target_common = internal_defined & target_defined
+        target_difference = np.abs(internal_target - expected_target)
+        target_tolerance = 1.0e-8 + 1.0e-10 * np.maximum(
+            np.abs(internal_target),
+            np.abs(expected_target),
+        )
+        fast_target_passed = np.array_equal(internal_defined, target_defined) and bool(
+            np.all(target_difference[target_common] <= target_tolerance[target_common])
+        )
         actual = np.asarray(result.next_state.other)
         actual_defined = np.asarray(result.next_state_defined.other, dtype=np.bool_)
         expected = np.asarray(batch.expected_next_state[batch_index, 0])
@@ -158,7 +182,8 @@ def _teacher_replay_gate(
         water = float(np.asarray(result.diagnostics["water_budget_residual"]))
         carbon = float(np.asarray(result.diagnostics["carbon_budget_residual"]))
         passed = (
-            np.array_equal(actual_defined, expected_defined)
+            fast_target_passed
+            and np.array_equal(actual_defined, expected_defined)
             and undefined_exact
             and bool(np.all(difference[common] <= tolerance[common]))
             and discrete_equal
@@ -170,6 +195,18 @@ def _teacher_replay_gate(
                 "status": "passed" if passed else "failed",
                 "batch_index": batch_index,
                 "day_index": int(np.asarray(inputs.day_index)),
+                "fast_target": {
+                    "status": "passed" if fast_target_passed else "failed",
+                    "defined_mask_exact": bool(np.array_equal(internal_defined, target_defined)),
+                    "maximum_defined_absolute_error": (
+                        float(np.max(target_difference[target_common])) if np.any(target_common) else 0.0
+                    ),
+                    "maximum_defined_tolerance_ratio": (
+                        float(np.max(target_difference[target_common] / target_tolerance[target_common]))
+                        if np.any(target_common)
+                        else 0.0
+                    ),
+                },
                 "defined_mask_exact": bool(np.array_equal(actual_defined, expected_defined)),
                 "undefined_representation_exact": bool(undefined_exact),
                 "maximum_defined_absolute_error": (float(np.max(difference[common])) if np.any(common) else 0.0),

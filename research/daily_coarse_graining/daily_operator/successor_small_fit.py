@@ -235,6 +235,7 @@ class PreparedSuccessorSmallFitBatch(NamedTuple):
     expected_next_state_defined: Any
     expected_fast_gpp: Any
     expected_fast_gpp_defined: Any
+    expected_fast_day_target: Any
     expected_next_discrete_state: Any
 
 
@@ -307,6 +308,7 @@ def prepare_successor_small_fit_batch(
     rollout_targets = []
     expected_gpp = []
     expected_gpp_defined = []
+    expected_fast_day_target = []
     expected_state = []
     expected_discrete = []
     for raw_start in entry["rollout_starts"]:
@@ -333,6 +335,7 @@ def prepare_successor_small_fit_batch(
         expected_gpp_defined.append(
             np.stack([value.targets.supervision["daily.fast_gpp"].defined for value in examples])
         )
+        expected_fast_day_target.append(np.asarray(parent.fast_day_target[start:stop]))
         states = np.asarray(parent.state_trajectory[start + 1 : stop + 1])
         expected_state.append(states)
         expected_discrete.append(
@@ -348,6 +351,7 @@ def prepare_successor_small_fit_batch(
         expected_next_state_defined=defined_numeric_mask(state),
         expected_fast_gpp=np.stack(expected_gpp),
         expected_fast_gpp_defined=np.stack(expected_gpp_defined),
+        expected_fast_day_target=np.stack(expected_fast_day_target),
         expected_next_discrete_state=_stack(expected_discrete),
     )
 
