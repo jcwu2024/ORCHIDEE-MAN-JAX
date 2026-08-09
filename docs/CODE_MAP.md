@@ -243,9 +243,12 @@ conversion, hard gates and AdamW update. The machine contract is
 `scripts/hpc/run_successor_small_fit_probe.py` and its shell wrapper execute
 the accepted no-checkpoint, one-update-per-arm free-`gln01` resource preflight.
 Its evidence is
-`successor_small_fit_gpu_probe_acceptance_20260809.md`. The production
-500-update/arm runner does not yet exist; do not treat the probe launcher as a
-paid training command.
+`successor_small_fit_gpu_probe_acceptance_20260809.md`.
+`scripts/hpc/run_successor_small_fit.py` owns the contract-bound, matched,
+no-checkpoint 2-to-500-update runner; its shell wrapper owns the Explore1000
+container boundary and `slurm_successor_small_fit.sh` freezes the unsubmitted
+paid resource request. Cross-landpoint/year JIT reuse and sizing evidence are
+in `successor_small_fit_runner_reuse_acceptance_20260810.md`.
 
 ## Scripts
 

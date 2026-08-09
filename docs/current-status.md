@@ -153,10 +153,18 @@ and bounded coefficients; both matched arms complete one update with all
 8,722,689 gradient elements finite, all 155 parameter leaves nonzero, finite
 updated parameters and zero rollout hard failures. The report SHA256 is
 `1e79bc76b97098ecf0725d94edfe144363420dba18792f05105e8f0707d543b6`.
-The active task is the 500-update/arm production runner, update-to-update
-compile-reuse validation, and paid resource freezing. No paid training
-submission, 7/30-day screen, 365-day rollout, long-held-point, Gate D2, or
-product acceptance is authorized yet.
+The contract-bound production runner and free two-update cross-shard reuse
+probe are accepted at commit `6710b35`. The schedule switched from
+`141.0-073.0/1988` to `099.0-111.0/1999`; replay, attention and control each
+kept one JIT executable and added zero variants. The hot marginal was 90.01
+seconds, giving a direct 13.04-hour 500-update projection. The frozen paid
+request is one `gnall` node, four CPUs, one V100 and 20 hours, with worst-case
+additive charge CNY 49.60. Its report SHA256 is
+`bcb47740c9400d01391515c8fb4c56dfa305d8f0e7db78077b882bd53ec7ed54`;
+see
+[`successor_small_fit_runner_reuse_acceptance_20260810.md`](research/daily_coarse_graining/successor_small_fit_runner_reuse_acceptance_20260810.md).
+No paid training submission, 7/30-day screen, 365-day rollout,
+long-held-point, Gate D2, or product acceptance is authorized yet.
 
 ## Stable Teacher
 

@@ -448,15 +448,20 @@ The report SHA256 is
 see
 [`successor_small_fit_gpu_probe_acceptance_20260809.md`](research/daily_coarse_graining/successor_small_fit_gpu_probe_acceptance_20260809.md).
 
-The active task is now to implement and validate the contract-bound production
-runner for at most 500 updates per arm and freeze its paid resource envelope.
-The accepted probe intentionally executes only one update per arm; its 30.1
-minute cold wall time is not a defensible 500-update projection. Prove
-update-to-update compile/runtime reuse on a free bounded case before presenting
-the `gnall` approval block. No paid GPU submission is authorized without exact
-resources, wall time, command, working directory, and worst-case cost. The
-7/30-day screen, 365-day, long-held-point, Gate D2, and product acceptance
-remain closed.
+The contract-bound 2-to-500-update production runner and free two-update
+cross-shard reuse gate are accepted at commit `6710b35`. The second entry
+changed both landpoint and year while replay, attention and control each kept
+one JIT executable and added zero variants. Its hot marginal was 90.01 seconds
+and the direct 500-update projection is 13.04 hours. The exact unsubmitted
+request is one `gnall` node, four CPUs, one V100 and 20 hours, with worst-case
+additive cost CNY 49.60. See
+[`successor_small_fit_runner_reuse_acceptance_20260810.md`](research/daily_coarse_graining/successor_small_fit_runner_reuse_acceptance_20260810.md).
+
+The active gate is explicit user approval or rejection of that paid envelope.
+Do not run `sbatch` without it. If approved, submit exactly
+`scripts/hpc/slurm_successor_small_fit.sh` from the accepted worktree and
+monitor the single no-checkpoint 500-update run. The 7/30-day screen, 365-day,
+long-held-point, Gate D2 and product acceptance remain closed.
 
 ## Completed Task Packet: Gate C
 
@@ -471,9 +476,9 @@ accepted, and the revised canonical fast-state owner schema plus non-neural
 materializer now pass formal cold/ordinary/restart `160/160` acceptance. The
 79-value-head plus mask decoder extension, its full train/train statistics,
 and the no-checkpoint real-v6 GPU probe are accepted. The bounded-small-fit
-single-update GPU preflight is also accepted; production-runner implementation,
-compile-reuse validation, and resource freezing are next. No paid fit is
-authorized yet.
+single-update preflight, production runner, and two-update cross-shard
+compile-reuse/resource gate are accepted. The paid 500-update fit awaits
+explicit approval and has not been submitted.
 Gates D2 and F remain queued.
 
 ### Inputs

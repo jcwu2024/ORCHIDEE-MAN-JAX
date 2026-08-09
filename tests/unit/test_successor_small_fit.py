@@ -283,3 +283,16 @@ def test_production_launcher_preserves_contract_and_dual_backend_boundary():
     assert '--updates "$UPDATES" \\' in launcher
     assert "UPDATES must lie in [2, 500]" in launcher
     assert "successor_small_fit_runner_v1.json" in launcher
+
+
+def test_paid_launcher_freezes_reviewed_single_gpu_envelope_without_submission():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (root / "scripts" / "hpc" / "slurm_successor_small_fit.sh").read_text()
+
+    assert "#SBATCH --partition=gnall" in launcher
+    assert "#SBATCH --cpus-per-task=4" in launcher
+    assert "#SBATCH --gres=gpu:1" in launcher
+    assert "#SBATCH --time=20:00:00" in launcher
+    assert "UPDATES=500" in launcher
+    assert "SUCCESSOR_SMALL_FIT_EXPECTED_GIT_HEAD:?" in launcher
+    assert "sbatch" not in launcher
