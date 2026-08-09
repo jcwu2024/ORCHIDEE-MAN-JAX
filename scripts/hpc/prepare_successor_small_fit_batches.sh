@@ -1,0 +1,63 @@
+#!/bin/bash
+# Preassemble a bounded successor schedule on a CPU test or compute node.
+
+set -euo pipefail
+
+ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
+WORKTREE=${WORKTREE:?set WORKTREE to the approved clean research worktree}
+EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD to the approved commit}
+UPDATES=${UPDATES:?set UPDATES between 2 and 500}
+OUTPUT_DIR=${OUTPUT_DIR:?set OUTPUT_DIR under the project runtime root}
+PYTHON=$ROOT/.venvs/orcjax_cpu/bin/python
+
+DATASET=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json
+ACCEPTANCE=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance-v2/acceptance_report.json
+BASE_STATISTICS=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance-v2/training_statistics.json
+PROCESS_STATISTICS=$ROOT/runtime/outputs/training/first-neural-process-head-v1-statistics/process_training_statistics.json
+FAST_STATISTICS=$ROOT/runtime/outputs/training/successor-fast-owner-statistics-c9f35c0/successor_fast_owner_statistics.json
+RUNNER_CONTRACT=$WORKTREE/manifests/coarse_graining/successor_small_fit_runner_v1.json
+
+case "$WORKTREE" in
+  "$ROOT"|"$ROOT/runtime/worktrees/"*) ;;
+  *) echo "WORKTREE escaped the project-owned root" >&2; exit 2 ;;
+esac
+case "$OUTPUT_DIR" in
+  "$ROOT/runtime/"*) ;;
+  *) echo "OUTPUT_DIR escaped the project runtime root" >&2; exit 2 ;;
+esac
+case "$UPDATES" in
+  ''|*[!0-9]*) echo "UPDATES must be an integer" >&2; exit 2 ;;
+esac
+if [ "$UPDATES" -lt 2 ] || [ "$UPDATES" -gt 500 ]; then
+  echo "UPDATES must lie in [2, 500]" >&2
+  exit 2
+fi
+for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" \
+  "$PROCESS_STATISTICS" "$FAST_STATISTICS" "$RUNNER_CONTRACT"; do
+  test -f "$path"
+done
+test -x "$PYTHON"
+test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
+test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
+
+mkdir -p "$OUTPUT_DIR" "$ROOT/runtime/cache/xdg"
+export JAX_PLATFORMS=cpu
+export JAX_ENABLE_X64=true
+export XDG_CACHE_HOME=$ROOT/runtime/cache/xdg
+export OMP_NUM_THREADS=1
+export OPENBLAS_NUM_THREADS=1
+export MKL_NUM_THREADS=1
+cd "$WORKTREE"
+
+/usr/bin/time -v "$PYTHON" -m scripts.hpc.prepare_successor_small_fit_batches \
+  --dataset-manifest "$DATASET" \
+  --acceptance-report "$ACCEPTANCE" \
+  --base-statistics "$BASE_STATISTICS" \
+  --process-statistics "$PROCESS_STATISTICS" \
+  --fast-statistics "$FAST_STATISTICS" \
+  --runner-contract "$RUNNER_CONTRACT" \
+  --updates "$UPDATES" \
+  --output-dir "$OUTPUT_DIR"
+
+test -f "$OUTPUT_DIR/prepared_manifest.json"
+sha256sum "$OUTPUT_DIR/prepared_manifest.json"

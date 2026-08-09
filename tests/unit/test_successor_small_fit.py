@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 
 import research.daily_coarse_graining.daily_operator.successor_small_fit as small_fit
+import scripts.hpc.run_successor_fast_owner_gpu_probe as fast_probe
 from research.daily_coarse_graining.daily_operator.successor_fast_owner_decoder import (
     DAY_START_DELTA,
     DEFINED_LOGIT,
@@ -32,6 +33,15 @@ from scripts.hpc.run_successor_small_fit import (
     _validate_update_count,
 )
 from scripts.hpc.run_successor_small_fit_probe import _leaf_failures
+from scripts.hpc.successor_small_fit_prepared import (
+    PREPARED_ARTIFACT_SCHEMA,
+    PREPARED_MANIFEST_SCHEMA,
+    PreparedUpdateArtifact,
+    atomic_json,
+    load_prepared_artifact,
+    load_prepared_manifest,
+    write_prepared_artifact,
+)
 
 
 @dataclass(frozen=True)
@@ -283,16 +293,110 @@ def test_production_launcher_preserves_contract_and_dual_backend_boundary():
     assert '--updates "$UPDATES" \\' in launcher
     assert "UPDATES must lie in [2, 500]" in launcher
     assert "successor_small_fit_runner_v1.json" in launcher
+    assert "PREPARED_MANIFEST=${PREPARED_MANIFEST:?" in launcher
+    assert '--prepared-manifest "$PREPARED_MANIFEST" \\' in launcher
 
 
-def test_paid_launcher_freezes_reviewed_single_gpu_envelope_without_submission():
+def test_rejected_paid_launcher_is_removed():
     root = Path(__file__).resolve().parents[2]
-    launcher = (root / "scripts" / "hpc" / "slurm_successor_small_fit.sh").read_text()
+    assert not (root / "scripts" / "hpc" / "slurm_successor_small_fit.sh").exists()
 
-    assert "#SBATCH --partition=gnall" in launcher
-    assert "#SBATCH --cpus-per-task=4" in launcher
-    assert "#SBATCH --gres=gpu:1" in launcher
-    assert "#SBATCH --time=20:00:00" in launcher
-    assert "UPDATES=500" in launcher
-    assert "SUCCESSOR_SMALL_FIT_EXPECTED_GIT_HEAD:?" in launcher
-    assert "sbatch" not in launcher
+
+def test_prepared_update_round_trip_and_hash_drift(tmp_path):
+    entry = {"landpoint_id": "001.0-071.0", "year": 1961, "anchor_starts": [1]}
+    artifact = PreparedUpdateArtifact(
+        schema_version=PREPARED_ARTIFACT_SCHEMA,
+        schedule_entry=entry,
+        trace_signature="trace",
+        batch={"state": np.asarray([1.0, 2.0])},
+        day_inputs=(np.asarray([3.0]),),
+    )
+    artifact_path = tmp_path / "update-0001.pkl"
+    record = write_prepared_artifact(artifact_path, artifact) | {
+        "update": 1,
+        "trace_signature": "trace",
+    }
+    manifest_path = tmp_path / "prepared_manifest.json"
+    loaded = load_prepared_artifact(manifest_path, record, schedule_entry=entry)
+
+    assert np.asarray(loaded.batch["state"]).tolist() == [1.0, 2.0]
+    artifact_path.write_bytes(artifact_path.read_bytes() + b"drift")
+    with pytest.raises(ValueError, match="hash drift"):
+        load_prepared_artifact(manifest_path, record, schedule_entry=entry)
+
+
+def test_prepared_manifest_binds_source_schedule_and_update_coverage(tmp_path):
+    path = tmp_path / "prepared_manifest.json"
+    payload = {
+        "schema_version": PREPARED_MANIFEST_SCHEMA,
+        "status": "passed",
+        "identity": {
+            "runner_contract_sha256": "runner",
+            "schedule_sha256": "schedule",
+            "source_git_head": "head",
+        },
+        "updates": 2,
+        "entries": [{"update": 1}, {"update": 2}],
+    }
+    atomic_json(path, payload)
+
+    assert (
+        load_prepared_manifest(
+            path,
+            runner_contract_sha256="runner",
+            schedule_sha256="schedule",
+            updates=2,
+            source_git_head="head",
+        )["status"]
+        == "passed"
+    )
+    with pytest.raises(ValueError, match="identity drift"):
+        load_prepared_manifest(
+            path,
+            runner_contract_sha256="runner",
+            schedule_sha256="schedule",
+            updates=2,
+            source_git_head="new-head",
+        )
+
+    payload["entries"] = [{"update": 1}, {"update": 3}]
+    atomic_json(path, payload)
+    with pytest.raises(ValueError, match="coverage drift"):
+        load_prepared_manifest(
+            path,
+            runner_contract_sha256="runner",
+            schedule_sha256="schedule",
+            updates=2,
+            source_git_head="head",
+        )
+
+
+def test_cpu_preparer_launcher_is_bounded_and_workspace_clean():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (root / "scripts" / "hpc" / "prepare_successor_small_fit_batches.sh").read_text()
+
+    assert "$ROOT/.venvs/orcjax_cpu/bin/python" in launcher
+    assert "JAX_PLATFORMS=cpu" in launcher
+    assert 'test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"' in launcher
+    assert "prepare_successor_small_fit_batches" in launcher
+
+
+def test_extended_runtime_forwards_explicit_cpu_backend(monkeypatch):
+    marker = object()
+
+    class BackendObserved(RuntimeError):
+        pass
+
+    def backend_initializer():
+        return marker
+
+    def fake_load_runtime(_args, *, backend_initializer):
+        assert backend_initializer() is marker
+        raise BackendObserved
+
+    monkeypatch.setattr(fast_probe, "_load_runtime", fake_load_runtime)
+    with pytest.raises(BackendObserved):
+        fast_probe._load_extended_runtime(
+            SimpleNamespace(),
+            backend_initializer=backend_initializer,
+        )

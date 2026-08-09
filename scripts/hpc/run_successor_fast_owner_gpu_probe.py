@@ -146,8 +146,16 @@ def _forward_comparison_report(
     }
 
 
-def _load_extended_runtime(args: argparse.Namespace) -> dict[str, Any]:
-    runtime = _load_runtime(args)
+def _load_extended_runtime(
+    args: argparse.Namespace,
+    *,
+    backend_initializer: Any | None = None,
+) -> dict[str, Any]:
+    runtime = (
+        _load_runtime(args)
+        if backend_initializer is None
+        else _load_runtime(args, backend_initializer=backend_initializer)
+    )
     payload = json.loads(args.fast_statistics.read_text(encoding="utf-8"))
     arrays_path = args.fast_statistics.parent / str(payload["statistics_npz"])
     _verify(

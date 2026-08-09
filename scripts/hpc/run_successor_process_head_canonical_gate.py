@@ -163,7 +163,11 @@ def _plan_context(manifest: Mapping[str, Any], landpoint_id: str) -> dict[str, P
     return result
 
 
-def _load_runtime(args: argparse.Namespace) -> dict[str, Any]:
+def _load_runtime(
+    args: argparse.Namespace,
+    *,
+    backend_initializer: Any = initialize_gpu_backend,
+) -> dict[str, Any]:
     base_payload = json.loads(args.base_statistics.read_text(encoding="utf-8"))
     base_npz = args.base_statistics.parent / str(base_payload["statistics_npz"])
     process_payload = json.loads(
@@ -188,7 +192,7 @@ def _load_runtime(args: argparse.Namespace) -> dict[str, Any]:
     manifest = json.loads(args.dataset_manifest.read_text(encoding="utf-8"))
     context_paths = _plan_context(manifest, FROZEN_LANDPOINT)
 
-    jax, devices = initialize_gpu_backend()
+    jax, devices = backend_initializer()
     jax.config.update("jax_enable_x64", True)
 
     from research.daily_coarse_graining.daily_markov_contract import (

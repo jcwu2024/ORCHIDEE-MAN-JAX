@@ -8,6 +8,7 @@ WORKTREE=${WORKTREE:?set WORKTREE to the approved clean research worktree}
 EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD to the approved commit}
 GPU_DEVICE=${GPU_DEVICE:?set GPU_DEVICE after checking nvidia-smi}
 UPDATES=${UPDATES:?set UPDATES between 2 and 500}
+PREPARED_MANIFEST=${PREPARED_MANIFEST:?set PREPARED_MANIFEST to the accepted CPU-prepared manifest}
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
@@ -33,7 +34,7 @@ if [ "$UPDATES" -lt 2 ] || [ "$UPDATES" -gt 500 ]; then
   exit 2
 fi
 for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" \
-  "$PROCESS_STATISTICS" "$FAST_STATISTICS"; do
+  "$PROCESS_STATISTICS" "$FAST_STATISTICS" "$PREPARED_MANIFEST"; do
   case "$path" in
     "$ROOT/runtime/"*) ;;
     *) echo "input escaped the project runtime root: $path" >&2; exit 2 ;;
@@ -86,6 +87,7 @@ env -u LD_LIBRARY_PATH \
       --process-statistics "$PROCESS_STATISTICS" \
       --fast-statistics "$FAST_STATISTICS" \
       --runner-contract "$RUNNER_CONTRACT" \
+      --prepared-manifest "$PREPARED_MANIFEST" \
       --updates "$UPDATES" \
       --output "$OUTPUT"
 

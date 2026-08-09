@@ -29,6 +29,11 @@ from scripts.hpc.run_successor_small_fit_probe import (
     _teacher_replay_gate_with_transition,
     _TeacherOutputHead,
 )
+from scripts.hpc.successor_small_fit_prepared import (
+    load_prepared_artifact,
+    load_prepared_manifest,
+    sha256_file,
+)
 
 
 class ArmUpdateResult(NamedTuple):
@@ -301,27 +306,15 @@ def _make_arm_steps(
     return train_step, evaluate
 
 
-def _prepare_update(
+def _prepare_adapter(
     runtime: Mapping[str, Any],
     entry: Mapping[str, Any],
-) -> tuple[Any, Any, Any, Mapping[str, float]]:
+) -> tuple[Any, Any, Mapping[str, float]]:
     from jax_orchidee.driver import orchestration as teacher
     from research.daily_coarse_graining.daily_markov_contract import load_markov_shard
-    from research.daily_coarse_graining.daily_operator.successor_small_fit import (
-        prepare_successor_small_fit_batch,
-    )
 
     timings = {}
     reference = _reference_for_entry(runtime["index"], entry)
-    started = time.perf_counter()
-    batch = prepare_successor_small_fit_batch(
-        reference,
-        entry,
-        adapter=runtime["adapter"],
-        schema=runtime["schema"],
-        owner_contract=runtime["owner_contract"],
-    )
-    timings["batch_preparation_seconds"] = time.perf_counter() - started
     paths = _plan_context(
         runtime["manifest"],
         landpoint_id=str(entry["landpoint_id"]),
@@ -344,7 +337,39 @@ def _prepare_update(
         fast_owner_materializer=runtime["materializer"],
     )
     timings["retained_runtime_seconds"] = time.perf_counter() - started
-    return reference, batch, adapter, timings
+    return reference, adapter, timings
+
+
+def _prepare_update(
+    runtime: Mapping[str, Any],
+    entry: Mapping[str, Any],
+) -> tuple[Any, Any, Any, Mapping[str, float]]:
+    from research.daily_coarse_graining.daily_operator.successor_small_fit import (
+        prepare_successor_small_fit_batch,
+    )
+
+    reference = _reference_for_entry(runtime["index"], entry)
+    started = time.perf_counter()
+    batch = prepare_successor_small_fit_batch(
+        reference,
+        entry,
+        adapter=runtime["adapter"],
+        schema=runtime["schema"],
+        owner_contract=runtime["owner_contract"],
+    )
+    batch_seconds = time.perf_counter() - started
+    retained_reference, adapter, timings = _prepare_adapter(runtime, entry)
+    if retained_reference != reference:
+        raise ValueError("successor batch and retained adapter reference drift")
+    return (
+        reference,
+        batch,
+        adapter,
+        {
+            "batch_preparation_seconds": batch_seconds,
+            **timings,
+        },
+    )
 
 
 def _git_head() -> str:
@@ -404,12 +429,29 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         updates=requested_updates,
     )
     verify_successor_small_fit_schedule(schedule, references, runner_contract)
-    first_entry = schedule["entries"][0]
-    _reference, first_batch, first_adapter, first_timing = _prepare_update(
-        runtime,
-        first_entry,
+    git_head = _git_head()
+    prepared_manifest = load_prepared_manifest(
+        args.prepared_manifest,
+        runner_contract_sha256=runner_contract.sha256,
+        schedule_sha256=schedule["schedule_sha256"],
+        updates=requested_updates,
+        source_git_head=git_head,
     )
+    prepared_manifest_sha256 = sha256_file(args.prepared_manifest)
+    first_entry = schedule["entries"][0]
+    first_load_started = time.perf_counter()
+    first_artifact = load_prepared_artifact(
+        args.prepared_manifest,
+        prepared_manifest["entries"][0],
+        schedule_entry=first_entry,
+    )
+    first_load_seconds = time.perf_counter() - first_load_started
+    _reference, first_adapter, first_adapter_timing = _prepare_adapter(runtime, first_entry)
     first_signature = _retained_tail_trace_signature(first_adapter)
+    if first_artifact.trace_signature != first_signature:
+        raise ValueError("prepared successor trace differs from live retained owner")
+    first_batch = first_artifact.batch
+    first_adapter = replace(first_adapter, day_inputs=first_artifact.day_inputs)
     replay_steps = {first_signature: _make_replay_transition(runtime, first_adapter)}
     replay_step = replay_steps[first_signature]
     replay_started = time.perf_counter()
@@ -435,7 +477,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "historical_v5_used": False,
             "identity": dict(identity)
             | {
-                "git_head": _git_head(),
+                "git_head": git_head,
                 "runner_contract_sha256": runner_contract.sha256,
                 "schedule_sha256": schedule["schedule_sha256"],
             },
@@ -526,7 +568,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "test_split_used": False,
             "identity": dict(identity)
             | {
-                "git_head": _git_head(),
+                "git_head": git_head,
                 "runner_contract_sha256": runner_contract.sha256,
                 "schedule_sha256": schedule["schedule_sha256"],
             },
@@ -555,10 +597,38 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     completed_updates = {arm: 0 for arm in arms}
     total_started = time.perf_counter()
     memory_before = _device_memory_report(runtime["devices"])
-    prepared_first = (_reference, first_batch, first_adapter, first_timing)
+    prepared_first = (
+        first_batch,
+        first_adapter,
+        {
+            "prepared_artifact_load_seconds": first_load_seconds,
+            "prepared_artifact_size_bytes": int(prepared_manifest["entries"][0]["size_bytes"]),
+            **first_adapter_timing,
+        },
+    )
+    prepared_artifact_load_seconds = first_load_seconds
 
     for update, entry in enumerate(schedule["entries"]):
-        reference, batch, adapter, preparation = prepared_first if update == 0 else _prepare_update(runtime, entry)
+        if update == 0:
+            batch, adapter, preparation = prepared_first
+        else:
+            load_started = time.perf_counter()
+            artifact = load_prepared_artifact(
+                args.prepared_manifest,
+                prepared_manifest["entries"][update],
+                schedule_entry=entry,
+            )
+            load_seconds = time.perf_counter() - load_started
+            prepared_artifact_load_seconds += load_seconds
+            if artifact.trace_signature != first_signature:
+                raise ValueError("prepared successor trace identity changed within schedule")
+            batch = artifact.batch
+            adapter = replace(first_adapter, day_inputs=artifact.day_inputs)
+            preparation = {
+                "prepared_artifact_load_seconds": load_seconds,
+                "prepared_artifact_size_bytes": int(prepared_manifest["entries"][update]["size_bytes"]),
+                "retained_runtime_seconds": 0.0,
+            }
         signature = _retained_tail_trace_signature(adapter)
         first_batches.setdefault(signature, (batch, adapter))
         if signature not in replay_steps:
@@ -596,7 +666,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 "test_split_used": False,
                 "identity": dict(identity)
                 | {
-                    "git_head": _git_head(),
+                    "git_head": git_head,
                     "runner_contract_sha256": runner_contract.sha256,
                     "schedule_sha256": schedule["schedule_sha256"],
                 },
@@ -675,7 +745,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                     "test_split_used": False,
                     "identity": dict(identity)
                     | {
-                        "git_head": _git_head(),
+                        "git_head": git_head,
                         "runner_contract_sha256": runner_contract.sha256,
                         "schedule_sha256": schedule["schedule_sha256"],
                     },
@@ -805,13 +875,20 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "devices": [str(device) for device in runtime["devices"]],
         "identity": dict(identity)
         | {
-            "git_head": _git_head(),
+            "git_head": git_head,
             "runner_contract_sha256": runner_contract.sha256,
             "schedule_sha256": schedule["schedule_sha256"],
+            "prepared_manifest_sha256": prepared_manifest_sha256,
         },
         "parameter_count_per_arm": counts,
         "matched_coefficients_shared_by_both_arms": True,
         "coefficient_preflight_seconds": preflight_seconds,
+        "prepared_batches_used": True,
+        "prepared_manifest": str(args.prepared_manifest.resolve()),
+        "prepared_artifact_count": len(prepared_manifest["entries"]),
+        "prepared_artifact_total_size_bytes": int(prepared_manifest["total_size_bytes"]),
+        "prepared_artifact_load_seconds": prepared_artifact_load_seconds,
+        "live_retained_owner_build_count": 1,
         "coefficient_preflight": _host_preflight(preflight),
         "trace_signature_count": len(first_batches),
         "dynamic_retained_input_shape_signatures": {
@@ -859,6 +936,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--process-statistics", type=Path, required=True)
     parser.add_argument("--fast-statistics", type=Path, required=True)
     parser.add_argument("--runner-contract", type=Path, required=True)
+    parser.add_argument("--prepared-manifest", type=Path, required=True)
     parser.add_argument("--updates", type=int, required=True)
     parser.add_argument("--output", type=Path, required=True)
     return parser
