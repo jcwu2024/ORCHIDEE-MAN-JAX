@@ -475,6 +475,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     )
     from research.daily_coarse_graining.daily_operator.successor_training import (
         LONG_HORIZON_COMPONENTS,
+        GradientRatioPreflightError,
         calibrate_gradient_ratio_coefficients,
         derive_long_horizon_scales,
     )
@@ -611,17 +612,45 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     }
     objective_contract = runner_contract.payload["objective"]
     preflight_started = time.perf_counter()
-    preflight = calibrate_gradient_ratio_coefficients(
-        parameters[SOURCE_ROUTED_ATTENTION],
-        anchor_loss,
-        component_losses,
-        target_gradient_ratios=objective_contract["gradient_ratio_targets"],
-        coefficient_minimum=float(objective_contract["coefficient_minimum"]),
-        coefficient_maximum=float(objective_contract["coefficient_maximum"]),
-        split_label="train/train",
-        compile_gradients=True,
-        combined_component_loss=component_vector,
-    )
+    try:
+        preflight = calibrate_gradient_ratio_coefficients(
+            parameters[SOURCE_ROUTED_ATTENTION],
+            anchor_loss,
+            component_losses,
+            target_gradient_ratios=objective_contract["gradient_ratio_targets"],
+            coefficient_minimum=float(objective_contract["coefficient_minimum"]),
+            coefficient_maximum=float(objective_contract["coefficient_maximum"]),
+            split_label="train/train",
+            compile_gradients=True,
+            combined_component_loss=component_vector,
+        )
+    except GradientRatioPreflightError as error:
+        report = {
+            "schema_version": "successor_small_fit_real_v6_single_update_probe_v1",
+            "status": "failed",
+            "failed_stage": "coefficient_gradient_preflight",
+            "checkpoint_written": False,
+            "training_updates_per_arm": 0,
+            "teacher_data_regenerated": False,
+            "historical_v5_used": False,
+            "backend": jax.default_backend(),
+            "devices": [str(device) for device in runtime["devices"]],
+            "identity": dict(identity)
+            | {
+                "runner_contract_sha256": runner_contract.sha256,
+                "schedule_sha256": schedule["schedule_sha256"],
+            },
+            "schedule_entry": entry,
+            "host_preparation_seconds": preparation_seconds,
+            "teacher_context_and_retained_adapter_seconds": context_seconds,
+            "annual_shard_teacher_replay": teacher_replay,
+            "coefficient_preflight_seconds": time.perf_counter() - preflight_started,
+            "coefficient_preflight_failure": error.diagnostic,
+            "parameter_count_per_arm": counts,
+            "next_gate": "repair_nonfinite_long_horizon_gradient",
+        }
+        _atomic_json(args.output, report)
+        return report
     jax.block_until_ready(
         (
             preflight.anchor_loss,

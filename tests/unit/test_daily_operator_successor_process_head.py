@@ -66,6 +66,7 @@ from research.daily_coarse_graining.daily_operator.successor_training import (
     CUMULATIVE_FLUX_FIELDS,
     LONG_HORIZON_COMPONENTS,
     TERMINAL_STOCK_FIELDS,
+    GradientRatioPreflightError,
     calibrate_gradient_ratio_coefficients,
     derive_long_horizon_scales,
     extract_biomass_productivity_trajectories,
@@ -1192,3 +1193,40 @@ def test_train_train_gradient_ratio_preflight_is_single_and_bounded():
             coefficient_maximum=10.0,
             split_label="validation",
         )
+
+
+def test_gradient_ratio_preflight_reports_nonfinite_parameter_leaves():
+    parameters = {"weight": jnp.asarray(2.0)}
+    components = {
+        name: (lambda values: values["weight"] ** 2)
+        for name in LONG_HORIZON_COMPONENTS
+    }
+    components["cumulative_flux_mse"] = lambda values: values["weight"] * jnp.nan
+    targets = {name: 0.1 for name in LONG_HORIZON_COMPONENTS}
+
+    with pytest.raises(GradientRatioPreflightError) as caught:
+        calibrate_gradient_ratio_coefficients(
+            parameters,
+            lambda values: values["weight"] ** 2,
+            components,
+            target_gradient_ratios=targets,
+            coefficient_minimum=0.001,
+            coefficient_maximum=10.0,
+            split_label="train/train",
+        )
+
+    assert caught.value.diagnostic == {
+        "component": "cumulative_flux_mse",
+        "loss": "nan",
+        "gradient_norm": "nan",
+        "gradient_element_count": 1,
+        "gradient_nonfinite_count": 1,
+        "gradient_nonfinite_leaves": [
+            {
+                "path": "['weight']",
+                "shape": [],
+                "nonfinite_count": 1,
+                "element_count": 1,
+            }
+        ],
+    }

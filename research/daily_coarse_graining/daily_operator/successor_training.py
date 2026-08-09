@@ -80,6 +80,14 @@ class GradientRatioPreflight(NamedTuple):
     achieved_gradient_ratios: Mapping[str, float]
 
 
+class GradientRatioPreflightError(ValueError):
+    """A bounded coefficient preflight failed with host-readable evidence."""
+
+    def __init__(self, message: str, diagnostic: Mapping[str, Any]):
+        super().__init__(message)
+        self.diagnostic = dict(diagnostic)
+
+
 class LongHorizonScales(NamedTuple):
     fluxes: Mapping[str, float]
     stocks: Mapping[str, float]
@@ -661,7 +669,36 @@ def calibrate_gradient_ratio_coefficients(
         norm = _tree_l2_norm(gradient)
         norm_host = float(norm)
         if not jnp.isfinite(value) or not jnp.isfinite(norm) or norm_host <= 0.0:
-            raise ValueError(f"nonfinite or zero rollout gradient for {name}")
+            bad_leaves = []
+            element_count = 0
+            nonfinite_count = 0
+            for path, leaf in jax.tree_util.tree_flatten_with_path(gradient)[0]:
+                array = np.asarray(leaf)
+                bad_count = int(np.count_nonzero(~np.isfinite(array)))
+                element_count += int(array.size)
+                nonfinite_count += bad_count
+                if bad_count:
+                    bad_leaves.append(
+                        {
+                            "path": jax.tree_util.keystr(path),
+                            "shape": list(array.shape),
+                            "nonfinite_count": bad_count,
+                            "element_count": int(array.size),
+                        }
+                    )
+            value_host = float(value)
+            diagnostic = {
+                "component": name,
+                "loss": value_host if np.isfinite(value_host) else str(value_host),
+                "gradient_norm": norm_host if np.isfinite(norm_host) else str(norm_host),
+                "gradient_element_count": element_count,
+                "gradient_nonfinite_count": nonfinite_count,
+                "gradient_nonfinite_leaves": bad_leaves,
+            }
+            raise GradientRatioPreflightError(
+                f"nonfinite or zero rollout gradient for {name}",
+                diagnostic,
+            )
         coefficient = target * anchor_norm_host / norm_host
         if not coefficient_minimum <= coefficient <= coefficient_maximum:
             raise ValueError(
