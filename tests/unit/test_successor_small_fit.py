@@ -26,6 +26,7 @@ from research.daily_coarse_graining.daily_operator.successor_small_fit import (
 from research.daily_coarse_graining.daily_operator.successor_training import (
     LONG_HORIZON_COMPONENTS,
 )
+from scripts.hpc.run_successor_small_fit_probe import _leaf_failures
 
 
 @dataclass(frozen=True)
@@ -186,3 +187,33 @@ def test_teacher_replay_inverts_delta_and_defined_logit_representations():
     assert np.asarray(outputs["direct"]).tolist() == [3.0]
     assert np.asarray(outputs["delta"]).tolist() == [2.5]
     assert np.asarray(outputs["status"]).tolist() == [20.0, -20.0]
+
+
+def test_replay_leaf_diagnostic_reports_undefined_representation_mismatch():
+    leaves = (
+        SimpleNamespace(key="first", start=0, stop=2),
+        SimpleNamespace(key="second", start=2, stop=3),
+    )
+    actual = np.asarray([1.0, 1.0e20, np.nan])
+    expected = np.asarray([1.0, np.nan, np.nan])
+    defined = np.asarray([True, False, False])
+    failures = _leaf_failures(
+        leaves,
+        actual,
+        expected,
+        defined,
+        defined,
+        np.full(3, 1.0e-8),
+    )
+
+    assert failures == [
+        {
+            "key": "first",
+            "mask_mismatch_count": 0,
+            "numerical_failure_count": 0,
+            "undefined_representation_mismatch_count": 1,
+            "actual_defined_count": 1,
+            "expected_defined_count": 1,
+            "maximum_common_absolute_error": 0.0,
+        }
+    ]

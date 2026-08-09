@@ -102,12 +102,18 @@ def _leaf_failures(
         admitted = tolerance[selected]
         mask_mismatches = int(np.count_nonzero(left_mask != right_mask))
         numerical_failures = int(np.count_nonzero(common & (difference > admitted)))
-        if mask_mismatches or numerical_failures:
+        expected_undefined = ~right_mask
+        undefined_equal = (actual[selected] == expected[selected]) | (
+            np.isnan(actual[selected]) & np.isnan(expected[selected])
+        )
+        undefined_representation_mismatches = int(np.count_nonzero(expected_undefined & ~undefined_equal))
+        if mask_mismatches or numerical_failures or undefined_representation_mismatches:
             records.append(
                 {
                     "key": str(leaf.key),
                     "mask_mismatch_count": mask_mismatches,
                     "numerical_failure_count": numerical_failures,
+                    "undefined_representation_mismatch_count": (undefined_representation_mismatches),
                     "actual_defined_count": int(np.count_nonzero(left_mask)),
                     "expected_defined_count": int(np.count_nonzero(right_mask)),
                     "maximum_common_absolute_error": (float(np.max(difference[common])) if np.any(common) else 0.0),
