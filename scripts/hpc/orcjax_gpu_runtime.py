@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import importlib
+import os
 from typing import Any
 
 
 def initialize_gpu_backend() -> tuple[Any, tuple[Any, ...]]:
-    """Register the CUDA PJRT plugin and fail rather than falling back to CPU."""
+    """Register requested backends while requiring CUDA as the default."""
     import jax
     from jax._src import xla_bridge
 
@@ -25,6 +26,19 @@ def initialize_gpu_backend() -> tuple[Any, tuple[Any, ...]]:
         if cuda_backend is None:
             cuda_backend = xla_bridge._init_backend("cuda")
             xla_bridge._backends["cuda"] = cuda_backend
+        requested = {
+            name.strip()
+            for name in os.environ.get("JAX_PLATFORMS", "").split(",")
+            if name.strip()
+        }
+        if "cpu" in requested:
+            cpu_backend = xla_bridge._backends.get("cpu")
+            if cpu_backend is None:
+                cpu_backend = xla_bridge._init_backend("cpu")
+                xla_bridge._backends["cpu"] = cpu_backend
+            cpu_devices = tuple(cpu_backend.devices())
+            if not cpu_devices or any(device.platform != "cpu" for device in cpu_devices):
+                raise RuntimeError(f"orcjax_gpu auxiliary CPU backend is invalid: {cpu_devices}")
         xla_bridge._default_backend = cuda_backend
     devices = tuple(cuda_backend.devices())
     if not devices or any(device.platform != "gpu" for device in devices):
