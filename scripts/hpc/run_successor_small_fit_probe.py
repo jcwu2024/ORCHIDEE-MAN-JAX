@@ -82,6 +82,40 @@ def _host_preflight(preflight: Any) -> Mapping[str, Any]:
     }
 
 
+def _leaf_failures(
+    leaves: Any,
+    actual: np.ndarray,
+    expected: np.ndarray,
+    actual_defined: np.ndarray,
+    expected_defined: np.ndarray,
+    tolerance: np.ndarray,
+) -> list[Mapping[str, Any]]:
+    records = []
+    for leaf in leaves:
+        if leaf.start is None or leaf.stop is None:
+            continue
+        selected = slice(int(leaf.start), int(leaf.stop))
+        left_mask = actual_defined[selected]
+        right_mask = expected_defined[selected]
+        common = left_mask & right_mask
+        difference = np.abs(actual[selected] - expected[selected])
+        admitted = tolerance[selected]
+        mask_mismatches = int(np.count_nonzero(left_mask != right_mask))
+        numerical_failures = int(np.count_nonzero(common & (difference > admitted)))
+        if mask_mismatches or numerical_failures:
+            records.append(
+                {
+                    "key": str(leaf.key),
+                    "mask_mismatch_count": mask_mismatches,
+                    "numerical_failure_count": numerical_failures,
+                    "actual_defined_count": int(np.count_nonzero(left_mask)),
+                    "expected_defined_count": int(np.count_nonzero(right_mask)),
+                    "maximum_common_absolute_error": (float(np.max(difference[common])) if np.any(common) else 0.0),
+                }
+            )
+    return records
+
+
 class _TeacherOutputHead:
     def __init__(self, base: Any):
         self.base = base
@@ -160,6 +194,14 @@ def _teacher_replay_gate(
         fast_target_passed = np.array_equal(internal_defined, target_defined) and bool(
             np.all(target_difference[target_common] <= target_tolerance[target_common])
         )
+        fast_target_failures = _leaf_failures(
+            runtime["contract"].fast_day_target_leaves,
+            internal_target,
+            expected_target,
+            internal_defined,
+            target_defined,
+            target_tolerance,
+        )
         actual = np.asarray(result.next_state.other)
         actual_defined = np.asarray(result.next_state_defined.other, dtype=np.bool_)
         expected = np.asarray(batch.expected_next_state[batch_index, 0])
@@ -175,6 +217,14 @@ def _teacher_replay_gate(
         )
         difference = np.abs(actual - expected)
         tolerance = 1.0e-8 + 1.0e-10 * np.maximum(np.abs(actual), np.abs(expected))
+        state_failures = _leaf_failures(
+            runtime["contract"].state_leaves,
+            actual,
+            expected,
+            actual_defined,
+            expected_defined,
+            tolerance,
+        )
         discrete_equal = all(
             np.array_equal(np.asarray(value), np.asarray(batch.expected_next_discrete_state[name][batch_index, 0]))
             for name, value in result.next_discrete_state.items()
@@ -206,6 +256,7 @@ def _teacher_replay_gate(
                         if np.any(target_common)
                         else 0.0
                     ),
+                    "leaf_failures": fast_target_failures,
                 },
                 "defined_mask_exact": bool(np.array_equal(actual_defined, expected_defined)),
                 "undefined_representation_exact": bool(undefined_exact),
@@ -213,6 +264,7 @@ def _teacher_replay_gate(
                 "maximum_defined_tolerance_ratio": (
                     float(np.max(difference[common] / tolerance[common])) if np.any(common) else 0.0
                 ),
+                "state_leaf_failures": state_failures,
                 "discrete_state_exact": discrete_equal,
                 "water_budget_residual": water,
                 "carbon_budget_residual": carbon,
