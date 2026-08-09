@@ -241,7 +241,7 @@ class SuccessorFastOwnerMaterializer:
                 continue
             selected = [slice(None)] * compact.ndim
             selected[int(leaf.pft_axis)] = compact_index
-            compact = compact.at[tuple(selected)].set(jnp.asarray(self.undef_sechiba, dtype=compact.dtype))
+            compact = compact.at[tuple(selected)].set(jnp.asarray(jnp.nan, dtype=compact.dtype))
         return compact
 
     def materialize(
