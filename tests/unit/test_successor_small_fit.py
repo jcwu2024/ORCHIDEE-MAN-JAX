@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from pathlib import Path
 from types import SimpleNamespace
 
 import jax
@@ -217,3 +218,10 @@ def test_replay_leaf_diagnostic_reports_undefined_representation_mismatch():
             "maximum_common_absolute_error": 0.0,
         }
     ]
+
+
+def test_gpu_launcher_registers_cpu_for_jax_scan_partial_evaluation():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (root / "scripts" / "hpc" / "run_successor_small_fit_probe.sh").read_text()
+
+    assert "SINGULARITYENV_JAX_PLATFORMS=cuda,cpu \\" in launcher
