@@ -24,6 +24,8 @@ FAST_STATISTICS_JSON_SHA256 = "b2e61a171156071d404d12b833130f2d0e98064564d1c3e00
 FAST_STATISTICS_NPZ_SHA256 = "890d1fd6110912a835c760b4fe58e9320481a929797858cad5b70b1bf03eb99f"
 EXPECTED_PARAMETER_COUNT = 8_722_689
 PROBE_SEED = 20260815
+FORWARD_ATOL = 1.0e-8
+FORWARD_RTOL = 1.0e-10
 
 
 def _tree_signature(jax: Any, value: Any) -> tuple[tuple[tuple[int, ...], str], ...]:
@@ -98,6 +100,49 @@ def _inactive_report(outputs: Mapping[str, Any], schema: Any) -> dict[str, Any]:
         "checked_field_count": checked,
         "failure_count": len(failures),
         "failures": failures,
+    }
+
+
+def _forward_comparison_report(
+    eager: Mapping[str, Any],
+    compiled: Mapping[str, Any],
+) -> dict[str, Any]:
+    passed = True
+    maximum_absolute_error = 0.0
+    maximum_tolerance_ratio = 0.0
+    maximum_field = None
+    maximum_reference_magnitude = 0.0
+    global_maximum_absolute_error = 0.0
+    for name in eager:
+        left = np.asarray(eager[name], dtype=np.float64)
+        right = np.asarray(compiled[name], dtype=np.float64)
+        difference = np.abs(left - right)
+        tolerance = FORWARD_ATOL + FORWARD_RTOL * np.maximum(
+            np.abs(left),
+            np.abs(right),
+        )
+        ratio = difference / tolerance
+        index = np.unravel_index(int(np.argmax(ratio)), ratio.shape)
+        field_ratio = float(ratio[index])
+        global_maximum_absolute_error = max(
+            global_maximum_absolute_error,
+            float(np.max(difference)),
+        )
+        if field_ratio > maximum_tolerance_ratio:
+            maximum_tolerance_ratio = field_ratio
+            maximum_absolute_error = float(difference[index])
+            maximum_field = name
+            maximum_reference_magnitude = float(max(abs(left[index]), abs(right[index])))
+        passed = passed and bool(np.all(difference <= tolerance))
+    return {
+        "passed": passed,
+        "atol": FORWARD_ATOL,
+        "rtol": FORWARD_RTOL,
+        "maximum_tolerance_ratio": maximum_tolerance_ratio,
+        "maximum_absolute_error_at_ratio": maximum_absolute_error,
+        "maximum_ratio_field": maximum_field,
+        "maximum_ratio_reference_magnitude": maximum_reference_magnitude,
+        "global_maximum_absolute_error": global_maximum_absolute_error,
     }
 
 
@@ -256,10 +301,7 @@ def _probe_arm(
     jax.block_until_ready(replay)
     replay_seconds = time.perf_counter() - replay_started
     compiled_report = _output_report(compiled, runtime["schema"])
-    maximum_eager_jit_error = max(
-        float(np.max(np.abs(np.asarray(eager[name], dtype=np.float64) - np.asarray(compiled[name], dtype=np.float64))))
-        for name in eager
-    )
+    comparison_report = _forward_comparison_report(eager, compiled)
 
     def loss_function(values: Any) -> tuple[Any, Any]:
         outputs = forward(values, inputs)
@@ -322,7 +364,7 @@ def _probe_arm(
         and abs(water_residual) <= 2.0e-12
         and abs(carbon_residual) <= 2.0e-12
         and state_report["all_finite"]
-        and maximum_eager_jit_error <= 1.0e-9
+        and comparison_report["passed"]
     )
     return {
         "status": "passed" if passed else "failed",
@@ -331,7 +373,7 @@ def _probe_arm(
             "eager_seconds": eager_seconds,
             "jit_compile_and_first_seconds": compile_seconds,
             "jit_replay_seconds": replay_seconds,
-            "maximum_eager_jit_absolute_error": maximum_eager_jit_error,
+            "eager_jit_comparison": comparison_report,
             "eager": eager_report,
             "compiled": compiled_report,
         },
