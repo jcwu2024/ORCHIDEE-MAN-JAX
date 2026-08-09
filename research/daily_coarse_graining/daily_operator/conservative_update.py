@@ -65,9 +65,14 @@ def apply_conservative_inventory_update(
     incoming_internal = jnp.sum(internal_transfer, axis=0)
     next_inventory = safe_start - outgoing_amount + external_input + incoming_internal
     next_inventory = jnp.where(defined, next_inventory, start)
-    initial_total = jnp.sum(jnp.where(defined, start, 0.0))
-    final_total = jnp.sum(jnp.where(defined, next_inventory, 0.0))
-    budget_residual = final_total - initial_total - jnp.sum(external_input) + jnp.sum(external_output)
+    # Check the same budget identity before large stock totals can cancel.
+    retained_internal_by_source = jnp.sum(
+        jnp.where(defined[None, :], internal_transfer, 0.0),
+        axis=1,
+    )
+    internal_outgoing = outgoing_amount * (1.0 - external_share)
+    discarded_external_input = jnp.sum(jnp.where(defined, 0.0, external_input))
+    budget_residual = jnp.sum(retained_internal_by_source - internal_outgoing) - discarded_external_input
     return ConservativeDomainResult(
         inventory=next_inventory,
         external_input=external_input,

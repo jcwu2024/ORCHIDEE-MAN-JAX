@@ -532,6 +532,37 @@ def test_conservative_parameterization_and_budget_close_without_clipping() -> No
     np.testing.assert_allclose(result.budget_residual, 0.0, atol=2.0e-15)
 
 
+def test_conservative_budget_residual_avoids_large_inventory_cancellation() -> None:
+    start = np.asarray([1.0e8 + 0.1, 2.0e8 + 0.2, 3.0e8 + 0.3])
+    prediction = InventoryPrediction(
+        outgoing_fraction=np.asarray([0.123, 0.234, 0.345]),
+        external_input_amount=np.asarray([0.01, 0.02, 0.03]),
+        external_output_share=np.asarray([0.1, 0.2, 0.3]),
+        destination_shares=np.asarray(
+            [[0.0, 0.3, 0.7], [0.2, 0.0, 0.8], [0.4, 0.6, 0.0]]
+        ),
+        defined=np.ones(3, dtype=np.bool_),
+    )
+
+    result = apply_conservative_inventory_update(start, prediction)
+
+    assert abs(float(result.budget_residual)) <= 2.0e-12
+
+
+def test_conservative_budget_residual_detects_discarded_undefined_flows() -> None:
+    prediction = InventoryPrediction(
+        outgoing_fraction=np.asarray([0.5, 0.0]),
+        external_input_amount=np.asarray([0.0, 2.0]),
+        external_output_share=np.zeros(2),
+        destination_shares=np.asarray([[0.0, 1.0], [1.0, 0.0]]),
+        defined=np.asarray([True, False]),
+    )
+
+    result = apply_conservative_inventory_update(np.asarray([10.0, np.nan]), prediction)
+
+    assert float(result.budget_residual) == pytest.approx(-7.0)
+
+
 def test_allowed_input_boundary_and_in_graph_exact_derivations() -> None:
     inputs = _input()
     parameters, transition = _operator(inputs)
