@@ -141,14 +141,8 @@ def _teacher_replay_gate(
     retained_tail: Any,
 ) -> Mapping[str, Any]:
     from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
-    from research.daily_coarse_graining.daily_operator.retained_tail import (
-        retained_tail_input,
-    )
     from research.daily_coarse_graining.daily_operator.successor_architecture import (
         SOURCE_ROUTED_ATTENTION,
-    )
-    from research.daily_coarse_graining.daily_operator.successor_small_fit import (
-        successor_teacher_physical_outputs,
     )
 
     jax = runtime["jax"]
@@ -161,6 +155,30 @@ def _teacher_replay_gate(
             retained_tail=retained_tail,
         )
     )
+    return _teacher_replay_gate_with_transition(
+        runtime,
+        batch,
+        retained_tail,
+        transition,
+    )
+
+
+def _teacher_replay_gate_with_transition(
+    runtime: Mapping[str, Any],
+    batch: Any,
+    retained_tail: Any,
+    transition: Any,
+) -> Mapping[str, Any]:
+    """Audit replay using a caller-owned, potentially reusable transition."""
+
+    from research.daily_coarse_graining.daily_operator.retained_tail import (
+        retained_tail_input,
+    )
+    from research.daily_coarse_graining.daily_operator.successor_small_fit import (
+        successor_teacher_physical_outputs,
+    )
+
+    jax = runtime["jax"]
     cases = []
     for batch_index in range(int(np.shape(batch.rollout_inputs.year)[0])):
         inputs = jax.tree_util.tree_map(

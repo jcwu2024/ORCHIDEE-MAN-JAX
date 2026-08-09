@@ -27,6 +27,10 @@ from research.daily_coarse_graining.daily_operator.successor_small_fit import (
 from research.daily_coarse_graining.daily_operator.successor_training import (
     LONG_HORIZON_COMPONENTS,
 )
+from scripts.hpc.run_successor_small_fit import (
+    _retained_tail_trace_signature,
+    _validate_update_count,
+)
 from scripts.hpc.run_successor_small_fit_probe import _leaf_failures
 
 
@@ -225,3 +229,57 @@ def test_gpu_launcher_registers_cpu_for_jax_scan_partial_evaluation():
     launcher = (root / "scripts" / "hpc" / "run_successor_small_fit_probe.sh").read_text()
 
     assert "SINGULARITYENV_JAX_PLATFORMS=cuda,cpu \\" in launcher
+
+
+def test_production_runner_trace_signature_excludes_dynamic_landpoint_year_arrays():
+    def adapter(*, runtime_year, day_inputs, nstm):
+        owner = SimpleNamespace(
+            config_path=Path("config.json"),
+            contract=SimpleNamespace(sha256="a" * 64),
+            mineral_imin=1,
+            mineral_imax=11,
+            daily_carbon_dispatch={"owner": np.asarray([1.0])},
+            metadata=SimpleNamespace(
+                nstm=nstm,
+                is_tree=np.asarray([False, True]),
+                is_peat=np.asarray([False, False]),
+                npts=1,
+            ),
+            season_provenance=("source",),
+            runtime_year=runtime_year,
+            lifecycle_start_tstep=48,
+            result_day_index=2,
+            include_modelout_diagnostics=False,
+            context=object(),
+        )
+        return SimpleNamespace(
+            static_owner=owner,
+            day_inputs=day_inputs,
+            fast_owner_materializer=SimpleNamespace(),
+        )
+
+    first = adapter(runtime_year=1961, day_inputs=np.asarray([1.0]), nstm=1)
+    switched = adapter(runtime_year=1999, day_inputs=np.asarray([9.0]), nstm=1)
+    control_drift = adapter(runtime_year=1999, day_inputs=np.asarray([9.0]), nstm=2)
+
+    assert _retained_tail_trace_signature(first) == _retained_tail_trace_signature(switched)
+    assert _retained_tail_trace_signature(first) != _retained_tail_trace_signature(control_drift)
+
+
+def test_production_runner_enforces_bounded_update_budget():
+    assert _validate_update_count(2, 500) == 2
+    assert _validate_update_count(500, 500) == 500
+    with pytest.raises(ValueError, match=r"\[2, 500\]"):
+        _validate_update_count(1, 500)
+    with pytest.raises(ValueError, match=r"\[2, 500\]"):
+        _validate_update_count(501, 500)
+
+
+def test_production_launcher_preserves_contract_and_dual_backend_boundary():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (root / "scripts" / "hpc" / "run_successor_small_fit.sh").read_text()
+
+    assert "SINGULARITYENV_JAX_PLATFORMS=cuda,cpu \\" in launcher
+    assert '--updates "$UPDATES" \\' in launcher
+    assert "UPDATES must lie in [2, 500]" in launcher
+    assert "successor_small_fit_runner_v1.json" in launcher
