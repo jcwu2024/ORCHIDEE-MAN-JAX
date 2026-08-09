@@ -31,6 +31,7 @@ ROLE_MIRROR = "mirror_of_canonical_owner"
 ROLE_CARRY = "true_guarded_or_static_carry"
 EXPECTED_CONTRACT_SHA256 = "4db5f828442212c58903096c36015f9d769c19aeaaa4eb9a4326fbea2fdfc4c9"
 DEFAULT_UNDEF_SECHIBA = 1.0e20
+ROUGHHEIGHT_PFT_KEY = "diffuco_previous_step_state.roughheight_pft"
 DEFAULT_CONTRACT_PATH = (
     Path(__file__).resolve().parents[3]
     / "manifests"
@@ -138,9 +139,7 @@ def load_fast_owner_reconstruction_contract(
             family=str(record.get("family", "")),
             path=tuple(str(value) for value in record.get("path", ())),
             axis_names=tuple(str(value) for value in record.get("axis_names", ())),
-            pft_axis=(
-                None if record.get("pft_axis") is None else int(record["pft_axis"])
-            ),
+            pft_axis=(None if record.get("pft_axis") is None else int(record["pft_axis"])),
             output_key=record.get("output_key"),
             defined_output_key=record.get("defined_output_key"),
             defined_policy=str(record.get("defined_policy", "")),
@@ -227,6 +226,24 @@ class SuccessorFastOwnerMaterializer:
     def _markov_leaves(self) -> Mapping[str, Any]:
         return {leaf.key: leaf for leaf in self.markov_contract.fast_day_target_leaves}
 
+    def _apply_static_defined_policy(self, leaf: FastOwnerLeaf, spec: Any, value: Any) -> Any:
+        """Restore source-static undefined slots omitted from neural endpoints."""
+
+        compact = jnp.asarray(value, dtype=jnp.dtype(spec.dtype))
+        if leaf.key != ROUGHHEIGHT_PFT_KEY:
+            return compact
+        if leaf.defined_policy != "frozen_contract_static_mask" or leaf.pft_axis is None:
+            raise ValueError("roughheight_pft static defined policy drift")
+        if len(spec.selected_pft_indices) != compact.shape[int(leaf.pft_axis)]:
+            raise ValueError("roughheight_pft compact PFT identity drift")
+        for compact_index, source_index in enumerate(spec.selected_pft_indices):
+            if int(source_index) != 0:
+                continue
+            selected = [slice(None)] * compact.ndim
+            selected[int(leaf.pft_axis)] = compact_index
+            compact = compact.at[tuple(selected)].set(jnp.asarray(self.undef_sechiba, dtype=compact.dtype))
+        return compact
+
     def materialize(
         self,
         *,
@@ -282,6 +299,7 @@ class SuccessorFastOwnerMaterializer:
             compact = jnp.asarray(named_outputs[leaf.output_key], dtype=jnp.dtype(spec.dtype))
             if tuple(compact.shape) != leaf.shape:
                 raise ValueError(f"successor endpoint shape drift for {leaf.key}: {compact.shape} != {leaf.shape}")
+            compact = self._apply_static_defined_policy(leaf, spec, compact)
             if leaf.defined_output_key is not None:
                 if leaf.defined_output_key not in named_outputs:
                     raise ValueError(f"missing successor defined logits {leaf.defined_output_key!r}")

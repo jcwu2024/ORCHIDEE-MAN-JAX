@@ -238,8 +238,12 @@ def test_materializer_closes_all_160_leaves_with_exact_mirrors_masks_and_derivat
     rveget = np.asarray(_value(result, by_key["diffuco_previous_step_state.rveget"]))
     assert rveget[0, 0] != pytest.approx(1.0e20)
     assert rveget[0, 13] == pytest.approx(1.0e20)
-
     owner = materializer.owner_contract.leaves_by_key
+    roughheight_pft = np.asarray(_value(result, by_key["diffuco_previous_step_state.roughheight_pft"]))
+    assert roughheight_pft[0, 0] == pytest.approx(1.0e20)
+    assert roughheight_pft[0, 13] == pytest.approx(
+        np.asarray(outputs[owner["diffuco_previous_step_state.roughheight_pft"].output_key])[0, 1]
+    )
     for key in (
         "daily_interface.wspeed_daily",
         "daily_interface.resp_maint_radia",
