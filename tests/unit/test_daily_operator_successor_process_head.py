@@ -15,6 +15,10 @@ from research.daily_coarse_graining.daily_operator.conservative_update import (
     apply_conservative_update,
     validate_conservative_result,
 )
+from research.daily_coarse_graining.daily_operator.fast_owner_reconstruction import (
+    build_successor_fast_owner_materializer,
+    load_fast_owner_reconstruction_contract,
+)
 from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
 from research.daily_coarse_graining.daily_operator.neural_architecture import (
     build_neural_output_schema,
@@ -39,6 +43,21 @@ from research.daily_coarse_graining.daily_operator.successor_contract import (
     FROZEN_CONTRACT_SHA256,
     contract_sha256,
     load_successor_candidate_contract,
+)
+from research.daily_coarse_graining.daily_operator.successor_fast_owner_decoder import (
+    DAY_START_DELTA,
+    DEFINED_LOGIT,
+    FAST_OWNER_LABELS,
+    RVEGET_LOGIT_KEY,
+    build_successor_fast_owner_schema,
+    extend_successor_output_normalization,
+    schema_field_labels,
+    training_representation_outputs,
+    validate_successor_output_normalization,
+)
+from research.daily_coarse_graining.daily_operator.successor_fast_owner_training import (
+    build_successor_fast_owner_targets,
+    successor_fast_owner_loss,
 )
 from research.daily_coarse_graining.daily_operator.successor_process_head import (
     SuccessorProcessHead,
@@ -234,6 +253,65 @@ def successor_setup():
     }
 
 
+@pytest.fixture(scope="module")
+def extended_successor_setup(successor_setup):
+    base = successor_setup
+    owner_contract = load_fast_owner_reconstruction_contract(
+        markov_contract=base["adapter"].contract,
+    )
+    schema = build_successor_fast_owner_schema(
+        base["schema"],
+        markov_contract=base["adapter"].contract,
+        owner_contract=owner_contract,
+    )
+    layout = build_successor_token_layout(
+        base["adapter"].input_assembler,
+        schema,
+        base["contract"],
+    )
+    output_normalization = unit_output_normalization(schema)
+    parameters = initialize_successor_parameters(
+        jax.random.PRNGKey(20260811),
+        schema=schema,
+        layout=layout,
+        inputs=base["assembled"],
+        arm=SOURCE_ROUTED_ATTENTION,
+    )
+    head = SuccessorProcessHead(
+        arm=SOURCE_ROUTED_ATTENTION,
+        contract=base["adapter"].contract,
+        input_assembler=base["adapter"].input_assembler,
+        schema=schema,
+        token_layout=layout,
+        input_normalization=base["input_normalization"],
+        output_normalization=output_normalization,
+        forcing_layout=base["head"].forcing_layout,
+        forcing_indices=base["head"].forcing_indices,
+    )
+    targets = build_successor_fast_owner_targets(
+        base["example"],
+        schema=schema,
+        markov_contract=base["adapter"].contract,
+        owner_contract=owner_contract,
+    )
+    scales = {
+        name: np.ones_like(np.asarray(target.value), dtype=np.float64)
+        for name, target in targets.items()
+        if name != RVEGET_LOGIT_KEY
+    }
+    return base | {
+        "base_schema": base["schema"],
+        "head": head,
+        "layout": layout,
+        "output_normalization": output_normalization,
+        "owner_contract": owner_contract,
+        "parameters": parameters,
+        "schema": schema,
+        "scales": scales,
+        "targets": targets,
+    }
+
+
 def test_successor_contract_is_externally_frozen(tmp_path):
     contract = load_successor_candidate_contract()
     assert contract.sha256 == FROZEN_CONTRACT_SHA256
@@ -356,6 +434,292 @@ def test_successor_layout_parameter_match_and_named_output_shapes(successor_setu
         driver["rau_old"],
         [pressure / (287.05 * temperature)],
     )
+
+
+def test_fast_owner_schema_routes_and_parameter_match_are_frozen(
+    extended_successor_setup,
+):
+    setup = extended_successor_setup
+    schema = setup["schema"]
+    added = schema.fields[101:]
+    values = tuple(field for field in added if field.value_representation != DEFINED_LOGIT)
+    logits = tuple(field for field in added if field.value_representation == DEFINED_LOGIT)
+
+    assert len(schema.fields) == 181
+    assert len(schema.labels) == 48
+    assert schema.labels[-8:] == FAST_OWNER_LABELS
+    assert len(values) == 79
+    assert len(logits) == 1
+    assert logits[0].name == RVEGET_LOGIT_KEY
+    assert sum(int(np.prod(field.shape)) for field in values) == 839
+    assert int(np.prod(logits[0].shape)) == 2
+    assert sum(field.value_representation == DAY_START_DELTA for field in values) == 65
+    assert all(
+        field.day_start_owner is not None
+        and field.day_start_state_start is not None
+        and field.day_start_state_stop is not None
+        for field in values
+        if field.value_representation == DAY_START_DELTA
+    )
+    assert {
+        domain: sum(field.process_domain == domain for field in values)
+        for domain in ("water", "energy", "carbon")
+    } == {"water": 42, "energy": 21, "carbon": 16}
+    by_name = {field.name: field for field in added}
+    assert by_name[
+        "endpoint.fast_state.diffuco_previous_step_state.control_inudate"
+    ].source_route == "carbon.fast_gpp"
+    assert by_name["endpoint.daily_summary.resp_maint_radia"].source_route == (
+        "carbon.fast_maintenance_respiration"
+    )
+    assert by_name["endpoint.ok_leak_aux.litterpart"].source_route == "carbon.other"
+    labels = schema_field_labels(schema)
+    assert {labels[field.name] for field in added} == set(FAST_OWNER_LABELS)
+    assert np.all(np.any(setup["layout"].field_allowed_family_mask, axis=1))
+    assert np.all(np.any(setup["layout"].field_graph_mask, axis=1))
+
+    control = initialize_successor_parameters(
+        jax.random.PRNGKey(20260812),
+        schema=schema,
+        layout=setup["layout"],
+        inputs=setup["assembled"],
+        arm=SOURCE_ROUTED_GRAPH_CONTROL,
+    )
+    assert successor_parameter_count(setup["parameters"]) == 8_722_689
+    assert successor_parameter_count(control) == 8_722_689
+    assert jax.tree_util.tree_structure(setup["parameters"]) == (
+        jax.tree_util.tree_structure(control)
+    )
+
+    base_normalization = unit_output_normalization(setup["base_schema"])
+    added_mean = {
+        field.name: np.zeros(field.shape, dtype=np.float64) for field in values
+    }
+    added_scale = {
+        field.name: np.ones(field.shape, dtype=np.float64) for field in values
+    }
+    extended = extend_successor_output_normalization(
+        base_normalization,
+        schema,
+        added_mean=added_mean,
+        added_scale=added_scale,
+    )
+    validate_successor_output_normalization(schema, extended)
+    with pytest.raises(ValueError, match="fitted fast-owner normalization registry drift"):
+        extend_successor_output_normalization(
+            base_normalization,
+            schema,
+            added_mean=dict(list(added_mean.items())[1:]),
+            added_scale=added_scale,
+        )
+
+
+def test_fast_owner_delta_targets_and_rveget_status_are_explicit(
+    extended_successor_setup,
+):
+    setup = extended_successor_setup
+    example = setup["example"]
+    state_leaf = next(
+        leaf
+        for leaf in setup["adapter"].contract.state_leaves
+        if leaf.key == "diffuco_previous_step_state.rveget"
+    )
+    state = np.asarray(example.inputs.continuous_state).copy()
+    state[state_leaf.start : state_leaf.stop] = np.asarray([1.0e20, 4.0])
+    inputs = example.inputs._replace(continuous_state=state)
+
+    boundary = example.targets.retained_boundary
+    fields = dict(boundary.fast_state_fields)
+    diffuco = dict(fields["diffuco_previous_step_state"])
+    rveget = np.asarray(diffuco["rveget"]).copy()
+    active = setup["adapter"].active_pft_indices
+    rveget[0, active[0]] = 3.0
+    rveget[0, active[1]] = 1.0e20
+    diffuco["rveget"] = rveget
+    fields["diffuco_previous_step_state"] = diffuco
+    targets = example.targets._replace(
+        retained_boundary=boundary._replace(fast_state_fields=fields)
+    )
+    changed = example._replace(inputs=inputs, targets=targets)
+    observed = build_successor_fast_owner_targets(
+        changed,
+        schema=setup["schema"],
+        markov_contract=setup["adapter"].contract,
+        owner_contract=setup["owner_contract"],
+    )
+    value_key = "endpoint.fast_state.diffuco_previous_step_state.rveget"
+    np.testing.assert_array_equal(observed[value_key].value, [[3.0, 0.0]])
+    np.testing.assert_array_equal(observed[value_key].defined, [[True, False]])
+    np.testing.assert_array_equal(observed[RVEGET_LOGIT_KEY].value, [[1.0, 0.0]])
+    np.testing.assert_array_equal(observed[RVEGET_LOGIT_KEY].defined, [[True, True]])
+
+    physical = {
+        name: np.zeros(field.shape, dtype=np.float64)
+        for name, field in ((field.name, field) for field in setup["schema"].fields)
+    }
+    physical[value_key] = np.asarray([[3.0, 7.0]], dtype=np.float64)
+    represented = training_representation_outputs(physical, inputs, setup["schema"])
+    np.testing.assert_array_equal(represented[value_key], [[3.0, 3.0]])
+
+
+@pytest.mark.parametrize(
+    "arm,seed",
+    (
+        (SOURCE_ROUTED_ATTENTION, 20260813),
+        (SOURCE_ROUTED_GRAPH_CONTROL, 20260814),
+    ),
+)
+def test_fast_owner_forward_loss_jvp_and_vjp_are_finite(
+    extended_successor_setup,
+    arm,
+    seed,
+):
+    setup = extended_successor_setup
+    parameters = initialize_successor_parameters(
+        jax.random.PRNGKey(seed),
+        schema=setup["schema"],
+        layout=setup["layout"],
+        inputs=setup["assembled"],
+        arm=arm,
+    )
+    head = SuccessorProcessHead(
+        arm=arm,
+        contract=setup["adapter"].contract,
+        input_assembler=setup["adapter"].input_assembler,
+        schema=setup["schema"],
+        token_layout=setup["layout"],
+        input_normalization=setup["input_normalization"],
+        output_normalization=setup["output_normalization"],
+        forcing_layout=setup["head"].forcing_layout,
+        forcing_indices=setup["head"].forcing_indices,
+    )
+    context = head.assemble_context(parameters, setup["assembled"])
+    eager = head.named_outputs(parameters, context, setup["assembled"])
+    compiled = jax.jit(
+        lambda values, encoded, inputs: head.named_outputs(values, encoded, inputs)
+    )(parameters, context, setup["assembled"])
+    jax.block_until_ready(compiled[RVEGET_LOGIT_KEY])
+    assert set(eager) == set(setup["targets"])
+    assert sum(np.asarray(value).size for value in eager.values()) == 39_371
+    assert all(np.all(np.isfinite(np.asarray(value))) for value in eager.values())
+    assert all(np.all(np.isfinite(np.asarray(value))) for value in compiled.values())
+    for field in setup["schema"].fields[101:]:
+        value = np.asarray(eager[field.name])
+        if field.constraint == "nonnegative":
+            assert np.all(value >= 0.0), field.name
+        elif field.constraint == "unit_interval":
+            assert np.all((value >= 0.0) & (value <= 1.0)), field.name
+
+    def loss_for_query_kernel(kernel):
+        query = dict(
+            parameters["process_blocks"][0]["input_mixer"]["query"],
+            kernel=kernel,
+        )
+        mixer = dict(
+            parameters["process_blocks"][0]["input_mixer"],
+            query=query,
+        )
+        block = dict(parameters["process_blocks"][0], input_mixer=mixer)
+        changed = dict(
+            parameters,
+            process_blocks=(block,) + parameters["process_blocks"][1:],
+        )
+        outputs = head.named_outputs(changed, context, setup["assembled"])
+        return successor_fast_owner_loss(
+            outputs,
+            setup["targets"],
+            inputs=setup["assembled"],
+            schema=setup["schema"],
+            scales=setup["scales"],
+        ).total
+
+    kernel = parameters["process_blocks"][0]["input_mixer"]["query"]["kernel"]
+    loss, gradient = jax.value_and_grad(loss_for_query_kernel)(kernel)
+    direction = jnp.ones_like(kernel) / jnp.sqrt(kernel.size)
+    jvp_loss, directional_derivative = jax.jvp(
+        loss_for_query_kernel,
+        (kernel,),
+        (direction,),
+    )
+    assert np.isfinite(float(loss))
+    assert np.isfinite(float(jvp_loss))
+    assert np.isfinite(float(directional_derivative))
+    np.testing.assert_allclose(float(jvp_loss), float(loss), rtol=1.0e-12)
+    assert np.all(np.isfinite(np.asarray(gradient)))
+    assert float(jnp.linalg.norm(gradient)) > 0.0
+
+
+def test_fast_owner_inactive_pft_outputs_and_one_day_budgets(
+    extended_successor_setup,
+):
+    setup = extended_successor_setup
+    head = setup["head"]
+    parameters = setup["parameters"]
+    assembled = setup["assembled"]
+    inactive = assembled._replace(
+        pft=assembled.pft._replace(
+            active_pft_mask=np.asarray([True, False], dtype=np.bool_),
+        )
+    )
+    inactive_outputs = head.named_outputs(
+        parameters,
+        head.assemble_context(parameters, inactive),
+        inactive,
+    )
+    for field in setup["schema"].fields[101:]:
+        if field.pft_axis is None:
+            continue
+        selected = np.take(np.asarray(inactive_outputs[field.name]), 1, axis=field.pft_axis)
+        np.testing.assert_array_equal(selected, 0.0, err_msg=field.name)
+
+    forcing = np.asarray(assembled.forcing.values).copy()
+    forcing[:, head.forcing_indices["Tair"]] = 280.0
+    forcing[:, head.forcing_indices["PSurf"]] = 101325.0
+    forcing[:, head.forcing_indices["Qair"]] = 0.01
+    driven = assembled._replace(forcing=assembled.forcing._replace(values=forcing))
+    outputs = head.named_outputs(
+        parameters,
+        head.assemble_context(parameters, driven),
+        driven,
+    )
+    prediction = head.prediction_from_named_outputs(outputs, driven)
+    update = apply_conservative_update(driven, prediction)
+    validate_conservative_result(update)
+    assert abs(float(update.water.budget_residual)) <= 2.0e-12
+    assert abs(float(update.carbon.budget_residual)) <= 2.0e-12
+
+    materializer = build_successor_fast_owner_materializer(
+        setup["adapter"].contract,
+        forcing_layout=head.forcing_layout,
+    )
+    height_leaf = next(
+        leaf
+        for leaf in setup["adapter"].contract.static_conditions.landpoint_static_leaves
+        if leaf.name == "measurement_heights"
+    )
+    height = np.asarray(driven.static_conditions)[height_leaf.start : height_leaf.stop][0]
+    boundary = prediction.retained_boundary
+    materialized = materializer.materialize(
+        fields_by_component=boundary.fast_state_fields,
+        daily_fields=boundary.daily_fields,
+        ok_leak_updates=boundary.ok_leak_result,
+        final_diagnostics=boundary.final_entry_diagnostics,
+        named_outputs=prediction.named_outputs,
+        forcing=driven.forcing,
+        measurement_height=height,
+    )
+    assert len(materialized.fields_by_component) > 0
+
+    transition = bind_daily_operator(
+        input_assembler=setup["adapter"].input_assembler,
+        process_head=head,
+        retained_tail=plumbing_test_retained_tail_adapter(),
+    )
+    result = transition(parameters, setup["example"].inputs)
+    validate_conservative_result(result.fast_update)
+    assert abs(float(result.fast_update.water.budget_residual)) <= 2.0e-12
+    assert abs(float(result.fast_update.carbon.budget_residual)) <= 2.0e-12
+    assert set(result.prediction.named_outputs) == set(setup["targets"])
 
 
 def test_successor_attention_forward_loss_and_gradient_are_finite(successor_setup):

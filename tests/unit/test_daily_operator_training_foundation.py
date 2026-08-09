@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import hashlib
 import json
 from pathlib import Path
 
@@ -19,6 +20,9 @@ from research.daily_coarse_graining.daily_operator.conservative_update import (
     apply_conservative_update,
     validate_conservative_result,
 )
+from research.daily_coarse_graining.daily_operator.fast_owner_reconstruction import (
+    load_fast_owner_reconstruction_contract,
+)
 from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
 from research.daily_coarse_graining.daily_operator.neural_architecture import (
     AXIAL_CANDIDATE,
@@ -37,6 +41,23 @@ from research.daily_coarse_graining.daily_operator.neural_process_head import (
 )
 from research.daily_coarse_graining.daily_operator.process_derivations import (
     NativeForcingFieldLayout,
+)
+from research.daily_coarse_graining.daily_operator.successor_contract import (
+    SuccessorCandidateContract,
+)
+from research.daily_coarse_graining.daily_operator.successor_fast_owner_decoder import (
+    DEFINED_LOGIT,
+    build_successor_fast_owner_schema,
+)
+from research.daily_coarse_graining.daily_operator.successor_fast_owner_statistics import (
+    fit_successor_fast_owner_statistics,
+    load_successor_fast_owner_statistics,
+    merge_successor_fast_owner_statistics,
+    vectorized_successor_fast_owner_targets,
+    write_successor_fast_owner_statistics,
+)
+from research.daily_coarse_graining.daily_operator.successor_fast_owner_training import (
+    build_successor_fast_owner_targets,
 )
 from research.daily_coarse_graining.daily_operator.training_contract import (
     FirstCandidateContract,
@@ -205,6 +226,8 @@ def test_host_training_adapter_is_excluded_without_entering_inference_graph():
     graph = audit_inference_source_graph()
     assert graph["passed"], graph["violations"]
     assert graph["host_only_training_files"] == [
+        "successor_fast_owner_statistics.py",
+        "successor_fast_owner_training.py",
         "training_contract.py",
         "training_data.py",
         "training_loss.py",
@@ -469,6 +492,99 @@ def test_process_statistics_artifact_fits_loads_and_rejects_hash_drift(tmp_path)
     )
     assert loaded.sample_count == statistics.sample_count
     assert set(loaded.outputs) == set(statistics.outputs)
+
+    owner_contract = load_fast_owner_reconstruction_contract(
+        markov_contract=adapter.contract,
+    )
+    successor_schema = build_successor_fast_owner_schema(
+        statistics.schema,
+        markov_contract=adapter.contract,
+        owner_contract=owner_contract,
+    )
+    vectorized_added = vectorized_successor_fast_owner_targets(
+        shard,
+        schema=successor_schema,
+        adapter=adapter,
+        owner_contract=owner_contract,
+    )
+    assert len(vectorized_added) == 80
+    assert sum(
+        field.value_representation == DEFINED_LOGIT
+        for field in successor_schema.fields
+    ) == 1
+    for row in range(shard.days):
+        example = adapter.assemble(
+            shard.sample(row),
+            supplemental_values={name: value[row] for name, value in typed_values.items()},
+            supplemental_defined={
+                name: value[row] for name, value in typed_defined.items()
+            },
+        )
+        single = build_successor_fast_owner_targets(
+            example,
+            schema=successor_schema,
+            markov_contract=adapter.contract,
+            owner_contract=owner_contract,
+        )
+        for name, target in vectorized_added.items():
+            np.testing.assert_array_equal(target.value[row], single[name].value)
+            np.testing.assert_array_equal(target.defined[row], single[name].defined)
+
+    process_json_hash = hashlib.sha256(metadata_path.read_bytes()).hexdigest()
+    process_npz_hash = hashlib.sha256(
+        metadata_path.with_suffix(".npz").read_bytes()
+    ).hexdigest()
+    successor_contract = SuccessorCandidateContract(
+        payload={
+            "data": {
+                "dataset_manifest_sha256": manifest_sha256,
+                "markov_contract_sha256": adapter.contract.sha256,
+                "typed_contract_sha256": adapter.typed_contract.sha256,
+                "training_statistics_json_sha256": process_json_hash,
+                "training_statistics_npz_sha256": process_npz_hash,
+            }
+        },
+        source_path=tmp_path / "successor.json",
+        sha256="7" * 64,
+    )
+    fast_statistics = fit_successor_fast_owner_statistics(
+        index,
+        adapter,
+        statistics,
+        successor_contract,
+        owner_contract,
+        successor_schema,
+        chunk_rows=1,
+    )
+    assert fast_statistics.sample_count == shard.days
+    assert len(fast_statistics.outputs) == 79
+    assert fast_statistics.rveget_eligible_count == shard.days * 2
+    assert len(fast_statistics.output_normalization(statistics).mean) == 181
+    assert len(fast_statistics.combined_loss_scales(statistics)) == 180
+    fast_path = write_successor_fast_owner_statistics(
+        fast_statistics,
+        tmp_path / "successor_fast_statistics.json",
+    )
+    loaded_fast = load_successor_fast_owner_statistics(
+        fast_path,
+        index=index,
+        adapter=adapter,
+        base=statistics,
+        successor_contract=successor_contract,
+        owner_contract=owner_contract,
+        schema=successor_schema,
+    )
+    assert loaded_fast.sample_count == fast_statistics.sample_count
+    merged_fast = merge_successor_fast_owner_statistics(
+        (loaded_fast,),
+        index=index,
+        adapter=adapter,
+        base=statistics,
+        successor_contract=successor_contract,
+        owner_contract=owner_contract,
+        schema=successor_schema,
+    )
+    assert merged_fast.source_inventory_sha256 == fast_statistics.source_inventory_sha256
 
     arrays_path = metadata_path.with_suffix(".npz")
     arrays_path.write_bytes(arrays_path.read_bytes() + b"tampered")

@@ -1,0 +1,5628 @@
+{
+  "acceptance_gates": {
+    "closed": [
+      "training",
+      "7_day_rollout",
+      "30_day_rollout",
+      "365_day_rollout",
+      "gate_d2",
+      "product_acceptance"
+    ],
+    "contract": [
+      "160_of_160_fast_leaves_classified_once",
+      "no_duplicate_or_anonymous_owner",
+      "typed_daily_integrals_never_materialize_instantaneous_state"
+    ],
+    "local_before_gpu": [
+      "candidate_and_control_forward_loss_jvp_vjp_finite",
+      "candidate_control_parameter_difference_at_most_0.02",
+      "one_day_state_and_water_carbon_budget_checks_pass"
+    ],
+    "pre_training_materializer": [
+      "all_teacher_160_of_160_with_atol_1e-8_rtol_1e-10",
+      "cold_ordinary_restart_masks_and_discrete_exact",
+      "rveget_defined_status_exact"
+    ]
+  },
+  "boundary": {
+    "anonymous_fast_vector_allowed": false,
+    "binding": "bind_daily_operator(input_assembler=canonical_assembler,process_head=candidate_head,retained_tail=canonical_retained_tail_adapter)",
+    "execute_48_step_state_scan": false,
+    "fast_leaf_count": 160,
+    "fast_target_width": 2855,
+    "reconstruct_48_forcing_records": false
+  },
+  "contract_sha256": "4db5f828442212c58903096c36015f9d769c19aeaaa4eb9a4326fbea2fdfc4c9",
+  "dataset": {
+    "dataset_id": "pft14-daily-teacher-669-1961-2010",
+    "dataset_manifest_sha256": "5fc2c0691bfa53252f875f7646f3c1a5bea203c2759a6e947b26bb51dc13aa99",
+    "historical_v5_allowed": false,
+    "markov_contract_sha256": "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442",
+    "release_id": "pft14-daily-teacher-v6",
+    "source_contract_sha256": "9ec8b89a9c1ff1988d7571d0ba25bb3310520f27aaf2ea0d7fea6c942cc235bd",
+    "teacher_regeneration_allowed": false
+  },
+  "decoder_extension": {
+    "candidate_control_share_identical_output_schema": true,
+    "decoder_transform": "architecture_review_pending",
+    "dynamic_defined_logit_count": 1,
+    "dynamic_defined_logit_width": 2,
+    "output_keys": [
+      "endpoint.fast_state.driver_previous_step_state.albedo",
+      "endpoint.fast_state.driver_previous_step_state.fluxsens",
+      "endpoint.fast_state.driver_previous_step_state.vevapp",
+      "endpoint.fast_state.diffuco_previous_step_state.cimean",
+      "endpoint.fast_state.diffuco_previous_step_state.control_inudate",
+      "endpoint.fast_state.diffuco_previous_step_state.drysoil_frac",
+      "endpoint.fast_state.diffuco_previous_step_state.evapot",
+      "endpoint.fast_state.diffuco_previous_step_state.evapot_corr",
+      "endpoint.fast_state.diffuco_previous_step_state.gpp",
+      "endpoint.fast_state.diffuco_previous_step_state.gsmean",
+      "endpoint.fast_state.diffuco_previous_step_state.qsurf",
+      "endpoint.fast_state.diffuco_previous_step_state.roughheight",
+      "endpoint.fast_state.diffuco_previous_step_state.roughheight_pft",
+      "endpoint.fast_state.diffuco_previous_step_state.rstruct",
+      "endpoint.fast_state.diffuco_previous_step_state.rveget",
+      "endpoint.fast_state.diffuco_previous_step_state.temp_sol_pft",
+      "endpoint.fast_state.diffuco_previous_step_state.z0h",
+      "endpoint.fast_state.diffuco_previous_step_state.z0m",
+      "endpoint.fast_state.enerbil_previous_step_state.soilcap_pft",
+      "endpoint.fast_state.enerbil_previous_step_state.soilflx_pft",
+      "endpoint.fast_state.hydrol_previous_step_state.ae_ns",
+      "endpoint.fast_state.hydrol_previous_step_state.canopy2ground",
+      "endpoint.fast_state.hydrol_previous_step_state.drainage_per_soil",
+      "endpoint.fast_state.hydrol_previous_step_state.evap_bare_lim",
+      "endpoint.fast_state.hydrol_previous_step_state.evap_bare_lim_ns",
+      "endpoint.fast_state.hydrol_previous_step_state.fwet_new",
+      "endpoint.fast_state.hydrol_previous_step_state.grndflux",
+      "endpoint.fast_state.hydrol_previous_step_state.humrel",
+      "endpoint.fast_state.hydrol_previous_step_state.humrelv",
+      "endpoint.fast_state.hydrol_previous_step_state.nroot",
+      "endpoint.fast_state.hydrol_previous_step_state.precip2canopy",
+      "endpoint.fast_state.hydrol_previous_step_state.precip2ground",
+      "endpoint.fast_state.hydrol_previous_step_state.profil_froz_hydro_ns",
+      "endpoint.fast_state.hydrol_previous_step_state.run2man",
+      "endpoint.fast_state.hydrol_previous_step_state.run2peat",
+      "endpoint.fast_state.hydrol_previous_step_state.runoff2peat",
+      "endpoint.fast_state.hydrol_previous_step_state.runoff_per_soil",
+      "endpoint.fast_state.hydrol_previous_step_state.shumdiag_peat",
+      "endpoint.fast_state.hydrol_previous_step_state.snow_age",
+      "endpoint.fast_state.hydrol_previous_step_state.snow_nobio_age",
+      "endpoint.fast_state.hydrol_previous_step_state.snowdz",
+      "endpoint.fast_state.hydrol_previous_step_state.snowgrain",
+      "endpoint.fast_state.hydrol_previous_step_state.snowmelt",
+      "endpoint.fast_state.hydrol_previous_step_state.snowrho",
+      "endpoint.fast_state.hydrol_previous_step_state.soilflxresid",
+      "endpoint.fast_state.hydrol_previous_step_state.subsnownobio",
+      "endpoint.fast_state.hydrol_previous_step_state.temp_hydro",
+      "endpoint.fast_state.hydrol_previous_step_state.temp_sol_add",
+      "endpoint.fast_state.hydrol_previous_step_state.us",
+      "endpoint.fast_state.hydrol_previous_step_state.wat_flux",
+      "endpoint.fast_state.hydrol_previous_step_state.water2infilt",
+      "endpoint.fast_state.hydrol_previous_step_state.wt_ab",
+      "endpoint.fast_state.hydrol_previous_step_state.wt_ab_tide",
+      "endpoint.fast_state.thermosoil_previous_step_state.cgrnd",
+      "endpoint.fast_state.thermosoil_previous_step_state.cgrnd_snow",
+      "endpoint.fast_state.thermosoil_previous_step_state.dgrnd",
+      "endpoint.fast_state.thermosoil_previous_step_state.dgrnd_snow",
+      "endpoint.fast_state.thermosoil_previous_step_state.gtemp",
+      "endpoint.fast_state.thermosoil_previous_step_state.lambda_snow",
+      "endpoint.fast_state.thermosoil_previous_step_state.pcapa_en",
+      "endpoint.fast_state.thermosoil_previous_step_state.shum_ngrnd_permalong",
+      "endpoint.fast_state.thermosoil_previous_step_state.soilcap",
+      "endpoint.fast_state.thermosoil_previous_step_state.soilflx",
+      "endpoint.daily_summary.humrel_daily",
+      "endpoint.daily_summary.litterhum_daily",
+      "endpoint.daily_summary.resp_maint_radia",
+      "endpoint.daily_summary.snowmass_daily",
+      "endpoint.daily_summary.soilhum_daily",
+      "endpoint.daily_summary.wspeed_daily",
+      "endpoint.ok_leak_aux.lignin_struc_above",
+      "endpoint.ok_leak_aux.lignin_struc_below",
+      "endpoint.ok_leak_aux.litterpart",
+      "endpoint.ok_leak_aux.dead_leaves",
+      "endpoint.ok_leak_aux.fuel_1hr",
+      "endpoint.ok_leak_aux.fuel_10hr",
+      "endpoint.ok_leak_aux.fuel_100hr",
+      "endpoint.ok_leak_aux.fuel_1000hr",
+      "endpoint.fast_state.final_diagnostics.temp_sol",
+      "endpoint.fast_state.sechiba_finalize_state.leaf_ci"
+    ],
+    "status": "not_implemented_pending_user_architecture_review",
+    "total_added_scalar_width": 841,
+    "value_output_count": 79,
+    "value_output_width": 839
+  },
+  "leaves": [
+    {
+      "axis_names": [
+        "npts",
+        "spectral_band_2"
+      ],
+      "canonical_owner": "endpoint.fast_state.driver_previous_step_state.albedo",
+      "component": "driver_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "driver",
+      "key": "driver_previous_step_state.albedo",
+      "loss_group": "fast_owner.driver",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.driver_previous_step_state.albedo",
+      "path": [
+        "albedo"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_or_guarded_carry",
+        "jax_owner": "jax_orchidee.driver.orchestration._runtime_next_state_from_components",
+        "producer_phase": "condveg_end",
+        "source_ref": "driver_albedo"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "unit_interval",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 0,
+      "stop": 2,
+      "teacher_target": "v6.fast_day_target[0:2]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "band_1_of:driver_previous_step_state.albedo",
+      "component": "driver_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "driver",
+      "key": "driver_previous_step_state.albedo_nir",
+      "path": [
+        "albedo_nir"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_condveg_to_previous_fields",
+        "producer_phase": "condveg_end",
+        "source_ref": "driver_albedo"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 2,
+      "stop": 3,
+      "teacher_target": "v6.fast_day_target[2:3]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "band_0_of:driver_previous_step_state.albedo",
+      "component": "driver_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "driver",
+      "key": "driver_previous_step_state.albedo_vis",
+      "path": [
+        "albedo_vis"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_condveg_to_previous_fields",
+        "producer_phase": "condveg_end",
+        "source_ref": "driver_albedo"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 3,
+      "stop": 4,
+      "teacher_target": "v6.fast_day_target[3:4]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.driver_previous_step_state.fluxsens",
+      "component": "driver_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "driver",
+      "key": "driver_previous_step_state.fluxsens",
+      "loss_group": "fast_owner.driver",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.driver_previous_step_state.fluxsens",
+      "path": [
+        "fluxsens"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "enerbil_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 4,
+      "stop": 5,
+      "teacher_target": "v6.fast_day_target[4:5]",
+      "typed_integral_collision": {
+        "forbidden_source": "typed_daily_integral_with_same_short_name:fluxsens",
+        "required_source": "endpoint.fast_state.driver_previous_step_state.fluxsens"
+      },
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [],
+      "canonical_owner": "final_native_forcing:CP_AIR*Tair+GRAVITY*measurement_height",
+      "component": "driver_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "driver",
+      "key": "driver_previous_step_state.old_eair",
+      "path": [
+        "old_eair"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "fortran_source/ORCHIDEE/src_sechiba/enerbil.f90::enerbil_main lines 390-598"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 5,
+      "stop": 6,
+      "teacher_target": "v6.fast_day_target[5:6]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [],
+      "canonical_owner": "final_native_forcing:Qair",
+      "component": "driver_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "driver",
+      "key": "driver_previous_step_state.old_qair",
+      "path": [
+        "old_qair"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "fortran_source/ORCHIDEE/src_sechiba/enerbil.f90::enerbil_main lines 390-598"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 6,
+      "stop": 7,
+      "teacher_target": "v6.fast_day_target[6:7]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [],
+      "canonical_owner": "static_condition:measurement_heights[0]",
+      "component": "driver_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "driver",
+      "key": "driver_previous_step_state.old_zlev",
+      "path": [
+        "old_zlev"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "fortran_source/ORCHIDEE/src_sechiba/enerbil.f90::enerbil_main lines 390-598"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 7,
+      "stop": 8,
+      "teacher_target": "v6.fast_day_target[7:8]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "source_exact_constant:0",
+      "component": "driver_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "driver",
+      "key": "driver_previous_step_state.peqAcoef",
+      "path": [
+        "peqAcoef"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "enerbil_main"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 8,
+      "stop": 9,
+      "teacher_target": "v6.fast_day_target[8:9]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "copy:driver_previous_step_state.old_qair",
+      "component": "driver_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "driver",
+      "key": "driver_previous_step_state.peqBcoef",
+      "path": [
+        "peqBcoef"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "enerbil_main"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 9,
+      "stop": 10,
+      "teacher_target": "v6.fast_day_target[9:10]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "source_exact_constant:0",
+      "component": "driver_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "driver",
+      "key": "driver_previous_step_state.petAcoef",
+      "path": [
+        "petAcoef"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "enerbil_main"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 10,
+      "stop": 11,
+      "teacher_target": "v6.fast_day_target[10:11]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "copy:driver_previous_step_state.old_eair",
+      "component": "driver_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "driver",
+      "key": "driver_previous_step_state.petBcoef",
+      "path": [
+        "petBcoef"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "enerbil_main"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 11,
+      "stop": 12,
+      "teacher_target": "v6.fast_day_target[11:12]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [],
+      "canonical_owner": "final_native_forcing:air_density",
+      "component": "driver_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "driver",
+      "key": "driver_previous_step_state.rau_old",
+      "path": [
+        "rau_old"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "fortran_source/ORCHIDEE/src_sechiba/enerbil.f90::enerbil_main lines 390-598"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 12,
+      "stop": 13,
+      "teacher_target": "v6.fast_day_target[12:13]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.driver_previous_step_state.vevapp",
+      "component": "driver_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "driver",
+      "key": "driver_previous_step_state.vevapp",
+      "loss_group": "fast_owner.driver",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.driver_previous_step_state.vevapp",
+      "path": [
+        "vevapp"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "enerbil_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 13,
+      "stop": 14,
+      "teacher_target": "v6.fast_day_target[13:14]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "diffuco_previous_step_state.z0m",
+      "component": "driver_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "driver",
+      "key": "driver_previous_step_state.z0",
+      "path": [
+        "z0"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_condveg_to_previous_fields",
+        "producer_phase": "condveg_end",
+        "source_ref": "condveg_roughness"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 14,
+      "stop": 15,
+      "teacher_target": "v6.fast_day_target[14:15]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.cimean",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.cimean",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.cimean",
+      "path": [
+        "cimean"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_diffuco_local_to_previous_fields",
+        "producer_phase": "diffuco_end",
+        "source_ref": "diffuco_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 15,
+      "stop": 17,
+      "teacher_target": "v6.fast_day_target[15:17]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.control_inudate",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.control_inudate",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.control_inudate",
+      "path": [
+        "control_inudate"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "freshness": "initialize_once_then_carry",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_diffuco_saved_controls_to_previous_fields",
+        "producer_phase": "diffuco_firstcall_control",
+        "source_ref": "diffuco_saved_controls"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "unit_interval",
+      "shape": [
+        1
+      ],
+      "start": 17,
+      "stop": 18,
+      "teacher_target": "v6.fast_day_target[17:18]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "day_start.diffuco_previous_step_state.control_salinity",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.control_salinity",
+      "path": [
+        "control_salinity"
+      ],
+      "provenance": {
+        "freshness": "initialize_once_then_carry",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_diffuco_saved_controls_to_previous_fields",
+        "producer_phase": "diffuco_firstcall_control",
+        "source_ref": "diffuco_saved_controls"
+      },
+      "role": "true_guarded_or_static_carry",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 18,
+      "stop": 19,
+      "teacher_target": "v6.fast_day_target[18:19]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.drysoil_frac",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.drysoil_frac",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.drysoil_frac",
+      "path": [
+        "drysoil_frac"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_diagnostics_end",
+        "source_ref": "hydrol_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "unit_interval",
+      "shape": [
+        1
+      ],
+      "start": 19,
+      "stop": 20,
+      "teacher_target": "v6.fast_day_target[19:20]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.evap_bare_lim",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.evap_bare_lim",
+      "path": [
+        "evap_bare_lim"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_diagnostics_end",
+        "source_ref": "hydrol_main"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 20,
+      "stop": 21,
+      "teacher_target": "v6.fast_day_target[20:21]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.evapot",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.evapot",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.evapot",
+      "path": [
+        "evapot"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "enerbil_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 21,
+      "stop": 22,
+      "teacher_target": "v6.fast_day_target[21:22]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.evapot_corr",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.evapot_corr",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.evapot_corr",
+      "path": [
+        "evapot_corr"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "enerbil_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 22,
+      "stop": 23,
+      "teacher_target": "v6.fast_day_target[22:23]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nnobio"
+      ],
+      "canonical_owner": "day_start.slowproc_stomate_previous_step_state.frac_nobio",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.frac_nobio",
+      "path": [
+        "frac_nobio"
+      ],
+      "provenance": {
+        "freshness": "guarded_carry",
+        "jax_owner": "jax_orchidee.driver.orchestration._runtime_next_state_from_components",
+        "producer_phase": "slowproc_surface_update",
+        "source_ref": "slowproc_surface"
+      },
+      "role": "true_guarded_or_static_carry",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        1
+      ],
+      "start": 23,
+      "stop": 24,
+      "teacher_target": "v6.fast_day_target[23:24]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.gpp",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.gpp",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.gpp",
+      "path": [
+        "gpp"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_diffuco_local_to_previous_fields",
+        "producer_phase": "diffuco_end",
+        "source_ref": "diffuco_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 24,
+      "stop": 26,
+      "teacher_target": "v6.fast_day_target[24:26]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.gsmean",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.gsmean",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.gsmean",
+      "path": [
+        "gsmean"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_diffuco_local_to_previous_fields",
+        "producer_phase": "diffuco_end",
+        "source_ref": "diffuco_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 26,
+      "stop": 28,
+      "teacher_target": "v6.fast_day_target[26:28]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "day_start.diffuco_previous_step_state.height",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.height",
+      "path": [
+        "height"
+      ],
+      "provenance": {
+        "freshness": "guarded_carry",
+        "jax_owner": "jax_orchidee.driver.orchestration._runtime_next_state_from_components",
+        "producer_phase": "slowproc_surface_update",
+        "source_ref": "slowproc_surface"
+      },
+      "role": "true_guarded_or_static_carry",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 28,
+      "stop": 30,
+      "teacher_target": "v6.fast_day_target[28:30]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.humrel",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.humrel",
+      "path": [
+        "humrel"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_diagnostics_end",
+        "source_ref": "hydrol_main"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 30,
+      "stop": 32,
+      "teacher_target": "v6.fast_day_target[30:32]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "day_start.slowproc_stomate_previous_step_state.lai",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.lai",
+      "path": [
+        "lai"
+      ],
+      "provenance": {
+        "freshness": "guarded_carry",
+        "jax_owner": "jax_orchidee.driver.orchestration._runtime_next_state_from_components",
+        "producer_phase": "slowproc_surface_update",
+        "source_ref": "slowproc_surface"
+      },
+      "role": "true_guarded_or_static_carry",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 32,
+      "stop": 34,
+      "teacher_target": "v6.fast_day_target[32:34]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.qsintveg",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.qsintveg",
+      "path": [
+        "qsintveg"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_canopy_end",
+        "source_ref": "hydrol_canop"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 34,
+      "stop": 36,
+      "teacher_target": "v6.fast_day_target[34:36]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.qsurf",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.qsurf",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.qsurf",
+      "path": [
+        "qsurf"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "enerbil_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 36,
+      "stop": 37,
+      "teacher_target": "v6.fast_day_target[36:37]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.roughheight",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.roughheight",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.roughheight",
+      "path": [
+        "roughheight"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_condveg_to_previous_fields",
+        "producer_phase": "condveg_end",
+        "source_ref": "condveg_roughness"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1
+      ],
+      "start": 37,
+      "stop": 38,
+      "teacher_target": "v6.fast_day_target[37:38]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.roughheight_pft",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.roughheight_pft",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.roughheight_pft",
+      "path": [
+        "roughheight_pft"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_condveg_to_previous_fields",
+        "producer_phase": "condveg_end",
+        "source_ref": "condveg_roughness"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 38,
+      "stop": 40,
+      "teacher_target": "v6.fast_day_target[38:40]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.rstruct",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.rstruct",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.rstruct",
+      "path": [
+        "rstruct"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_diffuco_local_to_previous_fields",
+        "producer_phase": "diffuco_end",
+        "source_ref": "diffuco_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 40,
+      "stop": 42,
+      "teacher_target": "v6.fast_day_target[40:42]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.rveget",
+      "component": "diffuco_previous_step_state",
+      "defined_output_key": "endpoint.fast_state.diffuco_previous_step_state.rveget.defined_logit",
+      "defined_policy": "neural_dynamic_value_and_defined_logit",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.rveget",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_dynamic_defined_value_mask_and_eligible_slot_mask_bce",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.rveget",
+      "path": [
+        "rveget"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_diffuco_local_to_previous_fields",
+        "producer_phase": "diffuco_end",
+        "source_ref": "diffuco_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "dynamic_defined_nonnegative",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 42,
+      "stop": 44,
+      "teacher_target": "v6.fast_day_target[42:44]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.snow",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.snow",
+      "path": [
+        "snow"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 44,
+      "stop": 45,
+      "teacher_target": "v6.fast_day_target[44:45]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.snow_age",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.snow_age",
+      "path": [
+        "snow_age"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 45,
+      "stop": 46,
+      "teacher_target": "v6.fast_day_target[45:46]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nnobio"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.snow_nobio",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.snow_nobio",
+      "path": [
+        "snow_nobio"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        1
+      ],
+      "start": 46,
+      "stop": 47,
+      "teacher_target": "v6.fast_day_target[46:47]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nnobio"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.snow_nobio_age",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.snow_nobio_age",
+      "path": [
+        "snow_nobio_age"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        1
+      ],
+      "start": 47,
+      "stop": 48,
+      "teacher_target": "v6.fast_day_target[47:48]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nsnow"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.snowdz",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.snowdz",
+      "path": [
+        "snowdz"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        3
+      ],
+      "start": 48,
+      "stop": 51,
+      "teacher_target": "v6.fast_day_target[48:51]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 3
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nsnow"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.snowgrain",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.snowgrain",
+      "path": [
+        "snowgrain"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        3
+      ],
+      "start": 51,
+      "stop": 54,
+      "teacher_target": "v6.fast_day_target[51:54]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 3
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nsnow"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.snowheat",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.snowheat",
+      "path": [
+        "snowheat"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        3
+      ],
+      "start": 54,
+      "stop": 57,
+      "teacher_target": "v6.fast_day_target[54:57]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 3
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nsnow"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.snowrho",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.snowrho",
+      "path": [
+        "snowrho"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        3
+      ],
+      "start": 57,
+      "stop": 60,
+      "teacher_target": "v6.fast_day_target[57:60]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 3
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nsnow"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.snowtemp",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.snowtemp",
+      "path": [
+        "snowtemp"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        3
+      ],
+      "start": 60,
+      "stop": 63,
+      "teacher_target": "v6.fast_day_target[60:63]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 3
+    },
+    {
+      "axis_names": [
+        "npts",
+        "spectral_band_2"
+      ],
+      "canonical_owner": "day_start.diffuco_previous_step_state.soilalbedo_bg",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.soilalbedo_bg",
+      "path": [
+        "soilalbedo_bg"
+      ],
+      "provenance": {
+        "freshness": "guarded_carry",
+        "jax_owner": "jax_orchidee.driver.orchestration._runtime_next_state_from_components",
+        "producer_phase": "condveg_initialize",
+        "source_ref": "driver_albedo"
+      },
+      "role": "true_guarded_or_static_carry",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 63,
+      "stop": 65,
+      "teacher_target": "v6.fast_day_target[63:65]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "enerbil_previous_step_state.temp_sol",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.temp_sol",
+      "path": [
+        "temp_sol"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "enerbil_main"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 65,
+      "stop": 66,
+      "teacher_target": "v6.fast_day_target[65:66]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.temp_sol_pft",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.temp_sol_pft",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.temp_sol_pft",
+      "path": [
+        "temp_sol_pft"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "enerbil_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 66,
+      "stop": 68,
+      "teacher_target": "v6.fast_day_target[66:68]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "day_start.slowproc_stomate_previous_step_state.veget",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.veget",
+      "path": [
+        "veget"
+      ],
+      "provenance": {
+        "freshness": "guarded_carry",
+        "jax_owner": "jax_orchidee.driver.orchestration._runtime_next_state_from_components",
+        "producer_phase": "slowproc_surface_update",
+        "source_ref": "slowproc_surface"
+      },
+      "role": "true_guarded_or_static_carry",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 68,
+      "stop": 70,
+      "teacher_target": "v6.fast_day_target[68:70]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "day_start.slowproc_stomate_previous_step_state.veget_max",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.veget_max",
+      "path": [
+        "veget_max"
+      ],
+      "provenance": {
+        "freshness": "guarded_carry",
+        "jax_owner": "jax_orchidee.driver.orchestration._runtime_next_state_from_components",
+        "producer_phase": "slowproc_surface_update",
+        "source_ref": "slowproc_surface"
+      },
+      "role": "true_guarded_or_static_carry",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 70,
+      "stop": 72,
+      "teacher_target": "v6.fast_day_target[70:72]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.z0h",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.z0h",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.z0h",
+      "path": [
+        "z0h"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_condveg_to_previous_fields",
+        "producer_phase": "condveg_end",
+        "source_ref": "condveg_roughness"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 72,
+      "stop": 73,
+      "teacher_target": "v6.fast_day_target[72:73]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.diffuco_previous_step_state.z0m",
+      "component": "diffuco_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "diffuco_previous_step_state.z0m",
+      "loss_group": "fast_owner.diffuco",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.diffuco_previous_step_state.z0m",
+      "path": [
+        "z0m"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_condveg_to_previous_fields",
+        "producer_phase": "condveg_end",
+        "source_ref": "condveg_roughness"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 73,
+      "stop": 74,
+      "teacher_target": "v6.fast_day_target[73:74]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "spectral_band_2"
+      ],
+      "canonical_owner": "driver_previous_step_state.albedo",
+      "component": "enerbil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "enerbil_previous_step_state.albedo",
+      "path": [
+        "albedo"
+      ],
+      "provenance": {
+        "freshness": "overwrite_or_guarded_carry",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_condveg_to_previous_fields",
+        "producer_phase": "condveg_end",
+        "source_ref": "driver_albedo"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 74,
+      "stop": 76,
+      "teacher_target": "v6.fast_day_target[74:76]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "ngrnd",
+        "nvm"
+      ],
+      "canonical_owner": "thermosoil_previous_step_state.cgrnd",
+      "component": "enerbil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "enerbil_previous_step_state.cgrnd",
+      "path": [
+        "cgrnd"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_coef_end",
+        "source_ref": "thermosoil_coef"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        31,
+        2
+      ],
+      "start": 76,
+      "stop": 138,
+      "teacher_target": "v6.fast_day_target[76:138]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 62
+    },
+    {
+      "axis_names": [
+        "npts",
+        "ngrnd",
+        "nvm"
+      ],
+      "canonical_owner": "thermosoil_previous_step_state.dgrnd",
+      "component": "enerbil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "enerbil_previous_step_state.dgrnd",
+      "path": [
+        "dgrnd"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_coef_end",
+        "source_ref": "thermosoil_coef"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        31,
+        2
+      ],
+      "start": 138,
+      "stop": 200,
+      "teacher_target": "v6.fast_day_target[138:200]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 62
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "diffuco_previous_step_state.qsurf",
+      "component": "enerbil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "enerbil_previous_step_state.qsurf",
+      "path": [
+        "qsurf"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "enerbil_main"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 200,
+      "stop": 201,
+      "teacher_target": "v6.fast_day_target[200:201]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "diffuco_previous_step_state.roughheight",
+      "component": "enerbil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "enerbil_previous_step_state.roughness",
+      "path": [
+        "roughness"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_condveg_to_previous_fields",
+        "producer_phase": "condveg_end",
+        "source_ref": "condveg_roughness"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 201,
+      "stop": 202,
+      "teacher_target": "v6.fast_day_target[201:202]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nsnow"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.snowdz",
+      "component": "enerbil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "enerbil_previous_step_state.snowdz",
+      "path": [
+        "snowdz"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        3
+      ],
+      "start": 202,
+      "stop": 205,
+      "teacher_target": "v6.fast_day_target[202:205]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 3
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "thermosoil_previous_step_state.soilcap",
+      "component": "enerbil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "enerbil_previous_step_state.soilcap",
+      "path": [
+        "soilcap"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_coef_end",
+        "source_ref": "thermosoil_coef"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 205,
+      "stop": 206,
+      "teacher_target": "v6.fast_day_target[205:206]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.enerbil_previous_step_state.soilcap_pft",
+      "component": "enerbil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "enerbil_previous_step_state.soilcap_pft",
+      "loss_group": "fast_owner.enerbil",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.enerbil_previous_step_state.soilcap_pft",
+      "path": [
+        "soilcap_pft"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_coef_end",
+        "source_ref": "thermosoil_coef"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 206,
+      "stop": 208,
+      "teacher_target": "v6.fast_day_target[206:208]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "thermosoil_previous_step_state.soilflx",
+      "component": "enerbil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "enerbil_previous_step_state.soilflx",
+      "path": [
+        "soilflx"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_coef_end",
+        "source_ref": "thermosoil_coef"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 208,
+      "stop": 209,
+      "teacher_target": "v6.fast_day_target[208:209]",
+      "typed_integral_collision": {
+        "forbidden_source": "typed_daily_integral_with_same_short_name:soilflx",
+        "required_source": "thermosoil_previous_step_state.soilflx"
+      },
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.enerbil_previous_step_state.soilflx_pft",
+      "component": "enerbil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "enerbil_previous_step_state.soilflx_pft",
+      "loss_group": "fast_owner.enerbil",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.enerbil_previous_step_state.soilflx_pft",
+      "path": [
+        "soilflx_pft"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_coef_end",
+        "source_ref": "thermosoil_coef"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 209,
+      "stop": 211,
+      "teacher_target": "v6.fast_day_target[209:211]",
+      "typed_integral_collision": {
+        "forbidden_source": "typed_daily_integral_with_same_short_name:soilflx_pft",
+        "required_source": "endpoint.fast_state.enerbil_previous_step_state.soilflx_pft"
+      },
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "conservative_update.thermal.enerbil_previous_step_state.temp_sol",
+      "component": "enerbil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "enerbil_previous_step_state.temp_sol",
+      "path": [
+        "temp_sol"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "enerbil_main"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 211,
+      "stop": 212,
+      "teacher_target": "v6.fast_day_target[211:212]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.temp_sol_add",
+      "component": "enerbil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "enerbil_previous_step_state.temp_sol_add",
+      "path": [
+        "temp_sol_add"
+      ],
+      "provenance": {
+        "freshness": "branch_overwrite_or_source_zero",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 212,
+      "stop": 213,
+      "teacher_target": "v6.fast_day_target[212:213]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "diffuco_previous_step_state.temp_sol_pft",
+      "component": "enerbil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "diffuco_enerbil",
+      "key": "enerbil_previous_step_state.temp_sol_pft",
+      "path": [
+        "temp_sol_pft"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_enerbil_local_to_previous_fields",
+        "producer_phase": "enerbil_end",
+        "source_ref": "enerbil_main"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 213,
+      "stop": 215,
+      "teacher_target": "v6.fast_day_target[213:215]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nstm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.ae_ns",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.ae_ns",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.ae_ns",
+      "path": [
+        "ae_ns"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_end",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        6
+      ],
+      "start": 215,
+      "stop": 221,
+      "teacher_target": "v6.fast_day_target[215:221]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 6
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.canopy2ground",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.canopy2ground",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.canopy2ground",
+      "path": [
+        "canopy2ground"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_canopy_end",
+        "source_ref": "hydrol_canop"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 221,
+      "stop": 223,
+      "teacher_target": "v6.fast_day_target[221:223]",
+      "typed_integral_collision": {
+        "forbidden_source": "typed_daily_integral_with_same_short_name:canopy2ground",
+        "required_source": "endpoint.fast_state.hydrol_previous_step_state.canopy2ground"
+      },
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nstm"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.drainage_per_soil",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.drainage",
+      "path": [
+        "drainage"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_end",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        6
+      ],
+      "start": 223,
+      "stop": 229,
+      "teacher_target": "v6.fast_day_target[223:229]",
+      "typed_integral_collision": {
+        "forbidden_source": "typed_daily_integral_with_same_short_name:drainage",
+        "required_source": "hydrol_previous_step_state.drainage_per_soil"
+      },
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 6
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nstm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.drainage_per_soil",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.drainage_per_soil",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.drainage_per_soil",
+      "path": [
+        "drainage_per_soil"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_end",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        6
+      ],
+      "start": 229,
+      "stop": 235,
+      "teacher_target": "v6.fast_day_target[229:235]",
+      "typed_integral_collision": {
+        "forbidden_source": "typed_daily_integral_with_same_short_name:drainage_per_soil",
+        "required_source": "endpoint.fast_state.hydrol_previous_step_state.drainage_per_soil"
+      },
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 6
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.evap_bare_lim",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.evap_bare_lim",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.evap_bare_lim",
+      "path": [
+        "evap_bare_lim"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_diagnostics_end",
+        "source_ref": "hydrol_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1
+      ],
+      "start": 235,
+      "stop": 236,
+      "teacher_target": "v6.fast_day_target[235:236]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nstm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.evap_bare_lim_ns",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.evap_bare_lim_ns",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.evap_bare_lim_ns",
+      "path": [
+        "evap_bare_lim_ns"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_end",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        6
+      ],
+      "start": 236,
+      "stop": 242,
+      "teacher_target": "v6.fast_day_target[236:242]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 6
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "conservative_update.water.flood_res",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.flood_res",
+      "path": [
+        "flood_res"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_flood_end",
+        "source_ref": "hydrol_main"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 242,
+      "stop": 243,
+      "teacher_target": "v6.fast_day_target[242:243]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nstm"
+      ],
+      "canonical_owner": "day_start.hydrol_previous_step_state.free_drain_coef",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.free_drain_coef",
+      "path": [
+        "free_drain_coef"
+      ],
+      "provenance": {
+        "freshness": "guarded_carry",
+        "jax_owner": "jax_orchidee.driver.orchestration._runtime_next_state_from_components",
+        "producer_phase": "hydrol_initialize",
+        "source_ref": "hydrol_static"
+      },
+      "role": "true_guarded_or_static_carry",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        6
+      ],
+      "start": 243,
+      "stop": 249,
+      "teacher_target": "v6.fast_day_target[243:249]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 6
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.fwet_new",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.fwet_new",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.fwet_new",
+      "path": [
+        "fwet_new"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_or_guarded_carry",
+        "jax_owner": "jax_orchidee.driver.orchestration._runtime_next_state_from_components",
+        "producer_phase": "hydrol_diagnostics_end",
+        "source_ref": "hydrol_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "unit_interval",
+      "shape": [
+        1
+      ],
+      "start": 249,
+      "stop": 250,
+      "teacher_target": "v6.fast_day_target[249:250]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.grndflux",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.grndflux",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.grndflux",
+      "path": [
+        "grndflux"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "branch_overwrite_or_source_zero",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 250,
+      "stop": 251,
+      "teacher_target": "v6.fast_day_target[250:251]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.humrel",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.humrel",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.humrel",
+      "path": [
+        "humrel"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_diagnostics_end",
+        "source_ref": "hydrol_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "unit_interval",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 251,
+      "stop": 253,
+      "teacher_target": "v6.fast_day_target[251:253]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm",
+        "nstm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.humrelv",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.humrelv",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.humrelv",
+      "path": [
+        "humrelv"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_diagnostics",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "unit_interval",
+      "shape": [
+        1,
+        2,
+        6
+      ],
+      "start": 253,
+      "stop": 265,
+      "teacher_target": "v6.fast_day_target[253:265]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 12
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nslm",
+        "nstm"
+      ],
+      "canonical_owner": "conservative_update.water.mc",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.mc",
+      "path": [
+        "mc"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_end",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        11,
+        6
+      ],
+      "start": 265,
+      "stop": 331,
+      "teacher_target": "v6.fast_day_target[265:331]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 66
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nslm",
+        "nstm"
+      ],
+      "canonical_owner": "conservative_update.water.mcl",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.mcl",
+      "path": [
+        "mcl"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_end",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        11,
+        6
+      ],
+      "start": 331,
+      "stop": 397,
+      "teacher_target": "v6.fast_day_target[331:397]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 66
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm",
+        "nslm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.nroot",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.nroot",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.nroot",
+      "path": [
+        "nroot"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_diagnostics",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        2,
+        11
+      ],
+      "start": 397,
+      "stop": 419,
+      "teacher_target": "v6.fast_day_target[397:419]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 22
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.precip2canopy",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.precip2canopy",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.precip2canopy",
+      "path": [
+        "precip2canopy"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_canopy_end",
+        "source_ref": "hydrol_canop"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 419,
+      "stop": 421,
+      "teacher_target": "v6.fast_day_target[419:421]",
+      "typed_integral_collision": {
+        "forbidden_source": "typed_daily_integral_with_same_short_name:precip2canopy",
+        "required_source": "endpoint.fast_state.hydrol_previous_step_state.precip2canopy"
+      },
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.precip2ground",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.precip2ground",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.precip2ground",
+      "path": [
+        "precip2ground"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_canopy_end",
+        "source_ref": "hydrol_canop"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 421,
+      "stop": 423,
+      "teacher_target": "v6.fast_day_target[421:423]",
+      "typed_integral_collision": {
+        "forbidden_source": "typed_daily_integral_with_same_short_name:precip2ground",
+        "required_source": "endpoint.fast_state.hydrol_previous_step_state.precip2ground"
+      },
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nslm",
+        "nstm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.profil_froz_hydro_ns",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.profil_froz_hydro_ns",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.profil_froz_hydro_ns",
+      "path": [
+        "profil_froz_hydro_ns"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "thermosoil_to_hydrol_boundary",
+        "source_ref": "hydrol_static"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        11,
+        6
+      ],
+      "start": 423,
+      "stop": 489,
+      "teacher_target": "v6.fast_day_target[423:489]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 66
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "conservative_update.water.qsintveg",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.qsintveg",
+      "path": [
+        "qsintveg"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_canopy_end",
+        "source_ref": "hydrol_canop"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 489,
+      "stop": 491,
+      "teacher_target": "v6.fast_day_target[489:491]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.run2man",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.run2man",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.run2man",
+      "path": [
+        "run2man"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_end",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 491,
+      "stop": 492,
+      "teacher_target": "v6.fast_day_target[491:492]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.run2peat",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.run2peat",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.run2peat",
+      "path": [
+        "run2peat"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_end",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 492,
+      "stop": 493,
+      "teacher_target": "v6.fast_day_target[492:493]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nstm"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.runoff_per_soil",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.runoff",
+      "path": [
+        "runoff"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_end",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        6
+      ],
+      "start": 493,
+      "stop": 499,
+      "teacher_target": "v6.fast_day_target[493:499]",
+      "typed_integral_collision": {
+        "forbidden_source": "typed_daily_integral_with_same_short_name:runoff",
+        "required_source": "hydrol_previous_step_state.runoff_per_soil"
+      },
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 6
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nstm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.runoff2peat",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.runoff2peat",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.runoff2peat",
+      "path": [
+        "runoff2peat"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_end",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        6
+      ],
+      "start": 499,
+      "stop": 505,
+      "teacher_target": "v6.fast_day_target[499:505]",
+      "typed_integral_collision": {
+        "forbidden_source": "typed_daily_integral_with_same_short_name:runoff2peat",
+        "required_source": "endpoint.fast_state.hydrol_previous_step_state.runoff2peat"
+      },
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 6
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nstm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.runoff_per_soil",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.runoff_per_soil",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.runoff_per_soil",
+      "path": [
+        "runoff_per_soil"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_end",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        6
+      ],
+      "start": 505,
+      "stop": 511,
+      "teacher_target": "v6.fast_day_target[505:511]",
+      "typed_integral_collision": {
+        "forbidden_source": "typed_daily_integral_with_same_short_name:runoff_per_soil",
+        "required_source": "endpoint.fast_state.hydrol_previous_step_state.runoff_per_soil"
+      },
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 6
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nslm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.shumdiag_peat",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.shumdiag_peat",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.shumdiag_peat",
+      "path": [
+        "shumdiag_peat"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_diagnostics",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        11
+      ],
+      "start": 511,
+      "stop": 522,
+      "teacher_target": "v6.fast_day_target[511:522]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 11
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "conservative_update.water.snow",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.snow",
+      "path": [
+        "snow"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 522,
+      "stop": 523,
+      "teacher_target": "v6.fast_day_target[522:523]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.snow_age",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.snow_age",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.snow_age",
+      "path": [
+        "snow_age"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1
+      ],
+      "start": 523,
+      "stop": 524,
+      "teacher_target": "v6.fast_day_target[523:524]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nnobio"
+      ],
+      "canonical_owner": "conservative_update.water.snow_nobio",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.snow_nobio",
+      "path": [
+        "snow_nobio"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        1
+      ],
+      "start": 524,
+      "stop": 525,
+      "teacher_target": "v6.fast_day_target[524:525]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nnobio"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.snow_nobio_age",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.snow_nobio_age",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.snow_nobio_age",
+      "path": [
+        "snow_nobio_age"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        1
+      ],
+      "start": 525,
+      "stop": 526,
+      "teacher_target": "v6.fast_day_target[525:526]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nsnow"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.snowdz",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.snowdz",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.snowdz",
+      "path": [
+        "snowdz"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        3
+      ],
+      "start": 526,
+      "stop": 529,
+      "teacher_target": "v6.fast_day_target[526:529]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 3
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nsnow"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.snowgrain",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.snowgrain",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.snowgrain",
+      "path": [
+        "snowgrain"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        3
+      ],
+      "start": 529,
+      "stop": 532,
+      "teacher_target": "v6.fast_day_target[529:532]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 3
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nsnow"
+      ],
+      "canonical_owner": "conservative_update.thermal.hydrol_previous_step_state.snowheat",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.snowheat",
+      "path": [
+        "snowheat"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        3
+      ],
+      "start": 532,
+      "stop": 535,
+      "teacher_target": "v6.fast_day_target[532:535]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 3
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nsnow"
+      ],
+      "canonical_owner": "conservative_update.water.snowliq",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.snowliq",
+      "path": [
+        "snowliq"
+      ],
+      "provenance": {
+        "freshness": "branch_overwrite_or_source_zero",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        3
+      ],
+      "start": 535,
+      "stop": 538,
+      "teacher_target": "v6.fast_day_target[535:538]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 3
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.snowmelt",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.snowmelt",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.snowmelt",
+      "path": [
+        "snowmelt"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "branch_overwrite_or_source_zero",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1
+      ],
+      "start": 538,
+      "stop": 539,
+      "teacher_target": "v6.fast_day_target[538:539]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nsnow"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.snowrho",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.snowrho",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.snowrho",
+      "path": [
+        "snowrho"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        3
+      ],
+      "start": 539,
+      "stop": 542,
+      "teacher_target": "v6.fast_day_target[539:542]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 3
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nsnow"
+      ],
+      "canonical_owner": "conservative_update.thermal.hydrol_previous_step_state.snowtemp",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.snowtemp",
+      "path": [
+        "snowtemp"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        3
+      ],
+      "start": 542,
+      "stop": 545,
+      "teacher_target": "v6.fast_day_target[542:545]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 3
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nslm",
+        "nstm"
+      ],
+      "canonical_owner": "hydrol_previous_step_state.mc",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.soil_mc",
+      "path": [
+        "soil_mc"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_export",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        11,
+        6
+      ],
+      "start": 545,
+      "stop": 611,
+      "teacher_target": "v6.fast_day_target[545:611]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 66
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.soilflxresid",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.soilflxresid",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.soilflxresid",
+      "path": [
+        "soilflxresid"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "branch_overwrite_or_source_zero",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "enerbil_to_hydrol_boundary",
+        "source_ref": "hydrol_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 611,
+      "stop": 612,
+      "teacher_target": "v6.fast_day_target[611:612]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nnobio"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.subsnownobio",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.subsnownobio",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.subsnownobio",
+      "path": [
+        "subsnownobio"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "branch_overwrite_or_source_zero",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        1
+      ],
+      "start": 612,
+      "stop": 613,
+      "teacher_target": "v6.fast_day_target[612:613]",
+      "typed_integral_collision": {
+        "forbidden_source": "typed_daily_integral_with_same_short_name:subsnownobio",
+        "required_source": "endpoint.fast_state.hydrol_previous_step_state.subsnownobio"
+      },
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nslm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.temp_hydro",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.temp_hydro",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.temp_hydro",
+      "path": [
+        "temp_hydro"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "thermosoil_to_hydrol_boundary",
+        "source_ref": "hydrol_static"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        11
+      ],
+      "start": 613,
+      "stop": 624,
+      "teacher_target": "v6.fast_day_target[613:624]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 11
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.temp_sol_add",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.temp_sol_add",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.temp_sol_add",
+      "path": [
+        "temp_sol_add"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "branch_overwrite_or_source_zero",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_snow_end",
+        "source_ref": "explicit_snow"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 624,
+      "stop": 625,
+      "teacher_target": "v6.fast_day_target[624:625]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm",
+        "nstm",
+        "nslm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.us",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.us",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.us",
+      "path": [
+        "us"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_diagnostics",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2,
+        6,
+        11
+      ],
+      "start": 625,
+      "stop": 757,
+      "teacher_target": "v6.fast_day_target[625:757]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 132
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nslm",
+        "nstm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.wat_flux",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.wat_flux",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.wat_flux",
+      "path": [
+        "wat_flux"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_export",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        11,
+        6
+      ],
+      "start": 757,
+      "stop": 823,
+      "teacher_target": "v6.fast_day_target[757:823]",
+      "typed_integral_collision": {
+        "forbidden_source": "typed_daily_integral_with_same_short_name:wat_flux",
+        "required_source": "endpoint.fast_state.hydrol_previous_step_state.wat_flux"
+      },
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 66
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nstm"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.water2infilt",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.water2infilt",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.water2infilt",
+      "path": [
+        "water2infilt"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_end",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        6
+      ],
+      "start": 823,
+      "stop": 829,
+      "teacher_target": "v6.fast_day_target[823:829]",
+      "typed_integral_collision": {
+        "forbidden_source": "typed_daily_integral_with_same_short_name:water2infilt",
+        "required_source": "endpoint.fast_state.hydrol_previous_step_state.water2infilt"
+      },
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 6
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.wt_ab",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.wt_ab",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.wt_ab",
+      "path": [
+        "wt_ab"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_end",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1
+      ],
+      "start": 829,
+      "stop": 830,
+      "teacher_target": "v6.fast_day_target[829:830]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.hydrol_previous_step_state.wt_ab_tide",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.wt_ab_tide",
+      "loss_group": "fast_owner.hydrol",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.hydrol_previous_step_state.wt_ab_tide",
+      "path": [
+        "wt_ab_tide"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_hydrol_to_previous_fields",
+        "producer_phase": "hydrol_soil_end",
+        "source_ref": "hydrol_soil"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1
+      ],
+      "start": 830,
+      "stop": 831,
+      "teacher_target": "v6.fast_day_target[830:831]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nstm"
+      ],
+      "canonical_owner": "day_start.hydrol_previous_step_state.zwt_force",
+      "component": "hydrol_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "hydrol",
+      "key": "hydrol_previous_step_state.zwt_force",
+      "path": [
+        "zwt_force"
+      ],
+      "provenance": {
+        "freshness": "guarded_carry",
+        "jax_owner": "jax_orchidee.driver.orchestration._runtime_next_state_from_components",
+        "producer_phase": "hydrol_initialize",
+        "source_ref": "hydrol_static"
+      },
+      "role": "true_guarded_or_static_carry",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        6
+      ],
+      "start": 831,
+      "stop": 837,
+      "teacher_target": "v6.fast_day_target[831:837]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 6
+    },
+    {
+      "axis_names": [
+        "npts",
+        "ngrnd",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.thermosoil_previous_step_state.cgrnd",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.cgrnd",
+      "loss_group": "fast_owner.thermosoil",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.thermosoil_previous_step_state.cgrnd",
+      "path": [
+        "cgrnd"
+      ],
+      "pft_axis": 2,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_coef_end",
+        "source_ref": "thermosoil_coef"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        31,
+        2
+      ],
+      "start": 837,
+      "stop": 899,
+      "teacher_target": "v6.fast_day_target[837:899]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 62
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nsnow"
+      ],
+      "canonical_owner": "endpoint.fast_state.thermosoil_previous_step_state.cgrnd_snow",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.cgrnd_snow",
+      "loss_group": "fast_owner.thermosoil",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.thermosoil_previous_step_state.cgrnd_snow",
+      "path": [
+        "cgrnd_snow"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_coef_end",
+        "source_ref": "thermosoil_coef"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        3
+      ],
+      "start": 899,
+      "stop": 902,
+      "teacher_target": "v6.fast_day_target[899:902]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 3
+    },
+    {
+      "axis_names": [
+        "npts",
+        "ngrnd",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.thermosoil_previous_step_state.dgrnd",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.dgrnd",
+      "loss_group": "fast_owner.thermosoil",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.thermosoil_previous_step_state.dgrnd",
+      "path": [
+        "dgrnd"
+      ],
+      "pft_axis": 2,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_coef_end",
+        "source_ref": "thermosoil_coef"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        31,
+        2
+      ],
+      "start": 902,
+      "stop": 964,
+      "teacher_target": "v6.fast_day_target[902:964]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 62
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nsnow"
+      ],
+      "canonical_owner": "endpoint.fast_state.thermosoil_previous_step_state.dgrnd_snow",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.dgrnd_snow",
+      "loss_group": "fast_owner.thermosoil",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.thermosoil_previous_step_state.dgrnd_snow",
+      "path": [
+        "dgrnd_snow"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_coef_end",
+        "source_ref": "thermosoil_coef"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        3
+      ],
+      "start": 964,
+      "stop": 967,
+      "teacher_target": "v6.fast_day_target[964:967]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 3
+    },
+    {
+      "axis_names": [],
+      "canonical_owner": "day_start.thermosoil_previous_step_state.e_soil_lat",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.e_soil_lat",
+      "path": [
+        "e_soil_lat"
+      ],
+      "provenance": {
+        "jax_owner": "day_start.thermosoil_previous_step_state.e_soil_lat",
+        "producer_phase": "thermosoil_guarded_ok_Ecorr_carry",
+        "source_ref": "fortran_source/ORCHIDEE/src_sechiba/thermosoil.f90 lines 463-465, 595-597, 2508-2536"
+      },
+      "role": "true_guarded_or_static_carry",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        14
+      ],
+      "start": 967,
+      "stop": 981,
+      "teacher_target": "v6.fast_day_target[967:981]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 14
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.thermosoil_previous_step_state.gtemp",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.gtemp",
+      "loss_group": "fast_owner.thermosoil",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.thermosoil_previous_step_state.gtemp",
+      "path": [
+        "gtemp"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_final_state",
+        "source_ref": "thermosoil_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 981,
+      "stop": 982,
+      "teacher_target": "v6.fast_day_target[981:982]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "ndeep",
+        "nvm"
+      ],
+      "canonical_owner": "thermosoil_previous_step_state.shum_ngrnd_permalong",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.hsdeep",
+      "path": [
+        "hsdeep"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_final_state",
+        "source_ref": "thermosoil_main"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        32,
+        2
+      ],
+      "start": 982,
+      "stop": 1046,
+      "teacher_target": "v6.fast_day_target[982:1046]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 64
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.thermosoil_previous_step_state.lambda_snow",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.lambda_snow",
+      "loss_group": "fast_owner.thermosoil",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.thermosoil_previous_step_state.lambda_snow",
+      "path": [
+        "lambda_snow"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_coef_end",
+        "source_ref": "thermosoil_coef"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1
+      ],
+      "start": 1046,
+      "stop": 1047,
+      "teacher_target": "v6.fast_day_target[1046:1047]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "ngrnd",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.thermosoil_previous_step_state.pcapa_en",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.pcapa_en",
+      "loss_group": "fast_owner.thermosoil",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.thermosoil_previous_step_state.pcapa_en",
+      "path": [
+        "pcapa_en"
+      ],
+      "pft_axis": 2,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_getdiff_end",
+        "source_ref": "thermosoil_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        32,
+        2
+      ],
+      "start": 1047,
+      "stop": 1111,
+      "teacher_target": "v6.fast_day_target[1047:1111]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 64
+    },
+    {
+      "axis_names": [
+        "npts",
+        "ngrnd",
+        "nvm"
+      ],
+      "canonical_owner": "conservative_update.thermal.thermosoil_previous_step_state.ptn",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.ptn",
+      "path": [
+        "ptn"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_profile_end",
+        "source_ref": "thermosoil_main"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        32,
+        2
+      ],
+      "start": 1111,
+      "stop": 1175,
+      "teacher_target": "v6.fast_day_target[1111:1175]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 64
+    },
+    {
+      "axis_names": [
+        "npts",
+        "ngrnd"
+      ],
+      "canonical_owner": "day_start.thermosoil_previous_step_state.refSOC",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.refSOC",
+      "path": [
+        "refSOC"
+      ],
+      "provenance": {
+        "freshness": "guarded_carry",
+        "jax_owner": "jax_orchidee.driver.orchestration._runtime_next_state_from_components",
+        "producer_phase": "thermosoil_initialize",
+        "source_ref": "thermosoil_static"
+      },
+      "role": "true_guarded_or_static_carry",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        32
+      ],
+      "start": 1175,
+      "stop": 1207,
+      "teacher_target": "v6.fast_day_target[1175:1207]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 32
+    },
+    {
+      "axis_names": [
+        "npts",
+        "ngrnd",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.fast_state.thermosoil_previous_step_state.shum_ngrnd_permalong",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.shum_ngrnd_permalong",
+      "loss_group": "fast_owner.thermosoil",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.thermosoil_previous_step_state.shum_ngrnd_permalong",
+      "path": [
+        "shum_ngrnd_permalong"
+      ],
+      "pft_axis": 2,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_longterm_humidity_update",
+        "source_ref": "thermosoil_main"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        32,
+        2
+      ],
+      "start": 1207,
+      "stop": 1271,
+      "teacher_target": "v6.fast_day_target[1207:1271]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 64
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.thermosoil_previous_step_state.soilcap",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.soilcap",
+      "loss_group": "fast_owner.thermosoil",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.thermosoil_previous_step_state.soilcap",
+      "path": [
+        "soilcap"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_coef_end",
+        "source_ref": "thermosoil_coef"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1
+      ],
+      "start": 1271,
+      "stop": 1272,
+      "teacher_target": "v6.fast_day_target[1271:1272]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.fast_state.thermosoil_previous_step_state.soilflx",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.soilflx",
+      "loss_group": "fast_owner.thermosoil",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.thermosoil_previous_step_state.soilflx",
+      "path": [
+        "soilflx"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_coef_end",
+        "source_ref": "thermosoil_coef"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 1272,
+      "stop": 1273,
+      "teacher_target": "v6.fast_day_target[1272:1273]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nslm"
+      ],
+      "canonical_owner": "conservative_update.thermal.thermosoil_previous_step_state.stempdiag",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.stempdiag",
+      "path": [
+        "stempdiag"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_profile_end",
+        "source_ref": "thermosoil_main"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        11
+      ],
+      "start": 1273,
+      "stop": 1284,
+      "teacher_target": "v6.fast_day_target[1273:1284]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 11
+    },
+    {
+      "axis_names": [
+        "npts",
+        "ndeep",
+        "nvm"
+      ],
+      "canonical_owner": "thermosoil_previous_step_state.ptn",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.tdeep",
+      "path": [
+        "tdeep"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_final_state",
+        "source_ref": "thermosoil_main"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        32,
+        2
+      ],
+      "start": 1284,
+      "stop": 1348,
+      "teacher_target": "v6.fast_day_target[1284:1348]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 64
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "enerbil_previous_step_state.temp_sol",
+      "component": "thermosoil_previous_step_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "thermosoil",
+      "key": "thermosoil_previous_step_state.temp_sol_beg",
+      "path": [
+        "temp_sol_beg"
+      ],
+      "provenance": {
+        "freshness": "overwrite_each_step",
+        "jax_owner": "jax_orchidee.driver.orchestration._add_thermosoil_to_previous_fields",
+        "producer_phase": "thermosoil_energy_end",
+        "source_ref": "thermosoil_main"
+      },
+      "role": "mirror_of_canonical_owner",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 1348,
+      "stop": 1349,
+      "teacher_target": "v6.fast_day_target[1348:1349]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [],
+      "canonical_owner": "source_exact_constant:0_for_accepted_pft14_scope",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.flood_root_radia",
+      "path": [
+        "flood_root_radia"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        14
+      ],
+      "start": 1349,
+      "stop": 1363,
+      "teacher_target": "v6.fast_day_target[1349:1363]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 14
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "named_output.daily.fast_gpp",
+      "component": null,
+      "defined_policy": "deterministic_active_vegetation_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.gpp_daily",
+      "path": [
+        "gpp_daily"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 1363,
+      "stop": 1365,
+      "teacher_target": "v6.fast_day_target[1363:1365]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.daily_summary.humrel_daily",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.humrel_daily",
+      "loss_group": "daily_summary",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.daily_summary.humrel_daily",
+      "path": [
+        "humrel_daily"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "unit_interval",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 1365,
+      "stop": 1367,
+      "teacher_target": "v6.fast_day_target[1365:1367]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_absolute_teacher_native",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.daily_summary.litterhum_daily",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.litterhum_daily",
+      "loss_group": "daily_summary",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.daily_summary.litterhum_daily",
+      "path": [
+        "litterhum_daily"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "unit_interval",
+      "shape": [
+        1
+      ],
+      "start": 1367,
+      "stop": 1368,
+      "teacher_target": "v6.fast_day_target[1367:1368]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_absolute_teacher_native",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "native_forcing_daily_integral:Rainf+Snowf",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.precip_daily",
+      "path": [
+        "precip_daily"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 1368,
+      "stop": 1369,
+      "teacher_target": "v6.fast_day_target[1368:1369]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm",
+        "nparts"
+      ],
+      "canonical_owner": "named_output.daily.fast_maintenance_respiration",
+      "component": null,
+      "defined_policy": "deterministic_active_vegetation_and_part_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.resp_maint_part",
+      "path": [
+        "resp_maint_part"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2,
+        12
+      ],
+      "start": 1369,
+      "stop": 1393,
+      "teacher_target": "v6.fast_day_target[1369:1393]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 24
+    },
+    {
+      "axis_names": [],
+      "canonical_owner": "endpoint.daily_summary.resp_maint_radia",
+      "component": null,
+      "defined_policy": "deterministic_active_vegetation_and_part_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.resp_maint_radia",
+      "loss_group": "daily_summary",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.daily_summary.resp_maint_radia",
+      "path": [
+        "resp_maint_radia"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        14
+      ],
+      "start": 1393,
+      "stop": 1407,
+      "teacher_target": "v6.fast_day_target[1393:1407]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_absolute_teacher_native",
+      "width": 14
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "native_forcing_daily_integral:Snowf",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.snowfall_daily",
+      "path": [
+        "snowfall_daily"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 1407,
+      "stop": 1408,
+      "teacher_target": "v6.fast_day_target[1407:1408]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.daily_summary.snowmass_daily",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.snowmass_daily",
+      "loss_group": "daily_summary",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.daily_summary.snowmass_daily",
+      "path": [
+        "snowmass_daily"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1
+      ],
+      "start": 1408,
+      "stop": 1409,
+      "teacher_target": "v6.fast_day_target[1408:1409]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_absolute_teacher_native",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nslm"
+      ],
+      "canonical_owner": "endpoint.daily_summary.soilhum_daily",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.soilhum_daily",
+      "loss_group": "daily_summary",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.daily_summary.soilhum_daily",
+      "path": [
+        "soilhum_daily"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "water",
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "unit_interval",
+      "shape": [
+        1,
+        11
+      ],
+      "start": 1409,
+      "stop": 1420,
+      "teacher_target": "v6.fast_day_target[1409:1420]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_absolute_teacher_native",
+      "width": 11
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "native_forcing_daily_mean:Tair",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.t2m_daily",
+      "path": [
+        "t2m_daily"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 1420,
+      "stop": 1421,
+      "teacher_target": "v6.fast_day_target[1420:1421]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "native_forcing_daily_max:Tair",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.t2m_max_daily",
+      "path": [
+        "t2m_max_daily"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 1421,
+      "stop": 1422,
+      "teacher_target": "v6.fast_day_target[1421:1422]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "native_forcing_daily_min:Tair",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.t2m_min_daily",
+      "path": [
+        "t2m_min_daily"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 1422,
+      "stop": 1423,
+      "teacher_target": "v6.fast_day_target[1422:1423]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "source_exact_constant:0_for_pft14_no_grass",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.tmc_topgrass_daily",
+      "path": [
+        "tmc_topgrass_daily"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 1423,
+      "stop": 1424,
+      "teacher_target": "v6.fast_day_target[1423:1424]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nslm"
+      ],
+      "canonical_owner": "named_output.daily.temperature_context.tsoil",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.tsoil_daily",
+      "path": [
+        "tsoil_daily"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        11
+      ],
+      "start": 1424,
+      "stop": 1435,
+      "teacher_target": "v6.fast_day_target[1424:1435]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 11
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "named_output.daily.temperature_context.tsurf",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.tsurf_daily",
+      "path": [
+        "tsurf_daily"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 1435,
+      "stop": 1436,
+      "teacher_target": "v6.fast_day_target[1435:1436]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts"
+      ],
+      "canonical_owner": "endpoint.daily_summary.wspeed_daily",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "daily_interface",
+      "key": "daily_interface.wspeed_daily",
+      "loss_group": "daily_summary",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.daily_summary.wspeed_daily",
+      "path": [
+        "wspeed_daily"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "jax_owner": "jax_orchidee.stomate.daily.stomate_first_step_daily_accumulation_from_entry",
+        "producer_phase": "stomate_daily_fold",
+        "source_ref": "fortran_source/ORCHIDEE/src_stomate/stomate.f90 daily accumulation"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1
+      ],
+      "start": 1436,
+      "stop": 1437,
+      "teacher_target": "v6.fast_day_target[1436:1437]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_absolute_teacher_native",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nlitt",
+        "nvm",
+        "nelements"
+      ],
+      "canonical_owner": "conservative_update.carbon.litter_above",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "ok_leak",
+      "key": "ok_leak.litter_above",
+      "path": [
+        "litter_above"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold",
+        "producer_phase": "ok_leak_half_hour_fold",
+        "source_ref": "research.daily_coarse_graining.carbon_budget_ownership.OK_LEAK_CARBON_FIELD_OWNERSHIP"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2,
+        2,
+        1
+      ],
+      "start": 1437,
+      "stop": 1441,
+      "teacher_target": "v6.fast_day_target[1437:1441]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 4
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nlitt",
+        "nvm",
+        "ndeep",
+        "nelements"
+      ],
+      "canonical_owner": "conservative_update.carbon.litter_below",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "ok_leak",
+      "key": "ok_leak.litter_below",
+      "path": [
+        "litter_below"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold",
+        "producer_phase": "ok_leak_half_hour_fold",
+        "source_ref": "research.daily_coarse_graining.carbon_budget_ownership.OK_LEAK_CARBON_FIELD_OWNERSHIP"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2,
+        2,
+        32,
+        1
+      ],
+      "start": 1441,
+      "stop": 1569,
+      "teacher_target": "v6.fast_day_target[1441:1569]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 128
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm"
+      ],
+      "canonical_owner": "endpoint.ok_leak_aux.lignin_struc_above",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "ok_leak",
+      "key": "ok_leak.lignin_struc_above",
+      "loss_group": "ok_leak_aux",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.ok_leak_aux.lignin_struc_above",
+      "path": [
+        "lignin_struc_above"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold",
+        "producer_phase": "ok_leak_half_hour_fold",
+        "source_ref": "research.daily_coarse_graining.carbon_budget_ownership.OK_LEAK_CARBON_FIELD_OWNERSHIP"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "unit_interval",
+      "shape": [
+        1,
+        2
+      ],
+      "start": 1569,
+      "stop": 1571,
+      "teacher_target": "v6.fast_day_target[1569:1571]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_absolute_teacher_native",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm",
+        "ndeep"
+      ],
+      "canonical_owner": "endpoint.ok_leak_aux.lignin_struc_below",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "ok_leak",
+      "key": "ok_leak.lignin_struc_below",
+      "loss_group": "ok_leak_aux",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.ok_leak_aux.lignin_struc_below",
+      "path": [
+        "lignin_struc_below"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold",
+        "producer_phase": "ok_leak_half_hour_fold",
+        "source_ref": "research.daily_coarse_graining.carbon_budget_ownership.OK_LEAK_CARBON_FIELD_OWNERSHIP"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "unit_interval",
+      "shape": [
+        1,
+        2,
+        32
+      ],
+      "start": 1571,
+      "stop": 1635,
+      "teacher_target": "v6.fast_day_target[1571:1635]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_absolute_teacher_native",
+      "width": 64
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm",
+        "nlitt"
+      ],
+      "canonical_owner": "endpoint.ok_leak_aux.litterpart",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "ok_leak",
+      "key": "ok_leak.litterpart",
+      "loss_group": "ok_leak_aux",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.ok_leak_aux.litterpart",
+      "path": [
+        "litterpart"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold",
+        "producer_phase": "ok_leak_half_hour_fold",
+        "source_ref": "research.daily_coarse_graining.carbon_budget_ownership.OK_LEAK_CARBON_FIELD_OWNERSHIP"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "unit_interval",
+      "shape": [
+        1,
+        2,
+        2
+      ],
+      "start": 1635,
+      "stop": 1639,
+      "teacher_target": "v6.fast_day_target[1635:1639]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_absolute_teacher_native",
+      "width": 4
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm",
+        "nlitt"
+      ],
+      "canonical_owner": "endpoint.ok_leak_aux.dead_leaves",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "ok_leak",
+      "key": "ok_leak.dead_leaves",
+      "loss_group": "ok_leak_aux",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.ok_leak_aux.dead_leaves",
+      "path": [
+        "dead_leaves"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold",
+        "producer_phase": "ok_leak_half_hour_fold",
+        "source_ref": "research.daily_coarse_graining.carbon_budget_ownership.OK_LEAK_CARBON_FIELD_OWNERSHIP"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        2,
+        2
+      ],
+      "start": 1639,
+      "stop": 1643,
+      "teacher_target": "v6.fast_day_target[1639:1643]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_absolute_teacher_native",
+      "width": 4
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm",
+        "nlitt",
+        "nelements"
+      ],
+      "canonical_owner": "endpoint.ok_leak_aux.fuel_1hr",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "ok_leak",
+      "key": "ok_leak.fuel_1hr",
+      "loss_group": "ok_leak_aux",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.ok_leak_aux.fuel_1hr",
+      "path": [
+        "fuel_1hr"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold",
+        "producer_phase": "ok_leak_half_hour_fold",
+        "source_ref": "research.daily_coarse_graining.carbon_budget_ownership.OK_LEAK_CARBON_FIELD_OWNERSHIP"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        2,
+        2,
+        1
+      ],
+      "start": 1643,
+      "stop": 1647,
+      "teacher_target": "v6.fast_day_target[1643:1647]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_absolute_teacher_native",
+      "width": 4
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm",
+        "nlitt",
+        "nelements"
+      ],
+      "canonical_owner": "endpoint.ok_leak_aux.fuel_10hr",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "ok_leak",
+      "key": "ok_leak.fuel_10hr",
+      "loss_group": "ok_leak_aux",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.ok_leak_aux.fuel_10hr",
+      "path": [
+        "fuel_10hr"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold",
+        "producer_phase": "ok_leak_half_hour_fold",
+        "source_ref": "research.daily_coarse_graining.carbon_budget_ownership.OK_LEAK_CARBON_FIELD_OWNERSHIP"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        2,
+        2,
+        1
+      ],
+      "start": 1647,
+      "stop": 1651,
+      "teacher_target": "v6.fast_day_target[1647:1651]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_absolute_teacher_native",
+      "width": 4
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm",
+        "nlitt",
+        "nelements"
+      ],
+      "canonical_owner": "endpoint.ok_leak_aux.fuel_100hr",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "ok_leak",
+      "key": "ok_leak.fuel_100hr",
+      "loss_group": "ok_leak_aux",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.ok_leak_aux.fuel_100hr",
+      "path": [
+        "fuel_100hr"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold",
+        "producer_phase": "ok_leak_half_hour_fold",
+        "source_ref": "research.daily_coarse_graining.carbon_budget_ownership.OK_LEAK_CARBON_FIELD_OWNERSHIP"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        2,
+        2,
+        1
+      ],
+      "start": 1651,
+      "stop": 1655,
+      "teacher_target": "v6.fast_day_target[1651:1655]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_absolute_teacher_native",
+      "width": 4
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm",
+        "nlitt",
+        "nelements"
+      ],
+      "canonical_owner": "endpoint.ok_leak_aux.fuel_1000hr",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "ok_leak",
+      "key": "ok_leak.fuel_1000hr",
+      "loss_group": "ok_leak_aux",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.ok_leak_aux.fuel_1000hr",
+      "path": [
+        "fuel_1000hr"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold",
+        "producer_phase": "ok_leak_half_hour_fold",
+        "source_ref": "research.daily_coarse_graining.carbon_budget_ownership.OK_LEAK_CARBON_FIELD_OWNERSHIP"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "nonnegative",
+      "shape": [
+        1,
+        2,
+        2,
+        1
+      ],
+      "start": 1655,
+      "stop": 1659,
+      "teacher_target": "v6.fast_day_target[1655:1659]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_absolute_teacher_native",
+      "width": 4
+    },
+    {
+      "axis_names": [
+        "npts",
+        "ncarb",
+        "nvm",
+        "ndeep"
+      ],
+      "canonical_owner": "conservative_update.carbon.carbon_32l",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "ok_leak",
+      "key": "ok_leak.carbon_32l",
+      "path": [
+        "carbon_32l"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold",
+        "producer_phase": "ok_leak_half_hour_fold",
+        "source_ref": "research.daily_coarse_graining.carbon_budget_ownership.OK_LEAK_CARBON_FIELD_OWNERSHIP"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        3,
+        2,
+        32
+      ],
+      "start": 1659,
+      "stop": 1851,
+      "teacher_target": "v6.fast_day_target[1659:1851]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 192
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm",
+        "ndeep",
+        "ndoc",
+        "npool",
+        "nelements"
+      ],
+      "canonical_owner": "conservative_update.carbon.DOC",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "ok_leak",
+      "key": "ok_leak.DOC",
+      "path": [
+        "DOC"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold",
+        "producer_phase": "ok_leak_half_hour_fold",
+        "source_ref": "research.daily_coarse_graining.carbon_budget_ownership.OK_LEAK_CARBON_FIELD_OWNERSHIP"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2,
+        32,
+        2,
+        7,
+        1
+      ],
+      "start": 1851,
+      "stop": 2747,
+      "teacher_target": "v6.fast_day_target[1851:2747]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 896
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm",
+        "nelements"
+      ],
+      "canonical_owner": "conservative_update.carbon.interception_storage",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "ok_leak",
+      "key": "ok_leak.interception_storage",
+      "path": [
+        "interception_storage"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold",
+        "producer_phase": "ok_leak_half_hour_fold",
+        "source_ref": "research.daily_coarse_graining.carbon_budget_ownership.OK_LEAK_CARBON_FIELD_OWNERSHIP"
+      },
+      "role": "existing_process_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2,
+        1
+      ],
+      "start": 2747,
+      "stop": 2749,
+      "teacher_target": "v6.fast_day_target[2747:2749]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 2
+    },
+    {
+      "axis_names": [
+        "npts",
+        "ndeep",
+        "nvm"
+      ],
+      "canonical_owner": "source_exact_derived_diagnostic:sum_carbon_32l_pool_axis",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "ok_leak",
+      "key": "ok_leak.deepC_peat",
+      "path": [
+        "deepC_peat"
+      ],
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._paper_compiled_ok_leak_fold",
+        "producer_phase": "ok_leak_half_hour_fold",
+        "source_ref": "research.daily_coarse_graining.carbon_budget_ownership.OK_LEAK_CARBON_FIELD_OWNERSHIP"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        32,
+        2
+      ],
+      "start": 2749,
+      "stop": 2813,
+      "teacher_target": "v6.fast_day_target[2749:2813]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 64
+    },
+    {
+      "axis_names": [],
+      "canonical_owner": "final_native_forcing:Tair",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "final_diagnostics",
+      "key": "final_diagnostics.t2mdiag",
+      "path": [
+        "t2mdiag"
+      ],
+      "provenance": {
+        "jax_owner": "research.daily_coarse_graining.daily_markov_contract._diagnostic_inventory",
+        "producer_phase": "final_half_hour_entry",
+        "source_ref": "compact_sechiba_entry_payload"
+      },
+      "role": "deterministic_source_exact_derivation",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 2813,
+      "stop": 2814,
+      "teacher_target": "v6.fast_day_target[2813:2814]",
+      "unit_policy": "teacher_native_no_conversion",
+      "width": 1
+    },
+    {
+      "axis_names": [],
+      "canonical_owner": "endpoint.fast_state.final_diagnostics.temp_sol",
+      "component": null,
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "final_diagnostics",
+      "key": "final_diagnostics.temp_sol",
+      "loss_group": "fast_owner.enerbil",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.final_diagnostics.temp_sol",
+      "path": [
+        "temp_sol"
+      ],
+      "pft_axis": null,
+      "pft_axis_policy": "not_pft_indexed",
+      "proposed_process_domain": "energy",
+      "provenance": {
+        "jax_owner": "research.daily_coarse_graining.daily_markov_contract._diagnostic_inventory",
+        "producer_phase": "final_half_hour_entry",
+        "source_ref": "compact_sechiba_entry_payload"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1
+      ],
+      "start": 2814,
+      "stop": 2815,
+      "teacher_target": "v6.fast_day_target[2814:2815]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 1
+    },
+    {
+      "axis_names": [
+        "npts",
+        "nvm",
+        "nlai"
+      ],
+      "canonical_owner": "endpoint.fast_state.sechiba_finalize_state.leaf_ci",
+      "component": "sechiba_finalize_state",
+      "defined_policy": "frozen_contract_static_mask",
+      "family": "sechiba_finalize",
+      "key": "sechiba_finalize_state.leaf_ci",
+      "loss_group": "fast_owner.sechiba_finalize",
+      "loss_mask_policy": "teacher_defined_and_frozen_contract_static_mask",
+      "output_key": "endpoint.fast_state.sechiba_finalize_state.leaf_ci",
+      "path": [
+        "leaf_ci"
+      ],
+      "pft_axis": 1,
+      "pft_axis_policy": "compact_active_pft_axis",
+      "proposed_process_domain": "carbon",
+      "provenance": {
+        "jax_owner": "jax_orchidee.driver.orchestration._updated_leaf_ci",
+        "producer_phase": "diffuco_end",
+        "source_ref": "fortran_source/ORCHIDEE/src_sechiba/diffuco.f90::diffuco_trans_co2 lines 2018-2969"
+      },
+      "role": "independent_neural_endpoint",
+      "scientific_constraint": "finite_teacher_native",
+      "shape": [
+        1,
+        2,
+        20
+      ],
+      "start": 2815,
+      "stop": 2855,
+      "teacher_target": "v6.fast_day_target[2815:2855]",
+      "unit_policy": "teacher_native_no_conversion",
+      "value_representation": "normalized_day_end_minus_day_start_owner",
+      "width": 40
+    }
+  ],
+  "role_column_counts": {
+    "deterministic_source_exact_derivation": 95,
+    "existing_process_endpoint": 1482,
+    "independent_neural_endpoint": 839,
+    "mirror_of_canonical_owner": 369,
+    "true_guarded_or_static_carry": 70
+  },
+  "role_leaf_counts": {
+    "deterministic_source_exact_derivation": 19,
+    "existing_process_endpoint": 21,
+    "independent_neural_endpoint": 79,
+    "mirror_of_canonical_owner": 30,
+    "true_guarded_or_static_carry": 11
+  },
+  "schema_version": "successor_fast_owner_reconstruction_v1",
+  "status": "frozen_for_materializer_acceptance_no_decoder_change_authorized"
+}

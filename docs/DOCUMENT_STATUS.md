@@ -47,7 +47,9 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/daily_operator_parameter_routing_v1.md` | Implemented local parameter-ownership boundary used by the successor | Routing physical parameters or planning Gate D2 |
 | `research/daily_coarse_graining/successor_process_head_architecture_options_v1.md` | Accepted decision package; attention/graph pair selected and frozen | Reviewing the selected successor mechanism and control |
 | `research/daily_coarse_graining/successor_process_head_local_foundation_20260809.md` | Accepted local synthetic foundation; real-v6 lifecycle later exposed an incomplete fast boundary | Reviewing implementation evidence before the boundary diagnosis |
-| `research/daily_coarse_graining/successor_fast_boundary_coverage_20260809.md` | Active blocking boundary evidence; owner reconstruction decision required | Designing or reviewing the successor fast-state output boundary |
+| `research/daily_coarse_graining/successor_fast_boundary_coverage_20260809.md` | Accepted blocking diagnosis; superseded for current action by the owner schema | Tracing why the original 101-output boundary failed |
+| `research/daily_coarse_graining/successor_fast_owner_reconstruction_contract_v1.md` | Accepted 160/160 owner/materializer boundary; decoder extension implemented | Auditing the 79-value-head plus mask ownership contract |
+| `research/daily_coarse_graining/successor_fast_owner_decoder_local_acceptance_20260809.md` | Accepted local 181-field decoder/statistics foundation; formal v6 statistics scan pending | Reviewing decoder semantics, local gates, or the next CPU scan |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

@@ -17,6 +17,13 @@ from .conservative_update import (
     split_signed_inventory,
     validate_conservative_result,
 )
+from .fast_owner_reconstruction import (
+    FastOwnerLeaf,
+    FastOwnerReconstructionContract,
+    SuccessorFastOwnerMaterializer,
+    build_successor_fast_owner_materializer,
+    load_fast_owner_reconstruction_contract,
+)
 from .input_assembly import CanonicalDailyOperatorInputAssembler
 from .long_horizon_objective import (
     ABOVEGROUND_BIOMASS_PARTS,
@@ -100,6 +107,14 @@ from .successor_contract import (
     SuccessorCandidateContract,
     load_successor_candidate_contract,
 )
+from .successor_fast_owner_decoder import (
+    FAST_OWNER_LABELS,
+    build_successor_fast_owner_schema,
+    extend_successor_output_normalization,
+    schema_field_labels,
+    training_representation_outputs,
+    validate_successor_output_normalization,
+)
 from .successor_process_head import SuccessorProcessHead
 from .successor_training import (
     CUMULATIVE_FLUX_FIELDS,
@@ -139,6 +154,9 @@ __all__ = [
     "FACTORIZED_CONTROL",
     "DEFAULT_PFT_PARAMETER_ROUTING",
     "FastProcessParameterFactors",
+    "FastOwnerLeaf",
+    "FastOwnerReconstructionContract",
+    "FAST_OWNER_LABELS",
     "EndOfDayDriverFields",
     "NeuralArchitectureConfig",
     "NeuralInputNormalization",
@@ -154,6 +172,7 @@ __all__ = [
     "SOURCE_ROUTED_ATTENTION",
     "SOURCE_ROUTED_GRAPH_CONTROL",
     "SuccessorArchitectureConfig",
+    "SuccessorFastOwnerMaterializer",
     "SuccessorTrainingObjective",
     "SuccessorCandidateContract",
     "SuccessorProcessHead",
@@ -175,6 +194,8 @@ __all__ = [
     "build_pft_parameter_routing",
     "build_process_axis_layout",
     "build_successor_token_layout",
+    "build_successor_fast_owner_materializer",
+    "build_successor_fast_owner_schema",
     "calibrate_gradient_ratio_coefficients",
     "derive_long_horizon_scales",
     "classify_differentiability_case",
@@ -187,6 +208,7 @@ __all__ = [
     "derive_ecosystem_carbon",
     "derive_litter_input",
     "extract_biomass_productivity_trajectories",
+    "extend_successor_output_normalization",
     "encode_native_forcing",
     "fast_process_parameter_factors",
     "parameterize_inventory_prediction",
@@ -196,6 +218,7 @@ __all__ = [
     "neural_process_outputs",
     "long_horizon_biomass_productivity_objective",
     "load_successor_candidate_contract",
+    "load_fast_owner_reconstruction_contract",
     "parameter_count",
     "plumbing_test_retained_tail_adapter",
     "retained_exact_pft_parameters",
@@ -214,6 +237,9 @@ __all__ = [
     "successor_process_outputs",
     "successor_training_objective",
     "trajectories_from_rollout",
+    "training_representation_outputs",
+    "schema_field_labels",
     "validate_conservative_result",
     "validate_native_forcing",
+    "validate_successor_output_normalization",
 ]

@@ -26,6 +26,7 @@ from research.daily_coarse_graining.daily_markov_contract import (
     _compiled_select_pft_axes,
 )
 
+from .fast_owner_reconstruction import SuccessorFastOwnerMaterializer
 from .input_assembly import PFT_AXES, CanonicalDailyOperatorInputAssembler
 from .parameter_routing import route_retained_stomate_parameters
 from .process_derivations import (
@@ -87,6 +88,7 @@ def build_canonical_retained_tail_adapter(
     lifecycle_start_tstep: int,
     result_day_index: int,
     include_modelout_diagnostics: bool = True,
+    fast_owner_materializer: SuccessorFastOwnerMaterializer | None = None,
 ) -> CanonicalRetainedTailAdapter:
     """Bind accepted retained-owner configuration without script-local wiring."""
 
@@ -192,6 +194,7 @@ def build_canonical_retained_tail_adapter(
             include_modelout_diagnostics=bool(include_modelout_diagnostics),
         ),
         day_inputs=jax.tree_util.tree_map(jnp.asarray, day_inputs),
+        fast_owner_materializer=fast_owner_materializer,
     )
 
 
@@ -206,6 +209,7 @@ class CanonicalRetainedTailAdapter:
 
     static_owner: CanonicalRetainedTailStaticOwner
     day_inputs: CanonicalRetainedTailDayInputs
+    fast_owner_materializer: SuccessorFastOwnerMaterializer | None = None
     source_owner: str = (
         "accepted canonical season/STOMATE retained daily owner via typed Gate-E1 adapter"
     )
@@ -249,6 +253,19 @@ class CanonicalRetainedTailAdapter:
             jnp.asarray(self.static_owner.contract.active_pft_indices, dtype=jnp.int32),
             axis=axis,
         )
+
+    def _static_condition(self, value: RetainedTailInput, name: str) -> Any:
+        matches = tuple(
+            leaf
+            for leaf in self.static_owner.contract.static_conditions.landpoint_static_leaves
+            if leaf.name == name
+        )
+        if len(matches) != 1:
+            raise ValueError(f"retained-tail materializer requires one {name!r} leaf")
+        leaf = matches[0]
+        return jnp.asarray(value.static_conditions, dtype=jnp.float64)[
+            leaf.start : leaf.stop
+        ].reshape(leaf.shape)
 
     def _restore_pft(self, base: Any, compact: Any, axis: int) -> Any:
         result = jnp.asarray(base)
@@ -355,6 +372,25 @@ class CanonicalRetainedTailAdapter:
             "ok_leak": ok_leak,
             "final_diagnostics": predicted.final_entry_diagnostics,
         }
+        if self.fast_owner_materializer is not None:
+            materialized = self.fast_owner_materializer.materialize(
+                fields_by_component=fields,
+                daily_fields=groups["daily_interface"],
+                ok_leak_updates=groups["ok_leak"],
+                final_diagnostics=groups["final_diagnostics"],
+                named_outputs=value.process_prediction.named_outputs,
+                forcing=value.canonical_input.forcing,
+                measurement_height=self._static_condition(
+                    value,
+                    "measurement_heights",
+                )[0],
+            )
+            fields = materialized.fields_by_component
+            groups = {
+                "daily_interface": materialized.daily_fields,
+                "ok_leak": materialized.ok_leak_updates,
+                "final_diagnostics": materialized.final_diagnostics,
+            }
         pieces = []
         for leaf in self.static_owner.contract.fast_day_target_leaves:
             source = (

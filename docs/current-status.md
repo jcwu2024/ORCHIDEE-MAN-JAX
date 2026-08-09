@@ -94,11 +94,46 @@ explicit endpoint reconstruction targets; the current 101-output schema does
 not implement that layer. See
 [`successor_fast_boundary_coverage_20260809.md`](research/daily_coarse_graining/successor_fast_boundary_coverage_20260809.md).
 
-The active gate is to freeze a canonical-owner reconstruction design before
-modifying the network. The all-Teacher oracle must reach `160/160` exact fast
-leaves before cold/ordinary/restart lifecycle acceptance or any small fit. No
-paid job is authorized; 7/30-day rollout, 365-day, long-held-point, Gate D2,
-and product acceptance remain closed.
+The revised successor fast-owner reconstruction schema is accepted at machine
+contract SHA256
+`4db5f828442212c58903096c36015f9d769c19aeaaa4eb9a4326fbea2fdfc4c9`.
+It assigns all 160 leaves/2,855 columns exactly once to 21 existing endpoints,
+19 derivations, 30 direct mirrors, 11 guarded/static carries, and 79 new neural
+value heads. The added neural width is 839 values plus two `rveget` status
+logits; the 14 typed-integral/state collisions are explicitly forbidden. The
+contract and full 79-row field table are in
+[`successor_fast_owner_reconstruction_contract_v1.md`](research/daily_coarse_graining/successor_fast_owner_reconstruction_contract_v1.md).
+
+The non-neural JAX materializer is now wired as an opt-in stage inside the
+canonical retained-tail adapter. Local daily-operator/successor regression is
+`79/79`. Free-`gln01` detached commit `4648a00` reached `160/160` exact leaves
+for cold Day 2, ordinary Day 3, and restart 1962 Day 1, with exact masks,
+discrete state, and `rveget` status plus passing retained lifecycle and
+water/carbon budgets. Its report SHA256 is
+`f3ae02d08c950bbf7269c8ba618b3fb34e4ed88d14c3d264a9751cd9f360e084`.
+No training, checkpoint, Teacher regeneration, or historical v5 data was used.
+
+The user approved the identical candidate/control decoder extension. It adds
+79 value queries and one `rveget` logit query while preserving the original
+101 fields. Both matched arms now contain exactly `8,722,689` parameters and
+share a 181-field/48-label schema, physical constraints, normalization,
+dynamic mask loss, and materializer. Sixty-five fast-state targets are
+day-end-minus-safe-day-start deltas; 14 daily/OK_LEAK targets are absolute.
+Loss group, process domain, and source route are explicit independent
+metadata. The attention candidate and fixed-graph control both pass eager/JIT
+forward, loss/JVP/VJP, inactive-PFT, one-day conservation, 160-leaf
+materialization, and inference-boundary audits. Full local evidence is in
+[`successor_fast_owner_decoder_local_acceptance_20260809.md`](research/daily_coarse_graining/successor_fast_owner_decoder_local_acceptance_20260809.md).
+
+The added-head train/train statistics path is also implemented locally. It
+reads only existing v6 state/fast-target arrays, fits mergeable moments for 79
+values, records `rveget` prevalence, and combines with the accepted 101-field
+statistics without a unit-scale fallback. Vectorized/single-day equivalence,
+artifact write/reload/merge, and 181-field normalization checks pass. The
+active gate is an explicitly approved `cnmix` statistics scan: 8 CPU cores,
+2-hour limit, CNY `1.12` worst case. It has not been submitted. Training,
+7/30-day rollout, 365-day, long-held-point, Gate D2, and product acceptance
+remain closed.
 
 ## Stable Teacher
 

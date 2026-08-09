@@ -22,6 +22,7 @@ EXPECTED = {
     "process_statistics_json": "9bc2cab43b3279e39a0fc2876ca298b2b371d6890986d44ef035859ca925eaab",
     "process_statistics_npz": "addf957afbd8338f4aa250155dcd299d568c1070b644e30279f9bf0ea37f9bf8",
     "successor_contract": "bb8bb34972e6fdff713f06f7ce48a2faa9eb4991af9f269c9aab26d96b592b5c",
+    "fast_owner_contract": "4db5f828442212c58903096c36015f9d769c19aeaaa4eb9a4326fbea2fdfc4c9",
 }
 FROZEN_LANDPOINT = "001.0-071.0"
 ROLLOUT_YEAR = 1961
@@ -269,12 +270,21 @@ def _load_runtime(args: argparse.Namespace) -> dict[str, Any]:
         contract=index.contract,
         expected_days=ordinary_reference.day_count,
     )
+    restart_typed_values, restart_typed_defined, restart_typed_days = (
+        read_typed_sidecar_shard(
+            restart_reference.path,
+            contract=index.contract,
+            expected_days=restart_reference.day_count,
+        )
+    )
     if not np.array_equal(typed_days, ordinary_parent.day_index):
         raise ValueError("frozen typed and parent day indices differ")
     if tuple(np.asarray(ordinary_parent.day_index[:2]).tolist()) != (2, 3):
         raise ValueError("frozen ordinary lifecycle rows are not 1961 Day 2/3")
     if int(np.asarray(restart_parent.day_index[0])) != 1:
         raise ValueError("frozen restart lifecycle row is not Day 1")
+    if not np.array_equal(restart_typed_days, restart_parent.day_index):
+        raise ValueError("frozen restart typed and parent day indices differ")
 
     examples = [
         adapter.assemble(
@@ -306,12 +316,12 @@ def _load_runtime(args: argparse.Namespace) -> dict[str, Any]:
         raise ValueError("successor parameter count drift")
     forcing_fields = contract.native_forcing.fields
     forcing_layout = NativeForcingFieldLayout(
-        forcing_fields.index("Rainf"),
-        forcing_fields.index("Rainf") + 1,
-        forcing_fields.index("Snowf"),
-        forcing_fields.index("Snowf") + 1,
-        forcing_fields.index("Tair"),
-        forcing_fields.index("Tair") + 1,
+        rain_start=forcing_fields.index("Rainf"),
+        rain_stop=forcing_fields.index("Rainf") + 1,
+        snow_start=forcing_fields.index("Snowf"),
+        snow_stop=forcing_fields.index("Snowf") + 1,
+        temperature_start=forcing_fields.index("Tair"),
+        temperature_stop=forcing_fields.index("Tair") + 1,
     )
     return {
         "jax": jax,
@@ -327,6 +337,8 @@ def _load_runtime(args: argparse.Namespace) -> dict[str, Any]:
         "restart_reference": restart_reference,
         "ordinary_parent": ordinary_parent,
         "restart_parent": restart_parent,
+        "restart_typed_values": restart_typed_values,
+        "restart_typed_defined": restart_typed_defined,
         "examples": examples,
         "assembled": assembled,
         "schema": schema,
@@ -417,6 +429,29 @@ class _TeacherReplacementProbeHead:
         }
         return self.base.prediction_from_named_outputs(hybrid, inputs)
 
+
+class _AllTeacherFastOwnerHead:
+    """Adapt same-row Teacher process and endpoint values without a network."""
+
+    def __init__(self, base: Any):
+        self.base = base
+
+    def assemble_context(self, parameters: Mapping[str, Any], inputs: Any) -> Any:
+        import jax.numpy as jnp
+
+        return jnp.asarray(inputs.day_index)
+
+    def __call__(
+        self,
+        parameters: Mapping[str, Any],
+        context: Any,
+        inputs: Any,
+    ) -> Any:
+        return self.base.prediction_from_named_outputs(
+            parameters["named_outputs"],
+            inputs,
+        )
+
 def _retained_adapter(
     runtime: Mapping[str, Any],
     teacher_context: Any,
@@ -424,6 +459,7 @@ def _retained_adapter(
     *,
     lifecycle_start_tstep: int,
     result_day_index: int,
+    fast_owner_materializer: Any | None = None,
 ) -> Any:
     from jax_orchidee.driver import orchestration as teacher
     from research.daily_coarse_graining.daily_markov_contract import (
@@ -451,6 +487,7 @@ def _retained_adapter(
         lifecycle_start_tstep=lifecycle_start_tstep,
         result_day_index=result_day_index,
         include_modelout_diagnostics=False,
+        fast_owner_materializer=fast_owner_materializer,
     )
 
 
@@ -521,13 +558,15 @@ def _retained_boundary_report(
         )
         exact_leaf_count += int(exact)
         if not exact:
-            records.append(
-                {
-                    "leaf": leaf.key,
-                    "mask_mismatch_count": mask_mismatches,
-                    "maximum_absolute_error": maximum_error,
-                }
-            )
+            record = {
+                "leaf": leaf.key,
+                "mask_mismatch_count": mask_mismatches,
+                "maximum_absolute_error": maximum_error,
+            }
+            if observed.size <= 16:
+                record["observed"] = observed.tolist()
+                record["teacher"] = wanted.tolist()
+            records.append(record)
     records.sort(
         key=lambda item: (
             item["mask_mismatch_count"],
@@ -583,13 +622,15 @@ def _flat_fast_target_report(
         )
         exact_leaf_count += int(exact)
         if not exact:
-            records.append(
-                {
-                    "leaf": leaf.key,
-                    "mask_mismatch_count": mask_mismatches,
-                    "maximum_absolute_error": maximum_error,
-                }
-            )
+            record = {
+                "leaf": leaf.key,
+                "mask_mismatch_count": mask_mismatches,
+                "maximum_absolute_error": maximum_error,
+            }
+            if actual.size <= 16:
+                record["observed"] = actual.tolist()
+                record["teacher"] = wanted.tolist()
+            records.append(record)
     records.sort(
         key=lambda item: (
             item["mask_mismatch_count"],
@@ -1142,6 +1183,226 @@ def _carbon_baseline_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
+def _all_teacher_fast_owner_outputs(
+    example: Any,
+    sample: Mapping[str, Any],
+    owner_contract: Any,
+) -> dict[str, Any]:
+    from research.daily_coarse_graining.markov_dataset import defined_numeric_mask
+
+    outputs = {
+        name: np.asarray(target.value, dtype=np.float64)
+        for name, target in example.targets.supervision.items()
+    }
+    target = np.asarray(sample["fast_day_target"], dtype=np.float64)
+    for leaf in owner_contract.leaves:
+        if leaf.output_key is None:
+            continue
+        value = target[leaf.start : leaf.stop].reshape(leaf.shape)
+        outputs[leaf.output_key] = value
+        if leaf.defined_output_key is not None:
+            outputs[leaf.defined_output_key] = np.where(
+                defined_numeric_mask(value),
+                1.0,
+                -1.0,
+            )
+    return outputs
+
+
+def _fast_owner_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
+    """Prove the non-neural materializer closes all 160 formal v6 leaves."""
+
+    from jax_orchidee.driver import orchestration as teacher
+    from research.daily_coarse_graining.daily_operator.fast_owner_reconstruction import (
+        build_successor_fast_owner_materializer,
+    )
+    from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
+    from research.daily_coarse_graining.daily_operator.retained_tail import (
+        retained_tail_input,
+    )
+    from research.daily_coarse_graining.daily_operator.successor_architecture import (
+        SOURCE_ROUTED_ATTENTION,
+    )
+
+    jax = runtime["jax"]
+    paths = runtime["context_paths"]
+    teacher_context = teacher.prepare_paper_1961_driver_context(
+        paths["config"],
+        used_run_def_path=paths["run_def"],
+        reference_run_dir=paths["reference_run_dir"],
+    )
+    materializer = build_successor_fast_owner_materializer(
+        runtime["contract"],
+        forcing_layout=runtime["forcing_layout"],
+    )
+    if materializer.owner_contract.contract_sha256 != EXPECTED["fast_owner_contract"]:
+        raise ValueError("fast-owner materializer contract identity drift")
+
+    ordinary_samples = [
+        runtime["ordinary_parent"].sample(row) for row in ANCHOR_ROWS
+    ]
+    restart_sample = runtime["restart_parent"].sample(0)
+    restart_example = runtime["adapter"].assemble(
+        restart_sample,
+        supplemental_values={
+            name: value[0]
+            for name, value in runtime["restart_typed_values"].items()
+        },
+        supplemental_defined={
+            name: value[0]
+            for name, value in runtime["restart_typed_defined"].items()
+        },
+    )
+    case_inputs = (
+        (
+            "cold_start_continuation_day2",
+            ordinary_samples[0],
+            runtime["examples"][ANCHOR_ROWS[0]],
+            48,
+            2,
+        ),
+        (
+            "ordinary_later_day3",
+            ordinary_samples[1],
+            runtime["examples"][ANCHOR_ROWS[1]],
+            96,
+            3,
+        ),
+        (
+            "restart_year_boundary_1962_day1",
+            restart_sample,
+            restart_example,
+            0,
+            1,
+        ),
+    )
+    base_head = _head(runtime, SOURCE_ROUTED_ATTENTION)
+    head = _AllTeacherFastOwnerHead(base_head)
+    cases = {}
+    for name, sample, example, lifecycle_start_tstep, result_day_index in case_inputs:
+        retained_tail = _retained_adapter(
+            runtime,
+            teacher_context,
+            sample,
+            lifecycle_start_tstep=lifecycle_start_tstep,
+            result_day_index=result_day_index,
+            fast_owner_materializer=materializer,
+        )
+        transition = bind_daily_operator(
+            input_assembler=runtime["adapter"].input_assembler,
+            process_head=head,
+            retained_tail=retained_tail,
+        )
+        started = time.perf_counter()
+        parameters = {
+            "named_outputs": _all_teacher_fast_owner_outputs(
+                example,
+                sample,
+                materializer.owner_contract,
+            )
+        }
+        result = jax.jit(transition)(parameters, example.inputs)
+        jax.block_until_ready(result)
+        assembled = runtime["adapter"].input_assembler.assemble(example.inputs)
+        internal_target = retained_tail._typed_fast_target(
+            retained_tail_input(
+                assembled,
+                result.prediction,
+                result.fast_update,
+            )
+        )
+        flat = _flat_fast_target_report(
+            internal_target,
+            sample,
+            runtime["contract"],
+        )
+        lifecycle = _case_report(result, sample, runtime["contract"])
+        rveget = next(
+            leaf
+            for leaf in runtime["contract"].fast_day_target_leaves
+            if leaf.key == "diffuco_previous_step_state.rveget"
+        )
+        from research.daily_coarse_graining.markov_dataset import defined_numeric_mask
+
+        observed_rveget = np.asarray(internal_target)[rveget.start : rveget.stop]
+        teacher_rveget = np.asarray(sample["fast_day_target"])[
+            rveget.start : rveget.stop
+        ]
+        observed_rveget_defined = defined_numeric_mask(observed_rveget)
+        teacher_rveget_defined = defined_numeric_mask(teacher_rveget)
+        common_rveget = observed_rveget_defined & teacher_rveget_defined
+        rveget_mask_mismatches = int(
+            np.count_nonzero(observed_rveget_defined != teacher_rveget_defined)
+        )
+        rveget_exact = (
+            rveget_mask_mismatches == 0
+            and np.allclose(
+                observed_rveget[common_rveget],
+                teacher_rveget[common_rveget],
+                atol=1.0e-8,
+                rtol=1.0e-10,
+            )
+        )
+        rveget_report = {
+            "status": "passed" if rveget_exact else "failed",
+            "mask_mismatch_count": rveget_mask_mismatches,
+            "teacher_defined": teacher_rveget_defined.tolist(),
+            "observed_defined": observed_rveget_defined.tolist(),
+        }
+        passed = (
+            flat["exact_leaf_count"] == 160
+            and flat["nonexact_leaf_count"] == 0
+            and lifecycle["status"] == "passed"
+            and lifecycle["defined_mask_mismatch_count"] == 0
+            and lifecycle["discrete_state_mismatch_count"] == 0
+            and rveget_exact
+        )
+        cases[name] = {
+            "status": "passed" if passed else "failed",
+            "seconds": time.perf_counter() - started,
+            "fast_target": flat,
+            "rveget_defined_status": rveget_report,
+            "lifecycle": lifecycle,
+        }
+    passed = all(case["status"] == "passed" for case in cases.values())
+    return {
+        "schema_version": "successor_fast_owner_all_teacher_gate_v1",
+        "status": "passed" if passed else "failed",
+        "promotion_authorized": False,
+        "checkpoint_written": False,
+        "training_updates": 0,
+        "historical_v5_used": False,
+        "teacher_data_regenerated": False,
+        "backend": jax.default_backend(),
+        "devices": [str(device) for device in runtime["devices"]],
+        "fast_owner_contract_sha256": EXPECTED["fast_owner_contract"],
+        "data": {
+            "dataset_manifest_sha256": EXPECTED["dataset_manifest"],
+            "markov_contract_sha256": runtime["contract"].sha256,
+            "landpoint_id": FROZEN_LANDPOINT,
+            "ordinary_year": 1961,
+            "ordinary_rows": list(ANCHOR_ROWS),
+            "restart_year": 1962,
+            "restart_row": 0,
+        },
+        "canonical_boundary": {
+            "binding": "bind_daily_operator(canonical_assembler, all_teacher_process_head, canonical_retained_tail_adapter)",
+            "native_forcing_only": True,
+            "reconstructs_48_forcing_records": False,
+            "executes_48_step_state_scan": False,
+            "neural_decoder_invoked": False,
+        },
+        "acceptance": {
+            "required_exact_fast_leaves": 160,
+            "atol": 1.0e-8,
+            "rtol": 1.0e-10,
+            "exact_masks_and_discrete_required": True,
+        },
+        "cases": cases,
+        "pending_required_gate": "architecture_review_then_identical_candidate_control_decoder_extension",
+    }
+
+
 def _attribution_stage(runtime: Mapping[str, Any]) -> dict[str, Any]:
     from jax_orchidee.driver import orchestration as teacher
     from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
@@ -1570,6 +1831,7 @@ def main() -> int:
             "attribution",
             "baseline",
             "carbon_baseline",
+            "fast_owner",
             "initialization",
             "lifecycle",
             "rollout",
@@ -1587,6 +1849,7 @@ def main() -> int:
         "attribution": _attribution_stage,
         "baseline": _baseline_stage,
         "carbon_baseline": _carbon_baseline_stage,
+        "fast_owner": _fast_owner_stage,
         "initialization": _initialization_stage,
         "lifecycle": _lifecycle_stage,
         "rollout": _rollout_stage,

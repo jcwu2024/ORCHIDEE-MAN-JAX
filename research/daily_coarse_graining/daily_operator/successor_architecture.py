@@ -311,6 +311,18 @@ def _route_key(label: str) -> str:
     raise ValueError(f"successor output label has no source route: {label}")
 
 
+def _field_source_route(field: Any, schema: NeuralOutputSchema) -> str:
+    if field.source_route is not None:
+        return field.source_route
+    return _route_key(schema.labels[field.label_index])
+
+
+def _field_process_domain(field: Any, schema: NeuralOutputSchema) -> str:
+    if field.process_domain is not None:
+        return field.process_domain
+    return schema.labels[field.label_index].split(".", 1)[0]
+
+
 def build_successor_token_layout(
     assembler: CanonicalDailyOperatorInputAssembler,
     schema: NeuralOutputSchema,
@@ -376,10 +388,11 @@ def build_successor_token_layout(
     allowed = np.zeros((len(schema.fields), len(family_names)), dtype=np.bool_)
     domains = []
     for field_index, field in enumerate(schema.fields):
-        label = schema.labels[field.label_index]
-        route = _route_key(label)
+        route = _field_source_route(field, schema)
+        if route not in routes:
+            raise ValueError(f"successor output source route is unknown: {route}")
         allowed[field_index, [family_names.index(name) for name in routes[route]]] = True
-        domains.append(label.split(".", 1)[0])
+        domains.append(_field_process_domain(field, schema))
     graph_rules = successor_contract.payload["process_graph"]
     graph = np.zeros((len(schema.fields), len(schema.fields)), dtype=np.bool_)
     for receiver, domain in enumerate(domains):
@@ -1013,6 +1026,7 @@ def _decode_field(
     field_index: int,
     schema: NeuralOutputSchema,
     normalization: NeuralOutputNormalization,
+    inputs: AssembledDailyOperatorInput,
 ) -> Any:
     coordinates = jnp.asarray(_field_coordinates(field.shape), dtype=jnp.int32)
     features = jnp.broadcast_to(
@@ -1043,19 +1057,52 @@ def _decode_field(
         parameters["decoder_second"],
         jax.nn.gelu(_linear(parameters["decoder_first"], features)),
     )[:, 0]
+    if field.constraint == "logit":
+        return jnp.where(active_mask, raw, 0.0).reshape(field.shape)
     mean = jnp.asarray(normalization.mean[field.name], dtype=jnp.float64).reshape(-1)
     scale = jnp.asarray(normalization.scale[field.name], dtype=jnp.float64).reshape(-1)
     scale = jnp.where(jnp.isfinite(scale) & (scale > 0.0), scale, 1.0)
-    if field.constraint == "unit_interval":
-        value = jax.nn.sigmoid(raw)
-    elif field.constraint == "signed_unit":
-        value = jnp.tanh(raw)
-    elif field.constraint == "nonnegative":
-        ratio = jnp.maximum(mean / scale, 1.0e-12)
-        baseline = ratio + jnp.log(-jnp.expm1(-ratio))
-        value = jax.nn.softplus(baseline + raw) * scale
+    if field.value_representation == "direct":
+        if field.constraint == "unit_interval":
+            value = jax.nn.sigmoid(raw)
+        elif field.constraint == "signed_unit":
+            value = jnp.tanh(raw)
+        elif field.constraint == "nonnegative":
+            ratio = jnp.maximum(mean / scale, 1.0e-12)
+            baseline = ratio + jnp.log(-jnp.expm1(-ratio))
+            value = jax.nn.softplus(baseline + raw) * scale
+        else:
+            value = mean + scale * raw
     else:
-        value = mean + scale * raw
+        if field.value_representation == "normalized_day_end_minus_day_start_owner":
+            continuous = jnp.asarray(
+                inputs.canonical_input.continuous_state,
+                dtype=jnp.float64,
+            )
+            start = int(field.day_start_state_start)
+            stop = int(field.day_start_state_stop)
+            day_start = continuous[start:stop]
+            day_start_defined = jnp.isfinite(day_start) & (jnp.abs(day_start) < 0.5e20)
+            base = jnp.where(day_start_defined, day_start, 0.0)
+        else:
+            base = jnp.zeros_like(raw)
+        center = base + mean
+        if field.constraint == "unit_interval":
+            bounded = jnp.clip(center, 1.0e-6, 1.0 - 1.0e-6)
+            local_slope = jnp.maximum(bounded * (1.0 - bounded), 1.0e-6)
+            baseline = jnp.log(bounded) - jnp.log1p(-bounded)
+            value = jax.nn.sigmoid(baseline + raw * scale / local_slope)
+        elif field.constraint == "nonnegative":
+            positive_center = jnp.maximum(center, scale * 1.0e-12)
+            ratio = positive_center / scale
+            baseline = ratio + jnp.log(-jnp.expm1(-ratio))
+            value = jax.nn.softplus(baseline + raw) * scale
+        elif field.constraint == "signed_unit":
+            bounded = jnp.clip(center, -1.0 + 1.0e-6, 1.0 - 1.0e-6)
+            local_slope = jnp.maximum(1.0 - bounded * bounded, 1.0e-6)
+            value = jnp.tanh(jnp.arctanh(bounded) + raw * scale / local_slope)
+        else:
+            value = center + scale * raw
     return jnp.where(active_mask, value, 0.0).reshape(field.shape)
 
 
@@ -1158,6 +1205,7 @@ def successor_process_outputs(
             index,
             schema,
             normalization,
+            inputs,
         )
         for index, field in enumerate(schema.fields)
     }

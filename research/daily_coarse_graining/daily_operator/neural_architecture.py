@@ -59,6 +59,12 @@ class OutputFieldSpec:
     constraint: str
     pft_axis: int | None = None
     full_pft_axis: bool = False
+    process_domain: str | None = None
+    source_route: str | None = None
+    value_representation: str = "direct"
+    day_start_owner: str | None = None
+    day_start_state_start: int | None = None
+    day_start_state_stop: int | None = None
 
 
 @dataclass(frozen=True)
@@ -75,10 +81,42 @@ class NeuralOutputSchema:
         for field in self.fields:
             if field.label_index < 0 or field.label_index >= len(self.labels):
                 raise ValueError(f"invalid label index for {field.name}")
-            if field.constraint not in {"signed", "nonnegative", "unit_interval", "signed_unit"}:
+            if field.constraint not in {
+                "signed",
+                "nonnegative",
+                "unit_interval",
+                "signed_unit",
+                "logit",
+            }:
                 raise ValueError(f"invalid output constraint for {field.name}")
             if field.pft_axis is not None and not 0 <= field.pft_axis < len(field.shape):
                 raise ValueError(f"invalid PFT axis for {field.name}")
+            if field.process_domain is not None and field.process_domain not in {
+                "water",
+                "energy",
+                "carbon",
+            }:
+                raise ValueError(f"invalid process domain for {field.name}")
+            if field.value_representation not in {
+                "direct",
+                "normalized_absolute_teacher_native",
+                "normalized_day_end_minus_day_start_owner",
+                "defined_logit",
+            }:
+                raise ValueError(f"invalid value representation for {field.name}")
+            state_slice = (field.day_start_state_start, field.day_start_state_stop)
+            has_state_slice = all(value is not None for value in state_slice)
+            if any(value is not None for value in state_slice) and not has_state_slice:
+                raise ValueError(f"incomplete day-start state slice for {field.name}")
+            if field.value_representation == "normalized_day_end_minus_day_start_owner":
+                if field.day_start_owner is None or not has_state_slice:
+                    raise ValueError(f"delta output lacks a day-start owner for {field.name}")
+                if int(field.day_start_state_stop) - int(field.day_start_state_start) != int(
+                    np.prod(field.shape)
+                ):
+                    raise ValueError(f"day-start state slice width drift for {field.name}")
+            elif field.day_start_owner is not None or has_state_slice:
+                raise ValueError(f"non-delta output declares a day-start owner for {field.name}")
 
 
 @dataclass(frozen=True, eq=False)

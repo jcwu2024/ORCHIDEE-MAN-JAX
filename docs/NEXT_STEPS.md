@@ -363,14 +363,53 @@ collisions, while a read-only 18-shard v6 scan finds that 62 currently carried
 leaves totaling 1,007 columns actually change within the day. The evidence is
 [`successor_fast_boundary_coverage_20260809.md`](research/daily_coarse_graining/successor_fast_boundary_coverage_20260809.md).
 
-The active gate is now to freeze the missing canonical fast-state owner
-reconstruction boundary before changing either network. Preserve the selected
-attention/graph pair and the 101 source-backed process outputs unless the new
-decision explicitly supersedes them; add no anonymous fast vector, 48-record
-forcing reconstruction, or 48-step scan. Before any training, an all-Teacher
-oracle must reconstruct `160/160` fast leaves and cold/ordinary/restart
-lifecycle cases must have exact masks and discrete state. No paid GPU task is
-authorized, and bounded small fit remains closed.
+A revised canonical fast-owner schema is now accepted in
+[`successor_fast_owner_reconstruction_contract_v1.md`](research/daily_coarse_graining/successor_fast_owner_reconstruction_contract_v1.md)
+and `manifests/coarse_graining/successor_fast_owner_reconstruction_v1.json` at
+SHA256 `4db5f828...fdfc4c9`. It classifies all `160/160` leaves and 2,855
+columns exactly once: 21 existing process endpoints, 19 source-exact
+derivations, 30 direct mirrors, 11 guarded/static carries, and 79 independent
+neural endpoints. The extension adds 839 value scalars plus two `rveget`
+defined logits and explicitly removes all 14 typed-integral/state collisions.
+The four promoted neural endpoints are final-step maintenance respiration,
+daily wind, final STOMATE-entry surface temperature, and restart-recomputed
+inundation control; formal v6 evidence disproved their earlier derivation,
+mirror, or carry classifications.
+
+The JAX fast-owner materializer is implemented behind the opt-in canonical
+retained-tail boundary. Local daily-operator/successor regression is `79/79`.
+On free `gln01`, detached commit `4648a00` passed cold Day 2, ordinary Day 3,
+and restart 1962 Day 1 at `160/160` exact fast leaves, with exact masks,
+discrete state, and `rveget` status plus passing retained lifecycle and
+water/carbon budgets. The report is
+`runtime/outputs/training/successor-fast-owner-materializer-4648a00/fast_owner_report.json`
+at SHA256 `f3ae02d0...f360e084`; it records zero training updates, no checkpoint,
+no Teacher regeneration, and no historical v5 use.
+
+The user approved the matched decoder extension. It is now implemented as 80
+additional field queries shared by both arms: 79 value heads plus one
+`rveget` status-logit head. The complete schema has 181 fields and 48 loss
+labels; both arms have exactly `8,722,689` parameters and identical parameter
+trees. Loss label, process domain, and source route are separate metadata.
+Sixty-five fast-state heads train on day-end-minus-safe-day-start deltas; 14
+daily/OK_LEAK heads train on absolute targets. Inference converts deltas to
+physical endpoints before the accepted 160-leaf materializer. The value MSE
+and eligible-slot `rveget` BCE share the `fast_owner.diffuco` macro group.
+Local eager/JIT forward, loss/JVP/VJP, inactive-PFT, normalization, one-day
+budget, materializer, and inference-source audits pass. See
+[`successor_fast_owner_decoder_local_acceptance_20260809.md`](research/daily_coarse_graining/successor_fast_owner_decoder_local_acceptance_20260809.md).
+
+The active gate is now the added-head train/train statistics artifact, not
+training. The fitter reads only existing accepted v6 `state_trajectory` and
+`fast_day_target` arrays, fits mergeable moments for 79 values, records
+`rveget` status prevalence, and combines with the accepted 101-field process
+statistics to produce strict 181-field normalization and 180 value-loss
+scales. Local vectorized/single-day equivalence, write/reload, merge, and hash
+checks pass. The proposed `cnmix` scan is 8 CPU cores for at most 2 hours,
+worst-case CNY `1.12`; it has not been submitted and requires explicit cost
+approval. No anonymous fast vector, 48-record forcing reconstruction, 48-step
+scan, Teacher regeneration, historical v5 use, training, rollout, or
+checkpoint is allowed in this gate.
 
 The process-statistics implementation is present in
 `daily_operator/training_statistics.py`. It vectorizes all 101 named targets
@@ -388,6 +427,10 @@ The final JSON SHA256 is
 the NPZ SHA256 is
 `addf957afbd8338f4aa250155dcd299d568c1070b644e30279f9bf0ea37f9bf8`.
 No GPU training submission is authorized without the separate approval block.
+After the added statistics artifact is accepted, run a free-`gln01`,
+no-checkpoint forward/loss/gradient probe for both arms. Only a passing probe
+can reopen a bounded small fit; 7/30-day rollout, 365-day, long-held-point,
+Gate D2, and product acceptance remain closed.
 
 ## Completed Task Packet: Gate C
 
@@ -397,10 +440,12 @@ Gate D1, the candidate registry, and Gate E1 are complete. Gate E2 coherent
 local implementation, representative six-point production pilot, formal v6
 product freeze, global-plan verification, five-worker reuse benchmark, full
 production, aggregation, and formal admission are complete. The successor
-pair is selected, frozen, and locally implemented. Its synthetic foundation
-is accepted, but the real-v6 lifecycle exposed an incomplete canonical
-fast-state output boundary. Owner reconstruction is the current stop point
-before any bounded fit. Gates D2 and F remain queued.
+pair is selected, frozen, and locally implemented. Its synthetic foundation is
+accepted, and the revised canonical fast-state owner schema plus non-neural
+materializer now pass formal cold/ordinary/restart `160/160` acceptance. The
+79-value-head plus mask decoder extension has passed its local gate; its
+train/train statistics scan awaits explicit CPU resource/cost approval before
+any bounded fit. Gates D2 and F remain queued.
 
 ### Inputs
 

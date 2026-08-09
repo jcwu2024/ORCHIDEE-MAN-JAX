@@ -34,6 +34,8 @@ HOST_ONLY_TRAINING_MODULES = frozenset(
         "training_data.py",
         "training_loss.py",
         "training_statistics.py",
+        "successor_fast_owner_training.py",
+        "successor_fast_owner_statistics.py",
     }
 )
 FORBIDDEN_INFERENCE_SYMBOLS = frozenset(

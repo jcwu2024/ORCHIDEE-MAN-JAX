@@ -203,6 +203,31 @@ record is `successor_process_head_local_foundation_20260809.md`.
 `daily_operator/neural_architecture.py` remains the closed first-pair
 implementation and is not the successor default.
 
+The blocking real-v6 boundary diagnosis is
+`successor_fast_boundary_coverage_20260809.md`. Its successor owner schema is
+`manifests/coarse_graining/successor_fast_owner_reconstruction_v1.json`, with
+the full review table in
+`successor_fast_owner_reconstruction_contract_v1.md`.
+`scripts/dev/build_successor_fast_owner_reconstruction_contract.py` owns
+generation and validation of the 160-leaf/2,855-column registry. It reads only
+accepted v6 manifest metadata, locks the v6 and source-contract identities,
+and does not read Teacher rows. `daily_operator/fast_owner_reconstruction.py`
+owns the identity-locked JAX materializer; `canonical_retained_tail.py`
+consumes it only when explicitly bound; and
+`scripts/hpc/run_successor_process_head_canonical_gate.py` owns the all-Teacher
+`fast_owner` stage. Contract SHA256 `4db5f828...fdfc4c9` and free-`gln01`
+report SHA256 `f3ae02d0...f360e084` establish cold/ordinary/restart `160/160`
+acceptance. `daily_operator/successor_fast_owner_decoder.py` owns the
+inference-safe 181-field schema, delta-to-physical transform, explicit
+loss/domain/source metadata, and strict normalization composition.
+`successor_fast_owner_training.py` is host-only and owns named single-day
+targets plus the 48-label value/BCE loss. `successor_fast_owner_statistics.py`
+is host-only and owns vectorized v6 target extraction and mergeable 79-value
+statistics. `scripts/hpc/fit_successor_fast_owner_statistics.py` is their
+fit/merge CLI; `slurm_successor_fast_owner_statistics.sh` is an unsubmitted
+8-CPU/CNY-1.12 proposal. Local acceptance is recorded in
+`successor_fast_owner_decoder_local_acceptance_20260809.md`.
+
 ## Scripts
 
 | Path | Classification | Use |

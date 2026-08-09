@@ -24,6 +24,7 @@ from .successor_architecture import (
     assemble_successor_process_context,
     successor_process_outputs,
 )
+from .successor_fast_owner_decoder import validate_successor_output_normalization
 from .types import AssembledDailyOperatorInput, ProcessPrediction
 
 
@@ -56,6 +57,10 @@ class SuccessorProcessHead:
         if tuple(self.schema.active_pft_indices) != tuple(self.contract.active_pft_indices):
             raise ValueError("successor schema and Markov PFT axes drift")
         self.config.validate()
+        validate_successor_output_normalization(
+            self.schema,
+            self.output_normalization,
+        )
         adapter = NeuralProcessHead(
             arm="named_output_adapter_only",
             contract=self.contract,
