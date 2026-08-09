@@ -42,7 +42,7 @@ test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
 test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
 test ! -e "$OUTPUT"
 command -v nvidia-smi >/dev/null
-nvidia-smi -i "$GPU_DEVICE" -L >/dev/null
+nvidia-smi -L >/dev/null
 mkdir -p "$(dirname "$OUTPUT")" "$CACHE_ROOT"
 
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
