@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-08-09.
+Last updated: 2026-08-10.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -245,10 +245,15 @@ the accepted no-checkpoint, one-update-per-arm free-`gln01` resource preflight.
 Its evidence is
 `successor_small_fit_gpu_probe_acceptance_20260809.md`.
 `scripts/hpc/run_successor_small_fit.py` owns the contract-bound, matched,
-no-checkpoint 2-to-500-update runner; its shell wrapper owns the Explore1000
-container boundary and `slurm_successor_small_fit.sh` freezes the unsubmitted
-paid resource request. Cross-landpoint/year JIT reuse and sizing evidence are
-in `successor_small_fit_runner_reuse_acceptance_20260810.md`.
+no-checkpoint 2-to-500-update runner and requires a prepared manifest.
+`scripts/hpc/prepare_successor_small_fit_batches.py` and its CPU wrapper own
+resumable, hash-bound batch/day-input packaging; `successor_small_fit_prepared.py`
+owns artifact serialization and admission. `run_successor_small_fit.sh` owns
+the Explore1000 GPU container boundary. The former paid Slurm wrapper is
+removed. Current prepared-batch/hot-reuse evidence and the rejected
+cross-process-cache assumption are in
+`successor_small_fit_prepared_batch_acceptance_20260810.md`; the earlier
+runner evidence remains in `successor_small_fit_runner_reuse_acceptance_20260810.md`.
 
 ## Scripts
 

@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-09.
+Last updated: 2026-08-10.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -153,18 +153,26 @@ and bounded coefficients; both matched arms complete one update with all
 8,722,689 gradient elements finite, all 155 parameter leaves nonzero, finite
 updated parameters and zero rollout hard failures. The report SHA256 is
 `1e79bc76b97098ecf0725d94edfe144363420dba18792f05105e8f0707d543b6`.
-The contract-bound production runner and free two-update cross-shard reuse
-probe are accepted at commit `6710b35`. The schedule switched from
-`141.0-073.0/1988` to `099.0-111.0/1999`; replay, attention and control each
-kept one JIT executable and added zero variants. The hot marginal was 90.01
-seconds, giving a direct 13.04-hour 500-update projection. The frozen paid
-request is one `gnall` node, four CPUs, one V100 and 20 hours, with worst-case
-additive charge CNY 49.60. Its report SHA256 is
-`bcb47740c9400d01391515c8fb4c56dfa305d8f0e7db78077b882bd53ec7ed54`;
-see
-[`successor_small_fit_runner_reuse_acceptance_20260810.md`](research/daily_coarse_graining/successor_small_fit_runner_reuse_acceptance_20260810.md).
+The earlier production runner and two-update probe proved same-process
+cross-shard reuse but spent 86.57 seconds per hot entry on host preparation.
+Its 20-hour paid request is rejected and its Slurm script is removed.
+
+Commit `1c63494` replaces per-update GPU-host preparation with hash-bound CPU
+artifacts. The accepted two-entry manifest totals 66,868,764 bytes and binds
+the source HEAD, contract, schedule, trace signature and per-file SHA256. The
+fixed-seed cold `gln01` report passes both arms and all hard gates. Its hot
+switched entry loads in 0.235 seconds; replay, attention and control take
+1.311, 1.138 and 0.879 seconds. Report SHA256 is
+`481581d1648699e140fa12c1b6a8e342f154ecb2216473f01a6916bd95c31f60`.
+
+Cross-process persistent cache reuse is not accepted. A new process with the
+same fixed hash seed and completed cache still recompiled `jit_train_step` and
+was stopped by its 10-minute hard limit. The active task is to remove
+avoidable coefficient-preflight and final-evaluation compilation, then
+remeasure before producing 500 artifacts or proposing any paid resources. See
+[`successor_small_fit_prepared_batch_acceptance_20260810.md`](research/daily_coarse_graining/successor_small_fit_prepared_batch_acceptance_20260810.md).
 No paid training submission, 7/30-day screen, 365-day rollout,
-long-held-point, Gate D2, or product acceptance is authorized yet.
+long-held-point, Gate D2, or product acceptance is authorized.
 
 ## Stable Teacher
 

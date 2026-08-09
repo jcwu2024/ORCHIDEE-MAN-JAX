@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-09.
+Last updated: 2026-08-10.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -448,20 +448,27 @@ The report SHA256 is
 see
 [`successor_small_fit_gpu_probe_acceptance_20260809.md`](research/daily_coarse_graining/successor_small_fit_gpu_probe_acceptance_20260809.md).
 
-The contract-bound 2-to-500-update production runner and free two-update
-cross-shard reuse gate are accepted at commit `6710b35`. The second entry
-changed both landpoint and year while replay, attention and control each kept
-one JIT executable and added zero variants. Its hot marginal was 90.01 seconds
-and the direct 500-update projection is 13.04 hours. The exact unsubmitted
-request is one `gnall` node, four CPUs, one V100 and 20 hours, with worst-case
-additive cost CNY 49.60. See
-[`successor_small_fit_runner_reuse_acceptance_20260810.md`](research/daily_coarse_graining/successor_small_fit_runner_reuse_acceptance_20260810.md).
+The earlier two-update runner proved same-process cross-shard JIT reuse but
+also exposed 86.57 seconds of repeated host preparation per hot entry. Its
+20-hour paid envelope is rejected and its Slurm script has been removed.
 
-The active gate is explicit user approval or rejection of that paid envelope.
-Do not run `sbatch` without it. If approved, submit exactly
-`scripts/hpc/slurm_successor_small_fit.sh` from the accepted worktree and
-monitor the single no-checkpoint 500-update run. The 7/30-day screen, 365-day,
-long-held-point, Gate D2 and product acceptance remain closed.
+Commit `1c63494` adds a hash-bound CPU prepared-batch boundary. Two `test01`
+artifacts totaling 66,868,764 bytes were prepared without regenerating
+Teacher data or reading v5. The fixed-seed `gln01` cold probe passed both arms,
+all hard gates, and update-to-update reuse. On the switched hot entry,
+artifact load was 0.235 seconds, replay 1.311 seconds, attention 1.138 seconds
+and control 0.879 seconds. The report SHA256 is
+`481581d1648699e140fa12c1b6a8e342f154ecb2216473f01a6916bd95c31f60`.
+See
+[`successor_small_fit_prepared_batch_acceptance_20260810.md`](research/daily_coarse_graining/successor_small_fit_prepared_batch_acceptance_20260810.md).
+
+Cross-process persistent JAX cache reuse remains rejected: even with
+`PYTHONHASHSEED=0`, a new process re-entered slow `jit_train_step` compilation.
+No paid envelope is active. The active gate is to eliminate avoidable
+same-process coefficient-preflight and final-evaluation compilation, then
+remeasure one bounded cold/hot run before preparing all 500 CPU artifacts or
+requesting `gnall`. The 7/30-day screen, 365-day, long-held-point, Gate D2 and
+product acceptance remain closed.
 
 ## Completed Task Packet: Gate C
 
@@ -476,9 +483,9 @@ accepted, and the revised canonical fast-state owner schema plus non-neural
 materializer now pass formal cold/ordinary/restart `160/160` acceptance. The
 79-value-head plus mask decoder extension, its full train/train statistics,
 and the no-checkpoint real-v6 GPU probe are accepted. The bounded-small-fit
-single-update preflight, production runner, and two-update cross-shard
-compile-reuse/resource gate are accepted. The paid 500-update fit awaits
-explicit approval and has not been submitted.
+single-update preflight, prepared-batch boundary, and same-process hot reuse
+are accepted. Cross-process train-step cache reuse and the old paid envelope
+are rejected; no paid 500-update fit is currently proposed or submitted.
 Gates D2 and F remain queued.
 
 ### Inputs
