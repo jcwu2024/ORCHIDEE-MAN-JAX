@@ -34,6 +34,7 @@ from research.daily_coarse_graining.daily_operator.retained_tail import (
 from research.daily_coarse_graining.daily_operator.successor_architecture import (
     SOURCE_ROUTED_ATTENTION,
     SOURCE_ROUTED_GRAPH_CONTROL,
+    _sqrt_with_zero_tangent,
     assemble_successor_process_context,
     build_successor_token_layout,
     initialize_successor_parameters,
@@ -1230,3 +1231,21 @@ def test_gradient_ratio_preflight_reports_nonfinite_parameter_leaves():
             }
         ],
     }
+
+
+def test_successor_summary_standard_deviation_has_zero_tangent_at_zero_variance():
+    def singleton_standard_deviation(value):
+        centered = value - jnp.mean(value)
+        return _sqrt_with_zero_tangent(jnp.mean(centered * centered))
+
+    value, tangent = jax.jvp(
+        _sqrt_with_zero_tangent,
+        (jnp.asarray(4.0),),
+        (jnp.asarray(1.0),),
+    )
+    gradient = jax.grad(singleton_standard_deviation)(jnp.asarray([2.0]))
+
+    assert float(value) == pytest.approx(2.0)
+    assert float(tangent) == pytest.approx(0.25)
+    assert float(singleton_standard_deviation(jnp.asarray([2.0]))) == 0.0
+    np.testing.assert_array_equal(np.asarray(gradient), np.zeros(1))

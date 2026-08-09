@@ -625,6 +625,23 @@ def _standardize(value: Any, mean: Any, scale: Any) -> Any:
     return jnp.where(valid, (safe - mean) / jnp.where(scale > 0.0, scale, 1.0), 0.0)
 
 
+@jax.custom_jvp
+def _sqrt_with_zero_tangent(value: Any) -> Any:
+    """Preserve sqrt primals while defining the zero-variance tangent."""
+
+    return jnp.sqrt(value)
+
+
+@_sqrt_with_zero_tangent.defjvp
+def _sqrt_with_zero_tangent_jvp(primals: Any, tangents: Any) -> tuple[Any, Any]:
+    (value,) = primals
+    (tangent,) = tangents
+    root = jnp.sqrt(value)
+    positive = value > 0.0
+    denominator = jnp.where(positive, 2.0 * root, 1.0)
+    return root, jnp.where(positive, tangent / denominator, 0.0)
+
+
 def _summary_tokens(
     parameters: Mapping[str, Any],
     layout: SummaryTokenLayout,
@@ -647,7 +664,9 @@ def _summary_tokens(
     safe = jnp.where(valid, values, 0.0)
     mean = jnp.sum(jnp.where(pool, safe[None, :], 0.0), axis=1) / jnp.maximum(count, 1.0)
     centered = jnp.where(pool, safe[None, :] - mean[:, None], 0.0)
-    std = jnp.sqrt(jnp.sum(centered * centered, axis=1) / jnp.maximum(count, 1.0))
+    std = _sqrt_with_zero_tangent(
+        jnp.sum(centered * centered, axis=1) / jnp.maximum(count, 1.0)
+    )
     minimum = jnp.min(jnp.where(pool, safe[None, :], jnp.inf), axis=1)
     maximum = jnp.max(jnp.where(pool, safe[None, :], -jnp.inf), axis=1)
     summary = jnp.stack(
@@ -733,7 +752,9 @@ def _process_static_tokens(
             jnp.stack(
                 (
                     mean,
-                    jnp.sqrt(jnp.sum(centered * centered) / jnp.maximum(count, 1.0)),
+                    _sqrt_with_zero_tangent(
+                        jnp.sum(centered * centered) / jnp.maximum(count, 1.0)
+                    ),
                     jnp.min(jnp.where(valid, array, jnp.inf)),
                     jnp.max(jnp.where(valid, array, -jnp.inf)),
                 )
