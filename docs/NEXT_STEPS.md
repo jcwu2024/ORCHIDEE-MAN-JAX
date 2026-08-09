@@ -399,17 +399,17 @@ Local eager/JIT forward, loss/JVP/VJP, inactive-PFT, normalization, one-day
 budget, materializer, and inference-source audits pass. See
 [`successor_fast_owner_decoder_local_acceptance_20260809.md`](research/daily_coarse_graining/successor_fast_owner_decoder_local_acceptance_20260809.md).
 
-The active gate is now the added-head train/train statistics artifact, not
-training. The fitter reads only existing accepted v6 `state_trajectory` and
-`fast_day_target` arrays, fits mergeable moments for 79 values, records
-`rveget` status prevalence, and combines with the accepted 101-field process
-statistics to produce strict 181-field normalization and 180 value-loss
-scales. Local vectorized/single-day equivalence, write/reload, merge, and hash
-checks pass. The proposed `cnmix` scan is 8 CPU cores for at most 2 hours,
-worst-case CNY `1.12`; it has not been submitted and requires explicit cost
-approval. No anonymous fast vector, 48-record forcing reconstruction, 48-step
-scan, Teacher regeneration, historical v5 use, training, rollout, or
-checkpoint is allowed in this gate.
+The added-head train/train statistics gate is accepted. Approved `cnmix` job
+`14515519` completed all eight partitions and merged exactly 8,591,565
+train/train rows from 23,540 source shards. A fresh `test01` process reloaded
+the final artifact with 79 added value fields, zero never-defined columns,
+finite moments, complete 181-field normalization, and complete 180-field
+value-loss scales. The final JSON SHA256 is
+`b2e61a171156071d404d12b833130f2d0e98064564d1c3e007e16f0210734719`;
+the NPZ SHA256 is
+`890d1fd6110912a835c760b4fe58e9320481a929797858cad5b70b1bf03eb99f`.
+See
+[`successor_fast_owner_statistics_acceptance_20260809.md`](research/daily_coarse_graining/successor_fast_owner_statistics_acceptance_20260809.md).
 
 The process-statistics implementation is present in
 `daily_operator/training_statistics.py`. It vectorizes all 101 named targets
@@ -427,10 +427,10 @@ The final JSON SHA256 is
 the NPZ SHA256 is
 `addf957afbd8338f4aa250155dcd299d568c1070b644e30279f9bf0ea37f9bf8`.
 No GPU training submission is authorized without the separate approval block.
-After the added statistics artifact is accepted, run a free-`gln01`,
-no-checkpoint forward/loss/gradient probe for both arms. Only a passing probe
-can reopen a bounded small fit; 7/30-day rollout, 365-day, long-held-point,
-Gate D2, and product acceptance remain closed.
+The active gate is now a free-`gln01`, no-checkpoint forward/loss/gradient
+probe for both arms using the accepted 181-field statistics artifact. Only a
+passing probe can reopen a bounded small fit; 7/30-day rollout, 365-day,
+long-held-point, Gate D2, and product acceptance remain closed.
 
 ## Completed Task Packet: Gate C
 
@@ -443,9 +443,9 @@ production, aggregation, and formal admission are complete. The successor
 pair is selected, frozen, and locally implemented. Its synthetic foundation is
 accepted, and the revised canonical fast-state owner schema plus non-neural
 materializer now pass formal cold/ordinary/restart `160/160` acceptance. The
-79-value-head plus mask decoder extension has passed its local gate; its
-train/train statistics scan awaits explicit CPU resource/cost approval before
-any bounded fit. Gates D2 and F remain queued.
+79-value-head plus mask decoder extension and its full train/train statistics
+artifact are accepted. The no-checkpoint `gln01` two-arm probe is next; no
+bounded fit is open yet. Gates D2 and F remain queued.
 
 ### Inputs
 

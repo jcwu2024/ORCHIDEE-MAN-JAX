@@ -125,15 +125,21 @@ forward, loss/JVP/VJP, inactive-PFT, one-day conservation, 160-leaf
 materialization, and inference-boundary audits. Full local evidence is in
 [`successor_fast_owner_decoder_local_acceptance_20260809.md`](research/daily_coarse_graining/successor_fast_owner_decoder_local_acceptance_20260809.md).
 
-The added-head train/train statistics path is also implemented locally. It
-reads only existing v6 state/fast-target arrays, fits mergeable moments for 79
-values, records `rveget` prevalence, and combines with the accepted 101-field
-statistics without a unit-scale fallback. Vectorized/single-day equivalence,
-artifact write/reload/merge, and 181-field normalization checks pass. The
-active gate is an explicitly approved `cnmix` statistics scan: 8 CPU cores,
-2-hour limit, CNY `1.12` worst case. It has not been submitted. Training,
-7/30-day rollout, 365-day, long-held-point, Gate D2, and product acceptance
-remain closed.
+The added-head train/train statistics artifact is accepted. Approved `cnmix`
+job `14515519` completed eight partitions and merged 8,591,565 train/train
+rows from 23,540 source shards in 8 minutes 57 seconds. A fresh `test01`
+process independently reloaded 79 added fields with zero never-defined
+columns and finite moments, then assembled complete 181-field normalization
+and 180-field value-loss scales. `rveget` was defined for 4,771,338 of
+17,183,130 eligible slots. The final JSON SHA256 is
+`b2e61a171156071d404d12b833130f2d0e98064564d1c3e007e16f0210734719`
+and the NPZ SHA256 is
+`890d1fd6110912a835c760b4fe58e9320481a929797858cad5b70b1bf03eb99f`.
+See
+[`successor_fast_owner_statistics_acceptance_20260809.md`](research/daily_coarse_graining/successor_fast_owner_statistics_acceptance_20260809.md).
+The active gate is a free `gln01` no-checkpoint forward/loss/gradient probe
+for both arms. Training, 7/30-day rollout, 365-day, long-held-point, Gate D2,
+and product acceptance remain closed.
 
 ## Stable Teacher
 

@@ -224,9 +224,11 @@ loss/domain/source metadata, and strict normalization composition.
 targets plus the 48-label value/BCE loss. `successor_fast_owner_statistics.py`
 is host-only and owns vectorized v6 target extraction and mergeable 79-value
 statistics. `scripts/hpc/fit_successor_fast_owner_statistics.py` is their
-fit/merge CLI; `slurm_successor_fast_owner_statistics.sh` is an unsubmitted
-8-CPU/CNY-1.12 proposal. Local acceptance is recorded in
-`successor_fast_owner_decoder_local_acceptance_20260809.md`.
+fit/merge CLI; `slurm_successor_fast_owner_statistics.sh` produced the
+accepted 8,591,565-row artifact under job `14515519`. Local decoder evidence
+is in `successor_fast_owner_decoder_local_acceptance_20260809.md`; formal
+statistics evidence is in
+`successor_fast_owner_statistics_acceptance_20260809.md`.
 
 ## Scripts
 
