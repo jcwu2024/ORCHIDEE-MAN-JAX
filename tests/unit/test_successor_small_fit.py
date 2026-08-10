@@ -348,6 +348,18 @@ def test_two_stage_production_launchers_are_bounded_and_unsubmitted():
     assert "CNY 6.64 worst case" in gpu
 
 
+def test_checkpoint_gpu_probe_is_serialization_only_and_removes_temporary_set():
+    root = Path(__file__).resolve().parents[2]
+    probe = (root / "scripts" / "hpc" / "probe_successor_checkpoint_handoff.py").read_text()
+
+    assert '"training_updates": 0' in probe
+    assert '"teacher_data_read": False' in probe
+    assert '"teacher_data_regenerated": False' in probe
+    assert '"historical_v5_used": False' in probe
+    assert "TemporaryDirectory" in probe
+    assert '"temporary_checkpoint_removed": True' in probe
+
+
 def test_checkpoint_handoff_contract_is_frozen_and_keeps_old_producer_identity():
     handoff = load_successor_checkpoint_handoff()
 

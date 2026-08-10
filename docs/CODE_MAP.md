@@ -252,6 +252,10 @@ publish both arms atomically through
 no checkpoint. The producer/consumer identity amendment is
 `manifests/coarse_graining/successor_small_fit_checkpoint_handoff_v1.json`,
 documented in `successor_small_fit_checkpoint_handoff_v1.md`.
+`scripts/hpc/probe_successor_checkpoint_handoff.py` owns the serialization-only
+free-GPU preflight. It stages synthetic GPU-origin parameter and optimizer
+trees in a temporary runtime directory, verifies exact reload, removes the
+temporary checkpoint and writes only a JSON evidence report.
 `scripts/hpc/prepare_successor_small_fit_batches.py` and its CPU wrapper own
 resumable, hash-bound batch/day-input packaging; `successor_small_fit_prepared.py`
 owns artifact serialization and admission. `run_successor_small_fit.sh` owns
