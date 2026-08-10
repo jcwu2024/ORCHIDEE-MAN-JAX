@@ -2,8 +2,8 @@
 
 Date: 2026-08-10.
 
-Status: local implementation and fail-closed tests accepted; free-`gln01`
-serialization preflight remains pending. No paid GPU fit is authorized.
+Status: local implementation, fail-closed tests and free-`gln01` serialization
+preflight accepted. No paid GPU fit is authorized.
 
 ## Reason For The Amendment
 
@@ -80,8 +80,13 @@ The focused successor suite passes `23/23`. It covers:
 - tampered checkpoint shape rejection;
 - launcher requirements for the checkpoint contract and final manifest.
 
-Ruff, Python compilation and `git diff --check` must remain clean before the
-free GPU preflight. That preflight is serialization-only: it must exercise GPU
-arrays through host persistence and verified reload without Teacher access,
-training updates, or a paid allocation. After it passes, the paid 500-update
-fit still requires a fresh resource and cost approval.
+Ruff, Python compilation and `git diff --check` remain clean. The
+serialization-only free GPU preflight passed at commit `c15cd86`: both arm
+trees originated on GPU, persisted through host memory, reloaded exactly, and
+left no checkpoint payload after the temporary directory closed. It performed
+zero training updates and did not read Teacher or v5 data. Report SHA256 is
+`a923d6371473bc19bef9ea89e3a390a4798b02ac13e23782d2520ab22616cf5a`;
+see
+[`successor_checkpoint_handoff_gpu_probe_acceptance_20260810.md`](successor_checkpoint_handoff_gpu_probe_acceptance_20260810.md).
+
+The paid 500-update fit still requires a fresh resource and cost approval.

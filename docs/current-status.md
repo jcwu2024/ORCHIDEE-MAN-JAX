@@ -214,9 +214,16 @@ submaximal runs publish nothing. Local contract, round-trip, tamper, incomplete
 fit and injected second-arm failure tests pass `23/23`. See
 [`successor_small_fit_checkpoint_handoff_v1.md`](research/daily_coarse_graining/successor_small_fit_checkpoint_handoff_v1.md).
 
-No GPU job is active. The next gate is a free `gln01` GPU-array
-serialization/reload preflight for this handoff. Only after it passes may a
-fresh approval block be shown for the one-process 500-update paid GPU fit.
+The free `gln01` GPU-array serialization/reload preflight passed at consumer
+commit `c15cd86`. Both arm trees originated on GPU, survived atomic host
+persistence and verified reload exactly, and were removed with the temporary
+directory. The persistent report SHA256 is
+`a923d6371473bc19bef9ea89e3a390a4798b02ac13e23782d2520ab22616cf5a`.
+It records zero training updates and no Teacher/v5 access; see
+[`successor_checkpoint_handoff_gpu_probe_acceptance_20260810.md`](research/daily_coarse_graining/successor_checkpoint_handoff_gpu_probe_acceptance_20260810.md).
+
+No GPU job is active. The next gate is a fresh approval block for the
+one-process 500-update paid GPU fit at execution commit `c15cd86`.
 No paid training submission, 7/30-day screen, 365-day rollout,
 long-held-point, Gate D2, or product acceptance is authorized.
 

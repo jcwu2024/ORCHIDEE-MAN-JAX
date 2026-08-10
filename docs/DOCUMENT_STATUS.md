@@ -59,7 +59,8 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_small_fit_compile_reduction_acceptance_20260810.md` | Accepted cold/hot timing evidence; avoidable compilation removed | Reviewing the timing basis for the bounded 500-update resource plan |
 | `research/daily_coarse_graining/successor_small_fit_production_resource_plan_20260810.md` | Accepted staged resource contract; CPU stage complete and GPU stage still gated | Reviewing resources, costs, or recovery policy |
 | `research/daily_coarse_graining/successor_small_fit_prepared_500_acceptance_20260810.md` | Active accepted 500-entry CPU product; bound GPU fit awaits separate approval | Reviewing prepared input identity or approving the GPU fit |
-| `research/daily_coarse_graining/successor_small_fit_checkpoint_handoff_v1.md` | Active checkpoint amendment; local atomicity/identity tests pass and free GPU serialization preflight is pending | Preparing the paid fit or consuming its checkpoints in rollout |
+| `research/daily_coarse_graining/successor_small_fit_checkpoint_handoff_v1.md` | Active checkpoint amendment; local and free GPU persistence preflight accepted | Preparing the paid fit or consuming its checkpoints in rollout |
+| `research/daily_coarse_graining/successor_checkpoint_handoff_gpu_probe_acceptance_20260810.md` | Accepted free-GPU serialization evidence; no production checkpoint retained | Reviewing persistence evidence before paid fit approval |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

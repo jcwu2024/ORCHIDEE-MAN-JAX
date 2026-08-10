@@ -502,10 +502,12 @@ handoff contract `a587b8a9...32315b0` now admits that exact producer manifest
 to a distinct clean consumer commit and atomically publishes both complete
 arm checkpoints only after a passing 500-update fit. Local identity,
 round-trip, tree-schema, tamper, incomplete-fit and interrupted-second-arm
-tests pass. The current gate is a serialization-only free-`gln01` preflight;
-no GPU job is active. After that passes, the one-process paid stage still
-requires a fresh approval block for `gnall`, one node, 16 CPU cores, one GPU,
-two-hour limit and additive CNY 6.64 worst-case charge. The 7/30-day screen,
+tests pass. The serialization-only free-`gln01` preflight also passes at
+consumer commit `c15cd86`: both GPU-origin arm trees reload exactly, the
+temporary checkpoint is removed, and no Teacher/v5 data or training update is
+used. No GPU job is active. The current gate is a fresh approval block for
+`gnall`, one node, 16 CPU cores, one GPU, two-hour limit and additive CNY 6.64
+worst-case charge. The 7/30-day screen,
 365-day, long-held-point, Gate D2 and product acceptance remain closed.
 
 ## Completed Task Packet: Gate C
@@ -524,8 +526,8 @@ and the no-checkpoint real-v6 GPU probe are accepted. The bounded-small-fit
 single-update preflight, prepared-batch boundary, same-process hot reuse, and
 avoidable-compilation reduction are accepted. Cross-process train-step cache
 reuse and the old paid envelope are rejected. The new staged CPU preparation
-is accepted. Its checkpoint-capable consumer passes local tests, while the
-free GPU serialization preflight and conditional paid fit remain unsubmitted.
+is accepted. Its checkpoint-capable consumer passes local and free GPU
+serialization tests, while the conditional paid fit remains unsubmitted.
 Gates D2 and F remain queued.
 
 ### Inputs
