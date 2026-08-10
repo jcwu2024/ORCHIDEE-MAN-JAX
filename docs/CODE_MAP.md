@@ -259,6 +259,11 @@ runner evidence remains in `successor_small_fit_runner_reuse_acceptance_20260810
 train/train coefficient contract and rejects runner, schedule, candidate,
 owner, first-artifact or source-report drift. The current compile-reduction
 evidence is `successor_small_fit_compile_reduction_acceptance_20260810.md`.
+`slurm_prepare_successor_small_fit_500.sh` owns the proposed four-worker
+`cnmix` preparation envelope; `slurm_successor_small_fit_500.sh` owns the
+separately gated one-GPU same-process fit envelope. Their accepted partition
+smoke, recovery boundary and cost contract are in
+`successor_small_fit_production_resource_plan_20260810.md`.
 
 ## Scripts
 

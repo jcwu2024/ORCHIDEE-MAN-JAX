@@ -184,11 +184,20 @@ finite and all hard gates were zero. Report SHA256 is
 see
 [`successor_small_fit_compile_reduction_acceptance_20260810.md`](research/daily_coarse_graining/successor_small_fit_compile_reduction_acceptance_20260810.md).
 
-No paid job is active. The next gate is a separately reviewed, resumable
-two-stage resource plan for preparing exactly 500 artifacts on a CPU compute
-partition and consuming them in one same-process, one-GPU 500-update fit.
-Neither stage may be submitted before its finite wall time, command, working
-directory and worst-case charge are explicitly approved.
+Commit `50bc99a` implements a four-worker resumable CPU preparation boundary
+and a fail-closed finalizer. The two-worker `test01` smoke passes with
+byte-identical artifact hashes, about 4.8 GB peak RSS per worker, approximately
+70 seconds of artifact work per worker and exact merged coverage. Its final
+manifest SHA256 is
+`f73c714a7f9e24699f7775b5c23f221a7eda4e1b1fdb81621f927bede26b0f31`.
+The bounded resource plan requests four one-core `cnmix` tasks for four hours
+(CNY 1.12 ceiling), then only after manifest admission requests 16 CPU cores
+and one `gnall` GPU for two hours (additive CNY 6.64 ceiling). See
+[`successor_small_fit_production_resource_plan_20260810.md`](research/daily_coarse_graining/successor_small_fit_production_resource_plan_20260810.md).
+
+No paid job is active. Explicit approval of the CPU preparation stage is the
+current gate. GPU approval remains separate and conditional on admission of
+the complete 500-entry manifest.
 No paid training submission, 7/30-day screen, 365-day rollout,
 long-held-point, Gate D2, or product acceptance is authorized.
 
