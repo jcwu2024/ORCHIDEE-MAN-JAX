@@ -9,6 +9,7 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
+import research.daily_coarse_graining.daily_operator.successor_frozen_coefficients as frozen_coefficients
 import research.daily_coarse_graining.daily_operator.successor_small_fit as small_fit
 import scripts.hpc.run_successor_fast_owner_gpu_probe as fast_probe
 from research.daily_coarse_graining.daily_operator.successor_fast_owner_decoder import (
@@ -40,6 +41,7 @@ from scripts.hpc.successor_small_fit_prepared import (
     atomic_json,
     load_prepared_artifact,
     load_prepared_manifest,
+    sha256_file,
     write_prepared_artifact,
 )
 
@@ -296,6 +298,9 @@ def test_production_launcher_preserves_contract_and_dual_backend_boundary():
     assert "successor_small_fit_runner_v1.json" in launcher
     assert "PREPARED_MANIFEST=${PREPARED_MANIFEST:?" in launcher
     assert '--prepared-manifest "$PREPARED_MANIFEST" \\' in launcher
+    assert "successor_small_fit_frozen_coefficients_v1.json" in launcher
+    assert '--coefficient-contract "$COEFFICIENT_CONTRACT" \\' in launcher
+    assert '--coefficient-source-report "$COEFFICIENT_SOURCE_REPORT" \\' in launcher
 
 
 def test_rejected_paid_launcher_is_removed():
@@ -404,3 +409,106 @@ def test_extended_runtime_forwards_explicit_cpu_backend(monkeypatch):
             SimpleNamespace(),
             backend_initializer=backend_initializer,
         )
+
+
+def test_frozen_coefficients_bind_source_report_and_first_artifact(tmp_path):
+    components = tuple(LONG_HORIZON_COMPONENTS)
+    targets = dict(zip(components, (0.1, 0.15, 0.1, 0.15), strict=True))
+    resolved = dict(zip(components, (0.02, 0.03, 0.004, 0.006), strict=True))
+    preflight = {
+        "anchor_gradient_norm": 10.0,
+        "component_gradient_norms": {name: 2.0 + index for index, name in enumerate(components)},
+        "component_losses": {name: 3.0 + index for index, name in enumerate(components)},
+        "resolved_coefficients": resolved,
+        "split_label": "train/train",
+        "target_gradient_ratios": targets,
+    }
+    report_path = tmp_path / "runner_report.json"
+    atomic_json(
+        report_path,
+        {
+            "status": "passed",
+            "run_kind": "bounded_reuse_probe",
+            "identity": {
+                "git_head": "source-head",
+                "runner_contract_sha256": "runner",
+                "schedule_sha256": "schedule",
+                "successor_candidate_contract_sha256": "candidate",
+                "fast_owner_contract_sha256": "owner",
+                "prepared_manifest_sha256": "prepared-manifest",
+            },
+            "training_updates_per_arm": 2,
+            "coefficient_preflight": preflight,
+        },
+    )
+    payload = {
+        "schema_version": frozen_coefficients.SCHEMA_VERSION,
+        "status": "accepted",
+        "identity": {
+            "runner_contract_sha256": "runner",
+            "schedule_sha256": "schedule",
+            "successor_candidate_contract_sha256": "candidate",
+            "fast_owner_contract_sha256": "owner",
+            "first_prepared_artifact_sha256": "artifact",
+        },
+        "source_evidence": {
+            "git_head": "source-head",
+            "runner_report_sha256": sha256_file(report_path),
+            "prepared_manifest_sha256": "prepared-manifest",
+            "training_updates_per_arm": 2,
+        },
+        "objective": {
+            "components": list(components),
+            "split_label": "train/train",
+            "gradient_ratio_targets": targets,
+            "coefficient_minimum": 0.001,
+            "coefficient_maximum": 10.0,
+            "resolved_coefficients": resolved,
+            "same_coefficients_for_both_arms": True,
+            "recalibrate_during_fit": False,
+            "validation_weight_tuning_allowed": False,
+        },
+    }
+    payload["contract_sha256"] = frozen_coefficients._canonical_sha256(payload)
+    contract_path = tmp_path / "coefficients.json"
+    atomic_json(contract_path, payload)
+
+    loaded = frozen_coefficients.load_frozen_successor_coefficients(
+        contract_path,
+        source_report_path=report_path,
+        runner_contract_sha256="runner",
+        schedule_sha256="schedule",
+        successor_contract_sha256="candidate",
+        fast_owner_contract_sha256="owner",
+        first_prepared_artifact_sha256="artifact",
+        components=components,
+        gradient_ratio_targets=targets,
+        coefficient_minimum=0.001,
+        coefficient_maximum=10.0,
+    )
+    assert loaded.coefficients == resolved
+
+    report_path.write_text(report_path.read_text() + " ", encoding="utf-8")
+    with pytest.raises(ValueError, match="source report hash drift"):
+        frozen_coefficients.load_frozen_successor_coefficients(
+            contract_path,
+            source_report_path=report_path,
+            runner_contract_sha256="runner",
+            schedule_sha256="schedule",
+            successor_contract_sha256="candidate",
+            fast_owner_contract_sha256="owner",
+            first_prepared_artifact_sha256="artifact",
+            components=components,
+            gradient_ratio_targets=targets,
+            coefficient_minimum=0.001,
+            coefficient_maximum=10.0,
+        )
+
+
+def test_final_evaluation_reuses_compiled_train_step():
+    source = Path(__file__).resolve().parents[2] / "scripts" / "hpc" / "run_successor_small_fit.py"
+    runner = source.read_text(encoding="utf-8")
+
+    assert '"final_evaluation_reuses_train_step": True' in runner
+    assert '"optimizer_result_discarded": True' in runner
+    assert "np.asarray(0.0, dtype=np.float64)" in runner

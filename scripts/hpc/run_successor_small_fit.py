@@ -23,7 +23,6 @@ from scripts.hpc.run_successor_process_head_canonical_gate import (
     _retained_adapter,
 )
 from scripts.hpc.run_successor_small_fit_probe import (
-    _host_preflight,
     _plan_context,
     _reference_for_entry,
     _teacher_replay_gate_with_transition,
@@ -386,26 +385,24 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     runtime = _load_extended_runtime(args)
     jax = runtime["jax"]
 
-    from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
     from research.daily_coarse_graining.daily_operator.successor_architecture import (
         SOURCE_ROUTED_ATTENTION,
         SOURCE_ROUTED_GRAPH_CONTROL,
         initialize_successor_parameters,
         successor_parameter_count,
     )
+    from research.daily_coarse_graining.daily_operator.successor_frozen_coefficients import (
+        load_frozen_successor_coefficients,
+    )
     from research.daily_coarse_graining.daily_operator.successor_small_fit import (
         build_successor_small_fit_schedule,
         initialize_successor_adamw,
         load_successor_small_fit_contract,
-        successor_anchor_batch_loss,
         successor_learning_rate,
-        successor_rollout_component_losses,
         verify_successor_small_fit_schedule,
     )
     from research.daily_coarse_graining.daily_operator.successor_training import (
         LONG_HORIZON_COMPONENTS,
-        GradientRatioPreflightError,
-        calibrate_gradient_ratio_coefficients,
         derive_long_horizon_scales,
     )
 
@@ -438,6 +435,23 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         source_git_head=git_head,
     )
     prepared_manifest_sha256 = sha256_file(args.prepared_manifest)
+    objective_contract = runner_contract.payload["objective"]
+    coefficient_load_started = time.perf_counter()
+    frozen_coefficients = load_frozen_successor_coefficients(
+        args.coefficient_contract,
+        source_report_path=args.coefficient_source_report,
+        runner_contract_sha256=runner_contract.sha256,
+        schedule_sha256=schedule["schedule_sha256"],
+        successor_contract_sha256=runtime["successor_contract"].sha256,
+        fast_owner_contract_sha256=runtime["owner_contract"].contract_sha256,
+        first_prepared_artifact_sha256=str(prepared_manifest["entries"][0]["sha256"]),
+        components=LONG_HORIZON_COMPONENTS,
+        gradient_ratio_targets=objective_contract["gradient_ratio_targets"],
+        coefficient_minimum=float(objective_contract["coefficient_minimum"]),
+        coefficient_maximum=float(objective_contract["coefficient_maximum"]),
+    )
+    coefficient_contract_load_seconds = time.perf_counter() - coefficient_load_started
+    coefficients = dict(frozen_coefficients.coefficients)
     first_entry = schedule["entries"][0]
     first_load_started = time.perf_counter()
     first_artifact = load_prepared_artifact(
@@ -509,86 +523,6 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         runtime["process_statistics"].outputs["daily.fast_gpp"].scale,
         runtime["contract"],
     )
-
-    candidate_head = _head(runtime, SOURCE_ROUTED_ATTENTION)
-    candidate_transition = bind_daily_operator(
-        input_assembler=runtime["adapter"].input_assembler,
-        process_head=candidate_head,
-        retained_tail=first_adapter,
-    )
-
-    def anchor_loss(values: Any) -> Any:
-        return successor_anchor_batch_loss(
-            values,
-            first_batch.anchor_inputs,
-            first_batch.anchor_targets,
-            head=candidate_head,
-            schema=runtime["schema"],
-            scales=runtime["loss_scales"],
-        )
-
-    def component_vector(values: Any) -> Any:
-        return successor_rollout_component_losses(
-            values,
-            first_batch,
-            transition=candidate_transition,
-            markov_contract=runtime["contract"],
-            flux_scales=long_scales.fluxes,
-            stock_scales=long_scales.stocks,
-            rematerialize=True,
-        )[0]
-
-    component_losses = {
-        name: (lambda values, index=index: component_vector(values)[index])
-        for index, name in enumerate(LONG_HORIZON_COMPONENTS)
-    }
-    objective_contract = runner_contract.payload["objective"]
-    preflight_started = time.perf_counter()
-    try:
-        preflight = calibrate_gradient_ratio_coefficients(
-            parameters[SOURCE_ROUTED_ATTENTION],
-            anchor_loss,
-            component_losses,
-            target_gradient_ratios=objective_contract["gradient_ratio_targets"],
-            coefficient_minimum=float(objective_contract["coefficient_minimum"]),
-            coefficient_maximum=float(objective_contract["coefficient_maximum"]),
-            split_label="train/train",
-            compile_gradients=True,
-            combined_component_loss=component_vector,
-        )
-    except GradientRatioPreflightError as error:
-        report = {
-            "schema_version": "successor_small_fit_contract_runner_v1",
-            "status": "failed",
-            "failed_stage": "coefficient_gradient_preflight",
-            "checkpoint_written": False,
-            "completed_updates_per_arm": {arm: 0 for arm in arms},
-            "teacher_data_regenerated": False,
-            "historical_v5_used": False,
-            "test_split_used": False,
-            "identity": dict(identity)
-            | {
-                "git_head": git_head,
-                "runner_contract_sha256": runner_contract.sha256,
-                "schedule_sha256": schedule["schedule_sha256"],
-            },
-            "coefficient_preflight_seconds": time.perf_counter() - preflight_started,
-            "coefficient_preflight_failure": error.diagnostic,
-            "total_wall_seconds": time.perf_counter() - run_started,
-            "next_gate": "repair_nonfinite_long_horizon_gradient",
-        }
-        _atomic_json(args.output, report)
-        return report
-    jax.block_until_ready(
-        (
-            preflight.anchor_loss,
-            preflight.component_losses,
-            preflight.anchor_gradient_norm,
-            preflight.component_gradient_norms,
-        )
-    )
-    preflight_seconds = time.perf_counter() - preflight_started
-    coefficients = {name: float(preflight.resolved_coefficients[name]) for name in LONG_HORIZON_COMPONENTS}
 
     step_cache: dict[tuple[str, str], tuple[Any, Any]] = {}
     first_batches = {first_signature: (first_batch, first_adapter)}
@@ -794,16 +728,31 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
 
     final_metrics = {}
     final_evaluation_seconds = {}
+    final_evaluation_compile_reuse = {}
     for arm in arms:
-        _train_step, evaluate = step_cache[(arm, first_signature)]
+        train_step, _evaluate = step_cache[(arm, first_signature)]
+        cache_before = int(train_step._cache_size())
         started = time.perf_counter()
-        evaluation = evaluate(
+        evaluation = train_step(
             parameters[arm],
+            optimizer[arm],
             first_batch,
             first_adapter.day_inputs,
+            np.asarray(0.0, dtype=np.float64),
         )
         jax.block_until_ready(evaluation)
         final_evaluation_seconds[arm] = time.perf_counter() - started
+        cache_after = int(train_step._cache_size())
+        hard_counts = _hard_counts_host(evaluation.hard_counts)
+        if not bool(np.asarray(evaluation.update_applied)):
+            raise ValueError(f"final zero-rate evaluation failed hard gates for {arm}")
+        final_evaluation_compile_reuse[arm] = {
+            "jit_cache_size_before": cache_before,
+            "jit_cache_size_after": cache_after,
+            "new_jit_executables": cache_after - cache_before,
+            "optimizer_result_discarded": True,
+            "learning_rate": 0.0,
+        }
         final_metrics[arm] = {
             "total": float(np.asarray(evaluation.loss)),
             "one_day_anchor": float(np.asarray(evaluation.anchor)),
@@ -811,7 +760,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 LONG_HORIZON_COMPONENTS,
                 evaluation.components,
             ),
-            "hard_gate_counts": _hard_counts_host(evaluation.hard_counts),
+            "hard_gate_counts": hard_counts,
         }
 
     coefficient_array = np.asarray(
@@ -879,17 +828,23 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "runner_contract_sha256": runner_contract.sha256,
             "schedule_sha256": schedule["schedule_sha256"],
             "prepared_manifest_sha256": prepared_manifest_sha256,
+            "frozen_coefficient_contract_sha256": frozen_coefficients.sha256,
+            "frozen_coefficient_source_report_sha256": frozen_coefficients.payload["source_evidence"][
+                "runner_report_sha256"
+            ],
         },
         "parameter_count_per_arm": counts,
         "matched_coefficients_shared_by_both_arms": True,
-        "coefficient_preflight_seconds": preflight_seconds,
+        "coefficient_preflight_recomputed": False,
+        "coefficient_preflight_seconds": 0.0,
+        "coefficient_contract_load_seconds": coefficient_contract_load_seconds,
         "prepared_batches_used": True,
         "prepared_manifest": str(args.prepared_manifest.resolve()),
         "prepared_artifact_count": len(prepared_manifest["entries"]),
         "prepared_artifact_total_size_bytes": int(prepared_manifest["total_size_bytes"]),
         "prepared_artifact_load_seconds": prepared_artifact_load_seconds,
         "live_retained_owner_build_count": 1,
-        "coefficient_preflight": _host_preflight(preflight),
+        "coefficient_preflight": dict(frozen_coefficients.source_preflight),
         "trace_signature_count": len(first_batches),
         "dynamic_retained_input_shape_signatures": {
             signature: _tree_shape_signature(jax, adapter.day_inputs)
@@ -905,6 +860,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "total_wall_seconds": time.perf_counter() - run_started,
             "training_loop_seconds": time.perf_counter() - total_started,
             "final_evaluation_seconds": final_evaluation_seconds,
+            "final_evaluation_reuses_train_step": True,
+            "final_evaluation_compile_reuse": final_evaluation_compile_reuse,
         },
         "device_memory_before_training": memory_before,
         "device_memory_after_training": _device_memory_report(runtime["devices"]),
@@ -937,6 +894,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--fast-statistics", type=Path, required=True)
     parser.add_argument("--runner-contract", type=Path, required=True)
     parser.add_argument("--prepared-manifest", type=Path, required=True)
+    parser.add_argument("--coefficient-contract", type=Path, required=True)
+    parser.add_argument("--coefficient-source-report", type=Path, required=True)
     parser.add_argument("--updates", type=int, required=True)
     parser.add_argument("--output", type=Path, required=True)
     return parser

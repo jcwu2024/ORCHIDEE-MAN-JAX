@@ -1,0 +1,45 @@
+{
+  "schema_version": "successor_small_fit_frozen_coefficients_v1",
+  "status": "accepted",
+  "contract_sha256": "b32f6cd0102d515b6f556e5e56b170229b27d913af8c0c2172b1e44c1f5f07ad",
+  "identity": {
+    "runner_contract_sha256": "8317fc74b6ba921b0ed60e774743884ddc81b233c75ce1823f3246211d1640de",
+    "schedule_sha256": "2c6ff41808b97b833850ecee667ddeb2e0561ad9d64dba7ce18835a7ce49fadc",
+    "successor_candidate_contract_sha256": "bb8bb34972e6fdff713f06f7ce48a2faa9eb4991af9f269c9aab26d96b592b5c",
+    "fast_owner_contract_sha256": "4db5f828442212c58903096c36015f9d769c19aeaaa4eb9a4326fbea2fdfc4c9",
+    "first_prepared_artifact_sha256": "d0b0fdaee6275546f5d740c670846a6d8e0849b0fa0c1d25ea36afe2987349ee"
+  },
+  "source_evidence": {
+    "git_head": "1c63494649207eecc365669fd3d9fcd7b85f389c",
+    "runner_report_sha256": "481581d1648699e140fa12c1b6a8e342f154ecb2216473f01a6916bd95c31f60",
+    "prepared_manifest_sha256": "2076ab3220f58be61d26bc1de0e0c10d2b16eb99c85318f16b02fda2bb9753c6",
+    "training_updates_per_arm": 2,
+    "coefficient_preflight_seconds": 408.0798439262435
+  },
+  "objective": {
+    "components": [
+      "cumulative_flux_mse",
+      "cumulative_flux_bias_squared",
+      "terminal_stock_mse",
+      "terminal_stock_bias_squared"
+    ],
+    "split_label": "train/train",
+    "gradient_ratio_targets": {
+      "cumulative_flux_mse": 0.1,
+      "cumulative_flux_bias_squared": 0.15,
+      "terminal_stock_mse": 0.1,
+      "terminal_stock_bias_squared": 0.15
+    },
+    "coefficient_minimum": 0.001,
+    "coefficient_maximum": 10.0,
+    "resolved_coefficients": {
+      "cumulative_flux_mse": 0.026843412276434775,
+      "cumulative_flux_bias_squared": 0.04026511841467285,
+      "terminal_stock_mse": 0.003129054494004748,
+      "terminal_stock_bias_squared": 0.004693581741008572
+    },
+    "same_coefficients_for_both_arms": true,
+    "recalibrate_during_fit": false,
+    "validation_weight_tuning_allowed": false
+  }
+}

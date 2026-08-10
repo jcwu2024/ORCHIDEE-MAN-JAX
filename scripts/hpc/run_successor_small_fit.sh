@@ -18,6 +18,8 @@ BASE_STATISTICS=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance
 PROCESS_STATISTICS=$ROOT/runtime/outputs/training/first-neural-process-head-v1-statistics/process_training_statistics.json
 FAST_STATISTICS=$ROOT/runtime/outputs/training/successor-fast-owner-statistics-c9f35c0/successor_fast_owner_statistics.json
 RUNNER_CONTRACT=$WORKTREE/manifests/coarse_graining/successor_small_fit_runner_v1.json
+COEFFICIENT_CONTRACT=$WORKTREE/manifests/coarse_graining/successor_small_fit_frozen_coefficients_v1.json
+COEFFICIENT_SOURCE_REPORT=$ROOT/runtime/outputs/training/successor-small-fit-hashseed0-cold-2u-1c63494/runner_report.json
 HEAD_SHORT=${EXPECTED_GIT_HEAD:0:7}
 OUTPUT=${OUTPUT:-$ROOT/runtime/outputs/training/successor-small-fit-${UPDATES}u-$HEAD_SHORT/runner_report.json}
 CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/successor-small-fit-runner-$HEAD_SHORT}
@@ -34,7 +36,8 @@ if [ "$UPDATES" -lt 2 ] || [ "$UPDATES" -gt 500 ]; then
   exit 2
 fi
 for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" \
-  "$PROCESS_STATISTICS" "$FAST_STATISTICS" "$PREPARED_MANIFEST"; do
+  "$PROCESS_STATISTICS" "$FAST_STATISTICS" "$PREPARED_MANIFEST" \
+  "$COEFFICIENT_SOURCE_REPORT"; do
   case "$path" in
     "$ROOT/runtime/"*) ;;
     *) echo "input escaped the project runtime root: $path" >&2; exit 2 ;;
@@ -48,6 +51,7 @@ for path in "$OUTPUT" "$CACHE_ROOT"; do
   esac
 done
 test -f "$RUNNER_CONTRACT"
+test -f "$COEFFICIENT_CONTRACT"
 test -x "$PYTHON"
 test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
 test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
@@ -89,6 +93,8 @@ env -u LD_LIBRARY_PATH \
       --fast-statistics "$FAST_STATISTICS" \
       --runner-contract "$RUNNER_CONTRACT" \
       --prepared-manifest "$PREPARED_MANIFEST" \
+      --coefficient-contract "$COEFFICIENT_CONTRACT" \
+      --coefficient-source-report "$COEFFICIENT_SOURCE_REPORT" \
       --updates "$UPDATES" \
       --output "$OUTPUT"
 
