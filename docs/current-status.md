@@ -167,10 +167,28 @@ switched entry loads in 0.235 seconds; replay, attention and control take
 
 Cross-process persistent cache reuse is not accepted. A new process with the
 same fixed hash seed and completed cache still recompiled `jit_train_step` and
-was stopped by its 10-minute hard limit. The active task is to remove
-avoidable coefficient-preflight and final-evaluation compilation, then
-remeasure before producing 500 artifacts or proposing any paid resources. See
+was stopped by its 10-minute hard limit. See
 [`successor_small_fit_prepared_batch_acceptance_20260810.md`](research/daily_coarse_graining/successor_small_fit_prepared_batch_acceptance_20260810.md).
+
+Commit `507cb61` then froze the four accepted train/train objective
+coefficients behind a source-report and first-artifact identity contract. A
+fresh two-entry manifest binds the new HEAD while retaining byte-identical
+artifact payloads. The cold `gln01` probe completed in 1,442.46 seconds, down
+465.92 seconds (24.4%) from the 1,908.38-second baseline. Coefficient loading
+took 0.018 seconds with no recalibration. Final zero-rate evaluations reused
+the compiled training steps in 1.055/0.894 seconds and added no executable.
+Both remaining cold train-step compile/updates took about 581 seconds; hot
+attention/control updates remained 1.208/0.894 seconds. All gradients were
+finite and all hard gates were zero. Report SHA256 is
+`a9ab43d855a4c035cbc52f978717de9737f801ef349981a19b50e22d2056bdc9`;
+see
+[`successor_small_fit_compile_reduction_acceptance_20260810.md`](research/daily_coarse_graining/successor_small_fit_compile_reduction_acceptance_20260810.md).
+
+No paid job is active. The next gate is a separately reviewed, resumable
+two-stage resource plan for preparing exactly 500 artifacts on a CPU compute
+partition and consuming them in one same-process, one-GPU 500-update fit.
+Neither stage may be submitted before its finite wall time, command, working
+directory and worst-case charge are explicitly approved.
 No paid training submission, 7/30-day screen, 365-day rollout,
 long-held-point, Gate D2, or product acceptance is authorized.
 

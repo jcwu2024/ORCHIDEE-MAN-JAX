@@ -464,11 +464,26 @@ See
 
 Cross-process persistent JAX cache reuse remains rejected: even with
 `PYTHONHASHSEED=0`, a new process re-entered slow `jit_train_step` compilation.
-No paid envelope is active. The active gate is to eliminate avoidable
-same-process coefficient-preflight and final-evaluation compilation, then
-remeasure one bounded cold/hot run before preparing all 500 CPU artifacts or
-requesting `gnall`. The 7/30-day screen, 365-day, long-held-point, Gate D2 and
-product acceptance remain closed.
+Commit `507cb61` closes the avoidable-compilation gate. It freezes the accepted
+train/train coefficients behind a hash- and identity-bound contract, removing
+the 408.08-second coefficient preflight, and reuses the compiled zero-rate
+training step for final evaluation. A fresh cold `gln01` probe completed in
+1,442.46 seconds versus 1,908.38 seconds, a 465.92-second (24.4%) reduction.
+Both remaining first train-step compile/updates took about 581 seconds; the
+switched hot attention/control updates took 1.208/0.894 seconds, and both final
+evaluations added zero JIT executables. All hard gates remained zero. The new
+report SHA256 is
+`a9ab43d855a4c035cbc52f978717de9737f801ef349981a19b50e22d2056bdc9`;
+see
+[`successor_small_fit_compile_reduction_acceptance_20260810.md`](research/daily_coarse_graining/successor_small_fit_compile_reduction_acceptance_20260810.md).
+
+No paid envelope is active. The active gate is now to freeze a resumable,
+two-stage 500-update production plan: CPU preparation of exactly 500
+HEAD-bound artifacts, followed by one same-process one-GPU fit that pays the
+two measured cold compilations once. Each stage requires a finite wall time,
+working directory, command and worst-case cost, followed by explicit approval
+before submission. Do not produce 500 artifacts on `test01`. The 7/30-day
+screen, 365-day, long-held-point, Gate D2 and product acceptance remain closed.
 
 ## Completed Task Packet: Gate C
 
@@ -483,9 +498,10 @@ accepted, and the revised canonical fast-state owner schema plus non-neural
 materializer now pass formal cold/ordinary/restart `160/160` acceptance. The
 79-value-head plus mask decoder extension, its full train/train statistics,
 and the no-checkpoint real-v6 GPU probe are accepted. The bounded-small-fit
-single-update preflight, prepared-batch boundary, and same-process hot reuse
-are accepted. Cross-process train-step cache reuse and the old paid envelope
-are rejected; no paid 500-update fit is currently proposed or submitted.
+single-update preflight, prepared-batch boundary, same-process hot reuse, and
+avoidable-compilation reduction are accepted. Cross-process train-step cache
+reuse and the old paid envelope are rejected; no paid 500-update fit is
+currently proposed or submitted.
 Gates D2 and F remain queued.
 
 ### Inputs

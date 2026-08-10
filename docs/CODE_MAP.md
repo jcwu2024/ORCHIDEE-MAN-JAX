@@ -245,7 +245,8 @@ the accepted no-checkpoint, one-update-per-arm free-`gln01` resource preflight.
 Its evidence is
 `successor_small_fit_gpu_probe_acceptance_20260809.md`.
 `scripts/hpc/run_successor_small_fit.py` owns the contract-bound, matched,
-no-checkpoint 2-to-500-update runner and requires a prepared manifest.
+no-checkpoint 2-to-500-update runner and requires a prepared manifest plus the
+accepted frozen-coefficient contract and its source report.
 `scripts/hpc/prepare_successor_small_fit_batches.py` and its CPU wrapper own
 resumable, hash-bound batch/day-input packaging; `successor_small_fit_prepared.py`
 owns artifact serialization and admission. `run_successor_small_fit.sh` owns
@@ -254,6 +255,10 @@ removed. Current prepared-batch/hot-reuse evidence and the rejected
 cross-process-cache assumption are in
 `successor_small_fit_prepared_batch_acceptance_20260810.md`; the earlier
 runner evidence remains in `successor_small_fit_runner_reuse_acceptance_20260810.md`.
+`daily_operator/successor_frozen_coefficients.py` admits the accepted
+train/train coefficient contract and rejects runner, schedule, candidate,
+owner, first-artifact or source-report drift. The current compile-reduction
+evidence is `successor_small_fit_compile_reduction_acceptance_20260810.md`.
 
 ## Scripts
 
