@@ -487,13 +487,21 @@ Each worker peaked near 4.8 GB RSS and prepared its artifact in about 70
 seconds. See
 [`successor_small_fit_production_resource_plan_20260810.md`](research/daily_coarse_graining/successor_small_fit_production_resource_plan_20260810.md).
 
-No paid job is active. The current action is explicit approval of the CPU
-stage only: `cnmix`, one node, four one-core tasks, four-hour limit, worst-case
-charge CNY 1.12. After its 500-entry output is independently admitted, the GPU
-stage requires a separate approval: `gnall`, one node, 16 CPU cores, one GPU,
-two-hour limit, additive worst-case charge CNY 6.64. Do not combine these
-approvals or start the GPU from a partial manifest. The 7/30-day screen,
-365-day, long-held-point, Gate D2 and product acceptance remain closed.
+Approved `cnmix` job `14517346` completed the CPU stage in `01:58:09` with all
+four workers and the finalizer exiting zero. The accepted manifest contains
+exactly 500 entries and 16,717,190,876 artifact bytes. An independent
+`test01` audit rehashed every file and passed exact size, SHA256, path,
+coverage, identity and policy checks. Manifest SHA256 is
+`0182b7f7a6d5eae09025a336f26bc67ba5fb54706c3529a846d3885c16d80462`;
+see
+[`successor_small_fit_prepared_500_acceptance_20260810.md`](research/daily_coarse_graining/successor_small_fit_prepared_500_acceptance_20260810.md).
+
+The server execution worktree must remain clean and pinned at manifest-bound
+HEAD `d493699` until the fit consumes these artifacts. No GPU job is active.
+The current gate is separate approval of the one-process GPU stage: `gnall`,
+one node, 16 CPU cores, one GPU, two-hour limit, additive worst-case charge
+CNY 6.64. The 7/30-day screen, 365-day, long-held-point, Gate D2 and product
+acceptance remain closed.
 
 ## Completed Task Packet: Gate C
 
@@ -510,8 +518,8 @@ materializer now pass formal cold/ordinary/restart `160/160` acceptance. The
 and the no-checkpoint real-v6 GPU probe are accepted. The bounded-small-fit
 single-update preflight, prepared-batch boundary, same-process hot reuse, and
 avoidable-compilation reduction are accepted. Cross-process train-step cache
-reuse and the old paid envelope are rejected. A new staged resource plan is
-proposed; neither its CPU preparation nor conditional GPU fit is submitted.
+reuse and the old paid envelope are rejected. The new staged CPU preparation
+is accepted; its conditional GPU fit remains unsubmitted.
 Gates D2 and F remain queued.
 
 ### Inputs

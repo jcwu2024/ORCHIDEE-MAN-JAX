@@ -195,9 +195,18 @@ The bounded resource plan requests four one-core `cnmix` tasks for four hours
 and one `gnall` GPU for two hours (additive CNY 6.64 ceiling). See
 [`successor_small_fit_production_resource_plan_20260810.md`](research/daily_coarse_graining/successor_small_fit_production_resource_plan_20260810.md).
 
-No paid job is active. Explicit approval of the CPU preparation stage is the
-current gate. GPU approval remains separate and conditional on admission of
-the complete 500-entry manifest.
+Approved `cnmix` job `14517346` completed in `01:58:09`; all four preparation
+workers and the finalizer exited zero. The final product contains exactly 500
+artifacts totaling 16,717,190,876 bytes. A separate `test01` process rehashed
+every artifact and passed exact coverage, size, SHA256, path, HEAD, schedule
+and policy checks. Manifest SHA256 is
+`0182b7f7a6d5eae09025a336f26bc67ba5fb54706c3529a846d3885c16d80462`.
+See
+[`successor_small_fit_prepared_500_acceptance_20260810.md`](research/daily_coarse_graining/successor_small_fit_prepared_500_acceptance_20260810.md).
+
+No GPU job is active. The server execution worktree remains intentionally
+pinned at manifest-bound HEAD `d493699`. A separately approved one-process
+500-update GPU fit is the current gate.
 No paid training submission, 7/30-day screen, 365-day rollout,
 long-held-point, Gate D2, or product acceptance is authorized.
 

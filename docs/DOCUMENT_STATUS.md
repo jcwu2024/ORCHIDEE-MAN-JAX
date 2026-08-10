@@ -57,7 +57,8 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_small_fit_runner_reuse_acceptance_20260810.md` | Historical accepted same-process reuse evidence; its 20-hour paid projection is superseded | Reviewing why repeated host preparation was rejected |
 | `research/daily_coarse_graining/successor_small_fit_prepared_batch_acceptance_20260810.md` | Accepted prepared-batch and hot-reuse evidence; cross-process cache and old paid envelope rejected | Reviewing the prepared boundary or rejected cache assumption |
 | `research/daily_coarse_graining/successor_small_fit_compile_reduction_acceptance_20260810.md` | Accepted cold/hot timing evidence; avoidable compilation removed | Reviewing the timing basis for the bounded 500-update resource plan |
-| `research/daily_coarse_graining/successor_small_fit_production_resource_plan_20260810.md` | Active staged resource contract; partition smoke accepted and CPU submission awaits approval | Reviewing resources, costs, recovery, or approving the CPU preparation stage |
+| `research/daily_coarse_graining/successor_small_fit_production_resource_plan_20260810.md` | Accepted staged resource contract; CPU stage complete and GPU stage still gated | Reviewing resources, costs, or recovery policy |
+| `research/daily_coarse_graining/successor_small_fit_prepared_500_acceptance_20260810.md` | Active accepted 500-entry CPU product; bound GPU fit awaits separate approval | Reviewing prepared input identity or approving the GPU fit |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

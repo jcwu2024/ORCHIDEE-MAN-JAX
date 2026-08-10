@@ -264,6 +264,10 @@ evidence is `successor_small_fit_compile_reduction_acceptance_20260810.md`.
 separately gated one-GPU same-process fit envelope. Their accepted partition
 smoke, recovery boundary and cost contract are in
 `successor_small_fit_production_resource_plan_20260810.md`.
+The complete four-worker 500-entry artifact product and independent full-hash
+admission are recorded in
+`successor_small_fit_prepared_500_acceptance_20260810.md`; its server execution
+worktree remains pinned to the manifest-bound HEAD until the GPU fit completes.
 
 ## Scripts
 
