@@ -8,6 +8,9 @@ WORKTREE=${WORKTREE:?set WORKTREE to the approved clean research worktree}
 EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD to the approved commit}
 UPDATES=${UPDATES:?set UPDATES between 2 and 500}
 OUTPUT_DIR=${OUTPUT_DIR:?set OUTPUT_DIR under the project runtime root}
+WORKER_INDEX=${WORKER_INDEX:-}
+WORKER_COUNT=${WORKER_COUNT:-}
+FINALIZE=${FINALIZE:-false}
 PYTHON=$ROOT/.venvs/orcjax_cpu/bin/python
 
 DATASET=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json
@@ -56,6 +59,17 @@ export OPENBLAS_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 cd "$WORKTREE"
 
+EXTRA_ARGS=()
+if [ "$FINALIZE" = true ]; then
+  test -n "$WORKER_COUNT"
+  test -z "$WORKER_INDEX"
+  EXTRA_ARGS+=(--finalize --worker-count "$WORKER_COUNT")
+elif [ -n "$WORKER_INDEX" ] || [ -n "$WORKER_COUNT" ]; then
+  test -n "$WORKER_INDEX"
+  test -n "$WORKER_COUNT"
+  EXTRA_ARGS+=(--worker-index "$WORKER_INDEX" --worker-count "$WORKER_COUNT")
+fi
+
 /usr/bin/time -v "$PYTHON" -m scripts.hpc.prepare_successor_small_fit_batches \
   --dataset-manifest "$DATASET" \
   --acceptance-report "$ACCEPTANCE" \
@@ -64,7 +78,14 @@ cd "$WORKTREE"
   --fast-statistics "$FAST_STATISTICS" \
   --runner-contract "$RUNNER_CONTRACT" \
   --updates "$UPDATES" \
-  --output-dir "$OUTPUT_DIR"
+  --output-dir "$OUTPUT_DIR" \
+  "${EXTRA_ARGS[@]}"
 
-test -f "$OUTPUT_DIR/prepared_manifest.json"
-sha256sum "$OUTPUT_DIR/prepared_manifest.json"
+if [ "$FINALIZE" = true ] || [ -z "$WORKER_INDEX" ]; then
+  test -f "$OUTPUT_DIR/prepared_manifest.json"
+  sha256sum "$OUTPUT_DIR/prepared_manifest.json"
+else
+  PARTIAL=$OUTPUT_DIR/partials/worker-$(printf '%04d' "$WORKER_INDEX").json
+  test -f "$PARTIAL"
+  sha256sum "$PARTIAL"
+fi

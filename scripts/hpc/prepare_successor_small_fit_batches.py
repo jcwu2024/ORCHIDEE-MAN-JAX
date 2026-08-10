@@ -53,9 +53,25 @@ def _identity(
     }
 
 
-def _load_progress(path: Path, identity: Mapping[str, Any], updates: int) -> dict[str, Any]:
+def _worker_updates(updates: int, worker_index: int, worker_count: int) -> tuple[int, ...]:
+    if worker_count < 1:
+        raise ValueError("worker_count must be positive")
+    if not 0 <= worker_index < worker_count:
+        raise ValueError("worker_index is outside worker_count")
+    return tuple(range(worker_index + 1, updates + 1, worker_count))
+
+
+def _load_progress(
+    path: Path,
+    identity: Mapping[str, Any],
+    updates: int,
+    *,
+    worker_index: int | None = None,
+    worker_count: int | None = None,
+) -> dict[str, Any]:
+    worker = None if worker_index is None else {"index": int(worker_index), "count": int(worker_count)}
     if not path.exists():
-        return {
+        payload = {
             "schema_version": PREPARED_MANIFEST_SCHEMA,
             "status": "in_progress",
             "identity": dict(identity),
@@ -64,14 +80,79 @@ def _load_progress(path: Path, identity: Mapping[str, Any], updates: int) -> dic
             "teacher_data_regenerated": False,
             "historical_v5_used": False,
         }
+        if worker is not None:
+            payload["worker"] = worker
+        return payload
     payload = json.loads(path.read_text(encoding="utf-8"))
     if (
         payload.get("schema_version") != PREPARED_MANIFEST_SCHEMA
         or payload.get("identity") != dict(identity)
         or int(payload.get("updates", -1)) != updates
+        or payload.get("worker") != worker
     ):
         raise ValueError("existing successor preparation progress has different identity")
     return payload
+
+
+def _finalize_worker_progress(
+    output_dir: Path,
+    identity: Mapping[str, Any],
+    schedule: Mapping[str, Any],
+    updates: int,
+    worker_count: int,
+) -> Mapping[str, Any]:
+    if worker_count < 1:
+        raise ValueError("worker_count must be positive")
+    started = time.perf_counter()
+    manifest_path = output_dir / "prepared_manifest.json"
+    completed: dict[int, Mapping[str, Any]] = {}
+    for worker_index in range(worker_count):
+        partial_path = output_dir / "partials" / f"worker-{worker_index:04d}.json"
+        if not partial_path.is_file():
+            raise ValueError(f"missing successor preparation worker {worker_index}")
+        partial = json.loads(partial_path.read_text(encoding="utf-8"))
+        expected_updates = _worker_updates(updates, worker_index, worker_count)
+        observed_updates = tuple(int(record.get("update", -1)) for record in partial.get("entries", ()))
+        if (
+            partial.get("schema_version") != PREPARED_MANIFEST_SCHEMA
+            or partial.get("status") != "passed"
+            or partial.get("identity") != dict(identity)
+            or int(partial.get("updates", -1)) != updates
+            or partial.get("worker") != {"index": worker_index, "count": worker_count}
+            or partial.get("teacher_data_regenerated") is not False
+            or partial.get("historical_v5_used") is not False
+            or observed_updates != expected_updates
+        ):
+            raise ValueError(f"successor preparation worker {worker_index} coverage or identity drift")
+        for record in partial["entries"]:
+            update = int(record["update"])
+            if update in completed:
+                raise ValueError(f"duplicate successor prepared update {update}")
+            load_prepared_artifact(
+                manifest_path,
+                record,
+                schedule_entry=schedule["entries"][update - 1],
+            )
+            completed[update] = record
+
+    if tuple(sorted(completed)) != tuple(range(1, updates + 1)):
+        raise ValueError("successor preparation worker merge has incomplete coverage")
+    entries = [completed[index] for index in range(1, updates + 1)]
+    progress = {
+        "schema_version": PREPARED_MANIFEST_SCHEMA,
+        "status": "passed",
+        "identity": dict(identity),
+        "updates": updates,
+        "entries": entries,
+        "trace_signatures": sorted({record["trace_signature"] for record in entries}),
+        "total_size_bytes": sum(int(record["size_bytes"]) for record in entries),
+        "elapsed_seconds_this_invocation": time.perf_counter() - started,
+        "worker_count": worker_count,
+        "teacher_data_regenerated": False,
+        "historical_v5_used": False,
+    }
+    atomic_json(manifest_path, progress)
+    return progress | {"manifest_sha256": sha256_file(manifest_path)}
 
 
 def run(args: argparse.Namespace) -> Mapping[str, Any]:
@@ -102,12 +183,40 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     identity = _identity(runtime, runner_contract, schedule)
     output_dir = args.output_dir.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
+    worker_count = args.worker_count
+    worker_index = args.worker_index
+    if args.finalize:
+        if worker_count is None or worker_index is not None:
+            raise ValueError("finalize requires worker_count and forbids worker_index")
+        return _finalize_worker_progress(
+            output_dir,
+            identity,
+            schedule,
+            updates,
+            worker_count,
+        )
+    if (worker_count is None) != (worker_index is None):
+        raise ValueError("worker_index and worker_count must be supplied together")
+    assigned_updates = (
+        tuple(range(1, updates + 1)) if worker_index is None else _worker_updates(updates, worker_index, worker_count)
+    )
     manifest_path = output_dir / "prepared_manifest.json"
-    progress = _load_progress(manifest_path, identity, updates)
+    progress_path = (
+        manifest_path if worker_index is None else output_dir / "partials" / f"worker-{worker_index:04d}.json"
+    )
+    progress = _load_progress(
+        progress_path,
+        identity,
+        updates,
+        worker_index=worker_index,
+        worker_count=worker_count,
+    )
     completed = {int(record["update"]): record for record in progress["entries"]}
     started = time.perf_counter()
 
     for update, entry in enumerate(schedule["entries"], start=1):
+        if update not in assigned_updates:
+            continue
         existing = completed.get(update)
         if existing is not None:
             load_prepared_artifact(
@@ -141,7 +250,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         progress["entries"] = [completed[index] for index in sorted(completed)]
         progress["total_size_bytes"] = sum(int(item["size_bytes"]) for item in progress["entries"])
         progress["elapsed_seconds_this_invocation"] = time.perf_counter() - started
-        atomic_json(manifest_path, progress)
+        atomic_json(progress_path, progress)
         print(
             "successor_prepared_update_written "
             f"update={update} size_bytes={record['size_bytes']} "
@@ -150,12 +259,12 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         )
 
     progress["status"] = "passed"
-    progress["entries"] = [completed[index] for index in range(1, updates + 1)]
+    progress["entries"] = [completed[index] for index in assigned_updates]
     progress["trace_signatures"] = sorted({record["trace_signature"] for record in progress["entries"]})
     progress["total_size_bytes"] = sum(int(item["size_bytes"]) for item in progress["entries"])
     progress["elapsed_seconds_this_invocation"] = time.perf_counter() - started
-    atomic_json(manifest_path, progress)
-    progress["manifest_sha256"] = sha256_file(manifest_path)
+    atomic_json(progress_path, progress)
+    progress["manifest_sha256"] = sha256_file(progress_path)
     return progress
 
 
@@ -169,6 +278,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--runner-contract", type=Path, required=True)
     parser.add_argument("--updates", type=int, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--worker-index", type=int)
+    parser.add_argument("--worker-count", type=int)
+    parser.add_argument("--finalize", action="store_true")
     return parser
 
 

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
@@ -28,6 +29,10 @@ from research.daily_coarse_graining.daily_operator.successor_small_fit import (
 )
 from research.daily_coarse_graining.daily_operator.successor_training import (
     LONG_HORIZON_COMPONENTS,
+)
+from scripts.hpc.prepare_successor_small_fit_batches import (
+    _finalize_worker_progress,
+    _worker_updates,
 )
 from scripts.hpc.run_successor_small_fit import (
     _retained_tail_trace_signature,
@@ -308,6 +313,28 @@ def test_rejected_paid_launcher_is_removed():
     assert not (root / "scripts" / "hpc" / "slurm_successor_small_fit.sh").exists()
 
 
+def test_two_stage_production_launchers_are_bounded_and_unsubmitted():
+    root = Path(__file__).resolve().parents[2]
+    cpu = (root / "scripts" / "hpc" / "slurm_prepare_successor_small_fit_500.sh").read_text()
+    gpu = (root / "scripts" / "hpc" / "slurm_successor_small_fit_500.sh").read_text()
+
+    assert "#SBATCH --partition=cnmix" in cpu
+    assert "#SBATCH --ntasks=4" in cpu
+    assert "#SBATCH --time=04:00:00" in cpu
+    assert "WORKER_COUNT=4" in cpu
+    assert "FINALIZE=true" in cpu
+    assert 'test ! -e "$OUTPUT_DIR/prepared_manifest.json"' in cpu
+    assert "CNY 1.12 worst case" in cpu
+
+    assert "#SBATCH --partition=gnall" in gpu
+    assert "#SBATCH --cpus-per-task=16" in gpu
+    assert "#SBATCH --gres=gpu:1" in gpu
+    assert "#SBATCH --time=02:00:00" in gpu
+    assert "PREPARED_MANIFEST=${PREPARED_MANIFEST:?" in gpu
+    assert "UPDATES=500" in gpu
+    assert "CNY 6.64 worst case" in gpu
+
+
 def test_prepared_update_round_trip_and_hash_drift(tmp_path):
     entry = {"landpoint_id": "001.0-071.0", "year": 1961, "anchor_starts": [1]}
     artifact = PreparedUpdateArtifact(
@@ -375,6 +402,58 @@ def test_prepared_manifest_binds_source_schedule_and_update_coverage(tmp_path):
             updates=2,
             source_git_head="head",
         )
+
+
+def test_partitioned_preparation_finalizer_checks_and_merges_exact_coverage(tmp_path):
+    identity = {"source_git_head": "head", "schedule_sha256": "schedule"}
+    schedule = {"entries": [{"landpoint_id": f"{update:03d}.0-071.0", "year": 1960 + update} for update in range(1, 5)]}
+    assert _worker_updates(4, 0, 2) == (1, 3)
+    assert _worker_updates(4, 1, 2) == (2, 4)
+
+    partials = tmp_path / "partials"
+    for worker_index in range(2):
+        records = []
+        for update in _worker_updates(4, worker_index, 2):
+            entry = schedule["entries"][update - 1]
+            artifact = PreparedUpdateArtifact(
+                schema_version=PREPARED_ARTIFACT_SCHEMA,
+                schedule_entry=entry,
+                trace_signature="trace",
+                batch={"state": np.asarray([update])},
+                day_inputs=(np.asarray([update]),),
+            )
+            record = write_prepared_artifact(tmp_path / f"update-{update:04d}.pkl", artifact) | {
+                "update": update,
+                "landpoint_id": entry["landpoint_id"],
+                "year": entry["year"],
+                "trace_signature": "trace",
+            }
+            records.append(record)
+        atomic_json(
+            partials / f"worker-{worker_index:04d}.json",
+            {
+                "schema_version": PREPARED_MANIFEST_SCHEMA,
+                "status": "passed",
+                "identity": identity,
+                "updates": 4,
+                "worker": {"index": worker_index, "count": 2},
+                "entries": records,
+                "teacher_data_regenerated": False,
+                "historical_v5_used": False,
+            },
+        )
+
+    merged = _finalize_worker_progress(tmp_path, identity, schedule, 4, 2)
+    assert merged["status"] == "passed"
+    assert merged["worker_count"] == 2
+    assert [record["update"] for record in merged["entries"]] == [1, 2, 3, 4]
+    assert sha256_file(tmp_path / "prepared_manifest.json") == merged["manifest_sha256"]
+
+    partial = json.loads((partials / "worker-0001.json").read_text())
+    partial["entries"] = list(reversed(partial["entries"]))
+    atomic_json(partials / "worker-0001.json", partial)
+    with pytest.raises(ValueError, match="coverage or identity drift"):
+        _finalize_worker_progress(tmp_path, identity, schedule, 4, 2)
 
 
 def test_cpu_preparer_launcher_is_bounded_and_workspace_clean():
