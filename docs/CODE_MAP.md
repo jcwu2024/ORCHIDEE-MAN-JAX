@@ -244,9 +244,14 @@ conversion, hard gates and AdamW update. The machine contract is
 the accepted no-checkpoint, one-update-per-arm free-`gln01` resource preflight.
 Its evidence is
 `successor_small_fit_gpu_probe_acceptance_20260809.md`.
-`scripts/hpc/run_successor_small_fit.py` owns the contract-bound, matched,
-no-checkpoint 2-to-500-update runner and requires a prepared manifest plus the
-accepted frozen-coefficient contract and its source report.
+`scripts/hpc/run_successor_small_fit.py` owns the contract-bound matched
+500-update runner and requires a prepared manifest plus the accepted
+frozen-coefficient contract and its source report. Successful production fits
+publish both arms atomically through
+`daily_operator/successor_fit_checkpoint.py`; failed and submaximal runs write
+no checkpoint. The producer/consumer identity amendment is
+`manifests/coarse_graining/successor_small_fit_checkpoint_handoff_v1.json`,
+documented in `successor_small_fit_checkpoint_handoff_v1.md`.
 `scripts/hpc/prepare_successor_small_fit_batches.py` and its CPU wrapper own
 resumable, hash-bound batch/day-input packaging; `successor_small_fit_prepared.py`
 owns artifact serialization and admission. `run_successor_small_fit.sh` owns
@@ -267,7 +272,8 @@ smoke, recovery boundary and cost contract are in
 The complete four-worker 500-entry artifact product and independent full-hash
 admission are recorded in
 `successor_small_fit_prepared_500_acceptance_20260810.md`; its server execution
-worktree remains pinned to the manifest-bound HEAD until the GPU fit completes.
+identity remains bound to producer HEAD `d493699`. A later clean consumer
+worktree may admit it only through the exact checkpoint-handoff contract.
 
 ## Scripts
 

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run the contract-bound matched successor fit or a bounded free reuse probe.
+# Run the contract-bound 500-update successor fit with atomic checkpoints.
 
 set -euo pipefail
 
@@ -7,7 +7,7 @@ ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 WORKTREE=${WORKTREE:?set WORKTREE to the approved clean research worktree}
 EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD to the approved commit}
 GPU_DEVICE=${GPU_DEVICE:?set GPU_DEVICE after checking nvidia-smi}
-UPDATES=${UPDATES:?set UPDATES between 2 and 500}
+UPDATES=${UPDATES:?set UPDATES to the approved production budget}
 PREPARED_MANIFEST=${PREPARED_MANIFEST:?set PREPARED_MANIFEST to the accepted CPU-prepared manifest}
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
@@ -18,10 +18,12 @@ BASE_STATISTICS=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance
 PROCESS_STATISTICS=$ROOT/runtime/outputs/training/first-neural-process-head-v1-statistics/process_training_statistics.json
 FAST_STATISTICS=$ROOT/runtime/outputs/training/successor-fast-owner-statistics-c9f35c0/successor_fast_owner_statistics.json
 RUNNER_CONTRACT=$WORKTREE/manifests/coarse_graining/successor_small_fit_runner_v1.json
+CHECKPOINT_HANDOFF=$WORKTREE/manifests/coarse_graining/successor_small_fit_checkpoint_handoff_v1.json
 COEFFICIENT_CONTRACT=$WORKTREE/manifests/coarse_graining/successor_small_fit_frozen_coefficients_v1.json
 COEFFICIENT_SOURCE_REPORT=$ROOT/runtime/outputs/training/successor-small-fit-hashseed0-cold-2u-1c63494/runner_report.json
 HEAD_SHORT=${EXPECTED_GIT_HEAD:0:7}
 OUTPUT=${OUTPUT:-$ROOT/runtime/outputs/training/successor-small-fit-${UPDATES}u-$HEAD_SHORT/runner_report.json}
+CHECKPOINT_DIR=${CHECKPOINT_DIR:-$(dirname "$OUTPUT")/checkpoints}
 CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/successor-small-fit-runner-$HEAD_SHORT}
 
 case "$WORKTREE" in
@@ -31,8 +33,8 @@ esac
 case "$UPDATES" in
   ''|*[!0-9]*) echo "UPDATES must be an integer" >&2; exit 2 ;;
 esac
-if [ "$UPDATES" -lt 2 ] || [ "$UPDATES" -gt 500 ]; then
-  echo "UPDATES must lie in [2, 500]" >&2
+if [ "$UPDATES" -ne 500 ]; then
+  echo "the checkpoint-producing successor fit requires exactly 500 updates" >&2
   exit 2
 fi
 for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" \
@@ -44,18 +46,20 @@ for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" \
   esac
   test -f "$path"
 done
-for path in "$OUTPUT" "$CACHE_ROOT"; do
+for path in "$OUTPUT" "$CHECKPOINT_DIR" "$CACHE_ROOT"; do
   case "$path" in
     "$ROOT/runtime/"*) ;;
     *) echo "runtime output escaped the project root: $path" >&2; exit 2 ;;
   esac
 done
 test -f "$RUNNER_CONTRACT"
+test -f "$CHECKPOINT_HANDOFF"
 test -f "$COEFFICIENT_CONTRACT"
 test -x "$PYTHON"
 test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
 test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
 test ! -e "$OUTPUT"
+test ! -e "$CHECKPOINT_DIR"
 command -v nvidia-smi >/dev/null
 nvidia-smi -L >/dev/null
 mkdir -p "$(dirname "$OUTPUT")" "$CACHE_ROOT"
@@ -92,11 +96,15 @@ env -u LD_LIBRARY_PATH \
       --process-statistics "$PROCESS_STATISTICS" \
       --fast-statistics "$FAST_STATISTICS" \
       --runner-contract "$RUNNER_CONTRACT" \
+      --checkpoint-handoff "$CHECKPOINT_HANDOFF" \
       --prepared-manifest "$PREPARED_MANIFEST" \
       --coefficient-contract "$COEFFICIENT_CONTRACT" \
       --coefficient-source-report "$COEFFICIENT_SOURCE_REPORT" \
       --updates "$UPDATES" \
-      --output "$OUTPUT"
+      --output "$OUTPUT" \
+      --checkpoint-dir "$CHECKPOINT_DIR"
 
 test -f "$OUTPUT"
+test -f "$CHECKPOINT_DIR/checkpoint_manifest.json"
 sha256sum "$OUTPUT"
+sha256sum "$CHECKPOINT_DIR/checkpoint_manifest.json"

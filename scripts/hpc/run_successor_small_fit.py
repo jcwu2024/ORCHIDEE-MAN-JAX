@@ -13,6 +13,11 @@ from typing import Any, Mapping, NamedTuple
 
 import numpy as np
 
+from research.daily_coarse_graining.daily_operator.successor_fit_checkpoint import (
+    admit_prepared_manifest_for_checkpoint_fit,
+    load_successor_checkpoint_handoff,
+    write_successor_checkpoint_set,
+)
 from scripts.hpc.run_successor_fast_owner_gpu_probe import (
     EXPECTED_PARAMETER_COUNT,
     _head,
@@ -407,8 +412,12 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     )
 
     runner_contract = load_successor_small_fit_contract(args.runner_contract)
+    checkpoint_handoff = load_successor_checkpoint_handoff(args.checkpoint_handoff)
     maximum_updates = int(runner_contract.sampling["maximum_updates_per_arm"])
     requested_updates = _validate_update_count(args.updates, maximum_updates)
+    production_fit = requested_updates == maximum_updates
+    if not production_fit:
+        raise ValueError("the checkpoint-handoff runner requires the full 500-update production fit")
     identity = runner_contract.payload["identity"]
     if (
         identity["successor_candidate_contract_sha256"] != runtime["successor_contract"].sha256
@@ -427,14 +436,23 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     )
     verify_successor_small_fit_schedule(schedule, references, runner_contract)
     git_head = _git_head()
+    producer = checkpoint_handoff.producer
     prepared_manifest = load_prepared_manifest(
         args.prepared_manifest,
-        runner_contract_sha256=runner_contract.sha256,
+        runner_contract_sha256=str(producer["producer_runner_contract_sha256"]),
         schedule_sha256=schedule["schedule_sha256"],
         updates=requested_updates,
-        source_git_head=git_head,
+        source_git_head=str(producer["producer_git_head"]),
     )
     prepared_manifest_sha256 = sha256_file(args.prepared_manifest)
+    artifact_admission = admit_prepared_manifest_for_checkpoint_fit(
+        checkpoint_handoff,
+        args.prepared_manifest,
+        prepared_manifest,
+        runner_contract_sha256=runner_contract.sha256,
+        schedule_sha256=schedule["schedule_sha256"],
+        consumer_git_head=git_head,
+    )
     objective_contract = runner_contract.payload["objective"]
     coefficient_load_started = time.perf_counter()
     frozen_coefficients = load_frozen_successor_coefficients(
@@ -452,6 +470,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     )
     coefficient_contract_load_seconds = time.perf_counter() - coefficient_load_started
     coefficients = dict(frozen_coefficients.coefficients)
+    execution_identity = dict(identity) | dict(artifact_admission) | {
+        "git_head": git_head,
+        "runner_contract_sha256": runner_contract.sha256,
+        "schedule_sha256": schedule["schedule_sha256"],
+        "prepared_manifest_sha256": prepared_manifest_sha256,
+        "frozen_coefficient_contract_sha256": frozen_coefficients.sha256,
+        "frozen_coefficient_source_report_sha256": frozen_coefficients.payload["source_evidence"][
+            "runner_report_sha256"
+        ],
+    }
     first_entry = schedule["entries"][0]
     first_load_started = time.perf_counter()
     first_artifact = load_prepared_artifact(
@@ -489,12 +517,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "training_updates_per_arm": 0,
             "teacher_data_regenerated": False,
             "historical_v5_used": False,
-            "identity": dict(identity)
-            | {
-                "git_head": git_head,
-                "runner_contract_sha256": runner_contract.sha256,
-                "schedule_sha256": schedule["schedule_sha256"],
-            },
+            "identity": execution_identity,
             "annual_shard_teacher_replay": first_replay,
         }
         _atomic_json(args.output, report)
@@ -598,12 +621,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 "teacher_data_regenerated": False,
                 "historical_v5_used": False,
                 "test_split_used": False,
-                "identity": dict(identity)
-                | {
-                    "git_head": git_head,
-                    "runner_contract_sha256": runner_contract.sha256,
-                    "schedule_sha256": schedule["schedule_sha256"],
-                },
+                "identity": execution_identity,
                 "teacher_replay": replay,
                 "completed_update_records": records,
                 "total_wall_seconds": time.perf_counter() - run_started,
@@ -677,12 +695,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                     "teacher_data_regenerated": False,
                     "historical_v5_used": False,
                     "test_split_used": False,
-                    "identity": dict(identity)
-                    | {
-                        "git_head": git_head,
-                        "runner_contract_sha256": runner_contract.sha256,
-                        "schedule_sha256": schedule["schedule_sha256"],
-                    },
+                    "identity": execution_identity,
                     "completed_update_records": records,
                     "total_wall_seconds": time.perf_counter() - run_started,
                     "next_gate": "repair_contract_runner",
@@ -808,13 +821,35 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         )
         for record in reuse_records
     )
-    production_fit = requested_updates == maximum_updates
     passed = reuse_passed and (promotion_passed if production_fit else True)
+    checkpoint_set = None
+    checkpoint_failure = None
+    if production_fit and passed:
+        try:
+            checkpoint_set = write_successor_checkpoint_set(
+                args.checkpoint_dir,
+                identity=execution_identity,
+                parameters={arm: jax.device_get(parameters[arm]) for arm in arms},
+                optimizers={arm: jax.device_get(optimizer[arm]) for arm in arms},
+                completed_updates=completed_updates,
+                parameter_counts=counts,
+                final_metrics=final_metrics,
+                loss_reductions=reductions,
+                expected_arms=arms,
+                required_updates=maximum_updates,
+                promotion_passed=promotion_passed,
+            )
+        except Exception as error:
+            passed = False
+            checkpoint_failure = f"{type(error).__name__}: {error}"
     report = {
         "schema_version": "successor_small_fit_contract_runner_v1",
         "status": "passed" if passed else "failed",
         "run_kind": "production_bounded_fit" if production_fit else "bounded_reuse_probe",
-        "checkpoint_written": False,
+        "checkpoint_written": checkpoint_set is not None,
+        "checkpoint_set": checkpoint_set,
+        "checkpoint_publication_failure": checkpoint_failure,
+        "failed_stage": "checkpoint_publication" if checkpoint_failure is not None else None,
         "training_updates_per_arm": requested_updates,
         "completed_updates_per_arm": completed_updates,
         "teacher_data_regenerated": False,
@@ -822,17 +857,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "test_split_used": False,
         "backend": jax.default_backend(),
         "devices": [str(device) for device in runtime["devices"]],
-        "identity": dict(identity)
-        | {
-            "git_head": git_head,
-            "runner_contract_sha256": runner_contract.sha256,
-            "schedule_sha256": schedule["schedule_sha256"],
-            "prepared_manifest_sha256": prepared_manifest_sha256,
-            "frozen_coefficient_contract_sha256": frozen_coefficients.sha256,
-            "frozen_coefficient_source_report_sha256": frozen_coefficients.payload["source_evidence"][
-                "runner_report_sha256"
-            ],
-        },
+        "identity": execution_identity,
         "parameter_count_per_arm": counts,
         "matched_coefficients_shared_by_both_arms": True,
         "coefficient_preflight_recomputed": False,
@@ -876,6 +901,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "next_gate": (
             "run_7_30_day_screen_in_a_separately_authorized_lifecycle"
             if production_fit and passed
+            else "repair_checkpoint_publication"
+            if checkpoint_failure is not None
             else "freeze_paid_resource_envelope"
             if passed
             else "repair_contract_runner"
@@ -893,11 +920,13 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--process-statistics", type=Path, required=True)
     parser.add_argument("--fast-statistics", type=Path, required=True)
     parser.add_argument("--runner-contract", type=Path, required=True)
+    parser.add_argument("--checkpoint-handoff", type=Path, required=True)
     parser.add_argument("--prepared-manifest", type=Path, required=True)
     parser.add_argument("--coefficient-contract", type=Path, required=True)
     parser.add_argument("--coefficient-source-report", type=Path, required=True)
     parser.add_argument("--updates", type=int, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--checkpoint-dir", type=Path, required=True)
     return parser
 
 

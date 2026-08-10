@@ -204,9 +204,19 @@ and policy checks. Manifest SHA256 is
 See
 [`successor_small_fit_prepared_500_acceptance_20260810.md`](research/daily_coarse_graining/successor_small_fit_prepared_500_acceptance_20260810.md).
 
-No GPU job is active. The server execution worktree remains intentionally
-pinned at manifest-bound HEAD `d493699`. A separately approved one-process
-500-update GPU fit is the current gate.
+The pre-existing runner would have discarded both trained parameter trees at
+process exit, making its named later 7/30-day screen impossible without
+retraining. A checkpoint handoff amendment now preserves the immutable
+producer identity at `d493699` while recording a distinct consumer commit.
+Only a complete, passing 500-update fit may atomically publish both arms,
+including parameters, optimizer state, hashes and tree schemas; failed and
+submaximal runs publish nothing. Local contract, round-trip, tamper, incomplete
+fit and injected second-arm failure tests pass `23/23`. See
+[`successor_small_fit_checkpoint_handoff_v1.md`](research/daily_coarse_graining/successor_small_fit_checkpoint_handoff_v1.md).
+
+No GPU job is active. The next gate is a free `gln01` GPU-array
+serialization/reload preflight for this handoff. Only after it passes may a
+fresh approval block be shown for the one-process 500-update paid GPU fit.
 No paid training submission, 7/30-day screen, 365-day rollout,
 long-held-point, Gate D2, or product acceptance is authorized.
 

@@ -496,12 +496,17 @@ coverage, identity and policy checks. Manifest SHA256 is
 see
 [`successor_small_fit_prepared_500_acceptance_20260810.md`](research/daily_coarse_graining/successor_small_fit_prepared_500_acceptance_20260810.md).
 
-The server execution worktree must remain clean and pinned at manifest-bound
-HEAD `d493699` until the fit consumes these artifacts. No GPU job is active.
-The current gate is separate approval of the one-process GPU stage: `gnall`,
-one node, 16 CPU cores, one GPU, two-hour limit, additive worst-case charge
-CNY 6.64. The 7/30-day screen, 365-day, long-held-point, Gate D2 and product
-acceptance remain closed.
+The 500 artifacts remain immutably attributed to producer HEAD `d493699`.
+Because the pre-existing runner discarded trained parameters, checkpoint
+handoff contract `a587b8a9...32315b0` now admits that exact producer manifest
+to a distinct clean consumer commit and atomically publishes both complete
+arm checkpoints only after a passing 500-update fit. Local identity,
+round-trip, tree-schema, tamper, incomplete-fit and interrupted-second-arm
+tests pass. The current gate is a serialization-only free-`gln01` preflight;
+no GPU job is active. After that passes, the one-process paid stage still
+requires a fresh approval block for `gnall`, one node, 16 CPU cores, one GPU,
+two-hour limit and additive CNY 6.64 worst-case charge. The 7/30-day screen,
+365-day, long-held-point, Gate D2 and product acceptance remain closed.
 
 ## Completed Task Packet: Gate C
 
@@ -519,7 +524,8 @@ and the no-checkpoint real-v6 GPU probe are accepted. The bounded-small-fit
 single-update preflight, prepared-batch boundary, same-process hot reuse, and
 avoidable-compilation reduction are accepted. Cross-process train-step cache
 reuse and the old paid envelope are rejected. The new staged CPU preparation
-is accepted; its conditional GPU fit remains unsubmitted.
+is accepted. Its checkpoint-capable consumer passes local tests, while the
+free GPU serialization preflight and conditional paid fit remain unsubmitted.
 Gates D2 and F remain queued.
 
 ### Inputs

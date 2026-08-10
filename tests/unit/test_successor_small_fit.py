@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import pickle
 from dataclasses import dataclass
 from pathlib import Path
 from types import SimpleNamespace
@@ -10,12 +11,20 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
+import research.daily_coarse_graining.daily_operator.successor_fit_checkpoint as fit_checkpoint
 import research.daily_coarse_graining.daily_operator.successor_frozen_coefficients as frozen_coefficients
 import research.daily_coarse_graining.daily_operator.successor_small_fit as small_fit
 import scripts.hpc.run_successor_fast_owner_gpu_probe as fast_probe
 from research.daily_coarse_graining.daily_operator.successor_fast_owner_decoder import (
     DAY_START_DELTA,
     DEFINED_LOGIT,
+)
+from research.daily_coarse_graining.daily_operator.successor_fit_checkpoint import (
+    SuccessorCheckpointHandoff,
+    admit_prepared_manifest_for_checkpoint_fit,
+    load_successor_checkpoint_handoff,
+    load_successor_checkpoint_set,
+    write_successor_checkpoint_set,
 )
 from research.daily_coarse_graining.daily_operator.successor_small_fit import (
     build_successor_small_fit_schedule,
@@ -299,13 +308,16 @@ def test_production_launcher_preserves_contract_and_dual_backend_boundary():
     assert "SINGULARITYENV_JAX_PLATFORMS=cuda,cpu \\" in launcher
     assert "SINGULARITYENV_PYTHONHASHSEED=0 \\" in launcher
     assert '--updates "$UPDATES" \\' in launcher
-    assert "UPDATES must lie in [2, 500]" in launcher
+    assert "requires exactly 500 updates" in launcher
     assert "successor_small_fit_runner_v1.json" in launcher
+    assert "successor_small_fit_checkpoint_handoff_v1.json" in launcher
     assert "PREPARED_MANIFEST=${PREPARED_MANIFEST:?" in launcher
     assert '--prepared-manifest "$PREPARED_MANIFEST" \\' in launcher
     assert "successor_small_fit_frozen_coefficients_v1.json" in launcher
     assert '--coefficient-contract "$COEFFICIENT_CONTRACT" \\' in launcher
     assert '--coefficient-source-report "$COEFFICIENT_SOURCE_REPORT" \\' in launcher
+    assert '--checkpoint-dir "$CHECKPOINT_DIR"' in launcher
+    assert 'test -f "$CHECKPOINT_DIR/checkpoint_manifest.json"' in launcher
 
 
 def test_rejected_paid_launcher_is_removed():
@@ -332,7 +344,199 @@ def test_two_stage_production_launchers_are_bounded_and_unsubmitted():
     assert "#SBATCH --time=02:00:00" in gpu
     assert "PREPARED_MANIFEST=${PREPARED_MANIFEST:?" in gpu
     assert "UPDATES=500" in gpu
+    assert 'test ! -e "$CHECKPOINT_DIR"' in gpu
     assert "CNY 6.64 worst case" in gpu
+
+
+def test_checkpoint_handoff_contract_is_frozen_and_keeps_old_producer_identity():
+    handoff = load_successor_checkpoint_handoff()
+
+    assert handoff.producer["producer_git_head"] == "d4936996635b02fcf04cd5f8c4926be3cc010124"
+    assert handoff.producer["prepared_manifest_sha256"] == (
+        "0182b7f7a6d5eae09025a336f26bc67ba5fb54706c3529a846d3885c16d80462"
+    )
+    assert handoff.checkpoint["checkpoint_on_failed_gate"] is False
+    assert handoff.checkpoint["checkpoint_on_submaximal_probe"] is False
+
+
+def test_checkpoint_handoff_separates_producer_and_consumer_git_heads(tmp_path):
+    manifest_path = tmp_path / "prepared_manifest.json"
+    manifest = {
+        "identity": {
+            "source_git_head": "a" * 40,
+            "runner_contract_sha256": "runner",
+            "schedule_sha256": "schedule",
+            "dataset_manifest_sha256": "dataset",
+            "successor_candidate_contract_sha256": "candidate",
+            "fast_owner_contract_sha256": "owner",
+        },
+        "updates": 2,
+        "entries": [{}, {}],
+        "total_size_bytes": 12,
+        "trace_signatures": ["trace"],
+    }
+    atomic_json(manifest_path, manifest)
+    producer = {
+        "prepared_manifest_sha256": sha256_file(manifest_path),
+        "producer_git_head": "a" * 40,
+        "producer_runner_contract_sha256": "runner",
+        "schedule_sha256": "schedule",
+        "dataset_manifest_sha256": "dataset",
+        "successor_candidate_contract_sha256": "candidate",
+        "fast_owner_contract_sha256": "owner",
+        "updates": 2,
+        "artifact_count": 2,
+        "total_size_bytes": 12,
+        "trace_signature": "trace",
+    }
+    handoff = SuccessorCheckpointHandoff(
+        payload={"producer_artifacts": producer},
+        source_path=tmp_path / "handoff.json",
+        sha256="handoff",
+    )
+
+    admitted = admit_prepared_manifest_for_checkpoint_fit(
+        handoff,
+        manifest_path,
+        manifest,
+        runner_contract_sha256="runner",
+        schedule_sha256="schedule",
+        consumer_git_head="b" * 40,
+    )
+    assert admitted["producer_git_head"] == "a" * 40
+    assert admitted["consumer_git_head"] == "b" * 40
+    with pytest.raises(ValueError, match="consumer git identity"):
+        admit_prepared_manifest_for_checkpoint_fit(
+            handoff,
+            manifest_path,
+            manifest,
+            runner_contract_sha256="runner",
+            schedule_sha256="schedule",
+            consumer_git_head="a" * 40,
+        )
+
+
+def _checkpoint_fixture():
+    arms = (
+        "source_routed_process_attention_v2",
+        "source_routed_graph_mlp_control_v2",
+    )
+    parameters = {
+        arm: {"weight": np.asarray([index + 1.0, index + 2.0])}
+        for index, arm in enumerate(arms)
+    }
+    optimizers = {
+        arm: {
+            "step": np.asarray(500, dtype=np.int32),
+            "first": {"weight": np.asarray([0.1, 0.2])},
+            "second": {"weight": np.asarray([0.01, 0.04])},
+        }
+        for arm in arms
+    }
+    return arms, parameters, optimizers
+
+
+def test_atomic_matched_checkpoint_set_round_trip_and_tree_schema(tmp_path):
+    arms, parameters, optimizers = _checkpoint_fixture()
+    identity = {"consumer_git_head": "b" * 40, "prepared_manifest_sha256": "manifest"}
+    checkpoint_dir = tmp_path / "checkpoints"
+    result = write_successor_checkpoint_set(
+        checkpoint_dir,
+        identity=identity,
+        parameters=parameters,
+        optimizers=optimizers,
+        completed_updates={arm: 500 for arm in arms},
+        parameter_counts={arm: 2 for arm in arms},
+        final_metrics={arm: {"loss": 1.0} for arm in arms},
+        loss_reductions={arm: {"one_day": 0.2} for arm in arms},
+        expected_arms=arms,
+        required_updates=500,
+        promotion_passed=True,
+    )
+
+    assert result["status"] == "passed"
+    assert set(path.name for path in checkpoint_dir.iterdir()) == {
+        "checkpoint_manifest.json",
+        *(f"{arm}.pkl" for arm in arms),
+    }
+    loaded = load_successor_checkpoint_set(
+        checkpoint_dir,
+        expected_manifest_sha256=result["manifest_sha256"],
+        identity=identity,
+        expected_arms=arms,
+        required_updates=500,
+    )
+    for arm in arms:
+        np.testing.assert_array_equal(loaded[arm]["parameters"]["weight"], parameters[arm]["weight"])
+        assert loaded[arm]["parameter_tree_schema"] == [
+            {"path": "['weight']", "shape": [2], "dtype": "float64"}
+        ]
+
+    manifest = json.loads((checkpoint_dir / "checkpoint_manifest.json").read_text())
+    arm = arms[0]
+    path = checkpoint_dir / manifest["checkpoints"][arm]["path"]
+    with path.open("rb") as handle:
+        payload = pickle.load(handle)
+    payload["parameters"]["weight"] = np.asarray([[1.0, 2.0]])
+    with path.open("wb") as handle:
+        pickle.dump(payload, handle)
+    manifest["checkpoints"][arm]["sha256"] = sha256_file(path)
+    atomic_json(checkpoint_dir / "checkpoint_manifest.json", manifest)
+    with pytest.raises(ValueError, match="tree-schema drift"):
+        load_successor_checkpoint_set(
+            checkpoint_dir,
+            expected_manifest_sha256=sha256_file(checkpoint_dir / "checkpoint_manifest.json"),
+            identity=identity,
+            expected_arms=arms,
+            required_updates=500,
+        )
+
+
+def test_checkpoint_set_refuses_failed_or_incomplete_fit_without_publication(tmp_path, monkeypatch):
+    arms, parameters, optimizers = _checkpoint_fixture()
+    common = {
+        "identity": {"consumer_git_head": "b" * 40},
+        "parameters": parameters,
+        "optimizers": optimizers,
+        "completed_updates": {arm: 500 for arm in arms},
+        "parameter_counts": {arm: 2 for arm in arms},
+        "final_metrics": {arm: {} for arm in arms},
+        "loss_reductions": {arm: {} for arm in arms},
+        "expected_arms": arms,
+        "required_updates": 500,
+    }
+    failed = tmp_path / "failed"
+    with pytest.raises(ValueError, match="passing promotion gates"):
+        write_successor_checkpoint_set(failed, promotion_passed=False, **common)
+    assert not failed.exists()
+
+    incomplete = tmp_path / "incomplete"
+    incomplete_updates = dict(common["completed_updates"])
+    incomplete_updates[arms[1]] = 499
+    with pytest.raises(ValueError, match="update count is incomplete"):
+        write_successor_checkpoint_set(
+            incomplete,
+            promotion_passed=True,
+            **(common | {"completed_updates": incomplete_updates}),
+        )
+    assert not incomplete.exists()
+
+    original = fit_checkpoint._write_pickle
+    calls = 0
+
+    def fail_second(path, payload):
+        nonlocal calls
+        calls += 1
+        if calls == 2:
+            raise OSError("injected second-arm write failure")
+        original(path, payload)
+
+    monkeypatch.setattr(fit_checkpoint, "_write_pickle", fail_second)
+    interrupted = tmp_path / "interrupted"
+    with pytest.raises(OSError, match="second-arm"):
+        write_successor_checkpoint_set(interrupted, promotion_passed=True, **common)
+    assert not interrupted.exists()
+    assert not list(tmp_path.glob(".interrupted.*.tmp"))
 
 
 def test_prepared_update_round_trip_and_hash_drift(tmp_path):
