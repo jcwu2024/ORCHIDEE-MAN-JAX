@@ -521,14 +521,19 @@ terminal biomass/carbon metrics, signed-bias gates and zero exact hard counts.
 Host artifacts are prepared on free CPU test nodes before GPU evaluation.
 Focused local tests pass `12/12`; no numeric screen has run.
 
-The repaired zero-update production-asset admission passed on `test01` at
-commit `0ed9891`. It admitted the exact 500-entry manifest, formal schedule,
-first artifact, coefficient source and checkpoint handoff; report SHA256 is
-`50d090e6...18ea089`. The current action is to present a fresh explicit
-approval block for the replacement paid fit. After a successful future fit
-publishes both checkpoints, prepare the three-window panel on a free CPU node
-and run the free `gln01` smoke. The formal 96-window screen, 365-day,
-long-held-point, Gate D2 and product gates remain closed.
+The successor pair has now completed all 500 updates under training identity
+`9023de2`. Both arms passed the frozen promotion gates with zero hard counts.
+Commit `d834d5d` repaired the resumed-process JIT reuse verdict and finalized
+the completed recovery without another training update. The accepted fit
+report SHA256 is `ea4b66cd...a259a`; the atomically published dual-checkpoint
+manifest SHA256 is `f8eed186...75e40`. A separate `test01` reader rehashed and
+loaded both parameter and optimizer trees. See
+[`successor_small_fit_500_checkpoint_acceptance_20260811.md`](research/daily_coarse_graining/successor_small_fit_500_checkpoint_acceptance_20260811.md).
+
+Do not rerun the 500-update fit. The current action is to prepare the frozen
+three-window 7/30-day panel on a free CPU test node and then run the free
+`gln01` smoke. The formal 96-window screen, 365-day, long-held-point, Gate D2
+and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 
@@ -546,9 +551,9 @@ and the no-checkpoint real-v6 GPU probe are accepted. The bounded-small-fit
 single-update preflight, prepared-batch boundary, same-process hot reuse, and
 avoidable-compilation reduction are accepted. Cross-process train-step cache
 reuse and the old paid envelope are rejected. The new staged CPU preparation
-is accepted. Its checkpoint-capable consumer passes local and free GPU
-serialization tests, while the conditional paid fit remains unsubmitted.
-Gates D2 and F remain queued.
+and the 500-update matched fit are accepted, and the dual checkpoint set has
+passed formal reload. The frozen 7/30-day screen is now active. Gates D2 and F
+remain queued.
 
 ### Inputs
 

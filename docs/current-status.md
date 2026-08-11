@@ -238,7 +238,8 @@ frozen before any fit result. Contract SHA256 is
 selects a deterministic non-test panel, prepares host artifacts on free CPU
 test nodes, runs same-boundary matched 7/30-day free rollouts, and applies
 biomass/productivity, bias and exact hard gates. Focused local tests pass
-`12/12`. No rollout screen has run because no production checkpoint exists.
+`12/12`. At package-freeze time no rollout screen had run and no production
+checkpoint existed.
 See
 [`successor_7_30_rollout_screen_package_20260810.md`](research/daily_coarse_graining/successor_7_30_rollout_screen_package_20260810.md).
 
@@ -249,10 +250,27 @@ SHA256 is `50d090e6...18ea089`; no training, checkpoint, v5, sealed-test or
 Teacher-regeneration path was used. See
 [`successor_production_fit_asset_admission_20260811.md`](research/daily_coarse_graining/successor_production_fit_asset_admission_20260811.md).
 
-The current gate is a fresh explicit approval block for the replacement paid
-fit. After a successful fit, proceed to free 7/30-day preparation and
-`gln01` smoke. The formal 96-window screen, 365-day rollout, long-held points,
-Gate D2 and product acceptance remain closed.
+The replacement fit is complete. Paid job `14520379` resumed from update 155
+and completed both arms through update 500 with every update applied, finite
+gradients, and zero hard counts. Its final process exit was a runner-only JIT
+reuse misclassification: recovery host arrays legitimately created one second
+device specialization at update 157, followed by zero new executables through
+update 500. The complete update-500 recovery was retained.
+
+Commit `d834d5d` accepts only that bounded post-recovery specialization and
+supports finalization from a completed recovery without another training
+update. The free-`gln01` finalizer published both checkpoints atomically. Fit
+report SHA256 is `ea4b66cd...a259a`; checkpoint manifest SHA256 is
+`f8eed186...75e40`. A separate `test01` reader rehashed and loaded both
+checkpoints, verifying 500 updates, 8,722,689 parameters and 17,445,379
+optimizer elements per arm, exact tree schemas, identities and finite values.
+See
+[`successor_small_fit_500_checkpoint_acceptance_20260811.md`](research/daily_coarse_graining/successor_small_fit_500_checkpoint_acceptance_20260811.md).
+
+The current gate is free preparation of the frozen three-window 7/30-day
+panel, followed by the free `gln01` smoke. The formal 96-window screen,
+365-day rollout, long-held points, Gate D2 and product acceptance remain
+closed.
 
 ## Stable Teacher
 
