@@ -64,7 +64,7 @@ export OPENBLAS_NUM_THREADS=1
 export MKL_NUM_THREADS=1
 cd "$WORKTREE"
 
-EXTRA_ARGS=()
+EXTRA_ARGS=(--artifact-compression "$ARTIFACT_COMPRESSION")
 if [ "$FINALIZE" = true ]; then
   test -n "$WORKER_COUNT"
   test -z "$WORKER_INDEX"
@@ -84,7 +84,6 @@ fi
   --runner-contract "$RUNNER_CONTRACT" \
   --updates "$UPDATES" \
   --output-dir "$OUTPUT_DIR" \
-  --artifact-compression "$ARTIFACT_COMPRESSION" \
   "${EXTRA_ARGS[@]}"
 
 if [ "$FINALIZE" = true ] || [ -z "$WORKER_INDEX" ]; then

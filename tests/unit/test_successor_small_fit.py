@@ -549,7 +549,7 @@ def test_prepared_batch_wrapper_exposes_bounded_artifact_compression():
 
     assert "ARTIFACT_COMPRESSION=${ARTIFACT_COMPRESSION:-none}" in wrapper
     assert 'none|gzip)' in wrapper
-    assert '--artifact-compression "$ARTIFACT_COMPRESSION"' in wrapper
+    assert 'EXTRA_ARGS=(--artifact-compression "$ARTIFACT_COMPRESSION")' in wrapper
 
 
 def test_checkpoint_gpu_probe_is_serialization_only_and_removes_temporary_set():
