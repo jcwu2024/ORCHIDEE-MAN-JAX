@@ -133,6 +133,7 @@ def test_training_sufficiency_contract_expands_data_exposure_without_changing_ar
     assert contract.payload["objective"]["bias_reduction_axis"] == (
         "joint_across_rollout_windows"
     )
+    assert contract.payload["gates"]["budget_absolute_tolerance"] == 2e-12
 
 
 def test_small_fit_schedule_rejects_non_train_reference():

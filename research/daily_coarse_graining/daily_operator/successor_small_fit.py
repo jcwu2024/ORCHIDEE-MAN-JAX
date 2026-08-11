@@ -36,7 +36,7 @@ from .successor_training import (
 SCHEMA_VERSION = "successor_small_fit_runner_v1"
 FROZEN_CONTRACT_SHA256 = "8317fc74b6ba921b0ed60e774743884ddc81b233c75ce1823f3246211d1640de"
 SUFFICIENCY_SCHEMA_VERSION = "successor_training_sufficiency_v2"
-SUFFICIENCY_CONTRACT_SHA256 = "6fc6b88843deb869c9c48358c91ba39ea6b1f661ffa75531f058a6c16eb22586"
+SUFFICIENCY_CONTRACT_SHA256 = "329671d6e0d2c43c4ba17d40a96ed9d5255096dac3925bf9f538749c9675340e"
 DEFAULT_CONTRACT_PATH = (
     Path(__file__).resolve().parents[3] / "manifests" / "coarse_graining" / "successor_small_fit_runner_v1.json"
 )
@@ -128,6 +128,12 @@ def load_successor_small_fit_contract(
         or retained.get("execute_48_step_state_scan") is not False
     ):
         raise ValueError("successor small-fit retained-tail policy drift")
+    gates = payload.get("gates", {})
+    if (
+        float(gates.get("budget_absolute_tolerance", 0.0)) <= 0.0
+        or float(gates.get("stock_negative_absolute_tolerance", 0.0)) <= 0.0
+    ):
+        raise ValueError("successor small-fit hard-gate tolerance drift")
     return SuccessorSmallFitContract(payload, source, observed)
 
 
