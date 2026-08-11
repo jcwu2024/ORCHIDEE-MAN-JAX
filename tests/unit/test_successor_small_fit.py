@@ -323,6 +323,8 @@ def test_production_launcher_preserves_contract_and_dual_backend_boundary():
     assert '--recovery-path "$RECOVERY_PATH" \\' in launcher
     assert "--recovery-interval 25" in launcher
     assert 'EXTRA_ARGS="--replay-only-update $REPLAY_ONLY_UPDATE"' in launcher
+    assert "--diagnose-update $DIAGNOSE_UPDATE" in launcher
+    assert "--recovery-identity-git-head $RECOVERY_IDENTITY_GIT_HEAD" in launcher
     assert "$EXTRA_ARGS" in launcher
     assert 'test -f "$CHECKPOINT_DIR/checkpoint_manifest.json"' in launcher
 

@@ -27,6 +27,8 @@ CHECKPOINT_DIR=${CHECKPOINT_DIR:-$(dirname "$OUTPUT")/checkpoints}
 RECOVERY_PATH=${RECOVERY_PATH:-$(dirname "$OUTPUT")/recovery_state.pkl}
 CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/successor-small-fit-runner-$HEAD_SHORT}
 REPLAY_ONLY_UPDATE=${REPLAY_ONLY_UPDATE:-}
+DIAGNOSE_UPDATE=${DIAGNOSE_UPDATE:-}
+RECOVERY_IDENTITY_GIT_HEAD=${RECOVERY_IDENTITY_GIT_HEAD:-}
 
 case "$WORKTREE" in
   "$ROOT"|"$ROOT/runtime/worktrees/"*) ;;
@@ -70,11 +72,22 @@ nvidia-smi -L >/dev/null
 mkdir -p "$(dirname "$OUTPUT")" "$CACHE_ROOT"
 
 EXTRA_ARGS=
+if [ -n "$REPLAY_ONLY_UPDATE" ] && [ -n "$DIAGNOSE_UPDATE" ]; then
+  echo "choose either replay-only or gradient-diagnostic mode" >&2
+  exit 2
+fi
 if [ -n "$REPLAY_ONLY_UPDATE" ]; then
   case "$REPLAY_ONLY_UPDATE" in
     ''|*[!0-9]*) echo "REPLAY_ONLY_UPDATE must be an integer" >&2; exit 2 ;;
   esac
   EXTRA_ARGS="--replay-only-update $REPLAY_ONLY_UPDATE"
+fi
+if [ -n "$DIAGNOSE_UPDATE" ]; then
+  case "$DIAGNOSE_UPDATE" in
+    ''|*[!0-9]*) echo "DIAGNOSE_UPDATE must be an integer" >&2; exit 2 ;;
+  esac
+  test -n "$RECOVERY_IDENTITY_GIT_HEAD"
+  EXTRA_ARGS="--diagnose-update $DIAGNOSE_UPDATE --recovery-identity-git-head $RECOVERY_IDENTITY_GIT_HEAD"
 fi
 
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
@@ -121,7 +134,7 @@ env -u LD_LIBRARY_PATH \
       $EXTRA_ARGS
 
 test -f "$OUTPUT"
-if [ -n "$REPLAY_ONLY_UPDATE" ]; then
+if [ -n "$REPLAY_ONLY_UPDATE" ] || [ -n "$DIAGNOSE_UPDATE" ]; then
   sha256sum "$OUTPUT"
   exit 0
 fi

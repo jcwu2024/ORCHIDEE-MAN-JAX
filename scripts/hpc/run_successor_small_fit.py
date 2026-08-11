@@ -234,11 +234,8 @@ def _make_arm_steps(
 ) -> tuple[Any, Any]:
     import jax.numpy as jnp
 
-    from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
     from research.daily_coarse_graining.daily_operator.successor_small_fit import (
         successor_adamw_update,
-        successor_anchor_batch_loss,
-        successor_rollout_component_losses,
         successor_rollout_hard_gate_counts,
     )
     from research.daily_coarse_graining.daily_operator.successor_training import (
@@ -246,34 +243,23 @@ def _make_arm_steps(
     )
 
     jax = runtime["jax"]
-    head = _head(runtime, arm)
+    anchor_objective, rollout_objective = _make_arm_objectives(
+        runtime,
+        arm,
+        adapter_template,
+        long_scales,
+    )
     coefficient_vector = jnp.asarray(
         tuple(coefficients[name] for name in LONG_HORIZON_COMPONENTS),
         dtype=jnp.float64,
     )
 
     def objective(parameters: Any, batch: Any, day_inputs: Any, *, rematerialize: bool):
-        retained_tail = replace(adapter_template, day_inputs=day_inputs)
-        transition = bind_daily_operator(
-            input_assembler=runtime["adapter"].input_assembler,
-            process_head=head,
-            retained_tail=retained_tail,
-        )
-        anchor = successor_anchor_batch_loss(
-            parameters,
-            batch.anchor_inputs,
-            batch.anchor_targets,
-            head=head,
-            schema=runtime["schema"],
-            scales=runtime["loss_scales"],
-        )
-        components, trace = successor_rollout_component_losses(
+        anchor = anchor_objective(parameters, batch)
+        components, trace = rollout_objective(
             parameters,
             batch,
-            transition=transition,
-            markov_contract=runtime["contract"],
-            flux_scales=long_scales.fluxes,
-            stock_scales=long_scales.stocks,
+            day_inputs,
             rematerialize=rematerialize,
         )
         hard_counts = successor_rollout_hard_gate_counts(
@@ -352,6 +338,148 @@ def _make_arm_steps(
         return ArmEvaluation(loss, anchor, components, hard_counts)
 
     return train_step, evaluate
+
+
+def _make_arm_objectives(
+    runtime: Mapping[str, Any],
+    arm: str,
+    adapter_template: Any,
+    long_scales: Any,
+) -> tuple[Any, Any]:
+    from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
+    from research.daily_coarse_graining.daily_operator.successor_small_fit import (
+        successor_anchor_batch_loss,
+        successor_rollout_component_losses,
+    )
+
+    head = _head(runtime, arm)
+
+    def anchor(parameters: Any, batch: Any) -> Any:
+        return successor_anchor_batch_loss(
+            parameters,
+            batch.anchor_inputs,
+            batch.anchor_targets,
+            head=head,
+            schema=runtime["schema"],
+            scales=runtime["loss_scales"],
+        )
+
+    def rollout(
+        parameters: Any,
+        batch: Any,
+        day_inputs: Any,
+        *,
+        rematerialize: bool,
+    ) -> Any:
+        retained_tail = replace(adapter_template, day_inputs=day_inputs)
+        transition = bind_daily_operator(
+            input_assembler=runtime["adapter"].input_assembler,
+            process_head=head,
+            retained_tail=retained_tail,
+        )
+        return successor_rollout_component_losses(
+            parameters,
+            batch,
+            transition=transition,
+            markov_contract=runtime["contract"],
+            flux_scales=long_scales.fluxes,
+            stock_scales=long_scales.stocks,
+            rematerialize=rematerialize,
+        )
+
+    return anchor, rollout
+
+
+def _gradient_tree_report(jax: Any, gradient: Any) -> Mapping[str, Any]:
+    groups: dict[str, dict[str, int]] = {}
+    failures = []
+    element_count = 0
+    nonfinite_count = 0
+    for path, leaf in jax.tree_util.tree_flatten_with_path(gradient)[0]:
+        array = np.asarray(leaf)
+        count = int(array.size)
+        bad = int(np.count_nonzero(~np.isfinite(array)))
+        element_count += count
+        nonfinite_count += bad
+        group = str(getattr(path[0], "key", path[0])) if path else "root"
+        record = groups.setdefault(group, {"element_count": 0, "nonfinite_count": 0})
+        record["element_count"] += count
+        record["nonfinite_count"] += bad
+        if bad:
+            failures.append(
+                {
+                    "path": jax.tree_util.keystr(path),
+                    "shape": list(array.shape),
+                    "element_count": count,
+                    "nonfinite_count": bad,
+                }
+            )
+    return {
+        "all_finite": nonfinite_count == 0,
+        "element_count": element_count,
+        "nonfinite_count": nonfinite_count,
+        "parameter_groups": groups,
+        "nonfinite_leaves": failures,
+    }
+
+
+def _diagnose_arm_gradients(
+    runtime: Mapping[str, Any],
+    arm: str,
+    parameters: Any,
+    batch: Any,
+    adapter: Any,
+    long_scales: Any,
+) -> Mapping[str, Any]:
+    import jax.numpy as jnp
+
+    from research.daily_coarse_graining.daily_operator.successor_training import (
+        LONG_HORIZON_COMPONENTS,
+    )
+
+    jax = runtime["jax"]
+    anchor_objective, rollout_objective = _make_arm_objectives(
+        runtime,
+        arm,
+        adapter,
+        long_scales,
+    )
+    anchor_measurement = jax.jit(
+        jax.value_and_grad(lambda values: anchor_objective(values, batch))
+    )
+    anchor_value, anchor_gradient = anchor_measurement(parameters)
+    jax.block_until_ready((anchor_value, anchor_gradient))
+
+    def component_vector(values: Any) -> Any:
+        return rollout_objective(
+            values,
+            batch,
+            adapter.day_inputs,
+            rematerialize=True,
+        )[0]
+
+    def component_measurement(values: Any) -> Any:
+        losses, pullback = jax.vjp(component_vector, values)
+        basis = jnp.eye(len(LONG_HORIZON_COMPONENTS), dtype=jnp.float64)
+        gradients = jax.lax.map(lambda seed: pullback(seed)[0], basis)
+        return losses, gradients
+
+    component_values, component_gradients = jax.jit(component_measurement)(parameters)
+    jax.block_until_ready((component_values, component_gradients))
+    components = {}
+    for index, name in enumerate(LONG_HORIZON_COMPONENTS):
+        gradient = jax.tree_util.tree_map(lambda leaf: leaf[index], component_gradients)
+        components[name] = {
+            "loss": float(np.asarray(component_values[index])),
+            "gradient": _gradient_tree_report(jax, gradient),
+        }
+    return {
+        "one_day_anchor": {
+            "loss": float(np.asarray(anchor_value)),
+            "gradient": _gradient_tree_report(jax, anchor_gradient),
+        },
+        "long_horizon_components": components,
+    }
 
 
 def _prepare_adapter(
@@ -645,9 +773,18 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
 
     step_cache: dict[tuple[str, str], tuple[Any, Any]] = {}
     first_batches = {first_signature: (first_batch, first_adapter)}
+    recovery_identity = execution_identity
+    if args.recovery_identity_git_head is not None:
+        source_head = str(args.recovery_identity_git_head)
+        if len(source_head) != 40:
+            raise ValueError("recovery identity git head must contain 40 hexadecimal characters")
+        recovery_identity = dict(execution_identity) | {
+            "git_head": source_head,
+            "consumer_git_head": source_head,
+        }
     recovery = load_successor_recovery(
         args.recovery_path,
-        identity=execution_identity,
+        identity=recovery_identity,
         expected_arms=arms,
         parameter_counts=counts,
         maximum_updates=maximum_updates,
@@ -664,6 +801,12 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         completed_updates = {arm: int(recovery["completed_updates"][arm]) for arm in arms}
     resume_update = next(iter(set(completed_updates.values())))
     session_start_update = resume_update
+    if args.diagnose_update is not None:
+        diagnose_update = int(args.diagnose_update)
+        if recovery is None or not resume_update < diagnose_update <= requested_updates:
+            raise ValueError("gradient diagnosis requires an earlier recovery state")
+    else:
+        diagnose_update = None
     total_started = time.perf_counter()
     memory_before = _device_memory_report(runtime["devices"])
     prepared_first = (
@@ -742,6 +885,39 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 "completed_update_records": records,
                 "total_wall_seconds": time.perf_counter() - run_started,
                 "next_gate": "repair_annual_shard_retained_tail_runtime",
+            }
+            _atomic_json(args.output, report)
+            return report
+
+        if diagnose_update == update + 1:
+            diagnostic_started = time.perf_counter()
+            diagnostic = _diagnose_arm_gradients(
+                runtime,
+                SOURCE_ROUTED_ATTENTION,
+                parameters[SOURCE_ROUTED_ATTENTION],
+                batch,
+                adapter,
+                long_scales,
+            )
+            report = {
+                "schema_version": "successor_small_fit_nonfinite_gradient_diagnostic_v1",
+                "status": "passed",
+                "run_kind": "recovery_gradient_diagnostic",
+                "diagnosed_arm": SOURCE_ROUTED_ATTENTION,
+                "diagnosed_update": update + 1,
+                "recovery_source_git_head": recovery_identity["git_head"],
+                "recovery_completed_updates_per_arm": resume_update,
+                "replayed_updates_per_arm": update - resume_update,
+                "checkpoint_written": False,
+                "recovery_written": False,
+                "teacher_data_regenerated": False,
+                "historical_v5_used": False,
+                "test_split_used": False,
+                "identity": execution_identity,
+                "schedule_entry": entry,
+                "teacher_replay_training_policy": replay_policy,
+                "gradient_diagnostic": diagnostic,
+                "diagnostic_seconds": time.perf_counter() - diagnostic_started,
             }
             _atomic_json(args.output, report)
             return report
@@ -1073,6 +1249,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--recovery-path", type=Path, required=True)
     parser.add_argument("--recovery-interval", type=int, default=25)
     parser.add_argument("--replay-only-update", type=int)
+    parser.add_argument("--diagnose-update", type=int)
+    parser.add_argument("--recovery-identity-git-head")
     return parser
 
 
