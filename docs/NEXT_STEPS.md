@@ -539,10 +539,16 @@ control while the spatial and joint windows are closer; this is preserved as
 a diagnostic rather than used to change the frozen model or gates. See
 [`successor_7_30_free_smoke_acceptance_20260811.md`](research/daily_coarse_graining/successor_7_30_free_smoke_acceptance_20260811.md).
 
-The current action is to materialize the deterministic 96-window formal panel
-on a free CPU test node, then request explicit paid-`gnall` authorization for
-the frozen formal screen. The 365-day rollout, long-held-point validation,
-Gate D2, sealed test, and product gates remain closed.
+The deterministic 96-window formal panel is now prepared and independently
+reloaded on free `test01`. Its 24 hash-bound artifacts total `212,275,046`
+bytes; prepared-manifest SHA256 is `6f4c4a30...23d0074`, window-plan file
+SHA256 is `71a1a1ac...f397965`, and all temporal/spatial/joint counts and
+policies match the frozen contract. See
+[`successor_7_30_formal_prepared_acceptance_20260811.md`](research/daily_coarse_graining/successor_7_30_formal_prepared_acceptance_20260811.md).
+
+The current action is to request explicit paid-`gnall` authorization for the
+frozen formal screen. The 365-day rollout, long-held-point validation, Gate
+D2, sealed test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 

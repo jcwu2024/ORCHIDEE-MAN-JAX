@@ -276,10 +276,15 @@ attention, while the spatial and joint windows are closer; the frozen formal
 panel must determine whether that signal generalizes. See
 [`successor_7_30_free_smoke_acceptance_20260811.md`](research/daily_coarse_graining/successor_7_30_free_smoke_acceptance_20260811.md).
 
-The current gate is free preparation of the deterministic 96-window formal
-panel, followed by a separately approved paid `gnall` screen. The 365-day
-rollout, long-held points, Gate D2, sealed test and product acceptance remain
-closed.
+The deterministic 96-window formal panel is prepared and independently
+rehash-verified on free `test01`. It contains 24 artifacts totaling
+`212,275,046` bytes. Prepared-manifest SHA256 is `6f4c4a30...23d0074` and
+window-plan file SHA256 is `71a1a1ac...f397965`. See
+[`successor_7_30_formal_prepared_acceptance_20260811.md`](research/daily_coarse_graining/successor_7_30_formal_prepared_acceptance_20260811.md).
+
+The current gate is explicit paid-`gnall` authorization for the frozen formal
+screen. The 365-day rollout, long-held points, Gate D2, sealed test and product
+acceptance remain closed.
 
 ## Stable Teacher
 
