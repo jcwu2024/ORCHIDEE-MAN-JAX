@@ -69,12 +69,12 @@ command -v nvidia-smi >/dev/null
 nvidia-smi -L >/dev/null
 mkdir -p "$(dirname "$OUTPUT")" "$CACHE_ROOT"
 
-EXTRA_ARGS=()
+EXTRA_ARGS=
 if [ -n "$REPLAY_ONLY_UPDATE" ]; then
   case "$REPLAY_ONLY_UPDATE" in
     ''|*[!0-9]*) echo "REPLAY_ONLY_UPDATE must be an integer" >&2; exit 2 ;;
   esac
-  EXTRA_ARGS=(--replay-only-update "$REPLAY_ONLY_UPDATE")
+  EXTRA_ARGS="--replay-only-update $REPLAY_ONLY_UPDATE"
 fi
 
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
@@ -118,7 +118,7 @@ env -u LD_LIBRARY_PATH \
       --checkpoint-dir "$CHECKPOINT_DIR" \
       --recovery-path "$RECOVERY_PATH" \
       --recovery-interval 25 \
-      "${EXTRA_ARGS[@]}"
+      $EXTRA_ARGS
 
 test -f "$OUTPUT"
 if [ -n "$REPLAY_ONLY_UPDATE" ]; then
