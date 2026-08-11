@@ -11,6 +11,7 @@ OUTPUT_DIR=${OUTPUT_DIR:?set OUTPUT_DIR under the project runtime root}
 WORKER_INDEX=${WORKER_INDEX:-}
 WORKER_COUNT=${WORKER_COUNT:-}
 FINALIZE=${FINALIZE:-false}
+ARTIFACT_COMPRESSION=${ARTIFACT_COMPRESSION:-none}
 PYTHON=$ROOT/.venvs/orcjax_cpu/bin/python
 
 DATASET=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json
@@ -35,6 +36,10 @@ if [ "$UPDATES" -lt 2 ] || [ "$UPDATES" -gt 500 ]; then
   echo "UPDATES must lie in [2, 500]" >&2
   exit 2
 fi
+case "$ARTIFACT_COMPRESSION" in
+  none|gzip) ;;
+  *) echo "ARTIFACT_COMPRESSION must be none or gzip" >&2; exit 2 ;;
+esac
 for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" \
   "$PROCESS_STATISTICS" "$FAST_STATISTICS" "$RUNNER_CONTRACT"; do
   test -f "$path"
@@ -79,6 +84,7 @@ fi
   --runner-contract "$RUNNER_CONTRACT" \
   --updates "$UPDATES" \
   --output-dir "$OUTPUT_DIR" \
+  --artifact-compression "$ARTIFACT_COMPRESSION" \
   "${EXTRA_ARGS[@]}"
 
 if [ "$FINALIZE" = true ] || [ -z "$WORKER_INDEX" ]; then

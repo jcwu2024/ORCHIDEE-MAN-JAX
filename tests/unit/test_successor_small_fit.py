@@ -543,6 +543,15 @@ def test_two_stage_production_launchers_are_bounded_and_unsubmitted():
     assert "CNY 6.64 worst case" in gpu
 
 
+def test_prepared_batch_wrapper_exposes_bounded_artifact_compression():
+    root = Path(__file__).resolve().parents[2]
+    wrapper = (root / "scripts" / "hpc" / "prepare_successor_small_fit_batches.sh").read_text()
+
+    assert "ARTIFACT_COMPRESSION=${ARTIFACT_COMPRESSION:-none}" in wrapper
+    assert 'none|gzip)' in wrapper
+    assert '--artifact-compression "$ARTIFACT_COMPRESSION"' in wrapper
+
+
 def test_checkpoint_gpu_probe_is_serialization_only_and_removes_temporary_set():
     root = Path(__file__).resolve().parents[2]
     probe = (root / "scripts" / "hpc" / "probe_successor_checkpoint_handoff.py").read_text()
