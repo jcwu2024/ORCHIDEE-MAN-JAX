@@ -48,6 +48,8 @@ from scripts.hpc.prepare_successor_small_fit_batches import (
     _worker_updates,
 )
 from scripts.hpc.run_successor_small_fit import (
+    _compile_reuse_passed,
+    _publication_identity_for_recovery,
     _retained_tail_trace_signature,
     _teacher_replay_training_policy,
     _validate_update_count,
@@ -304,6 +306,69 @@ def test_production_runner_enforces_bounded_update_budget():
         _validate_update_count(1, 500)
     with pytest.raises(ValueError, match=r"\[2, 500\]"):
         _validate_update_count(501, 500)
+
+
+def test_compile_reuse_accepts_one_post_recovery_array_specialization():
+    arms = ("attention", "control")
+
+    def record(update, before, after, new):
+        return {
+            "update": update,
+            "trace_signature": "trace",
+            "teacher_replay": {
+                "jit_cache_size_before": 1,
+                "jit_cache_size_after": 1,
+                "new_jit_executables": 0,
+            },
+            "arms": {
+                arm: {
+                    "jit_cache_size_before": before,
+                    "jit_cache_size_after": after,
+                    "new_jit_executables": new,
+                }
+                for arm in arms
+            },
+        }
+
+    records = [
+        record(1, 0, 1, 1),
+        record(2, 1, 1, 0),
+        record(3, 0, 1, 1),
+        record(4, 1, 2, 1),
+        record(5, 2, 2, 0),
+    ]
+    assert _compile_reuse_passed(records, trace_signature="trace", arms=arms)
+
+    records.append(record(6, 2, 3, 1))
+    assert not _compile_reuse_passed(records, trace_signature="trace", arms=arms)
+
+
+def test_completed_cross_commit_recovery_keeps_training_identity_for_publication():
+    execution = {"git_head": "e" * 40, "schedule_sha256": "schedule"}
+    recovery = {"git_head": "r" * 40, "schedule_sha256": "schedule"}
+
+    assert _publication_identity_for_recovery(
+        execution,
+        recovery,
+        resume_update=500,
+        requested_updates=500,
+        diagnostic=False,
+    ) == recovery
+    with pytest.raises(ValueError, match="may only diagnose or finalize"):
+        _publication_identity_for_recovery(
+            execution,
+            recovery,
+            resume_update=155,
+            requested_updates=500,
+            diagnostic=False,
+        )
+    assert _publication_identity_for_recovery(
+        execution,
+        recovery,
+        resume_update=155,
+        requested_updates=500,
+        diagnostic=True,
+    ) == execution
 
 
 def test_nonfinite_anchor_breakdown_resolves_samples_and_process_labels(monkeypatch):
@@ -976,7 +1041,8 @@ def test_final_evaluation_reuses_compiled_train_step():
     source = Path(__file__).resolve().parents[2] / "scripts" / "hpc" / "run_successor_small_fit.py"
     runner = source.read_text(encoding="utf-8")
 
-    assert '"final_evaluation_reuses_train_step": True' in runner
+    assert '"final_evaluation_reuses_train_step": resume_update < requested_updates' in runner
+    assert '"final_evaluation_from_completed_recovery": resume_update == requested_updates' in runner
     assert '"optimizer_result_discarded": True' in runner
     assert "np.asarray(0.0, dtype=np.float64)" in runner
 

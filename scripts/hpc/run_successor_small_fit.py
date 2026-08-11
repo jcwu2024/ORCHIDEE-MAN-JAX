@@ -202,6 +202,67 @@ def _validate_update_count(updates: int, maximum: int) -> int:
     return int(updates)
 
 
+def _compile_reuse_passed(
+    records: Sequence[Mapping[str, Any]],
+    *,
+    trace_signature: str,
+    arms: Sequence[str],
+) -> bool:
+    """Accept one process-local compile plus one post-recovery array specialization."""
+
+    if len(records) < 2 or [record.get("update") for record in records] != list(
+        range(1, len(records) + 1)
+    ):
+        return False
+    expected_arms = set(arms)
+    specialization_allowed = {arm: False for arm in arms}
+    for record in records:
+        replay = record.get("teacher_replay", {})
+        if (
+            record.get("trace_signature") != trace_signature
+            or int(replay.get("new_jit_executables", -1)) != 0
+            or int(replay.get("jit_cache_size_before", -1)) != 1
+            or int(replay.get("jit_cache_size_after", -1)) != 1
+            or set(record.get("arms", {})) != expected_arms
+        ):
+            return False
+        for arm in arms:
+            arm_record = record["arms"][arm]
+            before = int(arm_record.get("jit_cache_size_before", -1))
+            after = int(arm_record.get("jit_cache_size_after", -1))
+            new = int(arm_record.get("new_jit_executables", -1))
+            if before < 0 or new not in (0, 1) or after - before != new:
+                return False
+            if before == 0:
+                if after != 1 or new != 1:
+                    return False
+                specialization_allowed[arm] = True
+            elif new == 1:
+                if not specialization_allowed[arm] or before != 1 or after != 2:
+                    return False
+                specialization_allowed[arm] = False
+            else:
+                specialization_allowed[arm] = False
+    return True
+
+
+def _publication_identity_for_recovery(
+    execution_identity: Mapping[str, Any],
+    recovery_identity: Mapping[str, Any],
+    *,
+    resume_update: int,
+    requested_updates: int,
+    diagnostic: bool,
+) -> Mapping[str, Any]:
+    source_head = str(recovery_identity["git_head"])
+    current_head = str(execution_identity["git_head"])
+    if source_head != current_head and not diagnostic and resume_update != requested_updates:
+        raise ValueError("cross-commit recovery may only diagnose or finalize a completed fit")
+    if resume_update == requested_updates:
+        return dict(recovery_identity)
+    return dict(execution_identity)
+
+
 def _make_replay_transition(runtime: Mapping[str, Any], adapter_template: Any) -> Any:
     from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
     from research.daily_coarse_graining.daily_operator.successor_architecture import (
@@ -1041,13 +1102,28 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         initial_metrics = dict(recovery["initial_metrics"])
         completed_updates = {arm: int(recovery["completed_updates"][arm]) for arm in arms}
     resume_update = next(iter(set(completed_updates.values())))
-    session_start_update = resume_update
     if args.diagnose_update is not None:
         diagnose_update = int(args.diagnose_update)
         if recovery is None or not resume_update < diagnose_update <= requested_updates:
             raise ValueError("gradient diagnosis requires an earlier recovery state")
     else:
         diagnose_update = None
+    if recovery is not None:
+        if len(records) != resume_update or [record.get("update") for record in records] != list(
+            range(1, resume_update + 1)
+        ):
+            raise ValueError("successor recovery update records are incomplete or out of order")
+        publication_identity = _publication_identity_for_recovery(
+            execution_identity,
+            recovery["identity"],
+            resume_update=resume_update,
+            requested_updates=requested_updates,
+            diagnostic=diagnose_update is not None,
+        )
+    else:
+        if args.recovery_identity_git_head is not None:
+            raise ValueError("recovery identity override requires an existing recovery state")
+        publication_identity = execution_identity
     total_started = time.perf_counter()
     memory_before = _device_memory_report(runtime["devices"])
     prepared_first = (
@@ -1343,7 +1419,17 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     final_evaluation_seconds = {}
     final_evaluation_compile_reuse = {}
     for arm in arms:
-        train_step, _evaluate = step_cache[(arm, first_signature)]
+        key = (arm, first_signature)
+        if key not in step_cache:
+            step_cache[key] = _make_arm_steps(
+                runtime,
+                arm,
+                first_adapter,
+                coefficients,
+                long_scales,
+                runner_contract,
+            )
+        train_step, _evaluate = step_cache[key]
         cache_before = int(train_step._cache_size())
         started = time.perf_counter()
         evaluation = train_step(
@@ -1410,17 +1496,10 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 and all(value == 0 for value in final_metrics[arm]["hard_gate_counts"].values())
             )
 
-    session_records = records[session_start_update:]
-    reuse_records = session_records[1:]
-    reuse_passed = len(first_batches) == 1 and all(
-        record["trace_signature"] == first_signature
-        and record["teacher_replay"]["new_jit_executables"] == 0
-        and record["teacher_replay"]["jit_cache_size_after"] == 1
-        and all(
-            arm_record["new_jit_executables"] == 0 and arm_record["jit_cache_size_after"] == 1
-            for arm_record in record["arms"].values()
-        )
-        for record in reuse_records
+    reuse_passed = len(first_batches) == 1 and _compile_reuse_passed(
+        records,
+        trace_signature=first_signature,
+        arms=arms,
     )
     passed = reuse_passed and (promotion_passed if production_fit else True)
     checkpoint_set = None
@@ -1429,7 +1508,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         try:
             checkpoint_set = write_successor_checkpoint_set(
                 args.checkpoint_dir,
-                identity=execution_identity,
+                identity=publication_identity,
                 parameters={arm: jax.device_get(parameters[arm]) for arm in arms},
                 optimizers={arm: jax.device_get(optimizer[arm]) for arm in arms},
                 completed_updates=completed_updates,
@@ -1454,6 +1533,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "path": str(args.recovery_path.resolve()),
             "interval_updates": int(args.recovery_interval),
             "resumed_from_update": resume_update,
+            "source_git_head": recovery_identity["git_head"],
             "promotion_eligible": False,
         },
         "failed_stage": "checkpoint_publication" if checkpoint_failure is not None else None,
@@ -1464,7 +1544,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "test_split_used": False,
         "backend": jax.default_backend(),
         "devices": [str(device) for device in runtime["devices"]],
-        "identity": execution_identity,
+        "identity": publication_identity,
+        "finalizer_git_head": git_head,
         "parameter_count_per_arm": counts,
         "matched_coefficients_shared_by_both_arms": True,
         "coefficient_preflight_recomputed": False,
@@ -1492,7 +1573,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "total_wall_seconds": time.perf_counter() - run_started,
             "training_loop_seconds": time.perf_counter() - total_started,
             "final_evaluation_seconds": final_evaluation_seconds,
-            "final_evaluation_reuses_train_step": True,
+            "final_evaluation_reuses_train_step": resume_update < requested_updates,
+            "final_evaluation_from_completed_recovery": resume_update == requested_updates,
             "final_evaluation_compile_reuse": final_evaluation_compile_reuse,
         },
         "device_memory_before_training": memory_before,

@@ -85,12 +85,15 @@ if [ -n "$REPLAY_ONLY_UPDATE" ]; then
   esac
   EXTRA_ARGS="--replay-only-update $REPLAY_ONLY_UPDATE"
 fi
+if [ -n "$RECOVERY_IDENTITY_GIT_HEAD" ]; then
+  EXTRA_ARGS="$EXTRA_ARGS --recovery-identity-git-head $RECOVERY_IDENTITY_GIT_HEAD"
+fi
 if [ -n "$DIAGNOSE_UPDATE" ]; then
   case "$DIAGNOSE_UPDATE" in
     ''|*[!0-9]*) echo "DIAGNOSE_UPDATE must be an integer" >&2; exit 2 ;;
   esac
   test -n "$RECOVERY_IDENTITY_GIT_HEAD"
-  EXTRA_ARGS="--diagnose-update $DIAGNOSE_UPDATE --recovery-identity-git-head $RECOVERY_IDENTITY_GIT_HEAD"
+  EXTRA_ARGS="$EXTRA_ARGS --diagnose-update $DIAGNOSE_UPDATE"
   if [ -n "$DIAGNOSE_HORIZON" ]; then
     EXTRA_ARGS="$EXTRA_ARGS --diagnose-horizon $DIAGNOSE_HORIZON"
   fi
