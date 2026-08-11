@@ -827,6 +827,6 @@ def test_production_asset_admission_probe_is_cpu_only_and_zero_update():
     assert "load_frozen_successor_coefficients(" in source
     assert '"training_updates_executed": 0' in source
     assert '"checkpoint_written": False' in source
-    assert "test01|test02|test03|test04" in launcher
+    assert "test01|test02|test03|test04|ibtest01|ibtest02|ibtest03|ibtest04" in launcher
     assert "JAX_PLATFORMS=cpu" in launcher
     assert "sbatch" not in launcher

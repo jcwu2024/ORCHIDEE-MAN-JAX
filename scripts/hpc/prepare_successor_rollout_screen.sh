@@ -18,7 +18,7 @@ FAST_STATISTICS=$ROOT/runtime/outputs/training/successor-fast-owner-statistics-c
 SCREEN_CONTRACT=$WORKTREE/manifests/coarse_graining/successor_7_30_rollout_screen_v1.json
 
 case "$(hostname -s)" in
-  test01|test02|test03|test04) ;;
+  test01|test02|test03|test04|ibtest01|ibtest02|ibtest03|ibtest04) ;;
   *) echo "rollout-screen preparation must run on test01-test04" >&2; exit 2 ;;
 esac
 case "$WORKTREE" in
@@ -72,4 +72,3 @@ cd "$WORKTREE"
 test -f "$OUTPUT_DIR/prepared_manifest.json"
 test -f "$OUTPUT_DIR/window_plan.json"
 sha256sum "$OUTPUT_DIR/prepared_manifest.json" "$OUTPUT_DIR/window_plan.json"
-
