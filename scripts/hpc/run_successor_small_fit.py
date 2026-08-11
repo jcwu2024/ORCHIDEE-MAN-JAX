@@ -9,7 +9,7 @@ import subprocess
 import time
 from dataclasses import replace
 from pathlib import Path
-from typing import Any, Mapping, NamedTuple
+from typing import Any, Mapping, NamedTuple, Sequence
 
 import numpy as np
 
@@ -423,6 +423,71 @@ def _gradient_tree_report(jax: Any, gradient: Any) -> Mapping[str, Any]:
     }
 
 
+def _diagnose_anchor_breakdown(
+    runtime: Mapping[str, Any],
+    arm: str,
+    parameters: Any,
+    batch: Any,
+    anchor_starts: Sequence[int],
+) -> Mapping[str, Any]:
+    import jax.numpy as jnp
+
+    from research.daily_coarse_graining.daily_operator.successor_fast_owner_training import (
+        successor_fast_owner_loss,
+    )
+
+    jax = runtime["jax"]
+    head = _head(runtime, arm)
+    labels = tuple(runtime["schema"].labels)
+    starts = tuple(int(value) for value in anchor_starts)
+    if len(starts) != int(batch.anchor_inputs.continuous_state.shape[0]):
+        raise ValueError("anchor diagnostic start coverage drift")
+
+    def loss_vector(values: Any) -> Any:
+        def one(item: Any, wanted: Any) -> Any:
+            assembled = head.input_assembler.assemble(item)
+            context = head.assemble_context(values, assembled)
+            outputs = head.named_outputs(values, context, assembled)
+            result = successor_fast_owner_loss(
+                outputs,
+                wanted,
+                inputs=assembled,
+                schema=runtime["schema"],
+                scales=runtime["loss_scales"],
+            )
+            return result.total, jnp.stack(tuple(result.label_loss[name] for name in labels))
+
+        sample_losses, label_losses = jax.vmap(one)(batch.anchor_inputs, batch.anchor_targets)
+        return jnp.concatenate((sample_losses, jnp.mean(label_losses, axis=0)))
+
+    def measurement(values: Any) -> Any:
+        losses, pullback = jax.vjp(loss_vector, values)
+        basis = jnp.eye(len(starts) + len(labels), dtype=jnp.float64)
+        gradients = jax.lax.map(lambda seed: pullback(seed)[0], basis)
+        return losses, gradients
+
+    losses, gradients = jax.jit(measurement)(parameters)
+    jax.block_until_ready((losses, gradients))
+
+    def record(index: int) -> Mapping[str, Any]:
+        gradient = jax.tree_util.tree_map(lambda leaf: leaf[index], gradients)
+        return {
+            "loss": float(np.asarray(losses[index])),
+            "gradient": _gradient_tree_report(jax, gradient),
+        }
+
+    return {
+        "anchor_samples": [
+            {"anchor_start": start, **record(index)}
+            for index, start in enumerate(starts)
+        ],
+        "process_labels": {
+            name: record(len(starts) + index)
+            for index, name in enumerate(labels)
+        },
+    }
+
+
 def _diagnose_arm_gradients(
     runtime: Mapping[str, Any],
     arm: str,
@@ -430,6 +495,7 @@ def _diagnose_arm_gradients(
     batch: Any,
     adapter: Any,
     long_scales: Any,
+    anchor_starts: Sequence[int],
 ) -> Mapping[str, Any]:
     import jax.numpy as jnp
 
@@ -449,6 +515,18 @@ def _diagnose_arm_gradients(
     )
     anchor_value, anchor_gradient = anchor_measurement(parameters)
     jax.block_until_ready((anchor_value, anchor_gradient))
+    anchor_report = _gradient_tree_report(jax, anchor_gradient)
+    anchor_breakdown = (
+        _diagnose_anchor_breakdown(
+            runtime,
+            arm,
+            parameters,
+            batch,
+            anchor_starts,
+        )
+        if not anchor_report["all_finite"]
+        else None
+    )
 
     def component_vector(values: Any) -> Any:
         return rollout_objective(
@@ -476,7 +554,8 @@ def _diagnose_arm_gradients(
     return {
         "one_day_anchor": {
             "loss": float(np.asarray(anchor_value)),
-            "gradient": _gradient_tree_report(jax, anchor_gradient),
+            "gradient": anchor_report,
+            "nonfinite_breakdown": anchor_breakdown,
         },
         "long_horizon_components": components,
     }
@@ -898,6 +977,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 batch,
                 adapter,
                 long_scales,
+                entry["anchor_starts"],
             )
             report = {
                 "schema_version": "successor_small_fit_nonfinite_gradient_diagnostic_v1",

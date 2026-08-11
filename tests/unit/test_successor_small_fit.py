@@ -11,10 +11,12 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
+import research.daily_coarse_graining.daily_operator.successor_fast_owner_training as fast_owner_training
 import research.daily_coarse_graining.daily_operator.successor_fit_checkpoint as fit_checkpoint
 import research.daily_coarse_graining.daily_operator.successor_frozen_coefficients as frozen_coefficients
 import research.daily_coarse_graining.daily_operator.successor_small_fit as small_fit
 import scripts.hpc.run_successor_fast_owner_gpu_probe as fast_probe
+import scripts.hpc.run_successor_small_fit as production_fit
 from research.daily_coarse_graining.daily_operator.successor_fast_owner_decoder import (
     DAY_START_DELTA,
     DEFINED_LOGIT,
@@ -302,6 +304,52 @@ def test_production_runner_enforces_bounded_update_budget():
         _validate_update_count(1, 500)
     with pytest.raises(ValueError, match=r"\[2, 500\]"):
         _validate_update_count(501, 500)
+
+
+def test_nonfinite_anchor_breakdown_resolves_samples_and_process_labels(monkeypatch):
+    class Inputs(tuple):
+        __slots__ = ()
+        _fields = ("continuous_state", "feature")
+
+        def __new__(cls, continuous_state, feature):
+            return tuple.__new__(cls, (continuous_state, feature))
+
+        continuous_state = property(lambda self: self[0])
+        feature = property(lambda self: self[1])
+
+    head = SimpleNamespace(
+        input_assembler=SimpleNamespace(assemble=lambda value: value),
+        assemble_context=lambda _parameters, _inputs: None,
+        named_outputs=lambda parameters, _context, inputs: {
+            "prediction": parameters["decoder"]["weight"] * inputs.feature
+        },
+    )
+
+    def fake_loss(outputs, target, **_kwargs):
+        loss = (outputs["prediction"] - target) ** 2
+        return SimpleNamespace(total=loss, label_loss={"process.alpha": loss})
+
+    monkeypatch.setattr(production_fit, "_head", lambda _runtime, _arm: head)
+    monkeypatch.setattr(fast_owner_training, "successor_fast_owner_loss", fake_loss)
+    batch = SimpleNamespace(
+        anchor_inputs=Inputs(
+            continuous_state=jnp.zeros((2, 1)),
+            feature=jnp.asarray([1.0, 3.0]),
+        ),
+        anchor_targets=jnp.asarray([0.0, 1.0]),
+    )
+    report = production_fit._diagnose_anchor_breakdown(
+        {"jax": jax, "schema": SimpleNamespace(labels=("process.alpha",)), "loss_scales": {}},
+        "attention",
+        {"decoder": {"weight": jnp.asarray(2.0)}},
+        batch,
+        (7, 19),
+    )
+
+    assert [item["anchor_start"] for item in report["anchor_samples"]] == [7, 19]
+    assert [item["loss"] for item in report["anchor_samples"]] == [4.0, 25.0]
+    assert report["process_labels"]["process.alpha"]["loss"] == 14.5
+    assert report["process_labels"]["process.alpha"]["gradient"]["all_finite"]
 
 
 def test_production_launcher_preserves_contract_and_dual_backend_boundary():
