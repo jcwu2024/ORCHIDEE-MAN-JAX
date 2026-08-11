@@ -115,6 +115,24 @@ def test_small_fit_schedule_is_deterministic_matched_and_excludes_first_row():
     verify_successor_small_fit_schedule(left, references, contract)
 
 
+def test_training_sufficiency_contract_expands_data_exposure_without_changing_architecture():
+    root = Path(__file__).resolve().parents[2]
+    contract = load_successor_small_fit_contract(
+        root / "manifests" / "coarse_graining" / "successor_training_sufficiency_v2.json"
+    )
+
+    assert contract.sampling["maximum_updates_per_arm"] == 10000
+    assert contract.sampling["one_day_batch_size"] == 32
+    assert contract.sampling["rollout_batch_size"] == 4
+    assert contract.payload["matched_arms"] == [
+        "source_routed_process_attention_v2",
+        "source_routed_graph_mlp_control_v2",
+    ]
+    assert contract.payload["objective"]["bias_reduction_axis"] == (
+        "joint_across_rollout_windows"
+    )
+
+
 def test_small_fit_schedule_rejects_non_train_reference():
     contract = load_successor_small_fit_contract()
     bad = _Reference(_Parent("001.0-071.0", 1961, temporal_split="validation"))

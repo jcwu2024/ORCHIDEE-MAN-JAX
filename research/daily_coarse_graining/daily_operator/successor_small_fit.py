@@ -35,6 +35,8 @@ from .successor_training import (
 
 SCHEMA_VERSION = "successor_small_fit_runner_v1"
 FROZEN_CONTRACT_SHA256 = "8317fc74b6ba921b0ed60e774743884ddc81b233c75ce1823f3246211d1640de"
+SUFFICIENCY_SCHEMA_VERSION = "successor_training_sufficiency_v2"
+SUFFICIENCY_CONTRACT_SHA256 = "d5e9774dc5a9e5fe3d4a8a2cba3d700dd8700d49ded4afe21b1c0b5d5241be65"
 DEFAULT_CONTRACT_PATH = (
     Path(__file__).resolve().parents[3] / "manifests" / "coarse_graining" / "successor_small_fit_runner_v1.json"
 )
@@ -67,12 +69,17 @@ def load_successor_small_fit_contract(
 ) -> SuccessorSmallFitContract:
     source = Path(path).resolve()
     payload = json.loads(source.read_text(encoding="utf-8"))
-    if payload.get("schema_version") != SCHEMA_VERSION:
-        raise ValueError(f"schema_version must be {SCHEMA_VERSION!r}")
+    schema_version = payload.get("schema_version")
+    expected_sha256 = {
+        SCHEMA_VERSION: FROZEN_CONTRACT_SHA256,
+        SUFFICIENCY_SCHEMA_VERSION: SUFFICIENCY_CONTRACT_SHA256,
+    }.get(schema_version)
+    if expected_sha256 is None:
+        raise ValueError("unsupported successor training contract schema")
     observed = _canonical_sha256(payload)
     if payload.get("contract_sha256") != observed:
         raise ValueError("successor small-fit contract hash mismatch")
-    if observed != FROZEN_CONTRACT_SHA256:
+    if observed != expected_sha256:
         raise ValueError("successor small-fit frozen hash drift")
 
     sampling = payload.get("sampling", {})
@@ -83,21 +90,33 @@ def load_successor_small_fit_contract(
         or sampling.get("exclude_first_shard_row") is not True
     ):
         raise ValueError("successor small-fit sampling policy drift")
+    expected_sampling = (
+        (500, 16, 2) if schema_version == SCHEMA_VERSION else (10000, 32, 4)
+    )
     if (
-        int(sampling.get("maximum_updates_per_arm", 0)) != 500
-        or int(sampling.get("one_day_batch_size", 0)) != 16
-        or int(sampling.get("rollout_batch_size", 0)) != 2
+        (
+            int(sampling.get("maximum_updates_per_arm", 0)),
+            int(sampling.get("one_day_batch_size", 0)),
+            int(sampling.get("rollout_batch_size", 0)),
+        )
+        != expected_sampling
         or int(sampling.get("rollout_days", 0)) != 30
         or tuple(sampling.get("objective_horizons_days", ())) != (1, 7, 30)
     ):
         raise ValueError("successor small-fit batch or horizon budget drift")
 
     optimizer = payload.get("optimizer", {})
+    expected_optimizer = (
+        (50, 500) if schema_version == SCHEMA_VERSION else (500, 10000)
+    )
     if (
         optimizer.get("name") != "adamw"
         or optimizer.get("schedule") != "linear_warmup_cosine_decay"
-        or int(optimizer.get("warmup_updates", 0)) != 50
-        or int(optimizer.get("maximum_updates", 0)) != 500
+        or (
+            int(optimizer.get("warmup_updates", 0)),
+            int(optimizer.get("maximum_updates", 0)),
+        )
+        != expected_optimizer
         or float(optimizer.get("global_gradient_norm_clip", 0.0)) != 1.0
     ):
         raise ValueError("successor small-fit optimizer drift")
