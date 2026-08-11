@@ -398,6 +398,7 @@ def test_production_launcher_preserves_contract_and_dual_backend_boundary():
     assert "--recovery-identity-git-head $RECOVERY_IDENTITY_GIT_HEAD" in launcher
     assert "--diagnose-horizon $DIAGNOSE_HORIZON" in launcher
     assert "--diagnose-window $DIAGNOSE_WINDOW" in launcher
+    assert "--diagnose-boundary-window $DIAGNOSE_BOUNDARY_WINDOW" in launcher
     assert "$EXTRA_ARGS" in launcher
     assert 'test -f "$CHECKPOINT_DIR/checkpoint_manifest.json"' in launcher
 

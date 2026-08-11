@@ -638,6 +638,73 @@ def _diagnose_rollout_horizon_gradients(
     }
 
 
+class _FrozenPredictionHead:
+    def assemble_context(self, _prediction: Any, _inputs: Any) -> None:
+        return None
+
+    def __call__(self, prediction: Any, _context: Any, _inputs: Any) -> Any:
+        return prediction
+
+
+def _diagnose_prediction_boundary(
+    runtime: Mapping[str, Any],
+    arm: str,
+    parameters: Any,
+    batch: Any,
+    adapter: Any,
+    long_scales: Any,
+    *,
+    window_index: int,
+) -> Mapping[str, Any]:
+    from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
+    from research.daily_coarse_graining.daily_operator.successor_small_fit import (
+        successor_rollout_component_losses,
+    )
+
+    jax = runtime["jax"]
+    truncated = _slice_rollout_batch(jax, batch, 1, window_index)
+    item = jax.tree_util.tree_map(
+        lambda value: value[window_index, 0],
+        batch.rollout_inputs,
+    )
+    assembled = runtime["adapter"].input_assembler.assemble(item)
+    head = _head(runtime, arm)
+    context = head.assemble_context(parameters, assembled)
+    named_outputs = head.named_outputs(parameters, context, assembled)
+    transition = bind_daily_operator(
+        input_assembler=runtime["adapter"].input_assembler,
+        process_head=_FrozenPredictionHead(),
+        retained_tail=adapter,
+    )
+
+    def terminal_stock_loss(candidate_outputs: Any) -> Any:
+        candidate_prediction = head.prediction_from_named_outputs(
+            candidate_outputs,
+            assembled,
+        )
+        components, _trace = successor_rollout_component_losses(
+            candidate_prediction,
+            truncated,
+            transition=transition,
+            markov_contract=runtime["contract"],
+            flux_scales=long_scales.fluxes,
+            stock_scales=long_scales.stocks,
+            rematerialize=False,
+            horizons=(1,),
+        )
+        return components[2]
+
+    loss, gradient = jax.jit(jax.value_and_grad(terminal_stock_loss))(named_outputs)
+    jax.block_until_ready((loss, gradient))
+    return {
+        "window_index": window_index,
+        "horizon": 1,
+        "component": "terminal_stock_mse",
+        "loss": float(np.asarray(loss)),
+        "named_output_gradient": _gradient_tree_report(jax, gradient),
+    }
+
+
 def _prepare_adapter(
     runtime: Mapping[str, Any],
     entry: Mapping[str, Any],
@@ -720,6 +787,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         raise ValueError("diagnostic horizon must lie in [1, 30]")
     if args.diagnose_window is not None and args.diagnose_horizon is None:
         raise ValueError("diagnostic window requires a diagnostic horizon")
+    if args.diagnose_boundary_window is not None and args.diagnose_horizon is not None:
+        raise ValueError("choose either rollout-prefix or prediction-boundary diagnosis")
     run_started = time.perf_counter()
     runtime = _load_extended_runtime(args)
     jax = runtime["jax"]
@@ -1071,7 +1140,18 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                     "promotion_eligible": False,
                 }
             )
-            if args.diagnose_horizon is None:
+            if args.diagnose_boundary_window is not None:
+                diagnostic = _diagnose_prediction_boundary(
+                    runtime,
+                    SOURCE_ROUTED_ATTENTION,
+                    parameters[SOURCE_ROUTED_ATTENTION],
+                    batch,
+                    adapter,
+                    long_scales,
+                    window_index=int(args.diagnose_boundary_window),
+                )
+                schema_version = "successor_small_fit_prediction_boundary_diagnostic_v1"
+            elif args.diagnose_horizon is None:
                 diagnostic = _diagnose_arm_gradients(
                     runtime,
                     SOURCE_ROUTED_ATTENTION,
@@ -1449,6 +1529,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--recovery-identity-git-head")
     parser.add_argument("--diagnose-horizon", type=int)
     parser.add_argument("--diagnose-window", type=int, choices=(0, 1))
+    parser.add_argument("--diagnose-boundary-window", type=int, choices=(0, 1))
     return parser
 
 
