@@ -571,6 +571,54 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         _atomic_json(args.output, report)
         return report
 
+    if args.replay_only_update is not None:
+        replay_update = int(args.replay_only_update)
+        if not 1 <= replay_update <= requested_updates:
+            raise ValueError("replay-only update is outside the production schedule")
+        if replay_update == 1:
+            replay = first_replay
+            replay_policy = first_replay_policy
+            replay_seconds = first_replay_seconds
+            entry = first_entry
+        else:
+            entry = schedule["entries"][replay_update - 1]
+            artifact = load_prepared_artifact(
+                args.prepared_manifest,
+                prepared_manifest["entries"][replay_update - 1],
+                schedule_entry=entry,
+            )
+            if artifact.trace_signature != first_signature:
+                raise ValueError("prepared successor trace identity changed within schedule")
+            adapter = replace(first_adapter, day_inputs=artifact.day_inputs)
+            replay_started = time.perf_counter()
+            replay = _teacher_replay_gate_with_transition(
+                runtime,
+                artifact.batch,
+                adapter,
+                lambda values, inputs: replay_step(values, inputs, adapter.day_inputs),
+            )
+            replay_seconds = time.perf_counter() - replay_started
+            replay_policy = _teacher_replay_training_policy(replay)
+        report = {
+            "schema_version": "successor_small_fit_replay_policy_probe_v1",
+            "status": "passed" if replay_policy["training_admitted"] else "failed",
+            "run_kind": "replay_only_zero_update",
+            "replay_update": replay_update,
+            "schedule_entry": entry,
+            "training_updates_per_arm": 0,
+            "checkpoint_written": False,
+            "recovery_written": False,
+            "teacher_data_regenerated": False,
+            "historical_v5_used": False,
+            "test_split_used": False,
+            "identity": execution_identity,
+            "teacher_replay": replay,
+            "teacher_replay_training_policy": replay_policy,
+            "replay_seconds": replay_seconds,
+        }
+        _atomic_json(args.output, report)
+        return report
+
     assembled = runtime["adapter"].input_assembler.assemble(
         jax.tree_util.tree_map(lambda value: value[0], first_batch.anchor_inputs)
     )
@@ -1024,6 +1072,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--checkpoint-dir", type=Path, required=True)
     parser.add_argument("--recovery-path", type=Path, required=True)
     parser.add_argument("--recovery-interval", type=int, default=25)
+    parser.add_argument("--replay-only-update", type=int)
     return parser
 
 
