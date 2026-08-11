@@ -417,6 +417,7 @@ def successor_rollout_component_losses(
     flux_scales: Mapping[str, Any],
     stock_scales: Mapping[str, Any],
     rematerialize: bool = True,
+    horizons: Sequence[int] = (1, 7, 30),
 ) -> tuple[Any, Any]:
     """Return four unweighted 1/7/30-day components and the rollout trace."""
 
@@ -461,7 +462,7 @@ def successor_rollout_component_losses(
             flux_scales=flux_scales,
             stock_scales=stock_scales,
             coefficients=unit,
-            horizons=(1, 7, 30),
+            horizons=horizons,
         )
         return jnp.stack(tuple(getattr(result, name) for name in LONG_HORIZON_COMPONENTS))
 

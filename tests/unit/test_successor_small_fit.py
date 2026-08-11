@@ -352,6 +352,29 @@ def test_nonfinite_anchor_breakdown_resolves_samples_and_process_labels(monkeypa
     assert report["process_labels"]["process.alpha"]["gradient"]["all_finite"]
 
 
+def test_rollout_prefix_diagnostic_slices_window_and_horizon():
+    values = np.arange(2 * 30 * 3).reshape(2, 30, 3)
+    batch = small_fit.PreparedSuccessorSmallFitBatch(
+        anchor_inputs=None,
+        anchor_targets=None,
+        rollout_inputs={"values": values},
+        rollout_targets={"values": values + 1},
+        expected_next_state=values + 2,
+        expected_next_state_defined=np.ones_like(values, dtype=np.bool_),
+        expected_fast_gpp=values + 3,
+        expected_fast_gpp_defined=np.ones_like(values, dtype=np.bool_),
+        expected_fast_day_target=values + 4,
+        expected_next_discrete_state={"counter": values.astype(np.int32)},
+    )
+
+    sliced = production_fit._slice_rollout_batch(jax, batch, 7, 1)
+
+    assert sliced.rollout_inputs["values"].shape == (1, 7, 3)
+    np.testing.assert_array_equal(sliced.rollout_inputs["values"], values[1:2, :7])
+    assert sliced.expected_next_state.shape == (1, 7, 3)
+    assert sliced.expected_next_discrete_state["counter"].shape == (1, 7, 3)
+
+
 def test_production_launcher_preserves_contract_and_dual_backend_boundary():
     root = Path(__file__).resolve().parents[2]
     launcher = (root / "scripts" / "hpc" / "run_successor_small_fit.sh").read_text()
@@ -373,6 +396,8 @@ def test_production_launcher_preserves_contract_and_dual_backend_boundary():
     assert 'EXTRA_ARGS="--replay-only-update $REPLAY_ONLY_UPDATE"' in launcher
     assert "--diagnose-update $DIAGNOSE_UPDATE" in launcher
     assert "--recovery-identity-git-head $RECOVERY_IDENTITY_GIT_HEAD" in launcher
+    assert "--diagnose-horizon $DIAGNOSE_HORIZON" in launcher
+    assert "--diagnose-window $DIAGNOSE_WINDOW" in launcher
     assert "$EXTRA_ARGS" in launcher
     assert 'test -f "$CHECKPOINT_DIR/checkpoint_manifest.json"' in launcher
 

@@ -29,6 +29,8 @@ CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/successor-small-fit-
 REPLAY_ONLY_UPDATE=${REPLAY_ONLY_UPDATE:-}
 DIAGNOSE_UPDATE=${DIAGNOSE_UPDATE:-}
 RECOVERY_IDENTITY_GIT_HEAD=${RECOVERY_IDENTITY_GIT_HEAD:-}
+DIAGNOSE_HORIZON=${DIAGNOSE_HORIZON:-}
+DIAGNOSE_WINDOW=${DIAGNOSE_WINDOW:-}
 
 case "$WORKTREE" in
   "$ROOT"|"$ROOT/runtime/worktrees/"*) ;;
@@ -88,6 +90,12 @@ if [ -n "$DIAGNOSE_UPDATE" ]; then
   esac
   test -n "$RECOVERY_IDENTITY_GIT_HEAD"
   EXTRA_ARGS="--diagnose-update $DIAGNOSE_UPDATE --recovery-identity-git-head $RECOVERY_IDENTITY_GIT_HEAD"
+  if [ -n "$DIAGNOSE_HORIZON" ]; then
+    EXTRA_ARGS="$EXTRA_ARGS --diagnose-horizon $DIAGNOSE_HORIZON"
+  fi
+  if [ -n "$DIAGNOSE_WINDOW" ]; then
+    EXTRA_ARGS="$EXTRA_ARGS --diagnose-window $DIAGNOSE_WINDOW"
+  fi
 fi
 
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)

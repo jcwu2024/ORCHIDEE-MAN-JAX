@@ -370,6 +370,7 @@ def _make_arm_objectives(
         day_inputs: Any,
         *,
         rematerialize: bool,
+        horizons: Sequence[int] = (1, 7, 30),
     ) -> Any:
         retained_tail = replace(adapter_template, day_inputs=day_inputs)
         transition = bind_daily_operator(
@@ -385,6 +386,7 @@ def _make_arm_objectives(
             flux_scales=long_scales.fluxes,
             stock_scales=long_scales.stocks,
             rematerialize=rematerialize,
+            horizons=horizons,
         )
 
     return anchor, rollout
@@ -561,6 +563,81 @@ def _diagnose_arm_gradients(
     }
 
 
+def _slice_rollout_batch(jax: Any, batch: Any, horizon: int, window_index: int | None) -> Any:
+    selected = slice(None) if window_index is None else slice(window_index, window_index + 1)
+
+    def truncate(tree: Any) -> Any:
+        return jax.tree_util.tree_map(lambda value: value[selected, :horizon], tree)
+
+    return batch._replace(
+        rollout_inputs=truncate(batch.rollout_inputs),
+        rollout_targets=truncate(batch.rollout_targets),
+        expected_next_state=truncate(batch.expected_next_state),
+        expected_next_state_defined=truncate(batch.expected_next_state_defined),
+        expected_fast_gpp=truncate(batch.expected_fast_gpp),
+        expected_fast_gpp_defined=truncate(batch.expected_fast_gpp_defined),
+        expected_fast_day_target=truncate(batch.expected_fast_day_target),
+        expected_next_discrete_state=truncate(batch.expected_next_discrete_state),
+    )
+
+
+def _diagnose_rollout_horizon_gradients(
+    runtime: Mapping[str, Any],
+    arm: str,
+    parameters: Any,
+    batch: Any,
+    adapter: Any,
+    long_scales: Any,
+    *,
+    horizon: int,
+    window_index: int | None,
+) -> Mapping[str, Any]:
+    import jax.numpy as jnp
+
+    from research.daily_coarse_graining.daily_operator.successor_training import (
+        LONG_HORIZON_COMPONENTS,
+    )
+
+    jax = runtime["jax"]
+    truncated = _slice_rollout_batch(jax, batch, horizon, window_index)
+    _anchor, rollout_objective = _make_arm_objectives(
+        runtime,
+        arm,
+        adapter,
+        long_scales,
+    )
+
+    def component_vector(values: Any) -> Any:
+        return rollout_objective(
+            values,
+            truncated,
+            adapter.day_inputs,
+            rematerialize=True,
+            horizons=(horizon,),
+        )[0]
+
+    def component_measurement(values: Any) -> Any:
+        losses, pullback = jax.vjp(component_vector, values)
+        basis = jnp.eye(len(LONG_HORIZON_COMPONENTS), dtype=jnp.float64)
+        gradients = jax.lax.map(lambda seed: pullback(seed)[0], basis)
+        return losses, gradients
+
+    losses, gradients = jax.jit(component_measurement)(parameters)
+    jax.block_until_ready((losses, gradients))
+    components = {}
+    for index, name in enumerate(LONG_HORIZON_COMPONENTS):
+        gradient = jax.tree_util.tree_map(lambda leaf: leaf[index], gradients)
+        components[name] = {
+            "loss": float(np.asarray(losses[index])),
+            "gradient": _gradient_tree_report(jax, gradient),
+        }
+    return {
+        "horizon": horizon,
+        "window_index": window_index,
+        "components": components,
+    }
+
+
 def _prepare_adapter(
     runtime: Mapping[str, Any],
     entry: Mapping[str, Any],
@@ -639,6 +716,10 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         raise FileExistsError(f"small-fit output already exists: {args.output}")
     if int(args.recovery_interval) <= 0:
         raise ValueError("recovery interval must be positive")
+    if args.diagnose_horizon is not None and not 1 <= int(args.diagnose_horizon) <= 30:
+        raise ValueError("diagnostic horizon must lie in [1, 30]")
+    if args.diagnose_window is not None and args.diagnose_horizon is None:
+        raise ValueError("diagnostic window requires a diagnostic horizon")
     run_started = time.perf_counter()
     runtime = _load_extended_runtime(args)
     jax = runtime["jax"]
@@ -970,17 +1051,51 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
 
         if diagnose_update == update + 1:
             diagnostic_started = time.perf_counter()
-            diagnostic = _diagnose_arm_gradients(
-                runtime,
-                SOURCE_ROUTED_ATTENTION,
-                parameters[SOURCE_ROUTED_ATTENTION],
-                batch,
-                adapter,
-                long_scales,
-                entry["anchor_starts"],
+            recovery_written = update > resume_update
+            diagnostic_recovery = (
+                write_successor_recovery(
+                    args.output.with_name("diagnostic_recovery_state.pkl"),
+                    identity=execution_identity,
+                    parameters={arm: jax.device_get(parameters[arm]) for arm in arms},
+                    optimizers={arm: jax.device_get(optimizer[arm]) for arm in arms},
+                    completed_updates=completed_updates,
+                    parameter_counts=counts,
+                    initial_metrics=initial_metrics,
+                    completed_update_records=records,
+                    expected_arms=arms,
+                )
+                if recovery_written
+                else {
+                    "path": str(args.recovery_path.resolve()),
+                    "completed_updates_per_arm": resume_update,
+                    "promotion_eligible": False,
+                }
             )
+            if args.diagnose_horizon is None:
+                diagnostic = _diagnose_arm_gradients(
+                    runtime,
+                    SOURCE_ROUTED_ATTENTION,
+                    parameters[SOURCE_ROUTED_ATTENTION],
+                    batch,
+                    adapter,
+                    long_scales,
+                    entry["anchor_starts"],
+                )
+                schema_version = "successor_small_fit_nonfinite_gradient_diagnostic_v1"
+            else:
+                diagnostic = _diagnose_rollout_horizon_gradients(
+                    runtime,
+                    SOURCE_ROUTED_ATTENTION,
+                    parameters[SOURCE_ROUTED_ATTENTION],
+                    batch,
+                    adapter,
+                    long_scales,
+                    horizon=int(args.diagnose_horizon),
+                    window_index=args.diagnose_window,
+                )
+                schema_version = "successor_small_fit_rollout_prefix_gradient_diagnostic_v1"
             report = {
-                "schema_version": "successor_small_fit_nonfinite_gradient_diagnostic_v1",
+                "schema_version": schema_version,
                 "status": "passed",
                 "run_kind": "recovery_gradient_diagnostic",
                 "diagnosed_arm": SOURCE_ROUTED_ATTENTION,
@@ -989,7 +1104,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 "recovery_completed_updates_per_arm": resume_update,
                 "replayed_updates_per_arm": update - resume_update,
                 "checkpoint_written": False,
-                "recovery_written": False,
+                "recovery_written": recovery_written,
+                "diagnostic_recovery": diagnostic_recovery,
                 "teacher_data_regenerated": False,
                 "historical_v5_used": False,
                 "test_split_used": False,
@@ -1331,6 +1447,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--replay-only-update", type=int)
     parser.add_argument("--diagnose-update", type=int)
     parser.add_argument("--recovery-identity-git-head")
+    parser.add_argument("--diagnose-horizon", type=int)
+    parser.add_argument("--diagnose-window", type=int, choices=(0, 1))
     return parser
 
 
