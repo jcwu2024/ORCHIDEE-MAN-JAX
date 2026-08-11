@@ -556,10 +556,22 @@ classification. The local launcher now keeps only its required process-local
 JIT cache; focused validation passes 13 tests. See
 [`successor_7_30_formal_cache_timeout_20260811.md`](research/daily_coarse_graining/successor_7_30_formal_cache_timeout_20260811.md).
 
-The current action is a bounded free-`gln01` formal-batch-shape probe of that
-repair. A replacement paid screen requires another explicit approval after
-the free probe passes. The 365-day rollout, long-held-point validation, Gate
-D2, sealed test, and product gates remain closed.
+The no-persistent-cache repair then completed the entire frozen formal screen
+on free `gln01` in `312.730` seconds, so no replacement paid submission is
+needed. Report SHA256 is `7e8dc04f...a5b9d52b`. The attention candidate is
+rejected: all six primary-composite gates, 46/72 key-RMSE gates, and 42/72
+signed-bias gates fail, while all 30 numerical/state/budget hard gates pass.
+Attention repeatedly damages maintenance respiration, NPP, AGB/BGB and total
+live biomass relative to the control despite improving GPP in several cells.
+See
+[`successor_7_30_formal_screen_result_20260812.md`](research/daily_coarse_graining/successor_7_30_formal_screen_result_20260812.md).
+
+The current action is one bounded, no-training attribution of that declared
+failure across named processes, days, slices, and source-routed edges. Do not
+promote the control, tune against the formal windows, or start another
+architecture before the attribution is reviewed. The 365-day rollout,
+long-held-point validation, Gate D2, sealed test, and product gates remain
+closed.
 
 ## Completed Task Packet: Gate C
 

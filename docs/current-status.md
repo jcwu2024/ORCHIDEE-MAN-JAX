@@ -290,9 +290,18 @@ infrastructure failure and provides no scientific classification. The local
 launcher now uses process-local JIT caching only; see
 [`successor_7_30_formal_cache_timeout_20260811.md`](research/daily_coarse_graining/successor_7_30_formal_cache_timeout_20260811.md).
 
-The current gate is a bounded free-`gln01` formal-shape probe before any newly
-approved paid submission. The 365-day rollout, long-held points, Gate D2,
-sealed test and product acceptance remain closed.
+The repair completed the full frozen formal screen on free `gln01` in
+`312.730` seconds, making another paid submission unnecessary. The report
+SHA256 is `7e8dc04f...a5b9d52b`. Attention is rejected: all six primary
+composites are `60.61-272.25%` worse than control, 46/72 key-RMSE gates and
+42/72 bias gates fail, while all 30 hard gates pass. NPP, maintenance
+respiration, AGB/BGB, and total live biomass are the repeated dominant
+failures. See
+[`successor_7_30_formal_screen_result_20260812.md`](research/daily_coarse_graining/successor_7_30_formal_screen_result_20260812.md).
+
+The current gate is a bounded no-training attribution before any successor
+architecture discussion. The control is not promoted. The 365-day rollout,
+long-held points, Gate D2, sealed test and product acceptance remain closed.
 
 ## Stable Teacher
 
