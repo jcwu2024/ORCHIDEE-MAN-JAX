@@ -222,10 +222,32 @@ directory. The persistent report SHA256 is
 It records zero training updates and no Teacher/v5 access; see
 [`successor_checkpoint_handoff_gpu_probe_acceptance_20260810.md`](research/daily_coarse_graining/successor_checkpoint_handoff_gpu_probe_acceptance_20260810.md).
 
-No GPU job is active. The next gate is a fresh approval block for the
-one-process 500-update paid GPU fit at execution commit `c15cd86`.
-No paid training submission, 7/30-day screen, 365-day rollout,
-long-held-point, Gate D2, or product acceptance is authorized.
+Approved paid fit job `14517771` started but failed closed after `00:02:52`
+with exit code `1:0`, before the training loop and before any checkpoint
+publication. The output directory is empty. The loader incorrectly required
+the two-update coefficient-source schedule hash to equal the complete
+500-update consuming schedule hash even though their coefficient-defining
+first artifact is byte-identical. The schedule-ownership repair and a new
+CPU-only exact-production admission probe pass locally; no coefficient,
+objective, data or gate changed. See
+[`successor_small_fit_paid_admission_failure_20260811.md`](research/daily_coarse_graining/successor_small_fit_paid_admission_failure_20260811.md).
+
+While that job waits, the complete successor 7/30-day acceptance package was
+frozen before any fit result. Contract SHA256 is
+`99ec6eb0...0b6fc07`. It hash-admits both successful 500-update checkpoints,
+selects a deterministic non-test panel, prepares host artifacts on free CPU
+test nodes, runs same-boundary matched 7/30-day free rollouts, and applies
+biomass/productivity, bias and exact hard gates. Focused local tests pass
+`12/12`. No rollout screen has run because no production checkpoint exists.
+See
+[`successor_7_30_rollout_screen_package_20260810.md`](research/daily_coarse_graining/successor_7_30_rollout_screen_package_20260810.md).
+
+The next execution is the repaired zero-update production-asset admission on
+`test01`-`test04`, after a clean commit/worktree transfer. Only a passed,
+hash-recorded CPU report may support a fresh approval request for a replacement
+paid fit. After a successful future fit, proceed to free 7/30-day preparation
+and `gln01` smoke. The formal 96-window screen, 365-day rollout, long-held
+points, Gate D2 and product acceptance remain closed.
 
 ## Stable Teacher
 

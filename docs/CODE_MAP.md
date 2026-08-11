@@ -278,6 +278,26 @@ admission are recorded in
 `successor_small_fit_prepared_500_acceptance_20260810.md`; its server execution
 identity remains bound to producer HEAD `d493699`. A later clean consumer
 worktree may admit it only through the exact checkpoint-handoff contract.
+`scripts/hpc/probe_successor_production_admission.py` and its CPU-test-node
+wrapper now own the required fail-fast admission of the exact production
+schedule, manifest, first artifact, coefficient source and checkpoint handoff.
+They execute zero training updates and publish no checkpoint. This gate was
+added after job `14517771` exposed a source-versus-consuming schedule ownership
+bug; its diagnosis is `successor_small_fit_paid_admission_failure_20260811.md`.
+
+`daily_operator/successor_rollout_screen.py` owns the frozen post-fit 7/30-day
+non-test inventory, deterministic matched-window plan, additive
+biomass/productivity metrics, exact hard counts, dual-checkpoint admission and
+candidate/control classification. Its machine contract is
+`manifests/coarse_graining/successor_7_30_rollout_screen_v1.json`.
+`scripts/hpc/prepare_successor_rollout_screen.py` creates hash-bound host
+artifacts on free CPU test nodes; `successor_rollout_screen_prepared.py` owns
+their atomic persistence and admission. `run_successor_rollout_screen.py`
+consumes both admitted checkpoints at the canonical daily-operator boundary.
+The shell wrappers bind free CPU/GPU execution, while
+`slurm_successor_rollout_screen.sh` is an unsubmitted 96-window formal-screen
+proposal. The frozen package is documented in
+`successor_7_30_rollout_screen_package_20260810.md`.
 
 ## Scripts
 

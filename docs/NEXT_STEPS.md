@@ -505,10 +505,29 @@ round-trip, tree-schema, tamper, incomplete-fit and interrupted-second-arm
 tests pass. The serialization-only free-`gln01` preflight also passes at
 consumer commit `c15cd86`: both GPU-origin arm trees reload exactly, the
 temporary checkpoint is removed, and no Teacher/v5 data or training update is
-used. No GPU job is active. The current gate is a fresh approval block for
-`gnall`, one node, 16 CPU cores, one GPU, two-hour limit and additive CNY 6.64
-worst-case charge. The 7/30-day screen,
-365-day, long-held-point, Gate D2 and product acceptance remain closed.
+used. Approved job `14517771` started but failed closed after `00:02:52`,
+before any training update or checkpoint publication. The output directory is
+empty. The cause is an identity-ownership bug: the coefficient loader required
+the accepted two-update source schedule to equal the complete 500-update
+consuming schedule, although both use the exact same coefficient-defining
+first artifact. The local repair preserves all coefficient values, data,
+objective and gates and adds a CPU-only exact-production asset probe.
+
+The conditional 7/30-day acceptance package is complete and frozen before
+the fit result. Contract SHA256 is `99ec6eb0...0b6fc07`. It requires exact
+dual-checkpoint admission, deterministic temporal/spatial/joint non-test
+windows, byte-identical candidate/control panels, cumulative productivity and
+terminal biomass/carbon metrics, signed-bias gates and zero exact hard counts.
+Host artifacts are prepared on free CPU test nodes before GPU evaluation.
+Focused local tests pass `12/12`; no numeric screen has run.
+
+The immediate order is: commit and transfer the repair to a clean worktree;
+run the zero-update production-asset admission on `test01`-`test04`; record its
+passed report hash; then present a fresh approval block for any replacement
+paid fit. Do not resubmit before that free gate passes. After a successful
+future fit publishes both checkpoints, prepare the three-window panel on a
+free CPU node and run the free `gln01` smoke. The formal 96-window screen,
+365-day, long-held-point, Gate D2 and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 

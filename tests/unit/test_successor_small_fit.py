@@ -727,7 +727,7 @@ def test_frozen_coefficients_bind_source_report_and_first_artifact(tmp_path):
             "identity": {
                 "git_head": "source-head",
                 "runner_contract_sha256": "runner",
-                "schedule_sha256": "schedule",
+                "schedule_sha256": "source-schedule",
                 "successor_candidate_contract_sha256": "candidate",
                 "fast_owner_contract_sha256": "owner",
                 "prepared_manifest_sha256": "prepared-manifest",
@@ -741,7 +741,7 @@ def test_frozen_coefficients_bind_source_report_and_first_artifact(tmp_path):
         "status": "accepted",
         "identity": {
             "runner_contract_sha256": "runner",
-            "schedule_sha256": "schedule",
+            "schedule_sha256": "source-schedule",
             "successor_candidate_contract_sha256": "candidate",
             "fast_owner_contract_sha256": "owner",
             "first_prepared_artifact_sha256": "artifact",
@@ -772,7 +772,7 @@ def test_frozen_coefficients_bind_source_report_and_first_artifact(tmp_path):
         contract_path,
         source_report_path=report_path,
         runner_contract_sha256="runner",
-        schedule_sha256="schedule",
+        schedule_sha256="production-schedule",
         successor_contract_sha256="candidate",
         fast_owner_contract_sha256="owner",
         first_prepared_artifact_sha256="artifact",
@@ -783,13 +783,17 @@ def test_frozen_coefficients_bind_source_report_and_first_artifact(tmp_path):
     )
     assert loaded.coefficients == resolved
 
+    # The frozen coefficients are derived from the exact first artifact, not
+    # from the later unused entries in the source probe's two-update schedule.
+    assert payload["identity"]["schedule_sha256"] != "production-schedule"
+
     report_path.write_text(report_path.read_text() + " ", encoding="utf-8")
     with pytest.raises(ValueError, match="source report hash drift"):
         frozen_coefficients.load_frozen_successor_coefficients(
             contract_path,
             source_report_path=report_path,
             runner_contract_sha256="runner",
-            schedule_sha256="schedule",
+            schedule_sha256="production-schedule",
             successor_contract_sha256="candidate",
             fast_owner_contract_sha256="owner",
             first_prepared_artifact_sha256="artifact",
@@ -807,3 +811,22 @@ def test_final_evaluation_reuses_compiled_train_step():
     assert '"final_evaluation_reuses_train_step": True' in runner
     assert '"optimizer_result_discarded": True' in runner
     assert "np.asarray(0.0, dtype=np.float64)" in runner
+
+
+def test_production_asset_admission_probe_is_cpu_only_and_zero_update():
+    root = Path(__file__).resolve().parents[2]
+    source = (root / "scripts" / "hpc" / "probe_successor_production_admission.py").read_text(
+        encoding="utf-8"
+    )
+    launcher = (root / "scripts" / "hpc" / "probe_successor_production_admission.sh").read_text(
+        encoding="utf-8"
+    )
+
+    assert "backend_initializer=_cpu_backend" in source
+    assert "admit_prepared_manifest_for_checkpoint_fit(" in source
+    assert "load_frozen_successor_coefficients(" in source
+    assert '"training_updates_executed": 0' in source
+    assert '"checkpoint_written": False' in source
+    assert "test01|test02|test03|test04" in launcher
+    assert "JAX_PLATFORMS=cpu" in launcher
+    assert "sbatch" not in launcher

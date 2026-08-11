@@ -58,6 +58,14 @@ def load_frozen_successor_coefficients(
     coefficient_minimum: float,
     coefficient_maximum: float,
 ) -> FrozenSuccessorCoefficients:
+    """Admit coefficients from their source prefix into a verified fit schedule.
+
+    ``schedule_sha256`` identifies the consuming fit and is admitted by the
+    prepared-manifest/checkpoint-handoff boundary. The coefficient contract's
+    own schedule identifies the source preflight and need not equal a longer
+    consuming schedule when the coefficient-defining first artifact is exact.
+    """
+
     source = Path(path).resolve()
     payload = json.loads(source.read_text(encoding="utf-8"))
     if payload.get("schema_version") != SCHEMA_VERSION or payload.get("status") != "accepted":
@@ -69,10 +77,11 @@ def load_frozen_successor_coefficients(
     identity = payload.get("identity", {})
     if (
         identity.get("runner_contract_sha256") != runner_contract_sha256
-        or identity.get("schedule_sha256") != schedule_sha256
         or identity.get("successor_candidate_contract_sha256") != successor_contract_sha256
         or identity.get("fast_owner_contract_sha256") != fast_owner_contract_sha256
         or identity.get("first_prepared_artifact_sha256") != first_prepared_artifact_sha256
+        or not isinstance(schedule_sha256, str)
+        or not schedule_sha256
     ):
         raise ValueError("successor frozen-coefficient identity drift")
 
@@ -112,7 +121,11 @@ def load_frozen_successor_coefficients(
         or report.get("run_kind") != "bounded_reuse_probe"
         or report_identity.get("git_head") != source_evidence.get("git_head")
         or report_identity.get("runner_contract_sha256") != runner_contract_sha256
-        or report_identity.get("schedule_sha256") != schedule_sha256
+        # The source report is a two-update prefix probe. The consuming
+        # production schedule is independently admitted by its prepared
+        # manifest and checkpoint handoff; coefficient identity is anchored
+        # to the byte-identical first artifact used by this preflight.
+        or report_identity.get("schedule_sha256") != identity.get("schedule_sha256")
         or report_identity.get("successor_candidate_contract_sha256") != successor_contract_sha256
         or report_identity.get("fast_owner_contract_sha256") != fast_owner_contract_sha256
         or report_identity.get("prepared_manifest_sha256") != source_evidence.get("prepared_manifest_sha256")

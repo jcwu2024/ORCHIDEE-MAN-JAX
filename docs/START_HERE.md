@@ -91,8 +91,12 @@ The user selected source-routed process attention against an exactly matched
 source-graph MLP control. Their frozen v1 machine contract and local
 implementation now pass parameter-count, eager/JIT forward, loss/JVP/VJP,
 PFT, parameter-route, one-day conservation, and synthetic 30-day objective
-tests. The next gate is a no-checkpoint real-v6 smoke on free `gln01` with the
-canonical retained tail. No paid training is currently authorized.
+tests. Its fast-owner extension, real-v6 preflight, 500-entry CPU product and
+atomic checkpoint handoff are accepted. Paid fit job `14517771` failed during
+pre-training coefficient admission and published no checkpoint. The local
+schedule-ownership repair now requires a free CPU exact-production admission
+before any replacement request. The conditional 7/30-day screen package was
+frozen before that result; no rollout screen has run.
 
 ## New Task Bootstrap
 
@@ -111,11 +115,14 @@ unless `jax_orchidee` drifts between the two branches or its evidence hashes
 drift. Gate E2 data production is complete. The first formal neural process-
 head A/B is closed after one pair. The long-horizon objective and parameter-
 routing foundations are implemented. The selected successor pair, frozen
-contract, local network, and rollout-loss foundation are recorded in
-`successor_process_head_local_foundation_20260809.md`; the active next task is
-its no-checkpoint real-v6 `gln01` smoke. The bounded small fit, 7/30-day model
-selection, 365-day rollout, Gate D2, and product gates remain
-dependency-ordered later work.
+contract, local network, fast-owner boundary, small-fit lifecycle and
+checkpoint handoff are recorded in the active documents named by
+`DOCUMENT_STATUS.md`. The current active gate is the repaired zero-update
+production-asset admission on a free CPU test node. A replacement paid fit
+requires separate approval after that report passes. After a successful
+dual-checkpoint publication, prepare and run the frozen free 7/30-day smoke;
+the formal bounded screen still requires separate paid approval. The 365-day
+rollout, Gate D2, and product gates remain dependency-ordered later work.
 Before choosing or inheriting
 a neural architecture, read
 `research/daily_coarse_graining/failed_architecture_lessons.md`; it replaces
