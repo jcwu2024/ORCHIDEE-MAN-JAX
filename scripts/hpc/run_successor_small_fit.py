@@ -656,6 +656,8 @@ def _diagnose_prediction_boundary(
     *,
     window_index: int,
 ) -> Mapping[str, Any]:
+    from jax.experimental import checkify
+
     from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
     from research.daily_coarse_graining.daily_operator.successor_small_fit import (
         successor_rollout_component_losses,
@@ -694,14 +696,24 @@ def _diagnose_prediction_boundary(
         )
         return components[2]
 
-    loss, gradient = jax.jit(jax.value_and_grad(terminal_stock_loss))(named_outputs)
+    checked = checkify.checkify(
+        jax.value_and_grad(terminal_stock_loss),
+        errors=checkify.float_checks,
+    )
+    error, (loss, gradient) = jax.jit(checked)(named_outputs)
     jax.block_until_ready((loss, gradient))
+    maintenance = np.asarray(named_outputs["daily.fast_maintenance_respiration"])
     return {
         "window_index": window_index,
         "horizon": 1,
         "component": "terminal_stock_mse",
         "loss": float(np.asarray(loss)),
         "named_output_gradient": _gradient_tree_report(jax, gradient),
+        "maintenance_respiration": {
+            "values": maintenance.tolist(),
+            "sum_by_pft": np.sum(maintenance, axis=-1, dtype=np.float64).tolist(),
+        },
+        "checkify_error": error.get(),
     }
 
 
