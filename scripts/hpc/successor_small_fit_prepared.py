@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import gzip
 import hashlib
 import json
 import os
@@ -39,16 +40,36 @@ def atomic_json(path: Path, payload: Mapping[str, Any]) -> None:
     temporary.replace(path)
 
 
-def write_prepared_artifact(path: Path, artifact: PreparedUpdateArtifact) -> Mapping[str, Any]:
+def write_prepared_artifact(
+    path: Path,
+    artifact: PreparedUpdateArtifact,
+    *,
+    compression: str = "none",
+) -> Mapping[str, Any]:
+    if compression not in {"none", "gzip"}:
+        raise ValueError("unsupported successor prepared-artifact compression")
+    if compression == "gzip" and not path.name.endswith(".pkl.gz"):
+        raise ValueError("gzip successor artifact path must end in .pkl.gz")
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_name(f".{path.name}.{os.getpid()}.tmp")
-    with temporary.open("wb") as handle:
-        pickle.dump(artifact, handle, protocol=pickle.HIGHEST_PROTOCOL)
+    with temporary.open("wb") as raw_handle:
+        if compression == "gzip":
+            with gzip.GzipFile(
+                filename="",
+                mode="wb",
+                compresslevel=1,
+                fileobj=raw_handle,
+                mtime=0,
+            ) as handle:
+                pickle.dump(artifact, handle, protocol=pickle.HIGHEST_PROTOCOL)
+        else:
+            pickle.dump(artifact, raw_handle, protocol=pickle.HIGHEST_PROTOCOL)
     temporary.replace(path)
     return {
         "path": path.name,
         "sha256": sha256_file(path),
         "size_bytes": path.stat().st_size,
+        "compression": compression,
     }
 
 
@@ -92,8 +113,17 @@ def load_prepared_artifact(
         raise ValueError("prepared successor artifact escaped its manifest directory") from error
     if not path.is_file() or sha256_file(path) != str(record["sha256"]):
         raise ValueError("prepared successor artifact hash drift")
-    with path.open("rb") as handle:
-        artifact = pickle.load(handle)
+    compression = str(record.get("compression", "none"))
+    if compression == "gzip":
+        if not path.name.endswith(".pkl.gz"):
+            raise ValueError("gzip successor artifact path must end in .pkl.gz")
+        with gzip.open(path, "rb") as handle:
+            artifact = pickle.load(handle)
+    elif compression == "none":
+        with path.open("rb") as handle:
+            artifact = pickle.load(handle)
+    else:
+        raise ValueError("unsupported successor prepared-artifact compression")
     if not isinstance(artifact, PreparedUpdateArtifact):
         raise ValueError("prepared successor artifact type drift")
     if artifact.schema_version != PREPARED_ARTIFACT_SCHEMA:

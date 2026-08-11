@@ -68,6 +68,7 @@ def _load_progress(
     *,
     worker_index: int | None = None,
     worker_count: int | None = None,
+    artifact_compression: str = "none",
 ) -> dict[str, Any]:
     worker = None if worker_index is None else {"index": int(worker_index), "count": int(worker_count)}
     if not path.exists():
@@ -79,6 +80,7 @@ def _load_progress(
             "entries": [],
             "teacher_data_regenerated": False,
             "historical_v5_used": False,
+            "artifact_compression": artifact_compression,
         }
         if worker is not None:
             payload["worker"] = worker
@@ -89,6 +91,7 @@ def _load_progress(
         or payload.get("identity") != dict(identity)
         or int(payload.get("updates", -1)) != updates
         or payload.get("worker") != worker
+        or payload.get("artifact_compression", "none") != artifact_compression
     ):
         raise ValueError("existing successor preparation progress has different identity")
     return payload
@@ -100,6 +103,7 @@ def _finalize_worker_progress(
     schedule: Mapping[str, Any],
     updates: int,
     worker_count: int,
+    artifact_compression: str = "none",
 ) -> Mapping[str, Any]:
     if worker_count < 1:
         raise ValueError("worker_count must be positive")
@@ -121,6 +125,7 @@ def _finalize_worker_progress(
             or partial.get("worker") != {"index": worker_index, "count": worker_count}
             or partial.get("teacher_data_regenerated") is not False
             or partial.get("historical_v5_used") is not False
+            or partial.get("artifact_compression", "none") != artifact_compression
             or observed_updates != expected_updates
         ):
             raise ValueError(f"successor preparation worker {worker_index} coverage or identity drift")
@@ -150,6 +155,7 @@ def _finalize_worker_progress(
         "worker_count": worker_count,
         "teacher_data_regenerated": False,
         "historical_v5_used": False,
+        "artifact_compression": artifact_compression,
     }
     atomic_json(manifest_path, progress)
     return progress | {"manifest_sha256": sha256_file(manifest_path)}
@@ -194,6 +200,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             schedule,
             updates,
             worker_count,
+            args.artifact_compression,
         )
     if (worker_count is None) != (worker_index is None):
         raise ValueError("worker_index and worker_count must be supplied together")
@@ -210,6 +217,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         updates,
         worker_index=worker_index,
         worker_count=worker_count,
+        artifact_compression=args.artifact_compression,
     )
     completed = {int(record["update"]): record for record in progress["entries"]}
     started = time.perf_counter()
@@ -235,8 +243,13 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             batch=jax.tree_util.tree_map(np.asarray, batch),
             day_inputs=jax.tree_util.tree_map(np.asarray, adapter.day_inputs),
         )
-        artifact_path = output_dir / f"update-{update:04d}.pkl"
-        file_record = write_prepared_artifact(artifact_path, artifact)
+        suffix = ".pkl.gz" if args.artifact_compression == "gzip" else ".pkl"
+        artifact_path = output_dir / f"update-{update:04d}{suffix}"
+        file_record = write_prepared_artifact(
+            artifact_path,
+            artifact,
+            compression=args.artifact_compression,
+        )
         record = {
             "update": update,
             "landpoint_id": str(entry["landpoint_id"]),
@@ -281,6 +294,11 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--worker-index", type=int)
     parser.add_argument("--worker-count", type=int)
     parser.add_argument("--finalize", action="store_true")
+    parser.add_argument(
+        "--artifact-compression",
+        choices=("none", "gzip"),
+        default="none",
+    )
     return parser
 
 

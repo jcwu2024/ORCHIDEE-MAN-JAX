@@ -853,6 +853,33 @@ def test_prepared_update_round_trip_and_hash_drift(tmp_path):
         load_prepared_artifact(manifest_path, record, schedule_entry=entry)
 
 
+def test_gzip_prepared_update_is_deterministic_and_round_trips(tmp_path):
+    entry = {"landpoint_id": "001.0-071.0", "year": 1961, "anchor_starts": [1]}
+    artifact = PreparedUpdateArtifact(
+        schema_version=PREPARED_ARTIFACT_SCHEMA,
+        schedule_entry=entry,
+        trace_signature="trace",
+        batch={"state": np.zeros((128, 128), dtype=np.float64)},
+        day_inputs=(np.asarray([3.0]),),
+    )
+    paths = (tmp_path / "left.pkl.gz", tmp_path / "right.pkl.gz")
+    records = [
+        write_prepared_artifact(path, artifact, compression="gzip")
+        | {"update": 1, "trace_signature": "trace"}
+        for path in paths
+    ]
+
+    assert records[0]["compression"] == "gzip"
+    assert records[0]["sha256"] == records[1]["sha256"]
+    assert records[0]["size_bytes"] < artifact.batch["state"].nbytes // 10
+    loaded = load_prepared_artifact(
+        tmp_path / "prepared_manifest.json",
+        records[0],
+        schedule_entry=entry,
+    )
+    np.testing.assert_array_equal(loaded.batch["state"], artifact.batch["state"])
+
+
 def test_prepared_manifest_binds_source_schedule_and_update_coverage(tmp_path):
     path = tmp_path / "prepared_manifest.json"
     payload = {
