@@ -82,6 +82,21 @@ def _host_preflight(preflight: Any) -> Mapping[str, Any]:
     }
 
 
+def _device_memory_report(devices: Any) -> list[Mapping[str, Any]]:
+    records = []
+    for device in devices:
+        stats = device.memory_stats() or {}
+        records.append(
+            {
+                "device": str(device),
+                "bytes_in_use": int(stats.get("bytes_in_use", 0)),
+                "peak_bytes_in_use": int(stats.get("peak_bytes_in_use", 0)),
+                "bytes_limit": int(stats.get("bytes_limit", 0)),
+            }
+        )
+    return records
+
+
 def _leaf_failures(
     leaves: Any,
     actual: np.ndarray,
@@ -477,6 +492,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         raise FileExistsError(f"probe output already exists: {args.output}")
     runtime = _load_extended_runtime(args)
     jax = runtime["jax"]
+    memory_before = _device_memory_report(runtime["devices"])
 
     from jax_orchidee.driver import orchestration as teacher
     from research.daily_coarse_graining.daily_markov_contract import (
@@ -709,6 +725,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "historical_v5_used": False,
         "backend": jax.default_backend(),
         "devices": [str(device) for device in runtime["devices"]],
+        "device_memory_before": memory_before,
+        "device_memory_after": _device_memory_report(runtime["devices"]),
         "identity": dict(identity)
         | {
             "runner_contract_sha256": runner_contract.sha256,

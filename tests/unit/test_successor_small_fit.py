@@ -326,6 +326,7 @@ def test_gpu_launcher_registers_cpu_for_jax_scan_partial_evaluation():
     launcher = (root / "scripts" / "hpc" / "run_successor_small_fit_probe.sh").read_text()
 
     assert "SINGULARITYENV_JAX_PLATFORMS=cuda,cpu \\" in launcher
+    assert "RUNNER_CONTRACT=${RUNNER_CONTRACT:-" in launcher
 
 
 def test_production_runner_trace_signature_excludes_dynamic_landpoint_year_arrays():
