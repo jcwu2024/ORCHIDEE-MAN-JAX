@@ -451,22 +451,42 @@ def successor_rollout_component_losses(
         batch.expected_fast_gpp_defined,
         batch.rollout_inputs,
     )
+    return _batched_rollout_objective_components(
+        predicted,
+        expected,
+        flux_scales=flux_scales,
+        stock_scales=stock_scales,
+        horizons=horizons,
+    ), trace
+
+
+def _batched_rollout_objective_components(
+    predicted: Any,
+    expected: Any,
+    *,
+    flux_scales: Mapping[str, Any],
+    stock_scales: Mapping[str, Any],
+    horizons: Sequence[int],
+) -> Any:
+    """Evaluate bias across rollout windows, not separately within each window."""
+
+    def time_major(value: Any) -> Any:
+        return jax.tree_util.tree_map(lambda leaf: jnp.swapaxes(leaf, 0, 1), value)
+
+    actual = time_major(predicted)
+    wanted = time_major(expected)
     unit = {name: 1.0 for name in LONG_HORIZON_COMPONENTS}
-
-    def components_one(actual, wanted):
-        result = long_horizon_biomass_productivity_objective(
-            actual.fluxes,
-            wanted.fluxes,
-            actual.stocks,
-            wanted.stocks,
-            flux_scales=flux_scales,
-            stock_scales=stock_scales,
-            coefficients=unit,
-            horizons=horizons,
-        )
-        return jnp.stack(tuple(getattr(result, name) for name in LONG_HORIZON_COMPONENTS))
-
-    return jnp.mean(jax.vmap(components_one)(predicted, expected), axis=0), trace
+    result = long_horizon_biomass_productivity_objective(
+        actual.fluxes,
+        wanted.fluxes,
+        actual.stocks,
+        wanted.stocks,
+        flux_scales=flux_scales,
+        stock_scales=stock_scales,
+        coefficients=unit,
+        horizons=horizons,
+    )
+    return jnp.stack(tuple(getattr(result, name) for name in LONG_HORIZON_COMPONENTS))
 
 
 def successor_small_fit_loss(

@@ -31,6 +31,7 @@ from research.daily_coarse_graining.daily_operator.successor_fit_checkpoint impo
     write_successor_recovery,
 )
 from research.daily_coarse_graining.daily_operator.successor_small_fit import (
+    _batched_rollout_objective_components,
     build_successor_small_fit_schedule,
     initialize_successor_adamw,
     load_successor_small_fit_contract,
@@ -41,7 +42,11 @@ from research.daily_coarse_graining.daily_operator.successor_small_fit import (
     verify_successor_small_fit_schedule,
 )
 from research.daily_coarse_graining.daily_operator.successor_training import (
+    BiomassProductivityTrajectories,
     LONG_HORIZON_COMPONENTS,
+)
+from research.daily_coarse_graining.daily_operator.long_horizon_objective import (
+    MaskedTrajectory,
 )
 from scripts.hpc.prepare_successor_small_fit_batches import (
     _finalize_worker_progress,
@@ -187,6 +192,47 @@ def test_successor_combined_objective_supports_one_synthetic_update(monkeypatch)
     assert float(auxiliary[0]) == pytest.approx(4.0)
     assert np.asarray(auxiliary[1]).tolist() == pytest.approx([2.0, 4.0, 6.0, 8.0])
     assert float(gradient["weight"]) == pytest.approx(7.0)
+
+
+def test_rollout_bias_is_computed_across_windows_instead_of_duplicating_mse():
+    predicted = BiomassProductivityTrajectories(
+        fluxes={
+            "gpp": MaskedTrajectory(
+                value=jnp.asarray([[1.0], [-1.0]], dtype=jnp.float64),
+                defined=jnp.ones((2, 1), dtype=jnp.bool_),
+            )
+        },
+        stocks={
+            "live": MaskedTrajectory(
+                value=jnp.asarray([[1.0], [-1.0]], dtype=jnp.float64),
+                defined=jnp.ones((2, 1), dtype=jnp.bool_),
+            )
+        },
+    )
+    expected = BiomassProductivityTrajectories(
+        fluxes={
+            "gpp": MaskedTrajectory(
+                value=jnp.zeros((2, 1), dtype=jnp.float64),
+                defined=jnp.ones((2, 1), dtype=jnp.bool_),
+            )
+        },
+        stocks={
+            "live": MaskedTrajectory(
+                value=jnp.zeros((2, 1), dtype=jnp.float64),
+                defined=jnp.ones((2, 1), dtype=jnp.bool_),
+            )
+        },
+    )
+
+    components = _batched_rollout_objective_components(
+        predicted,
+        expected,
+        flux_scales={"gpp": 1.0},
+        stock_scales={"live": 1.0},
+        horizons=(1,),
+    )
+
+    np.testing.assert_allclose(np.asarray(components), [1.0, 0.0, 1.0, 0.0])
 
 
 def test_teacher_replay_inverts_delta_and_defined_logit_representations():
