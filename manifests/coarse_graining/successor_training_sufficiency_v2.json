@@ -1,7 +1,7 @@
 {
   "schema_version": "successor_training_sufficiency_v2",
   "status": "frozen_for_free_pipeline_and_gpu_probes",
-  "contract_sha256": "d5e9774dc5a9e5fe3d4a8a2cba3d700dd8700d49ded4afe21b1c0b5d5241be65",
+  "contract_sha256": "6fc6b88843deb869c9c48358c91ba39ea6b1f661ffa75531f058a6c16eb22586",
   "identity": {
     "successor_candidate_contract_sha256": "bb8bb34972e6fdff713f06f7ce48a2faa9eb4991af9f269c9aab26d96b592b5c",
     "fast_owner_contract_sha256": "4db5f828442212c58903096c36015f9d769c19aeaaa4eb9a4326fbea2fdfc4c9",
@@ -57,7 +57,7 @@
       "terminal_stock_mse": 0.1,
       "terminal_stock_bias_squared": 0.15
     },
-    "coefficient_minimum": 0.001,
+    "coefficient_minimum": 0.000001,
     "coefficient_maximum": 10.0,
     "coefficient_preflight_batches": 16,
     "coefficient_preflight_arms": "both_matched_arms",

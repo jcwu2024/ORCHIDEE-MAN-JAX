@@ -701,8 +701,18 @@ def calibrate_gradient_ratio_coefficients(
             )
         coefficient = target * anchor_norm_host / norm_host
         if not coefficient_minimum <= coefficient <= coefficient_maximum:
-            raise ValueError(
-                f"resolved coefficient for {name} lies outside the frozen interval"
+            raise GradientRatioPreflightError(
+                f"resolved coefficient for {name} lies outside the frozen interval",
+                {
+                    "component": name,
+                    "loss": float(value),
+                    "anchor_gradient_norm": anchor_norm_host,
+                    "component_gradient_norm": norm_host,
+                    "target_gradient_ratio": target,
+                    "resolved_coefficient": coefficient,
+                    "coefficient_minimum": coefficient_minimum,
+                    "coefficient_maximum": coefficient_maximum,
+                },
             )
         component_values[name] = value
         component_norms[name] = norm

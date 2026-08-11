@@ -43,7 +43,9 @@ from research.daily_coarse_graining.daily_operator.successor_small_fit import (
 )
 from research.daily_coarse_graining.daily_operator.successor_training import (
     BiomassProductivityTrajectories,
+    GradientRatioPreflightError,
     LONG_HORIZON_COMPONENTS,
+    calibrate_gradient_ratio_coefficients,
 )
 from research.daily_coarse_graining.daily_operator.long_horizon_objective import (
     MaskedTrajectory,
@@ -251,6 +253,28 @@ def test_rollout_bias_is_computed_across_windows_instead_of_duplicating_mse():
     )
 
     np.testing.assert_allclose(np.asarray(components), [1.0, 0.0, 1.0, 0.0])
+
+
+def test_gradient_ratio_interval_failure_reports_the_unclamped_coefficient():
+    parameters = {"weight": jnp.asarray(1.0, dtype=jnp.float64)}
+    components = {
+        name: (lambda values: 1000.0 * values["weight"])
+        for name in LONG_HORIZON_COMPONENTS
+    }
+
+    with pytest.raises(GradientRatioPreflightError) as captured:
+        calibrate_gradient_ratio_coefficients(
+            parameters,
+            lambda values: values["weight"] ** 2,
+            components,
+            target_gradient_ratios={name: 0.1 for name in LONG_HORIZON_COMPONENTS},
+            coefficient_minimum=0.001,
+            coefficient_maximum=10.0,
+            split_label="train/train",
+        )
+
+    assert captured.value.diagnostic["resolved_coefficient"] == pytest.approx(0.0002)
+    assert captured.value.diagnostic["coefficient_minimum"] == 0.001
 
 
 def test_teacher_replay_inverts_delta_and_defined_logit_representations():

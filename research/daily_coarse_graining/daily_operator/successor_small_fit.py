@@ -36,7 +36,7 @@ from .successor_training import (
 SCHEMA_VERSION = "successor_small_fit_runner_v1"
 FROZEN_CONTRACT_SHA256 = "8317fc74b6ba921b0ed60e774743884ddc81b233c75ce1823f3246211d1640de"
 SUFFICIENCY_SCHEMA_VERSION = "successor_training_sufficiency_v2"
-SUFFICIENCY_CONTRACT_SHA256 = "d5e9774dc5a9e5fe3d4a8a2cba3d700dd8700d49ded4afe21b1c0b5d5241be65"
+SUFFICIENCY_CONTRACT_SHA256 = "6fc6b88843deb869c9c48358c91ba39ea6b1f661ffa75531f058a6c16eb22586"
 DEFAULT_CONTRACT_PATH = (
     Path(__file__).resolve().parents[3] / "manifests" / "coarse_graining" / "successor_small_fit_runner_v1.json"
 )
