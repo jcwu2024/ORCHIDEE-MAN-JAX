@@ -67,6 +67,7 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_7_30_rollout_screen_package_20260810.md` | Active frozen post-fit acceptance package; dual checkpoints are now available | Preparing or reviewing the free smoke and formal bounded 7/30-day screen |
 | `research/daily_coarse_graining/successor_7_30_free_smoke_acceptance_20260811.md` | Active accepted free-smoke execution evidence; not promotion eligible | Preparing or reviewing the formal 96-window bounded screen |
 | `research/daily_coarse_graining/successor_7_30_formal_prepared_acceptance_20260811.md` | Active accepted formal prepared-panel input; paid screen awaits approval | Admitting or reviewing the formal 96-window bounded screen |
+| `research/daily_coarse_graining/successor_7_30_formal_cache_timeout_20260811.md` | Active infrastructure-failure diagnosis; no model classification | Validating the no-persistent-cache repair before a replacement paid screen |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

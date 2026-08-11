@@ -76,6 +76,17 @@ def test_contract_is_hash_frozen(contract):
     assert contract.payload["boundary"]["executes_48_step_state_scan"] is False
 
 
+def test_gpu_runner_uses_only_process_local_jit_cache():
+    launcher = (
+        Path(__file__).resolve().parents[2]
+        / "scripts"
+        / "hpc"
+        / "run_successor_rollout_screen.sh"
+    ).read_text(encoding="utf-8")
+    assert "JAX_COMPILATION_CACHE_DIR" not in launcher
+    assert "CACHE_ROOT" not in launcher
+
+
 def test_window_plan_is_deterministic_matched_and_excludes_first_rows(contract, index):
     first = screen.build_successor_screen_window_plan(index, contract, mode="formal_bounded_screen")
     second = screen.build_successor_screen_window_plan(index, contract, mode="formal_bounded_screen")

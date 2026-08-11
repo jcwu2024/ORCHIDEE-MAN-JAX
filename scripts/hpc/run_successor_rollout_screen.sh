@@ -25,8 +25,6 @@ BASE_STATISTICS=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance
 PROCESS_STATISTICS=$ROOT/runtime/outputs/training/first-neural-process-head-v1-statistics/process_training_statistics.json
 FAST_STATISTICS=$ROOT/runtime/outputs/training/successor-fast-owner-statistics-c9f35c0/successor_fast_owner_statistics.json
 SCREEN_CONTRACT=$WORKTREE/manifests/coarse_graining/successor_7_30_rollout_screen_v1.json
-HEAD_SHORT=${EXPECTED_GIT_HEAD:0:7}
-CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/successor-rollout-screen-$HEAD_SHORT}
 
 case "$WORKTREE" in
   "$ROOT"|"$ROOT/runtime/worktrees/"*) ;;
@@ -39,7 +37,7 @@ for path in "$PREPARED_MANIFEST" "$WINDOW_PLAN" "$FIT_REPORT"; do
   esac
   test -f "$path"
 done
-for path in "$CHECKPOINT_DIR" "$OUTPUT" "$CACHE_ROOT"; do
+for path in "$CHECKPOINT_DIR" "$OUTPUT"; do
   case "$path" in
     "$ROOT/runtime/"*) ;;
     *) echo "runtime path escaped the project root: $path" >&2; exit 2 ;;
@@ -56,7 +54,7 @@ test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
 test ! -e "$OUTPUT"
 command -v nvidia-smi >/dev/null
 nvidia-smi -L >/dev/null
-mkdir -p "$(dirname "$OUTPUT")" "$CACHE_ROOT"
+mkdir -p "$(dirname "$OUTPUT")"
 
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
 NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
@@ -74,7 +72,6 @@ env -u LD_LIBRARY_PATH \
   SINGULARITYENV_CUDA_VISIBLE_DEVICES="$GPU_DEVICE" \
   SINGULARITYENV_JAX_ENABLE_X64=true \
   SINGULARITYENV_JAX_PLATFORMS=cuda,cpu \
-  SINGULARITYENV_JAX_COMPILATION_CACHE_DIR="$CACHE_ROOT" \
   SINGULARITYENV_PYTHONHASHSEED=0 \
   SINGULARITYENV_ORCHIDEE_REPO_ROOT="$WORKTREE" \
   SINGULARITYENV_ORCHIDEE_RUNTIME_ROOT="$ROOT/runtime" \
@@ -102,4 +99,3 @@ env -u LD_LIBRARY_PATH \
 
 test -f "$OUTPUT"
 sha256sum "$OUTPUT"
-

@@ -282,9 +282,17 @@ rehash-verified on free `test01`. It contains 24 artifacts totaling
 window-plan file SHA256 is `71a1a1ac...f397965`. See
 [`successor_7_30_formal_prepared_acceptance_20260811.md`](research/daily_coarse_graining/successor_7_30_formal_prepared_acceptance_20260811.md).
 
-The current gate is explicit paid-`gnall` authorization for the frozen formal
-screen. The 365-day rollout, long-held points, Gate D2, sealed test and product
-acceptance remain closed.
+Approved `gnall` job `14520704` exhausted its 45-minute limit before its first
+formal artifact completed and wrote no report. The evaluator was blocked in
+shared-filesystem synchronization while writing many tiny JAX persistent-cache
+entries under `/WORK`; the GPU held the model but remained idle. This is an
+infrastructure failure and provides no scientific classification. The local
+launcher now uses process-local JIT caching only; see
+[`successor_7_30_formal_cache_timeout_20260811.md`](research/daily_coarse_graining/successor_7_30_formal_cache_timeout_20260811.md).
+
+The current gate is a bounded free-`gln01` formal-shape probe before any newly
+approved paid submission. The 365-day rollout, long-held points, Gate D2,
+sealed test and product acceptance remain closed.
 
 ## Stable Teacher
 

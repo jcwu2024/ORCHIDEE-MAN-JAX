@@ -546,8 +546,19 @@ SHA256 is `71a1a1ac...f397965`, and all temporal/spatial/joint counts and
 policies match the frozen contract. See
 [`successor_7_30_formal_prepared_acceptance_20260811.md`](research/daily_coarse_graining/successor_7_30_formal_prepared_acceptance_20260811.md).
 
-The current action is to request explicit paid-`gnall` authorization for the
-frozen formal screen. The 365-day rollout, long-held-point validation, Gate
+Approved `gnall` job `14520704` then reached its 45-minute limit before the
+first formal artifact completed and published no report. Read-only node
+diagnostics found the Python main thread in shared-filesystem
+`cl_sync_io_wait`, zero GPU utilization with the model resident in memory,
+and many tiny JAX persistent-cache files appearing slowly under `/WORK`.
+This is an infrastructure/cache-I/O failure and supplies no model
+classification. The local launcher now keeps only its required process-local
+JIT cache; focused validation passes 13 tests. See
+[`successor_7_30_formal_cache_timeout_20260811.md`](research/daily_coarse_graining/successor_7_30_formal_cache_timeout_20260811.md).
+
+The current action is a bounded free-`gln01` formal-batch-shape probe of that
+repair. A replacement paid screen requires another explicit approval after
+the free probe passes. The 365-day rollout, long-held-point validation, Gate
 D2, sealed test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
