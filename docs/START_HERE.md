@@ -93,10 +93,11 @@ implementation now pass parameter-count, eager/JIT forward, loss/JVP/VJP,
 PFT, parameter-route, one-day conservation, and synthetic 30-day objective
 tests. Its fast-owner extension, real-v6 preflight, 500-entry CPU product and
 atomic checkpoint handoff are accepted. Paid fit job `14517771` failed during
-pre-training coefficient admission and published no checkpoint. The local
-schedule-ownership repair now requires a free CPU exact-production admission
-before any replacement request. The conditional 7/30-day screen package was
-frozen before that result; no rollout screen has run.
+pre-training coefficient admission and published no checkpoint. The
+schedule-ownership repair and free CPU exact-production admission now pass at
+commit `0ed9891`; a replacement paid fit still needs explicit approval. The
+conditional 7/30-day screen package was frozen before that result; no rollout
+screen has run.
 
 ## New Task Bootstrap
 
@@ -117,10 +118,10 @@ head A/B is closed after one pair. The long-horizon objective and parameter-
 routing foundations are implemented. The selected successor pair, frozen
 contract, local network, fast-owner boundary, small-fit lifecycle and
 checkpoint handoff are recorded in the active documents named by
-`DOCUMENT_STATUS.md`. The current active gate is the repaired zero-update
-production-asset admission on a free CPU test node. A replacement paid fit
-requires separate approval after that report passes. After a successful
-dual-checkpoint publication, prepare and run the frozen free 7/30-day smoke;
+`DOCUMENT_STATUS.md`. The repaired zero-update production-asset admission has
+passed on a free CPU test node. The current active gate is a fresh explicit
+approval for the replacement paid fit. After a successful dual-checkpoint
+publication, prepare and run the frozen free 7/30-day smoke;
 the formal bounded screen still requires separate paid approval. The 365-day
 rollout, Gate D2, and product gates remain dependency-ordered later work.
 Before choosing or inheriting

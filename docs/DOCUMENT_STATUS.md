@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-10.
+Last updated: 2026-08-11.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -61,7 +61,8 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_small_fit_prepared_500_acceptance_20260810.md` | Active accepted 500-entry CPU product; bound GPU fit awaits separate approval | Reviewing prepared input identity or approving the GPU fit |
 | `research/daily_coarse_graining/successor_small_fit_checkpoint_handoff_v1.md` | Active checkpoint amendment; local and free GPU persistence preflight accepted | Preparing the paid fit or consuming its checkpoints in rollout |
 | `research/daily_coarse_graining/successor_checkpoint_handoff_gpu_probe_acceptance_20260810.md` | Accepted free-GPU serialization evidence; no production checkpoint retained | Reviewing persistence evidence before paid fit approval |
-| `research/daily_coarse_graining/successor_small_fit_paid_admission_failure_20260811.md` | Active failed-run diagnosis and local repair; free CPU production admission is next | Reviewing job 14517771 or preparing a replacement-fit preflight |
+| `research/daily_coarse_graining/successor_small_fit_paid_admission_failure_20260811.md` | Accepted failed-run diagnosis; schedule-ownership defect closed by the production admission | Reviewing job 14517771 or the reason for the admission repair |
+| `research/daily_coarse_graining/successor_production_fit_asset_admission_20260811.md` | Accepted exact-production free CPU admission; replacement paid fit awaits explicit approval | Reviewing production asset identity before the replacement fit |
 | `research/daily_coarse_graining/successor_7_30_rollout_screen_package_20260810.md` | Active frozen post-fit acceptance package; numeric execution awaits both fit checkpoints | Preparing or reviewing the free smoke and formal bounded 7/30-day screen |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |

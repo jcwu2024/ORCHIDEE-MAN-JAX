@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-08-10.
+Last updated: 2026-08-11.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -284,6 +284,9 @@ schedule, manifest, first artifact, coefficient source and checkpoint handoff.
 They execute zero training updates and publish no checkpoint. This gate was
 added after job `14517771` exposed a source-versus-consuming schedule ownership
 bug; its diagnosis is `successor_small_fit_paid_admission_failure_20260811.md`.
+The repaired gate passed on `test01` at consumer commit `0ed9891`; the accepted
+report SHA256 is `50d090e6...18ea089`, recorded in
+`successor_production_fit_asset_admission_20260811.md`.
 
 `daily_operator/successor_rollout_screen.py` owns the frozen post-fit 7/30-day
 non-test inventory, deterministic matched-window plan, additive

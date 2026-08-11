@@ -242,12 +242,17 @@ biomass/productivity, bias and exact hard gates. Focused local tests pass
 See
 [`successor_7_30_rollout_screen_package_20260810.md`](research/daily_coarse_graining/successor_7_30_rollout_screen_package_20260810.md).
 
-The next execution is the repaired zero-update production-asset admission on
-`test01`-`test04`, after a clean commit/worktree transfer. Only a passed,
-hash-recorded CPU report may support a fresh approval request for a replacement
-paid fit. After a successful future fit, proceed to free 7/30-day preparation
-and `gln01` smoke. The formal 96-window screen, 365-day rollout, long-held
-points, Gate D2 and product acceptance remain closed.
+The repaired zero-update production-asset admission has now passed on
+`test01` at commit `0ed9891` against the exact 500-entry manifest, formal
+schedule, first artifact, coefficient source and checkpoint handoff. Report
+SHA256 is `50d090e6...18ea089`; no training, checkpoint, v5, sealed-test or
+Teacher-regeneration path was used. See
+[`successor_production_fit_asset_admission_20260811.md`](research/daily_coarse_graining/successor_production_fit_asset_admission_20260811.md).
+
+The current gate is a fresh explicit approval block for the replacement paid
+fit. After a successful fit, proceed to free 7/30-day preparation and
+`gln01` smoke. The formal 96-window screen, 365-day rollout, long-held points,
+Gate D2 and product acceptance remain closed.
 
 ## Stable Teacher
 

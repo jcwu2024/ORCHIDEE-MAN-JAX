@@ -1,7 +1,8 @@
 # Successor Small-fit Paid Admission Failure
 
 Status: **job rejected before training; coefficient schedule-ownership bug
-repaired locally; replacement submission not authorized**.
+repaired and exact production assets admitted on free CPU; replacement
+submission not authorized**.
 
 Date: 2026-08-11.
 
@@ -70,6 +71,9 @@ Before requesting any replacement paid run:
 4. require a passed report and record its SHA256;
 5. present a fresh paid-resource approval block.
 
+These steps are complete through item 4. The accepted report SHA256 is
+`50d090e6382e13d3f735fd2d9a92c2feb0fbc9f0c6fa2acb55ecd6d2418ea089`;
+see `successor_production_fit_asset_admission_20260811.md`.
+
 No replacement submission, free GPU screen, 7/30-day numeric evaluation or
 later gate is authorized by this repair alone.
-

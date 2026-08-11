@@ -521,13 +521,14 @@ terminal biomass/carbon metrics, signed-bias gates and zero exact hard counts.
 Host artifacts are prepared on free CPU test nodes before GPU evaluation.
 Focused local tests pass `12/12`; no numeric screen has run.
 
-The immediate order is: commit and transfer the repair to a clean worktree;
-run the zero-update production-asset admission on `test01`-`test04`; record its
-passed report hash; then present a fresh approval block for any replacement
-paid fit. Do not resubmit before that free gate passes. After a successful
-future fit publishes both checkpoints, prepare the three-window panel on a
-free CPU node and run the free `gln01` smoke. The formal 96-window screen,
-365-day, long-held-point, Gate D2 and product gates remain closed.
+The repaired zero-update production-asset admission passed on `test01` at
+commit `0ed9891`. It admitted the exact 500-entry manifest, formal schedule,
+first artifact, coefficient source and checkpoint handoff; report SHA256 is
+`50d090e6...18ea089`. The current action is to present a fresh explicit
+approval block for the replacement paid fit. After a successful future fit
+publishes both checkpoints, prepare the three-window panel on a free CPU node
+and run the free `gln01` smoke. The formal 96-window screen, 365-day,
+long-held-point, Gate D2 and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 
