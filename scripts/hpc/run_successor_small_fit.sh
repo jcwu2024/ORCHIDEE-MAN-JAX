@@ -24,6 +24,7 @@ COEFFICIENT_SOURCE_REPORT=$ROOT/runtime/outputs/training/successor-small-fit-has
 HEAD_SHORT=${EXPECTED_GIT_HEAD:0:7}
 OUTPUT=${OUTPUT:-$ROOT/runtime/outputs/training/successor-small-fit-${UPDATES}u-$HEAD_SHORT/runner_report.json}
 CHECKPOINT_DIR=${CHECKPOINT_DIR:-$(dirname "$OUTPUT")/checkpoints}
+RECOVERY_PATH=${RECOVERY_PATH:-$(dirname "$OUTPUT")/recovery_state.pkl}
 CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/successor-small-fit-runner-$HEAD_SHORT}
 
 case "$WORKTREE" in
@@ -46,7 +47,7 @@ for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" \
   esac
   test -f "$path"
 done
-for path in "$OUTPUT" "$CHECKPOINT_DIR" "$CACHE_ROOT"; do
+for path in "$OUTPUT" "$CHECKPOINT_DIR" "$RECOVERY_PATH" "$CACHE_ROOT"; do
   case "$path" in
     "$ROOT/runtime/"*) ;;
     *) echo "runtime output escaped the project root: $path" >&2; exit 2 ;;
@@ -58,7 +59,10 @@ test -f "$COEFFICIENT_CONTRACT"
 test -x "$PYTHON"
 test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
 test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
-test ! -e "$OUTPUT"
+if [ -e "$OUTPUT" ] && [ ! -e "$RECOVERY_PATH" ]; then
+  echo "output exists without a resumable recovery state: $OUTPUT" >&2
+  exit 2
+fi
 test ! -e "$CHECKPOINT_DIR"
 command -v nvidia-smi >/dev/null
 nvidia-smi -L >/dev/null
@@ -102,7 +106,9 @@ env -u LD_LIBRARY_PATH \
       --coefficient-source-report "$COEFFICIENT_SOURCE_REPORT" \
       --updates "$UPDATES" \
       --output "$OUTPUT" \
-      --checkpoint-dir "$CHECKPOINT_DIR"
+      --checkpoint-dir "$CHECKPOINT_DIR" \
+      --recovery-path "$RECOVERY_PATH" \
+      --recovery-interval 25
 
 test -f "$OUTPUT"
 test -f "$CHECKPOINT_DIR/checkpoint_manifest.json"

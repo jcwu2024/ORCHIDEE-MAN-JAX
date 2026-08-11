@@ -24,7 +24,9 @@ from research.daily_coarse_graining.daily_operator.successor_fit_checkpoint impo
     admit_prepared_manifest_for_checkpoint_fit,
     load_successor_checkpoint_handoff,
     load_successor_checkpoint_set,
+    load_successor_recovery,
     write_successor_checkpoint_set,
+    write_successor_recovery,
 )
 from research.daily_coarse_graining.daily_operator.successor_small_fit import (
     build_successor_small_fit_schedule,
@@ -45,6 +47,7 @@ from scripts.hpc.prepare_successor_small_fit_batches import (
 )
 from scripts.hpc.run_successor_small_fit import (
     _retained_tail_trace_signature,
+    _teacher_replay_training_policy,
     _validate_update_count,
 )
 from scripts.hpc.run_successor_small_fit_probe import _leaf_failures
@@ -316,7 +319,9 @@ def test_production_launcher_preserves_contract_and_dual_backend_boundary():
     assert "successor_small_fit_frozen_coefficients_v1.json" in launcher
     assert '--coefficient-contract "$COEFFICIENT_CONTRACT" \\' in launcher
     assert '--coefficient-source-report "$COEFFICIENT_SOURCE_REPORT" \\' in launcher
-    assert '--checkpoint-dir "$CHECKPOINT_DIR"' in launcher
+    assert '--checkpoint-dir "$CHECKPOINT_DIR" \\' in launcher
+    assert '--recovery-path "$RECOVERY_PATH" \\' in launcher
+    assert "--recovery-interval 25" in launcher
     assert 'test -f "$CHECKPOINT_DIR/checkpoint_manifest.json"' in launcher
 
 
@@ -342,9 +347,10 @@ def test_two_stage_production_launchers_are_bounded_and_unsubmitted():
     assert "#SBATCH --cpus-per-task=16" in gpu
     assert "#SBATCH --gres=gpu:1" in gpu
     assert "#SBATCH --time=02:00:00" in gpu
-    assert "PREPARED_MANIFEST=${PREPARED_MANIFEST:?" in gpu
+    assert "PREPARED_MANIFEST=${PREPARED_MANIFEST:-" in gpu
     assert "UPDATES=500" in gpu
     assert 'test ! -e "$CHECKPOINT_DIR"' in gpu
+    assert "RECOVERY_PATH=" in gpu
     assert "CNY 6.64 worst case" in gpu
 
 
@@ -549,6 +555,90 @@ def test_checkpoint_set_refuses_failed_or_incomplete_fit_without_publication(tmp
         write_successor_checkpoint_set(interrupted, promotion_passed=True, **common)
     assert not interrupted.exists()
     assert not list(tmp_path.glob(".interrupted.*.tmp"))
+
+
+def test_recovery_round_trip_is_resumable_but_not_promotion_eligible(tmp_path):
+    arms, parameters, optimizers = _checkpoint_fixture()
+    identity = {"consumer_git_head": "c" * 40, "schedule_sha256": "schedule"}
+    recovery_path = tmp_path / "recovery_state.pkl"
+    written = write_successor_recovery(
+        recovery_path,
+        identity=identity,
+        parameters=parameters,
+        optimizers=optimizers,
+        completed_updates={arm: 25 for arm in arms},
+        parameter_counts={arm: 2 for arm in arms},
+        initial_metrics={arm: {"loss": 2.0} for arm in arms},
+        completed_update_records=[{"update": 25}],
+        expected_arms=arms,
+    )
+
+    assert written["promotion_eligible"] is False
+    loaded = load_successor_recovery(
+        recovery_path,
+        identity=identity,
+        expected_arms=arms,
+        parameter_counts={arm: 2 for arm in arms},
+        maximum_updates=500,
+    )
+    assert loaded is not None
+    assert loaded["promotion_eligible"] is False
+    assert loaded["completed_updates"] == {arm: 25 for arm in arms}
+    for arm in arms:
+        np.testing.assert_array_equal(loaded["parameters"][arm]["weight"], parameters[arm]["weight"])
+
+    assert (
+        load_successor_recovery(
+            tmp_path / "missing.pkl",
+            identity=identity,
+            expected_arms=arms,
+            parameter_counts={arm: 2 for arm in arms},
+            maximum_updates=500,
+        )
+        is None
+    )
+    with pytest.raises(ValueError, match="identity drift"):
+        load_successor_recovery(
+            recovery_path,
+            identity=identity | {"schedule_sha256": "different"},
+            expected_arms=arms,
+            parameter_counts={arm: 2 for arm in arms},
+            maximum_updates=500,
+        )
+
+
+def test_training_policy_logs_continuous_replay_drift_but_keeps_hard_gates():
+    replay = {
+        "status": "failed",
+        "cases": [
+            {
+                "batch_index": 0,
+                "fast_target": {
+                    "defined_mask_exact": True,
+                    "maximum_defined_tolerance_ratio": 1.0302695733977536,
+                    "leaf_failures": [{"numerical_failure_count": 1}],
+                },
+                "defined_mask_exact": True,
+                "defined_values_finite": True,
+                "undefined_representation_exact": True,
+                "maximum_defined_tolerance_ratio": 1.0302695733977536,
+                "state_leaf_failures": [{"numerical_failure_count": 1}],
+                "discrete_state_exact": True,
+                "water_budget_residual": 0.0,
+                "carbon_budget_residual": 0.0,
+            }
+        ],
+    }
+    policy = _teacher_replay_training_policy(replay)
+    assert policy["training_admitted"] is True
+    assert policy["continuous_tolerance_exceeded"] is True
+    assert policy["continuous_numerical_failure_count"] == 2
+    assert policy["maximum_continuous_tolerance_ratio"] == pytest.approx(1.0302695733977536)
+
+    replay["cases"][0]["defined_values_finite"] = False
+    rejected = _teacher_replay_training_policy(replay)
+    assert rejected["training_admitted"] is False
+    assert rejected["hard_failures"] == ["batch 0: nonfinite defined state"]
 
 
 def test_prepared_update_round_trip_and_hash_drift(tmp_path):

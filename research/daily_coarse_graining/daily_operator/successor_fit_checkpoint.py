@@ -16,6 +16,7 @@ import numpy as np
 HANDOFF_SCHEMA_VERSION = "successor_small_fit_checkpoint_handoff_v1"
 CHECKPOINT_SCHEMA_VERSION = "successor_small_fit_arm_checkpoint_v1"
 CHECKPOINT_SET_SCHEMA_VERSION = "successor_small_fit_checkpoint_set_v1"
+RECOVERY_SCHEMA_VERSION = "successor_small_fit_recovery_v1"
 FROZEN_HANDOFF_SHA256 = "a587b8a93b57bb69f06776aa80fd2268f6ebe2f2e13c07b70e45a3d6632315b0"
 DEFAULT_HANDOFF_PATH = (
     Path(__file__).resolve().parents[3]
@@ -186,6 +187,118 @@ def _write_json(path: Path, payload: Mapping[str, Any]) -> None:
         handle.write("\n")
         handle.flush()
         os.fsync(handle.fileno())
+
+
+def write_successor_recovery(
+    path: str | Path,
+    *,
+    identity: Mapping[str, Any],
+    parameters: Mapping[str, Any],
+    optimizers: Mapping[str, Any],
+    completed_updates: Mapping[str, int],
+    parameter_counts: Mapping[str, int],
+    initial_metrics: Mapping[str, Any],
+    completed_update_records: Sequence[Mapping[str, Any]],
+    expected_arms: Sequence[str],
+) -> Mapping[str, Any]:
+    """Atomically replace an unpromotable, matched-arm recovery state."""
+
+    target = Path(path).resolve()
+    arms = tuple(expected_arms)
+    expected = set(arms)
+    if not arms or any(
+        set(values) != expected
+        for values in (parameters, optimizers, completed_updates, parameter_counts)
+    ):
+        raise ValueError("successor recovery requires both matched arms")
+    update_counts = {int(completed_updates[arm]) for arm in arms}
+    if len(update_counts) != 1 or next(iter(update_counts)) <= 0:
+        raise ValueError("successor recovery requires equal positive update counts")
+
+    parameter_schemas = {}
+    optimizer_schemas = {}
+    for arm in arms:
+        parameter_elements = _validate_finite_tree(parameters[arm], label=f"{arm} recovery parameter")
+        _validate_finite_tree(optimizers[arm], label=f"{arm} recovery optimizer")
+        if parameter_elements != int(parameter_counts[arm]):
+            raise ValueError(f"successor recovery parameter count drift for {arm}")
+        parameter_schemas[arm] = _tree_schema(parameters[arm])
+        optimizer_schemas[arm] = _tree_schema(optimizers[arm])
+
+    payload = {
+        "schema_version": RECOVERY_SCHEMA_VERSION,
+        "promotion_eligible": False,
+        "identity": dict(identity),
+        "arms": list(arms),
+        "completed_updates": {arm: int(completed_updates[arm]) for arm in arms},
+        "parameter_counts": {arm: int(parameter_counts[arm]) for arm in arms},
+        "parameter_tree_schemas": parameter_schemas,
+        "optimizer_tree_schemas": optimizer_schemas,
+        "parameters": dict(parameters),
+        "optimizers": dict(optimizers),
+        "initial_metrics": dict(initial_metrics),
+        "completed_update_records": list(completed_update_records),
+    }
+    target.parent.mkdir(parents=True, exist_ok=True)
+    staging = target.with_name(f".{target.name}.{os.getpid()}.tmp")
+    try:
+        _write_pickle(staging, payload)
+        os.replace(staging, target)
+    except BaseException:
+        staging.unlink(missing_ok=True)
+        raise
+    return {
+        "path": str(target),
+        "completed_updates_per_arm": next(iter(update_counts)),
+        "promotion_eligible": False,
+    }
+
+
+def load_successor_recovery(
+    path: str | Path,
+    *,
+    identity: Mapping[str, Any],
+    expected_arms: Sequence[str],
+    parameter_counts: Mapping[str, int],
+    maximum_updates: int,
+) -> Mapping[str, Any] | None:
+    """Load a recovery state when present; recovery is never promotion evidence."""
+
+    source = Path(path).resolve()
+    if not source.exists():
+        return None
+    with source.open("rb") as handle:
+        payload = pickle.load(handle)
+    arms = tuple(expected_arms)
+    completed = payload.get("completed_updates", {})
+    if (
+        payload.get("schema_version") != RECOVERY_SCHEMA_VERSION
+        or payload.get("promotion_eligible") is not False
+        or payload.get("identity") != dict(identity)
+        or payload.get("arms") != list(arms)
+        or set(completed) != set(arms)
+        or set(payload.get("parameters", {})) != set(arms)
+        or set(payload.get("optimizers", {})) != set(arms)
+        or payload.get("parameter_counts") != {arm: int(parameter_counts[arm]) for arm in arms}
+    ):
+        raise ValueError("successor recovery identity drift")
+    update_counts = {int(completed[arm]) for arm in arms}
+    if len(update_counts) != 1 or not 0 < next(iter(update_counts)) <= int(maximum_updates):
+        raise ValueError("successor recovery update count drift")
+    for arm in arms:
+        parameters = payload["parameters"][arm]
+        optimizer = payload["optimizers"][arm]
+        if (
+            _tree_schema(parameters) != payload["parameter_tree_schemas"].get(arm)
+            or _tree_schema(optimizer) != payload["optimizer_tree_schemas"].get(arm)
+        ):
+            raise ValueError(f"successor recovery tree-schema drift for {arm}")
+        if _validate_finite_tree(parameters, label=f"{arm} recovery parameter") != int(parameter_counts[arm]):
+            raise ValueError(f"successor recovery parameter count drift for {arm}")
+        _validate_finite_tree(optimizer, label=f"{arm} recovery optimizer")
+    if next(iter(update_counts)) > 0 and not payload.get("initial_metrics"):
+        raise ValueError("successor recovery is missing initial metrics")
+    return payload
 
 
 def write_successor_checkpoint_set(

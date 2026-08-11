@@ -234,6 +234,10 @@ def _teacher_replay_gate_with_transition(
             dtype=np.bool_,
         )
         common = actual_defined & expected_defined
+        defined_values_finite = bool(
+            np.all(np.isfinite(actual[actual_defined]))
+            and np.all(np.isfinite(expected[expected_defined]))
+        )
         undefined_exact = np.array_equal(
             actual[~expected_defined],
             expected[~expected_defined],
@@ -258,6 +262,7 @@ def _teacher_replay_gate_with_transition(
         passed = (
             fast_target_passed
             and np.array_equal(actual_defined, expected_defined)
+            and defined_values_finite
             and undefined_exact
             and bool(np.all(difference[common] <= tolerance[common]))
             and discrete_equal
@@ -283,6 +288,7 @@ def _teacher_replay_gate_with_transition(
                     "leaf_failures": fast_target_failures,
                 },
                 "defined_mask_exact": bool(np.array_equal(actual_defined, expected_defined)),
+                "defined_values_finite": defined_values_finite,
                 "undefined_representation_exact": bool(undefined_exact),
                 "maximum_defined_absolute_error": (float(np.max(difference[common])) if np.any(common) else 0.0),
                 "maximum_defined_tolerance_ratio": (

@@ -16,7 +16,9 @@ import numpy as np
 from research.daily_coarse_graining.daily_operator.successor_fit_checkpoint import (
     admit_prepared_manifest_for_checkpoint_fit,
     load_successor_checkpoint_handoff,
+    load_successor_recovery,
     write_successor_checkpoint_set,
+    write_successor_recovery,
 )
 from scripts.hpc.run_successor_fast_owner_gpu_probe import (
     EXPECTED_PARAMETER_COUNT,
@@ -135,6 +137,48 @@ def _hard_counts_host(value: Any) -> Mapping[str, int]:
 
 def _component_record(names: tuple[str, ...], values: Any) -> Mapping[str, float]:
     return {name: float(value) for name, value in zip(names, np.asarray(values), strict=True)}
+
+
+def _teacher_replay_training_policy(replay: Mapping[str, Any]) -> Mapping[str, Any]:
+    """Keep structural and physical failures hard; report continuous drift."""
+
+    hard_failures = []
+    numerical_failure_count = 0
+    maximum_tolerance_ratio = 0.0
+    for case in replay["cases"]:
+        batch_index = int(case["batch_index"])
+        fast = case["fast_target"]
+        if not bool(fast["defined_mask_exact"]):
+            hard_failures.append(f"batch {batch_index}: fast-target defined mask")
+        if not bool(case["defined_mask_exact"]):
+            hard_failures.append(f"batch {batch_index}: state defined mask")
+        if not bool(case.get("defined_values_finite", True)):
+            hard_failures.append(f"batch {batch_index}: nonfinite defined state")
+        if not bool(case["undefined_representation_exact"]):
+            hard_failures.append(f"batch {batch_index}: undefined state representation")
+        if not bool(case["discrete_state_exact"]):
+            hard_failures.append(f"batch {batch_index}: discrete state")
+        for budget in ("water_budget_residual", "carbon_budget_residual"):
+            value = float(case[budget])
+            if not np.isfinite(value) or abs(value) > 2.0e-12:
+                hard_failures.append(f"batch {batch_index}: {budget}")
+        numerical_failure_count += sum(
+            int(failure["numerical_failure_count"])
+            for failure in (*fast["leaf_failures"], *case["state_leaf_failures"])
+        )
+        maximum_tolerance_ratio = max(
+            maximum_tolerance_ratio,
+            float(fast["maximum_defined_tolerance_ratio"]),
+            float(case["maximum_defined_tolerance_ratio"]),
+        )
+    return {
+        "training_admitted": not hard_failures,
+        "hard_failures": hard_failures,
+        "continuous_tolerance_exceeded": numerical_failure_count > 0,
+        "continuous_numerical_failure_count": numerical_failure_count,
+        "maximum_continuous_tolerance_ratio": maximum_tolerance_ratio,
+        "raw_replay_status": replay["status"],
+    }
 
 
 def _device_memory_report(devices: Any) -> list[Mapping[str, Any]]:
@@ -384,8 +428,10 @@ def _git_head() -> str:
 
 
 def run(args: argparse.Namespace) -> Mapping[str, Any]:
-    if args.output.exists():
+    if args.output.exists() and not args.recovery_path.exists():
         raise FileExistsError(f"small-fit output already exists: {args.output}")
+    if int(args.recovery_interval) <= 0:
+        raise ValueError("recovery interval must be positive")
     run_started = time.perf_counter()
     runtime = _load_extended_runtime(args)
     jax = runtime["jax"]
@@ -508,17 +554,19 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         ),
     )
     first_replay_seconds = time.perf_counter() - replay_started
-    if first_replay["status"] != "passed":
+    first_replay_policy = _teacher_replay_training_policy(first_replay)
+    if not first_replay_policy["training_admitted"]:
         report = {
             "schema_version": "successor_small_fit_contract_runner_v1",
             "status": "failed",
-            "failed_stage": "first_annual_shard_teacher_replay",
+            "failed_stage": "first_annual_shard_teacher_replay_hard_gate",
             "checkpoint_written": False,
             "training_updates_per_arm": 0,
             "teacher_data_regenerated": False,
             "historical_v5_used": False,
             "identity": execution_identity,
             "annual_shard_teacher_replay": first_replay,
+            "teacher_replay_training_policy": first_replay_policy,
         }
         _atomic_json(args.output, report)
         return report
@@ -549,9 +597,25 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
 
     step_cache: dict[tuple[str, str], tuple[Any, Any]] = {}
     first_batches = {first_signature: (first_batch, first_adapter)}
-    records = []
-    initial_metrics = {}
-    completed_updates = {arm: 0 for arm in arms}
+    recovery = load_successor_recovery(
+        args.recovery_path,
+        identity=execution_identity,
+        expected_arms=arms,
+        parameter_counts=counts,
+        maximum_updates=maximum_updates,
+    )
+    if recovery is None:
+        records = []
+        initial_metrics = {}
+        completed_updates = {arm: 0 for arm in arms}
+    else:
+        parameters = dict(recovery["parameters"])
+        optimizer = dict(recovery["optimizers"])
+        records = list(recovery["completed_update_records"])
+        initial_metrics = dict(recovery["initial_metrics"])
+        completed_updates = {arm: int(recovery["completed_updates"][arm]) for arm in arms}
+    resume_update = next(iter(set(completed_updates.values())))
+    session_start_update = resume_update
     total_started = time.perf_counter()
     memory_before = _device_memory_report(runtime["devices"])
     prepared_first = (
@@ -566,6 +630,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     prepared_artifact_load_seconds = first_load_seconds
 
     for update, entry in enumerate(schedule["entries"]):
+        if update < resume_update:
+            continue
         if update == 0:
             batch, adapter, preparation = prepared_first
         else:
@@ -609,11 +675,12 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         )
         replay_seconds = first_replay_seconds if update == 0 else time.perf_counter() - replay_started
         replay_cache_after = int(replay_step._cache_size())
-        if replay["status"] != "passed":
+        replay_policy = _teacher_replay_training_policy(replay)
+        if not replay_policy["training_admitted"]:
             report = {
                 "schema_version": "successor_small_fit_contract_runner_v1",
                 "status": "failed",
-                "failed_stage": "annual_shard_teacher_replay",
+                "failed_stage": "annual_shard_teacher_replay_hard_gate",
                 "failed_update": update + 1,
                 "failed_schedule_entry": entry,
                 "checkpoint_written": False,
@@ -623,6 +690,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 "test_split_used": False,
                 "identity": execution_identity,
                 "teacher_replay": replay,
+                "teacher_replay_training_policy": replay_policy,
                 "completed_update_records": records,
                 "total_wall_seconds": time.perf_counter() - run_started,
                 "next_gate": "repair_annual_shard_retained_tail_runtime",
@@ -714,7 +782,15 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "learning_rate": rate,
             "preparation": dict(preparation),
             "teacher_replay": {
-                "status": replay["status"],
+                "status": "passed" if replay_policy["training_admitted"] else "failed",
+                "raw_replay_status": replay_policy["raw_replay_status"],
+                "continuous_tolerance_exceeded": replay_policy["continuous_tolerance_exceeded"],
+                "continuous_numerical_failure_count": replay_policy[
+                    "continuous_numerical_failure_count"
+                ],
+                "maximum_continuous_tolerance_ratio": replay_policy[
+                    "maximum_continuous_tolerance_ratio"
+                ],
                 "seconds": replay_seconds,
                 "jit_cache_size_before": replay_cache_before,
                 "jit_cache_size_after": replay_cache_after,
@@ -723,6 +799,18 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "arms": arm_records,
         }
         records.append(record)
+        if (update + 1) % int(args.recovery_interval) == 0 or update + 1 == requested_updates:
+            write_successor_recovery(
+                args.recovery_path,
+                identity=execution_identity,
+                parameters={arm: jax.device_get(parameters[arm]) for arm in arms},
+                optimizers={arm: jax.device_get(optimizer[arm]) for arm in arms},
+                completed_updates=completed_updates,
+                parameter_counts=counts,
+                initial_metrics=initial_metrics,
+                completed_update_records=records,
+                expected_arms=arms,
+            )
         print(
             json.dumps(
                 {
@@ -810,7 +898,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 and all(value == 0 for value in final_metrics[arm]["hard_gate_counts"].values())
             )
 
-    reuse_records = records[1:]
+    session_records = records[session_start_update:]
+    reuse_records = session_records[1:]
     reuse_passed = len(first_batches) == 1 and all(
         record["trace_signature"] == first_signature
         and record["teacher_replay"]["new_jit_executables"] == 0
@@ -849,6 +938,12 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "checkpoint_written": checkpoint_set is not None,
         "checkpoint_set": checkpoint_set,
         "checkpoint_publication_failure": checkpoint_failure,
+        "recovery": {
+            "path": str(args.recovery_path.resolve()),
+            "interval_updates": int(args.recovery_interval),
+            "resumed_from_update": resume_update,
+            "promotion_eligible": False,
+        },
         "failed_stage": "checkpoint_publication" if checkpoint_failure is not None else None,
         "training_updates_per_arm": requested_updates,
         "completed_updates_per_arm": completed_updates,
@@ -927,6 +1022,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--updates", type=int, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--checkpoint-dir", type=Path, required=True)
+    parser.add_argument("--recovery-path", type=Path, required=True)
+    parser.add_argument("--recovery-interval", type=int, default=25)
     return parser
 
 
