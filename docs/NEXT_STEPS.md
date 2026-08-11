@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-10.
+Last updated: 2026-08-11.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -530,10 +530,19 @@ manifest SHA256 is `f8eed186...75e40`. A separate `test01` reader rehashed and
 loaded both parameter and optimizer trees. See
 [`successor_small_fit_500_checkpoint_acceptance_20260811.md`](research/daily_coarse_graining/successor_small_fit_500_checkpoint_acceptance_20260811.md).
 
-Do not rerun the 500-update fit. The current action is to prepare the frozen
-three-window 7/30-day panel on a free CPU test node and then run the free
-`gln01` smoke. The formal 96-window screen, 365-day, long-held-point, Gate D2
-and product gates remain closed.
+Do not rerun the 500-update fit. The frozen three-window `gln01` free smoke
+passed at evaluation commit `753db81`: both arms completed all temporal,
+spatial, and joint windows, every hard count was zero, and the report SHA256
+is `966313db...458e22`. The smoke is not promotion eligible and its
+`classification` is null. Its single temporal window strongly favors the
+control while the spatial and joint windows are closer; this is preserved as
+a diagnostic rather than used to change the frozen model or gates. See
+[`successor_7_30_free_smoke_acceptance_20260811.md`](research/daily_coarse_graining/successor_7_30_free_smoke_acceptance_20260811.md).
+
+The current action is to materialize the deterministic 96-window formal panel
+on a free CPU test node, then request explicit paid-`gnall` authorization for
+the frozen formal screen. The 365-day rollout, long-held-point validation,
+Gate D2, sealed test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 

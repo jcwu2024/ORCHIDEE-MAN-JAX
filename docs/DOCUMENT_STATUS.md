@@ -65,6 +65,7 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_production_fit_asset_admission_20260811.md` | Historical accepted exact-production admission used by the completed fit | Reviewing production asset identity |
 | `research/daily_coarse_graining/successor_small_fit_500_checkpoint_acceptance_20260811.md` | Active accepted 500-update fit and dual checkpoint product | Preparing or admitting the 7/30-day rollout screen |
 | `research/daily_coarse_graining/successor_7_30_rollout_screen_package_20260810.md` | Active frozen post-fit acceptance package; dual checkpoints are now available | Preparing or reviewing the free smoke and formal bounded 7/30-day screen |
+| `research/daily_coarse_graining/successor_7_30_free_smoke_acceptance_20260811.md` | Active accepted free-smoke execution evidence; not promotion eligible | Preparing or reviewing the formal 96-window bounded screen |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

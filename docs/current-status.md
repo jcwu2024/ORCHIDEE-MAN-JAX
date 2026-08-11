@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-10.
+Last updated: 2026-08-11.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -267,9 +267,18 @@ optimizer elements per arm, exact tree schemas, identities and finite values.
 See
 [`successor_small_fit_500_checkpoint_acceptance_20260811.md`](research/daily_coarse_graining/successor_small_fit_500_checkpoint_acceptance_20260811.md).
 
-The current gate is free preparation of the frozen three-window 7/30-day
-panel, followed by the free `gln01` smoke. The formal 96-window screen,
-365-day rollout, long-held points, Gate D2 and product acceptance remain
+The frozen three-window 7/30-day free smoke passed at evaluation commit
+`753db81`. Both arms completed one temporal, spatial, and joint non-test
+window, all hard counts were zero, and the report SHA256 is
+`966313db...458e22`. The smoke is explicitly not promotion eligible and no arm
+is classified. Its single temporal window is substantially worse for
+attention, while the spatial and joint windows are closer; the frozen formal
+panel must determine whether that signal generalizes. See
+[`successor_7_30_free_smoke_acceptance_20260811.md`](research/daily_coarse_graining/successor_7_30_free_smoke_acceptance_20260811.md).
+
+The current gate is free preparation of the deterministic 96-window formal
+panel, followed by a separately approved paid `gnall` screen. The 365-day
+rollout, long-held points, Gate D2, sealed test and product acceptance remain
 closed.
 
 ## Stable Teacher
