@@ -19,7 +19,7 @@ ACCEPTANCE=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance-v2/a
 BASE_STATISTICS=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance-v2/training_statistics.json
 PROCESS_STATISTICS=$ROOT/runtime/outputs/training/first-neural-process-head-v1-statistics/process_training_statistics.json
 FAST_STATISTICS=$ROOT/runtime/outputs/training/successor-fast-owner-statistics-c9f35c0/successor_fast_owner_statistics.json
-RUNNER_CONTRACT=$WORKTREE/manifests/coarse_graining/successor_small_fit_runner_v1.json
+RUNNER_CONTRACT=${RUNNER_CONTRACT:-$WORKTREE/manifests/coarse_graining/successor_small_fit_runner_v1.json}
 
 case "$WORKTREE" in
   "$ROOT"|"$ROOT/runtime/worktrees/"*) ;;

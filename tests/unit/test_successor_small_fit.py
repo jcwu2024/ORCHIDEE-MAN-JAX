@@ -17,6 +17,9 @@ import research.daily_coarse_graining.daily_operator.successor_frozen_coefficien
 import research.daily_coarse_graining.daily_operator.successor_small_fit as small_fit
 import scripts.hpc.run_successor_fast_owner_gpu_probe as fast_probe
 import scripts.hpc.run_successor_small_fit as production_fit
+from research.daily_coarse_graining.daily_operator.long_horizon_objective import (
+    MaskedTrajectory,
+)
 from research.daily_coarse_graining.daily_operator.successor_fast_owner_decoder import (
     DAY_START_DELTA,
     DEFINED_LOGIT,
@@ -42,17 +45,17 @@ from research.daily_coarse_graining.daily_operator.successor_small_fit import (
     verify_successor_small_fit_schedule,
 )
 from research.daily_coarse_graining.daily_operator.successor_training import (
+    LONG_HORIZON_COMPONENTS,
     BiomassProductivityTrajectories,
     GradientRatioPreflightError,
-    LONG_HORIZON_COMPONENTS,
     calibrate_gradient_ratio_coefficients,
-)
-from research.daily_coarse_graining.daily_operator.long_horizon_objective import (
-    MaskedTrajectory,
 )
 from scripts.hpc.prepare_successor_small_fit_batches import (
     _finalize_worker_progress,
     _worker_updates,
+)
+from scripts.hpc.probe_successor_multibatch_coefficients import (
+    _aggregate_coefficient_records,
 )
 from scripts.hpc.run_successor_small_fit import (
     _compile_reuse_passed,
@@ -130,9 +133,7 @@ def test_training_sufficiency_contract_expands_data_exposure_without_changing_ar
         "source_routed_process_attention_v2",
         "source_routed_graph_mlp_control_v2",
     ]
-    assert contract.payload["objective"]["bias_reduction_axis"] == (
-        "joint_across_rollout_windows"
-    )
+    assert contract.payload["objective"]["bias_reduction_axis"] == ("joint_across_rollout_windows")
     assert contract.payload["gates"]["budget_absolute_tolerance"] == 2e-12
 
 
@@ -258,10 +259,7 @@ def test_rollout_bias_is_computed_across_windows_instead_of_duplicating_mse():
 
 def test_gradient_ratio_interval_failure_reports_the_unclamped_coefficient():
     parameters = {"weight": jnp.asarray(1.0, dtype=jnp.float64)}
-    components = {
-        name: (lambda values: 1000.0 * values["weight"])
-        for name in LONG_HORIZON_COMPONENTS
-    }
+    components = {name: (lambda values: 1000.0 * values["weight"]) for name in LONG_HORIZON_COMPONENTS}
 
     with pytest.raises(GradientRatioPreflightError) as captured:
         calibrate_gradient_ratio_coefficients(
@@ -276,6 +274,37 @@ def test_gradient_ratio_interval_failure_reports_the_unclamped_coefficient():
 
     assert captured.value.diagnostic["resolved_coefficient"] == pytest.approx(0.0002)
     assert captured.value.diagnostic["coefficient_minimum"] == 0.001
+
+
+def test_multibatch_coefficients_use_one_shared_median_across_arms_and_batches():
+    records = [
+        {
+            "anchor_gradient_norm": 10.0,
+            "component_gradient_norms": {name: value for name in LONG_HORIZON_COMPONENTS},
+        }
+        for value in (10.0, 20.0, 30.0, 1000.0)
+    ]
+    result = _aggregate_coefficient_records(
+        records,
+        component_names=LONG_HORIZON_COMPONENTS,
+        targets={name: 0.1 for name in LONG_HORIZON_COMPONENTS},
+        coefficient_minimum=1e-6,
+        coefficient_maximum=10.0,
+    )
+
+    expected = np.median([0.1, 0.05, 1.0 / 30.0, 0.001])
+    assert result["record_count"] == 4
+    assert all(value == pytest.approx(expected) for value in result["resolved_coefficients"].values())
+
+
+def test_multibatch_coefficient_wrapper_is_free_gpu_and_writes_no_checkpoint():
+    root = Path(__file__).resolve().parents[2]
+    wrapper = (root / "scripts" / "hpc" / "run_successor_multibatch_coefficient_probe.sh").read_text()
+
+    assert "PREPARED_MANIFEST=${PREPARED_MANIFEST:?" in wrapper
+    assert "SINGULARITYENV_JAX_PLATFORMS=cuda,cpu" in wrapper
+    assert "sbatch" not in wrapper
+    assert "checkpoint" not in wrapper.lower()
 
 
 def test_teacher_replay_inverts_delta_and_defined_logit_representations():
@@ -437,13 +466,16 @@ def test_completed_cross_commit_recovery_keeps_training_identity_for_publication
     execution = {"git_head": "e" * 40, "schedule_sha256": "schedule"}
     recovery = {"git_head": "r" * 40, "schedule_sha256": "schedule"}
 
-    assert _publication_identity_for_recovery(
-        execution,
-        recovery,
-        resume_update=500,
-        requested_updates=500,
-        diagnostic=False,
-    ) == recovery
+    assert (
+        _publication_identity_for_recovery(
+            execution,
+            recovery,
+            resume_update=500,
+            requested_updates=500,
+            diagnostic=False,
+        )
+        == recovery
+    )
     with pytest.raises(ValueError, match="may only diagnose or finalize"):
         _publication_identity_for_recovery(
             execution,
@@ -452,13 +484,16 @@ def test_completed_cross_commit_recovery_keeps_training_identity_for_publication
             requested_updates=500,
             diagnostic=False,
         )
-    assert _publication_identity_for_recovery(
-        execution,
-        recovery,
-        resume_update=155,
-        requested_updates=500,
-        diagnostic=True,
-    ) == execution
+    assert (
+        _publication_identity_for_recovery(
+            execution,
+            recovery,
+            resume_update=155,
+            requested_updates=500,
+            diagnostic=True,
+        )
+        == execution
+    )
 
 
 def test_nonfinite_anchor_breakdown_resolves_samples_and_process_labels(monkeypatch):
@@ -592,7 +627,7 @@ def test_prepared_batch_wrapper_exposes_bounded_artifact_compression():
     wrapper = (root / "scripts" / "hpc" / "prepare_successor_small_fit_batches.sh").read_text()
 
     assert "ARTIFACT_COMPRESSION=${ARTIFACT_COMPRESSION:-none}" in wrapper
-    assert 'none|gzip)' in wrapper
+    assert "none|gzip)" in wrapper
     assert 'EXTRA_ARGS=(--artifact-compression "$ARTIFACT_COMPRESSION")' in wrapper
 
 
@@ -681,10 +716,7 @@ def _checkpoint_fixture():
         "source_routed_process_attention_v2",
         "source_routed_graph_mlp_control_v2",
     )
-    parameters = {
-        arm: {"weight": np.asarray([index + 1.0, index + 2.0])}
-        for index, arm in enumerate(arms)
-    }
+    parameters = {arm: {"weight": np.asarray([index + 1.0, index + 2.0])} for index, arm in enumerate(arms)}
     optimizers = {
         arm: {
             "step": np.asarray(500, dtype=np.int32),
@@ -728,9 +760,7 @@ def test_atomic_matched_checkpoint_set_round_trip_and_tree_schema(tmp_path):
     )
     for arm in arms:
         np.testing.assert_array_equal(loaded[arm]["parameters"]["weight"], parameters[arm]["weight"])
-        assert loaded[arm]["parameter_tree_schema"] == [
-            {"path": "['weight']", "shape": [2], "dtype": "float64"}
-        ]
+        assert loaded[arm]["parameter_tree_schema"] == [{"path": "['weight']", "shape": [2], "dtype": "float64"}]
 
     manifest = json.loads((checkpoint_dir / "checkpoint_manifest.json").read_text())
     arm = arms[0]
@@ -917,8 +947,7 @@ def test_gzip_prepared_update_is_deterministic_and_round_trips(tmp_path):
     )
     paths = (tmp_path / "left.pkl.gz", tmp_path / "right.pkl.gz")
     records = [
-        write_prepared_artifact(path, artifact, compression="gzip")
-        | {"update": 1, "trace_signature": "trace"}
+        write_prepared_artifact(path, artifact, compression="gzip") | {"update": 1, "trace_signature": "trace"}
         for path in paths
     ]
 
@@ -1175,12 +1204,8 @@ def test_final_evaluation_reuses_compiled_train_step():
 
 def test_production_asset_admission_probe_is_cpu_only_and_zero_update():
     root = Path(__file__).resolve().parents[2]
-    source = (root / "scripts" / "hpc" / "probe_successor_production_admission.py").read_text(
-        encoding="utf-8"
-    )
-    launcher = (root / "scripts" / "hpc" / "probe_successor_production_admission.sh").read_text(
-        encoding="utf-8"
-    )
+    source = (root / "scripts" / "hpc" / "probe_successor_production_admission.py").read_text(encoding="utf-8")
+    launcher = (root / "scripts" / "hpc" / "probe_successor_production_admission.sh").read_text(encoding="utf-8")
 
     assert "backend_initializer=_cpu_backend" in source
     assert "admit_prepared_manifest_for_checkpoint_fit(" in source
