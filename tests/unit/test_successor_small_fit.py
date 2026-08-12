@@ -1588,6 +1588,27 @@ def test_staged_500_slurm_launchers_freeze_approved_resources_and_boundaries():
     assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in runner
 
 
+def test_staged_1000_slurm_launchers_freeze_incremental_resume_boundary():
+    root = Path(__file__).resolve().parents[2]
+    prep = (root / "scripts" / "hpc" / "slurm_prepare_successor_staged_1000.sh").read_text()
+    train = (root / "scripts" / "hpc" / "slurm_successor_staged_training_1000.sh").read_text()
+
+    assert "#SBATCH --partition=cnmix" in prep
+    assert "#SBATCH --ntasks=4" in prep
+    assert "#SBATCH --time=04:00:00" in prep
+    assert "MILESTONE=1000" in prep
+    assert "successor-staged-prepared-0501-1000" in prep
+
+    assert "#SBATCH --partition=gnall" in train
+    assert "#SBATCH --cpus-per-task=4" in train
+    assert "#SBATCH --gres=gpu:1" in train
+    assert "#SBATCH --time=02:00:00" in train
+    assert "MILESTONE=1000" in train
+    assert 'sha256sum -c -' in train
+    assert 'cp "$PARENT_RECOVERY" "$RECOVERY_PATH"' in train
+    assert "--dependency" not in train
+
+
 def test_gzip_prepared_update_is_deterministic_and_round_trips(tmp_path):
     entry = {"landpoint_id": "001.0-071.0", "year": 1961, "anchor_starts": [1]}
     artifact = PreparedUpdateArtifact(
