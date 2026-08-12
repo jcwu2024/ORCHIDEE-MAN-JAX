@@ -321,11 +321,16 @@ The rejected attention checkpoint remains rejected and the control is not
 promoted. The user approved a matched repair that changes only the common
 final decoder kernel initialization to `1e-3` of its former scale, retaining
 zero bias, both bodies, parameter count, routing, retained tail and operator
-boundary. Implementation and 59 related local tests pass. The current gate is
-the zero-training 16-batch forward/gradient-path re-audit on free `gln01`.
-Current median loss coefficients, paid training, the old formal panel as a
-tuning set, 365-day rollout, long-held points, Gate D2, sealed test and product
-acceptance remain closed.
+boundary. Implementation and 59 related local tests pass. The free `gln01`
+16-batch re-audit passes at `0ef543b`: near-zero active GPP and maintenance
+cases are eliminated, GPP >10x cases are eliminated, maintenance >10x cases
+fall from 41/60 to 3/60, and the minimum parameter-gradient norm rises from
+about `1e-26` to `0.6077`, with the exact parameter count unchanged. The
+current gate is recomputing shared long-horizon coefficients on those same 16
+train/train batches while collecting state/budget hard gates, followed by a
+new disjoint validation-panel freeze. Paid training, the old formal panel as
+a tuning set, 365-day rollout, long-held points, Gate D2, sealed test and
+product acceptance remain closed.
 
 ## Stable Teacher
 

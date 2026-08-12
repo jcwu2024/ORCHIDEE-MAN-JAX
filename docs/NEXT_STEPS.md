@@ -586,16 +586,19 @@ against the formal 96-window panel, or start paid preparation/training. The
 user approved the first matched shared-output repair: both arms retain their
 bodies and operator boundary, while the common `decoder_second.kernel` is
 initialized at `1e-3` of its former scale and its zero bias is unchanged. The
-implementation and 59 related local tests pass. The active action is the
-zero-training, existing-16-batch forward and gradient-path re-audit on free
-`gln01`. It must retain finite outputs, the exact parameter count and usable
-parameter gradients where named-output gradients are active, remove the
-negative-tail collapse, and materially reduce the extreme positive
-initialization regime. Only after that gate passes may a separate validation
-panel be frozen, the objective recalibrated, and milestone validation added
-for the expanded at-most-10,000 point-year schedule. The 365-day rollout,
-long-held-point validation, Gate D2, sealed test, and product gates remain
-closed.
+implementation and 59 related local tests pass. The zero-training 16-batch
+free-`gln01` re-audit also passes at commit `0ef543b`: both arms keep exactly
+`8,722,689` parameters; active-Teacher GPP near-zero collapses fall from 9/53
+to 0/53 and >10x cases from 22-23/53 to 0/53; maintenance collapses fall from
+12/60 to 0/60 and >10x cases from 41/60 to 3/60. The minimum measured
+parameter-gradient norm is now `0.6077`, versus approximately `1e-26` before.
+This admits loss recalibration but is not evidence of trained accuracy. The
+active action is to recompute shared long-horizon coefficients on the same 16
+train/train batches while checking 30-day state/budget hard gates from the
+same rollout, then freeze a separate validation panel and add milestone
+validation for the expanded at-most-10,000 point-year schedule. The 365-day
+rollout, long-held-point validation, Gate D2, sealed test, and product gates
+remain closed.
 
 ## Completed Task Packet: Gate C
 

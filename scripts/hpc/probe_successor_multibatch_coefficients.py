@@ -93,6 +93,9 @@ def _aggregate_coefficient_records(
 def _make_measurement(runtime: Mapping[str, Any], arm: str, adapter: Any, long_scales: Any) -> Any:
     import jax.numpy as jnp
 
+    from research.daily_coarse_graining.daily_operator.successor_small_fit import (
+        successor_rollout_hard_gate_counts,
+    )
     from research.daily_coarse_graining.daily_operator.successor_training import (
         LONG_HORIZON_COMPONENTS,
     )
@@ -123,14 +126,19 @@ def _make_measurement(runtime: Mapping[str, Any], arm: str, adapter: Any, long_s
         anchor_value, anchor_gradient = jax.value_and_grad(lambda values: anchor_objective(values, batch))(parameters)
 
         def component_vector(values: Any) -> Any:
-            return rollout_objective(
+            components, trace = rollout_objective(
                 values,
                 batch,
                 day_inputs,
                 rematerialize=True,
-            )[0]
+            )
+            return components, trace
 
-        component_values, pullback = jax.vjp(component_vector, parameters)
+        component_values, pullback, trace = jax.vjp(
+            component_vector,
+            parameters,
+            has_aux=True,
+        )
         basis = jnp.eye(len(LONG_HORIZON_COMPONENTS), dtype=jnp.float64)
         component_gradients = jax.lax.map(lambda seed: pullback(seed)[0], basis)
         component_norms = jax.lax.map(
@@ -141,6 +149,11 @@ def _make_measurement(runtime: Mapping[str, Any], arm: str, adapter: Any, long_s
             lambda index: tree_nonfinite(jax.tree_util.tree_map(lambda leaf: leaf[index], component_gradients)),
             jnp.arange(len(LONG_HORIZON_COMPONENTS)),
         )
+        hard_counts = successor_rollout_hard_gate_counts(
+            batch,
+            trace,
+            markov_contract=runtime["contract"],
+        )
         return (
             anchor_value,
             component_values,
@@ -148,6 +161,7 @@ def _make_measurement(runtime: Mapping[str, Any], arm: str, adapter: Any, long_s
             component_norms,
             tree_nonfinite(anchor_gradient),
             component_nonfinite,
+            hard_counts,
         )
 
     return jax.jit(measurement)
@@ -257,9 +271,25 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             )
             jax.block_until_ready(measured)
             elapsed = time.perf_counter() - started
-            anchor_value, component_values, anchor_norm, component_norms, anchor_bad, component_bad = (
-                np.asarray(value) for value in measured
-            )
+            (
+                anchor_value,
+                component_values,
+                anchor_norm,
+                component_norms,
+                anchor_bad,
+                component_bad,
+                hard_counts,
+            ) = measured
+            anchor_value = np.asarray(anchor_value)
+            component_values = np.asarray(component_values)
+            anchor_norm = np.asarray(anchor_norm)
+            component_norms = np.asarray(component_norms)
+            anchor_bad = np.asarray(anchor_bad)
+            component_bad = np.asarray(component_bad)
+            hard_counts_host = {
+                name: int(np.asarray(value))
+                for name, value in hard_counts._asdict().items()
+            }
             if (
                 not np.isfinite(anchor_value)
                 or not np.all(np.isfinite(component_values))
@@ -285,6 +315,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                     "component_gradient_norms": {
                         name: float(component_norms[position]) for position, name in enumerate(LONG_HORIZON_COMPONENTS)
                     },
+                    "hard_gate_counts": hard_counts_host,
                     "artifact_load_seconds": load_seconds,
                     "measurement_seconds": elapsed,
                 }
@@ -310,9 +341,15 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         coefficient_minimum=float(objective["coefficient_minimum"]),
         coefficient_maximum=float(objective["coefficient_maximum"]),
     )
+    hard_gate_counts = {
+        name: sum(int(record["hard_gate_counts"][name]) for record in records)
+        for name in records[0]["hard_gate_counts"]
+    }
+    hard_failure_count = sum(hard_gate_counts.values())
+    status = "passed" if hard_failure_count == 0 else "failed_hard_gates"
     report = {
         "schema_version": "successor_multibatch_coefficient_probe_v1",
-        "status": "passed",
+        "status": status,
         "git_head": _git_head(),
         "runner_contract_sha256": contract.sha256,
         "prepared_manifest_sha256": sha256_file(args.prepared_manifest),
@@ -324,6 +361,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "same_coefficients_for_both_arms": True,
         "coefficient_aggregation": objective["coefficient_aggregation"],
         "aggregation": aggregation,
+        "hard_gate_counts": hard_gate_counts,
+        "hard_failure_count": hard_failure_count,
         "measurements": records,
         "adapter_preparation": adapter_timing,
         "device_memory_before": memory_before,
@@ -334,7 +373,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "teacher_data_regenerated": False,
         "historical_v5_used": False,
         "sealed_test_used": False,
-        "next_gate": "freeze_shared_multibatch_coefficients_and_validation_panel",
+        "next_gate": (
+            "review_shared_multibatch_coefficients_and_freeze_validation_panel"
+            if status == "passed"
+            else "diagnose_multibatch_state_or_budget_hard_gate_failure"
+        ),
     }
     _atomic_json(args.output, report)
     return report

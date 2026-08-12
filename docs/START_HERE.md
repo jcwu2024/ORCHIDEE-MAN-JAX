@@ -95,10 +95,12 @@ promoted. A subsequent training-sufficiency and gradient-path audit found
 that only 2.12% of train/train point-years were used, the run was still
 improving and clipped at every update, the old bias loss was duplicated, and
 both arms share a severely miscentered nonnegative output decoder. The user
-approved a matched `1e-3` final-decoder-kernel initialization repair; its local
-implementation passes. The current gate is the existing-16-batch,
-zero-training forward/gradient re-audit on free `gln01`, not another training
-run.
+approved a matched `1e-3` final-decoder-kernel initialization repair. Its
+local implementation and zero-training 16-batch free-GPU re-audit pass: the
+shared near-zero gradient/output collapse is removed without changing either
+body or the parameter count. The current gate is multi-batch long-horizon
+loss recalibration plus state/budget hard gates on those same train/train
+batches, not another training run.
 
 ## New Task Bootstrap
 
@@ -122,8 +124,9 @@ checkpoint handoff are recorded in the active documents named by
 `DOCUMENT_STATUS.md`. The current operation authority is
 `research/daily_coarse_graining/successor_training_sufficiency_loss_gradient_audit_20260812.md`.
 Do not rerun the old fit, freeze its multibatch median coefficients, or use the
-formal 96-window panel for tuning. The approved matched shared-output repair
-must pass the existing 16-batch forward/gradient audit before an expanded
+formal 96-window panel for tuning. The matched shared-output repair has passed
+the existing 16-batch forward/gradient audit. Shared loss coefficients must
+now be recalibrated and a separate validation panel frozen before an expanded
 training schedule is opened. The
 365-day rollout, Gate D2, and product gates remain dependency-ordered later
 work.

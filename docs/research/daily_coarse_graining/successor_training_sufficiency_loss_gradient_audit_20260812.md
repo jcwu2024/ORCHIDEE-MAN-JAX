@@ -148,19 +148,32 @@ initialization is multiplied by `1e-3`; its bias remains exactly zero. This is
 nonzero so the first backward pass can still reach the preceding decoder and
 body. The implementation and 59 related local tests pass.
 
-The active gate is now:
+The zero-training, existing-16-batch free-`gln01` re-audit passed at commit
+`0ef543b`. Both arms remain finite and retain exactly `8,722,689` parameters.
+On the same active-Teacher windows used above:
 
-1. repeat the existing 16-batch forward and gradient-path audit on free
-   `gln01`, with zero training and no checkpoint;
-2. require finite execution, the unchanged per-arm parameter count, no
-   negative-tail collapse on active Teacher GPP/maintenance windows, and
-   usable parameter gradients wherever named-output gradients are active;
-3. verify that the former widespread extreme-positive initialization is
-   materially reduced, without treating initial Teacher agreement as a model
-   accuracy test;
-4. only then recalibrate the long-horizon objective across multiple batches;
-5. freeze a validation panel disjoint from the old formal 96-window panel;
-6. implement milestone validation/checkpointing and the expanded schedule of
+- GPP ratios below `1e-8` fall from 9/53 to 0/53 for both arms;
+- GPP ratios above 10 fall from 22/53 attention and 23/53 control to 0/53;
+- maintenance ratios below `1e-8` fall from 12/60 to 0/60;
+- maintenance ratios above 10 fall from 41/60 to 3/60 for both arms;
+- median GPP ratios become 0.1963/0.1965 and median maintenance ratios become
+  0.9732/0.9740;
+- the minimum parameter-gradient norm across all measured arm/batch/component
+  combinations rises from approximately `1e-26` to `0.6077`; on the formerly
+  collapsed updates 12 and 15 all component norms are now order `1e2` to
+  `1e4`.
+
+This is an initialization-conditioning acceptance, not a claim that an
+untrained network matches the Teacher. The active gate is now:
+
+1. recompute shared long-horizon coefficients across the same 16 train/train
+   batches under the repaired initialization;
+2. collect 30-day state, budget, lifecycle and discrete-state hard gates from
+   the same rollout instead of launching a duplicate pass;
+3. review coefficient distributions and gradient clipping before freezing
+   them;
+4. freeze a validation panel disjoint from the old formal 96-window panel;
+5. implement milestone validation/checkpointing and the expanded schedule of
    at most 10,000 unique point-years.
 
 No paid preparation or training is authorized. The 365-day rollout,
@@ -177,5 +190,8 @@ closed.
   `runtime/outputs/diagnostics/successor-low-gradient-path-c7c6af6/probe_report.json`
 - all-16 gradient-path report:
   `runtime/outputs/diagnostics/successor-low-gradient-path-all16-c7c6af6/probe_report.json`
+- repaired all-16 gradient-path report (SHA256
+  `ba09ec659a631f39ca2ec2f0057099bf9b945df583efea4c8628b107d8671898`):
+  `runtime/outputs/diagnostics/successor-low-gradient-path-all16-0ef543b/probe_report.json`
 - training-sufficiency probe contract:
   `manifests/coarse_graining/successor_training_sufficiency_v2.json`

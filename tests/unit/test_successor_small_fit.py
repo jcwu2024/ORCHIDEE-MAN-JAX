@@ -335,6 +335,17 @@ def test_low_gradient_path_wrapper_is_free_gpu_and_zero_update():
     assert '"checkpoint_written": False' in probe
 
 
+def test_multibatch_coefficient_probe_reuses_rollout_for_hard_gates():
+    root = Path(__file__).resolve().parents[2]
+    wrapper = (root / "scripts" / "hpc" / "run_successor_multibatch_coefficient_probe.sh").read_text()
+    probe = (root / "scripts" / "hpc" / "probe_successor_multibatch_coefficients.py").read_text()
+
+    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in wrapper
+    assert "has_aux=True" in probe
+    assert '"hard_gate_counts": hard_counts_host' in probe
+    assert '"hard_failure_count": hard_failure_count' in probe
+
+
 def test_teacher_replay_inverts_delta_and_defined_logit_representations():
     fields = (
         SimpleNamespace(
