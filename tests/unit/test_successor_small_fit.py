@@ -45,6 +45,15 @@ from research.daily_coarse_graining.daily_operator.successor_small_fit import (
     successor_teacher_physical_outputs,
     verify_successor_small_fit_schedule,
 )
+from research.daily_coarse_graining.daily_operator.successor_staged_checkpoint import (
+    load_staged_recovery,
+    write_staged_best_checkpoint,
+    write_staged_recovery,
+)
+from research.daily_coarse_graining.daily_operator.successor_staged_training import (
+    advance_staged_validation_state,
+    validation_primary_composite,
+)
 from research.daily_coarse_graining.daily_operator.successor_training import (
     LONG_HORIZON_COMPONENTS,
     BiomassProductivityTrajectories,
@@ -71,6 +80,13 @@ from scripts.hpc.run_successor_small_fit import (
     _validate_update_count,
 )
 from scripts.hpc.run_successor_small_fit_probe import _leaf_failures
+from scripts.hpc.successor_rollout_screen_prepared import (
+    PREPARED_ARTIFACT_SCHEMA as ROLLOUT_PREPARED_ARTIFACT_SCHEMA,
+)
+from scripts.hpc.successor_rollout_screen_prepared import (
+    PreparedRolloutScreenArtifact,
+    write_prepared_rollout_artifact,
+)
 from scripts.hpc.successor_small_fit_prepared import (
     PREPARED_ARTIFACT_SCHEMA,
     PREPARED_MANIFEST_SCHEMA,
@@ -80,6 +96,17 @@ from scripts.hpc.successor_small_fit_prepared import (
     load_prepared_manifest,
     sha256_file,
     write_prepared_artifact,
+)
+from scripts.hpc.successor_staged_prepared import (
+    STAGED_PREPARED_MANIFEST_SCHEMA,
+    admit_staged_prepared_artifacts,
+    load_staged_prepared_manifest,
+    stage_update_range,
+    staged_worker_updates,
+)
+from scripts.hpc.successor_staged_validation_prepared import (
+    STAGED_VALIDATION_PREPARED_SCHEMA,
+    load_staged_validation_prepared,
 )
 
 
@@ -124,6 +151,30 @@ def test_small_fit_schedule_is_deterministic_matched_and_excludes_first_row():
     assert all(len(set(entry["anchor_starts"])) == 16 for entry in left["entries"])
     assert all(len(set(entry["rollout_starts"])) == 2 for entry in left["entries"])
     verify_successor_small_fit_schedule(left, references, contract)
+
+
+def test_staged_schedule_is_prefix_stable_and_ranges_are_incremental():
+    root = Path(__file__).resolve().parents[2]
+    contract = load_successor_small_fit_contract(
+        root / "manifests" / "coarse_graining" / "successor_training_staged_v3.json"
+    )
+    references = tuple(
+        _Reference(
+            _Parent(f"{landpoint:03d}.0-071.0", year),
+            sha256=f"{landpoint + year:064x}"[-64:],
+        )
+        for landpoint in range(1, 601)
+        for year in range(1961, 1963)
+    )
+    first = build_successor_small_fit_schedule(references, contract, updates=500)
+    second = build_successor_small_fit_schedule(references, contract, updates=1000)
+
+    assert first["entries"] == second["entries"][:500]
+    assert stage_update_range(contract.sampling["stage_milestones"], 500) == (1, 500)
+    assert stage_update_range(contract.sampling["stage_milestones"], 1000) == (501, 1000)
+    assert stage_update_range(contract.sampling["stage_milestones"], 10000) == (5001, 10000)
+    assert staged_worker_updates(501, 506, 0, 2) == (501, 503, 505)
+    assert staged_worker_updates(501, 506, 1, 2) == (502, 504, 506)
 
 
 def test_training_sufficiency_contract_expands_data_exposure_without_changing_architecture():
@@ -1171,6 +1222,335 @@ def test_prepared_update_round_trip_and_hash_drift(tmp_path):
     artifact_path.write_bytes(artifact_path.read_bytes() + b"drift")
     with pytest.raises(ValueError, match="hash drift"):
         load_prepared_artifact(manifest_path, record, schedule_entry=entry)
+
+
+def test_staged_prepared_manifest_admits_global_update_interval(tmp_path):
+    schedule_entries = [
+        {
+            "update": update,
+            "landpoint_id": f"{update:03d}.0-071.0",
+            "year": 1960 + update,
+        }
+        for update in range(1, 5)
+    ]
+    records = []
+    manifest_path = tmp_path / "prepared_manifest.json"
+    for update in (3, 4):
+        entry = schedule_entries[update - 1]
+        artifact = PreparedUpdateArtifact(
+            PREPARED_ARTIFACT_SCHEMA,
+            entry,
+            "trace",
+            {"state": np.asarray([update])},
+            (np.asarray([update]),),
+        )
+        records.append(
+            {
+                "update": update,
+                "trace_signature": "trace",
+                **write_prepared_artifact(
+                    tmp_path / f"update-{update:05d}.pkl.gz",
+                    artifact,
+                    compression="gzip",
+                ),
+            }
+        )
+    payload = {
+        "schema_version": STAGED_PREPARED_MANIFEST_SCHEMA,
+        "status": "passed",
+        "identity": {
+            "staged_training_contract_sha256": "contract",
+            "full_schedule_sha256": "schedule",
+        },
+        "start_update": 3,
+        "end_update": 4,
+        "artifact_count": 2,
+        "entries": records,
+        "total_size_bytes": sum(record["size_bytes"] for record in records),
+        "teacher_data_regenerated": False,
+        "historical_v5_used": False,
+        "sealed_test_used": False,
+    }
+    atomic_json(manifest_path, payload)
+
+    loaded = load_staged_prepared_manifest(
+        manifest_path,
+        staged_training_contract_sha256="contract",
+        full_schedule_sha256="schedule",
+        start_update=3,
+        end_update=4,
+    )
+    admit_staged_prepared_artifacts(
+        manifest_path,
+        loaded,
+        full_schedule={"entries": schedule_entries},
+    )
+    assert loaded["manifest_sha256"] == sha256_file(manifest_path)
+
+    payload["entries"] = list(reversed(records))
+    atomic_json(manifest_path, payload)
+    with pytest.raises(ValueError, match="identity drift"):
+        load_staged_prepared_manifest(
+            manifest_path,
+            staged_training_contract_sha256="contract",
+            full_schedule_sha256="schedule",
+            start_update=3,
+            end_update=4,
+        )
+
+
+def test_staged_validation_prepared_admits_fixed_panel_and_artifacts(tmp_path):
+    slices = {}
+    records = []
+    ordinal = 0
+    for slice_id in ("temporal", "spatial", "joint"):
+        entry = {
+            "landpoint_id": slice_id,
+            "year": 2006,
+            "parent_shard_sha256": "a" * 64,
+            "typed_shard_sha256": "b" * 64,
+            "day_count": 365,
+            "start_rows": [1, 31],
+        }
+        slices[slice_id] = {"entries": [entry]}
+        ordinal += 1
+        artifact = PreparedRolloutScreenArtifact(
+            ROLLOUT_PREPARED_ARTIFACT_SCHEMA,
+            slice_id,
+            entry,
+            "trace",
+            {"state": np.asarray([ordinal])},
+            (np.asarray([ordinal]),),
+        )
+        records.append(
+            {
+                "ordinal": ordinal,
+                "slice_id": slice_id,
+                "window_entry": entry,
+                "trace_signature": "trace",
+                **write_prepared_rollout_artifact(
+                    tmp_path / f"validation-{ordinal:03d}.pkl",
+                    artifact,
+                ),
+            }
+        )
+    panel = {
+        "schema_version": "successor_training_validation_panel_v1",
+        "runner_contract_sha256": "contract",
+        "slices": slices,
+        "sealed_test_used": False,
+    }
+    panel["panel_sha256"] = small_fit._canonical_sha256(panel)
+    panel_path = tmp_path / "validation_panel.json"
+    atomic_json(panel_path, panel)
+    manifest = {
+        "schema_version": STAGED_VALIDATION_PREPARED_SCHEMA,
+        "status": "passed",
+        "staged_training_contract_sha256": "contract",
+        "validation_panel": panel_path.name,
+        "validation_panel_sha256": panel["panel_sha256"],
+        "validation_panel_file_sha256": sha256_file(panel_path),
+        "artifact_count": 3,
+        "entries": records,
+        "sealed_test_used": False,
+        "teacher_data_regenerated": False,
+        "historical_v5_used": False,
+    }
+    manifest_path = tmp_path / "prepared_manifest.json"
+    atomic_json(manifest_path, manifest)
+
+    loaded, loaded_panel = load_staged_validation_prepared(
+        manifest_path,
+        staged_training_contract_sha256="contract",
+        validation_panel_sha256=panel["panel_sha256"],
+    )
+    assert loaded["manifest_sha256"] == sha256_file(manifest_path)
+    assert loaded_panel == panel
+
+    records[0]["slice_id"] = "joint"
+    atomic_json(manifest_path, manifest | {"entries": records})
+    with pytest.raises(ValueError, match="order drift"):
+        load_staged_validation_prepared(
+            manifest_path,
+            staged_training_contract_sha256="contract",
+            validation_panel_sha256=panel["panel_sha256"],
+        )
+
+
+def _staged_validation_report(score, *, hard_failures=0):
+    keys = (
+        "cumulative.gpp",
+        "cumulative.npp",
+        "cumulative.maintenance_respiration",
+        "terminal.aboveground_biomass_carbon",
+        "terminal.belowground_biomass_carbon",
+        "terminal.total_live_biomass_carbon",
+    )
+    return {
+        "slices": {
+            slice_id: {
+                "horizons": {
+                    str(horizon): {
+                        "keys": {
+                            key: {"normalized_rmse": float(score)} for key in keys
+                        }
+                    }
+                    for horizon in (7, 30)
+                },
+                "hard_counts": {"budget_residual_failure": int(hard_failures)},
+            }
+            for slice_id in ("temporal", "spatial", "joint")
+        }
+    }
+
+
+def test_staged_validation_state_stops_only_after_both_arms_plateau_twice():
+    root = Path(__file__).resolve().parents[2]
+    contract = load_successor_small_fit_contract(
+        root / "manifests" / "coarse_graining" / "successor_training_staged_v3.json"
+    )
+    attention, control = contract.payload["matched_arms"]
+    state = advance_staged_validation_state(
+        None,
+        milestone=500,
+        arm_reports={
+            attention: _staged_validation_report(1.0),
+            control: _staged_validation_report(1.0),
+        },
+        contract=contract,
+    )
+    assert validation_primary_composite(
+        _staged_validation_report(1.0),
+        primary_outputs=contract.payload["validation"]["primary_outputs"],
+    ) == pytest.approx(1.0)
+    assert state["stop_training"] is False
+
+    state = advance_staged_validation_state(
+        state,
+        milestone=1000,
+        arm_reports={
+            attention: _staged_validation_report(0.98),
+            control: _staged_validation_report(0.995),
+        },
+        contract=contract,
+    )
+    assert state["arms"][attention]["best_milestone"] == 1000
+    assert state["arms"][control]["best_milestone"] == 500
+    assert state["stop_training"] is False
+
+    state = advance_staged_validation_state(
+        state,
+        milestone=2000,
+        arm_reports={
+            attention: _staged_validation_report(0.975),
+            control: _staged_validation_report(1.01),
+        },
+        contract=contract,
+    )
+    assert state["stop_training"] is False
+    state = advance_staged_validation_state(
+        state,
+        milestone=5000,
+        arm_reports={
+            attention: _staged_validation_report(0.98),
+            control: _staged_validation_report(1.02),
+        },
+        contract=contract,
+    )
+    assert state["stop_training"] is True
+    assert state["stop_reason"] == "both_arms_plateaued_twice"
+    assert state["arms"][attention]["best_milestone"] == 1000
+
+
+def test_staged_validation_hard_failure_stops_without_selecting_checkpoint():
+    root = Path(__file__).resolve().parents[2]
+    contract = load_successor_small_fit_contract(
+        root / "manifests" / "coarse_graining" / "successor_training_staged_v3.json"
+    )
+    reports = {
+        arm: _staged_validation_report(1.0, hard_failures=int(index == 0))
+        for index, arm in enumerate(contract.payload["matched_arms"])
+    }
+    state = advance_staged_validation_state(
+        None,
+        milestone=500,
+        arm_reports=reports,
+        contract=contract,
+    )
+
+    assert state["stop_training"] is True
+    assert state["stop_reason"] == "validation_hard_failure"
+    assert state["arms"][contract.payload["matched_arms"][0]]["best_milestone"] is None
+
+
+def test_staged_recovery_and_best_checkpoint_round_trip(tmp_path):
+    arms, parameters, optimizers = _checkpoint_fixture()
+    identity = {"full_schedule_sha256": "schedule", "validation_panel_sha256": "panel"}
+    validation_state = {
+        "completed_milestones": [500],
+        "arms": {
+            arm: {
+                "best_milestone": 500,
+                "best_primary_composite": 1.0 + index,
+            }
+            for index, arm in enumerate(arms)
+        },
+    }
+    recovery_path = tmp_path / "recovery.pkl"
+    write_staged_recovery(
+        recovery_path,
+        identity=identity,
+        parameters=parameters,
+        optimizers=optimizers,
+        completed_updates=743,
+        parameter_counts={arm: 2 for arm in arms},
+        validation_state=validation_state,
+        best_parameters=parameters,
+        expected_arms=arms,
+    )
+    loaded = load_staged_recovery(
+        recovery_path,
+        identity=identity,
+        expected_arms=arms,
+        parameter_counts={arm: 2 for arm in arms},
+        minimum_completed_updates=500,
+        maximum_completed_updates=1000,
+    )
+    assert loaded["completed_updates"] == 743
+    assert loaded["validation_state"] == validation_state
+    with pytest.raises(ValueError, match="identity drift"):
+        load_staged_recovery(
+            recovery_path,
+            identity=identity,
+            expected_arms=arms,
+            parameter_counts={arm: 2 for arm in arms},
+            minimum_completed_updates=744,
+            maximum_completed_updates=1000,
+        )
+
+    best = write_staged_best_checkpoint(
+        tmp_path / "best.pkl",
+        identity=identity,
+        parameters=parameters,
+        parameter_counts={arm: 2 for arm in arms},
+        validation_state=validation_state,
+        expected_arms=arms,
+    )
+    assert best["best_milestones"] == {arm: 500 for arm in arms}
+    assert best["promotion_eligible"] is False
+
+
+def test_staged_runner_uses_prevalidated_artifacts_without_per_update_teacher_replay():
+    root = Path(__file__).resolve().parents[2]
+    runner = (root / "scripts" / "hpc" / "run_successor_staged_training.py").read_text()
+
+    assert "_teacher_replay_gate_with_transition" not in runner
+    assert "checkpoint_handoff" not in runner
+    assert "load_successor_training_assets(" in runner
+    assert "load_staged_validation_prepared(" in runner
+    assert "advance_staged_validation_state(" in runner
+    assert '"reconstructs_48_forcing_records": False' in runner
+    assert '"executes_48_step_state_scan": False' in runner
 
 
 def test_gzip_prepared_update_is_deterministic_and_round_trips(tmp_path):

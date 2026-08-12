@@ -65,6 +65,10 @@ class SuccessorSmallFitContract:
     def optimizer(self) -> Mapping[str, Any]:
         return self.payload["optimizer"]
 
+    @property
+    def gates(self) -> Mapping[str, Any]:
+        return self.payload["gates"]
+
 
 def load_successor_small_fit_contract(
     path: str | Path = DEFAULT_CONTRACT_PATH,

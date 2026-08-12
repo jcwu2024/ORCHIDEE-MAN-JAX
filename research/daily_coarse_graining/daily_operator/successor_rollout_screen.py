@@ -595,13 +595,12 @@ def _metric_record(squared: Any, signed: Any, absolute: Any, count: Any) -> Mapp
     }
 
 
-def finalize_rollout_screen_statistics(
+def _finalize_rollout_statistics(
     statistics: RolloutScreenStatistics,
     *,
-    contract: SuccessorRolloutScreenContract,
+    primary_keys: Sequence[str],
 ) -> Mapping[str, Any]:
-    metrics = contract.payload["metrics"]
-    primary = set(metrics["primary_keys"])
+    primary = set(primary_keys)
     cells = {}
     for horizon_index, horizon in enumerate(REQUIRED_HORIZONS):
         keys = {}
@@ -633,6 +632,17 @@ def finalize_rollout_screen_statistics(
             for name in RolloutHardGateCounts._fields
         },
     }
+
+
+def finalize_rollout_screen_statistics(
+    statistics: RolloutScreenStatistics,
+    *,
+    contract: SuccessorRolloutScreenContract,
+) -> Mapping[str, Any]:
+    return _finalize_rollout_statistics(
+        statistics,
+        primary_keys=contract.payload["metrics"]["primary_keys"],
+    )
 
 
 class AdmittedSuccessorCheckpoints(NamedTuple):
