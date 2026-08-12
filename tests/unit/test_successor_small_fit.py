@@ -1553,6 +1553,15 @@ def test_staged_runner_uses_prevalidated_artifacts_without_per_update_teacher_re
     assert '"executes_48_step_state_scan": False' in runner
 
 
+def test_staged_smoke_launcher_separates_consumer_and_prepared_source_heads():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (root / "scripts" / "hpc" / "run_successor_staged_training_probe.sh").read_text()
+
+    assert 'git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"' in launcher
+    assert '--prepared-source-git-head "$PREPARED_SOURCE_GIT_HEAD"' in launcher
+    assert '--prepared-source-git-head "$EXPECTED_GIT_HEAD"' not in launcher
+
+
 def test_gzip_prepared_update_is_deterministic_and_round_trips(tmp_path):
     entry = {"landpoint_id": "001.0-071.0", "year": 1961, "anchor_starts": [1]}
     artifact = PreparedUpdateArtifact(

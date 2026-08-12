@@ -6,6 +6,7 @@ set -euo pipefail
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 WORKTREE=${WORKTREE:?set WORKTREE to the clean staged-training commit}
 EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD}
+PREPARED_SOURCE_GIT_HEAD=${PREPARED_SOURCE_GIT_HEAD:?set PREPARED_SOURCE_GIT_HEAD}
 GPU_DEVICE=${GPU_DEVICE:?set GPU_DEVICE after checking nvidia-smi}
 PREPARED_MANIFEST=${PREPARED_MANIFEST:?set the two-update v3 manifest}
 VALIDATION_PREPARED_MANIFEST=${VALIDATION_PREPARED_MANIFEST:?set fixed validation prepared manifest}
@@ -16,11 +17,26 @@ COEFFICIENT_PREPARED=$ROOT/runtime/outputs/training/successor-sufficiency-coeff-
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
-case "$(hostname)" in gln01|ibgln01) ;; *) exit 2 ;; esac
-case "$OUTPUT" in "$ROOT/runtime/"*) ;; *) exit 2 ;; esac
-test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
-test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
-test ! -e "$OUTPUT"
+case "$(hostname -s)" in
+  gln01|ibgln01|ibc13b02n04) ;;
+  *) echo "staged smoke must run on gln01; observed host=$(hostname -s)" >&2; exit 2 ;;
+esac
+case "$OUTPUT" in
+  "$ROOT/runtime/"*) ;;
+  *) echo "OUTPUT must be below $ROOT/runtime: $OUTPUT" >&2; exit 2 ;;
+esac
+test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD" || {
+  echo "worktree HEAD does not match EXPECTED_GIT_HEAD=$EXPECTED_GIT_HEAD" >&2
+  exit 2
+}
+test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)" || {
+  echo "worktree is not clean: $WORKTREE" >&2
+  exit 2
+}
+test ! -e "$OUTPUT" || {
+  echo "OUTPUT already exists: $OUTPUT" >&2
+  exit 2
+}
 for path in "$PREPARED_MANIFEST" "$VALIDATION_PREPARED_MANIFEST" \
   "$ASSETS/frozen_coefficients.json" "$ASSETS/validation_panel.json" \
   "$COEFFICIENT_SOURCE" "$COEFFICIENT_PREPARED"; do
@@ -59,7 +75,7 @@ env -u LD_LIBRARY_PATH \
       --validation-panel-sha256 1ac7490a2c7067bf3f66faea75836d80a9e6fdc62ebcdc8673caa3f445c70350 \
       --validation-prepared-manifest "$VALIDATION_PREPARED_MANIFEST" \
       --prepared-manifest "$PREPARED_MANIFEST" \
-      --prepared-source-git-head "$EXPECTED_GIT_HEAD" \
+      --prepared-source-git-head "$PREPARED_SOURCE_GIT_HEAD" \
       --output "$OUTPUT"
 
 sha256sum "$OUTPUT"
