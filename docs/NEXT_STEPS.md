@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-11.
+Last updated: 2026-08-12.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -566,10 +566,34 @@ live biomass relative to the control despite improving GPP in several cells.
 See
 [`successor_7_30_formal_screen_result_20260812.md`](research/daily_coarse_graining/successor_7_30_formal_screen_result_20260812.md).
 
-The current action is one bounded, no-training attribution of that declared
-failure across named processes, days, slices, and source-routed edges. Do not
-promote the control, tune against the formal windows, or start another
-architecture before the attribution is reviewed. The 365-day rollout,
+The bounded no-training attribution is complete. The 500-update run used only
+500 of 23,540 train/train point-years, its final 100 updates were still
+improving, and every update in both arms was globally clipped. The old rollout
+bias reduction also made MSE and bias squared identical; commit `70c2f62`
+repairs that reduction across rollout windows.
+
+The 16-batch coefficient and gradient-path probes then found a more immediate
+shared blocker. Updates 12 and 15 have active vegetation, nonzero Teacher GPP,
+and order-one named-output gradients, but parameter gradients near `1e-20` or
+below. Their initialized GPP and maintenance outputs collapse toward zero. An
+all-16 extension also finds large positive overprediction on many other
+windows. Attention and control show the same pattern because they share the
+output decoder. See
+[`successor_training_sufficiency_loss_gradient_audit_20260812.md`](research/daily_coarse_graining/successor_training_sufficiency_loss_gradient_audit_20260812.md).
+
+Do not freeze the current median loss coefficients, promote the control, tune
+against the formal 96-window panel, or start paid preparation/training. The
+user approved the first matched shared-output repair: both arms retain their
+bodies and operator boundary, while the common `decoder_second.kernel` is
+initialized at `1e-3` of its former scale and its zero bias is unchanged. The
+implementation and 59 related local tests pass. The active action is the
+zero-training, existing-16-batch forward and gradient-path re-audit on free
+`gln01`. It must retain finite outputs, the exact parameter count and usable
+parameter gradients where named-output gradients are active, remove the
+negative-tail collapse, and materially reduce the extreme positive
+initialization regime. Only after that gate passes may a separate validation
+panel be frozen, the objective recalibrated, and milestone validation added
+for the expanded at-most-10,000 point-year schedule. The 365-day rollout,
 long-held-point validation, Gate D2, sealed test, and product gates remain
 closed.
 
@@ -590,8 +614,9 @@ single-update preflight, prepared-batch boundary, same-process hot reuse, and
 avoidable-compilation reduction are accepted. Cross-process train-step cache
 reuse and the old paid envelope are rejected. The new staged CPU preparation
 and the 500-update matched fit are accepted, and the dual checkpoint set has
-passed formal reload. The frozen 7/30-day screen is now active. Gates D2 and F
-remain queued.
+passed formal reload. The frozen 7/30-day screen rejected the trained
+attention checkpoint; the training-sufficiency, loss, and shared-decoder
+attribution now controls the next gate. Gates D2 and F remain queued.
 
 ### Inputs
 

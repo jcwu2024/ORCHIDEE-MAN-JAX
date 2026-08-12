@@ -49,6 +49,7 @@ from .types import AssembledDailyOperatorInput
 
 SOURCE_ROUTED_ATTENTION = "source_routed_process_attention_v2"
 SOURCE_ROUTED_GRAPH_CONTROL = "source_routed_graph_mlp_control_v2"
+SUCCESSOR_FINAL_DECODER_KERNEL_GAIN = 1.0e-3
 PFT_TRAIT_BARE_SOIL = 0
 PFT_TRAIT_IS_TREE = 2
 VCMAX25_FACTOR_SCALE = 100.0
@@ -437,6 +438,14 @@ def _linear_parameters(key: Any, in_width: int, out_width: int) -> dict[str, Any
     }
 
 
+def _final_decoder_parameters(key: Any, width: int) -> dict[str, Any]:
+    parameters = _linear_parameters(key, width, 1)
+    return {
+        "kernel": parameters["kernel"] * SUCCESSOR_FINAL_DECODER_KERNEL_GAIN,
+        "bias": parameters["bias"],
+    }
+
+
 def _mixer_parameters(key: Any, width: int) -> dict[str, Any]:
     keys = jax.random.split(key, 4)
     return {
@@ -549,7 +558,7 @@ def initialize_successor_parameters(
             _process_block_parameters(next(keys), config) for _ in range(config.process_blocks)
         ),
         "decoder_first": _linear_parameters(next(keys), config.d_model, config.decoder_width),
-        "decoder_second": _linear_parameters(next(keys), config.decoder_width, 1),
+        "decoder_second": _final_decoder_parameters(next(keys), config.decoder_width),
     }
 
 

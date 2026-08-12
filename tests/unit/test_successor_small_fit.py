@@ -50,6 +50,7 @@ from research.daily_coarse_graining.daily_operator.successor_training import (
     GradientRatioPreflightError,
     calibrate_gradient_ratio_coefficients,
 )
+from scripts.dev.audit_successor_multibatch_activity import _finite_summary
 from scripts.hpc.prepare_successor_small_fit_batches import (
     _finalize_worker_progress,
     _worker_updates,
@@ -305,6 +306,33 @@ def test_multibatch_coefficient_wrapper_is_free_gpu_and_writes_no_checkpoint():
     assert "SINGULARITYENV_JAX_PLATFORMS=cuda,cpu" in wrapper
     assert "sbatch" not in wrapper
     assert "checkpoint" not in wrapper.lower()
+
+
+def test_multibatch_activity_summary_respects_the_defined_mask():
+    summary = _finite_summary(
+        np.asarray([1.0, 1.0e20, np.nan, -3.0]),
+        np.asarray([True, False, True, True]),
+    )
+
+    assert summary == {
+        "count": 2,
+        "nonzero_count": 2,
+        "absolute_mean": 2.0,
+        "rms": pytest.approx(np.sqrt(5.0)),
+        "absolute_maximum": 3.0,
+    }
+
+
+def test_low_gradient_path_wrapper_is_free_gpu_and_zero_update():
+    root = Path(__file__).resolve().parents[2]
+    wrapper = (root / "scripts" / "hpc" / "run_successor_low_gradient_path_probe.sh").read_text()
+    probe = (root / "scripts" / "hpc" / "probe_successor_low_gradient_path.py").read_text()
+
+    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in wrapper
+    assert 'UPDATES=${UPDATES:-"12 15"}' in wrapper
+    assert "sbatch" not in wrapper
+    assert '"training_updates": 0' in probe
+    assert '"checkpoint_written": False' in probe
 
 
 def test_teacher_replay_inverts_delta_and_defined_logit_representations():

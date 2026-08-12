@@ -34,6 +34,9 @@ from research.daily_coarse_graining.daily_operator.retained_tail import (
 from research.daily_coarse_graining.daily_operator.successor_architecture import (
     SOURCE_ROUTED_ATTENTION,
     SOURCE_ROUTED_GRAPH_CONTROL,
+    SUCCESSOR_FINAL_DECODER_KERNEL_GAIN,
+    _final_decoder_parameters,
+    _linear_parameters,
     _sqrt_with_zero_tangent,
     assemble_successor_process_context,
     build_successor_token_layout,
@@ -514,6 +517,22 @@ def test_fast_owner_schema_routes_and_parameter_match_are_frozen(
             added_mean=dict(list(added_mean.items())[1:]),
             added_scale=added_scale,
         )
+
+
+def test_successor_final_decoder_only_scales_the_kernel():
+    key = jax.random.PRNGKey(20260812)
+    width = 256
+    standard = _linear_parameters(key, width, 1)
+    final = _final_decoder_parameters(key, width)
+
+    np.testing.assert_array_equal(final["bias"], np.zeros((1,), dtype=np.float64))
+    np.testing.assert_allclose(
+        final["kernel"],
+        standard["kernel"] * SUCCESSOR_FINAL_DECODER_KERNEL_GAIN,
+        rtol=0.0,
+        atol=0.0,
+    )
+    assert np.any(np.asarray(final["kernel"]) != 0.0)
 
 
 def test_fast_owner_delta_targets_and_rveget_status_are_explicit(

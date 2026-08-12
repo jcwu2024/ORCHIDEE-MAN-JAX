@@ -88,16 +88,17 @@ process-head candidate and matched control completed one seed pair and were
 stopped for practical equivalence without promoting either arm. The
 long-horizon objective and ownership-aware parameter boundary are implemented.
 The user selected source-routed process attention against an exactly matched
-source-graph MLP control. Their frozen v1 machine contract and local
-implementation now pass parameter-count, eager/JIT forward, loss/JVP/VJP,
-PFT, parameter-route, one-day conservation, and synthetic 30-day objective
-tests. Its fast-owner extension, real-v6 preflight, 500-entry CPU product and
-atomic checkpoint handoff are accepted. Paid fit job `14517771` failed during
-pre-training coefficient admission and published no checkpoint. The
-schedule-ownership repair and free CPU exact-production admission now pass at
-commit `0ed9891`; a replacement paid fit still needs explicit approval. The
-conditional 7/30-day screen package was frozen before that result; no rollout
-screen has run.
+source-graph MLP control. Their fast-owner extension, 500-update matched fit,
+dual checkpoints, free smoke, and formal 96-window 7/30-day screen are
+complete. The trained attention checkpoint is rejected and control is not
+promoted. A subsequent training-sufficiency and gradient-path audit found
+that only 2.12% of train/train point-years were used, the run was still
+improving and clipped at every update, the old bias loss was duplicated, and
+both arms share a severely miscentered nonnegative output decoder. The user
+approved a matched `1e-3` final-decoder-kernel initialization repair; its local
+implementation passes. The current gate is the existing-16-batch,
+zero-training forward/gradient re-audit on free `gln01`, not another training
+run.
 
 ## New Task Bootstrap
 
@@ -118,12 +119,14 @@ head A/B is closed after one pair. The long-horizon objective and parameter-
 routing foundations are implemented. The selected successor pair, frozen
 contract, local network, fast-owner boundary, small-fit lifecycle and
 checkpoint handoff are recorded in the active documents named by
-`DOCUMENT_STATUS.md`. The repaired zero-update production-asset admission has
-passed on a free CPU test node. The current active gate is a fresh explicit
-approval for the replacement paid fit. After a successful dual-checkpoint
-publication, prepare and run the frozen free 7/30-day smoke;
-the formal bounded screen still requires separate paid approval. The 365-day
-rollout, Gate D2, and product gates remain dependency-ordered later work.
+`DOCUMENT_STATUS.md`. The current operation authority is
+`research/daily_coarse_graining/successor_training_sufficiency_loss_gradient_audit_20260812.md`.
+Do not rerun the old fit, freeze its multibatch median coefficients, or use the
+formal 96-window panel for tuning. The approved matched shared-output repair
+must pass the existing 16-batch forward/gradient audit before an expanded
+training schedule is opened. The
+365-day rollout, Gate D2, and product gates remain dependency-ordered later
+work.
 Before choosing or inheriting
 a neural architecture, read
 `research/daily_coarse_graining/failed_architecture_lessons.md`; it replaces

@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-11.
+Last updated: 2026-08-12.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -299,9 +299,33 @@ respiration, AGB/BGB, and total live biomass are the repeated dominant
 failures. See
 [`successor_7_30_formal_screen_result_20260812.md`](research/daily_coarse_graining/successor_7_30_formal_screen_result_20260812.md).
 
-The current gate is a bounded no-training attribution before any successor
-architecture discussion. The control is not promoted. The 365-day rollout,
-long-held points, Gate D2, sealed test and product acceptance remain closed.
+The bounded no-training attribution is complete. The formal fit consumed 500
+of 23,540 available train/train point-years and was still improving at update
+500; every update in both arms exceeded the global clip threshold. The old
+rollout reduction also made each MSE component identical to its bias-squared
+component. Commit `70c2f62` repairs bias reduction across rollout windows.
+
+A 16-batch, two-arm coefficient probe found candidate coefficients spanning
+more than 25 orders of magnitude. Free CPU activity inspection ruled out
+inactive vegetation or empty Teacher targets on the near-zero-gradient
+batches. A one-day `gln01` path probe then found order-one gradients at the
+named-output boundary but parameter gradients around `1e-24` to `1e-20`:
+initialized GPP and maintenance outputs had entered the shared nonnegative
+decoder's negative saturation tail. Across all 16 batches, both arms have the
+same mix of near-zero and extreme-positive initial outputs. This shared output
+conditioning also explains persistent gradient clipping; it is not evidence
+against attention specifically. See
+[`successor_training_sufficiency_loss_gradient_audit_20260812.md`](research/daily_coarse_graining/successor_training_sufficiency_loss_gradient_audit_20260812.md).
+
+The rejected attention checkpoint remains rejected and the control is not
+promoted. The user approved a matched repair that changes only the common
+final decoder kernel initialization to `1e-3` of its former scale, retaining
+zero bias, both bodies, parameter count, routing, retained tail and operator
+boundary. Implementation and 59 related local tests pass. The current gate is
+the zero-training 16-batch forward/gradient-path re-audit on free `gln01`.
+Current median loss coefficients, paid training, the old formal panel as a
+tuning set, 365-day rollout, long-held points, Gate D2, sealed test and product
+acceptance remain closed.
 
 ## Stable Teacher
 
