@@ -37,6 +37,8 @@ SCHEMA_VERSION = "successor_small_fit_runner_v1"
 FROZEN_CONTRACT_SHA256 = "8317fc74b6ba921b0ed60e774743884ddc81b233c75ce1823f3246211d1640de"
 SUFFICIENCY_SCHEMA_VERSION = "successor_training_sufficiency_v2"
 SUFFICIENCY_CONTRACT_SHA256 = "329671d6e0d2c43c4ba17d40a96ed9d5255096dac3925bf9f538749c9675340e"
+STAGED_SCHEMA_VERSION = "successor_training_staged_v3"
+STAGED_CONTRACT_SHA256 = "53d21d3a03a1502263b333aaba9719b2d42f096672844497b1a213dd54c23c7b"
 DEFAULT_CONTRACT_PATH = (
     Path(__file__).resolve().parents[3] / "manifests" / "coarse_graining" / "successor_small_fit_runner_v1.json"
 )
@@ -73,6 +75,7 @@ def load_successor_small_fit_contract(
     expected_sha256 = {
         SCHEMA_VERSION: FROZEN_CONTRACT_SHA256,
         SUFFICIENCY_SCHEMA_VERSION: SUFFICIENCY_CONTRACT_SHA256,
+        STAGED_SCHEMA_VERSION: STAGED_CONTRACT_SHA256,
     }.get(schema_version)
     if expected_sha256 is None:
         raise ValueError("unsupported successor training contract schema")
@@ -90,9 +93,7 @@ def load_successor_small_fit_contract(
         or sampling.get("exclude_first_shard_row") is not True
     ):
         raise ValueError("successor small-fit sampling policy drift")
-    expected_sampling = (
-        (500, 16, 2) if schema_version == SCHEMA_VERSION else (10000, 32, 4)
-    )
+    expected_sampling = (500, 16, 2) if schema_version == SCHEMA_VERSION else (10000, 32, 4)
     if (
         (
             int(sampling.get("maximum_updates_per_arm", 0)),
@@ -106,9 +107,7 @@ def load_successor_small_fit_contract(
         raise ValueError("successor small-fit batch or horizon budget drift")
 
     optimizer = payload.get("optimizer", {})
-    expected_optimizer = (
-        (50, 500) if schema_version == SCHEMA_VERSION else (500, 10000)
-    )
+    expected_optimizer = (50, 500) if schema_version == SCHEMA_VERSION else (500, 10000)
     if (
         optimizer.get("name") != "adamw"
         or optimizer.get("schedule") != "linear_warmup_cosine_decay"
@@ -134,6 +133,29 @@ def load_successor_small_fit_contract(
         or float(gates.get("stock_negative_absolute_tolerance", 0.0)) <= 0.0
     ):
         raise ValueError("successor small-fit hard-gate tolerance drift")
+    if schema_version == STAGED_SCHEMA_VERSION:
+        objective = payload.get("objective", {})
+        validation = payload.get("validation", {})
+        if (
+            objective.get("coefficient_aggregation")
+            != "shared_lower_quantile_gradient_ratio"
+            or float(objective.get("coefficient_quantile", 0.0)) != 0.10
+            or tuple(validation.get("selection_slices", ()))
+            != (
+                "train/validation",
+                "validation/train",
+                "validation/validation",
+            )
+            or validation.get("exclude_formal_96_window_panel") is not True
+            or validation.get("sealed_test_evaluation") is not False
+            or validation.get("same_windows_for_both_arms_and_milestones")
+            is not True
+            or tuple(validation.get("reported_horizons_days", ())) != (7, 30)
+            or int(validation.get("shards_per_slice", 0)) != 8
+            or int(validation.get("windows_per_shard", 0)) != 2
+            or int(validation.get("rollout_days", 0)) != 30
+        ):
+            raise ValueError("successor sufficiency loss or validation policy drift")
     return SuccessorSmallFitContract(payload, source, observed)
 
 
@@ -250,6 +272,132 @@ def verify_successor_small_fit_schedule(
     )
     if schedule != expected:
         raise ValueError("small-fit schedule does not match its frozen derivation")
+
+
+VALIDATION_SLICE_SPLITS = {
+    "temporal": ("train", "validation"),
+    "spatial": ("validation", "train"),
+    "joint": ("validation", "validation"),
+}
+
+
+def _reference_identity(reference: Any) -> Mapping[str, Any]:
+    parent = reference.parent
+    return {
+        "landpoint_id": str(parent.landpoint_id),
+        "year": int(parent.year),
+        "parent_shard_sha256": str(parent.sha256),
+        "typed_shard_sha256": str(reference.sha256),
+        "day_count": int(reference.day_count),
+    }
+
+
+def build_successor_validation_panel(
+    references: Sequence[Any],
+    contract: SuccessorSmallFitContract,
+    *,
+    excluded_window_plan: Mapping[str, Any],
+) -> Mapping[str, Any]:
+    """Freeze milestone-validation windows outside the rejected formal panel."""
+
+    if contract.payload.get("schema_version") != STAGED_SCHEMA_VERSION:
+        raise ValueError("validation panel requires the staged-training contract")
+    validation = contract.payload["validation"]
+    if (
+        excluded_window_plan.get("plan_sha256")
+        != validation["excluded_formal_window_plan_sha256"]
+    ):
+        raise ValueError("excluded formal validation plan identity drift")
+    formal_keys = {
+        (
+            slice_id,
+            str(entry["landpoint_id"]),
+            int(entry["year"]),
+            int(start),
+        )
+        for slice_id, cell in excluded_window_plan["slices"].items()
+        for entry in cell["entries"]
+        for start in entry["start_rows"]
+    }
+    seed = int(validation["panel_seed"])
+    horizon = int(validation["rollout_days"])
+    shards_per_slice = int(validation["shards_per_slice"])
+    windows_per_shard = int(validation["windows_per_shard"])
+    slices = {}
+    for slice_id, (spatial, temporal) in VALIDATION_SLICE_SPLITS.items():
+        available = tuple(
+            reference
+            for reference in references
+            if reference.parent.spatial_split == spatial
+            and reference.parent.temporal_split == temporal
+        )
+        ranked = sorted(
+            available,
+            key=lambda reference: (
+                hashlib.sha256(
+                    (
+                        f"{seed}|validation-shard|{slice_id}|"
+                        f"{reference.parent.landpoint_id}|{reference.parent.year}|"
+                        f"{reference.parent.sha256}|{reference.sha256}"
+                    ).encode()
+                ).hexdigest(),
+                _reference_key(reference),
+            ),
+        )
+        selected = []
+        seen_landpoints = set()
+        for reference in ranked:
+            landpoint = str(reference.parent.landpoint_id)
+            if landpoint in seen_landpoints:
+                continue
+            valid_starts = sorted(
+                range(1, int(reference.day_count) - horizon + 1),
+                key=lambda start: (
+                    hashlib.sha256(
+                        f"{seed}|validation-start|{slice_id}|{landpoint}|{reference.parent.year}|{start}".encode()
+                    ).hexdigest(),
+                    start,
+                ),
+            )
+            starts = []
+            for start in valid_starts:
+                key = (slice_id, landpoint, int(reference.parent.year), start)
+                if key in formal_keys or any(abs(start - prior) < horizon for prior in starts):
+                    continue
+                starts.append(start)
+                if len(starts) == windows_per_shard:
+                    break
+            if len(starts) != windows_per_shard:
+                continue
+            seen_landpoints.add(landpoint)
+            selected.append(_reference_identity(reference) | {"start_rows": sorted(starts)})
+            if len(selected) == shards_per_slice:
+                break
+        if len(selected) != shards_per_slice:
+            raise ValueError(f"validation slice has too few disjoint shards: {slice_id}")
+        slices[slice_id] = {
+            "spatial_split": spatial,
+            "temporal_split": temporal,
+            "entries": selected,
+        }
+    panel = {
+        "schema_version": "successor_training_validation_panel_v1",
+        "runner_contract_sha256": contract.sha256,
+        "selection_seed": seed,
+        "rollout_days": horizon,
+        "reported_horizons_days": list(validation["reported_horizons_days"]),
+        "milestones": list(contract.sampling["stage_milestones"]),
+        "excluded_formal_window_plan_file_sha256": validation[
+            "excluded_formal_window_plan_file_sha256"
+        ],
+        "excluded_formal_window_plan_sha256": validation[
+            "excluded_formal_window_plan_sha256"
+        ],
+        "slices": slices,
+        "sealed_test_used": False,
+    }
+    panel["panel_sha256"] = _canonical_sha256(panel)
+    return panel
 
 
 class PreparedSuccessorSmallFitBatch(NamedTuple):

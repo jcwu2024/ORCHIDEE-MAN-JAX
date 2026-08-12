@@ -41,12 +41,22 @@ def _aggregate_coefficient_records(
     targets: Mapping[str, float],
     coefficient_minimum: float,
     coefficient_maximum: float,
+    coefficient_aggregation: str = "shared_median_gradient_ratio",
+    coefficient_quantile: float | None = None,
 ) -> Mapping[str, Any]:
     if not records:
         raise ValueError("multibatch coefficient records are empty")
     components = tuple(component_names)
     if set(targets) != set(components):
         raise ValueError("multibatch coefficient target registry drift")
+    if coefficient_aggregation == "shared_median_gradient_ratio":
+        if coefficient_quantile is not None:
+            raise ValueError("median coefficient aggregation does not take a quantile")
+    elif coefficient_aggregation == "shared_lower_quantile_gradient_ratio":
+        if coefficient_quantile is None or not 0.0 < coefficient_quantile <= 0.5:
+            raise ValueError("multibatch coefficient quantile must lie in (0, 0.5]")
+    else:
+        raise ValueError("unsupported multibatch coefficient aggregation")
 
     coefficients = {}
     distributions = {}
@@ -62,7 +72,11 @@ def _aggregate_coefficient_records(
         )
         if not np.all(np.isfinite(candidates)) or np.any(candidates <= 0.0):
             raise ValueError(f"nonfinite multibatch coefficient candidate for {name}")
-        coefficient = float(np.median(candidates))
+        coefficient = (
+            float(np.median(candidates))
+            if coefficient_aggregation == "shared_median_gradient_ratio"
+            else float(np.quantile(candidates, coefficient_quantile, method="lower"))
+        )
         if not coefficient_minimum <= coefficient <= coefficient_maximum:
             raise ValueError(f"shared multibatch coefficient for {name} is outside the interval")
         achieved = np.asarray(
@@ -83,11 +97,20 @@ def _aggregate_coefficient_records(
             "achieved_ratio_median": float(np.median(achieved)),
             "achieved_ratio_maximum": float(np.max(achieved)),
         }
-    return {
+    result = {
         "resolved_coefficients": coefficients,
         "component_distributions": distributions,
         "record_count": len(records),
     }
+    if coefficient_aggregation == "shared_lower_quantile_gradient_ratio":
+        result.update(
+            {
+                "coefficient_quantile": coefficient_quantile,
+                "quantile_method": "lower",
+                "coefficient_aggregation": coefficient_aggregation,
+            }
+        )
+    return result
 
 
 def _make_measurement(runtime: Mapping[str, Any], arm: str, adapter: Any, long_scales: Any) -> Any:
@@ -340,6 +363,12 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         targets=objective["gradient_ratio_targets"],
         coefficient_minimum=float(objective["coefficient_minimum"]),
         coefficient_maximum=float(objective["coefficient_maximum"]),
+        coefficient_aggregation=objective["coefficient_aggregation"],
+        coefficient_quantile=(
+            float(objective["coefficient_quantile"])
+            if "coefficient_quantile" in objective
+            else None
+        ),
     )
     hard_gate_counts = {
         name: sum(int(record["hard_gate_counts"][name]) for record in records)

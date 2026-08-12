@@ -36,6 +36,7 @@ from research.daily_coarse_graining.daily_operator.successor_fit_checkpoint impo
 from research.daily_coarse_graining.daily_operator.successor_small_fit import (
     _batched_rollout_objective_components,
     build_successor_small_fit_schedule,
+    build_successor_validation_panel,
     initialize_successor_adamw,
     load_successor_small_fit_contract,
     successor_adamw_update,
@@ -50,7 +51,11 @@ from research.daily_coarse_graining.daily_operator.successor_training import (
     GradientRatioPreflightError,
     calibrate_gradient_ratio_coefficients,
 )
+from research.daily_coarse_graining.daily_operator.successor_training_assets import (
+    load_successor_training_assets,
+)
 from scripts.dev.audit_successor_multibatch_activity import _finite_summary
+from scripts.dev.freeze_successor_training_assets import _freeze_coefficients
 from scripts.hpc.prepare_successor_small_fit_batches import (
     _finalize_worker_progress,
     _worker_updates,
@@ -135,7 +140,79 @@ def test_training_sufficiency_contract_expands_data_exposure_without_changing_ar
         "source_routed_graph_mlp_control_v2",
     ]
     assert contract.payload["objective"]["bias_reduction_axis"] == ("joint_across_rollout_windows")
+    assert contract.payload["objective"]["coefficient_aggregation"] == (
+        "shared_median_gradient_ratio"
+    )
     assert contract.payload["gates"]["budget_absolute_tolerance"] == 2e-12
+
+
+def test_staged_validation_panel_is_deterministic_and_excludes_formal_windows():
+    root = Path(__file__).resolve().parents[2]
+    contract = load_successor_small_fit_contract(
+        root / "manifests" / "coarse_graining" / "successor_training_staged_v3.json"
+    )
+    split_references = []
+    for slice_id, (spatial, temporal) in {
+        "temporal": ("train", "validation"),
+        "spatial": ("validation", "train"),
+        "joint": ("validation", "validation"),
+    }.items():
+        split_references.extend(
+            _Reference(
+                _Parent(
+                    f"{slice_id}-{ordinal:02d}",
+                    2005 + ordinal % 3,
+                    spatial_split=spatial,
+                    temporal_split=temporal,
+                ),
+                sha256=f"{slice_id}-{ordinal}",
+            )
+            for ordinal in range(10)
+        )
+    excluded = {
+        "plan_sha256": contract.payload["validation"][
+            "excluded_formal_window_plan_sha256"
+        ],
+        "slices": {
+            slice_id: {
+                "entries": [
+                    {
+                        "landpoint_id": f"{slice_id}-00",
+                        "year": 2005,
+                        "start_rows": [1, 31],
+                    }
+                ]
+            }
+            for slice_id in ("temporal", "spatial", "joint")
+        },
+    }
+    first = build_successor_validation_panel(
+        split_references,
+        contract,
+        excluded_window_plan=excluded,
+    )
+    second = build_successor_validation_panel(
+        tuple(reversed(split_references)),
+        contract,
+        excluded_window_plan=excluded,
+    )
+
+    assert first == second
+    assert first["sealed_test_used"] is False
+    assert first["milestones"] == [500, 1000, 2000, 5000, 10000]
+    for slice_id, cell in first["slices"].items():
+        assert len(cell["entries"]) == 8
+        assert len({entry["landpoint_id"] for entry in cell["entries"]}) == 8
+        assert all(len(entry["start_rows"]) == 2 for entry in cell["entries"])
+        assert all(
+            not (
+                entry["landpoint_id"] == f"{slice_id}-00"
+                and entry["year"] == 2005
+                and start in (1, 31)
+            )
+            for entry in cell["entries"]
+            for start in entry["start_rows"]
+        )
 
 
 def test_small_fit_schedule_rejects_non_train_reference():
@@ -277,7 +354,7 @@ def test_gradient_ratio_interval_failure_reports_the_unclamped_coefficient():
     assert captured.value.diagnostic["coefficient_minimum"] == 0.001
 
 
-def test_multibatch_coefficients_use_one_shared_median_across_arms_and_batches():
+def test_multibatch_coefficients_use_one_shared_lower_quantile_across_arms_and_batches():
     records = [
         {
             "anchor_gradient_norm": 10.0,
@@ -291,10 +368,41 @@ def test_multibatch_coefficients_use_one_shared_median_across_arms_and_batches()
         targets={name: 0.1 for name in LONG_HORIZON_COMPONENTS},
         coefficient_minimum=1e-6,
         coefficient_maximum=10.0,
+        coefficient_aggregation="shared_lower_quantile_gradient_ratio",
+        coefficient_quantile=0.10,
+    )
+
+    expected = np.quantile(
+        [0.1, 0.05, 1.0 / 30.0, 0.001],
+        0.10,
+        method="lower",
+    )
+    assert result["record_count"] == 4
+    assert result["coefficient_quantile"] == 0.10
+    assert result["quantile_method"] == "lower"
+    assert result["coefficient_aggregation"] == ("shared_lower_quantile_gradient_ratio")
+    assert all(value == pytest.approx(expected) for value in result["resolved_coefficients"].values())
+
+
+def test_multibatch_v2_coefficients_remain_median_without_quantile_field():
+    records = [
+        {
+            "anchor_gradient_norm": 10.0,
+            "component_gradient_norms": {name: value for name in LONG_HORIZON_COMPONENTS},
+        }
+        for value in (10.0, 20.0, 30.0, 1000.0)
+    ]
+    result = _aggregate_coefficient_records(
+        records,
+        component_names=LONG_HORIZON_COMPONENTS,
+        targets={name: 0.1 for name in LONG_HORIZON_COMPONENTS},
+        coefficient_minimum=1e-6,
+        coefficient_maximum=10.0,
+        coefficient_aggregation="shared_median_gradient_ratio",
     )
 
     expected = np.median([0.1, 0.05, 1.0 / 30.0, 0.001])
-    assert result["record_count"] == 4
+    assert "coefficient_quantile" not in result
     assert all(value == pytest.approx(expected) for value in result["resolved_coefficients"].values())
 
 
@@ -344,6 +452,96 @@ def test_multibatch_coefficient_probe_reuses_rollout_for_hard_gates():
     assert "has_aux=True" in probe
     assert '"hard_gate_counts": hard_counts_host' in probe
     assert '"hard_failure_count": hard_failure_count' in probe
+
+
+def test_staged_training_assets_rederive_coefficients_and_are_hash_bound(tmp_path):
+    root = Path(__file__).resolve().parents[2]
+    contract = load_successor_small_fit_contract(
+        root / "manifests" / "coarse_graining" / "successor_training_staged_v3.json"
+    )
+    components = tuple(LONG_HORIZON_COMPONENTS)
+    measurements = [
+        {
+            "anchor_gradient_norm": 10.0,
+            "component_gradient_norms": {
+                name: float(record + index + 1)
+                for index, name in enumerate(components)
+            },
+        }
+        for record in range(32)
+    ]
+    resolved = _aggregate_coefficient_records(
+        measurements,
+        component_names=components,
+        targets=contract.payload["objective"]["gradient_ratio_targets"],
+        coefficient_minimum=contract.payload["objective"]["coefficient_minimum"],
+        coefficient_maximum=contract.payload["objective"]["coefficient_maximum"],
+        coefficient_aggregation="shared_lower_quantile_gradient_ratio",
+        coefficient_quantile=0.10,
+    )["resolved_coefficients"]
+    prepared_path = tmp_path / "prepared.json"
+    atomic_json(prepared_path, {"identity": {"schedule_sha256": "schedule"}})
+    report_path = tmp_path / "report.json"
+    atomic_json(
+        report_path,
+        {
+            "status": "passed",
+            "git_head": "a" * 40,
+            "runner_contract_sha256": contract.payload["identity"][
+                "coefficient_probe_runner_contract_sha256"
+            ],
+            "prepared_manifest_sha256": sha256_file(prepared_path),
+            "training_updates": 0,
+            "checkpoint_written": False,
+            "sealed_test_used": False,
+            "historical_v5_used": False,
+            "teacher_data_regenerated": False,
+            "hard_failure_count": 0,
+            "measurement_record_count": 32,
+            "coefficient_aggregation": "shared_median_gradient_ratio",
+            "measurements": measurements,
+            "aggregation": {
+                "record_count": 32,
+                "resolved_coefficients": {name: 9.0 for name in components},
+            },
+        },
+    )
+    coefficient_payload = _freeze_coefficients(
+        json.loads(report_path.read_text()),
+        report_path=report_path,
+        contract=contract,
+        prepared_manifest_path=prepared_path,
+    )
+    coefficient_path = tmp_path / "coefficients.json"
+    atomic_json(coefficient_path, coefficient_payload)
+
+    panel_payload = {
+        "schema_version": "successor_training_validation_panel_v1",
+        "runner_contract_sha256": contract.sha256,
+        "reported_horizons_days": [7, 30],
+        "milestones": [500, 1000, 2000, 5000, 10000],
+        "excluded_formal_window_plan_file_sha256": contract.payload["validation"][
+            "excluded_formal_window_plan_file_sha256"
+        ],
+        "excluded_formal_window_plan_sha256": contract.payload["validation"][
+            "excluded_formal_window_plan_sha256"
+        ],
+        "slices": {name: {} for name in ("temporal", "spatial", "joint")},
+        "sealed_test_used": False,
+    }
+    panel_payload["panel_sha256"] = small_fit._canonical_sha256(panel_payload)
+    panel_path = tmp_path / "panel.json"
+    atomic_json(panel_path, panel_payload)
+
+    assets = load_successor_training_assets(
+        coefficient_path,
+        panel_path,
+        coefficient_report_path=report_path,
+        prepared_manifest_path=prepared_path,
+        runner_contract=contract,
+        components=components,
+    )
+    assert assets.coefficients == resolved
 
 
 def test_teacher_replay_inverts_delta_and_defined_logit_representations():
