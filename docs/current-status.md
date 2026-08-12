@@ -325,12 +325,22 @@ boundary. Implementation and 59 related local tests pass. The free `gln01`
 16-batch re-audit passes at `0ef543b`: near-zero active GPP and maintenance
 cases are eliminated, GPP >10x cases are eliminated, maintenance >10x cases
 fall from 41/60 to 3/60, and the minimum parameter-gradient norm rises from
-about `1e-26` to `0.6077`, with the exact parameter count unchanged. The
-current gate is recomputing shared long-horizon coefficients on those same 16
-train/train batches while collecting state/budget hard gates, followed by a
-new disjoint validation-panel freeze. Paid training, the old formal panel as
-a tuning set, 365-day rollout, long-held points, Gate D2, sealed test and
-product acceptance remain closed.
+about `1e-26` to `0.6077`, with the exact parameter count unchanged.
+
+Commit `b800db9` closes the follow-on asset gate without another GPU probe.
+The immutable v2 report's 32 raw measurements are recalculated once under the
+v3 lower-10%-quantile rule, producing coefficients `0.088284572329923`,
+`0.13244689760336273`, `0.019877774130136576`, and
+`0.029825749684563974`; all state/budget hard counts remain zero. Free
+`test01` froze and independently reloaded those coefficients plus a 48-window
+temporal/spatial/joint validation panel with eight distinct landpoints per
+slice, nonoverlapping within-shard windows, zero exact overlap with the old
+96-window panel, and no sealed-test use. See
+[`successor_staged_training_assets_acceptance_20260812.md`](research/daily_coarse_graining/successor_staged_training_assets_acceptance_20260812.md).
+The current gate is implementing the at-most-10,000-update staged runner and
+milestone validation. Paid training, the old formal panel as a tuning set,
+365-day rollout, long-held points, Gate D2, sealed test and product acceptance
+remain closed.
 
 ## Stable Teacher
 

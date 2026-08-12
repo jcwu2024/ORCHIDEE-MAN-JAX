@@ -98,9 +98,13 @@ both arms share a severely miscentered nonnegative output decoder. The user
 approved a matched `1e-3` final-decoder-kernel initialization repair. Its
 local implementation and zero-training 16-batch free-GPU re-audit pass: the
 shared near-zero gradient/output collapse is removed without changing either
-body or the parameter count. The current gate is multi-batch long-horizon
-loss recalibration plus state/budget hard gates on those same train/train
-batches, not another training run.
+body or the parameter count. The same rollouts then passed every state and
+budget hard gate. A staged-training v3 contract now freezes conservative
+lower-quantile long-horizon coefficients and a new 48-window non-test
+validation panel disjoint from the rejected formal 96-window screen. The
+current gate is implementing staged preparation/training and fixed-panel
+validation at 500, 1000, 2000, 5000, and 10000 updates. No paid run is yet
+authorized.
 
 ## New Task Bootstrap
 
@@ -121,13 +125,14 @@ head A/B is closed after one pair. The long-horizon objective and parameter-
 routing foundations are implemented. The selected successor pair, frozen
 contract, local network, fast-owner boundary, small-fit lifecycle and
 checkpoint handoff are recorded in the active documents named by
-`DOCUMENT_STATUS.md`. The current operation authority is
-`research/daily_coarse_graining/successor_training_sufficiency_loss_gradient_audit_20260812.md`.
+`DOCUMENT_STATUS.md`. The current operation authority is `NEXT_STEPS.md`; the
+accepted input-policy record is
+`research/daily_coarse_graining/successor_staged_training_assets_acceptance_20260812.md`.
 Do not rerun the old fit, freeze its multibatch median coefficients, or use the
 formal 96-window panel for tuning. The matched shared-output repair has passed
-the existing 16-batch forward/gradient audit. Shared loss coefficients must
-now be recalibrated and a separate validation panel frozen before an expanded
-training schedule is opened. The
+the existing 16-batch forward/gradient audit. The new coefficients and
+validation panel are frozen; implement their staged runner and free-node smoke
+before proposing a paid preparation or training run. The
 365-day rollout, Gate D2, and product gates remain dependency-ordered later
 work.
 Before choosing or inheriting

@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-11.
+Last updated: 2026-08-12.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -69,7 +69,8 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_7_30_formal_prepared_acceptance_20260811.md` | Active accepted formal prepared-panel input; paid screen awaits approval | Admitting or reviewing the formal 96-window bounded screen |
 | `research/daily_coarse_graining/successor_7_30_formal_cache_timeout_20260811.md` | Accepted infrastructure-failure diagnosis; repair confirmed by the completed free screen | Reviewing why job 14520704 timed out without model evidence |
 | `research/daily_coarse_graining/successor_7_30_formal_screen_result_20260812.md` | Accepted formal rejection of the trained attention checkpoint; control not promoted | Reviewing the bounded 7/30-day checkpoint result |
-| `research/daily_coarse_graining/successor_training_sufficiency_loss_gradient_audit_20260812.md` | Active attribution and current-operation gate; matched decoder repair passed 16-batch re-audit, loss recalibration next | Reviewing data use, loss repair, coefficient instability, or the matched output-head repair |
+| `research/daily_coarse_graining/successor_training_sufficiency_loss_gradient_audit_20260812.md` | Accepted attribution; its decoder diagnosis remains active evidence and its next-action list is completed | Reviewing data use, loss repair, coefficient instability, or the matched output-head repair |
+| `research/daily_coarse_graining/successor_staged_training_assets_acceptance_20260812.md` | Active accepted v3 coefficient and milestone-panel inputs; staged runner implementation is next | Implementing or reviewing the expanded matched training gate |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

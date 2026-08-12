@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-08-11.
+Last updated: 2026-08-12.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -238,8 +238,17 @@ runtime and fail-closed identities. Its acceptance record is
 `daily_operator/successor_small_fit.py` owns the derived bounded-fit contract,
 deterministic train/train annual-shard schedule, coherent typed-v6 batch
 assembly, 16-row one-day anchor, two-window 30-day objective, Teacher replay
-conversion, hard gates and AdamW update. The machine contract is
-`manifests/coarse_graining/successor_small_fit_runner_v1.json`.
+conversion, hard gates, AdamW update, staged-v3 contract admission and
+deterministic milestone-validation panel selection. The original machine
+contract is `manifests/coarse_graining/successor_small_fit_runner_v1.json`;
+the current staged policy is
+`manifests/coarse_graining/successor_training_staged_v3.json`.
+`daily_operator/successor_training_assets.py` independently admits the frozen
+v3 coefficient and validation-panel assets.
+`scripts/dev/freeze_successor_training_assets.py` derives the lower-quantile
+coefficients from the existing v2 report's raw measurements and freezes the
+new non-test panel on a CPU node. Its acceptance is
+`successor_staged_training_assets_acceptance_20260812.md`.
 `scripts/hpc/run_successor_small_fit_probe.py` and its shell wrapper execute
 the accepted no-checkpoint, one-update-per-arm free-`gln01` resource preflight.
 Its evidence is

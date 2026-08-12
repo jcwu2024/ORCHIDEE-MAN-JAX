@@ -581,7 +581,7 @@ windows. Attention and control show the same pattern because they share the
 output decoder. See
 [`successor_training_sufficiency_loss_gradient_audit_20260812.md`](research/daily_coarse_graining/successor_training_sufficiency_loss_gradient_audit_20260812.md).
 
-Do not freeze the current median loss coefficients, promote the control, tune
+Do not freeze the old median loss coefficients, promote the control, tune
 against the formal 96-window panel, or start paid preparation/training. The
 user approved the first matched shared-output repair: both arms retain their
 bodies and operator boundary, while the common `decoder_second.kernel` is
@@ -592,13 +592,25 @@ free-`gln01` re-audit also passes at commit `0ef543b`: both arms keep exactly
 to 0/53 and >10x cases from 22-23/53 to 0/53; maintenance collapses fall from
 12/60 to 0/60 and >10x cases from 41/60 to 3/60. The minimum measured
 parameter-gradient norm is now `0.6077`, versus approximately `1e-26` before.
-This admits loss recalibration but is not evidence of trained accuracy. The
-active action is to recompute shared long-horizon coefficients on the same 16
-train/train batches while checking 30-day state/budget hard gates from the
-same rollout, then freeze a separate validation panel and add milestone
-validation for the expanded at-most-10,000 point-year schedule. The 365-day
-rollout, long-held-point validation, Gate D2, sealed test, and product gates
-remain closed.
+This admitted loss recalibration but was not evidence of trained accuracy.
+That recalibration is now complete under staged-training contract v3. The
+existing 32 raw arm/batch measurements produce one shared lower-10%-quantile
+coefficient set; all state/budget hard counts are zero. A separate 48-window
+panel uses eight distinct landpoints and two nonoverlapping windows in each of
+the temporal, spatial, and joint non-test slices, with zero exact overlap with
+the rejected formal 96-window screen. Both assets passed independent reload
+on free `test01`; see
+[`successor_staged_training_assets_acceptance_20260812.md`](research/daily_coarse_graining/successor_staged_training_assets_acceptance_20260812.md).
+
+The active action is now to implement staged preparation and matched training
+for at most 10,000 unique train/train point-years, using the frozen
+coefficients and the same validation panel for both arms at updates 500, 1000,
+2000, 5000, and 10000. First pass local forward/loss/gradient, recovery and
+single-day state/budget tests, then run only a free-node smoke and resource
+measurement. A paid preparation or training proposal requires a new explicit
+Explore1000 resource, wall-time, working-directory, command and worst-case-cost
+approval. The 365-day rollout, long-held-point validation, Gate D2, sealed
+test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 
