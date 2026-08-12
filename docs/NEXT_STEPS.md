@@ -613,15 +613,26 @@ Report SHA256 is
 see
 [`successor_staged_training_gpu_smoke_acceptance_20260812.md`](research/daily_coarse_graining/successor_staged_training_gpu_smoke_acceptance_20260812.md).
 
-This accepts the execution path only; it does not promote or rank either arm.
-The active action is to size and propose the first `1-500` staged preparation
-and matched-training milestone from the measured preparation, compile, update,
-validation, memory, and storage costs. Do not prepare that formal stage or
-submit paid work without a new explicit Explore1000 resource, wall-time,
-working-directory, command, and worst-case-cost approval. The later
-`501-1000`, `1001-2000`, `2001-5000`, and `5001-10000` ranges remain
-conditional on milestone improvement. The 365-day rollout, long-held-point
-validation, Gate D2, sealed test, and product gates remain closed.
+The first formal staged milestone is complete. Job `14524758` prepared exactly
+500 admitted gzip artifacts; manifest SHA256 is
+`19d0cfd699c2535a101edbe245fffc23f49a6c514f565bb069b60e5683355375`.
+Job `14525122` completed 500 updates per arm plus the full frozen validation
+panel with zero hard failures; report SHA256 is
+`5d2ee5b19143f0d5662e6cad0818b5d82de91f859b84140ad33942da52a5019e`.
+Independent `test01` processes admitted all 500 training artifacts and later
+reloaded both complete parameter trees and every report record. See
+[`successor_staged_500_milestone_acceptance_20260812.md`](research/daily_coarse_graining/successor_staged_500_milestone_acceptance_20260812.md).
+
+Update 500 establishes the first staged comparison baseline. Control scores
+`1.0457081708`, attention `1.0523784009`; the `0.64%` difference does not
+promote either arm. The first real staged improvement decision is at update
+1000, where each arm is compared to its own update-500 score and must improve
+by at least 1% with zero hard failures. The active action is to propose the
+incremental `501-1000` preparation and training resources. Do not prepare or
+submit that paid continuation without a new explicit approval. The later
+`1001-2000`, `2001-5000`, and `5001-10000` ranges remain conditional. The
+365-day rollout, long-held-point validation, Gate D2, sealed test, and product
+gates remain closed.
 
 ## Completed Task Packet: Gate C
 

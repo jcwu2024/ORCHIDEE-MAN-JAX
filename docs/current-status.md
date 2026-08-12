@@ -349,10 +349,32 @@ This is pipeline evidence, not evidence that either architecture is accurate
 or promotable. See
 [`successor_staged_training_gpu_smoke_acceptance_20260812.md`](research/daily_coarse_graining/successor_staged_training_gpu_smoke_acceptance_20260812.md).
 
-The current gate is resource and cost sizing for the first `1-500` staged
-preparation/training milestone. Paid preparation/training, the old formal
-panel as a tuning set, 365-day rollout, long-held points, Gate D2, sealed test
-and product acceptance remain closed.
+The first staged milestone is now accepted at production commit `9856dae`.
+Paid `cnmix` job `14524758` prepared and finalized exactly 500 gzip artifacts
+in `03:26:53`; an independent `test01` process decompressed and rehashed every
+artifact. Manifest SHA256 is
+`19d0cfd699c2535a101edbe245fffc23f49a6c514f565bb069b60e5683355375`.
+Paid `gnall` job `14525122` then completed both matched arms through update 500
+and the full frozen 48-window validation in `00:52:51`, with every update
+applied and all training/validation hard counts zero. Report SHA256 is
+`5d2ee5b19143f0d5662e6cad0818b5d82de91f859b84140ad33942da52a5019e`.
+
+The control validation composite is `1.0457081708` and attention is
+`1.0523784009`; attention is `0.64%` worse overall and slightly worse in all
+six slice/horizon cells. Neither arm is promoted. The checkpoint
+`improved=true` flags only establish the first staged baseline, not improvement
+over zero training. Pre-clip gradient norm still exceeds one on 482/500
+attention and 474/500 control updates. Independent `test01` reload verified
+the recovery, best checkpoint, both 8,722,689-parameter trees, all update
+records, and all hard counts. See
+[`successor_staged_500_milestone_acceptance_20260812.md`](research/daily_coarse_graining/successor_staged_500_milestone_acceptance_20260812.md).
+
+The current gate is deciding and, if separately approved, preparing the
+incremental `501-1000` stage. At update 1000 each arm must improve its own
+current composite by at least 1% with zero hard failures to reset its plateau
+counter. Paid continuation, the old formal panel as a tuning set, 365-day
+rollout, long-held points, Gate D2, sealed test and product acceptance remain
+closed.
 
 ## Stable Teacher
 

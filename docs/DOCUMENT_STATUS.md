@@ -72,6 +72,7 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_training_sufficiency_loss_gradient_audit_20260812.md` | Accepted attribution; its decoder diagnosis remains active evidence and its next-action list is completed | Reviewing data use, loss repair, coefficient instability, or the matched output-head repair |
 | `research/daily_coarse_graining/successor_staged_training_assets_acceptance_20260812.md` | Active accepted v3 coefficient and milestone-panel inputs; staged runner and free smoke now pass | Reviewing the expanded matched training inputs |
 | `research/daily_coarse_graining/successor_staged_training_gpu_smoke_acceptance_20260812.md` | Active accepted free-GPU staged execution preflight; not promotion evidence | Sizing or reviewing the first 500-update stage |
+| `research/daily_coarse_graining/successor_staged_500_milestone_acceptance_20260812.md` | Active accepted first staged milestone; neither arm promoted | Reviewing or proposing the conditional 501-1000 stage |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |
