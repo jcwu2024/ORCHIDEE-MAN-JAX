@@ -337,10 +337,22 @@ temporal/spatial/joint validation panel with eight distinct landpoints per
 slice, nonoverlapping within-shard windows, zero exact overlap with the old
 96-window panel, and no sealed-test use. See
 [`successor_staged_training_assets_acceptance_20260812.md`](research/daily_coarse_graining/successor_staged_training_assets_acceptance_20260812.md).
-The current gate is implementing the at-most-10,000-update staged runner and
-milestone validation. Paid training, the old formal panel as a tuning set,
-365-day rollout, long-held points, Gate D2, sealed test and product acceptance
-remain closed.
+Commit `9b4a1ce` completes the free `gln01` staged-runner smoke. Both matched
+arms applied two finite-gradient updates, and one fixed validation artifact
+from each temporal/spatial/joint slice passed for both arms with zero state,
+mask, discrete, nonnegative-stock, or budget hard failures. An independent
+`test01` process re-read the report. Wall time was `26:35.37`, maximum host RSS
+was `11,648,856` KiB, observed GPU allocation peaked near `21.9` GiB, and one
+XLA train-step compile took `5:57.59`. Report SHA256 is
+`67b4ba0748e4f2fdc918de68587fa5ea4834271152940aba011c60fd06839f4c`.
+This is pipeline evidence, not evidence that either architecture is accurate
+or promotable. See
+[`successor_staged_training_gpu_smoke_acceptance_20260812.md`](research/daily_coarse_graining/successor_staged_training_gpu_smoke_acceptance_20260812.md).
+
+The current gate is resource and cost sizing for the first `1-500` staged
+preparation/training milestone. Paid preparation/training, the old formal
+panel as a tuning set, 365-day rollout, long-held points, Gate D2, sealed test
+and product acceptance remain closed.
 
 ## Stable Teacher
 

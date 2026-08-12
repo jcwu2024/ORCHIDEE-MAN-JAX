@@ -602,15 +602,26 @@ the rejected formal 96-window screen. Both assets passed independent reload
 on free `test01`; see
 [`successor_staged_training_assets_acceptance_20260812.md`](research/daily_coarse_graining/successor_staged_training_assets_acceptance_20260812.md).
 
-The active action is now to implement staged preparation and matched training
-for at most 10,000 unique train/train point-years, using the frozen
-coefficients and the same validation panel for both arms at updates 500, 1000,
-2000, 5000, and 10000. First pass local forward/loss/gradient, recovery and
-single-day state/budget tests, then run only a free-node smoke and resource
-measurement. A paid preparation or training proposal requires a new explicit
-Explore1000 resource, wall-time, working-directory, command and worst-case-cost
-approval. The 365-day rollout, long-held-point validation, Gate D2, sealed
-test, and product gates remain closed.
+The staged runner, recovery path, local gates, fixed milestone validation, and
+free-node execution smoke now pass. At consumer commit `9b4a1ce`, both arms
+applied two finite-gradient updates and passed one temporal, spatial, and joint
+validation artifact with zero hard failures. The smoke completed on free
+`gln01` in `26:35.37`, used at most about `21.9` GiB observed GPU memory and
+`11,648,856` KiB host RSS, and exposed a `5:57.59` XLA train-step compile.
+Report SHA256 is
+`67b4ba0748e4f2fdc918de68587fa5ea4834271152940aba011c60fd06839f4c`;
+see
+[`successor_staged_training_gpu_smoke_acceptance_20260812.md`](research/daily_coarse_graining/successor_staged_training_gpu_smoke_acceptance_20260812.md).
+
+This accepts the execution path only; it does not promote or rank either arm.
+The active action is to size and propose the first `1-500` staged preparation
+and matched-training milestone from the measured preparation, compile, update,
+validation, memory, and storage costs. Do not prepare that formal stage or
+submit paid work without a new explicit Explore1000 resource, wall-time,
+working-directory, command, and worst-case-cost approval. The later
+`501-1000`, `1001-2000`, `2001-5000`, and `5001-10000` ranges remain
+conditional on milestone improvement. The 365-day rollout, long-held-point
+validation, Gate D2, sealed test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 
