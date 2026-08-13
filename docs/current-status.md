@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-12.
+Last updated: 2026-08-13.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -369,12 +369,40 @@ the recovery, best checkpoint, both 8,722,689-parameter trees, all update
 records, and all hard counts. See
 [`successor_staged_500_milestone_acceptance_20260812.md`](research/daily_coarse_graining/successor_staged_500_milestone_acceptance_20260812.md).
 
-The current gate is deciding and, if separately approved, preparing the
-incremental `501-1000` stage. At update 1000 each arm must improve its own
-current composite by at least 1% with zero hard failures to reset its plateau
-counter. Paid continuation, the old formal panel as a tuning set, 365-day
-rollout, long-held points, Gate D2, sealed test and product acceptance remain
-closed.
+The second staged milestone is accepted at production commit `ea21f8a`.
+Preparation job `14527233` timed out after four hours with 56 resumable
+artifacts; free-node reproductions showed that its extreme per-sample delays
+were execution anomalies and reproduced two artifacts bit for bit. Approved
+`cnall` continuation `14532991` reused those artifacts and finished the 500
+incremental `501-1000` products in `01:47:12`. A separate `test01` process
+rebuilt the frozen schedule and rehashed and deserialized all 500 artifacts.
+Manifest SHA256 is
+`fe39325a3c18d6a7240e0fe5c2c23c14324b5abd9a88377a1ba380112196f076`.
+
+Paid `gnall` job `14535746` resumed the accepted update-500 recovery and
+completed update 1000 plus the unchanged 48-window panel in `00:52:54`. Report,
+recovery, and best-checkpoint SHA256 values are respectively
+`e379e3e7...bd68ce1`, `d49222d4...7cae7`, and `8a3967e3...f50d0a`.
+Independent `test01` loading verifies both complete 8,722,689-parameter trees,
+the optimizer state, all 500 incremental records, finite scalar values, and
+zero training/validation hard counts.
+
+Control improves from `1.0457081708` to `1.0060782200` (`3.79%`); attention
+improves from `1.0523784009` to `1.0145714634` (`3.59%`). All six fixed
+slice/horizon cells improve for each arm. Control remains `0.84%` better
+overall, so neither arm is promoted and attention has not established a
+decisive advantage. Incremental clipping falls to 402/500 control and 290/500
+attention updates, but gradient spikes remain. Temporal 30-day normalized
+GPP/NPP RMSE remains about `2.27/2.34-2.36`, while total-live-biomass RMSE is
+about `0.061`; productivity remains the main scientific error. See
+[`successor_staged_1000_milestone_acceptance_20260813.md`](research/daily_coarse_graining/successor_staged_1000_milestone_acceptance_20260813.md).
+
+The current gate is conditional preparation and execution of updates
+`1001-2000` from the accepted update-1000 recovery, with 1,000 new point-years
+and otherwise unchanged contracts. It requires a fresh resource estimate and
+explicit approval. The old formal panel remains forbidden as a tuning set;
+365-day rollout, long-held points, Gate D2, sealed test and product acceptance
+remain closed.
 
 ## Stable Teacher
 

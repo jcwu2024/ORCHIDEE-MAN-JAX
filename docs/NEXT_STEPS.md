@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-12.
+Last updated: 2026-08-13.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -623,16 +623,33 @@ Independent `test01` processes admitted all 500 training artifacts and later
 reloaded both complete parameter trees and every report record. See
 [`successor_staged_500_milestone_acceptance_20260812.md`](research/daily_coarse_graining/successor_staged_500_milestone_acceptance_20260812.md).
 
-Update 500 establishes the first staged comparison baseline. Control scores
-`1.0457081708`, attention `1.0523784009`; the `0.64%` difference does not
-promote either arm. The first real staged improvement decision is at update
-1000, where each arm is compared to its own update-500 score and must improve
-by at least 1% with zero hard failures. The active action is to propose the
-incremental `501-1000` preparation and training resources. Do not prepare or
-submit that paid continuation without a new explicit approval. The later
-`1001-2000`, `2001-5000`, and `5001-10000` ranges remain conditional. The
-365-day rollout, long-held-point validation, Gate D2, sealed test, and product
-gates remain closed.
+The second staged milestone is complete and accepted. Incremental preparation
+jobs `14527233` and `14532991` produced and independently admitted exactly 500
+new artifacts for updates `501-1000`; manifest SHA256 is
+`fe39325a3c18d6a7240e0fe5c2c23c14324b5abd9a88377a1ba380112196f076`.
+Job `14535746` resumed the accepted update-500 state and completed update 1000
+plus the unchanged frozen validation panel with zero hard failures; report
+SHA256 is
+`e379e3e700ebc93b558ddefa054af36854470b002a8224bf261211aebbd68ce1`.
+See
+[`successor_staged_1000_milestone_acceptance_20260813.md`](research/daily_coarse_graining/successor_staged_1000_milestone_acceptance_20260813.md).
+
+Control improves from `1.0457081708` to `1.0060782200` (`3.79%`), and
+attention improves from `1.0523784009` to `1.0145714634` (`3.59%`). Each arm
+passes its own minimum-1% milestone gate, and all six slice/horizon cells
+improve. This establishes that increasing the distinct training data used is
+currently beneficial. It does not promote either arm: control remains `0.84%`
+better overall, while GPP/NPP, especially temporal productivity, remain the
+dominant scientific errors.
+
+The active gate is the conditional `1001-2000` stage. It must prepare only
+1,000 new point-years, resume the accepted update-1000 recovery, keep the
+architecture/objective/coefficients/panel unchanged, and compare each arm to
+its own current best with the same minimum-1% and zero-hard-failure rule. Do
+not prepare or submit that paid continuation without a new resource estimate
+and explicit approval. The `2001-5000` and `5001-10000` ranges remain
+conditional. The 365-day rollout, long-held-point validation, Gate D2, sealed
+test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 
