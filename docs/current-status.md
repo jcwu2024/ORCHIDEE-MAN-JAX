@@ -397,12 +397,31 @@ GPP/NPP RMSE remains about `2.27/2.34-2.36`, while total-live-biomass RMSE is
 about `0.061`; productivity remains the main scientific error. See
 [`successor_staged_1000_milestone_acceptance_20260813.md`](research/daily_coarse_graining/successor_staged_1000_milestone_acceptance_20260813.md).
 
-The current gate is conditional preparation and execution of updates
-`1001-2000` from the accepted update-1000 recovery, with 1,000 new point-years
-and otherwise unchanged contracts. It requires a fresh resource estimate and
-explicit approval. The old formal panel remains forbidden as a tuning set;
-365-day rollout, long-held points, Gate D2, sealed test and product acceptance
-remain closed.
+The approved update-2000 continuation completed under GPU job `14540920`.
+Control improved only `0.31%`, from `1.0060782200` to `1.00298315`, below the
+frozen 1% gate. Attention worsened `3.08%`, from `1.0145714634` to
+`1.04584784`; its maintenance-respiration errors were especially unstable.
+All hard gates passed, but the best checkpoint remains update 1000 and the
+unchanged schedule must not continue to update 5000.
+
+A free-`gln01` equal-sample gradient probe at commit `14b9420` then compared
+`1 x (32 anchors + 4 rollouts)` against
+`4 x (8 anchors + 1 rollout)`. Both arms reproduced the ordinary loss and
+full gradient to about `1e-17`, with zero hard failures and no sampled
+gradient above the clipping threshold. Mixed point-year batches changed the
+gradient direction but did not consistently reduce cross-batch conflict.
+Report SHA256 is
+`eec3fccc372ad72f1818c86f7867c1eb63fc39d8a463bfe7b883196f3e88925a`;
+see
+[`successor_batch_diversity_probe_20260814.md`](research/daily_coarse_graining/successor_batch_diversity_probe_20260814.md).
+
+The current gate is one report-only 100-update equal-sample A/B on free
+`gln01`, starting from the accepted update-1000 parameters and optimizer and
+ending on the unchanged 48-window non-test validation panel. Mixed sampling
+must be no worse than single sampling for both arms and improve at least one
+arm by 0.5%, with zero hard failures. Otherwise the sampling branch closes.
+No paid run, architecture change, 365-day rollout, long-held points, Gate D2,
+sealed test, or product acceptance is authorized.
 
 ## Stable Teacher
 

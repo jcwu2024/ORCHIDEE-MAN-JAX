@@ -15,6 +15,7 @@ import research.daily_coarse_graining.daily_operator.successor_fast_owner_traini
 import research.daily_coarse_graining.daily_operator.successor_fit_checkpoint as fit_checkpoint
 import research.daily_coarse_graining.daily_operator.successor_frozen_coefficients as frozen_coefficients
 import research.daily_coarse_graining.daily_operator.successor_small_fit as small_fit
+import scripts.hpc.run_successor_batch_diversity_short_fit as diversity_fit
 import scripts.hpc.run_successor_fast_owner_gpu_probe as fast_probe
 import scripts.hpc.run_successor_small_fit as production_fit
 from research.daily_coarse_graining.daily_operator.long_horizon_objective import (
@@ -1702,6 +1703,67 @@ def test_batch_diversity_launcher_is_free_no_update_probe():
     assert '"training_updates": 0' in source
     assert '"checkpoint_written": False' in source
     assert "successor_adamw_update" not in source
+
+
+def test_batch_diversity_short_fit_classification_requires_shared_benefit(monkeypatch):
+    monkeypatch.setattr(
+        diversity_fit,
+        "validation_primary_composite",
+        lambda report, **_kwargs: report["composite"],
+    )
+    monkeypatch.setattr(
+        diversity_fit,
+        "validation_hard_failure_count",
+        lambda report: report.get("hard", 0),
+    )
+    arms = ("attention", "control")
+    baseline = {arm: {"composite": 1.0} for arm in arms}
+    validation = {
+        "single_point_year": {
+            "attention": {"composite": 1.01},
+            "control": {"composite": 1.00},
+        },
+        "four_point_year": {
+            "attention": {"composite": 1.00},
+            "control": {"composite": 1.00},
+        },
+    }
+
+    admitted = diversity_fit._classify(
+        validation,
+        baseline,
+        arms=arms,
+        primary_outputs=("gpp",),
+    )
+    assert admitted["status"] == "mixed_sampling_admitted"
+
+    validation["four_point_year"]["control"]["composite"] = 1.001
+    rejected = diversity_fit._classify(
+        validation,
+        baseline,
+        arms=arms,
+        primary_outputs=("gpp",),
+    )
+    assert rejected["status"] == "mixed_sampling_rejected"
+    assert rejected["mixed_no_worse_for_both_arms"] is False
+
+
+def test_batch_diversity_short_fit_launcher_is_free_and_report_only():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (
+        root / "scripts" / "hpc" / "run_successor_batch_diversity_short_fit.sh"
+    ).read_text()
+    source = (
+        root / "scripts" / "hpc" / "run_successor_batch_diversity_short_fit.py"
+    ).read_text()
+
+    assert "batch-diversity short fit must run on gln01" in launcher
+    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
+    assert "#SBATCH" not in launcher
+    assert '"short_updates": SHORT_UPDATES' in source
+    assert '"checkpoint_written": False' in source
+    assert "write_staged_recovery" not in source
+    assert "write_staged_best_checkpoint" not in source
 
 
 def test_gzip_prepared_update_is_deterministic_and_round_trips(tmp_path):

@@ -109,7 +109,7 @@ def _stack_contexts(jax: Any, values: Sequence[Any]) -> Any:
     if len(values) != POINTS_PER_MIXED_UPDATE:
         raise ValueError("successor diversity update requires four contexts")
     return jax.tree_util.tree_map(
-        lambda *leaves: jax.numpy.stack(leaves),
+        lambda *leaves: np.stack(tuple(np.asarray(leaf) for leaf in leaves)),
         *values,
     )
 

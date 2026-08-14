@@ -642,14 +642,23 @@ currently beneficial. It does not promote either arm: control remains `0.84%`
 better overall, while GPP/NPP, especially temporal productivity, remain the
 dominant scientific errors.
 
-The active gate is the conditional `1001-2000` stage. It must prepare only
-1,000 new point-years, resume the accepted update-1000 recovery, keep the
-architecture/objective/coefficients/panel unchanged, and compare each arm to
-its own current best with the same minimum-1% and zero-hard-failure rule. Do
-not prepare or submit that paid continuation without a new resource estimate
-and explicit approval. The `2001-5000` and `5001-10000` ranges remain
-conditional. The 365-day rollout, long-held-point validation, Gate D2, sealed
-test, and product gates remain closed.
+The approved `1001-2000` stage completed under GPU job `14540920`. Control
+improved only `0.31%`, from `1.0060782200` to `1.00298315`, below the frozen
+1% gate. Attention worsened `3.08%`, from `1.0145714634` to `1.04584784`.
+Control improved all six validation cells slightly; attention worsened all
+six. The accepted best checkpoint therefore remains update 1000. Do not
+continue unchanged to update 5000.
+
+The active gate is now the free-node, no-checkpoint batch-diversity short fit
+frozen in
+[`successor_batch_diversity_probe_20260814.md`](research/daily_coarse_graining/successor_batch_diversity_probe_20260814.md).
+Its zero-update probe showed exact loss/gradient implementation equivalence
+but no consistent gradient-geometry advantage for four-point-year updates.
+Run only the declared 100-update equal-sample A/B on `gln01`; require zero
+hard failures, mixed no worse than single for both arms, and at least 0.5%
+mixed improvement for one arm. Failure closes this sampling branch. No paid
+preparation/training, architecture change, 365-day rollout, long-held-point
+validation, Gate D2, sealed test, or product gate is authorized.
 
 ## Completed Task Packet: Gate C
 
