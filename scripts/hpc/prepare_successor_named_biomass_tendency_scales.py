@@ -161,7 +161,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     )
     from research.daily_coarse_graining.daily_operator.named_biomass_tendency import (
         NAMED_BIOMASS_TENDENCY_FIELDS,
-        biomass_stock_identity_residual,
+        biomass_stock_identity_roundoff_audit,
         fit_named_biomass_tendency_scales,
         named_biomass_tendency_objective,
     )
@@ -209,7 +209,12 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     initial_defined = {name: [] for name in NAMED_BIOMASS_TENDENCY_FIELDS}
     teacher_values = {name: [] for name in NAMED_BIOMASS_TENDENCY_FIELDS}
     teacher_defined = {name: [] for name in NAMED_BIOMASS_TENDENCY_FIELDS}
+    identity_gate = contract["preparation_gates"]["agb_plus_bgb_identity"]
+    identity_roundoff_units = int(identity_gate["roundoff_units"])
+    identity_magnitude_floor = float(identity_gate["magnitude_floor"])
     identity_maximum = 0.0
+    identity_maximum_tolerance = 0.0
+    identity_maximum_tolerance_ratio = 0.0
     selected_report = []
     for index, record in enumerate(selected, start=1):
         update = int(record["update"])
@@ -221,12 +226,29 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         )
         initial, teacher = _trajectory_assets(runtime, artifact)
         for trajectories in (initial, teacher):
-            identity = biomass_stock_identity_residual(trajectories.stocks)
-            values = np.asarray(identity.value)[np.asarray(identity.defined)]
+            identity = biomass_stock_identity_roundoff_audit(
+                trajectories.stocks,
+                roundoff_units=identity_roundoff_units,
+                magnitude_floor=identity_magnitude_floor,
+            )
+            defined = np.asarray(identity.defined)
+            values = np.asarray(identity.residual)[defined]
+            tolerances = np.asarray(identity.tolerance)[defined]
+            ratios = np.asarray(identity.tolerance_ratio)[defined]
             if values.size:
                 identity_maximum = max(
                     identity_maximum,
                     float(np.max(np.abs(values))),
+                )
+                identity_maximum_tolerance = max(
+                    identity_maximum_tolerance,
+                    float(np.max(tolerances)),
+                )
+                current_ratio = float(np.max(ratios))
+                identity_maximum_tolerance_ratio = (
+                    max(identity_maximum_tolerance_ratio, current_ratio)
+                    if np.isfinite(current_ratio)
+                    else float("inf")
                 )
         for name in NAMED_BIOMASS_TENDENCY_FIELDS:
             initial_values[name].append(np.asarray(initial.stocks[name].value)[:, 0])
@@ -294,10 +316,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         horizons=tuple(contract["horizons_days"]),
     )
     teacher_teacher_loss = float(np.asarray(zero.total))
-    identity_tolerance = float(
-        contract["preparation_gates"]["agb_plus_bgb_identity_tolerance"]
-    )
-    passed = teacher_teacher_loss == 0.0 and identity_maximum <= identity_tolerance
+    identity_passed = identity_maximum_tolerance_ratio <= 1.0
+    passed = teacher_teacher_loss == 0.0 and identity_passed
     report = {
         "schema_version": "successor_named_biomass_tendency_scale_asset_v1",
         "status": "passed" if passed else "failed",
@@ -330,8 +350,13 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "teacher_teacher_loss": teacher_teacher_loss,
             "teacher_teacher_loss_exact_zero": teacher_teacher_loss == 0.0,
             "maximum_total_minus_agb_bgb_absolute_residual": identity_maximum,
-            "agb_plus_bgb_identity_tolerance": identity_tolerance,
-            "agb_plus_bgb_identity_passed": identity_maximum <= identity_tolerance,
+            "maximum_agb_plus_bgb_identity_tolerance": identity_maximum_tolerance,
+            "maximum_agb_plus_bgb_identity_tolerance_ratio": (
+                identity_maximum_tolerance_ratio
+            ),
+            "agb_plus_bgb_identity_roundoff_units": identity_roundoff_units,
+            "agb_plus_bgb_identity_magnitude_floor": identity_magnitude_floor,
+            "agb_plus_bgb_identity_passed": identity_passed,
         },
         "backend": runtime["jax"].default_backend(),
         "devices": [str(value) for value in runtime["devices"]],

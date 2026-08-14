@@ -42,6 +42,13 @@ class BiomassIdentityResidual(NamedTuple):
     defined: Any
 
 
+class BiomassIdentityRoundoffAudit(NamedTuple):
+    residual: Any
+    tolerance: Any
+    tolerance_ratio: Any
+    defined: Any
+
+
 def _horizons(values: Sequence[int]) -> tuple[int, ...]:
     result = tuple(int(value) for value in values)
     if not result or any(value <= 0 for value in result):
@@ -337,3 +344,50 @@ def biomass_stock_identity_residual(
         0.0,
     )
     return BiomassIdentityResidual(value=residual, defined=defined)
+
+
+def biomass_stock_identity_roundoff_audit(
+    stocks: Mapping[str, MaskedTrajectory],
+    *,
+    roundoff_units: int,
+    magnitude_floor: float = 1.0,
+) -> BiomassIdentityRoundoffAudit:
+    """Audit the AGB/BGB identity against a scale-aware float64 error bound."""
+
+    if roundoff_units < 1:
+        raise ValueError("biomass identity roundoff units must be positive")
+    if not np.isfinite(magnitude_floor) or magnitude_floor <= 0.0:
+        raise ValueError("biomass identity magnitude floor must be positive")
+    identity = biomass_stock_identity_residual(stocks)
+    above = jnp.asarray(
+        stocks["aboveground_biomass_carbon"].value,
+        dtype=jnp.float64,
+    )
+    below = jnp.asarray(
+        stocks["belowground_biomass_carbon"].value,
+        dtype=jnp.float64,
+    )
+    total = jnp.asarray(
+        stocks["total_live_biomass_carbon"].value,
+        dtype=jnp.float64,
+    )
+    magnitude = jnp.maximum(
+        jnp.maximum(jnp.abs(total), jnp.abs(above) + jnp.abs(below)),
+        jnp.asarray(magnitude_floor, dtype=jnp.float64),
+    )
+    tolerance = (
+        jnp.asarray(roundoff_units, dtype=jnp.float64)
+        * jnp.asarray(np.finfo(np.float64).eps, dtype=jnp.float64)
+        * magnitude
+    )
+    ratio = jnp.where(
+        identity.defined,
+        jnp.abs(identity.value) / tolerance,
+        0.0,
+    )
+    return BiomassIdentityRoundoffAudit(
+        residual=identity.value,
+        tolerance=tolerance,
+        tolerance_ratio=ratio,
+        defined=identity.defined,
+    )

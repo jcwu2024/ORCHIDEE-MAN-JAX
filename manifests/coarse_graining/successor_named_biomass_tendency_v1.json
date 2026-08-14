@@ -1,7 +1,7 @@
 {
   "schema_version": "successor_named_biomass_tendency_v1",
   "status": "local_objective_foundation_no_training_authorized",
-  "contract_sha256": "e8a89217c623fb8d3e32fe9094ab5dbe54abc0f2ced0c5e4e62fd980331870de",
+  "contract_sha256": "18335d842b3498ddc57599dfe7c25fdca649452a2d01ff7405afbf2e3b882945",
   "dataset": {
     "dataset_id": "pft14-daily-teacher-v6",
     "teacher_regeneration_forbidden": true,
@@ -75,7 +75,13 @@
   ],
   "preparation_gates": {
     "teacher_teacher_loss_exact_zero": true,
-    "agb_plus_bgb_identity_tolerance": 1e-12,
+    "agb_plus_bgb_identity": {
+      "floating_dtype": "float64",
+      "summed_source_parts": 12,
+      "roundoff_units": 32,
+      "magnitude_floor": 1.0,
+      "criterion": "abs(total_live - aboveground - belowground) <= roundoff_units * float64_epsilon * max(abs(total_live), abs(aboveground) + abs(belowground), magnitude_floor)"
+    },
     "hard_counts_required_zero": true,
     "finite_loss_and_gradient_required": true,
     "target_each_stock_to_npp_median_gradient_ratio_interval": [0.1, 10.0],

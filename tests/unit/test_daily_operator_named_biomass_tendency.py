@@ -15,6 +15,7 @@ from research.daily_coarse_graining.daily_operator.long_horizon_objective import
 from research.daily_coarse_graining.daily_operator.named_biomass_tendency import (
     NAMED_BIOMASS_TENDENCY_FIELDS,
     biomass_stock_identity_residual,
+    biomass_stock_identity_roundoff_audit,
     fit_named_biomass_tendency_scales,
     named_biomass_tendency_objective,
 )
@@ -178,6 +179,31 @@ def test_biomass_stock_identity_residual_is_exact_and_masked():
     np.testing.assert_array_equal(result.defined, np.ones((1, 2), dtype=bool))
 
 
+def test_biomass_stock_identity_roundoff_gate_accepts_exact_identity():
+    stocks = _stocks([[400.0]], [[600.0]])
+    stocks["total_live_biomass_carbon"] = _trajectory([[1000.0]])
+    audit = biomass_stock_identity_roundoff_audit(stocks, roundoff_units=32)
+
+    assert float(audit.tolerance_ratio[0, 0]) == 0.0
+    assert float(audit.tolerance[0, 0]) > 0.0
+
+
+def test_biomass_stock_identity_roundoff_gate_accepts_reduction_order_noise():
+    stocks = _stocks([[400.0]], [[600.0]])
+    stocks["total_live_biomass_carbon"] = _trajectory([[1000.0 + 3.0e-12]])
+    audit = biomass_stock_identity_roundoff_audit(stocks, roundoff_units=32)
+
+    assert float(audit.tolerance_ratio[0, 0]) <= 1.0
+
+
+def test_biomass_stock_identity_roundoff_gate_rejects_material_error():
+    stocks = _stocks([[400.0]], [[600.0]])
+    stocks["total_live_biomass_carbon"] = _trajectory([[1000.0 + 1.0e-6]])
+    audit = biomass_stock_identity_roundoff_audit(stocks, roundoff_units=32)
+
+    assert float(audit.tolerance_ratio[0, 0]) > 1.0
+
+
 def test_named_biomass_tendency_rejects_scale_and_horizon_drift():
     stocks = _stocks(jnp.zeros((7, 1)), jnp.zeros((7, 1)))
     with pytest.raises(ValueError, match="horizon registry drift"):
@@ -219,6 +245,17 @@ def test_named_biomass_tendency_manifest_is_hash_bound_and_bounded():
     assert hashlib.sha256(canonical).hexdigest() == expected_hash
     assert manifest["optimized_stock_fields"] == list(NAMED_BIOMASS_TENDENCY_FIELDS)
     assert manifest["scale_policy"]["stock_relative_floor_ratio"] == 1.0e-3
+    assert manifest["preparation_gates"]["agb_plus_bgb_identity"] == {
+        "floating_dtype": "float64",
+        "summed_source_parts": 12,
+        "roundoff_units": 32,
+        "magnitude_floor": 1.0,
+        "criterion": (
+            "abs(total_live - aboveground - belowground) <= roundoff_units * "
+            "float64_epsilon * max(abs(total_live), abs(aboveground) + "
+            "abs(belowground), magnitude_floor)"
+        ),
+    }
     assert not manifest["negative_design"]["reopens_process_increment_v2"]
     assert manifest["preparation_gates"]["optimizer_updates"] == 0
     assert manifest["training_gate"]["status"].startswith("thresholds_require")
