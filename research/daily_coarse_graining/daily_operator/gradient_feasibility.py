@@ -30,6 +30,68 @@ def _project_simplex(values: np.ndarray) -> np.ndarray:
     return np.maximum(np.asarray(values, dtype=np.float64) - threshold, 0.0)
 
 
+def _active_set_minimum_norm_weights(
+    normalized_gram: np.ndarray,
+    *,
+    tolerance: float = 1.0e-9,
+) -> np.ndarray:
+    """Solve the small simplex QP by enumerating its nonempty faces."""
+
+    matrix = np.asarray(normalized_gram, dtype=np.float64)
+    count = int(matrix.shape[0])
+    best: np.ndarray | None = None
+    best_squared_norm = np.inf
+    for mask in range(1, 1 << count):
+        active = np.asarray(
+            [index for index in range(count) if mask & (1 << index)],
+            dtype=np.int64,
+        )
+        face = matrix[np.ix_(active, active)]
+        kkt = np.block(
+            [
+                [face, -np.ones((active.size, 1), dtype=np.float64)],
+                [
+                    np.ones((1, active.size), dtype=np.float64),
+                    np.zeros((1, 1), dtype=np.float64),
+                ],
+            ]
+        )
+        right = np.concatenate(
+            (np.zeros(active.size, dtype=np.float64), np.ones(1, dtype=np.float64))
+        )
+        solution, _residuals, _rank, _singular = np.linalg.lstsq(
+            kkt,
+            right,
+            rcond=None,
+        )
+        if (
+            np.max(np.abs(kkt @ solution - right)) > tolerance
+            or np.any(solution[:-1] < -tolerance)
+        ):
+            continue
+        weights = np.zeros(count, dtype=np.float64)
+        weights[active] = np.maximum(solution[:-1], 0.0)
+        total = float(np.sum(weights))
+        if total <= 0.0:
+            continue
+        weights /= total
+        gradient = matrix @ weights
+        level = float(weights @ gradient)
+        support = weights > tolerance
+        if (
+            np.any(np.abs(gradient[support] - level) > 10.0 * tolerance)
+            or np.any(gradient[~support] < level - 10.0 * tolerance)
+        ):
+            continue
+        squared_norm = float(weights @ matrix @ weights)
+        if squared_norm < best_squared_norm:
+            best = weights
+            best_squared_norm = squared_norm
+    if best is None:
+        raise ValueError("minimum-norm active-set solver did not find a KKT point")
+    return best
+
+
 def _minimum_norm_simplex_weights(
     normalized_gram: np.ndarray,
     *,
@@ -47,7 +109,7 @@ def _minimum_norm_simplex_weights(
         if float(np.max(np.abs(next_weights - weights))) <= tolerance:
             return next_weights
         weights = next_weights
-    raise ValueError("minimum-norm simplex solver did not converge")
+    return _active_set_minimum_norm_weights(normalized_gram)
 
 
 def _direction_record(

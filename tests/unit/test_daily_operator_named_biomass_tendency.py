@@ -12,6 +12,7 @@ import pytest
 
 from research.daily_coarse_graining.daily_operator.gradient_feasibility import (
     GRADIENT_FEASIBILITY_LABELS,
+    _minimum_norm_simplex_weights,
     classify_gradient_feasibility,
     gradient_direction_diagnostics,
 )
@@ -676,6 +677,28 @@ def test_gradient_feasibility_rejects_opposed_objectives():
 
     assert result["status"] == "common_descent_direction_not_supported"
     assert result["selected_direction"] is None
+
+
+def test_minimum_norm_solver_falls_back_for_slow_projected_convergence():
+    gram = np.asarray(
+        (
+            (1.0, 0.9, 0.2, 0.1),
+            (0.9, 1.0, 0.3, 0.2),
+            (0.2, 0.3, 1.0, 0.8),
+            (0.1, 0.2, 0.8, 1.0),
+        ),
+        dtype=np.float64,
+    )
+
+    weights = _minimum_norm_simplex_weights(gram, maximum_iterations=1)
+
+    assert np.all(weights >= 0.0)
+    assert float(np.sum(weights)) == pytest.approx(1.0)
+    gradient = gram @ weights
+    level = float(weights @ gradient)
+    support = weights > 1.0e-9
+    assert np.max(np.abs(gradient[support] - level)) < 1.0e-8
+    assert np.all(gradient[~support] >= level - 1.0e-8)
 
 
 def test_gradient_feasibility_contract_is_hash_bound_and_zero_update():
