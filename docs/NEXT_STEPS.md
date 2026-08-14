@@ -692,21 +692,29 @@ All four complete candidate gradients are finite and positive, and every
 state/budget hard count is zero. Report SHA256 is `2023f3cf...b0d7413`; see
 [`successor_named_biomass_gradient_preflight_20260814.md`](research/daily_coarse_graining/successor_named_biomass_gradient_preflight_20260814.md).
 
-The active gate is execution of the frozen bounded 100-update objective A/B on
-free `gln01`. The contract is
-`successor_named_biomass_objective_ab_v1.json` at SHA256
-`c161a7de...cc784a`. Clone the accepted update-1000 Attention parameters and
-optimizer into a current-objective control and named-AGB/BGB candidate; give
-both the same 100 four-point groups and learning rates, then evaluate both on
-the existing 48-window non-test panel. Admission requires at least 0.5%
-improvement in the four-key NPP/AGB/BGB/total-live composite, no aggregate
-regression for any of those four keys, improvement in at least four of six
-slice/horizon cells, at most 5% aggregate and 10% single-cell maintenance
-regression, and zero hard failures. Gradient clipping is report-only. The
-runner writes no checkpoint or recovery. Failure closes this objective path
-without more updates; a pass only opens review before longer training and is
-not itself a breakthrough claim. Do not change architecture, continue mixed
-sampling outside this A/B, or start paid training. The 365-day rollout,
+The bounded named-biomass objective A/B is complete and rejected. The
+candidate worsens the four-key NPP/AGB/BGB/total-live composite by `10.97%`,
+worsens each key by `3.73-46.98%`, and improves `0/6` slice/horizon cells.
+Both arms have zero hard failures and maintenance improves `31.05%`, so this
+is a valid negative objective result rather than a failed run. Candidate
+gradient clipping occurs on `93/100` updates versus `47/100` for control. The
+report SHA256 is `fb6f6f69...f03b89d`; see
+[`successor_named_biomass_objective_ab_20260814.md`](research/daily_coarse_graining/successor_named_biomass_objective_ab_20260814.md).
+
+Post-run attribution finds candidate median raw gradient norm `6.587` versus
+control `0.927`, candidate clipping on all 50 updates in the second half, and
+the named tendency terms supplying a median `73.9%` of its weighted
+long-horizon contribution. Candidate one-day anchor is also worse on `73/100`
+paired batches. This points to persistent fixed-weight component dominance,
+not a biomass signal that remains too small.
+
+The active gate is design review of a materially different multi-objective
+training mechanism. It must normalize or bound component influence before
+global clipping and explicitly handle harmful gradient conflict, with the
+unchanged Attention architecture and current staged objective as matched
+controls. Freeze the mechanism and stop gates before implementation. Do not
+tune the rejected tendency coefficient, add updates, change architecture on
+this result alone, or start paid training. The 365-day rollout,
 long-held-point validation, Gate D2, sealed test, and product gates remain
 closed.
 

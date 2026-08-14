@@ -33,20 +33,24 @@ complete candidate gradients are finite and every state/budget hard count is
 zero. See
 [`successor_named_biomass_gradient_preflight_20260814.md`](research/daily_coarse_graining/successor_named_biomass_gradient_preflight_20260814.md).
 
-The bounded 100-update no-checkpoint Attention objective A/B is frozen and
-locally implemented. It compares two clones of the accepted update-1000
-Attention parameters and optimizer under identical four-point groups and
-learning rates: the current staged-v3 objective is the control and the named
-AGB/BGB tendency objective is the candidate. The existing 48-window non-test
-panel is the only validation panel. Admission requires at least 0.5% aggregate
-improvement across NPP, AGB, BGB, and total live biomass; no aggregate
-regression for any of those four outputs; improvement in at least four of six
-slice/horizon cells; maintenance regression no greater than 5% in aggregate
-or 10% in any cell; and zero hard failures. Gradient clipping is report-only.
-The contract SHA256 is `c161a7de...cc784a`; local relevant regression is
-`93/93`. The active gate is execution on free `gln01`. A failure stops this
-objective path without extra updates, while a pass only opens review before
-any longer training.
+The bounded 100-update no-checkpoint Attention objective A/B is complete and
+rejected. Under identical update-1000 initialization, optimizer, four-point
+groups, and learning rates, the named AGB/BGB tendency candidate worsens the
+four-key NPP/AGB/BGB/total-live validation composite by `10.97%` and improves
+`0/6` slice/horizon cells. NPP, AGB, BGB, and total live biomass regress by
+`10.97%`, `3.73%`, `46.98%`, and `12.14%`. Maintenance improves by `31.05%`
+and both arms retain zero hard failures. Candidate clipping occurs on `93/100`
+updates versus `47/100` for control. The corrected report SHA256 is
+`fb6f6f69...f03b89d`; see
+[`successor_named_biomass_objective_ab_20260814.md`](research/daily_coarse_graining/successor_named_biomass_objective_ab_20260814.md).
+
+The fixed-coefficient tendency objective is closed without more updates.
+Report-only attribution finds candidate median raw gradient norm `6.587`
+versus control `0.927`; candidate clipping occurs on every update in the
+second half, and named tendency terms contribute a median `73.9%` of its
+weighted long-horizon loss. The active gate is design review of a materially
+different gradient-balanced multi-objective training mechanism. This result
+does not by itself reject the selected Attention architecture.
 
 ## First Formal Neural Candidate
 
