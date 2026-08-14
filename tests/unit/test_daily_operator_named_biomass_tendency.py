@@ -454,6 +454,29 @@ def test_named_biomass_gradient_preflight_manifest_freezes_train_only_rule():
     )
 
 
+def test_named_biomass_candidate_coefficients_are_hash_bound_and_closed():
+    path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_named_biomass_candidate_coefficients_v1.json"
+    )
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["resolved_coefficients"]["tendency_mse"] == manifest[
+        "resolved_coefficients"
+    ]["tendency_bias_squared"]
+    assert manifest["gradient_gate_result"]["passed"]
+    assert manifest["gradient_gate_result"]["hard_failure_count"] == 0
+    assert not manifest["training_policy"]["training_authorized"]
+    assert "long_horizon_maintenance_respiration" in manifest[
+        "excluded_from_summed_gradient"
+    ]
+
+
 def _write_scale_admission_fixture(tmp_path):
     scales = {
         str(horizon): {

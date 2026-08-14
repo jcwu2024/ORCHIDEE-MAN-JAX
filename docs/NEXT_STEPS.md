@@ -684,17 +684,22 @@ identity gate. Its file SHA256 is `fdc1f416...d4f175`; the acceptance contract
 SHA256 is `a0ec1315...2278490`. See
 [`successor_named_biomass_tendency_scale_acceptance_20260814.md`](research/daily_coarse_graining/successor_named_biomass_tendency_scale_acceptance_20260814.md).
 
-The active gate is the zero-update candidate-objective gradient preflight on
-train/train data. It must bind the accepted scale asset, preserve the one-day
-named-process anchor, exclude long-horizon maintenance from the summed
-gradient, pass finite loss/gradient and state/budget hard gates, and place the
-median AGB and BGB gradient norms within `0.1x-10x` of the NPP median under an
-explicitly frozen coefficient rule. No training is authorized by the scale
-acceptance. Before a no-checkpoint 100-update Attention objective A/B, freeze
-the maintenance no-regression guard and required validation-cell majority.
-Do not change architecture, continue mixed sampling, or start paid training.
-The 365-day rollout, long-held-point validation, Gate D2, sealed test, and
-product gates remain closed.
+The zero-update candidate-objective gradient preflight passed on free `gln01`.
+The accepted tendency scales raise unit AGB/BGB median gradient norms to
+`8.115/1.549` versus NPP `0.1929`. The frozen shared coefficient is
+`0.0544047`, giving weighted AGB/NPP and BGB/NPP ratios of `2.289` and `0.437`.
+All four complete candidate gradients are finite and positive, and every
+state/budget hard count is zero. Report SHA256 is `2023f3cf...b0d7413`; see
+[`successor_named_biomass_gradient_preflight_20260814.md`](research/daily_coarse_graining/successor_named_biomass_gradient_preflight_20260814.md).
+
+The active gate is now review and freeze of the bounded 100-update objective
+A/B thresholds. Before implementing or launching that runner, choose the
+maximum allowed maintenance-respiration regression relative to the
+current-loss Attention control and the required majority among the six
+slice/horizon primary-output cells. Training remains unauthorized. Do not
+change architecture, continue mixed sampling outside the registered A/B, or
+start paid training. The 365-day rollout, long-held-point validation, Gate D2,
+sealed test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 

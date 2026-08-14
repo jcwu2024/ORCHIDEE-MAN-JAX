@@ -1,0 +1,45 @@
+{
+  "schema_version": "successor_named_biomass_candidate_coefficients_v1",
+  "status": "accepted_zero_update_preflight_no_training_authorized",
+  "contract_sha256": "2093c392cc24a59f0b5021b7ecfafade7e3522fd3953014df63d4d85517b1d9f",
+  "identity": {
+    "preflight_contract_sha256": "ec38fc1316c54776c54dd8b9dadd01dcf1e5caf18a4340c466e89244a9442419",
+    "preflight_report_runtime_relative_path": "outputs/training/successor-named-biomass-gradient-preflight-b8ca4d7/report.json",
+    "preflight_report_file_sha256": "2023f3cf7b32c4406ee9aae02daccd4b0ae1084e21c6b5ca9de088dc8b0d7413",
+    "scale_acceptance_contract_sha256": "a0ec131530e9dd4f72b3f22267ddf88f8af7db9c7262d7d505c7fc5bf2278490",
+    "source_frozen_coefficient_contract_sha256": "c2833ee2bc66b31842e135b0b85fe48c6f3ee0b9a7650c77b4ae0889a7916b93",
+    "producer_git_head": "b8ca4d7934df9b1fcf85f8af62ce8ced1722c757",
+    "parent_update": 1000,
+    "arm": "source_routed_process_attention_v2"
+  },
+  "resolved_coefficients": {
+    "one_day_named_process_anchor": 1.0,
+    "cumulative_flux_mse": 0.088284572329923,
+    "cumulative_flux_bias_squared": 0.13244689760336273,
+    "tendency_mse": 0.05440473497107039,
+    "tendency_bias_squared": 0.05440473497107039
+  },
+  "excluded_from_summed_gradient": [
+    "long_horizon_maintenance_respiration",
+    "terminal_stock_mse",
+    "terminal_stock_bias_squared"
+  ],
+  "gradient_gate_result": {
+    "npp_median_gradient_norm": 0.1928996432968742,
+    "agb_unit_median_gradient_norm": 8.115338889968996,
+    "bgb_unit_median_gradient_norm": 1.5491119023599702,
+    "agb_to_npp_achieved_ratio": 2.288821554893659,
+    "bgb_to_npp_achieved_ratio": 0.4369060566831568,
+    "required_ratio_interval": [0.1, 10.0],
+    "coefficient_interval": [1e-6, 10.0],
+    "hard_failure_count": 0,
+    "nonfinite_gradient_count": 0,
+    "passed": true
+  },
+  "training_policy": {
+    "recalibration_during_training": false,
+    "validation_weight_tuning_allowed": false,
+    "training_authorized": false,
+    "next_gate": "freeze_maintenance_guard_and_validation_cell_majority"
+  }
+}

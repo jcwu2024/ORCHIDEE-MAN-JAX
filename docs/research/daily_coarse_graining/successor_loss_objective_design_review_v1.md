@@ -10,6 +10,14 @@ scale fitting implementation are complete, and the train-only scale asset
 passed on free `test01`. See
 [`successor_named_biomass_tendency_scale_acceptance_20260814.md`](successor_named_biomass_tendency_scale_acceptance_20260814.md).
 
+The subsequent zero-update real-v6 gradient preflight also passed. It freezes
+one shared AGB/BGB tendency coefficient of `0.05440473497107039`; the weighted
+AGB/NPP and BGB/NPP median gradient ratios are `2.2888` and `0.4369`, with
+finite complete candidate gradients and zero hard failures. Training remains
+closed pending review of the maintenance guard and validation-cell majority.
+See
+[`successor_named_biomass_gradient_preflight_20260814.md`](successor_named_biomass_gradient_preflight_20260814.md).
+
 ## Evidence To Explain
 
 At the accepted update-1000 Attention state:

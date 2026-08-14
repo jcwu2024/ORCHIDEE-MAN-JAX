@@ -26,11 +26,16 @@ AGB+BGB arithmetic tolerance ratio is `0.0456264`. The accepted scales and
 both file and canonical hashes are recorded in
 [`successor_named_biomass_tendency_scale_acceptance_20260814.md`](research/daily_coarse_graining/successor_named_biomass_tendency_scale_acceptance_20260814.md).
 
-The active gate is now a zero-update train/train candidate-objective gradient
-preflight. Training remains closed until finite loss/gradients, zero hard
-state/budget failures, and the frozen AGB/BGB-to-NPP gradient-ratio interval
-pass. The maintenance guard and validation-cell majority must be frozen before
-the later 100-update no-checkpoint Attention objective A/B.
+The zero-update train/train candidate-objective gradient preflight has passed.
+The accepted shared tendency coefficient is `0.05440473497107039`; weighted
+AGB/NPP and BGB/NPP median gradient ratios are `2.2888` and `0.4369`. All
+complete candidate gradients are finite and every state/budget hard count is
+zero. See
+[`successor_named_biomass_gradient_preflight_20260814.md`](research/daily_coarse_graining/successor_named_biomass_gradient_preflight_20260814.md).
+
+The active gate is review and freeze of the maintenance no-regression guard
+and validation-cell majority for a later 100-update no-checkpoint Attention
+objective A/B. Training remains closed.
 
 ## First Formal Neural Candidate
 
