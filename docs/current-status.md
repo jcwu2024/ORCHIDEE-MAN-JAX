@@ -1494,3 +1494,19 @@ realized-step audit of whether AdamW momentum/preconditioning preserves the
 raw common-descent direction. No further optimizer update, paid job, sealed
 test, or architecture change is authorized by this result. See
 [`successor_gradient_balanced_smoke_20260814.md`](research/daily_coarse_graining/successor_gradient_balanced_smoke_20260814.md).
+
+The follow-up zero-update realized-step audit completed on free `gln01` at
+commit `6cec975`. The raw minimum-norm direction passes `4/4` groups. After
+the actual inherited-AdamW transform, minimum component cosines fall to
+`0.00039-0.00464` and no group passes the `0.01` direction gate. Reset AdamW
+also passes `0/4`; two groups have a negative component cosine. Exact virtual
+all-component loss checks pass `3/4` inherited groups and only `2/4` reset
+groups. Hard and nonfinite counts are zero, and no proposed state is retained.
+The report SHA256 is
+`4b987902e4baf40e5223ae9201be416ff8f61f64080309056302ba947bf47037`.
+
+This rejects both inherited and reset AdamW as realizations of the global
+common-descent direction. The active gate is a zero-update shared
+direct-direction trust-region audit; no optimizer-reset smoke or further
+training is authorized. See
+[`successor_realized_step_audit_20260815.md`](research/daily_coarse_graining/successor_realized_step_audit_20260815.md).

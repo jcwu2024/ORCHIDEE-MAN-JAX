@@ -729,15 +729,25 @@ training-batch versus independent-rollout generalization. No architecture
 change is authorized by this result; discuss any new network architecture
 before implementation.
 
-The active gate is design review of a materially different multi-objective
-training mechanism. It must normalize or bound component influence before
-global clipping and explicitly handle harmful gradient conflict, with the
-unchanged Attention architecture and current staged objective as matched
-controls. Freeze the mechanism and stop gates before implementation. Do not
-tune the rejected tendency coefficient, add updates, change architecture on
-this result alone, or start paid training. The 365-day rollout,
-long-held-point validation, Gate D2, sealed test, and product gates remain
-closed.
+The zero-update realized-step audit is now complete at commit `6cec975`.
+The raw minimum-norm direction passes all four groups, but inherited AdamW
+reduces minimum component cosines to `0.00039-0.00464` and passes `0/4`
+direction groups. Reset AdamW also passes `0/4`, with two groups having a
+negative component cosine. Virtual all-component loss checks pass only `3/4`
+inherited groups and `2/4` reset groups. Hard and nonfinite counts remain
+zero. Report SHA256 is `4b987902...47037`; see
+[`successor_realized_step_audit_20260815.md`](research/daily_coarse_graining/successor_realized_step_audit_20260815.md).
+
+Do not run an optimizer-reset smoke. The active gate is a zero-update shared
+trust-region audit that applies parameter deltas exactly parallel to the raw
+common-descent direction, without AdamW, momentum, coordinate-wise scaling,
+or weight decay. Freeze a log-spaced global step-norm grid before evaluation.
+Only a single norm that makes every component no worse in at least three of
+four groups with zero hard failures may authorize a 10-update smoke. If none
+passes, close raw minimum-norm training and return to batch-to-rollout
+objective/generalization design. No network architecture change is involved.
+The 365-day rollout, long-held-point validation, Gate D2, sealed test, and
+product gates remain closed.
 
 ## Completed Task Packet: Gate C
 
