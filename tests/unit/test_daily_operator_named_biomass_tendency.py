@@ -23,6 +23,7 @@ from research.daily_coarse_graining.daily_operator.successor_training_assets imp
     load_named_biomass_tendency_scale_asset,
 )
 from scripts.hpc.prepare_successor_named_biomass_tendency_scales import (
+    _canonical_sha256,
     _select_records,
 )
 
@@ -281,6 +282,22 @@ def test_named_biomass_tendency_scale_selection_is_deterministic_and_unique():
         record["update"] for record in second
     ]
     assert len({(record["landpoint_id"], record["year"]) for record in first}) == 8
+
+
+def test_scale_asset_canonical_hash_survives_json_key_normalization():
+    payload = {
+        "scale_audit": {
+            "records": {
+                1: {"resolved_scale": 1.0},
+                7: {"resolved_scale": 7.0},
+                30: {"resolved_scale": 30.0},
+            }
+        }
+    }
+    digest = _canonical_sha256(payload)
+    reloaded = json.loads(json.dumps(payload | {"asset_sha256": digest}))
+
+    assert _canonical_sha256(reloaded) == digest
 
 
 def test_named_biomass_tendency_scale_acceptance_manifest_is_hash_bound():

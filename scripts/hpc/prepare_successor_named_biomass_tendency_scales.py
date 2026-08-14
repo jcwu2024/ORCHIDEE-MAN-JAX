@@ -24,7 +24,12 @@ from scripts.hpc.successor_staged_prepared import (
 def _canonical_sha256(payload: Mapping[str, Any]) -> str:
     value = dict(payload)
     value.pop("asset_sha256", None)
-    encoded = json.dumps(value, sort_keys=True, separators=(",", ":")).encode()
+    normalized = json.loads(json.dumps(value))
+    encoded = json.dumps(
+        normalized,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
     return hashlib.sha256(encoded).hexdigest()
 
 
