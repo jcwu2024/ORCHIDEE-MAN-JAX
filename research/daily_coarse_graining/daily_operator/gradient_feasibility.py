@@ -16,6 +16,10 @@ TRAINABLE_DIRECTION_NAMES = (
     "equal_unit",
     "minimum_norm_unit",
 )
+REALIZED_STEP_OPTIMIZERS = (
+    "inherited_adamw",
+    "reset_adamw",
+)
 
 
 def _project_simplex(values: np.ndarray) -> np.ndarray:
@@ -273,4 +277,88 @@ def classify_gradient_feasibility(
         "passed": selected is not None,
         "selected_direction": selected,
         "directions": directions,
+    }
+
+
+def classify_realized_step_audit(
+    records: Sequence[Mapping[str, Any]],
+    *,
+    gates: Mapping[str, Any],
+    labels: Sequence[str] = GRADIENT_FEASIBILITY_LABELS,
+) -> Mapping[str, Any]:
+    """Classify whether AdamW realizes the selected raw descent direction."""
+
+    names = tuple(labels)
+    required_groups = int(gates["minimum_passing_groups"])
+    total_groups = int(gates["total_groups"])
+    if len(records) != total_groups or not 1 <= required_groups <= total_groups:
+        raise ValueError("realized-step group gate is invalid")
+
+    raw_threshold = float(gates["minimum_raw_component_cosine"])
+    realized_threshold = float(gates["minimum_realized_component_cosine"])
+    maximum_loss_increase = float(
+        gates["maximum_virtual_component_relative_increase"]
+    )
+    raw_groups = sum(
+        float(record["raw_direction"]["minimum_component_cosine"])
+        >= raw_threshold
+        for record in records
+    )
+    optimizers = {}
+    for optimizer_name in REALIZED_STEP_OPTIMIZERS:
+        direction_groups = 0
+        virtual_loss_groups = 0
+        group_records = []
+        for record in records:
+            optimizer = record["optimizers"][optimizer_name]
+            cosines = optimizer["component_cosines"]
+            relative_changes = optimizer["virtual_loss_relative_changes"]
+            if tuple(cosines) != names or tuple(relative_changes) != names:
+                raise ValueError("realized-step component registry drift")
+            minimum_cosine = min(float(cosines[name]) for name in names)
+            maximum_increase = max(float(relative_changes[name]) for name in names)
+            direction_passed = minimum_cosine >= realized_threshold
+            loss_passed = maximum_increase <= maximum_loss_increase
+            direction_groups += int(direction_passed)
+            virtual_loss_groups += int(loss_passed)
+            group_records.append(
+                {
+                    "group": int(record["group"]),
+                    "minimum_component_cosine": minimum_cosine,
+                    "maximum_virtual_component_relative_increase": maximum_increase,
+                    "direction_passed": direction_passed,
+                    "virtual_losses_passed": loss_passed,
+                }
+            )
+        optimizers[optimizer_name] = {
+            "passed": direction_groups >= required_groups
+            and virtual_loss_groups >= required_groups,
+            "direction_passing_groups": direction_groups,
+            "virtual_loss_passing_groups": virtual_loss_groups,
+            "required_passing_groups": required_groups,
+            "groups": group_records,
+        }
+
+    raw_passed = raw_groups >= required_groups
+    inherited_passed = optimizers["inherited_adamw"]["passed"]
+    reset_passed = optimizers["reset_adamw"]["passed"]
+    if not raw_passed:
+        status = "raw_common_descent_drifted"
+        next_action = "stop_and_review_component_gradient_definition"
+    elif inherited_passed:
+        status = "inherited_adamw_handoff_supported"
+        next_action = "stop_optimizer_changes_and_audit_batch_to_rollout_generalization"
+    elif reset_passed:
+        status = "inherited_adamw_moments_destroy_common_descent"
+        next_action = "freeze_matched_reset_optimizer_smoke_before_training"
+    else:
+        status = "adamw_realization_not_supported"
+        next_action = "design_non_adamw_direction_realization_before_training"
+    return {
+        "status": status,
+        "raw_direction_passed": raw_passed,
+        "raw_direction_passing_groups": raw_groups,
+        "required_passing_groups": required_groups,
+        "optimizers": optimizers,
+        "next_action": next_action,
     }

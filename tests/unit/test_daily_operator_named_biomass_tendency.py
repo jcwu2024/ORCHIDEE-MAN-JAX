@@ -14,6 +14,7 @@ from research.daily_coarse_graining.daily_operator.gradient_feasibility import (
     GRADIENT_FEASIBILITY_LABELS,
     _minimum_norm_simplex_weights,
     classify_gradient_feasibility,
+    classify_realized_step_audit,
     gradient_direction_diagnostics,
 )
 from research.daily_coarse_graining.daily_operator.long_horizon_objective import (
@@ -41,6 +42,7 @@ from scripts.hpc.prepare_successor_named_biomass_tendency_scales import (
     _canonical_sha256,
     _select_records,
 )
+from scripts.hpc.probe_successor_realized_step import _make_proposed_directions
 from scripts.hpc.run_successor_gradient_balanced_smoke import (
     CANDIDATE,
     CONTROL,
@@ -934,6 +936,168 @@ def test_gradient_balanced_launcher_is_free_and_no_checkpoint():
     assert '"recovery_written": False' in source
     assert "write_staged_recovery" not in source
     assert "write_staged_best_checkpoint" not in source
+
+
+def _realized_step_records(inherited_cosine, reset_cosine, inherited_loss, reset_loss):
+    return [
+        {
+            "group": group,
+            "raw_direction": {"minimum_component_cosine": 0.2},
+            "optimizers": {
+                "inherited_adamw": {
+                    "component_cosines": {
+                        label: inherited_cosine for label in GRADIENT_FEASIBILITY_LABELS
+                    },
+                    "virtual_loss_relative_changes": {
+                        label: inherited_loss for label in GRADIENT_FEASIBILITY_LABELS
+                    },
+                },
+                "reset_adamw": {
+                    "component_cosines": {
+                        label: reset_cosine for label in GRADIENT_FEASIBILITY_LABELS
+                    },
+                    "virtual_loss_relative_changes": {
+                        label: reset_loss for label in GRADIENT_FEASIBILITY_LABELS
+                    },
+                },
+            },
+        }
+        for group in range(4)
+    ]
+
+
+def _realized_step_gates():
+    return {
+        "minimum_raw_component_cosine": 0.05,
+        "minimum_realized_component_cosine": 0.01,
+        "maximum_virtual_component_relative_increase": 1.0e-6,
+        "minimum_passing_groups": 3,
+        "total_groups": 4,
+    }
+
+
+@pytest.mark.parametrize(
+    ("values", "status"),
+    (
+        (
+            (0.2, 0.2, -0.01, -0.01),
+            "inherited_adamw_handoff_supported",
+        ),
+        (
+            (-0.2, 0.2, 0.01, -0.01),
+            "inherited_adamw_moments_destroy_common_descent",
+        ),
+        (
+            (-0.2, -0.2, 0.01, 0.01),
+            "adamw_realization_not_supported",
+        ),
+    ),
+)
+def test_realized_step_classifier_has_decisive_optimizer_forks(values, status):
+    result = classify_realized_step_audit(
+        _realized_step_records(*values),
+        gates=_realized_step_gates(),
+    )
+
+    assert result["status"] == status
+
+
+def test_realized_step_classifier_stops_on_raw_direction_drift():
+    records = _realized_step_records(0.2, 0.2, -0.01, -0.01)
+    for record in records[:2]:
+        record["raw_direction"]["minimum_component_cosine"] = -0.1
+
+    result = classify_realized_step_audit(records, gates=_realized_step_gates())
+
+    assert result["status"] == "raw_common_descent_drifted"
+
+
+def test_realized_step_contract_is_hash_bound_and_zero_update():
+    path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_realized_step_audit_v1.json"
+    )
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["components"] == list(GRADIENT_FEASIBILITY_LABELS)
+    assert manifest["gates"]["minimum_realized_component_cosine"] == 0.01
+    assert manifest["gates"]["minimum_passing_groups"] == 3
+    assert manifest["execution"]["optimizer_updates"] == 0
+    assert manifest["virtual_step"]["proposed_parameters_retained"] is False
+    assert manifest["virtual_step"]["optimizer_state_retained"] is False
+
+
+def test_realized_step_launcher_is_free_and_zero_update():
+    launcher = (
+        REPOSITORY_ROOT / "scripts" / "hpc" / "run_successor_realized_step.sh"
+    ).read_text()
+    source = (
+        REPOSITORY_ROOT / "scripts" / "hpc" / "probe_successor_realized_step.py"
+    ).read_text()
+
+    assert "requires free gln01" in launcher
+    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
+    assert "#SBATCH" not in launcher
+    assert '"optimizer_updates": 0' in source
+    assert '"proposed_parameters_retained": False' in source
+    assert '"optimizer_state_retained": False' in source
+    assert '"checkpoint_written": False' in source
+    assert "write_staged_recovery" not in source
+    assert "write_staged_best_checkpoint" not in source
+
+
+def test_realized_step_proposal_compiles_and_distinguishes_optimizer_state():
+    from research.daily_coarse_graining.daily_operator.successor_small_fit import (
+        SuccessorAdamWState,
+        initialize_successor_adamw,
+    )
+
+    parameters = {"value": jnp.asarray([1.0, 2.0], dtype=jnp.float64)}
+    reset = initialize_successor_adamw(parameters)
+    inherited = SuccessorAdamWState(
+        jnp.asarray(1000, dtype=jnp.int32),
+        {"value": jnp.asarray([0.5, 0.0], dtype=jnp.float64)},
+        {"value": jnp.asarray([0.25, 0.0], dtype=jnp.float64)},
+    )
+    contract = SimpleNamespace(
+        optimizer={
+            "beta1": 0.9,
+            "beta2": 0.999,
+            "epsilon": 1.0e-8,
+            "weight_decay": 0.0,
+            "global_gradient_norm_clip": 1.0,
+        }
+    )
+    gradients = tuple(
+        {"value": jnp.asarray([value, 0.0], dtype=jnp.float64)}
+        for value in (1.0, 2.0, 3.0, 4.0)
+    )
+    propose = _make_proposed_directions(jax, contract)
+
+    result = propose(
+        parameters,
+        inherited,
+        reset,
+        gradients,
+        jnp.full((4,), 0.25, dtype=jnp.float64),
+        jnp.asarray(1.0e-3, dtype=jnp.float64),
+    )
+    jax.block_until_ready(result)
+    _, _, combined, inherited_direction, reset_direction, raw_norm = result
+
+    np.testing.assert_allclose(combined["value"], np.asarray([2.5, 0.0]))
+    assert float(raw_norm) == pytest.approx(2.5)
+    assert np.all(np.isfinite(np.asarray(inherited_direction["value"])))
+    assert np.all(np.isfinite(np.asarray(reset_direction["value"])))
+    assert not np.allclose(
+        np.asarray(inherited_direction["value"]),
+        np.asarray(reset_direction["value"]),
+    )
 
 
 def _write_scale_admission_fixture(tmp_path):
