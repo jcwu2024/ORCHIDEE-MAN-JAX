@@ -33,9 +33,20 @@ complete candidate gradients are finite and every state/budget hard count is
 zero. See
 [`successor_named_biomass_gradient_preflight_20260814.md`](research/daily_coarse_graining/successor_named_biomass_gradient_preflight_20260814.md).
 
-The active gate is review and freeze of the maintenance no-regression guard
-and validation-cell majority for a later 100-update no-checkpoint Attention
-objective A/B. Training remains closed.
+The bounded 100-update no-checkpoint Attention objective A/B is frozen and
+locally implemented. It compares two clones of the accepted update-1000
+Attention parameters and optimizer under identical four-point groups and
+learning rates: the current staged-v3 objective is the control and the named
+AGB/BGB tendency objective is the candidate. The existing 48-window non-test
+panel is the only validation panel. Admission requires at least 0.5% aggregate
+improvement across NPP, AGB, BGB, and total live biomass; no aggregate
+regression for any of those four outputs; improvement in at least four of six
+slice/horizon cells; maintenance regression no greater than 5% in aggregate
+or 10% in any cell; and zero hard failures. Gradient clipping is report-only.
+The contract SHA256 is `c161a7de...cc784a`; local relevant regression is
+`93/93`. The active gate is execution on free `gln01`. A failure stops this
+objective path without extra updates, while a pass only opens review before
+any longer training.
 
 ## First Formal Neural Candidate
 

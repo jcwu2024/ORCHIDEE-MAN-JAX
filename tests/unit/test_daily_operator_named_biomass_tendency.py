@@ -34,6 +34,10 @@ from scripts.hpc.prepare_successor_named_biomass_tendency_scales import (
     _canonical_sha256,
     _select_records,
 )
+from scripts.hpc.run_successor_named_biomass_objective_ab import (
+    OBJECTIVES,
+    classify_objective_ab,
+)
 
 REPOSITORY_ROOT = Path(__file__).resolve().parents[2]
 COEFFICIENTS = {"tendency_mse": 1.0, "tendency_bias_squared": 1.0}
@@ -475,6 +479,131 @@ def test_named_biomass_candidate_coefficients_are_hash_bound_and_closed():
     assert "long_horizon_maintenance_respiration" in manifest[
         "excluded_from_summed_gradient"
     ]
+
+
+def test_named_biomass_objective_ab_contract_freezes_exact_bounded_gates():
+    path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_named_biomass_objective_ab_v1.json"
+    )
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["model"]["architecture"] == "source_routed_process_attention_v2"
+    assert manifest["model"]["architecture_change"] is False
+    assert manifest["training"] == {
+        "updates_per_objective": 100,
+        "optimizer_updates": [1001, 1100],
+        "sampling": "four_equal_point_year_contexts_per_update",
+        "one_day_anchor_batch_size": 32,
+        "rollout_windows_per_update": 4,
+        "rollout_days": 30,
+        "horizons_days": [1, 7, 30],
+        "same_point_years_learning_rates_and_optimizer": True,
+        "checkpoint_written": False,
+        "recovery_written": False,
+        "free_gln01_only": True,
+        "paid_training_authorized": False,
+    }
+    assert manifest["gates"] == {
+        "hard_failure_count": 0,
+        "minimum_research_primary_composite_relative_improvement": 0.005,
+        "each_research_primary_key_aggregate_no_worse": True,
+        "minimum_improved_slice_horizon_cells": 4,
+        "total_slice_horizon_cells": 6,
+        "maximum_maintenance_aggregate_relative_regression": 0.05,
+        "maximum_maintenance_single_cell_relative_regression": 0.10,
+        "gradient_clipping_report_only": True,
+    }
+    assert manifest["fail_action"] == "stop_named_biomass_objective_without_more_updates"
+
+
+def _objective_ab_validation(primary_candidate=0.99, maintenance_candidate=1.04):
+    keys = (
+        "cumulative.npp",
+        "terminal.aboveground_biomass_carbon",
+        "terminal.belowground_biomass_carbon",
+        "terminal.total_live_biomass_carbon",
+        "cumulative.maintenance_respiration",
+    )
+
+    def arm(primary, maintenance):
+        return {
+            "slices": {
+                slice_id: {
+                    "horizons": {
+                        str(horizon): {
+                            "keys": {
+                                key: {
+                                    "normalized_rmse": maintenance
+                                    if key == "cumulative.maintenance_respiration"
+                                    else primary
+                                }
+                                for key in keys
+                            }
+                        }
+                        for horizon in (7, 30)
+                    },
+                    "hard_counts": {"budget_residual_failure": 0},
+                }
+                for slice_id in ("temporal", "spatial", "joint")
+            }
+        }
+
+    return {
+        OBJECTIVES[0]: arm(1.0, 1.0),
+        OBJECTIVES[1]: arm(primary_candidate, maintenance_candidate),
+    }
+
+
+def test_named_biomass_objective_ab_classifier_requires_shared_improvement():
+    gates = {
+        "minimum_research_primary_composite_relative_improvement": 0.005,
+        "minimum_improved_slice_horizon_cells": 4,
+        "maximum_maintenance_aggregate_relative_regression": 0.05,
+        "maximum_maintenance_single_cell_relative_regression": 0.10,
+    }
+    validation = _objective_ab_validation()
+    admitted = classify_objective_ab(validation, gates=gates)
+
+    assert admitted["status"] == "named_biomass_objective_admitted"
+    assert admitted["research_primary"]["relative_improvement"] == pytest.approx(0.01)
+    assert admitted["research_primary"]["improved_cell_count"] == 6
+
+    validation[OBJECTIVES[1]]["slices"]["joint"]["horizons"]["30"]["keys"][
+        "cumulative.npp"
+    ]["normalized_rmse"] = 1.1
+    rejected = classify_objective_ab(validation, gates=gates)
+
+    assert rejected["status"] == "named_biomass_objective_rejected"
+    assert rejected["checks"]["each_research_primary_key_no_worse"] is False
+
+
+def test_named_biomass_objective_ab_launcher_is_free_and_no_checkpoint():
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_named_biomass_objective_ab.sh"
+    ).read_text()
+    source = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_named_biomass_objective_ab.py"
+    ).read_text()
+
+    assert "must run on free gln01" in launcher
+    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
+    assert "#SBATCH" not in launcher
+    assert '"checkpoint_written": False' in source
+    assert '"recovery_written": False' in source
+    assert "write_staged_recovery" not in source
+    assert "write_staged_best_checkpoint" not in source
 
 
 def _write_scale_admission_fixture(tmp_path):

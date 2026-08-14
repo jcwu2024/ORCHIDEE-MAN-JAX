@@ -692,14 +692,23 @@ All four complete candidate gradients are finite and positive, and every
 state/budget hard count is zero. Report SHA256 is `2023f3cf...b0d7413`; see
 [`successor_named_biomass_gradient_preflight_20260814.md`](research/daily_coarse_graining/successor_named_biomass_gradient_preflight_20260814.md).
 
-The active gate is now review and freeze of the bounded 100-update objective
-A/B thresholds. Before implementing or launching that runner, choose the
-maximum allowed maintenance-respiration regression relative to the
-current-loss Attention control and the required majority among the six
-slice/horizon primary-output cells. Training remains unauthorized. Do not
-change architecture, continue mixed sampling outside the registered A/B, or
-start paid training. The 365-day rollout, long-held-point validation, Gate D2,
-sealed test, and product gates remain closed.
+The active gate is execution of the frozen bounded 100-update objective A/B on
+free `gln01`. The contract is
+`successor_named_biomass_objective_ab_v1.json` at SHA256
+`c161a7de...cc784a`. Clone the accepted update-1000 Attention parameters and
+optimizer into a current-objective control and named-AGB/BGB candidate; give
+both the same 100 four-point groups and learning rates, then evaluate both on
+the existing 48-window non-test panel. Admission requires at least 0.5%
+improvement in the four-key NPP/AGB/BGB/total-live composite, no aggregate
+regression for any of those four keys, improvement in at least four of six
+slice/horizon cells, at most 5% aggregate and 10% single-cell maintenance
+regression, and zero hard failures. Gradient clipping is report-only. The
+runner writes no checkpoint or recovery. Failure closes this objective path
+without more updates; a pass only opens review before longer training and is
+not itself a breakthrough claim. Do not change architecture, continue mixed
+sampling outside this A/B, or start paid training. The 365-day rollout,
+long-held-point validation, Gate D2, sealed test, and product gates remain
+closed.
 
 ## Completed Task Packet: Gate C
 
