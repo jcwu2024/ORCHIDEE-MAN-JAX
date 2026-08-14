@@ -69,6 +69,12 @@ from scripts.hpc.prepare_successor_small_fit_batches import (
     _finalize_worker_progress,
     _worker_updates,
 )
+from scripts.hpc.probe_successor_batch_diversity import (
+    _gradient_summary,
+    _join_context_anchors,
+    _slice_context_batch,
+    _stack_contexts,
+)
 from scripts.hpc.probe_successor_multibatch_coefficients import (
     _aggregate_coefficient_records,
 )
@@ -1630,6 +1636,72 @@ def test_staged_2000_slurm_launchers_freeze_incremental_resume_boundary():
     assert 'sha256sum -c -' in train
     assert 'cp "$PARENT_RECOVERY" "$RECOVERY_PATH"' in train
     assert "--dependency" not in train
+
+
+def test_batch_diversity_slices_reconstruct_equal_sample_batch():
+    values = np.arange(32 * 2).reshape(32, 2)
+    rollouts = np.arange(4 * 30 * 2).reshape(4, 30, 2)
+    batch = small_fit.PreparedSuccessorSmallFitBatch(
+        anchor_inputs={"values": values},
+        anchor_targets={"values": values + 1},
+        rollout_inputs={"values": rollouts},
+        rollout_targets={"values": rollouts + 1},
+        expected_next_state=rollouts + 2,
+        expected_next_state_defined=np.ones_like(rollouts, dtype=np.bool_),
+        expected_fast_gpp=rollouts + 3,
+        expected_fast_gpp_defined=np.ones_like(rollouts, dtype=np.bool_),
+        expected_fast_day_target=rollouts + 4,
+        expected_next_discrete_state={"counter": rollouts.astype(np.int32)},
+    )
+
+    contexts = tuple(
+        _slice_context_batch(jax, batch, context_index=index) for index in range(4)
+    )
+    joined = _join_context_anchors(jax, contexts)
+    stacked = _stack_contexts(jax, contexts)
+
+    np.testing.assert_array_equal(joined.anchor_inputs["values"], values)
+    np.testing.assert_array_equal(joined.anchor_targets["values"], values + 1)
+    assert all(context.anchor_inputs["values"].shape == (8, 2) for context in contexts)
+    assert all(context.rollout_inputs["values"].shape == (1, 30, 2) for context in contexts)
+    np.testing.assert_array_equal(
+        np.concatenate([context.rollout_inputs["values"] for context in contexts]),
+        rollouts,
+    )
+    assert stacked.anchor_inputs["values"].shape == (4, 8, 2)
+    assert stacked.rollout_inputs["values"].shape == (4, 1, 30, 2)
+
+
+def test_batch_diversity_gradient_summary_reports_conflict_and_cancellation():
+    summary = _gradient_summary(
+        (
+            np.asarray([1.0, 0.0]),
+            np.asarray([0.0, 1.0]),
+            np.asarray([-1.0, 0.0]),
+            np.asarray([0.0, 1.0]),
+        ),
+        clip_norm=0.5,
+    )
+
+    assert summary["count"] == 4
+    assert summary["clip_count"] == 4
+    assert summary["pairwise_cosine_minimum"] == pytest.approx(-1.0)
+    assert summary["pairwise_negative_fraction"] == pytest.approx(1.0 / 6.0)
+    assert summary["cancellation_ratio"] == pytest.approx(0.5)
+
+
+def test_batch_diversity_launcher_is_free_no_update_probe():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (root / "scripts" / "hpc" / "run_successor_batch_diversity_probe.sh").read_text()
+    source = (root / "scripts" / "hpc" / "probe_successor_batch_diversity.py").read_text()
+
+    assert "batch-diversity probe must run on gln01" in launcher
+    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
+    assert "successor-staged-prepared-1001-2000" not in launcher
+    assert 'RECOVERY_PATH=${RECOVERY_PATH:?' in launcher
+    assert '"training_updates": 0' in source
+    assert '"checkpoint_written": False' in source
+    assert "successor_adamw_update" not in source
 
 
 def test_gzip_prepared_update_is_deterministic_and_round_trips(tmp_path):
