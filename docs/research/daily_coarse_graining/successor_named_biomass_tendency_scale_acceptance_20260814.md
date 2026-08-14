@@ -8,7 +8,7 @@ training authorized**.
 ## Result
 
 The train-only AGB/BGB tendency scale asset passed on free Explore1000 node
-`test01` at producer commit `fae31ae0d9839c0a18f18d3776a6995ba5157b1a`.
+`test01` at producer commit `5bd55c703bc392e1ac075cc63326345d04d7d6fe`.
 It read the existing prepared v6 updates `1001-2000`, selected 64 unique
 train/train point-years and four rollout windows per point-year, and used 256
 windows in total. It performed zero optimizer updates and did not regenerate
@@ -46,17 +46,17 @@ accuracy gate.
 ## Bound Assets
 
 - runtime-relative asset:
-  `outputs/training/successor-named-biomass-tendency-scales-fae31ae/scale_asset.json`
+  `outputs/training/successor-named-biomass-tendency-scales-5bd55c7/scale_asset.json`
 - file SHA256:
-  `49660e2cc203e2deda4f0fdaa80113c45f41aadd1b7b641453ac6ef7a6b4436b`
+  `fdc1f4167112d292e6ca879cad9aa4506c13152738e283724358e09977d4f175`
 - internal canonical asset SHA256:
-  `b74c6d57ce7240614aaabb1ac012f948ac89adc3960ea9e3d2e2a5237f4982c1`
+  `eeeff79e24533a27e9dd69fef80e290134ff3f674100c56e60f7d15636f035e0`
 - tendency contract SHA256:
   `18335d842b3498ddc57599dfe7c25fdca649452a2d01ff7405afbf2e3b882945`
 - acceptance contract:
   `manifests/coarse_graining/successor_named_biomass_tendency_scale_acceptance_v1.json`
 - acceptance contract SHA256:
-  `6ff63f651ba19bdc7a31beb382889fe08c325ff85964426f6ddce3a226d56237`
+  `a0ec131530e9dd4f72b3f22267ddf88f8af7db9c7262d7d505c7fc5bf2278490`
 
 The strict loader admits only the bound file and canonical hashes, source
 contract, exact scales, passed arithmetic gates, and zero-training/data-use

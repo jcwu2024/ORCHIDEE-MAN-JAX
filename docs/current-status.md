@@ -19,7 +19,7 @@ errors at 1, 7, and 30 days using train-only tendency scales, preserves the
 one-day process anchor, and removes long-horizon maintenance from the jointly
 summed gradient while retaining maintenance as a later no-regression guard.
 
-The scale asset passed on free `test01` at commit `fae31ae`. It uses 64 unique
+The scale asset passed on free `test01` at commit `5bd55c7`. It uses 64 unique
 train/train point-years and 256 existing prepared-v6 rollout windows, performs
 zero optimizer updates, and has exact-zero Teacher/Teacher loss. The maximum
 AGB+BGB arithmetic tolerance ratio is `0.0456264`. The accepted scales and

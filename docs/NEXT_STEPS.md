@@ -680,8 +680,8 @@ The named AGB/BGB tendency objective foundation and its train-only scale asset
 are now accepted. The asset uses 64 unique train/train point-years and 256
 rollout windows from existing prepared v6 data, with zero optimizer updates,
 exact-zero Teacher/Teacher loss, and a passed scale-aware float64 AGB+BGB
-identity gate. Its file SHA256 is `49660e2c...6b4436b`; the acceptance contract
-SHA256 is `6ff63f65...d56237`. See
+identity gate. Its file SHA256 is `fdc1f416...d4f175`; the acceptance contract
+SHA256 is `a0ec1315...2278490`. See
 [`successor_named_biomass_tendency_scale_acceptance_20260814.md`](research/daily_coarse_graining/successor_named_biomass_tendency_scale_acceptance_20260814.md).
 
 The active gate is the zero-update candidate-objective gradient preflight on

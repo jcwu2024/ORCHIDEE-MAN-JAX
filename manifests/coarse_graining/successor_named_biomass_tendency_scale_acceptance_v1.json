@@ -1,13 +1,13 @@
 {
   "schema_version": "successor_named_biomass_tendency_scale_acceptance_v1",
   "status": "accepted",
-  "contract_sha256": "6ff63f651ba19bdc7a31beb382889fe08c325ff85964426f6ddce3a226d56237",
+  "contract_sha256": "a0ec131530e9dd4f72b3f22267ddf88f8af7db9c7262d7d505c7fc5bf2278490",
   "tendency_contract_sha256": "18335d842b3498ddc57599dfe7c25fdca649452a2d01ff7405afbf2e3b882945",
   "asset": {
-    "runtime_relative_path": "outputs/training/successor-named-biomass-tendency-scales-fae31ae/scale_asset.json",
-    "file_sha256": "49660e2cc203e2deda4f0fdaa80113c45f41aadd1b7b641453ac6ef7a6b4436b",
-    "asset_sha256": "b74c6d57ce7240614aaabb1ac012f948ac89adc3960ea9e3d2e2a5237f4982c1",
-    "git_head": "fae31ae0d9839c0a18f18d3776a6995ba5157b1a"
+    "runtime_relative_path": "outputs/training/successor-named-biomass-tendency-scales-5bd55c7/scale_asset.json",
+    "file_sha256": "fdc1f4167112d292e6ca879cad9aa4506c13152738e283724358e09977d4f175",
+    "asset_sha256": "eeeff79e24533a27e9dd69fef80e290134ff3f674100c56e60f7d15636f035e0",
+    "git_head": "5bd55c703bc392e1ac075cc63326345d04d7d6fe"
   },
   "selection": {
     "spatial_split": "train",
