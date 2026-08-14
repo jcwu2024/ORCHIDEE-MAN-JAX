@@ -1,0 +1,92 @@
+{
+  "schema_version": "successor_named_biomass_tendency_v1",
+  "status": "local_objective_foundation_no_training_authorized",
+  "contract_sha256": "e8a89217c623fb8d3e32fe9094ab5dbe54abc0f2ced0c5e4e62fd980331870de",
+  "dataset": {
+    "dataset_id": "pft14-daily-teacher-v6",
+    "teacher_regeneration_forbidden": true,
+    "historical_v5_forbidden": true,
+    "scale_split": "spatial_train_temporal_train",
+    "validation_values_for_scale_forbidden": true,
+    "sealed_test_forbidden": true
+  },
+  "operator_boundary": "bind_daily_operator(input_assembler=canonical_assembler, process_head=candidate_head, retained_tail=canonical_retained_tail_adapter)",
+  "inference_constraints": {
+    "native_forcing_only": true,
+    "reconstruct_48_forcing_records": false,
+    "execute_48_step_state_scan": false
+  },
+  "horizons_days": [1, 7, 30],
+  "optimized_stock_fields": [
+    "aboveground_biomass_carbon",
+    "belowground_biomass_carbon"
+  ],
+  "reported_derived_stock": {
+    "id": "total_live_biomass_carbon",
+    "identity": "aboveground_biomass_carbon + belowground_biomass_carbon",
+    "optimized_independently": false
+  },
+  "tendency_residual_identity": "(predicted_terminal - shared_day_start) - (teacher_terminal - shared_day_start) = predicted_terminal - teacher_terminal",
+  "scale_policy": {
+    "empirical_statistic": "sample_standard_deviation_of_teacher_terminal_minus_day_start",
+    "stock_relative_floor_ratio": 0.001,
+    "minimum_scale": 1e-12,
+    "resolved_scale": "max(empirical_standard_deviation, stock_relative_floor_ratio * frozen_train_train_stock_scale, minimum_scale)",
+    "separate_by_horizon_and_field": true,
+    "freeze_before_any_optimizer_update": true
+  },
+  "scale_sampling": {
+    "prepared_stage": "updates_1001_2000",
+    "point_year_count": 64,
+    "rollout_windows_per_point_year": 4,
+    "total_rollout_windows": 256,
+    "selection_seed": 2026081403,
+    "selection_policy": "lowest_sha256_rank_without_repeated_landpoint_year"
+  },
+  "objective_policy": {
+    "existing_one_day_named_process_anchor": "unchanged_and_required",
+    "long_horizon_optimized_fluxes": [
+      "gpp",
+      "npp",
+      "growth_respiration",
+      "heterotrophic_respiration"
+    ],
+    "long_horizon_maintenance_respiration": "reported_no_regression_guard_not_jointly_summed_gradient",
+    "components": [
+      "cumulative_flux_mse",
+      "cumulative_flux_bias_squared",
+      "tendency_mse",
+      "tendency_bias_squared"
+    ],
+    "implicit_coefficients_forbidden": true,
+    "coefficient_preflight": "train_train_gradient_ratio_only_before_training"
+  },
+  "negative_design": {
+    "reopens_process_increment_v2": false,
+    "difference_from_process_increment_v2": "two named source-partitioned biomass quantities after the conservative operator, not 3854 anonymous state increments",
+    "arbitrary_large_static_stock_multiplier_forbidden": true,
+    "validation_tuned_weights_forbidden": true,
+    "multi_gradient_surgery_not_authorized": true
+  },
+  "source_provenance": [
+    "src_stomate/stomate_litter.f90::littercalc_leak:1637-2873",
+    "src_stomate/stomate_npp.f90::npp_calc:116-725",
+    "src_stomate/stomate_lpj.f90::StomateLpj:1118-1131"
+  ],
+  "preparation_gates": {
+    "teacher_teacher_loss_exact_zero": true,
+    "agb_plus_bgb_identity_tolerance": 1e-12,
+    "hard_counts_required_zero": true,
+    "finite_loss_and_gradient_required": true,
+    "target_each_stock_to_npp_median_gradient_ratio_interval": [0.1, 10.0],
+    "optimizer_updates": 0,
+    "checkpoint_written": false
+  },
+  "training_gate": {
+    "status": "thresholds_require_user_review_before_runner_implementation",
+    "maximum_updates": 100,
+    "free_gln01_only": true,
+    "checkpoint_written": false,
+    "paid_training_authorized": false
+  }
+}
