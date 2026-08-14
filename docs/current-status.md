@@ -11,6 +11,27 @@ This page is the current status authority. Dated files under
 `docs/source_audits/` and `docs/research/` are evidence snapshots and may
 describe an earlier gate without being rewritten.
 
+## Active Daily-Coarse-Graining Gate
+
+The `named_biomass_tendency_v1` objective foundation is implemented without
+changing the selected Attention architecture. It optimizes named AGB/BGB
+errors at 1, 7, and 30 days using train-only tendency scales, preserves the
+one-day process anchor, and removes long-horizon maintenance from the jointly
+summed gradient while retaining maintenance as a later no-regression guard.
+
+The scale asset passed on free `test01` at commit `fae31ae`. It uses 64 unique
+train/train point-years and 256 existing prepared-v6 rollout windows, performs
+zero optimizer updates, and has exact-zero Teacher/Teacher loss. The maximum
+AGB+BGB arithmetic tolerance ratio is `0.0456264`. The accepted scales and
+both file and canonical hashes are recorded in
+[`successor_named_biomass_tendency_scale_acceptance_20260814.md`](research/daily_coarse_graining/successor_named_biomass_tendency_scale_acceptance_20260814.md).
+
+The active gate is now a zero-update train/train candidate-objective gradient
+preflight. Training remains closed until finite loss/gradients, zero hard
+state/budget failures, and the frozen AGB/BGB-to-NPP gradient-ratio interval
+pass. The maintenance guard and validation-cell majority must be frozen before
+the later 100-update no-checkpoint Attention objective A/B.
+
 ## First Formal Neural Candidate
 
 `axial_process_operator_v1` and its exactly parameter-matched

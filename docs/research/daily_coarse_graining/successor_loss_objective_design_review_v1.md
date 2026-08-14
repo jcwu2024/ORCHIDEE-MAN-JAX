@@ -1,8 +1,14 @@
 # Successor Loss-Objective Design Review v1
 
-Status: **proposal for discussion; no implementation or training authorized**.
+Status: **mechanism and train-only scales accepted; zero-update gradient
+preflight next; no training authorized**.
 
 Date: 2026-08-14
+
+The user approved the mechanism after review. The objective foundation and
+scale fitting implementation are complete, and the train-only scale asset
+passed on free `test01`. See
+[`successor_named_biomass_tendency_scale_acceptance_20260814.md`](successor_named_biomass_tendency_scale_acceptance_20260814.md).
 
 ## Evidence To Explain
 

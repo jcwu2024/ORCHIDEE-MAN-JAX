@@ -19,6 +19,9 @@ from research.daily_coarse_graining.daily_operator.named_biomass_tendency import
     fit_named_biomass_tendency_scales,
     named_biomass_tendency_objective,
 )
+from research.daily_coarse_graining.daily_operator.successor_training_assets import (
+    load_named_biomass_tendency_scale_asset,
+)
 from scripts.hpc.prepare_successor_named_biomass_tendency_scales import (
     _select_records,
 )
@@ -278,6 +281,95 @@ def test_named_biomass_tendency_scale_selection_is_deterministic_and_unique():
         record["update"] for record in second
     ]
     assert len({(record["landpoint_id"], record["year"]) for record in first}) == 8
+
+
+def test_named_biomass_tendency_scale_acceptance_manifest_is_hash_bound():
+    path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_named_biomass_tendency_scale_acceptance_v1.json"
+    )
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["status"] == "accepted"
+    assert manifest["selection"]["total_rollout_windows"] == 256
+    assert manifest["accepted_gates"]["training_updates"] == 0
+    assert not manifest["accepted_gates"]["sealed_test_used"]
+
+
+def _write_scale_admission_fixture(tmp_path):
+    scales = {
+        str(horizon): {
+            "aboveground_biomass_carbon": float(horizon),
+            "belowground_biomass_carbon": float(horizon + 1),
+        }
+        for horizon in (1, 7, 30)
+    }
+    asset = {
+        "schema_version": "successor_named_biomass_tendency_scale_asset_v1",
+        "status": "passed",
+        "git_head": "a" * 40,
+        "identity": {"tendency_contract_sha256": "b" * 64},
+        "scales": scales,
+        "gates": {
+            "teacher_teacher_loss_exact_zero": True,
+            "agb_plus_bgb_identity_passed": True,
+            "maximum_agb_plus_bgb_identity_tolerance_ratio": 0.25,
+        },
+        "training_updates": 0,
+        "checkpoint_written": False,
+        "teacher_data_regenerated": False,
+        "historical_v5_used": False,
+        "validation_values_evaluated": False,
+        "sealed_test_used": False,
+    }
+    canonical = json.dumps(asset, sort_keys=True, separators=(",", ":")).encode()
+    asset["asset_sha256"] = hashlib.sha256(canonical).hexdigest()
+    asset_path = tmp_path / "scale_asset.json"
+    asset_path.write_text(json.dumps(asset), encoding="utf-8")
+    acceptance = {
+        "schema_version": "successor_named_biomass_tendency_scale_acceptance_v1",
+        "status": "accepted",
+        "tendency_contract_sha256": "b" * 64,
+        "asset": {
+            "file_sha256": hashlib.sha256(asset_path.read_bytes()).hexdigest(),
+            "asset_sha256": asset["asset_sha256"],
+            "git_head": "a" * 40,
+        },
+        "scales": scales,
+    }
+    canonical = json.dumps(
+        acceptance,
+        sort_keys=True,
+        separators=(",", ":"),
+    ).encode()
+    acceptance["contract_sha256"] = hashlib.sha256(canonical).hexdigest()
+    acceptance_path = tmp_path / "acceptance.json"
+    acceptance_path.write_text(json.dumps(acceptance), encoding="utf-8")
+    return asset_path, acceptance_path
+
+
+def test_named_biomass_tendency_scale_loader_admits_hash_bound_asset(tmp_path):
+    asset_path, acceptance_path = _write_scale_admission_fixture(tmp_path)
+
+    result = load_named_biomass_tendency_scale_asset(asset_path, acceptance_path)
+
+    assert result.scales[30]["aboveground_biomass_carbon"] == 30.0
+    assert result.file_sha256 == hashlib.sha256(asset_path.read_bytes()).hexdigest()
+
+
+def test_named_biomass_tendency_scale_loader_rejects_file_drift(tmp_path):
+    asset_path, acceptance_path = _write_scale_admission_fixture(tmp_path)
+    payload = json.loads(asset_path.read_text(encoding="utf-8"))
+    payload["scales"]["30"]["aboveground_biomass_carbon"] = 31.0
+    asset_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="identity drift"):
+        load_named_biomass_tendency_scale_asset(asset_path, acceptance_path)
 
 
 def test_named_biomass_tendency_scale_launcher_is_free_cpu_and_zero_update():

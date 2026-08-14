@@ -1,0 +1,44 @@
+{
+  "schema_version": "successor_named_biomass_tendency_scale_acceptance_v1",
+  "status": "accepted",
+  "contract_sha256": "6ff63f651ba19bdc7a31beb382889fe08c325ff85964426f6ddce3a226d56237",
+  "tendency_contract_sha256": "18335d842b3498ddc57599dfe7c25fdca649452a2d01ff7405afbf2e3b882945",
+  "asset": {
+    "runtime_relative_path": "outputs/training/successor-named-biomass-tendency-scales-fae31ae/scale_asset.json",
+    "file_sha256": "49660e2cc203e2deda4f0fdaa80113c45f41aadd1b7b641453ac6ef7a6b4436b",
+    "asset_sha256": "b74c6d57ce7240614aaabb1ac012f948ac89adc3960ea9e3d2e2a5237f4982c1",
+    "git_head": "fae31ae0d9839c0a18f18d3776a6995ba5157b1a"
+  },
+  "selection": {
+    "spatial_split": "train",
+    "temporal_split": "train",
+    "point_year_count": 64,
+    "rollout_windows_per_point_year": 4,
+    "total_rollout_windows": 256
+  },
+  "scales": {
+    "1": {
+      "aboveground_biomass_carbon": 1.3522777765283391,
+      "belowground_biomass_carbon": 0.9474426729431713
+    },
+    "7": {
+      "aboveground_biomass_carbon": 4.4218978071529,
+      "belowground_biomass_carbon": 1.6402823405932514
+    },
+    "30": {
+      "aboveground_biomass_carbon": 15.710052929812397,
+      "belowground_biomass_carbon": 6.016818078490793
+    }
+  },
+  "accepted_gates": {
+    "teacher_teacher_loss": 0.0,
+    "maximum_total_minus_agb_bgb_absolute_residual": 2.7284841053187847e-12,
+    "maximum_agb_plus_bgb_identity_tolerance_ratio": 0.04562638181444047,
+    "training_updates": 0,
+    "teacher_data_regenerated": false,
+    "historical_v5_used": false,
+    "validation_values_evaluated": false,
+    "sealed_test_used": false
+  },
+  "next_gate": "local_candidate_objective_gradient_preflight"
+}

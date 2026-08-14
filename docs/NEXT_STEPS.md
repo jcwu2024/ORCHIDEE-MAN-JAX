@@ -676,17 +676,25 @@ while AGB, BGB, and total-live-biomass norms are only about `1e-6` to `1e-7`.
 See
 [`successor_per_output_gradient_audit_20260814.md`](research/daily_coarse_graining/successor_per_output_gradient_audit_20260814.md).
 
-The active gate is now the no-training proposal in
-[`successor_loss_objective_design_review_v1.md`](research/daily_coarse_graining/successor_loss_objective_design_review_v1.md).
-It proposes named AGB/BGB tendencies after the conservative operator, keeps
-the one-day process anchor, converts long-horizon maintenance to a guard, and
-uses a current-loss Attention A/B before any conditional graph-control run.
-This is materially narrower than the rejected all-state `process_increment_v2`.
-The exact maintenance guard and required validation-cell majority must be
-reviewed and frozen before implementation. Do not implement a new objective,
-change architecture, continue mixed sampling, or start paid training before
-that review. The 365-day rollout, long-held-point validation, Gate D2, sealed
-test, and product gates remain closed.
+The named AGB/BGB tendency objective foundation and its train-only scale asset
+are now accepted. The asset uses 64 unique train/train point-years and 256
+rollout windows from existing prepared v6 data, with zero optimizer updates,
+exact-zero Teacher/Teacher loss, and a passed scale-aware float64 AGB+BGB
+identity gate. Its file SHA256 is `49660e2c...6b4436b`; the acceptance contract
+SHA256 is `6ff63f65...d56237`. See
+[`successor_named_biomass_tendency_scale_acceptance_20260814.md`](research/daily_coarse_graining/successor_named_biomass_tendency_scale_acceptance_20260814.md).
+
+The active gate is the zero-update candidate-objective gradient preflight on
+train/train data. It must bind the accepted scale asset, preserve the one-day
+named-process anchor, exclude long-horizon maintenance from the summed
+gradient, pass finite loss/gradient and state/budget hard gates, and place the
+median AGB and BGB gradient norms within `0.1x-10x` of the NPP median under an
+explicitly frozen coefficient rule. No training is authorized by the scale
+acceptance. Before a no-checkpoint 100-update Attention objective A/B, freeze
+the maintenance no-regression guard and required validation-cell majority.
+Do not change architecture, continue mixed sampling, or start paid training.
+The 365-day rollout, long-held-point validation, Gate D2, sealed test, and
+product gates remain closed.
 
 ## Completed Task Packet: Gate C
 
