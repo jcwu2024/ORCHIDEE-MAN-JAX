@@ -15,6 +15,7 @@ import research.daily_coarse_graining.daily_operator.successor_fast_owner_traini
 import research.daily_coarse_graining.daily_operator.successor_fit_checkpoint as fit_checkpoint
 import research.daily_coarse_graining.daily_operator.successor_frozen_coefficients as frozen_coefficients
 import research.daily_coarse_graining.daily_operator.successor_small_fit as small_fit
+import scripts.hpc.probe_successor_per_output_gradients as per_output_gradients
 import scripts.hpc.run_successor_batch_diversity_short_fit as diversity_fit
 import scripts.hpc.run_successor_fast_owner_gpu_probe as fast_probe
 import scripts.hpc.run_successor_small_fit as production_fit
@@ -1762,6 +1763,97 @@ def test_batch_diversity_short_fit_launcher_is_free_and_report_only():
     assert "#SBATCH" not in launcher
     assert '"short_updates": SHORT_UPDATES' in source
     assert '"checkpoint_written": False' in source
+    assert "write_staged_recovery" not in source
+    assert "write_staged_best_checkpoint" not in source
+
+
+def test_per_output_gradient_pair_key_is_canonical():
+    expected = "npp__vs__maintenance_respiration"
+    assert per_output_gradients._pair_key("npp", "maintenance_respiration") == expected
+    assert per_output_gradients._pair_key("maintenance_respiration", "npp") == expected
+
+
+def test_per_output_gradient_field_contribution_uses_active_field_count():
+    def error(mse, bias_squared, count):
+        return SimpleNamespace(mse=mse, bias_squared=bias_squared, count=count)
+
+    active_target = error(4.0, 2.0, 1.0)
+    inactive_target = error(0.0, 0.0, 0.0)
+    result = SimpleNamespace(
+        by_horizon={
+            1: SimpleNamespace(
+                cumulative_flux={"target": active_target, "other": error(0.0, 0.0, 1.0)},
+                terminal_stock={},
+            ),
+            7: SimpleNamespace(
+                cumulative_flux={"target": active_target, "other": error(0.0, 0.0, 0.0)},
+                terminal_stock={},
+            ),
+            30: SimpleNamespace(
+                cumulative_flux={"target": inactive_target, "other": error(0.0, 0.0, 1.0)},
+                terminal_stock={},
+            ),
+        }
+    )
+
+    value = per_output_gradients._field_contribution(
+        jnp,
+        result,
+        "target",
+        {
+            "cumulative_flux_mse": 2.0,
+            "cumulative_flux_bias_squared": 3.0,
+            "terminal_stock_mse": 5.0,
+            "terminal_stock_bias_squared": 7.0,
+        },
+    )
+
+    assert float(value) == pytest.approx(7.0)
+
+
+def test_per_output_gradient_conflict_classification_requires_two_mitigated_pairs():
+    pairs = {
+        per_output_gradients._pair_key(left, right): {
+            "median": -0.2 if index < 2 else 0.0,
+            "negative_fraction": 0.75 if index < 2 else 0.25,
+        }
+        for index, (left, right) in enumerate(per_output_gradients.CONFLICT_PAIRS)
+    }
+    mixed_pairs = {
+        key: {
+            "median": value["median"] + (0.1 if index < 2 else 0.0),
+            "negative_fraction": value["negative_fraction"],
+        }
+        for index, (key, value) in enumerate(pairs.items())
+    }
+
+    result = per_output_gradients._conflict_classification(
+        {"pairs": pairs},
+        {"pairs": mixed_pairs},
+    )
+
+    assert result["status"] == "attention_mixed_conflict_mitigation_supported"
+    assert result["confirmed_conflict_pairs"] == 2
+    assert result["mitigated_conflict_pairs"] == 2
+
+
+def test_per_output_gradient_launcher_is_free_zero_update_and_no_validation_values():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (
+        root / "scripts" / "hpc" / "run_successor_per_output_gradient_probe.sh"
+    ).read_text()
+    source = (
+        root / "scripts" / "hpc" / "probe_successor_per_output_gradients.py"
+    ).read_text()
+
+    assert "per-output gradient audit must run on gln01" in launcher
+    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
+    assert "#SBATCH" not in launcher
+    assert '"training_updates": 0' in source
+    assert '"checkpoint_written": False' in source
+    assert '"validation_values_evaluated": False' in source
+    assert "successor_adamw_update" not in source
+    assert "evaluate_staged_validation" not in source
     assert "write_staged_recovery" not in source
     assert "write_staged_best_checkpoint" not in source
 
