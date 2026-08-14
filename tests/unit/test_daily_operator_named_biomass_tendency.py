@@ -19,6 +19,14 @@ from research.daily_coarse_graining.daily_operator.named_biomass_tendency import
     fit_named_biomass_tendency_scales,
     named_biomass_tendency_objective,
 )
+from research.daily_coarse_graining.daily_operator.successor_training import (
+    CANDIDATE_OBJECTIVE_COMPONENTS,
+    CUMULATIVE_FLUX_FIELDS,
+    TERMINAL_STOCK_FIELDS,
+    BiomassProductivityTrajectories,
+    calibrate_named_biomass_gradient_coefficient,
+    candidate_successor_training_objective,
+)
 from research.daily_coarse_graining.daily_operator.successor_training_assets import (
     load_named_biomass_tendency_scale_asset,
 )
@@ -174,6 +182,109 @@ def test_named_biomass_tendency_is_jittable_with_finite_gradient():
     assert float(gradient) > 0.0
 
 
+def _candidate_trajectories(*, fluxes=None, stocks=None):
+    flux_values = {} if fluxes is None else fluxes
+    stock_values = {} if stocks is None else stocks
+    return BiomassProductivityTrajectories(
+        fluxes={
+            name: _trajectory(flux_values.get(name, np.zeros((30, 1))))
+            for name in CUMULATIVE_FLUX_FIELDS
+        },
+        stocks={
+            name: _trajectory(stock_values.get(name, np.zeros((30, 1))))
+            for name in TERMINAL_STOCK_FIELDS
+        },
+    )
+
+
+def _candidate_objective(predicted, expected):
+    return candidate_successor_training_objective(
+        0.0,
+        predicted,
+        expected,
+        flux_scales={name: 1.0 for name in CUMULATIVE_FLUX_FIELDS},
+        stock_scales={name: 1.0 for name in TERMINAL_STOCK_FIELDS},
+        tendency_scales={
+            horizon: {
+                "aboveground_biomass_carbon": 1.0,
+                "belowground_biomass_carbon": 1.0,
+            }
+            for horizon in (1, 7, 30)
+        },
+        coefficients={name: 1.0 for name in CANDIDATE_OBJECTIVE_COMPONENTS},
+    )
+
+
+def test_candidate_objective_reports_but_does_not_optimize_long_maintenance():
+    expected = _candidate_trajectories()
+    predicted = _candidate_trajectories(
+        fluxes={"maintenance_respiration": np.ones((30, 1))}
+    )
+
+    result = _candidate_objective(predicted, expected)
+
+    assert float(result.total) == 0.0
+    assert (
+        float(
+            result.long_horizon_diagnostics.by_horizon[
+                30
+            ].cumulative_flux["maintenance_respiration"].mse
+        )
+        > 0.0
+    )
+
+
+def test_candidate_objective_optimizes_npp_and_named_biomass():
+    expected = _candidate_trajectories()
+    npp = _candidate_objective(
+        _candidate_trajectories(fluxes={"npp": np.ones((30, 1))}),
+        expected,
+    )
+    biomass = _candidate_objective(
+        _candidate_trajectories(
+            stocks={"aboveground_biomass_carbon": np.ones((30, 1))}
+        ),
+        expected,
+    )
+
+    assert float(npp.total) > 0.0
+    assert float(npp.cumulative_flux_mse) > 0.0
+    assert float(biomass.total) > 0.0
+    assert float(biomass.tendency_mse) > 0.0
+
+
+def test_named_biomass_gradient_coefficient_equalizes_geometric_mean():
+    result = calibrate_named_biomass_gradient_coefficient(
+        [10.0, 10.0, 10.0],
+        [2.0, 2.0, 2.0],
+        [8.0, 8.0, 8.0],
+        target_ratio_interval=(0.1, 10.0),
+        coefficient_interval=(1.0e-6, 10.0),
+    )
+
+    assert result.coefficient == pytest.approx(2.5)
+    assert result.achieved_stock_to_npp_ratios == pytest.approx(
+        {
+            "aboveground_biomass_carbon": 0.5,
+            "belowground_biomass_carbon": 2.0,
+        }
+    )
+    assert result.passed
+
+
+def test_named_biomass_gradient_coefficient_rejects_imbalanced_stocks():
+    result = calibrate_named_biomass_gradient_coefficient(
+        [10.0, 10.0],
+        [0.001, 0.001],
+        [1000.0, 1000.0],
+        target_ratio_interval=(0.1, 10.0),
+        coefficient_interval=(1.0e-6, 10.0),
+    )
+
+    assert not result.ratios_within_interval
+    assert not result.passed
+
+
 def test_biomass_stock_identity_residual_is_exact_and_masked():
     stocks = _stocks([[1.0, 2.0]], [[3.0, 4.0]])
     stocks["total_live_biomass_carbon"] = _trajectory([[4.0, 6.0]])
@@ -318,6 +429,31 @@ def test_named_biomass_tendency_scale_acceptance_manifest_is_hash_bound():
     assert not manifest["accepted_gates"]["sealed_test_used"]
 
 
+def test_named_biomass_gradient_preflight_manifest_freezes_train_only_rule():
+    path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_named_biomass_gradient_preflight_v1.json"
+    )
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["model"]["optimizer_updates"] == 0
+    assert manifest["sampling"]["split"] == "train/train"
+    assert manifest["sampling"]["validation_values_forbidden"]
+    assert manifest["coefficient_rule"]["same_coefficient_for_agb_and_bgb"]
+    assert manifest["coefficient_rule"][
+        "each_stock_to_npp_median_gradient_ratio_interval"
+    ] == [0.1, 10.0]
+    assert (
+        manifest["objective"]["maintenance_respiration"]
+        == "reported_guard_excluded_from_summed_gradient"
+    )
+
+
 def _write_scale_admission_fixture(tmp_path):
     scales = {
         str(horizon): {
@@ -405,6 +541,28 @@ def test_named_biomass_tendency_scale_launcher_is_free_cpu_and_zero_update():
 
     assert "biomass tendency scales require a free CPU test node" in launcher
     assert "JAX_PLATFORMS=cpu" in launcher
+    assert "#SBATCH" not in launcher
+    assert '"training_updates": 0' in source
+    assert '"checkpoint_written": False' in source
+    assert '"validation_values_evaluated": False' in source
+    assert "successor_adamw_update" not in source
+
+
+def test_named_biomass_gradient_launcher_is_free_gpu_and_zero_update():
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_named_biomass_gradient_preflight.sh"
+    ).read_text()
+    source = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "probe_successor_named_biomass_gradients.py"
+    ).read_text()
+
+    assert "requires free gln01" in launcher
     assert "#SBATCH" not in launcher
     assert '"training_updates": 0' in source
     assert '"checkpoint_written": False' in source

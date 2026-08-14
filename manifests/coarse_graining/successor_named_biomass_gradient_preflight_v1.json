@@ -1,0 +1,69 @@
+{
+  "schema_version": "successor_named_biomass_gradient_preflight_v1",
+  "status": "frozen_zero_update_preflight_no_training_authorized",
+  "contract_sha256": "ec38fc1316c54776c54dd8b9dadd01dcf1e5caf18a4340c466e89244a9442419",
+  "tendency_contract_sha256": "18335d842b3498ddc57599dfe7c25fdca649452a2d01ff7405afbf2e3b882945",
+  "scale_acceptance_contract_sha256": "a0ec131530e9dd4f72b3f22267ddf88f8af7db9c7262d7d505c7fc5bf2278490",
+  "staged_training_contract_sha256": "53d21d3a03a1502263b333aaba9719b2d42f096672844497b1a213dd54c23c7b",
+  "model": {
+    "arm": "source_routed_process_attention_v2",
+    "parent_update": 1000,
+    "architecture_change": false,
+    "optimizer_updates": 0,
+    "checkpoint_written": false
+  },
+  "sampling": {
+    "split": "train/train",
+    "prepared_stage": "updates_1001_2000",
+    "point_year_count": 16,
+    "group_count": 4,
+    "point_years_per_group": 4,
+    "selection_policy": "existing_successor_batch_diversity_even_positions",
+    "rollout_context_per_point_year": 1,
+    "horizons_days": [1, 7, 30],
+    "validation_values_forbidden": true,
+    "sealed_test_forbidden": true
+  },
+  "objective": {
+    "one_day_named_process_anchor": "unchanged_unit_weight",
+    "optimized_cumulative_fluxes": [
+      "gpp",
+      "npp",
+      "growth_respiration",
+      "heterotrophic_respiration"
+    ],
+    "maintenance_respiration": "reported_guard_excluded_from_summed_gradient",
+    "optimized_named_tendencies": [
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon"
+    ],
+    "tendency_scales": "accepted_train_train_scale_asset",
+    "tendency_mse_and_bias_share_coefficient": true
+  },
+  "coefficient_rule": {
+    "source_values": "zero_update_train_train_group_median_parameter_gradient_norms",
+    "npp_reference": "current_accepted_cumulative_flux_mse_and_bias_coefficients",
+    "stock_unit_loss": "equal_horizon_equal_field_tendency_mse_plus_bias_squared",
+    "formula": "npp_median / sqrt(agb_unit_median * bgb_unit_median)",
+    "same_coefficient_for_agb_and_bgb": true,
+    "coefficient_interval": [1e-6, 10.0],
+    "each_stock_to_npp_median_gradient_ratio_interval": [0.1, 10.0],
+    "validation_tuning_allowed": false,
+    "recalibration_during_training": false
+  },
+  "gates": {
+    "all_losses_finite": true,
+    "all_parameter_gradients_finite": true,
+    "npp_agb_bgb_gradient_norms_positive": true,
+    "hard_failure_count": 0,
+    "full_candidate_objective_gradient_finite": true,
+    "optimizer_updates": 0,
+    "checkpoint_written": false,
+    "teacher_data_regenerated": false,
+    "historical_v5_used": false,
+    "validation_values_evaluated": false,
+    "sealed_test_used": false
+  },
+  "pass_action": "freeze_resolved_candidate_coefficients_then_review_bounded_training_gates",
+  "fail_action": "stop_named_biomass_tendency_mechanism_without_training"
+}

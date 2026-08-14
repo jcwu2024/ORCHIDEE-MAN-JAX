@@ -26,6 +26,10 @@ from .long_horizon_objective import (
     derive_ecosystem_carbon,
     long_horizon_biomass_productivity_objective,
 )
+from .named_biomass_tendency import (
+    NamedBiomassTendencyResult,
+    named_biomass_tendency_objective,
+)
 from .types import DailyOperatorInput, DailyOperatorResult, PFTAxisInput
 
 CUMULATIVE_FLUX_FIELDS = (
@@ -50,6 +54,18 @@ LONG_HORIZON_COMPONENTS = (
     "terminal_stock_mse",
     "terminal_stock_bias_squared",
 )
+CANDIDATE_OPTIMIZED_FLUX_FIELDS = (
+    "gpp",
+    "npp",
+    "growth_respiration",
+    "heterotrophic_respiration",
+)
+CANDIDATE_OBJECTIVE_COMPONENTS = (
+    "cumulative_flux_mse",
+    "cumulative_flux_bias_squared",
+    "tendency_mse",
+    "tendency_bias_squared",
+)
 
 
 class DailyOperatorRolloutTrace(NamedTuple):
@@ -67,6 +83,26 @@ class SuccessorTrainingObjective(NamedTuple):
     total: Any
     one_day_anchor: Any
     long_horizon: LongHorizonObjectiveResult
+
+
+class CandidateSuccessorTrainingObjective(NamedTuple):
+    total: Any
+    one_day_anchor: Any
+    cumulative_flux_mse: Any
+    cumulative_flux_bias_squared: Any
+    tendency_mse: Any
+    tendency_bias_squared: Any
+    long_horizon_diagnostics: LongHorizonObjectiveResult
+    named_biomass_tendency: NamedBiomassTendencyResult
+
+
+class NamedBiomassGradientCalibration(NamedTuple):
+    coefficient: float
+    median_gradient_norms: Mapping[str, float]
+    achieved_stock_to_npp_ratios: Mapping[str, float]
+    coefficient_within_bounds: bool
+    ratios_within_interval: bool
+    passed: bool
 
 
 class GradientRatioPreflight(NamedTuple):
@@ -573,6 +609,155 @@ def successor_training_objective(
         total=anchor + long_horizon.total,
         one_day_anchor=anchor,
         long_horizon=long_horizon,
+    )
+
+
+def _selected_flux_macro(
+    long_horizon: LongHorizonObjectiveResult,
+    attribute: str,
+) -> Any:
+    horizon_values = []
+    for value in long_horizon.by_horizon.values():
+        errors = tuple(
+            value.cumulative_flux[name]
+            for name in CANDIDATE_OPTIMIZED_FLUX_FIELDS
+        )
+        active = jnp.stack(tuple(error.count > 0.0 for error in errors))
+        components = jnp.stack(tuple(getattr(error, attribute) for error in errors))
+        count = jnp.sum(active, dtype=jnp.float64)
+        horizon_values.append(
+            jnp.where(
+                count > 0.0,
+                jnp.sum(jnp.where(active, components, 0.0), dtype=jnp.float64)
+                / jnp.maximum(count, 1.0),
+                0.0,
+            )
+        )
+    return jnp.mean(jnp.stack(tuple(horizon_values)))
+
+
+def candidate_successor_training_objective(
+    one_day_anchor: Any,
+    predicted: BiomassProductivityTrajectories,
+    expected: BiomassProductivityTrajectories,
+    *,
+    flux_scales: Mapping[str, Any],
+    stock_scales: Mapping[str, Any],
+    tendency_scales: Mapping[int, Mapping[str, Any]],
+    coefficients: Mapping[str, Any],
+    horizons: Sequence[int] = DEFAULT_HORIZONS,
+) -> CandidateSuccessorTrainingObjective:
+    """Join the anchor to selected fluxes and named AGB/BGB tendencies."""
+
+    if tuple(coefficients) != CANDIDATE_OBJECTIVE_COMPONENTS:
+        raise ValueError("candidate objective coefficient registry drift")
+    anchor = jnp.asarray(one_day_anchor, dtype=jnp.float64)
+    diagnostic_coefficients = {name: 0.0 for name in LONG_HORIZON_COMPONENTS}
+    long_horizon = long_horizon_biomass_productivity_objective(
+        predicted.fluxes,
+        expected.fluxes,
+        predicted.stocks,
+        expected.stocks,
+        flux_scales=flux_scales,
+        stock_scales=stock_scales,
+        coefficients=diagnostic_coefficients,
+        horizons=horizons,
+    )
+    cumulative_flux_mse = _selected_flux_macro(long_horizon, "mse")
+    cumulative_flux_bias_squared = _selected_flux_macro(
+        long_horizon,
+        "bias_squared",
+    )
+    tendency = named_biomass_tendency_objective(
+        predicted.stocks,
+        expected.stocks,
+        scales=tendency_scales,
+        coefficients={"tendency_mse": 1.0, "tendency_bias_squared": 1.0},
+        horizons=horizons,
+    )
+    components = {
+        "cumulative_flux_mse": cumulative_flux_mse,
+        "cumulative_flux_bias_squared": cumulative_flux_bias_squared,
+        "tendency_mse": tendency.tendency_mse,
+        "tendency_bias_squared": tendency.tendency_bias_squared,
+    }
+    total = anchor + sum(
+        jnp.asarray(coefficients[name], dtype=jnp.float64) * components[name]
+        for name in CANDIDATE_OBJECTIVE_COMPONENTS
+    )
+    return CandidateSuccessorTrainingObjective(
+        total=total,
+        one_day_anchor=anchor,
+        cumulative_flux_mse=cumulative_flux_mse,
+        cumulative_flux_bias_squared=cumulative_flux_bias_squared,
+        tendency_mse=tendency.tendency_mse,
+        tendency_bias_squared=tendency.tendency_bias_squared,
+        long_horizon_diagnostics=long_horizon,
+        named_biomass_tendency=tendency,
+    )
+
+
+def calibrate_named_biomass_gradient_coefficient(
+    npp_gradient_norms: Sequence[float],
+    agb_gradient_norms: Sequence[float],
+    bgb_gradient_norms: Sequence[float],
+    *,
+    target_ratio_interval: tuple[float, float],
+    coefficient_interval: tuple[float, float],
+) -> NamedBiomassGradientCalibration:
+    """Resolve one equal-stock coefficient from train-only median gradients."""
+
+    values = {
+        "npp": np.asarray(npp_gradient_norms, dtype=np.float64),
+        "aboveground_biomass_carbon": np.asarray(
+            agb_gradient_norms,
+            dtype=np.float64,
+        ),
+        "belowground_biomass_carbon": np.asarray(
+            bgb_gradient_norms,
+            dtype=np.float64,
+        ),
+    }
+    sizes = {array.size for array in values.values()}
+    if sizes == {0} or len(sizes) != 1:
+        raise ValueError("named biomass gradient samples must be nonempty and aligned")
+    if any(np.any(~np.isfinite(array)) or np.any(array <= 0.0) for array in values.values()):
+        raise ValueError("named biomass gradient norms must be finite and positive")
+    ratio_minimum, ratio_maximum = map(float, target_ratio_interval)
+    coefficient_minimum, coefficient_maximum = map(float, coefficient_interval)
+    if not 0.0 < ratio_minimum <= ratio_maximum:
+        raise ValueError("named biomass gradient ratio interval is invalid")
+    if not 0.0 < coefficient_minimum <= coefficient_maximum:
+        raise ValueError("named biomass coefficient interval is invalid")
+
+    medians = {name: float(np.median(array)) for name, array in values.items()}
+    stock_geometric_mean = float(
+        np.sqrt(
+            medians["aboveground_biomass_carbon"]
+            * medians["belowground_biomass_carbon"]
+        )
+    )
+    coefficient = medians["npp"] / stock_geometric_mean
+    achieved = {
+        name: coefficient * medians[name] / medians["npp"]
+        for name in (
+            "aboveground_biomass_carbon",
+            "belowground_biomass_carbon",
+        )
+    }
+    coefficient_within_bounds = (
+        coefficient_minimum <= coefficient <= coefficient_maximum
+    )
+    ratios_within_interval = all(
+        ratio_minimum <= value <= ratio_maximum for value in achieved.values()
+    )
+    return NamedBiomassGradientCalibration(
+        coefficient=coefficient,
+        median_gradient_norms=medians,
+        achieved_stock_to_npp_ratios=achieved,
+        coefficient_within_bounds=coefficient_within_bounds,
+        ratios_within_interval=ratios_within_interval,
+        passed=coefficient_within_bounds and ratios_within_interval,
     )
 
 
