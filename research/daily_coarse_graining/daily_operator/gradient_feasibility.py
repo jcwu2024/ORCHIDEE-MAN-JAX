@@ -362,3 +362,97 @@ def classify_realized_step_audit(
         "optimizers": optimizers,
         "next_action": next_action,
     }
+
+
+def classify_direct_trust_region(
+    records: Sequence[Mapping[str, Any]],
+    *,
+    step_norms: Sequence[float],
+    gates: Mapping[str, Any],
+    labels: Sequence[str] = GRADIENT_FEASIBILITY_LABELS,
+) -> Mapping[str, Any]:
+    """Select a shared direct-direction step norm from frozen virtual steps."""
+
+    names = tuple(labels)
+    norms = tuple(float(value) for value in step_norms)
+    total_groups = int(gates["total_groups"])
+    required_groups = int(gates["minimum_passing_groups"])
+    if (
+        len(records) != total_groups
+        or not norms
+        or tuple(sorted(set(norms))) != norms
+        or any(value <= 0.0 for value in norms)
+        or not 1 <= required_groups <= total_groups
+    ):
+        raise ValueError("direct trust-region registry is invalid")
+    group_limit = float(
+        gates["maximum_passing_group_component_relative_increase"]
+    )
+    global_limit = float(gates["maximum_any_group_component_relative_increase"])
+    median_decrease = float(
+        gates["minimum_each_component_median_relative_decrease"]
+    )
+
+    candidates = []
+    for step_norm in norms:
+        key = format(step_norm, ".12g")
+        changes = []
+        group_records = []
+        for record in records:
+            step = record["steps"][key]
+            relative = step["virtual_loss_relative_changes"]
+            if tuple(relative) != names:
+                raise ValueError("direct trust-region component registry drift")
+            values = np.asarray([float(relative[name]) for name in names])
+            maximum = float(np.max(values))
+            hard_failure_count = int(sum(step["hard_gate_counts"].values()))
+            passed = maximum <= group_limit and hard_failure_count == 0
+            changes.append(values)
+            group_records.append(
+                {
+                    "group": int(record["group"]),
+                    "maximum_component_relative_increase": maximum,
+                    "hard_failure_count": hard_failure_count,
+                    "passed": passed,
+                }
+            )
+        matrix = np.stack(changes)
+        medians = {
+            name: float(np.median(matrix[:, index]))
+            for index, name in enumerate(names)
+        }
+        passing_groups = sum(item["passed"] for item in group_records)
+        maximum_any = float(np.max(matrix))
+        passed = (
+            passing_groups >= required_groups
+            and maximum_any <= global_limit
+            and all(value <= -median_decrease for value in medians.values())
+        )
+        candidates.append(
+            {
+                "step_norm": step_norm,
+                "passed": passed,
+                "passing_groups": passing_groups,
+                "required_passing_groups": required_groups,
+                "maximum_any_group_component_relative_increase": maximum_any,
+                "component_median_relative_changes": medians,
+                "groups": group_records,
+            }
+        )
+    admitted = tuple(item for item in candidates if item["passed"])
+    selected = admitted[-1]["step_norm"] if admitted else None
+    return {
+        "status": (
+            "direct_trust_region_supported"
+            if selected is not None
+            else "direct_trust_region_not_supported"
+        ),
+        "passed": selected is not None,
+        "selected_step_norm": selected,
+        "candidates": candidates,
+        "next_action": (
+            "freeze_10_update_direct_direction_smoke_before_training"
+            if selected is not None
+            else "close_raw_minimum_norm_training_and_audit_batch_to_rollout_generalization"
+        ),
+    }

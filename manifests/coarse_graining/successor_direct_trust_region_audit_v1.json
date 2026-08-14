@@ -1,0 +1,58 @@
+{
+  "schema_version": "successor_direct_trust_region_audit_v1",
+  "status": "frozen_zero_update_direct_direction_grid",
+  "contract_sha256": "03c7d98ae25eb6f16d7d45714e6614732a65125335988bb1a0b0caa354b25343",
+  "identity": {
+    "realized_step_report_sha256": "4b987902e4baf40e5223ae9201be416ff8f61f64080309056302ba947bf47037",
+    "staged_training_contract_sha256": "53d21d3a03a1502263b333aaba9719b2d42f096672844497b1a213dd54c23c7b",
+    "candidate_coefficient_contract_sha256": "2093c392cc24a59f0b5021b7ecfafade7e3522fd3953014df63d4d85517b1d9f",
+    "scale_acceptance_contract_sha256": "a0ec131530e9dd4f72b3f22267ddf88f8af7db9c7262d7d505c7fc5bf2278490"
+  },
+  "model": {
+    "architecture": "source_routed_process_attention_v2",
+    "parent_update": 1000,
+    "parameter_count": 8722689,
+    "architecture_change": false
+  },
+  "sampling": {
+    "split": "train/train",
+    "selection_policy": "same_four_groups_as_accepted_gradient_feasibility",
+    "group_count": 4,
+    "point_years_per_group": 4,
+    "one_day_anchor_batch_size": 32,
+    "rollout_windows_per_group": 4,
+    "rollout_days": 30
+  },
+  "direction": {
+    "source": "minimum_norm_convex_combination_of_unit_component_gradients",
+    "parameter_delta": "negative_step_norm_times_unit_raw_direction",
+    "momentum": false,
+    "coordinate_adaptive_scaling": false,
+    "weight_decay": false
+  },
+  "step_norm_grid": [0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1],
+  "gates": {
+    "hard_failure_count": 0,
+    "nonfinite_value_count": 0,
+    "maximum_passing_group_component_relative_increase": 0.000001,
+    "minimum_passing_groups": 3,
+    "total_groups": 4,
+    "maximum_any_group_component_relative_increase": 0.01,
+    "minimum_each_component_median_relative_decrease": 0.0001
+  },
+  "selection": "largest_passing_shared_step_norm",
+  "execution": {
+    "free_gln01_only": true,
+    "paid_training_authorized": false,
+    "optimizer_updates": 0,
+    "proposed_parameters_retained": false,
+    "checkpoint_written": false,
+    "recovery_written": false,
+    "teacher_data_regenerated": false,
+    "historical_v5_used": false,
+    "validation_values_evaluated": false,
+    "sealed_test_used": false
+  },
+  "pass_action": "freeze_10_update_direct_direction_smoke_before_training",
+  "fail_action": "close_raw_minimum_norm_training_and_audit_batch_to_rollout_generalization"
+}

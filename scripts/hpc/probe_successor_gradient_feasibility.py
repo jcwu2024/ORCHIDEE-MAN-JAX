@@ -96,7 +96,7 @@ def _load_contract(
     return payload
 
 
-def _make_measurement(
+def _make_objective(
     runtime: Mapping[str, Any],
     adapter_template: Any,
     *,
@@ -105,7 +105,7 @@ def _make_measurement(
     tendency_scales: Mapping[int, Mapping[str, float]],
     flux_coefficients: Mapping[str, float],
     tendency_coefficient: float,
-) -> Any:
+) -> tuple[Any, Any]:
     import jax.numpy as jnp
 
     jax = runtime["jax"]
@@ -155,6 +155,29 @@ def _make_measurement(
         )
         return losses, hard_counts
 
+    return jax, objective
+
+
+def _make_measurement(
+    runtime: Mapping[str, Any],
+    adapter_template: Any,
+    *,
+    runner_contract: Any,
+    long_scales: Any,
+    tendency_scales: Mapping[int, Mapping[str, float]],
+    flux_coefficients: Mapping[str, float],
+    tendency_coefficient: float,
+) -> Any:
+    jax, objective = _make_objective(
+        runtime,
+        adapter_template,
+        runner_contract=runner_contract,
+        long_scales=long_scales,
+        tendency_scales=tendency_scales,
+        flux_coefficients=flux_coefficients,
+        tendency_coefficient=tendency_coefficient,
+    )
+
     def measurement(
         parameters: Any,
         seed: Any,
@@ -175,6 +198,30 @@ def _make_measurement(
         return losses, pullback(seed)[0], hard_counts
 
     return jax.jit(measurement)
+
+
+def _make_loss_evaluator(
+    runtime: Mapping[str, Any],
+    adapter_template: Any,
+    *,
+    runner_contract: Any,
+    long_scales: Any,
+    tendency_scales: Mapping[int, Mapping[str, float]],
+    flux_coefficients: Mapping[str, float],
+    tendency_coefficient: float,
+) -> Any:
+    """Compile the same component losses without constructing a VJP."""
+
+    jax, objective = _make_objective(
+        runtime,
+        adapter_template,
+        runner_contract=runner_contract,
+        long_scales=long_scales,
+        tendency_scales=tendency_scales,
+        flux_coefficients=flux_coefficients,
+        tendency_coefficient=tendency_coefficient,
+    )
+    return jax.jit(objective)
 
 
 def _measurement_record(

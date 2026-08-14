@@ -13,6 +13,7 @@ import pytest
 from research.daily_coarse_graining.daily_operator.gradient_feasibility import (
     GRADIENT_FEASIBILITY_LABELS,
     _minimum_norm_simplex_weights,
+    classify_direct_trust_region,
     classify_gradient_feasibility,
     classify_realized_step_audit,
     gradient_direction_diagnostics,
@@ -41,6 +42,10 @@ from research.daily_coarse_graining.daily_operator.successor_training_assets imp
 from scripts.hpc.prepare_successor_named_biomass_tendency_scales import (
     _canonical_sha256,
     _select_records,
+)
+from scripts.hpc.probe_successor_direct_trust_region import (
+    _make_combined_direction,
+    _make_direct_virtual_step,
 )
 from scripts.hpc.probe_successor_realized_step import _make_proposed_directions
 from scripts.hpc.run_successor_gradient_balanced_smoke import (
@@ -1098,6 +1103,146 @@ def test_realized_step_proposal_compiles_and_distinguishes_optimizer_state():
         np.asarray(inherited_direction["value"]),
         np.asarray(reset_direction["value"]),
     )
+
+
+def _trust_region_records(changes_by_step):
+    return [
+        {
+            "group": group,
+            "steps": {
+                format(step, ".12g"): {
+                    "virtual_loss_relative_changes": {
+                        label: values[group]
+                        for label in GRADIENT_FEASIBILITY_LABELS
+                    },
+                    "hard_gate_counts": {"failure": 0},
+                }
+                for step, values in changes_by_step.items()
+            },
+        }
+        for group in range(4)
+    ]
+
+
+def _trust_region_gates():
+    return {
+        "maximum_passing_group_component_relative_increase": 1.0e-6,
+        "minimum_passing_groups": 3,
+        "total_groups": 4,
+        "maximum_any_group_component_relative_increase": 0.01,
+        "minimum_each_component_median_relative_decrease": 1.0e-4,
+    }
+
+
+def test_direct_trust_region_selects_largest_shared_passing_norm():
+    result = classify_direct_trust_region(
+        _trust_region_records(
+            {
+                0.001: (-0.001, -0.001, -0.001, 0.005),
+                0.003: (-0.003, -0.003, -0.003, 0.009),
+                0.01: (-0.01, -0.01, 0.02, 0.02),
+            }
+        ),
+        step_norms=(0.001, 0.003, 0.01),
+        gates=_trust_region_gates(),
+    )
+
+    assert result["status"] == "direct_trust_region_supported"
+    assert result["selected_step_norm"] == pytest.approx(0.003)
+
+
+def test_direct_trust_region_rejects_only_tiny_or_unbounded_steps():
+    result = classify_direct_trust_region(
+        _trust_region_records(
+            {
+                0.0001: (-1.0e-6, -1.0e-6, -1.0e-6, -1.0e-6),
+                0.1: (-0.1, -0.1, -0.1, 0.02),
+            }
+        ),
+        step_norms=(0.0001, 0.1),
+        gates=_trust_region_gates(),
+    )
+
+    assert result["status"] == "direct_trust_region_not_supported"
+    assert result["selected_step_norm"] is None
+
+
+def test_direct_trust_region_contract_is_hash_bound_and_zero_update():
+    path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_direct_trust_region_audit_v1.json"
+    )
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["step_norm_grid"] == [
+        0.0001,
+        0.0003,
+        0.001,
+        0.003,
+        0.01,
+        0.03,
+        0.1,
+    ]
+    assert manifest["direction"]["momentum"] is False
+    assert manifest["direction"]["coordinate_adaptive_scaling"] is False
+    assert manifest["direction"]["weight_decay"] is False
+    assert manifest["execution"]["optimizer_updates"] == 0
+
+
+def test_direct_trust_region_step_has_frozen_global_norm():
+    parameters = {"value": jnp.asarray([1.0, 2.0], dtype=jnp.float64)}
+    gradients = tuple(
+        {"value": jnp.asarray([value, 0.0], dtype=jnp.float64)}
+        for value in (1.0, 2.0, 3.0, 4.0)
+    )
+    combine = _make_combined_direction(jax)
+    virtual_step = _make_direct_virtual_step(jax)
+    direction, norm, nonfinite = combine(
+        gradients,
+        jnp.full((4,), 0.25, dtype=jnp.float64),
+    )
+    proposed, proposed_nonfinite = virtual_step(
+        parameters,
+        direction,
+        norm,
+        jnp.asarray(0.03, dtype=jnp.float64),
+    )
+
+    delta = np.asarray(parameters["value"] - proposed["value"])
+    assert np.linalg.norm(delta) == pytest.approx(0.03)
+    assert int(nonfinite) == 0
+    assert int(proposed_nonfinite) == 0
+
+
+def test_direct_trust_region_launcher_is_free_and_zero_update():
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_direct_trust_region.sh"
+    ).read_text()
+    source = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "probe_successor_direct_trust_region.py"
+    ).read_text()
+
+    assert "requires free gln01" in launcher
+    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
+    assert "#SBATCH" not in launcher
+    assert '"optimizer_updates": 0' in source
+    assert '"proposed_parameters_retained": False' in source
+    assert '"checkpoint_written": False' in source
+    assert "successor_adamw_update" not in source
+    assert "write_staged_recovery" not in source
+    assert "_make_loss_evaluator" in source
+    assert "_loss_record" not in source
 
 
 def _write_scale_admission_fixture(tmp_path):
