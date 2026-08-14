@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import jax
 import jax.numpy as jnp
@@ -38,6 +39,14 @@ from research.daily_coarse_graining.daily_operator.successor_training_assets imp
 from scripts.hpc.prepare_successor_named_biomass_tendency_scales import (
     _canonical_sha256,
     _select_records,
+)
+from scripts.hpc.run_successor_gradient_balanced_smoke import (
+    CANDIDATE,
+    CONTROL,
+    _make_candidate_apply_step,
+    _make_gradient_gram,
+    classify_gradient_balanced_smoke,
+    selected_validation_subset,
 )
 from scripts.hpc.run_successor_named_biomass_objective_ab import (
     OBJECTIVES,
@@ -712,6 +721,196 @@ def test_gradient_feasibility_launcher_is_free_and_zero_update():
     assert '"validation_values_evaluated": False' in source
     assert "successor_adamw_update" not in source
     assert "write_staged_recovery" not in source
+
+
+def test_gradient_balanced_contracts_are_hash_bound_and_bounded():
+    manifest_root = REPOSITORY_ROOT / "manifests" / "coarse_graining"
+    acceptance = json.loads(
+        (
+            manifest_root / "successor_gradient_feasibility_acceptance_v1.json"
+        ).read_text(encoding="utf-8")
+    )
+    smoke = json.loads(
+        (manifest_root / "successor_gradient_balanced_smoke_v1.json").read_text(
+            encoding="utf-8"
+        )
+    )
+    for payload in (acceptance, smoke):
+        expected_hash = payload.pop("contract_sha256")
+        canonical = json.dumps(
+            payload,
+            sort_keys=True,
+            separators=(",", ":"),
+        ).encode()
+        assert hashlib.sha256(canonical).hexdigest() == expected_hash
+
+    assert smoke["training"]["updates_per_objective"] == 10
+    assert smoke["training"]["optimizer_updates"] == [1001, 1010]
+    assert smoke["training"]["one_day_anchor_batch_size"] == 32
+    assert smoke["training"]["rollout_windows_per_update"] == 4
+    assert smoke["training"]["checkpoint_written"] is False
+    assert smoke["training"]["recovery_written"] is False
+    assert smoke["training"]["free_gln01_only"] is True
+    assert smoke["gates"]["minimum_direction_feasible_updates"] == 8
+    assert smoke["gates"]["maximum_candidate_gradient_clip_updates"] == 2
+
+
+def test_gradient_balanced_validation_subset_is_first_and_last_per_slice():
+    slices = ("temporal", "spatial", "joint")
+    panel = {
+        "slices": {
+            slice_id: {
+                "entries": [
+                    {"window": f"{slice_id}-{ordinal}"}
+                    for ordinal in range(3)
+                ]
+            }
+            for slice_id in slices
+        }
+    }
+    prepared = {"entries": [{"artifact": ordinal} for ordinal in range(9)]}
+
+    selected = selected_validation_subset(prepared, panel)
+
+    assert [record["artifact"] for record, _entry in selected] == [0, 2, 3, 5, 6, 8]
+    assert [slice_id for _record, (slice_id, _entry) in selected] == [
+        "temporal",
+        "temporal",
+        "spatial",
+        "spatial",
+        "joint",
+        "joint",
+    ]
+
+
+def test_gradient_balanced_classifier_requires_training_and_validation_gates():
+    objective_validation = _objective_ab_validation()
+    validation = {
+        CONTROL: objective_validation[OBJECTIVES[0]],
+        CANDIDATE: objective_validation[OBJECTIVES[1]],
+    }
+    gates = {
+        "minimum_candidate_direction_component_cosine": 0.05,
+        "minimum_direction_feasible_updates": 8,
+        "maximum_candidate_gradient_clip_updates": 2,
+        "minimum_research_primary_composite_relative_improvement": 0.005,
+        "minimum_improved_slice_horizon_cells": 4,
+        "maximum_maintenance_aggregate_relative_regression": 0.05,
+        "maximum_maintenance_single_cell_relative_regression": 0.10,
+    }
+    updates = [
+        {
+            "candidate": {
+                "minimum_component_cosine": 0.10,
+                "combined_gradient_norm": 0.90,
+            }
+        }
+        for _ in range(10)
+    ]
+
+    admitted = classify_gradient_balanced_smoke(
+        validation,
+        updates,
+        gates=gates,
+        gradient_clip=1.0,
+    )
+    assert admitted["status"] == "gradient_balanced_smoke_admitted"
+    assert admitted["direction_feasible_updates"] == 10
+
+    for update in updates[:3]:
+        update["candidate"]["combined_gradient_norm"] = 1.01
+    rejected = classify_gradient_balanced_smoke(
+        validation,
+        updates,
+        gates=gates,
+        gradient_clip=1.0,
+    )
+    assert rejected["status"] == "gradient_balanced_smoke_rejected"
+    assert not rejected["training_checks"][
+        "candidate_gradient_clip_within_limit"
+    ]
+
+
+def test_gradient_gram_compiles_for_parameter_pytrees():
+    measure = _make_gradient_gram(jax)
+    gradients = tuple(
+        {"first": jnp.asarray([value, 1.0]), "second": jnp.asarray([2.0])}
+        for value in (1.0, 2.0, 3.0, 4.0)
+    )
+
+    gram, nonfinite = measure(gradients)
+
+    np.testing.assert_allclose(
+        np.asarray(gram),
+        np.asarray(
+            [
+                [6.0, 7.0, 8.0, 9.0],
+                [7.0, 9.0, 11.0, 13.0],
+                [8.0, 11.0, 14.0, 17.0],
+                [9.0, 13.0, 17.0, 21.0],
+            ]
+        ),
+    )
+    assert np.asarray(nonfinite).tolist() == [0, 0, 0, 0]
+
+
+def test_gradient_balanced_apply_step_compiles_with_existing_adamw():
+    from research.daily_coarse_graining.daily_operator.successor_small_fit import (
+        initialize_successor_adamw,
+    )
+
+    parameters = {"value": jnp.asarray([1.0, 2.0], dtype=jnp.float64)}
+    optimizer = initialize_successor_adamw(parameters)
+    contract = SimpleNamespace(
+        optimizer={
+            "beta1": 0.9,
+            "beta2": 0.999,
+            "epsilon": 1.0e-8,
+            "weight_decay": 0.0,
+            "global_gradient_norm_clip": 1.0,
+        }
+    )
+    apply_step = _make_candidate_apply_step(jax, contract)
+    gradients = tuple(
+        {"value": jnp.asarray([value, 0.0], dtype=jnp.float64)}
+        for value in (1.0, 2.0, 3.0, 4.0)
+    )
+
+    next_parameters, next_optimizer, norm = apply_step(
+        parameters,
+        optimizer,
+        gradients,
+        jnp.full((4,), 0.25, dtype=jnp.float64),
+        jnp.asarray(1.0e-3, dtype=jnp.float64),
+    )
+
+    assert float(norm) == pytest.approx(2.5)
+    assert int(next_optimizer.step) == 1
+    assert float(next_parameters["value"][0]) < 1.0
+    assert float(next_parameters["value"][1]) == pytest.approx(2.0)
+
+
+def test_gradient_balanced_launcher_is_free_and_no_checkpoint():
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_gradient_balanced_smoke.sh"
+    ).read_text()
+    source = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_gradient_balanced_smoke.py"
+    ).read_text()
+
+    assert "must run on free gln01" in launcher
+    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
+    assert "#SBATCH" not in launcher
+    assert '"checkpoint_written": False' in source
+    assert '"recovery_written": False' in source
+    assert "write_staged_recovery" not in source
+    assert "write_staged_best_checkpoint" not in source
 
 
 def _write_scale_admission_fixture(tmp_path):

@@ -1,0 +1,42 @@
+{
+  "schema_version": "successor_gradient_feasibility_acceptance_v1",
+  "status": "accepted_zero_update_common_descent_supported",
+  "contract_sha256": "cf173aee52cfff64d1462e5437e95d39666645ce34552cc0c9941577a9a5f400",
+  "identity": {
+    "feasibility_contract_sha256": "aeaed79b15399d9fd3e76f8091c8041caf4a3e3c99c6e3952a1a7458da8dae62",
+    "report_runtime_relative_path": "outputs/training/successor-gradient-feasibility-b5e4c7b/report.json",
+    "report_file_sha256": "9bd3d5db1b4bc26d526a33379f32c944f01f8dc48a947193df5b62a975c6d46c",
+    "producer_git_head": "b5e4c7bd7137425737f4c5ac0621541011dacec8",
+    "parent_update": 1000,
+    "architecture": "source_routed_process_attention_v2"
+  },
+  "result": {
+    "selected_direction": "minimum_norm_unit",
+    "selected_direction_passing_groups": 4,
+    "total_groups": 4,
+    "minimum_selected_group_component_cosine": 0.25126683287962553,
+    "selected_component_median_cosines": {
+      "one_day_anchor": 0.39041035257937684,
+      "npp": 0.4862966628766281,
+      "aboveground_biomass_tendency": 0.44598263640429103,
+      "belowground_biomass_tendency": 0.3904103525790401
+    },
+    "equal_unit_passing_groups": 2,
+    "equal_unit_rejected": true,
+    "hard_failure_count": 0,
+    "nonfinite_gradient_value_count": 0
+  },
+  "execution": {
+    "elapsed_seconds": 738.113317313604,
+    "peak_jax_device_bytes": 12720479232,
+    "training_updates": 0,
+    "checkpoint_written": false,
+    "recovery_written": false,
+    "validation_values_evaluated": false,
+    "sealed_test_used": false,
+    "teacher_data_regenerated": false,
+    "historical_v5_used": false,
+    "paid_node_used": false
+  },
+  "decision": "admit_only_a_frozen_10_update_minimum_norm_smoke"
+}
