@@ -47,6 +47,11 @@ from scripts.hpc.probe_successor_direct_trust_region import (
     _make_combined_direction,
     _make_direct_virtual_step,
 )
+from scripts.hpc.probe_successor_multibatch_direction import (
+    _empty_accumulators,
+    _make_gradient_accumulator,
+    _make_nonfinite_counter,
+)
 from scripts.hpc.probe_successor_realized_step import _make_proposed_directions
 from scripts.hpc.run_successor_direct_direction_smoke import (
     classify_direct_direction_smoke,
@@ -1341,6 +1346,62 @@ def test_direct_direction_smoke_contract_and_launcher_are_bounded():
     assert "successor_adamw_update" not in source
     assert '"checkpoint_written": False' in source
     assert '"final_parameters_retained": False' in source
+    assert "write_staged_recovery" not in source
+
+
+def test_multibatch_gradient_accumulation_matches_equal_group_mean():
+    parameters = {"value": jnp.asarray([1.0, 2.0], dtype=jnp.float64)}
+    accumulators = _empty_accumulators(jax, parameters)
+    accumulate = _make_gradient_accumulator(jax)
+    count_nonfinite = _make_nonfinite_counter(jax)
+    gradient = {"value": jnp.asarray([3.0, 4.0], dtype=jnp.float64)}
+
+    for _group in range(10):
+        accumulators[0] = accumulate(
+            accumulators[0],
+            gradient,
+            jnp.asarray(0.1, dtype=jnp.float64),
+        )
+
+    np.testing.assert_allclose(accumulators[0]["value"], gradient["value"])
+    assert int(count_nonfinite(accumulators[0])) == 0
+
+
+def test_multibatch_direction_contract_and_launcher_are_zero_update():
+    manifest_path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_multibatch_direction_audit_v1.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_multibatch_direction.sh"
+    ).read_text()
+    source = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "probe_successor_multibatch_direction.py"
+    ).read_text()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["sampling"]["total_point_years"] == 40
+    assert manifest["sampling"]["total_one_day_anchors"] == 320
+    assert manifest["sampling"]["total_rollout_windows"] == 40
+    assert manifest["execution"]["optimizer_updates"] == 0
+    assert manifest["direction"]["gradient_accumulation"] is True
+    assert "requires free gln01" in launcher
+    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
+    assert "#SBATCH" not in launcher
+    assert "successor_adamw_update" not in source
+    assert '"checkpoint_written": False' in source
+    assert '"proposed_parameters_retained": False' in source
     assert "write_staged_recovery" not in source
 
 

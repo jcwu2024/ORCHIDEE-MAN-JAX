@@ -1,0 +1,64 @@
+{
+  "schema_version": "successor_multibatch_direction_audit_v1",
+  "status": "frozen_zero_update_accumulated_gradient_grid",
+  "contract_sha256": "3c3cd06828f9300723e8e53e5708b7e02e386025daa0a9a717c10a948edfcd8d",
+  "identity": {
+    "direct_direction_smoke_contract_sha256": "faff94bf1b651e9a805da59125f63ca6baaf2835888035c4eaa6b8fd3580f1e1",
+    "direct_direction_smoke_report_sha256": "48e8e7da98a5b2c52e045af5653be5aea0bb85f970cb34b6f7ac40a65b50abf7",
+    "staged_training_contract_sha256": "53d21d3a03a1502263b333aaba9719b2d42f096672844497b1a213dd54c23c7b",
+    "candidate_coefficient_contract_sha256": "2093c392cc24a59f0b5021b7ecfafade7e3522fd3953014df63d4d85517b1d9f",
+    "scale_acceptance_contract_sha256": "a0ec131530e9dd4f72b3f22267ddf88f8af7db9c7262d7d505c7fc5bf2278490"
+  },
+  "model": {
+    "architecture": "source_routed_process_attention_v2",
+    "parent_update": 1000,
+    "parameter_count": 8722689,
+    "architecture_change": false
+  },
+  "sampling": {
+    "split": "train/train",
+    "scheduled_updates": [1001, 1010],
+    "mixed_batch_count": 10,
+    "point_years_per_mixed_batch": 4,
+    "total_point_years": 40,
+    "total_one_day_anchors": 320,
+    "total_rollout_windows": 40,
+    "rollout_days": 30
+  },
+  "direction": {
+    "component_gradient_aggregation": "equal_mean_across_ten_mixed_batches_at_frozen_parent",
+    "combined_direction": "minimum_norm_convex_combination_of_four_unit_aggregated_component_gradients",
+    "gradient_accumulation": true,
+    "simultaneous_graph_retention": false,
+    "adamw": false,
+    "momentum": false,
+    "coordinate_adaptive_scaling": false,
+    "weight_decay": false,
+    "gradient_clipping": false
+  },
+  "step_norm_grid": [0.00003, 0.0001, 0.0003, 0.001],
+  "gates": {
+    "hard_failure_count": 0,
+    "nonfinite_value_count": 0,
+    "maximum_passing_group_component_relative_increase": 0.000001,
+    "minimum_passing_groups": 8,
+    "total_groups": 10,
+    "maximum_any_group_component_relative_increase": 0.01,
+    "minimum_each_component_median_relative_decrease": 0.0001
+  },
+  "selection": "largest_passing_shared_step_norm",
+  "execution": {
+    "free_gln01_only": true,
+    "paid_training_authorized": false,
+    "optimizer_updates": 0,
+    "proposed_parameters_retained": false,
+    "checkpoint_written": false,
+    "recovery_written": false,
+    "teacher_data_regenerated": false,
+    "historical_v5_used": false,
+    "validation_values_evaluated": false,
+    "sealed_test_used": false
+  },
+  "pass_action": "review_bounded_accumulated_gradient_training_design",
+  "fail_action": "close_gradient_combination_and_redesign_objective_or_sampling_unit"
+}
