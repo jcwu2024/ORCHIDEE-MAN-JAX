@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-13.
+Last updated: 2026-08-14.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -666,15 +666,27 @@ sampling reverses or suppresses that tradeoff, especially for attention. The
 next controlled experiment category is loss balancing, not sampling or
 architecture.
 
-The active task is a zero-update, train/train-only per-output gradient audit
-at the accepted update-1000 checkpoint. Measure norms and pairwise cosines for
-GPP, NPP, maintenance respiration, AGB, BGB, and total live biomass separately
-from the one-day anchor, under the frozen normalization and coefficients, for
-both arms on the same existing prepared point-years. Do not use validation or
-sealed-test values for tuning, update parameters, write a checkpoint, change
-weights, or choose a balancing mechanism before reviewing the audit. The
-365-day rollout, long-held-point validation, Gate D2, paid training, and
-product gates remain closed.
+The attention-specific zero-update per-output gradient audit is complete at
+commit `4f35e6a`; report SHA256 is `a476b332...d1410b49`. Three of four
+maintenance-versus-primary-output pairs meet the stable single-batch conflict
+rule, but mixed sampling mitigates zero of them and makes every median less
+aligned. The proposed mixed-conflict-mitigation mechanism is rejected. The
+same audit finds NPP/maintenance median gradient norms around `1e-1/1e-2`
+while AGB, BGB, and total-live-biomass norms are only about `1e-6` to `1e-7`.
+See
+[`successor_per_output_gradient_audit_20260814.md`](research/daily_coarse_graining/successor_per_output_gradient_audit_20260814.md).
+
+The active gate is now the no-training proposal in
+[`successor_loss_objective_design_review_v1.md`](research/daily_coarse_graining/successor_loss_objective_design_review_v1.md).
+It proposes named AGB/BGB tendencies after the conservative operator, keeps
+the one-day process anchor, converts long-horizon maintenance to a guard, and
+uses a current-loss Attention A/B before any conditional graph-control run.
+This is materially narrower than the rejected all-state `process_increment_v2`.
+The exact maintenance guard and required validation-cell majority must be
+reviewed and frozen before implementation. Do not implement a new objective,
+change architecture, continue mixed sampling, or start paid training before
+that review. The 365-day rollout, long-held-point validation, Gate D2, sealed
+test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 

@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-13.
+Last updated: 2026-08-14.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -74,6 +74,10 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_staged_training_gpu_smoke_acceptance_20260812.md` | Active accepted free-GPU staged execution preflight; not promotion evidence | Sizing or reviewing the first 500-update stage |
 | `research/daily_coarse_graining/successor_staged_500_milestone_acceptance_20260812.md` | Accepted first staged baseline; superseded for current action by the 1000 milestone | Reviewing update-500 provenance or comparison values |
 | `research/daily_coarse_graining/successor_staged_1000_milestone_acceptance_20260813.md` | Active accepted second staged milestone; both arms improve but neither is promoted | Reviewing or proposing the conditional 1001-2000 stage |
+| `research/daily_coarse_graining/successor_batch_diversity_probe_20260814.md` | Accepted equal-sample A/B; mixed sampling is not a universal policy | Reviewing sampling diversity and the Attention-specific improvement |
+| `research/daily_coarse_graining/successor_loss_conflict_attribution_20260814.md` | Accepted validation attribution; superseded for current action by the gradient audit | Reviewing the maintenance-versus-productivity tradeoff |
+| `research/daily_coarse_graining/successor_per_output_gradient_audit_20260814.md` | Active train-only gradient evidence; mixed-conflict mechanism rejected and loss-design review opened | Designing the next matched objective experiment |
+| `research/daily_coarse_graining/successor_loss_objective_design_review_v1.md` | Active proposal only; review required before implementation or training | Discussing the named biomass-tendency mechanism and matched gates |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

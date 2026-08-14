@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-13.
+Last updated: 2026-08-14.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -433,14 +433,31 @@ control-single changes maintenance/NPP/total-live-biomass RMSE by
 the principal tradeoffs. See
 [`successor_loss_conflict_attribution_20260814.md`](research/daily_coarse_graining/successor_loss_conflict_attribution_20260814.md).
 
-The next controlled experiment category is loss balancing. The current task
-is a zero-update train/train-only per-output gradient audit at update 1000,
-covering GPP, NPP, maintenance respiration, AGB, BGB, total live biomass, and
-the one-day anchor for both arms on matched prepared point-years. Do not use
-validation or sealed-test values for tuning, train, change coefficients,
-choose a balancing mechanism, or change architecture before reviewing that
-audit. The 365-day rollout, long-held points, Gate D2, paid training, and
-product acceptance remain closed.
+The attention-specific zero-update train/train gradient audit completed on
+free `gln01` at commit `4f35e6a` in `779.454` seconds. Report SHA256 is
+`a476b332624a83515555e5532229ca51b265c6ff7eab1c349156c1a3d1410b49`;
+all hard and nonfinite-gradient counts are zero, and no update, checkpoint,
+validation value, or sealed-test value was used. Maintenance has stable
+negative gradient cosine with NPP, AGB, and total live biomass in at least
+three of four single groups. Mixed sampling mitigates none of those pairs and
+makes all four median maintenance pairings less aligned, so the proposed
+Attention mixed-conflict mechanism is rejected.
+
+The frozen objective also yields median Attention gradients around `1e-1` for
+NPP and `1e-2` for maintenance, versus only `1e-6` to `1e-7` for AGB, BGB,
+and total live biomass. This four-to-six-order imbalance supports a loss-
+objective design review, not another unchanged continuation. The active task
+is to specify a train-only biomass increment/tendency mechanism, maintenance
+guard, matched current-loss Attention control, graph-control role, and bounded
+preflight/short-fit gates before implementation or training. See
+[`successor_per_output_gradient_audit_20260814.md`](research/daily_coarse_graining/successor_per_output_gradient_audit_20260814.md).
+The discussion draft is
+[`successor_loss_objective_design_review_v1.md`](research/daily_coarse_graining/successor_loss_objective_design_review_v1.md).
+It explicitly does not reopen the rejected all-state `process_increment_v2`:
+the proposed signal is limited to source-partitioned AGB/BGB tendencies after
+the conservative operator, with unchanged one-day process supervision.
+The 365-day rollout, long-held points, Gate D2, paid training, and product
+acceptance remain closed.
 
 ## Stable Teacher
 
