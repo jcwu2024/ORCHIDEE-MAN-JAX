@@ -9,6 +9,11 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
+from research.daily_coarse_graining.daily_operator.gradient_feasibility import (
+    GRADIENT_FEASIBILITY_LABELS,
+    classify_gradient_feasibility,
+    gradient_direction_diagnostics,
+)
 from research.daily_coarse_graining.daily_operator.long_horizon_objective import (
     MaskedTrajectory,
 )
@@ -605,6 +610,108 @@ def test_named_biomass_objective_ab_launcher_is_free_and_no_checkpoint():
     assert '"recovery_written": False' in source
     assert "write_staged_recovery" not in source
     assert "write_staged_best_checkpoint" not in source
+
+
+def test_gradient_feasibility_directions_find_orthogonal_common_descent():
+    diagnostics = gradient_direction_diagnostics(np.eye(4, dtype=np.float64))
+
+    for direction_name in ("equal_unit", "minimum_norm_unit"):
+        direction = diagnostics["directions"][direction_name]
+        assert direction["all_strictly_positive"]
+        assert set(direction["normalized_directional_derivatives"]) == set(
+            GRADIENT_FEASIBILITY_LABELS
+        )
+        assert tuple(direction["normalized_directional_derivatives"].values()) == (
+            pytest.approx(0.5),
+        ) * 4
+
+    records = [
+        {"group": group, "diagnostics": diagnostics}
+        for group in range(4)
+    ]
+    result = classify_gradient_feasibility(
+        records,
+        gates={
+            "minimum_group_component_cosine": 0.05,
+            "minimum_component_median_cosine": 0.10,
+            "minimum_passing_groups": 3,
+        },
+    )
+    assert result["status"] == "common_descent_direction_supported"
+    assert result["selected_direction"] == "equal_unit"
+
+
+def test_gradient_feasibility_rejects_opposed_objectives():
+    vectors = np.asarray(
+        (
+            (1.0, 0.0),
+            (-1.0, 0.0),
+            (0.0, 1.0),
+            (0.0, 1.0),
+        ),
+        dtype=np.float64,
+    )
+    diagnostics = gradient_direction_diagnostics(vectors @ vectors.T)
+    records = [
+        {"group": group, "diagnostics": diagnostics}
+        for group in range(4)
+    ]
+    result = classify_gradient_feasibility(
+        records,
+        gates={
+            "minimum_group_component_cosine": 0.05,
+            "minimum_component_median_cosine": 0.10,
+            "minimum_passing_groups": 3,
+        },
+    )
+
+    assert result["status"] == "common_descent_direction_not_supported"
+    assert result["selected_direction"] is None
+
+
+def test_gradient_feasibility_contract_is_hash_bound_and_zero_update():
+    path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_gradient_feasibility_v1.json"
+    )
+    manifest = json.loads(path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["components"] == list(GRADIENT_FEASIBILITY_LABELS)
+    assert manifest["gates"]["minimum_group_component_cosine"] == 0.05
+    assert manifest["gates"]["minimum_passing_groups"] == 3
+    assert manifest["gates"]["minimum_component_median_cosine"] == 0.10
+    assert manifest["execution"]["optimizer_updates"] == 0
+    assert not manifest["execution"]["paid_training_authorized"]
+    assert not manifest["execution"]["validation_values_evaluated"]
+
+
+def test_gradient_feasibility_launcher_is_free_and_zero_update():
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_gradient_feasibility.sh"
+    ).read_text()
+    source = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "probe_successor_gradient_feasibility.py"
+    ).read_text()
+
+    assert "requires free gln01" in launcher
+    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
+    assert "#SBATCH" not in launcher
+    assert '"training_updates": 0' in source
+    assert '"checkpoint_written": False' in source
+    assert '"validation_values_evaluated": False' in source
+    assert "successor_adamw_update" not in source
+    assert "write_staged_recovery" not in source
 
 
 def _write_scale_admission_fixture(tmp_path):
