@@ -1,0 +1,82 @@
+{
+  "schema_version": "successor_direct_direction_smoke_v1",
+  "status": "frozen_10_update_free_gpu_no_checkpoint",
+  "contract_sha256": "faff94bf1b651e9a805da59125f63ca6baaf2835888035c4eaa6b8fd3580f1e1",
+  "identity": {
+    "direct_trust_region_contract_sha256": "03c7d98ae25eb6f16d7d45714e6614732a65125335988bb1a0b0caa354b25343",
+    "direct_trust_region_report_sha256": "ccc4e1fd29ddebf2d55976aec0282c62a14c814c6b148e1d862f9513379e1fbd",
+    "staged_training_contract_sha256": "53d21d3a03a1502263b333aaba9719b2d42f096672844497b1a213dd54c23c7b",
+    "candidate_coefficient_contract_sha256": "2093c392cc24a59f0b5021b7ecfafade7e3522fd3953014df63d4d85517b1d9f",
+    "scale_acceptance_contract_sha256": "a0ec131530e9dd4f72b3f22267ddf88f8af7db9c7262d7d505c7fc5bf2278490",
+    "parent_recovery_sha256": "d49222d4f9f64941e555d1c8b0536c785cc89942d59fb41b3a5d5ea291a7cae7",
+    "prepared_manifest_sha256": "6feabb05a9d3833de01be540e2676fd1d51da01510314b32015fd155d87111ba",
+    "validation_panel_sha256": "1ac7490a2c7067bf3f66faea75836d80a9e6fdc62ebcdc8673caa3f445c70350"
+  },
+  "model": {
+    "architecture": "source_routed_process_attention_v2",
+    "parent_update": 1000,
+    "parameter_count": 8722689,
+    "architecture_change": false
+  },
+  "update": {
+    "direction": "minimum_norm_convex_combination_of_unit_component_gradients",
+    "global_step_norm": 0.001,
+    "direction_recomputed_per_update": true,
+    "adamw": false,
+    "momentum": false,
+    "coordinate_adaptive_scaling": false,
+    "weight_decay": false,
+    "gradient_clipping": false
+  },
+  "training": {
+    "updates": 10,
+    "scheduled_batches": [1001, 1010],
+    "sampling": "four_equal_point_year_contexts_per_update",
+    "one_day_anchor_batch_size": 32,
+    "rollout_windows_per_update": 4,
+    "rollout_days": 30,
+    "control": "frozen_update_1000_parent_no_training"
+  },
+  "validation": {
+    "panel": "accepted_non_test_panel_deterministic_subset",
+    "selection": "first_and_last_ordered_artifact_per_slice",
+    "artifact_count": 6,
+    "window_count": 12,
+    "slices": ["temporal", "spatial", "joint"],
+    "horizons_days": [7, 30],
+    "research_primary_keys": [
+      "cumulative.npp",
+      "terminal.aboveground_biomass_carbon",
+      "terminal.belowground_biomass_carbon",
+      "terminal.total_live_biomass_carbon"
+    ],
+    "maintenance_key": "cumulative.maintenance_respiration",
+    "sealed_test_used": false
+  },
+  "gates": {
+    "hard_failure_count": 0,
+    "nonfinite_value_count": 0,
+    "total_updates": 10,
+    "minimum_all_component_nonincrease_updates": 8,
+    "maximum_nonincrease_component_relative_increase": 0.000001,
+    "maximum_any_update_component_relative_increase": 0.01,
+    "minimum_each_component_median_relative_decrease": 0.0001,
+    "minimum_research_primary_composite_relative_improvement": 0.005,
+    "each_research_primary_key_aggregate_no_worse": true,
+    "minimum_improved_slice_horizon_cells": 4,
+    "total_slice_horizon_cells": 6,
+    "maximum_maintenance_aggregate_relative_regression": 0.05,
+    "maximum_maintenance_single_cell_relative_regression": 0.10
+  },
+  "execution": {
+    "free_gln01_only": true,
+    "paid_training_authorized": false,
+    "checkpoint_written": false,
+    "recovery_written": false,
+    "teacher_data_regenerated": false,
+    "historical_v5_used": false,
+    "sealed_test_used": false
+  },
+  "pass_action": "review_bounded_direct_direction_training_design",
+  "fail_action": "close_direct_direction_training_and_audit_batch_to_rollout_generalization"
+}

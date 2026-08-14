@@ -48,6 +48,9 @@ from scripts.hpc.probe_successor_direct_trust_region import (
     _make_direct_virtual_step,
 )
 from scripts.hpc.probe_successor_realized_step import _make_proposed_directions
+from scripts.hpc.run_successor_direct_direction_smoke import (
+    classify_direct_direction_smoke,
+)
 from scripts.hpc.run_successor_gradient_balanced_smoke import (
     CANDIDATE,
     CONTROL,
@@ -1243,6 +1246,102 @@ def test_direct_trust_region_launcher_is_free_and_zero_update():
     assert "write_staged_recovery" not in source
     assert "_make_loss_evaluator" in source
     assert "_loss_record" not in source
+
+
+def _direct_smoke_gates():
+    return {
+        "hard_failure_count": 0,
+        "nonfinite_value_count": 0,
+        "total_updates": 10,
+        "minimum_all_component_nonincrease_updates": 8,
+        "maximum_nonincrease_component_relative_increase": 1.0e-6,
+        "maximum_any_update_component_relative_increase": 0.01,
+        "minimum_each_component_median_relative_decrease": 1.0e-4,
+        "minimum_research_primary_composite_relative_improvement": 0.005,
+        "minimum_improved_slice_horizon_cells": 4,
+        "maximum_maintenance_aggregate_relative_regression": 0.05,
+        "maximum_maintenance_single_cell_relative_regression": 0.10,
+    }
+
+
+def _direct_smoke_updates(relative_change=-0.001):
+    return [
+        {
+            "update_applied": True,
+            "loss_relative_changes": {
+                label: relative_change for label in GRADIENT_FEASIBILITY_LABELS
+            },
+            "parent_hard_gate_counts": {"failure": 0},
+            "proposed_hard_gate_counts": {"failure": 0},
+            "nonfinite_values": {"values": 0},
+        }
+        for _ in range(10)
+    ]
+
+
+def test_direct_direction_smoke_requires_bounded_updates_and_rollout_gain():
+    objective_validation = _objective_ab_validation()
+    validation = {
+        CONTROL: objective_validation[OBJECTIVES[0]],
+        CANDIDATE: objective_validation[OBJECTIVES[1]],
+    }
+    updates = _direct_smoke_updates()
+
+    admitted = classify_direct_direction_smoke(
+        validation,
+        updates,
+        gates=_direct_smoke_gates(),
+    )
+    assert admitted["status"] == "direct_direction_smoke_admitted"
+    assert admitted["all_component_nonincrease_updates"] == 10
+
+    updates[0]["loss_relative_changes"][GRADIENT_FEASIBILITY_LABELS[0]] = 0.02
+    rejected = classify_direct_direction_smoke(
+        validation,
+        updates,
+        gates=_direct_smoke_gates(),
+    )
+    assert rejected["status"] == "direct_direction_smoke_rejected"
+    assert not rejected["training_checks"][
+        "every_update_within_global_regression_bound"
+    ]
+
+
+def test_direct_direction_smoke_contract_and_launcher_are_bounded():
+    manifest_path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_direct_direction_smoke_v1.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_direct_direction_smoke.sh"
+    ).read_text()
+    source = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_direct_direction_smoke.py"
+    ).read_text()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["update"]["global_step_norm"] == pytest.approx(0.001)
+    assert manifest["training"]["updates"] == 10
+    assert manifest["update"]["adamw"] is False
+    assert manifest["execution"]["checkpoint_written"] is False
+    assert "requires free gln01" in launcher
+    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
+    assert "#SBATCH" not in launcher
+    assert "successor_adamw_update" not in source
+    assert '"checkpoint_written": False' in source
+    assert '"final_parameters_retained": False' in source
+    assert "write_staged_recovery" not in source
 
 
 def _write_scale_admission_fixture(tmp_path):
