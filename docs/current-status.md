@@ -415,13 +415,32 @@ Report SHA256 is
 see
 [`successor_batch_diversity_probe_20260814.md`](research/daily_coarse_graining/successor_batch_diversity_probe_20260814.md).
 
-The current gate is one report-only 100-update equal-sample A/B on free
-`gln01`, starting from the accepted update-1000 parameters and optimizer and
-ending on the unchanged 48-window non-test validation panel. Mixed sampling
-must be no worse than single sampling for both arms and improve at least one
-arm by 0.5%, with zero hard failures. Otherwise the sampling branch closes.
-No paid run, architecture change, 365-day rollout, long-held points, Gate D2,
-sealed test, or product acceptance is authorized.
+The 100-update equal-sample A/B completed on free `gln01` at commit `aa602ab`
+in `4130.87` seconds, including the unchanged 48-window validation panel.
+Report SHA256 is `6c3f16ff...161154b`; all hard counts are zero and no
+checkpoint or recovery was written. Attention mixed sampling scores
+`1.00714567`, 4.35% better than attention single at `1.05300199` and 0.73%
+better than the update-1000 baseline. Control mixed scores `1.00539728`,
+0.25% worse than control single at `1.00288890`. The preregistered both-arm
+gate fails, so mixed sampling is not adopted and no paid continuation is
+authorized.
+
+The report-only loss attribution is complete. Across six cells,
+control-single changes maintenance/NPP/total-live-biomass RMSE by
+`-12.94%/+2.39%/+2.38%`; attention-single changes them by
+`-30.32%/+14.53%/+14.50%`. Attention-mixed reverses the pattern to
+`+12.32%/-2.68%/-2.66%`. The signs are consistent across all six cells for
+the principal tradeoffs. See
+[`successor_loss_conflict_attribution_20260814.md`](research/daily_coarse_graining/successor_loss_conflict_attribution_20260814.md).
+
+The next controlled experiment category is loss balancing. The current task
+is a zero-update train/train-only per-output gradient audit at update 1000,
+covering GPP, NPP, maintenance respiration, AGB, BGB, total live biomass, and
+the one-day anchor for both arms on matched prepared point-years. Do not use
+validation or sealed-test values for tuning, train, change coefficients,
+choose a balancing mechanism, or change architecture before reviewing that
+audit. The 365-day rollout, long-held points, Gate D2, paid training, and
+product acceptance remain closed.
 
 ## Stable Teacher
 

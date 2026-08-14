@@ -86,3 +86,39 @@ by at least 0.5%. Otherwise stop this sampling branch. This screen cannot
 promote an architecture or open 365-day, held-point, Gate D2, sealed-test, or
 product gates.
 
+## Short-Fit Result
+
+The free-`gln01` short fit completed at commit `aa602ab` in `4130.87`
+seconds. It executed all 100 updates and the complete unchanged 48-window
+validation panel. Report SHA256 is
+`6c3f16ffb8b160bd85b1840955f50d0f422685d323b200ce309fcd89d161154b`.
+No checkpoint or recovery was written, and all training and validation hard
+counts are zero.
+
+| Arm | Update-1000 baseline | 100-update single | 100-update mixed | Mixed vs single |
+| --- | ---: | ---: | ---: | ---: |
+| attention | 1.01457146 | 1.05300199 | 1.00714567 | +4.35% |
+| control | 1.00607822 | 1.00288890 | 1.00539728 | -0.25% |
+
+Attention mixed sampling improves all six slice/horizon primary cells over
+its matched single continuation and improves the update-1000 composite by
+0.73%. Attention single sampling instead worsens the baseline by 3.79%.
+Control single and mixed sampling both improve the baseline slightly, but
+single is 0.25% better than mixed. The preregistered requirement that mixed
+sampling be no worse for both arms therefore fails, and the sampling branch
+is rejected for adoption or paid continuation.
+
+Pre-clip gradient counts above 1.0 are `42/100` attention-single, `47/100`
+attention-mixed, `62/100` control-single, and `60/100` control-mixed. Large
+isolated spikes remain in every path. Point-year diversity changes which arm
+is stable, but it does not consistently eliminate clipping or validation
+tradeoffs.
+
+The scientific pattern is more useful than the binary gate alone. Single
+sampling often improves maintenance respiration while worsening NPP and live
+biomass. Mixed sampling largely preserves or improves NPP and biomass but
+gives up some maintenance-respiration improvement, especially for control.
+The next bounded task is therefore loss-component conflict attribution using
+the existing short-fit records and frozen validation outputs. Do not train
+again, change architecture, or tune against the validation panel during that
+attribution.

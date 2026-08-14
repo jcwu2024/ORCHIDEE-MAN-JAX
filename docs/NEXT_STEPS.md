@@ -649,16 +649,32 @@ Control improved all six validation cells slightly; attention worsened all
 six. The accepted best checkpoint therefore remains update 1000. Do not
 continue unchanged to update 5000.
 
-The active gate is now the free-node, no-checkpoint batch-diversity short fit
-frozen in
+The free-node, no-checkpoint batch-diversity short fit frozen in
 [`successor_batch_diversity_probe_20260814.md`](research/daily_coarse_graining/successor_batch_diversity_probe_20260814.md).
-Its zero-update probe showed exact loss/gradient implementation equivalence
-but no consistent gradient-geometry advantage for four-point-year updates.
-Run only the declared 100-update equal-sample A/B on `gln01`; require zero
-hard failures, mixed no worse than single for both arms, and at least 0.5%
-mixed improvement for one arm. Failure closes this sampling branch. No paid
-preparation/training, architecture change, 365-day rollout, long-held-point
-validation, Gate D2, sealed test, or product gate is authorized.
+is complete. Its 100-update A/B has zero hard failures. Attention mixed
+sampling improves its matched single continuation by 4.35% and improves the
+update-1000 baseline by 0.73%, but control mixed sampling is 0.25% worse than
+control single. The preregistered both-arm gate therefore fails. Report
+SHA256 is `6c3f16ff...161154b`; do not adopt mixed sampling or propose paid
+continuation from this result.
+
+The report-only attribution is complete in
+[`successor_loss_conflict_attribution_20260814.md`](research/daily_coarse_graining/successor_loss_conflict_attribution_20260814.md).
+Across all six validation cells, single sampling improves maintenance
+respiration while systematically damaging NPP and live biomass; mixed
+sampling reverses or suppresses that tradeoff, especially for attention. The
+next controlled experiment category is loss balancing, not sampling or
+architecture.
+
+The active task is a zero-update, train/train-only per-output gradient audit
+at the accepted update-1000 checkpoint. Measure norms and pairwise cosines for
+GPP, NPP, maintenance respiration, AGB, BGB, and total live biomass separately
+from the one-day anchor, under the frozen normalization and coefficients, for
+both arms on the same existing prepared point-years. Do not use validation or
+sealed-test values for tuning, update parameters, write a checkpoint, change
+weights, or choose a balancing mechanism before reviewing the audit. The
+365-day rollout, long-held-point validation, Gate D2, paid training, and
+product gates remain closed.
 
 ## Completed Task Packet: Gate C
 
