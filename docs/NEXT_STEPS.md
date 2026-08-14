@@ -755,15 +755,23 @@ every primary key worsens, and `0/6` cells improve. Maintenance improves
 `5.7566%`. Report SHA256 is `48e8e7da...50abf7`; see
 [`successor_direct_direction_smoke_20260815.md`](research/daily_coarse_graining/successor_direct_direction_smoke_20260815.md).
 
-Do not continue fixed-norm per-batch direct training. The active gate is a
-zero-update multi-batch direction-transfer audit at the frozen update-1000
-parameters. Use ten distinct scheduled mixed batches and all 40
-batch-component gradients to determine whether a single robust common-descent
-direction exists when each proposed update sees materially more data. Freeze
-a bounded global step-norm grid and evaluate it on all ten batches; retain no
-parameters and read no validation or sealed-test values. No network
-architecture change is involved. The 365-day rollout, long-held-point
-validation, Gate D2, sealed test, and product gates remain closed.
+The zero-update accumulated multi-batch audit is complete at commit `ab7f41a`.
+A tenfold larger effective update batch reduces the worst regression at norm
+`0.0003` from `19.11%` to `0.0323%`, while median NPP and biomass components
+improve. It still passes only `4/10` groups because equal averaging hides
+small point-year conflicts; norm `0.001` becomes nonlinear and regresses up to
+`28.89%`. Report SHA256 is `0601fcd6...c0d847`; see
+[`successor_multibatch_direction_audit_20260815.md`](research/daily_coarse_graining/successor_multibatch_direction_audit_20260815.md).
+
+Do not train the ordinary averaged-gradient direction. The active gate is a
+zero-update group-aware feasibility audit using the same 40 group-component
+gradients. Normalize and constrain each of the 10 groups x 4 components
+separately, solve the 40-objective minimum-norm simplex problem, and only if a
+positive common direction exists evaluate a bounded virtual step grid on all
+ten groups. Retain no parameters and read no validation or sealed-test values.
+No network architecture change is involved. The 365-day rollout,
+long-held-point validation, Gate D2, sealed test, and product gates remain
+closed.
 
 ## Completed Task Packet: Gate C
 

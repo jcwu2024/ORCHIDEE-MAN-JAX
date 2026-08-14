@@ -82,6 +82,7 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_realized_step_audit_20260815.md` | Active optimizer-handoff rejection; inherited/reset AdamW closed | Designing the zero-update direct-direction trust-region gate |
 | `research/daily_coarse_graining/successor_direct_trust_region_audit_20260815.md` | Active direct-step admission; global norm 0.001 selected | Designing the no-checkpoint 10-update direct-direction smoke |
 | `research/daily_coarse_graining/successor_direct_direction_smoke_20260815.md` | Active per-batch direction-transfer rejection; no continuation | Designing the zero-update robust multi-batch direction audit |
+| `research/daily_coarse_graining/successor_multibatch_direction_audit_20260815.md` | Active batch-size attribution; ordinary averaging rejected | Designing the group-aware 40-objective feasibility audit |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

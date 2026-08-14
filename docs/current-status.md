@@ -1543,3 +1543,18 @@ transfer. The active gate is a zero-update robust multi-batch audit using ten
 mixed batches and all 40 batch-component gradients at the frozen update-1000
 parameters. See
 [`successor_direct_direction_smoke_20260815.md`](research/daily_coarse_graining/successor_direct_direction_smoke_20260815.md).
+
+The accumulated multi-batch audit completed on free `gln01` at commit
+`ab7f41a`. One effective update now covers 40 point-years, 320 one-day anchors,
+and 40 30-day windows. The direction is clear for the four group-mean
+objectives (minimum cosine `0.2736`) and sharply reduces instability: at global
+norm `0.0003`, the worst group-component regression is `0.0323%` rather than
+the per-batch smoke's `19.11%`. However, only `4/10` groups improve every
+component, so no frozen step passes. Norm `0.001` is nonlinear and regresses up
+to `28.89%`. Hard and nonfinite counts are zero, and the report SHA256 is
+`0601fcd6bc9f51b638bb2de14087be152320e65fa6430e5ddcab254990c0d847`.
+
+This confirms that effective batch size matters but ordinary averaging is not
+enough. The active gate is a zero-update group-aware 40-objective common
+direction audit. See
+[`successor_multibatch_direction_audit_20260815.md`](research/daily_coarse_graining/successor_multibatch_direction_audit_20260815.md).
