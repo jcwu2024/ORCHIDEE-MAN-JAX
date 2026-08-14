@@ -1510,3 +1510,20 @@ common-descent direction. The active gate is a zero-update shared
 direct-direction trust-region audit; no optimizer-reset smoke or further
 training is authorized. See
 [`successor_realized_step_audit_20260815.md`](research/daily_coarse_graining/successor_realized_step_audit_20260815.md).
+
+The direct-direction trust-region audit then completed on free `gln01` at
+commit `55c30a3`. With AdamW and all coordinate-wise optimizer transforms
+removed, global step norm `0.001` decreases all four component losses in all
+four train/train groups. Median relative changes are `-0.0116%` for the
+one-day anchor, `-0.1652%` for NPP, `-0.3081%` for AGB tendency, and
+`-0.0317%` for BGB tendency. Step norm `0.003` is rejected because one group
+regresses by `19.43%`; all larger tested norms are also outside the shared
+trust region. Hard and nonfinite counts are zero, no update is retained, and
+the report SHA256 is
+`ccc4e1fd29ddebf2d55976aec0282c62a14c814c6b148e1d862f9513379e1fbd`.
+
+This is positive local evidence for directly realizing the common-descent
+direction, not a promotion result. The active gate is a no-checkpoint
+10-update direct-direction smoke at fixed global norm `0.001`, followed by
+the accepted non-test 7/30-day subset. See
+[`successor_direct_trust_region_audit_20260815.md`](research/daily_coarse_graining/successor_direct_trust_region_audit_20260815.md).

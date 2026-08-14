@@ -738,16 +738,22 @@ inherited groups and `2/4` reset groups. Hard and nonfinite counts remain
 zero. Report SHA256 is `4b987902...47037`; see
 [`successor_realized_step_audit_20260815.md`](research/daily_coarse_graining/successor_realized_step_audit_20260815.md).
 
-Do not run an optimizer-reset smoke. The active gate is a zero-update shared
-trust-region audit that applies parameter deltas exactly parallel to the raw
-common-descent direction, without AdamW, momentum, coordinate-wise scaling,
-or weight decay. Freeze a log-spaced global step-norm grid before evaluation.
-Only a single norm that makes every component no worse in at least three of
-four groups with zero hard failures may authorize a 10-update smoke. If none
-passes, close raw minimum-norm training and return to batch-to-rollout
-objective/generalization design. No network architecture change is involved.
-The 365-day rollout, long-held-point validation, Gate D2, sealed test, and
-product gates remain closed.
+Do not run an optimizer-reset smoke. The direct-direction trust-region audit
+is complete at commit `55c30a3`. Global step norm `0.001` decreases all four
+component losses in all four groups with zero hard or nonfinite failures.
+Step norm `0.003` is already outside the shared trust region because one
+group's largest component regression is `19.43%`. Report SHA256 is
+`ccc4e1fd...e1fbd`; see
+[`successor_direct_trust_region_audit_20260815.md`](research/daily_coarse_graining/successor_direct_trust_region_audit_20260815.md).
+
+The active gate is a free-`gln01`, 10-update direct-direction smoke from the
+same update-1000 Attention parameters. Recompute the minimum-norm direction
+at each mixed batch and apply a parameter delta of global norm `0.001`
+directly, without AdamW, momentum, coordinate-wise scaling, weight decay, or
+clipping. Retain no checkpoint. Compare the initial and final parameters only
+on the accepted non-test 7/30-day subset. No network architecture change is
+involved. The 365-day rollout, long-held-point validation, Gate D2, sealed
+test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 
