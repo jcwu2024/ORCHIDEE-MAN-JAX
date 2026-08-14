@@ -127,6 +127,13 @@ def _load_contract(
     return payload
 
 
+def _scale_asset_identity(scale_asset: Any) -> Mapping[str, str]:
+    return {
+        "tendency_scale_asset_sha256": str(scale_asset.payload["asset_sha256"]),
+        "tendency_scale_asset_file_sha256": str(scale_asset.file_sha256),
+    }
+
+
 def _make_candidate_train_step(
     runtime: Mapping[str, Any],
     adapter_template: Any,
@@ -791,7 +798,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "candidate_coefficient_contract_sha256": candidate_contract[
                 "contract_sha256"
             ],
-            "tendency_scale_asset_sha256": scale_asset.asset_sha256,
+            **_scale_asset_identity(scale_asset),
         },
         "architecture": SOURCE_ROUTED_ATTENTION,
         "parameter_count": counts[SOURCE_ROUTED_ATTENTION],

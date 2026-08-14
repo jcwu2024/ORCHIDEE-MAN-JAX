@@ -36,6 +36,7 @@ from scripts.hpc.prepare_successor_named_biomass_tendency_scales import (
 )
 from scripts.hpc.run_successor_named_biomass_objective_ab import (
     OBJECTIVES,
+    _scale_asset_identity,
     classify_objective_ab,
 )
 
@@ -665,6 +666,10 @@ def test_named_biomass_tendency_scale_loader_admits_hash_bound_asset(tmp_path):
 
     assert result.scales[30]["aboveground_biomass_carbon"] == 30.0
     assert result.file_sha256 == hashlib.sha256(asset_path.read_bytes()).hexdigest()
+    assert _scale_asset_identity(result) == {
+        "tendency_scale_asset_sha256": result.payload["asset_sha256"],
+        "tendency_scale_asset_file_sha256": result.file_sha256,
+    }
 
 
 def test_named_biomass_tendency_scale_loader_rejects_file_drift(tmp_path):
