@@ -1527,3 +1527,19 @@ direction, not a promotion result. The active gate is a no-checkpoint
 10-update direct-direction smoke at fixed global norm `0.001`, followed by
 the accepted non-test 7/30-day subset. See
 [`successor_direct_trust_region_audit_20260815.md`](research/daily_coarse_graining/successor_direct_trust_region_audit_20260815.md).
+
+The 10-update direct-direction smoke completed on free `gln01` at commit
+`621cf57` and is rejected. All ten proposed updates pass finite and process
+hard gates, and every component has a negative median relative change, but
+only `6/10` updates decrease every component. The maximum single
+batch-component regression is `19.11%`. On the accepted non-test 7/30-day
+subset, the NPP/AGB/BGB/total-live composite worsens `1.4348%`, every primary
+key worsens, and `0/6` cells improve. Maintenance-respiration RMSE improves
+`5.7566%`. No final parameters or checkpoint are retained. Report SHA256 is
+`48e8e7da98a5b2c52e045af5653be5aea0bb85f970cb34b6f7ac40a65b50abf7`.
+
+Removing AdamW therefore fixes direction realization but not direction
+transfer. The active gate is a zero-update robust multi-batch audit using ten
+mixed batches and all 40 batch-component gradients at the frozen update-1000
+parameters. See
+[`successor_direct_direction_smoke_20260815.md`](research/daily_coarse_graining/successor_direct_direction_smoke_20260815.md).

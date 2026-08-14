@@ -746,14 +746,24 @@ group's largest component regression is `19.43%`. Report SHA256 is
 `ccc4e1fd...e1fbd`; see
 [`successor_direct_trust_region_audit_20260815.md`](research/daily_coarse_graining/successor_direct_trust_region_audit_20260815.md).
 
-The active gate is a free-`gln01`, 10-update direct-direction smoke from the
-same update-1000 Attention parameters. Recompute the minimum-norm direction
-at each mixed batch and apply a parameter delta of global norm `0.001`
-directly, without AdamW, momentum, coordinate-wise scaling, weight decay, or
-clipping. Retain no checkpoint. Compare the initial and final parameters only
-on the accepted non-test 7/30-day subset. No network architecture change is
-involved. The 365-day rollout, long-held-point validation, Gate D2, sealed
-test, and product gates remain closed.
+The free-`gln01` 10-update direct-direction smoke is complete at commit
+`621cf57` and rejected. All updates are finite with zero hard failures, and
+all four component medians decrease, but only `6/10` updates decrease every
+component; the largest batch-component regression is `19.11%`. On the
+accepted non-test 7/30-day subset, the NPP/biomass composite worsens `1.4348%`,
+every primary key worsens, and `0/6` cells improve. Maintenance improves
+`5.7566%`. Report SHA256 is `48e8e7da...50abf7`; see
+[`successor_direct_direction_smoke_20260815.md`](research/daily_coarse_graining/successor_direct_direction_smoke_20260815.md).
+
+Do not continue fixed-norm per-batch direct training. The active gate is a
+zero-update multi-batch direction-transfer audit at the frozen update-1000
+parameters. Use ten distinct scheduled mixed batches and all 40
+batch-component gradients to determine whether a single robust common-descent
+direction exists when each proposed update sees materially more data. Freeze
+a bounded global step-norm grid and evaluate it on all ten batches; retain no
+parameters and read no validation or sealed-test values. No network
+architecture change is involved. The 365-day rollout, long-held-point
+validation, Gate D2, sealed test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 
