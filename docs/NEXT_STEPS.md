@@ -708,6 +708,27 @@ long-horizon contribution. Candidate one-day anchor is also worse on `73/100`
 paired batches. This points to persistent fixed-weight component dominance,
 not a biomass signal that remains too small.
 
+The follow-up zero-update gradient-feasibility gate found a raw common descent
+direction for one-day anchor, NPP, AGB tendency, and BGB tendency in all four
+sampled groups. A frozen 10-update minimum-norm smoke then completed on free
+`gln01` at commit `e22a235` with zero hard failures, `10/10` feasible raw
+directions, and zero candidate clipping. It is nevertheless rejected: the
+four-key validation composite worsens `8.39%`, every NPP/AGB/BGB/total-live
+aggregate worsens, and `0/6` slice/horizon cells improve. Maintenance improves
+`30.80%`. Report SHA256 is `d84a6a76...bb83834`; see
+[`successor_gradient_balanced_smoke_20260814.md`](research/daily_coarse_graining/successor_gradient_balanced_smoke_20260814.md).
+
+Do not run the conditional 100-update gradient-balanced A/B. The active gate
+is to freeze a zero-update realized-step audit before implementation. It must
+compare the raw common-descent direction with the actual proposed AdamW
+parameter displacement produced by inherited optimizer moments, and may
+compare a preregistered matched optimizer-state reset. It must retain no
+proposed parameters and perform no training continuation. If the realized
+step remains locally improving, stop optimizer work and return to
+training-batch versus independent-rollout generalization. No architecture
+change is authorized by this result; discuss any new network architecture
+before implementation.
+
 The active gate is design review of a materially different multi-objective
 training mechanism. It must normalize or bound component influence before
 global clipping and explicitly handle harmful gradient conflict, with the

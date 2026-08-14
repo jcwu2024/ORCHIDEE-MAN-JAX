@@ -1474,3 +1474,23 @@ The restartable one-process capture and persisted-replay runners are now
 validated on all 96 accepted records. They verify the source generation plan,
 stage each day atomically, and resume only hash-identical passed records.
 Capture-interface failures and persisted-replay failures are both zero.
+
+The 2026-08-14 gradient-balanced Attention smoke is complete and rejected.
+At commit `e22a235`, a free-`gln01` run continued the accepted update-1000
+Attention state for 10 matched updates. The candidate used a per-update
+minimum-norm convex combination of unit gradients for one-day anchor, NPP,
+AGB tendency, and BGB tendency; the control retained the staged-v3 objective.
+All 10 candidate raw directions pass the `0.05` minimum-cosine gate, candidate
+clipping is `0/10`, and all hard failures are zero. On the frozen six-artifact
+7/30-day subset, however, the candidate worsens the four-key NPP/AGB/BGB/live
+biomass composite by `8.39%`, worsens every key, and improves `0/6` cells.
+Maintenance improves `30.80%`. The report SHA256 is
+`d84a6a764efdbd3b4d8cb74d5ddd0965c301b1ea162671a3db1b7a465bb83834`.
+
+This rejects raw-gradient minimum-norm combination followed by inherited
+AdamW state; it does not reject the Attention architecture. The conditional
+100-update A/B is closed. The next active task is to freeze a zero-update
+realized-step audit of whether AdamW momentum/preconditioning preserves the
+raw common-descent direction. No further optimizer update, paid job, sealed
+test, or architecture change is authorized by this result. See
+[`successor_gradient_balanced_smoke_20260814.md`](research/daily_coarse_graining/successor_gradient_balanced_smoke_20260814.md).

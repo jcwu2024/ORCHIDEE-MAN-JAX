@@ -78,6 +78,7 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_loss_conflict_attribution_20260814.md` | Accepted validation attribution; superseded for current action by the gradient audit | Reviewing the maintenance-versus-productivity tradeoff |
 | `research/daily_coarse_graining/successor_per_output_gradient_audit_20260814.md` | Active train-only gradient evidence; mixed-conflict mechanism rejected and loss-design review opened | Designing the next matched objective experiment |
 | `research/daily_coarse_graining/successor_loss_objective_design_review_v1.md` | Active proposal only; review required before implementation or training | Discussing the named biomass-tendency mechanism and matched gates |
+| `research/daily_coarse_graining/successor_gradient_balanced_smoke_20260814.md` | Active rejection evidence; 100-update continuation closed | Reviewing raw-gradient versus realized-AdamW-step failure and the next zero-update audit |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |
