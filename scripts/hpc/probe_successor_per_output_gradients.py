@@ -19,7 +19,6 @@ from research.daily_coarse_graining.daily_operator.successor_staged_checkpoint i
 from scripts.hpc.probe_successor_batch_diversity import (
     DIAGNOSTIC_GROUPS,
     POINTS_PER_MIXED_UPDATE,
-    _join_context_anchors,
     _selected_positions,
     _slice_context_batch,
     _stack_contexts,
@@ -33,7 +32,6 @@ from scripts.hpc.run_successor_small_fit import (
     _device_memory_report,
     _hard_counts_host,
     _head,
-    _make_arm_objectives,
     _prepare_adapter,
     _retained_tail_trace_signature,
 )
@@ -50,14 +48,13 @@ from scripts.hpc.successor_staged_validation_prepared import (
 PARENT_UPDATE = 1000
 HORIZONS = (1, 7, 30)
 AUDITED_OUTPUTS = (
-    "gpp",
     "npp",
     "maintenance_respiration",
     "aboveground_biomass_carbon",
     "belowground_biomass_carbon",
     "total_live_biomass_carbon",
 )
-GRADIENT_LABELS = ("total", "one_day_anchor", *AUDITED_OUTPUTS)
+GRADIENT_LABELS = AUDITED_OUTPUTS
 CONFLICT_PAIRS = tuple(
     ("maintenance_respiration", name)
     for name in (
@@ -119,7 +116,6 @@ def _field_contribution(
 
 def _loss_vector(
     jax: Any,
-    anchor: Any,
     predicted: Any,
     expected: Any,
     *,
@@ -152,7 +148,7 @@ def _loss_vector(
         )
         for name in AUDITED_OUTPUTS
     )
-    return jnp.stack((anchor + long.total, anchor, *selected))
+    return jnp.stack(selected)
 
 
 def _make_full_objective(
@@ -174,16 +170,9 @@ def _make_full_objective(
     )
 
     jax = runtime["jax"]
-    anchor_objective, _ = _make_arm_objectives(
-        runtime,
-        arm,
-        adapter_template,
-        long_scales,
-    )
     process_head = _head(runtime, arm)
 
     def objective(parameters: Any, batch: Any, day_inputs: Any) -> Any:
-        anchor = anchor_objective(parameters, batch)
         retained_tail = replace(adapter_template, day_inputs=day_inputs)
         transition = bind_daily_operator(
             input_assembler=runtime["adapter"].input_assembler,
@@ -232,7 +221,6 @@ def _make_full_objective(
         )
         return _loss_vector(
             jax,
-            anchor,
             predicted,
             expected,
             coefficients=coefficients,
@@ -263,12 +251,6 @@ def _make_mixed_objective(
     )
 
     jax = runtime["jax"]
-    anchor_objective, _ = _make_arm_objectives(
-        runtime,
-        arm,
-        adapter_template,
-        long_scales,
-    )
     process_head = _head(runtime, arm)
 
     def context_trajectory(parameters: Any, batch: Any, day_inputs: Any) -> Any:
@@ -308,11 +290,9 @@ def _make_mixed_objective(
 
     def objective(
         parameters: Any,
-        anchor_batch: Any,
         context_batches: Any,
         day_inputs: Any,
     ) -> Any:
-        anchor = anchor_objective(parameters, anchor_batch)
         predicted, expected, context_hard_counts = jax.vmap(
             context_trajectory,
             in_axes=(None, 0, 0),
@@ -323,7 +303,6 @@ def _make_mixed_objective(
         )
         return _loss_vector(
             jax,
-            anchor,
             predicted,
             expected,
             coefficients=coefficients,
@@ -334,73 +313,91 @@ def _make_mixed_objective(
 
 
 def _make_measurement(jax: Any, objective: Any) -> Any:
-    import jax.numpy as jnp
-
-    def measurement(parameters: Any, *arguments: Any) -> Any:
+    def measurement(parameters: Any, seed: Any, *arguments: Any) -> Any:
         values, pullback, hard_counts = jax.vjp(
             lambda current: objective(current, *arguments),
             parameters,
             has_aux=True,
         )
-        gradients = jax.lax.map(
-            lambda seed: pullback(seed)[0],
-            jnp.eye(len(GRADIENT_LABELS), dtype=jnp.float64),
-        )
-        gram = sum(
-            (
-                jnp.einsum("i...,j...->ij", leaf, leaf)
-                for leaf in jax.tree_util.tree_leaves(gradients)
-            ),
-            jnp.zeros(
-                (len(GRADIENT_LABELS), len(GRADIENT_LABELS)),
-                dtype=jnp.float64,
-            ),
-        )
-        norms = jnp.sqrt(jnp.maximum(jnp.diag(gram), 0.0))
-        denominator = norms[:, None] * norms[None, :]
-        cosines = jnp.where(denominator > 0.0, gram / denominator, 0.0)
-        nonfinite = sum(
-            (
-                jnp.sum(
-                    ~jnp.isfinite(leaf),
-                    axis=tuple(range(1, leaf.ndim)),
-                )
-                for leaf in jax.tree_util.tree_leaves(gradients)
-            ),
-            jnp.zeros((len(GRADIENT_LABELS),), dtype=jnp.int64),
-        )
-        return values, norms, cosines, nonfinite, hard_counts
+        return values, pullback(seed)[0], hard_counts
 
     return jax.jit(measurement)
 
 
-def _measurement_record(result: Any) -> Mapping[str, Any]:
-    values, norms, cosines, nonfinite, hard_counts = result
-    host_values = np.asarray(values, dtype=np.float64)
-    host_norms = np.asarray(norms, dtype=np.float64)
-    host_cosines = np.asarray(cosines, dtype=np.float64)
-    host_nonfinite = np.asarray(nonfinite, dtype=np.int64)
+def _measurement_record(
+    jax: Any,
+    measurement: Any,
+    parameters: Any,
+    *arguments: Any,
+) -> Mapping[str, Any]:
+    vectors = []
+    nonfinite = []
+    host_values = None
+    host_hard_counts = None
+    seeds = np.eye(len(GRADIENT_LABELS), dtype=np.float64)
+    for seed in seeds:
+        values, gradients, hard_counts = measurement(
+            parameters,
+            seed,
+            *arguments,
+        )
+        jax.block_until_ready((values, gradients, hard_counts))
+        current_values = np.asarray(values, dtype=np.float64)
+        current_hard_counts = _hard_counts_host(hard_counts)
+        if host_values is None:
+            host_values = current_values
+            host_hard_counts = current_hard_counts
+        elif not np.array_equal(current_values, host_values) or (
+            current_hard_counts != host_hard_counts
+        ):
+            raise ValueError("per-output gradient seed changed objective outputs")
+        leaves = tuple(
+            np.asarray(value, dtype=np.float64).reshape(-1)
+            for value in jax.device_get(jax.tree_util.tree_leaves(gradients))
+        )
+        vector = np.concatenate(leaves)
+        nonfinite.append(int(np.count_nonzero(~np.isfinite(vector))))
+        vectors.append(vector)
+        del values, gradients, hard_counts, leaves, vector
+
+    if host_values is None or host_hard_counts is None:
+        raise ValueError("per-output gradient measurement produced no gradients")
+    gram = np.asarray(
+        [
+            [float(np.dot(left, right)) for right in vectors]
+            for left in vectors
+        ],
+        dtype=np.float64,
+    )
+    norms = np.sqrt(np.maximum(np.diag(gram), 0.0))
+    denominator = norms[:, None] * norms[None, :]
+    cosines = np.divide(
+        gram,
+        denominator,
+        out=np.zeros_like(gram),
+        where=denominator > 0.0,
+    )
     return {
         "losses": {
             label: float(host_values[index])
             for index, label in enumerate(GRADIENT_LABELS)
         },
         "gradient_norms": {
-            label: float(host_norms[index])
+            label: float(norms[index])
             for index, label in enumerate(GRADIENT_LABELS)
         },
         "cosines": {
             left: {
-                right: float(host_cosines[left_index, right_index])
+                right: float(cosines[left_index, right_index])
                 for right_index, right in enumerate(GRADIENT_LABELS)
             }
             for left_index, left in enumerate(GRADIENT_LABELS)
         },
         "nonfinite_gradient_values": {
-            label: int(host_nonfinite[index])
+            label: int(nonfinite[index])
             for index, label in enumerate(GRADIENT_LABELS)
         },
-        "hard_gate_counts": _hard_counts_host(hard_counts),
+        "hard_gate_counts": host_hard_counts,
     }
 
 
@@ -521,6 +518,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     if contract.payload["schema_version"] != STAGED_SCHEMA_VERSION:
         raise ValueError("per-output gradient audit requires staged-v3")
     arms = tuple(contract.payload["matched_arms"])
+    if SOURCE_ROUTED_ATTENTION not in arms:
+        raise ValueError("per-output gradient audit requires the attention arm")
     references = runtime["index"].select(spatial_split="train", temporal_split="train")
     schedule = build_successor_small_fit_schedule(
         references,
@@ -604,35 +603,29 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         runtime["process_statistics"].outputs["daily.fast_gpp"].scale,
         runtime["contract"],
     )
-    full_measurements = {
-        arm: _make_measurement(
-            jax,
-            _make_full_objective(
-                runtime,
-                arm,
-                adapter_template,
-                assets.coefficients,
-                long_scales,
-                contract,
-            ),
-        )
-        for arm in arms
-    }
-    mixed_measurements = {
-        arm: _make_measurement(
-            jax,
-            _make_mixed_objective(
-                runtime,
-                arm,
-                adapter_template,
-                assets.coefficients,
-                long_scales,
-                contract,
-            ),
-        )
-        for arm in arms
-    }
-    records = {arm: [] for arm in arms}
+    full_measurement = _make_measurement(
+        jax,
+        _make_full_objective(
+            runtime,
+            SOURCE_ROUTED_ATTENTION,
+            adapter_template,
+            assets.coefficients,
+            long_scales,
+            contract,
+        ),
+    )
+    mixed_measurement = _make_measurement(
+        jax,
+        _make_mixed_objective(
+            runtime,
+            SOURCE_ROUTED_ATTENTION,
+            adapter_template,
+            assets.coefficients,
+            long_scales,
+            contract,
+        ),
+    )
+    records = []
     memory_before = _device_memory_report(runtime["devices"])
     for group_index in range(DIAGNOSTIC_GROUPS):
         group = selected[
@@ -644,51 +637,51 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             _slice_context_batch(jax, artifact.batch, context_index=index)
             for index, (_entry, artifact) in enumerate(group)
         )
-        anchor_batch = _join_context_anchors(jax, contexts)
         context_batch = _stack_contexts(jax, contexts)
         context_inputs = _stack_contexts(
             jax,
             tuple(artifact.day_inputs for _entry, artifact in group),
         )
-        for arm in arms:
-            single_result = full_measurements[arm](
-                parameters[arm],
-                designated[1].batch,
-                designated[1].day_inputs,
+        single_record = _measurement_record(
+            jax,
+            full_measurement,
+            parameters[SOURCE_ROUTED_ATTENTION],
+            designated[1].batch,
+            designated[1].day_inputs,
+        )
+        mixed_record = _measurement_record(
+            jax,
+            mixed_measurement,
+            parameters[SOURCE_ROUTED_ATTENTION],
+            context_batch,
+            context_inputs,
+        )
+        if (
+            sum(single_record["hard_gate_counts"].values()) != 0
+            or sum(mixed_record["hard_gate_counts"].values()) != 0
+            or sum(single_record["nonfinite_gradient_values"].values()) != 0
+            or sum(mixed_record["nonfinite_gradient_values"].values()) != 0
+        ):
+            raise ValueError(
+                f"per-output gradient hard failure for attention/group {group_index}"
             )
-            mixed_result = mixed_measurements[arm](
-                parameters[arm],
-                anchor_batch,
-                context_batch,
-                context_inputs,
-            )
-            jax.block_until_ready((single_result, mixed_result))
-            single_record = _measurement_record(single_result)
-            mixed_record = _measurement_record(mixed_result)
-            if (
-                sum(single_record["hard_gate_counts"].values()) != 0
-                or sum(mixed_record["hard_gate_counts"].values()) != 0
-                or sum(single_record["nonfinite_gradient_values"].values()) != 0
-                or sum(mixed_record["nonfinite_gradient_values"].values()) != 0
-            ):
-                raise ValueError(f"per-output gradient hard failure for {arm}/group {group_index}")
-            records[arm].append(
-                {
-                    "group": group_index,
-                    "point_years": [
-                        {
-                            "update": int(entry["update"]),
-                            "landpoint_id": str(entry["landpoint_id"]),
-                            "year": int(entry["year"]),
-                        }
-                        for entry, _artifact in group
-                    ],
-                    "single_point_year_update": int(designated[0]["update"]),
-                    "single": single_record,
-                    "mixed": mixed_record,
-                }
-            )
-        del group, contexts, anchor_batch, context_batch, context_inputs
+        records.append(
+            {
+                "group": group_index,
+                "point_years": [
+                    {
+                        "update": int(entry["update"]),
+                        "landpoint_id": str(entry["landpoint_id"]),
+                        "year": int(entry["year"]),
+                    }
+                    for entry, _artifact in group
+                ],
+                "single_point_year_update": int(designated[0]["update"]),
+                "single": single_record,
+                "mixed": mixed_record,
+            }
+        )
+        del group, contexts, context_batch, context_inputs
         gc.collect()
         print(
             json.dumps(
@@ -702,15 +695,12 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             flush=True,
         )
     summaries = {
-        arm: {
-            "single": _summarize(tuple(record["single"] for record in records[arm])),
-            "mixed": _summarize(tuple(record["mixed"] for record in records[arm])),
-        }
-        for arm in arms
+        "single": _summarize(tuple(record["single"] for record in records)),
+        "mixed": _summarize(tuple(record["mixed"] for record in records)),
     }
     classification = _conflict_classification(
-        summaries[SOURCE_ROUTED_ATTENTION]["single"],
-        summaries[SOURCE_ROUTED_ATTENTION]["mixed"],
+        summaries["single"],
+        summaries["mixed"],
     )
     report = {
         "schema_version": "successor_per_output_gradient_audit_v1",
@@ -718,6 +708,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "git_head": _git_head(),
         "parent_update": PARENT_UPDATE,
         "parameter_count_per_arm": counts,
+        "audited_arm": SOURCE_ROUTED_ATTENTION,
         "gradient_labels": list(GRADIENT_LABELS),
         "audited_outputs": list(AUDITED_OUTPUTS),
         "loss_contribution_policy": {

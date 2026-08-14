@@ -21,6 +21,7 @@ import scripts.hpc.run_successor_fast_owner_gpu_probe as fast_probe
 import scripts.hpc.run_successor_small_fit as production_fit
 from research.daily_coarse_graining.daily_operator.long_horizon_objective import (
     MaskedTrajectory,
+    RolloutHardGateCounts,
 )
 from research.daily_coarse_graining.daily_operator.successor_fast_owner_decoder import (
     DAY_START_DELTA,
@@ -1835,6 +1836,34 @@ def test_per_output_gradient_conflict_classification_requires_two_mitigated_pair
     assert result["status"] == "attention_mixed_conflict_mitigation_supported"
     assert result["confirmed_conflict_pairs"] == 2
     assert result["mitigated_conflict_pairs"] == 2
+
+
+def test_per_output_gradient_measurement_streams_exact_gradient_cosines():
+    def objective(parameters, factor):
+        base = jnp.sum(parameters["weight"] * factor)
+        values = base * jnp.arange(
+            1,
+            len(per_output_gradients.GRADIENT_LABELS) + 1,
+            dtype=jnp.float64,
+        )
+        zeros = jnp.asarray(0, dtype=jnp.int64)
+        return values, RolloutHardGateCounts(zeros, zeros, zeros, zeros, zeros)
+
+    measurement = per_output_gradients._make_measurement(jax, objective)
+    record = per_output_gradients._measurement_record(
+        jax,
+        measurement,
+        {"weight": jnp.asarray([2.0, 3.0], dtype=jnp.float64)},
+        jnp.asarray([1.0, 1.0], dtype=jnp.float64),
+    )
+
+    for index, label in enumerate(per_output_gradients.GRADIENT_LABELS, start=1):
+        assert record["gradient_norms"][label] == pytest.approx(index * np.sqrt(2.0))
+        assert record["nonfinite_gradient_values"][label] == 0
+        assert record["cosines"][label][per_output_gradients.GRADIENT_LABELS[0]] == (
+            pytest.approx(1.0)
+        )
+    assert sum(record["hard_gate_counts"].values()) == 0
 
 
 def test_per_output_gradient_launcher_is_free_zero_update_and_no_validation_values():
