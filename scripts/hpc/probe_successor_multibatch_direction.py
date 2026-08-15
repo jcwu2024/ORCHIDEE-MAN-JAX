@@ -500,6 +500,7 @@ def _run_frozen_scalarization_smoke(
     loss_evaluator: Any,
     memory_before: Mapping[str, Any],
     started: float,
+    backtracking: bool,
 ) -> Mapping[str, Any]:
     from scripts.hpc.prepare_successor_rollout_screen import (
         _prepare_adapter as _prepare_validation_adapter,
@@ -520,6 +521,16 @@ def _run_frozen_scalarization_smoke(
     )
 
     step_norm = float(audit["update"]["global_step_norm"])
+    step_norms = tuple(
+        float(value) for value in audit["update"].get("step_norm_grid", [step_norm])
+    )
+    if not step_norms or step_norms[0] != step_norm or any(
+        left <= right for left, right in zip(step_norms, step_norms[1:])
+    ):
+        raise ValueError("scalarization step grid must start at the admitted norm")
+    minimum_admissible_step = float(
+        audit["update"].get("minimum_admissible_step_norm", step_norm)
+    )
     seeds, scalarization = _frozen_scalarization_seeds(
         predecessor,
         expected_step_norm=step_norm,
@@ -596,116 +607,139 @@ def _run_frozen_scalarization_smoke(
             tuple(gradients),
             np.ones(len(gradients), dtype=np.float64),
         )
-        proposed, proposed_nonfinite = direct_step(
-            parameters,
-            direction,
-            direction_norm,
-            np.asarray(step_norm, dtype=np.float64),
-        )
-        jax.block_until_ready(
-            (direction, direction_norm, direction_nonfinite, proposed, proposed_nonfinite)
-        )
-
-        group_records = []
-        virtual_error = 0.0
-        for group_index in range(AUDIT_GROUPS):
-            anchor_batch, context_batch, context_inputs, group = _load_group(
-                jax,
-                manifest,
-                schedule,
-                args.prepared_manifest,
-                signature,
-                group_index,
-            )
-            losses_after, hard_counts_after = loss_evaluator(
-                proposed,
-                anchor_batch,
-                context_batch,
-                context_inputs,
-            )
-            jax.block_until_ready((losses_after, hard_counts_after))
-            before = before_records[group_index]["losses"]
-            after = np.asarray(losses_after, dtype=np.float64)
-            relative = _relative_changes(before, after)
-            if short_update == 1:
-                expected = predecessor["records"][group_index]["steps"][
-                    format(step_norm, ".12g")
-                ]["virtual_loss_relative_changes"]
-                virtual_error = max(
-                    virtual_error,
-                    max(
-                        abs(float(relative[label]) - float(expected[label]))
-                        for label in GRADIENT_FEASIBILITY_LABELS
-                    ),
-                )
-            group_records.append(
-                {
-                    "group": group_index,
-                    "point_years": before_records[group_index]["point_years"],
-                    "losses_before": {
-                        label: float(before[index])
-                        for index, label in enumerate(GRADIENT_FEASIBILITY_LABELS)
-                    },
-                    "losses_after": {
-                        label: float(after[index])
-                        for index, label in enumerate(GRADIENT_FEASIBILITY_LABELS)
-                    },
-                    "loss_relative_changes": relative,
-                    "parent_hard_gate_counts": before_records[group_index][
-                        "hard_gate_counts"
-                    ],
-                    "proposed_hard_gate_counts": _hard_counts_host(hard_counts_after),
-                }
-            )
-            del anchor_batch, context_batch, context_inputs, group
-            del losses_after, hard_counts_after
-            gc.collect()
-
         direction_norm_host = float(np.asarray(direction_norm))
         direction_norm_error = abs(
             direction_norm_host - float(scalarization["expected_direction_norm"])
         ) / max(float(scalarization["expected_direction_norm"]), 1.0e-30)
-        losses_nonfinite = sum(
-            int(
-                np.count_nonzero(
-                    ~np.isfinite(tuple(group_record[loss_key].values()))
+        attempts = []
+        selected = None
+        parent_equivalence = None
+        retained_attempt = None
+        for candidate_step_norm in step_norms:
+            proposed, proposed_nonfinite = direct_step(
+                parameters,
+                direction,
+                direction_norm,
+                np.asarray(candidate_step_norm, dtype=np.float64),
+            )
+            jax.block_until_ready(
+                (
+                    direction,
+                    direction_norm,
+                    direction_nonfinite,
+                    proposed,
+                    proposed_nonfinite,
                 )
             )
-            for group_record in group_records
-            for loss_key in ("losses_before", "losses_after", "loss_relative_changes")
-        )
-        nonfinite = {
-            "scalar_group_gradients": gradient_nonfinite,
-            "direction": int(np.asarray(direction_nonfinite)),
-            "proposed_parameters": int(np.asarray(proposed_nonfinite)),
-            "losses_and_relative_changes": losses_nonfinite,
-        }
-        hard_failures = sum(
-            sum(group_record["parent_hard_gate_counts"].values())
-            + sum(group_record["proposed_hard_gate_counts"].values())
-            for group_record in group_records
-        )
-        maximum_change = max(
-            float(value)
-            for group_record in group_records
-            for value in group_record["loss_relative_changes"].values()
-        )
-        parent_equivalence = (
-            {
-                "direction_norm_relative_error": direction_norm_error,
-                "maximum_virtual_relative_change_error": virtual_error,
+            group_records = []
+            virtual_error = 0.0
+            for group_index in range(AUDIT_GROUPS):
+                anchor_batch, context_batch, context_inputs, group = _load_group(
+                    jax,
+                    manifest,
+                    schedule,
+                    args.prepared_manifest,
+                    signature,
+                    group_index,
+                )
+                losses_after, hard_counts_after = loss_evaluator(
+                    proposed,
+                    anchor_batch,
+                    context_batch,
+                    context_inputs,
+                )
+                jax.block_until_ready((losses_after, hard_counts_after))
+                before = before_records[group_index]["losses"]
+                after = np.asarray(losses_after, dtype=np.float64)
+                relative = _relative_changes(before, after)
+                if short_update == 1 and candidate_step_norm == step_norm:
+                    expected = predecessor["records"][group_index]["steps"][
+                        format(step_norm, ".12g")
+                    ]["virtual_loss_relative_changes"]
+                    virtual_error = max(
+                        virtual_error,
+                        max(
+                            abs(float(relative[label]) - float(expected[label]))
+                            for label in GRADIENT_FEASIBILITY_LABELS
+                        ),
+                    )
+                group_records.append(
+                    {
+                        "group": group_index,
+                        "point_years": before_records[group_index]["point_years"],
+                        "losses_before": {
+                            label: float(before[index])
+                            for index, label in enumerate(GRADIENT_FEASIBILITY_LABELS)
+                        },
+                        "losses_after": {
+                            label: float(after[index])
+                            for index, label in enumerate(GRADIENT_FEASIBILITY_LABELS)
+                        },
+                        "loss_relative_changes": relative,
+                        "parent_hard_gate_counts": before_records[group_index][
+                            "hard_gate_counts"
+                        ],
+                        "proposed_hard_gate_counts": _hard_counts_host(
+                            hard_counts_after
+                        ),
+                    }
+                )
+                del anchor_batch, context_batch, context_inputs, group
+                del losses_after, hard_counts_after
+                gc.collect()
+            losses_nonfinite = sum(
+                int(
+                    np.count_nonzero(
+                        ~np.isfinite(tuple(group_record[loss_key].values()))
+                    )
+                )
+                for group_record in group_records
+                for loss_key in (
+                    "losses_before",
+                    "losses_after",
+                    "loss_relative_changes",
+                )
+            )
+            nonfinite = {
+                "scalar_group_gradients": gradient_nonfinite,
+                "direction": int(np.asarray(direction_nonfinite)),
+                "proposed_parameters": int(np.asarray(proposed_nonfinite)),
+                "losses_and_relative_changes": losses_nonfinite,
             }
-            if short_update == 1
-            else None
-        )
-        update_applied = (
-            hard_failures == 0
-            and sum(nonfinite.values()) == 0
-            and maximum_change
-            <= float(audit["gates"]["maximum_group_component_relative_increase"])
-            and (
-                short_update != 1
-                or (
+            hard_failures = sum(
+                sum(group_record["parent_hard_gate_counts"].values())
+                + sum(group_record["proposed_hard_gate_counts"].values())
+                for group_record in group_records
+            )
+            maximum_change = max(
+                float(value)
+                for group_record in group_records
+                for value in group_record["loss_relative_changes"].values()
+            )
+            candidate_admissible = (
+                candidate_step_norm >= minimum_admissible_step
+                and hard_failures == 0
+                and sum(nonfinite.values()) == 0
+                and maximum_change
+                <= float(
+                    audit["gates"]["maximum_group_component_relative_increase"]
+                )
+            )
+            attempts.append(
+                {
+                    "step_norm": candidate_step_norm,
+                    "admissible": candidate_admissible,
+                    "maximum_group_component_relative_increase": maximum_change,
+                    "hard_failure_count": hard_failures,
+                    "nonfinite_value_count": sum(nonfinite.values()),
+                }
+            )
+            if short_update == 1 and candidate_step_norm == step_norm:
+                parent_equivalence = {
+                    "direction_norm_relative_error": direction_norm_error,
+                    "maximum_virtual_relative_change_error": virtual_error,
+                }
+                candidate_admissible = candidate_admissible and (
                     direction_norm_error
                     <= float(
                         audit["gates"][
@@ -719,13 +753,40 @@ def _run_frozen_scalarization_smoke(
                         ]
                     )
                 )
+                attempts[-1]["admissible"] = candidate_admissible
+            if retained_attempt is not None:
+                del retained_attempt
+            retained_attempt = (
+                proposed,
+                group_records,
+                nonfinite,
+                hard_failures,
+                maximum_change,
+                candidate_step_norm,
             )
-        )
+            if candidate_admissible:
+                selected = retained_attempt
+                break
+            if not backtracking:
+                break
+
+        if retained_attempt is None:
+            raise ValueError("scalarization smoke evaluated no candidate steps")
+        (
+            proposed,
+            group_records,
+            nonfinite,
+            hard_failures,
+            maximum_change,
+            selected_step_norm,
+        ) = retained_attempt
+        update_applied = selected is not None
         updates.append(
             {
                 "short_update": short_update,
                 "update_applied": update_applied,
-                "step_norm": step_norm,
+                "step_norm": selected_step_norm if update_applied else None,
+                "attempts": attempts,
                 "direction_norm": direction_norm_host,
                 "scalarization": scalarization,
                 "parent_equivalence": parent_equivalence,
@@ -744,6 +805,7 @@ def _run_frozen_scalarization_smoke(
                     "update": short_update,
                     "total": SCALARIZATION_SMOKE_UPDATES,
                     "applied": update_applied,
+                    "step_norm": selected_step_norm if update_applied else None,
                 },
                 sort_keys=True,
             ),
@@ -794,19 +856,36 @@ def _run_frozen_scalarization_smoke(
         pass_action=audit["pass_action"],
         fail_action=audit["fail_action"],
     )
+    if backtracking:
+        classification = dict(classification)
+        classification["status"] = (
+            "group_aware_backtracking_smoke_admitted"
+            if classification["passed"]
+            else "group_aware_backtracking_smoke_rejected"
+        )
     report = {
-        "schema_version": "successor_group_aware_scalarization_smoke_report_v1",
+        "schema_version": (
+            "successor_group_aware_backtracking_smoke_report_v1"
+            if backtracking
+            else "successor_group_aware_scalarization_smoke_report_v1"
+        ),
         "status": "completed",
         "git_head": _git_head(),
         "identity": {
             "smoke_contract_sha256": audit["contract_sha256"],
             "predecessor_report_sha256": _sha256_file(args.smoke_report),
+            "failed_scalarization_report_sha256": (
+                _sha256_file(args.failed_scalarization_report)
+                if backtracking
+                else None
+            ),
             "staged_training_contract_sha256": contract.sha256,
         },
         "architecture": SOURCE_ROUTED_ATTENTION,
         "parameter_count": parameter_count,
         "parent_update": PARENT_UPDATE,
         "step_norm": step_norm,
+        "step_norm_grid": list(step_norms),
         "updates": updates,
         "validation": validation,
         "classification": classification,
@@ -833,10 +912,20 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     if args.geometry_output is not None and args.geometry_output.exists():
         raise FileExistsError(args.geometry_output)
     started = time.perf_counter()
-    scalarization_smoke = bool(args.frozen_group_aware_scalarization_smoke)
+    backtracking_smoke = bool(args.group_aware_backtracking_scalarization_smoke)
+    scalarization_smoke = bool(
+        args.frozen_group_aware_scalarization_smoke or backtracking_smoke
+    )
     group_aware_extension = bool(args.group_aware_step_extension)
     group_aware = bool(args.group_aware or group_aware_extension)
-    if scalarization_smoke:
+    if backtracking_smoke:
+        audit_schema = "successor_group_aware_backtracking_smoke_v1"
+        audit_status = "frozen_5_update_group_scalarization_backtracking"
+        predecessor_schema = "successor_group_aware_step_extension_v1"
+        predecessor_status = "frozen_zero_update_forty_objective_extended_grid"
+        predecessor_contract_key = "group_aware_step_extension_contract_sha256"
+        predecessor_report_key = "group_aware_step_extension_report_sha256"
+    elif scalarization_smoke:
         audit_schema = "successor_group_aware_scalarization_smoke_v1"
         audit_status = "frozen_5_update_group_scalarization_no_checkpoint"
         predecessor_schema = "successor_group_aware_step_extension_v1"
@@ -891,6 +980,21 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         if scalarization_smoke
         else None
     )
+    if backtracking_smoke:
+        if args.failed_scalarization_report is None:
+            raise ValueError("backtracking smoke requires failed scalarization report")
+        failed_report = json.loads(
+            args.failed_scalarization_report.read_text(encoding="utf-8")
+        )
+        if (
+            _sha256_file(args.failed_scalarization_report)
+            != audit["identity"]["failed_scalarization_report_sha256"]
+            or failed_report.get("identity", {}).get("smoke_contract_sha256")
+            != audit["identity"]["failed_scalarization_contract_sha256"]
+            or failed_report.get("classification", {}).get("status")
+            != "frozen_group_aware_scalarization_smoke_rejected"
+        ):
+            raise ValueError("backtracking scalarization predecessor drift")
 
     runtime = _load_extended_runtime(args)
     jax = runtime["jax"]
@@ -1046,6 +1150,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             loss_evaluator=loss_evaluator,
             memory_before=memory_before,
             started=started,
+            backtracking=backtracking_smoke,
         )
     if group_aware:
         flatten = _make_flattened_unit_gradient(jax)
@@ -1419,6 +1524,10 @@ def _parser() -> argparse.ArgumentParser:
     mode.add_argument("--group-aware", action="store_true")
     mode.add_argument("--group-aware-step-extension", action="store_true")
     mode.add_argument("--frozen-group-aware-scalarization-smoke", action="store_true")
+    mode.add_argument(
+        "--group-aware-backtracking-scalarization-smoke", action="store_true"
+    )
+    parser.add_argument("--failed-scalarization-report", type=Path)
     return parser
 
 

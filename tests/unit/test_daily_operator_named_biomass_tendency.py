@@ -1651,6 +1651,34 @@ def test_group_aware_scalarization_smoke_contract_is_bounded():
     assert "#SBATCH" not in launcher
 
 
+def test_group_aware_backtracking_smoke_has_a_useful_minimum_step():
+    manifest_path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_group_aware_backtracking_smoke_v1.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_group_aware_backtracking_smoke.sh"
+    ).read_text()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["update"]["step_norm_grid"] == [0.002, 0.001, 0.0005]
+    assert manifest["update"]["minimum_admissible_step_norm"] == 0.0005
+    assert manifest["training"]["reverse_passes_per_update"] == 8
+    assert manifest["execution"]["checkpoint_written"] is False
+    assert "requires free gln01" in launcher
+    assert "--group-aware-backtracking-scalarization-smoke" in launcher
+    assert "--failed-scalarization-report" in launcher
+    assert "#SBATCH" not in launcher
+
+
 def _write_scale_admission_fixture(tmp_path):
     scales = {
         str(horizon): {

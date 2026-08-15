@@ -85,6 +85,7 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_multibatch_direction_audit_20260815.md` | Active batch-size attribution; ordinary averaging rejected | Designing the group-aware 40-objective feasibility audit |
 | `research/daily_coarse_graining/successor_group_aware_direction_audit_20260815.md` | Active positive common-direction evidence; original finite-step grid failed magnitude only | Running or reviewing the bounded zero-update step extension |
 | `research/daily_coarse_graining/successor_group_aware_step_extension_20260815.md` | Active finite-step admission; global norm 0.002 selected | Running or reviewing the five-update frozen-scalarization smoke |
+| `research/daily_coarse_graining/successor_group_aware_scalarization_smoke_20260815.md` | Active fixed-step drift rejection with positive one-step rollout signal | Running or reviewing the bounded backtracking smoke |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

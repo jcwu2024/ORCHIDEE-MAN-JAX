@@ -781,16 +781,25 @@ and `-3.4462e-4` BGB tendency. The least negative individual change remains
 Report SHA256 is `a8b44848...df9a`; see
 [`successor_group_aware_step_extension_20260815.md`](research/daily_coarse_graining/successor_group_aware_step_extension_20260815.md).
 
-The active gate is a five-update frozen-scalarization smoke. Convert the 14
-positive parent simplex weights into raw-loss coefficients by dividing by
-their parent gradient norms, combine same-group components in one VJP, and
-thereby reduce each update from 40 reverse passes to eight. Apply global norm
-`0.002` only while all ten groups remain nonincreasing, retain no checkpoint,
-and compare the final in-memory parameters with the update-1000 parent on the
-accepted six-artifact non-test 7/30-day subset. This is a local mechanism
-drift test, not a final repeated-data training policy. No network architecture
-change is involved. The 365-day rollout, long-held-point validation, Gate D2,
-sealed test, and product gates remain closed.
+The five-update frozen-scalarization smoke completed at commit `1bbb163` and
+stopped before applying update 2. Update 1 reproduces the accepted direction
+to `4.82e-15` relative norm error and improves all 40 constraints. At update
+2, fixed norm `0.002` regresses several constraints, worst group-5 NPP by
+`0.0861%`. After the one accepted step, all six independent 7/30-day cells and
+all four NPP/AGB/BGB/total-live aggregates improve; the combined improvement
+is only `0.00922%`, below the frozen `0.5%` gate. Report SHA256 is
+`1aeb93ae...60ca6`; see
+[`successor_group_aware_scalarization_smoke_20260815.md`](research/daily_coarse_graining/successor_group_aware_scalarization_smoke_20260815.md).
+
+Do not reuse fixed norm `0.002`. The active gate is a matched five-update
+backtracking smoke using the same eight-VJP direction. At each update try
+`0.002`, `0.001`, and `0.0005` in descending order and apply the largest norm
+that keeps all 40 group-component losses nonincreasing. Stop if no norm at or
+above `0.0005` passes. Retain no checkpoint and evaluate the same non-test
+7/30-day subset. Passing opens rotating-group weight recalibration; failure
+closes parent-frozen weights and requires direction recalibration. No network
+architecture change is involved. The 365-day rollout, long-held-point
+validation, Gate D2, sealed test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 

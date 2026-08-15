@@ -26,13 +26,18 @@ losses decrease, with medians `-1.2176e-4` anchor, `-1.0193e-3` NPP,
 individual change is `-1.8028e-5`; hard and nonfinite counts are zero. See
 [`successor_group_aware_step_extension_20260815.md`](research/daily_coarse_graining/successor_group_aware_step_extension_20260815.md).
 
-This attributes the earlier instability to ordinary gradient averaging rather
-than to the Attention architecture. The active gate is a five-update local
-drift smoke using frozen parent simplex coefficients. Combining same-group
-components reduces the reverse passes per update from 40 to eight while all
-ten groups retain before/after checks. The final in-memory parameters are
-compared with the update-1000 parent on the accepted non-test 7/30-day subset;
-no checkpoint is retained.
+The efficient parent-frozen scalarization exactly reproduces the admitted
+direction and applies one `0.002` update. A second fixed `0.002` proposal
+regresses several constraints, worst group-5 NPP by `0.0861%`, and is stopped
+before application. After the single accepted step, all six independent
+7/30-day cells and all four NPP/AGB/BGB/total-live aggregates improve, but the
+combined improvement is only `0.00922%`. See
+[`successor_group_aware_scalarization_smoke_20260815.md`](research/daily_coarse_graining/successor_group_aware_scalarization_smoke_20260815.md).
+
+The active gate is a five-update backtracking smoke over norms
+`0.002, 0.001, 0.0005`, retaining the efficient eight-VJP direction and all
+40 before/after loss checks. If no norm of at least `0.0005` passes, fixed
+parent weights close and the direction must be recalibrated.
 
 ## First Formal Neural Candidate
 
@@ -1571,3 +1576,16 @@ It must preserve all ten groups locally and improve the established non-test
 7/30-day NPP/biomass composite before any rotating-group training design is
 opened. See
 [`successor_group_aware_step_extension_20260815.md`](research/daily_coarse_graining/successor_group_aware_step_extension_20260815.md).
+
+The parent-frozen scalarization smoke then completed on free `gln01` at
+commit `1bbb163`. Update 1 reproduces the accepted direction and improves all
+40 constraints. Update 2 at fixed norm `0.002` regresses multiple constraints,
+worst group-5 NPP by `0.0861%`, so it is not applied. The one accepted update
+improves all six independent 7/30-day cells and each NPP/AGB/BGB/total-live
+aggregate, but only by `0.00922%` in the combined primary score. Report SHA256
+is `1aeb93ae49e29496c43dfd9589f7e87f6e6be20c214a23a6d266aaca57360ca6`.
+
+The active gate is a bounded backtracking smoke at norms
+`0.002, 0.001, 0.0005`. It keeps the eight-VJP realization, stops if no useful
+step preserves all 40 constraints, and retains no checkpoint. See
+[`successor_group_aware_scalarization_smoke_20260815.md`](research/daily_coarse_graining/successor_group_aware_scalarization_smoke_20260815.md).
