@@ -90,7 +90,10 @@ stopped state. It must use existing architecture ownership to locate
 direction-norm and relative-update concentration, then test a bounded set of
 block projections only after they preserve all-40 first-order descent. No
 checkpoint, architecture change, paid run, or further raw-direction
-subdivision is authorized.
+subdivision is authorized. The seven-block leave-one-out contract SHA256 is
+`fa046011...c87153`; local admission passes 77 related tests plus static,
+contract, and launcher checks. One free-`gln01` execution is next. See
+[`successor_parameter_geometry_attribution_20260815.md`](research/daily_coarse_graining/successor_parameter_geometry_attribution_20260815.md).
 
 ## First Formal Neural Candidate
 

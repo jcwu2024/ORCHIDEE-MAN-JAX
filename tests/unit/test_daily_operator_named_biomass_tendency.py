@@ -28,6 +28,12 @@ from research.daily_coarse_graining.daily_operator.named_biomass_tendency import
     fit_named_biomass_tendency_scales,
     named_biomass_tendency_objective,
 )
+from research.daily_coarse_graining.daily_operator.parameter_geometry import (
+    SUCCESSOR_PARAMETER_BLOCKS,
+    exclude_successor_parameter_block,
+    successor_parameter_geometry_report,
+    validate_successor_parameter_blocks,
+)
 from research.daily_coarse_graining.daily_operator.successor_training import (
     CANDIDATE_OBJECTIVE_COMPONENTS,
     CUMULATIVE_FLUX_FIELDS,
@@ -61,6 +67,9 @@ from scripts.hpc.probe_successor_multibatch_direction import (
     classify_repeated_active_set_smoke,
     classify_second_state_recalibration,
 )
+from scripts.hpc.probe_successor_parameter_geometry import (
+    classify_parameter_geometry_attribution,
+)
 from scripts.hpc.probe_successor_realized_step import _make_proposed_directions
 from scripts.hpc.run_successor_direct_direction_smoke import (
     classify_direct_direction_smoke,
@@ -88,6 +97,38 @@ SCALES = {
     }
     for horizon in (1, 7, 30)
 }
+
+
+def test_successor_parameter_geometry_blocks_are_complete_and_projectable():
+    keys = tuple(
+        key for members in SUCCESSOR_PARAMETER_BLOCKS.values() for key in members
+    )
+    parameters = {
+        key: {"value": jnp.ones((2,), dtype=jnp.float64)} for key in keys
+    }
+    direction = {
+        key: {"value": jnp.full((2,), index + 1.0, dtype=jnp.float64)}
+        for index, key in enumerate(keys)
+    }
+
+    validate_successor_parameter_blocks(parameters)
+    report = successor_parameter_geometry_report(
+        parameters,
+        direction,
+        step_norm=5.0e-4,
+    )
+    projected = exclude_successor_parameter_block(direction, "output_decoder")
+
+    assert report["block_count"] == 7
+    assert report["top_level_key_count"] == len(keys) == 23
+    assert report["parameter_count"] == 2 * len(keys)
+    assert report["direction_squared_fraction_sum"] == pytest.approx(1.0)
+    assert report["nonfinite_value_count"] == 0
+    assert all(
+        np.all(np.asarray(projected[key]["value"]) == 0.0)
+        for key in SUCCESSOR_PARAMETER_BLOCKS["output_decoder"]
+    )
+    assert np.any(np.asarray(projected["process_blocks"]["value"]) != 0.0)
 
 
 def _trajectory(value, defined=None):
@@ -1978,6 +2019,101 @@ def test_cumulative_microstep_smoke_contract_is_bounded():
     assert "requires free gln01" in launcher
     assert "--cumulative-microstep-smoke" in launcher
     assert "--repeated-active-set-report" in launcher
+    assert "#SBATCH" not in launcher
+
+
+def test_parameter_geometry_attribution_requires_safe_owned_projection():
+    block_names = tuple(SUCCESSOR_PARAMETER_BLOCKS)
+    geometry = {
+        "block_count": 7,
+        "top_level_key_count": 23,
+        "direction_squared_fraction_sum": 1.0,
+        "nonfinite_value_count": 0,
+        "blocks": {name: {} for name in block_names},
+    }
+    reference = {
+        "reference_reproduced": True,
+        "direction_passed": True,
+        "finite_step_safe": False,
+        "hard_failure_count": 0,
+        "nonfinite_value_count": 0,
+    }
+    projections = [
+        {
+            "excluded_block": name,
+            "direction_passed": True,
+            "finite_step_safe": name == "output_decoder",
+            "hard_failure_count": 0,
+            "nonfinite_value_count": 0,
+        }
+        for name in block_names
+    ]
+    gates = {
+        "geometry": {
+            "expected_block_count": 7,
+            "expected_top_level_key_count": 23,
+            "maximum_direction_squared_fraction_sum_error": 1.0e-12,
+            "nonfinite_value_count": 0,
+        },
+        "projection": {
+            "hard_failure_count": 0,
+            "nonfinite_value_count": 0,
+        },
+        "attribution": {"minimum_safe_leave_one_out_projections": 1},
+    }
+
+    result = classify_parameter_geometry_attribution(
+        geometry,
+        reference,
+        projections,
+        gates=gates,
+        pass_action="design_preconditioner",
+        fail_action="review_boundary",
+    )
+
+    assert result["status"] == "parameter_geometry_block_attributed"
+    assert result["safe_excluded_blocks"] == ["output_decoder"]
+    projections[-1]["finite_step_safe"] = False
+    rejected = classify_parameter_geometry_attribution(
+        geometry,
+        reference,
+        projections,
+        gates=gates,
+        pass_action="design_preconditioner",
+        fail_action="review_boundary",
+    )
+    assert rejected["status"] == "parameter_geometry_not_attributed"
+
+
+def test_parameter_geometry_attribution_contract_is_bounded():
+    manifest_path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_parameter_geometry_attribution_v1.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_parameter_geometry_attribution.sh"
+    ).read_text()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["parameter_blocks"] == {
+        name: list(keys) for name, keys in SUCCESSOR_PARAMETER_BLOCKS.items()
+    }
+    assert manifest["projections"]["candidate_count"] == 7
+    assert manifest["projections"]["global_step_norm"] == pytest.approx(0.0005)
+    assert manifest["execution"]["maximum_projection_candidates"] == 7
+    assert manifest["execution"]["optimizer_updates"] == 0
+    assert manifest["execution"]["validation_values_evaluated"] is False
+    assert manifest["execution"]["final_parameters_retained"] is False
+    assert "requires free gln01" in launcher
+    assert "probe_successor_parameter_geometry" in launcher
     assert "#SBATCH" not in launcher
 
 

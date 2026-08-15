@@ -848,7 +848,11 @@ partition the existing parameter tree by owned encoder, interaction, and
 decoder blocks; measure direction-norm and relative-update concentration; and
 test only a bounded set of source-defined block projections. A projection is
 admissible only if it preserves all-40 first-order descent before its
-finite-step gate. Freeze this audit before any further GPU execution.
+finite-step gate. The seven-block leave-one-out audit is frozen under contract
+SHA256 `fa046011...c87153`; local admission passes 77 related tests and all
+static, contract, and launcher checks. One free-`gln01` execution is the
+active gate; see
+[`successor_parameter_geometry_attribution_20260815.md`](research/daily_coarse_graining/successor_parameter_geometry_attribution_20260815.md).
 
 No network architecture change is involved. The 365-day rollout,
 long-held-point validation, Gate D2, sealed test, and product gates remain
