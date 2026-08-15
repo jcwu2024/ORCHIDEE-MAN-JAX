@@ -806,18 +806,22 @@ constraints, 12 overlapping the parent's 14. It reads no validation values
 and retains no parameters. Report SHA256 is `c4ddb39b...10e97`; see
 [`successor_second_state_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_second_state_recalibration_audit_20260815.md).
 
-The bounded active-set recalibration audit is frozen under contract SHA256
-`284b328f...46670f`. It starts from the 14 parent constraints, checks all 40
-directional derivatives with ten group JVPs per round, adds only nonpositive
-constraints, and permits at most 20 individual component reverse passes. It
-must reproduce the exact reference's passing norm `0.002` on all ten groups.
-Run it once on free `gln01`; see
+The bounded active-set recalibration audit completed at commit `217876d` and
+passes. Re-solving the 14 parent-support gradients makes all 40 relative
+directional derivatives positive in one JVP round; the minimum is `0.0107166`
+and no constraint must be added. Norm `0.002` passes all ten groups with
+component medians closely matching the exact reference. The mechanism uses
+14 component reverse passes, `35%` of the exact reference's 40. Report SHA256
+is `e2a9e0eb...daf97`; see
 [`successor_active_set_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_active_set_recalibration_audit_20260815.md).
 
-Do not start repeated training unless this reproduces a common useful
-direction without 40 reverse passes. No network architecture change is
-involved. The 365-day rollout, long-held-point validation, Gate D2, sealed
-test, and product gates remain closed.
+The active gate is to design a bounded repeated active-set smoke. Each update
+must recalibrate from the preceding support, check all 40 signs, and stop
+before a regressing finite step. Measure hot update time and evaluate the
+established non-test 7/30-day subset at the end without retaining a
+checkpoint. No network architecture change is involved. The 365-day rollout,
+long-held-point validation, Gate D2, sealed test, and product gates remain
+closed.
 
 ## Completed Task Packet: Gate C
 

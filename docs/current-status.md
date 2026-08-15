@@ -50,14 +50,18 @@ read, and no parameters are retained. Report SHA256 is
 `c4ddb39b...10e97`. See
 [`successor_second_state_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_second_state_recalibration_audit_20260815.md).
 
-The bounded active-set implementation audit is now frozen and locally
-implemented. It starts from the 14 prior-support gradients, uses ten group
-JVPs per round to check all 40 directional derivatives, and adds only
-nonpositive constraints. It permits at most 20 component reverse passes and
-must reproduce the exact reference's passing norm `0.002`. The active gate is
-one free-`gln01` execution. Repeated training remains closed until this
-mechanism passes. See
+The bounded active-set implementation audit completed at commit `217876d`.
+Recalibrating the 14 parent-support gradients closes all 40 directional checks
+in one round with minimum relative derivative `0.0107166`; no constraint is
+added. Norm `0.002` passes all ten groups and closely reproduces the exact
+reference medians. Component reverse passes fall from 40 to 14, while hard
+and nonfinite counts remain zero. Report SHA256 is `e2a9e0eb...daf97`. See
 [`successor_active_set_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_active_set_recalibration_audit_20260815.md).
+
+The active gate is design of a bounded repeated active-set smoke with
+per-update recalibration, all-40 sign checks, finite-step stop rules, hot
+timing, and an end-of-smoke non-test 7/30-day evaluation. No checkpoint or
+architecture change is authorized by this result.
 
 ## First Formal Neural Candidate
 
@@ -1620,6 +1624,6 @@ SHA256 is
 
 The zero-retention exact 40-gradient audit at the state after the first
 admitted update completed with minimum cosine `0.0486966`, passing norm
-`0.002`, and support overlap `12/14`. The bounded efficient active-set
-implementation audit is frozen and awaits one free-`gln01` execution. See
+`0.002`, and support overlap `12/14`. Its efficient active-set realization
+then passes with 14 component reverse passes and one all-group JVP round. See
 [`successor_second_state_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_second_state_recalibration_audit_20260815.md).

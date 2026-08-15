@@ -51,3 +51,47 @@ SHA256 `284b328fa4c635499a2562d059e58b35e03918d3759f91e659d6595f3546670f`.
 Passing opens design of a bounded repeated active-set training smoke. Failure
 requires revising the recalibration mechanism, not changing the network
 architecture.
+
+## Result
+
+The free-`gln01` audit completed at commit `217876d` with valid evidence:
+
+- runtime report:
+  `outputs/training/successor-active-set-recalibration-217876d/report.json`;
+- report SHA256:
+  `e2a9e0eb73d4bc147e0ae03fc481c656991dec1bff738a67885e13514c7daf97`;
+- elapsed Python time: `1173.78 s`;
+- peak JAX device bytes: `13,826,391,552`;
+- hard failures and nonfinite values: zero;
+- checkpoint, recovery, validation-value evaluation, and parameter retention:
+  none.
+
+The mechanism closes in one round. The 14 parent-support gradients are
+sufficient after their simplex weights are recalibrated at the second state:
+all 40 relative directional derivatives are positive, with minimum
+`0.0107166`. No constraint is added. The final simplex drops the old
+zero-weight `group_04.npp`, leaving 13 positive constraints.
+
+The algorithm uses 14 individual component reverse passes and 10 group JVPs,
+versus 40 component reverse passes for the exact reference. Thus component
+reverse-pass count is reduced to `35%` of the reference. The wall-clock time
+is not yet reduced proportionally because this first audit separately
+compiled the VJP and new JVP programs; repeated-update hot timing remains to
+be measured.
+
+Norm `0.002` reproduces the exact reference's finite-step verdict. All 40
+losses decrease, and component median relative changes are:
+
+- one-day anchor: `-1.17109e-4`;
+- NPP: `-9.82175e-4`;
+- AGB tendency: `-1.28702e-3`;
+- BGB tendency: `-3.33786e-4`.
+
+## Accepted Next Gate
+
+Design a bounded repeated active-set smoke. At every update it must
+recalibrate from the preceding support, run the all-40 JVP sign check, select
+only a passing finite step, and stop before any regressing update. It should
+measure hot per-update cost and evaluate the established non-test 7/30-day
+subset at the end. It must retain no checkpoint. This is an optimization
+mechanism continuation, not an architecture change or a promotion run.
