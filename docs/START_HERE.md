@@ -109,10 +109,11 @@ The frozen, zero-retention maintenance-output projection audit completed on
 free `gln01` and rejected all three single-gradient corrections. The best
 correction removed about `95.57%` of the raw maintenance RMS but still missed
 the RMS and maximum caps and regressed the anchor and some group-component
-losses. The active task is to design and freeze a bounded nonlinear
-constrained solver in a low-dimensional parameter subspace. It must
-relinearize violated constraints and use exact finite evaluation; it does not
-change the Attention architecture or authorize training or a paid run.
+losses. A bounded nonlinear constrained solver is now frozen under contract
+SHA256 `db2b60c7...d67d339`. It uses at most eight parameter directions, four
+sequential relinearizations, and eight exact candidate evaluations. The active
+task is local implementation and admission; it does not change the Attention
+architecture or authorize training or a paid run.
 
 ## New Task Bootstrap
 

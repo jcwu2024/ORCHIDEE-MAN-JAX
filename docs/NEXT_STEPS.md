@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-15.
+Last updated: 2026-08-16.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -933,6 +933,19 @@ Freeze the subspace, iteration and evaluation budgets, feasibility-restoration
 rule, acceptance gates, and failure action before implementation or execution.
 This remains an optimizer-geometry investigation, not an architecture change
 or training authorization.
+
+That design is now frozen as the low-dimensional nonlinear projection
+contract, SHA256 `db2b60c7...d67d339`. Its matched control is the informative
+norm-`0.00025` single-gradient result. It constructs at most eight ordered,
+scientifically identified parameter directions at that point, freezes the
+orthonormal subspace, and permits at most four sequential relinearizations and
+eight exact 30-day candidate evaluations. Every iteration relinearizes all 40
+losses, the three long-horizon median effects, maintenance RMS, and all 28,800
+signed maintenance scalars. Total displacement is bounded to
+`[0.000125, 0.00075]`. The only authorized next operation is local
+implementation and admission of this frozen contract; execution remains one
+free-`gln01` zero-retention audit after local checks pass. See
+[`successor_low_dimensional_nonlinear_projection_protocol_20260816.md`](research/daily_coarse_graining/successor_low_dimensional_nonlinear_projection_protocol_20260816.md).
 
 No network architecture change is involved. The 365-day rollout,
 long-held-point validation, Gate D2, sealed test, and product gates remain

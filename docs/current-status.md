@@ -167,6 +167,18 @@ architecture change, optimizer update, checkpoint, validation read, sealed
 test, or paid run is authorized. See
 [`successor_maintenance_output_projection_protocol_20260816.md`](research/daily_coarse_graining/successor_maintenance_output_projection_protocol_20260816.md).
 
+The successor low-dimensional nonlinear projection is frozen under contract
+SHA256 `db2b60c7...d67d339`. Its matched control is the informative
+norm-`0.00025` correction. The candidate subspace has at most eight ordered
+directions spanning raw progress, raw and relinearized maintenance repair,
+the worst maintenance scalar, aggregate loss/effect repair, and two leading
+individual loss violations. The subspace is fixed before at most four
+sequential relinearizations and eight exact trials. Exact acceptance retains
+the prior all-40, NPP/AGB/BGB, maintenance, state, budget, and nonfinite gates
+and adds total-displacement bounds `[0.000125, 0.00075]`. The active operation
+is local implementation and admission only. See
+[`successor_low_dimensional_nonlinear_projection_protocol_20260816.md`](research/daily_coarse_graining/successor_low_dimensional_nonlinear_projection_protocol_20260816.md).
+
 ## First Formal Neural Candidate
 
 `axial_process_operator_v1` and its exactly parameter-matched

@@ -485,3 +485,46 @@ def test_maintenance_projection_contract_is_matched_and_bounded():
     assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
     assert "#SBATCH" not in launcher
     assert "successor_adamw_update" not in launcher
+
+
+def test_low_dimensional_nonlinear_projection_contract_is_bounded():
+    contract_path = (
+        ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_low_dimensional_nonlinear_projection_v1.json"
+    )
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+    predecessor = json.loads(
+        (
+            ROOT
+            / "manifests"
+            / "coarse_graining"
+            / "successor_maintenance_output_projection_v1.json"
+        ).read_text(encoding="utf-8")
+    )
+    canonical = dict(payload)
+    expected_hash = canonical.pop("contract_sha256")
+    observed_hash = hashlib.sha256(
+        json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+    assert expected_hash == observed_hash
+    assert payload["identity"]["maintenance_projection_contract_sha256"] == (
+        predecessor["contract_sha256"]
+    )
+    assert payload["matched_reference"]["matched_control"] == (
+        "raw_control_plus_norm_0.00025_single_maintenance_gradient_correction"
+    )
+    assert payload["subspace"]["maximum_basis_dimension"] == 8
+    assert payload["subspace"]["frozen_after_construction"] is True
+    assert payload["subspace"]["maximum_reverse_passes"] == 103
+    assert payload["solver"]["maximum_outer_iterations"] == 4
+    assert payload["solver"]["maximum_exact_candidate_evaluations"] == 8
+    assert payload["solver"]["maintenance_maximum_rows"] == (
+        "all_28800_scalar_values"
+    )
+    assert payload["gates"]["maximum_parameter_displacement_norm"] == 0.00075
+    assert payload["execution"]["optimizer_updates"] == 0
+    assert payload["execution"]["checkpoint_written"] is False
+    assert payload["execution"]["validation_values_evaluated"] is False

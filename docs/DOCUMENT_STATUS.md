@@ -95,6 +95,7 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_decoder_leaf_attribution_20260816.md` | Active negative decoder attribution; raw Euclidean direct steps closed | Designing output-locality and function-space trust region |
 | `research/daily_coarse_graining/successor_output_locality_audit_20260816.md` | Active positive field-local attribution; maintenance output dominates the finite failure | Designing a normalized maintenance-local output trust region |
 | `research/daily_coarse_graining/successor_maintenance_output_projection_protocol_20260816.md` | Completed negative evidence; a fixed maintenance gradient cannot jointly restore the caps and all losses | Designing a bounded nonlinear constrained solver in a frozen low-dimensional subspace |
+| `research/daily_coarse_graining/successor_low_dimensional_nonlinear_projection_protocol_20260816.md` | Active frozen nonlinear projection contract; no training or architecture change | Implementing and locally admitting the bounded zero-retention audit |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |
