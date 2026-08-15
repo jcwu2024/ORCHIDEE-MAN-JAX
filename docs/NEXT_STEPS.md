@@ -798,17 +798,20 @@ linear scaling proves the direction itself has ceased to be common. No second
 update is applied. Report SHA256 is `c2691824...74261`; see
 [`successor_group_aware_backtracking_smoke_20260815.md`](research/daily_coarse_graining/successor_group_aware_backtracking_smoke_20260815.md).
 
-Do not test smaller fixed-weight steps. The active gate is to freeze a
-zero-retention second-state recalibration audit. Reconstruct the admitted
-first update, recompute the exact 40 gradients at that state, solve a new
-common direction, evaluate a bounded finite-step grid, and report support
-overlap with the parent's 14 active constraints. If no common direction
-exists, redesign the objective or sampling groups. If it exists with sparse
-overlapping support, implement active-set recalibration that starts from the
-prior support and adds constraints identified by all-40 directional checks.
-No network architecture change is involved. The 365-day rollout,
-long-held-point validation, Gate D2, sealed test, and product gates remain
-closed.
+Do not test smaller fixed-weight steps. The zero-retention second-state exact
+recalibration audit is frozen under contract SHA256
+`5379e267...23014`. It reconstructs the admitted first update with eight VJPs,
+recomputes all 40 gradients at that state, solves a new common direction, and
+evaluates norms `0.0005, 0.001, 0.0015, 0.002` on all ten groups. It reads no
+validation values and retains no parameters. Run it once on free `gln01`; see
+[`successor_second_state_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_second_state_recalibration_audit_20260815.md).
+
+If no common direction exists, redesign the objective or sampling groups. If
+it exists with sparse overlapping support, implement active-set recalibration
+that starts from the prior support and adds constraints identified by all-40
+directional checks. No network architecture change is involved. The 365-day
+rollout, long-held-point validation, Gate D2, sealed test, and product gates
+remain closed.
 
 ## Completed Task Packet: Gate C
 

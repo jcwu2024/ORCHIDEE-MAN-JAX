@@ -479,6 +479,55 @@ def classify_frozen_scalarization_smoke(
     }
 
 
+def classify_second_state_recalibration(
+    direction_classification: Mapping[str, Any],
+    support: Mapping[str, Any],
+    *,
+    gates: Mapping[str, Any],
+    pass_action: str,
+    direction_fail_action: str,
+    step_fail_action: str,
+    support_fail_action: str,
+) -> Mapping[str, Any]:
+    """Classify the exact second-state direction and its active-set support."""
+
+    direction_passed = bool(direction_classification["direction_passed"])
+    finite_step_passed = bool(direction_classification["passed"])
+    sparse = int(support["recalibrated_support_size"]) <= int(
+        gates["maximum_recalibrated_support_size"]
+    )
+    overlapping = int(support["overlap_size"]) >= int(
+        gates["minimum_parent_support_overlap"]
+    )
+    active_set_supported = finite_step_passed and sparse and overlapping
+    if not direction_passed:
+        status = "second_state_common_direction_not_supported"
+        next_action = direction_fail_action
+    elif not finite_step_passed:
+        status = "second_state_finite_step_not_supported"
+        next_action = step_fail_action
+    elif not (sparse and overlapping):
+        status = "second_state_support_not_suitable_for_active_set"
+        next_action = support_fail_action
+    else:
+        status = "second_state_active_set_recalibration_supported"
+        next_action = pass_action
+    return {
+        "status": status,
+        "passed": active_set_supported,
+        "direction_passed": direction_passed,
+        "finite_step_passed": finite_step_passed,
+        "selected_step_norm": direction_classification["selected_step_norm"],
+        "minimum_group_component_cosine": direction_classification[
+            "minimum_group_component_cosine"
+        ],
+        "support_sparse": sparse,
+        "support_overlapping": overlapping,
+        "direction_classification": direction_classification,
+        "next_action": next_action,
+    }
+
+
 def _run_frozen_scalarization_smoke(
     *,
     args: argparse.Namespace,
@@ -906,19 +955,450 @@ def _run_frozen_scalarization_smoke(
     return report
 
 
+def _run_second_state_recalibration_audit(
+    *,
+    args: argparse.Namespace,
+    audit: Mapping[str, Any],
+    predecessor: Mapping[str, Any],
+    jax: Any,
+    runtime: Mapping[str, Any],
+    schedule: Mapping[str, Any],
+    manifest: Mapping[str, Any],
+    signature: Any,
+    parameters: Any,
+    parameter_count: int,
+    measurement: Any,
+    loss_evaluator: Any,
+    adapter_timing: Mapping[str, Any],
+    memory_before: Mapping[str, Any],
+    started: float,
+) -> Mapping[str, Any]:
+    """Recalibrate the exact 40-objective direction after one admitted step."""
+
+    import jax.numpy as jnp
+    from jax.flatten_util import ravel_pytree
+
+    first_step_norm = float(audit["first_update"]["global_step_norm"])
+    seeds, parent_scalarization = _frozen_scalarization_seeds(
+        predecessor,
+        expected_step_norm=first_step_norm,
+    )
+    if (
+        parent_scalarization["positive_constraints"]
+        != int(audit["gates"]["expected_parent_support_size"])
+        or parent_scalarization["active_groups"]
+        != int(audit["gates"]["expected_parent_active_groups"])
+    ):
+        raise ValueError("second-state parent scalarization support drift")
+
+    active_groups = tuple(
+        int(index) for index in np.flatnonzero(np.any(seeds > 0.0, axis=1))
+    )
+    combine = _make_combined_direction(jax)
+    direct_step = _make_direct_virtual_step(jax)
+    count_nonfinite = _make_nonfinite_counter(jax)
+    first_gradients = []
+    first_records = []
+    first_gradient_nonfinite = 0
+    for group_index in range(AUDIT_GROUPS):
+        anchor_batch, context_batch, context_inputs, group = _load_group(
+            jax,
+            manifest,
+            schedule,
+            args.prepared_manifest,
+            signature,
+            group_index,
+        )
+        if group_index in active_groups:
+            losses, gradient, hard_counts = measurement(
+                parameters,
+                seeds[group_index],
+                anchor_batch,
+                context_batch,
+                context_inputs,
+            )
+            gradient_nonfinite = count_nonfinite(gradient)
+            jax.block_until_ready(
+                (losses, gradient, hard_counts, gradient_nonfinite)
+            )
+            first_gradients.append(gradient)
+            first_gradient_nonfinite += int(np.asarray(gradient_nonfinite))
+        else:
+            losses, hard_counts = loss_evaluator(
+                parameters,
+                anchor_batch,
+                context_batch,
+                context_inputs,
+            )
+            jax.block_until_ready((losses, hard_counts))
+        first_records.append(
+            {
+                "group": group_index,
+                "losses": np.asarray(losses, dtype=np.float64),
+                "hard_gate_counts": _hard_counts_host(hard_counts),
+            }
+        )
+        del anchor_batch, context_batch, context_inputs, group, losses, hard_counts
+        gc.collect()
+
+    first_direction, first_direction_norm, first_direction_nonfinite = combine(
+        tuple(first_gradients),
+        np.ones(len(first_gradients), dtype=np.float64),
+    )
+    second_state_parameters, first_proposed_nonfinite = direct_step(
+        parameters,
+        first_direction,
+        first_direction_norm,
+        np.asarray(first_step_norm, dtype=np.float64),
+    )
+    jax.block_until_ready(
+        (
+            first_direction,
+            first_direction_norm,
+            first_direction_nonfinite,
+            second_state_parameters,
+            first_proposed_nonfinite,
+        )
+    )
+    first_direction_norm_host = float(np.asarray(first_direction_norm))
+    first_direction_norm_error = abs(
+        first_direction_norm_host
+        - float(parent_scalarization["expected_direction_norm"])
+    ) / max(float(parent_scalarization["expected_direction_norm"]), 1.0e-30)
+    del first_gradients, first_direction
+    gc.collect()
+
+    flatten = _make_flattened_unit_gradient(jax)
+    unit_gradients = []
+    records = []
+    maximum_first_step_reproduction_error = 0.0
+    for group_index in range(AUDIT_GROUPS):
+        anchor_batch, context_batch, context_inputs, group = _load_group(
+            jax,
+            manifest,
+            schedule,
+            args.prepared_manifest,
+            signature,
+            group_index,
+        )
+        record = _collect_group_unit_gradients(
+            jax,
+            measurement,
+            flatten,
+            unit_gradients,
+            second_state_parameters,
+            anchor_batch,
+            context_batch,
+            context_inputs,
+        )
+        first_relative = _relative_changes(
+            first_records[group_index]["losses"],
+            np.asarray(
+                [record["losses_before"][label] for label in GRADIENT_FEASIBILITY_LABELS],
+                dtype=np.float64,
+            ),
+        )
+        expected_relative = predecessor["records"][group_index]["steps"][
+            format(first_step_norm, ".12g")
+        ]["virtual_loss_relative_changes"]
+        maximum_first_step_reproduction_error = max(
+            maximum_first_step_reproduction_error,
+            max(
+                abs(float(first_relative[label]) - float(expected_relative[label]))
+                for label in GRADIENT_FEASIBILITY_LABELS
+            ),
+        )
+        records.append(
+            {
+                "group": group_index,
+                "point_years": [
+                    {
+                        "update": int(entry["update"]),
+                        "landpoint_id": str(entry["landpoint_id"]),
+                        "year": int(entry["year"]),
+                    }
+                    for entry, _artifact in group
+                ],
+                **record,
+                "steps": {},
+            }
+        )
+        del anchor_batch, context_batch, context_inputs, group
+        gc.collect()
+        print(
+            json.dumps(
+                {
+                    "event": "second_state_recalibration_gradient_group",
+                    "group": group_index + 1,
+                    "total": AUDIT_GROUPS,
+                },
+                sort_keys=True,
+            ),
+            flush=True,
+        )
+
+    constraint_labels = tuple(
+        f"group_{group_index + 1:02d}.{label}"
+        for group_index in range(AUDIT_GROUPS)
+        for label in GRADIENT_FEASIBILITY_LABELS
+    )
+    unit_matrix = jnp.stack(tuple(unit_gradients))
+    gram = _make_flat_gram(jax)(unit_matrix)
+    jax.block_until_ready(gram)
+    diagnostics = gradient_direction_diagnostics(
+        np.asarray(gram, dtype=np.float64),
+        labels=constraint_labels,
+    )
+    selected = diagnostics["directions"]["minimum_norm_unit"]
+    weights = np.asarray(
+        [selected["weights"][label] for label in constraint_labels],
+        dtype=np.float64,
+    )
+    direction_values, direction_norm, direction_nonfinite = _make_flat_direction(jax)(
+        unit_matrix,
+        weights,
+    )
+    _flat_parameters, unravel = ravel_pytree(second_state_parameters)
+    direction = unravel(direction_values)
+    jax.block_until_ready((direction, direction_norm, direction_nonfinite))
+    del unit_gradients, unit_matrix, direction_values
+    gc.collect()
+
+    support_tolerance = float(audit["support"]["weight_tolerance"])
+    parent_simplex = predecessor["aggregate_direction"][
+        "normalized_simplex_weights"
+    ]
+    recalibrated_simplex = selected["normalized_simplex_weights"]
+    parent_support = tuple(
+        label for label in constraint_labels if float(parent_simplex[label]) > support_tolerance
+    )
+    recalibrated_support = tuple(
+        label
+        for label in constraint_labels
+        if float(recalibrated_simplex[label]) > support_tolerance
+    )
+    parent_support_set = set(parent_support)
+    recalibrated_support_set = set(recalibrated_support)
+    overlap = tuple(sorted(parent_support_set & recalibrated_support_set))
+    support = {
+        "weight_tolerance": support_tolerance,
+        "parent_support_size": len(parent_support),
+        "recalibrated_support_size": len(recalibrated_support),
+        "overlap_size": len(overlap),
+        "parent_support": list(parent_support),
+        "recalibrated_support": list(recalibrated_support),
+        "overlap": list(overlap),
+        "entered": sorted(recalibrated_support_set - parent_support_set),
+        "dropped": sorted(parent_support_set - recalibrated_support_set),
+    }
+
+    step_norms = tuple(float(value) for value in audit["step_norm_grid"])
+    minimum_direction_cosine = min(
+        float(value)
+        for value in selected["normalized_directional_derivatives"].values()
+    )
+    evaluate_steps = bool(selected["all_strictly_positive"]) and (
+        minimum_direction_cosine
+        >= float(audit["direction_gate"]["minimum_group_component_cosine"])
+    )
+    proposals = {}
+    proposal_nonfinite = {}
+    if evaluate_steps:
+        for step_norm in step_norms:
+            proposed, nonfinite = direct_step(
+                second_state_parameters,
+                direction,
+                direction_norm,
+                np.asarray(step_norm, dtype=np.float64),
+            )
+            jax.block_until_ready((proposed, nonfinite))
+            key = format(step_norm, ".12g")
+            proposals[key] = proposed
+            proposal_nonfinite[key] = int(np.asarray(nonfinite))
+
+    for group_index in range(AUDIT_GROUPS if evaluate_steps else 0):
+        anchor_batch, context_batch, context_inputs, group = _load_group(
+            jax,
+            manifest,
+            schedule,
+            args.prepared_manifest,
+            signature,
+            group_index,
+        )
+        before = np.asarray(
+            [records[group_index]["losses_before"][label] for label in GRADIENT_FEASIBILITY_LABELS],
+            dtype=np.float64,
+        )
+        for step_norm in step_norms:
+            key = format(step_norm, ".12g")
+            losses_after, hard_counts = loss_evaluator(
+                proposals[key],
+                anchor_batch,
+                context_batch,
+                context_inputs,
+            )
+            jax.block_until_ready((losses_after, hard_counts))
+            after = np.asarray(losses_after, dtype=np.float64)
+            records[group_index]["steps"][key] = {
+                "step_norm": step_norm,
+                "virtual_losses_after": {
+                    label: float(after[index])
+                    for index, label in enumerate(GRADIENT_FEASIBILITY_LABELS)
+                },
+                "virtual_loss_relative_changes": _relative_changes(before, after),
+                "hard_gate_counts": _hard_counts_host(hard_counts),
+                "nonfinite_proposed_parameter_values": proposal_nonfinite[key],
+            }
+            del losses_after, hard_counts
+        del anchor_batch, context_batch, context_inputs, group
+        gc.collect()
+        print(
+            json.dumps(
+                {
+                    "event": "second_state_recalibration_virtual_group",
+                    "group": group_index + 1,
+                    "total": AUDIT_GROUPS,
+                },
+                sort_keys=True,
+            ),
+            flush=True,
+        )
+
+    direction_classification = classify_group_aware_direction(
+        diagnostics,
+        records,
+        step_norms=step_norms,
+        contract=audit,
+    )
+    classification = classify_second_state_recalibration(
+        direction_classification,
+        support,
+        gates=audit["gates"],
+        pass_action=audit["pass_action"],
+        direction_fail_action=audit["direction_fail_action"],
+        step_fail_action=audit["step_fail_action"],
+        support_fail_action=audit["support_fail_action"],
+    )
+    first_hard_failure_count = sum(
+        sum(record["hard_gate_counts"].values()) for record in first_records
+    )
+    hard_failure_count = first_hard_failure_count + sum(
+        sum(record["parent_hard_gate_counts"].values())
+        + sum(sum(step["hard_gate_counts"].values()) for step in record["steps"].values())
+        for record in records
+    )
+    nonfinite_count = (
+        first_gradient_nonfinite
+        + int(np.asarray(first_direction_nonfinite))
+        + int(np.asarray(first_proposed_nonfinite))
+        + sum(
+            sum(record["nonfinite_component_gradient_values"].values())
+            for record in records
+        )
+        + int(np.asarray(direction_nonfinite))
+        + sum(proposal_nonfinite.values())
+    )
+    all_losses_finite = all(
+        all(np.isfinite(value) for value in record["losses_before"].values())
+        and all(
+            all(np.isfinite(value) for value in step["virtual_losses_after"].values())
+            for step in record["steps"].values()
+        )
+        for record in records
+    )
+    reconstruction_passed = (
+        first_direction_norm_error
+        <= float(audit["gates"]["maximum_parent_direction_norm_relative_error"])
+        and maximum_first_step_reproduction_error
+        <= float(audit["gates"]["maximum_first_step_relative_change_error"])
+    )
+    evidence_valid = (
+        reconstruction_passed
+        and hard_failure_count == int(audit["gates"]["hard_failure_count"])
+        and nonfinite_count == int(audit["gates"]["nonfinite_value_count"])
+        and all_losses_finite
+    )
+    report = {
+        "schema_version": "successor_second_state_recalibration_audit_report_v1",
+        "status": "completed" if evidence_valid else "invalid_evidence",
+        "git_head": _git_head(),
+        "identity": {
+            "audit_contract_sha256": audit["contract_sha256"],
+            "predecessor_report_sha256": _sha256_file(args.smoke_report),
+            "backtracking_report_sha256": _sha256_file(args.backtracking_report),
+        },
+        "architecture": SOURCE_ROUTED_ATTENTION,
+        "parameter_count": parameter_count,
+        "parent_update": PARENT_UPDATE,
+        "first_update_reconstruction": {
+            "step_norm": first_step_norm,
+            "scalarization": parent_scalarization,
+            "direction_norm": first_direction_norm_host,
+            "direction_norm_relative_error": first_direction_norm_error,
+            "maximum_relative_change_error": maximum_first_step_reproduction_error,
+        },
+        "second_state_direction": {
+            "direction_norm": float(np.asarray(direction_norm)),
+            "minimum_component_cosine": minimum_direction_cosine,
+            "component_cosines": selected["normalized_directional_derivatives"],
+            "normalized_simplex_weights": selected["normalized_simplex_weights"],
+            "support": support,
+        },
+        "step_norm_grid": list(step_norms),
+        "classification": classification,
+        "records": records,
+        "evidence_gates": {
+            "evidence_valid": evidence_valid,
+            "first_update_reconstruction_passed": reconstruction_passed,
+            "all_losses_finite": all_losses_finite,
+            "hard_failure_count": hard_failure_count,
+            "nonfinite_value_count": nonfinite_count,
+        },
+        "adapter_preparation": adapter_timing,
+        "device_memory_before": memory_before,
+        "device_memory_after": _device_memory_report(runtime["devices"]),
+        "elapsed_seconds": time.perf_counter() - started,
+        "reconstructed_direct_updates": 1,
+        "new_updates_applied": 0,
+        "optimizer_updates": 0,
+        "proposed_parameters_retained": False,
+        "checkpoint_written": False,
+        "recovery_written": False,
+        "validation_values_evaluated": False,
+        "sealed_test_used": False,
+        "teacher_data_regenerated": False,
+        "historical_v5_used": False,
+        "next_gate": (
+            classification["next_action"]
+            if evidence_valid
+            else "stop_and_repair_second_state_recalibration_evidence"
+        ),
+    }
+    _atomic_json(args.output, report)
+    return report
+
+
 def run(args: argparse.Namespace) -> Mapping[str, Any]:
     if args.output.exists():
         raise FileExistsError(args.output)
     if args.geometry_output is not None and args.geometry_output.exists():
         raise FileExistsError(args.geometry_output)
     started = time.perf_counter()
+    second_state_recalibration = bool(args.second_state_recalibration_audit)
     backtracking_smoke = bool(args.group_aware_backtracking_scalarization_smoke)
     scalarization_smoke = bool(
         args.frozen_group_aware_scalarization_smoke or backtracking_smoke
     )
     group_aware_extension = bool(args.group_aware_step_extension)
     group_aware = bool(args.group_aware or group_aware_extension)
-    if backtracking_smoke:
+    if second_state_recalibration:
+        audit_schema = "successor_second_state_recalibration_audit_v1"
+        audit_status = "frozen_zero_retention_second_state_exact_recalibration"
+        predecessor_schema = "successor_group_aware_step_extension_v1"
+        predecessor_status = "frozen_zero_update_forty_objective_extended_grid"
+        predecessor_contract_key = "group_aware_step_extension_contract_sha256"
+        predecessor_report_key = "group_aware_step_extension_report_sha256"
+    elif backtracking_smoke:
         audit_schema = "successor_group_aware_backtracking_smoke_v1"
         audit_status = "frozen_5_update_group_scalarization_backtracking"
         predecessor_schema = "successor_group_aware_step_extension_v1"
@@ -977,9 +1457,24 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         raise ValueError("direction-audit predecessor identity drift")
     predecessor_report = (
         json.loads(args.smoke_report.read_text(encoding="utf-8"))
-        if scalarization_smoke
+        if scalarization_smoke or second_state_recalibration
         else None
     )
+    if second_state_recalibration:
+        if args.backtracking_report is None:
+            raise ValueError("second-state audit requires backtracking report")
+        backtracking_report = json.loads(
+            args.backtracking_report.read_text(encoding="utf-8")
+        )
+        if (
+            _sha256_file(args.backtracking_report)
+            != audit["identity"]["backtracking_report_sha256"]
+            or backtracking_report.get("identity", {}).get("smoke_contract_sha256")
+            != audit["identity"]["backtracking_contract_sha256"]
+            or backtracking_report.get("classification", {}).get("status")
+            != "group_aware_backtracking_smoke_rejected"
+        ):
+            raise ValueError("second-state backtracking predecessor drift")
     if backtracking_smoke:
         if args.failed_scalarization_report is None:
             raise ValueError("backtracking smoke requires failed scalarization report")
@@ -1129,6 +1624,24 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         **objective_arguments,
     )
     memory_before = _device_memory_report(runtime["devices"])
+    if second_state_recalibration:
+        return _run_second_state_recalibration_audit(
+            args=args,
+            audit=audit,
+            predecessor=predecessor_report,
+            jax=jax,
+            runtime=runtime,
+            schedule=schedule,
+            manifest=manifest,
+            signature=signature,
+            parameters=parameters,
+            parameter_count=counts[SOURCE_ROUTED_ATTENTION],
+            measurement=measurement,
+            loss_evaluator=loss_evaluator,
+            adapter_timing=adapter_timing,
+            memory_before=memory_before,
+            started=started,
+        )
     if scalarization_smoke:
         return _run_frozen_scalarization_smoke(
             args=args,
@@ -1527,7 +2040,9 @@ def _parser() -> argparse.ArgumentParser:
     mode.add_argument(
         "--group-aware-backtracking-scalarization-smoke", action="store_true"
     )
+    mode.add_argument("--second-state-recalibration-audit", action="store_true")
     parser.add_argument("--failed-scalarization-report", type=Path)
+    parser.add_argument("--backtracking-report", type=Path)
     return parser
 
 

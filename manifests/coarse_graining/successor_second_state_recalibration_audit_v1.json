@@ -1,0 +1,78 @@
+{
+  "schema_version": "successor_second_state_recalibration_audit_v1",
+  "status": "frozen_zero_retention_second_state_exact_recalibration",
+  "contract_sha256": "5379e26771d1e37b90983b8bc7242c5feb3c26a091de212153b1bc58b3023014",
+  "identity": {
+    "group_aware_step_extension_contract_sha256": "e78db1bac583d6adf853eb38207c7c410b5befb1cbb087e01da527d28fd3bda1",
+    "group_aware_step_extension_report_sha256": "a8b448488a25e924a36dc356a0bdba6f6cc213c6509e7e21ac3e4af0635edf9a",
+    "backtracking_contract_sha256": "8c9a97141f0eab05fe54e545ad8056e399eb12008e786eff4f0d35ddb347c11d",
+    "backtracking_report_sha256": "c2691824b6548be05337620ffb91cab1994b58bd83293a56968d89574a074261",
+    "staged_training_contract_sha256": "53d21d3a03a1502263b333aaba9719b2d42f096672844497b1a213dd54c23c7b",
+    "candidate_coefficient_contract_sha256": "2093c392cc24a59f0b5021b7ecfafade7e3522fd3953014df63d4d85517b1d9f",
+    "scale_acceptance_contract_sha256": "a0ec131530e9dd4f72b3f22267ddf88f8af7db9c7262d7d505c7fc5bf2278490",
+    "parent_recovery_sha256": "d49222d4f9f64941e555d1c8b0536c785cc89942d59fb41b3a5d5ea291a7cae7",
+    "prepared_manifest_sha256": "6feabb05a9d3833de01be540e2676fd1d51da01510314b32015fd155d87111ba"
+  },
+  "model": {
+    "architecture": "source_routed_process_attention_v2",
+    "parent_update": 1000,
+    "parameter_count": 8722689,
+    "architecture_change": false
+  },
+  "first_update": {
+    "global_step_norm": 0.002,
+    "scalarization": "accepted_parent_simplex_weight_divided_by_parent_component_gradient_norm",
+    "reverse_passes": 8,
+    "purpose": "reconstruct_the_previously_admitted_first_update_in_memory"
+  },
+  "second_state": {
+    "group_count": 10,
+    "component_count_per_group": 4,
+    "constraint_count": 40,
+    "direction": "exact_minimum_norm_convex_combination_of_forty_unit_gradients",
+    "reverse_passes": 40,
+    "sampling": "same_ten_frozen_mixed_groups_as_parent_audit"
+  },
+  "direction_gate": {
+    "all_component_cosines_strictly_positive": true,
+    "minimum_group_component_cosine": 0.001
+  },
+  "step_norm_grid": [0.0005, 0.001, 0.0015, 0.002],
+  "support": {
+    "weight_tolerance": 1e-12,
+    "comparison": "positive_normalized_simplex_constraints_at_parent_and_second_state"
+  },
+  "gates": {
+    "hard_failure_count": 0,
+    "nonfinite_value_count": 0,
+    "total_groups": 10,
+    "minimum_passing_groups": 10,
+    "maximum_passing_group_component_relative_increase": 0.000001,
+    "maximum_any_group_component_relative_increase": 0.000001,
+    "minimum_each_component_median_relative_decrease": 0.0001,
+    "expected_parent_support_size": 14,
+    "expected_parent_active_groups": 8,
+    "maximum_recalibrated_support_size": 20,
+    "minimum_parent_support_overlap": 1,
+    "maximum_parent_direction_norm_relative_error": 1e-10,
+    "maximum_first_step_relative_change_error": 1e-10
+  },
+  "execution": {
+    "free_gln01_only": true,
+    "paid_training_authorized": false,
+    "reconstructed_direct_updates": 1,
+    "new_updates_applied": 0,
+    "optimizer_updates": 0,
+    "checkpoint_written": false,
+    "recovery_written": false,
+    "proposed_parameters_retained": false,
+    "teacher_data_regenerated": false,
+    "historical_v5_used": false,
+    "validation_values_evaluated": false,
+    "sealed_test_used": false
+  },
+  "pass_action": "implement_active_set_recalibration_starting_from_prior_support",
+  "direction_fail_action": "redesign_objective_or_sampling_groups",
+  "step_fail_action": "redesign_finite_step_realization_after_exact_recalibration",
+  "support_fail_action": "redesign_efficient_recalibration_before_training"
+}

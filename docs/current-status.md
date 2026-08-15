@@ -40,12 +40,15 @@ Backtracking closes parent-frozen weights. At the second proposal, norms
 just the finite step, has ceased to be common. See
 [`successor_group_aware_backtracking_smoke_20260815.md`](research/daily_coarse_graining/successor_group_aware_backtracking_smoke_20260815.md).
 
-The active gate is design of a second-state exact recalibration audit. It
-must reconstruct the first admitted update, recompute the 40 gradients at the
-new parameters, test whether another common finite direction exists, and
-measure active-support overlap. Sparse overlap would justify an active-set
+The second-state exact recalibration audit is now frozen and locally
+implemented. It reconstructs the first admitted update with the accepted
+eight-VJP scalarization, recomputes the 40 gradients at the new parameters,
+tests four bounded finite step norms on all ten groups, and measures support
+overlap. It performs no new update and reads no validation values. The active
+gate is one free-`gln01` execution. Sparse overlap would justify an active-set
 recalibration implementation; absence of a common direction would force an
-objective or sampling redesign.
+objective or sampling redesign. See
+[`successor_second_state_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_second_state_recalibration_audit_20260815.md).
 
 ## First Formal Neural Candidate
 
@@ -1606,6 +1609,7 @@ smaller fixed-weight steps and requires direction recalibration. Report
 SHA256 is
 `c2691824b6548be05337620ffb91cab1994b58bd83293a56968d89574a074261`.
 
-The active gate is a zero-retention exact 40-gradient audit at the state after
-the first admitted update, with support-overlap reporting. See
-[`successor_group_aware_backtracking_smoke_20260815.md`](research/daily_coarse_graining/successor_group_aware_backtracking_smoke_20260815.md).
+The zero-retention exact 40-gradient audit at the state after the first
+admitted update is frozen and locally implemented. Its active operation is
+one free-`gln01` execution with support-overlap reporting. See
+[`successor_second_state_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_second_state_recalibration_audit_20260815.md).

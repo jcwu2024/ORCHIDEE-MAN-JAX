@@ -56,6 +56,7 @@ from scripts.hpc.probe_successor_multibatch_direction import (
     _make_gradient_accumulator,
     _make_nonfinite_counter,
     classify_group_aware_direction,
+    classify_second_state_recalibration,
 )
 from scripts.hpc.probe_successor_realized_step import _make_proposed_directions
 from scripts.hpc.run_successor_direct_direction_smoke import (
@@ -1676,6 +1677,63 @@ def test_group_aware_backtracking_smoke_has_a_useful_minimum_step():
     assert "requires free gln01" in launcher
     assert "--group-aware-backtracking-scalarization-smoke" in launcher
     assert "--failed-scalarization-report" in launcher
+    assert "#SBATCH" not in launcher
+
+
+def test_second_state_recalibration_classifies_sparse_overlap():
+    direction = {
+        "direction_passed": True,
+        "passed": True,
+        "selected_step_norm": 0.001,
+        "minimum_group_component_cosine": 0.04,
+    }
+    support = {"recalibrated_support_size": 12, "overlap_size": 6}
+    result = classify_second_state_recalibration(
+        direction,
+        support,
+        gates={
+            "maximum_recalibrated_support_size": 20,
+            "minimum_parent_support_overlap": 1,
+        },
+        pass_action="implement_active_set",
+        direction_fail_action="redesign_objectives",
+        step_fail_action="redesign_step",
+        support_fail_action="redesign_recalibration",
+    )
+
+    assert result["status"] == "second_state_active_set_recalibration_supported"
+    assert result["passed"] is True
+    assert result["next_action"] == "implement_active_set"
+
+
+def test_second_state_recalibration_contract_is_zero_retention():
+    manifest_path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_second_state_recalibration_audit_v1.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_second_state_recalibration_audit.sh"
+    ).read_text()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["first_update"]["reverse_passes"] == 8
+    assert manifest["second_state"]["reverse_passes"] == 40
+    assert manifest["step_norm_grid"] == [0.0005, 0.001, 0.0015, 0.002]
+    assert manifest["gates"]["minimum_passing_groups"] == 10
+    assert manifest["execution"]["new_updates_applied"] == 0
+    assert manifest["execution"]["validation_values_evaluated"] is False
+    assert manifest["execution"]["checkpoint_written"] is False
+    assert "requires free gln01" in launcher
+    assert "--second-state-recalibration-audit" in launcher
+    assert "--backtracking-report" in launcher
     assert "#SBATCH" not in launcher
 
 
