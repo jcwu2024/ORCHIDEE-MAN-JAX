@@ -49,6 +49,7 @@ from scripts.hpc.probe_successor_direct_trust_region import (
 )
 from scripts.hpc.probe_successor_multibatch_direction import (
     _empty_accumulators,
+    _frozen_scalarization_seeds,
     _make_flat_direction,
     _make_flat_gram,
     _make_flattened_unit_gradient,
@@ -1569,6 +1570,84 @@ def test_group_aware_step_extension_is_frozen_and_zero_update():
     assert "requires free gln01" in launcher
     assert "--group-aware-step-extension" in launcher
     assert "successor-group-aware-direction-b0ebda9/report.json" in launcher
+    assert "#SBATCH" not in launcher
+
+
+def test_frozen_group_aware_scalarization_uses_weight_over_raw_norm():
+    weights = {
+        f"group_{group + 1:02d}.{label}": 0.0
+        for group in range(10)
+        for label in GRADIENT_FEASIBILITY_LABELS
+    }
+    positive = []
+    for group in range(8):
+        count = 2 if group < 6 else 1
+        for component in range(count):
+            key = f"group_{group + 1:02d}.{GRADIENT_FEASIBILITY_LABELS[component]}"
+            weights[key] = 1.0 / 14.0
+            positive.append((group, component, key))
+    predecessor = {
+        "schema_version": "successor_group_aware_step_extension_report_v1",
+        "status": "completed",
+        "classification": {
+            "status": "group_aware_finite_step_supported",
+            "passed": True,
+            "selected_step_norm": 0.002,
+        },
+        "aggregate_direction": {
+            "normalized_simplex_weights": weights,
+            "direction_norm": 0.05,
+        },
+        "records": [
+            {
+                "group": group,
+                "gradient_norms": {
+                    label: float(group + component + 1)
+                    for component, label in enumerate(GRADIENT_FEASIBILITY_LABELS)
+                },
+            }
+            for group in range(10)
+        ],
+    }
+
+    seeds, summary = _frozen_scalarization_seeds(
+        predecessor,
+        expected_step_norm=0.002,
+    )
+
+    assert summary["positive_constraints"] == 14
+    assert summary["active_groups"] == 8
+    for group, component, key in positive:
+        norm = predecessor["records"][group]["gradient_norms"][
+            GRADIENT_FEASIBILITY_LABELS[component]
+        ]
+        assert seeds[group, component] == pytest.approx(weights[key] / norm)
+
+
+def test_group_aware_scalarization_smoke_contract_is_bounded():
+    manifest_path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_group_aware_scalarization_smoke_v1.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_group_aware_scalarization_smoke.sh"
+    ).read_text()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["training"]["updates"] == 5
+    assert manifest["training"]["reverse_passes_per_update"] == 8
+    assert manifest["execution"]["checkpoint_written"] is False
+    assert manifest["execution"]["final_parameters_retained"] is False
+    assert "requires free gln01" in launcher
+    assert "--frozen-group-aware-scalarization-smoke" in launcher
     assert "#SBATCH" not in launcher
 
 

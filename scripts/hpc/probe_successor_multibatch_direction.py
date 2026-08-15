@@ -8,7 +8,7 @@ import json
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any, Mapping, Sequence
 
 import numpy as np
 
@@ -61,6 +61,7 @@ from scripts.hpc.successor_staged_prepared import (
 )
 
 AUDIT_GROUPS = 10
+SCALARIZATION_SMOKE_UPDATES = 5
 
 
 def _git_head() -> str:
@@ -333,66 +334,550 @@ def classify_group_aware_direction(
     return result
 
 
+def _frozen_scalarization_seeds(
+    predecessor: Mapping[str, Any],
+    *,
+    expected_step_norm: float,
+) -> tuple[np.ndarray, Mapping[str, Any]]:
+    classification = predecessor.get("classification", {})
+    if (
+        predecessor.get("schema_version")
+        != "successor_group_aware_step_extension_report_v1"
+        or predecessor.get("status") != "completed"
+        or classification.get("status") != "group_aware_finite_step_supported"
+        or not classification.get("passed", False)
+        or float(classification.get("selected_step_norm")) != expected_step_norm
+    ):
+        raise ValueError("group-aware scalarization predecessor is not admitted")
+    records = predecessor.get("records", ())
+    if len(records) != AUDIT_GROUPS:
+        raise ValueError("group-aware scalarization predecessor group count drift")
+    weights = predecessor["aggregate_direction"]["normalized_simplex_weights"]
+    seeds = np.zeros(
+        (AUDIT_GROUPS, len(GRADIENT_FEASIBILITY_LABELS)), dtype=np.float64
+    )
+    positive_constraints = 0
+    for group_index, record in enumerate(records):
+        if int(record["group"]) != group_index:
+            raise ValueError("group-aware scalarization predecessor order drift")
+        for component_index, label in enumerate(GRADIENT_FEASIBILITY_LABELS):
+            constraint = f"group_{group_index + 1:02d}.{label}"
+            weight = float(weights[constraint])
+            norm = float(record["gradient_norms"][label])
+            if not np.isfinite(norm) or norm <= 0.0 or weight < 0.0:
+                raise ValueError("invalid frozen scalarization coefficient")
+            seeds[group_index, component_index] = weight / norm
+            positive_constraints += int(weight > 0.0)
+    active_groups = int(np.count_nonzero(np.any(seeds > 0.0, axis=1)))
+    return seeds, {
+        "positive_constraints": positive_constraints,
+        "active_groups": active_groups,
+        "seed_sum": float(np.sum(seeds)),
+        "expected_direction_norm": float(
+            predecessor["aggregate_direction"]["direction_norm"]
+        ),
+    }
+
+
+def classify_frozen_scalarization_smoke(
+    validation: Mapping[str, Any],
+    updates: Sequence[Mapping[str, Any]],
+    *,
+    gates: Mapping[str, Any],
+    pass_action: str,
+    fail_action: str,
+) -> Mapping[str, Any]:
+    from scripts.hpc.run_successor_gradient_balanced_smoke import (
+        CANDIDATE as VALIDATION_CANDIDATE,
+    )
+    from scripts.hpc.run_successor_gradient_balanced_smoke import (
+        CONTROL as VALIDATION_BASELINE,
+    )
+    from scripts.hpc.run_successor_named_biomass_objective_ab import (
+        classify_objective_ab,
+    )
+
+    total_updates = int(gates["total_updates"])
+    all_relative = {
+        label: [
+            float(group["loss_relative_changes"][label])
+            for update in updates
+            for group in update["groups"]
+        ]
+        for label in GRADIENT_FEASIBILITY_LABELS
+    }
+    component_medians = {
+        label: float(np.median(values)) if values else None
+        for label, values in all_relative.items()
+    }
+    maximum_change = max(
+        (
+            max(float(value) for value in group["loss_relative_changes"].values())
+            for update in updates
+            for group in update["groups"]
+        ),
+        default=None,
+    )
+    hard_failure_count = sum(
+        sum(group["parent_hard_gate_counts"].values())
+        + sum(group["proposed_hard_gate_counts"].values())
+        for update in updates
+        for group in update["groups"]
+    )
+    nonfinite_count = sum(
+        sum(update["nonfinite_values"].values()) for update in updates
+    )
+    first_equivalence = updates[0].get("parent_equivalence", {}) if updates else {}
+    training_checks = {
+        "all_updates_completed": len(updates) == total_updates
+        and all(bool(update["update_applied"]) for update in updates),
+        "frozen_support_size_exact": bool(updates)
+        and int(updates[0]["scalarization"]["positive_constraints"])
+        == int(gates["expected_positive_constraints"])
+        and int(updates[0]["scalarization"]["active_groups"])
+        == int(gates["expected_active_groups"]),
+        "parent_direction_equivalent": bool(first_equivalence)
+        and float(first_equivalence["direction_norm_relative_error"])
+        <= float(gates["maximum_parent_direction_norm_relative_error"])
+        and float(first_equivalence["maximum_virtual_relative_change_error"])
+        <= float(gates["maximum_parent_virtual_relative_change_error"]),
+        "hard_failures_zero": hard_failure_count
+        == int(gates["hard_failure_count"]),
+        "nonfinite_values_zero": nonfinite_count
+        == int(gates["nonfinite_value_count"]),
+        "every_group_component_nonincreasing": maximum_change is not None
+        and maximum_change
+        <= float(gates["maximum_group_component_relative_increase"]),
+        "each_component_median_decreased": all(
+            value is not None
+            and value <= -float(gates["minimum_each_component_median_relative_decrease"])
+            for value in component_medians.values()
+        ),
+    }
+    validation_result = classify_objective_ab(
+        {
+            "current_objective_control": validation[VALIDATION_BASELINE],
+            "named_biomass_candidate": validation[VALIDATION_CANDIDATE],
+        },
+        gates=gates,
+    )
+    passed = all(training_checks.values()) and validation_result["passed"]
+    return {
+        "status": (
+            "frozen_group_aware_scalarization_smoke_admitted"
+            if passed
+            else "frozen_group_aware_scalarization_smoke_rejected"
+        ),
+        "passed": passed,
+        "training_checks": training_checks,
+        "component_median_relative_changes": component_medians,
+        "maximum_group_component_relative_increase": maximum_change,
+        "hard_failure_count": hard_failure_count,
+        "nonfinite_value_count": nonfinite_count,
+        "validation": validation_result,
+        "next_action": pass_action if passed else fail_action,
+    }
+
+
+def _run_frozen_scalarization_smoke(
+    *,
+    args: argparse.Namespace,
+    audit: Mapping[str, Any],
+    predecessor: Mapping[str, Any],
+    runtime: Mapping[str, Any],
+    jax: Any,
+    contract: Any,
+    schedule: Mapping[str, Any],
+    manifest: Mapping[str, Any],
+    assets: Any,
+    adapter_template: Any,
+    adapter_timing: Mapping[str, Any],
+    signature: Any,
+    parameters: Any,
+    parameter_count: int,
+    long_scales: Any,
+    measurement: Any,
+    loss_evaluator: Any,
+    memory_before: Mapping[str, Any],
+    started: float,
+) -> Mapping[str, Any]:
+    from scripts.hpc.prepare_successor_rollout_screen import (
+        _prepare_adapter as _prepare_validation_adapter,
+    )
+    from scripts.hpc.prepare_successor_staged_validation import (
+        _reference as _validation_reference,
+    )
+    from scripts.hpc.run_successor_gradient_balanced_smoke import (
+        CANDIDATE as VALIDATION_CANDIDATE,
+    )
+    from scripts.hpc.run_successor_gradient_balanced_smoke import (
+        CONTROL as VALIDATION_BASELINE,
+    )
+    from scripts.hpc.run_successor_gradient_balanced_smoke import _evaluate_subset
+    from scripts.hpc.successor_staged_validation_prepared import (
+        load_staged_validation_prepared,
+        ordered_validation_entries,
+    )
+
+    step_norm = float(audit["update"]["global_step_norm"])
+    seeds, scalarization = _frozen_scalarization_seeds(
+        predecessor,
+        expected_step_norm=step_norm,
+    )
+    if (
+        scalarization["positive_constraints"]
+        != int(audit["gates"]["expected_positive_constraints"])
+        or scalarization["active_groups"]
+        != int(audit["gates"]["expected_active_groups"])
+    ):
+        raise ValueError("frozen scalarization support drift")
+    active_groups = tuple(
+        int(index) for index in np.flatnonzero(np.any(seeds > 0.0, axis=1))
+    )
+    combine = _make_combined_direction(jax)
+    direct_step = _make_direct_virtual_step(jax)
+    count_nonfinite = _make_nonfinite_counter(jax)
+    parent_parameters = parameters
+    updates = []
+
+    for short_update in range(1, SCALARIZATION_SMOKE_UPDATES + 1):
+        before_records = []
+        gradients = []
+        gradient_nonfinite = 0
+        for group_index in range(AUDIT_GROUPS):
+            anchor_batch, context_batch, context_inputs, group = _load_group(
+                jax,
+                manifest,
+                schedule,
+                args.prepared_manifest,
+                signature,
+                group_index,
+            )
+            if group_index in active_groups:
+                losses, gradient, hard_counts = measurement(
+                    parameters,
+                    seeds[group_index],
+                    anchor_batch,
+                    context_batch,
+                    context_inputs,
+                )
+                current_nonfinite = count_nonfinite(gradient)
+                jax.block_until_ready(
+                    (losses, gradient, hard_counts, current_nonfinite)
+                )
+                gradients.append(gradient)
+                gradient_nonfinite += int(np.asarray(current_nonfinite))
+            else:
+                losses, hard_counts = loss_evaluator(
+                    parameters,
+                    anchor_batch,
+                    context_batch,
+                    context_inputs,
+                )
+                jax.block_until_ready((losses, hard_counts))
+            before_records.append(
+                {
+                    "group": group_index,
+                    "point_years": [
+                        {
+                            "update": int(entry["update"]),
+                            "landpoint_id": str(entry["landpoint_id"]),
+                            "year": int(entry["year"]),
+                        }
+                        for entry, _artifact in group
+                    ],
+                    "losses": np.asarray(losses, dtype=np.float64),
+                    "hard_gate_counts": _hard_counts_host(hard_counts),
+                }
+            )
+            del anchor_batch, context_batch, context_inputs, group, losses, hard_counts
+            gc.collect()
+        direction, direction_norm, direction_nonfinite = combine(
+            tuple(gradients),
+            np.ones(len(gradients), dtype=np.float64),
+        )
+        proposed, proposed_nonfinite = direct_step(
+            parameters,
+            direction,
+            direction_norm,
+            np.asarray(step_norm, dtype=np.float64),
+        )
+        jax.block_until_ready(
+            (direction, direction_norm, direction_nonfinite, proposed, proposed_nonfinite)
+        )
+
+        group_records = []
+        virtual_error = 0.0
+        for group_index in range(AUDIT_GROUPS):
+            anchor_batch, context_batch, context_inputs, group = _load_group(
+                jax,
+                manifest,
+                schedule,
+                args.prepared_manifest,
+                signature,
+                group_index,
+            )
+            losses_after, hard_counts_after = loss_evaluator(
+                proposed,
+                anchor_batch,
+                context_batch,
+                context_inputs,
+            )
+            jax.block_until_ready((losses_after, hard_counts_after))
+            before = before_records[group_index]["losses"]
+            after = np.asarray(losses_after, dtype=np.float64)
+            relative = _relative_changes(before, after)
+            if short_update == 1:
+                expected = predecessor["records"][group_index]["steps"][
+                    format(step_norm, ".12g")
+                ]["virtual_loss_relative_changes"]
+                virtual_error = max(
+                    virtual_error,
+                    max(
+                        abs(float(relative[label]) - float(expected[label]))
+                        for label in GRADIENT_FEASIBILITY_LABELS
+                    ),
+                )
+            group_records.append(
+                {
+                    "group": group_index,
+                    "point_years": before_records[group_index]["point_years"],
+                    "losses_before": {
+                        label: float(before[index])
+                        for index, label in enumerate(GRADIENT_FEASIBILITY_LABELS)
+                    },
+                    "losses_after": {
+                        label: float(after[index])
+                        for index, label in enumerate(GRADIENT_FEASIBILITY_LABELS)
+                    },
+                    "loss_relative_changes": relative,
+                    "parent_hard_gate_counts": before_records[group_index][
+                        "hard_gate_counts"
+                    ],
+                    "proposed_hard_gate_counts": _hard_counts_host(hard_counts_after),
+                }
+            )
+            del anchor_batch, context_batch, context_inputs, group
+            del losses_after, hard_counts_after
+            gc.collect()
+
+        direction_norm_host = float(np.asarray(direction_norm))
+        direction_norm_error = abs(
+            direction_norm_host - float(scalarization["expected_direction_norm"])
+        ) / max(float(scalarization["expected_direction_norm"]), 1.0e-30)
+        losses_nonfinite = sum(
+            int(
+                np.count_nonzero(
+                    ~np.isfinite(tuple(group_record[loss_key].values()))
+                )
+            )
+            for group_record in group_records
+            for loss_key in ("losses_before", "losses_after", "loss_relative_changes")
+        )
+        nonfinite = {
+            "scalar_group_gradients": gradient_nonfinite,
+            "direction": int(np.asarray(direction_nonfinite)),
+            "proposed_parameters": int(np.asarray(proposed_nonfinite)),
+            "losses_and_relative_changes": losses_nonfinite,
+        }
+        hard_failures = sum(
+            sum(group_record["parent_hard_gate_counts"].values())
+            + sum(group_record["proposed_hard_gate_counts"].values())
+            for group_record in group_records
+        )
+        maximum_change = max(
+            float(value)
+            for group_record in group_records
+            for value in group_record["loss_relative_changes"].values()
+        )
+        parent_equivalence = (
+            {
+                "direction_norm_relative_error": direction_norm_error,
+                "maximum_virtual_relative_change_error": virtual_error,
+            }
+            if short_update == 1
+            else None
+        )
+        update_applied = (
+            hard_failures == 0
+            and sum(nonfinite.values()) == 0
+            and maximum_change
+            <= float(audit["gates"]["maximum_group_component_relative_increase"])
+            and (
+                short_update != 1
+                or (
+                    direction_norm_error
+                    <= float(
+                        audit["gates"][
+                            "maximum_parent_direction_norm_relative_error"
+                        ]
+                    )
+                    and virtual_error
+                    <= float(
+                        audit["gates"][
+                            "maximum_parent_virtual_relative_change_error"
+                        ]
+                    )
+                )
+            )
+        )
+        updates.append(
+            {
+                "short_update": short_update,
+                "update_applied": update_applied,
+                "step_norm": step_norm,
+                "direction_norm": direction_norm_host,
+                "scalarization": scalarization,
+                "parent_equivalence": parent_equivalence,
+                "groups": group_records,
+                "maximum_group_component_relative_increase": maximum_change,
+                "hard_failure_count": hard_failures,
+                "nonfinite_values": nonfinite,
+            }
+        )
+        if update_applied:
+            parameters = proposed
+        print(
+            json.dumps(
+                {
+                    "event": "frozen_group_aware_scalarization_update",
+                    "update": short_update,
+                    "total": SCALARIZATION_SMOKE_UPDATES,
+                    "applied": update_applied,
+                },
+                sort_keys=True,
+            ),
+            flush=True,
+        )
+        del before_records, gradients, direction, proposed, group_records
+        gc.collect()
+        if not update_applied:
+            break
+
+    validation_prepared, prepared_panel = load_staged_validation_prepared(
+        args.validation_prepared_manifest,
+        staged_training_contract_sha256=contract.sha256,
+        validation_panel_sha256=audit["identity"]["validation_panel_sha256"],
+    )
+    if prepared_panel != assets.validation_panel:
+        raise ValueError("frozen scalarization validation panel drift")
+    first_slice, first_validation_entry = ordered_validation_entries(
+        assets.validation_panel
+    )[0]
+    validation_reference = _validation_reference(
+        runtime["index"],
+        first_slice,
+        first_validation_entry,
+    )
+    validation_adapter = _prepare_validation_adapter(
+        runtime,
+        validation_reference,
+        int(first_validation_entry["start_rows"][0]),
+    )
+    validation = _evaluate_subset(
+        runtime,
+        contract=contract,
+        parameters={
+            VALIDATION_BASELINE: parent_parameters,
+            VALIDATION_CANDIDATE: parameters,
+        },
+        long_scales=long_scales,
+        adapter_template=validation_adapter,
+        prepared_manifest_path=args.validation_prepared_manifest,
+        prepared=validation_prepared,
+        panel=assets.validation_panel,
+    )
+    classification = classify_frozen_scalarization_smoke(
+        validation,
+        updates,
+        gates=audit["gates"],
+        pass_action=audit["pass_action"],
+        fail_action=audit["fail_action"],
+    )
+    report = {
+        "schema_version": "successor_group_aware_scalarization_smoke_report_v1",
+        "status": "completed",
+        "git_head": _git_head(),
+        "identity": {
+            "smoke_contract_sha256": audit["contract_sha256"],
+            "predecessor_report_sha256": _sha256_file(args.smoke_report),
+            "staged_training_contract_sha256": contract.sha256,
+        },
+        "architecture": SOURCE_ROUTED_ATTENTION,
+        "parameter_count": parameter_count,
+        "parent_update": PARENT_UPDATE,
+        "step_norm": step_norm,
+        "updates": updates,
+        "validation": validation,
+        "classification": classification,
+        "adapter_preparation": adapter_timing,
+        "device_memory_before": memory_before,
+        "device_memory_after": _device_memory_report(runtime["devices"]),
+        "elapsed_seconds": time.perf_counter() - started,
+        "optimizer_updates": sum(bool(update["update_applied"]) for update in updates),
+        "checkpoint_written": False,
+        "recovery_written": False,
+        "final_parameters_retained": False,
+        "teacher_data_regenerated": False,
+        "historical_v5_used": False,
+        "sealed_test_used": False,
+        "next_gate": classification["next_action"],
+    }
+    _atomic_json(args.output, report)
+    return report
+
+
 def run(args: argparse.Namespace) -> Mapping[str, Any]:
     if args.output.exists():
         raise FileExistsError(args.output)
     if args.geometry_output is not None and args.geometry_output.exists():
         raise FileExistsError(args.geometry_output)
     started = time.perf_counter()
+    scalarization_smoke = bool(args.frozen_group_aware_scalarization_smoke)
     group_aware_extension = bool(args.group_aware_step_extension)
     group_aware = bool(args.group_aware or group_aware_extension)
+    if scalarization_smoke:
+        audit_schema = "successor_group_aware_scalarization_smoke_v1"
+        audit_status = "frozen_5_update_group_scalarization_no_checkpoint"
+        predecessor_schema = "successor_group_aware_step_extension_v1"
+        predecessor_status = "frozen_zero_update_forty_objective_extended_grid"
+        predecessor_contract_key = "group_aware_step_extension_contract_sha256"
+        predecessor_report_key = "group_aware_step_extension_report_sha256"
+    elif group_aware_extension:
+        audit_schema = "successor_group_aware_step_extension_v1"
+        audit_status = "frozen_zero_update_forty_objective_extended_grid"
+        predecessor_schema = "successor_group_aware_direction_audit_v1"
+        predecessor_status = "frozen_zero_update_forty_objective_grid"
+        predecessor_contract_key = "group_aware_direction_contract_sha256"
+        predecessor_report_key = "group_aware_direction_report_sha256"
+    elif group_aware:
+        audit_schema = "successor_group_aware_direction_audit_v1"
+        audit_status = "frozen_zero_update_forty_objective_grid"
+        predecessor_schema = "successor_multibatch_direction_audit_v1"
+        predecessor_status = "frozen_zero_update_accumulated_gradient_grid"
+        predecessor_contract_key = "multibatch_direction_contract_sha256"
+        predecessor_report_key = "multibatch_direction_report_sha256"
+    else:
+        audit_schema = "successor_multibatch_direction_audit_v1"
+        audit_status = "frozen_zero_update_accumulated_gradient_grid"
+        predecessor_schema = "successor_direct_direction_smoke_v1"
+        predecessor_status = "frozen_10_update_free_gpu_no_checkpoint"
+        predecessor_contract_key = "direct_direction_smoke_contract_sha256"
+        predecessor_report_key = "direct_direction_smoke_report_sha256"
     audit = _load_contract(
         args.audit_contract,
-        schema_version=(
-            "successor_group_aware_step_extension_v1"
-            if group_aware_extension
-            else "successor_group_aware_direction_audit_v1"
-            if group_aware
-            else "successor_multibatch_direction_audit_v1"
-        ),
-        status=(
-            "frozen_zero_update_forty_objective_extended_grid"
-            if group_aware_extension
-            else "frozen_zero_update_forty_objective_grid"
-            if group_aware
-            else "frozen_zero_update_accumulated_gradient_grid"
-        ),
+        schema_version=audit_schema,
+        status=audit_status,
     )
     predecessor = _load_contract(
         args.smoke_contract,
-        schema_version=(
-            "successor_group_aware_direction_audit_v1"
-            if group_aware_extension
-            else "successor_multibatch_direction_audit_v1"
-            if group_aware
-            else "successor_direct_direction_smoke_v1"
-        ),
-        status=(
-            "frozen_zero_update_forty_objective_grid"
-            if group_aware_extension
-            else "frozen_zero_update_accumulated_gradient_grid"
-            if group_aware
-            else "frozen_10_update_free_gpu_no_checkpoint"
-        ),
+        schema_version=predecessor_schema,
+        status=predecessor_status,
     )
     candidate = _load_contract(
         args.candidate_coefficient_contract,
         schema_version="successor_named_biomass_candidate_coefficients_v1",
         status="accepted_zero_update_preflight_no_training_authorized",
-    )
-    predecessor_contract_key = (
-        "group_aware_direction_contract_sha256"
-        if group_aware_extension
-        else "multibatch_direction_contract_sha256"
-        if group_aware
-        else "direct_direction_smoke_contract_sha256"
-    )
-    predecessor_report_key = (
-        "group_aware_direction_report_sha256"
-        if group_aware_extension
-        else "multibatch_direction_report_sha256"
-        if group_aware
-        else "direct_direction_smoke_report_sha256"
     )
     if (
         predecessor["contract_sha256"]
@@ -401,6 +886,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         != audit["identity"][predecessor_report_key]
     ):
         raise ValueError("direction-audit predecessor identity drift")
+    predecessor_report = (
+        json.loads(args.smoke_report.read_text(encoding="utf-8"))
+        if scalarization_smoke
+        else None
+    )
 
     runtime = _load_extended_runtime(args)
     jax = runtime["jax"]
@@ -534,6 +1024,29 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         adapter_template,
         **objective_arguments,
     )
+    memory_before = _device_memory_report(runtime["devices"])
+    if scalarization_smoke:
+        return _run_frozen_scalarization_smoke(
+            args=args,
+            audit=audit,
+            predecessor=predecessor_report,
+            runtime=runtime,
+            jax=jax,
+            contract=contract,
+            schedule=schedule,
+            manifest=manifest,
+            assets=assets,
+            adapter_template=adapter_template,
+            adapter_timing=adapter_timing,
+            signature=signature,
+            parameters=parameters,
+            parameter_count=counts[SOURCE_ROUTED_ATTENTION],
+            long_scales=long_scales,
+            measurement=measurement,
+            loss_evaluator=loss_evaluator,
+            memory_before=memory_before,
+            started=started,
+        )
     if group_aware:
         flatten = _make_flattened_unit_gradient(jax)
         unit_gradients = []
@@ -542,8 +1055,6 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         accumulate = _make_gradient_accumulator(jax)
         count_nonfinite = _make_nonfinite_counter(jax)
         accumulators = _empty_accumulators(jax, parameters)
-    memory_before = _device_memory_report(runtime["devices"])
-
     records = []
     for group_index in range(AUDIT_GROUPS):
         anchor_batch, context_batch, context_inputs, group = _load_group(
@@ -907,6 +1418,7 @@ def _parser() -> argparse.ArgumentParser:
     mode = parser.add_mutually_exclusive_group()
     mode.add_argument("--group-aware", action="store_true")
     mode.add_argument("--group-aware-step-extension", action="store_true")
+    mode.add_argument("--frozen-group-aware-scalarization-smoke", action="store_true")
     return parser
 
 

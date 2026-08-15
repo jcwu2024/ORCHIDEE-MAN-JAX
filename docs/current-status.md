@@ -20,20 +20,19 @@ minimum-norm simplex audit has minimum cosine `0.050356` over all 40
 constraints. Every tested global norm through `0.0003` improves every
 component in all `10/10` groups, with zero hard or nonfinite failures.
 
-The original audit is formally below its finite-step effect-size gate. At
-norm `0.0003`, median relative changes are `-1.6217e-5` for the one-day anchor,
-`-1.5320e-4` for NPP, `-2.0090e-4` for AGB tendency, and `-5.1778e-5` for BGB
-tendency. Thus NPP and AGB pass the `1e-4` magnitude requirement; anchor and
-BGB do not. No objective regresses. See
-[`successor_group_aware_direction_audit_20260815.md`](research/daily_coarse_graining/successor_group_aware_direction_audit_20260815.md).
+The bounded step extension passes at norm `0.002`. All 40 group-component
+losses decrease, with medians `-1.2176e-4` anchor, `-1.0193e-3` NPP,
+`-1.3361e-3` AGB tendency, and `-3.4462e-4` BGB tendency. The least negative
+individual change is `-1.8028e-5`; hard and nonfinite counts are zero. See
+[`successor_group_aware_step_extension_20260815.md`](research/daily_coarse_graining/successor_group_aware_step_extension_20260815.md).
 
-This result attributes the earlier instability to ordinary gradient
-averaging rather than to the Attention architecture. Training remains closed.
-The active gate is one zero-update extension at norms
-`0.0005, 0.001, 0.0015, 0.002`, bounded by the observed near-linear anchor
-threshold estimate. If no norm passes, the finite-step gate closes without a
-second extension. If one passes, the next design question is how to retain
-the robust direction without recomputing 40 full gradients per update.
+This attributes the earlier instability to ordinary gradient averaging rather
+than to the Attention architecture. The active gate is a five-update local
+drift smoke using frozen parent simplex coefficients. Combining same-group
+components reduces the reverse passes per update from 40 to eight while all
+ten groups retain before/after checks. The final in-memory parameters are
+compared with the update-1000 parent on the accepted non-test 7/30-day subset;
+no checkpoint is retained.
 
 ## First Formal Neural Candidate
 
@@ -1557,3 +1556,18 @@ finite-step question. The active gate is a zero-update extension at norms
 change, training continuation, validation read, or sealed-test access is
 authorized. See
 [`successor_group_aware_direction_audit_20260815.md`](research/daily_coarse_graining/successor_group_aware_direction_audit_20260815.md).
+
+The bounded finite-step extension then completed on free `gln01` at commit
+`f0b2235`. Norm `0.002` passes all ten groups and all four component median
+effect gates. The one-day anchor, NPP, AGB tendency, and BGB tendency medians
+are `-1.2176e-4`, `-1.0193e-3`, `-1.3361e-3`, and `-3.4462e-4`; no individual
+component regresses. Hard/nonfinite counts are zero and no parameters are
+retained. Report SHA256 is
+`a8b448488a25e924a36dc356a0bdba6f6cc213c6509e7e21ac3e4af0635edf9a`.
+
+The active gate is a five-update frozen-scalarization smoke that realizes the
+14 positive constraints through eight group-level reverse passes per update.
+It must preserve all ten groups locally and improve the established non-test
+7/30-day NPP/biomass composite before any rotating-group training design is
+opened. See
+[`successor_group_aware_step_extension_20260815.md`](research/daily_coarse_graining/successor_group_aware_step_extension_20260815.md).

@@ -773,15 +773,24 @@ finite-step classification therefore fails on magnitude only, not on any
 regression. Report SHA256 is `f9c55f15...a4e3`; see
 [`successor_group_aware_direction_audit_20260815.md`](research/daily_coarse_graining/successor_group_aware_direction_audit_20260815.md).
 
-Do not train yet. The active gate is the frozen zero-update finite-step
-extension at norms `0.0005, 0.001, 0.0015, 0.002`. The upper bound is chosen
-before execution from the observed near-linear anchor threshold estimate of
-`0.00185`. Retain no parameters and read no validation or sealed-test values.
-If no step passes, do not extend the grid again; redesign the training
-mechanism. If one passes, review how to approximate the robust direction
-without paying for 40 full gradients on every training update. No network
-architecture change is involved. The 365-day rollout, long-held-point
-validation, Gate D2, sealed test, and product gates remain closed.
+The finite-step extension is complete at commit `f0b2235` and passes. Norm
+`0.002` improves every component in all `10/10` groups; median relative
+changes are `-1.2176e-4` anchor, `-1.0193e-3` NPP, `-1.3361e-3` AGB tendency,
+and `-3.4462e-4` BGB tendency. The least negative individual change remains
+`-1.8028e-5`. Hard/nonfinite counts are zero and no parameters are retained.
+Report SHA256 is `a8b44848...df9a`; see
+[`successor_group_aware_step_extension_20260815.md`](research/daily_coarse_graining/successor_group_aware_step_extension_20260815.md).
+
+The active gate is a five-update frozen-scalarization smoke. Convert the 14
+positive parent simplex weights into raw-loss coefficients by dividing by
+their parent gradient norms, combine same-group components in one VJP, and
+thereby reduce each update from 40 reverse passes to eight. Apply global norm
+`0.002` only while all ten groups remain nonincreasing, retain no checkpoint,
+and compare the final in-memory parameters with the update-1000 parent on the
+accepted six-artifact non-test 7/30-day subset. This is a local mechanism
+drift test, not a final repeated-data training policy. No network architecture
+change is involved. The 365-day rollout, long-held-point validation, Gate D2,
+sealed test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 
