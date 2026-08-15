@@ -40,15 +40,21 @@ Backtracking closes parent-frozen weights. At the second proposal, norms
 just the finite step, has ceased to be common. See
 [`successor_group_aware_backtracking_smoke_20260815.md`](research/daily_coarse_graining/successor_group_aware_backtracking_smoke_20260815.md).
 
-The second-state exact recalibration audit is now frozen and locally
-implemented. It reconstructs the first admitted update with the accepted
-eight-VJP scalarization, recomputes the 40 gradients at the new parameters,
-tests four bounded finite step norms on all ten groups, and measures support
-overlap. It performs no new update and reads no validation values. The active
-gate is one free-`gln01` execution. Sparse overlap would justify an active-set
-recalibration implementation; absence of a common direction would force an
-objective or sampling redesign. See
+The second-state exact recalibration audit completed at commit `1902936`.
+The first update is reproduced to `4.96e-15` relative direction-norm error.
+At that state, all 40 objectives retain a common direction with minimum cosine
+`0.0486966`; norm `0.002` improves every loss and passes all component-effect
+gates. The recalibrated support has 13 constraints, 12 overlapping the
+parent's 14. Hard and nonfinite counts are zero, no validation values are
+read, and no parameters are retained. Report SHA256 is
+`c4ddb39b...10e97`. See
 [`successor_second_state_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_second_state_recalibration_audit_20260815.md).
+
+The active gate is a bounded active-set implementation audit. It must start
+from the prior support, use all-40 directional checks to add violated
+constraints, and reproduce the exact second-state common finite direction
+without 40 reverse passes. Repeated training remains closed until this
+mechanism passes.
 
 ## First Formal Neural Candidate
 
@@ -1610,6 +1616,7 @@ SHA256 is
 `c2691824b6548be05337620ffb91cab1994b58bd83293a56968d89574a074261`.
 
 The zero-retention exact 40-gradient audit at the state after the first
-admitted update is frozen and locally implemented. Its active operation is
-one free-`gln01` execution with support-overlap reporting. See
+admitted update completed with minimum cosine `0.0486966`, passing norm
+`0.002`, and support overlap `12/14`. The next gate is the bounded efficient
+active-set implementation audit. See
 [`successor_second_state_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_second_state_recalibration_audit_20260815.md).

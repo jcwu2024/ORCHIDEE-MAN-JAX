@@ -799,19 +799,21 @@ update is applied. Report SHA256 is `c2691824...74261`; see
 [`successor_group_aware_backtracking_smoke_20260815.md`](research/daily_coarse_graining/successor_group_aware_backtracking_smoke_20260815.md).
 
 Do not test smaller fixed-weight steps. The zero-retention second-state exact
-recalibration audit is frozen under contract SHA256
-`5379e267...23014`. It reconstructs the admitted first update with eight VJPs,
-recomputes all 40 gradients at that state, solves a new common direction, and
-evaluates norms `0.0005, 0.001, 0.0015, 0.002` on all ten groups. It reads no
-validation values and retains no parameters. Run it once on free `gln01`; see
+recalibration audit completed at commit `1902936`. A new common direction
+exists with minimum cosine `0.0486966`; norm `0.002` improves all 40 losses
+and passes the four component-effect gates. The new simplex support has 13
+constraints, 12 overlapping the parent's 14. It reads no validation values
+and retains no parameters. Report SHA256 is `c4ddb39b...10e97`; see
 [`successor_second_state_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_second_state_recalibration_audit_20260815.md).
 
-If no common direction exists, redesign the objective or sampling groups. If
-it exists with sparse overlapping support, implement active-set recalibration
-that starts from the prior support and adds constraints identified by all-40
-directional checks. No network architecture change is involved. The 365-day
-rollout, long-held-point validation, Gate D2, sealed test, and product gates
-remain closed.
+The active gate is a bounded active-set recalibration audit. Start from the
+parent support, compute only its individual gradients, check all 40
+directional derivatives, add violated constraints, and compare the resulting
+direction and finite-step verdict with the exact second-state reference. Do
+not start repeated training unless this reproduces a common useful direction
+without 40 reverse passes. No network architecture change is involved. The
+365-day rollout, long-held-point validation, Gate D2, sealed test, and product
+gates remain closed.
 
 ## Completed Task Packet: Gate C
 
