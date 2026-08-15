@@ -34,10 +34,18 @@ before application. After the single accepted step, all six independent
 combined improvement is only `0.00922%`. See
 [`successor_group_aware_scalarization_smoke_20260815.md`](research/daily_coarse_graining/successor_group_aware_scalarization_smoke_20260815.md).
 
-The active gate is a five-update backtracking smoke over norms
-`0.002, 0.001, 0.0005`, retaining the efficient eight-VJP direction and all
-40 before/after loss checks. If no norm of at least `0.0005` passes, fixed
-parent weights close and the direction must be recalibrated.
+Backtracking closes parent-frozen weights. At the second proposal, norms
+`0.002, 0.001, 0.0005` regress the worst constraint by `8.6109e-4,
+4.3088e-4, 2.1552e-4`. This near-linear scaling shows that the direction, not
+just the finite step, has ceased to be common. See
+[`successor_group_aware_backtracking_smoke_20260815.md`](research/daily_coarse_graining/successor_group_aware_backtracking_smoke_20260815.md).
+
+The active gate is design of a second-state exact recalibration audit. It
+must reconstruct the first admitted update, recompute the 40 gradients at the
+new parameters, test whether another common finite direction exists, and
+measure active-support overlap. Sparse overlap would justify an active-set
+recalibration implementation; absence of a common direction would force an
+objective or sampling redesign.
 
 ## First Formal Neural Candidate
 
@@ -1589,3 +1597,15 @@ The active gate is a bounded backtracking smoke at norms
 `0.002, 0.001, 0.0005`. It keeps the eight-VJP realization, stops if no useful
 step preserves all 40 constraints, and retains no checkpoint. See
 [`successor_group_aware_scalarization_smoke_20260815.md`](research/daily_coarse_graining/successor_group_aware_scalarization_smoke_20260815.md).
+
+The matched backtracking smoke completed on free `gln01` at commit `4118c72`.
+At the second proposal, worst regressions scale from `8.6109e-4` at norm
+`0.002` to `4.3088e-4` at `0.001` and `2.1552e-4` at `0.0005`. No second
+update is applied, and all hard/nonfinite counts remain zero. This closes
+smaller fixed-weight steps and requires direction recalibration. Report
+SHA256 is
+`c2691824b6548be05337620ffb91cab1994b58bd83293a56968d89574a074261`.
+
+The active gate is a zero-retention exact 40-gradient audit at the state after
+the first admitted update, with support-overlap reporting. See
+[`successor_group_aware_backtracking_smoke_20260815.md`](research/daily_coarse_graining/successor_group_aware_backtracking_smoke_20260815.md).

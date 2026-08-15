@@ -791,15 +791,24 @@ is only `0.00922%`, below the frozen `0.5%` gate. Report SHA256 is
 `1aeb93ae...60ca6`; see
 [`successor_group_aware_scalarization_smoke_20260815.md`](research/daily_coarse_graining/successor_group_aware_scalarization_smoke_20260815.md).
 
-Do not reuse fixed norm `0.002`. The active gate is a matched five-update
-backtracking smoke using the same eight-VJP direction. At each update try
-`0.002`, `0.001`, and `0.0005` in descending order and apply the largest norm
-that keeps all 40 group-component losses nonincreasing. Stop if no norm at or
-above `0.0005` passes. Retain no checkpoint and evaluate the same non-test
-7/30-day subset. Passing opens rotating-group weight recalibration; failure
-closes parent-frozen weights and requires direction recalibration. No network
-architecture change is involved. The 365-day rollout, long-held-point
-validation, Gate D2, sealed test, and product gates remain closed.
+The backtracking smoke completed at commit `4118c72` and rejects parent-frozen
+weights. Update 1 again selects `0.002`. At update 2, norms `0.002, 0.001,
+0.0005` have worst regressions `8.6109e-4, 4.3088e-4, 2.1552e-4`; the nearly
+linear scaling proves the direction itself has ceased to be common. No second
+update is applied. Report SHA256 is `c2691824...74261`; see
+[`successor_group_aware_backtracking_smoke_20260815.md`](research/daily_coarse_graining/successor_group_aware_backtracking_smoke_20260815.md).
+
+Do not test smaller fixed-weight steps. The active gate is to freeze a
+zero-retention second-state recalibration audit. Reconstruct the admitted
+first update, recompute the exact 40 gradients at that state, solve a new
+common direction, evaluate a bounded finite-step grid, and report support
+overlap with the parent's 14 active constraints. If no common direction
+exists, redesign the objective or sampling groups. If it exists with sparse
+overlapping support, implement active-set recalibration that starts from the
+prior support and adds constraints identified by all-40 directional checks.
+No network architecture change is involved. The 365-day rollout,
+long-held-point validation, Gate D2, sealed test, and product gates remain
+closed.
 
 ## Completed Task Packet: Gate C
 
