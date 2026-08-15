@@ -58,10 +58,14 @@ reference medians. Component reverse passes fall from 40 to 14, while hard
 and nonfinite counts remain zero. Report SHA256 is `e2a9e0eb...daf97`. See
 [`successor_active_set_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_active_set_recalibration_audit_20260815.md).
 
-The active gate is design of a bounded repeated active-set smoke with
-per-update recalibration, all-40 sign checks, finite-step stop rules, hot
-timing, and an end-of-smoke non-test 7/30-day evaluation. No checkpoint or
-architecture change is authorized by this result.
+The bounded repeated active-set smoke is now frozen and locally implemented.
+It reconstructs the admitted first update, attempts four new recalibrated
+updates with all-40 sign and finite-step stop gates, records hot timing, and
+evaluates the established non-test 7/30-day subset. The directional rollout
+claim is separated from the unchanged `0.5%` promotion-scale threshold. The
+active gate is one free-`gln01` execution. No checkpoint or architecture
+change is authorized. See
+[`successor_repeated_active_set_smoke_20260815.md`](research/daily_coarse_graining/successor_repeated_active_set_smoke_20260815.md).
 
 ## First Formal Neural Candidate
 

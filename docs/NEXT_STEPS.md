@@ -815,11 +815,17 @@ component medians closely matching the exact reference. The mechanism uses
 is `e2a9e0eb...daf97`; see
 [`successor_active_set_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_active_set_recalibration_audit_20260815.md).
 
-The active gate is to design a bounded repeated active-set smoke. Each update
-must recalibrate from the preceding support, check all 40 signs, and stop
-before a regressing finite step. Measure hot update time and evaluate the
-established non-test 7/30-day subset at the end without retaining a
-checkpoint. No network architecture change is involved. The 365-day rollout,
+The bounded repeated active-set smoke is frozen under contract SHA256
+`2bef78c7...1028c5`. It reconstructs the admitted first step and attempts four
+new updates, for five total direct steps. Every update inherits the preceding
+positive support, checks all 40 directions, and applies only a passing norm
+from `0.002, 0.0015, 0.001, 0.0005`. It then evaluates the established
+six-artifact non-test 7/30-day subset. The directional rollout gate and the
+unchanged `0.5%` promotion-scale threshold are reported separately. Run this
+once on free `gln01`; see
+[`successor_repeated_active_set_smoke_20260815.md`](research/daily_coarse_graining/successor_repeated_active_set_smoke_20260815.md).
+
+No network architecture change is involved. The 365-day rollout,
 long-held-point validation, Gate D2, sealed test, and product gates remain
 closed.
 

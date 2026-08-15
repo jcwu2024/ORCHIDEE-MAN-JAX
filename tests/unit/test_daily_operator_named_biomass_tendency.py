@@ -57,6 +57,7 @@ from scripts.hpc.probe_successor_multibatch_direction import (
     _make_nonfinite_counter,
     classify_active_set_recalibration,
     classify_group_aware_direction,
+    classify_repeated_active_set_smoke,
     classify_second_state_recalibration,
 )
 from scripts.hpc.probe_successor_realized_step import _make_proposed_directions
@@ -1793,6 +1794,95 @@ def test_active_set_recalibration_contract_is_bounded():
     assert "requires free gln01" in launcher
     assert "--active-set-recalibration-audit" in launcher
     assert "--exact-recalibration-report" in launcher
+    assert "#SBATCH" not in launcher
+
+
+def test_repeated_active_set_smoke_separates_mechanism_and_promotion():
+    objective_validation = _objective_ab_validation(
+        primary_candidate=0.999,
+        maintenance_candidate=1.01,
+    )
+    validation = {
+        CONTROL: objective_validation[OBJECTIVES[0]],
+        CANDIDATE: objective_validation[OBJECTIVES[1]],
+    }
+    updates = [
+        {
+            "update_applied": True,
+            "direction_passed": True,
+            "component_reverse_passes": 14,
+            "rounds": [{}],
+            "hard_failure_count": 0,
+            "nonfinite_value_count": 0,
+        }
+        for _index in range(4)
+    ]
+    gates = {
+        "training": {
+            "expected_active_set_updates": 4,
+            "maximum_component_reverse_passes_per_update": 20,
+            "maximum_directional_check_rounds_per_update": 3,
+            "hard_failure_count": 0,
+            "nonfinite_value_count": 0,
+        },
+        "validation": {
+            "minimum_research_primary_composite_relative_improvement": 0.0,
+            "minimum_improved_slice_horizon_cells": 4,
+            "maximum_maintenance_aggregate_relative_regression": 0.05,
+            "maximum_maintenance_single_cell_relative_regression": 0.10,
+        },
+        "promotion": {
+            "minimum_research_primary_composite_relative_improvement": 0.005,
+        },
+    }
+
+    result = classify_repeated_active_set_smoke(
+        validation,
+        updates,
+        gates=gates,
+        pass_action="scale_bounded_updates",
+        fail_action="redesign",
+    )
+
+    assert result["status"] == "repeated_active_set_smoke_supported"
+    assert result["mechanism_passed"] is True
+    assert result["directional_validation"]["passed"] is True
+    assert result["promotion_threshold_met"] is False
+
+
+def test_repeated_active_set_smoke_contract_is_bounded():
+    manifest_path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_repeated_active_set_smoke_v1.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_repeated_active_set_smoke.sh"
+    ).read_text()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["training"]["active_set_updates"] == 4
+    assert manifest["training"]["total_direct_updates_after_completion"] == 5
+    assert manifest["step_norm_grid"] == [0.002, 0.0015, 0.001, 0.0005]
+    assert (
+        manifest["gates"]["training"][
+            "maximum_component_reverse_passes_per_update"
+        ]
+        == 20
+    )
+    assert manifest["execution"]["checkpoint_written"] is False
+    assert manifest["execution"]["final_parameters_retained"] is False
+    assert manifest["execution"]["validation_values_evaluated"] is True
+    assert "requires free gln01" in launcher
+    assert "--repeated-active-set-smoke" in launcher
+    assert "--active-set-reference-report" in launcher
     assert "#SBATCH" not in launcher
 
 
