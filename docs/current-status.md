@@ -123,7 +123,7 @@ their accepted train/train scales and day-start-delta representation. A
 three-seed output VJP decomposes the NPP/AGB/BGB finite mismatch into decoded
 output nonlinearity and downstream conservative-trajectory nonlinearity,
 without per-field intervention rollouts. The contract SHA256 is
-`3825029c...f3bd2`; 97 directly related local tests plus static, contract, and
+`edaebad5...7e9852`; 97 directly related local tests plus static, contract, and
 launcher checks pass. See
 [`successor_output_locality_audit_20260816.md`](research/daily_coarse_graining/successor_output_locality_audit_20260816.md).
 

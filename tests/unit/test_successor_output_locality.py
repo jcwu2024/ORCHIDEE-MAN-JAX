@@ -193,6 +193,14 @@ def test_output_locality_contract_and_launcher_are_bounded():
         / "successor_output_locality_audit_v1.json"
     )
     payload = json.loads(contract_path.read_text(encoding="utf-8"))
+    decoder_contract = json.loads(
+        (
+            ROOT
+            / "manifests"
+            / "coarse_graining"
+            / "successor_decoder_leaf_attribution_v1.json"
+        ).read_text(encoding="utf-8")
+    )
     canonical = dict(payload)
     expected_hash = canonical.pop("contract_sha256")
     observed_hash = hashlib.sha256(
@@ -201,6 +209,28 @@ def test_output_locality_contract_and_launcher_are_bounded():
     assert expected_hash == observed_hash
     assert payload["matched_reference"]["total_daily_transitions"] == 1200
     assert payload["matched_reference"]["field_intervention_runs"] == 0
+    assert payload["active_set"] == {
+        "initialization": "preceding_positive_simplex_support",
+        "weight_tolerance": 1e-12,
+        "maximum_rounds": 3,
+        "maximum_added_constraints": 6,
+    }
+    assert payload["gates"]["reference"][
+        "minimum_relative_directional_derivative"
+    ] == 0.0
+    assert payload["gates"]["projection"][
+        "maximum_group_component_relative_increase"
+    ] == 1e-6
+    assert payload["stopped_state_reconstruction"] == decoder_contract[
+        "stopped_state_reconstruction"
+    ]
+    assert payload["active_set"] == decoder_contract["active_set"]
+    assert payload["gates"]["reference"] == decoder_contract["gates"][
+        "reference"
+    ]
+    assert payload["gates"]["projection"] == decoder_contract["gates"][
+        "projection"
+    ]
     assert payload["execution"]["optimizer_updates"] == 0
     assert payload["execution"]["checkpoint_written"] is False
     assert payload["execution"]["validation_values_evaluated"] is False

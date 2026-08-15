@@ -874,7 +874,7 @@ See
 
 Raw Euclidean parameter-space direct steps are closed. Do not test more
 parameter exclusions or scalar subdivisions. The bounded output-locality
-audit is now frozen under contract SHA256 `3825029c...f3bd2` and passes 97
+audit is now frozen under contract SHA256 `edaebad5...7e9852` and passes 97
 directly related local tests plus static, contract, and launcher checks. It
 uses the same stopped state and ten groups to compare the 30-day first-order
 JVP and exact norm-`0.0005` changes for all 181 decoded fields in accepted

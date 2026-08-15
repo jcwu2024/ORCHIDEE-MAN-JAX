@@ -73,7 +73,7 @@ These are metric-scope decisions, not architecture promotion or rejection.
 
 The machine contract is
 `manifests/coarse_graining/successor_output_locality_audit_v1.json`, SHA256
-`3825029cdd3577d4fc2869ebe7afadcfe3ea3707d19986ffb6adcfe18e8f3bd2`.
+`edaebad5831cfb0fd4ea678ef61e5d4aed23e3b67e8dbcb64dd7451e7f7e9852`.
 
 ## Local Admission
 

@@ -1,7 +1,7 @@
 {
   "schema_version": "successor_output_locality_audit_v1",
   "status": "frozen_zero_retention_normalized_output_decomposition",
-  "contract_sha256": "3825029cdd3577d4fc2869ebe7afadcfe3ea3707d19986ffb6adcfe18e8f3bd2",
+  "contract_sha256": "edaebad5831cfb0fd4ea678ef61e5d4aed23e3b67e8dbcb64dd7451e7f7e9852",
   "identity": {
     "group_aware_step_extension_contract_sha256": "e78db1bac583d6adf853eb38207c7c410b5befb1cbb087e01da527d28fd3bda1",
     "group_aware_step_extension_report_sha256": "a8b448488a25e924a36dc356a0bdba6f6cc213c6509e7e21ac3e4af0635edf9a",
@@ -60,12 +60,28 @@
     "output_vjp_seeds_per_group": 3,
     "field_intervention_runs": 0
   },
+  "active_set": {
+    "initialization": "preceding_positive_simplex_support",
+    "weight_tolerance": 1e-12,
+    "maximum_rounds": 3,
+    "maximum_added_constraints": 6
+  },
   "localization": {
     "ranking_quantity": "absolute_base_output_vjp_times_exact_minus_jvp_output_change_on_regressing_groups",
     "top_k_fields": 12,
     "separate_output_and_downstream_finite_nonlinearity": true
   },
   "gates": {
+    "reference": {
+      "minimum_relative_directional_derivative": 0.0,
+      "maximum_reference_value_error": 1e-10
+    },
+    "projection": {
+      "minimum_relative_directional_derivative": 0.0,
+      "maximum_group_component_relative_increase": 0.000001,
+      "hard_failure_count": 0,
+      "nonfinite_value_count": 0
+    },
     "expected_group_count": 10,
     "expected_field_count": 181,
     "key_loss_labels": ["belowground_biomass_tendency"],
