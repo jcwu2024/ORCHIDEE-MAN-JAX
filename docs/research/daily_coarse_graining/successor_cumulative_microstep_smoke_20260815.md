@@ -62,3 +62,48 @@ passes. The classification tests cover successful early completion and
 bounded failure without validation reads. The complete related unit file
 passes `74` tests; Ruff, Python compilation, Bash syntax, canonical contract
 hash, and `git diff --check` pass.
+
+## Result
+
+The free-`gln01` smoke completed at commit `b3d2f5f`. The report is
+`runtime/outputs/training/successor-cumulative-microstep-b3d2f5f/report.json`,
+SHA256 `7316749e9012711fd0ebe29604ab3f13f9a125e31b37db9ccb1e71d3d5b674aa`.
+Both accepted direct updates and the stopped-state first microstep reproduce
+within the frozen reference tolerances, so the evidence is valid.
+
+Microstep 1 passes exactly as expected. One active-set round and 13 component
+reverse passes give minimum relative directional derivative `0.0105908`.
+The norm-`0.0005` step decreases all 40 losses and is applied. Its component
+median relative changes are `-2.85324e-5` anchor, `-2.37723e-4` NPP,
+`-3.11891e-4` AGB tendency, and `-8.06767e-5` BGB tendency.
+
+At the resulting state, microstep 2 again finds a common first-order
+direction in one round with the same 13-constraint support. Its minimum
+relative directional derivative remains positive at `0.0105646`. The same
+norm-`0.0005` finite step is nevertheless unsafe and is stopped before
+application. The maximum single objective regression is `28.7222%`; median
+changes are `-2.52975e-5` anchor, `+2.99602%` NPP, `+1.89155%` AGB tendency,
+and `+17.3846%` BGB tendency. BGB tendency regresses in several groups, not
+only one outlier.
+
+Hard and nonfinite counts remain zero. The run takes `1577.79` seconds and
+peaks at `13,833,740,288` device bytes. It applies one of four allowed
+microsteps, does not pass the cumulative macro-effect gate, and therefore
+does not read the 7/30-day validation values. No checkpoint, recovery, or
+candidate parameters are retained.
+
+## Decision After Execution
+
+The formal classification is `cumulative_microstep_smoke_not_supported`.
+Repeated recalibration does not make raw Euclidean parameter steps sustainable:
+the first safe microstep moves the model to another state with a positive
+infinitesimal direction but no accepted norm-`0.0005` finite step. Do not keep
+subdividing the same direction or continue direct training.
+
+The next bounded task is parameter-geometry attribution. Reconstruct the
+stopped state and direction without retaining parameters, partition the
+parameter tree by existing scientific/architectural ownership, and determine
+which blocks dominate the direction norm and the finite-step BGB/NPP
+regression. Any proposed preconditioning or block restriction must first
+preserve all-40 first-order descent and pass a finite-step gate. This is an
+update-geometry review, not an architecture change.

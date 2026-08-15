@@ -90,7 +90,7 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_second_state_recalibration_audit_20260815.md` | Active exact second-state admission; sparse overlapping support accepted | Implementing or reviewing efficient active-set recalibration |
 | `research/daily_coarse_graining/successor_active_set_recalibration_audit_20260815.md` | Active efficient recalibration admission; 14-VJP one-round closure accepted | Designing or reviewing the repeated active-set smoke |
 | `research/daily_coarse_graining/successor_repeated_active_set_smoke_20260815.md` | Active rejection evidence; one new update passes, then useful one-shot steps close | Designing the cumulative-microstep gate |
-| `research/daily_coarse_graining/successor_cumulative_microstep_smoke_20260815.md` | Active frozen cumulative-microstep contract; local admission accepted | Running or reviewing the free-gln01 smoke |
+| `research/daily_coarse_graining/successor_cumulative_microstep_smoke_20260815.md` | Active rejection evidence; safe microsteps do not accumulate through the finite-step boundary | Designing parameter-geometry attribution |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

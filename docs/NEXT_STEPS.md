@@ -833,8 +833,22 @@ be nonincreasing across all 40 objectives, and evaluate the existing `1e-4`
 component-effect gate on the cumulative macro-update. The mechanism is frozen
 at no more than four microsteps under contract SHA256
 `be46303e...2c545a`, and local admission passes 74 related tests plus static,
-contract, and launcher checks. Run it once on free `gln01`; see
+contract, and launcher checks. The free-`gln01` run completed at commit
+`b3d2f5f` and rejects the mechanism. Microstep 1 reproduces the safe
+norm-`0.0005` step; after it is applied, a freshly recalibrated direction still
+has minimum relative derivative `0.0105646`, but the next norm-`0.0005` step
+regresses an objective by up to `28.7222%`, led by BGB tendency across several
+groups. It is stopped before application. No validation values or parameters
+are retained. Report SHA256 is `7316749e...b674aa`; see
 [`successor_cumulative_microstep_smoke_20260815.md`](research/daily_coarse_graining/successor_cumulative_microstep_smoke_20260815.md).
+
+Do not subdivide or repeat the same raw Euclidean direction. The active task
+is a zero-retention parameter-geometry attribution at the stopped state:
+partition the existing parameter tree by owned encoder, interaction, and
+decoder blocks; measure direction-norm and relative-update concentration; and
+test only a bounded set of source-defined block projections. A projection is
+admissible only if it preserves all-40 first-order descent before its
+finite-step gate. Freeze this audit before any further GPU execution.
 
 No network architecture change is involved. The 365-day rollout,
 long-held-point validation, Gate D2, sealed test, and product gates remain

@@ -76,9 +76,21 @@ nonincrease at each microstep, and apply the unchanged four-component
 `1e-4` effect gate to the cumulative macro-update. The four-microstep maximum,
 early success stop, and unsafe-step stop are frozen under contract SHA256
 `be46303e...2c545a`. Local admission passes 74 related tests and all static,
-contract, and launcher checks. One free-`gln01` execution is next. No
-checkpoint, architecture change, or paid run is authorized. See
+contract, and launcher checks. The free-`gln01` execution completed at commit
+`b3d2f5f` and rejects the mechanism. The first microstep is safe and applied.
+After it, the next recalibrated direction remains first-order common with
+minimum relative derivative `0.0105646`, but its norm-`0.0005` finite step
+regresses up to `28.7222%`, dominated by BGB tendency across multiple groups.
+The step is not applied; no validation values or parameters are retained.
+Report SHA256 is `7316749e...b674aa`. See
 [`successor_cumulative_microstep_smoke_20260815.md`](research/daily_coarse_graining/successor_cumulative_microstep_smoke_20260815.md).
+
+The active task is a zero-retention parameter-geometry attribution at this
+stopped state. It must use existing architecture ownership to locate
+direction-norm and relative-update concentration, then test a bounded set of
+block projections only after they preserve all-40 first-order descent. No
+checkpoint, architecture change, paid run, or further raw-direction
+subdivision is authorized.
 
 ## First Formal Neural Candidate
 
