@@ -38,6 +38,13 @@ SUCCESSOR_PARAMETER_BLOCKS: Mapping[str, tuple[str, ...]] = {
     "output_decoder": ("decoder_first", "decoder_second"),
 }
 
+SUCCESSOR_DECODER_LEAVES: Mapping[str, tuple[str, str]] = {
+    "decoder_first.kernel": ("decoder_first", "kernel"),
+    "decoder_first.bias": ("decoder_first", "bias"),
+    "decoder_second.kernel": ("decoder_second", "kernel"),
+    "decoder_second.bias": ("decoder_second", "bias"),
+}
+
 
 def successor_parameter_block_by_key() -> Mapping[str, str]:
     result = {}
@@ -79,6 +86,23 @@ def exclude_successor_parameter_block(
         )
         for key, value in direction.items()
     }
+
+
+def exclude_successor_decoder_leaf(
+    direction: Mapping[str, Any],
+    leaf_name: str,
+) -> Mapping[str, Any]:
+    """Set one decoder kernel or bias to zero while preserving the pytree."""
+
+    validate_successor_parameter_blocks(direction)
+    if leaf_name not in SUCCESSOR_DECODER_LEAVES:
+        raise ValueError(f"unknown successor decoder leaf {leaf_name!r}")
+    top_level, child = SUCCESSOR_DECODER_LEAVES[leaf_name]
+    decoder = dict(direction[top_level])
+    if set(decoder) != {"kernel", "bias"}:
+        raise ValueError(f"successor decoder leaf layout drift for {top_level}")
+    decoder[child] = jnp.zeros_like(decoder[child])
+    return {**direction, top_level: decoder}
 
 
 def successor_parameter_geometry_report(
@@ -145,6 +169,69 @@ def successor_parameter_geometry_report(
         "top_level_key_count": len(successor_parameter_block_by_key()),
         "parameter_count": total_parameter_count,
         "direction_norm": total_direction_norm,
+        "direction_squared_fraction_sum": float(
+            sum(record["direction_squared_fraction"] for record in records.values())
+        ),
+        "nonfinite_value_count": sum(
+            int(record["nonfinite_value_count"]) for record in records.values()
+        ),
+        "step_norm": float(step_norm),
+    }
+
+
+def successor_decoder_leaf_geometry_report(
+    parameters: Mapping[str, Any],
+    direction: Mapping[str, Any],
+    *,
+    step_norm: float,
+) -> Mapping[str, Any]:
+    """Measure the four decoder leaves against the full direction norm."""
+
+    validate_successor_parameter_blocks(parameters)
+    validate_successor_parameter_blocks(direction)
+    if not np.isfinite(step_norm) or step_norm <= 0.0:
+        raise ValueError("successor decoder geometry step norm must be positive")
+    full_direction_squared = sum(
+        float(np.vdot(np.asarray(leaf), np.asarray(leaf)))
+        for leaf in jax.tree_util.tree_leaves(direction)
+    )
+    full_direction_norm = float(np.sqrt(full_direction_squared))
+    if not np.isfinite(full_direction_norm) or full_direction_norm <= 0.0:
+        raise ValueError("successor decoder geometry direction norm is invalid")
+    records = {}
+    parameter_count = 0
+    for name, (top_level, child) in SUCCESSOR_DECODER_LEAVES.items():
+        parameter = np.asarray(parameters[top_level][child], dtype=np.float64)
+        value = np.asarray(direction[top_level][child], dtype=np.float64)
+        parameter_norm = float(np.linalg.norm(parameter.reshape(-1)))
+        direction_norm = float(np.linalg.norm(value.reshape(-1)))
+        delta_norm = step_norm * direction_norm / full_direction_norm
+        records[name] = {
+            "top_level_key": top_level,
+            "child_key": child,
+            "shape": list(parameter.shape),
+            "element_count": int(parameter.size),
+            "parameter_norm": parameter_norm,
+            "direction_norm": direction_norm,
+            "direction_squared_fraction": float(
+                direction_norm * direction_norm / full_direction_squared
+            ),
+            "step_delta_norm": delta_norm,
+            "relative_step_to_parameter_norm": float(
+                delta_norm / max(parameter_norm, 1.0e-30)
+            ),
+            "nonfinite_value_count": int(
+                np.count_nonzero(~np.isfinite(parameter))
+                + np.count_nonzero(~np.isfinite(value))
+            ),
+        }
+        parameter_count += int(parameter.size)
+    return {
+        "blocks": records,
+        "block_count": len(records),
+        "top_level_key_count": 2,
+        "parameter_count": parameter_count,
+        "direction_norm": full_direction_norm,
         "direction_squared_fraction_sum": float(
             sum(record["direction_squared_fraction"] for record in records.values())
         ),

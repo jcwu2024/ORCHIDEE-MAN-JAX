@@ -29,8 +29,11 @@ from research.daily_coarse_graining.daily_operator.named_biomass_tendency import
     named_biomass_tendency_objective,
 )
 from research.daily_coarse_graining.daily_operator.parameter_geometry import (
+    SUCCESSOR_DECODER_LEAVES,
     SUCCESSOR_PARAMETER_BLOCKS,
+    exclude_successor_decoder_leaf,
     exclude_successor_parameter_block,
+    successor_decoder_leaf_geometry_report,
     successor_parameter_geometry_report,
     validate_successor_parameter_blocks,
 )
@@ -129,6 +132,38 @@ def test_successor_parameter_geometry_blocks_are_complete_and_projectable():
         for key in SUCCESSOR_PARAMETER_BLOCKS["output_decoder"]
     )
     assert np.any(np.asarray(projected["process_blocks"]["value"]) != 0.0)
+
+
+def test_successor_decoder_leaf_geometry_uses_full_direction_norm():
+    keys = tuple(
+        key for members in SUCCESSOR_PARAMETER_BLOCKS.values() for key in members
+    )
+    parameters = {key: jnp.ones((2,), dtype=jnp.float64) for key in keys}
+    direction = {key: jnp.ones((2,), dtype=jnp.float64) for key in keys}
+    for top_level in ("decoder_first", "decoder_second"):
+        parameters[top_level] = {
+            "kernel": jnp.ones((2, 2), dtype=jnp.float64),
+            "bias": jnp.ones((2,), dtype=jnp.float64),
+        }
+        direction[top_level] = {
+            "kernel": jnp.ones((2, 2), dtype=jnp.float64),
+            "bias": jnp.ones((2,), dtype=jnp.float64),
+        }
+
+    report = successor_decoder_leaf_geometry_report(
+        parameters,
+        direction,
+        step_norm=5.0e-4,
+    )
+    projected = exclude_successor_decoder_leaf(
+        direction, "decoder_second.bias"
+    )
+
+    assert report["block_count"] == len(SUCCESSOR_DECODER_LEAVES) == 4
+    assert report["top_level_key_count"] == 2
+    assert 0.0 < report["direction_squared_fraction_sum"] < 1.0
+    assert np.all(np.asarray(projected["decoder_second"]["bias"]) == 0.0)
+    assert np.any(np.asarray(projected["decoder_second"]["kernel"]) != 0.0)
 
 
 def _trajectory(value, defined=None):
@@ -2114,6 +2149,37 @@ def test_parameter_geometry_attribution_contract_is_bounded():
     assert manifest["execution"]["final_parameters_retained"] is False
     assert "requires free gln01" in launcher
     assert "probe_successor_parameter_geometry" in launcher
+    assert "#SBATCH" not in launcher
+
+
+def test_decoder_leaf_attribution_contract_is_bounded():
+    manifest_path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_decoder_leaf_attribution_v1.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_decoder_leaf_attribution.sh"
+    ).read_text()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["decoder_leaves"] == {
+        name: list(path) for name, path in SUCCESSOR_DECODER_LEAVES.items()
+    }
+    assert manifest["projections"]["candidate_count"] == 4
+    assert manifest["projections"]["global_step_norm"] == pytest.approx(0.0005)
+    assert manifest["execution"]["maximum_projection_candidates"] == 4
+    assert manifest["execution"]["optimizer_updates"] == 0
+    assert manifest["execution"]["validation_values_evaluated"] is False
+    assert "requires free gln01" in launcher
+    assert "--decoder-leaf-attribution" in launcher
     assert "#SBATCH" not in launcher
 
 

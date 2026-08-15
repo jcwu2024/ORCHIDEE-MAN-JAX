@@ -92,6 +92,7 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_repeated_active_set_smoke_20260815.md` | Active rejection evidence; one new update passes, then useful one-shot steps close | Designing the cumulative-microstep gate |
 | `research/daily_coarse_graining/successor_cumulative_microstep_smoke_20260815.md` | Active rejection evidence; safe microsteps do not accumulate through the finite-step boundary | Designing parameter-geometry attribution |
 | `research/daily_coarse_graining/successor_parameter_geometry_attribution_20260815.md` | Active negative attribution evidence; decoder dominates but no top-level exclusion is safe | Designing decoder-leaf attribution |
+| `research/daily_coarse_graining/successor_decoder_leaf_attribution_20260816.md` | Active frozen four-leaf decoder attribution; local admission accepted | Running or reviewing the free-gln01 audit |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

@@ -106,7 +106,10 @@ second decoder kernels and biases. It must preserve the same stopped state,
 all-40 first-order prefilter, and one norm-`0.0005` finite-step gate. A failure
 of every leaf exclusion closes raw parameter-space direct steps and opens a
 function/output-space trust-region design; it does not justify changing the
-Attention architecture.
+Attention architecture. The contract SHA256 is `08783a37...3cf721`; local
+admission passes 79 related tests plus static, contract, and launcher checks.
+One free-`gln01` execution is next. See
+[`successor_decoder_leaf_attribution_20260816.md`](research/daily_coarse_graining/successor_decoder_leaf_attribution_20260816.md).
 
 ## First Formal Neural Candidate
 

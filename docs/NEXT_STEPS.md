@@ -861,8 +861,13 @@ unchanged. Report SHA256 is `a7a170c7...c1a003`; see
 Do not freeze the full decoder or alter Attention. The active design task is
 a four-leaf decoder attribution over `decoder_first/second` kernels and
 biases, using the same stopped state, all-40 first-order prefilter, and single
-norm-`0.0005` finite-step gate. If no leaf exclusion is safe, close raw
+norm-`0.0005` finite-step gate. It is frozen under contract SHA256
+`08783a37...3cf721`; local admission passes 79 related tests and all static,
+contract, and launcher checks. Run it once on free `gln01`. If no leaf
+exclusion is safe, close raw
 parameter-space direct steps and design a function/output-space trust region.
+See
+[`successor_decoder_leaf_attribution_20260816.md`](research/daily_coarse_graining/successor_decoder_leaf_attribution_20260816.md).
 
 No network architecture change is involved. The 365-day rollout,
 long-held-point validation, Gate D2, sealed test, and product gates remain

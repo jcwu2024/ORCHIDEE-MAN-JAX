@@ -12,8 +12,11 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 
 from research.daily_coarse_graining.daily_operator.parameter_geometry import (
+    SUCCESSOR_DECODER_LEAVES,
     SUCCESSOR_PARAMETER_BLOCKS,
+    exclude_successor_decoder_leaf,
     exclude_successor_parameter_block,
+    successor_decoder_leaf_geometry_report,
     successor_parameter_geometry_report,
 )
 from research.daily_coarse_graining.daily_operator.successor_architecture import (
@@ -75,13 +78,17 @@ def classify_parameter_geometry_attribution(
 ) -> Mapping[str, Any]:
     """Require a faithful failed reference and at least one safe exclusion."""
 
+    expected_direction_fraction = float(
+        gates["geometry"].get("expected_direction_squared_fraction_sum", 1.0)
+    )
     geometry_checks = {
         "block_count_exact": int(geometry["block_count"])
         == int(gates["geometry"]["expected_block_count"]),
         "top_level_key_count_exact": int(geometry["top_level_key_count"])
         == int(gates["geometry"]["expected_top_level_key_count"]),
         "direction_fraction_closes": abs(
-            float(geometry["direction_squared_fraction_sum"]) - 1.0
+            float(geometry["direction_squared_fraction_sum"])
+            - expected_direction_fraction
         )
         <= float(
             gates["geometry"]["maximum_direction_squared_fraction_sum_error"]
@@ -292,10 +299,19 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     if args.output.exists():
         raise FileExistsError(args.output)
     started = time.perf_counter()
+    decoder_leaf = bool(args.decoder_leaf_attribution)
     audit = _load_contract(
         args.audit_contract,
-        schema_version="successor_parameter_geometry_attribution_v1",
-        status="frozen_zero_retention_seven_block_leave_one_out",
+        schema_version=(
+            "successor_decoder_leaf_attribution_v1"
+            if decoder_leaf
+            else "successor_parameter_geometry_attribution_v1"
+        ),
+        status=(
+            "frozen_zero_retention_four_decoder_leaf_leave_one_out"
+            if decoder_leaf
+            else "frozen_zero_retention_seven_block_leave_one_out"
+        ),
     )
     predecessor_contract = _load_contract(
         args.predecessor_contract,
@@ -323,11 +339,38 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         or not cumulative.get("evidence_gates", {}).get("evidence_valid", False)
     ):
         raise ValueError("parameter-geometry predecessor identity drift")
-    contract_blocks = {
-        name: tuple(keys) for name, keys in audit["parameter_blocks"].items()
-    }
-    if contract_blocks != dict(SUCCESSOR_PARAMETER_BLOCKS):
-        raise ValueError("parameter-geometry block contract drift")
+    parameter_geometry_reference = None
+    if decoder_leaf:
+        if args.parameter_geometry_report is None:
+            raise ValueError("decoder-leaf audit requires parameter-geometry report")
+        parameter_geometry_reference = json.loads(
+            args.parameter_geometry_report.read_text(encoding="utf-8")
+        )
+        if (
+            _sha256_file(args.parameter_geometry_report)
+            != audit["identity"]["parameter_geometry_report_sha256"]
+            or parameter_geometry_reference.get("identity", {}).get(
+                "audit_contract_sha256"
+            )
+            != audit["identity"]["parameter_geometry_contract_sha256"]
+            or parameter_geometry_reference.get("classification", {}).get("status")
+            != "parameter_geometry_not_attributed"
+            or not parameter_geometry_reference.get("evidence_gates", {}).get(
+                "evidence_valid", False
+            )
+        ):
+            raise ValueError("decoder-leaf parameter-geometry reference drift")
+        contract_leaves = {
+            name: tuple(path) for name, path in audit["decoder_leaves"].items()
+        }
+        if contract_leaves != dict(SUCCESSOR_DECODER_LEAVES):
+            raise ValueError("decoder-leaf contract drift")
+    else:
+        contract_blocks = {
+            name: tuple(keys) for name, keys in audit["parameter_blocks"].items()
+        }
+        if contract_blocks != dict(SUCCESSOR_PARAMETER_BLOCKS):
+            raise ValueError("parameter-geometry block contract drift")
 
     runtime = _load_extended_runtime(args)
     jax = runtime["jax"]
@@ -695,10 +738,18 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         and failed_reference_error <= tolerance
         and failed_reference_support
     )
-    geometry = successor_parameter_geometry_report(
-        parameters,
-        stopped["direction"],
-        step_norm=microstep_norm,
+    geometry = (
+        successor_decoder_leaf_geometry_report(
+            parameters,
+            stopped["direction"],
+            step_norm=microstep_norm,
+        )
+        if decoder_leaf
+        else successor_parameter_geometry_report(
+            parameters,
+            stopped["direction"],
+            step_norm=microstep_norm,
+        )
     )
     reference = {
         "reference_reproduced": reference_reproduced,
@@ -721,9 +772,18 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     gc.collect()
 
     projections = []
-    for block in SUCCESSOR_PARAMETER_BLOCKS:
+    projection_names = (
+        tuple(SUCCESSOR_DECODER_LEAVES)
+        if decoder_leaf
+        else tuple(SUCCESSOR_PARAMETER_BLOCKS)
+    )
+    for block in projection_names:
         projection_started = time.perf_counter()
-        projected = exclude_successor_parameter_block(stopped["direction"], block)
+        projected = (
+            exclude_successor_decoder_leaf(stopped["direction"], block)
+            if decoder_leaf
+            else exclude_successor_parameter_block(stopped["direction"], block)
+        )
         result = _evaluate_projected_direction(
             jax=jax,
             parameters=parameters,
@@ -775,13 +835,22 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         == int(audit["stopped_state_reconstruction"]["nonfinite_value_count"])
     )
     report = {
-        "schema_version": "successor_parameter_geometry_attribution_report_v1",
+        "schema_version": (
+            "successor_decoder_leaf_attribution_report_v1"
+            if decoder_leaf
+            else "successor_parameter_geometry_attribution_report_v1"
+        ),
         "status": "completed" if evidence_valid else "invalid_evidence",
         "git_head": subprocess_git_head(),
         "identity": {
             "audit_contract_sha256": audit["contract_sha256"],
             "predecessor_report_sha256": _sha256_file(args.predecessor_report),
             "cumulative_report_sha256": _sha256_file(args.cumulative_report),
+            "parameter_geometry_report_sha256": (
+                _sha256_file(args.parameter_geometry_report)
+                if decoder_leaf
+                else None
+            ),
         },
         "architecture": SOURCE_ROUTED_ATTENTION,
         "parameter_count": counts[SOURCE_ROUTED_ATTENTION],
@@ -841,6 +910,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--predecessor-contract", type=Path, required=True)
     parser.add_argument("--predecessor-report", type=Path, required=True)
     parser.add_argument("--cumulative-report", type=Path, required=True)
+    parser.add_argument("--parameter-geometry-report", type=Path)
     parser.add_argument("--candidate-coefficient-contract", type=Path, required=True)
     parser.add_argument("--tendency-scale-asset", type=Path, required=True)
     parser.add_argument("--tendency-scale-acceptance", type=Path, required=True)
@@ -852,6 +922,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--prepared-manifest", type=Path, required=True)
     parser.add_argument("--recovery-path", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--decoder-leaf-attribution", action="store_true")
     return parser
 
 
