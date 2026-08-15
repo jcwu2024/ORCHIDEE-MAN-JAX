@@ -883,11 +883,21 @@ separates decoder-output nonlinearity from downstream conservative-trajectory
 nonlinearity; no per-field intervention runs are used. See
 [`successor_output_locality_audit_20260816.md`](research/daily_coarse_graining/successor_output_locality_audit_20260816.md).
 
-The active operation is one diagnostic execution on free `gln01`. Its valid
-result must choose among a top-12 field-local metric, an all-field normalized
-output metric, or an NPP/biomass trajectory-observable metric. It performs no
-optimizer update and cannot authorize training by itself. This is an
-optimizer metric change, not an architecture change.
+The free-`gln01` execution completed at commit `2a29c2c`; report SHA256 is
+`93ebbff8...1cfa85`. All evidence gates pass. Output nonlinearity explains
+`96.08%` of the NPP and `79.79%` of the BGB finite mismatch.
+`daily.fast_maintenance_respiration` alone carries `94.29%` of absolute NPP
+and `95.11%` of BGB output-nonlinearity contribution. Its exact normalized
+RMS change is `0.08206` versus a first-order RMS of `0.000414`, with maximum
+absolute change `4.71565`. GPP has the opposite sign and partially offsets
+the regression.
+
+The active design task is therefore a normalized maintenance-local output
+trust region. Before another GPU run, freeze the correction mechanism,
+candidate count, exact maintenance-output cap, raw failed-proposal matched
+control, all-40 loss gates, and stop action. Do not impose one undifferentiated
+cap on all carbon outputs. This remains an optimizer metric change, not an
+architecture change or training authorization.
 
 No network architecture change is involved. The 365-day rollout,
 long-held-point validation, Gate D2, sealed test, and product gates remain

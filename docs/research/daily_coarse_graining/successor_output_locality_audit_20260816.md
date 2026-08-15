@@ -87,3 +87,53 @@ also pass.
 
 The next action is one free-`gln01` output-locality audit. It is diagnostic
 only and must stop after writing the report.
+
+## Result
+
+The free-`gln01` audit completed at commit `2a29c2c`. The report is
+`runtime/outputs/training/successor-output-locality-ca6b865/report.json`,
+SHA256
+`93ebbff89626f438200b239a5a15745fae066fda567e92b49db74437071cfa85`.
+All ten groups completed in `1968.70` seconds. Peak JAX device bytes were
+`13,826,391,552`; hard and nonfinite counts are zero. Output-tape replay and
+the JVP/VJP chain rule close at numerical precision, and the stopped failed
+step is reproduced exactly.
+
+Decoded-output nonlinearity accounts for `96.0844%` of the NPP finite
+mismatch, `78.3205%` of AGB tendency, and `79.7907%` of BGB tendency. All ten
+groups regress each of these three losses at the exact finite step despite
+negative first-order changes.
+
+The loss-relevant field attribution is sharply localized:
+
+- `daily.fast_maintenance_respiration` carries `94.2874%` of absolute NPP,
+  `87.4331%` of AGB, and `95.1144%` of BGB output-nonlinearity contribution;
+- `daily.fast_gpp` is the second field, but its signed contribution is
+  negative and therefore offsets rather than causes the finite regression;
+- `daily.temperature_context.tsoil`, `endpoint.daily_summary.soilhum_daily`,
+  and `endpoint.daily_summary.humrel_daily` supply the remaining nonzero
+  contribution.
+
+For maintenance respiration, the norm-`0.0005` step has normalized exact RMS
+`0.0820612` and maximum absolute change `4.71565`, while its first-order RMS
+is only `0.000413777`; the normalized linearization cosine is `-0.0357822`.
+Thus the parameter direction appears locally quiet in maintenance space but
+crosses into a large, oppositely oriented finite functional response.
+
+The formal classification is `decoded_output_nonlinearity_localized`, with
+next action `design_normalized_field_local_output_trust_region`. No optimizer
+update, checkpoint, recovery, retained parameters, validation read, or sealed
+test occurred.
+
+## Decision After Execution
+
+The next metric must protect the realized maintenance-respiration function,
+not suppress all carbon outputs uniformly. GPP currently offsets the failed
+step, so a joint undifferentiated carbon-output cap would remove useful
+movement. The field-local design must use the raw failed proposal as its
+matched control, preserve the all-40 common-descent objectives, and freeze an
+exact normalized maintenance-output acceptance gate before another GPU run.
+
+This evidence does not reject Attention and does not authorize training. A
+safe maintenance-local correction mechanism and its bounded candidate set
+must be designed next.

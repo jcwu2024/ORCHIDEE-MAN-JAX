@@ -127,7 +127,18 @@ without per-field intervention rollouts. The contract SHA256 is
 launcher checks pass. See
 [`successor_output_locality_audit_20260816.md`](research/daily_coarse_graining/successor_output_locality_audit_20260816.md).
 
-One free-`gln01` diagnostic execution is next. No architecture change,
+The free-`gln01` execution completed at commit `2a29c2c`; report SHA256 is
+`93ebbff8...1cfa85`. All ten groups, output-tape replay, JVP/VJP chain-rule,
+state, budget, and nonfinite gates pass. Decoded-output nonlinearity accounts
+for `96.08%` of NPP and `79.79%` of BGB finite mismatch.
+`daily.fast_maintenance_respiration` carries `94.29%` of absolute NPP and
+`95.11%` of BGB output-nonlinearity contribution. Its exact normalized RMS is
+`0.08206` versus first-order RMS `0.000414`, and its maximum absolute change is
+`4.71565` output scales. GPP contributes with the opposite sign and offsets
+the regression.
+
+The active design task is a maintenance-local normalized output trust region
+with the raw failed proposal as matched control. No architecture change,
 parameter exclusion search, scalar subdivision, optimizer update, checkpoint,
 validation read, sealed test, or paid run is authorized.
 
