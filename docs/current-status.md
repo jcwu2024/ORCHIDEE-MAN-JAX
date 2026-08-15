@@ -108,8 +108,20 @@ of every leaf exclusion closes raw parameter-space direct steps and opens a
 function/output-space trust-region design; it does not justify changing the
 Attention architecture. The contract SHA256 is `08783a37...3cf721`; local
 admission passes 79 related tests plus static, contract, and launcher checks.
-One free-`gln01` execution is next. See
+The free-`gln01` execution completed at commit `39cd8ef` and finds no safe
+leaf exclusion. The second decoder kernel carries `68.4533%` of full squared
+direction norm; the second bias has the largest relative step at `0.645335%`
+of its parameter norm. Both are required for common descent. Removing either
+first decoder leaf preserves first-order descent but leaves the `28.72%`
+finite regression. Report SHA256 is `513e4337...9b6c4d`. See
 [`successor_decoder_leaf_attribution_20260816.md`](research/daily_coarse_graining/successor_decoder_leaf_attribution_20260816.md).
+
+Raw Euclidean parameter-space direct steps are closed. The active design task
+is an output-locality audit comparing per-field first-order JVP and exact
+finite change at the same stopped state, so a later trust region can be
+defined in normalized process-output coordinates. No architecture change,
+parameter exclusion search, scalar subdivision, checkpoint, or paid run is
+authorized.
 
 ## First Formal Neural Candidate
 

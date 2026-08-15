@@ -49,3 +49,46 @@ existing pytree, and the shared attribution runner binds the accepted
 seven-block report before entering decoder mode. The complete related unit
 file passes `79` tests; Ruff, Python compilation, Bash syntax, canonical
 contract hash, and `git diff --check` pass.
+
+## Result
+
+The free-`gln01` audit completed at commit `39cd8ef`. The report is
+`runtime/outputs/training/successor-decoder-leaf-39cd8ef/report.json`, SHA256
+`513e43373c9e9d5b786a279953899449ef560d25d74d5db1b29671d9519b6c4d`.
+The stopped-state reference reproduces below `2.1e-15`; hard and nonfinite
+counts are zero.
+
+Decoder direction geometry is:
+
+- `decoder_second.kernel`: `68.4533%` of full squared direction norm,
+  step-delta norm `4.13683e-4`, and delta/parameter norm `0.147323%`;
+- `decoder_first.kernel`: `23.9256%`, `2.44569e-4`, and `0.00143373%`;
+- `decoder_second.bias`: `3.75344%`, `9.68690e-5`, and `0.645335%`;
+- `decoder_first.bias`: `0.0201673%`, `7.10058e-6`, and `0.00224562%`.
+
+Removing either second decoder leaf destroys common descent. Excluding the
+second kernel gives minimum relative derivative `-0.195122`; excluding its
+bias gives `-0.0810206`. Removing either first decoder leaf preserves
+first-order descent, but the finite step still regresses by `28.7203%` or
+`28.7222%`. No leaf exclusion is safe.
+
+The classification is `parameter_geometry_not_attributed`, with next action
+`close_raw_parameter_steps_and_design_function_space_trust_region`. Runtime is
+`1937.30` seconds and peak JAX device bytes are `13,827,079,680`. No optimizer
+update, validation read, checkpoint, recovery, or candidate parameters are
+produced.
+
+## Decision After Execution
+
+Raw Euclidean parameter-space direct steps are closed at this state. The two
+second-decoder leaves are jointly essential to first-order descent, while the
+first-decoder leaves do not cause the finite-step failure on their own. Do not
+continue parameter exclusions, scalar step subdivision, or direct updates.
+
+Before choosing a function-space metric, run one bounded output-locality
+design/audit: compare the full direction's first-order JVP with its exact
+finite-step change for the named decoded process outputs on the same ten
+groups, then rank the fields responsible for the BGB/NPP loss jump. The
+resulting normalized output coordinates, not parameter norm, must define any
+subsequent trust region. This remains an optimizer/metric change, not a neural
+architecture change.

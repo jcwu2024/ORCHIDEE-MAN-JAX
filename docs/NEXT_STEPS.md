@@ -863,11 +863,22 @@ a four-leaf decoder attribution over `decoder_first/second` kernels and
 biases, using the same stopped state, all-40 first-order prefilter, and single
 norm-`0.0005` finite-step gate. It is frozen under contract SHA256
 `08783a37...3cf721`; local admission passes 79 related tests and all static,
-contract, and launcher checks. Run it once on free `gln01`. If no leaf
-exclusion is safe, close raw
-parameter-space direct steps and design a function/output-space trust region.
+contract, and launcher checks. The free-`gln01` audit completed at commit
+`39cd8ef` and finds no safe leaf exclusion. The second decoder kernel carries
+`68.4533%` of full squared direction norm and its bias has the largest relative
+step (`0.645335%` of parameter norm), but excluding either breaks common
+descent. Excluding either first decoder leaf preserves descent yet leaves the
+`28.72%` finite regression. Report SHA256 is `513e4337...9b6c4d`.
 See
 [`successor_decoder_leaf_attribution_20260816.md`](research/daily_coarse_graining/successor_decoder_leaf_attribution_20260816.md).
+
+Raw Euclidean parameter-space direct steps are closed. Do not test more
+parameter exclusions or scalar subdivisions. The active design task is a
+bounded output-locality audit at the same stopped state: compare first-order
+JVP and exact finite-step changes for named decoded process outputs, identify
+the fields driving the BGB/NPP jump, and use their normalized coordinates to
+define a function/output-space trust region. This is an optimizer metric
+change, not an architecture change.
 
 No network architecture change is involved. The 365-day rollout,
 long-held-point validation, Gate D2, sealed test, and product gates remain
