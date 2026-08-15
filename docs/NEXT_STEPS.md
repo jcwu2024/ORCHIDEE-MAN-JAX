@@ -815,15 +815,26 @@ component medians closely matching the exact reference. The mechanism uses
 is `e2a9e0eb...daf97`; see
 [`successor_active_set_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_active_set_recalibration_audit_20260815.md).
 
-The bounded repeated active-set smoke is frozen under contract SHA256
-`2bef78c7...1028c5`. It reconstructs the admitted first step and attempts four
-new updates, for five total direct steps. Every update inherits the preceding
-positive support, checks all 40 directions, and applies only a passing norm
-from `0.002, 0.0015, 0.001, 0.0005`. It then evaluates the established
-six-artifact non-test 7/30-day subset. The directional rollout gate and the
-unchanged `0.5%` promotion-scale threshold are reported separately. Run this
-once on free `gln01`; see
+The bounded repeated active-set smoke completed at commit `b730731` and stops
+after one new accepted update. The following recalibrated direction still
+passes all 40 first-order checks with minimum relative derivative `0.0105908`.
+Norms `0.001` through `0.002` enter a strongly nonlinear regression region;
+norm `0.0005` decreases all 40 losses but misses the frozen per-step effect
+gate only for anchor and BGB medians. The retained two-update endpoint improves
+all `6/6` non-test 7/30-day cells and every primary aggregate, but its combined
+improvement is only `0.01822%`, below the unchanged `0.5%` promotion threshold.
+Report SHA256 is `04c35474...613d7`; see
 [`successor_repeated_active_set_smoke_20260815.md`](research/daily_coarse_graining/successor_repeated_active_set_smoke_20260815.md).
+
+Do not test smaller one-shot norms and do not lower the scientific effect
+gate. The active design task is a bounded cumulative-microstep mechanism:
+recalibrate after each safe norm-`0.0005` microstep, require every microstep to
+be nonincreasing across all 40 objectives, and evaluate the existing `1e-4`
+component-effect gate on the cumulative macro-update. The mechanism is frozen
+at no more than four microsteps under contract SHA256
+`be46303e...2c545a`, and local admission passes 74 related tests plus static,
+contract, and launcher checks. Run it once on free `gln01`; see
+[`successor_cumulative_microstep_smoke_20260815.md`](research/daily_coarse_graining/successor_cumulative_microstep_smoke_20260815.md).
 
 No network architecture change is involved. The 365-day rollout,
 long-held-point validation, Gate D2, sealed test, and product gates remain

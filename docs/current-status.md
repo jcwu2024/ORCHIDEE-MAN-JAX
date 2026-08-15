@@ -58,14 +58,27 @@ reference medians. Component reverse passes fall from 40 to 14, while hard
 and nonfinite counts remain zero. Report SHA256 is `e2a9e0eb...daf97`. See
 [`successor_active_set_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_active_set_recalibration_audit_20260815.md).
 
-The bounded repeated active-set smoke is now frozen and locally implemented.
-It reconstructs the admitted first update, attempts four new recalibrated
-updates with all-40 sign and finite-step stop gates, records hot timing, and
-evaluates the established non-test 7/30-day subset. The directional rollout
-claim is separated from the unchanged `0.5%` promotion-scale threshold. The
-active gate is one free-`gln01` execution. No checkpoint or architecture
-change is authorized. See
+The bounded repeated active-set smoke completed at commit `b730731`. It
+reconstructs the admitted first update and applies one new recalibrated norm-
+`0.002` update. At the following state, the recalibrated direction remains
+common across all 40 objectives with minimum relative derivative `0.0105908`.
+Norms `0.001`-`0.002` regress at least one objective, while norm `0.0005`
+decreases all 40 but misses the per-step `1e-4` useful-effect gate for anchor
+and BGB medians. No hard or nonfinite failures occur. The two-update endpoint
+improves all `6/6` non-test 7/30-day cells and every primary aggregate, but the
+combined improvement is only `0.01822%`, below the `0.5%` promotion threshold.
+Report SHA256 is `04c35474...613d7`. See
 [`successor_repeated_active_set_smoke_20260815.md`](research/daily_coarse_graining/successor_repeated_active_set_smoke_20260815.md).
+
+The active design task is a cumulative-microstep gate. It will recalibrate the
+active set after every safe norm-`0.0005` microstep, preserve all-40
+nonincrease at each microstep, and apply the unchanged four-component
+`1e-4` effect gate to the cumulative macro-update. The four-microstep maximum,
+early success stop, and unsafe-step stop are frozen under contract SHA256
+`be46303e...2c545a`. Local admission passes 74 related tests and all static,
+contract, and launcher checks. One free-`gln01` execution is next. No
+checkpoint, architecture change, or paid run is authorized. See
+[`successor_cumulative_microstep_smoke_20260815.md`](research/daily_coarse_graining/successor_cumulative_microstep_smoke_20260815.md).
 
 ## First Formal Neural Candidate
 

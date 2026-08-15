@@ -47,6 +47,62 @@ Passing the mechanism and directional rollout gate does not promote a model.
 It only permits review of whether a larger bounded active-set continuation is
 worth running.
 
+## Result
+
+The free-`gln01` smoke completed at commit `b730731`. The report is
+`runtime/outputs/training/successor-repeated-active-set-b730731/report.json`,
+SHA256 `04c354748bed5abbd2640536dee4d1a50829e166dc4243cdf5ac8858b06613d7`.
+The evidence is valid and reproduces the preceding accepted direction to
+`4.96e-15` relative norm error.
+
+The first new active-set update passes in one JVP round. It uses 14 component
+reverse passes, retains a 13-constraint support, and applies norm `0.002`.
+All 40 losses decrease. The component median relative changes are
+`-1.17109e-4` for the one-day anchor, `-9.82175e-4` for NPP,
+`-1.28702e-3` for AGB tendency, and `-3.33786e-4` for BGB tendency.
+
+The following active-set direction also passes in one round. Its minimum
+relative directional derivative is `0.0105908`; it uses 13 component reverse
+passes, adds no constraint, and keeps the same 13-constraint support. The
+finite-step gate, not the direction gate, stops the smoke:
+
+- norms `0.002`, `0.0015`, and `0.001` regress at least one loss, with maximum
+  relative increases `0.286978`, `0.287066`, and `0.287155`;
+- norm `0.0005` decreases all 40 losses, with maximum change
+  `-5.07888e-6`, but its anchor and BGB median decreases are only
+  `2.85324e-5` and `8.06767e-5`, below the frozen `1e-4` useful-effect gate;
+- the same `0.0005` step decreases NPP and AGB medians by `2.37723e-4` and
+  `3.11891e-4`.
+
+No attempted step has a hard failure or nonfinite value. The run applies one
+of four planned new updates, takes `1683.38` seconds, and reaches
+`13,826,391,552` peak device bytes.
+
+## Rollout Interpretation
+
+The retained two-total-update endpoint passes the separate directional
+7/30-day gate. All `6/6` slice-horizon cells improve and the aggregate NPP,
+AGB, BGB, and total-live RMS metrics are all lower. The combined primary
+composite falls from `0.8465344173` to `0.8463801822`, a relative improvement
+of `0.0182196%`. Maintenance RMS regresses by only `0.0979638%`, within the
+frozen guards.
+
+This is consistent positive rollout evidence, but it is far below the
+unchanged `0.5%` promotion threshold. The formal classification is
+`repeated_active_set_smoke_not_supported`: the four-update mechanism does not
+close, no model is promoted, and no parameters are retained.
+
+## Decision
+
+Do not search smaller one-shot norms or continue the same per-step effect
+gate. At the stopped state, `0.0005` is already safe across all 40 objectives,
+while a smaller step cannot meet the missing anchor/BGB magnitude gate. The
+next bounded mechanism may accumulate several safe `0.0005` microsteps,
+recalibrating the active set after every microstep, and apply the `1e-4`
+effect requirement to their cumulative macro-update. This changes the update
+schedule only; it does not change the network architecture, data, objectives,
+or promotion threshold.
+
 ## Boundaries
 
 - free `gln01` only; no paid job;

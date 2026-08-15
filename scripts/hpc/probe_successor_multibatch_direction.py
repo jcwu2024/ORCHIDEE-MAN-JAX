@@ -785,6 +785,91 @@ def classify_repeated_active_set_smoke(
     }
 
 
+def classify_cumulative_microstep_smoke(
+    validation: Mapping[str, Any] | None,
+    microsteps: Sequence[Mapping[str, Any]],
+    *,
+    gates: Mapping[str, Any],
+    maximum_microsteps: int,
+    pass_action: str,
+    fail_action: str,
+) -> Mapping[str, Any]:
+    """Classify one cumulative macro-update and optional rollout evidence."""
+
+    from scripts.hpc.run_successor_gradient_balanced_smoke import (
+        CANDIDATE as VALIDATION_CANDIDATE,
+    )
+    from scripts.hpc.run_successor_gradient_balanced_smoke import (
+        CONTROL as VALIDATION_BASELINE,
+    )
+    from scripts.hpc.run_successor_named_biomass_objective_ab import (
+        classify_objective_ab,
+    )
+
+    applied = tuple(step for step in microsteps if step["update_applied"])
+    final_cumulative = applied[-1]["cumulative"] if applied else None
+    macro_effect_passed = bool(final_cumulative and final_cumulative["effect_gate_passed"])
+    training_checks = {
+        "bounded_microstep_count": 0 < len(microsteps) <= maximum_microsteps,
+        "at_least_one_microstep_applied": bool(applied),
+        "all_applied_microsteps_safe": all(bool(step["microstep_safe"]) for step in applied),
+        "stopped_before_unsafe_microstep": all(bool(step["update_applied"]) for step in microsteps[:-1]),
+        "all_attempted_directions_passed": all(bool(step["direction_passed"]) for step in microsteps),
+        "reverse_pass_budget_met": all(
+            int(step["component_reverse_passes"])
+            <= int(gates["training"]["maximum_component_reverse_passes_per_microstep"])
+            for step in microsteps
+        ),
+        "round_budget_met": all(
+            len(step["rounds"]) <= int(gates["training"]["maximum_directional_check_rounds_per_microstep"])
+            for step in microsteps
+        ),
+        "hard_failures_zero": sum(int(step["hard_failure_count"]) for step in microsteps)
+        == int(gates["training"]["hard_failure_count"]),
+        "nonfinite_values_zero": sum(int(step["nonfinite_value_count"]) for step in microsteps)
+        == int(gates["training"]["nonfinite_value_count"]),
+        "cumulative_macro_effect_passed": macro_effect_passed,
+    }
+    mechanism_passed = all(training_checks.values())
+    directional_validation = None
+    promotion_validation = None
+    if validation is not None:
+        objective_validation = {
+            "current_objective_control": validation[VALIDATION_BASELINE],
+            "named_biomass_candidate": validation[VALIDATION_CANDIDATE],
+        }
+        directional_validation = classify_objective_ab(
+            objective_validation,
+            gates=gates["validation"],
+        )
+        promotion_gates = dict(gates["validation"])
+        promotion_gates["minimum_research_primary_composite_relative_improvement"] = float(
+            gates["promotion"]["minimum_research_primary_composite_relative_improvement"]
+        )
+        promotion_validation = classify_objective_ab(
+            objective_validation,
+            gates=promotion_gates,
+        )
+    validation_consistent = (validation is not None) == mechanism_passed
+    passed = bool(
+        mechanism_passed and validation_consistent and directional_validation and directional_validation["passed"]
+    )
+    return {
+        "status": ("cumulative_microstep_smoke_supported" if passed else "cumulative_microstep_smoke_not_supported"),
+        "passed": passed,
+        "mechanism_passed": mechanism_passed,
+        "training_checks": training_checks,
+        "microsteps_attempted": len(microsteps),
+        "microsteps_applied": len(applied),
+        "cumulative": final_cumulative,
+        "directional_validation": directional_validation,
+        "promotion_threshold_met": bool(promotion_validation and promotion_validation["passed"]),
+        "promotion_validation": promotion_validation,
+        "validation_consistent": validation_consistent,
+        "next_action": pass_action if passed else fail_action,
+    }
+
+
 def _run_frozen_scalarization_smoke(
     *,
     args: argparse.Namespace,
@@ -2789,12 +2874,594 @@ def _run_repeated_active_set_smoke(
     return report
 
 
+def _evaluate_active_set_step(
+    *,
+    jax: Any,
+    loss_evaluator: Any,
+    parameters: Any,
+    proposal_nonfinite: int,
+    before_losses: Sequence[np.ndarray],
+    macro_before_losses: Sequence[np.ndarray],
+    manifest: Mapping[str, Any],
+    schedule: Mapping[str, Any],
+    prepared_manifest_path: Path,
+    signature: Any,
+) -> Mapping[str, Any]:
+    """Evaluate one proposed state against current and macro baselines."""
+
+    groups = []
+    losses_by_group = []
+    current_changes = []
+    cumulative_changes = []
+    hard_failure_count = 0
+    nonfinite_value_count = int(proposal_nonfinite)
+    for group_index in range(AUDIT_GROUPS):
+        anchor_batch, context_batch, context_inputs, group = _load_group(
+            jax,
+            manifest,
+            schedule,
+            prepared_manifest_path,
+            signature,
+            group_index,
+        )
+        losses_after, hard_counts = loss_evaluator(
+            parameters,
+            anchor_batch,
+            context_batch,
+            context_inputs,
+        )
+        jax.block_until_ready((losses_after, hard_counts))
+        after = np.asarray(losses_after, dtype=np.float64)
+        current = _relative_changes(before_losses[group_index], after)
+        cumulative = _relative_changes(macro_before_losses[group_index], after)
+        current_values = np.asarray(
+            [current[label] for label in GRADIENT_FEASIBILITY_LABELS],
+            dtype=np.float64,
+        )
+        cumulative_values = np.asarray(
+            [cumulative[label] for label in GRADIENT_FEASIBILITY_LABELS],
+            dtype=np.float64,
+        )
+        hard_host = _hard_counts_host(hard_counts)
+        hard_failure_count += sum(hard_host.values())
+        nonfinite_value_count += int(np.sum(~np.isfinite(after)))
+        nonfinite_value_count += int(np.sum(~np.isfinite(current_values)))
+        nonfinite_value_count += int(np.sum(~np.isfinite(cumulative_values)))
+        losses_by_group.append(after)
+        current_changes.append(current_values)
+        cumulative_changes.append(cumulative_values)
+        groups.append(
+            {
+                "group": group_index,
+                "current_loss_relative_changes": current,
+                "cumulative_loss_relative_changes": cumulative,
+                "hard_gate_counts": hard_host,
+            }
+        )
+        del anchor_batch, context_batch, context_inputs, group
+        del losses_after, hard_counts
+        gc.collect()
+    return {
+        "groups": groups,
+        "losses": tuple(losses_by_group),
+        "current_change_matrix": np.stack(current_changes),
+        "cumulative_change_matrix": np.stack(cumulative_changes),
+        "hard_failure_count": hard_failure_count,
+        "nonfinite_value_count": nonfinite_value_count,
+    }
+
+
+def _change_matrix_summary(
+    matrix: np.ndarray,
+    *,
+    maximum_increase: float,
+    minimum_median_decrease: float | None = None,
+) -> Mapping[str, Any]:
+    medians = {
+        label: float(np.median(matrix[:, component_index]))
+        for component_index, label in enumerate(GRADIENT_FEASIBILITY_LABELS)
+    }
+    maximum_change = float(np.max(matrix))
+    nonincreasing = maximum_change <= maximum_increase
+    effect_gate_passed = bool(
+        nonincreasing
+        and minimum_median_decrease is not None
+        and all(value <= -minimum_median_decrease for value in medians.values())
+    )
+    return {
+        "maximum_group_component_relative_increase": maximum_change,
+        "component_median_relative_changes": medians,
+        "all_group_components_nonincreasing": nonincreasing,
+        "effect_gate_passed": effect_gate_passed,
+    }
+
+
+def _reference_attempt(
+    update: Mapping[str, Any],
+    *,
+    step_norm: float,
+) -> Mapping[str, Any]:
+    matches = [attempt for attempt in update["attempts"] if float(attempt["step_norm"]) == step_norm]
+    if len(matches) != 1:
+        raise ValueError("repeated active-set reference step drift")
+    return matches[0]
+
+
+def _run_cumulative_microstep_smoke(
+    *,
+    args: argparse.Namespace,
+    audit: Mapping[str, Any],
+    predecessor: Mapping[str, Any],
+    repeated_reference: Mapping[str, Any],
+    jax: Any,
+    runtime: Mapping[str, Any],
+    contract: Any,
+    schedule: Mapping[str, Any],
+    manifest: Mapping[str, Any],
+    assets: Any,
+    adapter_template: Any,
+    adapter_timing: Mapping[str, Any],
+    signature: Any,
+    parameters: Any,
+    parameter_count: int,
+    long_scales: Any,
+    measurement: Any,
+    loss_evaluator: Any,
+    directional_evaluator: Any,
+    memory_before: Mapping[str, Any],
+    started: float,
+) -> Mapping[str, Any]:
+    """Accumulate safe recalibrated microsteps into one useful macro-update."""
+
+    parent_parameters = parameters
+    first_step_norm = float(audit["reconstruction"]["first_direct_step_norm"])
+    second_step_norm = float(audit["reconstruction"]["second_direct_step_norm"])
+    microstep_norm = float(audit["microsteps"]["step_norm"])
+    maximum_microsteps = int(audit["microsteps"]["maximum_count"])
+    seeds, parent_scalarization = _frozen_scalarization_seeds(
+        predecessor,
+        expected_step_norm=first_step_norm,
+    )
+    active_parent_groups = tuple(int(index) for index in np.flatnonzero(np.any(seeds > 0.0, axis=1)))
+    combine = _make_combined_direction(jax)
+    direct_step = _make_direct_virtual_step(jax)
+    count_nonfinite = _make_nonfinite_counter(jax)
+    first_gradients = []
+    reconstruction_hard_failures = 0
+    reconstruction_nonfinite = 0
+    for group_index in range(AUDIT_GROUPS):
+        anchor_batch, context_batch, context_inputs, group = _load_group(
+            jax,
+            manifest,
+            schedule,
+            args.prepared_manifest,
+            signature,
+            group_index,
+        )
+        if group_index in active_parent_groups:
+            losses, gradient, hard_counts = measurement(
+                parameters,
+                seeds[group_index],
+                anchor_batch,
+                context_batch,
+                context_inputs,
+            )
+            gradient_nonfinite = count_nonfinite(gradient)
+            jax.block_until_ready((losses, gradient, hard_counts, gradient_nonfinite))
+            first_gradients.append(gradient)
+            reconstruction_nonfinite += int(np.asarray(gradient_nonfinite))
+        else:
+            losses, hard_counts = loss_evaluator(
+                parameters,
+                anchor_batch,
+                context_batch,
+                context_inputs,
+            )
+            jax.block_until_ready((losses, hard_counts))
+        reconstruction_hard_failures += sum(_hard_counts_host(hard_counts).values())
+        reconstruction_nonfinite += int(np.sum(~np.isfinite(np.asarray(losses, dtype=np.float64))))
+        del anchor_batch, context_batch, context_inputs, group, losses, hard_counts
+        gc.collect()
+
+    first_direction, first_direction_norm, first_direction_nonfinite = combine(
+        tuple(first_gradients),
+        np.ones(len(first_gradients), dtype=np.float64),
+    )
+    first_state, first_proposed_nonfinite = direct_step(
+        parameters,
+        first_direction,
+        first_direction_norm,
+        np.asarray(first_step_norm, dtype=np.float64),
+    )
+    jax.block_until_ready(
+        (
+            first_direction,
+            first_direction_norm,
+            first_direction_nonfinite,
+            first_state,
+            first_proposed_nonfinite,
+        )
+    )
+    reconstruction_nonfinite += int(np.asarray(first_direction_nonfinite))
+    reconstruction_nonfinite += int(np.asarray(first_proposed_nonfinite))
+    first_direction_norm_error = abs(
+        float(np.asarray(first_direction_norm)) - float(parent_scalarization["expected_direction_norm"])
+    ) / max(float(parent_scalarization["expected_direction_norm"]), 1.0e-30)
+    del first_gradients, first_direction
+    gc.collect()
+
+    constraint_labels = tuple(
+        f"group_{group_index + 1:02d}.{label}"
+        for group_index in range(AUDIT_GROUPS)
+        for label in GRADIENT_FEASIBILITY_LABELS
+    )
+    parent_weights = predecessor["aggregate_direction"]["normalized_simplex_weights"]
+    support = tuple(
+        label
+        for label in constraint_labels
+        if float(parent_weights[label]) > float(audit["active_set"]["weight_tolerance"])
+    )
+    second_recalibrated = _recalibrate_active_set_direction(
+        jax=jax,
+        measurement=measurement,
+        directional_evaluator=directional_evaluator,
+        parameters=first_state,
+        initial_support=support,
+        active_set=audit["active_set"],
+        gates=audit["gates"]["direction"],
+        manifest=manifest,
+        schedule=schedule,
+        prepared_manifest_path=args.prepared_manifest,
+        signature=signature,
+    )
+    second_state, second_proposed_nonfinite = direct_step(
+        first_state,
+        second_recalibrated["direction"],
+        second_recalibrated["direction_norm"],
+        np.asarray(second_step_norm, dtype=np.float64),
+    )
+    jax.block_until_ready((second_state, second_proposed_nonfinite))
+    second_evaluation = _evaluate_active_set_step(
+        jax=jax,
+        loss_evaluator=loss_evaluator,
+        parameters=second_state,
+        proposal_nonfinite=int(np.asarray(second_proposed_nonfinite)),
+        before_losses=second_recalibrated["losses"],
+        macro_before_losses=second_recalibrated["losses"],
+        manifest=manifest,
+        schedule=schedule,
+        prepared_manifest_path=args.prepared_manifest,
+        signature=signature,
+    )
+    second_summary = _change_matrix_summary(
+        second_evaluation["current_change_matrix"],
+        maximum_increase=float(audit["gates"]["microstep"]["maximum_group_component_relative_increase"]),
+        minimum_median_decrease=float(
+            audit["gates"]["macro_effect"]["minimum_each_component_median_relative_decrease"]
+        ),
+    )
+    reconstruction_hard_failures += int(second_recalibrated["hard_failure_count"]) + int(
+        second_evaluation["hard_failure_count"]
+    )
+    reconstruction_nonfinite += int(second_recalibrated["nonfinite_value_count"]) + int(
+        second_evaluation["nonfinite_value_count"]
+    )
+
+    reference_value_tolerance = float(audit["reconstruction"]["maximum_reference_component_change_error"])
+    accepted_reference = repeated_reference["updates"][0]
+    accepted_attempt = _reference_attempt(
+        accepted_reference,
+        step_norm=second_step_norm,
+    )
+    accepted_component_error = max(
+        abs(
+            second_summary["component_median_relative_changes"][label]
+            - float(accepted_attempt["component_median_relative_changes"][label])
+        )
+        for label in GRADIENT_FEASIBILITY_LABELS
+    )
+    second_reference_reproduced = (
+        second_recalibrated["direction_passed"]
+        and tuple(second_recalibrated["support"]) == tuple(accepted_reference["final_support"])
+        and abs(
+            float(second_recalibrated["minimum_relative_directional_derivative"])
+            - float(accepted_reference["minimum_relative_directional_derivative"])
+        )
+        <= float(audit["reconstruction"]["maximum_reference_minimum_derivative_error"])
+        and accepted_component_error <= reference_value_tolerance
+        and abs(
+            second_summary["maximum_group_component_relative_increase"]
+            - float(accepted_attempt["maximum_group_component_relative_increase"])
+        )
+        <= reference_value_tolerance
+        and bool(accepted_attempt["admissible"])
+        and second_summary["effect_gate_passed"]
+    )
+    macro_before_losses = second_evaluation["losses"]
+    parameters = second_state
+    support = tuple(second_recalibrated["support"])
+    del first_state, second_recalibrated, second_evaluation
+    gc.collect()
+
+    reference_stopped = repeated_reference["updates"][1]
+    stopped_attempt = _reference_attempt(reference_stopped, step_norm=microstep_norm)
+    microsteps = []
+    first_microstep_reference_reproduced = False
+    macro_effect_passed = False
+    for microstep_index in range(1, maximum_microsteps + 1):
+        microstep_started = time.perf_counter()
+        recalibrated = _recalibrate_active_set_direction(
+            jax=jax,
+            measurement=measurement,
+            directional_evaluator=directional_evaluator,
+            parameters=parameters,
+            initial_support=support,
+            active_set=audit["active_set"],
+            gates=audit["gates"]["direction"],
+            manifest=manifest,
+            schedule=schedule,
+            prepared_manifest_path=args.prepared_manifest,
+            signature=signature,
+        )
+        if not recalibrated["direction_passed"]:
+            microsteps.append(
+                {
+                    "microstep": microstep_index,
+                    "update_applied": False,
+                    "microstep_safe": False,
+                    "direction_passed": False,
+                    "minimum_relative_directional_derivative": float(
+                        recalibrated["minimum_relative_directional_derivative"]
+                    ),
+                    "initial_support": list(support),
+                    "final_support": list(recalibrated["support"]),
+                    "rounds": recalibrated["rounds"],
+                    "component_reverse_passes": int(recalibrated["component_reverse_passes"]),
+                    "group_jvps": int(recalibrated["group_jvps"]),
+                    "added_constraints": list(recalibrated["added_constraints"]),
+                    "current": None,
+                    "cumulative": None,
+                    "groups": None,
+                    "hard_failure_count": int(recalibrated["hard_failure_count"]),
+                    "nonfinite_value_count": int(recalibrated["nonfinite_value_count"]),
+                    "elapsed_seconds": time.perf_counter() - microstep_started,
+                }
+            )
+            break
+        proposed, proposed_nonfinite = direct_step(
+            parameters,
+            recalibrated["direction"],
+            recalibrated["direction_norm"],
+            np.asarray(microstep_norm, dtype=np.float64),
+        )
+        jax.block_until_ready((proposed, proposed_nonfinite))
+        evaluated = _evaluate_active_set_step(
+            jax=jax,
+            loss_evaluator=loss_evaluator,
+            parameters=proposed,
+            proposal_nonfinite=int(np.asarray(proposed_nonfinite)),
+            before_losses=recalibrated["losses"],
+            macro_before_losses=macro_before_losses,
+            manifest=manifest,
+            schedule=schedule,
+            prepared_manifest_path=args.prepared_manifest,
+            signature=signature,
+        )
+        current_summary = _change_matrix_summary(
+            evaluated["current_change_matrix"],
+            maximum_increase=float(audit["gates"]["microstep"]["maximum_group_component_relative_increase"]),
+        )
+        cumulative_summary = _change_matrix_summary(
+            evaluated["cumulative_change_matrix"],
+            maximum_increase=float(audit["gates"]["macro_effect"]["maximum_group_component_relative_increase"]),
+            minimum_median_decrease=float(
+                audit["gates"]["macro_effect"]["minimum_each_component_median_relative_decrease"]
+            ),
+        )
+        hard_failure_count = int(recalibrated["hard_failure_count"]) + int(evaluated["hard_failure_count"])
+        nonfinite_value_count = int(recalibrated["nonfinite_value_count"]) + int(evaluated["nonfinite_value_count"])
+        microstep_safe = bool(
+            current_summary["all_group_components_nonincreasing"]
+            and hard_failure_count == int(audit["gates"]["microstep"]["hard_failure_count"])
+            and nonfinite_value_count == int(audit["gates"]["microstep"]["nonfinite_value_count"])
+        )
+        update_applied = microstep_safe
+        macro_effect_passed = bool(update_applied and cumulative_summary["effect_gate_passed"])
+        record = {
+            "microstep": microstep_index,
+            "step_norm": microstep_norm,
+            "update_applied": update_applied,
+            "microstep_safe": microstep_safe,
+            "direction_passed": True,
+            "minimum_relative_directional_derivative": float(recalibrated["minimum_relative_directional_derivative"]),
+            "initial_support": list(support),
+            "final_support": list(recalibrated["support"]),
+            "rounds": recalibrated["rounds"],
+            "component_reverse_passes": int(recalibrated["component_reverse_passes"]),
+            "group_jvps": int(recalibrated["group_jvps"]),
+            "added_constraints": list(recalibrated["added_constraints"]),
+            "current": current_summary,
+            "cumulative": cumulative_summary,
+            "groups": evaluated["groups"],
+            "hard_failure_count": hard_failure_count,
+            "nonfinite_value_count": nonfinite_value_count,
+            "elapsed_seconds": time.perf_counter() - microstep_started,
+        }
+        microsteps.append(record)
+        if microstep_index == 1:
+            component_error = max(
+                abs(
+                    current_summary["component_median_relative_changes"][label]
+                    - float(stopped_attempt["component_median_relative_changes"][label])
+                )
+                for label in GRADIENT_FEASIBILITY_LABELS
+            )
+            first_microstep_reference_reproduced = (
+                abs(
+                    record["minimum_relative_directional_derivative"]
+                    - float(reference_stopped["minimum_relative_directional_derivative"])
+                )
+                <= float(audit["reconstruction"]["maximum_reference_minimum_derivative_error"])
+                and tuple(record["final_support"]) == tuple(reference_stopped["final_support"])
+                and component_error <= reference_value_tolerance
+                and abs(
+                    current_summary["maximum_group_component_relative_increase"]
+                    - float(stopped_attempt["maximum_group_component_relative_increase"])
+                )
+                <= reference_value_tolerance
+            )
+        print(
+            json.dumps(
+                {
+                    "event": "cumulative_microstep",
+                    "microstep": microstep_index,
+                    "maximum": maximum_microsteps,
+                    "applied": update_applied,
+                    "macro_effect_passed": macro_effect_passed,
+                    "reverse_passes": record["component_reverse_passes"],
+                    "jvp_rounds": len(record["rounds"]),
+                },
+                sort_keys=True,
+            ),
+            flush=True,
+        )
+        if not update_applied:
+            del proposed, evaluated, recalibrated
+            gc.collect()
+            break
+        parameters = proposed
+        support = tuple(record["final_support"])
+        del evaluated, recalibrated
+        gc.collect()
+        if macro_effect_passed:
+            break
+
+    reconstruction_reference_reproduced = (
+        first_direction_norm_error <= float(audit["reconstruction"]["maximum_first_direction_norm_relative_error"])
+        and second_reference_reproduced
+        and first_microstep_reference_reproduced
+    )
+    evidence_valid = (
+        reconstruction_reference_reproduced
+        and reconstruction_hard_failures == int(audit["gates"]["training"]["hard_failure_count"])
+        and reconstruction_nonfinite == int(audit["gates"]["training"]["nonfinite_value_count"])
+    )
+    validation = None
+    if macro_effect_passed and evidence_valid:
+        from scripts.hpc.prepare_successor_rollout_screen import (
+            _prepare_adapter as _prepare_validation_adapter,
+        )
+        from scripts.hpc.prepare_successor_staged_validation import (
+            _reference as _validation_reference,
+        )
+        from scripts.hpc.run_successor_gradient_balanced_smoke import (
+            CANDIDATE as VALIDATION_CANDIDATE,
+        )
+        from scripts.hpc.run_successor_gradient_balanced_smoke import (
+            CONTROL as VALIDATION_BASELINE,
+        )
+        from scripts.hpc.run_successor_gradient_balanced_smoke import (
+            _evaluate_subset,
+        )
+        from scripts.hpc.successor_staged_validation_prepared import (
+            load_staged_validation_prepared,
+            ordered_validation_entries,
+        )
+
+        validation_prepared, prepared_panel = load_staged_validation_prepared(
+            args.validation_prepared_manifest,
+            staged_training_contract_sha256=contract.sha256,
+            validation_panel_sha256=audit["identity"]["validation_panel_sha256"],
+        )
+        if prepared_panel != assets.validation_panel:
+            raise ValueError("cumulative microstep validation panel drift")
+        first_slice, first_validation_entry = ordered_validation_entries(assets.validation_panel)[0]
+        validation_reference = _validation_reference(
+            runtime["index"],
+            first_slice,
+            first_validation_entry,
+        )
+        validation_adapter = _prepare_validation_adapter(
+            runtime,
+            validation_reference,
+            int(first_validation_entry["start_rows"][0]),
+        )
+        validation = _evaluate_subset(
+            runtime,
+            contract=contract,
+            parameters={
+                VALIDATION_BASELINE: parent_parameters,
+                VALIDATION_CANDIDATE: parameters,
+            },
+            long_scales=long_scales,
+            adapter_template=validation_adapter,
+            prepared_manifest_path=args.validation_prepared_manifest,
+            prepared=validation_prepared,
+            panel=assets.validation_panel,
+        )
+
+    classification = classify_cumulative_microstep_smoke(
+        validation,
+        microsteps,
+        gates=audit["gates"],
+        maximum_microsteps=maximum_microsteps,
+        pass_action=audit["pass_action"],
+        fail_action=audit["fail_action"],
+    )
+    report = {
+        "schema_version": "successor_cumulative_microstep_smoke_report_v1",
+        "status": "completed" if evidence_valid else "invalid_evidence",
+        "git_head": _git_head(),
+        "identity": {
+            "smoke_contract_sha256": audit["contract_sha256"],
+            "predecessor_report_sha256": _sha256_file(args.smoke_report),
+            "repeated_active_set_report_sha256": _sha256_file(args.repeated_active_set_report),
+        },
+        "architecture": SOURCE_ROUTED_ATTENTION,
+        "parameter_count": parameter_count,
+        "parent_update": PARENT_UPDATE,
+        "reconstruction": {
+            "first_direction_norm_relative_error": first_direction_norm_error,
+            "second_reference_reproduced": second_reference_reproduced,
+            "first_microstep_reference_reproduced": (first_microstep_reference_reproduced),
+            "hard_failure_count": reconstruction_hard_failures,
+            "nonfinite_value_count": reconstruction_nonfinite,
+        },
+        "microsteps": microsteps,
+        "validation": validation,
+        "classification": classification,
+        "evidence_gates": {
+            "evidence_valid": evidence_valid,
+            "reconstruction_reference_reproduced": (reconstruction_reference_reproduced),
+        },
+        "adapter_preparation": adapter_timing,
+        "device_memory_before": memory_before,
+        "device_memory_after": _device_memory_report(runtime["devices"]),
+        "elapsed_seconds": time.perf_counter() - started,
+        "reconstructed_direct_updates": 2,
+        "new_microsteps_applied": sum(bool(step["update_applied"]) for step in microsteps),
+        "optimizer_updates": 0,
+        "checkpoint_written": False,
+        "recovery_written": False,
+        "final_parameters_retained": False,
+        "teacher_data_regenerated": False,
+        "historical_v5_used": False,
+        "sealed_test_used": False,
+        "next_gate": (
+            classification["next_action"] if evidence_valid else "stop_and_repair_cumulative_microstep_evidence"
+        ),
+    }
+    _atomic_json(args.output, report)
+    return report
+
+
 def run(args: argparse.Namespace) -> Mapping[str, Any]:
     if args.output.exists():
         raise FileExistsError(args.output)
     if args.geometry_output is not None and args.geometry_output.exists():
         raise FileExistsError(args.geometry_output)
     started = time.perf_counter()
+    cumulative_microstep = bool(args.cumulative_microstep_smoke)
     repeated_active_set = bool(args.repeated_active_set_smoke)
     active_set_recalibration = bool(args.active_set_recalibration_audit)
     second_state_recalibration = bool(args.second_state_recalibration_audit)
@@ -2804,7 +3471,14 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     )
     group_aware_extension = bool(args.group_aware_step_extension)
     group_aware = bool(args.group_aware or group_aware_extension)
-    if repeated_active_set:
+    if cumulative_microstep:
+        audit_schema = "successor_cumulative_microstep_smoke_v1"
+        audit_status = "frozen_four_microstep_macro_update_no_checkpoint"
+        predecessor_schema = "successor_group_aware_step_extension_v1"
+        predecessor_status = "frozen_zero_update_forty_objective_extended_grid"
+        predecessor_contract_key = "group_aware_step_extension_contract_sha256"
+        predecessor_report_key = "group_aware_step_extension_report_sha256"
+    elif repeated_active_set:
         audit_schema = "successor_repeated_active_set_smoke_v1"
         audit_status = "frozen_five_total_direct_updates_no_checkpoint"
         predecessor_schema = "successor_group_aware_step_extension_v1"
@@ -2888,8 +3562,22 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         or second_state_recalibration
         or active_set_recalibration
         or repeated_active_set
+        or cumulative_microstep
         else None
     )
+    repeated_reference = None
+    if cumulative_microstep:
+        if args.repeated_active_set_report is None:
+            raise ValueError("cumulative microstep smoke requires repeated report")
+        repeated_reference = json.loads(args.repeated_active_set_report.read_text(encoding="utf-8"))
+        if (
+            _sha256_file(args.repeated_active_set_report) != audit["identity"]["repeated_active_set_report_sha256"]
+            or repeated_reference.get("identity", {}).get("smoke_contract_sha256")
+            != audit["identity"]["repeated_active_set_contract_sha256"]
+            or repeated_reference.get("classification", {}).get("status") != "repeated_active_set_smoke_not_supported"
+            or not repeated_reference.get("evidence_gates", {}).get("evidence_valid", False)
+        ):
+            raise ValueError("cumulative microstep repeated reference drift")
     active_set_reference = None
     if repeated_active_set:
         if args.active_set_reference_report is None:
@@ -3088,6 +3776,35 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         **objective_arguments,
     )
     memory_before = _device_memory_report(runtime["devices"])
+    if cumulative_microstep:
+        directional_evaluator = _make_loss_directional_evaluator(
+            runtime,
+            adapter_template,
+            **objective_arguments,
+        )
+        return _run_cumulative_microstep_smoke(
+            args=args,
+            audit=audit,
+            predecessor=predecessor_report,
+            repeated_reference=repeated_reference,
+            jax=jax,
+            runtime=runtime,
+            contract=contract,
+            schedule=schedule,
+            manifest=manifest,
+            assets=assets,
+            adapter_template=adapter_template,
+            adapter_timing=adapter_timing,
+            signature=signature,
+            parameters=parameters,
+            parameter_count=counts[SOURCE_ROUTED_ATTENTION],
+            long_scales=long_scales,
+            measurement=measurement,
+            loss_evaluator=loss_evaluator,
+            directional_evaluator=directional_evaluator,
+            memory_before=memory_before,
+            started=started,
+        )
     if repeated_active_set:
         directional_evaluator = _make_loss_directional_evaluator(
             runtime,
@@ -3561,10 +4278,12 @@ def _parser() -> argparse.ArgumentParser:
     mode.add_argument("--second-state-recalibration-audit", action="store_true")
     mode.add_argument("--active-set-recalibration-audit", action="store_true")
     mode.add_argument("--repeated-active-set-smoke", action="store_true")
+    mode.add_argument("--cumulative-microstep-smoke", action="store_true")
     parser.add_argument("--failed-scalarization-report", type=Path)
     parser.add_argument("--backtracking-report", type=Path)
     parser.add_argument("--exact-recalibration-report", type=Path)
     parser.add_argument("--active-set-reference-report", type=Path)
+    parser.add_argument("--repeated-active-set-report", type=Path)
     return parser
 
 
