@@ -117,11 +117,19 @@ finite regression. Report SHA256 is `513e4337...9b6c4d`. See
 [`successor_decoder_leaf_attribution_20260816.md`](research/daily_coarse_graining/successor_decoder_leaf_attribution_20260816.md).
 
 Raw Euclidean parameter-space direct steps are closed. The active design task
-is an output-locality audit comparing per-field first-order JVP and exact
-finite change at the same stopped state, so a later trust region can be
-defined in normalized process-output coordinates. No architecture change,
-parameter exclusion search, scalar subdivision, checkpoint, or paid run is
-authorized.
+is now frozen as an output-locality audit comparing the 30-day per-field JVP
+and exact norm-`0.0005` change at the same stopped state. All 181 fields use
+their accepted train/train scales and day-start-delta representation. A
+three-seed output VJP decomposes the NPP/AGB/BGB finite mismatch into decoded
+output nonlinearity and downstream conservative-trajectory nonlinearity,
+without per-field intervention rollouts. The contract SHA256 is
+`3825029c...f3bd2`; 97 directly related local tests plus static, contract, and
+launcher checks pass. See
+[`successor_output_locality_audit_20260816.md`](research/daily_coarse_graining/successor_output_locality_audit_20260816.md).
+
+One free-`gln01` diagnostic execution is next. No architecture change,
+parameter exclusion search, scalar subdivision, optimizer update, checkpoint,
+validation read, sealed test, or paid run is authorized.
 
 ## First Formal Neural Candidate
 

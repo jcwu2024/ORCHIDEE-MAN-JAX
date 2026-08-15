@@ -1,0 +1,89 @@
+# Successor Output-Locality Audit, 2026-08-16
+
+## Motivation
+
+The decoder-leaf audit closes raw Euclidean parameter-space direct steps. The
+second decoder kernel and bias are both required for common first-order
+descent, while excluding either first-decoder leaf leaves the stopped
+`28.72%` finite regression unchanged. Parameter distance therefore does not
+provide a usable local metric at this state.
+
+This audit asks where the mismatch between first-order descent and the exact
+norm-`0.0005` finite step appears in function space. It does not change the
+Attention architecture or authorize another update.
+
+## Frozen Mechanism
+
+Reconstruct the same stopped state and negative unit parameter direction. On
+the same ten training groups, run all four 30-day context trajectories per
+group and record every named decoded output in its accepted training
+representation. Day-start-delta heads are converted relative to their own
+trajectory state, and all 181 fields are normalized by the accepted
+train/train output scales.
+
+For each group:
+
+1. compute a forward JVP of the 30-day normalized output tape;
+2. compute the exact output tape after the norm-`0.0005` parameter step;
+3. replay both tapes through the same conservative update and retained exact
+   processes;
+4. take one three-seed VJP of NPP, AGB tendency, and BGB tendency with respect
+   to the base output tape.
+
+The finite-step mismatch is decomposed as:
+
+```text
+exact loss change - first-order loss change
+  = base-output VJP * (exact output change - JVP output change)
+  + nonlinear finite response of the conservative trajectory and loss
+```
+
+The first term is ranked by named field. No field is individually perturbed
+or rerun, so the audit covers all 181 fields without 181 intervention
+rollouts.
+
+## Interpretation Gate
+
+The output tapes must reproduce the ordinary end-to-end losses within
+`1e-9`, the output-space chain rule must close within `1e-6`, and all state,
+budget, nonfinite, identity, and stopped-reference gates must remain exact.
+The BGB regression must be reproduced on at least one group.
+
+For regressing BGB groups, output nonlinearity is called dominant only when it
+accounts for at least `60%` of the absolute output-versus-downstream nonlinear
+decomposition. It is called localized only when the top 12 fields account for
+at least `80%` of absolute field contribution. The outcomes route the next
+metric design:
+
+- localized output nonlinearity: constrain the identified normalized fields;
+- distributed output nonlinearity: constrain all normalized decoded fields;
+- downstream finite-response dominance: constrain NPP/biomass trajectory
+  observables rather than decoder fields.
+
+These are metric-scope decisions, not architecture promotion or rejection.
+
+## Boundaries
+
+- accepted v6 data only; no Teacher regeneration and no v5 join;
+- ten groups, 40 point-years, 1,200 daily transitions;
+- one output JVP and one three-seed output VJP per group;
+- no optimizer update, checkpoint, recovery write, retained parameters,
+  validation values, sealed test, or paid node;
+- one free-`gln01` execution only after local admission.
+
+The machine contract is
+`manifests/coarse_graining/successor_output_locality_audit_v1.json`, SHA256
+`3825029cdd3577d4fc2869ebe7afadcfe3ea3707d19986ffb6adcfe18e8f3bd2`.
+
+## Local Admission
+
+The physical/training output representations now round-trip exactly for
+day-start-delta and direct fields. Field-level decomposition, aggregation,
+ranking, and all three metric-scope classifications are covered by tests.
+The original geometry suite plus new locality tests passes `83/83`; another
+14 directly related fast-owner/materializer/schema tests pass. Ruff, Python
+compilation, Bash syntax, canonical contract hash, and `git diff --check`
+also pass.
+
+The next action is one free-`gln01` output-locality audit. It is diagnostic
+only and must stop after writing the report.

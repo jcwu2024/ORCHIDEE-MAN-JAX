@@ -208,6 +208,24 @@ def training_representation_outputs(
     return result
 
 
+def physical_outputs_from_training_representation(
+    represented_outputs: Mapping[str, Any],
+    inputs: Any,
+    schema: NeuralOutputSchema,
+) -> dict[str, Any]:
+    """Materialize physical endpoints from the normalized-loss representation."""
+
+    if set(represented_outputs) != {field.name for field in schema.fields}:
+        raise ValueError("fast-owner represented output registry drift")
+    result = {}
+    for field in schema.fields:
+        value = jnp.asarray(represented_outputs[field.name], dtype=jnp.float64)
+        if field.value_representation == DAY_START_DELTA:
+            value = value + _day_start_base(inputs, field)
+        result[field.name] = value
+    return result
+
+
 def validate_successor_output_normalization(
     schema: NeuralOutputSchema,
     normalization: NeuralOutputNormalization,

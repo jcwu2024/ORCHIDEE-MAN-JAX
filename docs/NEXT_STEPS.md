@@ -873,12 +873,21 @@ See
 [`successor_decoder_leaf_attribution_20260816.md`](research/daily_coarse_graining/successor_decoder_leaf_attribution_20260816.md).
 
 Raw Euclidean parameter-space direct steps are closed. Do not test more
-parameter exclusions or scalar subdivisions. The active design task is a
-bounded output-locality audit at the same stopped state: compare first-order
-JVP and exact finite-step changes for named decoded process outputs, identify
-the fields driving the BGB/NPP jump, and use their normalized coordinates to
-define a function/output-space trust region. This is an optimizer metric
-change, not an architecture change.
+parameter exclusions or scalar subdivisions. The bounded output-locality
+audit is now frozen under contract SHA256 `3825029c...f3bd2` and passes 97
+directly related local tests plus static, contract, and launcher checks. It
+uses the same stopped state and ten groups to compare the 30-day first-order
+JVP and exact norm-`0.0005` changes for all 181 decoded fields in accepted
+normalized training coordinates. One three-seed output VJP per group
+separates decoder-output nonlinearity from downstream conservative-trajectory
+nonlinearity; no per-field intervention runs are used. See
+[`successor_output_locality_audit_20260816.md`](research/daily_coarse_graining/successor_output_locality_audit_20260816.md).
+
+The active operation is one diagnostic execution on free `gln01`. Its valid
+result must choose among a top-12 field-local metric, an all-field normalized
+output metric, or an NPP/biomass trajectory-observable metric. It performs no
+optimizer update and cannot authorize training by itself. This is an
+optimizer metric change, not an architecture change.
 
 No network architecture change is involved. The 365-day rollout,
 long-held-point validation, Gate D2, sealed test, and product gates remain
