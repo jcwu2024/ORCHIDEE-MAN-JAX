@@ -55,6 +55,7 @@ from scripts.hpc.probe_successor_multibatch_direction import (
     _make_flattened_unit_gradient,
     _make_gradient_accumulator,
     _make_nonfinite_counter,
+    classify_active_set_recalibration,
     classify_group_aware_direction,
     classify_second_state_recalibration,
 )
@@ -1734,6 +1735,64 @@ def test_second_state_recalibration_contract_is_zero_retention():
     assert "requires free gln01" in launcher
     assert "--second-state-recalibration-audit" in launcher
     assert "--backtracking-report" in launcher
+    assert "#SBATCH" not in launcher
+
+
+def test_active_set_recalibration_requires_direction_step_and_efficiency():
+    result = classify_active_set_recalibration(
+        {
+            "nonpositive_constraint_count": 0,
+            "minimum_relative_directional_derivative": 0.01,
+        },
+        {"passed": True, "selected_step_norm": 0.002},
+        {
+            "component_reverse_passes": 15,
+            "directional_check_rounds": 2,
+            "added_constraints": 1,
+        },
+        gates={
+            "minimum_relative_directional_derivative": 0.0,
+            "maximum_component_reverse_passes": 20,
+            "maximum_directional_check_rounds": 3,
+            "maximum_added_constraints": 6,
+        },
+        exact_selected_step_norm=0.002,
+        pass_action="bounded_training_smoke",
+        fail_action="redesign",
+    )
+
+    assert result["status"] == "active_set_recalibration_supported"
+    assert result["passed"] is True
+    assert result["reference_step_reproduced"] is True
+
+
+def test_active_set_recalibration_contract_is_bounded():
+    manifest_path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_active_set_recalibration_audit_v1.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_active_set_recalibration_audit.sh"
+    ).read_text()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["active_set"]["initial_constraint_count"] == 14
+    assert manifest["active_set"]["maximum_rounds"] == 3
+    assert manifest["gates"]["maximum_component_reverse_passes"] == 20
+    assert manifest["exact_reference"]["component_reverse_passes"] == 40
+    assert manifest["execution"]["new_updates_applied"] == 0
+    assert manifest["execution"]["validation_values_evaluated"] is False
+    assert "requires free gln01" in launcher
+    assert "--active-set-recalibration-audit" in launcher
+    assert "--exact-recalibration-report" in launcher
     assert "#SBATCH" not in launcher
 
 

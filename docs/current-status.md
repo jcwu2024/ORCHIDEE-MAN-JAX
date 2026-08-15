@@ -50,11 +50,14 @@ read, and no parameters are retained. Report SHA256 is
 `c4ddb39b...10e97`. See
 [`successor_second_state_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_second_state_recalibration_audit_20260815.md).
 
-The active gate is a bounded active-set implementation audit. It must start
-from the prior support, use all-40 directional checks to add violated
-constraints, and reproduce the exact second-state common finite direction
-without 40 reverse passes. Repeated training remains closed until this
-mechanism passes.
+The bounded active-set implementation audit is now frozen and locally
+implemented. It starts from the 14 prior-support gradients, uses ten group
+JVPs per round to check all 40 directional derivatives, and adds only
+nonpositive constraints. It permits at most 20 component reverse passes and
+must reproduce the exact reference's passing norm `0.002`. The active gate is
+one free-`gln01` execution. Repeated training remains closed until this
+mechanism passes. See
+[`successor_active_set_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_active_set_recalibration_audit_20260815.md).
 
 ## First Formal Neural Candidate
 
@@ -1617,6 +1620,6 @@ SHA256 is
 
 The zero-retention exact 40-gradient audit at the state after the first
 admitted update completed with minimum cosine `0.0486966`, passing norm
-`0.002`, and support overlap `12/14`. The next gate is the bounded efficient
-active-set implementation audit. See
+`0.002`, and support overlap `12/14`. The bounded efficient active-set
+implementation audit is frozen and awaits one free-`gln01` execution. See
 [`successor_second_state_recalibration_audit_20260815.md`](research/daily_coarse_graining/successor_second_state_recalibration_audit_20260815.md).
