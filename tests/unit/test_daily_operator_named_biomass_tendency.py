@@ -49,8 +49,12 @@ from scripts.hpc.probe_successor_direct_trust_region import (
 )
 from scripts.hpc.probe_successor_multibatch_direction import (
     _empty_accumulators,
+    _make_flat_direction,
+    _make_flat_gram,
+    _make_flattened_unit_gradient,
     _make_gradient_accumulator,
     _make_nonfinite_counter,
+    classify_group_aware_direction,
 )
 from scripts.hpc.probe_successor_realized_step import _make_proposed_directions
 from scripts.hpc.run_successor_direct_direction_smoke import (
@@ -714,6 +718,15 @@ def test_minimum_norm_solver_falls_back_for_slow_projected_convergence():
     support = weights > 1.0e-9
     assert np.max(np.abs(gradient[support] - level)) < 1.0e-8
     assert np.all(gradient[~support] >= level - 1.0e-8)
+
+
+def test_minimum_norm_solver_scales_to_forty_constraints():
+    normalized = np.eye(40, dtype=np.float64)
+
+    weights = _minimum_norm_simplex_weights(normalized)
+
+    np.testing.assert_allclose(weights, np.full(40, 1.0 / 40.0))
+    assert float(np.sum(weights)) == pytest.approx(1.0)
 
 
 def test_gradient_feasibility_contract_is_hash_bound_and_zero_update():
@@ -1403,6 +1416,104 @@ def test_multibatch_direction_contract_and_launcher_are_zero_update():
     assert '"checkpoint_written": False' in source
     assert '"proposed_parameters_retained": False' in source
     assert "write_staged_recovery" not in source
+
+
+def test_group_aware_flat_gradient_geometry_compiles():
+    flatten = _make_flattened_unit_gradient(jax)
+    gradient = {"value": jnp.asarray([3.0, 4.0], dtype=jnp.float64)}
+    unit, norm, nonfinite = flatten(gradient)
+    matrix = jnp.stack((unit, -unit))
+    gram = _make_flat_gram(jax)(matrix)
+    direction, direction_norm, direction_nonfinite = _make_flat_direction(jax)(
+        matrix,
+        jnp.asarray([0.75, 0.25], dtype=jnp.float64),
+    )
+
+    assert float(norm) == pytest.approx(5.0)
+    assert int(nonfinite) == 0
+    np.testing.assert_allclose(gram, np.asarray([[1.0, -1.0], [-1.0, 1.0]]))
+    np.testing.assert_allclose(direction, 0.5 * np.asarray(unit))
+    assert float(direction_norm) == pytest.approx(0.5)
+    assert int(direction_nonfinite) == 0
+
+
+def test_group_aware_classifier_requires_direction_before_virtual_steps():
+    diagnostics = gradient_direction_diagnostics(
+        np.eye(40, dtype=np.float64),
+        labels=tuple(f"constraint_{index}" for index in range(40)),
+    )
+    records = [
+        {
+            "group": group,
+            "steps": {
+                "0.0001": {
+                    "virtual_loss_relative_changes": {
+                        label: -0.001 for label in GRADIENT_FEASIBILITY_LABELS
+                    },
+                    "hard_gate_counts": {"failure": 0},
+                }
+            },
+        }
+        for group in range(10)
+    ]
+    contract = {
+        "direction_gate": {"minimum_group_component_cosine": 0.001},
+        "gates": {
+            "maximum_passing_group_component_relative_increase": 1.0e-6,
+            "minimum_passing_groups": 8,
+            "total_groups": 10,
+            "maximum_any_group_component_relative_increase": 0.01,
+            "minimum_each_component_median_relative_decrease": 1.0e-4,
+        },
+        "pass_action": "pass",
+        "direction_fail_action": "direction_fail",
+        "step_fail_action": "step_fail",
+    }
+
+    result = classify_group_aware_direction(
+        diagnostics,
+        records,
+        step_norms=(0.0001,),
+        contract=contract,
+    )
+
+    assert result["status"] == "group_aware_finite_step_supported"
+    assert result["selected_step_norm"] == pytest.approx(0.0001)
+    assert result["next_action"] == "pass"
+
+
+def test_group_aware_contract_and_launcher_are_zero_update():
+    manifest_path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_group_aware_direction_audit_v1.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_group_aware_direction.sh"
+    ).read_text()
+    source = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "probe_successor_multibatch_direction.py"
+    ).read_text()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["sampling"]["group_component_constraints"] == 40
+    assert manifest["direction_gate"]["minimum_group_component_cosine"] == 0.001
+    assert manifest["execution"]["optimizer_updates"] == 0
+    assert "requires free gln01" in launcher
+    assert "--group-aware" in launcher
+    assert "#SBATCH" not in launcher
+    assert "successor_adamw_update" not in source
+    assert '"checkpoint_written": False' in source
 
 
 def _write_scale_admission_fixture(tmp_path):

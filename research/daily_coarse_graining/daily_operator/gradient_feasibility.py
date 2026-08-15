@@ -113,6 +113,23 @@ def _minimum_norm_simplex_weights(
         if float(np.max(np.abs(next_weights - weights))) <= tolerance:
             return next_weights
         weights = next_weights
+    if count > 20:
+        gradient = normalized_gram @ weights
+        level = float(weights @ gradient)
+        support = weights > 1.0e-10
+        support_residual = (
+            float(np.max(np.abs(gradient[support] - level)))
+            if np.any(support)
+            else np.inf
+        )
+        inactive_violation = (
+            float(np.max(np.maximum(level - gradient[~support], 0.0)))
+            if np.any(~support)
+            else 0.0
+        )
+        if max(support_residual, inactive_violation) <= 1.0e-8:
+            return weights
+        raise ValueError("large minimum-norm simplex solve did not converge")
     return _active_set_minimum_norm_weights(normalized_gram)
 
 

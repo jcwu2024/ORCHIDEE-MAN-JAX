@@ -97,6 +97,41 @@ def _make_nonfinite_counter(jax: Any) -> Any:
     return count
 
 
+def _make_flattened_unit_gradient(jax: Any) -> Any:
+    import jax.numpy as jnp
+    from jax.flatten_util import ravel_pytree
+
+    @jax.jit
+    def flatten(gradient: Any) -> Any:
+        values, _unravel = ravel_pytree(gradient)
+        norm = jnp.linalg.norm(values)
+        nonfinite = jnp.sum(~jnp.isfinite(values), dtype=jnp.int64)
+        return values / jnp.maximum(norm, 1.0e-30), norm, nonfinite
+
+    return flatten
+
+
+def _make_flat_gram(jax: Any) -> Any:
+    @jax.jit
+    def measure(unit_gradients: Any) -> Any:
+        return unit_gradients @ unit_gradients.T
+
+    return measure
+
+
+def _make_flat_direction(jax: Any) -> Any:
+    import jax.numpy as jnp
+
+    @jax.jit
+    def combine(unit_gradients: Any, weights: Any) -> Any:
+        direction = weights @ unit_gradients
+        norm = jnp.linalg.norm(direction)
+        nonfinite = jnp.sum(~jnp.isfinite(direction), dtype=jnp.int64)
+        return direction, norm, nonfinite
+
+    return combine
+
+
 def _empty_accumulators(jax: Any, parameters: Any) -> list[Any]:
     import jax.numpy as jnp
 
@@ -204,30 +239,151 @@ def _accumulate_group_gradients(
     }
 
 
+def _collect_group_unit_gradients(
+    jax: Any,
+    measurement: Any,
+    flatten: Any,
+    unit_gradients: list[Any],
+    parameters: Any,
+    anchor_batch: Any,
+    context_batch: Any,
+    context_inputs: Any,
+) -> Mapping[str, Any]:
+    before = None
+    parent_hard = None
+    gradient_norms = {}
+    nonfinite = {}
+    for component_index, seed in enumerate(
+        np.eye(len(GRADIENT_FEASIBILITY_LABELS), dtype=np.float64)
+    ):
+        losses, gradient, hard_counts = measurement(
+            parameters,
+            seed,
+            anchor_batch,
+            context_batch,
+            context_inputs,
+        )
+        unit, norm, gradient_nonfinite = flatten(gradient)
+        jax.block_until_ready((losses, unit, norm, gradient_nonfinite, hard_counts))
+        current = np.asarray(losses, dtype=np.float64)
+        current_hard = _hard_counts_host(hard_counts)
+        if before is None:
+            before = current
+            parent_hard = current_hard
+        elif not np.array_equal(before, current) or parent_hard != current_hard:
+            raise ValueError("group-aware direction seed changed objective outputs")
+        label = GRADIENT_FEASIBILITY_LABELS[component_index]
+        gradient_norms[label] = float(np.asarray(norm))
+        nonfinite[label] = int(np.asarray(gradient_nonfinite))
+        unit_gradients.append(unit)
+        del losses, gradient, hard_counts, norm, gradient_nonfinite
+    if before is None or parent_hard is None:
+        raise ValueError("group-aware direction produced no gradients")
+    return {
+        "losses_before": {
+            label: float(before[index])
+            for index, label in enumerate(GRADIENT_FEASIBILITY_LABELS)
+        },
+        "parent_hard_gate_counts": parent_hard,
+        "gradient_norms": gradient_norms,
+        "nonfinite_component_gradient_values": nonfinite,
+    }
+
+
+def classify_group_aware_direction(
+    diagnostics: Mapping[str, Any],
+    records: list[Mapping[str, Any]],
+    *,
+    step_norms: tuple[float, ...],
+    contract: Mapping[str, Any],
+) -> Mapping[str, Any]:
+    direction = diagnostics["directions"]["minimum_norm_unit"]
+    cosines = direction["normalized_directional_derivatives"]
+    minimum_cosine = min(float(value) for value in cosines.values())
+    direction_passed = bool(direction["all_strictly_positive"]) and minimum_cosine >= float(
+        contract["direction_gate"]["minimum_group_component_cosine"]
+    )
+    if not direction_passed:
+        return {
+            "status": "group_aware_common_direction_not_supported",
+            "passed": False,
+            "direction_passed": False,
+            "minimum_group_component_cosine": minimum_cosine,
+            "selected_step_norm": None,
+            "candidates": [],
+            "next_action": contract["direction_fail_action"],
+        }
+    result = dict(
+        classify_direct_trust_region(
+            records,
+            step_norms=step_norms,
+            gates=contract["gates"],
+        )
+    )
+    result["direction_passed"] = True
+    result["minimum_group_component_cosine"] = minimum_cosine
+    result["status"] = (
+        "group_aware_finite_step_supported"
+        if result["passed"]
+        else "group_aware_finite_step_not_supported"
+    )
+    result["next_action"] = (
+        contract["pass_action"] if result["passed"] else contract["step_fail_action"]
+    )
+    return result
+
+
 def run(args: argparse.Namespace) -> Mapping[str, Any]:
     if args.output.exists():
         raise FileExistsError(args.output)
     started = time.perf_counter()
+    group_aware = bool(args.group_aware)
     audit = _load_contract(
         args.audit_contract,
-        schema_version="successor_multibatch_direction_audit_v1",
-        status="frozen_zero_update_accumulated_gradient_grid",
+        schema_version=(
+            "successor_group_aware_direction_audit_v1"
+            if group_aware
+            else "successor_multibatch_direction_audit_v1"
+        ),
+        status=(
+            "frozen_zero_update_forty_objective_grid"
+            if group_aware
+            else "frozen_zero_update_accumulated_gradient_grid"
+        ),
     )
-    smoke_contract = _load_contract(
+    predecessor = _load_contract(
         args.smoke_contract,
-        schema_version="successor_direct_direction_smoke_v1",
-        status="frozen_10_update_free_gpu_no_checkpoint",
+        schema_version=(
+            "successor_multibatch_direction_audit_v1"
+            if group_aware
+            else "successor_direct_direction_smoke_v1"
+        ),
+        status=(
+            "frozen_zero_update_accumulated_gradient_grid"
+            if group_aware
+            else "frozen_10_update_free_gpu_no_checkpoint"
+        ),
     )
     candidate = _load_contract(
         args.candidate_coefficient_contract,
         schema_version="successor_named_biomass_candidate_coefficients_v1",
         status="accepted_zero_update_preflight_no_training_authorized",
     )
+    predecessor_contract_key = (
+        "multibatch_direction_contract_sha256"
+        if group_aware
+        else "direct_direction_smoke_contract_sha256"
+    )
+    predecessor_report_key = (
+        "multibatch_direction_report_sha256"
+        if group_aware
+        else "direct_direction_smoke_report_sha256"
+    )
     if (
-        smoke_contract["contract_sha256"]
-        != audit["identity"]["direct_direction_smoke_contract_sha256"]
+        predecessor["contract_sha256"]
+        != audit["identity"][predecessor_contract_key]
         or _sha256_file(args.smoke_report)
-        != audit["identity"]["direct_direction_smoke_report_sha256"]
+        != audit["identity"][predecessor_report_key]
     ):
         raise ValueError("multibatch direction predecessor identity drift")
 
@@ -363,9 +519,14 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         adapter_template,
         **objective_arguments,
     )
-    accumulate = _make_gradient_accumulator(jax)
-    count_nonfinite = _make_nonfinite_counter(jax)
-    accumulators = _empty_accumulators(jax, parameters)
+    if group_aware:
+        flatten = _make_flattened_unit_gradient(jax)
+        unit_gradients = []
+        accumulators = None
+    else:
+        accumulate = _make_gradient_accumulator(jax)
+        count_nonfinite = _make_nonfinite_counter(jax)
+        accumulators = _empty_accumulators(jax, parameters)
     memory_before = _device_memory_report(runtime["devices"])
 
     records = []
@@ -378,17 +539,29 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             signature,
             group_index,
         )
-        record = _accumulate_group_gradients(
-            jax,
-            measurement,
-            accumulate,
-            count_nonfinite,
-            accumulators,
-            parameters,
-            anchor_batch,
-            context_batch,
-            context_inputs,
-        )
+        if group_aware:
+            record = _collect_group_unit_gradients(
+                jax,
+                measurement,
+                flatten,
+                unit_gradients,
+                parameters,
+                anchor_batch,
+                context_batch,
+                context_inputs,
+            )
+        else:
+            record = _accumulate_group_gradients(
+                jax,
+                measurement,
+                accumulate,
+                count_nonfinite,
+                accumulators,
+                parameters,
+                anchor_batch,
+                context_batch,
+                context_inputs,
+            )
         records.append(
             {
                 "group": group_index,
@@ -409,7 +582,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         print(
             json.dumps(
                 {
-                    "event": "multibatch_direction_gradient_group",
+                    "event": (
+                        "group_aware_direction_gradient_group"
+                        if group_aware
+                        else "multibatch_direction_gradient_group"
+                    ),
                     "group": group_index + 1,
                     "total": AUDIT_GROUPS,
                 },
@@ -418,38 +595,80 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             flush=True,
         )
 
-    gram_measurement = _make_gradient_gram(jax)
-    gram, aggregate_nonfinite = gram_measurement(tuple(accumulators))
-    jax.block_until_ready((gram, aggregate_nonfinite))
-    diagnostics = gradient_direction_diagnostics(np.asarray(gram, dtype=np.float64))
-    selected = diagnostics["directions"]["minimum_norm_unit"]
-    weights = np.asarray(
-        [selected["weights"][label] for label in GRADIENT_FEASIBILITY_LABELS],
-        dtype=np.float64,
-    )
-    combine = _make_combined_direction(jax)
-    direction, direction_norm, direction_nonfinite = combine(
-        tuple(accumulators),
-        weights,
-    )
+    if group_aware:
+        import jax.numpy as jnp
+        from jax.flatten_util import ravel_pytree
+
+        constraint_labels = tuple(
+            f"group_{group_index + 1:02d}.{label}"
+            for group_index in range(AUDIT_GROUPS)
+            for label in GRADIENT_FEASIBILITY_LABELS
+        )
+        unit_matrix = jnp.stack(tuple(unit_gradients))
+        flat_gram = _make_flat_gram(jax)
+        gram = flat_gram(unit_matrix)
+        jax.block_until_ready(gram)
+        diagnostics = gradient_direction_diagnostics(
+            np.asarray(gram, dtype=np.float64),
+            labels=constraint_labels,
+        )
+        selected = diagnostics["directions"]["minimum_norm_unit"]
+        weights = np.asarray(
+            [selected["weights"][label] for label in constraint_labels],
+            dtype=np.float64,
+        )
+        flat_direction = _make_flat_direction(jax)
+        direction_values, direction_norm, direction_nonfinite = flat_direction(
+            unit_matrix,
+            weights,
+        )
+        _flat_parameters, unravel = ravel_pytree(parameters)
+        direction = unravel(direction_values)
+        aggregate_nonfinite = np.asarray((0,), dtype=np.int64)
+        del unit_gradients, unit_matrix, direction_values
+        gc.collect()
+    else:
+        gram_measurement = _make_gradient_gram(jax)
+        gram, aggregate_nonfinite = gram_measurement(tuple(accumulators))
+        jax.block_until_ready((gram, aggregate_nonfinite))
+        diagnostics = gradient_direction_diagnostics(np.asarray(gram, dtype=np.float64))
+        selected = diagnostics["directions"]["minimum_norm_unit"]
+        weights = np.asarray(
+            [selected["weights"][label] for label in GRADIENT_FEASIBILITY_LABELS],
+            dtype=np.float64,
+        )
+        combine = _make_combined_direction(jax)
+        direction, direction_norm, direction_nonfinite = combine(
+            tuple(accumulators),
+            weights,
+        )
     jax.block_until_ready((direction, direction_norm, direction_nonfinite))
     direct_step = _make_direct_virtual_step(jax)
     step_norms = tuple(float(value) for value in audit["step_norm_grid"])
+    minimum_direction_cosine = min(
+        selected["normalized_directional_derivatives"].values()
+    )
+    evaluate_steps = not group_aware or (
+        bool(selected["all_strictly_positive"])
+        and minimum_direction_cosine
+        >= float(audit["direction_gate"]["minimum_group_component_cosine"])
+    )
     proposals = {}
     proposal_nonfinite = {}
-    for step_norm in step_norms:
-        proposed, nonfinite = direct_step(
-            parameters,
-            direction,
-            direction_norm,
-            np.asarray(step_norm, dtype=np.float64),
-        )
-        jax.block_until_ready((proposed, nonfinite))
-        key = format(step_norm, ".12g")
-        proposals[key] = proposed
-        proposal_nonfinite[key] = int(np.asarray(nonfinite))
+    if evaluate_steps:
+        for step_norm in step_norms:
+            proposed, nonfinite = direct_step(
+                parameters,
+                direction,
+                direction_norm,
+                np.asarray(step_norm, dtype=np.float64),
+            )
+            jax.block_until_ready((proposed, nonfinite))
+            key = format(step_norm, ".12g")
+            proposals[key] = proposed
+            proposal_nonfinite[key] = int(np.asarray(nonfinite))
 
-    for group_index in range(AUDIT_GROUPS):
+    for group_index in range(AUDIT_GROUPS if evaluate_steps else 0):
         anchor_batch, context_batch, context_inputs, group = _load_group(
             jax,
             manifest,
@@ -491,7 +710,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         print(
             json.dumps(
                 {
-                    "event": "multibatch_direction_virtual_group",
+                    "event": (
+                        "group_aware_direction_virtual_group"
+                        if group_aware
+                        else "multibatch_direction_virtual_group"
+                    ),
                     "group": group_index + 1,
                     "total": AUDIT_GROUPS,
                 },
@@ -526,40 +749,51 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         )
         for record in records
     )
-    classification = classify_direct_trust_region(
-        records,
-        step_norms=step_norms,
-        gates=audit["gates"],
-    )
-    classification = dict(classification)
-    classification["next_action"] = (
-        audit["pass_action"] if classification["passed"] else audit["fail_action"]
-    )
+    if group_aware:
+        classification = classify_group_aware_direction(
+            diagnostics,
+            records,
+            step_norms=step_norms,
+            contract=audit,
+        )
+    else:
+        classification = classify_direct_trust_region(
+            records,
+            step_norms=step_norms,
+            gates=audit["gates"],
+        )
+        classification = dict(classification)
+        classification["next_action"] = (
+            audit["pass_action"] if classification["passed"] else audit["fail_action"]
+        )
     evidence_valid = (
         hard_failure_count == int(audit["gates"]["hard_failure_count"])
         and nonfinite_count == int(audit["gates"]["nonfinite_value_count"])
         and all_losses_finite
     )
     report = {
-        "schema_version": "successor_multibatch_direction_audit_report_v1",
+        "schema_version": (
+            "successor_group_aware_direction_audit_report_v1"
+            if group_aware
+            else "successor_multibatch_direction_audit_report_v1"
+        ),
         "status": "completed" if evidence_valid else "invalid_evidence",
         "git_head": _git_head(),
         "identity": {
             "audit_contract_sha256": audit["contract_sha256"],
-            "direct_direction_smoke_report_sha256": _sha256_file(args.smoke_report),
+            "predecessor_report_sha256": _sha256_file(args.smoke_report),
             "staged_training_contract_sha256": contract.sha256,
         },
         "architecture": SOURCE_ROUTED_ATTENTION,
         "parameter_count": counts[SOURCE_ROUTED_ATTENTION],
         "parent_update": PARENT_UPDATE,
         "gradient_aggregation": audit["direction"],
+        "group_aware": group_aware,
         "step_norm_grid": list(step_norms),
         "aggregate_direction": {
             "gradient_norms": diagnostics["gradient_norms"],
             "direction_norm": float(np.asarray(direction_norm)),
-            "minimum_component_cosine": min(
-                selected["normalized_directional_derivatives"].values()
-            ),
+            "minimum_component_cosine": minimum_direction_cosine,
             "component_cosines": selected["normalized_directional_derivatives"],
             "normalized_simplex_weights": selected["normalized_simplex_weights"],
             "raw_gradient_coefficients": selected["weights"],
@@ -587,7 +821,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "next_gate": (
             classification["next_action"]
             if evidence_valid
-            else "stop_and_repair_multibatch_direction_evidence"
+            else "stop_and_repair_direction_evidence"
         ),
     }
     _atomic_json(args.output, report)
@@ -616,6 +850,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--prepared-manifest", type=Path, required=True)
     parser.add_argument("--recovery-path", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--group-aware", action="store_true")
     return parser
 
 
