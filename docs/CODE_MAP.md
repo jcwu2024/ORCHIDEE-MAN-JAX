@@ -203,6 +203,16 @@ record is `successor_process_head_local_foundation_20260809.md`.
 `daily_operator/neural_architecture.py` remains the closed first-pair
 implementation and is not the successor default.
 
+`daily_operator/nonlinear_projection.py` owns the active host-side bounded
+SLSQP subproblem, exact violation merit, and candidate acceptance for the
+zero-retention low-dimensional projection audit. The JAX reconstruction,
+maintenance microbatch gradients, frozen parameter basis, sequential JVPs,
+and exact finite trials remain in
+`scripts/hpc/probe_successor_parameter_geometry.py`; the free-GPU boundary is
+`scripts/hpc/run_successor_low_dimensional_nonlinear_projection.sh`. These are
+optimizer-geometry research tools and do not alter the Attention process head
+or production inference path.
+
 The blocking real-v6 boundary diagnosis is
 `successor_fast_boundary_coverage_20260809.md`. Its successor owner schema is
 `manifests/coarse_graining/successor_fast_owner_reconstruction_v1.json`, with

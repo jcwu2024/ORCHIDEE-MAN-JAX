@@ -13,6 +13,7 @@ dependencies = [
   "netCDF4>=1.7,<2",
   "numpy>=2.2,<3",
   "PyYAML>=6,<7",
+  "scipy>=1.14,<2",
   "xarray>=2025.1",
 ]
 

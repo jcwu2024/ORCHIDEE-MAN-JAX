@@ -1,7 +1,7 @@
 {
   "schema_version": "successor_low_dimensional_nonlinear_projection_v1",
   "status": "frozen_zero_retention_low_dimensional_sequential_projection",
-  "contract_sha256": "db2b60c780e5ec4978e936e88dfe13ed0e00bd23ba997b08fccf7e16ed67d339",
+  "contract_sha256": "bb0f07184fbbcafdda783a117231bcd7f2ff20a66f94fa29be165988dd67ba07",
   "identity": {
     "maintenance_projection_contract_sha256": "84b96d4ffbc86fb8e34303caff953d5a56b7651190294179f15081f1c5e35b72",
     "maintenance_projection_report_sha256": "64c689388d951c95cbc1339bb5e389e4ff2bae5d20385f655635c1a9a2ce98c5",
@@ -26,6 +26,29 @@
     "parent_update": 1000,
     "parameter_count": 8722689,
     "architecture_change": false
+  },
+  "output_coordinates": {
+    "representation": "accepted_training_representation_before_physical_endpoint_materialization",
+    "normalization": "accepted_train_train_output_normalization_scale",
+    "expected_field_count": 181,
+    "expected_label_count": 48,
+    "include_all_named_fields": true,
+    "day_start_delta_fields_use_own_trajectory_day_start": true,
+    "fast_parameter_routes_included": true
+  },
+  "stopped_state_reconstruction": {
+    "direct_step_norms": [0.002, 0.002],
+    "safe_microstep_norm": 0.0005,
+    "expected_applied_updates": 3,
+    "maximum_reference_value_error": 1e-10,
+    "hard_failure_count": 0,
+    "nonfinite_value_count": 0
+  },
+  "active_set": {
+    "initialization": "preceding_positive_simplex_support",
+    "weight_tolerance": 1e-12,
+    "maximum_rounds": 3,
+    "maximum_added_constraints": 6
   },
   "matched_reference": {
     "group_count": 10,
@@ -109,12 +132,24 @@
     "stop_if_no_accepted_trial": true
   },
   "gates": {
+    "reference": {
+      "minimum_relative_directional_derivative": 0.0,
+      "maximum_reference_value_error": 1e-10
+    },
+    "projection": {
+      "minimum_relative_directional_derivative": 0.0,
+      "maximum_group_component_relative_increase": 1e-6,
+      "hard_failure_count": 0,
+      "nonfinite_value_count": 0
+    },
     "maximum_group_component_relative_increase": 1e-6,
     "minimum_npp_median_relative_decrease": 1e-5,
     "minimum_agb_median_relative_decrease": 1e-5,
     "minimum_bgb_median_relative_decrease": 1e-5,
     "minimum_parameter_displacement_norm": 0.000125,
     "maximum_parameter_displacement_norm": 0.00075,
+    "maximum_basis_orthonormality_error": 1e-10,
+    "maximum_seed_reconstruction_relative_error": 1e-10,
     "maintenance_normalized_rms_cap": 0.0005208278724955756,
     "maintenance_maximum_absolute_cap": 0.005030725887901774,
     "hard_failure_count": 0,

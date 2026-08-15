@@ -12,6 +12,12 @@ from typing import Any, Mapping, Sequence
 
 import numpy as np
 
+from research.daily_coarse_graining.daily_operator.nonlinear_projection import (
+    classify_low_dimensional_nonlinear_projection,
+    exact_violation_merit,
+    projection_candidate_checks,
+    solve_relinearized_projection_subproblem,
+)
 from research.daily_coarse_graining.daily_operator.output_locality import (
     aggregate_normalized_output_changes,
     aggregate_output_locality,
@@ -545,6 +551,29 @@ def _make_output_locality_functions(
         jax.value_and_grad(group_maintenance_penalty, has_aux=True)
     )
 
+    def maintenance_scalar(
+        parameters: Any,
+        base_maintenance: Any,
+        batches: Any,
+        day_inputs: Any,
+        flat_index: Any,
+        sign: Any,
+    ) -> tuple[Any, Any]:
+        proposed_maintenance = group_maintenance_tape(
+            parameters,
+            batches,
+            day_inputs,
+        )
+        normalized_change = (
+            proposed_maintenance - base_maintenance
+        ) / maintenance_scale
+        value = sign * jnp.ravel(normalized_change)[flat_index]
+        return value, proposed_maintenance
+
+    maintenance_scalar_value_and_grad = jax.jit(
+        jax.value_and_grad(maintenance_scalar, has_aux=True)
+    )
+
     @jax.jit
     def tape_measurement(tape: Any, batches: Any, day_inputs: Any) -> Any:
         losses, pullback, hard_counts = jax.vjp(
@@ -563,6 +592,7 @@ def _make_output_locality_functions(
         "maintenance_tape_jvp": maintenance_tape_jvp,
         "maintenance_tape": maintenance_tape,
         "maintenance_penalty_value_and_grad": maintenance_penalty_value_and_grad,
+        "maintenance_scalar_value_and_grad": maintenance_scalar_value_and_grad,
         "tape_measurement": tape_measurement,
         "tape_evaluator": tape_evaluator,
     }
@@ -905,6 +935,1327 @@ def _preflight_maintenance_gradient_memory(
     del base, penalty_result, penalty, proposed, gradient, flat_gradient
     gc.collect()
     return record
+
+
+def _collect_maintenance_penalty_gradient(
+    *,
+    args: argparse.Namespace,
+    runtime: Mapping[str, Any],
+    functions: Mapping[str, Any],
+    manifest: Mapping[str, Any],
+    schedule: Mapping[str, Any],
+    signature: Any,
+    base_parameters: Any,
+    proposed_parameters: Any,
+    base_by_group: Sequence[np.ndarray] | None = None,
+) -> Mapping[str, Any]:
+    """Accumulate the exact all-40 maintenance RMS gradient in microbatches."""
+
+    jax = runtime["jax"]
+    import jax.numpy as jnp
+    from jax.flatten_util import ravel_pytree
+
+    scale = np.asarray(
+        runtime["output_normalization"].scale[MAINTENANCE_OUTPUT_FIELD],
+        dtype=np.float64,
+    )
+    gradient = None
+    penalty_values = []
+    bases = []
+    proposed_groups = []
+    nonfinite_count = 0
+    microbatch_count = AUDIT_GROUPS * POINTS_PER_MIXED_UPDATE
+    for group_index in range(AUDIT_GROUPS):
+        anchor_batch, context_batch, context_inputs, group = _load_group(
+            jax,
+            manifest,
+            schedule,
+            args.prepared_manifest,
+            signature,
+            group_index,
+        )
+        del anchor_batch, group
+        if base_by_group is None:
+            base = functions["maintenance_tape"](
+                base_parameters,
+                context_batch,
+                context_inputs,
+            )
+            jax.block_until_ready(base)
+            base_host = np.asarray(jax.device_get(base), dtype=np.float64)
+            del base
+        else:
+            base_host = np.asarray(base_by_group[group_index], dtype=np.float64)
+        bases.append(base_host)
+        proposed_parts = []
+        for point_index in range(POINTS_PER_MIXED_UPDATE):
+            point_batch = jax.tree_util.tree_map(
+                lambda value: value[point_index : point_index + 1],
+                context_batch,
+            )
+            point_inputs = jax.tree_util.tree_map(
+                lambda value: value[point_index : point_index + 1],
+                context_inputs,
+            )
+            point_base = jnp.asarray(
+                base_host[point_index : point_index + 1], dtype=jnp.float64
+            )
+            (result, point_gradient) = functions[
+                "maintenance_penalty_value_and_grad"
+            ](
+                proposed_parameters,
+                point_base,
+                point_batch,
+                point_inputs,
+            )
+            penalty, proposed = result
+            jax.block_until_ready((penalty, proposed, point_gradient))
+            penalty_host = float(np.asarray(penalty))
+            penalty_values.append(penalty_host)
+            nonfinite_count += int(not np.isfinite(penalty_host))
+            proposed_parts.append(
+                np.asarray(jax.device_get(proposed), dtype=np.float64)
+            )
+            weighted = jax.tree_util.tree_map(
+                lambda value: value / microbatch_count,
+                point_gradient,
+            )
+            gradient = (
+                weighted
+                if gradient is None
+                else jax.tree_util.tree_map(
+                    lambda total, value: total + value,
+                    gradient,
+                    weighted,
+                )
+            )
+            jax.block_until_ready(gradient)
+            del point_batch, point_inputs, point_base, result
+            del penalty, proposed, point_gradient, weighted
+            gc.collect()
+        proposed_groups.append(np.concatenate(proposed_parts, axis=0))
+        del context_batch, context_inputs, proposed_parts
+        gc.collect()
+    if gradient is None:
+        raise ValueError("maintenance penalty gradient collection is empty")
+    flat_gradient, _unravel = ravel_pytree(gradient)
+    gradient_norm = jnp.linalg.norm(flat_gradient)
+    gradient_nonfinite = jnp.sum(
+        ~jnp.isfinite(flat_gradient), dtype=jnp.int64
+    )
+    jax.block_until_ready((gradient_norm, gradient_nonfinite))
+    nonfinite_count += int(np.asarray(gradient_nonfinite))
+    records = [
+        summarize_normalized_output_change(
+            base=base,
+            tangent=np.zeros_like(proposed),
+            proposed=proposed,
+            scale=scale,
+            step_norm=1.0,
+        )
+        for base, proposed in zip(bases, proposed_groups, strict=True)
+    ]
+    return {
+        "gradient": gradient,
+        "gradient_norm": float(np.asarray(gradient_norm)),
+        "base_by_group": tuple(bases),
+        "proposed_by_group": tuple(proposed_groups),
+        "change": _exact_maintenance_change(
+            aggregate_normalized_output_changes(records)
+        ),
+        "penalty_mean": float(np.mean(np.asarray(penalty_values))),
+        "microbatch_count": len(penalty_values),
+        "nonfinite_value_count": nonfinite_count,
+    }
+
+
+def _collect_seeded_loss_gradient(
+    *,
+    jax: Any,
+    measurement: Any,
+    seeds: np.ndarray,
+    parameters: Any,
+    manifest: Mapping[str, Any],
+    schedule: Mapping[str, Any],
+    prepared_manifest_path: Path,
+    signature: Any,
+) -> Mapping[str, Any]:
+    """Accumulate one scalarized loss gradient from at most ten group VJPs."""
+
+    total = None
+    reverse_passes = 0
+    nonfinite_count = 0
+    hard_failure_count = 0
+    count_nonfinite = _make_nonfinite_counter(jax)
+    for group_index in range(AUDIT_GROUPS):
+        seed = np.asarray(seeds[group_index], dtype=np.float64)
+        if not np.any(seed):
+            continue
+        anchor_batch, context_batch, context_inputs, group = _load_group(
+            jax,
+            manifest,
+            schedule,
+            prepared_manifest_path,
+            signature,
+            group_index,
+        )
+        losses, gradient, hard_counts = measurement(
+            parameters,
+            seed,
+            anchor_batch,
+            context_batch,
+            context_inputs,
+        )
+        gradient_nonfinite = count_nonfinite(gradient)
+        jax.block_until_ready(
+            (losses, gradient, hard_counts, gradient_nonfinite)
+        )
+        total = (
+            gradient
+            if total is None
+            else jax.tree_util.tree_map(
+                lambda left, right: left + right,
+                total,
+                gradient,
+            )
+        )
+        jax.block_until_ready(total)
+        reverse_passes += 1
+        nonfinite_count += int(np.asarray(gradient_nonfinite))
+        nonfinite_count += int(np.sum(~np.isfinite(np.asarray(losses))))
+        hard_failure_count += sum(_hard_counts_host(hard_counts).values())
+        del anchor_batch, context_batch, context_inputs, group
+        del losses, gradient, hard_counts, gradient_nonfinite
+        gc.collect()
+    if total is None:
+        raise ValueError("seeded loss gradient collection is empty")
+    return {
+        "gradient": total,
+        "reverse_passes": reverse_passes,
+        "hard_failure_count": hard_failure_count,
+        "nonfinite_value_count": nonfinite_count,
+    }
+
+
+def _orthonormalize_parameter_directions(
+    jax: Any,
+    candidates: Sequence[tuple[str, Any]],
+    *,
+    minimum_residual_fraction: float,
+) -> Mapping[str, Any]:
+    """Build one ordered float64 orthonormal basis over flattened parameters."""
+
+    import jax.numpy as jnp
+    from jax.flatten_util import ravel_pytree
+
+    basis = []
+    records = []
+    unravel = None
+    for label, direction in candidates:
+        flat, current_unravel = ravel_pytree(direction)
+        if unravel is None:
+            unravel = current_unravel
+        original_norm = jnp.linalg.norm(flat)
+        residual = flat
+        for unit in basis:
+            residual = residual - jnp.vdot(unit, residual) * unit
+        residual_norm = jnp.linalg.norm(residual)
+        nonfinite = jnp.sum(~jnp.isfinite(residual), dtype=jnp.int64)
+        jax.block_until_ready((original_norm, residual_norm, nonfinite))
+        original_host = float(np.asarray(original_norm))
+        residual_host = float(np.asarray(residual_norm))
+        fraction = residual_host / max(original_host, 1.0e-30)
+        kept = bool(
+            int(np.asarray(nonfinite)) == 0
+            and original_host > 0.0
+            and fraction >= minimum_residual_fraction
+        )
+        if kept:
+            basis.append(residual / residual_norm)
+            jax.block_until_ready(basis[-1])
+        records.append(
+            {
+                "label": label,
+                "original_norm": original_host,
+                "residual_norm": residual_host,
+                "residual_norm_fraction": fraction,
+                "kept": kept,
+                "basis_index": len(basis) - 1 if kept else None,
+                "nonfinite_value_count": int(np.asarray(nonfinite)),
+            }
+        )
+        del flat, residual, original_norm, residual_norm, nonfinite
+        gc.collect()
+    if unravel is None or not basis:
+        raise ValueError("nonlinear projection produced no parameter basis")
+    matrix = jnp.stack(tuple(basis))
+    gram = matrix @ matrix.T
+    jax.block_until_ready((matrix, gram))
+    gram_host = np.asarray(gram, dtype=np.float64)
+    return {
+        "matrix": matrix,
+        "trees": tuple(unravel(row) for row in basis),
+        "unravel": unravel,
+        "records": records,
+        "dimension": len(basis),
+        "maximum_orthonormality_error": float(
+            np.max(np.abs(gram_host - np.eye(len(basis))))
+        ),
+        "nonfinite_value_count": sum(
+            int(record["nonfinite_value_count"]) for record in records
+        ),
+    }
+
+
+def _compose_subspace_parameters(
+    jax: Any,
+    *,
+    flat_stopped: Any,
+    basis_matrix: Any,
+    unravel: Any,
+    coordinates: np.ndarray,
+) -> Mapping[str, Any]:
+    """Materialize one low-dimensional coordinate vector as a parameter PyTree."""
+
+    import jax.numpy as jnp
+
+    coordinate_values = jnp.asarray(coordinates, dtype=jnp.float64)
+    displacement = jnp.tensordot(coordinate_values, basis_matrix, axes=1)
+    flat_parameters = flat_stopped + displacement
+    norm = jnp.linalg.norm(displacement)
+    nonfinite = jnp.sum(~jnp.isfinite(flat_parameters), dtype=jnp.int64)
+    parameters = unravel(flat_parameters)
+    jax.block_until_ready((parameters, norm, nonfinite))
+    return {
+        "parameters": parameters,
+        "displacement_norm": float(np.asarray(norm)),
+        "nonfinite_value_count": int(np.asarray(nonfinite)),
+    }
+
+
+def _median_effect_values_and_jacobian(
+    loss_values: np.ndarray,
+    loss_jacobian: np.ndarray,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Differentiate the locally active pair defining each ten-group median."""
+
+    values = loss_values.reshape(AUDIT_GROUPS, len(GRADIENT_FEASIBILITY_LABELS))
+    jacobian = loss_jacobian.reshape(
+        AUDIT_GROUPS,
+        len(GRADIENT_FEASIBILITY_LABELS),
+        loss_jacobian.shape[-1],
+    )
+    medians = []
+    derivatives = []
+    for component_index in range(1, len(GRADIENT_FEASIBILITY_LABELS)):
+        order = np.argsort(values[:, component_index], kind="stable")
+        active = order[AUDIT_GROUPS // 2 - 1 : AUDIT_GROUPS // 2 + 1]
+        medians.append(float(np.mean(values[active, component_index])))
+        derivatives.append(np.mean(jacobian[active, component_index], axis=0))
+    return np.asarray(medians), np.stack(derivatives)
+
+
+def _linearize_subspace_constraints(
+    *,
+    args: argparse.Namespace,
+    runtime: Mapping[str, Any],
+    functions: Mapping[str, Any],
+    directional_evaluator: Any,
+    basis_trees: Sequence[Any],
+    parameters: Any,
+    stopped_losses: Sequence[np.ndarray],
+    stopped_maintenance_by_group: Sequence[np.ndarray],
+    manifest: Mapping[str, Any],
+    schedule: Mapping[str, Any],
+    signature: Any,
+) -> Mapping[str, Any]:
+    """Evaluate exact values and all frozen-basis JVP columns at one iterate."""
+
+    jax = runtime["jax"]
+    scale = np.asarray(
+        runtime["output_normalization"].scale[MAINTENANCE_OUTPUT_FIELD],
+        dtype=np.float64,
+    )
+    loss_values = []
+    loss_jacobians = []
+    maintenance_values = []
+    maintenance_jacobians = []
+    hard_failure_count = 0
+    nonfinite_value_count = 0
+    for group_index in range(AUDIT_GROUPS):
+        anchor_batch, context_batch, context_inputs, group = _load_group(
+            jax,
+            manifest,
+            schedule,
+            args.prepared_manifest,
+            signature,
+            group_index,
+        )
+        group_loss_columns = []
+        group_maintenance_columns = []
+        current_losses = None
+        current_maintenance = None
+        current_hard = None
+        for basis_tree in basis_trees:
+            losses, loss_tangent, hard_counts = directional_evaluator(
+                parameters,
+                basis_tree,
+                anchor_batch,
+                context_batch,
+                context_inputs,
+            )
+            maintenance, maintenance_tangent = functions["maintenance_tape_jvp"](
+                parameters,
+                basis_tree,
+                context_batch,
+                context_inputs,
+            )
+            jax.block_until_ready(
+                (
+                    losses,
+                    loss_tangent,
+                    hard_counts,
+                    maintenance,
+                    maintenance_tangent,
+                )
+            )
+            losses_host = np.asarray(losses, dtype=np.float64)
+            maintenance_host = np.asarray(
+                jax.device_get(maintenance), dtype=np.float64
+            )
+            if current_losses is None:
+                current_losses = losses_host
+                current_maintenance = maintenance_host
+                current_hard = _hard_counts_host(hard_counts)
+            elif not np.array_equal(current_losses, losses_host) or not np.array_equal(
+                current_maintenance, maintenance_host
+            ):
+                raise ValueError("subspace JVP changed exact primal values")
+            denominator = np.maximum(
+                np.abs(np.asarray(stopped_losses[group_index], dtype=np.float64)),
+                1.0e-30,
+            )
+            group_loss_columns.append(
+                np.asarray(loss_tangent, dtype=np.float64) / denominator
+            )
+            group_maintenance_columns.append(
+                (
+                    np.asarray(jax.device_get(maintenance_tangent), dtype=np.float64)
+                    / scale
+                ).reshape(-1)
+            )
+            del losses, loss_tangent, hard_counts, maintenance, maintenance_tangent
+            gc.collect()
+        if current_losses is None or current_maintenance is None or current_hard is None:
+            raise ValueError("subspace linearization has no basis columns")
+        denominator = np.maximum(
+            np.abs(np.asarray(stopped_losses[group_index], dtype=np.float64)),
+            1.0e-30,
+        )
+        loss_values.append(
+            (current_losses - np.asarray(stopped_losses[group_index])) / denominator
+        )
+        maintenance_values.append(
+            (
+                current_maintenance
+                - np.asarray(stopped_maintenance_by_group[group_index])
+            ).reshape(-1)
+            / np.broadcast_to(scale, current_maintenance.shape).reshape(-1)
+        )
+        loss_jacobians.append(np.stack(group_loss_columns, axis=1))
+        maintenance_jacobians.append(
+            np.stack(group_maintenance_columns, axis=1)
+        )
+        hard_failure_count += sum(current_hard.values())
+        del anchor_batch, context_batch, context_inputs, group
+        gc.collect()
+    flat_losses = np.concatenate(loss_values)
+    flat_loss_jacobian = np.concatenate(loss_jacobians, axis=0)
+    flat_maintenance = np.concatenate(maintenance_values)
+    flat_maintenance_jacobian = np.concatenate(maintenance_jacobians, axis=0)
+    rms = float(np.sqrt(np.mean(flat_maintenance * flat_maintenance)))
+    rms_jacobian = (
+        np.mean(flat_maintenance[:, None] * flat_maintenance_jacobian, axis=0)
+        / max(rms, 1.0e-30)
+    )
+    effects, effect_jacobian = _median_effect_values_and_jacobian(
+        flat_losses,
+        flat_loss_jacobian,
+    )
+    nonfinite_value_count += sum(
+        int(np.count_nonzero(~np.isfinite(values)))
+        for values in (
+            flat_losses,
+            flat_loss_jacobian,
+            flat_maintenance,
+            flat_maintenance_jacobian,
+            rms_jacobian,
+            effects,
+            effect_jacobian,
+        )
+    )
+    return {
+        "loss_values": flat_losses,
+        "loss_jacobian": flat_loss_jacobian,
+        "effect_values": effects,
+        "effect_jacobian": effect_jacobian,
+        "maintenance_values": flat_maintenance,
+        "maintenance_jacobian": flat_maintenance_jacobian,
+        "maintenance_rms": rms,
+        "maintenance_rms_jacobian": rms_jacobian,
+        "hard_failure_count": hard_failure_count,
+        "nonfinite_value_count": nonfinite_value_count,
+    }
+
+
+def _evaluate_nonlinear_projection_candidate(
+    *,
+    args: argparse.Namespace,
+    audit: Mapping[str, Any],
+    runtime: Mapping[str, Any],
+    functions: Mapping[str, Any],
+    loss_evaluator: Any,
+    parameters: Any,
+    parameter_displacement_norm: float,
+    proposal_nonfinite: int,
+    stopped_losses: Sequence[np.ndarray],
+    stopped_maintenance_by_group: Sequence[np.ndarray],
+    manifest: Mapping[str, Any],
+    schedule: Mapping[str, Any],
+    signature: Any,
+) -> Mapping[str, Any]:
+    """Run one exact all-40 loss and maintenance finite evaluation."""
+
+    jax = runtime["jax"]
+    scale = np.asarray(
+        runtime["output_normalization"].scale[MAINTENANCE_OUTPUT_FIELD],
+        dtype=np.float64,
+    )
+    evaluated = _evaluate_active_set_step(
+        jax=jax,
+        loss_evaluator=loss_evaluator,
+        parameters=parameters,
+        proposal_nonfinite=proposal_nonfinite,
+        before_losses=stopped_losses,
+        macro_before_losses=stopped_losses,
+        manifest=manifest,
+        schedule=schedule,
+        prepared_manifest_path=args.prepared_manifest,
+        signature=signature,
+    )
+    maintenance_records = []
+    maintenance_nonfinite = 0
+    for group_index in range(AUDIT_GROUPS):
+        anchor_batch, context_batch, context_inputs, group = _load_group(
+            jax,
+            manifest,
+            schedule,
+            args.prepared_manifest,
+            signature,
+            group_index,
+        )
+        del anchor_batch, group
+        proposed = functions["maintenance_tape"](
+            parameters,
+            context_batch,
+            context_inputs,
+        )
+        jax.block_until_ready(proposed)
+        proposed_host = np.asarray(jax.device_get(proposed), dtype=np.float64)
+        maintenance_records.append(
+            summarize_normalized_output_change(
+                base=np.asarray(stopped_maintenance_by_group[group_index]),
+                tangent=np.zeros_like(proposed_host),
+                proposed=proposed_host,
+                scale=scale,
+                step_norm=1.0,
+            )
+        )
+        maintenance_nonfinite += int(np.count_nonzero(~np.isfinite(proposed_host)))
+        del context_batch, context_inputs, proposed, proposed_host
+        gc.collect()
+    maintenance_change = _exact_maintenance_change(
+        aggregate_normalized_output_changes(maintenance_records)
+    )
+    loss_summary = _change_matrix_summary(
+        evaluated["current_change_matrix"],
+        maximum_increase=float(
+            audit["gates"]["maximum_group_component_relative_increase"]
+        ),
+    )
+    return {
+        "loss_relative_changes": evaluated["current_change_matrix"].tolist(),
+        "loss_summary": loss_summary,
+        "maintenance_change": maintenance_change,
+        "parameter_displacement_norm": float(parameter_displacement_norm),
+        "hard_failure_count": int(evaluated["hard_failure_count"]),
+        "nonfinite_value_count": int(evaluated["nonfinite_value_count"])
+        + maintenance_nonfinite
+        + int(maintenance_change["nonfinite_value_count"]),
+    }
+
+
+def _collect_worst_maintenance_scalar_gradient(
+    *,
+    args: argparse.Namespace,
+    runtime: Mapping[str, Any],
+    functions: Mapping[str, Any],
+    parameters: Any,
+    base_by_group: Sequence[np.ndarray],
+    proposed_by_group: Sequence[np.ndarray],
+    manifest: Mapping[str, Any],
+    schedule: Mapping[str, Any],
+    signature: Any,
+) -> Mapping[str, Any]:
+    """Differentiate the signed scalar attaining the exact maintenance maximum."""
+
+    jax = runtime["jax"]
+    import jax.numpy as jnp
+    from jax.flatten_util import ravel_pytree
+
+    scale = np.asarray(
+        runtime["output_normalization"].scale[MAINTENANCE_OUTPUT_FIELD],
+        dtype=np.float64,
+    )
+    maximum = None
+    selected = None
+    for group_index, (base, proposed) in enumerate(
+        zip(base_by_group, proposed_by_group, strict=True)
+    ):
+        normalized = (proposed - base) / np.broadcast_to(scale, proposed.shape)
+        flat_index = int(np.argmax(np.abs(normalized)))
+        value = float(np.ravel(normalized)[flat_index])
+        if maximum is None or abs(value) > maximum:
+            maximum = abs(value)
+            point_size = int(np.prod(normalized.shape[1:]))
+            selected = {
+                "group_index": group_index,
+                "point_index": flat_index // point_size,
+                "point_flat_index": flat_index % point_size,
+                "signed_normalized_change": value,
+            }
+    if selected is None:
+        raise ValueError("maintenance maximum scalar selection is empty")
+    group_index = int(selected["group_index"])
+    point_index = int(selected["point_index"])
+    anchor_batch, context_batch, context_inputs, group = _load_group(
+        jax,
+        manifest,
+        schedule,
+        args.prepared_manifest,
+        signature,
+        group_index,
+    )
+    del anchor_batch
+    point_batch = jax.tree_util.tree_map(
+        lambda value: value[point_index : point_index + 1],
+        context_batch,
+    )
+    point_inputs = jax.tree_util.tree_map(
+        lambda value: value[point_index : point_index + 1],
+        context_inputs,
+    )
+    point_base = jnp.asarray(
+        base_by_group[group_index][point_index : point_index + 1],
+        dtype=jnp.float64,
+    )
+    (result, gradient) = functions["maintenance_scalar_value_and_grad"](
+        parameters,
+        point_base,
+        point_batch,
+        point_inputs,
+        np.asarray(selected["point_flat_index"], dtype=np.int64),
+        np.asarray(np.sign(selected["signed_normalized_change"]), dtype=np.float64),
+    )
+    value, proposed = result
+    flat_gradient, _unravel = ravel_pytree(gradient)
+    gradient_norm = jnp.linalg.norm(flat_gradient)
+    nonfinite = jnp.sum(~jnp.isfinite(flat_gradient), dtype=jnp.int64)
+    jax.block_until_ready((value, proposed, gradient, gradient_norm, nonfinite))
+    selected["landpoint_id"] = str(group[point_index][0]["landpoint_id"])
+    selected["year"] = int(group[point_index][0]["year"])
+    selected["objective_value"] = float(np.asarray(value))
+    selected["gradient_norm"] = float(np.asarray(gradient_norm))
+    selected["nonfinite_value_count"] = int(np.asarray(nonfinite))
+    del context_batch, context_inputs, group, point_batch, point_inputs, point_base
+    del result, value, proposed, flat_gradient, gradient_norm, nonfinite
+    gc.collect()
+    return {"gradient": gradient, "selection": selected}
+
+
+def _run_low_dimensional_nonlinear_projection(
+    *,
+    args: argparse.Namespace,
+    audit: Mapping[str, Any],
+    runtime: Mapping[str, Any],
+    schedule: Mapping[str, Any],
+    manifest: Mapping[str, Any],
+    adapter_timing: Mapping[str, Any],
+    signature: Any,
+    parameters: Any,
+    raw_parameters: Any,
+    direction: Any,
+    direction_norm: Any,
+    stopped_losses: Sequence[np.ndarray],
+    reference: Mapping[str, Any],
+    reconstruction: Mapping[str, Any],
+    maintenance_reference: Mapping[str, Any],
+    measurement: Any,
+    loss_evaluator: Any,
+    directional_evaluator: Any,
+    direct_step: Any,
+    functions: Mapping[str, Any],
+    gradient_memory_preflight: Mapping[str, Any],
+    memory_before: Mapping[str, Any],
+    started: float,
+) -> Mapping[str, Any]:
+    """Run the frozen sequential projection in one fixed parameter subspace."""
+
+    jax = runtime["jax"]
+    import jax.numpy as jnp
+    from jax.flatten_util import ravel_pytree
+
+    raw_gradient = _collect_maintenance_penalty_gradient(
+        args=args,
+        runtime=runtime,
+        functions=functions,
+        manifest=manifest,
+        schedule=schedule,
+        signature=signature,
+        base_parameters=parameters,
+        proposed_parameters=raw_parameters,
+    )
+    correction_norm = float(
+        audit["matched_control_reproduction"]["correction_norm"]
+    )
+    seed_parameters, seed_parameter_nonfinite = direct_step(
+        raw_parameters,
+        raw_gradient["gradient"],
+        np.asarray(raw_gradient["gradient_norm"], dtype=np.float64),
+        np.asarray(correction_norm, dtype=np.float64),
+    )
+    jax.block_until_ready((seed_parameters, seed_parameter_nonfinite))
+    seed_loss = _evaluate_active_set_step(
+        jax=jax,
+        loss_evaluator=loss_evaluator,
+        parameters=seed_parameters,
+        proposal_nonfinite=int(np.asarray(seed_parameter_nonfinite)),
+        before_losses=stopped_losses,
+        macro_before_losses=stopped_losses,
+        manifest=manifest,
+        schedule=schedule,
+        prepared_manifest_path=args.prepared_manifest,
+        signature=signature,
+    )
+    seed_gradient = _collect_maintenance_penalty_gradient(
+        args=args,
+        runtime=runtime,
+        functions=functions,
+        manifest=manifest,
+        schedule=schedule,
+        signature=signature,
+        base_parameters=parameters,
+        proposed_parameters=seed_parameters,
+        base_by_group=raw_gradient["base_by_group"],
+    )
+    seed_summary = _change_matrix_summary(
+        seed_loss["current_change_matrix"],
+        maximum_increase=float(
+            audit["gates"]["maximum_group_component_relative_increase"]
+        ),
+    )
+    flat_stopped, _stopped_unravel = ravel_pytree(parameters)
+    flat_seed, _seed_unravel = ravel_pytree(seed_parameters)
+    seed_displacement = flat_seed - flat_stopped
+    seed_displacement_norm = jnp.linalg.norm(seed_displacement)
+    jax.block_until_ready(seed_displacement_norm)
+    seed_record = {
+        "loss_relative_changes": seed_loss["current_change_matrix"].tolist(),
+        "loss_summary": seed_summary,
+        "maintenance_change": seed_gradient["change"],
+        "parameter_displacement_norm": float(np.asarray(seed_displacement_norm)),
+        "hard_failure_count": int(seed_loss["hard_failure_count"]),
+        "nonfinite_value_count": int(seed_loss["nonfinite_value_count"])
+        + int(seed_gradient["nonfinite_value_count"]),
+    }
+    expected = audit["matched_control_reproduction"]
+    medians = seed_summary["component_median_relative_changes"]
+    reproduction_errors = {
+        "maintenance_normalized_exact_rms": abs(
+            float(seed_gradient["change"]["normalized_exact_rms"])
+            - float(expected["maintenance_normalized_exact_rms"])
+        ),
+        "maintenance_maximum_absolute_exact_change": abs(
+            float(seed_gradient["change"]["maximum_absolute_exact_change"])
+            - float(expected["maintenance_maximum_absolute_exact_change"])
+        ),
+        "maximum_group_component_relative_increase": abs(
+            float(seed_summary["maximum_group_component_relative_increase"])
+            - float(expected["maximum_group_component_relative_increase"])
+        ),
+        "one_day_anchor_median_relative_change": abs(
+            float(medians["one_day_anchor"])
+            - float(expected["one_day_anchor_median_relative_change"])
+        ),
+        "npp_median_relative_change": abs(
+            float(medians["npp"])
+            - float(expected["npp_median_relative_change"])
+        ),
+        "aboveground_biomass_tendency_median_relative_change": abs(
+            float(medians["aboveground_biomass_tendency"])
+            - float(
+                expected["aboveground_biomass_tendency_median_relative_change"]
+            )
+        ),
+        "belowground_biomass_tendency_median_relative_change": abs(
+            float(medians["belowground_biomass_tendency"])
+            - float(
+                expected["belowground_biomass_tendency_median_relative_change"]
+            )
+        ),
+    }
+    maximum_reproduction_error = max(reproduction_errors.values())
+
+    worst_scalar = _collect_worst_maintenance_scalar_gradient(
+        args=args,
+        runtime=runtime,
+        functions=functions,
+        parameters=seed_parameters,
+        base_by_group=raw_gradient["base_by_group"],
+        proposed_by_group=seed_gradient["proposed_by_group"],
+        manifest=manifest,
+        schedule=schedule,
+        signature=signature,
+    )
+    change_matrix = np.asarray(seed_loss["current_change_matrix"], dtype=np.float64)
+    stopped_matrix = np.stack(
+        tuple(np.asarray(values, dtype=np.float64) for values in stopped_losses)
+    )
+    denominators = np.maximum(np.abs(stopped_matrix), 1.0e-30)
+    loss_limit = float(audit["gates"]["maximum_group_component_relative_increase"])
+    excess = np.maximum(change_matrix - loss_limit, 0.0)
+    violation_seeds = excess / denominators
+    violation_seed_norm = float(np.sum(np.abs(violation_seeds)))
+    if violation_seed_norm <= 0.0:
+        raise ValueError("matched control unexpectedly has no loss violations")
+    violation_seeds /= violation_seed_norm
+    violation_gradient = _collect_seeded_loss_gradient(
+        jax=jax,
+        measurement=measurement,
+        seeds=violation_seeds,
+        parameters=seed_parameters,
+        manifest=manifest,
+        schedule=schedule,
+        prepared_manifest_path=args.prepared_manifest,
+        signature=signature,
+    )
+
+    effect_seeds = np.zeros_like(change_matrix)
+    for component_index in range(1, len(GRADIENT_FEASIBILITY_LABELS)):
+        order = np.argsort(change_matrix[:, component_index], kind="stable")
+        active = order[AUDIT_GROUPS // 2 - 1 : AUDIT_GROUPS // 2 + 1]
+        effect_seeds[active, component_index] += (
+            1.0
+            / (len(OUTPUT_LOCALITY_LOSS_LABELS) * len(active))
+            / denominators[active, component_index]
+        )
+    effect_gradient = _collect_seeded_loss_gradient(
+        jax=jax,
+        measurement=measurement,
+        seeds=effect_seeds,
+        parameters=seed_parameters,
+        manifest=manifest,
+        schedule=schedule,
+        prepared_manifest_path=args.prepared_manifest,
+        signature=signature,
+    )
+
+    individual_count = int(
+        audit["subspace"]["individual_loss_violation_gradient_count"]
+    )
+    ordered_violations = np.argsort(excess.ravel(), kind="stable")[::-1]
+    selected_violations = [
+        int(index) for index in ordered_violations if excess.ravel()[index] > 0.0
+    ][:individual_count]
+    if len(selected_violations) != individual_count:
+        raise ValueError("matched control has too few individual loss violations")
+    individual_gradients = []
+    individual_records = []
+    for rank, flat_index in enumerate(selected_violations, start=1):
+        group_index, component_index = np.unravel_index(
+            flat_index, change_matrix.shape
+        )
+        seeds = np.zeros_like(change_matrix)
+        seeds[group_index, component_index] = 1.0 / denominators[
+            group_index, component_index
+        ]
+        collected = _collect_seeded_loss_gradient(
+            jax=jax,
+            measurement=measurement,
+            seeds=seeds,
+            parameters=seed_parameters,
+            manifest=manifest,
+            schedule=schedule,
+            prepared_manifest_path=args.prepared_manifest,
+            signature=signature,
+        )
+        individual_gradients.append(collected)
+        individual_records.append(
+            {
+                "rank": rank,
+                "group": group_index + 1,
+                "component": GRADIENT_FEASIBILITY_LABELS[component_index],
+                "relative_violation": float(change_matrix[group_index, component_index]),
+                "reverse_passes": int(collected["reverse_passes"]),
+            }
+        )
+
+    raw_descent = jax.tree_util.tree_map(
+        lambda value: -value / jnp.maximum(direction_norm, 1.0e-30),
+        direction,
+    )
+    candidate_directions = [
+        ("raw_common_descent_direction", raw_descent),
+        (
+            "raw_maintenance_rms_correction_direction",
+            jax.tree_util.tree_map(lambda value: -value, raw_gradient["gradient"]),
+        ),
+        (
+            "matched_control_maintenance_rms_repair_gradient",
+            jax.tree_util.tree_map(lambda value: -value, seed_gradient["gradient"]),
+        ),
+        (
+            "matched_control_worst_absolute_maintenance_repair_gradient",
+            jax.tree_util.tree_map(lambda value: -value, worst_scalar["gradient"]),
+        ),
+        (
+            "matched_control_positive_loss_violation_aggregate_gradient",
+            jax.tree_util.tree_map(
+                lambda value: -value, violation_gradient["gradient"]
+            ),
+        ),
+        (
+            "matched_control_long_horizon_effect_aggregate_gradient",
+            jax.tree_util.tree_map(lambda value: -value, effect_gradient["gradient"]),
+        ),
+    ]
+    candidate_directions.extend(
+        (
+            f"matched_control_largest_unrepresented_loss_violation_gradient_{rank}",
+            jax.tree_util.tree_map(lambda value: -value, collected["gradient"]),
+        )
+        for rank, collected in enumerate(individual_gradients, start=1)
+    )
+    basis = _orthonormalize_parameter_directions(
+        jax,
+        candidate_directions,
+        minimum_residual_fraction=float(
+            audit["subspace"]["minimum_residual_norm_fraction"]
+        ),
+    )
+    if not (
+        int(audit["subspace"]["minimum_basis_dimension"])
+        <= int(basis["dimension"])
+        <= int(audit["subspace"]["maximum_basis_dimension"])
+    ):
+        raise ValueError("nonlinear projection basis dimension is outside contract")
+    seed_coordinates_device = basis["matrix"] @ seed_displacement
+    raw_alignment_device = basis["matrix"] @ ravel_pytree(raw_descent)[0]
+    reconstructed_seed = jnp.tensordot(
+        seed_coordinates_device, basis["matrix"], axes=1
+    )
+    seed_reconstruction_error = jnp.linalg.norm(
+        reconstructed_seed - seed_displacement
+    ) / jnp.maximum(seed_displacement_norm, 1.0e-30)
+    jax.block_until_ready(
+        (seed_coordinates_device, raw_alignment_device, seed_reconstruction_error)
+    )
+    current_coordinates = np.asarray(seed_coordinates_device, dtype=np.float64)
+    raw_alignment = np.asarray(raw_alignment_device, dtype=np.float64)
+    current_parameters = seed_parameters
+    current_record = dict(seed_record)
+    current_record["merit"] = exact_violation_merit(
+        current_record,
+        gates=audit["gates"],
+        loss_scale=float(audit["solver"]["loss_violation_merit_scale"]),
+        effect_scale=float(audit["solver"]["effect_violation_merit_scale"]),
+    )
+
+    candidates = []
+    iterations = []
+    exact_evaluations = 0
+    total_linearization_hard = 0
+    total_linearization_nonfinite = 0
+    maximum_linearization_reference_error = 0.0
+    stop_reason = "maximum_outer_iterations_reached"
+    for iteration in range(1, int(audit["solver"]["maximum_outer_iterations"]) + 1):
+        linearization = _linearize_subspace_constraints(
+            args=args,
+            runtime=runtime,
+            functions=functions,
+            directional_evaluator=directional_evaluator,
+            basis_trees=basis["trees"],
+            parameters=current_parameters,
+            stopped_losses=stopped_losses,
+            stopped_maintenance_by_group=raw_gradient["base_by_group"],
+            manifest=manifest,
+            schedule=schedule,
+            signature=signature,
+        )
+        total_linearization_hard += int(linearization["hard_failure_count"])
+        total_linearization_nonfinite += int(linearization["nonfinite_value_count"])
+        linearization_reference_error = max(
+            float(
+                np.max(
+                    np.abs(
+                        linearization["loss_values"]
+                        - np.asarray(
+                            current_record["loss_relative_changes"],
+                            dtype=np.float64,
+                        ).ravel()
+                    )
+                )
+            ),
+            abs(
+                float(linearization["maintenance_rms"])
+                - float(
+                    current_record["maintenance_change"]["normalized_exact_rms"]
+                )
+            ),
+            abs(
+                float(np.max(np.abs(linearization["maintenance_values"])))
+                - float(
+                    current_record["maintenance_change"][
+                        "maximum_absolute_exact_change"
+                    ]
+                )
+            ),
+        )
+        maximum_linearization_reference_error = max(
+            maximum_linearization_reference_error,
+            linearization_reference_error,
+        )
+        solved = solve_relinearized_projection_subproblem(
+            coordinates=current_coordinates,
+            loss_values=linearization["loss_values"],
+            loss_jacobian=linearization["loss_jacobian"],
+            effect_values=linearization["effect_values"],
+            effect_jacobian=linearization["effect_jacobian"],
+            maintenance_values=linearization["maintenance_values"],
+            maintenance_jacobian=linearization["maintenance_jacobian"],
+            maintenance_rms=float(linearization["maintenance_rms"]),
+            maintenance_rms_jacobian=linearization[
+                "maintenance_rms_jacobian"
+            ],
+            raw_alignment=raw_alignment,
+            gates=audit["gates"],
+            solver=audit["solver"],
+        )
+        delta = np.asarray(solved["delta"], dtype=np.float64)
+        iteration_record = {
+            "iteration": iteration,
+            "current_coordinates": current_coordinates.tolist(),
+            "current_merit": current_record["merit"],
+            "linearization": {
+                "loss_row_count": int(linearization["loss_values"].size),
+                "maintenance_scalar_row_count": int(
+                    linearization["maintenance_values"].size
+                ),
+                "maintenance_rms": float(linearization["maintenance_rms"]),
+                "maximum_absolute_maintenance_change": float(
+                    np.max(np.abs(linearization["maintenance_values"]))
+                ),
+                "hard_failure_count": int(linearization["hard_failure_count"]),
+                "nonfinite_value_count": int(
+                    linearization["nonfinite_value_count"]
+                ),
+                "exact_reference_error": linearization_reference_error,
+            },
+            "solver": {
+                key: (value.tolist() if isinstance(value, np.ndarray) else value)
+                for key, value in solved.items()
+                if key != "delta"
+            },
+            "delta": delta.tolist(),
+            "trials": [],
+        }
+        iterations.append(iteration_record)
+        if not solved["success"] or float(solved["delta_norm"]) <= 1.0e-15:
+            stop_reason = "inner_solver_failed_or_returned_zero_step"
+            break
+        accepted_trial = None
+        for trial_fraction in tuple(
+            float(value) for value in audit["solver"]["trial_fractions"]
+        ):
+            if exact_evaluations >= int(
+                audit["solver"]["maximum_exact_candidate_evaluations"]
+            ):
+                stop_reason = "maximum_exact_candidate_evaluations_reached"
+                break
+            trial_coordinates = current_coordinates + trial_fraction * delta
+            composed = _compose_subspace_parameters(
+                jax,
+                flat_stopped=flat_stopped,
+                basis_matrix=basis["matrix"],
+                unravel=basis["unravel"],
+                coordinates=trial_coordinates,
+            )
+            exact = _evaluate_nonlinear_projection_candidate(
+                args=args,
+                audit=audit,
+                runtime=runtime,
+                functions=functions,
+                loss_evaluator=loss_evaluator,
+                parameters=composed["parameters"],
+                parameter_displacement_norm=float(composed["displacement_norm"]),
+                proposal_nonfinite=int(composed["nonfinite_value_count"]),
+                stopped_losses=stopped_losses,
+                stopped_maintenance_by_group=raw_gradient["base_by_group"],
+                manifest=manifest,
+                schedule=schedule,
+                signature=signature,
+            )
+            exact_evaluations += 1
+            exact.update(
+                {
+                    "iteration": iteration,
+                    "trial_fraction": trial_fraction,
+                    "coordinates": trial_coordinates.tolist(),
+                }
+            )
+            exact["merit"] = exact_violation_merit(
+                exact,
+                gates=audit["gates"],
+                loss_scale=float(
+                    audit["solver"]["loss_violation_merit_scale"]
+                ),
+                effect_scale=float(
+                    audit["solver"]["effect_violation_merit_scale"]
+                ),
+            )
+            exact["checks"] = projection_candidate_checks(
+                exact, gates=audit["gates"]
+            )
+            candidates.append(exact)
+            iteration_record["trials"].append(
+                {
+                    "trial_fraction": trial_fraction,
+                    "candidate_index": len(candidates) - 1,
+                    "merit": exact["merit"],
+                    "passed": all(exact["checks"].values()),
+                }
+            )
+            if all(exact["checks"].values()):
+                accepted_trial = (trial_coordinates, composed["parameters"], exact)
+                stop_reason = "first_exact_feasible_iterate"
+                break
+            tolerance = float(
+                audit["solver"]["minimum_relative_exact_merit_decrease"]
+            )
+            old_merit = current_record["merit"]
+            new_merit = exact["merit"]
+            old_maximum = float(old_merit["maximum_normalized_violation"])
+            maximum_improved = float(
+                new_merit["maximum_normalized_violation"]
+            ) <= old_maximum * (1.0 - tolerance)
+            tied_maximum = abs(
+                float(new_merit["maximum_normalized_violation"])
+                - old_maximum
+            ) <= 1.0e-12
+            mean_improved = float(
+                new_merit["mean_squared_normalized_violation"]
+            ) <= float(old_merit["mean_squared_normalized_violation"]) * (
+                1.0 - tolerance
+            )
+            if maximum_improved or (tied_maximum and mean_improved):
+                accepted_trial = (trial_coordinates, composed["parameters"], exact)
+                break
+            del composed
+            gc.collect()
+        if accepted_trial is None:
+            if stop_reason == "maximum_outer_iterations_reached":
+                stop_reason = "no_exact_trial_reduced_violation_merit"
+            break
+        current_coordinates, current_parameters, current_record = accepted_trial
+        if stop_reason == "first_exact_feasible_iterate":
+            break
+        print(
+            json.dumps(
+                {
+                    "event": "successor_nonlinear_projection_iteration",
+                    "iteration": iteration,
+                    "exact_evaluations": exact_evaluations,
+                    "maximum_normalized_violation": current_record["merit"][
+                        "maximum_normalized_violation"
+                    ],
+                },
+                sort_keys=True,
+            ),
+            flush=True,
+        )
+
+    reverse_passes = (
+        int(raw_gradient["microbatch_count"])
+        + int(seed_gradient["microbatch_count"])
+        + 1
+        + int(violation_gradient["reverse_passes"])
+        + int(effect_gradient["reverse_passes"])
+        + sum(int(record["reverse_passes"]) for record in individual_gradients)
+    )
+    basis_hard = (
+        int(violation_gradient["hard_failure_count"])
+        + int(effect_gradient["hard_failure_count"])
+        + sum(int(record["hard_failure_count"]) for record in individual_gradients)
+    )
+    basis_nonfinite = (
+        int(raw_gradient["nonfinite_value_count"])
+        + int(seed_gradient["nonfinite_value_count"])
+        + int(worst_scalar["selection"]["nonfinite_value_count"])
+        + int(violation_gradient["nonfinite_value_count"])
+        + int(effect_gradient["nonfinite_value_count"])
+        + sum(
+            int(record["nonfinite_value_count"])
+            for record in individual_gradients
+        )
+        + int(basis["nonfinite_value_count"])
+    )
+    evidence_checks = {
+        "maintenance_reference_valid": maintenance_reference.get("status")
+        == "completed"
+        and maintenance_reference.get("classification", {}).get("status")
+        == "maintenance_output_projection_not_supported"
+        and bool(
+            maintenance_reference.get("classification", {}).get(
+                "evidence_valid", False
+            )
+        ),
+        "matched_control_reproduced": maximum_reproduction_error
+        <= float(expected["maximum_reproduction_error"]),
+        "matched_control_hard_failures_zero": int(
+            seed_record["hard_failure_count"]
+        )
+        == 0,
+        "matched_control_nonfinite_values_zero": int(
+            seed_record["nonfinite_value_count"]
+        )
+        == 0,
+        "gradient_memory_preflight_passed": int(
+            gradient_memory_preflight["microbatch_point_years"]
+        )
+        == int(audit["subspace"]["maintenance_gradient_microbatch_point_years"])
+        and int(gradient_memory_preflight["nonfinite_value_count"]) == 0,
+        "basis_dimension_bounded": int(audit["subspace"]["minimum_basis_dimension"])
+        <= int(basis["dimension"])
+        <= int(audit["subspace"]["maximum_basis_dimension"]),
+        "basis_candidate_labels_exact": tuple(
+            record["label"] for record in basis["records"]
+        )
+        == tuple(audit["subspace"]["ordered_candidate_directions"]),
+        "basis_orthonormal": float(basis["maximum_orthonormality_error"])
+        <= float(audit["gates"]["maximum_basis_orthonormality_error"]),
+        "seed_reconstruction_closed": float(np.asarray(seed_reconstruction_error))
+        <= float(
+            audit["gates"]["maximum_seed_reconstruction_relative_error"]
+        ),
+        "reverse_pass_budget_respected": reverse_passes
+        <= int(audit["subspace"]["maximum_reverse_passes"]),
+        "outer_iteration_budget_respected": len(iterations)
+        <= int(audit["solver"]["maximum_outer_iterations"]),
+        "exact_evaluation_budget_respected": exact_evaluations
+        <= int(audit["solver"]["maximum_exact_candidate_evaluations"]),
+        "basis_hard_failures_zero": basis_hard == 0,
+        "basis_nonfinite_values_zero": basis_nonfinite == 0,
+        "linearization_hard_failures_zero": total_linearization_hard == 0,
+        "linearization_nonfinite_values_zero": total_linearization_nonfinite == 0,
+        "linearization_exact_references_closed": maximum_linearization_reference_error
+        <= float(expected["maximum_reproduction_error"]),
+    }
+    evidence_valid = bool(
+        all(evidence_checks.values())
+        and bool(reference["reference_reproduced"])
+        and int(reconstruction["hard_failure_count"]) == 0
+        and int(reconstruction["nonfinite_value_count"]) == 0
+    )
+    classification = classify_low_dimensional_nonlinear_projection(
+        candidates,
+        evidence_valid=evidence_valid,
+        gates=audit["gates"],
+        pass_action=audit["pass_action"],
+        fail_action=audit["fail_action"],
+    )
+    report = {
+        "schema_version": "successor_low_dimensional_nonlinear_projection_report_v1",
+        "status": "completed" if evidence_valid else "invalid_evidence",
+        "git_head": subprocess_git_head(),
+        "identity": {
+            "audit_contract_sha256": audit["contract_sha256"],
+            "maintenance_projection_report_sha256": _sha256_file(
+                args.maintenance_projection_report
+            ),
+        },
+        "architecture": SOURCE_ROUTED_ATTENTION,
+        "parameter_count": audit["model"]["parameter_count"],
+        "parent_update": PARENT_UPDATE,
+        "matched_control": {
+            **seed_record,
+            "reproduction_errors": reproduction_errors,
+            "maximum_reproduction_error": maximum_reproduction_error,
+            "coordinates": np.asarray(seed_coordinates_device).tolist(),
+            "merit": exact_violation_merit(
+                seed_record,
+                gates=audit["gates"],
+                loss_scale=float(audit["solver"]["loss_violation_merit_scale"]),
+                effect_scale=float(audit["solver"]["effect_violation_merit_scale"]),
+            ),
+        },
+        "subspace": {
+            "dimension": int(basis["dimension"]),
+            "candidate_directions": basis["records"],
+            "maximum_orthonormality_error": float(
+                basis["maximum_orthonormality_error"]
+            ),
+            "seed_reconstruction_relative_error": float(
+                np.asarray(seed_reconstruction_error)
+            ),
+            "raw_alignment": raw_alignment.tolist(),
+            "worst_maintenance_scalar": worst_scalar["selection"],
+            "individual_loss_violations": individual_records,
+            "reverse_passes": reverse_passes,
+            "maximum_linearization_reference_error": (
+                maximum_linearization_reference_error
+            ),
+        },
+        "iterations": iterations,
+        "candidates": candidates,
+        "classification": classification,
+        "stop_reason": stop_reason,
+        "evidence_gates": {
+            "evidence_valid": evidence_valid,
+            "checks": evidence_checks,
+            "hard_failure_count": basis_hard + total_linearization_hard,
+            "nonfinite_value_count": basis_nonfinite
+            + total_linearization_nonfinite,
+        },
+        "reference": reference,
+        "reconstruction": reconstruction,
+        "gradient_memory_preflight": gradient_memory_preflight,
+        "adapter_preparation": adapter_timing,
+        "device_memory_before": memory_before,
+        "device_memory_after": _device_memory_report(runtime["devices"]),
+        "elapsed_seconds": time.perf_counter() - started,
+        "reconstructed_direct_updates": 3,
+        "optimizer_updates": 0,
+        "checkpoint_written": False,
+        "recovery_written": False,
+        "final_parameters_retained": False,
+        "teacher_data_regenerated": False,
+        "historical_v5_used": False,
+        "validation_values_evaluated": False,
+        "sealed_test_used": False,
+        "next_gate": classification["next_action"],
+    }
+    _atomic_json(args.output, report)
+    return report
 
 
 def _run_maintenance_output_projection(
@@ -1428,35 +2779,47 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     decoder_leaf = bool(args.decoder_leaf_attribution)
     output_locality = bool(args.output_locality)
     maintenance_projection = bool(args.maintenance_projection)
-    if sum((decoder_leaf, output_locality, maintenance_projection)) > 1:
+    nonlinear_projection = bool(args.nonlinear_projection)
+    maintenance_mode = maintenance_projection or nonlinear_projection
+    if sum(
+        (decoder_leaf, output_locality, maintenance_projection, nonlinear_projection)
+    ) > 1:
         raise ValueError(
-            "choose decoder-leaf, output-locality, or maintenance projection"
+            "choose decoder-leaf, output-locality, maintenance, or nonlinear projection"
         )
     audit = _load_contract(
         args.audit_contract,
         schema_version=(
-            "successor_maintenance_output_projection_v1"
-            if maintenance_projection
+            "successor_low_dimensional_nonlinear_projection_v1"
+            if nonlinear_projection
             else (
-                "successor_output_locality_audit_v1"
-                if output_locality
+                "successor_maintenance_output_projection_v1"
+                if maintenance_projection
                 else (
-                    "successor_decoder_leaf_attribution_v1"
-                    if decoder_leaf
-                    else "successor_parameter_geometry_attribution_v1"
+                    "successor_output_locality_audit_v1"
+                    if output_locality
+                    else (
+                        "successor_decoder_leaf_attribution_v1"
+                        if decoder_leaf
+                        else "successor_parameter_geometry_attribution_v1"
+                    )
                 )
             )
         ),
         status=(
-            "frozen_zero_retention_maintenance_output_trust_region"
-            if maintenance_projection
+            "frozen_zero_retention_low_dimensional_sequential_projection"
+            if nonlinear_projection
             else (
-                "frozen_zero_retention_normalized_output_decomposition"
-                if output_locality
+                "frozen_zero_retention_maintenance_output_trust_region"
+                if maintenance_projection
                 else (
-                    "frozen_zero_retention_four_decoder_leaf_leave_one_out"
-                    if decoder_leaf
-                    else "frozen_zero_retention_seven_block_leave_one_out"
+                    "frozen_zero_retention_normalized_output_decomposition"
+                    if output_locality
+                    else (
+                        "frozen_zero_retention_four_decoder_leaf_leave_one_out"
+                        if decoder_leaf
+                        else "frozen_zero_retention_seven_block_leave_one_out"
+                    )
                 )
             )
         ),
@@ -1490,7 +2853,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     parameter_geometry_reference = None
     decoder_leaf_reference = None
     output_locality_reference = None
-    if decoder_leaf or output_locality or maintenance_projection:
+    if decoder_leaf or output_locality or maintenance_mode:
         if args.parameter_geometry_report is None:
             raise ValueError("audit requires parameter-geometry report")
         parameter_geometry_reference = json.loads(
@@ -1516,7 +2879,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         }
         if contract_leaves != dict(SUCCESSOR_DECODER_LEAVES):
             raise ValueError("decoder-leaf contract drift")
-    elif output_locality or maintenance_projection:
+    elif output_locality or maintenance_mode:
         if args.decoder_leaf_report is None:
             raise ValueError("output audit requires decoder-leaf report")
         decoder_leaf_reference = json.loads(
@@ -1536,7 +2899,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             )
         ):
             raise ValueError("decoder-leaf reference drift")
-        if maintenance_projection:
+        if maintenance_mode:
             if args.output_locality_report is None:
                 raise ValueError(
                     "maintenance projection requires output-locality report"
@@ -1569,7 +2932,28 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
 
     runtime = _load_extended_runtime(args)
     jax = runtime["jax"]
-    if (output_locality or maintenance_projection) and (
+    maintenance_reference = None
+    if nonlinear_projection:
+        if args.maintenance_projection_report is None:
+            raise ValueError("nonlinear projection requires maintenance report")
+        maintenance_reference = json.loads(
+            args.maintenance_projection_report.read_text(encoding="utf-8")
+        )
+        if (
+            _sha256_file(args.maintenance_projection_report)
+            != audit["identity"]["maintenance_projection_report_sha256"]
+            or maintenance_reference.get("identity", {}).get(
+                "audit_contract_sha256"
+            )
+            != audit["identity"]["maintenance_projection_contract_sha256"]
+            or maintenance_reference.get("classification", {}).get("status")
+            != "maintenance_output_projection_not_supported"
+            or not maintenance_reference.get("classification", {}).get(
+                "evidence_valid", False
+            )
+        ):
+            raise ValueError("maintenance projection reference drift")
+    if (output_locality or maintenance_mode) and (
         len(runtime["schema"].fields)
         != int(audit["output_coordinates"]["expected_field_count"])
         or len(runtime["schema"].labels)
@@ -1682,7 +3066,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     counts = {arm: successor_parameter_count(initialized[arm]) for arm in arms}
     if counts.get(SOURCE_ROUTED_ATTENTION) != EXPECTED_PARAMETER_COUNT:
         raise ValueError("parameter-geometry Attention parameter count drift")
-    if (output_locality or maintenance_projection) and counts[
+    if (output_locality or maintenance_mode) and counts[
         SOURCE_ROUTED_ATTENTION
     ] != int(
         audit["model"]["parameter_count"]
@@ -1723,7 +3107,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     memory_before = _device_memory_report(runtime["devices"])
     maintenance_functions = None
     gradient_memory_preflight = None
-    if maintenance_projection:
+    if maintenance_mode:
         maintenance_functions = _make_output_locality_functions(
             runtime,
             adapter_template,
@@ -1999,7 +3383,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         and failed_reference_support
     )
     geometry = None
-    if not maintenance_projection:
+    if not maintenance_mode:
         geometry = (
             successor_decoder_leaf_geometry_report(
                 parameters,
@@ -2039,6 +3423,36 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "hard_failure_count": reconstruction_hard,
         "nonfinite_value_count": reconstruction_nonfinite,
     }
+    if nonlinear_projection:
+        if maintenance_reference is None:
+            raise ValueError("nonlinear maintenance reference was not loaded")
+        if maintenance_functions is None or gradient_memory_preflight is None:
+            raise ValueError("nonlinear gradient memory preflight was not run")
+        return _run_low_dimensional_nonlinear_projection(
+            args=args,
+            audit=audit,
+            runtime=runtime,
+            schedule=schedule,
+            manifest=manifest,
+            adapter_timing=adapter_timing,
+            signature=signature,
+            parameters=parameters,
+            raw_parameters=full_proposed,
+            direction=stopped["direction"],
+            direction_norm=stopped["direction_norm"],
+            stopped_losses=stopped["losses"],
+            reference=reference,
+            reconstruction=reconstruction,
+            maintenance_reference=maintenance_reference,
+            measurement=measurement,
+            loss_evaluator=loss_evaluator,
+            directional_evaluator=directional_evaluator,
+            direct_step=direct_step,
+            functions=maintenance_functions,
+            gradient_memory_preflight=gradient_memory_preflight,
+            memory_before=memory_before,
+            started=started,
+        )
     if maintenance_projection:
         if output_locality_reference is None:
             raise ValueError("maintenance output-locality evidence was not loaded")
@@ -2239,6 +3653,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--parameter-geometry-report", type=Path)
     parser.add_argument("--decoder-leaf-report", type=Path)
     parser.add_argument("--output-locality-report", type=Path)
+    parser.add_argument("--maintenance-projection-report", type=Path)
     parser.add_argument("--candidate-coefficient-contract", type=Path, required=True)
     parser.add_argument("--tendency-scale-asset", type=Path, required=True)
     parser.add_argument("--tendency-scale-acceptance", type=Path, required=True)
@@ -2253,6 +3668,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--decoder-leaf-attribution", action="store_true")
     parser.add_argument("--output-locality", action="store_true")
     parser.add_argument("--maintenance-projection", action="store_true")
+    parser.add_argument("--nonlinear-projection", action="store_true")
     return parser
 
 

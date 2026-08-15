@@ -513,6 +513,13 @@ def test_low_dimensional_nonlinear_projection_contract_is_bounded():
     assert payload["identity"]["maintenance_projection_contract_sha256"] == (
         predecessor["contract_sha256"]
     )
+    assert payload["output_coordinates"] == predecessor["output_coordinates"]
+    assert payload["stopped_state_reconstruction"] == predecessor[
+        "stopped_state_reconstruction"
+    ]
+    assert payload["active_set"] == predecessor["active_set"]
+    assert payload["gates"]["reference"] == predecessor["gates"]["reference"]
+    assert payload["gates"]["projection"] == predecessor["gates"]["projection"]
     assert payload["matched_reference"]["matched_control"] == (
         "raw_control_plus_norm_0.00025_single_maintenance_gradient_correction"
     )
@@ -525,6 +532,20 @@ def test_low_dimensional_nonlinear_projection_contract_is_bounded():
         "all_28800_scalar_values"
     )
     assert payload["gates"]["maximum_parameter_displacement_norm"] == 0.00075
+    assert payload["gates"]["maximum_basis_orthonormality_error"] == 1e-10
     assert payload["execution"]["optimizer_updates"] == 0
     assert payload["execution"]["checkpoint_written"] is False
     assert payload["execution"]["validation_values_evaluated"] is False
+
+    launcher = (
+        ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_low_dimensional_nonlinear_projection.sh"
+    ).read_text(encoding="utf-8")
+    assert "nonlinear projection requires free gln01" in launcher
+    assert "--nonlinear-projection" in launcher
+    assert "--maintenance-projection-report" in launcher
+    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
+    assert "#SBATCH" not in launcher
+    assert "successor_adamw_update" not in launcher

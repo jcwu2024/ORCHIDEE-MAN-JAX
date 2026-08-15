@@ -110,10 +110,11 @@ free `gln01` and rejected all three single-gradient corrections. The best
 correction removed about `95.57%` of the raw maintenance RMS but still missed
 the RMS and maximum caps and regressed the anchor and some group-component
 losses. A bounded nonlinear constrained solver is now frozen under contract
-SHA256 `db2b60c7...d67d339`. It uses at most eight parameter directions, four
-sequential relinearizations, and eight exact candidate evaluations. The active
-task is local implementation and admission; it does not change the Attention
-architecture or authorize training or a paid run.
+SHA256 `bb0f0718...d67ba07`. It uses at most eight parameter directions, four
+sequential relinearizations, and eight exact candidate evaluations. Local
+implementation and admission pass. The active operation is one free-`gln01`
+zero-retention audit; it does not change the Attention architecture or
+authorize training or a paid run.
 
 ## New Task Bootstrap
 

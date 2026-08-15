@@ -1,9 +1,9 @@
 # Successor Low-Dimensional Nonlinear Projection Protocol
 
 Date: 2026-08-16
-Status: frozen before implementation
+Status: frozen and locally admitted; awaiting free-gln01 execution
 Contract: `successor_low_dimensional_nonlinear_projection_v1.json`
-Contract SHA256: `db2b60c780e5ec4978e936e88dfe13ed0e00bd23ba997b08fccf7e16ed67d339`
+Contract SHA256: `bb0f07184fbbcafdda783a117231bcd7f2ff20a66f94fa29be165988dd67ba07`
 
 ## Question
 
@@ -103,3 +103,20 @@ existing non-test 7/30-day screen. If none exists within four iterations and
 eight exact evaluations, close this fixed low-dimensional projection and
 return to the training objective and effective data use. Do not enlarge the
 network or alter Attention on the basis of this audit alone.
+
+## Local Implementation
+
+The host-side constraint assembly, exact merit, candidate classifier, and
+bounded hard/slack SLSQP solve are implemented in
+`daily_operator/nonlinear_projection.py`. The existing stopped-state probe now
+owns matched-control reconstruction, one-point-year maintenance gradients,
+ordered basis construction, sequential loss/maintenance JVPs, exact trials,
+and zero-retention reporting. The free-GPU launcher is
+`scripts/hpc/run_successor_low_dimensional_nonlinear_projection.sh`.
+
+Local admission passes 95 directly related tests, including a full 28,800-row
+maintenance-constraint solver test, plus Ruff, Python compilation, Bash
+syntax, canonical contract SHA256, and `git diff --check`. The Explore1000
+container provides SciPy `1.17.1`. No Teacher row, validation value, GPU model
+evaluation, optimizer update, or parameter checkpoint was used during local
+admission.
