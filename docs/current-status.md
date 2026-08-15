@@ -138,11 +138,15 @@ for `96.08%` of NPP and `79.79%` of BGB finite mismatch.
 the regression.
 
 The maintenance-local normalized output trust region is frozen under contract
-SHA256 `9f16f83f...67c89c`. It uses the raw failed proposal as matched control,
+SHA256 `84b96d4f...e35b72`. It uses the raw failed proposal as matched control,
 the preceding safe microstep's exact maintenance change times `1.25` as the
 cap, and one shared maintenance-displacement gradient for correction norms
 `0.000125`, `0.00025`, and `0.0005`. GPP is explicitly uncapped. Local
 admission passes 99 related tests plus static, contract, and launcher checks.
+The first four-point-year reverse implementation exited before any candidate
+or report after a `39,772,984,576`-byte XLA allocation request. The exact
+gradient mean is now accumulated over 40 one-point-year reverse microbatches,
+with a zero-displacement memory preflight before stopped-state reconstruction.
 The active operation is one free-`gln01` zero-retention execution. No
 architecture change, optimizer update, checkpoint, validation read, sealed
 test, or paid run is authorized. See

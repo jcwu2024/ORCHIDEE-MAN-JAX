@@ -463,6 +463,11 @@ def test_maintenance_projection_contract_is_matched_and_bounded():
         0.0005,
     ]
     assert payload["correction"]["candidate_count"] == 3
+    assert payload["correction"]["gradient_microbatch_point_years"] == 1
+    assert payload["correction"]["gradient_microbatch_count"] == 40
+    assert payload["correction"][
+        "memory_preflight_before_stopped_state_reconstruction"
+    ] is True
     assert payload["gates"]["minimum_displacement_fraction"] == 0.25
     assert payload["execution"]["optimizer_updates"] == 0
     assert payload["execution"]["checkpoint_written"] is False

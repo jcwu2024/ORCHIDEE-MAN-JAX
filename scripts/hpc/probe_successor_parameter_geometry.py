@@ -838,15 +838,82 @@ def _exact_maintenance_change(
     }
 
 
+def _preflight_maintenance_gradient_memory(
+    *,
+    args: argparse.Namespace,
+    runtime: Mapping[str, Any],
+    functions: Mapping[str, Any],
+    manifest: Mapping[str, Any],
+    schedule: Mapping[str, Any],
+    signature: Any,
+    parameters: Any,
+) -> Mapping[str, Any]:
+    """Compile one point-year maintenance reverse pass before reconstruction."""
+
+    started = time.perf_counter()
+    jax = runtime["jax"]
+    import jax.numpy as jnp
+    from jax.flatten_util import ravel_pytree
+
+    anchor_batch, context_batch, context_inputs, group = _load_group(
+        jax,
+        manifest,
+        schedule,
+        args.prepared_manifest,
+        signature,
+        0,
+    )
+    del anchor_batch
+    point_batch = jax.tree_util.tree_map(
+        lambda value: value[0:1], context_batch
+    )
+    point_inputs = jax.tree_util.tree_map(
+        lambda value: value[0:1], context_inputs
+    )
+    base = functions["maintenance_tape"](
+        parameters,
+        point_batch,
+        point_inputs,
+    )
+    (penalty_result, gradient) = functions[
+        "maintenance_penalty_value_and_grad"
+    ](
+        parameters,
+        base,
+        point_batch,
+        point_inputs,
+    )
+    penalty, proposed = penalty_result
+    flat_gradient, _unravel = ravel_pytree(gradient)
+    gradient_norm = jnp.linalg.norm(flat_gradient)
+    nonfinite = jnp.sum(~jnp.isfinite(flat_gradient), dtype=jnp.int64)
+    jax.block_until_ready(
+        (base, penalty, proposed, gradient, gradient_norm, nonfinite)
+    )
+    record = {
+        "point_year": {
+            "landpoint_id": str(group[0][0]["landpoint_id"]),
+            "year": int(group[0][0]["year"]),
+        },
+        "microbatch_point_years": 1,
+        "penalty_value": float(np.asarray(penalty)),
+        "gradient_norm": float(np.asarray(gradient_norm)),
+        "nonfinite_value_count": int(np.asarray(nonfinite)),
+        "elapsed_seconds": time.perf_counter() - started,
+    }
+    del context_batch, context_inputs, group, point_batch, point_inputs
+    del base, penalty_result, penalty, proposed, gradient, flat_gradient
+    gc.collect()
+    return record
+
+
 def _run_maintenance_output_projection(
     *,
     args: argparse.Namespace,
     audit: Mapping[str, Any],
     runtime: Mapping[str, Any],
-    contract: Any,
     schedule: Mapping[str, Any],
     manifest: Mapping[str, Any],
-    adapter_template: Any,
     adapter_timing: Mapping[str, Any],
     signature: Any,
     parameters: Any,
@@ -856,15 +923,13 @@ def _run_maintenance_output_projection(
     stopped_losses: Sequence[np.ndarray],
     safe_snapshot: Mapping[str, Any],
     raw_loss_summary: Mapping[str, Any],
-    long_scales: Any,
-    scale_asset: Any,
-    assets: Any,
-    tendency_coefficient: float,
     reference: Mapping[str, Any],
     reconstruction: Mapping[str, Any],
     output_locality_reference: Mapping[str, Any],
     loss_evaluator: Any,
     direct_step: Any,
+    functions: Mapping[str, Any],
+    gradient_memory_preflight: Mapping[str, Any],
     memory_before: Mapping[str, Any],
     started: float,
 ) -> Mapping[str, Any]:
@@ -874,15 +939,6 @@ def _run_maintenance_output_projection(
     import jax.numpy as jnp
     from jax.flatten_util import ravel_pytree
 
-    functions = _make_output_locality_functions(
-        runtime,
-        adapter_template,
-        runner_contract=contract,
-        long_scales=long_scales,
-        tendency_scales=scale_asset.scales,
-        flux_coefficients=assets.coefficients,
-        tendency_coefficient=tendency_coefficient,
-    )
     scale = np.asarray(
         runtime["output_normalization"].scale[MAINTENANCE_OUTPUT_FIELD],
         dtype=np.float64,
@@ -903,6 +959,7 @@ def _run_maintenance_output_projection(
     penalty_values = []
     penalty_gradient = None
     penalty_nonfinite_count = 0
+    gradient_microbatch_count = AUDIT_GROUPS * POINTS_PER_MIXED_UPDATE
     for group_index in range(AUDIT_GROUPS):
         group_started = time.perf_counter()
         anchor_batch, context_batch, context_inputs, group = _load_group(
@@ -926,24 +983,12 @@ def _run_maintenance_output_projection(
             context_batch,
             context_inputs,
         )
-        (penalty_result, group_gradient) = functions[
-            "maintenance_penalty_value_and_grad"
-        ](
-            raw_parameters,
-            raw_base,
-            context_batch,
-            context_inputs,
-        )
-        penalty_value, raw_proposed = penalty_result
         jax.block_until_ready(
             (
                 safe_base,
                 safe_tangent,
                 raw_base,
                 raw_tangent,
-                penalty_value,
-                raw_proposed,
-                group_gradient,
             )
         )
         (
@@ -951,16 +996,62 @@ def _run_maintenance_output_projection(
             safe_tangent_host,
             raw_base_host,
             raw_tangent_host,
-            raw_proposed_host,
         ) = jax.device_get(
             (
                 safe_base,
                 safe_tangent,
                 raw_base,
                 raw_tangent,
-                raw_proposed,
             )
         )
+        raw_proposed_parts = []
+        for point_index in range(POINTS_PER_MIXED_UPDATE):
+            point_batch = jax.tree_util.tree_map(
+                lambda value: value[point_index : point_index + 1],
+                context_batch,
+            )
+            point_inputs = jax.tree_util.tree_map(
+                lambda value: value[point_index : point_index + 1],
+                context_inputs,
+            )
+            (penalty_result, point_gradient) = functions[
+                "maintenance_penalty_value_and_grad"
+            ](
+                raw_parameters,
+                raw_base[point_index : point_index + 1],
+                point_batch,
+                point_inputs,
+            )
+            penalty_value, raw_proposed = penalty_result
+            jax.block_until_ready(
+                (penalty_value, raw_proposed, point_gradient)
+            )
+            penalty_value_host = float(np.asarray(penalty_value))
+            penalty_values.append(penalty_value_host)
+            penalty_nonfinite_count += int(
+                not np.isfinite(penalty_value_host)
+            )
+            raw_proposed_parts.append(
+                np.asarray(jax.device_get(raw_proposed), dtype=np.float64)
+            )
+            penalty_gradient = (
+                jax.tree_util.tree_map(
+                    lambda value: value / gradient_microbatch_count,
+                    point_gradient,
+                )
+                if penalty_gradient is None
+                else jax.tree_util.tree_map(
+                    lambda total, value: total
+                    + value / gradient_microbatch_count,
+                    penalty_gradient,
+                    point_gradient,
+                )
+            )
+            jax.block_until_ready(penalty_gradient)
+            del point_batch, point_inputs, penalty_result
+            del penalty_value, raw_proposed, point_gradient
+            gc.collect()
+        raw_proposed_host = np.concatenate(raw_proposed_parts, axis=0)
         safe_records.append(
             summarize_normalized_output_change(
                 base=safe_base_host,
@@ -980,28 +1071,16 @@ def _run_maintenance_output_projection(
             )
         )
         raw_base_by_group.append(raw_base_host)
-        penalty_value_host = float(np.asarray(penalty_value))
-        penalty_values.append(penalty_value_host)
-        penalty_nonfinite_count += int(not np.isfinite(penalty_value_host))
-        penalty_gradient = (
-            jax.tree_util.tree_map(
-                lambda value: value / AUDIT_GROUPS,
-                group_gradient,
-            )
-            if penalty_gradient is None
-            else jax.tree_util.tree_map(
-                lambda total, value: total + value / AUDIT_GROUPS,
-                penalty_gradient,
-                group_gradient,
-            )
-        )
-        jax.block_until_ready(penalty_gradient)
         print(
             json.dumps(
                 {
                     "event": "successor_maintenance_penalty_group",
                     "group": group_index + 1,
                     "total": AUDIT_GROUPS,
+                    "completed_gradient_microbatches": (
+                        group_index + 1
+                    )
+                    * POINTS_PER_MIXED_UPDATE,
                     "elapsed_seconds": time.perf_counter() - group_started,
                 },
                 sort_keys=True,
@@ -1010,7 +1089,7 @@ def _run_maintenance_output_projection(
         )
         del context_batch, context_inputs, group
         del safe_base, safe_tangent, raw_base, raw_tangent
-        del penalty_result, penalty_value, raw_proposed, group_gradient
+        del raw_proposed_parts
         del safe_base_host, safe_tangent_host, raw_tangent_host, raw_proposed_host
         gc.collect()
     if penalty_gradient is None:
@@ -1245,6 +1324,14 @@ def _run_maintenance_output_projection(
         <= float(audit["gates"]["maximum_penalty_rms_consistency_error"]),
         "penalty_gradient_finite_nonzero": penalty_nonfinite_count
         == int(audit["gates"]["nonfinite_value_count"]),
+        "gradient_microbatch_count_exact": len(penalty_values)
+        == int(audit["correction"]["gradient_microbatch_count"]),
+        "gradient_memory_preflight_passed": int(
+            gradient_memory_preflight["microbatch_point_years"]
+        )
+        == int(audit["correction"]["gradient_microbatch_point_years"])
+        and int(gradient_memory_preflight["nonfinite_value_count"])
+        == int(audit["gates"]["nonfinite_value_count"]),
         "reconstruction_hard_failures_zero": int(
             reconstruction["hard_failure_count"]
         )
@@ -1294,6 +1381,7 @@ def _run_maintenance_output_projection(
             "penalty_rms": penalty_rms,
             "penalty_rms_consistency_error": penalty_rms_error,
             "nonfinite_value_count": penalty_nonfinite_count,
+            "gradient_memory_preflight": gradient_memory_preflight,
         },
         "reference": reference,
         "reconstruction": reconstruction,
@@ -1633,6 +1721,43 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         runtime, adapter_template, **objective_arguments
     )
     memory_before = _device_memory_report(runtime["devices"])
+    maintenance_functions = None
+    gradient_memory_preflight = None
+    if maintenance_projection:
+        maintenance_functions = _make_output_locality_functions(
+            runtime,
+            adapter_template,
+            runner_contract=contract,
+            long_scales=long_scales,
+            tendency_scales=scale_asset.scales,
+            flux_coefficients=assets.coefficients,
+            tendency_coefficient=float(
+                candidate["resolved_coefficients"]["tendency_mse"]
+            ),
+        )
+        gradient_memory_preflight = _preflight_maintenance_gradient_memory(
+            args=args,
+            runtime=runtime,
+            functions=maintenance_functions,
+            manifest=manifest,
+            schedule=schedule,
+            signature=signature,
+            parameters=parameters,
+        )
+        if int(gradient_memory_preflight["nonfinite_value_count"]) != int(
+            audit["gates"]["nonfinite_value_count"]
+        ):
+            raise ValueError("maintenance gradient memory preflight failed")
+        print(
+            json.dumps(
+                {
+                    "event": "successor_maintenance_gradient_memory_preflight",
+                    **gradient_memory_preflight,
+                },
+                sort_keys=True,
+            ),
+            flush=True,
+        )
 
     direct_norms = tuple(
         float(value)
@@ -1919,14 +2044,14 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             raise ValueError("maintenance output-locality evidence was not loaded")
         if safe_snapshot is None:
             raise ValueError("maintenance safe reference was not reconstructed")
+        if maintenance_functions is None or gradient_memory_preflight is None:
+            raise ValueError("maintenance gradient memory preflight was not run")
         return _run_maintenance_output_projection(
             args=args,
             audit=audit,
             runtime=runtime,
-            contract=contract,
             schedule=schedule,
             manifest=manifest,
-            adapter_template=adapter_template,
             adapter_timing=adapter_timing,
             signature=signature,
             parameters=parameters,
@@ -1936,17 +2061,13 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             stopped_losses=stopped["losses"],
             safe_snapshot=safe_snapshot,
             raw_loss_summary=full_summary,
-            long_scales=long_scales,
-            scale_asset=scale_asset,
-            assets=assets,
-            tendency_coefficient=float(
-                candidate["resolved_coefficients"]["tendency_mse"]
-            ),
             reference=reference,
             reconstruction=reconstruction,
             output_locality_reference=output_locality_reference,
             loss_evaluator=loss_evaluator,
             direct_step=direct_step,
+            functions=maintenance_functions,
+            gradient_memory_preflight=gradient_memory_preflight,
             memory_before=memory_before,
             started=started,
         )

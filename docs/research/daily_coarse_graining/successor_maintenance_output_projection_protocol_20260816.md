@@ -3,7 +3,7 @@
 Date: 2026-08-16  
 Status: frozen before execution  
 Contract: `successor_maintenance_output_projection_v1.json`  
-Contract SHA256: `9f16f83f8f7dac72beeef9b14a510edb722af3fc81b291b50e0e90403367c89c`
+Contract SHA256: `84b96d4ffbc86fb8e34303caff953d5a56b7651190294179f15081f1c5e35b72`
 
 ## Question
 
@@ -29,9 +29,12 @@ train/train groups covering 40 point-years and 1,200 daily transitions.
   `0.000125`, `0.00025`, and `0.0005`.
 
 The correction objective is the scalar mean of squared normalized
-maintenance-output changes over all ten groups. One aggregate gradient is
-computed at the raw control and shared by the three candidates. This is a
-parameter-metric experiment, not a network architecture change.
+maintenance-output changes over all ten groups. The exact same mean is
+evaluated as 40 one-point-year reverse microbatches and accumulated with equal
+weight; every point-year has the same 30-day and output-scalar count. One
+aggregate gradient is computed at the raw control and shared by the three
+candidates. This is a parameter-metric experiment, not a network architecture
+change.
 
 ## Output Trust Region
 
@@ -69,3 +72,14 @@ additional scalar step subdivision.
 
 Execution is limited to one free `gln01` diagnostic. Paid Slurm work is not
 authorized by this protocol.
+
+## Resource Amendment
+
+The first live implementation vectorized all four point-years in each reverse
+pass. It exited before any candidate or report after XLA attempted to allocate
+`39,772,984,576` bytes on a 32 GB V100. No parameters, checkpoint, recovery,
+or scientific output were written. The implementation now compiles one
+zero-displacement, one-point-year reverse pass before the expensive stopped-
+state reconstruction. Passing that memory preflight authorizes the 40 exact
+microbatch gradients above; it does not change the objective, sample set,
+candidate norms, caps, or gates.

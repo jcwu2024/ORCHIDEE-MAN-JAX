@@ -893,12 +893,19 @@ absolute change `4.71565`. GPP has the opposite sign and partially offsets
 the regression.
 
 The normalized maintenance-local output trust region is now frozen under
-contract SHA256 `9f16f83f...67c89c`. The raw failed proposal is the matched
+contract SHA256 `84b96d4f...e35b72`. The raw failed proposal is the matched
 control; the preceding accepted norm-`0.0005` microstep supplies exact RMS and
 maximum maintenance caps at `1.25x`. Three corrections at norms `0.000125`,
 `0.00025`, and `0.0005` share one gradient of 30-day normalized maintenance
 displacement. GPP remains uncapped. Local admission passes 99 related tests
 plus Ruff, compilation, Bash, contract, and diff checks.
+
+The first live four-point-year reverse pass was rejected before any candidate
+or report when XLA requested `39,772,984,576` bytes on a 32 GB V100. The exact
+same scalar mean is now accumulated over 40 one-point-year reverse
+microbatches. A one-point-year zero-displacement memory preflight runs before
+the expensive stopped-state reconstruction; this changes execution shape, not
+the objective, samples, candidates, or gates.
 
 The active operation is one free-`gln01`, zero-retention execution of that
 frozen audit. It performs no optimizer update and reads no validation values.

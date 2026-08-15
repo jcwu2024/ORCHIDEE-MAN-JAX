@@ -1,7 +1,7 @@
 {
   "schema_version": "successor_maintenance_output_projection_v1",
   "status": "frozen_zero_retention_maintenance_output_trust_region",
-  "contract_sha256": "9f16f83f8f7dac72beeef9b14a510edb722af3fc81b291b50e0e90403367c89c",
+  "contract_sha256": "84b96d4ffbc86fb8e34303caff953d5a56b7651190294179f15081f1c5e35b72",
   "identity": {
     "group_aware_step_extension_contract_sha256": "e78db1bac583d6adf853eb38207c7c410b5befb1cbb087e01da527d28fd3bda1",
     "group_aware_step_extension_report_sha256": "a8b448488a25e924a36dc356a0bdba6f6cc213c6509e7e21ac3e4af0635edf9a",
@@ -80,7 +80,10 @@
   "correction": {
     "objective": "mean_squared_normalized_maintenance_output_displacement_from_stopped_state",
     "gradient_point": "raw_control_parameters",
-    "gradient_aggregation": "equal_scalar_mean_over_all_ten_groups",
+    "gradient_aggregation": "equal_scalar_mean_over_all_forty_point_year_microbatches",
+    "gradient_microbatch_point_years": 1,
+    "gradient_microbatch_count": 40,
+    "memory_preflight_before_stopped_state_reconstruction": true,
     "direction": "negative_unit_gradient_from_raw_control_parameters",
     "candidate_correction_norms": [
       0.000125,
@@ -123,6 +126,7 @@
   "execution": {
     "free_gln01_only": true,
     "paid_training_authorized": false,
+    "gradient_memory_preflight": "one_point_year_zero_displacement_reverse_pass",
     "optimizer_updates": 0,
     "checkpoint_written": false,
     "recovery_written": false,
