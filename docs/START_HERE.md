@@ -99,12 +99,15 @@ approved a matched `1e-3` final-decoder-kernel initialization repair. Its
 local implementation and zero-training 16-batch free-GPU re-audit pass: the
 shared near-zero gradient/output collapse is removed without changing either
 body or the parameter count. The same rollouts then passed every state and
-budget hard gate. A staged-training v3 contract now freezes conservative
-lower-quantile long-horizon coefficients and a new 48-window non-test
-validation panel disjoint from the rejected formal 96-window screen. The
-current gate is implementing staged preparation/training and fixed-panel
-validation at 500, 1000, 2000, 5000, and 10000 updates. No paid run is yet
-authorized.
+budget hard gate. A staged-training v3 contract froze conservative
+lower-quantile long-horizon coefficients and a new non-test validation panel.
+The update-1000 milestone is accepted, but ordinary optimizer continuation
+and several direct parameter-step mechanisms failed to transfer local descent
+into useful 7/30-day gains. A field-local audit now attributes the stopped
+finite-step failure primarily to nonlinear maintenance-respiration output.
+The active gate is one frozen, zero-retention maintenance-output projection
+audit on free `gln01`; it keeps the Attention architecture unchanged and reads
+no validation values. No paid run is authorized.
 
 ## New Task Bootstrap
 

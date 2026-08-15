@@ -892,12 +892,20 @@ RMS change is `0.08206` versus a first-order RMS of `0.000414`, with maximum
 absolute change `4.71565`. GPP has the opposite sign and partially offsets
 the regression.
 
-The active design task is therefore a normalized maintenance-local output
-trust region. Before another GPU run, freeze the correction mechanism,
-candidate count, exact maintenance-output cap, raw failed-proposal matched
-control, all-40 loss gates, and stop action. Do not impose one undifferentiated
-cap on all carbon outputs. This remains an optimizer metric change, not an
-architecture change or training authorization.
+The normalized maintenance-local output trust region is now frozen under
+contract SHA256 `9f16f83f...67c89c`. The raw failed proposal is the matched
+control; the preceding accepted norm-`0.0005` microstep supplies exact RMS and
+maximum maintenance caps at `1.25x`. Three corrections at norms `0.000125`,
+`0.00025`, and `0.0005` share one gradient of 30-day normalized maintenance
+displacement. GPP remains uncapped. Local admission passes 99 related tests
+plus Ruff, compilation, Bash, contract, and diff checks.
+
+The active operation is one free-`gln01`, zero-retention execution of that
+frozen audit. It performs no optimizer update and reads no validation values.
+If no candidate preserves all 40 losses while meeting the frozen effect and
+maintenance caps, close the single-gradient projection and design a nonlinear
+constrained solver; do not subdivide the same correction. This remains an
+optimizer metric change, not an architecture change or training authorization.
 
 No network architecture change is involved. The 365-day rollout,
 long-held-point validation, Gate D2, sealed test, and product gates remain

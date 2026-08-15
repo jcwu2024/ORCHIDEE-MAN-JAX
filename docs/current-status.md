@@ -137,10 +137,16 @@ for `96.08%` of NPP and `79.79%` of BGB finite mismatch.
 `4.71565` output scales. GPP contributes with the opposite sign and offsets
 the regression.
 
-The active design task is a maintenance-local normalized output trust region
-with the raw failed proposal as matched control. No architecture change,
-parameter exclusion search, scalar subdivision, optimizer update, checkpoint,
-validation read, sealed test, or paid run is authorized.
+The maintenance-local normalized output trust region is frozen under contract
+SHA256 `9f16f83f...67c89c`. It uses the raw failed proposal as matched control,
+the preceding safe microstep's exact maintenance change times `1.25` as the
+cap, and one shared maintenance-displacement gradient for correction norms
+`0.000125`, `0.00025`, and `0.0005`. GPP is explicitly uncapped. Local
+admission passes 99 related tests plus static, contract, and launcher checks.
+The active operation is one free-`gln01` zero-retention execution. No
+architecture change, optimizer update, checkpoint, validation read, sealed
+test, or paid run is authorized. See
+[`successor_maintenance_output_projection_protocol_20260816.md`](research/daily_coarse_graining/successor_maintenance_output_projection_protocol_20260816.md).
 
 ## First Formal Neural Candidate
 

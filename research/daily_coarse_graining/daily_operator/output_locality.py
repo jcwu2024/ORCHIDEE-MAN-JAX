@@ -11,6 +11,208 @@ def _relative_error(left: float, right: float) -> float:
     return abs(left - right) / max(abs(left), abs(right), 1.0e-30)
 
 
+def summarize_normalized_output_change(
+    *,
+    base: Any,
+    tangent: Any,
+    proposed: Any,
+    scale: Any,
+    step_norm: float,
+) -> Mapping[str, Any]:
+    """Summarize one normalized output tape's JVP and exact finite change."""
+
+    base_array = np.asarray(base, dtype=np.float64)
+    tangent_array = np.asarray(tangent, dtype=np.float64)
+    proposed_array = np.asarray(proposed, dtype=np.float64)
+    scale_array = np.asarray(scale, dtype=np.float64)
+    if (
+        step_norm <= 0.0
+        or base_array.shape != tangent_array.shape
+        or base_array.shape != proposed_array.shape
+    ):
+        raise ValueError("normalized output change shape or step drift")
+    broadcast_scale = np.broadcast_to(scale_array, base_array.shape)
+    if not np.all(np.isfinite(broadcast_scale) & (broadcast_scale > 0.0)):
+        raise ValueError("normalized output change scale is invalid")
+    linear = step_norm * tangent_array / broadcast_scale
+    exact = (proposed_array - base_array) / broadcast_scale
+    residual = exact - linear
+    nonfinite = sum(
+        np.count_nonzero(~np.isfinite(value))
+        for value in (base_array, tangent_array, proposed_array)
+    )
+    return {
+        "scalar_count": int(base_array.size),
+        "linear_squared_sum": float(np.sum(linear * linear, dtype=np.float64)),
+        "exact_squared_sum": float(np.sum(exact * exact, dtype=np.float64)),
+        "residual_squared_sum": float(
+            np.sum(residual * residual, dtype=np.float64)
+        ),
+        "linear_exact_dot": float(np.sum(linear * exact, dtype=np.float64)),
+        "maximum_absolute_linear_change": float(
+            np.max(np.abs(linear)) if linear.size else 0.0
+        ),
+        "maximum_absolute_exact_change": float(
+            np.max(np.abs(exact)) if exact.size else 0.0
+        ),
+        "maximum_absolute_residual": float(
+            np.max(np.abs(residual)) if residual.size else 0.0
+        ),
+        "nonfinite_value_count": int(nonfinite),
+    }
+
+
+def aggregate_normalized_output_changes(
+    records: Sequence[Mapping[str, Any]],
+) -> Mapping[str, Any]:
+    """Aggregate per-group normalized output changes without retaining tapes."""
+
+    if not records:
+        raise ValueError("normalized output aggregation requires records")
+    count = sum(int(record["scalar_count"]) for record in records)
+    linear_sq = sum(float(record["linear_squared_sum"]) for record in records)
+    exact_sq = sum(float(record["exact_squared_sum"]) for record in records)
+    residual_sq = sum(float(record["residual_squared_sum"]) for record in records)
+    dot = sum(float(record["linear_exact_dot"]) for record in records)
+    return {
+        "group_count": len(records),
+        "scalar_count": count,
+        "normalized_linear_rms": float(np.sqrt(linear_sq / max(count, 1))),
+        "normalized_exact_rms": float(np.sqrt(exact_sq / max(count, 1))),
+        "normalized_residual_rms": float(
+            np.sqrt(residual_sq / max(count, 1))
+        ),
+        "normalized_linearization_cosine": float(
+            dot / max(np.sqrt(linear_sq * exact_sq), 1.0e-30)
+        ),
+        "maximum_absolute_linear_change": max(
+            float(record["maximum_absolute_linear_change"]) for record in records
+        ),
+        "maximum_absolute_exact_change": max(
+            float(record["maximum_absolute_exact_change"]) for record in records
+        ),
+        "maximum_absolute_residual": max(
+            float(record["maximum_absolute_residual"]) for record in records
+        ),
+        "nonfinite_value_count": sum(
+            int(record["nonfinite_value_count"]) for record in records
+        ),
+    }
+
+
+def classify_maintenance_output_projection(
+    *,
+    safe_reference: Mapping[str, Any],
+    raw_control: Mapping[str, Any],
+    candidates: Sequence[Mapping[str, Any]],
+    gates: Mapping[str, Any],
+    pass_action: str,
+    fail_action: str,
+) -> Mapping[str, Any]:
+    """Select the smallest bounded maintenance correction passing every gate."""
+
+    safe_checks = {
+        "safe_reference_all_constraints_nonincreasing": bool(
+            safe_reference["loss_summary"]["all_group_components_nonincreasing"]
+        ),
+        "safe_reference_hard_failures_zero": int(
+            safe_reference["hard_failure_count"]
+        )
+        == int(gates["hard_failure_count"]),
+        "safe_reference_nonfinite_values_zero": int(
+            safe_reference["nonfinite_value_count"]
+        )
+        == int(gates["nonfinite_value_count"]),
+    }
+    raw_checks = {
+        "raw_control_finite_step_failed": not bool(
+            raw_control["loss_summary"]["all_group_components_nonincreasing"]
+        ),
+        "raw_control_exceeds_rms_cap": float(
+            raw_control["maintenance_change"]["normalized_exact_rms"]
+        )
+        > float(raw_control["maintenance_cap"]["normalized_exact_rms"]),
+        "raw_control_exceeds_maximum_cap": float(
+            raw_control["maintenance_change"]["maximum_absolute_exact_change"]
+        )
+        > float(raw_control["maintenance_cap"]["maximum_absolute_exact_change"]),
+    }
+    expected_norms = tuple(
+        float(value) for value in gates["candidate_correction_norms"]
+    )
+    observed_norms = tuple(
+        float(candidate["correction_norm"]) for candidate in candidates
+    )
+    candidate_set_checks = {
+        "candidate_count_exact": len(candidates)
+        == int(gates["expected_candidate_count"]),
+        "candidate_norms_exact": observed_norms == expected_norms,
+    }
+    candidate_records = []
+    for candidate in candidates:
+        medians = candidate["loss_summary"]["component_median_relative_changes"]
+        checks = {
+            "all_constraints_nonincreasing": bool(
+                candidate["loss_summary"]["all_group_components_nonincreasing"]
+            ),
+            "npp_effect": float(medians["npp"])
+            <= -float(gates["minimum_npp_median_relative_decrease"]),
+            "agb_effect": float(medians["aboveground_biomass_tendency"])
+            <= -float(gates["minimum_agb_median_relative_decrease"]),
+            "bgb_effect": float(medians["belowground_biomass_tendency"])
+            <= -float(gates["minimum_bgb_median_relative_decrease"]),
+            "maintenance_rms_within_cap": float(
+                candidate["maintenance_change"]["normalized_exact_rms"]
+            )
+            <= float(candidate["maintenance_cap"]["normalized_exact_rms"]),
+            "maintenance_maximum_within_cap": float(
+                candidate["maintenance_change"]["maximum_absolute_exact_change"]
+            )
+            <= float(
+                candidate["maintenance_cap"]["maximum_absolute_exact_change"]
+            ),
+            "displacement_retained": float(candidate["displacement_fraction"])
+            >= float(gates["minimum_displacement_fraction"]),
+            "hard_failures_zero": int(candidate["hard_failure_count"])
+            == int(gates["hard_failure_count"]),
+            "nonfinite_values_zero": int(candidate["nonfinite_value_count"])
+            == int(gates["nonfinite_value_count"]),
+        }
+        candidate_records.append(
+            {
+                "correction_norm": float(candidate["correction_norm"]),
+                "passed": all(checks.values()),
+                "checks": checks,
+            }
+        )
+    selected = next(
+        (record for record in candidate_records if record["passed"]), None
+    )
+    evidence_valid = (
+        all(safe_checks.values())
+        and all(raw_checks.values())
+        and all(candidate_set_checks.values())
+    )
+    passed = evidence_valid and selected is not None
+    return {
+        "status": (
+            "maintenance_output_projection_supported"
+            if passed
+            else "maintenance_output_projection_not_supported"
+        ),
+        "passed": passed,
+        "evidence_valid": evidence_valid,
+        "safe_reference_checks": safe_checks,
+        "raw_control_checks": raw_checks,
+        "candidate_set_checks": candidate_set_checks,
+        "candidate_checks": candidate_records,
+        "selected_correction_norm": (
+            selected["correction_norm"] if selected is not None else None
+        ),
+        "next_action": pass_action if passed else fail_action,
+    }
+
+
 def summarize_output_locality_group(
     *,
     fields: Sequence[Any],

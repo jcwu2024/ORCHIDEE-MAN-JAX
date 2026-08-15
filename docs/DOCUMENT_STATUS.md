@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-14.
+Last updated: 2026-08-16.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -94,6 +94,7 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_parameter_geometry_attribution_20260815.md` | Active negative attribution evidence; decoder dominates but no top-level exclusion is safe | Designing decoder-leaf attribution |
 | `research/daily_coarse_graining/successor_decoder_leaf_attribution_20260816.md` | Active negative decoder attribution; raw Euclidean direct steps closed | Designing output-locality and function-space trust region |
 | `research/daily_coarse_graining/successor_output_locality_audit_20260816.md` | Active positive field-local attribution; maintenance output dominates the finite failure | Designing a normalized maintenance-local output trust region |
+| `research/daily_coarse_graining/successor_maintenance_output_projection_protocol_20260816.md` | Active frozen zero-retention maintenance trust-region protocol | Running or reviewing the free-gln01 projection audit |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

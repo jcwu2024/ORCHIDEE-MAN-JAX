@@ -13,8 +13,11 @@ from research.daily_coarse_graining.daily_operator.neural_architecture import (
     OutputFieldSpec,
 )
 from research.daily_coarse_graining.daily_operator.output_locality import (
+    aggregate_normalized_output_changes,
     aggregate_output_locality,
+    classify_maintenance_output_projection,
     classify_output_locality,
+    summarize_normalized_output_change,
     summarize_output_locality_group,
 )
 from research.daily_coarse_graining.daily_operator.successor_fast_owner_decoder import (
@@ -24,6 +27,168 @@ from research.daily_coarse_graining.daily_operator.successor_fast_owner_decoder 
 )
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+def test_normalized_output_change_summary_and_aggregation():
+    first = summarize_normalized_output_change(
+        base=np.asarray([1.0, 2.0]),
+        tangent=np.asarray([2.0, -4.0]),
+        proposed=np.asarray([2.0, 0.0]),
+        scale=np.asarray([2.0, 4.0]),
+        step_norm=0.5,
+    )
+    second = summarize_normalized_output_change(
+        base=np.asarray([0.0, 0.0]),
+        tangent=np.asarray([0.0, 0.0]),
+        proposed=np.asarray([1.0, -1.0]),
+        scale=np.asarray([2.0, 2.0]),
+        step_norm=0.5,
+    )
+
+    assert first["scalar_count"] == 2
+    assert first["linear_squared_sum"] == 0.5
+    assert first["exact_squared_sum"] == 0.5
+    assert first["residual_squared_sum"] == 0.0
+    assert first["maximum_absolute_exact_change"] == 0.5
+
+    aggregate = aggregate_normalized_output_changes((first, second))
+    assert aggregate["group_count"] == 2
+    assert aggregate["scalar_count"] == 4
+    assert aggregate["normalized_linear_rms"] == np.sqrt(0.5 / 4.0)
+    assert aggregate["normalized_exact_rms"] == 0.5
+    assert aggregate["normalized_residual_rms"] == np.sqrt(0.5 / 4.0)
+    assert aggregate["nonfinite_value_count"] == 0
+
+
+def _projection_record(
+    correction_norm: float,
+    *,
+    safe: bool,
+    maintenance_rms: float,
+    maintenance_maximum: float,
+    displacement_fraction: float = 0.5,
+) -> dict:
+    return {
+        "correction_norm": correction_norm,
+        "loss_summary": {
+            "all_group_components_nonincreasing": safe,
+            "component_median_relative_changes": {
+                "one_day_anchor": -2.0e-5,
+                "npp": -2.0e-5,
+                "aboveground_biomass_tendency": -2.0e-5,
+                "belowground_biomass_tendency": -2.0e-5,
+            },
+        },
+        "maintenance_change": {
+            "normalized_exact_rms": maintenance_rms,
+            "maximum_absolute_exact_change": maintenance_maximum,
+        },
+        "maintenance_cap": {
+            "normalized_exact_rms": 0.1,
+            "maximum_absolute_exact_change": 1.0,
+        },
+        "displacement_fraction": displacement_fraction,
+        "hard_failure_count": 0,
+        "nonfinite_value_count": 0,
+    }
+
+
+def test_maintenance_output_projection_selects_smallest_passing_correction():
+    safe_reference = _projection_record(
+        0.0,
+        safe=True,
+        maintenance_rms=0.08,
+        maintenance_maximum=0.8,
+    )
+    raw_control = _projection_record(
+        0.0,
+        safe=False,
+        maintenance_rms=0.2,
+        maintenance_maximum=2.0,
+    )
+    candidates = (
+        _projection_record(
+            0.000125,
+            safe=True,
+            maintenance_rms=0.09,
+            maintenance_maximum=0.9,
+            displacement_fraction=0.6,
+        ),
+        _projection_record(
+            0.00025,
+            safe=True,
+            maintenance_rms=0.07,
+            maintenance_maximum=0.7,
+            displacement_fraction=0.4,
+        ),
+    )
+    gates = {
+        "candidate_correction_norms": [0.000125, 0.00025],
+        "expected_candidate_count": 2,
+        "minimum_npp_median_relative_decrease": 1.0e-5,
+        "minimum_agb_median_relative_decrease": 1.0e-5,
+        "minimum_bgb_median_relative_decrease": 1.0e-5,
+        "minimum_displacement_fraction": 0.25,
+        "hard_failure_count": 0,
+        "nonfinite_value_count": 0,
+    }
+
+    result = classify_maintenance_output_projection(
+        safe_reference=safe_reference,
+        raw_control=raw_control,
+        candidates=candidates,
+        gates=gates,
+        pass_action="run_validation",
+        fail_action="stop",
+    )
+
+    assert result["status"] == "maintenance_output_projection_supported"
+    assert result["selected_correction_norm"] == 0.000125
+    assert result["next_action"] == "run_validation"
+
+
+def test_maintenance_output_projection_rejects_unsafe_candidates():
+    safe_reference = _projection_record(
+        0.0,
+        safe=True,
+        maintenance_rms=0.08,
+        maintenance_maximum=0.8,
+    )
+    raw_control = _projection_record(
+        0.0,
+        safe=False,
+        maintenance_rms=0.2,
+        maintenance_maximum=2.0,
+    )
+    candidate = _projection_record(
+        0.000125,
+        safe=False,
+        maintenance_rms=0.09,
+        maintenance_maximum=0.9,
+    )
+    gates = {
+        "candidate_correction_norms": [0.000125],
+        "expected_candidate_count": 1,
+        "minimum_npp_median_relative_decrease": 1.0e-5,
+        "minimum_agb_median_relative_decrease": 1.0e-5,
+        "minimum_bgb_median_relative_decrease": 1.0e-5,
+        "minimum_displacement_fraction": 0.25,
+        "hard_failure_count": 0,
+        "nonfinite_value_count": 0,
+    }
+
+    result = classify_maintenance_output_projection(
+        safe_reference=safe_reference,
+        raw_control=raw_control,
+        candidates=(candidate,),
+        gates=gates,
+        pass_action="run_validation",
+        fail_action="stop",
+    )
+
+    assert result["status"] == "maintenance_output_projection_not_supported"
+    assert result["selected_correction_norm"] is None
+    assert result["next_action"] == "stop"
 
 
 def test_fast_owner_training_representation_round_trips_physical_outputs():
@@ -240,6 +405,78 @@ def test_output_locality_contract_and_launcher_are_bounded():
     ).read_text(encoding="utf-8")
     assert "output-locality audit requires free gln01" in launcher
     assert "--output-locality" in launcher
+    assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
+    assert "#SBATCH" not in launcher
+    assert "successor_adamw_update" not in launcher
+
+
+def test_maintenance_projection_contract_is_matched_and_bounded():
+    contract_path = (
+        ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_maintenance_output_projection_v1.json"
+    )
+    payload = json.loads(contract_path.read_text(encoding="utf-8"))
+    locality_contract = json.loads(
+        (
+            ROOT
+            / "manifests"
+            / "coarse_graining"
+            / "successor_output_locality_audit_v1.json"
+        ).read_text(encoding="utf-8")
+    )
+    canonical = dict(payload)
+    expected_hash = canonical.pop("contract_sha256")
+    observed_hash = hashlib.sha256(
+        json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()
+    ).hexdigest()
+
+    assert expected_hash == observed_hash
+    assert payload["identity"]["output_locality_contract_sha256"] == (
+        locality_contract["contract_sha256"]
+    )
+    assert payload["stopped_state_reconstruction"] == locality_contract[
+        "stopped_state_reconstruction"
+    ]
+    assert payload["active_set"] == locality_contract["active_set"]
+    assert payload["output_coordinates"] == locality_contract[
+        "output_coordinates"
+    ]
+    assert payload["gates"]["reference"] == locality_contract["gates"][
+        "reference"
+    ]
+    assert payload["gates"]["projection"] == locality_contract["gates"][
+        "projection"
+    ]
+    assert payload["matched_reference"]["raw_control"] == (
+        "same_stopped_state_raw_failed_norm_0.0005_proposal"
+    )
+    assert payload["maintenance_coordinate"]["field"] == (
+        "daily.fast_maintenance_respiration"
+    )
+    assert payload["maintenance_coordinate"]["cap_multiplier"] == 1.25
+    assert payload["maintenance_coordinate"]["gpp_is_uncapped"] is True
+    assert payload["correction"]["candidate_correction_norms"] == [
+        0.000125,
+        0.00025,
+        0.0005,
+    ]
+    assert payload["correction"]["candidate_count"] == 3
+    assert payload["gates"]["minimum_displacement_fraction"] == 0.25
+    assert payload["execution"]["optimizer_updates"] == 0
+    assert payload["execution"]["checkpoint_written"] is False
+    assert payload["execution"]["validation_values_evaluated"] is False
+
+    launcher = (
+        ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_maintenance_output_projection.sh"
+    ).read_text(encoding="utf-8")
+    assert "maintenance-output projection requires free gln01" in launcher
+    assert "--maintenance-projection" in launcher
+    assert "--output-locality-report" in launcher
     assert "SINGULARITYENV_XLA_PYTHON_CLIENT_PREALLOCATE=false" in launcher
     assert "#SBATCH" not in launcher
     assert "successor_adamw_update" not in launcher
