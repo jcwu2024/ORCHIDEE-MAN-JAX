@@ -147,7 +147,22 @@ The first four-point-year reverse implementation exited before any candidate
 or report after a `39,772,984,576`-byte XLA allocation request. The exact
 gradient mean is now accumulated over 40 one-point-year reverse microbatches,
 with a zero-displacement memory preflight before stopped-state reconstruction.
-The active operation is one free-`gln01` zero-retention execution. No
+The free-`gln01` execution completed at commit `629238a`; formal report SHA256
+is `64c68938...ce98c5`. All evidence checks pass with zero hard failures and
+zero nonfinite values. The safe-reference maintenance RMS/maximum are
+`0.0004166623`/`0.00402458`, defining caps `0.0005208279`/`0.00503073`; the
+raw control reproduces RMS `0.08206115`, maximum `4.71565188`, and worst loss
+regression `28.7222%`.
+
+All three single-gradient corrections fail. Norm `0.00025` is the informative
+result: maintenance RMS falls to `0.00363294` and the NPP/AGB/BGB medians all
+improve, but RMS remains `6.98x` above its cap, maximum remains `15.33x` above
+its cap, the anchor regresses `0.0177%`, and the worst loss regresses
+`0.2733%`. The fixed maintenance gradient is useful but cannot jointly restore
+the frozen constraints. The single-gradient projection is closed; do not
+subdivide it. The active task is to freeze a bounded nonlinear constrained
+solver that relinearizes violated constraints in a low-dimensional parameter
+subspace and verifies each correction with exact finite evaluation. No
 architecture change, optimizer update, checkpoint, validation read, sealed
 test, or paid run is authorized. See
 [`successor_maintenance_output_projection_protocol_20260816.md`](research/daily_coarse_graining/successor_maintenance_output_projection_protocol_20260816.md).

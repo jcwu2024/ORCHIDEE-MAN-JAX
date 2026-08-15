@@ -907,12 +907,32 @@ microbatches. A one-point-year zero-displacement memory preflight runs before
 the expensive stopped-state reconstruction; this changes execution shape, not
 the objective, samples, candidates, or gates.
 
-The active operation is one free-`gln01`, zero-retention execution of that
-frozen audit. It performs no optimizer update and reads no validation values.
-If no candidate preserves all 40 losses while meeting the frozen effect and
-maintenance caps, close the single-gradient projection and design a nonlinear
-constrained solver; do not subdivide the same correction. This remains an
-optimizer metric change, not an architecture change or training authorization.
+The free-`gln01` execution completed at commit `629238a`; formal report SHA256
+is `64c68938...ce98c5`. All evidence checks pass with zero hard failures and
+zero nonfinite values. The safe-reference maintenance RMS/maximum are
+`0.0004166623`/`0.00402458`, defining caps `0.0005208279`/`0.00503073`. The
+raw control reproduces RMS `0.08206115`, maximum `4.71565188`, and a worst
+loss regression of `28.7222%`.
+
+No correction passes. Norm `0.000125` leaves maintenance RMS `0.0390105` and
+regresses all three long-horizon medians. Norm `0.00025` is the informative
+near-feasible result: it improves NPP/AGB/BGB medians by
+`0.1628%`/`0.2292%`/`0.0327%`, but maintenance RMS/maximum remain
+`0.00363294`/`0.0771433`, the anchor regresses `0.0177%`, and the worst loss
+regresses `0.2733%`. Norm `0.0005` overshoots maintenance RMS to `0.00680043`
+and still violates the anchor and loss gates. See
+[`successor_maintenance_output_projection_protocol_20260816.md`](research/daily_coarse_graining/successor_maintenance_output_projection_protocol_20260816.md).
+
+The single-gradient projection is closed. Do not subdivide the same
+correction. The active design task is a bounded nonlinear constrained solver
+in a frozen low-dimensional parameter subspace, initialized from the
+informative `0.00025` neighborhood. Each bounded iteration must relinearize
+the currently violated all-40 losses, anchor, and maintenance RMS/maximum
+constraints, then verify the correction by exact finite 30-day evaluation.
+Freeze the subspace, iteration and evaluation budgets, feasibility-restoration
+rule, acceptance gates, and failure action before implementation or execution.
+This remains an optimizer-geometry investigation, not an architecture change
+or training authorization.
 
 No network architecture change is involved. The 365-day rollout,
 long-held-point validation, Gate D2, sealed test, and product gates remain

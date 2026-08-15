@@ -105,9 +105,14 @@ The update-1000 milestone is accepted, but ordinary optimizer continuation
 and several direct parameter-step mechanisms failed to transfer local descent
 into useful 7/30-day gains. A field-local audit now attributes the stopped
 finite-step failure primarily to nonlinear maintenance-respiration output.
-The active gate is one frozen, zero-retention maintenance-output projection
-audit on free `gln01`; it keeps the Attention architecture unchanged and reads
-no validation values. No paid run is authorized.
+The frozen, zero-retention maintenance-output projection audit completed on
+free `gln01` and rejected all three single-gradient corrections. The best
+correction removed about `95.57%` of the raw maintenance RMS but still missed
+the RMS and maximum caps and regressed the anchor and some group-component
+losses. The active task is to design and freeze a bounded nonlinear
+constrained solver in a low-dimensional parameter subspace. It must
+relinearize violated constraints and use exact finite evaluation; it does not
+change the Attention architecture or authorize training or a paid run.
 
 ## New Task Bootstrap
 

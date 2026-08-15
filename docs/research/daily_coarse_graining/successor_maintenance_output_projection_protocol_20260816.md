@@ -1,7 +1,7 @@
 # Successor Maintenance-Output Projection Protocol
 
 Date: 2026-08-16  
-Status: frozen before execution  
+Status: completed; single-gradient maintenance projection rejected
 Contract: `successor_maintenance_output_projection_v1.json`  
 Contract SHA256: `84b96d4ffbc86fb8e34303caff953d5a56b7651190294179f15081f1c5e35b72`
 
@@ -83,3 +83,38 @@ zero-displacement, one-point-year reverse pass before the expensive stopped-
 state reconstruction. Passing that memory preflight authorizes the 40 exact
 microbatch gradients above; it does not change the objective, sample set,
 candidate norms, caps, or gates.
+
+## Result
+
+The free-`gln01` execution completed at commit `629238a`. The formal report is
+`outputs/successor-maintenance-output-projection-629238a.json`, with SHA256
+`64c689388d951c95cbc1339bb5e389e4ff2bae5d20385f655635c1a9a2ce98c5`.
+All evidence checks pass, with zero hard failures and zero nonfinite values.
+The one-point-year gradient preflight used a reported JAX peak of
+`13,869,214,720` bytes; the full audit completed in `3,219.59` seconds.
+
+The safe reference reproduces all 40 nonincreasing losses. Its exact
+maintenance RMS and maximum changes are `0.0004166623` and `0.00402458`, so
+the frozen caps are `0.0005208279` and `0.00503073`. The raw control reproduces
+the failure: maintenance RMS `0.08206115`, maximum `4.71565188`, and worst
+group-component loss regression `28.7222%`.
+
+| Correction norm | Maintenance RMS | Maintenance maximum | Effect and loss result |
+| --- | ---: | ---: | --- |
+| `0.000125` | `0.0390105` | `3.29103` | NPP, AGB, and BGB medians worsen; worst loss regression `12.6934%` |
+| `0.00025` | `0.00363294` | `0.0771433` | NPP `-0.1628%`, AGB `-0.2292%`, BGB `-0.0327%`; anchor `+0.0177%`; worst loss regression `0.2733%` |
+| `0.0005` | `0.00680043` | `0.0754981` | Overshoots the maintenance minimum; anchor `+0.0400%`; worst loss regression `0.2603%` |
+
+No candidate passes. The `0.00025` correction removes about `95.57%` of the
+raw maintenance RMS, but remains `6.98x` above the RMS cap and `15.33x` above
+the maximum cap while violating the anchor and some of the 40 loss
+constraints. Thus the maintenance gradient is informative, but one fixed
+parameter-space direction cannot jointly restore the frozen constraints.
+
+The single-gradient projection is closed. Do not subdivide the same
+correction norm. The next task is to freeze a bounded nonlinear constrained
+solver that relinearizes violated maintenance, anchor, and all-40 loss
+constraints in a low-dimensional parameter subspace and verifies every
+accepted correction with exact finite evaluation. This is still an optimizer-
+geometry investigation, not an Attention architecture change or a training
+authorization.
