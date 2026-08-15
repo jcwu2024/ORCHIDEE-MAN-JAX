@@ -850,9 +850,19 @@ test only a bounded set of source-defined block projections. A projection is
 admissible only if it preserves all-40 first-order descent before its
 finite-step gate. The seven-block leave-one-out audit is frozen under contract
 SHA256 `fa046011...c87153`; local admission passes 77 related tests and all
-static, contract, and launcher checks. One free-`gln01` execution is the
-active gate; see
+static, contract, and launcher checks. The free-`gln01` execution completed at
+commit `c51dd87` and did not attribute a safe top-level exclusion. The output
+decoder carries `96.1526%` of squared direction norm; excluding it breaks
+common descent with minimum relative derivative `-0.285257`, while excluding
+any other block leaves the `28.72%` finite-step regression essentially
+unchanged. Report SHA256 is `a7a170c7...c1a003`; see
 [`successor_parameter_geometry_attribution_20260815.md`](research/daily_coarse_graining/successor_parameter_geometry_attribution_20260815.md).
+
+Do not freeze the full decoder or alter Attention. The active design task is
+a four-leaf decoder attribution over `decoder_first/second` kernels and
+biases, using the same stopped state, all-40 first-order prefilter, and single
+norm-`0.0005` finite-step gate. If no leaf exclusion is safe, close raw
+parameter-space direct steps and design a function/output-space trust region.
 
 No network architecture change is involved. The 365-day rollout,
 long-held-point validation, Gate D2, sealed test, and product gates remain

@@ -92,8 +92,21 @@ block projections only after they preserve all-40 first-order descent. No
 checkpoint, architecture change, paid run, or further raw-direction
 subdivision is authorized. The seven-block leave-one-out contract SHA256 is
 `fa046011...c87153`; local admission passes 77 related tests plus static,
-contract, and launcher checks. One free-`gln01` execution is next. See
+contract, and launcher checks. The free-`gln01` execution completed at commit
+`c51dd87`. The output decoder contains `96.1526%` of squared direction norm.
+Excluding it breaks common descent with minimum relative derivative
+`-0.285257`; excluding each other block preserves first-order descent but
+leaves the full `28.72%` finite-step regression essentially unchanged. No
+top-level block is safely attributed. Report SHA256 is
+`a7a170c7...c1a003`. See
 [`successor_parameter_geometry_attribution_20260815.md`](research/daily_coarse_graining/successor_parameter_geometry_attribution_20260815.md).
+
+The active design task is a four-leaf decoder attribution for the first and
+second decoder kernels and biases. It must preserve the same stopped state,
+all-40 first-order prefilter, and one norm-`0.0005` finite-step gate. A failure
+of every leaf exclusion closes raw parameter-space direct steps and opens a
+function/output-space trust-region design; it does not justify changing the
+Attention architecture.
 
 ## First Formal Neural Candidate
 
