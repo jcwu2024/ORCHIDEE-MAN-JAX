@@ -729,6 +729,32 @@ def test_minimum_norm_solver_scales_to_forty_constraints():
     assert float(np.sum(weights)) == pytest.approx(1.0)
 
 
+@pytest.mark.parametrize("case", ("correlated", "low_rank", "opposed"))
+def test_large_minimum_norm_solver_satisfies_kkt_for_hard_grams(case):
+    rng = np.random.default_rng(20260815)
+    if case == "correlated":
+        vectors = rng.normal(size=(40, 128))
+        vectors[:, :8] += 2.0
+    elif case == "low_rank":
+        basis = rng.normal(size=(8, 128))
+        vectors = np.repeat(basis, 5, axis=0) + 1.0e-8 * rng.normal(size=(40, 128))
+    else:
+        half = rng.normal(size=(20, 128))
+        vectors = np.concatenate((half, -half + 1.0e-8), axis=0)
+    vectors /= np.linalg.norm(vectors, axis=1, keepdims=True)
+    gram = vectors @ vectors.T
+
+    weights = _minimum_norm_simplex_weights(gram)
+
+    gradient = gram @ weights
+    level = float(weights @ gradient)
+    support = weights > 1.0e-9
+    assert np.all(weights >= 0.0)
+    assert float(np.sum(weights)) == pytest.approx(1.0)
+    assert np.max(np.abs(gradient[support] - level)) <= 1.0e-8
+    assert np.all(gradient[~support] >= level - 1.0e-8)
+
+
 def test_gradient_feasibility_contract_is_hash_bound_and_zero_update():
     path = (
         REPOSITORY_ROOT
@@ -1509,11 +1535,13 @@ def test_group_aware_contract_and_launcher_are_zero_update():
     assert manifest["sampling"]["group_component_constraints"] == 40
     assert manifest["direction_gate"]["minimum_group_component_cosine"] == 0.001
     assert manifest["execution"]["optimizer_updates"] == 0
+    assert manifest["execution"]["geometry_sidecar_written"] is True
     assert "requires free gln01" in launcher
     assert "--group-aware" in launcher
     assert "#SBATCH" not in launcher
     assert "successor_adamw_update" not in source
     assert '"checkpoint_written": False' in source
+    assert '"parameters_retained": False' in source
 
 
 def _write_scale_admission_fixture(tmp_path):

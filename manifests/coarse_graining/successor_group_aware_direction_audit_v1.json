@@ -1,7 +1,7 @@
 {
   "schema_version": "successor_group_aware_direction_audit_v1",
   "status": "frozen_zero_update_forty_objective_grid",
-  "contract_sha256": "1bf58c6cb30f9443328e37356de84473d3d72b0621ead7e8069dabb0954f0601",
+  "contract_sha256": "c6db0816b33f2333a8b94f7daaf0fb167be906c66051b036afda69f158fc120d",
   "identity": {
     "multibatch_direction_contract_sha256": "3c3cd06828f9300723e8e53e5708b7e02e386025daa0a9a717c10a948edfcd8d",
     "multibatch_direction_report_sha256": "0601fcd6bc9f51b638bb2de14087be152320e65fa6430e5ddcab254990c0d847",
@@ -55,6 +55,7 @@
     "free_gln01_only": true,
     "paid_training_authorized": false,
     "optimizer_updates": 0,
+    "geometry_sidecar_written": true,
     "proposed_parameters_retained": false,
     "checkpoint_written": false,
     "recovery_written": false,

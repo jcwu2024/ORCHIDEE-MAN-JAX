@@ -336,6 +336,8 @@ def classify_group_aware_direction(
 def run(args: argparse.Namespace) -> Mapping[str, Any]:
     if args.output.exists():
         raise FileExistsError(args.output)
+    if args.geometry_output is not None and args.geometry_output.exists():
+        raise FileExistsError(args.geometry_output)
     started = time.perf_counter()
     group_aware = bool(args.group_aware)
     audit = _load_contract(
@@ -608,8 +610,38 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         flat_gram = _make_flat_gram(jax)
         gram = flat_gram(unit_matrix)
         jax.block_until_ready(gram)
+        gram_host = np.asarray(gram, dtype=np.float64)
+        if args.geometry_output is not None:
+            _atomic_json(
+                args.geometry_output,
+                {
+                    "schema_version": "successor_group_aware_gradient_geometry_v1",
+                    "status": "completed_pre_solver",
+                    "git_head": _git_head(),
+                    "audit_contract_sha256": audit["contract_sha256"],
+                    "constraint_labels": list(constraint_labels),
+                    "normalized_gram_matrix": gram_host.tolist(),
+                    "groups": [
+                        {
+                            "group": record["group"],
+                            "point_years": record["point_years"],
+                            "losses_before": record["losses_before"],
+                            "gradient_norms": record["gradient_norms"],
+                            "parent_hard_gate_counts": record[
+                                "parent_hard_gate_counts"
+                            ],
+                            "nonfinite_component_gradient_values": record[
+                                "nonfinite_component_gradient_values"
+                            ],
+                        }
+                        for record in records
+                    ],
+                    "optimizer_updates": 0,
+                    "parameters_retained": False,
+                },
+            )
         diagnostics = gradient_direction_diagnostics(
-            np.asarray(gram, dtype=np.float64),
+            gram_host,
             labels=constraint_labels,
         )
         selected = diagnostics["directions"]["minimum_norm_unit"]
@@ -783,6 +815,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "audit_contract_sha256": audit["contract_sha256"],
             "predecessor_report_sha256": _sha256_file(args.smoke_report),
             "staged_training_contract_sha256": contract.sha256,
+            "geometry_sidecar_sha256": (
+                _sha256_file(args.geometry_output)
+                if args.geometry_output is not None
+                else None
+            ),
         },
         "architecture": SOURCE_ROUTED_ATTENTION,
         "parameter_count": counts[SOURCE_ROUTED_ATTENTION],
@@ -850,6 +887,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--prepared-manifest", type=Path, required=True)
     parser.add_argument("--recovery-path", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--geometry-output", type=Path)
     parser.add_argument("--group-aware", action="store_true")
     return parser
 

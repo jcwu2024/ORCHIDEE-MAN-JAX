@@ -10,6 +10,7 @@ GPU_DEVICE=${GPU_DEVICE:?set GPU_DEVICE after checking nvidia-smi}
 PREPARED_MANIFEST=${PREPARED_MANIFEST:?set the accepted 1001-2000 manifest}
 RECOVERY_PATH=${RECOVERY_PATH:?set the accepted update-1000 recovery}
 OUTPUT=${OUTPUT:?set a new report path under the project runtime root}
+GEOMETRY_OUTPUT=${GEOMETRY_OUTPUT:?set a new geometry sidecar path under the project runtime root}
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
@@ -35,6 +36,7 @@ case "$(hostname -s)" in
   *) echo "group-aware direction audit requires free gln01" >&2; exit 2 ;;
 esac
 case "$OUTPUT" in "$ROOT/runtime/"*) ;; *) exit 2 ;; esac
+case "$GEOMETRY_OUTPUT" in "$ROOT/runtime/"*) ;; *) exit 2 ;; esac
 for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" \
   "$PROCESS_STATISTICS" "$FAST_STATISTICS" "$RUNNER_CONTRACT" \
   "$AUDIT_CONTRACT" "$PREDECESSOR_CONTRACT" "$PREDECESSOR_REPORT" \
@@ -49,11 +51,13 @@ test -x "$PYTHON"
 test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
 test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
 test ! -e "$OUTPUT"
+test ! -e "$GEOMETRY_OUTPUT"
 command -v nvidia-smi >/dev/null
 nvidia-smi -i "$GPU_DEVICE" \
   --query-gpu=index,name,memory.total,memory.used,utilization.gpu \
   --format=csv,noheader
 mkdir -p "$(dirname "$OUTPUT")"
+mkdir -p "$(dirname "$GEOMETRY_OUTPUT")"
 
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
 NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
@@ -94,6 +98,7 @@ env -u LD_LIBRARY_PATH \
       --validation-prepared-manifest "$VALIDATION_PREPARED" \
       --prepared-manifest "$PREPARED_MANIFEST" \
       --recovery-path "$RECOVERY_PATH" \
+      --geometry-output "$GEOMETRY_OUTPUT" \
       --output "$OUTPUT"
 
 test -f "$OUTPUT"

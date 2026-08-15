@@ -96,6 +96,75 @@ def _active_set_minimum_norm_weights(
     return best
 
 
+def _iterative_active_set_minimum_norm_weights(
+    normalized_gram: np.ndarray,
+    *,
+    tolerance: float = 1.0e-10,
+    maximum_iterations: int = 10_000,
+) -> np.ndarray:
+    """Solve a larger simplex QP by adding and dropping active constraints."""
+
+    matrix = np.asarray(normalized_gram, dtype=np.float64)
+    count = int(matrix.shape[0])
+    weights = np.zeros(count, dtype=np.float64)
+    initial = int(np.argmin(np.diag(matrix)))
+    weights[initial] = 1.0
+    active = {initial}
+    for _ in range(maximum_iterations):
+        indices = np.asarray(sorted(active), dtype=np.int64)
+        face = matrix[np.ix_(indices, indices)]
+        kkt = np.block(
+            [
+                [face, -np.ones((indices.size, 1), dtype=np.float64)],
+                [
+                    np.ones((1, indices.size), dtype=np.float64),
+                    np.zeros((1, 1), dtype=np.float64),
+                ],
+            ]
+        )
+        right = np.concatenate(
+            (np.zeros(indices.size, dtype=np.float64), np.ones(1, dtype=np.float64))
+        )
+        solution, _residuals, _rank, _singular = np.linalg.lstsq(
+            kkt,
+            right,
+            rcond=None,
+        )
+        face_weights = solution[:-1]
+        candidate = np.zeros(count, dtype=np.float64)
+        candidate[indices] = face_weights
+        if np.any(face_weights < -tolerance):
+            delta = candidate - weights
+            leaving = np.asarray(
+                [index for index in indices if delta[index] < -tolerance],
+                dtype=np.int64,
+            )
+            alpha = min(float(-weights[index] / delta[index]) for index in leaving)
+            weights = weights + alpha * delta
+            weights[np.abs(weights) <= tolerance] = 0.0
+            active = {index for index in active if weights[index] > tolerance}
+            if not active:
+                raise ValueError("large minimum-norm active set became empty")
+            weights /= float(np.sum(weights))
+            continue
+        candidate = np.maximum(candidate, 0.0)
+        candidate /= float(np.sum(candidate))
+        gradient = matrix @ candidate
+        level = float(candidate @ gradient)
+        inactive = np.asarray(
+            [index for index in range(count) if index not in active],
+            dtype=np.int64,
+        )
+        if inactive.size == 0 or np.all(gradient[inactive] >= level - tolerance):
+            support = candidate > tolerance
+            if np.max(np.abs(gradient[support] - level)) <= 10.0 * tolerance:
+                return candidate
+        entering = int(inactive[int(np.argmin(gradient[inactive]))])
+        weights = candidate
+        active.add(entering)
+    raise ValueError("large minimum-norm active-set solve did not converge")
+
+
 def _minimum_norm_simplex_weights(
     normalized_gram: np.ndarray,
     *,
@@ -103,6 +172,8 @@ def _minimum_norm_simplex_weights(
     maximum_iterations: int = 20_000,
 ) -> np.ndarray:
     count = int(normalized_gram.shape[0])
+    if count > 20:
+        return _iterative_active_set_minimum_norm_weights(normalized_gram)
     weights = np.full(count, 1.0 / count, dtype=np.float64)
     lipschitz = float(np.max(np.linalg.eigvalsh(normalized_gram)))
     if lipschitz <= 0.0:
@@ -113,23 +184,6 @@ def _minimum_norm_simplex_weights(
         if float(np.max(np.abs(next_weights - weights))) <= tolerance:
             return next_weights
         weights = next_weights
-    if count > 20:
-        gradient = normalized_gram @ weights
-        level = float(weights @ gradient)
-        support = weights > 1.0e-10
-        support_residual = (
-            float(np.max(np.abs(gradient[support] - level)))
-            if np.any(support)
-            else np.inf
-        )
-        inactive_violation = (
-            float(np.max(np.maximum(level - gradient[~support], 0.0)))
-            if np.any(~support)
-            else 0.0
-        )
-        if max(support_residual, inactive_violation) <= 1.0e-8:
-            return weights
-        raise ValueError("large minimum-norm simplex solve did not converge")
     return _active_set_minimum_norm_weights(normalized_gram)
 
 
