@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-14.
+Last updated: 2026-08-15.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -13,44 +13,27 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-The `named_biomass_tendency_v1` objective foundation is implemented without
-changing the selected Attention architecture. It optimizes named AGB/BGB
-errors at 1, 7, and 30 days using train-only tendency scales, preserves the
-one-day process anchor, and removes long-horizon maintenance from the jointly
-summed gradient while retaining maintenance as a later no-regression guard.
+The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
+common first-order direction across 10 train/train groups and the four
+one-day-anchor/NPP/AGB-tendency/BGB-tendency objectives. The group-aware
+minimum-norm simplex audit has minimum cosine `0.050356` over all 40
+constraints. Every tested global norm through `0.0003` improves every
+component in all `10/10` groups, with zero hard or nonfinite failures.
 
-The scale asset passed on free `test01` at commit `5bd55c7`. It uses 64 unique
-train/train point-years and 256 existing prepared-v6 rollout windows, performs
-zero optimizer updates, and has exact-zero Teacher/Teacher loss. The maximum
-AGB+BGB arithmetic tolerance ratio is `0.0456264`. The accepted scales and
-both file and canonical hashes are recorded in
-[`successor_named_biomass_tendency_scale_acceptance_20260814.md`](research/daily_coarse_graining/successor_named_biomass_tendency_scale_acceptance_20260814.md).
+The original audit is formally below its finite-step effect-size gate. At
+norm `0.0003`, median relative changes are `-1.6217e-5` for the one-day anchor,
+`-1.5320e-4` for NPP, `-2.0090e-4` for AGB tendency, and `-5.1778e-5` for BGB
+tendency. Thus NPP and AGB pass the `1e-4` magnitude requirement; anchor and
+BGB do not. No objective regresses. See
+[`successor_group_aware_direction_audit_20260815.md`](research/daily_coarse_graining/successor_group_aware_direction_audit_20260815.md).
 
-The zero-update train/train candidate-objective gradient preflight has passed.
-The accepted shared tendency coefficient is `0.05440473497107039`; weighted
-AGB/NPP and BGB/NPP median gradient ratios are `2.2888` and `0.4369`. All
-complete candidate gradients are finite and every state/budget hard count is
-zero. See
-[`successor_named_biomass_gradient_preflight_20260814.md`](research/daily_coarse_graining/successor_named_biomass_gradient_preflight_20260814.md).
-
-The bounded 100-update no-checkpoint Attention objective A/B is complete and
-rejected. Under identical update-1000 initialization, optimizer, four-point
-groups, and learning rates, the named AGB/BGB tendency candidate worsens the
-four-key NPP/AGB/BGB/total-live validation composite by `10.97%` and improves
-`0/6` slice/horizon cells. NPP, AGB, BGB, and total live biomass regress by
-`10.97%`, `3.73%`, `46.98%`, and `12.14%`. Maintenance improves by `31.05%`
-and both arms retain zero hard failures. Candidate clipping occurs on `93/100`
-updates versus `47/100` for control. The corrected report SHA256 is
-`fb6f6f69...f03b89d`; see
-[`successor_named_biomass_objective_ab_20260814.md`](research/daily_coarse_graining/successor_named_biomass_objective_ab_20260814.md).
-
-The fixed-coefficient tendency objective is closed without more updates.
-Report-only attribution finds candidate median raw gradient norm `6.587`
-versus control `0.927`; candidate clipping occurs on every update in the
-second half, and named tendency terms contribute a median `73.9%` of its
-weighted long-horizon loss. The active gate is design review of a materially
-different gradient-balanced multi-objective training mechanism. This result
-does not by itself reject the selected Attention architecture.
+This result attributes the earlier instability to ordinary gradient
+averaging rather than to the Attention architecture. Training remains closed.
+The active gate is one zero-update extension at norms
+`0.0005, 0.001, 0.0015, 0.002`, bounded by the observed near-linear anchor
+threshold estimate. If no norm passes, the finite-step gate closes without a
+second extension. If one passes, the next design question is how to retain
+the robust direction without recomputing 40 full gradients per update.
 
 ## First Formal Neural Candidate
 
@@ -1558,3 +1541,19 @@ This confirms that effective batch size matters but ordinary averaging is not
 enough. The active gate is a zero-update group-aware 40-objective common
 direction audit. See
 [`successor_multibatch_direction_audit_20260815.md`](research/daily_coarse_graining/successor_multibatch_direction_audit_20260815.md).
+
+The group-aware 40-objective audit then completed on free `gln01` at commit
+`b0ebda9`. A common direction exists with minimum constraint cosine `0.050356`.
+Every tested norm through `0.0003` improves all four components in all ten
+groups, and all hard/nonfinite counts are zero. The formal gate is not passed
+because the one-day anchor and BGB tendency median decreases at `0.0003` are
+`1.6217e-5` and `5.1778e-5`, below the required `1e-4`; NPP and AGB tendency
+already pass. No parameters or checkpoint are retained. Report SHA256 is
+`f9c55f15dbd4744097dc5bc5089a35447d2cc63fcad41a00650622e3d809a4e3`.
+
+This solves the observed direction-sign conflict and leaves a bounded
+finite-step question. The active gate is a zero-update extension at norms
+`0.0005, 0.001, 0.0015, 0.002`, frozen before execution. No architecture
+change, training continuation, validation read, or sealed-test access is
+authorized. See
+[`successor_group_aware_direction_audit_20260815.md`](research/daily_coarse_graining/successor_group_aware_direction_audit_20260815.md).

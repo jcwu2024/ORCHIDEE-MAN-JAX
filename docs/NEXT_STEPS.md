@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-14.
+Last updated: 2026-08-15.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -763,15 +763,25 @@ small point-year conflicts; norm `0.001` becomes nonlinear and regresses up to
 `28.89%`. Report SHA256 is `0601fcd6...c0d847`; see
 [`successor_multibatch_direction_audit_20260815.md`](research/daily_coarse_graining/successor_multibatch_direction_audit_20260815.md).
 
-Do not train the ordinary averaged-gradient direction. The active gate is a
-zero-update group-aware feasibility audit using the same 40 group-component
-gradients. Normalize and constrain each of the 10 groups x 4 components
-separately, solve the 40-objective minimum-norm simplex problem, and only if a
-positive common direction exists evaluate a bounded virtual step grid on all
-ten groups. Retain no parameters and read no validation or sealed-test values.
-No network architecture change is involved. The 365-day rollout,
-long-held-point validation, Gate D2, sealed test, and product gates remain
-closed.
+The zero-update group-aware audit is complete at commit `b0ebda9`. A strong
+common direction exists across all 40 group-component constraints: minimum
+cosine is `0.050356`, all four tested steps improve every component in all
+`10/10` groups, and hard/nonfinite counts are zero. At norm `0.0003`, NPP and
+AGB tendency meet the frozen median-effect threshold, while the one-day anchor
+and BGB tendency improve by only `1.6217e-5` and `5.1778e-5`. The formal
+finite-step classification therefore fails on magnitude only, not on any
+regression. Report SHA256 is `f9c55f15...a4e3`; see
+[`successor_group_aware_direction_audit_20260815.md`](research/daily_coarse_graining/successor_group_aware_direction_audit_20260815.md).
+
+Do not train yet. The active gate is the frozen zero-update finite-step
+extension at norms `0.0005, 0.001, 0.0015, 0.002`. The upper bound is chosen
+before execution from the observed near-linear anchor threshold estimate of
+`0.00185`. Retain no parameters and read no validation or sealed-test values.
+If no step passes, do not extend the grid again; redesign the training
+mechanism. If one passes, review how to approximate the robust direction
+without paying for 40 full gradients on every training update. No network
+architecture change is involved. The 365-day rollout, long-held-point
+validation, Gate D2, sealed test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 

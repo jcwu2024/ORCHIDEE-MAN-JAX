@@ -339,16 +339,21 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     if args.geometry_output is not None and args.geometry_output.exists():
         raise FileExistsError(args.geometry_output)
     started = time.perf_counter()
-    group_aware = bool(args.group_aware)
+    group_aware_extension = bool(args.group_aware_step_extension)
+    group_aware = bool(args.group_aware or group_aware_extension)
     audit = _load_contract(
         args.audit_contract,
         schema_version=(
-            "successor_group_aware_direction_audit_v1"
+            "successor_group_aware_step_extension_v1"
+            if group_aware_extension
+            else "successor_group_aware_direction_audit_v1"
             if group_aware
             else "successor_multibatch_direction_audit_v1"
         ),
         status=(
-            "frozen_zero_update_forty_objective_grid"
+            "frozen_zero_update_forty_objective_extended_grid"
+            if group_aware_extension
+            else "frozen_zero_update_forty_objective_grid"
             if group_aware
             else "frozen_zero_update_accumulated_gradient_grid"
         ),
@@ -356,12 +361,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     predecessor = _load_contract(
         args.smoke_contract,
         schema_version=(
-            "successor_multibatch_direction_audit_v1"
+            "successor_group_aware_direction_audit_v1"
+            if group_aware_extension
+            else "successor_multibatch_direction_audit_v1"
             if group_aware
             else "successor_direct_direction_smoke_v1"
         ),
         status=(
-            "frozen_zero_update_accumulated_gradient_grid"
+            "frozen_zero_update_forty_objective_grid"
+            if group_aware_extension
+            else "frozen_zero_update_accumulated_gradient_grid"
             if group_aware
             else "frozen_10_update_free_gpu_no_checkpoint"
         ),
@@ -372,12 +381,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         status="accepted_zero_update_preflight_no_training_authorized",
     )
     predecessor_contract_key = (
-        "multibatch_direction_contract_sha256"
+        "group_aware_direction_contract_sha256"
+        if group_aware_extension
+        else "multibatch_direction_contract_sha256"
         if group_aware
         else "direct_direction_smoke_contract_sha256"
     )
     predecessor_report_key = (
-        "multibatch_direction_report_sha256"
+        "group_aware_direction_report_sha256"
+        if group_aware_extension
+        else "multibatch_direction_report_sha256"
         if group_aware
         else "direct_direction_smoke_report_sha256"
     )
@@ -387,7 +400,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         or _sha256_file(args.smoke_report)
         != audit["identity"][predecessor_report_key]
     ):
-        raise ValueError("multibatch direction predecessor identity drift")
+        raise ValueError("direction-audit predecessor identity drift")
 
     runtime = _load_extended_runtime(args)
     jax = runtime["jax"]
@@ -805,7 +818,9 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     )
     report = {
         "schema_version": (
-            "successor_group_aware_direction_audit_report_v1"
+            "successor_group_aware_step_extension_report_v1"
+            if group_aware_extension
+            else "successor_group_aware_direction_audit_report_v1"
             if group_aware
             else "successor_multibatch_direction_audit_report_v1"
         ),
@@ -826,6 +841,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "parent_update": PARENT_UPDATE,
         "gradient_aggregation": audit["direction"],
         "group_aware": group_aware,
+        "group_aware_step_extension": group_aware_extension,
         "step_norm_grid": list(step_norms),
         "aggregate_direction": {
             "gradient_norms": diagnostics["gradient_norms"],
@@ -888,7 +904,9 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--recovery-path", type=Path, required=True)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--geometry-output", type=Path)
-    parser.add_argument("--group-aware", action="store_true")
+    mode = parser.add_mutually_exclusive_group()
+    mode.add_argument("--group-aware", action="store_true")
+    mode.add_argument("--group-aware-step-extension", action="store_true")
     return parser
 
 

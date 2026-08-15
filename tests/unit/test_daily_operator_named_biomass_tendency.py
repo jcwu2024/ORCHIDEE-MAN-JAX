@@ -1544,6 +1544,34 @@ def test_group_aware_contract_and_launcher_are_zero_update():
     assert '"parameters_retained": False' in source
 
 
+def test_group_aware_step_extension_is_frozen_and_zero_update():
+    manifest_path = (
+        REPOSITORY_ROOT
+        / "manifests"
+        / "coarse_graining"
+        / "successor_group_aware_step_extension_v1.json"
+    )
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    expected_hash = manifest.pop("contract_sha256")
+    canonical = json.dumps(manifest, sort_keys=True, separators=(",", ":")).encode()
+    launcher = (
+        REPOSITORY_ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_group_aware_step_extension.sh"
+    ).read_text()
+
+    assert hashlib.sha256(canonical).hexdigest() == expected_hash
+    assert manifest["step_norm_grid"] == [0.0005, 0.001, 0.0015, 0.002]
+    assert manifest["sampling"]["group_component_constraints"] == 40
+    assert manifest["execution"]["optimizer_updates"] == 0
+    assert manifest["execution"]["proposed_parameters_retained"] is False
+    assert "requires free gln01" in launcher
+    assert "--group-aware-step-extension" in launcher
+    assert "successor-group-aware-direction-b0ebda9/report.json" in launcher
+    assert "#SBATCH" not in launcher
+
+
 def _write_scale_admission_fixture(tmp_path):
     scales = {
         str(horizon): {
