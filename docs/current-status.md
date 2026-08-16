@@ -248,12 +248,18 @@ discriminating one-day gate. The qualification failed, retained no checkpoint,
 and blocks the 64-point-year and paid stages. See
 [`strong_baseline_one_point_qualification_result_20260816.md`](research/daily_coarse_graining/strong_baseline_one_point_qualification_result_20260816.md).
 
-The active task is a bounded one-point loss-floor diagnostic contract and
-local implementation with per-label/per-field final evidence, an exact
-all-day gradient-accumulation tail, diagnostic-only state retention, and a
-reviewed train-only AGB/BGB tendency normalization. No paid job, 64-point-year
-fit, full epoch, 7/30/365-day screen, long-held point, Gate D2, sealed test, or
-product acceptance is authorized.
+The bounded one-point loss-floor diagnostic contract and local implementation
+are complete. The runner preserves the original 100-epoch recipe, adds at most
+25 exact all-364-day updates through 46 size-8 gradient microbatches, reports
+per-expert/per-label/per-field loss floors, loads the accepted train-only
+one-day AGB/BGB tendency scales, and writes only a diagnostic parameter state.
+Scientific rejection now exits normally and remains distinct from execution
+failure. The related local suite passes 94 tests plus static checks. The active
+task is a short real-v6 free-`gln01` execution preflight, followed on success by
+the frozen full free-`gln01` diagnostic. No paid job, 64-point-year fit, full
+epoch, 7/30/365-day screen, long-held point, Gate D2, sealed test, or product
+acceptance is authorized. See
+[`strong_baseline_one_point_loss_floor_diagnostic_v1.md`](research/daily_coarse_graining/strong_baseline_one_point_loss_floor_diagnostic_v1.md).
 
 ## First Formal Neural Candidate
 

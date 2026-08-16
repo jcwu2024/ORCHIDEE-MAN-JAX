@@ -1009,14 +1009,23 @@ scale AGB/BGB metric was already below threshold at random initialization and
 is not discriminating one-day evidence. See
 [`strong_baseline_one_point_qualification_result_20260816.md`](research/daily_coarse_graining/strong_baseline_one_point_qualification_result_20260816.md).
 
-The active gate is now a bounded one-point loss-floor diagnostic design and
-local admission. It must add per-label/per-field final evidence, distinguish
-minibatch noise from capacity with an exact all-364-day gradient-accumulation
-tail, retain only a diagnostic final state, and repair the AGB/BGB
-normalization using an explicitly reviewed train-only scale. Do not rerun the
-same recipe, regenerate v6, read or join v5, submit paid training, open the
-64-point-year gate, or run 7/30/365-day validation. Long-held points, Gate D2,
-sealed test, and product gates remain closed.
+The bounded one-point loss-floor diagnostic is now frozen and locally
+implemented. It reproduces the 100-epoch qualification, then performs at most
+25 exact all-364-day gradient updates through 46 size-8 microbatches per
+update. It reports every expert, label, value field, and defined-status loss;
+loads the accepted train-only one-day AGB/BGB tendency scales; and writes a
+parameter-only state that is explicitly ineligible for formal initialization
+or promotion. A scientific gate failure exits normally instead of appearing
+as a crashed job. The exact-accumulation, architecture, and tendency-asset
+regressions pass 94 tests, plus Ruff, formatting, compilation, CLI, Bash, and
+diff checks. See
+[`strong_baseline_one_point_loss_floor_diagnostic_v1.md`](research/daily_coarse_graining/strong_baseline_one_point_loss_floor_diagnostic_v1.md).
+
+The active gate is a short real-v6 execution preflight on free `gln01`. If its
+coverage, serialization, and corrected science paths pass, run the frozen full
+diagnostic on free `gln01`; do not alter the 100+25 budget after seeing partial
+losses. Paid training, 64-point-year fit, full epoch, 7/30/365-day screen,
+long-held points, Gate D2, sealed test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 

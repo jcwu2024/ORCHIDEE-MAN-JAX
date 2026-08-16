@@ -102,6 +102,7 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/strong_baseline_axis_aligned_process_expert_review_v1.md` | Accepted strong-baseline architecture and staged absolute gates; local implementation complete | Reviewing the approved mechanism or qualification sequence |
 | `research/daily_coarse_graining/strong_baseline_local_acceptance_20260816.md` | Accepted local structural evidence; real-v6 admission later passed | Reviewing executable capacity, source/axis wiring, dtype, gradient, or local budget evidence |
 | `research/daily_coarse_graining/strong_baseline_one_point_qualification_result_20260816.md` | Active failed qualification and next diagnostic authority | Reviewing one-point fit, expert loss floor, key science metrics, or the blocked 64-point-year gate |
+| `research/daily_coarse_graining/strong_baseline_one_point_loss_floor_diagnostic_v1.md` | Active frozen diagnostic contract; local implementation complete | Running the short free-gln01 preflight and then the bounded full diagnostic |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

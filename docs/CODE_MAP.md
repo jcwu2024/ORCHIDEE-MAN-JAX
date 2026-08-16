@@ -216,11 +216,15 @@ successor; `daily_operator/parameter_routing.py` owns their shared explicit
 fast-parameter factors. The local structural evidence is
 `strong_baseline_local_acceptance_20260816.md`.
 `daily_operator/strong_baseline_qualification.py` owns exact shuffled-epoch
-padding, the no-clip AdamW schedule, and decay exclusions for the one-point
-gate. `scripts/hpc/run_strong_baseline_one_point_qualification.py` owns full
-v6 point-year assembly, training, canonical one-day science metrics, and hard
-counts; its free-`gln01` launcher is the adjacent shell script. The completed
-failed gate is classified in
+padding, the no-clip AdamW schedule, decay exclusions, and reusable
+real-sample-weighted exact-gradient accumulation for the one-point gate.
+`scripts/hpc/run_strong_baseline_one_point_qualification.py` owns full v6
+point-year assembly, training, detailed expert/label/field loss-floor evidence,
+corrected one-day science metrics, diagnostic-state serialization, and hard
+counts. The frozen exact-gradient tail is launched on free `gln01` by
+`scripts/hpc/run_strong_baseline_one_point_loss_floor_diagnostic.sh` and is
+specified in `strong_baseline_one_point_loss_floor_diagnostic_v1.md`. The
+completed failed qualification is classified in
 `strong_baseline_one_point_qualification_result_20260816.md`. The earlier
 zero-update admission is implemented by
 `scripts/hpc/run_strong_baseline_gpu_admission.py` and its free-`gln01`

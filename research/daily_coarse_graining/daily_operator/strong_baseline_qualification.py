@@ -15,6 +15,24 @@ class StrongBaselineAdamWState(NamedTuple):
     second_moment: Any
 
 
+class ExactGradientAccumulatorState(NamedTuple):
+    gradient_sum: Any
+    admitted_samples: Any
+    microbatch_count: Any
+    weighted_microbatch_gradient_norm_sum: Any
+    nonfinite_gradient_values: Any
+
+
+class ExactGradientSummary(NamedTuple):
+    gradients: Any
+    gradient_norm: Any
+    mean_microbatch_gradient_norm: Any
+    cancellation_ratio: Any
+    admitted_samples: Any
+    microbatch_count: Any
+    nonfinite_gradient_values: Any
+
+
 def padded_epoch_batches(
     sample_count: int,
     batch_size: int,
@@ -75,12 +93,7 @@ def strong_baseline_weight_decay_mask(parameters: Any) -> Any:
 
     def admitted(path: tuple[Any, ...], _value: Any) -> bool:
         key = _path_key(path)
-        return not (
-            key == "bias"
-            or key.endswith("_bias")
-            or key == "scale"
-            or key.endswith("_norm_scale")
-        )
+        return not (key == "bias" or key.endswith("_bias") or key == "scale" or key.endswith("_norm_scale"))
 
     return jax.tree_util.tree_map_with_path(admitted, parameters)
 
@@ -91,6 +104,87 @@ def initialize_strong_baseline_adamw(parameters: Any) -> StrongBaselineAdamWStat
         step=jnp.asarray(0, dtype=jnp.int32),
         first_moment=zeros,
         second_moment=zeros,
+    )
+
+
+def initialize_exact_gradient_accumulator(parameters: Any) -> ExactGradientAccumulatorState:
+    """Initialize a sample-weighted full-dataset gradient accumulator."""
+
+    return ExactGradientAccumulatorState(
+        gradient_sum=jax.tree_util.tree_map(jnp.zeros_like, parameters),
+        admitted_samples=jnp.asarray(0.0, dtype=jnp.float32),
+        microbatch_count=jnp.asarray(0, dtype=jnp.int32),
+        weighted_microbatch_gradient_norm_sum=jnp.asarray(0.0, dtype=jnp.float32),
+        nonfinite_gradient_values=jnp.asarray(0, dtype=jnp.int32),
+    )
+
+
+def accumulate_exact_gradient_microbatch(
+    state: ExactGradientAccumulatorState,
+    gradients: Any,
+    admitted_samples: Any,
+) -> ExactGradientAccumulatorState:
+    """Add one mean microbatch gradient using its real-sample count."""
+
+    count = jnp.asarray(admitted_samples, dtype=jnp.float32)
+    squared_norm = sum(
+        (
+            jnp.sum(jnp.square(jnp.asarray(leaf, dtype=jnp.float32)), dtype=jnp.float32)
+            for leaf in jax.tree_util.tree_leaves(gradients)
+        ),
+        jnp.asarray(0.0, dtype=jnp.float32),
+    )
+    nonfinite = sum(
+        (jnp.sum(~jnp.isfinite(jnp.asarray(leaf)), dtype=jnp.int32) for leaf in jax.tree_util.tree_leaves(gradients)),
+        jnp.asarray(0, dtype=jnp.int32),
+    )
+    return ExactGradientAccumulatorState(
+        gradient_sum=jax.tree_util.tree_map(
+            lambda total, gradient: total + count * gradient,
+            state.gradient_sum,
+            gradients,
+        ),
+        admitted_samples=state.admitted_samples + count,
+        microbatch_count=state.microbatch_count + jnp.asarray(1, dtype=jnp.int32),
+        weighted_microbatch_gradient_norm_sum=(
+            state.weighted_microbatch_gradient_norm_sum + count * jnp.sqrt(squared_norm)
+        ),
+        nonfinite_gradient_values=state.nonfinite_gradient_values + nonfinite,
+    )
+
+
+def finalize_exact_gradient_accumulator(
+    state: ExactGradientAccumulatorState,
+) -> ExactGradientSummary:
+    """Return the exact sample-mean gradient and cancellation diagnostics."""
+
+    denominator = jnp.maximum(state.admitted_samples, jnp.asarray(1.0, dtype=jnp.float32))
+    gradients = jax.tree_util.tree_map(
+        lambda value: value / denominator,
+        state.gradient_sum,
+    )
+    squared_norm = sum(
+        (
+            jnp.sum(jnp.square(jnp.asarray(leaf, dtype=jnp.float32)), dtype=jnp.float32)
+            for leaf in jax.tree_util.tree_leaves(gradients)
+        ),
+        jnp.asarray(0.0, dtype=jnp.float32),
+    )
+    gradient_norm = jnp.sqrt(squared_norm)
+    mean_microbatch_norm = state.weighted_microbatch_gradient_norm_sum / denominator
+    cancellation_ratio = jnp.where(
+        mean_microbatch_norm > 0.0,
+        gradient_norm / mean_microbatch_norm,
+        0.0,
+    )
+    return ExactGradientSummary(
+        gradients=gradients,
+        gradient_norm=gradient_norm,
+        mean_microbatch_gradient_norm=mean_microbatch_norm,
+        cancellation_ratio=cancellation_ratio,
+        admitted_samples=state.admitted_samples,
+        microbatch_count=state.microbatch_count,
+        nonfinite_gradient_values=state.nonfinite_gradient_values,
     )
 
 
@@ -124,9 +218,7 @@ def strong_baseline_adamw_update(
     rate = jnp.asarray(learning_rate, dtype=jnp.float32)
 
     def update(parameter, first_value, second_value, apply_decay):
-        direction = (first_value / first_correction) / (
-            jnp.sqrt(second_value / second_correction) + epsilon
-        )
+        direction = (first_value / first_correction) / (jnp.sqrt(second_value / second_correction) + epsilon)
         direction = direction + (
             jnp.asarray(apply_decay, dtype=parameter.dtype)
             * jnp.asarray(weight_decay, dtype=parameter.dtype)
@@ -145,6 +237,11 @@ def strong_baseline_adamw_update(
 
 
 __all__ = [
+    "ExactGradientAccumulatorState",
+    "ExactGradientSummary",
+    "accumulate_exact_gradient_microbatch",
+    "finalize_exact_gradient_accumulator",
+    "initialize_exact_gradient_accumulator",
     "StrongBaselineAdamWState",
     "initialize_strong_baseline_adamw",
     "padded_epoch_batches",
