@@ -68,6 +68,14 @@ accepted.
 
 ## Reopening Rule
 
+The user-directed strong-baseline qualification is not a claim that one
+mechanism beats another and is not ranked against a rejected checkpoint. It
+may therefore train one baseline against frozen absolute capability and
+scientific gates without a matched arm. This exception does not promote a
+historical idea or permit open-ended tuning. After a strong baseline passes,
+any causal architecture claim, ablation, or reopening of a rejected mechanism
+still requires the matched-control rules below.
+
 A rejected idea may be reopened only when all of the following are written
 before training:
 

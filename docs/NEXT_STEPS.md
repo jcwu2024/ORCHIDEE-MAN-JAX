@@ -966,21 +966,26 @@ key aggregates and all six temporal/spatial/joint 7/30-day cells regressed.
 The checkpoint is retained for diagnosis and is not promotion eligible. See
 [`successor_attention_mixed_annealed_continuation_result_20260816.md`](research/daily_coarse_graining/successor_attention_mixed_annealed_continuation_result_20260816.md).
 
-The active gate is now an explicit user review of objective alignment versus
-backbone/capacity. Do not add more updates under the same recipe, alter the
-Attention architecture, start another paid run, or open the 365-day screen
-before that review. The update-1000 checkpoint remains incumbent. Long-held
-points, Gate D2, sealed test, and product gates remain closed.
+The user rejected further local ranking around the weak update-1000 model as
+the main research strategy. That checkpoint is diagnostic evidence, not an
+incumbent that defines success. The route-local-decoder A/B is superseded
+before implementation and must not be built or trained as the next candidate.
 
-The resulting proposal is a route-local decoder architecture review, not an
-implementation. It retains the v2 Attention body but replaces the universal
-decoder with five source-route-local width-256 decoders. Its matched control
-uses one width-1280 shared decoder; estimated total parameter counts differ by
-only four. Both would start from scratch and use the same named-biomass
-tendency objective, 2,000 point-years, and 500-update bounded screen. This
-directly tests the decoder/maintenance coupling identified by the accepted
-attribution chain. User review is required before any code change. See
-[`successor_route_local_decoder_architecture_review_v1.md`](research/daily_coarse_graining/successor_route_local_decoder_architecture_review_v1.md).
+The active gate is user review of one independently capable strong baseline,
+`axis_aligned_process_expert_operator_v1`. The proposal preserves dynamic
+PFT/depth/pool/part coordinates from source encoding through seven
+process-owned expert paths and axis-local family heads. It targets 35-50
+million parameters, uses all 8,591,565 train/train days in complete shuffled
+one-day epochs, proves small-set memorization before scale, and then applies a
+7/30-day rollout curriculum. It has no matched control during baseline
+qualification and is judged only by absolute one-day, productivity, biomass,
+bias, state, and budget gates. Controls and ablations are deferred until a
+baseline passes those gates. See
+[`strong_baseline_axis_aligned_process_expert_review_v1.md`](research/daily_coarse_graining/strong_baseline_axis_aligned_process_expert_review_v1.md).
+
+Do not create a manifest, implement the network, prepare training payloads,
+start a GPU run, or open the 365-day screen before that architecture review.
+Long-held points, Gate D2, sealed test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 

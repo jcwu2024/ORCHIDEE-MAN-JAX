@@ -118,13 +118,15 @@ mixed-point annealed continuation completed all 250 updates and 1,000 unique
 point-years. It was numerically valid and improved maintenance aggregate RMSE
 by 22.3%, but the primary NPP/AGB/BGB/total-live composite became 6.98% worse
 and all six 7/30-day cells regressed. Its final checkpoint is diagnostic only;
-the update-1000 checkpoint remains incumbent. The active gate is a user review
-of objective alignment versus backbone/capacity before any further network or
-paid run. The proposed next mechanism retains the Attention body and compares
-five source-route-local decoders against a parameter-matched wide shared
-decoder; it remains proposal-only in
-`successor_route_local_decoder_architecture_review_v1.md`. No architecture
-change is authorized without that discussion.
+the update-1000 checkpoint remains diagnostic only. The user rejected further
+local ranking around weak models as the main research strategy. The active
+gate is now review of an independently capable strong baseline: dynamic
+axis-aligned source encoding, seven process-owned experts, axis-local output
+heads, complete v6 epoch-level one-day pretraining, and a 7/30-day curriculum
+with absolute scientific gates. The former route-local-decoder A/B is
+superseded before implementation. See
+`strong_baseline_axis_aligned_process_expert_review_v1.md`. No network code or
+paid run is authorized before user review.
 
 ## New Task Bootstrap
 

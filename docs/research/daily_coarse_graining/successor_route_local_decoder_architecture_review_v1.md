@@ -1,9 +1,14 @@
 # Successor Route-Local Decoder Architecture Review v1
 
-Status: **proposal only; user architecture review required before
-implementation**.
+Status: **superseded as the next task before implementation; retained as an
+unexecuted diagnostic hypothesis**.
 
 Date: 2026-08-16
+
+The user redirected current work from local comparison around the rejected v2
+model to an independently capable strong baseline. See
+`strong_baseline_axis_aligned_process_expert_review_v1.md`. Nothing in this
+document was implemented or trained.
 
 ## Decision Question
 

@@ -195,24 +195,31 @@ loss fell 4.7% from the first to last 50-update window and maintenance
 aggregate validation RMSE improved 22.3%. The research-primary
 NPP/AGB/BGB/total-live composite nevertheless became 6.98% worse; all four
 primary aggregates and all six 7/30-day cells regressed. The final state is
-retained but not promotion eligible, and update 1000 remains incumbent. See
+retained but not promotion eligible, and update 1000 remains a diagnostic
+reference only. See
 [`successor_attention_mixed_annealed_continuation_result_20260816.md`](research/daily_coarse_graining/successor_attention_mixed_annealed_continuation_result_20260816.md).
 
-The active gate is a user review of research-output-aligned loss repair versus
-backbone/capacity change. More updates under the same recipe, architecture
-changes, paid runs, the 365-day screen, long-held points, Gate D2, sealed test,
-and product acceptance are not authorized before that review.
+The user rejected further local ranking around the weak update-1000 model as
+the main research strategy. It is diagnostic evidence, not an incumbent that
+defines success. The route-local-decoder A/B is superseded before
+implementation.
 
-The current proposal retains the source-routed Attention body and changes only
-output ownership. Five width-256 decoders separately own water, energy,
-carbon-other, fast GPP, and fast maintenance outputs. The matched control uses
-one width-1280 shared decoder; estimated total parameter counts are 8,986,885
-and 8,986,881. Both arms would start from scratch and share a bounded
-500-update, 2,000-point-year named-biomass-tendency screen. This is targeted at
-the accepted evidence that the universal decoder carries 96.15% of the failed
-direction and maintenance carries about 94-95% of the NPP/BGB output
-nonlinearity. It remains proposal-only pending user review. See
-[`successor_route_local_decoder_architecture_review_v1.md`](research/daily_coarse_graining/successor_route_local_decoder_architecture_review_v1.md).
+The active proposal is `axis_aligned_process_expert_operator_v1`. The audit
+behind it records 23,540 train/train point-years and 8,591,565 days versus only
+500 point-years and 8,000 one-day anchors in the first fit. It also identifies
+a deeper architecture bottleneck: all source/process Attention finishes at one
+query per field before scalar coordinates are expanded, so large carbon
+tensors cannot condition one output coordinate on its matching local input
+depth/pool/PFT state. The proposal preserves dynamic axes through seven
+process-owned expert paths and axis-local heads, targets 35-50 million
+parameters, trains complete v6 one-day epochs before a 7/30-day curriculum,
+and uses only absolute scientific gates. It has no matched control during
+baseline qualification. See
+[`strong_baseline_axis_aligned_process_expert_review_v1.md`](research/daily_coarse_graining/strong_baseline_axis_aligned_process_expert_review_v1.md).
+
+No architecture implementation, GPU run, paid job, 365-day screen, long-held
+point, Gate D2, sealed test, or product acceptance is authorized before user
+review.
 
 ## First Formal Neural Candidate
 
