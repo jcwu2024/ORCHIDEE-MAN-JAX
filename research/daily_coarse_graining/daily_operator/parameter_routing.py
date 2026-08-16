@@ -17,17 +17,40 @@ and an input to the retained daily ``vmax_step`` state update.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, NamedTuple
+from typing import Any, Mapping, NamedTuple
 
 import jax.numpy as jnp
 
+from jax_orchidee.stomate.carbon_kernels import (
+    IAGRHRTPN,
+    IAGRHRTST,
+    IAGRSAPPN,
+    IAGRSAPST,
+    ICARBRES,
+    IFRUIT,
+    IHEARTABOVE,
+    IHEARTBELOW,
+    ILEAF,
+    IROOT,
+    ISAPABOVE,
+    ISAPBELOW,
+    root_temperature,
+)
 from research.daily_coarse_graining.daily_pft_interface import (
     DailyPFTInterfaceContract,
     load_daily_pft_interface_contract,
 )
 
+from .process_derivations import (
+    NativeForcingFieldLayout,
+    derive_native_daily_deterministic_fields,
+)
+
 FAST_PROCESS_FACTOR = "explicit_parameterized_fast_process_factor"
 RETAINED_EXACT = "retained_exact"
+PFT_TRAIT_BARE_SOIL = 0
+PFT_TRAIT_IS_TREE = 2
+VCMAX25_FACTOR_SCALE = 100.0
 
 
 @dataclass(frozen=True)
@@ -150,6 +173,81 @@ def fast_process_parameter_factors(
         vcmax25=vcmax25,
         maintenance_temperature_slope=slope,
     )
+
+
+def apply_fast_parameter_routes(
+    outputs: Mapping[str, Any],
+    inputs: Any,
+    layout: Any,
+    forcing_layout: NativeForcingFieldLayout,
+) -> dict[str, Any]:
+    """Apply the shared explicit VCMAX25 and maintenance parameter factors."""
+
+    result = dict(outputs)
+    pft = inputs.pft
+    active = jnp.asarray(pft.active_pft_mask, dtype=jnp.bool_)
+    traits = jnp.asarray(pft.pft_traits, dtype=jnp.float64)
+    fraction = jnp.asarray(pft.pft_fraction, dtype=jnp.float64)
+    bare = active & (fraction > 0.0) & (traits[:, PFT_TRAIT_BARE_SOIL] > 0.5)
+    vegetation = active & (fraction > 0.0) & ~bare
+
+    continuous = jnp.asarray(inputs.canonical_input.continuous_state, dtype=jnp.float64)
+    tlong_k = continuous[layout.t2m_longterm_start : layout.t2m_longterm_stop][0]
+    factors = fast_process_parameter_factors(
+        pft.pft_parameters,
+        jnp.broadcast_to(tlong_k - 273.15, active.shape),
+    )
+    base_gpp = jnp.asarray(result["daily.fast_gpp"], dtype=jnp.float64)[0]
+    gpp = base_gpp * jnp.maximum(factors.vcmax25, 0.0) / VCMAX25_FACTOR_SCALE
+    result["daily.fast_gpp"] = jnp.where(vegetation, gpp, 0.0)[None, :]
+
+    deterministic = derive_native_daily_deterministic_fields(
+        inputs.forcing,
+        forcing_layout,
+        model_interval_seconds=layout.model_interval_seconds,
+    )
+    air_k = jnp.asarray(deterministic.t2m_daily, dtype=jnp.float64).reshape(-1)[0]
+    soil_k = jnp.asarray(result["daily.temperature_context.tsoil"], dtype=jnp.float64)
+    root_k = root_temperature(
+        soil_k[:, None, :],
+        jnp.asarray(inputs.process_static.z_soil, dtype=jnp.float64),
+        jnp.asarray(inputs.process_static.rprof, dtype=jnp.float64),
+    )[0]
+    part_temperature = jnp.broadcast_to(air_k, (active.shape[0], 12))
+    below = jnp.asarray([ISAPBELOW, IHEARTBELOW, IROOT], dtype=jnp.int32)
+    part_temperature = part_temperature.at[:, below].set(root_k[:, None])
+    is_tree = traits[:, PFT_TRAIT_IS_TREE] > 0.5
+    reserve_temperature = jnp.where(is_tree, air_k, root_k)
+    part_temperature = part_temperature.at[:, ICARBRES].set(reserve_temperature)
+    above = jnp.asarray(
+        [
+            ILEAF,
+            ISAPABOVE,
+            IHEARTABOVE,
+            IFRUIT,
+            IAGRSAPST,
+            IAGRSAPPN,
+            IAGRHRTST,
+            IAGRHRTPN,
+        ],
+        dtype=jnp.int32,
+    )
+    part_temperature = part_temperature.at[:, above].set(air_k)
+    multiplier = jnp.maximum(
+        1.0 + factors.maintenance_temperature_slope[:, None] * (part_temperature - 273.15),
+        0.0,
+    )
+    base_maintenance = jnp.asarray(
+        result["daily.fast_maintenance_respiration"],
+        dtype=jnp.float64,
+    )[0]
+    maintenance = base_maintenance * multiplier
+    result["daily.fast_maintenance_respiration"] = jnp.where(
+        vegetation[:, None],
+        maintenance,
+        0.0,
+    )[None, ...]
+    return result
 
 
 def retained_exact_pft_parameters(

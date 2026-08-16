@@ -99,7 +99,8 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/successor_attention_mixed_annealed_continuation_protocol_20260816.md` | Completed frozen Attention-only training contract; candidate not admitted | Reviewing the preregistered recipe or execution boundary |
 | `research/daily_coarse_graining/successor_attention_mixed_annealed_continuation_result_20260816.md` | Active negative training evidence; maintenance improves while every primary 7/30-day cell regresses | Reviewing objective alignment versus backbone/capacity with the user |
 | `research/daily_coarse_graining/successor_route_local_decoder_architecture_review_v1.md` | Superseded before implementation; retained unexecuted diagnostic hypothesis | Tracing why decoder isolation was considered |
-| `research/daily_coarse_graining/strong_baseline_axis_aligned_process_expert_review_v1.md` | Active proposal only; strong baseline architecture and absolute gates await user review | Discussing the next architecture before implementation |
+| `research/daily_coarse_graining/strong_baseline_axis_aligned_process_expert_review_v1.md` | Accepted strong-baseline architecture and staged absolute gates; local implementation complete | Reviewing the approved mechanism or qualification sequence |
+| `research/daily_coarse_graining/strong_baseline_local_acceptance_20260816.md` | Active local structural acceptance; real-v6 one-point-year qualification pending | Reviewing executable capacity, source/axis wiring, dtype, gradient, or local budget evidence |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

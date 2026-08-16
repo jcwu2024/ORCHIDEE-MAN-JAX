@@ -9,21 +9,6 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
-from jax_orchidee.stomate.carbon_kernels import (
-    IAGRHRTPN,
-    IAGRHRTST,
-    IAGRSAPPN,
-    IAGRSAPST,
-    ICARBRES,
-    IFRUIT,
-    IHEARTABOVE,
-    IHEARTBELOW,
-    ILEAF,
-    IROOT,
-    ISAPABOVE,
-    ISAPBELOW,
-    root_temperature,
-)
 from research.daily_coarse_graining.constrained_daily_replay import (
     CARBON_INVENTORY_FIELDS,
     THERMAL_FIELDS,
@@ -38,11 +23,9 @@ from .neural_architecture import (
     ProcessAxisLayout,
     build_process_axis_layout,
 )
-from .parameter_routing import fast_process_parameter_factors
-from .process_derivations import (
-    NativeForcingFieldLayout,
-    derive_native_daily_deterministic_fields,
-)
+from .output_transform import field_coordinates, normalized_output_to_physical
+from .parameter_routing import apply_fast_parameter_routes
+from .process_derivations import NativeForcingFieldLayout
 from .state_features import assemble_local_pft_features
 from .successor_contract import SuccessorCandidateContract
 from .types import AssembledDailyOperatorInput
@@ -50,9 +33,6 @@ from .types import AssembledDailyOperatorInput
 SOURCE_ROUTED_ATTENTION = "source_routed_process_attention_v2"
 SOURCE_ROUTED_GRAPH_CONTROL = "source_routed_graph_mlp_control_v2"
 SUCCESSOR_FINAL_DECODER_KERNEL_GAIN = 1.0e-3
-PFT_TRAIT_BARE_SOIL = 0
-PFT_TRAIT_IS_TREE = 2
-VCMAX25_FACTOR_SCALE = 100.0
 
 
 @dataclass(frozen=True)
@@ -90,10 +70,7 @@ class SummaryTokenLayout:
         tokens, width = self.pool_matrix.shape
         if tokens == 0:
             raise ValueError("summary token layout cannot be empty")
-        if any(
-            value.shape != (tokens,)
-            for value in (self.field_index, self.family_index, self.pft_index)
-        ):
+        if any(value.shape != (tokens,) for value in (self.field_index, self.family_index, self.pft_index)):
             raise ValueError("summary token metadata shape drift")
         if self.element_pft_index.shape != (width,):
             raise ValueError("summary token element/PFT layout drift")
@@ -161,22 +138,14 @@ def _reverse_groups(groups: Mapping[str, Sequence[str]]) -> dict[str, str]:
 
 
 def _represented_state_keys(assembler: CanonicalDailyOperatorInputAssembler) -> set[str]:
-    keys = {
-        f"hydrol_previous_step_state.{name}" for name in WATER_INVENTORY_FIELDS
-    }
-    keys.update(
-        f"slowproc_stomate_previous_step_state.{name}"
-        for name in CARBON_INVENTORY_FIELDS
-    )
+    keys = {f"hydrol_previous_step_state.{name}" for name in WATER_INVENTORY_FIELDS}
+    keys.update(f"slowproc_stomate_previous_step_state.{name}" for name in CARBON_INVENTORY_FIELDS)
     keys.update(
         f"{component}.{field}"
         for component, field, _bound in THERMAL_FIELDS
         if f"{component}.{field}" in assembler.thermal_keys
     )
-    keys.update(
-        f"slowproc_stomate_previous_step_state.{name}"
-        for name in ("veget_max", "lai", "biomass")
-    )
+    keys.update(f"slowproc_stomate_previous_step_state.{name}" for name in ("veget_max", "lai", "biomass"))
     return keys
 
 
@@ -208,9 +177,7 @@ def _state_summary_layout(
         local_size = int(leaf.stop - leaf.start)
         local_shape = tuple(int(value) for value in leaf.shape)
         grid = (
-            np.indices(local_shape, dtype=np.int32)
-            .reshape((len(local_shape), -1))
-            .T
+            np.indices(local_shape, dtype=np.int32).reshape((len(local_shape), -1)).T
             if local_shape
             else np.zeros((1, 0), dtype=np.int32)
         )
@@ -421,9 +388,7 @@ def build_successor_token_layout(
         field_graph_mask=graph,
         t2m_longterm_start=int(tlong[0].start),
         t2m_longterm_stop=int(tlong[0].stop),
-        model_interval_seconds=float(
-            assembler.contract.native_forcing.model_interval_seconds
-        ),
+        model_interval_seconds=float(assembler.contract.native_forcing.model_interval_seconds),
     )
 
 
@@ -514,9 +479,7 @@ def initialize_successor_parameters(
         "summary_input": _linear_parameters(next(keys), 4, config.d_model),
         "pft_input": _linear_parameters(next(keys), pft_width, config.d_model),
         "calendar_input": _linear_parameters(next(keys), 4, config.d_model),
-        "family_embedding": _normal(
-            next(keys), (len(layout.family_names), config.d_model), config.d_model
-        ),
+        "family_embedding": _normal(next(keys), (len(layout.family_names), config.d_model), config.d_model),
         "forcing_field_embedding": _normal(
             next(keys),
             (np.asarray(layout.forcing_family_index).size, config.d_model),
@@ -534,29 +497,17 @@ def initialize_successor_parameters(
             config.d_model,
         ),
         "semantic_position_embedding": _normal(next(keys), (64, config.d_model), config.d_model),
-        "state_field_embedding": _normal(
-            next(keys), (len(layout.state.field_names), config.d_model), config.d_model
-        ),
-        "static_field_embedding": _normal(
-            next(keys), (len(layout.static.field_names), config.d_model), config.d_model
-        ),
-        "annual_field_embedding": _normal(
-            next(keys), (len(layout.annual.field_names), config.d_model), config.d_model
-        ),
+        "state_field_embedding": _normal(next(keys), (len(layout.state.field_names), config.d_model), config.d_model),
+        "static_field_embedding": _normal(next(keys), (len(layout.static.field_names), config.d_model), config.d_model),
+        "annual_field_embedding": _normal(next(keys), (len(layout.annual.field_names), config.d_model), config.d_model),
         "process_static_field_embedding": _normal(next(keys), (6, config.d_model), config.d_model),
         "field_queries": _normal(next(keys), (len(schema.fields), config.d_model), config.d_model),
         "label_embedding": _normal(next(keys), (len(schema.labels), config.d_model), config.d_model),
-        "output_field_embedding": _normal(
-            next(keys), (len(schema.fields), config.d_model), config.d_model
-        ),
+        "output_field_embedding": _normal(next(keys), (len(schema.fields), config.d_model), config.d_model),
         "axis_ordinal_embedding": _normal(next(keys), (6, config.d_model), config.d_model),
         "output_position_embedding": _normal(next(keys), (64, config.d_model), config.d_model),
-        "forcing_blocks": tuple(
-            _forcing_block_parameters(next(keys), config) for _ in range(config.forcing_blocks)
-        ),
-        "process_blocks": tuple(
-            _process_block_parameters(next(keys), config) for _ in range(config.process_blocks)
-        ),
+        "forcing_blocks": tuple(_forcing_block_parameters(next(keys), config) for _ in range(config.forcing_blocks)),
+        "process_blocks": tuple(_process_block_parameters(next(keys), config) for _ in range(config.process_blocks)),
         "decoder_first": _linear_parameters(next(keys), config.d_model, config.decoder_width),
         "decoder_second": _final_decoder_parameters(next(keys), config.decoder_width),
     }
@@ -673,9 +624,7 @@ def _summary_tokens(
     safe = jnp.where(valid, values, 0.0)
     mean = jnp.sum(jnp.where(pool, safe[None, :], 0.0), axis=1) / jnp.maximum(count, 1.0)
     centered = jnp.where(pool, safe[None, :] - mean[:, None], 0.0)
-    std = _sqrt_with_zero_tangent(
-        jnp.sum(centered * centered, axis=1) / jnp.maximum(count, 1.0)
-    )
+    std = _sqrt_with_zero_tangent(jnp.sum(centered * centered, axis=1) / jnp.maximum(count, 1.0))
     minimum = jnp.min(jnp.where(pool, safe[None, :], jnp.inf), axis=1)
     maximum = jnp.max(jnp.where(pool, safe[None, :], -jnp.inf), axis=1)
     summary = jnp.stack(
@@ -761,9 +710,7 @@ def _process_static_tokens(
             jnp.stack(
                 (
                     mean,
-                    _sqrt_with_zero_tangent(
-                        jnp.sum(centered * centered) / jnp.maximum(count, 1.0)
-                    ),
+                    _sqrt_with_zero_tangent(jnp.sum(centered * centered) / jnp.maximum(count, 1.0)),
                     jnp.min(jnp.where(valid, array, jnp.inf)),
                     jnp.max(jnp.where(valid, array, -jnp.inf)),
                 )
@@ -1042,12 +989,6 @@ def _encode_field_queries(
     return queries
 
 
-def _field_coordinates(shape: tuple[int, ...]) -> np.ndarray:
-    if not shape:
-        return np.zeros((1, 0), dtype=np.int32)
-    return np.stack(np.unravel_index(np.arange(np.prod(shape)), shape), axis=1).astype(np.int32)
-
-
 def _decode_field(
     parameters: Mapping[str, Any],
     queries: Any,
@@ -1058,7 +999,7 @@ def _decode_field(
     normalization: NeuralOutputNormalization,
     inputs: AssembledDailyOperatorInput,
 ) -> Any:
-    coordinates = jnp.asarray(_field_coordinates(field.shape), dtype=jnp.int32)
+    coordinates = jnp.asarray(field_coordinates(field.shape), dtype=jnp.int32)
     features = jnp.broadcast_to(
         queries[field_index] + parameters["output_field_embedding"][field_index],
         (coordinates.shape[0], queries.shape[-1]),
@@ -1077,9 +1018,7 @@ def _decode_field(
                 active_mask &= compact < context.pft_tokens.shape[0]
             safe_compact = jnp.minimum(compact, context.pft_tokens.shape[0] - 1)
             active_mask &= context.pft_mask[safe_compact]
-            features += jnp.where(
-                active_mask[:, None], context.pft_tokens[safe_compact], 0.0
-            )
+            features += jnp.where(active_mask[:, None], context.pft_tokens[safe_compact], 0.0)
         else:
             features += parameters["axis_ordinal_embedding"][axis]
             features += parameters["output_position_embedding"][coordinate]
@@ -1087,123 +1026,13 @@ def _decode_field(
         parameters["decoder_second"],
         jax.nn.gelu(_linear(parameters["decoder_first"], features)),
     )[:, 0]
-    if field.constraint == "logit":
-        return jnp.where(active_mask, raw, 0.0).reshape(field.shape)
-    mean = jnp.asarray(normalization.mean[field.name], dtype=jnp.float64).reshape(-1)
-    scale = jnp.asarray(normalization.scale[field.name], dtype=jnp.float64).reshape(-1)
-    scale = jnp.where(jnp.isfinite(scale) & (scale > 0.0), scale, 1.0)
-    if field.value_representation == "direct":
-        if field.constraint == "unit_interval":
-            value = jax.nn.sigmoid(raw)
-        elif field.constraint == "signed_unit":
-            value = jnp.tanh(raw)
-        elif field.constraint == "nonnegative":
-            ratio = jnp.maximum(mean / scale, 1.0e-12)
-            baseline = ratio + jnp.log(-jnp.expm1(-ratio))
-            value = jax.nn.softplus(baseline + raw) * scale
-        else:
-            value = mean + scale * raw
-    else:
-        if field.value_representation == "normalized_day_end_minus_day_start_owner":
-            continuous = jnp.asarray(
-                inputs.canonical_input.continuous_state,
-                dtype=jnp.float64,
-            )
-            start = int(field.day_start_state_start)
-            stop = int(field.day_start_state_stop)
-            day_start = continuous[start:stop]
-            day_start_defined = jnp.isfinite(day_start) & (jnp.abs(day_start) < 0.5e20)
-            base = jnp.where(day_start_defined, day_start, 0.0)
-        else:
-            base = jnp.zeros_like(raw)
-        center = base + mean
-        if field.constraint == "unit_interval":
-            bounded = jnp.clip(center, 1.0e-6, 1.0 - 1.0e-6)
-            local_slope = jnp.maximum(bounded * (1.0 - bounded), 1.0e-6)
-            baseline = jnp.log(bounded) - jnp.log1p(-bounded)
-            value = jax.nn.sigmoid(baseline + raw * scale / local_slope)
-        elif field.constraint == "nonnegative":
-            positive_center = jnp.maximum(center, scale * 1.0e-12)
-            ratio = positive_center / scale
-            baseline = ratio + jnp.log(-jnp.expm1(-ratio))
-            value = jax.nn.softplus(baseline + raw) * scale
-        elif field.constraint == "signed_unit":
-            bounded = jnp.clip(center, -1.0 + 1.0e-6, 1.0 - 1.0e-6)
-            local_slope = jnp.maximum(1.0 - bounded * bounded, 1.0e-6)
-            value = jnp.tanh(jnp.arctanh(bounded) + raw * scale / local_slope)
-        else:
-            value = center + scale * raw
-    return jnp.where(active_mask, value, 0.0).reshape(field.shape)
-
-
-def _apply_fast_parameter_routes(
-    outputs: Mapping[str, Any],
-    inputs: AssembledDailyOperatorInput,
-    layout: SuccessorTokenLayout,
-    forcing_layout: NativeForcingFieldLayout,
-) -> dict[str, Any]:
-    result = dict(outputs)
-    pft = inputs.pft
-    active = jnp.asarray(pft.active_pft_mask, dtype=jnp.bool_)
-    traits = jnp.asarray(pft.pft_traits, dtype=jnp.float64)
-    fraction = jnp.asarray(pft.pft_fraction, dtype=jnp.float64)
-    bare = active & (fraction > 0.0) & (traits[:, PFT_TRAIT_BARE_SOIL] > 0.5)
-    vegetation = active & (fraction > 0.0) & ~bare
-
-    continuous = jnp.asarray(inputs.canonical_input.continuous_state, dtype=jnp.float64)
-    tlong_k = continuous[layout.t2m_longterm_start : layout.t2m_longterm_stop][0]
-    factors = fast_process_parameter_factors(
-        pft.pft_parameters,
-        jnp.broadcast_to(tlong_k - 273.15, active.shape),
+    return normalized_output_to_physical(
+        raw,
+        active_mask,
+        field=field,
+        normalization=normalization,
+        inputs=inputs,
     )
-    base_gpp = jnp.asarray(result["daily.fast_gpp"], dtype=jnp.float64)[0]
-    gpp = base_gpp * jnp.maximum(factors.vcmax25, 0.0) / VCMAX25_FACTOR_SCALE
-    result["daily.fast_gpp"] = jnp.where(vegetation, gpp, 0.0)[None, :]
-
-    deterministic = derive_native_daily_deterministic_fields(
-        inputs.forcing,
-        forcing_layout,
-        model_interval_seconds=layout.model_interval_seconds,
-    )
-    air_k = jnp.asarray(deterministic.t2m_daily, dtype=jnp.float64).reshape(-1)[0]
-    soil_k = jnp.asarray(result["daily.temperature_context.tsoil"], dtype=jnp.float64)
-    root_k = root_temperature(
-        soil_k[:, None, :],
-        jnp.asarray(inputs.process_static.z_soil, dtype=jnp.float64),
-        jnp.asarray(inputs.process_static.rprof, dtype=jnp.float64),
-    )[0]
-    part_temperature = jnp.broadcast_to(air_k, (active.shape[0], 12))
-    below = jnp.asarray([ISAPBELOW, IHEARTBELOW, IROOT], dtype=jnp.int32)
-    part_temperature = part_temperature.at[:, below].set(root_k[:, None])
-    is_tree = traits[:, PFT_TRAIT_IS_TREE] > 0.5
-    reserve_temperature = jnp.where(is_tree, air_k, root_k)
-    part_temperature = part_temperature.at[:, ICARBRES].set(reserve_temperature)
-    above = jnp.asarray(
-        [
-            ILEAF,
-            ISAPABOVE,
-            IHEARTABOVE,
-            IFRUIT,
-            IAGRSAPST,
-            IAGRSAPPN,
-            IAGRHRTST,
-            IAGRHRTPN,
-        ],
-        dtype=jnp.int32,
-    )
-    part_temperature = part_temperature.at[:, above].set(air_k)
-    multiplier = jnp.maximum(
-        1.0 + factors.maintenance_temperature_slope[:, None] * (part_temperature - 273.15),
-        0.0,
-    )
-    base_maintenance = jnp.asarray(
-        result["daily.fast_maintenance_respiration"], dtype=jnp.float64
-    )[0]
-    maintenance = base_maintenance * multiplier
-    result["daily.fast_maintenance_respiration"] = jnp.where(
-        vegetation[:, None], maintenance, 0.0
-    )[None, ...]
-    return result
 
 
 def successor_process_outputs(
@@ -1239,4 +1068,4 @@ def successor_process_outputs(
         )
         for index, field in enumerate(schema.fields)
     }
-    return _apply_fast_parameter_routes(outputs, inputs, layout, forcing_layout)
+    return apply_fast_parameter_routes(outputs, inputs, layout, forcing_layout)

@@ -1,0 +1,338 @@
+{
+  "schema_version": "strong_baseline_axis_aligned_process_expert_v1",
+  "status": "frozen_after_user_architecture_approval_for_local_implementation",
+  "contract_sha256": "baf5791f0786f22e05e8db9115eeab9a77687e19250d4d9efcb5181d6a96351d",
+  "architecture_id": "axis_aligned_process_expert_operator_v1",
+  "architecture_document": "docs/research/daily_coarse_graining/strong_baseline_axis_aligned_process_expert_review_v1.md",
+  "operator_boundary": "bind_daily_operator(input_assembler=canonical_assembler, process_head=baseline_head, retained_tail=canonical_retained_tail_adapter)",
+  "data_identity": {
+    "release_id": "pft14-daily-teacher-v6",
+    "dataset_manifest_sha256": "5fc2c0691bfa53252f875f7646f3c1a5bea203c2759a6e947b26bb51dc13aa99",
+    "acceptance_report_sha256": "8784ed42dc64ef77c9642f613eb2e5940635edc6e744a1af4ea8634293baa8e3",
+    "markov_contract_sha256": "6813065b51e95a2ec6663d8bc92f5336148704aea502632a05fd51d7e2e9d442",
+    "typed_contract_sha256": "395c35585ec4fcb04d15f3d189af3f7957646fc38f9f27245c5136ba9a123423",
+    "fast_owner_contract_sha256": "4db5f828442212c58903096c36015f9d769c19aeaaa4eb9a4326fbea2fdfc4c9",
+    "historical_v5_allowed": false,
+    "teacher_regeneration_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "expected_output_schema": {
+    "field_count": 181,
+    "label_count": 48,
+    "scalar_count": 39371,
+    "expert_counts": {
+      "canopy_gpp": {"fields": 17, "labels": 2, "scalars": 26},
+      "surface_energy": {"fields": 18, "labels": 7, "scalars": 61},
+      "hydrology_snow": {"fields": 77, "labels": 18, "scalars": 929},
+      "soil_thermal": {"fields": 16, "labels": 4, "scalars": 739},
+      "maintenance_respiration": {"fields": 1, "labels": 1, "scalars": 24},
+      "litter_poc_doc": {"fields": 42, "labels": 13, "scalars": 37518},
+      "daily_interface_finalize": {"fields": 10, "labels": 3, "scalars": 74}
+    }
+  },
+  "precision": {
+    "neural_parameters": "float32",
+    "neural_activations": "float32",
+    "optimizer_state": "float32",
+    "head_raw_to_constrained_cast": "float64",
+    "output_normalization": "float64",
+    "conservative_update": "float64",
+    "retained_tail": "float64",
+    "scientific_loss": "float64",
+    "reduced_precision_allowed": false
+  },
+  "capacity": {
+    "expert_width": 384,
+    "attention_heads": 8,
+    "expert_blocks": 3,
+    "forcing_width": 256,
+    "forcing_blocks": 2,
+    "axial_blocks": 1,
+    "parameter_count_minimum": 35000000,
+    "parameter_count_target_maximum": 50000000,
+    "parameter_count_hard_maximum": 60000000,
+    "dense_all_output_to_all_input_attention_allowed": false
+  },
+  "source_families": [
+    "forcing_thermodynamic",
+    "forcing_wind",
+    "forcing_precipitation",
+    "forcing_radiation",
+    "pft_structure",
+    "state_canopy",
+    "state_energy",
+    "state_water",
+    "state_thermal",
+    "state_carbon",
+    "state_driver",
+    "state_finalize",
+    "static_hydrology",
+    "static_surface",
+    "static_soil_carbon",
+    "static_mangrove",
+    "process_static_hydrology",
+    "process_static_carbon",
+    "annual_co2",
+    "calendar"
+  ],
+  "source_members": {
+    "forcing_fields": {
+      "forcing_thermodynamic": ["Tair", "PSurf", "Qair"],
+      "forcing_wind": ["Wind_E", "Wind_N"],
+      "forcing_precipitation": ["Rainf", "Snowf"],
+      "forcing_radiation": ["SWdown", "LWdown"]
+    },
+    "state_components": {
+      "state_canopy": ["diffuco_previous_step_state"],
+      "state_energy": ["enerbil_previous_step_state"],
+      "state_water": ["hydrol_previous_step_state"],
+      "state_thermal": ["thermosoil_previous_step_state"],
+      "state_carbon": ["slowproc_stomate_previous_step_state"],
+      "state_driver": ["driver_previous_step_state"],
+      "state_finalize": ["sechiba_finalize_state"]
+    },
+    "static_fields": {
+      "static_hydrology": [
+        "hydrol_humcste", "hydrol_throughfall_by_pft", "hydrol_cwrr_ks",
+        "hydrol_zz_mm", "hydrol_dz_mm", "hydrol_reinf_slope", "diaglev",
+        "sechiba_qsint", "pref_soil_veg", "soiltile", "soilclass"
+      ],
+      "static_surface": [
+        "ext_coeff_vegetfrac", "lalo", "lon", "lat", "areas", "contfrac",
+        "resolution", "corners", "seglength", "measurement_heights"
+      ],
+      "static_soil_carbon": [
+        "njsc", "clay_frac", "sand_frac", "silt_frac", "bulk_dens",
+        "soil_ph", "poor_soils"
+      ],
+      "static_mangrove": ["salinity", "tide_height"]
+    },
+    "annual_fields": {
+      "annual_co2": ["annual_co2_ppm"]
+    },
+    "process_static_fields": {
+      "process_static_hydrology": ["rprof", "z_soil"],
+      "process_static_carbon": ["litterfrac", "cue", "frac_carb", "sro_bottom"]
+    },
+    "structural": ["pft_structure", "calendar"]
+  },
+  "source_axis_bindings": {
+    "static_fields": {
+      "hydrol_humcste": [{"dimension": 0, "axis": "pft", "mode": "full_pft"}],
+      "hydrol_throughfall_by_pft": [{"dimension": 0, "axis": "pft", "mode": "full_pft"}],
+      "hydrol_cwrr_ks": [{"dimension": 0, "axis": "soil_layer", "mode": "interval_boundaries"}],
+      "hydrol_zz_mm": [{"dimension": 0, "axis": "soil_layer", "mode": "direct"}],
+      "hydrol_dz_mm": [{"dimension": 0, "axis": "soil_layer", "mode": "direct"}],
+      "diaglev": [{"dimension": 0, "axis": "soil_layer", "mode": "direct"}],
+      "ext_coeff_vegetfrac": [{"dimension": 0, "axis": "pft", "mode": "full_pft"}],
+      "pref_soil_veg": [{"dimension": 0, "axis": "pft", "mode": "full_pft"}],
+      "soiltile": [{"dimension": 1, "axis": "soil_tile", "mode": "direct"}]
+    },
+    "process_static_fields": {
+      "rprof": [{"dimension": 1, "axis": "pft", "mode": "compact_pft"}],
+      "z_soil": [{"dimension": 0, "axis": "soil_layer", "mode": "interval_boundaries"}],
+      "litterfrac": [
+        {"dimension": 0, "axis": "plant_part", "mode": "direct"},
+        {"dimension": 1, "axis": "litter_pool", "mode": "direct"}
+      ],
+      "frac_carb": [
+        {"dimension": 1, "axis": "carbon_pool", "mode": "direct"},
+        {"dimension": 2, "axis": "carbon_pool", "mode": "direct"}
+      ]
+    }
+  },
+  "experts": {
+    "canopy_gpp": {
+      "owner": "canopy exchange and fast GPP",
+      "admitted_sources": [
+        "forcing_thermodynamic", "forcing_wind", "forcing_radiation",
+        "pft_structure", "state_canopy", "state_energy", "state_water",
+        "state_thermal", "state_carbon", "state_driver",
+        "static_hydrology", "static_surface", "static_mangrove",
+        "process_static_hydrology", "annual_co2", "calendar"
+      ]
+    },
+    "surface_energy": {
+      "owner": "surface energy and non-soil-thermal energy fluxes",
+      "admitted_sources": [
+        "forcing_thermodynamic", "forcing_wind", "forcing_precipitation",
+        "forcing_radiation", "pft_structure", "state_canopy", "state_energy",
+        "state_water", "state_thermal", "state_driver", "static_hydrology",
+        "static_surface", "process_static_hydrology", "calendar"
+      ]
+    },
+    "hydrology_snow": {
+      "owner": "hydrology, flood, routing, and snow mass",
+      "admitted_sources": [
+        "forcing_thermodynamic", "forcing_wind", "forcing_precipitation",
+        "forcing_radiation", "pft_structure", "state_canopy", "state_energy",
+        "state_water", "state_thermal", "state_driver", "static_hydrology",
+        "static_surface", "static_mangrove", "process_static_hydrology",
+        "calendar"
+      ]
+    },
+    "soil_thermal": {
+      "owner": "soil, snow, and daily temperature context",
+      "admitted_sources": [
+        "forcing_thermodynamic", "forcing_precipitation", "forcing_radiation",
+        "pft_structure", "state_energy", "state_water", "state_thermal",
+        "static_hydrology", "static_surface", "static_soil_carbon",
+        "process_static_hydrology", "calendar"
+      ]
+    },
+    "maintenance_respiration": {
+      "owner": "plant maintenance respiration",
+      "admitted_sources": [
+        "forcing_thermodynamic", "pft_structure", "state_thermal",
+        "state_carbon", "process_static_hydrology", "calendar"
+      ]
+    },
+    "litter_poc_doc": {
+      "owner": "litter, particulate carbon, DOC, and peat transfers",
+      "admitted_sources": [
+        "forcing_thermodynamic", "forcing_precipitation", "pft_structure",
+        "state_water", "state_thermal", "state_carbon", "static_hydrology",
+        "static_soil_carbon", "static_mangrove", "process_static_hydrology",
+        "process_static_carbon", "calendar"
+      ]
+    },
+    "daily_interface_finalize": {
+      "owner": "driver, daily summary, status, and final interface",
+      "admitted_sources": [
+        "forcing_thermodynamic", "forcing_wind", "forcing_precipitation",
+        "forcing_radiation", "pft_structure", "state_canopy", "state_energy",
+        "state_water", "state_thermal", "state_carbon", "state_driver",
+        "state_finalize", "static_hydrology", "static_surface",
+        "static_soil_carbon", "static_mangrove", "process_static_hydrology",
+        "process_static_carbon", "annual_co2", "calendar"
+      ]
+    }
+  },
+  "label_ownership": {
+    "carbon.cryoturbation_redistribution": "litter_poc_doc",
+    "carbon.doc_export": "litter_poc_doc",
+    "carbon.doc_external_input": "litter_poc_doc",
+    "carbon.doc_free_adsorbed_equilibration": "litter_poc_doc",
+    "carbon.doc_gross_decomposition": "litter_poc_doc",
+    "carbon.doc_vertical_diffusion": "litter_poc_doc",
+    "carbon.doc_vertical_water_transport": "litter_poc_doc",
+    "carbon.fast_gpp": "canopy_gpp",
+    "carbon.fast_maintenance_respiration": "maintenance_respiration",
+    "carbon.litter_respiration": "litter_poc_doc",
+    "carbon.litter_to_doc": "litter_poc_doc",
+    "carbon.ok_leak_inventory_endpoints": "litter_poc_doc",
+    "carbon.perma_peat_redistribution": "litter_poc_doc",
+    "carbon.poc_gross_decomposition": "litter_poc_doc",
+    "energy.daily_temperature_context": "soil_thermal",
+    "energy.ground_heat_integral": "surface_energy",
+    "energy.latent_heat_integral": "surface_energy",
+    "energy.net_radiation_integral": "surface_energy",
+    "energy.phase_change_integral": "surface_energy",
+    "energy.sensible_heat_integral": "surface_energy",
+    "energy.snow_thermal_tendency": "soil_thermal",
+    "energy.soil_temperature_tendency": "soil_thermal",
+    "energy.surface_temperature_tendency": "surface_energy",
+    "water.bare_soil_evaporation": "hydrology_snow",
+    "water.canopy_inventory_endpoints": "hydrology_snow",
+    "water.canopy_precipitation_partition": "hydrology_snow",
+    "water.canopy_to_ground": "hydrology_snow",
+    "water.drainage": "hydrology_snow",
+    "water.flood_evaporation": "hydrology_snow",
+    "water.flood_inventory_endpoints": "hydrology_snow",
+    "water.routing_exchange": "hydrology_snow",
+    "water.runoff": "hydrology_snow",
+    "water.snow_inventory_endpoints": "hydrology_snow",
+    "water.snow_phase_and_melt_transfer": "hydrology_snow",
+    "water.snow_sublimation": "hydrology_snow",
+    "water.soil_infiltration": "hydrology_snow",
+    "water.soil_inventory_endpoints": "hydrology_snow",
+    "water.soil_vertical_transfer": "hydrology_snow",
+    "water.transpiration": "hydrology_snow",
+    "water.wet_canopy_evaporation": "hydrology_snow",
+    "fast_owner.driver": "daily_interface_finalize",
+    "fast_owner.diffuco": "canopy_gpp",
+    "fast_owner.enerbil": "surface_energy",
+    "fast_owner.hydrol": "hydrology_snow",
+    "fast_owner.thermosoil": "soil_thermal",
+    "daily_summary": "daily_interface_finalize",
+    "ok_leak_aux": "litter_poc_doc",
+    "fast_owner.sechiba_finalize": "daily_interface_finalize"
+  },
+  "axis_registry": {
+    "landpoint": {"aliases": ["landpoint", "npts"], "mode": "singleton_batch", "local_token_required": false},
+    "pft": {"aliases": ["pft", "nvm"], "mode": "shared_permutation_equivariant", "local_token_required": true},
+    "soil_layer": {"aliases": ["soil_layer", "nslm"], "mode": "ordered_factorized_axial", "local_token_required": true},
+    "soil_tile": {"aliases": ["soil_tile", "nstm"], "mode": "categorical_shared", "local_token_required": true},
+    "snow_layer": {"aliases": ["snow_layer", "nsnow"], "mode": "ordered_factorized_axial", "local_token_required": true},
+    "nonbiological_tile": {"aliases": ["nonbiological_tile", "snow_nonbio", "nnobio"], "mode": "categorical_shared", "local_token_required": true},
+    "deep_layer": {"aliases": ["deep_layer", "ndeep"], "mode": "ordered_factorized_axial", "local_token_required": true},
+    "carbon_pool": {"aliases": ["carbon_pool", "ncarb"], "mode": "categorical_shared", "local_token_required": true},
+    "doc_form": {"aliases": ["doc_form", "ndoc"], "mode": "categorical_shared", "local_token_required": true},
+    "doc_pool": {"aliases": ["doc_pool", "npool"], "mode": "categorical_shared", "local_token_required": true},
+    "element": {"aliases": ["element", "nelements"], "mode": "categorical_shared", "local_token_required": true},
+    "thermal_ground_layer": {"aliases": ["thermal_ground_layer", "ngrnd"], "mode": "ordered_factorized_axial", "local_token_required": true},
+    "lai_class": {"aliases": ["lai_class", "nlai"], "mode": "ordered_factorized_axial", "local_token_required": true},
+    "litter_pool": {"aliases": ["litter_pool", "nlitt"], "mode": "categorical_shared", "local_token_required": true},
+    "plant_part": {"aliases": ["plant_part", "nparts"], "mode": "categorical_shared", "local_token_required": true},
+    "spectral_band": {"aliases": ["spectral_band", "spectral_band_2"], "mode": "categorical_shared", "local_token_required": true},
+    "routing_role": {"aliases": ["routing_role"], "mode": "categorical_shared", "local_token_required": true},
+    "transfer_direction": {"aliases": ["transfer_direction"], "mode": "categorical_shared", "local_token_required": true}
+  },
+  "field_axis_overrides": {
+    "daily.fast_gpp": ["landpoint", "pft"],
+    "daily.fast_maintenance_respiration": ["landpoint", "pft", "plant_part"],
+    "daily.temperature_context.tsurf": ["landpoint"],
+    "daily.temperature_context.tsoil": ["landpoint", "soil_layer"],
+    "endpoint.daily_summary.resp_maint_radia": ["landpoint", "pft"],
+    "endpoint.fast_state.final_diagnostics.temp_sol": ["landpoint"]
+  },
+  "field_pft_axis_overrides": {
+    "endpoint.daily_summary.resp_maint_radia": 1
+  },
+  "graph_messages": {
+    "rounds": 2,
+    "gate": {"range": [0.0, 1.0], "initial_value": 0.01, "qualification_value": 0.0},
+    "directed_edges": [
+      ["hydrology_snow", "canopy_gpp"],
+      ["surface_energy", "canopy_gpp"],
+      ["soil_thermal", "canopy_gpp"],
+      ["canopy_gpp", "surface_energy"],
+      ["hydrology_snow", "surface_energy"],
+      ["soil_thermal", "surface_energy"],
+      ["canopy_gpp", "hydrology_snow"],
+      ["surface_energy", "hydrology_snow"],
+      ["soil_thermal", "hydrology_snow"],
+      ["surface_energy", "soil_thermal"],
+      ["hydrology_snow", "soil_thermal"],
+      ["canopy_gpp", "maintenance_respiration"],
+      ["soil_thermal", "maintenance_respiration"],
+      ["canopy_gpp", "litter_poc_doc"],
+      ["hydrology_snow", "litter_poc_doc"],
+      ["soil_thermal", "litter_poc_doc"],
+      ["maintenance_respiration", "litter_poc_doc"],
+      ["canopy_gpp", "daily_interface_finalize"],
+      ["surface_energy", "daily_interface_finalize"],
+      ["hydrology_snow", "daily_interface_finalize"],
+      ["soil_thermal", "daily_interface_finalize"],
+      ["maintenance_respiration", "daily_interface_finalize"],
+      ["litter_poc_doc", "daily_interface_finalize"]
+    ]
+  },
+  "loss_weighting": {
+    "process_fidelity": "equal_experts_then_equal_labels_within_expert",
+    "equal_scalar_weighting_allowed": false,
+    "expert_metrics_required": true
+  },
+  "forbidden": [
+    "historical_v5_rows",
+    "teacher_v6_regeneration",
+    "historical_checkpoint_initialization",
+    "landpoint_identity_embedding",
+    "48_record_forcing_reconstruction",
+    "48_step_state_scan",
+    "cross_day_neural_hidden_state",
+    "universal_output_decoder",
+    "dense_all_output_to_all_input_attention",
+    "validation_driven_loss_weight_search"
+  ]
+}

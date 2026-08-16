@@ -204,7 +204,7 @@ the main research strategy. It is diagnostic evidence, not an incumbent that
 defines success. The route-local-decoder A/B is superseded before
 implementation.
 
-The active proposal is `axis_aligned_process_expert_operator_v1`. The audit
+The user approved `axis_aligned_process_expert_operator_v1`. The audit
 behind it records 23,540 train/train point-years and 8,591,565 days versus only
 500 point-years and 8,000 one-day anchors in the first fit. It also identifies
 a deeper architecture bottleneck: all source/process Attention finishes at one
@@ -214,12 +214,33 @@ depth/pool/PFT state. The proposal preserves dynamic axes through seven
 process-owned expert paths and axis-local heads, targets 35-50 million
 parameters, trains complete v6 one-day epochs before a 7/30-day curriculum,
 and uses only absolute scientific gates. It has no matched control during
-baseline qualification. See
+baseline qualification. The refined proposal keeps neural algebra and AdamW
+in float32 but casts head outputs into the existing float64 constrained
+physics, retained-tail, loss, and budget path. It also stops successively at
+the structural, one-point-year, 64-point-year, 1%/10% epoch, one-day, 7-day,
+30-day, and 365-day gates; every expert is scored independently so aggregate
+loss cannot hide an unlearned process. See
 [`strong_baseline_axis_aligned_process_expert_review_v1.md`](research/daily_coarse_graining/strong_baseline_axis_aligned_process_expert_review_v1.md).
 
-No architecture implementation, GPU run, paid job, 365-day screen, long-held
-point, Gate D2, sealed test, or product acceptance is authorized before user
-review.
+Its contract is frozen at SHA256 `baf5791f...a96351d`. The executable has
+49,750,681 float32 parameters, seven independent experts, source-restricted
+forcing Attention, one shared factorized axial block, axis-aligned
+static/process-static/state inputs, per-label heads, and an
+equal-expert/equal-label loss. Fourteen local tests pass exact
+schema and capacity checks, eager/JIT full forward, finite loss and JVP/VJP,
+full/compact PFT mapping, forcing-source isolation, inactive-PFT isolation,
+and a synthetic bound one-day conservative update with zero water/carbon
+budget residual. The combined strong-baseline and relevant successor/parameter
+routing regression run passes 39 tests.
+See
+[`strong_baseline_local_acceptance_20260816.md`](research/daily_coarse_graining/strong_baseline_local_acceptance_20260816.md).
+
+The real-v6 zero-update admission runner is locally ready. The active gate is
+its free-`gln01` sample/canonical-lifecycle execution,
+followed only if it passes by the one train/train point-year memorization
+qualification. No paid job, 64-point-year fit, full epoch, 7/30/365-day
+screen, long-held point, Gate D2, sealed test, or product acceptance is yet
+authorized.
 
 ## First Formal Neural Candidate
 

@@ -203,6 +203,23 @@ record is `successor_process_head_local_foundation_20260809.md`.
 `daily_operator/neural_architecture.py` remains the closed first-pair
 implementation and is not the successor default.
 
+The current independently capable baseline is frozen by
+`manifests/coarse_graining/strong_baseline_axis_aligned_process_expert_v1.json`.
+`daily_operator/strong_baseline_contract.py` owns its seven-expert field,
+source, and axis admission; `strong_baseline_architecture.py` owns the
+49,750,681-parameter float32 forcing/factorized-axis/expert/output network;
+`strong_baseline_process_head.py` owns the Gate-E binding; and
+`strong_baseline_loss.py` owns equal-expert then equal-label process fidelity.
+`daily_operator/output_transform.py` contains the shared float64 constrained
+output transformation used by both the strong baseline and historical
+successor; `daily_operator/parameter_routing.py` owns their shared explicit
+fast-parameter factors. The local structural evidence is
+`strong_baseline_local_acceptance_20260816.md`. The real-v6 one-point-year
+zero-update admission is implemented by
+`scripts/hpc/run_strong_baseline_gpu_admission.py` and its free-`gln01`
+launcher; it is not yet executed or accepted. The memorization fit runner is
+not yet implemented.
+
 `daily_operator/nonlinear_projection.py` owns the active host-side bounded
 SLSQP subproblem, exact violation merit, and candidate acceptance for the
 zero-retention low-dimensional projection audit. The JAX reconstruction,

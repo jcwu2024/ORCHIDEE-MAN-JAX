@@ -56,9 +56,10 @@ current route distribution is:
 The current architecture completes all source and process Attention at one
 query per field. Only after that aggregation does it expand a field into its
 scalar coordinates by adding static axis and position embeddings. Therefore
-all 8,512 elements of a large carbon-transfer field, for example, start from
-the same already-aggregated field representation. An output coordinate cannot
-then query the corresponding input depth, carbon pool, PFT, or DOC pool.
+all 6,272 elements of `typed.ok_leak.cryoturbation_doc_transfer`, for example,
+start from the same already-aggregated field representation. An output
+coordinate cannot then query the corresponding input depth, carbon pool, PFT,
+or DOC pool.
 
 Several process-static arrays are also reduced to four statistics before the
 process body. Their layer- or pool-local values are unavailable to a local
@@ -126,11 +127,19 @@ output:
 - element, litter level, LAI class, and other declared contract axes.
 
 Small arrays may use one token per valid element. Large tensors use shared
-axis encoders and factorized axial blocks. Layered static quantities such as
-`z_soil`, `rprof`, `litterfrac`, `cue`, `frac_carb`, and `sro_bottom` must
-remain aligned with their applicable axes; replacing them with global
-mean/standard-deviation/minimum/maximum summaries is forbidden where a local
-head consumes the corresponding axis.
+axis encoders and factorized axial blocks. There is no dense Attention matrix
+between all elements of a large tensor. One axial block mixes one physical
+axis at a time while treating the other coordinates as batch/group indices;
+its cost is the sum of the per-axis interactions rather than the square of all
+tensor elements.
+
+Layered static quantities such as `z_soil`, `rprof`, `litterfrac`, `cue`,
+`frac_carb`, and `sro_bottom` must remain aligned with their applicable axes;
+replacing them with global mean/standard-deviation/minimum/maximum summaries
+is forbidden where a local head consumes the corresponding axis. Axis names,
+extents, masks, and local-state correspondence come from the accepted Markov,
+typed-label, and fast-owner contracts rather than hand-written positional
+guesses.
 
 Weights remain shared along PFT and repeated physical axes. PFT permutation,
 inactive-slot isolation, and variable legal `n_pft` remain structural gates.
@@ -155,12 +164,23 @@ universal hidden stack or output decoder.
 Two directed process-graph message rounds exchange only bounded summary
 messages. The graph admits the physical couplings needed by canopy, water,
 energy, temperature, maintenance, and soil carbon without giving every output
-unrestricted access to every expert parameter. Message gates are residual and
-initialized near zero so that each expert begins as a learnable local path.
+unrestricted access to every expert parameter. Each directed edge has a
+bounded residual gate initialized to approximately `0.01`; the ungated local
+path is always present. This prevents cross-process messages from becoming a
+required information path before an expert can learn its own mapping.
+
+The one-point-year and 64-point-year qualification runs disable graph
+messages and report each expert separately. Formal training starts again from
+new parameters with the same gates trainable from their near-zero
+initialization. Message magnitude, gate value, and received/sent gradient norm
+are diagnostics; large messages cannot hide a failed local expert.
 
 The exact field-to-expert ledger must cover all 181 fields once and only once
-before initialization. The source masks remain a restriction, not merely
-documentation.
+before initialization. Ownership follows the Teacher process, not the schema
+prefix: a hydrology endpoint remains owned by the hydrology expert rather than
+being placed into a catch-all finalize expert. The finalization expert may own
+only true interface, status, driver, and final-diagnostic fields. The source
+masks remain a restriction, not merely documentation.
 
 ### 4. Axis-aligned output heads
 
@@ -179,24 +199,55 @@ depth/PFT/pool state rather than only on a global field query. Heads share
 weights within a scientific label family, but GPP, maintenance, water, energy,
 and soil-carbon families do not share a final MLP.
 
+The output path is linear in the number of valid output elements. Each element
+uses gathered axis/local tokens and a shared family MLP; the design does not
+construct `39,371 x input-token-count` Attention. This is the required memory
+boundary for one-day batching and 30-day rematerialized rollout.
+
 Existing unit-interval, nonnegative, signed, signed-unit, status-logit,
 day-start-delta, mask, and exact parameter-route semantics remain unchanged.
 `vcmax25` and maintenance factors retain their explicit fast-process roles;
 `alloc_min` and `residence_time` continue to bypass the neural encoder and act
 in retained exact processes.
 
-### 5. Capacity envelope
+### 5. Capacity and precision envelope
 
-The provisional target is 35-50 million float64 parameters:
+The provisional target remains 35-50 million trainable parameters:
 
 - shared forcing and axis encoders: approximately 4-7 million;
 - seven process experts and graph messages: approximately 27-38 million;
 - axis-aligned family heads: approximately 4-7 million.
 
+At width 384, one cross-Attention plus four-times-expansion feed-forward block
+contains approximately `12 * 384^2 = 1.77` million matrix parameters. Three
+blocks in seven experts therefore provide about 37 million parameters before
+the shared encoders and local heads. This is a mechanism-derived capacity
+estimate, not a size selected to beat the old 8.7-million-parameter network.
+
 The implementation contract must compute the exact executable count and stay
 below 60 million parameters. The range is a capacity envelope, not a target
 to match another model. It may be adjusted once during local shape design,
-before any real training result is observed.
+before any real training result is observed. The baseline will not be reduced
+to 25 million merely to avoid testing memory; first use microbatching,
+rematerialization, and measured V100 execution.
+
+Neural parameters, encoded tokens, Attention, MLPs, gradients, and AdamW
+moments use `float32`. Before any constrained output transform or physical
+update, each head output is converted to `float64`. Output normalization,
+conservative water/carbon/thermal updates, retained exact processes, state,
+budgets, and scientific losses remain `float64`. The local gradient test must
+prove that this cast boundary is differentiable and that the existing strict
+budget gates are unchanged. Reduced-precision `float16`/`bfloat16` training is
+not part of the baseline.
+
+At 50 million parameters, the float32 parameters, gradients, and two AdamW
+moment buffers occupy approximately 763 MiB in total before temporary/XLA
+buffers. Parameter storage is therefore not the 32-GiB V100 constraint;
+activation retention across large output tensors and rollout days is. Before
+any paid run, free `gln01` must measure one-day microbatches, a rematerialized
+seven-day step, and a rematerialized 30-day step. Failure to fit at rollout
+microbatch one blocks paid training rather than silently requesting a larger
+node.
 
 ## Strong-Baseline Data Path
 
@@ -224,17 +275,34 @@ regimes instead of taking many correlated days from one point-year.
 
 ### Phase 0: learnability qualification
 
-Before full training:
+Before fitting real data, the local/free structural gate must prove:
+
+- every axis-bearing output family gathers its declared coordinate-local state
+  and static tokens rather than only a pooled field token;
+- coordinate permutations produce the corresponding output permutation, and
+  inactive PFT slots remain isolated;
+- a coordinate-local input perturbation has a finite nonzero JVP/VJP path to
+  its admitted local output while forbidden source edges remain absent;
+- eager/JIT forward, complete loss, gradient, one-day state construction, and
+  water/carbon budgets pass across the `float32` neural to `float64` physical
+  boundary;
+- compiled shapes contain no dense output-element by all-input-token
+  Attention allocation.
+
+Then run two train/train-only learnability fits with graph messages disabled:
 
 1. Memorize all valid days from one train/train point-year. Require at least
-   99% reduction in the complete one-day loss and normalized RMSE at most
-   0.05 for GPP, maintenance respiration, NPP, AGB tendency, and BGB tendency.
+   99% reduction in the complete one-day loss, at least 95% reduction for
+   every expert macro-loss, and normalized RMSE at most 0.05 for GPP,
+   maintenance respiration, NPP, AGB tendency, and BGB tendency.
 2. Fit a frozen 64-point-year train-only set. Require at least 90% loss
-   reduction, finite gradients, and zero hard failures.
+   reduction overall, at least 80% reduction for every expert macro-loss,
+   finite gradients, and zero hard failures.
 
 These are capacity and optimization tests, not model selection. Failure means
 the architecture, normalization, data mapping, or optimizer is not ready; it
-blocks full training.
+blocks full training. Neither qualification checkpoint initializes formal
+training; the full-data run starts again from the declared random seed.
 
 ### Phase 1: complete one-day pretraining
 
@@ -244,8 +312,29 @@ blocks full training.
   the effective batch.
 - Train the 181 named process fields plus downstream one-day GPP, NPP,
   maintenance, AGB tendency, BGB tendency, and total-live tendency.
-- Preserve equal macro weight over scientific label families so the 37,518
-  carbon-other scalars cannot dominate by element count.
+- Give each expert equal process-fidelity macro weight, then each scientific
+  label family equal weight within its expert. The 37,518 carbon-other scalars
+  therefore cannot dominate by element count, and an expert with many labels
+  cannot dominate merely by field count.
+
+The two-epoch budget has predeclared continuation gates:
+
+1. At 1% of the first epoch (85,916 distinct days, approximately 336 effective
+   batches), total train macro-loss must fall at least 20%, every expert loss
+   must be below its initialization value, all values must be finite, and all
+   hard-failure counts must remain zero.
+2. At 10% of the first epoch (859,157 distinct days), total train macro-loss
+   must fall at least 50%, every expert must fall at least 25%, and the
+   post-warmup clipping frequency must be at most 10%.
+3. At the end of epoch one, each non-test validation slice must reach GPP and
+   maintenance normalized RMSE at most 0.40; NPP and the three biomass
+   tendencies at most 0.75; absolute primary signed bias at most 0.10; at
+   least 75% of the label families within every expert at most 0.75; and no
+   family above 1.50.
+4. At the end of epoch two, the full one-day absolute gate below must pass.
+
+Failure at a continuation gate stops the run at its current checkpoint. It
+does not authorize a third epoch, a learning-rate search, or a larger model.
 
 Only after the one-day absolute gate passes may rollout fine-tuning begin.
 
@@ -269,7 +358,8 @@ train/train statistics:
 Within each group, normalized squared error and signed-bias squared are
 reported separately and equally macro-averaged. There is no validation-driven
 coefficient search, minimum-norm gradient balancing, or reuse of the rejected
-staged-v3 scalarization.
+staged-v3 scalarization. The named-process group retains equal expert then
+equal within-expert label weighting.
 
 ### Optimizer qualification
 
@@ -278,9 +368,11 @@ staged-v3 scalarization.
   cosine decay to `1e-5` within each curriculum phase.
 - Exclude normalization scales and biases from weight decay.
 - Freeze the global clip threshold from the 99th percentile of 32 diverse
-  train-only preflight gradient norms; do not inherit the arbitrary norm 1.0.
-- Report clipping frequency. Persistent clipping after warmup is a failed
-  optimization qualification, not evidence of useful training.
+  train-only effective-batch gradient norms; do not inherit the arbitrary norm
+  1.0 or estimate the threshold from single examples.
+- Report the unclipped norm and clipping frequency. More than 10% clipping
+  after warmup is a failed optimization qualification, not evidence of useful
+  training.
 
 ## Absolute Scientific Gates
 
@@ -294,10 +386,15 @@ On each non-test temporal, spatial, and joint validation slice:
 - NPP, AGB tendency, BGB tendency, and total-live tendency normalized RMSE at
   most 0.50;
 - absolute normalized signed bias at most 0.05 for every primary quantity;
-- at least 90% of all supervised label families have normalized RMSE at most
-  0.50, with no family above 1.0;
+- within every expert, at least 90% of its supervised label families have
+  normalized RMSE at most 0.50, with no family above 1.0;
 - zero numerical, mask, discrete, stock, water-budget, and carbon-budget hard
   failures.
+
+The report must contain, for all seven experts, its macro-loss, family median
+and worst normalized RMSE, signed bias, parameter-gradient norm, clipping
+incidence, and graph-message gate magnitudes. A passing total loss cannot hide
+a failing expert.
 
 ### Seven/thirty-day gate
 
@@ -328,17 +425,42 @@ Only after these absolute gates pass should the project freeze the model,
 design explanatory controls/ablations, open Gate D2, or inspect the sealed
 test split.
 
-## Required Review Before Implementation
+## Failure Interpretation And Cost Stop
 
-The user must review and accept or revise:
+The stages answer different questions and must not be blurred together:
+
+| First failed stage | What it establishes | Required action |
+| --- | --- | --- |
+| Structural/local gate | Axis access, dtype boundary, shape, or scientific wiring is wrong | Repair before any GPU fit |
+| One point-year | The model cannot memorize a deterministic local mapping | Treat as architecture/loss/data-mapping failure; no paid run |
+| 64 point-years | Capacity or optimization is inadequate even before generalization | Diagnose locally/free; no paid run |
+| 1% or 10% epoch | Full-data optimization is not learning all experts cleanly | Stop the full-data job; do not spend the remaining epoch budget |
+| One/two one-day epochs | One-day generalization is inadequate | Do not run 7-day rollout training |
+| Seven-day gate | Recursive state-distribution drift is already unacceptable | Do not run 30-day training |
+| Thirty-day gate | Productivity or biomass bias accumulates | Do not open 365-day validation |
+| 365-day/held-out gate | The operator is not scientifically qualified | Do not open Gate D2, sealed test, or product acceptance |
+
+Training loss reduction is evidence only at the first four stages. The model
+is not successful until the 365-day productivity, biomass, state, restart, and
+budget gates pass.
+
+## Accepted Decisions And Implementation Status
+
+The user accepted:
 
 1. replacing the route-local A/B with one absolute-capability baseline;
 2. the seven process experts and bounded graph-message mechanism;
 3. dynamic axis-aligned encoding and output heads;
-4. the 35-50 million parameter envelope;
-5. full v6 epoch-level one-day pretraining followed by 7/30-day curriculum;
-6. the proposed absolute one-day, 7/30-day, and 365-day gates.
+4. the 35-50 million parameter and `float32` neural/`float64` physical
+   envelope;
+5. the staged one-point-year, 64-point-year, 1%/10% epoch stop gates;
+6. full v6 epoch-level one-day pretraining followed by 7/30-day curriculum;
+7. the proposed absolute one-day, 7/30-day, and 365-day gates.
 
-After acceptance, the next implementation step is only the field-to-expert
-and axis-ownership manifest plus local synthetic shape tests. Paid training
+The field/expert/axis contract and local implementation now pass the structural
+gate at 49,750,681 float32 parameters, including one shared factorized axial
+self-Attention block. See
+[`strong_baseline_local_acceptance_20260816.md`](strong_baseline_local_acceptance_20260816.md).
+The next gate is real-v6 single-sample and canonical-lifecycle admission on
+free `gln01`, followed by one-point-year memorization. Paid training still
 requires a later, separate Explore1000 resource and cost approval.

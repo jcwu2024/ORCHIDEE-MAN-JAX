@@ -971,8 +971,8 @@ the main research strategy. That checkpoint is diagnostic evidence, not an
 incumbent that defines success. The route-local-decoder A/B is superseded
 before implementation and must not be built or trained as the next candidate.
 
-The active gate is user review of one independently capable strong baseline,
-`axis_aligned_process_expert_operator_v1`. The proposal preserves dynamic
+The user approved the independently capable strong baseline
+`axis_aligned_process_expert_operator_v1`. The design preserves dynamic
 PFT/depth/pool/part coordinates from source encoding through seven
 process-owned expert paths and axis-local family heads. It targets 35-50
 million parameters, uses all 8,591,565 train/train days in complete shuffled
@@ -980,12 +980,33 @@ one-day epochs, proves small-set memorization before scale, and then applies a
 7/30-day rollout curriculum. It has no matched control during baseline
 qualification and is judged only by absolute one-day, productivity, biomass,
 bias, state, and budget gates. Controls and ablations are deferred until a
-baseline passes those gates. See
+baseline passes those gates. Neural algebra/optimizer state is provisionally
+float32, while constrained output transforms, the conservative update,
+retained tail, scientific loss, and budgets remain float64. Structural,
+one-point-year, 64-point-year, 1%/10% full-epoch, one-day, 7-day, 30-day, and
+365-day gates stop spending at the first failed capability; all seven expert
+losses remain visible independently. See
 [`strong_baseline_axis_aligned_process_expert_review_v1.md`](research/daily_coarse_graining/strong_baseline_axis_aligned_process_expert_review_v1.md).
 
-Do not create a manifest, implement the network, prepare training payloads,
-start a GPU run, or open the 365-day screen before that architecture review.
-Long-held points, Gate D2, sealed test, and product gates remain closed.
+The architecture contract is now frozen at SHA256
+`baf5791f...a96351d`. The 49,750,681-parameter float32 implementation,
+formal process head, shared factorized axial block, axis/source masks,
+expert-balanced loss, eager/JIT forward, representative JVP/VJP,
+inactive-PFT isolation, and synthetic bound one-day budget gate pass 14 local
+tests. The shared output-transform and fast-parameter-route refactors also
+pass the relevant prior-successor regressions. See
+[`strong_baseline_local_acceptance_20260816.md`](research/daily_coarse_graining/strong_baseline_local_acceptance_20260816.md).
+
+The zero-update admission runner is locally implemented and the active gate is
+free-`gln01` admission of the real-v6
+one-point-year learnability qualification. First prove one real v6 sample
+through eager/JIT forward, expert-balanced loss, representative gradients,
+the canonical retained-tail lifecycle, and measured device memory. Then fit
+all valid days from one train/train point-year from fresh parameters with
+graph messages disabled. Do not regenerate v6, read or join v5, submit paid
+training, open the 64-point-year gate, or run 7/30/365-day validation before
+the one-point-year reduction gates pass. Long-held points, Gate D2, sealed
+test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 
