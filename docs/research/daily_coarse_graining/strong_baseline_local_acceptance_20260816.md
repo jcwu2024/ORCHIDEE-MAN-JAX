@@ -89,10 +89,8 @@ joined.
 
 ## Active Next Gate
 
-The zero-update real-v6 admission runner and free-`gln01` launcher are locally
-ready. Before the fit, execute them to prove one real sample through eager/JIT forward, the
-expert-balanced loss, representative gradients, the canonical retained-tail
-lifecycle, and measured device memory. The qualification fit must use fresh
-parameters, graph-message scale zero, all valid days from one train/train
-point-year, and the preregistered per-expert and primary-output reduction
-gates. Failure blocks the 64-point-year and paid full-data stages.
+This section is superseded by
+[`strong_baseline_one_point_qualification_result_20260816.md`](strong_baseline_one_point_qualification_result_20260816.md).
+The zero-update admission passed, but the one-point-year complete-process and
+per-expert reduction gates failed. The 64-point-year and paid stages remain
+blocked while the bounded loss-floor diagnostic is designed and admitted.

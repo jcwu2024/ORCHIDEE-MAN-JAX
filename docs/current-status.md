@@ -235,12 +235,25 @@ routing regression run passes 39 tests.
 See
 [`strong_baseline_local_acceptance_20260816.md`](research/daily_coarse_graining/strong_baseline_local_acceptance_20260816.md).
 
-The real-v6 zero-update admission runner is locally ready. The active gate is
-its free-`gln01` sample/canonical-lifecycle execution,
-followed only if it passes by the one train/train point-year memorization
-qualification. No paid job, 64-point-year fit, full epoch, 7/30/365-day
-screen, long-held point, Gate D2, sealed test, or product acceptance is yet
-authorized.
+The real-v6 zero-update admission passed. The subsequent one-point-year run at
+commit `4b849fb` used all 364 valid train/train days for 100 epochs and 4,600
+finite unclipped AdamW updates. Its report SHA256 is
+`ada70c37...b4b399b`. GPP (`0.03391`), maintenance (`0.00697`), NPP
+(`0.04041`), AGB tendency (`1.80e-5`), and BGB tendency (`3.60e-5`) meet their
+declared NRMSE thresholds, with zero nonfinite, negative-inventory, or budget
+hard counts. Complete process loss fell `97.60%`, below the `99%` gate, and
+four of seven experts missed their `95%` reduction gates. The stock-scale
+AGB/BGB metric was already below threshold at initialization, so it is not a
+discriminating one-day gate. The qualification failed, retained no checkpoint,
+and blocks the 64-point-year and paid stages. See
+[`strong_baseline_one_point_qualification_result_20260816.md`](research/daily_coarse_graining/strong_baseline_one_point_qualification_result_20260816.md).
+
+The active task is a bounded one-point loss-floor diagnostic contract and
+local implementation with per-label/per-field final evidence, an exact
+all-day gradient-accumulation tail, diagnostic-only state retention, and a
+reviewed train-only AGB/BGB tendency normalization. No paid job, 64-point-year
+fit, full epoch, 7/30/365-day screen, long-held point, Gate D2, sealed test, or
+product acceptance is authorized.
 
 ## First Formal Neural Candidate
 

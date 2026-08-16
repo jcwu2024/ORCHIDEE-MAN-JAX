@@ -997,16 +997,26 @@ tests. The shared output-transform and fast-parameter-route refactors also
 pass the relevant prior-successor regressions. See
 [`strong_baseline_local_acceptance_20260816.md`](research/daily_coarse_graining/strong_baseline_local_acceptance_20260816.md).
 
-The zero-update admission runner is locally implemented and the active gate is
-free-`gln01` admission of the real-v6
-one-point-year learnability qualification. First prove one real v6 sample
-through eager/JIT forward, expert-balanced loss, representative gradients,
-the canonical retained-tail lifecycle, and measured device memory. Then fit
-all valid days from one train/train point-year from fresh parameters with
-graph messages disabled. Do not regenerate v6, read or join v5, submit paid
-training, open the 64-point-year gate, or run 7/30/365-day validation before
-the one-point-year reduction gates pass. Long-held points, Gate D2, sealed
-test, and product gates remain closed.
+The zero-update real-v6 admission passed. The first complete one-point-year
+qualification then ran all 364 valid train/train days for 100 epochs and 4,600
+finite unclipped AdamW updates. GPP, maintenance, NPP, AGB tendency, and BGB
+tendency met the declared `0.05` NRMSE bound and all state/budget hard counts
+were zero. The complete process loss nevertheless fell only `97.60%` versus
+the required `99%`; canopy GPP, hydrology/snow, soil thermal, and
+litter/POC/DOC also missed the per-expert `95%` reduction gate. The run is not
+qualified and no checkpoint is promotion eligible. In addition, the stock-
+scale AGB/BGB metric was already below threshold at random initialization and
+is not discriminating one-day evidence. See
+[`strong_baseline_one_point_qualification_result_20260816.md`](research/daily_coarse_graining/strong_baseline_one_point_qualification_result_20260816.md).
+
+The active gate is now a bounded one-point loss-floor diagnostic design and
+local admission. It must add per-label/per-field final evidence, distinguish
+minibatch noise from capacity with an exact all-364-day gradient-accumulation
+tail, retain only a diagnostic final state, and repair the AGB/BGB
+normalization using an explicitly reviewed train-only scale. Do not rerun the
+same recipe, regenerate v6, read or join v5, submit paid training, open the
+64-point-year gate, or run 7/30/365-day validation. Long-held points, Gate D2,
+sealed test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 

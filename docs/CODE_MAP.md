@@ -214,11 +214,17 @@ source, and axis admission; `strong_baseline_architecture.py` owns the
 output transformation used by both the strong baseline and historical
 successor; `daily_operator/parameter_routing.py` owns their shared explicit
 fast-parameter factors. The local structural evidence is
-`strong_baseline_local_acceptance_20260816.md`. The real-v6 one-point-year
+`strong_baseline_local_acceptance_20260816.md`.
+`daily_operator/strong_baseline_qualification.py` owns exact shuffled-epoch
+padding, the no-clip AdamW schedule, and decay exclusions for the one-point
+gate. `scripts/hpc/run_strong_baseline_one_point_qualification.py` owns full
+v6 point-year assembly, training, canonical one-day science metrics, and hard
+counts; its free-`gln01` launcher is the adjacent shell script. The completed
+failed gate is classified in
+`strong_baseline_one_point_qualification_result_20260816.md`. The earlier
 zero-update admission is implemented by
 `scripts/hpc/run_strong_baseline_gpu_admission.py` and its free-`gln01`
-launcher; it is not yet executed or accepted. The memorization fit runner is
-not yet implemented.
+launcher and has passed.
 
 `daily_operator/nonlinear_projection.py` owns the active host-side bounded
 SLSQP subproblem, exact violation merit, and candidate acceptance for the
