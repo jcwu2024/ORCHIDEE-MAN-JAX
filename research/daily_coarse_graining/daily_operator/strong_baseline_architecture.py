@@ -1268,7 +1268,7 @@ def encode_strong_baseline_experts(
     message_gate_scale: float = 1.0,
     config: StrongBaselineConfig = StrongBaselineConfig(),
 ) -> Any:
-    """Run seven independent local experts, then two bounded message rounds."""
+    """Run seven independent local experts, then optional bounded message rounds."""
 
     allowed = jnp.asarray(layout.source_allowed, dtype=jnp.bool_)
     family = jnp.asarray(context.source_family_index, dtype=jnp.int32)
@@ -1298,6 +1298,9 @@ def encode_strong_baseline_experts(
             )
         experts.append(query[0])
     expert_tokens = jnp.stack(tuple(experts))
+
+    if message_gate_scale == 0.0:
+        return expert_tokens
 
     edge_mask = jnp.asarray(layout.graph_edge_mask, dtype=jnp.bool_)
     for round_index in range(config.graph_rounds):

@@ -240,6 +240,41 @@ def test_strong_baseline_forcing_families_do_not_leak_before_expert_mask(
     assert not np.allclose(np.asarray(observed[hydrology]), np.asarray(baseline[hydrology]))
 
 
+def test_strong_baseline_zero_message_scale_bypasses_all_graph_parameters(
+    strong_baseline_setup,
+):
+    setup = strong_baseline_setup
+    parameters = setup["parameters"]
+    context = assemble_strong_baseline_context(
+        parameters,
+        setup["assembled"],
+        normalization=setup["input_normalization"],
+        layout=setup["layout"],
+    )
+    changed = dict(parameters)
+    for name in (
+        "graph_sender",
+        "graph_gate_logits",
+        "graph_norm_scale",
+        "graph_norm_bias",
+    ):
+        changed[name] = jax.tree_util.tree_map(lambda value: value + 100.0, parameters[name])
+
+    baseline = encode_strong_baseline_experts(
+        parameters,
+        context,
+        layout=setup["layout"],
+        message_gate_scale=0.0,
+    )
+    observed = encode_strong_baseline_experts(
+        changed,
+        context,
+        layout=setup["layout"],
+        message_gate_scale=0.0,
+    )
+    np.testing.assert_array_equal(np.asarray(observed), np.asarray(baseline))
+
+
 def test_strong_baseline_inactive_pft_inputs_are_isolated(strong_baseline_setup):
     setup = strong_baseline_setup
     head = setup["head"]
