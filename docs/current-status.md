@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-15.
+Last updated: 2026-08-16.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -202,6 +202,17 @@ The active gate is a user review of research-output-aligned loss repair versus
 backbone/capacity change. More updates under the same recipe, architecture
 changes, paid runs, the 365-day screen, long-held points, Gate D2, sealed test,
 and product acceptance are not authorized before that review.
+
+The current proposal retains the source-routed Attention body and changes only
+output ownership. Five width-256 decoders separately own water, energy,
+carbon-other, fast GPP, and fast maintenance outputs. The matched control uses
+one width-1280 shared decoder; estimated total parameter counts are 8,986,885
+and 8,986,881. Both arms would start from scratch and share a bounded
+500-update, 2,000-point-year named-biomass-tendency screen. This is targeted at
+the accepted evidence that the universal decoder carries 96.15% of the failed
+direction and maintenance carries about 94-95% of the NPP/BGB output
+nonlinearity. It remains proposal-only pending user review. See
+[`successor_route_local_decoder_architecture_review_v1.md`](research/daily_coarse_graining/successor_route_local_decoder_architecture_review_v1.md).
 
 ## First Formal Neural Candidate
 

@@ -120,7 +120,11 @@ by 22.3%, but the primary NPP/AGB/BGB/total-live composite became 6.98% worse
 and all six 7/30-day cells regressed. Its final checkpoint is diagnostic only;
 the update-1000 checkpoint remains incumbent. The active gate is a user review
 of objective alignment versus backbone/capacity before any further network or
-paid run. No architecture change is authorized without that discussion.
+paid run. The proposed next mechanism retains the Attention body and compares
+five source-route-local decoders against a parameter-matched wide shared
+decoder; it remains proposal-only in
+`successor_route_local_decoder_architecture_review_v1.md`. No architecture
+change is authorized without that discussion.
 
 ## New Task Bootstrap
 

@@ -972,6 +972,16 @@ Attention architecture, start another paid run, or open the 365-day screen
 before that review. The update-1000 checkpoint remains incumbent. Long-held
 points, Gate D2, sealed test, and product gates remain closed.
 
+The resulting proposal is a route-local decoder architecture review, not an
+implementation. It retains the v2 Attention body but replaces the universal
+decoder with five source-route-local width-256 decoders. Its matched control
+uses one width-1280 shared decoder; estimated total parameter counts differ by
+only four. Both would start from scratch and use the same named-biomass
+tendency objective, 2,000 point-years, and 500-update bounded screen. This
+directly tests the decoder/maintenance coupling identified by the accepted
+attribution chain. User review is required before any code change. See
+[`successor_route_local_decoder_architecture_review_v1.md`](research/daily_coarse_graining/successor_route_local_decoder_architecture_review_v1.md).
+
 ## Completed Task Packet: Gate C
 
 This packet is complete and retained as its acceptance contract. Gates A-C
