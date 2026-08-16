@@ -213,15 +213,17 @@ and exact finite trials remain in
 optimizer-geometry research tools and do not alter the Attention process head
 or production inference path.
 
-`daily_operator/attention_mixed_continuation.py` owns the active
+`daily_operator/attention_mixed_continuation.py` owns the completed
 candidate-only contract, compressed cosine schedule, scientific
-classification, and recoverable single-Attention state. The executable and
+classification, and diagnostic recoverable single-Attention state. The executable and
 single-GPU boundary are
 `scripts/hpc/run_successor_attention_mixed_continuation.py` and the matching
 `.sh` launcher; `scripts/hpc/slurm_successor_attention_mixed_continuation.sh`
 owns the bounded one-GPU `gnall` resource envelope. They reuse the accepted
 update-1000 Attention parameters and prepared 1001-2000 assets; they do not
-alter the architecture or Teacher.
+alter the architecture or Teacher. The completed run is classified in
+`successor_attention_mixed_annealed_continuation_result_20260816.md`; the
+final state is not promotion eligible.
 
 The blocking real-v6 boundary diagnosis is
 `successor_fast_boundary_coverage_20260809.md`. Its successor owner schema is

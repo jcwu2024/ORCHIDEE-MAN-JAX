@@ -2,7 +2,7 @@
 
 Date: 2026-08-16
 
-Status: **frozen for one checkpoint-producing single-GPU continuation**.
+Status: **completed frozen contract; candidate not admitted**.
 
 ## Decision
 
@@ -77,3 +77,11 @@ capacity or backbone; it does not reopen parameter projection.
 - Execution may use free `gln01` or one `gnall` GPU. Every paid submission
   still requires explicit approval of its resources, wall time, command,
   working directory, and worst-case charge.
+
+## Result
+
+Approved job `14569673` completed all 250 updates at commit `f702696` in
+`00:35:11`. All hard failures were zero, but the primary NPP/AGB/BGB/total-live
+composite was 6.98% worse than the update-1000 parent and all six 7/30-day
+cells regressed. The candidate is not admitted. See
+[`successor_attention_mixed_annealed_continuation_result_20260816.md`](successor_attention_mixed_annealed_continuation_result_20260816.md).

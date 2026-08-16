@@ -956,25 +956,21 @@ nonzero step, so no exact candidate trial was opened. Report SHA256 is
 `4af8ddaf...5447ce`. Fixed low-dimensional post-training projection is now
 closed.
 
-The active gate is conventional candidate training, not another projection
-or zero-update audit. Freeze and run one Attention-only mixed-point annealed
-continuation from update 1000. It consumes the already prepared 1001-2000
-assets as 250 updates of four distinct point-years, retains the current
-1/7/30-day objective, and compresses cosine decay from the inherited
-update-1001 rate to `3e-5`. It writes recoverable candidate state. The graph
-control is not continued: earlier equal-sample evidence already showed that
-mixed sampling improved all six Attention cells and its aggregate by `0.73%`,
-while the obsolete shared-arm gate rejected it only because control preferred
-single sampling by `0.25%`. See
-[`successor_attention_mixed_annealed_continuation_protocol_20260816.md`](research/daily_coarse_graining/successor_attention_mixed_annealed_continuation_protocol_20260816.md).
+The Attention-only mixed-point annealed continuation is complete. Approved
+job `14569673` used all prepared 1001-2000 assets as 250 updates of four
+distinct point-years and annealed the learning rate to `3e-5`. All hard gates
+were zero. Median training loss fell 4.7% from the first to last 50-update
+window and maintenance aggregate validation RMSE improved 22.3%, but the
+primary NPP/AGB/BGB/total-live composite became 6.98% worse. All four primary
+key aggregates and all six temporal/spatial/joint 7/30-day cells regressed.
+The checkpoint is retained for diagnosis and is not promotion eligible. See
+[`successor_attention_mixed_annealed_continuation_result_20260816.md`](research/daily_coarse_graining/successor_attention_mixed_annealed_continuation_result_20260816.md).
 
-The frozen execution boundary permits free `gln01` or one `gnall` GPU. A paid
-submission still requires explicit approval of the exact resource envelope and
-worst-case charge before `sbatch`.
-
-No network architecture change is involved. A passing continuation opens one
-non-test 365-day screen. Long-held-point validation, Gate D2, sealed test, and
-product gates remain dependency-ordered later work.
+The active gate is now an explicit user review of objective alignment versus
+backbone/capacity. Do not add more updates under the same recipe, alter the
+Attention architecture, start another paid run, or open the 365-day screen
+before that review. The update-1000 checkpoint remains incumbent. Long-held
+points, Gate D2, sealed test, and product gates remain closed.
 
 ## Completed Task Packet: Gate C
 

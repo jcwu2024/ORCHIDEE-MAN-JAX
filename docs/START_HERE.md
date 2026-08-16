@@ -113,12 +113,14 @@ losses. A bounded nonlinear constrained solver is now frozen under contract
 SHA256 `bb0f0718...d67ba07`. It uses at most eight parameter directions, four
 sequential relinearizations, and eight exact candidate evaluations. Its free
 execution found no admissible nonzero constrained step and closes fixed
-low-dimensional post-training projection. The active operation is now a
-checkpoint-producing Attention-only continuation: reuse the accepted
-1001-2000 prepared assets as 250 four-point-year updates and compress cosine
-decay to the actual stage horizon. It does not change the Attention
-architecture, regenerate Teacher data, or use v5. It may run on free `gln01`
-or one `gnall` GPU after explicit approval of the exact paid resource envelope.
+low-dimensional post-training projection. The subsequent Attention-only
+mixed-point annealed continuation completed all 250 updates and 1,000 unique
+point-years. It was numerically valid and improved maintenance aggregate RMSE
+by 22.3%, but the primary NPP/AGB/BGB/total-live composite became 6.98% worse
+and all six 7/30-day cells regressed. Its final checkpoint is diagnostic only;
+the update-1000 checkpoint remains incumbent. The active gate is a user review
+of objective alignment versus backbone/capacity before any further network or
+paid run. No architecture change is authorized without that discussion.
 
 ## New Task Bootstrap
 

@@ -188,17 +188,20 @@ The matched point still violates 12 constraints. The bounded hard/slack solve
 returned no admissible nonzero step, so no exact candidate trial was opened.
 Fixed low-dimensional post-training projection is closed.
 
-The active task is an Attention-only mixed-point annealed continuation. It
-reuses the accepted 1001-2000 prepared assets as 250 optimizer updates, with
-four unique point-years, 32 one-day anchors, and four 30-day windows per
-update. The unchanged staged-v3 objective retains 1/7/30-day supervision, but
-the cosine schedule now reaches `3e-5` within the actual continuation rather
-than remaining near its 10,000-update peak. The final candidate state is
-retained. No control continuation, architecture change, Teacher regeneration,
-v5 use, or sealed-test read is authorized. Execution may use free `gln01` or
-one `gnall` GPU, but every paid submission requires explicit approval of its
-exact resource envelope and worst-case charge. See
-[`successor_attention_mixed_annealed_continuation_protocol_20260816.md`](research/daily_coarse_graining/successor_attention_mixed_annealed_continuation_protocol_20260816.md).
+The Attention-only mixed-point annealed continuation completed as approved
+`gnall` job `14569673` at commit `f702696` in `00:35:11`. All 250 updates and
+1,000 unique point-years completed with zero hard failures. Median training
+loss fell 4.7% from the first to last 50-update window and maintenance
+aggregate validation RMSE improved 22.3%. The research-primary
+NPP/AGB/BGB/total-live composite nevertheless became 6.98% worse; all four
+primary aggregates and all six 7/30-day cells regressed. The final state is
+retained but not promotion eligible, and update 1000 remains incumbent. See
+[`successor_attention_mixed_annealed_continuation_result_20260816.md`](research/daily_coarse_graining/successor_attention_mixed_annealed_continuation_result_20260816.md).
+
+The active gate is a user review of research-output-aligned loss repair versus
+backbone/capacity change. More updates under the same recipe, architecture
+changes, paid runs, the 365-day screen, long-held points, Gate D2, sealed test,
+and product acceptance are not authorized before that review.
 
 ## First Formal Neural Candidate
 
