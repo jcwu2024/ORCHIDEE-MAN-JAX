@@ -82,6 +82,7 @@ class StrongBaselineLayout:
     axis_extents: tuple[int, ...]
     axis_offsets: tuple[int, ...]
     active_pft_indices: tuple[int, ...]
+    pft_state_indices: np.ndarray
     field_expert_index: np.ndarray
     field_label_index: np.ndarray
     state_field_pool: np.ndarray
@@ -228,6 +229,33 @@ def _condition_pool(leaves: Sequence[Any], width: int) -> np.ndarray:
     for index, leaf in enumerate(leaves):
         rows[index, int(leaf.start) : int(leaf.stop)] = True
     return rows
+
+
+def _pft_state_indices(
+    adapter: Any,
+    contract: StrongBaselineContract,
+) -> np.ndarray:
+    """Map every compact PFT-state feature to its continuous-state statistic."""
+
+    leaves = {leaf.key: leaf for leaf in adapter.contract.state_leaves}
+    aliases = canonical_axis_aliases(contract)
+    active = tuple(int(value) for value in adapter.active_pft_indices)
+    parts = []
+    for name in ("veget_max", "lai", "biomass"):
+        key = f"slowproc_stomate_previous_step_state.{name}"
+        leaf = leaves.get(key)
+        if leaf is None:
+            raise ValueError(f"strong-baseline PFT state owner is absent: {key}")
+        canonical_axes = tuple(aliases[axis] for axis in leaf.axis_names)
+        pft_axes = tuple(index for index, axis in enumerate(canonical_axes) if axis == "pft")
+        if len(pft_axes) != 1:
+            raise ValueError(f"strong-baseline PFT state owner has invalid axes: {key}")
+        pft_axis = pft_axes[0]
+        indices = np.arange(int(leaf.start), int(leaf.stop), dtype=np.int32).reshape(leaf.shape)
+        coordinates = tuple(range(len(active))) if leaf.shape[pft_axis] == len(active) else active
+        selected = np.take(indices, np.asarray(coordinates, dtype=np.int32), axis=pft_axis)
+        parts.append(np.moveaxis(selected, pft_axis, 0).reshape((len(active), -1)))
+    return np.concatenate(tuple(parts), axis=1)
 
 
 def _source_axis_pool(
@@ -616,6 +644,7 @@ def build_strong_baseline_layout(
         axis_extents=axis_extents_tuple,
         axis_offsets=axis_offsets,
         active_pft_indices=tuple(int(value) for value in adapter.active_pft_indices),
+        pft_state_indices=_pft_state_indices(adapter, contract),
         field_expert_index=np.asarray([expert_names.index(field.expert) for field in ledger], dtype=np.int32),
         field_label_index=np.asarray([field.label_index for field in schema.fields], dtype=np.int32),
         state_field_pool=state_field_pool,
@@ -852,6 +881,7 @@ def _masked_summary(pool: np.ndarray, values: Any, defined: Any) -> tuple[Any, A
     pool = jnp.asarray(pool, dtype=jnp.bool_)
     values = jnp.asarray(values, dtype=jnp.float32).reshape(-1)
     defined = jnp.asarray(defined, dtype=jnp.bool_).reshape(-1)
+    values = jnp.where(defined, values, 0.0)
     selected = pool & defined[None, :]
     count = jnp.sum(selected, axis=1, dtype=jnp.float32)
     safe = jnp.where(selected, values[None, :], 0.0)
@@ -1146,7 +1176,20 @@ def assemble_strong_baseline_context(
         )
         axis_masks[expert_index] |= static_axis_mask | process_axis_mask
 
-    pft_features = jnp.asarray(assemble_local_pft_features(inputs.pft), dtype=jnp.float32)
+    pft_state_indices = jnp.asarray(layout.pft_state_indices, dtype=jnp.int32)
+    pft_state = _standardize(
+        inputs.pft.pft_state,
+        jnp.asarray(normalization.continuous_mean)[pft_state_indices],
+        jnp.asarray(normalization.continuous_scale)[pft_state_indices],
+    )
+    pft_features = jnp.concatenate(
+        (
+            pft_state,
+            jnp.asarray(inputs.pft.pft_traits, dtype=jnp.float32),
+            jnp.asarray(inputs.pft.pft_fraction, dtype=jnp.float32)[:, None],
+        ),
+        axis=1,
+    )
     pft_features = jnp.where(jnp.isfinite(pft_features), pft_features, 0.0)
     pft_tokens = _linear(parameters["pft_input"], pft_features)
     pft_family_index = layout.source_family_names.index("pft_structure")
@@ -1338,19 +1381,16 @@ def _field_raw_output(
     if indices.size:
         mapped = indices >= 0
         safe_indices = np.maximum(indices, 0)
-        local = _standardize(
-            inputs.state.other[jnp.asarray(safe_indices, dtype=jnp.int32)],
-            jnp.asarray(normalization.continuous_mean)[safe_indices],
-            jnp.asarray(normalization.continuous_scale)[safe_indices],
-        )
         local_defined = (
             jnp.asarray(mapped, dtype=jnp.bool_)
             & inputs.state_defined.other[jnp.asarray(safe_indices, dtype=jnp.int32)]
         )
-        local = jnp.where(
-            jnp.asarray(mapped, dtype=jnp.bool_),
-            local,
-            0.0,
+        local_mean = jnp.asarray(normalization.continuous_mean)[safe_indices]
+        local_raw = inputs.state.other[jnp.asarray(safe_indices, dtype=jnp.int32)]
+        local = _standardize(
+            jnp.where(local_defined, local_raw, local_mean),
+            local_mean,
+            jnp.asarray(normalization.continuous_scale)[safe_indices],
         )
     else:
         local = jnp.zeros((coordinates.shape[0],), dtype=jnp.float32)

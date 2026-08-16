@@ -992,7 +992,7 @@ The architecture contract is now frozen at SHA256
 `baf5791f...a96351d`. The 49,750,681-parameter float32 implementation,
 formal process head, shared factorized axial block, axis/source masks,
 expert-balanced loss, eager/JIT forward, representative JVP/VJP,
-inactive-PFT isolation, and synthetic bound one-day budget gate pass 14 local
+inactive-PFT isolation, undefined-sentinel isolation, and synthetic bound one-day budget gate pass 15 local
 tests. The shared output-transform and fast-parameter-route refactors also
 pass the relevant prior-successor regressions. See
 [`strong_baseline_local_acceptance_20260816.md`](research/daily_coarse_graining/strong_baseline_local_acceptance_20260816.md).

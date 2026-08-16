@@ -226,7 +226,7 @@ Its contract is frozen at SHA256 `baf5791f...a96351d`. The executable has
 49,750,681 float32 parameters, seven independent experts, source-restricted
 forcing Attention, one shared factorized axial block, axis-aligned
 static/process-static/state inputs, per-label heads, and an
-equal-expert/equal-label loss. Fourteen local tests pass exact
+equal-expert/equal-label loss. Fifteen local tests pass exact
 schema and capacity checks, eager/JIT full forward, finite loss and JVP/VJP,
 full/compact PFT mapping, forcing-source isolation, inactive-PFT isolation,
 and a synthetic bound one-day conservative update with zero water/carbon

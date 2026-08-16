@@ -47,7 +47,7 @@ conda run -n ORCJAX python -m pytest -q \
   tests/unit/test_daily_operator_strong_baseline_contract.py
 ```
 
-Result after the factorized axial completion: 14 passed in 187.43 seconds.
+Result after real-v6 input-safety completion: 15 passed in 193.17 seconds.
 
 Covered gates include:
 
@@ -59,6 +59,8 @@ Covered gates include:
 - full-PFT/compact-PFT local-state mapping;
 - a local soil-layer perturbation propagates to other coordinates through the
   declared factorized axial path;
+- PFT-state features use their exact continuous-state train statistics and
+  active undefined sentinels cannot leak through local or axial paths;
 - forcing-family source isolation before expert admission;
 - inactive-PFT isolation across neural PFT inputs, continuous and discrete
   state, full-PFT static fields, process-static fields, and parameter routes;

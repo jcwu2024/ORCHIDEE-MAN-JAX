@@ -12,7 +12,6 @@ import numpy as np
 
 from scripts.hpc.run_successor_fast_owner_gpu_probe import (
     PROBE_SEED,
-    _forward_comparison_report,
     _load_extended_runtime,
     _output_report,
     _tree_numeric_report,
@@ -24,6 +23,68 @@ from scripts.hpc.run_successor_process_head_canonical_gate import (
     _atomic_json,
     _retained_adapter,
 )
+
+FORWARD_ATOL = 1.0e-5
+FORWARD_RTOL = 2.0e-6
+
+
+def _forward_comparison_report(
+    eager: Mapping[str, Any],
+    compiled: Mapping[str, Any],
+) -> dict[str, Any]:
+    maximum_ratio = 0.0
+    maximum_error = 0.0
+    maximum_field = None
+    passed = True
+    for name in eager:
+        left = np.asarray(eager[name], dtype=np.float64)
+        right = np.asarray(compiled[name], dtype=np.float64)
+        difference = np.abs(left - right)
+        tolerance = FORWARD_ATOL + FORWARD_RTOL * np.maximum(np.abs(left), np.abs(right))
+        ratio = difference / tolerance
+        field_ratio = float(np.max(ratio))
+        if field_ratio > maximum_ratio:
+            maximum_ratio = field_ratio
+            maximum_error = float(np.max(difference))
+            maximum_field = name
+        passed = passed and bool(np.all(difference <= tolerance))
+    return {
+        "passed": passed,
+        "atol": FORWARD_ATOL,
+        "rtol": FORWARD_RTOL,
+        "maximum_tolerance_ratio": maximum_ratio,
+        "maximum_absolute_error": maximum_error,
+        "maximum_ratio_field": maximum_field,
+    }
+
+
+def _masked_state_report(state: Any, defined: Any) -> dict[str, Any]:
+    element_count = 0
+    defined_count = 0
+    undefined_count = 0
+    finite = True
+    squared_norm = 0.0
+    maximum = 0.0
+    for name in state._fields:
+        values = np.asarray(getattr(state, name), dtype=np.float64)
+        mask = np.asarray(getattr(defined, name), dtype=np.bool_)
+        if values.shape != mask.shape:
+            raise ValueError(f"next-state defined-mask shape drift for {name}")
+        selected = values[mask]
+        element_count += int(values.size)
+        defined_count += int(selected.size)
+        undefined_count += int(values.size - selected.size)
+        finite = finite and bool(np.all(np.isfinite(selected)))
+        squared_norm += float(np.sum(selected * selected, dtype=np.float64))
+        maximum = max(maximum, float(np.max(np.abs(selected))) if selected.size else 0.0)
+    return {
+        "all_declared_defined_finite": finite,
+        "element_count": element_count,
+        "defined_count": defined_count,
+        "undefined_count": undefined_count,
+        "defined_l2_norm": float(np.sqrt(squared_norm)),
+        "maximum_absolute_defined_value": maximum,
+    }
 
 
 def _memory_report(device: Any) -> Mapping[str, Any]:
@@ -132,7 +193,12 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             scales=runtime["loss_scales"],
             contract=architecture_contract,
         )
-        return loss.total, (loss.expert_mse, loss.expert_label_count)
+        return loss.total, (
+            loss.expert_mse,
+            loss.expert_label_count,
+            loss.label_mse,
+            loss.label_count,
+        )
 
     gradient_started = time.perf_counter()
     (loss_value, loss_aux), gradient = jax.jit(
@@ -141,7 +207,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     jax.block_until_ready((loss_value, gradient))
     gradient_seconds = time.perf_counter() - gradient_started
     gradient_report = _tree_numeric_report(jax, gradient)
-    expert_mse, expert_label_count = loss_aux
+    expert_mse, expert_label_count, label_mse, label_count = loss_aux
 
     paths = runtime["context_paths"]
     teacher_context = teacher.prepare_paper_1961_driver_context(
@@ -170,7 +236,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
     validate_conservative_result(result.fast_update)
     water_residual = float(result.fast_update.water.budget_residual)
     carbon_residual = float(result.fast_update.carbon.budget_residual)
-    state_report = _tree_numeric_report(jax, result.next_state)
+    state_report = _masked_state_report(result.next_state, result.next_state_defined)
 
     comparison = _forward_comparison_report(eager, compiled)
     compiled_report = _output_report(compiled, runtime["schema"])
@@ -185,7 +251,7 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
         and loss_number > 0.0
         and gradient_report["all_finite"]
         and gradient_report["l2_norm"] > 0.0
-        and state_report["all_finite"]
+        and state_report["all_declared_defined_finite"]
         and abs(water_residual) <= 2.0e-12
         and abs(carbon_residual) <= 2.0e-12
     )
@@ -229,6 +295,8 @@ def run(args: argparse.Namespace) -> dict[str, Any]:
             "total": loss_number,
             "expert_mse": expert_mse,
             "expert_label_count": expert_label_count,
+            "label_mse": label_mse,
+            "label_count": label_count,
         },
         "gradient": gradient_report | {"compile_and_run_seconds": gradient_seconds},
         "canonical_transition": {

@@ -85,6 +85,8 @@ def test_strong_baseline_capacity_precision_and_axis_wiring(strong_baseline_setu
     assert int(layout.static_axis_pool.sum()) == 412
     assert int(layout.process_static_axis_pool.sum()) == 294
     assert len(parameters["axial_blocks"]) == 1
+    assert layout.pft_state_indices.shape == np.asarray(setup["assembled"].pft.pft_state).shape
+    assert np.all(layout.pft_state_indices >= 0)
 
     field_index = next(
         index
@@ -305,6 +307,50 @@ def test_strong_baseline_inactive_pft_inputs_are_isolated(strong_baseline_setup)
         parameters,
         head.assemble_context(parameters, inactive),
         inactive,
+    )
+    observed = head.named_outputs(
+        parameters,
+        head.assemble_context(parameters, perturbed),
+        perturbed,
+    )
+    for name in baseline:
+        np.testing.assert_allclose(
+            np.asarray(observed[name]),
+            np.asarray(baseline[name]),
+            rtol=1.0e-6,
+            atol=1.0e-7,
+            err_msg=name,
+        )
+
+
+def test_strong_baseline_undefined_continuous_values_are_isolated(
+    strong_baseline_setup,
+):
+    setup = strong_baseline_setup
+    head = setup["head"]
+    parameters = setup["parameters"]
+    assembled = setup["assembled"]
+    undefined = np.zeros_like(np.asarray(assembled.state_defined.other), dtype=np.bool_)
+    undefined[0] = True
+    defined = np.asarray(assembled.state_defined.other).copy()
+    defined[undefined] = False
+    baseline_state = np.asarray(assembled.state.other).copy()
+    baseline_state[undefined] = 1.0e20
+    baseline_inputs = assembled._replace(
+        state=assembled.state._replace(other=baseline_state),
+        state_defined=assembled.state_defined._replace(other=defined),
+        canonical_input=assembled.canonical_input._replace(continuous_state=baseline_state),
+    )
+    perturbed_state = baseline_state.copy()
+    perturbed_state[undefined] = 1.0e30
+    perturbed = baseline_inputs._replace(
+        state=baseline_inputs.state._replace(other=perturbed_state),
+        canonical_input=baseline_inputs.canonical_input._replace(continuous_state=perturbed_state),
+    )
+    baseline = head.named_outputs(
+        parameters,
+        head.assemble_context(parameters, baseline_inputs),
+        baseline_inputs,
     )
     observed = head.named_outputs(
         parameters,
