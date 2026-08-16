@@ -1,0 +1,75 @@
+{
+  "schema_version": "successor_attention_mixed_annealed_continuation_v1",
+  "status": "frozen_for_attention_candidate_training",
+  "contract_sha256": "a6708373e4bb9066ad1795d88e5e58a3cfc764a34d5a8532307c02a2bd696ebc",
+  "identity": {
+    "staged_training_contract_sha256": "53d21d3a03a1502263b333aaba9719b2d42f096672844497b1a213dd54c23c7b",
+    "parent_recovery_sha256": "d49222d4f9f64941e555d1c8b0536c785cc89942d59fb41b3a5d5ea291a7cae7",
+    "prepared_manifest_sha256": "6feabb05a9d3833de01be540e2676fd1d51da01510314b32015fd155d87111ba",
+    "baseline_stage_report_sha256": "e379e3e700ebc93b558ddefa054af36854470b002a8224bf261211aebbd68ce1",
+    "validation_panel_sha256": "1ac7490a2c7067bf3f66faea75836d80a9e6fdc62ebcdc8673caa3f445c70350",
+    "batch_diversity_report_sha256": "6c3f16ffb8b160bd85b1840955f50d0f422685d323b200ce309fcd89d161154b"
+  },
+  "model": {
+    "architecture": "source_routed_process_attention_v2",
+    "parent_update": 1000,
+    "parameter_count": 8722689,
+    "architecture_change": false,
+    "graph_control_continued": false
+  },
+  "data": {
+    "teacher_release": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "prepared_updates": [1001, 2000],
+    "source_point_years": 1000,
+    "source_point_year_reuse": false,
+    "historical_v5_used": false,
+    "teacher_data_regenerated": false,
+    "sealed_test_used": false
+  },
+  "training": {
+    "continuation_updates": 250,
+    "point_years_per_update": 4,
+    "one_day_anchors_per_point_year": 8,
+    "rollout_windows_per_point_year": 1,
+    "one_day_batch_size": 32,
+    "rollout_batch_size": 4,
+    "rollout_days": 30,
+    "objective_horizons_days": [1, 7, 30],
+    "objective": "accepted_staged_v3_objective",
+    "optimizer": "inherited_adamw",
+    "schedule": "compressed_cosine_decay",
+    "initial_learning_rate_source": "staged_v3_update_1001",
+    "final_learning_rate": 0.00003,
+    "global_gradient_norm_clip": 1.0,
+    "recovery_interval": 50,
+    "retain_final_state": true,
+    "free_gln01_only": true,
+    "paid_training_authorized": false
+  },
+  "validation": {
+    "panel": "accepted_48_window_non_test_panel",
+    "slices": ["temporal", "spatial", "joint"],
+    "horizons_days": [7, 30],
+    "research_primary_keys": [
+      "cumulative.npp",
+      "terminal.aboveground_biomass_carbon",
+      "terminal.belowground_biomass_carbon",
+      "terminal.total_live_biomass_carbon"
+    ],
+    "maintenance_key": "cumulative.maintenance_respiration",
+    "same_panel_as_parent": true,
+    "sealed_test_used": false
+  },
+  "gates": {
+    "hard_failure_count": 0,
+    "minimum_research_primary_composite_relative_improvement": 0.005,
+    "each_research_primary_key_aggregate_no_worse": true,
+    "minimum_improved_slice_horizon_cells": 4,
+    "maximum_maintenance_aggregate_relative_regression": 0.2,
+    "maximum_maintenance_single_cell_relative_regression": 0.3,
+    "gradient_clipping_report_only": true
+  },
+  "pass_action": "retain_attention_checkpoint_and_open_365_day_non_test_screen",
+  "fail_action": "retain_diagnostic_state_and_review_capacity_or_backbone_with_user"
+}

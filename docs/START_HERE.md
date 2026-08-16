@@ -111,10 +111,13 @@ correction removed about `95.57%` of the raw maintenance RMS but still missed
 the RMS and maximum caps and regressed the anchor and some group-component
 losses. A bounded nonlinear constrained solver is now frozen under contract
 SHA256 `bb0f0718...d67ba07`. It uses at most eight parameter directions, four
-sequential relinearizations, and eight exact candidate evaluations. Local
-implementation and admission pass. The active operation is one free-`gln01`
-zero-retention audit; it does not change the Attention architecture or
-authorize training or a paid run.
+sequential relinearizations, and eight exact candidate evaluations. Its free
+execution found no admissible nonzero constrained step and closes fixed
+low-dimensional post-training projection. The active operation is now a
+checkpoint-producing Attention-only continuation: reuse the accepted
+1001-2000 prepared assets as 250 four-point-year updates and compress cosine
+decay to the actual stage horizon. It does not change the Attention
+architecture, regenerate Teacher data, use v5, or authorize a paid run.
 
 ## New Task Bootstrap
 

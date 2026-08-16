@@ -181,6 +181,23 @@ launcher checks. The active operation is one free-`gln01` zero-retention
 execution. See
 [`successor_low_dimensional_nonlinear_projection_protocol_20260816.md`](research/daily_coarse_graining/successor_low_dimensional_nonlinear_projection_protocol_20260816.md).
 
+The free execution completed at commit `85f1633` in `4905.58 s`, with report
+SHA256 `4af8ddaf...5447ce`. Evidence is valid, the eight-dimensional basis and
+matched-control reconstruction pass, and all hard/nonfinite counts are zero.
+The matched point still violates 12 constraints. The bounded hard/slack solve
+returned no admissible nonzero step, so no exact candidate trial was opened.
+Fixed low-dimensional post-training projection is closed.
+
+The active task is an Attention-only mixed-point annealed continuation. It
+reuses the accepted 1001-2000 prepared assets as 250 optimizer updates, with
+four unique point-years, 32 one-day anchors, and four 30-day windows per
+update. The unchanged staged-v3 objective retains 1/7/30-day supervision, but
+the cosine schedule now reaches `3e-5` within the actual continuation rather
+than remaining near its 10,000-update peak. The final candidate state is
+retained. No control continuation, architecture change, Teacher regeneration,
+v5 use, sealed-test read, or paid run is authorized. See
+[`successor_attention_mixed_annealed_continuation_protocol_20260816.md`](research/daily_coarse_graining/successor_attention_mixed_annealed_continuation_protocol_20260816.md).
+
 ## First Formal Neural Candidate
 
 `axial_process_operator_v1` and its exactly parameter-matched

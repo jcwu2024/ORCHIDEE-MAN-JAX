@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-08-12.
+Last updated: 2026-08-16.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -212,6 +212,14 @@ and exact finite trials remain in
 `scripts/hpc/run_successor_low_dimensional_nonlinear_projection.sh`. These are
 optimizer-geometry research tools and do not alter the Attention process head
 or production inference path.
+
+`daily_operator/attention_mixed_continuation.py` owns the active
+candidate-only contract, compressed cosine schedule, scientific
+classification, and recoverable single-Attention state. The executable and
+free-GPU boundary are
+`scripts/hpc/run_successor_attention_mixed_continuation.py` and the matching
+`.sh` launcher. They reuse the accepted update-1000 Attention parameters and
+prepared 1001-2000 assets; they do not alter the architecture or Teacher.
 
 The blocking real-v6 boundary diagnosis is
 `successor_fast_boundary_coverage_20260809.md`. Its successor owner schema is

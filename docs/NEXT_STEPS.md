@@ -948,9 +948,29 @@ next operation is one free-`gln01` zero-retention execution of this frozen
 audit. See
 [`successor_low_dimensional_nonlinear_projection_protocol_20260816.md`](research/daily_coarse_graining/successor_low_dimensional_nonlinear_projection_protocol_20260816.md).
 
-No network architecture change is involved. The 365-day rollout,
-long-held-point validation, Gate D2, sealed test, and product gates remain
+The free execution completed at commit `85f1633` in `4905.58 s`. Its evidence
+is valid, all hard/nonfinite counts are zero, the eight-dimensional basis is
+orthonormal, and the matched control is reproduced. The matched point still
+has 12 violated constraints. The bounded hard/slack solver found no admissible
+nonzero step, so no exact candidate trial was opened. Report SHA256 is
+`4af8ddaf...5447ce`. Fixed low-dimensional post-training projection is now
 closed.
+
+The active gate is conventional candidate training, not another projection
+or zero-update audit. Freeze and run one Attention-only mixed-point annealed
+continuation from update 1000. It consumes the already prepared 1001-2000
+assets as 250 updates of four distinct point-years, retains the current
+1/7/30-day objective, and compresses cosine decay from the inherited
+update-1001 rate to `3e-5`. It writes recoverable candidate state. The graph
+control is not continued: earlier equal-sample evidence already showed that
+mixed sampling improved all six Attention cells and its aggregate by `0.73%`,
+while the obsolete shared-arm gate rejected it only because control preferred
+single sampling by `0.25%`. See
+[`successor_attention_mixed_annealed_continuation_protocol_20260816.md`](research/daily_coarse_graining/successor_attention_mixed_annealed_continuation_protocol_20260816.md).
+
+No network architecture change is involved. A passing continuation opens one
+non-test 365-day screen. Long-held-point validation, Gate D2, sealed test, and
+product gates remain dependency-ordered later work.
 
 ## Completed Task Packet: Gate C
 
