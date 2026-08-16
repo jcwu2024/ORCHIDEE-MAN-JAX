@@ -1,7 +1,7 @@
 {
   "schema_version": "successor_attention_mixed_annealed_continuation_v1",
   "status": "frozen_for_attention_candidate_training",
-  "contract_sha256": "a6708373e4bb9066ad1795d88e5e58a3cfc764a34d5a8532307c02a2bd696ebc",
+  "contract_sha256": "00f7e59828dfcd2cb41dbe85b062699b9889833ff27eb3eb62a93aabade337ba",
   "identity": {
     "staged_training_contract_sha256": "53d21d3a03a1502263b333aaba9719b2d42f096672844497b1a213dd54c23c7b",
     "parent_recovery_sha256": "d49222d4f9f64941e555d1c8b0536c785cc89942d59fb41b3a5d5ea291a7cae7",
@@ -44,8 +44,8 @@
     "global_gradient_norm_clip": 1.0,
     "recovery_interval": 50,
     "retain_final_state": true,
-    "free_gln01_only": true,
-    "paid_training_authorized": false
+    "execution_targets": ["free_gln01", "gnall_single_gpu"],
+    "paid_submission_requires_explicit_resource_approval": true
   },
   "validation": {
     "panel": "accepted_48_window_non_test_panel",

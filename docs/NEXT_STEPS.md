@@ -968,6 +968,10 @@ while the obsolete shared-arm gate rejected it only because control preferred
 single sampling by `0.25%`. See
 [`successor_attention_mixed_annealed_continuation_protocol_20260816.md`](research/daily_coarse_graining/successor_attention_mixed_annealed_continuation_protocol_20260816.md).
 
+The frozen execution boundary permits free `gln01` or one `gnall` GPU. A paid
+submission still requires explicit approval of the exact resource envelope and
+worst-case charge before `sbatch`.
+
 No network architecture change is involved. A passing continuation opens one
 non-test 365-day screen. Long-held-point validation, Gate D2, sealed test, and
 product gates remain dependency-ordered later work.

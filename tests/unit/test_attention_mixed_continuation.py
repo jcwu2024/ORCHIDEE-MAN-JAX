@@ -140,7 +140,7 @@ def test_attention_mixed_continuation_state_round_trip(tmp_path):
     np.testing.assert_array_equal(loaded["parameters"]["kernel"], [1.0, 2.0])
 
 
-def test_attention_mixed_continuation_assets_are_candidate_only_and_free():
+def test_attention_mixed_continuation_assets_are_candidate_only_and_bounded():
     contract = json.loads(
         (
             ROOT
@@ -163,7 +163,36 @@ def test_attention_mixed_continuation_assets_are_candidate_only_and_free():
     ).read_text(encoding="utf-8")
     assert contract["training"]["continuation_updates"] == 250
     assert contract["model"]["graph_control_continued"] is False
-    assert contract["training"]["free_gln01_only"] is True
+    assert contract["training"]["execution_targets"] == [
+        "free_gln01",
+        "gnall_single_gpu",
+    ]
+    assert (
+        contract["training"]["paid_submission_requires_explicit_resource_approval"]
+        is True
+    )
     assert "#SBATCH" not in launcher
     assert "source_routed_graph_mlp_control_v2" not in runner
     assert "write_attention_continuation_state(" in runner
+
+
+def test_attention_mixed_continuation_slurm_envelope_is_single_gpu():
+    launcher = (
+        ROOT
+        / "scripts"
+        / "hpc"
+        / "run_successor_attention_mixed_continuation.sh"
+    ).read_text(encoding="utf-8")
+    slurm = (
+        ROOT
+        / "scripts"
+        / "hpc"
+        / "slurm_successor_attention_mixed_continuation.sh"
+    ).read_text(encoding="utf-8")
+    assert "ibc13b02n*|ibc13b03n*" in launcher
+    assert 'test "${SLURM_JOB_PARTITION:-}" = gnall' in launcher
+    assert "#SBATCH --partition=gnall" in slurm
+    assert "#SBATCH --cpus-per-task=4" in slurm
+    assert "#SBATCH --gres=gpu:1" in slurm
+    assert "#SBATCH --time=02:00:00" in slurm
+    assert "run_successor_attention_mixed_continuation.sh" in slurm

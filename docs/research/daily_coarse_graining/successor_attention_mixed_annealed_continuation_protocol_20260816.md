@@ -2,7 +2,7 @@
 
 Date: 2026-08-16
 
-Status: **frozen for one checkpoint-producing free-`gln01` continuation**.
+Status: **frozen for one checkpoint-producing single-GPU continuation**.
 
 ## Decision
 
@@ -30,7 +30,7 @@ continued in this stage and no new architecture claim is made.
 
 The machine contract is
 `manifests/coarse_graining/successor_attention_mixed_annealed_continuation_v1.json`,
-SHA256 `a6708373...696ebc`.
+SHA256 `00f7e598...337ba`.
 
 - Parent: accepted update-1000 parameters and AdamW state.
 - Architecture: `source_routed_process_attention_v2`, 8,722,689 parameters.
@@ -74,4 +74,6 @@ capacity or backbone; it does not reopen parameter projection.
 - No validation-weight tuning and no sealed-test access.
 - No 48-record forcing reconstruction or 48-step candidate state scan.
 - No Attention architecture change.
-- Free `gln01` only; no paid job is authorized by this protocol.
+- Execution may use free `gln01` or one `gnall` GPU. Every paid submission
+  still requires explicit approval of its resources, wall time, command,
+  working directory, and worst-case charge.

@@ -21,7 +21,7 @@ from .successor_staged_training import (
 
 SCHEMA_VERSION = "successor_attention_mixed_annealed_continuation_v1"
 STATE_SCHEMA_VERSION = "successor_attention_mixed_continuation_state_v1"
-FROZEN_CONTRACT_SHA256 = "a6708373e4bb9066ad1795d88e5e58a3cfc764a34d5a8532307c02a2bd696ebc"
+FROZEN_CONTRACT_SHA256 = "00f7e59828dfcd2cb41dbe85b062699b9889833ff27eb3eb62a93aabade337ba"
 DEFAULT_CONTRACT_PATH = (
     Path(__file__).resolve().parents[3]
     / "manifests"
@@ -83,6 +83,10 @@ def load_attention_mixed_continuation_contract(
         or int(training.get("rollout_days", 0)) != 30
         or tuple(training.get("objective_horizons_days", ())) != (1, 7, 30)
         or training.get("schedule") != "compressed_cosine_decay"
+        or tuple(training.get("execution_targets", ()))
+        != ("free_gln01", "gnall_single_gpu")
+        or training.get("paid_submission_requires_explicit_resource_approval")
+        is not True
         or data.get("teacher_data_regenerated") is not False
         or data.get("historical_v5_used") is not False
         or data.get("sealed_test_used") is not False

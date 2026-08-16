@@ -30,7 +30,11 @@ BASELINE_REPORT=$ROOT/runtime/outputs/training/successor-staged-fit-1000-ea21f8a
 
 case "$(hostname -s)" in
   gln01|ibgln01|ibc13b02n04) ;;
-  *) echo "Attention mixed continuation requires free gln01" >&2; exit 2 ;;
+  ibc13b02n*|ibc13b03n*)
+    test "${SLURM_JOB_PARTITION:-}" = gnall
+    test -n "${SLURM_JOB_ID:-}"
+    ;;
+  *) echo "Attention mixed continuation requires gln01 or a gnall allocation" >&2; exit 2 ;;
 esac
 case "$OUTPUT_ROOT" in "$ROOT/runtime/"*) ;; *) exit 2 ;; esac
 for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" \

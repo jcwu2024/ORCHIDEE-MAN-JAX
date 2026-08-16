@@ -195,7 +195,9 @@ update. The unchanged staged-v3 objective retains 1/7/30-day supervision, but
 the cosine schedule now reaches `3e-5` within the actual continuation rather
 than remaining near its 10,000-update peak. The final candidate state is
 retained. No control continuation, architecture change, Teacher regeneration,
-v5 use, sealed-test read, or paid run is authorized. See
+v5 use, or sealed-test read is authorized. Execution may use free `gln01` or
+one `gnall` GPU, but every paid submission requires explicit approval of its
+exact resource envelope and worst-case charge. See
 [`successor_attention_mixed_annealed_continuation_protocol_20260816.md`](research/daily_coarse_graining/successor_attention_mixed_annealed_continuation_protocol_20260816.md).
 
 ## First Formal Neural Candidate

@@ -117,7 +117,8 @@ low-dimensional post-training projection. The active operation is now a
 checkpoint-producing Attention-only continuation: reuse the accepted
 1001-2000 prepared assets as 250 four-point-year updates and compress cosine
 decay to the actual stage horizon. It does not change the Attention
-architecture, regenerate Teacher data, use v5, or authorize a paid run.
+architecture, regenerate Teacher data, or use v5. It may run on free `gln01`
+or one `gnall` GPU after explicit approval of the exact paid resource envelope.
 
 ## New Task Bootstrap
 
