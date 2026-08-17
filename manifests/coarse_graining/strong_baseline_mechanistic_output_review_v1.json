@@ -1,0 +1,114 @@
+{
+  "schema_version": "strong_baseline_mechanistic_output_review_v1",
+  "status": "proposal_only_user_review_required",
+  "implementation_authorized": false,
+  "base_architecture_contract": {
+    "path": "manifests/coarse_graining/strong_baseline_axis_aligned_process_expert_v1.json",
+    "contract_sha256": "baf5791f0786f22e05e8db9115eeab9a77687e19250d4d9efcb5181d6a96351d",
+    "field_count": 181,
+    "scalar_count": 39371
+  },
+  "classification": {
+    "learned_primary_or_endpoint": {
+      "selection": "all base-schema fields not listed in another classification",
+      "field_count": 149,
+      "scalar_count": 35895
+    },
+    "exact_daily_boundary_derived": {
+      "field_count": 16,
+      "scalar_count": 218,
+      "fields": [
+        "thermal.thermosoil_previous_step_state.stempdiag.normalized_tendency",
+        "endpoint.fast_state.diffuco_previous_step_state.drysoil_frac",
+        "endpoint.fast_state.diffuco_previous_step_state.roughheight",
+        "endpoint.fast_state.diffuco_previous_step_state.roughheight_pft",
+        "endpoint.fast_state.diffuco_previous_step_state.z0m",
+        "endpoint.fast_state.enerbil_previous_step_state.soilcap_pft",
+        "endpoint.fast_state.enerbil_previous_step_state.soilflx_pft",
+        "endpoint.fast_state.thermosoil_previous_step_state.cgrnd",
+        "endpoint.fast_state.thermosoil_previous_step_state.cgrnd_snow",
+        "endpoint.fast_state.thermosoil_previous_step_state.dgrnd",
+        "endpoint.fast_state.thermosoil_previous_step_state.dgrnd_snow",
+        "endpoint.fast_state.thermosoil_previous_step_state.gtemp",
+        "endpoint.fast_state.thermosoil_previous_step_state.lambda_snow",
+        "endpoint.fast_state.thermosoil_previous_step_state.pcapa_en",
+        "endpoint.fast_state.thermosoil_previous_step_state.soilcap",
+        "endpoint.fast_state.thermosoil_previous_step_state.soilflx"
+      ],
+      "mechanisms": {
+        "roughness": "condveg_main_minimal from learned final vegetation/snow primitives and final native forcing",
+        "dry_soil": "hydrol_litter_top_diagnostics plus hydrol_litter_grid_diagnostics from learned final hydrology primitives",
+        "thermal_diagnostics": "thermosoil_final_state plus thermosoil_diaglev_from_ptn from learned final thermal primitives",
+        "thermal_coefficients": "source-sequence daily-boundary calls through hydrology moisture, THERMOSOIL diffusion, final-state, and explicit-snow coefficient kernels"
+      }
+    },
+    "physical_baseline_plus_learned_residual": {
+      "field_count": 1,
+      "scalar_count": 3136,
+      "fields": [
+        "typed.ok_leak.doc_diffusive_interface"
+      ],
+      "baseline": "0.5 * (day-start source-kernel magnitude + predicted-day-end source-kernel magnitude), evaluated after the primitive conservative update",
+      "residual": "learned correction in a baseline-centered nonnegative output coordinate",
+      "claim": "strong explanatory baseline, not exact reconstruction"
+    },
+    "auxiliary_or_status": {
+      "field_count": 15,
+      "scalar_count": 122,
+      "fields": [
+        "endpoint.daily_summary.humrel_daily",
+        "endpoint.daily_summary.litterhum_daily",
+        "endpoint.daily_summary.resp_maint_radia",
+        "endpoint.daily_summary.snowmass_daily",
+        "endpoint.daily_summary.soilhum_daily",
+        "endpoint.daily_summary.wspeed_daily",
+        "endpoint.ok_leak_aux.lignin_struc_above",
+        "endpoint.ok_leak_aux.lignin_struc_below",
+        "endpoint.ok_leak_aux.litterpart",
+        "endpoint.ok_leak_aux.dead_leaves",
+        "endpoint.ok_leak_aux.fuel_1hr",
+        "endpoint.ok_leak_aux.fuel_10hr",
+        "endpoint.ok_leak_aux.fuel_100hr",
+        "endpoint.ok_leak_aux.fuel_1000hr",
+        "endpoint.fast_state.diffuco_previous_step_state.rveget.defined_logit"
+      ],
+      "policy": "retain explicit supervision and retained-tail/status ownership; do not count these fields as primary process primitives"
+    }
+  },
+  "doc_interface_semantics": {
+    "typed.ok_leak.doc_advective_interface": {
+      "stored_value": "nonnegative transported magnitude accumulated over 48 source calls",
+      "direction_owner": "the sign of wat_flux at each source call",
+      "not_valid": "daily signed interface sum"
+    },
+    "typed.ok_leak.doc_diffusive_interface": {
+      "stored_value": "nonnegative diffusive magnitude accumulated over 48 source calls",
+      "direction_owner": "the adjacent-layer concentration ordering at each source call",
+      "not_valid": "daily signed interface sum or one exact daily kernel result"
+    }
+  },
+  "coupled_learned_groups": {
+    "surface_energy_endpoint": [
+      "endpoint.fast_state.driver_previous_step_state.fluxsens",
+      "endpoint.fast_state.driver_previous_step_state.vevapp",
+      "endpoint.fast_state.diffuco_previous_step_state.evapot",
+      "endpoint.fast_state.diffuco_previous_step_state.evapot_corr",
+      "endpoint.fast_state.diffuco_previous_step_state.qsurf",
+      "endpoint.fast_state.diffuco_previous_step_state.temp_sol_pft",
+      "endpoint.fast_state.final_diagnostics.temp_sol"
+    ],
+    "canopy_capacity": [
+      "inventory.water.qsintveg.storage.outgoing_fraction",
+      "inventory.water.qsintveg.storage.incoming_amount",
+      "inventory.water.qsintveg.debt.outgoing_fraction",
+      "inventory.water.qsintveg.debt.incoming_amount"
+    ]
+  },
+  "data_policy": {
+    "teacher_v6_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "sealed_test_allowed": false,
+    "reconstruct_48_forcing_records": false,
+    "execute_48_step_state_scan": false
+  }
+}

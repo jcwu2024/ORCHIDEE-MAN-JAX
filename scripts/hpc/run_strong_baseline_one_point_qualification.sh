@@ -7,6 +7,9 @@ ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 WORKTREE=${WORKTREE:-$ROOT}
 EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD to the approved commit}
 GPU_DEVICE=${GPU_DEVICE:?set GPU_DEVICE after checking nvidia-smi}
+MECHANISTIC_OUTPUT=${MECHANISTIC_OUTPUT:-0}
+MAXIMUM_EPOCHS=${MAXIMUM_EPOCHS:-100}
+EVALUATION_INTERVAL=${EVALUATION_INTERVAL:-5}
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
@@ -16,8 +19,13 @@ BASE_STATISTICS=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance
 PROCESS_STATISTICS=$ROOT/runtime/outputs/training/first-neural-process-head-v1-statistics/process_training_statistics.json
 FAST_STATISTICS=$ROOT/runtime/outputs/training/successor-fast-owner-statistics-c9f35c0/successor_fast_owner_statistics.json
 HEAD_SHORT=${EXPECTED_GIT_HEAD:0:7}
-OUTPUT=${OUTPUT:-$ROOT/runtime/outputs/training/strong-baseline-one-point-$HEAD_SHORT/report.json}
-CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/strong-baseline-one-point-$HEAD_SHORT}
+case "$MECHANISTIC_OUTPUT" in
+  0) MODEL_TAG=strong-baseline; MODEL_ARGUMENTS=() ;;
+  1) MODEL_TAG=mechanistic-output; MODEL_ARGUMENTS=(--mechanistic-output) ;;
+  *) echo "MECHANISTIC_OUTPUT must be 0 or 1" >&2; exit 2 ;;
+esac
+OUTPUT=${OUTPUT:-$ROOT/runtime/outputs/training/$MODEL_TAG-one-point-$HEAD_SHORT/report.json}
+CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/$MODEL_TAG-one-point-$HEAD_SHORT}
 
 test -x "$PYTHON"
 test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
@@ -28,7 +36,7 @@ CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
 NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
 GPU_BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
 
-echo "host=$(hostname) git_head=$EXPECTED_GIT_HEAD gpu_device=$GPU_DEVICE output=$OUTPUT"
+echo "host=$(hostname) git_head=$EXPECTED_GIT_HEAD model=$MODEL_TAG gpu_device=$GPU_DEVICE output=$OUTPUT"
 nvidia-smi -i "$GPU_DEVICE" --query-gpu=index,name,memory.total,memory.used,utilization.gpu --format=csv,noheader
 
 env -u LD_LIBRARY_PATH \
@@ -51,8 +59,9 @@ env -u LD_LIBRARY_PATH \
       --process-statistics "$PROCESS_STATISTICS" \
       --fast-statistics "$FAST_STATISTICS" \
       --batch-size 8 \
-      --maximum-epochs 100 \
-      --evaluation-interval 5 \
+      --maximum-epochs "$MAXIMUM_EPOCHS" \
+      --evaluation-interval "$EVALUATION_INTERVAL" \
+      "${MODEL_ARGUMENTS[@]}" \
       --output "$OUTPUT"
 
 sha256sum "$OUTPUT"

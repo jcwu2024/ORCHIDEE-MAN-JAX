@@ -19,6 +19,7 @@ from research.daily_coarse_graining.daily_operator.strong_baseline_qualification
 )
 from scripts.hpc.run_strong_baseline_one_point_qualification import (
     _compare_loss_breakdowns,
+    _compare_loss_snapshots,
 )
 
 
@@ -116,6 +117,28 @@ def test_loss_floor_breakdown_compares_all_counts_and_stages():
         record = next(iter(result[section].values()))
         assert record["reduction_from_initialization"] == pytest.approx(0.75)
         assert record["reduction_during_exact_tail"] == pytest.approx(0.5)
+
+
+def test_mechanistic_loss_snapshot_compares_exact_diagnostics():
+    def snapshot(loss: float, count: int = 3):
+        record = {
+            "mean_daily_loss": loss,
+            "active_day_count": count,
+            "defined_value_count": float(count * 2),
+        }
+        return {
+            "experts": {"expert": record},
+            "labels": {"label": record},
+            "fields": {"field": record},
+            "defined_status": {"mask": record},
+            "exact_diagnostics": {"exact": record},
+        }
+
+    result = _compare_loss_snapshots(snapshot(4.0), snapshot(1.0))
+    assert result["counts_identical"]
+    for section in ("experts", "labels", "fields", "defined_status", "exact_diagnostics"):
+        record = next(iter(result[section].values()))
+        assert record["reduction_from_initialization"] == pytest.approx(0.75)
 
 
 def test_loss_floor_launcher_is_free_gln01_and_uses_frozen_tail():

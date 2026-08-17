@@ -307,6 +307,7 @@ class ProcessPrediction(NamedTuple):
     daily_temperature_context: DailyTemperatureContext
     retained_boundary: RetainedProcessBoundary
     named_outputs: Mapping[str, Any]
+    auxiliary_outputs: Mapping[str, Any]
 
 
 class ConservativeDomainResult(NamedTuple):

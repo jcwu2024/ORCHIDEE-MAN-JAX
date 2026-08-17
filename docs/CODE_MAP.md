@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-08-16.
+Last updated: 2026-08-17.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -224,11 +224,71 @@ corrected one-day science metrics, diagnostic-state serialization, and hard
 counts. The frozen exact-gradient tail is launched on free `gln01` by
 `scripts/hpc/run_strong_baseline_one_point_loss_floor_diagnostic.sh` and is
 specified in `strong_baseline_one_point_loss_floor_diagnostic_v1.md`. The
-completed failed qualification is classified in
+completed diagnostic and its dominant-label attribution are recorded in
+`strong_baseline_one_point_loss_floor_diagnostic_result_20260817.md`; the
+earlier failed qualification is classified in
 `strong_baseline_one_point_qualification_result_20260816.md`. The earlier
 zero-update admission is implemented by
 `scripts/hpc/run_strong_baseline_gpu_admission.py` and its free-`gln01`
 launcher and has passed.
+
+`research/daily_coarse_graining/fast_owner_delta_representation_audit.py`
+owns the bounded base-shard audit of constrained endpoint reachability, global
+normalization conditioning, and one-boundary source reconstruction. Its v2
+logic reconstructs absolute endpoints before testing physical ranges. It reads
+one accepted v6 base shard plus the existing train/train statistics without
+reading typed values, regenerating data, expanding 48 forcing steps, or
+running a subdaily state scan. Its unit tests are in
+`tests/unit/test_fast_owner_delta_representation_audit.py`, and its scientific
+classification is
+`dominant_endpoint_source_representation_audit_20260817.md`.
+
+`research/daily_coarse_graining/fast_owner_exact_reconstruction_panel.py`
+expands the admitted source formulas to an explicit non-test point-year panel,
+fails closed on spatial or temporal test selections, and aggregates exact
+field errors without reconstructing subdaily forcing or state scans. Its unit
+tests are in `tests/unit/test_fast_owner_exact_reconstruction_panel.py`.
+
+`research/daily_coarse_graining/thermal_coefficient_exact_reconstruction_panel.py`
+owns the complete daily-boundary reconstruction of the ten THERMOSOIL and
+ENERBIL coefficient fields. It calls the existing source-backed hydrology,
+thermal, final-state, and explicit-snow sequence and is tested by
+`tests/unit/test_thermal_coefficient_exact_reconstruction_panel.py`.
+
+`research/daily_coarse_graining/doc_diffusion_boundary_baseline_panel.py`
+compares day-start, day-end, and endpoint-trapezoid source-kernel magnitudes
+with the immutable v6 cumulative diffusion label on non-test point-years. It
+does not claim exact reconstruction. Its unit tests are in
+`tests/unit/test_doc_diffusion_boundary_baseline_panel.py`, and the accepted
+result is `doc_diffusion_boundary_baseline_result_20260817.md`.
+
+`research/daily_coarse_graining/hydrology_canopy_boundary_audit.py` owns the
+non-test, no-scan daily-boundary audit of HYDROL stress diagnostics,
+tile-to-grid bare-evaporation beta, `temp_hydro`, dynamic `nroot`, and signed
+canopy storage/debt. Its focused tests are in
+`tests/unit/test_hydrology_canopy_boundary_audit.py`; the source result and the
+subsequently accepted v2 mechanism basis are in
+`hydrology_canopy_boundary_audit_result_20260817.md`.
+
+`manifests/coarse_graining/strong_baseline_mechanistic_output_review_v1.json`
+is the historical proposal-only complete 181-field classification used by
+`mechanistic_output_architecture_review_v1.md`. Its coverage/count regression is
+`tests/unit/test_strong_baseline_mechanistic_output_review.py`.
+
+`manifests/coarse_graining/strong_baseline_mechanistic_output_v1.json` is the
+historical first executable output-mechanism contract.
+`manifests/coarse_graining/strong_baseline_mechanistic_output_v2.json` is the
+active hydrology/canopy contract. Under `daily_operator/`,
+`mechanistic_output_contract.py` owns the 161/20 learned/exact schema split,
+`mechanistic_output_reconstruction.py` owns pre/post-conservative-update exact
+and baseline/residual materialization, including support-aware `nroot` and the
+signed canopy endpoint-to-transfer conversion. `mechanistic_output_loss.py`
+excludes exact fields from optimization, supervises canopy endpoint/status
+coordinates, and retains exact-field diagnostics, while
+`mechanistic_process_head.py` binds the mechanism to the strong Attention
+backbone. `scripts/hpc/run_mechanistic_output_gpu_admission.py` owns bounded
+real-v6 forward/loss/gradient/state/budget admission. The shared one-point
+runner selects this path with `--mechanistic-output`.
 
 `daily_operator/nonlinear_projection.py` owns the active host-side bounded
 SLSQP subproblem, exact violation merit, and candidate acceptance for the

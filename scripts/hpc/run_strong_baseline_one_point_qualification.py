@@ -84,6 +84,8 @@ class DetailedProcessBatch(NamedTuple):
     field_count: Any
     defined_bce: Any
     defined_count: Any
+    exact_diagnostic_mse: Any
+    exact_diagnostic_count: Any
 
 
 def _stack(jax: Any, values: Sequence[Any]) -> Any:
@@ -223,6 +225,36 @@ def _compare_loss_breakdowns(
     return {"counts_identical": counts_identical, **result}
 
 
+def _compare_loss_snapshots(
+    initial: Mapping[str, Any],
+    final: Mapping[str, Any],
+) -> Mapping[str, Any]:
+    result: dict[str, Any] = {}
+    counts_identical = True
+    for section in ("experts", "labels", "fields", "defined_status", "exact_diagnostics"):
+        if set(initial[section]) != set(final[section]):
+            raise ValueError(f"loss-snapshot {section} registry drift")
+        records = {}
+        for name in initial[section]:
+            first = initial[section][name]
+            last = final[section][name]
+            count_names = tuple(key for key in first if key.endswith("_count"))
+            current_counts_identical = all(first[key] == last[key] for key in count_names)
+            counts_identical = counts_identical and current_counts_identical
+            records[name] = {
+                "initial_mean_daily_loss": first["mean_daily_loss"],
+                "final_mean_daily_loss": last["mean_daily_loss"],
+                **{f"initial_{key}": first[key] for key in count_names},
+                **{f"final_{key}": last[key] for key in count_names},
+                "counts_identical": current_counts_identical,
+                "reduction_from_initialization": _fractional_reduction(
+                    first["mean_daily_loss"], last["mean_daily_loss"]
+                ),
+            }
+        result[section] = records
+    return {"counts_identical": counts_identical, **result}
+
+
 def _metric_record(squared: float, signed: float, absolute: float, count: int) -> Mapping[str, Any]:
     if count <= 0:
         raise ValueError("one-point qualification primary metric has no valid values")
@@ -253,12 +285,17 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         raise ValueError("diagnostic-only paths require a positive tail-update budget")
     if diagnostic_mode and args.diagnostic_state_output.exists():
         raise FileExistsError(args.diagnostic_state_output)
+    if diagnostic_mode and args.mechanistic_output:
+        raise ValueError("mechanistic-output qualification does not admit the legacy diagnostic tail")
     started = time.perf_counter()
     runtime = _load_extended_runtime(args)
     jax = runtime["jax"]
     import jax.numpy as jnp
 
     from jax_orchidee.driver import orchestration as teacher
+    from research.daily_coarse_graining.daily_operator.conservative_update import (
+        apply_conservative_update,
+    )
     from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
     from research.daily_coarse_graining.daily_operator.strong_baseline_architecture import (
         build_strong_baseline_layout,
@@ -292,18 +329,65 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     )
 
     architecture_contract = load_strong_baseline_contract()
-    strong_layout = build_strong_baseline_layout(
-        adapter=runtime["adapter"],
-        schema=runtime["schema"],
-        owner_contract=runtime["owner_contract"],
-        contract=architecture_contract,
-        inputs=runtime["probe_assembled"],
-    )
+    mechanism_contract = None
+    parameter_schema = runtime["schema"]
+    if args.mechanistic_output:
+        from research.daily_coarse_graining.daily_operator.mechanistic_output_contract import (
+            build_mechanistic_learned_schema,
+            load_mechanistic_output_contract,
+        )
+        from research.daily_coarse_graining.daily_operator.mechanistic_output_loss import (
+            masked_mechanistic_output_loss,
+        )
+        from research.daily_coarse_graining.daily_operator.mechanistic_process_head import (
+            MechanisticStrongBaselineProcessHead,
+            build_mechanistic_output_layout,
+        )
+
+        mechanism_contract = load_mechanistic_output_contract()
+        parameter_schema = build_mechanistic_learned_schema(
+            runtime["schema"],
+            mechanism_contract,
+        )
+        strong_layout = build_mechanistic_output_layout(
+            adapter=runtime["adapter"],
+            complete_schema=runtime["schema"],
+            learned_schema=parameter_schema,
+            owner_contract=runtime["owner_contract"],
+            architecture_contract=architecture_contract,
+            mechanism_contract=mechanism_contract,
+            inputs=runtime["probe_assembled"],
+        )
+    else:
+        strong_layout = build_strong_baseline_layout(
+            adapter=runtime["adapter"],
+            schema=runtime["schema"],
+            owner_contract=runtime["owner_contract"],
+            contract=architecture_contract,
+            inputs=runtime["probe_assembled"],
+        )
     runtime = dict(runtime) | {
         "architecture_contract": architecture_contract,
         "strong_layout": strong_layout,
     }
-    head = _head(runtime)
+    head = (
+        MechanisticStrongBaselineProcessHead(
+            contract=runtime["contract"],
+            architecture_contract=architecture_contract,
+            mechanism_contract=mechanism_contract,
+            input_assembler=runtime["adapter"].input_assembler,
+            complete_schema=runtime["schema"],
+            learned_schema=parameter_schema,
+            layout=strong_layout,
+            input_normalization=runtime["input_normalization"],
+            output_normalization=runtime["output_normalization"],
+            forcing_layout=runtime["forcing_layout"],
+            forcing_indices=runtime["forcing_indices"],
+            message_gate_scale=0.0,
+        )
+        if args.mechanistic_output
+        else _head(runtime)
+    )
     dataset = _prepare_point_year(runtime)
     sample_count = int(dataset["sample_count"])
     batches_per_epoch = int(np.ceil(sample_count / args.batch_size))
@@ -311,23 +395,28 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
 
     parameters = initialize_strong_baseline_parameters(
         jax.random.PRNGKey(args.seed),
-        schema=runtime["schema"],
+        schema=parameter_schema,
         layout=strong_layout,
         inputs=runtime["probe_assembled"],
         contract=architecture_contract,
     )
-    if strong_baseline_parameter_count(parameters) != PARAMETER_COUNT:
+    parameter_count = 49_743_001 if args.mechanistic_output else PARAMETER_COUNT
+    if strong_baseline_parameter_count(parameters) != parameter_count:
         raise ValueError("strong-baseline qualification parameter count drift")
     optimizer = initialize_strong_baseline_adamw(parameters)
     decay_mask = strong_baseline_weight_decay_mask(parameters)
     expert_names = tuple(architecture_contract.expert_names)
-    label_names = tuple(runtime["schema"].labels)
+    active_label_indices = {field.label_index for field in parameter_schema.fields}
+    label_names = tuple(
+        name for index, name in enumerate(parameter_schema.labels) if index in active_label_indices
+    )
     field_names = tuple(
-        field.name for field in runtime["schema"].fields if field.value_representation != "defined_logit"
+        field.name for field in parameter_schema.fields if field.value_representation != "defined_logit"
     )
     defined_names = tuple(
-        field.name for field in runtime["schema"].fields if field.value_representation == "defined_logit"
+        field.name for field in parameter_schema.fields if field.value_representation == "defined_logit"
     )
+    exact_diagnostic_names = mechanism_contract.exact_fields if args.mechanistic_output else ()
     if set(label_names) != set(architecture_contract.label_ownership):
         raise ValueError("strong-baseline diagnostic label registry drift")
     if len(defined_names) != 1:
@@ -338,10 +427,31 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     raw_all = jax.device_put(dataset["raw_inputs"])
     science_all = jax.device_put(dataset["science_targets"])
 
-    def one_process_loss(values: Any, item: Any, wanted: Any) -> tuple[Any, Any]:
+    def process_loss_result(values: Any, item: Any, wanted: Any) -> Any:
         context = head.assemble_context(values, item)
+        if args.mechanistic_output:
+            primitive = head(values, context, item)
+            update = apply_conservative_update(item, primitive)
+            complete = head.materialize_post_update(
+                values,
+                context,
+                item,
+                primitive,
+                update,
+            )
+            return masked_mechanistic_output_loss(
+                complete.named_outputs,
+                wanted,
+                inputs=item,
+                complete_schema=runtime["schema"],
+                learned_schema=parameter_schema,
+                scales=runtime["loss_scales"],
+                architecture_contract=architecture_contract,
+                mechanism_contract=mechanism_contract,
+                auxiliary_outputs=complete.auxiliary_outputs,
+            )
         outputs = head.named_outputs(values, context, item)
-        loss = masked_equal_expert_label_macro_mse(
+        return masked_equal_expert_label_macro_mse(
             outputs,
             wanted,
             inputs=item,
@@ -349,6 +459,9 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             scales=runtime["loss_scales"],
             contract=architecture_contract,
         )
+
+    def one_process_loss(values: Any, item: Any, wanted: Any) -> tuple[Any, Any]:
+        loss = process_loss_result(values, item, wanted)
         return loss.total, jnp.stack(tuple(loss.expert_mse[name] for name in expert_names))
 
     def process_batch(
@@ -370,16 +483,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         return total, expert
 
     def one_process_details(values: Any, item: Any, wanted: Any) -> DetailedProcessBatch:
-        context = head.assemble_context(values, item)
-        outputs = head.named_outputs(values, context, item)
-        loss = masked_equal_expert_label_macro_mse(
-            outputs,
-            wanted,
-            inputs=item,
-            schema=runtime["schema"],
-            scales=runtime["loss_scales"],
-            contract=architecture_contract,
-        )
+        loss = process_loss_result(values, item, wanted)
         return DetailedProcessBatch(
             total=loss.total,
             expert_mse=jnp.stack(tuple(loss.expert_mse[name] for name in expert_names)),
@@ -390,6 +494,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             field_count=jnp.stack(tuple(loss.field_count[name] for name in field_names)),
             defined_bce=jnp.stack(tuple(loss.defined_bce[name] for name in defined_names)),
             defined_count=jnp.stack(tuple(loss.defined_count[name] for name in defined_names)),
+            exact_diagnostic_mse=(
+                jnp.stack(tuple(loss.exact_diagnostic_mse[name] for name in exact_diagnostic_names))
+                if exact_diagnostic_names
+                else jnp.zeros((0,), dtype=jnp.float64)
+            ),
+            exact_diagnostic_count=(
+                jnp.stack(tuple(loss.exact_diagnostic_count[name] for name in exact_diagnostic_names))
+                if exact_diagnostic_names
+                else jnp.zeros((0,), dtype=jnp.float64)
+            ),
         )
 
     def detailed_process_batch(
@@ -542,6 +656,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "labels": len(label_names),
             "fields": len(field_names),
             "defined_status": len(defined_names),
+            "exact_diagnostics": len(exact_diagnostic_names),
         }
         loss_sums = {name: np.zeros(size, dtype=np.float64) for name, size in shapes.items()}
         active_days = {name: np.zeros(size, dtype=np.int64) for name, size in shapes.items()}
@@ -581,6 +696,10 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                     np.asarray(detail.defined_bce, dtype=np.float64),
                     np.asarray(detail.defined_count, dtype=np.float64),
                 ),
+                "exact_diagnostics": (
+                    np.asarray(detail.exact_diagnostic_mse, dtype=np.float64),
+                    np.asarray(detail.exact_diagnostic_count, dtype=np.float64),
+                ),
             }
             for section, (losses, counts) in arrays.items():
                 active = admitted[:, None] & (counts > 0.0)
@@ -594,6 +713,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "labels": label_names,
             "fields": field_names,
             "defined_status": defined_names,
+            "exact_diagnostics": exact_diagnostic_names,
         }
         sections = {}
         for section, section_names in names.items():
@@ -685,11 +805,13 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     def science_batch(
         values: Any,
         all_inputs: Any,
+        all_process_targets: Any,
         expected_all: Any,
         indices: Any,
         weights: Any,
     ) -> ScienceBatchStatistics:
         inputs = jax.tree_util.tree_map(lambda value: value[indices], all_inputs)
+        process_targets = jax.tree_util.tree_map(lambda value: value[indices], all_process_targets)
         expected = jax.tree_util.tree_map(lambda value: value[indices], expected_all)
         result = jax.vmap(lambda item: transition(values, item))(inputs)
         trace = DailyOperatorRolloutTrace(
@@ -753,8 +875,13 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
 
         prediction_nonfinite = sum(
             (
-                jnp.sum((~jnp.isfinite(jnp.asarray(leaf))) & admitted_mask(leaf), dtype=jnp.int64)
-                for leaf in jax.tree_util.tree_leaves(result.prediction.named_outputs)
+                jnp.sum(
+                    (~jnp.isfinite(jnp.asarray(predicted_output)))
+                    & jnp.asarray(process_targets[name].defined, dtype=jnp.bool_)
+                    & admitted_mask(predicted_output),
+                    dtype=jnp.int64,
+                )
+                for name, predicted_output in result.prediction.named_outputs.items()
             ),
             jnp.asarray(0, dtype=jnp.int64),
         )
@@ -828,6 +955,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             result = science_batch(
                 values,
                 raw_all,
+                targets_all,
                 science_all,
                 jnp.asarray(indices),
                 jnp.asarray(weights),
@@ -852,7 +980,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         }
 
     initial_process = evaluate_process(parameters)
-    initial_process_details = evaluate_process_details(parameters) if diagnostic_mode else None
+    detail_mode = diagnostic_mode or args.mechanistic_output
+    initial_process_details = evaluate_process_details(parameters) if detail_mode else None
     initial_science = evaluate_science(parameters)
     history = []
     science_evaluations = [{"epoch": 0, **initial_science}]
@@ -953,7 +1082,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         print(
             json.dumps(
                 {
-                    "event": "strong_baseline_one_point_epoch",
+                    "event": (
+                        "mechanistic_output_one_point_epoch"
+                        if args.mechanistic_output
+                        else "strong_baseline_one_point_epoch"
+                    ),
                     "epoch": epoch,
                     "updates": completed_updates,
                     "mean_training_batch_loss": record["mean_training_batch_loss"],
@@ -1096,7 +1229,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             if passed:
                 break
 
-    final_process_details = evaluate_process_details(parameters) if diagnostic_mode else None
+    final_process_details = evaluate_process_details(parameters) if detail_mode else None
     loss_floor_breakdown = (
         _compare_loss_breakdowns(
             initial_process_details,
@@ -1108,6 +1241,13 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     )
     if diagnostic_mode and failure_reason is None and not loss_floor_breakdown["counts_identical"]:
         failure_reason = "loss-floor diagnostic counts changed between evaluations"
+    mechanistic_loss_breakdown = (
+        _compare_loss_snapshots(initial_process_details, final_process_details)
+        if args.mechanistic_output
+        else None
+    )
+    if args.mechanistic_output and failure_reason is None and not mechanistic_loss_breakdown["counts_identical"]:
+        failure_reason = "mechanistic loss-breakdown counts changed between evaluations"
 
     total_reduction = 1.0 - final_process["total"] / initial_process["total"]
     expert_reduction = {
@@ -1157,7 +1297,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "schema_version": (
             "strong_baseline_one_point_loss_floor_diagnostic_v1"
             if diagnostic_mode
-            else "strong_baseline_one_point_year_qualification_v1"
+            else (
+                "mechanistic_output_one_point_year_qualification_v1"
+                if args.mechanistic_output
+                else "strong_baseline_one_point_year_qualification_v1"
+            )
         ),
         "status": report_status,
         "execution_status": execution_status,
@@ -1181,11 +1325,27 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "last_batch_padding_has_zero_weight": True,
         },
         "model": {
-            "parameter_count": PARAMETER_COUNT,
+            "parameter_count": parameter_count,
             "fresh_initialization_seed": args.seed,
             "message_gate_scale": 0.0,
             "graph_path_executed": False,
             "historical_checkpoint_used": False,
+            **(
+                {
+                    "candidate": "strong_baseline_mechanistic_output_v2",
+                    "learned_output_field_count": len(parameter_schema.fields),
+                    "learned_output_scalar_count": sum(
+                        int(np.prod(field.shape, dtype=np.int64)) for field in parameter_schema.fields
+                    ),
+                    "complete_output_field_count": len(runtime["schema"].fields),
+                    "complete_output_scalar_count": sum(
+                        int(np.prod(field.shape, dtype=np.int64)) for field in runtime["schema"].fields
+                    ),
+                    "exact_derived_output_field_count": len(mechanism_contract.exact_fields),
+                }
+                if args.mechanistic_output
+                else {}
+            ),
         },
         "optimizer": {
             "name": "adamw",
@@ -1239,6 +1399,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "science": final_science,
         },
         "loss_floor_breakdown": loss_floor_breakdown,
+        "mechanistic_loss_breakdown": mechanistic_loss_breakdown,
         "history": history,
         "science_evaluations": science_evaluations,
         "device": {
@@ -1257,7 +1418,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "next_gate": (
             "design_64_point_year_qualification"
             if passed
-            else "use_label_field_loss_floor_evidence_before_next_model_change"
+            else (
+                "use_mechanistic_label_field_attribution_before_model_change"
+                if args.mechanistic_output
+                else "use_label_field_loss_floor_evidence_before_next_model_change"
+            )
         ),
     }
     _atomic_json(args.output, report)
@@ -1275,6 +1440,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--maximum-epochs", type=int, default=100)
     parser.add_argument("--evaluation-interval", type=int, default=5)
     parser.add_argument("--seed", type=int, default=PROBE_SEED)
+    parser.add_argument("--mechanistic-output", action="store_true")
     parser.add_argument("--diagnostic-tail-updates", type=int, default=0)
     parser.add_argument(
         "--diagnostic-tail-learning-rate",

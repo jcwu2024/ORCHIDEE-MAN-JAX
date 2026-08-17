@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-16.
+Last updated: 2026-08-17.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -1021,11 +1021,118 @@ regressions pass 94 tests, plus Ruff, formatting, compilation, CLI, Bash, and
 diff checks. See
 [`strong_baseline_one_point_loss_floor_diagnostic_v1.md`](research/daily_coarse_graining/strong_baseline_one_point_loss_floor_diagnostic_v1.md).
 
-The active gate is a short real-v6 execution preflight on free `gln01`. If its
-coverage, serialization, and corrected science paths pass, run the frozen full
-diagnostic on free `gln01`; do not alter the 100+25 budget after seeing partial
-losses. Paid training, 64-point-year fit, full epoch, 7/30/365-day screen,
-long-held points, Gate D2, sealed test, and product gates remain closed.
+The real-v6 preflight and frozen full diagnostic completed on free `gln01` at
+commit `04b0c2e`. All execution, coverage, finite-gradient, state, budget,
+count-identity, corrected-scale, and diagnostic-state gates pass. The total
+loss fell from `4.22628` to `0.19781` after the minibatch stage and only to
+`0.19126` after 25 exact-gradient updates: `95.4744%` reduction, still below
+`99%`. Four experts still fail. Corrected GPP, maintenance, and AGB pass, while
+BGB (`0.05064`) and NPP (`0.05694`) narrowly fail. Report SHA256 is
+`2f338354...7ad5661`; see
+[`strong_baseline_one_point_loss_floor_diagnostic_result_20260817.md`](research/daily_coarse_graining/strong_baseline_one_point_loss_floor_diagnostic_result_20260817.md).
+
+Five labels account for `91.06%` of final loss, and `fast_owner.diffuco` plus
+`fast_owner.driver` alone account for `76.18%`. The active gate is therefore a
+source/representation audit of those dominant endpoint labels. Determine
+which high-loss fields can be reconstructed once per day by existing
+source-backed JAX kernels, which are necessary learned primitives requiring a
+coupled decoder, and which are poorly conditioned targets. Do not implement a
+revised network before discussing that architecture with the user. Repeating
+the same stochastic recipe, paid training, 64-point-year fit, full epoch,
+7/30/365-day screen, long-held points, Gate D2, sealed test, and product gates
+remain closed.
+
+The bounded source/representation audit is now complete and corrected. Its
+first version incorrectly compared signed endpoint deltas with absolute
+physical ranges. The real decoder first adds day start and then constrains the
+absolute endpoint; the loss converts it back to a delta. The corrected
+inverse-decoder audit finds `0/260,988` hard range violations. It identifies
+24,532 exact 0/1 boundary endpoints and 34 interior targets requiring absolute
+raw above 20, which are bounded conditioning/status findings rather than
+evidence for a global signed decoder.
+
+One-boundary calls against true v6 endpoints verify exact reconstruction of
+`z0m` (`1.33e-15` maximum error), `roughheight*` (zero), `drysoil_frac`
+(`3.33e-16`), and the final `gtemp`, `stempdiag`, `tdeep`, and `hsdeep`
+diagnostics (zero). `z0h` does not yet reproduce and remains unresolved.
+Coupled energy endpoints and canopy storage remain learned. See
+[`dominant_endpoint_source_representation_audit_20260817.md`](research/daily_coarse_graining/dominant_endpoint_source_representation_audit_20260817.md).
+
+The exact reconstruction was then expanded to 20 non-test point-years: eight
+spatial-train points and two spatial-validation points, each in 1961 and 2006.
+`z0m`, `roughheight*`, `drysoil_frac`, `gtemp`, `stempdiag`, `tdeep`, and
+`hsdeep` pass every cell with maximum error `2.22e-15` or lower. `z0h` fails
+all 20 cells with maximum error `0.0137343` and remains a learned endpoint.
+The complete true-v6 boundary also reproduces all ten thermal coefficient
+fields in every point-year within `1e-10 + 1e-12*abs(target)`. Report SHA256
+is `adbdb831...6e579e8`. They are verified exact derived fields rather than
+conditional candidates. No test shard was read.
+
+The DOC diffusion correction is separately closed. Its v6 target is the sum
+of 48 nonnegative source magnitudes, not a signed interface sum and not one
+exact daily kernel result. The endpoint-trapezoid boundary proxy passes its
+frozen gate in all four non-test slices and leaves only `4.50%` residual
+variance overall. It is accepted as a physical baseline plus learned residual.
+Report SHA256 is `e200f2d7...8b69cbd`; see
+[`doc_diffusion_boundary_baseline_result_20260817.md`](research/daily_coarse_graining/doc_diffusion_boundary_baseline_result_20260817.md).
+
+The user approved the complete mechanistic-output architecture. Its formal
+contract is
+`manifests/coarse_graining/strong_baseline_mechanistic_output_v1.json`. The
+implementation learns 165 fields and 39,153 scalar values, materializes the
+complete 181-field/39,371-value boundary around one float64 conservative
+update, then enters the canonical retained exact tail. It retains
+axis-preserving process Attention and independent expert capacity, routes the
+coupled energy endpoints through one expert, applies capacity-aware canopy
+storage, and removes independent supervision of 16 verified derived fields.
+
+Local tests pass, and the bounded real-v6 `gln01` admission passed eager/JIT
+forward, complete mechanistic loss, all-parameter gradient, canonical bound
+transition, next-state, and budget checks. The subsequent fresh one-epoch,
+364-day smoke completed 46 finite updates with every prediction/state/budget/
+inventory hard count zero; its report SHA256 is
+`725130c4...bc73d304`.
+
+The first 100-epoch one-point run then passes the `99%` total-loss gate, all
+five primary-science NRMSE gates, and every hard gate. It fails only the
+independent canopy-GPP, hydrology/snow, litter/POC/DOC, and surface-energy
+expert-reduction gates. A second detailed run confirms that `humrel/humrelv`,
+canopy debt incoming amount, coupled energy endpoints, and DOC/litter fields
+dominate the residual, while also showing sensitivity to the unclipped
+high-learning-rate trajectory. See
+[`mechanistic_output_one_point_qualification_result_20260817.md`](research/daily_coarse_graining/mechanistic_output_one_point_qualification_result_20260817.md).
+
+The hydrology/canopy source-representation audit is complete on 20 non-test
+point-years. Final `nroot` cannot be reconstructed from day-start `nroot` and
+final moisture in one call: only `5/20` point-years pass. Once final `nroot` is
+supplied, however, `us`, `humrelv`, and `humrel` reproduce in `20/20` with
+maximum error `2.22e-16`; grid `evap_bare_lim` is also exact from learned
+tile-level `evap_bare_lim_ns`. `temp_hydro` fails `20/20` and remains learned.
+
+Canopy positive storage respects its physical capacity in every one of 7,290
+daily endpoints, but debt is positive on `41.51%`, so it is not a rare
+outlier. The captured daily `vevapwet` is signed and includes condensation; it
+is not a valid hard debt scale. See
+[`hydrology_canopy_boundary_audit_result_20260817.md`](research/daily_coarse_graining/hydrology_canopy_boundary_audit_result_20260817.md).
+
+The user approved the hydrology/canopy v2 output mechanism, now frozen in
+`manifests/coarse_graining/strong_baseline_mechanistic_output_v2.json`. It
+learns 161 fields/39,006 scalar coordinates, materializes 20 exact fields, and
+contains 49,743,001 parameters. Final `nroot` is learned on its day-start
+support; final `us`, `humrelv`, `humrel`, and `evap_bare_lim` are reconstructed
+after the conservative update. One signed canopy endpoint and three status
+logits replace independent supervision of the four storage/debt transfers,
+which are still materialized uniquely for the conservative updater.
+
+The local gate passes 57 focused and related regression tests plus Ruff,
+compileall, and diff checks. The active bounded task is one zero-update
+real-v6 `gln01` admission: eager/JIT complete forward, complete loss, full
+parameter-tree gradient, canonical retained tail, one-day state, and water/
+carbon budgets. It may read only an existing train/train v6 sample and must
+write no checkpoint or optimizer update. Do not open training, 64-point-year,
+full-epoch, rollout, paid, Gate D2, sealed-test, or product stages until this
+admission passes. See
+[`hydrology_canopy_output_v2_local_acceptance_20260817.md`](research/daily_coarse_graining/hydrology_canopy_output_v2_local_acceptance_20260817.md).
 
 ## Completed Task Packet: Gate C
 

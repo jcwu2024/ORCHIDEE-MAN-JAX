@@ -40,6 +40,19 @@ from .long_horizon_objective import (
     long_horizon_biomass_productivity_objective,
     rollout_hard_gate_counts,
 )
+from .mechanistic_output_contract import (
+    MechanisticOutputContract,
+    build_mechanistic_learned_schema,
+    load_mechanistic_output_contract,
+)
+from .mechanistic_output_loss import (
+    MechanisticOutputLossResult,
+    masked_mechanistic_output_loss,
+)
+from .mechanistic_process_head import (
+    MechanisticStrongBaselineProcessHead,
+    build_mechanistic_output_layout,
+)
 from .model import InputAssembler, ProcessHead, bind_daily_operator, daily_operator_transition
 from .named_biomass_tendency import (
     NAMED_BIOMASS_TENDENCY_COMPONENTS,
@@ -240,6 +253,9 @@ __all__ = [
     "DailyOperatorRolloutTrace",
     "GradientRatioPreflight",
     "LongHorizonScales",
+    "MechanisticOutputContract",
+    "MechanisticOutputLossResult",
+    "MechanisticStrongBaselineProcessHead",
     "NamedBiomassGradientCalibration",
     "apply_conservative_inventory_update",
     "apply_conservative_update",
@@ -252,6 +268,8 @@ __all__ = [
     "biomass_stock_identity_residual",
     "biomass_stock_identity_roundoff_audit",
     "build_canonical_retained_tail_adapter",
+    "build_mechanistic_learned_schema",
+    "build_mechanistic_output_layout",
     "build_neural_output_schema",
     "build_pft_parameter_routing",
     "build_process_axis_layout",
@@ -286,8 +304,10 @@ __all__ = [
     "neural_process_outputs",
     "long_horizon_biomass_productivity_objective",
     "masked_equal_expert_label_macro_mse",
+    "masked_mechanistic_output_loss",
     "named_biomass_tendency_objective",
     "load_successor_candidate_contract",
+    "load_mechanistic_output_contract",
     "load_strong_baseline_contract",
     "load_fast_owner_reconstruction_contract",
     "parameter_count",

@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-16.
+Last updated: 2026-08-17.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -254,12 +254,108 @@ are complete. The runner preserves the original 100-epoch recipe, adds at most
 per-expert/per-label/per-field loss floors, loads the accepted train-only
 one-day AGB/BGB tendency scales, and writes only a diagnostic parameter state.
 Scientific rejection now exits normally and remains distinct from execution
-failure. The related local suite passes 94 tests plus static checks. The active
-task is a short real-v6 free-`gln01` execution preflight, followed on success by
-the frozen full free-`gln01` diagnostic. No paid job, 64-point-year fit, full
-epoch, 7/30/365-day screen, long-held point, Gate D2, sealed test, or product
-acceptance is authorized. See
-[`strong_baseline_one_point_loss_floor_diagnostic_v1.md`](research/daily_coarse_graining/strong_baseline_one_point_loss_floor_diagnostic_v1.md).
+failure. The related local suite passes 94 tests plus static checks.
+
+The real-v6 preflight and full run then completed on free `gln01` at commit
+`04b0c2e`. The final total reduction is `95.4744%`; the 25 exact-gradient
+updates improve their starting loss by only `3.3112%` and do not cross the
+original gates. Corrected GPP, maintenance, and AGB NRMSE pass; BGB
+(`0.05064`) and NPP (`0.05694`) fail narrowly. All hard counts are zero. Five
+labels account for `91.06%` of the final process loss, led by
+`fast_owner.diffuco` and `fast_owner.driver` at `76.18%` together. Report
+SHA256 is `2f338354...7ad5661`. See
+[`strong_baseline_one_point_loss_floor_diagnostic_result_20260817.md`](research/daily_coarse_graining/strong_baseline_one_point_loss_floor_diagnostic_result_20260817.md).
+
+The active task is a source/representation audit of the dominant endpoint
+labels before any new architecture is implemented. No repeated stochastic
+fit, paid job, 64-point-year fit, full epoch, 7/30/365-day screen, long-held
+point, Gate D2, sealed test, or product acceptance is authorized.
+
+That bounded audit is complete and subsequently corrected after tracing the
+actual output transform and loss path. The original `39,019/260,988` claim was
+wrong because it tested signed deltas against absolute endpoint ranges. The
+corrected inverse-decoder audit finds zero hard range violations, 24,532 exact
+0/1 boundary endpoints, and only 34 interior targets requiring absolute raw
+above 20. True-v6 boundary calls still verify exact reconstruction of `z0m`,
+`roughheight*`, `drysoil_frac`, `gtemp`, `stempdiag`, `tdeep`, and `hsdeep`;
+`z0h` remains unresolved, while coupled energy primitives and canopy storage
+remain learned. See
+[`dominant_endpoint_source_representation_audit_20260817.md`](research/daily_coarse_graining/dominant_endpoint_source_representation_audit_20260817.md).
+
+The exact-reconstruction claim now passes a 20-point-year non-test panel:
+eight spatial-train points and two spatial-validation points in 1961 and 2006.
+All eight admitted field families pass every point-year, with maximum error
+`2.22e-15` or lower. `z0h` fails `20/20` and remains learned. Report SHA256 is
+`0b906b0c...7925f74`.
+
+The same panel closes all ten thermal coefficients from the complete daily
+boundary with zero failed point-years under `1e-10 + 1e-12*abs(target)`;
+report SHA256 is `adbdb831...6e579e8`. They are now verified exact derived
+fields. A separate DOC panel corrects the capture semantics: both advective
+and diffusive interface labels store nonnegative magnitudes, with direction
+owned by water-flow sign or concentration ordering. The endpoint-trapezoid
+DOC diffusion proxy reaches correlation `0.9833`, NRMSE `0.2119`, and residual
+variance fraction `0.0450` overall and passes all four non-test slices. It is a
+physical baseline plus learned residual, not an exact retained process. Report
+SHA256 is `e200f2d7...8b69cbd`.
+
+The user approved the complete `149/16/1/15` learned-primary, exact-derived,
+physical-baseline/residual, and auxiliary/status classification. The formal
+mechanistic-output implementation retains the axis-aligned seven-expert
+Attention backbone, adds coupled surface-energy routing and capacity-aware
+canopy storage, keeps `z0h` learned, and exposes all 181 fields after the
+conservative update. It has 49,744,537 float32 parameters and 165 neural
+fields/39,153 neural scalar outputs.
+
+Eight local tests pass schema/capacity, eager/JIT primitive and post-update
+forward, DOC identity/nonnegativity/gradient, thermal-kernel identity, complete
+loss, all-parameter VJP/JVP, bound one-day state, and water/carbon budgets. The
+bounded real-v6 `gln01` admission also passed. A fresh one-epoch 364-day smoke
+then completed 46 finite AdamW updates; all prediction/state/budget/inventory
+hard counts were zero and no checkpoint was written. Its report SHA256 is
+`725130c4122801f56b9f22c6a0d7b6c2cf0794978d4586eb4b13f6c5bc73d304`.
+The first formal 100-epoch run reduces total loss `99.1046%` and passes all
+five primary-science and hard gates. It fails only the independent expert
+reduction gates for canopy GPP (`93.9165%`), hydrology/snow (`83.0539%`),
+litter/POC/DOC (`80.3503%`), and surface energy (`92.2124%`). Its report SHA256
+is `b72ac45f...58daa0b`. A second detailed run localizes the residual to
+hydrology endpoints, canopy debt, coupled energy endpoints, and DOC/litter,
+and exposes sensitivity to the unclipped optimization trajectory. Its report
+SHA256 is `86e7f64e...c7b539`. See
+[`mechanistic_output_one_point_qualification_result_20260817.md`](research/daily_coarse_graining/mechanistic_output_one_point_qualification_result_20260817.md).
+
+The 20-point-year non-test hydrology/canopy boundary audit is complete. Final
+`nroot` is history dependent and its one-boundary reconstruction passes only
+`5/20` point-years. With true final `nroot`, final `us`, `humrelv`, and
+`humrel` pass `20/20` at maximum error `2.22e-16`; `evap_bare_lim` is exact
+from tile `evap_bare_lim_ns`. `temp_hydro` fails every point-year with maximum
+error `9.88667 K` and remains learned. The panel includes 101 under-`mcr`
+events and therefore covers that active mask behavior.
+
+Canopy storage stays within capacity on all 7,290 endpoints. Signed canopy
+debt is positive on `41.51%`, and daily `vevapwet` includes negative
+condensation values, so the old rare-debt wording and wet-evaporation hard
+scale are rejected. See
+[`hydrology_canopy_boundary_audit_result_20260817.md`](research/daily_coarse_graining/hydrology_canopy_boundary_audit_result_20260817.md).
+
+The user approved and the code now implements the hydrology/canopy v2 output
+mechanism. The frozen v2 contract learns 161 fields/39,006 scalar coordinates,
+derives 20 fields exactly, and contains 49,743,001 float32 parameters. Final
+`nroot` is a support-aware sparse simplex coordinate; final `us`, `humrelv`,
+`humrel`, and grid `evap_bare_lim` are materialized after the conservative
+update. Canopy uses one signed final endpoint plus storage/zero/debt status
+logits and a unique deterministic conversion to the original conservative
+transfers. The old four-transfer MSE is replaced by normalized endpoint MSE
+and categorical status loss.
+
+The v2 local gate passes 57 focused and related regression tests, including
+eager/JIT forward, complete loss, Attention-path VJP/JVP, endpoint conversion,
+one-day state, and water/carbon budgets. Ruff, compileall, and diff checks also
+pass. The active gate is now one zero-update real-v6 `gln01` admission covering
+the complete parameter-tree gradient and canonical retained-tail transition.
+Training, 64-point-year, full-epoch, rollout, paid, Gate D2, sealed-test, and
+product stages remain closed. See
+[`hydrology_canopy_output_v2_local_acceptance_20260817.md`](research/daily_coarse_graining/hydrology_canopy_output_v2_local_acceptance_20260817.md).
 
 ## First Formal Neural Candidate
 

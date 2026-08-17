@@ -564,6 +564,7 @@ class TrueLabelOracleHead:
             daily_temperature_context=temperature,
             retained_boundary=self.retained_boundary,
             named_outputs={},
+            auxiliary_outputs={},
         )
 
 

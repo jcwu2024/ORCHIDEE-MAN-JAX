@@ -303,6 +303,7 @@ def run_minimal_process_heads(
             ok_leak_result=None,
         ),
         named_outputs={},
+        auxiliary_outputs={},
     )
 
 

@@ -489,15 +489,22 @@ def build_strong_baseline_layout(
     owner_contract: Any,
     contract: StrongBaselineContract,
     inputs: AssembledDailyOperatorInput,
+    resolved_ledger: tuple[StrongBaselineFieldOwnership, ...] | None = None,
 ) -> StrongBaselineLayout:
     """Freeze all executable source, expert, axis, graph, and local-state maps."""
 
-    ledger = resolve_strong_baseline_field_ledger(
-        contract,
-        schema=schema,
-        adapter=adapter,
-        owner_contract=owner_contract,
+    ledger = (
+        resolve_strong_baseline_field_ledger(
+            contract,
+            schema=schema,
+            adapter=adapter,
+            owner_contract=owner_contract,
+        )
+        if resolved_ledger is None
+        else tuple(resolved_ledger)
     )
+    if tuple(field.name for field in ledger) != tuple(field.name for field in schema.fields):
+        raise ValueError("strong-baseline resolved ledger and schema drift")
     expert_names = contract.expert_names
     source_family_names = tuple(str(value) for value in contract.payload["source_families"])
     axis_names = tuple(str(value) for value in contract.payload["axis_registry"])

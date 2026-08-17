@@ -119,14 +119,38 @@ point-years. It was numerically valid and improved maintenance aggregate RMSE
 by 22.3%, but the primary NPP/AGB/BGB/total-live composite became 6.98% worse
 and all six 7/30-day cells regressed. Its final checkpoint is diagnostic only;
 the update-1000 checkpoint remains diagnostic only. The user rejected further
-local ranking around weak models as the main research strategy. The active
-gate is now review of an independently capable strong baseline: dynamic
-axis-aligned source encoding, seven process-owned experts, axis-local output
-heads, complete v6 epoch-level one-day pretraining, and a 7/30-day curriculum
-with absolute scientific gates. The former route-local-decoder A/B is
-superseded before implementation. See
-`strong_baseline_axis_aligned_process_expert_review_v1.md`. No network code or
-paid run is authorized before user review.
+local ranking around weak models as the main research strategy. The resulting
+49.75-million-parameter axis-aligned, seven-expert Attention baseline passed
+its structural and real-v6 admission gates but failed one-point memorization.
+The remaining loss is concentrated in redundant derived endpoints and coupled
+surface-energy fields rather than spread uniformly across the backbone.
+
+The user approved the mechanistic-output revision. Its formal implementation
+learns 165 of the complete 181 fields, reconstructs 16 verified daily-boundary
+fields exactly, uses an endpoint-trapezoid DOC baseline plus learned residual,
+and retains the 49.7-million-parameter axis-aligned process Attention
+backbone. Local tests and bounded real-v6 `gln01` forward, complete loss,
+gradient, bound transition, state, and budget admission pass. A one-epoch
+364-day training smoke completed 46 finite updates with every hard count zero.
+The first 100-epoch run passes the total-loss, five primary-science, and every
+hard gate, but four independent expert-reduction gates fail. A detailed
+reproduction localizes the residual to hydrology endpoints, canopy debt,
+coupled energy endpoints, and DOC/litter fields, and also exposes optimization
+trajectory sensitivity. The subsequent 20-point-year source audit proves
+that final `us/humrelv/humrel` are exact once final learned `nroot` is
+available, while `nroot` itself retains subdaily support history and
+`temp_hydro` retains a last-call phase dependency. It also rejects the old
+rare-debt canopy wording: signed debt occurs on `41.51%` of audited endpoints,
+and signed daily `vevapwet` is not a valid debt scale.
+
+The approved hydrology/canopy v2 mechanism is now implemented without changing
+the Attention backbone. It learns 161 fields/39,006 scalar coordinates,
+derives 20 boundary fields exactly, uses a support-aware final-`nroot`
+coordinate, and represents canopy water as one signed endpoint plus a
+storage/zero/debt status loss. Its 49,743,001-parameter local gate passes 57
+focused and related tests plus static checks. The active operation is a
+zero-update real-v6 `gln01` forward/loss/full-gradient/state/budget admission.
+No training, 64-point-year, rollout, paid, Gate D2, or product stage is open.
 
 ## New Task Bootstrap
 

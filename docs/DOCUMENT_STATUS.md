@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-16.
+Last updated: 2026-08-17.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -102,7 +102,14 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/strong_baseline_axis_aligned_process_expert_review_v1.md` | Accepted strong-baseline architecture and staged absolute gates; local implementation complete | Reviewing the approved mechanism or qualification sequence |
 | `research/daily_coarse_graining/strong_baseline_local_acceptance_20260816.md` | Accepted local structural evidence; real-v6 admission later passed | Reviewing executable capacity, source/axis wiring, dtype, gradient, or local budget evidence |
 | `research/daily_coarse_graining/strong_baseline_one_point_qualification_result_20260816.md` | Active failed qualification and next diagnostic authority | Reviewing one-point fit, expert loss floor, key science metrics, or the blocked 64-point-year gate |
-| `research/daily_coarse_graining/strong_baseline_one_point_loss_floor_diagnostic_v1.md` | Active frozen diagnostic contract; local implementation complete | Running the short free-gln01 preflight and then the bounded full diagnostic |
+| `research/daily_coarse_graining/strong_baseline_one_point_loss_floor_diagnostic_v1.md` | Completed frozen diagnostic contract; preflight and full execution complete | Reviewing the preregistered method or execution boundary |
+| `research/daily_coarse_graining/strong_baseline_one_point_loss_floor_diagnostic_result_20260817.md` | Failed diagnostic and dominant-label attribution evidence | Reviewing why one-point qualification remains closed |
+| `research/daily_coarse_graining/dominant_endpoint_source_representation_audit_20260817.md` | Completed corrected endpoint, exact-reconstruction, and DOC-semantics authority | Designing the next primitive-output/exact-reconstruction process head |
+| `research/daily_coarse_graining/doc_diffusion_boundary_baseline_result_20260817.md` | Accepted physical DOC boundary baseline plus learned-residual evidence; not an exact-process claim | Implementing or evaluating the revised DOC output after approval |
+| `research/daily_coarse_graining/mechanistic_output_architecture_review_v1.md` | Accepted architecture; implementation, real-v6 admission, and one-epoch training smoke complete | Reviewing the active mechanistic-output process head or one-point gate |
+| `research/daily_coarse_graining/mechanistic_output_one_point_qualification_result_20260817.md` | Active failed-qualification, positive-mechanism, field-attribution, and training-stability evidence | Designing the next hydrology/canopy representation revision |
+| `research/daily_coarse_graining/hydrology_canopy_boundary_audit_result_20260817.md` | Accepted hydrology/canopy source audit and v2 mechanism basis | Reviewing source evidence behind final `nroot` and signed canopy endpoints |
+| `research/daily_coarse_graining/hydrology_canopy_output_v2_local_acceptance_20260817.md` | Active local acceptance; zero-update real-v6 admission is next | Running or reviewing the v2 forward/loss/full-gradient/state/budget gate |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

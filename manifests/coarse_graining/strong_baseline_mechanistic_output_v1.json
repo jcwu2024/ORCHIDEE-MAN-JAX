@@ -1,0 +1,64 @@
+{
+  "schema_version": "strong_baseline_mechanistic_output_v1",
+  "status": "approved_for_implementation",
+  "implementation_authorized": true,
+  "base_architecture": "axis_aligned_process_expert_operator_v1",
+  "complete_boundary": {
+    "field_count": 181,
+    "scalar_count": 39371
+  },
+  "learned_boundary": {
+    "field_count": 165,
+    "scalar_count": 39153
+  },
+  "exact_daily_boundary_fields": [
+    "thermal.thermosoil_previous_step_state.stempdiag.normalized_tendency",
+    "endpoint.fast_state.diffuco_previous_step_state.drysoil_frac",
+    "endpoint.fast_state.diffuco_previous_step_state.roughheight",
+    "endpoint.fast_state.diffuco_previous_step_state.roughheight_pft",
+    "endpoint.fast_state.diffuco_previous_step_state.z0m",
+    "endpoint.fast_state.enerbil_previous_step_state.soilcap_pft",
+    "endpoint.fast_state.enerbil_previous_step_state.soilflx_pft",
+    "endpoint.fast_state.thermosoil_previous_step_state.cgrnd",
+    "endpoint.fast_state.thermosoil_previous_step_state.cgrnd_snow",
+    "endpoint.fast_state.thermosoil_previous_step_state.dgrnd",
+    "endpoint.fast_state.thermosoil_previous_step_state.dgrnd_snow",
+    "endpoint.fast_state.thermosoil_previous_step_state.gtemp",
+    "endpoint.fast_state.thermosoil_previous_step_state.lambda_snow",
+    "endpoint.fast_state.thermosoil_previous_step_state.pcapa_en",
+    "endpoint.fast_state.thermosoil_previous_step_state.soilcap",
+    "endpoint.fast_state.thermosoil_previous_step_state.soilflx"
+  ],
+  "doc_boundary_residual_field": "typed.ok_leak.doc_diffusive_interface",
+  "surface_energy_fields": [
+    "endpoint.fast_state.driver_previous_step_state.fluxsens",
+    "endpoint.fast_state.driver_previous_step_state.vevapp",
+    "endpoint.fast_state.diffuco_previous_step_state.evapot",
+    "endpoint.fast_state.diffuco_previous_step_state.evapot_corr",
+    "endpoint.fast_state.diffuco_previous_step_state.qsurf",
+    "endpoint.fast_state.diffuco_previous_step_state.temp_sol_pft",
+    "endpoint.fast_state.final_diagnostics.temp_sol"
+  ],
+  "canopy_capacity_fields": [
+    "inventory.water.qsintveg.storage.outgoing_fraction",
+    "inventory.water.qsintveg.storage.incoming_amount",
+    "inventory.water.qsintveg.debt.outgoing_fraction",
+    "inventory.water.qsintveg.debt.incoming_amount"
+  ],
+  "execution_order": [
+    "learned_primitive_outputs",
+    "pre_update_stempdiag_reconstruction",
+    "float64_conservative_update",
+    "post_update_exact_boundary_reconstruction",
+    "doc_endpoint_trapezoid_baseline_plus_residual",
+    "complete_181_field_boundary",
+    "canonical_retained_exact_tail"
+  ],
+  "data_policy": {
+    "teacher_v6_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "sealed_test_allowed": false,
+    "reconstruct_48_forcing_records": false,
+    "execute_48_step_state_scan": false
+  }
+}

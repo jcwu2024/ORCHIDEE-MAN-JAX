@@ -83,6 +83,15 @@ def daily_operator_transition(
     )
     prediction = process_head(parameters, context, assembled)
     fast_update = apply_conservative_update(assembled, prediction)
+    post_update_materializer = getattr(process_head, "materialize_post_update", None)
+    if post_update_materializer is not None:
+        prediction = post_update_materializer(
+            parameters,
+            context,
+            assembled,
+            prediction,
+            fast_update,
+        )
     tail = retained_tail(retained_tail_input(assembled, prediction, fast_update))
     diagnostics = {
         **tail.diagnostics,

@@ -558,4 +558,5 @@ class NeuralProcessHead:
             daily_temperature_context=temperature,
             retained_boundary=self._retained_boundary(outputs, inputs),
             named_outputs=outputs,
+            auxiliary_outputs={},
         )
