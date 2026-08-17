@@ -348,7 +348,7 @@ logits and a unique deterministic conversion to the original conservative
 transfers. The old four-transfer MSE is replaced by normalized endpoint MSE
 and categorical status loss.
 
-The v2 local gate passes 59 focused and related regression tests, including
+The v2 local gate passes 60 focused and related regression tests, including
 eager/JIT forward, complete loss, Attention-path VJP/JVP, endpoint conversion,
 one-day state, and water/carbon budgets. Ruff, compileall, and diff checks also
 pass. The subsequent zero-update real-v6 `gln01` admission also passes. Its
@@ -358,13 +358,21 @@ residuals are exactly zero. JAX peak bytes in use are 1.441 GB despite the
 roughly 25 GiB allocator reservation visible in `nvidia-smi`. Report SHA256 is
 `cd376e48...ccd0d8`.
 
-The active gate is one complete 364-day, one-epoch training smoke: 46 finite
-batch-8 AdamW updates, decreasing complete loss, unchanged masks/counts, zero
-state/budget/inventory hard counts, and no checkpoint. This is an absolute
-execution gate with no matched control and is distinct from the later formal
-100-epoch memorization gate. The 64-point-year, full-v6, rollout, paid, Gate
-D2, sealed-test, and product stages remain closed. See
-[`hydrology_canopy_output_v2_real_v6_admission_20260817.md`](research/daily_coarse_graining/hydrology_canopy_output_v2_real_v6_admission_20260817.md).
+The one-epoch training smoke then passes all preregistered gates. All 46
+batch-8 AdamW updates are finite, complete process loss decreases `7.3818%`,
+all seven experts improve, masks/counts are unchanged, and all state/budget/
+inventory hard counts remain zero. GPP, maintenance, and NPP NRMSE improve to
+`0.1390`, `0.2301`, and `0.1253`. Report SHA256 is
+`61de8c4c...a48b5c0`.
+
+The active gate is the separate formal 100-epoch/4,600-update one-point
+memorization run. It retains the absolute `99%` total, `95%` every-expert,
+`0.05` five-primary-NRMSE, and zero-hard-count gates, has no matched control,
+and writes no checkpoint. The prepared paid envelope is four CPU cores, one
+V100, and two hours on `gnall`, with CNY `4.96` worst-case additive cost. It
+must not be submitted without explicit approval. The 64-point-year, full-v6,
+rollout, Gate D2, sealed-test, and product stages remain closed. See
+[`hydrology_canopy_output_v2_one_epoch_smoke_result_20260817.md`](research/daily_coarse_graining/hydrology_canopy_output_v2_one_epoch_smoke_result_20260817.md).
 
 ## First Formal Neural Candidate
 

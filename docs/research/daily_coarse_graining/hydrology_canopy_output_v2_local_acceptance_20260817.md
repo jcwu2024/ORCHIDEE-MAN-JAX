@@ -55,12 +55,12 @@ tests/unit/test_daily_operator_output_transform.py
 tests/unit/test_daily_operator_successor_process_head.py            21 passed
 tests/unit/test_daily_operator_strong_baseline_qualification.py
 tests/unit/test_strong_baseline_mechanistic_output_review.py
-tests/unit/test_hydrology_canopy_boundary_audit.py                   14 passed
+tests/unit/test_hydrology_canopy_boundary_audit.py                   15 passed
 tests/unit/test_doc_diffusion_boundary_baseline_panel.py
 tests/unit/test_fast_owner_delta_representation_audit.py
 tests/unit/test_fast_owner_exact_reconstruction_panel.py
 tests/unit/test_thermal_coefficient_exact_reconstruction_panel.py    14 passed
-                                                                    59 passed
+                                                                    60 passed
 ```
 
 The tests cover schema and parameter counts, eager/JIT forward, finite complete

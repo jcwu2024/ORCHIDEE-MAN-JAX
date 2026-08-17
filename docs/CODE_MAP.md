@@ -288,7 +288,11 @@ coordinates, and retains exact-field diagnostics, while
 `mechanistic_process_head.py` binds the mechanism to the strong Attention
 backbone. `scripts/hpc/run_mechanistic_output_gpu_admission.py` owns bounded
 real-v6 forward/loss/gradient/state/budget admission. The shared one-point
-runner selects this path with `--mechanistic-output`.
+runner selects this path with `--mechanistic-output`; its explicit
+`--training-smoke` mode distinguishes the one-epoch execution gate from the
+formal 100-epoch memorization thresholds.
+`scripts/hpc/slurm_mechanistic_output_v2_one_point.sh` owns the bounded paid
+single-V100 formal one-point resource envelope.
 
 `daily_operator/nonlinear_projection.py` owns the active host-side bounded
 SLSQP subproblem, exact violation merit, and candidate acceptance for the

@@ -188,6 +188,22 @@ def test_one_point_launcher_has_explicit_mechanistic_training_smoke_mode():
     assert "sbatch" not in launcher
 
 
+def test_mechanistic_one_point_slurm_envelope_is_single_gpu_and_bounded():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (root / "scripts" / "hpc" / "slurm_mechanistic_output_v2_one_point.sh").read_text(
+        encoding="utf-8"
+    )
+    assert "#SBATCH --partition=gnall" in launcher
+    assert "#SBATCH --cpus-per-task=4" in launcher
+    assert "#SBATCH --gres=gpu:1" in launcher
+    assert "#SBATCH --time=02:00:00" in launcher
+    assert "CNY 4.96" in launcher
+    assert "MECHANISTIC_OUTPUT=1" in launcher
+    assert "MAXIMUM_EPOCHS=100" in launcher
+    assert "TRAINING_SMOKE=0" in launcher
+    assert "mechanistic-output-one-epoch-smoke-ba7f5d9" in launcher
+
+
 def test_loss_floor_launcher_is_free_gln01_and_uses_frozen_tail():
     root = Path(__file__).resolve().parents[2]
     launcher = (root / "scripts" / "hpc" / "run_strong_baseline_one_point_loss_floor_diagnostic.sh").read_text(

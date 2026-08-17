@@ -1124,22 +1124,30 @@ after the conservative update. One signed canopy endpoint and three status
 logits replace independent supervision of the four storage/debt transfers,
 which are still materialized uniquely for the conservative updater.
 
-The local gate passes 59 focused and related regression tests plus Ruff,
+The local gate passes 60 focused and related regression tests plus Ruff,
 compileall, and diff checks. The subsequent zero-update real-v6 `gln01`
 admission also passes complete eager/JIT forward, loss, the full
 49,743,001-element parameter-tree gradient, canonical retained tail, one-day
 state, and exact-zero water/carbon budgets. Report SHA256 is
 `cd376e48...ccd0d8`.
 
-The active bounded task is one complete 364-day, one-epoch training smoke on
-free `gln01`. It consumes every valid train/train day exactly once in 46
-batch-8 AdamW updates and writes no checkpoint. Its absolute gate requires
-complete finite execution, lower final complete loss, unchanged loss masks and
-counts, and zero prediction/state/budget/inventory hard counts. It has no
-matched control because it is an execution gate, not a model-ranking test. Do
-not open the formal 100-epoch memorization, 64-point-year, full-v6, rollout,
-paid, Gate D2, sealed-test, or product stages until it passes. See
-[`hydrology_canopy_output_v2_real_v6_admission_20260817.md`](research/daily_coarse_graining/hydrology_canopy_output_v2_real_v6_admission_20260817.md).
+The one-epoch training smoke passes. It completes all 46 finite updates,
+reduces complete process loss `7.3818%`, improves all seven experts, preserves
+all masks/counts, and has zero prediction/state/budget/inventory hard counts.
+GPP, maintenance, and NPP NRMSE improve from `0.3963`, `0.6725`, and `1.0865`
+to `0.1390`, `0.2301`, and `0.1253`. Report SHA256 is
+`61de8c4c...a48b5c0`.
+
+The active bounded task is the formal 100-epoch/4,600-update one-point
+memorization gate. It uses the same candidate, seed, 364 train/train days,
+batch size 8, unclipped AdamW schedule, and no checkpoint. It has no matched
+control. Acceptance remains at least `99%` total loss reduction, `95%` for
+every expert, all five primary NRMSE at or below `0.05`, finite gradients, and
+zero hard counts. The prepared `gnall` envelope is four CPU cores, one V100,
+and two hours; worst-case additive charge is CNY `4.96`. Do not submit without
+explicit approval and do not open 64-point-year, full-v6, rollout, Gate D2,
+sealed-test, or product stages until it passes. See
+[`hydrology_canopy_output_v2_one_epoch_smoke_result_20260817.md`](research/daily_coarse_graining/hydrology_canopy_output_v2_one_epoch_smoke_result_20260817.md).
 
 ## Completed Task Packet: Gate C
 

@@ -147,13 +147,16 @@ The approved hydrology/canopy v2 mechanism is now implemented without changing
 the Attention backbone. It learns 161 fields/39,006 scalar coordinates,
 derives 20 boundary fields exactly, uses a support-aware final-`nroot`
 coordinate, and represents canopy water as one signed endpoint plus a
-storage/zero/debt status loss. Its 49,743,001-parameter local gate passes 59
+storage/zero/debt status loss. Its 49,743,001-parameter local gate passes 60
 focused and related tests plus static checks. The zero-update real-v6 `gln01`
 forward/loss/full-gradient/state/budget admission also passes, with exact-zero
-water/carbon residuals and all 49,743,001 gradient values finite. The active
-operation is a no-checkpoint 364-day, one-epoch training smoke. The formal
-100-epoch memorization, 64-point-year, rollout, paid, Gate D2, and product
-stages remain closed.
+water/carbon residuals and all 49,743,001 gradient values finite. The
+no-checkpoint 364-day, one-epoch training smoke also passes: all 46 updates are
+finite, complete loss decreases `7.3818%`, all seven experts improve, and all
+hard counts remain zero. The active operation is the separate paid 100-epoch
+one-point memorization gate, prepared but awaiting explicit submission
+approval. The 64-point-year, rollout, Gate D2, and product stages remain
+closed.
 
 ## New Task Bootstrap
 

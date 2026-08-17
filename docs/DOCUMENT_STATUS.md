@@ -110,7 +110,8 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/mechanistic_output_one_point_qualification_result_20260817.md` | Active failed-qualification, positive-mechanism, field-attribution, and training-stability evidence | Designing the next hydrology/canopy representation revision |
 | `research/daily_coarse_graining/hydrology_canopy_boundary_audit_result_20260817.md` | Accepted hydrology/canopy source audit and v2 mechanism basis | Reviewing source evidence behind final `nroot` and signed canopy endpoints |
 | `research/daily_coarse_graining/hydrology_canopy_output_v2_local_acceptance_20260817.md` | Accepted local v2 evidence; real-v6 admission subsequently passed | Reviewing the v2 implementation and local gate |
-| `research/daily_coarse_graining/hydrology_canopy_output_v2_real_v6_admission_20260817.md` | Active accepted admission and one-epoch smoke contract | Running or reviewing the v2 one-epoch training smoke |
+| `research/daily_coarse_graining/hydrology_canopy_output_v2_real_v6_admission_20260817.md` | Accepted real-v6 v2 admission; one-epoch smoke subsequently passed | Reviewing the complete forward/loss/full-gradient/state/budget evidence |
+| `research/daily_coarse_graining/hydrology_canopy_output_v2_one_epoch_smoke_result_20260817.md` | Active accepted smoke and formal one-point resource contract | Reviewing or submitting the paid 100-epoch one-point memorization gate |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

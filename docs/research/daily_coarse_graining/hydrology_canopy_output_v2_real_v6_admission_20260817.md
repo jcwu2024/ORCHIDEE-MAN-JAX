@@ -2,8 +2,8 @@
 
 Date: 2026-08-17.
 
-Status: accepted. The next bounded gate is one complete 364-day, one-epoch
-training smoke on free `gln01`.
+Status: accepted. The subsequent one-epoch training smoke also passed; see
+`hydrology_canopy_output_v2_one_epoch_smoke_result_20260817.md`.
 
 ## Execution
 
@@ -50,6 +50,6 @@ next-state, water/carbon budget, and nonnegative-inventory hard counts are
 zero. The formal 99% total, 95% per-expert, and 0.05 primary NRMSE gates are not
 used to classify this one-epoch execution.
 
-A pass opens the separately evaluated 100-epoch one-point memorization gate.
-It does not open 64-point-year, full-v6, rollout, paid, Gate D2, sealed-test, or
-product stages.
+The smoke passed and opened the separately evaluated 100-epoch one-point
+memorization gate. It did not open 64-point-year, full-v6, rollout, Gate D2,
+sealed-test, or product stages.
