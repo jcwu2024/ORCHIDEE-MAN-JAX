@@ -348,14 +348,23 @@ logits and a unique deterministic conversion to the original conservative
 transfers. The old four-transfer MSE is replaced by normalized endpoint MSE
 and categorical status loss.
 
-The v2 local gate passes 57 focused and related regression tests, including
+The v2 local gate passes 59 focused and related regression tests, including
 eager/JIT forward, complete loss, Attention-path VJP/JVP, endpoint conversion,
 one-day state, and water/carbon budgets. Ruff, compileall, and diff checks also
-pass. The active gate is now one zero-update real-v6 `gln01` admission covering
-the complete parameter-tree gradient and canonical retained-tail transition.
-Training, 64-point-year, full-epoch, rollout, paid, Gate D2, sealed-test, and
-product stages remain closed. See
-[`hydrology_canopy_output_v2_local_acceptance_20260817.md`](research/daily_coarse_graining/hydrology_canopy_output_v2_local_acceptance_20260817.md).
+pass. The subsequent zero-update real-v6 `gln01` admission also passes. Its
+complete 49,743,001-element gradient is finite with L2 norm `208.5265`; all
+181 outputs and declared next-state values are finite, and water/carbon budget
+residuals are exactly zero. JAX peak bytes in use are 1.441 GB despite the
+roughly 25 GiB allocator reservation visible in `nvidia-smi`. Report SHA256 is
+`cd376e48...ccd0d8`.
+
+The active gate is one complete 364-day, one-epoch training smoke: 46 finite
+batch-8 AdamW updates, decreasing complete loss, unchanged masks/counts, zero
+state/budget/inventory hard counts, and no checkpoint. This is an absolute
+execution gate with no matched control and is distinct from the later formal
+100-epoch memorization gate. The 64-point-year, full-v6, rollout, paid, Gate
+D2, sealed-test, and product stages remain closed. See
+[`hydrology_canopy_output_v2_real_v6_admission_20260817.md`](research/daily_coarse_graining/hydrology_canopy_output_v2_real_v6_admission_20260817.md).
 
 ## First Formal Neural Candidate
 

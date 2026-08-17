@@ -255,6 +255,41 @@ def _compare_loss_snapshots(
     return {"counts_identical": counts_identical, **result}
 
 
+def _one_epoch_training_smoke_passed(
+    *,
+    failure_reason: str | None,
+    completed_epochs: int,
+    completed_updates: int,
+    expected_updates: int,
+    all_gradients_finite: bool,
+    initial_process: Mapping[str, Any],
+    final_process: Mapping[str, Any],
+    final_science: Mapping[str, Any],
+    counts_identical: bool,
+) -> bool:
+    process_values = (
+        float(initial_process["total"]),
+        float(final_process["total"]),
+        *(float(value) for value in final_process["expert_mse"].values()),
+    )
+    science_values = tuple(
+        float(value)
+        for record in final_science["primary"].values()
+        for key, value in record.items()
+        if key != "evaluated_values"
+    )
+    return (
+        failure_reason is None
+        and completed_epochs == 1
+        and completed_updates == expected_updates
+        and all_gradients_finite
+        and counts_identical
+        and all(np.isfinite(value) for value in (*process_values, *science_values))
+        and process_values[1] < process_values[0]
+        and all(int(value) == 0 for value in final_science["hard_counts"].values())
+    )
+
+
 def _metric_record(squared: float, signed: float, absolute: float, count: int) -> Mapping[str, Any]:
     if count <= 0:
         raise ValueError("one-point qualification primary metric has no valid values")
@@ -287,6 +322,14 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         raise FileExistsError(args.diagnostic_state_output)
     if diagnostic_mode and args.mechanistic_output:
         raise ValueError("mechanistic-output qualification does not admit the legacy diagnostic tail")
+    training_smoke = bool(args.training_smoke)
+    if training_smoke and (
+        not args.mechanistic_output
+        or diagnostic_mode
+        or args.maximum_epochs != 1
+        or args.evaluation_interval != 1
+    ):
+        raise ValueError("mechanistic training smoke requires one epoch, one-epoch evaluation, and no diagnostic tail")
     started = time.perf_counter()
     runtime = _load_extended_runtime(args)
     jax = runtime["jax"]
@@ -1249,6 +1292,22 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     if args.mechanistic_output and failure_reason is None and not mechanistic_loss_breakdown["counts_identical"]:
         failure_reason = "mechanistic loss-breakdown counts changed between evaluations"
 
+    training_smoke_passed = (
+        _one_epoch_training_smoke_passed(
+            failure_reason=failure_reason,
+            completed_epochs=completed_epochs,
+            completed_updates=completed_updates,
+            expected_updates=batches_per_epoch,
+            all_gradients_finite=all_gradients_finite,
+            initial_process=initial_process,
+            final_process=final_process,
+            final_science=final_science,
+            counts_identical=mechanistic_loss_breakdown["counts_identical"],
+        )
+        if training_smoke
+        else False
+    )
+
     total_reduction = 1.0 - final_process["total"] / initial_process["total"]
     expert_reduction = {
         name: 1.0 - final_process["expert_mse"][name] / initial_process["expert_mse"][name] for name in expert_names
@@ -1288,24 +1347,32 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             **state_payload["usage"],
         }
     execution_status = "completed" if failure_reason is None else "failed"
-    report_status = (
-        ("passed" if passed else ("completed_failed_gate" if failure_reason is None else "execution_failed"))
-        if diagnostic_mode
-        else ("passed" if passed else "failed")
-    )
+    if training_smoke:
+        report_status = "passed" if training_smoke_passed else "failed"
+    elif diagnostic_mode:
+        report_status = "passed" if passed else ("completed_failed_gate" if failure_reason is None else "execution_failed")
+    else:
+        report_status = "passed" if passed else "failed"
     report = {
         "schema_version": (
             "strong_baseline_one_point_loss_floor_diagnostic_v1"
             if diagnostic_mode
             else (
-                "mechanistic_output_one_point_year_qualification_v1"
-                if args.mechanistic_output
-                else "strong_baseline_one_point_year_qualification_v1"
+                "mechanistic_output_one_epoch_training_smoke_v1"
+                if training_smoke
+                else (
+                    "mechanistic_output_one_point_year_qualification_v1"
+                    if args.mechanistic_output
+                    else "strong_baseline_one_point_year_qualification_v1"
+                )
             )
         ),
         "status": report_status,
         "execution_status": execution_status,
-        "qualification_gate_status": "passed" if passed else "failed",
+        "qualification_gate_status": "not_evaluated" if training_smoke else ("passed" if passed else "failed"),
+        "one_epoch_training_smoke_gate_status": (
+            "passed" if training_smoke_passed else ("failed" if training_smoke else "not_applicable")
+        ),
         "failure_reason": failure_reason,
         "identity": {
             "git_head": git_head,
@@ -1416,12 +1483,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "executes_48_step_state_scan": False,
         "elapsed_seconds": time.perf_counter() - started,
         "next_gate": (
-            "design_64_point_year_qualification"
-            if passed
+            ("run_formal_one_point_year_memorization" if training_smoke_passed else "repair_one_epoch_training_smoke")
+            if training_smoke
             else (
-                "use_mechanistic_label_field_attribution_before_model_change"
-                if args.mechanistic_output
-                else "use_label_field_loss_floor_evidence_before_next_model_change"
+                "design_64_point_year_qualification"
+                if passed
+                else (
+                    "use_mechanistic_label_field_attribution_before_model_change"
+                    if args.mechanistic_output
+                    else "use_label_field_loss_floor_evidence_before_next_model_change"
+                )
             )
         ),
     }
@@ -1441,6 +1512,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--evaluation-interval", type=int, default=5)
     parser.add_argument("--seed", type=int, default=PROBE_SEED)
     parser.add_argument("--mechanistic-output", action="store_true")
+    parser.add_argument("--training-smoke", action="store_true")
     parser.add_argument("--diagnostic-tail-updates", type=int, default=0)
     parser.add_argument(
         "--diagnostic-tail-learning-rate",

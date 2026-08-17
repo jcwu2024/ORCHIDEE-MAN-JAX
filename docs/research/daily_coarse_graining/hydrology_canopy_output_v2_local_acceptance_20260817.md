@@ -2,8 +2,8 @@
 
 Date: 2026-08-17.
 
-Status: local gate accepted. One zero-update real-v6 `gln01` admission is the
-next and only open operation.
+Status: local gate accepted; the subsequent zero-update real-v6 admission also
+passed. The one-epoch training smoke is now the only open operation.
 
 ## Decision
 
@@ -55,12 +55,12 @@ tests/unit/test_daily_operator_output_transform.py
 tests/unit/test_daily_operator_successor_process_head.py            21 passed
 tests/unit/test_daily_operator_strong_baseline_qualification.py
 tests/unit/test_strong_baseline_mechanistic_output_review.py
-tests/unit/test_hydrology_canopy_boundary_audit.py                   12 passed
+tests/unit/test_hydrology_canopy_boundary_audit.py                   14 passed
 tests/unit/test_doc_diffusion_boundary_baseline_panel.py
 tests/unit/test_fast_owner_delta_representation_audit.py
 tests/unit/test_fast_owner_exact_reconstruction_panel.py
 tests/unit/test_thermal_coefficient_exact_reconstruction_panel.py    14 passed
-                                                                    57 passed
+                                                                    59 passed
 ```
 
 The tests cover schema and parameter counts, eager/JIT forward, finite complete
@@ -69,20 +69,18 @@ canopy endpoint-to-transfer identity, complete post-update materialization,
 canonical one-day state, water/carbon budgets, and runner compatibility.
 Ruff, compileall, and `git diff --check` also pass.
 
-This local evidence does not claim that the complete 49.7-million-parameter
-gradient has been exercised against real v6 data. That is deliberately the
-next gate.
+This local evidence by itself did not claim that the complete
+49.7-million-parameter gradient had been exercised against real v6 data. The
+subsequent gate established that evidence.
 
-## Next Gate
+## Subsequent Gate
 
-Run one zero-update admission on free `gln01` against one existing accepted
-train/train v6 sample. It must pass eager/JIT complete forward equivalence,
-finite complete loss, finite nonzero full parameter-tree gradient, the
-canonical retained-tail transition, finite declared next state, and water and
-carbon budget residuals no larger than `2e-12`.
+The zero-update admission on free `gln01` passed eager/JIT complete forward
+equivalence, finite complete loss, a finite nonzero full parameter-tree
+gradient, the canonical retained-tail transition, finite declared next state,
+and exact zero water and carbon budget residuals. See
+`hydrology_canopy_output_v2_real_v6_admission_20260817.md`.
 
-The gate regenerates no Teacher data, reads no v5 or sealed-test data, writes
-no checkpoint, performs no optimizer update, reconstructs no 48 forcing
-records, and executes no 48-step state scan. Training, 64-point-year,
-full-epoch, 7/30/365-day rollout, paid execution, Gate D2, and product
-acceptance remain closed until it passes.
+The next gate is the bounded one-epoch training smoke defined there. The
+64-point-year, full-v6, 7/30/365-day rollout, paid execution, Gate D2, and
+product stages remain closed.

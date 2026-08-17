@@ -1124,15 +1124,22 @@ after the conservative update. One signed canopy endpoint and three status
 logits replace independent supervision of the four storage/debt transfers,
 which are still materialized uniquely for the conservative updater.
 
-The local gate passes 57 focused and related regression tests plus Ruff,
-compileall, and diff checks. The active bounded task is one zero-update
-real-v6 `gln01` admission: eager/JIT complete forward, complete loss, full
-parameter-tree gradient, canonical retained tail, one-day state, and water/
-carbon budgets. It may read only an existing train/train v6 sample and must
-write no checkpoint or optimizer update. Do not open training, 64-point-year,
-full-epoch, rollout, paid, Gate D2, sealed-test, or product stages until this
-admission passes. See
-[`hydrology_canopy_output_v2_local_acceptance_20260817.md`](research/daily_coarse_graining/hydrology_canopy_output_v2_local_acceptance_20260817.md).
+The local gate passes 59 focused and related regression tests plus Ruff,
+compileall, and diff checks. The subsequent zero-update real-v6 `gln01`
+admission also passes complete eager/JIT forward, loss, the full
+49,743,001-element parameter-tree gradient, canonical retained tail, one-day
+state, and exact-zero water/carbon budgets. Report SHA256 is
+`cd376e48...ccd0d8`.
+
+The active bounded task is one complete 364-day, one-epoch training smoke on
+free `gln01`. It consumes every valid train/train day exactly once in 46
+batch-8 AdamW updates and writes no checkpoint. Its absolute gate requires
+complete finite execution, lower final complete loss, unchanged loss masks and
+counts, and zero prediction/state/budget/inventory hard counts. It has no
+matched control because it is an execution gate, not a model-ranking test. Do
+not open the formal 100-epoch memorization, 64-point-year, full-v6, rollout,
+paid, Gate D2, sealed-test, or product stages until it passes. See
+[`hydrology_canopy_output_v2_real_v6_admission_20260817.md`](research/daily_coarse_graining/hydrology_canopy_output_v2_real_v6_admission_20260817.md).
 
 ## Completed Task Packet: Gate C
 

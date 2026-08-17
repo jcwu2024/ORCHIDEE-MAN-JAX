@@ -20,6 +20,7 @@ from research.daily_coarse_graining.daily_operator.strong_baseline_qualification
 from scripts.hpc.run_strong_baseline_one_point_qualification import (
     _compare_loss_breakdowns,
     _compare_loss_snapshots,
+    _one_epoch_training_smoke_passed,
 )
 
 
@@ -139,6 +140,52 @@ def test_mechanistic_loss_snapshot_compares_exact_diagnostics():
     for section in ("experts", "labels", "fields", "defined_status", "exact_diagnostics"):
         record = next(iter(result[section].values()))
         assert record["reduction_from_initialization"] == pytest.approx(0.75)
+
+
+def test_one_epoch_training_smoke_uses_execution_and_absolute_hard_gates():
+    initial = {"total": 4.0, "expert_mse": {"expert": 2.0}}
+    final = {"total": 3.0, "expert_mse": {"expert": 1.5}}
+    science = {
+        "primary": {
+            "npp": {
+                "normalized_rmse": 0.8,
+                "normalized_signed_bias": 0.1,
+                "normalized_mean_absolute_error": 0.5,
+                "evaluated_values": 364,
+            }
+        },
+        "hard_counts": {"water_budget_failures": 0, "carbon_budget_failures": 0},
+    }
+    common = {
+        "failure_reason": None,
+        "completed_epochs": 1,
+        "completed_updates": 46,
+        "expected_updates": 46,
+        "all_gradients_finite": True,
+        "initial_process": initial,
+        "final_process": final,
+        "final_science": science,
+        "counts_identical": True,
+    }
+    assert _one_epoch_training_smoke_passed(**common)
+    assert not _one_epoch_training_smoke_passed(
+        **(common | {"final_science": science | {"hard_counts": {"water_budget_failures": 1}}})
+    )
+    assert not _one_epoch_training_smoke_passed(
+        **(common | {"final_process": final | {"total": 4.5}})
+    )
+
+
+def test_one_point_launcher_has_explicit_mechanistic_training_smoke_mode():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (root / "scripts" / "hpc" / "run_strong_baseline_one_point_qualification.sh").read_text(
+        encoding="utf-8"
+    )
+    assert "TRAINING_SMOKE=${TRAINING_SMOKE:-0}" in launcher
+    assert "MODEL_ARGUMENTS+=(--training-smoke)" in launcher
+    assert "MAXIMUM_EPOCHS=1" in launcher
+    assert "EVALUATION_INTERVAL=1" in launcher
+    assert "sbatch" not in launcher
 
 
 def test_loss_floor_launcher_is_free_gln01_and_uses_frozen_tail():
