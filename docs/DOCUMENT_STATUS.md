@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-17.
+Last updated: 2026-08-19.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -111,7 +111,13 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/hydrology_canopy_boundary_audit_result_20260817.md` | Accepted hydrology/canopy source audit and v2 mechanism basis | Reviewing source evidence behind final `nroot` and signed canopy endpoints |
 | `research/daily_coarse_graining/hydrology_canopy_output_v2_local_acceptance_20260817.md` | Accepted local v2 evidence; real-v6 admission subsequently passed | Reviewing the v2 implementation and local gate |
 | `research/daily_coarse_graining/hydrology_canopy_output_v2_real_v6_admission_20260817.md` | Accepted real-v6 v2 admission; one-epoch smoke subsequently passed | Reviewing the complete forward/loss/full-gradient/state/budget evidence |
-| `research/daily_coarse_graining/hydrology_canopy_output_v2_one_epoch_smoke_result_20260817.md` | Active accepted smoke and formal one-point resource contract | Reviewing or submitting the paid 100-epoch one-point memorization gate |
+| `research/daily_coarse_graining/hydrology_canopy_output_v2_one_epoch_smoke_result_20260817.md` | Completed accepted smoke and historical paid-envelope contract | Reviewing the admission path to the formal run |
+| `research/daily_coarse_graining/hydrology_canopy_output_v2_one_point_qualification_result_20260818.md` | Completed scientific rejection and motivation for the accepted attainability audit | Reviewing the v2 training result or why representation attainability was tested |
+| `research/daily_coarse_graining/mechanistic_output_v2_attainability_result_20260818.md` | Accepted output-coordinate and thermal-source authority; isolated diagnostics now complete | Reviewing why output-coordinate reachability is not the remaining blocker |
+| `research/daily_coarse_graining/mechanistic_output_v2_isolated_expert_memorization_protocol_20260818.md` | Completed frozen bounded training diagnostic | Reviewing the preregistered objective, budget, and gates |
+| `research/daily_coarse_graining/mechanistic_output_v2_isolated_expert_memorization_result_20260818.md` | Accepted negative mapping and field-level evidence; revision now implemented locally | Reviewing why the rejected litter mapping was replaced |
+| `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_design_20260819.md` | Active accepted candidate mechanism and bounded gate contract | Reviewing the litter coordinate-query design or its absolute gates |
+| `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_local_acceptance_20260819.md` | Active local admission; free one-epoch litter smoke is next | Versioning or running the candidate smoke |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

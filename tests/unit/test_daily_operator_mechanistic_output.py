@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from inspect import signature
+
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -21,9 +23,14 @@ from research.daily_coarse_graining.daily_operator import (
 from research.daily_coarse_graining.daily_operator.conservative_update import (
     apply_conservative_update,
 )
+from research.daily_coarse_graining.daily_operator.mechanistic_output_attainability import (
+    materialize_attainability_oracle,
+    oracle_learned_outputs,
+)
 from research.daily_coarse_graining.daily_operator.mechanistic_output_reconstruction import (
     _paper_zf_soil_b,
     compose_doc_baseline_residual,
+    invert_doc_baseline_residual,
     reconstruct_thermal_coefficients,
     signed_endpoint_to_transfers,
     support_aware_nroot_simplex,
@@ -197,6 +204,118 @@ def test_doc_composition_is_baseline_centered_nonnegative_and_differentiable():
     )
     assert np.all(np.isfinite(np.asarray(gradient)))
     assert np.all(np.asarray(gradient) > 0.0)
+
+
+def test_doc_residual_coordinate_has_finite_exact_inverse():
+    baseline = jnp.asarray([0.0, 0.2, 2.0], dtype=jnp.float64)
+    target = jnp.asarray([0.0, 0.5, 1.0], dtype=jnp.float64)
+    scale = jnp.asarray([1.0, 0.5, 2.0], dtype=jnp.float64)
+    residual = invert_doc_baseline_residual(target, baseline, scale)
+    reconstructed = compose_doc_baseline_residual(baseline, residual, scale)
+    assert np.all(np.isfinite(np.asarray(residual)))
+    np.testing.assert_allclose(np.asarray(reconstructed), np.asarray(target), atol=2.0e-15, rtol=0.0)
+
+
+def test_zero_training_attainability_oracle_materializes_complete_boundary(mechanistic_setup):
+    setup = mechanistic_setup
+    inputs = setup["assembled"]
+    grid = _paper_vertical_grid()
+    statics = {
+        "measurement_heights": [2.0, 10.0],
+        "hydrol_zz_mm": np.asarray(grid.znh) * 1000.0,
+        "hydrol_dz_mm": np.asarray(grid.dnh) * 1000.0,
+        "hydrol_cwrr_ks": np.ones((12,)),
+        "soiltile": np.asarray([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0]]),
+        "njsc": [6],
+        "pref_soil_veg": np.asarray([1] * 13 + [6]),
+        "ext_coeff_vegetfrac": np.asarray([0.0] + [0.5] * 13),
+        "sechiba_qsint": 0.1,
+    }
+    for name, value in statics.items():
+        inputs = _set_static(inputs, setup["adapter"].input_assembler, name, value)
+    forcing_values = jnp.asarray(inputs.forcing.values)
+    forcing_values = forcing_values.at[:, setup["head"].forcing_indices["Tair"]].set(280.0)
+    forcing_values = forcing_values.at[:, setup["head"].forcing_indices["PSurf"]].set(100000.0)
+    forcing_values = forcing_values.at[:, setup["head"].forcing_indices["Wind_N"]].set(2.0)
+    forcing_values = forcing_values.at[:, setup["head"].forcing_indices["Wind_E"]].set(1.0)
+    forcing = inputs.forcing._replace(values=forcing_values)
+    inputs = inputs._replace(
+        forcing=forcing,
+        canonical_input=inputs.canonical_input._replace(forcing=forcing),
+    )
+    learned, target_doc = oracle_learned_outputs(
+        setup["head"],
+        setup["targets"],
+        inputs,
+    )
+    assert set(learned) == {field.name for field in setup["learned_schema"].fields}
+    assert target_doc.shape == learned[setup["mechanism_contract"].doc_field].shape
+
+    result = materialize_attainability_oracle(
+        setup["head"],
+        setup["targets"],
+        inputs,
+        doc_fixed_point_iterations=2,
+    )
+    validate_conservative_result(result.fast_update)
+    assert set(result.prediction.named_outputs) == {field.name for field in setup["schema"].fields}
+    nonfinite = []
+    vegetation = np.asarray(inputs.pft.pft_traits)[:, 0] < 0.5
+    for name, value in result.prediction.named_outputs.items():
+        defined = np.asarray(setup["targets"][name].defined, dtype=np.bool_)
+        if name.endswith("roughheight_pft"):
+            defined = defined & vegetation[None, :]
+        if not np.all(np.isfinite(np.asarray(value))[defined]):
+            nonfinite.append(name)
+    assert not nonfinite, nonfinite
+    assert np.isfinite(float(result.doc_coordinate_fixed_point_residual))
+
+
+def test_exact_reconstruction_sees_materialized_learned_day_end_owners(mechanistic_setup):
+    setup = mechanistic_setup
+    head = setup["head"]
+    inputs = setup["assembled"]
+    learned, _target_doc = oracle_learned_outputs(
+        head,
+        setup["targets"],
+        inputs,
+    )
+    primitive = head.prediction_from_learned_outputs(learned, inputs)
+    fast_update = apply_conservative_update(inputs, primitive)
+    fields, _ok_leak = head.reconstructor.updated_fast_owner_fields(
+        primitive,
+        fast_update,
+        inputs,
+    )
+    thermal_sources = head.reconstructor.thermal_coefficient_inputs(fields, inputs)
+    assert set(thermal_sources) == set(signature(reconstruct_thermal_coefficients).parameters)
+    active = np.asarray(head.input_assembler.active_pft_indices, dtype=np.int32)
+    np.testing.assert_allclose(
+        np.asarray(thermal_sources["ptn"]),
+        np.take(
+            np.asarray(fields["thermosoil_previous_step_state"]["ptn"]),
+            active,
+            axis=2,
+        ),
+        atol=0.0,
+        rtol=0.0,
+    )
+    np.testing.assert_allclose(
+        np.asarray(fields["hydrol_previous_step_state"]["nroot"])[:, active],
+        np.asarray(primitive.named_outputs[setup["mechanism_contract"].nroot_coordinate_field]),
+        atol=0.0,
+        rtol=0.0,
+    )
+    np.testing.assert_allclose(
+        np.asarray(fields["hydrol_previous_step_state"]["evap_bare_lim_ns"]),
+        np.asarray(
+            primitive.named_outputs[
+                setup["mechanism_contract"].payload["hydrology_boundary"]["tile_beta_primitive_field"]
+            ]
+        ),
+        atol=0.0,
+        rtol=0.0,
+    )
 
 
 def _thermal_inputs():

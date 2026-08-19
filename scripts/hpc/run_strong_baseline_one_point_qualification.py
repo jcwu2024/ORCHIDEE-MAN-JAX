@@ -30,6 +30,9 @@ PARAMETER_COUNT = 49_750_681
 TOTAL_REDUCTION_GATE = 0.99
 EXPERT_REDUCTION_GATE = 0.95
 PRIMARY_NRMSE_GATE = 0.05
+ISOLATED_EXPERT_REDUCTION_GATE = 0.99
+ISOLATED_FIELD_REDUCTION_GATE = 0.95
+ISOLATED_FIELD_LOSS_FLOOR = 1.0e-4
 DEFAULT_DIAGNOSTIC_TAIL_LEARNING_RATE = 1.0e-5
 BUDGET_ATOL = 2.0e-12
 STOCK_ATOL = 2.0e-12
@@ -57,6 +60,11 @@ class TrainingStepResult(NamedTuple):
     expert_loss: Any
     gradient_norm: Any
     nonfinite_gradient_values: Any
+
+
+class CoverageProbeResult(NamedTuple):
+    gradients: Any
+    updates: Any
 
 
 class ScienceTargets(NamedTuple):
@@ -255,6 +263,40 @@ def _compare_loss_snapshots(
     return {"counts_identical": counts_identical, **result}
 
 
+def _isolated_field_gate(
+    loss_breakdown: Mapping[str, Any],
+    selected_fields: Sequence[str],
+) -> Mapping[str, Any]:
+    fields = loss_breakdown["fields"]
+    records = {}
+    for name in selected_fields:
+        record = fields[name]
+        initial = float(record["initial_mean_daily_loss"])
+        final = float(record["final_mean_daily_loss"])
+        reduction = record["reduction_from_initialization"]
+        dominant = initial >= ISOLATED_FIELD_LOSS_FLOOR
+        passed = (
+            not dominant
+            or final <= ISOLATED_FIELD_LOSS_FLOOR
+            or (reduction is not None and reduction >= ISOLATED_FIELD_REDUCTION_GATE)
+        )
+        records[name] = {
+            "initial_mean_daily_loss": initial,
+            "final_mean_daily_loss": final,
+            "reduction_from_initialization": reduction,
+            "dominant_at_initialization": dominant,
+            "passed": passed,
+        }
+    dominant_records = tuple(record for record in records.values() if record["dominant_at_initialization"])
+    return {
+        "initial_loss_floor": ISOLATED_FIELD_LOSS_FLOOR,
+        "required_dominant_field_reduction": ISOLATED_FIELD_REDUCTION_GATE,
+        "dominant_field_count": len(dominant_records),
+        "passed": bool(dominant_records and all(record["passed"] for record in dominant_records)),
+        "fields": records,
+    }
+
+
 def _one_epoch_training_smoke_passed(
     *,
     failure_reason: str | None,
@@ -306,6 +348,17 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         raise FileExistsError(args.output)
     if args.batch_size < 1 or args.maximum_epochs < 1 or args.evaluation_interval < 1:
         raise ValueError("qualification batch size, epochs, and evaluation interval must be positive")
+    isolated_expert = args.isolated_expert
+    hierarchical_candidate = bool(args.hierarchical_coordinate_attention)
+    if hierarchical_candidate and not args.mechanistic_output:
+        raise ValueError("hierarchical coordinate Attention requires mechanistic output")
+    if hierarchical_candidate and isolated_expert not in {None, "litter_poc_doc"}:
+        raise ValueError("hierarchical coordinate Attention only changes litter_poc_doc")
+    if isolated_expert is not None and (
+        not args.mechanistic_output
+        or isolated_expert not in {"litter_poc_doc", "surface_energy"}
+    ):
+        raise ValueError("isolated-expert mode requires one approved mechanistic diagnostic expert")
     diagnostic_mode = args.diagnostic_tail_updates > 0
     if args.diagnostic_tail_updates < 0 or args.diagnostic_tail_learning_rate <= 0.0:
         raise ValueError("diagnostic tail budget and learning rate are invalid")
@@ -322,6 +375,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         raise FileExistsError(args.diagnostic_state_output)
     if diagnostic_mode and args.mechanistic_output:
         raise ValueError("mechanistic-output qualification does not admit the legacy diagnostic tail")
+    if diagnostic_mode and isolated_expert is not None:
+        raise ValueError("isolated-expert mode does not admit the legacy diagnostic tail")
     training_smoke = bool(args.training_smoke)
     if training_smoke and (
         not args.mechanistic_output
@@ -338,6 +393,10 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     from jax_orchidee.driver import orchestration as teacher
     from research.daily_coarse_graining.daily_operator.conservative_update import (
         apply_conservative_update,
+    )
+    from research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention import (
+        CANDIDATE_NAME,
+        initialize_hierarchical_coordinate_attention_parameters,
     )
     from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
     from research.daily_coarse_graining.daily_operator.strong_baseline_architecture import (
@@ -383,6 +442,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             masked_mechanistic_output_loss,
         )
         from research.daily_coarse_graining.daily_operator.mechanistic_process_head import (
+            MechanisticHierarchicalCoordinateAttentionProcessHead,
             MechanisticStrongBaselineProcessHead,
             build_mechanistic_output_layout,
         )
@@ -414,7 +474,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "strong_layout": strong_layout,
     }
     head = (
-        MechanisticStrongBaselineProcessHead(
+        (
+            MechanisticHierarchicalCoordinateAttentionProcessHead
+            if hierarchical_candidate
+            else MechanisticStrongBaselineProcessHead
+        )(
             contract=runtime["contract"],
             architecture_contract=architecture_contract,
             mechanism_contract=mechanism_contract,
@@ -436,19 +500,31 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     batches_per_epoch = int(np.ceil(sample_count / args.batch_size))
     maximum_updates = args.maximum_epochs * batches_per_epoch
 
-    parameters = initialize_strong_baseline_parameters(
+    parameter_initializer = (
+        initialize_hierarchical_coordinate_attention_parameters
+        if hierarchical_candidate
+        else initialize_strong_baseline_parameters
+    )
+    parameters = parameter_initializer(
         jax.random.PRNGKey(args.seed),
         schema=parameter_schema,
         layout=strong_layout,
         inputs=runtime["probe_assembled"],
         contract=architecture_contract,
     )
-    parameter_count = 49_743_001 if args.mechanistic_output else PARAMETER_COUNT
+    parameter_count = (
+        58_736_698
+        if hierarchical_candidate
+        else (49_743_001 if args.mechanistic_output else PARAMETER_COUNT)
+    )
     if strong_baseline_parameter_count(parameters) != parameter_count:
         raise ValueError("strong-baseline qualification parameter count drift")
     optimizer = initialize_strong_baseline_adamw(parameters)
     decay_mask = strong_baseline_weight_decay_mask(parameters)
     expert_names = tuple(architecture_contract.expert_names)
+    isolated_expert_index = (
+        None if isolated_expert is None else expert_names.index(isolated_expert)
+    )
     active_label_indices = {field.label_index for field in parameter_schema.fields}
     label_names = tuple(
         name for index, name in enumerate(parameter_schema.labels) if index in active_label_indices
@@ -464,6 +540,46 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         raise ValueError("strong-baseline diagnostic label registry drift")
     if len(defined_names) != 1:
         raise ValueError("strong-baseline diagnostic defined-status registry drift")
+    selected_field_names = (
+        tuple(
+            field.name
+            for field in parameter_schema.fields
+            if architecture_contract.label_ownership[
+                parameter_schema.labels[field.label_index]
+            ]
+            == isolated_expert
+            and field.value_representation != "defined_logit"
+        )
+        if isolated_expert is not None
+        else ()
+    )
+    selected_field_indices = (
+        tuple(
+            index
+            for index, field in enumerate(parameter_schema.fields)
+            if architecture_contract.label_ownership[
+                parameter_schema.labels[field.label_index]
+            ]
+            == isolated_expert
+            and field.value_representation != "defined_logit"
+        )
+        if isolated_expert is not None
+        else ()
+    )
+    selected_label_head_indices = (
+        tuple(
+            index
+            for index in active_label_indices
+            if architecture_contract.label_ownership[parameter_schema.labels[index]]
+            == isolated_expert
+        )
+        if isolated_expert is not None
+        else ()
+    )
+    if isolated_expert is not None and (
+        not selected_field_names or not selected_label_head_indices
+    ):
+        raise ValueError("isolated expert has no active learned fields")
 
     assembled_all = jax.device_put(dataset["assembled_inputs"])
     targets_all = jax.device_put(dataset["targets"])
@@ -521,9 +637,14 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         )
         weight = jnp.asarray(weights, dtype=jnp.float64)
         count = jnp.sum(weight, dtype=jnp.float64)
-        total = jnp.sum(sample_loss * weight, dtype=jnp.float64) / count
+        complete_total = jnp.sum(sample_loss * weight, dtype=jnp.float64) / count
         expert = jnp.sum(sample_expert * weight[:, None], axis=0, dtype=jnp.float64) / count
-        return total, expert
+        objective = (
+            complete_total
+            if isolated_expert_index is None
+            else expert[isolated_expert_index]
+        )
+        return objective, expert
 
     def one_process_details(values: Any, item: Any, wanted: Any) -> DetailedProcessBatch:
         loss = process_loss_result(values, item, wanted)
@@ -560,6 +681,75 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         return jax.vmap(lambda item, target: one_process_details(values, item, target))(
             inputs,
             wanted,
+        )
+
+    coverage_group_names = (
+        (
+            (
+                "shared",
+                "selected_coordinate_blocks",
+                "other_expert_blocks",
+                "selected_field_heads",
+                "other_label_heads",
+            )
+            if hierarchical_candidate
+            else (
+                "shared",
+                "selected_expert_blocks",
+                "other_expert_blocks",
+                "selected_label_heads",
+                "other_label_heads",
+            )
+        )
+        if isolated_expert_index is not None
+        else ()
+    )
+
+    def coverage_groups(tree: Mapping[str, Any]) -> tuple[Any, ...]:
+        if isolated_expert_index is None:
+            return ()
+        if hierarchical_candidate:
+            coordinate = tree["hierarchical_litter"]
+            shared = {
+                name: value
+                for name, value in tree.items()
+                if name not in {"expert_blocks", "label_heads", "hierarchical_litter"}
+            }
+            return (
+                shared,
+                {
+                    name: value
+                    for name, value in coordinate.items()
+                    if name != "field_heads"
+                },
+                tuple(tree["expert_blocks"]),
+                tuple(coordinate["field_heads"][index] for index in selected_field_indices),
+                tuple(value for value in tree["label_heads"] if value),
+            )
+        selected_heads = frozenset(selected_label_head_indices)
+        shared = {
+            name: value
+            for name, value in tree.items()
+            if name not in {"expert_blocks", "label_heads"}
+        }
+        return (
+            shared,
+            (tree["expert_blocks"][isolated_expert_index],),
+            tuple(
+                value
+                for index, value in enumerate(tree["expert_blocks"])
+                if index != isolated_expert_index
+            ),
+            tuple(
+                value
+                for index, value in enumerate(tree["label_heads"])
+                if index in selected_heads
+            ),
+            tuple(
+                value
+                for index, value in enumerate(tree["label_heads"])
+                if index not in selected_heads
+            ),
         )
 
     @jax.jit
@@ -611,6 +801,39 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             jnp.sqrt(squared_norm),
             nonfinite,
         )
+
+    @jax.jit
+    def coverage_probe(
+        values: Any,
+        state: Any,
+        all_inputs: Any,
+        all_targets: Any,
+        indices: Any,
+        weights: Any,
+        learning_rate: Any,
+    ) -> CoverageProbeResult:
+        gradients = jax.grad(
+            lambda current: process_batch(
+                current,
+                all_inputs,
+                all_targets,
+                indices,
+                weights,
+            )[0]
+        )(values)
+        next_values, _next_state = strong_baseline_adamw_update(
+            values,
+            gradients,
+            state,
+            learning_rate,
+            decay_mask,
+        )
+        updates = jax.tree_util.tree_map(
+            lambda after, before: jnp.asarray(after) - jnp.asarray(before),
+            next_values,
+            values,
+        )
+        return CoverageProbeResult(gradients, updates)
 
     @jax.jit
     def accumulate_tail_microbatch(
@@ -1035,6 +1258,81 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     final_process = initial_process
     final_science = initial_science
     passed = False
+    coverage_snapshots: dict[str, Any] = {}
+
+    def coverage_record(result: CoverageProbeResult, update: int) -> Mapping[str, Any]:
+        def host_statistics(group: Any) -> tuple[int, int, float]:
+            value_count = 0
+            nonzero_count = 0
+            squared_norm = 0.0
+            for leaf in jax.tree_util.tree_leaves(group):
+                values = np.asarray(leaf)
+                value_count += int(values.size)
+                nonzero_count += int(np.count_nonzero(values))
+                squared_norm += float(
+                    np.sum(
+                        np.square(values, dtype=np.float64),
+                        dtype=np.float64,
+                    )
+                )
+            return value_count, nonzero_count, float(np.sqrt(squared_norm))
+
+        gradient_statistics = tuple(
+            host_statistics(group) for group in coverage_groups(result.gradients)
+        )
+        update_statistics = tuple(
+            host_statistics(group) for group in coverage_groups(result.updates)
+        )
+        if tuple(record[0] for record in gradient_statistics) != tuple(
+            record[0] for record in update_statistics
+        ):
+            raise ValueError("coverage probe gradient/update shape drift")
+        return {
+            "update": update,
+            "groups": {
+                name: {
+                    "parameter_value_count": gradient_statistics[index][0],
+                    "gradient_nonzero_value_count": gradient_statistics[index][1],
+                    "gradient_nonzero_fraction": float(
+                        gradient_statistics[index][1] / gradient_statistics[index][0]
+                    ),
+                    "gradient_l2_norm": gradient_statistics[index][2],
+                    "update_nonzero_value_count": update_statistics[index][1],
+                    "update_nonzero_fraction": float(
+                        update_statistics[index][1] / update_statistics[index][0]
+                    ),
+                    "update_l2_norm": update_statistics[index][2],
+                }
+                for index, name in enumerate(coverage_group_names)
+            },
+        }
+
+    coverage_probe_batch = None
+    if isolated_expert is not None:
+        probe_indices, probe_weights = padded_epoch_batches(
+            sample_count,
+            args.batch_size,
+            seed=args.seed,
+            epoch=1,
+        )[0]
+        coverage_probe_batch = (
+            jnp.asarray(probe_indices),
+            jnp.asarray(probe_weights),
+        )
+        initial_coverage = coverage_probe(
+            parameters,
+            optimizer,
+            assembled_all,
+            targets_all,
+            coverage_probe_batch[0],
+            coverage_probe_batch[1],
+            jnp.asarray(
+                qualification_learning_rate(1, maximum_updates),
+                dtype=jnp.float32,
+            ),
+        )
+        jax.block_until_ready(initial_coverage)
+        coverage_snapshots["initial_probe"] = coverage_record(initial_coverage, 0)
 
     for epoch in range(1, args.maximum_epochs + 1):
         epoch_started = time.perf_counter()
@@ -1100,8 +1398,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 name: 1.0 - final_process["expert_mse"][name] / initial_process["expert_mse"][name]
                 for name in expert_names
             }
-            process_passed = total_reduction >= TOTAL_REDUCTION_GATE and all(
-                value >= EXPERT_REDUCTION_GATE for value in expert_reduction.values()
+            process_passed = (
+                expert_reduction[isolated_expert] >= ISOLATED_EXPERT_REDUCTION_GATE
+                if isolated_expert is not None
+                else total_reduction >= TOTAL_REDUCTION_GATE
+                and all(value >= EXPERT_REDUCTION_GATE for value in expert_reduction.values())
             )
             record["process_evaluation"] = {
                 **final_process,
@@ -1120,7 +1421,12 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                     "primary_passed": primary_passed,
                     "hard_passed": hard_passed,
                 }
-                passed = process_passed and primary_passed and hard_passed and all_gradients_finite
+                passed = (
+                    process_passed
+                    and (primary_passed or isolated_expert is not None)
+                    and hard_passed
+                    and all_gradients_finite
+                )
         history.append(record)
         print(
             json.dumps(
@@ -1140,8 +1446,27 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             ),
             flush=True,
         )
-        if passed or failure_reason is not None:
+        if (passed and isolated_expert is None) or failure_reason is not None:
             break
+
+    if isolated_expert is not None and failure_reason is None:
+        final_coverage = coverage_probe(
+            parameters,
+            optimizer,
+            assembled_all,
+            targets_all,
+            coverage_probe_batch[0],
+            coverage_probe_batch[1],
+            jnp.asarray(
+                qualification_learning_rate(completed_updates, maximum_updates),
+                dtype=jnp.float32,
+            ),
+        )
+        jax.block_until_ready(final_coverage)
+        coverage_snapshots["final_probe"] = coverage_record(
+            final_coverage,
+            completed_updates,
+        )
 
     pre_tail_process = final_process
     pre_tail_science = final_science
@@ -1292,6 +1617,70 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     if args.mechanistic_output and failure_reason is None and not mechanistic_loss_breakdown["counts_identical"]:
         failure_reason = "mechanistic loss-breakdown counts changed between evaluations"
 
+    total_reduction = 1.0 - final_process["total"] / initial_process["total"]
+    expert_reduction = {
+        name: 1.0 - final_process["expert_mse"][name] / initial_process["expert_mse"][name]
+        for name in expert_names
+    }
+    isolated_field_result = (
+        _isolated_field_gate(mechanistic_loss_breakdown, selected_field_names)
+        if isolated_expert is not None
+        else None
+    )
+    isolated_coverage_gate = None
+    if isolated_expert is not None:
+        required_groups = (
+            ("selected_coordinate_blocks", "selected_field_heads")
+            if hierarchical_candidate
+            else ("selected_expert_blocks", "selected_label_heads")
+        )
+        coverage_checks = {
+            snapshot_name: {
+                group: {
+                    "gradient_nonzero": (
+                        coverage_snapshots[snapshot_name]["groups"][group][
+                            "gradient_nonzero_value_count"
+                        ]
+                        > 0
+                    ),
+                    "update_nonzero": (
+                        coverage_snapshots[snapshot_name]["groups"][group][
+                            "update_nonzero_value_count"
+                        ]
+                        > 0
+                    ),
+                }
+                for group in required_groups
+            }
+            for snapshot_name in ("initial_probe", "final_probe")
+            if snapshot_name in coverage_snapshots
+        }
+        isolated_coverage_gate = {
+            "required_groups": list(required_groups),
+            "snapshots": coverage_checks,
+            "passed": bool(
+                len(coverage_checks) == 2
+                and all(
+                    item["gradient_nonzero"] and item["update_nonzero"]
+                    for snapshot in coverage_checks.values()
+                    for item in snapshot.values()
+                )
+            ),
+        }
+        if not training_smoke:
+            passed = bool(
+                failure_reason is None
+                and completed_epochs == args.maximum_epochs
+                and completed_updates == maximum_updates
+                and all_gradients_finite
+                and mechanistic_loss_breakdown["counts_identical"]
+                and expert_reduction[isolated_expert]
+                >= ISOLATED_EXPERT_REDUCTION_GATE
+                and isolated_field_result["passed"]
+                and isolated_coverage_gate["passed"]
+                and all(value == 0 for value in final_science["hard_counts"].values())
+            )
+
     training_smoke_passed = (
         _one_epoch_training_smoke_passed(
             failure_reason=failure_reason,
@@ -1308,10 +1697,6 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         else False
     )
 
-    total_reduction = 1.0 - final_process["total"] / initial_process["total"]
-    expert_reduction = {
-        name: 1.0 - final_process["expert_mse"][name] / initial_process["expert_mse"][name] for name in expert_names
-    }
     git_head = _git_head()
     diagnostic_state = None
     if diagnostic_mode and failure_reason is None:
@@ -1347,23 +1732,36 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             **state_payload["usage"],
         }
     execution_status = "completed" if failure_reason is None else "failed"
-    if training_smoke:
-        report_status = "passed" if training_smoke_passed else "failed"
-    elif diagnostic_mode:
-        report_status = "passed" if passed else ("completed_failed_gate" if failure_reason is None else "execution_failed")
-    else:
-        report_status = "passed" if passed else "failed"
+    report_status = _report_status(
+        gate_passed=training_smoke_passed if training_smoke else passed,
+        execution_status=execution_status,
+    )
     report = {
         "schema_version": (
+            (
+                "hierarchical_coordinate_query_attention_v3_one_epoch_smoke_v1"
+                if training_smoke
+                else "hierarchical_coordinate_query_attention_v3_memorization_v1"
+            )
+            if hierarchical_candidate
+            else
             "strong_baseline_one_point_loss_floor_diagnostic_v1"
             if diagnostic_mode
             else (
-                "mechanistic_output_one_epoch_training_smoke_v1"
-                if training_smoke
+                (
+                    "mechanistic_output_v2_isolated_expert_one_epoch_smoke_v1"
+                    if training_smoke
+                    else "mechanistic_output_v2_isolated_expert_memorization_v1"
+                )
+                if isolated_expert is not None
                 else (
-                    "mechanistic_output_one_point_year_qualification_v1"
-                    if args.mechanistic_output
-                    else "strong_baseline_one_point_year_qualification_v1"
+                    "mechanistic_output_one_epoch_training_smoke_v1"
+                    if training_smoke
+                    else (
+                        "mechanistic_output_one_point_year_qualification_v1"
+                        if args.mechanistic_output
+                        else "strong_baseline_one_point_year_qualification_v1"
+                    )
                 )
             )
         ),
@@ -1397,9 +1795,23 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "message_gate_scale": 0.0,
             "graph_path_executed": False,
             "historical_checkpoint_used": False,
+            "training_objective": (
+                {
+                    "mode": "isolated_existing_expert_loss",
+                    "selected_expert": isolated_expert,
+                    "unselected_experts_reported": True,
+                    "complete_boundary_materialized": True,
+                }
+                if isolated_expert is not None
+                else {"mode": "equal_experts"}
+            ),
             **(
                 {
-                    "candidate": "strong_baseline_mechanistic_output_v2",
+                    "candidate": (
+                        CANDIDATE_NAME
+                        if hierarchical_candidate
+                        else "strong_baseline_mechanistic_output_v2"
+                    ),
                     "learned_output_field_count": len(parameter_schema.fields),
                     "learned_output_scalar_count": sum(
                         int(np.prod(field.shape, dtype=np.int64)) for field in parameter_schema.fields
@@ -1428,6 +1840,15 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "normalization_scales_and_biases_excluded_from_decay": True,
             "gradient_clipping": False,
             "all_observed_gradients_finite": all_gradients_finite,
+            "isolated_expert_coverage": (
+                {
+                    "group_names": list(coverage_group_names),
+                    "snapshots": coverage_snapshots,
+                    "gate": isolated_coverage_gate,
+                }
+                if isolated_expert is not None
+                else None
+            ),
         },
         "exact_gradient_tail": (
             {
@@ -1447,9 +1868,26 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             else None
         ),
         "gates": {
-            "required_total_loss_reduction": TOTAL_REDUCTION_GATE,
-            "required_every_expert_loss_reduction": EXPERT_REDUCTION_GATE,
-            "maximum_primary_normalized_rmse": PRIMARY_NRMSE_GATE,
+            "required_total_loss_reduction": (
+                None if isolated_expert is not None else TOTAL_REDUCTION_GATE
+            ),
+            "required_every_expert_loss_reduction": (
+                None if isolated_expert is not None else EXPERT_REDUCTION_GATE
+            ),
+            "required_selected_expert_loss_reduction": (
+                ISOLATED_EXPERT_REDUCTION_GATE
+                if isolated_expert is not None and not training_smoke
+                else None
+            ),
+            "isolated_dominant_field_initial_loss_floor": (
+                ISOLATED_FIELD_LOSS_FLOOR if isolated_expert is not None else None
+            ),
+            "required_isolated_dominant_field_reduction": (
+                ISOLATED_FIELD_REDUCTION_GATE if isolated_expert is not None else None
+            ),
+            "maximum_primary_normalized_rmse": (
+                None if isolated_expert is not None else PRIMARY_NRMSE_GATE
+            ),
             "required_hard_failure_count": 0,
         },
         "initial": {
@@ -1463,6 +1901,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "process": final_process,
             "total_loss_reduction": total_reduction,
             "expert_loss_reduction": expert_reduction,
+            "isolated_field_gate": isolated_field_result,
             "science": final_science,
         },
         "loss_floor_breakdown": loss_floor_breakdown,
@@ -1483,15 +1922,35 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "executes_48_step_state_scan": False,
         "elapsed_seconds": time.perf_counter() - started,
         "next_gate": (
-            ("run_formal_one_point_year_memorization" if training_smoke_passed else "repair_one_epoch_training_smoke")
-            if training_smoke
+            (
+                "run_full_isolated_expert_memorization"
+                if training_smoke_passed
+                else "repair_isolated_expert_one_epoch_smoke"
+            )
+            if training_smoke and isolated_expert is not None
             else (
-                "design_64_point_year_qualification"
-                if passed
+                (
+                    "compare_isolated_expert_results_before_joint_objective_change"
+                    if passed
+                    else "review_isolated_expert_field_and_gradient_failure"
+                )
+                if isolated_expert is not None
                 else (
-                    "use_mechanistic_label_field_attribution_before_model_change"
-                    if args.mechanistic_output
-                    else "use_label_field_loss_floor_evidence_before_next_model_change"
+                    (
+                        "run_formal_one_point_year_memorization"
+                        if training_smoke_passed
+                        else "repair_one_epoch_training_smoke"
+                    )
+                    if training_smoke
+                    else (
+                        "design_64_point_year_qualification"
+                        if passed
+                        else (
+                            "use_mechanistic_label_field_attribution_before_model_change"
+                            if args.mechanistic_output
+                            else "use_label_field_loss_floor_evidence_before_next_model_change"
+                        )
+                    )
                 )
             )
         ),
@@ -1512,6 +1971,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--evaluation-interval", type=int, default=5)
     parser.add_argument("--seed", type=int, default=PROBE_SEED)
     parser.add_argument("--mechanistic-output", action="store_true")
+    parser.add_argument("--hierarchical-coordinate-attention", action="store_true")
+    parser.add_argument("--isolated-expert")
     parser.add_argument("--training-smoke", action="store_true")
     parser.add_argument("--diagnostic-tail-updates", type=int, default=0)
     parser.add_argument(
@@ -1526,14 +1987,22 @@ def _parser() -> argparse.ArgumentParser:
     return parser
 
 
+def _report_status(*, gate_passed: bool, execution_status: str) -> str:
+    if gate_passed:
+        return "passed"
+    if execution_status == "completed":
+        return "completed_failed_gate"
+    return "execution_failed"
+
+
+def _report_exit_code(report: Mapping[str, Any]) -> int:
+    return 0 if report["execution_status"] == "completed" else 1
+
+
 def main() -> int:
     report = run(_parser().parse_args())
     print(json.dumps(report, indent=2, sort_keys=True, default=str))
-    diagnostic_completed = (
-        report["schema_version"] == "strong_baseline_one_point_loss_floor_diagnostic_v1"
-        and report["execution_status"] == "completed"
-    )
-    return 0 if report["status"] == "passed" or diagnostic_completed else 1
+    return _report_exit_code(report)
 
 
 if __name__ == "__main__":

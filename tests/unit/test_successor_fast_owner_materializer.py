@@ -297,7 +297,8 @@ def test_materializer_is_jittable_and_differentiable_and_rejects_missing_endpoin
     assert float(gradient) != 0.0
 
     missing = dict(outputs)
-    missing.pop(next(iter(missing)))
+    omitted = next(iter(missing))
+    missing.pop(omitted)
     with pytest.raises(ValueError, match="missing successor endpoint"):
         materializer.materialize(
             fields_by_component=fields,
@@ -308,3 +309,13 @@ def test_materializer_is_jittable_and_differentiable_and_rejects_missing_endpoin
             forcing=forcing,
             measurement_height=jnp.asarray(2.0),
         )
+    materializer.materialize(
+        fields_by_component=fields,
+        daily_fields=groups["daily_interface"],
+        ok_leak_updates=groups["ok_leak"],
+        final_diagnostics=groups["final_diagnostics"],
+        named_outputs=missing,
+        forcing=forcing,
+        measurement_height=jnp.asarray(2.0),
+        permitted_missing_output_keys=frozenset({omitted}),
+    )

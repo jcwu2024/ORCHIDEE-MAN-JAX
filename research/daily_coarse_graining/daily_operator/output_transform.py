@@ -25,6 +25,9 @@ def normalized_output_to_physical(
     field: OutputFieldSpec,
     normalization: NeuralOutputNormalization,
     inputs: AssembledDailyOperatorInput,
+    minimum_nonnegative_ratio: float = 1.0e-12,
+    minimum_unit_interval_center: float = 1.0e-6,
+    rescale_unit_interval_delta: bool = True,
 ) -> Any:
     """Apply the accepted constraint/delta transform in float64."""
 
@@ -42,7 +45,7 @@ def normalized_output_to_physical(
         elif field.constraint == "signed_unit":
             value = jnp.tanh(raw)
         elif field.constraint == "nonnegative":
-            ratio = jnp.maximum(mean / scale, 1.0e-12)
+            ratio = jnp.maximum(mean / scale, minimum_nonnegative_ratio)
             baseline = ratio + jnp.log(-jnp.expm1(-ratio))
             value = jax.nn.softplus(baseline + raw) * scale
         else:
@@ -62,12 +65,24 @@ def normalized_output_to_physical(
             base = jnp.zeros_like(raw)
         center = base + mean
         if field.constraint == "unit_interval":
-            bounded = jnp.clip(center, 1.0e-6, 1.0 - 1.0e-6)
+            bounded = jnp.clip(
+                center,
+                minimum_unit_interval_center,
+                1.0 - minimum_unit_interval_center,
+            )
             local_slope = jnp.maximum(bounded * (1.0 - bounded), 1.0e-6)
             baseline = jnp.log(bounded) - jnp.log1p(-bounded)
-            value = jax.nn.sigmoid(baseline + raw * scale / local_slope)
+            raw_scale = (
+                scale / local_slope
+                if rescale_unit_interval_delta
+                else jnp.ones_like(scale)
+            )
+            value = jax.nn.sigmoid(baseline + raw * raw_scale)
         elif field.constraint == "nonnegative":
-            positive_center = jnp.maximum(center, scale * 1.0e-12)
+            positive_center = jnp.maximum(
+                center,
+                scale * minimum_nonnegative_ratio,
+            )
             ratio = positive_center / scale
             baseline = ratio + jnp.log(-jnp.expm1(-ratio))
             value = jax.nn.softplus(baseline + raw) * scale

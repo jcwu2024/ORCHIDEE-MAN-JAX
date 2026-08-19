@@ -5,6 +5,9 @@ from types import SimpleNamespace
 import jax.numpy as jnp
 import numpy as np
 
+from research.daily_coarse_graining.daily_operator.mechanistic_output_attainability import (
+    normalized_coordinate_for_physical,
+)
 from research.daily_coarse_graining.daily_operator.neural_architecture import (
     NeuralOutputNormalization,
     NeuralOutputSchema,
@@ -86,3 +89,34 @@ def test_unit_interval_endpoint_decoder_represents_negative_delta() -> None:
 
     np.testing.assert_allclose(endpoint, [0.2], rtol=0.0, atol=1.0e-12)
     np.testing.assert_allclose(_represented(endpoint, inputs, field), [-0.6], rtol=0.0, atol=1.0e-12)
+
+
+def test_attainability_inverse_uses_finite_machine_boundary_coordinates() -> None:
+    inputs = _inputs(0.5)
+    for constraint, targets, atol in (
+        ("nonnegative", jnp.asarray([0.0]), 1.0e-28),
+        ("unit_interval", jnp.asarray([0.0]), 1.0e-28),
+        ("unit_interval", jnp.asarray([1.0]), 5.0e-16),
+        ("signed_unit", jnp.asarray([-1.0]), 1.0e-15),
+        ("signed_unit", jnp.asarray([1.0]), 1.0e-15),
+    ):
+        field = _field(constraint)
+        normalization = NeuralOutputNormalization(
+            mean={"endpoint": np.asarray([0.0])},
+            scale={"endpoint": np.asarray([1.0])},
+        )
+        raw = normalized_coordinate_for_physical(
+            targets,
+            field=field,
+            normalization=normalization,
+            inputs=inputs,
+        )
+        endpoint = normalized_output_to_physical(
+            raw,
+            jnp.asarray([True]),
+            field=field,
+            normalization=normalization,
+            inputs=inputs,
+        )
+        assert np.all(np.isfinite(np.asarray(raw)))
+        np.testing.assert_allclose(endpoint, targets, rtol=0.0, atol=atol)

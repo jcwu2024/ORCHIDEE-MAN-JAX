@@ -24,6 +24,15 @@ from .fast_owner_reconstruction import (
     build_successor_fast_owner_materializer,
     load_fast_owner_reconstruction_contract,
 )
+from .hierarchical_coordinate_attention import (
+    BRANCH_NAMES,
+    CANDIDATE_NAME,
+    HierarchicalCoordinateAttentionConfig,
+    hierarchical_coordinate_attention_parameter_count,
+    hierarchical_coordinate_attention_process_outputs,
+    initialize_hierarchical_coordinate_attention_parameters,
+    litter_coordinate_branch,
+)
 from .input_assembly import CanonicalDailyOperatorInputAssembler
 from .long_horizon_objective import (
     ABOVEGROUND_BIOMASS_PARTS,
@@ -50,6 +59,7 @@ from .mechanistic_output_loss import (
     masked_mechanistic_output_loss,
 )
 from .mechanistic_process_head import (
+    MechanisticHierarchicalCoordinateAttentionProcessHead,
     MechanisticStrongBaselineProcessHead,
     build_mechanistic_output_layout,
 )
@@ -121,11 +131,13 @@ from .retained_tail import (
 from .strong_baseline_architecture import (
     StrongBaselineConfig,
     StrongBaselineContext,
+    StrongBaselineFieldContext,
     StrongBaselineLayout,
     assemble_strong_baseline_context,
     build_strong_baseline_layout,
     encode_strong_baseline_experts,
     initialize_strong_baseline_parameters,
+    strong_baseline_field_context,
     strong_baseline_parameter_count,
     strong_baseline_process_outputs,
 )
@@ -220,6 +232,8 @@ __all__ = [
     "FastOwnerLeaf",
     "FastOwnerReconstructionContract",
     "FAST_OWNER_LABELS",
+    "BRANCH_NAMES",
+    "CANDIDATE_NAME",
     "EndOfDayDriverFields",
     "NeuralArchitectureConfig",
     "NeuralInputNormalization",
@@ -236,6 +250,7 @@ __all__ = [
     "SOURCE_ROUTED_GRAPH_CONTROL",
     "StrongBaselineConfig",
     "StrongBaselineContext",
+    "StrongBaselineFieldContext",
     "StrongBaselineContract",
     "StrongBaselineFieldOwnership",
     "StrongBaselineLayout",
@@ -255,7 +270,9 @@ __all__ = [
     "LongHorizonScales",
     "MechanisticOutputContract",
     "MechanisticOutputLossResult",
+    "MechanisticHierarchicalCoordinateAttentionProcessHead",
     "MechanisticStrongBaselineProcessHead",
+    "HierarchicalCoordinateAttentionConfig",
     "NamedBiomassGradientCalibration",
     "apply_conservative_inventory_update",
     "apply_conservative_update",
@@ -300,6 +317,7 @@ __all__ = [
     "parameterize_thermal_prediction",
     "initialize_neural_process_parameters",
     "initialize_strong_baseline_parameters",
+    "initialize_hierarchical_coordinate_attention_parameters",
     "initialize_successor_parameters",
     "neural_process_outputs",
     "long_horizon_biomass_productivity_objective",
@@ -328,7 +346,11 @@ __all__ = [
     "successor_process_outputs",
     "successor_training_objective",
     "strong_baseline_parameter_count",
+    "strong_baseline_field_context",
     "strong_baseline_process_outputs",
+    "hierarchical_coordinate_attention_parameter_count",
+    "hierarchical_coordinate_attention_process_outputs",
+    "litter_coordinate_branch",
     "resolve_strong_baseline_field_ledger",
     "trajectories_from_rollout",
     "training_representation_outputs",

@@ -41,6 +41,7 @@ from research.daily_coarse_graining.daily_markov_contract import (
 )
 
 from .conservative_update import split_signed_inventory
+from .fast_owner_reconstruction import ROLE_NEURAL, SuccessorFastOwnerMaterializer
 from .input_assembly import PFT_AXES, CanonicalDailyOperatorInputAssembler
 from .mechanistic_output_contract import MechanisticOutputContract
 from .types import (
@@ -108,6 +109,32 @@ def signed_endpoint_to_transfers(start: Any, end: Any) -> dict[str, Any]:
     }
 
 
+def _hydrol_boundary_vegetation_mapping(
+    veget_max: Any,
+    soiltile: Any,
+    vegtot: Any,
+    pref_soil_veg: Any,
+) -> tuple[Any, Any]:
+    """JIT-compatible subset of the audited post-``hydrol_vegupd`` mapping."""
+
+    veget_max = jnp.asarray(veget_max, dtype=jnp.float64)
+    soiltile = jnp.asarray(soiltile, dtype=jnp.float64)
+    vegtot = jnp.asarray(vegtot, dtype=jnp.float64)
+    pref_zero = jnp.asarray(pref_soil_veg, dtype=jnp.int32) - 1
+    routing = (
+        jnp.arange(soiltile.shape[1], dtype=jnp.int32)[None, None, :]
+        == pref_zero[None, :, None]
+    )
+    tile_active = soiltile > 1.0e-8
+    safe_soiltile = jnp.where(tile_active, soiltile, 1.0)
+    vegetmax_soil = jnp.where(
+        routing & tile_active[:, None, :] & (vegtot[:, None, None] > 1.0e-8),
+        veget_max[:, :, None] / safe_soiltile[:, None, :],
+        0.0,
+    )
+    return tile_active, vegetmax_soil
+
+
 def reconstruct_hydrology_boundary_diagnostics(
     *,
     mc: Any,
@@ -117,7 +144,6 @@ def reconstruct_hydrology_boundary_diagnostics(
     veget_max: Any,
     soiltile: Any,
     pref_soil_veg: Any,
-    vegtot: Any,
     dz_mm: Any,
     njsc: Any,
     evap_bare_lim_ns: Any,
@@ -130,24 +156,18 @@ def reconstruct_hydrology_boundary_diagnostics(
     veget = jnp.asarray(veget, dtype=jnp.float64)
     veget_max = jnp.asarray(veget_max, dtype=jnp.float64)
     soiltile = jnp.asarray(soiltile, dtype=jnp.float64)
-    vegtot = jnp.asarray(vegtot, dtype=jnp.float64)
     njsc = jnp.asarray(njsc, dtype=jnp.int32)
     if mc.shape != mcl.shape or mc.ndim != 3:
         raise ValueError("HYDROL endpoint moisture arrays must share (npts,nslm,nstm)")
     npts, _nslm, nstm = mc.shape
     if nroot.shape[:2] != veget.shape or veget.shape != veget_max.shape:
         raise ValueError("HYDROL endpoint PFT arrays drift")
-    pref_zero = jnp.asarray(pref_soil_veg, dtype=jnp.int32) - 1
-    routing = (
-        jnp.arange(nstm, dtype=jnp.int32)[None, None, :]
-        == pref_zero[None, :, None]
-    )
-    tile_active = soiltile > 1.0e-8
-    safe_soiltile = jnp.where(tile_active, soiltile, 1.0)
-    vegetmax_soil = jnp.where(
-        routing & tile_active[:, None, :] & (vegtot[:, None, None] > 1.0e-8),
-        veget_max[:, :, None] / safe_soiltile[:, None, :],
-        0.0,
+    vegtot = jnp.sum(veget_max, axis=1)
+    tile_active, vegetmax_soil = _hydrol_boundary_vegetation_mapping(
+        veget_max=veget_max,
+        soiltile=soiltile,
+        vegtot=vegtot,
+        pref_soil_veg=jnp.asarray(pref_soil_veg, dtype=jnp.int32),
     )
     mcr = jnp.asarray(USDA_MCR, dtype=jnp.float64)[njsc - 1]
     inferred_under = tile_active & (mc[:, 0, :] < mcr[:, None])
@@ -529,17 +549,33 @@ def compose_doc_baseline_residual(baseline: Any, residual: Any, scale: Any) -> A
     return jnp.maximum(value, 0.0)
 
 
+def invert_doc_baseline_residual(target: Any, baseline: Any, scale: Any) -> Any:
+    """Recover the finite residual coordinate for a nonnegative DOC target."""
+
+    target = jnp.maximum(jnp.asarray(target, dtype=jnp.float64), 0.0)
+    baseline = jnp.maximum(jnp.asarray(baseline, dtype=jnp.float64), 0.0)
+    scale = jnp.asarray(scale, dtype=jnp.float64)
+    scale = jnp.where(jnp.isfinite(scale) & (scale > 0.0), scale, 1.0)
+    epsilon = jnp.asarray(DOC_BASELINE_EPSILON, dtype=jnp.float64)
+    return _softplus_inverse(target / scale + epsilon) - _softplus_inverse(
+        baseline / scale + epsilon
+    )
+
+
 @dataclass(frozen=True, eq=False)
 class DailyBoundaryReconstructor:
     assembler: CanonicalDailyOperatorInputAssembler
     contract: MechanisticOutputContract
     forcing_indices: Mapping[str, int]
     output_scale: Mapping[str, Any]
+    fast_owner_materializer: SuccessorFastOwnerMaterializer
 
     def __post_init__(self) -> None:
         required = {"Tair", "PSurf", "Wind_N", "Wind_E"}
         if not required <= set(self.forcing_indices):
             raise ValueError("mechanistic reconstruction forcing registry is incomplete")
+        if self.fast_owner_materializer.markov_contract.sha256 != self.assembler.contract.sha256:
+            raise ValueError("mechanistic reconstruction and fast-owner contracts drift")
 
     @property
     def active_pft_indices(self) -> tuple[int, ...]:
@@ -575,6 +611,157 @@ class DailyBoundaryReconstructor:
         capacity = _select_pft(capacity, self.active_pft_indices, axis=1)
         bare = jnp.asarray(inputs.pft.pft_traits, dtype=jnp.float64)[:, 0] > 0.5
         return jnp.where(bare[None, :], 0.0, jnp.maximum(capacity, 0.0))
+
+    def doc_start_baseline(self, inputs: AssembledDailyOperatorInput) -> Any:
+        fields = reconstruct_state_fields_compiled(
+            inputs.canonical_input.continuous_state,
+            inputs.canonical_input.discrete_state,
+            self.assembler.contract,
+        )
+        doc = jnp.asarray(
+            fields["slowproc_stomate_previous_step_state"]["DOC"],
+            dtype=jnp.float64,
+        )
+        ptn = jnp.asarray(
+            fields["thermosoil_previous_step_state"]["ptn"],
+            dtype=jnp.float64,
+        )
+        return soilcarbon_leak_doc_diffusion(
+            doc,
+            ptn,
+            _paper_zf_soil_b(),
+            jnp.full((doc.shape[0],), DAILY_DOC_DIFFUSIVITY, dtype=jnp.float64),
+        ).doc_flux_diff[0]
+
+    def updated_fast_owner_fields(
+        self,
+        prediction: ProcessPrediction,
+        fast_update: ConservativeUpdateResult,
+        inputs: AssembledDailyOperatorInput,
+    ) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+        """Apply learned day-end owners before evaluating exact diagnostics."""
+
+        fields, ok_leak = updated_fast_state_fields(
+            prediction,
+            fast_update,
+            self.assembler,
+        )
+        exact_outputs = frozenset(
+            leaf.output_key
+            for leaf in self.fast_owner_materializer.owner_contract.leaves
+            if leaf.role == ROLE_NEURAL and leaf.output_key in set(self.contract.exact_fields)
+        )
+        materialized = self.fast_owner_materializer.materialize(
+            fields_by_component=fields,
+            daily_fields=prediction.retained_boundary.daily_fields,
+            ok_leak_updates=ok_leak,
+            final_diagnostics=prediction.retained_boundary.final_entry_diagnostics,
+            named_outputs=prediction.named_outputs,
+            forcing=inputs.forcing,
+            measurement_height=self.static(inputs, "measurement_heights")[0],
+            permitted_missing_output_keys=exact_outputs,
+        )
+        return materialized.fields_by_component, materialized.ok_leak_updates
+
+    def thermal_coefficient_inputs(
+        self,
+        fields: Mapping[str, Mapping[str, Any]],
+        inputs: AssembledDailyOperatorInput,
+    ) -> dict[str, Any]:
+        """Expose the exact source values used by the thermal coefficient kernel."""
+
+        hydrol = fields["hydrol_previous_step_state"]
+        diffuco = fields["diffuco_previous_step_state"]
+        thermal = fields["thermosoil_previous_step_state"]
+        enerbil = fields["enerbil_previous_step_state"]
+        active = self.active_pft_indices
+        forcing = _last_forcing_record(inputs)
+
+        def compact(value: Any, axis: int) -> Any:
+            return _select_pft(value, active, axis)
+
+        mc = jnp.asarray(hydrol["mc"], dtype=jnp.float64)
+        return {
+            "ptn": compact(thermal["ptn"], 2),
+            "shum_ngrnd_permalong": compact(thermal["shum_ngrnd_permalong"], 2),
+            "ref_soc": thermal["refSOC"],
+            "mc": mc,
+            "mcl": hydrol["mcl"],
+            "veget_max": compact(diffuco["veget_max"], 1),
+            "frac_nobio": diffuco["frac_nobio"],
+            "lai": compact(diffuco["lai"], 1),
+            "temp_sol": enerbil["temp_sol"],
+            "temp_sol_pft": compact(diffuco["temp_sol_pft"], 1),
+            "snow": hydrol["snow"],
+            "snow_nobio": hydrol["snow_nobio"],
+            "snowrho": hydrol["snowrho"],
+            "snowtemp": hydrol["snowtemp"],
+            "snowdz": hydrol["snowdz"],
+            "pressure_hpa": forcing[self.forcing_indices["PSurf"]][None] / 100.0,
+            "njsc": jnp.full(
+                (mc.shape[0],),
+                self.static(inputs, "njsc").reshape(-1)[0],
+                dtype=jnp.int32,
+            ),
+            "hydrol_zz_mm": self.static(inputs, "hydrol_zz_mm"),
+            "hydrol_dz_mm": self.static(inputs, "hydrol_dz_mm"),
+            "pref_soil_veg": compact(self.static(inputs, "pref_soil_veg"), 0),
+            "ext_coeff_vegetfrac": compact(
+                self.static(inputs, "ext_coeff_vegetfrac"),
+                0,
+            ),
+            "model_interval_seconds": float(
+                self.assembler.contract.native_forcing.model_interval_seconds
+            ),
+        }
+
+    def doc_trapezoid_baseline(
+        self,
+        prediction: ProcessPrediction,
+        fast_update: ConservativeUpdateResult,
+        inputs: AssembledDailyOperatorInput,
+    ) -> Any:
+        fields, ok_leak = self.updated_fast_owner_fields(
+            prediction,
+            fast_update,
+            inputs,
+        )
+        start_fields = reconstruct_state_fields_compiled(
+            inputs.canonical_input.continuous_state,
+            inputs.canonical_input.discrete_state,
+            self.assembler.contract,
+        )
+        start_doc = jnp.asarray(
+            start_fields["slowproc_stomate_previous_step_state"]["DOC"],
+            dtype=jnp.float64,
+        )
+        start_ptn = jnp.asarray(
+            start_fields["thermosoil_previous_step_state"]["ptn"],
+            dtype=jnp.float64,
+        )
+        end_doc = jnp.asarray(ok_leak["DOC"], dtype=jnp.float64)
+        end_ptn = jnp.asarray(
+            fields["thermosoil_previous_step_state"]["ptn"],
+            dtype=jnp.float64,
+        )
+        diffusivity = jnp.full(
+            (start_doc.shape[0],),
+            DAILY_DOC_DIFFUSIVITY,
+            dtype=jnp.float64,
+        )
+        start_flux = soilcarbon_leak_doc_diffusion(
+            start_doc,
+            start_ptn,
+            _paper_zf_soil_b(),
+            diffusivity,
+        ).doc_flux_diff
+        end_flux = soilcarbon_leak_doc_diffusion(
+            end_doc,
+            end_ptn,
+            _paper_zf_soil_b(),
+            diffusivity,
+        ).doc_flux_diff
+        return 0.5 * (start_flux + end_flux)[0]
 
     def pre_update_outputs(
         self,
@@ -654,14 +841,7 @@ class DailyBoundaryReconstructor:
 
         doc_key = self.contract.doc_field
         residual = jnp.asarray(result[doc_key], dtype=jnp.float64)
-        doc = jnp.asarray(fields["slowproc_stomate_previous_step_state"]["DOC"], dtype=jnp.float64)
-        ptn = jnp.asarray(thermal["ptn"], dtype=jnp.float64)
-        baseline = soilcarbon_leak_doc_diffusion(
-            doc,
-            ptn,
-            _paper_zf_soil_b(),
-            jnp.full((doc.shape[0],), DAILY_DOC_DIFFUSIVITY, dtype=jnp.float64),
-        ).doc_flux_diff[0]
+        baseline = self.doc_start_baseline(inputs)
         result[doc_key] = jnp.where(
             self.doc_active_mask(inputs, residual.ndim),
             compose_doc_baseline_residual(
@@ -682,15 +862,14 @@ class DailyBoundaryReconstructor:
     ) -> dict[str, Any]:
         outputs = dict(prediction.named_outputs)
         residual = outputs.pop("__mechanistic.doc_residual_coordinate")
-        fields, ok_leak = updated_fast_state_fields(
+        fields, _ok_leak = self.updated_fast_owner_fields(
             prediction,
             fast_update,
-            self.assembler,
+            inputs,
         )
         hydrol = fields["hydrol_previous_step_state"]
         diffuco = fields["diffuco_previous_step_state"]
         thermal = fields["thermosoil_previous_step_state"]
-        enerbil = fields["enerbil_previous_step_state"]
         active = self.active_pft_indices
         forcing = _last_forcing_record(inputs)
         frac_nobio = jnp.asarray(diffuco["frac_nobio"], dtype=jnp.float64)
@@ -768,7 +947,6 @@ class DailyBoundaryReconstructor:
             veget_max=compact(diffuco["veget_max"], 1),
             soiltile=self.static(inputs, "soiltile"),
             pref_soil_veg=compact(self.static(inputs, "pref_soil_veg"), 0),
-            vegtot=1.0 - jnp.sum(frac_nobio, axis=1),
             dz_mm=self.static(inputs, "hydrol_dz_mm"),
             njsc=njsc,
             evap_bare_lim_ns=hydrol["evap_bare_lim_ns"],
@@ -777,28 +955,7 @@ class DailyBoundaryReconstructor:
             outputs[f"endpoint.fast_state.hydrol_previous_step_state.{name}"] = value
 
         coefficients = reconstruct_thermal_coefficients(
-            ptn=compact(thermal["ptn"], 2),
-            shum_ngrnd_permalong=compact(thermal["shum_ngrnd_permalong"], 2),
-            ref_soc=thermal["refSOC"],
-            mc=hydrol["mc"],
-            mcl=hydrol["mcl"],
-            veget_max=compact(diffuco["veget_max"], 1),
-            frac_nobio=diffuco["frac_nobio"],
-            lai=compact(diffuco["lai"], 1),
-            temp_sol=enerbil["temp_sol"],
-            temp_sol_pft=compact(diffuco["temp_sol_pft"], 1),
-            snow=hydrol["snow"],
-            snow_nobio=hydrol["snow_nobio"],
-            snowrho=hydrol["snowrho"],
-            snowtemp=hydrol["snowtemp"],
-            snowdz=hydrol["snowdz"],
-            pressure_hpa=forcing[self.forcing_indices["PSurf"]][None] / 100.0,
-            njsc=njsc,
-            hydrol_zz_mm=self.static(inputs, "hydrol_zz_mm"),
-            hydrol_dz_mm=self.static(inputs, "hydrol_dz_mm"),
-            pref_soil_veg=compact(self.static(inputs, "pref_soil_veg"), 0),
-            ext_coeff_vegetfrac=compact(self.static(inputs, "ext_coeff_vegetfrac"), 0),
-            model_interval_seconds=float(self.assembler.contract.native_forcing.model_interval_seconds),
+            **self.thermal_coefficient_inputs(fields, inputs)
         )
         for name, value in coefficients.items():
             component = (
@@ -808,44 +965,11 @@ class DailyBoundaryReconstructor:
             )
             outputs[f"endpoint.fast_state.{component}.{name}"] = value
 
-        start_fields = reconstruct_state_fields_compiled(
-            inputs.canonical_input.continuous_state,
-            inputs.canonical_input.discrete_state,
-            self.assembler.contract,
-        )
-        start_doc = jnp.asarray(
-            start_fields["slowproc_stomate_previous_step_state"]["DOC"],
-            dtype=jnp.float64,
-        )
-        start_ptn = jnp.asarray(
-            start_fields["thermosoil_previous_step_state"]["ptn"],
-            dtype=jnp.float64,
-        )
-        end_doc = jnp.asarray(ok_leak["DOC"], dtype=jnp.float64)
-        end_ptn = jnp.asarray(thermal["ptn"], dtype=jnp.float64)
-        zf = _paper_zf_soil_b()
-        diffusivity = jnp.full(
-            (start_doc.shape[0],),
-            DAILY_DOC_DIFFUSIVITY,
-            dtype=jnp.float64,
-        )
-        start_flux = soilcarbon_leak_doc_diffusion(
-            start_doc,
-            start_ptn,
-            zf,
-            diffusivity,
-        ).doc_flux_diff
-        end_flux = soilcarbon_leak_doc_diffusion(
-            end_doc,
-            end_ptn,
-            zf,
-            diffusivity,
-        ).doc_flux_diff
         doc_key = self.contract.doc_field
         outputs[doc_key] = jnp.where(
             self.doc_active_mask(inputs, residual.ndim),
             compose_doc_baseline_residual(
-                0.5 * (start_flux + end_flux)[0],
+                self.doc_trapezoid_baseline(prediction, fast_update, inputs),
                 residual,
                 self.output_scale[doc_key],
             ),
@@ -860,6 +984,7 @@ class DailyBoundaryReconstructor:
 __all__ = [
     "DailyBoundaryReconstructor",
     "compose_doc_baseline_residual",
+    "invert_doc_baseline_residual",
     "reconstruct_thermal_coefficients",
     "updated_fast_state_fields",
 ]

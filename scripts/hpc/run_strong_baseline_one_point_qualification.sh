@@ -8,6 +8,8 @@ WORKTREE=${WORKTREE:-$ROOT}
 EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD to the approved commit}
 GPU_DEVICE=${GPU_DEVICE:?set GPU_DEVICE after checking nvidia-smi}
 MECHANISTIC_OUTPUT=${MECHANISTIC_OUTPUT:-0}
+HIERARCHICAL_COORDINATE_ATTENTION=${HIERARCHICAL_COORDINATE_ATTENTION:-0}
+ISOLATED_EXPERT=${ISOLATED_EXPERT:-}
 TRAINING_SMOKE=${TRAINING_SMOKE:-0}
 MAXIMUM_EPOCHS=${MAXIMUM_EPOCHS:-100}
 EVALUATION_INTERVAL=${EVALUATION_INTERVAL:-5}
@@ -24,6 +26,25 @@ case "$MECHANISTIC_OUTPUT" in
   0) MODEL_TAG=strong-baseline; MODEL_ARGUMENTS=() ;;
   1) MODEL_TAG=mechanistic-output; MODEL_ARGUMENTS=(--mechanistic-output) ;;
   *) echo "MECHANISTIC_OUTPUT must be 0 or 1" >&2; exit 2 ;;
+esac
+case "$ISOLATED_EXPERT" in
+  "") ;;
+  litter_poc_doc|surface_energy)
+    test "$MECHANISTIC_OUTPUT" = 1
+    MODEL_TAG=$MODEL_TAG-$ISOLATED_EXPERT
+    MODEL_ARGUMENTS+=(--isolated-expert "$ISOLATED_EXPERT")
+    ;;
+  *) echo "ISOLATED_EXPERT must be empty, litter_poc_doc, or surface_energy" >&2; exit 2 ;;
+esac
+case "$HIERARCHICAL_COORDINATE_ATTENTION" in
+  0) ;;
+  1)
+    test "$MECHANISTIC_OUTPUT" = 1
+    test "$ISOLATED_EXPERT" = litter_poc_doc
+    MODEL_TAG=hierarchical-coordinate-attention-litter
+    MODEL_ARGUMENTS+=(--hierarchical-coordinate-attention)
+    ;;
+  *) echo "HIERARCHICAL_COORDINATE_ATTENTION must be 0 or 1" >&2; exit 2 ;;
 esac
 case "$TRAINING_SMOKE" in
   0) RUN_TAG=$MODEL_TAG-one-point ;;
@@ -48,7 +69,7 @@ CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
 NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
 GPU_BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
 
-echo "host=$(hostname) git_head=$EXPECTED_GIT_HEAD model=$MODEL_TAG training_smoke=$TRAINING_SMOKE gpu_device=$GPU_DEVICE output=$OUTPUT"
+echo "host=$(hostname) git_head=$EXPECTED_GIT_HEAD model=$MODEL_TAG hierarchical_coordinate_attention=$HIERARCHICAL_COORDINATE_ATTENTION isolated_expert=${ISOLATED_EXPERT:-none} training_smoke=$TRAINING_SMOKE gpu_device=$GPU_DEVICE output=$OUTPUT"
 nvidia-smi -i "$GPU_DEVICE" --query-gpu=index,name,memory.total,memory.used,utilization.gpu --format=csv,noheader
 
 env -u LD_LIBRARY_PATH \

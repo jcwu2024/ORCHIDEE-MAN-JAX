@@ -132,6 +132,15 @@ class StrongBaselineContext(NamedTuple):
     pft_mask: Any
 
 
+class StrongBaselineFieldContext(NamedTuple):
+    features: Any
+    active: Any
+    axis_tokens: Any
+    axis_mask: Any
+    local_state_token: Any
+    local_state_mask: Any
+
+
 def _reverse_members(groups: Mapping[str, Sequence[str]], label: str) -> dict[str, str]:
     result: dict[str, str] = {}
     for family, members in groups.items():
@@ -1329,7 +1338,7 @@ def encode_strong_baseline_experts(
     return expert_tokens
 
 
-def _field_raw_output(
+def strong_baseline_field_context(
     parameters: Mapping[str, Any],
     expert_tokens: Any,
     context: StrongBaselineContext,
@@ -1340,15 +1349,21 @@ def _field_raw_output(
     field_index: int,
     layout: StrongBaselineLayout,
     normalization: NeuralInputNormalization,
-) -> tuple[Any, Any]:
+    include_expert_token: bool = True,
+) -> StrongBaselineFieldContext:
     coordinates = jnp.asarray(field_coordinates(field.shape), dtype=jnp.int32)
     expert_index = int(layout.field_expert_index[field_index])
+    field_token = parameters["field_embedding"][field_index]
+    if include_expert_token:
+        field_token = field_token + expert_tokens[expert_index]
     features = jnp.broadcast_to(
-        expert_tokens[expert_index] + parameters["field_embedding"][field_index],
+        field_token,
         (coordinates.shape[0], expert_tokens.shape[-1]),
     )
     active = jnp.ones((coordinates.shape[0],), dtype=jnp.bool_)
     axis_features = []
+    coordinate_axis_tokens = []
+    coordinate_axis_masks = []
     for axis_index, (axis_name, extent) in enumerate(zip(ownership.axes, ownership.shape, strict=True)):
         coordinate = coordinates[:, axis_index]
         canonical_index = layout.axis_names.index(axis_name)
@@ -1384,6 +1399,9 @@ def _field_raw_output(
             token += position[jnp.minimum(dynamic_coordinate, layout.axis_extents[canonical_index] - 1)]
         token = _linear(parameters["axis_slot_projection"][axis_index], token)
         features += token
+        if axis_name != "landpoint":
+            coordinate_axis_tokens.append(token)
+            coordinate_axis_masks.append(active & dynamic_mask)
         if axis_name != "landpoint" and int(extent) > 1:
             axis_features.append(token)
 
@@ -1405,10 +1423,11 @@ def _field_raw_output(
     else:
         local = jnp.zeros((coordinates.shape[0],), dtype=jnp.float32)
         local_defined = jnp.zeros((coordinates.shape[0],), dtype=jnp.bool_)
-    features += _linear(
+    local_state_token = _linear(
         parameters["local_state_input"],
         jnp.stack((local, local_defined.astype(jnp.float32)), axis=1),
     )
+    features += local_state_token
 
     if len(axis_features) >= 2:
         pair = jnp.zeros_like(features)
@@ -1421,9 +1440,54 @@ def _field_raw_output(
         features += jax.nn.sigmoid(parameters["pair_gate_logits"][expert_index]) * _linear(
             parameters["pair_projection"][expert_index], pair
         )
+    if coordinate_axis_tokens:
+        axis_tokens = jnp.stack(tuple(coordinate_axis_tokens), axis=1)
+        axis_mask = jnp.stack(tuple(coordinate_axis_masks), axis=1)
+    else:
+        axis_tokens = jnp.zeros(
+            (coordinates.shape[0], 0, features.shape[-1]),
+            dtype=features.dtype,
+        )
+        axis_mask = jnp.zeros((coordinates.shape[0], 0), dtype=jnp.bool_)
+    return StrongBaselineFieldContext(
+        features=features,
+        active=active,
+        axis_tokens=axis_tokens,
+        axis_mask=axis_mask,
+        local_state_token=local_state_token,
+        local_state_mask=local_defined & active,
+    )
+
+
+def _field_raw_output(
+    parameters: Mapping[str, Any],
+    expert_tokens: Any,
+    context: StrongBaselineContext,
+    inputs: AssembledDailyOperatorInput,
+    *,
+    field: Any,
+    ownership: StrongBaselineFieldOwnership,
+    field_index: int,
+    layout: StrongBaselineLayout,
+    normalization: NeuralInputNormalization,
+) -> tuple[Any, Any]:
+    field_context = strong_baseline_field_context(
+        parameters,
+        expert_tokens,
+        context,
+        inputs,
+        field=field,
+        ownership=ownership,
+        field_index=field_index,
+        layout=layout,
+        normalization=normalization,
+    )
     head = parameters["label_heads"][field.label_index]
-    raw = _linear(head["second"], jax.nn.gelu(_linear(head["first"], features)))[:, 0]
-    return raw, active
+    raw = _linear(
+        head["second"],
+        jax.nn.gelu(_linear(head["first"], field_context.features)),
+    )[:, 0]
+    return raw, field_context.active
 
 
 def strong_baseline_process_outputs(
@@ -1472,11 +1536,13 @@ def strong_baseline_process_outputs(
 __all__ = [
     "StrongBaselineConfig",
     "StrongBaselineContext",
+    "StrongBaselineFieldContext",
     "StrongBaselineLayout",
     "assemble_strong_baseline_context",
     "build_strong_baseline_layout",
     "encode_strong_baseline_experts",
     "initialize_strong_baseline_parameters",
+    "strong_baseline_field_context",
     "strong_baseline_parameter_count",
     "strong_baseline_process_outputs",
 ]

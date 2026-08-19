@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-17.
+Last updated: 2026-08-19.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -12,6 +12,24 @@ This page is the current status authority. Dated files under
 describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
+
+The rejected mechanistic-output v2 isolated diagnostics remain the evidence
+basis: surface energy falls `97.9259%` and passes all 11 dominant-field gates,
+while litter/POC/DOC falls `91.8014%` and fails 12 of 28 dominant fields. The
+user approved `hierarchical_coordinate_query_attention_v3` for the failed
+litter mapping. Its local implementation removes the rejected litter global
+expert blocks and shared litter label heads, then uses four two-block
+coordinate-query stages and field-specific projections. The instantiated
+tree has 58,736,698 parameters. Local forward/JIT, official loss/gradient,
+complete bound-day state/budget, inactive-PFT, and strict permutation gates
+pass; 50 focused and related tests plus static checks are green. Local probes
+also found and repaired candidate-local gradient starvation in zero-centered
+nonnegative and unit-interval litter transforms. The active task is to version
+this source and run one fresh 46-update litter-only smoke on a free `gln01`
+GPU. No checkpoint, 100-epoch diagnostic, 64-point-year training, rollout,
+Gate D2, sealed-test, or product work is open yet. The history below records
+the path to this active gate; it does not authorize restarting an earlier
+experiment.
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four
@@ -365,14 +383,30 @@ inventory hard counts remain zero. GPP, maintenance, and NPP NRMSE improve to
 `0.1390`, `0.2301`, and `0.1253`. Report SHA256 is
 `61de8c4c...a48b5c0`.
 
-The active gate is the separate formal 100-epoch/4,600-update one-point
-memorization run. It retains the absolute `99%` total, `95%` every-expert,
-`0.05` five-primary-NRMSE, and zero-hard-count gates, has no matched control,
-and writes no checkpoint. The prepared paid envelope is four CPU cores, one
-V100, and two hours on `gnall`, with CNY `4.96` worst-case additive cost. It
-must not be submitted without explicit approval. The 64-point-year, full-v6,
-rollout, Gate D2, sealed-test, and product stages remain closed. See
-[`hydrology_canopy_output_v2_one_epoch_smoke_result_20260817.md`](research/daily_coarse_graining/hydrology_canopy_output_v2_one_epoch_smoke_result_20260817.md).
+The formal 100-epoch/4,600-update run then completes with no execution failure.
+Total loss falls from `4.5707906` to `0.0498893` (`98.9085%`). All five
+primary NRMSE and all hard gates pass, but hydrology/snow (`93.7780%`),
+canopy/GPP (`93.4923%`), surface energy (`89.3930%`), and litter/POC/DOC
+(`80.2522%`) miss their independent `95%` reduction gates.
+
+The following zero-training attainability audit passes all 364 days. Maximum
+learned-field normalized MSE is `2.0612e-9`, maximum derived exact-field
+normalized MSE is `9.8733e-22`, and DOC plus every hard count are zero. The
+thermal source panel finds no physical-tolerance source failure; finite
+conservative arithmetic in `mc/mcl` explains the old coefficient-level
+physical-tolerance failures.
+
+The subsequent isolated diagnostics complete all 4,600 updates per expert.
+Surface energy reaches `97.9259%` aggregate reduction and passes every one of
+its 11 dominant-field gates. Litter/POC/DOC reaches only `91.8014%`; 12 of 28
+dominant fields fail, led by litter-above incoming amount, coupled OK_LEAK
+auxiliary endpoints, DOC incoming amount, adsorption, and advective transfer.
+Coverage, count identity, state, budget, finite-value, and nonnegative-inventory
+gates pass, and no checkpoint is written. The active gate is an architecture
+discussion for that litter/POC/DOC mapping. Another network, complete training
+run, 64-point-year, full-v6, rollout, Gate D2, sealed-test, and product stages
+remain closed. See
+[`mechanistic_output_v2_isolated_expert_memorization_result_20260818.md`](research/daily_coarse_graining/mechanistic_output_v2_isolated_expert_memorization_result_20260818.md).
 
 ## First Formal Neural Candidate
 

@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-17.
+Last updated: 2026-08-19.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -1138,16 +1138,58 @@ GPP, maintenance, and NPP NRMSE improve from `0.3963`, `0.6725`, and `1.0865`
 to `0.1390`, `0.2301`, and `0.1253`. Report SHA256 is
 `61de8c4c...a48b5c0`.
 
-The active bounded task is the formal 100-epoch/4,600-update one-point
-memorization gate. It uses the same candidate, seed, 364 train/train days,
-batch size 8, unclipped AdamW schedule, and no checkpoint. It has no matched
-control. Acceptance remains at least `99%` total loss reduction, `95%` for
-every expert, all five primary NRMSE at or below `0.05`, finite gradients, and
-zero hard counts. The prepared `gnall` envelope is four CPU cores, one V100,
-and two hours; worst-case additive charge is CNY `4.96`. Do not submit without
-explicit approval and do not open 64-point-year, full-v6, rollout, Gate D2,
-sealed-test, or product stages until it passes. See
-[`hydrology_canopy_output_v2_one_epoch_smoke_result_20260817.md`](research/daily_coarse_graining/hydrology_canopy_output_v2_one_epoch_smoke_result_20260817.md).
+The formal 100-epoch/4,600-update one-point run completed. Total loss falls
+`98.9085%`, missing the `99%` gate by `0.0915` percentage points. All five
+primary NRMSE gates and all hard gates pass. Maintenance, soil thermal, and
+daily interface/finalize pass their expert gates; hydrology/snow (`93.7780%`),
+canopy/GPP (`93.4923%`), surface energy (`89.3930%`), and litter/POC/DOC
+(`80.2522%`) do not. Hydrology improves by more than ten percentage points
+over v1, while litter is effectively plateaued. No checkpoint is retained.
+
+The zero-training output-coordinate attainability audit is accepted on all
+364 existing v6 rows. Maximum learned-field normalized MSE is `2.0612e-9`,
+maximum derived exact-field normalized MSE is `9.8733e-22`, the DOC fixed-
+point residual is zero, and every hard count is zero. A separate primitive-
+source alignment proves all thermal reconstruction inputs within physical
+tolerance; the largest source error is `2.6733e-13` in `mc/mcl`. The older
+fixed physical tolerance on Teacher-derived thermal coefficients measured
+roundoff amplification rather than a mapping failure and is retained only as
+a sensitivity diagnostic. Reports SHA256 are `292e8a03...a0897` for the full
+audit and `ffe388fb...55abce` for source alignment.
+
+The two fresh isolated one-expert diagnostics are complete. Surface energy
+falls `97.9259%`, misses only the `99%` aggregate gate, and passes all 11
+dominant-field gates. Litter/POC/DOC falls `91.8014%`; 12 of 28 dominant fields
+fail, concentrated in coupled OK_LEAK auxiliary endpoints, litter/DOC incoming
+amounts, adsorption, and advective transfer. Both runs complete all 4,600
+updates with nonzero selected block/head gradients and updates, unchanged
+counts, zero hard failures, and no checkpoint. Joint equal-expert interference
+is therefore not the whole failure mechanism.
+
+The user approved `hierarchical_coordinate_query_attention_v3`, and its local
+admission is complete. The 58,736,698-parameter candidate removes the rejected
+litter global expert blocks and shared litter label heads, uses four
+field-balanced coordinate-query stages, and preserves the accepted
+mechanistic-output v2 boundary, conservative update, explicit parameter
+ownership, and retained exact tail. Local forward/JIT, official loss and
+gradient, complete bound-day state/budget, inactive-PFT, and strict PFT
+permutation gates pass. The candidate also uses well-conditioned local
+parameterizations for the zero-centered nonnegative and bounded litter fields
+whose old transforms starved gradients. See
+[`hierarchical_coordinate_query_attention_v3_design_20260819.md`](research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_design_20260819.md)
+and
+[`hierarchical_coordinate_query_attention_v3_local_acceptance_20260819.md`](research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_local_acceptance_20260819.md).
+
+The next operation is to version the current source, then run exactly one
+fresh 46-update litter-only smoke on one free `gln01` GPU through the existing
+one-point runner with `MECHANISTIC_OUTPUT=1`,
+`HIERARCHICAL_COORDINATE_ATTENTION=1`,
+`ISOLATED_EXPERT=litter_poc_doc`, and `TRAINING_SMOKE=1`. It must write no
+checkpoint. Only a finite complete run with decreasing litter loss, unchanged
+counts, nonzero selected coordinate-block/field-head gradients and updates,
+and zero hard failures may open the frozen 100-epoch isolated memorization
+diagnostic. Do not repeat the rejected architecture runs, start a paid job,
+open 64-point-year training, rollout, Gate D2, sealed-test, or product work.
 
 ## Completed Task Packet: Gate C
 

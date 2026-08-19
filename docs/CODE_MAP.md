@@ -290,7 +290,13 @@ backbone. `scripts/hpc/run_mechanistic_output_gpu_admission.py` owns bounded
 real-v6 forward/loss/gradient/state/budget admission. The shared one-point
 runner selects this path with `--mechanistic-output`; its explicit
 `--training-smoke` mode distinguishes the one-epoch execution gate from the
-formal 100-epoch memorization thresholds.
+full memorization gate. `daily_operator/hierarchical_coordinate_attention.py`
+owns the active litter/POC/DOC successor: its four coordinate-query stages,
+field-balanced process contexts, field-specific heads, candidate-local stable
+bounded transforms, fresh parameter initialization, and 60-million-parameter
+cap. `mechanistic_process_head.py` exposes its separate process-head class;
+the shared one-point runner selects it only with
+`--hierarchical-coordinate-attention`.
 `scripts/hpc/slurm_mechanistic_output_v2_one_point.sh` owns the bounded paid
 single-V100 formal one-point resource envelope.
 

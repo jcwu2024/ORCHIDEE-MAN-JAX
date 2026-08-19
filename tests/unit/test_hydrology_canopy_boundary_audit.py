@@ -2,6 +2,9 @@ from __future__ import annotations
 
 import numpy as np
 
+from research.daily_coarse_graining.daily_operator.mechanistic_output_reconstruction import (
+    reconstruct_hydrology_boundary_diagnostics,
+)
 from research.daily_coarse_graining.hydrology_canopy_boundary_audit import (
     CanopyDebtArrays,
     ReconstructionComparison,
@@ -109,3 +112,70 @@ def test_synthetic_hydrology_boundary_shapes_and_identities() -> None:
     )
     assert metadata["forcing_records_materialized"] == 0
     assert metadata["subdaily_state_scan_steps"] == 0
+
+
+def test_runtime_hydrology_reconstruction_reuses_the_accepted_source_mapping() -> None:
+    batch = 2
+    nslm = 3
+    nstm = 2
+    mc = np.full((batch, nslm, nstm), 0.3, dtype=np.float64)
+    mcl = np.full_like(mc, 0.2)
+    nroot = np.asarray(
+        [
+            [[0.0, 0.0, 0.0], [0.0, 0.6, 0.4]],
+            [[0.0, 0.0, 0.0], [0.0, 0.5, 0.5]],
+        ],
+        dtype=np.float64,
+    )
+    veget = np.asarray([[0.1, 0.6], [0.2, 0.5]], dtype=np.float64)
+    veget_max = np.asarray([[0.1, 0.7], [0.2, 0.6]], dtype=np.float64)
+    soiltile = np.asarray([[0.1, 0.7], [0.2, 0.6]], dtype=np.float64)
+    evap_bare_lim_ns = np.asarray([[0.5, 0.25], [0.1, 0.4]], dtype=np.float64)
+    pref_soil_veg = np.asarray([1, 2], dtype=np.int32)
+    dz_mm = np.asarray([10.0, 30.0, 60.0])
+    njsc = np.asarray([6, 6], dtype=np.int32)
+
+    expected, _metadata = reconstruct_hydrology_boundary_fields(
+        mc=mc,
+        mcl=mcl,
+        start_nroot=nroot,
+        end_nroot=nroot,
+        veget=veget,
+        veget_max=veget_max,
+        soiltile=soiltile,
+        pref_soil_veg=pref_soil_veg,
+        dz_mm=dz_mm,
+        zz_mm=np.asarray([10.0, 40.0, 100.0]),
+        diaglev_m=np.asarray([0.01, 0.04, 0.1]),
+        njsc=njsc,
+        is_tree=np.asarray([False, True]),
+        end_stempdiag=np.asarray([[280.0, 279.0, 278.0], [275.0, 274.0, 273.0]]),
+        end_snow=np.zeros(batch),
+        end_snowdz=np.zeros((batch, 3)),
+        evap_bare_lim_ns=evap_bare_lim_ns,
+    )
+    observed = reconstruct_hydrology_boundary_diagnostics(
+        mc=mc,
+        mcl=mcl,
+        nroot=nroot,
+        veget=veget,
+        veget_max=veget_max,
+        soiltile=soiltile,
+        pref_soil_veg=pref_soil_veg,
+        dz_mm=dz_mm,
+        njsc=njsc,
+        evap_bare_lim_ns=evap_bare_lim_ns,
+    )
+    for name in ("us", "humrelv", "humrel"):
+        np.testing.assert_allclose(
+            np.asarray(observed[name]),
+            expected[f"from_true_end_nroot.{name}"],
+            atol=0.0,
+            rtol=0.0,
+        )
+    np.testing.assert_allclose(
+        np.asarray(observed["evap_bare_lim"]),
+        expected["from_tile_beta.evap_bare_lim"],
+        atol=0.0,
+        rtol=0.0,
+    )

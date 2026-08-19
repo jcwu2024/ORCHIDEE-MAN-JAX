@@ -17,10 +17,20 @@ from research.daily_coarse_graining.daily_operator.strong_baseline_qualification
     strong_baseline_adamw_update,
     strong_baseline_weight_decay_mask,
 )
+from scripts.hpc.run_mechanistic_output_v2_attainability import (
+    _attainability_gate_passed,
+    _weighted_records,
+)
+from scripts.hpc.run_mechanistic_output_v2_thermal_source_alignment import (
+    _error_summary,
+)
 from scripts.hpc.run_strong_baseline_one_point_qualification import (
     _compare_loss_breakdowns,
     _compare_loss_snapshots,
+    _isolated_field_gate,
     _one_epoch_training_smoke_passed,
+    _report_exit_code,
+    _report_status,
 )
 
 
@@ -176,6 +186,91 @@ def test_one_epoch_training_smoke_uses_execution_and_absolute_hard_gates():
     )
 
 
+def test_completed_scientific_rejection_is_not_an_execution_failure():
+    assert _report_status(gate_passed=False, execution_status="completed") == "completed_failed_gate"
+    assert _report_exit_code({"execution_status": "completed"}) == 0
+
+
+def test_execution_failure_retains_failed_status_and_nonzero_exit():
+    assert _report_status(gate_passed=False, execution_status="failed") == "execution_failed"
+    assert _report_exit_code({"execution_status": "failed"}) == 1
+
+
+def test_attainability_records_preserve_field_local_floors():
+    records = _weighted_records(
+        ("first", "second"),
+        np.asarray([2.0, 9.0]),
+        np.asarray([4.0, 3.0]),
+    )
+    assert records["first"]["normalized_mse"] == pytest.approx(0.5)
+    assert records["second"]["normalized_mse"] == pytest.approx(3.0)
+
+
+def test_thermal_alignment_distinguishes_bitwise_and_physical_tolerance():
+    target = np.asarray([1.0, 2.0], dtype=np.float64)
+    actual = target.copy()
+    actual[1] = np.nextafter(actual[1], np.inf)
+    summary = _error_summary(actual, target)
+    assert summary["bitwise_unequal_value_count"] == 1
+    assert summary["tolerance_failure_count"] == 0
+    assert not summary["bitwise_exact"]
+    assert summary["within_tolerance"]
+
+
+def test_isolated_field_gate_cannot_hide_a_dominant_field_floor():
+    breakdown = {
+        "fields": {
+            "passed_by_reduction": {
+                "initial_mean_daily_loss": 1.0,
+                "final_mean_daily_loss": 0.04,
+                "reduction_from_initialization": 0.96,
+            },
+            "passed_by_floor": {
+                "initial_mean_daily_loss": 0.2,
+                "final_mean_daily_loss": 9.0e-5,
+                "reduction_from_initialization": 0.5,
+            },
+            "failed": {
+                "initial_mean_daily_loss": 0.5,
+                "final_mean_daily_loss": 0.1,
+                "reduction_from_initialization": 0.8,
+            },
+        }
+    }
+    result = _isolated_field_gate(
+        breakdown,
+        ("passed_by_reduction", "passed_by_floor", "failed"),
+    )
+    assert result["dominant_field_count"] == 3
+    assert result["fields"]["passed_by_reduction"]["passed"]
+    assert result["fields"]["passed_by_floor"]["passed"]
+    assert not result["fields"]["failed"]["passed"]
+    assert not result["passed"]
+
+
+def test_attainability_gate_uses_normalized_error_for_derived_exact_fields():
+    assert _attainability_gate_passed(
+        maximum_field_mse=1.0e-9,
+        maximum_exact_mse=1.0e-9,
+        maximum_doc_residual=1.0e-11,
+        hard_counts={"failure": 0},
+    )
+    assert not _attainability_gate_passed(
+        maximum_field_mse=1.0e-9,
+        maximum_exact_mse=1.0e-7,
+        maximum_doc_residual=1.0e-11,
+        hard_counts={"failure": 0},
+    )
+
+
+def test_attainability_runner_uses_a_valid_epoch_for_deterministic_batches():
+    root = Path(__file__).resolve().parents[2]
+    runner = (root / "scripts" / "hpc" / "run_mechanistic_output_v2_attainability.py").read_text(
+        encoding="utf-8"
+    )
+    assert "seed=0,\n        epoch=1," in runner
+
+
 def test_one_point_launcher_has_explicit_mechanistic_training_smoke_mode():
     root = Path(__file__).resolve().parents[2]
     launcher = (root / "scripts" / "hpc" / "run_strong_baseline_one_point_qualification.sh").read_text(
@@ -185,6 +280,25 @@ def test_one_point_launcher_has_explicit_mechanistic_training_smoke_mode():
     assert "MODEL_ARGUMENTS+=(--training-smoke)" in launcher
     assert "MAXIMUM_EPOCHS=1" in launcher
     assert "EVALUATION_INTERVAL=1" in launcher
+
+
+def test_one_point_launcher_selects_hierarchical_litter_candidate_explicitly():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (
+        root / "scripts" / "hpc" / "run_strong_baseline_one_point_qualification.sh"
+    ).read_text(encoding="utf-8")
+    runner = (
+        root / "scripts" / "hpc" / "run_strong_baseline_one_point_qualification.py"
+    ).read_text(encoding="utf-8")
+    assert "HIERARCHICAL_COORDINATE_ATTENTION=${HIERARCHICAL_COORDINATE_ATTENTION:-0}" in launcher
+    assert "MODEL_ARGUMENTS+=(--hierarchical-coordinate-attention)" in launcher
+    assert 'test "$ISOLATED_EXPERT" = litter_poc_doc' in launcher
+    assert 'parser.add_argument("--hierarchical-coordinate-attention"' in runner
+    assert '"selected_coordinate_blocks"' in runner
+    assert '"selected_field_heads"' in runner
+    assert "58_736_698" in runner
+    assert 'ISOLATED_EXPERT=${ISOLATED_EXPERT:-}' in launcher
+    assert 'MODEL_ARGUMENTS+=(--isolated-expert "$ISOLATED_EXPERT")' in launcher
     assert "sbatch" not in launcher
 
 
@@ -202,6 +316,17 @@ def test_mechanistic_one_point_slurm_envelope_is_single_gpu_and_bounded():
     assert "MAXIMUM_EPOCHS=100" in launcher
     assert "TRAINING_SMOKE=0" in launcher
     assert "mechanistic-output-one-epoch-smoke-ba7f5d9" in launcher
+
+
+def test_mechanistic_attainability_launcher_is_free_zero_training_gpu_audit():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (root / "scripts" / "hpc" / "run_mechanistic_output_v2_attainability.sh").read_text(
+        encoding="utf-8"
+    )
+    assert "run_mechanistic_output_v2_attainability" in launcher
+    assert "--doc-fixed-point-iterations 8" in launcher
+    assert "--batch-size 8" in launcher
+    assert "sbatch" not in launcher
 
 
 def test_loss_floor_launcher_is_free_gln01_and_uses_frozen_tail():

@@ -153,10 +153,27 @@ forward/loss/full-gradient/state/budget admission also passes, with exact-zero
 water/carbon residuals and all 49,743,001 gradient values finite. The
 no-checkpoint 364-day, one-epoch training smoke also passes: all 46 updates are
 finite, complete loss decreases `7.3818%`, all seven experts improve, and all
-hard counts remain zero. The active operation is the separate paid 100-epoch
-one-point memorization gate, prepared but awaiting explicit submission
-approval. The 64-point-year, rollout, Gate D2, and product stages remain
-closed.
+hard counts remain zero. The subsequent formal 100-epoch run completes all
+4,600 finite updates and passes all five primary-science and all hard gates.
+It reduces total loss `98.9085%`, narrowly missing `99%`, while hydrology,
+canopy, surface energy, and litter/POC/DOC miss their independent `95%`
+expert-reduction gates. The following zero-training 364-day attainability
+audit passes: learned and derived-exact maximum normalized MSE values are
+`2.0612e-9` and `9.8733e-22`, and all hard counts are zero. Thermal source
+alignment finds no physical-tolerance mismatch; the older coefficient-level
+failure was roundoff amplification. The following isolated one-expert
+diagnostics complete all 4,600 updates without a hard failure but reject the
+current mapping: surface energy falls `97.9259%` and passes all 11 dominant
+field gates, while litter/POC/DOC falls only `91.8014%` and fails 12 of 28
+dominant fields. The user approved a hierarchical coordinate-query Attention
+revision for litter/POC/DOC. Its 58,736,698-parameter local implementation now
+passes 50 focused and related tests plus static checks, including official
+loss gradients, one complete bound day, budgets, inactive-PFT isolation, and
+strict PFT permutation equivariance. It also repairs the two rejected
+zero-centered output transforms that starved incoming/lignin gradients. The
+active gate is one fresh 46-update litter-only smoke on a free `gln01` GPU
+after versioning the source. The 100-epoch diagnostic, 64-point-year, rollout,
+Gate D2, and product stages remain closed until their dependency gates pass.
 
 ## New Task Bootstrap
 

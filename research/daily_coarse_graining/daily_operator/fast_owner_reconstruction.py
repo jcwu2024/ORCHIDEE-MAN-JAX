@@ -254,6 +254,7 @@ class SuccessorFastOwnerMaterializer:
         named_outputs: Mapping[str, Any],
         forcing: NativeForcingInput,
         measurement_height: Any,
+        permitted_missing_output_keys: frozenset[str] = frozenset(),
     ) -> ReconstructedFastDayTarget:
         fields = _copy_mapping(fields_by_component)
         groups: dict[str, dict[str, Any]] = {
@@ -294,6 +295,8 @@ class SuccessorFastOwnerMaterializer:
             if leaf.role != ROLE_NEURAL:
                 continue
             if leaf.output_key not in named_outputs:
+                if leaf.output_key in permitted_missing_output_keys:
+                    continue
                 raise ValueError(f"missing successor endpoint {leaf.output_key!r}")
             spec = markov[leaf.key]
             compact = jnp.asarray(named_outputs[leaf.output_key], dtype=jnp.dtype(spec.dtype))

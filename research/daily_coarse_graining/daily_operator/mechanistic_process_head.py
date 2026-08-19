@@ -9,6 +9,11 @@ import numpy as np
 
 from research.daily_coarse_graining.daily_markov_contract import DailyMarkovContract
 
+from .fast_owner_reconstruction import build_successor_fast_owner_materializer
+from .hierarchical_coordinate_attention import (
+    HierarchicalCoordinateAttentionConfig,
+    hierarchical_coordinate_attention_process_outputs,
+)
 from .input_assembly import CanonicalDailyOperatorInputAssembler
 from .mechanistic_output_contract import MechanisticOutputContract
 from .mechanistic_output_reconstruction import DailyBoundaryReconstructor
@@ -158,6 +163,10 @@ class MechanisticStrongBaselineProcessHead:
             contract=self.mechanism_contract,
             forcing_indices=self.forcing_indices,
             output_scale=self.output_normalization.scale,
+            fast_owner_materializer=build_successor_fast_owner_materializer(
+                self.contract,
+                forcing_layout=self.forcing_layout,
+            ),
         )
         object.__setattr__(self, "_named_output_adapter", adapter)
         object.__setattr__(self, "_reconstructor", reconstructor)
@@ -201,12 +210,28 @@ class MechanisticStrongBaselineProcessHead:
         inputs: AssembledDailyOperatorInput,
     ) -> ProcessPrediction:
         learned = self.learned_outputs(parameters, context, inputs)
-        primitive, auxiliary = self._reconstructor.pre_update_outputs(learned, inputs)
+        return self.prediction_from_learned_outputs(learned, inputs)
+
+    def prediction_from_learned_outputs(
+        self,
+        learned_outputs: Mapping[str, Any],
+        inputs: AssembledDailyOperatorInput,
+    ) -> ProcessPrediction:
+        """Apply the approved mechanism to already-decoded learned coordinates."""
+
+        primitive, auxiliary = self._reconstructor.pre_update_outputs(
+            learned_outputs,
+            inputs,
+        )
         prediction = self._named_output_adapter.prediction_from_named_outputs(
             primitive,
             inputs,
         )
         return prediction._replace(auxiliary_outputs=auxiliary)
+
+    @property
+    def reconstructor(self) -> DailyBoundaryReconstructor:
+        return self._reconstructor
 
     def materialize_post_update(
         self,
@@ -236,7 +261,43 @@ class MechanisticStrongBaselineProcessHead:
         )
 
 
+@dataclass(frozen=True, eq=False)
+class MechanisticHierarchicalCoordinateAttentionProcessHead(
+    MechanisticStrongBaselineProcessHead
+):
+    """Use coordinate-query Attention only for the litter/POC/DOC branch."""
+
+    coordinate_config: HierarchicalCoordinateAttentionConfig = (
+        HierarchicalCoordinateAttentionConfig()
+    )
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.coordinate_config.validate(self.config)
+
+    def learned_outputs(
+        self,
+        parameters: Mapping[str, Any],
+        context: StrongBaselineContext,
+        inputs: AssembledDailyOperatorInput,
+    ) -> Mapping[str, Any]:
+        return hierarchical_coordinate_attention_process_outputs(
+            parameters,
+            context,
+            inputs,
+            schema=self.learned_schema,
+            layout=self.layout,
+            input_normalization=self.input_normalization,
+            output_normalization=self.output_normalization,
+            forcing_layout=self.forcing_layout,
+            message_gate_scale=self.message_gate_scale,
+            baseline_config=self.config,
+            config=self.coordinate_config,
+        )
+
+
 __all__ = [
+    "MechanisticHierarchicalCoordinateAttentionProcessHead",
     "MechanisticStrongBaselineProcessHead",
     "build_mechanistic_output_layout",
 ]
