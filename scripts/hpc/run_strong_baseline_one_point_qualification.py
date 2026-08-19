@@ -34,6 +34,7 @@ ISOLATED_EXPERT_REDUCTION_GATE = 0.99
 ISOLATED_FIELD_REDUCTION_GATE = 0.95
 ISOLATED_FIELD_LOSS_FLOOR = 1.0e-4
 DEFAULT_DIAGNOSTIC_TAIL_LEARNING_RATE = 1.0e-5
+HIERARCHICAL_GRADIENT_MICROBATCH_SIZE = 2
 BUDGET_ATOL = 2.0e-12
 STOCK_ATOL = 2.0e-12
 PRIMARY_NAMES = (
@@ -100,6 +101,32 @@ def _stack(jax: Any, values: Sequence[Any]) -> Any:
     if not values:
         raise ValueError("cannot stack an empty one-point qualification tree")
     return jax.tree_util.tree_map(lambda *items: np.stack(items), *values)
+
+
+def _split_gradient_microbatches(
+    indices: np.ndarray,
+    weights: np.ndarray,
+    microbatch_size: int,
+) -> tuple[tuple[np.ndarray, np.ndarray], ...]:
+    """Split one logical batch while dropping only zero-weight padding chunks."""
+
+    batch_indices = np.asarray(indices, dtype=np.int32)
+    batch_weights = np.asarray(weights, dtype=np.float32)
+    if (
+        microbatch_size < 1
+        or batch_indices.ndim != 1
+        or batch_weights.shape != batch_indices.shape
+    ):
+        raise ValueError("invalid gradient microbatch request")
+    result = []
+    for start in range(0, batch_indices.size, microbatch_size):
+        current_indices = batch_indices[start : start + microbatch_size]
+        current_weights = batch_weights[start : start + microbatch_size]
+        if np.any(current_weights != 0.0):
+            result.append((current_indices, current_weights))
+    if not result:
+        raise ValueError("logical batch has no admitted gradient samples")
+    return tuple(result)
 
 
 def _prepare_point_year(runtime: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -499,6 +526,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     sample_count = int(dataset["sample_count"])
     batches_per_epoch = int(np.ceil(sample_count / args.batch_size))
     maximum_updates = args.maximum_epochs * batches_per_epoch
+    gradient_microbatch_size = (
+        min(args.batch_size, HIERARCHICAL_GRADIENT_MICROBATCH_SIZE)
+        if hierarchical_candidate
+        else args.batch_size
+    )
 
     parameter_initializer = (
         initialize_hierarchical_coordinate_attention_parameters
@@ -836,7 +868,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         return CoverageProbeResult(gradients, updates)
 
     @jax.jit
-    def accumulate_tail_microbatch(
+    def accumulate_gradient_microbatch(
         values: Any,
         accumulation: Any,
         all_inputs: Any,
@@ -862,6 +894,29 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         return next_accumulation, loss, expert_loss
 
     @jax.jit
+    def apply_training_gradient(
+        values: Any,
+        state: Any,
+        gradients: Any,
+        learning_rate: Any,
+    ) -> tuple[Any, Any]:
+        return strong_baseline_adamw_update(
+            values,
+            gradients,
+            state,
+            learning_rate,
+            decay_mask,
+        )
+
+    @jax.jit
+    def parameter_updates(after: Any, before: Any) -> Any:
+        return jax.tree_util.tree_map(
+            lambda current, previous: jnp.asarray(current) - jnp.asarray(previous),
+            after,
+            before,
+        )
+
+    @jax.jit
     def apply_tail_update(
         values: Any,
         state: Any,
@@ -875,7 +930,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             decay_mask,
         )
 
-    finalize_tail_gradient = jax.jit(finalize_exact_gradient_accumulator)
+    finalize_gradient = jax.jit(finalize_exact_gradient_accumulator)
 
     @jax.jit
     def parameter_nonfinite_count(values: Any) -> Any:
@@ -1308,7 +1363,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         }
 
     coverage_probe_batch = None
-    if isolated_expert is not None:
+    if isolated_expert is not None and not hierarchical_candidate:
         probe_indices, probe_weights = padded_epoch_batches(
             sample_count,
             args.batch_size,
@@ -1346,25 +1401,73 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         ):
             update = completed_updates + 1
             rate = qualification_learning_rate(update, maximum_updates)
-            result = train_step(
-                parameters,
-                optimizer,
-                assembled_all,
-                targets_all,
-                jnp.asarray(indices),
-                jnp.asarray(weights),
-                jnp.asarray(rate, dtype=jnp.float32),
-            )
-            jax.block_until_ready(result)
-            nonfinite = int(np.asarray(result.nonfinite_gradient_values))
-            loss_number = float(np.asarray(result.loss))
-            gradient_norm = float(np.asarray(result.gradient_norm))
+            gradient_summary = None
+            before_parameters = None
+            if hierarchical_candidate:
+                before_parameters = parameters
+                accumulation = initialize_exact_gradient_accumulator(parameters)
+                batch_loss_sum = 0.0
+                logical_batch_count = float(np.sum(weights))
+                for micro_indices, micro_weights in _split_gradient_microbatches(
+                    indices,
+                    weights,
+                    gradient_microbatch_size,
+                ):
+                    accumulation, micro_loss, _micro_expert = accumulate_gradient_microbatch(
+                        parameters,
+                        accumulation,
+                        assembled_all,
+                        targets_all,
+                        jnp.asarray(micro_indices),
+                        jnp.asarray(micro_weights),
+                    )
+                    jax.block_until_ready(accumulation)
+                    micro_count = float(np.sum(micro_weights))
+                    batch_loss_sum += float(np.asarray(micro_loss)) * micro_count
+                gradient_summary = finalize_gradient(accumulation)
+                jax.block_until_ready(gradient_summary)
+                admitted_samples = float(np.asarray(gradient_summary.admitted_samples))
+                nonfinite = int(np.asarray(gradient_summary.nonfinite_gradient_values))
+                gradient_norm = float(np.asarray(gradient_summary.gradient_norm))
+                loss_number = batch_loss_sum / admitted_samples
+                if admitted_samples != logical_batch_count:
+                    failure_reason = f"gradient microbatch coverage drift at update {update}"
+                    break
+                parameters, optimizer = apply_training_gradient(
+                    parameters,
+                    optimizer,
+                    gradient_summary.gradients,
+                    jnp.asarray(rate, dtype=jnp.float32),
+                )
+                jax.block_until_ready((parameters, optimizer))
+            else:
+                result = train_step(
+                    parameters,
+                    optimizer,
+                    assembled_all,
+                    targets_all,
+                    jnp.asarray(indices),
+                    jnp.asarray(weights),
+                    jnp.asarray(rate, dtype=jnp.float32),
+                )
+                jax.block_until_ready(result)
+                nonfinite = int(np.asarray(result.nonfinite_gradient_values))
+                loss_number = float(np.asarray(result.loss))
+                gradient_norm = float(np.asarray(result.gradient_norm))
+                parameters = result.parameters
+                optimizer = result.optimizer
             if nonfinite or not np.isfinite(loss_number) or not np.isfinite(gradient_norm):
                 all_gradients_finite = False
                 failure_reason = f"nonfinite training update {update}"
                 break
-            parameters = result.parameters
-            optimizer = result.optimizer
+            if hierarchical_candidate and update in {1, maximum_updates}:
+                updates = parameter_updates(parameters, before_parameters)
+                jax.block_until_ready(updates)
+                snapshot_name = "initial_probe" if update == 1 else "final_probe"
+                coverage_snapshots[snapshot_name] = coverage_record(
+                    CoverageProbeResult(gradient_summary.gradients, updates),
+                    update,
+                )
             completed_updates = update
             losses.append(loss_number)
             gradient_norms.append(gradient_norm)
@@ -1449,7 +1552,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         if (passed and isolated_expert is None) or failure_reason is not None:
             break
 
-    if isolated_expert is not None and failure_reason is None:
+    if isolated_expert is not None and not hierarchical_candidate and failure_reason is None:
         final_coverage = coverage_probe(
             parameters,
             optimizer,
@@ -1487,7 +1590,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             pre_update_loss_sum = 0.0
             pre_update_expert_sum = np.zeros((len(expert_names),), dtype=np.float64)
             for indices, weights in tail_batches:
-                accumulation, batch_loss, batch_expert = accumulate_tail_microbatch(
+                accumulation, batch_loss, batch_expert = accumulate_gradient_microbatch(
                     parameters,
                     accumulation,
                     assembled_all,
@@ -1499,7 +1602,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 batch_count = float(np.sum(weights))
                 pre_update_loss_sum += float(np.asarray(batch_loss)) * batch_count
                 pre_update_expert_sum += np.asarray(batch_expert, dtype=np.float64) * batch_count
-            gradient = finalize_tail_gradient(accumulation)
+            gradient = finalize_gradient(accumulation)
             jax.block_until_ready(gradient)
             admitted_samples = float(np.asarray(gradient.admitted_samples))
             microbatch_count = int(np.asarray(gradient.microbatch_count))
@@ -1829,6 +1932,13 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "optimizer": {
             "name": "adamw",
             "batch_size": args.batch_size,
+            "gradient_microbatch_size": gradient_microbatch_size,
+            "maximum_gradient_microbatches_per_update": int(
+                np.ceil(args.batch_size / gradient_microbatch_size)
+            ),
+            "gradient_accumulation_preserves_logical_batch": bool(
+                gradient_microbatch_size < args.batch_size
+            ),
             "maximum_epochs": args.maximum_epochs,
             "completed_epochs": completed_epochs,
             "maximum_updates": maximum_updates,

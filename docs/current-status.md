@@ -22,14 +22,19 @@ expert blocks and shared litter label heads, then uses four two-block
 coordinate-query stages and field-specific projections. The instantiated
 tree has 58,736,698 parameters. Local forward/JIT, official loss/gradient,
 complete bound-day state/budget, inactive-PFT, and strict permutation gates
-pass; 50 focused and related tests plus static checks are green. Local probes
+pass. The original local admission covered 51 focused and related tests plus
+static checks. Local probes
 also found and repaired candidate-local gradient starvation in zero-centered
-nonnegative and unit-interval litter transforms. The active task is to version
-this source and run one fresh 46-update litter-only smoke on a free `gln01`
-GPU. No checkpoint, 100-epoch diagnostic, 64-point-year training, rollout,
-Gate D2, sealed-test, or product work is open yet. The history below records
-the path to this active gate; it does not authorize restarting an earlier
-experiment.
+nonnegative and unit-interval litter transforms. Free-`gln01` commit `7dd9510`
+then stopped before its first training update: the separate batch-8 coverage
+backward graph attempted 72.57 GiB on a 32 GiB V100. It wrote no report or
+checkpoint, so this is not a candidate-quality result. The local repair keeps
+logical batch size 8 and 46 AdamW updates, uses exact size-2 gradient
+microbatches, and takes coverage from real updates rather than extra backward
+graphs. The active task is to version that repair and rerun one free smoke.
+No 100-epoch diagnostic, 64-point-year training, rollout, Gate D2, sealed-test,
+or product work is open yet. The history below records the path to this active
+gate; it does not authorize restarting an earlier experiment.
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

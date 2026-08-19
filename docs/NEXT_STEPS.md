@@ -1180,16 +1180,24 @@ whose old transforms starved gradients. See
 and
 [`hierarchical_coordinate_query_attention_v3_local_acceptance_20260819.md`](research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_local_acceptance_20260819.md).
 
-The next operation is to version the current source, then run exactly one
-fresh 46-update litter-only smoke on one free `gln01` GPU through the existing
-one-point runner with `MECHANISTIC_OUTPUT=1`,
-`HIERARCHICAL_COORDINATE_ATTENTION=1`,
-`ISOLATED_EXPERT=litter_poc_doc`, and `TRAINING_SMOKE=1`. It must write no
-checkpoint. Only a finite complete run with decreasing litter loss, unchanged
-counts, nonzero selected coordinate-block/field-head gradients and updates,
-and zero hard failures may open the frozen 100-epoch isolated memorization
-diagnostic. Do not repeat the rejected architecture runs, start a paid job,
-open 64-point-year training, rollout, Gate D2, sealed-test, or product work.
+The first free-`gln01` attempt at commit `7dd9510` stopped before training
+while XLA compiled a separate batch-8 coverage backward pass. Its attempted
+peak was 72.57 GiB on a 32 GiB V100; zero of 46 updates completed, no report or
+checkpoint was written, and the attempt provides no model-quality result. The
+bounded repair keeps logical batch size 8 and all 46 AdamW updates, accumulates
+exact real-sample-weighted gradients through size-2 candidate microbatches,
+and records coverage from the first and final actual updates instead of two
+extra backward graphs. See
+[`hierarchical_coordinate_query_attention_v3_gpu_smoke_attempt_20260819.md`](research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_gpu_smoke_attempt_20260819.md).
+
+The next operation is to version this memory repair, then run exactly one
+fresh 46-update litter-only smoke on one free `gln01` GPU with the same four
+selection flags. It must write no checkpoint. Only a finite complete run with
+decreasing litter loss, unchanged counts, nonzero selected coordinate-block/
+field-head gradients and updates, and zero hard failures may open the frozen
+100-epoch isolated memorization diagnostic. Do not repeat the rejected
+architecture runs, start a paid job, open 64-point-year training, rollout,
+Gate D2, sealed-test, or product work.
 
 ## Completed Task Packet: Gate C
 

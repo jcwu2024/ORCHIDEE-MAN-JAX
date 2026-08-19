@@ -31,6 +31,7 @@ from scripts.hpc.run_strong_baseline_one_point_qualification import (
     _one_epoch_training_smoke_passed,
     _report_exit_code,
     _report_status,
+    _split_gradient_microbatches,
 )
 
 
@@ -106,6 +107,19 @@ def test_exact_gradient_accumulator_uses_real_sample_counts():
     assert int(result.microbatch_count) == 2
     assert int(result.nonfinite_gradient_values) == 0
     assert 0.0 < float(result.cancellation_ratio) <= 1.0
+
+
+def test_gradient_microbatches_preserve_logical_batch_and_skip_zero_padding():
+    indices = np.arange(8, dtype=np.int32)
+    weights = np.asarray([1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0], dtype=np.float32)
+    microbatches = _split_gradient_microbatches(indices, weights, 2)
+
+    assert len(microbatches) == 2
+    np.testing.assert_array_equal(
+        np.concatenate([item[0] for item in microbatches]),
+        np.arange(4, dtype=np.int32),
+    )
+    assert sum(float(np.sum(item[1])) for item in microbatches) == 4.0
 
 
 def test_loss_floor_breakdown_compares_all_counts_and_stages():
@@ -297,6 +311,9 @@ def test_one_point_launcher_selects_hierarchical_litter_candidate_explicitly():
     assert '"selected_coordinate_blocks"' in runner
     assert '"selected_field_heads"' in runner
     assert "58_736_698" in runner
+    assert "HIERARCHICAL_GRADIENT_MICROBATCH_SIZE = 2" in runner
+    assert "gradient_accumulation_preserves_logical_batch" in runner
+    assert 'snapshot_name = "initial_probe" if update == 1 else "final_probe"' in runner
     assert 'ISOLATED_EXPERT=${ISOLATED_EXPERT:-}' in launcher
     assert 'MODEL_ARGUMENTS+=(--isolated-expert "$ISOLATED_EXPERT")' in launcher
     assert "sbatch" not in launcher

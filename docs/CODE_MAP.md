@@ -296,7 +296,10 @@ field-balanced process contexts, field-specific heads, candidate-local stable
 bounded transforms, fresh parameter initialization, and 60-million-parameter
 cap. `mechanistic_process_head.py` exposes its separate process-head class;
 the shared one-point runner selects it only with
-`--hierarchical-coordinate-attention`.
+`--hierarchical-coordinate-attention`. For this candidate the runner preserves
+logical batch size 8 while accumulating exact gradients through size-2
+microbatches and derives coverage from the first and final actual updates;
+other model paths retain direct-batch execution.
 `scripts/hpc/slurm_mechanistic_output_v2_one_point.sh` owns the bounded paid
 single-V100 formal one-point resource envelope.
 

@@ -166,14 +166,18 @@ diagnostics complete all 4,600 updates without a hard failure but reject the
 current mapping: surface energy falls `97.9259%` and passes all 11 dominant
 field gates, while litter/POC/DOC falls only `91.8014%` and fails 12 of 28
 dominant fields. The user approved a hierarchical coordinate-query Attention
-revision for litter/POC/DOC. Its 58,736,698-parameter local implementation now
-passes 50 focused and related tests plus static checks, including official
+revision for litter/POC/DOC. Its 58,736,698-parameter local implementation
+passed 51 focused and related tests plus static checks, including official
 loss gradients, one complete bound day, budgets, inactive-PFT isolation, and
 strict PFT permutation equivariance. It also repairs the two rejected
 zero-centered output transforms that starved incoming/lignin gradients. The
-active gate is one fresh 46-update litter-only smoke on a free `gln01` GPU
-after versioning the source. The 100-epoch diagnostic, 64-point-year, rollout,
-Gate D2, and product stages remain closed until their dependency gates pass.
+first free-GPU attempt reached zero training updates because a redundant
+batch-8 coverage backward graph required 72.57 GiB on a 32 GiB V100. The
+bounded local repair preserves batch 8 and 46 optimizer updates through
+size-2 exact gradient accumulation and reuses real updates for coverage. The
+active gate is to version that repair and rerun one free `gln01` smoke. The
+100-epoch diagnostic, 64-point-year, rollout, Gate D2, and product stages
+remain closed until their dependency gates pass.
 
 ## New Task Bootstrap
 
