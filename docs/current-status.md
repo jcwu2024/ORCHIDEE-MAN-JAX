@@ -43,18 +43,21 @@ the unchanged daily boundary, conservative updater, retained tail, and all
 non-DOC paths. The focused v4, runner, unchanged v3, and unchanged mechanistic
 suites pass `48` tests in isolated processes; static checks also pass.
 
-The no-checkpoint free-`gln01` smoke completed all 46 updates and passed its
-execution gate. Litter/POC/DOC loss fell `48.5539%`; new-path gradients and
-updates were nonzero at the first and final probes, counts were unchanged,
-and every state/budget/inventory hard count was zero. JAX peak bytes in use
-were `21.94 GiB` on one 32-GiB V100. The active gate is the prepared
-100-epoch, 4,600-update isolated v4 memorization diagnostic. It requires one
-approved paid `gnall` job and must pass the frozen `99%` aggregate and
-`95%`-per-dominant-field absolute gates. Multi-point training, rollout,
-sealed test, Gate D2, and product work remain closed. See
+Paid job `14627588` completed the v4 100-epoch, 4,600-update diagnostic
+normally in `05:30:23`. Aggregate litter/POC/DOC loss fell `99.1353%`, which
+passes the aggregate gate for the first time, and all execution, gradient,
+state, budget, inventory, count, and finite-value gates passed. The candidate
+still fails the frozen field gate at `24/28`: DOC incoming improves strongly
+to `90.5487%`, but DOC outgoing becomes `10.62` times its initial loss;
+free-to-adsorbed and advective reductions are `85.1634%` and `92.6142%`.
+No checkpoint was written. The coordinate-aligned handoff is useful evidence,
+but the joint signed endpoint head is rejected. The active gate is a bounded
+no-training audit of DOC endpoint target and loss geometry before another
+architecture is designed. Multi-point training, rollout, sealed test, Gate
+D2, and product work remain closed. See
 [`coordinate_coupled_doc_transition_v4_design_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_design_20260820.md)
 and
-[`coordinate_coupled_doc_transition_v4_gpu_smoke_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_gpu_smoke_20260820.md).
+[`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

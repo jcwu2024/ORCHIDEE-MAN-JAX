@@ -120,9 +120,10 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_local_acceptance_20260819.md` | Accepted local candidate admission; first GPU attempt exposed a runner-memory issue | Reviewing candidate correctness before GPU execution |
 | `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_gpu_smoke_attempt_20260819.md` | Historical zero-update OOM evidence; the repaired smoke and formal diagnostic later completed | Reviewing the memory repair rationale |
 | `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_doc_audit_20260820.md` | Accepted failed absolute qualification and DOC coordinate-coupling basis for v4 | Reviewing why v4 was opened |
-| `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_design_20260820.md` | Active frozen v4 mechanism and absolute gate contract | Reviewing the coordinate-aligned DOC design |
+| `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_design_20260820.md` | Completed frozen v4 mechanism contract; formal candidate subsequently rejected | Reviewing the coordinate-aligned DOC design |
 | `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_local_acceptance_20260820.md` | Accepted local v4 foundation; free smoke subsequently passed | Reviewing candidate correctness before GPU execution |
-| `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_gpu_smoke_20260820.md` | Active accepted free-GPU smoke and paid formal-gate contract | Preparing or reviewing the 100-epoch isolated diagnostic |
+| `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_gpu_smoke_20260820.md` | Accepted free-GPU smoke; formal diagnostic subsequently completed and failed | Reviewing the execution admission path |
+| `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md` | Active failed field-gate evidence and DOC target/loss-audit contract | Reviewing v4 or performing the bounded next audit |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

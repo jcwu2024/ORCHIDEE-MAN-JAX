@@ -1197,17 +1197,23 @@ mutually exclusive incoming/outgoing endpoints before the unchanged
 conservative update. Focused v4, runner, unchanged v3, and unchanged
 mechanistic suites pass `48` tests; static checks pass.
 
-The fresh one-epoch free-`gln01` smoke completed all 46 updates and passed.
-Selected loss fell `48.5539%`; gradients and updates reached the selected
-coordinate blocks and field heads at the first and final probes; counts were
-unchanged and all hard counts were zero. JAX peak bytes in use were
-`21.94 GiB`. The active operation is one paid `gnall` 100-epoch/4,600-update
-isolated v4 diagnostic using the prepared one-V100, four-CPU, eight-hour
-envelope. It requires explicit cost approval before submission and writes no
-checkpoint. Only the frozen `99%` aggregate plus `95%` per-dominant-field
-absolute gates can open multi-point training. Rollout, Gate D2, sealed-test,
-and product work remain closed. See
-[`coordinate_coupled_doc_transition_v4_gpu_smoke_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_gpu_smoke_20260820.md).
+Paid job `14627588` completed the v4 100-epoch/4,600-update diagnostic without
+an execution failure. Aggregate loss falls `99.1353%`, but the candidate
+passes only `24/28` dominant fields. Coordinate-aligned tokens repair DOC
+incoming substantially, from v3's `-0.3085%` reduction to `90.5487%`, while
+the joint signed decoder turns the previously passing DOC outgoing fraction
+into a `-962.3373%` reduction. Free-to-adsorbed and advective transfer also
+remain below their absolute gates. No checkpoint was written.
+
+The active operation is a bounded zero-training audit of the real-v6 DOC
+endpoint target and loss geometry: invert the signed materializer, quantify
+sign/status imbalance and branch-specific normalized loss, and compare exact
+local conditioning of the joint scalar against bounded sign-plus-magnitude or
+coordinate-coupled branch-specific alternatives. Freeze that evidence and
+discuss the revised mechanism before implementing another network. Do not
+repeat v4, start multi-point training or rollout, read sealed-test data, or
+advance Gate D2 or product work. See
+[`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md).
 
 ## Completed Task Packet: Gate C
 

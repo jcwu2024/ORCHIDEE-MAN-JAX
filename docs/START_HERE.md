@@ -183,11 +183,13 @@ v4 coordinate-coupled DOC revision. Its `59,971,257`-parameter local
 implementation aligns five predicted reaction/transport tokens to every DOC
 inventory coordinate and uses one joint conservative transition head for the
 mutually exclusive incoming/outgoing endpoints. The focused and compatibility
-suites pass 48 tests. Its free-`gln01` one-epoch smoke completed all 46 updates,
-reduced litter/POC/DOC loss `48.5539%`, reached the new gradient paths, and
-passed all state/budget/inventory hard gates. The active gate is the prepared
-paid 100-epoch isolated diagnostic; multi-point training, rollout, Gate D2,
-and product work stay closed until its absolute gates pass.
+suites pass 48 tests. Its free-GPU smoke passed, and paid job `14627588`
+completed the formal 100-epoch run. Aggregate loss falls `99.1353%`, but only
+`24/28` dominant fields pass: coordinate coupling repairs much of DOC
+incoming, while the joint signed head severely regresses DOC outgoing and
+does not clear adsorption/advection. V4 is rejected with no checkpoint. The
+active gate is a no-training audit of the DOC endpoint target/loss geometry;
+multi-point training, rollout, Gate D2, and product work stay closed.
 
 ## New Task Bootstrap
 
