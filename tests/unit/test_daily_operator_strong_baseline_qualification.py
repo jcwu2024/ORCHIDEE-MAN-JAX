@@ -27,6 +27,7 @@ from scripts.hpc.run_mechanistic_output_v2_thermal_source_alignment import (
 from scripts.hpc.run_strong_baseline_one_point_qualification import (
     _compare_loss_breakdowns,
     _compare_loss_snapshots,
+    _doc_status_early_screen_review,
     _isolated_field_gate,
     _one_epoch_training_smoke_passed,
     _report_exit_code,
@@ -262,6 +263,74 @@ def test_isolated_field_gate_cannot_hide_a_dominant_field_floor():
     assert not result["passed"]
 
 
+def test_doc_status_early_screen_uses_frozen_absolute_epoch_5_and_10_gates():
+    incoming = "inventory.carbon.DOC.incoming_amount"
+    outgoing = "inventory.carbon.DOC.outgoing_fraction"
+    adsorbed = "typed.ok_leak.doc_free_to_adsorbed"
+    advective = "typed.ok_leak.doc_advective_interface"
+
+    def breakdown(reductions: dict[str, float]) -> dict[str, object]:
+        return {
+            "counts_identical": True,
+            "fields": {
+                name: {
+                    "initial_mean_daily_loss": 1.0,
+                    "final_mean_daily_loss": 1.0 - reduction,
+                    "reduction_from_initialization": reduction,
+                }
+                for name, reduction in reductions.items()
+            },
+        }
+
+    epoch_5 = _doc_status_early_screen_review(
+        epoch=5,
+        litter_expert_reduction=0.2,
+        loss_breakdown=breakdown(
+            {incoming: -0.9, outgoing: 0.1, adsorbed: -0.2, advective: -0.1}
+        ),
+        incoming_field=incoming,
+        outgoing_field=outgoing,
+        free_to_adsorbed_field=adsorbed,
+        advective_field=advective,
+        hard_counts={"failure": 0},
+        all_gradients_finite=True,
+    )
+    assert epoch_5["passed"]
+    assert epoch_5["decision"] == "continue_to_epoch_10"
+
+    epoch_10 = _doc_status_early_screen_review(
+        epoch=10,
+        litter_expert_reduction=0.91,
+        loss_breakdown=breakdown(
+            {incoming: 0.6, outgoing: 0.5, adsorbed: 0.0, advective: 0.1}
+        ),
+        incoming_field=incoming,
+        outgoing_field=outgoing,
+        free_to_adsorbed_field=adsorbed,
+        advective_field=advective,
+        hard_counts={"failure": 0},
+        all_gradients_finite=True,
+    )
+    assert epoch_10["passed"]
+    assert epoch_10["decision"] == "open_formal_100_epoch_gate"
+
+    rejected = _doc_status_early_screen_review(
+        epoch=10,
+        litter_expert_reduction=0.89,
+        loss_breakdown=breakdown(
+            {incoming: 0.6, outgoing: 0.49, adsorbed: -0.01, advective: 0.1}
+        ),
+        incoming_field=incoming,
+        outgoing_field=outgoing,
+        free_to_adsorbed_field=adsorbed,
+        advective_field=advective,
+        hard_counts={"failure": 0},
+        all_gradients_finite=True,
+    )
+    assert not rejected["passed"]
+    assert rejected["decision"] == "stop_rejected"
+
+
 def test_attainability_gate_uses_normalized_error_for_derived_exact_fields():
     assert _attainability_gate_passed(
         maximum_field_mse=1.0e-9,
@@ -338,6 +407,42 @@ def test_one_point_launcher_selects_coordinate_coupled_doc_candidate_explicitly(
     assert "59_971_257" in runner
     assert "coordinate_coupled_doc_transition_v4_one_epoch_smoke_v1" in runner
     assert "sbatch" not in launcher
+
+
+def test_one_point_launcher_selects_doc_status_branch_magnitude_v5_explicitly():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (
+        root / "scripts" / "hpc" / "run_strong_baseline_one_point_qualification.sh"
+    ).read_text(encoding="utf-8")
+    runner = (
+        root / "scripts" / "hpc" / "run_strong_baseline_one_point_qualification.py"
+    ).read_text(encoding="utf-8")
+    assert "DOC_STATUS_BRANCH_MAGNITUDE=${DOC_STATUS_BRANCH_MAGNITUDE:-0}" in launcher
+    assert "MODEL_ARGUMENTS+=(--doc-status-branch-magnitude)" in launcher
+    assert 'test "$HIERARCHICAL_COORDINATE_ATTENTION" = 0' in launcher
+    assert 'test "$COORDINATE_COUPLED_DOC_TRANSITION" = 0' in launcher
+    assert 'test "$ISOLATED_EXPERT" = litter_poc_doc' in launcher
+    assert 'parser.add_argument("--doc-status-branch-magnitude"' in runner
+    assert "59_973_309" in runner
+    assert "doc_status_branch_magnitude_attention_v5_early_screen_v1" in runner
+    assert "masked_doc_status_branch_magnitude_loss" in runner
+    assert "sbatch" not in launcher
+
+
+def test_doc_status_v5_early_screen_slurm_envelope_is_bounded_and_no_checkpoint():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (
+        root / "scripts" / "hpc" / "slurm_doc_status_branch_magnitude_v5_early_screen.sh"
+    ).read_text(encoding="utf-8")
+    assert "#SBATCH --partition=gnall" in launcher
+    assert "#SBATCH --cpus-per-task=4" in launcher
+    assert "#SBATCH --gres=gpu:1" in launcher
+    assert "#SBATCH --time=02:00:00" in launcher
+    assert "CNY 4.96" in launcher
+    assert "DOC_STATUS_BRANCH_MAGNITUDE=1" in launcher
+    assert "MAXIMUM_EPOCHS=10" in launcher
+    assert "EVALUATION_INTERVAL=5" in launcher
+    assert "CHECKPOINT" not in launcher
 
 
 def test_mechanistic_one_point_slurm_envelope_is_single_gpu_and_bounded():

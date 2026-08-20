@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-20.
+Last updated: 2026-08-21.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -1214,19 +1214,34 @@ combined zero-predictor squared error. The one scalar is therefore trained
 primarily to repair incoming and can sacrifice outgoing. Returning to v3's
 separate transforms is insufficient: they have 563 small-Jacobian active
 targets. Explicit status plus branch-native magnitude has complete finite
-coverage and is shortlisted, but not promoted.
+coverage and is the accepted basis for v5.
 
-The active operation is user review and freeze of one revised DOC endpoint
-mechanism before implementation. It must specify exact status/materialization,
-branch-native magnitude coordinates, class/branch loss balancing, and bounded
-head-only gates. Any implementation must pass local forward/loss/gradient and
-one-day state/budget checks, then a 5-10 epoch no-checkpoint early-stop screen;
-another 100-epoch run is only a final promotion gate. Do not repeat v4, start
-multi-point training or rollout, read sealed-test data, or advance Gate D2 or
-product work. See
+The revised
+`coordinate_coupled_doc_status_branch_magnitude_attention_v5` mechanism is
+frozen, implemented, and locally accepted at `59,973,309` parameters. It keeps
+the complete v4 coordinate-aligned Attention backbone and replaces only the
+shared signed endpoint scalar with three status logits plus independent
+incoming/outgoing magnitude coordinates. Its branch-balanced official loss
+removes the old pooled DOC endpoint contribution rather than duplicating it.
+Focused eager/JIT forward, loss, full-gradient, canonical binding, one-day
+state/budget, inactive-PFT, and permutation gates pass. The formal training
+entry and launcher select V5 explicitly and leave v3/v4 behavior unchanged.
+
+The active operation is the prepared no-checkpoint 10-epoch early screen,
+which requires explicit execution approval. Epoch 5 stops on any hard failure
+or if either DOC endpoint loss exceeds twice initialization. Epoch 10 requires
+at least `90%` litter/POC/DOC reduction, at least `50%` reduction for both DOC
+endpoints, and no regression of free-to-adsorbed or advective transfer. The
+bounded single-V100/two-hour paid envelope has worst-case additive cost CNY
+`4.96`; it has not been submitted. A 100-epoch run opens only if every early
+gate passes. Do not repeat v4, train a new control, start multi-point training
+or rollout, read sealed-test data, or advance Gate D2 or product work. See
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
-[`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md).
+[`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),
+[`doc_status_branch_magnitude_attention_v5_design_20260820.md`](research/daily_coarse_graining/doc_status_branch_magnitude_attention_v5_design_20260820.md),
+and
+[`doc_status_branch_magnitude_attention_v5_local_acceptance_20260821.md`](research/daily_coarse_graining/doc_status_branch_magnitude_attention_v5_local_acceptance_20260821.md).
 
 ## Completed Task Packet: Gate C
 

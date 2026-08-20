@@ -37,6 +37,12 @@ DEFAULT_DIAGNOSTIC_TAIL_LEARNING_RATE = 1.0e-5
 HIERARCHICAL_GRADIENT_MICROBATCH_SIZE = 2
 BUDGET_ATOL = 2.0e-12
 STOCK_ATOL = 2.0e-12
+DOC_EARLY_SCREEN_FIRST_REVIEW_EPOCH = 5
+DOC_EARLY_SCREEN_MAXIMUM_EPOCH = 10
+DOC_EARLY_SCREEN_EXPERT_REDUCTION_GATE = 0.90
+DOC_EARLY_SCREEN_ENDPOINT_REDUCTION_GATE = 0.50
+DOC_EARLY_SCREEN_TRANSFER_REDUCTION_GATE = 0.0
+DOC_EARLY_SCREEN_ENDPOINT_LOSS_RATIO_MAXIMUM = 2.0
 PRIMARY_NAMES = (
     "gpp",
     "maintenance_respiration",
@@ -359,6 +365,123 @@ def _one_epoch_training_smoke_passed(
     )
 
 
+def _doc_status_early_screen_review(
+    *,
+    epoch: int,
+    litter_expert_reduction: float,
+    loss_breakdown: Mapping[str, Any],
+    incoming_field: str,
+    outgoing_field: str,
+    free_to_adsorbed_field: str,
+    advective_field: str,
+    hard_counts: Mapping[str, int],
+    all_gradients_finite: bool,
+) -> Mapping[str, Any]:
+    """Apply the frozen epoch-5/10 absolute gate for the v5 DOC head."""
+
+    if epoch not in {
+        DOC_EARLY_SCREEN_FIRST_REVIEW_EPOCH,
+        DOC_EARLY_SCREEN_MAXIMUM_EPOCH,
+    }:
+        raise ValueError("DOC early-screen review is defined only at epochs 5 and 10")
+    fields = loss_breakdown["fields"]
+    required_fields = (
+        incoming_field,
+        outgoing_field,
+        free_to_adsorbed_field,
+        advective_field,
+    )
+    missing = tuple(name for name in required_fields if name not in fields)
+    if missing:
+        raise ValueError(f"DOC early-screen fields are missing: {missing}")
+
+    def field_record(name: str) -> Mapping[str, Any]:
+        record = fields[name]
+        initial = float(record["initial_mean_daily_loss"])
+        final = float(record["final_mean_daily_loss"])
+        ratio = final / initial if initial > 0.0 else (0.0 if final == 0.0 else None)
+        return {
+            "initial_mean_daily_loss": initial,
+            "current_mean_daily_loss": final,
+            "current_to_initial_ratio": ratio,
+            "reduction_from_initialization": record["reduction_from_initialization"],
+        }
+
+    tracked = {name: field_record(name) for name in required_fields}
+    finite = bool(
+        all_gradients_finite
+        and np.isfinite(litter_expert_reduction)
+        and all(
+            np.isfinite(value)
+            for record in tracked.values()
+            for value in (
+                record["initial_mean_daily_loss"],
+                record["current_mean_daily_loss"],
+            )
+        )
+    )
+    hard_passed = all(int(value) == 0 for value in hard_counts.values())
+    counts_identical = bool(loss_breakdown["counts_identical"])
+    endpoint_loss_bounded = all(
+        tracked[name]["current_to_initial_ratio"] is not None
+        and tracked[name]["current_to_initial_ratio"]
+        <= DOC_EARLY_SCREEN_ENDPOINT_LOSS_RATIO_MAXIMUM
+        for name in (incoming_field, outgoing_field)
+    )
+    common_passed = finite and hard_passed and counts_identical and endpoint_loss_bounded
+
+    if epoch == DOC_EARLY_SCREEN_FIRST_REVIEW_EPOCH:
+        passed = common_passed
+        decision = "continue_to_epoch_10" if passed else "stop_rejected"
+    else:
+        endpoint_reduction_passed = all(
+            tracked[name]["reduction_from_initialization"] is not None
+            and tracked[name]["reduction_from_initialization"]
+            >= DOC_EARLY_SCREEN_ENDPOINT_REDUCTION_GATE
+            for name in (incoming_field, outgoing_field)
+        )
+        transfer_reduction_passed = all(
+            tracked[name]["reduction_from_initialization"] is not None
+            and tracked[name]["reduction_from_initialization"]
+            >= DOC_EARLY_SCREEN_TRANSFER_REDUCTION_GATE
+            for name in (free_to_adsorbed_field, advective_field)
+        )
+        aggregate_passed = (
+            litter_expert_reduction >= DOC_EARLY_SCREEN_EXPERT_REDUCTION_GATE
+        )
+        passed = bool(
+            common_passed
+            and aggregate_passed
+            and endpoint_reduction_passed
+            and transfer_reduction_passed
+        )
+        decision = "open_formal_100_epoch_gate" if passed else "stop_rejected"
+
+    return {
+        "epoch": epoch,
+        "passed": bool(passed),
+        "decision": decision,
+        "litter_poc_doc_reduction": float(litter_expert_reduction),
+        "checks": {
+            "finite_loss_and_gradients": finite,
+            "hard_counts_zero": hard_passed,
+            "loss_counts_identical": counts_identical,
+            "doc_endpoint_loss_within_2x_initial": endpoint_loss_bounded,
+            **(
+                {
+                    "litter_poc_doc_reduction_at_least_0_90": aggregate_passed,
+                    "both_doc_endpoint_reductions_at_least_0_50": endpoint_reduction_passed,
+                    "free_to_adsorbed_and_advective_not_regressed": transfer_reduction_passed,
+                }
+                if epoch == DOC_EARLY_SCREEN_MAXIMUM_EPOCH
+                else {}
+            ),
+        },
+        "hard_counts": {name: int(value) for name, value in hard_counts.items()},
+        "fields": tracked,
+    }
+
+
 def _metric_record(squared: float, signed: float, absolute: float, count: int) -> Mapping[str, Any]:
     if count <= 0:
         raise ValueError("one-point qualification primary metric has no valid values")
@@ -378,9 +501,12 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     isolated_expert = args.isolated_expert
     hierarchical_candidate = bool(args.hierarchical_coordinate_attention)
     coupled_doc_candidate = bool(args.coordinate_coupled_doc_transition)
-    if hierarchical_candidate and coupled_doc_candidate:
+    doc_status_candidate = bool(args.doc_status_branch_magnitude)
+    if sum((hierarchical_candidate, coupled_doc_candidate, doc_status_candidate)) > 1:
         raise ValueError("select exactly one coordinate Attention candidate")
-    coordinate_candidate = hierarchical_candidate or coupled_doc_candidate
+    coordinate_candidate = (
+        hierarchical_candidate or coupled_doc_candidate or doc_status_candidate
+    )
     if coordinate_candidate and not args.mechanistic_output:
         raise ValueError("coordinate Attention requires mechanistic output")
     if coordinate_candidate and isolated_expert not in {None, "litter_poc_doc"}:
@@ -416,6 +542,18 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         or args.evaluation_interval != 1
     ):
         raise ValueError("mechanistic training smoke requires one epoch, one-epoch evaluation, and no diagnostic tail")
+    if (
+        doc_status_candidate
+        and not training_smoke
+        and args.maximum_epochs
+        not in {DOC_EARLY_SCREEN_MAXIMUM_EPOCH, 100}
+    ):
+        raise ValueError("DOC status-magnitude qualification admits only 10 or 100 epochs")
+    doc_early_screen = bool(
+        doc_status_candidate
+        and not training_smoke
+        and args.maximum_epochs == DOC_EARLY_SCREEN_MAXIMUM_EPOCH
+    )
     started = time.perf_counter()
     runtime = _load_extended_runtime(args)
     jax = runtime["jax"]
@@ -430,6 +568,12 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     )
     from research.daily_coarse_graining.daily_operator.coordinate_coupled_doc_attention import (
         initialize_coordinate_coupled_doc_transition_parameters,
+    )
+    from research.daily_coarse_graining.daily_operator.doc_status_branch_magnitude_attention import (
+        CANDIDATE_NAME as DOC_STATUS_CANDIDATE_NAME,
+    )
+    from research.daily_coarse_graining.daily_operator.doc_status_branch_magnitude_attention import (
+        initialize_doc_status_branch_magnitude_parameters,
     )
     from research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention import (
         CANDIDATE_NAME as HIERARCHICAL_CANDIDATE_NAME,
@@ -473,6 +617,14 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     mechanism_contract = None
     parameter_schema = runtime["schema"]
     if args.mechanistic_output:
+        from research.daily_coarse_graining.daily_operator.doc_status_branch_magnitude_loss import (
+            DOC_COMPOSITE_LOSS,
+            DOC_INCOMING_COORDINATE_LOSS,
+            DOC_OUTGOING_COORDINATE_LOSS,
+            DOC_PHYSICAL_STATUS_MACRO_MSE,
+            DOC_STATUS_MACRO_CE,
+            masked_doc_status_branch_magnitude_loss,
+        )
         from research.daily_coarse_graining.daily_operator.mechanistic_output_contract import (
             build_mechanistic_learned_schema,
             load_mechanistic_output_contract,
@@ -482,6 +634,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         )
         from research.daily_coarse_graining.daily_operator.mechanistic_process_head import (
             MechanisticCoordinateCoupledDocTransitionProcessHead,
+            MechanisticDocStatusBranchMagnitudeProcessHead,
             MechanisticHierarchicalCoordinateAttentionProcessHead,
             MechanisticStrongBaselineProcessHead,
             build_mechanistic_output_layout,
@@ -515,12 +668,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     }
     head = (
         (
-            MechanisticCoordinateCoupledDocTransitionProcessHead
-            if coupled_doc_candidate
+            MechanisticDocStatusBranchMagnitudeProcessHead
+            if doc_status_candidate
             else (
-                MechanisticHierarchicalCoordinateAttentionProcessHead
-                if hierarchical_candidate
-                else MechanisticStrongBaselineProcessHead
+                MechanisticCoordinateCoupledDocTransitionProcessHead
+                if coupled_doc_candidate
+                else (
+                    MechanisticHierarchicalCoordinateAttentionProcessHead
+                    if hierarchical_candidate
+                    else MechanisticStrongBaselineProcessHead
+                )
             )
         )(
             contract=runtime["contract"],
@@ -550,12 +707,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     )
 
     parameter_initializer = (
-        initialize_coordinate_coupled_doc_transition_parameters
-        if coupled_doc_candidate
+        initialize_doc_status_branch_magnitude_parameters
+        if doc_status_candidate
         else (
-            initialize_hierarchical_coordinate_attention_parameters
-            if hierarchical_candidate
-            else initialize_strong_baseline_parameters
+            initialize_coordinate_coupled_doc_transition_parameters
+            if coupled_doc_candidate
+            else (
+                initialize_hierarchical_coordinate_attention_parameters
+                if hierarchical_candidate
+                else initialize_strong_baseline_parameters
+            )
         )
     )
     parameters = parameter_initializer(
@@ -566,12 +727,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         contract=architecture_contract,
     )
     parameter_count = (
-        59_971_257
-        if coupled_doc_candidate
+        59_973_309
+        if doc_status_candidate
         else (
-            58_736_698
-            if hierarchical_candidate
-            else (49_743_001 if args.mechanistic_output else PARAMETER_COUNT)
+            59_971_257
+            if coupled_doc_candidate
+            else (
+                58_736_698
+                if hierarchical_candidate
+                else (49_743_001 if args.mechanistic_output else PARAMETER_COUNT)
+            )
         )
     )
     if strong_baseline_parameter_count(parameters) != parameter_count:
@@ -586,9 +751,21 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     label_names = tuple(
         name for index, name in enumerate(parameter_schema.labels) if index in active_label_indices
     )
-    field_names = tuple(
+    ordinary_field_names = tuple(
         field.name for field in parameter_schema.fields if field.value_representation != "defined_logit"
     )
+    doc_loss_diagnostic_names = (
+        (
+            DOC_STATUS_MACRO_CE,
+            DOC_INCOMING_COORDINATE_LOSS,
+            DOC_OUTGOING_COORDINATE_LOSS,
+            DOC_PHYSICAL_STATUS_MACRO_MSE,
+            DOC_COMPOSITE_LOSS,
+        )
+        if doc_status_candidate
+        else ()
+    )
+    field_names = ordinary_field_names + doc_loss_diagnostic_names
     defined_names = tuple(
         field.name for field in parameter_schema.fields if field.value_representation == "defined_logit"
     )
@@ -655,16 +832,28 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 primitive,
                 update,
             )
-            return masked_mechanistic_output_loss(
+            loss_function = (
+                masked_doc_status_branch_magnitude_loss
+                if doc_status_candidate
+                else masked_mechanistic_output_loss
+            )
+            loss_arguments = {
+                "inputs": item,
+                "complete_schema": runtime["schema"],
+                "learned_schema": parameter_schema,
+                "scales": runtime["loss_scales"],
+                "architecture_contract": architecture_contract,
+                "mechanism_contract": mechanism_contract,
+                "auxiliary_outputs": complete.auxiliary_outputs,
+            }
+            if doc_status_candidate:
+                loss_arguments["output_normalization"] = runtime[
+                    "output_normalization"
+                ]
+            return loss_function(
                 complete.named_outputs,
                 wanted,
-                inputs=item,
-                complete_schema=runtime["schema"],
-                learned_schema=parameter_schema,
-                scales=runtime["loss_scales"],
-                architecture_contract=architecture_contract,
-                mechanism_contract=mechanism_contract,
-                auxiliary_outputs=complete.auxiliary_outputs,
+                **loss_arguments,
             )
         outputs = head.named_outputs(values, context, item)
         return masked_equal_expert_label_macro_mse(
@@ -1328,6 +1517,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     initial_process = evaluate_process(parameters)
     detail_mode = diagnostic_mode or args.mechanistic_output
     initial_process_details = evaluate_process_details(parameters) if detail_mode else None
+    final_process_details = initial_process_details
+    final_process_details_update = 0 if detail_mode else None
     initial_science = evaluate_science(parameters)
     history = []
     science_evaluations = [{"epoch": 0, **initial_science}]
@@ -1339,6 +1530,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     final_science = initial_science
     passed = False
     coverage_snapshots: dict[str, Any] = {}
+    doc_early_screen_reviews: list[Mapping[str, Any]] = []
+    doc_early_screen_rejected = False
 
     def coverage_record(result: CoverageProbeResult, update: int) -> Mapping[str, Any]:
         def host_statistics(group: Any) -> tuple[int, int, float]:
@@ -1518,6 +1711,14 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             or epoch % args.evaluation_interval == 0
             or epoch == args.maximum_epochs
             or failure_reason is not None
+            or (
+                doc_early_screen
+                and epoch
+                in {
+                    DOC_EARLY_SCREEN_FIRST_REVIEW_EPOCH,
+                    DOC_EARLY_SCREEN_MAXIMUM_EPOCH,
+                }
+            )
         )
         if should_evaluate:
             final_process = evaluate_process(parameters)
@@ -1538,7 +1739,20 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 "expert_reduction": expert_reduction,
                 "passed": process_passed,
             }
-            if process_passed or epoch == args.maximum_epochs or failure_reason is not None:
+            doc_early_review_epoch = bool(
+                doc_early_screen
+                and epoch
+                in {
+                    DOC_EARLY_SCREEN_FIRST_REVIEW_EPOCH,
+                    DOC_EARLY_SCREEN_MAXIMUM_EPOCH,
+                }
+            )
+            if (
+                process_passed
+                or epoch == args.maximum_epochs
+                or failure_reason is not None
+                or doc_early_review_epoch
+            ):
                 final_science = evaluate_science(parameters)
                 science_evaluations.append({"epoch": epoch, **final_science})
                 primary_passed = all(
@@ -1555,6 +1769,31 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                     and hard_passed
                     and all_gradients_finite
                 )
+                if doc_early_review_epoch:
+                    final_process_details = evaluate_process_details(parameters)
+                    final_process_details_update = completed_updates
+                    current_loss_breakdown = _compare_loss_snapshots(
+                        initial_process_details,
+                        final_process_details,
+                    )
+                    review = _doc_status_early_screen_review(
+                        epoch=epoch,
+                        litter_expert_reduction=expert_reduction["litter_poc_doc"],
+                        loss_breakdown=current_loss_breakdown,
+                        incoming_field="inventory.carbon.DOC.incoming_amount",
+                        outgoing_field="inventory.carbon.DOC.outgoing_fraction",
+                        free_to_adsorbed_field="typed.ok_leak.doc_free_to_adsorbed",
+                        advective_field="typed.ok_leak.doc_advective_interface",
+                        hard_counts=final_science["hard_counts"],
+                        all_gradients_finite=all_gradients_finite,
+                    )
+                    doc_early_screen_reviews.append(review)
+                    record["doc_status_early_screen_review"] = review
+                    if not review["passed"]:
+                        doc_early_screen_rejected = True
+                        passed = False
+                    elif epoch == DOC_EARLY_SCREEN_MAXIMUM_EPOCH:
+                        passed = True
         history.append(record)
         print(
             json.dumps(
@@ -1574,7 +1813,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             ),
             flush=True,
         )
-        if (passed and isolated_expert is None) or failure_reason is not None:
+        if (
+            (passed and isolated_expert is None)
+            or failure_reason is not None
+            or doc_early_screen_rejected
+        ):
             break
 
     if isolated_expert is not None and not coordinate_candidate and failure_reason is None:
@@ -1725,7 +1968,9 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             if passed:
                 break
 
-    final_process_details = evaluate_process_details(parameters) if detail_mode else None
+    if detail_mode and final_process_details_update != completed_updates:
+        final_process_details = evaluate_process_details(parameters)
+        final_process_details_update = completed_updates
     loss_floor_breakdown = (
         _compare_loss_breakdowns(
             initial_process_details,
@@ -1795,7 +2040,20 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 )
             ),
         }
-        if not training_smoke:
+        if doc_early_screen:
+            passed = bool(
+                failure_reason is None
+                and not doc_early_screen_rejected
+                and len(doc_early_screen_reviews) == 2
+                and doc_early_screen_reviews[-1]["epoch"]
+                == DOC_EARLY_SCREEN_MAXIMUM_EPOCH
+                and doc_early_screen_reviews[-1]["passed"]
+                and completed_epochs == DOC_EARLY_SCREEN_MAXIMUM_EPOCH
+                and completed_updates == maximum_updates
+                and all_gradients_finite
+                and mechanistic_loss_breakdown["counts_identical"]
+            )
+        elif not training_smoke:
             passed = bool(
                 failure_reason is None
                 and completed_epochs == args.maximum_epochs
@@ -1864,7 +2122,54 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         gate_passed=training_smoke_passed if training_smoke else passed,
         execution_status=execution_status,
     )
-    if coupled_doc_candidate:
+    if doc_status_candidate and not training_smoke:
+        if doc_early_screen:
+            next_gate = (
+                "run_formal_doc_status_branch_magnitude_100_epoch_gate"
+                if passed
+                else "stop_doc_status_branch_magnitude_candidate"
+            )
+        else:
+            next_gate = (
+                "open_multi_point_design_after_absolute_memorization_gate"
+                if passed
+                else "stop_doc_status_branch_magnitude_candidate"
+            )
+    elif training_smoke and isolated_expert is not None:
+        next_gate = (
+            "run_full_isolated_expert_memorization"
+            if training_smoke_passed
+            else "repair_isolated_expert_one_epoch_smoke"
+        )
+    elif isolated_expert is not None:
+        next_gate = (
+            "compare_isolated_expert_results_before_joint_objective_change"
+            if passed
+            else "review_isolated_expert_field_and_gradient_failure"
+        )
+    elif training_smoke:
+        next_gate = (
+            "run_formal_one_point_year_memorization"
+            if training_smoke_passed
+            else "repair_one_epoch_training_smoke"
+        )
+    elif passed:
+        next_gate = "design_64_point_year_qualification"
+    elif args.mechanistic_output:
+        next_gate = "use_mechanistic_label_field_attribution_before_model_change"
+    else:
+        next_gate = "use_label_field_loss_floor_evidence_before_next_model_change"
+    if doc_status_candidate:
+        report_schema_version = (
+            "doc_status_branch_magnitude_attention_v5_one_epoch_smoke_v1"
+            if training_smoke
+            else (
+                "doc_status_branch_magnitude_attention_v5_early_screen_v1"
+                if doc_early_screen
+                else "doc_status_branch_magnitude_attention_v5_memorization_v1"
+            )
+        )
+    elif coupled_doc_candidate:
         report_schema_version = (
             "coordinate_coupled_doc_transition_v4_one_epoch_smoke_v1"
             if training_smoke
@@ -1924,10 +2229,22 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "historical_checkpoint_used": False,
             "training_objective": (
                 {
-                    "mode": "isolated_existing_expert_loss",
+                    "mode": (
+                        "doc_status_branch_magnitude_isolated_litter_loss"
+                        if doc_status_candidate
+                        else "isolated_existing_expert_loss"
+                    ),
                     "selected_expert": isolated_expert,
                     "unselected_experts_reported": True,
                     "complete_boundary_materialized": True,
+                    **(
+                        {
+                            "status_and_branch_coordinate_supervision": True,
+                            "ordinary_doc_endpoint_loss_duplicated": False,
+                        }
+                        if doc_status_candidate
+                        else {}
+                    ),
                 }
                 if isolated_expert is not None
                 else {"mode": "equal_experts"}
@@ -1935,12 +2252,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             **(
                 {
                     "candidate": (
-                        COUPLED_DOC_CANDIDATE_NAME
-                        if coupled_doc_candidate
+                        DOC_STATUS_CANDIDATE_NAME
+                        if doc_status_candidate
                         else (
-                            HIERARCHICAL_CANDIDATE_NAME
-                            if hierarchical_candidate
-                            else "strong_baseline_mechanistic_output_v2"
+                            COUPLED_DOC_CANDIDATE_NAME
+                            if coupled_doc_candidate
+                            else (
+                                HIERARCHICAL_CANDIDATE_NAME
+                                if hierarchical_candidate
+                                else "strong_baseline_mechanistic_output_v2"
+                            )
                         )
                     ),
                     "learned_output_field_count": len(parameter_schema.fields),
@@ -2014,19 +2335,45 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             ),
             "required_selected_expert_loss_reduction": (
                 ISOLATED_EXPERT_REDUCTION_GATE
-                if isolated_expert is not None and not training_smoke
+                if isolated_expert is not None
+                and not training_smoke
+                and not doc_early_screen
                 else None
             ),
             "isolated_dominant_field_initial_loss_floor": (
                 ISOLATED_FIELD_LOSS_FLOOR if isolated_expert is not None else None
             ),
             "required_isolated_dominant_field_reduction": (
-                ISOLATED_FIELD_REDUCTION_GATE if isolated_expert is not None else None
+                ISOLATED_FIELD_REDUCTION_GATE
+                if isolated_expert is not None and not doc_early_screen
+                else None
             ),
             "maximum_primary_normalized_rmse": (
                 None if isolated_expert is not None else PRIMARY_NRMSE_GATE
             ),
             "required_hard_failure_count": 0,
+            "doc_status_early_screen": (
+                {
+                    "first_review_epoch": DOC_EARLY_SCREEN_FIRST_REVIEW_EPOCH,
+                    "maximum_epoch": DOC_EARLY_SCREEN_MAXIMUM_EPOCH,
+                    "maximum_doc_endpoint_loss_ratio_at_epoch_5": (
+                        DOC_EARLY_SCREEN_ENDPOINT_LOSS_RATIO_MAXIMUM
+                    ),
+                    "minimum_litter_poc_doc_reduction_at_epoch_10": (
+                        DOC_EARLY_SCREEN_EXPERT_REDUCTION_GATE
+                    ),
+                    "minimum_doc_endpoint_reduction_at_epoch_10": (
+                        DOC_EARLY_SCREEN_ENDPOINT_REDUCTION_GATE
+                    ),
+                    "minimum_transfer_reduction_at_epoch_10": (
+                        DOC_EARLY_SCREEN_TRANSFER_REDUCTION_GATE
+                    ),
+                    "reviews": doc_early_screen_reviews,
+                    "passed": passed,
+                }
+                if doc_early_screen
+                else None
+            ),
         },
         "initial": {
             "process": initial_process,
@@ -2059,39 +2406,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "reconstructs_48_forcing_records": False,
         "executes_48_step_state_scan": False,
         "elapsed_seconds": time.perf_counter() - started,
-        "next_gate": (
-            (
-                "run_full_isolated_expert_memorization"
-                if training_smoke_passed
-                else "repair_isolated_expert_one_epoch_smoke"
-            )
-            if training_smoke and isolated_expert is not None
-            else (
-                (
-                    "compare_isolated_expert_results_before_joint_objective_change"
-                    if passed
-                    else "review_isolated_expert_field_and_gradient_failure"
-                )
-                if isolated_expert is not None
-                else (
-                    (
-                        "run_formal_one_point_year_memorization"
-                        if training_smoke_passed
-                        else "repair_one_epoch_training_smoke"
-                    )
-                    if training_smoke
-                    else (
-                        "design_64_point_year_qualification"
-                        if passed
-                        else (
-                            "use_mechanistic_label_field_attribution_before_model_change"
-                            if args.mechanistic_output
-                            else "use_label_field_loss_floor_evidence_before_next_model_change"
-                        )
-                    )
-                )
-            )
-        ),
+        "next_gate": next_gate,
     }
     _atomic_json(args.output, report)
     return report
@@ -2111,6 +2426,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--mechanistic-output", action="store_true")
     parser.add_argument("--hierarchical-coordinate-attention", action="store_true")
     parser.add_argument("--coordinate-coupled-doc-transition", action="store_true")
+    parser.add_argument("--doc-status-branch-magnitude", action="store_true")
     parser.add_argument("--isolated-expert")
     parser.add_argument("--training-smoke", action="store_true")
     parser.add_argument("--diagnostic-tail-updates", type=int, default=0)

@@ -192,10 +192,15 @@ following free-CPU, zero-training geometry audit passes integrity and explains
 the trade: incoming supplies `97.6209%` of the two endpoint fields' combined
 zero-predictor squared error, so their shared scalar is strongly incentivized
 to repair incoming while sacrificing outgoing. The old independent heads have
-even more near-zero local derivatives. Status plus branch-native magnitude is
-shortlisted but not promoted. The active gate is user review and freeze of a
-revised DOC endpoint mechanism before implementation; multi-point training,
-rollout, Gate D2, and product work stay closed.
+even more near-zero local derivatives. The resulting v5 candidate retains the
+complete coordinate-aligned Attention backbone and replaces the shared scalar
+with three status logits plus branch-native incoming/outgoing magnitudes. Its
+`59,973,309`-parameter implementation passes local forward/loss/gradient,
+canonical binding, one-day state/budget, inactive-PFT, and permutation gates.
+The active gate is an explicitly approved, no-checkpoint 10-epoch early screen;
+the prepared one-V100/two-hour envelope has worst-case cost CNY `4.96` and has
+not been submitted. Multi-point training, rollout, Gate D2, and product work
+stay closed.
 
 ## New Task Bootstrap
 
@@ -220,9 +225,10 @@ checkpoint handoff are recorded in the active documents named by
 accepted input-policy record is
 `research/daily_coarse_graining/successor_staged_training_assets_acceptance_20260812.md`.
 Do not rerun an old fit or use the formal 96-window panel for tuning. The
-current task is to review the completed DOC target/loss-geometry audit and
-freeze a revised endpoint mechanism before changing the network. The 365-day
-rollout, Gate D2, and product gates remain dependency-ordered later work.
+current task is to review and, only with explicit approval, execute the frozen
+V5 10-epoch early screen. Do not repeat v4 or train a new control. The 100-epoch
+gate, multi-point training, 365-day rollout, Gate D2, and product gates remain
+dependency-ordered later work.
 Before choosing or inheriting
 a neural architecture, read
 `research/daily_coarse_graining/failed_architecture_lessons.md`; it replaces

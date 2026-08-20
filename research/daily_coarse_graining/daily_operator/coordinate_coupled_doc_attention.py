@@ -350,7 +350,7 @@ def _aligned_transfer_bank(
     return jnp.stack(tuple(tokens), axis=1), jnp.stack(tuple(masks), axis=1)
 
 
-def _coordinate_coupled_litter_raw_outputs(
+def _coordinate_coupled_litter_features(
     parameters: Mapping[str, Any],
     expert_tokens: Any,
     context: StrongBaselineContext,
@@ -360,7 +360,7 @@ def _coordinate_coupled_litter_raw_outputs(
     layout: StrongBaselineLayout,
     input_normalization: NeuralInputNormalization,
     coordinate_config: HierarchicalCoordinateAttentionConfig,
-) -> tuple[dict[int, Any], dict[int, Any], DocCoordinateAlignment]:
+) -> tuple[dict[int, Any], dict[int, Any], DocCoordinateAlignment, Any]:
     expert_index = layout.expert_names.index(LITTER_EXPERT)
     family_tokens, family_mask = _source_family_bank(context, layout, expert_index)
     alignment = build_doc_coordinate_alignment(schema=schema, layout=layout)
@@ -469,12 +469,43 @@ def _coordinate_coupled_litter_raw_outputs(
         coupling["pair_norm_bias"],
     )
     hidden = jax.nn.gelu(_linear(coupling["transition_decoder"], joint))
+    active[alignment.incoming_field_index] &= active[alignment.outgoing_field_index]
+    active[alignment.outgoing_field_index] = active[alignment.incoming_field_index]
+    if set(raw) | joint_indices != set(field_contexts):
+        raise ValueError("coordinate-coupled litter features did not cover every field")
+    return raw, active, alignment, hidden
+
+
+def _coordinate_coupled_litter_raw_outputs(
+    parameters: Mapping[str, Any],
+    expert_tokens: Any,
+    context: StrongBaselineContext,
+    inputs: AssembledDailyOperatorInput,
+    *,
+    schema: NeuralOutputSchema,
+    layout: StrongBaselineLayout,
+    input_normalization: NeuralInputNormalization,
+    coordinate_config: HierarchicalCoordinateAttentionConfig,
+) -> tuple[dict[int, Any], dict[int, Any], DocCoordinateAlignment]:
+    raw, active, alignment, hidden = _coordinate_coupled_litter_features(
+        parameters,
+        expert_tokens,
+        context,
+        inputs,
+        schema=schema,
+        layout=layout,
+        input_normalization=input_normalization,
+        coordinate_config=coordinate_config,
+    )
+    coupling = parameters["hierarchical_litter"]["doc_coupling"]
     signed_raw = _linear(coupling["transition_head"], hidden)[:, 0]
     raw[alignment.incoming_field_index] = signed_raw
     raw[alignment.outgoing_field_index] = signed_raw
-    active[alignment.incoming_field_index] &= active[alignment.outgoing_field_index]
-    active[alignment.outgoing_field_index] = active[alignment.incoming_field_index]
-    if set(raw) != set(field_contexts):
+    if set(raw) != {
+        field_index
+        for field_index, ownership in enumerate(layout.ledger)
+        if ownership.expert == LITTER_EXPERT
+    }:
         raise ValueError("coordinate-coupled litter decoder did not cover every field")
     return raw, active, alignment
 

@@ -13,6 +13,10 @@ from .coordinate_coupled_doc_attention import (
     CoordinateCoupledDocTransitionConfig,
     coordinate_coupled_doc_transition_process_outputs,
 )
+from .doc_status_branch_magnitude_attention import (
+    DocStatusBranchMagnitudeConfig,
+    doc_status_branch_magnitude_process_outputs,
+)
 from .fast_owner_reconstruction import build_successor_fast_owner_materializer
 from .hierarchical_coordinate_attention import (
     HierarchicalCoordinateAttentionConfig,
@@ -326,8 +330,79 @@ class MechanisticCoordinateCoupledDocTransitionProcessHead(MechanisticHierarchic
         )
 
 
+@dataclass(frozen=True, eq=False)
+class MechanisticDocStatusBranchMagnitudeProcessHead(
+    MechanisticCoordinateCoupledDocTransitionProcessHead
+):
+    """Use coordinate-aligned DOC status and branch-specific magnitude heads."""
+
+    doc_status_config: DocStatusBranchMagnitudeConfig = (
+        DocStatusBranchMagnitudeConfig()
+    )
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.doc_status_config.validate(
+            self.config,
+            self.coordinate_config,
+            self.doc_transition_config,
+        )
+
+    def learned_outputs_with_auxiliary(
+        self,
+        parameters: Mapping[str, Any],
+        context: StrongBaselineContext,
+        inputs: AssembledDailyOperatorInput,
+    ) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
+        return doc_status_branch_magnitude_process_outputs(
+            parameters,
+            context,
+            inputs,
+            schema=self.learned_schema,
+            layout=self.layout,
+            input_normalization=self.input_normalization,
+            output_normalization=self.output_normalization,
+            forcing_layout=self.forcing_layout,
+            message_gate_scale=self.message_gate_scale,
+            baseline_config=self.config,
+            coordinate_config=self.coordinate_config,
+            parent_config=self.doc_transition_config,
+            config=self.doc_status_config,
+        )
+
+    def learned_outputs(
+        self,
+        parameters: Mapping[str, Any],
+        context: StrongBaselineContext,
+        inputs: AssembledDailyOperatorInput,
+    ) -> Mapping[str, Any]:
+        learned, _auxiliary = self.learned_outputs_with_auxiliary(
+            parameters,
+            context,
+            inputs,
+        )
+        return learned
+
+    def __call__(
+        self,
+        parameters: Mapping[str, Any],
+        context: StrongBaselineContext,
+        inputs: AssembledDailyOperatorInput,
+    ) -> ProcessPrediction:
+        learned, doc_auxiliary = self.learned_outputs_with_auxiliary(
+            parameters,
+            context,
+            inputs,
+        )
+        prediction = self.prediction_from_learned_outputs(learned, inputs)
+        auxiliary = dict(prediction.auxiliary_outputs)
+        auxiliary.update(doc_auxiliary)
+        return prediction._replace(auxiliary_outputs=auxiliary)
+
+
 __all__ = [
     "MechanisticCoordinateCoupledDocTransitionProcessHead",
+    "MechanisticDocStatusBranchMagnitudeProcessHead",
     "MechanisticHierarchicalCoordinateAttentionProcessHead",
     "MechanisticStrongBaselineProcessHead",
     "build_mechanistic_output_layout",

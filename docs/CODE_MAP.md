@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-08-17.
+Last updated: 2026-08-21.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -312,6 +312,18 @@ microbatch boundary.
 completed paid single-V100 formal v4 one-point resource envelope; the failed
 candidate must not be rerun. The older
 `slurm_mechanistic_output_v2_one_point.sh` remains historical.
+
+`daily_operator/doc_status_branch_magnitude_attention.py` owns the active v5
+DOC endpoint candidate. It reuses v4's aligned source bank and replaces only
+the final signed scalar with three status logits and separate incoming and
+outgoing magnitude heads. `daily_operator/doc_status_branch_magnitude_loss.py`
+owns the class-macro status, branch-coordinate, physical endpoint, and revised
+inventory-label composition. `mechanistic_process_head.py` exposes the V5
+process head. The shared runner and launcher select it only with
+`--doc-status-branch-magnitude` / `DOC_STATUS_BRANCH_MAGNITUDE=1`, enforce the
+5/10-epoch no-checkpoint gate, and reject simultaneous v3/v4 selection.
+`scripts/hpc/slurm_doc_status_branch_magnitude_v5_early_screen.sh` owns the
+prepared but unsubmitted one-V100/two-hour envelope.
 
 `daily_operator/doc_target_diagnostics.py` owns the zero-training DOC endpoint
 partition, inverse-target, reconstruction, normalized-Jacobian, and loss-share

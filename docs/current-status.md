@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-20.
+Last updated: 2026-08-21.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -67,15 +67,27 @@ head also has 110 active Jacobians at or below `1e-6`. Reverting to v3's
 separate transforms is not sufficient because they have 563 such active
 coordinates. Status plus branch-native loss-scaled magnitude has finite
 targets throughout and closely matched active medians (`0.01843` versus
-`0.01838`), so it is shortlisted but not promoted.
+`0.01838`), so it is the accepted basis for v5.
 
-The active gate is user review and freeze of exact status/materialization,
-branch-specific magnitude coordinates, loss balancing, and head-only
-acceptance gates before implementation. A new head must pass local checks and
-a 5-10 epoch no-checkpoint screen before another 100-epoch run is considered.
-Multi-point training, rollout, sealed test, Gate D2, and product work remain
-closed. See
-[`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md).
+The frozen
+`coordinate_coupled_doc_status_branch_magnitude_attention_v5` implementation
+retains v4's coordinate-aligned Attention and changes only the final endpoint
+decoder and DOC loss. It emits incoming/unchanged/outgoing logits and separate
+incoming/outgoing magnitude coordinates, uses differentiable soft status
+gates, and preserves the conservative updater and retained exact tail. The
+model has `59,973,309` parameters. Focused local forward/loss/gradient,
+canonical binding, one-day state/budget, inactive-PFT, and strict permutation
+tests pass; the runner and launcher now select its loss and report schema
+explicitly.
+
+The active gate is the prepared no-checkpoint 10-epoch early screen. It reviews
+hard gates and endpoint-loss explosion at epoch 5, then applies absolute
+aggregate, endpoint, and transfer gates at epoch 10. Its one-V100, four-CPU,
+two-hour `gnall` envelope has a worst-case additive estimate of CNY `4.96` and
+has not been submitted. Another 100-epoch run opens only after an early-screen
+pass. Multi-point training, rollout, sealed test, Gate D2, and product work
+remain closed. See
+[`doc_status_branch_magnitude_attention_v5_local_acceptance_20260821.md`](research/daily_coarse_graining/doc_status_branch_magnitude_attention_v5_local_acceptance_20260821.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

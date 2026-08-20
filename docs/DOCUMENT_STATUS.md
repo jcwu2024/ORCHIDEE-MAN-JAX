@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-20.
+Last updated: 2026-08-21.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -125,7 +125,9 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_gpu_smoke_20260820.md` | Accepted free-GPU smoke; formal diagnostic subsequently completed and failed | Reviewing the execution admission path |
 | `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md` | Completed failed field-gate evidence; the follow-up geometry audit now controls the next gate | Reviewing why the joint signed v4 head was rejected |
 | `research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_v1.md` | Completed frozen zero-training protocol | Reviewing the preregistered DOC target/loss diagnostics |
-| `research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md` | Active joint-head rejection and revised-mechanism discussion authority | Designing and freezing the next DOC endpoint mechanism |
+| `research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md` | Accepted joint-head rejection and v5 mechanism basis | Reviewing why status plus branch magnitude replaced the signed scalar |
+| `research/daily_coarse_graining/doc_status_branch_magnitude_attention_v5_design_20260820.md` | Active frozen v5 mechanism and absolute-gate contract | Reviewing or changing the current DOC endpoint candidate |
+| `research/daily_coarse_graining/doc_status_branch_magnitude_attention_v5_local_acceptance_20260821.md` | Active accepted local foundation; 10-epoch screen prepared but not submitted | Reviewing implementation evidence or the next bounded GPU gate |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

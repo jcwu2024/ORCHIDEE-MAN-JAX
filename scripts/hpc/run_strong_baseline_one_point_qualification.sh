@@ -10,6 +10,7 @@ GPU_DEVICE=${GPU_DEVICE:?set GPU_DEVICE after checking nvidia-smi}
 MECHANISTIC_OUTPUT=${MECHANISTIC_OUTPUT:-0}
 HIERARCHICAL_COORDINATE_ATTENTION=${HIERARCHICAL_COORDINATE_ATTENTION:-0}
 COORDINATE_COUPLED_DOC_TRANSITION=${COORDINATE_COUPLED_DOC_TRANSITION:-0}
+DOC_STATUS_BRANCH_MAGNITUDE=${DOC_STATUS_BRANCH_MAGNITUDE:-0}
 ISOLATED_EXPERT=${ISOLATED_EXPERT:-}
 TRAINING_SMOKE=${TRAINING_SMOKE:-0}
 MAXIMUM_EPOCHS=${MAXIMUM_EPOCHS:-100}
@@ -58,6 +59,18 @@ case "$COORDINATE_COUPLED_DOC_TRANSITION" in
     ;;
   *) echo "COORDINATE_COUPLED_DOC_TRANSITION must be 0 or 1" >&2; exit 2 ;;
 esac
+case "$DOC_STATUS_BRANCH_MAGNITUDE" in
+  0) ;;
+  1)
+    test "$HIERARCHICAL_COORDINATE_ATTENTION" = 0
+    test "$COORDINATE_COUPLED_DOC_TRANSITION" = 0
+    test "$MECHANISTIC_OUTPUT" = 1
+    test "$ISOLATED_EXPERT" = litter_poc_doc
+    MODEL_TAG=doc-status-branch-magnitude-attention-v5-litter
+    MODEL_ARGUMENTS+=(--doc-status-branch-magnitude)
+    ;;
+  *) echo "DOC_STATUS_BRANCH_MAGNITUDE must be 0 or 1" >&2; exit 2 ;;
+esac
 case "$TRAINING_SMOKE" in
   0) RUN_TAG=$MODEL_TAG-one-point ;;
   1)
@@ -81,7 +94,7 @@ CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
 NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
 GPU_BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
 
-echo "host=$(hostname) git_head=$EXPECTED_GIT_HEAD model=$MODEL_TAG hierarchical_coordinate_attention=$HIERARCHICAL_COORDINATE_ATTENTION coordinate_coupled_doc_transition=$COORDINATE_COUPLED_DOC_TRANSITION isolated_expert=${ISOLATED_EXPERT:-none} training_smoke=$TRAINING_SMOKE gpu_device=$GPU_DEVICE output=$OUTPUT"
+echo "host=$(hostname) git_head=$EXPECTED_GIT_HEAD model=$MODEL_TAG hierarchical_coordinate_attention=$HIERARCHICAL_COORDINATE_ATTENTION coordinate_coupled_doc_transition=$COORDINATE_COUPLED_DOC_TRANSITION doc_status_branch_magnitude=$DOC_STATUS_BRANCH_MAGNITUDE isolated_expert=${ISOLATED_EXPERT:-none} training_smoke=$TRAINING_SMOKE gpu_device=$GPU_DEVICE output=$OUTPUT"
 nvidia-smi -i "$GPU_DEVICE" --query-gpu=index,name,memory.total,memory.used,utilization.gpu --format=csv,noheader
 
 env -u LD_LIBRARY_PATH \
