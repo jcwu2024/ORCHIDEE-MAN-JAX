@@ -51,13 +51,31 @@ still fails the frozen field gate at `24/28`: DOC incoming improves strongly
 to `90.5487%`, but DOC outgoing becomes `10.62` times its initial loss;
 free-to-adsorbed and advective reductions are `85.1634%` and `92.6142%`.
 No checkpoint was written. The coordinate-aligned handoff is useful evidence,
-but the joint signed endpoint head is rejected. The active gate is a bounded
-no-training audit of DOC endpoint target and loss geometry before another
-architecture is designed. Multi-point training, rollout, sealed test, Gate
-D2, and product work remain closed. See
+but the joint signed endpoint head is rejected. See
 [`coordinate_coupled_doc_transition_v4_design_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_design_20260820.md)
 and
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md).
+
+The following free-CPU, zero-training endpoint geometry audit passes integrity
+on all `326,144` coordinates. The joint inverse reconstructs every finite
+target to `8.88e-16`, and incoming/outgoing median normalized Jacobians are
+balanced at `0.4730` and `0.5340`. The decisive asymmetry is the supervised
+loss: incoming supplies `97.6209%` of the two fields' combined zero-predictor
+squared error and outgoing only `2.3791%`. This gives the shared scalar a
+strong incentive to repair incoming while sacrificing outgoing. The joint
+head also has 110 active Jacobians at or below `1e-6`. Reverting to v3's
+separate transforms is not sufficient because they have 563 such active
+coordinates. Status plus branch-native loss-scaled magnitude has finite
+targets throughout and closely matched active medians (`0.01843` versus
+`0.01838`), so it is shortlisted but not promoted.
+
+The active gate is user review and freeze of exact status/materialization,
+branch-specific magnitude coordinates, loss balancing, and head-only
+acceptance gates before implementation. A new head must pass local checks and
+a 5-10 epoch no-checkpoint screen before another 100-epoch run is considered.
+Multi-point training, rollout, sealed test, Gate D2, and product work remain
+closed. See
+[`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

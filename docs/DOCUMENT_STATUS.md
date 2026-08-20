@@ -123,7 +123,9 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_design_20260820.md` | Completed frozen v4 mechanism contract; formal candidate subsequently rejected | Reviewing the coordinate-aligned DOC design |
 | `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_local_acceptance_20260820.md` | Accepted local v4 foundation; free smoke subsequently passed | Reviewing candidate correctness before GPU execution |
 | `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_gpu_smoke_20260820.md` | Accepted free-GPU smoke; formal diagnostic subsequently completed and failed | Reviewing the execution admission path |
-| `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md` | Active failed field-gate evidence and DOC target/loss-audit contract | Reviewing v4 or performing the bounded next audit |
+| `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md` | Completed failed field-gate evidence; the follow-up geometry audit now controls the next gate | Reviewing why the joint signed v4 head was rejected |
+| `research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_v1.md` | Completed frozen zero-training protocol | Reviewing the preregistered DOC target/loss diagnostics |
+| `research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md` | Active joint-head rejection and revised-mechanism discussion authority | Designing and freezing the next DOC endpoint mechanism |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |

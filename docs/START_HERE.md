@@ -188,8 +188,14 @@ completed the formal 100-epoch run. Aggregate loss falls `99.1353%`, but only
 `24/28` dominant fields pass: coordinate coupling repairs much of DOC
 incoming, while the joint signed head severely regresses DOC outgoing and
 does not clear adsorption/advection. V4 is rejected with no checkpoint. The
-active gate is a no-training audit of the DOC endpoint target/loss geometry;
-multi-point training, rollout, Gate D2, and product work stay closed.
+following free-CPU, zero-training geometry audit passes integrity and explains
+the trade: incoming supplies `97.6209%` of the two endpoint fields' combined
+zero-predictor squared error, so their shared scalar is strongly incentivized
+to repair incoming while sacrificing outgoing. The old independent heads have
+even more near-zero local derivatives. Status plus branch-native magnitude is
+shortlisted but not promoted. The active gate is user review and freeze of a
+revised DOC endpoint mechanism before implementation; multi-point training,
+rollout, Gate D2, and product work stay closed.
 
 ## New Task Bootstrap
 
@@ -213,13 +219,10 @@ checkpoint handoff are recorded in the active documents named by
 `DOCUMENT_STATUS.md`. The current operation authority is `NEXT_STEPS.md`; the
 accepted input-policy record is
 `research/daily_coarse_graining/successor_staged_training_assets_acceptance_20260812.md`.
-Do not rerun the old fit, freeze its multibatch median coefficients, or use the
-formal 96-window panel for tuning. The matched shared-output repair has passed
-the existing 16-batch forward/gradient audit. The new coefficients and
-validation panel are frozen; implement their staged runner and free-node smoke
-before proposing a paid preparation or training run. The
-365-day rollout, Gate D2, and product gates remain dependency-ordered later
-work.
+Do not rerun an old fit or use the formal 96-window panel for tuning. The
+current task is to review the completed DOC target/loss-geometry audit and
+freeze a revised endpoint mechanism before changing the network. The 365-day
+rollout, Gate D2, and product gates remain dependency-ordered later work.
 Before choosing or inheriting
 a neural architecture, read
 `research/daily_coarse_graining/failed_architecture_lessons.md`; it replaces

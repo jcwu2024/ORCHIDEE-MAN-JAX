@@ -300,9 +300,9 @@ the shared one-point runner selects it only with
 logical batch size 8 while accumulating exact gradients through size-2
 microbatches and derives coverage from the first and final actual updates;
 other model paths retain direct-batch execution.
-`daily_operator/coordinate_coupled_doc_attention.py` owns the active v4
-successor: exact full/compact-PFT coordinate gathers, the five-token aligned
-DOC bank, the joint signed conservative endpoint materializer, fresh
+`daily_operator/coordinate_coupled_doc_attention.py` owns the rejected v4
+successor evidence: exact full/compact-PFT coordinate gathers, the five-token
+aligned DOC bank, the joint signed conservative endpoint materializer, fresh
 initialization, and its process-output path. `mechanistic_process_head.py`
 exposes the v4 class, while the shared runner and launcher select it only with
 `--coordinate-coupled-doc-transition` /
@@ -312,6 +312,17 @@ microbatch boundary.
 completed paid single-V100 formal v4 one-point resource envelope; the failed
 candidate must not be rerun. The older
 `slurm_mechanistic_output_v2_one_point.sh` remains historical.
+
+`daily_operator/doc_target_diagnostics.py` owns the zero-training DOC endpoint
+partition, inverse-target, reconstruction, normalized-Jacobian, and loss-share
+statistics. Its frozen contract is
+`manifests/coarse_graining/doc_endpoint_target_loss_geometry_audit_v1.json`.
+`scripts/hpc/audit_doc_endpoint_target_loss_geometry.py` assembles the accepted
+v6 point-year and writes the report, while
+`scripts/hpc/run_doc_endpoint_target_loss_geometry_audit.sh` restricts that
+execution to free CPU test nodes. The accepted result is
+`doc_endpoint_target_loss_geometry_audit_result_20260820.md`; it rejects the
+joint head and opens mechanism discussion, not another training run.
 
 `daily_operator/nonlinear_projection.py` owns the active host-side bounded
 SLSQP subproblem, exact violation merit, and candidate acceptance for the

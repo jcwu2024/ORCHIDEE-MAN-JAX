@@ -1205,15 +1205,28 @@ the joint signed decoder turns the previously passing DOC outgoing fraction
 into a `-962.3373%` reduction. Free-to-adsorbed and advective transfer also
 remain below their absolute gates. No checkpoint was written.
 
-The active operation is a bounded zero-training audit of the real-v6 DOC
-endpoint target and loss geometry: invert the signed materializer, quantify
-sign/status imbalance and branch-specific normalized loss, and compare exact
-local conditioning of the joint scalar against bounded sign-plus-magnitude or
-coordinate-coupled branch-specific alternatives. Freeze that evidence and
-discuss the revised mechanism before implementing another network. Do not
-repeat v4, start multi-point training or rollout, read sealed-test data, or
-advance Gate D2 or product work. See
-[`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md).
+The bounded zero-training DOC endpoint geometry audit is complete. All active
+joint targets have finite inverses and the incoming/outgoing median normalized
+Jacobian ratio is `0.8857`, so v4 did not fail because of an inverse bug or a
+broad derivative-scale mismatch. It failed the conditioning gate on 110 small
+active targets, while incoming supplies `97.6209%` of the shared fields'
+combined zero-predictor squared error. The one scalar is therefore trained
+primarily to repair incoming and can sacrifice outgoing. Returning to v3's
+separate transforms is insufficient: they have 563 small-Jacobian active
+targets. Explicit status plus branch-native magnitude has complete finite
+coverage and is shortlisted, but not promoted.
+
+The active operation is user review and freeze of one revised DOC endpoint
+mechanism before implementation. It must specify exact status/materialization,
+branch-native magnitude coordinates, class/branch loss balancing, and bounded
+head-only gates. Any implementation must pass local forward/loss/gradient and
+one-day state/budget checks, then a 5-10 epoch no-checkpoint early-stop screen;
+another 100-epoch run is only a final promotion gate. Do not repeat v4, start
+multi-point training or rollout, read sealed-test data, or advance Gate D2 or
+product work. See
+[`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
+and
+[`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md).
 
 ## Completed Task Packet: Gate C
 
