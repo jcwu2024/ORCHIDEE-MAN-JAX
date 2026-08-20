@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-19.
+Last updated: 2026-08-20.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -13,28 +13,32 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-The rejected mechanistic-output v2 isolated diagnostics remain the evidence
-basis: surface energy falls `97.9259%` and passes all 11 dominant-field gates,
-while litter/POC/DOC falls `91.8014%` and fails 12 of 28 dominant fields. The
-user approved `hierarchical_coordinate_query_attention_v3` for the failed
-litter mapping. Its local implementation removes the rejected litter global
-expert blocks and shared litter label heads, then uses four two-block
-coordinate-query stages and field-specific projections. The instantiated
-tree has 58,736,698 parameters. Local forward/JIT, official loss/gradient,
-complete bound-day state/budget, inactive-PFT, and strict permutation gates
-pass. The original local admission covered 51 focused and related tests plus
-static checks. Local probes
-also found and repaired candidate-local gradient starvation in zero-centered
-nonnegative and unit-interval litter transforms. Free-`gln01` commit `7dd9510`
-then stopped before its first training update: the separate batch-8 coverage
-backward graph attempted 72.57 GiB on a 32 GiB V100. It wrote no report or
-checkpoint, so this is not a candidate-quality result. The local repair keeps
-logical batch size 8 and 46 AdamW updates, uses exact size-2 gradient
-microbatches, and takes coverage from real updates rather than extra backward
-graphs. The active task is to version that repair and rerun one free smoke.
-No 100-epoch diagnostic, 64-point-year training, rollout, Gate D2, sealed-test,
-or product work is open yet. The history below records the path to this active
-gate; it does not authorize restarting an earlier experiment.
+The rejected mechanistic-output v2 isolated diagnostic remains the comparison
+point: litter/POC/DOC fell `91.8014%` and passed only `16/28` dominant fields.
+The user-approved `hierarchical_coordinate_query_attention_v3` repaired the
+coordinate mapping and completed its bounded 100-epoch run under job
+`14619803`. Loss fell `98.5804%`, all hard and gradient-coverage gates passed,
+and `25/28` dominant fields passed. The result is a substantial improvement
+but misses the frozen `99%` aggregate gate. DOC incoming amount
+(`-0.3085%`), free-to-adsorbed transfer (`83.2158%`), and advective transfer
+(`93.5753%`) remain unresolved, so no checkpoint was retained.
+
+A zero-training audit on the same 364 frozen v6 days shows that all three
+failed targets are active on every day, although only `9.88%` to `29.42%` of
+their coordinate cells are meaningfully nonzero. Their daily normalized
+intensities are strongly related: absolute daily-mean correlations are
+`0.9597` for incoming versus adsorption and `0.8892` for incoming versus
+advection. Per-coordinate constant means still leave `54.49%` to `91.00%` of
+zero-predictor squared error. The likely remaining bottleneck is therefore
+the model's pooled handoff between DOC stages: it does not provide
+coordinate-aligned predicted transfers to the inventory endpoint decoder.
+
+The active gate is an architecture discussion with the user about bounded
+coordinate-level DOC coupling and a possible joint mutually exclusive
+inventory-transition head. Do not implement another network, repeat the
+100-epoch diagnostic, open multi-point training or rollout, read sealed test
+data, or advance to Gate D2 before that decision. See
+[`hierarchical_coordinate_query_attention_v3_doc_audit_20260820.md`](research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_doc_audit_20260820.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

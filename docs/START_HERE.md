@@ -172,12 +172,16 @@ loss gradients, one complete bound day, budgets, inactive-PFT isolation, and
 strict PFT permutation equivariance. It also repairs the two rejected
 zero-centered output transforms that starved incoming/lignin gradients. The
 first free-GPU attempt reached zero training updates because a redundant
-batch-8 coverage backward graph required 72.57 GiB on a 32 GiB V100. The
-bounded local repair preserves batch 8 and 46 optimizer updates through
-size-2 exact gradient accumulation and reuses real updates for coverage. The
-active gate is to version that repair and rerun one free `gln01` smoke. The
-100-epoch diagnostic, 64-point-year, rollout, Gate D2, and product stages
-remain closed until their dependency gates pass.
+batch-8 coverage backward graph required 72.57 GiB on a 32 GiB V100. After a
+bounded memory repair, the smoke and formal 100-epoch isolated diagnostic
+completed. The revised mapping reduces litter/POC/DOC loss `98.5804%` and
+passes `25/28` dominant fields, a large improvement over the old mapping, but
+still misses its frozen absolute gate. A zero-training audit shows that the
+three remaining DOC targets vary every day together while the current
+inventory stage receives only pooled upstream contexts. The active gate is an
+architecture discussion about coordinate-aligned DOC transfer coupling and a
+joint inventory-transition head. No implementation, multi-point training,
+rollout, Gate D2, or product work is open before that discussion.
 
 ## New Task Bootstrap
 

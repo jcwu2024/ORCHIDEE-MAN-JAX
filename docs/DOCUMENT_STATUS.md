@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-19.
+Last updated: 2026-08-20.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -118,7 +118,8 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/mechanistic_output_v2_isolated_expert_memorization_result_20260818.md` | Accepted negative mapping and field-level evidence; revision now implemented locally | Reviewing why the rejected litter mapping was replaced |
 | `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_design_20260819.md` | Active accepted candidate mechanism and bounded gate contract | Reviewing the litter coordinate-query design or its absolute gates |
 | `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_local_acceptance_20260819.md` | Accepted local candidate admission; first GPU attempt exposed a runner-memory issue | Reviewing candidate correctness before GPU execution |
-| `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_gpu_smoke_attempt_20260819.md` | Active zero-update OOM evidence and bounded memory-repair contract | Versioning or rerunning the candidate smoke |
+| `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_gpu_smoke_attempt_20260819.md` | Historical zero-update OOM evidence; the repaired smoke and formal diagnostic later completed | Reviewing the memory repair rationale |
+| `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_doc_audit_20260820.md` | Active failed absolute qualification and DOC coordinate-coupling evidence | Discussing the next bounded DOC architecture revision |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |
