@@ -171,6 +171,98 @@ def paired_normalized_statistics(
     }
 
 
+def paired_daily_aggregate_statistics(
+    left_value: Any,
+    left_defined: Any,
+    left_scale: Any,
+    right_value: Any,
+    right_defined: Any,
+    right_scale: Any,
+    *,
+    meaningful_normalized_magnitude: float = 1.0e-8,
+) -> Mapping[str, Any]:
+    """Compare daily activity across targets with different coordinate axes."""
+
+    if meaningful_normalized_magnitude < 0.0:
+        raise ValueError("meaningful normalized magnitude must be nonnegative")
+    _left, _left_mask, left_valid, left = _validated_arrays(
+        left_value,
+        left_defined,
+        left_scale,
+    )
+    _right, _right_mask, right_valid, right = _validated_arrays(
+        right_value,
+        right_defined,
+        right_scale,
+    )
+    if left.shape[0] != right.shape[0]:
+        raise ValueError("paired DOC fields must have the same day count")
+
+    def daily_means(
+        normalized: np.ndarray,
+        valid: np.ndarray,
+    ) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
+        flat = normalized.reshape(normalized.shape[0], -1)
+        flat_valid = valid.reshape(valid.shape[0], -1)
+        valid_count = np.sum(flat_valid, axis=1, dtype=np.int64)
+        signed_sum = np.sum(np.where(flat_valid, flat, 0.0), axis=1, dtype=np.float64)
+        absolute_sum = np.sum(
+            np.where(flat_valid, np.abs(flat), 0.0),
+            axis=1,
+            dtype=np.float64,
+        )
+        signed_mean = np.divide(
+            signed_sum,
+            valid_count,
+            out=np.zeros_like(signed_sum),
+            where=valid_count > 0,
+        )
+        absolute_mean = np.divide(
+            absolute_sum,
+            valid_count,
+            out=np.zeros_like(absolute_sum),
+            where=valid_count > 0,
+        )
+        active = np.any(
+            flat_valid & (np.abs(flat) > meaningful_normalized_magnitude),
+            axis=1,
+        )
+        return signed_mean, absolute_mean, active
+
+    def correlation(first: np.ndarray, second: np.ndarray) -> float | None:
+        if first.size < 2 or float(np.std(first)) == 0.0 or float(np.std(second)) == 0.0:
+            return None
+        return float(np.corrcoef(first, second)[0, 1])
+
+    left_signed, left_absolute, left_active = daily_means(left, left_valid)
+    right_signed, right_absolute, right_active = daily_means(right, right_valid)
+    left_admitted = np.any(left_valid.reshape(left.shape[0], -1), axis=1)
+    right_admitted = np.any(right_valid.reshape(right.shape[0], -1), axis=1)
+    paired_days = left_admitted & right_admitted
+    union = paired_days & (left_active | right_active)
+    intersection = paired_days & left_active & right_active
+    return {
+        "paired_day_count": int(np.count_nonzero(paired_days)),
+        "signed_daily_mean_correlation": correlation(
+            left_signed[paired_days],
+            right_signed[paired_days],
+        ),
+        "absolute_daily_mean_correlation": correlation(
+            left_absolute[paired_days],
+            right_absolute[paired_days],
+        ),
+        "left_active_day_count": int(np.count_nonzero(paired_days & left_active)),
+        "right_active_day_count": int(np.count_nonzero(paired_days & right_active)),
+        "coactive_day_count": int(np.count_nonzero(intersection)),
+        "active_day_union_count": int(np.count_nonzero(union)),
+        "active_day_jaccard": (
+            float(np.count_nonzero(intersection) / np.count_nonzero(union))
+            if np.any(union)
+            else None
+        ),
+    }
+
+
 def inventory_partition_statistics(
     incoming_value: Any,
     incoming_defined: Any,
@@ -211,5 +303,6 @@ def inventory_partition_statistics(
 __all__ = [
     "inventory_partition_statistics",
     "masked_field_statistics",
+    "paired_daily_aggregate_statistics",
     "paired_normalized_statistics",
 ]

@@ -6,6 +6,7 @@ import pytest
 from research.daily_coarse_graining.daily_operator.doc_target_diagnostics import (
     inventory_partition_statistics,
     masked_field_statistics,
+    paired_daily_aggregate_statistics,
     paired_normalized_statistics,
 )
 
@@ -50,6 +51,34 @@ def test_paired_normalized_statistics_reports_coactivity_and_correlation() -> No
     assert report["active_union_count"] == 4
     assert report["active_jaccard"] == pytest.approx(0.75)
     assert report["signed_correlation"] is not None
+
+
+def test_paired_daily_statistics_accepts_different_coordinate_axes() -> None:
+    left = np.asarray([[0.0, 2.0], [2.0, 2.0], [0.0, 0.0]])
+    right = np.asarray(
+        [
+            [[1.0, 1.0], [0.0, 0.0]],
+            [[1.0, 1.0], [1.0, 1.0]],
+            [[0.0, 0.0], [0.0, 0.0]],
+        ]
+    )
+    report = paired_daily_aggregate_statistics(
+        left,
+        np.ones_like(left, dtype=np.bool_),
+        np.ones(2),
+        right,
+        np.ones_like(right, dtype=np.bool_),
+        np.ones((2, 2)),
+    )
+
+    assert report["paired_day_count"] == 3
+    assert report["left_active_day_count"] == 2
+    assert report["right_active_day_count"] == 2
+    assert report["coactive_day_count"] == 2
+    assert report["active_day_union_count"] == 2
+    assert report["active_day_jaccard"] == 1.0
+    assert report["signed_daily_mean_correlation"] == pytest.approx(1.0)
+    assert report["absolute_daily_mean_correlation"] == pytest.approx(1.0)
 
 
 def test_inventory_partition_statistics_requires_exclusive_endpoint_roles() -> None:

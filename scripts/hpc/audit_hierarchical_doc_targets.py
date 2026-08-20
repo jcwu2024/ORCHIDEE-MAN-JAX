@@ -69,7 +69,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     from research.daily_coarse_graining.daily_operator.doc_target_diagnostics import (
         inventory_partition_statistics,
         masked_field_statistics,
-        paired_normalized_statistics,
+        paired_daily_aggregate_statistics,
     )
 
     runtime = _load_extended_runtime(args, backend_initializer=_initialize_cpu_backend)
@@ -93,7 +93,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     for report_name, left_name, right_name in PAIR_NAMES:
         left = _target(dataset, left_name)
         right = _target(dataset, right_name)
-        pair_reports[report_name] = paired_normalized_statistics(
+        pair_reports[report_name] = paired_daily_aggregate_statistics(
             left.value,
             left.defined,
             runtime["loss_scales"][left_name],
