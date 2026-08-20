@@ -1,0 +1,44 @@
+{
+  "schema_version": "doc_endpoint_target_loss_geometry_audit_v1",
+  "experiment_id": "doc-endpoint-target-loss-geometry-v1",
+  "question": "Does the v4 joint signed DOC transition create a target-representation or normalized-gradient imbalance that separate endpoint or status-plus-magnitude coordinates avoid?",
+  "teacher_release": "pft14-daily-teacher-v6",
+  "data": {
+    "landpoint_id": "001.0-071.0",
+    "year": 1961,
+    "spatial_split": "train",
+    "temporal_split": "train",
+    "valid_day_count": 364
+  },
+  "audited_fields": {
+    "incoming": "inventory.carbon.DOC.incoming_amount",
+    "outgoing": "inventory.carbon.DOC.outgoing_fraction"
+  },
+  "representations": [
+    "v4_joint_signed_softplus_day_end",
+    "v3_separate_nonnegative_and_unit_interval_endpoints",
+    "status_plus_native_loss_scaled_magnitude"
+  ],
+  "thresholds": {
+    "meaningful_physical_magnitude": 1e-12,
+    "normalized_jacobian_floor": 1e-6,
+    "finite_reconstruction_absolute_tolerance": 1e-10
+  },
+  "execution": {
+    "training_updates": 0,
+    "checkpoint_written": false,
+    "teacher_regeneration": false,
+    "historical_v5_use": false,
+    "sealed_test_use": false,
+    "paid_compute": false
+  },
+  "decision_policy": {
+    "current_joint_fails_conditioning_if": [
+      "any admitted active target has no finite inverse coordinate",
+      "any admitted active target has normalized local Jacobian at or below the frozen floor",
+      "incoming/outgoing median normalized Jacobian ratio lies outside [0.1, 10]"
+    ],
+    "alternative_role": "shortlist only; no architecture is promoted by this audit",
+    "next_gate": "discuss and freeze one revised DOC endpoint mechanism before implementation"
+  }
+}

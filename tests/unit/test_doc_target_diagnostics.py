@@ -5,6 +5,7 @@ import pytest
 
 from research.daily_coarse_graining.daily_operator.doc_target_diagnostics import (
     inventory_partition_statistics,
+    inventory_transition_geometry_statistics,
     masked_field_statistics,
     paired_daily_aggregate_statistics,
     paired_normalized_statistics,
@@ -113,4 +114,62 @@ def test_doc_target_diagnostics_reject_shape_drift() -> None:
             np.zeros((2, 4)),
             np.ones((2, 4), dtype=np.bool_),
             np.ones(4),
+        )
+
+
+def test_inventory_transition_geometry_exposes_joint_boundary_conditioning() -> None:
+    incoming = np.asarray([[2.0, 0.0, 0.0, 1.0]])
+    outgoing = np.asarray([[0.0, 0.2, 1.0, 0.0]])
+    day_start = np.asarray([[10.0, 10.0, 10.0, 0.0]])
+    defined = np.ones_like(incoming, dtype=np.bool_)
+    report = inventory_transition_geometry_statistics(
+        incoming,
+        defined,
+        outgoing,
+        defined,
+        day_start,
+        defined,
+        incoming_output_mean=np.ones(4),
+        incoming_output_scale=np.ones(4),
+        outgoing_output_mean=np.full(4, 0.1),
+        outgoing_output_scale=np.full(4, 0.1),
+        incoming_loss_scale=np.ones(4),
+        outgoing_loss_scale=np.ones(4),
+    )
+
+    assert report["valid_count"] == 4
+    assert report["partition"] == {
+        "incoming_only_count": 2,
+        "outgoing_only_count": 2,
+        "unchanged_count": 0,
+        "simultaneously_active_count": 0,
+        "zero_day_start_count": 1,
+        "zero_target_end_count": 1,
+        "unit_outgoing_count": 1,
+    }
+    current = report["current_joint_signed_day_end"]
+    assert current["active_nonfinite_inverse_count"] == 1
+    assert current["active_jacobian_at_or_below_floor_count"] == 1
+    assert current["conditioning_passed"] is False
+    separate = report["separate_endpoint_transforms"]
+    assert separate["active_nonfinite_inverse_count"] == 1
+    assert separate["active_jacobian_at_or_below_floor_count"] == 1
+    assert report["status_plus_native_magnitude"]["finite_target_count"] == 4
+
+
+def test_inventory_transition_geometry_rejects_unmatched_shapes() -> None:
+    with pytest.raises(ValueError, match="share a non-scalar shape"):
+        inventory_transition_geometry_statistics(
+            np.zeros((2, 2)),
+            np.ones((2, 2), dtype=np.bool_),
+            np.zeros((2, 3)),
+            np.ones((2, 3), dtype=np.bool_),
+            np.zeros((2, 2)),
+            np.ones((2, 2), dtype=np.bool_),
+            incoming_output_mean=0.0,
+            incoming_output_scale=1.0,
+            outgoing_output_mean=0.0,
+            outgoing_output_scale=1.0,
+            incoming_loss_scale=1.0,
+            outgoing_loss_scale=1.0,
         )
