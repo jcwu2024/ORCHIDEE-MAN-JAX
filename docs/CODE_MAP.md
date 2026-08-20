@@ -308,8 +308,9 @@ exposes the v4 class, while the shared runner and launcher select it only with
 `--coordinate-coupled-doc-transition` /
 `COORDINATE_COUPLED_DOC_TRANSITION=1` and reuse the size-2 exact gradient
 microbatch boundary.
-`scripts/hpc/slurm_mechanistic_output_v2_one_point.sh` owns the bounded paid
-single-V100 formal one-point resource envelope.
+`scripts/hpc/slurm_coordinate_coupled_doc_transition_v4_one_point.sh` owns the
+active bounded paid single-V100 formal v4 one-point resource envelope. The
+older `slurm_mechanistic_output_v2_one_point.sh` remains historical.
 
 `daily_operator/nonlinear_projection.py` owns the active host-side bounded
 SLSQP subproblem, exact violation merit, and candidate acceptance for the

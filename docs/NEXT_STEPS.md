@@ -1197,16 +1197,17 @@ mutually exclusive incoming/outgoing endpoints before the unchanged
 conservative update. Focused v4, runner, unchanged v3, and unchanged
 mechanistic suites pass `48` tests; static checks pass.
 
-The next operation is exactly one fresh 364-day, one-epoch, 46-update smoke on
-one free `gln01` GPU with `MECHANISTIC_OUTPUT=1`,
-`ISOLATED_EXPERT=litter_poc_doc`,
-`COORDINATE_COUPLED_DOC_TRANSITION=1`, and `TRAINING_SMOKE=1`. It must write no
-checkpoint. Only finite completion, decreasing selected loss, unchanged
-counts, nonzero selected coordinate/joint-head gradients and updates, and
-zero hard failures may open the unchanged 100-epoch isolated diagnostic.
-Paid execution, multi-point training, rollout, Gate D2, sealed-test, and
-product work remain closed. See
-[`coordinate_coupled_doc_transition_v4_local_acceptance_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_local_acceptance_20260820.md).
+The fresh one-epoch free-`gln01` smoke completed all 46 updates and passed.
+Selected loss fell `48.5539%`; gradients and updates reached the selected
+coordinate blocks and field heads at the first and final probes; counts were
+unchanged and all hard counts were zero. JAX peak bytes in use were
+`21.94 GiB`. The active operation is one paid `gnall` 100-epoch/4,600-update
+isolated v4 diagnostic using the prepared one-V100, four-CPU, eight-hour
+envelope. It requires explicit cost approval before submission and writes no
+checkpoint. Only the frozen `99%` aggregate plus `95%` per-dominant-field
+absolute gates can open multi-point training. Rollout, Gate D2, sealed-test,
+and product work remain closed. See
+[`coordinate_coupled_doc_transition_v4_gpu_smoke_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_gpu_smoke_20260820.md).
 
 ## Completed Task Packet: Gate C
 

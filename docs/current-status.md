@@ -43,15 +43,18 @@ the unchanged daily boundary, conservative updater, retained tail, and all
 non-DOC paths. The focused v4, runner, unchanged v3, and unchanged mechanistic
 suites pass `48` tests in isolated processes; static checks also pass.
 
-The active gate is exactly one no-checkpoint, one-epoch, 46-update free-
-`gln01` smoke. It must pass finite execution, decreasing litter loss, count
-identity, new-path gradient/update coverage, and all state/budget/inventory
-hard gates before the unchanged 100-epoch isolated diagnostic can be
-prepared. Paid work, multi-point training, rollout, sealed test, Gate D2, and
-product work remain closed. See
+The no-checkpoint free-`gln01` smoke completed all 46 updates and passed its
+execution gate. Litter/POC/DOC loss fell `48.5539%`; new-path gradients and
+updates were nonzero at the first and final probes, counts were unchanged,
+and every state/budget/inventory hard count was zero. JAX peak bytes in use
+were `21.94 GiB` on one 32-GiB V100. The active gate is the prepared
+100-epoch, 4,600-update isolated v4 memorization diagnostic. It requires one
+approved paid `gnall` job and must pass the frozen `99%` aggregate and
+`95%`-per-dominant-field absolute gates. Multi-point training, rollout,
+sealed test, Gate D2, and product work remain closed. See
 [`coordinate_coupled_doc_transition_v4_design_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_design_20260820.md)
 and
-[`coordinate_coupled_doc_transition_v4_local_acceptance_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_local_acceptance_20260820.md).
+[`coordinate_coupled_doc_transition_v4_gpu_smoke_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_gpu_smoke_20260820.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four
