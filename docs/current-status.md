@@ -33,12 +33,25 @@ zero-predictor squared error. The likely remaining bottleneck is therefore
 the model's pooled handoff between DOC stages: it does not provide
 coordinate-aligned predicted transfers to the inventory endpoint decoder.
 
-The active gate is an architecture discussion with the user about bounded
-coordinate-level DOC coupling and a possible joint mutually exclusive
-inventory-transition head. Do not implement another network, repeat the
-100-epoch diagnostic, open multi-point training or rollout, read sealed test
-data, or advance to Gate D2 before that decision. See
-[`hierarchical_coordinate_query_attention_v3_doc_audit_20260820.md`](research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_doc_audit_20260820.md).
+The user approved `coordinate_coupled_doc_transition_attention_v4`, and its
+local foundation is complete. All 896 DOC inventory coordinates receive five
+upstream reaction/transport tokens aligned by physical PFT identity, layer,
+pool, and element. One shared signed transition decoder replaces the two
+independent incoming/outgoing heads and materializes mutually exclusive
+conservative endpoints. The model has `59,971,257` parameters and preserves
+the unchanged daily boundary, conservative updater, retained tail, and all
+non-DOC paths. The focused v4, runner, unchanged v3, and unchanged mechanistic
+suites pass `48` tests in isolated processes; static checks also pass.
+
+The active gate is exactly one no-checkpoint, one-epoch, 46-update free-
+`gln01` smoke. It must pass finite execution, decreasing litter loss, count
+identity, new-path gradient/update coverage, and all state/budget/inventory
+hard gates before the unchanged 100-epoch isolated diagnostic can be
+prepared. Paid work, multi-point training, rollout, sealed test, Gate D2, and
+product work remain closed. See
+[`coordinate_coupled_doc_transition_v4_design_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_design_20260820.md)
+and
+[`coordinate_coupled_doc_transition_v4_local_acceptance_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_local_acceptance_20260820.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

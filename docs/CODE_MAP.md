@@ -291,7 +291,7 @@ real-v6 forward/loss/gradient/state/budget admission. The shared one-point
 runner selects this path with `--mechanistic-output`; its explicit
 `--training-smoke` mode distinguishes the one-epoch execution gate from the
 full memorization gate. `daily_operator/hierarchical_coordinate_attention.py`
-owns the active litter/POC/DOC successor: its four coordinate-query stages,
+owns the v3 litter/POC/DOC parent: its four coordinate-query stages,
 field-balanced process contexts, field-specific heads, candidate-local stable
 bounded transforms, fresh parameter initialization, and 60-million-parameter
 cap. `mechanistic_process_head.py` exposes its separate process-head class;
@@ -300,6 +300,14 @@ the shared one-point runner selects it only with
 logical batch size 8 while accumulating exact gradients through size-2
 microbatches and derives coverage from the first and final actual updates;
 other model paths retain direct-batch execution.
+`daily_operator/coordinate_coupled_doc_attention.py` owns the active v4
+successor: exact full/compact-PFT coordinate gathers, the five-token aligned
+DOC bank, the joint signed conservative endpoint materializer, fresh
+initialization, and its process-output path. `mechanistic_process_head.py`
+exposes the v4 class, while the shared runner and launcher select it only with
+`--coordinate-coupled-doc-transition` /
+`COORDINATE_COUPLED_DOC_TRANSITION=1` and reuse the size-2 exact gradient
+microbatch boundary.
 `scripts/hpc/slurm_mechanistic_output_v2_one_point.sh` owns the bounded paid
 single-V100 formal one-point resource envelope.
 

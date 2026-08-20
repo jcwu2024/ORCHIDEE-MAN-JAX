@@ -9,6 +9,10 @@ import numpy as np
 
 from research.daily_coarse_graining.daily_markov_contract import DailyMarkovContract
 
+from .coordinate_coupled_doc_attention import (
+    CoordinateCoupledDocTransitionConfig,
+    coordinate_coupled_doc_transition_process_outputs,
+)
 from .fast_owner_reconstruction import build_successor_fast_owner_materializer
 from .hierarchical_coordinate_attention import (
     HierarchicalCoordinateAttentionConfig,
@@ -256,20 +260,14 @@ class MechanisticStrongBaselineProcessHead:
             complete,
             inputs,
         )
-        return complete_prediction._replace(
-            auxiliary_outputs=prediction.auxiliary_outputs
-        )
+        return complete_prediction._replace(auxiliary_outputs=prediction.auxiliary_outputs)
 
 
 @dataclass(frozen=True, eq=False)
-class MechanisticHierarchicalCoordinateAttentionProcessHead(
-    MechanisticStrongBaselineProcessHead
-):
+class MechanisticHierarchicalCoordinateAttentionProcessHead(MechanisticStrongBaselineProcessHead):
     """Use coordinate-query Attention only for the litter/POC/DOC branch."""
 
-    coordinate_config: HierarchicalCoordinateAttentionConfig = (
-        HierarchicalCoordinateAttentionConfig()
-    )
+    coordinate_config: HierarchicalCoordinateAttentionConfig = HierarchicalCoordinateAttentionConfig()
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -296,7 +294,40 @@ class MechanisticHierarchicalCoordinateAttentionProcessHead(
         )
 
 
+@dataclass(frozen=True, eq=False)
+class MechanisticCoordinateCoupledDocTransitionProcessHead(MechanisticHierarchicalCoordinateAttentionProcessHead):
+    """Add coordinate-aligned DOC transfers and one joint inventory head."""
+
+    doc_transition_config: CoordinateCoupledDocTransitionConfig = CoordinateCoupledDocTransitionConfig()
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.doc_transition_config.validate(self.config, self.coordinate_config)
+
+    def learned_outputs(
+        self,
+        parameters: Mapping[str, Any],
+        context: StrongBaselineContext,
+        inputs: AssembledDailyOperatorInput,
+    ) -> Mapping[str, Any]:
+        return coordinate_coupled_doc_transition_process_outputs(
+            parameters,
+            context,
+            inputs,
+            schema=self.learned_schema,
+            layout=self.layout,
+            input_normalization=self.input_normalization,
+            output_normalization=self.output_normalization,
+            forcing_layout=self.forcing_layout,
+            message_gate_scale=self.message_gate_scale,
+            baseline_config=self.config,
+            coordinate_config=self.coordinate_config,
+            config=self.doc_transition_config,
+        )
+
+
 __all__ = [
+    "MechanisticCoordinateCoupledDocTransitionProcessHead",
     "MechanisticHierarchicalCoordinateAttentionProcessHead",
     "MechanisticStrongBaselineProcessHead",
     "build_mechanistic_output_layout",

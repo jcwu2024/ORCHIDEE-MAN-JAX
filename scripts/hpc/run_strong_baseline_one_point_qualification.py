@@ -377,10 +377,14 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         raise ValueError("qualification batch size, epochs, and evaluation interval must be positive")
     isolated_expert = args.isolated_expert
     hierarchical_candidate = bool(args.hierarchical_coordinate_attention)
-    if hierarchical_candidate and not args.mechanistic_output:
-        raise ValueError("hierarchical coordinate Attention requires mechanistic output")
-    if hierarchical_candidate and isolated_expert not in {None, "litter_poc_doc"}:
-        raise ValueError("hierarchical coordinate Attention only changes litter_poc_doc")
+    coupled_doc_candidate = bool(args.coordinate_coupled_doc_transition)
+    if hierarchical_candidate and coupled_doc_candidate:
+        raise ValueError("select exactly one coordinate Attention candidate")
+    coordinate_candidate = hierarchical_candidate or coupled_doc_candidate
+    if coordinate_candidate and not args.mechanistic_output:
+        raise ValueError("coordinate Attention requires mechanistic output")
+    if coordinate_candidate and isolated_expert not in {None, "litter_poc_doc"}:
+        raise ValueError("coordinate Attention only changes litter_poc_doc")
     if isolated_expert is not None and (
         not args.mechanistic_output
         or isolated_expert not in {"litter_poc_doc", "surface_energy"}
@@ -421,8 +425,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     from research.daily_coarse_graining.daily_operator.conservative_update import (
         apply_conservative_update,
     )
+    from research.daily_coarse_graining.daily_operator.coordinate_coupled_doc_attention import (
+        CANDIDATE_NAME as COUPLED_DOC_CANDIDATE_NAME,
+    )
+    from research.daily_coarse_graining.daily_operator.coordinate_coupled_doc_attention import (
+        initialize_coordinate_coupled_doc_transition_parameters,
+    )
     from research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention import (
-        CANDIDATE_NAME,
+        CANDIDATE_NAME as HIERARCHICAL_CANDIDATE_NAME,
+    )
+    from research.daily_coarse_graining.daily_operator.hierarchical_coordinate_attention import (
         initialize_hierarchical_coordinate_attention_parameters,
     )
     from research.daily_coarse_graining.daily_operator.model import bind_daily_operator
@@ -469,6 +481,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             masked_mechanistic_output_loss,
         )
         from research.daily_coarse_graining.daily_operator.mechanistic_process_head import (
+            MechanisticCoordinateCoupledDocTransitionProcessHead,
             MechanisticHierarchicalCoordinateAttentionProcessHead,
             MechanisticStrongBaselineProcessHead,
             build_mechanistic_output_layout,
@@ -502,9 +515,13 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     }
     head = (
         (
-            MechanisticHierarchicalCoordinateAttentionProcessHead
-            if hierarchical_candidate
-            else MechanisticStrongBaselineProcessHead
+            MechanisticCoordinateCoupledDocTransitionProcessHead
+            if coupled_doc_candidate
+            else (
+                MechanisticHierarchicalCoordinateAttentionProcessHead
+                if hierarchical_candidate
+                else MechanisticStrongBaselineProcessHead
+            )
         )(
             contract=runtime["contract"],
             architecture_contract=architecture_contract,
@@ -528,14 +545,18 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     maximum_updates = args.maximum_epochs * batches_per_epoch
     gradient_microbatch_size = (
         min(args.batch_size, HIERARCHICAL_GRADIENT_MICROBATCH_SIZE)
-        if hierarchical_candidate
+        if coordinate_candidate
         else args.batch_size
     )
 
     parameter_initializer = (
-        initialize_hierarchical_coordinate_attention_parameters
-        if hierarchical_candidate
-        else initialize_strong_baseline_parameters
+        initialize_coordinate_coupled_doc_transition_parameters
+        if coupled_doc_candidate
+        else (
+            initialize_hierarchical_coordinate_attention_parameters
+            if hierarchical_candidate
+            else initialize_strong_baseline_parameters
+        )
     )
     parameters = parameter_initializer(
         jax.random.PRNGKey(args.seed),
@@ -545,9 +566,13 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         contract=architecture_contract,
     )
     parameter_count = (
-        58_736_698
-        if hierarchical_candidate
-        else (49_743_001 if args.mechanistic_output else PARAMETER_COUNT)
+        59_971_257
+        if coupled_doc_candidate
+        else (
+            58_736_698
+            if hierarchical_candidate
+            else (49_743_001 if args.mechanistic_output else PARAMETER_COUNT)
+        )
     )
     if strong_baseline_parameter_count(parameters) != parameter_count:
         raise ValueError("strong-baseline qualification parameter count drift")
@@ -724,7 +749,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 "selected_field_heads",
                 "other_label_heads",
             )
-            if hierarchical_candidate
+            if coordinate_candidate
             else (
                 "shared",
                 "selected_expert_blocks",
@@ -740,7 +765,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     def coverage_groups(tree: Mapping[str, Any]) -> tuple[Any, ...]:
         if isolated_expert_index is None:
             return ()
-        if hierarchical_candidate:
+        if coordinate_candidate:
             coordinate = tree["hierarchical_litter"]
             shared = {
                 name: value
@@ -1363,7 +1388,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         }
 
     coverage_probe_batch = None
-    if isolated_expert is not None and not hierarchical_candidate:
+    if isolated_expert is not None and not coordinate_candidate:
         probe_indices, probe_weights = padded_epoch_batches(
             sample_count,
             args.batch_size,
@@ -1403,7 +1428,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             rate = qualification_learning_rate(update, maximum_updates)
             gradient_summary = None
             before_parameters = None
-            if hierarchical_candidate:
+            if coordinate_candidate:
                 before_parameters = parameters
                 accumulation = initialize_exact_gradient_accumulator(parameters)
                 batch_loss_sum = 0.0
@@ -1460,7 +1485,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 all_gradients_finite = False
                 failure_reason = f"nonfinite training update {update}"
                 break
-            if hierarchical_candidate and update in {1, maximum_updates}:
+            if coordinate_candidate and update in {1, maximum_updates}:
                 updates = parameter_updates(parameters, before_parameters)
                 jax.block_until_ready(updates)
                 snapshot_name = "initial_probe" if update == 1 else "final_probe"
@@ -1552,7 +1577,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         if (passed and isolated_expert is None) or failure_reason is not None:
             break
 
-    if isolated_expert is not None and not hierarchical_candidate and failure_reason is None:
+    if isolated_expert is not None and not coordinate_candidate and failure_reason is None:
         final_coverage = coverage_probe(
             parameters,
             optimizer,
@@ -1734,7 +1759,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     if isolated_expert is not None:
         required_groups = (
             ("selected_coordinate_blocks", "selected_field_heads")
-            if hierarchical_candidate
+            if coordinate_candidate
             else ("selected_expert_blocks", "selected_label_heads")
         )
         coverage_checks = {
@@ -1839,35 +1864,34 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         gate_passed=training_smoke_passed if training_smoke else passed,
         execution_status=execution_status,
     )
+    if coupled_doc_candidate:
+        report_schema_version = (
+            "coordinate_coupled_doc_transition_v4_one_epoch_smoke_v1"
+            if training_smoke
+            else "coordinate_coupled_doc_transition_v4_memorization_v1"
+        )
+    elif hierarchical_candidate:
+        report_schema_version = (
+            "hierarchical_coordinate_query_attention_v3_one_epoch_smoke_v1"
+            if training_smoke
+            else "hierarchical_coordinate_query_attention_v3_memorization_v1"
+        )
+    elif diagnostic_mode:
+        report_schema_version = "strong_baseline_one_point_loss_floor_diagnostic_v1"
+    elif isolated_expert is not None:
+        report_schema_version = (
+            "mechanistic_output_v2_isolated_expert_one_epoch_smoke_v1"
+            if training_smoke
+            else "mechanistic_output_v2_isolated_expert_memorization_v1"
+        )
+    elif training_smoke:
+        report_schema_version = "mechanistic_output_one_epoch_training_smoke_v1"
+    elif args.mechanistic_output:
+        report_schema_version = "mechanistic_output_one_point_year_qualification_v1"
+    else:
+        report_schema_version = "strong_baseline_one_point_year_qualification_v1"
     report = {
-        "schema_version": (
-            (
-                "hierarchical_coordinate_query_attention_v3_one_epoch_smoke_v1"
-                if training_smoke
-                else "hierarchical_coordinate_query_attention_v3_memorization_v1"
-            )
-            if hierarchical_candidate
-            else
-            "strong_baseline_one_point_loss_floor_diagnostic_v1"
-            if diagnostic_mode
-            else (
-                (
-                    "mechanistic_output_v2_isolated_expert_one_epoch_smoke_v1"
-                    if training_smoke
-                    else "mechanistic_output_v2_isolated_expert_memorization_v1"
-                )
-                if isolated_expert is not None
-                else (
-                    "mechanistic_output_one_epoch_training_smoke_v1"
-                    if training_smoke
-                    else (
-                        "mechanistic_output_one_point_year_qualification_v1"
-                        if args.mechanistic_output
-                        else "strong_baseline_one_point_year_qualification_v1"
-                    )
-                )
-            )
-        ),
+        "schema_version": report_schema_version,
         "status": report_status,
         "execution_status": execution_status,
         "qualification_gate_status": "not_evaluated" if training_smoke else ("passed" if passed else "failed"),
@@ -1911,9 +1935,13 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             **(
                 {
                     "candidate": (
-                        CANDIDATE_NAME
-                        if hierarchical_candidate
-                        else "strong_baseline_mechanistic_output_v2"
+                        COUPLED_DOC_CANDIDATE_NAME
+                        if coupled_doc_candidate
+                        else (
+                            HIERARCHICAL_CANDIDATE_NAME
+                            if hierarchical_candidate
+                            else "strong_baseline_mechanistic_output_v2"
+                        )
                     ),
                     "learned_output_field_count": len(parameter_schema.fields),
                     "learned_output_scalar_count": sum(
@@ -2082,6 +2110,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--seed", type=int, default=PROBE_SEED)
     parser.add_argument("--mechanistic-output", action="store_true")
     parser.add_argument("--hierarchical-coordinate-attention", action="store_true")
+    parser.add_argument("--coordinate-coupled-doc-transition", action="store_true")
     parser.add_argument("--isolated-expert")
     parser.add_argument("--training-smoke", action="store_true")
     parser.add_argument("--diagnostic-tail-updates", type=int, default=0)

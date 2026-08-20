@@ -1188,17 +1188,25 @@ and passes `25/28` dominant fields, but it misses the frozen `99%` aggregate
 gate. DOC incoming amount, free-to-adsorbed transfer, and advective transfer
 remain below their field gates, and no checkpoint is retained.
 
-The follow-up zero-training target audit passes on the same 364 frozen v6
-days. All three failed targets are active every day, their daily normalized
-intensities are strongly correlated, and per-coordinate constant means leave
-most of the zero-predictor error. The current inventory stage receives pooled
-upstream hidden contexts rather than coordinate-aligned predicted DOC
-transfers. The active operation is therefore an architecture discussion with
-the user about a bounded source-routed coordinate handoff and a joint
-mutually-exclusive DOC inventory transition representation. Do not implement
-that change or start another training run before the discussion. Multi-point
-training, rollout, Gate D2, sealed-test, and product work remain closed. See
-[`hierarchical_coordinate_query_attention_v3_doc_audit_20260820.md`](research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_doc_audit_20260820.md).
+The follow-up target audit motivated and the user approved
+`coordinate_coupled_doc_transition_attention_v4`. Its local implementation is
+complete at `59,971,257` parameters. Every DOC inventory coordinate now reads
+five upstream transfer representations aligned by physical PFT identity,
+layer, pool, and element. A joint signed transition head materializes the
+mutually exclusive incoming/outgoing endpoints before the unchanged
+conservative update. Focused v4, runner, unchanged v3, and unchanged
+mechanistic suites pass `48` tests; static checks pass.
+
+The next operation is exactly one fresh 364-day, one-epoch, 46-update smoke on
+one free `gln01` GPU with `MECHANISTIC_OUTPUT=1`,
+`ISOLATED_EXPERT=litter_poc_doc`,
+`COORDINATE_COUPLED_DOC_TRANSITION=1`, and `TRAINING_SMOKE=1`. It must write no
+checkpoint. Only finite completion, decreasing selected loss, unchanged
+counts, nonzero selected coordinate/joint-head gradients and updates, and
+zero hard failures may open the unchanged 100-epoch isolated diagnostic.
+Paid execution, multi-point training, rollout, Gate D2, sealed-test, and
+product work remain closed. See
+[`coordinate_coupled_doc_transition_v4_local_acceptance_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_local_acceptance_20260820.md).
 
 ## Completed Task Packet: Gate C
 

@@ -319,6 +319,27 @@ def test_one_point_launcher_selects_hierarchical_litter_candidate_explicitly():
     assert "sbatch" not in launcher
 
 
+def test_one_point_launcher_selects_coordinate_coupled_doc_candidate_explicitly():
+    root = Path(__file__).resolve().parents[2]
+    launcher = (
+        root / "scripts" / "hpc" / "run_strong_baseline_one_point_qualification.sh"
+    ).read_text(encoding="utf-8")
+    runner = (
+        root / "scripts" / "hpc" / "run_strong_baseline_one_point_qualification.py"
+    ).read_text(encoding="utf-8")
+    assert (
+        "COORDINATE_COUPLED_DOC_TRANSITION=${COORDINATE_COUPLED_DOC_TRANSITION:-0}"
+        in launcher
+    )
+    assert "MODEL_ARGUMENTS+=(--coordinate-coupled-doc-transition)" in launcher
+    assert 'test "$HIERARCHICAL_COORDINATE_ATTENTION" = 0' in launcher
+    assert 'test "$ISOLATED_EXPERT" = litter_poc_doc' in launcher
+    assert 'parser.add_argument("--coordinate-coupled-doc-transition"' in runner
+    assert "59_971_257" in runner
+    assert "coordinate_coupled_doc_transition_v4_one_epoch_smoke_v1" in runner
+    assert "sbatch" not in launcher
+
+
 def test_mechanistic_one_point_slurm_envelope_is_single_gpu_and_bounded():
     root = Path(__file__).resolve().parents[2]
     launcher = (root / "scripts" / "hpc" / "slurm_mechanistic_output_v2_one_point.sh").read_text(

@@ -178,10 +178,14 @@ completed. The revised mapping reduces litter/POC/DOC loss `98.5804%` and
 passes `25/28` dominant fields, a large improvement over the old mapping, but
 still misses its frozen absolute gate. A zero-training audit shows that the
 three remaining DOC targets vary every day together while the current
-inventory stage receives only pooled upstream contexts. The active gate is an
-architecture discussion about coordinate-aligned DOC transfer coupling and a
-joint inventory-transition head. No implementation, multi-point training,
-rollout, Gate D2, or product work is open before that discussion.
+inventory stage receives only pooled upstream contexts. The user approved a
+v4 coordinate-coupled DOC revision. Its `59,971,257`-parameter local
+implementation aligns five predicted reaction/transport tokens to every DOC
+inventory coordinate and uses one joint conservative transition head for the
+mutually exclusive incoming/outgoing endpoints. The focused and compatibility
+suites pass 48 tests. The active gate is one no-checkpoint free-`gln01`
+one-epoch smoke. Multi-point training, rollout, Gate D2, and product work stay
+closed.
 
 ## New Task Bootstrap
 

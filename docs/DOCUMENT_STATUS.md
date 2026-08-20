@@ -119,7 +119,9 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_design_20260819.md` | Active accepted candidate mechanism and bounded gate contract | Reviewing the litter coordinate-query design or its absolute gates |
 | `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_local_acceptance_20260819.md` | Accepted local candidate admission; first GPU attempt exposed a runner-memory issue | Reviewing candidate correctness before GPU execution |
 | `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_gpu_smoke_attempt_20260819.md` | Historical zero-update OOM evidence; the repaired smoke and formal diagnostic later completed | Reviewing the memory repair rationale |
-| `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_doc_audit_20260820.md` | Active failed absolute qualification and DOC coordinate-coupling evidence | Discussing the next bounded DOC architecture revision |
+| `research/daily_coarse_graining/hierarchical_coordinate_query_attention_v3_doc_audit_20260820.md` | Accepted failed absolute qualification and DOC coordinate-coupling basis for v4 | Reviewing why v4 was opened |
+| `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_design_20260820.md` | Active frozen v4 mechanism and absolute gate contract | Reviewing the coordinate-aligned DOC design |
+| `research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_local_acceptance_20260820.md` | Active accepted local v4 foundation; free smoke is next | Running or reviewing the one-epoch free-GPU smoke |
 | `research/daily_coarse_graining/development_standard.md` | Active policy | Adding a research experiment |
 | `deployment-explore1000.md` | Active platform instructions | Running on Explore1000 |
 | `installation.md`, `data-layout.md`, `running.md` | Active user docs | Installing or running the Teacher |
