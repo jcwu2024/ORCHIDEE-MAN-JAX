@@ -1271,8 +1271,9 @@ not actual tensor use. No update or checkpoint occurred. Report SHA256 is
 `a92e9415...ad13803b`.
 
 The first bounded real-v6 training design is frozen as
-`target_oriented_bounded_training_v1`, SHA256 `68d1079c...7256d`. Every
-effective update uses 28 distinct point-years/landpoints: 32 one-day samples,
+`target_oriented_bounded_training_v1`, SHA256 `91faf011...ea25b`. Every
+effective update uses 28 distinct point-years/landpoints from one rotating
+runtime year: 32 one-day samples,
 eight seven-day windows, and four thirty-day windows, totaling 208 Teacher-day
 usages. Microbatches `4/1/1` use rematerialized rollout and exact sufficient
 statistics, so memory reduction does not change full-batch MSE or signed-bias
@@ -1280,11 +1281,14 @@ loss. Focused loss and gradient equivalence tests pass. AdamW uses 250-update
 warmup and 250/1,000/3,000 milestones; a train-only eight-batch p90 calibration
 replaces the arbitrary fixed gradient-norm threshold.
 
-The active operation is to implement the multi-point-year prepared-batch
-reader and dynamic retained-tail day-input path, followed by one free-V100
-zero-retained-update full-step preflight. Measure actual JAX live memory, hot
-step time, and eight unclipped norms before declaring any paid GPU resource,
-wall time, or worst-case cost. Do not run the V5 100-epoch gate, repeat v4/v5,
+The multi-point-year prepared-batch reader, per-sample dynamic retained-tail
+day-input path, exact independent-microbatch VJPs, and clipped AdamW proposal
+are implemented and pass focused local tests. The active operation is to
+prepare eight real-v6 batches on a free CPU test node, then run one free-V100
+zero-retained-update full-step preflight. Measure all seven gradient families,
+actual JAX peak live memory, compiled hot gradient-plus-AdamW step time, and
+eight unclipped norms before declaring any paid GPU resource, wall time, or
+worst-case cost. Do not run the V5 100-epoch gate, repeat v4/v5,
 train a weak control, read sealed-test data, or advance paid training,
 365-day rollout, Gate D2, or product work. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),

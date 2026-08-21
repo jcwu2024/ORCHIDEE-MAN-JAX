@@ -135,23 +135,27 @@ allocator's reserved pool. No update or checkpoint occurred. Report SHA256 is
 `a92e9415...ad13803b`.
 
 The first bounded training design is now frozen in machine contract
-`target_oriented_bounded_training_v1`. Each update draws 28 distinct
-point-years from 28 distinct landpoints: 32 one-day samples from 16
+`target_oriented_bounded_training_v1` at SHA256 `91faf011...ea25b`. Each update
+draws 28 distinct point-years and landpoints from one runtime year, while
+eligible years rotate deterministically: 32 one-day samples from 16
 point-years, eight seven-day windows, and four thirty-day windows, for 208
 Teacher-day usages per update. GPU microbatches are `4/1/1`; exact sufficient
 statistics preserve the full-batch MSE and signed-bias objective before one
-AdamW update. Synthetic full-batch versus accumulated loss and gradient tests
-pass. Gradient clipping is calibrated from eight train/train full-objective
-norms rather than assuming threshold 1.0. The bounded milestones are
-250/1,000/3,000 updates, and scientific promotion remains absolute rather
-than control-relative.
+AdamW update. The multi-point prepared reader gives every sample or window its
+own retained-tail arrays, while a common static scaffold keeps compilation
+valid. Synthetic full-batch versus accumulated gradients and focused prepared
+artifact tests pass. Gradient clipping is calibrated from eight train/train
+full-objective norms rather than assuming threshold 1.0. The bounded
+milestones are 250/1,000/3,000 updates, and scientific promotion remains
+absolute rather than control-relative.
 
-The active operation is to implement the multi-point-year prepared-batch
-reader and dynamic retained-tail `day_inputs`, then run a zero-retained-update
-free-V100 full-step preflight. That preflight must measure actual live memory,
-hot-step timing, and the eight unclipped gradient norms before a paid resource,
-wall-time, and worst-case cost proposal. No paid training, 365-day rollout,
-sealed-test read, Gate D2, or product work is authorized by this contract. See
+The active operation is to prepare eight real-v6 batches on a free CPU node,
+then run a zero-retained-update free-V100 full-step preflight. That preflight
+must verify scaffold-year invariance, all seven architecture gradient
+families, actual peak live memory, compiled hot gradient-plus-AdamW timing,
+and the eight unclipped gradient norms before a paid resource, wall-time, and
+worst-case cost proposal. No paid training, 365-day rollout, sealed-test read,
+Gate D2, or product work is authorized by this contract. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),

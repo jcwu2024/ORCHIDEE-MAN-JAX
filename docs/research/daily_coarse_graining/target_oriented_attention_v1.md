@@ -128,7 +128,10 @@ The first bounded training design is now frozen as
 effective and microbatch composition, the 250/1,000/3,000 update budget,
 optimizer and train-only gradient-clip calibration, validation slices, and
 checkpoint policy. Exact microbatch/full-batch loss and gradient equivalence
-passes locally. The active gate is its multi-point-year prepared-batch reader
-and free-V100 full-step memory/timing preflight. Paid resources, wall time, and
-worst-case cost remain conditional on that measurement. No 365-day rollout,
-Gate D2, sealed-test access, or product acceptance is authorized.
+passes locally. Its same-year multi-point-year prepared reader, dynamic
+retained inputs, and AdamW proposal are also implemented and locally tested.
+The active gate is free-CPU preparation of eight real-v6 batches followed by
+the free-V100 full-step memory/timing and gradient-calibration preflight. Paid
+resources, wall time, and worst-case cost remain conditional on that
+measurement. No 365-day rollout, Gate D2, sealed-test access, or product
+acceptance is authorized.

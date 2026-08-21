@@ -201,16 +201,23 @@ Its no-checkpoint 10-epoch screen completed normally but failed the frozen
 absolute gate: aggregate litter/POC/DOC fell `83.1178%`, while incoming and
 outgoing fell only `29.6589%` and `26.1806%`. Both improve rather than trade
 off, and status/branch latents learn strongly, but the physical endpoint term
-falls only `29.2932%`. V5 is rejected with no checkpoint. The active gate is a
-target-oriented successor design review. The old requirement that every
-learned field independently clear a 95--99% reduction gate is retired. The
-new frozen contract prioritizes one-day state, 7/30-day GPP/respiration and
-independent carbon-stock objectives, while retaining low-weight necessary
-process supervision and zero-tolerance physical gates. It classifies the 161
-learned fields as 2 direct-primary, 93 state/budget-essential, and 66
-auxiliary fields; 20 additional fields remain exact/diagnostic. The next
-neural architecture must be discussed with the user before implementation.
-Multi-point training, rollout, Gate D2, and product work stay closed.
+falls only `29.2932%`. V5 is rejected with no checkpoint. The old requirement
+that every learned field independently clear a 95--99% reduction gate is
+retired. The new frozen contract prioritizes one-day state, 7/30-day
+GPP/respiration and independent carbon-stock objectives, while retaining
+low-weight necessary process supervision and zero-tolerance physical gates.
+It classifies the 161 learned fields as 2 direct-primary, 93
+state/budget-essential, and 66 auxiliary fields; 20 additional fields remain
+exact/diagnostic.
+
+The discussed target-oriented successor is implemented as an 83,755,173-
+parameter hierarchical coordinate Attention model and has passed local plus
+zero-update real-v6 admission. Its same-year, 28-landpoint effective-batch
+reader, dynamic retained-tail inputs, exact microbatch gradients, and clipped
+AdamW proposal now pass local tests. The active operation is to prepare eight
+real-v6 batches on a free CPU test node and run a free-V100 zero-retained-
+update full-step preflight. Paid training, 365-day rollout, Gate D2, sealed
+test, and product work stay closed.
 
 ## New Task Bootstrap
 
@@ -235,14 +242,12 @@ checkpoint handoff are recorded in the evidence documents named by
 accepted input-policy record is
 `research/daily_coarse_graining/successor_staged_training_assets_acceptance_20260812.md`.
 Do not rerun an old fit or use the formal 96-window panel for tuning. The
-current task is to discuss and freeze a target-oriented successor architecture
-using
-`research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md`.
-Do not repeat v4/v5, inherit their physical endpoint materialization heads, or
-train a new weak control. The successor must decide how the 93 essential and
-66 auxiliary fields are represented before implementation. Multi-point
-training, 365-day rollout, Gate D2, and product gates remain dependency-ordered
-later work.
+target-oriented successor architecture and bounded training contract are
+frozen. Resume from the free-node eight-batch preparation and zero-retained-
+update full-step preflight named by `NEXT_STEPS.md`. Do not repeat v4/v5,
+inherit their physical endpoint materialization heads, or train a new weak
+control. Paid multi-point training, 365-day rollout, Gate D2, and product
+gates remain dependency-ordered later work.
 Before choosing or inheriting
 a neural architecture, read
 `research/daily_coarse_graining/failed_architecture_lessons.md`; it replaces

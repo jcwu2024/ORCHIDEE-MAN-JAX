@@ -8,9 +8,20 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Mapping, NamedTuple, Sequence
 
+import jax
 import jax.numpy as jnp
+import numpy as np
+
+from research.daily_coarse_graining.constrained_daily_replay import (
+    CARBON_INVENTORY_FIELDS,
+    THERMAL_FIELDS,
+    WATER_INVENTORY_FIELDS,
+)
+from research.daily_coarse_graining.daily_markov_contract import load_markov_shard
+from research.daily_coarse_graining.typed_sidecar import read_typed_sidecar_shard
 
 from .long_horizon_objective import MaskedTrajectory, NormalizedError
+from .successor_training import derive_long_horizon_scales
 from .target_oriented_contract import (
     INDEPENDENT_FLUX_BASIS,
     INDEPENDENT_STOCK_BASIS,
@@ -24,7 +35,7 @@ from .training_loss import ProcessLossResult
 from .types import StateDefinedMasks, StateFeatureGroups
 
 SCHEMA_VERSION = "target_oriented_bounded_training_v1"
-FROZEN_CONTRACT_SHA256 = "68d1079c7bcaffed11f880688dc465ce02285c526e5651b0a9ce33069657256d"
+FROZEN_CONTRACT_SHA256 = "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b"
 DEFAULT_CONTRACT_PATH = (
     Path(__file__).resolve().parents[3] / "manifests" / "coarse_graining" / "target_oriented_bounded_training_v1.json"
 )
@@ -61,6 +72,43 @@ class ErrorSufficientStatistics(NamedTuple):
 class ScienceWindowSufficientStatistics(NamedTuple):
     fluxes: Mapping[str, ErrorSufficientStatistics]
     stocks: Mapping[str, ErrorSufficientStatistics]
+
+
+class PreparedTargetOrientedOneDayBatch(NamedTuple):
+    inputs: Any
+    process_targets: Any
+    expected_next_state: StateFeatureGroups
+    expected_next_state_defined: StateDefinedMasks
+    expected_next_discrete_state: Mapping[str, Any]
+    day_inputs: Any
+
+
+class PreparedTargetOrientedWindowBatch(NamedTuple):
+    inputs: Any
+    expected_next_state: StateFeatureGroups
+    expected_next_state_defined: StateDefinedMasks
+    expected_fast_gpp: Any
+    expected_fast_gpp_defined: Any
+    expected_next_discrete_state: Mapping[str, Any]
+    day_inputs: Any
+
+
+class PreparedTargetOrientedTrainingBatch(NamedTuple):
+    one_day: PreparedTargetOrientedOneDayBatch
+    seven_day: PreparedTargetOrientedWindowBatch
+    thirty_day: PreparedTargetOrientedWindowBatch
+
+
+class TargetOrientedScales(NamedTuple):
+    state: StateFeatureGroups
+    fluxes: Mapping[str, float]
+    stocks: Mapping[str, float]
+
+
+class TargetOrientedAdamWState(NamedTuple):
+    step: Any
+    first: Any
+    second: Any
 
 
 def _validate_contract(payload: Mapping[str, Any]) -> None:
@@ -118,6 +166,12 @@ def _validate_contract(payload: Mapping[str, Any]) -> None:
         int(data.get("teacher_days_per_update", 0)),
     ) != (28, 28, 208):
         raise ValueError("target-oriented effective-batch exposure drift")
+    if (
+        data.get("selection") != "seeded_hash_ranked_common_year_distinct_landpoints_per_update"
+        or data.get("common_runtime_year_per_update") is not True
+        or data.get("runtime_year_rotation") != "seeded_balanced_cycle_over_eligible_train_years"
+    ):
+        raise ValueError("target-oriented retained runtime-year policy drift")
 
     micro = payload.get("microbatch", {})
     if (
@@ -222,6 +276,171 @@ def load_target_oriented_training_contract(
     return TargetOrientedTrainingContract(payload, source, observed)
 
 
+def target_oriented_learning_rate(
+    contract: TargetOrientedTrainingContract,
+    update: int,
+) -> float:
+    optimizer = contract.optimizer
+    maximum = int(optimizer["maximum_updates"])
+    warmup = int(optimizer["warmup_updates"])
+    if not 1 <= int(update) <= maximum:
+        raise ValueError("target-oriented update lies outside the frozen budget")
+    peak = float(optimizer["peak_learning_rate"])
+    final = float(optimizer["final_learning_rate"])
+    if update <= warmup:
+        return peak * update / warmup
+    progress = (update - warmup) / (maximum - warmup)
+    cosine = 0.5 * (1.0 + np.cos(np.pi * progress))
+    return float(final + (peak - final) * cosine)
+
+
+def initialize_target_oriented_adamw(parameters: Any) -> TargetOrientedAdamWState:
+    zeros = jax.tree_util.tree_map(jnp.zeros_like, parameters)
+    return TargetOrientedAdamWState(
+        step=jnp.asarray(0, dtype=jnp.int32),
+        first=zeros,
+        second=zeros,
+    )
+
+
+def target_oriented_adamw_update(
+    parameters: Any,
+    gradients: Any,
+    state: TargetOrientedAdamWState,
+    *,
+    learning_rate: Any,
+    clip_norm: Any,
+    contract: TargetOrientedTrainingContract,
+) -> tuple[Any, TargetOrientedAdamWState, Any, Any]:
+    """Apply one clipped AdamW proposal and return its raw norm and clip scale."""
+
+    optimizer = contract.optimizer
+    beta1 = float(optimizer["beta1"])
+    beta2 = float(optimizer["beta2"])
+    epsilon = float(optimizer["epsilon"])
+    decay = float(optimizer["weight_decay"])
+    squared = sum(
+        (
+            jnp.sum(
+                jnp.square(jnp.asarray(leaf, dtype=jnp.float32)),
+                dtype=jnp.float32,
+            )
+            for leaf in jax.tree_util.tree_leaves(gradients)
+        ),
+        jnp.asarray(0.0, dtype=jnp.float32),
+    )
+    norm = jnp.sqrt(squared)
+    threshold = jnp.asarray(clip_norm, dtype=jnp.float32)
+    scale = jnp.minimum(1.0, threshold / jnp.maximum(norm, 1.0e-30))
+    clipped = jax.tree_util.tree_map(
+        lambda value: jnp.asarray(value, dtype=jnp.float32) * scale,
+        gradients,
+    )
+    step = state.step + jnp.asarray(1, dtype=jnp.int32)
+    first = jax.tree_util.tree_map(
+        lambda old, gradient: beta1 * old + (1.0 - beta1) * gradient,
+        state.first,
+        clipped,
+    )
+    second = jax.tree_util.tree_map(
+        lambda old, gradient: beta2 * old + (1.0 - beta2) * gradient * gradient,
+        state.second,
+        clipped,
+    )
+    correction1 = 1.0 - jnp.power(jnp.asarray(beta1, dtype=jnp.float32), step)
+    correction2 = 1.0 - jnp.power(jnp.asarray(beta2, dtype=jnp.float32), step)
+    rate = jnp.asarray(learning_rate, dtype=jnp.float32)
+    updated = jax.tree_util.tree_map(
+        lambda value, mean, variance: (
+            value - rate * ((mean / correction1) / (jnp.sqrt(variance / correction2) + epsilon) + decay * value)
+        ),
+        parameters,
+        first,
+        second,
+    )
+    return updated, TargetOrientedAdamWState(step, first, second), norm, scale
+
+
+def derive_target_oriented_scales(
+    next_state_scale: Any,
+    fast_gpp_scale: Any,
+    contract: Any,
+) -> TargetOrientedScales:
+    """Project frozen train/train column scales onto the target loss basis."""
+
+    flat = np.asarray(next_state_scale, dtype=np.float64)
+    if flat.shape != (int(contract.continuous_state_width),):
+        raise ValueError("target-oriented next-state scale width drift")
+    if not np.all(np.isfinite(flat)) or np.any(flat <= 0.0):
+        raise ValueError("target-oriented next-state scales must be finite and positive")
+
+    def field(component: str, name: str) -> np.ndarray:
+        matches = tuple(
+            leaf
+            for leaf in contract.state_leaves
+            if leaf.component == component and leaf.path == (name,) and leaf.start is not None and leaf.stop is not None
+        )
+        if len(matches) != 1:
+            raise ValueError(f"target-oriented state scale owner drift for {component}.{name}")
+        leaf = matches[0]
+        return flat[int(leaf.start) : int(leaf.stop)].reshape(tuple(leaf.shape))
+
+    hydrol = "hydrol_previous_step_state"
+    stomate = "slowproc_stomate_previous_step_state"
+    qsintveg = field(hydrol, "qsintveg").reshape(-1)
+    water_parts = []
+    for name in WATER_INVENTORY_FIELDS:
+        value = field(hydrol, name).reshape(-1)
+        if name == "qsintveg":
+            water_parts.extend((value, value))
+        else:
+            water_parts.append(value)
+    carbon_parts = [field(stomate, name).reshape(-1) for name in CARBON_INVENTORY_FIELDS]
+    thermal_parts = [
+        field(component, name).reshape(-1)
+        for component, name, _bound in THERMAL_FIELDS
+        if any(leaf.component == component and leaf.path == (name,) for leaf in contract.state_leaves)
+    ]
+    state = StateFeatureGroups(
+        canopy=qsintveg,
+        soil=field(hydrol, "mc").reshape(-1),
+        snow=np.concatenate(tuple(field(hydrol, name).reshape(-1) for name in ("snow", "snow_nobio", "snowliq"))),
+        water=np.concatenate(tuple(water_parts)),
+        carbon=np.concatenate(tuple(carbon_parts)),
+        thermal=np.concatenate(tuple(thermal_parts)),
+        other=flat,
+    )
+    for name in StateFeatureGroups._fields:
+        value = np.asarray(getattr(state, name), dtype=np.float64)
+        if value.size < 1 or not np.all(np.isfinite(value)) or np.any(value <= 0.0):
+            raise ValueError(f"target-oriented state group scale is invalid for {name}")
+
+    long = derive_long_horizon_scales(flat, fast_gpp_scale, contract)
+    fluxes = {
+        "gpp": float(long.fluxes["gpp"]),
+        "autotrophic_respiration": float(
+            np.hypot(
+                long.fluxes["maintenance_respiration"],
+                long.fluxes["growth_respiration"],
+            )
+        ),
+        "heterotrophic_respiration": float(long.fluxes["heterotrophic_respiration"]),
+    }
+    stocks = {
+        "aboveground_biomass_carbon": float(long.stocks["aboveground_biomass_carbon"]),
+        "belowground_biomass_carbon": float(long.stocks["belowground_biomass_carbon"]),
+        "nonliving_ecosystem_carbon": float(
+            np.hypot(
+                long.stocks["ecosystem_carbon"],
+                long.stocks["total_live_biomass_carbon"],
+            )
+        ),
+    }
+    if set(fluxes) != set(INDEPENDENT_FLUX_BASIS) or set(stocks) != set(INDEPENDENT_STOCK_BASIS):
+        raise ValueError("target-oriented independent science scale registry drift")
+    return TargetOrientedScales(state=state, fluxes=fluxes, stocks=stocks)
+
+
 def normalized_error_sufficient_statistics(
     predicted: Any,
     expected: Any,
@@ -280,6 +499,118 @@ def normalized_error_from_sufficient_statistics(
         bias_squared=mean * mean,
         count=count,
     )
+
+
+def _linearized_error_loss(
+    current: ErrorSufficientStatistics,
+    total: ErrorSufficientStatistics,
+    *,
+    mse_weight: Any,
+    bias_squared_weight: Any,
+) -> Any:
+    """Return a local scalar whose gradient equals this batch's global contribution."""
+
+    count = jax.lax.stop_gradient(jnp.asarray(total.count, dtype=jnp.float64))
+    signed = jax.lax.stop_gradient(jnp.asarray(total.sum_signed, dtype=jnp.float64))
+    inverse = jnp.where(count > 0.0, 1.0 / count, 0.0)
+    return (
+        jnp.asarray(mse_weight, dtype=jnp.float64) * jnp.asarray(current.sum_squared, dtype=jnp.float64) * inverse
+        + jnp.asarray(bias_squared_weight, dtype=jnp.float64)
+        * 2.0
+        * signed
+        * jnp.asarray(current.sum_signed, dtype=jnp.float64)
+        * inverse
+        * inverse
+    )
+
+
+def linearized_one_day_state_loss(
+    current: Mapping[str, ErrorSufficientStatistics],
+    total: Mapping[str, ErrorSufficientStatistics],
+) -> Any:
+    """Gradient-exact one-day contribution for independent microbatch VJPs."""
+
+    if tuple(current) != tuple(StateFeatureGroups._fields) or tuple(total) != tuple(StateFeatureGroups._fields):
+        raise ValueError("target-oriented state statistic group drift")
+    active = {name: jax.lax.stop_gradient(jnp.asarray(total[name].count) > 0.0) for name in StateFeatureGroups._fields}
+    count = jnp.sum(jnp.stack(tuple(active.values())), dtype=jnp.float64)
+    values = []
+    for name in StateFeatureGroups._fields:
+        value = _linearized_error_loss(
+            current[name],
+            total[name],
+            mse_weight=0.5,
+            bias_squared_weight=0.5,
+        )
+        values.append(jnp.where(active[name], value, 0.0))
+    return jnp.where(count > 0.0, jnp.sum(jnp.stack(values)) / count, 0.0)
+
+
+def linearized_science_window_loss(
+    current: ScienceWindowSufficientStatistics,
+    total: ScienceWindowSufficientStatistics,
+) -> Any:
+    """Gradient-exact 7/30-day contribution for one-window microbatches."""
+
+    result = jnp.asarray(0.0, dtype=jnp.float64)
+    for current_group, total_group, names in (
+        (current.fluxes, total.fluxes, INDEPENDENT_FLUX_BASIS),
+        (current.stocks, total.stocks, INDEPENDENT_STOCK_BASIS),
+    ):
+        if set(current_group) != set(names) or set(total_group) != set(names):
+            raise ValueError("target-oriented science statistic registry drift")
+        active = {name: jax.lax.stop_gradient(jnp.asarray(total_group[name].count) > 0.0) for name in names}
+        count = jnp.sum(jnp.stack(tuple(active.values())), dtype=jnp.float64)
+        values = []
+        for name in names:
+            value = _linearized_error_loss(
+                current_group[name],
+                total_group[name],
+                mse_weight=0.25,
+                bias_squared_weight=0.25,
+            )
+            values.append(jnp.where(active[name], value, 0.0))
+        result = result + jnp.where(
+            count > 0.0,
+            jnp.sum(jnp.stack(values)) / count,
+            0.0,
+        )
+    return result
+
+
+def linearized_process_supervision_loss(
+    current: Mapping[str, ErrorSufficientStatistics],
+    total: Mapping[str, ErrorSufficientStatistics],
+    contract: TargetOrientedContract,
+) -> Any:
+    """Gradient-exact necessary-process contribution for one-day microbatches."""
+
+    labels_by_category = contract.labels_by_category
+    expected = set().union(*(set(values) for values in labels_by_category.values()))
+    if set(current) != expected or set(total) != expected:
+        raise ValueError("target-oriented process statistic registry drift")
+    policy = contract.payload["training_objective"]["necessary_process_supervision"]
+    weights = {
+        "primary_science_direct": float(policy["primary_science_direct_label_weight"]),
+        "state_budget_essential": float(policy["state_budget_essential_label_weight"]),
+        "auxiliary_supervision": float(policy["auxiliary_supervision_label_weight"]),
+    }
+    denominator = jnp.asarray(0.0, dtype=jnp.float64)
+    for category, labels in labels_by_category.items():
+        active = jnp.stack(tuple(jax.lax.stop_gradient(jnp.asarray(total[label].count) > 0.0) for label in labels))
+        denominator = denominator + weights[category] * jnp.sum(active, dtype=jnp.float64)
+    result = jnp.asarray(0.0, dtype=jnp.float64)
+    for category, labels in labels_by_category.items():
+        for label in labels:
+            active = jax.lax.stop_gradient(jnp.asarray(total[label].count) > 0.0)
+            value = _linearized_error_loss(
+                current[label],
+                total[label],
+                mse_weight=weights[category],
+                bias_squared_weight=0.0,
+            )
+            result = result + jnp.where(active, value, 0.0)
+    return jnp.where(denominator > 0.0, result / denominator, 0.0)
 
 
 def one_day_state_sufficient_statistics(
@@ -499,10 +830,16 @@ def process_supervision_sufficient_statistics(
         raise ValueError("target-oriented process statistic registry drift")
     return {
         name: ErrorSufficientStatistics(
-            sum_squared=jnp.asarray(process_loss.label_mse[name], dtype=jnp.float64)
-            * jnp.asarray(process_loss.label_count[name], dtype=jnp.float64),
+            sum_squared=jnp.sum(
+                jnp.asarray(process_loss.label_mse[name], dtype=jnp.float64)
+                * jnp.asarray(process_loss.label_count[name], dtype=jnp.float64),
+                dtype=jnp.float64,
+            ),
             sum_signed=jnp.asarray(0.0, dtype=jnp.float64),
-            count=jnp.asarray(process_loss.label_count[name], dtype=jnp.float64),
+            count=jnp.sum(
+                jnp.asarray(process_loss.label_count[name], dtype=jnp.float64),
+                dtype=jnp.float64,
+            ),
         )
         for name in process_loss.label_mse
     }
@@ -533,6 +870,148 @@ def _reference_identity(reference: Any) -> tuple[str, int, str, str]:
         int(parent.year),
         str(parent.sha256),
         str(reference.sha256),
+    )
+
+
+def _stack(values: Sequence[Any]) -> Any:
+    if not values:
+        raise ValueError("cannot stack an empty target-oriented batch")
+    return jax.tree_util.tree_map(lambda *items: np.stack(items), *values)
+
+
+def _training_reference_lookup(
+    references: Sequence[Any],
+) -> Mapping[tuple[str, int, str, str], Any]:
+    lookup = {_reference_identity(reference): reference for reference in references}
+    if len(lookup) != len(references):
+        raise ValueError("target-oriented training references are not unique")
+    point_years = {(identity[0], identity[1]) for identity in lookup}
+    if len(point_years) != len(lookup):
+        raise ValueError("target-oriented references do not uniquely identify point-years")
+    return lookup
+
+
+def _record_identity(record: Mapping[str, Any]) -> tuple[str, int, str, str]:
+    return (
+        str(record["landpoint_id"]),
+        int(record["year"]),
+        str(record["parent_shard_sha256"]),
+        str(record["typed_shard_sha256"]),
+    )
+
+
+def prepare_target_oriented_training_batch(
+    references: Sequence[Any],
+    entry: Mapping[str, Any],
+    *,
+    adapter: Any,
+    day_inputs_by_reference: Mapping[tuple[str, int, str, str], Any],
+) -> PreparedTargetOrientedTrainingBatch:
+    """Load one 28-landpoint update without merging retained-owner inputs."""
+
+    lookup = _training_reference_lookup(references)
+    components = entry.get("components", {})
+    if set(components) != {"one_day", "seven_day", "thirty_day"}:
+        raise ValueError("target-oriented prepared entry component registry drift")
+    records = tuple(record for name in components for record in components[name])
+    identities = tuple(_record_identity(record) for record in records)
+    if len(identities) != 28 or len(set(identities)) != 28:
+        raise ValueError("target-oriented prepared update must contain 28 point-years")
+    runtime_year = int(entry.get("runtime_year", -1))
+    if runtime_year < 0 or {identity[1] for identity in identities} != {runtime_year}:
+        raise ValueError("target-oriented prepared update crosses retained runtime years")
+    if set(identities) - set(lookup):
+        raise ValueError("target-oriented prepared entry does not resolve to accepted references")
+    if set(identities) - set(day_inputs_by_reference):
+        raise ValueError("target-oriented retained day inputs are incomplete")
+
+    def examples(
+        identity: tuple[str, int, str, str],
+        rows: Sequence[int],
+    ) -> tuple[Any, ...]:
+        reference = lookup[identity]
+        parent_ref = reference.parent
+        if parent_ref.spatial_split != "train" or parent_ref.temporal_split != "train":
+            raise ValueError("target-oriented batch attempted to load a non-train shard")
+        parent = load_markov_shard(parent_ref.path, contract=adapter.contract)
+        values, defined, days = read_typed_sidecar_shard(
+            reference.path,
+            contract=adapter.typed_contract,
+            expected_days=reference.day_count,
+        )
+        if not np.array_equal(days, parent.day_index):
+            raise ValueError("target-oriented typed and parent day axes differ")
+        result = []
+        for row in rows:
+            if not 0 <= row < int(parent.days):
+                raise ValueError("target-oriented schedule row lies outside its shard")
+            if int(parent.day_index[row]) < 2:
+                raise ValueError("target-oriented batch entered a first-day lifecycle row")
+            result.append(
+                adapter.assemble(
+                    parent.sample(row),
+                    supplemental_values={name: value[row] for name, value in values.items()},
+                    supplemental_defined={name: value[row] for name, value in defined.items()},
+                )
+            )
+        return tuple(result)
+
+    one_examples = []
+    one_day_inputs = []
+    for record in components["one_day"]:
+        identity = _record_identity(record)
+        selected = examples(identity, tuple(int(value) for value in record["start_rows"]))
+        one_examples.extend(selected)
+        one_day_inputs.extend(day_inputs_by_reference[identity] for _value in selected)
+    if len(one_examples) != 32:
+        raise ValueError("target-oriented prepared one-day sample count drift")
+    one_day = PreparedTargetOrientedOneDayBatch(
+        inputs=_stack([value.inputs for value in one_examples]),
+        process_targets=_stack([value.targets.supervision for value in one_examples]),
+        expected_next_state=_stack([value.targets.next_state for value in one_examples]),
+        expected_next_state_defined=_stack([value.targets.next_state_defined for value in one_examples]),
+        expected_next_discrete_state=_stack([value.targets.next_discrete_state for value in one_examples]),
+        day_inputs=_stack(one_day_inputs),
+    )
+
+    def windows(name: str, horizon: int, expected_count: int) -> PreparedTargetOrientedWindowBatch:
+        input_windows = []
+        state_windows = []
+        defined_windows = []
+        gpp_windows = []
+        gpp_defined_windows = []
+        discrete_windows = []
+        retained_inputs = []
+        for record in components[name]:
+            identity = _record_identity(record)
+            for raw_start in record["start_rows"]:
+                start = int(raw_start)
+                values = examples(identity, tuple(range(start, start + horizon)))
+                input_windows.append(_stack([value.inputs for value in values]))
+                state_windows.append(_stack([value.targets.next_state for value in values]))
+                defined_windows.append(_stack([value.targets.next_state_defined for value in values]))
+                gpp_windows.append(np.stack([value.targets.supervision["daily.fast_gpp"].value for value in values]))
+                gpp_defined_windows.append(
+                    np.stack([value.targets.supervision["daily.fast_gpp"].defined for value in values])
+                )
+                discrete_windows.append(_stack([value.targets.next_discrete_state for value in values]))
+                retained_inputs.append(day_inputs_by_reference[identity])
+        if len(input_windows) != expected_count:
+            raise ValueError(f"target-oriented prepared {name} window count drift")
+        return PreparedTargetOrientedWindowBatch(
+            inputs=_stack(input_windows),
+            expected_next_state=_stack(state_windows),
+            expected_next_state_defined=_stack(defined_windows),
+            expected_fast_gpp=np.stack(gpp_windows),
+            expected_fast_gpp_defined=np.stack(gpp_defined_windows),
+            expected_next_discrete_state=_stack(discrete_windows),
+            day_inputs=_stack(retained_inputs),
+        )
+
+    return PreparedTargetOrientedTrainingBatch(
+        one_day=one_day,
+        seven_day=windows("seven_day", 7, 8),
+        thirty_day=windows("thirty_day", 30, 4),
     )
 
 
@@ -575,9 +1054,7 @@ def build_target_oriented_training_schedule(
     requested = maximum if updates is None else int(updates)
     if not 1 <= requested <= maximum:
         raise ValueError("target-oriented schedule update count is outside the frozen budget")
-    unique = {_reference_identity(reference): reference for reference in references}
-    if len(unique) != len(references):
-        raise ValueError("target-oriented training references are not unique")
+    unique = _training_reference_lookup(references)
     required = int(data["distinct_point_years_per_update"])
     landpoints = {identity[0] for identity in unique}
     if len(landpoints) < required:
@@ -585,9 +1062,26 @@ def build_target_oriented_training_schedule(
     seed = int(data["selection_seed"])
     exclude_first = bool(data["exclude_first_shard_row"])
     entries = []
-    identities = tuple(unique)
+    by_year: dict[int, list[tuple[str, int, str, str]]] = {}
+    for identity in unique:
+        by_year.setdefault(identity[1], []).append(identity)
+    eligible_years = tuple(
+        year for year, identities in by_year.items() if len({identity[0] for identity in identities}) >= required
+    )
+    if not eligible_years:
+        raise ValueError("target-oriented training has no year with 28 distinct landpoints")
+    year_cycle = tuple(
+        sorted(
+            eligible_years,
+            key=lambda year: (_rank(seed, 0, ("runtime_year", year)), year),
+        )
+    )
     for update in range(1, requested + 1):
-        ranked = sorted(identities, key=lambda value: (_rank(seed, update, value), value))
+        runtime_year = year_cycle[(update - 1) % len(year_cycle)]
+        ranked = sorted(
+            by_year[runtime_year],
+            key=lambda value: (_rank(seed, update, value), value),
+        )
         selected = []
         seen_landpoints = set()
         for identity in ranked:
@@ -637,7 +1131,13 @@ def build_target_oriented_training_schedule(
                 }
                 for identity in component_identities
             ]
-        entries.append({"update": update, "components": records})
+        entries.append(
+            {
+                "update": update,
+                "runtime_year": runtime_year,
+                "components": records,
+            }
+        )
     schedule = {
         "schema_version": "target_oriented_training_schedule_v1",
         "training_contract_sha256": contract.sha256,
@@ -652,13 +1152,23 @@ __all__ = [
     "DEFAULT_CONTRACT_PATH",
     "ErrorSufficientStatistics",
     "FROZEN_CONTRACT_SHA256",
+    "PreparedTargetOrientedOneDayBatch",
+    "PreparedTargetOrientedTrainingBatch",
+    "PreparedTargetOrientedWindowBatch",
     "SCHEMA_VERSION",
     "ScienceWindowSufficientStatistics",
+    "TargetOrientedAdamWState",
     "TargetOrientedTrainingContract",
+    "TargetOrientedScales",
     "add_error_sufficient_statistics",
     "add_science_window_sufficient_statistics",
     "build_target_oriented_training_schedule",
+    "derive_target_oriented_scales",
+    "initialize_target_oriented_adamw",
     "load_target_oriented_training_contract",
+    "linearized_one_day_state_loss",
+    "linearized_process_supervision_loss",
+    "linearized_science_window_loss",
     "merge_error_sufficient_statistics",
     "necessary_process_supervision_from_sufficient_statistics",
     "normalized_error_from_sufficient_statistics",
@@ -666,6 +1176,9 @@ __all__ = [
     "one_day_state_anchor_from_sufficient_statistics",
     "one_day_state_sufficient_statistics",
     "process_supervision_sufficient_statistics",
+    "prepare_target_oriented_training_batch",
     "science_window_from_sufficient_statistics",
     "science_window_sufficient_statistics",
+    "target_oriented_adamw_update",
+    "target_oriented_learning_rate",
 ]

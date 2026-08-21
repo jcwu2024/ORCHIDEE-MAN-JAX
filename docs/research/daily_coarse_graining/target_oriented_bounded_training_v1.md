@@ -17,7 +17,7 @@ The machine contract is
 `manifests/coarse_graining/target_oriented_bounded_training_v1.json`. It binds
 the accepted Teacher-v6 dataset, candidate manifest, target objective, and GPU
 admission evidence. Its SHA256 is
-`68d1079c7bcaffed11f880688dc465ce02285c526e5651b0a9ce33069657256d`.
+`91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b`.
 
 ## Effective Update
 
@@ -31,12 +31,16 @@ distinct landpoints:
 | Thirty-day science windows | 4 | 4 | 120 |
 | Total | - | 28 | 208 |
 
-All rows come from the accepted Teacher-v6 `train/train` split. Point-years
-are hash-ranked from the frozen seed, landpoint identity is not a network
-feature, and no point-year or landpoint repeats within an update. The first
-annual row is excluded. This uses much more of the available data per update
-than the earlier one-point-year diagnostics without requiring a large tensor
-batch to reside in GPU memory at once.
+All rows come from the accepted Teacher-v6 `train/train` split. The 28
+point-years in one update share one runtime year and use 28 distinct
+landpoints; eligible years rotate in one deterministic hash-ranked cycle.
+This keeps the retained-tail executable scaffold static within a compiled
+update while every sample carries its own dynamic retained-tail arrays.
+Landpoint identity is not a network feature, and no point-year or landpoint
+repeats within an update. The first annual row is excluded. This uses much
+more of the available data per update than the earlier one-point-year
+diagnostics without requiring a large tensor batch to reside in GPU memory at
+once.
 
 ## Memory Strategy
 
@@ -53,7 +57,7 @@ This is single-GPU gradient accumulation, not data-parallel multi-GPU
 training. The zero-update V100 admission measured only 2.49 GiB peak live
 memory for one-day differentiation, but the actual full-objective step must be
 measured before selecting a paid resource envelope. Admission requires at
-most 28 GiB actual JAX `bytes_in_use`, leaving headroom on a 32 GB V100.
+most 28 GiB actual JAX `peak_bytes_in_use`, leaving headroom on a 32 GB V100.
 
 ## Optimizer
 
@@ -88,12 +92,16 @@ checkpoints allow paid runs to remain short and separately reviewable.
 
 ## Next Operation
 
-The exact microbatch sufficient-statistics accumulator is implemented, and
-synthetic full-batch versus accumulated loss/gradient tests pass. Implement
-the prepared multi-point-year real-v6 batch reader and dynamic retained-tail
-day-input path next. After local tests, one free-`gln01` preflight will measure
-full-step memory, hot-step time, and eight calibration gradients. Only its
-measured timing can support a paid GPU wall-time and worst-case cost proposal.
+The exact microbatch sufficient-statistics accumulator, multi-point-year
+prepared reader, dynamic retained-tail day-input path, and clipped AdamW
+proposal are implemented. Synthetic full-batch versus accumulated
+loss/gradient tests and focused prepared-artifact tests pass. The active
+operation is to prepare eight real-v6 batches on a free CPU test node and then
+run one free-`gln01` preflight. It will retain no update while measuring eight
+full-objective gradients, the train-only p90 clip, all seven architecture
+gradient families, actual peak memory, and the compiled hot gradient-plus-
+AdamW step. Only its measured timing can support a paid GPU wall-time and
+worst-case cost proposal.
 
 No Teacher regeneration, historical v5 access, paid submission, 365-day
 rollout, long-held validation, Gate D2, sealed-test access, or product

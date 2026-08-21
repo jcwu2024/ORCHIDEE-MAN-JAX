@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from typing import Any, Callable, Protocol
 
 import jax.numpy as jnp
@@ -128,5 +129,32 @@ def bind_daily_operator(
             process_head=process_head,
             retained_tail=retained_tail,
         )
+
+    return transition
+
+
+def bind_daily_operator_dynamic_retained_inputs(
+    *,
+    input_assembler: InputAssembler,
+    process_head: ProcessHead,
+    retained_tail_template: RetainedTailAdapter,
+) -> Callable[[Any, DailyOperatorInput, Any], DailyOperatorResult]:
+    """Expose retained arrays as a training argument without changing inference."""
+
+    def transition(
+        parameters: Any,
+        inputs: DailyOperatorInput,
+        retained_day_inputs: Any,
+    ) -> DailyOperatorResult:
+        retained_tail = replace(
+            retained_tail_template,
+            day_inputs=retained_day_inputs,
+        )
+        bound = bind_daily_operator(
+            input_assembler=input_assembler,
+            process_head=process_head,
+            retained_tail=retained_tail,
+        )
+        return bound(parameters, inputs)
 
     return transition

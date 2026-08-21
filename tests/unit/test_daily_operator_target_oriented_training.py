@@ -2,11 +2,16 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
+import jax.numpy as jnp
+import numpy as np
 import pytest
 
 from research.daily_coarse_graining.daily_operator.target_oriented_training import (
     build_target_oriented_training_schedule,
+    initialize_target_oriented_adamw,
     load_target_oriented_training_contract,
+    target_oriented_adamw_update,
+    target_oriented_learning_rate,
 )
 
 
@@ -24,16 +29,17 @@ class Reference:
     day_count: int = 364
 
 
-def _references(count: int = 32):
+def _references(count: int = 32, years: tuple[int, ...] = (1961, 1962, 1963)):
     return tuple(
         Reference(
             parent=Parent(
                 landpoint_id=f"point-{index:03d}",
-                year=1961 + index % 10,
-                sha256=f"parent-{index:03d}",
+                year=year,
+                sha256=f"parent-{index:03d}-{year}",
             ),
-            sha256=f"typed-{index:03d}",
+            sha256=f"typed-{index:03d}-{year}",
         )
+        for year in years
         for index in range(count)
     )
 
@@ -43,6 +49,7 @@ def test_target_oriented_training_contract_freezes_diverse_effective_batch():
     assert contract.data["teacher_days_per_update"] == 208
     assert contract.data["distinct_point_years_per_update"] == 28
     assert contract.data["distinct_landpoints_per_update"] == 28
+    assert contract.data["common_runtime_year_per_update"] is True
     assert contract.payload["microbatch"] == {
         "one_day_size": 4,
         "seven_day_window_size": 1,
@@ -56,6 +63,30 @@ def test_target_oriented_training_contract_freezes_diverse_effective_batch():
     }
     assert contract.optimizer["stage_milestones"] == [250, 1000, 3000]
     assert contract.payload["validation"]["promotion"] == ("absolute_target_oriented_7_30_day_gates_only")
+
+
+def test_target_oriented_adamw_schedule_and_clipping():
+    contract = load_target_oriented_training_contract()
+    assert target_oriented_learning_rate(contract, 1) == pytest.approx(4.0e-7)
+    assert target_oriented_learning_rate(contract, 250) == pytest.approx(1.0e-4)
+    assert target_oriented_learning_rate(contract, 3000) == pytest.approx(1.0e-5)
+
+    parameters = {"weight": jnp.asarray([1.0, -2.0], dtype=jnp.float32)}
+    gradients = {"weight": jnp.asarray([3.0, 4.0], dtype=jnp.float32)}
+    state = initialize_target_oriented_adamw(parameters)
+    updated, next_state, norm, scale = target_oriented_adamw_update(
+        parameters,
+        gradients,
+        state,
+        learning_rate=target_oriented_learning_rate(contract, 1),
+        clip_norm=1.0,
+        contract=contract,
+    )
+    assert float(norm) == pytest.approx(5.0)
+    assert float(scale) == pytest.approx(0.2)
+    assert int(next_state.step) == 1
+    assert np.all(np.isfinite(np.asarray(updated["weight"])))
+    assert not np.array_equal(np.asarray(updated["weight"]), np.asarray(parameters["weight"]))
 
 
 def test_target_oriented_schedule_is_deterministic_diverse_and_complete():
@@ -74,6 +105,7 @@ def test_target_oriented_schedule_is_deterministic_diverse_and_complete():
             "thirty_day": 4,
         }
         all_records = sum(components.values(), [])
+        assert {item["year"] for item in all_records} == {entry["runtime_year"]}
         assert len({(item["landpoint_id"], item["year"]) for item in all_records}) == 28
         assert len({item["landpoint_id"] for item in all_records}) == 28
         assert sum(len(item["start_rows"]) for item in components["one_day"]) == 32
@@ -81,6 +113,7 @@ def test_target_oriented_schedule_is_deterministic_diverse_and_complete():
         assert sum(len(item["start_rows"]) for item in components["thirty_day"]) == 4
         assert all(min(item["start_rows"]) >= 1 for item in all_records)
         assert all(max(item["start_rows"]) <= 334 for item in components["thirty_day"])
+    assert first["entries"][0]["runtime_year"] != first["entries"][1]["runtime_year"]
 
 
 def test_target_oriented_schedule_fails_when_landpoint_diversity_is_impossible():

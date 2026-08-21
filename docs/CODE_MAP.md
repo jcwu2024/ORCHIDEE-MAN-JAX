@@ -210,16 +210,21 @@ conditional. The accepted admission runner and free-`gln01` launcher are
 `outputs/target-oriented-attention-gpu-admission-7c6371c-report.json`.
 
 `daily_operator/target_oriented_training.py` owns the frozen bounded-training
-contract loader, deterministic 28-landpoint/point-year schedule, and exact
+contract loader, deterministic same-year 28-landpoint/point-year schedule,
+prepared batch construction, target scales, clipped AdamW proposal, and exact
 microbatch sufficient-statistics reductions for one-day state, 7/30-day
 science, and necessary process supervision. Its machine contract is
 `manifests/coarse_graining/target_oriented_bounded_training_v1.json`, its
 decision record is `target_oriented_bounded_training_v1.md`, and its focused
 regressions are
-`tests/unit/test_daily_operator_target_oriented_training.py` and
-`tests/unit/test_daily_operator_target_oriented_training_statistics.py`.
-Prepared multi-point-year Teacher-v6 artifacts and the full-step GPU preflight
-remain the next implementation boundary.
+`tests/unit/test_daily_operator_target_oriented_training.py`,
+`tests/unit/test_daily_operator_target_oriented_training_statistics.py`, and
+`tests/unit/test_daily_operator_target_oriented_prepared_batch.py`.
+`scripts/hpc/target_oriented_training_prepared.py` owns serialization,
+`prepare_target_oriented_training_batches.py` owns free-CPU real-v6
+preparation, and `run_target_oriented_full_step_preflight.py` owns the
+zero-retained-update free-GPU measurement. Producing and executing the eight
+real-v6 prepared batches is the active operation.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

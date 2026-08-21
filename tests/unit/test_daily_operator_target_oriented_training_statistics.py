@@ -12,6 +12,9 @@ from research.daily_coarse_graining.daily_operator import (
 )
 from research.daily_coarse_graining.daily_operator.target_oriented_training import (
     add_science_window_sufficient_statistics,
+    linearized_one_day_state_loss,
+    linearized_process_supervision_loss,
+    linearized_science_window_loss,
     merge_error_sufficient_statistics,
     necessary_process_supervision_from_sufficient_statistics,
     one_day_state_anchor_from_sufficient_statistics,
@@ -72,6 +75,35 @@ def test_state_microbatch_statistics_preserve_full_loss_and_gradient():
         jax.grad(full)(parameter),
         rtol=1e-12,
     )
+
+    total = merge_error_sufficient_statistics(
+        [
+            one_day_state_sufficient_statistics(
+                _state_groups(expected[selected] + parameter * feature[selected]),
+                _state_groups(expected[selected]),
+                _state_masks(defined[selected]),
+                _state_masks(defined[selected]),
+                _state_groups(jnp.asarray([1.0, 2.0, 3.0])),
+            )
+            for selected in (slice(start, start + 2) for start in range(0, 8, 2))
+        ]
+    )
+    independent_gradient = 0.0
+    for start in range(0, 8, 2):
+        selected = slice(start, start + 2)
+
+        def local(value):
+            current = one_day_state_sufficient_statistics(
+                _state_groups(expected[selected] + value * feature[selected]),
+                _state_groups(expected[selected]),
+                _state_masks(defined[selected]),
+                _state_masks(defined[selected]),
+                _state_groups(jnp.asarray([1.0, 2.0, 3.0])),
+            )
+            return linearized_one_day_state_loss(current, total)
+
+        independent_gradient += jax.grad(local)(parameter)
+    np.testing.assert_allclose(independent_gradient, jax.grad(full)(parameter), rtol=1e-12)
 
 
 def _trajectory(value, defined):
@@ -162,6 +194,30 @@ def test_science_microbatch_statistics_preserve_global_bias_and_gradient():
         rtol=1e-12,
     )
 
+    total = None
+    for index in range(8):
+        current = science_window_sufficient_statistics(
+            *_science_trajectories(parameter, slice(index, index + 1)),
+            flux_scales=FLUX_SCALES,
+            stock_scales=STOCK_SCALES,
+            horizon=30,
+        )
+        total = current if total is None else add_science_window_sufficient_statistics(total, current)
+    independent_gradient = 0.0
+    for index in range(8):
+
+        def local(value):
+            current = science_window_sufficient_statistics(
+                *_science_trajectories(value, slice(index, index + 1)),
+                flux_scales=FLUX_SCALES,
+                stock_scales=STOCK_SCALES,
+                horizon=30,
+            )
+            return linearized_science_window_loss(current, total)
+
+        independent_gradient += jax.grad(local)(parameter)
+    np.testing.assert_allclose(independent_gradient, jax.grad(full)(parameter), rtol=1e-12)
+
 
 def test_process_microbatch_statistics_preserve_label_weighting():
     contract = load_target_oriented_contract()
@@ -211,3 +267,24 @@ def test_process_microbatch_statistics_preserve_label_weighting():
         jax.grad(direct)(parameter),
         rtol=1e-12,
     )
+
+    total = merge_error_sufficient_statistics(
+        [
+            process_supervision_sufficient_statistics(microbatch(parameter, 0.0, 2)),
+            process_supervision_sufficient_statistics(microbatch(parameter, 0.3, 5)),
+        ]
+    )
+    independent_gradient = sum(
+        (
+            jax.grad(
+                lambda value, offset=offset, count=count: linearized_process_supervision_loss(
+                    process_supervision_sufficient_statistics(microbatch(value, offset, count)),
+                    total,
+                    contract,
+                )
+            )(parameter)
+            for offset, count in ((0.0, 2), (0.3, 5))
+        ),
+        jnp.asarray(0.0),
+    )
+    np.testing.assert_allclose(independent_gradient, jax.grad(direct)(parameter), rtol=1e-12)

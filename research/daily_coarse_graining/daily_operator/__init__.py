@@ -106,7 +106,13 @@ from .mechanistic_process_head import (
     MechanisticStrongBaselineProcessHead,
     build_mechanistic_output_layout,
 )
-from .model import InputAssembler, ProcessHead, bind_daily_operator, daily_operator_transition
+from .model import (
+    InputAssembler,
+    ProcessHead,
+    bind_daily_operator,
+    bind_daily_operator_dynamic_retained_inputs,
+    daily_operator_transition,
+)
 from .named_biomass_tendency import (
     NAMED_BIOMASS_TENDENCY_COMPONENTS,
     NAMED_BIOMASS_TENDENCY_FIELDS,
@@ -283,6 +289,24 @@ from .target_oriented_contract import (
 from .target_oriented_process_head import (
     MechanisticTargetOrientedAttentionProcessHead,
 )
+from .target_oriented_training import (
+    PreparedTargetOrientedOneDayBatch,
+    PreparedTargetOrientedTrainingBatch,
+    PreparedTargetOrientedWindowBatch,
+    TargetOrientedAdamWState,
+    TargetOrientedScales,
+    TargetOrientedTrainingContract,
+    build_target_oriented_training_schedule,
+    derive_target_oriented_scales,
+    initialize_target_oriented_adamw,
+    linearized_one_day_state_loss,
+    linearized_process_supervision_loss,
+    linearized_science_window_loss,
+    load_target_oriented_training_contract,
+    prepare_target_oriented_training_batch,
+    target_oriented_adamw_update,
+    target_oriented_learning_rate,
+)
 from .types import *  # noqa: F403
 
 __all__ = [
@@ -391,6 +415,7 @@ __all__ = [
     "audit_inference_source_graph",
     "audit_process_label_bindings",
     "bind_daily_operator",
+    "bind_daily_operator_dynamic_retained_inputs",
     "biomass_stock_identity_residual",
     "biomass_stock_identity_roundoff_audit",
     "build_canonical_retained_tail_adapter",
@@ -492,14 +517,30 @@ __all__ = [
     "ScienceWindowResult",
     "TargetOrientedContract",
     "TargetOrientedLossResult",
+    "TargetOrientedAdamWState",
+    "TargetOrientedTrainingContract",
+    "TargetOrientedScales",
+    "PreparedTargetOrientedOneDayBatch",
+    "PreparedTargetOrientedTrainingBatch",
+    "PreparedTargetOrientedWindowBatch",
+    "build_target_oriented_training_schedule",
+    "derive_target_oriented_scales",
+    "initialize_target_oriented_adamw",
+    "linearized_one_day_state_loss",
+    "linearized_process_supervision_loss",
+    "linearized_science_window_loss",
     "compose_target_oriented_loss",
     "derive_carbon_flux_identities",
     "derive_carbon_stock_identities",
     "load_target_oriented_contract",
+    "load_target_oriented_training_contract",
     "necessary_process_supervision_loss",
     "one_day_state_anchor",
+    "prepare_target_oriented_training_batch",
     "resolve_target_output_hierarchy",
     "science_window_objective",
+    "target_oriented_adamw_update",
+    "target_oriented_learning_rate",
     "DOMAIN_REFINEMENT_DEPTHS",
     "SCIENCE_DOMAIN_ADJACENCY",
     "SCIENCE_TOKEN_NAMES",

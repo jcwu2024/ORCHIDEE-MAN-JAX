@@ -1,7 +1,7 @@
 {
   "schema_version": "target_oriented_bounded_training_v1",
   "status": "frozen_for_training_step_preflight",
-  "contract_sha256": "68d1079c7bcaffed11f880688dc465ce02285c526e5651b0a9ce33069657256d",
+  "contract_sha256": "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b",
   "identity": {
     "candidate": "target_oriented_hierarchical_coordinate_attention_v1",
     "parameter_count": 83755173,
@@ -16,7 +16,9 @@
     "release_id": "pft14-daily-teacher-v6",
     "split": "train/train",
     "selection_seed": 20260821,
-    "selection": "seeded_hash_ranked_distinct_landpoints_per_update",
+    "selection": "seeded_hash_ranked_common_year_distinct_landpoints_per_update",
+    "common_runtime_year_per_update": true,
+    "runtime_year_rotation": "seeded_balanced_cycle_over_eligible_train_years",
     "exclude_first_shard_row": true,
     "one_day": {
       "sample_count": 32,
