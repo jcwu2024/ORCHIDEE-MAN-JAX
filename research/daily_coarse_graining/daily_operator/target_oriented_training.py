@@ -21,6 +21,7 @@ from research.daily_coarse_graining.daily_markov_contract import load_markov_sha
 from research.daily_coarse_graining.typed_sidecar import read_typed_sidecar_shard
 
 from .long_horizon_objective import MaskedTrajectory, NormalizedError
+from .successor_fast_owner_training import build_successor_fast_owner_targets
 from .successor_training import derive_long_horizon_scales
 from .target_oriented_contract import (
     INDEPENDENT_FLUX_BASIS,
@@ -905,6 +906,8 @@ def prepare_target_oriented_training_batch(
     entry: Mapping[str, Any],
     *,
     adapter: Any,
+    schema: Any,
+    owner_contract: Any,
     day_inputs_by_reference: Mapping[tuple[str, int, str, str], Any],
 ) -> PreparedTargetOrientedTrainingBatch:
     """Load one 28-landpoint update without merging retained-owner inputs."""
@@ -967,7 +970,17 @@ def prepare_target_oriented_training_batch(
         raise ValueError("target-oriented prepared one-day sample count drift")
     one_day = PreparedTargetOrientedOneDayBatch(
         inputs=_stack([value.inputs for value in one_examples]),
-        process_targets=_stack([value.targets.supervision for value in one_examples]),
+        process_targets=_stack(
+            [
+                build_successor_fast_owner_targets(
+                    value,
+                    schema=schema,
+                    markov_contract=adapter.contract,
+                    owner_contract=owner_contract,
+                )
+                for value in one_examples
+            ]
+        ),
         expected_next_state=_stack([value.targets.next_state for value in one_examples]),
         expected_next_state_defined=_stack([value.targets.next_state_defined for value in one_examples]),
         expected_next_discrete_state=_stack([value.targets.next_discrete_state for value in one_examples]),

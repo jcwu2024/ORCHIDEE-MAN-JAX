@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 import jax
 import jax.numpy as jnp
@@ -23,6 +24,9 @@ from research.daily_coarse_graining.daily_operator.training_data import (
 from research.daily_coarse_graining.daily_operator.types import (
     StateDefinedMasks,
     StateFeatureGroups,
+)
+from scripts.hpc.prepare_target_oriented_training_batches import (
+    _retained_inputs_from_artifact,
 )
 from scripts.hpc.target_oriented_training_prepared import (
     PREPARED_ARTIFACT_SCHEMA,
@@ -117,6 +121,9 @@ def test_prepared_batch_keeps_landpoint_day_inputs_dynamic(monkeypatch):
     entry = build_target_oriented_training_schedule(references, contract, updates=1)["entries"][0]
     parent_loads = []
     typed_loads = []
+    target_builds = []
+    schema = object()
+    owner_contract = object()
 
     def load_parent(path, *, contract):
         del contract
@@ -141,6 +148,15 @@ def test_prepared_batch_keeps_landpoint_day_inputs_dynamic(monkeypatch):
         "research.daily_coarse_graining.daily_operator.target_oriented_training.read_typed_sidecar_shard",
         load_typed,
     )
+
+    def build_targets(value, *, schema, markov_contract, owner_contract):
+        target_builds.append((value, schema, markov_contract, owner_contract))
+        return value.targets.supervision
+
+    monkeypatch.setattr(
+        "research.daily_coarse_graining.daily_operator.target_oriented_training.build_successor_fast_owner_targets",
+        build_targets,
+    )
     day_inputs = {
         (
             reference.parent.landpoint_id,
@@ -155,6 +171,8 @@ def test_prepared_batch_keeps_landpoint_day_inputs_dynamic(monkeypatch):
         references,
         entry,
         adapter=FakeAdapter(),
+        schema=schema,
+        owner_contract=owner_contract,
         day_inputs_by_reference=day_inputs,
     )
 
@@ -168,6 +186,8 @@ def test_prepared_batch_keeps_landpoint_day_inputs_dynamic(monkeypatch):
     assert np.unique(batch.seven_day.day_inputs).size == 8
     assert np.unique(batch.thirty_day.day_inputs).size == 4
     assert len(parent_loads) == len(typed_loads) == 28
+    assert len(target_builds) == 32
+    assert all(values[1:] == (schema, FakeAdapter.contract, owner_contract) for values in target_builds)
 
 
 @dataclass(frozen=True)
@@ -195,6 +215,42 @@ def test_dynamic_retained_binding_maps_each_sample_day_inputs(monkeypatch):
         jnp.asarray([1.0, 3.0, 5.0]),
     )
     np.testing.assert_array_equal(result, np.asarray([13.0, 25.0, 37.0]))
+
+
+def test_reuses_distinct_point_year_retained_inputs_from_prepared_artifact():
+    def record(point: int, starts: tuple[int, ...]):
+        return {
+            "landpoint_id": f"point-{point:03d}",
+            "year": 1979,
+            "parent_shard_sha256": f"parent-{point:03d}",
+            "typed_shard_sha256": f"typed-{point:03d}",
+            "start_rows": starts,
+        }
+
+    one_records = tuple(record(point, (2 * point + 1, 2 * point + 2)) for point in range(16))
+    seven_records = tuple(record(point, (point + 1,)) for point in range(16, 24))
+    thirty_records = tuple(record(point, (point + 1,)) for point in range(24, 28))
+    artifact = SimpleNamespace(
+        batch=SimpleNamespace(
+            one_day=SimpleNamespace(day_inputs=np.repeat(np.arange(16), 2)[:, None]),
+            seven_day=SimpleNamespace(day_inputs=np.arange(16, 24)[:, None]),
+            thirty_day=SimpleNamespace(day_inputs=np.arange(24, 28)[:, None]),
+        )
+    )
+    entry = {
+        "components": {
+            "one_day": one_records,
+            "seven_day": seven_records,
+            "thirty_day": thirty_records,
+        }
+    }
+
+    reused = _retained_inputs_from_artifact(jax, artifact, entry)
+
+    assert len(reused) == 28
+    for point in range(28):
+        identity = (f"point-{point:03d}", 1979, f"parent-{point:03d}", f"typed-{point:03d}")
+        np.testing.assert_array_equal(reused[identity], np.asarray([point]))
 
 
 def test_prepared_target_artifact_roundtrip(tmp_path):

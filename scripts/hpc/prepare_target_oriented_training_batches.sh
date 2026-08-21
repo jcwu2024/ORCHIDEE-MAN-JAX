@@ -9,6 +9,7 @@ EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD}
 UPDATES=${UPDATES:-8}
 HEAD_SHORT=${EXPECTED_GIT_HEAD:0:7}
 OUTPUT_DIR=${OUTPUT_DIR:-$ROOT/runtime/outputs/training/target-oriented-prepared-${UPDATES}-${HEAD_SHORT}}
+REUSE_RETAINED_INPUTS_MANIFEST=${REUSE_RETAINED_INPUTS_MANIFEST:-}
 PYTHON=$ROOT/.venvs/orcjax_cpu/bin/python
 
 case "$(hostname)" in
@@ -21,6 +22,13 @@ test "$UPDATES" = 8
 test -x "$PYTHON"
 test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
 test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
+
+REUSE_ARGS=()
+if [[ -n "$REUSE_RETAINED_INPUTS_MANIFEST" ]]; then
+  case "$REUSE_RETAINED_INPUTS_MANIFEST" in "$ROOT/runtime/outputs/"*) ;; *) exit 2 ;; esac
+  test -f "$REUSE_RETAINED_INPUTS_MANIFEST"
+  REUSE_ARGS=(--reuse-retained-inputs-manifest "$REUSE_RETAINED_INPUTS_MANIFEST")
+fi
 
 DATASET=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json
 ACCEPTANCE=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance-v2/acceptance_report.json
@@ -50,6 +58,7 @@ cd "$WORKTREE"
   --fast-statistics "$FAST_STATISTICS" \
   --training-contract "$TRAINING_CONTRACT" \
   --updates "$UPDATES" \
+  "${REUSE_ARGS[@]}" \
   --output-dir "$OUTPUT_DIR"
 
 test -f "$OUTPUT_DIR/prepared_manifest.json"

@@ -21,6 +21,7 @@ from scripts.hpc.target_oriented_training_prepared import (
     PreparedTargetOrientedUpdateArtifact,
     atomic_json,
     load_prepared_target_artifact,
+    load_prepared_target_manifest,
     sha256_file,
     write_prepared_target_artifact,
 )
@@ -61,6 +62,32 @@ def _record_identity(record: Mapping[str, Any]) -> tuple[str, int, str, str]:
 def _records(entry: Mapping[str, Any]):
     components = entry["components"]
     return tuple(record for name in ("one_day", "seven_day", "thirty_day") for record in components[name])
+
+
+def _retained_inputs_from_artifact(jax: Any, artifact: Any, entry: Mapping[str, Any]) -> Mapping[Any, Any]:
+    result = {}
+    batches = {
+        "one_day": artifact.batch.one_day.day_inputs,
+        "seven_day": artifact.batch.seven_day.day_inputs,
+        "thirty_day": artifact.batch.thirty_day.day_inputs,
+    }
+    for name, batch in batches.items():
+        offset = 0
+        for record in entry["components"][name]:
+            identity = _record_identity(record)
+            if identity in result:
+                raise ValueError("reused retained inputs contain a repeated point-year")
+            result[identity] = jax.tree_util.tree_map(
+                lambda value: np.asarray(value[offset]),
+                batch,
+            )
+            offset += len(record["start_rows"])
+        sizes = {int(np.asarray(value).shape[0]) for value in jax.tree_util.tree_leaves(batch)}
+        if sizes != {offset}:
+            raise ValueError(f"reused retained {name} batch coverage drift")
+    if len(result) != 28:
+        raise ValueError("reused retained inputs must cover 28 point-years")
+    return result
 
 
 def _prepare_retained_inputs(
@@ -123,6 +150,18 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         contract,
         updates=int(args.updates),
     )
+    reuse_manifest_path = getattr(args, "reuse_retained_inputs_manifest", None)
+    reuse_manifest = None
+    if reuse_manifest_path is not None:
+        reuse_manifest_path = reuse_manifest_path.resolve()
+        raw_reuse = json.loads(reuse_manifest_path.read_text(encoding="utf-8"))
+        reuse_manifest = load_prepared_target_manifest(
+            reuse_manifest_path,
+            training_contract_sha256=contract.sha256,
+            schedule_sha256=schedule["schedule_sha256"],
+            updates=int(args.updates),
+            source_git_head=str(raw_reuse.get("identity", {}).get("source_git_head", "")),
+        )
     lookup = {_identity(reference): reference for reference in references}
     identity = {
         "source_git_head": _git_head(),
@@ -152,6 +191,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "historical_v5_used": False,
             "sealed_test_read": False,
         }
+        if reuse_manifest_path is not None:
+            progress["retained_inputs_reused_from"] = str(reuse_manifest_path)
     completed = {int(record["update"]): record for record in progress["entries"]}
     retained_cache: dict[tuple[str, int, str, str], tuple[Any, str, float]] = {}
     started = time.perf_counter()
@@ -168,23 +209,35 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             print(f"target_prepared_update_reused update={update}", flush=True)
             continue
         entry_started = time.perf_counter()
-        day_inputs = {}
-        signatures = set()
-        retained_seconds = 0.0
-        for record in _records(entry):
-            key = _record_identity(record)
-            reference = lookup.get(key)
-            if reference is None:
-                raise ValueError("target-oriented schedule record has no coherent reference")
-            if key not in retained_cache:
-                retained_cache[key] = _prepare_retained_inputs(runtime, reference, record)
-                seconds = retained_cache[key][2]
-            else:
-                seconds = 0.0
-            dynamic, signature, _original_seconds = retained_cache[key]
-            day_inputs[key] = dynamic
-            signatures.add(signature)
-            retained_seconds += seconds
+        if reuse_manifest is not None:
+            reused_record = reuse_manifest["entries"][update - 1]
+            reused_artifact = load_prepared_target_artifact(
+                reuse_manifest_path,
+                reused_record,
+                training_contract_sha256=contract.sha256,
+                schedule_entry=entry,
+            )
+            day_inputs = _retained_inputs_from_artifact(jax, reused_artifact, entry)
+            signatures = {reused_artifact.trace_signature}
+            retained_seconds = 0.0
+        else:
+            day_inputs = {}
+            signatures = set()
+            retained_seconds = 0.0
+            for record in _records(entry):
+                key = _record_identity(record)
+                reference = lookup.get(key)
+                if reference is None:
+                    raise ValueError("target-oriented schedule record has no coherent reference")
+                if key not in retained_cache:
+                    retained_cache[key] = _prepare_retained_inputs(runtime, reference, record)
+                    seconds = retained_cache[key][2]
+                else:
+                    seconds = 0.0
+                dynamic, signature, _original_seconds = retained_cache[key]
+                day_inputs[key] = dynamic
+                signatures.add(signature)
+                retained_seconds += seconds
         if len(signatures) != 1:
             raise ValueError("target-oriented update crosses retained executable structures")
         batch_started = time.perf_counter()
@@ -192,6 +245,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             references,
             entry,
             adapter=runtime["adapter"],
+            schema=runtime["schema"],
+            owner_contract=runtime["owner_contract"],
             day_inputs_by_reference=day_inputs,
         )
         batch_seconds = time.perf_counter() - batch_started
@@ -243,6 +298,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--training-contract", type=Path, required=True)
     parser.add_argument("--updates", type=int, required=True)
     parser.add_argument("--output-dir", type=Path, required=True)
+    parser.add_argument("--reuse-retained-inputs-manifest", type=Path)
     return parser
 
 
