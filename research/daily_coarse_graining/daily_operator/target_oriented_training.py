@@ -494,7 +494,7 @@ def merge_error_sufficient_statistics(
     if not values:
         raise ValueError("cannot merge an empty target-oriented statistic sequence")
     keys = tuple(values[0])
-    if any(tuple(value) != keys for value in values[1:]):
+    if any(set(value) != set(keys) for value in values[1:]):
         raise ValueError("target-oriented sufficient-statistic registry drift")
     result = dict(values[0])
     for value in values[1:]:
@@ -545,7 +545,8 @@ def linearized_one_day_state_loss(
 ) -> Any:
     """Gradient-exact one-day contribution for independent microbatch VJPs."""
 
-    if tuple(current) != tuple(StateFeatureGroups._fields) or tuple(total) != tuple(StateFeatureGroups._fields):
+    expected = set(StateFeatureGroups._fields)
+    if set(current) != expected or set(total) != expected:
         raise ValueError("target-oriented state statistic group drift")
     active = {name: jax.lax.stop_gradient(jnp.asarray(total[name].count) > 0.0) for name in StateFeatureGroups._fields}
     count = jnp.sum(jnp.stack(tuple(active.values())), dtype=jnp.float64)
@@ -650,7 +651,7 @@ def one_day_state_sufficient_statistics(
 def one_day_state_anchor_from_sufficient_statistics(
     statistics: Mapping[str, ErrorSufficientStatistics],
 ) -> OneDayStateAnchorResult:
-    if tuple(statistics) != tuple(StateFeatureGroups._fields):
+    if set(statistics) != set(StateFeatureGroups._fields):
         raise ValueError("target-oriented state statistic group drift")
     errors = {
         name: normalized_error_from_sufficient_statistics(statistics[name]) for name in StateFeatureGroups._fields

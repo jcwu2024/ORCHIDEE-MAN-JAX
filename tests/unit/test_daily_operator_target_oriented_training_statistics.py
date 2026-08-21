@@ -106,6 +106,26 @@ def test_state_microbatch_statistics_preserve_full_loss_and_gradient():
     np.testing.assert_allclose(independent_gradient, jax.grad(full)(parameter), rtol=1e-12)
 
 
+def test_state_statistics_accept_jax_sorted_mapping_order():
+    expected = jnp.arange(6, dtype=jnp.float64).reshape(2, 3)
+    defined = jnp.ones_like(expected, dtype=jnp.bool_)
+    statistics = one_day_state_sufficient_statistics(
+        _state_groups(expected + 0.5),
+        _state_groups(expected),
+        _state_masks(defined),
+        _state_masks(defined),
+        _state_groups(jnp.ones((3,), dtype=jnp.float64)),
+    )
+    reordered = {name: statistics[name] for name in sorted(statistics)}
+
+    merged = merge_error_sufficient_statistics((statistics, reordered))
+    anchor = one_day_state_anchor_from_sufficient_statistics(reordered)
+    linearized = linearized_one_day_state_loss(reordered, merged)
+
+    assert np.isfinite(float(anchor.total))
+    assert np.isfinite(float(linearized))
+
+
 def _trajectory(value, defined):
     return MaskedTrajectory(value=value, defined=defined)
 
