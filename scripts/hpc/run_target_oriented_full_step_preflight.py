@@ -44,6 +44,22 @@ class HardCounts(NamedTuple):
     stock_negative: Any
 
 
+def _window_hard_counts(
+    prediction_nonfinite: Any,
+    state_nonfinite: Any,
+    state_mismatch: Any,
+    rollout: Any,
+) -> HardCounts:
+    return HardCounts(
+        prediction_nonfinite,
+        state_nonfinite,
+        state_mismatch + rollout.defined_mask_mismatch,
+        rollout.discrete_state_mismatch,
+        rollout.budget_residual_failure,
+        rollout.negative_declared_stock,
+    )
+
+
 def _git_head() -> str:
     return subprocess.check_output(("git", "rev-parse", "HEAD"), text=True).strip()
 
@@ -394,13 +410,11 @@ def _make_steps(
             ),
             jnp.asarray(0, dtype=jnp.int32),
         )
-        hard = HardCounts(
+        hard = _window_hard_counts(
             prediction_nonfinite,
             state_nonfinite,
-            state_mismatch + stock_hard.mask_mismatch_count,
-            stock_hard.discrete_mismatch_count,
-            stock_hard.budget_failure_count,
-            stock_hard.negative_stock_count,
+            state_mismatch,
+            stock_hard,
         )
         return statistics, hard
 
@@ -623,12 +637,14 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         updates=8,
     )
     source_head = _git_head()
+    prepared_identity = json.loads(args.prepared_manifest.read_text(encoding="utf-8")).get("identity", {})
+    prepared_source_head = str(prepared_identity.get("source_git_head", ""))
     prepared_manifest = load_prepared_target_manifest(
         args.prepared_manifest,
         training_contract_sha256=training_contract.sha256,
         schedule_sha256=schedule["schedule_sha256"],
         updates=8,
-        source_git_head=source_head,
+        source_git_head=prepared_source_head,
     )
     template = _prepare_template(runtime, schedule["entries"][0])
     if template.static_owner.include_modelout_diagnostics:
@@ -842,6 +858,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "status": "passed" if passed else "failed",
         "identity": {
             "git_head": source_head,
+            "prepared_source_git_head": prepared_source_head,
             "training_contract_sha256": training_contract.sha256,
             "schedule_sha256": schedule["schedule_sha256"],
         },

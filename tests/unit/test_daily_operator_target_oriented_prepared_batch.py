@@ -8,6 +8,9 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
+from research.daily_coarse_graining.daily_operator.long_horizon_objective import (
+    RolloutHardGateCounts,
+)
 from research.daily_coarse_graining.daily_operator.model import (
     bind_daily_operator_dynamic_retained_inputs,
 )
@@ -30,6 +33,7 @@ from scripts.hpc.prepare_target_oriented_training_batches import (
 )
 from scripts.hpc.run_target_oriented_full_step_preflight import (
     _validate_prepared_objective_shapes,
+    _window_hard_counts,
 )
 from scripts.hpc.target_oriented_training_prepared import (
     PREPARED_ARTIFACT_SCHEMA,
@@ -283,6 +287,20 @@ def test_full_step_preflight_validates_complete_targets_and_state_scale_shapes()
     bad_scales = SimpleNamespace(state=scales.state._replace(thermal=np.ones((4,))))
     with pytest.raises(ValueError, match="state scale shape drift for thermal"):
         _validate_prepared_objective_shapes(artifact, complete_schema=schema, scales=bad_scales)
+
+
+def test_full_step_preflight_maps_rollout_hard_count_fields():
+    rollout = RolloutHardGateCounts(
+        nonfinite_defined_prediction=1,
+        negative_declared_stock=2,
+        defined_mask_mismatch=3,
+        discrete_state_mismatch=4,
+        budget_residual_failure=5,
+    )
+
+    observed = _window_hard_counts(6, 7, 8, rollout)
+
+    assert observed == (6, 7, 11, 4, 5, 2)
 
 
 def test_prepared_target_artifact_roundtrip(tmp_path):
