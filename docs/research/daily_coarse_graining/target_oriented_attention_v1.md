@@ -1,6 +1,7 @@
 # Target-Oriented Hierarchical Coordinate Attention v1
 
-Status: **frozen for local implementation; no GPU training authorized**.
+Status: **local and zero-update real-v6 GPU admission accepted; bounded
+training design is active**.
 
 Date: 2026-08-21.
 
@@ -103,15 +104,31 @@ The full learned boundary contains 161 fields and 39,006 coordinates, and all
 defined eager/JIT outputs are finite. Water and carbon budget residuals remain
 within `2e-12` through the bound daily transition.
 
-This result authorizes preparation of a bounded real-v6 GPU lifecycle smoke.
-It does not authorize submission, training, checkpoint retention, or promotion
-without the separately approved resource and cost declaration.
+This result authorized the bounded real-v6 GPU lifecycle smoke. That smoke has
+now passed on one free `gln01` V100 at commit `7c6371c`: all 83,755,173
+gradient elements and all seven required gradient families were finite, the
+complete 181-field forward was finite on all declared-defined values, and the
+bound one-day water and carbon budget residuals were both zero. Hot JIT forward
+replay took `0.06197 s`; JAX peak live device memory was approximately 2.49
+GiB even though its allocator reserved approximately 25 GiB.
 
-The prepared entry point is
+The accepted entry point is
 `scripts/hpc/run_target_oriented_attention_gpu_admission.py`, launched on one
 free `gln01` V100 by
 `scripts/hpc/run_target_oriented_attention_gpu_admission.sh`. The launcher has
 a 90-minute timeout and writes one report under project-owned `runtime/`.
 It performs zero updates, reconstructs no half-hour forcing, executes no
-subdaily state scan, and writes no checkpoint. Remote synchronization and
-execution remain separately authorized actions.
+subdaily state scan, and writes no checkpoint. The report SHA256 is
+`a92e9415110d16b3a0a24ce3278514c694441b43d6ccf3d5245a5e63ad13803b`;
+full evidence is in
+`target_oriented_attention_gpu_admission_20260821.md`.
+
+The first bounded training design is now frozen as
+`target_oriented_bounded_training_v1`. It declares diverse real-v6 sampling,
+effective and microbatch composition, the 250/1,000/3,000 update budget,
+optimizer and train-only gradient-clip calibration, validation slices, and
+checkpoint policy. Exact microbatch/full-batch loss and gradient equivalence
+passes locally. The active gate is its multi-point-year prepared-batch reader
+and free-V100 full-step memory/timing preflight. Paid resources, wall time, and
+worst-case cost remain conditional on that measurement. No 365-day rollout,
+Gate D2, sealed-test access, or product acceptance is authorized.

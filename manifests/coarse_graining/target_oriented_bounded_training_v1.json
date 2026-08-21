@@ -1,0 +1,145 @@
+{
+  "schema_version": "target_oriented_bounded_training_v1",
+  "status": "frozen_for_training_step_preflight",
+  "contract_sha256": "68d1079c7bcaffed11f880688dc465ce02285c526e5651b0a9ce33069657256d",
+  "identity": {
+    "candidate": "target_oriented_hierarchical_coordinate_attention_v1",
+    "parameter_count": 83755173,
+    "architecture_manifest_sha256": "9ea64a449f51dd384555978a80816f8f0895b601dd1d0d10c717095119115265",
+    "target_oriented_objective_sha256": "7c9857c0ca57ee65cfcf7514a216a217c3b1661f6cc869c6dfb85d3786bfce5c",
+    "dataset_manifest_sha256": "5fc2c0691bfa53252f875f7646f3c1a5bea203c2759a6e947b26bb51dc13aa99",
+    "dataset_acceptance_sha256": "8784ed42dc64ef77c9642f613eb2e5940635edc6e744a1af4ea8634293baa8e3",
+    "gpu_admission_report_sha256": "a92e9415110d16b3a0a24ce3278514c694441b43d6ccf3d5245a5e63ad13803b"
+  },
+  "operator_boundary": "bind_daily_operator(input_assembler=canonical_assembler, process_head=candidate_head, retained_tail=canonical_retained_tail_adapter)",
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "selection_seed": 20260821,
+    "selection": "seeded_hash_ranked_distinct_landpoints_per_update",
+    "exclude_first_shard_row": true,
+    "one_day": {
+      "sample_count": 32,
+      "distinct_point_year_count": 16,
+      "samples_per_point_year": 2
+    },
+    "seven_day": {
+      "window_count": 8,
+      "distinct_point_year_count": 8,
+      "windows_per_point_year": 1,
+      "horizon_days": 7
+    },
+    "thirty_day": {
+      "window_count": 4,
+      "distinct_point_year_count": 4,
+      "windows_per_point_year": 1,
+      "horizon_days": 30
+    },
+    "distinct_point_years_per_update": 28,
+    "distinct_landpoints_per_update": 28,
+    "teacher_days_per_update": 208,
+    "sample_without_replacement_within_update": true,
+    "landpoint_or_pft_identity_as_feature": false,
+    "teacher_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "microbatch": {
+    "one_day_size": 4,
+    "seven_day_window_size": 1,
+    "thirty_day_window_size": 1,
+    "gradient_accumulation_dtype": "float32",
+    "loss_reduction_dtype": "float64",
+    "optimizer_updates_per_effective_batch": 1,
+    "global_bias_reduction": "exact_sufficient_statistics_across_the_full_effective_batch",
+    "rollout_rematerialization": true,
+    "multi_gpu_required": false
+  },
+  "objective": {
+    "components": [
+      "one_day_state_anchor",
+      "seven_day_science",
+      "thirty_day_science",
+      "necessary_process_supervision"
+    ],
+    "coefficients": {
+      "one_day_state_anchor": 1.0,
+      "seven_day_science": 1.0,
+      "thirty_day_science": 1.0,
+      "necessary_process_supervision": 0.1
+    },
+    "gradient_accumulation_rule": "differentiate exact effective-batch sufficient statistics, sum component gradients with frozen coefficients, then update once",
+    "validation_weight_tuning_allowed": false
+  },
+  "optimizer": {
+    "name": "adamw",
+    "peak_learning_rate": 0.0001,
+    "final_learning_rate": 0.00001,
+    "warmup_updates": 250,
+    "maximum_updates": 3000,
+    "stage_milestones": [250, 1000, 3000],
+    "schedule": "linear_warmup_cosine_decay",
+    "beta1": 0.9,
+    "beta2": 0.95,
+    "epsilon": 1e-8,
+    "weight_decay": 0.01,
+    "global_gradient_norm_clip": {
+      "calibration_batches": 8,
+      "calibration_split": "train/train",
+      "statistic": "p90",
+      "freeze_before_first_update": true,
+      "report_unclipped_norm_every_update": true,
+      "report_clip_fraction_at_every_milestone": true,
+      "validation_tuning_allowed": false
+    }
+  },
+  "preflight": {
+    "updates_retained": 0,
+    "checkpoint_written": false,
+    "device": "one V100 32GB",
+    "required_gradient_calibration_batches": 8,
+    "measure_hot_full_effective_step": true,
+    "measure_actual_peak_bytes_in_use": true,
+    "actual_peak_bytes_in_use_maximum": 30064771072,
+    "require_all_gradient_families_finite_nonzero": true,
+    "require_all_hard_failure_counts_zero": true,
+    "resource_and_cost_declaration_required_after_measurement": true
+  },
+  "validation": {
+    "slices": ["temporal", "spatial", "joint"],
+    "horizons_days": [7, 30],
+    "windows_per_slice_per_horizon": 16,
+    "distinct_landpoints_within_slice": true,
+    "sealed_test_used": false,
+    "evaluate_initialization": true,
+    "evaluate_at_stage_milestones": [250, 1000, 3000],
+    "promotion": "absolute_target_oriented_7_30_day_gates_only",
+    "budget_continuation": {
+      "hard_failure_count_maximum": 0,
+      "all_objective_components_finite": true,
+      "minimum_relative_macro_improvement_since_previous_milestone": 0.05,
+      "relative_improvement_is_pacing_not_promotion": true
+    }
+  },
+  "checkpoint": {
+    "preflight_checkpoint": false,
+    "recovery_interval_updates": 50,
+    "maximum_recovery_generations": 2,
+    "best_checkpoint_requires_zero_hard_failures": true,
+    "best_checkpoint_metric": "absolute_validation_science_macro",
+    "stage_boundary_checkpoint": true
+  },
+  "closed_until_short_horizon_acceptance": [
+    "365_day_rollout",
+    "long_held_point_validation",
+    "gate_d2",
+    "sealed_test",
+    "product_acceptance"
+  ],
+  "inference_constraints": {
+    "native_forcing_records_per_day": 5,
+    "reconstruct_48_forcing_records": false,
+    "execute_48_step_state_scan": false,
+    "cross_day_neural_hidden_state": false
+  }
+}

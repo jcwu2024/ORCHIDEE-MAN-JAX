@@ -1261,19 +1261,36 @@ does not inherit the rejected v4/v5 endpoint heads. Its focused local gate
 passes `10/10`, including full-boundary eager/JIT, complete loss/gradient,
 PFT isolation/permutation, canonical binding, and one-day budgets.
 
-The active operation is to prepare and, only after an explicit resource/cost
-approval, run one bounded no-checkpoint real-v6 GPU lifecycle smoke. The smoke
-must load accepted v6 assets, execute forward/loss/gradient and one bound day,
-record peak device memory and compile/run timing, and write no trained
-checkpoint. The prepared launcher is
-`scripts/hpc/run_target_oriented_attention_gpu_admission.sh`: one free
-`gln01` V100, one process, a 90-minute timeout, zero updates, and zero compute
-charge. Remote bundle synchronization, GPU selection, and execution still
-require explicit approval. Do not run the V5 100-epoch gate, repeat v4/v5, train a weak
-control, begin multi-point training or 7/30-day rollout, read sealed-test data,
-or advance Gate D2 or product work. See
+The approved zero-update real-v6 GPU admission has passed on one free `gln01`
+V100 at commit `7c6371c`. All 83,755,173 gradient elements and all seven
+required architecture families are finite; the complete forward and next-day
+state are finite on every declared-defined value; water and carbon budget
+residuals are zero. Hot JIT replay is `0.06197 s`. JAX peak live device memory
+is approximately 2.49 GiB; its approximately 25 GiB allocator reservation is
+not actual tensor use. No update or checkpoint occurred. Report SHA256 is
+`a92e9415...ad13803b`.
+
+The first bounded real-v6 training design is frozen as
+`target_oriented_bounded_training_v1`, SHA256 `68d1079c...7256d`. Every
+effective update uses 28 distinct point-years/landpoints: 32 one-day samples,
+eight seven-day windows, and four thirty-day windows, totaling 208 Teacher-day
+usages. Microbatches `4/1/1` use rematerialized rollout and exact sufficient
+statistics, so memory reduction does not change full-batch MSE or signed-bias
+loss. Focused loss and gradient equivalence tests pass. AdamW uses 250-update
+warmup and 250/1,000/3,000 milestones; a train-only eight-batch p90 calibration
+replaces the arbitrary fixed gradient-norm threshold.
+
+The active operation is to implement the multi-point-year prepared-batch
+reader and dynamic retained-tail day-input path, followed by one free-V100
+zero-retained-update full-step preflight. Measure actual JAX live memory, hot
+step time, and eight unclipped norms before declaring any paid GPU resource,
+wall time, or worst-case cost. Do not run the V5 100-epoch gate, repeat v4/v5,
+train a weak control, read sealed-test data, or advance paid training,
+365-day rollout, Gate D2, or product work. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
+[`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
+[`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

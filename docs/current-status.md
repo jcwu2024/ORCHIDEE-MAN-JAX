@@ -122,16 +122,43 @@ learned fields and 39,006 coordinates are finite in eager/JIT execution;
 primary, state, auxiliary, domain, and science-token paths receive finite
 nonzero gradients; inactive-PFT perturbations are exactly isolated; the full
 learned boundary is PFT-permutation equivariant within float32 tolerance; and
-canonical binding preserves the one-day water/carbon budget tolerances. The
-active operation is preparation of one bounded, no-checkpoint real-v6 GPU
-lifecycle smoke. Its local runner and free-`gln01` launcher are now prepared
-with a 90-minute timeout, zero updates, and no checkpoint. No remote sync or
-execution has occurred. No multi-point training, 7/30-day
-rollout, sealed-test read, Gate D2, or product work is authorized by the local
-result alone. See
+canonical binding preserves the one-day water/carbon budget tolerances.
+
+The following zero-update real-v6 GPU admission also passes on one free
+`gln01` V100 at commit `7c6371c`. The complete 181-field forward is finite on
+all 6,674 declared-defined values; all 83,755,173 gradient elements and the
+seven required architecture families are finite and nonzero; the canonical
+next-day transition is finite; and water/carbon budget residuals are exactly
+zero. Hot JIT forward replay is `0.06197 s`. JAX peak live device memory is
+approximately 2.49 GiB; the approximately 25 GiB seen in `nvidia-smi` is the
+allocator's reserved pool. No update or checkpoint occurred. Report SHA256 is
+`a92e9415...ad13803b`.
+
+The first bounded training design is now frozen in machine contract
+`target_oriented_bounded_training_v1`. Each update draws 28 distinct
+point-years from 28 distinct landpoints: 32 one-day samples from 16
+point-years, eight seven-day windows, and four thirty-day windows, for 208
+Teacher-day usages per update. GPU microbatches are `4/1/1`; exact sufficient
+statistics preserve the full-batch MSE and signed-bias objective before one
+AdamW update. Synthetic full-batch versus accumulated loss and gradient tests
+pass. Gradient clipping is calibrated from eight train/train full-objective
+norms rather than assuming threshold 1.0. The bounded milestones are
+250/1,000/3,000 updates, and scientific promotion remains absolute rather
+than control-relative.
+
+The active operation is to implement the multi-point-year prepared-batch
+reader and dynamic retained-tail `day_inputs`, then run a zero-retained-update
+free-V100 full-step preflight. That preflight must measure actual live memory,
+hot-step timing, and the eight unclipped gradient norms before a paid resource,
+wall-time, and worst-case cost proposal. No paid training, 365-day rollout,
+sealed-test read, Gate D2, or product work is authorized by this contract. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
-[`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md).
+[`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
+with GPU evidence in
+[`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md)
+and the training design in
+[`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

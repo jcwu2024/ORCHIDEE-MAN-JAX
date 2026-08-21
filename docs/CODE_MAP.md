@@ -202,10 +202,24 @@ retained exact tail. Their frozen mechanism/capacity record is
 `manifests/coarse_graining/target_oriented_attention_v1.json` and
 `target_oriented_attention_v1.md`; focused local qualification is in
 `tests/unit/test_daily_operator_target_oriented_attention.py`. The local gate
-is accepted, but real-v6 GPU admission and all training/rollout stages remain
-conditional. The zero-update real-v6 runner and free-`gln01` launcher are
+and zero-update real-v6 GPU admission are accepted; training and rollout remain
+conditional. The accepted admission runner and free-`gln01` launcher are
 `scripts/hpc/run_target_oriented_attention_gpu_admission.py` and
-`scripts/hpc/run_target_oriented_attention_gpu_admission.sh`.
+`scripts/hpc/run_target_oriented_attention_gpu_admission.sh`; its evidence is
+`target_oriented_attention_gpu_admission_20260821.md` and
+`outputs/target-oriented-attention-gpu-admission-7c6371c-report.json`.
+
+`daily_operator/target_oriented_training.py` owns the frozen bounded-training
+contract loader, deterministic 28-landpoint/point-year schedule, and exact
+microbatch sufficient-statistics reductions for one-day state, 7/30-day
+science, and necessary process supervision. Its machine contract is
+`manifests/coarse_graining/target_oriented_bounded_training_v1.json`, its
+decision record is `target_oriented_bounded_training_v1.md`, and its focused
+regressions are
+`tests/unit/test_daily_operator_target_oriented_training.py` and
+`tests/unit/test_daily_operator_target_oriented_training_statistics.py`.
+Prepared multi-point-year Teacher-v6 artifacts and the full-step GPU preflight
+remain the next implementation boundary.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and
