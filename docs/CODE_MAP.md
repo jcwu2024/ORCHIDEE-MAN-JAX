@@ -223,7 +223,8 @@ regressions are
 `scripts/hpc/target_oriented_training_prepared.py` owns serialization,
 `prepare_target_oriented_training_batches.py` owns free-CPU real-v6
 preparation, and `run_target_oriented_full_step_preflight.py` owns the
-zero-retained-update free-GPU measurement. Producing and executing the eight
+zero-retained-update free-GPU measurement. Their free-node launchers are the
+same basenames with `.sh` extensions. Producing and executing the eight
 real-v6 prepared batches is the active operation.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
