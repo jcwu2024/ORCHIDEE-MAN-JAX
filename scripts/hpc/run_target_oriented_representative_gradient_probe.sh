@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run one zero-retained-update target-oriented component-gradient probe on free gln01.
+# Run one zero-retained-update target-oriented component-gradient probe on free gln01 or Slurm.
 
 set -euo pipefail
 
@@ -14,7 +14,15 @@ CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/target-oriented-full
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
-case "$(hostname)" in gln01|ibc13b02n04) ;; *) exit 2 ;; esac
+case "$(hostname -s)" in
+  gln01|ibgln01|ibc13b02n04) ;;
+  *)
+    test -n "${SLURM_JOB_ID:-}" || {
+      echo "gradient probe requires free gln01 or a Slurm-allocated GPU" >&2
+      exit 2
+    }
+    ;;
+esac
 case "$WORKTREE" in "$ROOT"|"$ROOT/runtime/worktrees/"*) ;; *) exit 2 ;; esac
 case "$PREPARED_MANIFEST" in "$ROOT/runtime/outputs/"*) ;; *) exit 2 ;; esac
 case "$OUTPUT" in "$ROOT/runtime/outputs/"*) ;; *) exit 2 ;; esac
