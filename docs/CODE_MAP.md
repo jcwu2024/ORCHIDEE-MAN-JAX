@@ -313,8 +313,8 @@ completed paid single-V100 formal v4 one-point resource envelope; the failed
 candidate must not be rerun. The older
 `slurm_mechanistic_output_v2_one_point.sh` remains historical.
 
-`daily_operator/doc_status_branch_magnitude_attention.py` owns the active v5
-DOC endpoint candidate. It reuses v4's aligned source bank and replaces only
+`daily_operator/doc_status_branch_magnitude_attention.py` owns the rejected v5
+DOC endpoint evidence. It reuses v4's aligned source bank and replaces only
 the final signed scalar with three status logits and separate incoming and
 outgoing magnitude heads. `daily_operator/doc_status_branch_magnitude_loss.py`
 owns the class-macro status, branch-coordinate, physical endpoint, and revised
@@ -323,7 +323,10 @@ process head. The shared runner and launcher select it only with
 `--doc-status-branch-magnitude` / `DOC_STATUS_BRANCH_MAGNITUDE=1`, enforce the
 5/10-epoch no-checkpoint gate, and reject simultaneous v3/v4 selection.
 `scripts/hpc/slurm_doc_status_branch_magnitude_v5_early_screen.sh` owns the
-prepared but unsubmitted one-V100/two-hour envelope.
+completed one-V100/two-hour envelope. The candidate failed its frozen gate and
+must not be continued or rerun. Its result and physical-materialization
+diagnosis are recorded in
+`doc_status_branch_magnitude_attention_v5_early_screen_result_20260821.md`.
 
 `daily_operator/doc_target_diagnostics.py` owns the zero-training DOC endpoint
 partition, inverse-target, reconstruction, normalized-Jacobian, and loss-share

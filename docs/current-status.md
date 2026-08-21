@@ -80,14 +80,23 @@ canonical binding, one-day state/budget, inactive-PFT, and strict permutation
 tests pass; the runner and launcher now select its loss and report schema
 explicitly.
 
-The active gate is the prepared no-checkpoint 10-epoch early screen. It reviews
-hard gates and endpoint-loss explosion at epoch 5, then applies absolute
-aggregate, endpoint, and transfer gates at epoch 10. Its one-V100, four-CPU,
-two-hour `gnall` envelope has a worst-case additive estimate of CNY `4.96` and
-has not been submitted. Another 100-epoch run opens only after an early-screen
-pass. Multi-point training, rollout, sealed test, Gate D2, and product work
-remain closed. See
-[`doc_status_branch_magnitude_attention_v5_local_acceptance_20260821.md`](research/daily_coarse_graining/doc_status_branch_magnitude_attention_v5_local_acceptance_20260821.md).
+Paid job `14632388` completed the V5 10-epoch screen normally in `01:14:07`.
+All 460 updates were finite, selected gradient/update coverage passed, counts
+were unchanged, and every hard count was zero. Epoch 5 passed. Epoch 10 failed
+the frozen absolute gate: litter/POC/DOC fell `83.1178%` instead of `90%`, DOC
+incoming fell `29.6589%` instead of `50%`, and DOC outgoing fell `26.1806%`
+instead of `50%`. Adsorption and advection improved `16.6932%` and `58.9182%`.
+No checkpoint was written.
+
+Status and the two branch-latent losses fall `75.4655%`, `78.4438%`, and
+`54.2036%`, while the materialized physical endpoint term falls only
+`29.2932%`. V5 therefore fixes v4's incoming/outgoing sacrifice but does not
+convert its learned latent variables into sufficiently accurate physical
+endpoints. The active gate is a mechanism review of physical materialization;
+the coordinate-aligned source bank remains accepted evidence. V5 100-epoch,
+multi-point training, rollout, sealed test, Gate D2, and product work remain
+closed. See
+[`doc_status_branch_magnitude_attention_v5_early_screen_result_20260821.md`](research/daily_coarse_graining/doc_status_branch_magnitude_attention_v5_early_screen_result_20260821.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

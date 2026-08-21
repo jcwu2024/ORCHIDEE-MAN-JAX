@@ -1227,21 +1227,32 @@ Focused eager/JIT forward, loss, full-gradient, canonical binding, one-day
 state/budget, inactive-PFT, and permutation gates pass. The formal training
 entry and launcher select V5 explicitly and leave v3/v4 behavior unchanged.
 
-The active operation is the prepared no-checkpoint 10-epoch early screen,
-which requires explicit execution approval. Epoch 5 stops on any hard failure
-or if either DOC endpoint loss exceeds twice initialization. Epoch 10 requires
-at least `90%` litter/POC/DOC reduction, at least `50%` reduction for both DOC
-endpoints, and no regression of free-to-adsorbed or advective transfer. The
-bounded single-V100/two-hour paid envelope has worst-case additive cost CNY
-`4.96`; it has not been submitted. A 100-epoch run opens only if every early
-gate passes. Do not repeat v4, train a new control, start multi-point training
-or rollout, read sealed-test data, or advance Gate D2 or product work. See
+Paid job `14632388` completed the V5 10-epoch/460-update early screen normally
+in `01:14:07`. Epoch 5 passed, all gradients and values were finite, coverage
+passed, counts were unchanged, and every state, budget, and inventory hard
+count was zero. The epoch-10 absolute gate failed: litter/POC/DOC reduction was
+`83.1178%` rather than `90%`, and DOC incoming/outgoing reductions were
+`29.6589%`/`26.1806%` rather than `50%`. Free-to-adsorbed and advective
+transfer improved `16.6932%` and `58.9182%`. No checkpoint was written.
+
+V5 removes v4's catastrophic endpoint trade and its status/incoming-latent/
+outgoing-latent losses fall `75.4655%`/`78.4438%`/`54.2036%`, but the
+materialized physical endpoint term falls only `29.2932%`. The frozen result
+therefore rejects this soft-status-times-magnitude materialization and loss
+balance without rejecting the retained coordinate-aligned Attention source
+bank.
+
+The active operation is a mechanism review focused on physical endpoint
+materialization. Do not run the V5 100-epoch gate, weaken the early threshold,
+repeat v4/v5, train a new control, start multi-point training or rollout, read
+sealed-test data, or advance Gate D2 or product work. Any successor and its
+bounded absolute gate must be discussed and frozen before implementation. See
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),
 [`doc_status_branch_magnitude_attention_v5_design_20260820.md`](research/daily_coarse_graining/doc_status_branch_magnitude_attention_v5_design_20260820.md),
 and
-[`doc_status_branch_magnitude_attention_v5_local_acceptance_20260821.md`](research/daily_coarse_graining/doc_status_branch_magnitude_attention_v5_local_acceptance_20260821.md).
+[`doc_status_branch_magnitude_attention_v5_early_screen_result_20260821.md`](research/daily_coarse_graining/doc_status_branch_magnitude_attention_v5_early_screen_result_20260821.md).
 
 ## Completed Task Packet: Gate C
 

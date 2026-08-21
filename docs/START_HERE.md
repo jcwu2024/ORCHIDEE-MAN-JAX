@@ -197,10 +197,13 @@ complete coordinate-aligned Attention backbone and replaces the shared scalar
 with three status logits plus branch-native incoming/outgoing magnitudes. Its
 `59,973,309`-parameter implementation passes local forward/loss/gradient,
 canonical binding, one-day state/budget, inactive-PFT, and permutation gates.
-The active gate is an explicitly approved, no-checkpoint 10-epoch early screen;
-the prepared one-V100/two-hour envelope has worst-case cost CNY `4.96` and has
-not been submitted. Multi-point training, rollout, Gate D2, and product work
-stay closed.
+Its no-checkpoint 10-epoch screen completed normally but failed the frozen
+absolute gate: aggregate litter/POC/DOC fell `83.1178%`, while incoming and
+outgoing fell only `29.6589%` and `26.1806%`. Both improve rather than trade
+off, and status/branch latents learn strongly, but the physical endpoint term
+falls only `29.2932%`. V5 is rejected with no checkpoint. The active gate is a
+physical-materialization mechanism review; multi-point training, rollout,
+Gate D2, and product work stay closed.
 
 ## New Task Bootstrap
 
@@ -225,10 +228,11 @@ checkpoint handoff are recorded in the active documents named by
 accepted input-policy record is
 `research/daily_coarse_graining/successor_staged_training_assets_acceptance_20260812.md`.
 Do not rerun an old fit or use the formal 96-window panel for tuning. The
-current task is to review and, only with explicit approval, execute the frozen
-V5 10-epoch early screen. Do not repeat v4 or train a new control. The 100-epoch
-gate, multi-point training, 365-day rollout, Gate D2, and product gates remain
-dependency-ordered later work.
+current task is to review why V5's learned status/branch coordinates do not
+materialize accurate physical DOC endpoints and freeze a successor mechanism
+before implementation. Do not repeat v4/v5 or train a new weak control. The
+100-epoch gate, multi-point training, 365-day rollout, Gate D2, and product
+gates remain dependency-ordered later work.
 Before choosing or inheriting
 a neural architecture, read
 `research/daily_coarse_graining/failed_architecture_lessons.md`; it replaces
