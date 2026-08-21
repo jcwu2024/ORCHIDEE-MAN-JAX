@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from types import SimpleNamespace
 
 import jax.numpy as jnp
 import numpy as np
@@ -8,6 +9,7 @@ import pytest
 
 from research.daily_coarse_graining.daily_operator.target_oriented_training import (
     build_target_oriented_training_schedule,
+    derive_target_oriented_scales,
     initialize_target_oriented_adamw,
     load_target_oriented_training_contract,
     target_oriented_adamw_update,
@@ -123,3 +125,89 @@ def test_target_oriented_schedule_fails_when_landpoint_diversity_is_impossible()
     )
     with pytest.raises(ValueError, match="28 distinct landpoints"):
         build_target_oriented_training_schedule(repeated, contract, updates=1)
+
+
+def test_target_oriented_thermal_scales_inflate_selected_pft_axis(monkeypatch):
+    fields = {
+        ("hydrol_previous_step_state", "qsintveg"): ((1, 2), (1, 14), ("npts", "nvm"), (1, 13)),
+        ("hydrol_previous_step_state", "mc"): ((3,), (3,), ("soil",), ()),
+        ("hydrol_previous_step_state", "snow"): ((1,), (1,), ("snow",), ()),
+        ("hydrol_previous_step_state", "snow_nobio"): ((1,), (1,), ("snow",), ()),
+        ("hydrol_previous_step_state", "snowliq"): ((1,), (1,), ("snow",), ()),
+        ("hydrol_previous_step_state", "flood_res"): ((1,), (1,), ("npts",), ()),
+        ("slowproc_stomate_previous_step_state", "litter_above"): (
+            (1, 1, 2),
+            (1, 1, 14),
+            ("npts", "pool", "nvm"),
+            (1, 13),
+        ),
+        ("enerbil_previous_step_state", "temp_sol"): ((1,), (1,), ("npts",), ()),
+        ("thermosoil_previous_step_state", "ptn"): (
+            (1, 2, 2),
+            (1, 2, 14),
+            ("npts", "soil", "nvm"),
+            (1, 13),
+        ),
+        ("thermosoil_previous_step_state", "stempdiag"): ((1,), (1,), ("npts",), ()),
+        ("hydrol_previous_step_state", "snowtemp"): ((1,), (1,), ("snow",), ()),
+        ("hydrol_previous_step_state", "snowheat"): ((1,), (1,), ("snow",), ()),
+    }
+    leaves = []
+    cursor = 0
+    for (component, name), (shape, full_shape, axis_names, selected) in fields.items():
+        size = int(np.prod(shape))
+        leaves.append(
+            SimpleNamespace(
+                component=component,
+                path=(name,),
+                shape=shape,
+                full_shape=full_shape,
+                axis_names=axis_names,
+                selected_pft_indices=selected,
+                start=cursor,
+                stop=cursor + size,
+                key=f"{component}.{name}",
+            )
+        )
+        cursor += size
+    contract = SimpleNamespace(
+        continuous_state_width=cursor,
+        state_leaves=tuple(leaves),
+    )
+    monkeypatch.setattr(
+        "research.daily_coarse_graining.daily_operator.target_oriented_training.WATER_INVENTORY_FIELDS",
+        ("qsintveg", "mc", "snow", "snow_nobio", "snowliq", "flood_res"),
+    )
+    monkeypatch.setattr(
+        "research.daily_coarse_graining.daily_operator.target_oriented_training.CARBON_INVENTORY_FIELDS",
+        ("litter_above",),
+    )
+    monkeypatch.setattr(
+        "research.daily_coarse_graining.daily_operator.target_oriented_training.derive_long_horizon_scales",
+        lambda *_args: SimpleNamespace(
+            fluxes={
+                "gpp": 2.0,
+                "maintenance_respiration": 3.0,
+                "growth_respiration": 4.0,
+                "heterotrophic_respiration": 5.0,
+            },
+            stocks={
+                "aboveground_biomass_carbon": 6.0,
+                "belowground_biomass_carbon": 7.0,
+                "ecosystem_carbon": 8.0,
+                "total_live_biomass_carbon": 9.0,
+            },
+        ),
+    )
+    raw = np.arange(1, cursor + 1, dtype=np.float64)
+
+    scales = derive_target_oriented_scales(raw, np.asarray(2.0), contract)
+
+    assert scales.state.thermal.shape == (32,)
+    ptn_leaf = next(leaf for leaf in leaves if leaf.path == ("ptn",))
+    compact = raw[ptn_leaf.start : ptn_leaf.stop].reshape(ptn_leaf.shape)
+    inflated = scales.state.thermal[1:29].reshape(ptn_leaf.full_shape)
+    np.testing.assert_array_equal(inflated[:, :, 1], compact[:, :, 0])
+    np.testing.assert_array_equal(inflated[:, :, 13], compact[:, :, 1])
+    inactive = np.delete(inflated, (1, 13), axis=2)
+    np.testing.assert_array_equal(inactive, np.ones_like(inactive))

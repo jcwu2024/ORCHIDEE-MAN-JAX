@@ -54,6 +54,25 @@ def _slice(value: Any, start: int, stop: int) -> Any:
     return jax.tree_util.tree_map(lambda leaf: leaf[start:stop], value)
 
 
+def _validate_prepared_objective_shapes(
+    artifact: Any,
+    *,
+    complete_schema: Any,
+    scales: Any,
+) -> None:
+    expected_targets = {field.name for field in complete_schema.fields}
+    targets = artifact.batch.one_day.process_targets
+    if set(targets) != expected_targets:
+        raise ValueError("prepared one-day batch does not contain the complete process target boundary")
+    for name in scales.state._fields:
+        expected = np.asarray(getattr(artifact.batch.one_day.expected_next_state, name))
+        scale = np.asarray(getattr(scales.state, name))
+        if expected.shape != (32, *scale.shape):
+            raise ValueError(
+                f"prepared one-day state scale shape drift for {name}: expected={expected.shape}, scale={scale.shape}"
+            )
+
+
 def _zero_hard(jnp: Any) -> HardCounts:
     zero = jnp.asarray(0, dtype=jnp.int32)
     return HardCounts(zero, zero, zero, zero, zero, zero)
@@ -625,13 +644,18 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         runtime["process_statistics"].outputs["daily.fast_gpp"].scale,
         runtime["contract"],
     )
-    steps = _make_steps(runtime, head, template, scales, target_contract)
     first_artifact = load_prepared_target_artifact(
         args.prepared_manifest,
         prepared_manifest["entries"][0],
         training_contract_sha256=training_contract.sha256,
         schedule_entry=schedule["entries"][0],
     )
+    _validate_prepared_objective_shapes(
+        first_artifact,
+        complete_schema=runtime["schema"],
+        scales=scales,
+    )
+    steps = _make_steps(runtime, head, template, scales, target_contract)
     if first_artifact.trace_signature != _retained_tail_trace_signature(template):
         raise ValueError("prepared and live retained executable structures differ")
     first_input = jax.tree_util.tree_map(lambda value: value[0], first_artifact.batch.one_day.inputs)

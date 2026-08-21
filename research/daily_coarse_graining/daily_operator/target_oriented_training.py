@@ -375,7 +375,7 @@ def derive_target_oriented_scales(
     if not np.all(np.isfinite(flat)) or np.any(flat <= 0.0):
         raise ValueError("target-oriented next-state scales must be finite and positive")
 
-    def field(component: str, name: str) -> np.ndarray:
+    def field(component: str, name: str, *, inflate_pft_axis: bool = False) -> np.ndarray:
         matches = tuple(
             leaf
             for leaf in contract.state_leaves
@@ -384,7 +384,21 @@ def derive_target_oriented_scales(
         if len(matches) != 1:
             raise ValueError(f"target-oriented state scale owner drift for {component}.{name}")
         leaf = matches[0]
-        return flat[int(leaf.start) : int(leaf.stop)].reshape(tuple(leaf.shape))
+        compact = flat[int(leaf.start) : int(leaf.stop)].reshape(tuple(leaf.shape))
+        if not inflate_pft_axis or not leaf.selected_pft_indices:
+            return compact
+        axes = tuple(index for index, axis_name in enumerate(leaf.axis_names) if axis_name == "nvm")
+        if len(axes) != 1:
+            raise ValueError(f"target-oriented scale has unsupported PFT axes for {leaf.key}")
+        axis = axes[0]
+        inflated = np.ones(tuple(leaf.full_shape), dtype=np.float64)
+        for source_index, target_index in enumerate(leaf.selected_pft_indices):
+            source = [slice(None)] * compact.ndim
+            target = [slice(None)] * inflated.ndim
+            source[axis] = source_index
+            target[axis] = target_index
+            inflated[tuple(target)] = compact[tuple(source)]
+        return inflated
 
     hydrol = "hydrol_previous_step_state"
     stomate = "slowproc_stomate_previous_step_state"
@@ -398,7 +412,7 @@ def derive_target_oriented_scales(
             water_parts.append(value)
     carbon_parts = [field(stomate, name).reshape(-1) for name in CARBON_INVENTORY_FIELDS]
     thermal_parts = [
-        field(component, name).reshape(-1)
+        field(component, name, inflate_pft_axis=True).reshape(-1)
         for component, name, _bound in THERMAL_FIELDS
         if any(leaf.component == component and leaf.path == (name,) for leaf in contract.state_leaves)
     ]

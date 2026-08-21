@@ -28,6 +28,9 @@ from research.daily_coarse_graining.daily_operator.types import (
 from scripts.hpc.prepare_target_oriented_training_batches import (
     _retained_inputs_from_artifact,
 )
+from scripts.hpc.run_target_oriented_full_step_preflight import (
+    _validate_prepared_objective_shapes,
+)
 from scripts.hpc.target_oriented_training_prepared import (
     PREPARED_ARTIFACT_SCHEMA,
     PREPARED_MANIFEST_SCHEMA,
@@ -251,6 +254,35 @@ def test_reuses_distinct_point_year_retained_inputs_from_prepared_artifact():
     for point in range(28):
         identity = (f"point-{point:03d}", 1979, f"parent-{point:03d}", f"typed-{point:03d}")
         np.testing.assert_array_equal(reused[identity], np.asarray([point]))
+
+
+def test_full_step_preflight_validates_complete_targets_and_state_scale_shapes():
+    group_scale = np.ones((3,), dtype=np.float64)
+    scales = SimpleNamespace(state=StateFeatureGroups(**{name: group_scale for name in StateFeatureGroups._fields}))
+    expected_state = StateFeatureGroups(
+        **{name: np.zeros((32, 3), dtype=np.float64) for name in StateFeatureGroups._fields}
+    )
+    artifact = SimpleNamespace(
+        batch=SimpleNamespace(
+            one_day=SimpleNamespace(
+                process_targets={"complete": object()},
+                expected_next_state=expected_state,
+            )
+        )
+    )
+    schema = SimpleNamespace(fields=(SimpleNamespace(name="complete"),))
+
+    _validate_prepared_objective_shapes(artifact, complete_schema=schema, scales=scales)
+
+    incomplete = SimpleNamespace(
+        batch=SimpleNamespace(one_day=SimpleNamespace(process_targets={}, expected_next_state=expected_state))
+    )
+    with pytest.raises(ValueError, match="complete process target"):
+        _validate_prepared_objective_shapes(incomplete, complete_schema=schema, scales=scales)
+
+    bad_scales = SimpleNamespace(state=scales.state._replace(thermal=np.ones((4,))))
+    with pytest.raises(ValueError, match="state scale shape drift for thermal"):
+        _validate_prepared_objective_shapes(artifact, complete_schema=schema, scales=bad_scales)
 
 
 def test_prepared_target_artifact_roundtrip(tmp_path):
