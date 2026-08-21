@@ -1,0 +1,106 @@
+{
+  "schema_version": "target_oriented_attention_v1",
+  "status": "frozen_after_user_architecture_approval_for_local_implementation",
+  "architecture_id": "target_oriented_hierarchical_coordinate_attention_v1",
+  "architecture_document": "docs/research/daily_coarse_graining/target_oriented_attention_v1.md",
+  "operator_boundary": "bind_daily_operator(input_assembler=canonical_assembler, process_head=candidate_head, retained_tail=canonical_retained_tail_adapter)",
+  "contract_bindings": {
+    "target_oriented_contract_sha256": "7c9857c0ca57ee65cfcf7514a216a217c3b1661f6cc869c6dfb85d3786bfce5c",
+    "strong_baseline_contract_sha256": "baf5791f0786f22e05e8db9115eeab9a77687e19250d4d9efcb5181d6a96351d",
+    "teacher_release_id": "pft14-daily-teacher-v6",
+    "teacher_regeneration_allowed": false,
+    "historical_v5_allowed": false
+  },
+  "input_boundary": {
+    "day_start_physical_state": true,
+    "native_forcing_records_per_day": 5,
+    "learned_physical_parameter_channels": [],
+    "explicit_fast_parameter_routes": ["vcmax25", "maint_resp_slope"],
+    "retained_exact_parameter_routes": ["alloc_min", "residence_time"],
+    "reconstruct_48_forcing_records": false,
+    "execute_48_step_state_scan": false,
+    "cross_day_neural_hidden_state": false
+  },
+  "backbone": {
+    "width": 384,
+    "attention_heads": 8,
+    "ffn_width": 1536,
+    "source_routed_expert_blocks": 3,
+    "forcing_width": 256,
+    "forcing_blocks": 2,
+    "axial_blocks": 1,
+    "graph_rounds": 2,
+    "remove_legacy_label_heads": true
+  },
+  "domain_refinement": {
+    "canopy_gpp": 2,
+    "surface_energy": 1,
+    "hydrology_snow": 2,
+    "soil_thermal": 2,
+    "maintenance_respiration": 2,
+    "litter_poc_doc": 2,
+    "daily_interface_finalize": 1
+  },
+  "science_tokens": {
+    "names": [
+      "gpp",
+      "autotrophic_respiration",
+      "water_stress",
+      "temperature",
+      "slow_carbon"
+    ],
+    "domain_cross_attention_blocks": 2,
+    "cross_token_mixer_blocks": 2,
+    "domain_adjacency": {
+      "gpp": ["canopy_gpp", "surface_energy", "hydrology_snow", "soil_thermal"],
+      "autotrophic_respiration": ["canopy_gpp", "maintenance_respiration", "soil_thermal", "litter_poc_doc"],
+      "water_stress": ["canopy_gpp", "surface_energy", "hydrology_snow", "soil_thermal"],
+      "temperature": ["surface_energy", "hydrology_snow", "soil_thermal", "maintenance_respiration"],
+      "slow_carbon": ["canopy_gpp", "hydrology_snow", "soil_thermal", "maintenance_respiration", "litter_poc_doc"]
+    }
+  },
+  "output_heads": {
+    "primary_science_direct": {
+      "coordinate_attention_blocks": 3,
+      "decoder_width": 768,
+      "final_head_sharing": "independent_per_field"
+    },
+    "state_budget_essential": {
+      "coordinate_attention_blocks": 2,
+      "decoder_width": 512,
+      "final_head_sharing": "independent_per_field"
+    },
+    "auxiliary_supervision": {
+      "coordinate_attention_blocks": 0,
+      "bottleneck_width": 192,
+      "decoder_width": 128,
+      "final_head_sharing": "shared_per_label",
+      "direct_loss_weight_source": "target_oriented_daily_operator_v1"
+    }
+  },
+  "capacity": {
+    "implemented_parameter_count": 83755173,
+    "parameter_count_minimum": 80000000,
+    "parameter_count_target_maximum": 100000000,
+    "parameter_count_hard_maximum": 120000000
+  },
+  "fresh_output_path": {
+    "normalized_coordinate_prediction": true,
+    "existing_constraint_transform": true,
+    "minimum_nonnegative_ratio": 0.01,
+    "minimum_unit_interval_center": 0.0001,
+    "existing_conservative_update": true,
+    "existing_retained_exact_tail": true,
+    "inherit_v4_joint_signed_endpoint": false,
+    "inherit_v5_status_times_magnitude": false
+  },
+  "local_acceptance_before_gpu": [
+    "parameter_count_and_category_routing",
+    "eager_and_jit_forward",
+    "finite_loss_and_gradients_for_all_head_families",
+    "inactive_pft_isolation",
+    "pft_permutation_equivariance",
+    "canonical_binding",
+    "single_day_state_and_budget"
+  ]
+}

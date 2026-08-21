@@ -242,6 +242,20 @@ from .successor_training import (
     successor_training_objective,
     trajectories_from_rollout,
 )
+from .target_oriented_attention import (
+    CANDIDATE_NAME as TARGET_ORIENTED_ATTENTION_CANDIDATE,
+)
+from .target_oriented_attention import (
+    DOMAIN_REFINEMENT_DEPTHS,
+    SCIENCE_DOMAIN_ADJACENCY,
+    SCIENCE_TOKEN_NAMES,
+    TargetOrientedAttentionConfig,
+    encode_target_oriented_domains,
+    initialize_target_oriented_attention_parameters,
+    target_oriented_attention_parameter_count,
+    target_oriented_attention_process_outputs,
+    target_oriented_field_categories,
+)
 from .target_oriented_contract import (
     AUXILIARY_SUPERVISION,
     EXACT_OR_DIAGNOSTIC,
@@ -265,6 +279,9 @@ from .target_oriented_contract import (
     one_day_state_anchor,
     resolve_target_output_hierarchy,
     science_window_objective,
+)
+from .target_oriented_process_head import (
+    MechanisticTargetOrientedAttentionProcessHead,
 )
 from .types import *  # noqa: F403
 
@@ -362,7 +379,9 @@ __all__ = [
     "MechanisticDocStatusBranchMagnitudeProcessHead",
     "MechanisticHierarchicalCoordinateAttentionProcessHead",
     "MechanisticStrongBaselineProcessHead",
+    "MechanisticTargetOrientedAttentionProcessHead",
     "HierarchicalCoordinateAttentionConfig",
+    "TargetOrientedAttentionConfig",
     "NamedBiomassGradientCalibration",
     "apply_conservative_inventory_update",
     "apply_conservative_update",
@@ -416,6 +435,7 @@ __all__ = [
     "initialize_coordinate_coupled_doc_transition_parameters",
     "initialize_doc_status_branch_magnitude_parameters",
     "initialize_successor_parameters",
+    "initialize_target_oriented_attention_parameters",
     "neural_process_outputs",
     "long_horizon_biomass_productivity_objective",
     "masked_equal_expert_label_macro_mse",
@@ -480,4 +500,12 @@ __all__ = [
     "one_day_state_anchor",
     "resolve_target_output_hierarchy",
     "science_window_objective",
+    "DOMAIN_REFINEMENT_DEPTHS",
+    "SCIENCE_DOMAIN_ADJACENCY",
+    "SCIENCE_TOKEN_NAMES",
+    "TARGET_ORIENTED_ATTENTION_CANDIDATE",
+    "encode_target_oriented_domains",
+    "target_oriented_attention_parameter_count",
+    "target_oriented_attention_process_outputs",
+    "target_oriented_field_categories",
 ]

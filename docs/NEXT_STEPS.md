@@ -1253,16 +1253,23 @@ respiration, NEP/NEE, AGB/BGB/total live biomass, nonliving ecosystem carbon,
 and ecosystem carbon without duplicating algebraic identities in the loss.
 The frozen machine contract SHA256 is `7c9857c0...86bfce5c`.
 
-The active operation is discussion and freeze of a target-oriented successor
-architecture. It must decide which essential fields need direct learned heads
-and how the large auxiliary coordinate set is represented, while preserving
-the complete Gate-E boundary, conservative update, and retained exact tail.
-The coordinate-aligned Attention source bank remains useful evidence, but the
-rejected v4/v5 endpoint materialization heads are not defaults. Do not run the
-V5 100-epoch gate, repeat v4/v5, train a weak control, start multi-point
-training or rollout, read sealed-test data, or advance Gate D2 or product work.
-The architecture must be discussed with the user before implementation. See
+The target-oriented successor architecture is frozen and locally implemented
+as `target_oriented_hierarchical_coordinate_attention_v1`. It has
+`83,755,173` parameters, separate primary/state/auxiliary output capacity,
+five cross-domain science tokens, and a fresh constrained output path that
+does not inherit the rejected v4/v5 endpoint heads. Its focused local gate
+passes `10/10`, including full-boundary eager/JIT, complete loss/gradient,
+PFT isolation/permutation, canonical binding, and one-day budgets.
+
+The active operation is to prepare and, only after an explicit resource/cost
+approval, run one bounded no-checkpoint real-v6 GPU lifecycle smoke. The smoke
+must load accepted v6 assets, execute forward/loss/gradient and one bound day,
+record peak device memory and compile/run timing, and write no trained
+checkpoint. Do not run the V5 100-epoch gate, repeat v4/v5, train a weak
+control, begin multi-point training or 7/30-day rollout, read sealed-test data,
+or advance Gate D2 or product work. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
+[`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

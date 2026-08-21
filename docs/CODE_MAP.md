@@ -191,8 +191,19 @@ Its frozen machine contract is
 scientific decision and absolute 7/30/365-day gates are in
 `target_oriented_daily_operator_contract_v1.md`. Its lightweight regression is
 `tests/unit/test_daily_operator_target_oriented_contract.py`. It supersedes
-the older equal-field promotion policy but does not select a neural
-architecture or authorize training.
+the older equal-field promotion policy.
+
+`daily_operator/target_oriented_attention.py` owns the selected 83,755,173-
+parameter source-routed/domain-refined Attention backbone, five science-token
+interactions, and category-specific coordinate decoders.
+`daily_operator/target_oriented_process_head.py` binds those 161 learned
+fields to the existing mechanistic reconstruction, conservative updater, and
+retained exact tail. Their frozen mechanism/capacity record is
+`manifests/coarse_graining/target_oriented_attention_v1.json` and
+`target_oriented_attention_v1.md`; focused local qualification is in
+`tests/unit/test_daily_operator_target_oriented_attention.py`. The local gate
+is accepted, but real-v6 GPU admission and all training/rollout stages remain
+conditional.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

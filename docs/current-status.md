@@ -106,10 +106,30 @@ losses, and a 0.1-weight necessary-process term. It avoids double-counting
 NPP, NEP/NEE, total live biomass, and ecosystem-carbon identities while still
 requiring their absolute 7/30/365-day gates. Focused contract, hierarchy,
 identity, objective, and weighting tests pass `6/6` without Teacher data or
-training. The active gate is user discussion and freeze of the successor
-architecture, including whether all 66 auxiliary fields remain learned. No
-network implementation or GPU run is authorized yet. See
-[`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md).
+training.
+
+The user-approved successor is now implemented as
+`target_oriented_hierarchical_coordinate_attention_v1`. It retains the
+source-routed 384-wide encoder, replaces the old uniform label heads with 12
+domain-refinement blocks, five cross-domain science tokens, separate
+high-capacity primary/state coordinate decoders, and a 192-wide auxiliary
+bottleneck with label-shared heads. The fresh path does not use v4's joint
+signed endpoint or v5's status-times-magnitude materializer. It has exactly
+`83,755,173` float32 parameters.
+
+The focused local gate passes `10/10` with the frozen target contract: all 161
+learned fields and 39,006 coordinates are finite in eager/JIT execution;
+primary, state, auxiliary, domain, and science-token paths receive finite
+nonzero gradients; inactive-PFT perturbations are exactly isolated; the full
+learned boundary is PFT-permutation equivariant within float32 tolerance; and
+canonical binding preserves the one-day water/carbon budget tolerances. The
+active operation is preparation of one bounded, no-checkpoint real-v6 GPU
+lifecycle smoke. No server submission, multi-point training, 7/30-day
+rollout, sealed-test read, Gate D2, or product work is authorized by the local
+result alone. See
+[`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
+and
+[`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four
