@@ -1265,7 +1265,11 @@ The active operation is to prepare and, only after an explicit resource/cost
 approval, run one bounded no-checkpoint real-v6 GPU lifecycle smoke. The smoke
 must load accepted v6 assets, execute forward/loss/gradient and one bound day,
 record peak device memory and compile/run timing, and write no trained
-checkpoint. Do not run the V5 100-epoch gate, repeat v4/v5, train a weak
+checkpoint. The prepared launcher is
+`scripts/hpc/run_target_oriented_attention_gpu_admission.sh`: one free
+`gln01` V100, one process, a 90-minute timeout, zero updates, and zero compute
+charge. Remote bundle synchronization, GPU selection, and execution still
+require explicit approval. Do not run the V5 100-epoch gate, repeat v4/v5, train a weak
 control, begin multi-point training or 7/30-day rollout, read sealed-test data,
 or advance Gate D2 or product work. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),

@@ -203,7 +203,9 @@ retained exact tail. Their frozen mechanism/capacity record is
 `target_oriented_attention_v1.md`; focused local qualification is in
 `tests/unit/test_daily_operator_target_oriented_attention.py`. The local gate
 is accepted, but real-v6 GPU admission and all training/rollout stages remain
-conditional.
+conditional. The zero-update real-v6 runner and free-`gln01` launcher are
+`scripts/hpc/run_target_oriented_attention_gpu_admission.py` and
+`scripts/hpc/run_target_oriented_attention_gpu_admission.sh`.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

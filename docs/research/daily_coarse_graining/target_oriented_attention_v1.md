@@ -106,3 +106,12 @@ within `2e-12` through the bound daily transition.
 This result authorizes preparation of a bounded real-v6 GPU lifecycle smoke.
 It does not authorize submission, training, checkpoint retention, or promotion
 without the separately approved resource and cost declaration.
+
+The prepared entry point is
+`scripts/hpc/run_target_oriented_attention_gpu_admission.py`, launched on one
+free `gln01` V100 by
+`scripts/hpc/run_target_oriented_attention_gpu_admission.sh`. The launcher has
+a 90-minute timeout and writes one report under project-owned `runtime/`.
+It performs zero updates, reconstructs no half-hour forcing, executes no
+subdaily state scan, and writes no checkpoint. Remote synchronization and
+execution remain separately authorized actions.

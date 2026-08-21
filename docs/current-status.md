@@ -124,7 +124,9 @@ nonzero gradients; inactive-PFT perturbations are exactly isolated; the full
 learned boundary is PFT-permutation equivariant within float32 tolerance; and
 canonical binding preserves the one-day water/carbon budget tolerances. The
 active operation is preparation of one bounded, no-checkpoint real-v6 GPU
-lifecycle smoke. No server submission, multi-point training, 7/30-day
+lifecycle smoke. Its local runner and free-`gln01` launcher are now prepared
+with a 90-minute timeout, zero updates, and no checkpoint. No remote sync or
+execution has occurred. No multi-point training, 7/30-day
 rollout, sealed-test read, Gate D2, or product work is authorized by the local
 result alone. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
