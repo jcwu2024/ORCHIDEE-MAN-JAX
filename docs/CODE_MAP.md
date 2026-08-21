@@ -220,6 +220,12 @@ regressions are
 `tests/unit/test_daily_operator_target_oriented_training.py`,
 `tests/unit/test_daily_operator_target_oriented_training_statistics.py`, and
 `tests/unit/test_daily_operator_target_oriented_prepared_batch.py`.
+The post-preflight state-loss amendment is
+`manifests/coarse_graining/target_oriented_state_anchor_amendment_v1.json` and
+`target_oriented_state_anchor_amendment_20260821.md`; it owns the residual
+`other` eligibility mask, low-variance native-unit scale fallback, and
+declared-dynamic `rveget` reporting policy without changing the architecture
+or prepared-batch selection.
 `scripts/hpc/target_oriented_training_prepared.py` owns serialization,
 `prepare_target_oriented_training_batches.py` owns free-CPU real-v6
 preparation, and `run_target_oriented_full_step_preflight.py` owns the

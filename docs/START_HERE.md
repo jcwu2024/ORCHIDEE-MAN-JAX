@@ -212,12 +212,15 @@ exact/diagnostic.
 
 The discussed target-oriented successor is implemented as an 83,755,173-
 parameter hierarchical coordinate Attention model and has passed local plus
-zero-update real-v6 admission. Its same-year, 28-landpoint effective-batch
-reader, dynamic retained-tail inputs, exact microbatch gradients, and clipped
-AdamW proposal now pass local tests. The active operation is to prepare eight
-real-v6 batches on a free CPU test node and run a free-V100 zero-retained-
-update full-step preflight. Paid training, 365-day rollout, Gate D2, sealed
-test, and product work stay closed.
+zero-update real-v6 admission. Its eight-batch full-objective preflight exposed
+a one-day state-loss conditioning defect rather than an architecture or
+physical-transition failure: one near-constant DOC coordinate dominated and
+was duplicated through `other`. The frozen amendment now makes `other`
+residual, applies native-unit fallback to 46 low-variance coordinates, and
+separates declared-dynamic `rveget` status from hard failures. The active
+operation is a representative free-node gradient probe before repeating the
+eight-batch preflight. Paid training, 365-day rollout, Gate D2, sealed test,
+and product work stay closed.
 
 ## New Task Bootstrap
 

@@ -40,6 +40,14 @@ FROZEN_CONTRACT_SHA256 = "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd482
 DEFAULT_CONTRACT_PATH = (
     Path(__file__).resolve().parents[3] / "manifests" / "coarse_graining" / "target_oriented_bounded_training_v1.json"
 )
+STATE_ANCHOR_POLICY_SCHEMA_VERSION = "target_oriented_state_anchor_amendment_v1"
+STATE_ANCHOR_POLICY_FROZEN_SHA256 = "840089cfdf288c77453b0e7be0f4eeb0345b9225ad950e7b70b332791a77382c"
+DEFAULT_STATE_ANCHOR_POLICY_PATH = (
+    Path(__file__).resolve().parents[3]
+    / "manifests"
+    / "coarse_graining"
+    / "target_oriented_state_anchor_amendment_v1.json"
+)
 
 
 def _canonical_sha256(payload: Mapping[str, Any]) -> str:
@@ -62,6 +70,17 @@ class TargetOrientedTrainingContract:
     @property
     def optimizer(self) -> Mapping[str, Any]:
         return self.payload["optimizer"]
+
+
+@dataclass(frozen=True)
+class TargetOrientedStateAnchorPolicy:
+    payload: Mapping[str, Any]
+    source_path: Path
+    sha256: str
+
+    @property
+    def state_anchor(self) -> Mapping[str, Any]:
+        return self.payload["one_day_state_anchor"]
 
 
 class ErrorSufficientStatistics(NamedTuple):
@@ -102,6 +121,8 @@ class PreparedTargetOrientedTrainingBatch(NamedTuple):
 
 class TargetOrientedScales(NamedTuple):
     state: StateFeatureGroups
+    state_loss_eligible: StateDefinedMasks
+    state_declared_dynamic: StateDefinedMasks
     fluxes: Mapping[str, float]
     stocks: Mapping[str, float]
 
@@ -277,6 +298,38 @@ def load_target_oriented_training_contract(
     return TargetOrientedTrainingContract(payload, source, observed)
 
 
+def load_target_oriented_state_anchor_policy(
+    path: str | Path = DEFAULT_STATE_ANCHOR_POLICY_PATH,
+) -> TargetOrientedStateAnchorPolicy:
+    source = Path(path).resolve()
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    if payload.get("schema_version") != STATE_ANCHOR_POLICY_SCHEMA_VERSION:
+        raise ValueError("target-oriented state-anchor policy schema drift")
+    if payload.get("status") != "frozen_after_zero_update_full_step_diagnostic":
+        raise ValueError("target-oriented state-anchor policy is not frozen")
+    anchor = payload.get("one_day_state_anchor", {})
+    if (
+        float(anchor.get("minimum_resolved_empirical_scale", 0.0)),
+        float(anchor.get("unresolved_scale_fallback", 0.0)),
+    ) != (1.0e-6, 1.0):
+        raise ValueError("target-oriented state-anchor scale policy drift")
+    if anchor.get("robust_loss") != (
+        "not_enabled; scale pathology is repaired directly before changing loss geometry"
+    ):
+        raise ValueError("target-oriented state-anchor loss geometry drift")
+    dynamic = payload.get("defined_status", {})
+    if tuple(dynamic.get("declared_dynamic_state_leaves", ())) != (
+        "diffuco_previous_step_state.rveget",
+    ):
+        raise ValueError("target-oriented declared dynamic state registry drift")
+    observed = _canonical_sha256(payload)
+    if payload.get("contract_sha256") != observed:
+        raise ValueError("target-oriented state-anchor policy SHA256 drift")
+    if observed != STATE_ANCHOR_POLICY_FROZEN_SHA256:
+        raise ValueError("target-oriented state-anchor policy is not the frozen v1")
+    return TargetOrientedStateAnchorPolicy(payload, source, observed)
+
+
 def target_oriented_learning_rate(
     contract: TargetOrientedTrainingContract,
     update: int,
@@ -366,14 +419,21 @@ def derive_target_oriented_scales(
     next_state_scale: Any,
     fast_gpp_scale: Any,
     contract: Any,
+    *,
+    state_anchor_policy: TargetOrientedStateAnchorPolicy | None = None,
 ) -> TargetOrientedScales:
     """Project frozen train/train column scales onto the target loss basis."""
 
-    flat = np.asarray(next_state_scale, dtype=np.float64)
-    if flat.shape != (int(contract.continuous_state_width),):
+    raw_flat = np.asarray(next_state_scale, dtype=np.float64)
+    if raw_flat.shape != (int(contract.continuous_state_width),):
         raise ValueError("target-oriented next-state scale width drift")
-    if not np.all(np.isfinite(flat)) or np.any(flat <= 0.0):
+    if not np.all(np.isfinite(raw_flat)) or np.any(raw_flat <= 0.0):
         raise ValueError("target-oriented next-state scales must be finite and positive")
+    policy = state_anchor_policy or load_target_oriented_state_anchor_policy()
+    anchor_policy = policy.state_anchor
+    minimum = float(anchor_policy["minimum_resolved_empirical_scale"])
+    fallback = float(anchor_policy["unresolved_scale_fallback"])
+    flat = np.where(raw_flat > minimum, raw_flat, fallback)
 
     def field(component: str, name: str, *, inflate_pft_axis: bool = False) -> np.ndarray:
         matches = tuple(
@@ -430,7 +490,34 @@ def derive_target_oriented_scales(
         if value.size < 1 or not np.all(np.isfinite(value)) or np.any(value <= 0.0):
             raise ValueError(f"target-oriented state group scale is invalid for {name}")
 
-    long = derive_long_horizon_scales(flat, fast_gpp_scale, contract)
+    leaves_by_key = {leaf.key: leaf for leaf in contract.state_leaves}
+    excluded_other = np.zeros(raw_flat.shape, dtype=np.bool_)
+    for key in anchor_policy["other_excluded_state_leaves"]:
+        leaf = leaves_by_key.get(str(key))
+        if leaf is None or leaf.start is None or leaf.stop is None:
+            raise ValueError(f"target-oriented residual-state exclusion has no continuous owner: {key}")
+        excluded_other[int(leaf.start) : int(leaf.stop)] = True
+    loss_eligible = StateDefinedMasks(
+        **{
+            name: np.ones(np.asarray(getattr(state, name)).shape, dtype=np.bool_)
+            for name in StateFeatureGroups._fields
+        }
+    )._replace(other=~excluded_other)
+
+    declared_dynamic = np.zeros(raw_flat.shape, dtype=np.bool_)
+    for key in policy.payload["defined_status"]["declared_dynamic_state_leaves"]:
+        leaf = leaves_by_key.get(str(key))
+        if leaf is None or leaf.start is None or leaf.stop is None:
+            raise ValueError(f"target-oriented declared dynamic state has no continuous owner: {key}")
+        declared_dynamic[int(leaf.start) : int(leaf.stop)] = True
+    state_declared_dynamic = StateDefinedMasks(
+        **{
+            name: np.zeros(np.asarray(getattr(state, name)).shape, dtype=np.bool_)
+            for name in StateFeatureGroups._fields
+        }
+    )._replace(other=declared_dynamic)
+
+    long = derive_long_horizon_scales(raw_flat, fast_gpp_scale, contract)
     fluxes = {
         "gpp": float(long.fluxes["gpp"]),
         "autotrophic_respiration": float(
@@ -453,7 +540,13 @@ def derive_target_oriented_scales(
     }
     if set(fluxes) != set(INDEPENDENT_FLUX_BASIS) or set(stocks) != set(INDEPENDENT_STOCK_BASIS):
         raise ValueError("target-oriented independent science scale registry drift")
-    return TargetOrientedScales(state=state, fluxes=fluxes, stocks=stocks)
+    return TargetOrientedScales(
+        state=state,
+        state_loss_eligible=loss_eligible,
+        state_declared_dynamic=state_declared_dynamic,
+        fluxes=fluxes,
+        stocks=stocks,
+    )
 
 
 def normalized_error_sufficient_statistics(
@@ -469,7 +562,10 @@ def normalized_error_sufficient_statistics(
         raise ValueError("target-oriented sufficient-statistic shapes differ")
     scale = jnp.broadcast_to(jnp.asarray(scale, dtype=jnp.float64), predicted.shape)
     valid = defined & jnp.isfinite(predicted) & jnp.isfinite(expected) & jnp.isfinite(scale) & (scale > 0.0)
-    residual = jnp.where(valid, (predicted - expected) / scale, 0.0)
+    safe_predicted = jnp.where(valid, predicted, 0.0)
+    safe_expected = jnp.where(valid, expected, 0.0)
+    safe_scale = jnp.where(valid, scale, 1.0)
+    residual = (safe_predicted - safe_expected) / safe_scale
     return ErrorSufficientStatistics(
         sum_squared=jnp.sum(residual * residual, dtype=jnp.float64),
         sum_signed=jnp.sum(residual, dtype=jnp.float64),
@@ -635,13 +731,26 @@ def one_day_state_sufficient_statistics(
     predicted_defined: StateDefinedMasks,
     expected_defined: StateDefinedMasks,
     scales: StateFeatureGroups,
+    *,
+    eligible: StateDefinedMasks | None = None,
 ) -> Mapping[str, ErrorSufficientStatistics]:
+    if eligible is None:
+        eligible = StateDefinedMasks(
+            **{
+                name: jnp.ones_like(
+                    jnp.asarray(getattr(expected_defined, name), dtype=jnp.bool_),
+                    dtype=jnp.bool_,
+                )
+                for name in StateFeatureGroups._fields
+            }
+        )
     return {
         name: normalized_error_sufficient_statistics(
             getattr(predicted, name),
             getattr(expected, name),
             jnp.asarray(getattr(predicted_defined, name), dtype=jnp.bool_)
-            & jnp.asarray(getattr(expected_defined, name), dtype=jnp.bool_),
+            & jnp.asarray(getattr(expected_defined, name), dtype=jnp.bool_)
+            & jnp.asarray(getattr(eligible, name), dtype=jnp.bool_),
             getattr(scales, name),
         )
         for name in StateFeatureGroups._fields
@@ -1178,6 +1287,7 @@ def build_target_oriented_training_schedule(
 
 __all__ = [
     "DEFAULT_CONTRACT_PATH",
+    "DEFAULT_STATE_ANCHOR_POLICY_PATH",
     "ErrorSufficientStatistics",
     "FROZEN_CONTRACT_SHA256",
     "PreparedTargetOrientedOneDayBatch",
@@ -1188,11 +1298,13 @@ __all__ = [
     "TargetOrientedAdamWState",
     "TargetOrientedTrainingContract",
     "TargetOrientedScales",
+    "TargetOrientedStateAnchorPolicy",
     "add_error_sufficient_statistics",
     "add_science_window_sufficient_statistics",
     "build_target_oriented_training_schedule",
     "derive_target_oriented_scales",
     "initialize_target_oriented_adamw",
+    "load_target_oriented_state_anchor_policy",
     "load_target_oriented_training_contract",
     "linearized_one_day_state_loss",
     "linearized_process_supervision_loss",

@@ -19,10 +19,7 @@ from .types import StateDefinedMasks, StateFeatureGroups
 SCHEMA_VERSION = "target_oriented_daily_operator_v1"
 FROZEN_CONTRACT_SHA256 = "7c9857c0ca57ee65cfcf7514a216a217c3b1661f6cc869c6dfb85d3786bfce5c"
 DEFAULT_CONTRACT_PATH = (
-    Path(__file__).resolve().parents[3]
-    / "manifests"
-    / "coarse_graining"
-    / "target_oriented_daily_operator_v1.json"
+    Path(__file__).resolve().parents[3] / "manifests" / "coarse_graining" / "target_oriented_daily_operator_v1.json"
 )
 
 PRIMARY_SCIENCE_DIRECT = "primary_science_direct"
@@ -67,9 +64,7 @@ LOSS_COMPONENTS = (
 def contract_sha256(payload: Mapping[str, Any]) -> str:
     canonical = dict(payload)
     canonical.pop("contract_sha256", None)
-    encoded = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode(
-        "utf-8"
-    )
+    encoded = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
 
 
@@ -81,34 +76,20 @@ class TargetOrientedContract:
 
     @property
     def exact_fields(self) -> tuple[str, ...]:
-        return tuple(
-            str(name)
-            for name in self.payload["output_hierarchy"]["exact_or_diagnostic_fields"]
-        )
+        return tuple(str(name) for name in self.payload["output_hierarchy"]["exact_or_diagnostic_fields"])
 
     @property
     def labels_by_category(self) -> Mapping[str, tuple[str, ...]]:
         hierarchy = self.payload["output_hierarchy"]
         return {
-            PRIMARY_SCIENCE_DIRECT: tuple(
-                str(name) for name in hierarchy["primary_science_direct_labels"]
-            ),
-            STATE_BUDGET_ESSENTIAL: tuple(
-                str(name) for name in hierarchy["state_budget_essential_labels"]
-            ),
-            AUXILIARY_SUPERVISION: tuple(
-                str(name) for name in hierarchy["auxiliary_supervision_labels"]
-            ),
+            PRIMARY_SCIENCE_DIRECT: tuple(str(name) for name in hierarchy["primary_science_direct_labels"]),
+            STATE_BUDGET_ESSENTIAL: tuple(str(name) for name in hierarchy["state_budget_essential_labels"]),
+            AUXILIARY_SUPERVISION: tuple(str(name) for name in hierarchy["auxiliary_supervision_labels"]),
         }
 
     @property
     def loss_coefficients(self) -> Mapping[str, float]:
-        return {
-            str(name): float(value)
-            for name, value in self.payload["training_objective"][
-                "coefficients"
-            ].items()
-        }
+        return {str(name): float(value) for name, value in self.payload["training_objective"]["coefficients"].items()}
 
 
 class OutputHierarchy(NamedTuple):
@@ -233,18 +214,14 @@ def _validate_contract_payload(payload: Mapping[str, Any]) -> None:
     if tuple(objective.get("components", ())) != LOSS_COMPONENTS:
         raise ValueError("target-oriented loss component order drift")
     coefficients = objective.get("coefficients", {})
-    if tuple(coefficients) != LOSS_COMPONENTS or {
-        str(name): float(value) for name, value in coefficients.items()
-    } != {
+    if tuple(coefficients) != LOSS_COMPONENTS or {str(name): float(value) for name, value in coefficients.items()} != {
         "one_day_state_anchor": 1.0,
         "seven_day_science": 1.0,
         "thirty_day_science": 1.0,
         "necessary_process_supervision": 0.1,
     }:
         raise ValueError("target-oriented loss coefficients drift")
-    if tuple(objective.get("one_day_state_anchor", {}).get("groups", ())) != tuple(
-        StateFeatureGroups._fields
-    ):
+    if tuple(objective.get("one_day_state_anchor", {}).get("groups", ())) != tuple(StateFeatureGroups._fields):
         raise ValueError("target-oriented one-day state groups drift")
     process_weights = objective.get("necessary_process_supervision", {})
     if (
@@ -310,9 +287,7 @@ def resolve_target_output_hierarchy(
         raise ValueError("target-oriented complete schema count drift")
     if len(learned_schema.fields) != int(hierarchy["learned_field_count"]):
         raise ValueError("target-oriented learned schema count drift")
-    scalar_count = sum(
-        int(np.prod(field.shape, dtype=np.int64)) for field in learned_schema.fields
-    )
+    scalar_count = sum(int(np.prod(field.shape, dtype=np.int64)) for field in learned_schema.fields)
     if scalar_count != int(hierarchy["learned_scalar_count"]):
         raise ValueError("target-oriented learned scalar count drift")
     if tuple(learned_schema.labels) != tuple(complete_schema.labels):
@@ -325,45 +300,33 @@ def resolve_target_output_hierarchy(
         raise ValueError("target-oriented learned/exact field partition drift")
 
     labels = set(complete_schema.labels)
-    declared_labels = set().union(
-        *(set(values) for values in contract.labels_by_category.values())
-    )
+    declared_labels = set().union(*(set(values) for values in contract.labels_by_category.values()))
     if labels != declared_labels:
         missing = sorted(labels - declared_labels)
         extra = sorted(declared_labels - labels)
-        raise ValueError(
-            f"target-oriented label registry drift; missing={missing}, extra={extra}"
-        )
+        raise ValueError(f"target-oriented label registry drift; missing={missing}, extra={extra}")
     label_category = {
         label: category
         for category, category_labels in contract.labels_by_category.items()
         for label in category_labels
     }
-    fields_by_category: dict[str, list[str]] = {
-        category: [] for category in LEARNED_CATEGORIES
-    }
+    fields_by_category: dict[str, list[str]] = {category: [] for category in LEARNED_CATEGORIES}
     for field in learned_schema.fields:
         label = learned_schema.labels[field.label_index]
         fields_by_category[label_category[label]].append(field.name)
-    if sum(len(values) for values in fields_by_category.values()) != len(
-        learned_schema.fields
-    ):
+    if sum(len(values) for values in fields_by_category.values()) != len(learned_schema.fields):
         raise ValueError("target-oriented learned field classification is incomplete")
     complete_by_name = {field.name: field for field in complete_schema.fields}
     expected_counts = hierarchy["expected_category_counts"]
     for category, names in fields_by_category.items():
-        scalar_count_by_category = sum(
-            int(np.prod(complete_by_name[name].shape, dtype=np.int64)) for name in names
-        )
+        scalar_count_by_category = sum(int(np.prod(complete_by_name[name].shape, dtype=np.int64)) for name in names)
         expected = expected_counts[category]
         if (len(names), scalar_count_by_category) != (
             int(expected["field_count"]),
             int(expected["scalar_count"]),
         ):
             raise ValueError(f"target-oriented {category} count drift")
-    exact_scalar_count = sum(
-        int(np.prod(complete_by_name[name].shape, dtype=np.int64)) for name in exact_names
-    )
+    exact_scalar_count = sum(int(np.prod(complete_by_name[name].shape, dtype=np.int64)) for name in exact_names)
     expected_exact = expected_counts[EXACT_OR_DIAGNOSTIC]
     if (len(exact_names), exact_scalar_count) != (
         int(expected_exact["field_count"]),
@@ -371,9 +334,7 @@ def resolve_target_output_hierarchy(
     ):
         raise ValueError("target-oriented exact/diagnostic count drift")
     return OutputHierarchy(
-        learned_fields_by_category={
-            category: tuple(values) for category, values in fields_by_category.items()
-        },
+        learned_fields_by_category={category: tuple(values) for category, values in fields_by_category.items()},
         exact_or_diagnostic_fields=contract.exact_fields,
         learned_field_count=len(learned_schema.fields),
         learned_scalar_count=scalar_count,
@@ -388,9 +349,7 @@ def derive_carbon_flux_identities(
         missing = sorted(required - set(fluxes))
         extra = sorted(set(fluxes) - required)
         raise ValueError(f"carbon flux identity registry drift; missing={missing}, extra={extra}")
-    values = {
-        name: jnp.asarray(fluxes[name], dtype=jnp.float64) for name in required
-    }
+    values = {name: jnp.asarray(fluxes[name], dtype=jnp.float64) for name in required}
     shape = values[BASE_FLUX_FIELDS[0]].shape
     if any(value.shape != shape for value in values.values()):
         raise ValueError("carbon flux identity shapes differ")
@@ -418,10 +377,7 @@ def derive_carbon_stock_identities(
     shape = values[BASE_STOCK_FIELDS[0]].shape
     if any(value.shape != shape for value in values.values()):
         raise ValueError("carbon stock identity shapes differ")
-    total = (
-        values["aboveground_biomass_carbon"]
-        + values["belowground_biomass_carbon"]
-    )
+    total = values["aboveground_biomass_carbon"] + values["belowground_biomass_carbon"]
     return CarbonStockIdentityResult(
         total_live_biomass_carbon_from_parts=total,
         nonliving_ecosystem_carbon=values["ecosystem_carbon"] - total,
@@ -441,14 +397,11 @@ def _normalized_error(
     scale = jnp.broadcast_to(jnp.asarray(scale, dtype=jnp.float64), predicted.shape)
     if predicted.shape != expected.shape or defined.shape != predicted.shape:
         raise ValueError("normalized target-oriented arrays differ")
-    valid = (
-        defined
-        & jnp.isfinite(predicted)
-        & jnp.isfinite(expected)
-        & jnp.isfinite(scale)
-        & (scale > 0.0)
-    )
-    residual = jnp.where(valid, (predicted - expected) / scale, 0.0)
+    valid = defined & jnp.isfinite(predicted) & jnp.isfinite(expected) & jnp.isfinite(scale) & (scale > 0.0)
+    safe_predicted = jnp.where(valid, predicted, 0.0)
+    safe_expected = jnp.where(valid, expected, 0.0)
+    safe_scale = jnp.where(valid, scale, 1.0)
+    residual = (safe_predicted - safe_expected) / safe_scale
     count = jnp.sum(valid, dtype=jnp.float64)
     mean = jnp.where(count > 0.0, jnp.sum(residual) / count, 0.0)
     mse = jnp.where(
@@ -465,7 +418,19 @@ def one_day_state_anchor(
     predicted_defined: StateDefinedMasks,
     expected_defined: StateDefinedMasks,
     scales: StateFeatureGroups,
+    *,
+    eligible: StateDefinedMasks | None = None,
 ) -> OneDayStateAnchorResult:
+    if eligible is None:
+        eligible = StateDefinedMasks(
+            **{
+                name: jnp.ones_like(
+                    jnp.asarray(getattr(expected_defined, name), dtype=jnp.bool_),
+                    dtype=jnp.bool_,
+                )
+                for name in StateFeatureGroups._fields
+            }
+        )
     group_mse: dict[str, Any] = {}
     group_bias: dict[str, Any] = {}
     group_count: dict[str, Any] = {}
@@ -475,7 +440,8 @@ def one_day_state_anchor(
             getattr(predicted, name),
             getattr(expected, name),
             jnp.asarray(getattr(predicted_defined, name), dtype=jnp.bool_)
-            & jnp.asarray(getattr(expected_defined, name), dtype=jnp.bool_),
+            & jnp.asarray(getattr(expected_defined, name), dtype=jnp.bool_)
+            & jnp.asarray(getattr(eligible, name), dtype=jnp.bool_),
             getattr(scales, name),
         )
         group_mse[name] = error.mse
@@ -502,16 +468,14 @@ def one_day_state_anchor(
 def _masked_sum(left: MaskedTrajectory, right: MaskedTrajectory) -> MaskedTrajectory:
     return MaskedTrajectory(
         value=jnp.asarray(left.value) + jnp.asarray(right.value),
-        defined=jnp.asarray(left.defined, dtype=jnp.bool_)
-        & jnp.asarray(right.defined, dtype=jnp.bool_),
+        defined=jnp.asarray(left.defined, dtype=jnp.bool_) & jnp.asarray(right.defined, dtype=jnp.bool_),
     )
 
 
 def _masked_difference(left: MaskedTrajectory, right: MaskedTrajectory) -> MaskedTrajectory:
     return MaskedTrajectory(
         value=jnp.asarray(left.value) - jnp.asarray(right.value),
-        defined=jnp.asarray(left.defined, dtype=jnp.bool_)
-        & jnp.asarray(right.defined, dtype=jnp.bool_),
+        defined=jnp.asarray(left.defined, dtype=jnp.bool_) & jnp.asarray(right.defined, dtype=jnp.bool_),
     )
 
 
@@ -568,12 +532,8 @@ def science_window_objective(
 ) -> ScienceWindowResult:
     if int(horizon) not in (7, 30):
         raise ValueError("target-oriented training horizon must be 7 or 30 days")
-    predicted_flux, predicted_stock = _independent_science_trajectories(
-        predicted_fluxes, predicted_stocks
-    )
-    expected_flux, expected_stock = _independent_science_trajectories(
-        expected_fluxes, expected_stocks
-    )
+    predicted_flux, predicted_stock = _independent_science_trajectories(predicted_fluxes, predicted_stocks)
+    expected_flux, expected_stock = _independent_science_trajectories(expected_fluxes, expected_stocks)
     if set(flux_scales) != set(INDEPENDENT_FLUX_BASIS):
         raise ValueError("target-oriented independent flux scale registry drift")
     if set(stock_scales) != set(INDEPENDENT_STOCK_BASIS):
@@ -585,9 +545,8 @@ def science_window_objective(
         expected = expected_flux[name]
         if jnp.asarray(predicted.value).shape[0] < horizon:
             raise ValueError("target-oriented flux trajectory is shorter than horizon")
-        defined = (
-            jnp.asarray(predicted.defined[:horizon], dtype=jnp.bool_)
-            & jnp.asarray(expected.defined[:horizon], dtype=jnp.bool_)
+        defined = jnp.asarray(predicted.defined[:horizon], dtype=jnp.bool_) & jnp.asarray(
+            expected.defined[:horizon], dtype=jnp.bool_
         )
         complete = jnp.all(defined, axis=0)
         flux_errors[name] = _normalized_error(
@@ -603,9 +562,8 @@ def science_window_objective(
         expected = expected_stock[name]
         if jnp.asarray(predicted.value).shape[0] < horizon:
             raise ValueError("target-oriented stock trajectory is shorter than horizon")
-        defined = (
-            jnp.asarray(predicted.defined[horizon - 1], dtype=jnp.bool_)
-            & jnp.asarray(expected.defined[horizon - 1], dtype=jnp.bool_)
+        defined = jnp.asarray(predicted.defined[horizon - 1], dtype=jnp.bool_) & jnp.asarray(
+            expected.defined[horizon - 1], dtype=jnp.bool_
         )
         stock_errors[name] = _normalized_error(
             predicted.value[horizon - 1],
@@ -638,19 +596,11 @@ def necessary_process_supervision_loss(
     expected = set().union(*(set(values) for values in labels_by_category.values()))
     if set(process_loss.label_mse) != expected or set(process_loss.label_count) != expected:
         raise ValueError("target-oriented process loss label registry drift")
-    raw_weights = contract.payload["training_objective"][
-        "necessary_process_supervision"
-    ]
+    raw_weights = contract.payload["training_objective"]["necessary_process_supervision"]
     weights = {
-        PRIMARY_SCIENCE_DIRECT: float(
-            raw_weights["primary_science_direct_label_weight"]
-        ),
-        STATE_BUDGET_ESSENTIAL: float(
-            raw_weights["state_budget_essential_label_weight"]
-        ),
-        AUXILIARY_SUPERVISION: float(
-            raw_weights["auxiliary_supervision_label_weight"]
-        ),
+        PRIMARY_SCIENCE_DIRECT: float(raw_weights["primary_science_direct_label_weight"]),
+        STATE_BUDGET_ESSENTIAL: float(raw_weights["state_budget_essential_label_weight"]),
+        AUXILIARY_SUPERVISION: float(raw_weights["auxiliary_supervision_label_weight"]),
     }
     category_loss: dict[str, Any] = {}
     category_count: dict[str, Any] = {}
@@ -658,9 +608,7 @@ def necessary_process_supervision_loss(
     denominator = jnp.asarray(0.0, dtype=jnp.float64)
     for category in LEARNED_CATEGORIES:
         labels = labels_by_category[category]
-        active = jnp.stack(
-            tuple(jnp.asarray(process_loss.label_count[label]) > 0.0 for label in labels)
-        )
+        active = jnp.stack(tuple(jnp.asarray(process_loss.label_count[label]) > 0.0 for label in labels))
         values = jnp.stack(tuple(process_loss.label_mse[label] for label in labels))
         count = jnp.sum(active, dtype=jnp.float64)
         value = jnp.where(
@@ -690,21 +638,12 @@ def compose_target_oriented_loss(
     contract: TargetOrientedContract,
 ) -> TargetOrientedLossResult:
     components = {
-        "one_day_state_anchor": jnp.asarray(
-            one_day_state_anchor_value, dtype=jnp.float64
-        ),
+        "one_day_state_anchor": jnp.asarray(one_day_state_anchor_value, dtype=jnp.float64),
         "seven_day_science": jnp.asarray(seven_day_science, dtype=jnp.float64),
-        "thirty_day_science": jnp.asarray(
-            thirty_day_science, dtype=jnp.float64
-        ),
-        "necessary_process_supervision": jnp.asarray(
-            necessary_process_supervision, dtype=jnp.float64
-        ),
+        "thirty_day_science": jnp.asarray(thirty_day_science, dtype=jnp.float64),
+        "necessary_process_supervision": jnp.asarray(necessary_process_supervision, dtype=jnp.float64),
     }
-    weighted = {
-        name: contract.loss_coefficients[name] * components[name]
-        for name in LOSS_COMPONENTS
-    }
+    weighted = {name: contract.loss_coefficients[name] * components[name] for name in LOSS_COMPONENTS}
     total = sum(weighted.values(), jnp.asarray(0.0, dtype=jnp.float64))
     return TargetOrientedLossResult(
         total=total,

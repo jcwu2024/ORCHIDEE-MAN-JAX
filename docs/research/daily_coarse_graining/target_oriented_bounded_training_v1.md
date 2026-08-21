@@ -94,14 +94,18 @@ checkpoints allow paid runs to remain short and separately reviewable.
 
 The exact microbatch sufficient-statistics accumulator, multi-point-year
 prepared reader, dynamic retained-tail day-input path, and clipped AdamW
-proposal are implemented. Synthetic full-batch versus accumulated
-loss/gradient tests and focused prepared-artifact tests pass. The active
-operation is to prepare eight real-v6 batches on a free CPU test node and then
-run one free-`gln01` preflight. It will retain no update while measuring eight
-full-objective gradients, the train-only p90 clip, all seven architecture
-gradient families, actual peak memory, and the compiled hot gradient-plus-
-AdamW step. Only its measured timing can support a paid GPU wall-time and
-worst-case cost proposal.
+proposal are implemented. The eight real-v6 batches and first free-`gln01`
+preflight are complete. It measured about 8.15 GiB peak live memory and 35.65
+seconds per hot effective step, but all eight gradients were NaN because the
+one-day state anchor amplified one near-constant DOC coordinate and counted it
+again through `other`.
+
+The follow-up state-anchor amendment is frozen separately in
+`target_oriented_state_anchor_amendment_v1.json`. It does not change this
+batch, optimizer, milestone, or checkpoint design, so the prepared batches
+remain valid. The active operation is one representative free-node component-
+gradient probe under the amended loss, followed by the full eight-batch
+preflight only if all three gradient sources are finite.
 
 No Teacher regeneration, historical v5 access, paid submission, 365-day
 rollout, long-held validation, Gate D2, sealed-test access, or product

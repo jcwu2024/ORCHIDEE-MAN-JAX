@@ -149,20 +149,33 @@ full-objective norms rather than assuming threshold 1.0. The bounded
 milestones are 250/1,000/3,000 updates, and scientific promotion remains
 absolute rather than control-relative.
 
-The active operation is to prepare eight real-v6 batches on a free CPU node,
-then run a zero-retained-update free-V100 full-step preflight. That preflight
-must verify scaffold-year invariance, all seven architecture gradient
-families, actual peak live memory, compiled hot gradient-plus-AdamW timing,
-and the eight unclipped gradient norms before a paid resource, wall-time, and
-worst-case cost proposal. No paid training, 365-day rollout, sealed-test read,
-Gate D2, or product work is authorized by this contract. See
+The eight batches and first free-V100 full-step preflight are complete. Peak
+live memory is about 8.15 GiB and a hot effective step is about 35.65 seconds,
+but every full gradient is NaN. A component audit localizes the failure to the
+one-day state anchor: one near-constant DOC coordinate has scale
+`7.960966e-12`, creates loss around `1e14`, and is duplicated through the
+complete `other` state group. Learned process outputs, 7/30-day science loss,
+state transitions, budgets, and stocks are otherwise finite. The exact
+`roughheight_pft` diagnostic supplies the sole structural nonfinite complete
+output, and all state-mask mismatches are declared dynamic `rveget` status.
+
+The frozen amendment makes `other` residual, applies the existing native-unit
+fallback to the 46/3,854 state scales at or below `1e-6`, makes masked
+arithmetic backward-safe, checks nonfinites only on learned outputs, and keeps
+declared-dynamic `rveget` supervised/report-only. Focused local tests pass
+`25/25`. The active operation is a free-node real-v6 scale/count audit and one
+representative zero-retained-update component-gradient probe before deciding
+whether to repeat all eight batches. No paid training, 365-day rollout,
+sealed-test read, Gate D2, or product work is authorized. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 with GPU evidence in
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md)
 and the training design in
-[`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md).
+[`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md)
+and
+[`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

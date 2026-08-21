@@ -17,6 +17,7 @@ from research.daily_coarse_graining.daily_operator.target_oriented_training impo
     linearized_science_window_loss,
     merge_error_sufficient_statistics,
     necessary_process_supervision_from_sufficient_statistics,
+    normalized_error_sufficient_statistics,
     one_day_state_anchor_from_sufficient_statistics,
     one_day_state_sufficient_statistics,
     process_supervision_sufficient_statistics,
@@ -36,6 +37,72 @@ def _state_groups(value):
 
 def _state_masks(value):
     return StateDefinedMasks(**{name: value for name in StateFeatureGroups._fields})
+
+
+def test_masked_nonfinite_value_does_not_contaminate_gradient():
+    def loss(parameter):
+        statistics = normalized_error_sufficient_statistics(
+            jnp.stack((parameter, jnp.asarray(jnp.nan))),
+            jnp.asarray((1.0, 5.0)),
+            jnp.asarray((True, False)),
+            jnp.asarray((2.0, 3.0)),
+        )
+        return statistics.sum_squared / statistics.count
+
+    value, gradient = jax.value_and_grad(loss)(jnp.asarray(3.0))
+
+    np.testing.assert_allclose(value, 1.0)
+    np.testing.assert_allclose(gradient, 1.0)
+    assert np.isfinite(float(gradient))
+
+    def direct_loss(parameter):
+        return one_day_state_anchor(
+            _state_groups(jnp.stack((parameter, jnp.asarray(jnp.nan)))),
+            _state_groups(jnp.asarray((1.0, 5.0))),
+            _state_masks(jnp.asarray((True, False))),
+            _state_masks(jnp.asarray((True, False))),
+            _state_groups(jnp.asarray((2.0, 3.0))),
+        ).total
+
+    direct_value, direct_gradient = jax.value_and_grad(direct_loss)(jnp.asarray(3.0))
+    np.testing.assert_allclose(direct_value, 1.0)
+    np.testing.assert_allclose(direct_gradient, 1.0)
+    assert np.isfinite(float(direct_gradient))
+
+
+def test_state_anchor_eligibility_removes_residual_group_duplicates():
+    expected = _state_groups(jnp.asarray((0.0, 0.0)))
+    defined = _state_masks(jnp.asarray((True, True)))
+    eligible = _state_masks(jnp.asarray((True, False)))
+    scales = _state_groups(jnp.asarray((1.0, 1.0)))
+
+    def direct(parameter):
+        predicted = _state_groups(jnp.stack((jnp.asarray(1.0), parameter)))
+        return one_day_state_anchor(
+            predicted,
+            expected,
+            defined,
+            defined,
+            scales,
+            eligible=eligible,
+        ).total
+
+    def sufficient(parameter):
+        predicted = _state_groups(jnp.stack((jnp.asarray(1.0), parameter)))
+        statistics = one_day_state_sufficient_statistics(
+            predicted,
+            expected,
+            defined,
+            defined,
+            scales,
+            eligible=eligible,
+        )
+        return one_day_state_anchor_from_sufficient_statistics(statistics).total
+
+    for loss in (direct, sufficient):
+        value, gradient = jax.value_and_grad(loss)(jnp.asarray(1000.0))
+        np.testing.assert_allclose(value, 1.0)
+        np.testing.assert_allclose(gradient, 0.0)
 
 
 def test_state_microbatch_statistics_preserve_full_loss_and_gradient():

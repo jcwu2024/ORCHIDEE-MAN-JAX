@@ -11,6 +11,7 @@ from research.daily_coarse_graining.daily_operator.target_oriented_training impo
     build_target_oriented_training_schedule,
     derive_target_oriented_scales,
     initialize_target_oriented_adamw,
+    load_target_oriented_state_anchor_policy,
     load_target_oriented_training_contract,
     target_oriented_adamw_update,
     target_oriented_learning_rate,
@@ -118,6 +119,16 @@ def test_target_oriented_schedule_is_deterministic_diverse_and_complete():
     assert first["entries"][0]["runtime_year"] != first["entries"][1]["runtime_year"]
 
 
+def test_target_oriented_state_anchor_amendment_is_frozen_and_reuses_prepared_data():
+    policy = load_target_oriented_state_anchor_policy()
+
+    assert policy.sha256 == policy.payload["contract_sha256"]
+    assert policy.state_anchor["minimum_resolved_empirical_scale"] == 1.0e-6
+    assert policy.state_anchor["unresolved_scale_fallback"] == 1.0
+    assert policy.payload["data_and_execution"]["prepared_batch_reuse_allowed"] is True
+    assert policy.payload["data_and_execution"]["network_architecture_changed"] is False
+
+
 def test_target_oriented_schedule_fails_when_landpoint_diversity_is_impossible():
     contract = load_target_oriented_training_contract()
     repeated = tuple(
@@ -200,10 +211,30 @@ def test_target_oriented_thermal_scales_inflate_selected_pft_axis(monkeypatch):
         ),
     )
     raw = np.arange(1, cursor + 1, dtype=np.float64)
+    litter = next(leaf for leaf in leaves if leaf.path == ("litter_above",))
+    raw[litter.start] = 1.0e-9
+    policy = SimpleNamespace(
+        state_anchor={
+            "minimum_resolved_empirical_scale": 1.0e-6,
+            "unresolved_scale_fallback": 1.0,
+            "other_excluded_state_leaves": [
+                leaf.key for leaf in leaves if leaf.path != ("snowheat",)
+            ],
+        },
+        payload={"defined_status": {"declared_dynamic_state_leaves": []}},
+    )
 
-    scales = derive_target_oriented_scales(raw, np.asarray(2.0), contract)
+    scales = derive_target_oriented_scales(
+        raw,
+        np.asarray(2.0),
+        contract,
+        state_anchor_policy=policy,
+    )
 
     assert scales.state.thermal.shape == (32,)
+    assert scales.state.carbon[0] == 1.0
+    assert np.count_nonzero(scales.state_loss_eligible.other) == 1
+    assert not np.any(scales.state_declared_dynamic.other)
     ptn_leaf = next(leaf for leaf in leaves if leaf.path == ("ptn",))
     compact = raw[ptn_leaf.start : ptn_leaf.stop].reshape(ptn_leaf.shape)
     inflated = scales.state.thermal[1:29].reshape(ptn_leaf.full_shape)

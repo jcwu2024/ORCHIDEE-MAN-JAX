@@ -1281,20 +1281,33 @@ loss. Focused loss and gradient equivalence tests pass. AdamW uses 250-update
 warmup and 250/1,000/3,000 milestones; a train-only eight-batch p90 calibration
 replaces the arbitrary fixed gradient-norm threshold.
 
-The multi-point-year prepared-batch reader, per-sample dynamic retained-tail
-day-input path, exact independent-microbatch VJPs, and clipped AdamW proposal
-are implemented and pass focused local tests. The active operation is to
-prepare eight real-v6 batches on a free CPU test node, then run one free-V100
-zero-retained-update full-step preflight. Measure all seven gradient families,
-actual JAX peak live memory, compiled hot gradient-plus-AdamW step time, and
-eight unclipped norms before declaring any paid GPU resource, wall time, or
-worst-case cost. Do not run the V5 100-epoch gate, repeat v4/v5,
-train a weak control, read sealed-test data, or advance paid training,
-365-day rollout, Gate D2, or product work. See
+The eight real-v6 batches and first free-V100 full-step preflight are complete.
+The run used about 8.15 GiB peak live memory and about 35.65 seconds per hot
+effective step, but all eight gradients were NaN. The failure is localized to
+the one-day state anchor rather than the Attention body: a near-constant DOC
+coordinate with scale `7.96e-12` produced loss around `1e14`, was duplicated
+through the complete `other` state view, and exposed a masked-NaN backward
+path. The only complete-output nonfinite is exact/diagnostic
+`roughheight_pft`; every learned output is finite. All observed state-status
+mismatches belong to declared dynamic `rveget`; water/carbon budgets,
+discrete state, and negative-stock counts remain zero.
+
+The frozen state-anchor amendment uses mutually exclusive residual `other`
+coordinates, native-unit fallback for the 46/3,854 empirical scales at or
+below `1e-6`, safe masked arithmetic, learned-only nonfinite counts, and
+report-only declared-dynamic `rveget` mismatches. The network, optimizer,
+prepared batches, and science gates do not change. Focused local tests pass
+`25/25`. The active operation is a free-node real-v6 scale/count audit and one
+representative zero-retained-update component-gradient probe. Only after all
+three gradient sources are finite and the DOC domination is removed may the
+eight-batch full-step preflight be repeated. Paid training, weak-control
+comparison, sealed-test read, 365-day rollout, Gate D2, and product work remain
+closed. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
+[`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

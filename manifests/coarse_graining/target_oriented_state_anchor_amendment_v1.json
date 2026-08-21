@@ -1,0 +1,59 @@
+{
+  "schema_version": "target_oriented_state_anchor_amendment_v1",
+  "status": "frozen_after_zero_update_full_step_diagnostic",
+  "contract_sha256": "840089cfdf288c77453b0e7be0f4eeb0345b9225ad950e7b70b332791a77382c",
+  "predecessor": {
+    "target_oriented_daily_operator_sha256": "7c9857c0ca57ee65cfcf7514a216a217c3b1661f6cc869c6dfb85d3786bfce5c",
+    "target_oriented_bounded_training_sha256": "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b"
+  },
+  "evidence": {
+    "full_step_preflight_git_head": "b13494b08bbc542f83617d1c095287e522806677",
+    "full_step_preflight_report_sha256": "a20a4c365d5d6c37828f9606963e4472d04f50609cebb741a0057114855ffcf2",
+    "one_day_state_audit_sha256": "df8c7b933ddfef1128de76b4e1997ec93136b610c70d6cd68025e909b0541e56",
+    "diagnosis": "one near-constant DOC coordinate dominates the one-day state anchor and is counted again through the complete other-state view"
+  },
+  "one_day_state_anchor": {
+    "loss_form": "equal_active_group_mean_of_one_half_normalized_mse_plus_one_half_normalized_signed_bias_squared",
+    "empirical_scale_source": "existing pft14-daily-teacher-v6 train_train next_state standard deviation",
+    "minimum_resolved_empirical_scale": 1e-6,
+    "unresolved_scale_fallback": 1.0,
+    "unresolved_scale_semantics": "train in the coordinate's native units instead of amplifying sub-threshold empirical variation",
+    "other_group_semantics": "residual continuous state coordinates not represented by the named inventory or thermal groups",
+    "other_excluded_state_leaves": [
+      "hydrol_previous_step_state.qsintveg",
+      "hydrol_previous_step_state.mc",
+      "hydrol_previous_step_state.mcl",
+      "hydrol_previous_step_state.snow",
+      "hydrol_previous_step_state.snow_nobio",
+      "hydrol_previous_step_state.snowliq",
+      "hydrol_previous_step_state.flood_res",
+      "slowproc_stomate_previous_step_state.litter_above",
+      "slowproc_stomate_previous_step_state.litter_below",
+      "slowproc_stomate_previous_step_state.carbon_32l",
+      "slowproc_stomate_previous_step_state.DOC",
+      "slowproc_stomate_previous_step_state.interception_storage",
+      "enerbil_previous_step_state.temp_sol",
+      "thermosoil_previous_step_state.ptn",
+      "thermosoil_previous_step_state.stempdiag",
+      "hydrol_previous_step_state.snowtemp"
+    ],
+    "robust_loss": "not_enabled; scale pathology is repaired directly before changing loss geometry"
+  },
+  "defined_status": {
+    "declared_dynamic_state_leaves": [
+      "diffuco_previous_step_state.rveget"
+    ],
+    "supervision": "retain endpoint.fast_state.diffuco_previous_step_state.rveget.defined_logit BCE",
+    "optimizer_veto": "only undeclared defined-status mismatches",
+    "report_only": "declared dynamic rveget defined-status mismatches"
+  },
+  "data_and_execution": {
+    "teacher_regeneration": false,
+    "historical_v5": false,
+    "sealed_test": false,
+    "prepared_batch_selection_changed": false,
+    "prepared_batch_reuse_allowed": true,
+    "network_architecture_changed": false,
+    "optimizer_changed": false
+  }
+}

@@ -117,9 +117,12 @@ After 7/30-day acceptance, the 365-day gate requires:
 - year-end stock median and p95 relative error at most `2%` and `5%`;
 - scale-normalized fallback reporting for all low-denominator cases.
 
-At every horizon, defined/discrete mismatches, nonfinite defined values,
-negative declared stocks, and water/carbon budget failures have required count
-zero. Budget and stock tolerances remain `2e-12`.
+At every horizon, undeclared defined-status mismatches, discrete mismatches,
+nonfinite learned/declared-defined values, negative declared stocks, and
+water/carbon budget failures have required count zero. Declared dynamic
+`rveget` status remains supervised and reported but does not veto an update,
+as frozen by the post-preflight state-anchor amendment. Budget and stock
+tolerances remain `2e-12`.
 
 ## Verification
 

@@ -38,7 +38,8 @@ from scripts.hpc.target_oriented_training_prepared import (
 class HardCounts(NamedTuple):
     prediction_nonfinite: Any
     state_nonfinite: Any
-    state_mask_mismatch: Any
+    unexpected_state_mask_mismatch: Any
+    declared_dynamic_state_mask_mismatch: Any
     discrete_mismatch: Any
     budget_failure: Any
     stock_negative: Any
@@ -47,16 +48,26 @@ class HardCounts(NamedTuple):
 def _window_hard_counts(
     prediction_nonfinite: Any,
     state_nonfinite: Any,
-    state_mismatch: Any,
+    unexpected_state_mismatch: Any,
+    declared_dynamic_state_mismatch: Any,
     rollout: Any,
 ) -> HardCounts:
     return HardCounts(
         prediction_nonfinite,
         state_nonfinite,
-        state_mismatch + rollout.defined_mask_mismatch,
+        unexpected_state_mismatch + rollout.defined_mask_mismatch,
+        declared_dynamic_state_mismatch,
         rollout.discrete_state_mismatch,
         rollout.budget_residual_failure,
         rollout.negative_declared_stock,
+    )
+
+
+def _hard_failure_count(counts: Mapping[str, int]) -> int:
+    return sum(
+        int(value)
+        for name, value in counts.items()
+        if name != "declared_dynamic_state_mask_mismatch"
     )
 
 
@@ -87,11 +98,18 @@ def _validate_prepared_objective_shapes(
             raise ValueError(
                 f"prepared one-day state scale shape drift for {name}: expected={expected.shape}, scale={scale.shape}"
             )
+        for label, masks in (
+            ("loss eligibility", scales.state_loss_eligible),
+            ("declared dynamic status", scales.state_declared_dynamic),
+        ):
+            mask = np.asarray(getattr(masks, name))
+            if mask.shape != scale.shape:
+                raise ValueError(f"prepared one-day state {label} shape drift for {name}")
 
 
 def _zero_hard(jnp: Any) -> HardCounts:
     zero = jnp.asarray(0, dtype=jnp.int32)
-    return HardCounts(zero, zero, zero, zero, zero, zero)
+    return HardCounts(zero, zero, zero, zero, zero, zero, zero)
 
 
 def _add_hard(jax: Any, left: HardCounts, right: HardCounts) -> HardCounts:
@@ -231,17 +249,25 @@ def _make_steps(
         process_head=head,
         retained_tail_template=template,
     )
+    learned_output_names = tuple(field.name for field in runtime["learned_schema"].fields)
 
     def state_hard(predicted, predicted_defined, expected_defined):
         nonfinite = jnp.asarray(0, dtype=jnp.int32)
-        mismatch = jnp.asarray(0, dtype=jnp.int32)
+        unexpected_mismatch = jnp.asarray(0, dtype=jnp.int32)
+        declared_dynamic_mismatch = jnp.asarray(0, dtype=jnp.int32)
         for name in StateFeatureGroups._fields:
             value = jnp.asarray(getattr(predicted, name))
             actual = jnp.asarray(getattr(predicted_defined, name), dtype=jnp.bool_)
             wanted = jnp.asarray(getattr(expected_defined, name), dtype=jnp.bool_)
+            dynamic = jnp.asarray(getattr(scales.state_declared_dynamic, name), dtype=jnp.bool_)
+            local_mismatch = actual != wanted
             nonfinite = nonfinite + jnp.sum(wanted & ~jnp.isfinite(value), dtype=jnp.int32)
-            mismatch = mismatch + jnp.sum(actual != wanted, dtype=jnp.int32)
-        return nonfinite, mismatch
+            unexpected_mismatch = unexpected_mismatch + jnp.sum(local_mismatch & ~dynamic, dtype=jnp.int32)
+            declared_dynamic_mismatch = declared_dynamic_mismatch + jnp.sum(
+                local_mismatch & dynamic,
+                dtype=jnp.int32,
+            )
+        return nonfinite, unexpected_mismatch, declared_dynamic_mismatch
 
     def discrete_hard(predicted, expected):
         left, left_tree = jax.tree_util.tree_flatten(predicted)
@@ -274,11 +300,11 @@ def _make_steps(
                     & ~jnp.isfinite(jnp.asarray(result.prediction.named_outputs[name])),
                     dtype=jnp.int32,
                 )
-                for name in targets
+                for name in learned_output_names
             ),
             jnp.asarray(0, dtype=jnp.int32),
         )
-        state_nonfinite, state_mismatch = state_hard(
+        state_nonfinite, unexpected_state_mismatch, declared_dynamic_state_mismatch = state_hard(
             result.next_state,
             result.next_state_defined,
             expected_defined,
@@ -308,7 +334,8 @@ def _make_steps(
         hard = HardCounts(
             prediction_nonfinite,
             state_nonfinite,
-            state_mismatch,
+            unexpected_state_mismatch,
+            declared_dynamic_state_mismatch,
             discrete_hard(result.next_discrete_state, expected_discrete),
             budget,
             jnp.asarray(0, dtype=jnp.int32),
@@ -335,6 +362,7 @@ def _make_steps(
             predicted_defined,
             microbatch.expected_next_state_defined,
             scales.state,
+            eligible=scales.state_loss_eligible,
         )
         process = process_supervision_sufficient_statistics(
             ProcessLossResult(
@@ -398,7 +426,7 @@ def _make_steps(
             budget_atol=2.0e-12,
             stock_atol=2.0e-12,
         )
-        state_nonfinite, state_mismatch = state_hard(
+        state_nonfinite, unexpected_state_mismatch, declared_dynamic_state_mismatch = state_hard(
             trace.result.next_state,
             trace.result.next_state_defined,
             expected_defined,
@@ -406,14 +434,16 @@ def _make_steps(
         prediction_nonfinite = sum(
             (
                 jnp.sum(~jnp.isfinite(jnp.asarray(value)), dtype=jnp.int32)
-                for value in trace.result.prediction.named_outputs.values()
+                for name, value in trace.result.prediction.named_outputs.items()
+                if name in learned_output_names
             ),
             jnp.asarray(0, dtype=jnp.int32),
         )
         hard = _window_hard_counts(
             prediction_nonfinite,
             state_nonfinite,
-            state_mismatch,
+            unexpected_state_mismatch,
+            declared_dynamic_state_mismatch,
             stock_hard,
         )
         return statistics, hard
@@ -485,7 +515,16 @@ def _effective_gradient(
     batch: Any,
     steps: Mapping[str, Any],
     target_contract: Any,
-) -> tuple[Any, Mapping[str, Any], HardCounts, float, float]:
+) -> tuple[
+    Any,
+    Mapping[str, Any],
+    Mapping[str, Any],
+    Mapping[str, Any],
+    HardCounts,
+    Mapping[str, HardCounts],
+    float,
+    float,
+]:
     from research.daily_coarse_graining.daily_operator.target_oriented_training import (
         add_science_window_sufficient_statistics,
         merge_error_sufficient_statistics,
@@ -513,20 +552,56 @@ def _effective_gradient(
         add_science_window_sufficient_statistics,
         [value[0] for value in thirty_values],
     )
+    hard_sources = {}
+    for name, values in (
+        ("one_day", one_values),
+        ("seven_day", seven_values),
+        ("thirty_day", thirty_values),
+    ):
+        source_hard = _zero_hard(jnp)
+        for value in values:
+            source_hard = _add_hard(jax, source_hard, value[-1])
+        hard_sources[name] = source_hard
     hard = _zero_hard(jnp)
-    for value in (*one_values, *seven_values, *thirty_values):
-        hard = _add_hard(jax, hard, value[-1])
+    for source_hard in hard_sources.values():
+        hard = _add_hard(jax, hard, source_hard)
+    state_result = one_day_state_anchor_from_sufficient_statistics(total_state)
+    process_result = necessary_process_supervision_from_sufficient_statistics(
+        total_process,
+        target_contract,
+    )
+    seven_result = science_window_from_sufficient_statistics(total_seven)
+    thirty_result = science_window_from_sufficient_statistics(total_thirty)
     objective = {
-        "one_day_state_anchor": one_day_state_anchor_from_sufficient_statistics(total_state).total,
-        "seven_day_science": science_window_from_sufficient_statistics(total_seven).total,
-        "thirty_day_science": science_window_from_sufficient_statistics(total_thirty).total,
-        "necessary_process_supervision": necessary_process_supervision_from_sufficient_statistics(
-            total_process,
-            target_contract,
-        ),
+        "one_day_state_anchor": state_result.total,
+        "seven_day_science": seven_result.total,
+        "thirty_day_science": thirty_result.total,
+        "necessary_process_supervision": process_result,
+    }
+    objective_details = {
+        "one_day_state_anchor": {
+            "group_loss": state_result.group_loss,
+            "group_mse": state_result.group_mse,
+            "group_bias_squared": state_result.group_bias_squared,
+            "group_count": state_result.group_count,
+        },
+        "seven_day_science": {
+            "flux_mse": seven_result.flux_mse,
+            "flux_bias_squared": seven_result.flux_bias_squared,
+            "stock_mse": seven_result.stock_mse,
+            "stock_bias_squared": seven_result.stock_bias_squared,
+        },
+        "thirty_day_science": {
+            "flux_mse": thirty_result.flux_mse,
+            "flux_bias_squared": thirty_result.flux_bias_squared,
+            "stock_mse": thirty_result.stock_mse,
+            "stock_bias_squared": thirty_result.stock_bias_squared,
+        },
     }
     gradient_started = time.perf_counter()
-    accumulated = jax.tree_util.tree_map(lambda value: jnp.zeros_like(value, dtype=jnp.float32), parameters)
+
+    def zero_gradient():
+        return jax.tree_util.tree_map(lambda value: jnp.zeros_like(value, dtype=jnp.float32), parameters)
 
     def add_gradient(current, gradient):
         return jax.tree_util.tree_map(
@@ -535,6 +610,7 @@ def _effective_gradient(
             gradient,
         )
 
+    one_accumulated = zero_gradient()
     for microbatch in one_batches:
         _value, gradient = steps["one_gradient"](
             parameters,
@@ -542,24 +618,46 @@ def _effective_gradient(
             total_state,
             total_process,
         )
-        accumulated = add_gradient(accumulated, gradient)
+        one_accumulated = add_gradient(one_accumulated, gradient)
+    seven_accumulated = zero_gradient()
     for microbatch in seven_batches:
         _value, gradient = steps["seven_gradient"](
             parameters,
             microbatch,
             total_seven,
         )
-        accumulated = add_gradient(accumulated, gradient)
+        seven_accumulated = add_gradient(seven_accumulated, gradient)
+    thirty_accumulated = zero_gradient()
     for microbatch in thirty_batches:
         _value, gradient = steps["thirty_gradient"](
             parameters,
             microbatch,
             total_thirty,
         )
-        accumulated = add_gradient(accumulated, gradient)
-    jax.block_until_ready(accumulated)
+        thirty_accumulated = add_gradient(thirty_accumulated, gradient)
+    gradient_sources = {
+        "one_day_and_process": one_accumulated,
+        "seven_day_science": seven_accumulated,
+        "thirty_day_science": thirty_accumulated,
+    }
+    accumulated = jax.tree_util.tree_map(
+        lambda one, seven, thirty: one + seven + thirty,
+        one_accumulated,
+        seven_accumulated,
+        thirty_accumulated,
+    )
+    jax.block_until_ready((accumulated, gradient_sources))
     gradient_seconds = time.perf_counter() - gradient_started
-    return accumulated, objective, hard, forward_seconds, gradient_seconds
+    return (
+        accumulated,
+        gradient_sources,
+        objective,
+        objective_details,
+        hard,
+        hard_sources,
+        forward_seconds,
+        gradient_seconds,
+    )
 
 
 def run(args: argparse.Namespace) -> Mapping[str, Any]:
@@ -589,6 +687,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         build_target_oriented_training_schedule,
         derive_target_oriented_scales,
         initialize_target_oriented_adamw,
+        load_target_oriented_state_anchor_policy,
         load_target_oriented_training_contract,
         target_oriented_adamw_update,
         target_oriented_learning_rate,
@@ -596,10 +695,14 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
 
     if int(args.updates) != 8:
         raise ValueError("target-oriented clipping preflight requires exactly eight batches")
+    batch_count = int(args.batches)
+    if batch_count not in (1, 8):
+        raise ValueError("target-oriented full-step execution requires one diagnostic or eight calibration batches")
     architecture = load_strong_baseline_contract()
     mechanism = load_mechanistic_output_contract()
     target_contract = load_target_oriented_contract()
     training_contract = load_target_oriented_training_contract(args.training_contract)
+    state_anchor_policy = load_target_oriented_state_anchor_policy()
     learned_schema = build_mechanistic_learned_schema(runtime["schema"], mechanism)
     layout = build_mechanistic_output_layout(
         adapter=runtime["adapter"],
@@ -659,6 +762,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         runtime["base_statistics"].arrays["next_state"].scale,
         runtime["process_statistics"].outputs["daily.fast_gpp"].scale,
         runtime["contract"],
+        state_anchor_policy=state_anchor_policy,
     )
     first_artifact = load_prepared_target_artifact(
         args.prepared_manifest,
@@ -694,7 +798,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     records = []
     norms = []
     for index, (entry, prepared_record) in enumerate(
-        zip(schedule["entries"], prepared_manifest["entries"], strict=True),
+        zip(
+            schedule["entries"][:batch_count],
+            prepared_manifest["entries"][:batch_count],
+            strict=True,
+        ),
         start=1,
     ):
         artifact = (
@@ -708,23 +816,40 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             )
         )
         started = time.perf_counter()
-        gradient, components, hard, forward_seconds, gradient_seconds = _effective_gradient(
-            jax,
-            jnp,
-            parameters,
-            artifact.batch,
-            steps,
-            target_contract,
-        )
+        (
+            gradient,
+            gradient_sources,
+            components,
+            component_details,
+            hard,
+            hard_sources,
+            forward_seconds,
+            gradient_seconds,
+        ) = _effective_gradient(jax, jnp, parameters, artifact.batch, steps, target_contract)
         host_gradient = jax.device_get(gradient)
         gradient_report = _tree_numeric_report(jax, host_gradient)
         gradient_families = _gradient_family_report(jax, host_gradient)
+        gradient_source_reports = {}
+        for name, source_gradient in gradient_sources.items():
+            host_source = jax.device_get(source_gradient)
+            gradient_source_reports[name] = {
+                "gradient": _tree_numeric_report(jax, host_source),
+                "gradient_families": _gradient_family_report(jax, host_source),
+            }
         norm = float(gradient_report["l2_norm"])
         norms.append(norm)
         hard_host = {name: int(np.asarray(value)) for name, value in hard._asdict().items()}
+        hard_source_host = {
+            source: {name: int(np.asarray(value)) for name, value in counts._asdict().items()}
+            for source, counts in hard_sources.items()
+        }
         component_values = {
             name: value.total if hasattr(value, "total") else value for name, value in components.items()
         }
+        component_detail_values = jax.tree_util.tree_map(
+            lambda value: float(np.asarray(value)),
+            jax.device_get(component_details),
+        )
         total = compose_target_oriented_loss(
             one_day_state_anchor_value=component_values["one_day_state_anchor"],
             seven_day_science=component_values["seven_day_science"],
@@ -741,7 +866,10 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 "unclipped_gradient_norm": norm,
                 "gradient": gradient_report,
                 "gradient_families": gradient_families,
+                "gradient_sources": gradient_source_reports,
                 "hard_counts": hard_host,
+                "hard_count_sources": hard_source_host,
+                "component_details": component_detail_values,
                 "statistics_forward_seconds": forward_seconds,
                 "microbatch_gradient_seconds": gradient_seconds,
                 "effective_gradient_seconds": forward_seconds + gradient_seconds,
@@ -831,6 +959,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "auxiliary_heads",
     )
     hot_gradient_seconds = [record["effective_gradient_seconds"] for record in records[1:]]
+    if not hot_gradient_seconds:
+        hot_gradient_seconds = [record["effective_gradient_seconds"] for record in records]
     hot_full_step_seconds = [value + optimizer_hot_seconds for value in hot_gradient_seconds]
     passed = (
         scaffold["passed"]
@@ -845,7 +975,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             for record in records
             for name in required_gradient_families
         )
-        and all(sum(record["hard_counts"].values()) == 0 for record in records)
+        and all(_hard_failure_count(record["hard_counts"]) == 0 for record in records)
         and np.isfinite(threshold)
         and threshold > 0.0
         and optimizer_report["nonfinite_parameter_or_state_count"] == 0
@@ -854,12 +984,17 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         and maximum_live <= int(training_contract.payload["preflight"]["actual_peak_bytes_in_use_maximum"])
     )
     report = {
-        "schema_version": "target_oriented_full_step_preflight_v1",
+        "schema_version": (
+            "target_oriented_full_step_preflight_v1"
+            if batch_count == 8
+            else "target_oriented_representative_gradient_probe_v1"
+        ),
         "status": "passed" if passed else "failed",
         "identity": {
             "git_head": source_head,
             "prepared_source_git_head": prepared_source_head,
             "training_contract_sha256": training_contract.sha256,
+            "state_anchor_policy_sha256": state_anchor_policy.sha256,
             "schedule_sha256": schedule["schedule_sha256"],
         },
         "policy": {
@@ -868,6 +1003,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "teacher_data_regenerated": False,
             "historical_v5_used": False,
             "sealed_test_read": False,
+            "evaluated_batch_count": batch_count,
+            "gradient_clip_calibration_complete": batch_count == 8,
         },
         "backend": jax.default_backend(),
         "devices": [str(value) for value in runtime["devices"]],
@@ -900,6 +1037,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--training-contract", type=Path, required=True)
     parser.add_argument("--prepared-manifest", type=Path, required=True)
     parser.add_argument("--updates", type=int, default=8)
+    parser.add_argument("--batches", type=int, default=8)
     parser.add_argument("--output", type=Path, required=True)
     return parser
 
