@@ -1,0 +1,256 @@
+{
+  "schema_version": "target_oriented_daily_operator_v1",
+  "status": "frozen_before_successor_architecture",
+  "contract_sha256": "7c9857c0ca57ee65cfcf7514a216a217c3b1661f6cc869c6dfb85d3786bfce5c",
+  "dataset": {
+    "release_id": "pft14-daily-teacher-v6",
+    "teacher_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "sealed_test_allowed_for_selection": false
+  },
+  "operator_boundary": "bind_daily_operator(input_assembler=canonical_assembler, process_head=candidate_head, retained_tail=canonical_retained_tail_adapter)",
+  "inference_constraints": {
+    "native_forcing_records_per_day": 5,
+    "reconstruct_48_forcing_records": false,
+    "execute_48_step_state_scan": false,
+    "cross_day_neural_hidden_state_required": false
+  },
+  "output_hierarchy": {
+    "complete_field_count": 181,
+    "learned_field_count": 161,
+    "learned_scalar_count": 39006,
+    "expected_category_counts": {
+      "primary_science_direct": {"field_count": 2, "scalar_count": 26},
+      "state_budget_essential": {"field_count": 93, "scalar_count": 3682},
+      "auxiliary_supervision": {"field_count": 66, "scalar_count": 35298},
+      "exact_or_diagnostic": {"field_count": 20, "scalar_count": 365}
+    },
+    "primary_science_direct_labels": [
+      "carbon.fast_gpp",
+      "carbon.fast_maintenance_respiration"
+    ],
+    "state_budget_essential_labels": [
+      "carbon.ok_leak_inventory_endpoints",
+      "daily_summary",
+      "energy.daily_temperature_context",
+      "energy.snow_thermal_tendency",
+      "energy.soil_temperature_tendency",
+      "energy.surface_temperature_tendency",
+      "fast_owner.diffuco",
+      "fast_owner.driver",
+      "fast_owner.enerbil",
+      "fast_owner.hydrol",
+      "fast_owner.sechiba_finalize",
+      "fast_owner.thermosoil",
+      "ok_leak_aux",
+      "water.canopy_inventory_endpoints",
+      "water.flood_inventory_endpoints",
+      "water.snow_inventory_endpoints",
+      "water.soil_inventory_endpoints"
+    ],
+    "auxiliary_supervision_labels": [
+      "carbon.cryoturbation_redistribution",
+      "carbon.doc_export",
+      "carbon.doc_external_input",
+      "carbon.doc_free_adsorbed_equilibration",
+      "carbon.doc_gross_decomposition",
+      "carbon.doc_vertical_diffusion",
+      "carbon.doc_vertical_water_transport",
+      "carbon.litter_respiration",
+      "carbon.litter_to_doc",
+      "carbon.perma_peat_redistribution",
+      "carbon.poc_gross_decomposition",
+      "energy.ground_heat_integral",
+      "energy.latent_heat_integral",
+      "energy.net_radiation_integral",
+      "energy.phase_change_integral",
+      "energy.sensible_heat_integral",
+      "water.bare_soil_evaporation",
+      "water.canopy_precipitation_partition",
+      "water.canopy_to_ground",
+      "water.drainage",
+      "water.flood_evaporation",
+      "water.routing_exchange",
+      "water.runoff",
+      "water.snow_phase_and_melt_transfer",
+      "water.snow_sublimation",
+      "water.soil_infiltration",
+      "water.soil_vertical_transfer",
+      "water.transpiration",
+      "water.wet_canopy_evaporation"
+    ],
+    "exact_or_diagnostic_fields": [
+      "thermal.thermosoil_previous_step_state.stempdiag.normalized_tendency",
+      "endpoint.fast_state.diffuco_previous_step_state.drysoil_frac",
+      "endpoint.fast_state.diffuco_previous_step_state.roughheight",
+      "endpoint.fast_state.diffuco_previous_step_state.roughheight_pft",
+      "endpoint.fast_state.diffuco_previous_step_state.z0m",
+      "endpoint.fast_state.enerbil_previous_step_state.soilcap_pft",
+      "endpoint.fast_state.enerbil_previous_step_state.soilflx_pft",
+      "endpoint.fast_state.hydrol_previous_step_state.evap_bare_lim",
+      "endpoint.fast_state.hydrol_previous_step_state.humrel",
+      "endpoint.fast_state.hydrol_previous_step_state.humrelv",
+      "endpoint.fast_state.hydrol_previous_step_state.us",
+      "endpoint.fast_state.thermosoil_previous_step_state.cgrnd",
+      "endpoint.fast_state.thermosoil_previous_step_state.cgrnd_snow",
+      "endpoint.fast_state.thermosoil_previous_step_state.dgrnd",
+      "endpoint.fast_state.thermosoil_previous_step_state.dgrnd_snow",
+      "endpoint.fast_state.thermosoil_previous_step_state.gtemp",
+      "endpoint.fast_state.thermosoil_previous_step_state.lambda_snow",
+      "endpoint.fast_state.thermosoil_previous_step_state.pcapa_en",
+      "endpoint.fast_state.thermosoil_previous_step_state.soilcap",
+      "endpoint.fast_state.thermosoil_previous_step_state.soilflx"
+    ]
+  },
+  "carbon_identities": {
+    "optimization_flux_basis": [
+      "gpp",
+      "autotrophic_respiration",
+      "heterotrophic_respiration"
+    ],
+    "optimization_stock_basis": [
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon",
+      "nonliving_ecosystem_carbon"
+    ],
+    "reported_derived_fluxes": [
+      "npp",
+      "nep",
+      "nee"
+    ],
+    "reported_derived_stocks": [
+      "total_live_biomass_carbon",
+      "ecosystem_carbon"
+    ],
+    "equations": {
+      "autotrophic_respiration": "maintenance_respiration + growth_respiration",
+      "npp": "gpp - autotrophic_respiration",
+      "nep": "npp - heterotrophic_respiration",
+      "nee": "-nep",
+      "total_live_biomass_carbon": "aboveground_biomass_carbon + belowground_biomass_carbon",
+      "nonliving_ecosystem_carbon": "ecosystem_carbon - total_live_biomass_carbon"
+    },
+    "nee_sign_convention": "positive_to_atmosphere",
+    "optimization_rule": "use only the independent bases in macro loss; derived identities remain required reported metrics and absolute gates"
+  },
+  "training_objective": {
+    "components": [
+      "one_day_state_anchor",
+      "seven_day_science",
+      "thirty_day_science",
+      "necessary_process_supervision"
+    ],
+    "coefficients": {
+      "one_day_state_anchor": 1.0,
+      "seven_day_science": 1.0,
+      "thirty_day_science": 1.0,
+      "necessary_process_supervision": 0.1
+    },
+    "one_day_state_anchor": {
+      "groups": ["canopy", "soil", "snow", "water", "carbon", "thermal", "other"],
+      "group_weighting": "equal_active_groups_after_elementwise_frozen_scale_normalization",
+      "metrics": ["normalized_mse", "normalized_signed_bias_squared"]
+    },
+    "science_windows": {
+      "horizons_days": [7, 30],
+      "flux_mode": "complete-window cumulative amount divided by horizon times frozen train_train daily scale",
+      "stock_mode": "terminal full-operator state divided by frozen train_train stock scale",
+      "field_weighting": "equal independent fields",
+      "metric_weighting": "one_half_normalized_mse_plus_one_half_normalized_signed_bias_squared"
+    },
+    "necessary_process_supervision": {
+      "primary_science_direct_label_weight": 0.0,
+      "state_budget_essential_label_weight": 1.0,
+      "auxiliary_supervision_label_weight": 0.25,
+      "exact_or_diagnostic_weight": 0.0,
+      "normalization": "weighted_mean_over_active_label_mse",
+      "note": "primary direct fluxes are already present in the science loss; zero here prevents duplicate promotion weight"
+    },
+    "scale_policy": {
+      "source": "existing pft14-daily-teacher-v6 train_train rows only",
+      "teacher_regeneration": false,
+      "historical_v5": false,
+      "freeze_before_training": true,
+      "validation_tuning": false
+    }
+  },
+  "acceptance": {
+    "required_slices": ["temporal", "spatial", "joint"],
+    "all_slices_required": true,
+    "absolute_not_control_relative": true,
+    "reported_fluxes": [
+      "gpp",
+      "maintenance_respiration",
+      "growth_respiration",
+      "autotrophic_respiration",
+      "npp",
+      "heterotrophic_respiration",
+      "nep",
+      "nee"
+    ],
+    "reported_stocks": [
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon",
+      "total_live_biomass_carbon",
+      "nonliving_ecosystem_carbon",
+      "ecosystem_carbon"
+    ],
+    "short_horizon": {
+      "7": {
+        "normalized_rmse_maximum": 0.35,
+        "absolute_normalized_signed_bias_maximum": 0.10
+      },
+      "30": {
+        "normalized_rmse_maximum": 0.25,
+        "absolute_normalized_signed_bias_maximum": 0.07
+      },
+      "all_reported_keys_must_pass": true
+    },
+    "annual_365": {
+      "gross_and_component_fluxes": [
+        "gpp",
+        "maintenance_respiration",
+        "growth_respiration",
+        "autotrophic_respiration",
+        "npp",
+        "heterotrophic_respiration"
+      ],
+      "annual_integrated_flux_median_relative_bias_maximum": 0.02,
+      "annual_integrated_flux_p95_relative_bias_maximum": 0.05,
+      "net_fluxes": ["nep", "nee"],
+      "annual_net_flux_median_absolute_normalized_bias_maximum": 0.03,
+      "annual_net_flux_p95_absolute_normalized_bias_maximum": 0.10,
+      "stocks": [
+        "aboveground_biomass_carbon",
+        "belowground_biomass_carbon",
+        "total_live_biomass_carbon",
+        "nonliving_ecosystem_carbon",
+        "ecosystem_carbon"
+      ],
+      "year_end_stock_median_relative_error_maximum": 0.02,
+      "year_end_stock_p95_relative_error_maximum": 0.05,
+      "low_denominator_fallback": "also report train_train-scale normalized error; relative metrics alone cannot pass a near-zero Teacher denominator"
+    },
+    "hard_gates": {
+      "budget_residual_absolute_tolerance": 2e-12,
+      "stock_negative_absolute_tolerance": 2e-12,
+      "required_zero_counts": [
+        "nonfinite_defined_prediction",
+        "negative_declared_stock",
+        "defined_mask_mismatch",
+        "discrete_state_mismatch",
+        "budget_residual_failure"
+      ]
+    },
+    "promotion_order": [
+      "local_forward_loss_gradient",
+      "single_day_state_and_budget",
+      "7_day_absolute_science_screen",
+      "30_day_absolute_science_screen",
+      "365_day_absolute_science_validation",
+      "long_held_point_validation",
+      "gate_d2",
+      "product_acceptance"
+    ]
+  }
+}

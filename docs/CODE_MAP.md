@@ -182,6 +182,18 @@ derivation, and hard-gate foundation. Its source ledger and objective contract
 are `long_horizon_biomass_productivity_objective_v1.md` and the matching
 manifest. It does not select or implement the successor neural architecture.
 
+`daily_operator/target_oriented_contract.py` owns the current architecture-
+neutral output hierarchy, independent carbon-flux/stock identities, seven-
+group one-day state anchor, 7/30-day independent-basis science objective,
+low-weight necessary-process supervision, and explicit total-loss composition.
+Its frozen machine contract is
+`manifests/coarse_graining/target_oriented_daily_operator_v1.json`; the
+scientific decision and absolute 7/30/365-day gates are in
+`target_oriented_daily_operator_contract_v1.md`. Its lightweight regression is
+`tests/unit/test_daily_operator_target_oriented_contract.py`. It supersedes
+the older equal-field promotion policy but does not select a neural
+architecture or authorize training.
+
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and
 maintenance-temperature factors to replaced fast processes and dynamically

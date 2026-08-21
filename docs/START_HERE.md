@@ -202,8 +202,15 @@ absolute gate: aggregate litter/POC/DOC fell `83.1178%`, while incoming and
 outgoing fell only `29.6589%` and `26.1806%`. Both improve rather than trade
 off, and status/branch latents learn strongly, but the physical endpoint term
 falls only `29.2932%`. V5 is rejected with no checkpoint. The active gate is a
-physical-materialization mechanism review; multi-point training, rollout,
-Gate D2, and product work stay closed.
+target-oriented successor design review. The old requirement that every
+learned field independently clear a 95--99% reduction gate is retired. The
+new frozen contract prioritizes one-day state, 7/30-day GPP/respiration and
+independent carbon-stock objectives, while retaining low-weight necessary
+process supervision and zero-tolerance physical gates. It classifies the 161
+learned fields as 2 direct-primary, 93 state/budget-essential, and 66
+auxiliary fields; 20 additional fields remain exact/diagnostic. The next
+neural architecture must be discussed with the user before implementation.
+Multi-point training, rollout, Gate D2, and product work stay closed.
 
 ## New Task Bootstrap
 
@@ -221,18 +228,21 @@ active gate before editing or submitting a job. Gates A-D1 must not be reopened
 unless `jax_orchidee` drifts between the two branches or its evidence hashes
 drift. Gate E2 data production is complete. The first formal neural process-
 head A/B is closed after one pair. The long-horizon objective and parameter-
-routing foundations are implemented. The selected successor pair, frozen
-contract, local network, fast-owner boundary, small-fit lifecycle and
-checkpoint handoff are recorded in the active documents named by
+routing foundations are implemented. The historical successor pair, its
+frozen contract, local network, fast-owner boundary, small-fit lifecycle and
+checkpoint handoff are recorded in the evidence documents named by
 `DOCUMENT_STATUS.md`. The current operation authority is `NEXT_STEPS.md`; the
 accepted input-policy record is
 `research/daily_coarse_graining/successor_staged_training_assets_acceptance_20260812.md`.
 Do not rerun an old fit or use the formal 96-window panel for tuning. The
-current task is to review why V5's learned status/branch coordinates do not
-materialize accurate physical DOC endpoints and freeze a successor mechanism
-before implementation. Do not repeat v4/v5 or train a new weak control. The
-100-epoch gate, multi-point training, 365-day rollout, Gate D2, and product
-gates remain dependency-ordered later work.
+current task is to discuss and freeze a target-oriented successor architecture
+using
+`research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md`.
+Do not repeat v4/v5, inherit their physical endpoint materialization heads, or
+train a new weak control. The successor must decide how the 93 essential and
+66 auxiliary fields are represented before implementation. Multi-point
+training, 365-day rollout, Gate D2, and product gates remain dependency-ordered
+later work.
 Before choosing or inheriting
 a neural architecture, read
 `research/daily_coarse_graining/failed_architecture_lessons.md`; it replaces

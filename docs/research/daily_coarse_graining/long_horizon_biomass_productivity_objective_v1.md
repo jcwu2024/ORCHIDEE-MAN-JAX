@@ -1,6 +1,7 @@
 # Long-Horizon Biomass And Productivity Objective v1
 
-Status: **objective, metrics, and source ledger frozen; successor architecture and loss coefficients not selected**.
+Status: **source ledger and metric implementation retained; loss composition
+superseded by `target_oriented_daily_operator_contract_v1.md`**.
 
 Date: 2026-08-08.
 
@@ -23,11 +24,12 @@ The implementation is
 It is architecture-independent and does not reconstruct 48 forcing records or
 run a 48-step state scan.
 
-The existing equal-label one-day process loss remains a separate required
-anchor. Long-horizon terms cannot replace it. Final coefficients relative to
-that anchor are deliberately unset: they must be frozen before training after
-one bounded train/train gradient-magnitude preflight, not chosen after seeing
-rollout results.
+This v1 originally preserved the equal-label one-day process loss as a required
+anchor and left rollout coefficients unset. That weighting policy is now
+superseded. The source ledger, trajectory extraction, masks, stock definitions,
+and hard-gate implementation remain active; the current objective uses a
+one-day state anchor and low-weight hierarchy-aware process supervision under
+`target_oriented_daily_operator_contract_v1.md`.
 
 ## Frozen Objectives
 

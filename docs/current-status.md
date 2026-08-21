@@ -92,11 +92,24 @@ Status and the two branch-latent losses fall `75.4655%`, `78.4438%`, and
 `54.2036%`, while the materialized physical endpoint term falls only
 `29.2932%`. V5 therefore fixes v4's incoming/outgoing sacrifice but does not
 convert its learned latent variables into sufficiently accurate physical
-endpoints. The active gate is a mechanism review of physical materialization;
-the coordinate-aligned source bank remains accepted evidence. V5 100-epoch,
-multi-point training, rollout, sealed test, Gate D2, and product work remain
-closed. See
+endpoints. The coordinate-aligned source bank remains accepted evidence; V5's
+materialization head remains rejected. See
 [`doc_status_branch_magnitude_attention_v5_early_screen_result_20260821.md`](research/daily_coarse_graining/doc_status_branch_magnitude_attention_v5_early_screen_result_20260821.md).
+
+The following target/output audit replaces the old field-by-field gate as the
+current operation authority. Of the 161 learned fields, 2/26 scalar
+coordinates are direct primary science outputs, 93/3,682 are state/budget
+essential, and 66/35,298 are auxiliary supervision. Twenty complete-boundary
+fields remain exact/diagnostic. The frozen target-oriented objective combines
+an equal-group one-day state anchor, independent-basis 7/30-day science
+losses, and a 0.1-weight necessary-process term. It avoids double-counting
+NPP, NEP/NEE, total live biomass, and ecosystem-carbon identities while still
+requiring their absolute 7/30/365-day gates. Focused contract, hierarchy,
+identity, objective, and weighting tests pass `6/6` without Teacher data or
+training. The active gate is user discussion and freeze of the successor
+architecture, including whether all 66 auxiliary fields remain learned. No
+network implementation or GPU run is authorized yet. See
+[`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

@@ -1242,11 +1242,27 @@ therefore rejects this soft-status-times-magnitude materialization and loss
 balance without rejecting the retained coordinate-aligned Attention source
 bank.
 
-The active operation is a mechanism review focused on physical endpoint
-materialization. Do not run the V5 100-epoch gate, weaken the early threshold,
-repeat v4/v5, train a new control, start multi-point training or rollout, read
-sealed-test data, or advance Gate D2 or product work. Any successor and its
-bounded absolute gate must be discussed and frozen before implementation. See
+The subsequent target/output audit is complete. The 161 learned fields are now
+partitioned into 2 direct-primary fields (GPP and maintenance respiration), 93
+state/budget-essential fields, and 66 low-weight auxiliary process fields; 20
+additional boundary fields remain exact/diagnostic. The new objective uses a
+one-day state anchor, independent-basis 7-day and 30-day science losses, and a
+0.1-weight necessary-process term. It reports and absolutely gates GPP,
+maintenance/growth/total autotrophic respiration, NPP, heterotrophic
+respiration, NEP/NEE, AGB/BGB/total live biomass, nonliving ecosystem carbon,
+and ecosystem carbon without duplicating algebraic identities in the loss.
+The frozen machine contract SHA256 is `7c9857c0...86bfce5c`.
+
+The active operation is discussion and freeze of a target-oriented successor
+architecture. It must decide which essential fields need direct learned heads
+and how the large auxiliary coordinate set is represented, while preserving
+the complete Gate-E boundary, conservative update, and retained exact tail.
+The coordinate-aligned Attention source bank remains useful evidence, but the
+rejected v4/v5 endpoint materialization heads are not defaults. Do not run the
+V5 100-epoch gate, repeat v4/v5, train a weak control, start multi-point
+training or rollout, read sealed-test data, or advance Gate D2 or product work.
+The architecture must be discussed with the user before implementation. See
+[`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),
