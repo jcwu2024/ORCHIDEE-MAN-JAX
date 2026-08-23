@@ -15,10 +15,12 @@ import numpy as np
 from scripts.hpc.run_successor_fast_owner_gpu_probe import (
     PROBE_SEED,
     _load_extended_runtime,
+    _tree_numeric_report,
 )
 from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
 from scripts.hpc.run_target_oriented_attention_gpu_admission import (
     PARAMETER_COUNT,
+    _gradient_family_report,
     _head,
 )
 from scripts.hpc.run_target_oriented_full_step_preflight import _prepare_template
@@ -219,11 +221,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     day_inputs = _sample(artifact.batch.one_day.day_inputs, sample_index)
     assembled = runtime["adapter"].input_assembler.assemble(inputs)
 
-    @jax.jit
-    def learned_forward(values):
+    def learned_model(values):
         context = head.assemble_context(values, assembled)
         return head.learned_outputs(values, context, assembled)
 
+    learned_forward = jax.jit(learned_model)
     started = time.perf_counter()
     learned = learned_forward(parameters)
     jax.block_until_ready(learned)
@@ -278,6 +280,23 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         jax.device_get(stacked),
         group_names=group_names,
     )
+    boundary_cotangent = {
+        name: jnp.mean(value, axis=0)
+        for name, value in stacked.items()
+    }
+
+    @jax.jit
+    def parameter_pullback(values, cotangent):
+        _outputs, pullback = jax.vjp(learned_model, values)
+        return pullback(cotangent)[0]
+
+    parameter_started = time.perf_counter()
+    parameter_gradient = parameter_pullback(parameters, boundary_cotangent)
+    jax.block_until_ready(parameter_gradient)
+    parameter_seconds = time.perf_counter() - parameter_started
+    host_parameter_gradient = jax.device_get(parameter_gradient)
+    parameter_report = _tree_numeric_report(jax, host_parameter_gradient)
+    parameter_families = _gradient_family_report(jax, host_parameter_gradient)
     learned_report = {
         name: {
             "element_count": int(np.size(np.asarray(value))),
@@ -285,9 +304,12 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         }
         for name, value in jax.device_get(learned).items()
     }
+    passed = all(value["all_finite"] for value in gradient_report.values()) and bool(
+        parameter_report["all_finite"]
+    )
     report = {
         "schema_version": "target_oriented_output_boundary_vjp_v1",
-        "status": "localized" if any(not value["all_finite"] for value in gradient_report.values()) else "finite",
+        "status": "finite" if passed else "localized",
         "identity": {
             "git_head": _git_head(),
             "training_contract_sha256": training_contract.sha256,
@@ -306,11 +328,14 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "devices": [str(value) for value in runtime["devices"]],
         "learned_forward_seconds": learned_seconds,
         "output_boundary_gradient_seconds": gradient_seconds,
+        "parameter_vjp_seconds": parameter_seconds,
         "group_loss": {
             name: float(np.asarray(loss_values[index])) for index, name in enumerate(group_names)
         },
         "learned_outputs": learned_report,
         "output_boundary_gradients": gradient_report,
+        "parameter_gradient": parameter_report,
+        "parameter_gradient_families": parameter_families,
     }
     _atomic_json(args.output, report)
     return report
