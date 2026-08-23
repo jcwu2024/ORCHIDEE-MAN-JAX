@@ -1,7 +1,7 @@
 #!/bin/bash
 # Proposal only: one zero-update representative target-oriented gradient probe.
-# Ceiling: 4 CPU cores * 1 h * CNY 0.07 + 1 GPU * 1 h * CNY 2.20
-#          = CNY 0.28 + CNY 2.20 = CNY 2.48 worst case.
+# Ceiling: 4 CPU cores * 1.5 h * CNY 0.07 + 1 GPU * 1.5 h * CNY 2.20
+#          = CNY 0.42 + CNY 3.30 = CNY 3.72 worst case.
 # Submission requires fresh explicit approval.
 #SBATCH --job-name=orcjax-target-grad
 #SBATCH --partition=gnall
@@ -9,7 +9,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=4
 #SBATCH --gres=gpu:1
-#SBATCH --time=01:00:00
+#SBATCH --time=01:30:00
 #SBATCH --output=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/target_gradient_probe_%j.txt
 #SBATCH --error=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/logs/target_gradient_probe_%j.txt
 #SBATCH --no-requeue
