@@ -128,6 +128,29 @@ with SHA256
 No architecture, data, loss coefficient, optimizer, or prepared-batch policy
 changed during this diagnosis.
 
+## First Repaired Full-Probe Attempt
+
+Approved paid job `14651381` ran commit
+`2a6a5d5676873d715039daf0969f3a49e5ba58ce` with one V100, four CPUs, and a
+`01:30:00` limit. Slurm terminated it at `01:30:21` with state `TIMEOUT`. The
+runner had not completed the first representative batch and had not reached
+its atomic report write, so no report, optimizer proposal, checkpoint, or
+training update exists.
+
+The log contains no Python exception, nonfinite report, or physical hard-gate
+failure. It shows that the repaired path continued through full XLA work that
+the earlier NaN executions did not time reliably. Compilation of one backward
+module alone took approximately `20m27s`. The project-scoped persistent JAX
+cache is now approximately 262 MiB and contains the completed forward,
+one-day, and later backward executables from this attempt. The timeout is
+therefore incomplete execution evidence, not a model or gradient rejection.
+
+The rerun changes no numerical operation. The runner now synchronizes and
+prints completion time after each of the one-day/process, 7-day, and 30-day
+gradient sources. The Slurm ceiling is raised to three hours so the existing
+cache and any remaining cold compile can complete without another 90-minute
+cutoff.
+
 ## Next Gate
 
 Rerun the same complete single-batch, zero-update representative probe at the

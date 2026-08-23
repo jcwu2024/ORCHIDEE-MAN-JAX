@@ -226,9 +226,13 @@ denominator repair now passes local regression and real-v6 free-GPU VJPs. All
 39,006 learned-output coordinates and all 83,755,173 parameter gradients are
 finite through the one-day state anchor. The active gate is the same complete
 single-batch zero-update representative probe covering one-day/process,
-seven-day, and thirty-day gradients. Paid training, the eight-batch rerun,
-365-day rollout, Gate D2, sealed test, and product work remain closed until it
-passes.
+seven-day, and thirty-day gradients. Its first repaired execution, job
+`14651381`, reached the 1.5-hour Slurm limit during the now-finite full
+backward path and wrote no report; this is an incomplete execution, not a
+gradient failure. Its completed XLA compilations remain in the project cache,
+and the same probe is prepared with per-source progress logging and a
+three-hour ceiling. Paid training, the eight-batch rerun, 365-day rollout,
+Gate D2, sealed test, and product work remain closed until it passes.
 
 ## New Task Bootstrap
 

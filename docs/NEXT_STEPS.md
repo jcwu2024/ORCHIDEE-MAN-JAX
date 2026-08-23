@@ -1323,9 +1323,16 @@ representative batch: 32 one-day samples, eight 7-day windows, and four 30-day
 windows. This is the smallest existing probe that simultaneously verifies all
 three objective-gradient sources and the optimizer proposal. Only if all three
 gradient sources and all seven connected parameter families are finite may the
-eight-batch full-step preflight be repeated. Paid training, weak-control
-comparison, sealed-test read, 365-day rollout, Gate D2, and product work remain
-closed. See
+eight-batch full-step preflight be repeated. The first repaired execution,
+paid job `14651381`, timed out after `01:30:21` before completing the first
+batch and therefore wrote no JSON report or scientific gradient result. The
+log shows finite-path XLA compilation, including a 20-minute backward compile,
+rather than an exception or hard-gate failure. The shared persistent cache now
+contains the completed one-day/forward and subsequent backward executables.
+The exact same probe is prepared with per-source progress logging and a
+three-hour Slurm ceiling; neither change alters its graph, batch, loss, or
+acceptance policy. Paid training, weak-control comparison, sealed-test read,
+365-day rollout, Gate D2, and product work remain closed. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),

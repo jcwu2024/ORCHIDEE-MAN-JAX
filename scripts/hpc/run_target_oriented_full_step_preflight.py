@@ -611,6 +611,7 @@ def _effective_gradient(
         )
 
     one_accumulated = zero_gradient()
+    source_started = time.perf_counter()
     for microbatch in one_batches:
         _value, gradient = steps["one_gradient"](
             parameters,
@@ -619,7 +620,14 @@ def _effective_gradient(
             total_process,
         )
         one_accumulated = add_gradient(one_accumulated, gradient)
+    jax.block_until_ready(one_accumulated)
+    print(
+        "target_full_step_preflight gradient_source=one_day_and_process "
+        f"seconds={time.perf_counter() - source_started:.3f}",
+        flush=True,
+    )
     seven_accumulated = zero_gradient()
+    source_started = time.perf_counter()
     for microbatch in seven_batches:
         _value, gradient = steps["seven_gradient"](
             parameters,
@@ -627,7 +635,14 @@ def _effective_gradient(
             total_seven,
         )
         seven_accumulated = add_gradient(seven_accumulated, gradient)
+    jax.block_until_ready(seven_accumulated)
+    print(
+        "target_full_step_preflight gradient_source=seven_day_science "
+        f"seconds={time.perf_counter() - source_started:.3f}",
+        flush=True,
+    )
     thirty_accumulated = zero_gradient()
+    source_started = time.perf_counter()
     for microbatch in thirty_batches:
         _value, gradient = steps["thirty_gradient"](
             parameters,
@@ -635,6 +650,12 @@ def _effective_gradient(
             total_thirty,
         )
         thirty_accumulated = add_gradient(thirty_accumulated, gradient)
+    jax.block_until_ready(thirty_accumulated)
+    print(
+        "target_full_step_preflight gradient_source=thirty_day_science "
+        f"seconds={time.perf_counter() - source_started:.3f}",
+        flush=True,
+    )
     gradient_sources = {
         "one_day_and_process": one_accumulated,
         "seven_day_science": seven_accumulated,

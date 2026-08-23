@@ -241,7 +241,9 @@ the zero-stock division in
 shell wrapper own the learned-output-coordinate localization and complete
 Attention VJP. The repaired boundary is finite through all 83,755,173
 parameters. The active operation is one complete repaired single-batch
-real-v6 gradient probe; the eight-batch rerun remains conditional on it.
+real-v6 gradient probe; its runner now emits host-only completion timing after
+each objective-gradient source so a scheduler timeout cannot hide the last
+completed stage. The eight-batch rerun remains conditional on it.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

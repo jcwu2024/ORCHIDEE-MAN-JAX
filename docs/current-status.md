@@ -203,8 +203,20 @@ representative probe at the repaired commit. It contains 32 one-day samples,
 eight 7-day windows, and four 30-day windows and is still required because the
 boundary diagnostic exercised only the one-day state anchor. The eight-batch
 preflight remains conditional on all three full objective-gradient sources
-and all seven connected parameter families being finite. No paid training,
-365-day rollout, sealed-test read, Gate D2, or product work is authorized. See
+and all seven connected parameter families being finite.
+
+Paid job `14651381` attempted that repaired probe at commit `2a6a5d5` but
+reached the Slurm limit after `01:30:21`. It wrote no report, retained no
+update, and produced no gradient acceptance or rejection. Its log contains no
+Python exception or physical hard-gate failure; it shows that the repaired
+finite path continued through expensive XLA compilation, including about
+20 minutes for one backward executable, until Slurm terminated it. The
+project-scoped persistent cache grew to about 262 MiB and retains the completed
+executables. The next exact rerun adds host-only completion messages after the
+one-day/process, 7-day, and 30-day gradient stages and raises only the Slurm
+ceiling to three hours. The batch, graph, objective, optimizer proposal, and
+acceptance gates are unchanged. No paid training, 365-day rollout, sealed-test
+read, Gate D2, or product work is authorized. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
