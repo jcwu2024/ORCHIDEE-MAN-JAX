@@ -168,17 +168,43 @@ approximately `1e14` DOC domination and kept all learned outputs, states,
 budgets, discrete state, and stocks valid, but all three gradient sources
 remained NaN. The report SHA256 is `3575cfae...f3f2aee`.
 
-A confirmed cause is `sqrt(0)` in the shared masked standard-deviation
-summary: constant or one-coordinate groups have a finite zero forward value
-but a singular reverse derivative. The local repair uses the canonical
-finite-zero-tangent square root without changing the network, forward values,
-loss, data, or optimizer. Its focused regression, AD primitive tests, complete
-target-oriented Attention suite, Ruff, and diff checks pass. The active
-operation is the same single-batch zero-update real-v6 probe at the repaired
-commit. The eight-batch preflight remains conditional on all three gradient
-sources and all seven connected parameter families being finite. No paid
-training, 365-day rollout, sealed-test read, Gate D2, or product work is
-authorized. See
+The shared masked standard-deviation summary did contain a real `sqrt(0)` AD
+defect, and commit `5a50a65` repaired its zero tangent without changing
+forward values. Paid job `14650340` nevertheless reproduced the same loss,
+hard counts, and three NaN gradient sources at that commit. Its report SHA256
+is `c1bce9ed...fdbbdde`. This result corrects the earlier causal diagnosis:
+the masked summary is part of the fixed input assembly, so a gradient with
+respect to network parameters does not differentiate through it.
+
+The single-sample learned-output-boundary diagnostic at commit `3d5a62f`
+examined each of the seven state-group losses with respect to all 39,006
+physical learned-output coordinates. Every group contained the same unique
+nonfinite coordinate,
+`inventory.water.qsintveg.storage.incoming_amount`; all other 39,005
+coordinates were finite. In
+`mechanistic_output_reconstruction.py::signed_endpoint_to_transfers`, bare
+soil has `source == removed == 0`. The former expression
+`jnp.where(source > 0, removed / source, 0)` therefore formed an internal
+`0/0` that was hidden in the forward result but poisoned reverse mode.
+
+Commit `c8cb497` selects a safe denominator before division and preserves the
+forward result exactly. The local minimal reproduction now has finite
+gradient `[[0, -5]]`, and the complete mechanistic-output regression passes
+13 tests. The repaired free-`gln01` boundary VJP has SHA256
+`4444e23b...b721ddc4` and all seven groups are finite. Commit `e8294b0` then
+propagated the same real cotangent through the complete Attention model: all
+83,755,173 parameter-gradient values are finite, with norm
+`419576.1733` and finite nonzero gradients in the base encoder, domain
+refinement, science cross-attention, science mixer, primary heads, and state
+heads. Its report SHA256 is `ee2f1715...a5fba59`.
+
+The active operation is the same complete single-batch zero-update real-v6
+representative probe at the repaired commit. It contains 32 one-day samples,
+eight 7-day windows, and four 30-day windows and is still required because the
+boundary diagnostic exercised only the one-day state anchor. The eight-batch
+preflight remains conditional on all three full objective-gradient sources
+and all seven connected parameter families being finite. No paid training,
+365-day rollout, sealed-test read, Gate D2, or product work is authorized. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),

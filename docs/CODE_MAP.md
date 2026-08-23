@@ -232,9 +232,15 @@ preparation, and `run_target_oriented_full_step_preflight.py` owns the
 zero-retained-update free-GPU measurement. Their free-node launchers are the
 same basenames with `.sh` extensions. The first amended representative probe
 is recorded in `target_oriented_representative_gradient_probe_20260823.md`.
-It exposed the zero-variance reverse derivative in
-`strong_baseline_architecture.py::_masked_summary`, which is shared by the
-target-oriented encoder. The active operation is one repaired single-batch
+The intervening zero-variance repair in
+`strong_baseline_architecture.py::_masked_summary` is valid but does not lie
+on the network-parameter derivative path. The actual nonfinite derivative was
+the zero-stock division in
+`mechanistic_output_reconstruction.py::signed_endpoint_to_transfers`.
+`scripts/hpc/run_target_oriented_output_boundary_vjp.py` and its free-`gln01`
+shell wrapper own the learned-output-coordinate localization and complete
+Attention VJP. The repaired boundary is finite through all 83,755,173
+parameters. The active operation is one complete repaired single-batch
 real-v6 gradient probe; the eight-batch rerun remains conditional on it.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of

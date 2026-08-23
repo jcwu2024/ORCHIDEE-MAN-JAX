@@ -214,14 +214,21 @@ The discussed target-oriented successor is implemented as an 83,755,173-
 parameter hierarchical coordinate Attention model and has passed local plus
 zero-update real-v6 admission. Its first eight-batch full-objective preflight
 exposed a one-day state-loss conditioning defect. The amended representative
-probe under job `14644566` removed the approximately `1e14` DOC domination and
-kept learned outputs, states, budgets, and stocks finite, but all three
-gradient sources remained NaN. A confirmed cause is the zero-variance
-`sqrt(0)` derivative in a shared masked state summary. The forward-preserving
-finite-zero-tangent repair passes local regression and now awaits the same
-single-batch real-v6 probe. Paid training, the eight-batch rerun, 365-day
-rollout, Gate D2, sealed test, and product work stay closed until that probe
-shows finite gradients.
+probes under jobs `14644566` and `14650340` removed the approximately `1e14`
+DOC domination and kept learned outputs, states, budgets, and stocks finite,
+but all three gradient sources remained NaN. The intervening `sqrt(0)` repair
+was valid but could not affect network-parameter gradients because the shared
+summary is on the non-differentiated input side. A learned-output boundary VJP
+then isolated the actual nonfinite path to one bare-soil coordinate of
+`inventory.water.qsintveg.storage.incoming_amount`: the old reconstruction
+formed `0/0` before a forward `where` masked it. The forward-preserving safe-
+denominator repair now passes local regression and real-v6 free-GPU VJPs. All
+39,006 learned-output coordinates and all 83,755,173 parameter gradients are
+finite through the one-day state anchor. The active gate is the same complete
+single-batch zero-update representative probe covering one-day/process,
+seven-day, and thirty-day gradients. Paid training, the eight-batch rerun,
+365-day rollout, Gate D2, sealed test, and product work remain closed until it
+passes.
 
 ## New Task Bootstrap
 

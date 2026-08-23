@@ -1299,14 +1299,33 @@ report-only declared-dynamic `rveget` mismatches. The amended representative
 probe completed under job `14644566`: the approximately `1e14` DOC domination
 is gone and all learned outputs, states, budgets, discrete state, and stocks
 remain valid, but the one-day/process, seven-day, and thirty-day gradients all
-contain NaNs. A confirmed derivative defect is the shared masked-summary
-`sqrt(0)` at zero variance. The local forward-preserving finite-zero-tangent
-repair and regression pass. The active operation is to commit and synchronize
-that repair, then rerun exactly one zero-update real-v6 batch. Only if all
-three gradient sources and all seven connected parameter families are finite
-may the eight-batch full-step preflight be repeated. Paid training,
-weak-control comparison, sealed-test read, 365-day rollout, Gate D2, and
-product work remain closed. See
+contain NaNs. The subsequent zero-variance masked-summary repair is a valid AD
+repair, but job `14650340` proved that it does not affect this parameter-
+gradient path: the loss, hard counts, and all three NaN gradients were
+unchanged because the repaired summary is on the non-differentiated input
+side.
+
+A real-v6 learned-output-boundary VJP then localized the nonfinite derivative
+to exactly one of 39,006 scalar coordinates:
+`inventory.water.qsintveg.storage.incoming_amount` for bare soil. The old
+signed-endpoint reconstruction evaluated `removed / source` at
+`source == removed == 0` before a forward `where` hid the value. The safe-
+denominator repair at commit `c8cb497` leaves forward physics unchanged.
+Free-`gln01` verification shows finite boundary gradients for every coordinate
+and every state group; commit `e8294b0` additionally traces the real boundary
+cotangent through the complete Attention model, with all 83,755,173 parameter
+gradient values finite and finite nonzero gradients in every connected model
+family. Auxiliary heads correctly remain zero because this diagnostic uses
+only the state anchor.
+
+The active operation is now to rerun exactly one complete zero-update real-v6
+representative batch: 32 one-day samples, eight 7-day windows, and four 30-day
+windows. This is the smallest existing probe that simultaneously verifies all
+three objective-gradient sources and the optimizer proposal. Only if all three
+gradient sources and all seven connected parameter families are finite may the
+eight-batch full-step preflight be repeated. Paid training, weak-control
+comparison, sealed-test read, 365-day rollout, Gate D2, and product work remain
+closed. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
