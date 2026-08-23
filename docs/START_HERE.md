@@ -212,15 +212,16 @@ exact/diagnostic.
 
 The discussed target-oriented successor is implemented as an 83,755,173-
 parameter hierarchical coordinate Attention model and has passed local plus
-zero-update real-v6 admission. Its eight-batch full-objective preflight exposed
-a one-day state-loss conditioning defect rather than an architecture or
-physical-transition failure: one near-constant DOC coordinate dominated and
-was duplicated through `other`. The frozen amendment now makes `other`
-residual, applies native-unit fallback to 46 low-variance coordinates, and
-separates declared-dynamic `rveget` status from hard failures. The active
-operation is a representative free-node gradient probe before repeating the
-eight-batch preflight. Paid training, 365-day rollout, Gate D2, sealed test,
-and product work stay closed.
+zero-update real-v6 admission. Its first eight-batch full-objective preflight
+exposed a one-day state-loss conditioning defect. The amended representative
+probe under job `14644566` removed the approximately `1e14` DOC domination and
+kept learned outputs, states, budgets, and stocks finite, but all three
+gradient sources remained NaN. A confirmed cause is the zero-variance
+`sqrt(0)` derivative in a shared masked state summary. The forward-preserving
+finite-zero-tangent repair passes local regression and now awaits the same
+single-batch real-v6 probe. Paid training, the eight-batch rerun, 365-day
+rollout, Gate D2, sealed test, and product work stay closed until that probe
+shows finite gradients.
 
 ## New Task Bootstrap
 

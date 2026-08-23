@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-21.
+Last updated: 2026-08-23.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -162,11 +162,23 @@ output, and all state-mask mismatches are declared dynamic `rveget` status.
 The frozen amendment makes `other` residual, applies the existing native-unit
 fallback to the 46/3,854 state scales at or below `1e-6`, makes masked
 arithmetic backward-safe, checks nonfinites only on learned outputs, and keeps
-declared-dynamic `rveget` supervised/report-only. Focused local tests pass
-`25/25`. The active operation is a free-node real-v6 scale/count audit and one
-representative zero-retained-update component-gradient probe before deciding
-whether to repeat all eight batches. No paid training, 365-day rollout,
-sealed-test read, Gate D2, or product work is authorized. See
+declared-dynamic `rveget` supervised/report-only. The representative real-v6
+probe completed under job `14644566` at commit `d1eda1b`. It removed the
+approximately `1e14` DOC domination and kept all learned outputs, states,
+budgets, discrete state, and stocks valid, but all three gradient sources
+remained NaN. The report SHA256 is `3575cfae...f3f2aee`.
+
+A confirmed cause is `sqrt(0)` in the shared masked standard-deviation
+summary: constant or one-coordinate groups have a finite zero forward value
+but a singular reverse derivative. The local repair uses the canonical
+finite-zero-tangent square root without changing the network, forward values,
+loss, data, or optimizer. Its focused regression, AD primitive tests, complete
+target-oriented Attention suite, Ruff, and diff checks pass. The active
+operation is the same single-batch zero-update real-v6 probe at the repaired
+commit. The eight-batch preflight remains conditional on all three gradient
+sources and all seven connected parameter families being finite. No paid
+training, 365-day rollout, sealed-test read, Gate D2, or product work is
+authorized. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -176,6 +188,8 @@ and the training design in
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md)
 and
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md).
+The completed probe and derivative diagnosis are in
+[`target_oriented_representative_gradient_probe_20260823.md`](research/daily_coarse_graining/target_oriented_representative_gradient_probe_20260823.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

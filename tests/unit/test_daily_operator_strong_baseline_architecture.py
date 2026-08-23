@@ -12,6 +12,7 @@ from research.daily_coarse_graining.daily_operator import (
     validate_conservative_result,
 )
 from research.daily_coarse_graining.daily_operator.strong_baseline_architecture import (
+    _masked_summary,
     assemble_strong_baseline_context,
     build_strong_baseline_layout,
     encode_strong_baseline_experts,
@@ -70,6 +71,21 @@ def strong_baseline_setup():
             "parameters": parameters,
         }
     )
+
+
+def test_strong_baseline_summary_has_finite_zero_variance_gradient():
+    pool = np.asarray([[True, True], [True, False]], dtype=np.bool_)
+    defined = jnp.asarray([True, True])
+    values = jnp.asarray([1.0, 1.0])
+
+    summary, valid = _masked_summary(pool, values, defined)
+    standard_deviation_gradient = jax.grad(
+        lambda current: jnp.sum(_masked_summary(pool, current, defined)[0][:, 1])
+    )(values)
+
+    np.testing.assert_array_equal(np.asarray(summary[:, 1]), np.zeros(2))
+    np.testing.assert_array_equal(np.asarray(valid), np.ones(2, dtype=np.bool_))
+    np.testing.assert_array_equal(np.asarray(standard_deviation_gradient), np.zeros(2))
 
 
 def test_strong_baseline_capacity_precision_and_axis_wiring(strong_baseline_setup):

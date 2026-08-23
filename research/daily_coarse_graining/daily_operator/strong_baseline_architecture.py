@@ -9,6 +9,8 @@ import jax
 import jax.numpy as jnp
 import numpy as np
 
+from jax_orchidee.ad_primitives import source_sqrt_with_finite_zero_tangent
+
 from .neural_architecture import (
     NeuralInputNormalization,
     NeuralOutputNormalization,
@@ -907,7 +909,8 @@ def _masked_summary(pool: np.ndarray, values: Any, defined: Any) -> tuple[Any, A
     minimum = jnp.min(jnp.where(selected, values[None, :], jnp.inf), axis=1)
     maximum = jnp.max(jnp.where(selected, values[None, :], -jnp.inf), axis=1)
     valid = count > 0.0
-    summary = jnp.stack((mean, jnp.sqrt(jnp.maximum(variance, 0.0)), minimum, maximum), axis=1)
+    standard_deviation = source_sqrt_with_finite_zero_tangent(jnp.maximum(variance, 0.0))
+    summary = jnp.stack((mean, standard_deviation, minimum, maximum), axis=1)
     return jnp.where(valid[:, None], summary, 0.0), valid
 
 

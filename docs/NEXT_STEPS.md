@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-21.
+Last updated: 2026-08-23.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -1295,19 +1295,24 @@ discrete state, and negative-stock counts remain zero.
 The frozen state-anchor amendment uses mutually exclusive residual `other`
 coordinates, native-unit fallback for the 46/3,854 empirical scales at or
 below `1e-6`, safe masked arithmetic, learned-only nonfinite counts, and
-report-only declared-dynamic `rveget` mismatches. The network, optimizer,
-prepared batches, and science gates do not change. Focused local tests pass
-`25/25`. The active operation is a free-node real-v6 scale/count audit and one
-representative zero-retained-update component-gradient probe. Only after all
-three gradient sources are finite and the DOC domination is removed may the
-eight-batch full-step preflight be repeated. Paid training, weak-control
-comparison, sealed-test read, 365-day rollout, Gate D2, and product work remain
-closed. See
+report-only declared-dynamic `rveget` mismatches. The amended representative
+probe completed under job `14644566`: the approximately `1e14` DOC domination
+is gone and all learned outputs, states, budgets, discrete state, and stocks
+remain valid, but the one-day/process, seven-day, and thirty-day gradients all
+contain NaNs. A confirmed derivative defect is the shared masked-summary
+`sqrt(0)` at zero variance. The local forward-preserving finite-zero-tangent
+repair and regression pass. The active operation is to commit and synchronize
+that repair, then rerun exactly one zero-update real-v6 batch. Only if all
+three gradient sources and all seven connected parameter families are finite
+may the eight-batch full-step preflight be repeated. Paid training,
+weak-control comparison, sealed-test read, 365-day rollout, Gate D2, and
+product work remain closed. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),
+[`target_oriented_representative_gradient_probe_20260823.md`](research/daily_coarse_graining/target_oriented_representative_gradient_probe_20260823.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

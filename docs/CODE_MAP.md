@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-08-21.
+Last updated: 2026-08-23.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -230,8 +230,12 @@ or prepared-batch selection.
 `prepare_target_oriented_training_batches.py` owns free-CPU real-v6
 preparation, and `run_target_oriented_full_step_preflight.py` owns the
 zero-retained-update free-GPU measurement. Their free-node launchers are the
-same basenames with `.sh` extensions. Producing and executing the eight
-real-v6 prepared batches is the active operation.
+same basenames with `.sh` extensions. The first amended representative probe
+is recorded in `target_oriented_representative_gradient_probe_20260823.md`.
+It exposed the zero-variance reverse derivative in
+`strong_baseline_architecture.py::_masked_summary`, which is shared by the
+target-oriented encoder. The active operation is one repaired single-batch
+real-v6 gradient probe; the eight-batch rerun remains conditional on it.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and
