@@ -185,6 +185,13 @@ def test_signed_canopy_endpoint_has_unique_conservative_transfers():
     np.testing.assert_allclose(np.asarray(end_storage - end_debt), np.asarray(end))
     assert np.all(np.asarray(transfers["storage.outgoing_fraction"]) <= 1.0)
     assert np.all(np.asarray(transfers["debt.outgoing_fraction"]) <= 1.0)
+    gradient = jax.grad(
+        lambda target: sum(
+            jnp.sum(value)
+            for value in signed_endpoint_to_transfers(start, target).values()
+        )
+    )(end)
+    assert np.all(np.isfinite(np.asarray(gradient)))
 
 
 def test_doc_composition_is_baseline_centered_nonnegative_and_differentiable():

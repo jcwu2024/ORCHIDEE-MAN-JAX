@@ -95,7 +95,9 @@ def signed_endpoint_to_transfers(start: Any, end: Any) -> dict[str, Any]:
 
     def component(source: Any, target: Any) -> tuple[Any, Any]:
         removed = jnp.maximum(source - target, 0.0)
-        outgoing = jnp.where(source > 0.0, removed / source, 0.0)
+        source_positive = source > 0.0
+        safe_source = jnp.where(source_positive, source, 1.0)
+        outgoing = jnp.where(source_positive, removed / safe_source, 0.0)
         incoming = jnp.maximum(target - source, 0.0)
         return jnp.clip(outgoing, 0.0, 1.0), incoming
 
