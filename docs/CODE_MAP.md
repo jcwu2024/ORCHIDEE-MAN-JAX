@@ -243,7 +243,13 @@ Attention VJP. The repaired boundary is finite through all 83,755,173
 parameters. The active operation is one complete repaired single-batch
 real-v6 gradient probe; its runner now emits host-only completion timing after
 each objective-gradient source so a scheduler timeout cannot hide the last
-completed stage. The eight-batch rerun remains conditional on it.
+completed stage. Job `14652590` passed that representative gate. The active
+operation is the same runner over the complete frozen eight-batch preflight,
+with source/family gradients retained for conditioning review before training.
+`scripts/hpc/slurm_target_oriented_full_step_preflight.sh` owns its proposed
+one-V100, four-hour paid envelope; the shared runner reuses the accepted
+prepared manifest and the compilation cache populated by the representative
+probe.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

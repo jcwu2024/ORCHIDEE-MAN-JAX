@@ -198,12 +198,10 @@ propagated the same real cotangent through the complete Attention model: all
 refinement, science cross-attention, science mixer, primary heads, and state
 heads. Its report SHA256 is `ee2f1715...a5fba59`.
 
-The active operation is the same complete single-batch zero-update real-v6
-representative probe at the repaired commit. It contains 32 one-day samples,
-eight 7-day windows, and four 30-day windows and is still required because the
-boundary diagnostic exercised only the one-day state anchor. The eight-batch
-preflight remains conditional on all three full objective-gradient sources
-and all seven connected parameter families being finite.
+The required complete single-batch zero-update real-v6 representative probe
+contains 32 one-day samples, eight 7-day windows, and four 30-day windows. It
+was required after the boundary diagnostic because that diagnostic exercised
+only the one-day state anchor.
 
 Paid job `14651381` attempted that repaired probe at commit `2a6a5d5` but
 reached the Slurm limit after `01:30:21`. It wrote no report, retained no
@@ -212,11 +210,32 @@ Python exception or physical hard-gate failure; it shows that the repaired
 finite path continued through expensive XLA compilation, including about
 20 minutes for one backward executable, until Slurm terminated it. The
 project-scoped persistent cache grew to about 262 MiB and retains the completed
-executables. The next exact rerun adds host-only completion messages after the
-one-day/process, 7-day, and 30-day gradient stages and raises only the Slurm
-ceiling to three hours. The batch, graph, objective, optimizer proposal, and
-acceptance gates are unchanged. No paid training, 365-day rollout, sealed-test
-read, Gate D2, or product work is authorized. See
+executables.
+
+The unchanged cache-reusing rerun completed under paid job `14652590` at
+commit `50c2c14` in `00:53:12`. Its report SHA256 is
+`aa195412...33ac861` and status is `passed`. The one-day/process, 7-day, and
+30-day source-gradient norms are respectively `5202018.8299`, `1.4514`, and
+`0.8519`; every value in all three 83,755,173-element source gradients is
+finite. All seven combined parameter families are finite and nonzero. The
+finite AdamW proposal has raw norm `5202019.0`, clip scale `1.0`, parameter
+step norm `0.00345624`, and zero nonfinite parameter or optimizer-state
+values. Peak live device memory is 8.180 GB. Every budget, discrete, stock,
+unexpected-mask, prediction, and state hard-failure count is zero; the 147
+mask mismatches are exclusively the declared dynamic `rveget` status. No
+update or checkpoint was retained.
+
+The gradient decomposition is now an explicit conditioning observation. The
+7/30-day objectives dominate the primary science-head gradients but are about
+seven orders of magnitude below the one-day state anchor in the shared
+representation families at initialization. AdamW's coordinate-wise scaling
+means this raw ratio is not itself an update ratio, and the long-horizon heads
+do receive strong direct gradients, but one batch cannot prove that the shared
+representation will learn the long-horizon objectives. The active operation
+is the frozen eight-batch zero-update preflight, retaining all existing hard
+gates and recording the source/family pattern across diverse point-years. No
+paid training, 365-day rollout, sealed-test read, Gate D2, or product work is
+authorized. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),

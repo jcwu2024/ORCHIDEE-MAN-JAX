@@ -1318,21 +1318,41 @@ gradient values finite and finite nonzero gradients in every connected model
 family. Auxiliary heads correctly remain zero because this diagnostic uses
 only the state anchor.
 
-The active operation is now to rerun exactly one complete zero-update real-v6
-representative batch: 32 one-day samples, eight 7-day windows, and four 30-day
-windows. This is the smallest existing probe that simultaneously verifies all
-three objective-gradient sources and the optimizer proposal. Only if all three
-gradient sources and all seven connected parameter families are finite may the
-eight-batch full-step preflight be repeated. The first repaired execution,
+The complete zero-update real-v6 representative batch contains 32 one-day
+samples, eight 7-day windows, and four 30-day windows. It is the smallest
+existing probe that simultaneously verifies all three objective-gradient
+sources and the optimizer proposal. The first repaired execution,
 paid job `14651381`, timed out after `01:30:21` before completing the first
 batch and therefore wrote no JSON report or scientific gradient result. The
 log shows finite-path XLA compilation, including a 20-minute backward compile,
 rather than an exception or hard-gate failure. The shared persistent cache now
 contains the completed one-day/forward and subsequent backward executables.
-The exact same probe is prepared with per-source progress logging and a
-three-hour Slurm ceiling; neither change alters its graph, batch, loss, or
-acceptance policy. Paid training, weak-control comparison, sealed-test read,
-365-day rollout, Gate D2, and product work remain closed. See
+The exact same probe then completed under job `14652590` at commit `50c2c14`
+in `00:53:12`. Report SHA256 `aa195412...33ac861` has status `passed`: all
+three source gradients and all 83,755,173 combined gradient values are finite;
+all seven connected parameter families have finite nonzero combined
+gradients; the optimizer proposal is finite with zero nonfinite parameter or
+state values; and all budget, discrete, stock, unexpected-mask, prediction,
+and state hard-failure counts are zero. No update or checkpoint was retained.
+
+The representative batch also exposes an initialization-conditioning fact.
+The one-day/process gradient norm is `5.2020e6`, while the 7-day and 30-day
+science norms are `1.4514` and `0.8519`. The long-horizon sources dominate the
+primary science-head gradients but reach the shared encoder, refinement,
+cross-attention, mixer, and state heads at much smaller scale than the one-day
+anchor. This does not imply that AdamW will ignore the primary heads, but it
+means raw global norm alone cannot establish useful long-horizon learning.
+The active operation is the already frozen eight-batch zero-update preflight:
+measure the same source/family pattern over eight diverse point-year batches,
+calibrate the gradient-norm percentile, and require all existing finite,
+coverage, optimizer, memory, and physical gates. Its resource envelope is
+based on job `14652590`: approximately 19 minutes per cache-hot batch and
+19.25 GiB peak host memory imply a sequential eight-batch estimate near 2.5
+hours. The proposed Slurm boundary requests one V100, four CPUs, 32 GiB host
+memory, and four hours, and reuses the existing project compilation cache.
+Paid training, weak-control
+comparison, sealed-test read, 365-day rollout, Gate D2, and product work remain
+closed. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),

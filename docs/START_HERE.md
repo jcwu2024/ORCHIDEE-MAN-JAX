@@ -227,12 +227,17 @@ denominator repair now passes local regression and real-v6 free-GPU VJPs. All
 finite through the one-day state anchor. The active gate is the same complete
 single-batch zero-update representative probe covering one-day/process,
 seven-day, and thirty-day gradients. Its first repaired execution, job
-`14651381`, reached the 1.5-hour Slurm limit during the now-finite full
-backward path and wrote no report; this is an incomplete execution, not a
-gradient failure. Its completed XLA compilations remain in the project cache,
-and the same probe is prepared with per-source progress logging and a
-three-hour ceiling. Paid training, the eight-batch rerun, 365-day rollout,
-Gate D2, sealed test, and product work remain closed until it passes.
+`14651381`, reached an inadequate 1.5-hour limit and wrote no report. The
+cache-reusing rerun, job `14652590`, then completed in `00:53:12` and passed:
+all three objective-gradient sources, all 83,755,173 combined parameter
+gradients, all seven connected parameter families, the optimizer proposal,
+and every physical hard gate are finite and valid. At initialization the
+7/30-day gradients strongly reach the primary science heads but are much
+smaller than the one-day state gradient in the shared backbone. The active
+gate is the existing eight-batch zero-update preflight, which must establish
+whether that conditioning is stable across diverse point-years before any
+training. Paid training, 365-day rollout, Gate D2, sealed test, and product
+work remain closed.
 
 ## New Task Bootstrap
 

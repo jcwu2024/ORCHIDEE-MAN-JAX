@@ -1,10 +1,10 @@
 # Target-Oriented Representative Gradient Probe
 
-Status: **two paid representative probes are negative; the actual zero-stock
-reverse-mode defect is localized and repaired, and the real-v6 free-GPU
-boundary VJP passes; the complete representative rerun remains active**.
+Status: **accepted repaired representative gradient gate; all three objective
+sources, all combined parameter gradients, the optimizer proposal, and the
+physical hard gates pass; the eight-batch preflight is active**.
 
-Date: 2026-08-23.
+Date: 2026-08-23 to 2026-08-24.
 
 ## Scope
 
@@ -151,16 +151,52 @@ gradient sources. The Slurm ceiling is raised to three hours so the existing
 cache and any remaining cold compile can complete without another 90-minute
 cutoff.
 
+## Passing Repaired Execution
+
+Approved paid job `14652590` ran commit
+`50c2c14435361d62c64b7cc643d568dfa36bd9bc` on one V100 with four CPUs. It
+completed normally in `00:53:12`. The report is
+`runtime/outputs/training/target-oriented-representative-gradient-probe-50c2c14/report.json`
+with SHA256
+`aa1954124408e9291aff0afb4da7b26d52019f22369ee66e55e92742733ac861`.
+
+The report status is `passed`:
+
+- all 83,755,173 values in each of the one-day/process, 7-day, and 30-day
+  source gradients are finite;
+- their norms are `5202018.8299`, `1.4514`, and `0.8519`;
+- all 83,755,173 values in the combined gradient are finite, with all seven
+  connected parameter families finite and nonzero;
+- the optimizer proposal has raw norm `5202019.0`, clip scale `1.0`, finite
+  step norm `0.00345624`, and zero nonfinite parameter or optimizer-state
+  values;
+- peak live device memory is `8,179,523,584` bytes;
+- budget, discrete, stock, unexpected-mask, prediction-nonfinite, and state-
+  nonfinite hard counts are zero; and
+- the 147 observed mask mismatches are entirely the declared dynamic
+  `rveget` status.
+
+The runner retained zero updates, wrote no checkpoint, did not regenerate
+Teacher data, did not read v5 or the sealed test split, and did not alter the
+architecture or objective.
+
+The stage timings were `102.4s` for one-day/process, `216.2s` for 7-day, and
+`2083.2s` for 30-day; the last includes a `23m16.7s` cold XLA compile. At
+initialization, the long-horizon gradients strongly reach the primary science
+heads but are about seven orders of magnitude below the one-day anchor in the
+shared representation families. AdamW's per-coordinate normalization means
+the raw global ratio is not itself the resulting parameter-step ratio, but it
+is a conditioning fact that must be observed across the eight diverse batches
+before training.
+
 ## Next Gate
 
-Rerun the same complete single-batch, zero-update representative probe at the
-repaired commit. It contains 32 one-day samples, eight 7-day windows, and four
-30-day windows. The free boundary diagnostic proves the one-day state-anchor
-cotangent is finite through the complete network, but it does not execute the
-seven-day and thirty-day objective gradients or the optimizer proposal.
-Advance to the full eight-batch gradient calibration only if all three
-gradient sources and all seven parameter families are finite and nonzero where
-connected.
+Run the frozen eight-batch zero-update preflight. It repeats the same 32
+one-day, eight 7-day, and four 30-day composition over eight diverse
+point-year batches, establishes the 90th-percentile gradient clipping
+threshold, and records whether the source/family conditioning seen here is
+stable. Retain all existing finite-gradient, parameter-family coverage,
+optimizer, memory, state, budget, discrete, inventory, and mask gates.
 
 Paid training, retained optimizer updates, 365-day rollout, Gate D2, sealed
 test access, and product acceptance remain closed.

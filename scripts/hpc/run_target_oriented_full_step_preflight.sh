@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run the zero-retained-update target-oriented full-step preflight on free gln01.
+# Run the zero-retained-update target-oriented full-step preflight on free gln01 or Slurm.
 
 set -euo pipefail
 
@@ -8,13 +8,21 @@ WORKTREE=${WORKTREE:-$ROOT}
 EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD}
 GPU_DEVICE=${GPU_DEVICE:?set GPU_DEVICE after checking nvidia-smi}
 HEAD_SHORT=${EXPECTED_GIT_HEAD:0:7}
-PREPARED_MANIFEST=${PREPARED_MANIFEST:-$ROOT/runtime/outputs/training/target-oriented-prepared-8-${HEAD_SHORT}/prepared_manifest.json}
+PREPARED_MANIFEST=${PREPARED_MANIFEST:-$ROOT/runtime/outputs/training/target-oriented-prepared-8-30337ce/prepared_manifest.json}
 OUTPUT=${OUTPUT:-$ROOT/runtime/outputs/training/target-oriented-full-step-preflight-${HEAD_SHORT}/report.json}
-CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/target-oriented-full-step-${HEAD_SHORT}}
+CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/target-oriented-full-step-0d7f936}
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
-case "$(hostname)" in gln01|ibc13b02n04) ;; *) echo "full-step preflight requires free gln01" >&2; exit 2 ;; esac
+case "$(hostname -s)" in
+  gln01|ibgln01|ibc13b02n04) ;;
+  *)
+    test -n "${SLURM_JOB_ID:-}" || {
+      echo "full-step preflight requires free gln01 or a Slurm-allocated GPU" >&2
+      exit 2
+    }
+    ;;
+esac
 case "$WORKTREE" in "$ROOT"|"$ROOT/runtime/worktrees/"*) ;; *) exit 2 ;; esac
 case "$PREPARED_MANIFEST" in "$ROOT/runtime/outputs/"*) ;; *) exit 2 ;; esac
 case "$OUTPUT" in "$ROOT/runtime/outputs/"*) ;; *) exit 2 ;; esac
