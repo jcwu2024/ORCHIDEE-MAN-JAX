@@ -1,5 +1,5 @@
 #!/bin/bash
-# Prepare the eight target-oriented calibration batches on a free CPU test node.
+# Prepare target-oriented training batches on a free CPU test node.
 
 set -euo pipefail
 
@@ -7,8 +7,10 @@ ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 WORKTREE=${WORKTREE:-$ROOT}
 EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD}
 UPDATES=${UPDATES:-8}
+START_UPDATE=${START_UPDATE:-1}
+END_UPDATE=${END_UPDATE:-$UPDATES}
 HEAD_SHORT=${EXPECTED_GIT_HEAD:0:7}
-OUTPUT_DIR=${OUTPUT_DIR:-$ROOT/runtime/outputs/training/target-oriented-prepared-${UPDATES}-${HEAD_SHORT}}
+OUTPUT_DIR=${OUTPUT_DIR:-$ROOT/runtime/outputs/training/target-oriented-prepared-${UPDATES}-${HEAD_SHORT}/chunks/${START_UPDATE}-${END_UPDATE}}
 REUSE_RETAINED_INPUTS_MANIFEST=${REUSE_RETAINED_INPUTS_MANIFEST:-}
 PYTHON=$ROOT/.venvs/orcjax_cpu/bin/python
 
@@ -18,7 +20,7 @@ case "$(hostname)" in
 esac
 case "$WORKTREE" in "$ROOT"|"$ROOT/runtime/worktrees/"*) ;; *) exit 2 ;; esac
 case "$OUTPUT_DIR" in "$ROOT/runtime/outputs/"*) ;; *) exit 2 ;; esac
-test "$UPDATES" = 8
+case "$UPDATES" in 8|250|1000|3000) ;; *) echo "unsupported target-oriented preparation milestone" >&2; exit 2 ;; esac
 test -x "$PYTHON"
 test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
 test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
@@ -58,6 +60,8 @@ cd "$WORKTREE"
   --fast-statistics "$FAST_STATISTICS" \
   --training-contract "$TRAINING_CONTRACT" \
   --updates "$UPDATES" \
+  --start-update "$START_UPDATE" \
+  --end-update "$END_UPDATE" \
   "${REUSE_ARGS[@]}" \
   --output-dir "$OUTPUT_DIR"
 

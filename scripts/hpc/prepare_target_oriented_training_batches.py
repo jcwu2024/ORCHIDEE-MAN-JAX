@@ -64,6 +64,15 @@ def _records(entry: Mapping[str, Any]):
     return tuple(record for name in ("one_day", "seven_day", "thirty_day") for record in components[name])
 
 
+def _trees_exact(jax: Any, left: Any, right: Any) -> bool:
+    left_leaves, left_tree = jax.tree_util.tree_flatten(left)
+    right_leaves, right_tree = jax.tree_util.tree_flatten(right)
+    return left_tree == right_tree and all(
+        np.array_equal(np.asarray(first), np.asarray(second), equal_nan=True)
+        for first, second in zip(left_leaves, right_leaves, strict=True)
+    )
+
+
 def _retained_inputs_from_artifact(jax: Any, artifact: Any, entry: Mapping[str, Any]) -> Mapping[Any, Any]:
     result = {}
     batches = {
@@ -129,6 +138,8 @@ def _prepare_retained_inputs(
 
 
 def run(args: argparse.Namespace) -> Mapping[str, Any]:
+    if getattr(args, "end_update", None) is None:
+        args.end_update = int(args.updates)
     runtime = _load_extended_runtime(args, backend_initializer=_initialize_cpu_backend)
     jax = runtime["jax"]
     from research.daily_coarse_graining.daily_operator.target_oriented_training import (
@@ -141,6 +152,10 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     maximum = int(contract.optimizer["maximum_updates"])
     if not 1 <= int(args.updates) <= maximum:
         raise ValueError("target-oriented preparation update count is outside its budget")
+    start_update = int(getattr(args, "start_update", 1))
+    end_update = int(args.end_update)
+    if not 1 <= start_update <= end_update <= int(args.updates):
+        raise ValueError("target-oriented preparation range is outside its schedule")
     references = runtime["index"].select(
         spatial_split="train",
         temporal_split="train",
@@ -152,14 +167,25 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     )
     reuse_manifest_path = getattr(args, "reuse_retained_inputs_manifest", None)
     reuse_manifest = None
+    reuse_schedule = None
     if reuse_manifest_path is not None:
         reuse_manifest_path = reuse_manifest_path.resolve()
         raw_reuse = json.loads(reuse_manifest_path.read_text(encoding="utf-8"))
+        reuse_updates = int(raw_reuse.get("updates", 0))
+        if not 1 <= reuse_updates <= int(args.updates):
+            raise ValueError("target-oriented retained-input reuse coverage is invalid")
+        reuse_schedule = build_target_oriented_training_schedule(
+            references,
+            contract,
+            updates=reuse_updates,
+        )
+        if schedule["entries"][:reuse_updates] != reuse_schedule["entries"]:
+            raise ValueError("target-oriented retained-input reuse is not a schedule prefix")
         reuse_manifest = load_prepared_target_manifest(
             reuse_manifest_path,
             training_contract_sha256=contract.sha256,
-            schedule_sha256=schedule["schedule_sha256"],
-            updates=int(args.updates),
+            schedule_sha256=reuse_schedule["schedule_sha256"],
+            updates=reuse_updates,
             source_git_head=str(raw_reuse.get("identity", {}).get("source_git_head", "")),
         )
     lookup = {_identity(reference): reference for reference in references}
@@ -178,6 +204,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             progress.get("schema_version") != PREPARED_MANIFEST_SCHEMA
             or progress.get("identity") != identity
             or int(progress.get("updates", -1)) != int(args.updates)
+            or int(progress.get("start_update", -1)) != start_update
+            or int(progress.get("end_update", -1)) != end_update
         ):
             raise ValueError("existing target-oriented preparation has different identity")
     else:
@@ -186,6 +214,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "status": "in_progress",
             "identity": identity,
             "updates": int(args.updates),
+            "start_update": start_update,
+            "end_update": end_update,
             "entries": [],
             "teacher_data_regenerated": False,
             "historical_v5_used": False,
@@ -195,9 +225,44 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             progress["retained_inputs_reused_from"] = str(reuse_manifest_path)
     completed = {int(record["update"]): record for record in progress["entries"]}
     retained_cache: dict[tuple[str, int, str, str], tuple[Any, str, float]] = {}
+    landpoint_cache: dict[str, tuple[tuple[str, int, str, str], Any, str]] = {}
+    cross_year_verified: set[str] = set()
+    year_dependent: set[str] = set()
+
+    def register_cached(identity_key: tuple[str, int, str, str], value: Any, signature: str) -> None:
+        retained_cache[identity_key] = (value, signature, 0.0)
+        landpoint = identity_key[0]
+        existing = landpoint_cache.get(landpoint)
+        if existing is None:
+            landpoint_cache[landpoint] = (identity_key, value, signature)
+        elif existing[0][1] != identity_key[1]:
+            if existing[2] == signature and _trees_exact(jax, existing[1], value):
+                cross_year_verified.add(landpoint)
+            else:
+                year_dependent.add(landpoint)
+
+    def preload(manifest_path: Path, manifest: Mapping[str, Any], entries: list[Mapping[str, Any]]) -> None:
+        for record, entry in zip(manifest["entries"], entries, strict=True):
+            artifact = load_prepared_target_artifact(
+                manifest_path,
+                record,
+                training_contract_sha256=contract.sha256,
+                schedule_entry=entry,
+            )
+            for identity_key, value in _retained_inputs_from_artifact(jax, artifact, entry).items():
+                register_cached(identity_key, value, artifact.trace_signature)
+
+    if reuse_manifest is not None and reuse_schedule is not None:
+        preload(reuse_manifest_path, reuse_manifest, reuse_schedule["entries"])
+    if completed:
+        completed_entries = [schedule["entries"][update - 1] for update in sorted(completed)]
+        completed_manifest = progress | {"entries": [completed[update] for update in sorted(completed)]}
+        preload(manifest_path, completed_manifest, completed_entries)
     started = time.perf_counter()
 
     for update, entry in enumerate(schedule["entries"], start=1):
+        if update < start_update or update > end_update:
+            continue
         existing = completed.get(update)
         if existing is not None:
             load_prepared_target_artifact(
@@ -209,7 +274,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             print(f"target_prepared_update_reused update={update}", flush=True)
             continue
         entry_started = time.perf_counter()
-        if reuse_manifest is not None:
+        if reuse_manifest is not None and update <= int(reuse_manifest["updates"]):
             reused_record = reuse_manifest["entries"][update - 1]
             reused_artifact = load_prepared_target_artifact(
                 reuse_manifest_path,
@@ -220,6 +285,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             day_inputs = _retained_inputs_from_artifact(jax, reused_artifact, entry)
             signatures = {reused_artifact.trace_signature}
             retained_seconds = 0.0
+            for identity_key, value in day_inputs.items():
+                register_cached(identity_key, value, reused_artifact.trace_signature)
         else:
             day_inputs = {}
             signatures = set()
@@ -230,8 +297,26 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 if reference is None:
                     raise ValueError("target-oriented schedule record has no coherent reference")
                 if key not in retained_cache:
-                    retained_cache[key] = _prepare_retained_inputs(runtime, reference, record)
-                    seconds = retained_cache[key][2]
+                    landpoint = key[0]
+                    cached = landpoint_cache.get(landpoint)
+                    if (
+                        cached is not None
+                        and landpoint not in year_dependent
+                        and (cached[0][1] == key[1] or landpoint in cross_year_verified)
+                    ):
+                        retained_cache[key] = (cached[1], cached[2], 0.0)
+                        seconds = 0.0
+                    else:
+                        prepared_value = _prepare_retained_inputs(runtime, reference, record)
+                        retained_cache[key] = prepared_value
+                        seconds = prepared_value[2]
+                        if cached is not None and cached[0][1] != key[1]:
+                            if cached[2] == prepared_value[1] and _trees_exact(jax, cached[1], prepared_value[0]):
+                                cross_year_verified.add(landpoint)
+                            else:
+                                year_dependent.add(landpoint)
+                        if landpoint not in landpoint_cache:
+                            landpoint_cache[landpoint] = (key, prepared_value[0], prepared_value[1])
                 else:
                     seconds = 0.0
                 dynamic, signature, _original_seconds = retained_cache[key]
@@ -272,6 +357,9 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         progress["entries"] = [completed[index] for index in sorted(completed)]
         progress["elapsed_seconds_this_invocation"] = time.perf_counter() - started
         progress["total_size_bytes"] = sum(int(value["size_bytes"]) for value in progress["entries"])
+        progress["retained_landpoint_cache_count"] = len(landpoint_cache)
+        progress["cross_year_exact_verified_landpoint_count"] = len(cross_year_verified)
+        progress["year_dependent_landpoint_count"] = len(year_dependent)
         atomic_json(manifest_path, progress)
         print(
             f"target_prepared_update_written update={update} "
@@ -280,10 +368,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         )
 
     progress["status"] = "passed"
-    progress["entries"] = [completed[index] for index in range(1, int(args.updates) + 1)]
+    progress["entries"] = [completed[index] for index in range(start_update, end_update + 1)]
     progress["trace_signatures"] = sorted({record["trace_signature"] for record in progress["entries"]})
     progress["total_size_bytes"] = sum(int(record["size_bytes"]) for record in progress["entries"])
     progress["elapsed_seconds_this_invocation"] = time.perf_counter() - started
+    progress["retained_landpoint_cache_count"] = len(landpoint_cache)
+    progress["cross_year_exact_verified_landpoint_count"] = len(cross_year_verified)
+    progress["year_dependent_landpoint_count"] = len(year_dependent)
+    progress["retained_input_reuse_policy"] = (
+        "same-year reuse plus cross-year reuse only after exact second-year tree equality"
+    )
     atomic_json(manifest_path, progress)
     return progress | {"manifest_sha256": sha256_file(manifest_path)}
 
@@ -297,6 +391,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--fast-statistics", type=Path, required=True)
     parser.add_argument("--training-contract", type=Path, required=True)
     parser.add_argument("--updates", type=int, required=True)
+    parser.add_argument("--start-update", type=int, default=1)
+    parser.add_argument("--end-update", type=int)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("--reuse-retained-inputs-manifest", type=Path)
     return parser

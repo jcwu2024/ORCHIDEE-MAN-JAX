@@ -127,6 +127,16 @@ class TargetOrientedScales(NamedTuple):
     stocks: Mapping[str, float]
 
 
+class TargetOrientedAcceptanceScales(NamedTuple):
+    fluxes: Mapping[str, float]
+    stocks: Mapping[str, float]
+
+
+class TargetOrientedAcceptanceStatistics(NamedTuple):
+    fluxes: Mapping[str, ErrorSufficientStatistics]
+    stocks: Mapping[str, ErrorSufficientStatistics]
+
+
 class TargetOrientedAdamWState(NamedTuple):
     step: Any
     first: Any
@@ -549,6 +559,44 @@ def derive_target_oriented_scales(
     )
 
 
+def derive_target_oriented_acceptance_scales(
+    next_state_scale: Any,
+    fast_gpp_scale: Any,
+    contract: Any,
+) -> TargetOrientedAcceptanceScales:
+    """Project train/train scales onto every required short-horizon report key."""
+
+    long = derive_long_horizon_scales(next_state_scale, fast_gpp_scale, contract)
+    maintenance = float(long.fluxes["maintenance_respiration"])
+    growth = float(long.fluxes["growth_respiration"])
+    heterotrophic = float(long.fluxes["heterotrophic_respiration"])
+    npp = float(long.fluxes["npp"])
+    autotrophic = float(np.hypot(maintenance, growth))
+    nep = float(np.hypot(npp, heterotrophic))
+    fluxes = {
+        "gpp": float(long.fluxes["gpp"]),
+        "maintenance_respiration": maintenance,
+        "growth_respiration": growth,
+        "autotrophic_respiration": autotrophic,
+        "npp": npp,
+        "heterotrophic_respiration": heterotrophic,
+        "nep": nep,
+        "nee": nep,
+    }
+    total_live = float(long.stocks["total_live_biomass_carbon"])
+    ecosystem = float(long.stocks["ecosystem_carbon"])
+    stocks = {
+        "aboveground_biomass_carbon": float(long.stocks["aboveground_biomass_carbon"]),
+        "belowground_biomass_carbon": float(long.stocks["belowground_biomass_carbon"]),
+        "total_live_biomass_carbon": total_live,
+        "nonliving_ecosystem_carbon": float(np.hypot(ecosystem, total_live)),
+        "ecosystem_carbon": ecosystem,
+    }
+    if any(not np.isfinite(value) or value <= 0.0 for value in (*fluxes.values(), *stocks.values())):
+        raise ValueError("target-oriented acceptance scales must be finite and positive")
+    return TargetOrientedAcceptanceScales(fluxes=fluxes, stocks=stocks)
+
+
 def normalized_error_sufficient_statistics(
     predicted: Any,
     expected: Any,
@@ -948,6 +996,171 @@ def science_window_from_sufficient_statistics(
     )
 
 
+def _acceptance_trajectories(
+    fluxes: Mapping[str, MaskedTrajectory],
+    stocks: Mapping[str, MaskedTrajectory],
+) -> tuple[Mapping[str, MaskedTrajectory], Mapping[str, MaskedTrajectory]]:
+    required_fluxes = {
+        "gpp",
+        "maintenance_respiration",
+        "growth_respiration",
+        "heterotrophic_respiration",
+    }
+    required_stocks = {
+        "aboveground_biomass_carbon",
+        "belowground_biomass_carbon",
+        "total_live_biomass_carbon",
+        "ecosystem_carbon",
+    }
+    if not required_fluxes <= set(fluxes) or not required_stocks <= set(stocks):
+        raise ValueError("target-oriented acceptance trajectory registry is incomplete")
+    autotrophic = _masked_sum(
+        fluxes["maintenance_respiration"],
+        fluxes["growth_respiration"],
+    )
+    npp = _masked_difference(fluxes["gpp"], autotrophic)
+    nep = _masked_difference(npp, fluxes["heterotrophic_respiration"])
+    zero = MaskedTrajectory(
+        value=jnp.zeros_like(jnp.asarray(nep.value)),
+        defined=jnp.asarray(nep.defined, dtype=jnp.bool_),
+    )
+    return (
+        {
+            "gpp": fluxes["gpp"],
+            "maintenance_respiration": fluxes["maintenance_respiration"],
+            "growth_respiration": fluxes["growth_respiration"],
+            "autotrophic_respiration": autotrophic,
+            "npp": npp,
+            "heterotrophic_respiration": fluxes["heterotrophic_respiration"],
+            "nep": nep,
+            "nee": _masked_difference(zero, nep),
+        },
+        {
+            "aboveground_biomass_carbon": stocks["aboveground_biomass_carbon"],
+            "belowground_biomass_carbon": stocks["belowground_biomass_carbon"],
+            "total_live_biomass_carbon": stocks["total_live_biomass_carbon"],
+            "nonliving_ecosystem_carbon": _masked_difference(
+                stocks["ecosystem_carbon"],
+                stocks["total_live_biomass_carbon"],
+            ),
+            "ecosystem_carbon": stocks["ecosystem_carbon"],
+        },
+    )
+
+
+def target_oriented_acceptance_sufficient_statistics(
+    predicted_fluxes: Mapping[str, MaskedTrajectory],
+    expected_fluxes: Mapping[str, MaskedTrajectory],
+    predicted_stocks: Mapping[str, MaskedTrajectory],
+    expected_stocks: Mapping[str, MaskedTrajectory],
+    *,
+    scales: TargetOrientedAcceptanceScales,
+    horizon: int,
+) -> TargetOrientedAcceptanceStatistics:
+    """Accumulate the 13 absolute-gate keys without double-counting them in training."""
+
+    if int(horizon) not in (7, 30):
+        raise ValueError("target-oriented acceptance horizon must be 7 or 30 days")
+    predicted_flux, predicted_stock = _acceptance_trajectories(predicted_fluxes, predicted_stocks)
+    expected_flux, expected_stock = _acceptance_trajectories(expected_fluxes, expected_stocks)
+    if set(predicted_flux) != set(scales.fluxes) or set(predicted_stock) != set(scales.stocks):
+        raise ValueError("target-oriented acceptance scale registry drift")
+
+    flux_statistics = {}
+    for name, predicted in predicted_flux.items():
+        expected = expected_flux[name]
+        if jnp.asarray(predicted.value).shape[0] < horizon:
+            raise ValueError("target-oriented acceptance flux trajectory is too short")
+        defined = jnp.asarray(predicted.defined[:horizon], dtype=jnp.bool_) & jnp.asarray(
+            expected.defined[:horizon], dtype=jnp.bool_
+        )
+        complete = jnp.all(defined, axis=0)
+        flux_statistics[name] = normalized_error_sufficient_statistics(
+            jnp.sum(jnp.where(defined, predicted.value[:horizon], 0.0), axis=0),
+            jnp.sum(jnp.where(defined, expected.value[:horizon], 0.0), axis=0),
+            complete,
+            horizon * jnp.asarray(scales.fluxes[name], dtype=jnp.float64),
+        )
+
+    stock_statistics = {}
+    for name, predicted in predicted_stock.items():
+        expected = expected_stock[name]
+        if jnp.asarray(predicted.value).shape[0] < horizon:
+            raise ValueError("target-oriented acceptance stock trajectory is too short")
+        defined = jnp.asarray(predicted.defined[horizon - 1], dtype=jnp.bool_) & jnp.asarray(
+            expected.defined[horizon - 1], dtype=jnp.bool_
+        )
+        stock_statistics[name] = normalized_error_sufficient_statistics(
+            predicted.value[horizon - 1],
+            expected.value[horizon - 1],
+            defined,
+            scales.stocks[name],
+        )
+    return TargetOrientedAcceptanceStatistics(flux_statistics, stock_statistics)
+
+
+def add_target_oriented_acceptance_statistics(
+    left: TargetOrientedAcceptanceStatistics,
+    right: TargetOrientedAcceptanceStatistics,
+) -> TargetOrientedAcceptanceStatistics:
+    if set(left.fluxes) != set(right.fluxes) or set(left.stocks) != set(right.stocks):
+        raise ValueError("target-oriented acceptance statistic registry drift")
+    return TargetOrientedAcceptanceStatistics(
+        {
+            name: add_error_sufficient_statistics(left.fluxes[name], right.fluxes[name])
+            for name in left.fluxes
+        },
+        {
+            name: add_error_sufficient_statistics(left.stocks[name], right.stocks[name])
+            for name in left.stocks
+        },
+    )
+
+
+def finalize_target_oriented_acceptance_statistics(
+    statistics: TargetOrientedAcceptanceStatistics,
+    *,
+    horizon: int,
+    target_contract: TargetOrientedContract,
+) -> Mapping[str, Any]:
+    acceptance = target_contract.payload["acceptance"]
+    expected_fluxes = tuple(acceptance["reported_fluxes"])
+    expected_stocks = tuple(acceptance["reported_stocks"])
+    if tuple(statistics.fluxes) != expected_fluxes or tuple(statistics.stocks) != expected_stocks:
+        raise ValueError("target-oriented acceptance report registry drift")
+    gate = acceptance["short_horizon"][str(int(horizon))]
+    rmse_maximum = float(gate["normalized_rmse_maximum"])
+    bias_maximum = float(gate["absolute_normalized_signed_bias_maximum"])
+    keys = {}
+    for name, sufficient in (*statistics.fluxes.items(), *statistics.stocks.items()):
+        error = normalized_error_from_sufficient_statistics(sufficient)
+        mse = float(np.asarray(error.mse))
+        bias = float(np.asarray(error.mean_bias))
+        count = float(np.asarray(error.count))
+        rmse = float(np.sqrt(max(mse, 0.0)))
+        passed = (
+            count > 0.0
+            and np.isfinite(rmse)
+            and np.isfinite(bias)
+            and rmse <= rmse_maximum
+            and abs(bias) <= bias_maximum
+        )
+        keys[name] = {
+            "normalized_rmse": rmse,
+            "normalized_signed_bias": bias,
+            "evaluated_values": count,
+            "rmse_maximum": rmse_maximum,
+            "absolute_bias_maximum": bias_maximum,
+            "passed": bool(passed),
+        }
+    return {
+        "horizon_days": int(horizon),
+        "keys": keys,
+        "science_macro_normalized_rmse": float(np.mean([item["normalized_rmse"] for item in keys.values()])),
+        "all_key_gates_passed": all(item["passed"] for item in keys.values()),
+    }
+
+
 def process_supervision_sufficient_statistics(
     process_loss: ProcessLossResult,
 ) -> Mapping[str, ErrorSufficientStatistics]:
@@ -1285,6 +1498,132 @@ def build_target_oriented_training_schedule(
     return schedule
 
 
+def _validation_panel_sha256(payload: Mapping[str, Any]) -> str:
+    canonical = dict(payload)
+    canonical.pop("panel_sha256", None)
+    encoded = json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode()
+    return hashlib.sha256(encoded).hexdigest()
+
+
+def build_target_oriented_validation_panel(
+    index: Any,
+    training_contract: TargetOrientedTrainingContract,
+    target_contract: Any,
+) -> Mapping[str, Any]:
+    """Freeze the non-test 7/30-day panel before initialization is evaluated."""
+
+    validation = training_contract.payload["validation"]
+    slices = tuple(validation["slices"])
+    horizons = tuple(int(value) for value in validation["horizons_days"])
+    per_cell = int(validation["windows_per_slice_per_horizon"])
+    split_by_slice = {
+        "temporal": ("train", "validation"),
+        "spatial": ("validation", "train"),
+        "joint": ("validation", "validation"),
+    }
+    if slices != tuple(split_by_slice) or horizons != (7, 30) or per_cell != 16:
+        raise ValueError("target-oriented validation selection contract drift")
+    seed = int(training_contract.data["selection_seed"])
+    panel_slices = {}
+    for slice_id in slices:
+        spatial, temporal = split_by_slice[slice_id]
+        references = tuple(index.select(spatial_split=spatial, temporal_split=temporal))
+        if not references or any(
+            "test" in (reference.parent.spatial_split, reference.parent.temporal_split)
+            or reference.parent.spatial_split != spatial
+            or reference.parent.temporal_split != temporal
+            for reference in references
+        ):
+            raise ValueError(f"target-oriented validation slice drift: {slice_id}")
+        horizon_entries = {}
+        for horizon in horizons:
+            ranked = sorted(
+                (reference for reference in references if int(reference.day_count) >= horizon + 1),
+                key=lambda reference: (
+                    _rank(seed, horizon, ("validation", slice_id, *_reference_identity(reference))),
+                    _reference_identity(reference),
+                ),
+            )
+            selected = []
+            seen_landpoints = set()
+            for reference in ranked:
+                landpoint = str(reference.parent.landpoint_id)
+                if landpoint in seen_landpoints:
+                    continue
+                seen_landpoints.add(landpoint)
+                selected.append(reference)
+                if len(selected) == per_cell:
+                    break
+            if len(selected) != per_cell:
+                raise ValueError(f"target-oriented validation slice has too few landpoints: {slice_id}/{horizon}")
+            entries = []
+            for reference in selected:
+                identity = _reference_identity(reference)
+                entries.append(
+                    {
+                        "landpoint_id": identity[0],
+                        "year": identity[1],
+                        "parent_shard_sha256": identity[2],
+                        "typed_shard_sha256": identity[3],
+                        "day_count": int(reference.day_count),
+                        "horizon_days": horizon,
+                        "start_rows": list(
+                            _start_rows(
+                                reference,
+                                seed=seed,
+                                update=horizon,
+                                component=f"validation/{slice_id}",
+                                count=1,
+                                horizon=horizon,
+                                exclude_first=True,
+                            )
+                        ),
+                    }
+                )
+            horizon_entries[str(horizon)] = entries
+        panel_slices[slice_id] = {
+            "spatial_split": spatial,
+            "temporal_split": temporal,
+            "horizons": horizon_entries,
+        }
+    panel = {
+        "schema_version": "target_oriented_validation_panel_v1",
+        "training_contract_sha256": training_contract.sha256,
+        "target_contract_sha256": target_contract.sha256,
+        "dataset_manifest_sha256": training_contract.payload["identity"]["dataset_manifest_sha256"],
+        "selection_seed": seed,
+        "windows_per_slice_per_horizon": per_cell,
+        "sealed_test_used": False,
+        "slices": panel_slices,
+    }
+    panel["panel_sha256"] = _validation_panel_sha256(panel)
+    return panel
+
+
+def ordered_target_oriented_validation_entries(
+    panel: Mapping[str, Any],
+) -> list[tuple[str, int, Mapping[str, Any]]]:
+    return [
+        (slice_id, horizon, entry)
+        for slice_id in ("temporal", "spatial", "joint")
+        for horizon in (7, 30)
+        for entry in panel["slices"][slice_id]["horizons"][str(horizon)]
+    ]
+
+
+def verify_target_oriented_validation_panel(
+    panel: Mapping[str, Any],
+    index: Any,
+    training_contract: TargetOrientedTrainingContract,
+    target_contract: Any,
+) -> None:
+    if panel.get("panel_sha256") != _validation_panel_sha256(panel):
+        raise ValueError("target-oriented validation panel hash drift")
+    expected = build_target_oriented_validation_panel(index, training_contract, target_contract)
+    if dict(panel) != dict(expected):
+        raise ValueError("target-oriented validation panel selection drift")
+
+
 __all__ = [
     "DEFAULT_CONTRACT_PATH",
     "DEFAULT_STATE_ANCHOR_POLICY_PATH",
@@ -1295,13 +1634,18 @@ __all__ = [
     "PreparedTargetOrientedWindowBatch",
     "SCHEMA_VERSION",
     "ScienceWindowSufficientStatistics",
+    "TargetOrientedAcceptanceScales",
+    "TargetOrientedAcceptanceStatistics",
     "TargetOrientedAdamWState",
     "TargetOrientedTrainingContract",
     "TargetOrientedScales",
     "TargetOrientedStateAnchorPolicy",
     "add_error_sufficient_statistics",
     "add_science_window_sufficient_statistics",
+    "add_target_oriented_acceptance_statistics",
     "build_target_oriented_training_schedule",
+    "build_target_oriented_validation_panel",
+    "derive_target_oriented_acceptance_scales",
     "derive_target_oriented_scales",
     "initialize_target_oriented_adamw",
     "load_target_oriented_state_anchor_policy",
@@ -1315,10 +1659,14 @@ __all__ = [
     "normalized_error_sufficient_statistics",
     "one_day_state_anchor_from_sufficient_statistics",
     "one_day_state_sufficient_statistics",
+    "ordered_target_oriented_validation_entries",
     "process_supervision_sufficient_statistics",
     "prepare_target_oriented_training_batch",
     "science_window_from_sufficient_statistics",
     "science_window_sufficient_statistics",
     "target_oriented_adamw_update",
+    "target_oriented_acceptance_sufficient_statistics",
     "target_oriented_learning_rate",
+    "finalize_target_oriented_acceptance_statistics",
+    "verify_target_oriented_validation_panel",
 ]
