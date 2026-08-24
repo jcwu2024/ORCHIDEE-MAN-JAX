@@ -249,10 +249,29 @@ The eight batches confirm that long-horizon gradients strongly reach primary
 science heads but are initially about seven orders of magnitude below the
 one-day anchor in shared representation families. This is now a required
 warmup diagnostic rather than grounds for changing the frozen loss before
-training. The active operation is formal training-runner, recovery-checkpoint,
-and initialization/update-250 validation implementation plus local/free-node
-admission. No paid training, 365-day rollout, sealed-test read, Gate D2, or
-product work is authorized. See
+training.
+
+The retained update-1-to-250 runner and free-GPU admission are complete at
+commit `e363482`. The merged prepared manifest has SHA256
+`0b1e2c97...dfcd3`, exactly covers updates `1..250`, and totals 840,481,740
+bytes. The 96-window validation manifest has SHA256 `1c9081ef...5186a` and
+passed independent per-file verification. Neither product reads v5 or the
+sealed test and neither regenerates v6 Teacher data.
+
+The passing one-update `gln01` admission report has SHA256
+`51876122...a377`. It completed on GPU with gradient norm `5202019.0` below
+the frozen `5323655.8449` threshold, clip scale `1.0`, finite parameter-step
+norm `0.00345624`, zero contract-defined hard failures, verified recovery
+reload, and six initialization plus six post-update 7/30-day cells. Its tiny
+`0.004144%` macro improvement is not scientific evidence because admission
+uses one window per cell and deliberately is not the full frozen panel.
+
+Paid `gnall` job `14664525` is now the active operation at commit `e363482`.
+It requests one V100, four CPUs, 32 GiB host memory, and five hours, with a
+CNY 12.40 worst-case ceiling. Do not submit a duplicate. It must complete all
+250 updates, alternating recovery, the stage checkpoint, and both complete
+96-window validation panels before the next gate is chosen. No 365-day
+rollout, sealed-test read, Gate D2, or product work is authorized. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -266,6 +285,8 @@ The completed probe and derivative diagnosis are in
 [`target_oriented_representative_gradient_probe_20260823.md`](research/daily_coarse_graining/target_oriented_representative_gradient_probe_20260823.md).
 The accepted eight-batch evidence is
 [`target_oriented_full_step_preflight_acceptance_20260824.md`](research/daily_coarse_graining/target_oriented_full_step_preflight_acceptance_20260824.md).
+The active admission and submission evidence is
+[`target_oriented_formal_training_admission_20260825.md`](research/daily_coarse_graining/target_oriented_formal_training_admission_20260825.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

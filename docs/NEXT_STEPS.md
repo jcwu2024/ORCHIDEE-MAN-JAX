@@ -1360,15 +1360,21 @@ finite and connected, and AdamW does not map raw global norms directly to
 step ratios. It does require the first retained stage to report whether
 long-horizon loss and shared-family influence improve during warmup.
 
-The active operation is local implementation and free-node admission of the
-formal target-oriented training runner. It must consume the exact effective
-batches, freeze the accepted clipping threshold before update one, write at
-most two recovery generations every 50 updates, write the update-250 stage
-checkpoint, and run the frozen initialization/update-250 non-test 7/30-day
-panel. Only then may a paid update-1-to-250 stage be proposed. Paid training,
-weak-control
-comparison, sealed-test read, 365-day rollout, Gate D2, and product work remain
-closed. See
+The formal target-oriented runner and free-GPU admission are complete at
+commit `e363482`. The accepted prepared manifest covers updates `1..250`, the
+fixed validation manifest contains 96 non-test windows, and the one-update
+admission completed with finite parameters/AdamW state, no clipping, zero
+contract-defined hard failures, recovery write/reload, and all six 7/30-day
+cells before and after the update. Admission uses one window per cell and is
+not a scientific promotion screen.
+
+The active operation is monitoring paid `gnall` job `14664525`; do not submit
+a duplicate. It runs updates 1-250, writes at most two alternating recovery
+generations every 50 updates, writes the update-250 stage checkpoint, and
+evaluates the complete frozen 96-window panel at initialization and update
+250. On completion, apply the preregistered absolute gate and 5% pacing rule
+before any continuation. Weak-control comparison, sealed-test read, 365-day
+rollout, Gate D2, and product work remain closed. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
@@ -1376,6 +1382,7 @@ closed. See
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),
 [`target_oriented_representative_gradient_probe_20260823.md`](research/daily_coarse_graining/target_oriented_representative_gradient_probe_20260823.md),
 [`target_oriented_full_step_preflight_acceptance_20260824.md`](research/daily_coarse_graining/target_oriented_full_step_preflight_acceptance_20260824.md),
+[`target_oriented_formal_training_admission_20260825.md`](research/daily_coarse_graining/target_oriented_formal_training_admission_20260825.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

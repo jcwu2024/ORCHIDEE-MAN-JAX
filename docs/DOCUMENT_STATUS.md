@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-23.
+Last updated: 2026-08-25.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -47,10 +47,11 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md` | Current frozen loss, output hierarchy, carbon identities, and absolute 7/30/365-day acceptance authority | Discussing or implementing the next successor architecture and training objective |
 | `research/daily_coarse_graining/target_oriented_attention_v1.md` | Current selected architecture; local and zero-update real-v6 GPU admission accepted | Reviewing the 83.8M candidate mechanism, output capacity, or bounded-training entry |
 | `research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md` | Accepted zero-update real-v6 GPU admission; bounded training design is next | Reviewing gradients, budgets, timing, device memory, or training admission |
-| `research/daily_coarse_graining/target_oriented_bounded_training_v1.md` | Current frozen diverse-batch training design; eight-batch full-step preflight accepted; formal retained-update, checkpoint, and milestone-validation runner in implementation | Reviewing sampling, optimizer, clipping calibration, milestones, or formal training lifecycle |
+| `research/daily_coarse_graining/target_oriented_bounded_training_v1.md` | Current frozen diverse-batch training design; runner and free-GPU admission accepted; paid update-1-to-250 job active | Reviewing sampling, optimizer, clipping calibration, milestones, or formal training lifecycle |
 | `research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md` | Current frozen loss-conditioning amendment; its representative probe removed DOC domination but exposed a separate reverse-mode defect | Reviewing state-scale fallback, residual `other`, masked gradients, or declared-dynamic `rveget` status |
 | `research/daily_coarse_graining/target_oriented_representative_gradient_probe_20260823.md` | Accepted repaired representative gradient gate, including prior negative probes, zero-stock diagnosis, job 14651381 timeout, and passing job 14652590 | Reviewing the NaN repair, source-gradient conditioning, or entry to the eight-batch preflight |
 | `research/daily_coarse_graining/target_oriented_full_step_preflight_acceptance_20260824.md` | Accepted eight-batch gradient calibration, resource measurement, and physical preflight; training-runner implementation is next | Reviewing job 14659152, the frozen p90 clip threshold, hot-step cost, or training entry |
+| `research/daily_coarse_graining/target_oriented_formal_training_admission_20260825.md` | Active runner/admission evidence and paid job 14664525 submission authority; formal result pending | Monitoring the active job or reviewing prepared assets, recovery admission, and resource identity |
 | `research/daily_coarse_graining/daily_operator_parameter_routing_v1.md` | Implemented local parameter-ownership boundary used by the successor | Routing physical parameters or planning Gate D2 |
 | `research/daily_coarse_graining/successor_process_head_architecture_options_v1.md` | Historical accepted decision package; its attention/graph pair is not the current successor default | Reviewing the completed early successor comparison |
 | `research/daily_coarse_graining/successor_process_head_local_foundation_20260809.md` | Accepted local synthetic foundation; real-v6 lifecycle later exposed an incomplete fast boundary | Reviewing implementation evidence before the boundary diagnosis |
