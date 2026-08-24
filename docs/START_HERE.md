@@ -234,10 +234,15 @@ gradients, all seven connected parameter families, the optimizer proposal,
 and every physical hard gate are finite and valid. At initialization the
 7/30-day gradients strongly reach the primary science heads but are much
 smaller than the one-day state gradient in the shared backbone. The active
-gate is the existing eight-batch zero-update preflight, which must establish
-whether that conditioning is stable across diverse point-years before any
-training. Paid training, 365-day rollout, Gate D2, sealed test, and product
-work remain closed.
+eight-batch zero-update preflight then passed under job `14659152`: all eight
+combined gradients and connected families are finite and nonzero, the frozen
+p90 clipping threshold is `5323655.8449`, every physical hard gate is zero,
+and hot effective steps have a 36.81-second median. The shared-backbone
+conditioning is consistently one-day dominated across all eight years, while
+the long-horizon primary heads remain strongly connected. The active gate is
+formal training-runner, recovery-checkpoint, and milestone-validation
+implementation. Paid training, 365-day rollout, Gate D2, sealed test, and
+product work remain closed.
 
 ## New Task Bootstrap
 

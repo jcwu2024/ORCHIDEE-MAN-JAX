@@ -1342,15 +1342,31 @@ primary science-head gradients but reach the shared encoder, refinement,
 cross-attention, mixer, and state heads at much smaller scale than the one-day
 anchor. This does not imply that AdamW will ignore the primary heads, but it
 means raw global norm alone cannot establish useful long-horizon learning.
-The active operation is the already frozen eight-batch zero-update preflight:
-measure the same source/family pattern over eight diverse point-year batches,
-calibrate the gradient-norm percentile, and require all existing finite,
-coverage, optimizer, memory, and physical gates. Its resource envelope is
-based on job `14652590`: approximately 19 minutes per cache-hot batch and
-19.25 GiB peak host memory imply a sequential eight-batch estimate near 2.5
-hours. The proposed Slurm boundary requests one V100, four CPUs, 32 GiB host
-memory, and four hours, and reuses the existing project compilation cache.
-Paid training, weak-control
+The frozen eight-batch zero-update preflight completed under job `14659152` at
+commit `bca102c` in `00:27:00`. Report SHA256
+`7bddd58b...a688de5` has status `passed`: every combined gradient and all seven
+connected parameter families are finite and nonzero in all eight batches; the
+frozen p90 clipping threshold is `5323655.8449`; the AdamW proposal is finite;
+peak live JAX memory is 9.60 GB; and every physical hard-failure count is zero.
+The seven cache-hot effective steps have median `36.8113` seconds. This
+corrects the earlier 2.5-hour projection, which wrongly treated cold
+single-batch compilation as recurring execution.
+
+Across all eight runtime years, 7/30-day gradients strongly update the direct
+primary science heads but remain roughly seven orders of magnitude below the
+one-day state anchor in shared representation families at initialization.
+This does not reject the architecture or objective: the long-horizon paths are
+finite and connected, and AdamW does not map raw global norms directly to
+step ratios. It does require the first retained stage to report whether
+long-horizon loss and shared-family influence improve during warmup.
+
+The active operation is local implementation and free-node admission of the
+formal target-oriented training runner. It must consume the exact effective
+batches, freeze the accepted clipping threshold before update one, write at
+most two recovery generations every 50 updates, write the update-250 stage
+checkpoint, and run the frozen initialization/update-250 non-test 7/30-day
+panel. Only then may a paid update-1-to-250 stage be proposed. Paid training,
+weak-control
 comparison, sealed-test read, 365-day rollout, Gate D2, and product work remain
 closed. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
@@ -1359,6 +1375,7 @@ closed. See
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),
 [`target_oriented_representative_gradient_probe_20260823.md`](research/daily_coarse_graining/target_oriented_representative_gradient_probe_20260823.md),
+[`target_oriented_full_step_preflight_acceptance_20260824.md`](research/daily_coarse_graining/target_oriented_full_step_preflight_acceptance_20260824.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

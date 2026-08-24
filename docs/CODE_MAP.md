@@ -246,10 +246,14 @@ each objective-gradient source so a scheduler timeout cannot hide the last
 completed stage. Job `14652590` passed that representative gate. The active
 operation is the same runner over the complete frozen eight-batch preflight,
 with source/family gradients retained for conditioning review before training.
-`scripts/hpc/slurm_target_oriented_full_step_preflight.sh` owns its proposed
-one-V100, four-hour paid envelope; the shared runner reuses the accepted
+`scripts/hpc/slurm_target_oriented_full_step_preflight.sh` owns the completed
+one-V100 eight-batch execution boundary; the shared runner reused the accepted
 prepared manifest and the compilation cache populated by the representative
-probe.
+probe. Job `14659152` completed it in 27 minutes; its accepted report and the
+corrected hot-step resource measurement are recorded in
+`target_oriented_full_step_preflight_acceptance_20260824.md`. The next code
+owner to implement is the formal retained-update/checkpoint/validation runner;
+the preflight script must not be repurposed into training.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

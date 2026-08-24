@@ -1,7 +1,8 @@
 # Target-Oriented Bounded Training v1
 
-Status: **frozen for local implementation and training-step preflight; paid
-training is not yet authorized**.
+Status: **eight-batch training-step preflight accepted; formal runner and
+milestone-validation implementation are active; paid training is not yet
+authorized**.
 
 Date: 2026-08-21.
 
@@ -94,18 +95,24 @@ checkpoints allow paid runs to remain short and separately reviewable.
 
 The exact microbatch sufficient-statistics accumulator, multi-point-year
 prepared reader, dynamic retained-tail day-input path, and clipped AdamW
-proposal are implemented. The eight real-v6 batches and first free-`gln01`
-preflight are complete. It measured about 8.15 GiB peak live memory and 35.65
-seconds per hot effective step, but all eight gradients were NaN because the
-one-day state anchor amplified one near-constant DOC coordinate and counted it
-again through `other`.
+proposal are implemented. The first free-`gln01` preflight exposed the state-
+anchor conditioning defect, and the subsequent representative probes exposed
+and repaired a zero-stock reverse-mode division. Those negative executions are
+preserved in the dated evidence rather than restated here.
 
-The follow-up state-anchor amendment is frozen separately in
-`target_oriented_state_anchor_amendment_v1.json`. It does not change this
-batch, optimizer, milestone, or checkpoint design, so the prepared batches
-remain valid. The active operation is one representative free-node component-
-gradient probe under the amended loss, followed by the full eight-batch
-preflight only if all three gradient sources are finite.
+The repaired eight-batch preflight completed under job `14659152`. Every
+combined gradient and connected parameter family is finite and nonzero, the
+frozen train/train p90 threshold is `5323655.8449`, all physical hard gates are
+zero, peak live JAX memory is 9.60 GB, and the seven cache-hot effective steps
+have median `36.8113` seconds. The accepted evidence is
+`target_oriented_full_step_preflight_acceptance_20260824.md`.
+
+The active operation is formal retained-update implementation: load the exact
+prepared/scheduled effective batch, apply the frozen threshold and AdamW state,
+publish at most two recovery generations every 50 updates, publish the update-
+250 stage checkpoint, and evaluate the frozen non-test panel at initialization
+and update 250. The runner must also report whether the initially weak 7/30-day
+shared-family gradients and long-horizon losses improve during warmup.
 
 No Teacher regeneration, historical v5 access, paid submission, 365-day
 rollout, long-held validation, Gate D2, sealed-test access, or product

@@ -232,10 +232,27 @@ representation families at initialization. AdamW's coordinate-wise scaling
 means this raw ratio is not itself an update ratio, and the long-horizon heads
 do receive strong direct gradients, but one batch cannot prove that the shared
 representation will learn the long-horizon objectives. The active operation
-is the frozen eight-batch zero-update preflight, retaining all existing hard
-gates and recording the source/family pattern across diverse point-years. No
-paid training, 365-day rollout, sealed-test read, Gate D2, or product work is
-authorized. See
+was the frozen eight-batch zero-update preflight.
+
+Paid job `14659152` completed that preflight at commit `bca102c` in
+`00:27:00`. Report SHA256 `7bddd58b...a688de5` has status `passed`. Every one
+of the eight combined 83,755,173-element gradients is finite, all seven
+connected parameter families are finite and nonzero in every batch, and the
+frozen p90 clipping threshold is `5323655.8449`. The unclipped norms span
+`4.2401e6` to `5.6075e6`. The finite diagnostic AdamW proposal has zero
+nonfinite parameter or state values. Every physical hard-failure count is
+zero, peak live JAX memory is 9.60 GB, Slurm peak host RSS is 17.48 GiB, and
+the seven hot effective steps have median `36.8113` seconds. The report wrote
+no checkpoint and retained no update.
+
+The eight batches confirm that long-horizon gradients strongly reach primary
+science heads but are initially about seven orders of magnitude below the
+one-day anchor in shared representation families. This is now a required
+warmup diagnostic rather than grounds for changing the frozen loss before
+training. The active operation is formal training-runner, recovery-checkpoint,
+and initialization/update-250 validation implementation plus local/free-node
+admission. No paid training, 365-day rollout, sealed-test read, Gate D2, or
+product work is authorized. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -247,6 +264,8 @@ and
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md).
 The completed probe and derivative diagnosis are in
 [`target_oriented_representative_gradient_probe_20260823.md`](research/daily_coarse_graining/target_oriented_representative_gradient_probe_20260823.md).
+The accepted eight-batch evidence is
+[`target_oriented_full_step_preflight_acceptance_20260824.md`](research/daily_coarse_graining/target_oriented_full_step_preflight_acceptance_20260824.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four
