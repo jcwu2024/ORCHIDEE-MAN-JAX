@@ -20,11 +20,13 @@ set -euo pipefail
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 WORKTREE=${WORKTREE:-$ROOT}
 EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD to the approved commit}
+PREPARED_MANIFEST=$ROOT/runtime/outputs/training/target-oriented-prepared-250-9b82b5a/prepared_manifest.json
+VALIDATION_PREPARED_MANIFEST=$ROOT/runtime/outputs/training/target-oriented-validation-9b82b5a/prepared_manifest.json
 : "${CUDA_VISIBLE_DEVICES:?Slurm did not expose the allocated GPU}"
 GPU_DEVICE=${CUDA_VISIBLE_DEVICES%%,*}
 MODE=formal
 
-export WORKTREE EXPECTED_GIT_HEAD GPU_DEVICE MODE
+export WORKTREE EXPECTED_GIT_HEAD PREPARED_MANIFEST VALIDATION_PREPARED_MANIFEST GPU_DEVICE MODE
 
 echo "job_id=$SLURM_JOB_ID host=$(hostname) git_head=$EXPECTED_GIT_HEAD gpu_device=$GPU_DEVICE"
 exec bash "$WORKTREE/scripts/hpc/run_target_oriented_training.sh"

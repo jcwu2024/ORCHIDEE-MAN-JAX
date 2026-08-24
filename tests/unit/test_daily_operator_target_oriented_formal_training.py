@@ -251,9 +251,14 @@ def test_target_oriented_training_launcher_uses_portable_timeout():
     source = (root / "scripts/hpc/run_target_oriented_training.sh").read_text(
         encoding="utf-8"
     )
+    slurm_source = (
+        root / "scripts/hpc/slurm_target_oriented_training_250.sh"
+    ).read_text(encoding="utf-8")
 
     assert "timeout --signal=TERM 290m" in source
     assert "5h50m" not in source
+    assert "target-oriented-prepared-250-9b82b5a/prepared_manifest.json" in slurm_source
+    assert "target-oriented-validation-9b82b5a/prepared_manifest.json" in slurm_source
 
 
 def test_disjoint_prepared_chunks_merge_into_full_manifest(tmp_path):
