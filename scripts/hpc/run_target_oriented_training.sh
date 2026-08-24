@@ -69,7 +69,7 @@ env -u LD_LIBRARY_PATH \
   SINGULARITYENV_ORCHIDEE_REFERENCE_ROOT="$ROOT/runtime/assets" \
   SINGULARITYENV_ORCHIDEE_OUTPUT_ROOT="$ROOT/runtime/outputs" \
   SINGULARITYENV_PYTHONPATH="$WORKTREE" \
-  timeout --signal=TERM 5h50m \
+  timeout --signal=TERM 290m \
   singularity exec --nv --bind "$GPU_BINDS" --pwd "$WORKTREE" "$IMAGE" \
     "$PYTHON" -m scripts.hpc.run_target_oriented_training \
       --dataset-manifest "$DATASET" \

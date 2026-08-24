@@ -246,6 +246,16 @@ def test_retained_landpoint_reuse_requires_exact_tree_equality():
     assert not _trees_exact(jax, left, different)
 
 
+def test_target_oriented_training_launcher_uses_portable_timeout():
+    root = Path(__file__).resolve().parents[2]
+    source = (root / "scripts/hpc/run_target_oriented_training.sh").read_text(
+        encoding="utf-8"
+    )
+
+    assert "timeout --signal=TERM 290m" in source
+    assert "5h50m" not in source
+
+
 def test_disjoint_prepared_chunks_merge_into_full_manifest(tmp_path):
     root = tmp_path / "prepared"
     identity = {
