@@ -86,6 +86,10 @@ def test_target_oriented_acceptance_reports_all_derived_science_keys():
         scales=scales,
         horizon=7,
     )
+    statistics = statistics._replace(
+        fluxes=dict(sorted(statistics.fluxes.items())),
+        stocks=dict(sorted(statistics.stocks.items())),
+    )
     report = finalize_target_oriented_acceptance_statistics(
         statistics,
         horizon=7,

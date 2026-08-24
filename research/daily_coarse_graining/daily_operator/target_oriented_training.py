@@ -1126,13 +1126,20 @@ def finalize_target_oriented_acceptance_statistics(
     acceptance = target_contract.payload["acceptance"]
     expected_fluxes = tuple(acceptance["reported_fluxes"])
     expected_stocks = tuple(acceptance["reported_stocks"])
-    if tuple(statistics.fluxes) != expected_fluxes or tuple(statistics.stocks) != expected_stocks:
+    if set(statistics.fluxes) != set(expected_fluxes) or set(statistics.stocks) != set(
+        expected_stocks
+    ):
         raise ValueError("target-oriented acceptance report registry drift")
     gate = acceptance["short_horizon"][str(int(horizon))]
     rmse_maximum = float(gate["normalized_rmse_maximum"])
     bias_maximum = float(gate["absolute_normalized_signed_bias_maximum"])
     keys = {}
-    for name, sufficient in (*statistics.fluxes.items(), *statistics.stocks.items()):
+    for name in (*expected_fluxes, *expected_stocks):
+        sufficient = (
+            statistics.fluxes[name]
+            if name in statistics.fluxes
+            else statistics.stocks[name]
+        )
         error = normalized_error_from_sufficient_statistics(sufficient)
         mse = float(np.asarray(error.mse))
         bias = float(np.asarray(error.mean_bias))
