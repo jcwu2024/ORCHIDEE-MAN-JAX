@@ -13,7 +13,15 @@ HEAD_SHORT=${EXPECTED_GIT_HEAD:0:7}
 OUTPUT_DIR=${OUTPUT_DIR:-$ROOT/runtime/outputs/training/target-oriented-prepared-${UPDATES}-${HEAD_SHORT}/chunks/${START_UPDATE}-${END_UPDATE}}
 REUSE_RETAINED_INPUTS_MANIFEST=${REUSE_RETAINED_INPUTS_MANIFEST:-}
 LOG_PATH=${LOG_PATH:-}
+BACKGROUND=${BACKGROUND:-0}
+BACKGROUND_CHILD=${BACKGROUND_CHILD:-0}
 PYTHON=$ROOT/.venvs/orcjax_cpu/bin/python
+
+if [ "$BACKGROUND" = 1 ] && [ "$BACKGROUND_CHILD" = 0 ]; then
+  BACKGROUND_CHILD=1 nohup bash "$0" </dev/null >/dev/null 2>&1 &
+  echo "target-oriented preparation background_pid=$!"
+  exit 0
+fi
 
 if [ -n "$LOG_PATH" ]; then
   case "$LOG_PATH" in "$ROOT/runtime/logs/"*) ;; *) exit 2 ;; esac
