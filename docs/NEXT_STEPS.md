@@ -1392,13 +1392,14 @@ and reloads recovery, has zero physical hard failures, and improves the matched
 six-window admission macro by `9.1095%`. Because that panel has one window per
 cell, the improvement is engineering evidence rather than promotion.
 
-The active operation is free-CPU preparation and admission of the exact
-251-1000 partial range. It may reuse retained exact inputs from the accepted
-1-250 prepared product but must not copy or train those earlier updates. After
-merge, verify contiguous coverage, the full-1000 schedule identity, all file
-hashes, and forbidden-data declarations before constructing a paid launcher.
-Weak-control comparison, sealed-test read, 365-day rollout, Gate D2, and
-product work remain closed. See
+The exact 251-1000 partial range is now accepted. Four free-CPU chunks merged
+into 750 unique contiguous artifacts totaling 2,523,051,773 bytes. Every file
+hash and payload passed, the full-1000 schedule identity is frozen, and the
+merged manifest SHA256 is `8205140d...8fc31`. Teacher regeneration, historical
+v5 use, and sealed-test read are all false. The active operation is the
+explicitly approved paid update-250-to-1000 GPU continuation using the exact
+parent stage checkpoint and AdamW state. Weak-control comparison, sealed-test
+read, 365-day rollout, Gate D2, and product work remain closed. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
@@ -1410,6 +1411,7 @@ product work remain closed. See
 [`target_oriented_formal_training_250_result_20260825.md`](research/daily_coarse_graining/target_oriented_formal_training_250_result_20260825.md),
 [`target_oriented_update_1000_continuation_v1.md`](research/daily_coarse_graining/target_oriented_update_1000_continuation_v1.md),
 [`target_oriented_update_251_admission_20260825.md`](research/daily_coarse_graining/target_oriented_update_251_admission_20260825.md),
+[`target_oriented_update_1000_preparation_acceptance_20260825.md`](research/daily_coarse_graining/target_oriented_update_1000_preparation_acceptance_20260825.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

@@ -298,10 +298,14 @@ writes/reloads recovery with zero physical hard failures. On the matched six
 admission windows the macro changes from `0.552285` to `0.501974`, a `9.1095%`
 improvement. This is not full-panel promotion evidence.
 
-The active operation is free-CPU preparation and admission of the exact
-251-1000 partial range. No paid job is authorized until contiguous coverage,
-full-schedule identity, artifact hashes, and data-policy declarations pass.
-No 365-day rollout, sealed-test read, Gate D2, or product work is authorized.
+The exact update-251-to-1000 prepared range is now accepted. Four free-CPU
+chunks merged into 750 unique contiguous artifacts totaling 2,523,051,773
+bytes. Every artifact hash and payload passed, the full schedule SHA256 is
+`ee1ff380...9e2a5`, and the merged manifest SHA256 is `8205140d...8fc31`.
+Teacher regeneration, historical v5 use, and sealed-test read are all false.
+The active operation is the explicitly approved paid update-250-to-1000 GPU
+continuation using the exact parent stage checkpoint and AdamW state. No
+365-day rollout, sealed-test read, Gate D2, or product work is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -324,6 +328,8 @@ The frozen continuation contract is
 [`target_oriented_update_1000_continuation_v1.md`](research/daily_coarse_graining/target_oriented_update_1000_continuation_v1.md).
 The accepted free continuation admission is
 [`target_oriented_update_251_admission_20260825.md`](research/daily_coarse_graining/target_oriented_update_251_admission_20260825.md).
+The accepted complete preparation is
+[`target_oriented_update_1000_preparation_acceptance_20260825.md`](research/daily_coarse_graining/target_oriented_update_1000_preparation_acceptance_20260825.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

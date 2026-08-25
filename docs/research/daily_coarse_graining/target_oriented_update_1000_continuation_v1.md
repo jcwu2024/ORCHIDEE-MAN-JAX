@@ -1,8 +1,7 @@
 # Target-Oriented Update-1000 Continuation V1
 
-Status: frozen implementation contract; update-251 free admission accepted;
-full free-CPU preparation is next and paid execution requires separate
-resource approval.
+Status: frozen implementation contract; update-251 free admission and complete
+update-251-to-1000 preparation accepted; paid execution is the active operation.
 
 ## Decision
 
@@ -98,3 +97,16 @@ The `5%` pacing threshold requires the update-1000 macro to be at most
 `0.6550092954278051`. Relative improvement is not promotion. Sealed-test read,
 365-day rollout, long held-out points, Gate D2, and product acceptance remain
 closed until the absolute short-horizon gate passes.
+
+## Full Preparation Result
+
+Four free-CPU chunks were merged and independently admitted at commit
+`a243029`. The merged manifest covers exactly `251..1000`, contains 750
+artifacts totaling `2,523,051,773` bytes, and has SHA256
+`8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31`.
+Every artifact hash and serialized payload passed. The full schedule SHA256 is
+the frozen
+`ee1ff380a18e1ff3ea919c579455db5895fa95116f2f95d144d21a852da9e2a5`;
+Teacher regeneration, historical v5 use, and sealed-test read are all false.
+The complete evidence is in
+[`target_oriented_update_1000_preparation_acceptance_20260825.md`](target_oriented_update_1000_preparation_acceptance_20260825.md).

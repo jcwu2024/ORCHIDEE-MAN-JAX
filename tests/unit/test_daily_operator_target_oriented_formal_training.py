@@ -302,6 +302,30 @@ def test_target_oriented_training_launcher_uses_portable_timeout():
     assert 'BACKGROUND_CHILD=1 nohup bash "$0"' in preparation
 
 
+def test_target_oriented_update_1000_launcher_is_exact_continuation():
+    root = Path(__file__).resolve().parents[2]
+    source = (
+        root / "scripts/hpc/slurm_target_oriented_training_1000.sh"
+    ).read_text(encoding="utf-8")
+
+    assert "#SBATCH --partition=gnall" in source
+    assert "#SBATCH --cpus-per-task=4" in source
+    assert "#SBATCH --gres=gpu:1" in source
+    assert "#SBATCH --mem=32G" in source
+    assert "#SBATCH --time=10:00:00" in source
+    assert "target-oriented-prepared-1000-a243029/prepared_manifest.json" in source
+    assert "target-oriented-validation-9b82b5a/prepared_manifest.json" in source
+    assert "target-oriented-training-formal-e363482/stage-update-0250.pkl" in source
+    assert (
+        "STAGE_CHECKPOINT_SHA256="
+        "099d48c76277cafb04daf868c492200d0271fd6a4a2c6fa29ca6e4bdbe7989a5"
+    ) in source
+    assert "STAGE_START=250" in source
+    assert "STAGE_END=1000" in source
+    assert "PREPARED_UPDATES=1000" in source
+    assert "RUN_TIMEOUT=580m" in source
+
+
 def test_target_oriented_continuation_stage_requires_exact_checkpoint_pair():
     valid = SimpleNamespace(
         mode="formal",
