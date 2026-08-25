@@ -12,7 +12,13 @@ END_UPDATE=${END_UPDATE:-$UPDATES}
 HEAD_SHORT=${EXPECTED_GIT_HEAD:0:7}
 OUTPUT_DIR=${OUTPUT_DIR:-$ROOT/runtime/outputs/training/target-oriented-prepared-${UPDATES}-${HEAD_SHORT}/chunks/${START_UPDATE}-${END_UPDATE}}
 REUSE_RETAINED_INPUTS_MANIFEST=${REUSE_RETAINED_INPUTS_MANIFEST:-}
+LOG_PATH=${LOG_PATH:-}
 PYTHON=$ROOT/.venvs/orcjax_cpu/bin/python
+
+if [ -n "$LOG_PATH" ]; then
+  case "$LOG_PATH" in "$ROOT/runtime/logs/"*) ;; *) exit 2 ;; esac
+  exec >>"$LOG_PATH" 2>&1
+fi
 
 case "$(hostname)" in
   test01|test02|test03|test04|ibtest01|ibtest02|ibtest03|ibtest04) ;;

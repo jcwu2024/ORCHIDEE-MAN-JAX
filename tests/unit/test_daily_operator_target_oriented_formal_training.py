@@ -298,6 +298,7 @@ def test_target_oriented_training_launcher_uses_portable_timeout():
     assert "PREPARE_ARGUMENTS=(" in preparation
     assert '"${PREPARE_ARGUMENTS[@]}"' in preparation
     assert "REUSE_ARGS=()" not in preparation
+    assert 'exec >>"$LOG_PATH" 2>&1' in preparation
 
 
 def test_target_oriented_continuation_stage_requires_exact_checkpoint_pair():
