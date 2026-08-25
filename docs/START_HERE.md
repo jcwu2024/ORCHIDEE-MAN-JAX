@@ -245,11 +245,12 @@ occurred on only `3/250` updates. The science macro improves `28.4812%`, from
 `0.964059` to `0.689483`, which passes the continuation pacing rule but not
 the absolute 7/30-day gate. Biomass passes; GPP/NPP improve but remain above
 threshold; 30-day ecosystem and nonliving carbon remain nearly unchanged.
-The exact update-250 checkpoint handoff and partial-range update-251-to-1000
-runner now pass focused local tests. The active gate is free-node preparation
-of update 251 followed by a one-update checkpoint-handoff admission on
-`gln01`. Paid continuation, 365-day rollout, Gate D2, sealed test, and product
-work remain closed.
+The exact update-250 checkpoint handoff and one real update-251 continuation
+now pass on free `gln01`, including AdamW state, absolute learning rate,
+recovery reload, matched bounded windows, and all physical hard gates. The
+active gate is free-CPU preparation and admission of the exact 251-1000
+partial range. Paid continuation, 365-day rollout, Gate D2, sealed test, and
+product work remain closed.
 
 ## New Task Bootstrap
 

@@ -1,7 +1,8 @@
 # Target-Oriented Update-1000 Continuation V1
 
-Status: frozen implementation and admission contract; paid execution requires
-separate resource approval.
+Status: frozen implementation contract; update-251 free admission accepted;
+full free-CPU preparation is next and paid execution requires separate
+resource approval.
 
 ## Decision
 

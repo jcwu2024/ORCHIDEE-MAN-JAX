@@ -291,11 +291,18 @@ and validation panel. Focused continuation/checkpoint/range-manifest tests pass
 `8/8`; the extended target-oriented group passes `37/38`, with the sole failure
 an unchanged historical representative-probe wall-time assertion.
 
-The active operation is to prepare only update 251 on a free CPU test node and
-run a one-update continuation admission on free `gln01`. No new paid job is
-authorized until the exact handoff, update, recovery reload, bounded 7/30 cells,
-and physical hard gates pass there. No 365-day rollout, sealed-test read, Gate
-D2, or product work is authorized. See
+Free-node continuation admission now passes at commit `fee229e`. Update 251
+loads the exact stage checkpoint and AdamW step 250, uses learning rate
+`9.9999971e-5`, has finite gradient norm `284116.125`, is not clipped, and
+writes/reloads recovery with zero physical hard failures. On the matched six
+admission windows the macro changes from `0.552285` to `0.501974`, a `9.1095%`
+improvement. This is not full-panel promotion evidence.
+
+The active operation is free-CPU preparation and admission of the exact
+251-1000 partial range. No paid job is authorized until contiguous coverage,
+full-schedule identity, artifact hashes, and data-policy declarations pass.
+No 365-day rollout, sealed-test read, Gate D2, or product work is authorized.
+See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -315,6 +322,8 @@ The formal scientific result is
 [`target_oriented_formal_training_250_result_20260825.md`](research/daily_coarse_graining/target_oriented_formal_training_250_result_20260825.md).
 The frozen continuation contract is
 [`target_oriented_update_1000_continuation_v1.md`](research/daily_coarse_graining/target_oriented_update_1000_continuation_v1.md).
+The accepted free continuation admission is
+[`target_oriented_update_251_admission_20260825.md`](research/daily_coarse_graining/target_oriented_update_251_admission_20260825.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

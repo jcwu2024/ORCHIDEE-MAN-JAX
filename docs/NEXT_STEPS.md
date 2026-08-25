@@ -1386,12 +1386,19 @@ checkpoint, and range-manifest tests pass `8/8`; the extended target-oriented
 group passes `37/38`, with the sole failure an unchanged historical launcher
 wall-time assertion unrelated to this path.
 
-The active operation is free-node continuation admission: prepare only update
-251 from existing v6 on a CPU test node, then execute one update-251 checkpoint
-handoff on free `gln01`. Only after its update, recovery reload, bounded 7/30
-cells, and all physical hard gates pass may batches 251-1000 be prepared and a
-paid job proposed. Weak-control comparison, sealed-test read, 365-day rollout,
-Gate D2, and product work remain closed. See
+Free-node continuation admission now passes. Update 251 loads the exact parent
+parameters and AdamW step 250, uses the correct absolute learning rate, writes
+and reloads recovery, has zero physical hard failures, and improves the matched
+six-window admission macro by `9.1095%`. Because that panel has one window per
+cell, the improvement is engineering evidence rather than promotion.
+
+The active operation is free-CPU preparation and admission of the exact
+251-1000 partial range. It may reuse retained exact inputs from the accepted
+1-250 prepared product but must not copy or train those earlier updates. After
+merge, verify contiguous coverage, the full-1000 schedule identity, all file
+hashes, and forbidden-data declarations before constructing a paid launcher.
+Weak-control comparison, sealed-test read, 365-day rollout, Gate D2, and
+product work remain closed. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
@@ -1402,6 +1409,7 @@ Gate D2, and product work remain closed. See
 [`target_oriented_formal_training_admission_20260825.md`](research/daily_coarse_graining/target_oriented_formal_training_admission_20260825.md),
 [`target_oriented_formal_training_250_result_20260825.md`](research/daily_coarse_graining/target_oriented_formal_training_250_result_20260825.md),
 [`target_oriented_update_1000_continuation_v1.md`](research/daily_coarse_graining/target_oriented_update_1000_continuation_v1.md),
+[`target_oriented_update_251_admission_20260825.md`](research/daily_coarse_graining/target_oriented_update_251_admission_20260825.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),
