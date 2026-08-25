@@ -330,6 +330,9 @@ The accepted free continuation admission is
 [`target_oriented_update_251_admission_20260825.md`](research/daily_coarse_graining/target_oriented_update_251_admission_20260825.md).
 The accepted complete preparation is
 [`target_oriented_update_1000_preparation_acceptance_20260825.md`](research/daily_coarse_graining/target_oriented_update_1000_preparation_acceptance_20260825.md).
+The update-250 loss/gradient diagnosis and frozen update-1000 result analyzer
+are in
+[`target_oriented_update_250_training_dynamics_diagnosis_20260825.md`](research/daily_coarse_graining/target_oriented_update_250_training_dynamics_diagnosis_20260825.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four
