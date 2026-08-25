@@ -292,6 +292,13 @@ def test_target_oriented_training_launcher_uses_portable_timeout():
     assert "target-oriented-prepared-250-9b82b5a/prepared_manifest.json" in slurm_source
     assert "target-oriented-validation-9b82b5a/prepared_manifest.json" in slurm_source
 
+    preparation = (
+        root / "scripts/hpc/prepare_target_oriented_training_batches.sh"
+    ).read_text(encoding="utf-8")
+    assert "PREPARE_ARGUMENTS=(" in preparation
+    assert '"${PREPARE_ARGUMENTS[@]}"' in preparation
+    assert "REUSE_ARGS=()" not in preparation
+
 
 def test_target_oriented_continuation_stage_requires_exact_checkpoint_pair():
     valid = SimpleNamespace(

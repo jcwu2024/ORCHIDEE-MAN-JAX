@@ -25,13 +25,6 @@ test -x "$PYTHON"
 test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
 test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
 
-REUSE_ARGS=()
-if [[ -n "$REUSE_RETAINED_INPUTS_MANIFEST" ]]; then
-  case "$REUSE_RETAINED_INPUTS_MANIFEST" in "$ROOT/runtime/outputs/"*) ;; *) exit 2 ;; esac
-  test -f "$REUSE_RETAINED_INPUTS_MANIFEST"
-  REUSE_ARGS=(--reuse-retained-inputs-manifest "$REUSE_RETAINED_INPUTS_MANIFEST")
-fi
-
 DATASET=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json
 ACCEPTANCE=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance-v2/acceptance_report.json
 BASE_STATISTICS=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance-v2/training_statistics.json
@@ -43,6 +36,24 @@ for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" \
   test -f "$path"
 done
 
+PREPARE_ARGUMENTS=(
+  --dataset-manifest "$DATASET"
+  --acceptance-report "$ACCEPTANCE"
+  --base-statistics "$BASE_STATISTICS"
+  --process-statistics "$PROCESS_STATISTICS"
+  --fast-statistics "$FAST_STATISTICS"
+  --training-contract "$TRAINING_CONTRACT"
+  --updates "$UPDATES"
+  --start-update "$START_UPDATE"
+  --end-update "$END_UPDATE"
+)
+if [ -n "$REUSE_RETAINED_INPUTS_MANIFEST" ]; then
+  case "$REUSE_RETAINED_INPUTS_MANIFEST" in "$ROOT/runtime/outputs/"*) ;; *) exit 2 ;; esac
+  test -f "$REUSE_RETAINED_INPUTS_MANIFEST"
+  PREPARE_ARGUMENTS+=(--reuse-retained-inputs-manifest "$REUSE_RETAINED_INPUTS_MANIFEST")
+fi
+PREPARE_ARGUMENTS+=(--output-dir "$OUTPUT_DIR")
+
 mkdir -p "$OUTPUT_DIR" "$ROOT/runtime/cache/xdg"
 export JAX_PLATFORMS=cpu JAX_ENABLE_X64=true PYTHONHASHSEED=0
 export XDG_CACHE_HOME=$ROOT/runtime/cache/xdg
@@ -53,17 +64,7 @@ export OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
 cd "$WORKTREE"
 
 /usr/bin/time -v "$PYTHON" -m scripts.hpc.prepare_target_oriented_training_batches \
-  --dataset-manifest "$DATASET" \
-  --acceptance-report "$ACCEPTANCE" \
-  --base-statistics "$BASE_STATISTICS" \
-  --process-statistics "$PROCESS_STATISTICS" \
-  --fast-statistics "$FAST_STATISTICS" \
-  --training-contract "$TRAINING_CONTRACT" \
-  --updates "$UPDATES" \
-  --start-update "$START_UPDATE" \
-  --end-update "$END_UPDATE" \
-  "${REUSE_ARGS[@]}" \
-  --output-dir "$OUTPUT_DIR"
+  "${PREPARE_ARGUMENTS[@]}"
 
 test -f "$OUTPUT_DIR/prepared_manifest.json"
 sha256sum "$OUTPUT_DIR/prepared_manifest.json"
