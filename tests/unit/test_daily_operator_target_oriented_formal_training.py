@@ -318,6 +318,15 @@ def test_target_oriented_continuation_stage_requires_exact_checkpoint_pair():
         _stage_bounds(invalid)
 
 
+def test_continuation_admission_evaluates_a_matched_parent_baseline():
+    root = Path(__file__).resolve().parents[2]
+    source = (root / "scripts/hpc/run_target_oriented_training.py").read_text(
+        encoding="utf-8"
+    )
+    assert 'if mode == "admission":' in source
+    assert 'label=f"update_{stage_start}_admission_baseline"' in source
+
+
 def test_disjoint_prepared_chunks_merge_into_full_manifest(tmp_path):
     root = tmp_path / "prepared"
     identity = {

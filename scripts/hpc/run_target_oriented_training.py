@@ -660,8 +660,21 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             parameters = parent_stage["parameters"]
             optimizer = parent_stage["optimizer"]
             records = list(parent_stage["update_records"])
-            initial_validation = dict(parent_stage["validation"])
             jax.block_until_ready((parameters, optimizer))
+            if mode == "admission":
+                initial_validation = _evaluate_panel(
+                    runtime,
+                    parameters=parameters,
+                    evaluator=evaluator,
+                    prepared_path=args.validation_prepared_manifest,
+                    prepared=validation_prepared,
+                    panel=panel,
+                    target_contract=target_contract,
+                    mode=mode,
+                    label=f"update_{stage_start}_admission_baseline",
+                )
+            else:
+                initial_validation = dict(parent_stage["validation"])
             print(
                 f"target_training continued stage_checkpoint={args.stage_checkpoint} "
                 f"completed={completed}",
