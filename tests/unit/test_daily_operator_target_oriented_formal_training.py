@@ -10,6 +10,7 @@ import numpy as np
 from research.daily_coarse_graining.daily_operator.long_horizon_objective import MaskedTrajectory
 from research.daily_coarse_graining.daily_operator.target_oriented_checkpoint import (
     load_target_oriented_recovery,
+    load_target_oriented_stage_checkpoint,
     write_target_oriented_best_checkpoint,
     write_target_oriented_recovery,
     write_target_oriented_stage_checkpoint,
@@ -28,12 +29,14 @@ from research.daily_coarse_graining.daily_operator.target_oriented_training impo
 )
 from scripts.hpc.merge_target_oriented_training_batches import run as merge_prepared_chunks
 from scripts.hpc.prepare_target_oriented_training_batches import _trees_exact
+from scripts.hpc.run_target_oriented_training import _stage_bounds
 from scripts.hpc.target_oriented_training_prepared import (
     PREPARED_ARTIFACT_SCHEMA,
     PREPARED_MANIFEST_SCHEMA,
     PreparedTargetOrientedUpdateArtifact,
     atomic_json,
     load_prepared_target_manifest,
+    load_prepared_target_manifest_range,
     write_prepared_target_artifact,
 )
 
@@ -184,14 +187,25 @@ def test_target_oriented_validation_panel_is_fixed_diverse_and_non_test():
 
 
 def test_target_oriented_recovery_and_stage_checkpoint_roundtrip(tmp_path):
-    identity = {"run": "formal"}
+    identity = {
+        "run": "formal",
+        "git_head": "a" * 40,
+        "training_contract_sha256": "training",
+        "target_contract_sha256": "target",
+        "state_anchor_policy_sha256": "anchor",
+        "validation_panel_sha256": "panel",
+    }
     parameters = {"weight": np.asarray([1.0, 2.0], dtype=np.float32)}
     optimizer = {
         "step": np.asarray(2, dtype=np.int32),
         "first": np.asarray([0.1, 0.2], dtype=np.float32),
         "second": np.asarray([0.01, 0.04], dtype=np.float32),
     }
-    validation = {"hard_failure_count": 0, "science_macro_normalized_rmse": 0.5}
+    validation = {
+        "full_frozen_panel": True,
+        "hard_failure_count": 0,
+        "science_macro_normalized_rmse": 0.5,
+    }
     records = [{"update": 1}, {"update": 2}]
     recovery_path = tmp_path / "recovery.pkl"
     write_target_oriented_recovery(
@@ -237,6 +251,19 @@ def test_target_oriented_recovery_and_stage_checkpoint_roundtrip(tmp_path):
     )
     assert Path(stage["path"]).is_file()
     assert Path(best["path"]).is_file()
+    loaded_stage = load_target_oriented_stage_checkpoint(
+        stage["path"],
+        expected_sha256=stage["sha256"],
+        completed_updates=2,
+        parameter_count=2,
+        clip_threshold=3.0,
+        training_contract_sha256="training",
+        target_contract_sha256="target",
+        state_anchor_policy_sha256="anchor",
+        validation_panel_sha256="panel",
+    )
+    assert loaded_stage["completed_updates"] == 2
+    np.testing.assert_array_equal(loaded_stage["optimizer"]["step"], np.asarray(2))
 
 
 def test_retained_landpoint_reuse_requires_exact_tree_equality():
@@ -259,10 +286,29 @@ def test_target_oriented_training_launcher_uses_portable_timeout():
         root / "scripts/hpc/slurm_target_oriented_training_250.sh"
     ).read_text(encoding="utf-8")
 
-    assert "timeout --signal=TERM 290m" in source
+    assert "RUN_TIMEOUT=${RUN_TIMEOUT:-290m}" in source
+    assert 'timeout --signal=TERM "$RUN_TIMEOUT"' in source
     assert "5h50m" not in source
     assert "target-oriented-prepared-250-9b82b5a/prepared_manifest.json" in slurm_source
     assert "target-oriented-validation-9b82b5a/prepared_manifest.json" in slurm_source
+
+
+def test_target_oriented_continuation_stage_requires_exact_checkpoint_pair():
+    valid = SimpleNamespace(
+        mode="formal",
+        stage_start=250,
+        stage_end=1000,
+        prepared_updates=1000,
+        stage_checkpoint=Path("stage-update-0250.pkl"),
+        stage_checkpoint_sha256="0" * 64,
+    )
+    assert _stage_bounds(valid) == (250, 1000, 1000)
+    admission = SimpleNamespace(**(vars(valid) | {"mode": "admission"}))
+    assert _stage_bounds(admission) == (250, 1000, 251)
+
+    invalid = SimpleNamespace(**(vars(valid) | {"stage_checkpoint_sha256": None}))
+    with np.testing.assert_raises_regex(ValueError, "exact parent stage checkpoint"):
+        _stage_bounds(invalid)
 
 
 def test_disjoint_prepared_chunks_merge_into_full_manifest(tmp_path):
@@ -320,3 +366,68 @@ def test_disjoint_prepared_chunks_merge_into_full_manifest(tmp_path):
     )
     assert [record["update"] for record in merged["entries"]] == [1, 2]
     assert all(record["path"].startswith("chunks/") for record in merged["entries"])
+
+
+def test_disjoint_prepared_chunks_merge_into_continuation_range(tmp_path):
+    root = tmp_path / "prepared"
+    identity = {
+        "source_git_head": "producer",
+        "training_contract_sha256": "contract",
+        "schedule_sha256": "schedule-3",
+        "dataset_manifest_sha256": "dataset",
+    }
+    manifests = []
+    for update in (2, 3):
+        chunk = root / "chunks" / str(update)
+        chunk.mkdir(parents=True)
+        entry = {"update": update, "runtime_year": 2000 + update, "components": {}}
+        artifact = PreparedTargetOrientedUpdateArtifact(
+            PREPARED_ARTIFACT_SCHEMA,
+            "contract",
+            entry,
+            "trace",
+            {"value": np.asarray(update)},
+        )
+        record = {
+            "update": update,
+            "runtime_year": 2000 + update,
+            "trace_signature": "trace",
+            **write_prepared_target_artifact(chunk / f"update-{update:04d}.pkl.gz", artifact),
+        }
+        manifest = {
+            "schema_version": PREPARED_MANIFEST_SCHEMA,
+            "status": "passed",
+            "identity": identity,
+            "updates": 3,
+            "start_update": update,
+            "end_update": update,
+            "entries": [record],
+            "teacher_data_regenerated": False,
+            "historical_v5_used": False,
+            "sealed_test_read": False,
+        }
+        path = chunk / "prepared_manifest.json"
+        atomic_json(path, manifest)
+        manifests.append(path)
+
+    report = merge_prepared_chunks(
+        SimpleNamespace(
+            output_dir=root,
+            updates=3,
+            start_update=2,
+            end_update=3,
+            chunk_manifests=manifests,
+        )
+    )
+    assert report["start_update"] == 2
+    assert report["end_update"] == 3
+    merged = load_prepared_target_manifest_range(
+        root / "prepared_manifest.json",
+        training_contract_sha256="contract",
+        schedule_sha256="schedule-3",
+        updates=3,
+        start_update=2,
+        end_update=3,
+        source_git_head="producer",
+    )
+    assert [record["update"] for record in merged["entries"]] == [2, 3]

@@ -16,6 +16,7 @@ import numpy as np
 from research.daily_coarse_graining.daily_operator.successor_fit_checkpoint import sha256_file
 from research.daily_coarse_graining.daily_operator.target_oriented_checkpoint import (
     load_target_oriented_recovery,
+    load_target_oriented_stage_checkpoint,
     write_target_oriented_best_checkpoint,
     write_target_oriented_recovery,
     write_target_oriented_stage_checkpoint,
@@ -45,6 +46,7 @@ from scripts.hpc.successor_rollout_screen_prepared import load_prepared_rollout_
 from scripts.hpc.target_oriented_training_prepared import (
     load_prepared_target_artifact,
     load_prepared_target_manifest,
+    load_prepared_target_manifest_range,
 )
 from scripts.hpc.target_oriented_validation_prepared import (
     load_target_oriented_validation_prepared,
@@ -52,8 +54,9 @@ from scripts.hpc.target_oriented_validation_prepared import (
 
 FROZEN_CLIP_THRESHOLD = 5_323_655.8449
 FORMAL_STAGE_END = 250
+FORMAL_CONTINUATION_END = 1000
 RECOVERY_INTERVAL = 50
-CONDITIONING_UPDATES = frozenset((1, 50, 100, 150, 200, 250))
+CONDITIONING_UPDATES = frozenset((1, 50, 100, 150, 200, 250, 500, 750, 1000))
 
 
 def _git_head() -> str:
@@ -412,11 +415,38 @@ def _load_latest_recovery(
     return max(loaded, key=lambda item: int(item[0]["completed_updates"])) if loaded else (None, None)
 
 
+def _stage_bounds(args: argparse.Namespace) -> tuple[int, int, int]:
+    mode = str(args.mode)
+    start = int(args.stage_start)
+    end = int(args.stage_end)
+    if mode == "admission":
+        if (start, end) == (0, FORMAL_STAGE_END):
+            run_end = 1
+        elif (start, end) == (FORMAL_STAGE_END, FORMAL_CONTINUATION_END):
+            run_end = FORMAL_STAGE_END + 1
+        else:
+            raise ValueError("target-oriented admission stage boundary is not frozen")
+    elif (start, end) in (
+        (0, FORMAL_STAGE_END),
+        (FORMAL_STAGE_END, FORMAL_CONTINUATION_END),
+    ):
+        run_end = end
+    else:
+        raise ValueError("target-oriented runner stage boundary is not frozen")
+    if int(args.prepared_updates) != end:
+        raise ValueError("target-oriented prepared schedule does not match the stage end")
+    has_checkpoint = args.stage_checkpoint is not None
+    has_checkpoint_sha256 = bool(args.stage_checkpoint_sha256)
+    if start == 0 and (has_checkpoint or has_checkpoint_sha256):
+        raise ValueError("target-oriented first stage cannot load a parent stage checkpoint")
+    if start > 0 and not (has_checkpoint and has_checkpoint_sha256):
+        raise ValueError("target-oriented continuation requires the exact parent stage checkpoint")
+    return start, end, run_end
+
+
 def run(args: argparse.Namespace) -> Mapping[str, Any]:
     mode = str(args.mode)
-    run_updates = FORMAL_STAGE_END if mode == "formal" else 1
-    if int(args.prepared_updates) != FORMAL_STAGE_END:
-        raise ValueError("target-oriented warmup requires the frozen 250-update prepared schedule")
+    stage_start, stage_end, run_updates = _stage_bounds(args)
     if float(args.clip_threshold) != FROZEN_CLIP_THRESHOLD:
         raise ValueError("target-oriented clip threshold drift")
     output_dir = args.output_dir.resolve()
@@ -494,16 +524,28 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     schedule = build_target_oriented_training_schedule(
         references,
         training_contract,
-        updates=FORMAL_STAGE_END,
+        updates=int(args.prepared_updates),
     )
     raw_prepared = json.loads(args.prepared_manifest.read_text(encoding="utf-8"))
-    prepared = load_prepared_target_manifest(
-        args.prepared_manifest,
-        training_contract_sha256=training_contract.sha256,
-        schedule_sha256=schedule["schedule_sha256"],
-        updates=FORMAL_STAGE_END,
-        source_git_head=str(raw_prepared.get("identity", {}).get("source_git_head", "")),
-    )
+    prepared_arguments = {
+        "training_contract_sha256": training_contract.sha256,
+        "schedule_sha256": schedule["schedule_sha256"],
+        "updates": int(args.prepared_updates),
+        "source_git_head": str(raw_prepared.get("identity", {}).get("source_git_head", "")),
+    }
+    if stage_start == 0:
+        prepared = load_prepared_target_manifest(
+            args.prepared_manifest,
+            **prepared_arguments,
+        )
+    else:
+        prepared = load_prepared_target_manifest_range(
+            args.prepared_manifest,
+            start_update=stage_start + 1,
+            end_update=run_updates,
+            **prepared_arguments,
+        )
+    prepared_records = {int(record["update"]): record for record in prepared["entries"]}
     validation_prepared, panel = load_target_oriented_validation_prepared(
         args.validation_prepared_manifest,
         training_contract_sha256=training_contract.sha256,
@@ -516,7 +558,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         target_contract,
     )
 
-    template = _prepare_template(runtime, schedule["entries"][0])
+    first_update = stage_start + 1
+    template = _prepare_template(runtime, schedule["entries"][first_update - 1])
     if template.static_owner.include_modelout_diagnostics:
         template = replace(
             template,
@@ -535,9 +578,9 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     )
     first_artifact = load_prepared_target_artifact(
         args.prepared_manifest,
-        prepared["entries"][0],
+        prepared_records[first_update],
         training_contract_sha256=training_contract.sha256,
-        schedule_entry=schedule["entries"][0],
+        schedule_entry=schedule["entries"][first_update - 1],
     )
     _validate_prepared_objective_shapes(first_artifact, complete_schema=runtime["schema"], scales=scales)
     if first_artifact.trace_signature != _retained_tail_trace_signature(template):
@@ -555,6 +598,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     identity = {
         "git_head": _git_head(),
         "mode": mode,
+        "stage_start": stage_start,
+        "stage_end": stage_end,
         "training_contract_sha256": training_contract.sha256,
         "target_contract_sha256": target_contract.sha256,
         "state_anchor_policy_sha256": state_anchor_policy.sha256,
@@ -564,6 +609,21 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "validation_prepared_manifest_sha256": validation_prepared["manifest_sha256"],
         "clip_threshold": FROZEN_CLIP_THRESHOLD,
     }
+    parent_stage = None
+    if stage_start > 0:
+        parent_stage = load_target_oriented_stage_checkpoint(
+            args.stage_checkpoint,
+            expected_sha256=args.stage_checkpoint_sha256,
+            completed_updates=stage_start,
+            parameter_count=PARAMETER_COUNT,
+            clip_threshold=FROZEN_CLIP_THRESHOLD,
+            training_contract_sha256=training_contract.sha256,
+            target_contract_sha256=target_contract.sha256,
+            state_anchor_policy_sha256=state_anchor_policy.sha256,
+            validation_panel_sha256=panel["panel_sha256"],
+        )
+        identity["parent_stage_checkpoint_sha256"] = args.stage_checkpoint_sha256
+        identity["parent_stage_git_head"] = parent_stage["identity"]["git_head"]
     recovery_paths = (output_dir / "recovery-0.pkl", output_dir / "recovery-1.pkl")
     recovery, recovery_path = _load_latest_recovery(
         recovery_paths,
@@ -571,29 +631,42 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         maximum_updates=run_updates,
     )
     if recovery is None:
-        completed = 0
-        records = []
-        initial_validation = _evaluate_panel(
-            runtime,
-            parameters=parameters,
-            evaluator=evaluator,
-            prepared_path=args.validation_prepared_manifest,
-            prepared=validation_prepared,
-            panel=panel,
-            target_contract=target_contract,
-            mode=mode,
-            label="initialization",
-        )
-        if mode == "formal" and initial_validation["hard_failure_count"] == 0:
-            write_target_oriented_best_checkpoint(
-                output_dir / "best.pkl",
-                identity=identity,
-                parameters=_host_tree(jax, parameters),
-                completed_updates=0,
-                parameter_count=PARAMETER_COUNT,
-                validation=initial_validation,
+        if parent_stage is None:
+            completed = 0
+            records = []
+            initial_validation = _evaluate_panel(
+                runtime,
+                parameters=parameters,
+                evaluator=evaluator,
+                prepared_path=args.validation_prepared_manifest,
+                prepared=validation_prepared,
+                panel=panel,
+                target_contract=target_contract,
+                mode=mode,
+                label="initialization",
             )
-        print("target_training initialized and validation completed", flush=True)
+            if mode == "formal" and initial_validation["hard_failure_count"] == 0:
+                write_target_oriented_best_checkpoint(
+                    output_dir / "best.pkl",
+                    identity=identity,
+                    parameters=_host_tree(jax, parameters),
+                    completed_updates=0,
+                    parameter_count=PARAMETER_COUNT,
+                    validation=initial_validation,
+                )
+            print("target_training initialized and validation completed", flush=True)
+        else:
+            completed = stage_start
+            parameters = parent_stage["parameters"]
+            optimizer = parent_stage["optimizer"]
+            records = list(parent_stage["update_records"])
+            initial_validation = dict(parent_stage["validation"])
+            jax.block_until_ready((parameters, optimizer))
+            print(
+                f"target_training continued stage_checkpoint={args.stage_checkpoint} "
+                f"completed={completed}",
+                flush=True,
+            )
     else:
         completed = int(recovery["completed_updates"])
         parameters = recovery["parameters"]
@@ -620,7 +693,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         entry = schedule["entries"][update - 1]
         artifact = load_prepared_target_artifact(
             args.prepared_manifest,
-            prepared["entries"][update - 1],
+            prepared_records[update],
             training_contract_sha256=training_contract.sha256,
             schedule_entry=entry,
         )
@@ -785,7 +858,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 validation=final_validation,
             )
     memory_after = _memory_report(runtime["devices"][0])
-    clip_count = sum(int(record["clipped"]) for record in records)
+    stage_records = [record for record in records if int(record["update"]) > stage_start]
+    clip_count = sum(int(record["clipped"]) for record in stage_records)
     classification = {
         "status": "passed" if final_validation["absolute_short_horizon_passed"] else "rejected",
         "absolute_short_horizon_passed": final_validation["absolute_short_horizon_passed"],
@@ -803,7 +877,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "teacher_data_regenerated": False,
             "historical_v5_used": False,
             "sealed_test_read": False,
+            "stage_start": stage_start,
+            "stage_end": stage_end,
             "updates_retained": run_updates,
+            "updates_retained_this_stage": len(stage_records),
+            "completed_updates": run_updates,
             "recovery_interval": RECOVERY_INTERVAL,
             "maximum_recovery_generations": 2,
         },
@@ -814,7 +892,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "initial_validation": initial_validation,
         "final_validation": final_validation,
         "updates": records,
-        "clip_fraction": clip_count / len(records),
+        "clip_fraction": clip_count / len(stage_records),
+        "cumulative_clip_fraction": sum(int(record["clipped"]) for record in records) / len(records),
         "classification": classification,
         "checkpoints": checkpoint_records,
         "elapsed_seconds": time.perf_counter() - started,
@@ -825,7 +904,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 "enter_separately_authorized_365_day_gate"
                 if final_validation["absolute_short_horizon_passed"]
                 else (
-                    "review_update_251_to_1000_continuation"
+                    (
+                        "review_update_251_to_1000_continuation"
+                        if run_updates == FORMAL_STAGE_END
+                        else "review_update_1001_to_3000_continuation"
+                    )
                     if relative_improvement >= 0.05
                     else "stop_and_attribute_warmup_failure"
                 )
@@ -847,6 +930,10 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--prepared-manifest", type=Path, required=True)
     parser.add_argument("--validation-prepared-manifest", type=Path, required=True)
     parser.add_argument("--prepared-updates", type=int, default=FORMAL_STAGE_END)
+    parser.add_argument("--stage-start", type=int, default=0)
+    parser.add_argument("--stage-end", type=int, default=FORMAL_STAGE_END)
+    parser.add_argument("--stage-checkpoint", type=Path)
+    parser.add_argument("--stage-checkpoint-sha256")
     parser.add_argument("--clip-threshold", type=float, default=FROZEN_CLIP_THRESHOLD)
     parser.add_argument("--mode", choices=("admission", "formal"), required=True)
     parser.add_argument("--output-dir", type=Path, required=True)

@@ -266,12 +266,36 @@ reload, and six initialization plus six post-update 7/30-day cells. Its tiny
 `0.004144%` macro improvement is not scientific evidence because admission
 uses one window per cell and deliberately is not the full frozen panel.
 
-Paid `gnall` job `14664525` is now the active operation at commit `e363482`.
-It requests one V100, four CPUs, 32 GiB host memory, and five hours, with a
-CNY 12.40 worst-case ceiling. Do not submit a duplicate. It must complete all
-250 updates, alternating recovery, the stage checkpoint, and both complete
-96-window validation panels before the next gate is chosen. No 365-day
-rollout, sealed-test read, Gate D2, or product work is authorized. See
+Paid `gnall` job `14664525` completed normally at commit `e363482` in
+`02:57:58`. It retained all 250 contiguous updates, both alternating recovery
+generations, the update-250 stage checkpoint, the best-parameter checkpoint,
+and both complete 96-window validation panels. All contract-defined hard
+failures are zero. Only updates 5, 32, and 143 were clipped, for clip fraction
+`0.012`; the last 25 updates had no clipping. Peak live JAX device use was
+10.77 GB and Slurm MaxRSS was 19,590,408 KiB.
+
+The full-panel science macro fell from `0.96405897` to `0.68948347`, a
+`28.4812%` improvement. This passes the preregistered `5%` pacing rule but not
+the absolute 7/30-day gate. AGB, BGB, and total live biomass pass all six
+slice/horizon cells. GPP, NPP, NEE, and NEP improve materially but remain
+above their absolute thresholds. The dominant unresolved errors are ecosystem
+and nonliving ecosystem carbon, especially at 30 days where every slice
+improves by less than `0.4%`; maintenance respiration is inconsistent and
+worsens in several cells. The checkpoint is not promotion eligible.
+
+The explicit update-251-to-1000 continuation is implemented locally. It loads
+the exact stage checkpoint and AdamW step 250, admits a prepared partial range
+without duplicating updates 1-250, and continues schedule and learning rate at
+absolute update indices. It preserves the frozen objective, clipping threshold,
+and validation panel. Focused continuation/checkpoint/range-manifest tests pass
+`8/8`; the extended target-oriented group passes `37/38`, with the sole failure
+an unchanged historical representative-probe wall-time assertion.
+
+The active operation is to prepare only update 251 on a free CPU test node and
+run a one-update continuation admission on free `gln01`. No new paid job is
+authorized until the exact handoff, update, recovery reload, bounded 7/30 cells,
+and physical hard gates pass there. No 365-day rollout, sealed-test read, Gate
+D2, or product work is authorized. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -287,6 +311,10 @@ The accepted eight-batch evidence is
 [`target_oriented_full_step_preflight_acceptance_20260824.md`](research/daily_coarse_graining/target_oriented_full_step_preflight_acceptance_20260824.md).
 The active admission and submission evidence is
 [`target_oriented_formal_training_admission_20260825.md`](research/daily_coarse_graining/target_oriented_formal_training_admission_20260825.md).
+The formal scientific result is
+[`target_oriented_formal_training_250_result_20260825.md`](research/daily_coarse_graining/target_oriented_formal_training_250_result_20260825.md).
+The frozen continuation contract is
+[`target_oriented_update_1000_continuation_v1.md`](research/daily_coarse_graining/target_oriented_update_1000_continuation_v1.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

@@ -240,20 +240,31 @@ the zero-stock division in
 `scripts/hpc/run_target_oriented_output_boundary_vjp.py` and its free-`gln01`
 shell wrapper own the learned-output-coordinate localization and complete
 Attention VJP. The repaired boundary is finite through all 83,755,173
-parameters. The active operation is one complete repaired single-batch
-real-v6 gradient probe; its runner now emits host-only completion timing after
-each objective-gradient source so a scheduler timeout cannot hide the last
-completed stage. Job `14652590` passed that representative gate. The active
-operation is the same runner over the complete frozen eight-batch preflight,
-with source/family gradients retained for conditioning review before training.
+parameters. Job `14652590` passed the complete repaired single-batch real-v6
+gradient probe; its runner emits host-only completion timing after each
+objective-gradient source so a scheduler timeout cannot hide the last
+completed stage.
 `scripts/hpc/slurm_target_oriented_full_step_preflight.sh` owns the completed
 one-V100 eight-batch execution boundary; the shared runner reused the accepted
 prepared manifest and the compilation cache populated by the representative
 probe. Job `14659152` completed it in 27 minutes; its accepted report and the
 corrected hot-step resource measurement are recorded in
-`target_oriented_full_step_preflight_acceptance_20260824.md`. The next code
-owner to implement is the formal retained-update/checkpoint/validation runner;
-the preflight script must not be repurposed into training.
+`target_oriented_full_step_preflight_acceptance_20260824.md`.
+
+`scripts/hpc/run_target_oriented_training.py` owns the completed formal
+update-1-to-250 retained-update, recovery, stage-checkpoint, conditioning, and
+96-window validation lifecycle. Its paid boundary is
+`scripts/hpc/slurm_target_oriented_training_250.sh`, and checkpoint schemas
+are owned by
+`research/daily_coarse_graining/daily_operator/target_oriented_checkpoint.py`.
+Job `14664525` completed that stage; its formal evidence is
+`target_oriented_formal_training_250_result_20260825.md`. The same runner now
+owns the explicit update-251-to-1000 checkpoint-handoff and absolute-index
+continuation path. `target_oriented_checkpoint.py` validates and restores the
+parent parameters plus AdamW state, while `target_oriented_training_prepared.py`
+and `merge_target_oriented_training_batches.py` admit a partial absolute-update
+range without copying the first 250 artifacts. The stage checkpoint is not
+passed through the recovery reader or treated as a new initialization.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

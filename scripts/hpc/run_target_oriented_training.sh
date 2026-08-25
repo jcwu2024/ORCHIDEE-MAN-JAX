@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run target-oriented free admission or the formal update-1-to-250 stage.
+# Run target-oriented free admission, stage 1-250, or continuation 251-1000.
 
 set -euo pipefail
 
@@ -8,15 +8,32 @@ WORKTREE=${WORKTREE:-$ROOT}
 EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD}
 GPU_DEVICE=${GPU_DEVICE:?set GPU_DEVICE after checking nvidia-smi}
 MODE=${MODE:?set MODE to admission or formal}
+STAGE_START=${STAGE_START:-0}
+STAGE_END=${STAGE_END:-250}
+PREPARED_UPDATES=${PREPARED_UPDATES:-$STAGE_END}
+RUN_TIMEOUT=${RUN_TIMEOUT:-290m}
 HEAD_SHORT=${EXPECTED_GIT_HEAD:0:7}
-PREPARED_MANIFEST=${PREPARED_MANIFEST:-$ROOT/runtime/outputs/training/target-oriented-prepared-250-${HEAD_SHORT}/prepared_manifest.json}
+if [ "$STAGE_START" -eq 0 ]; then
+  PREPARED_MANIFEST=${PREPARED_MANIFEST:-$ROOT/runtime/outputs/training/target-oriented-prepared-250-${HEAD_SHORT}/prepared_manifest.json}
+else
+  PREPARED_MANIFEST=${PREPARED_MANIFEST:?set PREPARED_MANIFEST for the continuation range}
+fi
 VALIDATION_PREPARED_MANIFEST=${VALIDATION_PREPARED_MANIFEST:-$ROOT/runtime/outputs/training/target-oriented-validation-${HEAD_SHORT}/prepared_manifest.json}
-OUTPUT_DIR=${OUTPUT_DIR:-$ROOT/runtime/outputs/training/target-oriented-training-${MODE}-${HEAD_SHORT}}
+OUTPUT_DIR=${OUTPUT_DIR:-$ROOT/runtime/outputs/training/target-oriented-training-${MODE}-u${STAGE_END}-${HEAD_SHORT}}
 CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/target-oriented-full-step-0d7f936}
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
 case "$MODE" in admission|formal) ;; *) exit 2 ;; esac
+case "$MODE:$STAGE_START:$STAGE_END" in
+  admission:0:250|admission:250:1000|formal:0:250|formal:250:1000) ;;
+  *) exit 2 ;;
+esac
+if [ "$STAGE_START" -gt 0 ]; then
+  STAGE_CHECKPOINT=${STAGE_CHECKPOINT:?set STAGE_CHECKPOINT for continuation}
+  STAGE_CHECKPOINT_SHA256=${STAGE_CHECKPOINT_SHA256:?set STAGE_CHECKPOINT_SHA256 for continuation}
+  test -f "$STAGE_CHECKPOINT"
+fi
 case "$(hostname -s)" in
   gln01|ibgln01|ibc13b02n01|ibc13b02n02|ibc13b02n03|ibc13b02n04|ibc13b03n*) ;;
   *)
@@ -57,6 +74,29 @@ GPU_BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML
 echo "host=$(hostname) git_head=$EXPECTED_GIT_HEAD mode=$MODE gpu_device=$GPU_DEVICE output=$OUTPUT_DIR"
 nvidia-smi -i "$GPU_DEVICE" --query-gpu=index,name,memory.total,memory.used,utilization.gpu --format=csv,noheader
 
+RUN_ARGUMENTS=(
+  --dataset-manifest "$DATASET"
+  --acceptance-report "$ACCEPTANCE"
+  --base-statistics "$BASE_STATISTICS"
+  --process-statistics "$PROCESS_STATISTICS"
+  --fast-statistics "$FAST_STATISTICS"
+  --training-contract "$TRAINING_CONTRACT"
+  --prepared-manifest "$PREPARED_MANIFEST"
+  --validation-prepared-manifest "$VALIDATION_PREPARED_MANIFEST"
+  --prepared-updates "$PREPARED_UPDATES"
+  --stage-start "$STAGE_START"
+  --stage-end "$STAGE_END"
+  --clip-threshold 5323655.8449
+  --mode "$MODE"
+  --output-dir "$OUTPUT_DIR"
+)
+if [ "$STAGE_START" -gt 0 ]; then
+  RUN_ARGUMENTS+=(
+    --stage-checkpoint "$STAGE_CHECKPOINT"
+    --stage-checkpoint-sha256 "$STAGE_CHECKPOINT_SHA256"
+  )
+fi
+
 env -u LD_LIBRARY_PATH \
   SINGULARITYENV_LD_LIBRARY_PATH=/.singularity.d/libs \
   SINGULARITYENV_CUDA_VISIBLE_DEVICES="$GPU_DEVICE" \
@@ -69,21 +109,9 @@ env -u LD_LIBRARY_PATH \
   SINGULARITYENV_ORCHIDEE_REFERENCE_ROOT="$ROOT/runtime/assets" \
   SINGULARITYENV_ORCHIDEE_OUTPUT_ROOT="$ROOT/runtime/outputs" \
   SINGULARITYENV_PYTHONPATH="$WORKTREE" \
-  timeout --signal=TERM 290m \
+  timeout --signal=TERM "$RUN_TIMEOUT" \
   singularity exec --nv --bind "$GPU_BINDS" --pwd "$WORKTREE" "$IMAGE" \
-    "$PYTHON" -m scripts.hpc.run_target_oriented_training \
-      --dataset-manifest "$DATASET" \
-      --acceptance-report "$ACCEPTANCE" \
-      --base-statistics "$BASE_STATISTICS" \
-      --process-statistics "$PROCESS_STATISTICS" \
-      --fast-statistics "$FAST_STATISTICS" \
-      --training-contract "$TRAINING_CONTRACT" \
-      --prepared-manifest "$PREPARED_MANIFEST" \
-      --validation-prepared-manifest "$VALIDATION_PREPARED_MANIFEST" \
-      --prepared-updates 250 \
-      --clip-threshold 5323655.8449 \
-      --mode "$MODE" \
-      --output-dir "$OUTPUT_DIR"
+    "$PYTHON" -m scripts.hpc.run_target_oriented_training "${RUN_ARGUMENTS[@]}"
 
 test -f "$OUTPUT_DIR/report.json"
 sha256sum "$OUTPUT_DIR/report.json"

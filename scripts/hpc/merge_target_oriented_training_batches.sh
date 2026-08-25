@@ -7,6 +7,8 @@ ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 WORKTREE=${WORKTREE:-$ROOT}
 EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD}
 UPDATES=${UPDATES:-250}
+START_UPDATE=${START_UPDATE:-1}
+END_UPDATE=${END_UPDATE:-$UPDATES}
 EXPECTED_CHUNKS=${EXPECTED_CHUNKS:-8}
 HEAD_SHORT=${EXPECTED_GIT_HEAD:0:7}
 OUTPUT_DIR=${OUTPUT_DIR:-$ROOT/runtime/outputs/training/target-oriented-prepared-${UPDATES}-${HEAD_SHORT}}
@@ -30,6 +32,8 @@ export PYTHONPATH=$WORKTREE
 cd "$WORKTREE"
 "$PYTHON" -m scripts.hpc.merge_target_oriented_training_batches \
   --updates "$UPDATES" \
+  --start-update "$START_UPDATE" \
+  --end-update "$END_UPDATE" \
   --output-dir "$OUTPUT_DIR" \
   "${CHUNKS[@]}"
 

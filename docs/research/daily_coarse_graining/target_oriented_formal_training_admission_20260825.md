@@ -2,13 +2,12 @@
 
 ## Status
 
-The formal target-oriented update-1-to-250 job is active. Do not submit a
-duplicate while Slurm job `14664525` is queued or running.
+The formal target-oriented update-1-to-250 admission is accepted and Slurm job
+`14664525` has completed. The scientific result is recorded separately in
+`target_oriented_formal_training_250_result_20260825.md`.
 
 This report accepts the prepared assets, the retained-update runner, and its
-free-GPU admission. It is not the update-250 scientific result. The complete
-96-window initialization and update-250 validation remain inside the active
-formal job.
+free-GPU admission. It is not the update-250 scientific result.
 
 ## Executable Identity
 
@@ -85,10 +84,10 @@ not contract hard failures. Nonfinite predictions/states, unexpected static
 mask mismatches, discrete mismatches, budget failures, and negative stocks
 were all zero.
 
-## Active Paid Job
+## Completed Paid Job
 
 Slurm job `14664525` started on `ibc13b03n02` at
-`2026-08-25T02:30:17`:
+`2026-08-25T02:30:17` and completed with exit code `0:0` after `02:57:58`:
 
 - partition: `gnall`;
 - allocation: 1 node, 4 CPUs, 1 V100 GPU, 32 GiB host memory;
@@ -101,19 +100,15 @@ Slurm job `14664525` started on `ibc13b03n02` at
 
 Slurm reported `TRES=cpu=4,node=1,billing=4,gres/gpu=1`. The startup log
 confirmed commit `e363482`, formal mode, GPU device 0, the accepted prepared
-assets, and a V100 32 GB device.
+assets, and a V100 32 GB device. The job wrote both recovery generations,
+`stage-update-0250.pkl`, `best.pkl`, `progress.json`, and `report.json`.
 
 ## Next Operation
 
-Monitor job `14664525`; do not submit a duplicate. On completion, verify the
-stage report, both recovery generations, update-250 stage checkpoint, complete
-`1..250` update history, all hard failures, and both 96-window validation
-panels. Apply the preregistered next gate from the report:
-
-- absolute 7/30-day pass opens a separately authorized 365-day gate;
-- at least 5% macro improvement without absolute pass opens review of the
-  prepared update-251-to-1000 continuation;
-- less than 5% improvement stops training for attribution.
-
-Sealed-test access, 365-day rollout, Gate D2, and product acceptance remain
-closed until the formal report is reviewed.
+The formal report has status `completed`, all 250 updates, zero contract hard
+failures, and both full 96-window panels. Its macro improved `28.4812%`, above
+the `5%` pacing threshold, but the absolute 7/30-day gate failed. The active
+operation is therefore review and implementation of the explicit
+update-251-to-1000 checkpoint continuation described by
+`target_oriented_formal_training_250_result_20260825.md`. Sealed-test access,
+365-day rollout, Gate D2, and product acceptance remain closed.

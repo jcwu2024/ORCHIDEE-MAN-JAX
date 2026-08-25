@@ -233,16 +233,23 @@ all three objective-gradient sources, all 83,755,173 combined parameter
 gradients, all seven connected parameter families, the optimizer proposal,
 and every physical hard gate are finite and valid. At initialization the
 7/30-day gradients strongly reach the primary science heads but are much
-smaller than the one-day state gradient in the shared backbone. The active
+smaller than the one-day state gradient in the shared backbone. The
 eight-batch zero-update preflight then passed under job `14659152`: all eight
 combined gradients and connected families are finite and nonzero, the frozen
 p90 clipping threshold is `5323655.8449`, every physical hard gate is zero,
-and hot effective steps have a 36.81-second median. The shared-backbone
-conditioning is consistently one-day dominated across all eight years, while
-the long-horizon primary heads remain strongly connected. The active gate is
-formal training-runner, recovery-checkpoint, and milestone-validation
-implementation. Paid training, 365-day rollout, Gate D2, sealed test, and
-product work remain closed.
+and hot effective steps have a 36.81-second median.
+
+Formal job `14664525` subsequently completed updates 1-250 and the frozen
+96-window validation panel. All physical hard failures are zero and clipping
+occurred on only `3/250` updates. The science macro improves `28.4812%`, from
+`0.964059` to `0.689483`, which passes the continuation pacing rule but not
+the absolute 7/30-day gate. Biomass passes; GPP/NPP improve but remain above
+threshold; 30-day ecosystem and nonliving carbon remain nearly unchanged.
+The exact update-250 checkpoint handoff and partial-range update-251-to-1000
+runner now pass focused local tests. The active gate is free-node preparation
+of update 251 followed by a one-update checkpoint-handoff admission on
+`gln01`. Paid continuation, 365-day rollout, Gate D2, sealed test, and product
+work remain closed.
 
 ## New Task Bootstrap
 
@@ -268,11 +275,11 @@ accepted input-policy record is
 `research/daily_coarse_graining/successor_staged_training_assets_acceptance_20260812.md`.
 Do not rerun an old fit or use the formal 96-window panel for tuning. The
 target-oriented successor architecture and bounded training contract are
-frozen. Resume from the free-node eight-batch preparation and zero-retained-
-update full-step preflight named by `NEXT_STEPS.md`. Do not repeat v4/v5,
-inherit their physical endpoint materialization heads, or train a new weak
-control. Paid multi-point training, 365-day rollout, Gate D2, and product
-gates remain dependency-ordered later work.
+frozen. Resume from the completed update-250 result and continuation handoff
+named by `NEXT_STEPS.md`. Do not repeat v4/v5, inherit their physical endpoint
+materialization heads, or train a new weak control. Paid continuation,
+365-day rollout, Gate D2, and product gates remain dependency-ordered later
+work.
 Before choosing or inheriting
 a neural architecture, read
 `research/daily_coarse_graining/failed_architecture_lessons.md`; it replaces

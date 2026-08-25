@@ -1,4 +1,4 @@
-"""Merge disjoint prepared-update chunks into one admitted 250-update manifest."""
+"""Merge disjoint prepared-update chunks into one admitted schedule range."""
 
 from __future__ import annotations
 
@@ -32,6 +32,10 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     updates = int(first.get("updates", -1))
     if updates != int(args.updates):
         raise ValueError("target-oriented merge update budget drift")
+    start_update = int(getattr(args, "start_update", 1))
+    end_update = int(getattr(args, "end_update", None) or updates)
+    if not 1 <= start_update <= end_update <= updates:
+        raise ValueError("target-oriented merge range is outside the schedule")
     merged = {}
     chunk_records = []
     for path, chunk in chunks:
@@ -86,14 +90,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 "artifact_count": len(chunk["entries"]),
             }
         )
-    if sorted(merged) != list(range(1, updates + 1)):
-        raise ValueError("target-oriented prepared chunks do not cover the full schedule")
-    entries = [merged[update] for update in range(1, updates + 1)]
+    if sorted(merged) != list(range(start_update, end_update + 1)):
+        raise ValueError("target-oriented prepared chunks do not cover the requested range")
+    entries = [merged[update] for update in range(start_update, end_update + 1)]
     payload = {
         "schema_version": PREPARED_MANIFEST_SCHEMA,
         "status": "passed",
         "identity": identity,
         "updates": updates,
+        "start_update": start_update,
+        "end_update": end_update,
         "entries": entries,
         "trace_signatures": sorted({str(record["trace_signature"]) for record in entries}),
         "total_size_bytes": sum(int(record["size_bytes"]) for record in entries),
@@ -109,6 +115,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser()
     parser.add_argument("--updates", type=int, required=True)
+    parser.add_argument("--start-update", type=int, default=1)
+    parser.add_argument("--end-update", type=int)
     parser.add_argument("--output-dir", type=Path, required=True)
     parser.add_argument("chunk_manifests", nargs="+", type=Path)
     return parser

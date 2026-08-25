@@ -100,6 +100,41 @@ def load_prepared_target_manifest(
     return payload
 
 
+def load_prepared_target_manifest_range(
+    path: Path,
+    *,
+    training_contract_sha256: str,
+    schedule_sha256: str,
+    updates: int,
+    start_update: int,
+    end_update: int,
+    source_git_head: str,
+) -> Mapping[str, Any]:
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    identity = payload.get("identity", {})
+    entries = payload.get("entries", [])
+    start = int(start_update)
+    end = int(end_update)
+    if (
+        not 1 <= start <= end <= int(updates)
+        or payload.get("schema_version") != PREPARED_MANIFEST_SCHEMA
+        or payload.get("status") != "passed"
+        or identity.get("training_contract_sha256") != training_contract_sha256
+        or identity.get("schedule_sha256") != schedule_sha256
+        or identity.get("source_git_head") != source_git_head
+        or int(payload.get("updates", -1)) != int(updates)
+        or int(payload.get("start_update", -1)) != start
+        or int(payload.get("end_update", -1)) != end
+        or [int(record.get("update", -1)) for record in entries]
+        != list(range(start, end + 1))
+        or payload.get("teacher_data_regenerated") is not False
+        or payload.get("historical_v5_used") is not False
+        or payload.get("sealed_test_read") is not False
+    ):
+        raise ValueError("prepared target manifest range identity or coverage drift")
+    return payload
+
+
 __all__ = [
     "PREPARED_ARTIFACT_SCHEMA",
     "PREPARED_MANIFEST_SCHEMA",
@@ -107,6 +142,7 @@ __all__ = [
     "atomic_json",
     "load_prepared_target_artifact",
     "load_prepared_target_manifest",
+    "load_prepared_target_manifest_range",
     "sha256_file",
     "write_prepared_target_artifact",
 ]

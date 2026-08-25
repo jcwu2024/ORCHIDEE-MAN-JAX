@@ -166,6 +166,62 @@ def write_target_oriented_stage_checkpoint(
     }
 
 
+def load_target_oriented_stage_checkpoint(
+    path: str | Path,
+    *,
+    expected_sha256: str,
+    completed_updates: int,
+    parameter_count: int,
+    clip_threshold: float,
+    training_contract_sha256: str,
+    target_contract_sha256: str,
+    state_anchor_policy_sha256: str,
+    validation_panel_sha256: str,
+) -> Mapping[str, Any]:
+    source = Path(path).resolve()
+    if not source.is_file() or sha256_file(source) != str(expected_sha256):
+        raise ValueError("target-oriented stage checkpoint hash drift")
+    with source.open("rb") as handle:
+        payload = pickle.load(handle)
+    identity = payload.get("identity", {})
+    completed = int(completed_updates)
+    validation = payload.get("validation", {})
+    records = payload.get("update_records", ())
+    if (
+        payload.get("schema_version") != STAGE_SCHEMA
+        or payload.get("promotion_eligible") is not False
+        or int(payload.get("completed_updates", -1)) != completed
+        or int(payload.get("parameter_count", -1)) != int(parameter_count)
+        or float(payload.get("clip_threshold", np.nan)) != float(clip_threshold)
+        or identity.get("training_contract_sha256") != training_contract_sha256
+        or identity.get("target_contract_sha256") != target_contract_sha256
+        or identity.get("state_anchor_policy_sha256") != state_anchor_policy_sha256
+        or identity.get("validation_panel_sha256") != validation_panel_sha256
+        or [int(record.get("update", -1)) for record in records]
+        != list(range(1, completed + 1))
+        or validation.get("full_frozen_panel") is not True
+        or int(validation.get("hard_failure_count", -1)) != 0
+    ):
+        raise ValueError("target-oriented stage checkpoint identity or coverage drift")
+    parameter_schema, optimizer_schema = _validate_state(
+        payload["parameters"],
+        payload["optimizer"],
+        parameter_count=parameter_count,
+    )
+    if (
+        parameter_schema != payload.get("parameter_tree_schema")
+        or optimizer_schema != payload.get("optimizer_tree_schema")
+    ):
+        raise ValueError("target-oriented stage checkpoint tree schema drift")
+    optimizer = payload["optimizer"]
+    optimizer_step = int(
+        np.asarray(optimizer["step"] if isinstance(optimizer, Mapping) else optimizer.step)
+    )
+    if optimizer_step != completed:
+        raise ValueError("target-oriented stage optimizer step drift")
+    return payload
+
+
 def write_target_oriented_best_checkpoint(
     path: str | Path,
     *,
@@ -208,6 +264,7 @@ __all__ = [
     "RECOVERY_SCHEMA",
     "STAGE_SCHEMA",
     "load_target_oriented_recovery",
+    "load_target_oriented_stage_checkpoint",
     "write_target_oriented_best_checkpoint",
     "write_target_oriented_recovery",
     "write_target_oriented_stage_checkpoint",

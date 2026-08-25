@@ -1368,13 +1368,30 @@ contract-defined hard failures, recovery write/reload, and all six 7/30-day
 cells before and after the update. Admission uses one window per cell and is
 not a scientific promotion screen.
 
-The active operation is monitoring paid `gnall` job `14664525`; do not submit
-a duplicate. It runs updates 1-250, writes at most two alternating recovery
-generations every 50 updates, writes the update-250 stage checkpoint, and
-evaluates the complete frozen 96-window panel at initialization and update
-250. On completion, apply the preregistered absolute gate and 5% pacing rule
-before any continuation. Weak-control comparison, sealed-test read, 365-day
-rollout, Gate D2, and product work remain closed. See
+Paid `gnall` job `14664525` completed all 250 updates and both complete
+96-window validation panels at commit `e363482`. Every contract-defined hard
+failure is zero and only `3/250` updates were clipped. The science macro fell
+from `0.964059` to `0.689483`, a `28.4812%` relative improvement that passes
+the preregistered `5%` pacing rule but not the absolute 7/30-day gate. AGB,
+BGB, and total live biomass pass all six cells; GPP/NPP improve materially but
+remain above threshold; 30-day ecosystem and nonliving carbon barely improve,
+and maintenance respiration is inconsistent.
+
+The explicit update-251-to-1000 continuation and local qualification are now
+implemented. The runner restores the exact update-250 parameters and AdamW
+state, consumes partial prepared ranges at absolute update indices, preserves
+the frozen schedule/objective/clip threshold/96-window panel, and distinguishes
+the stage checkpoint from recovery and initialization. Focused continuation,
+checkpoint, and range-manifest tests pass `8/8`; the extended target-oriented
+group passes `37/38`, with the sole failure an unchanged historical launcher
+wall-time assertion unrelated to this path.
+
+The active operation is free-node continuation admission: prepare only update
+251 from existing v6 on a CPU test node, then execute one update-251 checkpoint
+handoff on free `gln01`. Only after its update, recovery reload, bounded 7/30
+cells, and all physical hard gates pass may batches 251-1000 be prepared and a
+paid job proposed. Weak-control comparison, sealed-test read, 365-day rollout,
+Gate D2, and product work remain closed. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
@@ -1383,6 +1400,8 @@ rollout, Gate D2, and product work remain closed. See
 [`target_oriented_representative_gradient_probe_20260823.md`](research/daily_coarse_graining/target_oriented_representative_gradient_probe_20260823.md),
 [`target_oriented_full_step_preflight_acceptance_20260824.md`](research/daily_coarse_graining/target_oriented_full_step_preflight_acceptance_20260824.md),
 [`target_oriented_formal_training_admission_20260825.md`](research/daily_coarse_graining/target_oriented_formal_training_admission_20260825.md),
+[`target_oriented_formal_training_250_result_20260825.md`](research/daily_coarse_graining/target_oriented_formal_training_250_result_20260825.md),
+[`target_oriented_update_1000_continuation_v1.md`](research/daily_coarse_graining/target_oriented_update_1000_continuation_v1.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),
