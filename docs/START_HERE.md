@@ -275,9 +275,15 @@ snowheat carry with the next Teacher day-start snowheat on the same four
 windows. That intervention is now complete: the 7-day extreme gradient falls
 by `10416` times, but the 30-day extreme falls only `1.56` times because the
 remaining gradient transfers to the coupled snowtemp state head (`272.77`).
-The active gate is therefore one snowheat-plus-snowtemp intervention on only
-the two 30-day windows. Attention is not rejected. Training, architecture
-changes, 365-day rollout, Gate D2, sealed test, and product work remain closed.
+The snowheat-plus-snowtemp intervention is also complete. It reduces the
+30-day extreme snowtemp head by `494.88` times and the full gradient by `5.23`
+times, leaving the snowheat head dominant. Static owner tracing then found
+that the Markov state also carries `diffuco` mirrors of both `hydrol` snow
+thermal leaves; the completed intervention replaced only the canonical
+`hydrol` copies. The active gate is therefore one mirror-complete four-slice
+intervention on the same two 30-day windows. Attention is not rejected.
+Training, architecture changes, 365-day rollout, Gate D2, sealed test, and
+product work remain closed.
 
 ## New Task Bootstrap
 

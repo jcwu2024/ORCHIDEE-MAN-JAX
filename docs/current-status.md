@@ -377,12 +377,20 @@ there. The 30-day extreme snowheat-head gradient falls by `78.96`, but the full
 gradient falls only by `1.56`; the remaining state path is dominated by
 snowtemp with norm `272.77` of a full `276.37`.
 
-The active gate is a zero-training snowheat-plus-snowtemp recurrence
-intervention on only the two 30-day windows. It will compute two complete
-maintenance gradients against the accepted snowheat-only parent. This is a
-causal diagnostic, not admissible training or inference behavior. No unchanged
-update-1001-to-3000 continuation, paid training, architecture edit, 365-day
-rollout, sealed-test read, Gate D2, or product work is authorized.
+The snowheat-plus-snowtemp recurrence intervention completed at commit
+`975ae9b`; report SHA256 is `c4b80543...303810`. The 30-day extreme full
+gradient falls from `276.37` to `52.87`, while its snowtemp head falls from
+`272.77` to `0.551`. The full-gradient reduction of `5.23` misses the frozen
+tenfold gate, and the remaining snowheat head is `40.71`.
+
+Static owner tracing found an incomplete causal cut: the Markov state contains
+`diffuco` snowheat/snowtemp mirrors in addition to the replaced `hydrol`
+coordinates. The active gate is a zero-training mirror-complete recurrence
+intervention on the same two 30-day windows. It replaces all four slices only
+after verifying the two fast-owner mirror relations. This is not admissible
+training or inference behavior. No unchanged update-1001-to-3000 continuation,
+paid training, architecture edit, 365-day rollout, sealed-test read, Gate D2,
+or product work is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -432,12 +440,16 @@ The completed gradient-path diagnostic and result are
 [`target_oriented_flux_gradient_path_attribution_v1.md`](research/daily_coarse_graining/target_oriented_flux_gradient_path_attribution_v1.md)
 and
 [`target_oriented_flux_gradient_path_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_gradient_path_result_20260826.md).
-The frozen active intervention is
+The completed snowheat-only intervention is
 [`target_oriented_snowheat_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snowheat_recurrence_intervention_v1.md).
 Its accepted result is
 [`target_oriented_snowheat_recurrence_result_20260827.md`](research/daily_coarse_graining/target_oriented_snowheat_recurrence_result_20260827.md).
-The frozen active coupled intervention is
-[`target_oriented_snow_thermal_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snow_thermal_recurrence_intervention_v1.md).
+The completed coupled intervention and result are
+[`target_oriented_snow_thermal_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snow_thermal_recurrence_intervention_v1.md)
+and
+[`target_oriented_snow_thermal_recurrence_result_20260827.md`](research/daily_coarse_graining/target_oriented_snow_thermal_recurrence_result_20260827.md).
+The frozen active mirror-aware intervention is
+[`target_oriented_snow_thermal_alias_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snow_thermal_alias_recurrence_intervention_v1.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

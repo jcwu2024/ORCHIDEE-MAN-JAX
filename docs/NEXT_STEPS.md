@@ -1483,15 +1483,24 @@ days, the snowheat-head gradient falls by `78.96`, but the full gradient falls
 only by `1.56`; snowtemp becomes the dominant remaining state head with norm
 `272.77` of a total `276.37`. Controls remain near their original magnitudes.
 
-The active operation is
-`target_oriented_snow_thermal_recurrence_intervention_v1`. Use only the two
-frozen 30-day windows and compare the accepted snowheat-only parent with a
-snowheat-plus-snowtemp Teacher carry. Compute exactly two maintenance
-gradients and require a tenfold reduction of both the extreme full gradient
-and snowtemp-head gradient for causal confirmation. The replacement remains
-diagnostic only. AdamW continuation, batch enlargement, architecture change,
-paid training, sealed-test read, 365-day rollout, Gate D2, and product work
-remain closed.
+The coupled snowheat-plus-snowtemp intervention completed on free `gln01` at
+commit `975ae9b`; report SHA256 is `c4b80543...303810`. Both complete gradients
+are finite and all physical hard failures are zero. For the 30-day extreme,
+the snowtemp-head norm falls `494.88` times and the full gradient falls `5.23`
+times, leaving the snowheat head at `40.71` and the direct maintenance head at
+`33.43`. The frozen tenfold full-gradient threshold is not met, so the result
+is mixed and Attention remains open.
+
+Post-result owner tracing found that the accepted Markov state stores
+`diffuco` mirrors of the `hydrol` snowheat and snowtemp leaves. The prior
+treatment replaced only `hydrol`, leaving both mirrors on predicted cross-day
+carry. The active operation is therefore
+`target_oriented_snow_thermal_alias_recurrence_intervention_v1`. It resolves
+and verifies both canonical/mirror groups and replaces all four slices for
+exactly the same extreme and matched-control windows. It computes two complete
+maintenance gradients and takes no optimizer step. AdamW continuation, batch
+enlargement, architecture change, paid training, sealed-test read, 365-day
+rollout, Gate D2, and product work remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -1520,6 +1529,8 @@ See
 [`target_oriented_snowheat_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snowheat_recurrence_intervention_v1.md),
 [`target_oriented_snowheat_recurrence_result_20260827.md`](research/daily_coarse_graining/target_oriented_snowheat_recurrence_result_20260827.md),
 [`target_oriented_snow_thermal_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snow_thermal_recurrence_intervention_v1.md),
+[`target_oriented_snow_thermal_recurrence_result_20260827.md`](research/daily_coarse_graining/target_oriented_snow_thermal_recurrence_result_20260827.md),
+[`target_oriented_snow_thermal_alias_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snow_thermal_alias_recurrence_intervention_v1.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

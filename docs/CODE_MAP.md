@@ -355,6 +355,17 @@ diagnostic multi-leaf rollout to compute exactly two complete maintenance
 gradients against the hash-bound snowheat-only parent. Its free-node launcher
 is `scripts/hpc/run_target_oriented_snow_thermal_recurrence_intervention.sh`.
 
+The accepted coupled result is
+`target_oriented_snow_thermal_recurrence_result_20260827.md`. Its post-result
+owner audit found that the two `hydrol` leaves have prognostic `diffuco`
+mirrors. `daily_operator/target_oriented_snow_thermal_alias_recurrence.py`
+owns the four-slice contract, fast-owner mirror verification, and bounded
+classifier. `scripts/hpc/audit_target_oriented_snow_thermal_alias_recurrence.py`
+owns the two complete mirror-aware gradients, and
+`scripts/hpc/run_target_oriented_snow_thermal_alias_recurrence_intervention.sh`
+is its free-`gln01` boundary. This diagnostic cannot enter training or final
+inference.
+
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and
 maintenance-temperature factors to replaced fast processes and dynamically
