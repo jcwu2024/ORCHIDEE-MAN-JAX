@@ -109,12 +109,16 @@ def _summarize_gram(
         estimates = int(aggregation.shape[0])
         if estimates > 1:
             upper = cosine[np.triu_indices(estimates, 1)]
-            pairwise = {
-                "minimum": _finite_or_none(float(np.nanmin(upper))),
-                "median": _finite_or_none(float(np.nanmedian(upper))),
-                "mean": _finite_or_none(float(np.nanmean(upper))),
-                "negative_fraction": _finite_or_none(float(np.mean(upper < 0.0))),
-            }
+            finite_upper = upper[np.isfinite(upper)]
+            if finite_upper.size:
+                pairwise = {
+                    "minimum": float(np.min(finite_upper)),
+                    "median": float(np.median(finite_upper)),
+                    "mean": float(np.mean(finite_upper)),
+                    "negative_fraction": float(np.mean(finite_upper < 0.0)),
+                }
+            else:
+                pairwise = {"minimum": None, "median": None, "mean": None, "negative_fraction": None}
         else:
             pairwise = {"minimum": None, "median": None, "mean": None, "negative_fraction": None}
         dot_reference = aggregation @ values @ reference
@@ -123,6 +127,7 @@ def _summarize_gram(
         np.divide(dot_reference, denominator, out=cosine_reference, where=denominator > 0.0)
         finite_reference = np.isfinite(cosine_reference)
         cosine_reference[finite_reference] = np.clip(cosine_reference[finite_reference], -1.0, 1.0)
+        finite_reference_values = cosine_reference[finite_reference]
         mean_coefficients = np.mean(aggregation, axis=0)
         mean_norm_squared = float(mean_coefficients @ values @ mean_coefficients)
         mean_squared_norm = float(np.mean(np.diag(aggregate_gram)))
@@ -134,9 +139,15 @@ def _summarize_gram(
             "gradient_norm_maximum": float(np.max(norms)),
             "pairwise_cosine": pairwise,
             "cosine_to_32_window_reference": {
-                "minimum": _finite_or_none(float(np.nanmin(cosine_reference))),
-                "median": _finite_or_none(float(np.nanmedian(cosine_reference))),
-                "mean": _finite_or_none(float(np.nanmean(cosine_reference))),
+                "minimum": (
+                    float(np.min(finite_reference_values)) if finite_reference_values.size else None
+                ),
+                "median": (
+                    float(np.median(finite_reference_values)) if finite_reference_values.size else None
+                ),
+                "mean": (
+                    float(np.mean(finite_reference_values)) if finite_reference_values.size else None
+                ),
             },
             "relative_gradient_variance": (
                 float(noise / mean_norm_squared) if mean_norm_squared > 0.0 else None
@@ -281,13 +292,16 @@ def _family_gram(jax: Any, jnp: Any, gradients: Sequence[Any]) -> Mapping[str, n
     result = {}
     for name in families:
         vectors = [
-            ravel_pytree(_audit_family_trees(gradient)[name])[0].astype(jnp.float32)
+            ravel_pytree(_audit_family_trees(gradient)[name])[0].astype(jnp.float64)
             for gradient in gradients
         ]
         matrix = jnp.stack(vectors, axis=0)
-        gram = matrix @ matrix.T
+        gram = jnp.matmul(matrix, matrix.T, precision=jax.lax.Precision.HIGHEST)
         jax.block_until_ready(gram)
-        result[name] = np.asarray(jax.device_get(gram), dtype=np.float64)
+        host = np.asarray(jax.device_get(gram), dtype=np.float64)
+        if not np.all(np.isfinite(host)):
+            raise FloatingPointError(f"nonfinite float64 gradient Gram matrix for {name}")
+        result[name] = host
     result["all_parameters"] = sum(result.values(), np.zeros_like(next(iter(result.values()))))
     return result
 
@@ -539,13 +553,17 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     cross_key_grams = _family_gram(jax, jnp, aggregate_gradients)
     cross_key = {}
     for family, gram in cross_key_grams.items():
+        cosine = _cosine_matrix(gram)
         cross_key[family] = {
             "keys": list(AUDIT_FLUX_KEYS),
             "gradient_norms": [float(value) for value in np.sqrt(np.maximum(np.diag(gram), 0.0))],
-            "cosine_matrix": _cosine_matrix(gram).tolist(),
+            "cosine_matrix": [
+                [_finite_or_none(float(value)) for value in row]
+                for row in cosine
+            ],
         }
     decision = _classify_batch_effect(key_reports)
-    all_cosine = np.asarray(cross_key["all_parameters"]["cosine_matrix"], dtype=np.float64)
+    all_cosine = _cosine_matrix(cross_key_grams["all_parameters"])
     indexes = {name: index for index, name in enumerate(AUDIT_FLUX_KEYS)}
     maintenance_growth = float(all_cosine[indexes["maintenance_respiration"], indexes["growth_respiration"]])
     npp_gpp = float(all_cosine[indexes["npp"], indexes["gpp"]])

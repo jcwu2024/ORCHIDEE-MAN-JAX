@@ -67,6 +67,13 @@ def test_gram_summary_and_batch_decision_detect_noise_reduction() -> None:
     assert decision["larger_batch_supported_keys"] == list(AUDIT_FLUX_KEYS[:3])
 
 
+def test_zero_gradient_family_has_null_cosines_without_invalid_values() -> None:
+    summary = _summarize_gram(np.zeros((8, 8), dtype=np.float64))
+    assert summary["4"]["gradient_norm_maximum"] == 0.0
+    assert summary["4"]["pairwise_cosine"]["median"] is None
+    assert summary["16"]["cosine_to_32_window_reference"]["median"] is None
+
+
 def test_gradient_family_partition_is_complete() -> None:
     target_names = (
         "domain_embedding",

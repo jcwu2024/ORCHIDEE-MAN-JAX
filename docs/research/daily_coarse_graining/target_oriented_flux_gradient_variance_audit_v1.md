@@ -54,7 +54,9 @@ for a complete, non-overlapping parameter partition:
 Their Gram matrices sum to the all-parameter Gram matrix. The report includes
 gradient norms, pairwise cosines, cosine to the common 32-window direction,
 relative variance, signal-to-noise ratio, and cross-key cosine geometry for
-4, 8, 16, and 32 windows.
+4, 8, 16, and 32 windows. Gram accumulation uses float64 and highest-precision
+GPU matrix multiplication; an exactly zero gradient family reports null
+cosines rather than inventing a direction.
 
 ## Decision Rule
 
