@@ -9,9 +9,9 @@ import numpy as np
 from scripts.hpc.audit_target_oriented_component_resolved_geometry import (
     PROTECTION_SOURCE_NAMES,
     SOURCE_NAMES,
+    _chunked_tree_gram,
     _cosine_report,
     _group_variance_report,
-    _host_tree_gram,
 )
 from scripts.hpc.audit_target_oriented_flux_gradient_variance import AUDIT_UPDATES
 
@@ -56,7 +56,7 @@ def test_component_resolved_geometry_cosine_and_variance_reports_are_exact():
     }
 
 
-def test_component_resolved_geometry_host_gram_matches_flattened_float64_reference():
+def test_component_resolved_geometry_chunked_gram_matches_flattened_float64_reference():
     gradients = (
         {"left": np.asarray([1.0, 2.0], dtype=np.float32), "right": (np.asarray(3.0),)},
         {"left": np.asarray([-2.0, 4.0], dtype=np.float32), "right": (np.asarray(0.5),)},
@@ -71,7 +71,15 @@ def test_component_resolved_geometry_host_gram_matches_flattened_float64_referen
         ]
     )
 
-    np.testing.assert_allclose(_host_tree_gram(jax, gradients), vectors @ vectors.T)
+    np.testing.assert_allclose(
+        _chunked_tree_gram(
+            jax,
+            gradients,
+            lambda matrix: matrix @ matrix.T,
+            chunk_size=2,
+        ),
+        vectors @ vectors.T,
+    )
 
 
 def test_component_resolved_geometry_launcher_is_free_node_and_zero_update_only():

@@ -49,6 +49,7 @@ PROTECTION_SOURCE_NAMES = (
     "seven_day_independent_stock",
     "thirty_day_independent_stock",
 )
+GRAM_CHUNK_SIZE = 1_048_576
 
 
 def _git_head() -> str:
@@ -97,8 +98,14 @@ def _all_parameter_gram(jax: Any, jnp: Any, gradients: Sequence[Any]) -> np.ndar
     return result
 
 
-def _host_tree_gram(jax: Any, gradients: Sequence[Any]) -> np.ndarray:
-    """Accumulate a float64 Gram matrix one parameter leaf at a time on the host."""
+def _chunked_tree_gram(
+    jax: Any,
+    gradients: Sequence[Any],
+    chunk_gram: Any,
+    *,
+    chunk_size: int = GRAM_CHUNK_SIZE,
+) -> np.ndarray:
+    """Accumulate a float64 Gram matrix using fixed-size parameter chunks."""
     if not gradients:
         raise ValueError("cannot build a Gram matrix from an empty gradient sequence")
 
@@ -107,14 +114,32 @@ def _host_tree_gram(jax: Any, gradients: Sequence[Any]) -> np.ndarray:
     if any(current_structure != structure for _, current_structure in flattened[1:]):
         raise ValueError("gradient tree structures differ")
 
+    width = int(chunk_size)
+    if width <= 0:
+        raise ValueError("gradient Gram chunk size must be positive")
+    matrix = np.empty((len(gradients), width), dtype=np.float64)
     gram = np.zeros((len(gradients), len(gradients)), dtype=np.float64)
+    filled = 0
     for leaf_index, reference in enumerate(leaves):
-        matrix = np.empty((len(gradients), np.asarray(reference).size), dtype=np.float64)
-        for gradient_index, (current_leaves, _) in enumerate(flattened):
-            matrix[gradient_index] = np.asarray(current_leaves[leaf_index]).reshape(-1)
-        gram += matrix @ matrix.T
+        arrays = [
+            np.asarray(current_leaves[leaf_index]).reshape(-1)
+            for current_leaves, _ in flattened
+        ]
+        offset = 0
+        while offset < np.asarray(reference).size:
+            count = min(width - filled, np.asarray(reference).size - offset)
+            for gradient_index, array in enumerate(arrays):
+                matrix[gradient_index, filled : filled + count] = array[offset : offset + count]
+            filled += count
+            offset += count
+            if filled == width:
+                gram += np.asarray(jax.device_get(chunk_gram(matrix)), dtype=np.float64)
+                filled = 0
+    if filled:
+        matrix[:, filled:] = 0.0
+        gram += np.asarray(jax.device_get(chunk_gram(matrix)), dtype=np.float64)
     if not np.all(np.isfinite(gram)):
-        raise FloatingPointError("component-resolved host gradient Gram matrix is nonfinite")
+        raise FloatingPointError("component-resolved chunked gradient Gram matrix is nonfinite")
     return gram
 
 
@@ -338,9 +363,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         family: _cosine_report(gram, SOURCE_NAMES)
         for family, gram in common_grams.items()
     }
+    chunk_gram = jax.jit(
+        lambda matrix: jnp.matmul(
+            matrix,
+            matrix.T,
+            precision=jax.lax.Precision.HIGHEST,
+        )
+    )
     batch_variance = {}
     for name in SOURCE_NAMES:
-        gram = _host_tree_gram(jax, source_gradients[name])
+        gram = _chunked_tree_gram(jax, source_gradients[name], chunk_gram)
         batch_variance[name] = _group_variance_report(gram)
 
     amended_flux = _add_gradient(
