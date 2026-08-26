@@ -369,13 +369,20 @@ the predicted `hydrol_previous_step_state.snowheat` tendency head. Matched
 controls instead have larger Teacher-state maintenance gradients, so this is
 a scenario-dependent feedback rather than a generic Teacher-forcing effect.
 
-The active gate is a zero-training snowheat recurrence intervention on the
-same four windows. Only the snowheat coordinates in each cross-day state carry
-will be replaced with the next Teacher day-start values; every other operator,
-forcing, retained-tail, target, and parameter path remains unchanged. This is
-a causal diagnostic, not admissible training or inference behavior. No
-unchanged update-1001-to-3000 continuation, paid training, architecture edit,
-365-day rollout, sealed-test read, Gate D2, or product work is authorized.
+The snowheat-only intervention completed on free `gln01` at commit `159f672`;
+report SHA256 is `e2a6934b...a05e0f`. All eight gradients are complete and
+finite, free scores reproduce exactly, and physical hard failures are zero.
+The 7-day extreme gradient falls by `10416.39`, confirming snowheat recurrence
+there. The 30-day extreme snowheat-head gradient falls by `78.96`, but the full
+gradient falls only by `1.56`; the remaining state path is dominated by
+snowtemp with norm `272.77` of a full `276.37`.
+
+The active gate is a zero-training snowheat-plus-snowtemp recurrence
+intervention on only the two 30-day windows. It will compute two complete
+maintenance gradients against the accepted snowheat-only parent. This is a
+causal diagnostic, not admissible training or inference behavior. No unchanged
+update-1001-to-3000 continuation, paid training, architecture edit, 365-day
+rollout, sealed-test read, Gate D2, or product work is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -427,6 +434,10 @@ and
 [`target_oriented_flux_gradient_path_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_gradient_path_result_20260826.md).
 The frozen active intervention is
 [`target_oriented_snowheat_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snowheat_recurrence_intervention_v1.md).
+Its accepted result is
+[`target_oriented_snowheat_recurrence_result_20260827.md`](research/daily_coarse_graining/target_oriented_snowheat_recurrence_result_20260827.md).
+The frozen active coupled intervention is
+[`target_oriented_snow_thermal_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snow_thermal_recurrence_intervention_v1.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

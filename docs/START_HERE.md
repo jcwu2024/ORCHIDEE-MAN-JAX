@@ -272,9 +272,12 @@ This is scenario dependent; Teacher-state gradients are larger for the
 matched controls, so Teacher forcing is not a generic remedy. The active gate
 is a zero-training causal intervention that replaces only the cross-day
 snowheat carry with the next Teacher day-start snowheat on the same four
-windows. Its frozen contract SHA256 is `006e9d3d...6cab122`. Attention is not
-rejected. Training, architecture changes, 365-day rollout, Gate D2, sealed
-test, and product work remain closed.
+windows. That intervention is now complete: the 7-day extreme gradient falls
+by `10416` times, but the 30-day extreme falls only `1.56` times because the
+remaining gradient transfers to the coupled snowtemp state head (`272.77`).
+The active gate is therefore one snowheat-plus-snowtemp intervention on only
+the two 30-day windows. Attention is not rejected. Training, architecture
+changes, 365-day rollout, Gate D2, sealed test, and product work remain closed.
 
 ## New Task Bootstrap
 

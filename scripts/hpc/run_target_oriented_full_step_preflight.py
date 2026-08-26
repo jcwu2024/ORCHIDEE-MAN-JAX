@@ -217,6 +217,7 @@ def _make_steps(
     acceptance_flux_names: tuple[str, ...] = (),
     science_flux_basis: tuple[str, ...] | None = None,
     diagnostic_teacher_carry_state_key: str | None = None,
+    diagnostic_teacher_carry_state_keys: tuple[str, ...] | None = None,
 ):
     import jax
     import jax.numpy as jnp
@@ -238,7 +239,8 @@ def _make_steps(
     )
     from research.daily_coarse_graining.daily_operator.target_oriented_snowheat_recurrence import (
         resolve_continuous_state_leaf,
-        rollout_with_teacher_state_leaf,
+        resolve_continuous_state_leaves,
+        rollout_with_teacher_state_leaves,
     )
     from research.daily_coarse_graining.daily_operator.target_oriented_training import (
         _linearized_error_loss,
@@ -274,10 +276,23 @@ def _make_steps(
     )
     if not set(diagnostic_flux_basis) <= set(resolved_flux_basis):
         raise ValueError("target-oriented diagnostic flux basis is unavailable")
+    if (
+        diagnostic_teacher_carry_state_key is not None
+        and diagnostic_teacher_carry_state_keys is not None
+    ):
+        raise ValueError("diagnostic Teacher-carry state key boundaries conflict")
+    diagnostic_teacher_carry_keys = diagnostic_teacher_carry_state_keys
     if diagnostic_teacher_carry_state_key is not None:
         resolve_continuous_state_leaf(
             runtime["contract"],
             diagnostic_teacher_carry_state_key,
+        )
+        diagnostic_teacher_carry_keys = (diagnostic_teacher_carry_state_key,)
+    if diagnostic_teacher_carry_keys is not None:
+        diagnostic_teacher_carry_keys = tuple(diagnostic_teacher_carry_keys)
+        resolve_continuous_state_leaves(
+            runtime["contract"],
+            diagnostic_teacher_carry_keys,
         )
 
     def state_hard(predicted, predicted_defined, expected_defined):
@@ -499,20 +514,20 @@ def _make_steps(
         return predicted, expected_window_trajectories(microbatch, templates)
 
     def teacher_carry_window_trajectories(parameters, microbatch, *, rematerialize: bool):
-        if diagnostic_teacher_carry_state_key is None:
-            raise ValueError("diagnostic Teacher-carry state key is unavailable")
+        if diagnostic_teacher_carry_keys is None:
+            raise ValueError("diagnostic Teacher-carry state keys are unavailable")
         templates = jax.tree_util.tree_map(lambda value: value[0], microbatch.inputs)
         day_inputs = jax.tree_util.tree_map(lambda value: value[0], microbatch.day_inputs)
 
         def transition(values, inputs):
             return dynamic(values, inputs, day_inputs)
 
-        trace = rollout_with_teacher_state_leaf(
+        trace = rollout_with_teacher_state_leaves(
             parameters,
             templates,
             transition=transition,
             contract=runtime["contract"],
-            state_key=diagnostic_teacher_carry_state_key,
+            state_keys=diagnostic_teacher_carry_keys,
             rematerialize=rematerialize,
         )
         predicted = trajectories_from_rollout(trace, runtime["contract"])
@@ -883,7 +898,7 @@ def _make_steps(
             )
         ),
     }
-    if diagnostic_teacher_carry_state_key is not None:
+    if diagnostic_teacher_carry_keys is not None:
         result.update(
             {
                 "seven_teacher_carry_flux_field_gradient": jax.jit(

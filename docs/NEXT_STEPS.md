@@ -1474,14 +1474,22 @@ differently: their Teacher-state maintenance gradients are larger than their
 free gradients. This is therefore a scenario-dependent snowheat feedback,
 not a generic benefit of Teacher forcing or evidence against Attention.
 
-The active operation is `target_oriented_snowheat_recurrence_intervention_v1`.
-Freeze and execute a zero-training causal test on the same four windows: keep
-the same parameters, forcing, operator, retained exact tail, and free rollout,
-but replace only the snowheat coordinates in the cross-day continuous-state
-carry with the next Teacher day-start snowheat. Compare maintenance score,
-full gradient, and snowheat-head attribution with the unmodified free
-reference. The replacement is diagnostic only and cannot enter training or
-final inference. AdamW continuation, batch enlargement, architecture change,
+The snowheat-only causal intervention then completed on free `gln01` at commit
+`159f672`; report SHA256 is `e2a6934b...a05e0f`. All `8/8` full gradients are
+finite over all `83,755,173` parameters, free scores reproduce exactly, and
+all physical hard failures are zero. The 7-day extreme maintenance gradient
+falls by `10416.39`, causally confirming snowheat recurrence there. At 30
+days, the snowheat-head gradient falls by `78.96`, but the full gradient falls
+only by `1.56`; snowtemp becomes the dominant remaining state head with norm
+`272.77` of a total `276.37`. Controls remain near their original magnitudes.
+
+The active operation is
+`target_oriented_snow_thermal_recurrence_intervention_v1`. Use only the two
+frozen 30-day windows and compare the accepted snowheat-only parent with a
+snowheat-plus-snowtemp Teacher carry. Compute exactly two maintenance
+gradients and require a tenfold reduction of both the extreme full gradient
+and snowtemp-head gradient for causal confirmation. The replacement remains
+diagnostic only. AdamW continuation, batch enlargement, architecture change,
 paid training, sealed-test read, 365-day rollout, Gate D2, and product work
 remain closed.
 See
@@ -1510,6 +1518,8 @@ See
 [`target_oriented_flux_gradient_path_attribution_v1.md`](research/daily_coarse_graining/target_oriented_flux_gradient_path_attribution_v1.md),
 [`target_oriented_flux_gradient_path_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_gradient_path_result_20260826.md),
 [`target_oriented_snowheat_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snowheat_recurrence_intervention_v1.md),
+[`target_oriented_snowheat_recurrence_result_20260827.md`](research/daily_coarse_graining/target_oriented_snowheat_recurrence_result_20260827.md),
+[`target_oriented_snow_thermal_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snow_thermal_recurrence_intervention_v1.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

@@ -70,13 +70,19 @@ def _verify_source_record(
     return record
 
 
-def _snowheat_head_norm(report: Mapping[str, Any]) -> float:
+def _state_head_norm(report: Mapping[str, Any], field: str) -> float:
     matches = tuple(
-        record for record in report["head_norms_by_field"]["state_heads"] if record["field"] == SNOWHEAT_TENDENCY_FIELD
+        record
+        for record in report["head_norms_by_field"]["state_heads"]
+        if record["field"] == field
     )
     if len(matches) > 1:
-        raise ValueError("snowheat recurrence head attribution is duplicated")
+        raise ValueError(f"state-head attribution is duplicated for {field}")
     return float(matches[0]["l2_norm"]) if matches else 0.0
+
+
+def _snowheat_head_norm(report: Mapping[str, Any]) -> float:
+    return _state_head_norm(report, SNOWHEAT_TENDENCY_FIELD)
 
 
 def _add_hard_totals(target: dict[str, int], value: Mapping[str, int]) -> None:

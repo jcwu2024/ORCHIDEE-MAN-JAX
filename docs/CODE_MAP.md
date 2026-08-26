@@ -342,6 +342,19 @@ maintenance gradients and complete family/head attribution, and
 free-`gln01` execution boundary. The intervention is forbidden in training
 and final inference.
 
+The accepted snowheat-only result is
+`target_oriented_snowheat_recurrence_result_20260827.md`. It confirms the
+7-day causal path and locates the unresolved 30-day gradient in the snowtemp
+state head. The next code boundary reuses the same diagnostic rollout with
+two exact Markov leaves and evaluates only the two 30-day windows.
+
+`daily_operator/target_oriented_snow_thermal_recurrence.py` owns the frozen
+two-window coupled contract and causal classifier.
+`scripts/hpc/audit_target_oriented_snow_thermal_recurrence.py` reuses the
+diagnostic multi-leaf rollout to compute exactly two complete maintenance
+gradients against the hash-bound snowheat-only parent. Its free-node launcher
+is `scripts/hpc/run_target_oriented_snow_thermal_recurrence_intervention.sh`.
+
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and
 maintenance-temperature factors to replaced fast processes and dynamically

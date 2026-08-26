@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Any, Callable, Mapping
+from typing import Any, Callable, Mapping, Sequence
 
 import jax
 import jax.numpy as jnp
@@ -165,18 +165,52 @@ def resolve_continuous_state_leaf(
     return leaf
 
 
+def resolve_continuous_state_leaves(
+    contract: DailyMarkovContract,
+    keys: Sequence[str],
+) -> tuple[StateLeafSpec, ...]:
+    state_keys = tuple(str(key) for key in keys)
+    if not state_keys or len(set(state_keys)) != len(state_keys):
+        raise ValueError("state intervention keys must be nonempty and unique")
+    leaves = tuple(resolve_continuous_state_leaf(contract, key) for key in state_keys)
+    ordered = sorted(leaves, key=lambda leaf: int(leaf.start or 0))
+    if any(
+        int(left.stop or 0) > int(right.start or 0)
+        for left, right in zip(ordered, ordered[1:], strict=False)
+    ):
+        raise ValueError("state intervention continuous slices overlap")
+    return leaves
+
+
 def replace_state_leaf_with_teacher(
     predicted_state: Any,
     teacher_state: Any,
     leaf: StateLeafSpec,
 ) -> Any:
+    return replace_state_leaves_with_teacher(
+        predicted_state,
+        teacher_state,
+        (leaf,),
+    )
+
+
+def replace_state_leaves_with_teacher(
+    predicted_state: Any,
+    teacher_state: Any,
+    leaves: Sequence[StateLeafSpec],
+) -> Any:
     predicted = jnp.asarray(predicted_state, dtype=jnp.float64)
     teacher = jnp.asarray(teacher_state, dtype=jnp.float64)
     if predicted.ndim != 1 or teacher.shape != predicted.shape:
         raise ValueError("state intervention vectors must have the same one-dimensional shape")
-    if leaf.start is None or leaf.stop is None or not (0 <= leaf.start < leaf.stop <= predicted.size):
-        raise ValueError("state intervention slice is outside the continuous state")
-    return predicted.at[leaf.start : leaf.stop].set(teacher[leaf.start : leaf.stop])
+    result = predicted
+    for leaf in tuple(leaves):
+        if leaf.start is None or leaf.stop is None or not (
+            0 <= leaf.start < leaf.stop <= predicted.size
+        ):
+            raise ValueError("state intervention slice is outside the continuous state")
+        result = result.at[leaf.start : leaf.stop].set(teacher[leaf.start : leaf.stop])
+    return result
 
 
 def rollout_with_teacher_state_leaf(
@@ -188,9 +222,28 @@ def rollout_with_teacher_state_leaf(
     state_key: str = SNOWHEAT_STATE_KEY,
     rematerialize: bool = False,
 ) -> DailyOperatorRolloutTrace:
-    """Run a diagnostic free rollout with one Teacher state slice intervened."""
+    return rollout_with_teacher_state_leaves(
+        parameters,
+        templates,
+        transition=transition,
+        contract=contract,
+        state_keys=(state_key,),
+        rematerialize=rematerialize,
+    )
 
-    leaf = resolve_continuous_state_leaf(contract, state_key)
+
+def rollout_with_teacher_state_leaves(
+    parameters: Any,
+    templates: DailyOperatorInput,
+    *,
+    transition: Callable[[Any, DailyOperatorInput], DailyOperatorResult],
+    contract: DailyMarkovContract,
+    state_keys: Sequence[str],
+    rematerialize: bool = False,
+) -> DailyOperatorRolloutTrace:
+    """Run a diagnostic free rollout with selected Teacher state slices."""
+
+    leaves = resolve_continuous_state_leaves(contract, state_keys)
     continuous = jnp.asarray(templates.continuous_state, dtype=jnp.float64)
     if continuous.ndim != 2 or continuous.shape[1] != contract.continuous_state_width:
         raise ValueError("state intervention templates require [day, continuous_state]")
@@ -202,10 +255,10 @@ def rollout_with_teacher_state_leaf(
     )
 
     def step(carry, template):
-        intervened = replace_state_leaf_with_teacher(
+        intervened = replace_state_leaves_with_teacher(
             carry[0],
             template.continuous_state,
-            leaf,
+            leaves,
         )
         current = rollout_input_from_template(template, intervened, carry[1], contract)
         result = transition(parameters, current)
@@ -276,6 +329,9 @@ __all__ = [
     "classify_snowheat_recurrence",
     "load_target_oriented_snowheat_recurrence_contract",
     "replace_state_leaf_with_teacher",
+    "replace_state_leaves_with_teacher",
     "resolve_continuous_state_leaf",
+    "resolve_continuous_state_leaves",
     "rollout_with_teacher_state_leaf",
+    "rollout_with_teacher_state_leaves",
 ]
