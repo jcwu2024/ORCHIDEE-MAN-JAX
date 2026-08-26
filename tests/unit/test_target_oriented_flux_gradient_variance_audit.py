@@ -107,7 +107,7 @@ def test_free_gpu_launcher_retains_no_optimizer_update() -> None:
     launcher = (root / "scripts/hpc/run_target_oriented_flux_gradient_variance_audit.sh").read_text(
         encoding="utf-8"
     )
-    assert "gln01|ibgln01" in launcher
+    assert "gln01|ibgln01|ibc13b02n04" in launcher
     assert "sbatch" not in launcher
     assert "audit_target_oriented_flux_gradient_variance" in launcher
     assert "stage-update-1000.pkl" in launcher
