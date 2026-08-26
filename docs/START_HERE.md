@@ -277,11 +277,19 @@ by `10416` times, but the 30-day extreme falls only `1.56` times because the
 remaining gradient transfers to the coupled snowtemp state head (`272.77`).
 The snowheat-plus-snowtemp intervention is also complete. It reduces the
 30-day extreme snowtemp head by `494.88` times and the full gradient by `5.23`
-times, leaving the snowheat head dominant. Static owner tracing then found
-that the Markov state also carries `diffuco` mirrors of both `hydrol` snow
-thermal leaves; the completed intervention replaced only the canonical
-`hydrol` copies. The active gate is therefore one mirror-complete four-slice
-intervention on the same two 30-day windows. Attention is not rejected.
+times. The following mirror-complete intervention then proves that the
+remaining snowheat gradient used the omitted `diffuco` mirror: its snowheat
+head becomes exactly zero. The full gradient falls only `1.57` times because
+the direct maintenance head remains `33.47`, so the frozen classification is
+mixed and Attention is not rejected.
+
+Source tracing shows that prior-day `resp_maint` is not an input to Fortran
+`maint_respiration`, but the current neural maintenance expert can read it
+through the complete `state_carbon` family. `resp_maint_part` is not part of
+this hypothesis because its day-end reset is source exact. The active gate is
+therefore one zero-training `resp_maint` recurrence intervention on the same
+two 30-day windows, preserving the accepted four snow-thermal carries. Any
+input-mask or source-routing edit requires user discussion after this result.
 Training, architecture changes, 365-day rollout, Gate D2, sealed test, and
 product work remain closed.
 

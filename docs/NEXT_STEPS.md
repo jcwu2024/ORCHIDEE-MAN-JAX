@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-26.
+Last updated: 2026-08-27.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -1491,16 +1491,31 @@ times, leaving the snowheat head at `40.71` and the direct maintenance head at
 `33.43`. The frozen tenfold full-gradient threshold is not met, so the result
 is mixed and Attention remains open.
 
-Post-result owner tracing found that the accepted Markov state stores
-`diffuco` mirrors of the `hydrol` snowheat and snowtemp leaves. The prior
-treatment replaced only `hydrol`, leaving both mirrors on predicted cross-day
-carry. The active operation is therefore
-`target_oriented_snow_thermal_alias_recurrence_intervention_v1`. It resolves
-and verifies both canonical/mirror groups and replaces all four slices for
-exactly the same extreme and matched-control windows. It computes two complete
-maintenance gradients and takes no optimizer step. AdamW continuation, batch
-enlargement, architecture change, paid training, sealed-test read, 365-day
-rollout, Gate D2, and product work remain closed.
+The mirror-complete snow-thermal intervention completed on free `gln01` at
+commit `51bb538`; report SHA256 is `5714d30d...4422168`. Both complete
+gradients are finite and all physical hard failures are zero. The snowheat
+head becomes exactly zero in both windows, proving that the previous residual
+used the omitted `diffuco` mirror. The extreme full gradient falls only
+`1.5693` times because the direct maintenance head remains `33.4668`; the
+matched control falls `2.0219` times and retains a `15.5237` maintenance head.
+The frozen classification is mixed and Attention remains open.
+
+Fortran and JAX source tracing separates the remaining two maintenance state
+fields. `resp_maint_part` is the current-day half-hour accumulator consumed by
+`npp_calc` and reset to zero at day end. `resp_maint` is overwritten from the
+current-day accumulator and persisted as a restart/Markov output, but it is
+not an input to the next `maint_respiration` call. The neural maintenance
+expert nevertheless admits its token through the complete `state_carbon`
+family. The active operation is therefore
+`target_oriented_maintenance_state_recurrence_intervention_v1`: preserve the
+accepted four snow-thermal carries, additionally Teacher-carry only persisted
+`resp_maint`, and compute the same two complete maintenance gradients. It is
+a zero-training causal diagnostic, not a proposed inference mode.
+
+Do not edit the maintenance input mask, source routing, or architecture until
+this diagnostic is complete and the result has been discussed with the user.
+AdamW continuation, batch enlargement, paid training, sealed-test read,
+365-day rollout, Gate D2, and product work remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -1531,6 +1546,8 @@ See
 [`target_oriented_snow_thermal_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snow_thermal_recurrence_intervention_v1.md),
 [`target_oriented_snow_thermal_recurrence_result_20260827.md`](research/daily_coarse_graining/target_oriented_snow_thermal_recurrence_result_20260827.md),
 [`target_oriented_snow_thermal_alias_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snow_thermal_alias_recurrence_intervention_v1.md),
+[`target_oriented_snow_thermal_alias_recurrence_result_20260827.md`](research/daily_coarse_graining/target_oriented_snow_thermal_alias_recurrence_result_20260827.md),
+[`target_oriented_maintenance_state_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_maintenance_state_recurrence_intervention_v1.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

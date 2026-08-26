@@ -1,0 +1,119 @@
+{
+  "schema_version": "target_oriented_maintenance_state_recurrence_intervention_v1",
+  "status": "frozen_before_zero_training_execution",
+  "contract_sha256": "cf4f11670df3fe3dc279802d24c23a5f8ebf6e6744ba47dac32de419cfa4e839",
+  "identity": {
+    "snow_thermal_alias_parent_report_sha256": "5714d30db9a905498a1e31203f7d6a622417fc165328ac47bf93e077e4422168",
+    "snow_thermal_alias_parent_contract_sha256": "5ab495baf5c140d71e841defaa6e799d8c6419717944e6aa38ab37b5ecd77f63",
+    "fast_owner_reconstruction_contract_sha256": "4db5f828442212c58903096c36015f9d769c19aeaaa4eb9a4326fbea2fdfc4c9",
+    "flux_basis_amendment_sha256": "6c81e8f56c2c81fc2ac024a71da98f3e875c4ebc429f9e3d1ff4e8e3ef6bfb45",
+    "update_1000_checkpoint_sha256": "a566f9d95726984dc03cbf1f1a183dd0d1eae9e3479ce5055c64e571ef6a16c7",
+    "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "candidate": "target_oriented_hierarchical_coordinate_attention_v1",
+    "parameter_count": 83755173
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "windows": [
+      {
+        "name": "thirty_day_extreme",
+        "role": "snow_thermal_alias_residual_maximum",
+        "horizon": 30,
+        "update": 465,
+        "runtime_year": 1981,
+        "window_index_within_group": 2,
+        "landpoint_id": "299.0-095.0",
+        "start_row": 207,
+        "parent_score": 0.26129600829784655,
+        "parent_gradient_l2_norm": 33.69151430799828,
+        "parent_maintenance_head_l2_norm": 33.46682558174026
+      },
+      {
+        "name": "thirty_day_matched_control",
+        "role": "maintenance_loss_matched_control",
+        "horizon": 30,
+        "update": 572,
+        "runtime_year": 1985,
+        "window_index_within_group": 2,
+        "landpoint_id": "167.0-099.0",
+        "start_row": 95,
+        "parent_score": 0.2791366342744657,
+        "parent_gradient_l2_norm": 15.677158190151237,
+        "parent_maintenance_head_l2_norm": 15.523654883737163
+      }
+    ],
+    "teacher_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_artifact_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "intervention": {
+    "parent_state_keys": [
+      "hydrol_previous_step_state.snowheat",
+      "diffuco_previous_step_state.snowheat",
+      "hydrol_previous_step_state.snowtemp",
+      "diffuco_previous_step_state.snowtemp"
+    ],
+    "added_state_key": "slowproc_stomate_previous_step_state.resp_maint",
+    "excluded_reset_accumulator": "slowproc_stomate_previous_step_state.resp_maint_part",
+    "source_owner": "stomate_resp.f90::maint_respiration lines 122-151; stomate_npp.f90::npp_calc lines 279-320 and 525-531; stomate.f90::stomate_main lines 4943-4958",
+    "coordinate_resolution": "DailyMarkovContract.state_leaves",
+    "parent": "accepted four-slice snow-thermal alias Teacher carry",
+    "treatment": "preserve the four snow-thermal carries and additionally replace only persisted resp_maint from the current Teacher day-start state before each daily transition",
+    "other_continuous_state_coordinates_remain_predicted": true,
+    "discrete_state_remains_predicted": true,
+    "forcing_unchanged": true,
+    "parameters_unchanged": true,
+    "operator_unchanged": true,
+    "retained_exact_tail_unchanged": true,
+    "diagnostic_only": true,
+    "allowed_in_training": false,
+    "allowed_in_final_inference": false
+  },
+  "measurement": {
+    "field": "maintenance_respiration",
+    "learned_head": "daily.fast_maintenance_respiration",
+    "field_score": "one_half_normalized_mse_plus_one_half_normalized_signed_bias_squared",
+    "mode": "snow_thermal_alias_plus_resp_maint_teacher_carry",
+    "gradient_count": 2,
+    "gradient_coverage": 83755173,
+    "report_complete_parameter_families": true,
+    "report_primary_and_state_head_norms_by_field": true,
+    "report_parent_to_treatment_reduction": true
+  },
+  "classification": {
+    "extreme_gradient_reduction_ratio_for_confirmation": 2.0,
+    "maintenance_head_reduction_ratio_for_confirmation": 2.0,
+    "gradient_reduction_ratio_for_no_effect": 1.25,
+    "maintenance_head_reduction_ratio_for_no_effect": 1.25,
+    "matched_control_is_reported_not_thresholded": true,
+    "thresholds_are_diagnostic_not_promotion_gates": true
+  },
+  "execution": {
+    "free_gln01_only": true,
+    "paid_training_authorized": false,
+    "optimizer_updates": 0,
+    "parameter_steps": 0,
+    "proposed_parameters_retained": false,
+    "optimizer_state_retained": false,
+    "checkpoint_written": false,
+    "recovery_written": false,
+    "teacher_data_regenerated": false,
+    "historical_v5_used": false,
+    "validation_values_evaluated": false,
+    "sealed_test_used": false,
+    "input_mask_edit_allowed": false,
+    "source_routing_edit_allowed": false,
+    "architecture_edit_allowed": false,
+    "365_day_rollout_allowed": false,
+    "gate_d2_allowed": false
+  },
+  "decision": {
+    "engineering_pass": "both_gradients_finite_complete_nonzero_all_five_state_slices_resolved_and_all_hard_gates_zero",
+    "maintenance_state_recurrence_confirmed": "pause_for_user_discussion_before_removing_resp_maint_from_the_maintenance_input_route",
+    "maintenance_state_recurrence_not_explanatory": "retain_attention_and_return_to_nonrecurrence_objective_or_optimization_design",
+    "maintenance_state_recurrence_mixed": "retain_attention_and_review_the_bounded_evidence_before_any_input_route_change",
+    "training_authorized": false
+  }
+}

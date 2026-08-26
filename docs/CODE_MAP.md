@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-08-23.
+Last updated: 2026-08-27.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -365,6 +365,20 @@ owns the two complete mirror-aware gradients, and
 `scripts/hpc/run_target_oriented_snow_thermal_alias_recurrence_intervention.sh`
 is its free-`gln01` boundary. This diagnostic cannot enter training or final
 inference.
+
+The accepted mirror-complete result is
+`target_oriented_snow_thermal_alias_recurrence_result_20260827.md`. It proves
+the omitted `diffuco` snowheat path and locates the remaining gradient in the
+direct maintenance head. Source tracing excludes the reset
+`resp_maint_part` accumulator and identifies persisted `resp_maint` as the
+only bounded maintenance-state recurrence question.
+`daily_operator/target_oriented_maintenance_state_recurrence.py` owns the
+frozen five-slice contract and causal classifier.
+`scripts/hpc/audit_target_oriented_maintenance_state_recurrence.py` owns the
+two complete gradients, and
+`scripts/hpc/run_target_oriented_maintenance_state_recurrence_intervention.sh`
+is its free-`gln01` boundary. It does not edit the maintenance source mask or
+architecture and cannot enter training or final inference.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and
