@@ -1,7 +1,8 @@
 # Target-Oriented Flux Gradient Variance Audit V1
 
-Status: frozen zero-update diagnostic; local implementation and qualification
-accepted; free-GPU execution is the active operation.
+Status: completed zero-update diagnostic. Free-`gln01` execution passed at
+commit `c5a72a4`; the result and next-gate decision are recorded in
+`target_oriented_flux_gradient_variance_audit_result_20260826.md`.
 
 ## Question
 
@@ -94,3 +95,14 @@ The launcher accepts only `gln01`, binds the accepted checkpoint and prepared
 manifest, and contains no scheduler submission or training entry point. The
 new focused tests plus the existing prepared-batch regressions pass `14/14`.
 Ruff, Python compilation, shell syntax, and `git diff --check` also pass.
+
+## Completed Execution
+
+The accepted free-`gln01` run used all 32 frozen windows and covered exactly
+`83,755,173` parameters with zero physical hard failures. Its report SHA256 is
+`1de8962a64aad6a7b76cf311f1dd14932780c67691ec472fbc342c5c8eb42fbe`.
+The machine decision is `mixed_batch_and_objective_geometry`: only GPP
+supports a larger effective batch, while maintenance and total autotrophic
+respiration remain directionally opposed at 16 windows. No optimizer update
+or checkpoint was written. See the dated result document for the complete
+metrics and controlling next gate.

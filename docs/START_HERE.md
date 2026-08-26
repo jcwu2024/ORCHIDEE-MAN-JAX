@@ -245,12 +245,16 @@ occurred on only `3/250` updates. The science macro improves `28.4812%`, from
 `0.964059` to `0.689483`, which passes the continuation pacing rule but not
 the absolute 7/30-day gate. Biomass passes; GPP/NPP improve but remain above
 threshold; 30-day ecosystem and nonliving carbon remain nearly unchanged.
-The exact update-250 checkpoint handoff and one real update-251 continuation
-now pass on free `gln01`, including AdamW state, absolute learning rate,
-recovery reload, matched bounded windows, and all physical hard gates. The
-active gate is free-CPU preparation and admission of the exact 251-1000
-partial range. Paid continuation, 365-day rollout, Gate D2, sealed test, and
-product work remain closed.
+The exact continuation then completed through update 1000. Its 96-window
+science macro improved a further `50.5638%`; biomass and slow-carbon stocks
+now pass, while GPP, NPP, maintenance, growth, and total autotrophic
+respiration remain above the absolute gates. A completed zero-update audit
+finds that GPP benefits from a larger effective batch but maintenance and
+total autotrophic gradients remain opposed even at 16 windows. The active gate
+is therefore a component-resolved flux-loss amendment followed by a
+zero-update joint geometry and virtual-step audit at the update-1000 state.
+Paid continuation, 365-day rollout, Gate D2, sealed test, and product work
+remain closed.
 
 ## New Task Bootstrap
 
@@ -276,7 +280,7 @@ accepted input-policy record is
 `research/daily_coarse_graining/successor_staged_training_assets_acceptance_20260812.md`.
 Do not rerun an old fit or use the formal 96-window panel for tuning. The
 target-oriented successor architecture and bounded training contract are
-frozen. Resume from the completed update-250 result and continuation handoff
+frozen. Resume from the completed update-1000 result and flux-gradient audit
 named by `NEXT_STEPS.md`. Do not repeat v4/v5, inherit their physical endpoint
 materialization heads, or train a new weak control. Paid continuation,
 365-day rollout, Gate D2, and product gates remain dependency-ordered later

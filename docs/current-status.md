@@ -315,14 +315,22 @@ nonliving carbon NRMSE collapse from about `2.56` to `0.0474` and both pass all
 three slices; their 7-day counterparts and AGB/BGB/total-live biomass also
 pass all cells. The remaining blockers are GPP, NPP, maintenance respiration,
 growth respiration, and autotrophic respiration. NPP improves only `5.60%`
-at 7 days and `0.132%` at 30 days from update 250. The active task is therefore
-a zero-update train-only cross-batch flux-gradient variance/cosine audit at
-the update-1000 checkpoint, including a 4 versus 8/16 comparison for 30-day
-windows. The audit is frozen and locally qualified using 32 windows from
-updates `251, 358, 465, 572, 679, 786, 893, 1000`. It measures five flux keys
-over a complete partition of all `83,755,173` parameters, applies no optimizer
-step, and writes no checkpoint. No unchanged update-1001-to-3000 continuation, 365-day rollout,
-sealed-test read, Gate D2, or product work is authorized.
+at 7 days and `0.132%` at 30 days from update 250. The subsequent zero-update
+cross-batch audit completed over 32 train/train windows and all `83,755,173`
+parameters. GPP stabilizes at 16 windows and NPP is already coherent at four,
+but maintenance and total autotrophic respiration remain opposed between the
+two 16-window estimates. Its decision is
+`mixed_batch_and_objective_geometry`; a larger batch alone is not admitted.
+
+The active task is a component-resolved amendment of the long-horizon flux
+basis: GPP, maintenance respiration, growth respiration, and heterotrophic
+respiration become the optimized terms, while total autotrophic respiration,
+NPP, NEP, and NEE remain derived gates. Keep the current Attention architecture
+and exact update-1000 parameters. Before any retained update, compare the
+amended flux gradient with the one-day/process and 7/30-day stock gradients
+and pass a bounded zero-retention virtual step. No unchanged
+update-1001-to-3000 continuation, 365-day rollout, sealed-test read, Gate D2,
+or product work is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -352,8 +360,10 @@ are in
 [`target_oriented_update_250_training_dynamics_diagnosis_20260825.md`](research/daily_coarse_graining/target_oriented_update_250_training_dynamics_diagnosis_20260825.md).
 The formal update-1000 result is
 [`target_oriented_formal_training_1000_result_20260826.md`](research/daily_coarse_graining/target_oriented_formal_training_1000_result_20260826.md).
-The active zero-update diagnostic is
-[`target_oriented_flux_gradient_variance_audit_v1.md`](research/daily_coarse_graining/target_oriented_flux_gradient_variance_audit_v1.md).
+The completed zero-update diagnostic and result are
+[`target_oriented_flux_gradient_variance_audit_v1.md`](research/daily_coarse_graining/target_oriented_flux_gradient_variance_audit_v1.md)
+and
+[`target_oriented_flux_gradient_variance_audit_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_gradient_variance_audit_result_20260826.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

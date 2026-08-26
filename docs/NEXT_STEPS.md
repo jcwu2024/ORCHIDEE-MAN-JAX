@@ -1406,18 +1406,25 @@ is that 7/30-day ecosystem and nonliving carbon now pass every slice, while
 GPP, NPP, maintenance respiration, growth respiration, and autotrophic
 respiration remain the blocking targets.
 
-The active task is a zero-update train-only flux-gradient variance and cosine
-audit at the update-1000 checkpoint. Compare independent gradient estimates
-for GPP/NPP/respiration using the current four 30-day windows and aggregates
-of 8 and 16 windows. This decides whether a larger effective batch is a
-credible bounded continuation mechanism or whether the next change must be in
-the objective/output heads. Do not blindly continue to update 3000. Weak-
-control comparison, sealed-test read, 365-day rollout, Gate D2, and product
-work remain closed. The audit is now frozen and locally qualified over 32
-predeclared 30-day windows from eight spaced training updates. It reports
-separate GPP, NPP, maintenance, growth, and total-autotrophic gradients for a
-complete parameter partition, retains no update, and is ready for free-`gln01`
-execution. See
+The zero-update train-only flux-gradient audit completed on free `gln01` at
+commit `c5a72a4`, covering 32 predeclared 30-day windows and every one of the
+`83,755,173` parameters. Its decision is
+`mixed_batch_and_objective_geometry`. GPP supports a larger effective batch
+and NPP is already coherent at four windows, but maintenance and total
+autotrophic respiration remain opposed between disjoint 16-window estimates.
+Batch enlargement alone is therefore rejected.
+
+The active task is to freeze and implement a component-resolved flux-basis
+amendment while retaining the current Attention architecture and exact
+update-1000 state. The independent optimization basis becomes GPP,
+maintenance respiration, growth respiration, and heterotrophic respiration;
+autotrophic respiration, NPP, NEP, and NEE remain derived identities and
+required acceptance keys. Before any retained update, a zero-update
+train-only audit must compare the amended flux gradient with one-day/process,
+7-day stock, and 30-day stock gradients and test a bounded virtual step with
+all physical hard gates. Do not blindly continue to update 3000. Weak-control
+comparison, sealed-test read, 365-day rollout, Gate D2, and product work remain
+closed. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
@@ -1433,6 +1440,7 @@ execution. See
 [`target_oriented_update_250_training_dynamics_diagnosis_20260825.md`](research/daily_coarse_graining/target_oriented_update_250_training_dynamics_diagnosis_20260825.md),
 [`target_oriented_formal_training_1000_result_20260826.md`](research/daily_coarse_graining/target_oriented_formal_training_1000_result_20260826.md),
 [`target_oriented_flux_gradient_variance_audit_v1.md`](research/daily_coarse_graining/target_oriented_flux_gradient_variance_audit_v1.md),
+[`target_oriented_flux_gradient_variance_audit_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_gradient_variance_audit_result_20260826.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),
