@@ -1443,18 +1443,36 @@ checkpoint, or recovery was retained.
 This closes direct realization of the raw component-resolved
 MSE-plus-squared-bias loss at update 1000. It does not reject the Attention
 architecture. The train/train, zero-training residual-tail and sampling-unit
-audit is frozen at contract SHA256 `bafcb2da...9bb763`; implementation and one
-free-`gln01` execution are the active operation. Local implementation and its
-focused `21/21` tests are complete. It preserves all 64 7-day and
-32 30-day window contributions, measures both standalone loss and
-full-parameter gradient norm, quantifies top-tail concentration and effective
-sample size by flux key, and distinguishes residual outliers from Jacobian
-amplification. Its fixed equal-window, soft-L1, and log1p influence candidates
-are diagnostic only. Only that evidence may select a robust loss and sampling
-unit for a later geometry gate. AdamW continuation, another direct-step grid,
-batch enlargement, architecture change, paid training, weak-control
-comparison, sealed-test read, 365-day rollout, Gate D2, and product work
-remain closed.
+audit then completed on free `gln01` at commit `b80494f`; report SHA256 is
+`e1c094e2...27d9e`. All 64 7-day and 32 30-day window gradients are finite
+over all `83,755,173` parameters and physical hard failures are zero.
+
+The decisive result is Jacobian amplification rather than a simple high-loss
+tail. The largest 7-day gradient norm is `22489.30`, contributes `92.07%` of
+the sum of all window gradient norms, and is 54 times the second largest. Its
+loss is only `0.05285`, approximately rank 12 of 64 and about `2.12%` of total
+loss. The corresponding maintenance-respiration score is `0.27647`; the
+largest 30-day gradient window has nearly the same maintenance score
+`0.27649`, while loss-matched controls have far smaller gradients.
+
+Frozen soft-L1/log1p influence functions do not materially repair the 7-day
+geometry: minimum cosine remains approximately `-0.97` and at least `35.9%`
+of windows remain opposed. The best 30-day log1p candidate reduces the
+negative fraction from `28.1%` to `18.8%`, but its minimum cosine remains
+`-0.874`. The machine action retains bounded influence as a possible later
+component; it does not establish robust-loss-only training.
+
+The active operation is a narrow zero-training gradient-path attribution.
+Use the extreme 7/30-day maintenance windows and frozen loss-matched controls
+to separate GPP, maintenance, and growth gradients; partition each gradient
+across the output paths and shared Attention backbone; and compare free
+rollout with the same daily evaluations under Teacher day-start states. This
+must identify whether amplification is output-local, backbone-local, or due
+to cross-day recurrence before selecting loss weighting, gradient
+conditioning, or any architecture intervention. AdamW continuation, another
+direct-step grid, batch enlargement, architecture change, paid training,
+weak-control comparison, sealed-test read, 365-day rollout, Gate D2, and
+product work remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -1477,6 +1495,8 @@ See
 [`target_oriented_flux_protected_virtual_step_v1.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_v1.md),
 [`target_oriented_flux_protected_virtual_step_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_result_20260826.md),
 [`target_oriented_flux_residual_tail_audit_v1.md`](research/daily_coarse_graining/target_oriented_flux_residual_tail_audit_v1.md),
+[`target_oriented_flux_residual_tail_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_residual_tail_result_20260826.md),
+[`target_oriented_flux_gradient_path_attribution_v1.md`](research/daily_coarse_graining/target_oriented_flux_gradient_path_attribution_v1.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

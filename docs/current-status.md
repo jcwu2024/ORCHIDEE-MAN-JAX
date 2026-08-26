@@ -344,17 +344,29 @@ median `11.5593%`, and raises the worst stock score `33.1712%`. All physical
 hard and nonfinite counts are zero, and no model state is retained.
 
 Direct realization of the raw component-resolved MSE-plus-squared-bias loss
-is closed; the Attention architecture is not rejected. The zero-training
-residual-tail and sampling-unit audit over the same eight train/train groups
-is frozen at contract SHA256 `bafcb2da...9bb763`. It preserves all 96 window
-contributions, compares standalone loss concentration with full-parameter
-gradient-norm concentration, forms exact group-local gradient Grams, and
-evaluates fixed equal-window, soft-L1, and log1p influence directions without
-taking a parameter step. Local implementation passes `21/21` focused tests
-plus static checks; one free-`gln01` execution is active.
-No unchanged update-1001-to-3000 continuation, repeated direct-step grid,
-paid training, 365-day rollout, sealed-test read, Gate D2, or product work is
-authorized.
+is closed; the Attention architecture is not rejected. The subsequent
+zero-training residual-tail audit completed on free `gln01` at commit
+`b80494f`; report SHA256 is `e1c094e2...27d9e`. All 96 window gradients are
+finite, complete over `83,755,173` parameters, and have zero physical hard
+failures.
+
+The 7-day loss effective sample size is `21.763/64`, but the gradient-norm
+effective sample size is only `1.179/64`. The update-465, landpoint
+`081.0-107.0`, row-90 window has loss `0.05285` and gradient norm `22489.30`:
+about `2.12%` of total loss but `92.07%` of total gradient-norm mass. The
+30-day maximum is also maintenance-respiration dominated. Frozen soft-L1 and
+log1p loss weighting leaves the 7-day minimum cosine near `-0.97`; the best
+30-day candidate improves but remains conflicted. Robust-loss-only repair is
+therefore not established.
+
+The active gate is a narrow zero-training gradient-path attribution on the
+two extreme maintenance windows and loss-matched controls. It will decompose
+GPP, maintenance, and growth gradients by complete parameter family and
+compare free rollout with Teacher-state daily evaluation to separate local
+output/backbone sensitivity from cross-day recurrence. No unchanged
+update-1001-to-3000 continuation, repeated direct-step grid, paid training,
+architecture edit, 365-day rollout, sealed-test read, Gate D2, or product work
+is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -396,8 +408,12 @@ The completed virtual-step contract and result are
 [`target_oriented_flux_protected_virtual_step_v1.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_v1.md)
 and
 [`target_oriented_flux_protected_virtual_step_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_result_20260826.md).
-The frozen next diagnostic is
-[`target_oriented_flux_residual_tail_audit_v1.md`](research/daily_coarse_graining/target_oriented_flux_residual_tail_audit_v1.md).
+The completed residual-tail contract and result are
+[`target_oriented_flux_residual_tail_audit_v1.md`](research/daily_coarse_graining/target_oriented_flux_residual_tail_audit_v1.md)
+and
+[`target_oriented_flux_residual_tail_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_residual_tail_result_20260826.md).
+The frozen active diagnostic is
+[`target_oriented_flux_gradient_path_attribution_v1.md`](research/daily_coarse_graining/target_oriented_flux_gradient_path_attribution_v1.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

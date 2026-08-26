@@ -262,6 +262,13 @@ def _make_steps(
     resolved_flux_basis = tuple(science_flux_basis or tuple(scales.fluxes))
     if set(resolved_flux_basis) != set(scales.fluxes):
         raise ValueError("target-oriented step flux basis and scale registry differ")
+    diagnostic_flux_basis = (
+        "gpp",
+        "maintenance_respiration",
+        "growth_respiration",
+    )
+    if not set(diagnostic_flux_basis) <= set(resolved_flux_basis):
+        raise ValueError("target-oriented diagnostic flux basis is unavailable")
 
     def state_hard(predicted, predicted_defined, expected_defined):
         nonfinite = jnp.asarray(0, dtype=jnp.int32)
@@ -387,6 +394,21 @@ def _make_steps(
         )
         return state, process, jax.tree_util.tree_map(lambda value: jnp.sum(value, axis=0), hard)
 
+    def expected_window_trajectories(microbatch, templates):
+        expected_state = jax.tree_util.tree_map(lambda value: value[0], microbatch.expected_next_state)
+        expected_defined = jax.tree_util.tree_map(lambda value: value[0], microbatch.expected_next_state_defined)
+        expected_gpp = microbatch.expected_fast_gpp[0]
+        expected_gpp_defined = microbatch.expected_fast_gpp_defined[0]
+        return extract_biomass_productivity_trajectories(
+            expected_state.other,
+            expected_defined.other,
+            daily_fast_gpp=expected_gpp,
+            daily_fast_gpp_defined=expected_gpp_defined,
+            pft_fraction=templates.pft.pft_fraction,
+            active_pft_mask=templates.pft.active_pft_mask,
+            contract=runtime["contract"],
+        )
+
     def window_trajectories(parameters, microbatch, *, rematerialize: bool):
         templates = jax.tree_util.tree_map(lambda value: value[0], microbatch.inputs)
         day_inputs = jax.tree_util.tree_map(lambda value: value[0], microbatch.day_inputs)
@@ -402,20 +424,9 @@ def _make_steps(
             rematerialize=rematerialize,
         )
         predicted = trajectories_from_rollout(trace, runtime["contract"])
-        expected_state = jax.tree_util.tree_map(lambda value: value[0], microbatch.expected_next_state)
+        expected = expected_window_trajectories(microbatch, templates)
         expected_defined = jax.tree_util.tree_map(lambda value: value[0], microbatch.expected_next_state_defined)
-        expected_gpp = microbatch.expected_fast_gpp[0]
-        expected_gpp_defined = microbatch.expected_fast_gpp_defined[0]
         expected_discrete = jax.tree_util.tree_map(lambda value: value[0], microbatch.expected_next_discrete_state)
-        expected = extract_biomass_productivity_trajectories(
-            expected_state.other,
-            expected_defined.other,
-            daily_fast_gpp=expected_gpp,
-            daily_fast_gpp_defined=expected_gpp_defined,
-            pft_fraction=templates.pft.pft_fraction,
-            active_pft_mask=templates.pft.active_pft_mask,
-            contract=runtime["contract"],
-        )
         stock_hard = rollout_hard_gate_counts(
             predicted.stocks,
             expected.stocks,
@@ -450,6 +461,32 @@ def _make_steps(
             stock_hard,
         )
         return predicted, expected, hard
+
+    def teacher_state_window_trajectories(parameters, microbatch, *, rematerialize: bool):
+        templates = jax.tree_util.tree_map(lambda value: value[0], microbatch.inputs)
+        day_inputs = jax.tree_util.tree_map(lambda value: value[0], microbatch.day_inputs)
+
+        def independent_day(_carry, daily_template):
+            result = dynamic(parameters, daily_template, day_inputs)
+            return _carry, result
+
+        scan_day = jax.checkpoint(independent_day) if rematerialize else independent_day
+        _, result = jax.lax.scan(scan_day, None, templates)
+        gpp = result.prediction.named_outputs["daily.fast_gpp"]
+        gpp_defined = jnp.broadcast_to(
+            jnp.asarray(templates.pft.active_pft_mask, dtype=jnp.bool_)[:, None, :],
+            jnp.asarray(gpp).shape,
+        )
+        predicted = extract_biomass_productivity_trajectories(
+            result.next_state.other,
+            result.next_state_defined.other,
+            daily_fast_gpp=gpp,
+            daily_fast_gpp_defined=gpp_defined,
+            pft_fraction=templates.pft.pft_fraction,
+            active_pft_mask=templates.pft.active_pft_mask,
+            contract=runtime["contract"],
+        )
+        return predicted, expected_window_trajectories(microbatch, templates)
 
     def window_statistics(parameters, microbatch, *, horizon: int, rematerialize: bool):
         predicted, expected, hard = window_trajectories(
@@ -492,6 +529,29 @@ def _make_steps(
             horizon=horizon,
         )
         return statistics, hard
+
+    def teacher_state_window_statistics(
+        parameters,
+        microbatch,
+        *,
+        horizon: int,
+        rematerialize: bool,
+    ):
+        predicted, expected = teacher_state_window_trajectories(
+            parameters,
+            microbatch,
+            rematerialize=rematerialize,
+        )
+        return science_window_sufficient_statistics(
+            predicted.fluxes,
+            expected.fluxes,
+            predicted.stocks,
+            expected.stocks,
+            flux_scales=scales.fluxes,
+            stock_scales=scales.stocks,
+            horizon=horizon,
+            flux_basis=resolved_flux_basis,
+        )
 
     one_forward = jax.jit(one_statistics)
     seven_forward = jax.jit(
@@ -558,6 +618,41 @@ def _make_steps(
             flux_basis=resolved_flux_basis,
         )
         return 0.25 * (result.flux_mse + result.flux_bias_squared)
+
+    def field_score_vector(statistics):
+        scores = []
+        for name in diagnostic_flux_basis:
+            current = statistics.fluxes[name]
+            count = jnp.asarray(current.count, dtype=jnp.float64)
+            denominator = jnp.maximum(count, 1.0)
+            mse = jnp.asarray(current.sum_squared, dtype=jnp.float64) / denominator
+            bias = jnp.asarray(current.sum_signed, dtype=jnp.float64) / denominator
+            scores.append(jnp.where(count > 0.0, 0.5 * (mse + bias * bias), 0.0))
+        return jnp.stack(tuple(scores))
+
+    def standalone_window_flux_field_score(parameters, batch, weights, *, horizon: int):
+        current, _hard = window_statistics(
+            parameters,
+            batch,
+            horizon=horizon,
+            rematerialize=True,
+        )
+        return jnp.vdot(
+            jnp.asarray(weights, dtype=jnp.float64),
+            field_score_vector(current),
+        )
+
+    def teacher_state_window_flux_field_score(parameters, batch, weights, *, horizon: int):
+        current = teacher_state_window_statistics(
+            parameters,
+            batch,
+            horizon=horizon,
+            rematerialize=True,
+        )
+        return jnp.vdot(
+            jnp.asarray(weights, dtype=jnp.float64),
+            field_score_vector(current),
+        )
 
     one_gradient = jax.jit(jax.value_and_grad(one_linear))
     seven_gradient = jax.jit(
@@ -634,6 +729,46 @@ def _make_steps(
                 lambda parameters, batch: standalone_window_flux_score(
                     parameters,
                     batch,
+                    horizon=30,
+                )
+            )
+        ),
+        "seven_flux_field_gradient": jax.jit(
+            jax.value_and_grad(
+                lambda parameters, batch, weights: standalone_window_flux_field_score(
+                    parameters,
+                    batch,
+                    weights,
+                    horizon=7,
+                )
+            )
+        ),
+        "thirty_flux_field_gradient": jax.jit(
+            jax.value_and_grad(
+                lambda parameters, batch, weights: standalone_window_flux_field_score(
+                    parameters,
+                    batch,
+                    weights,
+                    horizon=30,
+                )
+            )
+        ),
+        "seven_teacher_state_flux_field_gradient": jax.jit(
+            jax.value_and_grad(
+                lambda parameters, batch, weights: teacher_state_window_flux_field_score(
+                    parameters,
+                    batch,
+                    weights,
+                    horizon=7,
+                )
+            )
+        ),
+        "thirty_teacher_state_flux_field_gradient": jax.jit(
+            jax.value_and_grad(
+                lambda parameters, batch, weights: teacher_state_window_flux_field_score(
+                    parameters,
+                    batch,
+                    weights,
                     horizon=30,
                 )
             )

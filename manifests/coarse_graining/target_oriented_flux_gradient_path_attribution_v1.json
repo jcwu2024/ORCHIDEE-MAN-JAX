@@ -1,0 +1,157 @@
+{
+  "schema_version": "target_oriented_flux_gradient_path_attribution_v1",
+  "status": "frozen_before_zero_training_execution",
+  "contract_sha256": "d683b87ae2658c4aeb5658cf42ab0b55f6e9cef94cd18af5419a376e3a821900",
+  "identity": {
+    "residual_tail_report_sha256": "e1c094e2dba5f2eeb4ea8becfdf6623ef58fadd3e9d02518312a71d693d27d9e",
+    "residual_tail_contract_sha256": "bafcb2daa0bcfc0e7108022b44d8af4741d87a1c5e73e371104e5985819bb763",
+    "flux_basis_amendment_sha256": "6c81e8f56c2c81fc2ac024a71da98f3e875c4ebc429f9e3d1ff4e8e3ef6bfb45",
+    "update_1000_checkpoint_sha256": "a566f9d95726984dc03cbf1f1a183dd0d1eae9e3479ce5055c64e571ef6a16c7",
+    "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "candidate": "target_oriented_hierarchical_coordinate_attention_v1",
+    "parameter_count": 83755173
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "windows": [
+      {
+        "name": "seven_day_extreme",
+        "role": "maximum_gradient_norm",
+        "horizon": 7,
+        "global_window_index": 18,
+        "update": 465,
+        "runtime_year": 1981,
+        "window_index_within_group": 2,
+        "landpoint_id": "081.0-107.0",
+        "start_row": 90,
+        "standalone_flux_score": 0.05284760004212149,
+        "gradient_l2_norm": 22489.302293666995,
+        "maintenance_score": 0.2764685301345381
+      },
+      {
+        "name": "seven_day_matched_control",
+        "role": "similar_aggregate_and_maintenance_loss_low_gradient",
+        "horizon": 7,
+        "global_window_index": 58,
+        "update": 1000,
+        "runtime_year": 2003,
+        "window_index_within_group": 2,
+        "landpoint_id": "305.0-103.0",
+        "start_row": 337,
+        "standalone_flux_score": 0.045600489080990146,
+        "gradient_l2_norm": 5.57184341035061,
+        "maintenance_score": 0.3582215229411975
+      },
+      {
+        "name": "thirty_day_extreme",
+        "role": "maximum_gradient_norm",
+        "horizon": 30,
+        "global_window_index": 10,
+        "update": 465,
+        "runtime_year": 1981,
+        "window_index_within_group": 2,
+        "landpoint_id": "299.0-095.0",
+        "start_row": 207,
+        "standalone_flux_score": 0.03493797399275886,
+        "gradient_l2_norm": 53.87005806233154,
+        "maintenance_score": 0.2764875111508908
+      },
+      {
+        "name": "thirty_day_matched_control",
+        "role": "maintenance_loss_matched_low_gradient",
+        "horizon": 30,
+        "global_window_index": 14,
+        "update": 572,
+        "runtime_year": 1985,
+        "window_index_within_group": 2,
+        "landpoint_id": "167.0-099.0",
+        "start_row": 95,
+        "standalone_flux_score": 0.041330294000560555,
+        "gradient_l2_norm": 2.1047668673753854,
+        "maintenance_score": 0.2738444596649693
+      }
+    ],
+    "teacher_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_artifact_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "measurement": {
+    "field_basis": [
+      "gpp",
+      "maintenance_respiration",
+      "growth_respiration"
+    ],
+    "free_rollout": "canonical_daily_operator_free_state_recurrence",
+    "teacher_state_daily_evaluation": "same_daily_operator_and_forcing_with_each_day_start_state_from_the_prepared_teacher_window",
+    "teacher_state_evaluation_is_training": false,
+    "teacher_state_evaluation_is_final_inference": false,
+    "field_score": "one_half_normalized_mse_plus_one_half_normalized_signed_bias_squared",
+    "aggregate_reconstruction_weight_per_field": 0.125,
+    "aggregate_exact_retained_heterotrophic_weight": 0.125,
+    "coarse_parameter_families": [
+      "base_source_encoder",
+      "shared_science_backbone",
+      "primary_path",
+      "state_path",
+      "auxiliary_path"
+    ],
+    "fine_target_families": [
+      "domain_embedding",
+      "domain_blocks",
+      "science_query",
+      "science_embedding",
+      "science_cross_blocks",
+      "science_mixer_blocks",
+      "category_embedding",
+      "primary_blocks",
+      "state_blocks",
+      "primary_decoder",
+      "state_decoder",
+      "primary_heads",
+      "state_heads",
+      "auxiliary_science_projection",
+      "auxiliary_bottleneck",
+      "auxiliary_label_heads"
+    ],
+    "gradient_coverage": 83755173,
+    "score_reproduction_atol": 1e-8,
+    "score_reproduction_rtol": 0.001,
+    "report_full_free_teacher_field_gram": true,
+    "report_primary_and_state_head_norms_by_field": true
+  },
+  "classification": {
+    "matched_control_gradient_ratio_minimum": 10.0,
+    "free_to_teacher_gradient_ratio_for_recurrence": 10.0,
+    "free_to_teacher_gradient_ratio_for_local_path": 2.0,
+    "field_alignment_cosine_minimum": 0.9,
+    "dominant_parameter_family_squared_norm_fraction": 0.8,
+    "thresholds_are_diagnostic_not_promotion_gates": true
+  },
+  "execution": {
+    "free_gln01_only": true,
+    "paid_training_authorized": false,
+    "optimizer_updates": 0,
+    "parameter_steps": 0,
+    "proposed_parameters_retained": false,
+    "optimizer_state_retained": false,
+    "checkpoint_written": false,
+    "recovery_written": false,
+    "teacher_data_regenerated": false,
+    "historical_v5_used": false,
+    "validation_values_evaluated": false,
+    "sealed_test_used": false,
+    "architecture_edit_allowed": false,
+    "365_day_rollout_allowed": false,
+    "gate_d2_allowed": false
+  },
+  "decision": {
+    "engineering_pass": "all_24_field_gradients_finite_complete_and_four_free_rollout_hard_gates_zero",
+    "rollout_recurrence_dominant": "design_recurrence_conditioning_or_state_jacobian_intervention_before_training",
+    "primary_or_state_output_path_dominant": "pause_for_architecture_discussion_before_any_network_edit",
+    "shared_backbone_dominant": "compare_bounded_family_conditioning_before_training",
+    "mixed_or_unresolved": "retain_attention_and_extend_zero_training_path_diagnosis",
+    "training_authorized": false
+  }
+}

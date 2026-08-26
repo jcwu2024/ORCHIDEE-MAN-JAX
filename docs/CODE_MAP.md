@@ -310,6 +310,20 @@ owns the 96-window train/train execution and group-local streamed Grams; its
 free-node launcher is
 `scripts/hpc/run_target_oriented_flux_residual_tail_audit.sh`. This path
 takes no optimizer or parameter step and reads no validation artifact value.
+The accepted result is
+`target_oriented_flux_residual_tail_result_20260826.md`; it identifies an
+extreme maintenance-respiration Jacobian amplification and makes a focused
+free-rollout-versus-Teacher-state gradient-path attribution the next gate.
+
+`daily_operator/target_oriented_flux_gradient_path.py` owns the frozen four-
+window contract, complete fine-family partition, Gram summary, and bounded
+path classifier. The full-step factory exposes weighted per-field free and
+Teacher-state gradient functions without changing its retained training
+steps. `scripts/hpc/audit_target_oriented_flux_gradient_path.py` executes the
+24 GPP/maintenance/growth gradients, reconstructs the aggregate gradient, and
+reports coarse/fine/head attribution. Its free-`gln01` launcher is
+`scripts/hpc/run_target_oriented_flux_gradient_path_attribution.sh`. It takes
+no optimizer or parameter step and cannot edit the architecture.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

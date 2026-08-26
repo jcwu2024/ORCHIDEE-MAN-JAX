@@ -260,10 +260,15 @@ now complete. A valid common first-order flux direction exists, but no tested
 finite step protects one-day state and 7/30-day stocks while improving every
 required flux target. Direct realization of the raw amended
 MSE-plus-squared-bias loss is closed; the Attention architecture is not
-rejected. The zero-training residual-tail and sampling-unit audit is frozen at
-contract SHA256 `bafcb2da...9bb763`; local implementation is qualified and
-one free execution is the active gate before selecting a robust loss. Paid continuation,
-365-day rollout, Gate D2, sealed test, and product work remain closed.
+rejected. The subsequent 96-window residual-tail audit completed on free
+`gln01` at commit `b80494f`. One ordinary 7-day window contributes `92.07%`
+of total gradient-norm mass while only about `2.12%` of total loss. Frozen
+soft-L1/log1p loss weighting does not repair the 7-day direction conflict and
+only partly improves 30-day geometry. The active gate is therefore a narrow,
+zero-training GPP/maintenance/growth gradient-path attribution on the extreme
+windows and loss-matched controls, separating output heads, the shared
+Attention backbone, and free-rollout recurrence. Paid continuation, 365-day
+rollout, Gate D2, sealed test, and product work remain closed.
 
 ## New Task Bootstrap
 
