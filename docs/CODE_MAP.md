@@ -301,6 +301,16 @@ seven exact discarded parameter-step evaluations; its free-node launcher is
 closes this raw-loss realization and opens a separate residual-tail and
 sampling-unit audit; it does not authorize another direct-step grid.
 
+`daily_operator/target_oriented_flux_residual_tail.py` owns the frozen
+window-loss concentration, bounded influence, exact Gram-direction, and
+tail-mechanism classification logic. The existing full-step factory exposes
+standalone 7/30-day window-flux gradients for this audit without changing the
+training objective. `scripts/hpc/audit_target_oriented_flux_residual_tail.py`
+owns the 96-window train/train execution and group-local streamed Grams; its
+free-node launcher is
+`scripts/hpc/run_target_oriented_flux_residual_tail_audit.sh`. This path
+takes no optimizer or parameter step and reads no validation artifact value.
+
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and
 maintenance-temperature factors to replaced fast processes and dynamically

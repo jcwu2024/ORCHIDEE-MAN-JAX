@@ -244,6 +244,7 @@ def _make_steps(
         linearized_science_window_loss,
         one_day_state_sufficient_statistics,
         process_supervision_sufficient_statistics,
+        science_window_from_sufficient_statistics,
         science_window_sufficient_statistics,
         target_oriented_acceptance_sufficient_statistics,
     )
@@ -545,6 +546,19 @@ def _make_steps(
         )
         return linearized_science_stock_loss(current, total)
 
+    def standalone_window_flux_score(parameters, batch, *, horizon: int):
+        current, _hard = window_statistics(
+            parameters,
+            batch,
+            horizon=horizon,
+            rematerialize=True,
+        )
+        result = science_window_from_sufficient_statistics(
+            current,
+            flux_basis=resolved_flux_basis,
+        )
+        return 0.25 * (result.flux_mse + result.flux_bias_squared)
+
     one_gradient = jax.jit(jax.value_and_grad(one_linear))
     seven_gradient = jax.jit(
         jax.value_and_grad(lambda parameters, batch, total: window_linear(parameters, batch, total, horizon=7))
@@ -602,6 +616,24 @@ def _make_steps(
                     parameters,
                     batch,
                     total,
+                    horizon=30,
+                )
+            )
+        ),
+        "seven_flux_window_gradient": jax.jit(
+            jax.value_and_grad(
+                lambda parameters, batch: standalone_window_flux_score(
+                    parameters,
+                    batch,
+                    horizon=7,
+                )
+            )
+        ),
+        "thirty_flux_window_gradient": jax.jit(
+            jax.value_and_grad(
+                lambda parameters, batch: standalone_window_flux_score(
+                    parameters,
+                    batch,
                     horizon=30,
                 )
             )

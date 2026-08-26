@@ -2,7 +2,7 @@
 
 Date: 2026-08-26
 
-Status: frozen before zero-training implementation and execution
+Status: frozen; local implementation qualified before zero-training execution
 
 Machine contract:
 `manifests/coarse_graining/target_oriented_flux_residual_tail_audit_v1.json`
@@ -121,3 +121,23 @@ Engineering acceptance requires all 96 window scores and full-parameter
 gradients to be finite, complete group Grams, and zero physical hard failures.
 No optimizer, parameter step, checkpoint, recovery, paid job, 365-day
 rollout, Gate D2, or product gate is authorized.
+
+## Local Implementation Readiness
+
+The frozen loader and host analysis are implemented in
+`daily_operator/target_oriented_flux_residual_tail.py`. The existing rollout
+step factory now exposes standalone 7/30-day window-flux gradients without
+changing any retained training function. The executable and free-node
+launcher are:
+
+```text
+scripts/hpc/audit_target_oriented_flux_residual_tail.py
+scripts/hpc/run_target_oriented_flux_residual_tail_audit.sh
+```
+
+Focused residual-tail, protected-step, flux-variance, and component-geometry
+tests pass `21/21`; Ruff, Python compilation, Bash syntax, contract hash, and
+`git diff --check` pass. The broader target-oriented suite passes `66/67`.
+Its sole failure is an unchanged historical assertion that an older
+representative-gradient Slurm wrapper request `01:00:00`; that unrelated
+wrapper currently requests `03:00:00` and is not modified by this audit.

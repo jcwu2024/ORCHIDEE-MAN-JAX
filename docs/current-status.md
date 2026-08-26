@@ -350,7 +350,8 @@ is frozen at contract SHA256 `bafcb2da...9bb763`. It preserves all 96 window
 contributions, compares standalone loss concentration with full-parameter
 gradient-norm concentration, forms exact group-local gradient Grams, and
 evaluates fixed equal-window, soft-L1, and log1p influence directions without
-taking a parameter step. Its implementation and free execution are active.
+taking a parameter step. Local implementation passes `21/21` focused tests
+plus static checks; one free-`gln01` execution is active.
 No unchanged update-1001-to-3000 continuation, repeated direct-step grid,
 paid training, 365-day rollout, sealed-test read, Gate D2, or product work is
 authorized.

@@ -1444,7 +1444,8 @@ This closes direct realization of the raw component-resolved
 MSE-plus-squared-bias loss at update 1000. It does not reject the Attention
 architecture. The train/train, zero-training residual-tail and sampling-unit
 audit is frozen at contract SHA256 `bafcb2da...9bb763`; implementation and one
-free-`gln01` execution are the active operation. It preserves all 64 7-day and
+free-`gln01` execution are the active operation. Local implementation and its
+focused `21/21` tests are complete. It preserves all 64 7-day and
 32 30-day window contributions, measures both standalone loss and
 full-parameter gradient norm, quantifies top-tail concentration and effective
 sample size by flux key, and distinguishes residual outliers from Jacobian
