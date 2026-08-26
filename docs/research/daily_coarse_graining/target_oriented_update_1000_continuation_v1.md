@@ -1,7 +1,8 @@
 # Target-Oriented Update-1000 Continuation V1
 
-Status: frozen implementation contract; update-251 free admission and complete
-update-251-to-1000 preparation accepted; paid execution is the active operation.
+Status: completed execution contract; update-251 free admission, complete
+update-251-to-1000 preparation, and paid execution are accepted. The absolute
+gate failed and the post-result diagnostic is recorded separately.
 
 ## Decision
 
@@ -110,3 +111,14 @@ the frozen
 Teacher regeneration, historical v5 use, and sealed-test read are all false.
 The complete evidence is in
 [`target_oriented_update_1000_preparation_acceptance_20260825.md`](target_oriented_update_1000_preparation_acceptance_20260825.md).
+
+## Execution Result
+
+Paid job `14674142` completed updates 251 through 1000 at executable commit
+`433d286` in `08:12:26`. The science macro improved from `0.6894834689` to
+`0.3408543729`, so the 5% pacing rule passes, but the absolute short-horizon
+gate fails. Slow-carbon stock targets now pass while productivity and
+respiration remain the blocking failures. The checkpoint is not promoted and
+the continuation contract is closed. The formal result and next active gate
+are in
+[`target_oriented_formal_training_1000_result_20260826.md`](target_oriented_formal_training_1000_result_20260826.md).

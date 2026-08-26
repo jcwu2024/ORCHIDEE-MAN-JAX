@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-23.
+Last updated: 2026-08-26.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -1392,14 +1392,28 @@ and reloads recovery, has zero physical hard failures, and improves the matched
 six-window admission macro by `9.1095%`. Because that panel has one window per
 cell, the improvement is engineering evidence rather than promotion.
 
-The exact 251-1000 partial range is now accepted. Four free-CPU chunks merged
+The exact 251-1000 partial range is accepted. Four free-CPU chunks merged
 into 750 unique contiguous artifacts totaling 2,523,051,773 bytes. Every file
 hash and payload passed, the full-1000 schedule identity is frozen, and the
 merged manifest SHA256 is `8205140d...8fc31`. Teacher regeneration, historical
-v5 use, and sealed-test read are all false. The active operation is the
-explicitly approved paid update-250-to-1000 GPU continuation using the exact
-parent stage checkpoint and AdamW state. Weak-control comparison, sealed-test
-read, 365-day rollout, Gate D2, and product work remain closed. See
+v5 use, and sealed-test read are all false.
+
+Paid job `14674142` completed the exact update-251-to-1000 continuation at
+commit `433d286`. The frozen science macro improves from `0.68948347` to
+`0.34085437`, a further `50.5638%`; all physical hard gates pass and clipping
+is `0/750` in this stage. The absolute gate still fails. The important change
+is that 7/30-day ecosystem and nonliving carbon now pass every slice, while
+GPP, NPP, maintenance respiration, growth respiration, and autotrophic
+respiration remain the blocking targets.
+
+The active task is a zero-update train-only flux-gradient variance and cosine
+audit at the update-1000 checkpoint. Compare independent gradient estimates
+for GPP/NPP/respiration using the current four 30-day windows and aggregates
+of 8 and 16 windows. This decides whether a larger effective batch is a
+credible bounded continuation mechanism or whether the next change must be in
+the objective/output heads. Do not blindly continue to update 3000. Weak-
+control comparison, sealed-test read, 365-day rollout, Gate D2, and product
+work remain closed. See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
@@ -1413,6 +1427,7 @@ read, 365-day rollout, Gate D2, and product work remain closed. See
 [`target_oriented_update_251_admission_20260825.md`](research/daily_coarse_graining/target_oriented_update_251_admission_20260825.md),
 [`target_oriented_update_1000_preparation_acceptance_20260825.md`](research/daily_coarse_graining/target_oriented_update_1000_preparation_acceptance_20260825.md),
 [`target_oriented_update_250_training_dynamics_diagnosis_20260825.md`](research/daily_coarse_graining/target_oriented_update_250_training_dynamics_diagnosis_20260825.md),
+[`target_oriented_formal_training_1000_result_20260826.md`](research/daily_coarse_graining/target_oriented_formal_training_1000_result_20260826.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

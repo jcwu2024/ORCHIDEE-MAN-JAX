@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-25.
+Last updated: 2026-08-26.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -52,8 +52,9 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/target_oriented_representative_gradient_probe_20260823.md` | Accepted repaired representative gradient gate, including prior negative probes, zero-stock diagnosis, job 14651381 timeout, and passing job 14652590 | Reviewing the NaN repair, source-gradient conditioning, or entry to the eight-batch preflight |
 | `research/daily_coarse_graining/target_oriented_full_step_preflight_acceptance_20260824.md` | Accepted eight-batch gradient calibration, resource measurement, and physical preflight used by the completed update-250 stage | Reviewing job 14659152, the frozen p90 clip threshold, hot-step cost, or training entry |
 | `research/daily_coarse_graining/target_oriented_formal_training_admission_20260825.md` | Accepted runner/admission and job 14664525 submission provenance; the job is complete | Reviewing prepared assets, recovery admission, or paid resource identity |
-| `research/daily_coarse_graining/target_oriented_formal_training_250_result_20260825.md` | Current formal result: 28.48% pacing improvement, absolute gate failed, update-251-to-1000 continuation review admitted | Reviewing the complete 96-window result, failure attribution, or continuation gate |
-| `research/daily_coarse_graining/target_oriented_update_1000_continuation_v1.md` | Current frozen continuation, checkpoint-handoff, free-admission, and update-1000 gate contract | Implementing or admitting updates 251-1000 |
+| `research/daily_coarse_graining/target_oriented_formal_training_250_result_20260825.md` | Accepted parent-stage result: 28.48% pacing improvement and update-251-to-1000 continuation admitted; superseded as current result by update 1000 | Reviewing the parent checkpoint or why continuation was admitted |
+| `research/daily_coarse_graining/target_oriented_update_1000_continuation_v1.md` | Completed continuation, checkpoint-handoff, free-admission, preparation, and update-1000 gate contract | Reviewing the executed updates 251-1000 protocol |
+| `research/daily_coarse_graining/target_oriented_formal_training_1000_result_20260826.md` | Current formal result: slow-carbon breakthrough, 50.56% pacing improvement, absolute flux gate failed; flux-gradient batch-variance audit active | Reviewing update-1000 science, failure attribution, or the next diagnostic |
 | `research/daily_coarse_graining/target_oriented_update_251_admission_20260825.md` | Accepted exact checkpoint/AdamW handoff, update-251, recovery, and matched free-GPU admission | Preparing or admitting updates 251-1000 |
 | `research/daily_coarse_graining/daily_operator_parameter_routing_v1.md` | Implemented local parameter-ownership boundary used by the successor | Routing physical parameters or planning Gate D2 |
 | `research/daily_coarse_graining/successor_process_head_architecture_options_v1.md` | Historical accepted decision package; its attention/graph pair is not the current successor default | Reviewing the completed early successor comparison |

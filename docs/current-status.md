@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-23.
+Last updated: 2026-08-26.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -298,14 +298,28 @@ writes/reloads recovery with zero physical hard failures. On the matched six
 admission windows the macro changes from `0.552285` to `0.501974`, a `9.1095%`
 improvement. This is not full-panel promotion evidence.
 
-The exact update-251-to-1000 prepared range is now accepted. Four free-CPU
+The exact update-251-to-1000 prepared range is accepted. Four free-CPU
 chunks merged into 750 unique contiguous artifacts totaling 2,523,051,773
 bytes. Every artifact hash and payload passed, the full schedule SHA256 is
 `ee1ff380...9e2a5`, and the merged manifest SHA256 is `8205140d...8fc31`.
 Teacher regeneration, historical v5 use, and sealed-test read are all false.
-The active operation is the explicitly approved paid update-250-to-1000 GPU
-continuation using the exact parent stage checkpoint and AdamW state. No
-365-day rollout, sealed-test read, Gate D2, or product work is authorized.
+Paid job `14674142` then completed the exact continuation at commit `433d286`
+in `08:12:26`. All 750 continuation updates are retained, continuation
+clipping is `0/750`, cumulative clipping is `3/1000`, and every physical hard
+gate passes. The frozen macro improves from `0.68948347` at update 250 to
+`0.34085437` at update 1000, a further `50.5638%`, but the absolute gate still
+fails.
+
+The scientific failure has changed materially. Mean 30-day ecosystem and
+nonliving carbon NRMSE collapse from about `2.56` to `0.0474` and both pass all
+three slices; their 7-day counterparts and AGB/BGB/total-live biomass also
+pass all cells. The remaining blockers are GPP, NPP, maintenance respiration,
+growth respiration, and autotrophic respiration. NPP improves only `5.60%`
+at 7 days and `0.132%` at 30 days from update 250. The active task is therefore
+a zero-update train-only cross-batch flux-gradient variance/cosine audit at
+the update-1000 checkpoint, including a 4 versus 8/16 comparison for 30-day
+windows. No unchanged update-1001-to-3000 continuation, 365-day rollout,
+sealed-test read, Gate D2, or product work is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -333,6 +347,8 @@ The accepted complete preparation is
 The update-250 loss/gradient diagnosis and frozen update-1000 result analyzer
 are in
 [`target_oriented_update_250_training_dynamics_diagnosis_20260825.md`](research/daily_coarse_graining/target_oriented_update_250_training_dynamics_diagnosis_20260825.md).
+The formal update-1000 result is
+[`target_oriented_formal_training_1000_result_20260826.md`](research/daily_coarse_graining/target_oriented_formal_training_1000_result_20260826.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four
