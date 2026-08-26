@@ -359,14 +359,23 @@ log1p loss weighting leaves the 7-day minimum cosine near `-0.97`; the best
 30-day candidate improves but remains conflicted. Robust-loss-only repair is
 therefore not established.
 
-The active gate is a narrow zero-training gradient-path attribution on the
-two extreme maintenance windows and loss-matched controls. It will decompose
-GPP, maintenance, and growth gradients by complete parameter family and
-compare free rollout with Teacher-state daily evaluation to separate local
-output/backbone sensitivity from cross-day recurrence. No unchanged
-update-1001-to-3000 continuation, repeated direct-step grid, paid training,
-architecture edit, 365-day rollout, sealed-test read, Gate D2, or product work
-is authorized.
+The focused gradient-path attribution completed on free `gln01` at commit
+`53269af`; report SHA256 is `a2e9a885...ffa870d`. All `24/24` full gradients
+are finite over all `83,755,173` parameters and all physical hard failures
+are zero. Both extreme windows are recurrence dominated. Their maintenance
+free-to-Teacher-state gradient ratios are `243184.83` at 7 days and `49.38`
+at 30 days, and almost the entire extreme maintenance gradient enters through
+the predicted `hydrol_previous_step_state.snowheat` tendency head. Matched
+controls instead have larger Teacher-state maintenance gradients, so this is
+a scenario-dependent feedback rather than a generic Teacher-forcing effect.
+
+The active gate is a zero-training snowheat recurrence intervention on the
+same four windows. Only the snowheat coordinates in each cross-day state carry
+will be replaced with the next Teacher day-start values; every other operator,
+forcing, retained-tail, target, and parameter path remains unchanged. This is
+a causal diagnostic, not admissible training or inference behavior. No
+unchanged update-1001-to-3000 continuation, paid training, architecture edit,
+365-day rollout, sealed-test read, Gate D2, or product work is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -412,8 +421,12 @@ The completed residual-tail contract and result are
 [`target_oriented_flux_residual_tail_audit_v1.md`](research/daily_coarse_graining/target_oriented_flux_residual_tail_audit_v1.md)
 and
 [`target_oriented_flux_residual_tail_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_residual_tail_result_20260826.md).
-The frozen active diagnostic is
-[`target_oriented_flux_gradient_path_attribution_v1.md`](research/daily_coarse_graining/target_oriented_flux_gradient_path_attribution_v1.md).
+The completed gradient-path diagnostic and result are
+[`target_oriented_flux_gradient_path_attribution_v1.md`](research/daily_coarse_graining/target_oriented_flux_gradient_path_attribution_v1.md)
+and
+[`target_oriented_flux_gradient_path_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_gradient_path_result_20260826.md).
+The frozen active intervention is
+[`target_oriented_snowheat_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snowheat_recurrence_intervention_v1.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

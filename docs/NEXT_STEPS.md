@@ -1462,17 +1462,28 @@ negative fraction from `28.1%` to `18.8%`, but its minimum cosine remains
 `-0.874`. The machine action retains bounded influence as a possible later
 component; it does not establish robust-loss-only training.
 
-The active operation is a narrow zero-training gradient-path attribution.
-Use the extreme 7/30-day maintenance windows and frozen loss-matched controls
-to separate GPP, maintenance, and growth gradients; partition each gradient
-across the output paths and shared Attention backbone; and compare free
-rollout with the same daily evaluations under Teacher day-start states. This
-must identify whether amplification is output-local, backbone-local, or due
-to cross-day recurrence before selecting loss weighting, gradient
-conditioning, or any architecture intervention. AdamW continuation, another
-direct-step grid, batch enlargement, architecture change, paid training,
-weak-control comparison, sealed-test read, 365-day rollout, Gate D2, and
-product work remain closed.
+The focused gradient-path attribution then completed on free `gln01` at
+commit `53269af`; report SHA256 is `a2e9a885...ffa870d`. All `24/24` full
+gradients are finite over all `83,755,173` parameters and all physical hard
+failures are zero. Both extreme pairs classify as
+`rollout_recurrence_dominant`. Their maintenance free-to-Teacher-state
+gradient ratios are `243184.83` at 7 days and `49.38` at 30 days, and the
+largest state-head contribution in both cases is the predicted
+`hydrol_previous_step_state.snowheat` tendency. The matched controls behave
+differently: their Teacher-state maintenance gradients are larger than their
+free gradients. This is therefore a scenario-dependent snowheat feedback,
+not a generic benefit of Teacher forcing or evidence against Attention.
+
+The active operation is `target_oriented_snowheat_recurrence_intervention_v1`.
+Freeze and execute a zero-training causal test on the same four windows: keep
+the same parameters, forcing, operator, retained exact tail, and free rollout,
+but replace only the snowheat coordinates in the cross-day continuous-state
+carry with the next Teacher day-start snowheat. Compare maintenance score,
+full gradient, and snowheat-head attribution with the unmodified free
+reference. The replacement is diagnostic only and cannot enter training or
+final inference. AdamW continuation, batch enlargement, architecture change,
+paid training, sealed-test read, 365-day rollout, Gate D2, and product work
+remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -1497,6 +1508,8 @@ See
 [`target_oriented_flux_residual_tail_audit_v1.md`](research/daily_coarse_graining/target_oriented_flux_residual_tail_audit_v1.md),
 [`target_oriented_flux_residual_tail_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_residual_tail_result_20260826.md),
 [`target_oriented_flux_gradient_path_attribution_v1.md`](research/daily_coarse_graining/target_oriented_flux_gradient_path_attribution_v1.md),
+[`target_oriented_flux_gradient_path_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_gradient_path_result_20260826.md),
+[`target_oriented_snowheat_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snowheat_recurrence_intervention_v1.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

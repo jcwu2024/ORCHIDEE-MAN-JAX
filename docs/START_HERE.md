@@ -264,11 +264,17 @@ rejected. The subsequent 96-window residual-tail audit completed on free
 `gln01` at commit `b80494f`. One ordinary 7-day window contributes `92.07%`
 of total gradient-norm mass while only about `2.12%` of total loss. Frozen
 soft-L1/log1p loss weighting does not repair the 7-day direction conflict and
-only partly improves 30-day geometry. The active gate is therefore a narrow,
-zero-training GPP/maintenance/growth gradient-path attribution on the extreme
-windows and loss-matched controls, separating output heads, the shared
-Attention backbone, and free-rollout recurrence. Paid continuation, 365-day
-rollout, Gate D2, sealed test, and product work remain closed.
+only partly improves 30-day geometry. The focused gradient-path audit then
+completed at commit `53269af`: both extreme pairs are classified as
+`rollout_recurrence_dominant`, and nearly all of the extreme maintenance
+gradient enters through the predicted snowheat state carried into later days.
+This is scenario dependent; Teacher-state gradients are larger for the
+matched controls, so Teacher forcing is not a generic remedy. The active gate
+is a zero-training causal intervention that replaces only the cross-day
+snowheat carry with the next Teacher day-start snowheat on the same four
+windows. Its frozen contract SHA256 is `006e9d3d...6cab122`. Attention is not
+rejected. Training, architecture changes, 365-day rollout, Gate D2, sealed
+test, and product work remain closed.
 
 ## New Task Bootstrap
 

@@ -78,6 +78,11 @@ from research.daily_coarse_graining.daily_operator.successor_training import (
     rollout_input_from_template,
     successor_training_objective,
 )
+from research.daily_coarse_graining.daily_operator.target_oriented_snowheat_recurrence import (
+    SNOWHEAT_STATE_KEY,
+    resolve_continuous_state_leaf,
+    rollout_with_teacher_state_leaf,
+)
 from research.daily_coarse_graining.daily_operator.training_data import (
     DailyProcessTrainingAdapter,
 )
@@ -1087,6 +1092,55 @@ def test_rollout_refreshes_state_derived_pft_views_and_ignores_future_teacher_st
     np.testing.assert_array_equal(
         np.asarray(rematerialized.result.next_state.other),
         np.asarray(trace.result.next_state.other),
+    )
+
+
+def test_diagnostic_teacher_carry_replaces_only_snowheat(successor_setup):
+    setup = successor_setup
+    source = setup["example"].inputs
+    contract = setup["adapter"].contract
+    leaf = resolve_continuous_state_leaf(contract, SNOWHEAT_STATE_KEY)
+    templates = jax.tree_util.tree_map(
+        lambda value: jnp.stack((value, value, value)),
+        source,
+    )
+    teacher_state = np.asarray(templates.continuous_state).copy()
+    original = teacher_state[0, leaf.start : leaf.stop].copy()
+    teacher_state[1, leaf.start : leaf.stop] = 100.0
+    teacher_state[2, leaf.start : leaf.stop] = 200.0
+    templates = templates._replace(continuous_state=teacher_state)
+
+    def increment_snowheat(increment, current):
+        assembled = setup["adapter"].input_assembler.assemble(current)
+        next_continuous = jnp.asarray(current.continuous_state).at[
+            leaf.start : leaf.stop
+        ].add(increment)
+        return DailyOperatorResult(
+            prediction=None,
+            fast_update=None,
+            next_state=assembled.state._replace(other=next_continuous),
+            next_state_defined=assembled.state_defined._replace(
+                other=jnp.ones_like(next_continuous, dtype=jnp.bool_)
+            ),
+            next_discrete_state=current.discrete_state,
+            diagnostics={},
+        )
+
+    trace = rollout_with_teacher_state_leaf(
+        jnp.asarray(1.0, dtype=jnp.float64),
+        templates,
+        transition=increment_snowheat,
+        contract=contract,
+    )
+    predicted = np.asarray(trace.result.next_state.other)
+    np.testing.assert_allclose(predicted[0, leaf.start : leaf.stop], original + 1.0)
+    np.testing.assert_allclose(predicted[1, leaf.start : leaf.stop], 101.0)
+    np.testing.assert_allclose(predicted[2, leaf.start : leaf.stop], 201.0)
+    outside = np.ones(contract.continuous_state_width, dtype=np.bool_)
+    outside[leaf.start : leaf.stop] = False
+    np.testing.assert_allclose(
+        predicted[:, outside],
+        np.broadcast_to(np.asarray(source.continuous_state)[outside], predicted[:, outside].shape),
     )
 
 

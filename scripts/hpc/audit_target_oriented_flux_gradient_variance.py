@@ -315,6 +315,7 @@ def _load_context(
     *,
     science_flux_basis: Sequence[str] | None = None,
     verify_validation_artifacts: bool = True,
+    diagnostic_teacher_carry_state_key: str | None = None,
 ) -> Mapping[str, Any]:
     from research.daily_coarse_graining.daily_operator.mechanistic_output_contract import (
         build_mechanistic_learned_schema,
@@ -442,6 +443,7 @@ def _load_context(
         acceptance_scales=acceptance_scales,
         acceptance_flux_names=AUDIT_FLUX_KEYS,
         science_flux_basis=resolved_science_flux_basis,
+        diagnostic_teacher_carry_state_key=diagnostic_teacher_carry_state_key,
     )
     return {
         "runtime": runtime,

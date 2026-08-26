@@ -216,6 +216,7 @@ def _make_steps(
     acceptance_scales: Any | None = None,
     acceptance_flux_names: tuple[str, ...] = (),
     science_flux_basis: tuple[str, ...] | None = None,
+    diagnostic_teacher_carry_state_key: str | None = None,
 ):
     import jax
     import jax.numpy as jnp
@@ -234,6 +235,10 @@ def _make_steps(
         extract_biomass_productivity_trajectories,
         rollout_daily_operator,
         trajectories_from_rollout,
+    )
+    from research.daily_coarse_graining.daily_operator.target_oriented_snowheat_recurrence import (
+        resolve_continuous_state_leaf,
+        rollout_with_teacher_state_leaf,
     )
     from research.daily_coarse_graining.daily_operator.target_oriented_training import (
         _linearized_error_loss,
@@ -269,6 +274,11 @@ def _make_steps(
     )
     if not set(diagnostic_flux_basis) <= set(resolved_flux_basis):
         raise ValueError("target-oriented diagnostic flux basis is unavailable")
+    if diagnostic_teacher_carry_state_key is not None:
+        resolve_continuous_state_leaf(
+            runtime["contract"],
+            diagnostic_teacher_carry_state_key,
+        )
 
     def state_hard(predicted, predicted_defined, expected_defined):
         nonfinite = jnp.asarray(0, dtype=jnp.int32)
@@ -488,6 +498,68 @@ def _make_steps(
         )
         return predicted, expected_window_trajectories(microbatch, templates)
 
+    def teacher_carry_window_trajectories(parameters, microbatch, *, rematerialize: bool):
+        if diagnostic_teacher_carry_state_key is None:
+            raise ValueError("diagnostic Teacher-carry state key is unavailable")
+        templates = jax.tree_util.tree_map(lambda value: value[0], microbatch.inputs)
+        day_inputs = jax.tree_util.tree_map(lambda value: value[0], microbatch.day_inputs)
+
+        def transition(values, inputs):
+            return dynamic(values, inputs, day_inputs)
+
+        trace = rollout_with_teacher_state_leaf(
+            parameters,
+            templates,
+            transition=transition,
+            contract=runtime["contract"],
+            state_key=diagnostic_teacher_carry_state_key,
+            rematerialize=rematerialize,
+        )
+        predicted = trajectories_from_rollout(trace, runtime["contract"])
+        expected = expected_window_trajectories(microbatch, templates)
+        expected_defined = jax.tree_util.tree_map(
+            lambda value: value[0],
+            microbatch.expected_next_state_defined,
+        )
+        expected_discrete = jax.tree_util.tree_map(
+            lambda value: value[0],
+            microbatch.expected_next_discrete_state,
+        )
+        stock_hard = rollout_hard_gate_counts(
+            predicted.stocks,
+            expected.stocks,
+            nonnegative_stock_fields=TERMINAL_STOCK_FIELDS,
+            budget_residuals={
+                "water": trace.result.diagnostics["water_budget_residual"],
+                "carbon": trace.result.diagnostics["carbon_budget_residual"],
+            },
+            predicted_discrete_state=trace.result.next_discrete_state,
+            expected_discrete_state=expected_discrete,
+            budget_atol=2.0e-12,
+            stock_atol=2.0e-12,
+        )
+        state_nonfinite, unexpected_state_mismatch, declared_dynamic_state_mismatch = state_hard(
+            trace.result.next_state,
+            trace.result.next_state_defined,
+            expected_defined,
+        )
+        prediction_nonfinite = sum(
+            (
+                jnp.sum(~jnp.isfinite(jnp.asarray(value)), dtype=jnp.int32)
+                for name, value in trace.result.prediction.named_outputs.items()
+                if name in learned_output_names
+            ),
+            jnp.asarray(0, dtype=jnp.int32),
+        )
+        hard = _window_hard_counts(
+            prediction_nonfinite,
+            state_nonfinite,
+            unexpected_state_mismatch,
+            declared_dynamic_state_mismatch,
+            stock_hard,
+        )
+        return predicted, expected, hard
+
     def window_statistics(parameters, microbatch, *, horizon: int, rematerialize: bool):
         predicted, expected, hard = window_trajectories(
             parameters,
@@ -552,6 +624,30 @@ def _make_steps(
             horizon=horizon,
             flux_basis=resolved_flux_basis,
         )
+
+    def teacher_carry_window_statistics(
+        parameters,
+        microbatch,
+        *,
+        horizon: int,
+        rematerialize: bool,
+    ):
+        predicted, expected, hard = teacher_carry_window_trajectories(
+            parameters,
+            microbatch,
+            rematerialize=rematerialize,
+        )
+        statistics = science_window_sufficient_statistics(
+            predicted.fluxes,
+            expected.fluxes,
+            predicted.stocks,
+            expected.stocks,
+            flux_scales=scales.fluxes,
+            stock_scales=scales.stocks,
+            horizon=horizon,
+            flux_basis=resolved_flux_basis,
+        )
+        return statistics, hard
 
     one_forward = jax.jit(one_statistics)
     seven_forward = jax.jit(
@@ -644,6 +740,18 @@ def _make_steps(
 
     def teacher_state_window_flux_field_score(parameters, batch, weights, *, horizon: int):
         current = teacher_state_window_statistics(
+            parameters,
+            batch,
+            horizon=horizon,
+            rematerialize=True,
+        )
+        return jnp.vdot(
+            jnp.asarray(weights, dtype=jnp.float64),
+            field_score_vector(current),
+        )
+
+    def teacher_carry_window_flux_field_score(parameters, batch, weights, *, horizon: int):
+        current, _hard = teacher_carry_window_statistics(
             parameters,
             batch,
             horizon=horizon,
@@ -774,6 +882,47 @@ def _make_steps(
             )
         ),
     }
+    if diagnostic_teacher_carry_state_key is not None:
+        result.update(
+            {
+                "seven_teacher_carry_forward": jax.jit(
+                    lambda parameters, batch: teacher_carry_window_statistics(
+                        parameters,
+                        batch,
+                        horizon=7,
+                        rematerialize=False,
+                    )
+                ),
+                "thirty_teacher_carry_forward": jax.jit(
+                    lambda parameters, batch: teacher_carry_window_statistics(
+                        parameters,
+                        batch,
+                        horizon=30,
+                        rematerialize=False,
+                    )
+                ),
+                "seven_teacher_carry_flux_field_gradient": jax.jit(
+                    jax.value_and_grad(
+                        lambda parameters, batch, weights: teacher_carry_window_flux_field_score(
+                            parameters,
+                            batch,
+                            weights,
+                            horizon=7,
+                        )
+                    )
+                ),
+                "thirty_teacher_carry_flux_field_gradient": jax.jit(
+                    jax.value_and_grad(
+                        lambda parameters, batch, weights: teacher_carry_window_flux_field_score(
+                            parameters,
+                            batch,
+                            weights,
+                            horizon=30,
+                        )
+                    )
+                ),
+            }
+        )
     if acceptance_scales is not None:
         if not acceptance_flux_names or not set(acceptance_flux_names) <= set(acceptance_scales.fluxes):
             raise ValueError("acceptance flux-gradient registry is invalid")

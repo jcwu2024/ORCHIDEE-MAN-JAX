@@ -1,0 +1,137 @@
+{
+  "schema_version": "target_oriented_snowheat_recurrence_intervention_v1",
+  "status": "frozen_before_zero_training_execution",
+  "contract_sha256": "006e9d3d8ff63253ea2e70c995735856e9c3e93285934934fbbe3f7b16cab122",
+  "identity": {
+    "gradient_path_report_sha256": "a2e9a88575563f832bf705827c869dcbe920d15abd656f06b0eb08068ffa870d",
+    "gradient_path_contract_sha256": "d683b87ae2658c4aeb5658cf42ab0b55f6e9cef94cd18af5419a376e3a821900",
+    "flux_basis_amendment_sha256": "6c81e8f56c2c81fc2ac024a71da98f3e875c4ebc429f9e3d1ff4e8e3ef6bfb45",
+    "update_1000_checkpoint_sha256": "a566f9d95726984dc03cbf1f1a183dd0d1eae9e3479ce5055c64e571ef6a16c7",
+    "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "candidate": "target_oriented_hierarchical_coordinate_attention_v1",
+    "parameter_count": 83755173
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "windows": [
+      {
+        "name": "seven_day_extreme",
+        "role": "maximum_gradient_norm",
+        "horizon": 7,
+        "update": 465,
+        "runtime_year": 1981,
+        "window_index_within_group": 2,
+        "landpoint_id": "081.0-107.0",
+        "start_row": 90,
+        "free_maintenance_score": 0.2764168164985459,
+        "free_maintenance_gradient_l2_norm": 186303.06733250205
+      },
+      {
+        "name": "seven_day_matched_control",
+        "role": "similar_aggregate_and_maintenance_loss_low_gradient",
+        "horizon": 7,
+        "update": 1000,
+        "runtime_year": 2003,
+        "window_index_within_group": 2,
+        "landpoint_id": "305.0-103.0",
+        "start_row": 337,
+        "free_maintenance_score": 0.35822147494057266,
+        "free_maintenance_gradient_l2_norm": 44.399033970493775
+      },
+      {
+        "name": "thirty_day_extreme",
+        "role": "maximum_gradient_norm",
+        "horizon": 30,
+        "update": 465,
+        "runtime_year": 1981,
+        "window_index_within_group": 2,
+        "landpoint_id": "299.0-095.0",
+        "start_row": 207,
+        "free_maintenance_score": 0.2764873817004009,
+        "free_maintenance_gradient_l2_norm": 430.9573956948714
+      },
+      {
+        "name": "thirty_day_matched_control",
+        "role": "maintenance_loss_matched_low_gradient",
+        "horizon": 30,
+        "update": 572,
+        "runtime_year": 1985,
+        "window_index_within_group": 2,
+        "landpoint_id": "167.0-099.0",
+        "start_row": 95,
+        "free_maintenance_score": 0.2738444548955176,
+        "free_maintenance_gradient_l2_norm": 16.616925717203998
+      }
+    ],
+    "teacher_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_artifact_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "intervention": {
+    "state_key": "hydrol_previous_step_state.snowheat",
+    "learned_tendency_field": "thermal.hydrol_previous_step_state.snowheat.normalized_tendency",
+    "source_owner": "src_sechiba/explicitsnow.f90 snowheat/snowtemp",
+    "coordinate_resolution": "DailyMarkovContract.state_leaves exact start_stop",
+    "reference": "canonical free rollout",
+    "treatment": "before each daily transition replace only the snowheat coordinates of the predicted continuous-state carry with the current Teacher day-start snowheat coordinates",
+    "first_day_is_identity": true,
+    "other_continuous_state_coordinates_remain_predicted": true,
+    "discrete_state_remains_predicted": true,
+    "forcing_unchanged": true,
+    "parameters_unchanged": true,
+    "operator_unchanged": true,
+    "retained_exact_tail_unchanged": true,
+    "diagnostic_only": true,
+    "allowed_in_training": false,
+    "allowed_in_final_inference": false
+  },
+  "measurement": {
+    "field": "maintenance_respiration",
+    "field_score": "one_half_normalized_mse_plus_one_half_normalized_signed_bias_squared",
+    "modes": [
+      "free_reference",
+      "snowheat_teacher_carry"
+    ],
+    "gradient_count": 8,
+    "gradient_coverage": 83755173,
+    "score_reproduction_atol": 1e-8,
+    "score_reproduction_rtol": 0.001,
+    "report_complete_parameter_families": true,
+    "report_primary_and_state_head_norms_by_field": true,
+    "report_mode_gradient_cosine": true
+  },
+  "classification": {
+    "extreme_gradient_reduction_ratio_for_causal_confirmation": 10.0,
+    "snowheat_head_reduction_ratio_for_causal_confirmation": 10.0,
+    "gradient_reduction_ratio_for_no_effect": 2.0,
+    "both_extreme_windows_must_confirm": true,
+    "matched_controls_are_reported_not_thresholded": true,
+    "thresholds_are_diagnostic_not_promotion_gates": true
+  },
+  "execution": {
+    "free_gln01_only": true,
+    "paid_training_authorized": false,
+    "optimizer_updates": 0,
+    "parameter_steps": 0,
+    "proposed_parameters_retained": false,
+    "optimizer_state_retained": false,
+    "checkpoint_written": false,
+    "recovery_written": false,
+    "teacher_data_regenerated": false,
+    "historical_v5_used": false,
+    "validation_values_evaluated": false,
+    "sealed_test_used": false,
+    "architecture_edit_allowed": false,
+    "365_day_rollout_allowed": false,
+    "gate_d2_allowed": false
+  },
+  "decision": {
+    "engineering_pass": "all_8_gradients_finite_complete_nonzero_free_scores_reproduced_and_all_hard_gates_zero",
+    "snowheat_recurrence_causal": "discuss_state_jacobian_conditioning_design_before_any_architecture_or_training_change",
+    "snowheat_recurrence_partial": "retain_attention_and_test_the_minimal_coupled_snow_thermal_slice",
+    "snowheat_recurrence_not_causal": "retain_attention_and_continue_zero_training_recurrence_path_diagnosis",
+    "training_authorized": false
+  }
+}

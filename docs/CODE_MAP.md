@@ -323,7 +323,24 @@ steps. `scripts/hpc/audit_target_oriented_flux_gradient_path.py` executes the
 24 GPP/maintenance/growth gradients, reconstructs the aggregate gradient, and
 reports coarse/fine/head attribution. Its free-`gln01` launcher is
 `scripts/hpc/run_target_oriented_flux_gradient_path_attribution.sh`. It takes
-no optimizer or parameter step and cannot edit the architecture.
+no optimizer or parameter step and cannot edit the architecture. The accepted
+result is `target_oriented_flux_gradient_path_result_20260826.md`: it locates
+the extreme-gradient path in the predicted snowheat state carried between
+rollout days. The next code boundary is a separate zero-training snowheat-only
+carry intervention; it must resolve the leaf from
+`DailyMarkovContract.state_leaves` and must not alter the general rollout or
+final inference path.
+
+`daily_operator/target_oriented_snowheat_recurrence.py` owns the frozen
+intervention contract, exact Markov-leaf resolution, diagnostic one-slice
+Teacher carry, and bounded causal classifier. The full-step factory exposes
+the optional intervention gradients only when its diagnostic state key is
+explicitly supplied; the ordinary free and Teacher-state paths are unchanged.
+`scripts/hpc/audit_target_oriented_snowheat_recurrence.py` owns the eight
+maintenance gradients and complete family/head attribution, and
+`scripts/hpc/run_target_oriented_snowheat_recurrence_intervention.sh` owns its
+free-`gln01` execution boundary. The intervention is forbidden in training
+and final inference.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and
