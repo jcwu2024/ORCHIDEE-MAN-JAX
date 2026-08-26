@@ -380,6 +380,24 @@ two complete gradients, and
 is its free-`gln01` boundary. It does not edit the maintenance source mask or
 architecture and cannot enter training or final inference.
 
+The accepted result is
+`target_oriented_maintenance_state_recurrence_result_20260827.md`. It rejects
+persisted `resp_maint` recurrence as an explanation and closes further
+state-by-state Teacher carry. The next code boundary must operate on the
+existing independent maintenance final head and exact 7/30-day losses without
+editing the Attention architecture, input mask, or source routing.
+
+`daily_operator/target_oriented_maintenance_head_conditioning.py` owns the
+frozen 769-parameter final-head boundary, loss-scaled step calibration, and
+science/state/stock classifier. The shared full-step builder exposes two
+head-only 7/30-day reverse functions; all other parameters are primal parent
+values, not differentiated variables.
+`scripts/hpc/audit_target_oriented_maintenance_head_conditioning.py` owns the
+16-gradient geometry and exact virtual evaluations.
+`scripts/hpc/run_target_oriented_maintenance_head_conditioning_audit.sh` is
+the free-`gln01`, zero-training launcher. It cannot retain a proposal or enter
+final inference.
+
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and
 maintenance-temperature factors to replaced fast processes and dynamically

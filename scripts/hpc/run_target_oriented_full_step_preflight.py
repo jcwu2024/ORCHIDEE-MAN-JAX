@@ -237,6 +237,10 @@ def _make_steps(
         rollout_daily_operator,
         trajectories_from_rollout,
     )
+    from research.daily_coarse_graining.daily_operator.target_oriented_maintenance_head_conditioning import (
+        replace_maintenance_head,
+        resolve_maintenance_head_index,
+    )
     from research.daily_coarse_graining.daily_operator.target_oriented_snowheat_recurrence import (
         resolve_continuous_state_leaf,
         resolve_continuous_state_leaves,
@@ -266,6 +270,7 @@ def _make_steps(
         retained_tail_template=template,
     )
     learned_output_names = tuple(field.name for field in runtime["learned_schema"].fields)
+    maintenance_head_index = resolve_maintenance_head_index(runtime["learned_schema"])
     resolved_flux_basis = tuple(science_flux_basis or tuple(scales.fluxes))
     if set(resolved_flux_basis) != set(scales.fluxes):
         raise ValueError("target-oriented step flux basis and scale registry differ")
@@ -717,6 +722,32 @@ def _make_steps(
         )
         return linearized_science_stock_loss(current, total)
 
+    def maintenance_head_linear(
+        head_parameters,
+        parameters,
+        batch,
+        total,
+        *,
+        horizon: int,
+    ):
+        proposed = replace_maintenance_head(
+            parameters,
+            maintenance_head_index,
+            head_parameters,
+        )
+        current, _hard = window_statistics(
+            proposed,
+            batch,
+            horizon=horizon,
+            rematerialize=True,
+        )
+        return _linearized_error_loss(
+            current.fluxes["maintenance_respiration"],
+            total.fluxes["maintenance_respiration"],
+            mse_weight=0.5,
+            bias_squared_weight=0.5,
+        )
+
     def standalone_window_flux_score(parameters, batch, *, horizon: int):
         current, _hard = window_statistics(
             parameters,
@@ -832,6 +863,28 @@ def _make_steps(
         "thirty_stock_gradient": jax.jit(
             jax.value_and_grad(
                 lambda parameters, batch, total: window_stock_linear(
+                    parameters,
+                    batch,
+                    total,
+                    horizon=30,
+                )
+            )
+        ),
+        "seven_maintenance_head_gradient": jax.jit(
+            jax.value_and_grad(
+                lambda head_parameters, parameters, batch, total: maintenance_head_linear(
+                    head_parameters,
+                    parameters,
+                    batch,
+                    total,
+                    horizon=7,
+                )
+            )
+        ),
+        "thirty_maintenance_head_gradient": jax.jit(
+            jax.value_and_grad(
+                lambda head_parameters, parameters, batch, total: maintenance_head_linear(
+                    head_parameters,
                     parameters,
                     batch,
                     total,

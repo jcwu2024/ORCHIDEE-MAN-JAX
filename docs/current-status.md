@@ -392,15 +392,24 @@ direct maintenance head remains `33.47`. The matched control falls from
 `31.70` to `15.68` and retains a `15.52` maintenance head. The alias path is
 real but does not explain the full residual; the classification is mixed.
 
-Source tracing now identifies one bounded remaining causal question. Fortran
-`maint_respiration` does not read prior maintenance output;
-`resp_maint_part` is a current-day accumulator reset to zero after daily NPP;
-and `resp_maint` is overwritten from that accumulator before being persisted
-as restart/Markov output. The neural maintenance expert can still read the
-previous `resp_maint` token because it admits the complete `state_carbon`
-family. The active gate preserves all four accepted snow-thermal Teacher
-carries and additionally Teacher-carries only persisted `resp_maint` on the
-same two 30-day windows. No input-mask/source-routing edit, unchanged
+The persisted-maintenance intervention completed at commit `d08d6eb`; report
+SHA256 is `a95ae129...f809b9`. Both complete gradients are finite and nonzero
+over all `83,755,173` parameters, all five state slices resolve, and physical
+hard failures are zero. The extreme full gradient changes from `33.69151431`
+to `33.69151394`, while its direct maintenance head changes from
+`33.46682558` to `33.46682500`. The matched control changes by similarly
+negligible amounts. The frozen classification is
+`maintenance_state_recurrence_not_explanatory`.
+
+This closes the bounded Teacher-carry state investigation. It does not support
+removing persisted `resp_maint` from the broad carbon input route. The active
+gate returns to non-recurrence optimization design. The frozen
+`target_oriented_maintenance_head_conditioning_audit_v1` differentiates only
+the existing 769-parameter maintenance final head across 16 train/train
+group-by-horizon objectives, calibrates finite steps from predicted relative
+loss decrease, and exactly protects 7/30-day science, one-day state, and
+stocks. Its local gates pass; one free `gln01` zero-training execution is next.
+No input-mask/source-routing edit, unchanged
 update-1001-to-3000 continuation, paid training, architecture edit, 365-day
 rollout, sealed-test read, Gate D2, or product work is authorized.
 See
@@ -464,8 +473,12 @@ The completed mirror-aware intervention and accepted result are
 [`target_oriented_snow_thermal_alias_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snow_thermal_alias_recurrence_intervention_v1.md)
 and
 [`target_oriented_snow_thermal_alias_recurrence_result_20260827.md`](research/daily_coarse_graining/target_oriented_snow_thermal_alias_recurrence_result_20260827.md).
-The frozen active persisted-maintenance intervention is
-[`target_oriented_maintenance_state_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_maintenance_state_recurrence_intervention_v1.md).
+The completed persisted-maintenance intervention and accepted result are
+[`target_oriented_maintenance_state_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_maintenance_state_recurrence_intervention_v1.md)
+and
+[`target_oriented_maintenance_state_recurrence_result_20260827.md`](research/daily_coarse_graining/target_oriented_maintenance_state_recurrence_result_20260827.md).
+The frozen active non-recurrence audit is
+[`target_oriented_maintenance_head_conditioning_audit_v1.md`](research/daily_coarse_graining/target_oriented_maintenance_head_conditioning_audit_v1.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

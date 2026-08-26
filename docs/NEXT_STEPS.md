@@ -1500,22 +1500,32 @@ used the omitted `diffuco` mirror. The extreme full gradient falls only
 matched control falls `2.0219` times and retains a `15.5237` maintenance head.
 The frozen classification is mixed and Attention remains open.
 
-Fortran and JAX source tracing separates the remaining two maintenance state
-fields. `resp_maint_part` is the current-day half-hour accumulator consumed by
-`npp_calc` and reset to zero at day end. `resp_maint` is overwritten from the
-current-day accumulator and persisted as a restart/Markov output, but it is
-not an input to the next `maint_respiration` call. The neural maintenance
-expert nevertheless admits its token through the complete `state_carbon`
-family. The active operation is therefore
-`target_oriented_maintenance_state_recurrence_intervention_v1`: preserve the
-accepted four snow-thermal carries, additionally Teacher-carry only persisted
-`resp_maint`, and compute the same two complete maintenance gradients. It is
-a zero-training causal diagnostic, not a proposed inference mode.
+The persisted-maintenance intervention then completed on free `gln01` at
+commit `d08d6eb`; report SHA256 is `a95ae129...f809b9`. Both gradients cover
+all `83,755,173` parameters, all five state slices resolve, and all physical
+hard failures are zero. Cutting prior-day `resp_maint` changes the extreme
+full gradient from `33.69151431` to `33.69151394` and its maintenance head
+from `33.46682558` to `33.46682500`. The matched control is likewise
+unchanged. The frozen classification is
+`maintenance_state_recurrence_not_explanatory`.
 
-Do not edit the maintenance input mask, source routing, or architecture until
-this diagnostic is complete and the result has been discussed with the user.
-AdamW continuation, batch enlargement, paid training, sealed-test read,
-365-day rollout, Gate D2, and product work remain closed.
+Do not remove `resp_maint` from the maintenance input route on this evidence,
+and do not continue arbitrary state-by-state Teacher carry. The remaining
+gradient is the direct 30-day maintenance-output objective. The frozen active
+operation is `target_oriented_maintenance_head_conditioning_audit_v1`. It
+isolates only the existing 769-parameter independent final head, constructs a
+common direction from 16 train/train group-by-horizon maintenance gradients,
+and evaluates a loss-scaled finite-step grid against GPP, growth and total
+autotrophic respiration, NPP, one-day state, and stocks.
+
+The local contract, head-isolation, calibration, classifier, runner entry,
+Ruff, compilation, and Bash gates pass. The broader related suite passes
+`97/98`; the sole failure is the documented unchanged historical
+representative-probe wall-time assertion. The next operation is one free
+`gln01` zero-training execution. The Attention architecture, input mask,
+source routing, and loss remain unchanged. AdamW continuation, batch
+enlargement, paid training, sealed-test read, 365-day rollout, Gate D2, and
+product work remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -1548,6 +1558,8 @@ See
 [`target_oriented_snow_thermal_alias_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_snow_thermal_alias_recurrence_intervention_v1.md),
 [`target_oriented_snow_thermal_alias_recurrence_result_20260827.md`](research/daily_coarse_graining/target_oriented_snow_thermal_alias_recurrence_result_20260827.md),
 [`target_oriented_maintenance_state_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_maintenance_state_recurrence_intervention_v1.md),
+[`target_oriented_maintenance_state_recurrence_result_20260827.md`](research/daily_coarse_graining/target_oriented_maintenance_state_recurrence_result_20260827.md),
+[`target_oriented_maintenance_head_conditioning_audit_v1.md`](research/daily_coarse_graining/target_oriented_maintenance_head_conditioning_audit_v1.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

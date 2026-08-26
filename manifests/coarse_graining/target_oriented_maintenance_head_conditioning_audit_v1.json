@@ -1,0 +1,117 @@
+{
+  "schema_version": "target_oriented_maintenance_head_conditioning_audit_v1",
+  "status": "frozen_before_zero_training_execution",
+  "contract_sha256": "b354c4e8309e878899ce61c83f851b08279977a9984eccf0b9a60bc7089fc369",
+  "identity": {
+    "maintenance_state_recurrence_report_sha256": "a95ae1291a1d4cc77bb026448b4c31e8244604dee9485886c5f7079272f809b9",
+    "flux_basis_amendment_sha256": "6c81e8f56c2c81fc2ac024a71da98f3e875c4ebc429f9e3d1ff4e8e3ef6bfb45",
+    "parent_target_contract_sha256": "7c9857c0ca57ee65cfcf7514a216a217c3b1661f6cc869c6dfb85d3786bfce5c",
+    "parent_training_contract_sha256": "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b",
+    "update_1000_checkpoint_sha256": "a566f9d95726984dc03cbf1f1a183dd0d1eae9e3479ce5055c64e571ef6a16c7",
+    "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "candidate": "target_oriented_hierarchical_coordinate_attention_v1",
+    "parameter_count": 83755173,
+    "head_field": "daily.fast_maintenance_respiration",
+    "head_parameter_count": 769
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "audit_updates": [251, 358, 465, 572, 679, 786, 893, 1000],
+    "one_day_samples_per_group": 32,
+    "seven_day_windows_per_group": 8,
+    "thirty_day_windows_per_group": 4,
+    "total_seven_day_windows": 64,
+    "total_thirty_day_windows": 32,
+    "teacher_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_artifact_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "objective": {
+    "field": "maintenance_respiration",
+    "score": "0.5_normalized_mse_plus_0.5_normalized_signed_bias_squared",
+    "horizons": [7, 30],
+    "normalization": "frozen_train_train_flux_scale",
+    "loss_changed": false
+  },
+  "direction": {
+    "sources": "eight_groups_x_two_horizons_maintenance_field_score",
+    "constraint_count": 16,
+    "differentiated_parameters": "target_oriented.primary_heads[maintenance_field_index]",
+    "head_parameter_count": 769,
+    "all_other_parameters": "unchanged_nondifferentiated_parent_values",
+    "normalization": "unit_l2_per_group_horizon_head_gradient",
+    "combination": "minimum_norm_simplex_common_descent",
+    "minimum_constraint_cosine": 0.01,
+    "momentum": false,
+    "coordinate_adaptive_scaling": false,
+    "weight_decay": false,
+    "gradient_clipping": false
+  },
+  "step_calibration": {
+    "predicted_median_relative_decrease_fractions": [0.001, 0.003, 0.01, 0.03, 0.1],
+    "base_step_norm": "median_positive_parent_score_divided_by_common_directional_derivative",
+    "candidate_step_norm": "predicted_fraction_times_base_step_norm",
+    "maximum_parameter_step_norm": 0.01,
+    "out_of_bound_candidates_evaluated": false,
+    "grid_extended_after_result": false
+  },
+  "exact_evaluation": {
+    "independent_flux_keys": ["gpp", "maintenance_respiration", "growth_respiration"],
+    "derived_flux_keys": ["autotrophic_respiration", "npp", "nep", "nee"],
+    "exact_retained_key": "heterotrophic_respiration",
+    "stock_keys": [
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon",
+      "total_live_biomass_carbon",
+      "nonliving_ecosystem_carbon",
+      "ecosystem_carbon"
+    ],
+    "one_day_state_and_process_protected": true,
+    "all_eight_groups_evaluated": true
+  },
+  "gates": {
+    "hard_failure_count": 0,
+    "nonfinite_value_count": 0,
+    "maximum_any_group_maintenance_relative_increase": 0.000001,
+    "minimum_each_horizon_maintenance_median_relative_decrease": 0.001,
+    "maximum_any_group_gpp_relative_increase": 0.01,
+    "maximum_gpp_median_relative_increase": 0.0,
+    "maximum_any_group_growth_respiration_relative_increase": 0.01,
+    "maximum_growth_respiration_median_relative_increase": 0.0,
+    "maximum_any_group_derived_flux_relative_increase": 0.01,
+    "maximum_derived_flux_median_relative_increase": 0.0,
+    "maximum_any_group_one_day_relative_increase": 0.001,
+    "maximum_one_day_median_relative_increase": 0.0,
+    "maximum_any_group_stock_relative_increase": 0.01,
+    "maximum_stock_median_relative_increase": 0.0,
+    "require_parent_passing_acceptance_keys_remain_passing": true,
+    "maximum_parent_failing_stock_rmse_relative_increase": 0.01
+  },
+  "selection": "largest_passing_predicted_decrease_fraction",
+  "execution": {
+    "free_gln01_only": true,
+    "paid_training_authorized": false,
+    "optimizer_updates": 0,
+    "parameter_steps_retained": 0,
+    "proposed_parameters_retained": false,
+    "optimizer_state_retained": false,
+    "checkpoint_written": false,
+    "recovery_written": false,
+    "teacher_data_regenerated": false,
+    "historical_v5_used": false,
+    "validation_values_evaluated": false,
+    "sealed_test_used": false,
+    "input_mask_edit_allowed": false,
+    "source_routing_edit_allowed": false,
+    "architecture_edit_allowed": false,
+    "365_day_rollout_allowed": false,
+    "gate_d2_allowed": false
+  },
+  "decision": {
+    "common_direction_not_supported": "redesign_maintenance_objective_or_sampling_before_training",
+    "finite_head_step_not_protected": "inspect_head_output_parameterization_before_architecture_discussion",
+    "protected_head_step_supported": "design_bounded_head_conditioned_training_without_architecture_change"
+  }
+}

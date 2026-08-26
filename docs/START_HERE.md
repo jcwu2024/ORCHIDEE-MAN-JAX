@@ -283,15 +283,21 @@ head becomes exactly zero. The full gradient falls only `1.57` times because
 the direct maintenance head remains `33.47`, so the frozen classification is
 mixed and Attention is not rejected.
 
-Source tracing shows that prior-day `resp_maint` is not an input to Fortran
-`maint_respiration`, but the current neural maintenance expert can read it
-through the complete `state_carbon` family. `resp_maint_part` is not part of
-this hypothesis because its day-end reset is source exact. The active gate is
-therefore one zero-training `resp_maint` recurrence intervention on the same
-two 30-day windows, preserving the accepted four snow-thermal carries. Any
-input-mask or source-routing edit requires user discussion after this result.
-Training, architecture changes, 365-day rollout, Gate D2, sealed test, and
-product work remain closed.
+The following persisted-`resp_maint` intervention is also complete. Cutting
+that cross-day edge changes the extreme full gradient and direct maintenance
+head by only about one part in `1e8`; the matched control is equally
+unchanged. Persisted maintenance recurrence is therefore not explanatory and
+supplies no reason to delete the token from its input route. The remaining
+`33.47` extreme norm is the direct 30-day maintenance-output gradient, not
+another demonstrated state-recurrence path.
+
+The active gate returns to non-recurrence objective/optimization design. The
+frozen `target_oriented_maintenance_head_conditioning_audit_v1` isolates the
+existing 769-parameter maintenance final head at the update-1000 checkpoint.
+It measures 16 train/train group-by-horizon gradients and exact finite response
+while protecting NPP, respiration, state, and stocks. The Attention
+architecture, input mask, and source routing remain unchanged. Paid training,
+365-day rollout, Gate D2, sealed test, and product work remain closed.
 
 ## New Task Bootstrap
 
