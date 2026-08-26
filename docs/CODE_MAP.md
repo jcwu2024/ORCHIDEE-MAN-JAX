@@ -280,6 +280,18 @@ frozen decision record is
 result and the controlling component-resolved next gate are in
 `target_oriented_flux_gradient_variance_audit_result_20260826.md`.
 
+`daily_operator/target_oriented_flux_basis.py` and
+`manifests/coarse_graining/target_oriented_flux_basis_amendment_v1.json` own
+the explicit component-resolved flux basis without mutating the historical v1
+objective. `target_oriented_contract.py` and `target_oriented_training.py`
+accept that explicit basis for scale projection, science statistics, exact
+microbatch accumulation, and separate flux/stock linearized gradients.
+`scripts/hpc/audit_target_oriented_component_resolved_geometry.py` owns the
+active zero-update five-source/eight-group geometry audit, and
+`scripts/hpc/run_target_oriented_component_resolved_geometry_audit.sh` owns
+its free-`gln01` execution boundary. The frozen decision record is
+`target_oriented_component_resolved_flux_basis_v1.md`.
+
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and
 maintenance-temperature factors to replaced fast processes and dynamically

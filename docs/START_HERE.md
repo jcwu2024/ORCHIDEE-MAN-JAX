@@ -250,9 +250,10 @@ science macro improved a further `50.5638%`; biomass and slow-carbon stocks
 now pass, while GPP, NPP, maintenance, growth, and total autotrophic
 respiration remain above the absolute gates. A completed zero-update audit
 finds that GPP benefits from a larger effective batch but maintenance and
-total autotrophic gradients remain opposed even at 16 windows. The active gate
-is therefore a component-resolved flux-loss amendment followed by a
-zero-update joint geometry and virtual-step audit at the update-1000 state.
+total autotrophic gradients remain opposed even at 16 windows. The
+component-resolved flux-loss amendment is now locally implemented. The active
+gate is its free-`gln01` zero-update joint geometry audit, followed by a
+separately frozen virtual-step audit at the update-1000 state.
 Paid continuation, 365-day rollout, Gate D2, sealed test, and product work
 remain closed.
 

@@ -1,0 +1,72 @@
+{
+  "schema_version": "target_oriented_flux_basis_amendment_v1",
+  "status": "frozen_before_zero_update_geometry_audit",
+  "contract_sha256": "6c81e8f56c2c81fc2ac024a71da98f3e875c4ebc429f9e3d1ff4e8e3ef6bfb45",
+  "identity": {
+    "parent_target_contract_sha256": "7c9857c0ca57ee65cfcf7514a216a217c3b1661f6cc869c6dfb85d3786bfce5c",
+    "parent_training_contract_sha256": "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b",
+    "update_1000_checkpoint_sha256": "a566f9d95726984dc03cbf1f1a183dd0d1eae9e3479ce5055c64e571ef6a16c7",
+    "diagnostic_report_sha256": "1de8962a64aad6a7b76cf311f1dd14932780c67691ec472fbc342c5c8eb42fbe",
+    "candidate": "target_oriented_hierarchical_coordinate_attention_v1",
+    "parameter_count": 83755173
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "teacher_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "flux_basis": {
+    "superseded_aggregate_basis": [
+      "gpp",
+      "autotrophic_respiration",
+      "heterotrophic_respiration"
+    ],
+    "component_resolved_basis": [
+      "gpp",
+      "maintenance_respiration",
+      "growth_respiration",
+      "heterotrophic_respiration"
+    ],
+    "derived_report_only": [
+      "autotrophic_respiration",
+      "npp",
+      "nep",
+      "nee"
+    ],
+    "component_weighting": "equal_active_independent_fields",
+    "flux_vs_stock_weighting": "unchanged_equal_macro_groups",
+    "metric_weighting": "one_half_normalized_mse_plus_one_half_normalized_signed_bias_squared"
+  },
+  "unchanged_boundary": {
+    "architecture_changed": false,
+    "operator_boundary_changed": false,
+    "output_schema_changed": false,
+    "stock_basis": [
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon",
+      "nonliving_ecosystem_carbon"
+    ],
+    "one_day_state_anchor_coefficient": 1.0,
+    "seven_day_science_coefficient": 1.0,
+    "thirty_day_science_coefficient": 1.0,
+    "necessary_process_supervision_coefficient": 0.1
+  },
+  "zero_update_gate": {
+    "audit_updates": [251, 358, 465, 572, 679, 786, 893, 1000],
+    "gradient_sources": [
+      "one_day_state_and_process",
+      "seven_day_component_resolved_flux",
+      "seven_day_independent_stock",
+      "thirty_day_component_resolved_flux",
+      "thirty_day_independent_stock"
+    ],
+    "required_parameter_coverage": 83755173,
+    "required_finite_gradient_sources": 5,
+    "required_zero_physical_hard_failures": true,
+    "optimizer_update_retained": false,
+    "checkpoint_written": false,
+    "decision": "measure_source_geometry_and_bounded_virtual_step_before_training"
+  }
+}

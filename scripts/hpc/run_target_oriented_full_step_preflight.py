@@ -215,6 +215,7 @@ def _make_steps(
     *,
     acceptance_scales: Any | None = None,
     acceptance_flux_names: tuple[str, ...] = (),
+    science_flux_basis: tuple[str, ...] | None = None,
 ):
     import jax
     import jax.numpy as jnp
@@ -238,6 +239,8 @@ def _make_steps(
         _linearized_error_loss,
         linearized_one_day_state_loss,
         linearized_process_supervision_loss,
+        linearized_science_flux_loss,
+        linearized_science_stock_loss,
         linearized_science_window_loss,
         one_day_state_sufficient_statistics,
         process_supervision_sufficient_statistics,
@@ -255,6 +258,9 @@ def _make_steps(
         retained_tail_template=template,
     )
     learned_output_names = tuple(field.name for field in runtime["learned_schema"].fields)
+    resolved_flux_basis = tuple(science_flux_basis or tuple(scales.fluxes))
+    if set(resolved_flux_basis) != set(scales.fluxes):
+        raise ValueError("target-oriented step flux basis and scale registry differ")
 
     def state_hard(predicted, predicted_defined, expected_defined):
         nonfinite = jnp.asarray(0, dtype=jnp.int32)
@@ -458,6 +464,7 @@ def _make_steps(
             flux_scales=scales.fluxes,
             stock_scales=scales.stocks,
             horizon=horizon,
+            flux_basis=resolved_flux_basis,
         )
         return statistics, hard
 
@@ -510,7 +517,33 @@ def _make_steps(
             horizon=horizon,
             rematerialize=True,
         )
-        return linearized_science_window_loss(current, total)
+        return linearized_science_window_loss(
+            current,
+            total,
+            flux_basis=resolved_flux_basis,
+        )
+
+    def window_flux_linear(parameters, batch, total, *, horizon: int):
+        current, _hard = window_statistics(
+            parameters,
+            batch,
+            horizon=horizon,
+            rematerialize=True,
+        )
+        return linearized_science_flux_loss(
+            current,
+            total,
+            flux_basis=resolved_flux_basis,
+        )
+
+    def window_stock_linear(parameters, batch, total, *, horizon: int):
+        current, _hard = window_statistics(
+            parameters,
+            batch,
+            horizon=horizon,
+            rematerialize=True,
+        )
+        return linearized_science_stock_loss(current, total)
 
     one_gradient = jax.jit(jax.value_and_grad(one_linear))
     seven_gradient = jax.jit(
@@ -533,6 +566,46 @@ def _make_steps(
         "one_gradient": one_gradient,
         "seven_gradient": seven_gradient,
         "thirty_gradient": thirty_gradient,
+        "seven_flux_gradient": jax.jit(
+            jax.value_and_grad(
+                lambda parameters, batch, total: window_flux_linear(
+                    parameters,
+                    batch,
+                    total,
+                    horizon=7,
+                )
+            )
+        ),
+        "seven_stock_gradient": jax.jit(
+            jax.value_and_grad(
+                lambda parameters, batch, total: window_stock_linear(
+                    parameters,
+                    batch,
+                    total,
+                    horizon=7,
+                )
+            )
+        ),
+        "thirty_flux_gradient": jax.jit(
+            jax.value_and_grad(
+                lambda parameters, batch, total: window_flux_linear(
+                    parameters,
+                    batch,
+                    total,
+                    horizon=30,
+                )
+            )
+        ),
+        "thirty_stock_gradient": jax.jit(
+            jax.value_and_grad(
+                lambda parameters, batch, total: window_stock_linear(
+                    parameters,
+                    batch,
+                    total,
+                    horizon=30,
+                )
+            )
+        ),
     }
     if acceptance_scales is not None:
         if not acceptance_flux_names or not set(acceptance_flux_names) <= set(acceptance_scales.fluxes):

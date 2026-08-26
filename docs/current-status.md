@@ -322,15 +322,22 @@ but maintenance and total autotrophic respiration remain opposed between the
 two 16-window estimates. Its decision is
 `mixed_batch_and_objective_geometry`; a larger batch alone is not admitted.
 
-The active task is a component-resolved amendment of the long-horizon flux
-basis: GPP, maintenance respiration, growth respiration, and heterotrophic
-respiration become the optimized terms, while total autotrophic respiration,
-NPP, NEP, and NEE remain derived gates. Keep the current Attention architecture
-and exact update-1000 parameters. Before any retained update, compare the
-amended flux gradient with the one-day/process and 7/30-day stock gradients
-and pass a bounded zero-retention virtual step. No unchanged
-update-1001-to-3000 continuation, 365-day rollout, sealed-test read, Gate D2,
-or product work is authorized.
+The component-resolved long-horizon flux amendment is now frozen and locally
+implemented: GPP, maintenance respiration, growth respiration, and
+heterotrophic respiration are the optimized terms, while total autotrophic
+respiration, NPP, NEP, and NEE remain derived gates. The historical objective
+remains replayable by default; the amendment is explicit. Its focused and
+related group passes `30/30`, and the complete target-oriented group passes
+`53/54` with only the unchanged historical launcher wall-time assertion.
+
+The active operation is a free-`gln01`, zero-update geometry audit over eight
+fixed effective batches at the exact update-1000 parameters. It compares the
+amended 7/30-day flux gradients with one-day/process and 7/30-day stock
+gradients, covers all `83,755,173` parameters, invokes no optimizer, and writes
+no checkpoint. A separate bounded virtual-step contract must be frozen from
+that result before any retained update. No unchanged update-1001-to-3000
+continuation, 365-day rollout, sealed-test read, Gate D2, or product work is
+authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -364,6 +371,8 @@ The completed zero-update diagnostic and result are
 [`target_oriented_flux_gradient_variance_audit_v1.md`](research/daily_coarse_graining/target_oriented_flux_gradient_variance_audit_v1.md)
 and
 [`target_oriented_flux_gradient_variance_audit_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_gradient_variance_audit_result_20260826.md).
+The active component-resolved contract is
+[`target_oriented_component_resolved_flux_basis_v1.md`](research/daily_coarse_graining/target_oriented_component_resolved_flux_basis_v1.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

@@ -310,7 +310,11 @@ def _hard_host(value: Any) -> Mapping[str, int]:
     return {name: int(np.asarray(item)) for name, item in value._asdict().items()}
 
 
-def _load_context(args: argparse.Namespace) -> Mapping[str, Any]:
+def _load_context(
+    args: argparse.Namespace,
+    *,
+    science_flux_basis: Sequence[str] | None = None,
+) -> Mapping[str, Any]:
     from research.daily_coarse_graining.daily_operator.mechanistic_output_contract import (
         build_mechanistic_learned_schema,
         load_mechanistic_output_contract,
@@ -322,6 +326,7 @@ def _load_context(args: argparse.Namespace) -> Mapping[str, Any]:
         load_strong_baseline_contract,
     )
     from research.daily_coarse_graining.daily_operator.target_oriented_contract import (
+        INDEPENDENT_FLUX_BASIS,
         load_target_oriented_contract,
     )
     from research.daily_coarse_graining.daily_operator.target_oriented_training import (
@@ -343,6 +348,7 @@ def _load_context(args: argparse.Namespace) -> Mapping[str, Any]:
     target_contract = load_target_oriented_contract()
     training_contract = load_target_oriented_training_contract(args.training_contract)
     state_anchor_policy = load_target_oriented_state_anchor_policy()
+    resolved_science_flux_basis = tuple(science_flux_basis or INDEPENDENT_FLUX_BASIS)
     learned_schema = build_mechanistic_learned_schema(runtime["schema"], mechanism)
     layout = build_mechanistic_output_layout(
         adapter=runtime["adapter"],
@@ -395,6 +401,7 @@ def _load_context(args: argparse.Namespace) -> Mapping[str, Any]:
         runtime["process_statistics"].outputs["daily.fast_gpp"].scale,
         runtime["contract"],
         state_anchor_policy=state_anchor_policy,
+        flux_basis=resolved_science_flux_basis,
     )
     acceptance_scales = derive_target_oriented_acceptance_scales(
         runtime["base_statistics"].arrays["next_state"].scale,
@@ -432,6 +439,7 @@ def _load_context(args: argparse.Namespace) -> Mapping[str, Any]:
         target_contract,
         acceptance_scales=acceptance_scales,
         acceptance_flux_names=AUDIT_FLUX_KEYS,
+        science_flux_basis=resolved_science_flux_basis,
     )
     return {
         "runtime": runtime,
@@ -443,6 +451,8 @@ def _load_context(args: argparse.Namespace) -> Mapping[str, Any]:
         "target_contract": target_contract,
         "state_anchor_policy": state_anchor_policy,
         "panel": panel,
+        "scales": scales,
+        "template": template,
         "trace_signature": first_artifact.trace_signature,
     }
 

@@ -264,6 +264,7 @@ from .target_oriented_attention import (
 )
 from .target_oriented_contract import (
     AUXILIARY_SUPERVISION,
+    COMPONENT_RESOLVED_FLUX_BASIS,
     EXACT_OR_DIAGNOSTIC,
     INDEPENDENT_FLUX_BASIS,
     INDEPENDENT_STOCK_BASIS,
@@ -302,6 +303,8 @@ from .target_oriented_training import (
     initialize_target_oriented_adamw,
     linearized_one_day_state_loss,
     linearized_process_supervision_loss,
+    linearized_science_flux_loss,
+    linearized_science_stock_loss,
     linearized_science_window_loss,
     load_target_oriented_state_anchor_policy,
     load_target_oriented_training_contract,
@@ -506,6 +509,7 @@ __all__ = [
     "validate_native_forcing",
     "validate_successor_output_normalization",
     "AUXILIARY_SUPERVISION",
+    "COMPONENT_RESOLVED_FLUX_BASIS",
     "EXACT_OR_DIAGNOSTIC",
     "INDEPENDENT_FLUX_BASIS",
     "INDEPENDENT_STOCK_BASIS",
@@ -531,6 +535,8 @@ __all__ = [
     "initialize_target_oriented_adamw",
     "linearized_one_day_state_loss",
     "linearized_process_supervision_loss",
+    "linearized_science_flux_loss",
+    "linearized_science_stock_loss",
     "linearized_science_window_loss",
     "compose_target_oriented_loss",
     "derive_carbon_flux_identities",

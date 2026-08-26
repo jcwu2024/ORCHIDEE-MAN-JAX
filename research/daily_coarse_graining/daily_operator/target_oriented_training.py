@@ -24,6 +24,7 @@ from .long_horizon_objective import MaskedTrajectory, NormalizedError
 from .successor_fast_owner_training import build_successor_fast_owner_targets
 from .successor_training import derive_long_horizon_scales
 from .target_oriented_contract import (
+    COMPONENT_RESOLVED_FLUX_BASIS,
     INDEPENDENT_FLUX_BASIS,
     INDEPENDENT_STOCK_BASIS,
     NecessaryProcessSupervisionResult,
@@ -431,6 +432,7 @@ def derive_target_oriented_scales(
     contract: Any,
     *,
     state_anchor_policy: TargetOrientedStateAnchorPolicy | None = None,
+    flux_basis: Sequence[str] = INDEPENDENT_FLUX_BASIS,
 ) -> TargetOrientedScales:
     """Project frozen train/train column scales onto the target loss basis."""
 
@@ -528,8 +530,10 @@ def derive_target_oriented_scales(
     )._replace(other=declared_dynamic)
 
     long = derive_long_horizon_scales(raw_flat, fast_gpp_scale, contract)
-    fluxes = {
+    available_fluxes = {
         "gpp": float(long.fluxes["gpp"]),
+        "maintenance_respiration": float(long.fluxes["maintenance_respiration"]),
+        "growth_respiration": float(long.fluxes["growth_respiration"]),
         "autotrophic_respiration": float(
             np.hypot(
                 long.fluxes["maintenance_respiration"],
@@ -538,6 +542,10 @@ def derive_target_oriented_scales(
         ),
         "heterotrophic_respiration": float(long.fluxes["heterotrophic_respiration"]),
     }
+    basis = tuple(str(name) for name in flux_basis)
+    if basis not in (INDEPENDENT_FLUX_BASIS, COMPONENT_RESOLVED_FLUX_BASIS):
+        raise ValueError("target-oriented science scale flux basis is unsupported")
+    fluxes = {name: available_fluxes[name] for name in basis}
     stocks = {
         "aboveground_biomass_carbon": float(long.stocks["aboveground_biomass_carbon"]),
         "belowground_biomass_carbon": float(long.stocks["belowground_biomass_carbon"]),
@@ -548,7 +556,7 @@ def derive_target_oriented_scales(
             )
         ),
     }
-    if set(fluxes) != set(INDEPENDENT_FLUX_BASIS) or set(stocks) != set(INDEPENDENT_STOCK_BASIS):
+    if set(fluxes) != set(basis) or set(stocks) != set(INDEPENDENT_STOCK_BASIS):
         raise ValueError("target-oriented independent science scale registry drift")
     return TargetOrientedScales(
         state=state,
@@ -706,36 +714,69 @@ def linearized_one_day_state_loss(
     return jnp.where(count > 0.0, jnp.sum(jnp.stack(values)) / count, 0.0)
 
 
-def linearized_science_window_loss(
+def _linearized_science_group_loss(
+    current_group: Mapping[str, ErrorSufficientStatistics],
+    total_group: Mapping[str, ErrorSufficientStatistics],
+    names: Sequence[str],
+) -> Any:
+    names = tuple(names)
+    if set(current_group) != set(names) or set(total_group) != set(names):
+        raise ValueError("target-oriented science statistic registry drift")
+    active = {name: jax.lax.stop_gradient(jnp.asarray(total_group[name].count) > 0.0) for name in names}
+    count = jnp.sum(jnp.stack(tuple(active.values())), dtype=jnp.float64)
+    values = []
+    for name in names:
+        value = _linearized_error_loss(
+            current_group[name],
+            total_group[name],
+            mse_weight=0.25,
+            bias_squared_weight=0.25,
+        )
+        values.append(jnp.where(active[name], value, 0.0))
+    return jnp.where(
+        count > 0.0,
+        jnp.sum(jnp.stack(values)) / count,
+        0.0,
+    )
+
+
+def linearized_science_flux_loss(
+    current: ScienceWindowSufficientStatistics,
+    total: ScienceWindowSufficientStatistics,
+    *,
+    flux_basis: Sequence[str] = INDEPENDENT_FLUX_BASIS,
+) -> Any:
+    """Gradient-exact flux-macro contribution for independent-window VJPs."""
+
+    return _linearized_science_group_loss(current.fluxes, total.fluxes, flux_basis)
+
+
+def linearized_science_stock_loss(
     current: ScienceWindowSufficientStatistics,
     total: ScienceWindowSufficientStatistics,
 ) -> Any:
+    """Gradient-exact stock-macro contribution for independent-window VJPs."""
+
+    return _linearized_science_group_loss(
+        current.stocks,
+        total.stocks,
+        INDEPENDENT_STOCK_BASIS,
+    )
+
+
+def linearized_science_window_loss(
+    current: ScienceWindowSufficientStatistics,
+    total: ScienceWindowSufficientStatistics,
+    *,
+    flux_basis: Sequence[str] = INDEPENDENT_FLUX_BASIS,
+) -> Any:
     """Gradient-exact 7/30-day contribution for one-window microbatches."""
 
-    result = jnp.asarray(0.0, dtype=jnp.float64)
-    for current_group, total_group, names in (
-        (current.fluxes, total.fluxes, INDEPENDENT_FLUX_BASIS),
-        (current.stocks, total.stocks, INDEPENDENT_STOCK_BASIS),
-    ):
-        if set(current_group) != set(names) or set(total_group) != set(names):
-            raise ValueError("target-oriented science statistic registry drift")
-        active = {name: jax.lax.stop_gradient(jnp.asarray(total_group[name].count) > 0.0) for name in names}
-        count = jnp.sum(jnp.stack(tuple(active.values())), dtype=jnp.float64)
-        values = []
-        for name in names:
-            value = _linearized_error_loss(
-                current_group[name],
-                total_group[name],
-                mse_weight=0.25,
-                bias_squared_weight=0.25,
-            )
-            values.append(jnp.where(active[name], value, 0.0))
-        result = result + jnp.where(
-            count > 0.0,
-            jnp.sum(jnp.stack(values)) / count,
-            0.0,
-        )
-    return result
+    return linearized_science_flux_loss(
+        current,
+        total,
+        flux_basis=flux_basis,
+    ) + linearized_science_stock_loss(current, total)
 
 
 def linearized_process_supervision_loss(
@@ -854,6 +895,8 @@ def _masked_difference(
 def _independent_trajectories(
     fluxes: Mapping[str, MaskedTrajectory],
     stocks: Mapping[str, MaskedTrajectory],
+    *,
+    flux_basis: Sequence[str] = INDEPENDENT_FLUX_BASIS,
 ) -> tuple[Mapping[str, MaskedTrajectory], Mapping[str, MaskedTrajectory]]:
     required_fluxes = {
         "gpp",
@@ -869,15 +912,21 @@ def _independent_trajectories(
     }
     if not required_fluxes <= set(fluxes) or not required_stocks <= set(stocks):
         raise ValueError("target-oriented science trajectory registry is incomplete")
+    basis = tuple(str(name) for name in flux_basis)
+    if basis not in (INDEPENDENT_FLUX_BASIS, COMPONENT_RESOLVED_FLUX_BASIS):
+        raise ValueError("target-oriented science trajectory flux basis is unsupported")
+    available_fluxes = {
+        "gpp": fluxes["gpp"],
+        "maintenance_respiration": fluxes["maintenance_respiration"],
+        "growth_respiration": fluxes["growth_respiration"],
+        "autotrophic_respiration": _masked_sum(
+            fluxes["maintenance_respiration"],
+            fluxes["growth_respiration"],
+        ),
+        "heterotrophic_respiration": fluxes["heterotrophic_respiration"],
+    }
     return (
-        {
-            "gpp": fluxes["gpp"],
-            "autotrophic_respiration": _masked_sum(
-                fluxes["maintenance_respiration"],
-                fluxes["growth_respiration"],
-            ),
-            "heterotrophic_respiration": fluxes["heterotrophic_respiration"],
-        },
+        {name: available_fluxes[name] for name in basis},
         {
             "aboveground_biomass_carbon": stocks["aboveground_biomass_carbon"],
             "belowground_biomass_carbon": stocks["belowground_biomass_carbon"],
@@ -898,18 +947,30 @@ def science_window_sufficient_statistics(
     flux_scales: Mapping[str, Any],
     stock_scales: Mapping[str, Any],
     horizon: int,
+    flux_basis: Sequence[str] = INDEPENDENT_FLUX_BASIS,
 ) -> ScienceWindowSufficientStatistics:
     if int(horizon) not in (7, 30):
         raise ValueError("target-oriented training horizon must be 7 or 30 days")
-    if set(flux_scales) != set(INDEPENDENT_FLUX_BASIS):
+    basis = tuple(str(name) for name in flux_basis)
+    if basis not in (INDEPENDENT_FLUX_BASIS, COMPONENT_RESOLVED_FLUX_BASIS):
+        raise ValueError("target-oriented science statistic flux basis is unsupported")
+    if set(flux_scales) != set(basis):
         raise ValueError("target-oriented independent flux scale registry drift")
     if set(stock_scales) != set(INDEPENDENT_STOCK_BASIS):
         raise ValueError("target-oriented independent stock scale registry drift")
-    predicted_flux, predicted_stock = _independent_trajectories(predicted_fluxes, predicted_stocks)
-    expected_flux, expected_stock = _independent_trajectories(expected_fluxes, expected_stocks)
+    predicted_flux, predicted_stock = _independent_trajectories(
+        predicted_fluxes,
+        predicted_stocks,
+        flux_basis=basis,
+    )
+    expected_flux, expected_stock = _independent_trajectories(
+        expected_fluxes,
+        expected_stocks,
+        flux_basis=basis,
+    )
 
     flux_statistics = {}
-    for name in INDEPENDENT_FLUX_BASIS:
+    for name in basis:
         predicted = predicted_flux[name]
         expected = expected_flux[name]
         if jnp.asarray(predicted.value).shape[0] < horizon:
@@ -947,26 +1008,34 @@ def add_science_window_sufficient_statistics(
     left: ScienceWindowSufficientStatistics,
     right: ScienceWindowSufficientStatistics,
 ) -> ScienceWindowSufficientStatistics:
+    flux_names = tuple(left.fluxes)
+    stock_names = tuple(left.stocks)
+    if set(right.fluxes) != set(flux_names) or set(right.stocks) != set(stock_names):
+        raise ValueError("target-oriented science statistic registry drift")
     return ScienceWindowSufficientStatistics(
-        {
-            name: add_error_sufficient_statistics(left.fluxes[name], right.fluxes[name])
-            for name in INDEPENDENT_FLUX_BASIS
-        },
-        {
-            name: add_error_sufficient_statistics(left.stocks[name], right.stocks[name])
-            for name in INDEPENDENT_STOCK_BASIS
-        },
+        {name: add_error_sufficient_statistics(left.fluxes[name], right.fluxes[name]) for name in flux_names},
+        {name: add_error_sufficient_statistics(left.stocks[name], right.stocks[name]) for name in stock_names},
     )
 
 
 def science_window_from_sufficient_statistics(
     statistics: ScienceWindowSufficientStatistics,
+    *,
+    flux_basis: Sequence[str] | None = None,
 ) -> ScienceWindowResult:
-    if set(statistics.fluxes) != set(INDEPENDENT_FLUX_BASIS) or set(statistics.stocks) != set(INDEPENDENT_STOCK_BASIS):
+    basis = tuple(
+        str(name)
+        for name in (
+            tuple(statistics.fluxes)
+            if flux_basis is None
+            else flux_basis
+        )
+    )
+    if basis not in (INDEPENDENT_FLUX_BASIS, COMPONENT_RESOLVED_FLUX_BASIS):
+        raise ValueError("target-oriented science result flux basis is unsupported")
+    if set(statistics.fluxes) != set(basis) or set(statistics.stocks) != set(INDEPENDENT_STOCK_BASIS):
         raise ValueError("target-oriented science statistic registry drift")
-    flux_errors = {
-        name: normalized_error_from_sufficient_statistics(statistics.fluxes[name]) for name in INDEPENDENT_FLUX_BASIS
-    }
+    flux_errors = {name: normalized_error_from_sufficient_statistics(statistics.fluxes[name]) for name in basis}
     stock_errors = {
         name: normalized_error_from_sufficient_statistics(statistics.stocks[name]) for name in INDEPENDENT_STOCK_BASIS
     }
@@ -1659,6 +1728,8 @@ __all__ = [
     "load_target_oriented_training_contract",
     "linearized_one_day_state_loss",
     "linearized_process_supervision_loss",
+    "linearized_science_flux_loss",
+    "linearized_science_stock_loss",
     "linearized_science_window_loss",
     "merge_error_sufficient_statistics",
     "necessary_process_supervision_from_sufficient_statistics",

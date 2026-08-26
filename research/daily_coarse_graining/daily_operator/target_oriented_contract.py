@@ -13,6 +13,13 @@ import numpy as np
 
 from .long_horizon_objective import MaskedTrajectory, NormalizedError
 from .neural_architecture import NeuralOutputSchema
+from .target_oriented_flux_basis import (
+    COMPONENT_RESOLVED_FLUX_BASIS,
+    LEGACY_AGGREGATE_FLUX_BASIS,
+)
+from .target_oriented_flux_basis import (
+    INDEPENDENT_STOCK_BASIS as AMENDED_INDEPENDENT_STOCK_BASIS,
+)
 from .training_loss import ProcessLossResult
 from .types import StateDefinedMasks, StateFeatureGroups
 
@@ -31,15 +38,12 @@ LEARNED_CATEGORIES = (
     STATE_BUDGET_ESSENTIAL,
     AUXILIARY_SUPERVISION,
 )
-INDEPENDENT_FLUX_BASIS = (
-    "gpp",
-    "autotrophic_respiration",
-    "heterotrophic_respiration",
-)
-INDEPENDENT_STOCK_BASIS = (
-    "aboveground_biomass_carbon",
-    "belowground_biomass_carbon",
-    "nonliving_ecosystem_carbon",
+# Retain the historical v1 name so its checkpoint and contract remain replayable.
+INDEPENDENT_FLUX_BASIS = LEGACY_AGGREGATE_FLUX_BASIS
+INDEPENDENT_STOCK_BASIS = AMENDED_INDEPENDENT_STOCK_BASIS
+SUPPORTED_FLUX_BASES = (
+    INDEPENDENT_FLUX_BASIS,
+    COMPONENT_RESOLVED_FLUX_BASIS,
 )
 BASE_FLUX_FIELDS = (
     "gpp",
@@ -482,19 +486,27 @@ def _masked_difference(left: MaskedTrajectory, right: MaskedTrajectory) -> Maske
 def _independent_science_trajectories(
     fluxes: Mapping[str, MaskedTrajectory],
     stocks: Mapping[str, MaskedTrajectory],
+    *,
+    flux_basis: tuple[str, ...] = INDEPENDENT_FLUX_BASIS,
 ) -> tuple[Mapping[str, MaskedTrajectory], Mapping[str, MaskedTrajectory]]:
     if not set(BASE_FLUX_FIELDS) <= set(fluxes):
         raise ValueError("target-oriented science flux registry is incomplete")
     if not set(BASE_STOCK_FIELDS) <= set(stocks):
         raise ValueError("target-oriented science stock registry is incomplete")
-    independent_fluxes = {
+    basis = tuple(flux_basis)
+    if basis not in SUPPORTED_FLUX_BASES:
+        raise ValueError("target-oriented science flux basis is unsupported")
+    available_fluxes = {
         "gpp": fluxes["gpp"],
+        "maintenance_respiration": fluxes["maintenance_respiration"],
+        "growth_respiration": fluxes["growth_respiration"],
         "autotrophic_respiration": _masked_sum(
             fluxes["maintenance_respiration"],
             fluxes["growth_respiration"],
         ),
         "heterotrophic_respiration": fluxes["heterotrophic_respiration"],
     }
+    independent_fluxes = {name: available_fluxes[name] for name in basis}
     independent_stocks = {
         "aboveground_biomass_carbon": stocks["aboveground_biomass_carbon"],
         "belowground_biomass_carbon": stocks["belowground_biomass_carbon"],
@@ -529,18 +541,28 @@ def science_window_objective(
     flux_scales: Mapping[str, Any],
     stock_scales: Mapping[str, Any],
     horizon: int,
+    flux_basis: tuple[str, ...] = INDEPENDENT_FLUX_BASIS,
 ) -> ScienceWindowResult:
     if int(horizon) not in (7, 30):
         raise ValueError("target-oriented training horizon must be 7 or 30 days")
-    predicted_flux, predicted_stock = _independent_science_trajectories(predicted_fluxes, predicted_stocks)
-    expected_flux, expected_stock = _independent_science_trajectories(expected_fluxes, expected_stocks)
-    if set(flux_scales) != set(INDEPENDENT_FLUX_BASIS):
+    basis = tuple(flux_basis)
+    predicted_flux, predicted_stock = _independent_science_trajectories(
+        predicted_fluxes,
+        predicted_stocks,
+        flux_basis=basis,
+    )
+    expected_flux, expected_stock = _independent_science_trajectories(
+        expected_fluxes,
+        expected_stocks,
+        flux_basis=basis,
+    )
+    if set(flux_scales) != set(basis):
         raise ValueError("target-oriented independent flux scale registry drift")
     if set(stock_scales) != set(INDEPENDENT_STOCK_BASIS):
         raise ValueError("target-oriented independent stock scale registry drift")
 
     flux_errors: dict[str, NormalizedError] = {}
-    for name in INDEPENDENT_FLUX_BASIS:
+    for name in basis:
         predicted = predicted_flux[name]
         expected = expected_flux[name]
         if jnp.asarray(predicted.value).shape[0] < horizon:
@@ -656,6 +678,7 @@ __all__ = [
     "AUXILIARY_SUPERVISION",
     "CarbonFluxIdentityResult",
     "CarbonStockIdentityResult",
+    "COMPONENT_RESOLVED_FLUX_BASIS",
     "DEFAULT_CONTRACT_PATH",
     "EXACT_OR_DIAGNOSTIC",
     "FROZEN_CONTRACT_SHA256",
@@ -667,6 +690,7 @@ __all__ = [
     "PRIMARY_SCIENCE_DIRECT",
     "STATE_BUDGET_ESSENTIAL",
     "ScienceWindowResult",
+    "SUPPORTED_FLUX_BASES",
     "TargetOrientedContract",
     "TargetOrientedLossResult",
     "compose_target_oriented_loss",
