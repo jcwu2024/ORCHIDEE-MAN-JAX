@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
+import jax
 import numpy as np
 
 from scripts.hpc.audit_target_oriented_component_resolved_geometry import (
@@ -10,6 +11,7 @@ from scripts.hpc.audit_target_oriented_component_resolved_geometry import (
     SOURCE_NAMES,
     _cosine_report,
     _group_variance_report,
+    _host_tree_gram,
 )
 from scripts.hpc.audit_target_oriented_flux_gradient_variance import AUDIT_UPDATES
 
@@ -52,6 +54,24 @@ def test_component_resolved_geometry_cosine_and_variance_reports_are_exact():
         "pairwise_cosine_median": 0.0,
         "pairwise_cosine_negative_fraction": 0.0,
     }
+
+
+def test_component_resolved_geometry_host_gram_matches_flattened_float64_reference():
+    gradients = (
+        {"left": np.asarray([1.0, 2.0], dtype=np.float32), "right": (np.asarray(3.0),)},
+        {"left": np.asarray([-2.0, 4.0], dtype=np.float32), "right": (np.asarray(0.5),)},
+        {"left": np.asarray([0.0, -1.0], dtype=np.float32), "right": (np.asarray(2.0),)},
+    )
+    vectors = np.stack(
+        [
+            np.concatenate(
+                [np.asarray(leaf, dtype=np.float64).reshape(-1) for leaf in jax.tree_util.tree_leaves(tree)]
+            )
+            for tree in gradients
+        ]
+    )
+
+    np.testing.assert_allclose(_host_tree_gram(jax, gradients), vectors @ vectors.T)
 
 
 def test_component_resolved_geometry_launcher_is_free_node_and_zero_update_only():

@@ -97,6 +97,27 @@ def _all_parameter_gram(jax: Any, jnp: Any, gradients: Sequence[Any]) -> np.ndar
     return result
 
 
+def _host_tree_gram(jax: Any, gradients: Sequence[Any]) -> np.ndarray:
+    """Accumulate a float64 Gram matrix one parameter leaf at a time on the host."""
+    if not gradients:
+        raise ValueError("cannot build a Gram matrix from an empty gradient sequence")
+
+    flattened = [jax.tree_util.tree_flatten(gradient) for gradient in gradients]
+    leaves, structure = flattened[0]
+    if any(current_structure != structure for _, current_structure in flattened[1:]):
+        raise ValueError("gradient tree structures differ")
+
+    gram = np.zeros((len(gradients), len(gradients)), dtype=np.float64)
+    for leaf_index, reference in enumerate(leaves):
+        matrix = np.empty((len(gradients), np.asarray(reference).size), dtype=np.float64)
+        for gradient_index, (current_leaves, _) in enumerate(flattened):
+            matrix[gradient_index] = np.asarray(current_leaves[leaf_index]).reshape(-1)
+        gram += matrix @ matrix.T
+    if not np.all(np.isfinite(gram)):
+        raise FloatingPointError("component-resolved host gradient Gram matrix is nonfinite")
+    return gram
+
+
 def _cosine_report(gram: np.ndarray, names: Sequence[str]) -> Mapping[str, Any]:
     values = np.asarray(gram, dtype=np.float64)
     names = tuple(names)
@@ -319,7 +340,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     }
     batch_variance = {}
     for name in SOURCE_NAMES:
-        gram = _all_parameter_gram(jax, jnp, source_gradients[name])
+        gram = _host_tree_gram(jax, source_gradients[name])
         batch_variance[name] = _group_variance_report(gram)
 
     amended_flux = _add_gradient(
