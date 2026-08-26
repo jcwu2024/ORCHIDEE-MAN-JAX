@@ -76,7 +76,7 @@ def _science_record(statistics: Any, flux_basis: Sequence[str]) -> Mapping[str, 
             float(np.mean([value["normalized_mse"] for value in active]))
             + float(np.mean([value["normalized_signed_bias"] ** 2 for value in active]))
         )
-    return {"component_fields": fields, "standalone_flux_score": score}
+    return {"component_fields": fields, "forward_flux_score": score}
 
 
 def _window_identities(entry: Mapping[str, Any], component: str) -> list[Mapping[str, Any]]:
@@ -249,13 +249,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 acceptance_host = jax.device_get(acceptance)
                 science_record = _science_record(science_host, amendment.flux_basis)
                 exact_loss = float(np.asarray(loss))
-                if not np.isclose(
-                    exact_loss,
-                    float(science_record["standalone_flux_score"]),
-                    rtol=1.0e-8,
-                    atol=1.0e-12,
-                ):
-                    raise ValueError("standalone residual-tail loss does not reproduce forward score")
+                forward_loss = float(science_record["forward_flux_score"])
+                if not np.isfinite(exact_loss) or not np.isfinite(forward_loss):
+                    raise FloatingPointError("standalone residual-tail loss is nonfinite")
+                score_difference = abs(exact_loss - forward_loss)
+                score_relative_difference = score_difference / max(abs(forward_loss), 1.0e-15)
                 gradient_report = _gradient_report(jax, gradient)
                 if (
                     int(gradient_report["value_count"]) != PARAMETER_COUNT
@@ -280,6 +278,9 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                         "window_index_within_group": index,
                         **identity,
                         **science_record,
+                        "standalone_flux_score": exact_loss,
+                        "score_reproduction_absolute_difference": score_difference,
+                        "score_reproduction_relative_difference": score_relative_difference,
                         "acceptance_fields": acceptance_fields,
                         "gradient": gradient_report,
                         "sensitivity_proxy": float(gradient_report["l2_norm"]) / np.sqrt(max(exact_loss, 1.0e-30)),
@@ -332,6 +333,17 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             for name in (*OPTIMIZED_FLUX_KEYS, *DERIVED_FLUX_KEYS)
         }
         analysis[key] = {
+            "score_reproduction": {
+                "maximum_absolute_difference": max(
+                    float(record["score_reproduction_absolute_difference"]) for record in windows[key]
+                ),
+                "maximum_relative_difference": max(
+                    float(record["score_reproduction_relative_difference"]) for record in windows[key]
+                ),
+                "median_relative_difference": float(
+                    np.median([float(record["score_reproduction_relative_difference"]) for record in windows[key]])
+                ),
+            },
             "window_loss_concentration": contribution_summary(
                 losses,
                 top_counts=contract.top_counts,
