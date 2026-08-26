@@ -1511,21 +1511,31 @@ unchanged. The frozen classification is
 
 Do not remove `resp_maint` from the maintenance input route on this evidence,
 and do not continue arbitrary state-by-state Teacher carry. The remaining
-gradient is the direct 30-day maintenance-output objective. The frozen active
-operation is `target_oriented_maintenance_head_conditioning_audit_v1`. It
-isolates only the existing 769-parameter independent final head, constructs a
-common direction from 16 train/train group-by-horizon maintenance gradients,
-and evaluates a loss-scaled finite-step grid against GPP, growth and total
-autotrophic respiration, NPP, one-day state, and stocks.
+gradient is the direct 30-day maintenance-output objective. The frozen
+`target_oriented_maintenance_head_conditioning_audit_v1` has now completed on
+free `gln01`; report SHA256 is `85ab83a1...d27757`.
 
-The local contract, head-isolation, calibration, classifier, runner entry,
-Ruff, compilation, and Bash gates pass. The broader related suite passes
-`97/98`; the sole failure is the documented unchanged historical
-representative-probe wall-time assertion. The next operation is one free
-`gln01` zero-training execution. The Attention architecture, input mask,
-source routing, and loss remain unchanged. AdamW continuation, batch
-enlargement, paid training, sealed-test read, 365-day rollout, Gate D2, and
-product work remain closed.
+All 16 finite, nonzero 769-parameter head gradients admit a common direction
+with minimum cosine `0.056523`. No evaluated finite step passes every frozen
+protection gate, so the formal classification is
+`finite_head_step_not_protected`. This is not a no-learning result. At head
+norm `0.0018462`, median 7/30-day maintenance scores improve by
+`1.4415%/0.8188%`, with NPP, AGB, BGB, and total-live-biomass improvements.
+The formal failure comes from small positive median changes in 7-day GPP,
+growth-respiration, and ecosystem-carbon scores. The larger `0.0055387` norm
+also violates several `1%` any-group protection limits.
+
+The active boundary is now output-parameterization review followed by user
+discussion. The existing maintenance head is one shared `768 -> 1` linear
+projection over all maintenance coordinates; coordinate-specific information
+must be linearly decodable through those same 769 parameters. Preserve the
+Attention body as an open option and inspect a structured conditional
+maintenance head before proposing implementation. Do not change the
+architecture, input mask, source routing, or loss until the mechanism,
+parameter budget, initialization policy, matched diagnostic, and bounded gate
+have been discussed. Unchanged AdamW continuation, batch enlargement, paid
+training, sealed-test read, 365-day rollout, Gate D2, and product work remain
+closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -1560,6 +1570,7 @@ See
 [`target_oriented_maintenance_state_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_maintenance_state_recurrence_intervention_v1.md),
 [`target_oriented_maintenance_state_recurrence_result_20260827.md`](research/daily_coarse_graining/target_oriented_maintenance_state_recurrence_result_20260827.md),
 [`target_oriented_maintenance_head_conditioning_audit_v1.md`](research/daily_coarse_graining/target_oriented_maintenance_head_conditioning_audit_v1.md),
+[`target_oriented_maintenance_head_conditioning_result_20260827.md`](research/daily_coarse_graining/target_oriented_maintenance_head_conditioning_result_20260827.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

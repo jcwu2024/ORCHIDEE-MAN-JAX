@@ -291,13 +291,20 @@ supplies no reason to delete the token from its input route. The remaining
 `33.47` extreme norm is the direct 30-day maintenance-output gradient, not
 another demonstrated state-recurrence path.
 
-The active gate returns to non-recurrence objective/optimization design. The
-frozen `target_oriented_maintenance_head_conditioning_audit_v1` isolates the
-existing 769-parameter maintenance final head at the update-1000 checkpoint.
-It measures 16 train/train group-by-horizon gradients and exact finite response
-while protecting NPP, respiration, state, and stocks. The Attention
-architecture, input mask, and source routing remain unchanged. Paid training,
-365-day rollout, Gate D2, sealed test, and product work remain closed.
+The maintenance-head conditioning audit is now complete. All 16 gradients
+admit a common descent direction with minimum cosine `0.056523`, but none of
+the four in-bound finite steps passes every frozen protection gate. The `1%`
+calibrated step improves median 7/30-day maintenance by `1.44%/0.82%` and also
+improves NPP and live-biomass scores, while slightly regressing 7-day growth
+respiration and ecosystem-carbon scores. The formal classification is
+`finite_head_step_not_protected`.
+
+The active boundary is an architecture discussion, not another execution.
+Inspect a structured maintenance output parameterization while preserving the
+coordinate-aligned Attention body as an open option. Do not edit the
+architecture, input mask, source routing, or loss before that discussion.
+Unchanged continuation, paid training, 365-day rollout, Gate D2, sealed test,
+and product work remain closed.
 
 ## New Task Bootstrap
 

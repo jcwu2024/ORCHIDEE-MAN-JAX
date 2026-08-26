@@ -402,16 +402,28 @@ negligible amounts. The frozen classification is
 `maintenance_state_recurrence_not_explanatory`.
 
 This closes the bounded Teacher-carry state investigation. It does not support
-removing persisted `resp_maint` from the broad carbon input route. The active
-gate returns to non-recurrence optimization design. The frozen
-`target_oriented_maintenance_head_conditioning_audit_v1` differentiates only
-the existing 769-parameter maintenance final head across 16 train/train
-group-by-horizon objectives, calibrates finite steps from predicted relative
-loss decrease, and exactly protects 7/30-day science, one-day state, and
-stocks. Its local gates pass; one free `gln01` zero-training execution is next.
-No input-mask/source-routing edit, unchanged
-update-1001-to-3000 continuation, paid training, architecture edit, 365-day
-rollout, sealed-test read, Gate D2, or product work is authorized.
+removing persisted `resp_maint` from the broad carbon input route. The
+subsequent `target_oriented_maintenance_head_conditioning_audit_v1` completed
+on free `gln01` at commit `79b2e36`; report SHA256 is
+`85ab83a1...d27757`.
+
+All 16 finite, nonzero gradients over the 769-parameter maintenance final head
+admit a common direction with minimum cosine `0.056523`. Four in-bound steps
+were evaluated, but none passes every exact protection gate. At norm
+`0.0018462`, median 7/30-day maintenance scores improve by
+`1.4415%/0.8188%`; NPP and live-biomass scores also improve. Small positive
+median changes remain in 7-day GPP, growth respiration, and ecosystem carbon,
+so the preregistered classification is `finite_head_step_not_protected`.
+Every proposal was discarded, all hard/nonfinite counts are zero, and no
+optimizer or checkpoint was used.
+
+The active boundary is output-parameterization review and user discussion.
+The present head is one shared `768 -> 1` linear projection across all
+maintenance coordinates. This result does not reject the Attention body, but
+it prevents unchanged head-only continuation. No architecture, input-mask,
+source-routing, or loss edit is authorized before a structured-head mechanism
+and bounded gate are discussed. Paid training, 365-day rollout, sealed-test
+read, Gate D2, and product work remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -477,8 +489,10 @@ The completed persisted-maintenance intervention and accepted result are
 [`target_oriented_maintenance_state_recurrence_intervention_v1.md`](research/daily_coarse_graining/target_oriented_maintenance_state_recurrence_intervention_v1.md)
 and
 [`target_oriented_maintenance_state_recurrence_result_20260827.md`](research/daily_coarse_graining/target_oriented_maintenance_state_recurrence_result_20260827.md).
-The frozen active non-recurrence audit is
-[`target_oriented_maintenance_head_conditioning_audit_v1.md`](research/daily_coarse_graining/target_oriented_maintenance_head_conditioning_audit_v1.md).
+The completed non-recurrence audit and accepted result are
+[`target_oriented_maintenance_head_conditioning_audit_v1.md`](research/daily_coarse_graining/target_oriented_maintenance_head_conditioning_audit_v1.md)
+and
+[`target_oriented_maintenance_head_conditioning_result_20260827.md`](research/daily_coarse_graining/target_oriented_maintenance_head_conditioning_result_20260827.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

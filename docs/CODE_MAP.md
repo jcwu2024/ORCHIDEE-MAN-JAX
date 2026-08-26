@@ -398,6 +398,15 @@ values, not differentiated variables.
 the free-`gln01`, zero-training launcher. It cannot retain a proposal or enter
 final inference.
 
+The accepted result is
+`target_oriented_maintenance_head_conditioning_result_20260827.md`. It finds a
+common direction across all 16 maintenance objectives but no finite step that
+passes every frozen protection. The current implementation boundary therefore
+stops before output-architecture edits. The existing coordinate-aligned
+Attention body remains open; the next design must discuss a structured
+maintenance materialization instead of silently continuing the shared
+`768 -> 1` final head.
+
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and
 maintenance-temperature factors to replaced fast processes and dynamically
