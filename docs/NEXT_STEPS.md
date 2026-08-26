@@ -1429,14 +1429,30 @@ its apparent `+0.9723` alignment with the one-day gradient is not a stable
 training admission. The already successful stock objectives remain protection
 constraints.
 
-The protected virtual-step contract is frozen at SHA256
-`0781cd75...3a9053b` and its local implementation is qualified. The active
-operation is one free-`gln01`, zero-update execution. It constructs a
-normalized common direction from the 16 group-by-horizon amended flux
-gradients, applies the frozen direct parameter-step grid, and requires
-protection of one-day/process and 7/30-day stocks in every group. AdamW,
-retained updates, unchanged continuation to 3000, weak-control comparison,
-sealed-test read, 365-day rollout, Gate D2, and product work remain closed.
+The protected virtual-step audit completed on free `gln01` at commit
+`04c2b23`; report SHA256 is `6a9ed9c9...f1fba`. Its normalized common
+direction is real and well conditioned: the independently verified minimum
+constraint cosine is `0.04353145`, versus the frozen `0.001` gate. However,
+none of the seven finite norms passes. At the smallest norm `0.0001`, exact
+7-day component-flux loss has median change `+0.6359%` and maximum change
+`+15.7217%`; one-day state/process loss has median `+11.5593%`; and the worst
+stock score increases `+33.1712%`. All physical hard and nonfinite counts are
+zero, but the flux, state, and stock protection gates fail. No parameter,
+checkpoint, or recovery was retained.
+
+This closes direct realization of the raw component-resolved
+MSE-plus-squared-bias loss at update 1000. It does not reject the Attention
+architecture. The active operation is to freeze a train/train, zero-training
+residual-tail and sampling-unit audit before implementation. It must preserve
+per-window and per-group residual contributions, quantify top-tail dominance
+and effective sample size by 7/30-day flux key, identify whether update 465's
+7-day outlier is localized or regime-wide, and compare bounded influence
+functions and equal-window/equal-group/stratified weighting without taking a
+parameter step. Only that evidence may select a robust loss and sampling unit
+for a later geometry gate. AdamW continuation, another direct-step grid,
+batch enlargement, architecture change, paid training, weak-control
+comparison, sealed-test read, 365-day rollout, Gate D2, and product work
+remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -1457,6 +1473,7 @@ See
 [`target_oriented_component_resolved_flux_basis_v1.md`](research/daily_coarse_graining/target_oriented_component_resolved_flux_basis_v1.md),
 [`target_oriented_component_resolved_geometry_result_20260826.md`](research/daily_coarse_graining/target_oriented_component_resolved_geometry_result_20260826.md),
 [`target_oriented_flux_protected_virtual_step_v1.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_v1.md),
+[`target_oriented_flux_protected_virtual_step_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_result_20260826.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

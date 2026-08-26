@@ -287,10 +287,19 @@ objective. `target_oriented_contract.py` and `target_oriented_training.py`
 accept that explicit basis for scale projection, science statistics, exact
 microbatch accumulation, and separate flux/stock linearized gradients.
 `scripts/hpc/audit_target_oriented_component_resolved_geometry.py` owns the
-active zero-update five-source/eight-group geometry audit, and
+completed zero-update five-source/eight-group geometry audit, and
 `scripts/hpc/run_target_oriented_component_resolved_geometry_audit.sh` owns
 its free-`gln01` execution boundary. The frozen decision record is
 `target_oriented_component_resolved_flux_basis_v1.md`.
+
+`daily_operator/target_oriented_flux_virtual_step.py` owns the completed
+protected direct-step contract and classifier.
+`scripts/hpc/audit_target_oriented_flux_protected_virtual_step.py` owns the
+16-gradient common direction, independently realized Gram verification, and
+seven exact discarded parameter-step evaluations; its free-node launcher is
+`scripts/hpc/run_target_oriented_flux_protected_virtual_step.sh`. The result
+closes this raw-loss realization and opens a separate residual-tail and
+sampling-unit audit; it does not authorize another direct-step grid.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

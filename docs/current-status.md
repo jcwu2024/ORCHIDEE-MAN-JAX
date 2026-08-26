@@ -335,13 +335,23 @@ have median cross-batch cosine `-0.4739`, `53.6%` negative pairs, and a norm
 range from `0.515` to `1713.736`; 30-day flux gradients have median cosine
 `+0.0199` and `50%` negative pairs. The mean is dominated by update 465 and
 is nearly opposite the already successful 7-day stock gradient. The protected
-virtual-step contract is frozen at SHA256 `0781cd75...3a9053b`, implemented,
-and locally qualified. The active operation is its single free-`gln01`
-zero-update execution: build a normalized common direction from the 16
-group-by-horizon flux gradients, then require finite-step protection of
-one-day/process and 7/30-day stocks. No unchanged update-1001-to-3000
-continuation, paid training, 365-day rollout, sealed-test read, Gate D2, or
-product work is authorized.
+virtual-step audit then completed on free `gln01` at commit `04c2b23`; report
+SHA256 is `6a9ed9c9...f1fba`. A valid 16-constraint common direction exists,
+with independently realized minimum cosine `0.04353145`, but no finite step
+passes. Even norm `0.0001` raises exact 7-day component-flux loss by a median
+`0.6359%` and at worst `15.7217%`, raises one-day state/process loss by a
+median `11.5593%`, and raises the worst stock score `33.1712%`. All physical
+hard and nonfinite counts are zero, and no model state is retained.
+
+Direct realization of the raw component-resolved MSE-plus-squared-bias loss
+is closed; the Attention architecture is not rejected. The active gate is to
+freeze a zero-training residual-tail and sampling-unit audit over the same
+eight train/train groups. It must preserve per-window contributions, measure
+tail concentration and effective sample size by horizon and flux key, and
+compare bounded influence and equal-window/equal-group/stratified weighting
+without taking a parameter step. No unchanged update-1001-to-3000
+continuation, repeated direct-step grid, paid training, 365-day rollout,
+sealed-test read, Gate D2, or product work is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -379,8 +389,10 @@ The completed component-resolved contract is
 [`target_oriented_component_resolved_flux_basis_v1.md`](research/daily_coarse_graining/target_oriented_component_resolved_flux_basis_v1.md).
 The current geometry result is
 [`target_oriented_component_resolved_geometry_result_20260826.md`](research/daily_coarse_graining/target_oriented_component_resolved_geometry_result_20260826.md).
-The frozen active virtual-step contract is
-[`target_oriented_flux_protected_virtual_step_v1.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_v1.md).
+The completed virtual-step contract and result are
+[`target_oriented_flux_protected_virtual_step_v1.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_v1.md)
+and
+[`target_oriented_flux_protected_virtual_step_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_result_20260826.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four
