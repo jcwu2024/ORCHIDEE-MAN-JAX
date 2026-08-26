@@ -150,25 +150,31 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
 
         mode_records = {}
         gradients = []
-        for mode, gradient_step, forward_step in (
+        for mode, gradient_step in (
             (
                 "free_reference",
                 f"{prefix}_flux_field_gradient",
-                f"{prefix}_forward",
             ),
             (
                 "snowheat_teacher_carry",
                 f"{prefix}_teacher_carry_flux_field_gradient",
-                f"{prefix}_teacher_carry_forward",
             ),
         ):
-            _statistics, hard = steps[forward_step](parameters, batch)
-            score, gradient = steps[gradient_step](
-                parameters,
-                batch,
-                MAINTENANCE_WEIGHTS,
-            )
-            jax.block_until_ready((_statistics, hard, score, gradient))
+            if mode == "free_reference":
+                _statistics, hard = steps[f"{prefix}_forward"](parameters, batch)
+                score, gradient = steps[gradient_step](
+                    parameters,
+                    batch,
+                    MAINTENANCE_WEIGHTS,
+                )
+                jax.block_until_ready((_statistics, hard, score, gradient))
+            else:
+                (score, hard), gradient = steps[gradient_step](
+                    parameters,
+                    batch,
+                    MAINTENANCE_WEIGHTS,
+                )
+                jax.block_until_ready((score, hard, gradient))
             _add_hard_totals(hard_totals, _hard_host(jax.device_get(hard)))
             host_gradient = jax.tree_util.tree_map(np.asarray, jax.device_get(gradient))
             reports = _family_reports(jax, host_gradient)

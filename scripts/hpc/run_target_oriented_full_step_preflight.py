@@ -751,16 +751,17 @@ def _make_steps(
         )
 
     def teacher_carry_window_flux_field_score(parameters, batch, weights, *, horizon: int):
-        current, _hard = teacher_carry_window_statistics(
+        current, hard = teacher_carry_window_statistics(
             parameters,
             batch,
             horizon=horizon,
             rematerialize=True,
         )
-        return jnp.vdot(
+        score = jnp.vdot(
             jnp.asarray(weights, dtype=jnp.float64),
             field_score_vector(current),
         )
+        return score, hard
 
     one_gradient = jax.jit(jax.value_and_grad(one_linear))
     seven_gradient = jax.jit(
@@ -885,22 +886,6 @@ def _make_steps(
     if diagnostic_teacher_carry_state_key is not None:
         result.update(
             {
-                "seven_teacher_carry_forward": jax.jit(
-                    lambda parameters, batch: teacher_carry_window_statistics(
-                        parameters,
-                        batch,
-                        horizon=7,
-                        rematerialize=False,
-                    )
-                ),
-                "thirty_teacher_carry_forward": jax.jit(
-                    lambda parameters, batch: teacher_carry_window_statistics(
-                        parameters,
-                        batch,
-                        horizon=30,
-                        rematerialize=False,
-                    )
-                ),
                 "seven_teacher_carry_flux_field_gradient": jax.jit(
                     jax.value_and_grad(
                         lambda parameters, batch, weights: teacher_carry_window_flux_field_score(
@@ -908,7 +893,8 @@ def _make_steps(
                             batch,
                             weights,
                             horizon=7,
-                        )
+                        ),
+                        has_aux=True,
                     )
                 ),
                 "thirty_teacher_carry_flux_field_gradient": jax.jit(
@@ -918,7 +904,8 @@ def _make_steps(
                             batch,
                             weights,
                             horizon=30,
-                        )
+                        ),
+                        has_aux=True,
                     )
                 ),
             }
