@@ -212,6 +212,9 @@ def _make_steps(
     template: Any,
     scales: Any,
     target_contract: Any,
+    *,
+    acceptance_scales: Any | None = None,
+    acceptance_flux_names: tuple[str, ...] = (),
 ):
     import jax
     import jax.numpy as jnp
@@ -232,12 +235,14 @@ def _make_steps(
         trajectories_from_rollout,
     )
     from research.daily_coarse_graining.daily_operator.target_oriented_training import (
+        _linearized_error_loss,
         linearized_one_day_state_loss,
         linearized_process_supervision_loss,
         linearized_science_window_loss,
         one_day_state_sufficient_statistics,
         process_supervision_sufficient_statistics,
         science_window_sufficient_statistics,
+        target_oriented_acceptance_sufficient_statistics,
     )
     from research.daily_coarse_graining.daily_operator.training_loss import (
         ProcessLossResult,
@@ -375,7 +380,7 @@ def _make_steps(
         )
         return state, process, jax.tree_util.tree_map(lambda value: jnp.sum(value, axis=0), hard)
 
-    def window_statistics(parameters, microbatch, *, horizon: int, rematerialize: bool):
+    def window_trajectories(parameters, microbatch, *, rematerialize: bool):
         templates = jax.tree_util.tree_map(lambda value: value[0], microbatch.inputs)
         day_inputs = jax.tree_util.tree_map(lambda value: value[0], microbatch.day_inputs)
 
@@ -403,15 +408,6 @@ def _make_steps(
             pft_fraction=templates.pft.pft_fraction,
             active_pft_mask=templates.pft.active_pft_mask,
             contract=runtime["contract"],
-        )
-        statistics = science_window_sufficient_statistics(
-            predicted.fluxes,
-            expected.fluxes,
-            predicted.stocks,
-            expected.stocks,
-            flux_scales=scales.fluxes,
-            stock_scales=scales.stocks,
-            horizon=horizon,
         )
         stock_hard = rollout_hard_gate_counts(
             predicted.stocks,
@@ -445,6 +441,47 @@ def _make_steps(
             unexpected_state_mismatch,
             declared_dynamic_state_mismatch,
             stock_hard,
+        )
+        return predicted, expected, hard
+
+    def window_statistics(parameters, microbatch, *, horizon: int, rematerialize: bool):
+        predicted, expected, hard = window_trajectories(
+            parameters,
+            microbatch,
+            rematerialize=rematerialize,
+        )
+        statistics = science_window_sufficient_statistics(
+            predicted.fluxes,
+            expected.fluxes,
+            predicted.stocks,
+            expected.stocks,
+            flux_scales=scales.fluxes,
+            stock_scales=scales.stocks,
+            horizon=horizon,
+        )
+        return statistics, hard
+
+    def window_acceptance_statistics(
+        parameters,
+        microbatch,
+        *,
+        horizon: int,
+        rematerialize: bool,
+    ):
+        if acceptance_scales is None:
+            raise ValueError("acceptance scales are required for flux-gradient diagnostics")
+        predicted, expected, hard = window_trajectories(
+            parameters,
+            microbatch,
+            rematerialize=rematerialize,
+        )
+        statistics = target_oriented_acceptance_sufficient_statistics(
+            predicted.fluxes,
+            expected.fluxes,
+            predicted.stocks,
+            expected.stocks,
+            scales=acceptance_scales,
+            horizon=horizon,
         )
         return statistics, hard
 
@@ -482,7 +519,7 @@ def _make_steps(
     thirty_gradient = jax.jit(
         jax.value_and_grad(lambda parameters, batch, total: window_linear(parameters, batch, total, horizon=30))
     )
-    return {
+    result = {
         "transition_builder": lambda retained: (
             lambda values, inputs, day_inputs: bind_daily_operator_dynamic_retained_inputs(
                 input_assembler=runtime["adapter"].input_assembler,
@@ -497,6 +534,53 @@ def _make_steps(
         "seven_gradient": seven_gradient,
         "thirty_gradient": thirty_gradient,
     }
+    if acceptance_scales is not None:
+        if not acceptance_flux_names or not set(acceptance_flux_names) <= set(acceptance_scales.fluxes):
+            raise ValueError("acceptance flux-gradient registry is invalid")
+
+        def acceptance_flux_linear(parameters, batch, total, weights, *, horizon: int):
+            current, _hard = window_acceptance_statistics(
+                parameters,
+                batch,
+                horizon=horizon,
+                rematerialize=True,
+            )
+            if jnp.asarray(weights).shape != (len(acceptance_flux_names),):
+                raise ValueError("acceptance flux-gradient weight shape drift")
+            value = jnp.asarray(0.0, dtype=jnp.float64)
+            for index, name in enumerate(acceptance_flux_names):
+                value = value + jnp.asarray(weights[index], dtype=jnp.float64) * _linearized_error_loss(
+                    current.fluxes[name],
+                    total.fluxes[name],
+                    mse_weight=0.5,
+                    bias_squared_weight=0.5,
+                )
+            return value
+
+        result.update(
+            {
+                "thirty_acceptance_forward": jax.jit(
+                    lambda parameters, batch: window_acceptance_statistics(
+                        parameters,
+                        batch,
+                        horizon=30,
+                        rematerialize=False,
+                    )
+                ),
+                "thirty_acceptance_gradient": jax.jit(
+                    jax.value_and_grad(
+                        lambda parameters, batch, total, weights: acceptance_flux_linear(
+                            parameters,
+                            batch,
+                            total,
+                            weights,
+                            horizon=30,
+                        )
+                    )
+                ),
+            }
+        )
+    return result
 
 
 def _merge_statistics(add: Any, values: list[Any]) -> Any:

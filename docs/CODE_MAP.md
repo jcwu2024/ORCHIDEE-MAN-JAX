@@ -266,6 +266,18 @@ and `merge_target_oriented_training_batches.py` admit a partial absolute-update
 range without copying the first 250 artifacts. The stage checkpoint is not
 passed through the recovery reader or treated as a new initialization.
 
+`scripts/hpc/audit_target_oriented_flux_gradient_variance.py` owns the active
+zero-update 30-day flux-gradient batch-size diagnosis at the update-1000
+checkpoint. It reuses optional acceptance-statistic hooks in
+`run_target_oriented_full_step_preflight.py`, forms exact family and global
+Gram matrices for 4/8/16/32-window aggregates, and never invokes AdamW or
+writes a checkpoint. Its free-node launcher is
+`scripts/hpc/run_target_oriented_flux_gradient_variance_audit.sh`, its focused
+regression is
+`tests/unit/test_target_oriented_flux_gradient_variance_audit.py`, and its
+frozen decision record is
+`target_oriented_flux_gradient_variance_audit_v1.md`.
+
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and
 maintenance-temperature factors to replaced fast processes and dynamically

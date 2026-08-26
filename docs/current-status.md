@@ -318,7 +318,10 @@ growth respiration, and autotrophic respiration. NPP improves only `5.60%`
 at 7 days and `0.132%` at 30 days from update 250. The active task is therefore
 a zero-update train-only cross-batch flux-gradient variance/cosine audit at
 the update-1000 checkpoint, including a 4 versus 8/16 comparison for 30-day
-windows. No unchanged update-1001-to-3000 continuation, 365-day rollout,
+windows. The audit is frozen and locally qualified using 32 windows from
+updates `251, 358, 465, 572, 679, 786, 893, 1000`. It measures five flux keys
+over a complete partition of all `83,755,173` parameters, applies no optimizer
+step, and writes no checkpoint. No unchanged update-1001-to-3000 continuation, 365-day rollout,
 sealed-test read, Gate D2, or product work is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
@@ -349,6 +352,8 @@ are in
 [`target_oriented_update_250_training_dynamics_diagnosis_20260825.md`](research/daily_coarse_graining/target_oriented_update_250_training_dynamics_diagnosis_20260825.md).
 The formal update-1000 result is
 [`target_oriented_formal_training_1000_result_20260826.md`](research/daily_coarse_graining/target_oriented_formal_training_1000_result_20260826.md).
+The active zero-update diagnostic is
+[`target_oriented_flux_gradient_variance_audit_v1.md`](research/daily_coarse_graining/target_oriented_flux_gradient_variance_audit_v1.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four
