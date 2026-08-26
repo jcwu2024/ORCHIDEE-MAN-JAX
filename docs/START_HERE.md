@@ -260,8 +260,9 @@ now complete. A valid common first-order flux direction exists, but no tested
 finite step protects one-day state and 7/30-day stocks while improving every
 required flux target. Direct realization of the raw amended
 MSE-plus-squared-bias loss is closed; the Attention architecture is not
-rejected. The active gate is to freeze and run a zero-training residual-tail
-and sampling-unit audit before selecting a robust loss. Paid continuation,
+rejected. The zero-training residual-tail and sampling-unit audit is frozen at
+contract SHA256 `bafcb2da...9bb763`; its implementation and free execution
+are the active gate before selecting a robust loss. Paid continuation,
 365-day rollout, Gate D2, sealed test, and product work remain closed.
 
 ## New Task Bootstrap

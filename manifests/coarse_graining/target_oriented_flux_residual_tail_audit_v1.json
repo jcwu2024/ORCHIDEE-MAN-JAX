@@ -1,0 +1,98 @@
+{
+  "schema_version": "target_oriented_flux_residual_tail_audit_v1",
+  "status": "frozen_before_zero_training_execution",
+  "contract_sha256": "bafcb2daa0bcfc0e7108022b44d8af4741d87a1c5e73e371104e5985819bb763",
+  "identity": {
+    "protected_virtual_step_report_sha256": "6a9ed9c93141ec1d40f582a6fcfe314b6ade2cc1c52432f36fe57145339f1fba",
+    "flux_basis_amendment_sha256": "6c81e8f56c2c81fc2ac024a71da98f3e875c4ebc429f9e3d1ff4e8e3ef6bfb45",
+    "update_1000_checkpoint_sha256": "a566f9d95726984dc03cbf1f1a183dd0d1eae9e3479ce5055c64e571ef6a16c7",
+    "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "candidate": "target_oriented_hierarchical_coordinate_attention_v1",
+    "parameter_count": 83755173
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "audit_updates": [251, 358, 465, 572, 679, 786, 893, 1000],
+    "seven_day_windows_per_group": 8,
+    "thirty_day_windows_per_group": 4,
+    "total_seven_day_windows": 64,
+    "total_thirty_day_windows": 32,
+    "teacher_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_artifact_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "measurement": {
+    "horizons": [7, 30],
+    "optimized_flux_keys": [
+      "gpp",
+      "maintenance_respiration",
+      "growth_respiration"
+    ],
+    "exact_retained_guard": "heterotrophic_respiration",
+    "derived_report_only": [
+      "autotrophic_respiration",
+      "npp",
+      "nep",
+      "nee"
+    ],
+    "window_score": "one_half_normalized_mse_plus_one_half_normalized_signed_bias_squared",
+    "window_gradient": "standalone_component_resolved_flux_score",
+    "gradient_coverage": 83755173,
+    "group_geometry": "exact_float64_gram_over_standalone_window_gradients",
+    "sensitivity_proxy": "gradient_l2_norm_divided_by_sqrt_window_score",
+    "top_contribution_counts": [1, 5, 10],
+    "effective_sample_size": "sum_squared_over_sum_of_squares",
+    "field_scores_use_frozen_acceptance_scales": true,
+    "recompute_scales": false
+  },
+  "candidate_influence": {
+    "unit": "standalone_window_component_resolved_flux_score",
+    "reference": "equal_window",
+    "scale": "positive_train_train_window_score_median_per_horizon",
+    "scale_multipliers": [1.0, 4.0, 16.0],
+    "soft_l1": "rho(s,tau)=2*tau*(sqrt(1+s/tau)-1)",
+    "soft_l1_derivative": "1/sqrt(1+s/tau)",
+    "log1p": "rho(s,tau)=tau*log1p(s/tau)",
+    "log1p_derivative": "1/(1+s/tau)",
+    "weights_normalized_to_unit_sum": true,
+    "candidate_selected_during_execution": false
+  },
+  "classification": {
+    "localized_loss_top1_share_minimum": 0.2,
+    "localized_loss_top5_share_minimum": 0.5,
+    "localized_loss_ess_fraction_maximum": 0.4,
+    "broad_group_share_minimum": 0.25,
+    "broad_group_top1_within_group_maximum": 0.3,
+    "broad_group_above_global_median_fraction_minimum": 0.75,
+    "gradient_tail_top1_norm_share_minimum": 0.5,
+    "gradient_tail_ess_fraction_maximum": 0.5,
+    "jacobian_amplification_gradient_rank_fraction_maximum": 0.05,
+    "jacobian_amplification_loss_rank_fraction_minimum": 0.2
+  },
+  "execution": {
+    "free_gln01_only": true,
+    "paid_training_authorized": false,
+    "optimizer_updates": 0,
+    "parameter_steps": 0,
+    "proposed_parameters_retained": false,
+    "optimizer_state_retained": false,
+    "checkpoint_written": false,
+    "recovery_written": false,
+    "teacher_data_regenerated": false,
+    "historical_v5_used": false,
+    "validation_values_evaluated": false,
+    "sealed_test_used": false,
+    "365_day_rollout_allowed": false,
+    "gate_d2_allowed": false
+  },
+  "decision": {
+    "engineering_pass": "all_96_window_scores_and_gradients_finite_complete_and_physical_hard_failures_zero",
+    "localized_loss_and_gradient_tail": "admit_bounded_window_influence_candidate_for_later_zero_update_geometry",
+    "broad_group_regime": "admit_group_stratification_candidate_for_later_zero_update_geometry",
+    "gradient_tail_without_loss_tail": "close_robust_loss_only_and_diagnose_jacobian_conditioning",
+    "diffuse_loss_with_conflicting_window_gradients": "close_tail_reweighting_only_and_redesign_objective_decomposition",
+    "training_authorized": false
+  }
+}

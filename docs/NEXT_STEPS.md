@@ -1442,14 +1442,15 @@ checkpoint, or recovery was retained.
 
 This closes direct realization of the raw component-resolved
 MSE-plus-squared-bias loss at update 1000. It does not reject the Attention
-architecture. The active operation is to freeze a train/train, zero-training
-residual-tail and sampling-unit audit before implementation. It must preserve
-per-window and per-group residual contributions, quantify top-tail dominance
-and effective sample size by 7/30-day flux key, identify whether update 465's
-7-day outlier is localized or regime-wide, and compare bounded influence
-functions and equal-window/equal-group/stratified weighting without taking a
-parameter step. Only that evidence may select a robust loss and sampling unit
-for a later geometry gate. AdamW continuation, another direct-step grid,
+architecture. The train/train, zero-training residual-tail and sampling-unit
+audit is frozen at contract SHA256 `bafcb2da...9bb763`; implementation and one
+free-`gln01` execution are the active operation. It preserves all 64 7-day and
+32 30-day window contributions, measures both standalone loss and
+full-parameter gradient norm, quantifies top-tail concentration and effective
+sample size by flux key, and distinguishes residual outliers from Jacobian
+amplification. Its fixed equal-window, soft-L1, and log1p influence candidates
+are diagnostic only. Only that evidence may select a robust loss and sampling
+unit for a later geometry gate. AdamW continuation, another direct-step grid,
 batch enlargement, architecture change, paid training, weak-control
 comparison, sealed-test read, 365-day rollout, Gate D2, and product work
 remain closed.
@@ -1474,6 +1475,7 @@ See
 [`target_oriented_component_resolved_geometry_result_20260826.md`](research/daily_coarse_graining/target_oriented_component_resolved_geometry_result_20260826.md),
 [`target_oriented_flux_protected_virtual_step_v1.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_v1.md),
 [`target_oriented_flux_protected_virtual_step_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_result_20260826.md),
+[`target_oriented_flux_residual_tail_audit_v1.md`](research/daily_coarse_graining/target_oriented_flux_residual_tail_audit_v1.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

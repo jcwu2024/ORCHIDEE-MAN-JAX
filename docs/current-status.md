@@ -344,14 +344,16 @@ median `11.5593%`, and raises the worst stock score `33.1712%`. All physical
 hard and nonfinite counts are zero, and no model state is retained.
 
 Direct realization of the raw component-resolved MSE-plus-squared-bias loss
-is closed; the Attention architecture is not rejected. The active gate is to
-freeze a zero-training residual-tail and sampling-unit audit over the same
-eight train/train groups. It must preserve per-window contributions, measure
-tail concentration and effective sample size by horizon and flux key, and
-compare bounded influence and equal-window/equal-group/stratified weighting
-without taking a parameter step. No unchanged update-1001-to-3000
-continuation, repeated direct-step grid, paid training, 365-day rollout,
-sealed-test read, Gate D2, or product work is authorized.
+is closed; the Attention architecture is not rejected. The zero-training
+residual-tail and sampling-unit audit over the same eight train/train groups
+is frozen at contract SHA256 `bafcb2da...9bb763`. It preserves all 96 window
+contributions, compares standalone loss concentration with full-parameter
+gradient-norm concentration, forms exact group-local gradient Grams, and
+evaluates fixed equal-window, soft-L1, and log1p influence directions without
+taking a parameter step. Its implementation and free execution are active.
+No unchanged update-1001-to-3000 continuation, repeated direct-step grid,
+paid training, 365-day rollout, sealed-test read, Gate D2, or product work is
+authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -393,6 +395,8 @@ The completed virtual-step contract and result are
 [`target_oriented_flux_protected_virtual_step_v1.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_v1.md)
 and
 [`target_oriented_flux_protected_virtual_step_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_result_20260826.md).
+The frozen next diagnostic is
+[`target_oriented_flux_residual_tail_audit_v1.md`](research/daily_coarse_graining/target_oriented_flux_residual_tail_audit_v1.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four
