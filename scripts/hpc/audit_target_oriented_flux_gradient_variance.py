@@ -314,6 +314,7 @@ def _load_context(
     args: argparse.Namespace,
     *,
     science_flux_basis: Sequence[str] | None = None,
+    verify_validation_artifacts: bool = True,
 ) -> Mapping[str, Any]:
     from research.daily_coarse_graining.daily_operator.mechanistic_output_contract import (
         build_mechanistic_learned_schema,
@@ -388,6 +389,7 @@ def _load_context(
         args.validation_prepared_manifest,
         training_contract_sha256=training_contract.sha256,
         target_contract_sha256=target_contract.sha256,
+        verify_artifacts=verify_validation_artifacts,
     )
     verify_target_oriented_validation_panel(panel, runtime["index"], training_contract, target_contract)
     template = _prepare_template(runtime, schedule["entries"][AUDIT_UPDATES[0] - 1])

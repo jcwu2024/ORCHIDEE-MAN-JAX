@@ -322,22 +322,26 @@ but maintenance and total autotrophic respiration remain opposed between the
 two 16-window estimates. Its decision is
 `mixed_batch_and_objective_geometry`; a larger batch alone is not admitted.
 
-The component-resolved long-horizon flux amendment is now frozen and locally
-implemented: GPP, maintenance respiration, growth respiration, and
-heterotrophic respiration are the optimized terms, while total autotrophic
-respiration, NPP, NEP, and NEE remain derived gates. The historical objective
-remains replayable by default; the amendment is explicit. Its focused and
-related group passes `30/30`, and the complete target-oriented group passes
-`53/54` with only the unchanged historical launcher wall-time assertion.
+The component-resolved long-horizon flux amendment and its free-`gln01`
+zero-update geometry audit are complete. GPP, maintenance respiration, growth
+respiration, and heterotrophic respiration are the independent flux basis;
+autotrophic respiration, NPP, NEP, and NEE remain derived gates. Every one of
+the five gradient sources is finite and nonzero over all `83,755,173`
+parameters in all eight groups, with zero physical hard failures and no
+retained update. Report SHA256 is `414aa543...ff2a05`.
 
-The active operation is a free-`gln01`, zero-update geometry audit over eight
-fixed effective batches at the exact update-1000 parameters. It compares the
-amended 7/30-day flux gradients with one-day/process and 7/30-day stock
-gradients, covers all `83,755,173` parameters, invokes no optimizer, and writes
-no checkpoint. A separate bounded virtual-step contract must be frozen from
-that result before any retained update. No unchanged update-1001-to-3000
-continuation, 365-day rollout, sealed-test read, Gate D2, or product work is
-authorized.
+The geometry does not admit raw averaged training. Seven-day flux gradients
+have median cross-batch cosine `-0.4739`, `53.6%` negative pairs, and a norm
+range from `0.515` to `1713.736`; 30-day flux gradients have median cosine
+`+0.0199` and `50%` negative pairs. The mean is dominated by update 465 and
+is nearly opposite the already successful 7-day stock gradient. The protected
+virtual-step contract is frozen at SHA256 `0781cd75...3a9053b`, implemented,
+and locally qualified. The active operation is its single free-`gln01`
+zero-update execution: build a normalized common direction from the 16
+group-by-horizon flux gradients, then require finite-step protection of
+one-day/process and 7/30-day stocks. No unchanged update-1001-to-3000
+continuation, paid training, 365-day rollout, sealed-test read, Gate D2, or
+product work is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -371,8 +375,12 @@ The completed zero-update diagnostic and result are
 [`target_oriented_flux_gradient_variance_audit_v1.md`](research/daily_coarse_graining/target_oriented_flux_gradient_variance_audit_v1.md)
 and
 [`target_oriented_flux_gradient_variance_audit_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_gradient_variance_audit_result_20260826.md).
-The active component-resolved contract is
+The completed component-resolved contract is
 [`target_oriented_component_resolved_flux_basis_v1.md`](research/daily_coarse_graining/target_oriented_component_resolved_flux_basis_v1.md).
+The current geometry result is
+[`target_oriented_component_resolved_geometry_result_20260826.md`](research/daily_coarse_graining/target_oriented_component_resolved_geometry_result_20260826.md).
+The frozen active virtual-step contract is
+[`target_oriented_flux_protected_virtual_step_v1.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_v1.md).
 
 The update-1000 `source_routed_process_attention_v2` checkpoint has a strong
 common first-order direction across 10 train/train groups and the four

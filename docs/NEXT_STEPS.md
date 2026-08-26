@@ -1414,23 +1414,30 @@ and NPP is already coherent at four windows, but maintenance and total
 autotrophic respiration remain opposed between disjoint 16-window estimates.
 Batch enlargement alone is therefore rejected.
 
-The component-resolved flux-basis amendment is now frozen and locally
-implemented while retaining the current Attention architecture and exact
-update-1000 state. The independent optimization basis is GPP, maintenance
-respiration, growth respiration, and heterotrophic respiration; autotrophic
-respiration, NPP, NEP, and NEE remain derived identities and required
-acceptance keys. Historical v1 execution still defaults to its unchanged
-aggregate basis; the amendment must be selected explicitly.
+The component-resolved flux-basis amendment and its free-`gln01` zero-update
+geometry audit are complete while retaining the current Attention
+architecture and exact update-1000 state. All five declared sources are
+finite and nonzero over all `83,755,173` parameters in all eight groups, and
+physical hard failures are zero. The successful report SHA256 is
+`414aa543...ff2a05`.
 
-The active operation is the free-`gln01`, zero-update train-only geometry
-audit over eight fixed effective batches. It separately measures one-day plus
-process, 7-day flux, 7-day stock, 30-day flux, and 30-day stock gradients at
-the update-1000 state. A valid report requires five finite nonzero sources in
-all eight groups, exact `83,755,173`-parameter coverage, and zero physical hard
-failures. It invokes no optimizer and writes no checkpoint. Its result must be
-used to freeze a bounded virtual-step contract before any retained update. Do
-not blindly continue to update 3000. Weak-control comparison, sealed-test
-read, 365-day rollout, Gate D2, and product work remain closed. See
+The audit rejects a raw averaged continuation. The 7-day flux-gradient norm
+ranges from `0.515` to `1713.736`, its median cross-batch cosine is `-0.4739`,
+and `53.6%` of batch pairs are opposed. The 30-day flux source has median
+cosine `+0.0199` with `50%` negative pairs. Update 465 dominates the mean, so
+its apparent `+0.9723` alignment with the one-day gradient is not a stable
+training admission. The already successful stock objectives remain protection
+constraints.
+
+The protected virtual-step contract is frozen at SHA256
+`0781cd75...3a9053b` and its local implementation is qualified. The active
+operation is one free-`gln01`, zero-update execution. It constructs a
+normalized common direction from the 16 group-by-horizon amended flux
+gradients, applies the frozen direct parameter-step grid, and requires
+protection of one-day/process and 7/30-day stocks in every group. AdamW,
+retained updates, unchanged continuation to 3000, weak-control comparison,
+sealed-test read, 365-day rollout, Gate D2, and product work remain closed.
+See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
@@ -1448,6 +1455,8 @@ read, 365-day rollout, Gate D2, and product work remain closed. See
 [`target_oriented_flux_gradient_variance_audit_v1.md`](research/daily_coarse_graining/target_oriented_flux_gradient_variance_audit_v1.md),
 [`target_oriented_flux_gradient_variance_audit_result_20260826.md`](research/daily_coarse_graining/target_oriented_flux_gradient_variance_audit_result_20260826.md),
 [`target_oriented_component_resolved_flux_basis_v1.md`](research/daily_coarse_graining/target_oriented_component_resolved_flux_basis_v1.md),
+[`target_oriented_component_resolved_geometry_result_20260826.md`](research/daily_coarse_graining/target_oriented_component_resolved_geometry_result_20260826.md),
+[`target_oriented_flux_protected_virtual_step_v1.md`](research/daily_coarse_graining/target_oriented_flux_protected_virtual_step_v1.md),
 [`coordinate_coupled_doc_transition_v4_memorization_result_20260820.md`](research/daily_coarse_graining/coordinate_coupled_doc_transition_v4_memorization_result_20260820.md)
 and
 [`doc_endpoint_target_loss_geometry_audit_result_20260820.md`](research/daily_coarse_graining/doc_endpoint_target_loss_geometry_audit_result_20260820.md),

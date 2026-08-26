@@ -20,6 +20,7 @@ def load_target_oriented_validation_prepared(
     *,
     training_contract_sha256: str,
     target_contract_sha256: str,
+    verify_artifacts: bool = True,
 ) -> tuple[Mapping[str, Any], Mapping[str, Any]]:
     source = Path(path).resolve()
     payload = json.loads(source.read_text(encoding="utf-8"))
@@ -49,12 +50,13 @@ def load_target_oriented_validation_prepared(
             or record.get("window_entry") != entry
         ):
             raise ValueError("target-oriented validation-prepared order drift")
-        load_prepared_rollout_artifact(
-            source,
-            record,
-            slice_id=slice_id,
-            window_entry=entry,
-        )
+        if verify_artifacts:
+            load_prepared_rollout_artifact(
+                source,
+                record,
+                slice_id=slice_id,
+                window_entry=entry,
+            )
     return payload | {"manifest_sha256": sha256_file(source)}, panel
 
 

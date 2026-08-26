@@ -1,0 +1,94 @@
+{
+  "schema_version": "target_oriented_flux_protected_virtual_step_v1",
+  "status": "frozen_zero_update_flux_protected_virtual_step",
+  "contract_sha256": "0781cd758a3c30c9558801beae451301cb66ad794a5ad8aaf47d8f3473a9053b",
+  "identity": {
+    "geometry_report_sha256": "414aa5433baeab85ef824de34ad93822a035e4ee4c61375cab09e83d05ff2a05",
+    "flux_basis_amendment_sha256": "6c81e8f56c2c81fc2ac024a71da98f3e875c4ebc429f9e3d1ff4e8e3ef6bfb45",
+    "parent_target_contract_sha256": "7c9857c0ca57ee65cfcf7514a216a217c3b1661f6cc869c6dfb85d3786bfce5c",
+    "parent_training_contract_sha256": "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b",
+    "update_1000_checkpoint_sha256": "a566f9d95726984dc03cbf1f1a183dd0d1eae9e3479ce5055c64e571ef6a16c7",
+    "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "candidate": "target_oriented_hierarchical_coordinate_attention_v1",
+    "parameter_count": 83755173
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "audit_updates": [251, 358, 465, 572, 679, 786, 893, 1000],
+    "one_day_samples_per_group": 32,
+    "seven_day_windows_per_group": 8,
+    "thirty_day_windows_per_group": 4,
+    "teacher_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_artifact_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "direction": {
+    "optimization_sources": [
+      "seven_day_component_resolved_flux",
+      "thirty_day_component_resolved_flux"
+    ],
+    "constraint_count": 16,
+    "normalization": "unit_l2_per_group_horizon_gradient",
+    "combination": "minimum_norm_simplex_common_descent",
+    "parameter_delta": "negative_global_step_norm_times_unit_combined_direction",
+    "minimum_constraint_cosine": 0.001,
+    "momentum": false,
+    "coordinate_adaptive_scaling": false,
+    "weight_decay": false,
+    "gradient_clipping": false
+  },
+  "step_norm_grid": [0.0001, 0.0003, 0.001, 0.003, 0.01, 0.03, 0.1],
+  "flux_evaluation": {
+    "independent_optimized_keys": [
+      "gpp",
+      "maintenance_respiration",
+      "growth_respiration"
+    ],
+    "exact_retained_key": "heterotrophic_respiration",
+    "derived_required_keys": [
+      "autotrophic_respiration",
+      "npp",
+      "nep",
+      "nee"
+    ],
+    "horizons": [7, 30]
+  },
+  "protection_sources": [
+    "one_day_state_and_process",
+    "seven_day_independent_stock",
+    "thirty_day_independent_stock"
+  ],
+  "gates": {
+    "hard_failure_count": 0,
+    "nonfinite_value_count": 0,
+    "maximum_any_group_independent_flux_relative_increase": 0.000001,
+    "maximum_any_group_derived_flux_relative_increase": 0.000001,
+    "minimum_each_optimized_or_derived_key_median_relative_decrease": 0.0001,
+    "maximum_any_group_one_day_relative_increase": 0.0001,
+    "maximum_one_day_median_relative_increase": 0.0,
+    "maximum_any_group_stock_relative_increase": 0.01,
+    "maximum_stock_median_relative_increase": 0.0,
+    "require_parent_passing_acceptance_keys_remain_passing": true,
+    "maximum_parent_failing_stock_rmse_relative_increase": 0.01
+  },
+  "selection": "largest_passing_shared_step_norm",
+  "execution": {
+    "free_gln01_only": true,
+    "paid_training_authorized": false,
+    "optimizer_updates": 0,
+    "proposed_parameters_retained": false,
+    "optimizer_state_retained": false,
+    "checkpoint_written": false,
+    "recovery_written": false,
+    "teacher_data_regenerated": false,
+    "historical_v5_used": false,
+    "validation_values_evaluated": false,
+    "sealed_test_used": false,
+    "365_day_rollout_allowed": false,
+    "gate_d2_allowed": false
+  },
+  "pass_action": "design_bounded_recalibrated_flux_update_smoke",
+  "fail_action": "close_raw_amended_loss_realization_and_redesign_robust_loss_or_sampling_unit"
+}

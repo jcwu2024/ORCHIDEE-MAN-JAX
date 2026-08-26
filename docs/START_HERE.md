@@ -251,9 +251,12 @@ now pass, while GPP, NPP, maintenance, growth, and total autotrophic
 respiration remain above the absolute gates. A completed zero-update audit
 finds that GPP benefits from a larger effective batch but maintenance and
 total autotrophic gradients remain opposed even at 16 windows. The
-component-resolved flux-loss amendment is now locally implemented. The active
-gate is its free-`gln01` zero-update joint geometry audit, followed by a
-separately frozen virtual-step audit at the update-1000 state.
+component-resolved flux-loss amendment and its free-`gln01` zero-update joint
+geometry audit are now complete. All five sources are finite over all
+83,755,173 parameters, but 7-day and 30-day flux gradients are strongly
+heterogeneous across the eight batches; the raw mean is not admitted. The
+active gate is a separately frozen flux-focused virtual-step audit at the
+update-1000 state, with one-day state and 7/30-day stocks protected.
 Paid continuation, 365-day rollout, Gate D2, sealed test, and product work
 remain closed.
 

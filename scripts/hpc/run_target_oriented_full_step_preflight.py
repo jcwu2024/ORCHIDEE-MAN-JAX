@@ -632,6 +632,14 @@ def _make_steps(
 
         result.update(
             {
+                "seven_acceptance_forward": jax.jit(
+                    lambda parameters, batch: window_acceptance_statistics(
+                        parameters,
+                        batch,
+                        horizon=7,
+                        rematerialize=False,
+                    )
+                ),
                 "thirty_acceptance_forward": jax.jit(
                     lambda parameters, batch: window_acceptance_statistics(
                         parameters,
