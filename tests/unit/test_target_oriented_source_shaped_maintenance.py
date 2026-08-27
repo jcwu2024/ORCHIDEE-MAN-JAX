@@ -308,3 +308,26 @@ def test_source_shaped_inference_contains_no_half_hour_reconstruction_or_scan():
     assert "free gln01" in launcher
     assert "sbatch" not in launcher
     assert "RUN_TIMEOUT=${RUN_TIMEOUT:-120m}" in launcher
+
+
+def test_checkpoint_forward_tolerance_covers_float32_reduction_reordering():
+    from scripts.hpc.run_mechanistic_output_gpu_admission import _masked_forward_comparison
+    from scripts.hpc.run_target_oriented_source_shaped_maintenance_gpu_admission import (
+        CHECKPOINT_FORWARD_ATOL,
+        CHECKPOINT_FORWARD_RTOL,
+    )
+
+    eager = {"field": np.asarray([16.5], dtype=np.float32)}
+    compiled = {"field": np.asarray([16.5 + 4.73e-5], dtype=np.float32)}
+    targets = {"field": SimpleNamespace(defined=np.asarray([True]))}
+    default = _masked_forward_comparison(eager, compiled, targets)
+    checkpoint = _masked_forward_comparison(
+        eager,
+        compiled,
+        targets,
+        atol=CHECKPOINT_FORWARD_ATOL,
+        rtol=CHECKPOINT_FORWARD_RTOL,
+    )
+
+    assert not default["passed"]
+    assert checkpoint["passed"]

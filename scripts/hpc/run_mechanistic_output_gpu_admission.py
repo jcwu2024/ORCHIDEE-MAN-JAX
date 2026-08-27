@@ -60,6 +60,9 @@ def _masked_forward_comparison(
     eager: Mapping[str, Any],
     compiled: Mapping[str, Any],
     targets: Mapping[str, Any],
+    *,
+    atol: float = FORWARD_ATOL,
+    rtol: float = FORWARD_RTOL,
 ) -> dict[str, Any]:
     maximum_ratio = 0.0
     maximum_error = 0.0
@@ -74,7 +77,7 @@ def _masked_forward_comparison(
         if not left.size:
             continue
         difference = np.abs(left - right)
-        tolerance = FORWARD_ATOL + FORWARD_RTOL * np.maximum(np.abs(left), np.abs(right))
+        tolerance = atol + rtol * np.maximum(np.abs(left), np.abs(right))
         ratio = difference / tolerance
         field_ratio = float(np.max(ratio))
         if field_ratio > maximum_ratio:
@@ -84,8 +87,8 @@ def _masked_forward_comparison(
         passed = passed and bool(np.all(difference <= tolerance))
     return {
         "passed": passed,
-        "atol": FORWARD_ATOL,
-        "rtol": FORWARD_RTOL,
+        "atol": atol,
+        "rtol": rtol,
         "maximum_tolerance_ratio": maximum_ratio,
         "maximum_absolute_error": maximum_error,
         "maximum_ratio_field": maximum_field,

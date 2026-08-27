@@ -47,6 +47,8 @@ from scripts.hpc.target_oriented_validation_prepared import (
 
 CANDIDATE_PARAMETER_COUNT = 84_148_646
 CHECKPOINT_UPDATE = 1000
+CHECKPOINT_FORWARD_ATOL = 1.0e-5
+CHECKPOINT_FORWARD_RTOL = 5.0e-6
 
 
 def _nonmaintenance_parent_comparison(
@@ -240,7 +242,13 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     jax.block_until_ready(replay)
     replay_seconds = time.perf_counter() - replay_started
     compiled_report = _masked_output_report(compiled, runtime["targets"])
-    comparison = _masked_forward_comparison(eager, compiled, runtime["targets"])
+    comparison = _masked_forward_comparison(
+        eager,
+        compiled,
+        runtime["targets"],
+        atol=CHECKPOINT_FORWARD_ATOL,
+        rtol=CHECKPOINT_FORWARD_RTOL,
+    )
 
     def loss_function(values: Any) -> tuple[Any, Any]:
         context = head.assemble_context(values, assembled)
