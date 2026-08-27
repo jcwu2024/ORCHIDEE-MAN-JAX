@@ -14,7 +14,7 @@ PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
 case "$(hostname -s)" in
-  gln01|ibgln01) ;;
+  gln01|ibgln01|ibc13b02n04) ;;
   *) exit 2 ;;
 esac
 case "$WORKTREE" in "$ROOT"|"$ROOT/runtime/worktrees/"*) ;; *) exit 2 ;; esac
