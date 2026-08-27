@@ -2,7 +2,8 @@
 
 Date: 2026-08-28
 
-Status: frozen before zero-training execution
+Status: completed on free `gln01`; accepted result is recorded in
+`target_oriented_source_owner_state_bridge_result_20260828.md`
 
 Contract SHA256:
 `c8bcadc2ed94a38afaa8788ba5775070725ed1dc00d58db29b2753099ae86a2a`
@@ -86,3 +87,11 @@ The run creates no optimizer, applies no parameter step, writes no checkpoint,
 reconstructs no 48-record forcing series, and executes no 48-step scan. A free
 `gln01` V100 may run the bounded panel. Paid work, broader training, 365-day
 rollout, Gate D2, sealed test, and product work remain closed.
+
+## Qualification And Execution
+
+The contract, classifier, multi-leaf intervention boundary, forward-only
+launcher, and related source-shaped regressions pass locally. The real-v6 run
+completed at commit `1c862a4`; report SHA256 is
+`7defdf47...642d5c`. See the result document for the accepted partial and
+insufficient classification.

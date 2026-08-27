@@ -1610,14 +1610,21 @@ instead worsens by `680%/792%`, making autotrophic respiration worse.
 The branch correction therefore depends strongly on the recursively predicted
 state distribution. Immediate joint flux expansion is not supported, and
 unchanged branch-only continuation remains closed. The zero-training
-source-owner state bridge is now frozen under contract SHA256
-`c8bcadc2...86a2a`. It Teacher-carries only `biomass`, `lai`, `veget_max`, and
-`t2m_longterm` inside an otherwise free rollout and reuses the accepted free
-and full-Teacher results by report hash. The active gate is its bounded free-
-`gln01` execution for update 0 and update 100. All ten 7/30-day growth, NPP,
-AGB, BGB, and total-live cells must reverse to call the four exact physical
-source inputs sufficient; a partial reversal is explicitly insufficient.
-Every outcome returns to architecture discussion. No optimizer continuation,
+source-owner state bridge completed on free `gln01` at commit `1c862a4`;
+report SHA256 is `7defdf47...642d5c`. All hard failures are zero and the raw
+carbon identities close to `3.02e-14`.
+
+Teacher-carrying only `biomass`, `lai`, `veget_max`, and `t2m_longterm`
+reverses `4/10` frozen cells: all three 7-day biomass measures and 30-day AGB.
+Growth respiration and NPP remain materially worse at both horizons, while
+30-day BGB and total live biomass improve relative to free rollout but do not
+reverse. The accepted classification is
+`source_owner_state_drift_contributes_but_not_sufficient`.
+
+The active gate is architecture discussion before implementation. A successor
+must keep broader recurrent state or Attention hidden context in scope rather
+than conditioning the maintenance correction only on the four direct physical
+owners. Attention itself is not rejected. No optimizer continuation,
 validation read, sealed-test read, broader training, 365-day rollout, Gate
 D2, or product work is authorized.
 See
@@ -1634,6 +1641,7 @@ See
 [`target_oriented_source_shaped_coupling_attribution_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_coupling_attribution_v1.md),
 [`target_oriented_source_shaped_coupling_attribution_result_20260828.md`](research/daily_coarse_graining/target_oriented_source_shaped_coupling_attribution_result_20260828.md),
 [`target_oriented_source_owner_state_bridge_v1.md`](research/daily_coarse_graining/target_oriented_source_owner_state_bridge_v1.md),
+[`target_oriented_source_owner_state_bridge_result_20260828.md`](research/daily_coarse_graining/target_oriented_source_owner_state_bridge_result_20260828.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),

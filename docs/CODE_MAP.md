@@ -449,6 +449,10 @@ diagnostic state keys are supplied. The zero-training executable and free-
 `scripts/hpc/run_target_oriented_source_owner_state_bridge.sh`. They reuse the
 accepted free and full-Teacher report values, execute only the bridge, create
 no optimizer, and cannot write a checkpoint or enter final inference.
+The accepted result is
+`target_oriented_source_owner_state_bridge_result_20260828.md`: four of ten
+protected cells reverse, so broader recurrent state or Attention context
+remains in scope and implementation stops for architecture discussion.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

@@ -330,9 +330,12 @@ under Teacher day starts, while maintenance itself reverses from a large free-
 rollout improvement to a `680%/792%` deterioration. The next task is a bounded
 source-owner state bridge over `biomass`, `lai`, `veget_max`, and
 `t2m_longterm`. Its zero-training contract is frozen and locally qualified;
-the active gate is the bounded free-`gln01` execution. No new architecture is
-admitted yet. Validation reads, broader training, 365-day rollout, Gate D2,
-sealed test, and product work remain closed.
+the free-`gln01` execution now passes all physical gates but reverses only four
+of ten protected growth/NPP/biomass cells. Direct source-owner drift therefore
+contributes but is not sufficient. The active gate is architecture discussion;
+broader recurrent state or Attention context remains in scope and no new
+architecture is admitted yet. Validation reads, broader training, 365-day
+rollout, Gate D2, sealed test, and product work remain closed.
 
 ## New Task Bootstrap
 
