@@ -2,7 +2,7 @@
 
 Date: 2026-08-27
 
-Status: frozen before zero-update train/train panel
+Status: frozen; zero-update train/train panel accepted and one-update admission requires authorization
 
 Machine contract:
 `manifests/coarse_graining/target_oriented_source_shaped_train_train_screen_v1.json`
@@ -67,3 +67,17 @@ Only the zero-update free-GPU panel is authorized by this contract. It creates
 no optimizer and writes no checkpoint. A free one-update admission and paid
 100-update stage each require a new explicit user authorization after their
 resource and cost envelopes are known.
+
+## Zero-Update Result
+
+The complete eight-group panel passed execution at commit `250986f`; report
+SHA256 is `6e7302fe...e094291`. With no training, maintenance scores improve by
+`73.61%` at 7 days and `87.35%` at 30 days. The protection gate fails because
+the fixed source correction is too large for several 7-day groups, including
+median regressions in growth respiration, NPP, AGB, BGB, and total live
+biomass. All hard and nonfinite counts are zero.
+
+This is evidence for the new mechanism, not acceptance of its current output.
+The active boundary is explicit authorization for the one-update branch-only
+admission described above. See
+`target_oriented_source_shaped_zero_panel_result_20260827.md`.

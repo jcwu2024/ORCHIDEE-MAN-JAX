@@ -407,6 +407,15 @@ Attention body remains open; the next design must discuss a structured
 maintenance materialization instead of silently continuing the shared
 `768 -> 1` final head.
 
+`daily_operator/target_oriented_source_shaped_maintenance.py` owns the current
+source-shaped maintenance materialization and its two bounded correction
+branches. `daily_operator/target_oriented_source_shaped_screen.py` owns the
+frozen train/train data separation and 20%/1% science classifier.
+`scripts/hpc/run_target_oriented_source_shaped_train_train_zero_panel.py`
+evaluates the eight-group zero-update panel, and its same-named shell launcher
+is the free-`gln01` boundary. This path cannot create an optimizer, retain an
+update, read validation values, or enter final inference.
+
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and
 maintenance-temperature factors to replaced fast processes and dynamically

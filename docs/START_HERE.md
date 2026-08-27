@@ -305,9 +305,14 @@ zero-update real-v6 GPU admission loaded from the exact update-1000 parent.
 All parameters and both new physical branches differentiate, every retained
 Attention family has nonzero gradients, one canonical day is finite, and
 water/carbon budgets close exactly. This is execution admission, not science
-promotion. The active boundary is a separately frozen train/train screen with
-a fresh optimizer and the existing accepted v6 train assets. Validation reads,
-365-day rollout, Gate D2, sealed test, and product work remain closed.
+promotion. Its frozen eight-group train/train zero panel is also complete:
+without training, maintenance error improves by `73.61%/87.35%` at 7/30 days,
+but several 7-day protected carbon scores regress because the fixed source
+correction is too strong. All hard counts remain zero. The active boundary is
+explicit authorization for one free branch-only optimizer admission; it will
+train only the 394,242 new parameters and discard the single proposal.
+Validation reads, paid training, 365-day rollout, Gate D2, sealed test, and
+product work remain closed.
 
 ## New Task Bootstrap
 

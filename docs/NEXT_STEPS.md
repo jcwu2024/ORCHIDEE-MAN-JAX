@@ -1553,18 +1553,28 @@ Attention family have nonzero gradients, all 160 non-maintenance outputs are
 exactly equal to the parent, and the canonical one-day water/carbon residuals
 are zero. JAX peak live allocation is about 2.55 GiB.
 
-The active gate is now the design and local admission of a separately
-authorized train/train screen. It must start from the exact update-1000 parent,
-discard the old maintenance head and optimizer state, initialize a fresh
-optimizer, reuse accepted v6 train assets, and evaluate the frozen 7/30-day
-science gate. Training submission, validation read, sealed-test read, 365-day
-rollout, Gate D2, and product work remain closed until that executable contract
-and its measured resource envelope are accepted.
+The frozen train/train screen and its zero-update panel are now complete at
+commit `250986f`; report SHA256 is `6e7302fe...e094291`. Before training, the
+source formula already reduces median maintenance score by `73.6076%` at 7
+days and `87.3457%` at 30 days. It therefore clears the required 20% margin by
+a large amount. It is not yet protected: 7-day median growth respiration,
+NPP, AGB, BGB, and total-live scores regress, and the worst group regression
+is `340.382%`. All hard and nonfinite counts are zero.
+
+The active gate is explicit user authorization for a free one-update
+branch-only admission. It will use eight disjoint train/train calibration
+batches to freeze a p90 branch-gradient clip, create a fresh AdamW state,
+apply exactly one update to the 394,242 new parameters using artifact 252,
+verify that every retained parent parameter is unchanged, and discard the
+proposal. Paid 100-update training, validation read, sealed-test read, 365-day
+rollout, Gate D2, and product work remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`target_oriented_source_shaped_maintenance_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_maintenance_v1.md),
 [`target_oriented_source_shaped_maintenance_gpu_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_maintenance_gpu_admission_20260827.md),
+[`target_oriented_source_shaped_train_train_screen_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_train_train_screen_v1.md),
+[`target_oriented_source_shaped_zero_panel_result_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_zero_panel_result_20260827.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),
