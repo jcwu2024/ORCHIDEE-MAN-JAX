@@ -317,12 +317,17 @@ The direct branch-subtree autodiff admission now passes at commit `d965bea`.
 Its 394,242-coordinate gradient matches the subtree extracted from the full
 84.1-million-parameter gradient with zero failing coordinates. Hot effective
 batches fall from `36.85 s` to `25.18 s`, and JAX peak live GPU memory falls
-from about 7.64 GiB to 2.24 GiB. The current task is to prepare and separately
-authorize the paid 100-update branch-only train/train screen. Its branch-only
-checkpoint/recovery, exact `252..351` runner, frozen update-100 screen, and
-single-V100 Slurm wrapper are locally qualified at commit `9224398`. The
-three-hour worst-case envelope is CNY 8.28 and remains unsubmitted. Validation
-reads, 365-day rollout, Gate D2, sealed test, and product work remain closed.
+from about 7.64 GiB to 2.24 GiB. The paid 100-update branch-only train/train
+screen then completed in Slurm job `14701638`. All updates, physical gates,
+and frozen-parent checks pass, and maintenance improves by `90.76%/96.50%` at
+7/30 days. Scientific promotion fails because training only the maintenance
+branches worsens the coupled 7-day growth-respiration, NPP, AGB, BGB, and
+total-live-biomass protection scores; no 7-day group and only one 30-day group
+passes every absolute key. The checkpoint is diagnostic only. The current
+task is a zero-training source-coupling attribution using the fixed parent,
+update-0 source candidate, and update-100 branch state. Validation reads,
+broader training, 365-day rollout, Gate D2, sealed test, and product work
+remain closed.
 
 ## New Task Bootstrap
 

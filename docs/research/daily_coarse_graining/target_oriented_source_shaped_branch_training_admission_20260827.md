@@ -2,8 +2,8 @@
 
 Date: 2026-08-27
 
-Status: implementation and local qualification complete; paid submission is
-not yet authorized
+Status: completed by Slurm job `14701638`; scientific result is recorded in
+`target_oriented_source_shaped_branch_training_result_20260827.md`
 
 Implementation commit:
 `9224398f6740a8008f06f112194e7f0e2d37d153`
@@ -87,8 +87,10 @@ not part of the scientific gate.
 
 ## Decision Boundary
 
-Submission requires explicit approval of the exact resource, wall-time,
-working-directory, command, and worst-case cost block above. A completed job
-closes only this bounded train/train screen. Validation, broader training,
-365-day rollout, Gate D2, sealed test, and product acceptance require new
-review and remain closed.
+The user approved the exact resource block above and Slurm job `14701638`
+completed with exit code zero in `00:58:51`. The engineering run passed, but
+the frozen scientific promotion gate failed. The update-100 branch checkpoint
+is diagnostic only. See
+`target_oriented_source_shaped_branch_training_result_20260827.md` for the
+accepted result and next gate. Validation, broader training, 365-day rollout,
+Gate D2, sealed test, and product acceptance remain closed.

@@ -454,15 +454,31 @@ gradient; the objective, three gradient sources, hard counts, fresh AdamW
 proposal, and post-proposal objective also match. Hot effective-batch time is
 `25.18 s` versus the admitted `36.85 s`, and JAX peak live memory is about
 2.24 GiB versus 7.64 GiB. Physical gates pass and no training state is
-retained. The paid runner and branch-only checkpoint/recovery are locally
+retained. The paid runner and branch-only checkpoint/recovery were locally
 qualified at commit `9224398`. They bind artifacts `252..351` to updates
 `1..100`, reuse the accepted update-0 screen, evaluate the complete frozen
 eight-group 7/30-day screen at update 100, and keep all retained parent
-coordinates outside the optimizer. The active boundary is explicit approval
-of one `gnall` node, eight CPU cores, one V100, 32 GiB, three hours, and CNY
-8.28 worst case. No `sbatch` has been issued. Paid training,
-validation/sealed-test reads, broader training, 365-day rollout, Gate D2, and
-product work remain closed.
+coordinates outside the optimizer.
+
+The user approved that exact envelope and Slurm job `14701638` completed all
+100 updates in `00:58:51` at commit `7fdce65`; report SHA256 is
+`a5143c06...b2d4b22`. Only the 394,242 branch coordinates changed, clipping
+occurred on `4/100` updates, and every final-screen physical hard-failure count
+is zero. Median 7/30-day maintenance reductions increase from
+`73.61%/87.35%` to `90.76%/96.50%`.
+
+The scientific gate fails because protected carbon balance does not recover.
+At update 100, median 7-day growth respiration, NPP, AGB, BGB, and total-live
+biomass remain worse than the fixed parent, with several worsening relative
+to update 0. No 7-day group and only one 30-day group passes every absolute
+target-oriented key. The branch checkpoint is diagnostic only; continuing the
+same branch-only training is closed. The active gate is a zero-training
+source-coupling attribution across the fixed parent, update-0 source
+candidate, and update-100 branch state on the same train/train panel. It must
+separate direct carbon-identity effects from rollout-state recurrence before
+any jointly trainable flux successor is designed. Validation/sealed-test
+reads, broader training, 365-day rollout, Gate D2, and product work remain
+closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -479,8 +495,10 @@ and
 [`target_oriented_source_shaped_one_update_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_one_update_admission_20260827.md),
 and its accepted direct-gradient engineering evidence in
 [`target_oriented_source_shaped_branch_autodiff_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_autodiff_admission_20260827.md),
-with the unsubmitted paid-stage envelope in
+with the completed paid-stage envelope in
 [`target_oriented_source_shaped_branch_training_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_training_admission_20260827.md),
+and its completed scientific result in
+[`target_oriented_source_shaped_branch_training_result_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_training_result_20260827.md),
 with GPU evidence in
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md)
 and the training design in

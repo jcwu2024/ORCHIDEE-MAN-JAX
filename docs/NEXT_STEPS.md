@@ -1581,13 +1581,30 @@ also match. Hot effective-batch time falls from `36.85 s` to `25.18 s`
 2.24 GiB (`70.67%` reduction). Physical gates pass. No training update,
 checkpoint, recovery, validation read, or sealed-test read occurred.
 
-This closes the engineering prerequisite. The paid runner, branch-only
+This closed the engineering prerequisite. The paid runner, branch-only
 checkpoint/recovery, exact `252..351` schedule, final eight-group screen, and
-single-V100 Slurm wrapper are locally qualified at commit `9224398`. The
-active gate is explicit approval of its exact `gnall` envelope: one node,
-eight CPU cores, one V100, 32 GiB, three hours, and CNY 8.28 worst case. No
-`sbatch` has been issued. Validation read, sealed-test read, broader training,
-365-day rollout, Gate D2, and product work remain closed.
+single-V100 Slurm wrapper were locally qualified at commit `9224398`. The user
+approved the exact envelope and Slurm job `14701638` completed all 100 updates
+in `00:58:51` at commit `7fdce65`; report SHA256 is
+`a5143c06...b2d4b22`.
+
+The engineering run passes: only 394,242 branch parameters changed, all
+83,754,404 retained coordinates remained exactly fixed, clipping occurred on
+`4/100` updates, and all final-screen physical hard failures are zero. The
+maintenance reduction rises from `73.61%/87.35%` to `90.76%/96.50%` at 7/30
+days. Scientific promotion nevertheless fails. Median 7-day growth
+respiration, NPP, AGB, BGB, and total-live-biomass scores regress relative to
+the fixed parent, and no 7-day group plus only one 30-day group passes all
+absolute keys. The update-100 checkpoint is diagnostic only, and unchanged
+branch-only continuation is closed.
+
+The active gate is to freeze and execute a zero-training source-coupling
+attribution using the fixed parent, update-0 source candidate, and update-100
+branch state on the same train/train panel. It must separate direct daily
+carbon-identity effects from cross-day state recurrence and identify whether
+a bounded successor must jointly expose additional GPP/growth/maintenance
+flux heads. No optimizer continuation, validation read, sealed-test read,
+broader training, 365-day rollout, Gate D2, or product work is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -1598,6 +1615,7 @@ See
 [`target_oriented_source_shaped_one_update_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_one_update_admission_20260827.md),
 [`target_oriented_source_shaped_branch_autodiff_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_autodiff_admission_20260827.md),
 [`target_oriented_source_shaped_branch_training_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_training_admission_20260827.md),
+[`target_oriented_source_shaped_branch_training_result_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_training_result_20260827.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),
