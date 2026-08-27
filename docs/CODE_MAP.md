@@ -418,8 +418,13 @@ is the free-`gln01` zero-panel boundary.
 the accepted p90 branch-gradient calibration, one ephemeral branch-only AdamW
 proposal, frozen-parent identity check, and post-update forward/hard gate. Its
 shell launcher is free-`gln01` only and cannot write a checkpoint or recovery.
-The next implementation must expose direct branch-subtree autodiff for the
-same effective-batch objective before the paid 100-update runner is admitted.
+`scripts/hpc/run_target_oriented_source_shaped_branch_autodiff_admission.py`
+owns the accepted direct branch-subtree versus extracted-full-gradient
+equivalence, timing, live-memory, optimizer-proposal, and post-proposal hard
+gate. Its shell launcher is free-`gln01` only and cannot write a checkpoint or
+recovery. The shared full-step builder now exposes the unchanged complete
+objective with an optional differentiated parameter subtree; existing
+full-gradient callers retain their previous behavior.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

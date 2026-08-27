@@ -444,10 +444,20 @@ report SHA256 is `c2743cbc...34ea59`. The frozen p90 branch clip is
 `0.1973867`; artifact 252 uses clip scale `0.86065`, changes both new branches,
 keeps every retained coordinate unchanged, has zero hard failures before and
 after, and slightly reduces the effective-batch objective. The proposal was
-discarded without checkpoint or recovery. The active engineering boundary is
-a one-batch direct branch-subtree autodiff equivalence/timing check before any
-paid 100-update request. Paid training, validation/sealed-test reads, 365-day
-rollout, Gate D2, and product work remain closed.
+discarded without checkpoint or recovery.
+
+The direct branch-subtree autodiff admission then passed at commit `d965bea`;
+report SHA256 is `5852d996...e58538`. The full forward remains unchanged, but
+only 394,242 branch coordinates are differentiated. Zero gradient coordinates
+fail against the subtree extracted from the complete 84.1-million-parameter
+gradient; the objective, three gradient sources, hard counts, fresh AdamW
+proposal, and post-proposal objective also match. Hot effective-batch time is
+`25.18 s` versus the admitted `36.85 s`, and JAX peak live memory is about
+2.24 GiB versus 7.64 GiB. Physical gates pass and no training state is
+retained. The active boundary is preparation plus separate resource/cost
+authorization for the paid 100-update branch-only train/train screen. Paid
+training, validation/sealed-test reads, 365-day rollout, Gate D2, and product
+work remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -462,6 +472,8 @@ and
 [`target_oriented_source_shaped_zero_panel_result_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_zero_panel_result_20260827.md),
 and
 [`target_oriented_source_shaped_one_update_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_one_update_admission_20260827.md),
+and its accepted direct-gradient engineering evidence in
+[`target_oriented_source_shaped_branch_autodiff_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_autodiff_admission_20260827.md),
 with GPU evidence in
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md)
 and the training design in

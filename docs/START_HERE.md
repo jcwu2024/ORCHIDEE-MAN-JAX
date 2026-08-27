@@ -313,10 +313,13 @@ now past that free admission: eight calibration batches freeze p90 clip
 `0.1973867`, one ephemeral artifact-252 AdamW update changes both new branches,
 all retained coordinates stay unchanged, and hard failures are zero before
 and after. Report SHA256 is `c2743cbc...34ea59`; no checkpoint was written.
-The current task is a one-batch direct branch-subtree autodiff equivalence and
-timing check before any paid 100-update request. Validation reads, paid
-training, 365-day rollout, Gate D2, sealed test, and product work remain
-closed.
+The direct branch-subtree autodiff admission now passes at commit `d965bea`.
+Its 394,242-coordinate gradient matches the subtree extracted from the full
+84.1-million-parameter gradient with zero failing coordinates. Hot effective
+batches fall from `36.85 s` to `25.18 s`, and JAX peak live GPU memory falls
+from about 7.64 GiB to 2.24 GiB. The current task is to prepare and separately
+authorize the paid 100-update branch-only train/train screen. Validation reads,
+365-day rollout, Gate D2, sealed test, and product work remain closed.
 
 ## New Task Bootstrap
 
