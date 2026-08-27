@@ -434,7 +434,21 @@ frozen artifacts `252..351`, 100 direct-branch updates, ten-update recovery,
 and final eight-group train/train screen. Its same-named shell wrapper owns the
 GPU container boundary, while
 `scripts/hpc/slurm_target_oriented_source_shaped_branch_training_100.sh` owns
-the unsubmitted one-V100 paid resource envelope.
+the completed one-V100 paid resource envelope used by job `14701638`.
+
+`daily_operator/target_oriented_source_shaped_coupling.py` owns the completed
+update-0/update-100 free-versus-full-Teacher comparison, raw carbon-bias
+identity, and causal classifier. Its accepted result is
+`target_oriented_source_shaped_coupling_attribution_result_20260828.md`.
+`daily_operator/target_oriented_source_owner_state_bridge.py` owns the active
+four-owner contract and strict ten-cell classifier. The shared full-step
+factory exposes Teacher-carry acceptance forwards only when explicit
+diagnostic state keys are supplied. The zero-training executable and free-
+`gln01` boundary are
+`scripts/hpc/audit_target_oriented_source_owner_state_bridge.py` and
+`scripts/hpc/run_target_oriented_source_owner_state_bridge.sh`. They reuse the
+accepted free and full-Teacher report values, execute only the bridge, create
+no optimizer, and cannot write a checkpoint or enter final inference.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

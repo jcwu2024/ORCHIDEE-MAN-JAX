@@ -64,11 +64,7 @@ def _window_hard_counts(
 
 
 def _hard_failure_count(counts: Mapping[str, int]) -> int:
-    return sum(
-        int(value)
-        for name, value in counts.items()
-        if name != "declared_dynamic_state_mask_mismatch"
-    )
+    return sum(int(value) for name, value in counts.items() if name != "declared_dynamic_state_mask_mismatch")
 
 
 def _git_head() -> str:
@@ -281,10 +277,7 @@ def _make_steps(
     )
     if not set(diagnostic_flux_basis) <= set(resolved_flux_basis):
         raise ValueError("target-oriented diagnostic flux basis is unavailable")
-    if (
-        diagnostic_teacher_carry_state_key is not None
-        and diagnostic_teacher_carry_state_keys is not None
-    ):
+    if diagnostic_teacher_carry_state_key is not None and diagnostic_teacher_carry_state_keys is not None:
         raise ValueError("diagnostic Teacher-carry state key boundaries conflict")
     diagnostic_teacher_carry_keys = diagnostic_teacher_carry_state_keys
     if diagnostic_teacher_carry_state_key is not None:
@@ -735,6 +728,30 @@ def _make_steps(
         )
         return statistics, hard
 
+    def teacher_carry_window_acceptance_statistics(
+        parameters,
+        microbatch,
+        *,
+        horizon: int,
+        rematerialize: bool,
+    ):
+        if acceptance_scales is None:
+            raise ValueError("acceptance scales are required for Teacher-carry diagnostics")
+        predicted, expected, hard = teacher_carry_window_trajectories(
+            parameters,
+            microbatch,
+            rematerialize=rematerialize,
+        )
+        statistics = target_oriented_acceptance_sufficient_statistics(
+            predicted.fluxes,
+            expected.fluxes,
+            predicted.stocks,
+            expected.stocks,
+            scales=acceptance_scales,
+            horizon=horizon,
+        )
+        return statistics, hard
+
     one_forward = jax.jit(one_statistics)
     seven_forward = jax.jit(
         lambda parameters, batch: window_statistics(parameters, batch, horizon=7, rematerialize=False)
@@ -1169,6 +1186,27 @@ def _make_steps(
                 ),
             }
         )
+        if diagnostic_teacher_carry_keys is not None:
+            result.update(
+                {
+                    "seven_teacher_carry_acceptance_forward": jax.jit(
+                        lambda parameters, batch: teacher_carry_window_acceptance_statistics(
+                            parameters,
+                            batch,
+                            horizon=7,
+                            rematerialize=False,
+                        )
+                    ),
+                    "thirty_teacher_carry_acceptance_forward": jax.jit(
+                        lambda parameters, batch: teacher_carry_window_acceptance_statistics(
+                            parameters,
+                            batch,
+                            horizon=30,
+                            rematerialize=False,
+                        )
+                    ),
+                }
+            )
     return result
 
 

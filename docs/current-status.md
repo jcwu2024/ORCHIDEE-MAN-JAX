@@ -492,11 +492,15 @@ itself instead worsens by `680%/792%`.
 The accepted classification is `direct_daily_coupling_confirmed`, with every
 material protected free-rollout regression marked recurrence-required and
 `joint_flux_scope_required=false`. Immediate joint flux expansion is closed.
-The active gate is to freeze a zero-training source-owner state bridge that
-Teacher-carries only `biomass`, `lai`, `veget_max`, and `t2m_longterm` on the
-same panel. This separates exact source-input state drift from broader
-Attention context and other recurrent state paths before any revised branch
-architecture is discussed.
+The zero-training source-owner state bridge is now frozen under contract
+SHA256 `c8bcadc2...86a2a` and locally qualified. It Teacher-carries only
+`biomass`, `lai`, `veget_max`, and `t2m_longterm` on the same panel, while all
+other state remains predicted. Accepted free and full-Teacher modes are reused
+without reexecution. The active gate is the bounded free-`gln01` update-0 and
+update-100 bridge execution. Sufficiency requires all ten 7/30-day growth,
+NPP, AGB, BGB, and total-live cells to reverse; any partial result still
+requires broader Attention context or other recurrent state paths to remain
+in scope before a revised branch architecture is discussed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -521,6 +525,8 @@ with the frozen coupling-attribution contract in
 [`target_oriented_source_shaped_coupling_attribution_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_coupling_attribution_v1.md),
 and its accepted result in
 [`target_oriented_source_shaped_coupling_attribution_result_20260828.md`](research/daily_coarse_graining/target_oriented_source_shaped_coupling_attribution_result_20260828.md),
+with the frozen bridge method in
+[`target_oriented_source_owner_state_bridge_v1.md`](research/daily_coarse_graining/target_oriented_source_owner_state_bridge_v1.md),
 with GPU evidence in
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md)
 and the training design in
