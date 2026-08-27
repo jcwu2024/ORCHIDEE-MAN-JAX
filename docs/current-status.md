@@ -480,13 +480,23 @@ any jointly trainable flux successor is designed. Validation/sealed-test
 reads, broader training, 365-day rollout, Gate D2, and product work remain
 closed.
 
-That attribution is now frozen under contract SHA256
-`12b327c8...ce93b2` and locally qualified with 25 related tests. Its
-Teacher-day-start mode independently initializes every day from the existing
-prepared Teacher state while preserving the same complete daily forward. The
-accepted free-rollout records are reused, so real execution evaluates only the
-two matched Teacher-day-start states. The active gate is the bounded
-free-`gln01` run; it creates no optimizer or checkpoint.
+That attribution completed on free `gln01` at commit `4c22a4c`; report SHA256
+is `e2a0b90f...26a0d6b`. It creates no optimizer or checkpoint, all physical
+hard failures are zero, and the two raw carbon-bias identities close to
+`5.68e-14`. In free rollout, update 100 improves maintenance by
+`62.93%/71.74%` at 7/30 days while worsening growth respiration, NPP, AGB,
+BGB, and total live biomass. Under Teacher day starts, those protected
+regressions all become improvements, GPP is exactly unchanged, and maintenance
+itself instead worsens by `680%/792%`.
+
+The accepted classification is `direct_daily_coupling_confirmed`, with every
+material protected free-rollout regression marked recurrence-required and
+`joint_flux_scope_required=false`. Immediate joint flux expansion is closed.
+The active gate is to freeze a zero-training source-owner state bridge that
+Teacher-carries only `biomass`, `lai`, `veget_max`, and `t2m_longterm` on the
+same panel. This separates exact source-input state drift from broader
+Attention context and other recurrent state paths before any revised branch
+architecture is discussed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -509,6 +519,8 @@ and its completed scientific result in
 [`target_oriented_source_shaped_branch_training_result_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_training_result_20260827.md),
 with the frozen coupling-attribution contract in
 [`target_oriented_source_shaped_coupling_attribution_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_coupling_attribution_v1.md),
+and its accepted result in
+[`target_oriented_source_shaped_coupling_attribution_result_20260828.md`](research/daily_coarse_graining/target_oriented_source_shaped_coupling_attribution_result_20260828.md),
 with GPU evidence in
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md)
 and the training design in

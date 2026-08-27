@@ -1598,15 +1598,24 @@ the fixed parent, and no 7-day group plus only one 30-day group passes all
 absolute keys. The update-100 checkpoint is diagnostic only, and unchanged
 branch-only continuation is closed.
 
-The zero-training source-coupling attribution is now frozen under contract
-SHA256 `12b327c8...ce93b2` and locally qualified with 25 related tests. It uses
-the fixed parent, update-0 source candidate, and update-100 branch state on the
-same train/train panel. Its matched Teacher-day-start intervention removes
-only predicted cross-day carry while retaining the complete same-day neural
-forward, conservative updater, and exact tail. The active gate is its bounded
-free-`gln01` execution. No optimizer continuation, validation read,
-sealed-test read, broader training, 365-day rollout, Gate D2, or product work
-is authorized.
+The zero-training source-coupling attribution completed on free `gln01` at
+commit `4c22a4c`; report SHA256 is `e2a0b90f...26a0d6b`. All hard failures are
+zero and the raw carbon-bias identities close to `5.68e-14`. In free rollout,
+update 100 improves maintenance by `62.93%/71.74%` at 7/30 days but worsens
+growth respiration, NPP, AGB, BGB, and total live biomass. Under matched
+Teacher day starts, every one of those protected regressions disappears and
+becomes a `7%`-`9%` improvement; GPP is exactly invariant. Maintenance itself
+instead worsens by `680%/792%`, making autotrophic respiration worse.
+
+The branch correction therefore depends strongly on the recursively predicted
+state distribution. Immediate joint flux expansion is not supported, and
+unchanged branch-only continuation remains closed. The active gate is to
+freeze a zero-training source-owner state bridge that Teacher-carries only
+`biomass`, `lai`, `veget_max`, and `t2m_longterm`. It must determine whether
+the exact physical source inputs are sufficient to produce the reversal or
+whether broader Attention context/other state paths remain necessary. No
+optimizer continuation, validation read, sealed-test read, broader training,
+365-day rollout, Gate D2, or product work is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -1619,6 +1628,7 @@ See
 [`target_oriented_source_shaped_branch_training_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_training_admission_20260827.md),
 [`target_oriented_source_shaped_branch_training_result_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_training_result_20260827.md),
 [`target_oriented_source_shaped_coupling_attribution_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_coupling_attribution_v1.md),
+[`target_oriented_source_shaped_coupling_attribution_result_20260828.md`](research/daily_coarse_graining/target_oriented_source_shaped_coupling_attribution_result_20260828.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),

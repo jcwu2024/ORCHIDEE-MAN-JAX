@@ -2,7 +2,8 @@
 
 Date: 2026-08-27
 
-Status: frozen before zero-training execution
+Status: completed on free `gln01`; accepted result is recorded in
+`target_oriented_source_shaped_coupling_attribution_result_20260828.md`
 
 Contract SHA256:
 `12b327c81851551dfd7ef5e4878b03845290d78b5d51d26168046fe25dce93b2`
@@ -89,5 +90,7 @@ loading, Bash syntax, and `git diff --check` pass.
 
 The implementation adds Teacher-day-start acceptance statistics to the
 existing rollout step factory and a diagnostic runner that loads the accepted
-branch-only checkpoint without creating an optimizer. No real-v6 diagnostic
-value has been read locally; execution remains the next gate.
+branch-only checkpoint without creating an optimizer. The real-v6 execution
+completed at commit `4c22a4c`; report SHA256 is
+`e2a0b90f...26a0d6b`. See the result document for the causal classification
+and next gate.

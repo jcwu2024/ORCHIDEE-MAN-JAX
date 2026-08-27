@@ -323,11 +323,15 @@ and frozen-parent checks pass, and maintenance improves by `90.76%/96.50%` at
 7/30 days. Scientific promotion fails because training only the maintenance
 branches worsens the coupled 7-day growth-respiration, NPP, AGB, BGB, and
 total-live-biomass protection scores; no 7-day group and only one 30-day group
-passes every absolute key. The checkpoint is diagnostic only. The current
-task is a zero-training source-coupling attribution using the fixed parent,
-update-0 source candidate, and update-100 branch state. Validation reads,
-broader training, 365-day rollout, Gate D2, sealed test, and product work
-remain closed.
+passes every absolute key. The checkpoint is diagnostic only. The subsequent
+zero-training coupling attribution shows that all material protected
+regressions require recursively predicted state: they become improvements
+under Teacher day starts, while maintenance itself reverses from a large free-
+rollout improvement to a `680%/792%` deterioration. The next task is a bounded
+source-owner state bridge over `biomass`, `lai`, `veget_max`, and
+`t2m_longterm`; no new architecture is admitted yet. Validation reads, broader
+training, 365-day rollout, Gate D2, sealed test, and product work remain
+closed.
 
 ## New Task Bootstrap
 
