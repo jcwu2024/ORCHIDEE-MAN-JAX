@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import math
+from pathlib import Path
 
 import pytest
 
@@ -55,6 +56,12 @@ def test_source_shaped_screen_contract_is_frozen_and_disjoint():
     contract = load_source_shaped_train_train_screen_contract()
     assert contract.sha256 == FROZEN_SHA256
     assert contract.evaluation_updates == (251, 358, 465, 572, 679, 786, 893, 1000)
+
+    root = Path(__file__).resolve().parents[2]
+    launcher = (root / "scripts/hpc/run_target_oriented_source_shaped_train_train_zero_panel.sh").read_text()
+    manifest = "manifests/coarse_graining/target_oriented_flux_basis_amendment_v1.json"
+    assert manifest in launcher
+    assert (root / manifest).is_file()
 
 
 def test_source_shaped_relative_gate_requires_large_protected_improvement():
