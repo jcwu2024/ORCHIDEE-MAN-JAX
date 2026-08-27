@@ -437,10 +437,17 @@ gradients, all 160 non-maintenance outputs remain exactly equal to the parent,
 and the canonical next state and exact water/carbon budgets pass. The frozen
 zero-update train/train panel then improves maintenance by `73.61%/87.35%` at
 7/30 days without training, while failing protection because several 7-day
-carbon scores regress. All hard counts are zero. The active boundary is
-explicit authorization for one free branch-only optimizer admission over only
-the 394,242 new parameters. Paid training, validation/sealed-test reads,
-365-day rollout, Gate D2, and product work remain closed.
+carbon scores regress. All hard counts are zero.
+
+The free one-update branch-only admission then passed at commit `0ed926b`;
+report SHA256 is `c2743cbc...34ea59`. The frozen p90 branch clip is
+`0.1973867`; artifact 252 uses clip scale `0.86065`, changes both new branches,
+keeps every retained coordinate unchanged, has zero hard failures before and
+after, and slightly reduces the effective-batch objective. The proposal was
+discarded without checkpoint or recovery. The active engineering boundary is
+a one-batch direct branch-subtree autodiff equivalence/timing check before any
+paid 100-update request. Paid training, validation/sealed-test reads, 365-day
+rollout, Gate D2, and product work remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -453,6 +460,8 @@ with its frozen train/train screen and zero-update result in
 [`target_oriented_source_shaped_train_train_screen_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_train_train_screen_v1.md)
 and
 [`target_oriented_source_shaped_zero_panel_result_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_zero_panel_result_20260827.md),
+and
+[`target_oriented_source_shaped_one_update_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_one_update_admission_20260827.md),
 with GPU evidence in
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md)
 and the training design in

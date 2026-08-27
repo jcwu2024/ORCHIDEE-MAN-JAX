@@ -63,10 +63,11 @@ separately designed broader training stage, but it cannot open validation,
 
 ## Authorization Boundary
 
-Only the zero-update free-GPU panel is authorized by this contract. It creates
-no optimizer and writes no checkpoint. A free one-update admission and paid
-100-update stage each require a new explicit user authorization after their
-resource and cost envelopes are known.
+The zero-update panel and one-update free-GPU admission are complete. The
+admission created a fresh optimizer, applied one ephemeral branch-only update,
+and discarded the proposal without writing a checkpoint. The paid 100-update
+stage still requires new explicit user authorization after its direct
+branch-autodiff resource envelope is known.
 
 ## Zero-Update Result
 
@@ -78,6 +79,19 @@ median regressions in growth respiration, NPP, AGB, BGB, and total live
 biomass. All hard and nonfinite counts are zero.
 
 This is evidence for the new mechanism, not acceptance of its current output.
-The active boundary is explicit authorization for the one-update branch-only
-admission described above. See
-`target_oriented_source_shaped_zero_panel_result_20260827.md`.
+See `target_oriented_source_shaped_zero_panel_result_20260827.md`.
+
+## One-Update Admission Result
+
+The free admission passed at commit `0ed926b`; report SHA256 is
+`c2743cbc...34ea59`. Eight calibration batches freeze p90 branch clip
+`0.1973867`. Artifact 252 then produces raw branch norm `0.2293467`, uses clip
+scale `0.86065`, changes both branches, and leaves all retained parameters
+unchanged. Loss and all proposed parameters and optimizer values are finite;
+hard failures are zero before and after. No checkpoint or recovery was
+written.
+
+The active prerequisite is direct branch-subtree autodiff equivalence and
+timing on one existing train/train batch. Paid 100-update training remains
+closed. See
+`target_oriented_source_shaped_one_update_admission_20260827.md`.

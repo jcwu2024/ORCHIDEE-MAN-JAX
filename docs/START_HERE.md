@@ -309,10 +309,14 @@ promotion. Its frozen eight-group train/train zero panel is also complete:
 without training, maintenance error improves by `73.61%/87.35%` at 7/30 days,
 but several 7-day protected carbon scores regress because the fixed source
 correction is too strong. All hard counts remain zero. The active boundary is
-explicit authorization for one free branch-only optimizer admission; it will
-train only the 394,242 new parameters and discard the single proposal.
-Validation reads, paid training, 365-day rollout, Gate D2, sealed test, and
-product work remain closed.
+now past that free admission: eight calibration batches freeze p90 clip
+`0.1973867`, one ephemeral artifact-252 AdamW update changes both new branches,
+all retained coordinates stay unchanged, and hard failures are zero before
+and after. Report SHA256 is `c2743cbc...34ea59`; no checkpoint was written.
+The current task is a one-batch direct branch-subtree autodiff equivalence and
+timing check before any paid 100-update request. Validation reads, paid
+training, 365-day rollout, Gate D2, sealed test, and product work remain
+closed.
 
 ## New Task Bootstrap
 

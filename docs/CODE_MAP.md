@@ -413,8 +413,13 @@ branches. `daily_operator/target_oriented_source_shaped_screen.py` owns the
 frozen train/train data separation and 20%/1% science classifier.
 `scripts/hpc/run_target_oriented_source_shaped_train_train_zero_panel.py`
 evaluates the eight-group zero-update panel, and its same-named shell launcher
-is the free-`gln01` boundary. This path cannot create an optimizer, retain an
-update, read validation values, or enter final inference.
+is the free-`gln01` zero-panel boundary.
+`scripts/hpc/run_target_oriented_source_shaped_one_update_admission.py` owns
+the accepted p90 branch-gradient calibration, one ephemeral branch-only AdamW
+proposal, frozen-parent identity check, and post-update forward/hard gate. Its
+shell launcher is free-`gln01` only and cannot write a checkpoint or recovery.
+The next implementation must expose direct branch-subtree autodiff for the
+same effective-batch objective before the paid 100-update runner is admitted.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

@@ -1561,13 +1561,24 @@ a large amount. It is not yet protected: 7-day median growth respiration,
 NPP, AGB, BGB, and total-live scores regress, and the worst group regression
 is `340.382%`. All hard and nonfinite counts are zero.
 
-The active gate is explicit user authorization for a free one-update
-branch-only admission. It will use eight disjoint train/train calibration
-batches to freeze a p90 branch-gradient clip, create a fresh AdamW state,
-apply exactly one update to the 394,242 new parameters using artifact 252,
-verify that every retained parent parameter is unchanged, and discard the
-proposal. Paid 100-update training, validation read, sealed-test read, 365-day
-rollout, Gate D2, and product work remain closed.
+The free one-update branch-only admission is complete at commit `0ed926b`;
+report SHA256 is `c2743cbc...34ea59`. Eight disjoint calibration batches give
+a p90 branch-gradient clip of `0.1973867`. Artifact 252 then produces a finite
+raw branch norm of `0.2293467`; fresh AdamW update 1 uses clip scale `0.86065`,
+changes both new branches, leaves all 83,754,404 retained coordinates exactly
+unchanged, and reduces its effective-batch loss by `0.03366%`. Hard failures
+are zero before and after. The proposal was discarded and no checkpoint or
+recovery was written.
+
+The active engineering gate is to differentiate the unchanged full objective
+directly with respect to the 394,242 branch parameters and confirm one-batch
+gradient/proposal equivalence with the admitted extracted-branch path. This is
+required before paid training because the admitted full-parameter cold
+gradient took about 77 minutes and 7.64 GiB peak live GPU memory, although hot
+effective batches took only about 36.9 seconds. After the branch-only timing
+envelope is known, request separate authorization for the paid 100-update
+train/train screen. Validation read, sealed-test read, 365-day rollout, Gate
+D2, and product work remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -1575,6 +1586,7 @@ See
 [`target_oriented_source_shaped_maintenance_gpu_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_maintenance_gpu_admission_20260827.md),
 [`target_oriented_source_shaped_train_train_screen_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_train_train_screen_v1.md),
 [`target_oriented_source_shaped_zero_panel_result_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_zero_panel_result_20260827.md),
+[`target_oriented_source_shaped_one_update_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_one_update_admission_20260827.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),
