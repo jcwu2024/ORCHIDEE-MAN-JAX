@@ -1546,17 +1546,25 @@ related parent-Attention and parameter-routing numerical tests also pass. The
 only failure in that related file is an unrelated pre-existing launcher
 assertion expecting `01:00:00` while its Slurm script declares `03:00:00`.
 
-The active gate is now a zero-update real-v6 GPU admission using the exact
-update-1000 parent checkpoint. It must verify checkpoint transformation,
-finite forward and complete loss, both physical correction paths, full
-parameter gradients, one canonical transition, budgets, memory, and timing
-before any optimizer is created. Unchanged AdamW continuation, training,
-validation read, sealed-test read, 365-day rollout, Gate D2, and product work
-remain closed.
+The zero-update real-v6 GPU admission passed on free `gln01` at commit
+`cf1fead`; report SHA256 is `b5684fb4...b5119b46`. All 84,148,646 gradient
+elements are finite, both physical correction branches and every retained
+Attention family have nonzero gradients, all 160 non-maintenance outputs are
+exactly equal to the parent, and the canonical one-day water/carbon residuals
+are zero. JAX peak live allocation is about 2.55 GiB.
+
+The active gate is now the design and local admission of a separately
+authorized train/train screen. It must start from the exact update-1000 parent,
+discard the old maintenance head and optimizer state, initialize a fresh
+optimizer, reuse accepted v6 train assets, and evaluate the frozen 7/30-day
+science gate. Training submission, validation read, sealed-test read, 365-day
+rollout, Gate D2, and product work remain closed until that executable contract
+and its measured resource envelope are accepted.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 [`target_oriented_source_shaped_maintenance_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_maintenance_v1.md),
+[`target_oriented_source_shaped_maintenance_gpu_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_maintenance_gpu_admission_20260827.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),

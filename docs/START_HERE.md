@@ -300,14 +300,14 @@ respiration and ecosystem-carbon scores. The formal classification is
 `finite_head_step_not_protected`.
 
 The source-shaped maintenance architecture discussion is complete and its
-`84,148,646`-parameter local implementation passes the frozen structural,
-forward, loss, gradient, PFT-axis, single-day state, and budget gates. It
-preserves the coordinate-aligned Attention body and every non-maintenance
-head, while replacing only the old direct maintenance projection with two
-bounded source-shaped branches. The active boundary is a zero-update real-v6
-GPU admission loaded from the update-1000 parent checkpoint. Training,
-validation reads, 365-day rollout, Gate D2, sealed test, and product work
-remain closed.
+`84,148,646`-parameter implementation passes both local acceptance and the
+zero-update real-v6 GPU admission loaded from the exact update-1000 parent.
+All parameters and both new physical branches differentiate, every retained
+Attention family has nonzero gradients, one canonical day is finite, and
+water/carbon budgets close exactly. This is execution admission, not science
+promotion. The active boundary is a separately frozen train/train screen with
+a fresh optimizer and the existing accepted v6 train assets. Validation reads,
+365-day rollout, Gate D2, sealed test, and product work remain closed.
 
 ## New Task Bootstrap
 

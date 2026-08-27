@@ -2,7 +2,7 @@
 
 Date: 2026-08-27
 
-Status: frozen before local implementation
+Status: frozen; local implementation and zero-update real-v6 GPU admission accepted
 
 Machine contract:
 `manifests/coarse_graining/target_oriented_source_shaped_maintenance_v1.json`
@@ -151,6 +151,8 @@ bare/inactive zero, nonzero-correction PFT permutation equivariance, canonical
 single-day binding, exact water/carbon budgets, and the absence of a 48-step
 inference scan. Ruff, Python compilation, and `git diff --check` pass.
 
-The next gate is a zero-update real-v6 GPU admission initialized from the exact
-update-1000 parent checkpoint. No optimizer or training update is authorized
-until that admission passes.
+The zero-update real-v6 GPU admission initialized from the exact update-1000
+parent checkpoint passed at commit `cf1fead`; see
+`target_oriented_source_shaped_maintenance_gpu_admission_20260827.md`. The next
+gate is a separately frozen and locally admitted train/train screen with a new
+optimizer. No training update is authorized by this architecture contract.

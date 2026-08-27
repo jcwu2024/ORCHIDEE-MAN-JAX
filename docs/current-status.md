@@ -430,16 +430,22 @@ air/root branch. All six focused local tests pass, including eager/JIT,
 complete loss, both new-branch and reused-Attention gradients, nonzero-head PFT
 equivariance, one canonical day, and exact water/carbon budgets.
 
-The active boundary is the zero-update real-v6 GPU admission using the exact
-update-1000 parent checkpoint. It is not a training run. Paid training,
-optimizer continuation, validation/sealed-test reads, 365-day rollout, Gate
-D2, and product work remain closed.
+The zero-update real-v6 GPU admission passed on free `gln01` at commit
+`cf1fead`; report SHA256 is `b5684fb4...b5119b46`. All 84,148,646 gradients
+are finite, both new branches and every retained Attention family have nonzero
+gradients, all 160 non-maintenance outputs remain exactly equal to the parent,
+and the canonical next state and exact water/carbon budgets pass. The active
+boundary is now a separately frozen train/train screen with a fresh optimizer
+and accepted v6 train assets. Paid training, validation/sealed-test reads,
+365-day rollout, Gate D2, and product work remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
 with the active successor contract in
 [`target_oriented_source_shaped_maintenance_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_maintenance_v1.md),
+with its accepted real-v6 execution evidence in
+[`target_oriented_source_shaped_maintenance_gpu_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_maintenance_gpu_admission_20260827.md),
 with GPU evidence in
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md)
 and the training design in
