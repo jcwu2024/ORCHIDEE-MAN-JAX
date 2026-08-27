@@ -64,6 +64,53 @@ def test_source_shaped_screen_contract_is_frozen_and_disjoint():
     assert (root / manifest).is_file()
 
 
+def test_source_shaped_one_update_admission_is_ephemeral_and_branch_only():
+    root = Path(__file__).resolve().parents[2]
+    runner = (
+        root
+        / "scripts"
+        / "hpc"
+        / "run_target_oriented_source_shaped_one_update_admission.py"
+    ).read_text(encoding="utf-8")
+    launcher = (
+        root
+        / "scripts"
+        / "hpc"
+        / "run_target_oriented_source_shaped_one_update_admission.sh"
+    ).read_text(encoding="utf-8")
+
+    assert "_effective_gradient" in runner
+    assert "initialize_target_oriented_adamw(branches)" in runner
+    assert "target_oriented_adamw_update" in runner
+    assert '"training_updates_executed": 1' in runner
+    assert '"training_updates_persisted": 0' in runner
+    assert '"checkpoint_written": False' in runner
+    assert "write_target_oriented_stage_checkpoint" not in runner
+    assert "write_target_oriented_recovery" not in runner
+    assert "free gln01" in launcher
+    assert "sbatch" not in launcher
+    assert "RUN_TIMEOUT=${RUN_TIMEOUT:-120m}" in launcher
+
+    from scripts.hpc.run_target_oriented_source_shaped_one_update_admission import (
+        _replace_source_shaped_branches,
+    )
+
+    retained_root = object()
+    retained_target = object()
+    before = {
+        "retained_root": retained_root,
+        "target_oriented": {
+            "retained_target": retained_target,
+            "source_shaped_maintenance_heads": {"old": object()},
+        },
+    }
+    branches = {"aboveground": object(), "belowground": object()}
+    after = _replace_source_shaped_branches(before, branches)
+    assert after["retained_root"] is retained_root
+    assert after["target_oriented"]["retained_target"] is retained_target
+    assert after["target_oriented"]["source_shaped_maintenance_heads"] is branches
+
+
 def test_source_shaped_relative_gate_requires_large_protected_improvement():
     contract = load_source_shaped_train_train_screen_contract()
     parent = _groups(contract, maintenance_factor=1.0, protected_factor=1.0)
