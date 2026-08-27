@@ -497,7 +497,7 @@ def _coordinate_attention(
     return jnp.where(field_context.active[:, None], query[:, 0, :], 0.0)
 
 
-def target_oriented_attention_process_outputs(
+def _target_oriented_attention_decoded_outputs(
     parameters: Mapping[str, Any],
     context: StrongBaselineContext,
     inputs: AssembledDailyOperatorInput,
@@ -511,8 +511,9 @@ def target_oriented_attention_process_outputs(
     message_gate_scale: float = 1.0,
     baseline_config: StrongBaselineConfig = StrongBaselineConfig(),
     config: TargetOrientedAttentionConfig = TargetOrientedAttentionConfig(),
-) -> Mapping[str, Any]:
-    """Decode the complete learned schema through category-specific heads."""
+    deferred_primary_fields: frozenset[str] = frozenset(),
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Decode fields while retaining hidden coordinates for explicit materializers."""
 
     config.validate(baseline_config)
     categories = target_oriented_field_categories(schema, target_contract)
@@ -534,6 +535,7 @@ def target_oriented_attention_process_outputs(
         science_summary,
     )
     outputs = {}
+    deferred_hidden = {}
     for field_index, (field, ownership, category) in enumerate(
         zip(schema.fields, layout.ledger, categories, strict=True)
     ):
@@ -560,6 +562,9 @@ def target_oriented_attention_process_outputs(
                 config=config,
             )
             hidden = jax.nn.gelu(_linear(target["primary_decoder"], encoded))
+            if field.name in deferred_primary_fields:
+                deferred_hidden[field.name] = hidden.reshape((*field.shape, config.primary_decoder_width))
+                continue
             raw = _linear(target["primary_heads"][field_index], hidden)[:, 0]
         elif category == STATE_BUDGET_ESSENTIAL:
             encoded = _coordinate_attention(
@@ -592,6 +597,43 @@ def target_oriented_attention_process_outputs(
             minimum_unit_interval_center=config.minimum_unit_interval_center,
             rescale_unit_interval_delta=True,
         )
+    if set(deferred_hidden) != set(deferred_primary_fields):
+        missing = sorted(set(deferred_primary_fields) - set(deferred_hidden))
+        raise ValueError(f"deferred target-oriented primary fields are invalid: {missing}")
+    return outputs, deferred_hidden
+
+
+def target_oriented_attention_process_outputs(
+    parameters: Mapping[str, Any],
+    context: StrongBaselineContext,
+    inputs: AssembledDailyOperatorInput,
+    *,
+    schema: NeuralOutputSchema,
+    layout: StrongBaselineLayout,
+    input_normalization: NeuralInputNormalization,
+    output_normalization: NeuralOutputNormalization,
+    forcing_layout: NativeForcingFieldLayout,
+    target_contract: TargetOrientedContract,
+    message_gate_scale: float = 1.0,
+    baseline_config: StrongBaselineConfig = StrongBaselineConfig(),
+    config: TargetOrientedAttentionConfig = TargetOrientedAttentionConfig(),
+) -> Mapping[str, Any]:
+    """Decode the complete learned schema through category-specific heads."""
+
+    outputs, _hidden = _target_oriented_attention_decoded_outputs(
+        parameters,
+        context,
+        inputs,
+        schema=schema,
+        layout=layout,
+        input_normalization=input_normalization,
+        output_normalization=output_normalization,
+        forcing_layout=forcing_layout,
+        target_contract=target_contract,
+        message_gate_scale=message_gate_scale,
+        baseline_config=baseline_config,
+        config=config,
+    )
     return apply_fast_parameter_routes(outputs, inputs, layout, forcing_layout)
 
 

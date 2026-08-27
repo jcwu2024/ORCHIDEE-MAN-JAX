@@ -299,12 +299,15 @@ improves NPP and live-biomass scores, while slightly regressing 7-day growth
 respiration and ecosystem-carbon scores. The formal classification is
 `finite_head_step_not_protected`.
 
-The active boundary is an architecture discussion, not another execution.
-Inspect a structured maintenance output parameterization while preserving the
-coordinate-aligned Attention body as an open option. Do not edit the
-architecture, input mask, source routing, or loss before that discussion.
-Unchanged continuation, paid training, 365-day rollout, Gate D2, sealed test,
-and product work remain closed.
+The source-shaped maintenance architecture discussion is complete and its
+`84,148,646`-parameter local implementation passes the frozen structural,
+forward, loss, gradient, PFT-axis, single-day state, and budget gates. It
+preserves the coordinate-aligned Attention body and every non-maintenance
+head, while replacing only the old direct maintenance projection with two
+bounded source-shaped branches. The active boundary is a zero-update real-v6
+GPU admission loaded from the update-1000 parent checkpoint. Training,
+validation reads, 365-day rollout, Gate D2, sealed test, and product work
+remain closed.
 
 ## New Task Bootstrap
 

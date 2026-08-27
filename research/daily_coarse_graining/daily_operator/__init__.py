@@ -289,6 +289,27 @@ from .target_oriented_contract import (
 )
 from .target_oriented_process_head import (
     MechanisticTargetOrientedAttentionProcessHead,
+    MechanisticTargetOrientedSourceShapedMaintenanceProcessHead,
+    build_target_oriented_source_shaped_maintenance_head,
+)
+from .target_oriented_source_shaped_maintenance import (
+    ABOVEGROUND_PARTS as MAINTENANCE_ABOVEGROUND_PARTS,
+)
+from .target_oriented_source_shaped_maintenance import (
+    BELOWGROUND_PARTS as MAINTENANCE_BELOWGROUND_PARTS,
+)
+from .target_oriented_source_shaped_maintenance import (
+    MAINTENANCE_FIELD,
+    SourceShapedMaintenanceConfig,
+    SourceShapedMaintenanceContract,
+    compact_coeff_maint_zero_from_retained_tail,
+    initialize_source_shaped_maintenance_parameters,
+    load_source_shaped_maintenance_contract,
+    maintenance_temperature_corrections,
+    materialize_source_shaped_maintenance,
+    resolve_maintenance_field_index,
+    source_shaped_maintenance_parameter_count,
+    target_oriented_source_shaped_maintenance_process_outputs,
 )
 from .target_oriented_training import (
     PreparedTargetOrientedOneDayBatch,
@@ -551,6 +572,21 @@ __all__ = [
     "science_window_objective",
     "target_oriented_adamw_update",
     "target_oriented_learning_rate",
+    "MAINTENANCE_ABOVEGROUND_PARTS",
+    "MAINTENANCE_BELOWGROUND_PARTS",
+    "MAINTENANCE_FIELD",
+    "MechanisticTargetOrientedSourceShapedMaintenanceProcessHead",
+    "SourceShapedMaintenanceConfig",
+    "SourceShapedMaintenanceContract",
+    "build_target_oriented_source_shaped_maintenance_head",
+    "compact_coeff_maint_zero_from_retained_tail",
+    "initialize_source_shaped_maintenance_parameters",
+    "load_source_shaped_maintenance_contract",
+    "maintenance_temperature_corrections",
+    "materialize_source_shaped_maintenance",
+    "resolve_maintenance_field_index",
+    "source_shaped_maintenance_parameter_count",
+    "target_oriented_source_shaped_maintenance_process_outputs",
     "DOMAIN_REFINEMENT_DEPTHS",
     "SCIENCE_DOMAIN_ADJACENCY",
     "SCIENCE_TOKEN_NAMES",

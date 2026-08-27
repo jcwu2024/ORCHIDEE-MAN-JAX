@@ -180,6 +180,8 @@ def apply_fast_parameter_routes(
     inputs: Any,
     layout: Any,
     forcing_layout: NativeForcingFieldLayout,
+    *,
+    maintenance_already_routed: bool = False,
 ) -> dict[str, Any]:
     """Apply the shared explicit VCMAX25 and maintenance parameter factors."""
 
@@ -200,6 +202,9 @@ def apply_fast_parameter_routes(
     base_gpp = jnp.asarray(result["daily.fast_gpp"], dtype=jnp.float64)[0]
     gpp = base_gpp * jnp.maximum(factors.vcmax25, 0.0) / VCMAX25_FACTOR_SCALE
     result["daily.fast_gpp"] = jnp.where(vegetation, gpp, 0.0)[None, :]
+
+    if maintenance_already_routed:
+        return result
 
     deterministic = derive_native_daily_deterministic_fields(
         inputs.forcing,

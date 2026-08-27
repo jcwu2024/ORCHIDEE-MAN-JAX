@@ -1525,20 +1525,38 @@ The formal failure comes from small positive median changes in 7-day GPP,
 growth-respiration, and ecosystem-carbon scores. The larger `0.0055387` norm
 also violates several `1%` any-group protection limits.
 
-The active boundary is now output-parameterization review followed by user
-discussion. The existing maintenance head is one shared `768 -> 1` linear
-projection over all maintenance coordinates; coordinate-specific information
-must be linearly decodable through those same 769 parameters. Preserve the
-Attention body as an open option and inspect a structured conditional
-maintenance head before proposing implementation. Do not change the
-architecture, input mask, source routing, or loss until the mechanism,
-parameter budget, initialization policy, matched diagnostic, and bounded gate
-have been discussed. Unchanged AdamW continuation, batch enlargement, paid
-training, sealed-test read, 365-day rollout, Gate D2, and product work remain
-closed.
+The source-shaped maintenance architecture discussion and local
+implementation are now complete under contract SHA256
+`3c4d0c085c767f14b001837ccefb76aca291a56b8fd9d3a5e33279602af57fc4`.
+The candidate preserves the update-1000 coordinate-aligned Attention body and
+all non-maintenance heads, removes only the 769-parameter direct maintenance
+projection, and adds two `768 -> GELU(256) -> 1 -> tanh` source-group branches.
+Its exact parameter count is `84,148,646`; both final layers start at zero.
+Maintenance is materialized from day-start biomass/LAI, retained-static
+`coeff_maint_zero`, named slope parameters, native daily air temperature, and
+root temperature from predicted daily `tsoil`. The tree/non-tree reserve
+coordinate joins the air/root group respectively. No 48-record reconstruction
+or scan is present.
+
+The focused local suite passes all six tests: contract/tree ownership, eager
+and JIT forward, finite complete loss, finite nonzero gradients in both new
+branches and reused Attention, nonzero-correction PFT permutation equivariance,
+bare/inactive exact zero, canonical binding, and water/carbon budgets. Ten
+related parent-Attention and parameter-routing numerical tests also pass. The
+only failure in that related file is an unrelated pre-existing launcher
+assertion expecting `01:00:00` while its Slurm script declares `03:00:00`.
+
+The active gate is now a zero-update real-v6 GPU admission using the exact
+update-1000 parent checkpoint. It must verify checkpoint transformation,
+finite forward and complete loss, both physical correction paths, full
+parameter gradients, one canonical transition, budgets, memory, and timing
+before any optimizer is created. Unchanged AdamW continuation, training,
+validation read, sealed-test read, 365-day rollout, Gate D2, and product work
+remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
+[`target_oriented_source_shaped_maintenance_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_maintenance_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),

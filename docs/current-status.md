@@ -417,17 +417,29 @@ so the preregistered classification is `finite_head_step_not_protected`.
 Every proposal was discarded, all hard/nonfinite counts are zero, and no
 optimizer or checkpoint was used.
 
-The active boundary is output-parameterization review and user discussion.
-The present head is one shared `768 -> 1` linear projection across all
-maintenance coordinates. This result does not reject the Attention body, but
-it prevents unchanged head-only continuation. No architecture, input-mask,
-source-routing, or loss edit is authorized before a structured-head mechanism
-and bounded gate are discussed. Paid training, 365-day rollout, sealed-test
-read, Gate D2, and product work remain closed.
+The source-shaped maintenance architecture discussion is complete. Contract
+SHA256 is
+`3c4d0c085c767f14b001837ccefb76aca291a56b8fd9d3a5e33279602af57fc4`.
+The local implementation retains the parent Attention and non-maintenance
+heads, removes the 769-parameter maintenance projection, and adds two bounded
+part-group MLP branches for an exact total of `84,148,646` parameters. The
+zero-correction source formula uses day-start biomass/LAI, retained-static
+`coeff_maint_zero`, explicit slope parameters, daily air temperature, and
+root temperature from predicted daily `tsoil`; reserve uses the tree-dependent
+air/root branch. All six focused local tests pass, including eager/JIT,
+complete loss, both new-branch and reused-Attention gradients, nonzero-head PFT
+equivariance, one canonical day, and exact water/carbon budgets.
+
+The active boundary is the zero-update real-v6 GPU admission using the exact
+update-1000 parent checkpoint. It is not a training run. Paid training,
+optimizer continuation, validation/sealed-test reads, 365-day rollout, Gate
+D2, and product work remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
+with the active successor contract in
+[`target_oriented_source_shaped_maintenance_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_maintenance_v1.md),
 with GPU evidence in
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md)
 and the training design in
