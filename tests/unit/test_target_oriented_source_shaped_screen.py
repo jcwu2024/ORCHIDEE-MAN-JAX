@@ -112,6 +112,53 @@ def test_source_shaped_one_update_admission_is_ephemeral_and_branch_only():
     assert after["target_oriented"]["source_shaped_maintenance_heads"] is branches
 
 
+def test_source_shaped_branch_autodiff_admission_is_free_and_ephemeral():
+    root = Path(__file__).resolve().parents[2]
+    runner = (
+        root
+        / "scripts"
+        / "hpc"
+        / "run_target_oriented_source_shaped_branch_autodiff_admission.py"
+    ).read_text(encoding="utf-8")
+    launcher = (
+        root
+        / "scripts"
+        / "hpc"
+        / "run_target_oriented_source_shaped_branch_autodiff_admission.sh"
+    ).read_text(encoding="utf-8")
+    preflight = (
+        root / "scripts" / "hpc" / "run_target_oriented_full_step_preflight.py"
+    ).read_text(encoding="utf-8")
+
+    assert 'steps["make_trainable_gradient_steps"]' in runner
+    assert "gradient_parameters=branches" in runner
+    assert "gradient_steps=direct_steps" in runner
+    assert "def make_trainable_gradient_steps" in preflight
+    assert '"training_updates_persisted": 0' in runner
+    assert '"checkpoint_written": False' in runner
+    assert '"recovery_written": False' in runner
+    assert "write_target_oriented_stage_checkpoint" not in runner
+    assert "write_target_oriented_recovery" not in runner
+    assert "free gln01" in launcher
+    assert "sbatch" not in launcher
+    assert "RUN_TIMEOUT=${RUN_TIMEOUT:-180m}" in launcher
+
+
+def test_effective_gradient_requires_paired_trainable_overrides():
+    from scripts.hpc.run_target_oriented_full_step_preflight import _effective_gradient
+
+    with pytest.raises(ValueError, match="differentiated parameters and steps"):
+        _effective_gradient(
+            None,
+            None,
+            {},
+            None,
+            {},
+            None,
+            gradient_parameters={},
+        )
+
+
 def test_source_shaped_relative_gate_requires_large_protected_improvement():
     contract = load_source_shaped_train_train_screen_contract()
     parent = _groups(contract, maintenance_factor=1.0, protected_factor=1.0)

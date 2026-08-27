@@ -816,6 +816,60 @@ def _make_steps(
     thirty_gradient = jax.jit(
         jax.value_and_grad(lambda parameters, batch, total: window_linear(parameters, batch, total, horizon=30))
     )
+
+    def make_trainable_gradient_steps(fixed_parameters, inject_trainable):
+        one_trainable_gradient = jax.jit(
+            jax.value_and_grad(
+                lambda trainable, fixed, batch, total_state, total_process: one_linear(
+                    inject_trainable(fixed, trainable),
+                    batch,
+                    total_state,
+                    total_process,
+                )
+            )
+        )
+        seven_trainable_gradient = jax.jit(
+            jax.value_and_grad(
+                lambda trainable, fixed, batch, total: window_linear(
+                    inject_trainable(fixed, trainable),
+                    batch,
+                    total,
+                    horizon=7,
+                )
+            )
+        )
+        thirty_trainable_gradient = jax.jit(
+            jax.value_and_grad(
+                lambda trainable, fixed, batch, total: window_linear(
+                    inject_trainable(fixed, trainable),
+                    batch,
+                    total,
+                    horizon=30,
+                )
+            )
+        )
+        return {
+            "one_gradient": lambda trainable, batch, total_state, total_process: one_trainable_gradient(
+                trainable,
+                fixed_parameters,
+                batch,
+                total_state,
+                total_process,
+            ),
+            "seven_gradient": lambda trainable, batch, total: seven_trainable_gradient(
+                trainable,
+                fixed_parameters,
+                batch,
+                total,
+            ),
+            "thirty_gradient": lambda trainable, batch, total: thirty_trainable_gradient(
+                trainable,
+                fixed_parameters,
+                batch,
+                total,
+            ),
+        }
+
     result = {
         "transition_builder": lambda retained: (
             lambda values, inputs, day_inputs: bind_daily_operator_dynamic_retained_inputs(
@@ -830,6 +884,7 @@ def _make_steps(
         "one_gradient": one_gradient,
         "seven_gradient": seven_gradient,
         "thirty_gradient": thirty_gradient,
+        "make_trainable_gradient_steps": make_trainable_gradient_steps,
         "seven_flux_gradient": jax.jit(
             jax.value_and_grad(
                 lambda parameters, batch, total: window_flux_linear(
@@ -1053,6 +1108,8 @@ def _effective_gradient(
     target_contract: Any,
     *,
     science_flux_basis: Any | None = None,
+    gradient_parameters: Any | None = None,
+    gradient_steps: Mapping[str, Any] | None = None,
 ) -> tuple[
     Any,
     Mapping[str, Any],
@@ -1063,6 +1120,10 @@ def _effective_gradient(
     float,
     float,
 ]:
+    if (gradient_parameters is None) != (gradient_steps is None):
+        raise ValueError("target-oriented differentiated parameters and steps must be supplied together")
+    differentiated = parameters if gradient_parameters is None else gradient_parameters
+    derivative_steps = steps if gradient_steps is None else gradient_steps
     from research.daily_coarse_graining.daily_operator.target_oriented_training import (
         add_science_window_sufficient_statistics,
         merge_error_sufficient_statistics,
@@ -1145,7 +1206,7 @@ def _effective_gradient(
     gradient_started = time.perf_counter()
 
     def zero_gradient():
-        return jax.tree_util.tree_map(lambda value: jnp.zeros_like(value, dtype=jnp.float32), parameters)
+        return jax.tree_util.tree_map(lambda value: jnp.zeros_like(value, dtype=jnp.float32), differentiated)
 
     def add_gradient(current, gradient):
         return jax.tree_util.tree_map(
@@ -1157,8 +1218,8 @@ def _effective_gradient(
     one_accumulated = zero_gradient()
     source_started = time.perf_counter()
     for microbatch in one_batches:
-        _value, gradient = steps["one_gradient"](
-            parameters,
+        _value, gradient = derivative_steps["one_gradient"](
+            differentiated,
             microbatch,
             total_state,
             total_process,
@@ -1173,8 +1234,8 @@ def _effective_gradient(
     seven_accumulated = zero_gradient()
     source_started = time.perf_counter()
     for microbatch in seven_batches:
-        _value, gradient = steps["seven_gradient"](
-            parameters,
+        _value, gradient = derivative_steps["seven_gradient"](
+            differentiated,
             microbatch,
             total_seven,
         )
@@ -1188,8 +1249,8 @@ def _effective_gradient(
     thirty_accumulated = zero_gradient()
     source_started = time.perf_counter()
     for microbatch in thirty_batches:
-        _value, gradient = steps["thirty_gradient"](
-            parameters,
+        _value, gradient = derivative_steps["thirty_gradient"](
+            differentiated,
             microbatch,
             total_thirty,
         )
