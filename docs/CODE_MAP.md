@@ -426,6 +426,16 @@ recovery. The shared full-step builder now exposes the unchanged complete
 objective with an optional differentiated parameter subtree; existing
 full-gradient callers retain their previous behavior.
 
+`daily_operator/target_oriented_source_shaped_checkpoint.py` owns the compact
+branch-only atomic recovery and update-100 checkpoint. It persists no retained
+parent coordinate and binds reconstruction to the exact parent hash.
+`scripts/hpc/run_target_oriented_source_shaped_branch_training.py` owns the
+frozen artifacts `252..351`, 100 direct-branch updates, ten-update recovery,
+and final eight-group train/train screen. Its same-named shell wrapper owns the
+GPU container boundary, while
+`scripts/hpc/slurm_target_oriented_source_shaped_branch_training_100.sh` owns
+the unsubmitted one-V100 paid resource envelope.
+
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and
 maintenance-temperature factors to replaced fast processes and dynamically

@@ -2,7 +2,7 @@
 
 Date: 2026-08-27
 
-Status: frozen; zero-update train/train panel accepted and one-update admission requires authorization
+Status: frozen; all pre-training admissions accepted and the paid runner awaits authorization
 
 Machine contract:
 `manifests/coarse_graining/target_oriented_source_shaped_train_train_screen_v1.json`
@@ -91,7 +91,18 @@ unchanged. Loss and all proposed parameters and optimizer values are finite;
 hard failures are zero before and after. No checkpoint or recovery was
 written.
 
-The active prerequisite is direct branch-subtree autodiff equivalence and
-timing on one existing train/train batch. Paid 100-update training remains
-closed. See
-`target_oriented_source_shaped_one_update_admission_20260827.md`.
+The direct branch-subtree admission subsequently passed at commit `d965bea`;
+report SHA256 is `5852d996...e58538`. It matches the extracted complete
+gradient with zero failing coordinates, reduces hot effective-batch time from
+`36.85 s` to `25.18 s`, and reduces JAX peak live memory from about 7.64 GiB
+to 2.24 GiB. See
+`target_oriented_source_shaped_branch_autodiff_admission_20260827.md`.
+
+## Paid-Stage Admission
+
+The 100-update runner, compact branch-only recovery/checkpoint, exact
+`252..351` schedule, update-100 eight-group screen, and Slurm wrapper are
+locally qualified at commit `9224398`. The frozen request is one `gnall` node,
+eight CPU cores, one V100, 32 GiB, three hours, and CNY 8.28 worst case. It has
+not been submitted. See
+`target_oriented_source_shaped_branch_training_admission_20260827.md`.

@@ -454,10 +454,15 @@ gradient; the objective, three gradient sources, hard counts, fresh AdamW
 proposal, and post-proposal objective also match. Hot effective-batch time is
 `25.18 s` versus the admitted `36.85 s`, and JAX peak live memory is about
 2.24 GiB versus 7.64 GiB. Physical gates pass and no training state is
-retained. The active boundary is preparation plus separate resource/cost
-authorization for the paid 100-update branch-only train/train screen. Paid
-training, validation/sealed-test reads, 365-day rollout, Gate D2, and product
-work remain closed.
+retained. The paid runner and branch-only checkpoint/recovery are locally
+qualified at commit `9224398`. They bind artifacts `252..351` to updates
+`1..100`, reuse the accepted update-0 screen, evaluate the complete frozen
+eight-group 7/30-day screen at update 100, and keep all retained parent
+coordinates outside the optimizer. The active boundary is explicit approval
+of one `gnall` node, eight CPU cores, one V100, 32 GiB, three hours, and CNY
+8.28 worst case. No `sbatch` has been issued. Paid training,
+validation/sealed-test reads, broader training, 365-day rollout, Gate D2, and
+product work remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -474,6 +479,8 @@ and
 [`target_oriented_source_shaped_one_update_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_one_update_admission_20260827.md),
 and its accepted direct-gradient engineering evidence in
 [`target_oriented_source_shaped_branch_autodiff_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_autodiff_admission_20260827.md),
+with the unsubmitted paid-stage envelope in
+[`target_oriented_source_shaped_branch_training_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_training_admission_20260827.md),
 with GPU evidence in
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md)
 and the training design in
