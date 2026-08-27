@@ -27,14 +27,7 @@ def _groups(contract, *, maintenance_factor: float, protected_factor: float):
         acceptance = {}
         for horizon in ("7", "30"):
             values = {
-                name: _key(
-                    1.0
-                    * (
-                        maintenance_factor
-                        if name == "maintenance_respiration"
-                        else protected_factor
-                    )
-                )
+                name: _key(1.0 * (maintenance_factor if name == "maintenance_respiration" else protected_factor))
                 for name in keys
             }
             acceptance[horizon] = {
@@ -66,18 +59,12 @@ def test_source_shaped_screen_contract_is_frozen_and_disjoint():
 
 def test_source_shaped_one_update_admission_is_ephemeral_and_branch_only():
     root = Path(__file__).resolve().parents[2]
-    runner = (
-        root
-        / "scripts"
-        / "hpc"
-        / "run_target_oriented_source_shaped_one_update_admission.py"
-    ).read_text(encoding="utf-8")
-    launcher = (
-        root
-        / "scripts"
-        / "hpc"
-        / "run_target_oriented_source_shaped_one_update_admission.sh"
-    ).read_text(encoding="utf-8")
+    runner = (root / "scripts" / "hpc" / "run_target_oriented_source_shaped_one_update_admission.py").read_text(
+        encoding="utf-8"
+    )
+    launcher = (root / "scripts" / "hpc" / "run_target_oriented_source_shaped_one_update_admission.sh").read_text(
+        encoding="utf-8"
+    )
 
     assert "_effective_gradient" in runner
     assert "science_flux_basis=amendment.flux_basis" in runner
@@ -114,21 +101,13 @@ def test_source_shaped_one_update_admission_is_ephemeral_and_branch_only():
 
 def test_source_shaped_branch_autodiff_admission_is_free_and_ephemeral():
     root = Path(__file__).resolve().parents[2]
-    runner = (
-        root
-        / "scripts"
-        / "hpc"
-        / "run_target_oriented_source_shaped_branch_autodiff_admission.py"
-    ).read_text(encoding="utf-8")
-    launcher = (
-        root
-        / "scripts"
-        / "hpc"
-        / "run_target_oriented_source_shaped_branch_autodiff_admission.sh"
-    ).read_text(encoding="utf-8")
-    preflight = (
-        root / "scripts" / "hpc" / "run_target_oriented_full_step_preflight.py"
-    ).read_text(encoding="utf-8")
+    runner = (root / "scripts" / "hpc" / "run_target_oriented_source_shaped_branch_autodiff_admission.py").read_text(
+        encoding="utf-8"
+    )
+    launcher = (root / "scripts" / "hpc" / "run_target_oriented_source_shaped_branch_autodiff_admission.sh").read_text(
+        encoding="utf-8"
+    )
+    preflight = (root / "scripts" / "hpc" / "run_target_oriented_full_step_preflight.py").read_text(encoding="utf-8")
 
     assert 'steps["make_trainable_gradient_steps"]' in runner
     assert "gradient_parameters=branches" in runner
@@ -157,6 +136,34 @@ def test_effective_gradient_requires_paired_trainable_overrides():
             None,
             gradient_parameters={},
         )
+
+
+def test_source_shaped_branch_training_is_direct_bounded_and_paid_only():
+    root = Path(__file__).resolve().parents[2]
+    runner = (root / "scripts" / "hpc" / "run_target_oriented_source_shaped_branch_training.py").read_text(
+        encoding="utf-8"
+    )
+    launcher = (root / "scripts" / "hpc" / "run_target_oriented_source_shaped_branch_training.sh").read_text(
+        encoding="utf-8"
+    )
+    slurm = (root / "scripts" / "hpc" / "slurm_target_oriented_source_shaped_branch_training_100.sh").read_text(
+        encoding="utf-8"
+    )
+
+    assert "gradient_parameters=branches" in runner
+    assert "gradient_steps=direct_steps" in runner
+    assert "(artifact_start, artifact_end, maximum_updates) != (252, 351, 100)" in runner
+    assert "write_source_shaped_recovery" in runner
+    assert "write_source_shaped_checkpoint" in runner
+    assert '"validation_values_evaluated": False' in runner
+    assert "stage-update-0100.pkl" in runner
+    assert "RUN_TIMEOUT=${RUN_TIMEOUT:-170m}" in launcher
+    assert "sbatch" not in launcher
+    assert "#SBATCH --partition=gnall" in slurm
+    assert "#SBATCH --gres=gpu:1" in slurm
+    assert "#SBATCH --cpus-per-task=8" in slurm
+    assert "#SBATCH --time=03:00:00" in slurm
+    assert "CNY 8.28 worst case" in slurm
 
 
 def test_source_shaped_relative_gate_requires_large_protected_improvement():
