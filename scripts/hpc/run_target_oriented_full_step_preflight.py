@@ -1051,6 +1051,8 @@ def _effective_gradient(
     batch: Any,
     steps: Mapping[str, Any],
     target_contract: Any,
+    *,
+    science_flux_basis: Any | None = None,
 ) -> tuple[
     Any,
     Mapping[str, Any],
@@ -1106,8 +1108,14 @@ def _effective_gradient(
         total_process,
         target_contract,
     )
-    seven_result = science_window_from_sufficient_statistics(total_seven)
-    thirty_result = science_window_from_sufficient_statistics(total_thirty)
+    seven_result = science_window_from_sufficient_statistics(
+        total_seven,
+        flux_basis=science_flux_basis,
+    )
+    thirty_result = science_window_from_sufficient_statistics(
+        total_thirty,
+        flux_basis=science_flux_basis,
+    )
     objective = {
         "one_day_state_anchor": state_result.total,
         "seven_day_science": seven_result.total,

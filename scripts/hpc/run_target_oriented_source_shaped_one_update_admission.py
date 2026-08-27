@@ -147,6 +147,7 @@ def _effective_forward(
     batch: Any,
     steps: Mapping[str, Any],
     target_contract: Any,
+    science_flux_basis: Any,
 ) -> tuple[Mapping[str, Any], Any, Mapping[str, Any], float]:
     """Evaluate the exact effective-batch objective and hard gates without gradients."""
 
@@ -188,8 +189,14 @@ def _effective_forward(
         total_process,
         target_contract,
     )
-    seven = science_window_from_sufficient_statistics(total_seven)
-    thirty = science_window_from_sufficient_statistics(total_thirty)
+    seven = science_window_from_sufficient_statistics(
+        total_seven,
+        flux_basis=science_flux_basis,
+    )
+    thirty = science_window_from_sufficient_statistics(
+        total_thirty,
+        flux_basis=science_flux_basis,
+    )
     objective = _objective_record(
         {
             "one_day_state_anchor": state.total,
@@ -348,6 +355,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             artifact.batch,
             steps,
             target_contract,
+            science_flux_basis=amendment.flux_basis,
         )
         branch_gradient = _branch_tree(gradient)
         jax.block_until_ready((branch_gradient, hard))
@@ -410,6 +418,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         artifact.batch,
         steps,
         target_contract,
+        science_flux_basis=amendment.flux_basis,
     )
     branch_gradient = _branch_tree(full_gradient)
     jax.block_until_ready((branch_gradient, hard_before))
@@ -504,6 +513,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             artifact.batch,
             steps,
             target_contract,
+            amendment.flux_basis,
         )
     )
     hard_after_host = _hard_host(jax.device_get(hard_after))

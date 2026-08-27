@@ -80,6 +80,7 @@ def test_source_shaped_one_update_admission_is_ephemeral_and_branch_only():
     ).read_text(encoding="utf-8")
 
     assert "_effective_gradient" in runner
+    assert "science_flux_basis=amendment.flux_basis" in runner
     assert "initialize_target_oriented_adamw(branches)" in runner
     assert "target_oriented_adamw_update" in runner
     assert '"training_updates_executed": 1' in runner
