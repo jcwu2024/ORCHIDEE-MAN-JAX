@@ -479,6 +479,14 @@ separate direct carbon-identity effects from rollout-state recurrence before
 any jointly trainable flux successor is designed. Validation/sealed-test
 reads, broader training, 365-day rollout, Gate D2, and product work remain
 closed.
+
+That attribution is now frozen under contract SHA256
+`12b327c8...ce93b2` and locally qualified with 25 related tests. Its
+Teacher-day-start mode independently initializes every day from the existing
+prepared Teacher state while preserving the same complete daily forward. The
+accepted free-rollout records are reused, so real execution evaluates only the
+two matched Teacher-day-start states. The active gate is the bounded
+free-`gln01` run; it creates no optimizer or checkpoint.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -499,6 +507,8 @@ with the completed paid-stage envelope in
 [`target_oriented_source_shaped_branch_training_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_training_admission_20260827.md),
 and its completed scientific result in
 [`target_oriented_source_shaped_branch_training_result_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_training_result_20260827.md),
+with the frozen coupling-attribution contract in
+[`target_oriented_source_shaped_coupling_attribution_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_coupling_attribution_v1.md),
 with GPU evidence in
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md)
 and the training design in

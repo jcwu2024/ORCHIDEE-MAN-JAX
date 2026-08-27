@@ -1,0 +1,74 @@
+{
+  "schema_version": "target_oriented_source_shaped_coupling_attribution_v1",
+  "status": "frozen_before_zero_training_execution",
+  "contract_sha256": "12b327c81851551dfd7ef5e4878b03845290d78b5d51d26168046fe25dce93b2",
+  "identity": {
+    "source_shaped_screen_contract_sha256": "a06beb815834142f44939022eea6ebd044e0a096b5d3c443754a9d87fb0f8cee",
+    "zero_panel_report_sha256": "6e7302fe4131d408ca469a62e3c31d9259fe9efa4a2e713e4242bc549e094291",
+    "branch_training_report_sha256": "a5143c066f611ef3678216cb76c1c8eebf679e5726050ed5cc6265516b2d4b22",
+    "branch_checkpoint_sha256": "fd6b866ec7a7c74f13dd7485a11d14126a7c39a689e1b9e2836bfd11079bd153",
+    "parent_checkpoint_sha256": "a566f9d95726984dc03cbf1f1a183dd0d1eae9e3479ce5055c64e571ef6a16c7"
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "evaluation_updates": [251, 358, 465, 572, 679, 786, 893, 1000],
+    "seven_day_windows_per_group": 8,
+    "thirty_day_windows_per_group": 4,
+    "validation_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "states": {
+    "update_0": "deterministic source-shaped initialization loaded from the fixed update-1000 parent",
+    "update_100": "branch-only diagnostic checkpoint from Slurm job 14701638",
+    "retained_parent_coordinates_must_match": true
+  },
+  "modes": {
+    "free_rollout": "reuse the accepted update-0 and update-100 frozen screen records without reexecution",
+    "teacher_day_start": "evaluate every day independently from its prepared Teacher day-start state and discrete state"
+  },
+  "metrics": {
+    "acceptance_score": "0.5 * (normalized_rmse^2 + normalized_signed_bias^2)",
+    "reported_fluxes": [
+      "gpp",
+      "maintenance_respiration",
+      "growth_respiration",
+      "autotrophic_respiration",
+      "npp"
+    ],
+    "protected_keys": [
+      "gpp",
+      "growth_respiration",
+      "autotrophic_respiration",
+      "npp",
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon",
+      "total_live_biomass_carbon",
+      "ecosystem_carbon"
+    ],
+    "raw_bias_identities": [
+      "autotrophic_respiration = maintenance_respiration + growth_respiration",
+      "npp = gpp - maintenance_respiration - growth_respiration"
+    ]
+  },
+  "classification": {
+    "material_median_relative_score_increase": 0.01,
+    "raw_bias_identity_absolute_tolerance": 1e-10,
+    "direct_daily_component": "a protected key has a material positive update-100 versus update-0 median score change in teacher-day-start mode",
+    "recurrence_required_component": "a protected key regresses materially in free rollout but not in teacher-day-start mode",
+    "joint_flux_scope_required": "teacher-day-start NPP regresses while maintenance improves and the raw carbon identities close"
+  },
+  "execution": {
+    "optimizer_allowed": false,
+    "training_updates": 0,
+    "checkpoint_write_allowed": false,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "free_gpu_execution_allowed": true,
+    "paid_execution_authorized": false,
+    "validation_read_authorized": false,
+    "sealed_test_authorized": false
+  }
+}

@@ -516,7 +516,49 @@ def _make_steps(
             active_pft_mask=templates.pft.active_pft_mask,
             contract=runtime["contract"],
         )
-        return predicted, expected_window_trajectories(microbatch, templates)
+        expected = expected_window_trajectories(microbatch, templates)
+        expected_defined = jax.tree_util.tree_map(
+            lambda value: value[0],
+            microbatch.expected_next_state_defined,
+        )
+        expected_discrete = jax.tree_util.tree_map(
+            lambda value: value[0],
+            microbatch.expected_next_discrete_state,
+        )
+        stock_hard = rollout_hard_gate_counts(
+            predicted.stocks,
+            expected.stocks,
+            nonnegative_stock_fields=TERMINAL_STOCK_FIELDS,
+            budget_residuals={
+                "water": result.diagnostics["water_budget_residual"],
+                "carbon": result.diagnostics["carbon_budget_residual"],
+            },
+            predicted_discrete_state=result.next_discrete_state,
+            expected_discrete_state=expected_discrete,
+            budget_atol=2.0e-12,
+            stock_atol=2.0e-12,
+        )
+        state_nonfinite, unexpected_state_mismatch, declared_dynamic_state_mismatch = state_hard(
+            result.next_state,
+            result.next_state_defined,
+            expected_defined,
+        )
+        prediction_nonfinite = sum(
+            (
+                jnp.sum(~jnp.isfinite(jnp.asarray(value)), dtype=jnp.int32)
+                for name, value in result.prediction.named_outputs.items()
+                if name in learned_output_names
+            ),
+            jnp.asarray(0, dtype=jnp.int32),
+        )
+        hard = _window_hard_counts(
+            prediction_nonfinite,
+            state_nonfinite,
+            unexpected_state_mismatch,
+            declared_dynamic_state_mismatch,
+            stock_hard,
+        )
+        return predicted, expected, hard
 
     def teacher_carry_window_trajectories(parameters, microbatch, *, rematerialize: bool):
         if diagnostic_teacher_carry_keys is None:
@@ -629,7 +671,7 @@ def _make_steps(
         horizon: int,
         rematerialize: bool,
     ):
-        predicted, expected = teacher_state_window_trajectories(
+        predicted, expected, _hard = teacher_state_window_trajectories(
             parameters,
             microbatch,
             rematerialize=rematerialize,
@@ -644,6 +686,30 @@ def _make_steps(
             horizon=horizon,
             flux_basis=resolved_flux_basis,
         )
+
+    def teacher_state_window_acceptance_statistics(
+        parameters,
+        microbatch,
+        *,
+        horizon: int,
+        rematerialize: bool,
+    ):
+        if acceptance_scales is None:
+            raise ValueError("acceptance scales are required for Teacher-day-start diagnostics")
+        predicted, expected, hard = teacher_state_window_trajectories(
+            parameters,
+            microbatch,
+            rematerialize=rematerialize,
+        )
+        statistics = target_oriented_acceptance_sufficient_statistics(
+            predicted.fluxes,
+            expected.fluxes,
+            predicted.stocks,
+            expected.stocks,
+            scales=acceptance_scales,
+            horizon=horizon,
+        )
+        return statistics, hard
 
     def teacher_carry_window_statistics(
         parameters,
@@ -1068,6 +1134,22 @@ def _make_steps(
                 ),
                 "thirty_acceptance_forward": jax.jit(
                     lambda parameters, batch: window_acceptance_statistics(
+                        parameters,
+                        batch,
+                        horizon=30,
+                        rematerialize=False,
+                    )
+                ),
+                "seven_teacher_state_acceptance_forward": jax.jit(
+                    lambda parameters, batch: teacher_state_window_acceptance_statistics(
+                        parameters,
+                        batch,
+                        horizon=7,
+                        rematerialize=False,
+                    )
+                ),
+                "thirty_teacher_state_acceptance_forward": jax.jit(
+                    lambda parameters, batch: teacher_state_window_acceptance_statistics(
                         parameters,
                         batch,
                         horizon=30,

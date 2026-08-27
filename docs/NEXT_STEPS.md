@@ -1598,13 +1598,15 @@ the fixed parent, and no 7-day group plus only one 30-day group passes all
 absolute keys. The update-100 checkpoint is diagnostic only, and unchanged
 branch-only continuation is closed.
 
-The active gate is to freeze and execute a zero-training source-coupling
-attribution using the fixed parent, update-0 source candidate, and update-100
-branch state on the same train/train panel. It must separate direct daily
-carbon-identity effects from cross-day state recurrence and identify whether
-a bounded successor must jointly expose additional GPP/growth/maintenance
-flux heads. No optimizer continuation, validation read, sealed-test read,
-broader training, 365-day rollout, Gate D2, or product work is authorized.
+The zero-training source-coupling attribution is now frozen under contract
+SHA256 `12b327c8...ce93b2` and locally qualified with 25 related tests. It uses
+the fixed parent, update-0 source candidate, and update-100 branch state on the
+same train/train panel. Its matched Teacher-day-start intervention removes
+only predicted cross-day carry while retaining the complete same-day neural
+forward, conservative updater, and exact tail. The active gate is its bounded
+free-`gln01` execution. No optimizer continuation, validation read,
+sealed-test read, broader training, 365-day rollout, Gate D2, or product work
+is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -1616,6 +1618,7 @@ See
 [`target_oriented_source_shaped_branch_autodiff_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_autodiff_admission_20260827.md),
 [`target_oriented_source_shaped_branch_training_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_training_admission_20260827.md),
 [`target_oriented_source_shaped_branch_training_result_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_branch_training_result_20260827.md),
+[`target_oriented_source_shaped_coupling_attribution_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_coupling_attribution_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),
