@@ -462,8 +462,16 @@ contract, combined-gradient rule, and relative plus aggregate-absolute science
 classifier. `scripts/hpc/calibrate_target_oriented_distribution_aware_guard.py`
 owns the accepted zero-update calibration, while
 `scripts/hpc/run_target_oriented_distribution_aware_one_update_admission.py`
-owns the active ephemeral free-`gln01` AdamW admission. Neither free runner can
-write a checkpoint, read validation, or authorize paid training.
+owns the accepted ephemeral free-`gln01` AdamW admission. Neither free runner
+can write a checkpoint, read validation, or authorize paid training.
+`daily_operator/target_oriented_distribution_aware_checkpoint.py` owns compact
+adapter-only atomic recovery and update-250 persistence.
+`scripts/hpc/run_target_oriented_distribution_aware_training.py` owns the
+exact 250-update combined-gradient fit plus update-0/update-250 train/train
+screens; its shell wrapper owns the container boundary, and
+`scripts/hpc/slurm_target_oriented_distribution_aware_training_250.sh` owns
+the unsubmitted one-V100 paid envelope. None makes the retained Attention
+parent trainable.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

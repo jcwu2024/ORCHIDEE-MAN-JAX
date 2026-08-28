@@ -14,6 +14,12 @@ from research.daily_coarse_graining.daily_operator import (
     load_distribution_aware_bounded_training_contract,
     load_distribution_aware_guard_calibration_contract,
 )
+from research.daily_coarse_graining.daily_operator.target_oriented_distribution_aware_checkpoint import (
+    load_distribution_aware_checkpoint,
+    load_distribution_aware_recovery,
+    write_distribution_aware_checkpoint,
+    write_distribution_aware_recovery,
+)
 
 
 def test_distribution_aware_guard_calibration_contract_is_exact():
@@ -167,3 +173,91 @@ def test_distribution_aware_one_update_admission_is_ephemeral_and_adapter_only()
     assert "free gln01" in launcher
     assert "sbatch" not in launcher
     assert "RUN_TIMEOUT=${RUN_TIMEOUT:-150m}" in launcher
+
+
+def test_distribution_aware_adapter_checkpoint_round_trip(tmp_path):
+    identity = {"contract": "frozen"}
+    adapter = {"kernel": np.asarray([1.0, 2.0, 3.0], dtype=np.float32)}
+    optimizer = {
+        "step": np.asarray(2, dtype=np.int32),
+        "first": {"kernel": np.zeros(3, dtype=np.float32)},
+        "second": {"kernel": np.ones(3, dtype=np.float32)},
+    }
+    records = [{"optimizer_update": 1}, {"optimizer_update": 2}]
+    screen = {
+        "candidate_groups": [{"update": value} for value in range(8)],
+        "comparison_to_fixed_parent": {"hard_gate_passed": True},
+    }
+    recovery_path = tmp_path / "recovery.pkl"
+    write_distribution_aware_recovery(
+        recovery_path,
+        identity=identity,
+        adapter=adapter,
+        optimizer=optimizer,
+        completed_updates=2,
+        parameter_count=3,
+        clip_threshold=2.5,
+        update_records=records,
+        initial_screen=screen,
+    )
+    recovery = load_distribution_aware_recovery(
+        recovery_path,
+        identity=identity,
+        parameter_count=3,
+        clip_threshold=2.5,
+        maximum_updates=250,
+    )
+    assert recovery is not None
+    np.testing.assert_array_equal(recovery["adapter"]["kernel"], adapter["kernel"])
+
+    checkpoint_path = tmp_path / "stage-update-0250.pkl"
+    metadata = write_distribution_aware_checkpoint(
+        checkpoint_path,
+        identity=identity,
+        adapter=adapter,
+        optimizer=optimizer,
+        completed_updates=2,
+        parameter_count=3,
+        clip_threshold=2.5,
+        update_records=records,
+        initial_screen=screen,
+        final_screen=screen,
+    )
+    checkpoint = load_distribution_aware_checkpoint(
+        checkpoint_path,
+        expected_sha256=metadata["sha256"],
+        identity=identity,
+        completed_updates=2,
+        parameter_count=3,
+        clip_threshold=2.5,
+    )
+    assert checkpoint["promotion_eligible"] is False
+    assert checkpoint["completed_updates"] == 2
+
+
+def test_distribution_aware_paid_runner_is_bounded_adapter_only_and_unsubmitted():
+    root = Path(__file__).resolve().parents[2]
+    runner = (
+        root / "scripts/hpc/run_target_oriented_distribution_aware_training.py"
+    ).read_text(encoding="utf-8")
+    launcher = (
+        root / "scripts/hpc/run_target_oriented_distribution_aware_training.sh"
+    ).read_text(encoding="utf-8")
+    slurm = (
+        root / "scripts/hpc/slurm_target_oriented_distribution_aware_training_250.sh"
+    ).read_text(encoding="utf-8")
+    assert "gradient_parameters=adapter" in runner
+    assert "gradient_steps=free_gradient_steps" in runner
+    assert "combine_adapter_gradients" in runner
+    assert "write_distribution_aware_recovery" in runner
+    assert "write_distribution_aware_checkpoint" in runner
+    assert '"validation_values_evaluated": False' in runner
+    assert '"retained_parent_parameters_trainable": False' in runner
+    assert "stage-update-0250.pkl" in runner
+    assert "RUN_TIMEOUT=${RUN_TIMEOUT:-290m}" in launcher
+    assert "sbatch" not in launcher
+    assert "#SBATCH --partition=gnall" in slurm
+    assert "#SBATCH --gres=gpu:1" in slurm
+    assert "#SBATCH --cpus-per-task=8" in slurm
+    assert "#SBATCH --time=05:00:00" in slurm
+    assert "CNY 13.80 worst case" in slurm

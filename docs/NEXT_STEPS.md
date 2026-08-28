@@ -1656,12 +1656,19 @@ rate, and clip threshold `2.692620468992339`. The threshold is the p90 of the
 existing calibration triangle upper bounds, so no calibration rerun is
 needed. The parent Attention and all non-adapter parameters remain frozen.
 
-The active operation is one ephemeral artifact-252 free-`gln01` optimizer
-admission using `free_gradient + 0.1 * teacher_guard_gradient`. It must retain
-no update or checkpoint and must prove finite full adapter gradients, exact
-parent preservation, and zero pre/post physical hard failures. Only after it
-passes may an exact paid 250-update resource envelope be proposed. Validation,
-sealed test, 365-day rollout, Gate D2, and product work remain closed.
+The ephemeral artifact-252 admission passed on free `gln01` at commit
+`5ea0033`; report SHA256 is `a32b2c17...c7734e`. Free, guard, and combined
+gradients cover all adapter coordinates and all leaves are nonzero. The
+combined norm `2.0161371` is below the frozen clip threshold, all adapter
+leaves change, all `83,754,404` parent coordinates remain exactly fixed, the
+same-batch combined objective decreases, and pre/post hard failures are zero.
+No update or checkpoint was retained.
+
+The active operation is local qualification of the exact 250-update runner,
+compact adapter-only recovery/checkpoint, update-0/update-250 train/train
+screen, and one-V100 Slurm wrapper. After those pass, present the exact paid
+resource envelope for separate user approval. Validation, sealed test,
+365-day rollout, Gate D2, and product work remain closed.
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)
@@ -1669,6 +1676,8 @@ at contract SHA256 `c1019409...e7179d7`, with accepted result in
 [`target_oriented_distribution_aware_guard_calibration_result_20260828.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_result_20260828.md).
 The active training contract and one-update boundary are in
 [`target_oriented_distribution_aware_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_bounded_training_v1.md).
+The accepted optimizer admission is in
+[`target_oriented_distribution_aware_one_update_admission_20260828.md`](research/daily_coarse_graining/target_oriented_distribution_aware_one_update_admission_20260828.md).
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),

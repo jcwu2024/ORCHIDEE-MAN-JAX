@@ -526,10 +526,14 @@ The adapter-only bounded training contract is frozen at SHA256
 `0c60924e...210051`. It owns 250 prepared artifacts from
 `252..511` after excluding calibration/evaluation updates, a fresh 250-update
 AdamW schedule, and an immutable combined-gradient clip threshold
-`2.692620468992339` derived without another run. The active operation is one
-ephemeral artifact-252 update on free `gln01`; it writes no checkpoint. Paid
+`2.692620468992339` derived without another run. The ephemeral artifact-252
+update passed on free `gln01` at commit `5ea0033`; report SHA256 is
+`a32b2c17...c7734e`. Its combined norm is `2.0161371`, no clipping occurs,
+all adapter leaves change, every parent coordinate remains exactly fixed, and
+all pre/post hard failures are zero. The active operation is local
+qualification of the paid runner and compact adapter-only persistence. Paid
 training, validation, sealed test, 365-day rollout, Gate D2, and product work
-remain closed pending that admission and a separate resource approval.
+remain closed pending a separate resource approval.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and

@@ -2,7 +2,8 @@
 
 Date: 2026-08-28
 
-Status: frozen before free one-update admission
+Status: frozen; free one-update admission accepted; paid stage awaits separate
+resource approval
 
 Machine contract:
 `manifests/coarse_graining/target_oriented_distribution_aware_bounded_training_v1.json`
@@ -52,6 +53,11 @@ Before paid training, one ephemeral artifact-252 update must pass on free
 `gln01`. It must update all adapter leaves, preserve every parent parameter by
 identity, remain finite, and have zero free and guard physical hard failures
 before and after. It writes no checkpoint or recovery.
+
+That admission passed at commit `5ea0033`; report SHA256 is
+`a32b2c17...c7734e`. The combined gradient norm was `2.0161371`, no clipping
+occurred, all adapter leaves changed, and all retained parent parameters were
+exactly unchanged.
 
 ## Evaluation And Decision
 
