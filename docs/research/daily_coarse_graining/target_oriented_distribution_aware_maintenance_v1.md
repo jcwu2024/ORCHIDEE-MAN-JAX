@@ -2,7 +2,7 @@
 
 Date: 2026-08-28
 
-Status: local implementation accepted; real-v6 GPU admission pending
+Status: local implementation and real-v6 GPU admission accepted
 
 Machine contract:
 `manifests/coarse_graining/target_oriented_distribution_aware_maintenance_v1.json`
@@ -97,8 +97,8 @@ and zero physical hard failures.
 Local acceptance covers parameter ownership, all 24 addressable corrections,
 forward/loss/gradient, exact non-maintenance output preservation, inactive PFT
 isolation, PFT permutation equivariance, and one canonical state/budget
-transition. A zero-update real-v6 free-`gln01` admission must then cover the
-complete gradient and all `9,750,529` adapter coordinates.
+transition. The accepted zero-update real-v6 admission covers the complete
+forward/loss and all `9,750,529` adapter-gradient coordinates.
 
 This contract authorizes no optimizer update, paid job, validation read,
 checkpoint, 365-day rollout, Gate D2, sealed test, or product work.
@@ -119,6 +119,13 @@ non-maintenance parent outputs, bare/inactive zero behavior, PFT permutation
 equivariance, canonical daily binding, and water/carbon residuals within
 `2e-12`. Its inference source contains no half-hour reconstruction or scan.
 
-The active gate is the zero-update real-v6 admission on free `gln01`. That run
-must differentiate only the adapter subtree while evaluating the complete
-frozen-parent forward and loss. It may not create an optimizer or checkpoint.
+The zero-update real-v6 admission passed on free `gln01` at commit `54ada54`;
+the report SHA256 is `376d8016...c66ece5`. All `9,750,529` adapter-gradient
+elements are finite, every adapter leaf is nonzero, all 160 non-maintenance
+outputs exactly equal the parent, and canonical water/carbon residuals are
+zero. The accepted evidence is in
+`target_oriented_distribution_aware_maintenance_gpu_admission_20260828.md`.
+
+The active gate is a separate post-admission training contract and frozen
+Teacher-guard coefficient. No optimizer or paid training may be created before
+that calibration is accepted.

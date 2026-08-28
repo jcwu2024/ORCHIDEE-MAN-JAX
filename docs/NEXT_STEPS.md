@@ -1633,12 +1633,20 @@ predecessor suites pass all 11 unique tests, including eager/JIT forward,
 complete loss, adapter gradients, exact non-maintenance parent equality, PFT
 permutation, canonical binding, and water/carbon budgets.
 
-The active gate is a zero-update real-v6 admission on free `gln01`. It must run
-the complete frozen-parent forward/loss, differentiate exactly the adapter
-subtree, cover all `9,750,529` adapter coordinates, and pass the canonical
-one-day state/budget gate. No optimizer continuation, validation read,
-sealed-test read, broader training, paid job, 365-day rollout, Gate D2, or
-product work is authorized.
+The zero-update real-v6 admission passed on free `gln01` at commit `54ada54`;
+report SHA256 is `376d8016...c66ece5`. It covers all `9,750,529` adapter
+gradient elements, every adapter leaf is nonzero, all 160 non-maintenance
+outputs exactly equal the parent, and canonical water/carbon residuals are
+zero. JAX peak live allocation is about `1.37 GB`; the roughly 25 GiB visible
+to `nvidia-smi` was the allocator reservation.
+
+The active gate is the separate post-admission training contract. On the
+frozen eight train/train calibration batches, compute the median adapter
+gradient norm for the existing free objective and the independent
+Teacher-day-start maintenance/growth/NPP guard. Freeze their ratio, clipped to
+`[0.1, 10]`, before optimizer creation. No optimizer continuation, validation
+read, sealed-test read, broader training, paid job, 365-day rollout, Gate D2,
+or product work is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -1655,6 +1663,7 @@ See
 [`target_oriented_source_owner_state_bridge_v1.md`](research/daily_coarse_graining/target_oriented_source_owner_state_bridge_v1.md),
 [`target_oriented_source_owner_state_bridge_result_20260828.md`](research/daily_coarse_graining/target_oriented_source_owner_state_bridge_result_20260828.md),
 [`target_oriented_distribution_aware_maintenance_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_v1.md),
+[`target_oriented_distribution_aware_maintenance_gpu_admission_20260828.md`](research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_gpu_admission_20260828.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),

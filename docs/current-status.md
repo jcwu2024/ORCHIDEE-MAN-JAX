@@ -512,13 +512,17 @@ the existing exact source materializer. The complete candidate has
 parameters. All 11 focused candidate/predecessor tests pass, including
 eager/JIT forward, complete loss, adapter gradients, exact non-maintenance
 parent equality, permutation, canonical state, and water/carbon budgets. The
-active gate is the zero-update real-v6 free-`gln01` admission; no training or
-paid execution is authorized.
+zero-update real-v6 admission then passed on free `gln01` at commit `54ada54`;
+report SHA256 is `376d8016...c66ece5`. All adapter gradients and canonical
+budgets pass, and all 160 non-maintenance outputs exactly equal the parent.
+The active gate is the separate post-admission training contract and
+eight-batch Teacher-guard gradient-ratio calibration; no optimizer or paid
+execution is authorized before it is frozen.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
-with the active successor contract in
+with the predecessor source-shaped contract in
 [`target_oriented_source_shaped_maintenance_v1.md`](research/daily_coarse_graining/target_oriented_source_shaped_maintenance_v1.md),
 with its accepted real-v6 execution evidence in
 [`target_oriented_source_shaped_maintenance_gpu_admission_20260827.md`](research/daily_coarse_graining/target_oriented_source_shaped_maintenance_gpu_admission_20260827.md),
@@ -544,6 +548,8 @@ and its accepted result in
 [`target_oriented_source_owner_state_bridge_result_20260828.md`](research/daily_coarse_graining/target_oriented_source_owner_state_bridge_result_20260828.md),
 with the active locally accepted successor in
 [`target_oriented_distribution_aware_maintenance_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_v1.md),
+with its accepted real-v6 evidence in
+[`target_oriented_distribution_aware_maintenance_gpu_admission_20260828.md`](research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_gpu_admission_20260828.md),
 with GPU evidence in
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md)
 and the training design in
