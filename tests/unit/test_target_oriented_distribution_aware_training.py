@@ -56,7 +56,7 @@ def test_teacher_guard_coefficient_rejects_invalid_panels(free, guard):
 
 def test_distribution_aware_bounded_training_contract_is_exact_and_disjoint():
     contract = load_distribution_aware_bounded_training_contract()
-    assert contract.sha256 == "304d6593dbad888b37fdd7171c823f9feaa1a82301aed0c4dd62f3ea23ac0d1c"
+    assert contract.sha256 == "0c60924ee12d0ea555b082f76990ca55e34f86f67effb052f5eec44c01210051"
     assert contract.evaluation_updates == (251, 358, 465, 572, 679, 786, 893, 1000)
     assert contract.payload["objective"]["teacher_guard_coefficient"] == 0.1
     assert contract.optimizer["maximum_updates"] == 250
@@ -65,8 +65,10 @@ def test_distribution_aware_bounded_training_contract_is_exact_and_disjoint():
     )
     training = contract.payload["data"]["training_updates"]
     assert training == {
-        "artifact_update_start": 1,
-        "artifact_update_end": 250,
+        "artifact_candidate_start": 252,
+        "artifact_candidate_end": 511,
+        "excluded_artifact_updates": [352, 353, 354, 355, 356, 357, 358, 359, 360, 465],
+        "selection": "ascending_candidate_updates_after_exclusion",
         "optimizer_update_count": 250,
     }
 

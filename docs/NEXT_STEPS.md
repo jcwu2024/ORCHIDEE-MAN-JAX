@@ -1647,14 +1647,16 @@ nonzero, and all physical hard failures are zero. The median gradient norms
 are `0.3181163` and `13.9532423`; the raw ratio `0.0227987` therefore freezes
 the preregistered bounded Teacher-guard coefficient at exactly `0.1`.
 
-The separate 250-update adapter-only training contract is now frozen at
-SHA256 `304d6593...ac0d1c`. It uses prepared train/train artifacts `1..250`, a
+The separate 250-update adapter-only training contract is frozen at SHA256
+`0c60924e...210051`. It uses 250
+prepared train/train artifacts selected from `252..511` after excluding the
+calibration/evaluation updates, a
 fresh AdamW state, 25-update warmup, `1e-4` peak learning rate, `3e-5` final
 rate, and clip threshold `2.692620468992339`. The threshold is the p90 of the
 existing calibration triangle upper bounds, so no calibration rerun is
 needed. The parent Attention and all non-adapter parameters remain frozen.
 
-The active operation is one ephemeral artifact-1 free-`gln01` optimizer
+The active operation is one ephemeral artifact-252 free-`gln01` optimizer
 admission using `free_gradient + 0.1 * teacher_guard_gradient`. It must retain
 no update or checkpoint and must prove finite full adapter gradients, exact
 parent preservation, and zero pre/post physical hard failures. Only after it

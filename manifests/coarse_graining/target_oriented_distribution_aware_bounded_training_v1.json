@@ -1,7 +1,7 @@
 {
   "schema_version": "target_oriented_distribution_aware_bounded_training_v1",
   "status": "frozen_before_one_update_admission",
-  "contract_sha256": "304d6593dbad888b37fdd7171c823f9feaa1a82301aed0c4dd62f3ea23ac0d1c",
+  "contract_sha256": "0c60924ee12d0ea555b082f76990ca55e34f86f67effb052f5eec44c01210051",
   "identity": {
     "candidate": "target_oriented_distribution_aware_maintenance_v1",
     "candidate_contract_sha256": "f167943cfb80902fd968259f7f2a1a852d783b151a7eedd16b3157abd1a37d2d",
@@ -23,8 +23,10 @@
     "split": "train/train",
     "prepared_schedule_updates": 1000,
     "training_updates": {
-      "artifact_update_start": 1,
-      "artifact_update_end": 250,
+      "artifact_candidate_start": 252,
+      "artifact_candidate_end": 511,
+      "excluded_artifact_updates": [352, 353, 354, 355, 356, 357, 358, 359, 360, 465],
+      "selection": "ascending_candidate_updates_after_exclusion",
       "optimizer_update_count": 250
     },
     "guard_calibration_updates": [352, 353, 354, 355, 356, 357, 359, 360],
@@ -78,7 +80,7 @@
     }
   },
   "one_update_admission": {
-    "artifact_update": 1,
+    "artifact_update": 252,
     "optimizer_updates_executed": 1,
     "optimizer_updates_persisted": 0,
     "checkpoint_written": false,

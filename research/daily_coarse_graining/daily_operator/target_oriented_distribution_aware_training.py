@@ -13,7 +13,7 @@ from .target_oriented_source_shaped_maintenance import contract_sha256
 
 SCHEMA_VERSION = "target_oriented_distribution_aware_guard_calibration_v1"
 BOUNDED_TRAINING_SCHEMA_VERSION = "target_oriented_distribution_aware_bounded_training_v1"
-BOUNDED_TRAINING_FROZEN_SHA256 = "304d6593dbad888b37fdd7171c823f9feaa1a82301aed0c4dd62f3ea23ac0d1c"
+BOUNDED_TRAINING_FROZEN_SHA256 = "0c60924ee12d0ea555b082f76990ca55e34f86f67effb052f5eec44c01210051"
 _CONTRACT_PATH = (
     Path(__file__).resolve().parents[3]
     / "manifests"
@@ -130,16 +130,23 @@ def load_distribution_aware_bounded_training_contract(
 
     data = payload["data"]
     training = data["training_updates"]
+    excluded = tuple(int(value) for value in training["excluded_artifact_updates"])
+    excluded_set = set(excluded)
     training_updates = tuple(
-        range(
-            int(training["artifact_update_start"]),
-            int(training["artifact_update_end"]) + 1,
+        value
+        for value in range(
+            int(training["artifact_candidate_start"]),
+            int(training["artifact_candidate_end"]) + 1,
         )
+        if value not in excluded_set
     )
     calibration_updates = tuple(int(value) for value in data["guard_calibration_updates"])
     evaluation_updates = tuple(int(value) for value in data["evaluation_updates"])
     if (
-        training_updates != tuple(range(1, 251))
+        len(training_updates) != 250
+        or training_updates[0] != 252
+        or training_updates[-1] != 511
+        or excluded != (352, 353, 354, 355, 356, 357, 358, 359, 360, 465)
         or int(training["optimizer_update_count"]) != 250
         or calibration_updates != (352, 353, 354, 355, 356, 357, 359, 360)
         or evaluation_updates != (251, 358, 465, 572, 679, 786, 893, 1000)

@@ -523,10 +523,11 @@ nonzero, and all physical hard failures are zero. Median norms are
 Teacher-guard coefficient at exactly `0.1`.
 
 The adapter-only bounded training contract is frozen at SHA256
-`304d6593...ac0d1c`. It owns prepared artifacts `1..250`, a fresh 250-update
+`0c60924e...210051`. It owns 250 prepared artifacts from
+`252..511` after excluding calibration/evaluation updates, a fresh 250-update
 AdamW schedule, and an immutable combined-gradient clip threshold
 `2.692620468992339` derived without another run. The active operation is one
-ephemeral artifact-1 update on free `gln01`; it writes no checkpoint. Paid
+ephemeral artifact-252 update on free `gln01`; it writes no checkpoint. Paid
 training, validation, sealed test, 365-day rollout, Gate D2, and product work
 remain closed pending that admission and a separate resource approval.
 See

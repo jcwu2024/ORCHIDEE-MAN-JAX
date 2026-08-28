@@ -339,7 +339,7 @@ source-backed materializer. Local and real-v6 admission pass. Its frozen
 Teacher-guard calibration completed at commit `b980cde`, producing coefficient
 `0.1` with report SHA256 `bb55388f...addf7a474`. The active gate is the free
 one-update admission for the frozen 250-update adapter-only contract SHA256
-`304d6593...ac0d1c`. No paid training, validation read, 365-day rollout, Gate
+`0c60924e...210051`. No paid training, validation read, 365-day rollout, Gate
 D2, sealed test, or product work is authorized before that admission and a
 separate resource approval.
 

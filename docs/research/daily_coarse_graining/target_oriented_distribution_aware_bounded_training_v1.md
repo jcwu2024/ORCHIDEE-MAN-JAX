@@ -8,7 +8,7 @@ Machine contract:
 `manifests/coarse_graining/target_oriented_distribution_aware_bounded_training_v1.json`
 
 Contract SHA256:
-`304d6593dbad888b37fdd7171c823f9feaa1a82301aed0c4dd62f3ea23ac0d1c`
+`0c60924ee12d0ea555b082f76990ca55e34f86f67effb052f5eec44c01210051`
 
 ## Purpose
 
@@ -20,8 +20,9 @@ to establish a small relative win over a weak baseline.
 
 ## Data And Objective
 
-The bounded stage uses existing Teacher-v6 prepared train/train artifacts
-`1..250`, one per optimizer update. Every effective batch retains 32 one-day
+The bounded stage uses 250 existing Teacher-v6 prepared train/train artifacts
+selected in ascending order from `252..511` after excluding calibration and
+evaluation updates `352..360` and `465`, one per optimizer update. Every effective batch retains 32 one-day
 samples, eight 7-day windows, four 30-day windows, and 208 Teacher days. The
 eight calibration artifacts and eight evaluation groups are disjoint from
 training and from each other. Teacher data is not regenerated; historical v5,
@@ -47,7 +48,7 @@ warmup updates, peak learning rate `1e-4`, and cosine decay to `3e-5` at update
 of the eight calibration triangle upper bounds
 `free_norm + 0.1 * guard_norm`, so no additional calibration run is needed.
 
-Before paid training, one ephemeral artifact-1 update must pass on free
+Before paid training, one ephemeral artifact-252 update must pass on free
 `gln01`. It must update all adapter leaves, preserve every parent parameter by
 identity, remain finite, and have zero free and guard physical hard failures
 before and after. It writes no checkpoint or recovery.
@@ -72,4 +73,3 @@ relative mechanism failure closes unchanged adapter-only continuation.
 The contract authorizes no paid submission by itself. Validation, 365-day
 rollout, long held points, Gate D2, sealed test, and product acceptance remain
 closed until the short-horizon science gate passes.
-
