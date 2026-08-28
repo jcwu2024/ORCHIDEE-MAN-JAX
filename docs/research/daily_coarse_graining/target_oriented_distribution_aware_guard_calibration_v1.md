@@ -2,7 +2,8 @@
 
 Date: 2026-08-28
 
-Status: frozen before zero-update calibration
+Status: completed and accepted; numeric result recorded in
+`target_oriented_distribution_aware_guard_calibration_result_20260828.md`
 
 Machine contract:
 `manifests/coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.json`
@@ -57,3 +58,6 @@ All eight batches must have finite, strictly positive gradient norms for both
 objectives, full `9,750,529`-coordinate coverage, and zero physical hard
 failures. The run creates no optimizer, update, checkpoint, or recovery. A
 free `gln01` GPU may execute it; paid training remains closed.
+
+The accepted execution froze the coefficient at `0.1`; report SHA256 is
+`bb55388f598cc6e4e421597be3b988e7d5d12ab1d66a5e5528b2883addf7a474`.

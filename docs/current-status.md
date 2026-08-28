@@ -515,15 +515,20 @@ parent equality, permutation, canonical state, and water/carbon budgets. The
 zero-update real-v6 admission then passed on free `gln01` at commit `54ada54`;
 report SHA256 is `376d8016...c66ece5`. All adapter gradients and canonical
 budgets pass, and all 160 non-maintenance outputs exactly equal the parent.
-The active gate is the separate post-admission training contract and
-eight-batch Teacher-guard gradient-ratio calibration; no optimizer or paid
-execution is authorized before it is frozen.
+The eight-batch Teacher-guard calibration completed on free `gln01` at commit
+`b980cde`; report SHA256 is `bb55388f...addf7a474`. Every free and guard
+gradient covers all `9,750,529` adapter coordinates, all 36 leaves are
+nonzero, and all physical hard failures are zero. Median norms are
+`0.3181163` and `13.9532423`; their raw ratio `0.0227987` freezes the bounded
+Teacher-guard coefficient at exactly `0.1`.
 
-That zero-update calibration method is now frozen under contract SHA256
-`c1019409...e7179d7`. It uses prepared artifacts `352, 353, 354, 355, 356,
-357, 359, 360`; its Teacher guard is the equal macro mean of 7/30-day
-maintenance, growth respiration, and NPP scores. The local implementation and
-six focused tests pass. Free-`gln01` execution is the active operation.
+The adapter-only bounded training contract is frozen at SHA256
+`304d6593...ac0d1c`. It owns prepared artifacts `1..250`, a fresh 250-update
+AdamW schedule, and an immutable combined-gradient clip threshold
+`2.692620468992339` derived without another run. The active operation is one
+ephemeral artifact-1 update on free `gln01`; it writes no checkpoint. Paid
+training, validation, sealed test, 365-day rollout, Gate D2, and product work
+remain closed pending that admission and a separate resource approval.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and

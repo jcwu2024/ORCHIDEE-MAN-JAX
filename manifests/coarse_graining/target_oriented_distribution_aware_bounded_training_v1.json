@@ -1,0 +1,136 @@
+{
+  "schema_version": "target_oriented_distribution_aware_bounded_training_v1",
+  "status": "frozen_before_one_update_admission",
+  "contract_sha256": "304d6593dbad888b37fdd7171c823f9feaa1a82301aed0c4dd62f3ea23ac0d1c",
+  "identity": {
+    "candidate": "target_oriented_distribution_aware_maintenance_v1",
+    "candidate_contract_sha256": "f167943cfb80902fd968259f7f2a1a852d783b151a7eedd16b3157abd1a37d2d",
+    "gpu_admission_report_sha256": "376d8016f4c3805e3652b7ef9be7034581b6509edf24654d4231b23afc66ece5",
+    "guard_calibration_contract_sha256": "c101940963465df1e25878f596645037e7d2de22dcefcf21f622fcd1de7179d7",
+    "guard_calibration_report_sha256": "bb55388f598cc6e4e421597be3b988e7d5d12ab1d66a5e5528b2883addf7a474",
+    "parent_checkpoint_update": 1000,
+    "parent_checkpoint_sha256": "a566f9d95726984dc03cbf1f1a183dd0d1eae9e3479ce5055c64e571ef6a16c7",
+    "parent_train_train_report_sha256": "85ab83a120f1f82f09b8783391e564e5632e84c8582fa74a6b250089bad27757",
+    "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "base_training_contract_sha256": "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b",
+    "target_contract_sha256": "7c9857c0ca57ee65cfcf7514a216a217c3b1661f6cc869c6dfb85d3786bfce5c",
+    "flux_basis_amendment_sha256": "6c81e8f56c2c81fc2ac024a71da98f3e875c4ebc429f9e3d1ff4e8e3ef6bfb45",
+    "candidate_parameter_count": 93504933,
+    "trainable_adapter_parameter_count": 9750529
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "prepared_schedule_updates": 1000,
+    "training_updates": {
+      "artifact_update_start": 1,
+      "artifact_update_end": 250,
+      "optimizer_update_count": 250
+    },
+    "guard_calibration_updates": [352, 353, 354, 355, 356, 357, 359, 360],
+    "evaluation_updates": [251, 358, 465, 572, 679, 786, 893, 1000],
+    "groups_are_disjoint_from_calibration_and_training": true,
+    "one_day_samples_per_update": 32,
+    "seven_day_windows_per_update": 8,
+    "thirty_day_windows_per_update": 4,
+    "teacher_days_per_update": 208,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "parameter_ownership": {
+    "trainable_family": "target_oriented.distribution_aware_maintenance",
+    "trainable_parameter_count": 9750529,
+    "retained_parent_parameter_count": 83754404,
+    "parent_parameters_frozen": true,
+    "optimizer_state_reused": false,
+    "direct_adapter_subtree_autodiff": true
+  },
+  "objective": {
+    "free_objective": "existing_target_oriented_component_resolved_effective_batch_objective",
+    "free_objective_coefficient": 1.0,
+    "teacher_guard_objective": "equal_macro_teacher_day_start_7_30_day_maintenance_growth_npp",
+    "teacher_guard_coefficient": 0.1,
+    "teacher_guard_coefficient_source": "accepted_guard_calibration_report",
+    "teacher_guard_cell_count": 6,
+    "teacher_guard_cell_weight": 0.16666666666666666,
+    "validation_weight_tuning_allowed": false
+  },
+  "optimizer": {
+    "name": "adamw",
+    "beta1": 0.9,
+    "beta2": 0.95,
+    "epsilon": 1e-8,
+    "weight_decay": 0.01,
+    "warmup_updates": 25,
+    "peak_learning_rate": 0.0001,
+    "final_learning_rate": 0.00003,
+    "maximum_updates": 250,
+    "schedule": "linear_warmup_cosine_decay",
+    "global_gradient_norm_clip": {
+      "threshold": 2.692620468992339,
+      "derivation": "p90_of_free_norm_plus_0.1_times_teacher_guard_norm_triangle_upper_bound",
+      "calibration_batch_count": 8,
+      "freeze_before_first_update": true,
+      "report_unclipped_norm_every_update": true,
+      "validation_tuning_allowed": false
+    }
+  },
+  "one_update_admission": {
+    "artifact_update": 1,
+    "optimizer_updates_executed": 1,
+    "optimizer_updates_persisted": 0,
+    "checkpoint_written": false,
+    "recovery_written": false,
+    "require_complete_free_and_teacher_guard_objectives": true,
+    "require_all_adapter_gradients_finite_nonzero": true,
+    "require_retained_parent_exactly_unchanged": true,
+    "require_pre_and_post_update_hard_failure_count_zero": true,
+    "free_gln01_allowed": true
+  },
+  "bounded_stage": {
+    "requires_separate_paid_resource_authorization": true,
+    "evaluate_candidate_at_optimizer_updates": [0, 250],
+    "recovery_interval_updates": 25,
+    "checkpoint_at_optimizer_updates": [250],
+    "stop_on_any_hard_or_nonfinite_failure": true
+  },
+  "science_gate": {
+    "maintenance_key": "maintenance_respiration",
+    "minimum_median_maintenance_score_reduction_by_horizon": {
+      "7": 0.2,
+      "30": 0.2
+    },
+    "protected_keys": [
+      "gpp",
+      "growth_respiration",
+      "autotrophic_respiration",
+      "npp",
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon",
+      "total_live_biomass_carbon",
+      "ecosystem_carbon"
+    ],
+    "maximum_median_protected_score_increase": 0.0,
+    "absolute_gate_aggregation": "evaluated_value_weighted_across_all_eight_train_train_evaluation_groups_per_horizon",
+    "absolute_target_oriented_all_keys_required_at_horizons": [7, 30],
+    "hard_failure_count_maximum": 0,
+    "relative_improvement_alone_is_promotion": false,
+    "small_relative_win_is_sufficient": false
+  },
+  "execution": {
+    "one_update_free_gpu_admission_allowed": true,
+    "paid_training_authorized": false,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_read_authorized": false,
+    "365_day_rollout_authorized": false,
+    "gate_d2_authorized": false,
+    "sealed_test_authorized": false,
+    "product_acceptance_authorized": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "cross_day_neural_hidden_state": false
+  }
+}

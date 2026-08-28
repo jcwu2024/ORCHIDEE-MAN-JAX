@@ -452,7 +452,18 @@ no optimizer, and cannot write a checkpoint or enter final inference.
 The accepted result is
 `target_oriented_source_owner_state_bridge_result_20260828.md`: four of ten
 protected cells reverse, so broader recurrent state or Attention context
-remains in scope and implementation stops for architecture discussion.
+remains in scope.
+
+`daily_operator/target_oriented_distribution_aware_maintenance.py` owns the
+accepted 24-coordinate, two-block maintenance Attention adapter and exact
+source-backed output materialization. `daily_operator/target_oriented_distribution_aware_training.py`
+owns its completed Teacher-guard calibration, frozen 250-update adapter-only
+contract, combined-gradient rule, and relative plus aggregate-absolute science
+classifier. `scripts/hpc/calibrate_target_oriented_distribution_aware_guard.py`
+owns the accepted zero-update calibration, while
+`scripts/hpc/run_target_oriented_distribution_aware_one_update_admission.py`
+owns the active ephemeral free-`gln01` AdamW admission. Neither free runner can
+write a checkpoint, read validation, or authorize paid training.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-26.
+Last updated: 2026-08-28.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -89,7 +89,9 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/target_oriented_source_owner_state_bridge_result_20260828.md` | Accepted result: four direct owners repair part of biomass recurrence but are insufficient for growth/NPP | Reviewing the evidence that motivated the active distribution-aware adapter |
 | `research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_v1.md` | Active frozen mechanism with accepted local and real-v6 admission | Reviewing the 24-coordinate Attention adapter or preparing its training contract |
 | `research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_gpu_admission_20260828.md` | Accepted zero-update real-v6 GPU admission | Reviewing gradients, parent equality, budgets, timing, or memory evidence |
-| `research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md` | Active frozen zero-update Teacher-guard coefficient protocol | Reviewing the two objectives or executing the free calibration |
+| `research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md` | Completed frozen zero-update Teacher-guard coefficient protocol | Reviewing the two calibrated objectives |
+| `research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_result_20260828.md` | Accepted free-GPU result; Teacher-guard coefficient frozen at 0.1 | Reviewing calibration norms, timing, memory, or report identity |
+| `research/daily_coarse_graining/target_oriented_distribution_aware_bounded_training_v1.md` | Active frozen 250-update adapter-only contract; free one-update admission is next | Reviewing data separation, optimizer, science gates, or the active operation |
 | `research/daily_coarse_graining/target_oriented_update_251_admission_20260825.md` | Accepted exact checkpoint/AdamW handoff, update-251, recovery, and matched free-GPU admission | Preparing or admitting updates 251-1000 |
 | `research/daily_coarse_graining/daily_operator_parameter_routing_v1.md` | Implemented local parameter-ownership boundary used by the successor | Routing physical parameters or planning Gate D2 |
 | `research/daily_coarse_graining/successor_process_head_architecture_options_v1.md` | Historical accepted decision package; its attention/graph pair is not the current successor default | Reviewing the completed early successor comparison |

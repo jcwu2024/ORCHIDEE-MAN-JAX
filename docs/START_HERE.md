@@ -329,13 +329,19 @@ regressions require recursively predicted state: they become improvements
 under Teacher day starts, while maintenance itself reverses from a large free-
 rollout improvement to a `680%/792%` deterioration. The next task is a bounded
 source-owner state bridge over `biomass`, `lai`, `veget_max`, and
-`t2m_longterm`. Its zero-training contract is frozen and locally qualified;
-the free-`gln01` execution now passes all physical gates but reverses only four
-of ten protected growth/NPP/biomass cells. Direct source-owner drift therefore
-contributes but is not sufficient. The active gate is architecture discussion;
-broader recurrent state or Attention context remains in scope and no new
-architecture is admitted yet. Validation reads, broader training, 365-day
-rollout, Gate D2, sealed test, and product work remain closed.
+`t2m_longterm`. Its free-`gln01` execution passed all physical gates but
+reversed only four of ten protected growth/NPP/biomass cells. Direct
+source-owner drift therefore contributes but is not sufficient.
+
+The accepted successor retains the coordinate-aligned Attention parent and
+adds a 24-coordinate maintenance-specific Attention adapter with an exact
+source-backed materializer. Local and real-v6 admission pass. Its frozen
+Teacher-guard calibration completed at commit `b980cde`, producing coefficient
+`0.1` with report SHA256 `bb55388f...addf7a474`. The active gate is the free
+one-update admission for the frozen 250-update adapter-only contract SHA256
+`304d6593...ac0d1c`. No paid training, validation read, 365-day rollout, Gate
+D2, sealed test, or product work is authorized before that admission and a
+separate resource approval.
 
 ## New Task Bootstrap
 

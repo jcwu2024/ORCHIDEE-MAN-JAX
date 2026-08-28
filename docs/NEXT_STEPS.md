@@ -1640,21 +1640,33 @@ outputs exactly equal the parent, and canonical water/carbon residuals are
 zero. JAX peak live allocation is about `1.37 GB`; the roughly 25 GiB visible
 to `nvidia-smi` was the allocator reservation.
 
-The active gate is the separate post-admission training contract. On the
-frozen eight train/train calibration batches, compute the median adapter
-gradient norm for the existing free objective and the independent
-Teacher-day-start maintenance/growth/NPP guard. Freeze their ratio, clipped to
-`[0.1, 10]`, before optimizer creation. No optimizer continuation, validation
-read, sealed-test read, broader training, paid job, 365-day rollout, Gate D2,
-or product work is authorized.
+The zero-update calibration completed on free `gln01` at commit `b980cde`;
+report SHA256 is `bb55388f...addf7a474`. All eight free and Teacher-guard
+gradients cover all `9,750,529` adapter coordinates, every adapter leaf is
+nonzero, and all physical hard failures are zero. The median gradient norms
+are `0.3181163` and `13.9532423`; the raw ratio `0.0227987` therefore freezes
+the preregistered bounded Teacher-guard coefficient at exactly `0.1`.
 
-The zero-update calibration protocol is frozen in
+The separate 250-update adapter-only training contract is now frozen at
+SHA256 `304d6593...ac0d1c`. It uses prepared train/train artifacts `1..250`, a
+fresh AdamW state, 25-update warmup, `1e-4` peak learning rate, `3e-5` final
+rate, and clip threshold `2.692620468992339`. The threshold is the p90 of the
+existing calibration triangle upper bounds, so no calibration rerun is
+needed. The parent Attention and all non-adapter parameters remain frozen.
+
+The active operation is one ephemeral artifact-1 free-`gln01` optimizer
+admission using `free_gradient + 0.1 * teacher_guard_gradient`. It must retain
+no update or checkpoint and must prove finite full adapter gradients, exact
+parent preservation, and zero pre/post physical hard failures. Only after it
+passes may an exact paid 250-update resource envelope be proposed. Validation,
+sealed test, 365-day rollout, Gate D2, and product work remain closed.
+
+The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)
-at contract SHA256 `c1019409...e7179d7`. Its local loader, median/clipping
-logic, direct adapter-gradient route, runner policy, CLI, and free-node
-launcher pass six focused tests and static checks. Execute this unchanged on
-free `gln01`; then bind the resulting numeric coefficient and report identity
-into a separate bounded training contract.
+at contract SHA256 `c1019409...e7179d7`, with accepted result in
+[`target_oriented_distribution_aware_guard_calibration_result_20260828.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_result_20260828.md).
+The active training contract and one-update boundary are in
+[`target_oriented_distribution_aware_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_bounded_training_v1.md).
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
