@@ -1,0 +1,85 @@
+{
+  "schema_version": "target_oriented_distribution_aware_guard_calibration_v1",
+  "status": "frozen_before_zero_update_calibration",
+  "contract_sha256": "c101940963465df1e25878f596645037e7d2de22dcefcf21f622fcd1de7179d7",
+  "identity": {
+    "candidate": "target_oriented_distribution_aware_maintenance_v1",
+    "candidate_contract_sha256": "f167943cfb80902fd968259f7f2a1a852d783b151a7eedd16b3157abd1a37d2d",
+    "gpu_admission_report_sha256": "376d8016f4c3805e3652b7ef9be7034581b6509edf24654d4231b23afc66ece5",
+    "parent_checkpoint_update": 1000,
+    "parent_checkpoint_sha256": "a566f9d95726984dc03cbf1f1a183dd0d1eae9e3479ce5055c64e571ef6a16c7",
+    "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "training_contract_sha256": "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b",
+    "target_contract_sha256": "7c9857c0ca57ee65cfcf7514a216a217c3b1661f6cc869c6dfb85d3786bfce5c",
+    "flux_basis_amendment_sha256": "6c81e8f56c2c81fc2ac024a71da98f3e875c4ebc429f9e3d1ff4e8e3ef6bfb45",
+    "candidate_parameter_count": 93504933,
+    "trainable_adapter_parameter_count": 9750529
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "prepared_schedule_updates": 1000,
+    "calibration_updates": [352, 353, 354, 355, 356, 357, 359, 360],
+    "calibration_batch_count": 8,
+    "one_day_samples_per_batch": 32,
+    "seven_day_windows_per_batch": 8,
+    "thirty_day_windows_per_batch": 4,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "parameter_ownership": {
+    "trainable_family": "target_oriented.distribution_aware_maintenance",
+    "trainable_parameter_count": 9750529,
+    "parent_parameters_frozen": true,
+    "gradient_mode": "direct_adapter_subtree_autodiff_through_complete_forward_and_loss"
+  },
+  "free_objective": {
+    "name": "existing_target_oriented_component_resolved_effective_batch_objective",
+    "one_day_state_anchor_coefficient": 1.0,
+    "seven_day_science_coefficient": 1.0,
+    "thirty_day_science_coefficient": 1.0,
+    "necessary_process_supervision_coefficient": 0.1,
+    "cross_day_state": "predicted_free_rollout"
+  },
+  "teacher_guard_objective": {
+    "cross_day_state": "independent_teacher_day_start",
+    "horizons_days": [7, 30],
+    "keys": [
+      "maintenance_respiration",
+      "growth_respiration",
+      "npp"
+    ],
+    "cell_score": "0.5_times_normalized_mse_plus_0.5_times_normalized_signed_bias_squared",
+    "cell_count": 6,
+    "cell_weight": 0.16666666666666666,
+    "aggregation": "equal_macro_mean_over_horizon_key_cells"
+  },
+  "coefficient": {
+    "unclipped": "median_free_adapter_gradient_norm_divided_by_median_teacher_guard_adapter_gradient_norm",
+    "minimum": 0.1,
+    "maximum": 10.0,
+    "freeze_from_train_train_before_optimizer_creation": true,
+    "validation_tuning_allowed": false
+  },
+  "acceptance": {
+    "required_batch_count": 8,
+    "required_gradient_element_count_per_objective": 9750529,
+    "all_gradient_elements_finite": true,
+    "free_gradient_norm_strictly_positive": true,
+    "teacher_guard_gradient_norm_strictly_positive": true,
+    "hard_failure_count": 0,
+    "coefficient_finite_and_within_bounds": true
+  },
+  "execution": {
+    "optimizer_created": false,
+    "training_updates": 0,
+    "checkpoint_written": false,
+    "recovery_written": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "free_gln01_allowed": true,
+    "paid_execution_authorized": false
+  }
+}

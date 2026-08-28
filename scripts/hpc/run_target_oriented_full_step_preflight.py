@@ -1139,8 +1139,80 @@ def _make_steps(
                 )
             return value
 
+        def teacher_state_acceptance_flux_linear(
+            parameters,
+            batch,
+            total,
+            weights,
+            *,
+            horizon: int,
+        ):
+            current, _hard = teacher_state_window_acceptance_statistics(
+                parameters,
+                batch,
+                horizon=horizon,
+                rematerialize=True,
+            )
+            if jnp.asarray(weights).shape != (len(acceptance_flux_names),):
+                raise ValueError("Teacher-state acceptance weight shape drift")
+            value = jnp.asarray(0.0, dtype=jnp.float64)
+            for index, name in enumerate(acceptance_flux_names):
+                value = value + jnp.asarray(weights[index], dtype=jnp.float64) * _linearized_error_loss(
+                    current.fluxes[name],
+                    total.fluxes[name],
+                    mse_weight=0.5,
+                    bias_squared_weight=0.5,
+                )
+            return value
+
+        def make_trainable_teacher_state_acceptance_gradient_steps(
+            fixed_parameters,
+            inject_trainable,
+        ):
+            seven = jax.jit(
+                jax.value_and_grad(
+                    lambda trainable, fixed, batch, total, weights: teacher_state_acceptance_flux_linear(
+                        inject_trainable(fixed, trainable),
+                        batch,
+                        total,
+                        weights,
+                        horizon=7,
+                    )
+                )
+            )
+            thirty = jax.jit(
+                jax.value_and_grad(
+                    lambda trainable, fixed, batch, total, weights: teacher_state_acceptance_flux_linear(
+                        inject_trainable(fixed, trainable),
+                        batch,
+                        total,
+                        weights,
+                        horizon=30,
+                    )
+                )
+            )
+            return {
+                "seven_gradient": lambda trainable, batch, total, weights: seven(
+                    trainable,
+                    fixed_parameters,
+                    batch,
+                    total,
+                    weights,
+                ),
+                "thirty_gradient": lambda trainable, batch, total, weights: thirty(
+                    trainable,
+                    fixed_parameters,
+                    batch,
+                    total,
+                    weights,
+                ),
+            }
+
         result.update(
             {
+                "make_trainable_teacher_state_acceptance_gradient_steps": (
+                    make_trainable_teacher_state_acceptance_gradient_steps
+                ),
                 "seven_acceptance_forward": jax.jit(
                     lambda parameters, batch: window_acceptance_statistics(
                         parameters,

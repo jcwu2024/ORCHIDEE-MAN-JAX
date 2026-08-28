@@ -1647,6 +1647,14 @@ Teacher-day-start maintenance/growth/NPP guard. Freeze their ratio, clipped to
 `[0.1, 10]`, before optimizer creation. No optimizer continuation, validation
 read, sealed-test read, broader training, paid job, 365-day rollout, Gate D2,
 or product work is authorized.
+
+The zero-update calibration protocol is frozen in
+[`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)
+at contract SHA256 `c1019409...e7179d7`. Its local loader, median/clipping
+logic, direct adapter-gradient route, runner policy, CLI, and free-node
+launcher pass six focused tests and static checks. Execute this unchanged on
+free `gln01`; then bind the resulting numeric coefficient and report identity
+into a separate bounded training contract.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -1664,6 +1672,7 @@ See
 [`target_oriented_source_owner_state_bridge_result_20260828.md`](research/daily_coarse_graining/target_oriented_source_owner_state_bridge_result_20260828.md),
 [`target_oriented_distribution_aware_maintenance_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_v1.md),
 [`target_oriented_distribution_aware_maintenance_gpu_admission_20260828.md`](research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_gpu_admission_20260828.md),
+[`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),

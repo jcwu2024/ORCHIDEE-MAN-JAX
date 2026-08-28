@@ -518,6 +518,12 @@ budgets pass, and all 160 non-maintenance outputs exactly equal the parent.
 The active gate is the separate post-admission training contract and
 eight-batch Teacher-guard gradient-ratio calibration; no optimizer or paid
 execution is authorized before it is frozen.
+
+That zero-update calibration method is now frozen under contract SHA256
+`c1019409...e7179d7`. It uses prepared artifacts `352, 353, 354, 355, 356,
+357, 359, 360`; its Teacher guard is the equal macro mean of 7/30-day
+maintenance, growth respiration, and NPP scores. The local implementation and
+six focused tests pass. Free-`gln01` execution is the active operation.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -550,6 +556,8 @@ with the active locally accepted successor in
 [`target_oriented_distribution_aware_maintenance_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_v1.md),
 with its accepted real-v6 evidence in
 [`target_oriented_distribution_aware_maintenance_gpu_admission_20260828.md`](research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_gpu_admission_20260828.md),
+with the active zero-update coefficient method in
+[`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md),
 with GPU evidence in
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md)
 and the training design in
