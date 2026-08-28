@@ -530,10 +530,12 @@ AdamW schedule, and an immutable combined-gradient clip threshold
 update passed on free `gln01` at commit `5ea0033`; report SHA256 is
 `a32b2c17...c7734e`. Its combined norm is `2.0161371`, no clipping occurs,
 all adapter leaves change, every parent coordinate remains exactly fixed, and
-all pre/post hard failures are zero. The active operation is local
-qualification of the paid runner and compact adapter-only persistence. Paid
-training, validation, sealed test, 365-day rollout, Gate D2, and product work
-remain closed pending a separate resource approval.
+all pre/post hard failures are zero. The exact 250-update runner, compact
+adapter-only recovery/checkpoint, update-0/update-250 screen, and one-V100
+Slurm wrapper are locally qualified at commit `ad5c11b`; the related suite
+passes 22 tests. The active gate is explicit approval of the five-hour paid
+resource envelope. Validation, sealed test, 365-day rollout, Gate D2, and
+product work remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and

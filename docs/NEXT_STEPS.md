@@ -1664,11 +1664,14 @@ leaves change, all `83,754,404` parent coordinates remain exactly fixed, the
 same-batch combined objective decreases, and pre/post hard failures are zero.
 No update or checkpoint was retained.
 
-The active operation is local qualification of the exact 250-update runner,
-compact adapter-only recovery/checkpoint, update-0/update-250 train/train
-screen, and one-V100 Slurm wrapper. After those pass, present the exact paid
-resource envelope for separate user approval. Validation, sealed test,
-365-day rollout, Gate D2, and product work remain closed.
+The exact 250-update runner, compact adapter-only recovery/checkpoint,
+update-0/update-250 train/train screen, and one-V100 Slurm wrapper are locally
+qualified at commit `ad5c11b`. The related suite passes 22 tests; Ruff, Python
+compilation, Bash syntax, CLI import, and diff checks pass. The active gate is
+explicit user approval of the five-hour, one-V100 paid envelope recorded in
+[`target_oriented_distribution_aware_training_admission_20260828.md`](research/daily_coarse_graining/target_oriented_distribution_aware_training_admission_20260828.md).
+Validation, sealed test, 365-day rollout, Gate D2, and product work remain
+closed.
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)
