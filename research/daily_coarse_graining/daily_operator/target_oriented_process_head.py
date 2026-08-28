@@ -17,6 +17,12 @@ from .target_oriented_contract import (
     TargetOrientedContract,
     resolve_target_output_hierarchy,
 )
+from .target_oriented_distribution_aware_maintenance import (
+    DistributionAwareMaintenanceConfig,
+    DistributionAwareMaintenanceContract,
+    load_distribution_aware_maintenance_contract,
+    target_oriented_distribution_aware_maintenance_process_outputs,
+)
 from .target_oriented_source_shaped_maintenance import (
     SourceShapedMaintenanceConfig,
     SourceShapedMaintenanceContract,
@@ -110,6 +116,53 @@ class MechanisticTargetOrientedSourceShapedMaintenanceProcessHead(MechanisticTar
         )
 
 
+@dataclass(frozen=True, eq=False, kw_only=True)
+class MechanisticTargetOrientedDistributionAwareMaintenanceProcessHead(MechanisticTargetOrientedAttentionProcessHead):
+    """Replace direct maintenance decoding with the part-resolved adapter."""
+
+    distribution_contract: DistributionAwareMaintenanceContract
+    coeff_maint_zero: Any
+    distribution_config: DistributionAwareMaintenanceConfig = DistributionAwareMaintenanceConfig()
+    source_config: SourceShapedMaintenanceConfig = SourceShapedMaintenanceConfig()
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.distribution_config.validate(self.distribution_contract, self.target_config)
+        coefficient = np.asarray(self.coeff_maint_zero)
+        expected = (len(self.layout.active_pft_indices), 12)
+        if coefficient.shape != expected or not np.all(np.isfinite(coefficient)):
+            raise ValueError(f"distribution-aware maintenance coefficients must be finite with shape {expected}")
+
+    def learned_outputs(
+        self,
+        parameters: Mapping[str, Any],
+        context: StrongBaselineContext,
+        inputs: AssembledDailyOperatorInput,
+    ) -> Mapping[str, Any]:
+        return target_oriented_distribution_aware_maintenance_process_outputs(
+            parameters,
+            context,
+            inputs,
+            schema=self.learned_schema,
+            layout=self.layout,
+            input_normalization=self.input_normalization,
+            output_normalization=self.output_normalization,
+            forcing_layout=self.forcing_layout,
+            target_contract=self.target_contract,
+            distribution_contract=self.distribution_contract,
+            coeff_maint_zero=self.coeff_maint_zero,
+            ext_coeff_vegetfrac=self.reconstructor.static(
+                inputs,
+                "ext_coeff_vegetfrac",
+            ),
+            message_gate_scale=self.message_gate_scale,
+            baseline_config=self.config,
+            attention_config=self.target_config,
+            config=self.distribution_config,
+            source_config=self.source_config,
+        )
+
+
 def build_target_oriented_source_shaped_maintenance_head(
     parent: MechanisticTargetOrientedAttentionProcessHead,
     retained_tail: Any,
@@ -145,8 +198,47 @@ def build_target_oriented_source_shaped_maintenance_head(
     )
 
 
+def build_target_oriented_distribution_aware_maintenance_head(
+    parent: MechanisticTargetOrientedAttentionProcessHead,
+    retained_tail: Any,
+    *,
+    distribution_contract: DistributionAwareMaintenanceContract | None = None,
+    distribution_config: DistributionAwareMaintenanceConfig = DistributionAwareMaintenanceConfig(),
+    source_config: SourceShapedMaintenanceConfig = SourceShapedMaintenanceConfig(),
+) -> MechanisticTargetOrientedDistributionAwareMaintenanceProcessHead:
+    """Bind the exact retained static coefficient owner to the part-resolved head."""
+
+    contract = distribution_contract or load_distribution_aware_maintenance_contract()
+    if retained_tail.static_owner.contract.sha256 != parent.contract.sha256:
+        raise ValueError("distribution-aware head and retained-tail Markov contracts drift")
+    coefficient = compact_coeff_maint_zero_from_retained_tail(retained_tail)
+    return MechanisticTargetOrientedDistributionAwareMaintenanceProcessHead(
+        contract=parent.contract,
+        architecture_contract=parent.architecture_contract,
+        mechanism_contract=parent.mechanism_contract,
+        input_assembler=parent.input_assembler,
+        complete_schema=parent.complete_schema,
+        learned_schema=parent.learned_schema,
+        layout=parent.layout,
+        input_normalization=parent.input_normalization,
+        output_normalization=parent.output_normalization,
+        forcing_layout=parent.forcing_layout,
+        forcing_indices=parent.forcing_indices,
+        message_gate_scale=parent.message_gate_scale,
+        config=parent.config,
+        target_contract=parent.target_contract,
+        target_config=parent.target_config,
+        distribution_contract=contract,
+        coeff_maint_zero=coefficient,
+        distribution_config=distribution_config,
+        source_config=source_config,
+    )
+
+
 __all__ = [
     "MechanisticTargetOrientedAttentionProcessHead",
+    "MechanisticTargetOrientedDistributionAwareMaintenanceProcessHead",
     "MechanisticTargetOrientedSourceShapedMaintenanceProcessHead",
+    "build_target_oriented_distribution_aware_maintenance_head",
     "build_target_oriented_source_shaped_maintenance_head",
 ]

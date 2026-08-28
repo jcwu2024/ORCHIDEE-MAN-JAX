@@ -277,7 +277,42 @@ def materialize_source_shaped_maintenance(
     forcing_layout: NativeForcingFieldLayout,
     config: SourceShapedMaintenanceConfig = SourceShapedMaintenanceConfig(),
 ) -> Any:
-    """Evaluate the daily source formula with bounded learned corrections."""
+    """Evaluate the daily source formula with broadcast part-group corrections."""
+
+    n_pft = inputs.pft.pft_state.shape[0]
+    traits = jnp.asarray(inputs.pft.pft_traits, dtype=jnp.float64)
+    is_tree = traits[:, PFT_TRAIT_IS_TREE] > 0.5
+    above_delta = jnp.asarray(aboveground_correction, dtype=jnp.float64).reshape((n_pft,))
+    below_delta = jnp.asarray(belowground_correction, dtype=jnp.float64).reshape((n_pft,))
+    part_delta = jnp.broadcast_to(above_delta[:, None], (n_pft, NPARTS))
+    below = jnp.asarray(BELOWGROUND_PARTS, dtype=jnp.int32)
+    part_delta = part_delta.at[:, below].set(below_delta[:, None])
+    reserve_delta = jnp.where(is_tree, above_delta, below_delta)
+    part_delta = part_delta.at[:, ICARBRES].set(reserve_delta)
+    return materialize_part_resolved_source_shaped_maintenance(
+        inputs,
+        decoded_outputs,
+        coeff_maint_zero,
+        ext_coeff_vegetfrac,
+        part_delta,
+        layout=layout,
+        forcing_layout=forcing_layout,
+        config=config,
+    )
+
+
+def materialize_part_resolved_source_shaped_maintenance(
+    inputs: AssembledDailyOperatorInput,
+    decoded_outputs: Mapping[str, Any],
+    coeff_maint_zero: Any,
+    ext_coeff_vegetfrac: Any,
+    part_correction: Any,
+    *,
+    layout: StrongBaselineLayout,
+    forcing_layout: NativeForcingFieldLayout,
+    config: SourceShapedMaintenanceConfig = SourceShapedMaintenanceConfig(),
+) -> Any:
+    """Evaluate the daily source formula with one correction per PFT/part."""
 
     pft = inputs.pft
     state = jnp.asarray(pft.pft_state, dtype=jnp.float64)
@@ -329,18 +364,15 @@ def materialize_source_shaped_maintenance(
         jnp.broadcast_to(tlong_k - 273.15, (n_pft,)),
     )
 
-    is_tree = traits[:, PFT_TRAIT_IS_TREE] > 0.5
-    above_delta = jnp.asarray(aboveground_correction, dtype=jnp.float64).reshape((n_pft,))
-    below_delta = jnp.asarray(belowground_correction, dtype=jnp.float64).reshape((n_pft,))
     part_temperature = jnp.broadcast_to(air_k, (n_pft, NPARTS))
-    part_delta = jnp.broadcast_to(above_delta[:, None], (n_pft, NPARTS))
     below = jnp.asarray(BELOWGROUND_PARTS, dtype=jnp.int32)
     part_temperature = part_temperature.at[:, below].set(root_k[:, None])
-    part_delta = part_delta.at[:, below].set(below_delta[:, None])
+    is_tree = traits[:, PFT_TRAIT_IS_TREE] > 0.5
     reserve_temperature = jnp.where(is_tree, air_k, root_k)
-    reserve_delta = jnp.where(is_tree, above_delta, below_delta)
     part_temperature = part_temperature.at[:, ICARBRES].set(reserve_temperature)
-    part_delta = part_delta.at[:, ICARBRES].set(reserve_delta)
+    part_delta = jnp.asarray(part_correction, dtype=jnp.float64)
+    if part_delta.shape != (n_pft, NPARTS):
+        raise ValueError("part-resolved maintenance correction shape drift")
 
     temperature_baseline = jnp.maximum(
         1.0 + factors.maintenance_temperature_slope[:, None] * (part_temperature - 273.15),
@@ -447,6 +479,7 @@ __all__ = [
     "initialize_source_shaped_maintenance_parameters",
     "load_source_shaped_maintenance_contract",
     "maintenance_temperature_corrections",
+    "materialize_part_resolved_source_shaped_maintenance",
     "materialize_source_shaped_maintenance",
     "resolve_maintenance_field_index",
     "source_shaped_maintenance_parameter_count",

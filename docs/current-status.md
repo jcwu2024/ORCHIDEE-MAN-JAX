@@ -501,10 +501,19 @@ identities close to `3.02e-14`.
 Only `4/10` required cells reverse: 7-day AGB, BGB, and total live biomass plus
 30-day AGB. Both growth-respiration and NPP cells remain materially regressed,
 as do 30-day BGB and total live biomass. The accepted classification is
-`source_owner_state_drift_contributes_but_not_sufficient`. The active gate is
-architecture discussion before implementation. Broader recurrent state or
-Attention hidden context must remain in scope; Attention itself is not
-rejected.
+`source_owner_state_drift_contributes_but_not_sufficient`.
+
+The approved successor is now frozen and locally accepted under contract
+SHA256 `f167943c...1a37d2d`. It retains the update-1000 Attention parent and
+all 24 PFT/part maintenance hidden coordinates, adds a two-block
+maintenance-specific Attention adapter over full canonical context, and uses
+the existing exact source materializer. The complete candidate has
+`93,504,933` parameters; the first stage owns only the `9,750,529` new adapter
+parameters. All 11 focused candidate/predecessor tests pass, including
+eager/JIT forward, complete loss, adapter gradients, exact non-maintenance
+parent equality, permutation, canonical state, and water/carbon budgets. The
+active gate is the zero-update real-v6 free-`gln01` admission; no training or
+paid execution is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -533,6 +542,8 @@ with the frozen bridge method in
 [`target_oriented_source_owner_state_bridge_v1.md`](research/daily_coarse_graining/target_oriented_source_owner_state_bridge_v1.md),
 and its accepted result in
 [`target_oriented_source_owner_state_bridge_result_20260828.md`](research/daily_coarse_graining/target_oriented_source_owner_state_bridge_result_20260828.md),
+with the active locally accepted successor in
+[`target_oriented_distribution_aware_maintenance_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_v1.md),
 with GPU evidence in
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md)
 and the training design in

@@ -1621,12 +1621,24 @@ Growth respiration and NPP remain materially worse at both horizons, while
 reverse. The accepted classification is
 `source_owner_state_drift_contributes_but_not_sufficient`.
 
-The active gate is architecture discussion before implementation. A successor
-must keep broader recurrent state or Attention hidden context in scope rather
-than conditioning the maintenance correction only on the four direct physical
-owners. Attention itself is not rejected. No optimizer continuation,
-validation read, sealed-test read, broader training, 365-day rollout, Gate
-D2, or product work is authorized.
+The successor mechanism is now frozen and locally accepted in
+[`target_oriented_distribution_aware_maintenance_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_v1.md)
+at contract SHA256 `f167943c...1a37d2d`. It keeps the update-1000 Attention
+parent, preserves all 24 PFT/part maintenance coordinates, adds a two-block
+maintenance-specific Attention adapter over the full canonical context, and
+materializes maintenance through the existing exact source formula. The
+complete candidate has `93,504,933` parameters; only the `9,750,529` adapter
+parameters are first-stage trainable. The focused local candidate and
+predecessor suites pass all 11 unique tests, including eager/JIT forward,
+complete loss, adapter gradients, exact non-maintenance parent equality, PFT
+permutation, canonical binding, and water/carbon budgets.
+
+The active gate is a zero-update real-v6 admission on free `gln01`. It must run
+the complete frozen-parent forward/loss, differentiate exactly the adapter
+subtree, cover all `9,750,529` adapter coordinates, and pass the canonical
+one-day state/budget gate. No optimizer continuation, validation read,
+sealed-test read, broader training, paid job, 365-day rollout, Gate D2, or
+product work is authorized.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md),
 [`target_oriented_attention_v1.md`](research/daily_coarse_graining/target_oriented_attention_v1.md),
@@ -1642,6 +1654,7 @@ See
 [`target_oriented_source_shaped_coupling_attribution_result_20260828.md`](research/daily_coarse_graining/target_oriented_source_shaped_coupling_attribution_result_20260828.md),
 [`target_oriented_source_owner_state_bridge_v1.md`](research/daily_coarse_graining/target_oriented_source_owner_state_bridge_v1.md),
 [`target_oriented_source_owner_state_bridge_result_20260828.md`](research/daily_coarse_graining/target_oriented_source_owner_state_bridge_result_20260828.md),
+[`target_oriented_distribution_aware_maintenance_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_v1.md),
 [`target_oriented_attention_gpu_admission_20260821.md`](research/daily_coarse_graining/target_oriented_attention_gpu_admission_20260821.md),
 [`target_oriented_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_bounded_training_v1.md),
 [`target_oriented_state_anchor_amendment_20260821.md`](research/daily_coarse_graining/target_oriented_state_anchor_amendment_20260821.md),
