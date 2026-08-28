@@ -13,7 +13,10 @@ CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/target-oriented-dist
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
-case "$(hostname -s)" in gln01|ibgln01) ;; *) exit 2 ;; esac
+case "$(hostname -s)" in
+  gln01|ibgln01|ibc13b02n01|ibc13b02n02|ibc13b02n03|ibc13b02n04) ;;
+  *) exit 2 ;;
+esac
 case "$WORKTREE" in "$ROOT"|"$ROOT/runtime/worktrees/"*) ;; *) exit 2 ;; esac
 case "$OUTPUT" in "$ROOT/runtime/outputs/diagnostics/"*) ;; *) exit 2 ;; esac
 case "$CACHE_ROOT" in "$ROOT/runtime/cache/"*) ;; *) exit 2 ;; esac
