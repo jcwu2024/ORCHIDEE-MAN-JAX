@@ -30,6 +30,14 @@ from .target_oriented_source_shaped_maintenance import (
     load_source_shaped_maintenance_contract,
     target_oriented_source_shaped_maintenance_process_outputs,
 )
+from .target_oriented_structured_gpp import (
+    StructuredGPPConfig,
+    StructuredGPPContract,
+    StructuredGPPStateLayout,
+    build_structured_gpp_state_layout,
+    load_structured_gpp_contract,
+    target_oriented_structured_gpp_process_outputs,
+)
 from .types import AssembledDailyOperatorInput
 
 
@@ -163,6 +171,52 @@ class MechanisticTargetOrientedDistributionAwareMaintenanceProcessHead(Mechanist
         )
 
 
+@dataclass(frozen=True, eq=False, kw_only=True)
+class MechanisticTargetOrientedStructuredGPPProcessHead(
+    MechanisticTargetOrientedDistributionAwareMaintenanceProcessHead
+):
+    """Replace only daily GPP with the approved day-local specialist."""
+
+    structured_contract: StructuredGPPContract
+    structured_state_layout: StructuredGPPStateLayout
+    structured_config: StructuredGPPConfig = StructuredGPPConfig()
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.structured_config.validate(self.structured_contract, self.target_config)
+
+    def learned_outputs(
+        self,
+        parameters: Mapping[str, Any],
+        context: StrongBaselineContext,
+        inputs: AssembledDailyOperatorInput,
+    ) -> Mapping[str, Any]:
+        return target_oriented_structured_gpp_process_outputs(
+            parameters,
+            context,
+            inputs,
+            schema=self.learned_schema,
+            layout=self.layout,
+            state_layout=self.structured_state_layout,
+            input_normalization=self.input_normalization,
+            output_normalization=self.output_normalization,
+            forcing_layout=self.forcing_layout,
+            target_contract=self.target_contract,
+            distribution_contract=self.distribution_contract,
+            coeff_maint_zero=self.coeff_maint_zero,
+            ext_coeff_vegetfrac=self.reconstructor.static(
+                inputs,
+                "ext_coeff_vegetfrac",
+            ),
+            message_gate_scale=self.message_gate_scale,
+            baseline_config=self.config,
+            attention_config=self.target_config,
+            distribution_config=self.distribution_config,
+            source_config=self.source_config,
+            config=self.structured_config,
+        )
+
+
 def build_target_oriented_source_shaped_maintenance_head(
     parent: MechanisticTargetOrientedAttentionProcessHead,
     retained_tail: Any,
@@ -235,10 +289,47 @@ def build_target_oriented_distribution_aware_maintenance_head(
     )
 
 
+def build_target_oriented_structured_gpp_head(
+    parent: MechanisticTargetOrientedDistributionAwareMaintenanceProcessHead,
+    *,
+    structured_contract: StructuredGPPContract | None = None,
+    structured_config: StructuredGPPConfig = StructuredGPPConfig(),
+) -> MechanisticTargetOrientedStructuredGPPProcessHead:
+    """Install the structured GPP boundary over the accepted maintenance parent."""
+
+    contract = structured_contract or load_structured_gpp_contract()
+    return MechanisticTargetOrientedStructuredGPPProcessHead(
+        contract=parent.contract,
+        architecture_contract=parent.architecture_contract,
+        mechanism_contract=parent.mechanism_contract,
+        input_assembler=parent.input_assembler,
+        complete_schema=parent.complete_schema,
+        learned_schema=parent.learned_schema,
+        layout=parent.layout,
+        input_normalization=parent.input_normalization,
+        output_normalization=parent.output_normalization,
+        forcing_layout=parent.forcing_layout,
+        forcing_indices=parent.forcing_indices,
+        message_gate_scale=parent.message_gate_scale,
+        config=parent.config,
+        target_contract=parent.target_contract,
+        target_config=parent.target_config,
+        distribution_contract=parent.distribution_contract,
+        coeff_maint_zero=parent.coeff_maint_zero,
+        distribution_config=parent.distribution_config,
+        source_config=parent.source_config,
+        structured_contract=contract,
+        structured_state_layout=build_structured_gpp_state_layout(parent.contract),
+        structured_config=structured_config,
+    )
+
+
 __all__ = [
     "MechanisticTargetOrientedAttentionProcessHead",
     "MechanisticTargetOrientedDistributionAwareMaintenanceProcessHead",
     "MechanisticTargetOrientedSourceShapedMaintenanceProcessHead",
+    "MechanisticTargetOrientedStructuredGPPProcessHead",
     "build_target_oriented_distribution_aware_maintenance_head",
     "build_target_oriented_source_shaped_maintenance_head",
+    "build_target_oriented_structured_gpp_head",
 ]

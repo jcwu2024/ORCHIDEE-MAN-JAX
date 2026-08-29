@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-27.
+Last updated: 2026-08-29.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -1697,13 +1697,28 @@ the learned fluxes. The frozen classification is
 `gpp_boundary_supported_as_next_scope`. See
 [`target_oriented_distribution_aware_gpp_bridge_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_gpp_bridge_v1.md).
 
-The active gate is now the user-required architecture discussion for a
-structured GPP boundary. Preserve the coordinate-aligned Attention backbone
-as the initial shared representation; current evidence does not authorize
-discarding it. Do not implement a GPP head, start training, read validation,
-run 365 days, enter Gate D2, open sealed test, or begin product work before
-that discussion. The accepted result is
-[`target_oriented_distribution_aware_gpp_bridge_result_20260829.md`](research/daily_coarse_graining/target_oriented_distribution_aware_gpp_bridge_result_20260829.md).
+The user-approved structured GPP architecture is frozen at contract SHA256
+`ce211fa7...620ea` and its local implementation is accepted. It preserves the
+coordinate-aligned Attention parent and the distribution-aware maintenance
+adapter, removes only the 769-parameter GPP projection, and adds a
+12,879,363-parameter day-local 45-token Transformer with potential,
+limitation, and bounded-correction branches. The complete candidate has
+`106,383,527` parameters. Focused local tests pass exact ownership/count,
+eager/JIT forward, complete loss and gradients, non-GPP parent equality,
+parameter isolation, inactive/bare/PFT permutation, and a complete canonical
+state/budget day. See
+[`target_oriented_structured_gpp_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_v1.md)
+and
+[`target_oriented_structured_gpp_local_acceptance_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_local_acceptance_20260829.md).
+
+The active gate is one free-`gln01` real-v6 zero-update admission. It must bind
+the frozen update-250 distribution-aware checkpoint, prove full-specialist
+forward/loss/gradient and frozen-parent ownership, and complete the canonical
+single-day state/budget boundary without a subdaily scan. Do not create an
+optimizer, retain an update, submit a paid job, read validation, run 7/30 or
+365 days, enter Gate D2, open sealed test, or begin product work under the
+local contract. A separate frozen training contract is required after this
+admission.
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)

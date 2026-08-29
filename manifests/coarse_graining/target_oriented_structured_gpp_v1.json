@@ -1,0 +1,145 @@
+{
+  "schema_version": "target_oriented_structured_gpp_v1",
+  "status": "frozen_after_user_architecture_approval_before_local_implementation",
+  "contract_sha256": "ce211fa7c6f5a09bd900e02e31a864b61fb32f6b06ee96d4262402c513d620ea",
+  "identity": {
+    "candidate": "target_oriented_structured_gpp_v1",
+    "parent_candidate": "target_oriented_distribution_aware_maintenance_v1",
+    "parent_parameter_count": 93504933,
+    "parent_checkpoint_update": 250,
+    "parent_checkpoint_sha256": "baae0c13aa7f22f04e56bec43b915e7e2dab8c2ca775e91d260f26136d55c7da",
+    "teacher_gpp_bridge_contract_sha256": "ce2eefb1360bb5b6f49f727ab470d1faef3952a7649d411539d81ba3b28c5647",
+    "teacher_gpp_bridge_report_sha256": "fa9bc44556ba4376ebb03e55490b20f4385dd9929f8a83cf01a4ce7998531c52",
+    "teacher_release": "pft14-daily-teacher-v6",
+    "learned_field": "daily.fast_gpp"
+  },
+  "input_boundary": {
+    "native_forcing_fields": [
+      "Tair", "PSurf", "Qair", "Wind_E", "Wind_N", "Rainf", "Snowf", "SWdown", "LWdown"
+    ],
+    "native_forcing_records": 5,
+    "native_forcing_token_count": 45,
+    "forcing_record_semantics": "one_predecessor_plus_four_native_six_hour_records",
+    "direct_pft_state": ["veget_max", "lai", "biomass"],
+    "direct_dynamic_state": [
+      "slowproc_stomate_previous_step_state.assim_param",
+      "slowproc_stomate_previous_step_state.temp_growth",
+      "hydrol_previous_step_state.humrel",
+      "hydrol_previous_step_state.qsintveg",
+      "diffuco_previous_step_state.control_salinity",
+      "diffuco_previous_step_state.control_inudate"
+    ],
+    "explicit_static_parameter_factor": "vcmax25",
+    "forbidden_gpp_parameter_inputs": [
+      "maint_resp_slope_a", "maint_resp_slope_b", "maint_resp_slope_c", "alloc_min", "residence_time"
+    ],
+    "forbidden_identity_or_target_inputs": [
+      "landpoint_id", "pft_id", "fortran_pft_id", "teacher_day_end_target", "teacher_fast_gpp"
+    ],
+    "parent_context": "existing_coordinate_aligned_attention_gpp_hidden_and_named_source_tokens",
+    "parent_weights_trainable_in_first_stage": false
+  },
+  "architecture": {
+    "removed_parameter_family": "target_oriented.primary_heads[gpp_field_index]",
+    "removed_parameter_count": 769,
+    "new_parameter_family": "target_oriented.structured_gpp",
+    "width": 384,
+    "attention_heads": 8,
+    "ffn_width": 1536,
+    "forcing_attention_blocks": 2,
+    "potential_cross_attention_blocks": 2,
+    "limitation_cross_attention_blocks": 2,
+    "correction_cross_attention_blocks": 1,
+    "forcing_attention_scope": "all_45_day_local_tokens",
+    "pft_query_weights_shared": true,
+    "cross_day_neural_hidden_state": false,
+    "new_parameter_count": 12879363,
+    "candidate_parameter_count": 106383527,
+    "first_stage_trainable_parameter_count": 12879363,
+    "final_kernel_initialization_scale": 0.001
+  },
+  "output_factorization": {
+    "formula": "active_vegetation * train_gpp_scale * softplus(potential) * sigmoid(limitation) * exp(log(4)*tanh(correction)) * max(vcmax25,0)/100",
+    "potential_inputs": "radiation_thermodynamic_co2_calendar_pft_structure_and_dynamic_capacity",
+    "limitation_inputs": "humidity_pressure_wind_precipitation_water_canopy_snow_and_thermal_context",
+    "correction_inputs": "union_of_admitted_gpp_context_plus_parent_gpp_hidden",
+    "multiplicative_correction_range": [0.25, 4.0],
+    "nonnegative": true,
+    "bare_soil_rule": "exact_zero",
+    "inactive_or_zero_fraction_rule": "exact_zero",
+    "pft_fraction_multiplied_inside_output": false,
+    "pft_fraction_reason": "Teacher gpp_daily is already normalized at the PFT daily boundary; fraction is used only for aggregation and context",
+    "explicit_vcmax_route_owner": "research.daily_coarse_graining.daily_operator.parameter_routing.apply_fast_parameter_routes"
+  },
+  "matched_control": {
+    "identity": "structured_gpp_duration_pooled_graph_mlp_control_v1",
+    "shared": [
+      "input_registry", "output_factorization", "width", "depth", "loss", "data", "optimizer", "seed", "acceptance"
+    ],
+    "replacement": "content_dependent_attention_is_replaced_by_token_local_mlp_and_fixed_duration_weighted_pooling",
+    "parameter_count_relative_difference_maximum": 0.02,
+    "promotion_role": "mechanism_attribution_only_after_candidate_passes_absolute_7_and_30_day_gates",
+    "train_control_if_candidate_fails_absolute_gate": false,
+    "relative_win_required_for_candidate_promotion": false
+  },
+  "training_objective": {
+    "data": "existing_pft14_daily_teacher_v6_train_train_only",
+    "teacher_regeneration": false,
+    "historical_v5": false,
+    "one_day": ["scale_normalized_gpp_error", "batch_signed_gpp_bias"],
+    "seven_and_thirty_day_fluxes": [
+      "gpp", "maintenance_respiration", "growth_respiration", "autotrophic_respiration", "npp"
+    ],
+    "seven_and_thirty_day_terminal_stocks": [
+      "aboveground_biomass_carbon", "belowground_biomass_carbon", "total_live_biomass_carbon",
+      "nonliving_ecosystem_carbon", "ecosystem_carbon"
+    ],
+    "direct_gpp_anchor_required": true,
+    "global_train_train_sampling_required": true,
+    "validation_tuning": false
+  },
+  "local_acceptance": {
+    "parameter_tree_and_count_exact": true,
+    "old_gpp_projection_removed": true,
+    "all_45_forcing_tokens_directly_addressable": true,
+    "eager_and_jit_forward_finite": true,
+    "complete_loss_finite": true,
+    "all_specialist_parameter_gradients_finite": true,
+    "each_branch_and_final_projection_gradient_nonzero": true,
+    "gpp_gradient_to_vcmax25_nonzero": true,
+    "gpp_gradient_to_forbidden_parameter_channels_zero": true,
+    "non_gpp_outputs_exactly_match_distribution_aware_parent": true,
+    "bare_and_inactive_pft_exact_zero": true,
+    "pft_permutation_equivariance": true,
+    "single_day_state_and_budget_pass": true,
+    "water_and_carbon_budget_absolute_tolerance": 2e-12,
+    "no_half_hour_reconstruction_or_scan": true
+  },
+  "bounded_science_gate": {
+    "horizons_days": [7, 30],
+    "required_keys": [
+      "gpp", "maintenance_respiration", "growth_respiration", "autotrophic_respiration", "npp",
+      "aboveground_biomass_carbon", "belowground_biomass_carbon", "total_live_biomass_carbon", "ecosystem_carbon"
+    ],
+    "seven_day_normalized_rmse_maximum": 0.35,
+    "seven_day_absolute_normalized_signed_bias_maximum": 0.10,
+    "thirty_day_normalized_rmse_maximum": 0.25,
+    "thirty_day_absolute_normalized_signed_bias_maximum": 0.07,
+    "hard_failure_count": 0,
+    "absolute_gate_precedes_control_training": true
+  },
+  "execution": {
+    "optimizer_updates_authorized_by_this_contract": 0,
+    "free_gln01_zero_update_admission_allowed": true,
+    "paid_training_authorized": false,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_values_allowed": false,
+    "sealed_test_allowed": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "365_day_rollout_allowed": false,
+    "gate_d2_allowed": false,
+    "product_acceptance_allowed": false
+  }
+}

@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-28.
+Last updated: 2026-08-29.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -96,7 +96,9 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/target_oriented_distribution_aware_training_admission_20260828.md` | Completed paid-stage admission; job 14856147 executed the accepted envelope | Reviewing the exact runner, persistence, resources, timing, or cost |
 | `research/daily_coarse_graining/target_oriented_distribution_aware_training_result_20260829.md` | Current completed result: maintenance mechanism passed, full science promotion failed | Reviewing why unchanged adapter continuation is closed or preparing the Teacher-GPP bridge |
 | `research/daily_coarse_graining/target_oriented_distribution_aware_gpp_bridge_v1.md` | Completed frozen zero-training Teacher-GPP causal contract | Reviewing the matched modes and preregistered classifier |
-| `research/daily_coarse_graining/target_oriented_distribution_aware_gpp_bridge_result_20260829.md` | Current accepted result: exact GPP repairs all required 7/30-day carbon keys | Preparing the required structured-GPP architecture discussion |
+| `research/daily_coarse_graining/target_oriented_distribution_aware_gpp_bridge_result_20260829.md` | Accepted causal result: exact GPP repairs all required 7/30-day carbon keys | Reviewing why the active successor changes GPP only |
+| `research/daily_coarse_graining/target_oriented_structured_gpp_v1.md` | Current frozen structured-GPP architecture; local implementation accepted, optimizer updates closed | Reviewing the 45-token Transformer mechanism, parameter ownership, or bounded gates |
+| `research/daily_coarse_graining/target_oriented_structured_gpp_local_acceptance_20260829.md` | Current accepted local implementation evidence; real-v6 zero-update admission pending | Preparing or reviewing the free-gln01 admission |
 | `research/daily_coarse_graining/target_oriented_update_251_admission_20260825.md` | Accepted exact checkpoint/AdamW handoff, update-251, recovery, and matched free-GPU admission | Preparing or admitting updates 251-1000 |
 | `research/daily_coarse_graining/daily_operator_parameter_routing_v1.md` | Implemented local parameter-ownership boundary used by the successor | Routing physical parameters or planning Gate D2 |
 | `research/daily_coarse_graining/successor_process_head_architecture_options_v1.md` | Historical accepted decision package; its attention/graph pair is not the current successor default | Reviewing the completed early successor comparison |

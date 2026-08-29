@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-27.
+Last updated: 2026-08-29.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -554,10 +554,25 @@ Both modes have zero hard failures. Teacher GPP makes GPP exact, reduces
 growth-respiration score by `99.6757%/99.5925%` and NPP by
 `98.6264%/98.8312%` at 7/30 days, and makes all nine required aggregate keys
 pass. Teacher-day-start instead severely worsens the learned fluxes. The
-classification is `gpp_boundary_supported_as_next_scope`. The active gate is
-the required architecture discussion before implementing a structured GPP
-boundary. No architecture or optimizer change has been made; validation,
-365-day, Gate D2, sealed-test, and product work remain closed.
+classification is `gpp_boundary_supported_as_next_scope`.
+
+The subsequent user-approved structured GPP mechanism is frozen at SHA256
+`ce211fa7...620ea` and locally accepted. It preserves the coordinate-aligned
+Attention parent and accepted distribution-aware maintenance adapter, replaces
+only the old 769-parameter GPP projection, and adds a 12,879,363-parameter
+day-local Transformer over 45 forcing field/time tokens. Its potential,
+environmental-limitation, and bounded-correction branches produce GPP through
+the existing explicit `vcmax25 / 100` route. The complete candidate has
+`106,383,527` parameters. Five focused tests pass exact counts, eager/JIT,
+complete loss and gradients, bitwise non-GPP parent equality, parameter-route
+isolation, inactive/bare/PFT permutation, and a complete canonical daily
+state/budget transition. The active gate is a free-`gln01` real-v6 zero-update
+admission. Optimizer updates, paid training, validation, 7/30/365-day rollout,
+Gate D2, sealed test, and product work remain closed pending a separate
+contract. See
+[`target_oriented_structured_gpp_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_v1.md)
+and
+[`target_oriented_structured_gpp_local_acceptance_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_local_acceptance_20260829.md).
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
