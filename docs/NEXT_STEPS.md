@@ -1711,14 +1711,23 @@ state/budget day. See
 and
 [`target_oriented_structured_gpp_local_acceptance_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_local_acceptance_20260829.md).
 
-The active gate is one free-`gln01` real-v6 zero-update admission. It must bind
-the frozen update-250 distribution-aware checkpoint, prove full-specialist
-forward/loss/gradient and frozen-parent ownership, and complete the canonical
-single-day state/budget boundary without a subdaily scan. Do not create an
-optimizer, retain an update, submit a paid job, read validation, run 7/30 or
-365 days, enter Gate D2, open sealed test, or begin product work under the
-local contract. A separate frozen training contract is required after this
-admission.
+The free-`gln01` real-v6 zero-update admission passed at commit `dbc1373`;
+report SHA256 is `7a5d4310...04c488`. The GPU backend loaded the frozen
+update-250 distribution-aware checkpoint, preserved all parent parameter
+objects, matched all 160 non-GPP outputs bit for bit, covered all 12,879,363
+specialist gradient elements, and produced nonzero gradients in all 129
+specialist leaves. The canonical daily transition has all 181 outputs, finite
+declared state, and exact-zero water/carbon residuals. JIT replay is `0.064 s`
+and peak live allocation is `1.47 GB`. See
+[`target_oriented_structured_gpp_gpu_admission_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_gpu_admission_20260829.md).
+
+The active gate is to freeze the separate bounded training contract before
+any optimizer update. It must use existing v6 train/train data, train only the
+specialist, retain a direct one-day GPP anchor plus 7/30-day carbon objectives,
+define gradient/step calibration and recovery, and stop on explicit absolute
+science gates. Do not start training, read validation, run 365 days, enter
+Gate D2, open sealed test, or begin product work before that contract is
+reviewed and accepted.
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)

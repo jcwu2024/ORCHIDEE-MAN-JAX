@@ -566,13 +566,22 @@ the existing explicit `vcmax25 / 100` route. The complete candidate has
 `106,383,527` parameters. Five focused tests pass exact counts, eager/JIT,
 complete loss and gradients, bitwise non-GPP parent equality, parameter-route
 isolation, inactive/bare/PFT permutation, and a complete canonical daily
-state/budget transition. The active gate is a free-`gln01` real-v6 zero-update
-admission. Optimizer updates, paid training, validation, 7/30/365-day rollout,
-Gate D2, sealed test, and product work remain closed pending a separate
-contract. See
+state/budget transition. The free-`gln01` real-v6 zero-update admission then
+passed at commit `dbc1373`; report SHA256 is `7a5d4310...04c488`. It uses the
+GPU backend and frozen update-250 maintenance checkpoint, preserves all parent
+parameter objects, matches all 160 non-GPP outputs bit for bit, covers all
+12,879,363 specialist gradient elements with `129/129` nonzero leaves, and
+finishes the canonical 181-output day with exact-zero water/carbon residuals.
+JIT replay is `0.064 s`; peak live allocation is `1.47 GB`. No optimizer,
+update, or checkpoint was created. The active gate is to freeze a separate
+bounded specialist-only training contract. Paid training, validation,
+7/30/365-day evaluation, Gate D2, sealed test, and product work remain closed
+until their declared prerequisites pass. See
 [`target_oriented_structured_gpp_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_v1.md)
 and
-[`target_oriented_structured_gpp_local_acceptance_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_local_acceptance_20260829.md).
+[`target_oriented_structured_gpp_local_acceptance_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_local_acceptance_20260829.md),
+with real-v6 evidence in
+[`target_oriented_structured_gpp_gpu_admission_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_gpu_admission_20260829.md).
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
