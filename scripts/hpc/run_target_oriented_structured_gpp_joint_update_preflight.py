@@ -53,14 +53,14 @@ from scripts.hpc.run_target_oriented_attention_gpu_admission import _head as _pa
 from scripts.hpc.run_target_oriented_full_step_preflight import _hard_failure_count, _make_steps
 from scripts.hpc.run_target_oriented_structured_gpp_gpu_admission import _component_gradient_reports
 from scripts.hpc.run_target_oriented_structured_gpp_training_preflight import (
+    ADAPTER_PARAMETER_COUNT,
+    PARENT_PARAMETER_COUNT,
     _direct_forward,
     _hard_host,
     _horizon_forward,
 )
 
 SCHEMA_VERSION = "target_oriented_structured_gpp_joint_update_preflight_result_v1"
-PARENT_PARAMETER_COUNT = 93_504_164
-ADAPTER_PARAMETER_COUNT = 9_750_529
 
 
 def _git_head() -> str:

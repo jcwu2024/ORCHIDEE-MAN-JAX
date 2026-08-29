@@ -70,6 +70,8 @@ def test_structured_gpp_joint_update_runner_is_discarded_and_free_gpu_only():
     assert "load_structured_gpp_checkpoint" in runner
     assert 'warm_checkpoint["optimizer"]' in runner
     assert "target_oriented_adamw_update" in runner
+    assert "PARENT_PARAMETER_COUNT =" not in runner
+    assert "ADAPTER_PARAMETER_COUNT =" not in runner
     assert '"optimizer_updates_persisted": 0' in runner
     assert '"checkpoint_written": False' in runner
     assert "write_structured_gpp_checkpoint" not in runner
