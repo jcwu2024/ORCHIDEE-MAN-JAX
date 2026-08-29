@@ -348,11 +348,14 @@ specialist completed direct warm start and joint-gradient calibration. A
 single-artifact joint proposal failed because its 30-day gradient conflicted
 with its 7-day gradient. The completed eight-artifact heterogeneity audit then
 found batch size 4 to be the minimum size whose calibrated combined gradient
-is a common descent direction in every group. The active gate is a free-GPU,
-no-retention preflight of two independent batch-four AdamW proposals from the
-same step-250 warm-start state. Paid joint training and later validation gates
-remain closed until both aggregate proposals pass. See `NEXT_STEPS.md` for the
-exact contract and current execution boundary.
+is a common descent direction in every group. Two independent discarded
+batch-four AdamW proposals from the same step-250 state then passed. The
+bounded four-epoch/248-update joint-training contract, recovery-aware runner,
+train-only epoch panel, and paid launcher are now frozen and locally qualified.
+The active gate is explicit approval of the prepared one-V100, 10-hour,
+worst-case `CNY 27.60` envelope; no paid job has been submitted. Later 7/30-day,
+365-day, Gate D2, sealed-test, and product gates remain dependency ordered.
+See `NEXT_STEPS.md` for the exact current execution boundary.
 
 ## New Task Bootstrap
 

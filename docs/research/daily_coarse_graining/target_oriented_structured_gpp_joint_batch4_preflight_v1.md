@@ -2,8 +2,7 @@
 
 Date: 2026-08-29
 
-Status: frozen before free-GPU discarded proposals; local implementation
-accepted
+Status: completed and accepted; bounded batch-four training design is next
 
 Machine contract:
 `manifests/coarse_graining/target_oriented_structured_gpp_joint_batch4_preflight_v1.json`

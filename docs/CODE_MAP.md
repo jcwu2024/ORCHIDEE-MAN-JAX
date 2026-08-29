@@ -787,7 +787,7 @@ The accepted calibrated coefficients are consumed by
 `daily_operator/target_oriented_structured_gpp_joint_update.py` and
 `manifests/coarse_graining/target_oriented_structured_gpp_joint_update_preflight_v1.json`.
 `scripts/hpc/run_target_oriented_structured_gpp_joint_update_preflight.py`
-owns the active inherited-AdamW discarded proposal and its realized-step
+owns the completed inherited-AdamW discarded proposal and its realized-step
 checks; `run_target_oriented_structured_gpp_joint_update_preflight.sh` owns
 the free-`gln01` execution boundary. The subsequent single-artifact rejection
 opens grouped gradient analysis in
@@ -802,7 +802,18 @@ The accepted audit selects batch size 4. Its finite-step gate is owned by
 `scripts/hpc/run_target_oriented_structured_gpp_joint_batch4_preflight.py`
 executes two independent discarded step-251 proposals from the same warm-start
 parameter and AdamW state; its shell wrapper is the free-`gln01` boundary.
-Neither proposal can write a checkpoint or authorize paid training.
+Neither proposal can write a checkpoint or authorize paid training. The
+accepted result opens the bounded production owner
+`daily_operator/target_oriented_structured_gpp_joint_training.py` with machine
+contract
+`manifests/coarse_graining/target_oriented_structured_gpp_joint_training_v1.json`.
+`scripts/hpc/run_target_oriented_structured_gpp_joint_training.py` owns the
+four-artifact gradient accumulation, inherited AdamW update, atomic recovery,
+train-only epoch panel, early stop, and last-passing checkpoint selection.
+`run_target_oriented_structured_gpp_joint_training.sh` is its container
+boundary, and `slurm_target_oriented_structured_gpp_joint_training.sh` is the
+unsubmitted paid `gnall` launcher. The frozen design is documented in
+`target_oriented_structured_gpp_joint_training_v1.md`.
 
 ## Scripts
 

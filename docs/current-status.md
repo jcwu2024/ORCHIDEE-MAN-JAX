@@ -625,13 +625,25 @@ report SHA256 is `15d993a2...80eea`. Batch sizes `1/2/4/8` pass
 `7/8`, `3/4`, `2/2`, and `1/1` groups, so batch size 4 is the minimum
 consistent effective batch. The two batch-four groups have minimum
 source-to-combined cosines `0.7992` and `0.7543`. All execution and physical
-gates pass, and no optimizer or update was created. The active gate is two
-independent discarded accumulated-AdamW proposals from the same step-250
-warm-start state, frozen at contract SHA256 `06d8c3f4...c19169`. Each group
-must reduce its three aggregate losses and preserve positive realized-step
-cosines and all physical gates. Per-artifact changes are report-only. Paid
-joint training, validation, 365-day rollout, Gate D2, sealed test, and product
-work remain closed. See
+gates pass, and no optimizer or update was created. The subsequent two-group
+batch-four preflight passed at commit `42c0e4e`; report SHA256 is
+`6a574c67...a0ac1`. Group-mean direct/7-day/30-day losses change by
+`-0.1694%/-0.1079%/-0.0897%` and
+`-0.2086%/-0.1038%/-0.1222%`. Every aggregate realized-step cosine is
+positive, all physical gates pass, both proposals start from the same
+step-250 state, and neither is retained. The bounded successor is now frozen
+under contract SHA256 `168d44bd...98832`, with deterministic schedule SHA256
+`770bae61...5f70`. It permits at most four epochs and 248 effective batch-four
+updates, continues inherited AdamW from step 250, writes recovery every ten
+updates, and selects only the last epoch whose train-only direct/7-day/30-day
+mean losses all strictly improve. The runner directly checks finite specialist
+and optimizer proposals and a nonzero parameter step. Its local contract,
+negative-design, checkpoint, static, CLI, and shell gates pass. The prepared
+paid envelope is one `gnall` V100, eight CPU cores, 32 GiB host memory, and ten
+hours, at worst-case `CNY 27.60`; it remains unsubmitted pending exact
+approval. The non-test 96-window panel remains reserved for post-training
+model selection. 365-day rollout, Gate D2, sealed test, and product work remain
+closed. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
@@ -640,7 +652,9 @@ with the rejected proposal in
 the effective-batch result in
 [`target_oriented_structured_gpp_joint_gradient_heterogeneity_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_heterogeneity_result_20260829.md),
 and the active preflight in
-[`target_oriented_structured_gpp_joint_batch4_preflight_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_batch4_preflight_v1.md).
+[`target_oriented_structured_gpp_joint_batch4_preflight_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_batch4_preflight_result_20260830.md).
+The active contract is
+[`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and

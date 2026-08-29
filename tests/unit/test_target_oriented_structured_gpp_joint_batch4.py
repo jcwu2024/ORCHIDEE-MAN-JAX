@@ -73,6 +73,8 @@ def test_structured_gpp_batch4_runner_is_discarded_and_free_gpu_only():
     assert "target_oriented_adamw_update" in runner
     assert "optimizer_updates_persisted\": 0" in runner
     assert "per_artifact_changes_reported_not_thresholded" in runner
+    assert '"pre_specialist_parent_parameter_count": PARENT_PARAMETER_COUNT' in runner
+    assert 'identity["retained_parent_parameter_count"]' in runner
     assert "write_structured_gpp_checkpoint" not in runner
     assert "write_structured_gpp_recovery" not in runner
     assert "sbatch" not in launcher

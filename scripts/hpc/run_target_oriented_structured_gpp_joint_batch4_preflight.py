@@ -648,7 +648,10 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "model": {
             "candidate_parameter_count": _tree_size(jax, parameters),
             "trainable_specialist_parameter_count": specialist_element_count(specialist),
-            "retained_parent_parameter_count": PARENT_PARAMETER_COUNT,
+            "pre_specialist_parent_parameter_count": PARENT_PARAMETER_COUNT,
+            "retained_parent_parameter_count": int(
+                identity["retained_parent_parameter_count"]
+            ),
         },
         "effective_batch_size": 4,
         "group_reports": group_reports,

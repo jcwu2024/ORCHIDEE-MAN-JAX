@@ -75,6 +75,7 @@ def _payload(
     update_records: Sequence[Mapping[str, Any]],
     initial_panel: Mapping[str, Any],
     final_panel: Mapping[str, Any] | None = None,
+    stage_metadata: Mapping[str, Any] | None = None,
 ) -> Mapping[str, Any]:
     completed = int(completed_updates)
     _validate_records(update_records, completed)
@@ -100,6 +101,8 @@ def _payload(
     }
     if final_panel is not None:
         result["final_direct_panel"] = _validate_panel(final_panel)
+    if stage_metadata is not None:
+        result["stage_metadata"] = dict(stage_metadata)
     return result
 
 

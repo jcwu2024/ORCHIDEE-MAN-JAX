@@ -1780,19 +1780,34 @@ physical gates, parent identity, and checkpoint identity pass; no optimizer
 or update was created. See
 [`target_oriented_structured_gpp_joint_gradient_heterogeneity_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_heterogeneity_result_20260829.md).
 
-The active gate is the discarded batch-four AdamW preflight frozen at
-contract SHA256 `06d8c3f4...c19169`. The two artifact groups are evaluated as
-independent step-251 proposals from the same accepted warm-start specialist
-and AdamW state at step 250. For each group, the negative realized parameter
-step must have positive cosine with all three aggregate source gradients, and
-the group's mean direct-GPP, 7-day, and 30-day losses must each decrease.
-Individual artifact changes are reported but are not separately gated. Every
-pre/post physical gate must pass; no proposal, optimizer state, checkpoint, or
-recovery is retained. A complete pass opens only a separately frozen
-batch-four bounded-training contract and explicit paid-resource request. No
-paid joint training, validation read, 365-day rollout, Gate D2, sealed test,
-or product work is authorized. See
-[`target_oriented_structured_gpp_joint_batch4_preflight_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_batch4_preflight_v1.md).
+The discarded batch-four AdamW preflight then passed at commit `42c0e4e`;
+report SHA256 is `6a574c67...a0ac1`. Both independent groups start from the
+same step-250 state, retain positive realized-step cosine with every aggregate
+source, and reduce their mean direct-GPP, 7-day, and 30-day losses. The first
+group changes those losses by `-0.1694%/-0.1079%/-0.0897%`; the second by
+`-0.2086%/-0.1038%/-0.1222%`. All gradient, finite-value, physical, parent,
+and checkpoint gates pass. No proposal is retained. See
+[`target_oriented_structured_gpp_joint_batch4_preflight_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_batch4_preflight_result_20260830.md).
+
+The bounded batch-four joint-training contract and paid runner are now frozen
+and locally qualified. Contract SHA256 is `168d44bd...98832`; its PCG64
+four-epoch schedule SHA256 is `770bae61...5f70`. Each effective update averages
+four independent direct, 7-day, and 30-day gradient triples before one inherited
+AdamW update. The bounded maximum is 248 joint updates, with atomic recovery
+every ten updates and at each epoch boundary. The eight-artifact train-only
+panel must strictly improve all three mean sources after an epoch; a failed
+epoch writes no checkpoint and stops, while the accepted non-test 96-window
+panel remains unread until final model selection. Local contract, recovery,
+negative-design, checkpoint, static, CLI, and shell checks pass. See
+[`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
+
+The active gate is explicit paid-resource approval and one unchanged `gnall`
+execution. The prepared envelope is one node, eight CPU cores, one V100, 32 GiB
+host memory, and a 10-hour limit, with worst-case additive charge
+`CNY 5.60 + CNY 22.00 = CNY 27.60`. No job has been submitted. Only after the
+exact commit, command, working directory, and this cost are approved may the
+launcher run. No 365-day rollout, Gate D2, sealed test, or product work is
+authorized before the bounded stage and its 7/30-day screen pass.
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)

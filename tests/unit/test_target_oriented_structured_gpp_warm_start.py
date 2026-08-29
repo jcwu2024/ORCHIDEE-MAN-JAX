@@ -80,6 +80,7 @@ def test_structured_gpp_checkpoint_and_recovery_round_trip(tmp_path):
         clip_threshold=17.0,
         update_records=records,
         initial_panel=initial,
+        stage_metadata={"epoch_panels": [{"epoch": 1}]},
     )
     recovery = load_structured_gpp_recovery(
         recovery_path,
@@ -90,6 +91,7 @@ def test_structured_gpp_checkpoint_and_recovery_round_trip(tmp_path):
     )
     assert recovery_metadata["completed_updates"] == 2
     np.testing.assert_array_equal(recovery["specialist"]["kernel"], specialist["kernel"])
+    assert recovery["stage_metadata"] == {"epoch_panels": [{"epoch": 1}]}
 
     checkpoint_path = tmp_path / "stage-update-0250.pkl"
     checkpoint_metadata = write_structured_gpp_checkpoint(
@@ -103,6 +105,7 @@ def test_structured_gpp_checkpoint_and_recovery_round_trip(tmp_path):
         update_records=records,
         initial_panel=initial,
         final_panel=final,
+        stage_metadata={"selected_epoch": 1},
     )
     checkpoint = load_structured_gpp_checkpoint(
         checkpoint_path,
@@ -114,6 +117,7 @@ def test_structured_gpp_checkpoint_and_recovery_round_trip(tmp_path):
     )
     assert checkpoint["promotion_eligible"] is False
     assert checkpoint["final_direct_panel"]["aggregate_direct_gpp_loss"] == 1.5
+    assert checkpoint["stage_metadata"] == {"selected_epoch": 1}
 
 
 def test_structured_gpp_warm_start_runner_is_bounded_direct_only_and_unsubmitted():
