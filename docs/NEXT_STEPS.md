@@ -1730,15 +1730,20 @@ zero. The real 7/30-day forward paths pass without compiling horizon gradients.
 See
 [`target_oriented_structured_gpp_training_preflight_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_training_preflight_result_20260829.md).
 
-The active gate is the separately frozen 250-update direct-GPP warm start at
-contract SHA256 `1a3b8138...4818a6`. It uses 250 existing train/train artifacts,
-all 208 Teacher days per update, fixed AdamW learning rate `4e-6`, and the
-accepted p90 clip. Only the specialist is checkpointed; validation, sealed
-test, and 7/30-day gradients remain closed. After the retained endpoint passes
-its independent direct-GPP panel, calibrate 7/30-day coefficients from
-train-only artifacts before designing joint training. Do not run 365 days,
-enter Gate D2, or begin product work under this warm-start contract. See
-[`target_oriented_structured_gpp_warm_start_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_v1.md).
+Paid job `14873550` completed the frozen warm start at commit `1fb8916` with
+exit code zero. Its disjoint endpoint panel improved `8/8`, and aggregate
+direct-GPP loss fell from `1.11241519` to `0.74803793` (`32.7555%`). All
+physical hard failures are zero, all parent parameters remain exactly fixed,
+and report SHA256 is `c0e23be4...500f`. The retained specialist checkpoint is
+`ebef94aa...3f9` and is not promotion eligible. See
+[`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md).
+
+The active operation is to freeze and execute a train-only 7/30-day gradient
+calibration at that update-250 endpoint. Measure finite horizon objectives,
+physical hard gates, specialist gradient coverage and norms, and coefficient
+geometry before designing any joint objective. Retain no optimizer update and
+read no validation or sealed-test value. Do not begin joint training, run 365
+days, enter Gate D2, or begin product work before this calibration is accepted.
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)

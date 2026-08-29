@@ -594,17 +594,18 @@ and passes the daily physical gate. Real 7/30-day forward compatibility passes
 without horizon-gradient compilation. See
 [`target_oriented_structured_gpp_training_preflight_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_training_preflight_result_20260829.md).
 
-The active contract is the 250-update direct-GPP warm start at SHA256
-`1a3b8138...4818a6`. It uses 250 disjoint existing train/train artifacts and
-all 208 Teacher days per update, trains only the specialist at constant
-learning rate `4e-6`, writes recovery every 25 updates, and retains only the
-update-250 specialist checkpoint. An eight-artifact train-only endpoint panel
-requires at least 10% aggregate direct-loss reduction and six individual
-improvements. This is a capability gate, not scientific promotion. Joint
-7/30-day gradients are calibrated only after a passing warm endpoint;
-validation, 365-day rollout, Gate D2, sealed test, and product work remain
-closed. See
-[`target_oriented_structured_gpp_warm_start_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_v1.md).
+Paid job `14873550` completed the frozen 250-update direct-GPP warm start at
+commit `1fb8916` in `00:21:25`; report SHA256 is `c0e23be4...500f`. Only the
+12,879,363-parameter specialist trained, while all 93,504,164 parent
+parameters remained exactly unchanged. The disjoint eight-artifact endpoint
+panel improved `8/8`; aggregate direct-GPP loss fell from `1.11241519` to
+`0.74803793`, a `32.7555%` reduction against the frozen `10%` requirement.
+All physical hard failures are zero. The specialist checkpoint SHA256 is
+`ebef94aa...3f9` and remains non-promotion-eligible. The active gate is now a
+separate train-only 7/30-day gradient calibration at this retained endpoint;
+joint training, validation, 365-day rollout, Gate D2, sealed test, and product
+work remain closed. See
+[`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md).
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and

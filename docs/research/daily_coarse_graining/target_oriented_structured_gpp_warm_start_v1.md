@@ -2,8 +2,8 @@
 
 Date: 2026-08-29
 
-Status: frozen after accepted free-GPU preflight; paid execution requires a
-separate resource approval
+Status: completed frozen contract; paid job `14873550` passed the endpoint
+capability gate; checkpoint remains non-promotion-eligible
 
 Machine contract:
 `manifests/coarse_graining/target_oriented_structured_gpp_warm_start_v1.json`
@@ -58,3 +58,12 @@ The checkpoint is not promotion eligible. A capability pass opens only a
 train-only 7/30-day gradient calibration at the warm-start endpoint. Joint
 training, validation, 365-day rollout, Gate D2, sealed test, and product
 acceptance remain closed.
+
+## Execution Result
+
+Paid job `14873550` executed this contract unchanged at commit `1fb8916` and
+completed all 250 updates with exit code zero. Aggregate direct-GPP loss fell
+`32.7555%`, all eight evaluation artifacts improved, every physical hard gate
+passed, and all retained parent parameters remained exactly unchanged. The
+accepted evidence and next-gate decision are recorded in
+[`target_oriented_structured_gpp_warm_start_result_20260829.md`](target_oriented_structured_gpp_warm_start_result_20260829.md).
