@@ -1746,7 +1746,7 @@ pairwise source cosines are positive. The frozen 7/30 coefficients are
 `46.802861793665286`. See
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md).
 
-The active operation is the frozen discarded joint-update preflight at
+The discarded joint-update preflight was frozen at
 contract SHA256 `5d255e49...0c5d5`. On train/train artifact 512, load the
 accepted warm-start specialist and inherited AdamW state at step 250, combine
 the three exact gradients with the frozen coefficients, apply the frozen clip
@@ -1759,6 +1759,30 @@ separately frozen bounded joint-training contract and paid-resource request.
 Do not begin paid joint training, validation, 365 days, Gate D2, sealed test,
 or product work before this gate is accepted. See
 [`target_oriented_structured_gpp_joint_update_preflight_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_update_preflight_v1.md).
+
+That preflight is now complete and rejected at commit `e9aa41e`; report SHA256
+is `c63d2d4e...ccfc6`. Direct GPP, 7-day science, weighted science, and the
+complete joint objective decrease, but 30-day science increases `0.2558%`.
+The raw 7-versus-30 gradient cosine is `-0.9134`, and the inherited AdamW
+negative step has cosine `-0.0167` with the 30-day gradient. All physical,
+finite-value, parameter-ownership, and checkpoint gates pass, and no proposal
+is retained. See
+[`target_oriented_structured_gpp_joint_update_preflight_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_update_preflight_result_20260829.md).
+
+Do not relax the completed gate or begin paid single-artifact joint training.
+The active zero-update train-only gradient heterogeneity audit is frozen at
+contract SHA256 `0905b114...8d945b`, and its implementation and free-node
+wrapper pass locally. It uses artifacts
+`512, 548, 584, 620, 656, 692, 728, 763`. Using the already frozen
+coefficients, report
+individual geometry and non-overlapping grouped accumulation at effective
+batch sizes `1, 2, 4, 8`. Identify the smallest size, if any, for which every
+group has positive source-to-combined cosine for direct GPP, 7-day science,
+and 30-day science. No optimizer, update, validation read, or checkpoint write
+is authorized. A positive result opens only a discarded accumulated-AdamW
+proposal; a negative result requires objective or multi-objective update
+redesign before training. See
+[`target_oriented_structured_gpp_joint_gradient_heterogeneity_audit_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_heterogeneity_audit_v1.md).
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)

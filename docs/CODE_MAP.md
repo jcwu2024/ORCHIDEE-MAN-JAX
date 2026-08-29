@@ -789,7 +789,13 @@ The accepted calibrated coefficients are consumed by
 `scripts/hpc/run_target_oriented_structured_gpp_joint_update_preflight.py`
 owns the active inherited-AdamW discarded proposal and its realized-step
 checks; `run_target_oriented_structured_gpp_joint_update_preflight.sh` owns
-the free-`gln01` execution boundary.
+the free-`gln01` execution boundary. The subsequent single-artifact rejection
+opens grouped gradient analysis in
+`daily_operator/target_oriented_structured_gpp_joint_heterogeneity.py` and
+`manifests/coarse_graining/target_oriented_structured_gpp_joint_gradient_heterogeneity_audit_v1.json`.
+`scripts/hpc/audit_target_oriented_structured_gpp_joint_gradient_heterogeneity.py`
+owns the zero-update `1/2/4/8` effective-batch audit, with its free-node
+boundary in `run_target_oriented_structured_gpp_joint_gradient_heterogeneity.sh`.
 
 ## Scripts
 

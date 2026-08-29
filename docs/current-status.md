@@ -610,17 +610,28 @@ artifacts, and every physical hard count is zero. The frozen 7/30 coefficients
 are `5.065197169020285` and `4.594433600967992`, and the combined-gradient p90
 clip is `46.802861793665286`. Every pairwise source cosine is positive; the
 minimum direct-to-30-day cosine is `0.4849`, while each source-to-combined
-cosine is at least `0.7005`. The active gate is the separately frozen
-discarded inherited-AdamW joint proposal at contract SHA256
+cosine is at least `0.7005`. A separately frozen discarded inherited-AdamW
+joint proposal was defined at contract SHA256
 `5d255e49...0c5d5`. It executes one ephemeral step 251 on artifact 512 and
 must preserve descent for all three source losses and all physical gates.
-Paid joint training, validation, 365-day rollout, Gate D2, sealed test, and
-product work remain closed. See
+The preflight completed at commit `e9aa41e` and is rejected; report SHA256 is
+`c63d2d4e...ccfc6`. Direct GPP and 7-day loss fall `0.117%` and `0.192%`, but
+30-day loss rises `0.256%`. Artifact 512's 7-versus-30 raw gradient cosine is
+`-0.9134`, and the inherited AdamW step has cosine `-0.0167` with the 30-day
+gradient. All engineering, finite-value, physical, parent-preservation, and
+checkpoint gates pass, and no proposal is retained. The active gate is a
+zero-update intended-stage gradient heterogeneity audit at grouped effective
+batch sizes `1/2/4/8`. Its frozen contract SHA256 is
+`0905b114...8d945b`, and its local implementation is accepted. Paid joint
+training, validation, 365-day rollout, Gate D2, sealed test, and product work
+remain closed. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
-with the active gate in
-[`target_oriented_structured_gpp_joint_update_preflight_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_update_preflight_v1.md).
+with the rejected proposal in
+[`target_oriented_structured_gpp_joint_update_preflight_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_update_preflight_result_20260829.md),
+and the active audit in
+[`target_oriented_structured_gpp_joint_gradient_heterogeneity_audit_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_heterogeneity_audit_v1.md).
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and

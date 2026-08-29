@@ -1,0 +1,101 @@
+{
+  "schema_version": "target_oriented_structured_gpp_joint_gradient_heterogeneity_audit_v1",
+  "status": "frozen_before_free_gpu_train_only_gradient_heterogeneity_audit",
+  "contract_sha256": "0905b11467e982cdff72c624f2c61c2849e4e2dd90cbee860b9996c9588d945b",
+  "identity": {
+    "candidate": "target_oriented_structured_gpp_v1",
+    "candidate_contract_sha256": "ce211fa7c6f5a09bd900e02e31a864b61fb32f6b06ee96d4262402c513d620ea",
+    "joint_preflight_contract_sha256": "5d255e49f7add44c4948a3e737fe6edd72999b6fbd6a37439dc787cb38c0c5d5",
+    "joint_preflight_report_sha256": "c63d2d4e1844f6df4b1f87cf63b2c59554b1567df6b0a8e19851ff9b7abccfc6",
+    "calibration_contract_sha256": "c00ebf0242744c1583c12d1475b20021e325c4816c0391fb78a928ac874868fe",
+    "calibration_report_sha256": "6ff2d03e0719b22c64012834ea3c5b134a740efa59be01d5715e5cf4c24389c0",
+    "warm_start_report_sha256": "c0e23be4a91a3f47e9411ef7baf513ade03a3e08b81578c97871f038bb07500f",
+    "warm_start_checkpoint_sha256": "ebef94aa5a98c06646e45863459bfb755dc94fc00a31646cd591f7e6c508d3f9",
+    "warm_start_checkpoint_update": 250,
+    "warm_start_clip_threshold": 17.256861560753983,
+    "parent_distribution_checkpoint_sha256": "baae0c13aa7f22f04e56bec43b915e7e2dab8c2ca775e91d260f26136d55c7da",
+    "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "base_training_contract_sha256": "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b",
+    "target_contract_sha256": "7c9857c0ca57ee65cfcf7514a216a217c3b1661f6cc869c6dfb85d3786bfce5c",
+    "flux_basis_amendment_sha256": "6c81e8f56c2c81fc2ac024a71da98f3e875c4ebc429f9e3d1ff4e8e3ef6bfb45",
+    "candidate_parameter_count": 106383527,
+    "differentiated_specialist_parameter_count": 12879363,
+    "retained_parent_parameter_count": 93504164
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "prepared_schedule_updates": 1000,
+    "artifact_updates": [512, 548, 584, 620, 656, 692, 728, 763],
+    "artifact_runtime_years": [1973, 1969, 1989, 1988, 1972, 2003, 2002, 1987],
+    "selection": "eight_equally_spaced_artifacts_across_planned_joint_training_interval",
+    "calibration_artifacts_reused": false,
+    "evaluation_artifacts_reused": false,
+    "direct_gpp_teacher_days_per_artifact": 208,
+    "seven_day_windows_per_artifact": 8,
+    "thirty_day_windows_per_artifact": 4,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "objective": {
+    "gradient_sources": [
+      "direct_gpp_208_teacher_days",
+      "seven_day_component_resolved_science",
+      "thirty_day_component_resolved_science"
+    ],
+    "coefficients": {
+      "direct_gpp_208_teacher_days": 1.0,
+      "seven_day_component_resolved_science": 5.065197169020285,
+      "thirty_day_component_resolved_science": 4.594433600967992
+    },
+    "coefficients_recalibrated": false,
+    "validation_weight_tuning_allowed": false
+  },
+  "effective_batch_analysis": {
+    "candidate_sizes": [1, 2, 4, 8],
+    "grouping": "contiguous_nonoverlapping_groups_in_frozen_artifact_order",
+    "source_gradient_aggregation": "arithmetic_mean_across_artifacts_in_group",
+    "combined_gradient": "direct_plus_frozen_seven_coefficient_times_seven_plus_frozen_thirty_coefficient_times_thirty",
+    "group_common_descent_condition": "all_three_source_to_combined_cosines_strictly_positive",
+    "minimum_consistent_size": "smallest_candidate_size_for_which_every_group_passes",
+    "individual_pairwise_and_source_to_combined_cosines": "reported_not_thresholded",
+    "optimizer_created": false,
+    "optimizer_updates_executed": 0
+  },
+  "acceptance": {
+    "artifact_record_count": 8,
+    "required_gradient_source_count_per_record": 3,
+    "required_gradient_element_count_per_source": 12879363,
+    "all_source_gradients_finite_nonzero": true,
+    "all_specialist_leaves_nonzero_per_source": true,
+    "all_grouped_gradients_finite_nonzero": true,
+    "all_objectives_finite_positive": true,
+    "physical_hard_failure_count_maximum": 0,
+    "retained_parent_parameters_exactly_unchanged": true,
+    "warm_start_checkpoint_sha256_unchanged": true,
+    "minimum_consistent_size_is_classification_not_execution_gate": true
+  },
+  "execution": {
+    "free_gln01_allowed": true,
+    "paid_training_authorized": false,
+    "joint_training_authorized": false,
+    "optimizer_update_authorized": false,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_read_authorized": false,
+    "365_day_rollout_authorized": false,
+    "gate_d2_authorized": false,
+    "sealed_test_authorized": false,
+    "product_acceptance_authorized": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "cross_day_neural_hidden_state": false
+  },
+  "next_gate": {
+    "on_consistent_size_found": "freeze_discarded_accumulated_adamw_preflight_at_minimum_consistent_size",
+    "on_no_consistent_size": "stop_before_training_and_redesign_objective_or_multiobjective_update",
+    "on_execution_failure": "repair_audit_without_changing_frozen_artifacts_or_geometry_method"
+  }
+}
