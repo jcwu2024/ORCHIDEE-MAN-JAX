@@ -601,11 +601,19 @@ parameters remained exactly unchanged. The disjoint eight-artifact endpoint
 panel improved `8/8`; aggregate direct-GPP loss fell from `1.11241519` to
 `0.74803793`, a `32.7555%` reduction against the frozen `10%` requirement.
 All physical hard failures are zero. The specialist checkpoint SHA256 is
-`ebef94aa...3f9` and remains non-promotion-eligible. The active gate is now a
-separate train-only 7/30-day gradient calibration at this retained endpoint;
-joint training, validation, 365-day rollout, Gate D2, sealed test, and product
-work remain closed. See
-[`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md).
+`ebef94aa...3f9` and remains non-promotion-eligible.
+
+The active train-only 7/30-day joint-gradient calibration is frozen at SHA256
+`c00ebf02...868fe` and locally accepted. It uses the eight artifacts excluded
+from warm-start training and endpoint evaluation, differentiates only the
+specialist, and targets 7/30 gradient-norm ratios `0.25/0.25` relative to the
+direct-GPP anchor. Per-source median coefficients and a combined-gradient p90
+clip will be derived without an optimizer, update, validation read, or new
+checkpoint. The free-`gln01` execution is next. Joint training, validation,
+365-day rollout, Gate D2, sealed test, and product work remain closed. See
+[`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
+and
+[`target_oriented_structured_gpp_joint_gradient_calibration_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_v1.md).
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and

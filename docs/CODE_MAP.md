@@ -772,6 +772,18 @@ The shell wrappers bind free CPU/GPU execution, while
 proposal. The frozen package is documented in
 `successor_7_30_rollout_screen_package_20260810.md`.
 
+The current structured-GPP successor keeps its endpoint-specific training
+contracts in `daily_operator/target_oriented_structured_gpp_training.py` and
+its compact specialist checkpoint format in
+`daily_operator/target_oriented_structured_gpp_checkpoint.py`. The post-warm
+train-only coefficient policy is owned by
+`daily_operator/target_oriented_structured_gpp_joint_calibration.py` and
+`manifests/coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_v1.json`.
+`scripts/hpc/calibrate_target_oriented_structured_gpp_joint_gradients.py`
+measures direct, 7-day, 30-day, and combined specialist gradients without an
+optimizer or checkpoint write. Its free-`gln01` container boundary is
+`scripts/hpc/run_target_oriented_structured_gpp_joint_gradient_calibration.sh`.
+
 ## Scripts
 
 | Path | Classification | Use |

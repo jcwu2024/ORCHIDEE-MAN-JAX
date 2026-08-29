@@ -1738,12 +1738,18 @@ and report SHA256 is `c0e23be4...500f`. The retained specialist checkpoint is
 `ebef94aa...3f9` and is not promotion eligible. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md).
 
-The active operation is to freeze and execute a train-only 7/30-day gradient
-calibration at that update-250 endpoint. Measure finite horizon objectives,
-physical hard gates, specialist gradient coverage and norms, and coefficient
-geometry before designing any joint objective. Retain no optimizer update and
-read no validation or sealed-test value. Do not begin joint training, run 365
-days, enter Gate D2, or begin product work before this calibration is accepted.
+The active operation is the frozen train-only 7/30-day joint-gradient
+calibration at contract SHA256 `c00ebf02...868fe`. Its implementation and
+free-node wrapper are locally accepted. On artifacts `352-357`, `359`, and
+`360`, measure direct-GPP plus recursive 7/30-day specialist gradients at the
+retained endpoint. Resolve per-source median coefficients targeting
+`0.25/0.25` of the direct-gradient norm, report gradient cosines, and freeze
+the combined-gradient p90 clip. Create no optimizer, execute no update, write
+no checkpoint, and read no validation or sealed-test value. A pass opens only
+a separately frozen discarded joint-update preflight. Do not begin paid joint
+training, run 365 days, enter Gate D2, or begin product work before these gates
+are accepted. See
+[`target_oriented_structured_gpp_joint_gradient_calibration_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_v1.md).
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)
