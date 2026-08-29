@@ -584,11 +584,13 @@ with real-v6 evidence in
 [`target_oriented_structured_gpp_gpu_admission_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_gpu_admission_20260829.md).
 
 The structured-GPP training preflight is now frozen under contract SHA256
-`b2b6c012...ce828`. It replaces the old complete one-day state/process loss
+`6fa02537...62b62`. It replaces the old complete one-day state/process loss
 with a direct GPP anchor over all 208 Teacher day starts already present in
-each prepared artifact. It measures direct, 7-day, and 30-day gradients on
-eight train-only calibration artifacts, derives the direct-GPP p90 clip, and
-allows one discarded AdamW proposal at learning rate `4e-6`. Only the
+each prepared artifact. It measures direct GPP gradients on eight train-only
+calibration artifacts, derives the direct-GPP p90 clip, and runs one real
+7/30-day forward-only compatibility diagnostic before allowing one discarded
+AdamW proposal at learning rate `4e-6`. Joint horizon gradients are deferred
+until the direct-GPP warm-start endpoint. Only the
 12,879,363-parameter specialist is differentiable; the 93,504,164 retained
 parameters remain frozen. The preflight writes no checkpoint or recovery and
 does not read validation values. Local contract, exact sufficient-statistic

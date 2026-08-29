@@ -224,18 +224,16 @@ def _direct_gradient(
     return total, gradient, forward_seconds, time.perf_counter() - started
 
 
-def _horizon_gradient(
+def _horizon_forward(
     jax: Any,
     jnp: Any,
     parameters: Mapping[str, Any],
-    specialist: Any,
     batch: Any,
     steps: Mapping[str, Any],
-    gradient_steps: Mapping[str, Any],
     *,
     horizon: int,
     flux_basis: tuple[str, ...],
-) -> tuple[Any, Any, Any, float, float]:
+) -> tuple[Any, Any, float]:
     source = batch.seven_day if horizon == 7 else batch.thirty_day
     count = 8 if horizon == 7 else 4
     name = "seven" if horizon == 7 else "thirty"
@@ -251,17 +249,9 @@ def _horizon_gradient(
     hard = _zero_hard(jnp)
     for value in forward:
         hard = _add_hard(jax, hard, value[1])
-    forward_seconds = time.perf_counter() - started
-
-    started = time.perf_counter()
-    gradient = _zero_gradient(jax, jnp, specialist)
-    for microbatch in microbatches:
-        _value, current = gradient_steps[f"{name}_gradient"](specialist, microbatch, total)
-        gradient = _add_gradient(jax, jnp, gradient, current)
-    jax.block_until_ready((gradient, hard))
-    print(f"structured_gpp horizon_gradient days={horizon}", flush=True)
+    jax.block_until_ready(hard)
     result = science_window_from_sufficient_statistics(total, flux_basis=flux_basis)
-    return result, gradient, hard, forward_seconds, time.perf_counter() - started
+    return result, hard, time.perf_counter() - started
 
 
 def _one_day_hard(
@@ -399,106 +389,85 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         target_contract,
         science_flux_basis=amendment.flux_basis,
     )
-    horizon_gradient_steps = steps["make_trainable_gradient_steps"](
-        parameters,
-        replace_specialist,
-    )
     direct_steps = _make_direct_steps(runtime, head, parameters)
     memory_before = _memory_report(runtime["devices"][0])
 
+    rollout_update = int(contract.payload["short_horizon_forward_diagnostic"]["artifact_update"])
+    rollout_artifact = _load_artifact(args, context, rollout_update)
+    seven, seven_hard, seven_seconds = _horizon_forward(
+        jax,
+        jnp,
+        parameters,
+        rollout_artifact.batch,
+        steps,
+        horizon=7,
+        flux_basis=amendment.flux_basis,
+    )
+    thirty, thirty_hard, thirty_seconds = _horizon_forward(
+        jax,
+        jnp,
+        parameters,
+        rollout_artifact.batch,
+        steps,
+        horizon=30,
+        flux_basis=amendment.flux_basis,
+    )
+    rollout_hard = {
+        "seven_day": _hard_host(jax.device_get(seven_hard)),
+        "thirty_day": _hard_host(jax.device_get(thirty_hard)),
+    }
+    rollout_objectives = {
+        "seven_day_science": float(np.asarray(seven.total)),
+        "thirty_day_science": float(np.asarray(thirty.total)),
+    }
+    rollout_passed = all(np.isfinite(value) and value > 0.0 for value in rollout_objectives.values()) and all(
+        _hard_failure_count(value) == 0 for value in rollout_hard.values()
+    )
+
     records = []
     direct_norms = []
-    seven_norms = []
-    thirty_norms = []
     for update in contract.calibration_updates:
         artifact = _load_artifact(args, context, update)
         record_started = time.perf_counter()
         direct_total, direct_gradient, direct_forward_seconds, direct_gradient_seconds = _direct_gradient(
             jax, jnp, specialist, artifact.batch, direct_steps
         )
-        seven, seven_gradient, seven_hard, seven_forward_seconds, seven_gradient_seconds = _horizon_gradient(
-            jax,
-            jnp,
-            parameters,
-            specialist,
-            artifact.batch,
-            steps,
-            horizon_gradient_steps,
-            horizon=7,
-            flux_basis=amendment.flux_basis,
-        )
-        thirty, thirty_gradient, thirty_hard, thirty_forward_seconds, thirty_gradient_seconds = _horizon_gradient(
-            jax,
-            jnp,
-            parameters,
-            specialist,
-            artifact.batch,
-            steps,
-            horizon_gradient_steps,
-            horizon=30,
-            flux_basis=amendment.flux_basis,
-        )
-        reports = {
-            "direct_gpp": _tree_numeric_report(jax, jax.device_get(direct_gradient)),
-            "seven_day": _tree_numeric_report(jax, jax.device_get(seven_gradient)),
-            "thirty_day": _tree_numeric_report(jax, jax.device_get(thirty_gradient)),
-        }
-        direct_norms.append(float(reports["direct_gpp"]["l2_norm"]))
-        seven_norms.append(float(reports["seven_day"]["l2_norm"]))
-        thirty_norms.append(float(reports["thirty_day"]["l2_norm"]))
-        hard = {
-            "seven_day": _hard_host(jax.device_get(seven_hard)),
-            "thirty_day": _hard_host(jax.device_get(thirty_hard)),
-        }
+        gradient_report = _tree_numeric_report(jax, jax.device_get(direct_gradient))
+        direct_norms.append(float(gradient_report["l2_norm"]))
         records.append(
             {
                 "artifact_update": update,
                 "runtime_year": int(context["schedule"]["entries"][update - 1]["runtime_year"]),
                 "objectives": {
                     "direct_gpp": float(np.asarray(structured_gpp_direct_loss(direct_total))),
-                    "seven_day_science": float(np.asarray(seven.total)),
-                    "thirty_day_science": float(np.asarray(thirty.total)),
                     "direct_gpp_evaluated_values": int(np.asarray(direct_total.count)),
                 },
-                "gradients": reports,
-                "hard_counts": hard,
+                "gradient": gradient_report,
                 "timing_seconds": {
                     "direct_forward": direct_forward_seconds,
                     "direct_gradient": direct_gradient_seconds,
-                    "seven_forward": seven_forward_seconds,
-                    "seven_gradient": seven_gradient_seconds,
-                    "thirty_forward": thirty_forward_seconds,
-                    "thirty_gradient": thirty_gradient_seconds,
                     "total": time.perf_counter() - record_started,
                 },
             }
         )
         print(
             f"structured_gpp calibration={update} direct={direct_norms[-1]:.9g} "
-            f"seven={seven_norms[-1]:.9g} thirty={thirty_norms[-1]:.9g} "
             f"seconds={records[-1]['timing_seconds']['total']:.3f}",
             flush=True,
         )
-        del direct_gradient, seven_gradient, thirty_gradient
+        del direct_gradient
 
     calibration = calibrate_structured_gpp_gradient_norms(
         direct_norms,
-        seven_norms,
-        thirty_norms,
         minimum_clip_threshold=float(contract.payload["gradient_calibration"]["direct_gpp_clip_threshold_minimum"]),
     )
-    calibration_passed = (
-        all(
-            report["all_finite"]
-            and report["element_count"] == SPECIALIST_PARAMETER_COUNT
-            and report["l2_norm"] > 0.0
-            and (name != "direct_gpp" or report["nonzero_leaf_count"] == report["leaf_count"])
-            for record in records
-            for name, report in record["gradients"].items()
-        )
-        and all(np.isfinite(value) for record in records for value in record["objectives"].values())
-        and all(_hard_failure_count(value) == 0 for record in records for value in record["hard_counts"].values())
-    )
+    calibration_passed = all(
+        record["gradient"]["all_finite"]
+        and record["gradient"]["element_count"] == SPECIALIST_PARAMETER_COUNT
+        and record["gradient"]["l2_norm"] > 0.0
+        and record["gradient"]["nonzero_leaf_count"] == record["gradient"]["leaf_count"]
+        for record in records
+    ) and all(np.isfinite(value) for record in records for value in record["objectives"].values())
 
     artifact_update = int(contract.ephemeral_update["artifact_update"])
     artifact = _load_artifact(args, context, artifact_update)
@@ -555,7 +524,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         and float(np.asarray(raw_norm)) > 0.0
         and 0.0 < float(np.asarray(clip_scale)) <= 1.0
     )
-    passed = calibration_passed and ephemeral_passed
+    passed = rollout_passed and calibration_passed and ephemeral_passed
     report = {
         "schema_version": SCHEMA_VERSION,
         "status": "passed" if passed else "failed",
@@ -596,9 +565,20 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "passed": calibration_passed,
             "updates": list(contract.calibration_updates),
             "direct_gpp_p90_clip_threshold": calibration.direct_p90_clip_threshold,
-            "median_gradient_norms": dict(calibration.median_norms),
-            "initial_horizon_to_direct_norm_ratios": dict(calibration.initial_horizon_to_direct_norm_ratios),
+            "median_direct_gradient_norm": calibration.median_direct_norm,
             "records": records,
+        },
+        "short_horizon_forward_diagnostic": {
+            "passed": rollout_passed,
+            "artifact_update": rollout_update,
+            "runtime_year": int(context["schedule"]["entries"][rollout_update - 1]["runtime_year"]),
+            "objectives": rollout_objectives,
+            "hard_counts": rollout_hard,
+            "timing_seconds": {
+                "seven_day": seven_seconds,
+                "thirty_day": thirty_seconds,
+            },
+            "gradients_evaluated": False,
         },
         "ephemeral_update": {
             "passed": ephemeral_passed,

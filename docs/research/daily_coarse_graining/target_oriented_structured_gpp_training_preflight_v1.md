@@ -8,7 +8,7 @@ Machine contract:
 `manifests/coarse_graining/target_oriented_structured_gpp_training_preflight_v1.json`
 
 Contract SHA256:
-`b2b6c0129f524ad56440633ad5923fbb75bd602e4cd87c655625295ac23ce828`
+`6fa0253794938c4400b1e2ac028e818f177ca9c9632edd0fbb0f562520562b62`
 
 ## Purpose
 
@@ -39,24 +39,27 @@ different frozen error.
 
 ## Short-Horizon Objective
 
-The same existing rollout machinery supplies seven- and thirty-day science
-gradients. Optimization uses the independent component-resolved flux basis
+After warm start, the same existing rollout machinery will supply seven- and
+thirty-day science gradients. Joint optimization uses the independent
+component-resolved flux basis
 (`GPP`, maintenance respiration, growth respiration, and heterotrophic
 respiration) and independent stock basis (AGB, BGB, and nonliving ecosystem
 carbon). Autotrophic respiration, NPP, total live biomass, and ecosystem
 carbon remain mandatory reported and gated identities, but are not duplicated
 as extra optimization weights.
 
-The initial 7/30-day gradient norms are diagnostic. Their final coefficients
-must be calibrated again from train-only artifacts at the warm-start endpoint;
-validation values cannot tune them.
+The preflight evaluates one real 7/30-day rollout artifact for finite science
+objectives and physical hard gates, but does not compile its gradients. The
+joint gradients and their coefficients are calibrated from train-only
+artifacts at the warm-start endpoint, when the specialist has first learned
+the direct GPP mapping; validation values cannot tune them.
 
 ## Free-GPU Preflight
 
 Eight reserved train/train artifacts (`352-357`, `359`, and `360`) measure
-direct-GPP, seven-day, and thirty-day specialist gradients. The warm-stage
-clip threshold is the direct-GPP p90 norm. No optimizer exists during this
-calibration.
+direct-GPP specialist gradients. The warm-stage clip threshold is their p90
+norm. Artifact `352` also runs 7/30-day forward-only diagnostics. No optimizer
+exists during this calibration.
 
 One fresh AdamW proposal then uses artifact `252`, learning rate `4e-6`, and
 the calibrated clip threshold. The proposal must decrease the same-artifact

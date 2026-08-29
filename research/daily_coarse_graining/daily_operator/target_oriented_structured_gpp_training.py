@@ -20,7 +20,7 @@ from .target_oriented_training import (
 )
 
 SCHEMA_VERSION = "target_oriented_structured_gpp_training_preflight_v1"
-FROZEN_CONTRACT_SHA256 = "b2b6c0129f524ad56440633ad5923fbb75bd602e4cd87c655625295ac23ce828"
+FROZEN_CONTRACT_SHA256 = "6fa0253794938c4400b1e2ac028e818f177ca9c9632edd0fbb0f562520562b62"
 DEFAULT_CONTRACT_PATH = (
     Path(__file__).resolve().parents[3]
     / "manifests"
@@ -50,11 +50,8 @@ class StructuredGPPTrainingPreflightContract:
 @dataclass(frozen=True)
 class StructuredGPPGradientCalibration:
     direct_norms: tuple[float, ...]
-    seven_day_norms: tuple[float, ...]
-    thirty_day_norms: tuple[float, ...]
     direct_p90_clip_threshold: float
-    median_norms: Mapping[str, float]
-    initial_horizon_to_direct_norm_ratios: Mapping[str, float]
+    median_direct_norm: float
 
 
 def _stage_updates(stage: Mapping[str, Any]) -> tuple[int, ...]:
@@ -131,9 +128,21 @@ def load_structured_gpp_training_preflight_contract(
         raise ValueError("structured GPP planned training schedule drift")
 
     direct = payload["objective"]["direct_gpp"]
+    calibration_contract = payload["gradient_calibration"]
+    rollout = payload["short_horizon_forward_diagnostic"]
     probe = payload["ephemeral_update"]
     if (
         float(direct["coefficient"]) != 1.0
+        or tuple(int(value) for value in calibration_contract["artifact_updates"]) != calibration
+        or calibration_contract["gradient_sources"] != ["direct_gpp_208_teacher_days"]
+        or int(calibration_contract["required_gradient_element_count"]) != SPECIALIST_PARAMETER_COUNT
+        or calibration_contract["optimizer_created_during_calibration"] is not False
+        or int(rollout["artifact_update"]) != 352
+        or tuple(int(value) for value in rollout["horizons_days"]) != (7, 30)
+        or int(rollout["optimizer_updates"]) != 0
+        or rollout["gradients_evaluated"] is not False
+        or rollout["require_objectives_finite_positive"] is not True
+        or rollout["require_physical_hard_failure_count_zero"] is not True
         or probe["optimizer"] != "adamw"
         or float(probe["learning_rate"]) != 4.0e-6
         or int(probe["optimizer_updates_executed"]) != 1
@@ -218,41 +227,26 @@ def combine_specialist_gradients(
 
 def calibrate_structured_gpp_gradient_norms(
     direct_norms: Sequence[float],
-    seven_day_norms: Sequence[float],
-    thirty_day_norms: Sequence[float],
     *,
     minimum_clip_threshold: float = 1.0e-8,
 ) -> StructuredGPPGradientCalibration:
-    """Freeze the warm-start clip scale and report initial horizon geometry."""
+    """Freeze the direct-GPP warm-start clip scale from train-only gradients."""
 
-    arrays = {
-        "direct_gpp": np.asarray(tuple(direct_norms), dtype=np.float64),
-        "seven_day": np.asarray(tuple(seven_day_norms), dtype=np.float64),
-        "thirty_day": np.asarray(tuple(thirty_day_norms), dtype=np.float64),
-    }
-    if any(value.shape != (8,) for value in arrays.values()):
-        raise ValueError("structured GPP gradient calibration requires eight norm triplets")
-    if any(not np.all(np.isfinite(value)) or np.any(value <= 0.0) for value in arrays.values()):
+    direct = np.asarray(tuple(direct_norms), dtype=np.float64)
+    if direct.shape != (8,):
+        raise ValueError("structured GPP gradient calibration requires eight direct norms")
+    if not np.all(np.isfinite(direct)) or np.any(direct <= 0.0):
         raise ValueError("structured GPP calibration norms must be finite and positive")
     if not np.isfinite(minimum_clip_threshold) or minimum_clip_threshold <= 0.0:
         raise ValueError("structured GPP minimum clip threshold is invalid")
-    medians = {name: float(np.median(value)) for name, value in arrays.items()}
     clip = max(
-        float(np.quantile(arrays["direct_gpp"], 0.9, method="linear")),
+        float(np.quantile(direct, 0.9, method="linear")),
         float(minimum_clip_threshold),
     )
-    direct = medians["direct_gpp"]
-    ratios = {
-        "seven_day": medians["seven_day"] / direct,
-        "thirty_day": medians["thirty_day"] / direct,
-    }
     return StructuredGPPGradientCalibration(
-        direct_norms=tuple(float(value) for value in arrays["direct_gpp"]),
-        seven_day_norms=tuple(float(value) for value in arrays["seven_day"]),
-        thirty_day_norms=tuple(float(value) for value in arrays["thirty_day"]),
+        direct_norms=tuple(float(value) for value in direct),
         direct_p90_clip_threshold=clip,
-        median_norms=medians,
-        initial_horizon_to_direct_norm_ratios=ratios,
+        median_direct_norm=float(np.median(direct)),
     )
 
 

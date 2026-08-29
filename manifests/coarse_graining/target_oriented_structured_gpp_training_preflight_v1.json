@@ -1,7 +1,7 @@
 {
   "schema_version": "target_oriented_structured_gpp_training_preflight_v1",
   "status": "frozen_before_free_gpu_gradient_calibration_and_ephemeral_update",
-  "contract_sha256": "b2b6c0129f524ad56440633ad5923fbb75bd602e4cd87c655625295ac23ce828",
+  "contract_sha256": "6fa0253794938c4400b1e2ac028e818f177ca9c9632edd0fbb0f562520562b62",
   "identity": {
     "candidate": "target_oriented_structured_gpp_v1",
     "candidate_contract_sha256": "ce211fa7c6f5a09bd900e02e31a864b61fb32f6b06ee96d4262402c513d620ea",
@@ -66,7 +66,7 @@
         "nonliving_ecosystem_carbon", "ecosystem_carbon"
       ],
       "derived_keys_not_duplicated_in_optimization_weight": true,
-      "initial_gradient_norms_are_diagnostic_only": true,
+      "gradient_calibration_deferred_until_warm_start_endpoint": true,
       "joint_coefficients_frozen_after_warm_start_train_only_calibration": true
     },
     "excluded_from_training": [
@@ -78,7 +78,7 @@
   },
   "gradient_calibration": {
     "artifact_updates": [352, 353, 354, 355, 356, 357, 359, 360],
-    "gradient_sources": ["direct_gpp_208_teacher_days", "seven_day_science", "thirty_day_science"],
+    "gradient_sources": ["direct_gpp_208_teacher_days"],
     "required_gradient_element_count": 12879363,
     "direct_gpp_clip_statistic": "p90",
     "direct_gpp_clip_threshold_minimum": 1e-08,
@@ -86,6 +86,15 @@
     "all_specialist_leaves_nonzero_for_direct_gpp": true,
     "physical_hard_failure_count_maximum": 0,
     "optimizer_created_during_calibration": false
+  },
+  "short_horizon_forward_diagnostic": {
+    "artifact_update": 352,
+    "horizons_days": [7, 30],
+    "optimizer_updates": 0,
+    "gradients_evaluated": false,
+    "require_objectives_finite_positive": true,
+    "require_physical_hard_failure_count_zero": true,
+    "purpose": "prove recursive structured-GPP rollout compatibility before warm start; joint gradients are calibrated only at the warm-start endpoint"
   },
   "ephemeral_update": {
     "artifact_update": 252,
@@ -132,7 +141,8 @@
     "candidate_and_specialist_parameter_counts_exact": true,
     "direct_gpp_loss_finite_and_positive": true,
     "direct_gpp_gradient_finite_full_coverage": true,
-    "horizon_gradients_finite_full_coverage": true,
+    "seven_and_thirty_day_forward_objectives_finite": true,
+    "seven_and_thirty_day_forward_hard_failure_count": 0,
     "one_day_state_and_budget_hard_failure_count": 0,
     "proposal_parameter_or_optimizer_nonfinite_count": 0,
     "direct_gpp_loss_strictly_decreases_after_proposal": true,

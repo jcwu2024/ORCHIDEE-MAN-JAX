@@ -1722,12 +1722,13 @@ and peak live allocation is `1.47 GB`. See
 [`target_oriented_structured_gpp_gpu_admission_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_gpu_admission_20260829.md).
 
 The separate structured-GPP training preflight is now frozen under contract
-SHA256 `b2b6c012...ce828`. Its direct anchor uses all 208 existing Teacher-v6
+SHA256 `6fa02537...62b62`. Its direct anchor uses all 208 existing Teacher-v6
 days in every prepared artifact, while excluding irreducible frozen-parent
-state/process losses. Eight reserved train/train artifacts calibrate direct,
-7-day, and 30-day specialist gradients; one artifact then receives a single
-fresh AdamW proposal that is discarded. Parent parameters remain frozen and
-no checkpoint or recovery may be written. See
+state/process losses. Eight reserved train/train artifacts calibrate direct
+GPP specialist gradients and one artifact receives a forward-only 7/30-day
+compatibility check. A separate artifact then receives a single fresh AdamW
+proposal that is discarded. Parent parameters remain frozen and no checkpoint
+or recovery may be written. See
 [`target_oriented_structured_gpp_training_preflight_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_training_preflight_v1.md).
 
 The active gate is to execute that frozen preflight on free `gln01`. If it

@@ -79,6 +79,19 @@ def test_structured_gpp_training_preflight_contract_is_exact_and_disjoint():
     assert contract.ephemeral_update["artifact_update"] == 252
     assert contract.ephemeral_update["optimizer_updates_persisted"] == 0
     assert contract.payload["data"]["direct_gpp_teacher_days_per_artifact"] == 208
+    assert contract.payload["gradient_calibration"]["gradient_sources"] == ["direct_gpp_208_teacher_days"]
+    assert contract.payload["short_horizon_forward_diagnostic"] == {
+        "artifact_update": 352,
+        "horizons_days": [7, 30],
+        "optimizer_updates": 0,
+        "gradients_evaluated": False,
+        "require_objectives_finite_positive": True,
+        "require_physical_hard_failure_count_zero": True,
+        "purpose": (
+            "prove recursive structured-GPP rollout compatibility before warm start; "
+            "joint gradients are calibrated only at the warm-start endpoint"
+        ),
+    }
     assert contract.payload["planned_bounded_training"]["authorized_by_this_contract"] is False
     assert contract.payload["execution"]["paid_training_authorized"] is False
 
@@ -171,21 +184,14 @@ def test_linearized_direct_microbatches_have_exact_full_batch_gradient():
 def test_structured_gpp_gradient_calibration_uses_direct_p90():
     result = calibrate_structured_gpp_gradient_norms(
         range(1, 9),
-        range(2, 10),
-        range(3, 11),
     )
     assert result.direct_p90_clip_threshold == pytest.approx(7.3)
-    assert result.median_norms == {
-        "direct_gpp": 4.5,
-        "seven_day": 5.5,
-        "thirty_day": 6.5,
-    }
-    assert result.initial_horizon_to_direct_norm_ratios["seven_day"] == pytest.approx(5.5 / 4.5)
+    assert result.median_direct_norm == 4.5
 
-    with pytest.raises(ValueError, match="eight norm triplets"):
-        calibrate_structured_gpp_gradient_norms((1.0,) * 7, (1.0,) * 8, (1.0,) * 8)
+    with pytest.raises(ValueError, match="eight direct norms"):
+        calibrate_structured_gpp_gradient_norms((1.0,) * 7)
     with pytest.raises(ValueError, match="finite and positive"):
-        calibrate_structured_gpp_gradient_norms((0.0,) * 8, (1.0,) * 8, (1.0,) * 8)
+        calibrate_structured_gpp_gradient_norms((0.0,) * 8)
 
 
 def test_structured_gpp_specialist_tree_replace_and_gradient_combination():
@@ -212,12 +218,15 @@ def test_structured_gpp_training_preflight_runner_is_ephemeral_and_free_gpu_only
         encoding="utf-8"
     )
     assert "gradient_parameters" not in runner
+    assert "_horizon_gradient" not in runner
+    assert "make_trainable_gradient_steps" not in runner
     assert "specialist_tree(parameters)" in runner
     assert "replace_specialist" in runner
     assert '"training_updates_executed": 1' in runner
     assert '"training_updates_persisted": 0' in runner
     assert '"checkpoint_written": False' in runner
     assert '"recovery_written": False' in runner
+    assert '"gradients_evaluated": False' in runner
     assert "write_target_oriented_stage_checkpoint" not in runner
     assert "write_distribution_aware_checkpoint" not in runner
     assert "free gln01" in launcher
