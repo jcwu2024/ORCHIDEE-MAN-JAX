@@ -21,11 +21,19 @@ from .target_oriented_training import (
 
 SCHEMA_VERSION = "target_oriented_structured_gpp_training_preflight_v1"
 FROZEN_CONTRACT_SHA256 = "6fa0253794938c4400b1e2ac028e818f177ca9c9632edd0fbb0f562520562b62"
+WARM_START_SCHEMA_VERSION = "target_oriented_structured_gpp_warm_start_v1"
+WARM_START_FROZEN_CONTRACT_SHA256 = "1a3b8138b7fcef0cc28f7669d89cdfaae053244b706eebf23b3aa4efcc4818a6"
 DEFAULT_CONTRACT_PATH = (
     Path(__file__).resolve().parents[3]
     / "manifests"
     / "coarse_graining"
     / "target_oriented_structured_gpp_training_preflight_v1.json"
+)
+DEFAULT_WARM_START_CONTRACT_PATH = (
+    Path(__file__).resolve().parents[3]
+    / "manifests"
+    / "coarse_graining"
+    / "target_oriented_structured_gpp_warm_start_v1.json"
 )
 SPECIALIST_KEY = "structured_gpp"
 SPECIALIST_PARAMETER_COUNT = 12_879_363
@@ -52,6 +60,25 @@ class StructuredGPPGradientCalibration:
     direct_norms: tuple[float, ...]
     direct_p90_clip_threshold: float
     median_direct_norm: float
+
+
+@dataclass(frozen=True)
+class StructuredGPPWarmStartContract:
+    payload: Mapping[str, Any]
+    source_path: Path
+    sha256: str
+
+    @property
+    def training_updates(self) -> tuple[int, ...]:
+        return _stage_updates(self.payload["data"]["training_updates"])
+
+    @property
+    def evaluation_updates(self) -> tuple[int, ...]:
+        return tuple(int(value) for value in self.payload["data"]["evaluation_updates"])
+
+    @property
+    def optimizer(self) -> Mapping[str, Any]:
+        return self.payload["optimizer"]
 
 
 def _stage_updates(stage: Mapping[str, Any]) -> tuple[int, ...]:
@@ -153,6 +180,110 @@ def load_structured_gpp_training_preflight_contract(
     ):
         raise ValueError("structured GPP training-preflight execution drift")
     return StructuredGPPTrainingPreflightContract(payload, source, observed)
+
+
+def load_structured_gpp_warm_start_contract(
+    path: str | Path = DEFAULT_WARM_START_CONTRACT_PATH,
+) -> StructuredGPPWarmStartContract:
+    source = Path(path)
+    payload = json.loads(source.read_text(encoding="utf-8"))
+    observed = contract_sha256(payload)
+    if payload.get("schema_version") != WARM_START_SCHEMA_VERSION:
+        raise ValueError("structured GPP warm-start schema drift")
+    if (
+        payload.get("status") != "frozen_after_free_gpu_preflight_before_paid_warm_start"
+        or payload.get("contract_sha256") != observed
+        or observed != WARM_START_FROZEN_CONTRACT_SHA256
+    ):
+        raise ValueError("structured GPP warm-start contract is not frozen")
+
+    identity = payload["identity"]
+    ownership = payload["parameter_ownership"]
+    if (
+        identity["training_preflight_contract_sha256"] != FROZEN_CONTRACT_SHA256
+        or identity["training_preflight_report_sha256"]
+        != "d531f8dcc6d684c1cba6c471d28e640a82114d0967849bea5bb5d7f47a2cbccc"
+        or int(identity["candidate_parameter_count"]) != CANDIDATE_PARAMETER_COUNT
+        or int(identity["trainable_specialist_parameter_count"]) != SPECIALIST_PARAMETER_COUNT
+        or int(identity["retained_parent_parameter_count"]) != 93_504_164
+        or int(ownership["trainable_parameter_count"]) != SPECIALIST_PARAMETER_COUNT
+        or int(ownership["retained_parent_parameter_count"]) != 93_504_164
+        or ownership["parent_parameters_frozen"] is not True
+    ):
+        raise ValueError("structured GPP warm-start ownership or preflight drift")
+
+    contract = StructuredGPPWarmStartContract(payload, source, observed)
+    training = contract.training_updates
+    calibration = tuple(int(value) for value in payload["data"]["clip_calibration_updates"])
+    evaluation = contract.evaluation_updates
+    if (
+        len(training) != 250
+        or training[0] != 252
+        or training[-1] != 511
+        or calibration != (352, 353, 354, 355, 356, 357, 359, 360)
+        or evaluation != (251, 358, 465, 572, 679, 786, 893, 1000)
+        or set(training) & set(calibration)
+        or set(training) & set(evaluation)
+        or int(payload["data"]["direct_gpp_teacher_days_per_artifact"]) != 208
+    ):
+        raise ValueError("structured GPP warm-start data separation drift")
+
+    objective = payload["objective"]
+    optimizer = payload["optimizer"]
+    clipping = optimizer["global_gradient_norm_clip"]
+    endpoint = payload["endpoint_evaluation"]
+    if (
+        objective["name"] != "direct_gpp_208_teacher_days"
+        or objective["recursive_candidate_state_used"] is not False
+        or optimizer["name"] != "adamw"
+        or optimizer["learning_rate_schedule"] != "constant"
+        or float(optimizer["learning_rate"]) != 4.0e-6
+        or int(optimizer["maximum_updates"]) != 250
+        or float(clipping["threshold"]) != 17.256861560753983
+        or tuple(int(value) for value in endpoint["direct_gpp_panel_updates"]) != evaluation
+        or float(endpoint["minimum_aggregate_direct_gpp_loss_reduction"]) != 0.1
+        or int(endpoint["minimum_individual_artifact_improvement_count"]) != 6
+        or payload["next_gate"]["joint_training_authorized"] is not False
+        or payload["execution"]["seven_or_thirty_day_gradients_authorized"] is not False
+    ):
+        raise ValueError("structured GPP warm-start objective or endpoint drift")
+    return contract
+
+
+def compare_structured_gpp_direct_panels(
+    initial: Mapping[str, Any],
+    final: Mapping[str, Any],
+    contract: StructuredGPPWarmStartContract,
+) -> Mapping[str, Any]:
+    expected = contract.evaluation_updates
+    initial_records = tuple(initial["records"])
+    final_records = tuple(final["records"])
+    if (
+        tuple(int(value["artifact_update"]) for value in initial_records) != expected
+        or tuple(int(value["artifact_update"]) for value in final_records) != expected
+    ):
+        raise ValueError("structured GPP direct-panel identity drift")
+    initial_loss = float(initial["aggregate_direct_gpp_loss"])
+    final_loss = float(final["aggregate_direct_gpp_loss"])
+    if not np.isfinite(initial_loss) or not np.isfinite(final_loss) or initial_loss <= 0.0 or final_loss < 0.0:
+        raise ValueError("structured GPP direct-panel loss is invalid")
+    improvement_count = sum(
+        float(after["direct_gpp_loss"]) < float(before["direct_gpp_loss"])
+        for before, after in zip(initial_records, final_records, strict=True)
+    )
+    reduction = 1.0 - final_loss / initial_loss
+    endpoint = contract.payload["endpoint_evaluation"]
+    passed = reduction >= float(endpoint["minimum_aggregate_direct_gpp_loss_reduction"]) and improvement_count >= int(
+        endpoint["minimum_individual_artifact_improvement_count"]
+    )
+    return {
+        "initial_aggregate_direct_gpp_loss": initial_loss,
+        "final_aggregate_direct_gpp_loss": final_loss,
+        "aggregate_direct_gpp_loss_reduction": reduction,
+        "individual_artifact_improvement_count": improvement_count,
+        "artifact_count": len(expected),
+        "capability_gate_passed": passed,
+    }
 
 
 def structured_gpp_direct_statistics(
@@ -257,15 +388,21 @@ def specialist_element_count(tree: Any) -> int:
 __all__ = [
     "CANDIDATE_PARAMETER_COUNT",
     "DEFAULT_CONTRACT_PATH",
+    "DEFAULT_WARM_START_CONTRACT_PATH",
     "FROZEN_CONTRACT_SHA256",
     "SCHEMA_VERSION",
     "SPECIALIST_PARAMETER_COUNT",
     "StructuredGPPGradientCalibration",
     "StructuredGPPTrainingPreflightContract",
+    "StructuredGPPWarmStartContract",
+    "WARM_START_FROZEN_CONTRACT_SHA256",
+    "WARM_START_SCHEMA_VERSION",
     "calibrate_structured_gpp_gradient_norms",
     "combine_specialist_gradients",
+    "compare_structured_gpp_direct_panels",
     "linearized_structured_gpp_direct_loss",
     "load_structured_gpp_training_preflight_contract",
+    "load_structured_gpp_warm_start_contract",
     "replace_specialist",
     "specialist_element_count",
     "specialist_tree",

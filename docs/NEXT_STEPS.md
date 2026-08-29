@@ -1721,23 +1721,24 @@ declared state, and exact-zero water/carbon residuals. JIT replay is `0.064 s`
 and peak live allocation is `1.47 GB`. See
 [`target_oriented_structured_gpp_gpu_admission_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_gpu_admission_20260829.md).
 
-The separate structured-GPP training preflight is now frozen under contract
-SHA256 `6fa02537...62b62`. Its direct anchor uses all 208 existing Teacher-v6
-days in every prepared artifact, while excluding irreducible frozen-parent
-state/process losses. Eight reserved train/train artifacts calibrate direct
-GPP specialist gradients and one artifact receives a forward-only 7/30-day
-compatibility check. A separate artifact then receives a single fresh AdamW
-proposal that is discarded. Parent parameters remain frozen and no checkpoint
-or recovery may be written. See
-[`target_oriented_structured_gpp_training_preflight_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_training_preflight_v1.md).
+The separate structured-GPP training preflight passed on free `gln01` at
+commit `d852e69`; report SHA256 is `d531f8dc...2cbccc`. All eight direct-GPP
+gradients cover all 12,879,363 specialist parameters and 129 leaves. Their p90
+norm is `17.25686156`. One discarded AdamW proposal reduces same-artifact GPP
+loss, preserves all parent arrays, and keeps the daily physical hard gate at
+zero. The real 7/30-day forward paths pass without compiling horizon gradients.
+See
+[`target_oriented_structured_gpp_training_preflight_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_training_preflight_result_20260829.md).
 
-The active gate is to execute that frozen preflight on free `gln01`. If it
-passes, freeze the bounded 250-update direct-GPP warm-start contract using the
-measured p90 gradient clip before requesting paid resources. The 7/30-day
-coefficients are calibrated from train-only artifacts at the warm-start
-endpoint, not from validation. Do not start retained training, read validation,
-run 365 days, enter Gate D2, open sealed test, or begin product work under the
-preflight contract.
+The active gate is the separately frozen 250-update direct-GPP warm start at
+contract SHA256 `1a3b8138...4818a6`. It uses 250 existing train/train artifacts,
+all 208 Teacher days per update, fixed AdamW learning rate `4e-6`, and the
+accepted p90 clip. Only the specialist is checkpointed; validation, sealed
+test, and 7/30-day gradients remain closed. After the retained endpoint passes
+its independent direct-GPP panel, calibrate 7/30-day coefficients from
+train-only artifacts before designing joint training. Do not run 365 days,
+enter Gate D2, or begin product work under this warm-start contract. See
+[`target_oriented_structured_gpp_warm_start_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_v1.md).
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)
