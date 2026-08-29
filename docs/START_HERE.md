@@ -343,6 +343,17 @@ one-update admission for the frozen 250-update adapter-only contract SHA256
 D2, sealed test, or product work is authorized before that admission and a
 separate resource approval.
 
+That maintenance-only phase is now historical. The current structured-GPP
+specialist completed direct warm start and joint-gradient calibration. A
+single-artifact joint proposal failed because its 30-day gradient conflicted
+with its 7-day gradient. The completed eight-artifact heterogeneity audit then
+found batch size 4 to be the minimum size whose calibrated combined gradient
+is a common descent direction in every group. The active gate is a free-GPU,
+no-retention preflight of two independent batch-four AdamW proposals from the
+same step-250 warm-start state. Paid joint training and later validation gates
+remain closed until both aggregate proposals pass. See `NEXT_STEPS.md` for the
+exact contract and current execution boundary.
+
 ## New Task Bootstrap
 
 A new contributor can resume from a clean clone with:

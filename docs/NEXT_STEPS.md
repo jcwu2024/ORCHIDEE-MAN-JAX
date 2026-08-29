@@ -1770,19 +1770,29 @@ is retained. See
 [`target_oriented_structured_gpp_joint_update_preflight_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_update_preflight_result_20260829.md).
 
 Do not relax the completed gate or begin paid single-artifact joint training.
-The active zero-update train-only gradient heterogeneity audit is frozen at
-contract SHA256 `0905b114...8d945b`, and its implementation and free-node
-wrapper pass locally. It uses artifacts
-`512, 548, 584, 620, 656, 692, 728, 763`. Using the already frozen
-coefficients, report
-individual geometry and non-overlapping grouped accumulation at effective
-batch sizes `1, 2, 4, 8`. Identify the smallest size, if any, for which every
-group has positive source-to-combined cosine for direct GPP, 7-day science,
-and 30-day science. No optimizer, update, validation read, or checkpoint write
-is authorized. A positive result opens only a discarded accumulated-AdamW
-proposal; a negative result requires objective or multi-objective update
-redesign before training. See
-[`target_oriented_structured_gpp_joint_gradient_heterogeneity_audit_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_heterogeneity_audit_v1.md).
+The zero-update train-only gradient heterogeneity audit completed at commit
+`95322f8`; report SHA256 is `15d993a2...80eea`. Batch sizes 1, 2, 4, and 8
+pass `7/8`, `3/4`, `2/2`, and `1/1` groups respectively. Batch size 4 is the
+minimum consistent effective batch. Its two groups have minimum
+source-to-combined cosines `0.7992` and `0.7543`, including the group that
+contains the rejected single artifact 512. All gradients, objectives,
+physical gates, parent identity, and checkpoint identity pass; no optimizer
+or update was created. See
+[`target_oriented_structured_gpp_joint_gradient_heterogeneity_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_heterogeneity_result_20260829.md).
+
+The active gate is the discarded batch-four AdamW preflight frozen at
+contract SHA256 `06d8c3f4...c19169`. The two artifact groups are evaluated as
+independent step-251 proposals from the same accepted warm-start specialist
+and AdamW state at step 250. For each group, the negative realized parameter
+step must have positive cosine with all three aggregate source gradients, and
+the group's mean direct-GPP, 7-day, and 30-day losses must each decrease.
+Individual artifact changes are reported but are not separately gated. Every
+pre/post physical gate must pass; no proposal, optimizer state, checkpoint, or
+recovery is retained. A complete pass opens only a separately frozen
+batch-four bounded-training contract and explicit paid-resource request. No
+paid joint training, validation read, 365-day rollout, Gate D2, sealed test,
+or product work is authorized. See
+[`target_oriented_structured_gpp_joint_batch4_preflight_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_batch4_preflight_v1.md).
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)

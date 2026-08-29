@@ -796,6 +796,13 @@ opens grouped gradient analysis in
 `scripts/hpc/audit_target_oriented_structured_gpp_joint_gradient_heterogeneity.py`
 owns the zero-update `1/2/4/8` effective-batch audit, with its free-node
 boundary in `run_target_oriented_structured_gpp_joint_gradient_heterogeneity.sh`.
+The accepted audit selects batch size 4. Its finite-step gate is owned by
+`daily_operator/target_oriented_structured_gpp_joint_batch4.py` and
+`manifests/coarse_graining/target_oriented_structured_gpp_joint_batch4_preflight_v1.json`.
+`scripts/hpc/run_target_oriented_structured_gpp_joint_batch4_preflight.py`
+executes two independent discarded step-251 proposals from the same warm-start
+parameter and AdamW state; its shell wrapper is the free-`gln01` boundary.
+Neither proposal can write a checkpoint or authorize paid training.
 
 ## Scripts
 
