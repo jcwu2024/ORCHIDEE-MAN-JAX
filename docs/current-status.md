@@ -532,10 +532,25 @@ update passed on free `gln01` at commit `5ea0033`; report SHA256 is
 all adapter leaves change, every parent coordinate remains exactly fixed, and
 all pre/post hard failures are zero. The exact 250-update runner, compact
 adapter-only recovery/checkpoint, update-0/update-250 screen, and one-V100
-Slurm wrapper are locally qualified at commit `ad5c11b`; the related suite
-passes 22 tests. The active gate is explicit approval of the five-hour paid
-resource envelope. Validation, sealed test, 365-day rollout, Gate D2, and
-product work remain closed.
+Slurm wrapper were locally qualified at commit `ad5c11b`; the related suite
+passes 22 tests. Paid job `14856147` completed all 250 updates at commit
+`90c6636` in `03:38:12`; report SHA256 is `7f6d5686...9257`. No update was
+clipped, all hard counts are zero, and all `83,754,404` parent coordinates
+remain exactly fixed. Median maintenance reduction reaches
+`90.7403%/95.7084%` at 7/30 days and maintenance passes both aggregate
+absolute gates. The complete scientific gate fails because GPP, growth
+respiration, and NPP remain above threshold and the protected no-regression
+gate is not met. The adapter checkpoint SHA256 is `baae0c13...7da`, is
+diagnostic only, and unchanged adapter-only continuation is closed. The
+active gate is a zero-training Teacher-GPP causal bridge on the same eight
+train/train groups before any architecture change. Validation, sealed test,
+365-day rollout, Gate D2, and product work remain closed.
+The bridge contract is frozen at SHA256 `ce2eefb1...28c5647`. Its local
+implementation passes 29 distinct focused and related tests, including one
+complete learned-output/typed-flux/state/budget day, plus Ruff, Python
+compilation, Bash syntax, CLI import, and diff checks. It reuses the accepted
+ordinary free screen and needs only the Teacher-GPP and Teacher-day-start
+modes on free `gln01`. No architecture or optimizer change is included.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -568,6 +583,8 @@ with the active locally accepted successor in
 [`target_oriented_distribution_aware_maintenance_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_v1.md),
 with its accepted real-v6 evidence in
 [`target_oriented_distribution_aware_maintenance_gpu_admission_20260828.md`](research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_gpu_admission_20260828.md),
+with the completed bounded-training result in
+[`target_oriented_distribution_aware_training_result_20260829.md`](research/daily_coarse_graining/target_oriented_distribution_aware_training_result_20260829.md),
 with the active zero-update coefficient method in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md),
 with GPU evidence in

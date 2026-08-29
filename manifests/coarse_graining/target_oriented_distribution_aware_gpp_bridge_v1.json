@@ -1,0 +1,95 @@
+{
+  "schema_version": "target_oriented_distribution_aware_gpp_bridge_v1",
+  "status": "frozen_before_zero_training_execution",
+  "contract_sha256": "ce2eefb1360bb5b6f49f727ab470d1faef3952a7649d411539d81ba3b28c5647",
+  "identity": {
+    "bounded_training_contract_sha256": "0c60924ee12d0ea555b082f76990ca55e34f86f67effb052f5eec44c01210051",
+    "training_report_sha256": "7f6d5686a560fac9533da505a829f0eb2a392a20d5aef14e470421f670ba9257",
+    "candidate_checkpoint_sha256": "baae0c13aa7f22f04e56bec43b915e7e2dab8c2ca775e91d260f26136d55c7da",
+    "candidate_contract_sha256": "f167943cfb80902fd968259f7f2a1a852d783b151a7eedd16b3157abd1a37d2d",
+    "parent_checkpoint_sha256": "a566f9d95726984dc03cbf1f1a183dd0d1eae9e3479ce5055c64e571ef6a16c7",
+    "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "target_contract_sha256": "7c9857c0ca57ee65cfcf7514a216a217c3b1661f6cc869c6dfb85d3786bfce5c",
+    "flux_basis_amendment_sha256": "6c81e8f56c2c81fc2ac024a71da98f3e875c4ebc429f9e3d1ff4e8e3ef6bfb45"
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "evaluation_updates": [251, 358, 465, 572, 679, 786, 893, 1000],
+    "seven_day_windows_per_group": 8,
+    "thirty_day_windows_per_group": 4,
+    "validation_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "intervention": {
+    "mode": "replace_predicted_daily_fast_gpp_with_matched_teacher_fast_gpp_before_conservative_update",
+    "learned_output_key": "daily.fast_gpp",
+    "replacement_occurs_before_conservative_update": true,
+    "replacement_occurs_before_retained_exact_tail": true,
+    "model_cross_day_continuous_state_remains_predicted": true,
+    "model_cross_day_discrete_state_remains_predicted": true,
+    "model_maintenance_and_all_other_learned_outputs_remain_predicted": true,
+    "forcing_parameters_attention_and_retained_tail_unchanged": true,
+    "diagnostic_only": true,
+    "allowed_in_training": false,
+    "allowed_in_final_inference": false
+  },
+  "modes": {
+    "free_rollout": "reuse the accepted update-250 final-screen groups; every learned output and cross-day state is predicted",
+    "teacher_gpp_bridge": "reexecute update 250 while replacing only daily.fast_gpp before the conservative update and retained exact tail",
+    "teacher_day_start": "reexecute update 250 with complete matched Teacher day-start state and otherwise ordinary candidate prediction"
+  },
+  "metrics": {
+    "acceptance_score": "0.5 * (normalized_rmse^2 + normalized_signed_bias^2)",
+    "reported_keys": [
+      "gpp",
+      "maintenance_respiration",
+      "growth_respiration",
+      "autotrophic_respiration",
+      "npp",
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon",
+      "total_live_biomass_carbon",
+      "ecosystem_carbon"
+    ],
+    "causal_downstream_keys": ["growth_respiration", "npp"],
+    "absolute_required_keys": [
+      "gpp",
+      "maintenance_respiration",
+      "growth_respiration",
+      "autotrophic_respiration",
+      "npp",
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon",
+      "total_live_biomass_carbon",
+      "ecosystem_carbon"
+    ],
+    "required_horizons": [7, 30]
+  },
+  "classification": {
+    "minimum_median_downstream_score_reduction_for_gpp_scope": 0.5,
+    "minimum_median_downstream_score_reduction_for_contribution": 0.2,
+    "maximum_median_downstream_score_regression_for_contribution": 0.05,
+    "gpp_boundary_supported_as_next_scope": "all absolute required key-by-horizon gates pass, every downstream key-by-horizon median score falls by at least 50%, and all physical hard counts are zero",
+    "gpp_boundary_contributes_but_not_sufficient": "at least one downstream key-by-horizon median score falls by at least 20%, no downstream cell regresses by more than 5%, and all physical hard counts are zero",
+    "shared_attention_or_state_scope_required": "the Teacher-GPP intervention does not satisfy either stronger classification"
+  },
+  "execution": {
+    "free_gln01_allowed": true,
+    "paid_execution_authorized": false,
+    "optimizer_allowed": false,
+    "training_updates": 0,
+    "parameter_steps": 0,
+    "checkpoint_write_allowed": false,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "architecture_edit_allowed": false,
+    "validation_read_authorized": false,
+    "sealed_test_authorized": false,
+    "365_day_rollout_allowed": false,
+    "gate_d2_allowed": false,
+    "product_acceptance_allowed": false
+  }
+}

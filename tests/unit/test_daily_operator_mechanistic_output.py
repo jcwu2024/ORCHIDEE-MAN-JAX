@@ -35,6 +35,10 @@ from research.daily_coarse_graining.daily_operator.mechanistic_output_reconstruc
     signed_endpoint_to_transfers,
     support_aware_nroot_simplex,
 )
+from research.daily_coarse_graining.daily_operator.target_oriented_distribution_aware_gpp_bridge import (
+    GPP_OUTPUT_KEY,
+    teacher_gpp_bridge_transition,
+)
 from research.daily_coarse_graining.thermal_coefficient_exact_reconstruction_panel import (
     _paper_vertical_grid,
     reconstruct_thermal_coefficient_fields,
@@ -323,6 +327,80 @@ def test_exact_reconstruction_sees_materialized_learned_day_end_owners(mechanist
         atol=0.0,
         rtol=0.0,
     )
+
+
+def test_teacher_gpp_bridge_reaches_typed_flux_and_preserves_daily_budgets(mechanistic_setup):
+    setup = mechanistic_setup
+    head = setup["head"]
+    assembler = setup["adapter"].input_assembler
+    inputs = setup["assembled"]
+    grid = _paper_vertical_grid()
+    statics = {
+        "measurement_heights": [2.0, 10.0],
+        "hydrol_zz_mm": np.asarray(grid.znh) * 1000.0,
+        "hydrol_dz_mm": np.asarray(grid.dnh) * 1000.0,
+        "hydrol_cwrr_ks": np.ones((12,)),
+        "soiltile": np.asarray([[1.0, 0.0, 0.0, 0.0, 0.0, 0.0]]),
+        "njsc": [6],
+        "pref_soil_veg": np.asarray([1] * 13 + [6]),
+        "ext_coeff_vegetfrac": np.asarray([0.0] + [0.5] * 13),
+        "sechiba_qsint": 0.1,
+    }
+    for name, value in statics.items():
+        inputs = _set_static(inputs, assembler, name, value)
+    forcing_values = jnp.asarray(inputs.forcing.values)
+    forcing_values = forcing_values.at[:, head.forcing_indices["Tair"]].set(280.0)
+    forcing_values = forcing_values.at[:, head.forcing_indices["PSurf"]].set(100000.0)
+    forcing_values = forcing_values.at[:, head.forcing_indices["Wind_N"]].set(2.0)
+    forcing_values = forcing_values.at[:, head.forcing_indices["Wind_E"]].set(1.0)
+    forcing = inputs.forcing._replace(values=forcing_values)
+    inputs = inputs._replace(
+        forcing=forcing,
+        canonical_input=inputs.canonical_input._replace(forcing=forcing),
+    )
+    ordinary = bind_daily_operator(
+        input_assembler=assembler,
+        process_head=head,
+        retained_tail=plumbing_test_retained_tail_adapter(),
+    )(setup["parameters"], inputs.canonical_input)
+    teacher_gpp = ordinary.prediction.named_outputs[GPP_OUTPUT_KEY] + 0.25 * jnp.asarray(
+        inputs.pft.active_pft_mask,
+        dtype=jnp.float64,
+    )[None, :]
+    bridged = teacher_gpp_bridge_transition(
+        setup["parameters"],
+        inputs.canonical_input,
+        teacher_gpp,
+        input_assembler=assembler,
+        process_head=head,
+        retained_tail=plumbing_test_retained_tail_adapter(),
+    )
+    validate_conservative_result(bridged.fast_update)
+    np.testing.assert_allclose(
+        np.asarray(bridged.prediction.named_outputs[GPP_OUTPUT_KEY]),
+        np.asarray(teacher_gpp),
+        atol=0.0,
+        rtol=0.0,
+    )
+    np.testing.assert_allclose(
+        np.asarray(bridged.prediction.fluxes.carbon.fast_gpp),
+        np.where(
+            np.asarray(inputs.pft.pft_traits)[:, 0] < 0.5,
+            np.asarray(teacher_gpp)[0],
+            0.0,
+        ),
+        atol=0.0,
+        rtol=0.0,
+    )
+    assert np.all(
+        np.isfinite(
+            np.concatenate(
+                [np.asarray(value).reshape(-1) for value in bridged.next_state]
+            )
+        )
+    )
+    assert abs(float(bridged.diagnostics["water_budget_residual"])) <= 2.0e-12
+    assert abs(float(bridged.diagnostics["carbon_budget_residual"])) <= 2.0e-12
 
 
 def _thermal_inputs():

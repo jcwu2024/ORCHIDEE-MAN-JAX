@@ -1665,13 +1665,36 @@ same-batch combined objective decreases, and pre/post hard failures are zero.
 No update or checkpoint was retained.
 
 The exact 250-update runner, compact adapter-only recovery/checkpoint,
-update-0/update-250 train/train screen, and one-V100 Slurm wrapper are locally
-qualified at commit `ad5c11b`. The related suite passes 22 tests; Ruff, Python
-compilation, Bash syntax, CLI import, and diff checks pass. The active gate is
-explicit user approval of the five-hour, one-V100 paid envelope recorded in
-[`target_oriented_distribution_aware_training_admission_20260828.md`](research/daily_coarse_graining/target_oriented_distribution_aware_training_admission_20260828.md).
-Validation, sealed test, 365-day rollout, Gate D2, and product work remain
-closed.
+update-0/update-250 train/train screen, and one-V100 Slurm wrapper were locally
+qualified at commit `ad5c11b`. Paid job `14856147` then completed all 250
+updates at commit `90c6636` in `03:38:12`; report SHA256 is
+`7f6d5686...9257`. All retained parent coordinates remain exactly unchanged,
+no update is clipped, and every hard failure count is zero. Median maintenance
+reduction reaches `90.7403%/95.7084%` at 7/30 days, and maintenance passes
+both aggregate absolute gates. Complete scientific promotion fails: GPP,
+growth respiration, and NPP remain above their absolute gates, while the
+frozen protected no-regression gate also fails. The diagnostic checkpoint
+SHA256 is `baae0c13...7da`; unchanged adapter-only continuation is closed.
+
+The active gate is a zero-training Teacher-GPP causal bridge on the same
+eight train/train groups. It must substitute only matched Teacher fast GPP
+before the retained exact daily carbon chain while preserving the candidate's
+own maintenance, state recurrence, and all other outputs. This decides whether
+the next architecture discussion can be scoped to a structured GPP boundary
+or must include shared Attention/state representation. Validation, sealed
+test, 365-day rollout, Gate D2, and product work remain closed. See
+[`target_oriented_distribution_aware_training_result_20260829.md`](research/daily_coarse_graining/target_oriented_distribution_aware_training_result_20260829.md).
+
+The bridge contract is now frozen at SHA256 `ce2eefb1...28c5647` and the
+forward-only implementation is locally qualified. It replaces GPP inside the
+typed `ProcessPrediction`, before the canonical retained tail, while carrying
+the model's predicted state between days. The focused and related suite passes
+29 distinct tests, including a complete local learned-output/typed-flux/state/
+budget day; Ruff, Python compilation, Bash syntax, CLI import, and diff checks
+pass. The next operation is to execute the two necessary modes on free
+`gln01`: Teacher-GPP bridge and Teacher-day-start. The accepted ordinary free
+rollout is reused rather than recomputed. See
+[`target_oriented_distribution_aware_gpp_bridge_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_gpp_bridge_v1.md).
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)

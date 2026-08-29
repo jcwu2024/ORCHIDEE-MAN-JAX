@@ -470,8 +470,19 @@ adapter-only atomic recovery and update-250 persistence.
 exact 250-update combined-gradient fit plus update-0/update-250 train/train
 screens; its shell wrapper owns the container boundary, and
 `scripts/hpc/slurm_target_oriented_distribution_aware_training_250.sh` owns
-the unsubmitted one-V100 paid envelope. None makes the retained Attention
-parent trainable.
+the completed one-V100 paid envelope. None makes the retained Attention parent
+trainable. Job `14856147` produced the diagnostic update-250 checkpoint.
+
+`daily_operator/target_oriented_distribution_aware_gpp_bridge.py` owns the
+active zero-training Teacher-GPP contract loader, the single learned-coordinate
+substitution before the retained exact tail, the matched-GPP free-state scan,
+and the frozen three-way classifier. Optional forward hooks live in
+`scripts/hpc/run_target_oriented_full_step_preflight.py`.
+`scripts/hpc/audit_target_oriented_distribution_aware_gpp_bridge.py` owns the
+two required update-250 train/train modes and reuses the accepted ordinary
+free-rollout screen; its same-basename shell wrapper owns the free-`gln01`
+container boundary. These files cannot train, change architecture, write a
+checkpoint, read validation values, or enter final inference.
 
 `daily_operator/parameter_routing.py` owns the active ownership-aware split of
 the full operator parameter carrier. It supplies named `vcmax25` and

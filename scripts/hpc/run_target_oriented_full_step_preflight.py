@@ -214,6 +214,7 @@ def _make_steps(
     science_flux_basis: tuple[str, ...] | None = None,
     diagnostic_teacher_carry_state_key: str | None = None,
     diagnostic_teacher_carry_state_keys: tuple[str, ...] | None = None,
+    diagnostic_teacher_gpp_bridge: bool = False,
 ):
     import jax
     import jax.numpy as jnp
@@ -232,6 +233,10 @@ def _make_steps(
         extract_biomass_productivity_trajectories,
         rollout_daily_operator,
         trajectories_from_rollout,
+    )
+    from research.daily_coarse_graining.daily_operator.target_oriented_distribution_aware_gpp_bridge import (
+        rollout_with_teacher_fast_gpp,
+        teacher_gpp_bridge_transition,
     )
     from research.daily_coarse_graining.daily_operator.target_oriented_maintenance_head_conditioning import (
         replace_maintenance_head,
@@ -553,6 +558,82 @@ def _make_steps(
         )
         return predicted, expected, hard
 
+    def teacher_gpp_bridge_window_trajectories(
+        parameters,
+        microbatch,
+        *,
+        rematerialize: bool,
+    ):
+        if not diagnostic_teacher_gpp_bridge:
+            raise ValueError("diagnostic Teacher-GPP bridge is unavailable")
+        templates = jax.tree_util.tree_map(lambda value: value[0], microbatch.inputs)
+        day_inputs = jax.tree_util.tree_map(lambda value: value[0], microbatch.day_inputs)
+        teacher_fast_gpp = microbatch.expected_fast_gpp[0]
+        retained = replace(template, day_inputs=day_inputs)
+
+        def transition(values, inputs, daily_fast_gpp):
+            return teacher_gpp_bridge_transition(
+                values,
+                inputs,
+                daily_fast_gpp,
+                input_assembler=runtime["adapter"].input_assembler,
+                process_head=head,
+                retained_tail=retained,
+            )
+
+        trace = rollout_with_teacher_fast_gpp(
+            parameters,
+            templates,
+            teacher_fast_gpp,
+            transition=transition,
+            contract=runtime["contract"],
+            rematerialize=rematerialize,
+        )
+        predicted = trajectories_from_rollout(trace, runtime["contract"])
+        expected = expected_window_trajectories(microbatch, templates)
+        expected_defined = jax.tree_util.tree_map(
+            lambda value: value[0],
+            microbatch.expected_next_state_defined,
+        )
+        expected_discrete = jax.tree_util.tree_map(
+            lambda value: value[0],
+            microbatch.expected_next_discrete_state,
+        )
+        stock_hard = rollout_hard_gate_counts(
+            predicted.stocks,
+            expected.stocks,
+            nonnegative_stock_fields=TERMINAL_STOCK_FIELDS,
+            budget_residuals={
+                "water": trace.result.diagnostics["water_budget_residual"],
+                "carbon": trace.result.diagnostics["carbon_budget_residual"],
+            },
+            predicted_discrete_state=trace.result.next_discrete_state,
+            expected_discrete_state=expected_discrete,
+            budget_atol=2.0e-12,
+            stock_atol=2.0e-12,
+        )
+        state_nonfinite, unexpected_state_mismatch, declared_dynamic_state_mismatch = state_hard(
+            trace.result.next_state,
+            trace.result.next_state_defined,
+            expected_defined,
+        )
+        prediction_nonfinite = sum(
+            (
+                jnp.sum(~jnp.isfinite(jnp.asarray(value)), dtype=jnp.int32)
+                for name, value in trace.result.prediction.named_outputs.items()
+                if name in learned_output_names
+            ),
+            jnp.asarray(0, dtype=jnp.int32),
+        )
+        hard = _window_hard_counts(
+            prediction_nonfinite,
+            state_nonfinite,
+            unexpected_state_mismatch,
+            declared_dynamic_state_mismatch,
+            stock_hard,
+        )
+        return predicted, expected, hard
+
     def teacher_carry_window_trajectories(parameters, microbatch, *, rematerialize: bool):
         if diagnostic_teacher_carry_keys is None:
             raise ValueError("diagnostic Teacher-carry state keys are unavailable")
@@ -690,6 +771,30 @@ def _make_steps(
         if acceptance_scales is None:
             raise ValueError("acceptance scales are required for Teacher-day-start diagnostics")
         predicted, expected, hard = teacher_state_window_trajectories(
+            parameters,
+            microbatch,
+            rematerialize=rematerialize,
+        )
+        statistics = target_oriented_acceptance_sufficient_statistics(
+            predicted.fluxes,
+            expected.fluxes,
+            predicted.stocks,
+            expected.stocks,
+            scales=acceptance_scales,
+            horizon=horizon,
+        )
+        return statistics, hard
+
+    def teacher_gpp_bridge_window_acceptance_statistics(
+        parameters,
+        microbatch,
+        *,
+        horizon: int,
+        rematerialize: bool,
+    ):
+        if acceptance_scales is None:
+            raise ValueError("acceptance scales are required for Teacher-GPP diagnostics")
+        predicted, expected, hard = teacher_gpp_bridge_window_trajectories(
             parameters,
             microbatch,
             rematerialize=rematerialize,
@@ -1271,6 +1376,27 @@ def _make_steps(
                     ),
                     "thirty_teacher_carry_acceptance_forward": jax.jit(
                         lambda parameters, batch: teacher_carry_window_acceptance_statistics(
+                            parameters,
+                            batch,
+                            horizon=30,
+                            rematerialize=False,
+                        )
+                    ),
+                }
+            )
+        if diagnostic_teacher_gpp_bridge:
+            result.update(
+                {
+                    "seven_teacher_gpp_bridge_acceptance_forward": jax.jit(
+                        lambda parameters, batch: teacher_gpp_bridge_window_acceptance_statistics(
+                            parameters,
+                            batch,
+                            horizon=7,
+                            rematerialize=False,
+                        )
+                    ),
+                    "thirty_teacher_gpp_bridge_acceptance_forward": jax.jit(
+                        lambda parameters, batch: teacher_gpp_bridge_window_acceptance_statistics(
                             parameters,
                             batch,
                             horizon=30,

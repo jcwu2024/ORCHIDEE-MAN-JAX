@@ -2,7 +2,7 @@
 
 Date: 2026-08-28
 
-Status: locally qualified; paid Slurm submission awaits explicit approval
+Status: completed admission; Slurm job 14856147 executed the accepted envelope
 
 Implementation commit:
 `ad5c11b27d8c3e92bca88a22181fbf3fc6159a02`
@@ -78,3 +78,9 @@ Submission requires explicit approval of the exact resource envelope above.
 After completion, review the frozen update-0/update-250 relative and absolute
 7/30-day gates before any validation read, 365-day rollout, long held point,
 Gate D2, sealed test, or product work.
+
+## Outcome
+
+Job `14856147` completed all 250 updates with exit code zero in `03:38:12` at
+commit `90c6636`. The accepted result is recorded in
+[`target_oriented_distribution_aware_training_result_20260829.md`](target_oriented_distribution_aware_training_result_20260829.md).
