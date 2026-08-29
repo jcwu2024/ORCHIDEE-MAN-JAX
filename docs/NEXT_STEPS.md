@@ -1721,13 +1721,22 @@ declared state, and exact-zero water/carbon residuals. JIT replay is `0.064 s`
 and peak live allocation is `1.47 GB`. See
 [`target_oriented_structured_gpp_gpu_admission_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_gpu_admission_20260829.md).
 
-The active gate is to freeze the separate bounded training contract before
-any optimizer update. It must use existing v6 train/train data, train only the
-specialist, retain a direct one-day GPP anchor plus 7/30-day carbon objectives,
-define gradient/step calibration and recovery, and stop on explicit absolute
-science gates. Do not start training, read validation, run 365 days, enter
-Gate D2, open sealed test, or begin product work before that contract is
-reviewed and accepted.
+The separate structured-GPP training preflight is now frozen under contract
+SHA256 `b2b6c012...ce828`. Its direct anchor uses all 208 existing Teacher-v6
+days in every prepared artifact, while excluding irreducible frozen-parent
+state/process losses. Eight reserved train/train artifacts calibrate direct,
+7-day, and 30-day specialist gradients; one artifact then receives a single
+fresh AdamW proposal that is discarded. Parent parameters remain frozen and
+no checkpoint or recovery may be written. See
+[`target_oriented_structured_gpp_training_preflight_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_training_preflight_v1.md).
+
+The active gate is to execute that frozen preflight on free `gln01`. If it
+passes, freeze the bounded 250-update direct-GPP warm-start contract using the
+measured p90 gradient clip before requesting paid resources. The 7/30-day
+coefficients are calibrated from train-only artifacts at the warm-start
+endpoint, not from validation. Do not start retained training, read validation,
+run 365 days, enter Gate D2, open sealed test, or begin product work under the
+preflight contract.
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)

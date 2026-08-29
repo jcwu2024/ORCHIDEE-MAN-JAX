@@ -573,8 +573,8 @@ parameter objects, matches all 160 non-GPP outputs bit for bit, covers all
 12,879,363 specialist gradient elements with `129/129` nonzero leaves, and
 finishes the canonical 181-output day with exact-zero water/carbon residuals.
 JIT replay is `0.064 s`; peak live allocation is `1.47 GB`. No optimizer,
-update, or checkpoint was created. The active gate is to freeze a separate
-bounded specialist-only training contract. Paid training, validation,
+update, or checkpoint was created. The separate specialist-only training
+preflight described below is now frozen. Paid training, validation,
 7/30/365-day evaluation, Gate D2, sealed test, and product work remain closed
 until their declared prerequisites pass. See
 [`target_oriented_structured_gpp_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_v1.md)
@@ -582,6 +582,19 @@ and
 [`target_oriented_structured_gpp_local_acceptance_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_local_acceptance_20260829.md),
 with real-v6 evidence in
 [`target_oriented_structured_gpp_gpu_admission_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_gpu_admission_20260829.md).
+
+The structured-GPP training preflight is now frozen under contract SHA256
+`b2b6c012...ce828`. It replaces the old complete one-day state/process loss
+with a direct GPP anchor over all 208 Teacher day starts already present in
+each prepared artifact. It measures direct, 7-day, and 30-day gradients on
+eight train-only calibration artifacts, derives the direct-GPP p90 clip, and
+allows one discarded AdamW proposal at learning rate `4e-6`. Only the
+12,879,363-parameter specialist is differentiable; the 93,504,164 retained
+parameters remain frozen. The preflight writes no checkpoint or recovery and
+does not read validation values. Local contract, exact sufficient-statistic
+gradient, scheduling, ownership, and runner-policy tests pass. The active
+gate is free-`gln01` execution; retained or paid training remains closed. See
+[`target_oriented_structured_gpp_training_preflight_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_training_preflight_v1.md).
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
