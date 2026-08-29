@@ -100,6 +100,7 @@ def _make_direct_steps(
 ) -> Mapping[str, Any]:
     jax = runtime["jax"]
     jnp = runtime["jnp"]
+    fixed_parameters = replace_specialist(fixed_parameters, {})
 
     from research.daily_coarse_graining.daily_operator.parameter_routing import (
         PFT_TRAIT_BARE_SOIL,
@@ -121,8 +122,8 @@ def _make_direct_steps(
     one_predict = jax.vmap(predicted_gpp, in_axes=(None, 0))
     window_predict = jax.vmap(jax.vmap(predicted_gpp, in_axes=(None, 0)), in_axes=(None, 0))
 
-    def one_statistics(specialist, batch):
-        parameters = replace_specialist(fixed_parameters, specialist)
+    def one_statistics(specialist, fixed, batch):
+        parameters = replace_specialist(fixed, specialist)
         predicted = one_predict(parameters, batch.inputs)
         target = batch.process_targets[GPP_FIELD]
         active = active_vegetation(batch.inputs)[..., None, :]
@@ -134,8 +135,8 @@ def _make_direct_steps(
             active,
         )
 
-    def window_statistics(specialist, batch):
-        parameters = replace_specialist(fixed_parameters, specialist)
+    def window_statistics(specialist, fixed, batch):
+        parameters = replace_specialist(fixed, specialist)
         predicted = window_predict(parameters, batch.inputs)
         active = active_vegetation(batch.inputs)[..., None, :]
         return structured_gpp_direct_statistics(
@@ -146,27 +147,31 @@ def _make_direct_steps(
             active,
         )
 
-    one_forward = jax.jit(one_statistics)
-    window_forward = jax.jit(window_statistics)
-    one_gradient = jax.jit(
+    one_forward_impl = jax.jit(one_statistics)
+    window_forward_impl = jax.jit(window_statistics)
+    one_gradient_impl = jax.jit(
         jax.value_and_grad(
-            lambda specialist, batch, total: linearized_structured_gpp_direct_loss(
-                one_statistics(specialist, batch), total
-            )
+            lambda specialist, fixed, batch, total: linearized_structured_gpp_direct_loss(
+                one_statistics(specialist, fixed, batch), total
+            ),
+            argnums=0,
         )
     )
-    window_gradient = jax.jit(
+    window_gradient_impl = jax.jit(
         jax.value_and_grad(
-            lambda specialist, batch, total: linearized_structured_gpp_direct_loss(
-                window_statistics(specialist, batch), total
-            )
+            lambda specialist, fixed, batch, total: linearized_structured_gpp_direct_loss(
+                window_statistics(specialist, fixed, batch), total
+            ),
+            argnums=0,
         )
     )
     return {
-        "one_forward": one_forward,
-        "window_forward": window_forward,
-        "one_gradient": one_gradient,
-        "window_gradient": window_gradient,
+        "one_forward": lambda specialist, batch: one_forward_impl(specialist, fixed_parameters, batch),
+        "window_forward": lambda specialist, batch: window_forward_impl(specialist, fixed_parameters, batch),
+        "one_gradient": lambda specialist, batch, total: one_gradient_impl(specialist, fixed_parameters, batch, total),
+        "window_gradient": lambda specialist, batch, total: window_gradient_impl(
+            specialist, fixed_parameters, batch, total
+        ),
     }
 
 
@@ -186,9 +191,11 @@ def _direct_forward(
 ) -> tuple[Any, float]:
     started = time.perf_counter()
     statistics = []
-    for source, microbatch in _direct_microbatches(batch):
+    for index, (source, microbatch) in enumerate(_direct_microbatches(batch)):
         step = direct_steps["one_forward"] if source == "one_day" else direct_steps["window_forward"]
         statistics.append(step(specialist, microbatch))
+        if index in (0, 8, 16):
+            print(f"structured_gpp direct_forward source={source}", flush=True)
     jax.block_until_ready(statistics)
     total = statistics[0]
     for value in statistics[1:]:
@@ -207,10 +214,12 @@ def _direct_gradient(
     total, forward_seconds = _direct_forward(jax, specialist, batch, direct_steps)
     started = time.perf_counter()
     gradient = _zero_gradient(jax, jnp, specialist)
-    for source, microbatch in _direct_microbatches(batch):
+    for index, (source, microbatch) in enumerate(_direct_microbatches(batch)):
         step = direct_steps["one_gradient"] if source == "one_day" else direct_steps["window_gradient"]
         _value, current = step(specialist, microbatch, total)
         gradient = _add_gradient(jax, jnp, gradient, current)
+        if index in (0, 8, 16):
+            print(f"structured_gpp direct_gradient source={source}", flush=True)
     jax.block_until_ready(gradient)
     return total, gradient, forward_seconds, time.perf_counter() - started
 
@@ -234,6 +243,7 @@ def _horizon_gradient(
     started = time.perf_counter()
     forward = [steps[f"{name}_forward"](parameters, value) for value in microbatches]
     jax.block_until_ready(forward)
+    print(f"structured_gpp horizon_forward days={horizon}", flush=True)
     total = _merge_statistics(
         add_science_window_sufficient_statistics,
         [value[0] for value in forward],
@@ -249,6 +259,7 @@ def _horizon_gradient(
         _value, current = gradient_steps[f"{name}_gradient"](specialist, microbatch, total)
         gradient = _add_gradient(jax, jnp, gradient, current)
     jax.block_until_ready((gradient, hard))
+    print(f"structured_gpp horizon_gradient days={horizon}", flush=True)
     result = science_window_from_sufficient_statistics(total, flux_basis=flux_basis)
     return result, gradient, hard, forward_seconds, time.perf_counter() - started
 
