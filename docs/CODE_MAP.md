@@ -783,6 +783,13 @@ train-only coefficient policy is owned by
 measures direct, 7-day, 30-day, and combined specialist gradients without an
 optimizer or checkpoint write. Its free-`gln01` container boundary is
 `scripts/hpc/run_target_oriented_structured_gpp_joint_gradient_calibration.sh`.
+The accepted calibrated coefficients are consumed by
+`daily_operator/target_oriented_structured_gpp_joint_update.py` and
+`manifests/coarse_graining/target_oriented_structured_gpp_joint_update_preflight_v1.json`.
+`scripts/hpc/run_target_oriented_structured_gpp_joint_update_preflight.py`
+owns the active inherited-AdamW discarded proposal and its realized-step
+checks; `run_target_oriented_structured_gpp_joint_update_preflight.sh` owns
+the free-`gln01` execution boundary.
 
 ## Scripts
 

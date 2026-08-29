@@ -1738,18 +1738,27 @@ and report SHA256 is `c0e23be4...500f`. The retained specialist checkpoint is
 `ebef94aa...3f9` and is not promotion eligible. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md).
 
-The active operation is the frozen train-only 7/30-day joint-gradient
-calibration at contract SHA256 `c00ebf02...868fe`. Its implementation and
-free-node wrapper are locally accepted. On artifacts `352-357`, `359`, and
-`360`, measure direct-GPP plus recursive 7/30-day specialist gradients at the
-retained endpoint. Resolve per-source median coefficients targeting
-`0.25/0.25` of the direct-gradient norm, report gradient cosines, and freeze
-the combined-gradient p90 clip. Create no optimizer, execute no update, write
-no checkpoint, and read no validation or sealed-test value. A pass opens only
-a separately frozen discarded joint-update preflight. Do not begin paid joint
-training, run 365 days, enter Gate D2, or begin product work before these gates
-are accepted. See
-[`target_oriented_structured_gpp_joint_gradient_calibration_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_v1.md).
+The train-only 7/30-day joint-gradient calibration passed on free `gln01` at
+commit `7c547d5`; report SHA256 is `6ff2d03e...389c0`. All source and combined
+gradients cover the complete specialist, all physical hard gates pass, and all
+pairwise source cosines are positive. The frozen 7/30 coefficients are
+`5.065197169020285` and `4.594433600967992`; the combined-gradient p90 clip is
+`46.802861793665286`. See
+[`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md).
+
+The active operation is the frozen discarded joint-update preflight at
+contract SHA256 `5d255e49...0c5d5`. On train/train artifact 512, load the
+accepted warm-start specialist and inherited AdamW state at step 250, combine
+the three exact gradients with the frozen coefficients, apply the frozen clip
+and one ephemeral step 251, then discard it. Require the negative realized
+parameter step to have positive cosine with all three source gradients; all
+three same-artifact losses must strictly decrease; pre/post one-day, 7-day,
+and 30-day physical hard counts must be zero; the parent and checkpoint must
+remain unchanged. Write no checkpoint or recovery. A pass opens only a
+separately frozen bounded joint-training contract and paid-resource request.
+Do not begin paid joint training, validation, 365 days, Gate D2, sealed test,
+or product work before this gate is accepted. See
+[`target_oriented_structured_gpp_joint_update_preflight_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_update_preflight_v1.md).
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)

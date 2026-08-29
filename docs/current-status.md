@@ -603,17 +603,24 @@ panel improved `8/8`; aggregate direct-GPP loss fell from `1.11241519` to
 All physical hard failures are zero. The specialist checkpoint SHA256 is
 `ebef94aa...3f9` and remains non-promotion-eligible.
 
-The active train-only 7/30-day joint-gradient calibration is frozen at SHA256
-`c00ebf02...868fe` and locally accepted. It uses the eight artifacts excluded
-from warm-start training and endpoint evaluation, differentiates only the
-specialist, and targets 7/30 gradient-norm ratios `0.25/0.25` relative to the
-direct-GPP anchor. Per-source median coefficients and a combined-gradient p90
-clip will be derived without an optimizer, update, validation read, or new
-checkpoint. The free-`gln01` execution is next. Joint training, validation,
-365-day rollout, Gate D2, sealed test, and product work remain closed. See
+The train-only 7/30-day joint-gradient calibration passed on free `gln01` at
+commit `7c547d5`; report SHA256 is `6ff2d03e...389c0`. All three gradients
+cover all `12,879,363` specialist parameters and 129 leaves on all eight
+artifacts, and every physical hard count is zero. The frozen 7/30 coefficients
+are `5.065197169020285` and `4.594433600967992`, and the combined-gradient p90
+clip is `46.802861793665286`. Every pairwise source cosine is positive; the
+minimum direct-to-30-day cosine is `0.4849`, while each source-to-combined
+cosine is at least `0.7005`. The active gate is the separately frozen
+discarded inherited-AdamW joint proposal at contract SHA256
+`5d255e49...0c5d5`. It executes one ephemeral step 251 on artifact 512 and
+must preserve descent for all three source losses and all physical gates.
+Paid joint training, validation, 365-day rollout, Gate D2, sealed test, and
+product work remain closed. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
-[`target_oriented_structured_gpp_joint_gradient_calibration_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_v1.md).
+[`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
+with the active gate in
+[`target_oriented_structured_gpp_joint_update_preflight_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_update_preflight_v1.md).
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and

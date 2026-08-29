@@ -1,0 +1,102 @@
+{
+  "schema_version": "target_oriented_structured_gpp_joint_update_preflight_v1",
+  "status": "frozen_before_free_gpu_discarded_joint_update",
+  "contract_sha256": "5d255e49f7add44c4948a3e737fe6edd72999b6fbd6a37439dc787cb38c0c5d5",
+  "identity": {
+    "candidate": "target_oriented_structured_gpp_v1",
+    "candidate_contract_sha256": "ce211fa7c6f5a09bd900e02e31a864b61fb32f6b06ee96d4262402c513d620ea",
+    "calibration_execution_git_head": "7c547d55f54ed95eedef0cec79a328fb882f0663",
+    "calibration_contract_sha256": "c00ebf0242744c1583c12d1475b20021e325c4816c0391fb78a928ac874868fe",
+    "calibration_report_sha256": "6ff2d03e0719b22c64012834ea3c5b134a740efa59be01d5715e5cf4c24389c0",
+    "warm_start_contract_sha256": "1a3b8138b7fcef0cc28f7669d89cdfaae053244b706eebf23b3aa4efcc4818a6",
+    "warm_start_report_sha256": "c0e23be4a91a3f47e9411ef7baf513ade03a3e08b81578c97871f038bb07500f",
+    "warm_start_checkpoint_sha256": "ebef94aa5a98c06646e45863459bfb755dc94fc00a31646cd591f7e6c508d3f9",
+    "warm_start_checkpoint_update": 250,
+    "warm_start_clip_threshold": 17.256861560753983,
+    "parent_distribution_checkpoint_sha256": "baae0c13aa7f22f04e56bec43b915e7e2dab8c2ca775e91d260f26136d55c7da",
+    "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "base_training_contract_sha256": "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b",
+    "target_contract_sha256": "7c9857c0ca57ee65cfcf7514a216a217c3b1661f6cc869c6dfb85d3786bfce5c",
+    "flux_basis_amendment_sha256": "6c81e8f56c2c81fc2ac024a71da98f3e875c4ebc429f9e3d1ff4e8e3ef6bfb45",
+    "candidate_parameter_count": 106383527,
+    "trainable_specialist_parameter_count": 12879363,
+    "retained_parent_parameter_count": 93504164
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "prepared_schedule_updates": 1000,
+    "ephemeral_update_artifact": 512,
+    "direct_gpp_teacher_days": 208,
+    "seven_day_windows": 8,
+    "thirty_day_windows": 4,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "objective": {
+    "gradient_sources": [
+      "direct_gpp_208_teacher_days",
+      "seven_day_component_resolved_science",
+      "thirty_day_component_resolved_science"
+    ],
+    "coefficients": {
+      "direct_gpp_208_teacher_days": 1.0,
+      "seven_day_component_resolved_science": 5.065197169020285,
+      "thirty_day_component_resolved_science": 4.594433600967992
+    },
+    "combined_gradient_p90_clip_threshold": 46.802861793665286,
+    "coefficients_recalibrated": false,
+    "validation_weight_tuning_allowed": false
+  },
+  "optimizer_proposal": {
+    "optimizer": "adamw",
+    "state_source": "warm_start_checkpoint_after_250_direct_gpp_updates",
+    "initial_optimizer_step": 250,
+    "proposed_optimizer_step": 251,
+    "learning_rate": 4e-06,
+    "beta1": 0.9,
+    "beta2": 0.95,
+    "epsilon": 1e-08,
+    "weight_decay": 0.01,
+    "gradient_clip_threshold": 46.802861793665286,
+    "updates_executed": 1,
+    "updates_persisted": 0,
+    "checkpoint_written": false,
+    "recovery_written": false
+  },
+  "acceptance": {
+    "all_source_gradients_finite_full_coverage": true,
+    "combined_gradient_finite_full_coverage": true,
+    "all_specialist_leaves_nonzero_in_combined_gradient": true,
+    "all_specialist_components_changed": true,
+    "source_to_negative_parameter_step_cosine_strictly_positive": true,
+    "direct_gpp_loss_strictly_decreases": true,
+    "seven_day_science_loss_strictly_decreases": true,
+    "thirty_day_science_loss_strictly_decreases": true,
+    "pre_and_post_physical_hard_failure_count_maximum": 0,
+    "retained_parent_parameters_exactly_unchanged": true,
+    "warm_start_checkpoint_sha256_unchanged": true,
+    "proposal_parameter_or_optimizer_nonfinite_count": 0
+  },
+  "execution": {
+    "free_gln01_allowed": true,
+    "paid_training_authorized": false,
+    "joint_training_authorized": false,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_read_authorized": false,
+    "365_day_rollout_authorized": false,
+    "gate_d2_authorized": false,
+    "sealed_test_authorized": false,
+    "product_acceptance_authorized": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "cross_day_neural_hidden_state": false
+  },
+  "next_gate": {
+    "on_pass": "freeze_bounded_250_update_joint_training_contract_and_request_paid_resource_authorization",
+    "on_failure": "stop_before_paid_joint_training_and_review_optimizer_realization"
+  }
+}
