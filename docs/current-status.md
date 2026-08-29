@@ -548,9 +548,16 @@ train/train groups before any architecture change. Validation, sealed test,
 The bridge contract is frozen at SHA256 `ce2eefb1...28c5647`. Its local
 implementation passes 29 distinct focused and related tests, including one
 complete learned-output/typed-flux/state/budget day, plus Ruff, Python
-compilation, Bash syntax, CLI import, and diff checks. It reuses the accepted
-ordinary free screen and needs only the Teacher-GPP and Teacher-day-start
-modes on free `gln01`. No architecture or optimizer change is included.
+compilation, Bash syntax, CLI import, and diff checks. Its free-`gln01`
+execution completed in `934.80 s`; report SHA256 is `fa9bc445...531c52`.
+Both modes have zero hard failures. Teacher GPP makes GPP exact, reduces
+growth-respiration score by `99.6757%/99.5925%` and NPP by
+`98.6264%/98.8312%` at 7/30 days, and makes all nine required aggregate keys
+pass. Teacher-day-start instead severely worsens the learned fluxes. The
+classification is `gpp_boundary_supported_as_next_scope`. The active gate is
+the required architecture discussion before implementing a structured GPP
+boundary. No architecture or optimizer change has been made; validation,
+365-day, Gate D2, sealed-test, and product work remain closed.
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)
 and
@@ -585,6 +592,8 @@ with its accepted real-v6 evidence in
 [`target_oriented_distribution_aware_maintenance_gpu_admission_20260828.md`](research/daily_coarse_graining/target_oriented_distribution_aware_maintenance_gpu_admission_20260828.md),
 with the completed bounded-training result in
 [`target_oriented_distribution_aware_training_result_20260829.md`](research/daily_coarse_graining/target_oriented_distribution_aware_training_result_20260829.md),
+with the accepted GPP causal result in
+[`target_oriented_distribution_aware_gpp_bridge_result_20260829.md`](research/daily_coarse_graining/target_oriented_distribution_aware_gpp_bridge_result_20260829.md),
 with the active zero-update coefficient method in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md),
 with GPU evidence in

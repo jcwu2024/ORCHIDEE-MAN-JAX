@@ -1676,13 +1676,10 @@ growth respiration, and NPP remain above their absolute gates, while the
 frozen protected no-regression gate also fails. The diagnostic checkpoint
 SHA256 is `baae0c13...7da`; unchanged adapter-only continuation is closed.
 
-The active gate is a zero-training Teacher-GPP causal bridge on the same
-eight train/train groups. It must substitute only matched Teacher fast GPP
-before the retained exact daily carbon chain while preserving the candidate's
-own maintenance, state recurrence, and all other outputs. This decides whether
-the next architecture discussion can be scoped to a structured GPP boundary
-or must include shared Attention/state representation. Validation, sealed
-test, 365-day rollout, Gate D2, and product work remain closed. See
+The zero-training Teacher-GPP causal bridge on the same eight train/train
+groups is complete at commit `5480f51`. It substituted only matched Teacher
+fast GPP before the retained exact daily carbon chain while preserving the
+candidate's own maintenance, state recurrence, and all other outputs. See
 [`target_oriented_distribution_aware_training_result_20260829.md`](research/daily_coarse_graining/target_oriented_distribution_aware_training_result_20260829.md).
 
 The bridge contract is now frozen at SHA256 `ce2eefb1...28c5647` and the
@@ -1691,10 +1688,22 @@ typed `ProcessPrediction`, before the canonical retained tail, while carrying
 the model's predicted state between days. The focused and related suite passes
 29 distinct tests, including a complete local learned-output/typed-flux/state/
 budget day; Ruff, Python compilation, Bash syntax, CLI import, and diff checks
-pass. The next operation is to execute the two necessary modes on free
-`gln01`: Teacher-GPP bridge and Teacher-day-start. The accepted ordinary free
-rollout is reused rather than recomputed. See
+pass. The accepted free-`gln01` execution then completed in `934.80 s`; report
+SHA256 is `fa9bc445...531c52`. Both executed modes have zero hard failures.
+Teacher GPP makes GPP exact, reduces median growth-respiration score by
+`99.6757%/99.5925%` and NPP by `98.6264%/98.8312%` at 7/30 days, and makes all
+nine required aggregate keys pass. Teacher-day-start instead severely worsens
+the learned fluxes. The frozen classification is
+`gpp_boundary_supported_as_next_scope`. See
 [`target_oriented_distribution_aware_gpp_bridge_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_gpp_bridge_v1.md).
+
+The active gate is now the user-required architecture discussion for a
+structured GPP boundary. Preserve the coordinate-aligned Attention backbone
+as the initial shared representation; current evidence does not authorize
+discarding it. Do not implement a GPP head, start training, read validation,
+run 365 days, enter Gate D2, open sealed test, or begin product work before
+that discussion. The accepted result is
+[`target_oriented_distribution_aware_gpp_bridge_result_20260829.md`](research/daily_coarse_graining/target_oriented_distribution_aware_gpp_bridge_result_20260829.md).
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)
