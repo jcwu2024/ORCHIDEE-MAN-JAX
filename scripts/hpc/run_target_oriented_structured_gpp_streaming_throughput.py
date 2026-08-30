@@ -84,7 +84,6 @@ def _prepare_direct_batch(
     references: Sequence[Any],
 ) -> tuple[DirectGppBatch, Mapping[str, Any]]:
     from research.daily_coarse_graining.daily_markov_contract import load_markov_shard
-    from research.daily_coarse_graining.typed_sidecar import read_typed_sidecar_shard
 
     jax = runtime["jax"]
     adapter = runtime["adapter"]
@@ -92,46 +91,50 @@ def _prepare_direct_batch(
     records = []
     started = time.perf_counter()
     for reference in references:
-        local_started = time.perf_counter()
+        read_started = time.perf_counter()
         parent = load_markov_shard(reference.parent.path, contract=runtime["contract"])
-        values, defined, days = read_typed_sidecar_shard(
-            reference.path,
-            contract=adapter.typed_contract,
-            expected_days=reference.day_count,
-        )
-        if not np.array_equal(days, parent.day_index) or int(reference.day_count) <= DAYS_PER_POINT_YEAR:
+        read_seconds = time.perf_counter() - read_started
+        if int(reference.day_count) != parent.days or int(reference.day_count) <= DAYS_PER_POINT_YEAR:
             raise ValueError("structured GPP streaming source shard is not eligible")
+        assemble_started = time.perf_counter()
         examples = tuple(
-            adapter.assemble(
-                parent.sample(row),
-                supplemental_values={name: value[row] for name, value in values.items()},
-                supplemental_defined={name: value[row] for name, value in defined.items()},
-            )
+            adapter.assemble_direct_gpp(parent.sample(row))
             for row in range(1, DAYS_PER_POINT_YEAR + 1)
         )
+        assemble_seconds = time.perf_counter() - assemble_started
         grouped_examples.append(examples)
         records.append(
             {
                 "identity": list(_reference_identity(reference)),
                 "rows": [1, DAYS_PER_POINT_YEAR],
-                "read_and_assemble_seconds": time.perf_counter() - local_started,
+                "eligible_days_in_loaded_parent_shard": parent.days - 1,
+                "parent_shard_read_seconds": read_seconds,
+                "direct_gpp_assemble_seconds": assemble_seconds,
             }
         )
+    round_robin_started = time.perf_counter()
     examples = _round_robin(grouped_examples)
+    round_robin_seconds = time.perf_counter() - round_robin_started
+    stack_started = time.perf_counter()
     batch = DirectGppBatch(
         inputs=_stack(jax, [value.inputs for value in examples]),
         process_targets={
             GPP_FIELD: _stack(
                 jax,
-                [value.targets.supervision[GPP_FIELD] for value in examples],
+                [value.target for value in examples],
             )
         },
     )
+    stack_seconds = time.perf_counter() - stack_started
     if len(examples) != MAXIMUM_BATCH_SIZE:
         raise ValueError("structured GPP streaming batch size drift")
     return batch, {
         "point_years": records,
         "days": len(examples),
+        "parent_shard_read_seconds": sum(value["parent_shard_read_seconds"] for value in records),
+        "direct_gpp_assemble_seconds": sum(value["direct_gpp_assemble_seconds"] for value in records),
+        "round_robin_seconds": round_robin_seconds,
+        "stack_seconds": stack_seconds,
         "read_assemble_and_stack_seconds": time.perf_counter() - started,
     }
 
@@ -392,6 +395,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "checkpoint_writes": 0,
             "retained_tail_payload_streamed": False,
             "seven_or_thirty_day_payload_streamed": False,
+            "typed_sidecar_payload_streamed": False,
         },
         "batch": {
             "source_point_years": SOURCE_POINT_YEARS,

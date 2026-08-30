@@ -267,6 +267,34 @@ def test_v6_adapter_builds_only_named_input_and_process_targets():
     assert example.targets.retained_boundary.fast_state_fields
 
 
+def test_v6_adapter_direct_gpp_path_matches_full_training_example():
+    adapter = DailyProcessTrainingAdapter.from_contract(_markov_contract())
+    parent, values, defined = _synthetic_parent(adapter)
+    leaf = next(
+        item
+        for item in adapter.contract.fast_day_target_leaves
+        if item.key == "daily_interface.gpp_daily"
+    )
+    parent["fast_day_target"][leaf.start : leaf.stop] = np.arange(
+        1, leaf.stop - leaf.start + 1, dtype=np.float64
+    )
+    direct = adapter.assemble_direct_gpp(parent)
+    full = adapter.assemble(
+        parent,
+        supplemental_values=values,
+        supplemental_defined=defined,
+    )
+    for observed, expected in zip(
+        jax.tree_util.tree_leaves(direct.inputs),
+        jax.tree_util.tree_leaves(full.inputs),
+        strict=True,
+    ):
+        np.testing.assert_array_equal(observed, expected)
+    expected = full.targets.supervision["daily.fast_gpp"]
+    np.testing.assert_array_equal(direct.target.value, expected.value)
+    np.testing.assert_array_equal(direct.target.defined, expected.defined)
+
+
 def _synthetic_shard_and_typed(adapter, *, days=2):
     parent, values, defined = _synthetic_parent(adapter)
     state_trajectory = np.stack([parent["state"]] * (days + 1))

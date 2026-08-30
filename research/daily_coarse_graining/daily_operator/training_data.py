@@ -25,6 +25,7 @@ from research.daily_coarse_graining.constrained_daily_replay import (
 )
 from research.daily_coarse_graining.daily_markov_contract import (
     DailyMarkovContract,
+    _inflate_pft_axes,
     reconstruct_fast_day_target,
     reconstruct_state_fields,
 )
@@ -75,6 +76,13 @@ class ProcessTrainingTarget(NamedTuple):
 class ProcessTrainingExample(NamedTuple):
     inputs: DailyOperatorInput
     targets: ProcessTrainingTarget
+
+
+class DirectGPPTrainingExample(NamedTuple):
+    """Inference inputs plus the exact fast-GPP target and no other payload."""
+
+    inputs: DailyOperatorInput
+    target: MaskedProcessTarget
 
 
 def _get_path(root: Mapping[str, Any], path: tuple[str, ...]) -> Any:
@@ -293,6 +301,55 @@ class DailyProcessTrainingAdapter:
             self.contract,
         )
         return self._operator_input(parent_sample, fields)
+
+    def assemble_direct_gpp(
+        self,
+        parent_sample: Mapping[str, Any],
+    ) -> DirectGPPTrainingExample:
+        """Assemble only inference inputs and the exact packed fast-GPP target."""
+
+        required = {
+            "state",
+            "fast_day_target",
+            "forcing_native",
+            "parameters",
+            "landpoint_static",
+            "annual_conditions",
+            "year",
+            "day_index",
+            "discrete_state",
+        }
+        missing = sorted(required - set(parent_sample))
+        if missing:
+            raise ValueError(f"v6 direct-GPP sample is missing fields: {missing}")
+        fields = reconstruct_state_fields(
+            np.asarray(parent_sample["state"], dtype=np.float64),
+            parent_sample["discrete_state"],
+            self.contract,
+        )
+        inputs = self._operator_input(parent_sample, fields)
+        matches = tuple(
+            leaf
+            for leaf in self.contract.fast_day_target_leaves
+            if leaf.key == "daily_interface.gpp_daily"
+        )
+        if len(matches) != 1:
+            raise ValueError("v6 direct-GPP target registry drift")
+        leaf = matches[0]
+        packed = np.asarray(parent_sample["fast_day_target"], dtype=np.float64)
+        if packed.shape != (self.contract.fast_day_target_width,):
+            raise ValueError("v6 direct-GPP packed target width drift")
+        compact = packed[leaf.start : leaf.stop].reshape(leaf.shape).astype(
+            np.dtype(leaf.dtype), copy=False
+        )
+        full = _inflate_pft_axes(compact, leaf)
+        value = self._select_pft(full, 1)
+        active = np.ones((len(self.active_pft_indices),), dtype=np.bool_)
+        defined = _defined(value) & _broadcast_pft_mask(active, value.shape, axis=1)
+        return DirectGPPTrainingExample(
+            inputs=inputs,
+            target=MaskedProcessTarget(np.asarray(value, dtype=np.float64), defined),
+        )
 
     def _compact_inventory(self, value: Any, field: str) -> np.ndarray:
         axis = PFT_AXES.get(field)
