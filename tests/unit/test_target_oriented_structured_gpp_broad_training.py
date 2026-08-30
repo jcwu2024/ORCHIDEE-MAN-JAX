@@ -91,7 +91,9 @@ def test_structured_gpp_broad_launchers_keep_free_and_paid_boundaries_separate()
     )
     assert "assemble_direct_gpp" not in runner
     assert "_prepare_batch" in runner
-    assert "--maximum-updates" in worker
+    assert 'EXECUTED_UPDATES=${MAXIMUM_UPDATES:-1000}' in worker
+    assert '--maximum-updates "$EXECUTED_UPDATES"' in worker
+    assert "EXTRA_ARGS" not in worker
     assert "MAXIMUM_UPDATES=2" in admission
     assert "sbatch" not in admission
     assert "#SBATCH --partition=gnall" in paid

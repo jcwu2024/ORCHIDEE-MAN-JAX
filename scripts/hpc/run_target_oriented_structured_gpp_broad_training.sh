@@ -23,6 +23,7 @@ else
   case "$(hostname -s)" in gln01|ibgln01|ibc13b02n04) ;; *) exit 2 ;; esac
   test "$MAXIMUM_UPDATES" = 2
 fi
+EXECUTED_UPDATES=${MAXIMUM_UPDATES:-1000}
 test -x "$PYTHON"
 test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
 test -z "$(cd "$WORKTREE" && git status --porcelain --untracked-files=all)"
@@ -69,12 +70,8 @@ mkdir -p "$OUTPUT_DIR" "$CACHE_ROOT"
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
 NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
 GPU_BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
-EXTRA_ARGS=()
-if test -n "$MAXIMUM_UPDATES"; then
-  EXTRA_ARGS+=(--maximum-updates "$MAXIMUM_UPDATES")
-fi
 
-echo "host=$(hostname) git_head=$EXPECTED_GIT_HEAD gpu_device=$GPU_DEVICE output=$OUTPUT_DIR maximum_updates=${MAXIMUM_UPDATES:-1000}"
+echo "host=$(hostname) git_head=$EXPECTED_GIT_HEAD gpu_device=$GPU_DEVICE output=$OUTPUT_DIR maximum_updates=$EXECUTED_UPDATES"
 nvidia-smi -i "$GPU_DEVICE" --query-gpu=index,name,memory.total,memory.used,utilization.gpu --format=csv,noheader
 
 env -u LD_LIBRARY_PATH \
@@ -117,7 +114,7 @@ env -u LD_LIBRARY_PATH \
       --schedule-report "$SCHEDULE_REPORT" \
       --broad-preflight-report "$BROAD_PREFLIGHT_REPORT" \
       --broad-training-contract "$BROAD_TRAINING_CONTRACT" \
-      "${EXTRA_ARGS[@]}" \
+      --maximum-updates "$EXECUTED_UPDATES" \
       --output-dir "$OUTPUT_DIR"
 
 test -f "$OUTPUT_DIR/report.json"
