@@ -1865,14 +1865,23 @@ finite and nonzero, all retained parent parameters were exactly unchanged, and
 all physical hard-failure counts were zero. See
 [`target_oriented_structured_gpp_broad_training_admission_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_admission_result_20260830.md).
 
-The active operation is to obtain explicit paid resource approval, then submit
-the bounded stage on `gnall`: updates 1-1,000 and 208,000 unique days, fresh
+Paid job `14881105` at commit `af5f426` exited before Python after two allocated
+seconds because old Bash rejected an empty optional argument array under
+`set -u`. It performed no training and wrote no checkpoint or report. Commit
+`c24f21b` removes the array and always passes an explicit update count. Bash,
+Ruff, 11 focused tests, and a one-second free production-branch launch smoke
+pass the former failure point. See
+[`target_oriented_structured_gpp_broad_training_launch_failure_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_launch_failure_20260831.md).
+
+The active operation is to obtain fresh explicit approval and resubmit the
+same bounded stage on `gnall`: updates 1-1,000 and 208,000 unique days, fresh
 AdamW moments, constant `4e-6`, p95 clip 20.98786557796449, and fixed train-only
 monitor evaluations at steps 0, 250, 500, and 1,000. Do not submit until the
 user approves one node, eight CPU cores, one V100, 32 GiB, five hours, the exact
-working directory and command, and the CNY 13.80 worst-case additive estimate.
-Do not tune against the consumed 96-window panel, change architecture, or open
-365-day rollout, Gate D2, sealed test, or product acceptance yet.
+working directory and corrected `c24f21b` command, and the CNY 13.80 worst-case
+additive estimate. Do not tune against the consumed 96-window panel, change
+architecture, or open 365-day rollout, Gate D2, sealed test, or product
+acceptance yet.
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)

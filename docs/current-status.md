@@ -679,7 +679,12 @@ passed at commit `1573eb9`, report SHA256 `94a43cbe...cc70`: both chained
 updates were finite and nonzero, the 93,504,164 retained parent parameters were
 exactly unchanged, physical hard failures were zero, and the step-2 recovery
 was written with SHA256 `eed4aca8...2e92`. Explicit paid resource approval is
-now the active gate; no paid training is yet authorized. See
+now the active gate. The first paid launch, job `14881105` at `af5f426`, failed
+before Python after two seconds because old Bash rejected an empty optional
+argument array under `set -u`; it performed no training or checkpoint write.
+Commit `c24f21b` removes that array and passed the former line in a free
+production-branch launch smoke. Fresh corrected-submission approval is pending;
+no paid training result exists yet. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
@@ -705,6 +710,8 @@ and the active paid-stage design is
 [`target_oriented_structured_gpp_broad_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_v1.md).
 Its accepted runner admission is
 [`target_oriented_structured_gpp_broad_training_admission_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_admission_result_20260830.md).
+The paid-launch failure and correction are in
+[`target_oriented_structured_gpp_broad_training_launch_failure_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_launch_failure_20260831.md).
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See
