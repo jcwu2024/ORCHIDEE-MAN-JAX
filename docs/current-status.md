@@ -638,12 +638,21 @@ updates, continues inherited AdamW from step 250, writes recovery every ten
 updates, and selects only the last epoch whose train-only direct/7-day/30-day
 mean losses all strictly improve. The runner directly checks finite specialist
 and optimizer proposals and a nonzero parameter step. Its local contract,
-negative-design, checkpoint, static, CLI, and shell gates pass. The prepared
-paid envelope is one `gnall` V100, eight CPU cores, 32 GiB host memory, and ten
-hours, at worst-case `CNY 27.60`; it remains unsubmitted pending exact
-approval. The non-test 96-window panel remains reserved for post-training
-model selection. 365-day rollout, Gate D2, sealed test, and product work remain
-closed. See
+negative-design, checkpoint, static, CLI, and shell gates pass. Paid job
+`14878155` then completed all 248 batch-four updates and all four train-only
+epoch panels. Direct GPP, 7-day science, and 30-day science panel losses fell
+`49.6886%`, `50.7018%`, and `42.8952%`; all execution and physical gates pass,
+and step 498 is the selected diagnostic checkpoint. Its independent 96-window
+screen completed on free `gln01` at commit `d41cd0c`. Every physical hard
+failure is zero, but no slice/horizon cell passes all absolute science keys.
+The science macro is `0.4613409`, `35.3484%` worse than the inherited
+step-1000 Attention checkpoint on the same panel. GPP fails all six cells with
+negative bias and mean NRMSE `49.3998%` worse; maintenance respiration improves
+`59.3330%` and passes five cells. AGB, BGB, total-live, ecosystem, and
+nonliving-carbon stocks pass all six cells. Step 498 is not promoted; 365-day
+rollout, Gate D2, sealed test, and product work remain closed. The active work
+is a zero-update broad-v6 direct-GPP coverage and throughput audit before any
+new training contract. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
@@ -653,7 +662,11 @@ the effective-batch result in
 [`target_oriented_structured_gpp_joint_gradient_heterogeneity_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_heterogeneity_result_20260829.md),
 and the active preflight in
 [`target_oriented_structured_gpp_joint_batch4_preflight_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_batch4_preflight_result_20260830.md).
-The active contract is
+The completed training and screen results are in
+[`target_oriented_structured_gpp_joint_training_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_result_20260830.md)
+and
+[`target_oriented_structured_gpp_short_horizon_screen_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_short_horizon_screen_result_20260830.md).
+The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See
 [`target_oriented_daily_operator_contract_v1.md`](research/daily_coarse_graining/target_oriented_daily_operator_contract_v1.md)

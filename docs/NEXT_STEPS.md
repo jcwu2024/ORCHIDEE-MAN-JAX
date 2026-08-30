@@ -1801,13 +1801,30 @@ panel remains unread until final model selection. Local contract, recovery,
 negative-design, checkpoint, static, CLI, and shell checks pass. See
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 
-The active gate is explicit paid-resource approval and one unchanged `gnall`
-execution. The prepared envelope is one node, eight CPU cores, one V100, 32 GiB
-host memory, and a 10-hour limit, with worst-case additive charge
-`CNY 5.60 + CNY 22.00 = CNY 27.60`. No job has been submitted. Only after the
-exact commit, command, working directory, and this cost are approved may the
-launcher run. No 365-day rollout, Gate D2, sealed test, or product work is
-authorized before the bounded stage and its 7/30-day screen pass.
+Paid job `14878155` completed the unchanged bounded contract at commit
+`8115588`. All 248 batch-four updates and four train-only epoch panels passed;
+step 498 is selected. The formal independent 96-window screen then completed
+on free `gln01` at commit `d41cd0c`. All physical hard failures are zero, but
+the absolute science gate fails every slice/horizon cell. Science macro NRMSE
+is `0.4613409`, versus `0.3408544` for the inherited step-1000 Attention
+checkpoint on the same panel. GPP fails `6/6` cells with negative bias and is
+`49.3998%` worse on mean NRMSE; maintenance improves `59.3330%` and passes
+`5/6`. Biomass and ecosystem-carbon stock keys pass `6/6`, but this does not
+override the GPP/NPP/respiration failures. See
+[`target_oriented_structured_gpp_joint_training_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_result_20260830.md)
+and
+[`target_oriented_structured_gpp_short_horizon_screen_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_short_horizon_screen_result_20260830.md).
+
+The active gate is now a zero-update coverage and throughput audit for broad
+direct-GPP supervision from existing v6 train/train rows. The two completed
+training stages exposed the 12,879,363-parameter specialist to at most 104,000
+distinct direct-GPP Teacher days, only `1.2105%` of the available 8,591,565
+train/train transitions, while repeating the joint subset for four epochs.
+Quantify actual unique day/landpoint/year coverage, define a disjoint
+train/train monitoring panel, and measure streamed batch throughput before
+freezing any new paid training. Do not continue the same 500-artifact schedule,
+tune against the consumed 96-window panel, change architecture, or open
+365-day rollout, Gate D2, sealed test, or product acceptance yet.
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)
