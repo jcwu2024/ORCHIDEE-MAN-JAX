@@ -22,7 +22,7 @@ from scripts.hpc.audit_target_oriented_structured_gpp_data_coverage import (
 
 SCHEMA_VERSION = "target_oriented_structured_gpp_broad_schedule_audit_v1"
 COVERAGE_REPORT_SHA256 = "a53330a621cd63cd863798caea012a1517ef8552205839cb6f7f93aafff0528b"
-SAMPLE_UPDATES = (1, 16, 250, 500, 1000, 2000, 3500, 5000)
+SAMPLE_UPDATES = (*range(1, 17), 250, 500, 1000, 2000, 3500, 5000)
 
 
 def _canonical_selection(selection: Any) -> Mapping[str, Any]:

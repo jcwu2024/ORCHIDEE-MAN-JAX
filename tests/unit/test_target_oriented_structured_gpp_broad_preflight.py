@@ -79,3 +79,20 @@ def test_structured_gpp_broad_schedule_launcher_is_free_cpu_zero_training():
     assert "test01|test02|test03|test04" in launcher
     assert "--broad-preflight-contract" in launcher
     assert "--coverage-report" in launcher
+
+
+def test_structured_gpp_broad_gpu_preflight_launcher_is_free_and_zero_checkpoint():
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2]
+    launcher = (
+        root / "scripts/hpc/run_target_oriented_structured_gpp_broad_preflight.sh"
+    ).read_text(encoding="utf-8")
+    runner = (
+        root / "scripts/hpc/run_target_oriented_structured_gpp_broad_preflight.py"
+    ).read_text(encoding="utf-8")
+    assert "sbatch" not in launcher
+    assert "gln01|ibgln01|ibc13b02n04" in launcher
+    assert "--schedule-report" in launcher
+    assert '"optimizer_checkpoint_writes": 0' in runner
+    assert '"chained_training_updates": 0' in runner

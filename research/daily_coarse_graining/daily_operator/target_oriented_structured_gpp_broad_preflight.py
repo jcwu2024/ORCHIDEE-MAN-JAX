@@ -51,6 +51,10 @@ class StructuredGPPBroadPreflightContract:
     source_path: Path
     sha256: str
 
+    @property
+    def optimizer(self) -> Mapping[str, Any]:
+        return self.payload["optimizer_preflight"]
+
 
 def reference_identity(reference: Any) -> PointYearKey:
     return (
