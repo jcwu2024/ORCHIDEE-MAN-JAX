@@ -652,7 +652,15 @@ negative bias and mean NRMSE `49.3998%` worse; maintenance respiration improves
 nonliving-carbon stocks pass all six cells. Step 498 is not promoted; 365-day
 rollout, Gate D2, sealed test, and product work remain closed. The active work
 is a zero-update broad-v6 direct-GPP coverage and throughput audit before any
-new training contract. See
+new training contract. The coverage half is now complete at commit `db9763b`.
+It exactly reconstructs 103,399 unique exposed days, only `1.203494%` of the
+8,591,565 accepted train/train transitions; the four joint epochs repeat a
+51,878-day subset. All 535 train landpoints and 44 years occur, so the gap is
+shallow day-level exposure rather than missing global IDs. A target-blind
+monitor proposal reserves 128 previously unseen point-years on 128 distinct
+landpoints, with 2,048 sampled monitor days and 46,589 fully reserved eligible
+days. The active operation is now a direct-only raw-v6 streaming throughput
+prototype; no new training is authorized. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
@@ -666,6 +674,8 @@ The completed training and screen results are in
 [`target_oriented_structured_gpp_joint_training_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_result_20260830.md)
 and
 [`target_oriented_structured_gpp_short_horizon_screen_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_short_horizon_screen_result_20260830.md).
+The exact coverage evidence is in
+[`target_oriented_structured_gpp_data_coverage_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_data_coverage_result_20260830.md).
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See

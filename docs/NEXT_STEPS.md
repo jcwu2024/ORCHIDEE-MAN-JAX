@@ -1815,16 +1815,28 @@ override the GPP/NPP/respiration failures. See
 and
 [`target_oriented_structured_gpp_short_horizon_screen_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_short_horizon_screen_result_20260830.md).
 
-The active gate is now a zero-update coverage and throughput audit for broad
-direct-GPP supervision from existing v6 train/train rows. The two completed
-training stages exposed the 12,879,363-parameter specialist to at most 104,000
-distinct direct-GPP Teacher days, only `1.2105%` of the available 8,591,565
-train/train transitions, while repeating the joint subset for four epochs.
-Quantify actual unique day/landpoint/year coverage, define a disjoint
-train/train monitoring panel, and measure streamed batch throughput before
-freezing any new paid training. Do not continue the same 500-artifact schedule,
-tune against the consumed 96-window panel, change architecture, or open
-365-day rollout, Gate D2, sealed test, or product acceptance yet.
+The target-blind coverage audit is complete at commit `db9763b`; report SHA256
+is `a53330a6...0528b`. It reconstructs exactly 103,399 unique exposed days,
+`1.203494%` of the 8,591,565 accepted train/train transitions. Warm start used
+51,863 unique days; joint training used 51,878 unique days and repeated them
+over four epochs. Coverage spans all 535 train landpoints and 44 years but only
+10,761 of 23,540 point-years. A SHA256-ranked monitor proposal reserves 128
+previously unseen point-years on distinct landpoints, samples 2,048 monitor
+days, and leaves 8,521,436 first-row-eligible days for future broad training.
+See
+[`target_oriented_structured_gpp_data_coverage_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_data_coverage_result_20260830.md).
+
+The active gate is now the throughput half: build a direct-only,
+point-year-local raw-v6 streamer and measure shard read, assembly,
+host-to-device transfer, exact direct-GPP forward/gradient, and peak bytes for
+representative batch sizes. Do not carry retained-tail or 7/30 rollout payloads
+into this path. Existing accepted timings imply about 103 days/s for the
+two-pass gradient computation alone, but they do not measure raw-shard
+streaming. No paid broad training contract is allowed until the measured
+throughput and the monitor identity are frozen. Do not continue the same
+500-artifact schedule, tune against the consumed 96-window panel, change
+architecture, or open 365-day rollout, Gate D2, sealed test, or product
+acceptance yet.
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)

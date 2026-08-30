@@ -79,6 +79,10 @@ while every held slice acquired a negative GPP bias. It is not yet proof that
 data coverage is the only cause; architecture conditioning and loss
 calibration remain possible contributors.
 
+The subsequent target-blind schedule audit resolved the upper bound to exactly
+103,399 unique days (`1.203494%` of accepted train/train). See
+[`target_oriented_structured_gpp_data_coverage_result_20260830.md`](target_oriented_structured_gpp_data_coverage_result_20260830.md).
+
 ## Decision And Next Gate
 
 Do not continue the same 500-artifact schedule, select another epoch from this
