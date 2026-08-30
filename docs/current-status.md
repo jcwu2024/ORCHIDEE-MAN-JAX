@@ -669,7 +669,13 @@ direct-GPP target-blind schedule and free-GPU preflight frozen by machine
 contract `f0e50031...096a3`. It proposes 5,000 updates over 1,040,000 new days,
 with 52 distinct landpoints and four days per point-year in every 208-day
 update. It reserves the accepted monitor and excludes every previously exposed
-day. No paid training is yet authorized. See
+day. The full schedule audit and free-GPU preflight have passed at commit
+`853afa3`: schedule SHA256 `b4295558...d6b8b`; all 16 gradients were finite over
+all 129 specialist leaves; raw gradient p95 is 20.98786557796449; and all four
+independent `4e-6` AdamW steps reduced their batch loss while passing physical
+and retained-parent gates. The active stage-1 contract is `c54233c1...340e1`,
+bounded to 1,000 updates and 208,000 unique days. Runner qualification and free
+admission are next; no paid training is yet authorized. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
@@ -689,6 +695,10 @@ The accepted direct-only throughput evidence is in
 [`target_oriented_structured_gpp_streaming_throughput_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_streaming_throughput_result_20260830.md).
 The active preflight contract is
 [`target_oriented_structured_gpp_broad_preflight_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_preflight_v1.md).
+Its accepted result is
+[`target_oriented_structured_gpp_broad_preflight_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_preflight_result_20260830.md),
+and the active paid-stage design is
+[`target_oriented_structured_gpp_broad_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_v1.md).
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See

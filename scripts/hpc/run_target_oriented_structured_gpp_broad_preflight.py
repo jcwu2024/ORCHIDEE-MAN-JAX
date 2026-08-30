@@ -105,6 +105,8 @@ def _resolve_schedule_batches(
 def _prepare_batch(
     runtime: Mapping[str, Any],
     selections: Sequence[tuple[Any, tuple[int, ...]]],
+    *,
+    expected_days: int = 208,
 ) -> tuple[DirectGppBatch, Mapping[str, float]]:
     from research.daily_coarse_graining.daily_markov_contract import load_markov_shard
 
@@ -132,7 +134,7 @@ def _prepare_batch(
         },
     )
     stack_seconds = time.perf_counter() - started
-    if len(examples) != 208:
+    if len(examples) != int(expected_days):
         raise ValueError("structured GPP broad preflight day count drift")
     return batch, {
         "parent_shard_read_seconds": read_seconds,
@@ -148,9 +150,12 @@ def _direct_forward(
     batch: DirectGppBatch,
     direct_steps: Mapping[str, Any],
 ) -> Any:
+    batch_size = int(batch.inputs.year.shape[0])
+    if batch_size <= 0 or batch_size % 4:
+        raise ValueError("structured GPP broad forward batch size drift")
     values = [
         direct_steps["one_forward"](specialist, _slice(batch, start, start + 4))
-        for start in range(0, 208, 4)
+        for start in range(0, batch_size, 4)
     ]
     jax.block_until_ready(values)
     total = values[0]

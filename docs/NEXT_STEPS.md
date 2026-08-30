@@ -1845,14 +1845,27 @@ and 1,040,000 previously unseen days; every 208-day update has 52 distinct
 landpoints and four days per point-year. The accepted 128-point-year monitor is
 reserved in full and the 103,399 prior-exposure days are excluded.
 
-The active operation is now to materialize and audit that target-blind schedule
-on a free CPU node, then run the bounded 16-gradient/four-independent-proposal
-preflight on free `gln01`. The preflight writes no optimizer checkpoint and
-does not chain training updates. Only a passing result may freeze a paid first
-stage of 1,000 updates and 208,000 unique days. Do not submit paid training,
-continue the old 500-artifact schedule, tune against the consumed 96-window
-panel, change architecture, or open 365-day rollout, Gate D2, sealed test, or
-product acceptance yet.
+The target-blind schedule and free-GPU preflight are accepted at commit
+`853afa3`. Schedule report SHA256 is `7de9e840...9e252`, schedule SHA256 is
+`b4295558...d6b8b`, and GPU report SHA256 is `0962b18d...39b0d`. The full
+schedule has exactly 1,040,000 unique days, all 535 landpoints, 23,412
+non-monitor point-years, all 44 years, and zero overlap with prior exposure or
+monitor point-years. Sixteen global batch gradients were finite across all 129
+specialist leaves; raw norms have median 12.8578, p95 20.9879, and maximum
+23.0190. Four independent `4e-6` AdamW steps all reduced their own batch loss
+and passed retained-parent and physical gates. See
+[`target_oriented_structured_gpp_broad_preflight_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_preflight_result_20260830.md).
+
+The active contract is now
+[`target_oriented_structured_gpp_broad_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_v1.md),
+machine SHA256 `c54233c1...340e1`. Implement and locally qualify the resumable
+runner, then admit it on free `gln01`. Stage 1 is bounded to schedule updates
+1-1,000 and 208,000 unique days, fresh AdamW moments, constant `4e-6`, p95 clip
+20.98786557796449, and fixed train-only monitor evaluations at steps 0, 250,
+500, and 1,000. Do not submit the five-hour paid job until the user separately
+approves the exact resources, command, directory, and CNY 13.80 worst-case
+estimate. Do not tune against the consumed 96-window panel, change architecture,
+or open 365-day rollout, Gate D2, sealed test, or product acceptance yet.
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)
