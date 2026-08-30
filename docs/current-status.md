@@ -659,8 +659,17 @@ It exactly reconstructs 103,399 unique exposed days, only `1.203494%` of the
 shallow day-level exposure rather than missing global IDs. A target-blind
 monitor proposal reserves 128 previously unseen point-years on 128 distinct
 landpoints, with 2,048 sampled monitor days and 46,589 fully reserved eligible
-days. The active operation is now a direct-only raw-v6 streaming throughput
-prototype; no new training is authorized. See
+days. The direct-only streamer is now accepted at commit `c28a667`. It removes
+typed-sidecar and complete-example assembly from the GPP path, reducing 208-day
+host preparation from `84.2489 s` to `0.7304 s` (`115.34x`) and sustaining
+284.76 host days/s. A contended free-GPU run gives a conservative 56.36
+compute days/s and 47.05 end-to-end days/s, with finite loss statistics and all
+12,879,363 specialist gradients finite. The active operation is now the broad
+direct-GPP target-blind schedule and free-GPU preflight frozen by machine
+contract `f0e50031...096a3`. It proposes 5,000 updates over 1,040,000 new days,
+with 52 distinct landpoints and four days per point-year in every 208-day
+update. It reserves the accepted monitor and excludes every previously exposed
+day. No paid training is yet authorized. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
@@ -676,6 +685,10 @@ and
 [`target_oriented_structured_gpp_short_horizon_screen_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_short_horizon_screen_result_20260830.md).
 The exact coverage evidence is in
 [`target_oriented_structured_gpp_data_coverage_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_data_coverage_result_20260830.md).
+The accepted direct-only throughput evidence is in
+[`target_oriented_structured_gpp_streaming_throughput_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_streaming_throughput_result_20260830.md).
+The active preflight contract is
+[`target_oriented_structured_gpp_broad_preflight_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_preflight_v1.md).
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See

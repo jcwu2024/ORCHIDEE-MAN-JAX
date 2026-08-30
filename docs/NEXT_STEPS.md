@@ -1826,17 +1826,33 @@ days, and leaves 8,521,436 first-row-eligible days for future broad training.
 See
 [`target_oriented_structured_gpp_data_coverage_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_data_coverage_result_20260830.md).
 
-The active gate is now the throughput half: build a direct-only,
-point-year-local raw-v6 streamer and measure shard read, assembly,
-host-to-device transfer, exact direct-GPP forward/gradient, and peak bytes for
-representative batch sizes. Do not carry retained-tail or 7/30 rollout payloads
-into this path. Existing accepted timings imply about 103 days/s for the
-two-pass gradient computation alone, but they do not measure raw-shard
-streaming. No paid broad training contract is allowed until the measured
-throughput and the monitor identity are frozen. Do not continue the same
-500-artifact schedule, tune against the consumed 96-window panel, change
-architecture, or open 365-day rollout, Gate D2, sealed test, or product
-acceptance yet.
+The direct-only streaming probe is accepted at commit `c28a667`; report SHA256
+is `06731a56...10761`. Preparing 208 days takes `0.7304 s` rather than the
+complete-example path's `84.2489 s`, a `115.34x` improvement and about 284.76
+host days/s. The shared-card 208-day exact forward/gradient path sustains 56.36
+days/s and the combined hot path 47.05 days/s; this is a conservative result
+because an unrelated process already used about 27% GPU. All loss statistics
+and all 12,879,363 specialist gradient elements are finite. The path reads no
+typed sidecar and constructs no retained-tail, other-target, next-state, or
+7/30-day payload. See
+[`target_oriented_structured_gpp_streaming_throughput_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_streaming_throughput_result_20260830.md).
+
+The broad-data schedule and free-GPU preflight contract is frozen as
+[`target_oriented_structured_gpp_broad_preflight_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_preflight_v1.md),
+machine SHA256 `f0e50031...096a3`. Keep the coordinate-aligned Attention parent
+and structured-GPP mechanism unchanged. The proposed maximum is 5,000 updates
+and 1,040,000 previously unseen days; every 208-day update has 52 distinct
+landpoints and four days per point-year. The accepted 128-point-year monitor is
+reserved in full and the 103,399 prior-exposure days are excluded.
+
+The active operation is now to materialize and audit that target-blind schedule
+on a free CPU node, then run the bounded 16-gradient/four-independent-proposal
+preflight on free `gln01`. The preflight writes no optimizer checkpoint and
+does not chain training updates. Only a passing result may freeze a paid first
+stage of 1,000 updates and 208,000 unique days. Do not submit paid training,
+continue the old 500-artifact schedule, tune against the consumed 96-window
+panel, change architecture, or open 365-day rollout, Gate D2, sealed test, or
+product acceptance yet.
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)

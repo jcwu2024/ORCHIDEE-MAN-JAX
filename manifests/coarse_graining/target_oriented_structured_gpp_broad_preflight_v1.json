@@ -1,0 +1,121 @@
+{
+  "schema_version": "target_oriented_structured_gpp_broad_preflight_v1",
+  "status": "frozen_before_target_blind_schedule_materialization_and_free_gpu_preflight",
+  "contract_sha256": "f0e50031715b26898d581d3d99a17ae3c01a6a27e693f2e0130fb9e6c63096a3",
+  "identity": {
+    "candidate": "target_oriented_structured_gpp_v1",
+    "candidate_contract_sha256": "ce211fa7c6f5a09bd900e02e31a864b61fb32f6b06ee96d4262402c513d620ea",
+    "dataset_manifest_sha256": "5fc2c0691bfa53252f875f7646f3c1a5bea203c2759a6e947b26bb51dc13aa99",
+    "coverage_report_sha256": "a53330a621cd63cd863798caea012a1517ef8552205839cb6f7f93aafff0528b",
+    "throughput_report_sha256": "06731a560786a02dd2de5e323a3d3b395eaacc89e51f69ceb89a3a6ed0210761",
+    "selected_checkpoint_sha256": "77cb405fc7cbcea3a394041a141c7d5180bd7068eaa309ccdc33a3995d295f2b",
+    "selected_checkpoint_optimizer_step": 498,
+    "candidate_parameter_count": 106383527,
+    "trainable_specialist_parameter_count": 12879363,
+    "retained_parent_parameter_count": 93504164
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "selection_seed": 20260830,
+    "selection_algorithm": "sha256_ranked_landpoints_point_years_and_rows_with_rotating_distinct_landpoint_batches",
+    "optimizer_updates_maximum": 5000,
+    "point_years_per_update": 52,
+    "days_per_point_year_per_update": 4,
+    "effective_day_batch_size": 208,
+    "microbatch_size": 4,
+    "unique_training_days": 1040000,
+    "exclude_first_lifecycle_row": true,
+    "exclude_prior_exposed_days": true,
+    "distinct_landpoints_within_update": true,
+    "repeat_training_days": false,
+    "selection_uses_target_values": false,
+    "monitor": {
+      "source": "accepted_coverage_report_proposal",
+      "point_years": 128,
+      "distinct_landpoints": 128,
+      "sampled_days": 2048,
+      "days_per_point_year": 16,
+      "reserve_whole_point_years": true,
+      "selection_uses_target_values": false
+    },
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "input_boundary": {
+    "assembler": "DailyProcessTrainingAdapter.assemble_direct_gpp",
+    "inputs": "canonical_daily_operator_inputs",
+    "target": "daily.fast_gpp",
+    "typed_sidecar_payload": false,
+    "retained_tail_payload": false,
+    "other_process_targets": false,
+    "next_state_target": false,
+    "seven_or_thirty_day_payload": false
+  },
+  "objective": {
+    "name": "direct_gpp_208_unique_teacher_days",
+    "formula": "0.5 * normalized_mse + 0.5 * normalized_signed_bias_squared",
+    "normalization": "frozen_train_train_daily_fast_gpp_scale",
+    "mask": "teacher_defined_and_active_nonbare_positive_fraction_vegetation",
+    "aggregation": "exact_sufficient_statistics_across_all_208_days",
+    "recursive_candidate_state_used": false
+  },
+  "optimizer_preflight": {
+    "name": "adamw",
+    "state": "fresh_zero_moments_at_selected_step_498_parameters",
+    "beta1": 0.9,
+    "beta2": 0.95,
+    "epsilon": 1e-08,
+    "weight_decay": 0.01,
+    "learning_rate": 4e-06,
+    "gradient_batches": 16,
+    "independent_finite_step_batches": 4,
+    "chained_training_updates": false,
+    "clip_threshold_derivation": "p95_of_16_broad_batch_raw_gradient_norms",
+    "report_all_raw_norms": true
+  },
+  "proposed_paid_stage_after_preflight": {
+    "stage_1_optimizer_updates": 1000,
+    "stage_1_unique_days": 208000,
+    "stage_1_monitor_updates": [0, 250, 500, 1000],
+    "maximum_total_optimizer_updates": 5000,
+    "maximum_total_unique_days": 1040000,
+    "later_monitor_updates": [2000, 3500, 5000],
+    "fresh_optimizer_state": true,
+    "constant_learning_rate_through_stage_1": true,
+    "training_authorized_by_this_preflight_contract": false
+  },
+  "acceptance": {
+    "schedule_has_exact_unique_day_count": true,
+    "schedule_excludes_prior_exposure_and_monitor_point_years": true,
+    "every_update_has_52_distinct_landpoints_and_208_days": true,
+    "all_16_gradient_batches_finite_full_specialist_coverage": true,
+    "all_4_independent_proposals_finite_nonzero": true,
+    "same_batch_post_proposal_loss_decreases_in_all_4_cases": true,
+    "retained_parent_parameters_exactly_unchanged": true,
+    "all_one_day_physical_hard_failures_zero": true
+  },
+  "execution": {
+    "target_blind_schedule_audit_allowed_on_free_cpu": true,
+    "free_gln01_preflight_allowed": true,
+    "paid_training_authorized": false,
+    "optimizer_checkpoint_writes_allowed": false,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "validation_read_authorized": false,
+    "365_day_rollout_authorized": false,
+    "gate_d2_authorized": false,
+    "sealed_test_authorized": false,
+    "product_acceptance_authorized": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "cross_day_neural_hidden_state": false
+  },
+  "next_gate": {
+    "on_preflight_pass": "freeze_broad_direct_gpp_paid_stage_1_training_contract",
+    "on_preflight_failure": "stop_before_paid_training_and_review_data_or_optimizer",
+    "architecture_change_authorized": false
+  }
+}
