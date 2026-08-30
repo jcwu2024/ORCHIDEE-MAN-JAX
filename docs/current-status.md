@@ -674,8 +674,12 @@ day. The full schedule audit and free-GPU preflight have passed at commit
 all 129 specialist leaves; raw gradient p95 is 20.98786557796449; and all four
 independent `4e-6` AdamW steps reduced their batch loss while passing physical
 and retained-parent gates. The active stage-1 contract is `c54233c1...340e1`,
-bounded to 1,000 updates and 208,000 unique days. Runner qualification and free
-admission are next; no paid training is yet authorized. See
+bounded to 1,000 updates and 208,000 unique days. The two-update free admission
+passed at commit `1573eb9`, report SHA256 `94a43cbe...cc70`: both chained
+updates were finite and nonzero, the 93,504,164 retained parent parameters were
+exactly unchanged, physical hard failures were zero, and the step-2 recovery
+was written with SHA256 `eed4aca8...2e92`. Explicit paid resource approval is
+now the active gate; no paid training is yet authorized. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
@@ -699,6 +703,8 @@ Its accepted result is
 [`target_oriented_structured_gpp_broad_preflight_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_preflight_result_20260830.md),
 and the active paid-stage design is
 [`target_oriented_structured_gpp_broad_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_v1.md).
+Its accepted runner admission is
+[`target_oriented_structured_gpp_broad_training_admission_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_admission_result_20260830.md).
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See

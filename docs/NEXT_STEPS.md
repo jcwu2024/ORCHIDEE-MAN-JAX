@@ -1856,16 +1856,23 @@ specialist leaves; raw norms have median 12.8578, p95 20.9879, and maximum
 and passed retained-parent and physical gates. See
 [`target_oriented_structured_gpp_broad_preflight_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_preflight_result_20260830.md).
 
-The active contract is now
+The active contract is
 [`target_oriented_structured_gpp_broad_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_v1.md),
-machine SHA256 `c54233c1...340e1`. Implement and locally qualify the resumable
-runner, then admit it on free `gln01`. Stage 1 is bounded to schedule updates
-1-1,000 and 208,000 unique days, fresh AdamW moments, constant `4e-6`, p95 clip
-20.98786557796449, and fixed train-only monitor evaluations at steps 0, 250,
-500, and 1,000. Do not submit the five-hour paid job until the user separately
-approves the exact resources, command, directory, and CNY 13.80 worst-case
-estimate. Do not tune against the consumed 96-window panel, change architecture,
-or open 365-day rollout, Gate D2, sealed test, or product acceptance yet.
+machine SHA256 `c54233c1...340e1`. The resumable runner and two-update free
+`gln01` admission passed at commit `1573eb9`; report SHA256 is
+`94a43cbe...cc70` and recovery SHA256 is `eed4aca8...2e92`. Both updates were
+finite and nonzero, all retained parent parameters were exactly unchanged, and
+all physical hard-failure counts were zero. See
+[`target_oriented_structured_gpp_broad_training_admission_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_admission_result_20260830.md).
+
+The active operation is to obtain explicit paid resource approval, then submit
+the bounded stage on `gnall`: updates 1-1,000 and 208,000 unique days, fresh
+AdamW moments, constant `4e-6`, p95 clip 20.98786557796449, and fixed train-only
+monitor evaluations at steps 0, 250, 500, and 1,000. Do not submit until the
+user approves one node, eight CPU cores, one V100, 32 GiB, five hours, the exact
+working directory and command, and the CNY 13.80 worst-case additive estimate.
+Do not tune against the consumed 96-window panel, change architecture, or open
+365-day rollout, Gate D2, sealed test, or product acceptance yet.
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)
