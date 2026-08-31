@@ -706,16 +706,31 @@ state feedback is material in `6/6`. The Teacher-GPP bridge makes growth
 respiration and NPP pass all cells, reducing their median acceptance scores by
 `99.6822%` and `99.6525%`. The formal classification is
 `direct_and_feedback_gpp_with_sufficient_downstream_cause`; all attribution
-integrity and physical gates pass. The design discussion is complete. The
-active gate is a zero-training source-component state-feedback attribution on
-prepared `train/train` updates `301`, `601`, and `901`, frozen at contract
-SHA256 `858b5907...c69ed`. It compares free rollout, full Teacher day-start
-state, and six single-component Teacher-carry modes using a shared runtime
-state-mask graph. The fresh panel is not read. Its material-component result
-will bound the first coupled GPP state/process-head scope; a no-component
-result requires an interaction audit rather than discarding the source
-families. No unchanged specialist training, architecture/loss edit, 365-day
-rollout, Gate D2, sealed test, or product acceptance is authorized. See
+integrity and physical gates pass.
+
+The following train-only source-component state-feedback attribution is also
+complete at commit `15171cd`, under contract SHA256 `858b5907...c69ed` and
+report SHA256 `1b2d1820...41c2a19b`. Carrying only
+`slowproc_stomate_previous_step_state` captures median `96.0598%/81.9454%`
+of the 7/30-day cumulative-GPP free-to-full-Teacher score gap and is positive
+in all six update/horizon cases. It is the only component that passes the
+frozen materiality rule. Water captures `9.1288%/5.1239%`; it remains a
+monitored secondary path but does not enter the first selected scope. Canopy,
+energy, thermal, and driver components are nonmaterial. All physical and
+integrity gates pass, with no training, fresh-target read, Teacher
+regeneration, v5 use, checkpoint write, 48-record reconstruction, or subdaily
+scan.
+
+The active gate is architecture discussion and contract freeze for a coupled
+GPP/carbon-state candidate. Retain the day-local coordinate-Attention GPP
+specialist and canonical retained exact tail; initially open only source-backed
+inputs/process paths associated with `slowproc_stomate_previous_step_state`,
+while protecting and reporting water. The train-only objective, matched
+mechanism control, local/real-v6 zero-update admission, bounded training
+budget, target-blind monitor, and stop rule must be approved before
+implementation or any optimizer update. No unchanged specialist training,
+fresh-target tuning, 365-day rollout, Gate D2, sealed test, or product
+acceptance is authorized. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
@@ -751,10 +766,14 @@ Its completed result is
 [`target_oriented_structured_gpp_fresh_screen_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_result_20260831.md).
 The completed attribution contract is
 [`target_oriented_structured_gpp_fresh_attribution_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_attribution_v1.md).
-Its accepted result and current design-discussion authority are
+Its accepted result and predecessor design evidence are
 [`target_oriented_structured_gpp_fresh_attribution_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_attribution_result_20260831.md).
-The active train-only state-feedback scope contract is
+The completed train-only state-feedback scope contract is
 [`target_oriented_structured_gpp_state_feedback_attribution_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_state_feedback_attribution_v1.md).
+Its accepted result and current design-scope authority are
+[`target_oriented_structured_gpp_state_feedback_attribution_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_state_feedback_attribution_result_20260831.md).
+The unapproved architecture proposal is
+[`target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md).
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See

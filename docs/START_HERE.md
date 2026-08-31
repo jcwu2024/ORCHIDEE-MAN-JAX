@@ -355,15 +355,28 @@ formal classification is
 `direct_and_feedback_gpp_with_sufficient_downstream_cause`. All integrity and
 physical gates pass, but the checkpoint is not promoted.
 
-The design discussion is complete. The active gate is the frozen zero-training
-`train/train` state-feedback attribution at contract SHA256
-`858b5907...c69ed`. It compares free rollout, full Teacher day-start state,
-and six single-source-component Teacher-carry interventions on prepared updates
-`301`, `601`, and `901`. Its purpose is to bound which state/process heads may
-join the GPP specialist before any architecture or loss edit. Unchanged
-specialist continuation, fresh-target tuning, 365-day rollout, Gate D2, sealed
-test, and product acceptance remain closed. See `NEXT_STEPS.md` for the exact
-current boundary.
+The train-only source-component attribution is complete at commit `15171cd`;
+report SHA256 is `1b2d1820...41c2a19b`. Carrying only
+`slowproc_stomate_previous_step_state` captures a median `96.06%/81.95%` of
+the 7/30-day cumulative-GPP free-to-full-Teacher score gap, is positive in all
+six update/horizon cases, and is material at both horizons. No other source
+component passes the frozen
+materiality gate. Water captures `9.13%/5.12%` and remains a monitored
+secondary path. All integrity and physical gates pass.
+
+The active gate is architecture discussion and a frozen train-only objective
+for the first coupled GPP/carbon-state candidate. Retain the existing day-local
+coordinate-Attention GPP specialist, open only source-backed paths associated
+with `slowproc_stomate_previous_step_state` initially, preserve the canonical
+retained exact tail, and keep water protected and reported. Do not implement
+or train until the mechanism, matched diagnostic control, bounded admission,
+and stop rule are approved. Unchanged specialist continuation, fresh-target
+tuning, 365-day rollout, Gate D2, sealed test, and product acceptance remain
+closed. See `NEXT_STEPS.md` for the exact current boundary.
+
+The current discussion proposal is
+`research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md`;
+it is not implementation or training authorization.
 
 ## New Task Bootstrap
 

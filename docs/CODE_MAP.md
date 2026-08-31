@@ -841,7 +841,7 @@ report. It recomputes formal-report reproduction, attribution classification,
 and integrity from existing JSON statistics without loading Teacher data or
 executing the model.
 
-The next train-only feedback-scope audit is owned by
+The completed train-only feedback-scope audit is owned by
 `daily_operator/target_oriented_structured_gpp_state_feedback_attribution.py`
 and
 `manifests/coarse_graining/target_oriented_structured_gpp_state_feedback_attribution_v1.json`.
@@ -851,7 +851,14 @@ Teacher-carry modes on prepared updates `301`, `601`, and `901`.
 `daily_operator/target_oriented_snowheat_recurrence.py` and
 `run_target_oriented_full_step_preflight.py` provide the shared runtime-mask
 rollout so the components reuse one compiled graph per horizon. The shell
-wrapper is a direct free-`gln01` boundary with no `sbatch` path.
+wrapper is a direct free-`gln01` boundary with no `sbatch` path. The accepted
+result selects only `slowproc_stomate_previous_step_state` as material, keeps
+water as a monitored secondary path, and opens architecture discussion rather
+than implementation. Its evidence is
+`target_oriented_structured_gpp_state_feedback_attribution_result_20260831.md`.
+No coupled GPP/carbon-state model owner exists yet; add one only after the
+mechanism, train-only objective, matched diagnostic control, bounded gates,
+and stop rule are approved.
 
 ## Scripts
 

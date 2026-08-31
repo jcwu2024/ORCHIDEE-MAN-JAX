@@ -1909,20 +1909,42 @@ and NPP pass all six cells, with median acceptance-score reductions of
 `direct_and_feedback_gpp_with_sufficient_downstream_cause`. See
 [`target_oriented_structured_gpp_fresh_attribution_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_attribution_result_20260831.md).
 
-The design discussion selected two ordered workstreams while retaining the
-day-local coordinate Attention backbone. First, the active zero-training
-`train/train` state-feedback attribution freezes six source components and
-prepared updates `301`, `601`, and `901` under contract SHA256
-`858b5907...c69ed`. It measures how much each single-component Teacher-carry
-intervention captures of the cumulative-GPP free-to-full-Teacher score gap,
-without reading the fresh panel. Only a component material at 7 or 30 days may
-enter the first coupled GPP state/process-head design; if none is individually
-material, component interactions must be audited before an architecture edit.
-Second, direct-GPP continuation may reuse updates `1001-5000` of the accepted
-million-day schedule only after its broader train-only monitor and loss/stop
-contract are frozen. Do not continue the unchanged specialist, tune from fresh
-targets, or open 365-day rollout, Gate D2, sealed test, or product acceptance.
-The active contract is
+The train-only state-feedback attribution is complete at commit `15171cd`;
+report SHA256 is `1b2d1820...41c2a19b`. Carrying only
+`slowproc_stomate_previous_step_state` captures a median `96.0598%` of the
+7-day and `81.9454%` of the 30-day cumulative-GPP free-to-full-Teacher score
+gap. It is positive in all six update/horizon cases and is the only component
+that passes the frozen materiality rule. Water captures `9.1288%/5.1239%` and
+does not pass, but remains a monitored secondary path because all three
+7-day groups improve. All physical hard failures are zero, no optimizer or
+checkpoint was created, and no fresh target, sealed test, v5 row, regenerated
+Teacher datum, 48-record forcing reconstruction, or subdaily scan was used.
+See
+[`target_oriented_structured_gpp_state_feedback_attribution_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_state_feedback_attribution_result_20260831.md).
+
+The active gate is to discuss and then freeze the first coupled GPP/carbon-
+state architecture and train-only objective before implementation. Preserve
+the current day-local coordinate-Attention GPP specialist and the canonical
+retained exact tail. Initially open only source-backed inputs/process paths
+associated with `slowproc_stomate_previous_step_state`; do not directly
+replace retained STOMATE state. Keep water-state scores as a protected
+secondary diagnostic. The objective must include broad direct daily GPP,
+one-day carbon-state supervision through the complete operator, and 7/30-day
+GPP/respiration/NPP/carbon-stock terms on train/train windows. Freeze its
+matched mechanism control, local and real-v6 zero-update admission, bounded
+training budget, target-blind monitor, and stop rule before any optimizer
+update. The existing million-day schedule may be reused only after this new
+contract defines which direct days and rollout windows are consumed.
+
+The discussion proposal is
+[`target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md).
+It recommends coordinate-level cross-attention over the selected day-start
+slow-process carbon state while keeping `daily.fast_gpp` as the only newly
+controlled output. It is not yet a frozen architecture or training contract.
+
+Do not continue the unchanged specialist, tune from fresh targets, or open
+365-day rollout, Gate D2, sealed test, or product acceptance. The completed
+scope contract is
 [`target_oriented_structured_gpp_state_feedback_attribution_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_state_feedback_attribution_v1.md).
 The completed attribution contracts remain
 [`target_oriented_structured_gpp_fresh_screen_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_v1.md)
