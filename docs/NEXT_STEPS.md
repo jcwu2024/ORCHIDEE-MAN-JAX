@@ -1873,15 +1873,22 @@ Ruff, 11 focused tests, and a one-second free production-branch launch smoke
 pass the former failure point. See
 [`target_oriented_structured_gpp_broad_training_launch_failure_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_launch_failure_20260831.md).
 
-The active operation is to obtain fresh explicit approval and resubmit the
-same bounded stage on `gnall`: updates 1-1,000 and 208,000 unique days, fresh
-AdamW moments, constant `4e-6`, p95 clip 20.98786557796449, and fixed train-only
-monitor evaluations at steps 0, 250, 500, and 1,000. Do not submit until the
-user approves one node, eight CPU cores, one V100, 32 GiB, five hours, the exact
-working directory and corrected `c24f21b` command, and the CNY 13.80 worst-case
-additive estimate. Do not tune against the consumed 96-window panel, change
-architecture, or open 365-day rollout, Gate D2, sealed test, or product
-acceptance yet.
+Corrected job `14883081` completed all 1,000 updates at commit `f040679`; report
+SHA256 is `5cfab5a6...bee9`. The fixed monitor loss fell from `0.82876149` to
+`0.08593347`, an 89.63% reduction, and 125/128 point-years improved. Aggregate
+normalized bias improved from `-0.43192778` to `-0.09223345`, all physical hard
+counts were zero, and all 93,504,164 retained parent coordinates were exactly
+unchanged. The accepted selected checkpoint is update 1,000, SHA256
+`3b173b89...4ec0`. See
+[`target_oriented_structured_gpp_broad_training_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_result_20260831.md).
+
+The active operation is to design and freeze a fresh target-blind independent
+7/30-day science screen before reading its values. It must not reuse the
+consumed 96-window panel for tuning. The screen must test direct GPP
+generalization and downstream GPP, respiration, NPP, AGB, and BGB behavior
+under the existing conservative daily operator boundary. Do not change the
+architecture, continue broad training, or open 365-day rollout, Gate D2,
+sealed test, or product acceptance yet.
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)

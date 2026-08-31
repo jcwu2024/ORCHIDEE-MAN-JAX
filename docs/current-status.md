@@ -683,8 +683,14 @@ now the active gate. The first paid launch, job `14881105` at `af5f426`, failed
 before Python after two seconds because old Bash rejected an empty optional
 argument array under `set -u`; it performed no training or checkpoint write.
 Commit `c24f21b` removes that array and passed the former line in a free
-production-branch launch smoke. Fresh corrected-submission approval is pending;
-no paid training result exists yet. See
+production-branch launch smoke. Corrected job `14883081` then completed all
+1,000 updates in `02:30:39`; report SHA256 is `5cfab5a6...bee9`. The fixed
+monitor loss fell 89.63%, 125/128 point-years improved, aggregate normalized
+bias magnitude fell from 0.432 to 0.092, all physical hard counts were zero,
+and retained parent parameters were exactly unchanged. Update 1,000,
+checkpoint SHA256 `3b173b89...4ec0`, is the accepted broad-stage selection. A
+fresh independent 7/30-day screen is now the active gate; no long-horizon or
+product acceptance exists yet. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
@@ -712,6 +718,8 @@ Its accepted runner admission is
 [`target_oriented_structured_gpp_broad_training_admission_result_20260830.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_admission_result_20260830.md).
 The paid-launch failure and correction are in
 [`target_oriented_structured_gpp_broad_training_launch_failure_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_launch_failure_20260831.md).
+The accepted broad-stage result is in
+[`target_oriented_structured_gpp_broad_training_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_result_20260831.md).
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See
