@@ -835,6 +835,11 @@ diagnostic Teacher-GPP bridge on the same 96 windows. It reports exact GPP
 residual decomposition and signed growth/NPP propagation without an optimizer,
 parameter step, or checkpoint write. Its shell wrapper is a direct free-
 `gln01` boundary and contains no `sbatch` submission.
+`scripts/hpc/finalize_target_oriented_structured_gpp_fresh_attribution.py`
+is the hash-bound CPU-only correction boundary for the completed raw numerical
+report. It recomputes formal-report reproduction, attribution classification,
+and integrity from existing JSON statistics without loading Teacher data or
+executing the model.
 
 ## Scripts
 

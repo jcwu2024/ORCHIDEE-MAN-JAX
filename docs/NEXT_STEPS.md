@@ -1899,17 +1899,26 @@ GPP fails all six cells at `0.73409` to `1.00839`, and growth respiration,
 NPP, NEP, and NEE also fail all six. Biomass and ecosystem-carbon stocks still
 pass all cells. The broad step-1000 checkpoint is not promoted.
 
-The active operation is a zero-training attribution on the same frozen
-checkpoint and 96 windows. Separate local Teacher-state GPP error from added
-free-rollout state-feedback error, resolve temporal/spatial/joint differences,
-and trace the signed GPP residual into growth respiration and NPP. Do not
-continue broad training, tune from the fresh targets, change the architecture,
-or open 365-day rollout, Gate D2, sealed test, or product acceptance. See
+The zero-training attribution is complete. Its hash-bound CPU finalizer
+reproduces the ordinary fresh report within `6.94e-18`; every decomposition,
+carbon-identity, finite-value, and physical hard gate passes. Teacher-state
+cumulative GPP fails `5/6` cells, and added cross-day state feedback is
+material in `6/6`. The diagnostic Teacher-GPP bridge makes growth respiration
+and NPP pass all six cells, with median acceptance-score reductions of
+`99.6822%` and `99.6525%`. The formal classification is
+`direct_and_feedback_gpp_with_sufficient_downstream_cause`. See
+[`target_oriented_structured_gpp_fresh_attribution_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_attribution_result_20260831.md).
+
+The active operation is a design discussion before any architecture or loss
+edit. A successor must address both train-only day-local GPP generalization and
+the cross-day state channels that feed later GPP. Before implementation, freeze
+the affected output/state scope, mechanism, train-only objective, matched
+diagnostic, bounded admission, and stop rule. Do not continue the unchanged
+structured-GPP specialist, tune from the fresh targets, or open 365-day
+rollout, Gate D2, sealed test, or product acceptance. The completed contracts
+remain
 [`target_oriented_structured_gpp_fresh_screen_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_v1.md)
 and
-[`target_oriented_structured_gpp_fresh_screen_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_result_20260831.md).
-The attribution is frozen before execution at contract SHA256
-`2c93dbe5...112a`; see
 [`target_oriented_structured_gpp_fresh_attribution_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_attribution_v1.md).
 
 The completed zero-update calibration protocol is recorded in

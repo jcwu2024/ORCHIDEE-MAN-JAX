@@ -347,18 +347,20 @@ That maintenance-only phase and the subsequent small-data structured-GPP
 stages are now historical. Broad direct-GPP training later exposed 208,000
 new train/train days and reduced its fixed monitor loss by `89.63%`, but its
 selected step-1000 checkpoint failed the target-blind fresh 96-window science
-screen. All physical hard gates pass; Teacher-state daily GPP NRMSE is
-`0.44496`, and free-rollout GPP, growth respiration, NPP, NEP, and NEE fail all
-six temporal/spatial/joint 7/30-day cells. Biomass and ecosystem-carbon stocks
-pass all cells. The checkpoint is not promoted.
+screen. The completed three-mode attribution then separates the failure:
+Teacher-state cumulative GPP fails `5/6` cells, cross-day state feedback is
+material in `6/6`, and a diagnostic Teacher-GPP bridge makes growth respiration
+and NPP pass all six cells with about `99.7%` median score reduction. The
+formal classification is
+`direct_and_feedback_gpp_with_sufficient_downstream_cause`. All integrity and
+physical gates pass, but the checkpoint is not promoted.
 
-The active gate is the frozen, zero-training three-mode attribution on that
-same checkpoint and panel: ordinary free rollout, Teacher-day-start local GPP,
-and a diagnostic Teacher-GPP bridge. It separates local GPP mapping error from
-added state-feedback error and measures downstream growth/NPP causality. It
-does not authorize more training, an architecture edit, 365-day rollout, Gate
-D2, sealed test, or product acceptance. See `NEXT_STEPS.md` for the exact
-current execution boundary.
+The active gate is a design discussion before any architecture or loss edit.
+The next candidate must jointly address train-only day-local GPP generalization
+and the cross-day state channels that feed later GPP. Unchanged specialist
+continuation, validation-target tuning, 365-day rollout, Gate D2, sealed test,
+and product acceptance remain closed. See `NEXT_STEPS.md` for the exact current
+boundary.
 
 ## New Task Bootstrap
 

@@ -697,13 +697,20 @@ passes, but the absolute science gate fails. Teacher-state daily GPP NRMSE is
 `0.44496`; free-rollout GPP is `0.73409` to `1.00839` and fails all six cells.
 Growth respiration, NPP, NEP, and NEE also fail every cell. Maintenance and
 heterotrophic respiration plus all biomass and ecosystem-carbon stocks pass
-all six cells. The checkpoint is rejected for promotion. The active gate is a
-zero-training, same-panel attribution of local GPP error, added cross-day
-state-feedback error, distribution slice, and downstream growth/NPP
-propagation. Its three-mode contract is frozen at SHA256
-`2c93dbe5...112a`: ordinary free rollout, Teacher-day-start local GPP, and a
-diagnostic Teacher-GPP bridge. No long-horizon or product acceptance exists
-yet. See
+all six cells. The checkpoint is rejected for promotion.
+
+The same-panel three-mode attribution is now complete under contract SHA256
+`2c93dbe5...112a`. Its corrected, hash-bound CPU final report SHA256 is
+`fafd5111...f8037e`. Teacher-state cumulative GPP fails `5/6` cells; cross-day
+state feedback is material in `6/6`. The Teacher-GPP bridge makes growth
+respiration and NPP pass all cells, reducing their median acceptance scores by
+`99.6822%` and `99.6525%`. The formal classification is
+`direct_and_feedback_gpp_with_sufficient_downstream_cause`; all attribution
+integrity and physical gates pass. The active gate is a design discussion for
+a successor that addresses both local GPP generalization and GPP-driving
+cross-day state feedback. No further unchanged specialist training,
+architecture/loss edit before discussion, 365-day rollout, Gate D2, sealed
+test, or product acceptance is authorized. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
@@ -733,12 +740,14 @@ The paid-launch failure and correction are in
 [`target_oriented_structured_gpp_broad_training_launch_failure_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_launch_failure_20260831.md).
 The accepted broad-stage result is in
 [`target_oriented_structured_gpp_broad_training_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_result_20260831.md).
-The active fresh-screen contract is
+The completed fresh-screen contract is
 [`target_oriented_structured_gpp_fresh_screen_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_v1.md).
 Its completed result is
 [`target_oriented_structured_gpp_fresh_screen_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_result_20260831.md).
-The active attribution contract is
+The completed attribution contract is
 [`target_oriented_structured_gpp_fresh_attribution_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_attribution_v1.md).
+Its accepted result and current design-discussion authority are
+[`target_oriented_structured_gpp_fresh_attribution_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_attribution_result_20260831.md).
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See
