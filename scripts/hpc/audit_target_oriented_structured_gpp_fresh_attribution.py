@@ -21,8 +21,10 @@ from research.daily_coarse_graining.daily_operator.target_oriented_structured_gp
 )
 from research.daily_coarse_graining.daily_operator.target_oriented_structured_gpp_fresh_attribution import (
     add_residual_decomposition_statistics,
+    all_numeric_values_finite,
     classify_fresh_attribution,
     finalize_residual_decomposition_statistics,
+    formal_metric_difference,
     load_structured_gpp_fresh_attribution_contract,
     residual_decomposition_sufficient_statistics,
 )
@@ -355,39 +357,6 @@ def _direct_cumulative_report(statistics: Any, *, horizon: int, target_contract:
     }
 
 
-def _formal_metric_difference(observed: Mapping[str, Any], formal: Mapping[str, Any]) -> float:
-    differences = [
-        abs(float(observed["science_macro_normalized_rmse"]) - float(formal["science_macro_normalized_rmse"]))
-    ]
-    if observed["hard_counts"] != formal["hard_counts"]:
-        return float("inf")
-    for slice_id in ("temporal", "spatial", "joint"):
-        for horizon in ("7", "30"):
-            left = observed["slices"][slice_id][horizon]
-            right = formal["slices"][slice_id][horizon]
-            if bool(left["all_key_gates_passed"]) != bool(right["all_key_gates_passed"]):
-                return float("inf")
-            differences.append(
-                abs(float(left["science_macro_normalized_rmse"]) - float(right["science_macro_normalized_rmse"]))
-            )
-            for name in left["keys"]:
-                if bool(left["keys"][name]["passed"]) != bool(right["keys"][name]["passed"]):
-                    return float("inf")
-                for metric in ("normalized_rmse", "normalized_signed_bias"):
-                    differences.append(abs(float(left["keys"][name][metric]) - float(right["keys"][name][metric])))
-    return max(differences)
-
-
-def _all_numeric_values_finite(value: Any) -> bool:
-    if isinstance(value, Mapping):
-        return all(_all_numeric_values_finite(item) for item in value.values())
-    if isinstance(value, (tuple, list)):
-        return all(_all_numeric_values_finite(item) for item in value)
-    if isinstance(value, (int, float, np.integer, np.floating)) and not isinstance(value, (bool, np.bool_)):
-        return bool(np.isfinite(value))
-    return True
-
-
 def _summarize_carbon_residuals(
     records: Mapping[str, Mapping[str, list[float]]],
 ) -> Mapping[str, Any]:
@@ -510,12 +479,12 @@ def _evaluate_panel(
                 for mode in ("ordinary_free_rollout", "teacher_gpp_bridge")
             },
         )
-        for mode, source_name in (
+        for carbon_mode, source_name in (
             ("ordinary_free_rollout", "free_carbon_residuals"),
             ("teacher_gpp_bridge", "bridge_carbon_residuals"),
         ):
-            for name in carbon_cell[mode]:
-                carbon_cell[mode][name].extend(
+            for name in carbon_cell[carbon_mode]:
+                carbon_cell[carbon_mode][name].extend(
                     np.asarray(local[source_name][name], dtype=np.float64).reshape(-1).tolist()
                 )
         print(
@@ -578,7 +547,7 @@ def _evaluate_panel(
         "slices": free_reports,
         "hard_counts": free_hard,
     }
-    metric_difference = _formal_metric_difference(observed_free, formal_report["panel"]) if mode == "formal" else None
+    metric_difference = formal_metric_difference(observed_free, formal_report["panel"]) if mode == "formal" else None
     classification = (
         classify_fresh_attribution(
             direct_reports,
@@ -593,7 +562,7 @@ def _evaluate_panel(
     gates = attribution_contract.payload["integrity_gates"]
     free_hard_count = _hard_failure_count(free_hard)
     bridge_hard_count = _hard_failure_count(bridge_hard)
-    all_finite = _all_numeric_values_finite(
+    all_finite = all_numeric_values_finite(
         {
             "ordinary_free": observed_free,
             "teacher_day_start_direct_gpp": direct_reports,

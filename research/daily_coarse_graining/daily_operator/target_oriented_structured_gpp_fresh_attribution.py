@@ -189,6 +189,39 @@ def acceptance_score(record: Mapping[str, Any]) -> float:
     return 0.5 * (rmse * rmse + bias * bias)
 
 
+def formal_metric_difference(observed: Mapping[str, Any], formal: Mapping[str, Any]) -> float:
+    differences = [
+        abs(float(observed["science_macro_normalized_rmse"]) - float(formal["science_macro_normalized_rmse"]))
+    ]
+    if observed["hard_counts"] != formal["hard_counts"]:
+        return float("inf")
+    for slice_id in ("temporal", "spatial", "joint"):
+        for horizon in ("7", "30"):
+            left = observed["slices"][slice_id][horizon]
+            right = formal["slices"][slice_id][horizon]
+            if bool(left["all_key_gates_passed"]) != bool(right["all_key_gates_passed"]):
+                return float("inf")
+            differences.append(
+                abs(float(left["science_macro_normalized_rmse"]) - float(right["science_macro_normalized_rmse"]))
+            )
+            for name in left["keys"]:
+                if bool(left["keys"][name]["passed"]) != bool(right["keys"][name]["passed"]):
+                    return float("inf")
+                for metric in ("normalized_rmse", "normalized_signed_bias"):
+                    differences.append(abs(float(left["keys"][name][metric]) - float(right["keys"][name][metric])))
+    return max(differences)
+
+
+def all_numeric_values_finite(value: Any) -> bool:
+    if isinstance(value, Mapping):
+        return all(all_numeric_values_finite(item) for item in value.values())
+    if isinstance(value, (tuple, list)):
+        return all(all_numeric_values_finite(item) for item in value)
+    if isinstance(value, (int, float, np.integer, np.floating)) and not isinstance(value, (bool, np.bool_)):
+        return bool(np.isfinite(value))
+    return True
+
+
 def classify_fresh_attribution(
     direct_cells: Mapping[str, Mapping[str, Mapping[str, Any]]],
     decomposition_cells: Mapping[str, Mapping[str, Mapping[str, Any]]],
@@ -254,8 +287,10 @@ __all__ = [
     "StructuredGPPFreshAttributionContract",
     "acceptance_score",
     "add_residual_decomposition_statistics",
+    "all_numeric_values_finite",
     "classify_fresh_attribution",
     "finalize_residual_decomposition_statistics",
+    "formal_metric_difference",
     "load_structured_gpp_fresh_attribution_contract",
     "residual_decomposition_sufficient_statistics",
 ]
