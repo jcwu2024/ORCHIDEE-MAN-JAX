@@ -1909,14 +1909,22 @@ and NPP pass all six cells, with median acceptance-score reductions of
 `direct_and_feedback_gpp_with_sufficient_downstream_cause`. See
 [`target_oriented_structured_gpp_fresh_attribution_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_attribution_result_20260831.md).
 
-The active operation is a design discussion before any architecture or loss
-edit. A successor must address both train-only day-local GPP generalization and
-the cross-day state channels that feed later GPP. Before implementation, freeze
-the affected output/state scope, mechanism, train-only objective, matched
-diagnostic, bounded admission, and stop rule. Do not continue the unchanged
-structured-GPP specialist, tune from the fresh targets, or open 365-day
-rollout, Gate D2, sealed test, or product acceptance. The completed contracts
-remain
+The design discussion selected two ordered workstreams while retaining the
+day-local coordinate Attention backbone. First, the active zero-training
+`train/train` state-feedback attribution freezes six source components and
+prepared updates `101`, `501`, and `901` under contract SHA256
+`2ba1e38b...a00e3`. It measures how much each single-component Teacher-carry
+intervention captures of the cumulative-GPP free-to-full-Teacher score gap,
+without reading the fresh panel. Only a component material at 7 or 30 days may
+enter the first coupled GPP state/process-head design; if none is individually
+material, component interactions must be audited before an architecture edit.
+Second, direct-GPP continuation may reuse updates `1001-5000` of the accepted
+million-day schedule only after its broader train-only monitor and loss/stop
+contract are frozen. Do not continue the unchanged specialist, tune from fresh
+targets, or open 365-day rollout, Gate D2, sealed test, or product acceptance.
+The active contract is
+[`target_oriented_structured_gpp_state_feedback_attribution_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_state_feedback_attribution_v1.md).
+The completed attribution contracts remain
 [`target_oriented_structured_gpp_fresh_screen_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_v1.md)
 and
 [`target_oriented_structured_gpp_fresh_attribution_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_attribution_v1.md).

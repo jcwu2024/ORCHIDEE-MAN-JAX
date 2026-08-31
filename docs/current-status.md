@@ -706,11 +706,16 @@ state feedback is material in `6/6`. The Teacher-GPP bridge makes growth
 respiration and NPP pass all cells, reducing their median acceptance scores by
 `99.6822%` and `99.6525%`. The formal classification is
 `direct_and_feedback_gpp_with_sufficient_downstream_cause`; all attribution
-integrity and physical gates pass. The active gate is a design discussion for
-a successor that addresses both local GPP generalization and GPP-driving
-cross-day state feedback. No further unchanged specialist training,
-architecture/loss edit before discussion, 365-day rollout, Gate D2, sealed
-test, or product acceptance is authorized. See
+integrity and physical gates pass. The design discussion is complete. The
+active gate is a zero-training source-component state-feedback attribution on
+prepared `train/train` updates `101`, `501`, and `901`, frozen at contract
+SHA256 `2ba1e38b...a00e3`. It compares free rollout, full Teacher day-start
+state, and six single-component Teacher-carry modes using a shared runtime
+state-mask graph. The fresh panel is not read. Its material-component result
+will bound the first coupled GPP state/process-head scope; a no-component
+result requires an interaction audit rather than discarding the source
+families. No unchanged specialist training, architecture/loss edit, 365-day
+rollout, Gate D2, sealed test, or product acceptance is authorized. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
@@ -748,6 +753,8 @@ The completed attribution contract is
 [`target_oriented_structured_gpp_fresh_attribution_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_attribution_v1.md).
 Its accepted result and current design-discussion authority are
 [`target_oriented_structured_gpp_fresh_attribution_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_attribution_result_20260831.md).
+The active train-only state-feedback scope contract is
+[`target_oriented_structured_gpp_state_feedback_attribution_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_state_feedback_attribution_v1.md).
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See

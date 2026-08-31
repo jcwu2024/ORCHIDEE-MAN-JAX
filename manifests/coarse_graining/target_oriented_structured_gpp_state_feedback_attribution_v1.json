@@ -1,0 +1,82 @@
+{
+  "schema_version": "target_oriented_structured_gpp_state_feedback_attribution_v1",
+  "status": "frozen_before_zero_training_execution",
+  "contract_sha256": "2ba1e38b8f345ce8cb888fd82302edf753bd398b428288fbdc0463aa1c2a00e3",
+  "identity": {
+    "candidate": "target_oriented_structured_gpp_v1_broad_stage_1000",
+    "candidate_contract_sha256": "ce211fa7c6f5a09bd900e02e31a864b61fb32f6b06ee96d4262402c513d620ea",
+    "broad_training_contract_sha256": "c54233c118e206200d1e8e5ec827355a469228c5a5e383786a720dd4af5340e1",
+    "broad_training_report_sha256": "5cfab5a693be4c58fd2726420106f2844f93703e5ca8e2910268498154b2bee9",
+    "selected_checkpoint_sha256": "3b173b8980c37b49db3d1547dddad2ab98ec00c733e2f564469490ee382d4ec0",
+    "selected_checkpoint_update": 1000,
+    "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "candidate_parameter_count": 106383527,
+    "trainable_specialist_parameter_count": 12879363,
+    "retained_parent_parameter_count": 93504164
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "prepared_updates": [101, 501, 901],
+    "seven_day_windows_per_update": 8,
+    "thirty_day_windows_per_update": 4,
+    "fresh_validation_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "source_components": {
+    "state_canopy": "diffuco_previous_step_state",
+    "state_energy": "enerbil_previous_step_state",
+    "state_water": "hydrol_previous_step_state",
+    "state_thermal": "thermosoil_previous_step_state",
+    "state_carbon": "slowproc_stomate_previous_step_state",
+    "state_driver": "driver_previous_step_state"
+  },
+  "modes": {
+    "ordinary_free_rollout": "all cross-day state is candidate-predicted",
+    "full_teacher_day_start": "every day uses its prepared Teacher day-start state",
+    "single_component_teacher_carry": "only one named component's continuous leaves are replaced by the matched next Teacher day-start values"
+  },
+  "measurement": {
+    "target": "cumulative area-weighted GPP",
+    "horizons_days": [7, 30],
+    "acceptance_score": "0.5 * (normalized_rmse^2 + normalized_signed_bias^2)",
+    "capture_fraction": "(free_score - component_score) / (free_score - full_teacher_score)",
+    "minimum_positive_free_to_teacher_score_gap": 1e-12,
+    "reported_component_statistics": [
+      "normalized_rmse",
+      "normalized_signed_bias",
+      "acceptance_score",
+      "capture_fraction",
+      "positive_capture_group_count"
+    ]
+  },
+  "classification": {
+    "minimum_eligible_group_count_per_horizon": 2,
+    "material_median_capture_fraction": 0.1,
+    "material_positive_capture_group_count": 2,
+    "component_selected_if_material_at_either_horizon": true,
+    "selection_scope": "only selected source components may enter the first coupled state/process-head design"
+  },
+  "execution": {
+    "free_gln01_allowed": true,
+    "paid_execution_authorized": false,
+    "optimizer_updates": 0,
+    "parameter_steps": 0,
+    "checkpoint_writes": 0,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "architecture_or_loss_edit_allowed": false,
+    "fresh_validation_read_allowed": false,
+    "sealed_test_allowed": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "365_day_rollout_allowed": false,
+    "gate_d2_allowed": false,
+    "product_acceptance_allowed": false
+  },
+  "next_gate": {
+    "on_material_components": "freeze_coupled_gpp_state_process_head_scope_and_train_only_objective",
+    "on_no_material_component": "retain_all_source_families_and_audit_interactions_before_architecture_edit",
+    "on_integrity_failure": "repair_execution_only_without_reading_fresh_targets"
+  }
+}

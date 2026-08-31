@@ -244,21 +244,48 @@ def rollout_with_teacher_state_leaves(
     """Run a diagnostic free rollout with selected Teacher state slices."""
 
     leaves = resolve_continuous_state_leaves(contract, state_keys)
+    mask = jnp.zeros((contract.continuous_state_width,), dtype=jnp.bool_)
+    for leaf in leaves:
+        mask = mask.at[leaf.start : leaf.stop].set(True)
+    return rollout_with_teacher_state_mask(
+        parameters,
+        templates,
+        transition=transition,
+        contract=contract,
+        state_mask=mask,
+        rematerialize=rematerialize,
+    )
+
+
+def rollout_with_teacher_state_mask(
+    parameters: Any,
+    templates: DailyOperatorInput,
+    *,
+    transition: Callable[[Any, DailyOperatorInput], DailyOperatorResult],
+    contract: DailyMarkovContract,
+    state_mask: Any,
+    rematerialize: bool = False,
+) -> DailyOperatorRolloutTrace:
+    """Run a diagnostic rollout with a runtime-selected Teacher state mask."""
+
     continuous = jnp.asarray(templates.continuous_state, dtype=jnp.float64)
     if continuous.ndim != 2 or continuous.shape[1] != contract.continuous_state_width:
         raise ValueError("state intervention templates require [day, continuous_state]")
     if continuous.shape[0] < 1:
         raise ValueError("state intervention rollout window cannot be empty")
+    mask = jnp.asarray(state_mask, dtype=jnp.bool_)
+    if mask.shape != (contract.continuous_state_width,):
+        raise ValueError("state intervention mask width does not match the continuous state")
     initial_discrete = jax.tree_util.tree_map(
         lambda value: jnp.asarray(value)[0],
         templates.discrete_state,
     )
 
     def step(carry, template):
-        intervened = replace_state_leaves_with_teacher(
-            carry[0],
-            template.continuous_state,
-            leaves,
+        intervened = jnp.where(
+            mask,
+            jnp.asarray(template.continuous_state, dtype=jnp.float64),
+            jnp.asarray(carry[0], dtype=jnp.float64),
         )
         current = rollout_input_from_template(template, intervened, carry[1], contract)
         result = transition(parameters, current)
@@ -334,4 +361,5 @@ __all__ = [
     "resolve_continuous_state_leaves",
     "rollout_with_teacher_state_leaf",
     "rollout_with_teacher_state_leaves",
+    "rollout_with_teacher_state_mask",
 ]

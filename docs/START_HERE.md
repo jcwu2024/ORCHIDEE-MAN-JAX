@@ -355,12 +355,15 @@ formal classification is
 `direct_and_feedback_gpp_with_sufficient_downstream_cause`. All integrity and
 physical gates pass, but the checkpoint is not promoted.
 
-The active gate is a design discussion before any architecture or loss edit.
-The next candidate must jointly address train-only day-local GPP generalization
-and the cross-day state channels that feed later GPP. Unchanged specialist
-continuation, validation-target tuning, 365-day rollout, Gate D2, sealed test,
-and product acceptance remain closed. See `NEXT_STEPS.md` for the exact current
-boundary.
+The design discussion is complete. The active gate is the frozen zero-training
+`train/train` state-feedback attribution at contract SHA256
+`2ba1e38b...a00e3`. It compares free rollout, full Teacher day-start state,
+and six single-source-component Teacher-carry interventions on prepared updates
+`101`, `501`, and `901`. Its purpose is to bound which state/process heads may
+join the GPP specialist before any architecture or loss edit. Unchanged
+specialist continuation, fresh-target tuning, 365-day rollout, Gate D2, sealed
+test, and product acceptance remain closed. See `NEXT_STEPS.md` for the exact
+current boundary.
 
 ## New Task Bootstrap
 
