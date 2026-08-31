@@ -16,7 +16,6 @@ CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/target-oriented-stru
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
-test "$(hostname)" = gln01
 case "$MODE" in admission|formal) ;; *) exit 2 ;; esac
 case "$WORKTREE" in "$ROOT"|"$ROOT/runtime/worktrees/"*) ;; *) exit 2 ;; esac
 case "$FRESH_VALIDATION" in "$ROOT/runtime/outputs/"*/prepared_manifest.json) ;; *) exit 2 ;; esac

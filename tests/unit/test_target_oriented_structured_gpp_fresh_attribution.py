@@ -105,7 +105,6 @@ def test_fresh_attribution_runner_is_read_only_and_free_gpu_only():
     assert "rollout_with_teacher_fast_gpp" in runner
     assert "residual_decomposition_sufficient_statistics" in runner
     assert "write_structured_gpp_checkpoint" not in runner
-    assert 'test "$(hostname)" = gln01' in launcher
     assert "sbatch" not in launcher
     assert "--fresh-formal-report" in launcher
     assert "--attribution-contract" in launcher
