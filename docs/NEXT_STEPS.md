@@ -1922,25 +1922,35 @@ Teacher datum, 48-record forcing reconstruction, or subdaily scan was used.
 See
 [`target_oriented_structured_gpp_state_feedback_attribution_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_state_feedback_attribution_result_20260831.md).
 
-The active gate is to discuss and then freeze the first coupled GPP/carbon-
-state architecture and train-only objective before implementation. Preserve
-the current day-local coordinate-Attention GPP specialist and the canonical
-retained exact tail. Initially open only source-backed inputs/process paths
-associated with `slowproc_stomate_previous_step_state`; do not directly
-replace retained STOMATE state. Keep water-state scores as a protected
-secondary diagnostic. The objective must include broad direct daily GPP,
-one-day carbon-state supervision through the complete operator, and 7/30-day
-GPP/respiration/NPP/carbon-stock terms on train/train windows. Freeze its
-matched mechanism control, local and real-v6 zero-update admission, bounded
-training budget, target-blind monitor, and stop rule before any optimizer
-update. The existing million-day schedule may be reused only after this new
-contract defines which direct days and rollout windows are consumed.
+The user approved the first coupled GPP/carbon-state architecture. Its machine
+contract is frozen at SHA256 `c7f81436...e7e74d`, and the local zero-training
+implementation passes exact 2,386-coordinate/107-field layout, parameter
+budget, eager/JIT forward, complete direct loss, adapter gradients, parameter
+route, PFT permutation/inactive isolation, single-day state, and water/carbon
+budget gates. The implementation retains the current structured-GPP
+Attention, newly controls only `daily.fast_gpp`, and conditions it through two
+PFT-query cross-attention blocks over day-start
+`slowproc_stomate_previous_step_state` coordinates. It does not directly
+predict STOMATE state.
 
-The discussion proposal is
+The active gate is a free-`gln01` zero-update real-v6 admission using the
+accepted broad update-1000 checkpoint and one train/train day. It must measure
+real-v6 forward/loss/gradients, ownership, one complete daily transition,
+budgets, timing, and peak live memory without creating an optimizer or writing
+a checkpoint. After it passes, freeze the GPP-reachable one-day carbon-state
+inventory, objective coefficients, replacement 48-day-per-point-year direct
+monitor, train-only 7/30-day monitor, discarded-proposal preflight, bounded
+training budget, and stop rule before any optimizer update. The existing
+million-day schedule may be reused only after the later training contract
+defines which direct days and rollout windows are consumed.
+
+The approved design is
 [`target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md).
 It recommends coordinate-level cross-attention over the selected day-start
 slow-process carbon state while keeping `daily.fast_gpp` as the only newly
-controlled output. It is not yet a frozen architecture or training contract.
+controlled output. The accepted local evidence is
+[`target_oriented_coupled_gpp_carbon_feedback_local_acceptance_20260831.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_local_acceptance_20260831.md).
+This is a frozen architecture contract, not a training contract.
 
 Do not continue the unchanged specialist, tune from fresh targets, or open
 365-day rollout, Gate D2, sealed test, or product acceptance. The completed

@@ -772,8 +772,13 @@ The completed train-only state-feedback scope contract is
 [`target_oriented_structured_gpp_state_feedback_attribution_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_state_feedback_attribution_v1.md).
 Its accepted result and current design-scope authority are
 [`target_oriented_structured_gpp_state_feedback_attribution_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_state_feedback_attribution_result_20260831.md).
-The unapproved architecture proposal is
+The user-approved architecture and accepted local implementation design are
 [`target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md).
+The exact 2,386-coordinate layout, 3,080,832-parameter adapter, complete
+109,464,359-parameter candidate, local forward/loss/gradient/PFT/parameter-
+route/daily-budget gates, and current free-GPU next step are recorded in
+[`target_oriented_coupled_gpp_carbon_feedback_local_acceptance_20260831.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_local_acceptance_20260831.md).
+No optimizer update or training is authorized.
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See

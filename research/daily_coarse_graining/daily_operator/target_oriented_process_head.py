@@ -17,6 +17,14 @@ from .target_oriented_contract import (
     TargetOrientedContract,
     resolve_target_output_hierarchy,
 )
+from .target_oriented_coupled_gpp_carbon_feedback import (
+    CarbonFeedbackStateLayout,
+    CoupledGPPCarbonFeedbackConfig,
+    CoupledGPPCarbonFeedbackContract,
+    build_carbon_feedback_state_layout,
+    load_coupled_gpp_carbon_feedback_contract,
+    target_oriented_coupled_gpp_carbon_feedback_process_outputs,
+)
 from .target_oriented_distribution_aware_maintenance import (
     DistributionAwareMaintenanceConfig,
     DistributionAwareMaintenanceContract,
@@ -217,6 +225,54 @@ class MechanisticTargetOrientedStructuredGPPProcessHead(
         )
 
 
+@dataclass(frozen=True, eq=False, kw_only=True)
+class MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead(
+    MechanisticTargetOrientedStructuredGPPProcessHead
+):
+    """Condition only daily GPP on coordinate-preserving day-start carbon state."""
+
+    coupled_contract: CoupledGPPCarbonFeedbackContract
+    carbon_state_layout: CarbonFeedbackStateLayout
+    coupled_config: CoupledGPPCarbonFeedbackConfig = CoupledGPPCarbonFeedbackConfig()
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.coupled_config.validate(self.coupled_contract, self.structured_config)
+
+    def learned_outputs(
+        self,
+        parameters: Mapping[str, Any],
+        context: StrongBaselineContext,
+        inputs: AssembledDailyOperatorInput,
+    ) -> Mapping[str, Any]:
+        return target_oriented_coupled_gpp_carbon_feedback_process_outputs(
+            parameters,
+            context,
+            inputs,
+            schema=self.learned_schema,
+            layout=self.layout,
+            structured_state_layout=self.structured_state_layout,
+            carbon_state_layout=self.carbon_state_layout,
+            input_normalization=self.input_normalization,
+            output_normalization=self.output_normalization,
+            forcing_layout=self.forcing_layout,
+            target_contract=self.target_contract,
+            distribution_contract=self.distribution_contract,
+            coeff_maint_zero=self.coeff_maint_zero,
+            ext_coeff_vegetfrac=self.reconstructor.static(
+                inputs,
+                "ext_coeff_vegetfrac",
+            ),
+            message_gate_scale=self.message_gate_scale,
+            baseline_config=self.config,
+            attention_config=self.target_config,
+            distribution_config=self.distribution_config,
+            source_config=self.source_config,
+            structured_config=self.structured_config,
+            config=self.coupled_config,
+        )
+
+
 def build_target_oriented_source_shaped_maintenance_head(
     parent: MechanisticTargetOrientedAttentionProcessHead,
     retained_tail: Any,
@@ -324,12 +380,58 @@ def build_target_oriented_structured_gpp_head(
     )
 
 
+def build_target_oriented_coupled_gpp_carbon_feedback_head(
+    parent: MechanisticTargetOrientedStructuredGPPProcessHead,
+    *,
+    coupled_contract: CoupledGPPCarbonFeedbackContract | None = None,
+    coupled_config: CoupledGPPCarbonFeedbackConfig = CoupledGPPCarbonFeedbackConfig(),
+) -> MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead:
+    """Install the approved carbon-coordinate adapter over structured GPP."""
+
+    contract = coupled_contract or load_coupled_gpp_carbon_feedback_contract()
+    carbon_layout = build_carbon_feedback_state_layout(
+        parent.contract,
+        baseline_layout=parent.layout,
+        architecture_contract=parent.architecture_contract,
+        coupled_contract=contract,
+    )
+    return MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead(
+        contract=parent.contract,
+        architecture_contract=parent.architecture_contract,
+        mechanism_contract=parent.mechanism_contract,
+        input_assembler=parent.input_assembler,
+        complete_schema=parent.complete_schema,
+        learned_schema=parent.learned_schema,
+        layout=parent.layout,
+        input_normalization=parent.input_normalization,
+        output_normalization=parent.output_normalization,
+        forcing_layout=parent.forcing_layout,
+        forcing_indices=parent.forcing_indices,
+        message_gate_scale=parent.message_gate_scale,
+        config=parent.config,
+        target_contract=parent.target_contract,
+        target_config=parent.target_config,
+        distribution_contract=parent.distribution_contract,
+        coeff_maint_zero=parent.coeff_maint_zero,
+        distribution_config=parent.distribution_config,
+        source_config=parent.source_config,
+        structured_contract=parent.structured_contract,
+        structured_state_layout=parent.structured_state_layout,
+        structured_config=parent.structured_config,
+        coupled_contract=contract,
+        carbon_state_layout=carbon_layout,
+        coupled_config=coupled_config,
+    )
+
+
 __all__ = [
     "MechanisticTargetOrientedAttentionProcessHead",
     "MechanisticTargetOrientedDistributionAwareMaintenanceProcessHead",
+    "MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead",
     "MechanisticTargetOrientedSourceShapedMaintenanceProcessHead",
     "MechanisticTargetOrientedStructuredGPPProcessHead",
     "build_target_oriented_distribution_aware_maintenance_head",
+    "build_target_oriented_coupled_gpp_carbon_feedback_head",
     "build_target_oriented_source_shaped_maintenance_head",
     "build_target_oriented_structured_gpp_head",
 ]

@@ -1,0 +1,179 @@
+{
+  "schema_version": "target_oriented_coupled_gpp_carbon_feedback_v1",
+  "status": "frozen_after_user_architecture_approval_for_local_implementation_and_zero_update_admission",
+  "contract_sha256": "c7f81436ff6ba1179b01adad0f76b47ddd2aab68208e97719c2c5464f3e7e74d",
+  "identity": {
+    "candidate": "target_oriented_coupled_gpp_carbon_feedback_attention_v1",
+    "parent_candidate": "target_oriented_structured_gpp_v1_broad_stage_1000",
+    "parent_candidate_contract_sha256": "ce211fa7c6f5a09bd900e02e31a864b61fb32f6b06ee96d4262402c513d620ea",
+    "parent_broad_training_contract_sha256": "c54233c118e206200d1e8e5ec827355a469228c5a5e383786a720dd4af5340e1",
+    "parent_broad_training_report_sha256": "5cfab5a693be4c58fd2726420106f2844f93703e5ca8e2910268498154b2bee9",
+    "parent_checkpoint_sha256": "3b173b8980c37b49db3d1547dddad2ab98ec00c733e2f564469490ee382d4ec0",
+    "parent_checkpoint_update": 1000,
+    "state_feedback_attribution_contract_sha256": "858b59077d4a9dbdc7ecaeb06345725bd94c2a570f1b78d258d8dee480bc69ed",
+    "state_feedback_attribution_report_sha256": "1b2d1820a48b17ae0297bacc5e0cdf2b00e3290c3a5b9c135a98417a41c2a19b",
+    "teacher_release": "pft14-daily-teacher-v6",
+    "learned_field": "daily.fast_gpp"
+  },
+  "state_tokenization": {
+    "selected_component": "slowproc_stomate_previous_step_state",
+    "continuous_coordinate_count": 2386,
+    "continuous_field_count": 107,
+    "value_features": ["train_train_normalized_value", "defined_status"],
+    "field_identity_embedding": true,
+    "pft_owner_use": "attention_mask_only_without_identity_embedding",
+    "global_owner_index": -1,
+    "unsupported_pft_owner_index": -2,
+    "axis_role_names": [
+      "carbon_pool",
+      "deep_layer",
+      "doc_form",
+      "doc_pool",
+      "element",
+      "landpoint",
+      "litter_pool",
+      "nage",
+      "nleafages",
+      "nlevs",
+      "nonbiological_tile",
+      "npco2",
+      "nwp",
+      "plant_part",
+      "soil_layer",
+      "soil_tile",
+      "two"
+    ],
+    "axis_role_extents": [3, 32, 2, 7, 1, 1, 2, 101, 4, 2, 1, 1, 2, 12, 11, 6, 2],
+    "maximum_non_pft_axis_roles_per_coordinate": 5,
+    "absolute_pft_slot_embedding": false,
+    "undefined_coordinate_attention": false
+  },
+  "architecture": {
+    "parameter_family": "target_oriented.coupled_gpp_carbon_feedback",
+    "width": 384,
+    "attention_heads": 8,
+    "ffn_width": 768,
+    "cross_attention_blocks": 2,
+    "attention_bank": "global_coordinates_plus_same_compact_pft_coordinates",
+    "quadratic_carbon_token_self_attention": false,
+    "pft_query_weights_shared": true,
+    "residual_injection_targets": ["potential_query", "limitation_query", "correction_query"],
+    "residual_injection_kernel_initialization_scale": 0.001,
+    "new_adapter_parameter_count": 3080832,
+    "new_adapter_parameter_count_maximum": 8000000,
+    "parent_candidate_parameter_count": 106383527,
+    "candidate_parameter_count": 109464359,
+    "candidate_parameter_count_maximum": 120000000,
+    "trainable_structured_gpp_parameter_count": 12879363,
+    "first_stage_trainable_parameter_count": 15960195,
+    "retained_parent_parameter_count": 93504164
+  },
+  "output_boundary": {
+    "newly_controlled_output": "daily.fast_gpp[compact_pft]",
+    "direct_next_state_output": false,
+    "cross_day_neural_hidden_state": false,
+    "non_gpp_outputs": "bit_identical_to_parent_for_same_day_start_input",
+    "conservative_updater": "unchanged",
+    "retained_exact_stomate_tail": "unchanged",
+    "recurrent_path": "day_start_carbon_to_gpp_to_conservative_update_to_retained_exact_tail_to_next_day_carbon",
+    "bare_soil_rule": "exact_zero",
+    "inactive_or_zero_fraction_rule": "exact_zero"
+  },
+  "parameter_ownership": {
+    "first_stage_trainable_families": [
+      "target_oriented.structured_gpp",
+      "target_oriented.coupled_gpp_carbon_feedback"
+    ],
+    "retained_parent_parameters_frozen": true,
+    "vcmax25_route": "existing_explicit_final_factor",
+    "forbidden_gpp_parameter_inputs": [
+      "maint_resp_slope_a",
+      "maint_resp_slope_b",
+      "maint_resp_slope_c",
+      "alloc_min",
+      "residence_time"
+    ]
+  },
+  "matched_control": {
+    "identity": "target_oriented_coupled_gpp_carbon_feedback_field_balanced_pooled_mlp_v1",
+    "shared": [
+      "coordinate_tokens",
+      "width",
+      "depth",
+      "pft_masks",
+      "residual_injection_points",
+      "parameter_budget",
+      "output_factorization",
+      "objective",
+      "data",
+      "optimizer",
+      "seed"
+    ],
+    "replacement": "content_dependent_cross_attention_replaced_by_token_local_mlp_and_fixed_field_balanced_pooling",
+    "role": "post_success_mechanism_attribution_only",
+    "train_if_candidate_fails_absolute_science_gate": false,
+    "relative_win_can_rescue_absolute_failure": false
+  },
+  "training_objective_inventory": {
+    "data": "existing_pft14_daily_teacher_v6_train_train_only",
+    "direct_daily": ["normalized_gpp_mse", "normalized_signed_gpp_bias_squared"],
+    "one_day_state_anchor": "gpp_reachable_slowproc_coordinates_grouped_by_source_field",
+    "seven_and_thirty_day_cumulative": [
+      "gpp",
+      "maintenance_respiration",
+      "growth_respiration",
+      "autotrophic_respiration",
+      "npp"
+    ],
+    "seven_and_thirty_day_terminal": [
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon",
+      "total_live_biomass_carbon",
+      "nonliving_ecosystem_carbon",
+      "ecosystem_carbon"
+    ],
+    "hard_constraints": ["exact_carbon_identities", "water_budget", "carbon_budget", "finite_state"],
+    "water_feedback": "protected_secondary_diagnostic_without_trainable_adapter",
+    "coefficients_frozen": false,
+    "coefficient_prerequisite": "zero_update_gradient_calibration_and_gpp_reachability_inventory"
+  },
+  "local_acceptance": {
+    "contract_derived_coordinate_layout_exact": true,
+    "parameter_tree_and_count_exact": true,
+    "eager_and_jit_forward_finite": true,
+    "complete_direct_loss_finite": true,
+    "all_adapter_gradients_finite": true,
+    "both_cross_attention_blocks_receive_nonzero_gradients": true,
+    "all_three_residual_injections_receive_nonzero_gradients": true,
+    "gpp_sensitivity_to_selected_carbon_state_nonzero": true,
+    "non_gpp_outputs_bit_identical_to_parent": true,
+    "pft_permutation_equivariance": true,
+    "inactive_pft_isolation": true,
+    "single_day_state_and_budget_pass": true,
+    "water_and_carbon_budget_absolute_tolerance": 2e-12,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0
+  },
+  "execution": {
+    "optimizer_updates_authorized": 0,
+    "checkpoint_writes_authorized": 0,
+    "local_implementation_and_tests_allowed": true,
+    "free_gln01_zero_update_admission_allowed": true,
+    "paid_training_authorized": false,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "fresh_validation_read_allowed": false,
+    "sealed_test_allowed": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "cross_day_neural_hidden_state": false,
+    "365_day_rollout_allowed": false,
+    "gate_d2_allowed": false,
+    "product_acceptance_allowed": false
+  },
+  "next_gate": {
+    "on_local_acceptance": "free_gln01_zero_update_real_v6_admission",
+    "on_free_admission": "freeze_gpp_reachability_inventory_objective_coefficients_and_bounded_training_contract",
+    "on_failure": "repair_only_the_failed_local_or_execution_boundary_before_training"
+  }
+}

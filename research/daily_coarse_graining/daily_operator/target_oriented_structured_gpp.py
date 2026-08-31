@@ -113,6 +113,14 @@ class StructuredGPPStateLayout(NamedTuple):
     control_inudate: StructuredGPPStateSlice
 
 
+class StructuredGPPQueryState(NamedTuple):
+    pft_tokens: Any
+    parent_tokens: Any
+    local_tokens: Any
+    local_active: Any
+    base_query: Any
+
+
 @dataclass(frozen=True)
 class StructuredGPPConfig:
     width: int = 384
@@ -450,6 +458,42 @@ def _run_gpp_branch(
     return jnp.where(active[:, None], encoded[:, 0, :], 0.0)
 
 
+def structured_gpp_query_state(
+    parameters: Mapping[str, Any],
+    context: StrongBaselineContext,
+    gpp_hidden: Any,
+    inputs: AssembledDailyOperatorInput,
+    *,
+    state_layout: StructuredGPPStateLayout,
+    input_normalization: NeuralInputNormalization,
+    config: StructuredGPPConfig = StructuredGPPConfig(),
+) -> StructuredGPPQueryState:
+    """Build the shared per-PFT query without changing the output factorization."""
+
+    specialist = parameters["target_oriented"]["structured_gpp"]
+    local_tokens, local_defined = structured_gpp_local_tokens(
+        specialist,
+        inputs,
+        input_normalization,
+        state_layout,
+    )
+    pft_mask = jnp.asarray(context.pft_mask, dtype=jnp.bool_)
+    n_pft = pft_mask.shape[0]
+    hidden = jnp.asarray(gpp_hidden, dtype=jnp.float32)
+    if hidden.shape != (1, n_pft, config.parent_hidden_width):
+        raise ValueError("structured GPP parent hidden shape drift")
+    parent_tokens = _linear(specialist["parent_hidden_projection"], hidden[0])
+    pft_tokens = _linear(specialist["pft_query_projection"], context.pft_tokens)
+    local_active = pft_mask & local_defined
+    return StructuredGPPQueryState(
+        pft_tokens=pft_tokens,
+        parent_tokens=parent_tokens,
+        local_tokens=local_tokens,
+        local_active=local_active,
+        base_query=pft_tokens + parent_tokens + local_tokens,
+    )
+
+
 def structured_gpp_base_response(
     parameters: Mapping[str, Any],
     context: StrongBaselineContext,
@@ -461,6 +505,8 @@ def structured_gpp_base_response(
     input_normalization: NeuralInputNormalization,
     output_normalization: NeuralOutputNormalization,
     config: StructuredGPPConfig = StructuredGPPConfig(),
+    query_state: StructuredGPPQueryState | None = None,
+    query_residuals: tuple[Any, Any, Any] | None = None,
 ) -> Any:
     """Return pre-VCMAX positive daily GPP for every compact PFT."""
 
@@ -468,14 +514,25 @@ def structured_gpp_base_response(
     forcing_tokens, forcing_valid, forcing_field = _structured_forcing_tokens(
         specialist, inputs, input_normalization, config
     )
-    local_tokens, local_defined = structured_gpp_local_tokens(specialist, inputs, input_normalization, state_layout)
-    pft_mask = jnp.asarray(context.pft_mask, dtype=jnp.bool_)
-    n_pft = pft_mask.shape[0]
-    hidden = jnp.asarray(gpp_hidden, dtype=jnp.float32)
-    if hidden.shape != (1, n_pft, config.parent_hidden_width):
-        raise ValueError("structured GPP parent hidden shape drift")
-    parent_tokens = _linear(specialist["parent_hidden_projection"], hidden[0])
-    pft_tokens = _linear(specialist["pft_query_projection"], context.pft_tokens)
+    query_state = (
+        structured_gpp_query_state(
+            parameters,
+            context,
+            gpp_hidden,
+            inputs,
+            state_layout=state_layout,
+            input_normalization=input_normalization,
+            config=config,
+        )
+        if query_state is None
+        else query_state
+    )
+    pft_tokens = query_state.pft_tokens
+    parent_tokens = query_state.parent_tokens
+    local_tokens = query_state.local_tokens
+    local_active = query_state.local_active
+    base_query = query_state.base_query
+    n_pft = int(base_query.shape[0])
 
     forcing_count = forcing_tokens.shape[0]
     parent_source = jnp.asarray(context.source_tokens[forcing_count:], dtype=jnp.float32)
@@ -515,14 +572,16 @@ def structured_gpp_base_response(
         jnp.concatenate((forcing_valid, common_tail_mask))[None, :],
         (n_pft, bank.shape[1]),
     )
-    local_active = pft_mask & local_defined
     potential_mask &= local_active[:, None]
     full_mask &= local_active[:, None]
 
-    base_query = pft_tokens + parent_tokens + local_tokens
+    if query_residuals is None:
+        query_residuals = tuple(jnp.zeros_like(base_query) for _ in range(3))
+    if len(query_residuals) != 3 or any(value.shape != base_query.shape for value in query_residuals):
+        raise ValueError("structured GPP query residual shape drift")
     potential_hidden = _run_gpp_branch(
         specialist,
-        base_query + specialist["branch_embedding"][0],
+        base_query + specialist["branch_embedding"][0] + query_residuals[0],
         bank,
         potential_mask,
         specialist["potential_blocks"],
@@ -531,7 +590,7 @@ def structured_gpp_base_response(
     )
     limitation_hidden = _run_gpp_branch(
         specialist,
-        base_query + specialist["branch_embedding"][1],
+        base_query + specialist["branch_embedding"][1] + query_residuals[1],
         bank,
         full_mask,
         specialist["limitation_blocks"],
@@ -540,7 +599,7 @@ def structured_gpp_base_response(
     )
     correction_hidden = _run_gpp_branch(
         specialist,
-        base_query + specialist["branch_embedding"][2],
+        base_query + specialist["branch_embedding"][2] + query_residuals[2],
         bank,
         full_mask,
         specialist["correction_blocks"],
@@ -557,6 +616,7 @@ def structured_gpp_base_response(
     scale = jnp.where(jnp.isfinite(scale) & (scale > 0.0), scale, 1.0)
     traits = jnp.asarray(inputs.pft.pft_traits, dtype=jnp.float64)
     fraction = jnp.asarray(inputs.pft.pft_fraction, dtype=jnp.float64)
+    pft_mask = jnp.asarray(context.pft_mask, dtype=jnp.bool_)
     vegetation = pft_mask & (fraction > 0.0) & (traits[:, PFT_TRAIT_BARE_SOIL] <= 0.5)
     base = scale * jnp.asarray(potential, dtype=jnp.float64) * jnp.asarray(limitation, dtype=jnp.float64) * correction
     return jnp.where(vegetation, base, 0.0)[None, :]
@@ -648,6 +708,7 @@ __all__ = [
     "GPP_FIELD",
     "StructuredGPPConfig",
     "StructuredGPPContract",
+    "StructuredGPPQueryState",
     "StructuredGPPStateLayout",
     "build_structured_gpp_state_layout",
     "initialize_structured_gpp_parameters",
@@ -656,5 +717,6 @@ __all__ = [
     "structured_gpp_base_response",
     "structured_gpp_local_tokens",
     "structured_gpp_parameter_count",
+    "structured_gpp_query_state",
     "target_oriented_structured_gpp_process_outputs",
 ]

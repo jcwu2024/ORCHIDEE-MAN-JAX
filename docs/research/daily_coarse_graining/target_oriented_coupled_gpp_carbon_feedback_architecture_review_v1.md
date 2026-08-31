@@ -2,8 +2,8 @@
 
 Date: 2026-08-31
 
-Status: proposal for user discussion; implementation, optimizer updates, and
-training are not authorized
+Status: user-approved architecture; local zero-training implementation is
+accepted, while optimizer updates and training remain unauthorized
 
 ## Evidence And Design Question
 
@@ -194,8 +194,12 @@ Before any optimizer update:
 - exact inactive-PFT isolation and strict PFT permutation equivariance;
 - non-GPP parent outputs bit-identical for the same input;
 - one complete day with finite state and exact water/carbon budgets;
-- a free-`gln01` one-update discarded proposal measuring time, peak memory,
-  gradient balance, and a data-derived clipping threshold.
+- a free-`gln01` zero-update real-v6 admission measuring forward, loss,
+  gradients, state/budget integrity, time, and peak memory.
+
+A later training-preflight contract must separately authorize one discarded
+optimizer proposal for gradient balance and clipping calibration. The current
+architecture contract authorizes no optimizer construction or update.
 
 The paid training ceiling must be set from that measured hot step. Milestones
 are required at updates `250`, `500`, and at the frozen maximum, with early
@@ -209,9 +213,9 @@ all hard gates; a small relative improvement is not enough. Failure closes the
 candidate and returns to mechanism attribution, not a learning-rate or epoch
 search.
 
-## Discussion Decision Needed
+## User Decision And Local Closure
 
-Before implementation, confirm or revise these three decisions:
+The user approved all three decisions:
 
 1. retain the current structured-GPP Attention and add coordinate-level
    carbon-state cross-attention rather than replacing the whole backbone;
@@ -220,3 +224,11 @@ Before implementation, confirm or revise these three decisions:
    STOMATE state;
 3. use the pooled-MLP arm only as a post-success mechanism control, with
    absolute science gates controlling promotion.
+
+The machine contract is
+`manifests/coarse_graining/target_oriented_coupled_gpp_carbon_feedback_v1.json`
+at SHA256
+`c7f81436ff6ba1179b01adad0f76b47ddd2aab68208e97719c2c5464f3e7e74d`.
+It authorizes local implementation and a free-`gln01` zero-update admission
+only. The accepted local implementation evidence is recorded in
+`target_oriented_coupled_gpp_carbon_feedback_local_acceptance_20260831.md`.

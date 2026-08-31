@@ -852,13 +852,20 @@ Teacher-carry modes on prepared updates `301`, `601`, and `901`.
 `run_target_oriented_full_step_preflight.py` provide the shared runtime-mask
 rollout so the components reuse one compiled graph per horizon. The shell
 wrapper is a direct free-`gln01` boundary with no `sbatch` path. The accepted
-result selects only `slowproc_stomate_previous_step_state` as material, keeps
-water as a monitored secondary path, and opens architecture discussion rather
-than implementation. Its evidence is
+result selects only `slowproc_stomate_previous_step_state` as material and
+keeps water as a monitored secondary path. Its evidence is
 `target_oriented_structured_gpp_state_feedback_attribution_result_20260831.md`.
-No coupled GPP/carbon-state model owner exists yet; add one only after the
-mechanism, train-only objective, matched diagnostic control, bounded gates,
-and stop rule are approved.
+
+The approved coupled owner is
+`daily_operator/target_oriented_coupled_gpp_carbon_feedback.py`. It derives
+the 2,386-coordinate/107-field state layout from the accepted Markov and
+strong-baseline contracts, owns the shared two-block PFT-query cross-attention
+adapter and three structured-GPP residual injections, and preserves GPP-only
+output ownership. `target_oriented_process_head.py` exposes its stable
+process-head builder. Its machine contract is
+`manifests/coarse_graining/target_oriented_coupled_gpp_carbon_feedback_v1.json`.
+The current implementation is locally accepted but has not yet passed its
+real-v6 free-GPU admission; no optimizer or training owner exists for it.
 
 ## Scripts
 
