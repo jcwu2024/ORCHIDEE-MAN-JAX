@@ -815,6 +815,17 @@ boundary, and `slurm_target_oriented_structured_gpp_joint_training.sh` is the
 unsubmitted paid `gnall` launcher. The frozen design is documented in
 `target_oriented_structured_gpp_joint_training_v1.md`.
 
+The post-broad-training independent screen is owned by
+`daily_operator/target_oriented_structured_gpp_fresh_screen.py` and
+`manifests/coarse_graining/target_oriented_structured_gpp_fresh_screen_v1.json`.
+The selector excludes consumed point-years using metadata only.
+`scripts/hpc/prepare_target_oriented_structured_gpp_fresh_validation.py`
+materializes the resulting 96 host artifacts on free CPU test nodes, and
+`run_target_oriented_structured_gpp_fresh_screen.py` evaluates Teacher-state
+daily GPP plus canonical 7/30-day free rollouts from the broad update-1000
+checkpoint. Their shell wrappers are direct free-node boundaries and contain
+no `sbatch` submission.
+
 ## Scripts
 
 | Path | Classification | Use |

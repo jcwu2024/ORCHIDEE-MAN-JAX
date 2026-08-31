@@ -689,8 +689,11 @@ monitor loss fell 89.63%, 125/128 point-years improved, aggregate normalized
 bias magnitude fell from 0.432 to 0.092, all physical hard counts were zero,
 and retained parent parameters were exactly unchanged. Update 1,000,
 checkpoint SHA256 `3b173b89...4ec0`, is the accepted broad-stage selection. A
-fresh independent 7/30-day screen is now the active gate; no long-horizon or
-product acceptance exists yet. See
+fresh independent 7/30-day screen is now frozen at contract SHA256
+`894a0b2d...e6a7`. It excludes the consumed panel's point-years within each
+slice, reports Teacher-state daily GPP separately, and retains the absolute
+13-key free-rollout gate. Free-CPU host preparation and free-`gln01` admission
+are now active; no long-horizon or product acceptance exists yet. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
@@ -720,6 +723,8 @@ The paid-launch failure and correction are in
 [`target_oriented_structured_gpp_broad_training_launch_failure_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_launch_failure_20260831.md).
 The accepted broad-stage result is in
 [`target_oriented_structured_gpp_broad_training_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_result_20260831.md).
+The active fresh-screen contract is
+[`target_oriented_structured_gpp_fresh_screen_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_v1.md).
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See

@@ -1882,13 +1882,22 @@ unchanged. The accepted selected checkpoint is update 1,000, SHA256
 `3b173b89...4ec0`. See
 [`target_oriented_structured_gpp_broad_training_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_result_20260831.md).
 
-The active operation is to design and freeze a fresh target-blind independent
-7/30-day science screen before reading its values. It must not reuse the
-consumed 96-window panel for tuning. The screen must test direct GPP
-generalization and downstream GPP, respiration, NPP, AGB, and BGB behavior
-under the existing conservative daily operator boundary. Do not change the
-architecture, continue broad training, or open 365-day rollout, Gate D2,
-sealed test, or product acceptance yet.
+The fresh target-blind independent screen is now frozen at contract SHA256
+`894a0b2d...e6a7`. It keeps 16 windows in each temporal/spatial/joint and
+7/30-day cell, but excludes every point-year consumed by the earlier panel
+within the corresponding slice before metadata-only ranking. It reports
+Teacher-state daily GPP separately from free-rollout GPP, respiration, NPP,
+AGB, BGB, and ecosystem-carbon behavior. Promotion remains the existing
+absolute 13-key 7/30-day gate with zero physical hard failures; no weak control
+comparison is required.
+
+The active operation is to prepare the 96 fresh host artifacts on a free CPU
+test node, then run one-window-per-cell admission on free `gln01`. Only an
+admission pass opens the full fresh 96-window free-GPU screen. Do not change
+the architecture, continue broad training, read the fresh target values for
+tuning, or open 365-day rollout, Gate D2, sealed test, or product acceptance
+yet. See
+[`target_oriented_structured_gpp_fresh_screen_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_v1.md).
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)
