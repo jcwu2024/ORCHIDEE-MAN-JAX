@@ -1,0 +1,110 @@
+{
+  "schema_version": "target_oriented_structured_gpp_fresh_attribution_v1",
+  "status": "frozen_before_attribution_execution",
+  "contract_sha256": "2c93dbe5d31791474c9c02bbf08efd76f831c1f7e99bb5c1458b4cd8f880112a",
+  "identity": {
+    "candidate": "target_oriented_structured_gpp_v1_broad_stage_1000",
+    "fresh_screen_contract_sha256": "894a0b2dc329179566e624e7c04b3a63522588aed34feb8dc00e3187eb73e6a7",
+    "fresh_formal_report_sha256": "a9b9f6dcaf9aca349e738f096609e683342286d14d870d2c140afe2a3253798b",
+    "selected_checkpoint_sha256": "3b173b8980c37b49db3d1547dddad2ab98ec00c733e2f564469490ee382d4ec0",
+    "selected_checkpoint_update": 1000,
+    "validation_prepared_manifest_sha256": "43b321dd065cb7ee0d8f524af2f4ed5a2dfb56ad933a22f6d1bb33505029150e",
+    "validation_panel_sha256": "32c72823b7d190e8c8a3569dcbf1d57ead258ae635bdd717412fb7aa629718bb",
+    "candidate_parameter_count": 106383527,
+    "trainable_specialist_parameter_count": 12879363,
+    "retained_parent_parameter_count": 93504164
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "panel_role": "completed_fresh_independent_validation_attribution_only",
+    "formal_window_count": 96,
+    "admission_window_count": 6,
+    "admission_selection": "first_frozen_window_in_each_slice_horizon_cell",
+    "slices": ["temporal", "spatial", "joint"],
+    "horizons_days": [7, 30],
+    "windows_per_slice_per_horizon": 16,
+    "model_selection_or_tuning_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "modes": {
+    "ordinary_free_rollout": {
+      "cross_day_state": "candidate_predicted",
+      "gpp": "candidate_predicted"
+    },
+    "teacher_day_start_direct_gpp": {
+      "cross_day_state": "teacher_day_start_for_each_local_head_call",
+      "gpp": "candidate_predicted",
+      "full_transition_executed": false
+    },
+    "teacher_gpp_bridge": {
+      "cross_day_state": "candidate_predicted",
+      "gpp": "teacher_replacement_before_conservative_update_and_retained_tail",
+      "all_other_learned_outputs": "candidate_predicted",
+      "diagnostic_only": true,
+      "allowed_in_training": false,
+      "allowed_in_final_inference": false
+    }
+  },
+  "measurements": {
+    "gpp_residual_identity": "free_minus_teacher_equals_local_plus_state_feedback",
+    "gpp_component_statistics": [
+      "normalized_rms",
+      "normalized_signed_bias",
+      "local_feedback_cosine",
+      "squared_error_cross_fraction"
+    ],
+    "component_aggregation": "matched_daily_area_weighted_values_and_matched_horizon_sums",
+    "distribution_cells": ["temporal_7", "temporal_30", "spatial_7", "spatial_30", "joint_7", "joint_30"],
+    "bridge_reported_keys": [
+      "gpp",
+      "maintenance_respiration",
+      "growth_respiration",
+      "autotrophic_respiration",
+      "npp",
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon",
+      "total_live_biomass_carbon",
+      "nonliving_ecosystem_carbon",
+      "ecosystem_carbon"
+    ],
+    "causal_downstream_keys": ["growth_respiration", "npp"],
+    "carbon_residual_identity": "npp_error_equals_gpp_error_minus_maintenance_error_minus_growth_error"
+  },
+  "integrity_gates": {
+    "ordinary_free_report_maximum_absolute_metric_difference": 1e-12,
+    "gpp_residual_identity_maximum_absolute_error": 1e-12,
+    "gpp_squared_decomposition_relative_error_maximum": 1e-12,
+    "carbon_residual_identity_maximum_absolute_error": 1e-10,
+    "required_hard_failure_count": 0,
+    "all_reported_statistics_finite_and_nonempty": true
+  },
+  "classification": {
+    "direct_mapping_insufficient_when_teacher_state_cumulative_gpp_failing_cells_minimum": 1,
+    "state_feedback_material_when_feedback_to_total_rms_ratio_minimum": 0.25,
+    "state_feedback_material_cell_count_minimum": 3,
+    "teacher_gpp_sufficient_when_downstream_keys_pass_all_cells": true,
+    "teacher_gpp_contributes_when_median_downstream_score_reduction_minimum": 0.5
+  },
+  "execution": {
+    "free_gln01_allowed": true,
+    "paid_execution_authorized": false,
+    "optimizer_updates": 0,
+    "parameter_steps": 0,
+    "checkpoint_writes": 0,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "sealed_test_allowed": false,
+    "architecture_edit_allowed": false,
+    "loss_edit_allowed": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "365_day_rollout_allowed": false,
+    "gate_d2_allowed": false,
+    "product_acceptance_allowed": false
+  },
+  "next_gate": {
+    "on_admission_pass": "run_formal_96_window_fresh_attribution",
+    "on_integrity_failure": "stop_and_repair_attribution_execution_only",
+    "on_integrity_pass": "interpret_attribution_and_discuss_before_any_architecture_or_loss_change"
+  }
+}

@@ -343,19 +343,22 @@ one-update admission for the frozen 250-update adapter-only contract SHA256
 D2, sealed test, or product work is authorized before that admission and a
 separate resource approval.
 
-That maintenance-only phase is now historical. The current structured-GPP
-specialist completed direct warm start and joint-gradient calibration. A
-single-artifact joint proposal failed because its 30-day gradient conflicted
-with its 7-day gradient. The completed eight-artifact heterogeneity audit then
-found batch size 4 to be the minimum size whose calibrated combined gradient
-is a common descent direction in every group. Two independent discarded
-batch-four AdamW proposals from the same step-250 state then passed. The
-bounded four-epoch/248-update joint-training contract, recovery-aware runner,
-train-only epoch panel, and paid launcher are now frozen and locally qualified.
-The active gate is explicit approval of the prepared one-V100, 10-hour,
-worst-case `CNY 27.60` envelope; no paid job has been submitted. Later 7/30-day,
-365-day, Gate D2, sealed-test, and product gates remain dependency ordered.
-See `NEXT_STEPS.md` for the exact current execution boundary.
+That maintenance-only phase and the subsequent small-data structured-GPP
+stages are now historical. Broad direct-GPP training later exposed 208,000
+new train/train days and reduced its fixed monitor loss by `89.63%`, but its
+selected step-1000 checkpoint failed the target-blind fresh 96-window science
+screen. All physical hard gates pass; Teacher-state daily GPP NRMSE is
+`0.44496`, and free-rollout GPP, growth respiration, NPP, NEP, and NEE fail all
+six temporal/spatial/joint 7/30-day cells. Biomass and ecosystem-carbon stocks
+pass all cells. The checkpoint is not promoted.
+
+The active gate is the frozen, zero-training three-mode attribution on that
+same checkpoint and panel: ordinary free rollout, Teacher-day-start local GPP,
+and a diagnostic Teacher-GPP bridge. It separates local GPP mapping error from
+added state-feedback error and measures downstream growth/NPP causality. It
+does not authorize more training, an architecture edit, 365-day rollout, Gate
+D2, sealed test, or product acceptance. See `NEXT_STEPS.md` for the exact
+current execution boundary.
 
 ## New Task Bootstrap
 

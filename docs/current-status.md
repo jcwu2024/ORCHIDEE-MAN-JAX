@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-29.
+Last updated: 2026-08-31.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -688,12 +688,22 @@ production-branch launch smoke. Corrected job `14883081` then completed all
 monitor loss fell 89.63%, 125/128 point-years improved, aggregate normalized
 bias magnitude fell from 0.432 to 0.092, all physical hard counts were zero,
 and retained parent parameters were exactly unchanged. Update 1,000,
-checkpoint SHA256 `3b173b89...4ec0`, is the accepted broad-stage selection. A
-fresh independent 7/30-day screen is now frozen at contract SHA256
-`894a0b2d...e6a7`. It excludes the consumed panel's point-years within each
-slice, reports Teacher-state daily GPP separately, and retains the absolute
-13-key free-rollout gate. Free-CPU host preparation and free-`gln01` admission
-are now active; no long-horizon or product acceptance exists yet. See
+checkpoint SHA256 `3b173b89...4ec0`, is the accepted broad-stage selection.
+The following fresh independent 7/30-day screen completed at commit `c422c37`
+under contract SHA256 `894a0b2d...e6a7`; formal report SHA256 is
+`a9b9f6dc...98b`. It excludes the consumed panel's point-years within each
+slice and evaluates 96 new windows. Every execution and physical hard gate
+passes, but the absolute science gate fails. Teacher-state daily GPP NRMSE is
+`0.44496`; free-rollout GPP is `0.73409` to `1.00839` and fails all six cells.
+Growth respiration, NPP, NEP, and NEE also fail every cell. Maintenance and
+heterotrophic respiration plus all biomass and ecosystem-carbon stocks pass
+all six cells. The checkpoint is rejected for promotion. The active gate is a
+zero-training, same-panel attribution of local GPP error, added cross-day
+state-feedback error, distribution slice, and downstream growth/NPP
+propagation. Its three-mode contract is frozen at SHA256
+`2c93dbe5...112a`: ordinary free rollout, Teacher-day-start local GPP, and a
+diagnostic Teacher-GPP bridge. No long-horizon or product acceptance exists
+yet. See
 [`target_oriented_structured_gpp_warm_start_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_warm_start_result_20260829.md)
 and
 [`target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_gradient_calibration_result_20260829.md),
@@ -725,6 +735,10 @@ The accepted broad-stage result is in
 [`target_oriented_structured_gpp_broad_training_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_result_20260831.md).
 The active fresh-screen contract is
 [`target_oriented_structured_gpp_fresh_screen_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_v1.md).
+Its completed result is
+[`target_oriented_structured_gpp_fresh_screen_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_result_20260831.md).
+The active attribution contract is
+[`target_oriented_structured_gpp_fresh_attribution_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_attribution_v1.md).
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See

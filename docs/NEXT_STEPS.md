@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-29.
+Last updated: 2026-08-31.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -1891,13 +1891,26 @@ AGB, BGB, and ecosystem-carbon behavior. Promotion remains the existing
 absolute 13-key 7/30-day gate with zero physical hard failures; no weak control
 comparison is required.
 
-The active operation is to prepare the 96 fresh host artifacts on a free CPU
-test node, then run one-window-per-cell admission on free `gln01`. Only an
-admission pass opens the full fresh 96-window free-GPU screen. Do not change
-the architecture, continue broad training, read the fresh target values for
-tuning, or open 365-day rollout, Gate D2, sealed test, or product acceptance
-yet. See
-[`target_oriented_structured_gpp_fresh_screen_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_v1.md).
+The fresh-screen preparation, six-window admission, and formal 96-window
+free-`gln01` execution are complete at commit `c422c37`; formal report SHA256
+is `a9b9f6dc...98b`. All physical hard failures are zero, but the absolute
+science gate fails. Teacher-state daily GPP NRMSE is `0.44496`; free-rollout
+GPP fails all six cells at `0.73409` to `1.00839`, and growth respiration,
+NPP, NEP, and NEE also fail all six. Biomass and ecosystem-carbon stocks still
+pass all cells. The broad step-1000 checkpoint is not promoted.
+
+The active operation is a zero-training attribution on the same frozen
+checkpoint and 96 windows. Separate local Teacher-state GPP error from added
+free-rollout state-feedback error, resolve temporal/spatial/joint differences,
+and trace the signed GPP residual into growth respiration and NPP. Do not
+continue broad training, tune from the fresh targets, change the architecture,
+or open 365-day rollout, Gate D2, sealed test, or product acceptance. See
+[`target_oriented_structured_gpp_fresh_screen_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_v1.md)
+and
+[`target_oriented_structured_gpp_fresh_screen_result_20260831.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_result_20260831.md).
+The attribution is frozen before execution at contract SHA256
+`2c93dbe5...112a`; see
+[`target_oriented_structured_gpp_fresh_attribution_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_fresh_attribution_v1.md).
 
 The completed zero-update calibration protocol is recorded in
 [`target_oriented_distribution_aware_guard_calibration_v1.md`](research/daily_coarse_graining/target_oriented_distribution_aware_guard_calibration_v1.md)

@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-08-29.
+Last updated: 2026-08-31.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -123,7 +123,9 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_admission_result_20260830.md` | Accepted free-GPU runner and recovery qualification evidence | Reviewing the two chained updates, physical gate, retained parent, memory, or next paid gate |
 | `research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_launch_failure_20260831.md` | Completed launcher-failure and correction authority | Reviewing job 14881105, the empty-array failure, or commit c24f21b |
 | `research/daily_coarse_graining/target_oriented_structured_gpp_broad_training_result_20260831.md` | Current accepted broad-stage evidence and next-screen authority | Reviewing job 14883081, monitor improvement, selected checkpoint, bias, physical gates, or the fresh 7/30-day next gate |
-| `research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_v1.md` | Current frozen independent 7/30-day screen; free host preparation and admission active | Reviewing fresh selection, consumed-panel exclusion, direct-GPP diagnostic, absolute science gates, or execution order |
+| `research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_v1.md` | Completed frozen independent 7/30-day screen contract | Reviewing fresh selection, consumed-panel exclusion, direct-GPP diagnostic, or absolute science gates |
+| `research/daily_coarse_graining/target_oriented_structured_gpp_fresh_screen_result_20260831.md` | Current failed-promotion evidence and zero-training attribution authority | Reviewing the fresh 96-window result, GPP generalization failure, downstream flux failures, or next gate |
+| `research/daily_coarse_graining/target_oriented_structured_gpp_fresh_attribution_v1.md` | Current frozen three-mode zero-training attribution contract | Reviewing local-versus-feedback GPP decomposition, Teacher-GPP bridge causality, integrity gates, or execution boundary |
 | `research/daily_coarse_graining/target_oriented_update_251_admission_20260825.md` | Accepted exact checkpoint/AdamW handoff, update-251, recovery, and matched free-GPU admission | Preparing or admitting updates 251-1000 |
 | `research/daily_coarse_graining/daily_operator_parameter_routing_v1.md` | Implemented local parameter-ownership boundary used by the successor | Routing physical parameters or planning Gate D2 |
 | `research/daily_coarse_graining/successor_process_head_architecture_options_v1.md` | Historical accepted decision package; its attention/graph pair is not the current successor default | Reviewing the completed early successor comparison |

@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-08-27.
+Last updated: 2026-08-31.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -825,6 +825,16 @@ materializes the resulting 96 host artifacts on free CPU test nodes, and
 daily GPP plus canonical 7/30-day free rollouts from the broad update-1000
 checkpoint. Their shell wrappers are direct free-node boundaries and contain
 no `sbatch` submission.
+
+The failed screen's read-only causal attribution is owned by
+`daily_operator/target_oriented_structured_gpp_fresh_attribution.py` and
+`manifests/coarse_graining/target_oriented_structured_gpp_fresh_attribution_v1.json`.
+`scripts/hpc/audit_target_oriented_structured_gpp_fresh_attribution.py`
+executes ordinary free rollout, Teacher-day-start local GPP, and the existing
+diagnostic Teacher-GPP bridge on the same 96 windows. It reports exact GPP
+residual decomposition and signed growth/NPP propagation without an optimizer,
+parameter step, or checkpoint write. Its shell wrapper is a direct free-
+`gln01` boundary and contains no `sbatch` submission.
 
 ## Scripts
 
