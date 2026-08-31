@@ -185,13 +185,14 @@ def _make_fresh_evaluator(
             lambda value: value[0],
             batch.rollout_inputs,
         )
-        teacher_results = jax.vmap(lambda inputs: transition(parameters, inputs))(
-            teacher_inputs
-        )
-        direct_predicted = jnp.asarray(
-            teacher_results.prediction.named_outputs["daily.fast_gpp"],
-            dtype=jnp.float64,
-        )
+        def direct_gpp_step(carry: Any, inputs: Any) -> tuple[Any, Any]:
+            assembled = runtime["adapter"].input_assembler.assemble(inputs)
+            context = head.assemble_context(parameters, assembled)
+            prediction = head(parameters, context, assembled)
+            return carry, prediction.named_outputs["daily.fast_gpp"]
+
+        _, direct_values = jax.lax.scan(direct_gpp_step, None, teacher_inputs)
+        direct_predicted = jnp.asarray(direct_values, dtype=jnp.float64)
         direct_expected = jnp.asarray(batch.expected_fast_gpp[0], dtype=jnp.float64)
         direct_defined = jnp.asarray(
             batch.expected_fast_gpp_defined[0],
