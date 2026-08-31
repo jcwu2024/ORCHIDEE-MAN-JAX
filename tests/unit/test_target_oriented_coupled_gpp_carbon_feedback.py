@@ -269,3 +269,15 @@ def test_coupled_inference_has_no_subdaily_reconstruction_or_scan():
     assert "free gln01" in launcher
     assert "sbatch" not in launcher
     assert "RUN_TIMEOUT=${RUN_TIMEOUT:-120m}" in launcher
+
+    slurm_launcher = (
+        root
+        / "scripts/hpc/slurm_target_oriented_coupled_gpp_carbon_feedback_gpu_admission.sh"
+    ).read_text(encoding="utf-8")
+    assert "#SBATCH --partition=gnall" in slurm_launcher
+    assert "#SBATCH --gres=gpu:1" in slurm_launcher
+    assert "#SBATCH --time=02:00:00" in slurm_launcher
+    assert "RUN_TIMEOUT=110m" in slurm_launcher
+    assert "run_target_oriented_coupled_gpp_carbon_feedback_gpu_admission.sh" in (
+        slurm_launcher
+    )
