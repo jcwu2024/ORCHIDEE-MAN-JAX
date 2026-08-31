@@ -104,6 +104,7 @@ def test_runner_uses_one_dynamic_mask_graph_and_no_paid_or_fresh_path() -> None:
     )
     shared = (ROOT / "scripts" / "hpc" / "run_target_oriented_full_step_preflight.py").read_text(encoding="utf-8")
     assert "diagnostic_teacher_carry_state_mask=True" in runner
+    assert "acceptance_flux_names=AUDIT_FLUX_KEYS" in runner
     assert "masked_teacher_carry_acceptance_forward" in runner
     assert "fresh-validation-prepared-manifest" not in runner
     assert "write_structured_gpp_checkpoint" not in runner

@@ -31,7 +31,12 @@ from research.daily_coarse_graining.daily_operator.target_oriented_training impo
     derive_target_oriented_acceptance_scales,
     finalize_target_oriented_acceptance_statistics,
 )
-from scripts.hpc.audit_target_oriented_flux_gradient_variance import _hard_host, _load_context, _tree_size
+from scripts.hpc.audit_target_oriented_flux_gradient_variance import (
+    AUDIT_FLUX_KEYS,
+    _hard_host,
+    _load_context,
+    _tree_size,
+)
 from scripts.hpc.calibrate_target_oriented_distribution_aware_guard import _replace_adapter
 from scripts.hpc.run_successor_fast_owner_gpu_probe import PROBE_SEED
 from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
@@ -305,6 +310,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         context["scales"],
         target_contract,
         acceptance_scales=acceptance_scales,
+        acceptance_flux_names=AUDIT_FLUX_KEYS,
         science_flux_basis=amendment.flux_basis,
         diagnostic_teacher_carry_state_mask=True,
     )
