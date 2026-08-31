@@ -46,14 +46,14 @@ def _groups(score: float):
             "update": update,
             "acceptance": {horizon: {"keys": {"gpp": _key(score)}} for horizon in ("7", "30")},
         }
-        for update in (101, 501, 901)
+        for update in (301, 601, 901)
     ]
 
 
 def test_contract_freezes_train_only_six_component_scope() -> None:
     contract = load_structured_gpp_state_feedback_attribution_contract()
     assert contract.sha256 == FROZEN_CONTRACT_SHA256
-    assert contract.evaluation_updates == (101, 501, 901)
+    assert contract.evaluation_updates == (301, 601, 901)
     assert contract.source_components == SOURCE_COMPONENTS
     assert contract.payload["execution"]["optimizer_updates"] == 0
     assert contract.payload["execution"]["fresh_validation_read_allowed"] is False

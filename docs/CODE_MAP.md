@@ -847,7 +847,7 @@ and
 `manifests/coarse_graining/target_oriented_structured_gpp_state_feedback_attribution_v1.json`.
 `scripts/hpc/audit_target_oriented_structured_gpp_state_feedback.py` evaluates
 free rollout, full Teacher day-start state, and six source-component
-Teacher-carry modes on prepared updates `101`, `501`, and `901`.
+Teacher-carry modes on prepared updates `301`, `601`, and `901`.
 `daily_operator/target_oriented_snowheat_recurrence.py` and
 `run_target_oriented_full_step_preflight.py` provide the shared runtime-mask
 rollout so the components reuse one compiled graph per horizon. The shell

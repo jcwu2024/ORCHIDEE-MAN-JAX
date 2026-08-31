@@ -1,7 +1,7 @@
 {
   "schema_version": "target_oriented_structured_gpp_state_feedback_attribution_v1",
   "status": "frozen_before_zero_training_execution",
-  "contract_sha256": "2ba1e38b8f345ce8cb888fd82302edf753bd398b428288fbdc0463aa1c2a00e3",
+  "contract_sha256": "858b59077d4a9dbdc7ecaeb06345725bd94c2a570f1b78d258d8dee480bc69ed",
   "identity": {
     "candidate": "target_oriented_structured_gpp_v1_broad_stage_1000",
     "candidate_contract_sha256": "ce211fa7c6f5a09bd900e02e31a864b61fb32f6b06ee96d4262402c513d620ea",
@@ -17,7 +17,7 @@
   "data": {
     "release_id": "pft14-daily-teacher-v6",
     "split": "train/train",
-    "prepared_updates": [101, 501, 901],
+    "prepared_updates": [301, 601, 901],
     "seven_day_windows_per_update": 8,
     "thirty_day_windows_per_update": 4,
     "fresh_validation_values_allowed": false,

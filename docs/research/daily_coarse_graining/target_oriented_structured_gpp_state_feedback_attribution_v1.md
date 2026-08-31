@@ -4,7 +4,7 @@ Date: 2026-08-31
 
 Status: frozen before zero-training execution
 
-Contract SHA256: `2ba1e38b8f345ce8cb888fd82302edf753bd398b428288fbdc0463aa1c2a00e3`
+Contract SHA256: `858b59077d4a9dbdc7ecaeb06345725bd94c2a570f1b78d258d8dee480bc69ed`
 
 ## Question
 
@@ -17,7 +17,7 @@ It does not train, rank architectures, or use the fresh 96-window targets.
 
 ## Matched Intervention
 
-The fixed panel uses prepared `train/train` updates `101`, `501`, and `901`.
+The fixed panel uses prepared `train/train` updates `301`, `601`, and `901`.
 Each update contains eight 7-day and four 30-day windows. The candidate,
 forcing, parameters, constrained updater, retained exact tail, and initial
 Teacher state are identical in every mode.

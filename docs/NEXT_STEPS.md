@@ -1912,8 +1912,8 @@ and NPP pass all six cells, with median acceptance-score reductions of
 The design discussion selected two ordered workstreams while retaining the
 day-local coordinate Attention backbone. First, the active zero-training
 `train/train` state-feedback attribution freezes six source components and
-prepared updates `101`, `501`, and `901` under contract SHA256
-`2ba1e38b...a00e3`. It measures how much each single-component Teacher-carry
+prepared updates `301`, `601`, and `901` under contract SHA256
+`858b5907...c69ed`. It measures how much each single-component Teacher-carry
 intervention captures of the cumulative-GPP free-to-full-Teacher score gap,
 without reading the fresh panel. Only a component material at 7 or 30 days may
 enter the first coupled GPP state/process-head design; if none is individually

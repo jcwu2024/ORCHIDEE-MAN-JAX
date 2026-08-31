@@ -357,9 +357,9 @@ physical gates pass, but the checkpoint is not promoted.
 
 The design discussion is complete. The active gate is the frozen zero-training
 `train/train` state-feedback attribution at contract SHA256
-`2ba1e38b...a00e3`. It compares free rollout, full Teacher day-start state,
+`858b5907...c69ed`. It compares free rollout, full Teacher day-start state,
 and six single-source-component Teacher-carry interventions on prepared updates
-`101`, `501`, and `901`. Its purpose is to bound which state/process heads may
+`301`, `601`, and `901`. Its purpose is to bound which state/process heads may
 join the GPP specialist before any architecture or loss edit. Unchanged
 specialist continuation, fresh-target tuning, 365-day rollout, Gate D2, sealed
 test, and product acceptance remain closed. See `NEXT_STEPS.md` for the exact

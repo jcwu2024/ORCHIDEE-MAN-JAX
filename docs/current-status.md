@@ -708,8 +708,8 @@ respiration and NPP pass all cells, reducing their median acceptance scores by
 `direct_and_feedback_gpp_with_sufficient_downstream_cause`; all attribution
 integrity and physical gates pass. The design discussion is complete. The
 active gate is a zero-training source-component state-feedback attribution on
-prepared `train/train` updates `101`, `501`, and `901`, frozen at contract
-SHA256 `2ba1e38b...a00e3`. It compares free rollout, full Teacher day-start
+prepared `train/train` updates `301`, `601`, and `901`, frozen at contract
+SHA256 `858b5907...c69ed`. It compares free rollout, full Teacher day-start
 state, and six single-component Teacher-carry modes using a shared runtime
 state-mask graph. The fresh panel is not read. Its material-component result
 will bound the first coupled GPP state/process-head scope; a no-component

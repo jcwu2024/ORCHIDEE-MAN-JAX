@@ -12,7 +12,7 @@ import numpy as np
 from .target_oriented_flux_basis import contract_sha256
 
 SCHEMA_VERSION = "target_oriented_structured_gpp_state_feedback_attribution_v1"
-FROZEN_CONTRACT_SHA256 = "2ba1e38b8f345ce8cb888fd82302edf753bd398b428288fbdc0463aa1c2a00e3"
+FROZEN_CONTRACT_SHA256 = "858b59077d4a9dbdc7ecaeb06345725bd94c2a570f1b78d258d8dee480bc69ed"
 SOURCE_COMPONENTS = (
     ("state_canopy", "diffuco_previous_step_state"),
     ("state_energy", "enerbil_previous_step_state"),
@@ -66,7 +66,7 @@ def _validate(payload: Mapping[str, Any]) -> None:
     if (
         data.get("release_id") != "pft14-daily-teacher-v6"
         or data.get("split") != "train/train"
-        or tuple(data.get("prepared_updates", ())) != (101, 501, 901)
+        or tuple(data.get("prepared_updates", ())) != (301, 601, 901)
         or int(data.get("seven_day_windows_per_update", 0)) != 8
         or int(data.get("thirty_day_windows_per_update", 0)) != 4
         or bool(data.get("fresh_validation_values_allowed"))
