@@ -449,6 +449,11 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         or context["target_contract"].sha256 != identity_contract["target_contract_sha256"]
     ):
         raise ValueError("coupled GPP bounded training data identity drift")
+    schedule = build_coupled_gpp_training_schedule()
+    required_artifacts = {value for group in schedule.groups for value in group} | set(contract.monitor_updates)
+    missing_artifacts = sorted(required_artifacts - set(context["prepared_records"]))
+    if missing_artifacts:
+        raise ValueError(f"coupled GPP bounded training prepared coverage drift: {missing_artifacts}")
 
     candidate = _build_candidate(runtime, args, context["template"])
     initialized_parameters = candidate["parameters"]
@@ -498,7 +503,6 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         )
     )
     proposal_check = _make_proposal_check(jax, jnp)
-    schedule = build_coupled_gpp_training_schedule()
     memory_before = _memory_report(runtime["devices"][0])
     identity = {
         "git_head": _git_head(),

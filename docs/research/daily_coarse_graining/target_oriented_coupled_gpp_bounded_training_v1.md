@@ -17,10 +17,11 @@ uses artifacts `251, 358, 465, 572, 679, 786, 893, 1000`; these artifacts are
 excluded from optimizer updates and are never used to change coefficients or
 learning rate.
 
-The remaining 984 eligible artifacts are permuted once with NumPy `PCG64`
-seed `20260901`. The first 64 entries are grouped without replacement into
-eight ordered macro batches of eight artifacts. The materialized schedule
-SHA256 is `71928c65...5f160e`. Selection uses artifact identity only and was
+The admitted prepared product covers artifacts `251-1000`. After both excluded
+panels, the remaining 734 eligible artifacts are permuted once with NumPy
+`PCG64` seed `20260901`. The first 64 entries are grouped without replacement
+into eight ordered macro batches of eight artifacts. The materialized schedule
+SHA256 is `cb5e2ab1...6c04e`. Selection uses artifact identity only and was
 frozen before any monitor value was evaluated.
 
 Each retained optimizer update therefore covers:
@@ -82,7 +83,7 @@ and product acceptance remain closed.
 
 The machine contract is
 `manifests/coarse_graining/target_oriented_coupled_gpp_bounded_training_v1.json`
-at SHA256 `56652448...81f1e`. The schedule and stop-rule owner is
+at SHA256 `5378fe99...699cca`. The schedule and stop-rule owner is
 `daily_operator/target_oriented_coupled_gpp_bounded_training.py`; atomic state
 ownership is in `target_oriented_coupled_gpp_checkpoint.py`; and the executable
 runner is `scripts/hpc/run_target_oriented_coupled_gpp_bounded_training.py`.
@@ -91,3 +92,11 @@ Before paid execution, `--admission-only` must run on free `gln01`. It executes
 the same initial monitor and first full macro proposal, round-trips a temporary
 recovery, then discards the proposal and deletes the temporary recovery. It
 cannot write a retained training checkpoint.
+
+The first free admission attempt at commit `b0ad35d` exposed a schedule-range
+ownership error after three training-artifact gradients: the merged prepared
+manifest contains artifacts `251-1000`, while the original schedule sampled
+from `1-1000` and eventually requested missing artifact `173`. It produced no
+report, recovery, retained optimizer update, or checkpoint. The corrected
+contract freezes the admitted `251-1000` range and the runner now verifies all
+64 training keys plus all eight monitor keys before model construction or JIT.

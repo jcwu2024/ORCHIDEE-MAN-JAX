@@ -67,20 +67,21 @@ def test_coupled_gpp_bounded_training_contract_and_schedule_are_exact():
     schedule = build_coupled_gpp_training_schedule()
     assert schedule.sha256 == SCHEDULE_SHA256
     assert schedule.groups == (
-        (814, 620, 655, 173, 168, 194, 371, 994),
-        (506, 35, 83, 426, 585, 925, 6, 503),
-        (612, 505, 629, 796, 762, 95, 73, 413),
-        (415, 634, 69, 433, 784, 275, 442, 434),
-        (31, 950, 878, 22, 216, 790, 315, 47),
-        (334, 929, 635, 303, 720, 881, 391, 338),
-        (204, 560, 927, 719, 744, 574, 497, 340),
-        (802, 366, 660, 806, 558, 110, 884, 528),
+        (389, 922, 967, 910, 850, 885, 489, 891),
+        (326, 935, 542, 913, 897, 836, 887, 863),
+        (968, 750, 987, 728, 953, 253, 646, 937),
+        (481, 672, 900, 294, 998, 668, 433, 535),
+        (965, 351, 272, 363, 660, 670, 548, 740),
+        (332, 994, 933, 930, 699, 916, 387, 427),
+        (675, 417, 455, 803, 779, 284, 385, 520),
+        (293, 576, 290, 784, 743, 963, 414, 727),
     )
     flattened = [value for group in schedule.groups for value in group]
     assert len(flattened) == len(set(flattened)) == 64
     assert set(flattened).isdisjoint(MONITOR_UPDATES)
     assert set(flattened).isdisjoint(CALIBRATION_UPDATES)
-    assert len(eligible_training_artifacts()) == 984
+    assert min(flattened) >= 251
+    assert len(eligible_training_artifacts()) == 734
 
 
 def test_coupled_gpp_finite_step_and_monitor_rules_are_bounded():

@@ -24,8 +24,8 @@ from .target_oriented_coupled_gpp_optimizer_preflight import (
 from .target_oriented_source_shaped_maintenance import contract_sha256
 
 SCHEMA_VERSION = "target_oriented_coupled_gpp_bounded_training_v1"
-FROZEN_CONTRACT_SHA256 = "56652448d7cbd7e1397a10ac0f48cd9e3456f37c0e8c0d7e1214018c7e681f1e"
-SCHEDULE_SHA256 = "71928c65234080885f7cb4f89a059871c05ffdc2836c9a081a04735d9b5f160e"
+FROZEN_CONTRACT_SHA256 = "5378fe9908c272b8651d8b2087e56e4d7751ead18c7395794bbe2361f6699cca"
+SCHEDULE_SHA256 = "cb5e2ab12beecd558efe1aaf8082da54567b63631ce0b982e03934067b36c04e"
 CALIBRATION_UPDATES = (352, 353, 354, 355, 356, 357, 359, 360)
 MONITOR_UPDATES = (251, 358, 465, 572, 679, 786, 893, 1000)
 DEFAULT_CONTRACT_PATH = (
@@ -67,7 +67,7 @@ class CoupledGPPBoundedTrainingContract:
 
 def eligible_training_artifacts() -> tuple[int, ...]:
     excluded = frozenset(CALIBRATION_UPDATES) | frozenset(MONITOR_UPDATES)
-    return tuple(update for update in range(1, 1001) if update not in excluded)
+    return tuple(update for update in range(251, 1001) if update not in excluded)
 
 
 def build_coupled_gpp_training_schedule(
@@ -195,6 +195,8 @@ def load_coupled_gpp_bounded_training_contract(
         or int(identity["fixed_parameter_count"]) != 93_504_164
         or tuple(int(value) for value in data["objective_calibration_artifacts"]) != CALIBRATION_UPDATES
         or tuple(int(value) for value in data["monitor_artifacts"]) != MONITOR_UPDATES
+        or int(data["prepared_artifact_start"]) != 251
+        or int(data["prepared_artifact_end"]) != 1000
         or int(data["training_candidate_artifact_count"]) != len(eligible_training_artifacts())
         or int(data["macro_batch_artifact_count"]) != 8
         or int(data["maximum_optimizer_updates"]) != 8

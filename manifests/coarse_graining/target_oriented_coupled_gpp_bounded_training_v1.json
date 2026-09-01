@@ -1,7 +1,7 @@
 {
   "schema_version": "target_oriented_coupled_gpp_bounded_training_v1",
   "status": "frozen_before_runner_qualification_and_paid_resource_review",
-  "contract_sha256": "56652448d7cbd7e1397a10ac0f48cd9e3456f37c0e8c0d7e1214018c7e681f1e",
+  "contract_sha256": "5378fe9908c272b8651d8b2087e56e4d7751ead18c7395794bbe2361f6699cca",
   "identity": {
     "candidate": "target_oriented_coupled_gpp_carbon_feedback_attention_v1",
     "coupled_candidate_contract_sha256": "c7f81436ff6ba1179b01adad0f76b47ddd2aab68208e97719c2c5464f3e7e74d",
@@ -23,20 +23,22 @@
     "release_id": "pft14-daily-teacher-v6",
     "split": "train/train",
     "prepared_schedule_updates": 1000,
+    "prepared_artifact_start": 251,
+    "prepared_artifact_end": 1000,
     "objective_calibration_artifacts": [352, 353, 354, 355, 356, 357, 359, 360],
     "monitor_artifacts": [251, 358, 465, 572, 679, 786, 893, 1000],
     "monitor_role": "fixed_train_only_target_blind_checkpoint_selection_panel",
     "monitor_disjoint_from_training_and_calibration": true,
-    "training_candidate_artifact_count": 984,
+    "training_candidate_artifact_count": 734,
     "macro_batch_artifact_count": 8,
     "maximum_optimizer_updates": 8,
     "training_artifact_presentations": 64,
     "training_schedule": {
       "generator": "numpy.random.Generator(PCG64)",
       "seed": 20260901,
-      "selection": "first_64_of_one_permutation_over_all_eligible_prepared_artifacts",
+      "selection": "first_64_of_one_permutation_over_eligible_prepared_artifacts_251_through_1000",
       "sample_without_replacement_within_stage": true,
-      "materialized_schedule_sha256": "71928c65234080885f7cb4f89a059871c05ffdc2836c9a081a04735d9b5f160e"
+      "materialized_schedule_sha256": "cb5e2ab12beecd558efe1aaf8082da54567b63631ce0b982e03934067b36c04e"
     },
     "direct_gpp_teacher_days_per_macro_update": 1664,
     "one_day_state_transitions_per_macro_update": 256,

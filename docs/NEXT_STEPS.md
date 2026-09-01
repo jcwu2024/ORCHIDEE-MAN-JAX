@@ -1986,7 +1986,7 @@ training update was written. See
 [`target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md).
 
 The target-blind schedule and first bounded-training contract are now frozen
-at SHA256 `56652448...81f1e`. Eight optimizer updates use 64 unique training
+at SHA256 `5378fe99...699cca`. Eight optimizer updates use 64 unique training
 artifacts in deterministic eight-artifact macro batches; the calibration and
 fixed eight-artifact train-only monitor panels are disjoint from training.
 Every proposal is evaluated before retention, recovery is atomic after every

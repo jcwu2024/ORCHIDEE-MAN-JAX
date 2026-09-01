@@ -826,7 +826,7 @@ proposal, moments, and parameters were discarded. See
 [`target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md).
 
 The target-blind deterministic schedule and first bounded stage are now frozen
-at contract SHA256 `56652448...81f1e`. The stage contains eight macro updates,
+at contract SHA256 `5378fe99...699cca`. The stage contains eight macro updates,
 each averaging eight prepared artifacts, while the eight calibration artifacts
 and a fixed eight-artifact train-only monitor are excluded from training. All
 64 training artifacts are unique. Every proposal must pass complete before/
@@ -837,6 +837,13 @@ production-equivalent free-`gln01` admission are the active gate. Paid training
 remains unauthorized until that admission and an exact resource approval.
 See
 [`target_oriented_coupled_gpp_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_bounded_training_v1.md).
+
+The first free runner-admission attempt at commit `b0ad35d` stopped after
+three artifact gradients because its schedule sampled missing artifact `173`
+outside the prepared product's admitted `251-1000` range. No report, recovery,
+retained update, or checkpoint was written. The corrected contract SHA256 is
+`5378fe99...699cca`; its 64 training keys and eight monitor keys are now
+checked against `prepared_records` before model construction or JIT.
 
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
