@@ -286,7 +286,8 @@ def replace_coupled_gpp_trainable(
     parameters: Mapping[str, Any],
     trainable: Mapping[str, Any],
 ) -> Mapping[str, Any]:
-    if tuple(trainable) not in ((), TRAINABLE_FAMILIES):
+    keys = frozenset(trainable)
+    if keys not in (frozenset(), frozenset(TRAINABLE_FAMILIES)):
         raise ValueError("coupled GPP trainable family drift")
     target = dict(parameters["target_oriented"])
     for name in TRAINABLE_FAMILIES:

@@ -163,3 +163,24 @@ def test_objective_coefficient_resolution_and_trainable_boundary():
     assert replaced["fixed"] is parent["fixed"]
     assert replaced["target_oriented"]["retained"] is parent["target_oriented"]["retained"]
     np.testing.assert_array_equal(replaced["target_oriented"]["structured_gpp"]["value"], 2.0)
+
+
+def test_trainable_replacement_accepts_jax_canonical_key_order():
+    parent = {
+        "fixed": jnp.asarray(3.0),
+        "target_oriented": {
+            "structured_gpp": {"value": jnp.ones((2,))},
+            "coupled_gpp_carbon_feedback": {"value": jnp.ones((3,))},
+            "retained": jnp.asarray(4.0),
+        },
+    }
+    trainable = coupled_gpp_trainable_tree(parent)
+    fixed = replace_coupled_gpp_trainable(parent, {})
+    replaced = jax.jit(replace_coupled_gpp_trainable)(fixed, trainable)
+
+    np.testing.assert_array_equal(replaced["target_oriented"]["structured_gpp"]["value"], 1.0)
+    np.testing.assert_array_equal(
+        replaced["target_oriented"]["coupled_gpp_carbon_feedback"]["value"],
+        1.0,
+    )
+    assert float(replaced["target_oriented"]["retained"]) == 4.0

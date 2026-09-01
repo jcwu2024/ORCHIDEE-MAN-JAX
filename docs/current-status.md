@@ -801,6 +801,13 @@ anchor, and component-resolved 7/30-day science. The active gate is the
 zero-update real-v6 GPU calibration over eight train-only artifacts. It creates
 no optimizer and writes no checkpoint; no optimizer update or training is
 authorized.
+
+Job `14899347` at commit `8a1dffc` failed before its first objective value
+because the parameter-family guard compared dictionary insertion order inside
+JAX `jit`. JAX canonicalized the two keys into a different, equally valid
+order. No report or checkpoint was written. The guard now compares the exact
+key set, and a JIT regression test covers the scheduler failure path. The
+scientific gate is unchanged and still awaits a clean zero-update execution.
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See

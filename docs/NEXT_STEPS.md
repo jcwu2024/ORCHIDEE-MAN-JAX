@@ -1964,6 +1964,13 @@ training. The replacement direct monitor, train-only 7/30-day monitor,
 bounded training budget, and stop rule remain required before training. No
 paid training is the next operation.
 
+The first GPU execution, job `14899347` at commit `8a1dffc`, stopped before
+objective evaluation because an order-sensitive parameter-family guard did
+not accept JAX's canonical dictionary-key order inside `jit`. No result report,
+optimizer, update, or checkpoint was produced. The guard now verifies the
+exact key set and has a JIT regression test. The active gate remains one clean
+zero-update calibration execution.
+
 The approved design is
 [`target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md).
 It recommends coordinate-level cross-attention over the selected day-start
