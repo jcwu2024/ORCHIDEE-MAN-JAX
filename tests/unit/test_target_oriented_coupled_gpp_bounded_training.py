@@ -202,6 +202,8 @@ def test_coupled_gpp_training_launchers_are_bounded_and_admissible():
     assert "write_coupled_gpp_checkpoint" in runner
     assert "sbatch" not in launcher
     assert "ADMISSION_ONLY=${ADMISSION_ONLY:-0}" in launcher
+    assert "ADMISSION_ARG=" in launcher
+    assert "ADMISSION_ARGS" not in launcher
     assert "RUN_TIMEOUT=${RUN_TIMEOUT:-290m}" in launcher
     assert "#SBATCH --partition=gnall" in slurm
     assert "#SBATCH --gres=gpu:1" in slurm

@@ -82,9 +82,9 @@ mkdir -p "$OUTPUT_DIR" "$CACHE_ROOT"
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
 NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
 GPU_BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
-ADMISSION_ARGS=()
+ADMISSION_ARG=
 if test "$ADMISSION_ONLY" = 1; then
-  ADMISSION_ARGS=(--admission-only)
+  ADMISSION_ARG=--admission-only
 fi
 
 echo "host=$(hostname) git_head=$EXPECTED_GIT_HEAD gpu_device=$GPU_DEVICE output=$OUTPUT_DIR admission=$ADMISSION_ONLY"
@@ -133,7 +133,7 @@ env -u LD_LIBRARY_PATH \
       --optimizer-backoff-report "$BACKOFF_REPORT" \
       --bounded-training-contract "$BOUNDED_CONTRACT" \
       --output-dir "$OUTPUT_DIR" \
-      "${ADMISSION_ARGS[@]}"
+      $ADMISSION_ARG
 
 if test "$ADMISSION_ONLY" = 1; then
   test -f "$OUTPUT_DIR/admission-report.json"
