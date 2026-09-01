@@ -876,8 +876,14 @@ field attachment and exact-nonzero Jacobian union. Its machine contract is
 `scripts/hpc/audit_target_oriented_gpp_state_reachability.py` loads the exact
 accepted candidate and computes each real-v6 forward-mode Jacobian through the
 conservative update and canonical retained tail;
-`run_target_oriented_gpp_state_reachability.sh` is its free-`gln01`-only
-launcher. None of these owners creates an optimizer or checkpoint.
+`run_target_oriented_gpp_state_reachability.sh` owns its free-`gln01` or
+approved-`gnall` execution boundary, and
+`slurm_target_oriented_gpp_state_reachability.sh` owns the bounded paid
+envelope. The accepted result is
+`target_oriented_gpp_state_reachability_result_20260901.md`. None of these
+owners creates an optimizer or checkpoint. The next code boundary is a
+field-grouped one-day state-anchor and objective-calibration contract over the
+41 accepted reachable coordinates.
 
 ## Scripts
 

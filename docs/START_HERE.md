@@ -372,13 +372,15 @@ conservative update and retained exact tail. All trainable gradients, the
 complete next state, and water/carbon budgets pass; no optimizer or checkpoint
 was created.
 
-The active gate is the frozen 13-day, zero-training GPP-to-next-day slow-carbon
-reachability audit. It differentiates the exact complete operator with respect
-to the compact bare-soil/PFT14 GPP boundary and freezes only genuinely
-reachable state coordinates, grouped by source field. Its contract SHA256 is
-`1bf2bbfc...7c82af`. Training, fresh-target tuning, 365-day rollout, Gate D2,
-sealed test, and product acceptance remain closed. See `NEXT_STEPS.md` for the
-exact current boundary.
+The frozen 13-day GPP-to-next-day slow-carbon reachability audit passed under
+job `14899147`. Its exact-nonzero PFT14 union contains 41 coordinates in 16
+fields; all Jacobians and next states are finite, the bare-soil derivative is
+exactly zero, and all water/carbon budget residuals are zero. The active gate
+is now a train-only, field-grouped one-day state-anchor and objective-
+calibration contract over those reachable coordinates, followed by local
+zero-update loss/gradient admission. Training, fresh-target tuning, 365-day
+rollout, Gate D2, sealed test, and product acceptance remain closed. See
+`NEXT_STEPS.md` for the exact current boundary.
 
 ## New Task Bootstrap
 

@@ -784,17 +784,19 @@ next state is finite, water/carbon budget residuals are zero, non-GPP parent
 outputs are bit-exact, cache-hot forward is `0.057055 s/day`, and peak live JAX
 allocation is about 1.55 GB. Report SHA256 is `cf8eb1d2...e623`; see
 [`target_oriented_coupled_gpp_carbon_feedback_gpu_admission_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_gpu_admission_20260901.md).
-The active gate is a zero-training GPP-to-next-day slow-carbon reachability
-inventory grouped by source field. No optimizer update or training is
+The zero-training GPP-to-next-day slow-carbon reachability audit passed under
+job `14899147` at commit `b730b99`; report SHA256 is `dc53765e...d020`. Across
+12 train/train calendar positions and one restart boundary, the exact-nonzero
+PFT14 union contains 41 coordinates in 16 fields. Every Jacobian and declared
+next-state value is finite, every bare-soil derivative is exactly zero, and
+all water/carbon budget residuals are zero. No optimizer or checkpoint was
+created. See
+[`target_oriented_gpp_state_reachability_result_20260901.md`](research/daily_coarse_graining/target_oriented_gpp_state_reachability_result_20260901.md).
+
+The active gate is a train-only field-grouped one-day state-anchor and
+objective-calibration contract over the 41 reachable coordinates, followed by
+local zero-update loss/gradient admission. No optimizer update or training is
 authorized.
-Its 13-day train/train execution contract is frozen at SHA256
-`1bf2bbfc...7c82af`. The pure field-grouped Jacobian summarizer, real-v6 GPU
-runner, direct free-`gln01` launcher, and all eight focused plus predecessor
-tests pass locally. The differentiated boundary is the compact `(1, 2)`
-bare-soil/PFT14 GPP output; the audit takes the exact-nonzero PFT14 union over
-12 calendar positions and one restart boundary while requiring an exact-zero
-bare-soil column. See
-[`target_oriented_gpp_state_reachability_v1.md`](research/daily_coarse_graining/target_oriented_gpp_state_reachability_v1.md).
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See

@@ -1942,28 +1942,25 @@ all non-GPP parent outputs remain bit-exact, and cache-hot forward time is
 optimizer or checkpoint was created. See
 [`target_oriented_coupled_gpp_carbon_feedback_gpu_admission_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_gpu_admission_20260901.md).
 
-The active gate is now a zero-training complete-operator dependency audit.
-Differentiate next-day `slowproc_stomate_previous_step_state` with respect to
-the `daily.fast_gpp` process boundary, identify every finite nonzero coordinate,
-and freeze the result grouped by source field. Only after that inventory is
-accepted may the one-day state-anchor loss and objective coefficients be
-frozen. The replacement 48-day-per-point-year direct monitor, train-only
-7/30-day monitor, discarded-proposal preflight, bounded training budget, and
-stop rule also remain required before any optimizer update. The existing
-million-day schedule may be reused only after the later training contract
-defines which direct days and rollout windows are consumed.
+The 13-day zero-training reachability audit passed under Explore1000 job
+`14899147` at commit `b730b99`; report SHA256 is `dc53765e...d020`. Every
+float64 `(2386, 2)` Jacobian is finite, every bare-soil derivative is exactly
+zero, and the exact-nonzero PFT14 union contains 41 coordinates in 16 source
+fields. Thirty-nine coordinates exceed the normalized reporting threshold;
+the two smaller exact-nonzero coordinates remain part of the authoritative
+union. All next-state and water/carbon budget gates pass. See
+[`target_oriented_gpp_state_reachability_result_20260901.md`](research/daily_coarse_graining/target_oriented_gpp_state_reachability_result_20260901.md).
 
-The reachability execution is frozen at contract SHA256
-`1bf2bbfc...7c82af`. It uses 12 target-blind calendar positions from the 1961
-train/train point-year plus the accepted 1962 restart Day 1 boundary. For each
-case it computes the float64 `2386 x 2` Jacobian of next-day slow-process state
-with respect to compact bare-soil/PFT14 GPP, requires the bare-soil column to
-be exactly zero, takes the exact-nonzero PFT14 union, and records field-local
-indices and normalized sensitivities. The local contract, summarizer, runner,
-three focused tests, and five predecessor candidate tests pass. The next
-operation is the free-`gln01` execution; no optimizer or checkpoint path is
-present. See
-[`target_oriented_gpp_state_reachability_v1.md`](research/daily_coarse_graining/target_oriented_gpp_state_reachability_v1.md).
+The active gate is now to freeze a field-grouped one-day state-anchor and
+objective-calibration contract over those 41 coordinates. The contract must
+preserve field identity, use train-only statistics, state how direct science
+losses and the reachable-state groups are balanced, and define a zero-update
+local loss/gradient admission before any optimizer is created. The replacement
+48-day-per-point-year direct monitor, train-only 7/30-day monitor,
+discarded-proposal preflight, bounded training budget, and stop rule remain
+required before training. The existing million-day schedule may be reused only
+after that later training contract defines which direct days and rollout
+windows are consumed. No paid training is the next operation.
 
 The approved design is
 [`target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md).
