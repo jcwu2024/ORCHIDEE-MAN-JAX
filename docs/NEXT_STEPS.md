@@ -1985,14 +1985,18 @@ pass. The proposal and fresh optimizer were discarded; no checkpoint or
 training update was written. See
 [`target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md).
 
-The active gate is target-blind training and train-only monitor schedule
-design followed by a separately frozen bounded-training contract. Before a
-runner or paid training submission is authorized, freeze deterministic
-macro-batch grouping, non-overlapping monitor artifacts, milestone and
-recovery cadence, per-update finite-step acceptance, physical gates, and
-multi-source stop rules. The first bounded stage must remain non-promotable;
-fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
-stay closed.
+The target-blind schedule and first bounded-training contract are now frozen
+at SHA256 `56652448...81f1e`. Eight optimizer updates use 64 unique training
+artifacts in deterministic eight-artifact macro batches; the calibration and
+fixed eight-artifact train-only monitor panels are disjoint from training.
+Every proposal is evaluated before retention, recovery is atomic after every
+accepted update, and only passing update-4/update-8 train-only monitors can
+write a non-promotable checkpoint. The active gate is local runner
+qualification followed by one discarded production-equivalent free-`gln01`
+admission. Paid training is not authorized until that admission passes and an
+exact resource/cost envelope is approved. Fresh validation, 365-day rollout,
+Gate D2, sealed test, and product acceptance stay closed. See
+[`target_oriented_coupled_gpp_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_bounded_training_v1.md).
 
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT

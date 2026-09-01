@@ -906,9 +906,17 @@ proposal and optimizer state are discarded; these files are not a training or
 checkpoint owner. Job `14902356` rejected the `4e-6` finite step after complete
 execution; `slurm_target_oriented_coupled_gpp_optimizer_backoff.sh` owns the
 accepted `2e-6` execution envelope. Its result is
-`target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md`. No coupled-
-candidate training, recovery, or checkpoint owner exists yet; those ownership
-boundaries are the active design task.
+`target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md`.
+`daily_operator/target_oriented_coupled_gpp_bounded_training.py` now owns the
+frozen target-blind eight-macro-update schedule, disjoint train-only monitor,
+finite-step retention gate, milestones, and stop rules.
+`daily_operator/target_oriented_coupled_gpp_checkpoint.py` owns atomic
+two-family recovery and non-promotable stage checkpoints.
+`scripts/hpc/run_target_oriented_coupled_gpp_bounded_training.py` owns both the
+discarded production-equivalent runner admission and retained bounded stage;
+its direct shell wrapper admits free `gln01` or allocated `gnall`, and its
+Slurm wrapper freezes the proposed one-V100 paid envelope. The runner remains
+conditional on local and free-GPU qualification.
 
 ## Scripts
 

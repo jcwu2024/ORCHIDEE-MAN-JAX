@@ -825,10 +825,18 @@ coverage, physical, fixed-parameter, and checkpoint-integrity gates pass. The
 proposal, moments, and parameters were discarded. See
 [`target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md).
 
-The active gate is now target-blind deterministic macro-batch and train-only
-monitor schedule design plus a bounded training contract. Training remains
-unauthorized until grouping, monitor exclusion, milestones, recovery,
-per-update finite-step acceptance, physical gates, and stop rules are frozen.
+The target-blind deterministic schedule and first bounded stage are now frozen
+at contract SHA256 `56652448...81f1e`. The stage contains eight macro updates,
+each averaging eight prepared artifacts, while the eight calibration artifacts
+and a fixed eight-artifact train-only monitor are excluded from training. All
+64 training artifacts are unique. Every proposal must pass complete before/
+after four-source and physical checks before retention; atomic recovery follows
+each accepted update, and only passing update-4/update-8 monitor panels write
+non-promotable checkpoints. Local runner qualification and a discarded
+production-equivalent free-`gln01` admission are the active gate. Paid training
+remains unauthorized until that admission and an exact resource approval.
+See
+[`target_oriented_coupled_gpp_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_bounded_training_v1.md).
 
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
