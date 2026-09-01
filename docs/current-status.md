@@ -845,6 +845,17 @@ retained update, or checkpoint was written. The corrected contract SHA256 is
 `5378fe99...699cca`; its 64 training keys and eight monitor keys are now
 checked against `prepared_records` before model construction or JIT.
 
+The corrected free runner admission then passed at commit `885693a` in
+`1,579.743` seconds; report SHA256 is `4aaac8ca...b8e23`. The first scheduled
+macro proposal improves direct GPP, reachable state, 7-day science, 30-day
+science, and weighted total by `1.60249%/10.41690%/1.02810%/1.32569%/2.52874%`.
+All 15,960,195 gradients are finite, all 190 leaves are nonzero, both trainable
+families change, clip scale is `1.0`, all true physical hard counts are zero,
+and temporary recovery round-trips before deletion. No update or checkpoint is
+retained. The active gate is the resource-approved paid eight-update stage.
+See
+[`target_oriented_coupled_gpp_bounded_training_admission_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_bounded_training_admission_20260902.md).
+
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
 The exact-key-set repair and JIT regression were subsequently exercised by

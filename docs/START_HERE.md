@@ -384,10 +384,10 @@ finite-step gate: state improved while direct GPP and 7/30-day science
 regressed. The exact half-rate `2e-6` proposal then passed every gate under job
 `14902878`: all four macro losses decrease, all physical gates pass, and no
 checkpoint was written. The target-blind eight-update training/monitor
-schedule and bounded-stage contract are now frozen. The active gate is local
-runner qualification and a discarded production-equivalent free-`gln01`
-admission before paid resource approval. Fresh-target tuning, 365-day rollout,
-Gate D2, sealed test, and product acceptance remain closed. See
+schedule and bounded-stage contract are now frozen, and the corrected
+production-equivalent free-`gln01` runner admission passes. The active gate is
+the separately resource-approved paid eight-update stage. Fresh-target tuning,
+365-day rollout, Gate D2, sealed test, and product acceptance remain closed. See
 `NEXT_STEPS.md` for the exact current boundary.
 
 ## New Task Bootstrap

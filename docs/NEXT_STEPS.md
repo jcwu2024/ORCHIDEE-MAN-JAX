@@ -1991,12 +1991,15 @@ artifacts in deterministic eight-artifact macro batches; the calibration and
 fixed eight-artifact train-only monitor panels are disjoint from training.
 Every proposal is evaluated before retention, recovery is atomic after every
 accepted update, and only passing update-4/update-8 train-only monitors can
-write a non-promotable checkpoint. The active gate is local runner
-qualification followed by one discarded production-equivalent free-`gln01`
-admission. Paid training is not authorized until that admission passes and an
-exact resource/cost envelope is approved. Fresh validation, 365-day rollout,
+write a non-promotable checkpoint. The corrected production-equivalent
+free-`gln01` admission passes at commit `885693a`: all four source losses
+decrease, all gradients and physical gates pass, and temporary recovery
+round-trips without retaining the update. The active gate is the separately
+resource-approved paid eight-update stage. Fresh validation, 365-day rollout,
 Gate D2, sealed test, and product acceptance stay closed. See
 [`target_oriented_coupled_gpp_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_bounded_training_v1.md).
+Admission evidence is in
+[`target_oriented_coupled_gpp_bounded_training_admission_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_bounded_training_admission_20260902.md).
 
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT
