@@ -775,10 +775,18 @@ Its accepted result and current design-scope authority are
 The user-approved architecture and accepted local implementation design are
 [`target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md).
 The exact 2,386-coordinate layout, 3,080,832-parameter adapter, complete
-109,464,359-parameter candidate, local forward/loss/gradient/PFT/parameter-
-route/daily-budget gates, and current free-GPU next step are recorded in
+109,464,359-parameter candidate, and local forward/loss/gradient/PFT/parameter-
+route/daily-budget gates are recorded in
 [`target_oriented_coupled_gpp_carbon_feedback_local_acceptance_20260831.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_local_acceptance_20260831.md).
-No optimizer update or training is authorized.
+The real-v6 zero-update admission passed under job `14897461`: all 15,960,195
+trainable gradients and all 190 leaves are finite and nonzero, the complete
+next state is finite, water/carbon budget residuals are zero, non-GPP parent
+outputs are bit-exact, cache-hot forward is `0.057055 s/day`, and peak live JAX
+allocation is about 1.55 GB. Report SHA256 is `cf8eb1d2...e623`; see
+[`target_oriented_coupled_gpp_carbon_feedback_gpu_admission_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_gpu_admission_20260901.md).
+The active gate is a zero-training GPP-to-next-day slow-carbon reachability
+inventory grouped by source field. No optimizer update or training is
+authorized.
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See

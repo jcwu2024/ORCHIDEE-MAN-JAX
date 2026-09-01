@@ -1933,14 +1933,23 @@ PFT-query cross-attention blocks over day-start
 `slowproc_stomate_previous_step_state` coordinates. It does not directly
 predict STOMATE state.
 
-The active gate is a free-`gln01` zero-update real-v6 admission using the
-accepted broad update-1000 checkpoint and one train/train day. It must measure
-real-v6 forward/loss/gradients, ownership, one complete daily transition,
-budgets, timing, and peak live memory without creating an optimizer or writing
-a checkpoint. After it passes, freeze the GPP-reachable one-day carbon-state
-inventory, objective coefficients, replacement 48-day-per-point-year direct
-monitor, train-only 7/30-day monitor, discarded-proposal preflight, bounded
-training budget, and stop rule before any optimizer update. The existing
+The zero-update real-v6 GPU admission passed under job `14897461` at commit
+`989a457`; report SHA256 is `cf8eb1d2...e623`. All 15,960,195 first-stage
+trainable gradients are finite and every parameter leaf is nonzero. The
+complete next-day state is finite, water and carbon budget residuals are zero,
+all non-GPP parent outputs remain bit-exact, and cache-hot forward time is
+`0.057055 s/day`. Peak live JAX device allocation is about 1.55 GB. No
+optimizer or checkpoint was created. See
+[`target_oriented_coupled_gpp_carbon_feedback_gpu_admission_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_gpu_admission_20260901.md).
+
+The active gate is now a zero-training complete-operator dependency audit.
+Differentiate next-day `slowproc_stomate_previous_step_state` with respect to
+the `daily.fast_gpp` process boundary, identify every finite nonzero coordinate,
+and freeze the result grouped by source field. Only after that inventory is
+accepted may the one-day state-anchor loss and objective coefficients be
+frozen. The replacement 48-day-per-point-year direct monitor, train-only
+7/30-day monitor, discarded-proposal preflight, bounded training budget, and
+stop rule also remain required before any optimizer update. The existing
 million-day schedule may be reused only after the later training contract
 defines which direct days and rollout windows are consumed.
 

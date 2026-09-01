@@ -864,8 +864,12 @@ adapter and three structured-GPP residual injections, and preserves GPP-only
 output ownership. `target_oriented_process_head.py` exposes its stable
 process-head builder. Its machine contract is
 `manifests/coarse_graining/target_oriented_coupled_gpp_carbon_feedback_v1.json`.
-The current implementation is locally accepted but has not yet passed its
-real-v6 free-GPU admission; no optimizer or training owner exists for it.
+The local implementation and real-v6 zero-update GPU admission are accepted.
+`scripts/hpc/run_target_oriented_coupled_gpp_carbon_feedback_gpu_admission.py`
+owns the machine-readable admission, while its direct and Slurm shell wrappers
+own free-`gln01` and bounded `gnall` launch boundaries. No optimizer or
+training owner exists for the candidate yet; the next owner to add is a
+zero-training GPP-to-next-state reachability audit.
 
 ## Scripts
 
