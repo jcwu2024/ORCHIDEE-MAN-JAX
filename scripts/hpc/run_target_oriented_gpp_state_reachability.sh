@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run the zero-training GPP-to-next-state reachability audit on free gln01.
+# Run the zero-training GPP-to-next-state audit on free gln01 or approved gnall.
 
 set -euo pipefail
 
@@ -13,7 +13,14 @@ CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/target-oriented-gpp-
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
-case "$(hostname -s)" in gln01|ibgln01|ibc13b02n04) ;; *) exit 2 ;; esac
+case "$(hostname -s)" in
+  gln01|ibgln01|ibc13b02n04) ;;
+  ibc13b02n01|ibc13b02n02|ibc13b02n03|ibc13b03n*)
+    test -n "${SLURM_JOB_ID:-}"
+    test "${SLURM_JOB_PARTITION:-}" = "gnall"
+    ;;
+  *) exit 2 ;;
+esac
 case "$WORKTREE" in "$ROOT"|"$ROOT/runtime/worktrees/"*) ;; *) exit 2 ;; esac
 case "$OUTPUT" in "$ROOT/runtime/outputs/diagnostics/"*.json) ;; *) exit 2 ;; esac
 case "$CACHE_ROOT" in "$ROOT/runtime/cache/"*) ;; *) exit 2 ;; esac
