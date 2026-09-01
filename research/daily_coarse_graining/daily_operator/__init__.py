@@ -319,6 +319,12 @@ from .target_oriented_coupled_gpp_objective import (
     replace_coupled_gpp_trainable,
     resolve_coupled_gpp_objective_coefficients,
 )
+from .target_oriented_coupled_gpp_optimizer_preflight import (
+    CoupledGPPOptimizerPreflightContract,
+    four_source_macro_objectives,
+    load_coupled_gpp_optimizer_preflight_contract,
+    macro_source_changes,
+)
 from .target_oriented_distribution_aware_maintenance import (
     DistributionAwareMaintenanceConfig,
     DistributionAwareMaintenanceContract,
@@ -670,6 +676,7 @@ __all__ = [
     "CoupledGPPCarbonFeedbackContract",
     "CoupledGPPObjectiveCalibrationContract",
     "CoupledGPPObjectiveCoefficients",
+    "CoupledGPPOptimizerPreflightContract",
     "FieldGroupedStateAnchorResult",
     "MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead",
     "MechanisticTargetOrientedDistributionAwareMaintenanceProcessHead",
@@ -711,6 +718,7 @@ __all__ = [
     "distribution_aware_maintenance_corrections",
     "distribution_aware_maintenance_parameter_count",
     "field_grouped_state_anchor_from_sufficient_statistics",
+    "four_source_macro_objectives",
     "initialize_distribution_aware_maintenance_parameters",
     "initialize_source_shaped_maintenance_parameters",
     "initialize_structured_gpp_parameters",
@@ -722,8 +730,10 @@ __all__ = [
     "load_structured_gpp_contract",
     "load_coupled_gpp_carbon_feedback_contract",
     "load_coupled_gpp_objective_calibration_contract",
+    "load_coupled_gpp_optimizer_preflight_contract",
     "load_gpp_state_reachability_contract",
     "linearized_reachable_state_anchor_loss",
+    "macro_source_changes",
     "maintenance_temperature_corrections",
     "materialize_part_resolved_source_shaped_maintenance",
     "materialize_source_shaped_maintenance",

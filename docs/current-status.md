@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-08-31.
+Last updated: 2026-09-01.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -793,21 +793,33 @@ all water/carbon budget residuals are zero. No optimizer or checkpoint was
 created. See
 [`target_oriented_gpp_state_reachability_result_20260901.md`](research/daily_coarse_graining/target_oriented_gpp_state_reachability_result_20260901.md).
 
-The train-only field-grouped one-day state anchor and four-source objective-
-calibration contract are frozen at SHA256 `20986e2d...825` and implemented
-locally. It differentiates exactly the 15,960,195 structured-GPP plus coupled-
-feedback parameters over direct GPP, the 41-coordinate/16-field one-day state
-anchor, and component-resolved 7/30-day science. The active gate is the
-zero-update real-v6 GPU calibration over eight train-only artifacts. It creates
-no optimizer and writes no checkpoint; no optimizer update or training is
-authorized.
+The train-only field-grouped one-day state anchor and four-source objective
+calibration passed under job `14899511` at commit `5582348` in `01:38:16`.
+Report SHA256 is `4f209b77...b5138`. Every source gradient is finite and
+nonzero over all 15,960,195 trainable parameters and all 190 leaves on all
+eight artifacts; all 16 reachable fields are active and every true physical
+hard failure is zero. The resolved direct/state/7-day/30-day coefficients are
+`1.0/0.6524275555272667/0.4072260558556481/0.28249951035415655`; the p90 clip
+threshold is `12.808193184117403`. The combined within-artifact direction
+conflicts with 7-day science in `3/8` artifacts, 30-day science in `4/8`, and
+state in `1/8`, though never with direct GPP. See
+[`target_oriented_coupled_gpp_objective_calibration_result_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_objective_calibration_result_20260901.md).
 
-Job `14899347` at commit `8a1dffc` failed before its first objective value
-because the parameter-family guard compared dictionary insertion order inside
-JAX `jit`. JAX canonicalized the two keys into a different, equally valid
-order. No report or checkpoint was written. The guard now compares the exact
-key set, and a JIT regression test covers the scheduler failure path. The
-scientific gate is unchanged and still awaits a clean zero-update execution.
+The active gate is one discarded macro-batch optimizer proposal, frozen at
+contract SHA256 `7932efa1...aa3cf`. It arithmetic-averages each source
+gradient across the same eight artifacts, applies the frozen coefficients,
+and realizes one `4e-6` step from a fresh AdamW state shared by both trainable
+families. All four macro losses and their weighted total must decrease, each
+source must align positively with the realized negative step, and all physical,
+fixed-parameter, and checkpoint-integrity gates must pass. The proposal and
+optimizer are discarded and no training, checkpoint, or recovery is
+authorized. See
+[`target_oriented_coupled_gpp_optimizer_preflight_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_preflight_v1.md).
+
+Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
+dictionary-order guard failed inside JAX `jit` before objective evaluation.
+The exact-key-set repair and JIT regression were subsequently exercised by
+the successful calibration; the failed job produced no report or checkpoint.
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See

@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-08-31.
+Last updated: 2026-09-01.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -1951,25 +1951,36 @@ the two smaller exact-nonzero coordinates remain part of the authoritative
 union. All next-state and water/carbon budget gates pass. See
 [`target_oriented_gpp_state_reachability_result_20260901.md`](research/daily_coarse_graining/target_oriented_gpp_state_reachability_result_20260901.md).
 
-The field-grouped one-day state anchor and four-source objective-calibration
-contract are frozen at SHA256 `20986e2d...825` and implemented locally. The
-anchor uses only the accepted 41 `next_state.other` coordinates, averages
-coordinates within each of 16 fields, and then weights fields equally. The
-four train-only gradient sources are direct GPP, the one-day reachable-state
-anchor, and component-resolved 7/30-day science. The active gate is the
-zero-update real-v6 GPU calibration over prepared updates `352-357`, `359`,
-and `360`; it creates no optimizer and writes no checkpoint. On pass, freeze a
-discarded four-source optimizer-proposal preflight before authorizing any
-training. The replacement direct monitor, train-only 7/30-day monitor,
-bounded training budget, and stop rule remain required before training. No
-paid training is the next operation.
+The field-grouped one-day state anchor and four-source objective calibration
+passed under job `14899511` at commit `5582348`; report SHA256 is
+`4f209b77...b5138`. All four source gradients are finite and nonzero over all
+15,960,195 trainable parameters and all 190 leaves on each of prepared updates
+`352-357`, `359`, and `360`. All physical hard failures are zero. The resolved
+coefficients are direct GPP `1.0`, reachable state `0.6524275555272667`,
+7-day science `0.4072260558556481`, and 30-day science
+`0.28249951035415655`; the clip threshold is `12.808193184117403`. The
+within-artifact combined gradient nevertheless conflicts with 7-day science
+in `3/8` artifacts and 30-day science in `4/8`, so calibration alone does not
+authorize training. See
+[`target_oriented_coupled_gpp_objective_calibration_result_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_objective_calibration_result_20260901.md).
 
-The first GPU execution, job `14899347` at commit `8a1dffc`, stopped before
-objective evaluation because an order-sensitive parameter-family guard did
-not accept JAX's canonical dictionary-key order inside `jit`. No result report,
-optimizer, update, or checkpoint was produced. The guard now verifies the
-exact key set and has a JIT regression test. The active gate remains one clean
-zero-update calibration execution.
+The active gate is the separately frozen discarded optimizer-proposal
+preflight, contract SHA256 `7932efa1...aa3cf`. It averages each source
+gradient across all eight artifacts, combines the four averages with the
+frozen coefficients, and creates one proposal from a fresh AdamW state over
+both trainable families at learning rate `4e-6`. It then reevaluates all eight
+artifacts. All four macro losses and their weighted total must strictly
+decrease, every averaged source gradient must have positive cosine with the
+realized negative parameter step, and every physical/fixed-parameter/checkpoint
+gate must pass. The proposal is discarded; no checkpoint, recovery, or
+training update is written. Passing opens only target-blind training/monitor
+schedule design and a separately frozen bounded training contract. See
+[`target_oriented_coupled_gpp_optimizer_preflight_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_preflight_v1.md).
+
+Job `14899347` remains an engineering-failure record: its order-sensitive
+dictionary guard stopped before objective evaluation. The exact-key-set JIT
+repair was exercised by the successful calibration job and is regression
+tested. No result or checkpoint came from the failed job.
 
 The approved design is
 [`target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md).

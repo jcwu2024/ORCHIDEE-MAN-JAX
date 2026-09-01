@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-08-31.
+Last updated: 2026-09-01.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -867,8 +867,8 @@ process-head builder. Its machine contract is
 The local implementation and real-v6 zero-update GPU admission are accepted.
 `scripts/hpc/run_target_oriented_coupled_gpp_carbon_feedback_gpu_admission.py`
 owns the machine-readable admission, while its direct and Slurm shell wrappers
-own free-`gln01` and bounded `gnall` launch boundaries. No optimizer or
-training owner exists for the candidate yet.
+own free-`gln01` and bounded `gnall` launch boundaries. No persistent optimizer
+or training owner exists for the candidate yet.
 
 `daily_operator/target_oriented_gpp_state_reachability.py` owns the frozen
 field attachment and exact-nonzero Jacobian union. Its machine contract is
@@ -890,8 +890,18 @@ the frozen four-source coefficient rule. Its machine contract is
 `scripts/hpc/calibrate_target_oriented_coupled_gpp_objective.py` owns the
 eight-artifact zero-update calibration report; its direct and Slurm wrappers
 own free-`gln01` and bounded `gnall` launch boundaries. No optimizer or
-checkpoint is created. Passing this execution opens only a separately frozen
-discarded optimizer-proposal preflight.
+checkpoint is created. The accepted result is
+`target_oriented_coupled_gpp_objective_calibration_result_20260901.md`.
+
+`daily_operator/target_oriented_coupled_gpp_optimizer_preflight.py` owns the
+frozen macro-objective aggregation and proposal policy; its machine contract
+is
+`manifests/coarse_graining/target_oriented_coupled_gpp_optimizer_preflight_v1.json`.
+`scripts/hpc/run_target_oriented_coupled_gpp_optimizer_preflight.py` owns one
+fresh-AdamW proposal and complete eight-artifact before/after evaluation. Its
+direct and Slurm wrappers own free-`gln01` and bounded `gnall` execution. The
+proposal and optimizer state are discarded; these files are not a training or
+checkpoint owner.
 
 ## Scripts
 
