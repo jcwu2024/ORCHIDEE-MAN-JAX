@@ -868,8 +868,16 @@ The local implementation and real-v6 zero-update GPU admission are accepted.
 `scripts/hpc/run_target_oriented_coupled_gpp_carbon_feedback_gpu_admission.py`
 owns the machine-readable admission, while its direct and Slurm shell wrappers
 own free-`gln01` and bounded `gnall` launch boundaries. No optimizer or
-training owner exists for the candidate yet; the next owner to add is a
-zero-training GPP-to-next-state reachability audit.
+training owner exists for the candidate yet.
+
+`daily_operator/target_oriented_gpp_state_reachability.py` owns the frozen
+field attachment and exact-nonzero Jacobian union. Its machine contract is
+`manifests/coarse_graining/target_oriented_gpp_state_reachability_v1.json`.
+`scripts/hpc/audit_target_oriented_gpp_state_reachability.py` loads the exact
+accepted candidate and computes each real-v6 forward-mode Jacobian through the
+conservative update and canonical retained tail;
+`run_target_oriented_gpp_state_reachability.sh` is its free-`gln01`-only
+launcher. None of these owners creates an optimizer or checkpoint.
 
 ## Scripts
 

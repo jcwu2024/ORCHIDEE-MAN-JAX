@@ -1,0 +1,79 @@
+{
+  "schema_version": "target_oriented_gpp_state_reachability_v1",
+  "status": "frozen_after_real_v6_admission_for_zero_training_execution",
+  "contract_sha256": "1bf2bbfc13c2b6b4b04d323b1a95917e3b33d501dd249f7b2fd36084307c82af",
+  "predecessor": {
+    "coupled_gpp_carbon_feedback_contract_sha256": "c7f81436ff6ba1179b01adad0f76b47ddd2aab68208e97719c2c5464f3e7e74d",
+    "real_v6_admission_report_sha256": "cf8eb1d2ba66c70a2d8580caef32647d59765f863c0043a749761a9148d7e623",
+    "real_v6_admission_git_head": "989a457db945e56c4c392d3b8589b1375dc3f7ab"
+  },
+  "data": {
+    "teacher_release": "pft14-daily-teacher-v6",
+    "landpoint_id": "001.0-071.0",
+    "spatial_split": "train",
+    "temporal_split": "train",
+    "selection_uses_target_values": false,
+    "ordinary_year": 1961,
+    "ordinary_rows": [0, 44, 72, 103, 133, 164, 194, 225, 256, 286, 317, 347],
+    "ordinary_day_indices": [2, 46, 74, 105, 135, 166, 196, 227, 258, 288, 319, 349],
+    "restart_year": 1962,
+    "restart_rows": [0],
+    "restart_day_indices": [1],
+    "case_count": 13,
+    "selection_rationale": "ordinary Day 2 plus one target-blind mid-month state from each remaining noleap month, followed by the accepted restart-year Day 1 boundary"
+  },
+  "differentiated_boundary": {
+    "input": "daily.fast_gpp",
+    "compact_pft_indices": [0, 13],
+    "compact_pft_roles": ["bare_soil", "pft14"],
+    "input_shape": [1, 2],
+    "fixed_outputs": "all non-GPP candidate outputs for the same day-start input",
+    "path": [
+      "mechanistic prediction reconstruction",
+      "conservative daily update",
+      "post-update exact materialization",
+      "canonical retained exact STOMATE tail"
+    ],
+    "output_component": "slowproc_stomate_previous_step_state",
+    "output_coordinate_count": 2386,
+    "output_field_count": 107,
+    "direct_neural_next_state_output": false
+  },
+  "derivative": {
+    "method": "float64 forward_mode_full_jacobian",
+    "jacobian_shape_per_case": [2386, 2],
+    "reachable_coordinate_rule": "finite_and_exactly_nonzero_in_the_pft14_column_on_at_least_one_case",
+    "bare_soil_rule": "all_derivatives_exactly_zero",
+    "case_aggregation": "union",
+    "field_aggregation": "retain_exact_flat_indices_and_group_by_markov_source_field",
+    "normalized_sensitivity": "absolute_derivative_times_existing_train_train_gpp_scale_divided_by_amended_next_state_scale",
+    "normalized_report_threshold": 1e-12,
+    "normalized_threshold_controls_reachability": false
+  },
+  "acceptance": {
+    "all_jacobian_values_finite": true,
+    "bare_soil_maximum_absolute_derivative": 0.0,
+    "pft14_nonzero_coordinate_count_minimum_per_case": 1,
+    "union_nonzero_coordinate_count_minimum": 1,
+    "all_reachable_coordinates_have_unique_markov_owners": true,
+    "water_budget_absolute_tolerance": 2e-12,
+    "carbon_budget_absolute_tolerance": 2e-12,
+    "all_next_state_declared_defined_values_finite": true
+  },
+  "execution": {
+    "optimizer_updates_authorized": 0,
+    "optimizer_creation_authorized": false,
+    "checkpoint_writes_authorized": 0,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "fresh_validation_read_allowed": false,
+    "sealed_test_allowed": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "paid_training_authorized": false
+  },
+  "next_gate": {
+    "on_pass": "freeze_field_grouped_one_day_state_anchor_and_objective_calibration_contract",
+    "on_failure": "repair_only_the_failed_dependency_or_execution_boundary"
+  }
+}

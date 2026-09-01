@@ -1953,6 +1953,18 @@ stop rule also remain required before any optimizer update. The existing
 million-day schedule may be reused only after the later training contract
 defines which direct days and rollout windows are consumed.
 
+The reachability execution is frozen at contract SHA256
+`1bf2bbfc...7c82af`. It uses 12 target-blind calendar positions from the 1961
+train/train point-year plus the accepted 1962 restart Day 1 boundary. For each
+case it computes the float64 `2386 x 2` Jacobian of next-day slow-process state
+with respect to compact bare-soil/PFT14 GPP, requires the bare-soil column to
+be exactly zero, takes the exact-nonzero PFT14 union, and records field-local
+indices and normalized sensitivities. The local contract, summarizer, runner,
+three focused tests, and five predecessor candidate tests pass. The next
+operation is the free-`gln01` execution; no optimizer or checkpoint path is
+present. See
+[`target_oriented_gpp_state_reachability_v1.md`](research/daily_coarse_graining/target_oriented_gpp_state_reachability_v1.md).
+
 The approved design is
 [`target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md).
 It recommends coordinate-level cross-attention over the selected day-start

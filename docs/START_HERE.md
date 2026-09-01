@@ -364,19 +364,21 @@ component passes the frozen
 materiality gate. Water captures `9.13%/5.12%` and remains a monitored
 secondary path. All integrity and physical gates pass.
 
-The active gate is architecture discussion and a frozen train-only objective
-for the first coupled GPP/carbon-state candidate. Retain the existing day-local
-coordinate-Attention GPP specialist, open only source-backed paths associated
-with `slowproc_stomate_previous_step_state` initially, preserve the canonical
-retained exact tail, and keep water protected and reported. Do not implement
-or train until the mechanism, matched diagnostic control, bounded admission,
-and stop rule are approved. Unchanged specialist continuation, fresh-target
-tuning, 365-day rollout, Gate D2, sealed test, and product acceptance remain
-closed. See `NEXT_STEPS.md` for the exact current boundary.
+The first coupled GPP/carbon-state candidate is now implemented and has passed
+local plus real-v6 zero-update admission. It retains the structured-GPP
+Attention specialist, newly conditions only `daily.fast_gpp` on coordinate-
+preserving `slowproc_stomate_previous_step_state`, and preserves the canonical
+conservative update and retained exact tail. All trainable gradients, the
+complete next state, and water/carbon budgets pass; no optimizer or checkpoint
+was created.
 
-The current discussion proposal is
-`research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md`;
-it is not implementation or training authorization.
+The active gate is the frozen 13-day, zero-training GPP-to-next-day slow-carbon
+reachability audit. It differentiates the exact complete operator with respect
+to the compact bare-soil/PFT14 GPP boundary and freezes only genuinely
+reachable state coordinates, grouped by source field. Its contract SHA256 is
+`1bf2bbfc...7c82af`. Training, fresh-target tuning, 365-day rollout, Gate D2,
+sealed test, and product acceptance remain closed. See `NEXT_STEPS.md` for the
+exact current boundary.
 
 ## New Task Bootstrap
 

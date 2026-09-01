@@ -787,6 +787,14 @@ allocation is about 1.55 GB. Report SHA256 is `cf8eb1d2...e623`; see
 The active gate is a zero-training GPP-to-next-day slow-carbon reachability
 inventory grouped by source field. No optimizer update or training is
 authorized.
+Its 13-day train/train execution contract is frozen at SHA256
+`1bf2bbfc...7c82af`. The pure field-grouped Jacobian summarizer, real-v6 GPU
+runner, direct free-`gln01` launcher, and all eight focused plus predecessor
+tests pass locally. The differentiated boundary is the compact `(1, 2)`
+bare-soil/PFT14 GPP output; the audit takes the exact-nonzero PFT14 union over
+12 calendar positions and one restart boundary while requiring an exact-zero
+bare-soil column. See
+[`target_oriented_gpp_state_reachability_v1.md`](research/daily_coarse_graining/target_oriented_gpp_state_reachability_v1.md).
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).
 See

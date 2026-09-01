@@ -323,6 +323,13 @@ from .target_oriented_distribution_aware_training import (
     load_distribution_aware_bounded_training_contract,
     load_distribution_aware_guard_calibration_contract,
 )
+from .target_oriented_gpp_state_reachability import (
+    GPPStateReachabilityContract,
+    GPPStateReachabilityLayout,
+    build_gpp_state_reachability_layout,
+    load_gpp_state_reachability_contract,
+    summarize_gpp_state_jacobians,
+)
 from .target_oriented_process_head import (
     MechanisticTargetOrientedAttentionProcessHead,
     MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead,
@@ -667,6 +674,7 @@ __all__ = [
     "build_target_oriented_structured_gpp_head",
     "build_structured_gpp_state_layout",
     "build_carbon_feedback_state_layout",
+    "build_gpp_state_reachability_layout",
     "carbon_feedback_query_residuals",
     "carbon_feedback_tokens",
     "coupled_gpp_carbon_feedback_base_response",
@@ -688,6 +696,7 @@ __all__ = [
     "load_source_shaped_maintenance_contract",
     "load_structured_gpp_contract",
     "load_coupled_gpp_carbon_feedback_contract",
+    "load_gpp_state_reachability_contract",
     "maintenance_temperature_corrections",
     "materialize_part_resolved_source_shaped_maintenance",
     "materialize_source_shaped_maintenance",
@@ -700,6 +709,9 @@ __all__ = [
     "structured_gpp_parameter_count",
     "structured_gpp_query_state",
     "target_oriented_coupled_gpp_carbon_feedback_process_outputs",
+    "summarize_gpp_state_jacobians",
+    "GPPStateReachabilityContract",
+    "GPPStateReachabilityLayout",
     "target_oriented_structured_gpp_process_outputs",
     "TeacherGuardCoefficientCalibration",
     "target_oriented_source_shaped_maintenance_process_outputs",
