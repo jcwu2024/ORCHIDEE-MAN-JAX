@@ -881,9 +881,17 @@ approved-`gnall` execution boundary, and
 `slurm_target_oriented_gpp_state_reachability.sh` owns the bounded paid
 envelope. The accepted result is
 `target_oriented_gpp_state_reachability_result_20260901.md`. None of these
-owners creates an optimizer or checkpoint. The next code boundary is a
-field-grouped one-day state-anchor and objective-calibration contract over the
-41 accepted reachable coordinates.
+owners creates an optimizer or checkpoint.
+
+`daily_operator/target_oriented_coupled_gpp_objective.py` owns the accepted
+41-coordinate/16-field state anchor, the two-family trainable boundary, and
+the frozen four-source coefficient rule. Its machine contract is
+`manifests/coarse_graining/target_oriented_coupled_gpp_objective_calibration_v1.json`.
+`scripts/hpc/calibrate_target_oriented_coupled_gpp_objective.py` owns the
+eight-artifact zero-update calibration report; its direct and Slurm wrappers
+own free-`gln01` and bounded `gnall` launch boundaries. No optimizer or
+checkpoint is created. Passing this execution opens only a separately frozen
+discarded optimizer-proposal preflight.
 
 ## Scripts
 

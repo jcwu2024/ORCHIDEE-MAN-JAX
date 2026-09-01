@@ -375,12 +375,12 @@ was created.
 The frozen 13-day GPP-to-next-day slow-carbon reachability audit passed under
 job `14899147`. Its exact-nonzero PFT14 union contains 41 coordinates in 16
 fields; all Jacobians and next states are finite, the bare-soil derivative is
-exactly zero, and all water/carbon budget residuals are zero. The active gate
-is now a train-only, field-grouped one-day state-anchor and objective-
-calibration contract over those reachable coordinates, followed by local
-zero-update loss/gradient admission. Training, fresh-target tuning, 365-day
-rollout, Gate D2, sealed test, and product acceptance remain closed. See
-`NEXT_STEPS.md` for the exact current boundary.
+exactly zero, and all water/carbon budget residuals are zero. The train-only,
+field-grouped one-day state anchor and four-source objective-calibration
+contract are now frozen and implemented locally. The active gate is its
+zero-update real-v6 GPU execution over eight train-only artifacts. Training,
+fresh-target tuning, 365-day rollout, Gate D2, sealed test, and product
+acceptance remain closed. See `NEXT_STEPS.md` for the exact current boundary.
 
 ## New Task Bootstrap
 

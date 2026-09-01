@@ -793,9 +793,13 @@ all water/carbon budget residuals are zero. No optimizer or checkpoint was
 created. See
 [`target_oriented_gpp_state_reachability_result_20260901.md`](research/daily_coarse_graining/target_oriented_gpp_state_reachability_result_20260901.md).
 
-The active gate is a train-only field-grouped one-day state-anchor and
-objective-calibration contract over the 41 reachable coordinates, followed by
-local zero-update loss/gradient admission. No optimizer update or training is
+The train-only field-grouped one-day state anchor and four-source objective-
+calibration contract are frozen at SHA256 `20986e2d...825` and implemented
+locally. It differentiates exactly the 15,960,195 structured-GPP plus coupled-
+feedback parameters over direct GPP, the 41-coordinate/16-field one-day state
+anchor, and component-resolved 7/30-day science. The active gate is the
+zero-update real-v6 GPU calibration over eight train-only artifacts. It creates
+no optimizer and writes no checkpoint; no optimizer update or training is
 authorized.
 The completed training contract is
 [`target_oriented_structured_gpp_joint_training_v1.md`](research/daily_coarse_graining/target_oriented_structured_gpp_joint_training_v1.md).

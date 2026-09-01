@@ -1,0 +1,146 @@
+{
+  "schema_version": "target_oriented_coupled_gpp_objective_calibration_v1",
+  "status": "frozen_after_reachability_for_zero_update_train_only_calibration",
+  "contract_sha256": "20986e2d4fdefdddf2c89bd5a8ab83f64c680804d5b2b5b497c011bc34dcb825",
+  "identity": {
+    "candidate": "target_oriented_coupled_gpp_carbon_feedback_attention_v1",
+    "coupled_candidate_contract_sha256": "c7f81436ff6ba1179b01adad0f76b47ddd2aab68208e97719c2c5464f3e7e74d",
+    "reachability_contract_sha256": "1bf2bbfc13c2b6b4b04d323b1a95917e3b33d501dd249f7b2fd36084307c82af",
+    "reachability_report_sha256": "dc53765e84f14b0d08e7d9d6bafbd0527a36349f57f012dac1cf8d5e1a36d020",
+    "real_v6_admission_report_sha256": "cf8eb1d2ba66c70a2d8580caef32647d59765f863c0043a749761a9148d7e623",
+    "structured_checkpoint_sha256": "3b173b8980c37b49db3d1547dddad2ab98ec00c733e2f564469490ee382d4ec0",
+    "structured_checkpoint_update": 1000,
+    "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "base_training_contract_sha256": "91faf01123008a60c59038c074779a2a2b4553b82c3739475dd4829fe91ea25b",
+    "target_contract_sha256": "7c9857c0ca57ee65cfcf7514a216a217c3b1661f6cc869c6dfb85d3786bfce5c",
+    "flux_basis_amendment_sha256": "6c81e8f56c2c81fc2ac024a71da98f3e875c4ebc429f9e3d1ff4e8e3ef6bfb45",
+    "candidate_parameter_count": 109464359,
+    "trainable_parameter_count": 15960195,
+    "retained_parameter_count": 93504164,
+    "coupled_adapter_initialization_seed_offset": 20260831
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "prepared_schedule_updates": 1000,
+    "calibration_artifact_updates": [352, 353, 354, 355, 356, 357, 359, 360],
+    "artifact_role": "train_only_objective_calibration_not_checkpoint_selection",
+    "direct_gpp_teacher_days_per_artifact": 208,
+    "one_day_teacher_samples_per_artifact": 32,
+    "seven_day_windows_per_artifact": 8,
+    "thirty_day_windows_per_artifact": 4,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "fresh_validation_values_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "reachable_state_anchor": {
+    "source_view": "next_state.other",
+    "source_component": "slowproc_stomate_previous_step_state",
+    "reachable_coordinate_rule": "accepted_13_case_exact_nonzero_pft14_union",
+    "coordinate_count": 41,
+    "field_count": 16,
+    "field_weighting": "equal_active_fields_after_equal_coordinate_mean_within_field",
+    "metric": "one_half_normalized_mse_plus_one_half_normalized_signed_bias_squared",
+    "scale_source": "existing_train_train_next_state_scale_with_accepted_state_anchor_amendment",
+    "normalized_reporting_threshold_controls_inclusion": false,
+    "fields": [
+      {"field": "slowproc_stomate_previous_step_state.age", "global_state_indices": [2226]},
+      {"field": "slowproc_stomate_previous_step_state.assim_param", "global_state_indices": [2230]},
+      {"field": "slowproc_stomate_previous_step_state.biomass", "global_state_indices": [2243, 2244, 2245, 2246, 2247, 2248, 2249, 2251, 2252, 2253, 2254]},
+      {"field": "slowproc_stomate_previous_step_state.bm_to_litter", "global_state_indices": [2267, 2268, 2269, 2272, 2273, 2275, 2276]},
+      {"field": "slowproc_stomate_previous_step_state.carb_mass_total", "global_state_indices": [2279]},
+      {"field": "slowproc_stomate_previous_step_state.frac_age", "global_state_indices": [2975, 2976, 2977, 2978]},
+      {"field": "slowproc_stomate_previous_step_state.gpp_week", "global_state_indices": [3009]},
+      {"field": "slowproc_stomate_previous_step_state.lai", "global_state_indices": [3019]},
+      {"field": "slowproc_stomate_previous_step_state.leaf_age", "global_state_indices": [3024, 3025, 3026, 3027]},
+      {"field": "slowproc_stomate_previous_step_state.leaf_frac", "global_state_indices": [3032, 3033, 3034, 3035]},
+      {"field": "slowproc_stomate_previous_step_state.maxgppweek_thisyear", "global_state_indices": [3261]},
+      {"field": "slowproc_stomate_previous_step_state.npp_daily", "global_state_indices": [3279]},
+      {"field": "slowproc_stomate_previous_step_state.resp_growth", "global_state_indices": [3513]},
+      {"field": "slowproc_stomate_previous_step_state.tot_bare_soil", "global_state_indices": [3638]},
+      {"field": "slowproc_stomate_previous_step_state.turnover_daily", "global_state_indices": [3673]},
+      {"field": "slowproc_stomate_previous_step_state.veget", "global_state_indices": [3706]}
+    ]
+  },
+  "objective": {
+    "gradient_sources": [
+      "direct_gpp_208_teacher_days",
+      "reachable_state_anchor_32_teacher_days",
+      "seven_day_component_resolved_science",
+      "thirty_day_component_resolved_science"
+    ],
+    "direct_gpp": {
+      "formula": "one_half_normalized_mse_plus_one_half_normalized_signed_bias_squared",
+      "coefficient": 1.0,
+      "recursive_candidate_state_used": false
+    },
+    "short_horizon_science": {
+      "horizons_days": [7, 30],
+      "optimization_flux_basis": ["gpp", "maintenance_respiration", "growth_respiration", "heterotrophic_respiration"],
+      "optimization_stock_basis": ["aboveground_biomass_carbon", "belowground_biomass_carbon", "nonliving_ecosystem_carbon"],
+      "metric": "equal_field_macro_of_one_half_normalized_mse_plus_one_half_normalized_signed_bias_squared",
+      "recursive_candidate_state_used": true
+    }
+  },
+  "coefficient_calibration": {
+    "reference_gradient_source": "direct_gpp_208_teacher_days",
+    "reference_coefficient": 1.0,
+    "target_gradient_norm_ratios": {
+      "reachable_state_anchor_32_teacher_days": 0.5,
+      "seven_day_component_resolved_science": 0.25,
+      "thirty_day_component_resolved_science": 0.25
+    },
+    "candidate_formula": "target_ratio_times_direct_gpp_gradient_norm_divided_by_source_gradient_norm",
+    "aggregation": "per_source_median_across_eight_train_train_artifacts",
+    "coefficient_minimum": 0.0001,
+    "coefficient_maximum": 100.0,
+    "same_coefficients_for_all_later_training_updates": true,
+    "recalibrate_during_training": false,
+    "validation_weight_tuning_allowed": false,
+    "combined_gradient_clip_statistic": "p90_across_eight_calibrated_combined_gradients",
+    "combined_gradient_clip_minimum": 1e-08,
+    "pairwise_and_source_to_combined_cosines": "reported_not_thresholded"
+  },
+  "parameter_ownership": {
+    "differentiated_families": ["target_oriented.structured_gpp", "target_oriented.coupled_gpp_carbon_feedback"],
+    "differentiated_parameter_count": 15960195,
+    "retained_parameter_count": 93504164,
+    "retained_parameters_frozen": true
+  },
+  "acceptance": {
+    "calibration_record_count": 8,
+    "required_gradient_source_count_per_record": 4,
+    "required_gradient_element_count_per_source": 15960195,
+    "all_source_gradients_finite_nonzero": true,
+    "all_trainable_leaves_nonzero_per_source": true,
+    "all_combined_gradients_finite_nonzero": true,
+    "all_trainable_leaves_nonzero_in_combined_gradient": true,
+    "all_objectives_finite_positive": true,
+    "all_reachable_fields_active_per_record": true,
+    "physical_hard_failure_count_maximum": 0,
+    "coefficients_inside_frozen_interval": true,
+    "combined_clip_finite_positive": true,
+    "retained_parameters_exactly_unchanged": true,
+    "structured_checkpoint_sha256_unchanged": true
+  },
+  "execution": {
+    "optimizer_created": false,
+    "optimizer_updates_authorized": 0,
+    "checkpoint_writes_authorized": 0,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "fresh_validation_read_authorized": false,
+    "sealed_test_authorized": false,
+    "365_day_rollout_authorized": false,
+    "gate_d2_authorized": false,
+    "product_acceptance_authorized": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "cross_day_neural_hidden_state": false
+  },
+  "next_gate": {
+    "on_pass": "freeze_discarded_four_source_optimizer_proposal_preflight",
+    "on_failure": "stop_before_optimizer_and_review_failed_loss_or_gradient_source"
+  }
+}

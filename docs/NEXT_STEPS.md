@@ -1951,16 +1951,18 @@ the two smaller exact-nonzero coordinates remain part of the authoritative
 union. All next-state and water/carbon budget gates pass. See
 [`target_oriented_gpp_state_reachability_result_20260901.md`](research/daily_coarse_graining/target_oriented_gpp_state_reachability_result_20260901.md).
 
-The active gate is now to freeze a field-grouped one-day state-anchor and
-objective-calibration contract over those 41 coordinates. The contract must
-preserve field identity, use train-only statistics, state how direct science
-losses and the reachable-state groups are balanced, and define a zero-update
-local loss/gradient admission before any optimizer is created. The replacement
-48-day-per-point-year direct monitor, train-only 7/30-day monitor,
-discarded-proposal preflight, bounded training budget, and stop rule remain
-required before training. The existing million-day schedule may be reused only
-after that later training contract defines which direct days and rollout
-windows are consumed. No paid training is the next operation.
+The field-grouped one-day state anchor and four-source objective-calibration
+contract are frozen at SHA256 `20986e2d...825` and implemented locally. The
+anchor uses only the accepted 41 `next_state.other` coordinates, averages
+coordinates within each of 16 fields, and then weights fields equally. The
+four train-only gradient sources are direct GPP, the one-day reachable-state
+anchor, and component-resolved 7/30-day science. The active gate is the
+zero-update real-v6 GPU calibration over prepared updates `352-357`, `359`,
+and `360`; it creates no optimizer and writes no checkpoint. On pass, freeze a
+discarded four-source optimizer-proposal preflight before authorizing any
+training. The replacement direct monitor, train-only 7/30-day monitor,
+bounded training budget, and stop rule remain required before training. No
+paid training is the next operation.
 
 The approved design is
 [`target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_carbon_feedback_architecture_review_v1.md).
