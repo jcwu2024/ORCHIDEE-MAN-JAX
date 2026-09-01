@@ -31,6 +31,7 @@ from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_o
     replace_coupled_gpp_trainable,
 )
 from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_optimizer_preflight import (
+    BACKOFF_SCHEMA_VERSION,
     four_source_macro_objectives,
     load_coupled_gpp_optimizer_preflight_contract,
     macro_source_changes,
@@ -81,6 +82,7 @@ from scripts.hpc.run_target_oriented_structured_gpp_training_preflight import (
 )
 
 SCHEMA_VERSION = "target_oriented_coupled_gpp_optimizer_preflight_result_v1"
+BACKOFF_RESULT_SCHEMA_VERSION = "target_oriented_coupled_gpp_optimizer_backoff_result_v1"
 
 
 def _git_head() -> str:
@@ -181,6 +183,30 @@ def _validate_calibration_report(
     return report
 
 
+def _validate_rejected_optimizer_preflight_report(
+    path: Path,
+    contract: Any,
+) -> Mapping[str, Any]:
+    identity = contract.payload["identity"]
+    report = json.loads(path.read_text(encoding="utf-8"))
+    acceptance = report.get("acceptance", {})
+    if (
+        sha256_file(path) != identity["rejected_optimizer_preflight_report_sha256"]
+        or report.get("schema_version") != SCHEMA_VERSION
+        or report.get("status") != "failed"
+        or report.get("identity", {}).get("git_head") != identity["rejected_optimizer_preflight_execution_git_head"]
+        or report.get("identity", {}).get("optimizer_preflight_contract_sha256")
+        != identity["rejected_optimizer_preflight_contract_sha256"]
+        or acceptance.get("every_macro_source_loss_decreased") is not False
+        or acceptance.get("weighted_macro_objective_decreased") is not True
+        or acceptance.get("optimizer_realizes_all_source_descent_directions") is not True
+        or acceptance.get("physical_hard_gates_passed") is not True
+        or report.get("next_gate") != "stop_before_training_and_review_optimizer_realization_or_objective_conflict"
+    ):
+        raise ValueError("coupled GPP optimizer-backoff predecessor is not accepted")
+    return report
+
+
 def run(args: argparse.Namespace) -> Mapping[str, Any]:
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -189,6 +215,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     started = time.perf_counter()
 
     contract = load_coupled_gpp_optimizer_preflight_contract(args.optimizer_preflight_contract)
+    backoff = contract.payload["schema_version"] == BACKOFF_SCHEMA_VERSION
     objective_contract = load_coupled_gpp_objective_calibration_contract(args.objective_calibration_contract)
     identity = contract.payload["identity"]
     if objective_contract.sha256 != identity["objective_calibration_contract_sha256"]:
@@ -198,6 +225,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         contract,
         objective_contract,
     )
+    rejected_preflight_report = None
+    if backoff:
+        if args.rejected_optimizer_preflight_report is None:
+            raise ValueError("coupled GPP optimizer backoff requires the rejected preflight report")
+        rejected_preflight_report = _validate_rejected_optimizer_preflight_report(
+            args.rejected_optimizer_preflight_report,
+            contract,
+        )
+    elif args.rejected_optimizer_preflight_report is not None:
+        raise ValueError("base coupled GPP optimizer preflight received a predecessor report")
     layout = build_reachable_state_anchor_layout(objective_contract)
     _validate_reachability_report(
         args.reachability_report,
@@ -379,8 +416,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     }
 
     optimizer = initialize_target_oriented_adamw(trainable)
-    proposal_policy = contract.payload["optimizer_proposal"]
-    learning_rate = float(proposal_policy["learning_rate"])
+    learning_rate = contract.learning_rate
     optimizer_step = jax.jit(
         lambda values, derivatives, state: target_oriented_adamw_update(
             values,
@@ -550,7 +586,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     )
 
     report = {
-        "schema_version": SCHEMA_VERSION,
+        "schema_version": BACKOFF_RESULT_SCHEMA_VERSION if backoff else SCHEMA_VERSION,
         "status": "passed" if passed else "failed",
         "identity": {
             "git_head": _git_head(),
@@ -639,6 +675,16 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 "combined_gradient_p90_clip_threshold"
             ],
         },
+        "rejected_preflight_summary": (
+            {
+                "status": rejected_preflight_report["status"],
+                "report_sha256": sha256_file(args.rejected_optimizer_preflight_report),
+                "learning_rate": rejected_preflight_report["proposal"]["learning_rate"],
+                "macro_source_changes": rejected_preflight_report["objectives"]["macro_source_changes"],
+            }
+            if rejected_preflight_report is not None
+            else None
+        ),
         "next_gate": contract.payload["next_gate"]["on_pass" if passed else "on_failure"],
     }
     _atomic_json(output, report)
@@ -673,6 +719,7 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--objective-calibration-contract", type=Path, required=True)
     parser.add_argument("--objective-calibration-report", type=Path, required=True)
     parser.add_argument("--optimizer-preflight-contract", type=Path, required=True)
+    parser.add_argument("--rejected-optimizer-preflight-report", type=Path)
     parser.add_argument("--output", type=Path, required=True)
     return parser
 

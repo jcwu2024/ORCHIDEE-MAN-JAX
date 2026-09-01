@@ -55,7 +55,8 @@ GPU_ADMISSION_REPORT=$ROOT/runtime/outputs/diagnostics/target-oriented-coupled-g
 REACHABILITY_REPORT=$ROOT/runtime/outputs/diagnostics/target-oriented-gpp-state-reachability-14899147.json
 OBJECTIVE_CONTRACT=$WORKTREE/manifests/coarse_graining/target_oriented_coupled_gpp_objective_calibration_v1.json
 OBJECTIVE_REPORT=$ROOT/runtime/outputs/diagnostics/target-oriented-coupled-gpp-objective-calibration-14899511.json
-PREFLIGHT_CONTRACT=$WORKTREE/manifests/coarse_graining/target_oriented_coupled_gpp_optimizer_preflight_v1.json
+PREFLIGHT_CONTRACT=${PREFLIGHT_CONTRACT:-$WORKTREE/manifests/coarse_graining/target_oriented_coupled_gpp_optimizer_preflight_v1.json}
+REJECTED_PREFLIGHT_REPORT=${REJECTED_PREFLIGHT_REPORT:-}
 
 for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" \
   "$PROCESS_STATISTICS" "$FAST_STATISTICS" "$TRAINING_CONTRACT" \
@@ -67,11 +68,19 @@ for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" \
   "$OBJECTIVE_REPORT" "$PREFLIGHT_CONTRACT"; do
   test -f "$path"
 done
+if test -n "$REJECTED_PREFLIGHT_REPORT"; then
+  test -f "$REJECTED_PREFLIGHT_REPORT"
+fi
 mkdir -p "$(dirname "$OUTPUT")" "$CACHE_ROOT"
 
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
 NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
 GPU_BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
+
+PREDECESSOR_ARGS=()
+if test -n "$REJECTED_PREFLIGHT_REPORT"; then
+  PREDECESSOR_ARGS=(--rejected-optimizer-preflight-report "$REJECTED_PREFLIGHT_REPORT")
+fi
 
 echo "host=$(hostname) git_head=$EXPECTED_GIT_HEAD gpu_device=$GPU_DEVICE output=$OUTPUT"
 nvidia-smi -i "$GPU_DEVICE" --query-gpu=index,name,memory.total,memory.used,utilization.gpu --format=csv,noheader
@@ -117,6 +126,7 @@ env -u LD_LIBRARY_PATH \
       --objective-calibration-contract "$OBJECTIVE_CONTRACT" \
       --objective-calibration-report "$OBJECTIVE_REPORT" \
       --optimizer-preflight-contract "$PREFLIGHT_CONTRACT" \
+      "${PREDECESSOR_ARGS[@]}" \
       --output "$OUTPUT"
 
 test -f "$OUTPUT"

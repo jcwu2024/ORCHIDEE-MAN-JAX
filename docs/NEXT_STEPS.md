@@ -1964,18 +1964,28 @@ in `3/8` artifacts and 30-day science in `4/8`, so calibration alone does not
 authorize training. See
 [`target_oriented_coupled_gpp_objective_calibration_result_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_objective_calibration_result_20260901.md).
 
-The active gate is the separately frozen discarded optimizer-proposal
-preflight, contract SHA256 `7932efa1...aa3cf`. It averages each source
-gradient across all eight artifacts, combines the four averages with the
-frozen coefficients, and creates one proposal from a fresh AdamW state over
-both trainable families at learning rate `4e-6`. It then reevaluates all eight
-artifacts. All four macro losses and their weighted total must strictly
-decrease, every averaged source gradient must have positive cosine with the
-realized negative parameter step, and every physical/fixed-parameter/checkpoint
-gate must pass. The proposal is discarded; no checkpoint, recovery, or
-training update is written. Passing opens only target-blind training/monitor
-schedule design and a separately frozen bounded training contract. See
-[`target_oriented_coupled_gpp_optimizer_preflight_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_preflight_v1.md).
+The discarded optimizer-proposal preflight completed as job `14902356` at
+commit `b54c502` in `00:26:32`; report SHA256 is `dd43a960...d146ab`. All
+gradients, the optimizer, both trainable-family steps, physical gates, fixed
+parameters, and checkpoint integrity pass. Every source gradient aligns
+positively with the realized negative parameter step, proving a common
+first-order direction. The finite `4e-6` step is rejected: reachable state
+falls `30.0427%`, but direct GPP rises `11.9170%`, 7-day science rises
+`0.7175%`, and 30-day science rises `0.0550%`. The weighted total falls
+`1.1798%`, which cannot override the per-source gates. The raw gradient norm
+is below the clip threshold, so clipping is not causal. See
+[`target_oriented_coupled_gpp_optimizer_preflight_result_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_preflight_result_20260901.md).
+
+The active gate is one exact-half-rate `2e-6` proposal, frozen at contract
+SHA256 `129d2892...aadc315`. It reuses the same eight artifacts, averaged
+gradients, four coefficients, fresh AdamW ownership, and strict gates. It is
+one independent proposal, not a rate sweep or chained update. A local
+quadratic estimate places the strictest zero crossing near `2.46e-6`, so the
+half-rate is preregistered below that boundary. The proposal remains discarded
+with no checkpoint, recovery, or training update. Passing opens only
+target-blind schedule and bounded-training contract design; failure closes
+this optimizer realization before training. See
+[`target_oriented_coupled_gpp_optimizer_backoff_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_backoff_v1.md).
 
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT

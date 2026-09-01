@@ -805,16 +805,24 @@ conflicts with 7-day science in `3/8` artifacts, 30-day science in `4/8`, and
 state in `1/8`, though never with direct GPP. See
 [`target_oriented_coupled_gpp_objective_calibration_result_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_objective_calibration_result_20260901.md).
 
-The active gate is one discarded macro-batch optimizer proposal, frozen at
-contract SHA256 `7932efa1...aa3cf`. It arithmetic-averages each source
-gradient across the same eight artifacts, applies the frozen coefficients,
-and realizes one `4e-6` step from a fresh AdamW state shared by both trainable
-families. All four macro losses and their weighted total must decrease, each
-source must align positively with the realized negative step, and all physical,
-fixed-parameter, and checkpoint-integrity gates must pass. The proposal and
-optimizer are discarded and no training, checkpoint, or recovery is
-authorized. See
-[`target_oriented_coupled_gpp_optimizer_preflight_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_preflight_v1.md).
+The discarded macro-batch optimizer proposal completed as job `14902356` at
+commit `b54c502` in `00:26:32`; report SHA256 is `dd43a960...d146ab`. Every
+averaged source gradient has positive cosine with the realized negative step,
+all parameters and optimizer values are finite, both trainable families and
+all leaves change, and every physical/fixed/checkpoint gate passes. The finite
+`4e-6` step nevertheless fails: state loss improves `30.0427%`, while direct
+GPP, 7-day science, and 30-day science regress `11.9170%/0.7175%/0.0550%`.
+The weighted total improves `1.1798%`, but every-source descent is required.
+The raw norm is `6.41398` versus the `12.8082` clip threshold, excluding
+clipping as the cause. See
+[`target_oriented_coupled_gpp_optimizer_preflight_result_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_preflight_result_20260901.md).
+
+The active gate is one independent fresh-AdamW proposal at the exact half-rate
+`2e-6`, frozen at SHA256 `129d2892...aadc315`. The model, artifacts,
+coefficients, gradients, optimizer ownership, and acceptance gates are
+unchanged. This is not a rate sweep and not training. The proposal and moments
+are discarded; no checkpoint or recovery is authorized. See
+[`target_oriented_coupled_gpp_optimizer_backoff_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_backoff_v1.md).
 
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.

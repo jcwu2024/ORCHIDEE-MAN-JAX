@@ -378,11 +378,14 @@ fields; all Jacobians and next states are finite, the bare-soil derivative is
 exactly zero, and all water/carbon budget residuals are zero. The subsequent
 four-source objective calibration passed under job `14899511`. It resolved
 the direct/state/7-day/30-day coefficients and clip threshold, but exposed
-artifact-level 7/30-day gradient conflict. The active gate is therefore one
-discarded fresh-AdamW macro-batch proposal over all eight train-only
-artifacts. It writes no checkpoint and authorizes no training. Fresh-target
-tuning, 365-day rollout, Gate D2, sealed test, and product acceptance remain
-closed. See `NEXT_STEPS.md` for the exact current boundary.
+artifact-level 7/30-day gradient conflict. The following discarded `4e-6`
+fresh-AdamW proposal found a valid common first-order direction but failed the
+finite-step gate: state improved while direct GPP and 7/30-day science
+regressed. The active gate is one exact half-rate `2e-6` proposal over the
+same eight train-only artifacts. It writes no checkpoint and authorizes no
+training. Fresh-target tuning, 365-day rollout, Gate D2, sealed test, and
+product acceptance remain closed. See `NEXT_STEPS.md` for the exact current
+boundary.
 
 ## New Task Bootstrap
 

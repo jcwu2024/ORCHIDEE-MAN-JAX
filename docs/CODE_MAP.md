@@ -894,14 +894,18 @@ checkpoint is created. The accepted result is
 `target_oriented_coupled_gpp_objective_calibration_result_20260901.md`.
 
 `daily_operator/target_oriented_coupled_gpp_optimizer_preflight.py` owns the
-frozen macro-objective aggregation and proposal policy; its machine contract
-is
-`manifests/coarse_graining/target_oriented_coupled_gpp_optimizer_preflight_v1.json`.
+frozen macro-objective aggregation and proposal policies; its machine
+contracts are
+`manifests/coarse_graining/target_oriented_coupled_gpp_optimizer_preflight_v1.json`
+and the active exact-half-rate
+`target_oriented_coupled_gpp_optimizer_backoff_v1.json`.
 `scripts/hpc/run_target_oriented_coupled_gpp_optimizer_preflight.py` owns one
 fresh-AdamW proposal and complete eight-artifact before/after evaluation. Its
 direct and Slurm wrappers own free-`gln01` and bounded `gnall` execution. The
 proposal and optimizer state are discarded; these files are not a training or
-checkpoint owner.
+checkpoint owner. Job `14902356` rejected the `4e-6` finite step after complete
+execution; `slurm_target_oriented_coupled_gpp_optimizer_backoff.sh` owns the
+active `2e-6` execution envelope.
 
 ## Scripts
 

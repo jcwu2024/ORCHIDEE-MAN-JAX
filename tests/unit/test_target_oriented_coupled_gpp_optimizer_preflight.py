@@ -14,6 +14,7 @@ from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_o
     THIRTY_SOURCE,
 )
 from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_optimizer_preflight import (
+    BACKOFF_FROZEN_CONTRACT_SHA256,
     FROZEN_CONTRACT_SHA256,
     four_source_macro_objectives,
     load_coupled_gpp_optimizer_preflight_contract,
@@ -42,6 +43,19 @@ def test_coupled_gpp_optimizer_preflight_contract_freezes_macro_proposal():
         THIRTY_SOURCE: 0.28249951035415655,
     }
     assert contract.clip_threshold == 12.808193184117403
+    assert contract.learning_rate == 4.0e-6
+
+
+def test_coupled_gpp_optimizer_backoff_contract_freezes_one_halved_proposal():
+    root = Path(__file__).resolve().parents[2]
+    contract = load_coupled_gpp_optimizer_preflight_contract(
+        root / "manifests" / "coarse_graining" / "target_oriented_coupled_gpp_optimizer_backoff_v1.json"
+    )
+    assert contract.sha256 == BACKOFF_FROZEN_CONTRACT_SHA256
+    assert contract.artifact_updates == (352, 353, 354, 355, 356, 357, 359, 360)
+    assert contract.learning_rate == 2.0e-6
+    assert contract.payload["optimizer_proposal"]["independent_proposals"] == 1
+    assert contract.payload["optimizer_proposal"]["chained_updates"] == 0
 
 
 def test_four_source_macro_objective_and_changes_are_exact():
@@ -153,6 +167,7 @@ def test_optimizer_preflight_runner_is_discarded_and_has_no_training_path():
     assert "target_oriented_adamw_update" in runner
     assert '"optimizer_updates_persisted": 0' in runner
     assert '"checkpoint_written": False' in runner
+    assert "--rejected-optimizer-preflight-report" in runner
     assert "write_structured_gpp_checkpoint" not in runner
     assert "write_structured_gpp_recovery" not in runner
     assert "sbatch" not in launcher
