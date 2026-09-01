@@ -905,7 +905,10 @@ direct and Slurm wrappers own free-`gln01` and bounded `gnall` execution. The
 proposal and optimizer state are discarded; these files are not a training or
 checkpoint owner. Job `14902356` rejected the `4e-6` finite step after complete
 execution; `slurm_target_oriented_coupled_gpp_optimizer_backoff.sh` owns the
-active `2e-6` execution envelope.
+accepted `2e-6` execution envelope. Its result is
+`target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md`. No coupled-
+candidate training, recovery, or checkpoint owner exists yet; those ownership
+boundaries are the active design task.
 
 ## Scripts
 

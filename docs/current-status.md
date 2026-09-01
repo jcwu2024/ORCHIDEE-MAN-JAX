@@ -817,12 +817,18 @@ The raw norm is `6.41398` versus the `12.8082` clip threshold, excluding
 clipping as the cause. See
 [`target_oriented_coupled_gpp_optimizer_preflight_result_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_preflight_result_20260901.md).
 
-The active gate is one independent fresh-AdamW proposal at the exact half-rate
-`2e-6`, frozen at SHA256 `129d2892...aadc315`. The model, artifacts,
-coefficients, gradients, optimizer ownership, and acceptance gates are
-unchanged. This is not a rate sweep and not training. The proposal and moments
-are discarded; no checkpoint or recovery is authorized. See
-[`target_oriented_coupled_gpp_optimizer_backoff_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_backoff_v1.md).
+The independent fresh-AdamW half-rate proposal passed under job `14902878` at
+commit `510a059` in `00:23:34`; report SHA256 is `6abb472d...f751c5`. Direct,
+state, 7-day, 30-day, and weighted macro losses decrease
+`4.08665%/16.3007%/0.003126%/0.039625%/4.37440%`. All direction, finite,
+coverage, physical, fixed-parameter, and checkpoint-integrity gates pass. The
+proposal, moments, and parameters were discarded. See
+[`target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md).
+
+The active gate is now target-blind deterministic macro-batch and train-only
+monitor schedule design plus a bounded training contract. Training remains
+unauthorized until grouping, monitor exclusion, milestones, recovery,
+per-update finite-step acceptance, physical gates, and stop rules are frozen.
 
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.

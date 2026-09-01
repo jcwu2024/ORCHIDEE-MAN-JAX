@@ -1976,16 +1976,23 @@ falls `30.0427%`, but direct GPP rises `11.9170%`, 7-day science rises
 is below the clip threshold, so clipping is not causal. See
 [`target_oriented_coupled_gpp_optimizer_preflight_result_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_preflight_result_20260901.md).
 
-The active gate is one exact-half-rate `2e-6` proposal, frozen at contract
-SHA256 `129d2892...aadc315`. It reuses the same eight artifacts, averaged
-gradients, four coefficients, fresh AdamW ownership, and strict gates. It is
-one independent proposal, not a rate sweep or chained update. A local
-quadratic estimate places the strictest zero crossing near `2.46e-6`, so the
-half-rate is preregistered below that boundary. The proposal remains discarded
-with no checkpoint, recovery, or training update. Passing opens only
-target-blind schedule and bounded-training contract design; failure closes
-this optimizer realization before training. See
-[`target_oriented_coupled_gpp_optimizer_backoff_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_backoff_v1.md).
+The exact-half-rate `2e-6` proposal passed under job `14902878` at commit
+`510a059` in `00:23:34`; report SHA256 is `6abb472d...f751c5`. Direct GPP,
+reachable state, 7-day science, 30-day science, and the weighted total decrease
+`4.08665%/16.3007%/0.003126%/0.039625%/4.37440%`. All direction, finite-value,
+parameter-coverage, physical, fixed-parameter, and checkpoint-integrity gates
+pass. The proposal and fresh optimizer were discarded; no checkpoint or
+training update was written. See
+[`target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_optimizer_backoff_result_20260901.md).
+
+The active gate is target-blind training and train-only monitor schedule
+design followed by a separately frozen bounded-training contract. Before a
+runner or paid training submission is authorized, freeze deterministic
+macro-batch grouping, non-overlapping monitor artifacts, milestone and
+recovery cadence, per-update finite-step acceptance, physical gates, and
+multi-source stop rules. The first bounded stage must remain non-promotable;
+fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
+stay closed.
 
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT
