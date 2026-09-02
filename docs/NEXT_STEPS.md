@@ -2048,6 +2048,19 @@ free-`gln01` admission. Both updates must pass before a new paid contract may
 be proposed. See
 [`target_oriented_coupled_gpp_fresh_moment_admission_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_fresh_moment_admission_v1.md).
 
+The free admission then completed at commit `eb4eb19`; report SHA256 is
+`3e07fb8a...15f834`. Update 2 passed with all four source improvements, but
+update 3 failed: GPP and 7-day science regressed `0.758192%` and `0.0372167%`
+while state, 30-day science, and the weighted objective improved
+`4.32042%/1.01398%/0.766949%`. All gradients and physical gates passed, clip
+scale was `1.0`, and no state was retained. The update-3 weighted raw gradient
+already has negative cosine with 7-day and 30-day gradients (`-0.274594` and
+`-0.0310940`), so fresh moments are not a sufficient training rule. The
+active gate is a zero-retention update-3 common-direction and finite-step
+audit at the state after the admitted update 2. Paid continuation and fresh
+validation remain closed. See
+[`target_oriented_coupled_gpp_fresh_moment_admission_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_fresh_moment_admission_result_20260902.md).
+
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT
 repair was exercised by the successful calibration job and is regression

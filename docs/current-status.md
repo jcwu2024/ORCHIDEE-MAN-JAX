@@ -911,6 +911,21 @@ whitespace checks pass. The active gate is the no-checkpoint two-update run on
 free `gln01`; paid continuation and fresh validation remain closed. See
 [`target_oriented_coupled_gpp_fresh_moment_admission_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_fresh_moment_admission_v1.md).
 
+That free admission completed at commit `eb4eb19` in `1,519.041` seconds;
+report SHA256 is `3e07fb8a...15f834`. Update 2 passes and improves direct
+GPP/state/7-day/30-day/weighted losses by
+`4.04281%/2.91495%/0.609017%/0.345835%/1.86632%`. After parameters advance in
+memory and moments reset again, update 3 fails: GPP and 7-day science regress
+`0.758192%/0.0372167%`, while state, 30-day science, and weighted loss improve
+`4.32042%/1.01398%/0.766949%`. Its weighted raw gradient already has negative
+cosine with the 7-day and 30-day gradients (`-0.274594/-0.0310940`), so this
+is no longer explained solely by inherited AdamW moments. Both proposals are
+finite, unclipped, physically valid, and fully discarded; recovery and fixed
+parameters remain unchanged. The active gate is a zero-retention update-3
+common-direction and finite-step audit at the in-memory post-update-2 state.
+Paid continuation remains closed. See
+[`target_oriented_coupled_gpp_fresh_moment_admission_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_fresh_moment_admission_result_20260902.md).
+
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
 The exact-key-set repair and JIT regression were subsequently exercised by
