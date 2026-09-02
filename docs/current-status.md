@@ -939,6 +939,31 @@ related tests plus static checks pass. The active gate is one free-`gln01`
 execution. See
 [`target_oriented_coupled_gpp_update3_common_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update3_common_direction_audit_v1.md).
 
+That free audit passed at commit `e704749` in `4,521.701` seconds; report
+SHA256 is `642086af...ec8d`. The solved direct direction has minimum source
+cosine `0.226096`, and every frozen scale from `1` through `1/16` improves
+GPP, state, 7-day, and 30-day losses while passing every physical hard gate.
+At full scale those improvements are
+`0.9890%/6.5908%/3.7807%/6.5117%`, with weighted loss down `3.6710%`.
+Fresh AdamW rotates the source cosines down to `0.02949`-`0.08313` and has a
+nonmonotonic finite response: `1/2` and `1/4` regress 7-day loss. All proposals
+were discarded and protected artifacts remain unchanged. The active gate is a
+separate three-to-five-update free smoke that recomputes and directly realizes
+the common direction at each accepted state. Paid training and validation
+remain closed. See
+[`target_oriented_coupled_gpp_update3_common_direction_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update3_common_direction_result_20260902.md).
+
+The direct-recalibration smoke is now frozen and locally qualified at contract
+SHA256 `f7f0efc1...e9cf`. From the accepted in-memory update-2 state, it tests
+scheduled updates 3-5. At each state it recomputes the four source gradients
+and minimum-norm direction, applies the direct full displacement norm
+`0.00775897335105`, and retains the proposal only in memory when every source
+and physical gate passes. It stops on the first scientific rejection and
+writes no checkpoint. Thirty-six related tests plus Ruff, compilation, shell,
+and whitespace checks pass. The active gate is one free-`gln01` execution;
+paid training and validation remain closed. See
+[`target_oriented_coupled_gpp_direct_recalibration_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_recalibration_smoke_v1.md).
+
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
 The exact-key-set repair and JIT regression were subsequently exercised by

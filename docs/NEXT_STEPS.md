@@ -2073,6 +2073,30 @@ smoke; failure redirects work to the long-horizon-primary objective hierarchy,
 not another architecture change or paid continuation. See
 [`target_oriented_coupled_gpp_update3_common_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update3_common_direction_audit_v1.md).
 
+The free audit then passed at commit `e704749` in `4,521.701` seconds; report
+SHA256 is `642086af...ec8d`. The minimum-norm direction has source cosines
+`0.226096/0.226096/0.226096/0.248111` for GPP, state, 7-day, and 30-day loss.
+All five direct scales `1,1/2,1/4,1/8,1/16` improve every source and pass all
+physical gates; at full scale the improvements are
+`0.9890%/6.5908%/3.7807%/6.5117%`. Fresh AdamW is nonmonotonic and fails at
+`1/2` and `1/4`, so it is not the primary realization. The active gate is to
+freeze and locally qualify a three-to-five-update no-checkpoint free-`gln01`
+smoke that recomputes and directly realizes the common direction after every
+accepted macro update. Paid continuation and fresh validation remain closed.
+See
+[`target_oriented_coupled_gpp_update3_common_direction_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update3_common_direction_result_20260902.md).
+
+The three-update direct-recalibration smoke is now frozen and locally
+qualified at contract SHA256 `f7f0efc1...e9cf`. It reconstructs fresh update
+2, then recomputes the four-source minimum-norm direction before each of
+scheduled updates 3-5 and directly realizes fixed global parameter norm
+`0.00775897335105`. Each full step must improve all four sources and pass all
+physical gates; the first rejection stops the run. It writes only a report and
+retains no state. Thirty-six focused and related tests plus static checks pass.
+The active gate is one free-`gln01` execution. Paid training and fresh
+validation remain closed. See
+[`target_oriented_coupled_gpp_direct_recalibration_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_recalibration_smoke_v1.md).
+
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT
 repair was exercised by the successful calibration job and is regression

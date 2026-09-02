@@ -1,0 +1,84 @@
+{
+  "schema_version": "target_oriented_coupled_gpp_direct_recalibration_smoke_v1",
+  "status": "frozen_zero_retention_three_update_direct_recalibration_smoke",
+  "contract_sha256": "f7f0efc11fb716ec8946f70539b06585cce0c106087cd63de79acb5db648e9cf",
+  "identity": {
+    "common_direction_audit_contract_sha256": "956940a1b9cc159fb732980b5bb0f090fc9664adebcf27b22719ec310855cf09",
+    "common_direction_result_sha256": "642086afe65c08909b162153cf08ab8ca72bf31f5041b47e422592165b95ec8d",
+    "fresh_moment_contract_sha256": "a8c362fefb8512cdfe5204dccb2fba4d585f7024366ebe64bf9e5c5a031eda11",
+    "bounded_training_contract_sha256": "5378fe9908c272b8651d8b2087e56e4d7751ead18c7395794bbe2361f6699cca",
+    "coupled_candidate_contract_sha256": "c7f81436ff6ba1179b01adad0f76b47ddd2aab68208e97719c2c5464f3e7e74d",
+    "schedule_sha256": "cb5e2ab12beecd558efe1aaf8082da54567b63631ce0b982e03934067b36c04e",
+    "parent_completed_updates": 1,
+    "reconstructed_fresh_update": 2,
+    "direct_recalibration_updates": [3, 4, 5]
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "reconstruction_artifact_updates": [326, 935, 542, 913, 897, 836, 887, 863],
+    "direct_recalibration_artifact_groups": [
+      [968, 750, 987, 728, 953, 253, 646, 937],
+      [481, 672, 900, 294, 998, 668, 433, 535],
+      [965, 351, 272, 363, 660, 670, 548, 740]
+    ],
+    "macro_batch_artifact_count": 8,
+    "direct_gpp_teacher_days_per_update": 1664,
+    "one_day_state_transitions_per_update": 256,
+    "seven_day_windows_per_update": 64,
+    "thirty_day_windows_per_update": 32,
+    "fresh_validation_values_allowed": false,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "direction": {
+    "source_registry": [
+      "direct_gpp_208_teacher_days",
+      "reachable_state_anchor_32_teacher_days",
+      "seven_day_component_resolved_science",
+      "thirty_day_component_resolved_science"
+    ],
+    "solver": "minimum_norm_simplex_over_unit_source_gradients",
+    "minimum_source_cosine": 0.0001,
+    "realization": "negative_unit_common_gradient_times_frozen_parameter_step_norm",
+    "parameter_step_l2": 0.007758973351050004,
+    "parameter_step_scale": 1.0,
+    "recompute_after_every_accepted_update": true,
+    "adamw_realization_allowed": false
+  },
+  "evaluation": {
+    "evaluate_all_eight_current_update_artifacts_before_and_after": true,
+    "finite_step_rule": "frozen_four_source_nonincrease_and_strict_weighted_decrease",
+    "relative_source_tolerance": 0.000001,
+    "all_one_seven_thirty_day_physical_hard_failures_zero": true,
+    "all_gradients_parameters_and_losses_finite": true,
+    "fresh_update2_must_remain_accepted": true,
+    "stop_on_first_scientific_rejection": true,
+    "required_consecutive_direct_updates": 3
+  },
+  "retention": {
+    "optimizer_updates_persisted": 0,
+    "parameter_proposals_persisted": 0,
+    "recovery_modified": false,
+    "checkpoint_written": false,
+    "training_continuation_authorized": false
+  },
+  "execution": {
+    "free_gln01_allowed": true,
+    "paid_partition_authorized": false,
+    "maximum_wall_time_minutes": 90,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "fresh_validation_read_authorized": false,
+    "365_day_rollout_authorized": false,
+    "gate_d2_authorized": false,
+    "sealed_test_authorized": false,
+    "product_acceptance_authorized": false
+  },
+  "next_gate": {
+    "on_three_updates_accepted": "freeze_bounded_direct_recalibration_training_contract_and_resource_review",
+    "on_no_common_first_order_direction": "review_long_horizon_primary_objective_and_anchor_constraints",
+    "on_common_direction_finite_step_rejection": "review_state_local_finite_step_without_architecture_change"
+  }
+}
