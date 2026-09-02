@@ -812,6 +812,40 @@ def _make_steps(
         )
         return statistics, hard
 
+    def window_monitor_statistics(
+        parameters,
+        microbatch,
+        *,
+        horizon: int,
+        rematerialize: bool,
+    ):
+        if acceptance_scales is None:
+            raise ValueError("acceptance scales are required for detailed science monitoring")
+        predicted, expected, hard = window_trajectories(
+            parameters,
+            microbatch,
+            rematerialize=rematerialize,
+        )
+        science = science_window_sufficient_statistics(
+            predicted.fluxes,
+            expected.fluxes,
+            predicted.stocks,
+            expected.stocks,
+            flux_scales=scales.fluxes,
+            stock_scales=scales.stocks,
+            horizon=horizon,
+            flux_basis=resolved_flux_basis,
+        )
+        acceptance = target_oriented_acceptance_sufficient_statistics(
+            predicted.fluxes,
+            expected.fluxes,
+            predicted.stocks,
+            expected.stocks,
+            scales=acceptance_scales,
+            horizon=horizon,
+        )
+        return science, acceptance, hard
+
     def teacher_state_window_statistics(
         parameters,
         microbatch,
@@ -1415,6 +1449,22 @@ def _make_steps(
 
         result.update(
             {
+                "seven_monitor_forward": jax.jit(
+                    lambda parameters, batch: window_monitor_statistics(
+                        parameters,
+                        batch,
+                        horizon=7,
+                        rematerialize=False,
+                    )
+                ),
+                "thirty_monitor_forward": jax.jit(
+                    lambda parameters, batch: window_monitor_statistics(
+                        parameters,
+                        batch,
+                        horizon=30,
+                        rematerialize=False,
+                    )
+                ),
                 "make_trainable_teacher_state_acceptance_gradient_steps": (
                     make_trainable_teacher_state_acceptance_gradient_steps
                 ),

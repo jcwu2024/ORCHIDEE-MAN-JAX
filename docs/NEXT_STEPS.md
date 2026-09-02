@@ -2159,6 +2159,29 @@ allowed with a 120-minute timeout. Paid training and fresh validation remain
 closed. See
 [`target_oriented_coupled_gpp_scale_selected_transfer_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selected_transfer_audit_v1.md).
 
+The free transfer execution then completed at commit `67a4d40` in
+`3,532.066` seconds; report SHA256 is `b77e92fe...f625`. The preregistered
+primary gate passes: independent 7-day and 30-day component-resolved science
+losses improve `8.3089%` and `13.4337%`, with `6/8` and `8/8` artifacts
+improving, and all physical gates pass. Reachable one-day state improves
+`18.2362%`. Direct teacher-state GPP, however, regresses `39.2867%` and
+improves on only `1/8` artifacts. See
+[`target_oriented_coupled_gpp_scale_selected_transfer_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selected_transfer_result_20260902.md).
+
+The persistent 100-update scale-selecting contract and runner are now frozen
+and locally qualified. The runner reports cumulative 7/30-day GPP and every
+key science output separately from the aggregate, and it cannot select a
+checkpoint until direct GPP recovers to the pre-update-5 monitor baseline
+while both horizon aggregates and physical gates remain accepted. It writes
+atomic parameter-only recovery without optimizer state. The active gate is a
+free `gln01` runner admission that reconstructs update 7, runs the detailed
+initial monitor and one discarded persistent update, and round-trips a
+temporary recovery. The Attention architecture, trainable boundary,
+conservative updater, retained exact tail, and scale-selecting common-direction
+method stay unchanged. Paid execution remains closed until this admission
+passes. See
+[`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md).
+
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT
 repair was exercised by the successful calibration job and is regression

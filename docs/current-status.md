@@ -1031,6 +1031,27 @@ pass; per-artifact unanimity is not required. Local qualification and one free
 See
 [`target_oriented_coupled_gpp_scale_selected_transfer_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selected_transfer_audit_v1.md).
 
+The free transfer audit completed at commit `67a4d40` in `3,532.066` seconds;
+report SHA256 is `b77e92fe...f625`. The selected updates improve independent
+7-day and 30-day component-resolved science means by `8.3089%` and `13.4337%`;
+`6/8` and `8/8` artifacts improve, respectively. Reachable state improves
+`18.2362%`, and all physical/integrity gates pass. The frozen primary transfer
+gate is therefore accepted. Direct teacher-state GPP nevertheless worsens
+`39.2867%` and improves on only one artifact. See
+[`target_oriented_coupled_gpp_scale_selected_transfer_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selected_transfer_result_20260902.md).
+
+The persistent 100-update scale-selecting runner is now frozen and locally
+qualified. It exposes cumulative 7/30-day GPP and all 13 key science variables
+alongside the macro objective, reuses one rollout for both reports, and
+requires direct GPP recovery to the pre-update-5 baseline without losing the
+accepted horizon improvements before selecting a checkpoint. Its recovery is
+atomic and parameter-only; no optimizer state exists. The active task is the
+free `gln01` admission covering update-7 reconstruction, the detailed initial
+monitor, one discarded persistent update, and a temporary recovery roundtrip.
+No architecture change is opened. Paid training, fresh validation, 365-day
+rollout, Gate D2, sealed test, and product acceptance remain closed. See
+[`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md).
+
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
 The exact-key-set repair and JIT regression were subsequently exercised by

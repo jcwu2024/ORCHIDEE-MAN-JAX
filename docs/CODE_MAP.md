@@ -918,6 +918,18 @@ its direct shell wrapper admits free `gln01` or allocated `gnall`, and its
 Slurm wrapper freezes the proposed one-V100 paid envelope. The runner remains
 conditional on local and free-GPU qualification.
 
+`daily_operator/target_oriented_coupled_gpp_persistent_scale_training.py`
+owns the frozen 100-update schedule, scale-selection policy, detailed monitor
+gate, and checkpoint deadline. Its machine contract is
+`manifests/coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.json`.
+`daily_operator/target_oriented_coupled_gpp_persistent_checkpoint.py` owns
+atomic parameter-only recovery and milestone checkpoints without optimizer
+state. `scripts/hpc/run_target_oriented_coupled_gpp_persistent_scale_training.py`
+owns update-7 reconstruction, persistent common-direction updates, combined
+7/30-day aggregate and per-key monitoring, recovery, and runner admission.
+Its direct and Slurm wrappers own the free-`gln01` admission and the separately
+authorized one-V100 `gnall` execution boundary.
+
 ## Scripts
 
 | Path | Classification | Use |
