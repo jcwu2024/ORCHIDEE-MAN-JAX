@@ -231,6 +231,7 @@ def _training_proposal(
     coefficients: Mapping[str, float],
     relative_tolerance: float,
     optimizer_update: int,
+    return_internal: bool = False,
 ) -> Mapping[str, Any]:
     runtime = context["runtime"]
     jax = runtime["jax"]
@@ -372,7 +373,7 @@ def _training_proposal(
         coefficients=coefficients,
         relative_tolerance=relative_tolerance,
     )
-    return {
+    result = {
         "accepted": accepted,
         "updated_trainable": updated_trainable,
         "updated_optimizer": updated_optimizer,
@@ -402,6 +403,13 @@ def _training_proposal(
             "timing_seconds": {"total": time.perf_counter() - update_started},
         },
     }
+    if return_internal:
+        result["internal"] = {
+            "source_gradients": source_gradients,
+            "combined_gradient": combined_gradient,
+            "parameter_step": parameter_step,
+        }
+    return result
 
 
 def run(args: argparse.Namespace) -> Mapping[str, Any]:

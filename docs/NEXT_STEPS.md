@@ -2012,6 +2012,14 @@ Admission evidence is in
 The completed result is
 [`target_oriented_coupled_gpp_bounded_training_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_bounded_training_result_20260902.md).
 
+The zero-training update-2 geometry audit is now frozen and implemented at
+contract SHA256 `d0b500bb...773526`. It loads the exact update-1 recovery,
+recomputes the rejected update-2 macro gradient once, compares inherited and
+zero-moment AdamW displacements, and evaluates each on the fixed
+`1, 1/2, 1/4, 1/8, 1/16` scale grid. Every proposal is discarded. The active
+gate is its single free-`gln01` execution. See
+[`target_oriented_coupled_gpp_update2_geometry_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update2_geometry_audit_v1.md).
+
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT
 repair was exercised by the successful calibration job and is regression
