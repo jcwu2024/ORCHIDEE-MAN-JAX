@@ -926,6 +926,19 @@ common-direction and finite-step audit at the in-memory post-update-2 state.
 Paid continuation remains closed. See
 [`target_oriented_coupled_gpp_fresh_moment_admission_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_fresh_moment_admission_result_20260902.md).
 
+The zero-retention update-3 common-direction audit is now implemented and
+frozen at contract SHA256 `956940a1...55cf09`. It reconstructs the accepted
+fresh-moment update 2, computes the four update-3 source gradients and their
+`4x4` Gram matrix, uses the existing tested minimum-norm unit-gradient simplex
+solver, and compares direct versus fresh-AdamW realizations on the fixed
+matched-distance scale grid `1,1/2,1/4,1/8,1/16`. Direct realization is
+preferred; AdamW is admissible only if it preserves all four positive source
+cosines. All proposals are discarded, numeric predecessor differences are
+reporting-only, and fresh validation remains unread. Forty-three focused and
+related tests plus static checks pass. The active gate is one free-`gln01`
+execution. See
+[`target_oriented_coupled_gpp_update3_common_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update3_common_direction_audit_v1.md).
+
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
 The exact-key-set repair and JIT regression were subsequently exercised by

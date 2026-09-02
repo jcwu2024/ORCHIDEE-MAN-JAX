@@ -2061,6 +2061,18 @@ audit at the state after the admitted update 2. Paid continuation and fresh
 validation remain closed. See
 [`target_oriented_coupled_gpp_fresh_moment_admission_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_fresh_moment_admission_result_20260902.md).
 
+The update-3 common-direction audit is now frozen and locally qualified at
+contract SHA256 `956940a1...55cf09`. It reconstructs accepted fresh update 2
+in memory, recomputes the four update-3 gradients, solves the tested
+minimum-norm simplex problem, and compares direct versus fresh-AdamW
+realizations at matched displacement scales `1,1/2,1/4,1/8,1/16`. Numeric
+reproduction differences are reporting-only. Every proposal is discarded and
+no validation value is read. The active gate is one free-`gln01` execution.
+A common finite step opens only a three-to-five-update free recalibration
+smoke; failure redirects work to the long-horizon-primary objective hierarchy,
+not another architecture change or paid continuation. See
+[`target_oriented_coupled_gpp_update3_common_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update3_common_direction_audit_v1.md).
+
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT
 repair was exercised by the successful calibration job and is regression
