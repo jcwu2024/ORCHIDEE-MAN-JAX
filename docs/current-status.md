@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-01.
+Last updated: 2026-09-03.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -1040,17 +1040,22 @@ gate is therefore accepted. Direct teacher-state GPP nevertheless worsens
 `39.2867%` and improves on only one artifact. See
 [`target_oriented_coupled_gpp_scale_selected_transfer_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selected_transfer_result_20260902.md).
 
-The persistent 100-update scale-selecting runner is now frozen and locally
-qualified. It exposes cumulative 7/30-day GPP and all 13 key science variables
-alongside the macro objective, reuses one rollout for both reports, and
-requires direct GPP recovery to the pre-update-5 baseline without losing the
-accepted horizon improvements before selecting a checkpoint. Its recovery is
-atomic and parameter-only; no optimizer state exists. The active task is the
-free `gln01` admission covering update-7 reconstruction, the detailed initial
-monitor, one discarded persistent update, and a temporary recovery roundtrip.
-No architecture change is opened. Paid training, fresh validation, 365-day
-rollout, Gate D2, sealed test, and product acceptance remain closed. See
-[`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md).
+The persistent 100-update scale-selecting runner has passed free `gln01`
+admission at commit `7d57887`. The `4,669.897`-second run reconstructed update
+7, evaluated all 13 science keys on the eight-artifact monitor, accepted scale
+`1` for one discarded proposal, and round-tripped a temporary parameter-only
+recovery. No checkpoint or recovery remained. Peak live JAX bytes were about
+4.11 GB. Initial cumulative GPP scores are still `0.417840` at 7 days and
+`0.497822` at 30 days; GPP, growth/autotrophic respiration, NPP, NEP, and NEE
+fail the current absolute monitor thresholds at both horizons. This is runner
+and recovery admission, not scientific promotion. The active task is explicit
+paid-resource authorization for the frozen 100-update `gnall` trial, retaining
+the update-10 and update-25 early-stop rules. No architecture change is opened.
+Fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
+remain closed. See
+[`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md)
+and
+[`target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md).
 
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.

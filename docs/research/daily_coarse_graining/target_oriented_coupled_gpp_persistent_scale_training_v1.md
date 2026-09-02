@@ -2,7 +2,7 @@
 
 Date: 2026-09-03
 
-Status: frozen and locally qualified; free `gln01` runner admission pending
+Status: frozen; free `gln01` runner admission accepted, paid authorization pending
 
 Machine contract:
 `manifests/coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.json`
@@ -75,12 +75,13 @@ identity and parameter-tree schema.
 
 ## Admission
 
-The free `gln01` admission must reconstruct the selected update-7 state,
-evaluate the full detailed initial monitor, execute one persistent update,
-round-trip a temporary parameter-only recovery, and discard the update and
-temporary recovery. No checkpoint or recovery may remain.
+The free `gln01` admission passed at commit `7d57887`. It reconstructed the
+selected update-7 state, evaluated the full detailed initial monitor, executed
+one discarded persistent update, and round-tripped a temporary parameter-only
+recovery. No checkpoint or recovery remained. See
+[`target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md`](target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md).
 
-Paid training, fresh validation, 365-day rollout, Gate D2, sealed test, and
-product acceptance remain closed. A paid run requires a separate review of
-the exact Slurm resources, wall-time limit, command, working directory, and
-worst-case charge after admission passes.
+Paid training still requires a separate review and explicit approval of the
+exact Slurm resources, wall-time limit, command, working directory, and
+worst-case charge. Fresh validation, 365-day rollout, Gate D2, sealed test,
+and product acceptance remain closed.

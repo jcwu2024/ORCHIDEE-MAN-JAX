@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-09-01.
+Last updated: 2026-09-03.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -157,7 +157,8 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selecting_recalibration_result_20260902.md` | Current accepted three-update local finite-step evidence | Reviewing selected scales, four-source changes, or the next transfer gate |
 | `research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selected_transfer_audit_v1.md` | Completed frozen non-test 7/30-day transfer contract | Reviewing independent panel ownership, bounded acceptance, or execution |
 | `research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selected_transfer_result_20260902.md` | Current accepted primary transfer evidence with a material direct-GPP warning | Designing the guarded persistent 100-update trial |
-| `research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md` | Current frozen persistent schedule, per-key monitor, recovery, and stop contract | Running free runner admission or reviewing the later paid envelope |
+| `research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md` | Current frozen persistent schedule, per-key monitor, recovery, and stop contract; free admission passed | Reviewing the paid 100-update envelope or training rules |
+| `research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md` | Current accepted free-GPU runner, monitor, and recovery admission | Reviewing runtime, absolute initial science scores, persistence cleanup, or the paid-entry decision |
 | `research/daily_coarse_graining/target_oriented_update_251_admission_20260825.md` | Accepted exact checkpoint/AdamW handoff, update-251, recovery, and matched free-GPU admission | Preparing or admitting updates 251-1000 |
 | `research/daily_coarse_graining/daily_operator_parameter_routing_v1.md` | Implemented local parameter-ownership boundary used by the successor | Routing physical parameters or planning Gate D2 |
 | `research/daily_coarse_graining/successor_process_head_architecture_options_v1.md` | Historical accepted decision package; its attention/graph pair is not the current successor default | Reviewing the completed early successor comparison |
