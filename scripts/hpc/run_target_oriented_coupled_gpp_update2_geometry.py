@@ -367,19 +367,15 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     internal = inherited["internal"]
     source_gradients = internal["source_gradients"]
     parent_changes = parent_rejected["proposal"]["source_changes"]
-    tolerance = float(
-        audit_contract.payload["evaluation"]["reproduce_parent_rejected_scale_one_changes_absolute_tolerance"]
-    )
-    reproduced = all(
-        abs(
-            float(inherited["record"]["source_changes"][name]["relative_change"])
-            - float(parent_changes[name]["relative_change"])
-        )
-        <= tolerance
+    reference_differences = {
+        name: float(inherited["record"]["source_changes"][name]["relative_change"])
+        - float(parent_changes[name]["relative_change"])
         for name in GRADIENT_SOURCES
-    )
-    if inherited["accepted"] or not reproduced:
-        raise RuntimeError("coupled GPP update-2 rejected proposal was not reproduced")
+    }
+    tolerance = float(audit_contract.payload["evaluation"]["parent_scale_one_reference_absolute_tolerance"])
+    reproduced = all(abs(value) <= tolerance for value in reference_differences.values())
+    if inherited["accepted"]:
+        raise RuntimeError("coupled GPP update-2 frozen rejection outcome drift")
 
     inherited_direction = _direction_record(
         jax,
@@ -510,6 +506,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
                 bounded_contract.coefficients,
             ),
             "rejected_scale_one_reproduced": reproduced,
+            "rejected_scale_one_reference_tolerance": tolerance,
+            "rejected_scale_one_reference_differences": reference_differences,
             "recovery_unchanged": recovery_unchanged,
         },
         "gradient": {

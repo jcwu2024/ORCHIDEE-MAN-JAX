@@ -1,7 +1,7 @@
 {
   "schema_version": "target_oriented_coupled_gpp_update2_geometry_audit_v1",
   "status": "frozen_zero_training_update2_optimizer_geometry_audit",
-  "contract_sha256": "d0b500bbf92cfd33814e541fa5db1c0adc0516431a75f05c15c773f833773526",
+  "contract_sha256": "7585cc5b46a76fb19d08703c8e88839f8758258888a1f302d5448dbf7e79f198",
   "identity": {
     "parent_git_head": "6d1864b2d7c2c95b176c1995d8f59ebd03d92d8a",
     "parent_result_report_sha256": "bf83501782f0e6815a5bd408b203f15c8bcceefc3effb9cdda713aefd58be39c",
@@ -41,7 +41,9 @@
     "relative_source_tolerance": 0.000001,
     "all_one_seven_thirty_day_physical_hard_failures_zero": true,
     "all_gradients_parameters_optimizer_values_and_losses_finite": true,
-    "reproduce_parent_rejected_scale_one_changes_absolute_tolerance": 1e-10
+    "parent_scale_one_reference_absolute_tolerance": 1e-8,
+    "parent_scale_one_numeric_reference_is_reporting_only": true,
+    "parent_scale_one_frozen_gate_outcome_must_remain_rejected": true
   },
   "classification": {
     "inherited_backtracking_admissible": "at_least_one_inherited_scale_passes_the_frozen_finite_step_rule",

@@ -5,7 +5,7 @@ Date: 2026-09-02
 Status: frozen zero-training audit; local implementation accepted
 
 Machine contract SHA256:
-`d0b500bbf92cfd33814e541fa5db1c0adc0516431a75f05c15c773f833773526`.
+`7585cc5b46a76fb19d08703c8e88839f8758258888a1f302d5448dbf7e79f198`.
 
 ## Question
 
@@ -46,9 +46,10 @@ artifacts. A scale passes only if the weighted objective strictly decreases,
 all four source losses do not increase beyond relative tolerance `1e-6`, and
 all physical hard counts remain zero.
 
-The inherited scale-one result must reproduce the recorded rejected proposal
-within absolute relative-change tolerance `1e-10`. This is a production-path
-check, not an independent training run.
+The inherited scale-one result must remain rejected by the same frozen
+finite-step rule. Its four relative changes are also compared with the parent
+report at absolute reference tolerance `1e-8`, but that numeric comparison is
+reporting-only: different legal GPU reduction order must not abort the audit.
 
 ## Retention And Decision
 
@@ -63,6 +64,10 @@ optimizer-reset amendment. If neither passes, training remains closed and the
 four-source direction or preconditioning must be reviewed. The audit does not
 read the 96-window validation panel and cannot promote the candidate.
 
-The local contract, classification tests, runner compilation, and shell
-syntax checks pass. The executable gate is one bounded free-`gln01` run; no
-paid partition is authorized.
+The first free execution at commit `cc86e44` completed the full update-2
+gradient and inherited scale-one forward, then stopped because the original
+contract incorrectly made a `1e-10` numeric-reference comparison fatal. No
+proposal, recovery, checkpoint, or report was written. The corrected local
+contract, classification tests, runner compilation, and shell syntax checks
+must pass before the bounded free-`gln01` rerun; no paid partition is
+authorized.

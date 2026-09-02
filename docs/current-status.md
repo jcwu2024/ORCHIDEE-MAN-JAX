@@ -871,14 +871,19 @@ zero-training update-2 audit of raw-gradient versus inherited-AdamW direction
 and bounded displacement scales at the exact retained recovery state. See
 [`target_oriented_coupled_gpp_bounded_training_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_bounded_training_result_20260902.md).
 
-The follow-up update-2 optimizer-geometry audit is frozen at contract SHA256
-`d0b500bb...773526` and implemented locally. It uses the exact update-1
-recovery and update-2 artifacts, computes the four gradients once, compares
+The follow-up update-2 optimizer-geometry audit is implemented locally. It
+uses the exact update-1 recovery and update-2 artifacts, computes the four
+gradients once, compares
 inherited AdamW against a zero-moment AdamW comparator, and evaluates the
 fixed `1, 1/2, 1/4, 1/8, 1/16` displacement scales. It retains no proposal,
-does not modify recovery, and reads no fresh target. Local contract,
-classification, compilation, and shell checks pass. The active gate is one
-bounded free-`gln01` execution. See
+does not modify recovery, and reads no fresh target. Its first free execution
+at commit `cc86e44` completed the full gradient and inherited scale-one
+forward but stopped on an unnecessarily fatal `1e-10` parent-reference
+tolerance. No report or retained state was written. The corrected contract at
+SHA256 `7585cc5b...79f198`
+makes that comparison reporting-only while preserving the frozen scientific
+rejection outcome as mandatory. The active gate is corrected local acceptance
+and one bounded free-`gln01` rerun. See
 [`target_oriented_coupled_gpp_update2_geometry_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update2_geometry_audit_v1.md).
 
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its

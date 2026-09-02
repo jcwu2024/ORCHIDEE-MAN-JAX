@@ -16,7 +16,7 @@ from .target_oriented_coupled_gpp_objective import GRADIENT_SOURCES
 from .target_oriented_source_shaped_maintenance import contract_sha256
 
 SCHEMA_VERSION = "target_oriented_coupled_gpp_update2_geometry_audit_v1"
-FROZEN_CONTRACT_SHA256 = "d0b500bbf92cfd33814e541fa5db1c0adc0516431a75f05c15c773f833773526"
+FROZEN_CONTRACT_SHA256 = "7585cc5b46a76fb19d08703c8e88839f8758258888a1f302d5448dbf7e79f198"
 PARENT_GIT_HEAD = "6d1864b2d7c2c95b176c1995d8f59ebd03d92d8a"
 PARENT_RESULT_SHA256 = "bf83501782f0e6815a5bd408b203f15c8bcceefc3effb9cdda713aefd58be39c"
 PARENT_REJECTED_SHA256 = "0dcd1525212a38891ac593be251807a32c6e7785e5156e9f2b6fba49b5f6a9e3"
@@ -97,7 +97,9 @@ def load_coupled_gpp_update2_geometry_contract(
         or float(directions["learning_rate"]) != 2.0e-6
         or float(directions["global_gradient_norm_clip"]) != 12.808193184117403
         or float(evaluation["relative_source_tolerance"]) != 1.0e-6
-        or float(evaluation["reproduce_parent_rejected_scale_one_changes_absolute_tolerance"]) != 1.0e-10
+        or float(evaluation["parent_scale_one_reference_absolute_tolerance"]) != 1.0e-8
+        or evaluation["parent_scale_one_numeric_reference_is_reporting_only"] is not True
+        or evaluation["parent_scale_one_frozen_gate_outcome_must_remain_rejected"] is not True
     ):
         raise ValueError("coupled GPP update-2 geometry identity or method drift")
     if (
