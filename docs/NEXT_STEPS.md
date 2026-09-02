@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-09-01.
+Last updated: 2026-09-02.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -2118,6 +2118,29 @@ physical evaluation. It retains no state and reads no validation value.
 Thirty-nine related tests plus static checks pass. The active gate is one
 free-`gln01` execution; paid training remains closed. See
 [`target_oriented_coupled_gpp_update5_scale_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update5_scale_audit_v1.md).
+
+The free update-5 scale audit then completed at commit `25ec5bc` in
+`2,696.660` seconds; report SHA256 is `2199a0b7...5081`. Scales `1/4`, `1/8`,
+`1/16`, and `1/32` pass all four source and physical gates. The maximum
+accepted scale `1/4` improves GPP/state/7-day/30-day by
+`0.3069%/10.4394%/2.5014%/2.6021%` and the weighted objective by `2.9544%`.
+Scale `1/2` is rejected because GPP worsens `9.3058%` despite an aggregate
+improvement. This confirms a bounded trust region rather than an architecture
+failure. The active gate is to freeze and locally qualify a no-checkpoint
+scale-selecting direct-recalibration smoke that recomputes the common
+direction at every update and applies only the largest passing frozen scale.
+Paid training and fresh validation remain closed. See
+[`target_oriented_coupled_gpp_update5_scale_audit_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update5_scale_audit_result_20260902.md).
+
+The scale-selecting continuation is now frozen and locally qualified at
+contract SHA256 `3b7109fc...8a5`. It reconstructs update 5 at selected scale
+`1/4`, then tests new updates 6 and 7. Every update recomputes the four-source
+common direction and evaluates `1,1/2,1/4,1/8,1/16,1/32` from largest to
+smallest, applying only the first passing scale and retaining nothing. All 42
+coupled-GPP/reachability tests and static checks pass. The active gate
+is one free-`gln01` execution with a 120-minute timeout. Paid training and
+fresh validation remain closed. See
+[`target_oriented_coupled_gpp_scale_selecting_recalibration_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selecting_recalibration_smoke_v1.md).
 
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT

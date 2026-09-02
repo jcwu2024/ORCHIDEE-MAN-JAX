@@ -1,0 +1,2724 @@
+{
+  "classification": "bounded_direct_finite_step",
+  "elapsed_seconds": 2696.659512368962,
+  "identity": {
+    "direct_recalibration_contract_sha256": "bb79be4c8aa127685549e76f0646a4ae9174e463fcf6cf21fcd05bc083a76bb4",
+    "direct_recalibration_result_sha256": "0c2d3e219f4dce16be40d15ce6a1ccbdb7c5f4f239e88e83a874e42b23242fd2",
+    "git_head": "25ec5bc9beb79f0a713e6d12993281e48d9ea09a",
+    "scale_audit_contract_sha256": "835a8ee86feb6691596552ac4047bc4f02905702d6534282c1f6be190ee69cbd",
+    "schedule_sha256": "cb5e2ab12beecd558efe1aaf8082da54567b63631ce0b982e03934067b36c04e"
+  },
+  "integrity": {
+    "direct_recalibration_result_unchanged": true,
+    "parent_recovery_unchanged": true,
+    "reconstructed_integrity": {
+      "common_direction_result_unchanged": true,
+      "fixed_parameters": {
+        "element_count": 93504164,
+        "exactly_unchanged": true,
+        "leaf_count": 1172,
+        "same_array_objects": true,
+        "same_tree_structure": true
+      },
+      "parent_recovery_unchanged": true,
+      "source_checkpoint_unchanged": true
+    }
+  },
+  "memory_after": {
+    "bytes_in_use": 990802688,
+    "bytes_limit": 25559728128,
+    "num_allocs": 1931914,
+    "peak_bytes_in_use": 4098246656
+  },
+  "next_gate": "freeze_scale_selecting_direct_recalibration_smoke",
+  "policy": {
+    "checkpoint_written": false,
+    "forcing_records_reconstructed": 0,
+    "fresh_validation_values_evaluated": false,
+    "historical_v5_used": false,
+    "optimizer_updates_persisted": 0,
+    "parameter_proposals_persisted": 0,
+    "parent_recovery_modified": false,
+    "sealed_test_read": false,
+    "subdaily_state_scan_steps": 0,
+    "teacher_data_regenerated": false
+  },
+  "reconstruction": {
+    "current_classification": "common_direction_finite_step_rejection",
+    "numeric_differences_reporting_only": true,
+    "predecessor_classification": "common_direction_finite_step_rejection",
+    "updates_accepted": [
+      3,
+      4
+    ],
+    "updates_evaluated": [
+      3,
+      4,
+      5
+    ]
+  },
+  "schema_version": "target_oriented_coupled_gpp_update5_scale_audit_result_v1",
+  "status": "passed",
+  "update_5": {
+    "accepted_scales": [
+      0.25,
+      0.125,
+      0.0625,
+      0.03125
+    ],
+    "scales": [
+      {
+        "evaluation": {
+          "artifact_updates": [
+            965,
+            351,
+            272,
+            363,
+            660,
+            670,
+            548,
+            740
+          ],
+          "hard_gate_passed": true,
+          "label": "direct_recalibration_update_5_post",
+          "records": [
+            {
+              "artifact_update": 965,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 9,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 23,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1983,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.06370054306862052,
+                "reachable_state_anchor_32_teacher_days": 0.0048158509467000656,
+                "seven_day_component_resolved_science": 0.05128012043175934,
+                "thirty_day_component_resolved_science": 0.08248374654276397
+              },
+              "timing_seconds": {
+                "direct": 0.8267633095383644,
+                "seven_day": 2.2013204880058765,
+                "state": 0.724177080206573,
+                "thirty_day": 4.617211359553039,
+                "total": 9.401630726642907
+              }
+            },
+            {
+              "artifact_update": 351,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 12,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 39,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 59,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1999,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.06640534311936153,
+                "reachable_state_anchor_32_teacher_days": 0.010600336739548622,
+                "seven_day_component_resolved_science": 0.11169501490678772,
+                "thirty_day_component_resolved_science": 0.0790689986122724
+              },
+              "timing_seconds": {
+                "direct": 0.8246167730540037,
+                "seven_day": 2.194702514447272,
+                "state": 0.7264534700661898,
+                "thirty_day": 4.617625393904746,
+                "total": 9.392463532276452
+              }
+            },
+            {
+              "artifact_update": 272,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 15,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 39,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 89,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1977,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.07086420113434753,
+                "reachable_state_anchor_32_teacher_days": 0.03601088114235919,
+                "seven_day_component_resolved_science": 0.10281792953593967,
+                "thirty_day_component_resolved_science": 0.04921779980741725
+              },
+              "timing_seconds": {
+                "direct": 0.8276786087080836,
+                "seven_day": 2.195306130684912,
+                "state": 0.7242856463417411,
+                "thirty_day": 4.614502710290253,
+                "total": 9.39378756005317
+              }
+            },
+            {
+              "artifact_update": 363,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 15,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 41,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1970,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.015546183877606852,
+                "reachable_state_anchor_32_teacher_days": 0.004905270537836816,
+                "seven_day_component_resolved_science": 0.13269779035520515,
+                "thirty_day_component_resolved_science": 0.10665944149772821
+              },
+              "timing_seconds": {
+                "direct": 0.8267971547320485,
+                "seven_day": 2.1951659535989165,
+                "state": 0.7188618304207921,
+                "thirty_day": 4.618478135205805,
+                "total": 9.396724118851125
+              }
+            },
+            {
+              "artifact_update": 660,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 10,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 23,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 87,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1985,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.10004935072924911,
+                "reachable_state_anchor_32_teacher_days": 0.07149694792056559,
+                "seven_day_component_resolved_science": 0.05296387649016156,
+                "thirty_day_component_resolved_science": 0.009704458320708886
+              },
+              "timing_seconds": {
+                "direct": 0.8255627574399114,
+                "seven_day": 2.1933746775612235,
+                "state": 0.7221176102757454,
+                "thirty_day": 4.616438829340041,
+                "total": 9.389331713318825
+              }
+            },
+            {
+              "artifact_update": 670,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 11,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 18,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 59,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 2000,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.11796392956566315,
+                "reachable_state_anchor_32_teacher_days": 0.025894439801221615,
+                "seven_day_component_resolved_science": 0.05680916539522309,
+                "thirty_day_component_resolved_science": 0.07112246405657005
+              },
+              "timing_seconds": {
+                "direct": 0.8264477411285043,
+                "seven_day": 2.195063415914774,
+                "state": 0.7160767260938883,
+                "thirty_day": 4.613335360772908,
+                "total": 9.375792414881289
+              }
+            },
+            {
+              "artifact_update": 548,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 16,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 29,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1969,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.01353792811547707,
+                "reachable_state_anchor_32_teacher_days": 0.00714698356633498,
+                "seven_day_component_resolved_science": 0.2028522757658782,
+                "thirty_day_component_resolved_science": 0.11170712924986798
+              },
+              "timing_seconds": {
+                "direct": 0.823651940561831,
+                "seven_day": 2.1935971565544605,
+                "state": 0.7285966277122498,
+                "thirty_day": 4.6140673737972975,
+                "total": 9.391518777236342
+              }
+            },
+            {
+              "artifact_update": 740,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 13,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 31,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1994,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.09299727045425214,
+                "reachable_state_anchor_32_teacher_days": 0.005858494567508539,
+                "seven_day_component_resolved_science": 0.07822242642273296,
+                "thirty_day_component_resolved_science": 0.15858556256549564
+              },
+              "timing_seconds": {
+                "direct": 0.8264405624940991,
+                "seven_day": 2.1912640798836946,
+                "state": 0.7230833973735571,
+                "thirty_day": 4.618735089898109,
+                "total": 9.392531050369143
+              }
+            }
+          ],
+          "source_mean_losses": {
+            "direct_gpp_208_teacher_days": 0.06763309375807224,
+            "reachable_state_anchor_32_teacher_days": 0.020841150652759426,
+            "seven_day_component_resolved_science": 0.09866732491296096,
+            "thirty_day_component_resolved_science": 0.08356870008160305
+          },
+          "weighted_objective": {
+            "joint": 0.14501845715294662,
+            "weighted_sources": {
+              "direct_gpp_208_teacher_days": 0.06763309375807224,
+              "reachable_state_anchor_32_teacher_days": 0.013597340974755331,
+              "seven_day_component_resolved_science": 0.040179905566132816,
+              "thirty_day_component_resolved_science": 0.023608116853986224
+            }
+          }
+        },
+        "finite_step_accepted": false,
+        "hard_gate_passed": true,
+        "parameter_delta_l2": 0.007758973249784634,
+        "scale": 1.0,
+        "source_changes": {
+          "direct_gpp_208_teacher_days": {
+            "after": 0.06763309375807224,
+            "before": 0.04276493332922165,
+            "relative_change": 0.5815082239788729
+          },
+          "reachable_state_anchor_32_teacher_days": {
+            "after": 0.020841150652759426,
+            "before": 0.029228347616384195,
+            "relative_change": -0.2869541950747587
+          },
+          "seven_day_component_resolved_science": {
+            "after": 0.09866732491296096,
+            "before": 0.10950931178965306,
+            "relative_change": -0.09900515946550315
+          },
+          "thirty_day_component_resolved_science": {
+            "after": 0.08356870008160305,
+            "before": 0.09348589116884765,
+            "relative_change": -0.10608222228242825
+          }
+        },
+        "source_losses_after": {
+          "direct_gpp_208_teacher_days": 0.06763309375807224,
+          "reachable_state_anchor_32_teacher_days": 0.020841150652759426,
+          "seven_day_component_resolved_science": 0.09866732491296096,
+          "thirty_day_component_resolved_science": 0.08356870008160305
+        },
+        "weighted_objective_after": {
+          "joint": 0.14501845715294662,
+          "weighted_sources": {
+            "direct_gpp_208_teacher_days": 0.06763309375807224,
+            "reachable_state_anchor_32_teacher_days": 0.013597340974755331,
+            "seven_day_component_resolved_science": 0.040179905566132816,
+            "thirty_day_component_resolved_science": 0.023608116853986224
+          }
+        }
+      },
+      {
+        "evaluation": {
+          "artifact_updates": [
+            965,
+            351,
+            272,
+            363,
+            660,
+            670,
+            548,
+            740
+          ],
+          "hard_gate_passed": true,
+          "label": "update5_common_direct_scale_0.5",
+          "records": [
+            {
+              "artifact_update": 965,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 9,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 23,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1983,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.04929437305911595,
+                "reachable_state_anchor_32_teacher_days": 0.01067738254366457,
+                "seven_day_component_resolved_science": 0.0542795039434757,
+                "thirty_day_component_resolved_science": 0.08588180684513685
+              },
+              "timing_seconds": {
+                "direct": 0.8523399857804179,
+                "seven_day": 2.1885009026154876,
+                "state": 0.7233393955975771,
+                "thirty_day": 4.60641560330987,
+                "total": 9.430386792868376
+              }
+            },
+            {
+              "artifact_update": 351,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 12,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 39,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 59,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1999,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.045927165017771256,
+                "reachable_state_anchor_32_teacher_days": 0.014496390791785479,
+                "seven_day_component_resolved_science": 0.11852953954457628,
+                "thirty_day_component_resolved_science": 0.07865428307793183
+              },
+              "timing_seconds": {
+                "direct": 0.8267253935337067,
+                "seven_day": 2.191230956465006,
+                "state": 0.7215462708845735,
+                "thirty_day": 4.608017736114562,
+                "total": 9.407546726986766
+              }
+            },
+            {
+              "artifact_update": 272,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 15,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 39,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 89,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1977,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.05376942630273933,
+                "reachable_state_anchor_32_teacher_days": 0.03664067642187152,
+                "seven_day_component_resolved_science": 0.10908501807159829,
+                "thirty_day_component_resolved_science": 0.04702179647709281
+              },
+              "timing_seconds": {
+                "direct": 0.8278787927702069,
+                "seven_day": 2.1919415779411793,
+                "state": 0.7190853599458933,
+                "thirty_day": 4.609002179466188,
+                "total": 9.405909024178982
+              }
+            },
+            {
+              "artifact_update": 363,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 15,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 41,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1970,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.010141311643799021,
+                "reachable_state_anchor_32_teacher_days": 0.0049448295508253606,
+                "seven_day_component_resolved_science": 0.1403304771410499,
+                "thirty_day_component_resolved_science": 0.1150270460040605
+              },
+              "timing_seconds": {
+                "direct": 0.8268949491903186,
+                "seven_day": 2.2049354491755366,
+                "state": 0.7212573317810893,
+                "thirty_day": 4.608965057879686,
+                "total": 9.431331030093133
+              }
+            },
+            {
+              "artifact_update": 660,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 10,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 23,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 87,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1985,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.06936797092546623,
+                "reachable_state_anchor_32_teacher_days": 0.07434069929290454,
+                "seven_day_component_resolved_science": 0.05579147284333258,
+                "thirty_day_component_resolved_science": 0.012316136796379221
+              },
+              "timing_seconds": {
+                "direct": 0.8261931408196688,
+                "seven_day": 2.1953979367390275,
+                "state": 0.7167244423180819,
+                "thirty_day": 4.608756959438324,
+                "total": 9.408428529277444
+              }
+            },
+            {
+              "artifact_update": 670,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 11,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 18,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 59,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 2000,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.07390629043347288,
+                "reachable_state_anchor_32_teacher_days": 0.031993427376741615,
+                "seven_day_component_resolved_science": 0.05931385443504132,
+                "thirty_day_component_resolved_science": 0.07491228167698205
+              },
+              "timing_seconds": {
+                "direct": 0.826087050139904,
+                "seven_day": 2.1890374375507236,
+                "state": 0.7238673008978367,
+                "thirty_day": 4.602867873385549,
+                "total": 9.403653054498136
+              }
+            },
+            {
+              "artifact_update": 548,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 16,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 29,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1969,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.013628226291172354,
+                "reachable_state_anchor_32_teacher_days": 0.007689782522039148,
+                "seven_day_component_resolved_science": 0.2159674348521805,
+                "thirty_day_component_resolved_science": 0.12171934113537122
+              },
+              "timing_seconds": {
+                "direct": 0.8295115027576685,
+                "seven_day": 2.1906876489520073,
+                "state": 0.7148292316123843,
+                "thirty_day": 4.617927020415664,
+                "total": 9.430725823156536
+              }
+            },
+            {
+              "artifact_update": 740,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 13,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 31,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1994,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.05792180954055246,
+                "reachable_state_anchor_32_teacher_days": 0.008735663502528974,
+                "seven_day_component_resolved_science": 0.07973731098331246,
+                "thirty_day_component_resolved_science": 0.17254796367684092
+              },
+              "timing_seconds": {
+                "direct": 0.8298893496394157,
+                "seven_day": 2.1922403601929545,
+                "state": 0.7284668423235416,
+                "thirty_day": 4.605944628827274,
+                "total": 9.45711828675121
+              }
+            }
+          ],
+          "source_mean_losses": {
+            "direct_gpp_208_teacher_days": 0.046744571651761185,
+            "reachable_state_anchor_32_teacher_days": 0.02368985650029515,
+            "seven_day_component_resolved_science": 0.10412932647682088,
+            "thirty_day_component_resolved_science": 0.08851008196122442
+          },
+          "weighted_objective": {
+            "joint": 0.12960871655455353,
+            "weighted_sources": {
+              "direct_gpp_208_teacher_days": 0.046744571651761185,
+              "reachable_state_anchor_32_teacher_days": 0.015455915167279295,
+              "seven_day_component_resolved_science": 0.04240417492006088,
+              "thirty_day_component_resolved_science": 0.025004054815452165
+            }
+          }
+        },
+        "finite_step_accepted": false,
+        "hard_gate_passed": true,
+        "parameter_delta_l2": 0.003879486624892317,
+        "scale": 0.5,
+        "source_changes": {
+          "direct_gpp_208_teacher_days": {
+            "after": 0.046744571651761185,
+            "before": 0.04276493332922165,
+            "relative_change": 0.09305844795554062
+          },
+          "reachable_state_anchor_32_teacher_days": {
+            "after": 0.02368985650029515,
+            "before": 0.029228347616384195,
+            "relative_change": -0.18949039435210482
+          },
+          "seven_day_component_resolved_science": {
+            "after": 0.10412932647682088,
+            "before": 0.10950931178965306,
+            "relative_change": -0.04912810814815573
+          },
+          "thirty_day_component_resolved_science": {
+            "after": 0.08851008196122442,
+            "before": 0.09348589116884765,
+            "relative_change": -0.053225242284274374
+          }
+        },
+        "source_losses_after": {
+          "direct_gpp_208_teacher_days": 0.046744571651761185,
+          "reachable_state_anchor_32_teacher_days": 0.02368985650029515,
+          "seven_day_component_resolved_science": 0.10412932647682088,
+          "thirty_day_component_resolved_science": 0.08851008196122442
+        },
+        "weighted_objective_after": {
+          "joint": 0.12960871655455353,
+          "weighted_sources": {
+            "direct_gpp_208_teacher_days": 0.046744571651761185,
+            "reachable_state_anchor_32_teacher_days": 0.015455915167279295,
+            "seven_day_component_resolved_science": 0.04240417492006088,
+            "thirty_day_component_resolved_science": 0.025004054815452165
+          }
+        }
+      },
+      {
+        "evaluation": {
+          "artifact_updates": [
+            965,
+            351,
+            272,
+            363,
+            660,
+            670,
+            548,
+            740
+          ],
+          "hard_gate_passed": true,
+          "label": "update5_common_direct_scale_0.25",
+          "records": [
+            {
+              "artifact_update": 965,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 9,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 23,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1983,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.04457788160697616,
+                "reachable_state_anchor_32_teacher_days": 0.014699445223419658,
+                "seven_day_component_resolved_science": 0.05583184527827226,
+                "thirty_day_component_resolved_science": 0.0894827640860341
+              },
+              "timing_seconds": {
+                "direct": 0.8282862482592463,
+                "seven_day": 2.2427843576297164,
+                "state": 0.7731144204735756,
+                "thirty_day": 4.662338633090258,
+                "total": 9.629051987081766
+              }
+            },
+            {
+              "artifact_update": 351,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 12,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 39,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 59,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1999,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.04130409286166444,
+                "reachable_state_anchor_32_teacher_days": 0.01791265024589305,
+                "seven_day_component_resolved_science": 0.121884233034525,
+                "thirty_day_component_resolved_science": 0.07859168593528132
+              },
+              "timing_seconds": {
+                "direct": 0.827907339669764,
+                "seven_day": 2.196156215853989,
+                "state": 0.7324197310954332,
+                "thirty_day": 4.624701177701354,
+                "total": 9.5187210701406
+              }
+            },
+            {
+              "artifact_update": 272,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 15,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 39,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 89,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1977,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.04957244208673637,
+                "reachable_state_anchor_32_teacher_days": 0.03741841456762038,
+                "seven_day_component_resolved_science": 0.11165764038901259,
+                "thirty_day_component_resolved_science": 0.04632084869206969
+              },
+              "timing_seconds": {
+                "direct": 0.8282212950289249,
+                "seven_day": 2.1957966098561883,
+                "state": 0.7393309213221073,
+                "thirty_day": 4.653554393909872,
+                "total": 9.520036218687892
+              }
+            },
+            {
+              "artifact_update": 363,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 15,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 41,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1970,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.00903398560602875,
+                "reachable_state_anchor_32_teacher_days": 0.00535822704169327,
+                "seven_day_component_resolved_science": 0.1443309051895832,
+                "thirty_day_component_resolved_science": 0.11899129864912046
+              },
+              "timing_seconds": {
+                "direct": 0.8299060333520174,
+                "seven_day": 2.2010012855753303,
+                "state": 0.7362760016694665,
+                "thirty_day": 4.612442663870752,
+                "total": 9.532576642930508
+              }
+            },
+            {
+              "artifact_update": 660,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 10,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 23,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 87,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1985,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.06943721623607652,
+                "reachable_state_anchor_32_teacher_days": 0.07810692740286607,
+                "seven_day_component_resolved_science": 0.05715221522484156,
+                "thirty_day_component_resolved_science": 0.01396624185054322
+              },
+              "timing_seconds": {
+                "direct": 0.8265937836840749,
+                "seven_day": 2.19408861361444,
+                "state": 0.7311704475432634,
+                "thirty_day": 4.64569104462862,
+                "total": 9.528098722919822
+              }
+            },
+            {
+              "artifact_update": 670,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 11,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 18,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 59,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 2000,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.0599452759444798,
+                "reachable_state_anchor_32_teacher_days": 0.03686221928626188,
+                "seven_day_component_resolved_science": 0.06063841663292243,
+                "thirty_day_component_resolved_science": 0.07690118702372406
+              },
+              "timing_seconds": {
+                "direct": 0.8304277323186398,
+                "seven_day": 2.19233263656497,
+                "state": 0.7255483493208885,
+                "thirty_day": 4.610088912770152,
+                "total": 9.530776866711676
+              }
+            },
+            {
+              "artifact_update": 548,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 16,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 29,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1969,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.013731857215871696,
+                "reachable_state_anchor_32_teacher_days": 0.007951420606175288,
+                "seven_day_component_resolved_science": 0.2215565610767273,
+                "thirty_day_component_resolved_science": 0.1238911832230333
+              },
+              "timing_seconds": {
+                "direct": 0.8323974190279841,
+                "seven_day": 2.1886260341852903,
+                "state": 0.7310705007985234,
+                "thirty_day": 4.603592675179243,
+                "total": 9.451873912476003
+              }
+            },
+            {
+              "artifact_update": 740,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 13,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 31,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1994,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.053466827950146414,
+                "reachable_state_anchor_32_teacher_days": 0.011107397687031964,
+                "seven_day_component_resolved_science": 0.08110891032018908,
+                "thirty_day_component_resolved_science": 0.1802812902248149
+              },
+              "timing_seconds": {
+                "direct": 0.8256298946216702,
+                "seven_day": 2.1960966074839234,
+                "state": 0.724280777387321,
+                "thirty_day": 4.606344971805811,
+                "total": 9.442603973671794
+              }
+            }
+          ],
+          "source_mean_losses": {
+            "direct_gpp_208_teacher_days": 0.042633697438497514,
+            "reachable_state_anchor_32_teacher_days": 0.02617708775762019,
+            "seven_day_component_resolved_science": 0.10677009089325917,
+            "thirty_day_component_resolved_science": 0.09105331246057763
+          },
+          "weighted_objective": {
+            "joint": 0.12891442999907257,
+            "weighted_sources": {
+              "direct_gpp_208_teacher_days": 0.042633697438497514,
+              "reachable_state_anchor_32_teacher_days": 0.017078653376526882,
+              "seven_day_component_resolved_science": 0.043479562997810986,
+              "thirty_day_component_resolved_science": 0.0257225161862372
+            }
+          }
+        },
+        "finite_step_accepted": true,
+        "hard_gate_passed": true,
+        "parameter_delta_l2": 0.0019397433124461584,
+        "scale": 0.25,
+        "source_changes": {
+          "direct_gpp_208_teacher_days": {
+            "after": 0.042633697438497514,
+            "before": 0.04276493332922165,
+            "relative_change": -0.0030687734203588505
+          },
+          "reachable_state_anchor_32_teacher_days": {
+            "after": 0.02617708775762019,
+            "before": 0.029228347616384195,
+            "relative_change": -0.10439385417236503
+          },
+          "seven_day_component_resolved_science": {
+            "after": 0.10677009089325917,
+            "before": 0.10950931178965306,
+            "relative_change": -0.025013588813848287
+          },
+          "thirty_day_component_resolved_science": {
+            "after": 0.09105331246057763,
+            "before": 0.09348589116884765,
+            "relative_change": -0.026020811032078244
+          }
+        },
+        "source_losses_after": {
+          "direct_gpp_208_teacher_days": 0.042633697438497514,
+          "reachable_state_anchor_32_teacher_days": 0.02617708775762019,
+          "seven_day_component_resolved_science": 0.10677009089325917,
+          "thirty_day_component_resolved_science": 0.09105331246057763
+        },
+        "weighted_objective_after": {
+          "joint": 0.12891442999907257,
+          "weighted_sources": {
+            "direct_gpp_208_teacher_days": 0.042633697438497514,
+            "reachable_state_anchor_32_teacher_days": 0.017078653376526882,
+            "seven_day_component_resolved_science": 0.043479562997810986,
+            "thirty_day_component_resolved_science": 0.0257225161862372
+          }
+        }
+      },
+      {
+        "evaluation": {
+          "artifact_updates": [
+            965,
+            351,
+            272,
+            363,
+            660,
+            670,
+            548,
+            740
+          ],
+          "hard_gate_passed": true,
+          "label": "update5_common_direct_scale_0.125",
+          "records": [
+            {
+              "artifact_update": 965,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 9,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 23,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1983,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.04322670618988138,
+                "reachable_state_anchor_32_teacher_days": 0.016748355411340288,
+                "seven_day_component_resolved_science": 0.05661652264849074,
+                "thirty_day_component_resolved_science": 0.0885985536364913
+              },
+              "timing_seconds": {
+                "direct": 0.8262087153270841,
+                "seven_day": 2.187432606704533,
+                "state": 0.7252217773348093,
+                "thirty_day": 4.6084394827485085,
+                "total": 9.418333483859897
+              }
+            },
+            {
+              "artifact_update": 351,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 12,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 39,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 59,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1999,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.040522116746755585,
+                "reachable_state_anchor_32_teacher_days": 0.01992113741757657,
+                "seven_day_component_resolved_science": 0.12354853704727604,
+                "thirty_day_component_resolved_science": 0.07868403781206991
+              },
+              "timing_seconds": {
+                "direct": 0.8240587776526809,
+                "seven_day": 2.1897743865847588,
+                "state": 0.7172185154631734,
+                "thirty_day": 4.605115696787834,
+                "total": 9.412966151721776
+              }
+            },
+            {
+              "artifact_update": 272,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 15,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 39,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 89,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1977,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.04888656320092619,
+                "reachable_state_anchor_32_teacher_days": 0.0379205831013179,
+                "seven_day_component_resolved_science": 0.11141072529329812,
+                "thirty_day_component_resolved_science": 0.04587769692578442
+              },
+              "timing_seconds": {
+                "direct": 0.8258578712120652,
+                "seven_day": 2.1892684726044536,
+                "state": 0.7171829463914037,
+                "thirty_day": 4.6029696790501475,
+                "total": 9.39637432899326
+              }
+            },
+            {
+              "artifact_update": 363,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 15,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 41,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1970,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.008809394658811346,
+                "reachable_state_anchor_32_teacher_days": 0.005641837990771464,
+                "seven_day_component_resolved_science": 0.1463764229495704,
+                "thirty_day_component_resolved_science": 0.12153664598792348
+              },
+              "timing_seconds": {
+                "direct": 0.833810580894351,
+                "seven_day": 2.1988987680524588,
+                "state": 0.7284801304340363,
+                "thirty_day": 4.608435063622892,
+                "total": 9.432858626358211
+              }
+            },
+            {
+              "artifact_update": 660,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 10,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 23,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 87,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1985,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.07231045215985965,
+                "reachable_state_anchor_32_teacher_days": 0.08055623358123187,
+                "seven_day_component_resolved_science": 0.05782923607228775,
+                "thirty_day_component_resolved_science": 0.014850538974718216
+              },
+              "timing_seconds": {
+                "direct": 0.8227715203538537,
+                "seven_day": 2.1876861779019237,
+                "state": 0.7227667374536395,
+                "thirty_day": 4.601814240217209,
+                "total": 9.390576507896185
+              }
+            },
+            {
+              "artifact_update": 670,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 11,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 18,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 59,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 2000,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.056527088733044545,
+                "reachable_state_anchor_32_teacher_days": 0.039731911948675536,
+                "seven_day_component_resolved_science": 0.061323853888309486,
+                "thirty_day_component_resolved_science": 0.07823178989910519
+              },
+              "timing_seconds": {
+                "direct": 0.8218424636870623,
+                "seven_day": 2.1885466063395143,
+                "state": 0.7199611440300941,
+                "thirty_day": 4.602767067961395,
+                "total": 9.380061751231551
+              }
+            },
+            {
+              "artifact_update": 548,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 16,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 29,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1969,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.013795752148528326,
+                "reachable_state_anchor_32_teacher_days": 0.00807455319105625,
+                "seven_day_component_resolved_science": 0.2248817695954196,
+                "thirty_day_component_resolved_science": 0.125657690536857
+              },
+              "timing_seconds": {
+                "direct": 0.8242985494434834,
+                "seven_day": 2.1878713285550475,
+                "state": 0.7210584627464414,
+                "thirty_day": 4.606060984544456,
+                "total": 9.382923949509859
+              }
+            },
+            {
+              "artifact_update": 740,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 13,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 31,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1994,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.05347672329475933,
+                "reachable_state_anchor_32_teacher_days": 0.01254087817963467,
+                "seven_day_component_resolved_science": 0.08193100778073747,
+                "thirty_day_component_resolved_science": 0.18375877336937566
+              },
+              "timing_seconds": {
+                "direct": 0.8228348987177014,
+                "seven_day": 2.189617022871971,
+                "state": 0.7291779052466154,
+                "thirty_day": 4.607020165771246,
+                "total": 9.395946513861418
+              }
+            }
+          ],
+          "source_mean_losses": {
+            "direct_gpp_208_teacher_days": 0.042194349641570796,
+            "reachable_state_anchor_32_teacher_days": 0.02764193635270057,
+            "seven_day_component_resolved_science": 0.10798975940942371,
+            "thirty_day_component_resolved_science": 0.09214946589279065
+          },
+          "weighted_objective": {
+            "joint": 0.13023713339741388,
+            "weighted_sources": {
+              "direct_gpp_208_teacher_days": 0.042194349641570796,
+              "reachable_state_anchor_32_teacher_days": 0.018034360964632724,
+              "seven_day_component_resolved_science": 0.043976243797099974,
+              "thirty_day_component_resolved_science": 0.026032178994110408
+            }
+          }
+        },
+        "finite_step_accepted": true,
+        "hard_gate_passed": true,
+        "parameter_delta_l2": 0.0009698716562230792,
+        "scale": 0.125,
+        "source_changes": {
+          "direct_gpp_208_teacher_days": {
+            "after": 0.042194349641570796,
+            "before": 0.04276493332922165,
+            "relative_change": -0.01334232613572129
+          },
+          "reachable_state_anchor_32_teacher_days": {
+            "after": 0.02764193635270057,
+            "before": 0.029228347616384195,
+            "relative_change": -0.05427646080116928
+          },
+          "seven_day_component_resolved_science": {
+            "after": 0.10798975940942371,
+            "before": 0.10950931178965306,
+            "relative_change": -0.013876010682526538
+          },
+          "thirty_day_component_resolved_science": {
+            "after": 0.09214946589279065,
+            "before": 0.09348589116884765,
+            "relative_change": -0.014295475599021048
+          }
+        },
+        "source_losses_after": {
+          "direct_gpp_208_teacher_days": 0.042194349641570796,
+          "reachable_state_anchor_32_teacher_days": 0.02764193635270057,
+          "seven_day_component_resolved_science": 0.10798975940942371,
+          "thirty_day_component_resolved_science": 0.09214946589279065
+        },
+        "weighted_objective_after": {
+          "joint": 0.13023713339741388,
+          "weighted_sources": {
+            "direct_gpp_208_teacher_days": 0.042194349641570796,
+            "reachable_state_anchor_32_teacher_days": 0.018034360964632724,
+            "seven_day_component_resolved_science": 0.043976243797099974,
+            "thirty_day_component_resolved_science": 0.026032178994110408
+          }
+        }
+      },
+      {
+        "evaluation": {
+          "artifact_updates": [
+            965,
+            351,
+            272,
+            363,
+            660,
+            670,
+            548,
+            740
+          ],
+          "hard_gate_passed": true,
+          "label": "update5_common_direct_scale_0.0625",
+          "records": [
+            {
+              "artifact_update": 965,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 9,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 23,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1983,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.042843835553089696,
+                "reachable_state_anchor_32_teacher_days": 0.017762968356021674,
+                "seven_day_component_resolved_science": 0.05701240337230722,
+                "thirty_day_component_resolved_science": 0.0915710654750287
+              },
+              "timing_seconds": {
+                "direct": 0.823930892162025,
+                "seven_day": 2.1898676762357354,
+                "state": 0.7247822871431708,
+                "thirty_day": 4.6054951483383775,
+                "total": 9.38982393220067
+              }
+            },
+            {
+              "artifact_update": 351,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 12,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 39,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 59,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1999,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.04049730760090053,
+                "reachable_state_anchor_32_teacher_days": 0.020984304045517793,
+                "seven_day_component_resolved_science": 0.12438687770198675,
+                "thirty_day_component_resolved_science": 0.07870779864694014
+              },
+              "timing_seconds": {
+                "direct": 0.8240513186901808,
+                "seven_day": 2.1887986725196242,
+                "state": 0.725009280256927,
+                "thirty_day": 4.602366603910923,
+                "total": 9.403754054568708
+              }
+            },
+            {
+              "artifact_update": 272,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 15,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 39,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 89,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1977,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.04893770312405589,
+                "reachable_state_anchor_32_teacher_days": 0.03820115525618657,
+                "seven_day_component_resolved_science": 0.11240143012975723,
+                "thirty_day_component_resolved_science": 0.04566675561736633
+              },
+              "timing_seconds": {
+                "direct": 0.822347984649241,
+                "seven_day": 2.1888434756547213,
+                "state": 0.7184330355376005,
+                "thirty_day": 4.60230949241668,
+                "total": 9.386505912058055
+              }
+            },
+            {
+              "artifact_update": 363,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 15,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 41,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1970,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.008764804204598728,
+                "reachable_state_anchor_32_teacher_days": 0.005799953289972899,
+                "seven_day_component_resolved_science": 0.14741191526102906,
+                "thirty_day_component_resolved_science": 0.12282361997479711
+              },
+              "timing_seconds": {
+                "direct": 0.825939953327179,
+                "seven_day": 2.1901466185227036,
+                "state": 0.7185353171080351,
+                "thirty_day": 4.604329124093056,
+                "total": 9.392005231231451
+              }
+            },
+            {
+              "artifact_update": 660,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 10,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 23,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 87,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1985,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.07430395026876596,
+                "reachable_state_anchor_32_teacher_days": 0.08188815026965311,
+                "seven_day_component_resolved_science": 0.058169481916256614,
+                "thirty_day_component_resolved_science": 0.01504394016078298
+              },
+              "timing_seconds": {
+                "direct": 0.825694352388382,
+                "seven_day": 2.192851067520678,
+                "state": 0.7228638688102365,
+                "thirty_day": 4.610196250490844,
+                "total": 9.401449502445757
+              }
+            },
+            {
+              "artifact_update": 670,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 11,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 18,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 59,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 2000,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.05579454378962481,
+                "reachable_state_anchor_32_teacher_days": 0.04127103308498375,
+                "seven_day_component_resolved_science": 0.061672985178722925,
+                "thirty_day_component_resolved_science": 0.07884529791264808
+              },
+              "timing_seconds": {
+                "direct": 0.8269877154380083,
+                "seven_day": 2.193509061820805,
+                "state": 0.713365601375699,
+                "thirty_day": 4.622647479176521,
+                "total": 9.396490621380508
+              }
+            },
+            {
+              "artifact_update": 548,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 16,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 29,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1969,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.013830285288481365,
+                "reachable_state_anchor_32_teacher_days": 0.008132292797957215,
+                "seven_day_component_resolved_science": 0.22656176411724108,
+                "thirty_day_component_resolved_science": 0.12614084003417822
+              },
+              "timing_seconds": {
+                "direct": 0.8239396950230002,
+                "seven_day": 2.1879455177113414,
+                "state": 0.7199733825400472,
+                "thirty_day": 4.6068385085090995,
+                "total": 9.380753071047366
+              }
+            },
+            {
+              "artifact_update": 740,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 13,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 31,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1994,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.053883172774595076,
+                "reachable_state_anchor_32_teacher_days": 0.013314425738643772,
+                "seven_day_component_resolved_science": 0.08237087407991175,
+                "thirty_day_component_resolved_science": 0.1854888178837269
+              },
+              "timing_seconds": {
+                "direct": 0.8226053845137358,
+                "seven_day": 2.188353167846799,
+                "state": 0.7250857073813677,
+                "thirty_day": 4.605358951725066,
+                "total": 9.38088336121291
+              }
+            }
+          ],
+          "source_mean_losses": {
+            "direct_gpp_208_teacher_days": 0.04235695032551401,
+            "reachable_state_anchor_32_teacher_days": 0.028419285354867097,
+            "seven_day_component_resolved_science": 0.10874846646965158,
+            "thirty_day_component_resolved_science": 0.09303601696318356
+          },
+          "weighted_objective": {
+            "joint": 0.13146631351760857,
+            "weighted_sources": {
+              "direct_gpp_208_teacher_days": 0.04235695032551401,
+              "reachable_state_anchor_32_teacher_days": 0.01854152487390779,
+              "seven_day_component_resolved_science": 0.04428520908078641,
+              "thirty_day_component_resolved_science": 0.026282629237400358
+            }
+          }
+        },
+        "finite_step_accepted": true,
+        "hard_gate_passed": true,
+        "parameter_delta_l2": 0.0004849358281115396,
+        "scale": 0.0625,
+        "source_changes": {
+          "direct_gpp_208_teacher_days": {
+            "after": 0.04235695032551401,
+            "before": 0.04276493332922165,
+            "relative_change": -0.009540129539471554
+          },
+          "reachable_state_anchor_32_teacher_days": {
+            "after": 0.028419285354867097,
+            "before": 0.029228347616384195,
+            "relative_change": -0.027680738991333616
+          },
+          "seven_day_component_resolved_science": {
+            "after": 0.10874846646965158,
+            "before": 0.10950931178965306,
+            "relative_change": -0.006947768254291668
+          },
+          "thirty_day_component_resolved_science": {
+            "after": 0.09303601696318356,
+            "before": 0.09348589116884765,
+            "relative_change": -0.004812214977461729
+          }
+        },
+        "source_losses_after": {
+          "direct_gpp_208_teacher_days": 0.04235695032551401,
+          "reachable_state_anchor_32_teacher_days": 0.028419285354867097,
+          "seven_day_component_resolved_science": 0.10874846646965158,
+          "thirty_day_component_resolved_science": 0.09303601696318356
+        },
+        "weighted_objective_after": {
+          "joint": 0.13146631351760857,
+          "weighted_sources": {
+            "direct_gpp_208_teacher_days": 0.04235695032551401,
+            "reachable_state_anchor_32_teacher_days": 0.01854152487390779,
+            "seven_day_component_resolved_science": 0.04428520908078641,
+            "thirty_day_component_resolved_science": 0.026282629237400358
+          }
+        }
+      },
+      {
+        "evaluation": {
+          "artifact_updates": [
+            965,
+            351,
+            272,
+            363,
+            660,
+            670,
+            548,
+            740
+          ],
+          "hard_gate_passed": true,
+          "label": "update5_common_direct_scale_0.03125",
+          "records": [
+            {
+              "artifact_update": 965,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 9,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 23,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1983,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.04272827492534221,
+                "reachable_state_anchor_32_teacher_days": 0.01826524246069831,
+                "seven_day_component_resolved_science": 0.05721136250754573,
+                "thirty_day_component_resolved_science": 0.08942462706092537
+              },
+              "timing_seconds": {
+                "direct": 0.8245470337569714,
+                "seven_day": 2.183171059936285,
+                "state": 0.7177991028875113,
+                "thirty_day": 4.602841322310269,
+                "total": 9.364764566533267
+              }
+            },
+            {
+              "artifact_update": 351,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 12,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 39,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 59,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1999,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.04057688345399265,
+                "reachable_state_anchor_32_teacher_days": 0.021535473321208684,
+                "seven_day_component_resolved_science": 0.12481146548835714,
+                "thirty_day_component_resolved_science": 0.07872293373483986
+              },
+              "timing_seconds": {
+                "direct": 0.8242887472733855,
+                "seven_day": 2.185987887904048,
+                "state": 0.7190442206338048,
+                "thirty_day": 4.606260878965259,
+                "total": 9.37342686764896
+              }
+            },
+            {
+              "artifact_update": 272,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 15,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 39,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 89,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1977,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.04906534130290665,
+                "reachable_state_anchor_32_teacher_days": 0.0383448555425448,
+                "seven_day_component_resolved_science": 0.11288670432096867,
+                "thirty_day_component_resolved_science": 0.04556393824658151
+              },
+              "timing_seconds": {
+                "direct": 0.825902852229774,
+                "seven_day": 2.185933100990951,
+                "state": 0.7222801614552736,
+                "thirty_day": 4.604248940944672,
+                "total": 9.378285491839051
+              }
+            },
+            {
+              "artifact_update": 363,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 15,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 41,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1970,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.008757585454867794,
+                "reachable_state_anchor_32_teacher_days": 0.005881277230446335,
+                "seven_day_component_resolved_science": 0.14793493603549182,
+                "thirty_day_component_resolved_science": 0.12347069924530922
+              },
+              "timing_seconds": {
+                "direct": 0.82497638463974,
+                "seven_day": 2.19586022477597,
+                "state": 0.7242135293781757,
+                "thirty_day": 4.603738516569138,
+                "total": 9.395314105786383
+              }
+            },
+            {
+              "artifact_update": 660,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 10,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 23,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 87,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1985,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.07542324336452878,
+                "reachable_state_anchor_32_teacher_days": 0.08258423893876268,
+                "seven_day_component_resolved_science": 0.05833976788076776,
+                "thirty_day_component_resolved_science": 0.015276312520610931
+              },
+              "timing_seconds": {
+                "direct": 0.8226460013538599,
+                "seven_day": 2.184257715009153,
+                "state": 0.7185372756794095,
+                "thirty_day": 4.6059894217178226,
+                "total": 9.37428533937782
+              }
+            },
+            {
+              "artifact_update": 670,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 11,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 18,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 59,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 2000,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.055676299141833446,
+                "reachable_state_anchor_32_teacher_days": 0.042066465317020574,
+                "seven_day_component_resolved_science": 0.06184919315911074,
+                "thirty_day_component_resolved_science": 0.07918655799492795
+              },
+              "timing_seconds": {
+                "direct": 0.8285470306873322,
+                "seven_day": 2.187244393862784,
+                "state": 0.7202573856338859,
+                "thirty_day": 4.602499097585678,
+                "total": 9.389156559482217
+              }
+            },
+            {
+              "artifact_update": 548,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 16,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 29,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1969,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.013848157344681875,
+                "reachable_state_anchor_32_teacher_days": 0.00815844188657858,
+                "seven_day_component_resolved_science": 0.22740570688046233,
+                "thirty_day_component_resolved_science": 0.1266762345350037
+              },
+              "timing_seconds": {
+                "direct": 0.8255064124241471,
+                "seven_day": 2.187904592603445,
+                "state": 0.718076815828681,
+                "thirty_day": 4.605872018262744,
+                "total": 9.375349939800799
+              }
+            },
+            {
+              "artifact_update": 740,
+              "hard_counts": {
+                "one_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 13,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "seven_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 31,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                },
+                "thirty_day": {
+                  "budget_failure": 0,
+                  "declared_dynamic_state_mask_mismatch": 60,
+                  "discrete_mismatch": 0,
+                  "prediction_nonfinite": 0,
+                  "state_nonfinite": 0,
+                  "stock_negative": 0,
+                  "unexpected_state_mask_mismatch": 0
+                }
+              },
+              "runtime_year": 1994,
+              "source_losses": {
+                "direct_gpp_208_teacher_days": 0.05417013340839419,
+                "reachable_state_anchor_32_teacher_days": 0.013724458848407476,
+                "seven_day_component_resolved_science": 0.08259767941069318,
+                "thirty_day_component_resolved_science": 0.18649861502833184
+              },
+              "timing_seconds": {
+                "direct": 0.8253952637314796,
+                "seven_day": 2.1899952832609415,
+                "state": 0.7200677627697587,
+                "thirty_day": 4.6108767259866,
+                "total": 9.383812624029815
+              }
+            }
+          ],
+          "source_mean_losses": {
+            "direct_gpp_208_teacher_days": 0.04253073979956845,
+            "reachable_state_anchor_32_teacher_days": 0.028820056693208432,
+            "seven_day_component_resolved_science": 0.10912960196042468,
+            "thirty_day_component_resolved_science": 0.09310248979581628
+          },
+          "weighted_objective": {
+            "joint": 0.13207556410158716,
+            "weighted_sources": {
+              "direct_gpp_208_teacher_days": 0.04253073979956845,
+              "reachable_state_anchor_32_teacher_days": 0.01880299913850722,
+              "seven_day_component_resolved_science": 0.04444041738344054,
+              "thirty_day_component_resolved_science": 0.026301407780070958
+            }
+          }
+        },
+        "finite_step_accepted": true,
+        "hard_gate_passed": true,
+        "parameter_delta_l2": 0.0002424679140557698,
+        "scale": 0.03125,
+        "source_changes": {
+          "direct_gpp_208_teacher_days": {
+            "after": 0.04253073979956845,
+            "before": 0.04276493332922165,
+            "relative_change": -0.005476298252362069
+          },
+          "reachable_state_anchor_32_teacher_days": {
+            "after": 0.028820056693208432,
+            "before": 0.029228347616384195,
+            "relative_change": -0.013969004629837259
+          },
+          "seven_day_component_resolved_science": {
+            "after": 0.10912960196042468,
+            "before": 0.10950931178965306,
+            "relative_change": -0.003467374810625583
+          },
+          "thirty_day_component_resolved_science": {
+            "after": 0.09310248979581628,
+            "before": 0.09348589116884765,
+            "relative_change": -0.004101168296496084
+          }
+        },
+        "source_losses_after": {
+          "direct_gpp_208_teacher_days": 0.04253073979956845,
+          "reachable_state_anchor_32_teacher_days": 0.028820056693208432,
+          "seven_day_component_resolved_science": 0.10912960196042468,
+          "thirty_day_component_resolved_science": 0.09310248979581628
+        },
+        "weighted_objective_after": {
+          "joint": 0.13207556410158716,
+          "weighted_sources": {
+            "direct_gpp_208_teacher_days": 0.04253073979956845,
+            "reachable_state_anchor_32_teacher_days": 0.01880299913850722,
+            "seven_day_component_resolved_science": 0.04444041738344054,
+            "thirty_day_component_resolved_science": 0.026301407780070958
+          }
+        }
+      }
+    ]
+  }
+}

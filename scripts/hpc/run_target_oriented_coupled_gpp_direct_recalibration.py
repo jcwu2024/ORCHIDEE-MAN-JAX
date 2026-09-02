@@ -650,6 +650,7 @@ def run(
             "context": context,
             "initialized_parameters": initialized_parameters,
             "steps": steps,
+            "gradient_steps": gradient_steps,
             "direct_steps": direct_steps,
             "state_steps": state_steps,
             "layout": layout,

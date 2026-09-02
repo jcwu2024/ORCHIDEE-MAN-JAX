@@ -989,6 +989,30 @@ static checks pass. The active gate is one free-`gln01` execution; paid
 training and validation remain closed. See
 [`target_oriented_coupled_gpp_update5_scale_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update5_scale_audit_v1.md).
 
+The free execution completed at commit `25ec5bc` in `2,696.660` seconds;
+report SHA256 is `2199a0b7...5081`. The classification is
+`bounded_direct_finite_step`: scales `1/4`, `1/8`, `1/16`, and `1/32` pass,
+while `1/2` is rejected because GPP worsens `9.3058%`. At the largest accepted
+scale `1/4`, GPP/state/7-day/30-day improve
+`0.3069%/10.4394%/2.5014%/2.6021%`, and weighted loss improves `2.9544%`.
+All physical and nonfinite gates pass; no parameters or checkpoint are
+retained. The active gate is a frozen no-checkpoint scale-selecting
+direct-recalibration smoke with per-update direction recomputation and
+largest-passing-scale selection. Paid training and validation remain closed.
+See
+[`target_oriented_coupled_gpp_update5_scale_audit_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update5_scale_audit_result_20260902.md).
+
+The next scale-selecting smoke is frozen and locally qualified at contract
+SHA256 `3b7109fc...8a5`. It reconstructs the selected update-5 `1/4` state and
+continues through new updates 6 and 7. Each update recomputes the four-source
+minimum-norm direction, evaluates the frozen scales in descending order, and
+applies only the largest passing scale in memory. It stops on the first state
+with no common direction or no accepted scale and writes no checkpoint.
+Forty-two coupled-GPP/reachability tests plus all static checks pass. The
+active gate is one free-`gln01` execution with a 120-minute timeout; paid
+training and validation remain closed. See
+[`target_oriented_coupled_gpp_scale_selecting_recalibration_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selecting_recalibration_smoke_v1.md).
+
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
 The exact-key-set repair and JIT regression were subsequently exercised by

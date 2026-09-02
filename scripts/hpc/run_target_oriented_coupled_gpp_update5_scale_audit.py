@@ -23,7 +23,7 @@ from scripts.hpc.run_target_oriented_coupled_gpp_direct_recalibration import (
 from scripts.hpc.run_target_oriented_coupled_gpp_direct_recalibration import (
     run as _run_smoke,
 )
-from scripts.hpc.run_target_oriented_coupled_gpp_update2_geometry import _evaluate_scales
+from scripts.hpc.run_target_oriented_coupled_gpp_update2_geometry import _evaluate_scales, _scaled_parameters
 
 SCHEMA_VERSION = "target_oriented_coupled_gpp_update5_scale_audit_result_v1"
 
@@ -51,7 +51,12 @@ def _load_smoke_result(path: Path, contract: Any) -> Mapping[str, Any]:
     return report
 
 
-def run(args: Any) -> Mapping[str, Any]:
+def run(
+    args: Any,
+    *,
+    write_output: bool = True,
+    return_internal: bool = False,
+) -> Mapping[str, Any] | tuple[Mapping[str, Any], Mapping[str, Any]]:
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
@@ -146,7 +151,23 @@ def run(args: Any) -> Mapping[str, Any]:
         "elapsed_seconds": time.perf_counter() - started,
         "next_gate": contract.payload["next_gate"]["on_bounded_finite_step" if passed else "on_no_bounded_finite_step"],
     }
-    _atomic_json(output, report)
+    if write_output:
+        _atomic_json(output, report)
+    if return_internal:
+        if not accepted_scales:
+            raise RuntimeError("coupled GPP update-5 scale audit has no selected in-memory state")
+        selected_scale = max(accepted_scales)
+        selected_trainable = _scaled_parameters(
+            internal["context"]["runtime"]["jax"],
+            internal["before_trainable"],
+            internal["proposed_trainable"],
+            selected_scale,
+        )
+        return report, internal | {
+            "selected_scale": selected_scale,
+            "selected_trainable": selected_trainable,
+            "scale_records": scales,
+        }
     return report
 
 
