@@ -388,9 +388,13 @@ schedule and bounded-stage contract were then frozen, and the corrected
 production-equivalent free-`gln01` runner admission passed. Paid job `14903328`
 retained update 1, then stopped scientifically when the update-2 proposal
 improved the weighted objective, state, and 7/30-day losses but regressed
-direct GPP by `2.63633%`. No milestone checkpoint exists. The active gate is a
-zero-training audit of the inherited AdamW displacement and bounded step scales
-at the exact update-1 recovery state. Fresh-target tuning, continued training,
+direct GPP by `2.63633%`. No milestone checkpoint exists. A zero-training
+audit then proves that inherited update-1 AdamW moments rotate the update-2
+displacement slightly against direct GPP; no inherited scale passes. Reset
+AdamW is a common descent direction and its full step improves all four
+sources plus the weighted objective. The active gate is a
+fresh-moments-per-macro-update bounded-training amendment and discarded
+consecutive-update free-GPU admission. Fresh-target tuning, paid continuation,
 365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
 See `NEXT_STEPS.md` for the exact current boundary.
 

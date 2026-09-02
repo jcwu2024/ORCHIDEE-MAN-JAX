@@ -2025,6 +2025,19 @@ inherited and zero-moment AdamW displacements, and evaluates each on the fixed
 gate is the corrected contract freeze and free-`gln01` rerun. See
 [`target_oriented_coupled_gpp_update2_geometry_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update2_geometry_audit_v1.md).
 
+The corrected audit completed at commit `b7697f5`; report SHA256 is
+`09209273...b60956`. The inherited AdamW direction has direct-GPP cosine
+`-0.00493710`, and none of its five scales passes. Reset AdamW has positive
+cosine with all four source gradients; its full-scale proposal improves direct
+GPP, state, 7-day, 30-day, and weighted losses by
+`4.04281%/2.91495%/0.609099%/0.345835%/1.86634%` and passes every hard gate.
+Full scale and `1/16` pass while intermediate scales fail, so scalar
+backtracking is not supported. The active gate is to freeze and locally
+implement a fresh-moments-per-macro-update bounded-training amendment, then
+run one discarded consecutive-update free-GPU admission. Paid continuation
+and fresh validation remain closed. See
+[`target_oriented_coupled_gpp_update2_geometry_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update2_geometry_result_20260902.md).
+
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT
 repair was exercised by the successful calibration job and is regression

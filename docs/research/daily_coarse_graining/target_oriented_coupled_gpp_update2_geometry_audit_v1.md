@@ -2,7 +2,7 @@
 
 Date: 2026-09-02
 
-Status: frozen zero-training audit; local implementation accepted
+Status: completed accepted zero-training audit
 
 Machine contract SHA256:
 `7585cc5b46a76fb19d08703c8e88839f8758258888a1f302d5448dbf7e79f198`.
@@ -69,5 +69,7 @@ gradient and inherited scale-one forward, then stopped because the original
 contract incorrectly made a `1e-10` numeric-reference comparison fatal. No
 proposal, recovery, checkpoint, or report was written. The corrected local
 contract, classification tests, runner compilation, and shell syntax checks
-must pass before the bounded free-`gln01` rerun; no paid partition is
-authorized.
+passed before the bounded free-`gln01` rerun. The corrected execution completed
+at commit `b7697f5`; the accepted result is recorded in
+[`target_oriented_coupled_gpp_update2_geometry_result_20260902.md`](target_oriented_coupled_gpp_update2_geometry_result_20260902.md).
+No paid partition was authorized.

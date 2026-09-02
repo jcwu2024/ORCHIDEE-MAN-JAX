@@ -886,6 +886,18 @@ rejection outcome as mandatory. The active gate is corrected local acceptance
 and one bounded free-`gln01` rerun. See
 [`target_oriented_coupled_gpp_update2_geometry_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update2_geometry_audit_v1.md).
 
+The corrected audit completed at commit `b7697f5` in `1,870.963` seconds;
+report SHA256 is `09209273...b60956`. The inherited AdamW displacement has a
+negative direct-GPP cosine `-0.00493710`, so every tested inherited scale
+fails. Reset AdamW is a common descent direction and its full-scale proposal
+improves direct GPP/state/7-day/30-day/weighted losses
+`4.04281%/2.91495%/0.609099%/0.345835%/1.86634%`; all physical hard counts are
+zero. Only full scale and `1/16` pass, excluding ordinary monotone
+backtracking. Recovery, fixed parameters, and the source checkpoint remain
+unchanged. The active gate is a fresh-moments-per-macro-update bounded-training
+amendment plus one discarded consecutive-update free-GPU admission. See
+[`target_oriented_coupled_gpp_update2_geometry_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update2_geometry_result_20260902.md).
+
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
 The exact-key-set repair and JIT regression were subsequently exercised by
