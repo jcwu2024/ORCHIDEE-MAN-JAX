@@ -81,11 +81,17 @@ def _selected_update5_record(report: Mapping[str, Any]) -> Mapping[str, Any]:
     return matches[0]
 
 
-def run(args: Any) -> Mapping[str, Any]:
+def run(
+    args: Any,
+    *,
+    write_output: bool = True,
+    return_internal: bool = False,
+) -> Mapping[str, Any] | tuple[Mapping[str, Any], Mapping[str, Any]]:
     output = args.output.resolve()
-    output.parent.mkdir(parents=True, exist_ok=True)
-    if output.exists():
-        raise FileExistsError(output)
+    if write_output:
+        output.parent.mkdir(parents=True, exist_ok=True)
+        if output.exists():
+            raise FileExistsError(output)
     started = time.perf_counter()
     contract = load_coupled_gpp_scale_selecting_recalibration_contract(args.scale_selecting_contract)
     predecessor = _load_update5_scale_result(args.scale_audit_result, contract)
@@ -347,7 +353,24 @@ def run(args: Any) -> Mapping[str, Any]:
         "elapsed_seconds": time.perf_counter() - started,
         "next_gate": contract.payload["next_gate"][next_key],
     }
-    _atomic_json(output, report)
+    if write_output:
+        _atomic_json(output, report)
+    if return_internal:
+        if not passed:
+            raise RuntimeError("coupled GPP scale-selecting smoke has no accepted final state")
+        return report, {
+            "context": context,
+            "initialized_parameters": initialized_parameters,
+            "baseline_trainable": internal["before_trainable"],
+            "final_trainable": trainable,
+            "steps": steps,
+            "direct_steps": direct_steps,
+            "state_steps": state_steps,
+            "layout": layout,
+            "flux_basis": flux_basis,
+            "coefficients": coefficients,
+            "device": internal["device"],
+        }
     return report
 
 

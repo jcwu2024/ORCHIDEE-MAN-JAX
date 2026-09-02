@@ -1013,6 +1013,24 @@ active gate is one free-`gln01` execution with a 120-minute timeout; paid
 training and validation remain closed. See
 [`target_oriented_coupled_gpp_scale_selecting_recalibration_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selecting_recalibration_smoke_v1.md).
 
+The free execution passed at commit `aaeea61` in `3,402.216` seconds; report
+SHA256 is `c8ae64e5...42a0b8`. Updates 5, 6, and 7 select scales `1/4`, `1`,
+and `1/2`. Their GPP/state/7-day/30-day changes are respectively
+`-0.3068%/-10.4393%/-2.5015%/-2.6018%`,
+`-3.1720%/-4.3370%/-3.0809%/-4.5798%`, and
+`-3.5180%/-4.4065%/-3.8337%/-3.2788%`. All physical gates pass, fixed
+parameters remain exact, and nothing is retained. See
+[`target_oriented_coupled_gpp_scale_selecting_recalibration_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selecting_recalibration_result_20260902.md).
+
+The active gate is now the frozen no-checkpoint non-test 7/30-day transfer
+audit at contract SHA256 `110d3b4a...ab571d`. It evaluates the state before
+update 5 and the selected state after update 7 on the held-aside eight-artifact
+train/train monitor. Both horizon means must improve and physical gates must
+pass; per-artifact unanimity is not required. Local qualification and one free
+`gln01` execution are next. Paid training and fresh validation remain closed.
+See
+[`target_oriented_coupled_gpp_scale_selected_transfer_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selected_transfer_audit_v1.md).
+
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
 The exact-key-set repair and JIT regression were subsequently exercised by

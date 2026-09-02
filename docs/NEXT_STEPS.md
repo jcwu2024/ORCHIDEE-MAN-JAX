@@ -2142,6 +2142,23 @@ is one free-`gln01` execution with a 120-minute timeout. Paid training and
 fresh validation remain closed. See
 [`target_oriented_coupled_gpp_scale_selecting_recalibration_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selecting_recalibration_smoke_v1.md).
 
+The free scale-selecting execution then passed at commit `aaeea61` in
+`3,402.216` seconds; report SHA256 is `c8ae64e5...42a0b8`. Updates 5-7 select
+scales `1/4`, `1`, and `1/2`. Their weighted four-source objectives improve
+`2.9544%`, `3.5294%`, and `3.6991%`, respectively; every individual source and
+physical gate also passes. No parameter or checkpoint is retained. See
+[`target_oriented_coupled_gpp_scale_selecting_recalibration_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selecting_recalibration_result_20260902.md).
+
+The active gate is the frozen no-checkpoint non-test 7/30-day transfer audit at
+contract SHA256 `110d3b4a...ab571d`. It compares the state before update 5
+with the selected state after update 7 on the eight held-aside train/train
+monitor artifacts: 64 seven-day and 32 thirty-day windows. Both horizon mean
+losses must improve; per-artifact unanimity is report-only. The panel did not
+participate in gradients or scale selection. One free `gln01` execution is
+allowed with a 120-minute timeout. Paid training and fresh validation remain
+closed. See
+[`target_oriented_coupled_gpp_scale_selected_transfer_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selected_transfer_audit_v1.md).
+
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT
 repair was exercised by the successful calibration job and is regression

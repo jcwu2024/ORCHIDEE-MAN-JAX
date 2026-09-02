@@ -9,6 +9,7 @@ EXPECTED_GIT_HEAD=${EXPECTED_GIT_HEAD:?set EXPECTED_GIT_HEAD}
 GPU_DEVICE=${GPU_DEVICE:?set GPU_DEVICE after checking nvidia-smi}
 OUTPUT=${OUTPUT:?set OUTPUT inside the project runtime diagnostics tree}
 RUN_TIMEOUT=${RUN_TIMEOUT:-120m}
+RUN_KIND=${RUN_KIND:-scale_selecting}
 CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/target-oriented-coupled-gpp-objective-calibration}
 PARENT_DIR=$ROOT/runtime/outputs/training/target-oriented-coupled-gpp-bounded-14903328
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
@@ -59,9 +60,11 @@ AUDIT_CONTRACT=$WORKTREE/manifests/coarse_graining/target_oriented_coupled_gpp_u
 RECALIBRATION_CONTRACT=$WORKTREE/manifests/coarse_graining/target_oriented_coupled_gpp_direct_recalibration_smoke_v1.json
 SCALE_AUDIT_CONTRACT=$WORKTREE/manifests/coarse_graining/target_oriented_coupled_gpp_update5_scale_audit_v1.json
 SCALE_SELECTING_CONTRACT=$WORKTREE/manifests/coarse_graining/target_oriented_coupled_gpp_scale_selecting_recalibration_smoke_v1.json
+TRANSFER_CONTRACT=$WORKTREE/manifests/coarse_graining/target_oriented_coupled_gpp_scale_selected_transfer_audit_v1.json
 AUDIT_RESULT=$ROOT/runtime/outputs/diagnostics/target-oriented-coupled-gpp-update3-common-direction-e704749.json
 SMOKE_RESULT=$ROOT/runtime/outputs/diagnostics/target-oriented-coupled-gpp-direct-recalibration-a32db38.json
 SCALE_AUDIT_RESULT=$ROOT/runtime/outputs/diagnostics/target-oriented-coupled-gpp-update5-scale-audit-25ec5bc.json
+SCALE_SELECTING_RESULT=$ROOT/runtime/outputs/diagnostics/target-oriented-coupled-gpp-scale-selecting-recalibration-aaeea61.json
 PARENT_RESULT=$PARENT_DIR/report.json
 PARENT_RECOVERY=$PARENT_DIR/recovery.pkl
 
@@ -79,6 +82,23 @@ for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" \
   "$PARENT_RESULT" "$PARENT_RECOVERY"; do
   test -f "$path"
 done
+
+case "$RUN_KIND" in
+  scale_selecting)
+    PYTHON_MODULE=scripts.hpc.run_target_oriented_coupled_gpp_scale_selecting_recalibration
+    EXTRA_ARGS=()
+    ;;
+  transfer)
+    PYTHON_MODULE=scripts.hpc.run_target_oriented_coupled_gpp_scale_selected_transfer
+    test -f "$TRANSFER_CONTRACT"
+    test -f "$SCALE_SELECTING_RESULT"
+    EXTRA_ARGS=(
+      --transfer-contract "$TRANSFER_CONTRACT"
+      --scale-selecting-result "$SCALE_SELECTING_RESULT"
+    )
+    ;;
+  *) exit 2 ;;
+esac
 mkdir -p "$(dirname "$OUTPUT")" "$CACHE_ROOT"
 
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
@@ -102,7 +122,7 @@ env -u LD_LIBRARY_PATH \
   SINGULARITYENV_PYTHONPATH="$WORKTREE" \
   timeout --signal=TERM "$RUN_TIMEOUT" \
   singularity exec --nv --bind "$GPU_BINDS" --pwd "$WORKTREE" "$IMAGE" \
-    "$PYTHON" -m scripts.hpc.run_target_oriented_coupled_gpp_scale_selecting_recalibration \
+    "$PYTHON" -m "$PYTHON_MODULE" \
       --dataset-manifest "$DATASET" \
       --acceptance-report "$ACCEPTANCE" \
       --base-statistics "$BASE_STATISTICS" \
@@ -140,6 +160,7 @@ env -u LD_LIBRARY_PATH \
       --scale-audit-result "$SCALE_AUDIT_RESULT" \
       --parent-result-report "$PARENT_RESULT" \
       --parent-recovery "$PARENT_RECOVERY" \
+      "${EXTRA_ARGS[@]}" \
       --output "$OUTPUT"
 
 test -f "$OUTPUT"
