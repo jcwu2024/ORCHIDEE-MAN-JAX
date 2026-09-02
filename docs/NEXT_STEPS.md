@@ -1994,12 +1994,23 @@ accepted update, and only passing update-4/update-8 train-only monitors can
 write a non-promotable checkpoint. The corrected production-equivalent
 free-`gln01` admission passes at commit `885693a`: all four source losses
 decrease, all gradients and physical gates pass, and temporary recovery
-round-trips without retaining the update. The active gate is the separately
-resource-approved paid eight-update stage. Fresh validation, 365-day rollout,
-Gate D2, sealed test, and product acceptance stay closed. See
+round-trips without retaining the update. Paid job `14903328` then retained
+update 1 and stopped at the update-2 finite-step gate. Update 2 improved the
+weighted objective `0.686293%`, reachable state `6.17157%`, 7-day science
+`1.00842%`, and 30-day science `0.550934%`, but direct GPP regressed
+`2.63633%`; the proposal was discarded. No clipping, numerical, physical,
+fixed-parameter, or source-checkpoint failure occurred. The stage did not
+reach update 4, so it wrote no checkpoint. The active gate is a zero-training
+optimizer-geometry and bounded-step audit at the exact update-1 recovery state.
+It must distinguish inherited-AdamW direction rotation from finite-step
+curvature before any objective change or continuation. Fresh validation,
+continued training, 365-day rollout, Gate D2, sealed test, and product
+acceptance stay closed. See
 [`target_oriented_coupled_gpp_bounded_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_bounded_training_v1.md).
 Admission evidence is in
 [`target_oriented_coupled_gpp_bounded_training_admission_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_bounded_training_admission_20260902.md).
+The completed result is
+[`target_oriented_coupled_gpp_bounded_training_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_bounded_training_result_20260902.md).
 
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT

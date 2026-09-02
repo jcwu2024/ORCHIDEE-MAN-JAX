@@ -856,6 +856,21 @@ retained. The active gate is the resource-approved paid eight-update stage.
 See
 [`target_oriented_coupled_gpp_bounded_training_admission_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_bounded_training_admission_20260902.md).
 
+Paid job `14903328` completed the frozen runner at commit `6d1864b` in
+`1,717.025` seconds; report SHA256 is `bf835017...be39c`. Update 1 was retained
+after direct GPP, reachable state, 7-day science, 30-day science, and the
+weighted objective improved `1.60249%/10.41690%/1.02810%/1.32569%/2.52874%`.
+The update-2 proposal then improved the weighted objective `0.686293%`, state
+`6.17157%`, 7-day science `1.00842%`, and 30-day science `0.550934%`, but
+regressed direct GPP `2.63633%`; it was discarded by the frozen every-source
+finite-step gate. Both gradient norms were below the clip threshold, every
+true physical hard count was zero, and fixed parameters plus the source
+checkpoint remained unchanged. The stage stopped scientifically before update
+4, so no milestone monitor or checkpoint exists. The active gate is a
+zero-training update-2 audit of raw-gradient versus inherited-AdamW direction
+and bounded displacement scales at the exact retained recovery state. See
+[`target_oriented_coupled_gpp_bounded_training_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_bounded_training_result_20260902.md).
+
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
 The exact-key-set repair and JIT regression were subsequently exercised by
