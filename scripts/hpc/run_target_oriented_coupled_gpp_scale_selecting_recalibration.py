@@ -360,6 +360,7 @@ def run(
             raise RuntimeError("coupled GPP scale-selecting smoke has no accepted final state")
         return report, {
             "context": context,
+            "head": internal["head"],
             "initialized_parameters": initialized_parameters,
             "baseline_trainable": internal["before_trainable"],
             "final_trainable": trainable,

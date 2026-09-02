@@ -648,6 +648,7 @@ def run(
             raise RuntimeError("coupled GPP direct recalibration did not expose the terminal update state")
         return report, last_internal | {
             "context": context,
+            "head": candidate["head"],
             "initialized_parameters": initialized_parameters,
             "steps": steps,
             "gradient_steps": gradient_steps,

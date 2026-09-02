@@ -185,6 +185,10 @@ def test_persistent_runner_reuses_rollout_for_detailed_monitor_and_has_admission
     runner = (root / "scripts/hpc/run_target_oriented_coupled_gpp_persistent_scale_training.py").read_text(
         encoding="utf-8"
     )
+    direct = (root / "scripts/hpc/run_target_oriented_coupled_gpp_direct_recalibration.py").read_text(encoding="utf-8")
+    selecting = (root / "scripts/hpc/run_target_oriented_coupled_gpp_scale_selecting_recalibration.py").read_text(
+        encoding="utf-8"
+    )
     launcher = (root / "scripts/hpc/run_target_oriented_coupled_gpp_persistent_scale_training.sh").read_text(
         encoding="utf-8"
     )
@@ -193,6 +197,10 @@ def test_persistent_runner_reuses_rollout_for_detailed_monitor_and_has_admission
     )
     assert "window_monitor_statistics" in shared
     assert '"seven_monitor_forward"' in shared
+    assert '"head": candidate["head"]' in direct
+    assert '"head": internal["head"]' in selecting
+    assert "acceptance_scales=acceptance_scales" in runner
+    assert 'monitor_steps["seven_monitor_forward"]' in runner
     assert "add_target_oriented_acceptance_statistics" in runner
     assert "for scale in contract.scales" in runner
     assert "write_persistent_recovery" in runner

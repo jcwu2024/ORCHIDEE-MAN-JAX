@@ -43,6 +43,7 @@ from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_s
 from research.daily_coarse_graining.daily_operator.target_oriented_training import (
     add_science_window_sufficient_statistics,
     add_target_oriented_acceptance_statistics,
+    derive_target_oriented_acceptance_scales,
     finalize_target_oriented_acceptance_statistics,
     science_window_from_sufficient_statistics,
 )
@@ -79,6 +80,7 @@ from scripts.hpc.run_target_oriented_coupled_gpp_update2_geometry import (
 )
 from scripts.hpc.run_target_oriented_full_step_preflight import (
     _add_hard,
+    _make_steps,
     _merge_statistics,
     _slice,
     _zero_hard,
@@ -484,9 +486,26 @@ def run(args: Any) -> Mapping[str, Any]:
     initialized_parameters = internal["initialized_parameters"]
     bootstrap_trainable = internal["final_trainable"]
     fixed_parameters = replace_coupled_gpp_trainable(initialized_parameters, {})
-    steps = internal["steps"]
-    if not {"seven_monitor_forward", "thirty_monitor_forward"} <= set(steps):
-        raise RuntimeError("persistent coupled GPP detailed monitor steps are unavailable")
+    acceptance_scales = derive_target_oriented_acceptance_scales(
+        runtime["base_statistics"].arrays["next_state"].scale,
+        runtime["process_statistics"].outputs["daily.fast_gpp"].scale,
+        runtime["contract"],
+    )
+    monitor_steps = _make_steps(
+        runtime,
+        internal["head"],
+        context["template"],
+        context["scales"],
+        context["target_contract"],
+        acceptance_scales=acceptance_scales,
+        acceptance_flux_names=("gpp",),
+        science_flux_basis=internal["flux_basis"],
+    )
+    steps = dict(internal["steps"])
+    steps.update(
+        seven_monitor_forward=monitor_steps["seven_monitor_forward"],
+        thirty_monitor_forward=monitor_steps["thirty_monitor_forward"],
+    )
     gradient_steps = steps["make_trainable_gradient_steps"](
         fixed_parameters,
         replace_coupled_gpp_trainable,
