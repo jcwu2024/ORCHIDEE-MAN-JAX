@@ -232,6 +232,7 @@ def _training_proposal(
     relative_tolerance: float,
     optimizer_update: int,
     return_internal: bool = False,
+    expected_optimizer_state_step: int | None = None,
 ) -> Mapping[str, Any]:
     runtime = context["runtime"]
     jax = runtime["jax"]
@@ -349,6 +350,7 @@ def _training_proposal(
     before_means = _mean_losses(before_records)
     after_means = post["source_mean_losses"]
     changes = source_changes(before_means, after_means)
+    expected_state_step = optimizer_update if expected_optimizer_state_step is None else expected_optimizer_state_step
     engineering_passed = bool(
         all(
             value["all_finite"]
@@ -362,7 +364,7 @@ def _training_proposal(
         and float(np.asarray(delta_squared)) > 0.0
         and np.isfinite(float(np.asarray(raw_norm)))
         and 0.0 < float(np.asarray(clip_scale)) <= 1.0
-        and int(np.asarray(updated_optimizer.step)) == optimizer_update
+        and int(np.asarray(updated_optimizer.step)) == expected_state_step
         and all(report["all_finite"] and report["l2_norm"] > 0.0 for report in family_steps.values())
     )
     if not engineering_passed:
@@ -393,6 +395,7 @@ def _training_proposal(
             },
             "optimizer": {
                 "learning_rate": context["coupled_learning_rate"],
+                "optimizer_state_step": int(np.asarray(updated_optimizer.step)),
                 "raw_gradient_norm": float(np.asarray(raw_norm)),
                 "clip_scale": float(np.asarray(clip_scale)),
                 "parameter_delta_l2": float(np.sqrt(float(np.asarray(delta_squared)))),

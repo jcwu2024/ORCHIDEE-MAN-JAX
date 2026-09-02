@@ -898,6 +898,19 @@ unchanged. The active gate is a fresh-moments-per-macro-update bounded-training
 amendment plus one discarded consecutive-update free-GPU admission. See
 [`target_oriented_coupled_gpp_update2_geometry_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update2_geometry_result_20260902.md).
 
+The fresh-moment amendment is now frozen and locally qualified at canonical
+contract SHA256 `a8c362fe...31eda11`. It starts each scheduled macro update
+with zero AdamW first/second moments and bias-correction step one while passing
+accepted neural parameters in memory. The admission evaluates scheduled
+updates 2 and 3 from the exact update-1 recovery, requires all four source
+losses plus the existing physical and ownership gates to pass twice, writes
+only a JSON report, and retains no proposal or checkpoint. The architecture,
+objective coefficients, `2e-6` learning rate, clip threshold, and data schedule
+are unchanged. Thirty-one related tests plus Python, Ruff, shell, and
+whitespace checks pass. The active gate is the no-checkpoint two-update run on
+free `gln01`; paid continuation and fresh validation remain closed. See
+[`target_oriented_coupled_gpp_fresh_moment_admission_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_fresh_moment_admission_v1.md).
+
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
 The exact-key-set repair and JIT regression were subsequently exercised by

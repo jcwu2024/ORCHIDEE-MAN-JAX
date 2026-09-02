@@ -2038,6 +2038,16 @@ run one discarded consecutive-update free-GPU admission. Paid continuation
 and fresh validation remain closed. See
 [`target_oriented_coupled_gpp_update2_geometry_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update2_geometry_result_20260902.md).
 
+That amendment is now frozen and locally qualified at contract SHA256
+`a8c362fe...31eda11`. It keeps the architecture, four-source objective,
+learning rate, clip threshold, prepared schedule, and finite-step gates
+unchanged. Updates 2 and 3 each start with zero AdamW moments and optimizer
+step one; accepted parameters pass only in memory between them, and all state
+is discarded after reporting. The active gate is the two-consecutive-update
+free-`gln01` admission. Both updates must pass before a new paid contract may
+be proposed. See
+[`target_oriented_coupled_gpp_fresh_moment_admission_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_fresh_moment_admission_v1.md).
+
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT
 repair was exercised by the successful calibration job and is regression
