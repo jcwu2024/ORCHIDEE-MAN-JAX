@@ -1,0 +1,75 @@
+{
+  "schema_version": "target_oriented_coupled_gpp_update5_scale_audit_v1",
+  "status": "frozen_zero_retention_update5_direct_scale_audit",
+  "contract_sha256": "835a8ee86feb6691596552ac4047bc4f02905702d6534282c1f6be190ee69cbd",
+  "identity": {
+    "direct_recalibration_contract_sha256": "bb79be4c8aa127685549e76f0646a4ae9174e463fcf6cf21fcd05bc083a76bb4",
+    "direct_recalibration_result_sha256": "0c2d3e219f4dce16be40d15ce6a1ccbdb7c5f4f239e88e83a874e42b23242fd2",
+    "schedule_sha256": "cb5e2ab12beecd558efe1aaf8082da54567b63631ce0b982e03934067b36c04e",
+    "reconstructed_accepted_updates": [3, 4],
+    "audited_update": 5
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "audit_artifact_updates": [965, 351, 272, 363, 660, 670, 548, 740],
+    "macro_batch_artifact_count": 8,
+    "direct_gpp_teacher_days": 1664,
+    "one_day_state_transitions": 256,
+    "seven_day_windows": 64,
+    "thirty_day_windows": 32,
+    "fresh_validation_values_allowed": false,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "direction": {
+    "source_registry": [
+      "direct_gpp_208_teacher_days",
+      "reachable_state_anchor_32_teacher_days",
+      "seven_day_component_resolved_science",
+      "thirty_day_component_resolved_science"
+    ],
+    "reconstruction_rule": "recompute_minimum_norm_common_direction_after_accepted_updates_3_and_4",
+    "minimum_source_cosine": 0.0001,
+    "full_parameter_step_l2": 0.007758973351050004,
+    "parameter_dtype_preserved": true,
+    "parameter_displacement_scales": [1.0, 0.5, 0.25, 0.125, 0.0625, 0.03125],
+    "quadratic_diagnostic_gpp_zero_crossing": 0.253654313532838,
+    "quadratic_diagnostic_gpp_minimum": 0.126827156766419
+  },
+  "evaluation": {
+    "full_scale_evaluation_reused_from_reconstructed_smoke": true,
+    "evaluate_all_eight_update5_artifacts_at_every_smaller_scale": true,
+    "finite_step_rule": "frozen_four_source_nonincrease_and_strict_weighted_decrease",
+    "relative_source_tolerance": 0.000001,
+    "all_one_seven_thirty_day_physical_hard_failures_zero": true,
+    "all_gradients_parameters_and_losses_finite": true,
+    "updates_3_and_4_must_remain_accepted": true,
+    "update_5_full_scale_must_remain_rejected": true,
+    "numeric_reproduction_differences_are_reporting_only": true
+  },
+  "retention": {
+    "optimizer_updates_persisted": 0,
+    "parameter_proposals_persisted": 0,
+    "recovery_modified": false,
+    "checkpoint_written": false,
+    "training_continuation_authorized": false
+  },
+  "execution": {
+    "free_gln01_allowed": true,
+    "paid_partition_authorized": false,
+    "maximum_wall_time_minutes": 90,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "fresh_validation_read_authorized": false,
+    "365_day_rollout_authorized": false,
+    "gate_d2_authorized": false,
+    "sealed_test_authorized": false,
+    "product_acceptance_authorized": false
+  },
+  "next_gate": {
+    "on_bounded_finite_step": "freeze_scale_selecting_direct_recalibration_smoke",
+    "on_no_bounded_finite_step": "review_common_direction_parameterization_and_finite_curvature_without_architecture_change"
+  }
+}

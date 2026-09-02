@@ -964,6 +964,31 @@ and whitespace checks pass. The active gate is one free-`gln01` execution;
 paid training and validation remain closed. See
 [`target_oriented_coupled_gpp_direct_recalibration_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_recalibration_smoke_v1.md).
 
+The corrected smoke completed at commit `a32db38` in `2,552.884` seconds;
+report SHA256 is `0c2d3e21...2fd2`. Recalibrated direct updates 3 and 4 pass,
+but update 5 rejects the same full displacement. Its common direction remains
+strong (minimum cosine `0.495394`); state, 7-day, and 30-day losses improve
+`28.6952%/9.9005%/10.6083%`, while GPP regresses `58.1509%` and weighted loss
+regresses `9.1686%`. A derivative/full-response quadratic diagnostic places
+the likely GPP crossing near scale `0.254` and local minimum near `0.127`.
+The active gate is a zero-retention update-5 scale audit on
+`1,1/2,1/4,1/8,1/16,1/32`; no architecture change, paid training, or
+validation read is open. The earlier `40b66a2` launch is an engineering
+timeout caused by float32-to-float64 proposal promotion; `a32db38` preserves
+parameter dtype and removes that repeated compilation. See
+[`target_oriented_coupled_gpp_direct_recalibration_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_recalibration_result_20260902.md).
+
+The bounded update-5 scale audit is frozen and locally qualified at contract
+SHA256 `835a8ee8...69cbd`. It reconstructs the accepted update-3/update-4
+states and rejected update-5 full proposal without an intermediate write,
+then evaluates `1,1/2,1/4,1/8,1/16,1/32` on the same eight train/train
+artifacts. The grid brackets the diagnostic GPP crossing/minimum at
+`0.253654/0.126827`; only actual four-source and physical evaluations count.
+No proposal or checkpoint is retained. Thirty-nine related tests and all
+static checks pass. The active gate is one free-`gln01` execution; paid
+training and validation remain closed. See
+[`target_oriented_coupled_gpp_update5_scale_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update5_scale_audit_v1.md).
+
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
 The exact-key-set repair and JIT regression were subsequently exercised by

@@ -2097,6 +2097,28 @@ The active gate is one free-`gln01` execution. Paid training and fresh
 validation remain closed. See
 [`target_oriented_coupled_gpp_direct_recalibration_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_recalibration_smoke_v1.md).
 
+The corrected free smoke then completed at commit `a32db38` in `2,552.884`
+seconds; report SHA256 is `0c2d3e21...2fd2`. Updates 3 and 4 pass with all four
+sources improving, but update 5 rejects the fixed full step: state, 7-day, and
+30-day losses improve `28.6952%/9.9005%/10.6083%`, while GPP regresses
+`58.1509%` and weighted loss regresses `9.1686%`. Its minimum source cosine is
+still strong at `0.495394`, so the failure is finite curvature, not a missing
+common direction. A local GPP quadratic diagnostic places the improvement
+crossing near scale `0.254` and minimum near `0.127`. The active gate is a
+zero-retention update-5 audit on scales `1,1/2,1/4,1/8,1/16,1/32`. Paid
+training and fresh validation remain closed. See
+[`target_oriented_coupled_gpp_direct_recalibration_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_recalibration_result_20260902.md).
+
+The update-5 bounded-scale audit is now frozen and locally qualified at
+contract SHA256 `835a8ee8...69cbd`. It reconstructs accepted direct updates 3
+and 4 plus the rejected update-5 full step in one process, then evaluates
+scales `1,1/2,1/4,1/8,1/16,1/32` on all eight update-5 artifacts. The full
+record is reused and every smaller scale receives a real finite-step and
+physical evaluation. It retains no state and reads no validation value.
+Thirty-nine related tests plus static checks pass. The active gate is one
+free-`gln01` execution; paid training remains closed. See
+[`target_oriented_coupled_gpp_update5_scale_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update5_scale_audit_v1.md).
+
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT
 repair was exercised by the successful calibration job and is regression

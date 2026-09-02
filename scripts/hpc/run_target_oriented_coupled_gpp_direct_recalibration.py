@@ -269,7 +269,12 @@ def _measure_source_gradients(
     }
 
 
-def run(args: argparse.Namespace) -> Mapping[str, Any]:
+def run(
+    args: argparse.Namespace,
+    *,
+    write_output: bool = True,
+    return_internal: bool = False,
+) -> Mapping[str, Any] | tuple[Mapping[str, Any], Mapping[str, Any]]:
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
@@ -428,6 +433,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     records = []
     accepted_updates = []
     stop_classification = None
+    last_internal = None
     minimum_cosine = float(contract.payload["direction"]["minimum_source_cosine"])
     parameter_step_l2 = float(contract.payload["direction"]["parameter_step_l2"])
     for macro_update, group in zip(DIRECT_RECALIBRATION_UPDATES, DIRECT_RECALIBRATION_GROUPS, strict=True):
@@ -543,6 +549,15 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             "timing_seconds": {"total": time.perf_counter() - update_started},
         }
         records.append(record)
+        last_internal = {
+            "macro_update": macro_update,
+            "group": group,
+            "before_trainable": trainable,
+            "proposed_trainable": proposed,
+            "before_losses": before_losses,
+            "full_scale_evaluation": after,
+            "direction_norm": float(direction["parameter_descent_direction"]["l2_norm"]),
+        }
         print(f"coupled_gpp direct_recalibration update={macro_update} accepted={accepted}", flush=True)
         if not accepted:
             stop_classification = "common_direction_finite_step_rejection"
@@ -626,7 +641,23 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
         "next_gate": contract.payload["next_gate"][next_key],
         "predecessor_classification": predecessor["classification"],
     }
-    _atomic_json(output, report)
+    if write_output:
+        _atomic_json(output, report)
+    if return_internal:
+        if last_internal is None or int(last_internal["macro_update"]) != DIRECT_RECALIBRATION_UPDATES[-1]:
+            raise RuntimeError("coupled GPP direct recalibration did not expose the terminal update state")
+        return report, last_internal | {
+            "context": context,
+            "initialized_parameters": initialized_parameters,
+            "steps": steps,
+            "direct_steps": direct_steps,
+            "state_steps": state_steps,
+            "layout": layout,
+            "flux_basis": amendment.flux_basis,
+            "coefficients": bounded_contract.coefficients,
+            "relative_tolerance": relative_tolerance,
+            "device": runtime["devices"][0],
+        }
     return report
 
 
