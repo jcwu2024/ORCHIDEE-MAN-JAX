@@ -27,7 +27,7 @@ from .target_oriented_coupled_gpp_update3_common_direction import (
 from .target_oriented_source_shaped_maintenance import contract_sha256
 
 SCHEMA_VERSION = "target_oriented_coupled_gpp_direct_recalibration_smoke_v1"
-FROZEN_CONTRACT_SHA256 = "f7f0efc11fb716ec8946f70539b06585cce0c106087cd63de79acb5db648e9cf"
+FROZEN_CONTRACT_SHA256 = "bb79be4c8aa127685549e76f0646a4ae9174e463fcf6cf21fcd05bc083a76bb4"
 COMMON_DIRECTION_RESULT_SHA256 = "642086afe65c08909b162153cf08ab8ca72bf31f5041b47e422592165b95ec8d"
 DIRECT_RECALIBRATION_UPDATES = (3, 4, 5)
 DIRECT_RECALIBRATION_GROUPS = (
@@ -87,6 +87,7 @@ def load_coupled_gpp_direct_recalibration_contract(
         or float(direction["minimum_source_cosine"]) != MINIMUM_SOURCE_COSINE
         or float(direction["parameter_step_l2"]) != REFERENCE_DELTA_L2
         or float(direction["parameter_step_scale"]) != 1.0
+        or direction["parameter_dtype_preserved"] is not True
         or direction["recompute_after_every_accepted_update"] is not True
         or direction["adamw_realization_allowed"] is not False
         or int(evaluation["required_consecutive_direct_updates"]) != REQUIRED_CONSECUTIVE_UPDATES

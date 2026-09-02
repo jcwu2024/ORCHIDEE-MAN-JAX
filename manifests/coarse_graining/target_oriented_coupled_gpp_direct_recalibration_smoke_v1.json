@@ -1,7 +1,7 @@
 {
   "schema_version": "target_oriented_coupled_gpp_direct_recalibration_smoke_v1",
   "status": "frozen_zero_retention_three_update_direct_recalibration_smoke",
-  "contract_sha256": "f7f0efc11fb716ec8946f70539b06585cce0c106087cd63de79acb5db648e9cf",
+  "contract_sha256": "bb79be4c8aa127685549e76f0646a4ae9174e463fcf6cf21fcd05bc083a76bb4",
   "identity": {
     "common_direction_audit_contract_sha256": "956940a1b9cc159fb732980b5bb0f090fc9664adebcf27b22719ec310855cf09",
     "common_direction_result_sha256": "642086afe65c08909b162153cf08ab8ca72bf31f5041b47e422592165b95ec8d",
@@ -44,6 +44,7 @@
     "realization": "negative_unit_common_gradient_times_frozen_parameter_step_norm",
     "parameter_step_l2": 0.007758973351050004,
     "parameter_step_scale": 1.0,
+    "parameter_dtype_preserved": true,
     "recompute_after_every_accepted_update": true,
     "adamw_realization_allowed": false
   },

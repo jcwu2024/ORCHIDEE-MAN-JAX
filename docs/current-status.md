@@ -954,7 +954,7 @@ remain closed. See
 [`target_oriented_coupled_gpp_update3_common_direction_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update3_common_direction_result_20260902.md).
 
 The direct-recalibration smoke is now frozen and locally qualified at contract
-SHA256 `f7f0efc1...e9cf`. From the accepted in-memory update-2 state, it tests
+SHA256 `bb79be4c...76bb4`. From the accepted in-memory update-2 state, it tests
 scheduled updates 3-5. At each state it recomputes the four source gradients
 and minimum-norm direction, applies the direct full displacement norm
 `0.00775897335105`, and retains the proposal only in memory when every source

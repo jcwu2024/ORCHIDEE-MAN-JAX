@@ -2087,7 +2087,7 @@ See
 [`target_oriented_coupled_gpp_update3_common_direction_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_update3_common_direction_result_20260902.md).
 
 The three-update direct-recalibration smoke is now frozen and locally
-qualified at contract SHA256 `f7f0efc1...e9cf`. It reconstructs fresh update
+qualified at contract SHA256 `bb79be4c...76bb4`. It reconstructs fresh update
 2, then recomputes the four-source minimum-norm direction before each of
 scheduled updates 3-5 and directly realizes fixed global parameter norm
 `0.00775897335105`. Each full step must improve all four sources and pass all

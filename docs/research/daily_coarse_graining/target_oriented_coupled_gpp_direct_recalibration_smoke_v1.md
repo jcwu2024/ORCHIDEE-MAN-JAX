@@ -11,7 +11,7 @@ updates, rather than only at one state.
 The frozen machine contract is
 `manifests/coarse_graining/target_oriented_coupled_gpp_direct_recalibration_smoke_v1.json`,
 canonical SHA256
-`f7f0efc11fb716ec8946f70539b06585cce0c106087cd63de79acb5db648e9cf`.
+`bb79be4c8aa127685549e76f0646a4ae9174e463fcf6cf21fcd05bc083a76bb4`.
 
 ## State And Schedule
 
@@ -42,7 +42,10 @@ The accepted geometry is realized directly, without AdamW first/second
 moments or coordinatewise scaling. The fixed global parameter displacement is
 `0.007758973351050004`, the full scale accepted by the update-3 audit. The
 direction is recomputed after every accepted proposal; neither simplex weights
-nor gradients are inherited across macro updates.
+nor gradients are inherited across macro updates. The direct realization casts
+the common direction and scalar norm to each parameter leaf's existing dtype,
+so an accepted step cannot promote float32 parameters to float64 and trigger a
+second full compilation family.
 
 ## Finite-Step Gate
 

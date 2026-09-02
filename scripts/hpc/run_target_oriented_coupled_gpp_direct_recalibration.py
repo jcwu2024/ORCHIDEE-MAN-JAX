@@ -74,7 +74,6 @@ from scripts.hpc.calibrate_target_oriented_structured_gpp_joint_gradients import
 )
 from scripts.hpc.probe_successor_direct_trust_region import (
     _make_combined_direction,
-    _make_direct_virtual_step,
 )
 from scripts.hpc.run_strong_baseline_gpu_admission import _memory_report
 from scripts.hpc.run_successor_gradient_balanced_smoke import _make_gradient_gram
@@ -101,6 +100,36 @@ SCHEMA_VERSION = "target_oriented_coupled_gpp_direct_recalibration_smoke_result_
 
 def _git_head() -> str:
     return subprocess.check_output(("git", "rev-parse", "HEAD"), text=True).strip()
+
+
+def _make_dtype_preserving_direct_virtual_step(jax: Any) -> Any:
+    import jax.numpy as jnp
+
+    @jax.jit
+    def step(parameters: Any, direction: Any, direction_norm: Any, step_norm: Any) -> Any:
+        proposed = jax.tree_util.tree_map(
+            lambda value, gradient: (
+                value
+                - jnp.asarray(step_norm, dtype=value.dtype)
+                * jnp.asarray(gradient, dtype=value.dtype)
+                / jnp.maximum(
+                    jnp.asarray(direction_norm, dtype=value.dtype),
+                    jnp.asarray(1.0e-30, dtype=value.dtype),
+                )
+            ),
+            parameters,
+            direction,
+        )
+        nonfinite = sum(
+            (
+                jnp.sum(~jnp.isfinite(jnp.asarray(leaf)), dtype=jnp.int64)
+                for leaf in jax.tree_util.tree_leaves(proposed)
+            ),
+            jnp.asarray(0, dtype=jnp.int64),
+        )
+        return proposed, nonfinite
+
+    return step
 
 
 def _load_common_direction_result(path: Path, contract: Any, audit_contract: Any) -> Mapping[str, Any]:
@@ -351,7 +380,7 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     proposal_check = _make_proposal_check(jax, jnp)
     gram_measurement = _make_gradient_gram(jax)
     combine_direction = _make_combined_direction(jax)
-    direct_virtual_step = _make_direct_virtual_step(jax)
+    direct_virtual_step = _make_dtype_preserving_direct_virtual_step(jax)
     memory_before = _memory_report(runtime["devices"][0])
 
     recovery_before = args.parent_recovery.stat()
