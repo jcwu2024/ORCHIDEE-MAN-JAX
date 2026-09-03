@@ -90,9 +90,9 @@ for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" \
 done
 
 mkdir -p "$(dirname "$OUTPUT")" "$OUTPUT_DIR" "$CACHE_ROOT"
-ADMISSION_ARG=()
+ADMISSION_ARG=
 if test "$ADMISSION_ONLY" = 1; then
-  ADMISSION_ARG=(--admission-only)
+  ADMISSION_ARG=--admission-only
 fi
 
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
@@ -159,7 +159,7 @@ env -u LD_LIBRARY_PATH \
       --persistent-contract "$PERSISTENT_CONTRACT" \
       --transfer-result "$TRANSFER_RESULT" \
       --output-dir "$OUTPUT_DIR" \
-      "${ADMISSION_ARG[@]}" \
+      $ADMISSION_ARG \
       --output "$OUTPUT"
 
 test -f "$OUTPUT"

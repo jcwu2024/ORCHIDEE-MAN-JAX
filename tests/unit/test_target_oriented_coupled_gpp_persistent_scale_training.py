@@ -210,6 +210,10 @@ def test_persistent_runner_reuses_rollout_for_detailed_monitor_and_has_admission
     assert "sbatch" not in launcher
     assert "ADMISSION_ONLY=${ADMISSION_ONLY:-1}" in launcher
     assert "RUN_TIMEOUT=${RUN_TIMEOUT:-120m}" in launcher
+    assert "ADMISSION_ARG=()" not in launcher
+    assert "ADMISSION_ARG=" in launcher
+    assert "ADMISSION_ARG=--admission-only" in launcher
+    assert "$ADMISSION_ARG" in launcher
     assert "#SBATCH --partition=gnall" in slurm
     assert "#SBATCH --gres=gpu:1" in slurm
     assert "#SBATCH --time=16:00:00" in slurm
