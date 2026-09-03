@@ -2218,6 +2218,12 @@ with the completed attribution protocol in
 The active transfer contract is
 [`target_oriented_coupled_gpp_direct_step_transfer_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_step_transfer_audit_v1.md).
 
+The first free execution at `e755bb1` stopped after bootstrap because compact
+direct-generalization replay records lack the persistent result's
+`finite_step_accepted` field. It wrote no output or state. Commit `4953939`
+now reads the accepted persistent records and validates replay metadata before
+GPU work; the active scientific gate is unchanged.
+
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT
 repair was exercised by the successful calibration job and is regression

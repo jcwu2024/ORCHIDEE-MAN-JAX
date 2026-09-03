@@ -1093,6 +1093,13 @@ with the completed attribution protocol in
 The active transfer contract is
 [`target_oriented_coupled_gpp_direct_step_transfer_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_step_transfer_audit_v1.md).
 
+The first free execution at `e755bb1` stopped after bootstrap because compact
+direct-generalization replay records do not carry the persistent result's
+`finite_step_accepted` field. No result or state was written. Commit
+`4953939` switches to the accepted persistent records and performs metadata
+validation before any GPU gradient computation. The frozen scientific gate
+is unchanged.
+
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
 The exact-key-set repair and JIT regression were subsequently exercised by

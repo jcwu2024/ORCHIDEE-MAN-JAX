@@ -78,6 +78,16 @@ multi-group GPP-protected backtracking smoke. Either failure classification
 requires replacing the single scheduled-group GPP constraint with
 multi-group direct-GPP direction constraints before any continuation.
 
+The first free execution at commit `e755bb1` completed the update-7 bootstrap
+and all eight persistent-update-1 gradients, then stopped before update 2.
+The runner had supplied the direct-generalization report's compact replay
+records to a helper that requires the persistent training record, including
+`finite_step_accepted`. No result, parameter, recovery, or checkpoint was
+written. Commit `4953939` reads replay metadata from the accepted persistent
+result and validates it before any GPU gradient work; a regression test
+exercises the missing-field failure at that pre-compute boundary. The
+scientific contract and scale ladder are unchanged.
+
 ## Implementation
 
 - Contract:
