@@ -930,6 +930,16 @@ owns update-7 reconstruction, persistent common-direction updates, combined
 Its direct and Slurm wrappers own the free-`gln01` admission and the separately
 authorized one-V100 `gnall` execution boundary.
 
+`daily_operator/target_oriented_coupled_gpp_direct_generalization.py` owns the
+frozen update-1-through-10 trajectory, first-adjacent-regression definition,
+cosine normalization, and sign-based attribution policy. Its machine contract
+is
+`manifests/coarse_graining/target_oriented_coupled_gpp_direct_generalization_audit_v1.json`.
+`scripts/hpc/audit_target_oriented_coupled_gpp_direct_generalization.py` owns
+the zero-retention trajectory replay and 8-training/8-monitor direct-gradient
+geometry; its direct wrapper is free-`gln01` only. It does not read the
+persistent recovery, repeat scale search, or own a checkpoint.
+
 ## Scripts
 
 | Path | Classification | Use |

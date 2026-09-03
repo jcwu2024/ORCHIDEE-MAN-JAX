@@ -2185,23 +2185,33 @@ and `33.9401%` at 7/30 days. Direct teacher-state GPP, however, worsened
 `24.1562%` and improved on only `1/8` monitor artifacts. No checkpoint was
 selected; the retained recovery is attribution-only.
 
-The active gate is a bounded zero-training direct-GPP generalization audit.
-It must locate the first regression along the ten-update trajectory and
-compare scheduled-batch versus fixed-monitor directional derivatives and
-per-artifact gradient alignment. This will distinguish insufficient effective
-batch coverage, incompatible cross-group directions, and teacher-state versus
-free-rollout compensation before selecting a training repair. The Attention
-architecture, conservative updater, retained exact tail, and accepted long-
-horizon gains stay in scope. Unchanged recovery continuation, fresh
-validation, 365-day rollout, Gate D2, sealed test, and product acceptance
-remain closed. See
+The bounded zero-training direct-GPP generalization audit is now frozen and
+locally qualified at contract SHA256 `2ff8fbb8...3123c74`. It deterministically
+replays persistent updates 1-10 from the selected update-7 state, uses the ten
+already accepted scales without repeating scale search, and evaluates the
+fixed monitor's direct GPP after each in-memory update. At the first adjacent
+regression it computes the eight scheduled-batch and eight monitor-artifact
+direct-GPP gradients, their complete direction geometry, and actual finite
+changes. The persistent recovery is not read and no parameter state is
+retained. Twelve focused and related tests plus CLI, Ruff, format, and Bash
+syntax checks pass.
+
+The active gate is one free-`gln01` execution with a 180-minute timeout. Its
+evidence will select between a larger/multi-group effective batch, robust
+cross-group constraints, and a loss/acceptance repair for rollout
+compensation. The Attention architecture, conservative updater, retained
+exact tail, and accepted long-horizon gains stay in scope. Unchanged recovery
+continuation, paid execution, fresh validation, 365-day rollout, Gate D2,
+sealed test, and product acceptance remain closed. See
 [`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md)
 and
 [`target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md),
 with the launch correction in
 [`target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md)
 and the scientific result in
-[`target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md).
+[`target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md),
+with the active audit contract in
+[`target_oriented_coupled_gpp_direct_generalization_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_generalization_audit_v1.md).
 
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT

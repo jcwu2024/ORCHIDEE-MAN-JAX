@@ -1,0 +1,79 @@
+{
+  "schema_version": "target_oriented_coupled_gpp_direct_generalization_audit_v1",
+  "status": "frozen_before_direct_gpp_generalization_values_are_evaluated",
+  "contract_sha256": "2ff8fbb882885cc3dcdee02434b0f846ededdcc96d81bdfc0ce5ee04c3123c74",
+  "identity": {
+    "candidate": "target_oriented_coupled_gpp_carbon_feedback_attention_v1",
+    "persistent_contract_sha256": "1742d9d19a6b8e8d91331723bf06047a17fa5ce5d31cc528987205a838d8b5e4",
+    "persistent_result_sha256": "764b14e169345ba119407b9e3dcf3a7e9141900c2710c8afa2775dd0fe881168",
+    "persistent_schedule_sha256": "c79c5f2e125706d73b306ccd5aa23582a062b6f387d55224edee52666492548d",
+    "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
+    "candidate_parameter_count": 109464359,
+    "trainable_parameter_count": 15960195,
+    "fixed_parameter_count": 93504164
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "training_split": "train/train",
+    "monitor_split": "train/train_non_test_monitor",
+    "monitor_artifact_updates": [251, 358, 465, 572, 679, 786, 893, 1000],
+    "monitor_used_by_persistent_gradients_or_scale_selection": false,
+    "fresh_validation_values_allowed": false,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "trajectory": {
+    "start_state": "reconstructed_selected_state_after_update_7",
+    "persistent_updates": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+    "selected_scales_from_result": [1.0, 0.5, 0.5, 1.0, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0],
+    "persistent_recovery_read": false,
+    "recompute_four_source_direction_per_update": true,
+    "repeat_scale_search": false,
+    "evaluate_fixed_monitor_direct_gpp_after_every_update": true,
+    "first_regression_definition": "first_strict_adjacent_increase_in_eight_artifact_mean_direct_gpp_loss",
+    "adjacent_regression_relative_tolerance": 0.0,
+    "persistent_result_loss_match_rtol": 1e-6,
+    "persistent_result_loss_match_atol": 1e-9
+  },
+  "attribution": {
+    "gradient_state": "immediately_before_first_adjacent_monitor_regression",
+    "gradient_objective": "direct_gpp_208_teacher_days",
+    "training_artifact_gradient_count": 8,
+    "monitor_artifact_gradient_count": 8,
+    "applied_step_direction_included": true,
+    "pairwise_cosine_matrix_required": true,
+    "finite_step_per_artifact_changes_required": true,
+    "sign_based_classification_only": true,
+    "sampling_variance_separable_from_population_heterogeneity": false
+  },
+  "acceptance": {
+    "all_ten_updates_replayed": true,
+    "first_adjacent_regression_located": true,
+    "all_sixteen_direct_gradients_finite_nonzero": true,
+    "trajectory_endpoint_matches_persistent_result": true,
+    "scientific_model_promotion_implied": false
+  },
+  "retention": {
+    "checkpoint_written": false,
+    "recovery_written": false,
+    "trainable_parameters_written": false,
+    "optimizer_state_written": false
+  },
+  "execution": {
+    "free_gln01_allowed": true,
+    "paid_partition_authorized": false,
+    "timeout_minutes": 180,
+    "fresh_validation_read_authorized": false,
+    "365_day_rollout_authorized": false,
+    "gate_d2_authorized": false,
+    "sealed_test_authorized": false,
+    "product_acceptance_authorized": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0
+  },
+  "next_gate": {
+    "on_completed_attribution": "select one training repair from observed direction and finite-step evidence before any continuation",
+    "on_replay_or_gradient_failure": "stop and repair the audit implementation without changing the architecture or training state"
+  }
+}
