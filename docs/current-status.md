@@ -1094,13 +1094,17 @@ state is retained. See
 [`target_oriented_coupled_gpp_multi_group_direction_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_result_20260904.md).
 
 This closes group-mean multi-group direction construction as the next training
-rule without rejecting the Attention architecture. The active task is to
-freeze and locally qualify an artifact-aware or distributionally robust
-zero-training GPP direction audit that exposes within-group heterogeneity,
-selects its scale using train-only evidence, and evaluates the fixed monitor
-only after selection. Recovery continuation, paid execution, fresh
-validation, 365-day rollout, Gate D2, sealed test, and product acceptance
-remain closed. The completed contract is
+rule without rejecting the Attention architecture. The active gate is the
+frozen zero-retention artifact-aware direction audit at contract SHA256
+`0606e7e2...f37fc52`. It uses 40 separate train-only artifact direct-GPP
+gradients and the three scheduled non-GPP gradients as 43 unit-normalized
+constraints. Its scale ladder stops at the first train-only step that preserves
+all 40 artifact losses; only that proposal can reach the fixed monitor. One
+free `gln01` execution is allowed with a 120-minute timeout. Recovery
+continuation, paid execution, fresh validation, 365-day rollout, Gate D2,
+sealed test, and product acceptance remain closed. See
+[`target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md).
+The completed predecessor contract is
 [`target_oriented_coupled_gpp_multi_group_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_audit_v1.md).
 The predecessor training evidence remains in
 [`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md)

@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run the zero-retention multi-group direct-GPP direction audit on free gln01.
+# Run a zero-retention direct-GPP direction audit on free gln01.
 
 set -euo pipefail
 
@@ -10,6 +10,9 @@ GPU_DEVICE=${GPU_DEVICE:?set GPU_DEVICE after checking nvidia-smi}
 OUTPUT=${OUTPUT:?set OUTPUT inside the project runtime outputs tree}
 RUN_TIMEOUT=${RUN_TIMEOUT:-120m}
 CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/target-oriented-coupled-gpp-objective-calibration}
+PYTHON_MODULE=${PYTHON_MODULE:-scripts.hpc.audit_target_oriented_coupled_gpp_multi_group_direction}
+ARTIFACT_AWARE_CONTRACT=${ARTIFACT_AWARE_CONTRACT:-}
+MULTI_GROUP_RESULT=${MULTI_GROUP_RESULT:-}
 PARENT_DIR=$ROOT/runtime/outputs/training/target-oriented-coupled-gpp-bounded-14903328
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
@@ -86,6 +89,20 @@ for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" "$PROCESS_STATISTICS" \
   test -f "$path"
 done
 
+EXTRA_AUDIT_ARGS=()
+if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_artifact_aware_direction" ]]; then
+  test -n "$ARTIFACT_AWARE_CONTRACT"
+  test -n "$MULTI_GROUP_RESULT"
+  test -f "$ARTIFACT_AWARE_CONTRACT"
+  test -f "$MULTI_GROUP_RESULT"
+  EXTRA_AUDIT_ARGS=(
+    --artifact-aware-contract "$ARTIFACT_AWARE_CONTRACT"
+    --multi-group-result "$MULTI_GROUP_RESULT"
+  )
+elif [[ -n "$ARTIFACT_AWARE_CONTRACT" || -n "$MULTI_GROUP_RESULT" ]]; then
+  exit 2
+fi
+
 mkdir -p "$(dirname "$OUTPUT")" "$CACHE_ROOT"
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
 NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
@@ -108,7 +125,7 @@ env -u LD_LIBRARY_PATH \
   SINGULARITYENV_PYTHONPATH="$WORKTREE" \
   timeout --signal=TERM "$RUN_TIMEOUT" \
   singularity exec --nv --bind "$GPU_BINDS" --pwd "$WORKTREE" "$IMAGE" \
-    "$PYTHON" -m scripts.hpc.audit_target_oriented_coupled_gpp_multi_group_direction \
+    "$PYTHON" -m "$PYTHON_MODULE" \
       --dataset-manifest "$DATASET" \
       --acceptance-report "$ACCEPTANCE" \
       --base-statistics "$BASE_STATISTICS" \
@@ -155,6 +172,7 @@ env -u LD_LIBRARY_PATH \
       --step-transfer-contract "$STEP_TRANSFER_CONTRACT" \
       --direct-step-transfer-result "$STEP_TRANSFER_RESULT" \
       --multi-group-contract "$MULTI_GROUP_CONTRACT" \
+      "${EXTRA_AUDIT_ARGS[@]}" \
       --output-dir "$(dirname "$OUTPUT")" \
       --output "$OUTPUT"
 

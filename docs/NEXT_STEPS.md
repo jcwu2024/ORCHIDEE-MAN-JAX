@@ -2218,14 +2218,19 @@ gates pass and no state is retained. Group-mean direction construction is
 therefore closed as the next training rule. See
 [`target_oriented_coupled_gpp_multi_group_direction_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_result_20260904.md).
 
-The active task is to freeze and locally qualify an artifact-aware or
-distributionally robust zero-training GPP direction audit. It must expose
-within-group GPP heterogeneity during direction construction, keep scale
-selection train-only, and read the fixed monitor only after one proposal has
-been selected. This remains an update-rule diagnosis, not an Attention
-architecture change or training continuation. Paid execution, fresh
-validation, 365-day rollout, Gate D2, sealed test, and product acceptance
-remain closed. The completed contract is
+The active gate is the frozen zero-retention artifact-aware GPP direction
+audit at contract SHA256 `0606e7e2...f37fc52`. Forty separate train-only
+direct-GPP artifact gradients plus scheduled state and 7/30-day gradients
+form 43 unit-normalized constraints. The iterative active-set solver uses a
+`43 x 43` Gram; finite-step selection requires every one of the 40 artifact
+losses to remain nonincreasing and stops at the first passing scale in the
+descending ladder. The fixed monitor remains excluded until one proposal is
+selected. This is an update-rule diagnosis, not an Attention architecture
+change or training continuation. One free `gln01` execution is allowed with a
+120-minute timeout. Paid execution, fresh validation, 365-day rollout, Gate
+D2, sealed test, and product acceptance remain closed. See
+[`target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md).
+The completed predecessor contract is
 [`target_oriented_coupled_gpp_multi_group_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_audit_v1.md).
 The predecessor training evidence remains in
 [`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md)

@@ -102,8 +102,9 @@ rule. It solves the five observed train-only group means but does not transfer
 to the independent monitor, so a three-update smoke is not opened and the
 Attention architecture is not rejected.
 
-The next task is to freeze an artifact-aware or distributionally robust
-zero-training direction audit. It must expose within-group GPP heterogeneity
-to direction construction, retain train-only scale selection, and evaluate
-the fixed monitor only after selection. No persistent training or architecture
-change is justified until that audit shows independent transfer.
+The next gate is the frozen artifact-aware zero-training direction audit in
+[`target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md`](target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md).
+It exposes all 40 train-only artifact gradients to direction construction,
+retains train-only scale selection, and evaluates the fixed monitor only after
+selection. No persistent training or architecture change is justified until
+that audit shows independent transfer.
