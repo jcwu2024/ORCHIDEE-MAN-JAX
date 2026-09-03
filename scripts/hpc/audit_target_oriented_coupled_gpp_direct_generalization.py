@@ -296,6 +296,7 @@ def _replay_direction(
     updated = _scaled_parameters(jax, trainable, proposed, selected_scale)
     return {
         "updated_trainable": updated,
+        "proposed_trainable": proposed,
         "record": {
             "persistent_update": persistent_update,
             "artifact_updates": [int(value) for value in group],
@@ -364,6 +365,70 @@ def _artifact_gradients_and_changes(
     return {"gradients": tuple(gradients), "records": records}
 
 
+def _bootstrap_update7(args: Any, persistent_contract: Any) -> Mapping[str, Any]:
+    started = time.perf_counter()
+    reconstructed, internal = _run_direct_recalibration(args, write_output=False, return_internal=True)
+    if (
+        reconstructed.get("status") != "failed_scientific_gate"
+        or reconstructed.get("classification") != "common_direction_finite_step_rejection"
+        or reconstructed.get("smoke", {}).get("updates_accepted") != [3, 4]
+        or reconstructed.get("smoke", {}).get("updates_evaluated") != [3, 4, 5]
+    ):
+        raise RuntimeError("coupled-GPP update-7 bootstrap reconstruction failed")
+
+    context = internal["context"]
+    jax = context["runtime"]["jax"]
+    bootstrap_schedule = build_coupled_gpp_training_schedule()
+    gram_measurement = _make_gradient_gram(jax)
+    combine_direction = _make_combined_direction(jax)
+    direct_virtual_step = _make_dtype_preserving_direct_virtual_step(jax)
+    trainable = _scaled_parameters(
+        jax,
+        internal["before_trainable"],
+        internal["proposed_trainable"],
+        BOOTSTRAP_SELECTED_SCALES[2],
+    )
+    bootstrap_records = []
+    for macro_update, selected_scale in zip((6, 7), BOOTSTRAP_SELECTED_SCALES[3:], strict=True):
+        replayed = _replay_direction(
+            args,
+            context,
+            initialized_parameters=internal["initialized_parameters"],
+            trainable=trainable,
+            steps=internal["steps"],
+            gradient_steps=internal["gradient_steps"],
+            direct_steps=internal["direct_steps"],
+            state_steps=internal["state_steps"],
+            layout=internal["layout"],
+            group=bootstrap_schedule.groups[macro_update - 1],
+            flux_basis=internal["flux_basis"],
+            persistent_contract=persistent_contract,
+            persistent_update=macro_update,
+            expected_record=None,
+            selected_scale=selected_scale,
+            gram_measurement=gram_measurement,
+            combine_direction=combine_direction,
+            direct_virtual_step=direct_virtual_step,
+        )
+        trainable = replayed["updated_trainable"]
+        bootstrap_records.append(replayed["record"])
+    return {
+        "context": context,
+        "initialized_parameters": internal["initialized_parameters"],
+        "trainable": trainable,
+        "steps": internal["steps"],
+        "gradient_steps": internal["gradient_steps"],
+        "direct_steps": internal["direct_steps"],
+        "state_steps": internal["state_steps"],
+        "layout": internal["layout"],
+        "flux_basis": internal["flux_basis"],
+        "coefficients": internal["coefficients"],
+        "device": internal["device"],
+        "records": bootstrap_records,
+        "elapsed_seconds": time.perf_counter() - started,
+    }
+
+
 def run(args: Any) -> Mapping[str, Any]:
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
@@ -382,20 +447,11 @@ def run(args: Any) -> Mapping[str, Any]:
         schedule=schedule,
     )
 
-    bootstrap_started = time.perf_counter()
-    reconstructed, internal = _run_direct_recalibration(args, write_output=False, return_internal=True)
-    if (
-        reconstructed.get("status") != "failed_scientific_gate"
-        or reconstructed.get("classification") != "common_direction_finite_step_rejection"
-        or reconstructed.get("smoke", {}).get("updates_accepted") != [3, 4]
-        or reconstructed.get("smoke", {}).get("updates_evaluated") != [3, 4, 5]
-    ):
-        raise RuntimeError("direct-GPP generalization update-7 reconstruction failed")
-    context = internal["context"]
+    bootstrap = _bootstrap_update7(args, persistent_contract)
+    context = bootstrap["context"]
     runtime = context["runtime"]
     jax = runtime["jax"]
     jnp = runtime["jnp"]
-    bootstrap_schedule = build_coupled_gpp_training_schedule()
     required = {value for group in schedule.groups[: len(AUDITED_PERSISTENT_UPDATES)] for value in group} | set(
         audit_contract.monitor_updates
     )
@@ -403,49 +459,18 @@ def run(args: Any) -> Mapping[str, Any]:
     if missing:
         raise ValueError(f"direct-GPP generalization prepared coverage drift: {missing}")
 
-    initialized_parameters = internal["initialized_parameters"]
-    steps = internal["steps"]
-    gradient_steps = internal["gradient_steps"]
-    direct_steps = internal["direct_steps"]
-    state_steps = internal["state_steps"]
-    layout = internal["layout"]
-    flux_basis = internal["flux_basis"]
+    initialized_parameters = bootstrap["initialized_parameters"]
+    steps = bootstrap["steps"]
+    gradient_steps = bootstrap["gradient_steps"]
+    direct_steps = bootstrap["direct_steps"]
+    state_steps = bootstrap["state_steps"]
+    layout = bootstrap["layout"]
+    flux_basis = bootstrap["flux_basis"]
     gram_measurement = _make_gradient_gram(jax)
     combine_direction = _make_combined_direction(jax)
     direct_virtual_step = _make_dtype_preserving_direct_virtual_step(jax)
-
-    trainable = _scaled_parameters(
-        jax,
-        internal["before_trainable"],
-        internal["proposed_trainable"],
-        BOOTSTRAP_SELECTED_SCALES[2],
-    )
-    bootstrap_records = []
-    for macro_update, selected_scale in zip((6, 7), BOOTSTRAP_SELECTED_SCALES[3:], strict=True):
-        replayed = _replay_direction(
-            args,
-            context,
-            initialized_parameters=initialized_parameters,
-            trainable=trainable,
-            steps=steps,
-            gradient_steps=gradient_steps,
-            direct_steps=direct_steps,
-            state_steps=state_steps,
-            layout=layout,
-            group=bootstrap_schedule.groups[macro_update - 1],
-            flux_basis=flux_basis,
-            persistent_contract=persistent_contract,
-            persistent_update=macro_update,
-            expected_record=None,
-            selected_scale=selected_scale,
-            gram_measurement=gram_measurement,
-            combine_direction=combine_direction,
-            direct_virtual_step=direct_virtual_step,
-        )
-        trainable = replayed["updated_trainable"]
-        bootstrap_records.append(replayed["record"])
-    bootstrap_seconds = time.perf_counter() - bootstrap_started
-    memory_before = _memory_report(internal["device"])
+    trainable = bootstrap["trainable"]
+    memory_before = _memory_report(bootstrap["device"])
 
     initial_panel = _direct_panel(
         args,
@@ -652,8 +677,8 @@ def run(args: Any) -> Mapping[str, Any]:
             "direct_common_direction_updates": [3, 4, 5, 6, 7],
             "selected_scales": list(BOOTSTRAP_SELECTED_SCALES),
             "historical_scale_search_repeated": False,
-            "updates_6_7": bootstrap_records,
-            "elapsed_seconds": bootstrap_seconds,
+            "updates_6_7": bootstrap["records"],
+            "elapsed_seconds": bootstrap["elapsed_seconds"],
         },
         "trajectory": {
             "initial_persistent_update": 0,
@@ -708,7 +733,7 @@ def run(args: Any) -> Mapping[str, Any]:
             "scientific_model_promotion_implied": False,
         },
         "memory_before": memory_before,
-        "memory_after": _memory_report(internal["device"]),
+        "memory_after": _memory_report(bootstrap["device"]),
         "elapsed_seconds": time.perf_counter() - started,
         "next_gate": audit_contract.payload["next_gate"]["on_completed_attribution"],
     }

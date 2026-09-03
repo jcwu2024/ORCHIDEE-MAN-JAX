@@ -1058,32 +1058,29 @@ Direct teacher-state GPP instead worsened `24.1562%`, with only `1/8`
 artifacts improving. No checkpoint was selected; the retained recovery is
 attribution-only.
 
-The bounded zero-training direct-GPP audit is frozen and locally qualified at
-contract SHA256 `017b8a1d...55ff5f`. It reconstructs the ten accepted states
-without the persistent recovery or repeated scale search, locates the first
-fixed-monitor direct-GPP regression, and compares eight training-artifact and
-eight monitor-artifact gradients with the applied four-source direction. It
-writes only one attribution report. Twelve focused and related tests plus
-static/CLI checks pass.
+The corrected zero-training direct-GPP audit completed on free `gln01` at
+commit `52c60e7` in `7,117.794` seconds; report SHA256 is
+`23327c3c...51cd9`. The first fixed-monitor regression is persistent update 2:
+scheduled direct GPP improves `5.8362%`, while monitor direct GPP worsens
+`2.2197%`. Their mean gradients have cosine `0.973434`, so a simple
+scheduled-versus-monitor mean-direction reversal is ruled out. The applied
+four-source descent has cosines only `0.154337` and `0.024148` with the two
+GPP means, and artifact conflicts plus a positive first-order monitor cosine
+followed by finite regression identify weak GPP protection and finite-step
+nonlinearity. The ten-update monitor trajectory worsens `27.6762%`. Every
+engineering gate passes and nothing is retained. See
+[`target_oriented_coupled_gpp_direct_generalization_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_generalization_result_20260903.md).
 
-Its first free execution at `06c765a` stopped before persistent update 1 on an
-invalid cross-run `rtol=1e-6` identity check. Two accepted independent initial
-monitors already differ `0.125583%`; the amended contract now uses a `1%`
-bootstrap bound, treats old-run per-step values as report-only, and retains
-exact same-run and direct-GPP outcome-direction gates. The stopped execution
-wrote no result or parameter state.
-
-The old bootstrap also recursively repeated historical scale audits and used
-almost three hours before reaching the attribution. The replacement builds
-updates 2-7 once with their accepted mechanisms and fixed scales; the
-180-minute execution bound remains unchanged.
-
-The active task is one free-`gln01` execution with a 180-minute timeout. The
-result will decide between larger effective batches, robust cross-group
-constraints, and a loss/acceptance correction for teacher-state versus
-rollout compensation. No architecture change is opened. Unchanged recovery
-continuation, paid execution, fresh validation, 365-day rollout, Gate D2,
-sealed test, and product acceptance remain closed. See
+The active task is the frozen update-2 direct-step transfer audit at contract
+SHA256 `b6f05589...13a61`. It selects the largest of
+`1/2,1/4,1/8,1/16,1/32,1/64` that preserves the scheduled four-source gate
+and direct GPP across four disjoint future train/train groups. The fixed
+monitor remains unread until selection and receives only the selected scale.
+The audit avoids the unneeded 19-by-19 gradient Gram, retains no state, and is
+allowed one free-`gln01` execution with a 120-minute timeout. No architecture
+change is opened. Recovery continuation, paid execution, fresh validation,
+365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
+See
 [`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md)
 and
 [`target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md),
@@ -1091,8 +1088,10 @@ with the launch correction in
 [`target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md)
 and the scientific result in
 [`target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md),
-with the active audit contract in
+with the completed attribution protocol in
 [`target_oriented_coupled_gpp_direct_generalization_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_generalization_audit_v1.md).
+The active transfer contract is
+[`target_oriented_coupled_gpp_direct_step_transfer_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_step_transfer_audit_v1.md).
 
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.
