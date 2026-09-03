@@ -2168,22 +2168,30 @@ improving, and all physical gates pass. Reachable one-day state improves
 improves on only `1/8` artifacts. See
 [`target_oriented_coupled_gpp_scale_selected_transfer_result_20260902.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_scale_selected_transfer_result_20260902.md).
 
-The persistent 100-update scale-selecting runner has now passed free `gln01`
-admission at commit `7d57887` in `4,669.897` seconds. It reconstructed update
-7, ran the detailed eight-artifact monitor, selected scale `1` for one
-discarded persistent update, and round-tripped then removed the temporary
-parameter-only recovery. No checkpoint or recovery remained; peak live JAX
-bytes were about 4.11 GB. The initial cumulative GPP scores remain poor at
-`0.417840` for 7 days and `0.497822` for 30 days, so this accepts the runner,
-not the model's absolute science. The active gate is explicit paid-resource
-authorization for the frozen 100-update `gnall` trial with its update-10 and
-update-25 stops. The Attention architecture, trainable boundary, conservative
-updater, retained exact tail, and scale-selecting common-direction method stay
-unchanged. Fresh validation, 365-day rollout, Gate D2, sealed test, and product
-acceptance remain closed. See
+The persistent 100-update scale-selecting runner passed free `gln01` admission
+at commit `7d57887` in `4,669.897` seconds. It reconstructed update 7, ran the
+detailed eight-artifact monitor, selected scale `1` for one discarded update,
+and removed its temporary recovery. Initial cumulative GPP scores remain poor
+at `0.417840` for 7 days and `0.497822` for 30 days, so this accepts the runner,
+not the model's absolute science.
+
+The first paid launch, job `14911154`, exited after two seconds before Python
+because the production-only empty argument array was incompatible with
+Explore1000 Bash 4.2 under `set -u`. It produced no report, checkpoint,
+recovery, or training update. Commit `64185d8` uses the established scalar
+argument pattern and passes focused tests, local and cluster Bash checks, and a
+free one-second `admission=0` launcher smoke through the former failure line.
+The active gate is new explicit paid-resource authorization for the same
+frozen 100-update `gnall` trial with its update-10 and update-25 stops. The
+Attention architecture, trainable boundary, conservative updater, retained
+exact tail, and scale-selecting common-direction method stay unchanged. Fresh
+validation, 365-day rollout, Gate D2, sealed test, and product acceptance
+remain closed. See
 [`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md)
 and
-[`target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md).
+[`target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md),
+with the launch correction in
+[`target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md).
 
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT

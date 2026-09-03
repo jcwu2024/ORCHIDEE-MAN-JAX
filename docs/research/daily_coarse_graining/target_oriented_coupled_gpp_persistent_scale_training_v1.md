@@ -2,7 +2,8 @@
 
 Date: 2026-09-03
 
-Status: frozen; free `gln01` runner admission accepted, paid authorization pending
+Status: frozen; free admission accepted, production launcher repaired, paid
+reauthorization pending
 
 Machine contract:
 `manifests/coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.json`
@@ -85,3 +86,10 @@ Paid training still requires a separate review and explicit approval of the
 exact Slurm resources, wall-time limit, command, working directory, and
 worst-case charge. Fresh validation, 365-day rollout, Gate D2, sealed test,
 and product acceptance remain closed.
+
+Paid job `14911154` exited before Python because the production-only empty
+admission array was incompatible with Explore1000 Bash 4.2 under `set -u`.
+Commit `64185d8` replaces it with the established scalar pattern and passes a
+free one-second production-mode launcher smoke. No training result or artifact
+came from the failed job. See
+[`target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md`](target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md).
