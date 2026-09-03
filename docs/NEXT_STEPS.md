@@ -2229,14 +2229,17 @@ improving. The classification is
 gates pass and no state is retained. See
 [`target_oriented_coupled_gpp_artifact_aware_direction_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_result_20260904.md).
 
-The active task is to freeze and locally qualify a no-checkpoint three-update
-artifact-aware backtracking smoke. Each update must recompute its 43-constraint
-direction on a new train-only panel, choose a scale without monitor feedback,
-and preserve scheduled state and 7/30-day science. The fixed monitor trajectory
-may be evaluated only after all train-only choices are complete. This tests
-reconstruction repeatability and consecutive-step transfer before persistent
-training. Paid execution, fresh validation, 365-day rollout, Gate D2, sealed
-test, and product acceptance remain closed. The completed audit contract is
+The no-checkpoint three-update artifact-aware backtracking smoke is frozen at
+contract SHA256 `451a1003...7e20f3` and locally qualified. Logical updates 2,
+3, and 4 use three disjoint 40-artifact train-only panels; every update
+recomputes all 43 gradients and chooses the first passing scale without monitor
+feedback. Only after all three train-only choices pass may the fixed monitor
+trajectory be read. The active gate is one execution on free `gln01`, with a
+240-minute timeout and no checkpoint or recovery output. Paid execution, fresh
+validation, 365-day rollout, Gate D2, sealed test, and product acceptance remain
+closed. See
+[`target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.md).
+The completed one-step audit contract is
 [`target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md).
 The completed predecessor contract is
 [`target_oriented_coupled_gpp_multi_group_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_audit_v1.md).

@@ -13,6 +13,8 @@ CACHE_ROOT=${CACHE_ROOT:-$ROOT/runtime/cache/jax/orcjax_gpu/target-oriented-coup
 PYTHON_MODULE=${PYTHON_MODULE:-scripts.hpc.audit_target_oriented_coupled_gpp_multi_group_direction}
 ARTIFACT_AWARE_CONTRACT=${ARTIFACT_AWARE_CONTRACT:-}
 MULTI_GROUP_RESULT=${MULTI_GROUP_RESULT:-}
+CONTINUITY_CONTRACT=${CONTINUITY_CONTRACT:-}
+ARTIFACT_AWARE_RESULT=${ARTIFACT_AWARE_RESULT:-}
 PARENT_DIR=$ROOT/runtime/outputs/training/target-oriented-coupled-gpp-bounded-14903328
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
@@ -90,7 +92,22 @@ for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" "$PROCESS_STATISTICS" \
 done
 
 EXTRA_AUDIT_ARGS=()
-if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_artifact_aware_direction" ]]; then
+if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_artifact_aware_continuity" ]]; then
+  test -n "$ARTIFACT_AWARE_CONTRACT"
+  test -n "$MULTI_GROUP_RESULT"
+  test -n "$CONTINUITY_CONTRACT"
+  test -n "$ARTIFACT_AWARE_RESULT"
+  test -f "$ARTIFACT_AWARE_CONTRACT"
+  test -f "$MULTI_GROUP_RESULT"
+  test -f "$CONTINUITY_CONTRACT"
+  test -f "$ARTIFACT_AWARE_RESULT"
+  EXTRA_AUDIT_ARGS=(
+    --artifact-aware-contract "$ARTIFACT_AWARE_CONTRACT"
+    --multi-group-result "$MULTI_GROUP_RESULT"
+    --continuity-contract "$CONTINUITY_CONTRACT"
+    --artifact-aware-result "$ARTIFACT_AWARE_RESULT"
+  )
+elif [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_artifact_aware_direction" ]]; then
   test -n "$ARTIFACT_AWARE_CONTRACT"
   test -n "$MULTI_GROUP_RESULT"
   test -f "$ARTIFACT_AWARE_CONTRACT"
@@ -99,7 +116,8 @@ if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_artifac
     --artifact-aware-contract "$ARTIFACT_AWARE_CONTRACT"
     --multi-group-result "$MULTI_GROUP_RESULT"
   )
-elif [[ -n "$ARTIFACT_AWARE_CONTRACT" || -n "$MULTI_GROUP_RESULT" ]]; then
+elif [[ -n "$ARTIFACT_AWARE_CONTRACT" || -n "$MULTI_GROUP_RESULT" || \
+  -n "$CONTINUITY_CONTRACT" || -n "$ARTIFACT_AWARE_RESULT" ]]; then
   exit 2
 fi
 

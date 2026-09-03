@@ -1107,14 +1107,18 @@ no state is retained. See
 [`target_oriented_coupled_gpp_artifact_aware_direction_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_result_20260904.md).
 
 This accepts artifact-aware direction construction for a bounded continuity
-test without promoting the Attention model. The active task is to freeze and
-locally qualify a no-checkpoint three-update backtracking smoke. Every update
-must recompute its direction on a new train-only panel and select its scale
-without monitor feedback; the monitor trajectory is read only after all three
-choices. Reconstruction repeatability, consecutive feasibility, and transfer
-must pass before persistent training. Recovery continuation, paid execution,
-fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
-remain closed. The completed audit contract is
+test without promoting the Attention model. The three-update smoke is now
+frozen at contract SHA256 `451a1003...7e20f3` and locally qualified. Logical
+updates 2, 3, and 4 use schedule groups `(2,11,12,13,14)`,
+`(3,15,16,17,18)`, and `(4,19,20,21,22)`, respectively: 120 distinct
+train-only point-year artifacts in total. Every step recomputes its 43-gradient
+direction and uses the existing descending backtracking ladder. The monitor is
+not read unless all three train-only steps pass, and no parameters are retained.
+The active gate is one free-`gln01` execution with a 240-minute timeout.
+Recovery continuation, paid execution, fresh validation, 365-day rollout, Gate
+D2, sealed test, and product acceptance remain closed. See
+[`target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.md).
+The completed one-step audit contract is
 [`target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md).
 The completed predecessor contract is
 [`target_oriented_coupled_gpp_multi_group_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_audit_v1.md).

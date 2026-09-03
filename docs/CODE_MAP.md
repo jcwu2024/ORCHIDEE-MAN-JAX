@@ -960,6 +960,23 @@ accumulates five disjoint direct-GPP group means plus the scheduled state,
 performs train-only finite-step selection before at most one monitor read. Its
 direct wrapper is free-`gln01` only and retains no state.
 
+`daily_operator/target_oriented_coupled_gpp_artifact_aware_direction.py` owns
+the 43-constraint sample-level direction and train-only scale gate. Its machine
+contract is
+`manifests/coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.json`.
+`scripts/hpc/audit_target_oriented_coupled_gpp_artifact_aware_direction.py`
+owns the accepted one-step audit over 40 individual direct-GPP artifacts and
+three scheduled non-GPP objectives.
+
+`daily_operator/target_oriented_coupled_gpp_artifact_aware_continuity.py` owns
+the three disjoint train-only panels, consecutive-update classification, and
+post-selection monitor-trajectory rule. Its machine contract is
+`manifests/coarse_graining/target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.json`.
+`scripts/hpc/audit_target_oriented_coupled_gpp_artifact_aware_continuity.py`
+recomputes the 43-gradient direction at each in-memory state and defers every
+monitor read until all three train-only steps pass. Its free-`gln01` wrapper
+writes one report and no parameters, optimizer state, recovery, or checkpoint.
+
 ## Scripts
 
 | Path | Classification | Use |
