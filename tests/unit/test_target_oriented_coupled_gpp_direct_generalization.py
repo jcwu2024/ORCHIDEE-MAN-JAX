@@ -26,6 +26,8 @@ def test_direct_generalization_contract_is_frozen_and_zero_retention():
     assert tuple(contract.payload["trajectory"]["selected_scales_from_result"]) == SELECTED_SCALES
     assert contract.payload["trajectory"]["persistent_recovery_read"] is False
     assert contract.payload["trajectory"]["repeat_scale_search"] is False
+    assert contract.payload["trajectory"]["bootstrap_persistent_result_relative_difference_maximum"] == 0.01
+    assert contract.payload["trajectory"]["per_update_and_endpoint_persistent_result_loss_comparison"] == "report_only"
     assert not any(contract.payload["retention"].values())
     assert contract.payload["execution"]["paid_partition_authorized"] is False
 
@@ -83,7 +85,9 @@ def test_direct_generalization_runner_is_read_only_and_direct_only_at_attributio
     launcher = (root / "scripts/hpc/run_target_oriented_coupled_gpp_direct_generalization.sh").read_text(
         encoding="utf-8"
     )
-    assert "_run_scale_selecting(args, write_output=False, return_internal=True)" in runner
+    assert "_run_direct_recalibration(args, write_output=False, return_internal=True)" in runner
+    assert "_run_scale_selecting" not in runner
+    assert "BOOTSTRAP_SELECTED_SCALES = (1.0, 1.0, 0.25, 1.0, 0.5)" in runner
     assert "_measure_source_gradients" in runner
     assert "_direct_gradient" in runner
     assert "first_adjacent_regression" in runner

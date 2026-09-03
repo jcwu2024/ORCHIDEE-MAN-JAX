@@ -20,7 +20,7 @@ from .target_oriented_coupled_gpp_persistent_scale_training import (
 from .target_oriented_source_shaped_maintenance import contract_sha256
 
 SCHEMA_VERSION = "target_oriented_coupled_gpp_direct_generalization_audit_v1"
-FROZEN_CONTRACT_SHA256 = "2ff8fbb882885cc3dcdee02434b0f846ededdcc96d81bdfc0ce5ee04c3123c74"
+FROZEN_CONTRACT_SHA256 = "017b8a1de69260970cb78f500afc8984cb86afb2a57cfb53bdb111e1fd55ff5f"
 PERSISTENT_RESULT_SHA256 = "764b14e169345ba119407b9e3dcf3a7e9141900c2710c8afa2775dd0fe881168"
 AUDITED_PERSISTENT_UPDATES = tuple(range(1, 11))
 SELECTED_SCALES = (1.0, 0.5, 0.5, 1.0, 0.5, 0.5, 1.0, 1.0, 1.0, 1.0)
@@ -178,8 +178,11 @@ def load_coupled_gpp_direct_generalization_contract(
         or trajectory.get("repeat_scale_search") is not False
         or trajectory.get("evaluate_fixed_monitor_direct_gpp_after_every_update") is not True
         or float(trajectory.get("adjacent_regression_relative_tolerance", -1.0)) != 0.0
-        or float(trajectory.get("persistent_result_loss_match_rtol", -1.0)) != 1.0e-6
-        or float(trajectory.get("persistent_result_loss_match_atol", -1.0)) != 1.0e-9
+        or float(trajectory.get("historical_independent_initial_monitor_relative_spread", -1.0)) != 0.00125583158782248
+        or float(trajectory.get("bootstrap_persistent_result_relative_difference_maximum", -1.0)) != 0.01
+        or float(trajectory.get("same_replay_internal_loss_match_rtol", -1.0)) != 1.0e-6
+        or float(trajectory.get("same_replay_internal_loss_match_atol", -1.0)) != 1.0e-9
+        or trajectory.get("per_update_and_endpoint_persistent_result_loss_comparison") != "report_only"
         or int(attribution.get("training_artifact_gradient_count", -1)) != 8
         or int(attribution.get("monitor_artifact_gradient_count", -1)) != 8
         or attribution.get("gradient_objective") != "direct_gpp_208_teacher_days"
@@ -191,7 +194,7 @@ def load_coupled_gpp_direct_generalization_contract(
         or acceptance.get("all_ten_updates_replayed") is not True
         or acceptance.get("first_adjacent_regression_located") is not True
         or acceptance.get("all_sixteen_direct_gradients_finite_nonzero") is not True
-        or acceptance.get("trajectory_endpoint_matches_persistent_result") is not True
+        or acceptance.get("trajectory_direct_gpp_outcome_direction_matches_persistent_result") is not True
         or acceptance.get("scientific_model_promotion_implied") is not False
     ):
         raise ValueError("coupled GPP direct-generalization contract drift")

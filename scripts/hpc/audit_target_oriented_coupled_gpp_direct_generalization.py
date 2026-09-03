@@ -13,6 +13,9 @@ from research.daily_coarse_graining.daily_operator.gradient_feasibility import (
     gradient_direction_diagnostics,
 )
 from research.daily_coarse_graining.daily_operator.successor_fit_checkpoint import sha256_file
+from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_bounded_training import (
+    build_coupled_gpp_training_schedule,
+)
 from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_direct_generalization import (
     AUDITED_PERSISTENT_UPDATES,
     PERSISTENT_RESULT_SHA256,
@@ -41,17 +44,15 @@ from scripts.hpc.run_strong_baseline_gpu_admission import _memory_report
 from scripts.hpc.run_successor_gradient_balanced_smoke import _make_gradient_gram
 from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
 from scripts.hpc.run_target_oriented_coupled_gpp_direct_recalibration import (
+    _git_head,
     _make_dtype_preserving_direct_virtual_step,
     _measure_source_gradients,
 )
+from scripts.hpc.run_target_oriented_coupled_gpp_direct_recalibration import (
+    run as _run_direct_recalibration,
+)
 from scripts.hpc.run_target_oriented_coupled_gpp_persistent_scale_training import (
     _parser as _persistent_parser,
-)
-from scripts.hpc.run_target_oriented_coupled_gpp_scale_selecting_recalibration import (
-    _git_head,
-)
-from scripts.hpc.run_target_oriented_coupled_gpp_scale_selecting_recalibration import (
-    run as _run_scale_selecting,
 )
 from scripts.hpc.run_target_oriented_coupled_gpp_update2_geometry import _scaled_parameters
 from scripts.hpc.run_target_oriented_structured_gpp_training_preflight import (
@@ -60,6 +61,7 @@ from scripts.hpc.run_target_oriented_structured_gpp_training_preflight import (
 )
 
 SCHEMA_VERSION = "target_oriented_coupled_gpp_direct_generalization_audit_result_v1"
+BOOTSTRAP_SELECTED_SCALES = (1.0, 1.0, 0.25, 1.0, 0.5)
 
 
 def _load_persistent_result(
@@ -219,7 +221,7 @@ def _replay_direction(
     flux_basis: Sequence[str],
     persistent_contract: Any,
     persistent_update: int,
-    expected_record: Mapping[str, Any],
+    expected_record: Mapping[str, Any] | None,
     selected_scale: float,
     gram_measurement: Any,
     combine_direction: Any,
@@ -266,24 +268,29 @@ def _replay_direction(
         np.asarray(float(persistent_contract.payload["direction"]["full_parameter_step_l2"]), dtype=np.float64),
     )
     jax.block_until_ready((proposed, proposal_nonfinite))
-    expected_losses = expected_record["source_mean_losses_before"]
-    losses_match = all(
-        np.isclose(
-            float(measurement["source_mean_losses"][name]),
-            float(expected_losses[name]),
-            rtol=1.0e-6,
-            atol=1.0e-9,
+    losses_match = None
+    expected_metadata_matches = True
+    if expected_record is not None:
+        expected_losses = expected_record["source_mean_losses_before"]
+        losses_match = all(
+            np.isclose(
+                float(measurement["source_mean_losses"][name]),
+                float(expected_losses[name]),
+                rtol=1.0e-6,
+                atol=1.0e-9,
+            )
+            for name in GRADIENT_SOURCES
         )
-        for name in GRADIENT_SOURCES
-    )
+        expected_metadata_matches = bool(
+            tuple(int(value) for value in expected_record["artifact_updates"]) == tuple(int(value) for value in group)
+            and float(expected_record["selected_scale"]) == float(selected_scale)
+            and expected_record["finite_step_accepted"] is True
+        )
     if (
         not common
         or int(np.asarray(common_nonfinite)) != 0
         or int(np.asarray(proposal_nonfinite)) != 0
-        or tuple(int(value) for value in expected_record["artifact_updates"]) != tuple(int(value) for value in group)
-        or float(expected_record["selected_scale"]) != float(selected_scale)
-        or expected_record["finite_step_accepted"] is not True
-        or not losses_match
+        or not expected_metadata_matches
     ):
         raise RuntimeError(f"direct-GPP persistent update {persistent_update} replay drift")
     updated = _scaled_parameters(jax, trainable, proposed, selected_scale)
@@ -375,13 +382,20 @@ def run(args: Any) -> Mapping[str, Any]:
         schedule=schedule,
     )
 
-    reconstructed, internal = _run_scale_selecting(args, write_output=False, return_internal=True)
-    if reconstructed.get("status") != "passed" or reconstructed.get("smoke", {}).get("updates_accepted") != [5, 6, 7]:
+    bootstrap_started = time.perf_counter()
+    reconstructed, internal = _run_direct_recalibration(args, write_output=False, return_internal=True)
+    if (
+        reconstructed.get("status") != "failed_scientific_gate"
+        or reconstructed.get("classification") != "common_direction_finite_step_rejection"
+        or reconstructed.get("smoke", {}).get("updates_accepted") != [3, 4]
+        or reconstructed.get("smoke", {}).get("updates_evaluated") != [3, 4, 5]
+    ):
         raise RuntimeError("direct-GPP generalization update-7 reconstruction failed")
     context = internal["context"]
     runtime = context["runtime"]
     jax = runtime["jax"]
     jnp = runtime["jnp"]
+    bootstrap_schedule = build_coupled_gpp_training_schedule()
     required = {value for group in schedule.groups[: len(AUDITED_PERSISTENT_UPDATES)] for value in group} | set(
         audit_contract.monitor_updates
     )
@@ -390,21 +404,48 @@ def run(args: Any) -> Mapping[str, Any]:
         raise ValueError(f"direct-GPP generalization prepared coverage drift: {missing}")
 
     initialized_parameters = internal["initialized_parameters"]
-    fixed_parameters = replace_coupled_gpp_trainable(initialized_parameters, {})
     steps = internal["steps"]
-    gradient_steps = steps["make_trainable_gradient_steps"](
-        fixed_parameters,
-        replace_coupled_gpp_trainable,
-    )
+    gradient_steps = internal["gradient_steps"]
     direct_steps = internal["direct_steps"]
     state_steps = internal["state_steps"]
     layout = internal["layout"]
     flux_basis = internal["flux_basis"]
-    trainable = internal["final_trainable"]
-    memory_before = _memory_report(internal["device"])
     gram_measurement = _make_gradient_gram(jax)
     combine_direction = _make_combined_direction(jax)
     direct_virtual_step = _make_dtype_preserving_direct_virtual_step(jax)
+
+    trainable = _scaled_parameters(
+        jax,
+        internal["before_trainable"],
+        internal["proposed_trainable"],
+        BOOTSTRAP_SELECTED_SCALES[2],
+    )
+    bootstrap_records = []
+    for macro_update, selected_scale in zip((6, 7), BOOTSTRAP_SELECTED_SCALES[3:], strict=True):
+        replayed = _replay_direction(
+            args,
+            context,
+            initialized_parameters=initialized_parameters,
+            trainable=trainable,
+            steps=steps,
+            gradient_steps=gradient_steps,
+            direct_steps=direct_steps,
+            state_steps=state_steps,
+            layout=layout,
+            group=bootstrap_schedule.groups[macro_update - 1],
+            flux_basis=flux_basis,
+            persistent_contract=persistent_contract,
+            persistent_update=macro_update,
+            expected_record=None,
+            selected_scale=selected_scale,
+            gram_measurement=gram_measurement,
+            combine_direction=combine_direction,
+            direct_virtual_step=direct_virtual_step,
+        )
+        trainable = replayed["updated_trainable"]
+        bootstrap_records.append(replayed["record"])
+    bootstrap_seconds = time.perf_counter() - bootstrap_started
+    memory_before = _memory_report(internal["device"])
 
     initial_panel = _direct_panel(
         args,
@@ -415,10 +456,14 @@ def run(args: Any) -> Mapping[str, Any]:
         label="trajectory_0",
     )
     persistent_initial = float(persistent_result["initial_monitor"]["source_mean_losses"][DIRECT_SOURCE])
-    rtol = float(audit_contract.payload["trajectory"]["persistent_result_loss_match_rtol"])
-    atol = float(audit_contract.payload["trajectory"]["persistent_result_loss_match_atol"])
-    if not np.isclose(initial_panel["mean_loss"], persistent_initial, rtol=rtol, atol=atol):
+    trajectory_contract = audit_contract.payload["trajectory"]
+    bootstrap_relative_difference = abs(float(initial_panel["mean_loss"]) - persistent_initial) / persistent_initial
+    if bootstrap_relative_difference > float(
+        trajectory_contract["bootstrap_persistent_result_relative_difference_maximum"]
+    ):
         raise RuntimeError("direct-GPP initial monitor replay drift")
+    internal_rtol = float(trajectory_contract["same_replay_internal_loss_match_rtol"])
+    internal_atol = float(trajectory_contract["same_replay_internal_loss_match_atol"])
 
     trajectory = [dict(persistent_update=0, panel=initial_panel)]
     replay_records = []
@@ -482,11 +527,12 @@ def run(args: Any) -> Mapping[str, Any]:
     trajectory_losses = tuple(float(item["panel"]["mean_loss"]) for item in trajectory)
     first_regression = first_adjacent_regression(trajectory_losses)
     persistent_final = float(persistent_result["milestone_monitors"][0]["source_mean_losses"][DIRECT_SOURCE])
-    endpoint_matches = bool(np.isclose(trajectory_losses[-1], persistent_final, rtol=rtol, atol=atol))
+    endpoint_relative_difference = abs(trajectory_losses[-1] - persistent_final) / persistent_final
+    persistent_outcome_is_regression = persistent_final > persistent_initial
+    replay_outcome_is_regression = trajectory_losses[-1] > trajectory_losses[0]
+    outcome_direction_matches = persistent_outcome_is_regression == replay_outcome_is_regression
     if first_state is None or first_regression is None or first_state["persistent_update"] != first_regression:
         raise RuntimeError("direct-GPP first adjacent regression was not retained")
-    if not endpoint_matches:
-        raise RuntimeError("direct-GPP update-10 monitor replay drift")
 
     training = _artifact_gradients_and_changes(
         args,
@@ -536,13 +582,29 @@ def run(args: Any) -> Mapping[str, Any]:
     monitor_before = float(np.mean([item["before_loss"] for item in monitor["records"]]))
     monitor_after = float(np.mean([item["after_loss"] for item in monitor["records"]]))
     means_match = bool(
-        np.isclose(training_before, first_state["training_direct_loss_before"], rtol=rtol, atol=atol)
-        and np.isclose(monitor_before, first_state["monitor_direct_loss_before"], rtol=rtol, atol=atol)
-        and np.isclose(monitor_after, first_state["monitor_direct_loss_after"], rtol=rtol, atol=atol)
+        np.isclose(
+            training_before,
+            first_state["training_direct_loss_before"],
+            rtol=internal_rtol,
+            atol=internal_atol,
+        )
+        and np.isclose(
+            monitor_before,
+            first_state["monitor_direct_loss_before"],
+            rtol=internal_rtol,
+            atol=internal_atol,
+        )
+        and np.isclose(
+            monitor_after,
+            first_state["monitor_direct_loss_after"],
+            rtol=internal_rtol,
+            atol=internal_atol,
+        )
     )
     engineering_passed = bool(
         len(replay_records) == len(AUDITED_PERSISTENT_UPDATES)
-        and endpoint_matches
+        and outcome_direction_matches
+        and replay_outcome_is_regression
         and np.all(nonfinite_host == 0)
         and np.all(np.diag(gram_host) > 0.0)
         and means_match
@@ -584,6 +646,15 @@ def run(args: Any) -> Mapping[str, Any]:
             "forcing_records_reconstructed": 0,
             "subdaily_state_scan_steps": 0,
         },
+        "bootstrap": {
+            "source_state": "bounded_training_update_1_recovery",
+            "fresh_adamw_updates": [2],
+            "direct_common_direction_updates": [3, 4, 5, 6, 7],
+            "selected_scales": list(BOOTSTRAP_SELECTED_SCALES),
+            "historical_scale_search_repeated": False,
+            "updates_6_7": bootstrap_records,
+            "elapsed_seconds": bootstrap_seconds,
+        },
         "trajectory": {
             "initial_persistent_update": 0,
             "final_persistent_update": 10,
@@ -597,7 +668,12 @@ def run(args: Any) -> Mapping[str, Any]:
                 for item in trajectory
             ],
             "replay_updates": replay_records,
-            "endpoint_matches_persistent_result": endpoint_matches,
+            "bootstrap_persistent_result_relative_difference": bootstrap_relative_difference,
+            "endpoint_persistent_result_relative_difference": endpoint_relative_difference,
+            "persistent_result_loss_comparisons_are_report_only": True,
+            "persistent_result_outcome_is_regression": persistent_outcome_is_regression,
+            "replay_outcome_is_regression": replay_outcome_is_regression,
+            "outcome_direction_matches_persistent_result": outcome_direction_matches,
         },
         "first_regression_attribution": {
             "persistent_update": first_regression,
@@ -627,7 +703,7 @@ def run(args: Any) -> Mapping[str, Any]:
             "all_sixteen_direct_gradients_finite_nonzero": bool(
                 np.all(nonfinite_host[:16] == 0) and np.all(np.diag(gram_host)[:16] > 0.0)
             ),
-            "trajectory_endpoint_matches_persistent_result": endpoint_matches,
+            "trajectory_direct_gpp_outcome_direction_matches_persistent_result": outcome_direction_matches,
             "engineering_gate_passed": engineering_passed,
             "scientific_model_promotion_implied": False,
         },

@@ -1059,12 +1059,24 @@ artifacts improving. No checkpoint was selected; the retained recovery is
 attribution-only.
 
 The bounded zero-training direct-GPP audit is frozen and locally qualified at
-contract SHA256 `2ff8fbb8...3123c74`. It reconstructs the ten accepted states
+contract SHA256 `017b8a1d...55ff5f`. It reconstructs the ten accepted states
 without the persistent recovery or repeated scale search, locates the first
 fixed-monitor direct-GPP regression, and compares eight training-artifact and
 eight monitor-artifact gradients with the applied four-source direction. It
 writes only one attribution report. Twelve focused and related tests plus
 static/CLI checks pass.
+
+Its first free execution at `06c765a` stopped before persistent update 1 on an
+invalid cross-run `rtol=1e-6` identity check. Two accepted independent initial
+monitors already differ `0.125583%`; the amended contract now uses a `1%`
+bootstrap bound, treats old-run per-step values as report-only, and retains
+exact same-run and direct-GPP outcome-direction gates. The stopped execution
+wrote no result or parameter state.
+
+The old bootstrap also recursively repeated historical scale audits and used
+almost three hours before reaching the attribution. The replacement builds
+updates 2-7 once with their accepted mechanisms and fixed scales; the
+180-minute execution bound remains unchanged.
 
 The active task is one free-`gln01` execution with a 180-minute timeout. The
 result will decide between larger effective batches, robust cross-group

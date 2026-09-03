@@ -2186,7 +2186,7 @@ and `33.9401%` at 7/30 days. Direct teacher-state GPP, however, worsened
 selected; the retained recovery is attribution-only.
 
 The bounded zero-training direct-GPP generalization audit is now frozen and
-locally qualified at contract SHA256 `2ff8fbb8...3123c74`. It deterministically
+locally qualified at contract SHA256 `017b8a1d...55ff5f`. It deterministically
 replays persistent updates 1-10 from the selected update-7 state, uses the ten
 already accepted scales without repeating scale search, and evaluates the
 fixed monitor's direct GPP after each in-memory update. At the first adjacent
@@ -2195,6 +2195,19 @@ direct-GPP gradients, their complete direction geometry, and actual finite
 changes. The persistent recovery is not read and no parameter state is
 retained. Twelve focused and related tests plus CLI, Ruff, format, and Bash
 syntax checks pass.
+
+The first free execution at `06c765a` stopped before persistent update 1
+because an invalid cross-run `rtol=1e-6` identity gate rejected ordinary GPU
+replay variation. Existing accepted admission and production initial monitors
+already differ `0.125583%`. The corrected contract requires a `1%` bootstrap
+identity bound, makes old-run per-step values report-only, and retains exact
+same-run checks plus the direct-GPP outcome-direction gate. The stopped run
+wrote no report or parameter state.
+
+The same run exposed that the old bootstrap recursively repeated prior scale
+audits and spent almost three hours before the attribution. The runner is now
+being corrected to reconstruct updates 2-7 once with fixed accepted scales;
+the 180-minute bound is unchanged.
 
 The active gate is one free-`gln01` execution with a 180-minute timeout. Its
 evidence will select between a larger/multi-group effective batch, robust

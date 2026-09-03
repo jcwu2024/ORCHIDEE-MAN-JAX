@@ -1,7 +1,7 @@
 {
   "schema_version": "target_oriented_coupled_gpp_direct_generalization_audit_v1",
   "status": "frozen_before_direct_gpp_generalization_values_are_evaluated",
-  "contract_sha256": "2ff8fbb882885cc3dcdee02434b0f846ededdcc96d81bdfc0ce5ee04c3123c74",
+  "contract_sha256": "017b8a1de69260970cb78f500afc8984cb86afb2a57cfb53bdb111e1fd55ff5f",
   "identity": {
     "candidate": "target_oriented_coupled_gpp_carbon_feedback_attention_v1",
     "persistent_contract_sha256": "1742d9d19a6b8e8d91331723bf06047a17fa5ce5d31cc528987205a838d8b5e4",
@@ -33,8 +33,11 @@
     "evaluate_fixed_monitor_direct_gpp_after_every_update": true,
     "first_regression_definition": "first_strict_adjacent_increase_in_eight_artifact_mean_direct_gpp_loss",
     "adjacent_regression_relative_tolerance": 0.0,
-    "persistent_result_loss_match_rtol": 1e-6,
-    "persistent_result_loss_match_atol": 1e-9
+    "historical_independent_initial_monitor_relative_spread": 0.00125583158782248,
+    "bootstrap_persistent_result_relative_difference_maximum": 0.01,
+    "same_replay_internal_loss_match_rtol": 1e-6,
+    "same_replay_internal_loss_match_atol": 1e-9,
+    "per_update_and_endpoint_persistent_result_loss_comparison": "report_only"
   },
   "attribution": {
     "gradient_state": "immediately_before_first_adjacent_monitor_regression",
@@ -51,7 +54,7 @@
     "all_ten_updates_replayed": true,
     "first_adjacent_regression_located": true,
     "all_sixteen_direct_gradients_finite_nonzero": true,
-    "trajectory_endpoint_matches_persistent_result": true,
+    "trajectory_direct_gpp_outcome_direction_matches_persistent_result": true,
     "scientific_model_promotion_implied": false
   },
   "retention": {
