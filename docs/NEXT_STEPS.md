@@ -2206,16 +2206,26 @@ improving. The classification is `train_only_scale_fails_monitor`; no state
 was retained. See
 [`target_oriented_coupled_gpp_direct_step_transfer_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_step_transfer_result_20260904.md).
 
-The active gate is the frozen zero-retention multi-group direct-GPP direction
-audit at contract SHA256 `1c103e79...b82d19`. At the same pre-update-2 state,
-the scheduled and four train-only guard GPP gradients enter direction
-construction separately alongside reachable state, 7-day science, and
-30-day science. The existing minimum-norm solver uses only an `8 x 8` Gram.
-Scale selection remains train-only; the fixed monitor may evaluate only the
-selected proposal once. This is an optimizer-direction test, not an
-architecture change or training continuation. One free `gln01` execution is
-allowed with a 120-minute timeout. Paid execution, fresh validation, 365-day
-rollout, Gate D2, sealed test, and product acceptance remain closed. See
+The zero-retention multi-group direct-GPP direction audit completed on free
+`gln01` at commit `c5c0a56` in `4,874.724` seconds; report SHA256 is
+`cf10f5e...663577`. A common eight-constraint direction exists with minimum
+cosine `0.150436`, and all six frozen scales improve every scheduled source
+and all four train-only guard-group GPP means. The train-only selector chooses
+scale `1/2`. The fixed monitor nevertheless worsens by `0.4731%`, with `4/8`
+artifacts improving. The classification is
+`multi_group_direction_fails_monitor`; all engineering and scheduled physical
+gates pass and no state is retained. Group-mean direction construction is
+therefore closed as the next training rule. See
+[`target_oriented_coupled_gpp_multi_group_direction_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_result_20260904.md).
+
+The active task is to freeze and locally qualify an artifact-aware or
+distributionally robust zero-training GPP direction audit. It must expose
+within-group GPP heterogeneity during direction construction, keep scale
+selection train-only, and read the fixed monitor only after one proposal has
+been selected. This remains an update-rule diagnosis, not an Attention
+architecture change or training continuation. Paid execution, fresh
+validation, 365-day rollout, Gate D2, sealed test, and product acceptance
+remain closed. The completed contract is
 [`target_oriented_coupled_gpp_multi_group_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_audit_v1.md).
 The predecessor training evidence remains in
 [`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md)

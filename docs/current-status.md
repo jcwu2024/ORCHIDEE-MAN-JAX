@@ -1081,16 +1081,26 @@ physical gates pass, allocator peak is about `4.10 GB`, and no state is
 retained. See
 [`target_oriented_coupled_gpp_direct_step_transfer_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_step_transfer_result_20260904.md).
 
-The active gate is the frozen zero-retention multi-group direct-GPP direction
-audit at contract SHA256 `1c103e79...b82d19`. It treats the scheduled and four
-train-only guard GPP gradients as separate direction constraints alongside
-reachable state, 7-day science, and 30-day science. The existing minimum-norm
-solver uses an `8 x 8` Gram, followed by train-only scale selection and at
-most one fixed-monitor evaluation. This changes the update rule, not the
-Attention architecture. One free `gln01` execution is allowed with a
-120-minute timeout. Recovery continuation, paid execution, fresh validation,
-365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
-See
+The multi-group direct-GPP direction audit completed on free `gln01` at commit
+`c5c0a56` in `4,874.724` seconds; report SHA256 is `cf10f5e...663577`. The
+minimum-norm solver finds a common eight-constraint direction with minimum
+cosine `0.150436`. All six frozen scales improve all four scheduled sources,
+all four train-only guard-group GPP means, and the combined guard mean, so the
+train-only selector chooses scale `1/2`. The fixed monitor, read only after
+selection, worsens by `0.4731%`; exactly `4/8` artifacts improve. The
+classification is `multi_group_direction_fails_monitor`. All engineering and
+scheduled physical gates pass, allocator peak is about `4.10 GB`, and no
+state is retained. See
+[`target_oriented_coupled_gpp_multi_group_direction_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_result_20260904.md).
+
+This closes group-mean multi-group direction construction as the next training
+rule without rejecting the Attention architecture. The active task is to
+freeze and locally qualify an artifact-aware or distributionally robust
+zero-training GPP direction audit that exposes within-group heterogeneity,
+selects its scale using train-only evidence, and evaluates the fixed monitor
+only after selection. Recovery continuation, paid execution, fresh
+validation, 365-day rollout, Gate D2, sealed test, and product acceptance
+remain closed. The completed contract is
 [`target_oriented_coupled_gpp_multi_group_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_audit_v1.md).
 The predecessor training evidence remains in
 [`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md)
