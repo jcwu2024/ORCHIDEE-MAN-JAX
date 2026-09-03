@@ -2218,17 +2218,25 @@ gates pass and no state is retained. Group-mean direction construction is
 therefore closed as the next training rule. See
 [`target_oriented_coupled_gpp_multi_group_direction_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_result_20260904.md).
 
-The active gate is the frozen zero-retention artifact-aware GPP direction
-audit at contract SHA256 `0606e7e2...f37fc52`. Forty separate train-only
-direct-GPP artifact gradients plus scheduled state and 7/30-day gradients
-form 43 unit-normalized constraints. The iterative active-set solver uses a
-`43 x 43` Gram; finite-step selection requires every one of the 40 artifact
-losses to remain nonincreasing and stops at the first passing scale in the
-descending ladder. The fixed monitor remains excluded until one proposal is
-selected. This is an update-rule diagnosis, not an Attention architecture
-change or training continuation. One free `gln01` execution is allowed with a
-120-minute timeout. Paid execution, fresh validation, 365-day rollout, Gate
-D2, sealed test, and product acceptance remain closed. See
+The artifact-aware direction audit completed on free `gln01` at commit
+`77d5a45` in `3,630.564` seconds; report SHA256 is `67bde6d8...09cbfe`. A
+43-constraint common direction exists with minimum cosine `0.0422923`. The
+first scale `1/2` improves all four scheduled sources, all `40/40` train-only
+direct-GPP artifacts, and their combined mean by `3.4706%`. The fixed monitor,
+read only after selection, improves by `2.7567%`, with `8/8` artifacts
+improving. The classification is
+`artifact_aware_direction_transfers_to_monitor`; all engineering and physical
+gates pass and no state is retained. See
+[`target_oriented_coupled_gpp_artifact_aware_direction_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_result_20260904.md).
+
+The active task is to freeze and locally qualify a no-checkpoint three-update
+artifact-aware backtracking smoke. Each update must recompute its 43-constraint
+direction on a new train-only panel, choose a scale without monitor feedback,
+and preserve scheduled state and 7/30-day science. The fixed monitor trajectory
+may be evaluated only after all train-only choices are complete. This tests
+reconstruction repeatability and consecutive-step transfer before persistent
+training. Paid execution, fresh validation, 365-day rollout, Gate D2, sealed
+test, and product acceptance remain closed. The completed audit contract is
 [`target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md).
 The completed predecessor contract is
 [`target_oriented_coupled_gpp_multi_group_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_audit_v1.md).

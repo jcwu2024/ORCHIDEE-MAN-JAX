@@ -1093,16 +1093,28 @@ scheduled physical gates pass, allocator peak is about `4.10 GB`, and no
 state is retained. See
 [`target_oriented_coupled_gpp_multi_group_direction_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_result_20260904.md).
 
-This closes group-mean multi-group direction construction as the next training
-rule without rejecting the Attention architecture. The active gate is the
-frozen zero-retention artifact-aware direction audit at contract SHA256
-`0606e7e2...f37fc52`. It uses 40 separate train-only artifact direct-GPP
-gradients and the three scheduled non-GPP gradients as 43 unit-normalized
-constraints. Its scale ladder stops at the first train-only step that preserves
-all 40 artifact losses; only that proposal can reach the fixed monitor. One
-free `gln01` execution is allowed with a 120-minute timeout. Recovery
-continuation, paid execution, fresh validation, 365-day rollout, Gate D2,
-sealed test, and product acceptance remain closed. See
+The artifact-aware direction audit completed on free `gln01` at commit
+`77d5a45` in `3,630.564` seconds; report SHA256 is `67bde6d8...09cbfe`. A
+43-constraint common direction exists with minimum cosine `0.0422923`; its
+21-constraint support includes all three scheduled non-GPP sources and 18 GPP
+artifacts. Scale `1/2` improves all scheduled sources and every one of the 40
+train-only GPP artifacts. Their combined mean improves `3.4706%`, and the
+least-improved artifact still improves `0.4916%`. The fixed monitor, read only
+after selection, improves `2.7567%`, with `8/8` artifacts improving. The
+classification is `artifact_aware_direction_transfers_to_monitor`. All
+engineering and physical gates pass, allocator peak is about `12.11 GB`, and
+no state is retained. See
+[`target_oriented_coupled_gpp_artifact_aware_direction_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_result_20260904.md).
+
+This accepts artifact-aware direction construction for a bounded continuity
+test without promoting the Attention model. The active task is to freeze and
+locally qualify a no-checkpoint three-update backtracking smoke. Every update
+must recompute its direction on a new train-only panel and select its scale
+without monitor feedback; the monitor trajectory is read only after all three
+choices. Reconstruction repeatability, consecutive feasibility, and transfer
+must pass before persistent training. Recovery continuation, paid execution,
+fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
+remain closed. The completed audit contract is
 [`target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md).
 The completed predecessor contract is
 [`target_oriented_coupled_gpp_multi_group_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_audit_v1.md).
