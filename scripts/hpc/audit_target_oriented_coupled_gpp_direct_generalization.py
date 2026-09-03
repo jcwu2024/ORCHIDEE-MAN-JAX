@@ -227,6 +227,16 @@ def _replay_direction(
     combine_direction: Any,
     direct_virtual_step: Any,
 ) -> Mapping[str, Any]:
+    if expected_record is not None:
+        expected_metadata_matches = bool(
+            tuple(int(value) for value in expected_record.get("artifact_updates", ()))
+            == tuple(int(value) for value in group)
+            and float(expected_record.get("selected_scale", float("nan"))) == float(selected_scale)
+            and expected_record.get("finite_step_accepted") is True
+        )
+        if not expected_metadata_matches:
+            raise RuntimeError(f"direct-GPP persistent update {persistent_update} replay metadata drift")
+
     runtime = context["runtime"]
     jax = runtime["jax"]
     parameters = replace_coupled_gpp_trainable(initialized_parameters, trainable)
@@ -269,7 +279,6 @@ def _replay_direction(
     )
     jax.block_until_ready((proposed, proposal_nonfinite))
     losses_match = None
-    expected_metadata_matches = True
     if expected_record is not None:
         expected_losses = expected_record["source_mean_losses_before"]
         losses_match = all(
@@ -281,17 +290,7 @@ def _replay_direction(
             )
             for name in GRADIENT_SOURCES
         )
-        expected_metadata_matches = bool(
-            tuple(int(value) for value in expected_record["artifact_updates"]) == tuple(int(value) for value in group)
-            and float(expected_record["selected_scale"]) == float(selected_scale)
-            and expected_record["finite_step_accepted"] is True
-        )
-    if (
-        not common
-        or int(np.asarray(common_nonfinite)) != 0
-        or int(np.asarray(proposal_nonfinite)) != 0
-        or not expected_metadata_matches
-    ):
+    if not common or int(np.asarray(common_nonfinite)) != 0 or int(np.asarray(proposal_nonfinite)) != 0:
         raise RuntimeError(f"direct-GPP persistent update {persistent_update} replay drift")
     updated = _scaled_parameters(jax, trainable, proposed, selected_scale)
     return {

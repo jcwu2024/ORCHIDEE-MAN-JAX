@@ -13,6 +13,7 @@ from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_d
     load_coupled_gpp_direct_step_transfer_contract,
     select_largest_train_only_scale,
 )
+from scripts.hpc.audit_target_oriented_coupled_gpp_direct_generalization import _replay_direction
 
 
 def _scale_records(passing_scale: float | None):
@@ -68,6 +69,9 @@ def test_direct_step_transfer_runner_is_zero_retention_and_avoids_large_gram():
         encoding="utf-8"
     )
     assert "_bootstrap_update7" in runner
+    assert "_load_persistent_result" in runner
+    assert 'persistent_result["training"]["updates"]' in runner
+    assert 'predecessor["trajectory"]["replay_updates"]' not in runner
     assert "_replay_direction" in runner
     assert "_evaluate_scales" in runner
     assert "select_largest_train_only_scale" in runner
@@ -81,3 +85,27 @@ def test_direct_step_transfer_runner_is_zero_retention_and_avoids_large_gram():
     assert "gln01|ibgln01|ibc13b02n04" in launcher
     assert "RUN_TIMEOUT=${RUN_TIMEOUT:-120m}" in launcher
     assert "sbatch" not in launcher
+
+
+def test_replay_metadata_drift_fails_before_gpu_work():
+    with pytest.raises(RuntimeError, match="replay metadata drift"):
+        _replay_direction(
+            None,
+            {},
+            initialized_parameters=None,
+            trainable=None,
+            steps={},
+            gradient_steps={},
+            direct_steps={},
+            state_steps={},
+            layout=None,
+            group=(1,),
+            flux_basis=(),
+            persistent_contract=None,
+            persistent_update=1,
+            expected_record={"artifact_updates": [1], "selected_scale": 1.0},
+            selected_scale=1.0,
+            gram_measurement=None,
+            combine_direction=None,
+            direct_virtual_step=None,
+        )

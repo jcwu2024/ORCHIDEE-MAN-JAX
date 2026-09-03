@@ -10,6 +10,9 @@ from typing import Any, Mapping
 import numpy as np
 
 from research.daily_coarse_graining.daily_operator.successor_fit_checkpoint import sha256_file
+from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_direct_generalization import (
+    load_coupled_gpp_direct_generalization_contract,
+)
 from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_direct_step_transfer import (
     AUDITED_PERSISTENT_UPDATE,
     DIRECT_GENERALIZATION_RESULT_SHA256,
@@ -28,6 +31,7 @@ from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_p
 from scripts.hpc.audit_target_oriented_coupled_gpp_direct_generalization import (
     _bootstrap_update7,
     _direct_panel,
+    _load_persistent_result,
     _replay_direction,
 )
 from scripts.hpc.audit_target_oriented_coupled_gpp_direct_generalization import (
@@ -142,13 +146,23 @@ def run(args: Any) -> Mapping[str, Any]:
     started = time.perf_counter()
     contract = load_coupled_gpp_direct_step_transfer_contract(args.step_transfer_contract)
     source_digest = sha256_file(args.direct_generalization_result)
-    predecessor = _load_generalization_result(args.direct_generalization_result, contract)
+    _load_generalization_result(args.direct_generalization_result, contract)
+    generalization_contract = load_coupled_gpp_direct_generalization_contract(args.generalization_contract)
     persistent_contract = load_coupled_gpp_persistent_scale_training_contract(args.persistent_contract)
-    if persistent_contract.sha256 != contract.payload["identity"]["persistent_contract_sha256"]:
+    if (
+        generalization_contract.sha256 != contract.payload["identity"]["direct_generalization_contract_sha256"]
+        or persistent_contract.sha256 != contract.payload["identity"]["persistent_contract_sha256"]
+    ):
         raise ValueError("direct-step transfer persistent contract chain drift")
     schedule = build_persistent_scale_training_schedule()
     if schedule.sha256 != contract.payload["identity"]["persistent_schedule_sha256"]:
         raise ValueError("direct-step transfer persistent schedule drift")
+    persistent_result = _load_persistent_result(
+        args.persistent_result,
+        audit_contract=generalization_contract,
+        persistent_contract=persistent_contract,
+        schedule=schedule,
+    )
 
     recovery_before = args.parent_recovery.stat()
     bootstrap = _bootstrap_update7(args, persistent_contract)
@@ -164,7 +178,7 @@ def run(args: Any) -> Mapping[str, Any]:
     gram_measurement = _make_gradient_gram(jax)
     combine_direction = _make_combined_direction(jax)
     direct_virtual_step = _make_dtype_preserving_direct_virtual_step(jax)
-    replay_records = predecessor["trajectory"]["replay_updates"]
+    replay_records = persistent_result["training"]["updates"]
     common = dict(
         initialized_parameters=initialized_parameters,
         steps=bootstrap["steps"],
