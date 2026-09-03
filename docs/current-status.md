@@ -1048,21 +1048,31 @@ and removed its temporary recovery. Initial cumulative GPP scores remain
 respiration, NPP, NEP, and NEE fail the current absolute monitor thresholds at
 both horizons. This is runner admission, not scientific promotion.
 
-Paid job `14911154` exited after two seconds before Python because the
-production-only empty argument array was incompatible with Explore1000 Bash
-4.2 under `set -u`. It produced no report, checkpoint, recovery, or update.
-Commit `64185d8` replaces the array with the established scalar pattern and
-passes focused tests plus a free one-second production-mode launcher smoke
-through the former failure line. The active task is new explicit paid-resource
-authorization for the same frozen 100-update `gnall` trial, retaining the
-update-10 and update-25 early-stop rules. No architecture change is opened.
-Fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
-remain closed. See
+Paid job `14911154` was a zero-training Bash failure and was corrected at
+`64185d8`. Corrected job `14911228` completed normally in `02:18:50` and
+stopped at the frozen update-10 scientific gate. All ten updates decreased all
+four sources on their own eight-artifact batches. On the fixed monitor,
+reachable state and 7/30-day science improved `15.1638%`, `29.5626%`, and
+`31.8176%`; cumulative 7/30-day GPP improved `30.2653%` and `33.9401%`.
+Direct teacher-state GPP instead worsened `24.1562%`, with only `1/8`
+artifacts improving. No checkpoint was selected; the retained recovery is
+attribution-only.
+
+The active task is a bounded zero-training audit that reconstructs the ten
+accepted states, locates the first fixed-monitor direct-GPP regression, and
+compares the training-batch and monitor-group direction geometry. The result
+will decide between larger effective batches, robust cross-group constraints,
+and a loss/acceptance correction for teacher-state versus rollout
+compensation. No architecture change is opened. Unchanged recovery
+continuation, fresh validation, 365-day rollout, Gate D2, sealed test, and
+product acceptance remain closed. See
 [`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md)
 and
 [`target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md),
 with the launch correction in
-[`target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md).
+[`target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md)
+and the scientific result in
+[`target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md).
 
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.

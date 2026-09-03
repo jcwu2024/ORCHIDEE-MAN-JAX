@@ -2175,23 +2175,33 @@ and removed its temporary recovery. Initial cumulative GPP scores remain poor
 at `0.417840` for 7 days and `0.497822` for 30 days, so this accepts the runner,
 not the model's absolute science.
 
-The first paid launch, job `14911154`, exited after two seconds before Python
-because the production-only empty argument array was incompatible with
-Explore1000 Bash 4.2 under `set -u`. It produced no report, checkpoint,
-recovery, or training update. Commit `64185d8` uses the established scalar
-argument pattern and passes focused tests, local and cluster Bash checks, and a
-free one-second `admission=0` launcher smoke through the former failure line.
-The active gate is new explicit paid-resource authorization for the same
-frozen 100-update `gnall` trial with its update-10 and update-25 stops. The
-Attention architecture, trainable boundary, conservative updater, retained
-exact tail, and scale-selecting common-direction method stay unchanged. Fresh
+The first paid launch, job `14911154`, was a zero-training Bash failure and was
+corrected at `64185d8`. Corrected job `14911228` then completed normally in
+`02:18:50` and stopped at the frozen update-10 scientific gate after ten
+accepted updates. Every update decreased all four sources on its own batch,
+and the fixed monitor improved reachable state `15.1638%`, 7-day science
+`29.5626%`, and 30-day science `31.8176%`. Cumulative GPP improved `30.2653%`
+and `33.9401%` at 7/30 days. Direct teacher-state GPP, however, worsened
+`24.1562%` and improved on only `1/8` monitor artifacts. No checkpoint was
+selected; the retained recovery is attribution-only.
+
+The active gate is a bounded zero-training direct-GPP generalization audit.
+It must locate the first regression along the ten-update trajectory and
+compare scheduled-batch versus fixed-monitor directional derivatives and
+per-artifact gradient alignment. This will distinguish insufficient effective
+batch coverage, incompatible cross-group directions, and teacher-state versus
+free-rollout compensation before selecting a training repair. The Attention
+architecture, conservative updater, retained exact tail, and accepted long-
+horizon gains stay in scope. Unchanged recovery continuation, fresh
 validation, 365-day rollout, Gate D2, sealed test, and product acceptance
 remain closed. See
 [`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md)
 and
 [`target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md),
 with the launch correction in
-[`target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md).
+[`target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md)
+and the scientific result in
+[`target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md).
 
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT

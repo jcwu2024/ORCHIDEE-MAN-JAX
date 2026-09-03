@@ -2,8 +2,7 @@
 
 Date: 2026-09-03
 
-Status: frozen; free admission accepted, production launcher repaired, paid
-reauthorization pending
+Status: completed at the update-10 scientific stop; no checkpoint selected
 
 Machine contract:
 `manifests/coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.json`
@@ -93,3 +92,9 @@ Commit `64185d8` replaces it with the established scalar pattern and passes a
 free one-second production-mode launcher smoke. No training result or artifact
 came from the failed job. See
 [`target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md`](target_oriented_coupled_gpp_persistent_scale_training_launch_failure_20260903.md).
+
+Corrected job `14911228` completed ten updates and stopped at the frozen
+update-10 gate. Independent state and 7/30-day errors improved materially, but
+direct teacher-state GPP worsened `24.1562%` and improved on only one of eight
+monitor artifacts. No checkpoint was selected. See
+[`target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md`](target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md).
