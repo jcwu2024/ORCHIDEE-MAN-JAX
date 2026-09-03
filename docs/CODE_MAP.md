@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-09-01.
+Last updated: 2026-09-04.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -949,6 +949,16 @@ contract is
 the one-direction finite-step evaluations; its free-`gln01` wrapper has no
 paid submission path. It writes only the result report and never exposes the
 fixed monitor before train-only scale selection.
+
+`daily_operator/target_oriented_coupled_gpp_multi_group_direction.py` owns the
+eight-constraint registry and post-selection classification for the current
+same-state audit. Its machine contract is
+`manifests/coarse_graining/target_oriented_coupled_gpp_multi_group_direction_audit_v1.json`.
+`scripts/hpc/audit_target_oriented_coupled_gpp_multi_group_direction.py`
+accumulates five disjoint direct-GPP group means plus the scheduled state,
+7-day, and 30-day gradients, solves the `8 x 8` common-direction problem, and
+performs train-only finite-step selection before at most one monitor read. Its
+direct wrapper is free-`gln01` only and retains no state.
 
 ## Scripts
 

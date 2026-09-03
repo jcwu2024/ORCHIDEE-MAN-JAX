@@ -1081,15 +1081,18 @@ physical gates pass, allocator peak is about `4.10 GB`, and no state is
 retained. See
 [`target_oriented_coupled_gpp_direct_step_transfer_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_step_transfer_result_20260904.md).
 
-The active task is a frozen zero-retention multi-group direct-GPP direction
-audit at the same pre-update-2 state. It must treat the scheduled and four
+The active gate is the frozen zero-retention multi-group direct-GPP direction
+audit at contract SHA256 `1c103e79...b82d19`. It treats the scheduled and four
 train-only guard GPP gradients as separate direction constraints alongside
-reachable state, 7-day science, and 30-day science, then perform train-only
-scale selection before one fixed-monitor evaluation. This changes the update
-rule, not the Attention architecture. Recovery continuation, paid execution,
-fresh validation, 365-day rollout, Gate D2, sealed test, and product
-acceptance remain closed.
+reachable state, 7-day science, and 30-day science. The existing minimum-norm
+solver uses an `8 x 8` Gram, followed by train-only scale selection and at
+most one fixed-monitor evaluation. This changes the update rule, not the
+Attention architecture. One free `gln01` execution is allowed with a
+120-minute timeout. Recovery continuation, paid execution, fresh validation,
+365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
 See
+[`target_oriented_coupled_gpp_multi_group_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_multi_group_direction_audit_v1.md).
+The predecessor training evidence remains in
 [`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md)
 and
 [`target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_admission_result_20260903.md),
