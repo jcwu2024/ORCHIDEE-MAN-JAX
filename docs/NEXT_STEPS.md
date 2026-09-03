@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-09-03.
+Last updated: 2026-09-04.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -2196,15 +2196,24 @@ finite-step nonlinearity remain. Across ten updates monitor direct GPP worsens
 `27.6762%`. All engineering gates pass and no state is retained. See
 [`target_oriented_coupled_gpp_direct_generalization_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_generalization_result_20260903.md).
 
-The active gate is the frozen persistent-update-2 direct-step transfer audit
-at contract SHA256 `b6f05589...13a61`. It tests scales
-`1/2,1/4,1/8,1/16,1/32,1/64` on the scheduled four-source gate and four
-disjoint train-only direct-GPP guard groups. It selects the largest shared
-passing scale without reading the fixed monitor, then evaluates only that
-selected scale once on the monitor. The runner deliberately omits the
-unneeded 19-by-19 gradient Gram. One free `gln01` execution is allowed with a
-120-minute timeout. Training continuation, paid execution, fresh validation,
-365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
+The persistent-update-2 direct-step transfer audit completed on free `gln01`
+at commit `48eb1ae` in `3,935.020` seconds; report SHA256 is
+`df2593b...966c94`. The train-only selector chose scale `1/4`: all scheduled
+sources improve by `1.0764-3.6708%`, and the four disjoint guard-group direct
+GPP means improve by `0.2811-1.7612%`. The fixed monitor, which was excluded
+from selection, nevertheless worsens by `0.5107%`, with `4/8` artifacts
+improving. The classification is `train_only_scale_fails_monitor`; no state
+was retained. See
+[`target_oriented_coupled_gpp_direct_step_transfer_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_step_transfer_result_20260904.md).
+
+The active task is to freeze a zero-retention multi-group direct-GPP direction
+audit at the same pre-update-2 state. The scheduled and four train-only guard
+GPP gradients must enter direction construction separately, alongside the
+reachable-state, 7-day, and 30-day gradients. Scale selection must remain
+train-only; the fixed monitor may evaluate only the selected proposal once.
+This is an optimizer-direction test, not an architecture change or training
+continuation. Paid execution, fresh validation, 365-day rollout, Gate D2,
+sealed test, and product acceptance remain closed.
 See
 [`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md)
 and
@@ -2215,14 +2224,14 @@ and the scientific result in
 [`target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md),
 with the completed attribution protocol in
 [`target_oriented_coupled_gpp_direct_generalization_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_generalization_audit_v1.md).
-The active transfer contract is
+The completed transfer contract is
 [`target_oriented_coupled_gpp_direct_step_transfer_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_step_transfer_audit_v1.md).
 
 The first free execution at `e755bb1` stopped after bootstrap because compact
 direct-generalization replay records lack the persistent result's
 `finite_step_accepted` field. It wrote no output or state. Commit `4953939`
 now reads the accepted persistent records and validates replay metadata before
-GPU work; the active scientific gate is unchanged.
+GPU work; the completed scientific contract was unchanged.
 
 Job `14899347` remains an engineering-failure record: its order-sensitive
 dictionary guard stopped before objective evaluation. The exact-key-set JIT

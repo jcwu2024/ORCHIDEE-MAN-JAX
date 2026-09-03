@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-03.
+Last updated: 2026-09-04.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -1071,15 +1071,24 @@ nonlinearity. The ten-update monitor trajectory worsens `27.6762%`. Every
 engineering gate passes and nothing is retained. See
 [`target_oriented_coupled_gpp_direct_generalization_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_generalization_result_20260903.md).
 
-The active task is the frozen update-2 direct-step transfer audit at contract
-SHA256 `b6f05589...13a61`. It selects the largest of
-`1/2,1/4,1/8,1/16,1/32,1/64` that preserves the scheduled four-source gate
-and direct GPP across four disjoint future train/train groups. The fixed
-monitor remains unread until selection and receives only the selected scale.
-The audit avoids the unneeded 19-by-19 gradient Gram, retains no state, and is
-allowed one free-`gln01` execution with a 120-minute timeout. No architecture
-change is opened. Recovery continuation, paid execution, fresh validation,
-365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
+The update-2 direct-step transfer audit completed on free `gln01` at commit
+`48eb1ae` in `3,935.020` seconds; report SHA256 is `df2593b...966c94`. The
+largest train-only passing scale is `1/4`: all four scheduled sources and all
+four disjoint guard-group direct-GPP means improve. The fixed monitor was read
+only after selection and worsens by `0.5107%`, with `4/8` artifacts improving.
+The classification is `train_only_scale_fails_monitor`. All engineering and
+physical gates pass, allocator peak is about `4.10 GB`, and no state is
+retained. See
+[`target_oriented_coupled_gpp_direct_step_transfer_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_step_transfer_result_20260904.md).
+
+The active task is a frozen zero-retention multi-group direct-GPP direction
+audit at the same pre-update-2 state. It must treat the scheduled and four
+train-only guard GPP gradients as separate direction constraints alongside
+reachable state, 7-day science, and 30-day science, then perform train-only
+scale selection before one fixed-monitor evaluation. This changes the update
+rule, not the Attention architecture. Recovery continuation, paid execution,
+fresh validation, 365-day rollout, Gate D2, sealed test, and product
+acceptance remain closed.
 See
 [`target_oriented_coupled_gpp_persistent_scale_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_v1.md)
 and
@@ -1090,15 +1099,15 @@ and the scientific result in
 [`target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md),
 with the completed attribution protocol in
 [`target_oriented_coupled_gpp_direct_generalization_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_generalization_audit_v1.md).
-The active transfer contract is
+The completed transfer contract is
 [`target_oriented_coupled_gpp_direct_step_transfer_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_direct_step_transfer_audit_v1.md).
 
 The first free execution at `e755bb1` stopped after bootstrap because compact
 direct-generalization replay records do not carry the persistent result's
 `finite_step_accepted` field. No result or state was written. Commit
 `4953939` switches to the accepted persistent records and performs metadata
-validation before any GPU gradient computation. The frozen scientific gate
-is unchanged.
+validation before any GPU gradient computation. The completed scientific
+contract was unchanged.
 
 Job `14899347` at commit `8a1dffc` remains an engineering-failure record. Its
 dictionary-order guard failed inside JAX `jit` before objective evaluation.

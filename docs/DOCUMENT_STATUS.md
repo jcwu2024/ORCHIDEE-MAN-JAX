@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-09-03.
+Last updated: 2026-09-04.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -163,7 +163,8 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/target_oriented_coupled_gpp_persistent_scale_training_result_20260903.md` | Current update-10 scientific stop and direct-GPP generalization authority | Reviewing long-horizon gains, the missing checkpoint, or designing the active direction-transfer audit |
 | `research/daily_coarse_graining/target_oriented_coupled_gpp_direct_generalization_audit_v1.md` | Completed zero-retention attribution protocol | Reviewing trajectory replay, first-regression geometry, or evidence limits |
 | `research/daily_coarse_graining/target_oriented_coupled_gpp_direct_generalization_result_20260903.md` | Current accepted first-regression attribution evidence | Reviewing why weak direct-GPP protection and finite-step transfer are the blockers |
-| `research/daily_coarse_graining/target_oriented_coupled_gpp_direct_step_transfer_audit_v1.md` | Current frozen train-only scale-selection and monitor-transfer contract | Running or interpreting the active update-2 finite-step transfer audit |
+| `research/daily_coarse_graining/target_oriented_coupled_gpp_direct_step_transfer_audit_v1.md` | Completed frozen train-only scale-selection and monitor-transfer contract | Reviewing the update-2 scale ladder or preregistered decision branches |
+| `research/daily_coarse_graining/target_oriented_coupled_gpp_direct_step_transfer_result_20260904.md` | Current accepted failure-to-transfer evidence; train-only `1/4` worsens the fixed monitor | Designing the active multi-group direct-GPP direction audit |
 | `research/daily_coarse_graining/target_oriented_update_251_admission_20260825.md` | Accepted exact checkpoint/AdamW handoff, update-251, recovery, and matched free-GPU admission | Preparing or admitting updates 251-1000 |
 | `research/daily_coarse_graining/daily_operator_parameter_routing_v1.md` | Implemented local parameter-ownership boundary used by the successor | Routing physical parameters or planning Gate D2 |
 | `research/daily_coarse_graining/successor_process_head_architecture_options_v1.md` | Historical accepted decision package; its attention/graph pair is not the current successor default | Reviewing the completed early successor comparison |
