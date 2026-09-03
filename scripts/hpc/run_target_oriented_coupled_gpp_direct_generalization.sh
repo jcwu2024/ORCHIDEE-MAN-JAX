@@ -14,7 +14,7 @@ PARENT_DIR=$ROOT/runtime/outputs/training/target-oriented-coupled-gpp-bounded-14
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
-case "$(hostname -s)" in gln01|ibgln01) ;; *) exit 2 ;; esac
+case "$(hostname -s)" in gln01|ibgln01|ibc13b02n04) ;; *) exit 2 ;; esac
 case "$WORKTREE" in "$ROOT"|"$ROOT/runtime/worktrees/"*) ;; *) exit 2 ;; esac
 case "$OUTPUT" in "$ROOT/runtime/outputs/"*.json|"$ROOT/runtime/outputs/"*/*.json) ;; *) exit 2 ;; esac
 case "$CACHE_ROOT" in "$ROOT/runtime/cache/"*) ;; *) exit 2 ;; esac
