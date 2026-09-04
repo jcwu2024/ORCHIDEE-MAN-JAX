@@ -98,7 +98,8 @@ done
 
 EXTRA_AUDIT_ARGS=()
 if [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_aware_persistent_training" || \
-  "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_zero_displacement" ]]; then
+  "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_zero_displacement" || \
+  "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_localized_jump" ]]; then
   test -n "$ARTIFACT_AWARE_CONTRACT"
   test -n "$MULTI_GROUP_RESULT"
   test -n "$CONTINUITY_CONTRACT"
@@ -119,7 +120,8 @@ if [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_
     --artifact-aware-persistent-contract "$ARTIFACT_AWARE_PERSISTENT_CONTRACT"
     --continuity-result "$CONTINUITY_RESULT"
   )
-  if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_zero_displacement" ]]; then
+  if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_zero_displacement" || \
+    "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_localized_jump" ]]; then
     test -n "$PERSISTENT_TRAINING_REPORT"
     test -n "$PERSISTENT_REJECTED_PROPOSAL"
     test -n "$PERSISTENT_ARTIFACT_AWARE_RECOVERY"

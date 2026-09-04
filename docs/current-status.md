@@ -1117,22 +1117,30 @@ count is `7/8`. The classification is
 `artifact_aware_three_update_continuity_passes_monitor`. See
 [`target_oriented_coupled_gpp_artifact_aware_continuity_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_continuity_result_20260904.md).
 
-This accepts consecutive artifact-aware transfer without promoting the
-Attention model. Independent reconstruction is materially variable: the first
-selected scale changes from the predecessor's `1/2` to `1/32`, and both
-train-only and monitor baselines shift by about `3.4%`.
+The subsequent artifact-aware persistent run completed on free `gln01` at
+commit `714aa0d` in `5,434.218` seconds. Logical update 2 selected scale `1/2`
+and was retained. Logical update 3 found a common first-order direction but no
+tested scale passed all train-only gates, so the run stopped with recovery
+through update 2 and no checkpoint. Its report SHA256 is
+`ded2f4a5...7aa3a`; the rejected proposal SHA256 is `a8a983ca...de728`.
 
-The bounded artifact-aware persistent-training contract is now frozen at
-`3826d358...d6578` and locally qualified. It covers logical updates 2-7 with 240
-unique train-only artifacts, one immutable exact pre-update-2 parameter
-snapshot, initialization-only resume, atomic recovery after the initial
-monitor and every retained update, and detailed monitor gates at updates 4
-and 7. Only a passing final gate can write a non-promotable diagnostic
-checkpoint. All 79 coupled-GPP unit tests plus Ruff, Python compilation, and
-shell syntax checks pass. The active gate is one free-`gln01` execution with a
-240-minute resumable timeout. Recovery continuation from the old rule, paid
-execution, fresh validation, 365-day rollout, Gate D2, sealed test, and product
-acceptance remain closed. The protocol is
+The exact-zero audit at commit `ca59ed5` then proves that the update-2
+recovery reproduces all eight stored update-3 seven-day baselines exactly.
+The historical `1/64` proposal worsens their aggregate by `0.5775%` solely
+because artifact `550` worsens by `6.1243%`; all other artifacts improve and
+all physical hard gates remain zero. Report SHA256 is
+`c30f31a9...0795d`. The active gate is a zero-training localized trace within
+artifact `550`: reconstruct the 26 nonzero direction rows, select the worst of
+its eight seven-day windows, then identify the first material continuous,
+defined-mask, or discrete-state change while reporting all science flux and
+stock trajectories. Architecture changes, further training, paid execution,
+fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
+remain closed. See
+[`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md)
+and
+[`target_oriented_coupled_gpp_localized_jump_trace_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_trace_v1.md).
+
+The bounded persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
 The first free launch at `d9f1238` stopped before GPU allocation because the
 new contract transcribed the parent result SHA incorrectly. The repository's

@@ -2239,17 +2239,29 @@ finishes `6.2224%` below its initial value. The classification is
 `artifact_aware_three_update_continuity_passes_monitor`. See
 [`target_oriented_coupled_gpp_artifact_aware_continuity_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_continuity_result_20260904.md).
 
-The accepted mechanism is not yet a scientifically accepted persistent model:
-independently reconstructed pre-update-2 baselines and selected scales differ
-materially across runs. The bounded artifact-aware persistent-training
-contract is now frozen and locally qualified. It writes one exact immutable
-start before monitor evaluation, resumes without historical replay, writes
-atomic recovery after the initial monitor and every accepted step, rotates six
-disjoint 40-artifact train-only panels, and reads the fixed monitor only at
-updates 4 and 7. The active gate is one free-`gln01` execution with a
-240-minute resumable timeout. Paid execution, fresh validation, 365-day
-rollout, Gate D2, sealed test, and product acceptance remain closed. The new
-protocol is
+The artifact-aware persistent run completed on free `gln01` at commit
+`714aa0d` in `5,434.218` seconds. Logical update 2 selected scale `1/2` and
+was retained; logical update 3 found a common first-order direction but no
+tested scale passed all train-only gates. The run stopped at the scientific
+gate with recovery retained exactly through update 2 and no checkpoint. The
+report SHA256 is `ded2f4a5...7aa3a`; the rejected proposal SHA256 is
+`a8a983ca...de728`.
+
+The exact-zero follow-up completed on free `gln01` at commit `ca59ed5` in
+`557.468` seconds. Exact-zero forward reproduces all eight update-3 seven-day
+baselines exactly. The historical `1/64` displacement worsens the aggregate
+by `0.5775%`, entirely because artifact `550` worsens by `6.1243%`; the other
+seven artifacts improve. The active gate is the bounded artifact-550
+localized jump trace: reconstruct only the 26 nonzero direction sources, find
+the responsible seven-day window, and report the first differing state,
+defined mask, discrete branch, or science trajectory. No further training,
+architecture change, paid execution, fresh validation, 365-day rollout, Gate
+D2, sealed test, or product acceptance is authorized before this trace. See
+[`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md)
+and
+[`target_oriented_coupled_gpp_localized_jump_trace_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_trace_v1.md).
+
+The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
 The first free launch at `d9f1238` exposed an incorrectly transcribed parent
 result SHA and stopped before GPU allocation. The corrected contract uses the
