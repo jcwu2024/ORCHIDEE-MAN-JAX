@@ -2229,15 +2229,24 @@ improving. The classification is
 gates pass and no state is retained. See
 [`target_oriented_coupled_gpp_artifact_aware_direction_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_result_20260904.md).
 
-The no-checkpoint three-update artifact-aware backtracking smoke is frozen at
-contract SHA256 `451a1003...7e20f3` and locally qualified. Logical updates 2,
-3, and 4 use three disjoint 40-artifact train-only panels; every update
-recomputes all 43 gradients and chooses the first passing scale without monitor
-feedback. Only after all three train-only choices pass may the fixed monitor
-trajectory be read. The active gate is one execution on free `gln01`, with a
-240-minute timeout and no checkpoint or recovery output. Paid execution, fresh
-validation, 365-day rollout, Gate D2, sealed test, and product acceptance remain
-closed. See
+The corrected three-update continuity smoke completed on free `gln01` at
+commit `c345e64` in `5,467.939` seconds; report SHA256 is
+`aa326bb4...52d69`. Updates 2, 3, and 4 select scales `1/32`, `1/16`, and
+`1/2`; each improves all `40/40` train-only direct-GPP artifacts and all four
+scheduled sources while passing every physical gate. The fixed-monitor mean,
+read only after all choices are final, remains improved after every step and
+finishes `6.2224%` below its initial value. The classification is
+`artifact_aware_three_update_continuity_passes_monitor`. See
+[`target_oriented_coupled_gpp_artifact_aware_continuity_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_continuity_result_20260904.md).
+
+The accepted mechanism is not yet a stable persistent-training start: the
+independently reconstructed pre-update-2 baselines and selected scales differ
+materially across runs. The active task is to freeze and locally qualify a
+bounded artifact-aware persistent-training contract with one exact serialized
+start state, identity-exact resume, atomic recovery after every accepted step,
+rotating disjoint 40-artifact train-only panels, and post-selection monitor
+milestones. Paid execution, fresh validation, 365-day rollout, Gate D2, sealed
+test, and product acceptance remain closed. The completed smoke contract is
 [`target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.md).
 The completed one-step audit contract is
 [`target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md).

@@ -1106,17 +1106,27 @@ engineering and physical gates pass, allocator peak is about `12.11 GB`, and
 no state is retained. See
 [`target_oriented_coupled_gpp_artifact_aware_direction_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_result_20260904.md).
 
-This accepts artifact-aware direction construction for a bounded continuity
-test without promoting the Attention model. The three-update smoke is now
-frozen at contract SHA256 `451a1003...7e20f3` and locally qualified. Logical
-updates 2, 3, and 4 use schedule groups `(2,11,12,13,14)`,
-`(3,15,16,17,18)`, and `(4,19,20,21,22)`, respectively: 120 distinct
-train-only point-year artifacts in total. Every step recomputes its 43-gradient
-direction and uses the existing descending backtracking ladder. The monitor is
-not read unless all three train-only steps pass, and no parameters are retained.
-The active gate is one free-`gln01` execution with a 240-minute timeout.
-Recovery continuation, paid execution, fresh validation, 365-day rollout, Gate
-D2, sealed test, and product acceptance remain closed. See
+The corrected three-update continuity smoke completed on free `gln01` at
+commit `c345e64` in `5,467.939` seconds; report SHA256 is
+`aa326bb4...52d69`. Updates 2, 3, and 4 select scales `1/32`, `1/16`, and
+`1/2`. All three common directions pass, every selected step improves all
+`40/40` train-only GPP artifacts and all four scheduled sources, and every
+physical hard gate remains zero. The fixed-monitor mean remains below its
+initial value after each step and finishes `6.2224%` lower; the final artifact
+count is `7/8`. The classification is
+`artifact_aware_three_update_continuity_passes_monitor`. See
+[`target_oriented_coupled_gpp_artifact_aware_continuity_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_continuity_result_20260904.md).
+
+This accepts consecutive artifact-aware transfer without promoting the
+Attention model. Independent reconstruction is materially variable: the first
+selected scale changes from the predecessor's `1/2` to `1/32`, and both
+train-only and monitor baselines shift by about `3.4%`. The active task is to
+freeze and locally qualify bounded persistent training with one exact
+serialized start, identity-exact resume, atomic per-step recovery, rotating
+40-artifact train-only panels, and monitor milestones that remain excluded
+from direction and scale selection. Recovery continuation from the old rule,
+paid execution, fresh validation, 365-day rollout, Gate D2, sealed test, and
+product acceptance remain closed. The completed smoke contract is
 [`target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.md).
 The completed one-step audit contract is
 [`target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md).
