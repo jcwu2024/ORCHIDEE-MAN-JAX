@@ -90,6 +90,31 @@ def test_continuity_predecessor_loader_accepts_only_frozen_positive_result(tmp_p
     assert report["selection"]["selected_monitor"]["improved_artifact_count"] == 8
 
 
+def test_monitor_trajectory_builds_three_adjacent_changes_from_four_states(monkeypatch):
+    def fake_panel(_args, _context, *, trainable, direct_steps, updates, label):
+        del direct_steps, label
+        return {
+            "mean_loss": float(trainable),
+            "artifact_losses": [
+                {"artifact_update": int(update), "loss": float(trainable) + index * 0.01}
+                for index, update in enumerate(updates)
+            ],
+        }
+
+    monkeypatch.setattr(runner, "_direct_panel", fake_panel)
+    result = runner._monitor_trajectory(
+        None,
+        {},
+        trainables=(4.0, 3.0, 2.0, 1.0),
+        direct_steps={},
+        monitor_updates=(251, 358),
+    )
+    assert len(result["state_panels"]) == 4
+    assert len(result["relative_to_initial"]) == 3
+    assert len(result["consecutive_changes"]) == 3
+    assert result["relative_changes"] == pytest.approx((-0.25, -0.5, -0.75))
+
+
 def test_continuity_runner_defers_monitor_and_never_persists_parameters():
     root = Path(__file__).resolve().parents[2]
     source = (root / "scripts/hpc/audit_target_oriented_coupled_gpp_artifact_aware_continuity.py").read_text(

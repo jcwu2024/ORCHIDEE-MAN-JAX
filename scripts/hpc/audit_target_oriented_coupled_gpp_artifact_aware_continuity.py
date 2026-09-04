@@ -357,7 +357,7 @@ def _monitor_trajectory(
     )
     baseline = panels[0]
     relative_to_initial = tuple(_panel_change(baseline, panel) for panel in panels[1:])
-    consecutive = tuple(_panel_change(first, second) for first, second in zip(panels, panels[1:], strict=True))
+    consecutive = tuple(_panel_change(first, second) for first, second in zip(panels[:-1], panels[1:], strict=True))
     return {
         "state_panels": list(panels),
         "relative_to_initial": list(relative_to_initial),
