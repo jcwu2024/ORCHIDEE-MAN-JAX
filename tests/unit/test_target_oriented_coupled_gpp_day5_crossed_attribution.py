@@ -135,6 +135,12 @@ def test_tree_interpolation_preserves_endpoints_and_midpoint():
     )
 
 
+def test_runner_reads_runtime_year_from_canonical_schedule():
+    schedule = {"entries": [{"runtime_year": "1975"}, {"runtime_year": "1976"}]}
+
+    assert runner._runtime_year_for_update(schedule, 2) == 1976
+
+
 def test_crossed_runner_routes_every_required_input_and_has_no_paid_path():
     root = Path(__file__).resolve().parents[2]
     shared = (
@@ -158,6 +164,9 @@ def test_crossed_runner_routes_every_required_input_and_has_no_paid_path():
     assert "RUN_TIMEOUT=${RUN_TIMEOUT:-60m}" in wrapper
     source = inspect.getsource(runner.run)
     assert source.count("reconstruct_localized_jump_parameters(args, bootstrap=bootstrap)") == 1
+    assert source.index("_runtime_year_for_update") < source.index(
+        "reconstruct_localized_jump_parameters"
+    )
     assert source.index("resolve_crossed_gpp_state_components") < source.index(
         "reconstruct_localized_jump_parameters"
     )

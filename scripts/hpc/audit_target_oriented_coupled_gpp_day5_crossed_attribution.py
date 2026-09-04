@@ -138,6 +138,10 @@ def _tree_mismatch_count(jax: Any, first: Any, second: Any) -> int:
     )
 
 
+def _runtime_year_for_update(schedule: Mapping[str, Any], update: int) -> int:
+    return int(schedule["entries"][int(update) - 1]["runtime_year"])
+
+
 def _factor_record(factors: Mapping[str, Any], pft_index: int) -> Mapping[str, Any]:
     record = {name: np.asarray(value).tolist() for name, value in factors.items()}
     record["gpp"] = float(np.asarray(factors["routed_gpp"]).reshape(-1)[int(pft_index)])
@@ -277,6 +281,10 @@ def run(args: Any) -> Mapping[str, Any]:
     }
     if parameter_counts != PARAMETER_FAMILY_COUNTS:
         raise ValueError("crossed attribution parameter-family count drift")
+    runtime_year = _runtime_year_for_update(
+        bootstrap["context"]["schedule"],
+        TARGET_ARTIFACT_UPDATE,
+    )
 
     reconstruction = reconstruct_localized_jump_parameters(args, bootstrap=bootstrap)
     runtime = reconstruction.runtime
@@ -739,7 +747,7 @@ def run(args: Any) -> Mapping[str, Any]:
         },
         "target": {
             "artifact_update": TARGET_ARTIFACT_UPDATE,
-            "runtime_year": int(artifact.runtime_year),
+            "runtime_year": runtime_year,
             "window_index": TARGET_WINDOW_INDEX,
             "window_ordinal": TARGET_WINDOW_INDEX + 1,
             "day_index": TARGET_DAY_INDEX,
