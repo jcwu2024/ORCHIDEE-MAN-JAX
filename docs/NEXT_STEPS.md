@@ -2276,12 +2276,17 @@ virtually the entire GPP ratio, while limitation and correction are nearly
 unchanged. See
 [`target_oriented_coupled_gpp_snowheat_causal_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_snowheat_causal_result_20260904.md).
 
-The active gate is to freeze a zero-update Day-5 crossed attribution of
-control/treatment parameters against control/treatment same-day state. Only
-if that cross locates a state-mediated effect should source-owner or carbon
-field interventions be executed. No further training, architecture change,
-paid execution, fresh validation, 365-day rollout, Gate D2, sealed test, or
-product acceptance is authorized before this attribution.
+The active gate is the now-frozen zero-update Day-5 crossed attribution of
+control/treatment parameters against control/treatment same-day state. The
+same execution includes matched necessity/sufficiency controls for all six
+GPP-admitted state owners, both trainable parameter families, and four fixed
+six-point interpolation paths, avoiding repeated direction reconstruction.
+Its local classifier, mask, launcher, and historical shared-runner regressions
+pass `47/47`. The next action is one free-`gln01` execution. No further
+training, architecture change, paid execution, fresh validation, 365-day
+rollout, Gate D2, sealed test, or product acceptance is authorized before this
+attribution. See
+[`target_oriented_coupled_gpp_day5_crossed_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_day5_crossed_attribution_v1.md).
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).

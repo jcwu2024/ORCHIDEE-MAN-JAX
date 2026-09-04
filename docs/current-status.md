@@ -1151,17 +1151,22 @@ both `4.869900`, for a retained fraction of `1.0`. The selected-window
 displacement is also retained at `0.999999999997151`. The potential factor,
 not limitation or correction, carries virtually the full GPP ratio.
 
-The snowheat causal hypothesis is rejected. The active gate is a zero-update
-Day-5 parameter/state crossed attribution, followed by source-owner
-interventions only if the crossed result identifies a state-mediated effect.
-Architecture changes, further training, paid execution, fresh validation,
-365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
+The snowheat causal hypothesis is rejected. The active gate is the frozen
+zero-update Day-5 parameter/state crossed attribution. In one execution it
+also evaluates necessity/sufficiency controls for all six GPP-admitted state
+owners and both trainable parameter families, plus four fixed interpolation
+paths. Local classifier, exact-mask, launcher, and shared-runner regressions
+pass `47/47`. The next action is one free-`gln01` execution. Architecture
+changes, further training, paid execution, fresh validation, 365-day rollout,
+Gate D2, sealed test, and product acceptance remain closed.
 See
 [`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md),
 [`target_oriented_coupled_gpp_localized_jump_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_result_20260904.md),
 [`target_oriented_coupled_gpp_snowheat_causal_intervention_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_snowheat_causal_intervention_v1.md),
 and
-[`target_oriented_coupled_gpp_snowheat_causal_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_snowheat_causal_result_20260904.md).
+[`target_oriented_coupled_gpp_snowheat_causal_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_snowheat_causal_result_20260904.md),
+and
+[`target_oriented_coupled_gpp_day5_crossed_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_day5_crossed_attribution_v1.md).
 
 The bounded persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).

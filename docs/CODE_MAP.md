@@ -997,6 +997,14 @@ the rejected update-3 displacement in memory, runs control, treatment, and
 matched-snowheat trajectories, and writes a report even when an engineering
 subgate fails. Its wrapper is free-`gln01` only and never retains parameters.
 
+`daily_operator/target_oriented_coupled_gpp_day5_crossed_attribution.py` owns
+the four-cell parameter/state classifier, exact six-owner route masks,
+owner-level materiality rule, and two-family effect decomposition.
+`scripts/hpc/audit_target_oriented_coupled_gpp_day5_crossed_attribution.py`
+owns the complete Day-5 crossed evaluations, matched owner and parameter
+controls, and frozen interpolation paths. Its dedicated wrapper reuses the
+shared free-`gln01` boundary and has no optimizer, checkpoint, or paid path.
+
 ## Scripts
 
 | Path | Classification | Use |

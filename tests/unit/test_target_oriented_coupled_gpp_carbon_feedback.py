@@ -28,6 +28,14 @@ from research.daily_coarse_graining.daily_operator.parameter_routing import (
 from research.daily_coarse_graining.daily_operator.strong_baseline_architecture import (
     strong_baseline_parameter_count,
 )
+from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_day5_crossed_attribution import (
+    PARAMETER_FAMILY_COUNTS,
+    STATE_COMPONENT_COORDINATE_COUNTS,
+    resolve_crossed_gpp_state_components,
+)
+from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_objective import (
+    coupled_gpp_trainable_tree,
+)
 from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_snowheat_causal import (
     resolve_coupled_gpp_snowheat_sources,
 )
@@ -106,6 +114,19 @@ def test_coupled_contract_layout_and_parameter_budget_are_exact(coupled_gpp_setu
         "state_canopy",
         "state_water",
     }
+    components = resolve_crossed_gpp_state_components(
+        setup["adapter"].contract,
+        setup["candidate_head"].layout,
+    )
+    assert {
+        name: record["state_coordinate_count"] for name, record in components.items()
+    } == STATE_COMPONENT_COORDINATE_COUNTS
+    assert all(record["canopy_gpp_admitted"] for record in components.values())
+    trainable = coupled_gpp_trainable_tree(parameters)
+    assert {
+        name: strong_baseline_parameter_count(value)
+        for name, value in trainable.items()
+    } == PARAMETER_FAMILY_COUNTS
 
 
 def test_coupled_forward_loss_gradients_and_parent_isolation(coupled_gpp_setup):
