@@ -2239,14 +2239,19 @@ finishes `6.2224%` below its initial value. The classification is
 `artifact_aware_three_update_continuity_passes_monitor`. See
 [`target_oriented_coupled_gpp_artifact_aware_continuity_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_continuity_result_20260904.md).
 
-The accepted mechanism is not yet a stable persistent-training start: the
+The accepted mechanism is not yet a scientifically accepted persistent model:
 independently reconstructed pre-update-2 baselines and selected scales differ
-materially across runs. The active task is to freeze and locally qualify a
-bounded artifact-aware persistent-training contract with one exact serialized
-start state, identity-exact resume, atomic recovery after every accepted step,
-rotating disjoint 40-artifact train-only panels, and post-selection monitor
-milestones. Paid execution, fresh validation, 365-day rollout, Gate D2, sealed
-test, and product acceptance remain closed. The completed smoke contract is
+materially across runs. The bounded artifact-aware persistent-training
+contract is now frozen and locally qualified. It writes one exact immutable
+start before monitor evaluation, resumes without historical replay, writes
+atomic recovery after the initial monitor and every accepted step, rotates six
+disjoint 40-artifact train-only panels, and reads the fixed monitor only at
+updates 4 and 7. The active gate is one free-`gln01` execution with a
+240-minute resumable timeout. Paid execution, fresh validation, 365-day
+rollout, Gate D2, sealed test, and product acceptance remain closed. The new
+protocol is
+[`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
+The completed smoke contract is
 [`target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.md).
 The completed one-step audit contract is
 [`target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.md).

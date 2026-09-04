@@ -977,6 +977,18 @@ recomputes the 43-gradient direction at each in-memory state and defers every
 monitor read until all three train-only steps pass. Its free-`gln01` wrapper
 writes one report and no parameters, optimizer state, recovery, or checkpoint.
 
+`daily_operator/target_oriented_coupled_gpp_artifact_aware_persistent_training.py`
+owns the six-update rotating-panel schedule and the update-4/update-7 monitor
+gates. Its machine contract is
+`manifests/coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.json`.
+`daily_operator/target_oriented_coupled_gpp_artifact_aware_persistence.py`
+owns immutable exact-start serialization, atomic parameter-only recovery, and
+the final-gate-only diagnostic checkpoint.
+`scripts/hpc/run_target_oriented_coupled_gpp_artifact_aware_persistent_training.py`
+owns one-time start reconstruction, identity-exact no-replay resume, per-step
+artifact-aware training, and detailed monitor execution. Its direct wrapper is
+free-`gln01` only; no paid launcher is authorized.
+
 ## Scripts
 
 | Path | Classification | Use |

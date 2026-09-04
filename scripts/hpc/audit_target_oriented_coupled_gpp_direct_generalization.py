@@ -413,6 +413,7 @@ def _bootstrap_update7(args: Any, persistent_contract: Any) -> Mapping[str, Any]
         bootstrap_records.append(replayed["record"])
     return {
         "context": context,
+        "head": internal["head"],
         "initialized_parameters": internal["initialized_parameters"],
         "trainable": trainable,
         "steps": internal["steps"],

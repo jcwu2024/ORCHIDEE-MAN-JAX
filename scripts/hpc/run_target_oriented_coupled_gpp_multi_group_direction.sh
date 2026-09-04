@@ -1,5 +1,5 @@
 #!/bin/bash
-# Run a zero-retention direct-GPP direction audit on free gln01.
+# Shared free-gln01 boundary for artifact-aware coupled-GPP audits and training.
 
 set -euo pipefail
 
@@ -15,6 +15,8 @@ ARTIFACT_AWARE_CONTRACT=${ARTIFACT_AWARE_CONTRACT:-}
 MULTI_GROUP_RESULT=${MULTI_GROUP_RESULT:-}
 CONTINUITY_CONTRACT=${CONTINUITY_CONTRACT:-}
 ARTIFACT_AWARE_RESULT=${ARTIFACT_AWARE_RESULT:-}
+ARTIFACT_AWARE_PERSISTENT_CONTRACT=${ARTIFACT_AWARE_PERSISTENT_CONTRACT:-}
+CONTINUITY_RESULT=${CONTINUITY_RESULT:-}
 PARENT_DIR=$ROOT/runtime/outputs/training/target-oriented-coupled-gpp-bounded-14903328
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
@@ -92,7 +94,28 @@ for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" "$PROCESS_STATISTICS" \
 done
 
 EXTRA_AUDIT_ARGS=()
-if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_artifact_aware_continuity" ]]; then
+if [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_aware_persistent_training" ]]; then
+  test -n "$ARTIFACT_AWARE_CONTRACT"
+  test -n "$MULTI_GROUP_RESULT"
+  test -n "$CONTINUITY_CONTRACT"
+  test -n "$ARTIFACT_AWARE_RESULT"
+  test -n "$ARTIFACT_AWARE_PERSISTENT_CONTRACT"
+  test -n "$CONTINUITY_RESULT"
+  test -f "$ARTIFACT_AWARE_CONTRACT"
+  test -f "$MULTI_GROUP_RESULT"
+  test -f "$CONTINUITY_CONTRACT"
+  test -f "$ARTIFACT_AWARE_RESULT"
+  test -f "$ARTIFACT_AWARE_PERSISTENT_CONTRACT"
+  test -f "$CONTINUITY_RESULT"
+  EXTRA_AUDIT_ARGS=(
+    --artifact-aware-contract "$ARTIFACT_AWARE_CONTRACT"
+    --multi-group-result "$MULTI_GROUP_RESULT"
+    --continuity-contract "$CONTINUITY_CONTRACT"
+    --artifact-aware-result "$ARTIFACT_AWARE_RESULT"
+    --artifact-aware-persistent-contract "$ARTIFACT_AWARE_PERSISTENT_CONTRACT"
+    --continuity-result "$CONTINUITY_RESULT"
+  )
+elif [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_artifact_aware_continuity" ]]; then
   test -n "$ARTIFACT_AWARE_CONTRACT"
   test -n "$MULTI_GROUP_RESULT"
   test -n "$CONTINUITY_CONTRACT"
@@ -117,7 +140,8 @@ elif [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_artif
     --multi-group-result "$MULTI_GROUP_RESULT"
   )
 elif [[ -n "$ARTIFACT_AWARE_CONTRACT" || -n "$MULTI_GROUP_RESULT" || \
-  -n "$CONTINUITY_CONTRACT" || -n "$ARTIFACT_AWARE_RESULT" ]]; then
+  -n "$CONTINUITY_CONTRACT" || -n "$ARTIFACT_AWARE_RESULT" || \
+  -n "$ARTIFACT_AWARE_PERSISTENT_CONTRACT" || -n "$CONTINUITY_RESULT" ]]; then
   exit 2
 fi
 

@@ -274,7 +274,10 @@ def run(
     *,
     write_output: bool = True,
     return_internal: bool = False,
+    initialization_only: bool = False,
 ) -> Mapping[str, Any] | tuple[Mapping[str, Any], Mapping[str, Any]]:
+    if initialization_only and (write_output or not return_internal):
+        raise ValueError("initialization-only coupled GPP setup requires an internal, non-writing call")
     output = args.output.resolve()
     output.parent.mkdir(parents=True, exist_ok=True)
     if output.exists():
@@ -404,6 +407,33 @@ def run(
         raise ValueError("coupled GPP direct recalibration recovery state drift")
     trainable = jax.device_put(recovered["trainable"])
     relative_tolerance = float(contract.payload["evaluation"]["relative_source_tolerance"])
+
+    if initialization_only:
+        report = {
+            "schema_version": "target_oriented_coupled_gpp_direct_recalibration_initialization_v1",
+            "status": "passed",
+            "identity": {
+                "coupled_candidate_contract_sha256": candidate["coupled_contract"].sha256,
+                "prepared_manifest_sha256": sha256_file(args.prepared_manifest),
+            },
+            "memory_before": memory_before,
+            "elapsed_seconds": time.perf_counter() - started,
+        }
+        return report, {
+            "context": context,
+            "head": candidate["head"],
+            "initialized_parameters": initialized_parameters,
+            "parent_trainable": trainable,
+            "steps": steps,
+            "gradient_steps": gradient_steps,
+            "direct_steps": direct_steps,
+            "state_steps": state_steps,
+            "layout": layout,
+            "flux_basis": amendment.flux_basis,
+            "coefficients": bounded_contract.coefficients,
+            "relative_tolerance": relative_tolerance,
+            "device": runtime["devices"][0],
+        }
 
     parameters = replace_coupled_gpp_trainable(initialized_parameters, trainable)
     update_two = _training_proposal(
