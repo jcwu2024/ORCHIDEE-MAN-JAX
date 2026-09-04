@@ -49,6 +49,9 @@ from scripts.hpc.calibrate_target_oriented_structured_gpp_joint_gradients import
 from scripts.hpc.run_strong_baseline_gpu_admission import _memory_report
 from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
 from scripts.hpc.run_target_oriented_coupled_gpp_artifact_aware_persistent_training import (
+    _initialization_only,
+)
+from scripts.hpc.run_target_oriented_coupled_gpp_artifact_aware_persistent_training import (
     _parser as _persistent_parser,
 )
 from scripts.hpc.run_target_oriented_coupled_gpp_direct_recalibration import _git_head
@@ -334,15 +337,17 @@ def run(args: Any) -> Mapping[str, Any]:
         raise FileExistsError(output)
     parent = _load_localized_result(args.localized_jump_report.resolve())
 
-    reconstruction = reconstruct_localized_jump_parameters(args)
-    runtime = reconstruction.runtime
-    jax = reconstruction.jax
-    jnp = reconstruction.jnp
+    bootstrap = _initialization_only(args)
+    runtime = bootstrap["context"]["runtime"]
     leaves, source_routes = resolve_coupled_gpp_snowheat_sources(
         runtime["contract"],
         runtime["owner_contract"],
-        reconstruction.bootstrap["layout"],
+        bootstrap["head"].layout,
     )
+    reconstruction = reconstruct_localized_jump_parameters(args, bootstrap=bootstrap)
+    runtime = reconstruction.runtime
+    jax = reconstruction.jax
+    jnp = reconstruction.jnp
     artifact = _load_artifact(args, reconstruction.context, TARGET_ARTIFACT_UPDATE)
     microbatch = _slice(artifact.batch.seven_day, TARGET_WINDOW_INDEX, TARGET_WINDOW_INDEX + 1)
 

@@ -191,8 +191,11 @@ def test_snowheat_runner_delegates_reconstruction_and_routes_required_options():
         if option.startswith("--")
     }
     assert sorted(option for option in required if option not in shared and option not in wrapper) == []
-    assert inspect.getsource(runner.run).count("reconstruct_localized_jump_parameters(args)") == 1
-    assert "_measure_direct_artifact_gradients" not in inspect.getsource(runner.run)
+    run_source = inspect.getsource(runner.run)
+    assert run_source.count("reconstruct_localized_jump_parameters(args, bootstrap=bootstrap)") == 1
+    assert 'bootstrap["head"].layout' in run_source
+    assert 'bootstrap["layout"]' not in run_source
+    assert "_measure_direct_artifact_gradients" not in run_source
     assert "sbatch" not in wrapper
     assert "free gln01" in wrapper
     assert "RUN_TIMEOUT=${RUN_TIMEOUT:-60m}" in wrapper

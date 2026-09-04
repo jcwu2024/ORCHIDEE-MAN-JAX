@@ -540,7 +540,11 @@ def _window_scores(
     }
 
 
-def reconstruct_localized_jump_parameters(args: Any) -> LocalizedJumpReconstruction:
+def reconstruct_localized_jump_parameters(
+    args: Any,
+    *,
+    bootstrap: Mapping[str, Any] | None = None,
+) -> LocalizedJumpReconstruction:
     """Rebuild the accepted control and historical rejected tiny step in memory."""
 
     from jax.flatten_util import ravel_pytree
@@ -582,7 +586,7 @@ def reconstruct_localized_jump_parameters(args: Any) -> LocalizedJumpReconstruct
     ):
         raise ValueError("localized-jump frozen reconstruction plan drift")
 
-    bootstrap = _initialization_only(args)
+    bootstrap = _initialization_only(args) if bootstrap is None else bootstrap
     context = bootstrap["context"]
     runtime = context["runtime"]
     jax = runtime["jax"]
