@@ -2276,17 +2276,26 @@ virtually the entire GPP ratio, while limitation and correction are nearly
 unchanged. See
 [`target_oriented_coupled_gpp_snowheat_causal_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_snowheat_causal_result_20260904.md).
 
-The active gate is the now-frozen zero-update Day-5 crossed attribution of
-control/treatment parameters against control/treatment same-day state. The
-same execution includes matched necessity/sufficiency controls for all six
-GPP-admitted state owners, both trainable parameter families, and four fixed
-six-point interpolation paths, avoiding repeated direction reconstruction.
-Its local classifier, mask, launcher, and historical shared-runner regressions
-pass `47/47`. The next action is one free-`gln01` execution. No further
-training, architecture change, paid execution, fresh validation, 365-day
-rollout, Gate D2, sealed test, or product acceptance is authorized before this
-attribution. See
-[`target_oriented_coupled_gpp_day5_crossed_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_day5_crossed_attribution_v1.md).
+The Day-5 crossed attribution completed on free `gln01` at commit `1c7dc9b`
+in `915.314` seconds; report SHA256 is `c014ac09...7780c5`. All engineering
+gates pass. The four cells are `CC=CT=2.7673363042` and
+`TC=TT=4.8698997235`: parameters explain `100%` of the `+2.1025634193` GPP
+jump, while carried state and parameter-state interaction explain exactly
+zero. Every state-owner intervention is null. At both states,
+`structured_gpp` alone is `100%` sufficient and necessary, while
+`coupled_gpp_carbon_feedback` has zero effect and zero interaction. The
+parameter path stays near `2.7673` through fraction `1/2` and jumps to
+`4.8699` at `3/4`; both state paths are constant. See
+[`target_oriented_coupled_gpp_day5_crossed_attribution_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_day5_crossed_attribution_result_20260904.md).
+
+The active gate is user discussion of this direct `structured_gpp` potential
+jump before changing architecture or training. The recommended bounded next
+diagnostic is zero-training precision/ULP and existing-parameter-subtree
+attribution, because the smooth implemented factor path contains no explicit
+parameter-dependent hard branch and the current evidence does not yet
+distinguish float32 update quantization from extreme internal conditioning.
+Further training, architecture change, paid execution, fresh validation,
+365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).

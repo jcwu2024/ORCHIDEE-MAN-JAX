@@ -1151,14 +1151,24 @@ both `4.869900`, for a retained fraction of `1.0`. The selected-window
 displacement is also retained at `0.999999999997151`. The potential factor,
 not limitation or correction, carries virtually the full GPP ratio.
 
-The snowheat causal hypothesis is rejected. The active gate is the frozen
-zero-update Day-5 parameter/state crossed attribution. In one execution it
-also evaluates necessity/sufficiency controls for all six GPP-admitted state
-owners and both trainable parameter families, plus four fixed interpolation
-paths. Local classifier, exact-mask, launcher, and shared-runner regressions
-pass `47/47`. The next action is one free-`gln01` execution. Architecture
-changes, further training, paid execution, fresh validation, 365-day rollout,
-Gate D2, sealed test, and product acceptance remain closed.
+The snowheat causal hypothesis is rejected. The subsequent Day-5 crossed
+attribution completed on free `gln01` at commit `1c7dc9b` in `915.314`
+seconds; report SHA256 is `c014ac09...7780c5`. All engineering gates pass.
+The four cells are `CC=CT=2.7673363042` and `TC=TT=4.8698997235`, assigning
+`100%` of the `+2.1025634193` GPP jump to the direct parameter map and exactly
+zero to carried state or parameter-state interaction. All six state-owner
+controls are null. At either Day-5 state, `structured_gpp` is `100%`
+sufficient and necessary, while `coupled_gpp_carbon_feedback` contributes
+zero. The parameter interpolation remains near `2.7673` through `1/2` and
+jumps to `4.8699` at `3/4`; state interpolation is constant.
+
+The accepted implementation contains no explicit parameter-dependent hard
+branch in this factor path, so the sharp response is localized but not yet
+explained. The active gate is user discussion before architecture or training
+changes. The recommended bounded follow-up is a zero-training float32/ULP and
+existing-parameter-subtree attribution that separates update quantization
+from extreme internal conditioning. Paid execution, fresh validation,
+365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
 See
 [`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md),
 [`target_oriented_coupled_gpp_localized_jump_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_result_20260904.md),
@@ -1166,7 +1176,9 @@ See
 and
 [`target_oriented_coupled_gpp_snowheat_causal_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_snowheat_causal_result_20260904.md),
 and
-[`target_oriented_coupled_gpp_day5_crossed_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_day5_crossed_attribution_v1.md).
+[`target_oriented_coupled_gpp_day5_crossed_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_day5_crossed_attribution_v1.md),
+with the accepted result in
+[`target_oriented_coupled_gpp_day5_crossed_attribution_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_day5_crossed_attribution_result_20260904.md).
 
 The bounded persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
