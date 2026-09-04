@@ -989,6 +989,14 @@ owns one-time start reconstruction, identity-exact no-replay resume, per-step
 artifact-aware training, and detailed monitor execution. Its direct wrapper is
 free-`gln01` only; no paid launcher is authorized.
 
+`daily_operator/target_oriented_coupled_gpp_snowheat_causal.py` owns the
+mirror-complete snowheat source resolution, bounded Day-5 causal classifier,
+and existing GPP-factor log attribution. The completed executable
+`scripts/hpc/audit_target_oriented_coupled_gpp_snowheat_causal.py` reconstructs
+the rejected update-3 displacement in memory, runs control, treatment, and
+matched-snowheat trajectories, and writes a report even when an engineering
+subgate fails. Its wrapper is free-`gln01` only and never retains parameters.
+
 ## Scripts
 
 | Path | Classification | Use |

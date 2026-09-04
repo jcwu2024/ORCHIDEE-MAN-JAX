@@ -1142,17 +1142,26 @@ structured-GPP branch through the inherited source bank, while the newer
 carbon-coordinate adapter does not read snowheat. This proves reachability
 and temporal precedence, not causality.
 
-The active gate is a zero-training matched intervention on artifact 550,
-window 4. It replaces both treatment snowheat mirrors with the control
-trajectory's same-day start values and reports the potential, limitation, and
-correction factors. A causal conclusion requires removal of at least `90%` of
-the Day-5 GPP jump. Architecture changes, further training, paid execution,
-fresh validation, 365-day rollout, Gate D2, sealed test, and product
-acceptance remain closed. See
+The matched snowheat intervention completed at commit `67fae75` in `890.625`
+seconds; report SHA256 is `a19c6230...a15a2e23`. It passes trajectory, score,
+factorization, and physical engineering gates. Replacing both treatment
+snowheat mirrors with control same-day starts leaves the Day-5 GPP jump
+unchanged: control is `2.767336`, free treatment and matched treatment are
+both `4.869900`, for a retained fraction of `1.0`. The selected-window
+displacement is also retained at `0.999999999997151`. The potential factor,
+not limitation or correction, carries virtually the full GPP ratio.
+
+The snowheat causal hypothesis is rejected. The active gate is a zero-update
+Day-5 parameter/state crossed attribution, followed by source-owner
+interventions only if the crossed result identifies a state-mediated effect.
+Architecture changes, further training, paid execution, fresh validation,
+365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
+See
 [`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md),
 [`target_oriented_coupled_gpp_localized_jump_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_result_20260904.md),
+[`target_oriented_coupled_gpp_snowheat_causal_intervention_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_snowheat_causal_intervention_v1.md),
 and
-[`target_oriented_coupled_gpp_snowheat_causal_intervention_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_snowheat_causal_intervention_v1.md).
+[`target_oriented_coupled_gpp_snowheat_causal_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_snowheat_causal_result_20260904.md).
 
 The bounded persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).

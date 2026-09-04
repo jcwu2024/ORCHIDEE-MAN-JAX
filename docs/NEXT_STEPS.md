@@ -2265,15 +2265,23 @@ branches, but temporal precedence and reachability do not establish
 causality. See
 [`target_oriented_coupled_gpp_localized_jump_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_result_20260904.md).
 
-The active gate is the frozen matched snowheat intervention on that one
-window. It keeps the treatment parameters and all other predicted state but
-replaces both treatment snowheat mirrors with the control trajectory's
-same-day start values, while exposing the existing potential, limitation, and
-correction factors. Only disappearance of at least `90%` of the Day-5 GPP
-jump supports a causal snowheat conclusion. No further training, architecture
-change, paid execution, fresh validation, 365-day rollout, Gate D2, sealed
-test, or product acceptance is authorized before this diagnostic. See
-[`target_oriented_coupled_gpp_snowheat_causal_intervention_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_snowheat_causal_intervention_v1.md).
+The matched snowheat intervention completed on free `gln01` at commit
+`67fae75` in `890.625` seconds; report SHA256 is `a19c6230...a15a2e23`.
+Control, treatment, and matched trajectories reproduce their engineering
+references and have zero physical hard failures. Matching both snowheat
+mirrors changes neither the Day-5 GPP jump nor the selected-window objective:
+the retained fractions are `1.0` and `0.999999999997151`. The classification
+is `snowheat_path_not_explanatory_for_day5_jump`. The potential factor carries
+virtually the entire GPP ratio, while limitation and correction are nearly
+unchanged. See
+[`target_oriented_coupled_gpp_snowheat_causal_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_snowheat_causal_result_20260904.md).
+
+The active gate is to freeze a zero-update Day-5 crossed attribution of
+control/treatment parameters against control/treatment same-day state. Only
+if that cross locates a state-mediated effect should source-owner or carbon
+field interventions be executed. No further training, architecture change,
+paid execution, fresh validation, 365-day rollout, Gate D2, sealed test, or
+product acceptance is authorized before this attribution.
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
