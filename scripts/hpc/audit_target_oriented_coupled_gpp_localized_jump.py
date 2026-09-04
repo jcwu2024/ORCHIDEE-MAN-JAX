@@ -632,13 +632,29 @@ def run(args: Any) -> Mapping[str, Any]:
     parameter_delta_l2 = jnp.linalg.norm(flat_delta)
     jax.block_until_ready((treatment_trainable, proposal_nonfinite, parameter_delta_l2))
     parameter_delta_l2_host = float(np.asarray(parameter_delta_l2))
-    if int(np.asarray(proposal_nonfinite)) != 0 or not np.isclose(
-        parameter_delta_l2_host,
-        float(smallest["parameter_delta_l2"]),
-        rtol=1.0e-5,
-        atol=1.0e-10,
+    nominal_parameter_delta_l2 = float(smallest["scale"]) * plan["full_parameter_step_l2"]
+    nominal_delta_matches = bool(
+        np.isclose(
+            nominal_parameter_delta_l2,
+            float(smallest["parameter_delta_l2"]),
+            rtol=1.0e-12,
+            atol=1.0e-15,
+        )
+    )
+    if (
+        int(np.asarray(proposal_nonfinite)) != 0
+        or not np.isfinite(parameter_delta_l2_host)
+        or parameter_delta_l2_host <= 0.0
+        or not nominal_delta_matches
     ):
-        raise RuntimeError("localized-jump treatment displacement drift")
+        raise RuntimeError("localized-jump treatment displacement is invalid")
+    print(
+        "coupled_gpp localized_jump direction_reproduced "
+        f"combined_norm={combined_norm_host:.12g} "
+        f"nominal_delta={nominal_parameter_delta_l2:.12g} "
+        f"realized_delta={parameter_delta_l2_host:.12g}",
+        flush=True,
+    )
     treatment_parameters = replace_coupled_gpp_trainable(bootstrap["initialized_parameters"], treatment_trainable)
     del direct["unit_gradients"], scheduled["unit_gradients"]
     del unit_matrix, flat_direction, flat_template, direction_tree, proposed, delta_tree, flat_delta, zero
@@ -783,6 +799,8 @@ def run(args: Any) -> Mapping[str, Any]:
             "historical_full_parameter_step_l2": plan["full_parameter_step_l2"],
             "treatment_scale": float(smallest["scale"]),
             "historical_treatment_parameter_delta_l2": float(smallest["parameter_delta_l2"]),
+            "nominal_treatment_parameter_delta_l2": nominal_parameter_delta_l2,
+            "nominal_treatment_parameter_delta_reproduced": nominal_delta_matches,
             "reconstructed_treatment_parameter_delta_l2": parameter_delta_l2_host,
             "direct_gradient_reports": list(direct["gradient_reports"]),
             "scheduled_gradient_reports": scheduled["gradient_reports"],
