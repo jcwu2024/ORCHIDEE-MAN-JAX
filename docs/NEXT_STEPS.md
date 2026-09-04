@@ -2251,6 +2251,10 @@ updates 4 and 7. The active gate is one free-`gln01` execution with a
 rollout, Gate D2, sealed test, and product acceptance remain closed. The new
 protocol is
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
+The first free launch at `d9f1238` exposed an incorrectly transcribed parent
+result SHA and stopped before GPU allocation. The corrected contract uses the
+already frozen and server-confirmed `764b14e...81168`; the failed preflight
+wrote no training state or result.
 The completed smoke contract is
 [`target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.md).
 The completed one-step audit contract is

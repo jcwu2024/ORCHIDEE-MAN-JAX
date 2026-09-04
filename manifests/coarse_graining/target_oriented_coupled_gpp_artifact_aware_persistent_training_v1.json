@@ -1,14 +1,14 @@
 {
   "schema_version": "target_oriented_coupled_gpp_artifact_aware_persistent_training_v1",
   "status": "frozen_before_exact_start_state_is_serialized",
-  "contract_sha256": "af7b3dbf64b70b50133ac76728413a56389f69afd50223000ac32ee76f01aa02",
+  "contract_sha256": "3826d3584cf054bff0d08f0290e3bb20df2df90b3de47da8d9ffa6abc93d6578",
   "identity": {
     "candidate": "target_oriented_coupled_gpp_carbon_feedback_attention_v1",
     "continuity_contract_sha256": "451a1003514c465b1e191f741e07cbe18285bf117eee6ae71020706d577e20f3",
     "continuity_result_sha256": "aa326bb4cfb237528cb0785e7d03d7f440f91647bcab4959d0334afc0a452d69",
     "parent_persistent_contract_sha256": "1742d9d19a6b8e8d91331723bf06047a17fa5ce5d31cc528987205a838d8b5e4",
     "parent_persistent_schedule_sha256": "c79c5f2e125706d73b306ccd5aa23582a062b6f387d55224edee52666492548d",
-    "parent_persistent_result_sha256": "a92903f651c4c6375a969f672b3990065acc11088410643360052a99858bcfc3",
+    "parent_persistent_result_sha256": "764b14e169345ba119407b9e3dcf3a7e9141900c2710c8afa2775dd0fe881168",
     "prepared_manifest_sha256": "8205140ddeae34967a287d41d204318659a84a8574de954e9b0be14f8998fc31",
     "candidate_parameter_count": 109464359,
     "trainable_parameter_count": 15960195,

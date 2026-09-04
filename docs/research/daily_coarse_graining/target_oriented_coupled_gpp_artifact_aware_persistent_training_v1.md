@@ -16,7 +16,7 @@ or expose fresh validation or sealed-test values.
 The frozen machine contract is
 `manifests/coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.json`,
 canonical SHA256
-`af7b3dbf64b70b50133ac76728413a56389f69afd50223000ac32ee76f01aa02`.
+`3826d3584cf054bff0d08f0290e3bb20df2df90b3de47da8d9ffa6abc93d6578`.
 
 ## Exact Starting State
 

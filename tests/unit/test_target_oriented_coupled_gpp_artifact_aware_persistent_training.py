@@ -18,6 +18,7 @@ from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_a
 from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_artifact_aware_persistent_training import (
     FROZEN_CONTRACT_SHA256,
     LOGICAL_UPDATES,
+    PARENT_PERSISTENT_RESULT_SHA256,
     PRIMARY_SCIENCE_KEYS,
     TRAIN_PANEL_GROUP_UPDATES,
     artifact_aware_monitor_gate,
@@ -25,6 +26,7 @@ from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_a
 )
 from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_direct_generalization import (
     MONITOR_UPDATES,
+    PERSISTENT_RESULT_SHA256,
 )
 from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_objective import (
     GRADIENT_SOURCES,
@@ -84,6 +86,8 @@ def test_artifact_aware_persistent_contract_freezes_disjoint_rotating_panels():
     assert set(artifacts).isdisjoint(contract.monitor_updates)
     assert tuple(len(registry) for registry in contract.source_registries) == (43,) * 6
     assert contract.payload["execution"]["paid_partition_authorized"] is False
+    assert PARENT_PERSISTENT_RESULT_SHA256 == PERSISTENT_RESULT_SHA256
+    assert contract.payload["identity"]["parent_persistent_result_sha256"] == PERSISTENT_RESULT_SHA256
 
 
 def test_final_monitor_gate_requires_gpp_and_primary_science_improvement():

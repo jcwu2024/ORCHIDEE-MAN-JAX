@@ -1123,7 +1123,7 @@ selected scale changes from the predecessor's `1/2` to `1/32`, and both
 train-only and monitor baselines shift by about `3.4%`.
 
 The bounded artifact-aware persistent-training contract is now frozen at
-`af7b3db...aa02` and locally qualified. It covers logical updates 2-7 with 240
+`3826d358...d6578` and locally qualified. It covers logical updates 2-7 with 240
 unique train-only artifacts, one immutable exact pre-update-2 parameter
 snapshot, initialization-only resume, atomic recovery after the initial
 monitor and every retained update, and detailed monitor gates at updates 4
@@ -1134,6 +1134,11 @@ shell syntax checks pass. The active gate is one free-`gln01` execution with a
 execution, fresh validation, 365-day rollout, Gate D2, sealed test, and product
 acceptance remain closed. The protocol is
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
+The first free launch at `d9f1238` stopped before GPU allocation because the
+new contract transcribed the parent result SHA incorrectly. The repository's
+existing authority and the server file both use `764b14e...81168`; the
+contract now uses that value. No start, recovery, checkpoint, or report was
+written by the failed preflight.
 The completed smoke contract is
 [`target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.md).
 The completed one-step audit contract is
