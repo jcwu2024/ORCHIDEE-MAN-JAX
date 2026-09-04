@@ -121,6 +121,14 @@ class StructuredGPPQueryState(NamedTuple):
     base_query: Any
 
 
+class StructuredGPPFactorization(NamedTuple):
+    potential: Any
+    limitation: Any
+    correction: Any
+    normalization_scale: Any
+    pre_vcmax_gpp: Any
+
+
 @dataclass(frozen=True)
 class StructuredGPPConfig:
     width: int = 384
@@ -494,7 +502,7 @@ def structured_gpp_query_state(
     )
 
 
-def structured_gpp_base_response(
+def structured_gpp_factorization(
     parameters: Mapping[str, Any],
     context: StrongBaselineContext,
     gpp_hidden: Any,
@@ -507,8 +515,8 @@ def structured_gpp_base_response(
     config: StructuredGPPConfig = StructuredGPPConfig(),
     query_state: StructuredGPPQueryState | None = None,
     query_residuals: tuple[Any, Any, Any] | None = None,
-) -> Any:
-    """Return pre-VCMAX positive daily GPP for every compact PFT."""
+) -> StructuredGPPFactorization:
+    """Expose the existing positive GPP factors without changing their path."""
 
     specialist = parameters["target_oriented"]["structured_gpp"]
     forcing_tokens, forcing_valid, forcing_field = _structured_forcing_tokens(
@@ -619,7 +627,45 @@ def structured_gpp_base_response(
     pft_mask = jnp.asarray(context.pft_mask, dtype=jnp.bool_)
     vegetation = pft_mask & (fraction > 0.0) & (traits[:, PFT_TRAIT_BARE_SOIL] <= 0.5)
     base = scale * jnp.asarray(potential, dtype=jnp.float64) * jnp.asarray(limitation, dtype=jnp.float64) * correction
-    return jnp.where(vegetation, base, 0.0)[None, :]
+    pre_vcmax_gpp = jnp.where(vegetation, base, 0.0)[None, :]
+    return StructuredGPPFactorization(
+        potential=potential,
+        limitation=limitation,
+        correction=correction,
+        normalization_scale=scale,
+        pre_vcmax_gpp=pre_vcmax_gpp,
+    )
+
+
+def structured_gpp_base_response(
+    parameters: Mapping[str, Any],
+    context: StrongBaselineContext,
+    gpp_hidden: Any,
+    inputs: AssembledDailyOperatorInput,
+    *,
+    layout: StrongBaselineLayout,
+    state_layout: StructuredGPPStateLayout,
+    input_normalization: NeuralInputNormalization,
+    output_normalization: NeuralOutputNormalization,
+    config: StructuredGPPConfig = StructuredGPPConfig(),
+    query_state: StructuredGPPQueryState | None = None,
+    query_residuals: tuple[Any, Any, Any] | None = None,
+) -> Any:
+    """Return pre-VCMAX positive daily GPP for every compact PFT."""
+
+    return structured_gpp_factorization(
+        parameters,
+        context,
+        gpp_hidden,
+        inputs,
+        layout=layout,
+        state_layout=state_layout,
+        input_normalization=input_normalization,
+        output_normalization=output_normalization,
+        config=config,
+        query_state=query_state,
+        query_residuals=query_residuals,
+    ).pre_vcmax_gpp
 
 
 def target_oriented_structured_gpp_process_outputs(
@@ -708,6 +754,7 @@ __all__ = [
     "GPP_FIELD",
     "StructuredGPPConfig",
     "StructuredGPPContract",
+    "StructuredGPPFactorization",
     "StructuredGPPQueryState",
     "StructuredGPPStateLayout",
     "build_structured_gpp_state_layout",
@@ -715,6 +762,7 @@ __all__ = [
     "load_structured_gpp_contract",
     "resolve_gpp_field_index",
     "structured_gpp_base_response",
+    "structured_gpp_factorization",
     "structured_gpp_local_tokens",
     "structured_gpp_parameter_count",
     "structured_gpp_query_state",

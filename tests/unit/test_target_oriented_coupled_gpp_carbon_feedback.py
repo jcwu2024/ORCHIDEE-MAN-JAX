@@ -28,6 +28,9 @@ from research.daily_coarse_graining.daily_operator.parameter_routing import (
 from research.daily_coarse_graining.daily_operator.strong_baseline_architecture import (
     strong_baseline_parameter_count,
 )
+from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_snowheat_causal import (
+    resolve_coupled_gpp_snowheat_sources,
+)
 from tests.unit.test_daily_operator_hierarchical_coordinate_attention import (
     _complete_prediction_for_loss,
     _host_l2,
@@ -90,6 +93,20 @@ def test_coupled_contract_layout_and_parameter_budget_are_exact(coupled_gpp_setu
         "structured_gpp"
     ]
 
+    leaves, routes = resolve_coupled_gpp_snowheat_sources(
+        setup["adapter"].contract,
+        setup["owner_contract"],
+        setup["candidate_head"].layout,
+    )
+    assert {leaf.key for leaf in leaves} == {
+        "diffuco_previous_step_state.snowheat",
+        "hydrol_previous_step_state.snowheat",
+    }
+    assert {record["source_family"] for record in routes.values()} == {
+        "state_canopy",
+        "state_water",
+    }
+
 
 def test_coupled_forward_loss_gradients_and_parent_isolation(coupled_gpp_setup):
     setup = coupled_gpp_setup
@@ -98,12 +115,28 @@ def test_coupled_forward_loss_gradients_and_parent_isolation(coupled_gpp_setup):
     inputs = setup["assembled"]
     context = head.assemble_context(parameters, inputs)
     eager = head.learned_outputs(parameters, context, inputs)
+    factors = head.gpp_factorization(parameters, context, inputs)
     compiled = jax.jit(
         lambda values, encoded, assembled: head.learned_outputs(values, encoded, assembled)
     )(parameters, context, inputs)
     jax.block_until_ready(compiled[GPP_FIELD])
     assert all(np.all(np.isfinite(np.asarray(value))) for value in eager.values())
     assert all(np.all(np.isfinite(np.asarray(value))) for value in compiled.values())
+    assert set(factors) == {
+        "potential",
+        "limitation",
+        "correction",
+        "normalization_scale",
+        "pre_vcmax_gpp",
+        "vcmax25_factor",
+        "routed_gpp",
+    }
+    np.testing.assert_allclose(
+        np.asarray(factors["routed_gpp"]),
+        np.asarray(eager[GPP_FIELD]),
+        rtol=1.0e-7,
+        atol=1.0e-10,
+    )
 
     parent_head = setup["parent_head"]
     parent_parameters = setup["parent_parameters"]

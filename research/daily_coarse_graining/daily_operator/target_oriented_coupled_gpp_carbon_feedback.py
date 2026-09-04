@@ -48,9 +48,10 @@ from .target_oriented_structured_gpp import (
     GPP_FIELD,
     StructuredGPPConfig,
     StructuredGPPContract,
+    StructuredGPPFactorization,
     StructuredGPPQueryState,
     StructuredGPPStateLayout,
-    structured_gpp_base_response,
+    structured_gpp_factorization,
     structured_gpp_query_state,
 )
 from .types import AssembledDailyOperatorInput
@@ -378,6 +379,37 @@ def coupled_gpp_carbon_feedback_base_response(
     structured_config: StructuredGPPConfig = StructuredGPPConfig(),
     config: CoupledGPPCarbonFeedbackConfig = CoupledGPPCarbonFeedbackConfig(),
 ) -> Any:
+    return coupled_gpp_carbon_feedback_factorization(
+        parameters,
+        context,
+        gpp_hidden,
+        inputs,
+        layout=layout,
+        structured_state_layout=structured_state_layout,
+        carbon_state_layout=carbon_state_layout,
+        input_normalization=input_normalization,
+        output_normalization=output_normalization,
+        structured_config=structured_config,
+        config=config,
+    ).pre_vcmax_gpp
+
+
+def coupled_gpp_carbon_feedback_factorization(
+    parameters: Mapping[str, Any],
+    context: StrongBaselineContext,
+    gpp_hidden: Any,
+    inputs: AssembledDailyOperatorInput,
+    *,
+    layout: StrongBaselineLayout,
+    structured_state_layout: StructuredGPPStateLayout,
+    carbon_state_layout: CarbonFeedbackStateLayout,
+    input_normalization: NeuralInputNormalization,
+    output_normalization: NeuralOutputNormalization,
+    structured_config: StructuredGPPConfig = StructuredGPPConfig(),
+    config: CoupledGPPCarbonFeedbackConfig = CoupledGPPCarbonFeedbackConfig(),
+) -> StructuredGPPFactorization:
+    """Expose the inherited factorization after carbon-query conditioning."""
+
     query_state: StructuredGPPQueryState = structured_gpp_query_state(
         parameters,
         context,
@@ -396,7 +428,7 @@ def coupled_gpp_carbon_feedback_base_response(
         input_normalization=input_normalization,
         config=config,
     )
-    return structured_gpp_base_response(
+    return structured_gpp_factorization(
         parameters,
         context,
         gpp_hidden,
@@ -504,6 +536,7 @@ __all__ = [
     "carbon_feedback_query_residuals",
     "carbon_feedback_tokens",
     "coupled_gpp_carbon_feedback_base_response",
+    "coupled_gpp_carbon_feedback_factorization",
     "coupled_gpp_carbon_feedback_parameter_count",
     "initialize_coupled_gpp_carbon_feedback_parameters",
     "load_coupled_gpp_carbon_feedback_contract",

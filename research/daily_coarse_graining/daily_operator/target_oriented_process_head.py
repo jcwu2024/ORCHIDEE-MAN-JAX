@@ -5,12 +5,15 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any, Mapping
 
+import jax.numpy as jnp
 import numpy as np
 
 from .mechanistic_process_head import MechanisticStrongBaselineProcessHead
+from .parameter_routing import DEFAULT_PFT_PARAMETER_ROUTING, VCMAX25_FACTOR_SCALE
 from .strong_baseline_architecture import StrongBaselineContext
 from .target_oriented_attention import (
     TargetOrientedAttentionConfig,
+    _target_oriented_attention_decoded_outputs,
     target_oriented_attention_process_outputs,
 )
 from .target_oriented_contract import (
@@ -22,6 +25,7 @@ from .target_oriented_coupled_gpp_carbon_feedback import (
     CoupledGPPCarbonFeedbackConfig,
     CoupledGPPCarbonFeedbackContract,
     build_carbon_feedback_state_layout,
+    coupled_gpp_carbon_feedback_factorization,
     load_coupled_gpp_carbon_feedback_contract,
     target_oriented_coupled_gpp_carbon_feedback_process_outputs,
 )
@@ -32,6 +36,7 @@ from .target_oriented_distribution_aware_maintenance import (
     target_oriented_distribution_aware_maintenance_process_outputs,
 )
 from .target_oriented_source_shaped_maintenance import (
+    MAINTENANCE_FIELD,
     SourceShapedMaintenanceConfig,
     SourceShapedMaintenanceContract,
     compact_coeff_maint_zero_from_retained_tail,
@@ -39,6 +44,7 @@ from .target_oriented_source_shaped_maintenance import (
     target_oriented_source_shaped_maintenance_process_outputs,
 )
 from .target_oriented_structured_gpp import (
+    GPP_FIELD,
     StructuredGPPConfig,
     StructuredGPPContract,
     StructuredGPPStateLayout,
@@ -271,6 +277,60 @@ class MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead(
             structured_config=self.structured_config,
             config=self.coupled_config,
         )
+
+    def gpp_factorization(
+        self,
+        parameters: Mapping[str, Any],
+        context: StrongBaselineContext,
+        inputs: AssembledDailyOperatorInput,
+    ) -> Mapping[str, Any]:
+        """Return the existing routed GPP factors for diagnostics."""
+
+        _outputs, hidden = _target_oriented_attention_decoded_outputs(
+            parameters,
+            context,
+            inputs,
+            schema=self.learned_schema,
+            layout=self.layout,
+            input_normalization=self.input_normalization,
+            output_normalization=self.output_normalization,
+            forcing_layout=self.forcing_layout,
+            target_contract=self.target_contract,
+            message_gate_scale=self.message_gate_scale,
+            baseline_config=self.config,
+            config=self.target_config,
+            deferred_primary_fields=frozenset((GPP_FIELD, MAINTENANCE_FIELD)),
+        )
+        factors = coupled_gpp_carbon_feedback_factorization(
+            parameters,
+            context,
+            hidden[GPP_FIELD],
+            inputs,
+            layout=self.layout,
+            structured_state_layout=self.structured_state_layout,
+            carbon_state_layout=self.carbon_state_layout,
+            input_normalization=self.input_normalization,
+            output_normalization=self.output_normalization,
+            structured_config=self.structured_config,
+            config=self.coupled_config,
+        )
+        vcmax_index = DEFAULT_PFT_PARAMETER_ROUTING.index("vcmax25")
+        vcmax_factor = (
+            jnp.maximum(
+                jnp.asarray(inputs.pft.pft_parameters[:, vcmax_index], dtype=jnp.float64),
+                0.0,
+            )
+            / VCMAX25_FACTOR_SCALE
+        )
+        return {
+            "potential": factors.potential,
+            "limitation": factors.limitation,
+            "correction": factors.correction,
+            "normalization_scale": factors.normalization_scale,
+            "pre_vcmax_gpp": factors.pre_vcmax_gpp,
+            "vcmax25_factor": vcmax_factor,
+            "routed_gpp": factors.pre_vcmax_gpp * vcmax_factor[None, :],
+        }
 
 
 def build_target_oriented_source_shaped_maintenance_head(

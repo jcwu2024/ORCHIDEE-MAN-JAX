@@ -2251,15 +2251,29 @@ The exact-zero follow-up completed on free `gln01` at commit `ca59ed5` in
 `557.468` seconds. Exact-zero forward reproduces all eight update-3 seven-day
 baselines exactly. The historical `1/64` displacement worsens the aggregate
 by `0.5775%`, entirely because artifact `550` worsens by `6.1243%`; the other
-seven artifacts improve. The active gate is the bounded artifact-550
-localized jump trace: reconstruct only the 26 nonzero direction sources, find
-the responsible seven-day window, and report the first differing state,
-defined mask, discrete branch, or science trajectory. No further training,
-architecture change, paid execution, fresh validation, 365-day rollout, Gate
-D2, sealed test, or product acceptance is authorized before this trace. See
-[`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md)
-and
-[`target_oriented_coupled_gpp_localized_jump_trace_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_trace_v1.md).
+seven artifacts improve.
+
+The bounded artifact-550 trace then completed at commit `e436b96` in
+`1,218.624` seconds; report SHA256 is `cdca61cd...1f618e`. The fourth of eight
+seven-day windows contains the entire material regression. There is no
+discrete or defined-mask change. Both mirrored `snowheat` coordinates first
+cross `0.001` training scale on Day 2 and reach `0.00417` on Day 4; GPP then
+jumps on Day 5 from `2.76734` to `4.86990`, carrying
+`+1.51385` NPP and `+0.79464/+0.71857` AGB/BGB into later days. The source
+router confirms that both snowheat mirrors can reach all three structured-GPP
+branches, but temporal precedence and reachability do not establish
+causality. See
+[`target_oriented_coupled_gpp_localized_jump_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_result_20260904.md).
+
+The active gate is the frozen matched snowheat intervention on that one
+window. It keeps the treatment parameters and all other predicted state but
+replaces both treatment snowheat mirrors with the control trajectory's
+same-day start values, while exposing the existing potential, limitation, and
+correction factors. Only disappearance of at least `90%` of the Day-5 GPP
+jump supports a causal snowheat conclusion. No further training, architecture
+change, paid execution, fresh validation, 365-day rollout, Gate D2, sealed
+test, or product acceptance is authorized before this diagnostic. See
+[`target_oriented_coupled_gpp_snowheat_causal_intervention_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_snowheat_causal_intervention_v1.md).
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).

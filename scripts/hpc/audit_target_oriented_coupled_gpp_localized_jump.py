@@ -6,7 +6,7 @@ import gc
 import json
 import time
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any, Mapping, NamedTuple, Sequence
 
 import numpy as np
 
@@ -87,6 +87,30 @@ DIRECTION_NORM_RTOL = 1.0e-5
 DIRECTION_NORM_ATOL = 1.0e-10
 FORWARD_REPRODUCTION_RTOL = 1.0e-6
 FORWARD_REPRODUCTION_ATOL = 1.0e-10
+
+
+class LocalizedJumpReconstruction(NamedTuple):
+    contract: Any
+    recovery_digest: str
+    recovered: Mapping[str, Any]
+    historical_target: Mapping[str, Any]
+    plan: Mapping[str, Any]
+    bootstrap: Mapping[str, Any]
+    context: Mapping[str, Any]
+    runtime: Mapping[str, Any]
+    jax: Any
+    jnp: Any
+    control_parameters: Any
+    treatment_parameters: Any
+    direct: Mapping[str, Any]
+    scheduled: Mapping[str, Any]
+    combined_norm: float
+    norm_matches: bool
+    treatment_scale: float
+    historical_delta: float
+    nominal_delta: float
+    nominal_delta_matches: bool
+    realized_delta: float
 
 
 def _direction_reconstruction_plan(rejected: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -516,14 +540,10 @@ def _window_scores(
     }
 
 
-def run(args: Any) -> Mapping[str, Any]:
-    from jax.flatten_util import ravel_pytree
+def reconstruct_localized_jump_parameters(args: Any) -> LocalizedJumpReconstruction:
+    """Rebuild the accepted control and historical rejected tiny step in memory."""
 
-    started = time.perf_counter()
-    output = args.output.resolve()
-    output.parent.mkdir(parents=True, exist_ok=True)
-    if output.exists():
-        raise FileExistsError(output)
+    from jax.flatten_util import ravel_pytree
 
     contract = load_coupled_gpp_artifact_aware_persistent_training_contract(args.artifact_aware_persistent_contract)
     parent_report, rejected = _load_parent_evidence(
@@ -661,6 +681,59 @@ def run(args: Any) -> Mapping[str, Any]:
     del direct_units, unit_by_source
     gc.collect()
 
+    return LocalizedJumpReconstruction(
+        contract=contract,
+        recovery_digest=recovery_digest,
+        recovered=recovered,
+        historical_target=historical_target,
+        plan=plan,
+        bootstrap=bootstrap,
+        context=context,
+        runtime=runtime,
+        jax=jax,
+        jnp=jnp,
+        control_parameters=control_parameters,
+        treatment_parameters=treatment_parameters,
+        direct=direct,
+        scheduled=scheduled,
+        combined_norm=combined_norm_host,
+        norm_matches=norm_matches,
+        treatment_scale=float(smallest["scale"]),
+        historical_delta=float(smallest["parameter_delta_l2"]),
+        nominal_delta=nominal_parameter_delta_l2,
+        nominal_delta_matches=nominal_delta_matches,
+        realized_delta=parameter_delta_l2_host,
+    )
+
+
+def run(args: Any) -> Mapping[str, Any]:
+    started = time.perf_counter()
+    output = args.output.resolve()
+    output.parent.mkdir(parents=True, exist_ok=True)
+    if output.exists():
+        raise FileExistsError(output)
+
+    reconstruction = reconstruct_localized_jump_parameters(args)
+    contract = reconstruction.contract
+    recovery_digest = reconstruction.recovery_digest
+    recovered = reconstruction.recovered
+    historical_target = reconstruction.historical_target
+    plan = reconstruction.plan
+    bootstrap = reconstruction.bootstrap
+    context = reconstruction.context
+    runtime = reconstruction.runtime
+    jax = reconstruction.jax
+    jnp = reconstruction.jnp
+    control_parameters = reconstruction.control_parameters
+    treatment_parameters = reconstruction.treatment_parameters
+    direct = reconstruction.direct
+    scheduled = reconstruction.scheduled
+    combined_norm_host = reconstruction.combined_norm
+    norm_matches = reconstruction.norm_matches
+    nominal_parameter_delta_l2 = reconstruction.nominal_delta
+    nominal_delta_matches = reconstruction.nominal_delta_matches
+    parameter_delta_l2_host = reconstruction.realized_delta
+
     artifact = _load_artifact(args, context, TARGET_ARTIFACT_UPDATE)
     window_scores = _window_scores(
         jax,
@@ -797,8 +870,8 @@ def run(args: Any) -> Mapping[str, Any]:
             "reconstructed_combined_gradient_norm": combined_norm_host,
             "combined_gradient_norm_reproduced": norm_matches,
             "historical_full_parameter_step_l2": plan["full_parameter_step_l2"],
-            "treatment_scale": float(smallest["scale"]),
-            "historical_treatment_parameter_delta_l2": float(smallest["parameter_delta_l2"]),
+            "treatment_scale": reconstruction.treatment_scale,
+            "historical_treatment_parameter_delta_l2": reconstruction.historical_delta,
             "nominal_treatment_parameter_delta_l2": nominal_parameter_delta_l2,
             "nominal_treatment_parameter_delta_reproduced": nominal_delta_matches,
             "reconstructed_treatment_parameter_delta_l2": parameter_delta_l2_host,

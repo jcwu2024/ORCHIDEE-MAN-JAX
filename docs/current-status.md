@@ -1129,16 +1129,30 @@ recovery reproduces all eight stored update-3 seven-day baselines exactly.
 The historical `1/64` proposal worsens their aggregate by `0.5775%` solely
 because artifact `550` worsens by `6.1243%`; all other artifacts improve and
 all physical hard gates remain zero. Report SHA256 is
-`c30f31a9...0795d`. The active gate is a zero-training localized trace within
-artifact `550`: reconstruct the 26 nonzero direction rows, select the worst of
-its eight seven-day windows, then identify the first material continuous,
-defined-mask, or discrete-state change while reporting all science flux and
-stock trajectories. Architecture changes, further training, paid execution,
-fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
-remain closed. See
-[`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md)
+`c30f31a9...0795d`.
+
+The localized trace completed at commit `e436b96` in `1,218.624` seconds;
+report SHA256 is `cdca61cd...1f618e`. The fourth seven-day window is the sole
+material regression. It has no discrete or defined-mask divergence. Two
+mirror copies of snow-layer-2 `snowheat` first exceed `0.001` training scale
+on Day 2, while the scientific discontinuity occurs on Day 5: GPP changes
+from `2.767336` to `4.869900`, NPP by `+1.513847`, and AGB/BGB by
+`+0.794635/+0.718573`. Both snowheat source families can reach every
+structured-GPP branch through the inherited source bank, while the newer
+carbon-coordinate adapter does not read snowheat. This proves reachability
+and temporal precedence, not causality.
+
+The active gate is a zero-training matched intervention on artifact 550,
+window 4. It replaces both treatment snowheat mirrors with the control
+trajectory's same-day start values and reports the potential, limitation, and
+correction factors. A causal conclusion requires removal of at least `90%` of
+the Day-5 GPP jump. Architecture changes, further training, paid execution,
+fresh validation, 365-day rollout, Gate D2, sealed test, and product
+acceptance remain closed. See
+[`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md),
+[`target_oriented_coupled_gpp_localized_jump_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_result_20260904.md),
 and
-[`target_oriented_coupled_gpp_localized_jump_trace_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_trace_v1.md).
+[`target_oriented_coupled_gpp_snowheat_causal_intervention_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_snowheat_causal_intervention_v1.md).
 
 The bounded persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
