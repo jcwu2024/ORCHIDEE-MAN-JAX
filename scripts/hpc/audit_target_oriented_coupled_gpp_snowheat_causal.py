@@ -63,7 +63,9 @@ from scripts.hpc.run_target_oriented_full_step_preflight import (
 from scripts.hpc.run_target_oriented_structured_gpp_training_preflight import _hard_host
 
 LOCALIZED_RESULT_SHA256 = "cdca61cdcdf88ff0fd1fc8a07cfe07ead7180438844b7618c3f81f94281f618e"
-FACTORIZATION_RTOL = 1.0e-7
+# The exposed float32 branch factors can differ from the fused GPU output by
+# slightly more than one float32 epsilon while remaining the same product.
+FACTORIZATION_RTOL = 2.0e-7
 FACTORIZATION_ATOL = 1.0e-10
 
 
@@ -623,6 +625,10 @@ def run(args: Any) -> Mapping[str, Any]:
             "free_gpp_trace_reproduced": free_trace_reproduced,
             "free_window_scores_reproduced": free_scores_reproduced,
             "factorization_passed": factorization_passed,
+            "factorization_tolerance": {
+                "rtol": FACTORIZATION_RTOL,
+                "atol": FACTORIZATION_ATOL,
+            },
             "factorized_routed_gpp_within_tolerance": {
                 name: bool(value["within_tolerance"]) for name, value in factor_comparisons.items()
             },

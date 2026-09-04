@@ -173,10 +173,16 @@ def test_factorization_comparison_uses_relative_tolerance_for_nonzero_gpp():
     )
     comparison = runner._factorization_comparison(
         trace,
-        {"routed_gpp": observed + 4.0e-7},
+        {"routed_gpp": observed + 8.0e-7},
     )
     assert comparison["maximum_absolute_error"] > runner.FACTORIZATION_ATOL
     assert comparison["within_tolerance"] is True
+
+    outside = runner._factorization_comparison(
+        trace,
+        {"routed_gpp": observed + 1.1e-6},
+    )
+    assert outside["within_tolerance"] is False
 
 
 def test_snowheat_runner_delegates_reconstruction_and_routes_required_options():
