@@ -196,6 +196,8 @@ def test_snowheat_runner_delegates_reconstruction_and_routes_required_options():
     assert 'bootstrap["head"].layout' in run_source
     assert 'bootstrap["layout"]' not in run_source
     assert "_measure_direct_artifact_gradients" not in run_source
+    assert "raise RuntimeError" not in run_source
+    assert run_source.index("engineering_gate_failed") < run_source.index("_atomic_json(output, report)")
     assert "sbatch" not in wrapper
     assert "free gln01" in wrapper
     assert "RUN_TIMEOUT=${RUN_TIMEOUT:-60m}" in wrapper

@@ -506,7 +506,14 @@ def run(args: Any) -> Mapping[str, Any]:
         and all(value == 0 for value in hard_failure_counts.values())
     )
     if not engineering_passed:
-        raise RuntimeError("coupled-GPP matched snowheat intervention failed its engineering gate")
+        print(
+            "coupled_gpp snowheat_causal engineering_gate_failed "
+            f"free_trace={free_trace_reproduced} "
+            f"free_scores={free_scores_reproduced} "
+            f"factorization={factorization_passed} "
+            f"hard_failures={json.dumps(hard_failure_counts, sort_keys=True)}",
+            flush=True,
+        )
 
     trajectory_records = {}
     for name, trace, trajectories, starts, factors in (
@@ -536,16 +543,21 @@ def run(args: Any) -> Mapping[str, Any]:
     matched_score = float(score_records["treatment_matched_snowheat"]["total"])
     score_jump = abs(treatment_score - control_score)
     score_retained = abs(matched_score - control_score) / max(score_jump, 1.0e-30)
-    action = {
-        "snowheat_path_causal_for_day5_jump": "pause_for_user_discussion_before_any_gpp_routing_or_architecture_change",
-        "snowheat_path_partial_for_day5_jump": "separate_direct_day5_snowheat_routing_from_prior_mediated_state",
-        "snowheat_path_not_explanatory_for_day5_jump": "trace_other_day5_gpp_inputs_without_architecture_change",
-    }[classification["classification"]]
+    action = (
+        {
+            "snowheat_path_causal_for_day5_jump": "pause_for_user_discussion_before_any_gpp_routing_or_architecture_change",
+            "snowheat_path_partial_for_day5_jump": "separate_direct_day5_snowheat_routing_from_prior_mediated_state",
+            "snowheat_path_not_explanatory_for_day5_jump": "trace_other_day5_gpp_inputs_without_architecture_change",
+        }[classification["classification"]]
+        if engineering_passed
+        else "inspect_written_engineering_gate_report_before_rerun"
+    )
+    report_status = "passed" if engineering_passed else "engineering_gate_failed"
 
     report = {
         "schema_version": SCHEMA_VERSION,
-        "status": "passed",
-        "classification": classification["classification"],
+        "status": report_status,
+        "classification": classification["classification"] if engineering_passed else report_status,
         "identity": {
             "git_head": _git_head(),
             "localized_jump_report_sha256": sha256_file(args.localized_jump_report),
@@ -591,6 +603,7 @@ def run(args: Any) -> Mapping[str, Any]:
         "trajectories": trajectory_records,
         "day5_causal_test": classification
         | {
+            "scientific_classification_accepted": engineering_passed,
             "control_gpp": control_gpp,
             "treatment_free_gpp": treatment_gpp,
             "treatment_matched_snowheat_gpp": matched_gpp,
@@ -638,7 +651,7 @@ def _parser() -> Any:
 def main() -> int:
     report = run(_parser().parse_args())
     print(json.dumps(report, indent=2, sort_keys=True, default=str))
-    return 0
+    return 0 if report["status"] == "passed" else 1
 
 
 if __name__ == "__main__":
