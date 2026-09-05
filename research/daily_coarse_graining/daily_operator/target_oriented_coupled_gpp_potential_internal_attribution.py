@@ -18,10 +18,10 @@ from .target_oriented_coupled_gpp_structured_precision_attribution import (
     summarize_gpp_path,
 )
 
-SCHEMA_VERSION = "target_oriented_coupled_gpp_potential_internal_attribution_result_v1"
+SCHEMA_VERSION = "target_oriented_coupled_gpp_potential_internal_attribution_result_v2"
 PARENT_REPORT_SHA256 = "40c617ba096f5b9b50482316473d416b17dafb90b7162cbf0d59c9fffaf5b693"
-LOWER_FRACTION = 10.0 / 16.0
-UPPER_FRACTION = 11.0 / 16.0
+LOWER_FRACTION = 11.0 / 16.0
+UPPER_FRACTION = 12.0 / 16.0
 EXPECTED_MAXIMUM_INTERVAL = (LOWER_FRACTION, UPPER_FRACTION)
 POTENTIAL_BLOCK_COUNT = 2
 POTENTIAL_BLOCK_LEAF_COUNT = 32

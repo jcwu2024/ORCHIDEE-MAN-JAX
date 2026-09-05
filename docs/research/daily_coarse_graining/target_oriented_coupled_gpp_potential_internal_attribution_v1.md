@@ -2,8 +2,9 @@
 
 Date: 2026-09-05
 
-Status: frozen after user approval, before implementation and zero-training
-execution
+Status: completed with an engineering-inconclusive result; the isolated
+potential jump moved to `11/16 -> 12/16`, so this contract is superseded by
+`target_oriented_coupled_gpp_potential_internal_attribution_v2.md`
 
 ## Question
 

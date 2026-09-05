@@ -15,6 +15,10 @@ from research.daily_coarse_graining.daily_operator.strong_baseline_architecture 
 from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_potential_internal_attribution import (
     BLOCK_PARAMETER_GROUPS,
     COMPONENT_PARAMETER_GROUPS,
+    EXPECTED_MAXIMUM_INTERVAL,
+    LOWER_FRACTION,
+    SCHEMA_VERSION,
+    UPPER_FRACTION,
     classify_activation_precision_paths,
     classify_parameter_localization,
     replace_parameter_paths,
@@ -42,6 +46,13 @@ def test_component_groups_exactly_partition_all_potential_block_leaves():
     assert report["component_group_count"] == 16
     assert report["exact_nonoverlapping_coverage"] is True
     assert set(report["group_leaf_counts"]) == set(COMPONENT_PARAMETER_GROUPS)
+
+
+def test_v2_targets_the_observed_isolated_potential_jump():
+    assert SCHEMA_VERSION.endswith("_v2")
+    assert LOWER_FRACTION == 11.0 / 16.0
+    assert UPPER_FRACTION == 12.0 / 16.0
+    assert EXPECTED_MAXIMUM_INTERVAL == (LOWER_FRACTION, UPPER_FRACTION)
 
 
 def test_parameter_path_replacement_is_structural_and_order_independent():
