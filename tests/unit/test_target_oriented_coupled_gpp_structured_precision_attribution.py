@@ -3,6 +3,7 @@ from __future__ import annotations
 import copy
 import inspect
 from pathlib import Path
+from types import SimpleNamespace
 
 import jax
 import jax.numpy as jnp
@@ -170,6 +171,37 @@ def test_crossed_parent_identity_and_factor_metadata_are_exact():
             drifted,
             runner.CROSSED_ATTRIBUTION_SHA256,
         )
+
+
+@pytest.mark.parametrize(
+    "delta_key",
+    (
+        "reconstructed_parameter_delta_l2",
+        "reconstructed_treatment_parameter_delta_l2",
+    ),
+)
+def test_direction_integrity_accepts_legacy_and_current_parent_delta_keys(delta_key):
+    reconstruction = SimpleNamespace(
+        norm_matches=True,
+        combined_norm=0.25,
+        nominal_delta_matches=True,
+        realized_delta=0.125,
+        plan={"historical_combined_gradient_norm": 0.25},
+        treatment_scale=0.5,
+        historical_delta=0.125,
+        nominal_delta=0.125,
+    )
+    parent = {
+        "direction_reconstruction": {
+            "reconstructed_combined_gradient_norm": 0.25,
+            delta_key: 0.125,
+        }
+    }
+
+    result = runner._direction_integrity(reconstruction, parent)
+
+    assert result["combined_gradient_norm_reproduced"] is True
+    assert result["treatment_parameter_displacement_reproduced"] is True
 
 
 def test_mixed_subtree_replaces_only_selected_group(monkeypatch):

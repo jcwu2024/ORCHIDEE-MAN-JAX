@@ -262,6 +262,9 @@ def _direction_integrity(
     parent: Mapping[str, Any],
 ) -> Mapping[str, Any]:
     expected = parent["direction_reconstruction"]
+    expected_delta = expected.get("reconstructed_treatment_parameter_delta_l2")
+    if expected_delta is None:
+        expected_delta = expected["reconstructed_parameter_delta_l2"]
     norm_passed = bool(
         reconstruction.norm_matches
         and np.isclose(
@@ -275,7 +278,7 @@ def _direction_integrity(
         reconstruction.nominal_delta_matches
         and np.isclose(
             reconstruction.realized_delta,
-            float(expected["reconstructed_parameter_delta_l2"]),
+            float(expected_delta),
             rtol=DIRECTION_NORM_RTOL,
             atol=DIRECTION_NORM_ATOL,
         )
