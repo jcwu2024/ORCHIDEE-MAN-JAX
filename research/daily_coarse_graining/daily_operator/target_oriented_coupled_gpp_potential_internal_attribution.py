@@ -252,6 +252,7 @@ def traced_potential_branch(
     *,
     heads: int,
     dtype: Any,
+    attention_head_mask: Any | None = None,
 ) -> Mapping[str, Any]:
     """Run the existing potential branch operation order while exposing activations."""
 
@@ -275,7 +276,16 @@ def traced_potential_branch(
     bank = jnp.asarray(bank, dtype=dtype)
     mask = jnp.asarray(bank_mask, dtype=jnp.bool_)[:, None, :]
     records = []
-    for block in potential_blocks:
+    effective_attention_masks = []
+    if attention_head_mask is not None:
+        attention_head_mask = jnp.asarray(attention_head_mask, dtype=jnp.bool_)
+        expected_shape = (len(potential_blocks), int(query.shape[0]), int(heads), int(bank.shape[-2]))
+        if tuple(attention_head_mask.shape) != expected_shape:
+            raise ValueError(
+                "potential diagnostic head mask shape drift: "
+                f"{tuple(attention_head_mask.shape)} versus {expected_shape}"
+            )
+    for block_index, block in enumerate(potential_blocks):
         block_input = encoded
         attention = block["attention"]
         projected_query = linear(attention["query"], encoded)
@@ -289,11 +299,14 @@ def traced_potential_branch(
         logits = jnp.einsum("...hqd,...hkd->...hqk", head_query, head_key) / jnp.sqrt(
             jnp.asarray(head_width, dtype=dtype)
         )
-        masked_logits = jnp.where(mask[..., None, :, :], logits, -jnp.inf)
-        row_valid = jnp.any(mask, axis=-1, keepdims=True)
-        safe_logits = jnp.where(row_valid[..., None, :, :], masked_logits, 0.0)
+        effective_mask = jnp.broadcast_to(mask[..., None, :, :], logits.shape)
+        if attention_head_mask is not None:
+            effective_mask &= attention_head_mask[block_index, :, :, None, :]
+        masked_logits = jnp.where(effective_mask, logits, -jnp.inf)
+        row_valid = jnp.any(effective_mask, axis=-1, keepdims=True)
+        safe_logits = jnp.where(row_valid, masked_logits, 0.0)
         weights = jax.nn.softmax(safe_logits, axis=-1)
-        weights = jnp.where(mask[..., None, :, :], weights, 0.0)
+        weights = jnp.where(effective_mask, weights, 0.0)
         attention_context = jnp.einsum("...hqk,...hkd->...hqd", weights, head_value)
         attention_context = attention_context.swapaxes(-3, -2).reshape(
             attention_context.shape[:-3] + (attention_context.shape[-2], width)
@@ -335,11 +348,13 @@ def traced_potential_branch(
                 "ffn_norm": encoded,
             }
         )
+        effective_attention_masks.append(effective_mask)
     hidden = jnp.where(jnp.asarray(active, dtype=jnp.bool_)[:, None], encoded[:, 0, :], 0.0)
     potential_logit = linear(potential_output, hidden)[:, 0]
     return {
         "blocks": tuple(records),
         "attention_mask": mask,
+        "effective_attention_masks": tuple(effective_attention_masks),
         "hidden": hidden,
         "potential_logit": potential_logit,
         "potential": jax.nn.softplus(potential_logit),
