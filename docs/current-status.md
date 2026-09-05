@@ -1193,10 +1193,13 @@ head 7 switching from the `litterpart` state token at weight `0.459139` to the
 `8.1263` to `7796.5381`, and float64 repeats the collapse. The zero-training
 head-slice and source-token causal audit is now frozen in
 [`target_oriented_coupled_gpp_attention_head_token_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_attention_head_token_attribution_v1.md).
-The active task is local implementation and tests before one free-`gln01`
-run and before any conditioning-control architecture discussion. Paid
-execution, training, fresh validation, 365-day rollout, Gate D2, sealed test,
-and product acceptance remain closed.
+The head/token implementation then passed 35 related local tests at commit
+`f885801`, including exact Q/K output-slice coverage, kernel-plus-bias moves,
+production-shadow equivalence, head-mask isolation, shell syntax, and required
+CLI wiring. The active task is one bounded zero-training free-`gln01` run
+before any conditioning-control architecture discussion. Paid execution,
+training, fresh validation, 365-day rollout, Gate D2, sealed test, and product
+acceptance remain closed.
 See
 [`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md),
 [`target_oriented_coupled_gpp_localized_jump_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_result_20260904.md),

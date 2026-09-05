@@ -2,7 +2,8 @@
 
 Date: 2026-09-05
 
-Status: frozen before local implementation and zero-training execution
+Status: implemented and locally accepted at `f885801`; awaiting the bounded
+zero-training free-`gln01` execution
 
 ## Question
 

@@ -2324,8 +2324,10 @@ The zero-training head/token causal audit is now frozen in
 [`target_oriented_coupled_gpp_attention_head_token_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_attention_head_token_attribution_v1.md).
 On the same `11/16 -> 12/16` trees it tests paired block-0 per-head Q/K output
 slices, a head-7 Q-only/K-only/Q+K crossed panel, exact DOC/litterpart logits,
-and matched global versus head-7-only token masks. The active task is local
-implementation and tests, followed by one bounded zero-training free-`gln01`
+and matched global versus head-7-only token masks. The implementation passed
+35 related local tests at commit `f885801`, including production-shadow
+equivalence, exact Q/K head coverage, head-mask isolation, shell syntax, and
+required CLI wiring. The active task is one bounded zero-training free-`gln01`
 execution. No scientific outcome is required for the engineering gate. No
 architecture edit, further training, paid execution, fresh validation,
 365-day rollout, Gate D2, sealed test, or product acceptance is authorized.
