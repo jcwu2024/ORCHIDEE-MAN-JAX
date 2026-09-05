@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-09-04.
+Last updated: 2026-09-05.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -2288,15 +2288,24 @@ parameter path stays near `2.7673` through fraction `1/2` and jumps to
 `4.8699` at `3/4`; both state paths are constant. See
 [`target_oriented_coupled_gpp_day5_crossed_attribution_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_day5_crossed_attribution_result_20260904.md).
 
-The user approved the bounded diagnostic, now frozen in
-[`target_oriented_coupled_gpp_structured_precision_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_structured_precision_attribution_v1.md).
-It will inventory float32/ULP changes, run matched necessity/sufficiency
-controls over all 14 existing `structured_gpp` top-level parameter subtrees,
-and compare fixed 17-point production-float32 and float64-weight interpolation
-paths. This is one zero-training free-`gln01` diagnostic, not an architecture
-proposal. Further training, architecture change, paid execution, fresh
-validation, 365-day rollout, Gate D2, sealed test, and product acceptance
-remain closed.
+The user-approved bounded diagnostic frozen in
+[`target_oriented_coupled_gpp_structured_precision_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_structured_precision_attribution_v1.md)
+completed on free `gln01` at commit `587c3fd` in `935.288` seconds; report
+SHA256 is `40c617ba...f5b693`, and every engineering gate passes. Of
+12,879,363 weights, 8,974,854 change; 27.85% of changed coordinates move one
+ULP, while 72.15% are distinct intermediate float32 values at fraction
+`1/2`. Raising only the endpoint-weight interpolation to float64 leaves the
+same full GPP jump in the same `10/16` to `11/16` interval, with endpoint-jump
+ratio `0.9999997364`. This rejects float32 endpoint quantization as the sampled
+cause. `potential_blocks` alone is `0.9999997732` sufficient and
+`0.9999056398` necessary; every other top-level subtree is immaterial. See
+[`target_oriented_coupled_gpp_structured_precision_attribution_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_structured_precision_attribution_result_20260905.md).
+
+The active gate is user discussion of conditioning control inside the
+existing potential blocks or a different GPP potential parameterization.
+This result does not authorize an architecture edit. Further training, paid
+execution, fresh validation, 365-day rollout, Gate D2, sealed test, and
+product acceptance remain closed.
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).

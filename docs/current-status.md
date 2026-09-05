@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-04.
+Last updated: 2026-09-05.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -1162,13 +1162,26 @@ sufficient and necessary, while `coupled_gpp_carbon_feedback` contributes
 zero. The parameter interpolation remains near `2.7673` through `1/2` and
 jumps to `4.8699` at `3/4`; state interpolation is constant.
 
-The accepted implementation contains no explicit parameter-dependent hard
-branch in this factor path, so the sharp response is localized but not yet
-explained. The active gate is user discussion before architecture or training
-changes. The recommended bounded follow-up is a zero-training float32/ULP and
-existing-parameter-subtree attribution that separates update quantization
-from extreme internal conditioning. Paid execution, fresh validation,
-365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
+The subsequent zero-training structured-precision attribution completed on
+free `gln01` at commit `587c3fd` in `935.288` seconds; report SHA256 is
+`40c617ba...f5b693`, and all engineering gates pass. It inventories all
+12,879,363 weights and 129 leaves. Of 8,974,854 changed coordinates, only
+27.85% move one ULP; 72.15% are distinct intermediates at fraction `1/2`.
+Float64 endpoint-weight interpolation retains the complete sharp jump in the
+same `10/16` to `11/16` interval, with endpoint-jump magnitude ratio
+`0.9999997364`. The accepted classification is
+`structured_gpp_conditioning_persists_with_float64_weights`, rejecting
+float32 endpoint quantization as the sampled cause.
+
+Only `potential_blocks` is material: inserted alone it is `0.9999997732`
+sufficient, and removing it captures `0.9999056398` of the effect. The final
+potential output layer and all other top-level subtrees are immaterial. This
+localizes the sampled pathology to the potential branch's existing residual
+attention/FFN blocks, but not yet to one internal layer or operation. The
+active gate is user discussion of conditioning control or a different GPP
+potential parameterization before any architecture or training change. Paid
+execution, fresh validation, 365-day rollout, Gate D2, sealed test, and
+product acceptance remain closed.
 See
 [`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md),
 [`target_oriented_coupled_gpp_localized_jump_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_result_20260904.md),
@@ -1178,7 +1191,11 @@ and
 and
 [`target_oriented_coupled_gpp_day5_crossed_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_day5_crossed_attribution_v1.md),
 with the accepted result in
-[`target_oriented_coupled_gpp_day5_crossed_attribution_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_day5_crossed_attribution_result_20260904.md).
+[`target_oriented_coupled_gpp_day5_crossed_attribution_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_day5_crossed_attribution_result_20260904.md),
+the completed precision contract in
+[`target_oriented_coupled_gpp_structured_precision_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_structured_precision_attribution_v1.md),
+and its accepted result in
+[`target_oriented_coupled_gpp_structured_precision_attribution_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_structured_precision_attribution_result_20260905.md).
 
 The bounded persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
