@@ -2301,16 +2301,32 @@ cause. `potential_blocks` alone is `0.9999997732` sufficient and
 `0.9999056398` necessary; every other top-level subtree is immaterial. See
 [`target_oriented_coupled_gpp_structured_precision_attribution_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_structured_precision_attribution_result_20260905.md).
 
-The user approved the next zero-training internal localization, now frozen in
-[`target_oriented_coupled_gpp_potential_internal_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_potential_internal_attribution_v1.md).
-It isolates both potential residual blocks and all 16 non-overlapping
-attention, normalization, and FFN parameter components across the exact
-`10/16 -> 11/16` jump. A matched full-float64 shadow forward separately tests
-whether intermediate activation precision or intrinsic block conditioning
-causes the sharp response. The active task is local implementation and tests,
-then one zero-training free-`gln01` execution. This result does not authorize
-an architecture edit. Further training, paid execution, fresh validation,
-365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
+The first internal-localization contract used the whole-structured-tree
+`10/16 -> 11/16` interval. Its free execution at `aae98e3` showed that the
+isolated potential-block jump instead occurs at `11/16 -> 12/16`; endpoints
+reproduced, but component attribution on the plateau was invalid. That v1
+result is engineering-inconclusive and recorded in
+[`target_oriented_coupled_gpp_potential_internal_attribution_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_potential_internal_attribution_result_20260905.md).
+
+The corrected v2 diagnostic then passed on free `gln01` at commit `56ec8f2`
+in `896.484` seconds; report SHA256 is `f781e4a9...07e0a3`. Full float64
+retains the sharp jump with endpoint-effect ratio `0.9999999709`. Block 0 is
+`1.0000001583` sufficient and `0.9999992086` necessary; block 1 parameters
+are immaterial. Within block 0, the Q and K projections are each sufficient
+but neither individually necessary, indicating redundant threshold crossing.
+Head 7 switches from bank index 205 (`litterpart`, weight `0.459139`, entropy
+`1.418627`) to index 153 (`DOC`, weight `1`, entropy approximately zero); its
+float32 maximum logit rises from `8.1263` to `7796.5381`, and float64 makes
+the same switch. See
+[`target_oriented_coupled_gpp_potential_internal_attribution_v2_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_potential_internal_attribution_v2_result_20260905.md).
+
+The active gate is to freeze and locally qualify a zero-training head/token
+causal audit on the same `11/16 -> 12/16` trees. It must test paired per-head
+Q/K parameter slices, record head-7 DOC/litterpart logits, and apply matched
+token-mask interventions before any conditioning-control architecture is
+discussed. No architecture edit, further training, paid execution, fresh
+validation, 365-day rollout, Gate D2, sealed test, or product acceptance is
+authorized.
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).

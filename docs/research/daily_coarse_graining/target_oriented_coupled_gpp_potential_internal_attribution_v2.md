@@ -2,8 +2,8 @@
 
 Date: 2026-09-05
 
-Status: frozen after the v1 interval-migration result, before the bounded
-zero-training rerun
+Status: completed; the accepted result is recorded in
+`target_oriented_coupled_gpp_potential_internal_attribution_v2_result_20260905.md`
 
 ## Question
 

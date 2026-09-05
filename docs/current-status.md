@@ -1178,10 +1178,23 @@ sufficient, and removing it captures `0.9999056398` of the effect. The final
 potential output layer and all other top-level subtrees are immaterial. This
 localizes the sampled pathology to the potential branch's existing residual
 attention/FFN blocks, but not yet to one internal layer or operation. The
-active gate is user discussion of conditioning control or a different GPP
-potential parameterization before any architecture or training change. Paid
-execution, fresh validation, 365-day rollout, Gate D2, sealed test, and
-product acceptance remain closed.
+first internal audit then showed that the isolated jump moves from the full
+tree's `10/16 -> 11/16` interval to `11/16 -> 12/16`; its component result is
+therefore engineering-inconclusive.
+
+The corrected internal v2 run passed on free `gln01` at commit `56ec8f2` in
+`896.484` seconds; report SHA256 is `f781e4a9...07e0a3`. The full-float64
+potential branch retains the sharp jump with magnitude ratio `0.9999999709`.
+Block 0 is effectively fully sufficient and necessary, while block 1
+parameters are immaterial. Block-0 attention Q and K are each sufficient but
+neither singly necessary. The first discrete activation change is attention
+head 7 switching from the `litterpart` state token at weight `0.459139` to the
+`DOC` state token at weight `1.0`; the maximum float32 logit changes from
+`8.1263` to `7796.5381`, and float64 repeats the collapse. The active gate is
+a frozen zero-training head-slice and source-token causal audit before any
+conditioning-control architecture discussion. Paid execution, training,
+fresh validation, 365-day rollout, Gate D2, sealed test, and product
+acceptance remain closed.
 See
 [`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md),
 [`target_oriented_coupled_gpp_localized_jump_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_result_20260904.md),
@@ -1195,7 +1208,11 @@ with the accepted result in
 the completed precision contract in
 [`target_oriented_coupled_gpp_structured_precision_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_structured_precision_attribution_v1.md),
 and its accepted result in
-[`target_oriented_coupled_gpp_structured_precision_attribution_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_structured_precision_attribution_result_20260905.md).
+[`target_oriented_coupled_gpp_structured_precision_attribution_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_structured_precision_attribution_result_20260905.md),
+the corrected internal contract in
+[`target_oriented_coupled_gpp_potential_internal_attribution_v2.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_potential_internal_attribution_v2.md),
+and its accepted result in
+[`target_oriented_coupled_gpp_potential_internal_attribution_v2_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_potential_internal_attribution_v2_result_20260905.md).
 
 The bounded persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
