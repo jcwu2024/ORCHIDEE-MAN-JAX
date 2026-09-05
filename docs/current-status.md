@@ -1194,12 +1194,16 @@ head 7 switching from the `litterpart` state token at weight `0.459139` to the
 head-slice and source-token causal audit is now frozen in
 [`target_oriented_coupled_gpp_attention_head_token_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_attention_head_token_attribution_v1.md).
 The head/token implementation then passed 35 related local tests at commit
-`f885801`, including exact Q/K output-slice coverage, kernel-plus-bias moves,
-production-shadow equivalence, head-mask isolation, shell syntax, and required
-CLI wiring. The active task is one bounded zero-training free-`gln01` run
-before any conditioning-control architecture discussion. Paid execution,
-training, fresh validation, 365-day rollout, Gate D2, sealed test, and product
-acceptance remain closed.
+`f885801`. Its free `gln01` execution passed at commit `7788d6b` in `904.470`
+seconds; report SHA256 is `2c8a28d8...d94836`. Only block-0 head 7 is
+sufficient (`1.0000001583`) and necessary (`0.9999992086`). Removing DOC only
+from that head leaves lower GPP unchanged and reduces upper GPP from
+`4.8699012434` to `2.7673204964`, capturing the full jump; removing
+litterpart has zero effect. Q-only and K-only are redundantly sufficient, but
+only paired Q+K removal is necessary. The active gate is user discussion of
+a Q/K conditioning-controlled architecture before implementation. Paid
+execution, training, fresh validation, 365-day rollout, Gate D2, sealed test,
+and product acceptance remain closed.
 See
 [`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md),
 [`target_oriented_coupled_gpp_localized_jump_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_result_20260904.md),
@@ -1217,7 +1221,11 @@ and its accepted result in
 the corrected internal contract in
 [`target_oriented_coupled_gpp_potential_internal_attribution_v2.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_potential_internal_attribution_v2.md),
 and its accepted result in
-[`target_oriented_coupled_gpp_potential_internal_attribution_v2_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_potential_internal_attribution_v2_result_20260905.md).
+[`target_oriented_coupled_gpp_potential_internal_attribution_v2_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_potential_internal_attribution_v2_result_20260905.md),
+the completed head/token contract in
+[`target_oriented_coupled_gpp_attention_head_token_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_attention_head_token_attribution_v1.md),
+and its accepted result in
+[`target_oriented_coupled_gpp_attention_head_token_attribution_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_attention_head_token_attribution_result_20260905.md).
 
 The bounded persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).

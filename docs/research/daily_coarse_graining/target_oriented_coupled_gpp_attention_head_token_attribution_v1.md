@@ -2,8 +2,8 @@
 
 Date: 2026-09-05
 
-Status: implemented and locally accepted at `f885801`; awaiting the bounded
-zero-training free-`gln01` execution
+Status: completed; the accepted result is recorded in
+`target_oriented_coupled_gpp_attention_head_token_attribution_result_20260905.md`
 
 ## Question
 

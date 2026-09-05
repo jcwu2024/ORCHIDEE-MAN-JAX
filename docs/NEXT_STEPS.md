@@ -2324,13 +2324,19 @@ The zero-training head/token causal audit is now frozen in
 [`target_oriented_coupled_gpp_attention_head_token_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_attention_head_token_attribution_v1.md).
 On the same `11/16 -> 12/16` trees it tests paired block-0 per-head Q/K output
 slices, a head-7 Q-only/K-only/Q+K crossed panel, exact DOC/litterpart logits,
-and matched global versus head-7-only token masks. The implementation passed
-35 related local tests at commit `f885801`, including production-shadow
-equivalence, exact Q/K head coverage, head-mask isolation, shell syntax, and
-required CLI wiring. The active task is one bounded zero-training free-`gln01`
-execution. No scientific outcome is required for the engineering gate. No
-architecture edit, further training, paid execution, fresh validation,
-365-day rollout, Gate D2, sealed test, or product acceptance is authorized.
+and matched global versus head-7-only token masks. The free `gln01` run passed
+at commit `7788d6b` in `904.470` seconds; report SHA256 is
+`2c8a28d8...d94836`. Only block-0 head 7 is sufficient and necessary. A
+head-7-only DOC mask leaves the lower endpoint unchanged and removes the
+entire upper jump, while a litterpart mask has zero effect. Q-only and K-only
+are each sufficient but neither alone is necessary; the paired Q+K slice is
+necessary. See
+[`target_oriented_coupled_gpp_attention_head_token_attribution_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_attention_head_token_attribution_result_20260905.md).
+
+The active gate is user discussion of a Q/K conditioning-controlled
+architecture before implementation. No architecture edit, further training,
+paid execution, fresh validation, 365-day rollout, Gate D2, sealed test, or
+product acceptance is authorized.
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
