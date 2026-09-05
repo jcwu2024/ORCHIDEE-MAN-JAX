@@ -147,7 +147,8 @@ if [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_
     )
     if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_snowheat_causal" || \
       "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_day5_crossed_attribution" || \
-      "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_structured_precision_attribution" ]]; then
+      "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_structured_precision_attribution" || \
+      "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_potential_internal_attribution" ]]; then
       test -n "$LOCALIZED_JUMP_RESULT"
       test -f "$LOCALIZED_JUMP_RESULT"
       EXTRA_AUDIT_ARGS+=(--localized-jump-report "$LOCALIZED_JUMP_RESULT")

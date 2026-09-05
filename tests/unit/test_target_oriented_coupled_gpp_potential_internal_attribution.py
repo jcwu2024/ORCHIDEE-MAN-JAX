@@ -210,6 +210,16 @@ def test_parent_report_and_free_gln01_route_are_wired_before_reconstruction():
     assert "sbatch" not in wrapper
     assert "audit_target_oriented_coupled_gpp_potential_internal_attribution" in shared
     assert "--structured-precision-report" in shared
+    module = "scripts.hpc.audit_target_oriented_coupled_gpp_potential_internal_attribution"
+    for sentinel in (
+        'test -n "$LOCALIZED_JUMP_RESULT"',
+        'test -n "$SNOWHEAT_CAUSAL_RESULT"',
+        'test -n "$CROSSED_ATTRIBUTION_RESULT"',
+        'test -n "$STRUCTURED_PRECISION_RESULT"',
+    ):
+        prefix = shared[: shared.index(sentinel)]
+        condition = prefix[prefix.rfind("if [[") :]
+        assert module in condition
     required = {
         option
         for action in runner._parser()._actions
