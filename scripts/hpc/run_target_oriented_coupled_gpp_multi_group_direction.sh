@@ -22,6 +22,7 @@ PERSISTENT_REJECTED_PROPOSAL=${PERSISTENT_REJECTED_PROPOSAL:-}
 PERSISTENT_ARTIFACT_AWARE_RECOVERY=${PERSISTENT_ARTIFACT_AWARE_RECOVERY:-}
 LOCALIZED_JUMP_RESULT=${LOCALIZED_JUMP_RESULT:-}
 SNOWHEAT_CAUSAL_RESULT=${SNOWHEAT_CAUSAL_RESULT:-}
+CROSSED_ATTRIBUTION_RESULT=${CROSSED_ATTRIBUTION_RESULT:-}
 PARENT_DIR=$ROOT/runtime/outputs/training/target-oriented-coupled-gpp-bounded-14903328
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
@@ -103,7 +104,8 @@ if [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_zero_displacement" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_localized_jump" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_snowheat_causal" || \
-  "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_day5_crossed_attribution" ]]; then
+  "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_day5_crossed_attribution" || \
+  "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_structured_precision_attribution" ]]; then
   test -n "$ARTIFACT_AWARE_CONTRACT"
   test -n "$MULTI_GROUP_RESULT"
   test -n "$CONTINUITY_CONTRACT"
@@ -127,7 +129,8 @@ if [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_
   if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_zero_displacement" || \
     "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_localized_jump" || \
     "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_snowheat_causal" || \
-    "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_day5_crossed_attribution" ]]; then
+    "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_day5_crossed_attribution" || \
+    "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_structured_precision_attribution" ]]; then
     test -n "$PERSISTENT_TRAINING_REPORT"
     test -n "$PERSISTENT_REJECTED_PROPOSAL"
     test -n "$PERSISTENT_ARTIFACT_AWARE_RECOVERY"
@@ -140,15 +143,22 @@ if [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_
       --parent-artifact-aware-recovery "$PERSISTENT_ARTIFACT_AWARE_RECOVERY"
     )
     if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_snowheat_causal" || \
-      "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_day5_crossed_attribution" ]]; then
+      "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_day5_crossed_attribution" || \
+      "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_structured_precision_attribution" ]]; then
       test -n "$LOCALIZED_JUMP_RESULT"
       test -f "$LOCALIZED_JUMP_RESULT"
       EXTRA_AUDIT_ARGS+=(--localized-jump-report "$LOCALIZED_JUMP_RESULT")
     fi
-    if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_day5_crossed_attribution" ]]; then
+    if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_day5_crossed_attribution" || \
+      "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_structured_precision_attribution" ]]; then
       test -n "$SNOWHEAT_CAUSAL_RESULT"
       test -f "$SNOWHEAT_CAUSAL_RESULT"
       EXTRA_AUDIT_ARGS+=(--snowheat-report "$SNOWHEAT_CAUSAL_RESULT")
+    fi
+    if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_structured_precision_attribution" ]]; then
+      test -n "$CROSSED_ATTRIBUTION_RESULT"
+      test -f "$CROSSED_ATTRIBUTION_RESULT"
+      EXTRA_AUDIT_ARGS+=(--crossed-attribution-report "$CROSSED_ATTRIBUTION_RESULT")
     fi
   fi
 elif [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_artifact_aware_continuity" ]]; then
@@ -180,7 +190,7 @@ elif [[ -n "$ARTIFACT_AWARE_CONTRACT" || -n "$MULTI_GROUP_RESULT" || \
   -n "$ARTIFACT_AWARE_PERSISTENT_CONTRACT" || -n "$CONTINUITY_RESULT" || \
   -n "$PERSISTENT_TRAINING_REPORT" || -n "$PERSISTENT_REJECTED_PROPOSAL" || \
   -n "$PERSISTENT_ARTIFACT_AWARE_RECOVERY" || -n "$LOCALIZED_JUMP_RESULT" || \
-  -n "$SNOWHEAT_CAUSAL_RESULT" ]]; then
+  -n "$SNOWHEAT_CAUSAL_RESULT" || -n "$CROSSED_ATTRIBUTION_RESULT" ]]; then
   exit 2
 fi
 
