@@ -2288,14 +2288,15 @@ parameter path stays near `2.7673` through fraction `1/2` and jumps to
 `4.8699` at `3/4`; both state paths are constant. See
 [`target_oriented_coupled_gpp_day5_crossed_attribution_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_day5_crossed_attribution_result_20260904.md).
 
-The active gate is user discussion of this direct `structured_gpp` potential
-jump before changing architecture or training. The recommended bounded next
-diagnostic is zero-training precision/ULP and existing-parameter-subtree
-attribution, because the smooth implemented factor path contains no explicit
-parameter-dependent hard branch and the current evidence does not yet
-distinguish float32 update quantization from extreme internal conditioning.
-Further training, architecture change, paid execution, fresh validation,
-365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
+The user approved the bounded diagnostic, now frozen in
+[`target_oriented_coupled_gpp_structured_precision_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_structured_precision_attribution_v1.md).
+It will inventory float32/ULP changes, run matched necessity/sufficiency
+controls over all 14 existing `structured_gpp` top-level parameter subtrees,
+and compare fixed 17-point production-float32 and float64-weight interpolation
+paths. This is one zero-training free-`gln01` diagnostic, not an architecture
+proposal. Further training, architecture change, paid execution, fresh
+validation, 365-day rollout, Gate D2, sealed test, and product acceptance
+remain closed.
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
