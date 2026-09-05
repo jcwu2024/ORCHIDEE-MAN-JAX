@@ -2320,13 +2320,15 @@ float32 maximum logit rises from `8.1263` to `7796.5381`, and float64 makes
 the same switch. See
 [`target_oriented_coupled_gpp_potential_internal_attribution_v2_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_potential_internal_attribution_v2_result_20260905.md).
 
-The active gate is to freeze and locally qualify a zero-training head/token
-causal audit on the same `11/16 -> 12/16` trees. It must test paired per-head
-Q/K parameter slices, record head-7 DOC/litterpart logits, and apply matched
-token-mask interventions before any conditioning-control architecture is
-discussed. No architecture edit, further training, paid execution, fresh
-validation, 365-day rollout, Gate D2, sealed test, or product acceptance is
-authorized.
+The zero-training head/token causal audit is now frozen in
+[`target_oriented_coupled_gpp_attention_head_token_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_attention_head_token_attribution_v1.md).
+On the same `11/16 -> 12/16` trees it tests paired block-0 per-head Q/K output
+slices, a head-7 Q-only/K-only/Q+K crossed panel, exact DOC/litterpart logits,
+and matched global versus head-7-only token masks. The active task is local
+implementation and tests, followed by one bounded zero-training free-`gln01`
+execution. No scientific outcome is required for the engineering gate. No
+architecture edit, further training, paid execution, fresh validation,
+365-day rollout, Gate D2, sealed test, or product acceptance is authorized.
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
