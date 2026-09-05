@@ -156,7 +156,8 @@ def float32_delta_inventory(
     """Return exact leaf, group, and whole-tree float32 endpoint deltas."""
 
     groups = tuple(groups)
-    if tuple(control) != groups or tuple(treatment) != groups:
+    expected = frozenset(groups)
+    if len(groups) != len(expected) or frozenset(control) != expected or frozenset(treatment) != expected:
         raise ValueError("structured-GPP top-level parameter registry drift")
     group_records = {}
     group_summaries = []
@@ -247,7 +248,13 @@ def float32_interpolation_membership(
     """Count where a realized float32 interpolation lies between endpoints."""
 
     groups = tuple(groups)
-    if tuple(control) != groups or tuple(treatment) != groups or tuple(realized) != groups:
+    expected = frozenset(groups)
+    if (
+        len(groups) != len(expected)
+        or frozenset(control) != expected
+        or frozenset(treatment) != expected
+        or frozenset(realized) != expected
+    ):
         raise ValueError("structured-GPP top-level parameter registry drift")
     records = {}
     summaries = []
@@ -364,7 +371,12 @@ def classify_subtree_controls(
     """Report top-level subtree sufficiency and leave-one-out necessity."""
 
     groups = tuple(groups)
-    if tuple(treatment_group_only_gpp) != groups or tuple(treatment_without_group_gpp) != groups:
+    expected = frozenset(groups)
+    if (
+        len(groups) != len(expected)
+        or frozenset(treatment_group_only_gpp) != expected
+        or frozenset(treatment_without_group_gpp) != expected
+    ):
         raise ValueError("structured-GPP subtree control registry drift")
     finite = np.asarray(
         (

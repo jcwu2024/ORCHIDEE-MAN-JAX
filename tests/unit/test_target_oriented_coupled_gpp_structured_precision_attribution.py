@@ -86,6 +86,26 @@ def test_interpolation_membership_conserves_changed_coordinates():
     assert report["unchanged_preserved"] is True
 
 
+def test_registry_checks_accept_equivalent_mapping_insertion_orders():
+    control = {
+        "first": {"weight": np.asarray((1.0,), dtype=np.float32)},
+        "second": {"weight": np.asarray((2.0,), dtype=np.float32)},
+    }
+    treatment = {
+        "second": {"weight": np.asarray((3.0,), dtype=np.float32)},
+        "first": {"weight": np.asarray((2.0,), dtype=np.float32)},
+    }
+
+    inventory = float32_delta_inventory(
+        control,
+        treatment,
+        groups=("first", "second"),
+    )
+
+    assert tuple(inventory["groups"]) == ("first", "second")
+    assert inventory["summary"]["changed_coordinate_count"] == 2
+
+
 @pytest.mark.parametrize(
     ("float64_values", "expected"),
     (
@@ -155,7 +175,7 @@ def test_crossed_parent_identity_and_factor_metadata_are_exact():
 def test_mixed_subtree_replaces_only_selected_group(monkeypatch):
     monkeypatch.setattr(runner, "STRUCTURED_GPP_GROUPS", ("first", "second"))
     control = {"first": object(), "second": object()}
-    treatment = {"first": object(), "second": object()}
+    treatment = {"second": object(), "first": object()}
 
     mixed = runner._mixed_subtree(control, treatment, ("second",))
 

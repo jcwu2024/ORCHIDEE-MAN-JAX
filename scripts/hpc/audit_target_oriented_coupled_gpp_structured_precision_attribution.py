@@ -103,7 +103,7 @@ def _validate_crossed_result(report: Mapping[str, Any], digest: str) -> None:
         or float(structured.get("necessity_capture_fraction", -1.0)) != 1.0
         or float(feedback.get("signed_sufficiency_fraction", -1.0)) != 0.0
         or float(feedback.get("necessity_capture_fraction", -1.0)) != 0.0
-        or tuple(cells) != ("CC", "CT", "TC", "TT")
+        or frozenset(cells) != frozenset(("CC", "CT", "TC", "TT"))
     ):
         raise ValueError("coupled-GPP crossed-attribution result drift")
 
@@ -131,7 +131,7 @@ def _parent_factor_metadata(parent: Mapping[str, Any]) -> Mapping[str, Any]:
 
 
 def _validate_initialized_structured_tree(tree: Mapping[str, Any]) -> None:
-    if tuple(tree) != STRUCTURED_GPP_GROUPS:
+    if frozenset(tree) != frozenset(STRUCTURED_GPP_GROUPS):
         raise ValueError("structured-GPP initial subtree registry drift")
     if strong_baseline_parameter_count(tree) != STRUCTURED_GPP_PARAMETER_COUNT:
         raise ValueError("structured-GPP initial parameter count drift")
@@ -167,7 +167,8 @@ def _mixed_subtree(
     treatment: Mapping[str, Any],
     treatment_groups: Sequence[str],
 ) -> Mapping[str, Any]:
-    if tuple(control) != STRUCTURED_GPP_GROUPS or tuple(treatment) != STRUCTURED_GPP_GROUPS:
+    expected = frozenset(STRUCTURED_GPP_GROUPS)
+    if frozenset(control) != expected or frozenset(treatment) != expected:
         raise ValueError("structured-GPP subtree registry drift")
     selected = frozenset(treatment_groups)
     if not selected.issubset(STRUCTURED_GPP_GROUPS):
@@ -670,8 +671,8 @@ def run(args: Any) -> Mapping[str, Any]:
             "direction_reproduced": direction_passed,
             "control_trace_reproduced": control_trace_reproduced,
             "parent_CC_TC_reproduced": parent_cells_reproduced,
-            "structured_gpp_registry_passed": tuple(control_structured) == STRUCTURED_GPP_GROUPS
-            and tuple(treatment_structured) == STRUCTURED_GPP_GROUPS,
+            "structured_gpp_registry_passed": frozenset(control_structured) == frozenset(STRUCTURED_GPP_GROUPS)
+            and frozenset(treatment_structured) == frozenset(STRUCTURED_GPP_GROUPS),
             "structured_gpp_inventory_conserved": inventory_passed,
             "float32_membership_conserved": membership_passed,
             "all_factors_finite_and_routed_gpp_nonnegative": factors_passed,
