@@ -2301,11 +2301,16 @@ cause. `potential_blocks` alone is `0.9999997732` sufficient and
 `0.9999056398` necessary; every other top-level subtree is immaterial. See
 [`target_oriented_coupled_gpp_structured_precision_attribution_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_structured_precision_attribution_result_20260905.md).
 
-The active gate is user discussion of conditioning control inside the
-existing potential blocks or a different GPP potential parameterization.
-This result does not authorize an architecture edit. Further training, paid
-execution, fresh validation, 365-day rollout, Gate D2, sealed test, and
-product acceptance remain closed.
+The user approved the next zero-training internal localization, now frozen in
+[`target_oriented_coupled_gpp_potential_internal_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_potential_internal_attribution_v1.md).
+It isolates both potential residual blocks and all 16 non-overlapping
+attention, normalization, and FFN parameter components across the exact
+`10/16 -> 11/16` jump. A matched full-float64 shadow forward separately tests
+whether intermediate activation precision or intrinsic block conditioning
+causes the sharp response. The active task is local implementation and tests,
+then one zero-training free-`gln01` execution. This result does not authorize
+an architecture edit. Further training, paid execution, fresh validation,
+365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
