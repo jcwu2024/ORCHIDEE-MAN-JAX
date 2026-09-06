@@ -407,10 +407,18 @@ head or token. The complete candidate has `109,464,375` parameters and the
 candidate plus parent regression passes all `17` local tests, including full
 loss/gradient, PFT, single-day state, and budget gates.
 
-The active gate is one free-`gln01` zero-update real-v6 admission. It must
-verify that the known jump is reduced to at most `25%` while logits, gradients,
-state, and budgets remain valid. Training, checkpoints, paid execution, fresh
-validation, 365-day rollout, Gate D2, sealed test, and product acceptance
+The free-`gln01` real-v6 admission now passes. The parent GPP jump is
+`2.102579`; the conditioned candidate's jump is exactly zero and its maximum
+absolute logit is `4.240962`. Its complete real-v6 one-day loss, all 15.96M
+trainable gradients, state, and water/carbon budgets are valid. Both
+conditioned endpoints are `5.316468`, however, so this proves continuity and
+not absolute accuracy.
+
+The active gate is to freeze and implement one discarded-update preflight. It
+must measure the conditioned zero-update 7/30-day train/train state and test
+whether one newly computed, train-only-selected bounded step transfers to the
+fixed non-test monitor. Persistent training, checkpoints, paid execution,
+fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
 remain closed. See `NEXT_STEPS.md` for the exact current boundary.
 
 ## New Task Bootstrap

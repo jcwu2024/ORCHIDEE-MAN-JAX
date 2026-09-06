@@ -1216,12 +1216,24 @@ The combined candidate and parent local regression passes `17` tests in
 `804.14` seconds. Forward, complete loss, all temperature and inherited
 potential Q/K/V/output gradients, fixed-reference agreement, non-GPP parent
 identity, PFT behavior, canonical one-day state, and water/carbon budgets pass.
-Ruff, Python compilation, shell syntax, and diff checks also pass. This is
-local implementation evidence only. The active gate is one free-`gln01`
-zero-update real-v6 admission that must reproduce the parent pathology, bound
-logits, reduce its jump to at most `25%`, and pass the real-v6 one-day
-loss/gradient/state/budget checks. Training, checkpoints, paid execution,
-fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
+Ruff, Python compilation, shell syntax, and diff checks also pass.
+
+The free-`gln01` real-v6 admission then passed at commit `812e851` in
+`1753.274` seconds. It reproduces the parent jump from `2.7673221604` to
+`4.8699012434`; candidate and fixed reference instead give `5.3164683410` at
+both endpoints, eliminating the jump with maximum absolute logit `4.240962`.
+The real-v6 complete loss, all `15,960,211` gradient coordinates, both
+temperature blocks, both potential Q/K/V/output paths, all defined outputs and
+next-state coordinates, and both budgets pass. No optimizer or checkpoint was
+created. This proves the conditioning mechanism but does not establish that
+the common endpoint is scientifically accurate.
+
+The active gate is a separately frozen discarded one-update preflight. It must
+measure the conditioned zero-update train/train 7/30-day science state,
+recompute the artifact-aware direction over the expanded trainable tree,
+perform train-only bounded scale selection, and read the fixed non-test monitor
+at most once. Persistent training, checkpoints, paid execution, fresh
+validation, 365-day rollout, Gate D2, sealed test, and product acceptance
 remain closed.
 See
 [`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md),
@@ -1249,6 +1261,8 @@ The candidate contract and local evidence are in
 [`target_oriented_coupled_gpp_conditioned_attention_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_v1.md)
 and
 [`target_oriented_coupled_gpp_conditioned_attention_local_acceptance_20260906.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_local_acceptance_20260906.md).
+The accepted free-GPU result is in
+[`target_oriented_coupled_gpp_conditioned_attention_gpu_admission_20260906.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_gpu_admission_20260906.md).
 
 The bounded persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).

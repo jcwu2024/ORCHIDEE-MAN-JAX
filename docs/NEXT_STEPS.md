@@ -2351,13 +2351,28 @@ water/carbon budgets. Static, compile, shell, and diff checks pass. See
 and
 [`target_oriented_coupled_gpp_conditioned_attention_local_acceptance_20260906.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_local_acceptance_20260906.md).
 
-The active gate is one free-`gln01`, zero-update admission on the existing
-real-v6 train/train artifact. It must reproduce the accepted parent trace and
-endpoints, bound logits by `12.000001`, reduce the known `11/16 -> 12/16` GPP
-jump to at most `25%`, and pass one complete real-v6 loss/gradient/state/budget
-transition. Only a pass may open a separately frozen discarded one-update
-preflight. Optimizer updates, checkpoints, paid execution, fresh validation,
-365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
+The free-`gln01` real-v6 admission passed at commit `812e851` in `1753.274`
+seconds. The parent jump from `2.7673221604` to `4.8699012434` is reproduced;
+the candidate and fixed reference both give `5.3164683410` at both endpoints,
+so the jump fraction is exactly zero and the maximum absolute conditioned
+logit is `4.240962`. The real-v6 complete loss is finite, all `15,960,211`
+trainable gradient coordinates are finite, both temperature blocks and both
+potential-block Q/K/V/output paths have nonzero gradient, every declared
+output/state value is finite where defined, and both water/carbon residuals
+are zero. No optimizer or checkpoint was created. Report SHA256 is
+`080f6b9d...233263`. See
+[`target_oriented_coupled_gpp_conditioned_attention_gpu_admission_20260906.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_gpu_admission_20260906.md).
+
+The zero jump proves the intended conditioning repair but the common
+`5.3164683410` endpoint is not an accuracy result. The active gate is therefore
+to freeze and implement one discarded-update preflight at the conditioned
+initialization. It must first report the existing train/train 7/30-day science
+state, recompute the artifact-aware multi-objective direction over the expanded
+trainable tree, select a bounded scale using train-only information, and read
+the fixed non-test monitor at most once. The proposal is discarded regardless
+of outcome. Persistent training, checkpoints, paid execution, fresh
+validation, 365-day rollout, Gate D2, sealed test, and product acceptance
+remain closed.
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
