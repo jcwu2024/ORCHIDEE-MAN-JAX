@@ -85,10 +85,12 @@ def _make_direct_steps(
     runtime: Mapping[str, Any],
     head: Any,
     fixed_parameters: Mapping[str, Any],
+    *,
+    replace_trainable: Any = replace_coupled_gpp_trainable,
 ) -> Mapping[str, Any]:
     jax = runtime["jax"]
     jnp = runtime["jnp"]
-    fixed_parameters = replace_coupled_gpp_trainable(fixed_parameters, {})
+    fixed_parameters = replace_trainable(fixed_parameters, {})
 
     from research.daily_coarse_graining.daily_operator.parameter_routing import (
         PFT_TRAIT_BARE_SOIL,
@@ -117,7 +119,7 @@ def _make_direct_steps(
     )
 
     def one_statistics(trainable: Any, fixed: Any, batch: Any) -> Any:
-        parameters = replace_coupled_gpp_trainable(fixed, trainable)
+        parameters = replace_trainable(fixed, trainable)
         predicted = one_predict(parameters, batch.inputs)
         target = batch.process_targets[GPP_FIELD]
         active = active_vegetation(batch.inputs)[..., None, :]
@@ -130,7 +132,7 @@ def _make_direct_steps(
         )
 
     def window_statistics(trainable: Any, fixed: Any, batch: Any) -> Any:
-        parameters = replace_coupled_gpp_trainable(fixed, trainable)
+        parameters = replace_trainable(fixed, trainable)
         predicted = window_predict(parameters, batch.inputs)
         active = active_vegetation(batch.inputs)[..., None, :]
         return structured_gpp_direct_statistics(
@@ -193,12 +195,14 @@ def _make_state_steps(
     fixed_parameters: Mapping[str, Any],
     state_scale: Any,
     layout: Any,
+    *,
+    replace_trainable: Any = replace_coupled_gpp_trainable,
 ) -> Mapping[str, Any]:
     jax = runtime["jax"]
-    fixed_parameters = replace_coupled_gpp_trainable(fixed_parameters, {})
+    fixed_parameters = replace_trainable(fixed_parameters, {})
 
     def statistics(trainable: Any, fixed: Any, batch: Any) -> Any:
-        parameters = replace_coupled_gpp_trainable(fixed, trainable)
+        parameters = replace_trainable(fixed, trainable)
         result = jax.vmap(transition, in_axes=(None, 0, 0))(
             parameters,
             batch.inputs,

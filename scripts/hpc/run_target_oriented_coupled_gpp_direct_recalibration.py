@@ -164,10 +164,12 @@ def _measure_source_gradients(
     group: Sequence[int],
     flux_basis: Any,
     macro_update: int,
+    expected_parameter_count: int | None = None,
 ) -> Mapping[str, Any]:
     runtime = context["runtime"]
     jax = runtime["jax"]
     jnp = runtime["jnp"]
+    parameter_count = TRAINABLE_PARAMETER_COUNT if expected_parameter_count is None else int(expected_parameter_count)
     started = time.perf_counter()
     gradient_sums = {name: _zero_gradient(jax, jnp, trainable) for name in GRADIENT_SOURCES}
     loss_records = []
@@ -254,7 +256,7 @@ def _measure_source_gradients(
     source_reports = {name: _tree_scalar_report(jax, jnp, source_gradients[name]) for name in GRADIENT_SOURCES}
     if not all(
         report["all_finite"]
-        and report["element_count"] == TRAINABLE_PARAMETER_COUNT
+        and report["element_count"] == parameter_count
         and report["l2_norm"] > 0.0
         and report["nonzero_leaf_count"] == report["leaf_count"]
         for report in source_reports.values()

@@ -143,9 +143,11 @@ def _fixed_parameter_report(
     jax: Any,
     before: Mapping[str, Any],
     after: Mapping[str, Any],
+    *,
+    replace_trainable: Any = replace_coupled_gpp_trainable,
 ) -> Mapping[str, Any]:
-    first = replace_coupled_gpp_trainable(before, {})
-    second = replace_coupled_gpp_trainable(after, {})
+    first = replace_trainable(before, {})
+    second = replace_trainable(after, {})
     first_leaves, first_tree = jax.tree_util.tree_flatten(first)
     second_leaves, second_tree = jax.tree_util.tree_flatten(second)
     same_tree = first_tree == second_tree

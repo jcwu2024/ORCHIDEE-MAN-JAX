@@ -2364,15 +2364,24 @@ are zero. No optimizer or checkpoint was created. Report SHA256 is
 [`target_oriented_coupled_gpp_conditioned_attention_gpu_admission_20260906.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_gpu_admission_20260906.md).
 
 The zero jump proves the intended conditioning repair but the common
-`5.3164683410` endpoint is not an accuracy result. The active gate is therefore
-to freeze and implement one discarded-update preflight at the conditioned
-initialization. It must first report the existing train/train 7/30-day science
-state, recompute the artifact-aware multi-objective direction over the expanded
-trainable tree, select a bounded scale using train-only information, and read
-the fixed non-test monitor at most once. The proposal is discarded regardless
-of outcome. Persistent training, checkpoints, paid execution, fresh
-validation, 365-day rollout, Gate D2, sealed test, and product acceptance
-remain closed.
+`5.3164683410` endpoint is not an accuracy result. The discarded update-3
+preflight is now frozen and locally qualified at contract SHA256
+`b29e92b5...cb97d27d`. It starts from the identity-exact accepted update-2
+recovery, adds the conditioned trainable temperatures, and uses 43 constraints:
+40 individual direct-GPP artifact gradients plus scheduled state, 7-day, and
+30-day gradients. Its full displacement is calibrated from the new
+architecture's relative gradient geometry and then tested at descending scales
+through `1/64`; the old parent step norm is not inherited. Scale selection is
+train-only. Only afterward are the eight fixed monitor artifacts loaded once
+each and evaluated as initial/candidate pairs. Every proposal is discarded.
+
+The active gate is one free-`gln01` execution with a 180-minute timeout. It
+must establish a common direction, a passing train-only finite step, and fixed
+monitor transfer before a bounded persistent-training contract can be
+proposed. Persistent training, checkpoints, paid execution, fresh validation,
+365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
+See
+[`target_oriented_coupled_gpp_conditioned_attention_discarded_update_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_discarded_update_v1.md).
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).

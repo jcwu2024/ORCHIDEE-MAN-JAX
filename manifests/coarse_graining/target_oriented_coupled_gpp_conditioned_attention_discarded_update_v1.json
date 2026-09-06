@@ -1,0 +1,179 @@
+{
+  "schema_version": "target_oriented_coupled_gpp_conditioned_attention_discarded_update_v1",
+  "status": "frozen_before_conditioned_update3_gradient_or_monitor_values_are_evaluated",
+  "contract_sha256": "b29e92b5696b0d4f980b33f1b802eb8f014aa61f7d9e49e1ca82134fcb97d27d",
+  "identity": {
+    "candidate": "target_oriented_coupled_gpp_conditioned_attention_v1",
+    "conditioned_attention_contract_sha256": "b9bdd9dde51a8f6f1de2c21cd6678f5a51232011397501459d614b549ca560d4",
+    "conditioned_attention_admission_report_sha256": "080f6b9dbe3ba7f74af1311dec4ee72ed1fba11dbf634ddec97bb08019233263",
+    "artifact_aware_persistent_contract_sha256": "3826d3584cf054bff0d08f0290e3bb20df2df90b3de47da8d9ffa6abc93d6578",
+    "artifact_aware_persistent_schedule_sha256": "c79c5f2e125706d73b306ccd5aa23582a062b6f387d55224edee52666492548d",
+    "artifact_aware_persistent_report_sha256": "ded2f4a59fbcd8fafd84d7a64e597017911f1222f5f748170fc82dec97d7aa3a",
+    "artifact_aware_update2_recovery_sha256": "da019556821239cbf50bd67372002f4217bb10f70eafef55375c9c0c31de857c",
+    "parent_candidate_parameter_count": 109464359,
+    "parent_trainable_parameter_count": 15960195,
+    "candidate_parameter_count": 109464375,
+    "candidate_trainable_parameter_count": 15960211,
+    "retained_parameter_count": 93504164
+  },
+  "data": {
+    "release_id": "pft14-daily-teacher-v6",
+    "split": "train/train",
+    "logical_update": 3,
+    "scheduled_group_update": 3,
+    "guard_group_updates": [15, 16, 17, 18],
+    "train_only_artifact_groups": [
+      [655, 783, 959, 302, 550, 705, 261, 580],
+      [527, 582, 346, 756, 963, 426, 610, 379],
+      [561, 707, 395, 791, 686, 972, 781, 694],
+      [577, 991, 946, 737, 743, 256, 765, 331],
+      [513, 440, 902, 778, 947, 690, 423, 443]
+    ],
+    "train_only_artifact_count": 40,
+    "teacher_days_per_direct_gpp_artifact": 208,
+    "fixed_monitor_artifact_updates": [251, 358, 465, 572, 679, 786, 893, 1000],
+    "fixed_monitor_disjoint_from_train_only_panel": true,
+    "fresh_validation_values_allowed": false,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "sealed_test_allowed": false
+  },
+  "starting_state": {
+    "source": "identity_exact_artifact_aware_recovery_after_accepted_logical_update_2",
+    "required_completed_logical_update": 2,
+    "accepted_update2_retained": true,
+    "rejected_update3_applied": false,
+    "earlier_bootstrap_state_used_as_candidate_start": false,
+    "parent_trainable_tree_loaded_read_only": true,
+    "conditioned_temperature_parameters_attached_after_parent_recovery_load": true,
+    "conditioned_temperature_initial_value": 6.928203230275509,
+    "optimizer_state_loaded": false
+  },
+  "baseline": {
+    "scheduled_train_only_seven_and_thirty_day_absolute_science_reported_before_gradients": true,
+    "required_science_keys": [
+      "gpp",
+      "maintenance_respiration",
+      "growth_respiration",
+      "autotrophic_respiration",
+      "npp",
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon",
+      "total_live_biomass_carbon",
+      "ecosystem_carbon"
+    ],
+    "critical_long_horizon_keys": [
+      "gpp",
+      "npp",
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon",
+      "total_live_biomass_carbon"
+    ],
+    "supporting_science_keys": [
+      "maintenance_respiration",
+      "growth_respiration",
+      "autotrophic_respiration",
+      "ecosystem_carbon"
+    ]
+  },
+  "direction": {
+    "source_registry_rule": "40_individual_direct_gpp_artifacts_then_scheduled_state_7day_30day",
+    "gradient_constraint_count": 43,
+    "direct_gpp_artifact_constraint_count": 40,
+    "scheduled_non_gpp_constraint_count": 3,
+    "solver": "minimum_norm_simplex_over_43_unit_gradients",
+    "each_gradient_unit_normalized": true,
+    "minimum_constraint_cosine": 0.0001,
+    "optimizer_or_momentum_state_used": false,
+    "expanded_candidate_trainable_tree_required": true,
+    "temperature_gradient_coordinates_included": 16
+  },
+  "step_calibration": {
+    "rule": "min(target_max_relative_reduction/max_constraint_relative_slope,absolute_l2_cap,relative_trainable_l2_cap_times_trainable_l2)",
+    "constraint_relative_slope": "gradient_l2_times_common_direction_cosine_divided_by_max(loss,loss_floor)",
+    "target_maximum_linearized_relative_reduction": 0.02,
+    "loss_floor": 1e-12,
+    "absolute_parameter_delta_l2_cap": 0.01,
+    "relative_trainable_parameter_l2_cap": 1e-05,
+    "minimum_usable_parameter_delta_l2": 1e-08,
+    "scale_multipliers_descending": [1.0, 0.5, 0.25, 0.125, 0.0625, 0.03125, 0.015625],
+    "old_parent_full_step_l2_inherited": false,
+    "old_parent_scale_ladder_inherited": false,
+    "parameter_dtype_preserved": true
+  },
+  "train_only_selection": {
+    "scheduled_four_source_finite_step_gate_required": true,
+    "scheduled_physical_hard_gate_required": true,
+    "each_artifact_direct_gpp_relative_regression_maximum": 1e-06,
+    "combined_40_artifact_direct_gpp_must_strictly_decrease": true,
+    "required_science_macro_must_strictly_decrease": true,
+    "critical_key_horizon_relative_regression_maximum": 0.001,
+    "supporting_key_horizon_relative_regression_maximum": 0.01,
+    "stop_after_first_train_only_passing_scale": true,
+    "monitor_values_excluded_from_direction_calibration_and_scale_selection": true
+  },
+  "absolute_science_gate": {
+    "seven_day_normalized_rmse_maximum": 0.35,
+    "seven_day_absolute_normalized_signed_bias_maximum": 0.1,
+    "thirty_day_normalized_rmse_maximum": 0.25,
+    "thirty_day_absolute_normalized_signed_bias_maximum": 0.07,
+    "required_keys": [
+      "gpp",
+      "maintenance_respiration",
+      "growth_respiration",
+      "autotrophic_respiration",
+      "npp",
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon",
+      "total_live_biomass_carbon",
+      "ecosystem_carbon"
+    ],
+    "reported_for_initial_and_selected_train_only_states": true,
+    "reported_for_initial_and_selected_monitor_states": true,
+    "required_for_single_discarded_step_selection": false,
+    "required_before_model_promotion": true
+  },
+  "fixed_monitor": {
+    "read_only_after_train_only_scale_is_selected": true,
+    "each_artifact_loaded_at_most_once": true,
+    "initial_and_candidate_evaluated_as_a_pair": true,
+    "direct_gpp_mean_must_strictly_decrease": true,
+    "minimum_nonregressing_direct_gpp_artifact_count": 6,
+    "artifact_direct_gpp_relative_regression_tolerance": 1e-06,
+    "required_science_macro_must_strictly_decrease": true,
+    "critical_key_horizon_relative_regression_maximum": 0.001,
+    "supporting_key_horizon_relative_regression_maximum": 0.01,
+    "physical_hard_gate_required": true,
+    "monitor_never_selects_direction_or_scale": true
+  },
+  "retention": {
+    "optimizer_created": false,
+    "optimizer_updates_persisted": false,
+    "parameter_proposals_persisted": false,
+    "recovery_modified": false,
+    "checkpoint_written": false,
+    "trainable_parameters_written": false,
+    "training_continuation_authorized": false
+  },
+  "execution": {
+    "free_gln01_allowed": true,
+    "paid_partition_authorized": false,
+    "timeout_minutes": 180,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "fresh_validation_read_authorized": false,
+    "teacher_data_regeneration_authorized": false,
+    "historical_v5_authorized": false,
+    "365_day_rollout_authorized": false,
+    "gate_d2_authorized": false,
+    "sealed_test_authorized": false,
+    "product_acceptance_authorized": false
+  },
+  "next_gate": {
+    "on_monitor_transfer_with_absolute_science_pass": "freeze_bounded_conditioned_attention_training_smoke",
+    "on_monitor_transfer_with_absolute_science_open": "freeze_bounded_conditioned_attention_training_smoke_with_unchanged_absolute_promotion_gate",
+    "on_monitor_transfer_failure": "attribute_conditioned_direction_transfer_before_training",
+    "on_no_common_direction": "review_conditioned_objective_geometry_before_training",
+    "on_no_train_only_finite_step": "review_conditioned_step_conditioning_before_training"
+  }
+}

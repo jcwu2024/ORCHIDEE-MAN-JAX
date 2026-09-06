@@ -1228,14 +1228,22 @@ next-state coordinates, and both budgets pass. No optimizer or checkpoint was
 created. This proves the conditioning mechanism but does not establish that
 the common endpoint is scientifically accurate.
 
-The active gate is a separately frozen discarded one-update preflight. It must
-measure the conditioned zero-update train/train 7/30-day science state,
-recompute the artifact-aware direction over the expanded trainable tree,
-perform train-only bounded scale selection, and read the fixed non-test monitor
-at most once. Persistent training, checkpoints, paid execution, fresh
-validation, 365-day rollout, Gate D2, sealed test, and product acceptance
-remain closed.
+The discarded update-3 preflight is now frozen and locally qualified at
+contract SHA256 `b29e92b5...cb97d27d`. It loads the identity-exact accepted
+update-2 recovery, attaches the 16 conditioned temperature coordinates, and
+constructs a minimum-norm common direction from 40 individual direct-GPP
+artifact gradients plus scheduled state, 7-day, and 30-day gradients. Its
+step norm is calibrated from the conditioned architecture's own relative
+gradient geometry rather than inherited from the parent. Descending scale
+selection is train-only. If a scale passes, each of eight disjoint monitor
+artifacts is loaded once and evaluated as an initial/candidate pair before
+release. No proposal or optimizer state can be retained.
+
+The active gate is one free-`gln01` execution with a 180-minute timeout.
+Persistent training, checkpoints, paid execution, fresh validation, 365-day
+rollout, Gate D2, sealed test, and product acceptance remain closed.
 See
+[`target_oriented_coupled_gpp_conditioned_attention_discarded_update_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_discarded_update_v1.md),
 [`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md),
 [`target_oriented_coupled_gpp_localized_jump_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_result_20260904.md),
 [`target_oriented_coupled_gpp_snowheat_causal_intervention_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_snowheat_causal_intervention_v1.md),

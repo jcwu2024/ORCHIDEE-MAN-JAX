@@ -27,6 +27,8 @@ STRUCTURED_PRECISION_RESULT=${STRUCTURED_PRECISION_RESULT:-}
 POTENTIAL_INTERNAL_RESULT=${POTENTIAL_INTERNAL_RESULT:-}
 CONDITIONING_CONTRACT=${CONDITIONING_CONTRACT:-}
 HEAD_TOKEN_RESULT=${HEAD_TOKEN_RESULT:-}
+CONDITIONED_ADMISSION_RESULT=${CONDITIONED_ADMISSION_RESULT:-}
+CONDITIONED_DISCARDED_UPDATE_CONTRACT=${CONDITIONED_DISCARDED_UPDATE_CONTRACT:-}
 PARENT_DIR=$ROOT/runtime/outputs/training/target-oriented-coupled-gpp-bounded-14903328
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
@@ -104,7 +106,22 @@ for path in "$DATASET" "$ACCEPTANCE" "$BASE_STATISTICS" "$PROCESS_STATISTICS" \
 done
 
 EXTRA_AUDIT_ARGS=()
-if [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_aware_persistent_training" || \
+if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_conditioned_attention_discarded_update" ]]; then
+  for path in "$ARTIFACT_AWARE_PERSISTENT_CONTRACT" "$PERSISTENT_TRAINING_REPORT" \
+    "$PERSISTENT_ARTIFACT_AWARE_RECOVERY" "$CONDITIONING_CONTRACT" \
+    "$CONDITIONED_ADMISSION_RESULT" "$CONDITIONED_DISCARDED_UPDATE_CONTRACT"; do
+    test -n "$path"
+    test -f "$path"
+  done
+  EXTRA_AUDIT_ARGS=(
+    --artifact-aware-persistent-contract "$ARTIFACT_AWARE_PERSISTENT_CONTRACT"
+    --parent-persistent-training-report "$PERSISTENT_TRAINING_REPORT"
+    --parent-artifact-aware-recovery "$PERSISTENT_ARTIFACT_AWARE_RECOVERY"
+    --conditioning-contract "$CONDITIONING_CONTRACT"
+    --conditioned-admission-report "$CONDITIONED_ADMISSION_RESULT"
+    --discarded-update-contract "$CONDITIONED_DISCARDED_UPDATE_CONTRACT"
+  )
+elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_aware_persistent_training" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_zero_displacement" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_localized_jump" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_snowheat_causal" || \
@@ -229,7 +246,8 @@ elif [[ -n "$ARTIFACT_AWARE_CONTRACT" || -n "$MULTI_GROUP_RESULT" || \
   -n "$PERSISTENT_ARTIFACT_AWARE_RECOVERY" || -n "$LOCALIZED_JUMP_RESULT" || \
   -n "$SNOWHEAT_CAUSAL_RESULT" || -n "$CROSSED_ATTRIBUTION_RESULT" || \
   -n "$STRUCTURED_PRECISION_RESULT" || -n "$POTENTIAL_INTERNAL_RESULT" || \
-  -n "$CONDITIONING_CONTRACT" || -n "$HEAD_TOKEN_RESULT" ]]; then
+  -n "$CONDITIONING_CONTRACT" || -n "$HEAD_TOKEN_RESULT" || \
+  -n "$CONDITIONED_ADMISSION_RESULT" || -n "$CONDITIONED_DISCARDED_UPDATE_CONTRACT" ]]; then
   exit 2
 fi
 

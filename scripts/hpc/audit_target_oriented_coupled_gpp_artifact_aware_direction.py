@@ -108,9 +108,11 @@ def _measure_direct_artifact_gradients(
     updates: Sequence[int],
     flatten_gradient: Any,
     label: str,
+    expected_parameter_count: int | None = None,
 ) -> Mapping[str, Any]:
     jax = context["runtime"]["jax"]
     jnp = context["runtime"]["jnp"]
+    parameter_count = TRAINABLE_PARAMETER_COUNT if expected_parameter_count is None else int(expected_parameter_count)
     started = time.perf_counter()
     unit_gradients = []
     gradient_reports = []
@@ -133,7 +135,7 @@ def _measure_direct_artifact_gradients(
             nonfinite_host != 0
             or not np.isfinite(norm_host)
             or norm_host <= 0.0
-            or int(unit.size) != TRAINABLE_PARAMETER_COUNT
+            or int(unit.size) != parameter_count
         ):
             raise RuntimeError(f"artifact-aware direct-GPP gradient {update} is invalid")
         source = f"{DIRECT_SOURCE}.artifact_{int(update)}"

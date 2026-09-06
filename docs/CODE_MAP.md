@@ -1018,6 +1018,18 @@ the real-v6 one-day and known-jump zero-update admission, and its dedicated
 shell wrapper reuses the shared free-`gln01` boundary. It creates no optimizer,
 writes no checkpoint, and has no paid launcher.
 
+`daily_operator/target_oriented_coupled_gpp_conditioned_attention_discarded_update.py`
+owns the active 43-constraint direction registry, architecture-aware step
+calibration, nine-key science gates, fixed-monitor transfer gate, and exclusive
+outcome classification. Its machine contract is
+`manifests/coarse_graining/target_oriented_coupled_gpp_conditioned_attention_discarded_update_v1.json`.
+`scripts/hpc/audit_target_oriented_coupled_gpp_conditioned_attention_discarded_update.py`
+loads the exact accepted update-2 recovery, constructs the conditioned
+trainable tree, performs train-only direction and scale selection, and then
+loads each fixed-monitor artifact once for paired initial/candidate evaluation.
+Its dedicated wrapper is free-`gln01` only. It writes one report and no
+parameters, optimizer state, recovery, or checkpoint.
+
 ## Scripts
 
 | Path | Classification | Use |

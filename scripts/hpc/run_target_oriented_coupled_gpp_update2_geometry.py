@@ -179,6 +179,7 @@ def _evaluate_scales(
     relative_tolerance: float,
     label: str,
     direction_norm: float,
+    replace_trainable: Any = replace_coupled_gpp_trainable,
 ) -> list[Mapping[str, Any]]:
     jax = context["runtime"]["jax"]
     records = []
@@ -187,7 +188,7 @@ def _evaluate_scales(
             evaluation = scale_one_evaluation
         else:
             scaled = _scaled_parameters(jax, before_trainable, proposed_trainable, float(scale))
-            parameters = replace_coupled_gpp_trainable(initialized_parameters, scaled)
+            parameters = replace_trainable(initialized_parameters, scaled)
             evaluation = _evaluate_artifacts(
                 args,
                 context,
