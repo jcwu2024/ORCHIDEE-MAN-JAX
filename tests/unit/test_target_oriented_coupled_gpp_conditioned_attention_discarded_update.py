@@ -230,7 +230,28 @@ def test_free_launcher_supplies_every_required_argument_without_sbatch():
         for option in action.option_strings
         if option.startswith("--")
     }
-    assert sorted(option for option in required if option not in wrapper and option not in shared) == []
+    module_branch_start = shared.index(
+        'if [[ "$PYTHON_MODULE" == '
+        '"scripts.hpc.audit_target_oriented_coupled_gpp_conditioned_attention_discarded_update"'
+    )
+    module_branch_end = shared.index("elif [[", module_branch_start)
+    module_branch = shared[module_branch_start:module_branch_end]
+    common_command = shared[shared.index('"$PYTHON" -m "$PYTHON_MODULE"') :]
+    assert sorted(option for option in required if option not in module_branch and option not in common_command) == []
+    for variable in (
+        "ARTIFACT_AWARE_CONTRACT",
+        "MULTI_GROUP_RESULT",
+        "CONTINUITY_CONTRACT",
+        "ARTIFACT_AWARE_RESULT",
+        "ARTIFACT_AWARE_PERSISTENT_CONTRACT",
+        "CONTINUITY_RESULT",
+        "PERSISTENT_TRAINING_REPORT",
+        "PERSISTENT_ARTIFACT_AWARE_RECOVERY",
+        "CONDITIONING_CONTRACT",
+        "CONDITIONED_ADMISSION_RESULT",
+        "CONDITIONED_DISCARDED_UPDATE_CONTRACT",
+    ):
+        assert f"export {variable}=" in wrapper
     assert "RUN_TIMEOUT=${RUN_TIMEOUT:-180m}" in wrapper
     assert "sbatch" not in wrapper
     assert "sbatch" not in shared

@@ -135,6 +135,6 @@ One free `gln01` run with a 180-minute timeout is authorized.
 
 The frozen loader, architecture-aware trainable replacement, step calibration,
 science and monitor gates, one-load paired monitor, CLI argument wiring, and
-no-retention boundary pass 66 focused and helper-regression tests. Ruff,
+no-retention boundary pass 67 focused and helper-regression tests. Ruff,
 Python compilation, Bash syntax, contract loading, and whitespace checks pass.
 The free real-v6 execution is the active gate.
