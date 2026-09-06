@@ -174,7 +174,8 @@ def run(args):
         _atomic_json(args.output, report)
         print(f"window442 stage={stage} elapsed={report['elapsed_seconds']:.1f}s", flush=True)
 
-    save("bootstrap")
+    # The inherited initialization-only entry point requires an unused output path.
+    print("window442 stage=bootstrap", flush=True)
     try:
         parent = json.loads((args.conditioned_run_dir / "report.json").read_text())
         recovered = load_recovery(

@@ -1,3 +1,4 @@
+import json
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -94,3 +95,29 @@ def test_launcher_uses_the_actual_required_parser_branch():
     wrapper = (root / "scripts/hpc/audit_conditioned_attention_window442.sh").read_text()
     assert "RUN_TIMEOUT=${RUN_TIMEOUT:-90m}" in wrapper
     assert "sbatch" not in wrapper + shared
+
+
+def test_report_is_not_created_before_inherited_bootstrap(tmp_path, monkeypatch):
+    (tmp_path / "report.json").write_text(json.dumps({"identity": {}}))
+    contract = tmp_path / "contract.json"
+    contract.write_text(json.dumps({"contract_sha256": "test"}))
+    args = SimpleNamespace(
+        conditioned_run_dir=tmp_path,
+        output=tmp_path / "diagnostic.json",
+        parent_persistent_training_report=None,
+        parent_artifact_aware_recovery=None,
+        artifact_aware_persistent_contract=contract,
+        conditioning_contract=None,
+    )
+    monkeypatch.setattr(audit, "load_recovery", lambda *a, **kw: {"completed_logical_update": 3})
+    monkeypatch.setattr(audit, "_load_parent_state", lambda *a, **kw: (None, {}))
+    monkeypatch.setattr(audit, "load_coupled_gpp_conditioned_attention_contract", lambda path: None)
+
+    def bootstrap(*a, **kw):
+        assert not args.output.exists()
+        raise RuntimeError("bootstrap boundary reached")
+
+    monkeypatch.setattr(audit, "_conditioned_bootstrap", bootstrap)
+    with pytest.raises(RuntimeError, match="bootstrap boundary reached"):
+        audit.run(args)
+    assert json.loads(args.output.read_text())["status"] == "failed"
