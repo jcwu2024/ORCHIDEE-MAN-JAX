@@ -106,3 +106,20 @@ One free gln01 GPU, 90-minute timeout, incremental report at every stage. No
 fresh data, monitor, optimizer, model-state write, paid submission, or training.
 Large finite-step disagreement alone is not proof of an incorrect derivative;
 interpret epsilon dependence and parameter rounding before naming a cause.
+
+### Execution Handoff
+
+Implementation `c4c0a00` passed local tests but its free-node launch exposed an
+output-lifecycle integration error: the initial progress JSON existed before
+the inherited initializer's unused-output check. No numerical evaluation or
+parameter write occurred. Commit `2258c18` defers that first report write;
+the new regression test exercises the inherited bootstrap boundary. Fifteen
+related tests, CLI help, Ruff and both shell syntax checks pass locally.
+
+The corrected free-node run is `conditioned-window442-2258c18`, launched on
+gln01 GPU 0 (actual host `ibc13b02n04`), wrapper PID 74324, with a 90-minute
+timeout. At last inspection it was in bootstrap with its process alive;
+no day/state result was yet available. Inspect
+`runtime/outputs/diagnostics/conditioned-window442-2258c18.log` and `.json`
+on the server before launching anything else. The previous failure evidence
+remains in the `conditioned-window442-c4c0a00` report/log.
