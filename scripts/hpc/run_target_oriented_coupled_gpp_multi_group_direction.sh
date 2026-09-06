@@ -130,7 +130,8 @@ if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_conditi
     --conditioned-admission-report "$CONDITIONED_ADMISSION_RESULT"
     --discarded-update-contract "$CONDITIONED_DISCARDED_UPDATE_CONTRACT"
   )
-elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_conditioned_attention_persistent_training" ]]; then
+elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_conditioned_attention_persistent_training" || \
+  "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_update4_derivative" ]]; then
   for path in "$ARTIFACT_AWARE_CONTRACT" "$MULTI_GROUP_RESULT" "$CONTINUITY_CONTRACT" \
     "$ARTIFACT_AWARE_RESULT" "$ARTIFACT_AWARE_PERSISTENT_CONTRACT" "$CONTINUITY_RESULT" \
     "$PERSISTENT_TRAINING_REPORT" "$PERSISTENT_ARTIFACT_AWARE_RECOVERY" \

@@ -1264,7 +1264,12 @@ and retain a candidate only after both step-local and cumulative fixed-monitor
 gates pass. Failed candidates cannot overwrite the preceding recovery. The
 absolute promotion gate is unchanged. Local/static qualification passes 57
 related tests plus all static, CLI, contract, and shell checks. One
-free-`gln01` execution is the active gate; paid execution, fresh validation,
+free-`gln01` execution completed at `45ab263` in 3162.530 seconds. Update 3
+was retained; update 4 failed every scale because 30-day loss increased while
+direct GPP, state, and 7-day losses improved. The active gate is the bounded
+update-4 derivative diagnostic in
+`research/daily_coarse_graining/conditioned_attention_update4_derivative_20260906.md`;
+paid execution, fresh validation,
 365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
 See
 [`target_oriented_coupled_gpp_conditioned_attention_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_persistent_training_v1.md),

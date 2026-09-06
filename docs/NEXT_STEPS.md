@@ -2395,7 +2395,7 @@ respiration gates remain open at both horizons. The accepted classification is
 See
 [`target_oriented_coupled_gpp_conditioned_attention_discarded_update_result_20260906.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_discarded_update_result_20260906.md).
 
-The active gate is now the frozen three-update persistent smoke under contract
+The completed three-update persistent smoke was frozen under contract
 SHA256 `ac65c5be...e5c9aff`. Logical updates 3-5 use 120 unique train-only
 artifacts and recompute the 43-constraint direction plus architecture-aware
 step calibration after every accepted state. Scale selection remains
@@ -2408,10 +2408,20 @@ is resumable, free-`gln01` only, and bounded to 240 minutes. See
 Local qualification now passes 57 related tests in `374.82` seconds plus Ruff,
 Python compilation, both shell syntax checks, manifest/result loading, actual
 parser-branch coverage, CLI help, and whitespace checks. The immediate task is
-to synchronize one clean commit and execute the free smoke. Paid execution,
+now the update-4 derivative diagnostic described below. Paid execution,
 fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
 remain closed. See
 [`target_oriented_coupled_gpp_conditioned_attention_persistent_training_local_acceptance_20260906.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_persistent_training_local_acceptance_20260906.md).
+
+Run `45ab263` completed in 3162.530 seconds, retained update 3, and stopped
+at update 4 because its 30-day loss increased at every tested scale. All
+40 direct-GPP artifacts, scheduled state, and 7-day losses improved; physical
+and engineering gates passed. The active gate is a free, zero-retention
+derivative audit at the saved update-3 state: reproduce the rejected direction,
+compare reverse and forward primals, compare raw and float32-accumulated
+gradients against actual parameter displacement, and measure signed 30-day
+finite differences on the eight scheduled artifacts. See
+[`conditioned_attention_update4_derivative_20260906.md`](research/daily_coarse_graining/conditioned_attention_update4_derivative_20260906.md).
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).

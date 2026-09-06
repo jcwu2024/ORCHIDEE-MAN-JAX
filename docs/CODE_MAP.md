@@ -1043,6 +1043,13 @@ and admits retention only after both step-local and cumulative fixed-monitor
 gates pass. Its direct wrapper is resumable and free-`gln01` only; no paid
 launcher or product-promotion path is authorized.
 
+`scripts/hpc/audit_conditioned_attention_update4_derivative.py` owns the
+current zero-retention diagnostic after persistent update 4 failed. It
+reconstructs only nonzero simplex support, records reverse/forward primal
+agreement and gradient accumulation precision, and measures signed 30-day
+finite changes on the scheduled training artifacts. Its wrapper reuses the
+qualified free-node argument branch and never writes model parameters.
+
 ## Scripts
 
 | Path | Classification | Use |

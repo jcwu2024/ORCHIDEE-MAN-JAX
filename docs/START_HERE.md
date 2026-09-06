@@ -422,11 +422,11 @@ improve by `0.94%`, `1.03%`, `0.73%`, and `0.68%`. Absolute GPP, NPP, growth
 respiration, and autotrophic-respiration gates remain far open, so this is
 training admission rather than model acceptance.
 
-The active gate is a frozen, resumable three-update conditioned-Attention
-smoke. Logical updates 3-5 each recompute 43 gradients and their own bounded
-step on 40 disjoint train-only artifacts. A selected step is retained only if
-both step-local and cumulative fixed-monitor transfer pass; the unchanged
-absolute 7/30-day promotion gate is reported but not weakened. Paid execution,
+The three-update conditioned-Attention smoke retained update 3 and stopped
+at update 4: GPP, state, and 7-day losses improve, but the 30-day loss rises
+despite a predicted decrease. The active gate is a bounded derivative audit
+at the saved update-3 state, comparing reverse/forward primals, gradient
+accumulation precision, and signed finite changes. Paid execution,
 fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
 remain closed. See `NEXT_STEPS.md` for the exact current boundary.
 

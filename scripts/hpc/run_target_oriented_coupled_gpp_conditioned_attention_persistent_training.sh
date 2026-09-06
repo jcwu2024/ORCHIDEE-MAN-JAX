@@ -5,7 +5,7 @@ set -euo pipefail
 
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 export WORKTREE=${WORKTREE:-$ROOT}
-export PYTHON_MODULE=scripts.hpc.run_target_oriented_coupled_gpp_conditioned_attention_persistent_training
+export PYTHON_MODULE=${PYTHON_MODULE:-scripts.hpc.run_target_oriented_coupled_gpp_conditioned_attention_persistent_training}
 export ARTIFACT_AWARE_CONTRACT=$WORKTREE/manifests/coarse_graining/target_oriented_coupled_gpp_artifact_aware_direction_audit_v1.json
 export MULTI_GROUP_RESULT=$ROOT/runtime/outputs/diagnostics/target-oriented-coupled-gpp-multi-group-direction-c5c0a56.json
 export CONTINUITY_CONTRACT=$WORKTREE/manifests/coarse_graining/target_oriented_coupled_gpp_artifact_aware_continuity_smoke_v1.json
