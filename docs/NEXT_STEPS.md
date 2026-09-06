@@ -2417,10 +2417,14 @@ Run `45ab263` completed in 3162.530 seconds, retained update 3, and stopped
 at update 4 because its 30-day loss increased at every tested scale. All
 40 direct-GPP artifacts, scheduled state, and 7-day losses improved; physical
 and engineering gates passed. The active gate is a free, zero-retention
-derivative audit at the saved update-3 state: reproduce the rejected direction,
-compare reverse and forward primals, compare raw and float32-accumulated
-gradients against actual parameter displacement, and measure signed 30-day
-finite differences on the eight scheduled artifacts. See
+day/state derivative localization at saved update 3, artifact 442/window 0.
+The completed `d9c4bd4` audit reproduces all source norms and forward losses;
+seven of eight artifacts agree with finite differences, while 442 predicts
+-0.019983 but actually changes by +0.0000907. Its first window has gradient
+norm 1097.9 versus about 2 for the other windows; raw float64 accumulation
+does not fix the discrepancy. Compare the canonical daily forward tangent
+with parameter finite differences, then replay at most three implicated days
+to name the state/process boundary. Do not restart training yet. See
 [`conditioned_attention_update4_derivative_20260906.md`](research/daily_coarse_graining/conditioned_attention_update4_derivative_20260906.md).
 
 The persistent protocol remains recorded in

@@ -1,6 +1,6 @@
 # Conditioned Attention Update-4 Derivative Audit
 
-Status: bounded diagnostic frozen before execution. No training update is authorized by this audit.
+Status: completed at `d9c4bd4`; day/state localization below is the active diagnostic. No training update is authorized by either audit.
 
 ## Persistent Smoke Result
 
@@ -63,3 +63,46 @@ Parent reports remain under
 `runtime/outputs/training/target-oriented-coupled-gpp-conditioned-attention-persistent-45ab263/`.
 Local report copies are `outputs/diagnostics/conditioned-persistent-45ab263-report.json`
 and `outputs/diagnostics/conditioned-persistent-45ab263-rejected.json`.
+
+## Completed Derivative Evidence
+
+The free-node audit completed in 1473.137 seconds. All source norms reproduce;
+all eight baseline and full-step forward losses reproduce exactly. Seven of
+eight artifact derivatives agree closely with their finite changes. Artifact
+442 predicts -0.0199830 but actually changes by +0.0000906981. Its central
+secants remain positive at scales 1, 1/4 and 1/16. Float64 raw-gradient
+accumulation gives the same prediction, excluding float32 accumulation as the
+material cause. Window 0 has gradient norm 1097.9185, versus 2.07, 2.06, and
+2.29 for windows 1-3. Its reverse/forward scalar difference is only 5.23e-8.
+This localizes the discrepancy, not yet its process-level cause.
+
+Evidence: `outputs/diagnostics/conditioned-update4-derivative-d9c4bd4.json`.
+
+## Frozen Window 442 Day/State Localization
+
+Reuse accepted update 3, artifact 442 and window 0. Reproduce its reverse
+gradient with all four baseline windows' sufficient statistics held fixed,
+preserving the global squared-bias derivative. The probe is the negative unit
+gradient of this window, explicitly NOT the rejected update-4 direction.
+
+Compute a forward-mode tangent through the canonical 30-day rollout and
+compare its scalar derivative with the reverse dot product. Record daily
+state and GPP derivative/central-secant disagreement at parameter-displacement
+norms 1e-3, 1e-4, 1e-5, 1e-6, preserving every parameter dtype and reporting
+the reverse dot product with the actual rounded central displacement.
+Baseline hard gates must pass. No inference or scientific tolerance changes.
+
+At 1e-5 select the first day with relative state-tangent error >0.1 and frozen-
+scale absolute error >1e-3, its predecessor, and the largest-error day (at most
+three days). If none qualify, inspect only the largest-error day. This is a
+diagnostic ranking, not a scientific acceptance threshold. Replay each selected
+one-day transition at the baseline carry with the incoming tangent, compare
+against the scan, and record local central differences for every process-head
+output and the resulting state. These tangent-line carry perturbations are
+diagnostic only and may leave the physical manifold at large epsilon.
+
+Runner/wrapper: `scripts/hpc/audit_conditioned_attention_window442.py` and `.sh`.
+One free gln01 GPU, 90-minute timeout, incremental report at every stage. No
+fresh data, monitor, optimizer, model-state write, paid submission, or training.
+Large finite-step disagreement alone is not proof of an incorrect derivative;
+interpret epsilon dependence and parameter rounding before naming a cause.

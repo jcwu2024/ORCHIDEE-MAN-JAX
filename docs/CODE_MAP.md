@@ -1050,6 +1050,11 @@ agreement and gradient accumulation precision, and measures signed 30-day
 finite changes on the scheduled training artifacts. Its wrapper reuses the
 qualified free-node argument branch and never writes model parameters.
 
+`scripts/hpc/audit_conditioned_attention_window442.py` owns the follow-up
+single-window forward-tangent/finite-difference diagnostic and at-most-three-
+day local transition replay. It reuses canonical rollout and retained-tail
+code, keeps the four-window bias totals fixed, and never writes parameters.
+
 ## Scripts
 
 | Path | Classification | Use |
