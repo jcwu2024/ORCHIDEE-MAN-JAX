@@ -414,10 +414,19 @@ trainable gradients, state, and water/carbon budgets are valid. Both
 conditioned endpoints are `5.316468`, however, so this proves continuity and
 not absolute accuracy.
 
-The active gate is to freeze and implement one discarded-update preflight. It
-must measure the conditioned zero-update 7/30-day train/train state and test
-whether one newly computed, train-only-selected bounded step transfers to the
-fixed non-test monitor. Persistent training, checkpoints, paid execution,
+The discarded update-3 preflight now passes. Its common direction has minimum
+constraint cosine `0.326565`; the architecture-calibrated full step improves
+all `40/40` train-only and `8/8` fixed-monitor direct-GPP artifacts. The fixed
+monitor's direct-GPP mean, reachable state, 7-day science, and 30-day science
+improve by `0.94%`, `1.03%`, `0.73%`, and `0.68%`. Absolute GPP, NPP, growth
+respiration, and autotrophic-respiration gates remain far open, so this is
+training admission rather than model acceptance.
+
+The active gate is a frozen, resumable three-update conditioned-Attention
+smoke. Logical updates 3-5 each recompute 43 gradients and their own bounded
+step on 40 disjoint train-only artifacts. A selected step is retained only if
+both step-local and cumulative fixed-monitor transfer pass; the unchanged
+absolute 7/30-day promotion gate is reported but not weakened. Paid execution,
 fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
 remain closed. See `NEXT_STEPS.md` for the exact current boundary.
 

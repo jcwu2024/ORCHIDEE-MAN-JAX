@@ -29,6 +29,8 @@ CONDITIONING_CONTRACT=${CONDITIONING_CONTRACT:-}
 HEAD_TOKEN_RESULT=${HEAD_TOKEN_RESULT:-}
 CONDITIONED_ADMISSION_RESULT=${CONDITIONED_ADMISSION_RESULT:-}
 CONDITIONED_DISCARDED_UPDATE_CONTRACT=${CONDITIONED_DISCARDED_UPDATE_CONTRACT:-}
+CONDITIONED_DISCARDED_UPDATE_RESULT=${CONDITIONED_DISCARDED_UPDATE_RESULT:-}
+CONDITIONED_PERSISTENT_CONTRACT=${CONDITIONED_PERSISTENT_CONTRACT:-}
 PARENT_DIR=$ROOT/runtime/outputs/training/target-oriented-coupled-gpp-bounded-14903328
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
@@ -127,6 +129,31 @@ if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_conditi
     --conditioning-contract "$CONDITIONING_CONTRACT"
     --conditioned-admission-report "$CONDITIONED_ADMISSION_RESULT"
     --discarded-update-contract "$CONDITIONED_DISCARDED_UPDATE_CONTRACT"
+  )
+elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_conditioned_attention_persistent_training" ]]; then
+  for path in "$ARTIFACT_AWARE_CONTRACT" "$MULTI_GROUP_RESULT" "$CONTINUITY_CONTRACT" \
+    "$ARTIFACT_AWARE_RESULT" "$ARTIFACT_AWARE_PERSISTENT_CONTRACT" "$CONTINUITY_RESULT" \
+    "$PERSISTENT_TRAINING_REPORT" "$PERSISTENT_ARTIFACT_AWARE_RECOVERY" \
+    "$CONDITIONING_CONTRACT" "$CONDITIONED_ADMISSION_RESULT" \
+    "$CONDITIONED_DISCARDED_UPDATE_CONTRACT" "$CONDITIONED_DISCARDED_UPDATE_RESULT" \
+    "$CONDITIONED_PERSISTENT_CONTRACT"; do
+    test -n "$path"
+    test -f "$path"
+  done
+  EXTRA_AUDIT_ARGS=(
+    --artifact-aware-contract "$ARTIFACT_AWARE_CONTRACT"
+    --multi-group-result "$MULTI_GROUP_RESULT"
+    --continuity-contract "$CONTINUITY_CONTRACT"
+    --artifact-aware-result "$ARTIFACT_AWARE_RESULT"
+    --artifact-aware-persistent-contract "$ARTIFACT_AWARE_PERSISTENT_CONTRACT"
+    --continuity-result "$CONTINUITY_RESULT"
+    --parent-persistent-training-report "$PERSISTENT_TRAINING_REPORT"
+    --parent-artifact-aware-recovery "$PERSISTENT_ARTIFACT_AWARE_RECOVERY"
+    --conditioning-contract "$CONDITIONING_CONTRACT"
+    --conditioned-admission-report "$CONDITIONED_ADMISSION_RESULT"
+    --discarded-update-contract "$CONDITIONED_DISCARDED_UPDATE_CONTRACT"
+    --conditioned-discarded-update-result "$CONDITIONED_DISCARDED_UPDATE_RESULT"
+    --conditioned-persistent-contract "$CONDITIONED_PERSISTENT_CONTRACT"
   )
 elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_aware_persistent_training" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_zero_displacement" || \
@@ -254,7 +281,8 @@ elif [[ -n "$ARTIFACT_AWARE_CONTRACT" || -n "$MULTI_GROUP_RESULT" || \
   -n "$SNOWHEAT_CAUSAL_RESULT" || -n "$CROSSED_ATTRIBUTION_RESULT" || \
   -n "$STRUCTURED_PRECISION_RESULT" || -n "$POTENTIAL_INTERNAL_RESULT" || \
   -n "$CONDITIONING_CONTRACT" || -n "$HEAD_TOKEN_RESULT" || \
-  -n "$CONDITIONED_ADMISSION_RESULT" || -n "$CONDITIONED_DISCARDED_UPDATE_CONTRACT" ]]; then
+  -n "$CONDITIONED_ADMISSION_RESULT" || -n "$CONDITIONED_DISCARDED_UPDATE_CONTRACT" || \
+  -n "$CONDITIONED_DISCARDED_UPDATE_RESULT" || -n "$CONDITIONED_PERSISTENT_CONTRACT" ]]; then
   exit 2
 fi
 

@@ -1030,6 +1030,19 @@ loads each fixed-monitor artifact once for paired initial/candidate evaluation.
 Its dedicated wrapper is free-`gln01` only. It writes one report and no
 parameters, optimizer state, recovery, or checkpoint.
 
+`daily_operator/target_oriented_coupled_gpp_conditioned_attention_persistent_training.py`
+owns the current three-update schedule, per-update architecture-aware
+calibration, and terminal classification. Its machine contract is
+`manifests/coarse_graining/target_oriented_coupled_gpp_conditioned_attention_persistent_training_v1.json`.
+`daily_operator/target_oriented_coupled_gpp_conditioned_attention_persistence.py`
+owns the immutable conditioned start, atomic parameter-only recovery, and
+diagnostic update-5 checkpoint.
+`scripts/hpc/run_target_oriented_coupled_gpp_conditioned_attention_persistent_training.py`
+recomputes 43 constraints at each state, performs train-only scale selection,
+and admits retention only after both step-local and cumulative fixed-monitor
+gates pass. Its direct wrapper is resumable and free-`gln01` only; no paid
+launcher or product-promotion path is authorized.
+
 ## Scripts
 
 | Path | Classification | Use |

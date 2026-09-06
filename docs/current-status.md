@@ -1239,10 +1239,36 @@ selection is train-only. If a scale passes, each of eight disjoint monitor
 artifacts is loaded once and evaluated as an initial/candidate pair before
 release. No proposal or optimizer state can be retained.
 
-The active gate is one free-`gln01` execution with a 180-minute timeout.
-Persistent training, checkpoints, paid execution, fresh validation, 365-day
-rollout, Gate D2, sealed test, and product acceptance remain closed.
+The corrected discarded update-3 preflight completed at commit `2adb422` in
+`6,410.496` seconds. Its report SHA256 is `0aa30a0e...e9fe9b42a`, and the
+classification is
+`conditioned_discarded_update_transfers_but_absolute_science_remains_open`.
+The common direction has minimum cosine `0.3265653`; its recalibrated full
+delta L2 `0.0005178796` at scale `1` improves all `40/40` train-only direct-GPP
+artifacts and all four scheduled sources. The train-only science macro falls
+`1.3425%`.
+
+All `8/8` excluded fixed-monitor artifacts also improve. Monitor direct GPP,
+reachable state, 7-day science, and 30-day science fall `0.9373%`, `1.0276%`,
+`0.7332%`, and `0.6816%`; the required science macro falls `0.7579%`. All
+physical and engineering gates pass, reported allocator peak is about 12 GB,
+and no parameter state is retained. Absolute GPP, NPP, growth respiration,
+and autotrophic respiration still fail at 7 and 30 days, so model promotion
+remains closed. See
+[`target_oriented_coupled_gpp_conditioned_attention_discarded_update_result_20260906.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_discarded_update_result_20260906.md).
+
+The current contract is a resumable three-update conditioned-Attention smoke,
+SHA256 `ac65c5be...e5c9aff`. Updates 3-5 use 120 unique train-only artifacts,
+recompute all 43 gradients and step calibration after every retained state,
+and retain a candidate only after both step-local and cumulative fixed-monitor
+gates pass. Failed candidates cannot overwrite the preceding recovery. The
+absolute promotion gate is unchanged. Local/static qualification passes 57
+related tests plus all static, CLI, contract, and shell checks. One
+free-`gln01` execution is the active gate; paid execution, fresh validation,
+365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
 See
+[`target_oriented_coupled_gpp_conditioned_attention_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_persistent_training_v1.md),
+[`target_oriented_coupled_gpp_conditioned_attention_persistent_training_local_acceptance_20260906.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_persistent_training_local_acceptance_20260906.md),
 [`target_oriented_coupled_gpp_conditioned_attention_discarded_update_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_discarded_update_v1.md),
 [`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md),
 [`target_oriented_coupled_gpp_localized_jump_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_result_20260904.md),

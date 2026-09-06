@@ -2375,13 +2375,43 @@ through `1/64`; the old parent step norm is not inherited. Scale selection is
 train-only. Only afterward are the eight fixed monitor artifacts loaded once
 each and evaluated as initial/candidate pairs. Every proposal is discarded.
 
-The active gate is one free-`gln01` execution with a 180-minute timeout. It
-must establish a common direction, a passing train-only finite step, and fixed
-monitor transfer before a bounded persistent-training contract can be
-proposed. Persistent training, checkpoints, paid execution, fresh validation,
-365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
+The corrected free-`gln01` discarded update-3 preflight completed at commit
+`2adb422` in `6,410.496` seconds; report SHA256 is
+`0aa30a0e...e9fe9b42a`. The 43-constraint common direction has minimum cosine
+`0.3265653`, versus `0.0422923` for the parent architecture's earlier
+artifact-aware audit. The candidate's own calibration selects parameter-delta
+L2 `0.0005178796`, and the first multiplier `1` passes. All `40/40`
+train-only artifacts improve, their direct-GPP mean falls `0.9204%`, and the
+scheduled state, 7-day, and 30-day sources fall `0.7218%`, `0.6061%`, and
+`2.5039%`.
+
+The independently excluded fixed monitor also passes: all `8/8` direct-GPP
+artifacts improve, mean direct GPP falls `0.9373%`, reachable state falls
+`1.0276%`, and 7/30-day component-resolved science falls `0.7332%/0.6816%`.
+The required science macro improves `0.7579%`, every physical gate passes, and
+no state is retained. Absolute GPP, NPP, growth-respiration, and autotrophic-
+respiration gates remain open at both horizons. The accepted classification is
+`conditioned_discarded_update_transfers_but_absolute_science_remains_open`.
 See
-[`target_oriented_coupled_gpp_conditioned_attention_discarded_update_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_discarded_update_v1.md).
+[`target_oriented_coupled_gpp_conditioned_attention_discarded_update_result_20260906.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_discarded_update_result_20260906.md).
+
+The active gate is now the frozen three-update persistent smoke under contract
+SHA256 `ac65c5be...e5c9aff`. Logical updates 3-5 use 120 unique train-only
+artifacts and recompute the 43-constraint direction plus architecture-aware
+step calibration after every accepted state. Scale selection remains
+train-only. A candidate is retained only when both its step-local monitor
+change and its cumulative change from the immutable start pass; monitor
+failure discards the candidate and preserves the preceding recovery. The run
+is resumable, free-`gln01` only, and bounded to 240 minutes. See
+[`target_oriented_coupled_gpp_conditioned_attention_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_persistent_training_v1.md).
+
+Local qualification now passes 57 related tests in `374.82` seconds plus Ruff,
+Python compilation, both shell syntax checks, manifest/result loading, actual
+parser-branch coverage, CLI help, and whitespace checks. The immediate task is
+to synchronize one clean commit and execute the free smoke. Paid execution,
+fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
+remain closed. See
+[`target_oriented_coupled_gpp_conditioned_attention_persistent_training_local_acceptance_20260906.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_persistent_training_local_acceptance_20260906.md).
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).
