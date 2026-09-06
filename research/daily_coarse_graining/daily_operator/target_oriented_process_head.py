@@ -29,6 +29,13 @@ from .target_oriented_coupled_gpp_carbon_feedback import (
     load_coupled_gpp_carbon_feedback_contract,
     target_oriented_coupled_gpp_carbon_feedback_process_outputs,
 )
+from .target_oriented_coupled_gpp_conditioned_attention import (
+    CoupledGPPConditionedAttentionConfig,
+    CoupledGPPConditionedAttentionContract,
+    coupled_gpp_conditioned_attention_temperatures,
+    fixed_reference_attention_temperatures,
+    load_coupled_gpp_conditioned_attention_contract,
+)
 from .target_oriented_distribution_aware_maintenance import (
     DistributionAwareMaintenanceConfig,
     DistributionAwareMaintenanceContract,
@@ -232,9 +239,7 @@ class MechanisticTargetOrientedStructuredGPPProcessHead(
 
 
 @dataclass(frozen=True, eq=False, kw_only=True)
-class MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead(
-    MechanisticTargetOrientedStructuredGPPProcessHead
-):
+class MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead(MechanisticTargetOrientedStructuredGPPProcessHead):
     """Condition only daily GPP on coordinate-preserving day-start carbon state."""
 
     coupled_contract: CoupledGPPCarbonFeedbackContract
@@ -244,6 +249,13 @@ class MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead(
     def __post_init__(self) -> None:
         super().__post_init__()
         self.coupled_config.validate(self.coupled_contract, self.structured_config)
+
+    def potential_attention_temperatures(self, parameters: Mapping[str, Any]) -> Any | None:
+        del parameters
+        return None
+
+    def potential_attention_normalization_epsilon(self) -> float:
+        return 1.0e-6
 
     def learned_outputs(
         self,
@@ -276,6 +288,8 @@ class MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead(
             source_config=self.source_config,
             structured_config=self.structured_config,
             config=self.coupled_config,
+            potential_attention_temperatures=self.potential_attention_temperatures(parameters),
+            potential_attention_normalization_epsilon=self.potential_attention_normalization_epsilon(),
         )
 
     def gpp_factorization(
@@ -313,6 +327,8 @@ class MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead(
             output_normalization=self.output_normalization,
             structured_config=self.structured_config,
             config=self.coupled_config,
+            potential_attention_temperatures=self.potential_attention_temperatures(parameters),
+            potential_attention_normalization_epsilon=self.potential_attention_normalization_epsilon(),
         )
         vcmax_index = DEFAULT_PFT_PARAMETER_ROUTING.index("vcmax25")
         vcmax_factor = (
@@ -331,6 +347,32 @@ class MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead(
             "vcmax25_factor": vcmax_factor,
             "routed_gpp": factors.pre_vcmax_gpp * vcmax_factor[None, :],
         }
+
+
+@dataclass(frozen=True, eq=False, kw_only=True)
+class MechanisticTargetOrientedCoupledGPPConditionedAttentionProcessHead(
+    MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead
+):
+    """Bound Q/K-conditioned potential attention to the existing coupled head."""
+
+    conditioning_contract: CoupledGPPConditionedAttentionContract
+    conditioning_config: CoupledGPPConditionedAttentionConfig = CoupledGPPConditionedAttentionConfig()
+    fixed_temperature_reference: bool = False
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.conditioning_config.validate(self.conditioning_contract, self.structured_config)
+
+    def potential_attention_temperatures(self, parameters: Mapping[str, Any]) -> Any:
+        if self.fixed_temperature_reference:
+            return fixed_reference_attention_temperatures(config=self.conditioning_config)
+        return coupled_gpp_conditioned_attention_temperatures(
+            parameters,
+            config=self.conditioning_config,
+        )
+
+    def potential_attention_normalization_epsilon(self) -> float:
+        return self.conditioning_config.normalization_epsilon
 
 
 def build_target_oriented_source_shaped_maintenance_head(
@@ -484,14 +526,58 @@ def build_target_oriented_coupled_gpp_carbon_feedback_head(
     )
 
 
+def build_target_oriented_coupled_gpp_conditioned_attention_head(
+    parent: MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead,
+    *,
+    conditioning_contract: CoupledGPPConditionedAttentionContract | None = None,
+    conditioning_config: CoupledGPPConditionedAttentionConfig = CoupledGPPConditionedAttentionConfig(),
+    fixed_temperature_reference: bool = False,
+) -> MechanisticTargetOrientedCoupledGPPConditionedAttentionProcessHead:
+    """Install bounded cosine potential attention over the coupled GPP head."""
+
+    contract = conditioning_contract or load_coupled_gpp_conditioned_attention_contract()
+    return MechanisticTargetOrientedCoupledGPPConditionedAttentionProcessHead(
+        contract=parent.contract,
+        architecture_contract=parent.architecture_contract,
+        mechanism_contract=parent.mechanism_contract,
+        input_assembler=parent.input_assembler,
+        complete_schema=parent.complete_schema,
+        learned_schema=parent.learned_schema,
+        layout=parent.layout,
+        input_normalization=parent.input_normalization,
+        output_normalization=parent.output_normalization,
+        forcing_layout=parent.forcing_layout,
+        forcing_indices=parent.forcing_indices,
+        message_gate_scale=parent.message_gate_scale,
+        config=parent.config,
+        target_contract=parent.target_contract,
+        target_config=parent.target_config,
+        distribution_contract=parent.distribution_contract,
+        coeff_maint_zero=parent.coeff_maint_zero,
+        distribution_config=parent.distribution_config,
+        source_config=parent.source_config,
+        structured_contract=parent.structured_contract,
+        structured_state_layout=parent.structured_state_layout,
+        structured_config=parent.structured_config,
+        coupled_contract=parent.coupled_contract,
+        carbon_state_layout=parent.carbon_state_layout,
+        coupled_config=parent.coupled_config,
+        conditioning_contract=contract,
+        conditioning_config=conditioning_config,
+        fixed_temperature_reference=fixed_temperature_reference,
+    )
+
+
 __all__ = [
     "MechanisticTargetOrientedAttentionProcessHead",
+    "MechanisticTargetOrientedCoupledGPPConditionedAttentionProcessHead",
     "MechanisticTargetOrientedDistributionAwareMaintenanceProcessHead",
     "MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead",
     "MechanisticTargetOrientedSourceShapedMaintenanceProcessHead",
     "MechanisticTargetOrientedStructuredGPPProcessHead",
     "build_target_oriented_distribution_aware_maintenance_head",
     "build_target_oriented_coupled_gpp_carbon_feedback_head",
+    "build_target_oriented_coupled_gpp_conditioned_attention_head",
     "build_target_oriented_source_shaped_maintenance_head",
     "build_target_oriented_structured_gpp_head",
 ]

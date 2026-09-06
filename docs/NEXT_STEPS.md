@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-09-05.
+Last updated: 2026-09-06.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -2333,10 +2333,31 @@ are each sufficient but neither alone is necessary; the paired Q+K slice is
 necessary. See
 [`target_oriented_coupled_gpp_attention_head_token_attribution_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_attention_head_token_attribution_result_20260905.md).
 
-The active gate is user discussion of a Q/K conditioning-controlled
-architecture before implementation. No architecture edit, further training,
-paid execution, fresh validation, 365-day rollout, Gate D2, sealed test, or
-product acceptance is authorized.
+The user-approved Q/K-conditioned candidate is now frozen and implemented.
+Only the two `structured_gpp.potential_blocks` attention layers change: every
+projected Q/K vector is normalized per head and scored with one bounded
+learnable temperature per block/head. The 16 temperatures initialize at
+`sqrt(48)` and are bounded below `12`; no head or token is hard-coded. The
+candidate has `109,464,375` total and `15,960,211` first-stage trainable
+parameters. The matched reference uses the identical normalized Q/K path with
+fixed `sqrt(48)` temperatures and is not a promotion baseline.
+
+The candidate, coupled-parent, and structured-parent local suite passes all
+`17` tests in `804.14` seconds, including forward/loss/gradient, initial
+candidate/reference agreement, inherited Q/K/V/output gradient reach, parent
+regression, PFT isolation/permutation, canonical single-day state, and
+water/carbon budgets. Static, compile, shell, and diff checks pass. See
+[`target_oriented_coupled_gpp_conditioned_attention_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_v1.md)
+and
+[`target_oriented_coupled_gpp_conditioned_attention_local_acceptance_20260906.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_local_acceptance_20260906.md).
+
+The active gate is one free-`gln01`, zero-update admission on the existing
+real-v6 train/train artifact. It must reproduce the accepted parent trace and
+endpoints, bound logits by `12.000001`, reduce the known `11/16 -> 12/16` GPP
+jump to at most `25%`, and pass one complete real-v6 loss/gradient/state/budget
+transition. Only a pass may open a separately frozen discarded one-update
+preflight. Optimizer updates, checkpoints, paid execution, fresh validation,
+365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
 
 The persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).

@@ -434,6 +434,82 @@ def structured_gpp_local_tokens(
     return _linear(specialist["local_input"], features), jnp.all(defined, axis=1)
 
 
+def _stable_head_l2_normalize(value: Any, epsilon: float) -> Any:
+    """Normalize projected head vectors without squaring their raw magnitude."""
+
+    value = jnp.asarray(value, dtype=jnp.float32)
+    epsilon = jnp.asarray(epsilon, dtype=value.dtype)
+    maximum = jnp.max(jnp.abs(value), axis=-1, keepdims=True)
+    scaled = value / jnp.where(maximum > 0.0, maximum, 1.0)
+    scaled_norm = jnp.sqrt(jnp.sum(scaled * scaled, axis=-1, keepdims=True) + epsilon * epsilon)
+    raw_norm = maximum * scaled_norm
+    normalized = scaled / scaled_norm
+    return jnp.where(raw_norm > epsilon, normalized, 0.0)
+
+
+def bounded_cosine_attention_logits(
+    parameters: Mapping[str, Any],
+    query: Any,
+    key_value: Any,
+    *,
+    heads: int,
+    temperatures: Any,
+    normalization_epsilon: float,
+) -> Any:
+    """Return per-head cosine logits with caller-supplied bounded temperatures."""
+
+    projected_query = _linear(parameters["query"], query)
+    projected_key = _linear(parameters["key"], key_value)
+    width = int(projected_query.shape[-1])
+    if width % int(heads):
+        raise ValueError("conditioned attention width must divide its head count")
+    head_width = width // int(heads)
+    head_query = projected_query.reshape(projected_query.shape[:-1] + (heads, head_width)).swapaxes(-3, -2)
+    head_key = projected_key.reshape(projected_key.shape[:-1] + (heads, head_width)).swapaxes(-3, -2)
+    head_query = _stable_head_l2_normalize(head_query, normalization_epsilon)
+    head_key = _stable_head_l2_normalize(head_key, normalization_epsilon)
+    temperatures = jnp.asarray(temperatures, dtype=jnp.float32)
+    if temperatures.shape != (int(heads),):
+        raise ValueError("conditioned attention temperature shape drift")
+    cosine = jnp.einsum("...hqd,...hkd->...hqk", head_query, head_key)
+    return jnp.clip(cosine, -1.0, 1.0) * temperatures[..., None, None]
+
+
+def bounded_cosine_attention(
+    parameters: Mapping[str, Any],
+    query: Any,
+    key_value: Any,
+    *,
+    heads: int,
+    mask: Any,
+    temperatures: Any,
+    normalization_epsilon: float,
+) -> Any:
+    """Run attention with scale-invariant Q/K geometry and unchanged Value path."""
+
+    logits = bounded_cosine_attention_logits(
+        parameters,
+        query,
+        key_value,
+        heads=heads,
+        temperatures=temperatures,
+        normalization_epsilon=normalization_epsilon,
+    )
+    value = _linear(parameters["value"], key_value)
+    width = int(value.shape[-1])
+    head_width = width // int(heads)
+    value = value.reshape(value.shape[:-1] + (heads, head_width)).swapaxes(-3, -2)
+    mask = jnp.asarray(mask, dtype=jnp.bool_)
+    logits = jnp.where(mask[..., None, :, :], logits, -jnp.inf)
+    row_valid = jnp.any(mask, axis=-1, keepdims=True)
+    safe_logits = jnp.where(row_valid[..., None, :, :], logits, 0.0)
+    weights = jax.nn.softmax(safe_logits, axis=-1)
+    weights = jnp.where(mask[..., None, :, :], weights, 0.0)
+    result = jnp.einsum("...hqk,...hkd->...hqd", weights, value)
+    result = result.swapaxes(-3, -2).reshape(result.shape[:-3] + (result.shape[-2], width))
+    return _linear(parameters["output"], result)
+
+
 def _run_gpp_branch(
     specialist: Mapping[str, Any],
     query: Any,
@@ -443,18 +519,36 @@ def _run_gpp_branch(
     *,
     active: Any,
     config: StructuredGPPConfig,
+    attention_temperatures: Any | None = None,
+    attention_normalization_epsilon: float = 1.0e-6,
 ) -> Any:
     encoded = query[:, None, :]
-    for block in blocks:
-        encoded = _layer_norm(
-            encoded
-            + _attention(
+    if attention_temperatures is not None:
+        attention_temperatures = jnp.asarray(attention_temperatures, dtype=jnp.float32)
+        if attention_temperatures.shape != (len(blocks), config.attention_heads):
+            raise ValueError("conditioned GPP attention temperature registry drift")
+    for block_index, block in enumerate(blocks):
+        attention_output = (
+            _attention(
                 block["attention"],
                 encoded,
                 bank,
                 heads=config.attention_heads,
                 mask=bank_mask[:, None, :],
-            ),
+            )
+            if attention_temperatures is None
+            else bounded_cosine_attention(
+                block["attention"],
+                encoded,
+                bank,
+                heads=config.attention_heads,
+                mask=bank_mask[:, None, :],
+                temperatures=attention_temperatures[block_index],
+                normalization_epsilon=attention_normalization_epsilon,
+            )
+        )
+        encoded = _layer_norm(
+            encoded + attention_output,
             block["attention_norm_scale"],
             block["attention_norm_bias"],
         )
@@ -515,6 +609,8 @@ def structured_gpp_factorization(
     config: StructuredGPPConfig = StructuredGPPConfig(),
     query_state: StructuredGPPQueryState | None = None,
     query_residuals: tuple[Any, Any, Any] | None = None,
+    potential_attention_temperatures: Any | None = None,
+    potential_attention_normalization_epsilon: float = 1.0e-6,
 ) -> StructuredGPPFactorization:
     """Expose the existing positive GPP factors without changing their path."""
 
@@ -595,6 +691,8 @@ def structured_gpp_factorization(
         specialist["potential_blocks"],
         active=local_active,
         config=config,
+        attention_temperatures=potential_attention_temperatures,
+        attention_normalization_epsilon=potential_attention_normalization_epsilon,
     )
     limitation_hidden = _run_gpp_branch(
         specialist,
@@ -650,6 +748,8 @@ def structured_gpp_base_response(
     config: StructuredGPPConfig = StructuredGPPConfig(),
     query_state: StructuredGPPQueryState | None = None,
     query_residuals: tuple[Any, Any, Any] | None = None,
+    potential_attention_temperatures: Any | None = None,
+    potential_attention_normalization_epsilon: float = 1.0e-6,
 ) -> Any:
     """Return pre-VCMAX positive daily GPP for every compact PFT."""
 
@@ -665,6 +765,8 @@ def structured_gpp_base_response(
         config=config,
         query_state=query_state,
         query_residuals=query_residuals,
+        potential_attention_temperatures=potential_attention_temperatures,
+        potential_attention_normalization_epsilon=potential_attention_normalization_epsilon,
     ).pre_vcmax_gpp
 
 
@@ -757,6 +859,8 @@ __all__ = [
     "StructuredGPPFactorization",
     "StructuredGPPQueryState",
     "StructuredGPPStateLayout",
+    "bounded_cosine_attention",
+    "bounded_cosine_attention_logits",
     "build_structured_gpp_state_layout",
     "initialize_structured_gpp_parameters",
     "load_structured_gpp_contract",

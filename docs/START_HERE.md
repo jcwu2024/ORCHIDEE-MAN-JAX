@@ -392,11 +392,26 @@ direct GPP by `2.63633%`. No milestone checkpoint exists. A zero-training
 audit then proves that inherited update-1 AdamW moments rotate the update-2
 displacement slightly against direct GPP; no inherited scale passes. Reset
 AdamW is a common descent direction and its full step improves all four
-sources plus the weighted objective. The active gate is a
-fresh-moments-per-macro-update bounded-training amendment and discarded
-consecutive-update free-GPU admission. Fresh-target tuning, paid continuation,
-365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
-See `NEXT_STEPS.md` for the exact current boundary.
+sources plus the weighted objective.
+
+Later bounded transfer work reached two accepted identity-exact artifact-aware
+updates, then stopped before applying update 3 when a sharp Day-5 GPP jump was
+found. Zero-training causal attribution localized that jump to unbounded Q/K
+scale in block-0 potential attention: head 7 switched from litterpart to DOC as
+its maximum logit rose from `8.1263` to `7796.5381`.
+
+The user-approved repair is now implemented locally. It preserves the coupled
+GPP Transformer and normalizes projected Q/K separately per head in the two
+potential blocks, with 16 bounded learnable temperatures and no hard-coded
+head or token. The complete candidate has `109,464,375` parameters and the
+candidate plus parent regression passes all `17` local tests, including full
+loss/gradient, PFT, single-day state, and budget gates.
+
+The active gate is one free-`gln01` zero-update real-v6 admission. It must
+verify that the known jump is reduced to at most `25%` while logits, gradients,
+state, and budgets remain valid. Training, checkpoints, paid execution, fresh
+validation, 365-day rollout, Gate D2, sealed test, and product acceptance
+remain closed. See `NEXT_STEPS.md` for the exact current boundary.
 
 ## New Task Bootstrap
 

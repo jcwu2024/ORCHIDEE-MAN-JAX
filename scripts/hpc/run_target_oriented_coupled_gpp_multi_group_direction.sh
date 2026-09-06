@@ -25,6 +25,8 @@ SNOWHEAT_CAUSAL_RESULT=${SNOWHEAT_CAUSAL_RESULT:-}
 CROSSED_ATTRIBUTION_RESULT=${CROSSED_ATTRIBUTION_RESULT:-}
 STRUCTURED_PRECISION_RESULT=${STRUCTURED_PRECISION_RESULT:-}
 POTENTIAL_INTERNAL_RESULT=${POTENTIAL_INTERNAL_RESULT:-}
+CONDITIONING_CONTRACT=${CONDITIONING_CONTRACT:-}
+HEAD_TOKEN_RESULT=${HEAD_TOKEN_RESULT:-}
 PARENT_DIR=$ROOT/runtime/outputs/training/target-oriented-coupled-gpp-bounded-14903328
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
@@ -109,7 +111,8 @@ if [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_day5_crossed_attribution" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_structured_precision_attribution" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_potential_internal_attribution" || \
-  "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_attention_head_token_attribution" ]]; then
+  "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_attention_head_token_attribution" || \
+  "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_conditioned_attention" ]]; then
   test -n "$ARTIFACT_AWARE_CONTRACT"
   test -n "$MULTI_GROUP_RESULT"
   test -n "$CONTINUITY_CONTRACT"
@@ -136,7 +139,8 @@ if [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_
     "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_day5_crossed_attribution" || \
     "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_structured_precision_attribution" || \
     "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_potential_internal_attribution" || \
-    "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_attention_head_token_attribution" ]]; then
+    "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_attention_head_token_attribution" || \
+    "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_conditioned_attention" ]]; then
     test -n "$PERSISTENT_TRAINING_REPORT"
     test -n "$PERSISTENT_REJECTED_PROPOSAL"
     test -n "$PERSISTENT_ARTIFACT_AWARE_RECOVERY"
@@ -148,6 +152,16 @@ if [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_
       --parent-rejected-proposal "$PERSISTENT_REJECTED_PROPOSAL"
       --parent-artifact-aware-recovery "$PERSISTENT_ARTIFACT_AWARE_RECOVERY"
     )
+    if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_conditioned_attention" ]]; then
+      test -n "$CONDITIONING_CONTRACT"
+      test -n "$HEAD_TOKEN_RESULT"
+      test -f "$CONDITIONING_CONTRACT"
+      test -f "$HEAD_TOKEN_RESULT"
+      EXTRA_AUDIT_ARGS+=(
+        --conditioning-contract "$CONDITIONING_CONTRACT"
+        --head-token-report "$HEAD_TOKEN_RESULT"
+      )
+    fi
     if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_snowheat_causal" || \
       "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_day5_crossed_attribution" || \
       "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_structured_precision_attribution" || \
@@ -214,7 +228,8 @@ elif [[ -n "$ARTIFACT_AWARE_CONTRACT" || -n "$MULTI_GROUP_RESULT" || \
   -n "$PERSISTENT_TRAINING_REPORT" || -n "$PERSISTENT_REJECTED_PROPOSAL" || \
   -n "$PERSISTENT_ARTIFACT_AWARE_RECOVERY" || -n "$LOCALIZED_JUMP_RESULT" || \
   -n "$SNOWHEAT_CAUSAL_RESULT" || -n "$CROSSED_ATTRIBUTION_RESULT" || \
-  -n "$STRUCTURED_PRECISION_RESULT" || -n "$POTENTIAL_INTERNAL_RESULT" ]]; then
+  -n "$STRUCTURED_PRECISION_RESULT" || -n "$POTENTIAL_INTERNAL_RESULT" || \
+  -n "$CONDITIONING_CONTRACT" || -n "$HEAD_TOKEN_RESULT" ]]; then
   exit 2
 fi
 

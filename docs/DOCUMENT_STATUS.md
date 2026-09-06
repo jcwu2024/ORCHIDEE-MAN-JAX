@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-09-05.
+Last updated: 2026-09-06.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -185,7 +185,9 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/target_oriented_coupled_gpp_potential_internal_attribution_v2.md` | Completed corrected internal block/component and activation-precision contract | Reviewing the accepted `11/16 -> 12/16` method |
 | `research/daily_coarse_graining/target_oriented_coupled_gpp_potential_internal_attribution_v2_result_20260905.md` | Current accepted block-0 Q/K and head-7 attention-collapse localization | Designing the active head-slice and source-token causal audit |
 | `research/daily_coarse_graining/target_oriented_coupled_gpp_attention_head_token_attribution_v1.md` | Completed zero-training head-slice and source-token causal-audit contract | Reviewing the frozen causal method |
-| `research/daily_coarse_graining/target_oriented_coupled_gpp_attention_head_token_attribution_result_20260905.md` | Current accepted block-0/head-7/DOC mediation result | Discussing Q/K conditioning control before any architecture implementation |
+| `research/daily_coarse_graining/target_oriented_coupled_gpp_attention_head_token_attribution_result_20260905.md` | Current accepted block-0/head-7/DOC mediation result | Reviewing the causal basis for the conditioned candidate |
+| `research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_v1.md` | Current frozen Q/K-conditioned architecture and zero-update admission contract | Reviewing the mechanism, parameter boundary, or frozen gates |
+| `research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_local_acceptance_20260906.md` | Current accepted local implementation; free real-v6 zero-update admission is next | Reviewing local evidence or preparing the free admission |
 | `research/daily_coarse_graining/target_oriented_update_251_admission_20260825.md` | Accepted exact checkpoint/AdamW handoff, update-251, recovery, and matched free-GPU admission | Preparing or admitting updates 251-1000 |
 | `research/daily_coarse_graining/daily_operator_parameter_routing_v1.md` | Implemented local parameter-ownership boundary used by the successor | Routing physical parameters or planning Gate D2 |
 | `research/daily_coarse_graining/successor_process_head_architecture_options_v1.md` | Historical accepted decision package; its attention/graph pair is not the current successor default | Reviewing the completed early successor comparison |

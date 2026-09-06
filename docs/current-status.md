@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-05.
+Last updated: 2026-09-06.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -1200,10 +1200,29 @@ sufficient (`1.0000001583`) and necessary (`0.9999992086`). Removing DOC only
 from that head leaves lower GPP unchanged and reduces upper GPP from
 `4.8699012434` to `2.7673204964`, capturing the full jump; removing
 litterpart has zero effect. Q-only and K-only are redundantly sufficient, but
-only paired Q+K removal is necessary. The active gate is user discussion of
-a Q/K conditioning-controlled architecture before implementation. Paid
-execution, training, fresh validation, 365-day rollout, Gate D2, sealed test,
-and product acceptance remain closed.
+only paired Q+K removal is necessary.
+
+The user-approved Q/K-conditioned candidate is now frozen and implemented. It
+preserves the Transformer and changes only the two potential-attention layers:
+projected Q/K vectors are independently normalized per 48-coordinate head and
+their cosine score is multiplied by one bounded temperature for each of two
+blocks and eight heads. The 16 new temperatures initialize at `sqrt(48)` and
+remain below `12`. The complete candidate has `109,464,375` parameters, of
+which `15,960,211` belong to the first-stage trainable boundary. It does not
+hard-code head 7 or DOC, and all Value, residual, FFN, factorization,
+conservative-update, and retained-tail paths remain unchanged.
+
+The combined candidate and parent local regression passes `17` tests in
+`804.14` seconds. Forward, complete loss, all temperature and inherited
+potential Q/K/V/output gradients, fixed-reference agreement, non-GPP parent
+identity, PFT behavior, canonical one-day state, and water/carbon budgets pass.
+Ruff, Python compilation, shell syntax, and diff checks also pass. This is
+local implementation evidence only. The active gate is one free-`gln01`
+zero-update real-v6 admission that must reproduce the parent pathology, bound
+logits, reduce its jump to at most `25%`, and pass the real-v6 one-day
+loss/gradient/state/budget checks. Training, checkpoints, paid execution,
+fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
+remain closed.
 See
 [`target_oriented_coupled_gpp_zero_displacement_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_zero_displacement_result_20260904.md),
 [`target_oriented_coupled_gpp_localized_jump_result_20260904.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_localized_jump_result_20260904.md),
@@ -1226,6 +1245,10 @@ the completed head/token contract in
 [`target_oriented_coupled_gpp_attention_head_token_attribution_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_attention_head_token_attribution_v1.md),
 and its accepted result in
 [`target_oriented_coupled_gpp_attention_head_token_attribution_result_20260905.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_attention_head_token_attribution_result_20260905.md).
+The candidate contract and local evidence are in
+[`target_oriented_coupled_gpp_conditioned_attention_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_v1.md)
+and
+[`target_oriented_coupled_gpp_conditioned_attention_local_acceptance_20260906.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_local_acceptance_20260906.md).
 
 The bounded persistent protocol remains recorded in
 [`target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md`](research/daily_coarse_graining/target_oriented_coupled_gpp_artifact_aware_persistent_training_v1.md).

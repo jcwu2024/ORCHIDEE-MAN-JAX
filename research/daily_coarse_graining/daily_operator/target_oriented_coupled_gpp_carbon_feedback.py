@@ -157,9 +157,7 @@ def build_carbon_feedback_state_layout(
     """Derive carbon coordinates and semantic axes from the accepted contracts."""
 
     leaves = tuple(
-        leaf
-        for leaf in markov_contract.state_leaves
-        if not leaf.discrete and leaf.component == CARBON_COMPONENT
+        leaf for leaf in markov_contract.state_leaves if not leaf.discrete and leaf.component == CARBON_COMPONENT
     )
     state_spec = coupled_contract.payload["state_tokenization"]
     expected_fields = int(state_spec["continuous_field_count"])
@@ -185,7 +183,9 @@ def build_carbon_feedback_state_layout(
         size = int(np.prod(shape, dtype=np.int64)) if shape else 1
         if stop - start != size:
             raise ValueError(f"carbon-feedback state slice size drift: {leaf.key}")
-        grid = np.indices(shape, dtype=np.int32).reshape((len(shape), -1)).T if shape else np.zeros((1, 0), dtype=np.int32)
+        grid = (
+            np.indices(shape, dtype=np.int32).reshape((len(shape), -1)).T if shape else np.zeros((1, 0), dtype=np.int32)
+        )
         roles = np.full((size, max_roles), -1, dtype=np.int32)
         positions = np.full((size, max_roles), -1, dtype=np.int32)
         local_role = 0
@@ -244,7 +244,9 @@ def initialize_coupled_gpp_carbon_feedback_parameters(
     expected_parent = int(coupled_contract.payload["architecture"]["parent_candidate_parameter_count"])
     observed_parent = strong_baseline_parameter_count(parent_parameters)
     if observed_parent != expected_parent:
-        raise ValueError(f"coupled GPP/carbon-feedback parent has {observed_parent} parameters; expected {expected_parent}")
+        raise ValueError(
+            f"coupled GPP/carbon-feedback parent has {observed_parent} parameters; expected {expected_parent}"
+        )
     structured = parent_parameters["target_oriented"].get("structured_gpp")
     expected_structured = int(coupled_contract.payload["architecture"]["trainable_structured_gpp_parameter_count"])
     if strong_baseline_parameter_count(structured) != expected_structured:
@@ -263,8 +265,7 @@ def initialize_coupled_gpp_carbon_feedback_parameters(
         "field_embedding": _normal(next(keys), (len(state_layout.field_names), config.width), config.width),
         "axis_role_embedding": _normal(next(keys), (len(state_layout.axis_role_names), config.width), config.width),
         "axis_position_embedding": tuple(
-            _normal(next(keys), (extent, config.width), config.width)
-            for extent in state_layout.axis_role_extents
+            _normal(next(keys), (extent, config.width), config.width) for extent in state_layout.axis_role_extents
         ),
         "query_projection": _linear_parameters(next(keys), config.width, config.width),
         "blocks": tuple(
@@ -276,7 +277,9 @@ def initialize_coupled_gpp_carbon_feedback_parameters(
     expected_adapter = int(coupled_contract.payload["architecture"]["new_adapter_parameter_count"])
     observed_adapter = strong_baseline_parameter_count(adapter)
     if observed_adapter != expected_adapter:
-        raise ValueError(f"coupled GPP/carbon-feedback adapter has {observed_adapter} parameters; expected {expected_adapter}")
+        raise ValueError(
+            f"coupled GPP/carbon-feedback adapter has {observed_adapter} parameters; expected {expected_adapter}"
+        )
 
     parameters = dict(parent_parameters)
     target = dict(parent_parameters["target_oriented"])
@@ -287,7 +290,9 @@ def initialize_coupled_gpp_carbon_feedback_parameters(
     expected_total = int(coupled_contract.payload["architecture"]["candidate_parameter_count"])
     observed_total = strong_baseline_parameter_count(parameters)
     if observed_total != expected_total:
-        raise ValueError(f"coupled GPP/carbon-feedback candidate has {observed_total} parameters; expected {expected_total}")
+        raise ValueError(
+            f"coupled GPP/carbon-feedback candidate has {observed_total} parameters; expected {expected_total}"
+        )
     return parameters
 
 
@@ -378,6 +383,8 @@ def coupled_gpp_carbon_feedback_base_response(
     output_normalization: NeuralOutputNormalization,
     structured_config: StructuredGPPConfig = StructuredGPPConfig(),
     config: CoupledGPPCarbonFeedbackConfig = CoupledGPPCarbonFeedbackConfig(),
+    potential_attention_temperatures: Any | None = None,
+    potential_attention_normalization_epsilon: float = 1.0e-6,
 ) -> Any:
     return coupled_gpp_carbon_feedback_factorization(
         parameters,
@@ -391,6 +398,8 @@ def coupled_gpp_carbon_feedback_base_response(
         output_normalization=output_normalization,
         structured_config=structured_config,
         config=config,
+        potential_attention_temperatures=potential_attention_temperatures,
+        potential_attention_normalization_epsilon=potential_attention_normalization_epsilon,
     ).pre_vcmax_gpp
 
 
@@ -407,6 +416,8 @@ def coupled_gpp_carbon_feedback_factorization(
     output_normalization: NeuralOutputNormalization,
     structured_config: StructuredGPPConfig = StructuredGPPConfig(),
     config: CoupledGPPCarbonFeedbackConfig = CoupledGPPCarbonFeedbackConfig(),
+    potential_attention_temperatures: Any | None = None,
+    potential_attention_normalization_epsilon: float = 1.0e-6,
 ) -> StructuredGPPFactorization:
     """Expose the inherited factorization after carbon-query conditioning."""
 
@@ -440,6 +451,8 @@ def coupled_gpp_carbon_feedback_factorization(
         config=structured_config,
         query_state=query_state,
         query_residuals=residuals,
+        potential_attention_temperatures=potential_attention_temperatures,
+        potential_attention_normalization_epsilon=potential_attention_normalization_epsilon,
     )
 
 
@@ -466,6 +479,8 @@ def target_oriented_coupled_gpp_carbon_feedback_process_outputs(
     source_config: SourceShapedMaintenanceConfig = SourceShapedMaintenanceConfig(),
     structured_config: StructuredGPPConfig = StructuredGPPConfig(),
     config: CoupledGPPCarbonFeedbackConfig = CoupledGPPCarbonFeedbackConfig(),
+    potential_attention_temperatures: Any | None = None,
+    potential_attention_normalization_epsilon: float = 1.0e-6,
 ) -> Mapping[str, Any]:
     """Materialize the parent outputs and replace only GPP with carbon feedback."""
 
@@ -513,6 +528,8 @@ def target_oriented_coupled_gpp_carbon_feedback_process_outputs(
         output_normalization=output_normalization,
         structured_config=structured_config,
         config=config,
+        potential_attention_temperatures=potential_attention_temperatures,
+        potential_attention_normalization_epsilon=potential_attention_normalization_epsilon,
     )
     return apply_fast_parameter_routes(
         outputs,

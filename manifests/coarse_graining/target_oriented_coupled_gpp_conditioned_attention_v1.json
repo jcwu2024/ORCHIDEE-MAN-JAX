@@ -1,0 +1,172 @@
+{
+  "schema_version": "target_oriented_coupled_gpp_conditioned_attention_v1",
+  "status": "frozen_after_user_conditioning_architecture_approval_for_local_implementation_and_zero_update_admission",
+  "contract_sha256": "b9bdd9dde51a8f6f1de2c21cd6678f5a51232011397501459d614b549ca560d4",
+  "identity": {
+    "candidate": "target_oriented_coupled_gpp_conditioned_attention_v1",
+    "parent_candidate": "target_oriented_coupled_gpp_carbon_feedback_attention_v1",
+    "parent_candidate_contract_sha256": "c7f81436ff6ba1179b01adad0f76b47ddd2aab68208e97719c2c5464f3e7e74d",
+    "conditioning_attribution_report_sha256": "2c8a28d82eec1824163a3796a2777716cca8455a42241591bfa9d21478d94836",
+    "source_structured_checkpoint_sha256": "3b173b8980c37b49db3d1547dddad2ab98ec00c733e2f564469490ee382d4ec0",
+    "teacher_release": "pft14-daily-teacher-v6",
+    "learned_field": "daily.fast_gpp"
+  },
+  "mechanism": {
+    "conditioned_parameter_family": "target_oriented.structured_gpp.potential_blocks[*].attention",
+    "conditioned_attention_blocks": 2,
+    "attention_heads": 8,
+    "head_width": 48,
+    "query_key_rule": "independent_per_head_l2_normalization_after_linear_projection",
+    "score_rule": "temperature[block,head] * clip(dot(normalized_query,normalized_key),-1,1)",
+    "normalization_epsilon": 1e-06,
+    "temperature_parameterization": "12*sigmoid(raw_temperature_logit)",
+    "temperature_initial_value": 6.928203230275509,
+    "temperature_maximum": 12.0,
+    "temperature_parameter_count": 16,
+    "unchanged_attention_components": [
+      "query_linear_projection",
+      "key_linear_projection",
+      "value_linear_projection",
+      "value_aggregation",
+      "output_linear_projection",
+      "attention_mask"
+    ],
+    "unchanged_attention_paths": [
+      "structured_gpp.forcing_blocks",
+      "structured_gpp.limitation_blocks",
+      "structured_gpp.correction_blocks",
+      "coupled_gpp_carbon_feedback.blocks"
+    ],
+    "hard_coded_head_or_token_selection": false
+  },
+  "parameter_ownership": {
+    "new_parameter_family": "target_oriented.coupled_gpp_conditioning",
+    "new_parameter_count": 16,
+    "parent_candidate_parameter_count": 109464359,
+    "candidate_parameter_count": 109464375,
+    "candidate_parameter_count_maximum": 120000000,
+    "first_stage_trainable_families": [
+      "target_oriented.structured_gpp",
+      "target_oriented.coupled_gpp_carbon_feedback",
+      "target_oriented.coupled_gpp_conditioning"
+    ],
+    "first_stage_trainable_parameter_count": 15960211,
+    "retained_parent_parameter_count": 93504164
+  },
+  "output_boundary": {
+    "newly_controlled_output": "daily.fast_gpp[compact_pft]",
+    "direct_next_state_output": false,
+    "cross_day_neural_hidden_state": false,
+    "non_gpp_outputs": "bit_identical_to_parent_for_same_day_start_input",
+    "conservative_updater": "unchanged",
+    "retained_exact_stomate_tail": "unchanged",
+    "vcmax25_route": "unchanged_explicit_final_factor",
+    "forbidden_gpp_parameter_inputs": [
+      "maint_resp_slope_a",
+      "maint_resp_slope_b",
+      "maint_resp_slope_c",
+      "alloc_min",
+      "residence_time"
+    ],
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0
+  },
+  "matched_mechanism_reference": {
+    "identity": "target_oriented_coupled_gpp_fixed_temperature_cosine_attention_v1",
+    "shared": [
+      "all_parent_parameters",
+      "query_key_l2_normalization",
+      "attention_value_path",
+      "output_factorization",
+      "process_head_boundary",
+      "objective",
+      "data",
+      "optimizer",
+      "seed"
+    ],
+    "replacement": "per_head_learnable_temperature_is_fixed_at_sqrt_head_width",
+    "candidate_and_reference_initial_forward_match": true,
+    "role": "post_absolute_success_mechanism_attribution_only",
+    "train_if_candidate_fails_absolute_science_gate": false,
+    "relative_win_can_rescue_absolute_failure": false
+  },
+  "local_acceptance": {
+    "contract_and_parameter_count_exact": true,
+    "legacy_parent_forward_unchanged_when_conditioning_absent": true,
+    "initial_candidate_and_fixed_reference_forward_match": true,
+    "finite_eager_and_jit_forward": true,
+    "finite_complete_loss": true,
+    "all_temperature_gradients_finite": true,
+    "at_least_one_temperature_gradient_nonzero_per_potential_block": true,
+    "inherited_potential_query_key_value_and_output_gradients_finite_nonzero": true,
+    "conditioned_logits_absolute_maximum": 12.000001,
+    "non_gpp_outputs_bit_identical_to_parent": true,
+    "inactive_pft_isolation": true,
+    "pft_permutation_equivariance": true,
+    "single_day_state_and_budget_pass": true,
+    "water_and_carbon_budget_absolute_tolerance": 2e-12,
+    "no_half_hour_reconstruction_or_scan": true
+  },
+  "pathological_continuity_gate": {
+    "artifact_update": 550,
+    "runtime_year": 1976,
+    "seven_day_window_index": 3,
+    "day_index": 4,
+    "vegetation_pft_index": 1,
+    "parameter_interval": [
+      0.6875,
+      0.75
+    ],
+    "parent_lower_gpp": 2.7673221604,
+    "parent_upper_gpp": 4.8699012434,
+    "conditioned_jump_fraction_of_parent_maximum": 0.25,
+    "candidate_and_fixed_reference_endpoint_match_rtol": 1e-06,
+    "candidate_and_fixed_reference_endpoint_match_atol": 1e-08,
+    "all_values_finite_and_gpp_nonnegative": true,
+    "purpose": "prove_the_conditioning_mechanism_removes_the_known_qk_scale_instability_before_training"
+  },
+  "bounded_science_gate": {
+    "horizons_days": [
+      7,
+      30
+    ],
+    "required_keys": [
+      "gpp",
+      "maintenance_respiration",
+      "growth_respiration",
+      "autotrophic_respiration",
+      "npp",
+      "aboveground_biomass_carbon",
+      "belowground_biomass_carbon",
+      "total_live_biomass_carbon",
+      "ecosystem_carbon"
+    ],
+    "seven_day_normalized_rmse_maximum": 0.35,
+    "seven_day_absolute_normalized_signed_bias_maximum": 0.1,
+    "thirty_day_normalized_rmse_maximum": 0.25,
+    "thirty_day_absolute_normalized_signed_bias_maximum": 0.07,
+    "hard_failure_count": 0,
+    "absolute_gate_precedes_reference_training": true
+  },
+  "execution": {
+    "local_implementation_and_tests_allowed": true,
+    "free_gln01_zero_update_admission_allowed": true,
+    "optimizer_updates_authorized": 0,
+    "checkpoint_writes_authorized": 0,
+    "paid_training_authorized": false,
+    "teacher_data_regeneration_allowed": false,
+    "historical_v5_allowed": false,
+    "fresh_validation_read_allowed": false,
+    "sealed_test_allowed": false,
+    "forcing_records_reconstructed": 0,
+    "subdaily_state_scan_steps": 0,
+    "365_day_rollout_allowed": false,
+    "gate_d2_allowed": false,
+    "product_acceptance_allowed": false
+  },
+  "next_gate": {
+    "on_local_acceptance": "free_gln01_zero_update_real_v6_and_pathological_continuity_admission",
+    "on_free_admission": "freeze_discarded_one_update_training_preflight",
+    "on_failure": "repair_or_reject_the_conditioning_mechanism_before_any_optimizer_update"
+  }
+}

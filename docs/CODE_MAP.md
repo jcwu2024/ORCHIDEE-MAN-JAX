@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-09-04.
+Last updated: 2026-09-06.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -1004,6 +1004,19 @@ owner-level materiality rule, and two-family effect decomposition.
 owns the complete Day-5 crossed evaluations, matched owner and parameter
 controls, and frozen interpolation paths. Its dedicated wrapper reuses the
 shared free-`gln01` boundary and has no optimizer, checkpoint, or paid path.
+
+`daily_operator/target_oriented_coupled_gpp_conditioned_attention.py` owns the
+16 bounded per-block/head temperature parameters, conditioned trainable-tree
+boundary, fixed-temperature mechanism reference, and continuity classifier.
+The bounded cosine Q/K operation lives in
+`daily_operator/target_oriented_structured_gpp.py`; the existing process-head
+builder in `daily_operator/target_oriented_process_head.py` installs it only
+for the two potential blocks. The frozen machine contract is
+`manifests/coarse_graining/target_oriented_coupled_gpp_conditioned_attention_v1.json`.
+`scripts/hpc/audit_target_oriented_coupled_gpp_conditioned_attention.py` owns
+the real-v6 one-day and known-jump zero-update admission, and its dedicated
+shell wrapper reuses the shared free-`gln01` boundary. It creates no optimizer,
+writes no checkpoint, and has no paid launcher.
 
 ## Scripts
 
