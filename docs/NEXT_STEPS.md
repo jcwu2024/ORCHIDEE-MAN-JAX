@@ -2424,8 +2424,13 @@ seven of eight artifacts agree with finite differences, while 442 predicts
 norm 1097.9 versus about 2 for the other windows; raw float64 accumulation
 does not fix the discrepancy. The completed `2258c18` window audit reproduces
 the reverse derivative -1097.9184, but forward tangent +2.6295 and finite
-difference +2.6274 agree against it. The active task is now identical-scalar
-JVP/VJP/finite differences with rematerialization on/off, as frozen in
+difference +2.6274 agree against it. The identical-scalar remat comparison
+reproduced this discrepancy; the no-remat reverse failed because its temporary
+buffers require 43.12 GiB on a 32 GiB GPU. Do not rerun that configuration.
+The active task is the full 30-day streamed adjoint with one-day derivative
+graphs, using the saved probe direction and total statistics. See
+[`conditioned_attention_streamed_adjoint_20260907.md`](research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md).
+The preceding comparison is recorded in
 [`conditioned_attention_derivative_modes_20260907.md`](research/daily_coarse_graining/conditioned_attention_derivative_modes_20260907.md).
 The prior local-state summary included an undefined NaN and cannot name the
 causal process; its diagnostic mask is corrected without changing the model.

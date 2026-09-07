@@ -1061,6 +1061,12 @@ differences under remat on/off. `run_target_oriented_full_step_preflight.py`
 exposes that scalar without changing its default remat behavior. The diagnostic
 saves a derived probe direction, not parameters or a checkpoint.
 
+`scripts/hpc/audit_conditioned_attention_streamed_adjoint.py` owns the active
+full-horizon streamed adjoint, observation-loss cotangents, one-day JVP/VJP
+duality checks, and source-mapped daily state gradients. It reuses the prior
+probe and existing science/transition functions, checks compiled one-day memory
+before execution, and saves diagnostic arrays without model parameters.
+
 ## Scripts
 
 | Path | Classification | Use |

@@ -1,6 +1,7 @@
 # Conditioned Attention Same-Graph Derivative Modes
 
-Status: frozen bounded diagnostic, no training or architecture change.
+Status: remat comparison complete; whole-window no-remat failed on memory.
+Superseded for current action by the streamed-adjoint diagnostic.
 
 ## Question
 
@@ -57,8 +58,17 @@ handling. The real-window numerical comparison remains pending.
 ## Active Run
 
 Launched at code `2cb51af` on free gln01 GPU 0, actual host `ibc13b02n04`,
-wrapper PID 12150, 90-minute timeout. The last inspection confirmed the process
-alive in bootstrap with no reported exception; no numerical result yet.
+wrapper PID 12150, 90-minute timeout. It failed after 5154.615 seconds when the
+compiled no-remat reverse requested 46,297,116,312 bytes (43.12 GiB) of temporary
+GPU memory, beyond the 32 GiB device. The complete remat scalar still gives
+reverse -1097.9184265 versus JVP +2.6294964 and finite difference +2.6274486.
+The no-remat case produced no derivative. It is not evidence that remat caused
+the sign error. No model parameters changed; the probe direction was saved.
 Check `runtime/outputs/diagnostics/conditioned-derivative-modes-2cb51af.log`
 and `.json` on the server before repeating any computation. The local-only
 handoff documentation commit does not change the running server checkout.
+
+Do not rerun the whole-window no-remat configuration. The next owner is
+`conditioned_attention_streamed_adjoint_20260907.md`. It consumes the saved
+probe without rebuilding the failed window gradient, preserves the complete
+30-day derivative chain, and compiles only a one-day reverse graph.

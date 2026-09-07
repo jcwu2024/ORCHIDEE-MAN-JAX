@@ -68,7 +68,7 @@ def test_actual_shell_module_branch_supplies_required_parser_options():
         'elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_conditioned_attention_persistent_training"'
     )
     branch = shared[start : shared.index("elif [[", start + 8)]
-    assert '"scripts.hpc.audit_conditioned_attention_derivative_modes" ]]; then' in branch
+    assert '"scripts.hpc.audit_conditioned_attention_derivative_modes"' in branch
     command = shared[shared.index('"$PYTHON" -m "$PYTHON_MODULE"') :]
     required = {o for a in audit.window._parser()._actions if a.required for o in a.option_strings}
     assert all(o in branch or o in command for o in required)
