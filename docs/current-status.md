@@ -1267,12 +1267,18 @@ related tests plus all static, CLI, contract, and shell checks. One
 free-`gln01` execution completed at `45ab263` in 3162.530 seconds. Update 3
 was retained; update 4 failed every scale because 30-day loss increased while
 direct GPP, state, and 7-day losses improved. The active gate is the bounded
-artifact-442/window-0 day/state derivative diagnostic. The completed
+artifact-442/window-0 same-graph derivative-mode diagnostic. The completed
 `d9c4bd4` audit reproduces all eight forward loss pairs and all source norms;
 seven artifacts agree with finite differences. Artifact 442 accounts for the
 material mismatch (-0.019983 predicted versus +0.0000907 actual), with its
 first window's gradient norm 1097.9 versus about 2 for the remaining windows.
-Float32 gradient accumulation is not the material cause. See
+Float32 gradient accumulation is not the material cause. Completed window
+audit `2258c18` (3745.513 seconds) gives reverse -1097.9184 versus forward
+tangent +2.6295 and central difference +2.6274. Its local-state summary had an
+unmasked undefined NaN, so no physical process is yet identified. The active
+comparison uses the identical production scalar with remat enabled/disabled;
+see `research/daily_coarse_graining/conditioned_attention_derivative_modes_20260907.md`.
+Previous evidence:
 `research/daily_coarse_graining/conditioned_attention_update4_derivative_20260906.md`;
 paid execution, fresh validation,
 365-day rollout, Gate D2, sealed test, and product acceptance remain closed.

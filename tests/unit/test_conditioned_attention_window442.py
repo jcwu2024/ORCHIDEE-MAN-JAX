@@ -88,7 +88,7 @@ def test_launcher_uses_the_actual_required_parser_branch():
         'elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_conditioned_attention_persistent_training"'
     )
     branch = shared[start : shared.index("elif [[", start + 8)]
-    assert '"scripts.hpc.audit_conditioned_attention_window442" ]]; then' in branch
+    assert '"scripts.hpc.audit_conditioned_attention_window442"' in branch
     command = shared[shared.index('"$PYTHON" -m "$PYTHON_MODULE"') :]
     required = {option for action in audit._parser()._actions if action.required for option in action.option_strings}
     assert all(option in branch or option in command for option in required)
@@ -121,3 +121,13 @@ def test_report_is_not_created_before_inherited_bootstrap(tmp_path, monkeypatch)
     with pytest.raises(RuntimeError, match="bootstrap boundary reached"):
         audit.run(args)
     assert json.loads(args.output.read_text())["status"] == "failed"
+
+
+def test_masked_comparison_excludes_only_declared_undefined_coordinates():
+    row = audit.derivative_comparison([2.0, 0.0], [3.0, np.nan], [1.0, np.nan], 0.5, [1.0, 1.0], defined=[True, False])
+    assert row["excluded_coordinate_count"] == 1
+    assert row["nonfinite_count"] == 0
+    assert row["error_scaled_l2"] == 0
+    assert row["worst_flat_index"] == 0
+    bad = audit.derivative_comparison([2.0, 0.0], [np.nan, 0.0], [1.0, 0.0], 0.5, [1.0, 1.0], defined=[True, False])
+    assert bad["nonfinite_count"] == 1

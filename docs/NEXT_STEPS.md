@@ -2422,9 +2422,14 @@ The completed `d9c4bd4` audit reproduces all source norms and forward losses;
 seven of eight artifacts agree with finite differences, while 442 predicts
 -0.019983 but actually changes by +0.0000907. Its first window has gradient
 norm 1097.9 versus about 2 for the other windows; raw float64 accumulation
-does not fix the discrepancy. Compare the canonical daily forward tangent
-with parameter finite differences, then replay at most three implicated days
-to name the state/process boundary. Do not restart training yet. See
+does not fix the discrepancy. The completed `2258c18` window audit reproduces
+the reverse derivative -1097.9184, but forward tangent +2.6295 and finite
+difference +2.6274 agree against it. The active task is now identical-scalar
+JVP/VJP/finite differences with rematerialization on/off, as frozen in
+[`conditioned_attention_derivative_modes_20260907.md`](research/daily_coarse_graining/conditioned_attention_derivative_modes_20260907.md).
+The prior local-state summary included an undefined NaN and cannot name the
+causal process; its diagnostic mask is corrected without changing the model.
+Do not restart training yet. Prior evidence is in
 [`conditioned_attention_update4_derivative_20260906.md`](research/daily_coarse_graining/conditioned_attention_update4_derivative_20260906.md).
 
 The persistent protocol remains recorded in

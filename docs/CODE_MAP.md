@@ -1055,6 +1055,12 @@ single-window forward-tangent/finite-difference diagnostic and at-most-three-
 day local transition replay. It reuses canonical rollout and retained-tail
 code, keeps the four-window bias totals fixed, and never writes parameters.
 
+`scripts/hpc/audit_conditioned_attention_derivative_modes.py` compares the
+identical production linearized science scalar with JVP, VJP and finite
+differences under remat on/off. `run_target_oriented_full_step_preflight.py`
+exposes that scalar without changing its default remat behavior. The diagnostic
+saves a derived probe direction, not parameters or a checkpoint.
+
 ## Scripts
 
 | Path | Classification | Use |

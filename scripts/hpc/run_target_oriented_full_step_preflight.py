@@ -1009,12 +1009,12 @@ def _make_steps(
             target_contract,
         )
 
-    def window_linear(parameters, batch, total, *, horizon: int):
+    def window_linear(parameters, batch, total, *, horizon: int, rematerialize: bool = True):
         current, _hard = window_statistics(
             parameters,
             batch,
             horizon=horizon,
-            rematerialize=True,
+            rematerialize=rematerialize,
         )
         return linearized_science_window_loss(
             current,
@@ -1193,6 +1193,7 @@ def _make_steps(
         }
 
     result = {
+        "window_linearized_score": window_linear,
         "transition_builder": lambda retained: (
             lambda values, inputs, day_inputs: bind_daily_operator_dynamic_retained_inputs(
                 input_assembler=runtime["adapter"].input_assembler,

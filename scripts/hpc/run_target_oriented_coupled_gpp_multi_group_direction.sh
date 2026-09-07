@@ -132,7 +132,8 @@ if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_conditi
   )
 elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_conditioned_attention_persistent_training" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_update4_derivative" || \
-  "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_window442" ]]; then
+  "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_window442" || \
+  "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_derivative_modes" ]]; then
   for path in "$ARTIFACT_AWARE_CONTRACT" "$MULTI_GROUP_RESULT" "$CONTINUITY_CONTRACT" \
     "$ARTIFACT_AWARE_RESULT" "$ARTIFACT_AWARE_PERSISTENT_CONTRACT" "$CONTINUITY_RESULT" \
     "$PERSISTENT_TRAINING_REPORT" "$PERSISTENT_ARTIFACT_AWARE_RECOVERY" \

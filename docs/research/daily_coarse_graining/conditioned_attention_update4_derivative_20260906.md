@@ -118,8 +118,27 @@ related tests, CLI help, Ruff and both shell syntax checks pass locally.
 
 The corrected free-node run is `conditioned-window442-2258c18`, launched on
 gln01 GPU 0 (actual host `ibc13b02n04`), wrapper PID 74324, with a 90-minute
-timeout. At last inspection it was in bootstrap with its process alive;
-no day/state result was yet available. Inspect
+timeout. It completed in 3745.513 seconds, with zero baseline hard failures. Inspect
 `runtime/outputs/diagnostics/conditioned-window442-2258c18.log` and `.json`
 on the server before launching anything else. The previous failure evidence
 remains in the `conditioned-window442-c4c0a00` report/log.
+
+### Completed Window Evidence
+
+The production reverse norm reproduced (1097.9184269905 in float64 reduction).
+Along its negative unit gradient, reverse predicts -1097.9184263267, while
+the diagnostic forward tangent is +2.6294964322. Central differences are
++2.6385652276 at 1e-4 and +2.6274486304 at 1e-5. Even using actual dtype-rounded
+central displacement, reverse predicts -1097.7443 and -1093.5841 respectively.
+This is a reverse-versus-forward-path sign disagreement, not evidence that
+the model is inherently untrainable. The scalar primals differ by only 1.34e-8.
+
+The local-day state summary has a diagnostic defect: an undefined
+`roughheight_pft` coordinate was not masked, contaminating its norms with NaN.
+Those local-state rankings are not valid process-cause evidence. The full-
+window state comparison was masked, and scalar derivative evidence is finite.
+The diagnostic-only summary now excludes declared undefined coordinates while
+still counting any nonfinite value on a defined coordinate. No model/Teacher
+formula changes are made. Do not rerun the complete day audit merely to fix
+its summary; the next question is the same-graph derivative comparison in
+`conditioned_attention_derivative_modes_20260907.md`.

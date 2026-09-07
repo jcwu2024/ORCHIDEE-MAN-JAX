@@ -42,9 +42,12 @@ def displaced(jax, values, tangent, epsilon):
     )
 
 
-def derivative_comparison(tangent, plus, minus, epsilon, scale):
+def derivative_comparison(tangent, plus, minus, epsilon, scale, *, defined=None):
     tangent = np.asarray(tangent, dtype=np.float64)
-    secant = (np.asarray(plus, dtype=np.float64) - np.asarray(minus, dtype=np.float64)) / (2 * epsilon)
+    plus, minus = np.asarray(plus, dtype=np.float64), np.asarray(minus, dtype=np.float64)
+    mask = np.ones(tangent.shape, dtype=bool) if defined is None else np.broadcast_to(defined, tangent.shape)
+    tangent, plus, minus = (np.where(mask, v, 0.0) for v in (tangent, plus, minus))
+    secant = (plus - minus) / (2 * epsilon)
     scale = np.asarray(scale, dtype=np.float64)
     error = (tangent - secant) / scale
     flat = int(np.argmax(np.abs(error)))
@@ -60,6 +63,7 @@ def derivative_comparison(tangent, plus, minus, epsilon, scale):
         "worst_secant": float(secant.flat[flat]),
         "worst_scaled_error": float(error.flat[flat]),
         "nonfinite_count": int(np.sum(~np.isfinite(tangent)) + np.sum(~np.isfinite(secant))),
+        "excluded_coordinate_count": int(np.sum(~mask)),
     }
 
 
@@ -333,7 +337,9 @@ def run(args):
                 )
                 jax.block_until_ready((plus, minus))
                 d, p, m = jax.device_get((local_derivative, plus, minus))
-                state_row = derivative_comparison(d["state"], p["state"], m["state"], epsilon, state_scale)
+                state_row = derivative_comparison(
+                    d["state"], p["state"], m["state"], epsilon, state_scale, defined=state_mask[day]
+                )
                 state_row["location"] = _state_location(contract, state_row["worst_flat_index"])
                 processes = {
                     k: derivative_comparison(d["process"][k], p["process"][k], m["process"][k], epsilon, 1)
@@ -345,10 +351,14 @@ def run(args):
                 {
                     "day": day + 1,
                     "state_primal_max_error_vs_scan": float(
-                        jnp.max(jnp.abs(local_base["state"] - baseline["state"][day]))
+                        jnp.max(jnp.where(state_mask[day], jnp.abs(local_base["state"] - baseline["state"][day]), 0.0))
                     ),
                     "state_jvp_max_error_vs_scan": float(
-                        jnp.max(jnp.abs(local_derivative["state"] - derivatives["state"][day]))
+                        jnp.max(
+                            jnp.where(
+                                state_mask[day], jnp.abs(local_derivative["state"] - derivatives["state"][day]), 0.0
+                            )
+                        )
                     ),
                     "comparisons": cells,
                 }
