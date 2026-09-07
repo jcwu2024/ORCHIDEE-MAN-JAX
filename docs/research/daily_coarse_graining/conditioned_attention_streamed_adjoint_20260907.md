@@ -66,3 +66,12 @@ parameter precision, forward/reverse/finite-difference agreement, a nonzero
 first-day contribution, memory-limit rejection, undefined-coordinate dot
 products, actual launcher argument coverage, and complete runner orchestration
 with diagnostic serialization. Real-v6 numerical results remain pending.
+
+## Active Run
+
+Code `0056141` is running on free gln01 GPU 0 (actual host `ibc13b02n04`),
+wrapper PID 24933, with a 90-minute timeout. Last check: process alive in
+bootstrap, no exception reported and no numerical result yet. Inspect
+`runtime/outputs/diagnostics/conditioned-streamed-adjoint-0056141.log` and
+`.json` before repeating any computation. This local handoff note does not
+change the server checkout while the diagnostic is running.
