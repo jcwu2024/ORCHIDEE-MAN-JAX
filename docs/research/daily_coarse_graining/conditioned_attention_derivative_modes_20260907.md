@@ -53,3 +53,12 @@ probe serialization, compiled 30-step toy recurrence
 JVP/VJP/finite differences with remat on/off, closure mode binding, actual
 launcher parser coverage, bootstrap output lifecycle, and undefined-mask
 handling. The real-window numerical comparison remains pending.
+
+## Active Run
+
+Launched at code `2cb51af` on free gln01 GPU 0, actual host `ibc13b02n04`,
+wrapper PID 12150, 90-minute timeout. The last inspection confirmed the process
+alive in bootstrap with no reported exception; no numerical result yet.
+Check `runtime/outputs/diagnostics/conditioned-derivative-modes-2cb51af.log`
+and `.json` on the server before repeating any computation. The local-only
+handoff documentation commit does not change the running server checkout.
