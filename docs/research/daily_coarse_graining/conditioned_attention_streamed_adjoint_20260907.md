@@ -112,3 +112,14 @@ updates or checkpoint writes. Local tests include complete saved-trace runner
 execution and assert that it never loads a new artifact or full-rollout evaluator.
 Do not reconnect training until replay differences and actual descent using
 the proposed backward path have been checked.
+
+## Replay Launch
+
+Code `4468c92` passed 22 related local tests, Ruff, shell syntax and whitespace
+checks, and was fast-forwarded to the server using an incremental Git bundle.
+Run `conditioned-daily-replay-4468c92` is active on free gln01 GPU 0 (actual
+host `ibc13b02n04`), wrapper PID 42490, with `RUN_TIMEOUT=60m`. Initialization
+completed in 212.8 seconds; the last observed stage is `replay_forward_2`.
+No numerical replay result is available at this handoff. Inspect remote
+`runtime/outputs/diagnostics/conditioned-daily-replay-4468c92.json` and `.log`
+before any new launch. The server remains at `4468c92` while this run is active.
