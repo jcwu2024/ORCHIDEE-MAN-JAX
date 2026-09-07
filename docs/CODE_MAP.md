@@ -1066,6 +1066,9 @@ full-horizon streamed adjoint, observation-loss cotangents, one-day JVP/VJP
 duality checks, and source-mapped daily state gradients. It reuses the prior
 probe and existing science/transition functions, checks compiled one-day memory
 before execution, and saves diagnostic arrays without model parameters.
+Its optional `--replay-trace` path reuses those arrays for days 2/15/16 only,
+compares forward/JVP/VJP primals with source and scale mapping, and never
+constructs a full-rollout evaluator or loads another training artifact.
 
 ## Scripts
 

@@ -425,8 +425,10 @@ training admission rather than model acceptance.
 The three-update conditioned-Attention smoke retained update 3 and stopped
 at update 4: GPP, state, and 7-day losses improve, but the 30-day loss rises
 despite a predicted decrease. The active gate is a bounded derivative audit
-at the saved update-3 state, comparing reverse/forward primals, gradient
-accumulation precision, and signed finite changes. Paid execution,
+at the saved update-3 state. Full streamed reverse now agrees with forward
+and finite differences on the failing window; narrow saved-trace daily replay
+must identify remaining primal discrepancies before a production repair.
+Model accuracy is unchanged. Paid execution,
 fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
 remain closed. See `NEXT_STEPS.md` for the exact current boundary.
 

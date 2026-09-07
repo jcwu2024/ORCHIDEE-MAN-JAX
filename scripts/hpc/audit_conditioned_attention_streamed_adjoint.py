@@ -59,6 +59,88 @@ def memory_requirement(compiled, limit_bytes):
     return sizes
 
 
+def replay_difference(reference, actual, scale, cotangent, locate):
+    """Finite-coordinate diagnostics, not a replacement for physical defined-mask gates."""
+    reference, actual = np.asarray(reference, dtype=np.float64), np.asarray(actual, dtype=np.float64)
+    scale, cotangent = np.broadcast_arrays(np.asarray(scale), np.asarray(cotangent))
+    finite = np.isfinite(reference) & np.isfinite(actual)
+    delta = np.subtract(actual, reference, out=np.zeros_like(reference), where=finite)
+    normalized = np.divide(delta, scale, out=np.zeros_like(delta), where=finite & (scale > 0))
+    weighted = delta * cotangent
+
+    def top(ranking):
+        indices = np.flatnonzero(finite & (ranking != 0))
+        indices = indices[np.argsort(ranking[indices])[-5:][::-1]]
+        return [
+            dict(
+                locate(int(i)), reference=float(reference[i]), actual=float(actual[i]),
+                delta=float(delta[i]), scale=float(scale[i]), scaled_delta=float(normalized[i]),
+                cotangent_weighted_delta=float(weighted[i]),
+            )
+            for i in indices
+        ]
+
+    return {
+        "mask_policy": "finite_intersection_only_not_physical_acceptance",
+        "finite_mask_changes": int(np.sum(np.isfinite(reference) != np.isfinite(actual))),
+        "nonfinite_active_coordinates": int(np.sum(~finite & (cotangent != 0))),
+        "maximum_absolute_error": float(np.max(np.abs(delta))),
+        "maximum_scaled_error": float(np.max(np.abs(normalized))),
+        "linearized_downstream_effect": float(np.sum(weighted)),
+        "top_absolute": top(np.abs(delta)),
+        "top_scaled": top(np.abs(normalized)),
+        "top_downstream": top(np.abs(weighted)),
+    }
+
+
+def replay_saved_days(jax, jnp, kernels, values, direction, fixed, saved, scale, locate, *, callback=None):
+    emit = callback or (lambda event, data: None)
+    rows = []
+    reverse = None
+    for index in (1, 14, 15):
+        state, day = saved["states"][index], saved["days"][index]
+        incoming = saved["input_tangents"][index]
+        cotangent = jax.tree_util.tree_map(lambda v: v[index], saved["cotangents"])
+        cotangent = dict(cotangent, state=cotangent["state"] + saved["adjoints"][index + 1])
+        canonical = jax.tree_util.tree_map(lambda v: v[index], saved["observations"])
+        emit("replay_forward", {"day": index + 1})
+        forward = kernels["forward"](values, state, fixed, day)
+        primal, tangent = kernels["tangent"](values, state, direction, incoming, fixed, day)
+        jax.block_until_ready((forward, primal, tangent))
+        if reverse is None:
+            emit("replay_reverse_compile", {"day": index + 1})
+            reverse = kernels["reverse"].lower(values, state, fixed, day, cotangent).compile()
+            emit("reverse_memory", memory_requirement(reverse, 24 * 1024**3))
+        reverse_primal, gradient, adjoint = reverse(values, state, fixed, day, cotangent)
+        jax.block_until_ready((reverse_primal, gradient, adjoint))
+        row = {"day": index + 1, "comparisons": {}}
+        for name, a, b in (
+            ("canonical_to_forward", canonical, forward),
+            ("canonical_to_jvp", canonical, primal),
+            ("jvp_to_vjp", primal, reverse_primal),
+            ("forward_to_vjp", forward, reverse_primal),
+        ):
+            row["comparisons"][name] = {
+                "state": replay_difference(a["state"], b["state"], scale, cotangent["state"], locate),
+                "gpp": replay_difference(
+                    np.asarray(a["gpp"]).ravel(), np.asarray(b["gpp"]).ravel(),
+                    np.ones(np.size(a["gpp"])), np.asarray(cotangent["gpp"]).ravel(), lambda i: {"index": i},
+                ),
+                "fraction_maximum_error": float(jnp.max(jnp.abs(a["fraction"] - b["fraction"]))),
+            }
+        row["duality_gap"] = dot(jax, cotangent, tangent) - dot(jax, gradient, direction) - dot(jax, adjoint, incoming)
+        row["parameter_projection"] = dot(jax, gradient, direction)
+        tangent_comparison = replay_difference(
+            saved["tangents"][index]["state"], tangent["state"], scale, cotangent["state"], locate,
+        )
+        row["stored_tangent_maximum_error"] = tangent_comparison["maximum_absolute_error"]
+        row["stored_tangent_nonfinite_active_coordinates"] = tangent_comparison["nonfinite_active_coordinates"]
+        row["stored_adjoint_maximum_error"] = float(jnp.max(jnp.abs(adjoint - saved["adjoints"][index])))
+        rows.append(row)
+        emit("replay_day", row)
+    return rows
+
+
 def streamed_derivatives(
     jax, jnp, kernels, values, direction, fixed, states, days, cotangents, *, callback=None, limit_bytes=24 * 1024**3
 ):
@@ -237,6 +319,33 @@ def run(args):
         jax, jnp = context["runtime"]["jax"], context["runtime"]["jnp"]
         values, fixed = jax.device_put(recovered["trainable"]), bootstrap["fixed_parameters"]
         direction, total = jax.device_put((probe["direction"], probe["total"]))
+        if getattr(args, "replay_trace", None) is not None:
+            report["schema_version"] = "conditioned_attention_daily_replay_v1"
+            report["status"] = "running"
+            report["replay_trace"] = str(args.replay_trace)
+            report["replay_days"] = []
+            save("load_saved_trace")
+            previous = json.loads(args.replay_trace.with_suffix("").with_suffix(".json").read_text())
+            if previous["status"] != "completed" or previous["probe_path"] != str(args.probe):
+                raise ValueError("daily replay requires a completed trace with the same diagnostic probe")
+            with args.replay_trace.open("rb") as stream:
+                saved = jax.device_put(pickle.load(stream))
+
+            def replay_progress(event, data):
+                if event == "replay_day":
+                    report["replay_days"].append(data)
+                if event == "reverse_memory":
+                    report["one_day_reverse_memory"] = data
+                save(f"{event}_{data['day']}" if "day" in data else event)
+
+            replay_saved_days(
+                jax, jnp, make_day_kernels(jax, make_step(bootstrap)), values, direction, fixed, saved,
+                np.asarray(context["scales"].state.other, dtype=np.float64),
+                lambda i: window._state_location(context["runtime"]["contract"], i), callback=replay_progress,
+            )
+            report["status"] = "completed"
+            save("completed")
+            return report
         artifact = window._load_artifact(args, context, 442)
         micro = window._slice(artifact.batch.thirty_day, 0, 1)
         parameters = window.replace_conditioned_coupled_gpp_trainable(fixed, values)
@@ -376,6 +485,7 @@ def run(args):
 def _parser():
     parser = window._parser()
     parser.add_argument("--probe", type=Path, default=PROBE)
+    parser.add_argument("--replay-trace", type=Path, help="Replay days 2/15/16 from a completed streamed trace; no full rollout")
     return parser
 
 

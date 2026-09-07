@@ -2427,8 +2427,12 @@ the reverse derivative -1097.9184, but forward tangent +2.6295 and finite
 difference +2.6274 agree against it. The identical-scalar remat comparison
 reproduced this discrepancy; the no-remat reverse failed because its temporary
 buffers require 43.12 GiB on a 32 GiB GPU. Do not rerun that configuration.
-The active task is the full 30-day streamed adjoint with one-day derivative
-graphs, using the saved probe direction and total statistics. See
+The full 30-day streamed adjoint `0056141` completed in 1722.781 seconds:
+reverse +2.62694, forward +2.62710, and finite differences +2.63857/+2.63083
+agree in sign, with zero baseline hard failures. The next task is to reuse
+its saved trace for days 2/15/16 only, identifying the source/scale of local
+primal differences and comparing JVP/VJP primals before any training repair.
+This does not yet establish the production reverse failure's root cause. See
 [`conditioned_attention_streamed_adjoint_20260907.md`](research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md).
 The preceding comparison is recorded in
 [`conditioned_attention_derivative_modes_20260907.md`](research/daily_coarse_graining/conditioned_attention_derivative_modes_20260907.md).

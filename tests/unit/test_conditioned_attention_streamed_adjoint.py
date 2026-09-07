@@ -106,6 +106,19 @@ def test_zero_cotangent_handles_undefined_constant_but_not_active_nan():
     assert np.isnan(audit.dot(jax, {"x": np.array([2.0, 1.0])}, {"x": np.array([3.0, np.nan])}))
 
 
+def test_replay_difference_separates_absolute_scaled_and_downstream_errors():
+    result = audit.replay_difference(
+        np.array([1e8, 1.0, np.nan, 2.0]), np.array([1e8 + 5, 1.01, np.nan, np.nan]),
+        np.array([1e8, 0.01, 1.0, 1.0]), np.array([0.0, 3.0, 0.0, 2.0]), lambda i: {"index": i},
+    )
+    assert result["top_absolute"][0]["index"] == 0
+    assert result["top_scaled"][0]["index"] == 1
+    assert result["top_downstream"][0]["index"] == 1
+    assert result["linearized_downstream_effect"] == pytest.approx(0.03)
+    assert result["finite_mask_changes"] == 1
+    assert result["nonfinite_active_coordinates"] == 1
+
+
 def test_actual_launcher_branch_supplies_required_options():
     root = Path(__file__).resolve().parents[2]
     shared = (root / "scripts/hpc/run_target_oriented_coupled_gpp_multi_group_direction.sh").read_text()
@@ -114,6 +127,7 @@ def test_actual_launcher_branch_supplies_required_options():
     )
     branch = shared[start : shared.index("elif [[", start + 8)]
     assert '"scripts.hpc.audit_conditioned_attention_streamed_adjoint" ]]; then' in branch
+    assert 'EXTRA_AUDIT_ARGS+=(--replay-trace "$REPLAY_TRACE")' in branch
     command = shared[shared.index('"$PYTHON" -m "$PYTHON_MODULE"') :]
     required = {o for a in audit._parser()._actions if a.required for o in a.option_strings}
     assert all(o in branch or o in command for o in required)
@@ -219,3 +233,19 @@ def test_full_runner_bootstrap_replay_and_diagnostic_output(tmp_path, monkeypatc
     assert result["forward_projection"] == pytest.approx(result["reverse_projection"], rel=1e-12)
     assert result["baseline_score"] == pytest.approx(result["production_score"], rel=1e-12)
     assert args.output.with_suffix(".trace.pkl").exists()
+    args.replay_trace = args.output.with_suffix(".trace.pkl")
+    args.output = tmp_path / "replay.json"
+
+    def forbidden(*a, **kw):
+        raise AssertionError("saved replay must not load artifacts or run a full trajectory")
+
+    monkeypatch.setattr(audit.window, "_load_artifact", forbidden)
+    monkeypatch.setattr(audit.window, "_make_trace_evaluator", forbidden)
+    replay = audit.run(args)
+    assert replay["status"] == "completed"
+    assert [r["day"] for r in replay["replay_days"]] == [2, 15, 16]
+    assert max(abs(r["duality_gap"]) for r in replay["replay_days"]) < 1e-10
+    for row in replay["replay_days"]:
+        assert row["stored_adjoint_maximum_error"] < 1e-10
+        assert row["comparisons"]["jvp_to_vjp"]["state"]["maximum_absolute_error"] < 1e-12
+    assert not args.output.with_suffix(".trace.pkl").exists()

@@ -1,6 +1,7 @@
 # Conditioned Attention Streamed Adjoint
 
-Status: frozen free-node derivative diagnostic. No training or model change.
+Status: full streamed diagnostic completed; narrow daily replay is next.
+No training or model change.
 
 ## Scope And Evidence
 
@@ -65,13 +66,49 @@ parameter-gradient equality with monolithic reverse for float64 and mixed
 parameter precision, forward/reverse/finite-difference agreement, a nonzero
 first-day contribution, memory-limit rejection, undefined-coordinate dot
 products, actual launcher argument coverage, and complete runner orchestration
-with diagnostic serialization. Real-v6 numerical results remain pending.
+with diagnostic serialization. Real-v6 numerical results are below.
 
-## Active Run
+## Completed Result
 
-Code `0056141` is running on free gln01 GPU 0 (actual host `ibc13b02n04`),
-wrapper PID 24933, with a 90-minute timeout. Last check: process alive in
-bootstrap, no exception reported and no numerical result yet. Inspect
-`runtime/outputs/diagnostics/conditioned-streamed-adjoint-0056141.log` and
-`.json` before repeating any computation. This local handoff note does not
-change the server checkout while the diagnostic is running.
+Run `0056141` completed on free gln01 GPU 0 in 1722.781 seconds. Baseline
+hard failures are zero. Full streamed reverse projection is +2.6269377161;
+forward projection is +2.6271017424. Canonical central differences are
++2.6385713650 at 1e-4 and +2.6308308773 at 1e-5, with no defined-mask changes.
+The former production reverse projection -1097.9184 is not reproduced by
+this path. This is derivative evidence, not improved model accuracy or proof
+that remat itself caused the error.
+
+The maximum daily duality gap is 0.000164441 on day 16. The compiled one-day
+reverse estimates 1,609,245,328 bytes (1.50 GiB) for arguments, outputs and
+temporary buffers; this is not measured total process VRAM. All daily state
+gradients are finite. Observation loss 0.0534603538 and production loss
+0.0534604043 are close but not bitwise equal. The largest JVP-primal versus
+canonical state absolute error is 5.5879296 on day 2; its field and scale
+must be identified before interpreting its significance.
+
+Evidence: `outputs/diagnostics/conditioned-streamed-adjoint-0056141.json`
+locally; corresponding `.json`, `.log` and `.trace.pkl` under remote
+`runtime/outputs/diagnostics/`. The trace contains daily states, observations,
+tangents, cotangents and adjoints, not model weights. Accepted update-3
+recovery is unchanged. Access through alias cln01 with HostName
+192.168.11.2 works when 192.168.11.1 times out.
+
+## Narrow Replay
+
+Use the same runner with `--replay-trace` (launcher environment `REPLAY_TRACE`)
+to replay only days 2, 15 and 16. Day 2 has the largest raw state discrepancy;
+day 16 has the largest duality residual; day 15 supplies an adjacent reference.
+Reuse stored carries, direction and future adjoints; do not execute a new
+30-day scan or gradient. Compare standalone forward, JVP primal and VJP primal
+at identical inputs against each other and the stored canonical observations.
+Report state coordinates by absolute, training-scale-normalized and downstream
+cotangent-weighted differences, plus GPP differences and derivative reproduction.
+Finite-intersection summaries are explicitly diagnostic and cannot replace
+physical defined-mask or science acceptance. The weighted difference is a
+linearized effect, not an observed full-rollout loss change.
+
+This remains a free-node diagnostic on one GPU, bounded to 60 minutes, without
+updates or checkpoint writes. Local tests include complete saved-trace runner
+execution and assert that it never loads a new artifact or full-rollout evaluator.
+Do not reconnect training until replay differences and actual descent using
+the proposed backward path have been checked.

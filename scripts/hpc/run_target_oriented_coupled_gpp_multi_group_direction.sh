@@ -159,6 +159,9 @@ elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_conditi
     --conditioned-discarded-update-result "$CONDITIONED_DISCARDED_UPDATE_RESULT"
     --conditioned-persistent-contract "$CONDITIONED_PERSISTENT_CONTRACT"
   )
+  if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_streamed_adjoint" && -n "${REPLAY_TRACE:-}" ]]; then
+    EXTRA_AUDIT_ARGS+=(--replay-trace "$REPLAY_TRACE")
+  fi
 elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_aware_persistent_training" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_zero_displacement" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_localized_jump" || \
