@@ -7,12 +7,36 @@ import time
 
 import numpy as np
 
-from research.daily_coarse_graining.daily_operator.streamed_adjoint import StreamedAdjoint
+from research.daily_coarse_graining.daily_operator.streamed_adjoint import StreamedAdjoint, compact_adjoint_trace
 from scripts.hpc import audit_conditioned_attention_streamed_step as step_audit
 from scripts.hpc import run_target_oriented_coupled_gpp_conditioned_attention_persistent_training as persistent
 
 streamed = step_audit.streamed
 window = step_audit.window
+
+
+def make_compact_trace_evaluator(bootstrap):
+    """Record only adjoint inputs from the unchanged canonical daily rollout."""
+    from research.daily_coarse_graining.daily_operator.successor_training import (
+        rollout_daily_operator,
+        trajectories_from_rollout,
+    )
+
+    context = bootstrap["context"]
+    jax, contract = context["runtime"]["jax"], context["runtime"]["contract"]
+    dynamic = bootstrap["steps"]["transition_builder"](context["template"])
+
+    def evaluate(parameters, micro):
+        templates = jax.tree_util.tree_map(lambda v: v[0], micro.inputs)
+        retained = jax.tree_util.tree_map(lambda v: v[0], micro.day_inputs)
+        trace = rollout_daily_operator(
+            parameters, templates, transition=lambda v, inputs: dynamic(v, inputs, retained),
+            contract=contract, rematerialize=False,
+        )
+        compact = compact_adjoint_trace(trace)
+        return compact, trajectories_from_rollout(compact, contract)
+
+    return jax.jit(evaluate)
 
 
 def make_observation_gradient(bootstrap, horizon):

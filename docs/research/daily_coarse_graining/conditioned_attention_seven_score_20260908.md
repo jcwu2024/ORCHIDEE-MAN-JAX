@@ -1,6 +1,7 @@
 # Seven-Day Observation/Production Score Localization
 
-Status: local qualification passes; free-GPU replay launched at `c530f90`.
+Status: verbose replay `c530f90` completed; compact adjoint-tape check is the
+active bounded follow-up.
 
 Local qualification passes 21 focused and related tests in 45.25 seconds,
 including complete two-window statistics, streamed gradients, finite
@@ -83,4 +84,68 @@ prelaunch check. Server and local execution commit agree; shell syntax and
 Ruff pass. The command is `bash scripts/hpc/audit_conditioned_attention_seven_score.sh`
 from the project root, with `GPU_DEVICE=1` and `RUN_TIMEOUT=45m`.
 The report/log names are `conditioned-seven-score-c530f90.json` / `.log`
-under `runtime/outputs/diagnostics/`. Numerical results are pending.
+under `runtime/outputs/diagnostics/`. The run completed in 1153.55476 seconds;
+wrapper PID `62329` has exited. No weights were retained.
+
+## Completed Verbose Replay
+
+Both compact-trajectory variants give exactly the unchanged production score
+on both selected windows. Separating the compact trajectories from loss
+assembly changes neither score. The verbose-trace score matches the
+observation-gradient score: window 5 differs from production by -1.8336384e-5,
+while window 1 differs by only 9.35990e-10. Counts and masks agree; all recorded
+physical failures are zero. This localizes the discrepancy to the compiled
+rollout/output boundary, not a missing term in observation-loss assembly.
+
+In window 5, differences become pronounced in maintenance respiration on day
+5 (0.00252744), litter carbon on day 6 (0.11424480), and GPP on day 7
+(0.00785883). These are absolute differences between compiled paths, not
+errors against Teacher truth. Day-6 ecosystem-carbon difference is 0.11623933.
+Window 1 maximum GPP difference is 6.51070e-7. This does not yet identify a
+causal physical process or prove a particular compiler pass is responsible.
+
+Directional derivatives remain consistent with actual float32 displacement:
+
+| Window | Step | Production relative derivative error | Observation relative derivative error |
+| ---: | ---: | ---: | ---: |
+| 5 | 1e-4 | 0.013352% | 0.003078% |
+| 5 | 1e-5 | 0.344881% | 0.040946% |
+| 1 | 1e-4 | 0.001202% | 0.000879% |
+| 1 | 1e-5 | 0.023644% | 0.018738% |
+
+All secants and gradient projections have the descent sign; the reverse
+executable compiled once. The checked derivative is credible but scalar
+consistency still has to be restored before full integration admission.
+
+## Compact Adjoint Tape: Fixed Follow-Up
+
+The verbose trace exports the full prediction and fast-update diagnostics.
+The proposed tape exports only complete continuous/discrete recurrent state,
+state-defined masks, daily GPP, and current PFT fractions/active masks. It calls
+the same canonical daily rollout and transition, without changing neural
+weights, precision policy, forcing, process formulas, loss or gradient length.
+This is an output projection for autodiff bookkeeping, not a neural-output
+inventory change or a new architecture. Production training remains unchanged
+until this candidate is admitted.
+
+Run the same two windows, original eight-window totals, and the same two
+finite-difference step sizes with `--trace-mode compact` (`TRACE_MODE=compact`
+through the existing wrapper). Retain the original verbose evaluator only to
+report per-day source-mapped state differences. Existing JSON names beginning
+`verbose_` describe the recorded trace; `trace_mode` identifies which tape was
+used. Compare tape scores with the unchanged production evaluator at the
+existing atol=1e-6, rtol=1e-5; require physical failures zero and directional
+derivative errors <=1% with matching descent signs on both windows/steps.
+These bounds are unchanged from preceding score and derivative checks.
+
+One free gln01 V100, 45-minute limit, zero retained updates and no fixed-monitor
+read. If the compact tape passes, verify all seven previously failing windows
+and the complete original integration before fixed-monitor evaluation. If it
+does not pass, use the recorded state locations to select the next source
+inspection; do not cycle through arbitrary compiler flags or relax tolerances.
+
+Compact-tape local qualification passed 22 focused/related tests in 51.88
+seconds. The compact-mode test exercises the actual canonical rollout scan,
+state input reconstruction boundary, full streamed gradient and finite
+differences, with an auxiliary output excluded from the tape. Ruff and diff
+checks pass.

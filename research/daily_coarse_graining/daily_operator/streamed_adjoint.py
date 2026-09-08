@@ -6,6 +6,41 @@ transition and observation-loss cotangents. It does not define process logic.
 
 from __future__ import annotations
 
+from typing import Any, NamedTuple
+
+
+class AdjointState(NamedTuple):
+    other: Any
+
+
+class AdjointPrediction(NamedTuple):
+    named_outputs: Any
+
+
+class AdjointResult(NamedTuple):
+    next_state: AdjointState
+    next_state_defined: AdjointState
+    next_discrete_state: Any
+    prediction: AdjointPrediction
+
+
+class AdjointTrace(NamedTuple):
+    result: AdjointResult
+    pft_fraction: Any
+    active_pft_mask: Any
+
+
+def compact_adjoint_trace(trace):
+    """Keep the complete recurrent carry and science observations, without auxiliaries."""
+    result = trace.result
+    return AdjointTrace(
+        AdjointResult(
+            AdjointState(result.next_state.other), AdjointState(result.next_state_defined.other),
+            result.next_discrete_state, AdjointPrediction({"daily.fast_gpp": result.prediction.named_outputs["daily.fast_gpp"]}),
+        ),
+        trace.pft_fraction, trace.active_pft_mask,
+    )
+
 
 class StreamedAdjoint:
     """Reuse one reverse executable for equal-shaped windows and parameter trees."""

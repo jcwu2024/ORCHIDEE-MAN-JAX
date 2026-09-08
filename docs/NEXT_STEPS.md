@@ -2456,10 +2456,13 @@ bounded replay is now specified in
 [`conditioned_attention_seven_score_20260908.md`](research/daily_coarse_graining/conditioned_attention_seven_score_20260908.md):
 artifact 322/windows 5 and 1, original eight-window totals, compact/verbose
 trajectory comparisons and directional finite differences, no update.
-Its 21 local tests pass. Free `gln01` GPU 1 replay launched at `c530f90`,
-wrapper PID `62329`, approximately 17:02 CST on 2026-09-08, with a 45-minute
-limit. Read `runtime/outputs/diagnostics/conditioned-seven-score-c530f90.json`
-and `.log` before starting another experiment; numerical results are pending.
+Free `gln01` replay `c530f90` completed in 1153.55476 seconds. Compact
+trajectories reproduce production scores exactly; verbose recording differs.
+Masks/counts agree, and both windows' production finite-difference checks
+agree within 0.345%. The active follow-up is the same two-window test with a
+compact adjoint tape containing full recurrent state and science observations
+only, plus per-day source-mapped state differences. See the fixed follow-up
+section in the above contract. Production training remains unchanged.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See

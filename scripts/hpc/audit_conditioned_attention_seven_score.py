@@ -77,7 +77,28 @@ def make_extractors(bootstrap):
     return jax.jit(compact), jax.jit(statistics)
 
 
-def experiment(bootstrap, values, artifact, *, emit):
+def state_difference_rows(bootstrap, recorded, verbose):
+    left = np.asarray(recorded.result.next_state.other)
+    right = np.asarray(verbose.result.next_state.other)
+    lm = np.asarray(recorded.result.next_state_defined.other)
+    rm = np.asarray(verbose.result.next_state_defined.other)
+    scales = np.asarray(bootstrap["context"]["scales"].state.other)
+    difference = np.where(lm & rm, left - right, 0.0)
+    normalized = np.abs(difference) / np.maximum(scales, 1e-30)
+    contract = bootstrap["context"]["runtime"]["contract"]
+    rows = []
+    for day in range(len(left)):
+        largest = np.argsort(normalized[day])[-3:][::-1]
+        rows.append({"day": day + 1, "mask_mismatches": int(np.sum(lm[day] != rm[day])),
+                     "largest_scaled_differences": [
+                         {**window._state_location(contract, int(i)), "recorded": float(left[day, i]),
+                          "verbose": float(right[day, i]), "scaled_difference": float(normalized[day, i])}
+                         for i in largest
+                     ]})
+    return rows
+
+
+def experiment(bootstrap, values, artifact, *, emit, trace_mode="verbose"):
     jax, jnp = (bootstrap["context"]["runtime"][k] for k in ("jax", "jnp"))
     fixed, basis = bootstrap["fixed_parameters"], bootstrap["flux_basis"]
     parameters = window.replace_conditioned_coupled_gpp_trainable(fixed, values)
@@ -86,8 +107,9 @@ def experiment(bootstrap, values, artifact, *, emit):
     outputs = [forward(parameters, micro) for micro in micros]
     jax.block_until_ready(outputs)
     total = step_audit.merge_statistics([v[0] for v in outputs])
-    report = {"windows": [], "artifact_update": ARTIFACT, "global_statistics_window_count": 8}
-    trace_forward = window._make_trace_evaluator(bootstrap)
+    report = {"windows": [], "artifact_update": ARTIFACT, "global_statistics_window_count": 8, "trace_mode": trace_mode}
+    verbose_forward = window._make_trace_evaluator(bootstrap)
+    trace_forward = integration.make_compact_trace_evaluator(bootstrap) if trace_mode == "compact" else verbose_forward
     compact, statistics = make_extractors(bootstrap)
     score_gradient = integration.make_observation_gradient(bootstrap, 7)
     reverse = integration.StreamedAdjoint(jax, jnp, streamed.make_step(bootstrap))
@@ -116,6 +138,10 @@ def experiment(bootstrap, values, artifact, *, emit):
         row["verbose_vs_production_statistics"] = statistics_rows(verbose_stats, outputs[index][0])
         row["compact_vs_production_statistics"] = statistics_rows(compact_stats, outputs[index][0])
         row["verbose_vs_compact_trajectories"] = trajectory_rows(verbose_predicted, compact_predicted)
+        # Existing score/trajectory key names are retained; trace_mode identifies the recorded path.
+        if trace_mode == "compact":
+            full_trace, _ = verbose_forward(parameters, micro)
+            row["recorded_vs_verbose_states"] = state_difference_rows(bootstrap, trace, full_trace)
         row["trace_pft_fraction"] = np.asarray(trace.pft_fraction).tolist()
         row["trace_active_pft_mask"] = np.asarray(trace.active_pft_mask).tolist()
         row["hard_failure_count"] = sum(
@@ -193,7 +219,7 @@ def run(args):
         emit("load_artifact", {"status": "running", "parent_identity": parent["identity"]})
         artifact = window._load_artifact(args, bootstrap["context"], ARTIFACT)
         jax = bootstrap["context"]["runtime"]["jax"]
-        result = experiment(bootstrap, jax.device_put(recovered["trainable"]), artifact, emit=emit)
+        result = experiment(bootstrap, jax.device_put(recovered["trainable"]), artifact, emit=emit, trace_mode=args.trace_mode)
         emit("completed", {**result, "status": "completed", "classification": "diagnostic_complete_no_model_admission"})
     except Exception as exc:
         emit(report["stage"], {"status": "failed", "error": f"{type(exc).__name__}: {exc}"})
@@ -201,5 +227,11 @@ def run(args):
     return report
 
 
+def _parser():
+    parser = window._parser()
+    parser.add_argument("--trace-mode", choices=("verbose", "compact"), default="verbose")
+    return parser
+
+
 if __name__ == "__main__":
-    run(window._parser().parse_args())
+    run(_parser().parse_args())

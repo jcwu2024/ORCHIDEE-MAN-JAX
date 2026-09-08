@@ -1314,10 +1314,14 @@ Source comparison finds the same extraction and loss formulas. The bounded
 next replay is frozen in `conditioned_attention_seven_score_20260908.md`:
 artifact 322/windows 5 and 1, compact/verbose trajectory statistics and
 directional finite differences with the original eight-window totals.
-The replay passes 21 local tests and is launched on free `gln01` GPU 1 at
-`c530f90` (wrapper PID `62329`, 45-minute limit, approximately 17:02 CST).
-Its report is `runtime/outputs/diagnostics/conditioned-seven-score-c530f90.json`;
-numerical results are pending.
+Replay `c530f90` completed in 1153.55476 seconds. Compact trajectory scores
+match production exactly; verbose scores reproduce the mismatch. Masks/counts
+agree, all physical failures are zero, and directional derivatives agree
+within 0.345% through production on both windows. Window-5 differences become
+pronounced in day-5 maintenance, day-6 litter and day-7 GPP. The active
+follow-up tests compact adjoint recording and source-mapped daily state
+differences, with unchanged loss, tolerances and complete recurrent gradient.
+Its completed report is `runtime/outputs/diagnostics/conditioned-seven-score-c530f90.json`.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;

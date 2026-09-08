@@ -1093,6 +1093,11 @@ production score, verbose-trace observations and compact production
 trajectories for artifact 322/windows 5 and 1. It reuses the exposed
 `window_trajectories` callable, and checks streamed derivatives against actual
 parameter displacements without constructing a monolithic reverse graph.
+Its `--trace-mode compact` follow-up uses `compact_adjoint_trace` and
+`make_compact_trace_evaluator` to export recurrent carry/science observations
+without auxiliary prediction/update diagnostics, and records per-day state
+differences against the verbose path. Default production gradients remain
+unchanged until the bounded candidate passes.
 
 ## Scripts
 
