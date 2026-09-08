@@ -43,6 +43,10 @@ def warm_snow_free_regime(state, forcing, contract, layout):
     Leading axes may represent independent days/windows for label auditing.
     No tolerance turns a real small snowpack into a zero-snow state. Strictly
     warm native endpoints also exclude freezing dew (diffuco_comb).
+    Source: condveg.f90::condveg_frac_snow 872-890;
+    diffuco.f90::diffuco_snow 1216-1275, diffuco_comb 3135-3183;
+    enerbil.f90::enerbil_evapveg 1760; explicitsnow.f90::explicitsnow_fall
+    1198-1266. Thermal reachability additionally enforces our daily head bounds.
     """
     active = jnp.asarray(forcing.record_mask, dtype=bool)
     current = active & ~jnp.asarray(forcing.predecessor_mask, dtype=bool)
@@ -68,6 +72,8 @@ def apply_warm_snow_free_boundary(outputs, inputs, contract, layout):
     Reset tendencies use float64, matching the conservative thermal update.
     They remove the incoming snow thermal derivative within this regime.
     The learned Attention outputs and derivatives are unchanged elsewhere.
+    Source: explicitsnow.f90::explicitsnow_main 222-235,259-315,395-402,459-500,
+    explicitsnow_profile 1681-1690, explicitsnow_melt_refrz 1441-1558.
     """
     state = inputs.canonical_input.continuous_state
     eligible = warm_snow_free_regime(state, inputs.forcing, contract, layout)

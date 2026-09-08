@@ -1,6 +1,7 @@
 # Warm snow-free boundary: bounded repair contract
 
-Status: implementation and zero-training admission in progress. No model promotion.
+Status: bounded forward consistency screen passes; science accuracy is mixed
+with two material regressions. No model or training-gradient promotion.
 
 ## Mechanism and scope
 
@@ -73,3 +74,99 @@ The reference is a causal comparison, not an acceptable scientific baseline.
 A passed forward screen permits the existing streamed/JVP/FD gradient gate
 and broader 40-artifact integration; it does not by itself authorize resumed
 paid training, fixed-monitor promotion, 365-day acceptance or Gate D2.
+
+## Implementation and current evidence
+
+Implementation commit: `e0fd6e3`; prepared-panel path correction: `c882529`.
+The canonical Teacher is unchanged. `MechanisticStrongBaselineProcessHead`
+has a default-off `warm_snow_free_boundary` option inherited by the current
+conditioned Attention head. The correction changes 22 learned output fields,
+adds no parameters, and keeps the existing complete output schema.
+
+Local admission: 10 tests pass in 44.20 seconds, covering the regime selector,
+canonical binding/materialized mirrors, water/carbon budgets, and thermal
+forward/reverse/finite-difference checks. Ruff and `git diff --check` pass.
+The 18 related mechanistic-output/thermal-source tests also pass (259.34 s).
+The real-binding fixture needed the existing valid soil/static fixture values;
+those fixture errors were fixed locally before any GPU execution.
+
+Free `test01` label read completed at `c882529` in seconds. Artifacts 251,
+322 and 442 contain 24 seven-day windows and 12 thirty-day windows: 528 day
+positions (not claimed to be unique). Every position is selected. All nine
+checked Teacher snow endpoint families match the source reference exactly,
+with zero undefined/nonfinite values. There is **no real active-snow coverage**
+in this panel; only synthetic unchanged-output evidence covers those regimes.
+Artifact 1 was initially named but is absent from this prepared manifest;
+the bounded panel was corrected to available artifact 251 before the GPU run.
+Report: `runtime/outputs/diagnostics/conditioned-snow-free-labels-c882529.json`.
+
+The first screen at `c882529` finished the reference 322/5 computation, then
+stopped at 278.52 seconds when its report reducer received `HardCounts`
+instead of a host mapping. The partial JSON preserves that case; it does not
+contain repair-arm evidence. The reducer is corrected and a complete
+screen/report-loop test using the real `HardCounts` type passes at `4d85256`.
+The screen also records all relevant HYDROL snow endpoints and their
+DIFFUCO/ENERBIL mirrors. The paired forward screen completed on free
+`gln01`, GPU 1, at `4d85256` in 1347.72 seconds (22.46 minutes), within the
+45-minute timeout, reusing compilation caches. Report/log stem:
+`runtime/outputs/diagnostics/conditioned-snow-free-rollout-4d85256`.
+No Slurm/paid job, new Teacher labels, training update, or checkpoint was made.
+
+## Paired result and interpretation
+
+All six reference/repair cases completed; `all_repair_forward_gates_pass=true`.
+The repaired paths select all 7/7/30 days, and all 17 checked snow owners and
+mirrors match their source reference exactly. Both arms have zero physical
+hard failures under the existing policy. Declared dynamic-state mask changes
+are recorded separately, not hidden or reclassified: repair counts are 7,
+0 and 29 respectively; unexpected mask changes are zero.
+
+The following is the unchanged, normalized science composite, **not** a
+percentage error in biomass or productivity. Lower is better.
+
+| Train window | Reference | Repair | Change | Recorded minus production, repair |
+| --- | ---: | ---: | ---: | ---: |
+| 322/5, 7 days | 0.160806598 | 0.156316134 | -2.79% | +5.78e-8 |
+| 322/1, 7 days | 0.098416067 | 0.333321197 | +238.69% | -1.94e-8 |
+| 442/0, 30 days | 0.128476724 | 0.248246001 | +93.22% | +1.79e-9 |
+
+Every repaired production/recorded score passes the frozen comparison
+tolerance. Reference 322/5 fails (difference -6.08975e-5). Reference 322/1
+and 442/0 pass scoring consistency but fail the source snow-state check.
+
+GPP normalized MSE changes from 0.988537 to 0.962295, 0.570830 to 1.926283,
+and 0.760815 to 1.470874 respectively. Growth respiration and biomass errors
+also rise in the two regressed windows; nonliving carbon error falls in all
+three. Heterotrophic error is zero in this bounded panel and supplies no
+evidence of learned improvement. Raw primary trajectories and masks remain
+in the JSON for later inspection.
+
+This is evidence that the source correction removes an unphysical recurrent
+state and the observed scoring instability on these windows. It is **not**
+evidence of general gradient correctness or a useful replacement model.
+Existing weights do not preserve their former science scores under the
+corrected transition. Compensation for erroneous states is a possible
+explanation, not an attribution established by this screen. Do not reject
+the source rule solely to recover a weak model's former score, and do not
+claim that retraining is guaranteed to repair the accuracy regression.
+
+## Exact next operation
+
+Keep the accepted recovery at update 3 and this option default off. Before
+any new optimizer update, bind the corrected head on these same three
+windows and compare full streamed one-day-VJP BPTT with JVP and finite
+differences on the existing declared parameter directions and epsilon ladder.
+The local thermal-only AD test does not substitute for that network test.
+Do not compile a whole-30-day no-rematerialization reverse graph again.
+
+Rebuild **all** one-day, direct/state and horizon gradient functions with the
+corrected head. This screen's `with_boundary` helper rebuilds forward steps
+only; its inherited gradient helpers must not be used for corrected training.
+If derivative agreement passes, run the bounded train-only integration and
+discarded-step descent check with corrected forward losses as the starting
+point, while reporting actual GPP/respiration/biomass errors. The scientific
+goal remains the absolute long-horizon targets, not outperforming the old
+incorrect-snow checkpoint. Any retained continuation requires the corrected
+boundary option in its experiment identity and the existing science gates.
+No new architecture, v6 regeneration, paid training, monitor evaluation or
+product promotion is authorized by this forward-screen result alone.

@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-06.
+Last updated: 2026-09-08.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -1349,6 +1349,29 @@ start-plus-decoded-delta checks reproduce all 84 actual retained snow
 endpoints exactly. Canonical state and intervention results are unaffected.
 The diagnostic offset correction has a full-versus-compact shape regression
 test. See the named report for the scientific evidence and next boundaries.
+The next correction is implemented at `e0fd6e3`, default off, under
+`research/daily_coarse_graining/conditioned_attention_snow_free_boundary_20260908.md`.
+It selects exactly snow-free, no-nobio, no-snowfall days with warm native
+temperature endpoints; the warm condition excludes the source's freezing-dew
+snow-creation path. The Attention body/weights and Teacher are unchanged.
+Ten local state/budget/regime/thermal-gradient tests pass. At `c882529`, a
+free-test01 read of 528 existing v6 day positions matches nine snow endpoint
+families exactly (all selected, no real active-snow coverage). The bounded
+zero-update 7/30-day paired screen completed on free gln01 GPU 1 in 1347.72
+seconds, within its 45-minute timeout, report stem
+`conditioned-snow-free-rollout-4d85256`.
+The earlier `c882529` run stopped at report reduction after its first
+reference window (278.52 s); host conversion of `HardCounts` and a complete
+report-loop regression test correct that script error. All 18 related
+mechanistic-output/thermal-source tests also pass.
+All three repaired windows pass snow-state and production/recorded-score
+checks, with no physical hard failure. Science composites change -2.79%,
++238.69% and +93.22%; the latter two GPP/biomass regressions preclude claiming
+an accuracy gain. The next task is actual corrected-network streamed/JVP/FD
+verification, then conditionally a discarded train-only descent check.
+No new weights or gradient default are admitted. The correction remains
+default off, and this forward-only bootstrap must not supply stale original
+gradient helpers to training. No job from this screen remains running.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;

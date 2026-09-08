@@ -2473,13 +2473,23 @@ Same-input one-day execution reproduces the initial snowheat discrepancy;
 snow-only incoming differences reproduce almost all Day-4 amplification.
 An existing-artifact read on free test01 shows both Teacher windows are
 snow-free, with zero snowheat throughout, while the candidate accumulates
-roughly 30--35 million by Day 7. The immediate task is a source-backed
-snow-state consistency correction: audit no-snow/snowfall/melt day-end
-conditions and v6 examples, then freeze and implement the smallest supported
-fix. Do not use Teacher states at inference or assume the enthalpy identity
-holds after HYDROL cleanup without checking ordering. This takes priority
-over precision-only or compiler-layout trials. Recovery remains update 3;
-production training is unchanged.
+roughly 30--35 million by Day 7. The source-backed warm snow-free correction
+is now implemented, default off, with the Attention backbone unchanged.
+Ten local regime/state/budget/thermal-AD tests pass. A free-CPU read of 528
+existing v6 day positions agrees exactly for nine snow endpoint families;
+this panel contains no real active-snow examples. The free-GPU paired 7/30-day
+screen completed at `4d85256` in 1347.72 seconds. All three repaired windows
+have exact source snow states, zero hard failures and passing
+production/recorded scores. Science is mixed: composite changes are -2.79%,
++238.69% and +93.22%; GPP drives the two regressions. This is forward
+consistency admission only, not an accuracy improvement or model promotion.
+See [`conditioned_attention_snow_free_boundary_20260908.md`](research/daily_coarse_graining/conditioned_attention_snow_free_boundary_20260908.md).
+The immediate task is corrected-head streamed/JVP/FD validation on the same
+three windows; rebuild every gradient function with the corrected head first.
+Only after derivative agreement should the bounded train-only integration
+and discarded descent step resume, using corrected starting losses and
+absolute science targets. Do not repeat a whole-30-day no-remat reverse graph.
+Recovery remains update 3; production training is unchanged.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See

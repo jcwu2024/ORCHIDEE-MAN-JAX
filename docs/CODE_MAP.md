@@ -1107,6 +1107,16 @@ perturbations under one executable. It compares state JVPs with finite changes
 on days 2/4/7; it does not alter process formulas or train parameters. Its
 wrapper is bounded to 30 minutes on one free gln01 GPU.
 
+`daily_operator/snow_free_boundary.py` owns the default-off source-backed
+warm snow-free regime and its pre-updater snow output correction.
+`MechanisticStrongBaselineProcessHead.warm_snow_free_boundary` enables it for
+the inherited conditioned Attention head without changing its parameters.
+`scripts/hpc/audit_conditioned_snow_free_labels.py` checks existing labels on
+free CPU; `audit_conditioned_snow_free_rollout.py` compares unchanged update-3
+weights with and without the boundary on three train-only 7/30-day windows.
+Its wrapper permits at most 45 minutes on one free gln01 GPU. The forward
+screen does not rebuild training gradient helpers or retain weights.
+
 ## Scripts
 
 | Path | Classification | Use |

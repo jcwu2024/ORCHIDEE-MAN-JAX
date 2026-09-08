@@ -436,10 +436,13 @@ comparisons differ from production; all 32 thirty-day comparisons pass.
 The following source diagnostic reproduces the initial discrepancy in a
 single day and confirms snow-state recurrence amplifies it. Existing Teacher
 labels show both checked windows are snow-free, while candidate snowheat
-accumulates far outside that support. The active task is source-backed
-snow-state consistency repair before fixed-monitor evaluation or retained
-continuation; see `conditioned_attention_thermal_source_20260908.md` under
-the daily-coarse-graining research documents. Accepted recovery remains update 3;
+accumulates far outside that support. A default-off, source-backed warm
+snow-free boundary is now implemented; 10 local tests and 528 existing-v6
+day positions pass. Its free-GPU 7/30-day screen now passes snow-state and
+scoring consistency, but two of three science scores materially regress.
+The active task is corrected-head gradient validation before any training; see
+`conditioned_attention_snow_free_boundary_20260908.md` under the research
+documents. Accepted recovery remains update 3;
 no new weights were retained and model accuracy is not promoted. Paid execution,
 fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
 remain closed. See `NEXT_STEPS.md` for the exact current boundary.
