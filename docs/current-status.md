@@ -1377,7 +1377,9 @@ The successor corrected-head derivative runner and contract are implemented:
 All helper bindings receive the same corrected head; global bias totals are
 recomputed with that head. Twenty-six targeted local tests pass, including
 the complete mixed-precision three-window derivative/descent/report lifecycle
-and actual HardCounts. Real free-GPU execution is next; recovery stays at 3.
+and actual HardCounts. The free gln01 GPU-1 run is launched at `e6a00b2`,
+report/log stem `conditioned-snow-free-gradient-e6a00b2`; Python bootstrap
+started, real results pending. Its timeout is 60 minutes; recovery stays at 3.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;

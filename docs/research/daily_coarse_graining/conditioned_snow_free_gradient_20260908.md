@@ -1,7 +1,7 @@
 # Corrected snow-free head: bounded network-gradient gate
 
-Status: frozen before execution; implementation and local qualification passed;
-free-GPU execution is next.
+Status: implementation and local qualification passed; free-GPU run launched
+at `e6a00b2`, result pending.
 
 The preceding forward screen passes snow-state and score consistency, but
 science regresses in two windows. This gate establishes whether the corrected
@@ -76,3 +76,20 @@ bindings receive the identical corrected head, while the default stays off.
 Launcher required arguments, Ruff and `git diff --check` pass. An initial toy
 fixture incorrectly put a horizon axis on constant retained inputs; it was
 corrected to the actual prepared-batch layout before GPU execution.
+
+## Execution handoff
+
+Launched on free gln01 GPU 1 (host `ibc13b02n04`, V100 32 GB), after both
+devices reported 0 MiB and 0% utilization. Local and remote execution commit:
+`e6a00b20a24088f137bb02fc604f71964f68cac8`. Remote shell syntax passed.
+The detached wrapper reached Python `stage=bootstrap`; no sbatch was used.
+
+Output stem under remote `runtime/outputs/diagnostics/`:
+`conditioned-snow-free-gradient-e6a00b2` (`.log` and incremental `.json`).
+Command: `GPU_DEVICE=1 EXPECTED_GIT_HEAD=e6a00b20a24088f137bb02fc604f71964f68cac8
+OUTPUT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/conditioned-snow-free-gradient-e6a00b2.json
+bash scripts/hpc/audit_conditioned_snow_free_gradient.sh`.
+Working directory is `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`; timeout 60m.
+Inspect this run before any restart. A completed process alone is insufficient:
+read `passed`, each case, all pair comparisons and actual loss changes. If a
+timeout interrupts incremental JSON, its partial cases are not full admission.

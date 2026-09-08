@@ -2496,6 +2496,10 @@ tests). Its frozen gate is
 one free GPU, 60-minute maximum, three windows, two perturbation magnitudes,
 full reverse/JVP/finite-difference agreement and actual diagnostic descent.
 No checkpoint or paid training is authorized by this derivative gate.
+The free gln01 GPU-1 run is launched at `e6a00b2`, output stem
+`runtime/outputs/diagnostics/conditioned-snow-free-gradient-e6a00b2`.
+Inspect its log/incremental JSON before doing any further execution; results
+are pending and no derivative gate is yet promoted.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See
