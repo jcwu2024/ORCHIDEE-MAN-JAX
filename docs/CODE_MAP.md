@@ -1088,6 +1088,12 @@ observation-score comparisons. The immediate diagnostic boundary is between
 its `make_observation_gradient`, the canonical trace extractor and production
 science sufficient statistics; no new architecture is being introduced.
 
+`scripts/hpc/audit_conditioned_attention_seven_score.py` compares the unchanged
+production score, verbose-trace observations and compact production
+trajectories for artifact 322/windows 5 and 1. It reuses the exposed
+`window_trajectories` callable, and checks streamed derivatives against actual
+parameter displacements without constructing a monolithic reverse graph.
+
 ## Scripts
 
 | Path | Classification | Use |

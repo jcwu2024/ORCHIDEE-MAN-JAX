@@ -1193,6 +1193,7 @@ def _make_steps(
         }
 
     result = {
+        "window_trajectories": window_trajectories,
         "window_linearized_score": window_linear,
         "transition_builder": lambda retained: (
             lambda values, inputs, day_inputs: bind_daily_operator_dynamic_retained_inputs(

@@ -1310,6 +1310,10 @@ statistics before changing code. No tolerance relaxation, new architecture,
 fixed-monitor read or retained continuation is implied. Accepted recovery
 remains update 3. Absolute GPP/NPP/growth/total-respiration gates remain open.
 The partial local SCP copy must not be used as complete evidence.
+Source comparison finds the same extraction and loss formulas. The bounded
+next replay is frozen in `conditioned_attention_seven_score_20260908.md`:
+artifact 322/windows 5 and 1, compact/verbose trajectory statistics and
+directional finite differences with the original eight-window totals.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;

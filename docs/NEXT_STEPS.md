@@ -2451,6 +2451,11 @@ remote report is
 Do not restart the completed run or use the partial local SCP copy. Start
 with source comparison and, if needed, a focused zero-update replay of a
 failing and a passing seven-day window. Accepted recovery remains update 3.
+Source comparison found the same extraction and loss formulas. The active
+bounded replay is now specified in
+[`conditioned_attention_seven_score_20260908.md`](research/daily_coarse_graining/conditioned_attention_seven_score_20260908.md):
+artifact 322/windows 5 and 1, original eight-window totals, compact/verbose
+trajectory comparisons and directional finite differences, no update.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See
