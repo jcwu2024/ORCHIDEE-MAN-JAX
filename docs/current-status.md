@@ -1372,6 +1372,12 @@ verification, then conditionally a discarded train-only descent check.
 No new weights or gradient default are admitted. The correction remains
 default off, and this forward-only bootstrap must not supply stale original
 gradient helpers to training. No job from this screen remains running.
+The successor corrected-head derivative runner and contract are implemented:
+`research/daily_coarse_graining/conditioned_snow_free_gradient_20260908.md`.
+All helper bindings receive the same corrected head; global bias totals are
+recomputed with that head. Twenty-six targeted local tests pass, including
+the complete mixed-precision three-window derivative/descent/report lifecycle
+and actual HardCounts. Real free-GPU execution is next; recovery stays at 3.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;

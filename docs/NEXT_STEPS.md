@@ -2490,6 +2490,12 @@ Only after derivative agreement should the bounded train-only integration
 and discarded descent step resume, using corrected starting losses and
 absolute science targets. Do not repeat a whole-30-day no-remat reverse graph.
 Recovery remains update 3; production training is unchanged.
+The corrected-head runner is implemented and locally qualified (26 targeted
+tests). Its frozen gate is
+[`conditioned_snow_free_gradient_20260908.md`](research/daily_coarse_graining/conditioned_snow_free_gradient_20260908.md):
+one free GPU, 60-minute maximum, three windows, two perturbation magnitudes,
+full reverse/JVP/finite-difference agreement and actual diagnostic descent.
+No checkpoint or paid training is authorized by this derivative gate.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See

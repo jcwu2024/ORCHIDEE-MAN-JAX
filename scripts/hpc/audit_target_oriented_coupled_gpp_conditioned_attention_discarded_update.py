@@ -5,6 +5,7 @@ from __future__ import annotations
 import gc
 import json
 import time
+from dataclasses import replace
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -191,6 +192,7 @@ def _conditioned_bootstrap(
     *,
     recovered: Mapping[str, Any],
     conditioning_contract: Any,
+    warm_snow_free_boundary: bool = False,
 ) -> Mapping[str, Any]:
     from research.daily_coarse_graining.daily_operator.target_oriented_process_head import (
         build_target_oriented_coupled_gpp_conditioned_attention_head,
@@ -206,6 +208,9 @@ def _conditioned_bootstrap(
         bootstrap["head"],
         conditioning_contract=conditioning_contract,
     )
+    if warm_snow_free_boundary:
+        # Set the physical boundary before binding any forward/gradient helper.
+        head = replace(head, warm_snow_free_boundary=True)
     parameters = initialize_coupled_gpp_conditioned_attention_parameters(
         parent_parameters,
         conditioning_contract=conditioning_contract,

@@ -1117,6 +1117,12 @@ weights with and without the boundary on three train-only 7/30-day windows.
 Its wrapper permits at most 45 minutes on one free gln01 GPU. The forward
 screen does not rebuild training gradient helpers or retain weights.
 
+`scripts/hpc/audit_conditioned_snow_free_gradient.py` rebuilds all helper
+bindings with the corrected head before comparing full streamed reverse,
+daily JVP and rounded finite differences on the same three windows. Corrected
+panel totals replace historical probe totals. Its free-GPU wrapper has a
+60-minute limit; it writes diagnostics only and retains no parameter updates.
+
 ## Scripts
 
 | Path | Classification | Use |

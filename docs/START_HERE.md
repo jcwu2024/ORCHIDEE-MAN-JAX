@@ -440,8 +440,9 @@ accumulates far outside that support. A default-off, source-backed warm
 snow-free boundary is now implemented; 10 local tests and 528 existing-v6
 day positions pass. Its free-GPU 7/30-day screen now passes snow-state and
 scoring consistency, but two of three science scores materially regress.
-The active task is corrected-head gradient validation before any training; see
-`conditioned_attention_snow_free_boundary_20260908.md` under the research
+The active task is corrected-head gradient validation before any training;
+its runner passes 26 local tests. See
+`conditioned_snow_free_gradient_20260908.md` under the research
 documents. Accepted recovery remains update 3;
 no new weights were retained and model accuracy is not promoted. Paid execution,
 fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
