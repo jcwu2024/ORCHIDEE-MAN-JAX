@@ -428,10 +428,14 @@ despite a predicted decrease. The active gate is a bounded derivative audit
 at the saved update-3 state. Full streamed reverse now agrees with forward
 and finite differences on the failing window. Narrow daily replay found small
 GPP and downstream linearized differences. The discarded four-window step
-passed: predicted and actual descent agree. The active gate is the original
-40-artifact update-4 train-only proposal with streamed 7/30-day gradients,
-unchanged direct/state gradients, and no retained update or fixed-monitor read.
-Model accuracy is unchanged. Paid execution,
+passed: predicted and actual descent agree. The original 40-artifact update-4
+integration then completed in 2131.8 seconds. Its actual train-only update
+passes at the first scale, improving direct GPP, state and 7/30-day losses.
+Overall integration is not admitted because seven seven-day observation-score
+comparisons differ from production; all 32 thirty-day comparisons pass.
+The active task is to locate those seven differences before fixed-monitor
+evaluation or retained continuation. Accepted recovery remains update 3;
+no new weights were retained and model accuracy is not promoted. Paid execution,
 fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
 remain closed. See `NEXT_STEPS.md` for the exact current boundary.
 

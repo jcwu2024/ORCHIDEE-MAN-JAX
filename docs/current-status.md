@@ -1266,8 +1266,9 @@ absolute promotion gate is unchanged. Local/static qualification passes 57
 related tests plus all static, CLI, contract, and shell checks. One
 free-`gln01` execution completed at `45ab263` in 3162.530 seconds. Update 3
 was retained; update 4 failed every scale because 30-day loss increased while
-direct GPP, state, and 7-day losses improved. The active gate is the bounded
-original 40-artifact update-4 integration with streamed horizon gradients. The completed
+direct GPP, state, and 7-day losses improved. The subsequent original-panel
+streamed integration completed; its remaining seven-day score discrepancy is
+the active gate, as detailed below. The completed
 `d9c4bd4` audit reproduces all eight forward loss pairs and all source norms;
 seven artifacts agree with finite differences. Artifact 442 accounts for the
 material mismatch (-0.019983 predicted versus +0.0000907 actual), with its
@@ -1289,16 +1290,27 @@ difference 5.376e-7, and downstream linearized effects about 1e-9 to 1e-8.
 Four-window discarded step `c726446` passed in 890.713 seconds. At norm 1e-4,
 predicted change -0.000882413 matches actual -0.000882278; both magnitudes
 improve all four windows, derivative errors are below 0.15%, and all hard
-counts are zero. The active task is the original 40-artifact update-4 proposal
-with only its 7/30-day gradient callbacks replaced by full streamed backward.
-All original train-only gates remain, and weights are discarded. Root cause
+counts are zero. The original 40-artifact update-4 proposal with only its
+7/30-day gradient callbacks replaced by full streamed backward has completed.
+All original train-only gates pass at scale 1, and weights are discarded. Root cause
 and general repair validity remain unproven; no model accuracy promotion.
 The active contract is
 `research/daily_coarse_graining/conditioned_attention_streamed_integration_20260908.md`;
-25 local tests pass, and the real-data integration is running on free `gln01`
-GPU 1 at `1e6c521` (wrapper PID `39230`, 120-minute limit). Its report is
+25 local tests pass. Free `gln01` integration `1e6c521` completed in 2131.7955
+seconds; wrapper PID `39230` has exited. Its complete remote report is
 `runtime/outputs/diagnostics/conditioned-streamed-integration-1e6c521.json`.
-the completed preceding check is
+All 40 direct-GPP artifacts improve (mean loss -0.95028%); scheduled state,
+seven-day and thirty-day losses decrease 0.64089%, 0.64699% and 0.52441%.
+Physical gates pass, but overall admission is false: seven of 64 seven-day
+observation-score comparisons fail; all 32 thirty-day comparisons pass. The
+largest difference is 1.83363843567e-5 at zero-based seven-day ordinal 37.
+The active next task is source-level comparison and a bounded failing/passing
+window replay if needed, tracing masks, fractions, trajectories and science
+statistics before changing code. No tolerance relaxation, new architecture,
+fixed-monitor read or retained continuation is implied. Accepted recovery
+remains update 3. Absolute GPP/NPP/growth/total-respiration gates remain open.
+The partial local SCP copy must not be used as complete evidence.
+The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;
 the preceding result is in `research/daily_coarse_graining/conditioned_attention_derivative_modes_20260907.md`.

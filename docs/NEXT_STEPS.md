@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-09-06.
+Last updated: 2026-09-08.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -2435,15 +2435,22 @@ relative; GPP differences are at most 5.376e-7 and downstream linearized effects
 about 1e-9 to 1e-8. Discarded four-window step `c726446` passed in 890.713
 seconds: predicted/actual changes -0.000882413/-0.000882278 at norm 1e-4,
 both step magnitudes descend in all windows, and derivative errors are below
-0.15%. The active task is a discarded update-4 integration on its original
-40-artifact panel, substituting only streamed 7/30-day gradients. Keep all
-43 constraints, scale and science gates unchanged; no recovery write or
-fixed-monitor read. See
+0.15%. The discarded original-panel update-4 integration has now completed.
+Its actual training-side update passes at scale 1, with direct GPP, state,
+seven-day and thirty-day losses all decreasing. Overall integration is not
+admitted: seven of 64 seven-day observation-score comparisons fail; all 32
+thirty-day comparisons pass. The active task is to locate those seven
+differences, keeping the architecture, loss and tolerances unchanged, before
+any fixed-monitor check or retained update. See the result and bounded next
+diagnostic plan in
 [`conditioned_attention_streamed_integration_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_integration_20260908.md).
-Local qualification passed 25 tests. Free `gln01` GPU 1 execution is running
-at `1e6c521`, wrapper PID `39230`, with a 120-minute bound; inspect its
-`runtime/outputs/diagnostics/conditioned-streamed-integration-1e6c521.json`
-and `.log` before starting any further experiment.
+Local qualification passed 25 tests. Free `gln01` execution at `1e6c521`
+completed in 2131.7955 seconds; wrapper PID `39230` has exited. The complete
+remote report is
+`runtime/outputs/diagnostics/conditioned-streamed-integration-1e6c521.json`.
+Do not restart the completed run or use the partial local SCP copy. Start
+with source comparison and, if needed, a focused zero-update replay of a
+failing and a passing seven-day window. Accepted recovery remains update 3.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See

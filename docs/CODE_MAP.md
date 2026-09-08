@@ -1083,6 +1083,10 @@ dynamic-target observation gradients and streamed seven/thirty-day callbacks
 to the existing `_train_only_update` function. It tests the original update-4
 40-artifact panel without invoking monitor or persistence paths. It caches the
 heavy reverse graph and horizon-specific observation-loss graphs across data.
+Its `1e6c521` run passes actual train-only descent but fails seven seven-day
+observation-score comparisons. The immediate diagnostic boundary is between
+its `make_observation_gradient`, the canonical trace extractor and production
+science sufficient statistics; no new architecture is being introduced.
 
 ## Scripts
 
