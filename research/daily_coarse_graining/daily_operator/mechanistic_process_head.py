@@ -131,6 +131,7 @@ class MechanisticStrongBaselineProcessHead:
     forcing_indices: Mapping[str, int]
     message_gate_scale: float = 1.0
     config: StrongBaselineConfig = StrongBaselineConfig()
+    warm_snow_free_boundary: bool = False
     _named_output_adapter: NeuralProcessHead = field(init=False, repr=False)
     _reconstructor: DailyBoundaryReconstructor = field(init=False, repr=False)
 
@@ -227,6 +228,12 @@ class MechanisticStrongBaselineProcessHead:
     ) -> ProcessPrediction:
         """Apply the approved mechanism to already-decoded learned coordinates."""
 
+        if self.warm_snow_free_boundary:
+            from .snow_free_boundary import apply_warm_snow_free_boundary
+
+            learned_outputs = apply_warm_snow_free_boundary(
+                learned_outputs, inputs, self.contract, self.forcing_layout,
+            )
         primitive, auxiliary = self._reconstructor.pre_update_outputs(
             learned_outputs,
             inputs,

@@ -138,6 +138,7 @@ elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_conditi
   "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_streamed_integration" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_seven_score" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_thermal_source" || \
+  "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_snow_free_rollout" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_streamed_adjoint" ]]; then
   for path in "$ARTIFACT_AWARE_CONTRACT" "$MULTI_GROUP_RESULT" "$CONTINUITY_CONTRACT" \
     "$ARTIFACT_AWARE_RESULT" "$ARTIFACT_AWARE_PERSISTENT_CONTRACT" "$CONTINUITY_RESULT" \
