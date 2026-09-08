@@ -185,7 +185,8 @@ def run(args):
         window._atomic_json(args.output, report)
         print(f"thermal_source stage={stage} elapsed={report['elapsed_seconds']:.1f}s", flush=True)
 
-    emit("bootstrap", {})
+    # The reused initializer owns creation of args.output; log before it runs.
+    print("thermal_source stage=bootstrap", flush=True)
     try:
         parent = json.loads((args.conditioned_run_dir / "report.json").read_text())
         recovered = window.load_recovery(args.conditioned_run_dir / "recovery.pkl", identity=parent["identity"],

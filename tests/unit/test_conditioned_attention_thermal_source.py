@@ -85,3 +85,27 @@ def test_launcher_delivers_all_required_parser_arguments():
     wrapper = (root / "scripts/hpc/audit_conditioned_attention_thermal_source.sh").read_text()
     assert "RUN_TIMEOUT=${RUN_TIMEOUT:-30m}" in wrapper
     assert "sbatch" not in wrapper
+
+
+def test_runner_does_not_precreate_initializer_output(tmp_path, monkeypatch):
+    parent = tmp_path / "parent"
+    parent.mkdir()
+    (parent / "report.json").write_text('{"identity": {}}')
+    contract = tmp_path / "contract.json"
+    contract.write_text('{"contract_sha256": "fixture"}')
+    args = NS(conditioned_run_dir=parent, output=tmp_path / "result.json",
+              parent_persistent_training_report=None, parent_artifact_aware_recovery=None,
+              artifact_aware_persistent_contract=contract, conditioning_contract=None)
+    monkeypatch.setattr(audit.window, "load_recovery", lambda *a, **kw: {"completed_logical_update": 3, "trainable": {}})
+    monkeypatch.setattr(audit.window, "_load_parent_state", lambda *a, **kw: ({}, {}))
+    monkeypatch.setattr(audit.window, "load_coupled_gpp_conditioned_attention_contract", lambda *a: None)
+
+    def bootstrap(*a, **kw):
+        assert not args.output.exists()
+        return {"context": {"runtime": {"jax": jax}}}
+
+    monkeypatch.setattr(audit.window, "_conditioned_bootstrap", bootstrap)
+    monkeypatch.setattr(audit.window, "_load_artifact", lambda *a: None)
+    monkeypatch.setattr(audit, "experiment", lambda *a, **kw: {"windows": []})
+    assert audit.run(args)["status"] == "completed"
+    assert json.loads(args.output.read_text())["status"] == "completed"
