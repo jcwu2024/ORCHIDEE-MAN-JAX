@@ -1,7 +1,7 @@
 # Seven-Day Observation/Production Score Localization
 
-Status: verbose replay `c530f90` completed; compact adjoint-tape check is the
-active bounded follow-up.
+Status: verbose replay `c530f90` completed; compact adjoint-tape replay is
+running at `d31e93c`.
 
 Local qualification passes 21 focused and related tests in 45.25 seconds,
 including complete two-window statistics, streamed gradients, finite
@@ -149,3 +149,11 @@ seconds. The compact-mode test exercises the actual canonical rollout scan,
 state input reconstruction boundary, full streamed gradient and finite
 differences, with an auxiliary output excluded from the tape. Ruff and diff
 checks pass.
+
+The compact replay launched at approximately 19:48 CST on 2026-09-08 on
+free `gln01` GPU 1, wrapper PID `74821`, commit
+`d31e93c03a38bec1b87ac3e216bf16da2b8c35ec`. Both cards were idle before launch.
+The same shell command uses `TRACE_MODE=compact`, `GPU_DEVICE=1`, and
+`RUN_TIMEOUT=45m`. Output is
+`runtime/outputs/diagnostics/conditioned-compact-tape-d31e93c.json` / `.log`.
+Numerical outcome is pending; no retained update or paid job was started.

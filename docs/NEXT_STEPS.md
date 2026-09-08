@@ -2463,6 +2463,11 @@ agree within 0.345%. The active follow-up is the same two-window test with a
 compact adjoint tape containing full recurrent state and science observations
 only, plus per-day source-mapped state differences. See the fixed follow-up
 section in the above contract. Production training remains unchanged.
+The compact follow-up passes 22 local tests and is running at `d31e93c` on
+free `gln01` GPU 1 (wrapper PID `74821`, 45-minute bound, launched about
+19:48 CST on 2026-09-08). Inspect
+`runtime/outputs/diagnostics/conditioned-compact-tape-d31e93c.json` and `.log`
+before any further run. Numerical outcome is pending.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See

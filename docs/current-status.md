@@ -1322,6 +1322,9 @@ pronounced in day-5 maintenance, day-6 litter and day-7 GPP. The active
 follow-up tests compact adjoint recording and source-mapped daily state
 differences, with unchanged loss, tolerances and complete recurrent gradient.
 Its completed report is `runtime/outputs/diagnostics/conditioned-seven-score-c530f90.json`.
+Compact-tape replay `d31e93c` passed 22 local tests and launched on free
+`gln01` GPU 1 (PID `74821`, 45-minute limit, approximately 19:48 CST).
+The pending report is `runtime/outputs/diagnostics/conditioned-compact-tape-d31e93c.json`.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;
