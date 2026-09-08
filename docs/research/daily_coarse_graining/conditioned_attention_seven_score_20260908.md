@@ -156,4 +156,9 @@ free `gln01` GPU 1, wrapper PID `74821`, commit
 The same shell command uses `TRACE_MODE=compact`, `GPU_DEVICE=1`, and
 `RUN_TIMEOUT=45m`. Output is
 `runtime/outputs/diagnostics/conditioned-compact-tape-d31e93c.json` / `.log`.
-Numerical outcome is pending; no retained update or paid job was started.
+The run completed in 615.589 seconds and is not admitted. Window 5's score
+gap remains -7.37018197e-6; production/observation derivative errors at 1e-5
+are 1.258%/1.828%, above 1%. Window 1 passes and all physical failures are
+zero. No retained update or paid job was started. The first state differences
+include Day-1 snowheat; source inspection and the next bounded diagnosis are
+recorded in `conditioned_attention_thermal_source_20260908.md`.

@@ -2463,11 +2463,15 @@ agree within 0.345%. The active follow-up is the same two-window test with a
 compact adjoint tape containing full recurrent state and science observations
 only, plus per-day source-mapped state differences. See the fixed follow-up
 section in the above contract. Production training remains unchanged.
-The compact follow-up passes 22 local tests and is running at `d31e93c` on
-free `gln01` GPU 1 (wrapper PID `74821`, 45-minute bound, launched about
-19:48 CST on 2026-09-08). Inspect
-`runtime/outputs/diagnostics/conditioned-compact-tape-d31e93c.json` and `.log`
-before any further run. Numerical outcome is pending.
+The compact follow-up completed at `d31e93c` in 615.589 seconds and is not
+admitted: window 5 score drift remains -7.37018e-6 and its smaller-displacement
+derivative errors exceed 1%. Window 1 passes; physical failures are zero.
+The current task is the source-mapped same-input thermal/recurrent diagnostic
+in [`conditioned_attention_thermal_source_20260908.md`](research/daily_coarse_graining/conditioned_attention_thermal_source_20260908.md).
+Snowheat/snowtemp are learned affine daily updates, not iterative snow solves.
+Separate decoder arithmetic from amplification of incoming-state differences
+on the same two windows before any full integration rerun. Recovery remains
+update 3; production training is unchanged.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See
