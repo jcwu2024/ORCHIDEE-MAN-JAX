@@ -1076,7 +1076,13 @@ and complete recurrent parameter-gradient accumulation for supplied trajectories
 the existing four-window global-bias science loss and checks one discarded
 direction against actual canonical finite-step losses. Its dedicated shell
 wrapper uses the existing free-node boundary. Production training remains
-unchanged pending real-data derivative and descent admission.
+unchanged; the four-window derivative and descent check has passed.
+
+`scripts/hpc/audit_conditioned_attention_streamed_integration.py` supplies
+dynamic-target observation gradients and streamed seven/thirty-day callbacks
+to the existing `_train_only_update` function. It tests the original update-4
+40-artifact panel without invoking monitor or persistence paths. It caches the
+heavy reverse graph and horizon-specific observation-loss graphs across data.
 
 ## Scripts
 

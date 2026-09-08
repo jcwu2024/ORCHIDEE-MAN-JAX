@@ -1267,7 +1267,7 @@ related tests plus all static, CLI, contract, and shell checks. One
 free-`gln01` execution completed at `45ab263` in 3162.530 seconds. Update 3
 was retained; update 4 failed every scale because 30-day loss increased while
 direct GPP, state, and 7-day losses improved. The active gate is the bounded
-artifact-442 four-window streamed-gradient discarded-step check. The completed
+original 40-artifact update-4 integration with streamed horizon gradients. The completed
 `d9c4bd4` audit reproduces all eight forward loss pairs and all source norms;
 seven artifacts agree with finite differences. Artifact 442 accounts for the
 material mismatch (-0.019983 predicted versus +0.0000907 actual), with its
@@ -1286,10 +1286,16 @@ absolute error (5.58793, day 2) and daily duality gap (0.000164441, day 16)
 motivated saved-trace replay on days 2/15/16. That replay `4468c92` completed
 in 502.559 seconds: snowheat relative difference is 5.43e-6, maximum GPP
 difference 5.376e-7, and downstream linearized effects about 1e-9 to 1e-8.
-The active task is a four-window discarded-step check using a cached full
-streamed pullback, unchanged science loss and global bias, and real canonical
-finite-step evaluation. Root cause and a production backward repair remain
-unproven; model accuracy has not changed. The next contract is
+Four-window discarded step `c726446` passed in 890.713 seconds. At norm 1e-4,
+predicted change -0.000882413 matches actual -0.000882278; both magnitudes
+improve all four windows, derivative errors are below 0.15%, and all hard
+counts are zero. The active task is the original 40-artifact update-4 proposal
+with only its 7/30-day gradient callbacks replaced by full streamed backward.
+All original train-only gates remain, and weights are discarded. Root cause
+and general repair validity remain unproven; no model accuracy promotion.
+The active contract is
+`research/daily_coarse_graining/conditioned_attention_streamed_integration_20260908.md`;
+the completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;
 the preceding result is in `research/daily_coarse_graining/conditioned_attention_derivative_modes_20260907.md`.

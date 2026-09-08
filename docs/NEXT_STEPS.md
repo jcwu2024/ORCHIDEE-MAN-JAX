@@ -2432,10 +2432,15 @@ reverse +2.62694, forward +2.62710, and finite differences +2.63857/+2.63083
 agree in sign, with zero baseline hard failures. Saved-trace replay `4468c92`
 completed in 502.559 seconds: the largest discrepancy is snowheat at 5.43e-6
 relative; GPP differences are at most 5.376e-7 and downstream linearized effects
-about 1e-9 to 1e-8. The active task is a discarded negative-streamed-gradient
-step on all four artifact-442 windows, using the unchanged global-bias science
-objective. Compare actual production descent and rounded-displacement finite
-differences before any multi-artifact training integration. Its contract is
+about 1e-9 to 1e-8. Discarded four-window step `c726446` passed in 890.713
+seconds: predicted/actual changes -0.000882413/-0.000882278 at norm 1e-4,
+both step magnitudes descend in all windows, and derivative errors are below
+0.15%. The active task is a discarded update-4 integration on its original
+40-artifact panel, substituting only streamed 7/30-day gradients. Keep all
+43 constraints, scale and science gates unchanged; no recovery write or
+fixed-monitor read. See
+[`conditioned_attention_streamed_integration_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_integration_20260908.md).
+The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See
 [`conditioned_attention_streamed_adjoint_20260907.md`](research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md).
