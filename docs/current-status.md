@@ -1314,6 +1314,10 @@ Source comparison finds the same extraction and loss formulas. The bounded
 next replay is frozen in `conditioned_attention_seven_score_20260908.md`:
 artifact 322/windows 5 and 1, compact/verbose trajectory statistics and
 directional finite differences with the original eight-window totals.
+The replay passes 21 local tests and is launched on free `gln01` GPU 1 at
+`c530f90` (wrapper PID `62329`, 45-minute limit, approximately 17:02 CST).
+Its report is `runtime/outputs/diagnostics/conditioned-seven-score-c530f90.json`;
+numerical results are pending.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;

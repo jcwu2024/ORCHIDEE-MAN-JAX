@@ -1,6 +1,6 @@
 # Seven-Day Observation/Production Score Localization
 
-Status: bounded zero-update diagnostic frozen before real-data execution.
+Status: local qualification passes; free-GPU replay launched at `c530f90`.
 
 Local qualification passes 21 focused and related tests in 45.25 seconds,
 including complete two-window statistics, streamed gradients, finite
@@ -75,3 +75,12 @@ serialization and launcher routing before launch. Use the result to choose
 the smallest source-backed follow-up; do not restart the full integration
 until the discrepancy has an explanation and the derivative consequence is
 understood.
+
+Launched 2026-09-08 at approximately 17:02 CST on `gln01` (`ibc13b02n04`),
+GPU 1, wrapper PID `62329`, commit
+`c530f902e1dcb1c094695c288807b8d012b8b6aa`. Both GPUs were idle at the
+prelaunch check. Server and local execution commit agree; shell syntax and
+Ruff pass. The command is `bash scripts/hpc/audit_conditioned_attention_seven_score.sh`
+from the project root, with `GPU_DEVICE=1` and `RUN_TIMEOUT=45m`.
+The report/log names are `conditioned-seven-score-c530f90.json` / `.log`
+under `runtime/outputs/diagnostics/`. Numerical results are pending.
