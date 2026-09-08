@@ -2429,9 +2429,14 @@ reproduced this discrepancy; the no-remat reverse failed because its temporary
 buffers require 43.12 GiB on a 32 GiB GPU. Do not rerun that configuration.
 The full 30-day streamed adjoint `0056141` completed in 1722.781 seconds:
 reverse +2.62694, forward +2.62710, and finite differences +2.63857/+2.63083
-agree in sign, with zero baseline hard failures. The next task is to reuse
-its saved trace for days 2/15/16 only, identifying the source/scale of local
-primal differences and comparing JVP/VJP primals before any training repair.
+agree in sign, with zero baseline hard failures. Saved-trace replay `4468c92`
+completed in 502.559 seconds: the largest discrepancy is snowheat at 5.43e-6
+relative; GPP differences are at most 5.376e-7 and downstream linearized effects
+about 1e-9 to 1e-8. The active task is a discarded negative-streamed-gradient
+step on all four artifact-442 windows, using the unchanged global-bias science
+objective. Compare actual production descent and rounded-displacement finite
+differences before any multi-artifact training integration. Its contract is
+[`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See
 [`conditioned_attention_streamed_adjoint_20260907.md`](research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md).
 The preceding comparison is recorded in

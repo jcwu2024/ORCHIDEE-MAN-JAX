@@ -1070,6 +1070,14 @@ Its optional `--replay-trace` path reuses those arrays for days 2/15/16 only,
 compares forward/JVP/VJP primals with source and scale mapping, and never
 constructs a full-rollout evaluator or loads another training artifact.
 
+`daily_operator/streamed_adjoint.py` owns a cached one-day reverse executable
+and complete recurrent parameter-gradient accumulation for supplied trajectories.
+`scripts/hpc/audit_conditioned_attention_streamed_step.py` integrates it with
+the existing four-window global-bias science loss and checks one discarded
+direction against actual canonical finite-step losses. Its dedicated shell
+wrapper uses the existing free-node boundary. Production training remains
+unchanged pending real-data derivative and descent admission.
+
 ## Scripts
 
 | Path | Classification | Use |

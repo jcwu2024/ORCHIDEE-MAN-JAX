@@ -1,6 +1,6 @@
 # Conditioned Attention Streamed Adjoint
 
-Status: full streamed diagnostic completed; narrow daily replay is next.
+Status: full streamed diagnostic and narrow daily replay completed.
 No training or model change.
 
 ## Scope And Evidence
@@ -117,9 +117,20 @@ the proposed backward path have been checked.
 
 Code `4468c92` passed 22 related local tests, Ruff, shell syntax and whitespace
 checks, and was fast-forwarded to the server using an incremental Git bundle.
-Run `conditioned-daily-replay-4468c92` is active on free gln01 GPU 0 (actual
-host `ibc13b02n04`), wrapper PID 42490, with `RUN_TIMEOUT=60m`. Initialization
-completed in 212.8 seconds; the last observed stage is `replay_forward_2`.
-No numerical replay result is available at this handoff. Inspect remote
-`runtime/outputs/diagnostics/conditioned-daily-replay-4468c92.json` and `.log`
-before any new launch. The server remains at `4468c92` while this run is active.
+Run `conditioned-daily-replay-4468c92` completed on free gln01 GPU 0 (actual
+host `ibc13b02n04`) in 502.559 seconds. The wrapper process exited.
+Initialization took 212.8 seconds; compilation dominated the remaining time.
+The JSON result is also stored locally under `outputs/diagnostics/`.
+
+The 5.58793 discrepancy is `hydrol_previous_step_state.snowheat`, coordinate
+[0,2], relative to 1,029,049.9863, or 5.43e-6 relative. Training-scale-normalized
+error is 0.00556468. Across all three days and four comparison modes, maximum
+GPP difference is 5.37601e-7; fraction differences and finite-mask changes are
+zero, with no nonfinite active coordinates. Downstream linearized state effects
+are about 1e-9 to 1e-8; these are not measured free-rollout loss changes.
+Stored state tangents reproduce exactly on all three days. Day-16 duality gap
+1.64441e-4 reproduces, while days 2/15 are about 1e-8 or smaller.
+
+This supports a bounded discarded-step repair check, not a root-cause or
+accuracy claim. The next contract is
+[`conditioned_attention_streamed_step_20260908.md`](conditioned_attention_streamed_step_20260908.md).
