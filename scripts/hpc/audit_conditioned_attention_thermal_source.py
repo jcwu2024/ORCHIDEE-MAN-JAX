@@ -22,6 +22,18 @@ def locations(contract):
                             for field in ("snowheat", "snowtemp")}}
 
 
+def teacher_snow_rows(artifact, contract):
+    """Read existing labels only, including mass/depth to identify snow-free cases."""
+    leaves = [v for v in contract.state_leaves if v.component == "hydrol_previous_step_state"
+              and v.path[0] in ("snow", "snowdz", "snowrho", "snowliq", "snowheat", "snowtemp")]
+    batch = artifact.batch.seven_day
+    return [{"window": i, "fields": {
+        v.key: {"day_start": np.asarray(batch.inputs.continuous_state[i, :, v.start:v.stop]).tolist(),
+                "teacher_next": np.asarray(batch.expected_next_state.other[i, :, v.start:v.stop]).tolist(),
+                "teacher_defined": np.asarray(batch.expected_next_state_defined.other[i, :, v.start:v.stop]).tolist()}
+        for v in leaves}} for i in seven.WINDOWS]
+
+
 def source_rows(start, result, captured, head, indices):
     """Reconstruct each learned affine thermal update independently on the host."""
     rows = {}
@@ -32,9 +44,11 @@ def source_rows(start, result, captured, head, indices):
     for component, field, _ in THERMAL_FIELDS:
         key = f"{component}.{field}"
         if key in head.input_assembler.thermal_keys:
-            leaf = next(v for v in head.contract.state_leaves if v.key == key)
-            offsets[key] = slice(thermal_offset, thermal_offset + leaf.stop - leaf.start)
-            thermal_offset += leaf.stop - leaf.start
+            # Thermal prediction uses reconstructed full-PFT shapes. The canonical
+            # recurrent vector can compact PFTs, so its leaf widths are not offsets.
+            size = np.size(result.prediction.named_outputs[f"thermal.{key}.normalized_tendency"])
+            offsets[key] = slice(thermal_offset, thermal_offset + size)
+            thermal_offset += size
     for field in FIELDS:
         key = field.removeprefix("thermal.").removesuffix(".normalized_tendency")
         raw, decoded = (np.asarray(v, dtype=np.float64).reshape(-1) for v in captured[field])
@@ -62,6 +76,7 @@ def source_rows(start, result, captured, head, indices):
             "tail_endpoint": endpoint.tolist(), "raw_to_endpoint_local_slope": (BOUNDS[field] * slope).tolist(),
             "decode_host_max_abs_error": float(np.max(np.abs(expected - decoded))),
             "affine_host_max_abs_error": float(np.max(np.abs(initial + BOUNDS[field] * decoded - fast))),
+            "affine_to_tail_max_abs_error": float(np.max(np.abs(initial + BOUNDS[field] * decoded - endpoint))),
             "tail_minus_fast_max_abs_error": float(np.max(np.abs(endpoint - fast))),
         }
     return rows
@@ -116,7 +131,8 @@ def experiment(bootstrap, values, artifact, *, emit):
     verbose_forward = window._make_trace_evaluator(bootstrap)
     compact_forward = seven.integration.make_compact_trace_evaluator(bootstrap)
     detailed, lean, tangent = make_kernels(bootstrap)
-    report = {"windows": [], "state_locations": {k: v.tolist() for k, v in indices.items()}}
+    report = {"windows": [], "state_locations": {k: v.tolist() for k, v in indices.items()},
+              "teacher_snow": teacher_snow_rows(artifact, contract)}
 
     def compare(a, b):
         a, b = np.asarray(a), np.asarray(b)

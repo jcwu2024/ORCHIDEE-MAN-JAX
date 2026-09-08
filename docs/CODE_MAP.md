@@ -1093,11 +1093,19 @@ production score, verbose-trace observations and compact production
 trajectories for artifact 322/windows 5 and 1. It reuses the exposed
 `window_trajectories` callable, and checks streamed derivatives against actual
 parameter displacements without constructing a monolithic reverse graph.
-Its `--trace-mode compact` follow-up uses `compact_adjoint_trace` and
+Its completed `--trace-mode compact` follow-up uses `compact_adjoint_trace` and
 `make_compact_trace_evaluator` to export recurrent carry/science observations
 without auxiliary prediction/update diagnostics, and records per-day state
 differences against the verbose path. Default production gradients remain
 unchanged until the bounded candidate passes.
+
+`scripts/hpc/audit_conditioned_attention_thermal_source.py` owns the following
+same-input one-day replay on the two seven-day windows. It captures existing
+raw snowhead outputs only during diagnostic tracing, reconstructs the decoder
+and affine endpoint independently, and separates snow-only from other-state
+perturbations under one executable. It compares state JVPs with finite changes
+on days 2/4/7; it does not alter process formulas or train parameters. Its
+wrapper is bounded to 30 minutes on one free gln01 GPU.
 
 ## Scripts
 

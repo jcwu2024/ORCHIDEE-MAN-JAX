@@ -2466,12 +2466,20 @@ section in the above contract. Production training remains unchanged.
 The compact follow-up completed at `d31e93c` in 615.589 seconds and is not
 admitted: window 5 score drift remains -7.37018e-6 and its smaller-displacement
 derivative errors exceed 1%. Window 1 passes; physical failures are zero.
-The current task is the source-mapped same-input thermal/recurrent diagnostic
-in [`conditioned_attention_thermal_source_20260908.md`](research/daily_coarse_graining/conditioned_attention_thermal_source_20260908.md).
-Snowheat/snowtemp are learned affine daily updates, not iterative snow solves.
-Separate decoder arithmetic from amplification of incoming-state differences
-on the same two windows before any full integration rerun. Recovery remains
-update 3; production training is unchanged.
+The source-mapped same-input thermal/recurrent diagnostic completed in
+1328.8 seconds on free gln01 at `ff9310c`; see
+[`conditioned_attention_thermal_source_20260908.md`](research/daily_coarse_graining/conditioned_attention_thermal_source_20260908.md).
+Same-input one-day execution reproduces the initial snowheat discrepancy;
+snow-only incoming differences reproduce almost all Day-4 amplification.
+An existing-artifact read on free test01 shows both Teacher windows are
+snow-free, with zero snowheat throughout, while the candidate accumulates
+roughly 30--35 million by Day 7. The immediate task is a source-backed
+snow-state consistency correction: audit no-snow/snowfall/melt day-end
+conditions and v6 examples, then freeze and implement the smallest supported
+fix. Do not use Teacher states at inference or assume the enthalpy identity
+holds after HYDROL cleanup without checking ordering. This takes priority
+over precision-only or compiler-layout trials. Recovery remains update 3;
+production training is unchanged.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See

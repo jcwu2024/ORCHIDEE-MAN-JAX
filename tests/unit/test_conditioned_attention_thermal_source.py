@@ -29,6 +29,11 @@ class Fast(NamedTuple):
 class Result(NamedTuple):
     next_state: object
     fast_update: object
+    prediction: object
+
+
+class Prediction(NamedTuple):
+    named_outputs: object
 
 
 def test_same_input_source_capture_and_state_direction(monkeypatch):
@@ -49,7 +54,8 @@ def test_same_input_source_capture_and_state_direction(monkeypatch):
             field=field, normalization=normalization, inputs=None,
         )[0] for i, field in enumerate(fields)]
         heat, temp = state[0] + 1e9 * decoded[0], state[1] + 100 * decoded[1]
-        return Result(Group(jnp.array([heat, temp, heat, temp])), Fast(Thermal(jnp.array([temp, heat]))))
+        return Result(Group(jnp.array([heat, temp, heat, temp])), Fast(Thermal(jnp.array([temp, heat]))),
+                      Prediction(dict(zip(audit.FIELDS, decoded, strict=True))))
 
     monkeypatch.setattr(training, "rollout_input_from_template", lambda template, state, discrete, contract: state)
     bootstrap = {"context": {"runtime": {"jax": jax, "contract": contract}, "template": None},
@@ -67,6 +73,7 @@ def test_same_input_source_capture_and_state_direction(monkeypatch):
         assert row["decode_host_max_abs_error"] < 1e-12
         assert row["affine_host_max_abs_error"] < 1e-9
         assert row["tail_minus_fast_max_abs_error"] == 0
+        assert row["affine_to_tail_max_abs_error"] < 1e-9
     direction = jnp.array([1.0, 0.1, 1.0, 0.1])
     primal, response = tangent(parameters, state, direction, day)
     secant = (lean(parameters, state + direction, day) - lean(parameters, state - direction, day)) / 2
@@ -85,6 +92,29 @@ def test_launcher_delivers_all_required_parser_arguments():
     wrapper = (root / "scripts/hpc/audit_conditioned_attention_thermal_source.sh").read_text()
     assert "RUN_TIMEOUT=${RUN_TIMEOUT:-30m}" in wrapper
     assert "sbatch" not in wrapper
+
+
+def test_thermal_offsets_use_full_prediction_shapes_not_compact_state_widths():
+    heat, temp = audit.FIELDS
+    prefix = "thermal.enerbil_previous_step_state.temp_sol.normalized_tendency"
+    raw = {heat: np.array([1e-6]), temp: np.array([1e-5])}
+    decoded = {name: np.tanh(value) for name, value in raw.items()}
+    initial = np.array([280.0, 0.0, 273.15])
+    endpoint = initial.copy()
+    endpoint[1] += 1e9 * decoded[heat][0]
+    endpoint[2] += 100 * decoded[temp][0]
+    names = [prefix.removeprefix("thermal.").removesuffix(".normalized_tendency"),
+             temp.removeprefix("thermal.").removesuffix(".normalized_tendency"),
+             heat.removeprefix("thermal.").removesuffix(".normalized_tendency")]
+    head = NS(input_assembler=NS(thermal_keys=names),
+              learned_schema=NS(fields=[NS(name=n, constraint="signed_unit", value_representation="direct") for n in raw]),
+              output_normalization=NS(mean={n: np.zeros(1) for n in raw}, scale={n: np.ones(1) for n in raw}))
+    result = Result(Group(endpoint), Fast(Thermal(np.array([280.0, 281.0, 282.0, endpoint[2], endpoint[1]]))),
+                    Prediction({prefix: np.zeros(3), **decoded}))
+    rows = audit.source_rows(initial, result, {n: (raw[n], decoded[n]) for n in raw}, head,
+                             {names[1]: np.array([2]), names[2]: np.array([1])})
+    assert all(v["affine_host_max_abs_error"] == 0 for v in rows.values())
+    assert all(v["tail_minus_fast_max_abs_error"] == 0 for v in rows.values())
 
 
 def test_runner_does_not_precreate_initializer_output(tmp_path, monkeypatch):

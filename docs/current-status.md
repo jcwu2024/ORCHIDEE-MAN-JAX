@@ -1322,9 +1322,33 @@ pronounced in day-5 maintenance, day-6 litter and day-7 GPP. The active
 follow-up tests compact adjoint recording and source-mapped daily state
 differences, with unchanged loss, tolerances and complete recurrent gradient.
 Its completed report is `runtime/outputs/diagnostics/conditioned-seven-score-c530f90.json`.
-Compact-tape replay `d31e93c` passed 22 local tests and launched on free
-`gln01` GPU 1 (PID `74821`, 45-minute limit, approximately 19:48 CST).
-The pending report is `runtime/outputs/diagnostics/conditioned-compact-tape-d31e93c.json`.
+Compact-tape replay `d31e93c` completed in 615.589 seconds. It is not admitted:
+window 5 score drift is -7.37018e-6 and its smaller-displacement production/
+observation derivative errors are 1.258%/1.828%. Window 1 passes; physical
+failures are zero. The completed report is
+`runtime/outputs/diagnostics/conditioned-compact-tape-d31e93c.json`.
+The active source diagnosis is
+`research/daily_coarse_graining/conditioned_attention_thermal_source_20260908.md`.
+Its source inspection identifies learned float32 decoder outputs followed
+by float64 affine snowheat/snowtemp updates, not a snow root solver. The
+same-input replay separates fresh arithmetic differences from recurrence.
+It completed on free gln01 at `ff9310c` in 1328.8 seconds, GPU 1, within its
+30-minute bound and with no parameter retention. An earlier `8aa5331` launch stopped before model setup
+because its progress file conflicted with the shared initializer; corrected
+write ordering and the startup lifecycle test pass. Accepted recovery stays
+at update 3; no production gradient change has been admitted. Same-input
+one-day execution reproduces Day-1 snowheat drift. At Day 4, snow-only state
+differences reproduce -211052.46 of the full -211069.69 layer-1 effect.
+A free test01 read of existing artifact 322 shows both Teacher windows have
+zero snow mass/depth/liquid/heat throughout; candidate heat reaches about
+30--35 million by Day 7. The next priority is source-backed snow-state
+consistency and conditioning, not another precision-only or layout trial.
+The thermal report's fast-vector offsets were misindexed with compact PFT
+widths; three fast-endpoint diagnostic fields are invalid. Independent
+start-plus-decoded-delta checks reproduce all 84 actual retained snow
+endpoints exactly. Canonical state and intervention results are unaffected.
+The diagnostic offset correction has a full-versus-compact shape regression
+test. See the named report for the scientific evidence and next boundaries.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;

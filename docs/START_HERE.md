@@ -433,8 +433,13 @@ integration then completed in 2131.8 seconds. Its actual train-only update
 passes at the first scale, improving direct GPP, state and 7/30-day losses.
 Overall integration is not admitted because seven seven-day observation-score
 comparisons differ from production; all 32 thirty-day comparisons pass.
-The active task is to locate those seven differences before fixed-monitor
-evaluation or retained continuation. Accepted recovery remains update 3;
+The following source diagnostic reproduces the initial discrepancy in a
+single day and confirms snow-state recurrence amplifies it. Existing Teacher
+labels show both checked windows are snow-free, while candidate snowheat
+accumulates far outside that support. The active task is source-backed
+snow-state consistency repair before fixed-monitor evaluation or retained
+continuation; see `conditioned_attention_thermal_source_20260908.md` under
+the daily-coarse-graining research documents. Accepted recovery remains update 3;
 no new weights were retained and model accuracy is not promoted. Paid execution,
 fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
 remain closed. See `NEXT_STEPS.md` for the exact current boundary.
