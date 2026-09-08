@@ -2,11 +2,17 @@
 
 English | [简体中文](README.zh-CN.md)
 
-Source-backed JAX implementation of the ORCHIDEE-MAN paper-era model for the
-PFT14 mangrove configuration. Scientific process logic is ported from the
-Fortran source and carries file, procedure, and line-span provenance.
+This project has two connected stages: a source-backed, differentiable JAX
+implementation of the ORCHIDEE-MAN paper-era PFT14 mangrove model, and a
+Transformer/Attention-based daily neural operator trained from that model.
+The JAX Teacher is implemented and validated within its declared scope; the
+daily replacement remains under development.
 
-## Current Scope
+## Stage 1: Differentiable JAX Teacher
+
+The Teacher preserves the Fortran process logic, with file, procedure, and
+line-span provenance. It still executes 48 half-hour transitions and the
+daily vegetation/carbon processes each day.
 
 - PFT14 single-landpoint driver, SECHIBA, HYDROL, DIFFUCO, ENERBIL,
   THERMOSOIL, CONDVEG, STOMATE, restart handoff, and annual modelout.
@@ -16,10 +22,71 @@ Fortran source and carries file, procedure, and line-span provenance.
   reuse gates pass on the current production path.
 - Seven previously unused landpoints have completed 1961-2010 validation;
   their largest 2010 AGB/BGB/GPP/NPP relative error is `8.5e-5`.
-- The full 669-landpoint acceptance run has not yet been completed.
+- Selected physical-parameter gradients pass the canonical Teacher Gate D1:
+  forward and reverse automatic differentiation agree with finite differences
+  across the declared process, multiday, and restart cases. See the
+  [gradient acceptance scope](docs/research/daily_coarse_graining/gate_d1_physical_parameter_gradients_v1.md).
+- Performance work includes compiled day/block execution, executable reuse,
+  vectorization, and restartable production runs. It preserves the physical
+  time steps; these optimizations do not make the Teacher a daily surrogate.
 
-This scope statement is deliberately narrower than claiming equivalence for
-other PFTs or unsupported ORCHIDEE configurations.
+Scientific support is currently limited to PFT14 and the declared validation
+matrix. Neither all-PFT equivalence nor every physical-parameter derivative
+is claimed. Full 669-landpoint Fortran-equivalence release acceptance remains
+a separate gate from the Teacher dataset acceptance below.
+
+## Stage 2: Daily Neural Process Operator
+
+The research goal is to replace the subdaily process sequence with one daily
+transition while keeping long-term GPP, respiration, NPP, aboveground biomass,
+and belowground biomass accurate. The current candidate uses a
+Transformer/Attention network coupled to a conservative state updater and
+retained exact daily processes:
+
+```text
+day-start state + native 6-hour forcing + relevant parameters/static conditions
+  -> Transformer/Attention process head: daily process quantities
+  -> one constrained water/carbon/energy state update
+  -> retained exact daily processes
+  -> next-day state
+```
+
+The neural head connects through the existing `bind_daily_operator` boundary
+with the canonical input assembler and retained-tail adapter. Parameters are
+routed to the processes that use them. Daily inference must not reconstruct
+48 half-hour forcing inputs or execute a 48-step state scan. Retaining the
+physical next-day state allows days to be linked into multiyear simulations.
+
+The frozen **v6 Teacher dataset is complete and accepted for neural training**:
+669 landpoints, 1961-2010, 33,450 point-year shards, and 12,208,581 daily
+transitions. See the
+[data acceptance report](docs/research/daily_coarse_graining/teacher_v6_full_production_acceptance_20260807.md).
+Use this coherent release; do not regenerate it or mix historical v5 rows into
+training. Dataset acceptance does not establish daily-model accuracy.
+
+### Research status — 2026-09-08
+
+The daily model, physical coupling, and training/rollout infrastructure are
+implemented. The active architecture is Transformer/Attention with Q/K
+normalization, and training
+includes one-day state and 7/30-day science objectives. A model that passes
+the required long-term accuracy gates is **not yet available**.
+
+Current work addresses numerical consistency in multiday backpropagation.
+A full streamed-backward trial of the previously rejected training update
+now improves direct GPP, state, and both 7/30-day aggregate losses while
+passing physical gates. However, seven seven-day windows disagree between
+two loss-evaluation paths, so overall integration is not yet admitted and no
+new weights were retained. The immediate next task is to locate those
+differences, then verify transfer on the fixed independent evaluation panel
+before retained continuation. See the
+[result and next diagnostic](docs/research/daily_coarse_graining/conditioned_attention_streamed_integration_20260908.md).
+
+365-day rollouts, long-term held-out-site validation, daily-model physical-
+parameter gradient acceptance (Gate D2), and product acceptance remain later
+milestones. Teacher Gate D1 does not validate the neural model's gradients.
+GPU supports training; CPU/GPU inference performance and the final speedup
+must be established by workload-level measurements.
 
 ## Branches and Research Status
 
@@ -30,30 +97,23 @@ other PFTs or unsupported ORCHIDEE configurations.
   default to off, and ordinary Teacher mode is required to stay behaviorally
   aligned with `main`; see `docs/branch-alignment-20260802.md`.
 
-The daily neural path is technically connected but is not yet a validated or
-user-facing model. Earlier direct-state candidates were rejected. The active
-target is now a true daily conservative process operator consuming native
-six-hour forcing and performing one constrained daily state update; the final
-surrogate will not execute a 48-step state scan.
-GPU is currently intended for batched neural training; neural inference will
-remain CPU/GPU portable and will be selected from measured workload-level
-performance rather than assumed to require GPU.
-
 Start with [`docs/START_HERE.md`](docs/START_HERE.md), then use
 [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md) for the current work order and
-[`docs/CODE_MAP.md`](docs/CODE_MAP.md) for repository ownership. Dated
-research and source-audit documents are historical evidence and may describe
-earlier gates. The long research `HANDOFF.md` is a chronology, not the active
-roadmap.
+[`docs/CODE_MAP.md`](docs/CODE_MAP.md) for repository ownership.
+[`docs/current-status.md`](docs/current-status.md) records detailed evidence;
+[`docs/DOCUMENT_STATUS.md`](docs/DOCUMENT_STATUS.md) identifies active contracts
+and historical reports. These pages take precedence over the dated snapshot
+above. The long research `HANDOFF.md` is a chronology, not the active roadmap.
 
 ## Repository Layout
 
 | Path | Purpose |
 | --- | --- |
 | `jax_orchidee/` | Production JAX model, driver, process modules, and CLI runners |
+| `research/daily_coarse_graining/` | Daily neural operators, Teacher-data interfaces, losses, training, and rollout research |
 | `configs/` | Portable PFT14 paper-case configuration |
 | `manifests/` | External data contract and 669-landpoint metadata |
-| `scripts/hpc/` | Generic isolated-landpoint scheduler templates |
+| `scripts/hpc/` | Explore1000 Teacher, data preparation, neural training, and diagnostic launchers |
 | `scripts/dev/` | Oracle, audit, diagnosis, and performance tooling; not a runtime dependency |
 | `tests/` | Unit, parity, Oracle-evidence, and integration tests |
 | `docs/` | User documentation and source-driven equivalence evidence |
@@ -116,6 +176,9 @@ to `data/`, `reference/`, and `outputs/` under the repository root.
 
 ## Run One Landpoint
 
+The public CLI below runs the physical half-hour Teacher. It does not select
+the experimental daily neural model.
+
 ```bash
 uv run orchidee-jax run \
   --landpoint-id 001.0-071.0 \
@@ -153,7 +216,9 @@ landpoints consecutively.
 - Fortran source is the process truth.
 - Runtime references validate numerical and state behavior; they do not
   replace source-driven branch coverage.
-- Missing processes are not approximated or hidden by calibration.
+- Missing Teacher processes are not approximated or hidden by calibration.
+  The daily surrogate is an explicit learned approximation with separate
+  accuracy, physical-budget, and gradient acceptance requirements.
 - Discrete states compare exactly. Floating-point gates use explicit,
   field-aware tolerances recorded under `docs/source_audits`.
 

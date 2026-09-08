@@ -2,10 +2,15 @@
 
 [English](README.md) | 简体中文
 
-这是面向 PFT14 红树林配置、以源码为依据的 ORCHIDEE-MAN 论文版本 JAX
-实现。所有科学过程逻辑均从 Fortran 源码移植，并记录对应文件、过程和行号范围。
+本项目包含两个相互衔接的阶段：将 ORCHIDEE-MAN 论文版本的 PFT14 红树林
+物理模型移植到可微框架 JAX，以及利用该模型训练基于 Transformer/Attention
+的日尺度神经算子。JAX 教师模型已实现并在声明范围内通过验证；日尺度替代模型
+仍在研发中。
 
-## 当前范围
+## 第一阶段：可微 JAX 教师模型
+
+教师模型（Teacher）保留 Fortran 的科学过程逻辑，并记录对应文件、过程和
+行号范围。它每天仍然执行 48 次半小时状态推进，以及原有的日尺度植被和碳过程。
 
 - 已实现 PFT14 单 landpoint 的 Driver、SECHIBA、HYDROL、DIFFUCO、
   ENERBIL、THERMOSOIL、CONDVEG、STOMATE、restart 年际交接和年度
@@ -16,9 +21,56 @@
   跨 landpoint 复用同一编译 executable 的语义门禁。
 - 7 个此前未用于定向修复的 landpoint 已完成 1961-2010 年验证；其 2010 年
   AGB/BGB/GPP/NPP 的最大相对误差为 `8.5e-5`。
-- 669 个 landpoint 的完整验收尚未完成。
+- 已通过教师模型的物理参数梯度验收 Gate D1：在声明的过程、多日传播和重启
+  案例中，前向、反向自动微分与有限差分一致。具体范围见
+  [梯度验收记录](docs/research/daily_coarse_graining/gate_d1_physical_parameter_gradients_v1.md)。
+- 已开展日/多日块编译、编译结果复用、向量化和可断点恢复的生产运行优化。
+  这些优化保留原来的物理时间步，并不意味着教师模型已经变成日尺度代理模型。
 
-这里的范围声明刻意不扩展到其他 PFT 或当前不支持的 ORCHIDEE 配置。
+科学支持目前限于 PFT14 和已声明的验收矩阵，不代表所有 PFT、所有物理参数的
+导数均已验证。完整 669 点的 Fortran 等价性发布验收，与下面的教师数据集验收
+是不同的门槛。
+
+## 第二阶段：日尺度神经过程算子
+
+当前研究目标是用一次日尺度状态转移替代亚日尺度过程序列，同时保证 GPP、
+呼吸、NPP、地上生物量和地下生物量等关键输出在长期模拟中保持准确。当前候选
+采用 Transformer/Attention 网络，并与守恒状态更新器、保留的精确日过程耦合：
+
+```text
+当天起始状态 + 原生 6 小时气象驱动 + 相关参数/静态条件
+  → Transformer/Attention 过程头：预测日尺度过程量
+  → 一次受水、碳、能量约束的状态更新
+  → 保留的精确日过程
+  → 下一天状态
+```
+
+网络通过既有 `bind_daily_operator` 边界接入，使用规范输入组装器和保留日过程
+适配器。参数按所属过程传入。最终日尺度推理不得重建 48 个半小时气象输入，
+也不得执行 48 步状态扫描；通过传递物理上的下一日状态，连接成多年模拟。
+
+**v6 教师数据集已完整生成，并通过神经训练数据验收**：覆盖 669 个陆地点、
+1961—2010 年，共 33,450 个点年数据分片、12,208,581 次日状态转移。详见
+[数据验收报告](docs/research/daily_coarse_graining/teacher_v6_full_production_acceptance_20260807.md)。
+后续训练使用这一连续一致的数据版本，不重新生成，也不混入历史 v5 数据。
+数据集验收通过，不等于日尺度模型的精度已经达标。
+
+### 研究进度：2026-09-08
+
+日尺度模型、物理过程耦合和训练/多日模拟基础设施已经实现。当前架构采用带
+Q/K 归一化的 Transformer/Attention，训练目标包含单日状态和 7/30 日科学指标。
+**目前仍没有通过所需长期精度验收的日尺度模型。**
+
+近期在解决跨日反向传播的数值一致性问题。采用完整的逐日反向传播后，此前失败的
+一次训练更新已经能让直接 GPP、状态和 7/30 日综合损失同时下降，并通过物理检查。
+但有 7 个七日窗口在两种损失计算路径之间存在差异，因此整体验收仍未通过，也没有
+保存新权重。下一步先定位这些差异，再在独立的固定验收数据上确认改善能否迁移，
+之后才继续保留训练更新。详见
+[本次结果及下一步定位任务](docs/research/daily_coarse_graining/conditioned_attention_streamed_integration_20260908.md)。
+
+365 日模拟、长期留出点验证、日尺度模型的物理参数梯度验收（Gate D2）和产品
+验收仍是后续里程碑。教师模型的 Gate D1 不能替代神经模型的梯度验收。
+GPU 用于训练；最终 CPU/GPU 推理性能和加速幅度需要通过完整工作负载实测确认。
 
 ## 分支与研究状态
 
@@ -28,27 +80,23 @@
   默认关闭，普通 Teacher 模式必须与 `main` 保持行为对齐；详见
   `docs/branch-alignment-20260802.md`。
 
-日尺度神经链路已经在技术上接通，但还不是经过科学验收或面向用户的模型。此前直接预测
-状态的候选已经被否决。当前目标是真正的守恒型日尺度过程算子：读取原生 6 小时 forcing，
-预测日累计通量和转移比例，并只执行一次受约束的日状态更新；最终代理模型不再执行
-48 步状态递推。GPU
-目前主要用于批量神经网络训练；神经网络推理继续同时支持 CPU 和 GPU，最终根据完整
-工作负载的实测性能选择，而不是预先规定必须使用 GPU。
-
 新接手者先阅读 [`docs/START_HERE.md`](docs/START_HERE.md)，再用
 [`docs/NEXT_STEPS.md`](docs/NEXT_STEPS.md) 确认当前工作顺序，用
-[`docs/CODE_MAP.md`](docs/CODE_MAP.md) 确认代码归属。带日期的研究报告和源码审计
-只是历史证据快照。超长的 `HANDOFF.md` 现在保留为实验与服务器任务历史，不再规定
-下一步。
+[`docs/CODE_MAP.md`](docs/CODE_MAP.md) 确认代码归属。
+[`docs/current-status.md`](docs/current-status.md) 记录详细证据，
+[`docs/DOCUMENT_STATUS.md`](docs/DOCUMENT_STATUS.md) 标明当前有效的合同及历史报告。
+这些页面的最新记录优先于上方带日期的进度摘要。超长的 `HANDOFF.md` 保留为
+实验与服务器任务历史，不再规定下一步。
 
 ## 仓库结构
 
 | 路径 | 用途 |
 | --- | --- |
 | `jax_orchidee/` | 正式 JAX 模型、Driver、过程模块和 CLI 运行器 |
+| `research/daily_coarse_graining/` | 日尺度神经算子、教师数据接口、损失、训练与多日模拟研究 |
 | `configs/` | 可移植的 PFT14 论文案例配置 |
 | `manifests/` | 外置数据契约和 669 个 landpoint 的元数据 |
-| `scripts/hpc/` | 每个 landpoint 独立运行的通用调度器模板 |
+| `scripts/hpc/` | Explore1000 教师运行、数据准备、神经训练和诊断启动脚本 |
 | `scripts/dev/` | Oracle、审计、诊断和性能工具；不是正式运行依赖 |
 | `tests/` | 单元、数值等价、Oracle 证据和集成测试 |
 | `docs/` | 用户文档和由源码驱动的等价性证据 |
@@ -107,6 +155,8 @@ uv run orchidee-jax inventory --config configs/orchidee_man_250919.yaml
 
 ## 运行一个 Landpoint
 
+下面的公开 CLI 运行物理半小时教师模型，不会选择实验中的日尺度神经模型。
+
 ```bash
 uv run orchidee-jax run \
   --landpoint-id 001.0-071.0 \
@@ -141,7 +191,8 @@ uv run orchidee-jax validate-landpoints \
 
 - Fortran 源码是过程 truth。
 - 运行时 reference 用于验证数值和状态行为，但不能替代由源码驱动的分支覆盖。
-- 不使用近似过程或参数校准掩盖缺失过程。
+- 不使用近似过程或参数校准掩盖教师模型的缺失过程。日尺度代理则是明确的学习型
+  近似，需要单独通过精度、物理预算和梯度验收。
 - 离散状态必须精确相等；浮点验收使用记录在 `docs/source_audits` 中、按字段明确
   定义的容差。
 
