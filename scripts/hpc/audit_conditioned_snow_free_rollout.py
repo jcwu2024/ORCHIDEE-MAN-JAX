@@ -17,9 +17,19 @@ from scripts.hpc.run_target_oriented_full_step_preflight import _make_steps
 
 window = integration.window
 CASES = ((322, 7, 5), (322, 7, 1), (442, 30, 0))
+SNOW_ENDPOINTS = tuple(
+    (f"{owner}.{name}", reference, tolerance)
+    for owner in (HYDROL, "diffuco_previous_step_state")
+    for name, reference, tolerance in (("snow", 0., 0.), ("snowdz", 0., 0.),
+                                       ("snowheat", 0., 1e-6), ("snowtemp", 273.15, 1e-10),
+                                       ("snowrho", 50., 0.), ("snowgrain", 0., 0.), ("snow_age", 0., 0.))
+) + tuple((f"{HYDROL}.{name}", 0., 0.) for name in ("snowliq", "snow_nobio")) + (
+    ("enerbil_previous_step_state.snowdz", 0., 0.),
+)
 
 
 def with_boundary(bootstrap, enabled):
+    """Rebuild forward steps only; inherited training helpers are not usable."""
     context = bootstrap["context"]
     head = replace(bootstrap["head"], warm_snow_free_boundary=enabled)
     steps = _make_steps(context["runtime"], head, context["template"], context["scales"],
@@ -88,22 +98,19 @@ def experiment(bootstrap, values, artifacts, emit):
             row["selected_days"] = selected.tolist()
             row["snow"] = {}
             snow_pass = True
-            for owner in (HYDROL, "diffuco_previous_step_state"):
-                for name, reference, tolerance in (("snow", 0., 0.), ("snowdz", 0., 0.),
-                                                    ("snowheat", 0., 1e-6), ("snowtemp", 273.15, 1e-10)):
-                    key = f"{owner}.{name}"
-                    leaf = next(v for v in contract.state_leaves if v.key == key)
-                    vals = next_state[:, leaf.start:leaf.stop]
-                    error = float(np.max(np.abs(vals[selected] - reference), initial=0.))
-                    snow_pass &= bool(np.all(np.isfinite(vals[selected])) and error <= tolerance)
-                    row["snow"][key] = {"next": vals.tolist(), "selected_max_abs_error": error}
+            for key, reference, tolerance in SNOW_ENDPOINTS:
+                leaf = next(v for v in contract.state_leaves if v.key == key)
+                vals = next_state[:, leaf.start:leaf.stop]
+                error = float(np.max(np.abs(vals[selected] - reference), initial=0.))
+                snow_pass &= bool(np.all(np.isfinite(vals[selected])) and error <= tolerance)
+                row["snow"][key] = {"next": vals.tolist(), "selected_max_abs_error": error}
             row["snow_pass"] = snow_pass
             row["trajectories"] = {group: {name: {
                 "predicted": np.asarray(value.value).tolist(), "predicted_defined": np.asarray(value.defined).tolist(),
                 "teacher": np.asarray(getattr(expected, group)[name].value).tolist(),
                 "teacher_defined": np.asarray(getattr(expected, group)[name].defined).tolist(),
             } for name, value in getattr(predicted, group).items()} for group in ("fluxes", "stocks")}
-            row["hard_failure_count"] = window._hard_failure_count(hard)
+            row["hard_failure_count"] = window._hard_failure_count(row["hard"])
             if enabled:
                 report["all_repair_forward_gates_pass"] &= bool(snow_pass and row["score_agrees"]
                     and row["hard_failure_count"] == 0 and np.all(selected) and np.isfinite(row["science"]["total"]))
