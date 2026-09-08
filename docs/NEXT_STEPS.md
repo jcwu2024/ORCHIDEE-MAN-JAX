@@ -2440,6 +2440,10 @@ both step magnitudes descend in all windows, and derivative errors are below
 43 constraints, scale and science gates unchanged; no recovery write or
 fixed-monitor read. See
 [`conditioned_attention_streamed_integration_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_integration_20260908.md).
+Local qualification passed 25 tests. Free `gln01` GPU 1 execution is running
+at `1e6c521`, wrapper PID `39230`, with a 120-minute bound; inspect its
+`runtime/outputs/diagnostics/conditioned-streamed-integration-1e6c521.json`
+and `.log` before starting any further experiment.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See

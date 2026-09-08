@@ -1,6 +1,6 @@
 # Streamed Backward Multi-Artifact Integration
 
-Status: frozen before real-data evaluation; implementation and local checks pass.
+Status: local checks pass; free-GPU integration is running at `1e6c521`.
 
 The discarded four-window step `c726446` passed in 890.713 seconds. At norm
 1e-4, predicted loss change was -0.00088241257 and actual change -0.00088227829;
@@ -69,3 +69,16 @@ streamed-adjoint and persistent-training regression tests in 40.84 seconds.
 The actual horizon caller matches full differentiation across changing data
 and parameters, with reverse compilation reused across both horizons. Ruff,
 shell syntax and `git diff --check` also pass.
+
+## Free-Node Execution
+
+Launched on 2026-09-08 at approximately 14:07 CST on `gln01`
+(`ibc13b02n04`), GPU 1, wrapper PID `39230`, commit
+`1e6c521a78d3a2730f42da8beeaf472ea87ef0d3`. The card was idle before launch.
+The wrapper has a 120-minute limit; no Slurm job or paid allocation was used.
+Command: `bash scripts/hpc/audit_conditioned_attention_streamed_integration.sh`,
+with `GPU_DEVICE=1` and `RUN_TIMEOUT=120m` from the project root.
+Report and log are under `runtime/outputs/diagnostics/` as
+`conditioned-streamed-integration-1e6c521.json` and `.log`.
+Startup confirmed the requested checkout and GPU. Numerical admission remains
+pending; accepted update-3 recovery is unchanged.

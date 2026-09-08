@@ -1295,6 +1295,9 @@ All original train-only gates remain, and weights are discarded. Root cause
 and general repair validity remain unproven; no model accuracy promotion.
 The active contract is
 `research/daily_coarse_graining/conditioned_attention_streamed_integration_20260908.md`;
+25 local tests pass, and the real-data integration is running on free `gln01`
+GPU 1 at `1e6c521` (wrapper PID `39230`, 120-minute limit). Its report is
+`runtime/outputs/diagnostics/conditioned-streamed-integration-1e6c521.json`.
 the completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;
