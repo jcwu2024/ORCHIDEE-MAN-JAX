@@ -82,3 +82,14 @@ four-window runner that writes only JSON, scientific rejection classification,
 and actual launcher argument coverage. Existing streamed/replay, window,
 derivative-mode and flux-basis tests also pass. Ruff, CLI help, individual
 shell syntax checks and whitespace checks pass. Real-v6 descent is pending.
+
+## Active Run
+
+Code `c726446` was fast-forwarded to the server through an incremental Git
+bundle. Run `conditioned-streamed-step-c726446` is active on free gln01 GPU 1
+(actual host `ibc13b02n04`), wrapper PID 25173, with a 90-minute timeout.
+GPU 0 had other processes at launch; GPU 1 was free. The last observed stage
+is bootstrap, with no exception or numerical result yet. Read
+`runtime/outputs/diagnostics/conditioned-streamed-step-c726446.json` and `.log`
+before repeating any execution. Server code remains `c726446` while running;
+this launch note is local only. Accepted update-3 recovery is unchanged.
