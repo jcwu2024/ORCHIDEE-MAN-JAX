@@ -27,7 +27,7 @@ def run(root, output):
     report = {"teacher_regenerated": False, "rows": []}
     expected = {"snow": 0., "snowdz": 0., "snowliq": 0., "snow_nobio": 0.,
                 "snowheat": 0., "snowtemp": 273.15, "snowrho": 50., "snow_age": 0., "snowgrain": 0.}
-    for update in (1, 322, 442):
+    for update in (251, 322, 442):
         entry = next(e for e in manifest["entries"] if e["update"] == update)
         with gzip.open(prepared / entry["path"], "rb") as handle:
             artifact = pickle.load(handle)

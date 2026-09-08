@@ -60,7 +60,7 @@ The reference is a causal comparison, not an acceptable scientific baseline.
    must be identical. Inside it, canonical state/mirrors and budgets must
    agree, and local forward/reverse/finite-difference thermal derivatives must
    agree away from regime boundaries.
-2. Free-CPU existing-label panel: prepared artifacts 1, 322 and 442, both
+2. Free-CPU existing-label panel: prepared artifacts 251, 322 and 442, both
    7- and 30-day inputs. Count coverage and compare selected Teacher endpoints;
    disclose any absent active-snow coverage. Do not regenerate labels.
 3. One free-GPU, at most 45-minute zero-training run: artifact 322 windows 5/1
