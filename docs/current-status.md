@@ -1424,7 +1424,15 @@ hot update plus monitor is ~14 minutes from the previous report's first-use
 overheads, not yet measured sustained throughput. The user subsequently approved
 implementation, free-node checks and submission of the one-V100/8-CPU,
 6-hour envelope, CNY 16.56 maximum. The continuation runner and exact 400-artifact
-plan are implemented; saved-candidate free-GPU admission precedes submission.
+plan are implemented. Saved-candidate free-GPU admission passed in 518.64 s:
+408 readable artifacts, unchanged reloaded parameters, reproduced corrected
+monitor and all physical gates passing. Job **14979295** is submitted to
+gnall, initially `PENDING (Priority)`, at execution commit `7f13f10`.
+Its six-hour/one-GPU/eight-CPU allocation matches the approval. No new training
+result is available yet. Keep the remote checkout at that execution commit
+while queued. Next inspect the job and fixed-monitor learning curve; do not
+automatically submit another paid run. See
+`research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md`.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;

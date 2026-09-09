@@ -451,9 +451,12 @@ also passes: all eight monitor artifacts improve in direct GPP (mean loss
 This monitor is not fresh independent validation. Final prediction accuracy
 is still unproven. The next task is bounded corrected-head continuation from
 the saved diagnostic update-4 candidate; accepted recovery remains update 3
-and model accuracy is not promoted. Paid execution,
-fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
-remain closed. See `NEXT_STEPS.md` for the exact current boundary.
+and model accuracy is not promoted. Its saved-candidate free admission now
+passes and approved gnall job `14979295` is submitted for ten new updates,
+with a six-hour / CNY 16.56 ceiling. Read this job's results next; keep the
+remote execution checkout at `7f13f10` while queued. Fresh validation,
+365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
+See `NEXT_STEPS.md` for the exact current boundary.
 
 ## New Task Bootstrap
 

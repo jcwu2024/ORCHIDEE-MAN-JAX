@@ -5,6 +5,9 @@ Status: user approved implementation, free-node checks and submission to gnall,
 materialized in `manifests/coarse_graining/conditioned_snow_free_continuation_v1.json`.
 The runner is `scripts/hpc/run_conditioned_snow_free_continuation.py`; the
 launcher is `scripts/hpc/slurm_conditioned_snow_free_continuation.sh`.
+The saved-candidate free admission passed in 518.64 seconds; gnall job
+`14979295` is submitted. See the
+[execution record](conditioned_snow_free_continuation_execution_20260909.md).
 
 ## Research question and starting evidence
 

@@ -2519,9 +2519,15 @@ It freezes ten new updates (logical 5--14), 400 distinct existing artifact
 IDs, unchanged admitted update rules, per-update automatic monitor/recovery,
 and summaries after 2/5/10 new steps. Schedule separation was checked locally.
 Approved paid envelope is one V100 + 8 Slurm CPUs, 6 hours maximum (CNY 16.56
-additive maximum). The new continuation runner and pending/accepted recovery
-boundary are implemented; complete local and saved-candidate free-node checks,
-then submit `scripts/hpc/slurm_conditioned_snow_free_continuation.sh`.
+additive maximum). Local checks and the saved-candidate free-GPU admission
+pass (518.64 seconds, 408 readable artifacts, matching corrected monitor,
+all hard gates pass). **gnall job 14979295 is submitted**, initially pending
+for Priority. Execution commit is `7f13f10`; keep the remote checkout there
+while queued. The next operation is to read this job's progress/results and
+assess accepted updates, fixed-monitor learning, limiting constraints and hot
+throughput, not submit another job. See the
+[execution record](research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md)
+for paths and resume semantics.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See
