@@ -2491,19 +2491,21 @@ negative-gradient descent checks pass. Maximum derivative discrepancy is
 [`conditioned_snow_free_gradient_20260908.md`](research/daily_coarse_graining/conditioned_snow_free_gradient_20260908.md):
 the process completed; do not restart it. These are linearized window scores,
 not a full multi-artifact update or final accuracy improvement.
-The immediate task is the corrected-head full train-only discarded-step
-integration under
+The corrected-head full train-only discarded-step integration is complete under
 [`conditioned_snow_free_integration_20260909.md`](research/daily_coarse_graining/conditioned_snow_free_integration_20260909.md).
-Recompute corrected starting losses and true finite-step statistics, preserve
-the 40-artifact panel, all 43 constraints and absolute science targets.
-Use one free GPU for at most 90 minutes. Require all 96 gradient callbacks,
-score consistency and existing science-progress gates. Only a pass opens
-paired fixed-monitor evaluation. Recovery remains update 3; no weights,
-paid training, or whole-30-day no-remat reverse graph are admitted here.
-The corrected integration is now launched at `90f6403` on free gln01 GPU 1.
-Inspect `runtime/outputs/diagnostics/conditioned-snow-free-integration-90f6403`
-(`.log` and `.json`) before further execution. Seventeen local tests pass;
-real integration results remain pending.
+Run `90f6403` completed in 3363.25 seconds and is admitted: all 96 score
+comparisons pass, the first scale passes, all 40 direct-GPP artifacts improve,
+and scheduled 7/30-day science losses decrease 0.660%/0.583%. Physical gates
+pass. Absolute GPP/NPP/growth/autotrophic-respiration gates remain open.
+The immediate task is paired fixed-monitor transfer under
+[`conditioned_snow_free_monitor_20260909.md`](research/daily_coarse_graining/conditioned_snow_free_monitor_20260909.md).
+Reproduce the discarded candidate using the recorded seven nonzero gradient
+coefficients and exact selected step, verify its training losses, save a
+separate diagnostic snapshot, then compare corrected baseline/candidate on
+monitor artifacts 251,358,465,572,679,786,893,1000. No solver, scale selection
+or monitor-driven tuning. This is a previously exposed development monitor,
+not new independent validation. One free GPU, at most 90 minutes; recovery
+remains update 3. A pass admits planning bounded continuation, not promotion.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See

@@ -1129,6 +1129,14 @@ It preserves the 40-artifact update-4 proposal and discards resulting weights.
 The ordinary integration defaults remain unchanged; the corrected wrapper
 allows one free GPU for at most 90 minutes. All score totals are recomputed.
 
+`scripts/hpc/audit_conditioned_snow_free_monitor.py` replays the admitted
+train-selected candidate using only exactly nonzero source coefficients,
+preserving the full matrix layout and original update arithmetic. It verifies
+the reconstructed train losses before fixed-monitor access, saves a separate
+diagnostic candidate and evaluates corrected baseline/candidate through the
+existing monitor gates. It never updates accepted recovery. The wrapper uses
+one free GPU for at most 90 minutes; this is development-monitor transfer.
+
 ## Scripts
 
 | Path | Classification | Use |

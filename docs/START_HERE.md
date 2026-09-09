@@ -442,10 +442,13 @@ day positions pass. Its free-GPU 7/30-day screen now passes snow-state and
 scoring consistency, but two of three science scores materially regress.
 The corrected-head gradient check now passes on the three 7/30-day windows:
 all eight derivative comparisons and six diagnostic descent checks pass,
-with maximum relative derivative discrepancy 0.0650%. This admits the next
-full train-only discarded step on the existing 40-artifact panel; see
-`conditioned_snow_free_integration_20260909.md` under the research
-documents. Final prediction accuracy is still unproven. Accepted recovery remains update 3;
+with maximum relative derivative discrepancy 0.0650%. The corrected full
+40-artifact integration also passes: all 96 gradient scores agree, and the
+first train-only step reduces direct GPP and 7/30-day losses. The active task
+is paired transfer to the existing development monitor; see
+`conditioned_snow_free_monitor_20260909.md` under the research documents.
+This monitor is not fresh independent validation. Final prediction accuracy
+is still unproven. Accepted recovery remains update 3;
 no new weights were retained and model accuracy is not promoted. Paid execution,
 fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
 remain closed. See `NEXT_STEPS.md` for the exact current boundary.

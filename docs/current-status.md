@@ -1389,10 +1389,21 @@ The next contract is `research/daily_coarse_graining/conditioned_snow_free_integ
 same 40 artifacts/43 constraints, all 96 horizon callbacks, corrected initial
 and actual finite-step losses, unchanged science gates, one free GPU/90m.
 Recovery remains at 3; paired fixed monitor is conditional on integration.
-The corrected integration passed 17 local tests and was launched at
-`90f6403` on free gln01 GPU 1 (host `ibc13b02n04`), 90-minute maximum.
-Report/log stem: `conditioned-snow-free-integration-90f6403`; results pending.
-No paid allocation or retained parameter update was submitted.
+The corrected integration `90f6403` completed on free gln01 GPU 1 in 3363.2543
+seconds. All 96 score checks pass and scale 1 is accepted, delta L2
+0.000381141275313. All 40 direct-GPP artifacts improve (mean -0.94885%);
+scheduled state/7-day/30-day losses change -0.64066%/-0.65962%/-0.58321%.
+Detailed science macro decreases 0.64062%; all physical gates pass. Seven-day
+ecosystem-carbon loss increases 0.009406%, inside its supporting cap. Absolute
+GPP/NPP/growth/autotrophic-respiration remain unaccepted at both horizons.
+Report/log stem: `conditioned-snow-free-integration-90f6403`, complete JSON
+retrieved locally. No paid allocation or retained parameter update occurred.
+Next is `research/daily_coarse_graining/conditioned_snow_free_monitor_20260909.md`:
+reconstruct from the seven exactly nonzero source weights, verify against the
+selected training result, save a separate diagnostic candidate, then evaluate
+the existing eight-artifact monitor pair. No new tuning, independent-validation
+claim or accepted-recovery mutation. This replay avoids recomputing zero-weight
+gradients and repeating the direction solver/scale search.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;

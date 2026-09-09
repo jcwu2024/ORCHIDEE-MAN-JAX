@@ -1,7 +1,7 @@
 # Corrected-head full train-only step
 
-Status: implementation and local qualification pass; free-GPU run launched
-at `90f6403` on 2026-09-09, result pending.
+Status: completed and admitted at `90f6403` on 2026-09-09; next is paired
+fixed-monitor transfer, not model promotion.
 
 ## Why this is next
 
@@ -81,3 +81,25 @@ Inspect `admission.passed`, all 96 horizon records, proposal selection, actual
 science changes and absolute-science status separately. A process exit or
 train-only selection alone is not integration admission. No candidate or
 monitor result is retained by this run; recovery remains update 3.
+
+## Completed result
+
+The complete local JSON `outputs/conditioned-snow-free-integration-90f6403.json`
+reports `admission.passed=true`, elapsed 3363.2543 seconds (56.05 minutes).
+All 64 seven-day and 32 thirty-day callbacks have matching production and
+observation scores. The first scale (1) passes; parameter delta L2 is
+0.000381141275313. All 40 direct-GPP artifacts improve, aggregate -0.94885%.
+Scheduled one-day state, seven-day science and thirty-day science losses
+change -0.64066%, -0.65962% and -0.58321%. Detailed science macro decreases
+0.64062%; physical gates pass. Seven-day ecosystem-carbon loss increases
+0.009406%, within the existing supporting cap; not every metric improves.
+
+Absolute GPP, NPP, growth and total autotrophic respiration gates still fail
+at both horizons. These percentages describe changes of losses in one small
+step, not physical prediction errors or long-term accuracy. No weights were
+saved by the discarded-step runner; accepted recovery remains update 3.
+The chosen direction has exactly seven positive simplex weights (six direct
+artifacts 555/600/697/867/870/982 and the scheduled 30-day objective); all
+other weights are exactly zero. This allows bounded reconstruction for the
+next monitor check without rerunning zero-weight gradients or scale search.
+See [`conditioned_snow_free_monitor_20260909.md`](conditioned_snow_free_monitor_20260909.md).
