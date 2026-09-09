@@ -1426,12 +1426,19 @@ implementation, free-node checks and submission of the one-V100/8-CPU,
 6-hour envelope, CNY 16.56 maximum. The continuation runner and exact 400-artifact
 plan are implemented. Saved-candidate free-GPU admission passed in 518.64 s:
 408 readable artifacts, unchanged reloaded parameters, reproduced corrected
-monitor and all physical gates passing. Job **14979295** is submitted to
-gnall, initially `PENDING (Priority)`, at execution commit `7f13f10`.
-Its six-hour/one-GPU/eight-CPU allocation matches the approval. No new training
-result is available yet. Keep the remote checkout at that execution commit
-while queued. Next inspect the job and fixed-monitor learning curve; do not
-automatically submit another paid run. See
+monitor and all physical gates passing. Job **14979295** subsequently completed
+normally in 02:49:07 at execution commit `7f13f10`: all ten new updates are
+accepted and recovery is verified at logical update 14. Fixed development-monitor
+direct GPP loss decreases 9.35793% and science macro decreases 7.34134%, with
+every step improving and all 960 score comparisons passing. The final five
+updates reduce direct loss another 5.47676%; there is no observed plateau.
+The daily reverse compiles once. Absolute GPP/NPP/growth/autotrophic respiration
+still fail at both horizons. Estimated additive actual-duration cost is CNY 7.78.
+Next prepare longer bounded training and an independent evaluation panel from
+this recovery, keeping Attention. Check accumulating report-writing overhead
+before scaling length and explicitly materialize the next data schedule.
+No further paid job is approved. The completed-job checkout restriction is released.
+See `research/daily_coarse_graining/conditioned_snow_free_continuation_result_20260909.md` and
 `research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md`.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See

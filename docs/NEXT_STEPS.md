@@ -2506,9 +2506,10 @@ improve direct GPP (mean -0.89965%); all 18 science-key/horizon losses improve
 respiration gates remain open. This is a previously exposed development
 monitor, not independent validation or proof of sustained training progress.
 The candidate is saved at `runtime/outputs/diagnostics/conditioned-snow-free-monitor-6ed00b0.candidate.pkl`.
-Do not reconstruct it again. Accepted recovery remains update 3.
-Immediate task: freeze bounded corrected-head continuation from this saved
-candidate, check reload/persistence, and specify predetermined training panels,
+Do not reconstruct it again. The original uncorrected recovery remains update 3;
+the corrected continuation now has its own accepted update-14 recovery below.
+The completed continuation froze this saved
+candidate, checked reload/persistence, and specified predetermined training panels,
 newly recomputed directions, corrected monitor baselines, cumulative progress,
 absolute accuracy and resource bounds before execution. Do not reuse old
 uncorrected recovery/monitor identities. The user approved implementation,
@@ -2521,11 +2522,20 @@ and summaries after 2/5/10 new steps. Schedule separation was checked locally.
 Approved paid envelope is one V100 + 8 Slurm CPUs, 6 hours maximum (CNY 16.56
 additive maximum). Local checks and the saved-candidate free-GPU admission
 pass (518.64 seconds, 408 readable artifacts, matching corrected monitor,
-all hard gates pass). **gnall job 14979295 is submitted**, initially pending
-for Priority. Execution commit is `7f13f10`; keep the remote checkout there
-while queued. The next operation is to read this job's progress/results and
-assess accepted updates, fixed-monitor learning, limiting constraints and hot
-throughput, not submit another job. See the
+all hard gates pass). **gnall job 14979295 completed all ten updates** in
+02:49:07, with recovery confirmed at logical update 14. Direct monitor loss
+falls 9.35793% and science macro falls 7.34134%; all steps and 960 gradient-score
+comparisons pass, with one daily-reverse compilation. Last-five-step direct
+loss falls a further 5.47676%; no observed plateau. GPP/NPP/growth/autotrophic
+respiration absolute gates still fail. See the
+[result review](research/daily_coarse_graining/conditioned_snow_free_continuation_result_20260909.md).
+Next prepare a longer bounded continuation from this recovery and a separately
+defined independent evaluation panel, retaining the Attention architecture.
+Check accumulating progress-report overhead before scaling length, and explicitly
+extend/materialize the train-only schedule (the current formula exceeds its
+100 groups at logical update 24). No further paid submission is authorized.
+The remote checkout no longer needs to remain pinned for this completed job.
+See the
 [execution record](research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md)
 for paths and resume semantics.
 The preceding completed contract is

@@ -449,12 +449,16 @@ also passes: all eight monitor artifacts improve in direct GPP (mean loss
 -0.90%) and all 18 science-key/horizon losses decrease. See
 `conditioned_snow_free_monitor_20260909.md` under the research documents.
 This monitor is not fresh independent validation. Final prediction accuracy
-is still unproven. The next task is bounded corrected-head continuation from
-the saved diagnostic update-4 candidate; accepted recovery remains update 3
-and model accuracy is not promoted. Its saved-candidate free admission now
-passes and approved gnall job `14979295` is submitted for ten new updates,
-with a six-hour / CNY 16.56 ceiling. Read this job's results next; keep the
-remote execution checkout at `7f13f10` while queued. Fresh validation,
+is still unproven. The bounded corrected-head continuation starts from
+the saved diagnostic update-4 candidate; the original uncorrected recovery
+remains update 3 and model accuracy is not promoted. Its saved-candidate free admission
+passes and approved gnall job `14979295` completed all ten new updates in
+2h49m. Recovery is now logical update 14. Fixed-monitor direct GPP loss falls
+9.36% and science macro falls 7.34%, with every step improving, one daily-reverse
+compilation, and all physical gates passing. Absolute GPP/NPP and two respiration
+gates still fail. Next prepare longer bounded training and independent evaluation
+on the same architecture; check growing reporting overhead before scaling.
+Fresh validation,
 365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
 See `NEXT_STEPS.md` for the exact current boundary.
 

@@ -4,6 +4,11 @@ The user approved implementation, free-node checks and gnall submission under
 the [ten-update plan](conditioned_snow_free_continuation_plan_20260909.md).
 Execution commit: `7f13f106e0fd06371cf092cd50b3bd7012bdfd0d`.
 
+Final status: job **14979295 completed normally in 02:49:07**, all ten updates
+accepted through logical update 14. Fixed-monitor direct GPP loss decreases
+9.35793% and science macro decreases 7.34134%; absolute accuracy remains open.
+See the [completed result](conditioned_snow_free_continuation_result_20260909.md).
+
 ## Implementation and local evidence
 
 - The exact 400-artifact training schedule is materialized, with no artifact
@@ -62,18 +67,15 @@ Log: `runtime/logs/corrected10_14979295.txt`.
 Run directory: `runtime/outputs/training/conditioned-snow-free-continuation-14979295/`.
 That directory will contain `report.json`, `pending.pkl`, and `recovery.pkl`.
 
-Keep the remote checkout at execution commit `7f13f10` while queued: its
-launcher checks that HEAD at startup. Local documentation commits made after
-submission must not be fast-forwarded onto the queued job's checkout.
+The checkout was kept at execution commit `7f13f10` while queued. The job is
+now complete, so this temporary startup restriction no longer applies.
 
 This is a sustained-learning experiment, not an independent validation or
 model-promotion gate. Assess the fixed monitor curve and absolute GPP/NPP,
 respiration and biomass accuracy after completion. Ten updates are not proof
 of full training sufficiency or of architecture failure.
 
-Next operation: inspect this job and its report, count accepted updates and
-actual attempted data use, report any stopping constraint, and compare fixed
-monitor losses/RMSE/bias against the corrected update-4 baseline. Check hot
-update time and reverse reuse by the second update. Do not submit a replacement
-or longer paid run automatically, and do not treat a rejected optimization
-step as an Attention architecture rejection.
+Result review and recovery inspection are complete. Next prepare a longer
+bounded continuation and separately defined independent evaluation, keeping
+the current architecture. Check growing progress-report overhead before
+scaling run length. Do not submit another paid run automatically.
