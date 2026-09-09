@@ -1,7 +1,7 @@
 # Corrected-head fixed-monitor transfer
 
-Status: frozen before implementation/execution, 2026-09-09; implementation
-and local qualification passed, free-GPU execution next.
+Status: implementation and local qualification passed; free-GPU run launched
+at `6ed00b0` on 2026-09-09, result pending.
 
 The corrected full integration `90f6403` passed all 96 gradient score checks
 and the complete train-only step. This experiment compares corrected update 3
@@ -76,3 +76,20 @@ and reload of the separate candidate snapshot without creating a recovery.
 The actual preceding JSON also passes 124 field/schema comparison checks;
 its science counts are `evaluated_values`, and selected direct losses are
 `artifact_changes.after`. Ruff, CLI/launcher arguments and whitespace pass.
+
+## Running handoff
+
+Execution commit `6ed00b0bce99b6e64d0cda1b3cb4a8c34be73aee` fast-forwarded
+on the server; both wrappers pass shell syntax. Both GPUs were idle before
+launch. The detached run started on gln01 GPU 1 (host `ibc13b02n04`, V100
+32 GB) and reached Python `corrected_monitor stage=bootstrap`.
+
+Working directory: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`.
+Command: `GPU_DEVICE=1 EXPECTED_GIT_HEAD=6ed00b0bce99b6e64d0cda1b3cb4a8c34be73aee
+OUTPUT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/conditioned-snow-free-monitor-6ed00b0.json
+bash scripts/hpc/audit_conditioned_snow_free_monitor.sh` (90m timeout).
+The `.log`, incremental `.json`, and, after replay passes, `.candidate.pkl`
+share that stem. There is no Slurm ID or paid allocation. Inspect this run
+before restarting. Distinguish reconstruction failure, monitor-transfer
+failure, and absolute-accuracy status. Accepted recovery remains update 3;
+the diagnostic candidate is not an accepted continuation checkpoint.

@@ -1404,6 +1404,11 @@ selected training result, save a separate diagnostic candidate, then evaluate
 the existing eight-artifact monitor pair. No new tuning, independent-validation
 claim or accepted-recovery mutation. This replay avoids recomputing zero-weight
 gradients and repeating the direction solver/scale search.
+The paired monitor runner passed 18 local tests and was launched at
+`6ed00b0` on free gln01 GPU 1, 90-minute bound. Python bootstrap started;
+report/log stem `conditioned-snow-free-monitor-6ed00b0`, transfer result
+pending. A separate `.candidate.pkl` will be written only after replay
+verification. It is not an accepted recovery and does not promote accuracy.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;

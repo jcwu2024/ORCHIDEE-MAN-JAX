@@ -2506,6 +2506,10 @@ monitor artifacts 251,358,465,572,679,786,893,1000. No solver, scale selection
 or monitor-driven tuning. This is a previously exposed development monitor,
 not new independent validation. One free GPU, at most 90 minutes; recovery
 remains update 3. A pass admits planning bounded continuation, not promotion.
+The monitor runner passed 18 local tests and is launched at `6ed00b0` on free
+gln01 GPU 1. Inspect `runtime/outputs/diagnostics/conditioned-snow-free-monitor-6ed00b0`
+(`.log`/`.json`, candidate snapshot only after replay passes) before further
+execution. It reached Python bootstrap; real transfer result remains pending.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See
