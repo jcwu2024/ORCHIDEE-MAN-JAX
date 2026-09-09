@@ -89,3 +89,29 @@ tested `EXPECTED_GIT_HEAD` set in the environment. Resources: gnall, one V100
 no requeue. Additive maximum: GPU CNY 17.60 + CPU CNY 4.48 = **CNY 22.08**.
 Show the final execution commit and command with free-check results before
 requesting this new paid approval.
+
+## Completed preparation evidence
+
+Execution code is `b6929153fc028330cbfc347f12565043a85e7aa6` on both checkouts.
+The 38-test local regression set passes, including the full mocked 20-update
+lifecycle, completed resume, real update-14 recovery loading, CLI parsing,
+independent paired-count checks, and existing streamed-gradient numerical tests.
+
+Free test01 prepared all 24 independent windows in 783.53 seconds, using
+35,528,315 bytes. The selected panel contains 24 distinct locations and 24
+distinct point-years, excluding 215 point-years from the three historical
+panels. Preparation reads existing v6 data and does not run the Teacher again.
+Local evidence is `outputs/conditioned-independent-validation-panel-20260909.json`
+and `outputs/conditioned-independent-validation-prepared-20260909.json`.
+The reporting benchmark is `outputs/conditioned-reporting-db6ff1f.json`.
+
+The zero-update free gln01 GPU-1 admission passed at this execution commit.
+It has restored the accepted update-14 tree, checked 686 existing training and
+monitor files for readability, and reproduced the fixed eight-artifact monitor
+at 534.5 seconds. All 24 independent windows completed, with zero physical
+hard failures and zero trained updates, in 1162.95 seconds overall. Absolute
+science accuracy still fails; independent transfer cannot be measured until
+the paired post-training evaluation. See
+[the admission record](conditioned_continuation_v2_admission_20260909.md).
+Report:
+`runtime/outputs/diagnostics/conditioned-v2-preflight-b692915/report.json`.

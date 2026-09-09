@@ -1440,9 +1440,16 @@ The longer continuation is now implemented under
 monitor protection, and paired 24-window independent evaluation. The growing
 report-writing cost is measured on free test02 and bounded: late full event
 write 0.4603s versus compact event 0.00244s. The local 38-test set passes.
-Independent preparation on free test01 is in progress; free-GPU baseline
-admission precedes a new 8h / CNY 22.08 approval request. No further paid job
-is approved. The completed-job checkout restriction is released.
+Independent preparation on free test01 is complete (24 windows, 783.53 seconds).
+Free-GPU admission at `b692915` passes in 1162.95 seconds, with update-14 monitor
+reproduction, all 24 independent windows evaluated, zero physical hard failures
+and zero new updates. Independent science macro normalized RMSE is 0.369501;
+all six cells still fail absolute GPP/NPP/growth/autotrophic respiration gates.
+This is a starting measurement, not paired transfer evidence. See
+`research/daily_coarse_graining/conditioned_continuation_v2_admission_20260909.md`.
+The new 8h / CNY 22.08 run is ready for approval; no further paid job is approved.
+The completed-job checkout restriction is released; keep remote `b692915` for
+the prepared v2 submission.
 See `research/daily_coarse_graining/conditioned_snow_free_continuation_result_20260909.md` and
 `research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md`.
 The completed preceding check is

@@ -2534,10 +2534,14 @@ The next-stage implementation now follows
 20 updates (15--34) from update 14, unchanged architecture/update rules, explicit
 800 training-artifact exposures / 678 distinct IDs, and paired independent
 24-window temporal/spatial/joint validation. Bounded progress reporting passes
-free-CPU measurement (late event IO 0.4603s -> 0.00244s). Local checks pass;
-free CPU preparation is in progress. Complete free-GPU reload/monitor/independent
-baseline admission before requesting the new one-V100/8-CPU/8h paid envelope
-(CNY 22.08 maximum). No further paid submission is authorized yet.
+free-CPU measurement (late event IO 0.4603s -> 0.00244s). All 38 local checks,
+free CPU preparation and free-GPU admission pass at execution `b692915`.
+The 1162.95-second zero-update run reproduces update 14 and evaluates all 24
+independent windows with zero physical hard failures. Independent starting
+accuracy still fails absolute gates; paired transfer remains unmeasured.
+See the [admission record](research/daily_coarse_graining/conditioned_continuation_v2_admission_20260909.md).
+Next action: request the ready one-V100/8-CPU/8h paid run (CNY 22.08 maximum).
+No further paid submission is authorized yet.
 The remote checkout no longer needs to remain pinned for this completed job.
 See the
 [execution record](research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md)

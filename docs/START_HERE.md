@@ -457,9 +457,10 @@ passes and approved gnall job `14979295` completed all ten new updates in
 9.36% and science macro falls 7.34%, with every step improving, one daily-reverse
 compilation, and all physical gates passing. Absolute GPP/NPP and two respiration
 gates still fail. The next 20-update continuation and independent 24-window
-evaluation are implemented. Reporting overhead is reduced and local checks pass;
-complete free data/baseline admission before requesting the next paid run.
-Fresh validation,
+evaluation are implemented. Local and free CPU/GPU admission pass: all 24
+independent windows complete without physical hard failures, but absolute
+accuracy still fails. The next 20-update run is ready for paid approval;
+independent before/after transfer remains unmeasured. Larger fresh validation,
 365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
 See `NEXT_STEPS.md` for the exact current boundary.
 
