@@ -1421,9 +1421,10 @@ ten additional updates (logical 5--14), 400 distinct existing artifact IDs,
 no fixed-monitor artifact overlap, same admitted optimizer/daily-gradient
 method, automatic per-update monitor/recovery and 2/5/10 summaries. Estimated
 hot update plus monitor is ~14 minutes from the previous report's first-use
-overheads, not yet measured sustained throughput. Proposed one-V100/8-CPU
-6-hour paid envelope is CNY 16.56 maximum; design only, no implementation,
-paid approval or submission yet.
+overheads, not yet measured sustained throughput. The user subsequently approved
+implementation, free-node checks and submission of the one-V100/8-CPU,
+6-hour envelope, CNY 16.56 maximum. The continuation runner and exact 400-artifact
+plan are implemented; saved-candidate free-GPU admission precedes submission.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;

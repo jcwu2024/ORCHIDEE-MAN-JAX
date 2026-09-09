@@ -1,7 +1,10 @@
-# Proposed ten-update corrected-head continuation
+# Ten-update corrected-head continuation
 
-Status: design proposal, 2026-09-09. Not an implemented runner, frozen execution
-contract, or paid-submission authorization. No job is launched by this plan.
+Status: user approved implementation, free-node checks and submission to gnall,
+2026-09-09, under the six-hour / CNY 16.56 envelope below. The exact panels are
+materialized in `manifests/coarse_graining/conditioned_snow_free_continuation_v1.json`.
+The runner is `scripts/hpc/run_conditioned_snow_free_continuation.py`; the
+launcher is `scripts/hpc/slurm_conditioned_snow_free_continuation.sh`.
 
 ## Research question and starting evidence
 
@@ -166,7 +169,7 @@ Training: one continuous job, proposed gnall allocation of one V100 32 GB and
 `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`; outputs go to a separate corrected
 continuation directory under `runtime/outputs/training/`. Reuse the canonical
 GPU environment and existing Singularity wrapper. Proposed launcher and exact
-command must be implemented/reviewable before requesting submission approval.
+command are implemented and covered by the user's approval through submission.
 No multi-GPU or alternative model arm in this run.
 
 Timing basis: the last full integration took 3363.25 seconds. The first detailed
@@ -188,8 +191,8 @@ Using Explore1000's stated additive rates, the proposed maximum charge is:
 GPU 1 x 6 x CNY 2.20 = CNY 13.20; CPU 8 x 6 x CNY 0.07 = CNY 3.36;
 total CNY 16.56. At 3--4.5 hours the corresponding estimate is CNY 8.28--12.42.
 Queue waiting is additional elapsed time, outside these compute-time estimates.
-Resources/command/wall limit/estimate still require explicit paid approval
-before submission; this document authorizes no submission.
+The user approved this bounded execution through submission. Display the exact
+command and resource envelope before submitting; no second approval is needed.
 
 After a useful sustained-learning result, scale training/data consumption and
 then assess independently reserved data. Annual rollout, long holdout, Gate D2

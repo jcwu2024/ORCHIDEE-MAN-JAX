@@ -1137,6 +1137,13 @@ diagnostic candidate and evaluates corrected baseline/candidate through the
 existing monitor gates. It never updates accepted recovery. The wrapper uses
 one free GPU for at most 90 minutes; this is development-monitor transfer.
 
+The corrected warm snow-free continuation uses
+`daily_operator/corrected_continuation.py` for the approved 400-artifact plan
+and pending/accepted atomic state. `scripts/hpc/run_conditioned_snow_free_continuation.py`
+reuses the admitted train-only update and one persistent streamed reverse across
+logical updates 5--14. Its shell and Slurm launchers own free preflight and the
+approved one-V100/six-hour run; the old three-update runner remains historical.
+
 ## Scripts
 
 | Path | Classification | Use |

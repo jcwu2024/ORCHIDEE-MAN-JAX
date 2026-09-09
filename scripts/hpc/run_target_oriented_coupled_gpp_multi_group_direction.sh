@@ -35,13 +35,18 @@ PARENT_DIR=$ROOT/runtime/outputs/training/target-oriented-coupled-gpp-bounded-14
 PYTHON=$ROOT/.venvs/orcjax_gpu/bin/python
 IMAGE=/apps/soft/sif/foundationpose
 
-case "$(hostname -s)" in gln01|ibgln01|ibc13b02n04) ;; *) exit 2 ;; esac
+case "$(hostname -s)" in
+  gln01|ibgln01|ibc13b02n04) ;;
+  *) [[ "$PYTHON_MODULE" == "scripts.hpc.run_conditioned_snow_free_continuation" && -n "${SLURM_JOB_ID:-}" && "${SLURM_JOB_PARTITION:-}" == gnall ]] || exit 2 ;;
+esac
 case "$WORKTREE" in "$ROOT"|"$ROOT/runtime/worktrees/"*) ;; *) exit 2 ;; esac
 case "$OUTPUT" in "$ROOT/runtime/outputs/"*.json|"$ROOT/runtime/outputs/"*/*.json) ;; *) exit 2 ;; esac
 case "$CACHE_ROOT" in "$ROOT/runtime/cache/"*) ;; *) exit 2 ;; esac
 test -x "$PYTHON"
 test "$(cd "$WORKTREE" && git rev-parse HEAD)" = "$EXPECTED_GIT_HEAD"
-test ! -e "$OUTPUT"
+if [[ "$PYTHON_MODULE" != "scripts.hpc.run_conditioned_snow_free_continuation" ]]; then
+  test ! -e "$OUTPUT"
+fi
 
 DATASET=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json
 ACCEPTANCE=$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance-v2/acceptance_report.json
@@ -131,6 +136,7 @@ if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_conditi
     --discarded-update-contract "$CONDITIONED_DISCARDED_UPDATE_CONTRACT"
   )
 elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_conditioned_attention_persistent_training" || \
+  "$PYTHON_MODULE" == "scripts.hpc.run_conditioned_snow_free_continuation" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_update4_derivative" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_window442" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_derivative_modes" || \
@@ -172,6 +178,9 @@ elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_conditi
   fi
   if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_seven_score" ]]; then
     EXTRA_AUDIT_ARGS+=(--trace-mode "${TRACE_MODE:-verbose}")
+  fi
+  if [[ "$PYTHON_MODULE" == "scripts.hpc.run_conditioned_snow_free_continuation" && "${PREFLIGHT_ONLY:-0}" == 1 ]]; then
+    EXTRA_AUDIT_ARGS+=(--preflight-only)
   fi
 elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_aware_persistent_training" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_zero_displacement" || \
