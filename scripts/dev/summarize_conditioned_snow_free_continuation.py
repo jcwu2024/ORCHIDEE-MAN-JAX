@@ -6,12 +6,14 @@ import json
 from pathlib import Path
 from statistics import median
 
-from research.daily_coarse_graining.daily_operator.corrected_continuation import load_contract
+from research.daily_coarse_graining.daily_operator.corrected_continuation import DEFAULT_PLAN, load_contract
 from scripts.hpc.run_conditioned_snow_free_continuation import persistent
 
 
 def summarize(report):
-    contract = load_contract()
+    plan = report['plan']
+    contract = load_contract(DEFAULT_PLAN.with_name(plan['schema_version'] + '.json'))
+    start = plan['starting_logical_update']
     baseline, monitors = report['initial_monitor'], report['monitors']
     rows, previous, artifacts = [], baseline, []
     for record, monitor in zip(report['records'], monitors, strict=True):
@@ -25,7 +27,7 @@ def summarize(report):
         assert len(evidence['records']) == 96 and all(r['linearized_score_agrees'] for r in evidence['records'])
         artifacts.extend(u for g in record['train_only_panel']['artifact_groups'] for u in g)
         slopes = record['direction']['calibration']['constraint_relative_slopes']
-        rows.append({'new_update': record['logical_update'] - 4,
+        rows.append({'new_update': record['logical_update'] - start,
                      'direct_reduction_percent': -100 * cumulative['direct_gpp_mean_relative_change'],
                      'science_reduction_percent': -100 * cumulative['science_progress']['macro_relative_change'],
                      'direct_local_reduction_percent': -100 * local['direct_gpp_mean_relative_change'],
@@ -45,16 +47,17 @@ def summarize(report):
                 'initial_rmse': before['normalized_rmse'], 'final_rmse': after['normalized_rmse'],
                 'initial_bias': before['normalized_signed_bias'], 'final_bias': after['normalized_signed_bias'],
                 'absolute_pass': report['absolute_science']['checks'][f'{horizon}.{key}']})
-    middle = monitors[4]['panel']
+    middle = monitors[-6]['panel'] if len(monitors) > 5 else baseline
     second_half = persistent.monitor_transfer_gate(contract, middle, final)
     return {'status': report['status'], 'completed_updates': len(rows), 'updates': rows, 'metrics': metrics,
             'all_local_cumulative_gates_recomputed': True, 'gradient_score_pairs': 96 * len(rows),
             'train_artifact_exposures': len(artifacts), 'distinct_train_artifacts': len(set(artifacts)),
-            'hot_train_median_seconds': median(r['train_seconds'] for r in rows[1:]),
+            'hot_train_median_seconds': median(r['train_seconds'] for r in (rows[1:] or rows)),
             'last_five_direct_reduction_percent': -100 * second_half['direct_gpp_mean_relative_change'],
             'last_five_science_reduction_percent': -100 * second_half['science_progress']['macro_relative_change'],
             'absolute_science_passed': report['absolute_science']['passed'],
-            'reverse_compile_count': report['reverse_compile_count']}
+            'reverse_compile_count': report['reverse_compile_count'],
+            'starting_logical_update': start, 'independent_gate': report.get('independent_gate')}
 
 
 def main():
@@ -75,7 +78,8 @@ def main():
         ax.plot([0] + [r['new_update'] for r in rows], [0] + [r[field] for r in rows],
                 marker='o', linewidth=2, label=label)
     ax.set(xlabel='Additional accepted updates', ylabel='Loss reduction from corrected baseline (%)',
-           title='Job 14979295: fixed development monitor', xticks=range(11))
+           title=f'Corrected Attention: fixed development monitor (start {summary["starting_logical_update"]})',
+           xticks=range(0, len(rows) + 1, max(1, len(rows) // 10)))
     ax.grid(alpha=.25)
     ax.legend()
     fig.savefig(args.report.with_suffix('.learning.png'), dpi=170)

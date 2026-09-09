@@ -182,6 +182,9 @@ elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_conditi
   if [[ "$PYTHON_MODULE" == "scripts.hpc.run_conditioned_snow_free_continuation" && "${PREFLIGHT_ONLY:-0}" == 1 ]]; then
     EXTRA_AUDIT_ARGS+=(--preflight-only)
   fi
+  if [[ "$PYTHON_MODULE" == "scripts.hpc.run_conditioned_snow_free_continuation" && -n "${CONTINUATION_CONTRACT:-}" ]]; then
+    EXTRA_AUDIT_ARGS+=(--continuation-contract "$CONTINUATION_CONTRACT")
+  fi
 elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_artifact_aware_persistent_training" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_zero_displacement" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_localized_jump" || \

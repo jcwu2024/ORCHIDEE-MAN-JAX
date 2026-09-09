@@ -1143,6 +1143,14 @@ and pending/accepted atomic state. `scripts/hpc/run_conditioned_snow_free_contin
 reuses the admitted train-only update and one persistent streamed reverse across
 logical updates 5--14. Its shell and Slurm launchers own free preflight and the
 approved one-V100/six-hour run; the old three-update runner remains historical.
+The same runner also supports v2 logical updates 15--34 from accepted update 14.
+`daily_operator/continuation_reporting.py` bounds per-event progress IO while
+preserving complete lifecycle reports. `daily_operator/conditioned_independent_panel.py`
+selects disjoint metadata-only validation and owns the paired transfer rule;
+`scripts/hpc/prepare_conditioned_independent_validation.py` reuses the existing
+v6 validation preparer. The runner binds the corrected head into the existing
+fresh rollout evaluator for before/after checks. The v2 Slurm script proposes
+one V100/eight hours and requires new paid approval after free admission.
 
 ## Scripts
 

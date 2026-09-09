@@ -1434,10 +1434,15 @@ every step improving and all 960 score comparisons passing. The final five
 updates reduce direct loss another 5.47676%; there is no observed plateau.
 The daily reverse compiles once. Absolute GPP/NPP/growth/autotrophic respiration
 still fail at both horizons. Estimated additive actual-duration cost is CNY 7.78.
-Next prepare longer bounded training and an independent evaluation panel from
-this recovery, keeping Attention. Check accumulating report-writing overhead
-before scaling length and explicitly materialize the next data schedule.
-No further paid job is approved. The completed-job checkout restriction is released.
+The longer continuation is now implemented under
+`research/daily_coarse_graining/conditioned_continuation_v2_plan_20260909.md`:
+20 new updates, 800 exposures / 678 distinct existing artifacts, stage/original
+monitor protection, and paired 24-window independent evaluation. The growing
+report-writing cost is measured on free test02 and bounded: late full event
+write 0.4603s versus compact event 0.00244s. The local 38-test set passes.
+Independent preparation on free test01 is in progress; free-GPU baseline
+admission precedes a new 8h / CNY 22.08 approval request. No further paid job
+is approved. The completed-job checkout restriction is released.
 See `research/daily_coarse_graining/conditioned_snow_free_continuation_result_20260909.md` and
 `research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md`.
 The completed preceding check is

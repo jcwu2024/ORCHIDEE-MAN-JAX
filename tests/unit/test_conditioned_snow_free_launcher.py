@@ -10,14 +10,16 @@ from scripts.hpc.run_conditioned_snow_free_continuation import _parser
 
 
 @pytest.mark.parametrize('paid', [False, True])
-def test_actual_wrapper_and_slurm_cli(tmp_path, paid):
+@pytest.mark.parametrize('stage', [1, 2])
+def test_actual_wrapper_and_slurm_cli(tmp_path, paid, stage):
     bash = shutil.which('bash')
     if bash is None:
         pytest.skip('requires Bash')
     root = Path(__file__).resolve().parents[2]
     hpc = tmp_path / 'scripts/hpc'
     hpc.mkdir(parents=True)
-    names = ['run_conditioned_snow_free_continuation.sh', 'slurm_conditioned_snow_free_continuation.sh',
+    slurm_name = 'slurm_conditioned_snow_free_continuation' + ('_v2' if stage == 2 else '') + '.sh'
+    names = ['run_conditioned_snow_free_continuation.sh', slurm_name,
              'run_target_oriented_coupled_gpp_conditioned_attention_persistent_training.sh',
              'run_target_oriented_coupled_gpp_multi_group_direction.sh']
     for name in names:
@@ -34,6 +36,8 @@ def test_actual_wrapper_and_slurm_cli(tmp_path, paid):
     else:
         for name in ('SLURM_JOB_ID', 'SLURM_JOB_PARTITION'):
             environment.pop(name, None)
+        if stage == 2:
+            environment['CONTINUATION_CONTRACT'] = (tmp_path / 'manifests/coarse_graining/conditioned_snow_free_continuation_v2.json').as_posix()
     # Only external cluster commands are mocked; all shell branching/expansion is real.
     functions = '''
 hostname() { printf '%s\n' "$FAKE_HOST"; }
@@ -46,7 +50,7 @@ env() { printf 'ARG=%s\n' "$@"; }
 export -f hostname git test readlink nvidia-smi sha256sum env
 bash "$1"
 '''
-    entry = hpc / ('slurm_conditioned_snow_free_continuation.sh' if paid else 'run_conditioned_snow_free_continuation.sh')
+    entry = hpc / (slurm_name if paid else 'run_conditioned_snow_free_continuation.sh')
     result = subprocess.run([bash, '-c', functions, 'test-launch', entry.as_posix()],
                             env=environment, capture_output=True, text=True, timeout=30)
     assert result.returncode == 0, result.stdout + result.stderr
@@ -58,4 +62,6 @@ bash "$1"
     assert parsed.output == output
     assert f'SINGULARITYENV_CUDA_VISIBLE_DEVICES={3 if paid else 1}' in args
     if paid:
-        assert '350m' in args
+        assert ('350m' if stage == 1 else '470m') in args
+    if stage == 2:
+        assert parsed.continuation_contract.name == 'conditioned_snow_free_continuation_v2.json'

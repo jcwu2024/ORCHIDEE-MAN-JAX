@@ -2529,11 +2529,15 @@ comparisons pass, with one daily-reverse compilation. Last-five-step direct
 loss falls a further 5.47676%; no observed plateau. GPP/NPP/growth/autotrophic
 respiration absolute gates still fail. See the
 [result review](research/daily_coarse_graining/conditioned_snow_free_continuation_result_20260909.md).
-Next prepare a longer bounded continuation from this recovery and a separately
-defined independent evaluation panel, retaining the Attention architecture.
-Check accumulating progress-report overhead before scaling length, and explicitly
-extend/materialize the train-only schedule (the current formula exceeds its
-100 groups at logical update 24). No further paid submission is authorized.
+The next-stage implementation now follows
+[conditioned_continuation_v2_plan_20260909.md](research/daily_coarse_graining/conditioned_continuation_v2_plan_20260909.md):
+20 updates (15--34) from update 14, unchanged architecture/update rules, explicit
+800 training-artifact exposures / 678 distinct IDs, and paired independent
+24-window temporal/spatial/joint validation. Bounded progress reporting passes
+free-CPU measurement (late event IO 0.4603s -> 0.00244s). Local checks pass;
+free CPU preparation is in progress. Complete free-GPU reload/monitor/independent
+baseline admission before requesting the new one-V100/8-CPU/8h paid envelope
+(CNY 22.08 maximum). No further paid submission is authorized yet.
 The remote checkout no longer needs to remain pinned for this completed job.
 See the
 [execution record](research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md)

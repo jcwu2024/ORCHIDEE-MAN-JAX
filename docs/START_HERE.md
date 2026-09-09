@@ -456,8 +456,9 @@ passes and approved gnall job `14979295` completed all ten new updates in
 2h49m. Recovery is now logical update 14. Fixed-monitor direct GPP loss falls
 9.36% and science macro falls 7.34%, with every step improving, one daily-reverse
 compilation, and all physical gates passing. Absolute GPP/NPP and two respiration
-gates still fail. Next prepare longer bounded training and independent evaluation
-on the same architecture; check growing reporting overhead before scaling.
+gates still fail. The next 20-update continuation and independent 24-window
+evaluation are implemented. Reporting overhead is reduced and local checks pass;
+complete free data/baseline admission before requesting the next paid run.
 Fresh validation,
 365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
 See `NEXT_STEPS.md` for the exact current boundary.
