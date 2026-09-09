@@ -2513,6 +2513,14 @@ newly recomputed directions, corrected monitor baselines, cumulative progress,
 absolute accuracy and resource bounds before execution. Do not reuse old
 uncorrected recovery/monitor identities. No new run has been launched for
 this continuation; paid execution and final acceptance remain closed.
+A concrete design proposal now exists:
+[`conditioned_snow_free_continuation_plan_20260909.md`](research/daily_coarse_graining/conditioned_snow_free_continuation_plan_20260909.md).
+It proposes ten new updates (logical 5--14), 400 distinct existing artifact
+IDs, unchanged admitted update rules, per-update automatic monitor/recovery,
+and summaries after 2/5/10 new steps. Schedule separation was checked locally.
+Proposed paid envelope is one V100 + 8 Slurm CPUs, 6 hours maximum (CNY 16.56
+additive maximum). This is a design awaiting discussion/implementation, not
+an approved paid job or an implemented continuation runner.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See

@@ -1415,6 +1415,15 @@ Its separate remote `.candidate.pkl` is saved and reusable; do not reconstruct
 it again. Accepted recovery is still update 3. The next task is a frozen
 bounded continuation with corrected-head reload/persistence and cumulative
 monitor/absolute-science reporting; no continuation job is launched yet.
+The user requested a training design. The proposal is now documented in
+`research/daily_coarse_graining/conditioned_snow_free_continuation_plan_20260909.md`:
+ten additional updates (logical 5--14), 400 distinct existing artifact IDs,
+no fixed-monitor artifact overlap, same admitted optimizer/daily-gradient
+method, automatic per-update monitor/recovery and 2/5/10 summaries. Estimated
+hot update plus monitor is ~14 minutes from the previous report's first-use
+overheads, not yet measured sustained throughput. Proposed one-V100/8-CPU
+6-hour paid envelope is CNY 16.56 maximum; design only, no implementation,
+paid approval or submission yet.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;
