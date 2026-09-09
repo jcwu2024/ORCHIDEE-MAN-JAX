@@ -444,12 +444,14 @@ The corrected-head gradient check now passes on the three 7/30-day windows:
 all eight derivative comparisons and six diagnostic descent checks pass,
 with maximum relative derivative discrepancy 0.0650%. The corrected full
 40-artifact integration also passes: all 96 gradient scores agree, and the
-first train-only step reduces direct GPP and 7/30-day losses. The active task
-is paired transfer to the existing development monitor; see
+first train-only step reduces direct GPP and 7/30-day losses. Paired transfer
+also passes: all eight monitor artifacts improve in direct GPP (mean loss
+-0.90%) and all 18 science-key/horizon losses decrease. See
 `conditioned_snow_free_monitor_20260909.md` under the research documents.
 This monitor is not fresh independent validation. Final prediction accuracy
-is still unproven. Accepted recovery remains update 3;
-no new weights were retained and model accuracy is not promoted. Paid execution,
+is still unproven. The next task is bounded corrected-head continuation from
+the saved diagnostic update-4 candidate; accepted recovery remains update 3
+and model accuracy is not promoted. Paid execution,
 fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
 remain closed. See `NEXT_STEPS.md` for the exact current boundary.
 

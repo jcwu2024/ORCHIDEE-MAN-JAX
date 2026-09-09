@@ -1404,11 +1404,17 @@ selected training result, save a separate diagnostic candidate, then evaluate
 the existing eight-artifact monitor pair. No new tuning, independent-validation
 claim or accepted-recovery mutation. This replay avoids recomputing zero-weight
 gradients and repeating the direction solver/scale search.
-The paired monitor runner passed 18 local tests and was launched at
-`6ed00b0` on free gln01 GPU 1, 90-minute bound. Python bootstrap started;
-report/log stem `conditioned-snow-free-monitor-6ed00b0`, transfer result
-pending. A separate `.candidate.pkl` will be written only after replay
-verification. It is not an accepted recovery and does not promote accuracy.
+The paired monitor `6ed00b0` completed on free gln01 GPU 1 in 1121.3835
+seconds. Reconstruction and training-score replay pass, then all eight
+monitor artifacts improve direct GPP (mean -0.89965%). All 18 science-key/
+horizon losses decrease, macro -0.63715%; physical checks pass. Absolute
+GPP/NPP/growth/autotrophic-respiration still fail at both horizons. This is
+single-step development-monitor transfer, not final prediction accuracy.
+The complete report is local at `outputs/conditioned-snow-free-monitor-6ed00b0.json`.
+Its separate remote `.candidate.pkl` is saved and reusable; do not reconstruct
+it again. Accepted recovery is still update 3. The next task is a frozen
+bounded continuation with corrected-head reload/persistence and cumulative
+monitor/absolute-science reporting; no continuation job is launched yet.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;

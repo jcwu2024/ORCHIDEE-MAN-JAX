@@ -1,7 +1,7 @@
 # Corrected-head fixed-monitor transfer
 
-Status: implementation and local qualification passed; free-GPU run launched
-at `6ed00b0` on 2026-09-09, result pending.
+Status: completed and passed at `6ed00b0` on 2026-09-09. Candidate replay and
+paired development-monitor transfer are admitted; absolute accuracy remains open.
 
 The corrected full integration `90f6403` passed all 96 gradient score checks
 and the complete train-only step. This experiment compares corrected update 3
@@ -93,3 +93,45 @@ share that stem. There is no Slurm ID or paid allocation. Inspect this run
 before restarting. Distinguish reconstruction failure, monitor-transfer
 failure, and absolute-accuracy status. Accepted recovery remains update 3;
 the diagnostic candidate is not an accepted continuation checkpoint.
+
+## Completed result
+
+Complete JSON was retrieved to `outputs/conditioned-snow-free-monitor-6ed00b0.json`.
+The first direct SCP stalled; the subsequent compressed transfer is complete
+and parses successfully. It reports `status=completed`, `passed=true`,
+`classification=corrected_monitor_transfer_passed`, elapsed 1121.3835 seconds
+(18.69 minutes). No timeout or paid allocation was involved.
+
+Reconstruction passes every source and candidate-loss comparison and all 32
+thirty-day score comparisons. Combined direction norm is 0.421342272648220,
+versus recorded 0.421342272648339. The separate candidate was saved at
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/conditioned-snow-free-monitor-6ed00b0.candidate.pkl`.
+Do not recompute this already saved proposal. It contains corrected-boundary
+metadata and proposed logical update 4; the accepted recovery file remains 3.
+
+All eight monitor artifacts improve in direct GPP, mean loss change -0.89965%.
+The detailed nine-key/two-horizon science macro changes -0.63715%. Every one
+of the 18 key/horizon losses decreases, including ecosystem carbon; all
+physical gates pass. Selected changes (loss reduction, not physical error %):
+
+| Objective | 7-day loss decrease | 30-day loss decrease |
+| --- | ---: | ---: |
+| GPP | 0.62266% | 0.65070% |
+| NPP | 0.62848% | 0.64011% |
+| Aboveground biomass carbon | 0.68368% | 0.67444% |
+| Belowground biomass carbon | 0.56163% | 0.59444% |
+| Autotrophic respiration | 0.60267% | 0.66306% |
+
+Absolute GPP, NPP, growth respiration and total autotrophic respiration gates
+still fail at both horizons. AGB/BGB, total live biomass, maintenance
+respiration and ecosystem-carbon gates pass on this bounded monitor only.
+This is positive single-step development-monitor transfer, not proof of
+independent generalization, sustained training slope or long-term simulation.
+
+Next: freeze a bounded continuation from the saved corrected candidate, with
+freshly computed directions at each update, predetermined training panels,
+corrected-model monitor baseline and explicit cumulative/absolute science
+reporting. Verify snapshot reload and corrected-head persistence, then run
+within a stated resource envelope. Do not silently apply the old uncorrected
+recovery/monitor identity or repeat the full discarded reconstruction. Paid
+training, 365-day rollout, Gate D2 and final product gates remain unopened.

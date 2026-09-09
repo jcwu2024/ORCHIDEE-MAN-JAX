@@ -2497,19 +2497,22 @@ Run `90f6403` completed in 3363.25 seconds and is admitted: all 96 score
 comparisons pass, the first scale passes, all 40 direct-GPP artifacts improve,
 and scheduled 7/30-day science losses decrease 0.660%/0.583%. Physical gates
 pass. Absolute GPP/NPP/growth/autotrophic-respiration gates remain open.
-The immediate task is paired fixed-monitor transfer under
+Paired fixed-monitor transfer is now completed and admitted under
 [`conditioned_snow_free_monitor_20260909.md`](research/daily_coarse_graining/conditioned_snow_free_monitor_20260909.md).
-Reproduce the discarded candidate using the recorded seven nonzero gradient
-coefficients and exact selected step, verify its training losses, save a
-separate diagnostic snapshot, then compare corrected baseline/candidate on
-monitor artifacts 251,358,465,572,679,786,893,1000. No solver, scale selection
-or monitor-driven tuning. This is a previously exposed development monitor,
-not new independent validation. One free GPU, at most 90 minutes; recovery
-remains update 3. A pass admits planning bounded continuation, not promotion.
-The monitor runner passed 18 local tests and is launched at `6ed00b0` on free
-gln01 GPU 1. Inspect `runtime/outputs/diagnostics/conditioned-snow-free-monitor-6ed00b0`
-(`.log`/`.json`, candidate snapshot only after replay passes) before further
-execution. It reached Python bootstrap; real transfer result remains pending.
+Run `6ed00b0` completes in 1121.38 seconds. Candidate reconstruction, training
+score reproduction and monitor transfer all pass. All eight monitor artifacts
+improve direct GPP (mean -0.89965%); all 18 science-key/horizon losses improve
+(macro -0.63715%). Physical gates pass, but absolute GPP/NPP/growth/autotrophic
+respiration gates remain open. This is a previously exposed development
+monitor, not independent validation or proof of sustained training progress.
+The candidate is saved at `runtime/outputs/diagnostics/conditioned-snow-free-monitor-6ed00b0.candidate.pkl`.
+Do not reconstruct it again. Accepted recovery remains update 3.
+Immediate task: freeze bounded corrected-head continuation from this saved
+candidate, check reload/persistence, and specify predetermined training panels,
+newly recomputed directions, corrected monitor baselines, cumulative progress,
+absolute accuracy and resource bounds before execution. Do not reuse old
+uncorrected recovery/monitor identities. No new run has been launched for
+this continuation; paid execution and final acceptance remain closed.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See
