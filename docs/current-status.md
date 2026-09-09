@@ -1447,9 +1447,13 @@ and zero new updates. Independent science macro normalized RMSE is 0.369501;
 all six cells still fail absolute GPP/NPP/growth/autotrophic respiration gates.
 This is a starting measurement, not paired transfer evidence. See
 `research/daily_coarse_graining/conditioned_continuation_v2_admission_20260909.md`.
-The new 8h / CNY 22.08 run is ready for approval; no further paid job is approved.
-The completed-job checkout restriction is released; keep remote `b692915` for
-the prepared v2 submission.
+The user approved the 8h / CNY 22.08 run. Job `14984032` was submitted on
+2026-09-09 at 22:32:51 Asia/Shanghai, initially PENDING / Priority. Slurm confirms
+one GPU, eight CPUs, 32G host memory and no requeue. Keep remote `b692915` fixed
+until completion. Results go to `conditioned-snow-free-continuation-v2-14984032`.
+The user's final-training reproducibility principle is now in `AGENTS.md` and
+`NEXT_STEPS.md`: retain exploratory progress, but execute a documented complete
+training recipe before final-method acceptance.
 See `research/daily_coarse_graining/conditioned_snow_free_continuation_result_20260909.md` and
 `research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md`.
 The completed preceding check is

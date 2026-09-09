@@ -1,7 +1,7 @@
 # Corrected Attention: second bounded continuation and independent evaluation
 
-Status: implementation and free preparation authorized; **paid submission is
-not yet approved**. This plan is fixed before new validation target arrays or
+Status: approved paid job **14984032** submitted on 2026-09-09 at 22:32:51
+Asia/Shanghai. This plan was fixed before new validation target arrays or
 model scores are inspected. It follows the accepted ten-update result under
 job 14979295 and keeps its Attention architecture, 109,464,375 total / 15,960,211
 trainable parameters, physical boundary correction and 43-source optimizer.
@@ -87,8 +87,10 @@ Proposed command, from `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX` on gln01:
 tested `EXPECTED_GIT_HEAD` set in the environment. Resources: gnall, one V100
 32GB, one task, 8 Slurm CPUs, 32GB host memory, 8h maximum (470m inner timeout),
 no requeue. Additive maximum: GPU CNY 17.60 + CPU CNY 4.48 = **CNY 22.08**.
-Show the final execution commit and command with free-check results before
-requesting this new paid approval.
+The execution commit, command, free-check results and cost were presented;
+the user authorized continuation after discussing final-method reproducibility.
+See the admission record for submission provenance. This remains exploratory
+training; final reproducible-method acceptance is a separate requirement.
 
 ## Completed preparation evidence
 

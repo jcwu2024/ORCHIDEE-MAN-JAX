@@ -6,6 +6,20 @@ This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
+## Final-training reproducibility principle (user decision, 2026-09-09)
+
+Exploratory continuation may reuse checkpoints, including the current update-14
+parent. Final scientific acceptance additionally requires a clear, executable
+training protocol that has actually been run end to end. Freeze architecture,
+data splits/sampling, initialization and seeds, losses/update rules, per-stage
+trainable/frozen modules, stage transitions, stopping and model selection.
+Document how every inherited pretrained component is produced. Staged training
+is valid; an unexplained chain of exploratory checkpoints is not a final recipe.
+Do not disguise exploratory choices as a preplanned method. Consolidate and
+execute the successful method before final acceptance, without forcing every
+current exploratory continuation to restart. See `AGENTS.md` for the persistent
+instruction. This decision does not change the prepared v2 experiment.
+
 ## Four Separate Claims
 
 The project currently contains four related but distinct goals:
@@ -2540,9 +2554,12 @@ The 1162.95-second zero-update run reproduces update 14 and evaluates all 24
 independent windows with zero physical hard failures. Independent starting
 accuracy still fails absolute gates; paired transfer remains unmeasured.
 See the [admission record](research/daily_coarse_graining/conditioned_continuation_v2_admission_20260909.md).
-Next action: request the ready one-V100/8-CPU/8h paid run (CNY 22.08 maximum).
-No further paid submission is authorized yet.
-The remote checkout no longer needs to remain pinned for this completed job.
+The user authorized the one-V100/8-CPU/8h run (CNY 22.08 maximum); job
+`14984032` was submitted at 2026-09-09 22:32:51 Asia/Shanghai and initially
+queues for Priority. Next action: inspect its result, then review sustained
+learning and independent paired transfer. Do not submit a duplicate. Keep
+remote `b692915` fixed while the job is pending/running. This is exploratory
+continuation; the final-training reproducibility principle above still applies.
 See the
 [execution record](research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md)
 for paths and resume semantics.

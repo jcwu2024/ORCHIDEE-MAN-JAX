@@ -1,9 +1,10 @@
 # Corrected Attention continuation v2: free admission
 
 Status: implementation, preparation and zero-update free-GPU admission pass.
-The next paid run is ready for approval; no new paid submission has occurred.
+The user authorized continuation; paid job **14984032** is submitted.
 Execution: `b6929153fc028330cbfc347f12565043a85e7aa6`. Subsequent local changes
-are documentation only; keep the tested remote execution checkout for submission.
+are documentation only; keep the tested remote checkout fixed while the job
+is pending or running.
 
 The [frozen plan](conditioned_continuation_v2_plan_20260909.md) continues the
 accepted update-14 checkpoint for 20 updates, with the same Attention, corrected
@@ -71,7 +72,7 @@ transfer from the proposed 20 updates. Do not tune the frozen schedule from this
 panel or reopen the architecture based on its starting errors. After training,
 evaluate the same windows once and apply the preregistered paired transfer gate.
 
-## Proposed paid execution
+## Approved paid execution
 
 Resources: gnall, one V100 32GB, eight Slurm CPUs, 32GB host memory, eight-hour
 limit; 470-minute inner timeout, no requeue or automatic resubmission. Estimated
@@ -90,3 +91,27 @@ Output: `runtime/outputs/training/conditioned-snow-free-continuation-v2-JOBID/`.
 Start: accepted update-14 `recovery.pkl` under the completed job 14979295.
 Review sustained development loss reduction, independent paired transfer,
 absolute errors and actual hot-update/reporting time before any extension.
+
+Submitted 2026-09-09 22:32:51 Asia/Shanghai via gln01. Slurm confirms job
+`14984032`, name `orcjax-corrected20`, gnall, eight CPUs, one GPU, 32G host
+memory, 08:00:00 limit and `Requeue=0`. Initial state is PENDING / Priority.
+No duplicate continuation job was present before submission. Authorization is
+the user's "然后我允许你继续工作" following the explicit resource/cost proposal
+and discussion of exploratory versus reproducible final training.
+
+Paths:
+
+- Log: `runtime/logs/corrected20_14984032.txt`
+- Report: `runtime/outputs/training/conditioned-snow-free-continuation-v2-14984032/report.json`
+- Recovery: `runtime/outputs/training/conditioned-snow-free-continuation-v2-14984032/recovery.pkl`
+
+Next: inspect this job's actual result; do not launch a duplicate or change the
+remote checkout. Review accepted update count, development losses, independent
+paired transfer, absolute science and wall time. The new user principle is
+persisted in `AGENTS.md` and at the start of `docs/NEXT_STEPS.md`: exploratory
+checkpoint continuation does not replace end-to-end execution of a documented
+final training protocol with reproducible pretrained-weight provenance.
+
+Read-only status: `/rmprog/slurm/v22.05.7/bin/scontrol show job 14984032`.
+If explicitly requested, cancel only this job with
+`/rmprog/slurm/v22.05.7/bin/scancel 14984032`; no automatic resubmission.

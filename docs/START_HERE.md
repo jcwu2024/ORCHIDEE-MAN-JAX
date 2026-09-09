@@ -459,7 +459,7 @@ compilation, and all physical gates passing. Absolute GPP/NPP and two respiratio
 gates still fail. The next 20-update continuation and independent 24-window
 evaluation are implemented. Local and free CPU/GPU admission pass: all 24
 independent windows complete without physical hard failures, but absolute
-accuracy still fails. The next 20-update run is ready for paid approval;
+accuracy still fails. Approved 20-update gnall job `14984032` is submitted;
 independent before/after transfer remains unmeasured. Larger fresh validation,
 365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
 See `NEXT_STEPS.md` for the exact current boundary.
