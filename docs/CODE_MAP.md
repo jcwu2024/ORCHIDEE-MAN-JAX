@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-09-06.
+Last updated: 2026-09-09.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -1122,6 +1122,12 @@ bindings with the corrected head before comparing full streamed reverse,
 daily JVP and rounded finite differences on the same three windows. Corrected
 panel totals replace historical probe totals. Its free-GPU wrapper has a
 60-minute limit; it writes diagnostics only and retains no parameter updates.
+
+`scripts/hpc/audit_conditioned_snow_free_integration.py` invokes the existing
+streamed integration with the corrected bootstrap and compact trace enabled.
+It preserves the 40-artifact update-4 proposal and discards resulting weights.
+The ordinary integration defaults remain unchanged; the corrected wrapper
+allows one free GPU for at most 90 minutes. All score totals are recomputed.
 
 ## Scripts
 

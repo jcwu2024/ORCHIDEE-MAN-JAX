@@ -71,12 +71,13 @@ def make_observation_gradient(bootstrap, horizon):
 
 
 class StreamedHorizonCallbacks:
-    def __init__(self, bootstrap, *, callback=None):
+    def __init__(self, bootstrap, *, callback=None, compact_trace=False):
         self.bootstrap = bootstrap
         self.jax = bootstrap["context"]["runtime"]["jax"]
         self.jnp = bootstrap["context"]["runtime"]["jnp"]
         self.emit = callback or (lambda event, row: None)
-        self.trace = window._make_trace_evaluator(bootstrap)
+        self.trace = (make_compact_trace_evaluator(bootstrap) if compact_trace
+                      else window._make_trace_evaluator(bootstrap))
         self.reverse = StreamedAdjoint(self.jax, self.jnp, streamed.make_step(bootstrap))
         self.scores = {h: make_observation_gradient(bootstrap, h) for h in (7, 30)}
         self.records = []
@@ -135,13 +136,16 @@ def classify(record, callbacks):
     }
 
 
-def run(args):
+def run(args, *, warm_snow_free_boundary=False):
     started = time.perf_counter()
     report = {
         "schema_version": "conditioned_attention_streamed_integration_v1", "status": "initializing", "stage": "bootstrap",
         "logical_update": 4, "policy": {"retained_updates": 0, "monitor_evaluated": False, "teacher_regenerated": False},
         "horizon_records": [],
     }
+    report["policy"]["warm_snow_free_boundary"] = warm_snow_free_boundary
+    if warm_snow_free_boundary:
+        report["schema_version"] = "conditioned_snow_free_integration_v1"
 
     def emit(stage, updates):
         report.update(updates)
@@ -161,6 +165,7 @@ def run(args):
         )
         bootstrap = window._conditioned_bootstrap(
             args, recovered=original, conditioning_contract=window.load_coupled_gpp_conditioned_attention_contract(args.conditioning_contract),
+            warm_snow_free_boundary=warm_snow_free_boundary,
         )
         contract = persistent.load_conditioned_attention_persistent_training_contract(args.conditioned_persistent_contract)
         index = contract.logical_updates.index(4)
@@ -175,7 +180,7 @@ def run(args):
                 report["one_day_reverse_memory"] = row
             emit(event, {"progress": row})
 
-        callbacks = StreamedHorizonCallbacks(bootstrap, callback=progress)
+        callbacks = StreamedHorizonCallbacks(bootstrap, callback=progress, compact_trace=warm_snow_free_boundary)
         jax = bootstrap["context"]["runtime"]["jax"]
         result = persistent._train_only_update(
             args, callbacks.attach(), contract, trainable=jax.device_put(recovered["trainable"]), panel=panel,

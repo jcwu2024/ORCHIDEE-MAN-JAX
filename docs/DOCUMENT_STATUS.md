@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-09-06.
+Last updated: 2026-09-09.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -196,11 +196,12 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/conditioned_attention_derivative_modes_20260907.md` | Completed remat sign disagreement; no-remat reverse failed on memory | Do not repeat the 43.12 GiB whole-window reverse |
 | `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md` | Completed full-horizon and three-day derivative/replay evidence | Reviewing the evidence for a bounded backward repair check |
 | `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md` | Completed four-window derivative and actual-descent admission | Reviewing evidence for multi-artifact integration; no retained update |
-| `research/daily_coarse_graining/conditioned_attention_streamed_integration_20260908.md` | Completed train-only descent; overall non-admission on seven seven-day score comparisons | Active: locate extraction/trajectory/score differences before fixed-monitor evaluation; no retained update |
+| `research/daily_coarse_graining/conditioned_attention_streamed_integration_20260908.md` | Historical uncorrected integration; overall non-admission on seven score comparisons | Reference for the corrected-head integration; no retained update |
 | `research/daily_coarse_graining/conditioned_attention_seven_score_20260908.md` | Verbose and compact replays completed; compact tape not admitted | Trace the remaining score/derivative discrepancy on artifact 322/windows 5 and 1 |
 | `research/daily_coarse_graining/conditioned_attention_thermal_source_20260908.md` | Completed source diagnosis; correction evidence follows in the warm snow-free report | Same-input drift and snow recurrence are confirmed; Teacher snow-free states expose candidate drift |
-| `research/daily_coarse_graining/conditioned_attention_snow_free_boundary_20260908.md` | Default-off repair passes local, existing-label and bounded GPU forward consistency; science mixed with two regressions | Next: corrected-network streamed/JVP/FD verification, then conditional discarded-step integration; no model or gradient promotion |
-| `research/daily_coarse_graining/conditioned_snow_free_gradient_20260908.md` | Active frozen gate; 26 local tests pass, free-GPU run e6a00b2 launched, result pending | Inspect existing run before restarting; corrected-head reverse/JVP/FD and descent before training |
+| `research/daily_coarse_graining/conditioned_attention_snow_free_boundary_20260908.md` | Default-off repair passes forward consistency; science mixed with two regressions | Source mechanism and forward evidence; corrected gradient now passes separately |
+| `research/daily_coarse_graining/conditioned_snow_free_gradient_20260908.md` | Completed and passed at e6a00b2; all three cases/eight pairs, no retained weights | Derivative admission for corrected-head integration, not final accuracy |
+| `research/daily_coarse_graining/conditioned_snow_free_integration_20260909.md` | Active frozen contract for corrected-head train-only discarded step | Same 40-artifact panel, true losses, 96 gradients and existing science gates before fixed monitor |
 | `research/daily_coarse_graining/target_oriented_coupled_gpp_conditioned_attention_persistent_training_local_acceptance_20260906.md` | Accepted local runner, persistence, model-regression, and CLI evidence | Reviewing why the free real-v6 smoke is admitted |
 | `research/daily_coarse_graining/target_oriented_update_251_admission_20260825.md` | Accepted exact checkpoint/AdamW handoff, update-251, recovery, and matched free-GPU admission | Preparing or admitting updates 251-1000 |
 | `research/daily_coarse_graining/daily_operator_parameter_routing_v1.md` | Implemented local parameter-ownership boundary used by the successor | Routing physical parameters or planning Gate D2 |

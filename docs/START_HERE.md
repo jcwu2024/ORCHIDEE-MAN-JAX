@@ -440,10 +440,12 @@ accumulates far outside that support. A default-off, source-backed warm
 snow-free boundary is now implemented; 10 local tests and 528 existing-v6
 day positions pass. Its free-GPU 7/30-day screen now passes snow-state and
 scoring consistency, but two of three science scores materially regress.
-The active task is corrected-head gradient validation before any training;
-its runner passes 26 local tests. See
-`conditioned_snow_free_gradient_20260908.md` under the research
-documents. Accepted recovery remains update 3;
+The corrected-head gradient check now passes on the three 7/30-day windows:
+all eight derivative comparisons and six diagnostic descent checks pass,
+with maximum relative derivative discrepancy 0.0650%. This admits the next
+full train-only discarded step on the existing 40-artifact panel; see
+`conditioned_snow_free_integration_20260909.md` under the research
+documents. Final prediction accuracy is still unproven. Accepted recovery remains update 3;
 no new weights were retained and model accuracy is not promoted. Paid execution,
 fresh validation, 365-day rollout, Gate D2, sealed test, and product acceptance
 remain closed. See `NEXT_STEPS.md` for the exact current boundary.

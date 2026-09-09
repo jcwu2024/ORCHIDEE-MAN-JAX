@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-08.
+Last updated: 2026-09-09.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -1377,9 +1377,18 @@ The successor corrected-head derivative runner and contract are implemented:
 All helper bindings receive the same corrected head; global bias totals are
 recomputed with that head. Twenty-six targeted local tests pass, including
 the complete mixed-precision three-window derivative/descent/report lifecycle
-and actual HardCounts. The free gln01 GPU-1 run is launched at `e6a00b2`,
-report/log stem `conditioned-snow-free-gradient-e6a00b2`; Python bootstrap
-started, real results pending. Its timeout is 60 minutes; recovery stays at 3.
+and actual HardCounts. The free gln01 GPU-1 run `e6a00b2` completed in
+1402.1835 seconds, report/log stem `conditioned-snow-free-gradient-e6a00b2`.
+All three cases and eight derivative pairs pass; six negative-gradient steps
+lower their production linearized scores. Maximum relative derivative
+discrepancy is 0.0650%, with no hard failures or mask changes. Reverse compiles
+once (estimated buffers 1.50 GiB). This admits the corrected-head full
+train-only discarded-step integration, not accuracy or retained training.
+The local JSON is complete at `outputs/conditioned-snow-free-gradient-e6a00b2.json`.
+The next contract is `research/daily_coarse_graining/conditioned_snow_free_integration_20260909.md`:
+same 40 artifacts/43 constraints, all 96 horizon callbacks, corrected initial
+and actual finite-step losses, unchanged science gates, one free GPU/90m.
+Recovery remains at 3; paired fixed monitor is conditional on integration.
 The completed preceding check is
 `research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md`. See
 `research/daily_coarse_graining/conditioned_attention_streamed_adjoint_20260907.md`;

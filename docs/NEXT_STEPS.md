@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-09-08.
+Last updated: 2026-09-09.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -2484,22 +2484,22 @@ production/recorded scores. Science is mixed: composite changes are -2.79%,
 +238.69% and +93.22%; GPP drives the two regressions. This is forward
 consistency admission only, not an accuracy improvement or model promotion.
 See [`conditioned_attention_snow_free_boundary_20260908.md`](research/daily_coarse_graining/conditioned_attention_snow_free_boundary_20260908.md).
-The immediate task is corrected-head streamed/JVP/FD validation on the same
-three windows; rebuild every gradient function with the corrected head first.
-Only after derivative agreement should the bounded train-only integration
-and discarded descent step resume, using corrected starting losses and
-absolute science targets. Do not repeat a whole-30-day no-remat reverse graph.
-Recovery remains update 3; production training is unchanged.
-The corrected-head runner is implemented and locally qualified (26 targeted
-tests). Its frozen gate is
+The corrected-head streamed/JVP/FD validation now passes at `e6a00b2` in
+1402.18 seconds: all three windows, eight direction/epsilon pairs and six
+negative-gradient descent checks pass. Maximum derivative discrepancy is
+0.0650%, all physical/mask/score checks pass. The frozen gate and evidence are
 [`conditioned_snow_free_gradient_20260908.md`](research/daily_coarse_graining/conditioned_snow_free_gradient_20260908.md):
-one free GPU, 60-minute maximum, three windows, two perturbation magnitudes,
-full reverse/JVP/finite-difference agreement and actual diagnostic descent.
-No checkpoint or paid training is authorized by this derivative gate.
-The free gln01 GPU-1 run is launched at `e6a00b2`, output stem
-`runtime/outputs/diagnostics/conditioned-snow-free-gradient-e6a00b2`.
-Inspect its log/incremental JSON before doing any further execution; results
-are pending and no derivative gate is yet promoted.
+the process completed; do not restart it. These are linearized window scores,
+not a full multi-artifact update or final accuracy improvement.
+The immediate task is the corrected-head full train-only discarded-step
+integration under
+[`conditioned_snow_free_integration_20260909.md`](research/daily_coarse_graining/conditioned_snow_free_integration_20260909.md).
+Recompute corrected starting losses and true finite-step statistics, preserve
+the 40-artifact panel, all 43 constraints and absolute science targets.
+Use one free GPU for at most 90 minutes. Require all 96 gradient callbacks,
+score consistency and existing science-progress gates. Only a pass opens
+paired fixed-monitor evaluation. Recovery remains update 3; no weights,
+paid training, or whole-30-day no-remat reverse graph are admitted here.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See

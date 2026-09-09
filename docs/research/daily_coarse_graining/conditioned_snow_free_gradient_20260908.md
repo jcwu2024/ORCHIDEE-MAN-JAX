@@ -1,7 +1,7 @@
 # Corrected snow-free head: bounded network-gradient gate
 
-Status: implementation and local qualification passed; free-GPU run launched
-at `e6a00b2`, result pending.
+Status: completed and passed at `e6a00b2`; admits the corrected-head train-only
+discarded-step integration, not retained training or model promotion.
 
 The preceding forward screen passes snow-state and score consistency, but
 science regresses in two windows. This gate establishes whether the corrected
@@ -93,3 +93,35 @@ Working directory is `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`; timeout 60m.
 Inspect this run before any restart. A completed process alone is insufficient:
 read `passed`, each case, all pair comparisons and actual loss changes. If a
 timeout interrupts incremental JSON, its partial cases are not full admission.
+
+## Completed result (read 2026-09-09)
+
+The full JSON was retrieved and parsed locally at
+`outputs/conditioned-snow-free-gradient-e6a00b2.json`. It reports
+`status=completed`, `passed=true`, elapsed 1402.1835 seconds (23.37 minutes).
+All three cases, eight direction/epsilon pairs, sixteen perturbed forwards
+and six negative-gradient descent checks pass. Zero physical hard failures,
+unchanged masks, all selected warm snow-free days, finite active tangents and
+matching production/observation scores throughout. Reverse compiled once;
+its buffer estimate is 1,609,272,056 bytes (1.50 GiB), not measured device peak.
+
+| Artifact/window | Days | Reverse projection at 1e-4 | Actual central secant | Actual positive-step change |
+| --- | ---: | ---: | ---: | ---: |
+| 322/5 | 7 | -1.2884642434 | -1.2884357637 | -0.00012856913 |
+| 322/1 | 7 | -1.0619267350 | -1.0618592298 | -0.00010612342 |
+| 442/0 | 30 | -2.8305290598 | -2.8304228952 | -0.00028280328 |
+
+At 1e-5, the actual changes are -1.27887e-5, -1.05734e-5 and
+-2.81814e-5 respectively. Maximum pairwise derivative relative discrepancy
+over all pairs is approximately 0.0650%, below the frozen 1% threshold.
+The historical 442 probe predicts and produces an increase (+2.54746 versus
++2.54754 derivative at 1e-4); its purpose is independent sign/agreement,
+not descent. The maximum scaled JVP-primal gap is 0.00026952.
+
+These scores are frozen-global-bias linearized window contributions, not
+the full recomputed multi-window objective or prediction-error percentages.
+The next integration must recompute the true loss at each proposed update.
+This result does not reverse the preceding two accuracy regressions, prove
+all climates/branches, or alter accepted recovery update 3. No weights were
+retained; no paid job was submitted. The next contract is
+[`conditioned_snow_free_integration_20260909.md`](conditioned_snow_free_integration_20260909.md).

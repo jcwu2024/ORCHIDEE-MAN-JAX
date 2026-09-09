@@ -139,9 +139,16 @@ def setup_bootstrap(monkeypatch):
     return bootstrap
 
 
-def test_actual_horizon_caller_matches_monolithic_with_changing_targets_and_horizons(monkeypatch):
+@pytest.mark.parametrize("compact", [False, True])
+def test_actual_horizon_caller_matches_monolithic_with_changing_targets_and_horizons(monkeypatch, compact):
     bootstrap = setup_bootstrap(monkeypatch)
-    callbacks = audit.StreamedHorizonCallbacks(bootstrap)
+    compact_calls = []
+    def compact_factory(b):
+        compact_calls.append(b)
+        return audit.window._make_trace_evaluator(b)
+    monkeypatch.setattr(audit, "make_compact_trace_evaluator", compact_factory)
+    callbacks = audit.StreamedHorizonCallbacks(bootstrap, compact_trace=compact)
+    assert len(compact_calls) == int(compact)
     attached = callbacks.attach()
     assert attached["gradient_steps"]["unrelated"] is bootstrap["gradient_steps"]["unrelated"]
     assert attached["direct_steps"] is bootstrap["direct_steps"]
@@ -166,7 +173,8 @@ def test_actual_horizon_caller_matches_monolithic_with_changing_targets_and_hori
     assert all(r["linearized_score_agrees"] for r in callbacks.records)
 
 
-def test_complete_runner_routes_original_panel_and_discards_parameters(tmp_path, monkeypatch):
+@pytest.mark.parametrize("corrected", [False, True])
+def test_complete_runner_routes_original_panel_and_discards_parameters(tmp_path, monkeypatch, corrected):
     bootstrap = setup_bootstrap(monkeypatch)
     contract = audit.persistent.load_conditioned_attention_persistent_training_contract()
     args = SimpleNamespace(conditioned_run_dir=tmp_path, output=tmp_path / "result.json",
@@ -180,8 +188,14 @@ def test_complete_runner_routes_original_panel_and_discards_parameters(tmp_path,
     monkeypatch.setattr(audit.window, "load_coupled_gpp_conditioned_attention_contract", lambda p: None)
     def initialize(*a, **kw):
         assert not args.output.exists()
+        assert kw["warm_snow_free_boundary"] == corrected
         return bootstrap
     monkeypatch.setattr(audit.window, "_conditioned_bootstrap", initialize)
+    compact_calls = []
+    def compact_factory(b):
+        compact_calls.append(b)
+        return audit.window._make_trace_evaluator(b)
+    monkeypatch.setattr(audit, "make_compact_trace_evaluator", compact_factory)
 
     def proposed(a, b, c, **kw):
         assert kw["logical_update"] == 4
@@ -201,7 +215,9 @@ def test_complete_runner_routes_original_panel_and_discards_parameters(tmp_path,
         return {"updated_trainable": {"must_not_serialize": object()}, "record": {"selection": {"accepted": True, "selected_scale": 0.5}}}
 
     monkeypatch.setattr(audit.persistent, "_train_only_update", proposed)
-    result = audit.run(args)
+    result = audit.run(args, warm_snow_free_boundary=corrected)
+    assert result["policy"]["warm_snow_free_boundary"] == corrected
+    assert len(compact_calls) == int(corrected)
     assert result["status"] == "completed"
     assert result["admission"]["passed"]
     assert len(result["horizon_records"]) == 96
@@ -235,3 +251,9 @@ def test_launcher_argument_branch():
     wrapper = (root / "scripts/hpc/audit_conditioned_attention_streamed_integration.sh").read_text()
     assert "RUN_TIMEOUT=${RUN_TIMEOUT:-120m}" in wrapper
     assert "sbatch" not in shared + wrapper
+    assert '"scripts.hpc.audit_conditioned_snow_free_integration" ||' in branch
+    corrected = (root / "scripts/hpc/audit_conditioned_snow_free_integration.sh").read_text()
+    assert "RUN_TIMEOUT=${RUN_TIMEOUT:-90m}" in corrected
+    assert "sbatch" not in corrected
+    entry = (root / "scripts/hpc/audit_conditioned_snow_free_integration.py").read_text()
+    assert "warm_snow_free_boundary=True" in entry
