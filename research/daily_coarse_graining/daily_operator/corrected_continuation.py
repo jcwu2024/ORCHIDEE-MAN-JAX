@@ -38,17 +38,25 @@ class CorrectedContinuationContract(ConditionedAttentionPersistentTrainingContra
 def load_contract(path=DEFAULT_PLAN):
     plan = json.loads(Path(path).read_text())
     base = load_conditioned_attention_persistent_training_contract()
-    if (plan['schema_version'] != 'conditioned_snow_free_continuation_v1'
-            or plan['logical_updates'] != list(range(5, 15)) or plan['starting_logical_update'] != 4
+    version = plan['schema_version']
+    if version not in ('conditioned_snow_free_continuation_v1', 'conditioned_snow_free_continuation_v2'):
+        raise ValueError('unknown corrected-continuation plan')
+    start, stop = (4, 14) if version.endswith('_v1') else (14, 34)
+    if (plan['logical_updates'] != list(range(start + 1, stop + 1)) or plan['starting_logical_update'] != start
             or plan['warm_snow_free_boundary'] is not True or tuple(plan['monitor_updates']) != base.monitor_updates):
         raise ValueError('incorrect corrected-continuation plan')
-    schedule = build_persistent_scale_training_schedule()
-    for u in plan['logical_updates']:
-        expected = [list(schedule.groups[i - 1]) for i in (u, *range(4*u + 3, 4*u + 7))]
+    if version.endswith('_v1'):
+        schedule = build_persistent_scale_training_schedule()
+        expected_panels = [[list(schedule.groups[i - 1]) for i in (u, *range(4*u + 3, 4*u + 7))]
+                           for u in plan['logical_updates']]
+    else:
+        schedule = build_persistent_scale_training_schedule(seed=20260910, maximum_updates=20, macro_batch_size=40)
+        expected_panels = [[list(block[i:i + 8]) for i in range(0, 40, 8)] for block in schedule.groups]
+    for u, expected in zip(plan['logical_updates'], expected_panels, strict=True):
         if plan['train_panels'][str(u)] != expected:
             raise ValueError('continuation panel differs from approved schedule')
     artifacts = [v for groups in plan['train_panels'].values() for group in groups for v in group]
-    if len(set(artifacts)) != 400 or not set(artifacts).isdisjoint(base.monitor_updates):
+    if (version.endswith('_v1') and len(set(artifacts)) != 400) or not set(artifacts).isdisjoint(base.monitor_updates):
         raise ValueError('continuation artifact coverage or monitor overlap')
     return CorrectedContinuationContract(base.payload, Path(path), base.sha256, plan)
 
@@ -70,7 +78,8 @@ def read_state(path, plan):
     if state.get('schema_version') != 'corrected_continuation_state_v1' or state.get('plan') != plan:
         raise ValueError('recovery belongs to a different continuation')
     completed = state['completed_logical_update']
-    if completed not in range(4, 15) or [r['logical_update'] for r in state['records']] != list(range(5, completed + 1)):
+    start = plan['starting_logical_update']
+    if completed not in range(start, plan['logical_updates'][-1] + 1) or [r['logical_update'] for r in state['records']] != list(range(start + 1, completed + 1)):
         raise ValueError('noncontiguous corrected recovery progress')
     if len(state['monitors']) != len(state['records']):
         raise ValueError('corrected recovery is missing accepted monitors')
@@ -108,10 +117,11 @@ def continue_training(contract, state, directory, *, propose, monitor, transfer,
         measured = monitor(pending['trainable'], update)
         before = state['monitors'][-1]['panel'] if state['monitors'] else state['initial_monitor']
         local_gate, cumulative_gate = transfer(before, measured), transfer(state['initial_monitor'], measured)
-        if not (local_gate['passed'] and cumulative_gate['passed']):
+        origin_gate = transfer(state.get('original_monitor', state['initial_monitor']), measured)
+        if not (local_gate['passed'] and cumulative_gate['passed'] and origin_gate['passed']):
             state['stopped_reason'] = 'monitor_transfer'
             state['rejected'] = {'logical_update': update, 'local_gate': local_gate,
-                                 'cumulative_gate': cumulative_gate, 'panel': measured}
+                                 'cumulative_gate': cumulative_gate, 'original_gate': origin_gate, 'panel': measured}
             save_state(recovery_path, state)
             emit('stopped', {'reason': state['stopped_reason'], 'rejected': state['rejected']})
             break
@@ -119,12 +129,14 @@ def continue_training(contract, state, directory, *, propose, monitor, transfer,
         state['completed_logical_update'] = update
         state['records'].append(pending['record'])
         state['monitors'].append({'logical_update': update, 'panel': measured,
-            'local_gate': local_gate, 'cumulative_gate': cumulative_gate, 'gradient_evidence': pending['gradient_evidence']})
+            'local_gate': local_gate, 'cumulative_gate': cumulative_gate, 'original_gate': origin_gate,
+            'gradient_evidence': pending['gradient_evidence']})
         save_state(recovery_path, state)
-        emit('update_retained', {'logical_update': update, 'new_updates': update - 4,
+        emit('update_retained', {'logical_update': update, 'new_updates': update - contract.plan['starting_logical_update'],
+                                'completed_logical_update': update,
                                 'local_gate': local_gate, 'cumulative_gate': cumulative_gate})
         if update in contract.plan['milestones']:
-            emit('milestone', {'new_updates': update - 4})
+            emit('milestone', {'new_updates': update - contract.plan['starting_logical_update']})
         done_this_call += 1
         if max_updates is not None and done_this_call >= max_updates:
             break

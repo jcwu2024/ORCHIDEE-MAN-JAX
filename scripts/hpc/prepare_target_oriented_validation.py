@@ -58,7 +58,7 @@ def _reference(index: Any, slice_id: str, entry: Mapping[str, Any]) -> Any:
     return matches[0]
 
 
-def run(args: argparse.Namespace) -> Mapping[str, Any]:
+def run(args: argparse.Namespace, *, panel_builder=None) -> Mapping[str, Any]:
     runtime = _load_extended_runtime(args, backend_initializer=_initialize_cpu_backend)
     from research.daily_coarse_graining.daily_operator.target_oriented_contract import (
         load_target_oriented_contract,
@@ -69,19 +69,18 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
 
     training_contract = load_target_oriented_training_contract(args.training_contract)
     target_contract = load_target_oriented_contract()
-    panel = build_target_oriented_validation_panel(runtime["index"], training_contract, target_contract)
+    panel = (build_target_oriented_validation_panel(runtime["index"], training_contract, target_contract)
+             if panel_builder is None else panel_builder(runtime['index'], target_contract))
     output_dir = args.output_dir.resolve()
     output_dir.mkdir(parents=True, exist_ok=True)
     panel_path = output_dir / "validation_panel.json"
     manifest_path = output_dir / "prepared_manifest.json"
     if panel_path.exists():
         existing_panel = json.loads(panel_path.read_text(encoding="utf-8"))
-        verify_target_oriented_validation_panel(
-            existing_panel,
-            runtime["index"],
-            training_contract,
-            target_contract,
-        )
+        if panel_builder is None:
+            verify_target_oriented_validation_panel(
+                existing_panel, runtime["index"], training_contract, target_contract,
+            )
         if existing_panel != panel:
             raise ValueError("target-oriented validation panel changed during resume")
     else:

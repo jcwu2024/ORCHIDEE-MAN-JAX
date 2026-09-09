@@ -7,6 +7,7 @@ import time
 from pathlib import Path
 
 from research.daily_coarse_graining.daily_operator import corrected_continuation as continuation
+from research.daily_coarse_graining.daily_operator.continuation_reporting import ContinuationReporter
 from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_conditioned_attention_persistence import (
     _validate_parameter_tree,
     parameter_trees_identical,
@@ -54,11 +55,8 @@ def run(args):
               'plan': contract.plan, 'preflight_only': args.preflight_only,
               'independent_validation': False, 'promotion_eligible': False}
 
-    def emit(stage, updates):
-        report.update(updates)
-        report.update(stage=stage, elapsed_seconds=time.perf_counter() - started)
-        window._atomic_json(args.output, report)
-        print(f'corrected_continuation stage={stage} elapsed={report["elapsed_seconds"]:.1f}s', flush=True)
+    emit = ContinuationReporter(args.output, report, write=window._atomic_json)
+    emit.started = started
 
     try:
         snapshot = continuation.read_pickle(contract.plan['candidate_snapshot'])
