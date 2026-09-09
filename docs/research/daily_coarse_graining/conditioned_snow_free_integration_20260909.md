@@ -1,7 +1,7 @@
 # Corrected-head full train-only step
 
-Status: frozen before implementation and execution, 2026-09-09; implementation
-and local qualification pass, free-GPU execution next.
+Status: implementation and local qualification pass; free-GPU run launched
+at `90f6403` on 2026-09-09, result pending.
 
 ## Why this is next
 
@@ -63,3 +63,21 @@ differentiation with changing data/targets and float32 parameters. Corrected
 bootstrap and compact-trace routing are explicit, and no proposed parameter
 tree enters JSON or checkpoint output. The existing default path is unchanged.
 Ruff, parser/launcher argument coverage and whitespace checks pass.
+
+## Running handoff
+
+Execution commit `90f6403d6190cabd2bd9cb8c7a4b086c9cb4ef7b` is fast-forwarded
+on the server; both shell syntax checks pass. The previous gradient process
+completed, and both GPUs were idle before this launch. The corrected
+integration wrapper started on gln01 GPU 1, host `ibc13b02n04`, V100 32 GB.
+There is no Slurm ID or paid charge; this is a detached free-node process.
+
+Working directory: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`.
+Command: `GPU_DEVICE=1 EXPECTED_GIT_HEAD=90f6403d6190cabd2bd9cb8c7a4b086c9cb4ef7b
+OUTPUT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/conditioned-snow-free-integration-90f6403.json
+bash scripts/hpc/audit_conditioned_snow_free_integration.sh` (timeout 90m).
+Read `.log` and incremental `.json` at that stem before starting any new run.
+Inspect `admission.passed`, all 96 horizon records, proposal selection, actual
+science changes and absolute-science status separately. A process exit or
+train-only selection alone is not integration admission. No candidate or
+monitor result is retained by this run; recovery remains update 3.

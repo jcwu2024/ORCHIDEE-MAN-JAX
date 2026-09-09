@@ -2500,6 +2500,10 @@ Use one free GPU for at most 90 minutes. Require all 96 gradient callbacks,
 score consistency and existing science-progress gates. Only a pass opens
 paired fixed-monitor evaluation. Recovery remains update 3; no weights,
 paid training, or whole-30-day no-remat reverse graph are admitted here.
+The corrected integration is now launched at `90f6403` on free gln01 GPU 1.
+Inspect `runtime/outputs/diagnostics/conditioned-snow-free-integration-90f6403`
+(`.log` and `.json`) before further execution. Seventeen local tests pass;
+real integration results remain pending.
 The preceding completed contract is
 [`conditioned_attention_streamed_step_20260908.md`](research/daily_coarse_graining/conditioned_attention_streamed_step_20260908.md).
 This does not yet establish the production reverse failure's root cause. See
