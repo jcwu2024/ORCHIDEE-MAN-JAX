@@ -106,6 +106,8 @@ def _make_fresh_evaluator(
     template: Any,
     acceptance_scales: Any,
     state_scales: Any,
+    *,
+    include_trajectories: bool = False,
 ) -> Any:
     import jax
     import jax.numpy as jnp
@@ -273,6 +275,8 @@ def _make_fresh_evaluator(
             rollout_hard.budget_residual_failure,
             rollout_hard.negative_declared_stock,
         )
+        if include_trajectories:
+            return rollout_statistics, direct_statistics, hard, one_predicted, one_expected
         return rollout_statistics, direct_statistics, hard
 
     return evaluate

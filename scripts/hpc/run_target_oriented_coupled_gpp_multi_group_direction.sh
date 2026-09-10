@@ -137,6 +137,7 @@ if [[ "$PYTHON_MODULE" == "scripts.hpc.audit_target_oriented_coupled_gpp_conditi
   )
 elif [[ "$PYTHON_MODULE" == "scripts.hpc.run_target_oriented_coupled_gpp_conditioned_attention_persistent_training" || \
   "$PYTHON_MODULE" == "scripts.hpc.run_conditioned_snow_free_continuation" || \
+  "$PYTHON_MODULE" == "scripts.hpc.export_conditioned_science_trajectories" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_update4_derivative" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_window442" || \
   "$PYTHON_MODULE" == "scripts.hpc.audit_conditioned_attention_derivative_modes" || \
