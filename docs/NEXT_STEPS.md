@@ -2587,9 +2587,30 @@ Gnall job **14991510** was submitted once on 2026-09-10 at 15:15:57 Asia/Shangha
 initially PENDING; Slurm resources and working directory match the approved
 envelope. Keep server execution at `ce7cd79` while queued/running. Outputs are
 `runtime/outputs/training/conditioned-snow-free-continuation-v3-14991510/`, log
-`runtime/logs/corrected40_14991510.txt`. Next inspect this job when the user
-requests progress/completion, then review paired physical metrics and recovery
-through update 74. No duplicate/automatic paid resubmission is authorized.
+`runtime/logs/corrected40_14991510.txt`. It completed in 02:13:44 with seven
+retained updates (35-41), then stopped on update 42's `gradient_score` mismatch.
+One 30-day score pair differs by 0.8455%; all 672 pairs in retained updates pass.
+Paired physical errors improve slightly, but absolute acceptance still fails.
+Next isolate that single window's forward observation/production discrepancy
+on a free GPU before further training. See
+[v3 result](research/daily_coarse_graining/conditioned_continuation_v3_result_20260910.md).
+Do not simply resubmit the stopped recovery or treat it as a completed 40-update
+coverage comparator. No duplicate/automatic paid resubmission is authorized.
+The first free-GPU single-window diagnostic completed in 787.6s: both scores
+reproduce, loss aggregation and masks agree, but day-10 GPP differs by
+0.2896344 gC m-2 day-1 between production and compact traces. The discrepancy
+precedes reverse propagation. Full-state/day-10 crossed replay completed in
+604.8s: replacing only DOC restores production GPP; discrete swaps and the
+other 31 tested state leaves do not. Free-CPU input-scale audit finds a DOC
+coordinate at about 0.048 divided by a frozen scale of 7.96e-12, giving a
+float32 feature around 6.024e9; a 4.47e-9 raw change becomes 512 normalized.
+Next design/version and test input conditioning for predicted states outside
+the Teacher scale, preserving Attention topology and frozen v6 assets. Test
+coordinate/leaf sensitivity, paired primals, derivatives and physical outputs
+before training. No tolerance relaxation or claimed repair yet.
+See [score localization](research/daily_coarse_graining/conditioned_score_discrepancy_20260910.md)
+for exact outputs, next gate and checkpoint/source handling. All diagnostics
+are complete; no duplicate rerun of the completed forward localization.
 Final-training reproducibility remains required.
 The user subsequently authorized **parallel data-coverage expansion preparation**
 and asked whether limited data/frozen parameters are only exploratory choices.
@@ -2602,10 +2623,18 @@ The current 678-package pool spans all 535 train locations/44 years, but only
 raise the pool's unique-day coverage to 539,171 (6.293%, 3.851x). These are
 package counts, not lifetime exposure across inherited pretraining. The free
 two-package CPU pilot and independent readback pass; the ready CPU preparation
-array is ten one-CPU tasks, 200 packages/task, no GPUs, 12h/task, maximum CNY 8.40.
-This separate paid CPU budget is **not yet approved**. See
+job uses four nodes and ten one-CPU workers per node (40 total), 50 packages/worker,
+no GPUs, 4h total wall limit, maximum CNY 11.20.
+The user approved this budget; CPU job **14992138** started at 2026-09-10
+19:05:08 on `ibc11b08n[20-23]`, with the approved 40 CPUs and a hard end at
+23:05:08. It completed successfully in 00:55:13 (estimated CNY 2.58), all
+40 workers passed. Manifest merge/readback passed on free test02: 2,000 artifacts,
+one trace signature, 6.726 GB compressed, full range 1001-3000. The matching
+audited schedule makes the combined 539,171 unique days available (6.293%),
+not yet consumed by training. Next complete new-package neural preflight after
+resolving the score discrepancy. No duplicate submission or automatic retry. See
 [coverage expansion](research/daily_coarse_graining/conditioned_data_coverage_expansion_20260910.md)
-for exact command, paths, counts and timing. Do not alter job 14991510's checkout
+for exact command, paths, counts and timing. Keep active diagnostics' checkout stable
 or submit a second GPU run from this preparation authorization.
 See the
 [execution record](research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md)

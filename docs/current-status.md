@@ -1484,8 +1484,25 @@ the user then approved the 12h/CNY 33.12 envelope. Gnall job **14991510** was
 submitted on 2026-09-10 at 15:15:57 Asia/Shanghai, initially PENDING. Slurm
 confirms one GPU, eight CPUs, 32GB host memory, 12h, no requeue and the project
 working directory. The server must remain at `ce7cd79` while queued/running.
-Results will be in `runtime/outputs/training/conditioned-snow-free-continuation-v3-14991510/`;
-there is no result or update beyond 34 from this job yet.
+Results are in `runtime/outputs/training/conditioned-snow-free-continuation-v3-14991510/`.
+It completed normally in 02:13:44 but stopped training early: updates 35-41
+retained, update 42 rejected for one of 96 gradient-path score comparisons.
+All 672 comparisons in retained updates pass. The failing 30-day pair differs
+by 0.00020619 (0.8455%); root cause is unresolved, not proof of wrong gradients.
+Development science macro improves 1.3702%; 30-day GPP/NPP cumulative RMSE
+becomes 64.8228/44.7650, AGB/BGB net-change RMSE 29.0914/18.2379 gC m-2.
+Physical hard gates pass; absolute science and planned-stage completion fail.
+Update-41 recovery is preserved. Next isolate the one-window discrepancy on a
+free node; no unchanged paid retry. See `conditioned_continuation_v3_result_20260910.md`.
+Completed free gln01 diagnostics at unchanged ce7cd79 localize artifact 883/window
+3's score failure to day-10 DOC input sensitivity, before reverse propagation.
+First run (787.6s) reproduces both scores; full-state replay (604.8s) shows a
+DOC-only state swap restores GPP 5.301189 from compact 5.590824. Discrete swaps
+and the other 31 tested leaves do not change it. A free-CPU scale audit finds
+DOC input about 0.048 standardized by 7.96e-12 into about 6.024e9; roughly
+4.47e-9 raw path difference becomes 512 in float32. Attention input conditioning
+for predicted off-Teacher-range states is the next gate; no repair/weight change
+has been made. See `conditioned_score_discrepancy_20260910.md` for evidence and limits.
 The user later reported that job 14991510 was running and approved parallel
 coverage-expansion preparation. Exact train/train metadata counting finds the
 678-package pool spans all 535 training locations/44 years but only 140,002
@@ -1494,8 +1511,18 @@ unique days out of 8,568,025 eligible (1.634%). Adding existing schedule entries
 every inherited pretraining stage. Two new packages (1964/1990) were prepared
 on free test03 and read back on test02, with canonical shapes and finite defined
 GPP targets. Batch construction took 199.20/198.18s, total process 14m42s on a
-shared node with 47% CPU availability. A ten-task, one-CPU/task, 12h/task cnall
-preparation script is ready (maximum CNY 8.40), **not submitted or approved**.
+shared node with 47% CPU availability. A single cnall job with four nodes and
+ten one-CPU workers per node (40 total), 50 packages/worker and a 4h wall limit
+was approved and submitted as **14992138** (maximum CNY 11.20). It started
+2026-09-10 19:05:08 on `ibc11b08n[20-23]`; scheduler confirms 4 nodes/40 CPUs
+and a hard end of 23:05:08. Projected worker memory is about 53 GiB per node.
+Output: `runtime/outputs/training/conditioned-coverage-expanded-14992138/`;
+log: `runtime/logs/data-expand_14992138.txt`. The job completed successfully
+in 00:55:13, estimated CNY 2.58. All 40 workers and the free-test02 manifest
+merge/readback pass: 2,000 artifacts (1001-3000), one structure, 6.726 GB.
+Combined current-pool/extension availability is 539,171 unique days (6.293%);
+the neural model has not trained on this extension yet. Local manifest is
+`outputs/conditioned-coverage-expanded-14992138.json`.
 No new-package neural forward or expanded-data GPU training has run. See
 `conditioned_data_coverage_expansion_20260910.md` for the next concrete action.
 The user's final-training reproducibility principle is now in `AGENTS.md` and

@@ -82,43 +82,85 @@ windows / four thirty-day windows each, finite defined GPP targets, and a common
 executable structure. Years are 1964 and 1990. This is data admission; a new-package
 neural forward/state/budget test remains part of the later GPU-training preflight.
 
-## Proposed CPU materialization
+## Submitted CPU materialization
 
-Prepare 1001-3000 as ten 200-package chunks. Script:
+Prepare 1001-3000 as forty 50-package chunks in one Slurm job. Script:
 `scripts/hpc/slurm_conditioned_coverage_preparation.sh`.
-Proposed cnall array: ten jobs, at most ten concurrent; each one node/task,
-one CPU, no GPU, maximum 12h, 710m inner timeout, no requeue. Omit Slurm memory
+Approved cnall allocation: four nodes, ten one-CPU tasks per node (40 total),
+no GPU, maximum 4h, 230m per-worker timeout, no requeue. Forty exclusive one-core
+srun steps execute concurrently, with separate chunk outputs and logs. Each
+step is pinned to one allocated node so exactly ten workers use each node.
+The parent waits for all workers and returns failure if any worker fails.
+Omit Slurm memory
 requests on this CPU partition as required by the current deployment rules.
-Maximum total CPU cost: 10 * 1 * 12 * CNY 0.07 = **CNY 8.40**.
-This budget is not yet approved; no sbatch has been issued for it.
-At the measured free-node wall time, 200 packages take about 11.1h plus startup;
+Maximum total CPU cost: 4 * 10 * 4 * CNY 0.07 = **CNY 11.20**.
+The user approved this envelope and submission returned job **14992138** at
+2026-09-10 19:05:07 server time. It started at 19:05:08 on
+`ibc11b08n[20-23]`. scontrol confirms RUNNING, four nodes, 40 CPUs/tasks,
+ten tasks per node, no GPU, no requeue, and a 04:00:00 limit. Scheduled hard
+end is 23:05:08; estimated completion is around 22:00, subject to storage speed.
+Main log: `runtime/logs/data-expand_14992138.txt`.
+Completed successfully (`0:0`) after **00:55:13**. All 40 workers completed
+their 50-package ranges. Duration-based CPU charge estimate is CNY 2.58.
+Observed late-run preparation time is about 55 seconds/package, substantially
+faster than the shared free-node pilot. Manifest merge/readback has started on
+free test02 using the existing merger, with start/end 1001/3000 and 40 chunks.
+Merge log: `runtime/logs/conditioned-coverage-merge-14992138.log`.
+Merge/readback completed successfully on free test02: 40 disjoint chunks,
+exactly 2,000 artifacts covering 1001-3000, one common trace signature, and
+6,725,574,740 compressed bytes. The existing merger read every artifact payload
+and checked its declared update/contract/structure before publishing the manifest.
+Average preparation time per package was 55.62s (range 52.25-62.40s).
+The merged schedule identity matches the audited/piloted schedule, so the
+previous unique-day coverage calculation now describes available prepared
+packages: current pool plus extension contains 539,171 unique days (6.293%).
+This is availability, not a claim that neural training has consumed them.
+Merged manifest: `runtime/outputs/training/conditioned-coverage-expanded-14992138/prepared_manifest.json`.
+Local copy: `outputs/conditioned-coverage-expanded-14992138.json`.
+At the measured free-node wall time, 50 packages take about 2.8h plus startup;
 dedicated CPU time may be faster, but no speedup is assumed for the ceiling.
-Parallel queue admission is not guaranteed, and the 12h bound is per task.
+Concurrent shared-storage contention can reduce this speedup; 4h is a limit,
+not a completion guarantee. The live cnall snapshot showed 63 idle nodes and
+no partition maximum-node restriction; this does not guarantee job admission.
+All four nodes must be allocated together. Independent packages need no MPI
+or gradient communication, so cross-node execution requires only task placement.
+The pilot peak RSS of 5,577,296 KiB per process projects to about 53 GiB per
+node for ten workers, below each node's approximately 187 GiB physical memory. CPU memory
+is not reserved reliably by this partition; shared-node pressure remains possible.
 Each artifact is saved as it completes. No automatic retry is authorized.
 Estimated new compressed storage is about 6.8 GB based on the pilot.
 
 The standalone launcher has been placed in the project runtime transfer directory
-and invoke the unchanged `ce7cd79` preparer, without changing the running GPU
+and invokes the unchanged `ce7cd79` preparer, without changing the running GPU
 job's checkout. Working directory: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`.
-Combine chunk manifests after completion using the existing manifest schema;
-retain old package/monitor provenance and measure the materialized coverage.
-Ruff/whitespace checks pass locally and the transferred launcher passes bash
-syntax checking on free test02. Ready CPU submission from cln01, in that
-working directory, after approval:
+Chunk manifests have been combined using the existing schema and provenance.
+The revised launcher passes bash syntax and local whitespace checks. Free
+test02 exercised all 40 launches with mock srun/scontrol: ten workers per node,
+four distinct allocated nodes, and all disjoint ranges
+cover 1001-3000 and have separate output/log paths; all-success returns 0,
+and an injected worker exit 7 produces parent exit 1 while the other workers
+finish. Test harness: `runtime/transfer/check_coverage_launcher_20260910.sh`.
+This validates shell orchestration, not actual Slurm admission or shared-storage
+throughput. The scientific worker is unchanged from the passed two-package pilot.
+Executed CPU submission from cln01, in that working directory:
 
 ```bash
 EXPECTED_GIT_HEAD=ce7cd7985e28fb5b53ae2d578d11f6b1d44761db /rmprog/slurm/v22.05.7/bin/sbatch runtime/transfer/slurm_conditioned_coverage_preparation_20260910.sh
 ```
 
 This reads the admitted `ce7cd79` source checkout without updating it. Its new
-array output root is `runtime/outputs/training/conditioned-coverage-expanded-ARRAY_JOB_ID/`.
-Current training job 14991510 and its files remain separate.
+output root is `runtime/outputs/training/conditioned-coverage-expanded-14992138/`.
+Training job 14991510 and its files remain separate.
 
 Before later GPU training, complete a small candidate forward/state/budget
 check on new packages and freeze its actual selection schedule. To isolate
 coverage, compare from the same accepted update-34 weights with 40 updates,
 40 packages/update, unchanged loss and trainable parameter scope. Reuse v3
 as the fixed-pool comparator; no assumption that it is already a good model.
+Update: v3 stopped at attempted update 42 after seven retained updates, so it
+does not yet provide the planned 40-update comparator. Resolve its score-path
+discrepancy first, then explicitly match the training budget for coverage review.
+CPU package preparation remains useful and continues independently.
 The reused validation panel remains development validation. Do not select
 new train rows from its targets or claim a fresh/sealed test. A separate
 GPU resource proposal will be needed; preparing data is not permission to

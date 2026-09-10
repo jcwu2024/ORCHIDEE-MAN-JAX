@@ -2,7 +2,10 @@
 
 Status: local and free-node admission complete; the user approved the 12h /
 CNY 33.12 envelope and job **14991510** was submitted on 2026-09-10 at 15:15:57
-Asia/Shanghai. Initially PENDING. See `conditioned_continuation_v3_admission_20260910.md`.
+Asia/Shanghai. It subsequently retained updates 35-41 and stopped at update 42
+for a score discrepancy; the 40-update plan was not completed. See
+`conditioned_continuation_v3_result_20260910.md` for the result and next gate,
+and `conditioned_continuation_v3_admission_20260910.md` for admission provenance.
 Rationale is in `conditioned_gpp_feedback_diagnosis_20260910.md`.
 
 ## Frozen scientific method

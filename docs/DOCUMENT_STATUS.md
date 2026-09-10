@@ -23,9 +23,11 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `research/daily_coarse_graining/conditioned_data_coverage_expansion_20260910.md` | Current parallel preparation; CPU pilot passed, paid CPU budget not yet approved | Exact sample coverage, proposed 2,000-package extension and CPU submission envelope |
+| `research/daily_coarse_graining/conditioned_score_discrepancy_20260910.md` | Completed DOC-input localization; input-conditioning correction is next | Causal leaf swap, amplified tiny-scale input and bounded repair gate |
+| `research/daily_coarse_graining/conditioned_data_coverage_expansion_20260910.md` | CPU job 14992138 and free-node merge/readback passed | Available 2,000-package extension, exact coverage and execution record |
 | `research/daily_coarse_graining/conditioned_gpp_feedback_diagnosis_20260910.md` | Current completed offline diagnosis | Comparing daily Teacher-state/free-run GPP and cumulative carbon/net-growth error |
-| `research/daily_coarse_graining/conditioned_continuation_v3_plan_20260910.md` | Approved; job 14991510 submitted, initially queued | Reviewing unchanged-method updates 35-74 and embedded validation curves |
+| `research/daily_coarse_graining/conditioned_continuation_v3_result_20260910.md` | Current GPU result; seven updates retained, update 42 score mismatch unresolved | Physical progress, early-stop evidence and next single-window diagnosis |
+| `research/daily_coarse_graining/conditioned_continuation_v3_plan_20260910.md` | Frozen plan; job stopped at update 42 before planned completion | Reviewing intended unchanged-method updates 35-74 and embedded validation curves |
 | `research/daily_coarse_graining/conditioned_continuation_v3_admission_20260910.md` | Completed admission and paid submission record | Exact submitted command, execution checkout, job paths, cost and matching metric/curve evidence |
 | `branch-alignment-20260802.md` | Completed Gate A audit | Checking branch provenance |
 | `teacher-branch-parity-acceptance.md` | Accepted Gate A decision | Checking canonical Teacher identity |

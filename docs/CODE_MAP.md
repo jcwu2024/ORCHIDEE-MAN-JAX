@@ -61,10 +61,20 @@ No code under `research/` is imported by the ordinary Teacher path.
 
 ## Daily Research
 
+`scripts/hpc/audit_conditioned_score_discrepancy.py` localizes update 42's
+stopped score comparison using the accepted update-41 recovery and artifact
+883/window 3. It compares compact observation and production forward paths,
+saves diagnostic traces, and performs no training or parameter checkpoint write.
+Its `--trace-localization` mode crosses day-10 state carries and individual
+state leaves. `audit_conditioned_doc_input_scale.py` reads the resulting saved
+states and actual frozen input scales on CPU, exposing DOC scale amplification
+without another model execution. These are diagnostics, not model corrections.
+
 `scripts/hpc/audit_conditioned_training_coverage.py` counts unique train/train
 days in the current pool and the existing schedule's 1001-3000 extension without
 reading Teacher target arrays. `slurm_conditioned_coverage_preparation.sh` runs
-the unchanged CPU preparer as ten 200-package chunks; the standalone runtime
+the unchanged CPU preparer in one Slurm job with four nodes, ten one-core workers
+per node, and 50 packages per worker; the standalone runtime
 launcher leaves the running neural training checkout unchanged.
 
 Current offline fit diagnosis: `scripts/dev/analyze_conditioned_gpp_feedback.py`
