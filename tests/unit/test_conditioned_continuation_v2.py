@@ -92,15 +92,17 @@ def test_independent_transfer_uses_all_slices_and_equal_counts(failure):
 
 
 @pytest.mark.parametrize('preflight', [True, False])
-def test_stage_two_full_runner_parent_and_independent_lifecycle(tmp_path, monkeypatch, preflight):
+@pytest.mark.parametrize('version', [2, 3])
+def test_stage_two_full_runner_parent_and_independent_lifecycle(tmp_path, monkeypatch, preflight, version):
     import jax
     import numpy as np
     from test_conditioned_snow_free_monitor import science
 
-    contract = load_contract(PLAN)
+    plan = PLAN.with_name(f'conditioned_snow_free_continuation_v{version}.json')
+    contract = load_contract(plan)
     values = {'x': np.array([1.], dtype=np.float32)}
     baseline = science(contract, contract.monitor_updates)
-    args = NS(output=tmp_path / 'report.json', continuation_contract=PLAN, preflight_only=preflight,
+    args = NS(output=tmp_path / 'report.json', continuation_contract=plan, preflight_only=preflight,
               artifact_aware_persistent_contract=tmp_path / 'parent.json', parent_persistent_training_report=None,
               parent_artifact_aware_recovery=None, conditioning_contract=None)
     args.artifact_aware_persistent_contract.write_text('{"contract_sha256":"old"}')
@@ -141,11 +143,11 @@ def test_stage_two_full_runner_parent_and_independent_lifecycle(tmp_path, monkey
     if preflight:
         assert updates == [] and independent_calls == [1.] and result['passed']
     else:
-        assert updates == list(range(15, 35)) and result['trained_updates'] == 20
+        assert updates == list(contract.logical_updates) and result['trained_updates'] == len(contract.logical_updates)
         assert result['independent_gate']['passed'] and len(independent_calls) == 2
         assert all(m['original_gate']['passed'] for m in result['monitors'])
         runner.run(args)
-        assert len(independent_calls) == 2 and updates == list(range(15, 35))
+        assert len(independent_calls) == 2 and updates == list(contract.logical_updates)
 
 
 def test_stage_two_loads_actual_update14_recovery_instead_of_update4(tmp_path):
@@ -163,3 +165,27 @@ def test_stage_two_loads_actual_update14_recovery_instead_of_update4(tmp_path):
     Path(plan['parent_report']).write_text('{"status":"completed","completed_logical_update":14}')
     values, expected, original = runner.starting_point(replace(stage, plan=plan))
     assert float(values['x'][0]) == 14. and expected == {'baseline': 14} and original == {'baseline': 4}
+
+
+def test_stage_three_continues_sampling_and_preserves_original_monitor(tmp_path):
+    import numpy as np
+
+    from research.daily_coarse_graining.daily_operator.corrected_continuation import save_state
+    from research.daily_coarse_graining.daily_operator.target_oriented_coupled_gpp_persistent_scale_training import (
+        build_persistent_scale_training_schedule,
+    )
+    parent = load_contract(PLAN)
+    stage = load_contract(PLAN.with_name('conditioned_snow_free_continuation_v3.json'))
+    schedule = build_persistent_scale_training_schedule(seed=20260910, maximum_updates=60, macro_batch_size=40)
+    combined = parent.train_panels + stage.train_panels
+    assert tuple(tuple(u for g in p for u in g) for p in combined) == schedule.groups
+    plan = dict(stage.plan, parent_recovery=str(tmp_path / 'parent.pkl'), parent_report=str(tmp_path / 'parent.json'))
+    save_state(plan['parent_recovery'], {'schema_version': 'corrected_continuation_state_v1', 'plan': parent.plan,
+        'completed_logical_update': 34, 'stopped_reason': None,
+        'trainable': {'x': np.array([34.], dtype=np.float32)}, 'initial_monitor': {'baseline': 14},
+        'original_monitor': {'baseline': 4}, 'records': [{'logical_update': u} for u in range(15, 35)],
+        'monitors': [{'panel': {'baseline': u}, 'local_gate': {'passed': True}, 'cumulative_gate': {'passed': True}}
+                     for u in range(15, 35)]})
+    Path(plan['parent_report']).write_text('{"status":"completed","completed_logical_update":34}')
+    values, expected, original = runner.starting_point(replace(stage, plan=plan))
+    assert float(values['x'][0]) == 34. and expected == {'baseline': 34} and original == {'baseline': 4}

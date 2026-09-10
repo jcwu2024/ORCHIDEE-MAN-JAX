@@ -61,6 +61,13 @@ No code under `research/` is imported by the ordinary Teacher path.
 
 ## Daily Research
 
+Current offline fit diagnosis: `scripts/dev/analyze_conditioned_gpp_feedback.py`
+compares saved Teacher-state and free-run daily GPP on identical days and reports
+cumulative carbon and net-growth errors. It reads completed JSON reports and
+curves only. `scripts/dev/prepare_conditioned_continuation_v3.py` materializes
+the next 40 blocks of the existing training schedule. V3 saves validation
+trajectories during its scheduled evaluation to avoid another inference export.
+
 `research/daily_coarse_graining/` currently mixes reusable infrastructure and
 historical prototypes. Use the following classification.
 

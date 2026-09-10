@@ -49,19 +49,22 @@ def bootstrap_args(args):
 
 
 def starting_point(contract):
-    if contract.plan['starting_logical_update'] == 14:
-        parent = continuation.read_state(contract.plan['parent_recovery'], continuation.load_contract().plan)
+    if contract.plan['starting_logical_update'] in (14, 34):
+        start = contract.plan['starting_logical_update']
+        parent_plan = continuation.load_contract(continuation.DEFAULT_PLAN.with_name(
+            'conditioned_snow_free_continuation_v1.json' if start == 14 else 'conditioned_snow_free_continuation_v2.json')).plan
+        parent = continuation.read_state(contract.plan['parent_recovery'], parent_plan)
         reference = json.loads(Path(contract.plan['parent_report']).read_text())
         if (parent['schema_version'] != 'corrected_continuation_state_v1'
-                or parent['completed_logical_update'] != 14 or parent['stopped_reason'] is not None
-                or parent['plan'] != continuation.load_contract().plan
-                or len(parent['records']) != 10 or len(parent['monitors']) != 10
-                or reference['completed_logical_update'] != 14 or reference['status'] != 'completed'):
-            raise ValueError('requires completed and accepted corrected update-14 recovery')
+                or parent['completed_logical_update'] != start or parent['stopped_reason'] is not None
+                or len(parent['records']) != len(parent_plan['logical_updates'])
+                or len(parent['monitors']) != len(parent_plan['logical_updates'])
+                or reference['completed_logical_update'] != start or reference['status'] != 'completed'):
+            raise ValueError(f'requires completed and accepted corrected update-{start} recovery')
         last = parent['monitors'][-1]
         if not (last['local_gate']['passed'] and last['cumulative_gate']['passed']):
             raise ValueError('parent is not monitor accepted')
-        return parent['trainable'], last['panel'], parent['initial_monitor']
+        return parent['trainable'], last['panel'], parent.get('original_monitor', parent['initial_monitor'])
     snapshot = continuation.read_pickle(contract.plan['candidate_snapshot'])
     reference = json.loads(Path(contract.plan['monitor_reference']).read_text())
     if (snapshot['schema_version'] != 'corrected_train_selected_candidate_v1'
@@ -90,12 +93,15 @@ def independent_evaluator(bootstrap, contract):
         raise ValueError('independent panel does not match the preregistered plan')
     scales = derive_target_oriented_acceptance_scales(runtime['base_statistics'].arrays['next_state'].scale,
         runtime['process_statistics'].outputs['daily.fast_gpp'].scale, runtime['contract'])
-    evaluate = fresh._make_fresh_evaluator(runtime, bootstrap['head'], context['template'], scales, context['scales'])
+    save_curves = bool(contract.plan.get('save_validation_trajectories', False))
+    evaluate = fresh._make_fresh_evaluator(runtime, bootstrap['head'], context['template'], scales,
+                                          context['scales'], include_trajectories=save_curves)
 
     def measure(values):
         parameters = window.replace_conditioned_coupled_gpp_trainable(bootstrap['fixed_parameters'], runtime['jax'].device_put(values))
         return fresh._evaluate_panel(runtime, parameters=parameters, evaluator=evaluate,
-            prepared_path=path, prepared=prepared, panel=panel, target_contract=context['target_contract'], mode='formal')
+            prepared_path=path, prepared=prepared, panel=panel, target_contract=context['target_contract'],
+            mode='formal', include_trajectories=save_curves)
     return measure
 
 

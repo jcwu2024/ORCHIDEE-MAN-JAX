@@ -299,6 +299,21 @@ def _direct_report(statistics: Any) -> Mapping[str, Any]:
     }
 
 
+def pack_science_trajectory(value):
+    """Small host-side curve export using the same derived science quantities as acceptance."""
+    from research.daily_coarse_graining.daily_operator.target_oriented_training import _acceptance_trajectories
+    fluxes, stocks = _acceptance_trajectories(value.fluxes, value.stocks)
+    result = {}
+    for category, trajectories in (('fluxes', fluxes), ('stocks', stocks)):
+        result[category] = {}
+        for key, item in trajectories.items():
+            values = np.asarray(item.value).reshape(-1)
+            defined = np.asarray(item.defined, dtype=bool).reshape(-1)
+            result[category][key] = [float(v) if valid and np.isfinite(v) else None
+                                     for v, valid in zip(values, defined, strict=True)]
+    return result
+
+
 def _evaluate_panel(
     runtime: Mapping[str, Any],
     *,
@@ -309,6 +324,7 @@ def _evaluate_panel(
     panel: Mapping[str, Any],
     target_contract: Any,
     mode: str,
+    include_trajectories: bool = False,
 ) -> Mapping[str, Any]:
     jax = runtime["jax"]
     rollout_cells: dict[tuple[str, int], Any] = {}
@@ -316,6 +332,7 @@ def _evaluate_panel(
     direct_total = None
     hard = {name: 0 for name in HardCounts._fields}
     timings = []
+    trajectories = []
     selected = _validation_records(panel, prepared, mode=mode)
     for ordinal, (record, (slice_id, horizon, entry)) in enumerate(
         selected,
@@ -328,17 +345,23 @@ def _evaluate_panel(
             window_entry=entry,
         )
         started = time.perf_counter()
-        rollout_statistics, direct_statistics, local_hard = evaluator(
+        evaluated = evaluator(
             parameters,
             artifact.batch,
             artifact.day_inputs,
             horizon=horizon,
         )
+        rollout_statistics, direct_statistics, local_hard = evaluated[:3]
         jax.block_until_ready((rollout_statistics, direct_statistics, local_hard))
         timings.append(time.perf_counter() - started)
         rollout_host, direct_host, hard_host = jax.device_get(
             (rollout_statistics, direct_statistics, local_hard)
         )
+        if include_trajectories:
+            predicted, expected = jax.device_get(evaluated[3:])
+            trajectories.append({'ordinal': ordinal, 'slice': slice_id, 'horizon': horizon, 'entry': entry,
+                                 'model': pack_science_trajectory(predicted),
+                                 'teacher': pack_science_trajectory(expected)})
         key = (slice_id, horizon)
         rollout_cells[key] = (
             rollout_host
@@ -397,6 +420,7 @@ def _evaluate_panel(
     )
     return {
         "full_frozen_panel": full_panel,
+        **({'trajectories': trajectories} if include_trajectories else {}),
         "evaluated_windows": len(selected),
         "science_macro_normalized_rmse": float(np.mean(macros)),
         "hard_counts": hard,

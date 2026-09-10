@@ -1466,6 +1466,16 @@ remain poorly fitted. Heterotrophic respiration is zero for both throughout
 this panel. Curves and reading guide are in
 `outputs/conditioned-science-fit-14984032/README.md`.
 Results remain in `conditioned-snow-free-continuation-v2-14984032`.
+Offline diagnosis on the same 444 validation days gives update-34 Teacher-state
+GPP RMSE 1.74793 versus free-rollout 2.33039 gC m-2 day-1. Both improve from
+update 14. Thirty-day NPP accumulated bias improves +33.1840 -> +29.1134 gC m-2;
+AGB/BGB net-change RMSE improves 30.5028/19.8301 -> 29.4153/18.6226. Neither
+direct fit nor recurrence is solved. Actual sampled training years are 1961-2004.
+The user authorized preparing the next stage. The v3 plan proposes unchanged
+updates 35-74 with continued sampling and embedded validation curves, under a
+not-yet-approved 12h / CNY 33.12 paid envelope. See
+`conditioned_gpp_feedback_diagnosis_20260910.md` and
+`conditioned_continuation_v3_plan_20260910.md` in the daily research docs.
 The user's final-training reproducibility principle is now in `AGENTS.md` and
 `NEXT_STEPS.md`: retain exploratory progress, but execute a documented complete
 training recipe before final-method acceptance.

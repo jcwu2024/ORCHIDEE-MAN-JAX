@@ -39,9 +39,12 @@ def load_contract(path=DEFAULT_PLAN):
     plan = json.loads(Path(path).read_text())
     base = load_conditioned_attention_persistent_training_contract()
     version = plan['schema_version']
-    if version not in ('conditioned_snow_free_continuation_v1', 'conditioned_snow_free_continuation_v2'):
+    bounds = {'conditioned_snow_free_continuation_v1': (4, 14),
+              'conditioned_snow_free_continuation_v2': (14, 34),
+              'conditioned_snow_free_continuation_v3': (34, 74)}
+    if version not in bounds:
         raise ValueError('unknown corrected-continuation plan')
-    start, stop = (4, 14) if version.endswith('_v1') else (14, 34)
+    start, stop = bounds[version]
     if (plan['logical_updates'] != list(range(start + 1, stop + 1)) or plan['starting_logical_update'] != start
             or plan['warm_snow_free_boundary'] is not True or tuple(plan['monitor_updates']) != base.monitor_updates):
         raise ValueError('incorrect corrected-continuation plan')
@@ -50,8 +53,9 @@ def load_contract(path=DEFAULT_PLAN):
         expected_panels = [[list(schedule.groups[i - 1]) for i in (u, *range(4*u + 3, 4*u + 7))]
                            for u in plan['logical_updates']]
     else:
-        schedule = build_persistent_scale_training_schedule(seed=20260910, maximum_updates=20, macro_batch_size=40)
-        expected_panels = [[list(block[i:i + 8]) for i in range(0, 40, 8)] for block in schedule.groups]
+        schedule = build_persistent_scale_training_schedule(seed=20260910, maximum_updates=stop - 14, macro_batch_size=40)
+        expected_panels = [[list(block[i:i + 8]) for i in range(0, 40, 8)]
+                           for block in schedule.groups[start - 14:]]
     for u, expected in zip(plan['logical_updates'], expected_panels, strict=True):
         if plan['train_panels'][str(u)] != expected:
             raise ValueError('continuation panel differs from approved schedule')

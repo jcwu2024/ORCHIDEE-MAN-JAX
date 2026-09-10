@@ -2568,9 +2568,19 @@ passing. Curves are in `outputs/conditioned-science-fit-14984032/README.md`.
 They show large GPP/NPP errors and poorly matched biomass changes despite
 close stock levels; do not overstate biomass acceptance. Heterotrophic
 respiration is zero in every sample and is not an informative fit test here.
-Next discuss the actual fit and growth evidence before the next training stage.
-Report future progress with physical-unit fits as well as loss changes. No new
-paid run is authorized. Final-training reproducibility remains required.
+The user discussed the actual fit and authorized next-stage preparation.
+Offline paired diagnosis now puts direct and free-run GPP on the same 444 days:
+update-34 daily RMSE is 1.74793 with Teacher states versus 2.33039 in free rollout.
+Both improve from update 14; spatial/30 recurrence remains particularly large.
+The 30-day NPP cumulative bias decreases 33.1840 -> 29.1134 gC m-2, and AGB/BGB
+net-change RMSE also improves but remains large. Actual training records span
+1961-2004. See [the diagnosis](research/daily_coarse_graining/conditioned_gpp_feedback_diagnosis_20260910.md).
+Prepare [continuation v3](research/daily_coarse_graining/conditioned_continuation_v3_plan_20260910.md):
+40 unchanged-method updates, 35-74, continuing the existing sampling stream;
+save validation curves inside the scheduled evaluation. The 24-window panel
+is now reused development validation, not fresh/sealed testing. Local checks
+and free CPU/GPU admission precede a 1-V100/8-CPU/12h proposal (CNY 33.12 maximum).
+No new paid run is authorized. Final-training reproducibility remains required.
 See the
 [execution record](research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md)
 for paths and resume semantics.

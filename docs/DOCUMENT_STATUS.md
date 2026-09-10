@@ -23,6 +23,8 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/conditioned_gpp_feedback_diagnosis_20260910.md` | Current completed offline diagnosis | Comparing daily Teacher-state/free-run GPP and cumulative carbon/net-growth error |
+| `research/daily_coarse_graining/conditioned_continuation_v3_plan_20260910.md` | Current preparation; paid submission not yet authorized | Preparing unchanged-method updates 35-74 and embedded validation curves |
 | `branch-alignment-20260802.md` | Completed Gate A audit | Checking branch provenance |
 | `teacher-branch-parity-acceptance.md` | Accepted Gate A decision | Checking canonical Teacher identity |
 | `porting/pft14_extensible_design.md` | Accepted Gate B structural design; new PFT science remains unsupported | Extending Teacher PFT support |
