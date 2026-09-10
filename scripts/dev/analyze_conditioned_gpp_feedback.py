@@ -124,6 +124,16 @@ def analyze(report, curves):
                        'Training active-PFT loss and validation land-area RMSE are not directly interchangeable.',
                        'RMSE difference is not an additive causal decomposition of recurrence error.',
                        'Initial stock values were not exported; shared-initial-state endpoint errors give net-change errors, not net-change levels.']}
+    old, new = (result['cumulative_carbon'][label]['30'] for label in versions)
+    checks = {key + '_rmse_decreased': new[key]['rmse'] < old[key]['rmse'] for key in
+              ('gpp', 'npp', 'aboveground_biomass_carbon_net_change_error', 'belowground_biomass_carbon_net_change_error')}
+    checks.update({key + '_rmse_within_2_percent': new[key]['rmse'] <= old[key]['rmse'] * 1.02
+                   for key in ('maintenance_respiration', 'autotrophic_respiration')})
+    checks['relative_transfer_passed'] = bool(report['independent_transfer_passed'])
+    result['physical_progress_review'] = {
+        'checks': checks, 'passed': all(checks.values()), 'selects_checkpoint': False,
+        'final_model_accepted': False,
+        'interpretation': 'Post-stage development review; absolute gates and final reproducible training remain separate.'}
     return result
 
 

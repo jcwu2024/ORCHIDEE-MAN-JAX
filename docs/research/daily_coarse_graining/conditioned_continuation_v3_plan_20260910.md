@@ -1,6 +1,7 @@
 # Corrected Attention continuation v3: carbon accumulation and sustained fit
 
-Status: preparation; paid submission not yet authorized for this resource envelope.
+Status: local and free-node admission complete; paid submission not yet authorized
+for this resource envelope. See `conditioned_continuation_v3_admission_20260910.md`.
 Rationale is in `conditioned_gpp_feedback_diagnosis_20260910.md`.
 
 ## Frozen scientific method

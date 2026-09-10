@@ -1476,6 +1476,11 @@ updates 35-74 with continued sampling and embedded validation curves, under a
 not-yet-approved 12h / CNY 33.12 paid envelope. See
 `conditioned_gpp_feedback_diagnosis_20260910.md` and
 `conditioned_continuation_v3_plan_20260910.md` in the daily research docs.
+V3 admission completed on free gln01 GPU 1 at `ce7cd79`: 1236.23s, zero
+updates/physical failures, no OOM, 24 embedded-curve windows. All 252 scalar
+and 624 curve comparisons match update 34. Local 29 tests and real-parent
+free CPU loading also pass. The server remains at this execution commit;
+the paid script is ready, awaiting approval of the 12h/CNY 33.12 envelope.
 The user's final-training reproducibility principle is now in `AGENTS.md` and
 `NEXT_STEPS.md`: retain exploratory progress, but execute a documented complete
 training recipe before final-method acceptance.
