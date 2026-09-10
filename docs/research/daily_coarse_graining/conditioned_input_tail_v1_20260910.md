@@ -85,3 +85,33 @@ difference over all 30 days from 1024 to 0.20711. That residual includes already
 diverged downstream physical states; this offline number is not a new rollout
 or evidence of model improvement. Actual rollout admission remains required.
 Output: `outputs/conditioned-input-tail-cpu-14991510.json`.
+
+## Local admission and free-GPU execution
+
+Eight new tests pass (5.68s), including true JVP/VJP/rounded finite differences,
+C1 boundaries, pre-cast extremes, undefined masks, constructor compatibility,
+short recurrence and component regression rules. Thirty existing network and
+streamed-adjoint/integration tests pass (521.03s), covering forward/loss,
+parameter gradients, bound one-day budgets, inactive PFTs and permutation.
+Ruff, Python CLI import, shell syntax and whitespace checks pass. These are
+local implementation checks, not the real-v6 derivative admission.
+
+Server checkout fast-forwarded from ce7cd79 to **fe3f6fd** after the preceding
+diagnostics and CPU preparation had finished. GPU 1 was idle (3 MiB, 0%);
+GPU 0 belongs to another running process and was left untouched. Launched
+2026-09-10 at approximately 22:50 China time, free gln01/ibc13b02n04, Python
+PID **18115**, one V10032GB, 45-minute timeout, allocator fraction 0.55:
+
+```
+GPU_DEVICE=1 EXPECTED_GIT_HEAD=fe3f6fd7977f4b0b8ed1545723c683ee151e4f6b \
+  bash scripts/hpc/audit_conditioned_input_tail.sh
+```
+
+Working directory: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`.
+Report: `runtime/outputs/diagnostics/conditioned-input-tail-14991510.json`.
+Log: `runtime/logs/conditioned-input-tail-14991510.log`.
+Bootstrap has started. Result and real-model derivative acceptance remain
+pending. Do not update the server checkout during this process or submit a
+duplicate. CPU audit's standalone arithmetic clarification was rerun separately
+on test02; it uses exact legacy float32 arithmetic for the reference and yields
+the same maximum feature gap of 1024.

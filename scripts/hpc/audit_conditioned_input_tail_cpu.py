@@ -42,8 +42,12 @@ def run(root):
     za, zb = [(np.where(common, v, mean) - mean) / safe for v in (a, b)]
     def tail(z):
         return np.where(abs(z) <= 16., z, np.sign(z) * (16. + np.log1p(np.maximum(abs(z) - 16., 0.))))
+    legacy_scale = scale.astype('float32')
+    legacy_scale = np.where(np.isfinite(legacy_scale) & (legacy_scale > 0), legacy_scale, 1.)
+    legacy_a, legacy_b = [(np.where(common, v, mean).astype('float32') - mean.astype('float32')) / legacy_scale
+                          for v in (a, b)]
     result['max_float32_feature_difference'] = {
-        'linear': float(np.max(abs(za.astype('float32') - zb.astype('float32')))),
+        'linear': float(np.max(abs(legacy_a - legacy_b))),
         'tail': float(np.max(abs(tail(za).astype('float32') - tail(zb).astype('float32'))))}
     ranked = np.argsort(np.max(np.where(valid_a, abs(za), 0.), axis=0))[-20:][::-1]
     leaf_rows = json.loads((diagnostics / 'conditioned-score-day10-14991510.json').read_text())['daily_state_differences']
