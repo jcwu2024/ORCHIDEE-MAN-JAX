@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/conditioned_data_coverage_expansion_20260910.md` | Current parallel preparation; CPU pilot passed, paid CPU budget not yet approved | Exact sample coverage, proposed 2,000-package extension and CPU submission envelope |
 | `research/daily_coarse_graining/conditioned_gpp_feedback_diagnosis_20260910.md` | Current completed offline diagnosis | Comparing daily Teacher-state/free-run GPP and cumulative carbon/net-growth error |
 | `research/daily_coarse_graining/conditioned_continuation_v3_plan_20260910.md` | Approved; job 14991510 submitted, initially queued | Reviewing unchanged-method updates 35-74 and embedded validation curves |
 | `research/daily_coarse_graining/conditioned_continuation_v3_admission_20260910.md` | Completed admission and paid submission record | Exact submitted command, execution checkout, job paths, cost and matching metric/curve evidence |

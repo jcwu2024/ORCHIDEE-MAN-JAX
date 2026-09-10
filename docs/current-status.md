@@ -1486,6 +1486,18 @@ confirms one GPU, eight CPUs, 32GB host memory, 12h, no requeue and the project
 working directory. The server must remain at `ce7cd79` while queued/running.
 Results will be in `runtime/outputs/training/conditioned-snow-free-continuation-v3-14991510/`;
 there is no result or update beyond 34 from this job yet.
+The user later reported that job 14991510 was running and approved parallel
+coverage-expansion preparation. Exact train/train metadata counting finds the
+678-package pool spans all 535 training locations/44 years but only 140,002
+unique days out of 8,568,025 eligible (1.634%). Adding existing schedule entries
+1001-3000 yields 539,171 unique days, a 3.851x increase; these counts do not audit
+every inherited pretraining stage. Two new packages (1964/1990) were prepared
+on free test03 and read back on test02, with canonical shapes and finite defined
+GPP targets. Batch construction took 199.20/198.18s, total process 14m42s on a
+shared node with 47% CPU availability. A ten-task, one-CPU/task, 12h/task cnall
+preparation script is ready (maximum CNY 8.40), **not submitted or approved**.
+No new-package neural forward or expanded-data GPU training has run. See
+`conditioned_data_coverage_expansion_20260910.md` for the next concrete action.
 The user's final-training reproducibility principle is now in `AGENTS.md` and
 `NEXT_STEPS.md`: retain exploratory progress, but execute a documented complete
 training recipe before final-method acceptance.

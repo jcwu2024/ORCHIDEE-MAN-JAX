@@ -2591,6 +2591,22 @@ envelope. Keep server execution at `ce7cd79` while queued/running. Outputs are
 requests progress/completion, then review paired physical metrics and recovery
 through update 74. No duplicate/automatic paid resubmission is authorized.
 Final-training reproducibility remains required.
+The user subsequently authorized **parallel data-coverage expansion preparation**
+and asked whether limited data/frozen parameters are only exploratory choices.
+They are separate decisions: wider coverage is useful now, and freezing trained
+modules is not established as the optimal final scope. Keep the current model,
+loss and trainable scope fixed for the first coverage comparison; any broader
+unfreezing needs its own evidence and reproducible stage definition.
+The current 678-package pool spans all 535 train locations/44 years, but only
+140,002 unique eligible days (1.634%). Existing schedule entries 1001-3000 would
+raise the pool's unique-day coverage to 539,171 (6.293%, 3.851x). These are
+package counts, not lifetime exposure across inherited pretraining. The free
+two-package CPU pilot and independent readback pass; the ready CPU preparation
+array is ten one-CPU tasks, 200 packages/task, no GPUs, 12h/task, maximum CNY 8.40.
+This separate paid CPU budget is **not yet approved**. See
+[coverage expansion](research/daily_coarse_graining/conditioned_data_coverage_expansion_20260910.md)
+for exact command, paths, counts and timing. Do not alter job 14991510's checkout
+or submit a second GPU run from this preparation authorization.
 See the
 [execution record](research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md)
 for paths and resume semantics.

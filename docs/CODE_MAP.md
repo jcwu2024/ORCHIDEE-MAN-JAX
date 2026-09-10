@@ -61,6 +61,12 @@ No code under `research/` is imported by the ordinary Teacher path.
 
 ## Daily Research
 
+`scripts/hpc/audit_conditioned_training_coverage.py` counts unique train/train
+days in the current pool and the existing schedule's 1001-3000 extension without
+reading Teacher target arrays. `slurm_conditioned_coverage_preparation.sh` runs
+the unchanged CPU preparer as ten 200-package chunks; the standalone runtime
+launcher leaves the running neural training checkout unchanged.
+
 Current offline fit diagnosis: `scripts/dev/analyze_conditioned_gpp_feedback.py`
 compares saved Teacher-state and free-run daily GPP on identical days and reports
 cumulative carbon and net-growth errors. It reads completed JSON reports and
