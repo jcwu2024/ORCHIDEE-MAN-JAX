@@ -1,7 +1,8 @@
 # Corrected Attention continuation v3: carbon accumulation and sustained fit
 
-Status: local and free-node admission complete; paid submission not yet authorized
-for this resource envelope. See `conditioned_continuation_v3_admission_20260910.md`.
+Status: local and free-node admission complete; the user approved the 12h /
+CNY 33.12 envelope and job **14991510** was submitted on 2026-09-10 at 15:15:57
+Asia/Shanghai. Initially PENDING. See `conditioned_continuation_v3_admission_20260910.md`.
 Rationale is in `conditioned_gpp_feedback_diagnosis_20260910.md`.
 
 ## Frozen scientific method
@@ -86,4 +87,5 @@ Worst-case additive charge: 1*12*2.20 + 8*12*0.07 = **CNY 33.12**.
 Working directory `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`.
 Command from gln01, with the tested execution commit in EXPECTED_GIT_HEAD:
 `sbatch scripts/hpc/slurm_conditioned_snow_free_continuation_v3.sh`.
-User approval of this concrete envelope is required before submission.
+The user approved this concrete envelope; submission provenance is in the
+admission record. No automatic duplicate or paid resubmission is authorized.

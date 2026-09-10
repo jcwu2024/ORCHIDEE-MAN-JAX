@@ -2582,9 +2582,15 @@ is now reused development validation, not fresh/sealed testing. Local 29-test
 checks, real-parent free CPU loading, and all 24 free GPU windows pass at
 `ce7cd79` (1236.23s, no updates/OOM). All 252 scalar and 624 trajectory
 comparisons match the prior update-34 result. See [admission](research/daily_coarse_graining/conditioned_continuation_v3_admission_20260910.md).
-The 1-V100/8-CPU/12h task is ready (CNY 33.12 maximum); next obtain approval
-of this concrete envelope before sbatch. Server execution remains `ce7cd79`.
-No new paid run is authorized. Final-training reproducibility remains required.
+The user approved the 1-V100/8-CPU/32GB/12h task (CNY 33.12 maximum).
+Gnall job **14991510** was submitted once on 2026-09-10 at 15:15:57 Asia/Shanghai,
+initially PENDING; Slurm resources and working directory match the approved
+envelope. Keep server execution at `ce7cd79` while queued/running. Outputs are
+`runtime/outputs/training/conditioned-snow-free-continuation-v3-14991510/`, log
+`runtime/logs/corrected40_14991510.txt`. Next inspect this job when the user
+requests progress/completion, then review paired physical metrics and recovery
+through update 74. No duplicate/automatic paid resubmission is authorized.
+Final-training reproducibility remains required.
 See the
 [execution record](research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md)
 for paths and resume semantics.

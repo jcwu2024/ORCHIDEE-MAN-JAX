@@ -1,6 +1,7 @@
 # Continuation v3 preparation and admission
 
-Status: all admission checks completed; ready for paid-submission approval.
+Status: approved and submitted as gnall job **14991510** on 2026-09-10 at
+15:15:57 Asia/Shanghai. Initial state is PENDING; no training result yet.
 Execution code: `ce7cd7985e28fb5b53ae2d578d11f6b1d44761db` on the workstation
 and server at admission launch. Later offline-report/document changes do not
 alter this running execution. Plan: `conditioned_continuation_v3_plan_20260910.md`.
@@ -55,6 +56,21 @@ Ready command on gln01, in `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`:
 EXPECTED_GIT_HEAD=ce7cd7985e28fb5b53ae2d578d11f6b1d44761db sbatch scripts/hpc/slurm_conditioned_snow_free_continuation_v3.sh
 ```
 
-Proposed gnall envelope: one V100, 8 Slurm CPUs, 32GB host memory, 12h ceiling,
-additive maximum CNY 33.12. The server remains at this tested execution commit.
-No paid submission has been made. Do not submit from this admission alone.
+The user explicitly approved this gnall envelope: one V100, 8 Slurm CPUs,
+32GB host memory, 12h ceiling, additive maximum CNY 33.12. The ready command
+above was submitted once, returning job **14991510**. Slurm confirms
+`TRES=cpu=8,mem=32G,node=1,billing=8,gres/gpu=1`, `TimeLimit=12:00:00`,
+`Requeue=0` and the declared working directory and script. Initial state is
+PENDING (Reason=None at the first inspection). The initial scheduler estimate
+was 2026-09-12 13:22:25; this is provisional, not a promised start time.
+
+Keep the server checkout at the tested execution commit while queued/running.
+Job log: `runtime/logs/corrected40_14991510.txt`.
+Outputs: `runtime/outputs/training/conditioned-snow-free-continuation-v3-14991510/`;
+inspect `report.progress.json`, `report.json` and `recovery.pkl` when available.
+The expected endpoint is logical update 74 from the accepted update-34 parent.
+No duplicate submission or automatic resubmission is authorized.
+
+On gln01, read status with `scontrol show job 14991510` or
+`squeue -j 14991510`. If the user requests cancellation, the exact command is
+`scancel 14991510`; do not cancel merely because it is queued.

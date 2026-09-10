@@ -1480,7 +1480,12 @@ V3 admission completed on free gln01 GPU 1 at `ce7cd79`: 1236.23s, zero
 updates/physical failures, no OOM, 24 embedded-curve windows. All 252 scalar
 and 624 curve comparisons match update 34. Local 29 tests and real-parent
 free CPU loading also pass. The server remains at this execution commit;
-the paid script is ready, awaiting approval of the 12h/CNY 33.12 envelope.
+the user then approved the 12h/CNY 33.12 envelope. Gnall job **14991510** was
+submitted on 2026-09-10 at 15:15:57 Asia/Shanghai, initially PENDING. Slurm
+confirms one GPU, eight CPUs, 32GB host memory, 12h, no requeue and the project
+working directory. The server must remain at `ce7cd79` while queued/running.
+Results will be in `runtime/outputs/training/conditioned-snow-free-continuation-v3-14991510/`;
+there is no result or update beyond 34 from this job yet.
 The user's final-training reproducibility principle is now in `AGENTS.md` and
 `NEXT_STEPS.md`: retain exploratory progress, but execute a documented complete
 training recipe before final-method acceptance.
