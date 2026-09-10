@@ -1,10 +1,11 @@
 # Corrected Attention continuation v2: free admission
 
 Status: implementation, preparation and zero-update free-GPU admission pass.
-The user authorized continuation; paid job **14984032** is submitted.
+The user authorized continuation; paid job **14984032** subsequently completed
+all 20 updates. See [the result](conditioned_continuation_v2_result_20260910.md).
 Execution: `b6929153fc028330cbfc347f12565043a85e7aa6`. Subsequent local changes
-are documentation only; keep the tested remote checkout fixed while the job
-is pending or running.
+were documentation only during this execution; its checkout restriction is
+now released.
 
 The [frozen plan](conditioned_continuation_v2_plan_20260909.md) continues the
 accepted update-14 checkpoint for 20 updates, with the same Attention, corrected

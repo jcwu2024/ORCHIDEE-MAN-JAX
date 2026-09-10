@@ -1150,7 +1150,12 @@ selects disjoint metadata-only validation and owns the paired transfer rule;
 `scripts/hpc/prepare_conditioned_independent_validation.py` reuses the existing
 v6 validation preparer. The runner binds the corrected head into the existing
 fresh rollout evaluator for before/after checks. The v2 Slurm script proposes
-one V100/eight hours and requires new paid approval after free admission.
+one V100/eight hours; v2 job 14984032 is now complete.
+`scripts/hpc/export_conditioned_science_trajectories.py` exports all paired
+independent Teacher/parent/current daily curves through the existing fresh
+evaluator's optional trajectory return and reproduces its saved acceptance
+metrics. `scripts/dev/plot_conditioned_science_fit.py` produces physical-unit
+flux, stock-level, stock-change and daily-curve comparisons without training.
 
 ## Scripts
 

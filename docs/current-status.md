@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-09.
+Last updated: 2026-09-10.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -1449,8 +1449,23 @@ This is a starting measurement, not paired transfer evidence. See
 `research/daily_coarse_graining/conditioned_continuation_v2_admission_20260909.md`.
 The user approved the 8h / CNY 22.08 run. Job `14984032` was submitted on
 2026-09-09 at 22:32:51 Asia/Shanghai, initially PENDING / Priority. Slurm confirms
-one GPU, eight CPUs, 32G host memory and no requeue. Keep remote `b692915` fixed
-until completion. Results go to `conditioned-snow-free-continuation-v2-14984032`.
+one GPU, eight CPUs, 32G host memory and no requeue. It completed on 2026-09-10
+at 09:51:54, elapsed 5h08m, with all 20 updates accepted (recovery 34).
+Development direct/science losses fall 16.8483%/12.5737%; independent macro
+normalized RMSE falls 4.4875%. Paired transfer passes; joint/7 regresses 0.1962%,
+the other five cells improve. All 1,920 score checks pass; daily reverse compiles
+once. Absolute science still fails. See
+`research/daily_coarse_graining/conditioned_continuation_v2_result_20260910.md`.
+The checkout restriction is released; free inference at `3d94543` completed
+all 24 Teacher/parent/current curves, reproducing 468 saved acceptance metrics
+and counts. The initial shared GPU-1 export hit CUDA graph OOM; the unchanged
+run on idle GPU 0 with 0.55 preallocation completed in 323.57 seconds. Actual
+window-mean GPP Teacher/model is 3.51/4.53 and NPP 1.22/1.94 gC m-2 day-1;
+maintenance is closer at 1.78/1.82. Stock levels are close but window changes
+remain poorly fitted. Heterotrophic respiration is zero for both throughout
+this panel. Curves and reading guide are in
+`outputs/conditioned-science-fit-14984032/README.md`.
+Results remain in `conditioned-snow-free-continuation-v2-14984032`.
 The user's final-training reproducibility principle is now in `AGENTS.md` and
 `NEXT_STEPS.md`: retain exploratory progress, but execute a documented complete
 training recipe before final-method acceptance.

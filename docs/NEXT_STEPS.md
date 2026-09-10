@@ -1,6 +1,6 @@
 # Current Roadmap
 
-Last updated: 2026-09-09.
+Last updated: 2026-09-10.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
@@ -2556,10 +2556,21 @@ accuracy still fails absolute gates; paired transfer remains unmeasured.
 See the [admission record](research/daily_coarse_graining/conditioned_continuation_v2_admission_20260909.md).
 The user authorized the one-V100/8-CPU/8h run (CNY 22.08 maximum); job
 `14984032` was submitted at 2026-09-09 22:32:51 Asia/Shanghai and initially
-queues for Priority. Next action: inspect its result, then review sustained
-learning and independent paired transfer. Do not submit a duplicate. Keep
-remote `b692915` fixed while the job is pending/running. This is exploratory
-continuation; the final-training reproducibility principle above still applies.
+queued for Priority. It completed all 20 updates on 2026-09-10 at 09:51:54,
+elapsed 5h08m, recovery 34. Development losses fall 16.85% direct and 12.57%
+science; independent macro normalized RMSE falls 4.49%, passing relative
+transfer with all hard failures zero. Absolute accuracy still fails. See the
+[result](research/daily_coarse_graining/conditioned_continuation_v2_result_20260910.md).
+The completed-job checkout restriction is released. Current user request:
+show actual productivity/respiration/biomass fits in physical units. Free
+inference at `3d94543` completed all 24 paired windows with 468 report checks
+passing. Curves are in `outputs/conditioned-science-fit-14984032/README.md`.
+They show large GPP/NPP errors and poorly matched biomass changes despite
+close stock levels; do not overstate biomass acceptance. Heterotrophic
+respiration is zero in every sample and is not an informative fit test here.
+Next discuss the actual fit and growth evidence before the next training stage.
+Report future progress with physical-unit fits as well as loss changes. No new
+paid run is authorized. Final-training reproducibility remains required.
 See the
 [execution record](research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md)
 for paths and resume semantics.

@@ -459,8 +459,14 @@ compilation, and all physical gates passing. Absolute GPP/NPP and two respiratio
 gates still fail. The next 20-update continuation and independent 24-window
 evaluation are implemented. Local and free CPU/GPU admission pass: all 24
 independent windows complete without physical hard failures, but absolute
-accuracy still fails. Approved 20-update gnall job `14984032` is submitted;
-independent before/after transfer remains unmeasured. Larger fresh validation,
+accuracy still fails. Job `14984032` completed all 20 updates in 5h08m,
+reaching update 34. Development direct/science losses fall 16.85%/12.57%,
+and independent macro normalized RMSE falls 4.49% with the paired transfer
+gate passing. Five cells improve; joint/7 regresses 0.20%. Absolute accuracy
+still fails. Physical-unit fit curves now show substantial GPP/NPP errors and
+poor biomass changes despite close stock levels; maintenance is closer, while
+heterotrophic respiration is zero throughout this panel. See the current result
+and `outputs/conditioned-science-fit-14984032/README.md`. Larger validation,
 365-day rollout, Gate D2, sealed test, and product acceptance remain closed.
 See `NEXT_STEPS.md` for the exact current boundary.
 

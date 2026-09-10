@@ -1,7 +1,9 @@
 # Corrected Attention: second bounded continuation and independent evaluation
 
-Status: approved paid job **14984032** submitted on 2026-09-09 at 22:32:51
-Asia/Shanghai. This plan was fixed before new validation target arrays or
+Status: job **14984032** completed all 20 updates on 2026-09-10; paired
+relative transfer passes, absolute accuracy remains open. See the
+[result and physical-fit interpretation](conditioned_continuation_v2_result_20260910.md).
+This plan was fixed before new validation target arrays or
 model scores are inspected. It follows the accepted ten-update result under
 job 14979295 and keeps its Attention architecture, 109,464,375 total / 15,960,211
 trainable parameters, physical boundary correction and 43-source optimizer.
