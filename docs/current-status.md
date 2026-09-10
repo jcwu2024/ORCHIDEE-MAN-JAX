@@ -13,6 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest operation (2026-09-10): update-42 forward mismatch is localized to DOC
+input scaling. The default-off continuous log-tail v1 candidate is implemented
+across neural state-feature routes, with frozen T=16 and unchanged update-41
+weights for admission. CPU saved-state audit is complete; eight new focused
+tests pass. Existing network compatibility and free-GPU forward admission are
+in progress. No correction or paid continuation is accepted yet. See
+[`conditioned_input_tail_v1_20260910.md`](research/daily_coarse_graining/conditioned_input_tail_v1_20260910.md)
+for the active mechanism, train-only cases, physical regression caps and
+derivative stage. Earlier records below retain their historical meaning.
+
 The rejected mechanistic-output v2 isolated diagnostic remains the comparison
 point: litter/POC/DOC fell `91.8014%` and passed only `16/28` dominant fields.
 The user-approved `hierarchical_coordinate_query_attention_v3` repaired the

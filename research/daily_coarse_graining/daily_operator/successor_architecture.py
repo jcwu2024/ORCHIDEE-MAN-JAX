@@ -16,6 +16,7 @@ from research.daily_coarse_graining.constrained_daily_replay import (
 )
 
 from .input_assembly import CanonicalDailyOperatorInputAssembler
+from .input_conditioning import standardize_continuous
 from .neural_architecture import (
     NeuralInputNormalization,
     NeuralOutputNormalization,
@@ -839,10 +840,13 @@ def assemble_successor_process_context(
         mask_groups.append(group[1])
         family_groups.append(group[2])
 
-    state_values = _standardize(
+    state_values = standardize_continuous(
         inputs.state.other,
         normalization.continuous_mean,
         normalization.continuous_scale,
+        normalization.continuous_tail_threshold,
+        dtype=jnp.float64,
+        legacy_standardize=_standardize,
     )
     state_group = _summary_tokens(
         parameters,

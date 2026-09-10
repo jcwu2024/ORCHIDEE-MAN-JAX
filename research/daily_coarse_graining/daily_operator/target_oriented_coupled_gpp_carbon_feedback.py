@@ -13,6 +13,7 @@ import numpy as np
 
 from research.daily_coarse_graining.daily_markov_contract import DailyMarkovContract
 
+from .input_conditioning import standardize_continuous
 from .neural_architecture import NeuralInputNormalization, NeuralOutputNormalization, NeuralOutputSchema
 from .parameter_routing import apply_fast_parameter_routes
 from .process_derivations import NativeForcingFieldLayout
@@ -27,7 +28,6 @@ from .strong_baseline_architecture import (
     _linear_parameters,
     _normal,
     _residual_block_parameters,
-    _standardize,
     strong_baseline_parameter_count,
 )
 from .strong_baseline_contract import StrongBaselineContract, canonical_axis_aliases
@@ -307,7 +307,14 @@ def carbon_feedback_tokens(
     mean = jnp.asarray(normalization.continuous_mean, dtype=jnp.float32)[indices]
     scale = jnp.asarray(normalization.continuous_scale, dtype=jnp.float32)[indices]
     defined = jnp.asarray(inputs.state_defined.other, dtype=jnp.bool_)[indices] & jnp.isfinite(raw)
-    normalized = _standardize(jnp.where(defined, raw, mean), mean, scale)
+    if normalization.continuous_tail_threshold is not None:
+        raw = jnp.asarray(inputs.state.other)[indices]
+        mean = jnp.asarray(normalization.continuous_mean)[indices]
+        scale = jnp.asarray(normalization.continuous_scale)[indices]
+        defined = jnp.asarray(inputs.state_defined.other, dtype=jnp.bool_)[indices] & jnp.isfinite(raw)
+    normalized = standardize_continuous(
+        jnp.where(defined, raw, mean), mean, scale, normalization.continuous_tail_threshold,
+    )
     features = jnp.stack((normalized, defined.astype(jnp.float32)), axis=1)
     tokens = _linear(adapter["value_input"], features)
     tokens += adapter["field_embedding"][jnp.asarray(state_layout.field_index, dtype=jnp.int32)]

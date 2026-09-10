@@ -61,6 +61,13 @@ No code under `research/` is imported by the ordinary Teacher path.
 
 ## Daily Research
 
+`daily_operator/input_conditioning.py` owns the optional continuous-state
+log-tail transform, default off through `NeuralInputNormalization`. All state
+feature routes honor it. `scripts/hpc/audit_conditioned_input_tail_cpu.py`
+audits saved states; `audit_conditioned_input_tail.py` and `.sh` compare fixed
+update-41 weights on three train-only cases using rebuilt forward bindings.
+These do not enable training or promote the candidate.
+
 `scripts/hpc/audit_conditioned_score_discrepancy.py` localizes update 42's
 stopped score comparison using the accepted update-41 recovery and artifact
 883/window 3. It compares compact observation and production forward paths,

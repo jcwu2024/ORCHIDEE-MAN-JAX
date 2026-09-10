@@ -13,6 +13,7 @@ import numpy as np
 
 from research.daily_coarse_graining.daily_markov_contract import DailyMarkovContract
 
+from .input_conditioning import standardize_continuous
 from .neural_architecture import (
     NeuralInputNormalization,
     NeuralOutputNormalization,
@@ -381,7 +382,17 @@ def _normalized_state_slice(
     mean = jnp.asarray(normalization.continuous_mean[spec.start : spec.stop], dtype=jnp.float32).reshape(spec.shape)
     scale = jnp.asarray(normalization.continuous_scale[spec.start : spec.stop], dtype=jnp.float32).reshape(spec.shape)
     defined = jnp.asarray(inputs.state_defined.other[spec.start : spec.stop], dtype=jnp.bool_).reshape(spec.shape)
-    normalized = _standardize(jnp.where(defined, raw, mean), mean, scale)
+    # Retain the historical raw feature dtype; normalize from original precision
+    # when enabled so the tail acts before float32 rounding or overflow.
+    if normalization.continuous_tail_threshold is not None:
+        source = inputs.state.other[spec.start : spec.stop].reshape(spec.shape)
+        mean = jnp.asarray(normalization.continuous_mean[spec.start : spec.stop]).reshape(spec.shape)
+        scale = jnp.asarray(normalization.continuous_scale[spec.start : spec.stop]).reshape(spec.shape)
+    else:
+        source = raw
+    normalized = standardize_continuous(
+        jnp.where(defined, source, mean), mean, scale, normalization.continuous_tail_threshold,
+    )
     return raw, normalized, defined
 
 

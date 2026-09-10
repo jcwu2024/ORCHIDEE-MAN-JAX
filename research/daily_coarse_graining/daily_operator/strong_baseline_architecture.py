@@ -11,6 +11,7 @@ import numpy as np
 
 from jax_orchidee.ad_primitives import source_sqrt_with_finite_zero_tangent
 
+from .input_conditioning import standardize_continuous
 from .neural_architecture import (
     NeuralInputNormalization,
     NeuralOutputNormalization,
@@ -1037,10 +1038,11 @@ def assemble_strong_baseline_context(
     """Encode native forcing and axis-preserving source summaries in float32."""
 
     pft_mask = jnp.asarray(inputs.pft.active_pft_mask, dtype=jnp.bool_)
-    state = _standardize(
+    state = standardize_continuous(
         inputs.state.other,
         normalization.continuous_mean,
         normalization.continuous_scale,
+        normalization.continuous_tail_threshold,
     )
     state_defined = _mask_inactive_pft_elements(
         inputs.state_defined.other,
@@ -1196,10 +1198,11 @@ def assemble_strong_baseline_context(
         axis_masks[expert_index] |= static_axis_mask | process_axis_mask
 
     pft_state_indices = jnp.asarray(layout.pft_state_indices, dtype=jnp.int32)
-    pft_state = _standardize(
+    pft_state = standardize_continuous(
         inputs.pft.pft_state,
         jnp.asarray(normalization.continuous_mean)[pft_state_indices],
         jnp.asarray(normalization.continuous_scale)[pft_state_indices],
+        normalization.continuous_tail_threshold,
     )
     pft_features = jnp.concatenate(
         (
@@ -1418,10 +1421,11 @@ def strong_baseline_field_context(
         )
         local_mean = jnp.asarray(normalization.continuous_mean)[safe_indices]
         local_raw = inputs.state.other[jnp.asarray(safe_indices, dtype=jnp.int32)]
-        local = _standardize(
+        local = standardize_continuous(
             jnp.where(local_defined, local_raw, local_mean),
             local_mean,
             jnp.asarray(normalization.continuous_scale)[safe_indices],
+            normalization.continuous_tail_threshold,
         )
     else:
         local = jnp.zeros((coordinates.shape[0],), dtype=jnp.float32)

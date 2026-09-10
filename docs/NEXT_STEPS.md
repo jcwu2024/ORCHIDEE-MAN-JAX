@@ -2604,8 +2604,12 @@ precedes reverse propagation. Full-state/day-10 crossed replay completed in
 other 31 tested state leaves do not. Free-CPU input-scale audit finds a DOC
 coordinate at about 0.048 divided by a frozen scale of 7.96e-12, giving a
 float32 feature around 6.024e9; a 4.47e-9 raw change becomes 512 normalized.
-Next design/version and test input conditioning for predicted states outside
-the Teacher scale, preserving Attention topology and frozen v6 assets. Test
+The default-off continuous log-tail v1 correction is now implemented; local
+compatibility and free-node forward admission are the active work. The fixed
+T=16 protocol, matched update-41 reference and three train-only cases are in
+[input-tail admission](research/daily_coarse_graining/conditioned_input_tail_v1_20260910.md).
+CPU saved-state audit is complete: Teacher maximum |z|=21.96, predicted maximum
+7.424e9; all 30 values above 1e3 belong to the same DOC coordinate. Test
 coordinate/leaf sensitivity, paired primals, derivatives and physical outputs
 before training. No tolerance relaxation or claimed repair yet.
 See [score localization](research/daily_coarse_graining/conditioned_score_discrepancy_20260910.md)
@@ -2634,8 +2638,8 @@ audited schedule makes the combined 539,171 unique days available (6.293%),
 not yet consumed by training. Next complete new-package neural preflight after
 resolving the score discrepancy. No duplicate submission or automatic retry. See
 [coverage expansion](research/daily_coarse_graining/conditioned_data_coverage_expansion_20260910.md)
-for exact command, paths, counts and timing. Keep active diagnostics' checkout stable
-or submit a second GPU run from this preparation authorization.
+for exact command, paths, counts and timing. Keep active diagnostics' checkout stable.
+Do not submit a second GPU run from this preparation authorization.
 See the
 [execution record](research/daily_coarse_graining/conditioned_snow_free_continuation_execution_20260909.md)
 for paths and resume semantics.

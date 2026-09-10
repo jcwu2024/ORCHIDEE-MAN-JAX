@@ -24,6 +24,7 @@ from research.daily_coarse_graining.constrained_daily_replay import (
 )
 
 from .input_assembly import CanonicalDailyOperatorInputAssembler
+from .input_conditioning import standardize_continuous
 from .state_features import assemble_local_pft_features
 from .types import AssembledDailyOperatorInput
 
@@ -283,6 +284,7 @@ class NeuralInputNormalization(NamedTuple):
     water_scale: Any
     carbon_scale: Any
     thermal_scale: Any
+    continuous_tail_threshold: float | None = None
 
 
 class NeuralOutputNormalization(NamedTuple):
@@ -640,10 +642,13 @@ def assemble_neural_process_context(
         domain_tokens.append(tokens)
         domain_masks.append(mask)
 
-    continuous = _standardize(
+    continuous = standardize_continuous(
         inputs.state.other,
         normalization.continuous_mean,
         normalization.continuous_scale,
+        normalization.continuous_tail_threshold,
+        dtype=jnp.float64,
+        legacy_standardize=_standardize,
     ).reshape(-1)
     continuous = jnp.where(
         jnp.asarray(inputs.state_defined.other, dtype=jnp.bool_).reshape(-1),
