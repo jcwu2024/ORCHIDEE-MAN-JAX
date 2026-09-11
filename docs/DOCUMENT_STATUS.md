@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/fresh_start_normalization_loss_review_20260911.md` | Completed independent review | Pooled PFT moments, destination scales and why gsmean-only v2 settings remain appropriate |
 | `research/daily_coarse_graining/fresh_start_gsmean_applicability_v2_20260911.md` | Current pre-execution correction protocol | Source-backed bare-soil gsmean zero, unchanged fresh-start learning settings |
 | `research/daily_coarse_graining/fresh_start_loss_balance_audit_20260911.md` | Completed; bare-soil gsmean dominates loss/gradient | Exact attribution, matched reference and source-backed next correction |
 | `research/daily_coarse_graining/fresh_start_one_day_probe_v1_20260911.md` | Completed 12 full-network updates; bounded one-day AD/learning screen passes | Actual memory/speed, mixed physical fit and state-loss dominance |

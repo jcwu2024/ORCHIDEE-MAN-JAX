@@ -23,7 +23,7 @@ def bootstrap(args, protocol):
     from scripts.hpc.run_target_oriented_attention_gpu_admission import _head
     from scripts.hpc.run_target_oriented_full_step_preflight import _prepare_template
     backend = {}
-    if args.shape_only:
+    if args.shape_only or getattr(args, 'cpu_forward_only', False):
         def cpu_backend():
             import jax
             return jax, jax.devices('cpu')
@@ -131,6 +131,9 @@ def run(args):
         emit('initial_forward_completed', initial=baseline)
         if not all(np.isfinite(float(value)) and hard_ok(aux) for value, aux in baseline):
             emit('stopped', status='rejected', reason='initial_forward_physical')
+            return report
+        if args.cpu_forward_only:
+            emit('completed', status='passed', classification='cpu_forward_admission_only')
             return report
         emit('compile_full_gradient')
         compiled = backward.lower(parameters, samples[0]).compile()
@@ -249,6 +252,7 @@ def parser():
     result.add_argument('--protocol', type=Path, default=ROOT/'manifests/coarse_graining/fresh_start_one_day_probe_v1.json')
     result.add_argument('--admission-only', action='store_true')
     result.add_argument('--shape-only', action='store_true', help='CPU trace of the complete loss on actual samples; no model execution or updates')
+    result.add_argument('--cpu-forward-only', action='store_true', help='CPU numerical forward/physical checks only; no gradients or training')
     return result
 
 

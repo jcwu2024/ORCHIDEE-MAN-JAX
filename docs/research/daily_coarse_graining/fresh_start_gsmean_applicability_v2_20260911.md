@@ -79,3 +79,17 @@ losses 0.48457/0.48618/0.47089 if only bare gsmean is zeroed, compared with
 229.648/229.308/229.427. Actual model execution remains necessary. Broader
 source and normalization reviews run independently and do not enable other
 field changes in this v2 candidate.
+
+The implementation agent's separate read-only integration review finds no
+blocker: the flag reaches the reconstruction boundary and next state; zero
+values remain defined/supervised; v1 defaults remain off. The independent
+normalization review confirms pooled compact-PFT output statistics plus
+missing applicability and a bare-column state scale of1 create the mismatch.
+It finds no reason to alter v2 numerical settings before this correction.
+
+The three-sample complete CPU shape preflight at 9394619 passed in 192.6s.
+Both free gln01 GPUs were occupied after that check. Rather than wait without
+numerical evidence, run the same initial samples on free test02 with
+`--cpu-forward-only`, one process and a 15-minute cap. This uses the identical
+objective and physical checks but performs no gradients or updates. It cannot
+replace subsequent GPU derivative/resource/learning acceptance.
