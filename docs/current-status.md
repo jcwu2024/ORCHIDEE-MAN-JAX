@@ -47,6 +47,14 @@ pass. Source-backed gsmean applicability is the next correction, keeping DOC
 conditioning and fresh full-network initialization. Three explicitly authorized
 Sol/max agents handle source audit, code fix and independent review; root owns
 the v2 protocol and integration. No paid job or new trained checkpoint yet.
+All three delegated tasks are complete and the correction is integrated.
+Six focused tests, real-data CPU shape checks and actual CPU numerical forward
+pass. Initial mean state loss falls to 0.480548 through exact bare-soil gsmean
+materialization, while initial physical fluxes/stocks match the earlier run
+within tolerance; all hard counts are zero. This is not new training.
+The v2 GPU gradient/12-update screen remains pending because both free GPUs
+were occupied at the last check. Fuel/dead-leaf source ownership forbids a
+blanket zero-by-name extension; see the source audit linked from the v2 protocol.
 
 The all-state and DOC-only T=16 input-tail tests completed in 2459.7s and
 1838.3s on free gln01. Both pass the three tested numerical/mask/physical-hard

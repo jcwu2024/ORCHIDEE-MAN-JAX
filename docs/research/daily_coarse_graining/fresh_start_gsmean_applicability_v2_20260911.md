@@ -93,3 +93,44 @@ numerical evidence, run the same initial samples on free test02 with
 `--cpu-forward-only`, one process and a 15-minute cap. This uses the identical
 objective and physical checks but performs no gradients or updates. It cannot
 replace subsequent GPU derivative/resource/learning acceptance.
+
+## CPU numerical admission and review outcome
+
+Free test02 numerical forward completed at **f24225e** in 199.16s with zero
+updates. Report: `runtime/outputs/diagnostics/fresh-start-gsmean-v2-cpu-forward.json`
+(copied to local outputs). Shape report is
+`runtime/outputs/diagnostics/fresh-start-gsmean-v2-shapes.json`, also copied.
+The first CPU-forward invocation reached argument parsing before the server
+fast-forward finished its automatic Git maintenance and was rejected; it did
+no model computation. The actual numerical run began only after the completed
+fast-forward was observed.
+
+All three initial predictions, states, masks, discrete values, stock signs,
+budgets and new applicability hard counts pass. Both named output and next-day
+bare-soil gsmean are exactly zero. Vegetation gsmean remains around
+2768.26497/2765.49098/2767.89066, consistent with the previous initial forward.
+State losses are 0.484566612/0.486183763/0.470892702, matching offline accounting.
+Total losses are 0.051294385/0.057645667/0.052204415, mean 0.053714822.
+
+Root compared every stored initial physical flux/stock to the v1 GPU initial
+report with atol=1e-6, rtol=1e-5; all pass (maximum absolute difference
+3.244e-6 across physical stocks/fluxes). This is forward preservation of those
+initial science outputs while removing an invalid state value. It is not
+trained improvement or full-gradient acceptance of the corrected objective.
+
+All three delegated tasks are complete. See
+[`bare_soil_output_source_audit_20260911.md`](bare_soil_output_source_audit_20260911.md)
+and
+[`fresh_start_normalization_loss_review_20260911.md`](fresh_start_normalization_loss_review_20260911.md).
+The source audit confirms unconditional bare-soil gsmean zero and rejects
+unconditional zero for restart-carried dead_leaves/fuels. Its arbitrary
+nonzero bare-soil fuel restart edge case remains documented and out of this
+current paper-path correction; no Teacher source was changed.
+
+Both free gln01 GPUs remained occupied at the last check (about 2505 MiB and
+80% utilization each). No GPU v2 rerun has been started. Next, when an idle free
+GPU is available, use the existing wrapper with
+`--protocol manifests/coarse_graining/fresh_start_one_day_probe_v2.json`, a new
+`OUTPUT` such as `runtime/outputs/diagnostics/fresh-start-gsmean-v2.json`, and
+the unchanged 60-minute limit. Complete real GPU AD/JVP/FD and the bounded
+12-update learning screen before judging clipping/loss balance further.

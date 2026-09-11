@@ -60,6 +60,16 @@ fields and normalization, and execute the frozen
 The user authorized three parallel GPT-5.6 Sol/max subagents for those tasks;
 root owns integration and verification. Keep seed/data/loss/optimizer/full-
 network scope fixed for this correction. No new paid submission is authorized.
+The three agents have now completed source audit, implementation and independent
+review. Six focused tests pass. The v2 complete CPU shape preflight passed in
+192.6s; actual free-CPU forward passed at f24225e in 199.16s. Bare-soil gsmean
+is exactly zero in named output and next state; all original/new hard counts
+are zero. Initial mean state loss is 0.480548 versus 229.460890; initial physical
+flux/stock values remain within prior-forward tolerance. This is a corrected
+initialization, not a trained gain. Dead-leaf/fuel fields must not be hard-zeroed.
+Both free GPUs were occupied at the last check. Next run the v2 protocol's GPU
+gradient/learning admission when an idle free GPU is available; it has not
+started. CPU report: `runtime/outputs/diagnostics/fresh-start-gsmean-v2-cpu-forward.json`.
 
 Formal reproducibility still requires architecture, splits/sampling, seeds,
 initialization, input transforms, losses, update rules, stage transitions,

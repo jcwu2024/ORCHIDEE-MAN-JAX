@@ -159,6 +159,11 @@ def run(args):
             'shared_encoder': families['source_encoder'],
         }
         emit('gradient_completed', gradient=numeric, gradient_families=families, participation=participation)
+        if protocol.get('output_applicability', {}).get('gsmean_bare_soil_zero', False):
+            gsmean_index = next(i for i, field in enumerate(head.learned_schema.fields)
+                                if field.name == 'endpoint.fast_state.diffuco_previous_step_state.gsmean')
+            emit('gsmean_gradient', gsmean_head_gradient=_tree_numeric_report(
+                jax, gradient['target_oriented']['state_heads'][gsmean_index]))
         if not numeric['all_finite'] or numeric['l2_norm'] == 0 or not hard_ok(aux):
             emit('stopped', status='rejected', reason='full_gradient')
             return report
