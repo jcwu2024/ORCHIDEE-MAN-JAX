@@ -271,10 +271,11 @@ def run(args):
             if iteration in protocol['training']['monitor_updates']:
                 current = [forward(parameters, sample) for sample in samples]
                 jax.block_until_ready(current)
-                report['monitors'].append(monitor_record(iteration, parameters, current))
                 if not all(np.isfinite(float(loss)) and hard_ok(aux) for loss, aux in current):
-                    emit('stopped', status='rejected', reason='monitor_forward')
+                    report['monitors'].append({'update': iteration, 'samples': current})
+                    emit('stopped', status='rejected', reason='monitor_forward', attempted_update=iteration)
                     return report
+                report['monitors'].append(monitor_record(iteration, parameters, current))
             emit('update_completed', completed_updates=iteration)
         final = report['monitors'][-1]['samples']
         passed = (np.mean([float(v[0]) for v in final]) < np.mean([float(v[0]) for v in baseline])

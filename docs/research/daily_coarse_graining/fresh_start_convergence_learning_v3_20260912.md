@@ -49,3 +49,24 @@ Once actual learning/physical/fraction behavior is known, prepare a larger
 data/batch/update plan with admission and training in one persistent job.
 Do not claim that a drop in an initial invalid-output loss or a three-sample
 learning probe establishes final training or generalization.
+
+## Local integration checks
+
+Seven focused tests pass in4.07s: unchanged scientific/optimizer settings,
+legacy all-epsilon behavior, genuine distinct-scale mask-stable admission,
+fraction monitoring with masked/legitimate/opposite endpoints, and the existing
+physical extraction path. Ruff passes.
+
+A GPT-5.6 Sol/max read-only integration review found no admission/ordering
+blocker: all seven scales are evaluated, no optimizer is created before
+admission, old protocols retain their defaults, and fraction monitoring is
+diagnostic only. Its one robustness suggestion was applied: reject an invalid
+ordinary monitor before running optional diagnostic comparisons, retaining
+the ordinary failing values and attempted update number. This changes failure
+reporting, not valid-run numerical behavior.
+
+Free test02 traced both ordinary and diagnostic objectives on all three actual
+samples at643533a and passed in208.4s. Report:
+`runtime/outputs/diagnostics/fresh-start-learning-v3-shapes.json`.
+The later failure-report ordering adjustment affects only rejected monitors,
+not the traced model/gradient computation.
