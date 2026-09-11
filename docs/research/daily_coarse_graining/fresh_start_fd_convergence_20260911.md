@@ -40,8 +40,22 @@ This is a bounded local-direction classification, not global AD or training
 acceptance. Report failures at larger epsilons rather than suppressing them;
 use component/mask evidence to interpret their cause before changing admission.
 
+Definition-head logits are included in the state diagnostic export so any
+learned defined/undefined switch can be tied to its threshold, rather than
+attributed from a mask count alone.
+
 Local classification/mask tests and complete CPU shape tracing precede one
 free GPU audit, at most45 minutes, reusing the warm compilation cache. No
 optimizer state or checkpoint is written. A later learning run requires an
 explicit versioned admission rule supported by the measured convergence and
 branch evidence; preserve the original v2 failure record.
+
+## Local and CPU preparation
+
+Five local tests pass (7.37s), covering unchanged tolerances, a genuine
+three-scale plateau requirement, mask/discrete-change reporting and the
+existing loss-attribution/layout checks. Ruff passes. Free test02 complete
+diagnostic shape tracing at f4378e2 passed in194.4s, report
+`runtime/outputs/diagnostics/fresh-start-fd-convergence-shapes.json`.
+The additional definition-logit export simply returns existing computed
+arrays; it changes neither the ordinary loss nor model parameter values.
