@@ -55,6 +55,11 @@ within tolerance; all hard counts are zero. This is not new training.
 The v2 GPU gradient/12-update screen remains pending because both free GPUs
 were occupied at the last check. Fuel/dead-leaf source ownership forbids a
 blanket zero-by-name extension; see the source audit linked from the v2 protocol.
+The latest resource check also finds no paid GPU available (all ten gnall
+nodes report GresUsed8/8, including the CPU-idle node). The user permits
+immediate paid submission only when a GPU is available and requests discussion
+before queueing otherwise. A one-V100/eight-CPU/one-hour Slurm option is ready,
+maximum CNY2.76, but has not been submitted; queue choice is pending.
 
 The all-state and DOC-only T=16 input-tail tests completed in 2459.7s and
 1838.3s on free gln01. Both pass the three tested numerical/mask/physical-hard
