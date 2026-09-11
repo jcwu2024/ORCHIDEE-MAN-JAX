@@ -150,11 +150,13 @@ def _load_extended_runtime(
     args: argparse.Namespace,
     *,
     backend_initializer: Any | None = None,
+    initialize_probe_parameters: bool = True,
 ) -> dict[str, Any]:
+    extra = {} if initialize_probe_parameters else {'initialize_probe_parameters': False}
     runtime = (
-        _load_runtime(args)
+        _load_runtime(args, **extra)
         if backend_initializer is None
-        else _load_runtime(args, backend_initializer=backend_initializer)
+        else _load_runtime(args, backend_initializer=backend_initializer, **extra)
     )
     payload = json.loads(args.fast_statistics.read_text(encoding="utf-8"))
     arrays_path = args.fast_statistics.parent / str(payload["statistics_npz"])

@@ -167,6 +167,7 @@ def _load_runtime(
     args: argparse.Namespace,
     *,
     backend_initializer: Any = initialize_gpu_backend,
+    initialize_probe_parameters: bool = True,
 ) -> dict[str, Any]:
     base_payload = json.loads(args.base_statistics.read_text(encoding="utf-8"))
     base_npz = args.base_statistics.parent / str(base_payload["statistics_npz"])
@@ -309,14 +310,11 @@ def _load_runtime(
         schema,
         successor_contract,
     )
-    parameters = initialize_successor_parameters(
-        jax.random.PRNGKey(20260809),
-        schema=schema,
-        layout=layout,
-        inputs=assembled[0],
-        arm=SOURCE_ROUTED_ATTENTION,
-    )
-    if successor_parameter_count(parameters) != 8_679_681:
+    parameters = (initialize_successor_parameters(
+        jax.random.PRNGKey(20260809), schema=schema, layout=layout,
+        inputs=assembled[0], arm=SOURCE_ROUTED_ATTENTION,
+    ) if initialize_probe_parameters else None)
+    if initialize_probe_parameters and successor_parameter_count(parameters) != 8_679_681:
         raise ValueError("successor parameter count drift")
     forcing_fields = contract.native_forcing.fields
     forcing_layout = NativeForcingFieldLayout(

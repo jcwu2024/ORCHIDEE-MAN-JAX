@@ -25,6 +25,15 @@ is to establish that the clean method can learn, not to beat an old checkpoint
 before training. See the concrete deliverable and ordering in
 [`fresh_start_training_route_20260911.md`](research/daily_coarse_graining/fresh_start_training_route_20260911.md).
 
+The first prototype is implemented in `daily_operator/fresh_start.py`,
+`fresh_start_training.py` and `scripts/hpc/run_fresh_start_one_day.py`.
+Two local tests pass, including actual fresh full-network process-loss gradients
+and a bound day. The frozen
+[`fresh-start probe`](research/daily_coarse_graining/fresh_start_one_day_probe_v1_20260911.md)
+uses DOC T=16, seed 20260911, three existing train samples, complete one-day AD,
+and at most 12 AdamW updates after numerical/physical admission. Next execute
+the free-node real-v6 gate and inspect its physical-unit learning report.
+
 Formal reproducibility still requires architecture, splits/sampling, seeds,
 initialization, input transforms, losses, update rules, stage transitions,
 stopping and checkpoint selection to be executable and run end to end.

@@ -67,6 +67,14 @@ all-parameter training entry point for the existing Attention design. See
 continuation scripts require exploratory weight/report chains and select
 15.96M GPP-related parameters; they are not the intended final training entry.
 
+`daily_operator/fresh_start.py` now constructs the full existing Attention
+architecture from one seed and binds DOC input conditioning.
+`fresh_start_training.py` owns direct one-day science/state/process loss and
+all-parameter AdamW. `scripts/hpc/run_fresh_start_one_day.py` uses existing v6
+assets without inherited checkpoints; its free-node wrapper is `.sh`. The
+machine-readable probe is `fresh_start_one_day_probe_v1.json`. Its bounded
+learning result is not final training or generalization acceptance.
+
 `daily_operator/input_conditioning.py` owns the optional continuous-state
 log-tail transform, default off through `NeuralInputNormalization`. All state
 feature routes honor it. `scripts/hpc/audit_conditioned_input_tail_cpu.py`
