@@ -23,7 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `research/daily_coarse_graining/fresh_start_one_day_probe_v1_20260911.md` | First GPU attempt failed before updates; PFT-axis caller fixed, CPU complete-loss shape check active | Exact protocol, failure/correction and pending real-v6 admission |
+| `research/daily_coarse_graining/fresh_start_one_day_probe_v1_20260911.md` | CPU complete-loss shape check passed; corrected free-GPU v2 run active | Exact protocol, first-attempt correction and pending real-v6 admission |
 | `research/daily_coarse_graining/fresh_start_training_route_20260911.md` | Current user decision and next implementation deliverable | Fresh initialization, full-network training and executable paper-method requirements |
 | `research/daily_coarse_graining/conditioned_doc_tail_v1_20260911.md` | Completed; numerical gates pass, fixed-weight science regression gate fails | DOC-only physical results, error compensation and limits of drop-in correction |
 | `research/daily_coarse_graining/conditioned_input_tail_v1_20260910.md` | Completed; numerical gates pass, drop-in physical regression gate fails | Fixed-weight physical results and isolated DOC-coordinate causality |

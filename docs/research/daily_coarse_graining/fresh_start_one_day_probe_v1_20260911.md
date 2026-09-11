@@ -111,12 +111,29 @@ weighting (0.2*2 + 0.8*10 = 8.4), its input gradient [0.2,0.8], stock shape and
 inactive-PFT masking. It passes in 3.92s. Ruff and whitespace checks pass.
 
 A `--shape-only` CPU mode now traces the complete objective on the three actual
-prepared samples before another GPU run. Free test02 execution at cb3c454 is
-in progress, with a 15-minute cap and report
+prepared samples before another GPU run. Free test02 execution at cb3c454
+passed in 218.69s, within its 15-minute cap, with report
 `runtime/outputs/diagnostics/fresh-start-one-day-shapes-v2.json`. It performs
 fresh initialization and abstract loss tracing, no forward model execution,
-gradient updates or training. Do not infer numerical acceptance from shapes.
+gradient updates or training. All three complete losses have scalar output;
+all 109,464,375 parameters are in scope. Do not infer numerical acceptance from shapes.
 
 The selected Teacher rows are point 217.0-109.0/year 1963/day 6,
 331.0-083.0/year 1982/day 100, and 299.0-071.0/year 1986/day 115. They are three
 existing train samples, not the prior three rollout windows themselves.
+
+## Corrected free-GPU rerun
+
+The CPU preflight passed. The unchanged bounded protocol is now running on
+free gln01 GPU 1 at **cb3c454**, with a new output path preserving v1 evidence:
+`runtime/outputs/diagnostics/fresh-start-one-day-v2.json` and
+`runtime/logs/fresh-start-one-day-v2.log`. GPU 1 was idle (3 MiB, 0%) before
+launch; GPU 0 was occupied and left untouched. Same 60-minute cap, seed,
+three samples, full-neural-parameter scope, losses, and at most 12 updates
+only after numerical/physical/derivative admission. No paid job submitted.
+
+Command from the project root:
+`GPU_DEVICE=1 OUTPUT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/fresh-start-one-day-v2.json bash scripts/hpc/run_fresh_start_one_day.sh`.
+Next read the v2 report; do not duplicate this running process or update its
+server checkout. CPU report also copied locally to
+`outputs/fresh-start-one-day-shapes-v2.json`.

@@ -36,11 +36,14 @@ the free-node real-v6 gate and inspect its physical-unit learning report.
 The first free-GPU execution at cdf7eb3 ended after 1064.4s with zero updates:
 the new single-day science extractor omitted day axes on PFT fraction/mask.
 Commit cb3c454 fixes the caller; its real-extractor JIT/area/gradient regression
-test passes. Complete-objective abstract tracing is now running on free test02
-(15-minute cap), report `runtime/outputs/diagnostics/fresh-start-one-day-shapes-v2.json`.
-Read this first, then rerun the corrected GPU gate with a new output path;
-the failed v1 report remains evidence. No real-data gradient or learning result
-exists yet. Do not duplicate a still-running preflight.
+test passes. Free test02 complete-objective abstract tracing passed on all
+three real samples in 218.69s; report
+`runtime/outputs/diagnostics/fresh-start-one-day-shapes-v2.json`.
+The corrected free gln01 GPU 1 run at cb3c454 is active with the same 60-minute
+protocol; next read `runtime/outputs/diagnostics/fresh-start-one-day-v2.json`
+and `runtime/logs/fresh-start-one-day-v2.log`. The failed v1 report remains
+evidence. No real-data gradient or learning result exists yet; do not duplicate
+the running GPU preflight or modify its checkout.
 
 Formal reproducibility still requires architecture, splits/sampling, seeds,
 initialization, input transforms, losses, update rules, stage transitions,
