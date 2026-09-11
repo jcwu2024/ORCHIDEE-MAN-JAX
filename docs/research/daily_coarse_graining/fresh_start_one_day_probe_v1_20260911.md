@@ -91,6 +91,32 @@ Command: `GPU_DEVICE=1 bash scripts/hpc/run_fresh_start_one_day.sh`.
 Report: `runtime/outputs/diagnostics/fresh-start-one-day-v1.json`.
 Log: `runtime/logs/fresh-start-one-day-v1.log`.
 Optional final prototype checkpoint: report path with `.checkpoint.pkl` suffix.
-The process has entered bootstrap. Real-data forward/AD, memory and learning
-results are pending. Read this report next; no duplicate submission or server
-checkout update while it runs. No paid GPU task was submitted.
+This first execution failed; details and correction are below. No paid GPU
+task was submitted.
+
+## First real-data attempt and interface correction
+
+The cdf7eb3 execution ended after 1064.4s, with zero updates. Bootstrap took
+1045.7s and produced all 109,464,375 freshly initialized trainable parameters.
+The first complete objective trace then raised
+`ValueError: trajectory PFT context must have shape (1, 1, 2)`.
+State and GPP had received their one-day axes, while PFT fractions/active masks
+had not. This is a new caller wiring error, not a failed learned model or a
+measured gradient/memory failure. The previous local test covered complete
+process loss and a bound day, but missed the combined science-loss adapter.
+
+Commit cb3c454 adds the missing day axes through one shared extraction helper.
+A regression test runs the actual physical extractor under JIT, verifies area
+weighting (0.2*2 + 0.8*10 = 8.4), its input gradient [0.2,0.8], stock shape and
+inactive-PFT masking. It passes in 3.92s. Ruff and whitespace checks pass.
+
+A `--shape-only` CPU mode now traces the complete objective on the three actual
+prepared samples before another GPU run. Free test02 execution at cb3c454 is
+in progress, with a 15-minute cap and report
+`runtime/outputs/diagnostics/fresh-start-one-day-shapes-v2.json`. It performs
+fresh initialization and abstract loss tracing, no forward model execution,
+gradient updates or training. Do not infer numerical acceptance from shapes.
+
+The selected Teacher rows are point 217.0-109.0/year 1963/day 6,
+331.0-083.0/year 1982/day 100, and 299.0-071.0/year 1986/day 115. They are three
+existing train samples, not the prior three rollout windows themselves.

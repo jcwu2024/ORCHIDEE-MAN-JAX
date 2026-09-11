@@ -24,9 +24,12 @@ entry point and bounded all-parameter numerical/resource/learning admission in
 
 The fresh-start prototype is implemented and local actual full-network
 initialization/process-loss/gradient/bound-day tests pass (336.45s). The
-combined real-data science/state/process objective is being admitted on free
-gln01 GPU 1 at cdf7eb3, PID 102459, 60-minute cap, with at most 12 updates only
-after forward/AD admission. Report:
+combined real-data science/state/process objective failed on its first trace
+at cdf7eb3 after 1064.4s, zero updates: PFT fraction/mask lacked a single-day
+axis. cb3c454 fixes that caller and passes a focused physical-extractor
+regression. Free test02 complete-loss shape preflight is in progress, report
+`runtime/outputs/diagnostics/fresh-start-one-day-shapes-v2.json`; a new GPU run
+follows only after that check. The original failure report is
 `runtime/outputs/diagnostics/fresh-start-one-day-v1.json`. This is three fixed
 train samples, not a full training epoch, final protocol or generalization test.
 

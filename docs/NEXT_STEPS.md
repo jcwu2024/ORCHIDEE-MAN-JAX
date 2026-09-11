@@ -33,9 +33,14 @@ and a bound day. The frozen
 uses DOC T=16, seed 20260911, three existing train samples, complete one-day AD,
 and at most 12 AdamW updates after numerical/physical admission. Next execute
 the free-node real-v6 gate and inspect its physical-unit learning report.
-The free gln01 GPU 1 execution is now running at cdf7eb3, PID 102459,
-60-minute limit; read `runtime/outputs/diagnostics/fresh-start-one-day-v1.json`
-and `runtime/logs/fresh-start-one-day-v1.log` next. Do not launch a duplicate.
+The first free-GPU execution at cdf7eb3 ended after 1064.4s with zero updates:
+the new single-day science extractor omitted day axes on PFT fraction/mask.
+Commit cb3c454 fixes the caller; its real-extractor JIT/area/gradient regression
+test passes. Complete-objective abstract tracing is now running on free test02
+(15-minute cap), report `runtime/outputs/diagnostics/fresh-start-one-day-shapes-v2.json`.
+Read this first, then rerun the corrected GPU gate with a new output path;
+the failed v1 report remains evidence. No real-data gradient or learning result
+exists yet. Do not duplicate a still-running preflight.
 
 Formal reproducibility still requires architecture, splits/sampling, seeds,
 initialization, input transforms, losses, update rules, stage transitions,
