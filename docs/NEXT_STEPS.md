@@ -1,12 +1,26 @@
 # Current Roadmap
 
-Last updated: 2026-09-11.
+Last updated: 2026-09-12.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
-## Immediate operation: reproducible fresh-start training (2026-09-11)
+## Current execution gate (2026-09-12)
+
+The fixed-direction FD audit completed: all masks/discrete/hard gates remain
+valid, and four consecutive small scales agree with reverse/JVP at unchanged
+tolerance. The three-scale plateau passes. Larger perturbations show strong
+lignin-fraction/state/process nonlinearity, not an observed mask switch.
+Next execute the v3 fresh-start12-update probe under
+[`fresh_start_convergence_learning_v3_20260912.md`](research/daily_coarse_graining/fresh_start_convergence_learning_v3_20260912.md).
+V3 changes only admission policy and diagnostic fraction monitoring; keep
+seed, data, architecture, DOC/gsmean rules, losses and optimizer identical.
+Historical v1/v2 still use their original all-declared-epsilons rule. No
+training before convergence/physical admission. Paid job15005758 is canceled;
+use a bounded free GPU after local/CPU preflight, no new paid job.
+
+## Fresh-start decision and preceding execution history
 
 The user clarified that reconstructing the incidental exploratory checkpoint
 chain is not an acceptable default paper method. The formal route now defaults

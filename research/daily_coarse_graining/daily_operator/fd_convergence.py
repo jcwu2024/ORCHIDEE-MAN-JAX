@@ -17,13 +17,24 @@ def plateau(rows):
     """Require three adjacent small, physically valid, mask-stable scales."""
     consecutive = []
     for row in rows:
-        if row['epsilon'] <= 3e-4 and row['passed'] and row['mask_stable'] and row['physical_pass']:
+        if 0 < row['epsilon'] <= 3e-4 and row['passed'] and row['mask_stable'] and row['physical_pass']:
+            if consecutive and row['epsilon'] >= consecutive[-1]:
+                consecutive = []
             consecutive.append(row['epsilon'])
             if len(consecutive) == 3:
                 return {'passed': True, 'epsilons': consecutive}
         else:
             consecutive = []
     return {'passed': False, 'epsilons': []}
+
+
+def admission(rows, policy='all_declared_epsilons'):
+    if policy == 'all_declared_epsilons':
+        return {'passed': bool(rows) and all(row['passed'] for row in rows),
+                'policy': policy}
+    if policy == 'mask_stable_convergence_plateau_v1':
+        return {**plateau(rows), 'policy': policy}
+    raise ValueError(f'unsupported finite-difference policy: {policy}')
 
 
 def mask_changes(jax, baseline, current, contract):

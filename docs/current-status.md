@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-11.
+Last updated: 2026-09-12.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -12,6 +12,15 @@ This page is the current status authority. Dated files under
 describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
+
+Current step: v3 convergence-admitted fresh-start learning. The seven-scale
+audit completed in2266.39s; reverse/JVP/FD agree at3e-4,1e-4,3e-5,1e-5 with
+all masks/discrete/hard counts valid. Large-step differences are dominated by
+nonlinear state/process responses, including deeper lignin fractions moving
+near1 on the negative perturbation. No model update occurred. Next execute
+[`v3 bounded learning`](research/daily_coarse_graining/fresh_start_convergence_learning_v3_20260912.md)
+with unchanged model/data/loss/optimizer, convergence-based admission and
+explicit fraction monitoring. Paid job15005758 remains canceled.
 
 Latest decision (2026-09-11): the paper method should start from fresh neural
 initialization of the consolidated Attention architecture, with full-network

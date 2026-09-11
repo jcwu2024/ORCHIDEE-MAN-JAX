@@ -97,6 +97,12 @@ epsilon pairs, component/one-sided slopes and state-mask/discrete changes;
 the three-adjacent-small-scale classification. It performs no training or
 automatic tolerance adjustment.
 
+The v3 fresh-start runner uses `fd_convergence.admission` to retain the old
+all-eps rule by default and explicitly select the measured mask-stable plateau
+rule for v3. `fraction_monitoring.py` reports lignin-fraction endpoints and
+Teacher-relative saturation without changing loss or model gradients. The
+same runner continues directly from admission into its bounded update loop.
+
 `daily_operator/input_conditioning.py` owns the optional continuous-state
 log-tail transform, default off through `NeuralInputNormalization`. All state
 feature routes honor it. `scripts/hpc/audit_conditioned_input_tail_cpu.py`

@@ -87,6 +87,10 @@ def run(args):
         raise ValueError('this prototype implements the declared DOC-only input policy')
     if protocol['trainable_scope'] != 'all_neural_parameters' or protocol['optimizer']['name'] != 'AdamW':
         raise ValueError('this prototype requires all-neural-parameter AdamW')
+    fd_policy = protocol['admission'].get('finite_difference_policy', 'all_declared_epsilons')
+    if fd_policy not in ('all_declared_epsilons', 'mask_stable_convergence_plateau_v1'):
+        raise ValueError('unsupported finite-difference policy')
+    use_plateau = fd_policy == 'mask_stable_convergence_plateau_v1'
     started = time.perf_counter()
     report = {'status': 'running', 'protocol': protocol, 'completed_updates': 0,
               'source_git_head': subprocess.check_output(['git', 'rev-parse', 'HEAD'], text=True).strip(),
@@ -116,14 +120,20 @@ def run(args):
             raise ValueError(f'fresh parameter count {count} differs')
         report.update(parameter_count=count, trainable_parameter_count=count, sample_metadata=metadata)
         objective = make_objective(runtime, head, template, scales, protocol)
+        diagnostic = (make_objective(runtime, head, template, scales, protocol, state_diagnostics=True)
+                      if use_plateau or 'monitoring' in protocol else None)
         if args.shape_only:
             emit('trace_complete_objective')
             shapes = [jax.eval_shape(objective, parameters, sample) for sample in samples]
+            if diagnostic is not None:
+                for sample in samples:
+                    jax.eval_shape(diagnostic, parameters, sample)
             emit('completed', status='passed', classification='complete_objective_shapes_only',
                  loss_shapes=[list(value[0].shape) for value in shapes],
                  parameter_count=count, trainable_parameter_count=count)
             return report
         forward = jax.jit(objective)
+        detail = jax.jit(diagnostic) if diagnostic is not None else None
         backward = jax.jit(jax.value_and_grad(objective, has_aux=True))
         emit('initial_forward')
         baseline = [forward(parameters, sample) for sample in samples]
@@ -174,6 +184,12 @@ def run(args):
         # that displacement. Two epsilons diagnose curvature/rounding separately.
         direction = jax.tree_util.tree_map(lambda g: (g / numeric['l2_norm']).astype(g.dtype), gradient)
         tangent = jax.jit(lambda p, d, sample: jax.jvp(lambda v: objective(v, sample)[0], (p,), (d,))[1])
+        baseline_details = None
+        if use_plateau:
+            from research.daily_coarse_graining.daily_operator.fd_convergence import mask_changes
+            detailed_value, baseline_details = detail(parameters, samples[0])
+            if not np.isclose(float(detailed_value), float(baseline[0][0]), atol=1e-6, rtol=1e-5):
+                raise ValueError('diagnostic and ordinary baseline differ')
         derivative_rows = []
         for epsilon in protocol['admission']['finite_difference_epsilons']:
             plus = jax.tree_util.tree_map(lambda p, d: (p + epsilon*d).astype(p.dtype), parameters, direction)
@@ -190,9 +206,23 @@ def run(args):
                        and np.isclose(jvp, reverse, atol=protocol['admission']['derivative_absolute_tolerance'],
                                       rtol=protocol['admission']['derivative_relative_tolerance'])
                        and hard_ok(left[1]) and hard_ok(right[1]))}
+            if use_plateau:
+                changes, detail_agrees = [], True
+                for variant, ordinary in ((plus, left), (minus, right)):
+                    detailed_value, details = detail(variant, samples[0])
+                    detail_agrees &= bool(np.isclose(float(detailed_value), float(ordinary[0]), atol=1e-6, rtol=1e-5))
+                    changes.append(mask_changes(jax, baseline_details['state_diagnostics'],
+                                                details['state_diagnostics'], head.contract))
+                row.update(mask_stable=all(change['stable'] for change in changes),
+                           physical_pass=hard_ok(left[1]) and hard_ok(right[1]),
+                           masks=changes, diagnostic_scalar_agrees=detail_agrees)
+                row['passed'] &= detail_agrees
             derivative_rows.append(row)
             emit('derivative_probe', derivatives=derivative_rows)
-        if not all(v['passed'] for v in derivative_rows):
+        from research.daily_coarse_graining.daily_operator.fd_convergence import admission
+        derivative_admission = admission(derivative_rows, fd_policy)
+        emit('derivative_admission', derivative_admission=derivative_admission)
+        if not derivative_admission['passed']:
             emit('stopped', status='rejected', reason='derivative_agreement')
             return report
         device_memory = runtime['devices'][0].memory_stats()
@@ -203,7 +233,24 @@ def run(args):
         del gradient, groups, direction, plus, minus, effective
         state = initialize_target_oriented_adamw(parameters)
         update = make_update(protocol)
-        report['monitors'].append({'update': 0, 'samples': baseline})
+
+        def monitor_record(iteration, current_parameters, ordinary):
+            record = {'update': iteration, 'samples': ordinary}
+            if 'monitoring' in protocol:
+                from research.daily_coarse_graining.daily_operator.fraction_monitoring import fraction_report
+                config = protocol['monitoring']
+                leaf = next(v for v in head.contract.state_leaves if v.key == config['fraction_state_field'])
+                fractions = []
+                for sample, reference in zip(samples, ordinary, strict=True):
+                    detailed_value, detailed_aux = detail(current_parameters, sample)
+                    if not np.isclose(float(detailed_value), float(reference[0]), atol=1e-6, rtol=1e-5):
+                        raise ValueError('diagnostic and ordinary monitor differ')
+                    fractions.append(fraction_report(jax.device_get(detailed_aux['state_diagnostics']),
+                                                     leaf, config['saturation_tolerance']))
+                record['fraction_diagnostics'] = fractions
+            return record
+
+        report['monitors'].append(monitor_record(0, parameters, baseline))
         for iteration in range(1, protocol['training']['updates'] + 1):
             began = time.perf_counter()
             accumulated = None
@@ -224,7 +271,7 @@ def run(args):
             if iteration in protocol['training']['monitor_updates']:
                 current = [forward(parameters, sample) for sample in samples]
                 jax.block_until_ready(current)
-                report['monitors'].append({'update': iteration, 'samples': current})
+                report['monitors'].append(monitor_record(iteration, parameters, current))
                 if not all(np.isfinite(float(loss)) and hard_ok(aux) for loss, aux in current):
                     emit('stopped', status='rejected', reason='monitor_forward')
                     return report

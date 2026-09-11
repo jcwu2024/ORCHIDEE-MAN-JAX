@@ -76,3 +76,33 @@ Bootstrap finished at188.9s and initial-gradient/diagnostic preparation is
 running. The report must be read before any admission amendment or new training.
 Keep the server checkout stable and do not launch a duplicate. Paid job15005758
 remains canceled with zero runtime; no new paid work.
+
+## Completed result
+
+Completed at35e608a in2266.39s, no updates. All seven endpoint pairs preserve
+the baseline state masks/discrete values and pass all physical hard counts.
+All diagnostic scalars reproduce their ordinary counterparts. Therefore no
+observed mask/discrete switch explains the earlier large-scale mismatch.
+
+| Epsilon | Central FD | Reverse | JVP | Original numerical tolerance |
+| --- | ---: | ---: | ---: | --- |
+| 1e-3 | 0.46612860 | 0.63538186 | 0.63538185 | fail |
+| 7e-4 | 0.40219449 | 0.63538122 | 0.63538121 | fail |
+| 5e-4 | 0.61719973 | 0.63538067 | 0.63538068 | fail |
+| 3e-4 | 0.63534774 | 0.63537971 | 0.63537971 | pass |
+| 1e-4 | 0.63538014 | 0.63537796 | 0.63537795 | pass |
+| 3e-5 | 0.63537836 | 0.63537709 | 0.63537705 | pass |
+| 1e-5 | 0.63535781 | 0.63537676 | 0.63537676 | pass |
+
+The frozen plateau [3e-4,1e-4,3e-5] passes, with1e-5 also passing. Large-scale
+one-sided slopes are asymmetric; their discrepancy is in state/process terms,
+while weighted flux slope stays near0.01872. Offline attribution of the saved
+states finds lignin_struc_below contributes the largest state-slope change.
+Negative1e-3 drives its deeper fractions near1 from about1e-7, whereas negative
+3e-4 leaves them around0.00032-0.00252. This is strong finite-step nonlinearity;
+it does not refute the demonstrated local derivative. Precise attribution of
+the whole process-loss term is not established by the state-only export.
+
+Next use the explicitly versioned convergence admission in
+[`fresh_start_convergence_learning_v3_20260912.md`](fresh_start_convergence_learning_v3_20260912.md)
+and proceed to the bounded12-update learning test with fraction monitoring.
