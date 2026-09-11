@@ -134,3 +134,10 @@ GPU is available, use the existing wrapper with
 `OUTPUT` such as `runtime/outputs/diagnostics/fresh-start-gsmean-v2.json`, and
 the unchanged 60-minute limit. Complete real GPU AD/JVP/FD and the bounded
 12-update learning screen before judging clipping/loss balance further.
+
+The user subsequently approved the paid queue option after no available GPU
+was found. Job **15005758** is now submitted (one V100, eight CPUs, 32G host
+RAM, one hour, maximum CNY2.76), initially PENDING/Priority. See
+[`queue execution record`](fresh_start_gsmean_v2_queue_option_20260911.md).
+The scientific protocol is unchanged; no duplicate free or paid run should
+start while this job remains queued/running.

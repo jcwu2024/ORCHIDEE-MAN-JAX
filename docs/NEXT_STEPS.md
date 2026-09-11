@@ -75,8 +75,13 @@ available, but requested consultation before queueing if neither free nor paid
 GPUs are available. Rechecks show both free GPUs busy and all ten gnall nodes'
 eight GPUs allocated. No job submitted. The prepared
 [`queue option`](research/daily_coarse_graining/fresh_start_gsmean_v2_queue_option_20260911.md)
-is one V100, eight CPUs, 32 GiB host RAM, one hour, maximum CNY2.76; waiting
-for the user's queue decision. Source/script transfer and shell validation are done.
+is one V100, eight CPUs, 32 GiB host RAM, one hour, maximum CNY2.76.
+The user approved queueing; job **15005758** is submitted at executable checkout
+85e6b39. Initial state PENDING/Priority, estimated start 2026-09-13 12:51:52
+(scheduler estimate may change). Next inspect this job, not a duplicate:
+`runtime/logs/gsmean-v2_15005758.txt` and
+`runtime/outputs/training/fresh-start-gsmean-v2-15005758/report.json`.
+Keep the server executable checkout stable while queued/running.
 
 Formal reproducibility still requires architecture, splits/sampling, seeds,
 initialization, input transforms, losses, update rules, stage transitions,

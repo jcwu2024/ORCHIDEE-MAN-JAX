@@ -59,7 +59,10 @@ The latest resource check also finds no paid GPU available (all ten gnall
 nodes report GresUsed8/8, including the CPU-idle node). The user permits
 immediate paid submission only when a GPU is available and requests discussion
 before queueing otherwise. A one-V100/eight-CPU/one-hour Slurm option is ready,
-maximum CNY2.76, but has not been submitted; queue choice is pending.
+maximum CNY2.76. The user approved queueing and job 15005758 is now submitted
+at executable checkout 85e6b39. Initial state PENDING/Priority; scheduler estimate
+2026-09-13 12:51:52, subject to change. No training has started. Track its
+job-specific log and `runtime/outputs/training/fresh-start-gsmean-v2-15005758/report.json`.
 
 The all-state and DOC-only T=16 input-tail tests completed in 2459.7s and
 1838.3s on free gln01. Both pass the three tested numerical/mask/physical-hard

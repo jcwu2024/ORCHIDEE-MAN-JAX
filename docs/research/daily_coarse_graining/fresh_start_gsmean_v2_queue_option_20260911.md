@@ -27,7 +27,27 @@ Therefore no available paid GPU was established and no job was submitted.
 - Unique job-specific report/checkpoint directory and `%j` log naming prevent
   overwriting prior experiments.
 
-Queue authorization is pending. The frozen protocol's original paid-submission
+The user subsequently approved paid queue submission. The frozen protocol's original paid-submission
 field records the initial free-node proposal; execution authority is the user's
 current session instruction, not a JSON checkbox. No paid submission occurs
 without that instruction's resource-availability/queue conditions being met.
+
+## Submitted queue job
+
+Job **15005758**, submitted from gln01 under executable checkout **85e6b39**.
+Scheduler SubmitTime: 2026-09-11T21:29:54. Submission command:
+`/rmprog/slurm/v22.05.7/bin/sbatch --parsable scripts/hpc/slurm_fresh_start_gsmean_v2.sh`.
+The returned job ID and `scontrol show job` confirm gnall, one GPU, eight CPUs,
+32G host RAM, one-hour limit and the intended working directory/command.
+
+Initial state: PENDING, reason Priority, no allocated node or runtime. The
+scheduler's current estimated start is 2026-09-13T12:51:52; this is a changing
+scheduler estimate, not a guaranteed appointment. Maximum additive fee remains
+CNY2.76. No second job or automatic retry is authorized.
+
+Log: `runtime/logs/gsmean-v2_15005758.txt`.
+Report/checkpoint directory:
+`runtime/outputs/training/fresh-start-gsmean-v2-15005758/`.
+`report.json` records admission and training; optional `report.checkpoint.pkl`
+is the fresh prototype checkpoint. Preserve this server checkout while queued
+and running. Next inspect this job's status/log/report when it starts or ends.
