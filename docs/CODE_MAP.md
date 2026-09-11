@@ -67,6 +67,11 @@ feature routes honor it. `scripts/hpc/audit_conditioned_input_tail_cpu.py`
 audits saved states; `audit_conditioned_input_tail.py` and `.sh` compare fixed
 update-41 weights on three train-only cases using rebuilt forward bindings.
 These do not enable training or promote the candidate.
+The optional `continuous_tail_mask` selects canonical state coordinates;
+`--tail-scope doc` resolves it from the named DOC field and
+`--reference-report` reuses completed unchanged-weight evidence. Other neural
+features preserve their original arithmetic. The all-state arm's physical
+regression gate failed; the DOC-only scope test is the current candidate.
 
 `scripts/hpc/audit_conditioned_score_discrepancy.py` localizes update 42's
 stopped score comparison using the accepted update-41 recovery and artifact

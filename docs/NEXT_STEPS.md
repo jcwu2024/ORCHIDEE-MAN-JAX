@@ -2604,11 +2604,18 @@ precedes reverse propagation. Full-state/day-10 crossed replay completed in
 other 31 tested state leaves do not. Free-CPU input-scale audit finds a DOC
 coordinate at about 0.048 divided by a frozen scale of 7.96e-12, giving a
 float32 feature around 6.024e9; a 4.47e-9 raw change becomes 512 normalized.
-The default-off continuous log-tail v1 correction is implemented; 38 local
-focused/compatibility tests pass. Free gln01 GPU 1 forward admission is running
-at fe3f6fd (PID 18115, 45-minute cap), with report
-`runtime/outputs/diagnostics/conditioned-input-tail-14991510.json`. Read this
-result next; do not duplicate or promote before physical/derivative gates. The fixed
+The default-off all-state continuous log-tail v1 completed on free gln01 in
+2459.7s at fe3f6fd, report
+`runtime/outputs/diagnostics/conditioned-input-tail-14991510.json`. All three
+score pairs, masks and hard physical gates pass; coordinate 1785 alone is now
+proven causal. Physical performance is mixed: 322/7-day improves sharply, but
+883/30-day GPP and respiration regress; all three fail a component regression
+cap. It is rejected as a drop-in update-41 correction, not as a trainable route.
+Next test the same fixed T=16 only on the named DOC field, leaving all other
+features on legacy arithmetic, under the frozen
+[DOC-only scope gate](research/daily_coarse_graining/conditioned_doc_tail_v1_20260911.md).
+Reuse completed reference rows and the same three train cases; no paid
+training or automatic derivative acceptance. The original fixed
 T=16 protocol, matched update-41 reference and three train-only cases are in
 [input-tail admission](research/daily_coarse_graining/conditioned_input_tail_v1_20260910.md).
 CPU saved-state audit is complete: Teacher maximum |z|=21.96, predicted maximum

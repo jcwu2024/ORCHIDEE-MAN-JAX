@@ -1043,6 +1043,7 @@ def assemble_strong_baseline_context(
         normalization.continuous_mean,
         normalization.continuous_scale,
         normalization.continuous_tail_threshold,
+        coordinate_mask=normalization.continuous_tail_mask,
     )
     state_defined = _mask_inactive_pft_elements(
         inputs.state_defined.other,
@@ -1203,6 +1204,8 @@ def assemble_strong_baseline_context(
         jnp.asarray(normalization.continuous_mean)[pft_state_indices],
         jnp.asarray(normalization.continuous_scale)[pft_state_indices],
         normalization.continuous_tail_threshold,
+        coordinate_mask=(None if normalization.continuous_tail_mask is None else
+                         jnp.asarray(normalization.continuous_tail_mask)[pft_state_indices]),
     )
     pft_features = jnp.concatenate(
         (
@@ -1426,6 +1429,8 @@ def strong_baseline_field_context(
             local_mean,
             jnp.asarray(normalization.continuous_scale)[safe_indices],
             normalization.continuous_tail_threshold,
+            coordinate_mask=(None if normalization.continuous_tail_mask is None else
+                             jnp.asarray(normalization.continuous_tail_mask)[safe_indices]),
         )
     else:
         local = jnp.zeros((coordinates.shape[0],), dtype=jnp.float32)

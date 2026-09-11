@@ -847,6 +847,7 @@ def assemble_successor_process_context(
         normalization.continuous_tail_threshold,
         dtype=jnp.float64,
         legacy_standardize=_standardize,
+        coordinate_mask=normalization.continuous_tail_mask,
     )
     state_group = _summary_tokens(
         parameters,

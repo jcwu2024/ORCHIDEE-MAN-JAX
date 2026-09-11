@@ -23,7 +23,8 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `research/daily_coarse_graining/conditioned_input_tail_v1_20260910.md` | Default-off candidate implemented; local/free-node admission in progress | Frozen transform, matched cases, physical regression caps and CPU evidence |
+| `research/daily_coarse_graining/conditioned_doc_tail_v1_20260911.md` | Current frozen DOC-only scope test | Separating DOC numerical stabilization from changes to other state features |
+| `research/daily_coarse_graining/conditioned_input_tail_v1_20260910.md` | Completed; numerical gates pass, drop-in physical regression gate fails | Fixed-weight physical results and isolated DOC-coordinate causality |
 | `research/daily_coarse_graining/conditioned_score_discrepancy_20260910.md` | Completed DOC-input localization; input-conditioning correction is next | Causal leaf swap, amplified tiny-scale input and bounded repair gate |
 | `research/daily_coarse_graining/conditioned_data_coverage_expansion_20260910.md` | CPU job 14992138 and free-node merge/readback passed | Available 2,000-package extension, exact coverage and execution record |
 | `research/daily_coarse_graining/conditioned_gpp_feedback_diagnosis_20260910.md` | Current completed offline diagnosis | Comparing daily Teacher-state/free-run GPP and cumulative carbon/net-growth error |

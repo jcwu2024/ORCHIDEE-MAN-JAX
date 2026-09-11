@@ -94,3 +94,36 @@ def test_short_recurrence_reverse_matches_jvp_and_finite_difference():
     fd = (rollout(p + 1e-7) - rollout(p - 1e-7)) / 2e-7
     np.testing.assert_allclose(reverse, tangent, rtol=1e-12)
     np.testing.assert_allclose(reverse, fd, rtol=1e-7)
+
+
+def test_selected_tail_preserves_other_features_and_gradients_bitwise():
+    mean = jnp.array([1e-12, .2345678912345, -3.])
+    scale = jnp.array([8e-12, .000237654321234, 1e-3])
+    mask = jnp.array([True, False, False])
+    x = jnp.array([.048, 28.45678123456, 300.543211234])
+
+    def candidate(value):
+        return standardize_continuous(value, mean, scale, 16., coordinate_mask=mask)
+
+    baseline = jax.jit(lambda value: _standardize(value, mean, scale))(x)
+    output = jax.jit(candidate)(x)
+    np.testing.assert_array_equal(output[1:], baseline[1:])
+    np.testing.assert_array_equal(candidate(x)[1:], _standardize(x, mean, scale)[1:])
+    assert 16. < float(output[0]) < 50.
+    old_gradient = jax.grad(lambda v: jnp.sum(_standardize(v, mean, scale)))(x)
+    new_gradient = jax.grad(lambda v: jnp.sum(candidate(v)))(x)
+    np.testing.assert_array_equal(new_gradient[1:], old_gradient[1:])
+    assert np.isfinite(new_gradient).all()
+
+
+def test_masked_structured_slice_uses_global_coordinate_selection():
+    raw = jnp.array([1., .048, 200., jnp.nan])
+    inputs = SimpleNamespace(state=SimpleNamespace(other=raw),
+                             state_defined=SimpleNamespace(other=jnp.array([True, True, True, False])))
+    norm = NeuralInputNormalization(*([np.zeros(4)] * 11))._replace(
+        continuous_scale=np.full(4, 8e-12), continuous_tail_threshold=16.,
+        continuous_tail_mask=np.array([False, True, False, False]))
+    _, features, _ = _normalized_state_slice(inputs, norm, StructuredGPPStateSlice(1, 4, (3,)))
+    assert 16. < float(features[0]) < 50.
+    assert float(features[1]) == float(_standardize(raw[2], 0., 8e-12))
+    assert float(features[2]) == 0.

@@ -311,9 +311,14 @@ def carbon_feedback_tokens(
         raw = jnp.asarray(inputs.state.other)[indices]
         mean = jnp.asarray(normalization.continuous_mean)[indices]
         scale = jnp.asarray(normalization.continuous_scale)[indices]
-        defined = jnp.asarray(inputs.state_defined.other, dtype=jnp.bool_)[indices] & jnp.isfinite(raw)
+        enabled_defined = jnp.asarray(inputs.state_defined.other, dtype=jnp.bool_)[indices] & jnp.isfinite(raw)
+        selected = (True if normalization.continuous_tail_mask is None else
+                    jnp.asarray(normalization.continuous_tail_mask)[indices])
+        defined = jnp.where(selected, enabled_defined, defined)
     normalized = standardize_continuous(
         jnp.where(defined, raw, mean), mean, scale, normalization.continuous_tail_threshold,
+        coordinate_mask=(None if normalization.continuous_tail_mask is None else
+                         jnp.asarray(normalization.continuous_tail_mask)[indices]),
     )
     features = jnp.stack((normalized, defined.astype(jnp.float32)), axis=1)
     tokens = _linear(adapter["value_input"], features)

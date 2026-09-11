@@ -12,6 +12,7 @@ CONTINUOUS_TAIL_THRESHOLD = 16.0
 def standardize_continuous(
     value: Any, mean: Any, scale: Any, threshold: float | None = None,
     *, dtype: Any = jnp.float32, legacy_standardize: Callable | None = None,
+    coordinate_mask: Any = None,
 ) -> Any:
     """Preserve legacy arithmetic by default; optionally compress only tails.
 
@@ -28,6 +29,18 @@ def standardize_continuous(
         return jnp.where(jnp.isfinite(value), (value - mean) / safe_scale, 0.0)
     if not 0.0 < threshold < float("inf"):
         raise ValueError("continuous tail threshold must be positive and finite")
+    if coordinate_mask is not None:
+        selected = jnp.asarray(coordinate_mask, dtype=jnp.bool_)
+        # Non-selected features use their exact historical arithmetic. Hide
+        # selected values from the inactive legacy branch before its division.
+        legacy = standardize_continuous(
+            jnp.where(selected, mean, value), mean, scale, dtype=dtype,
+            legacy_standardize=legacy_standardize,
+        )
+        conditioned = standardize_continuous(
+            jnp.where(selected, value, mean), mean, scale, threshold, dtype=dtype,
+        )
+        return jnp.where(selected, conditioned, legacy)
     value, mean, scale = (jnp.asarray(x, dtype=jnp.float64) for x in (value, mean, scale))
     finite = jnp.isfinite(value)
     safe_scale = jnp.where(jnp.isfinite(scale) & (scale > 0.0), scale, 1.0)

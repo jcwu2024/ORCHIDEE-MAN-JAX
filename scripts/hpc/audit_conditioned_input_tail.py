@@ -22,10 +22,17 @@ CASES = ((883, 30, 3), (322, 7, 1), (442, 30, 0))
 ROOT = Path('/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX')
 
 
-def with_tail(bootstrap, threshold):
+def with_tail(bootstrap, threshold, scope='all'):
     """Bind all forward consumers; old training helper closures must not be used."""
     context = bootstrap['context']
-    normalization = bootstrap['head'].input_normalization._replace(continuous_tail_threshold=threshold)
+    mask = None
+    if threshold is not None and scope == 'doc':
+        leaf = next(v for v in context['runtime']['contract'].state_leaves
+                    if v.key == 'slowproc_stomate_previous_step_state.DOC')
+        mask = np.zeros_like(bootstrap['head'].input_normalization.continuous_mean, dtype=bool)
+        mask[leaf.start:leaf.stop] = True
+    normalization = bootstrap['head'].input_normalization._replace(
+        continuous_tail_threshold=threshold, continuous_tail_mask=mask)
     head = replace(bootstrap['head'], input_normalization=normalization)
     steps = _make_steps(context['runtime'], head, context['template'], context['scales'],
                         context['target_contract'], science_flux_basis=bootstrap['flux_basis'])
@@ -93,6 +100,8 @@ def run(args):
     report = {'schema_version': CONTINUOUS_TAIL_VERSION, 'status': 'running', 'cases': [],
               'threshold': CONTINUOUS_TAIL_THRESHOLD, 'training_updates': 0,
               'validation_accessed': False, 'source_update': 41}
+    report['scope'] = args.tail_scope
+    report['reference_report'] = str(args.reference_report) if args.reference_report else None
 
     def emit(stage, **updates):
         report.update(updates, stage=stage, elapsed_seconds=time.perf_counter() - started)
@@ -115,8 +124,20 @@ def run(args):
         parameters = window.replace_conditioned_coupled_gpp_trainable(bootstrap['fixed_parameters'], values)
         artifacts = {u: window._load_artifact(args, bootstrap['context'], u) for u in (883, 322, 442)}
         references = {}
-        for arm, threshold in (('reference', None), ('tail', CONTINUOUS_TAIL_THRESHOLD)):
-            current = with_tail(bootstrap, threshold)
+        arms = [('reference', None), ('tail', CONTINUOUS_TAIL_THRESHOLD)]
+        if args.reference_report:
+            previous = json.loads(args.reference_report.read_text())
+            if previous['status'] != 'completed' or previous['source_update'] != 41:
+                raise ValueError('reference must be a completed fixed update-41 screen')
+            references = {(r['artifact'], r['horizon'], r['window']): r
+                          for r in previous['cases'] if r['arm'] == 'reference'}
+            if set(references) != set(CASES):
+                raise ValueError('reference case set differs')
+            report['cases'].extend(references.values())
+            report['doc_probes'] = {'reference': previous['doc_probes']['reference']}
+            arms = [('tail', CONTINUOUS_TAIL_THRESHOLD)]
+        for arm, threshold in arms:
+            current = with_tail(bootstrap, threshold, scope=args.tail_scope)
             trace_forward = integration.make_compact_trace_evaluator(current)
             extract = {h: screen.make_trace_statistics(current, h) for h in (7, 30)}
             observe = {h: integration.make_observation_gradient(current, h) for h in (7, 30)}
@@ -177,4 +198,6 @@ if __name__ == '__main__':
     parser = training._parser()
     parser.add_argument('--diagnostic-source', type=Path, default=ROOT /
         'runtime/outputs/training/conditioned-snow-free-continuation-v3-14991510')
+    parser.add_argument('--tail-scope', choices=('all', 'doc'), default='all')
+    parser.add_argument('--reference-report', type=Path)
     run(parser.parse_args())

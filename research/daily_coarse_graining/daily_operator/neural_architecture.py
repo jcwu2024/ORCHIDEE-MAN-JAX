@@ -285,6 +285,7 @@ class NeuralInputNormalization(NamedTuple):
     carbon_scale: Any
     thermal_scale: Any
     continuous_tail_threshold: float | None = None
+    continuous_tail_mask: Any = None
 
 
 class NeuralOutputNormalization(NamedTuple):
@@ -649,6 +650,7 @@ def assemble_neural_process_context(
         normalization.continuous_tail_threshold,
         dtype=jnp.float64,
         legacy_standardize=_standardize,
+        coordinate_mask=normalization.continuous_tail_mask,
     ).reshape(-1)
     continuous = jnp.where(
         jnp.asarray(inputs.state_defined.other, dtype=jnp.bool_).reshape(-1),

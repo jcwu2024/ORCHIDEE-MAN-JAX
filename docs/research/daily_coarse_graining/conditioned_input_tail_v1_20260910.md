@@ -1,6 +1,7 @@
 # Continuous-state input tail v1: bounded zero-update admission
 
-Candidate protocol, not an accepted correction. Frozen before model tests.
+Completed: numerically stabilized, rejected as a drop-in update-41 correction.
+The original protocol below was frozen before model tests.
 
 Keep update-41 weights, Attention topology, physical states, immutable v6 data
 and statistics. Add an optional continuous-state feature transform. For the
@@ -110,8 +111,33 @@ GPU_DEVICE=1 EXPECTED_GIT_HEAD=fe3f6fd7977f4b0b8ed1545723c683ee151e4f6b \
 Working directory: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`.
 Report: `runtime/outputs/diagnostics/conditioned-input-tail-14991510.json`.
 Log: `runtime/logs/conditioned-input-tail-14991510.log`.
-Bootstrap has started. Result and real-model derivative acceptance remain
-pending. Do not update the server checkout during this process or submit a
-duplicate. CPU audit's standalone arithmetic clarification was rerun separately
+The free-GPU run completed in 2459.7s, within the 45-minute cap. No parameter
+updates or paid jobs. CPU audit's standalone arithmetic clarification was rerun separately
 on test02; it uses exact legacy float32 arithmetic for the reference and yields
 the same maximum feature gap of 1024.
+
+## Completed result (read 2026-09-11)
+
+All three corrected production/compact score pairs pass the original tolerance;
+their absolute differences are 1.17e-7, 1.15e-10 and 1.33e-7. Production trace
+statistics and trajectory masks agree, outputs are finite, all hard counts zero.
+Coordinate 1785 alone reproduces the complete original 0.2896344 GPP jump;
+the corrected coordinate probe gives exactly zero, and the whole-DOC probe
+gives 7.96e-7 gC m-2 day-1.
+
+Physical performance is mixed. Each cell shows unchanged -> all-state tail;
+cumulative errors and final biomass errors are signed model-minus-Teacher in
+gC m-2. Daily RMSE is gC m-2 day-1. These are train-only diagnostic windows.
+
+| Case | Daily GPP RMSE | Cumulative GPP error | Cumulative NPP error | Cumulative maintenance error | Final AGB error | Final BGB error |
+| --- | --- | --- | --- | --- | --- | --- |
+| 883 / 30 days | 3.007 -> 3.810 | 49.94 -> 87.88 | 41.23 -> 49.76 | -2.06 -> 24.03 | 26.01 -> 29.25 | 14.78 -> 20.05 |
+| 322 / 7 days | 3.405 -> 0.176 | 21.59 -> 1.11 | 15.53 -> 0.38 | 0.08 -> 0.61 | 5.89 -> 0.14 | 9.51 -> 0.23 |
+| 442 / 30 days | 2.589 -> 2.067 | 74.25 -> 61.42 | 47.66 -> 27.78 | 8.06 -> 22.84 | 27.25 -> 14.48 | 20.12 -> 13.13 |
+
+All three fail at least one declared component regression cap. Do not proceed
+to derivative acceptance or continuation under this all-state transform. This
+is not evidence that it could not be adapted through training; it does show
+that numerical stabilization alone cannot be claimed as forward-preserving.
+The next bounded DOC-only scope test is frozen in
+[`conditioned_doc_tail_v1_20260911.md`](conditioned_doc_tail_v1_20260911.md).

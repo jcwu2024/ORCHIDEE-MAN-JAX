@@ -392,6 +392,8 @@ def _normalized_state_slice(
         source = raw
     normalized = standardize_continuous(
         jnp.where(defined, source, mean), mean, scale, normalization.continuous_tail_threshold,
+        coordinate_mask=(None if normalization.continuous_tail_mask is None else
+                         jnp.asarray(normalization.continuous_tail_mask[spec.start : spec.stop]).reshape(spec.shape)),
     )
     return raw, normalized, defined
 

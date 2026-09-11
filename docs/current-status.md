@@ -13,14 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Latest operation (2026-09-10): update-42 forward mismatch is localized to DOC
-input scaling. The default-off continuous log-tail v1 candidate is implemented
-across neural state-feature routes, with frozen T=16 and unchanged update-41
-weights for admission. CPU saved-state audit is complete; eight new focused
-and thirty existing compatibility tests pass. Free-GPU forward admission is
-running at fe3f6fd on gln01 GPU 1, PID 18115, with a 45-minute limit; report
-`runtime/outputs/diagnostics/conditioned-input-tail-14991510.json`. No correction
-or paid continuation is accepted yet. See
+Latest operation (2026-09-11): the all-state T=16 input-tail test completed in
+2459.7s on free gln01. Numerical score/mask/physical-hard gates pass, but mixed
+science results reject it as a drop-in update-41 correction. Isolated DOC
+coordinate 1785 reproduces the original GPP jump; compression removes it.
+Next isolate the same transform to the named DOC field, preserving legacy
+features elsewhere, under
+[`conditioned_doc_tail_v1_20260911.md`](research/daily_coarse_graining/conditioned_doc_tail_v1_20260911.md).
+No corrected model, derivative acceptance or paid continuation is claimed. See
 [`conditioned_input_tail_v1_20260910.md`](research/daily_coarse_graining/conditioned_input_tail_v1_20260910.md)
 for the active mechanism, train-only cases, physical regression caps and
 derivative stage. Earlier records below retain their historical meaning.
