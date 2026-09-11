@@ -1,10 +1,13 @@
 #!/bin/bash
-# One bounded free-GPU run, with data/protocol arguments only; no checkpoint chain.
+# Bounded free/approved-Slurm GPU run; no checkpoint chain.
 set -euo pipefail
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 GPU_DEVICE=${GPU_DEVICE:?select an idle free GPU}
 OUTPUT=${OUTPUT:-$ROOT/runtime/outputs/diagnostics/fresh-start-one-day-v1.json}
-case "$(hostname -s)" in gln01|ibgln01|ibc13b02n04) ;; *) exit 2 ;; esac
+case "$(hostname -s)" in
+  gln01|ibgln01|ibc13b02n04) ;;
+  *) [[ -n "${SLURM_JOB_ID:-}" && "${SLURM_JOB_PARTITION:-}" == gnall ]] || exit 2 ;;
+esac
 case "$OUTPUT" in "$ROOT/runtime/outputs/"*.json) ;; *) exit 2 ;; esac
 CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
 NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
