@@ -77,6 +77,10 @@ changes before amending admission. Paid job15005758 was explicitly canceled
 by user request; scheduler confirms CANCELLED and RunTime00:00:00.
 The active work is
 [`fresh-start FD convergence`](research/daily_coarse_graining/fresh_start_fd_convergence_20260911.md).
+Its five local tests and CPU shape preflight pass. Free GPU1 run at35e608a,
+PID908, is active with a45-minute cap. Report:
+`runtime/outputs/diagnostics/fresh-start-fd-convergence-v1.json`. No model
+updates, new checkpoints or paid jobs in this diagnostic.
 
 The all-state and DOC-only T=16 input-tail tests completed in 2459.7s and
 1838.3s on free gln01. Both pass the three tested numerical/mask/physical-hard

@@ -98,6 +98,12 @@ Next run the fixed seven-scale convergence and state-mask/discrete-branch
 diagnostic under
 [`fresh_start_fd_convergence_20260911.md`](research/daily_coarse_graining/fresh_start_fd_convergence_20260911.md).
 No training or tolerance relaxation inside the diagnostic, and no new paid job.
+Five local tests and free-CPU shape tracing (194.4s) pass. The convergence
+diagnostic is running on free gln01 GPU1 at35e608a, PID908, 45-minute cap.
+Next read `runtime/outputs/diagnostics/fresh-start-fd-convergence-v1.json`
+and its `.states.pkl`/runtime log. Look for a three-adjacent-scale mask-stable
+plateau and the larger-scale discrepancy's component/branch evidence before
+changing the original admission rule. No duplicate execution.
 
 Formal reproducibility still requires architecture, splits/sampling, seeds,
 initialization, input transforms, losses, update rules, stage transitions,

@@ -59,3 +59,20 @@ diagnostic shape tracing at f4378e2 passed in194.4s, report
 `runtime/outputs/diagnostics/fresh-start-fd-convergence-shapes.json`.
 The additional definition-logit export simply returns existing computed
 arrays; it changes neither the ordinary loss nor model parameter values.
+
+## Free-GPU execution
+
+Launched late 2026-09-11 on free gln01 GPU1, executable checkout **35e608a**,
+Python PID **908**, 45-minute cap. Both GPUs were empty before launch; only
+GPU1 is used. Working directory `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`.
+
+Command:
+`GPU_DEVICE=1 PYTHON_MODULE=scripts.hpc.audit_fresh_start_fd_convergence RUN_TIMEOUT=45m OUTPUT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/fresh-start-fd-convergence-v1.json bash scripts/hpc/run_fresh_start_one_day.sh --protocol manifests/coarse_graining/fresh_start_one_day_probe_v2.json`.
+
+Report: `runtime/outputs/diagnostics/fresh-start-fd-convergence-v1.json`.
+State/logit export: same prefix with `.states.pkl` suffix.
+Log: `runtime/logs/fresh-start-fd-convergence-v1.log`.
+Bootstrap finished at188.9s and initial-gradient/diagnostic preparation is
+running. The report must be read before any admission amendment or new training.
+Keep the server checkout stable and do not launch a duplicate. Paid job15005758
+remains canceled with zero runtime; no new paid work.
