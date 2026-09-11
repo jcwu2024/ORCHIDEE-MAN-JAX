@@ -89,6 +89,15 @@ source85e6b39, Python PID107826, 60-minute cap. Next read
 runtime log. Do not unhold a duplicate during the free run. Future paid plans
 should bundle admission and worthwhile subsequent training/monitoring to avoid
 one queue cycle per small step; no larger/multiple jobs have been submitted.
+The free v2 run at85e6b39 has ended (2005.78s, zero updates). Initial hard
+checks and all full-gradient finiteness checks pass, norm0.63538. Reverse/JVP
+agree; FD agrees at3e-4 but differs at1e-3, so the unchanged two-scale rule
+stopped training. The user explicitly canceled the held paid duplicate;
+job15005758 is confirmed CANCELLED with zero runtime.
+Next run the fixed seven-scale convergence and state-mask/discrete-branch
+diagnostic under
+[`fresh_start_fd_convergence_20260911.md`](research/daily_coarse_graining/fresh_start_fd_convergence_20260911.md).
+No training or tolerance relaxation inside the diagnostic, and no new paid job.
 
 Formal reproducibility still requires architecture, splits/sampling, seeds,
 initialization, input transforms, losses, update rules, stage transitions,

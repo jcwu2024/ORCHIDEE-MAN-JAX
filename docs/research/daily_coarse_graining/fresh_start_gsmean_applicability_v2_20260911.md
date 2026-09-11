@@ -147,3 +147,20 @@ probe is running on free gln01 GPU1 at85e6b39, PID107826, output
 `runtime/outputs/diagnostics/fresh-start-gsmean-v2-free.json`. Follow the free
 run; do not release the held duplicate while it is active. See the queue record
 for exact resource transition and the user's future queue-efficiency preference.
+
+## Completed free-GPU v2 admission
+
+The 85e6b39 free run stopped after 2005.78s with zero optimizer updates,
+reason `derivative_agreement`. Initial physical/applicability checks pass.
+All 109,464,375 gradient coordinates are finite; norm0.635383586 versus
+758.451725 before the gsmean correction. The gsmean head norm is1.06166e-7,
+preserving its vegetation response rather than freezing that head.
+
+At epsilon1e-3 reverse/JVP agree at about0.63538185 but central finite
+difference is0.46612860; at3e-4 reverse/JVP/FD agree at
+0.63537971/0.63537971/0.63534774. The original rule requires both scales, so
+training correctly did not start under that protocol. No conclusion of an
+AD implementation defect or successful training is justified by this alone.
+Next perform the fixed-scale convergence/branch diagnostic in
+[`fresh_start_fd_convergence_20260911.md`](fresh_start_fd_convergence_20260911.md).
+The paid duplicate was canceled on the user's explicit instruction.

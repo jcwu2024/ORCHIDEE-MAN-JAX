@@ -77,3 +77,11 @@ so compilation and queue wait are amortized. Multiple paid jobs should represent
 independent justified experiments, not repeated probes of the same unresolved
 boundary. Larger budgets/sampling/objectives must still be specified before
 submission; this request does not silently increase the current12-update run.
+
+## Canceled on user instruction
+
+The user explicitly requested cancellation after the free run ended. Root
+verified job15005758 was PENDING/JobHeldUser, then ran `scancel 15005758`.
+Scheduler confirms CANCELLED, RunTime00:00:00, no allocated node. Recorded
+cancel time is 2026-09-11T23:28:06. No paid compute ran. Do not release or
+resubmit this job; next work is free-node FD convergence diagnosis.

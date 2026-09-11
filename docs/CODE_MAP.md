@@ -90,6 +90,13 @@ then checks exact bare-soil zero in both named outputs and next-day state.
 `scripts/dev/analyze_gsmean_zero_counterfactual.py` is offline loss accounting
 from the completed exported states, not a substitute for model acceptance.
 
+`scripts/hpc/audit_fresh_start_fd_convergence.py` reuses the corrected v2
+objective at a fresh deterministic initialization. It measures seven fixed
+epsilon pairs, component/one-sided slopes and state-mask/discrete changes;
+`daily_operator/fd_convergence.py` owns the unchanged numerical tolerance and
+the three-adjacent-small-scale classification. It performs no training or
+automatic tolerance adjustment.
+
 `daily_operator/input_conditioning.py` owns the optional continuous-state
 log-tail transform, default off through `NeuralInputNormalization`. All state
 feature routes honor it. `scripts/hpc/audit_conditioned_input_tail_cpu.py`

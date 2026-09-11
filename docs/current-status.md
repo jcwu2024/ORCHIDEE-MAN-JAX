@@ -70,6 +70,13 @@ source85e6b39, PID107826. Active report is now
 The paid job will not start while held. No bigger training budget or additional
 job was submitted; future paid work should amortize queue/compile time across
 declared admission and substantive training stages.
+The free v2 run completed with an admission stop after2005.78s, zero updates:
+gradient norm0.63538, finite full tree, matching reverse/JVP and FD at3e-4,
+but discrepant FD at1e-3. Investigate fixed-scale convergence and mask/branch
+changes before amending admission. Paid job15005758 was explicitly canceled
+by user request; scheduler confirms CANCELLED and RunTime00:00:00.
+The active work is
+[`fresh-start FD convergence`](research/daily_coarse_graining/fresh_start_fd_convergence_20260911.md).
 
 The all-state and DOC-only T=16 input-tail tests completed in 2459.7s and
 1838.3s on free gln01. Both pass the three tested numerical/mask/physical-hard

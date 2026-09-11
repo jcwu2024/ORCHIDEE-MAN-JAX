@@ -132,6 +132,7 @@ def make_objective(runtime, head, template, scales, protocol, *, state_diagnosti
                 'scales': scales.state, 'eligible': scales.state_loss_eligible,
                 'group_loss': state_result.group_loss, 'group_mse': state_result.group_mse,
                 'group_bias_squared': state_result.group_bias_squared, 'group_count': state_result.group_count,
+                'next_discrete': result.next_discrete_state,
             }
         return loss, auxiliary
 
