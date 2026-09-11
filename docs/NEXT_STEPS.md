@@ -50,6 +50,11 @@ loss/initialization or expanding samples, under
 [`fresh_start_loss_balance_audit_20260911.md`](research/daily_coarse_graining/fresh_start_loss_balance_audit_20260911.md).
 Use the same three samples and initial/final prototype weights for diagnosis
 only. No new training or paid submission follows automatically from the probe.
+The localization's three local tests and free-CPU complete-objective shape
+preflight pass (201.1s). Free gln01 GPU 1 diagnostic at 9a6edb6 is now active,
+PID 49644, 45-minute cap. Next read
+`runtime/outputs/diagnostics/fresh-start-loss-balance-v1.json` and its `.states.pkl`
+export/log; do not duplicate it or change the server checkout while running.
 
 Formal reproducibility still requires architecture, splits/sampling, seeds,
 initialization, input transforms, losses, update rules, stage transitions,

@@ -75,6 +75,13 @@ assets without inherited checkpoints; its free-node wrapper is `.sh`. The
 machine-readable probe is `fresh_start_one_day_probe_v1.json`. Its bounded
 learning result is not final training or generalization acceptance.
 
+The completed probe's state-loss dominance is being localized by
+`scripts/hpc/audit_fresh_start_loss_balance.py`. The objective's optional
+`state_diagnostics` exports grouped states/scales/masks without changing the
+ordinary training return. `daily_operator/state_loss_attribution.py` maps
+canonical fields to actual grouped layouts and exactly decomposes both MSE
+and signed-bias contributions. No optimizer step is performed by this audit.
+
 `daily_operator/input_conditioning.py` owns the optional continuous-state
 log-tail transform, default off through `NeuralInputNormalization`. All state
 feature routes honor it. `scripts/hpc/audit_conditioned_input_tail_cpu.py`

@@ -162,7 +162,8 @@ RMSE in gC m-2 day-1:
 
 The three samples are repeated, so this is basic learnability evidence only.
 Two samples' GPP errors increase; aggregate GPP/NPP improve mainly through the
-third case's larger error reduction. Do not claim uniform scientific success.
+larger error reduction at point 331.0-083.0/year 1982. Do not claim uniform
+scientific success.
 
 Gradient compiled live-buffer estimate is 2.653 GiB. JAX peak active memory is
 4.342 GiB, versus a 20.630 GiB allocator pool; these are not the same as total

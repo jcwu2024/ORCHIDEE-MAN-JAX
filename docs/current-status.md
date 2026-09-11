@@ -39,6 +39,13 @@ before writing any training amendment. The original failure report is
 `runtime/outputs/diagnostics/fresh-start-one-day-v1.json`. This is three fixed
 train samples, not a full training epoch, final protocol or generalization test.
 
+The field-level loss audit passes local/CPU shape preflight and is running at
+9a6edb6 on free gln01 GPU 1, PID 49644, 45-minute cap. It evaluates initial and
+update-12 weights on the same three samples and exports per-field state loss
+plus initial state-head gradient rankings. Report:
+`runtime/outputs/diagnostics/fresh-start-loss-balance-v1.json`. No updates or
+paid jobs in this audit; dominant fields and the next amendment are pending.
+
 The all-state and DOC-only T=16 input-tail tests completed in 2459.7s and
 1838.3s on free gln01. Both pass the three tested numerical/mask/physical-hard
 gates but fail old-weight science regression gates. DOC-only improves the

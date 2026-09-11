@@ -38,3 +38,34 @@ resulting normalization/initialization/loss amendment before training; do not
 blindly reduce the entire state coefficient or equate frequent clipping with
 proof of an incorrect clipping threshold. Resource and sample expansion remain
 part of the subsequent reproducible training plan.
+
+## Implementation and execution record
+
+`fresh_start_training.make_objective(..., state_diagnostics=True)` returns
+grouped predicted/expected states, scales, eligibility and exact original
+group statistics. Default false leaves ordinary training outputs unchanged.
+`state_loss_attribution.py` maps the actual canonical inventory/thermal layouts
+and reconstructs loss including signed-bias cross terms. Three focused tests
+pass in 12.29s (attribution, actual group layout, existing physical extractor).
+Ruff and shell syntax pass.
+
+Free test02 abstract tracing of the complete diagnostic objective passed in
+201.1s, report `runtime/outputs/diagnostics/fresh-start-loss-balance-shapes.json`
+(also copied to local outputs). No new model weights were trained.
+
+The GPU diagnostic started around 19:36 on 2026-09-11, free gln01 GPU 1,
+source **9a6edb6**, Python PID **49644**. The GPU was idle (3 MiB, 0%); GPU 0
+was occupied and left untouched. One V100, 45-minute cap, same compile cache
+as the completed prototype. Working directory:
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`.
+
+Command:
+`GPU_DEVICE=1 PYTHON_MODULE=scripts.hpc.audit_fresh_start_loss_balance RUN_TIMEOUT=45m OUTPUT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/fresh-start-loss-balance-v1.json bash scripts/hpc/run_fresh_start_one_day.sh`.
+
+Report: `runtime/outputs/diagnostics/fresh-start-loss-balance-v1.json`.
+Raw state export: same prefix with `.states.pkl` suffix (no parameters).
+Log: `runtime/logs/fresh-start-loss-balance-v1.log`.
+Bootstrap is running; read these results next. Keep its server checkout stable
+and do not launch a duplicate. No paid work or parameter updates are authorized
+by this diagnostic. Initial recorded state-head squared-norm share is
+99.99904%; attribution has not yet identified the responsible field.
