@@ -17,6 +17,15 @@ from .target_oriented_training import (
 )
 
 
+def extract_one_day_trajectories(state, defined, gpp, gpp_defined, inputs, contract):
+    """Add the same one-day axis to state, GPP and PFT area/mask inputs."""
+    return extract_biomass_productivity_trajectories(
+        state.other[None, :], defined.other[None, :],
+        daily_fast_gpp=gpp[None, ...], daily_fast_gpp_defined=gpp_defined[None, ...],
+        pft_fraction=inputs.pft.pft_fraction[None, ...],
+        active_pft_mask=inputs.pft.active_pft_mask[None, ...], contract=contract)
+
+
 def make_objective(runtime, head, template, scales, protocol):
     """Differentiate one canonical day directly, without a custom reverse scan."""
     transition = bind_daily_operator_dynamic_retained_inputs(
@@ -26,11 +35,7 @@ def make_objective(runtime, head, template, scales, protocol):
     weights = protocol['loss']
 
     def trajectories(state, defined, gpp, gpp_defined, inputs):
-        return extract_biomass_productivity_trajectories(
-            state.other[None, :], defined.other[None, :],
-            daily_fast_gpp=gpp[None, ...], daily_fast_gpp_defined=gpp_defined[None, ...],
-            pft_fraction=inputs.pft.pft_fraction, active_pft_mask=inputs.pft.active_pft_mask,
-            contract=head.contract)
+        return extract_one_day_trajectories(state, defined, gpp, gpp_defined, inputs, head.contract)
 
     def objective(parameters, sample):
         result = transition(parameters, sample.inputs, sample.day_inputs)

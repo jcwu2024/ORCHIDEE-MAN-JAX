@@ -22,7 +22,13 @@ def bootstrap(args, protocol):
     from scripts.hpc.run_successor_fast_owner_gpu_probe import _load_extended_runtime
     from scripts.hpc.run_target_oriented_attention_gpu_admission import _head
     from scripts.hpc.run_target_oriented_full_step_preflight import _prepare_template
-    runtime = _load_extended_runtime(args, initialize_probe_parameters=False)
+    backend = {}
+    if args.shape_only:
+        def cpu_backend():
+            import jax
+            return jax, jax.devices('cpu')
+        backend['backend_initializer'] = cpu_backend
+    runtime = _load_extended_runtime(args, initialize_probe_parameters=False, **backend)
     from research.daily_coarse_graining.daily_operator.fresh_start import build_fresh_head, initialize_fresh_parameters
     from research.daily_coarse_graining.daily_operator.mechanistic_output_contract import (
         build_mechanistic_learned_schema,
@@ -108,6 +114,13 @@ def run(args):
             raise ValueError(f'fresh parameter count {count} differs')
         report.update(parameter_count=count, trainable_parameter_count=count, sample_metadata=metadata)
         objective = make_objective(runtime, head, template, scales, protocol)
+        if args.shape_only:
+            emit('trace_complete_objective')
+            shapes = [jax.eval_shape(objective, parameters, sample) for sample in samples]
+            emit('completed', status='passed', classification='complete_objective_shapes_only',
+                 loss_shapes=[list(value[0].shape) for value in shapes],
+                 parameter_count=count, trainable_parameter_count=count)
+            return report
         forward = jax.jit(objective)
         backward = jax.jit(jax.value_and_grad(objective, has_aux=True))
         emit('initial_forward')
@@ -233,6 +246,7 @@ def parser():
         result.add_argument('--'+name, type=Path, required=True)
     result.add_argument('--protocol', type=Path, default=ROOT/'manifests/coarse_graining/fresh_start_one_day_probe_v1.json')
     result.add_argument('--admission-only', action='store_true')
+    result.add_argument('--shape-only', action='store_true', help='CPU trace of the complete loss on actual samples; no model execution or updates')
     return result
 
 
