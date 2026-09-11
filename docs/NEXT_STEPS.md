@@ -33,6 +33,9 @@ and a bound day. The frozen
 uses DOC T=16, seed 20260911, three existing train samples, complete one-day AD,
 and at most 12 AdamW updates after numerical/physical admission. Next execute
 the free-node real-v6 gate and inspect its physical-unit learning report.
+The free gln01 GPU 1 execution is now running at cdf7eb3, PID 102459,
+60-minute limit; read `runtime/outputs/diagnostics/fresh-start-one-day-v1.json`
+and `runtime/logs/fresh-start-one-day-v1.log` next. Do not launch a duplicate.
 
 Formal reproducibility still requires architecture, splits/sampling, seeds,
 initialization, input transforms, losses, update rules, stage transitions,

@@ -79,3 +79,18 @@ The local retained tail is the established plumbing adapter; real retained
 physics and the combined science/state/process gradient are checked on v6
 before the first optimizer update. No full-real-model gradient claim follows
 from the local process-loss test alone.
+
+## Free-node execution
+
+Launched on 2026-09-11 around 12:36 China time, free gln01/ibc13b02n04 GPU 1,
+source **cdf7eb3**, Python PID **102459**, 60-minute cap. GPU 1 was idle before
+launch; GPU 0 held another process and was left untouched. Working directory:
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`.
+
+Command: `GPU_DEVICE=1 bash scripts/hpc/run_fresh_start_one_day.sh`.
+Report: `runtime/outputs/diagnostics/fresh-start-one-day-v1.json`.
+Log: `runtime/logs/fresh-start-one-day-v1.log`.
+Optional final prototype checkpoint: report path with `.checkpoint.pkl` suffix.
+The process has entered bootstrap. Real-data forward/AD, memory and learning
+results are pending. Read this report next; no duplicate submission or server
+checkout update while it runs. No paid GPU task was submitted.

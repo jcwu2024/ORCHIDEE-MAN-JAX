@@ -22,6 +22,14 @@ must not become permanent merely because other modules were pretrained.
 entry point and bounded all-parameter numerical/resource/learning admission in
 [`fresh_start_training_route_20260911.md`](research/daily_coarse_graining/fresh_start_training_route_20260911.md).
 
+The fresh-start prototype is implemented and local actual full-network
+initialization/process-loss/gradient/bound-day tests pass (336.45s). The
+combined real-data science/state/process objective is being admitted on free
+gln01 GPU 1 at cdf7eb3, PID 102459, 60-minute cap, with at most 12 updates only
+after forward/AD admission. Report:
+`runtime/outputs/diagnostics/fresh-start-one-day-v1.json`. This is three fixed
+train samples, not a full training epoch, final protocol or generalization test.
+
 The all-state and DOC-only T=16 input-tail tests completed in 2459.7s and
 1838.3s on free gln01. Both pass the three tested numerical/mask/physical-hard
 gates but fail old-weight science regression gates. DOC-only improves the
