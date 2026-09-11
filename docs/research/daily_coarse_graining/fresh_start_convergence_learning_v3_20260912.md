@@ -70,3 +70,18 @@ samples at643533a and passed in208.4s. Report:
 `runtime/outputs/diagnostics/fresh-start-learning-v3-shapes.json`.
 The later failure-report ordering adjustment affects only rejected monitors,
 not the traced model/gradient computation.
+
+## Free execution
+
+Started2026-09-12 around02:00 China time, free gln01 GPU1, source **0a3495e**,
+Python PID **11826**, maximum60minutes. Both free GPUs were empty; only GPU1
+is used. Working directory `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`.
+
+Command:
+`GPU_DEVICE=1 RUN_TIMEOUT=60m OUTPUT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/fresh-start-learning-v3.json bash scripts/hpc/run_fresh_start_one_day.sh --protocol manifests/coarse_graining/fresh_start_one_day_probe_v3.json`.
+
+Report: `runtime/outputs/diagnostics/fresh-start-learning-v3.json`.
+Log: `runtime/logs/fresh-start-learning-v3.log`.
+Optional final prototype: `fresh-start-learning-v3.checkpoint.pkl` beside report.
+Read this run next. Do not modify its server checkout or launch a duplicate.
+Paid job15005758 stays canceled; no new paid submission.

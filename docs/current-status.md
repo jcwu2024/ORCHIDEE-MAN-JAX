@@ -21,6 +21,11 @@ near1 on the negative perturbation. No model update occurred. Next execute
 [`v3 bounded learning`](research/daily_coarse_graining/fresh_start_convergence_learning_v3_20260912.md)
 with unchanged model/data/loss/optimizer, convergence-based admission and
 explicit fraction monitoring. Paid job15005758 remains canceled.
+The v3 integration passes seven focused tests, independent review and real-data
+CPU shape tracing (208.4s). It is running free on gln01 GPU1 at0a3495e,
+PID11826, with60-minute cap. Active report:
+`runtime/outputs/diagnostics/fresh-start-learning-v3.json`. Training results
+remain pending; admission and12 updates are in the same process.
 
 Latest decision (2026-09-11): the paper method should start from fresh neural
 initialization of the consolidated Attention architecture, with full-network

@@ -23,7 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `research/daily_coarse_graining/fresh_start_convergence_learning_v3_20260912.md` | Current bounded learning protocol | Convergence admission, unchanged training settings and fraction monitoring |
+| `research/daily_coarse_graining/fresh_start_convergence_learning_v3_20260912.md` | Local/CPU checks pass; free GPU run active at0a3495e | Convergence admission, unchanged training settings and fraction monitoring |
 | `research/daily_coarse_graining/fresh_start_fd_convergence_20260911.md` | Completed; local plateau passes, all masks stable | Four passing small scales and large-step nonlinear state/process response |
 | `research/daily_coarse_graining/bare_soil_output_source_audit_20260911.md` | Completed source audit | Exact gsmean zero versus restart-carried litter/fuel semantics and explicit edge cases |
 | `research/daily_coarse_graining/fresh_start_normalization_loss_review_20260911.md` | Completed independent review | Pooled PFT moments, destination scales and why gsmean-only v2 settings remain appropriate |

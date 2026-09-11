@@ -19,6 +19,12 @@ seed, data, architecture, DOC/gsmean rules, losses and optimizer identical.
 Historical v1/v2 still use their original all-declared-epsilons rule. No
 training before convergence/physical admission. Paid job15005758 is canceled;
 use a bounded free GPU after local/CPU preflight, no new paid job.
+Seven focused tests and independent Sol/max integration review pass. The
+complete CPU shape preflight passed in208.4s. V3 is now running on free gln01
+GPU1 at0a3495e, PID11826, maximum60minutes. Next read
+`runtime/outputs/diagnostics/fresh-start-learning-v3.json` and the matching
+runtime log. The same process enters12 updates only after convergence/physical
+admission, with fraction monitoring at0/1/4/8/12. No duplicate or paid run.
 
 ## Fresh-start decision and preceding execution history
 
