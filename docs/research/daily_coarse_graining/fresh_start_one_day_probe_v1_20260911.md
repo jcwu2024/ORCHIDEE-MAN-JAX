@@ -124,7 +124,7 @@ existing train samples, not the prior three rollout windows themselves.
 
 ## Corrected free-GPU rerun
 
-The CPU preflight passed. The unchanged bounded protocol is now running on
+The CPU preflight passed. The unchanged bounded protocol completed on
 free gln01 GPU 1 at **cb3c454**, with a new output path preserving v1 evidence:
 `runtime/outputs/diagnostics/fresh-start-one-day-v2.json` and
 `runtime/logs/fresh-start-one-day-v2.log`. GPU 1 was idle (3 MiB, 0%) before
@@ -134,6 +134,45 @@ only after numerical/physical/derivative admission. No paid job submitted.
 
 Command from the project root:
 `GPU_DEVICE=1 OUTPUT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/outputs/diagnostics/fresh-start-one-day-v2.json bash scripts/hpc/run_fresh_start_one_day.sh`.
-Next read the v2 report; do not duplicate this running process or update its
-server checkout. CPU report also copied locally to
+The v2 process has ended. CPU report also copied locally to
 `outputs/fresh-start-one-day-shapes-v2.json`.
+
+## Completed full-network learning probe
+
+All 12 updates completed in 2106.65s, with full trainable count 109,464,375,
+no inherited weights, all monitored physical/mask/discrete hard counts zero,
+and successful final-checkpoint forward replay. On the first sample the full
+gradient is finite, norm 758.4517; DOC heads, maintenance, GPP and shared encoder
+participate. Reverse/JVP/rounded finite differences pass at both declared
+epsilons. At 1e-3 the projections are 758.45012/758.45012/758.58724; at 3e-4
+they are 758.44779/758.44778/758.45997. This is bounded single-day derivative
+evidence, not full-parameter 7/30-day or D2 validation.
+
+Mean loss decreases 22.951749 -> 21.145502 (7.8698%); independent daily flux
+loss decreases 0.00246382 -> 0.00206628 (16.1350%). Three-sample physical daily
+RMSE in gC m-2 day-1:
+
+| Output | Initial | Update 12 |
+| --- | ---: | ---: |
+| GPP | 0.179023 | 0.163341 |
+| Maintenance respiration | 0.085528 | 0.077753 |
+| Growth respiration | 0.017921 | 0.019114 |
+| Autotrophic respiration | 0.074087 | 0.068984 |
+| NPP | 0.235922 | 0.211680 |
+
+The three samples are repeated, so this is basic learnability evidence only.
+Two samples' GPP errors increase; aggregate GPP/NPP improve mainly through the
+third case's larger error reduction. Do not claim uniform scientific success.
+
+Gradient compiled live-buffer estimate is 2.653 GiB. JAX peak active memory is
+4.342 GiB, versus a 20.630 GiB allocator pool; these are not the same as total
+process VRAM. Hot update median is about 0.847s for three sequential samples;
+first update is 99.88s including optimizer compilation. Most elapsed time was
+initialization, compilation and derivative admission, not the 12 hot updates.
+
+The initial weighted state term supplies 99.97534% of loss. The initial full
+gradient is almost entirely in state heads, and all updates clip: raw norms
+687.45 -> 935.44 with scales 0.001455 -> 0.001069. These observations motivate
+field-level loss/gradient localization before changing weights or expanding
+training. The next zero-update gate is
+[`fresh_start_loss_balance_audit_20260911.md`](fresh_start_loss_balance_audit_20260911.md).

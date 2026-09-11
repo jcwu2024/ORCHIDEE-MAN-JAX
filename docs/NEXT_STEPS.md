@@ -39,11 +39,17 @@ Commit cb3c454 fixes the caller; its real-extractor JIT/area/gradient regression
 test passes. Free test02 complete-objective abstract tracing passed on all
 three real samples in 218.69s; report
 `runtime/outputs/diagnostics/fresh-start-one-day-shapes-v2.json`.
-The corrected free gln01 GPU 1 run at cb3c454 is active with the same 60-minute
-protocol; next read `runtime/outputs/diagnostics/fresh-start-one-day-v2.json`
-and `runtime/logs/fresh-start-one-day-v2.log`. The failed v1 report remains
-evidence. No real-data gradient or learning result exists yet; do not duplicate
-the running GPU preflight or modify its checkout.
+The corrected free-GPU run at cb3c454 completed all 12 full-network updates in
+2106.65s; report `runtime/outputs/diagnostics/fresh-start-one-day-v2.json`.
+The bounded single-day reverse/JVP/FD, physical hard gates and checkpoint
+replay pass. Three-sample flux loss falls 16.14%; GPP, maintenance and NPP RMSE
+improve overall, growth RMSE worsens. Actual peak active JAX memory is 4.34 GiB
+versus 20.63 GiB pool; hot updates take about 0.85s for this tiny batch.
+Next localize state loss and state-head gradient dominance before revising
+loss/initialization or expanding samples, under
+[`fresh_start_loss_balance_audit_20260911.md`](research/daily_coarse_graining/fresh_start_loss_balance_audit_20260911.md).
+Use the same three samples and initial/final prototype weights for diagnosis
+only. No new training or paid submission follows automatically from the probe.
 
 Formal reproducibility still requires architecture, splits/sampling, seeds,
 initialization, input transforms, losses, update rules, stage transitions,

@@ -10,6 +10,8 @@ CUDA_DRIVER=$(readlink -f /usr/lib64/libcuda.so.1)
 NVML_DRIVER=$(readlink -f /usr/lib64/libnvidia-ml.so.1)
 GPU_BINDS="/WORK:/WORK,$CUDA_DRIVER:/usr/lib/x86_64-linux-gnu/libcuda.so.1,$NVML_DRIVER:/usr/lib/x86_64-linux-gnu/libnvidia-ml.so.1"
 CACHE_ROOT=$ROOT/runtime/cache/jax/orcjax_gpu/fresh-start-one-day-v1
+PYTHON_MODULE=${PYTHON_MODULE:-scripts.hpc.run_fresh_start_one_day}
+RUN_TIMEOUT=${RUN_TIMEOUT:-60m}
 mkdir -p "$(dirname "$OUTPUT")" "$CACHE_ROOT"
 cd "$ROOT"
 echo "host=$(hostname -s) code=$(git rev-parse --short HEAD) gpu=$GPU_DEVICE output=$OUTPUT"
@@ -25,8 +27,8 @@ env -u LD_LIBRARY_PATH \
   SINGULARITYENV_ORCHIDEE_REFERENCE_ROOT="$ROOT/runtime/assets" \
   SINGULARITYENV_ORCHIDEE_OUTPUT_ROOT="$ROOT/runtime/outputs" \
   SINGULARITYENV_PYTHONPATH="$ROOT" \
-  timeout --signal=TERM 60m singularity exec --nv --bind "$GPU_BINDS" --pwd "$ROOT" /apps/soft/sif/foundationpose \
-    "$ROOT/.venvs/orcjax_gpu/bin/python" -m scripts.hpc.run_fresh_start_one_day \
+  timeout --signal=TERM "$RUN_TIMEOUT" singularity exec --nv --bind "$GPU_BINDS" --pwd "$ROOT" /apps/soft/sif/foundationpose \
+    "$ROOT/.venvs/orcjax_gpu/bin/python" -m "$PYTHON_MODULE" \
     --dataset-manifest "$ROOT/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json" \
     --acceptance-report "$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance-v2/acceptance_report.json" \
     --base-statistics "$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance-v2/training_statistics.json" \

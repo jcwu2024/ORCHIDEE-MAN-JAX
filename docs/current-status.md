@@ -29,9 +29,13 @@ at cdf7eb3 after 1064.4s, zero updates: PFT fraction/mask lacked a single-day
 axis. cb3c454 fixes that caller and passes a focused physical-extractor
 regression. Free test02 complete-loss shape preflight passed in 218.69s, report
 `runtime/outputs/diagnostics/fresh-start-one-day-shapes-v2.json`. The corrected
-free gln01 GPU 1 run at cb3c454 is active, report
-`runtime/outputs/diagnostics/fresh-start-one-day-v2.json`, same 60-minute cap
-and bounded protocol. No real-data gradient/learning result yet. The original failure report is
+free gln01 GPU 1 run at cb3c454 completed all 12 updates in 2106.65s; report
+`runtime/outputs/diagnostics/fresh-start-one-day-v2.json`. Its single-day
+reverse/JVP/FD and hard gates pass, as does checkpoint replay. Mean flux loss
+falls 16.14%, with mixed individual physical errors; all updates clip strongly
+and state heads dominate the gradient. Next perform the fixed-sample
+[`loss-balance audit`](research/daily_coarse_graining/fresh_start_loss_balance_audit_20260911.md)
+before writing any training amendment. The original failure report is
 `runtime/outputs/diagnostics/fresh-start-one-day-v1.json`. This is three fixed
 train samples, not a full training epoch, final protocol or generalization test.
 

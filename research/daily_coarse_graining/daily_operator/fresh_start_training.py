@@ -26,7 +26,7 @@ def extract_one_day_trajectories(state, defined, gpp, gpp_defined, inputs, contr
         active_pft_mask=inputs.pft.active_pft_mask[None, ...], contract=contract)
 
 
-def make_objective(runtime, head, template, scales, protocol):
+def make_objective(runtime, head, template, scales, protocol, *, state_diagnostics=False):
     """Differentiate one canonical day directly, without a custom reverse scan."""
     transition = bind_daily_operator_dynamic_retained_inputs(
         input_assembler=runtime['adapter'].input_assembler, process_head=head,
@@ -50,7 +50,8 @@ def make_objective(runtime, head, template, scales, protocol):
             result.next_state, sample.expected_next_state,
             result.next_state_defined, sample.expected_next_state_defined, scales.state,
             eligible=scales.state_loss_eligible)
-        state_total = one_day_state_anchor_from_sufficient_statistics(state_stats).total
+        state_result = one_day_state_anchor_from_sufficient_statistics(state_stats)
+        state_total = state_result.total
         target_gpp = sample.process_targets['daily.fast_gpp']
         predicted = trajectories(result.next_state, result.next_state_defined,
             result.prediction.named_outputs['daily.fast_gpp'], target_gpp.defined, sample.inputs)
@@ -100,9 +101,18 @@ def make_objective(runtime, head, template, scales, protocol):
             'predicted': maintenance['predicted'] + growth['predicted'],
             'teacher': maintenance['teacher'] + growth['teacher'],
             'defined': maintenance['defined'] & growth['defined']}
-        return loss, {'flux_loss': flux_total, 'state_loss': state_total, 'process_loss': process_total,
+        auxiliary = {'flux_loss': flux_total, 'state_loss': state_total, 'process_loss': process_total,
                       'flux_losses': flux_losses, 'hard': hard, 'declared_dynamic_mask_mismatch': declared_mask,
                       'budgets': budgets, 'physical': physical}
+        if state_diagnostics:
+            auxiliary['state_diagnostics'] = {
+                'predicted': result.next_state, 'predicted_defined': result.next_state_defined,
+                'expected': sample.expected_next_state, 'expected_defined': sample.expected_next_state_defined,
+                'scales': scales.state, 'eligible': scales.state_loss_eligible,
+                'group_loss': state_result.group_loss, 'group_mse': state_result.group_mse,
+                'group_bias_squared': state_result.group_bias_squared, 'group_count': state_result.group_count,
+            }
+        return loss, auxiliary
 
     return objective
 
