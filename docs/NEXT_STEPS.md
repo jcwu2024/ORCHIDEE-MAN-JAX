@@ -1,24 +1,38 @@
 # Current Roadmap
 
-Last updated: 2026-09-10.
+Last updated: 2026-09-11.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
-## Final-training reproducibility principle (user decision, 2026-09-09)
+## Immediate operation: reproducible fresh-start training (2026-09-11)
 
-Exploratory continuation may reuse checkpoints, including the current update-14
-parent. Final scientific acceptance additionally requires a clear, executable
-training protocol that has actually been run end to end. Freeze architecture,
-data splits/sampling, initialization and seeds, losses/update rules, per-stage
-trainable/frozen modules, stage transitions, stopping and model selection.
-Document how every inherited pretrained component is produced. Staged training
-is valid; an unexplained chain of exploratory checkpoints is not a final recipe.
-Do not disguise exploratory choices as a preplanned method. Consolidate and
-execute the successful method before final acceptance, without forcing every
-current exploratory continuation to restart. See `AGENTS.md` for the persistent
-instruction. This decision does not change the prepared v2 experiment.
+The user clarified that reconstructing the incidental exploratory checkpoint
+chain is not an acceptable default paper method. The formal route now defaults
+to fresh initialization of the consolidated Attention architecture, with
+full-network optimization as the target. Existing weights remain useful for
+diagnosis and resource probes. Do not automatically resume update 41, repeat
+the completed input-tail comparisons, or keep the historical 15.96M trainable
+scope because the other weights were once trained.
+
+Next build one checkpoint-independent initialization and all-parameter training
+entry point, using existing v6 data/statistics and the canonical daily binding.
+Specify the input-conditioning rule and losses before its bounded admission;
+then test local forward/loss/gradients and one-day state/budgets, followed by a
+small free-node real-v6 all-parameter resource/learning probe. Its first task
+is to establish that the clean method can learn, not to beat an old checkpoint
+before training. See the concrete deliverable and ordering in
+[`fresh_start_training_route_20260911.md`](research/daily_coarse_graining/fresh_start_training_route_20260911.md).
+
+Formal reproducibility still requires architecture, splits/sampling, seeds,
+initialization, input transforms, losses, update rules, stage transitions,
+stopping and checkpoint selection to be executable and run end to end.
+Purposeful stages are allowed if defined in advance and reproducible from the
+declared initialization. Any temporary freezing must have an explicit scope
+and unfreezing rule. `AGENTS.md` records this persistent user decision.
+Historical contracts below describe their original experiments; this section
+controls the next task. New paid work still needs a concrete approved budget.
 
 ## Four Separate Claims
 
@@ -2611,15 +2625,15 @@ score pairs, masks and hard physical gates pass; coordinate 1785 alone is now
 proven causal. Physical performance is mixed: 322/7-day improves sharply, but
 883/30-day GPP and respiration regress; all three fail a component regression
 cap. It is rejected as a drop-in update-41 correction, not as a trainable route.
-Next test the same fixed T=16 only on the named DOC field, leaving all other
-features on legacy arithmetic, under the frozen
+The following named-DOC-only T=16 test is also complete under the frozen
 [DOC-only scope gate](research/daily_coarse_graining/conditioned_doc_tail_v1_20260911.md).
-Its implementation passes 11 focused tests; free gln01 GPU 1 run at 4645c39
-started 2026-09-11 around 09:47 (PID 64931, 45-minute cap). Next read
-`runtime/outputs/diagnostics/conditioned-doc-tail-14991510.json` and its matching
-runtime log; do not duplicate the running diagnostic.
-Reuse completed reference rows and the same three train cases; no paid
-training or automatic derivative acceptance. The original fixed
+Its 1838.3s free-GPU execution at 4645c39 passes score/mask/physical-hard gates
+on all three cases, but fails fixed-weight science regression gates, especially
+maintenance. Result: `runtime/outputs/diagnostics/conditioned-doc-tail-14991510.json`.
+All NPP/AGB/BGB absolute errors improve, with possible flux-error compensation;
+this is not derivative or scientific acceptance. Both scope tests are closed.
+The user's subsequent clarification makes fresh-start full-network training
+the next main task; see the immediate-operation section at the top. The original fixed
 T=16 protocol, matched update-41 reference and three train-only cases are in
 [input-tail admission](research/daily_coarse_graining/conditioned_input_tail_v1_20260910.md).
 CPU saved-state audit is complete: Teacher maximum |z|=21.96, predicted maximum
@@ -2633,9 +2647,9 @@ Final-training reproducibility remains required.
 The user subsequently authorized **parallel data-coverage expansion preparation**
 and asked whether limited data/frozen parameters are only exploratory choices.
 They are separate decisions: wider coverage is useful now, and freezing trained
-modules is not established as the optimal final scope. Keep the current model,
-loss and trainable scope fixed for the first coverage comparison; any broader
-unfreezing needs its own evidence and reproducible stage definition.
+modules is not established as the optimal final scope. The earlier fixed-scope
+coverage comparison is superseded as the next task by the 2026-09-11 fresh-start
+decision; retain prepared data and sampling evidence for the new protocol.
 The current 678-package pool spans all 535 train locations/44 years, but only
 140,002 unique eligible days (1.634%). Existing schedule entries 1001-3000 would
 raise the pool's unique-day coverage to 539,171 (6.293%, 3.851x). These are

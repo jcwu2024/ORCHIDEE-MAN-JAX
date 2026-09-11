@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-10.
+Last updated: 2026-09-11.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -13,20 +13,25 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Latest operation (2026-09-11): the all-state T=16 input-tail test completed in
-2459.7s on free gln01. Numerical score/mask/physical-hard gates pass, but mixed
-science results reject it as a drop-in update-41 correction. Isolated DOC
-coordinate 1785 reproduces the original GPP jump; compression removes it.
-Next isolate the same transform to the named DOC field, preserving legacy
-features elsewhere, under
-[`conditioned_doc_tail_v1_20260911.md`](research/daily_coarse_graining/conditioned_doc_tail_v1_20260911.md).
-The DOC-only mask passes 11 focused tests and is running on free gln01 GPU 1
-at 4645c39, PID 64931, 45-minute limit. Result path:
-`runtime/outputs/diagnostics/conditioned-doc-tail-14991510.json`.
-No corrected model, derivative acceptance or paid continuation is claimed. See
-[`conditioned_input_tail_v1_20260910.md`](research/daily_coarse_graining/conditioned_input_tail_v1_20260910.md)
-for the active mechanism, train-only cases, physical regression caps and
-derivative stage. Earlier records below retain their historical meaning.
+Latest decision (2026-09-11): the paper method should start from fresh neural
+initialization of the consolidated Attention architecture, with full-network
+optimization as the target. Existing exploratory checkpoints are diagnostic
+assets, not a required final weight source. The historical 15.96M-only scope
+must not become permanent merely because other modules were pretrained.
+`AGENTS.md` records the decision. Next build the clean initialization/training
+entry point and bounded all-parameter numerical/resource/learning admission in
+[`fresh_start_training_route_20260911.md`](research/daily_coarse_graining/fresh_start_training_route_20260911.md).
+
+The all-state and DOC-only T=16 input-tail tests completed in 2459.7s and
+1838.3s on free gln01. Both pass the three tested numerical/mask/physical-hard
+gates but fail old-weight science regression gates. DOC-only improves the
+three cases' NPP/AGB/BGB absolute errors while maintenance worsens; flux-error
+compensation is possible. Neither is an accepted trained correction or a
+real-model derivative validation. Both jobs have ended. Result paths and
+physical-unit evidence are in
+[`conditioned_doc_tail_v1_20260911.md`](research/daily_coarse_graining/conditioned_doc_tail_v1_20260911.md)
+and the linked all-state report. Earlier records below retain their historical
+meaning; no paid continuation or final method has been accepted.
 
 The rejected mechanistic-output v2 isolated diagnostic remains the comparison
 point: litter/POC/DOC fell `91.8014%` and passed only `16/28` dominant fields.

@@ -1,6 +1,7 @@
 # DOC-only input tail: zero-update mechanism separation
 
-Frozen before execution. This is a narrower candidate and causal test following
+Completed; numerical gates pass, fixed-weight physical regression gate fails.
+The protocol below was frozen before execution. This is a narrower candidate and causal test following
 the completed all-state T=16 screen. It is not automatic promotion of that run.
 
 All-state compression fixed the numerical mismatch on all three cases, but
@@ -72,7 +73,8 @@ verify resolution from the contract rather than a hard-coded index.
 Eleven focused normalization/admission tests pass in 5.97s. Ruff, shell syntax
 and whitespace checks pass. The preceding all-state implementation had also
 passed 30 original network/streamed compatibility tests; those were not rerun
-for this default-off mask extension. Real-v6 candidate admission is pending.
+for this default-off mask extension. Real-v6 forward results are below;
+derivative admission was not run.
 
 Server checkout fast-forwarded to **4645c39** after the all-state process ended.
 Free gln01 GPU 1 was idle (3 MiB, 0%); GPU 0 was occupied and left untouched.
@@ -88,5 +90,34 @@ EXPECTED_GIT_HEAD=4645c39e46b1e18dd822286e9e44a0b117b558ba \
 Working directory: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`.
 Report: `runtime/outputs/diagnostics/conditioned-doc-tail-14991510.json`.
 Log: `runtime/logs/conditioned-doc-tail-14991510.log`.
-Read the result next. Keep this checkout stable while the process is running;
-do not launch a duplicate or treat it as paid training authorization.
+The process has ended. Do not duplicate it or treat it as paid training authorization.
+
+## Completed result
+
+Completed in 1838.3s (30.6 minutes), no error, no optimizer updates or paid
+allocation. All three production/compact scores agree at original tolerance;
+absolute differences are 2.43e-7, 1.07e-10 and 4.00e-8. Masks and separately
+recorded production statistics agree; physical hard failures are zero. Both
+saved day-10 whole-DOC and coordinate-1785 interventions give exactly zero GPP
+difference under the corrected head.
+
+Signed model-minus-Teacher errors, unchanged -> DOC-only, in gC m-2. Final
+biomass error equals full-window net-change error because initial states agree.
+
+| Case | Cumulative GPP | Cumulative NPP | Cumulative maintenance | Final AGB | Final BGB |
+| --- | --- | --- | --- | --- | --- |
+| 883 / 30 days | 49.94 -> 56.56 | 41.23 -> 26.20 | -2.06 -> 23.78 | 26.01 -> 14.62 | 14.78 -> 11.18 |
+| 322 / 7 days | 21.59 -> 1.11 | 15.53 -> 0.38 | 0.08 -> 0.61 | 5.89 -> 0.14 | 9.51 -> 0.23 |
+| 442 / 30 days | 74.25 -> 11.57 | 47.66 -> -9.27 | 8.06 -> 16.29 | 27.25 -> -6.22 | 20.12 -> -3.05 |
+
+Every case fails its maintenance MSE regression cap; 883 also fails GPP and
+nonliving carbon, and 442 also fails nonliving carbon. Overall science totals
+are 0.074534 -> 0.125672, 0.285553 -> 0.00109845, and 0.179439 -> 0.0260206.
+This supports numerical stabilization but does not pass direct replacement of
+the update-41 model. NPP/biomass improvements may include compensation between
+GPP and respiration errors. No real-model derivative acceptance is claimed.
+
+Local report: `outputs/conditioned-doc-tail-14991510.json`.
+Following the user's reproducibility clarification, the next main task is
+[`fresh_start_training_route_20260911.md`](fresh_start_training_route_20260911.md),
+not another old-weight scope comparison or automatic continuation.

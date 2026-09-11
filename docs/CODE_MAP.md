@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-09-09.
+Last updated: 2026-09-11.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -61,6 +61,12 @@ No code under `research/` is imported by the ordinary Teacher path.
 
 ## Daily Research
 
+Current next implementation: a checkpoint-independent initialization and
+all-parameter training entry point for the existing Attention design. See
+`fresh_start_training_route_20260911.md` in the research docs. The old conditioned
+continuation scripts require exploratory weight/report chains and select
+15.96M GPP-related parameters; they are not the intended final training entry.
+
 `daily_operator/input_conditioning.py` owns the optional continuous-state
 log-tail transform, default off through `NeuralInputNormalization`. All state
 feature routes honor it. `scripts/hpc/audit_conditioned_input_tail_cpu.py`
@@ -71,7 +77,8 @@ The optional `continuous_tail_mask` selects canonical state coordinates;
 `--tail-scope doc` resolves it from the named DOC field and
 `--reference-report` reuses completed unchanged-weight evidence. Other neural
 features preserve their original arithmetic. The all-state arm's physical
-regression gate failed; the DOC-only scope test is the current candidate.
+regression gate failed; the DOC-only scope test has also completed with mixed
+physical results. Neither automatically enables a final input protocol.
 
 `scripts/hpc/audit_conditioned_score_discrepancy.py` localizes update 42's
 stopped score comparison using the accepted update-41 recovery and artifact

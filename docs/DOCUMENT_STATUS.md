@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-09-09.
+Last updated: 2026-09-11.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -23,7 +23,8 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `research/daily_coarse_graining/conditioned_doc_tail_v1_20260911.md` | Current frozen DOC-only scope test | Separating DOC numerical stabilization from changes to other state features |
+| `research/daily_coarse_graining/fresh_start_training_route_20260911.md` | Current user decision and next implementation deliverable | Fresh initialization, full-network training and executable paper-method requirements |
+| `research/daily_coarse_graining/conditioned_doc_tail_v1_20260911.md` | Completed; numerical gates pass, fixed-weight science regression gate fails | DOC-only physical results, error compensation and limits of drop-in correction |
 | `research/daily_coarse_graining/conditioned_input_tail_v1_20260910.md` | Completed; numerical gates pass, drop-in physical regression gate fails | Fixed-weight physical results and isolated DOC-coordinate causality |
 | `research/daily_coarse_graining/conditioned_score_discrepancy_20260910.md` | Completed DOC-input localization; input-conditioning correction is next | Causal leaf swap, amplified tiny-scale input and bounded repair gate |
 | `research/daily_coarse_graining/conditioned_data_coverage_expansion_20260910.md` | CPU job 14992138 and free-node merge/readback passed | Available 2,000-package extension, exact coverage and execution record |

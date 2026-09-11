@@ -60,6 +60,13 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
+As of 2026-09-11, the immediate neural research task is a reproducible fresh-start
+training prototype: initialize the consolidated Attention architecture without
+exploratory checkpoint dependencies and admit full-network optimization on a
+bounded v6 learning test. Existing weights remain diagnostic assets. See the
+top of `NEXT_STEPS.md` and `fresh_start_training_route_20260911.md` in the
+research docs. The chronology below does not override this work order.
+
 Gate A is complete. `main` and `research/daily-coarse-graining` contain the
 same scientific Teacher core. The research branch currently has one
 default-off compiled-output capture hook that must be promoted unchanged to
