@@ -63,6 +63,13 @@ maximum CNY2.76. The user approved queueing and job 15005758 is now submitted
 at executable checkout 85e6b39. Initial state PENDING/Priority; scheduler estimate
 2026-09-13 12:51:52, subject to change. No training has started. Track its
 job-specific log and `runtime/outputs/training/fresh-start-gsmean-v2-15005758/report.json`.
+The next check found both free GPUs empty. Root held paid job15005758
+(PENDING/JobHeldUser, not canceled) and launched the same v2 probe free on GPU1,
+source85e6b39, PID107826. Active report is now
+`runtime/outputs/diagnostics/fresh-start-gsmean-v2-free.json`, with60-minute cap.
+The paid job will not start while held. No bigger training budget or additional
+job was submitted; future paid work should amortize queue/compile time across
+declared admission and substantive training stages.
 
 The all-state and DOC-only T=16 input-tail tests completed in 2459.7s and
 1838.3s on free gln01. Both pass the three tested numerical/mask/physical-hard

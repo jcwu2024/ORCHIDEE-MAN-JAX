@@ -51,3 +51,29 @@ Report/checkpoint directory:
 `report.json` records admission and training; optional `report.checkpoint.pkl`
 is the fresh prototype checkpoint. Preserve this server checkout while queued
 and running. Next inspect this job's status/log/report when it starts or ends.
+
+## Switched to available free GPU
+
+On the user's next resource/queue-efficiency request, both free gln01 GPUs were
+empty (0 MiB, 0% utilization, no compute processes). Paid job15005758 was still
+PENDING/Priority; its scheduler start estimate had moved to September13 13:57.
+Root placed the pending paid job on hold with `scontrol hold 15005758` and
+verified PENDING/JobHeldUser before launching the same approved probe free.
+This is not cancellation and does not promise preservation of queue priority;
+the held job cannot start or duplicate the free run until explicitly released.
+
+Free run: gln01 GPU1, executable checkout85e6b39, Python PID107826,
+RUN_TIMEOUT60m, same scientific protocol and at most12 updates. Report/log:
+`runtime/outputs/diagnostics/fresh-start-gsmean-v2-free.json` and
+`runtime/logs/fresh-start-gsmean-v2-free.log`.
+No new paid job or larger resource commitment. Keep the checkout stable during
+the free process. Track the free result next; do not unhold a duplicate while
+it is running.
+
+The user's queue-efficiency concern is accepted as a planning constraint:
+future paid experiments should bundle preregistered admission, larger training
+and monitoring/checkpoints in one persistent process where dependencies permit,
+so compilation and queue wait are amortized. Multiple paid jobs should represent
+independent justified experiments, not repeated probes of the same unresolved
+boundary. Larger budgets/sampling/objectives must still be specified before
+submission; this request does not silently increase the current12-update run.

@@ -141,3 +141,9 @@ RAM, one hour, maximum CNY2.76), initially PENDING/Priority. See
 [`queue execution record`](fresh_start_gsmean_v2_queue_option_20260911.md).
 The scientific protocol is unchanged; no duplicate free or paid run should
 start while this job remains queued/running.
+
+Free GPUs subsequently became empty. Job15005758 is now held, and the same
+probe is running on free gln01 GPU1 at85e6b39, PID107826, output
+`runtime/outputs/diagnostics/fresh-start-gsmean-v2-free.json`. Follow the free
+run; do not release the held duplicate while it is active. See the queue record
+for exact resource transition and the user's future queue-efficiency preference.

@@ -82,6 +82,13 @@ The user approved queueing; job **15005758** is submitted at executable checkout
 `runtime/logs/gsmean-v2_15005758.txt` and
 `runtime/outputs/training/fresh-start-gsmean-v2-15005758/report.json`.
 Keep the server executable checkout stable while queued/running.
+Subsequent resource recheck: both free GPUs became empty. Paid job15005758
+was held (PENDING/JobHeldUser) before starting the same probe on free gln01 GPU1,
+source85e6b39, Python PID107826, 60-minute cap. Next read
+`runtime/outputs/diagnostics/fresh-start-gsmean-v2-free.json` and the matching
+runtime log. Do not unhold a duplicate during the free run. Future paid plans
+should bundle admission and worthwhile subsequent training/monitoring to avoid
+one queue cycle per small step; no larger/multiple jobs have been submitted.
 
 Formal reproducibility still requires architecture, splits/sampling, seeds,
 initialization, input transforms, losses, update rules, stage transitions,
