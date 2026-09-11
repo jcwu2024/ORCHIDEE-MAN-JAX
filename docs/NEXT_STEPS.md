@@ -2614,6 +2614,10 @@ cap. It is rejected as a drop-in update-41 correction, not as a trainable route.
 Next test the same fixed T=16 only on the named DOC field, leaving all other
 features on legacy arithmetic, under the frozen
 [DOC-only scope gate](research/daily_coarse_graining/conditioned_doc_tail_v1_20260911.md).
+Its implementation passes 11 focused tests; free gln01 GPU 1 run at 4645c39
+started 2026-09-11 around 09:47 (PID 64931, 45-minute cap). Next read
+`runtime/outputs/diagnostics/conditioned-doc-tail-14991510.json` and its matching
+runtime log; do not duplicate the running diagnostic.
 Reuse completed reference rows and the same three train cases; no paid
 training or automatic derivative acceptance. The original fixed
 T=16 protocol, matched update-41 reference and three train-only cases are in

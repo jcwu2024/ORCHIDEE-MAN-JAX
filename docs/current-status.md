@@ -20,6 +20,9 @@ coordinate 1785 reproduces the original GPP jump; compression removes it.
 Next isolate the same transform to the named DOC field, preserving legacy
 features elsewhere, under
 [`conditioned_doc_tail_v1_20260911.md`](research/daily_coarse_graining/conditioned_doc_tail_v1_20260911.md).
+The DOC-only mask passes 11 focused tests and is running on free gln01 GPU 1
+at 4645c39, PID 64931, 45-minute limit. Result path:
+`runtime/outputs/diagnostics/conditioned-doc-tail-14991510.json`.
 No corrected model, derivative acceptance or paid continuation is claimed. See
 [`conditioned_input_tail_v1_20260910.md`](research/daily_coarse_graining/conditioned_input_tail_v1_20260910.md)
 for the active mechanism, train-only cases, physical regression caps and

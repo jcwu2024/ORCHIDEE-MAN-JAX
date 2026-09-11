@@ -58,3 +58,35 @@ separate numerical stabilization from inherited-model dependence on the old
 input distribution. No paid training or gradient acceptance follows merely
 from score equality. Any subsequent adaptation training needs an explicit
 method, budget and approval, with reproducible final-training provenance.
+
+## Implementation and launch record
+
+The optional `NeuralInputNormalization.continuous_tail_mask` now follows each
+route's existing state indices. Unselected features execute legacy arithmetic;
+tests compare eager with eager and compiled with compiled, since JIT fusion
+can itself differ from eager evaluation by one float32 rounding unit. Both
+values and input derivatives are unchanged on unselected test coordinates.
+The named-field binding test uses an intentionally different DOC slice to
+verify resolution from the contract rather than a hard-coded index.
+
+Eleven focused normalization/admission tests pass in 5.97s. Ruff, shell syntax
+and whitespace checks pass. The preceding all-state implementation had also
+passed 30 original network/streamed compatibility tests; those were not rerun
+for this default-off mask extension. Real-v6 candidate admission is pending.
+
+Server checkout fast-forwarded to **4645c39** after the all-state process ended.
+Free gln01 GPU 1 was idle (3 MiB, 0%); GPU 0 was occupied and left untouched.
+Launched 2026-09-11 at approximately 09:47 China time, Python PID **64931**,
+one free V10032GB, 45-minute timeout, allocator fraction 0.55:
+
+```
+GPU_DEVICE=1 TAIL_SCOPE=doc \
+EXPECTED_GIT_HEAD=4645c39e46b1e18dd822286e9e44a0b117b558ba \
+  bash scripts/hpc/audit_conditioned_input_tail.sh
+```
+
+Working directory: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX`.
+Report: `runtime/outputs/diagnostics/conditioned-doc-tail-14991510.json`.
+Log: `runtime/logs/conditioned-doc-tail-14991510.log`.
+Read the result next. Keep this checkout stable while the process is running;
+do not launch a duplicate or treat it as paid training authorization.
