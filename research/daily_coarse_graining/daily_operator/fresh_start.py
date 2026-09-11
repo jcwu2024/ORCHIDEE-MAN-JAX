@@ -19,7 +19,13 @@ from .target_oriented_process_head import (
 from .target_oriented_structured_gpp import initialize_structured_gpp_parameters
 
 
-def build_fresh_head(parent_head, retained_tail, *, threshold=16.0):
+def build_fresh_head(
+    parent_head,
+    retained_tail,
+    *,
+    threshold=16.0,
+    apply_gsmean_applicability=False,
+):
     """Construct the existing topology with exact static owners and DOC conditioning."""
     head = build_target_oriented_distribution_aware_maintenance_head(parent_head, retained_tail)
     head = build_target_oriented_structured_gpp_head(head)
@@ -30,7 +36,12 @@ def build_fresh_head(parent_head, retained_tail, *, threshold=16.0):
     mask[doc.start:doc.stop] = True
     normalization = head.input_normalization._replace(
         continuous_tail_threshold=threshold, continuous_tail_mask=mask)
-    return replace(head, input_normalization=normalization, warm_snow_free_boundary=True)
+    return replace(
+        head,
+        input_normalization=normalization,
+        warm_snow_free_boundary=True,
+        apply_gsmean_applicability=apply_gsmean_applicability,
+    )
 
 
 def initialize_fresh_parameters(head, inputs, *, seed):

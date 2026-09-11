@@ -9,6 +9,7 @@ import jax.numpy as jnp
 import numpy as np
 
 from .mechanistic_process_head import MechanisticStrongBaselineProcessHead
+from .output_applicability import apply_gsmean_output_applicability
 from .parameter_routing import DEFAULT_PFT_PARAMETER_ROUTING, VCMAX25_FACTOR_SCALE
 from .strong_baseline_architecture import StrongBaselineContext
 from .target_oriented_attention import (
@@ -68,6 +69,7 @@ class MechanisticTargetOrientedAttentionProcessHead(MechanisticStrongBaselinePro
 
     target_contract: TargetOrientedContract
     target_config: TargetOrientedAttentionConfig = TargetOrientedAttentionConfig()
+    apply_gsmean_applicability: bool = False
 
     def __post_init__(self) -> None:
         super().__post_init__()
@@ -98,6 +100,21 @@ class MechanisticTargetOrientedAttentionProcessHead(MechanisticStrongBaselinePro
             baseline_config=self.config,
             config=self.target_config,
         )
+
+    def prediction_from_learned_outputs(
+        self,
+        learned_outputs: Mapping[str, Any],
+        inputs: AssembledDailyOperatorInput,
+    ):
+        """Apply opt-in source applicability before physical reconstruction."""
+
+        if self.apply_gsmean_applicability:
+            learned_outputs = apply_gsmean_output_applicability(
+                learned_outputs,
+                inputs,
+                schema=self.learned_schema,
+            )
+        return super().prediction_from_learned_outputs(learned_outputs, inputs)
 
 
 @dataclass(frozen=True, eq=False, kw_only=True)
@@ -404,6 +421,7 @@ def build_target_oriented_source_shaped_maintenance_head(
         config=parent.config,
         target_contract=parent.target_contract,
         target_config=parent.target_config,
+        apply_gsmean_applicability=parent.apply_gsmean_applicability,
         source_contract=contract,
         coeff_maint_zero=coefficient,
         source_config=source_config,
@@ -440,6 +458,7 @@ def build_target_oriented_distribution_aware_maintenance_head(
         config=parent.config,
         target_contract=parent.target_contract,
         target_config=parent.target_config,
+        apply_gsmean_applicability=parent.apply_gsmean_applicability,
         distribution_contract=contract,
         coeff_maint_zero=coefficient,
         distribution_config=distribution_config,
@@ -472,6 +491,7 @@ def build_target_oriented_structured_gpp_head(
         config=parent.config,
         target_contract=parent.target_contract,
         target_config=parent.target_config,
+        apply_gsmean_applicability=parent.apply_gsmean_applicability,
         distribution_contract=parent.distribution_contract,
         coeff_maint_zero=parent.coeff_maint_zero,
         distribution_config=parent.distribution_config,
@@ -513,6 +533,7 @@ def build_target_oriented_coupled_gpp_carbon_feedback_head(
         config=parent.config,
         target_contract=parent.target_contract,
         target_config=parent.target_config,
+        apply_gsmean_applicability=parent.apply_gsmean_applicability,
         distribution_contract=parent.distribution_contract,
         coeff_maint_zero=parent.coeff_maint_zero,
         distribution_config=parent.distribution_config,
@@ -552,6 +573,7 @@ def build_target_oriented_coupled_gpp_conditioned_attention_head(
         config=parent.config,
         target_contract=parent.target_contract,
         target_config=parent.target_config,
+        apply_gsmean_applicability=parent.apply_gsmean_applicability,
         distribution_contract=parent.distribution_contract,
         coeff_maint_zero=parent.coeff_maint_zero,
         distribution_config=parent.distribution_config,

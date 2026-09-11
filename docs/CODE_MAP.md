@@ -82,6 +82,14 @@ ordinary training return. `daily_operator/state_loss_attribution.py` maps
 canonical fields to actual grouped layouts and exactly decomposes both MSE
 and signed-bias contributions. No optimizer step is performed by this audit.
 
+The resulting source-backed gsmean correction uses
+`daily_operator/output_applicability.py` at the learned-output-to-physical-
+prediction boundary. The head/fresh factory option defaults off; the separate
+`fresh_start_one_day_probe_v2.json` protocol enables it. The fresh objective
+then checks exact bare-soil zero in both named outputs and next-day state.
+`scripts/dev/analyze_gsmean_zero_counterfactual.py` is offline loss accounting
+from the completed exported states, not a substitute for model acceptance.
+
 `daily_operator/input_conditioning.py` owns the optional continuous-state
 log-tail transform, default off through `NeuralInputNormalization`. All state
 feature routes honor it. `scripts/hpc/audit_conditioned_input_tail_cpu.py`

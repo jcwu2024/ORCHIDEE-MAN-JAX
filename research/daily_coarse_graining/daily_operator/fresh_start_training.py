@@ -8,6 +8,7 @@ import jax.numpy as jnp
 
 from .mechanistic_output_loss import masked_mechanistic_output_loss
 from .model import bind_daily_operator_dynamic_retained_inputs
+from .parameter_routing import PFT_TRAIT_BARE_SOIL
 from .successor_training import extract_biomass_productivity_trajectories
 from .target_oriented_contract import necessary_process_supervision_loss
 from .target_oriented_training import (
@@ -33,6 +34,12 @@ def make_objective(runtime, head, template, scales, protocol, *, state_diagnosti
         retained_tail_template=template)
     flux_names = tuple(protocol['fluxes'])
     weights = protocol['loss']
+    check_gsmean = protocol.get('output_applicability', {}).get('gsmean_bare_soil_zero', False)
+    if check_gsmean:
+        gsmean_key = 'endpoint.fast_state.diffuco_previous_step_state.gsmean'
+        gsmean_field = next(field for field in head.learned_schema.fields if field.name == gsmean_key)
+        gsmean_leaf = next(leaf for leaf in head.contract.state_leaves
+                           if leaf.key == 'diffuco_previous_step_state.gsmean')
 
     def trajectories(state, defined, gpp, gpp_defined, inputs):
         return extract_one_day_trajectories(state, defined, gpp, gpp_defined, inputs, head.contract)
@@ -86,6 +93,17 @@ def make_objective(runtime, head, template, scales, protocol, *, state_diagnosti
                 'mask_mismatch': mask_mismatch, 'discrete_mismatch': discrete_mismatch,
                 'budget_failure': jnp.sum(~jnp.isfinite(budgets) | (abs(budgets) > protocol['admission']['budget_absolute_tolerance'])),
                 'stock_negative': sum(jnp.sum(v.defined & (v.value < -1e-12)) for v in predicted.stocks.values())}
+        if check_gsmean:
+            bare = sample.inputs.pft.pft_traits[:, PFT_TRAIT_BARE_SOIL] > .5
+            mask_shape = [1] * len(gsmean_field.shape)
+            mask_shape[gsmean_field.pft_axis] = bare.shape[0]
+            bare = bare.reshape(mask_shape)
+            gsmean_output = result.prediction.named_outputs[gsmean_key]
+            gsmean_state = result.next_state.other[gsmean_leaf.start:gsmean_leaf.stop].reshape(gsmean_field.shape)
+            # Zero remains defined and supervised; this is a physical output
+            # invariant, not a loss-eligibility exclusion.
+            hard['bare_soil_gsmean_nonzero'] = (jnp.sum(bare & (gsmean_output != 0.))
+                                                + jnp.sum(bare & (gsmean_state != 0.)))
         physical = {group: {name: {'predicted': field.value, 'teacher': getattr(expected, group)[name].value,
                                    'defined': field.defined & getattr(expected, group)[name].defined}
                            for name, field in getattr(predicted, group).items()} for group in ('fluxes', 'stocks')}
@@ -104,6 +122,9 @@ def make_objective(runtime, head, template, scales, protocol, *, state_diagnosti
         auxiliary = {'flux_loss': flux_total, 'state_loss': state_total, 'process_loss': process_total,
                       'flux_losses': flux_losses, 'hard': hard, 'declared_dynamic_mask_mismatch': declared_mask,
                       'budgets': budgets, 'physical': physical}
+        if check_gsmean:
+            auxiliary['gsmean_applicability'] = {'predicted': gsmean_output, 'next_state': gsmean_state,
+                                                'bare_soil': bare}
         if state_diagnostics:
             auxiliary['state_diagnostics'] = {
                 'predicted': result.next_state, 'predicted_defined': result.next_state_defined,

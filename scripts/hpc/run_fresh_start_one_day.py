@@ -62,7 +62,9 @@ def bootstrap(args, protocol):
         artifacts.append(artifact)
     template = _prepare_template(runtime, artifacts[0].schedule_entry)
     template = replace(template, static_owner=replace(template.static_owner, include_modelout_diagnostics=False))
-    head = build_fresh_head(_head(runtime, target), template, threshold=protocol['input_conditioning']['threshold'])
+    head = build_fresh_head(
+        _head(runtime, target), template, threshold=protocol['input_conditioning']['threshold'],
+        apply_gsmean_applicability=protocol.get('output_applicability', {}).get('gsmean_bare_soil_zero', False))
     parameters = initialize_fresh_parameters(head, runtime['probe_assembled'], seed=protocol['seed'])
     scales = derive_target_oriented_scales(runtime['base_statistics'].arrays['next_state'].scale,
         runtime['process_statistics'].outputs['daily.fast_gpp'].scale, runtime['contract'],

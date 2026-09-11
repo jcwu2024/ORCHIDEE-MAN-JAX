@@ -1,0 +1,18 @@
+{
+  "schema_version": "fresh_start_one_day_probe_v2",
+  "purpose": "source_backed_gsmean_applicability_then_full_network_learning_probe",
+  "seed": 20260911,
+  "parameter_count": 109464375,
+  "trainable_scope": "all_neural_parameters",
+  "initialization": "split_root_key_into_target_maintenance_structured_gpp_carbon_feedback; analytic_initial_attention_temperatures",
+  "input_conditioning": {"version": "continuous_log_tail_v1", "scope": "slowproc_stomate_previous_step_state.DOC", "threshold": 16.0},
+  "output_applicability": {"gsmean_bare_soil_zero": true},
+  "data": {"release": "pft14-daily-teacher-v6", "split": "train/train", "artifact_ids": [322, 442, 883], "one_day_sample_index": 0},
+  "loss": {"independent_daily_flux_mse": 1.0, "one_day_state_anchor": 0.1, "necessary_process_supervision": 0.01},
+  "fluxes": ["gpp", "maintenance_respiration", "growth_respiration", "heterotrophic_respiration"],
+  "optimizer": {"name": "AdamW", "beta1": 0.9, "beta2": 0.999, "epsilon": 1e-8, "weight_decay": 0.0, "learning_rate": 1e-5, "schedule": "constant_for_probe", "clip_norm": 1.0},
+  "training": {"updates": 12, "microbatch": 1, "gradient_accumulation_samples": 3, "sample_order": "listed_order_each_update", "monitor_updates": [0, 1, 4, 8, 12]},
+  "admission": {"derivative_relative_tolerance": 0.01, "derivative_absolute_tolerance": 1e-6, "finite_difference_epsilons": [0.001, 0.0003], "budget_absolute_tolerance": 2e-12, "memory_limit_gib": 24, "must_match_old_checkpoint_accuracy": false},
+  "learning_screen": {"total_loss_must_decrease": true, "daily_flux_macro_must_decrease": true, "physical_hard_failures": 0, "generalization_claim": false},
+  "execution": {"free_gpu_minutes_max": 60, "paid_submission_authorized": false, "teacher_regeneration": false, "validation_access": false, "sealed_test_access": false}
+}

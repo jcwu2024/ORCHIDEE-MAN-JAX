@@ -23,7 +23,8 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `research/daily_coarse_graining/fresh_start_loss_balance_audit_20260911.md` | Current zero-update localization gate | Dominant state fields, normalization, repeated views and state-head gradients |
+| `research/daily_coarse_graining/fresh_start_gsmean_applicability_v2_20260911.md` | Current pre-execution correction protocol | Source-backed bare-soil gsmean zero, unchanged fresh-start learning settings |
+| `research/daily_coarse_graining/fresh_start_loss_balance_audit_20260911.md` | Completed; bare-soil gsmean dominates loss/gradient | Exact attribution, matched reference and source-backed next correction |
 | `research/daily_coarse_graining/fresh_start_one_day_probe_v1_20260911.md` | Completed 12 full-network updates; bounded one-day AD/learning screen passes | Actual memory/speed, mixed physical fit and state-loss dominance |
 | `research/daily_coarse_graining/fresh_start_training_route_20260911.md` | Current user decision and next implementation deliverable | Fresh initialization, full-network training and executable paper-method requirements |
 | `research/daily_coarse_graining/conditioned_doc_tail_v1_20260911.md` | Completed; numerical gates pass, fixed-weight science regression gate fails | DOC-only physical results, error compensation and limits of drop-in correction |

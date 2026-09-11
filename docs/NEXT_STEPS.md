@@ -50,11 +50,16 @@ loss/initialization or expanding samples, under
 [`fresh_start_loss_balance_audit_20260911.md`](research/daily_coarse_graining/fresh_start_loss_balance_audit_20260911.md).
 Use the same three samples and initial/final prototype weights for diagnosis
 only. No new training or paid submission follows automatically from the probe.
-The localization's three local tests and free-CPU complete-objective shape
-preflight pass (201.1s). Free gln01 GPU 1 diagnostic at 9a6edb6 is now active,
-PID 49644, 45-minute cap. Next read
-`runtime/outputs/diagnostics/fresh-start-loss-balance-v1.json` and its `.states.pkl`
-export/log; do not duplicate it or change the server checkout while running.
+The localization completed at 9a6edb6 in 572.14s, with no updates and all six
+matched forward/hard checks passing. Bare-soil gsmean predicted about 2769
+against Teacher zero drives 99.75-99.77% of total loss and 99.99891% of squared
+gradient norm. The Fortran process leaves bare-soil gsmean exactly zero.
+Next integrate source-backed gsmean applicability, independently audit related
+fields and normalization, and execute the frozen
+[`gsmean v2 probe`](research/daily_coarse_graining/fresh_start_gsmean_applicability_v2_20260911.md).
+The user authorized three parallel GPT-5.6 Sol/max subagents for those tasks;
+root owns integration and verification. Keep seed/data/loss/optimizer/full-
+network scope fixed for this correction. No new paid submission is authorized.
 
 Formal reproducibility still requires architecture, splits/sampling, seeds,
 initialization, input transforms, losses, update rules, stage transitions,

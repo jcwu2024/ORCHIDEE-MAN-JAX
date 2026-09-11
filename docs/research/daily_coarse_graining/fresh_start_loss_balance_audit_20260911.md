@@ -65,7 +65,40 @@ Command:
 Report: `runtime/outputs/diagnostics/fresh-start-loss-balance-v1.json`.
 Raw state export: same prefix with `.states.pkl` suffix (no parameters).
 Log: `runtime/logs/fresh-start-loss-balance-v1.log`.
-Bootstrap is running; read these results next. Keep its server checkout stable
-and do not launch a duplicate. No paid work or parameter updates are authorized
-by this diagnostic. Initial recorded state-head squared-norm share is
-99.99904%; attribution has not yet identified the responsible field.
+The diagnostic completed in 572.14s with no parameter updates or paid work.
+All six initial/update-12 forward comparisons reproduce the completed probe,
+all hard counts are zero, and the original first-sample gradient norm agrees.
+
+## Completed localization
+
+The dominant state field is `diffuco_previous_step_state.gsmean`, specifically
+global coordinate 10, compact bare-soil slot 0 (source PFT1). The neighboring
+coordinate 11 is PFT14. Initial bare-soil predictions are 2769.587, 2767.579
+and 2768.925, with Teacher zero and state-loss scale 1.0. The neighboring
+vegetation coordinate has scale 360508.623. Gsmean supplies 99.75-99.77% of the
+entire weighted objective and 99.79% of the unweighted grouped state loss.
+Its 513-parameter output head has gradient norm 758.44758, versus the full
+758.45172: 99.99891% of the squared norm.
+
+After 12 updates the erroneous bare-soil predictions are still about 2656-2659.
+Most reported loss decrease was this output moving toward zero. The next
+largest fields are fuel_1hr, dead_leaves and fuel_1000hr, also with suspicious
+bare-soil predictions, but their reset/carry semantics need source auditing
+before deciding any constraint. This is output applicability, not evidence
+to delete the state objective or to further compress the DOC input.
+
+`diffuco.f90::diffuco_trans_co2` initializes `gsmean(:,:)=zero` at line 2289,
+loops over vegetation `jv=2,nvm` at 2299 and assigns `gsmean` within that loop
+at 2885. The canonical catalog identifies compact source index0 as bare soil.
+Source-backed applicability must use that identity/trait rather than a fixed
+array position. Separate source and normalization reviews are being prepared.
+
+Root's offline accounting probe sets only exported state index10 to zero,
+recomputes MSE and the group signed-bias cross term, and leaves all other
+coordinates/scales unchanged. Initial state losses become 0.48457, 0.48618,
+0.47089 versus 229.648, 229.308, 229.427. This is an accounting counterfactual,
+not a forward acceptance result. Files:
+`scripts/dev/analyze_gsmean_zero_counterfactual.py`,
+`outputs/gsmean-zero-counterfactual.json` and the copied diagnostic states.
+Next implement source-backed bare-soil gsmean zero and rerun the unchanged
+fresh-start learning protocol with explicit applicability enabled.
