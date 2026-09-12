@@ -38,8 +38,12 @@ scales, preserving every finished direction/epsilon in the report.
 
 Parameter center epsilon is min(1e-4, max(1e-10, 0.01*max(abs(loss),1e-6)/
 max(abs(reference_projection),abs(streamed_projection),1e-6))). State center
-is min(fitted_safe_scale*1e-4, the same first-order loss-change bound), floored
-at8 native float64 spacings of that state value. Probe4x,1x,0.25x the center.
+is min(fitted_safe_scale*1e-2, the same first-order loss-change bound), floored
+at8 native float64 spacings of that state value. Probe4x,1x,0.25x,0.0625x and
+0.015625x the center. The range was broadened before GPU numerical execution
+after the CPU bootstrap measured reserve value9.98185e-9 and scale4.66846e-9:
+normalized steps1e-4 alone can be too small for a float32 network's FD estimate.
+This brackets truncation/quantization without making another expensive JVP graph.
 Scales depend on saved sensitivity and actual input scaling, not FD outcomes.
 Report raw state/mean/scale and float32 versus float64 standardized values.
 Track physical gates and defined/discrete stability under every displacement.

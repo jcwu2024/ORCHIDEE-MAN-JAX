@@ -161,7 +161,10 @@ def run(args):
             # Freeze scales from saved first-order sensitivity, not FD outcomes.
             sensitivity_center = .01*max(abs(current_loss),1e-6)/max(abs(direct_projection),abs(streamed_projection),1e-6)
             if name == 'largest_state_coordinate':
-                center = max(8*abs(np.spacing(raw_value)),min(safe_scale*1e-4,sensitivity_center))
+                # The physical reserve scale is ~4.7e-9. Perturb in normalized
+                # units and bracket float32 quantization rather than using an
+                # arbitrary raw-unit epsilon below the encoded resolution.
+                center = max(8*abs(np.spacing(raw_value)),min(safe_scale*1e-2,sensitivity_center))
             else:
                 center = min(1e-4,max(1e-10,sensitivity_center))
             row = {'name':name,'reference_projection':direct_projection,
@@ -169,7 +172,7 @@ def run(args):
                    'fd_center_epsilon':center,'pairs':[]}
             report['directions'].append(row)
             emit('nominal_direction')
-            for epsilon in (4*center,center,center/4):
+            for epsilon in (4*center,center,center/4,center/16,center/64):
                 plus = jax.tree_util.tree_map(lambda p,d:(p+epsilon*d).astype(p.dtype),parameters,dp)
                 minus = jax.tree_util.tree_map(lambda p,d:(p-epsilon*d).astype(p.dtype),parameters,dp)
                 sp,sm = (initial+epsilon*ds).astype(initial.dtype),(initial-epsilon*ds).astype(initial.dtype)
