@@ -25,7 +25,19 @@ Next run the frozen
 [`one_day_batch_resource_probe_20260912.md`](research/daily_coarse_graining/one_day_batch_resource_probe_20260912.md)
 on four distinct point-year samples, alongside the public two-day gradient
 comparison. Corrected public CPU shape tracing passed at b7fd1bc in477.36s;
-the reviewed Teacher masks/coordinate comparison need their updated preflight.
+the reviewed Teacher masks/coordinate comparison are implemented at4410c41.
+Batch4 CPU full-gradient shapes passed at a49643f in662.2s. Its free gln01
+GPU0 probe is running at4410c41 (launcher PID108717, Python108758),45-minute
+cap; report `runtime/outputs/diagnostics/one-day-batch4-v1.json`.
+Updated public T2 CPU shapes passed on test02 at4410c41 in275.3s; report
+`runtime/outputs/diagnostics/public-rollout-shapes-v3.json`. The frozen public
+T2 GPU probe started on free gln01 GPU1 at13:10 CST (launcher PID110317),
+90-minute cap; report `runtime/outputs/diagnostics/public-rollout-T2-v1.json`.
+Read both running GPU results before promoting batching or multi-day AD;
+do not duplicate either process. Keep the shared server checkout at4410c41
+while these processes run. The non-executable larger-training decision draft
+is `broader_one_day_training_draft_20260912.md` in the research docs; freeze
+its update budget and monitoring rules using these measurements, not guesses.
 Do not start full-network7/30-day updates based only on toy tests. No new paid
 job is approved; job15005758 is canceled. Earlier execution history follows.
 

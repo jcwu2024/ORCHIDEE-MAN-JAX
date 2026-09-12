@@ -59,3 +59,12 @@ explicit Teacher GPP validity, Teacher-defined state finiteness, declared-stock
 and learned-output checks, and coordinate-wise gradient agreement at the same
 atol1e-6/rtol1e-4, retaining the declared per-leaf L2 gate. Updated CPU tracing
 is required for the revised observation structure.
+
+The revised canonical/probe/batch focused tests pass7 cases, and the generic
+public/legacy streamed suites pass21 cases. Updated real CPU shapes passed on
+test02 at4410c41 in275.3s, `public-rollout-shapes-v3.json`.
+The free GPU1 T2 numerical probe started2026-09-12 13:10 CST at4410c41,
+launcher PID110317,90-minute limit. Report/log:
+`runtime/outputs/diagnostics/public-rollout-T2-v1.json` and `.log`.
+Its numerical acceptance is pending, independent of the batch4 resource test
+on GPU0. Do not treat CPU abstract tracing as measured numerical agreement.

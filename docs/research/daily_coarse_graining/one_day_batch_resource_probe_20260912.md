@@ -32,3 +32,13 @@ After resource results, freeze a larger persistent run's batch, sampling,
 update count, monitoring/stopping and budget. Do not claim the63,707 available
 training days have already been consumed or that this resource probe trained
 a model.
+
+## Execution record
+
+The catalogue-selection/batch-gradient/cache/sampling tests pass10 cases.
+Real CPU abstract single/batch4 gradients pass at a49643f in662.2s on test03;
+report `runtime/outputs/diagnostics/one-day-batch4-shapes-v1.json`.
+The free GPU0 numerical/resource probe started2026-09-12 13:04 CST at4410c41,
+launcher PID108717/Python108758,45-minute cap. Report and log are
+`runtime/outputs/diagnostics/one-day-batch4-v1.json` and `.log`.
+Current result is pending; no training or paid job was submitted.

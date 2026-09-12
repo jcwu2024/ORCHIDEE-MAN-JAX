@@ -25,8 +25,17 @@ completed on free test02 in149.20s:63,707 unique Teacher days,535 points,
 not actual training coverage. The corrected real two-day CPU direct/checkpointed
 gradient shape probe passed at b7fd1bc in477.36s. Review identified missing
 Teacher GPP validity and physical/coordinate comparison coverage in the probe;
-those are being corrected before GPU numerical execution. The independent
-batch4 resource probe is implemented and its related10 local tests pass.
+those are corrected at4410c41. Seven probe/canonical/batch tests and21 public/
+legacy-streamed regressions pass; batch sampling/cache tests also pass.
+The batch4 real CPU shape gate passed at a49643f in662.2s. Its free GPU0
+probe started2026-09-12 13:04 CST at4410c41, launcher PID108717/Python108758,
+45-minute cap. Report `runtime/outputs/diagnostics/one-day-batch4-v1.json`.
+The updated public T2 CPU shape gate passed on test02 at4410c41 in275.3s;
+report `runtime/outputs/diagnostics/public-rollout-shapes-v3.json`.
+The public T2 numerical comparison started on free gln01 GPU1 at13:10 CST,
+launcher PID110317,90-minute cap; report
+`runtime/outputs/diagnostics/public-rollout-T2-v1.json`. Both GPU results are
+pending. Keep the shared server checkout fixed until both processes finish.
 No multi-day training or new paid submission yet.
 See the linked current plan in `NEXT_STEPS.md`; prior chronological entries
 below retain their original scope.
