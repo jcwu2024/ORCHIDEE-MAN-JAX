@@ -44,7 +44,14 @@ do not blindly repeat three serial compilation paths under the same time cap.
 The user approved the staged completion. Its implementation and independent
 review are complete;7 focused tests pass. See
 [`public_rollout_staged_completion_20260912.md`](research/daily_coarse_graining/public_rollout_staged_completion_20260912.md).
-The chain is running on free gln01 GPU1 at4d128c3, launcher PID19594:
+The first staged chain saved the full reference, then stopped on a JAX0.4.38
+AOT input-type error: scalar float0 cotangent slicing produced numpy.void.
+Array-preserving slicing at8e522ce fixes the boundary without changing the
+forward/reference graph. Seventeen local public/staged tests pass; a tiny
+real-GPU test reproduced the old error and verified repaired streamed/direct
+agreement under JAX0.4.38. Report `rollout-float0-compatibility-v1.json`.
+The chain resumed on free gln01 GPU1 at8e522ce, launcher PID31604, reusing the
+durable reference. The first attempt report/log are preserved with `-attempt1`:
 core comparison, then directional checks, then separate checkpointed comparison.
 Each stage and each epsilon persists independently; only a passed stage starts
 the next. Read `runtime/outputs/diagnostics/public-rollout-T2-v2-pipeline.log`

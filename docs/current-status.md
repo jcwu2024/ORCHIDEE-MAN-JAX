@@ -52,8 +52,15 @@ stages and durable gradient/epsilon artifacts. Limits90/60/90minutes are stop
 limits, not duration estimates; failed/limited stages stop the chain.
 Log `runtime/outputs/diagnostics/public-rollout-T2-v2-pipeline.log`; separate
 stage reports use `public-rollout-T2-v2-{core,derivatives,checkpointed}.json`.
-Results are pending. The26MB cache file for the old direct jit_loss exists;
-actual cache reuse still needs the new compile timing.
+The first staged attempt saved reference.pkl (418MB), with reference compile
+592.995s and evaluation0.806s, then failed at1770.9s on scalar numpy.void
+cotangents in the JAX0.4.38 AOT call. The array-preserving float0 slice fix at
+8e522ce passes17 local tests plus an exact-runtime tiny GPU reproduction and
+repaired streamed/direct comparison. Report `rollout-float0-compatibility-v1.json`.
+The chain resumed on free GPU1 at8e522ce, PID31604, reusing the saved reference;
+original attempt report/log are preserved with `-attempt1`. Cross-method
+results remain pending. This host streamed-interface issue is absent from the
+separate single-day direct-AD training route.
 The user asked to advance independent work instead of waiting. The broad
 one-day runner, weighted gradient accumulation, atomic full-state checkpoint
 and fixed physical monitor summaries are implemented. Eleven local tests pass,

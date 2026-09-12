@@ -76,3 +76,19 @@ Reports: `public-rollout-T2-v2-core.json`, `-derivatives.json`,
 `-checkpointed.json`; shared stage directory `public-rollout-T2-v2-stages/`,
 all under the same diagnostics directory. The chain is currently in core
 bootstrap. Do not update its checkout or start a duplicate run. No paid job.
+
+The first staged attempt saved the full418MB reference, then failed after
+compiling streamed reverse: JAX0.4.38 rejects numpy.void scalar arguments.
+The host slice of a scalar bool/int observation's float0 cotangent produced
+that NumPy scalar. The fix at8e522ce retains a0-D array with the same float0
+dtype. No biological equation, forward value, reference gradient, or derivative
+rule changes. Seventeen local public/staged tests pass. The tiny GPU diagnostic
+`probe_rollout_float0_compatibility.py` reproduced the exact old failure under
+JAX0.4.38 and passed fixed streamed/direct agreement in a few seconds, before
+relaunching the real model. Result `rollout-float0-compatibility-v1.json`.
+
+The original report/log are archived as `public-rollout-T2-v2-core-attempt1.json`
+and `public-rollout-T2-v2-pipeline-attempt1.log`. The chain resumed on free GPU1
+at8e522ce, launcher PID31604; existing reference.pkl is reused. Numerical
+cross-method admission remains pending. Single-day direct-AD training does not
+use this streamed interface and its isolated12bac94 checkout remains unchanged.
