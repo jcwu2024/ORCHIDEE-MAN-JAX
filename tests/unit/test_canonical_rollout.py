@@ -37,7 +37,8 @@ def test_canonical_step_rebuilds_fraction_and_keeps_its_state_gradient(monkeypat
             diagnostics={'water_budget_residual': jnp.array(0.), 'carbon_budget_residual': jnp.array(0.)})
 
     monkeypatch.setattr(bridge, 'bind_daily_operator_dynamic_retained_inputs', lambda **kw: transition)
-    head = SimpleNamespace(contract=contract, input_assembler=adapter.input_assembler)
+    head = SimpleNamespace(contract=contract, input_assembler=adapter.input_assembler,
+                           learned_schema=SimpleNamespace(fields=[SimpleNamespace(name='daily.fast_gpp')]))
     step = bridge.make_canonical_step(head, object())
 
     def loss(s):
@@ -56,6 +57,7 @@ def test_science_probe_loss_uses_dynamic_fraction_and_horizon():
     loss = bridge.make_science_probe_loss(contract, scales)
     states = jnp.zeros((2, contract.continuous_state_width))
     target = {'state': states, 'defined': jnp.ones_like(states, dtype=bool),
+              'gpp_defined': jnp.ones((2,1,2), dtype=bool),
               'gpp': jnp.zeros((2,1,2)), 'fraction': jnp.array([[.25,.75],[.25,.75]]),
               'active': jnp.ones((2,2), dtype=bool)}
     predicted = dict(target, gpp=jnp.array([[[1.,2.]],[[1.,2.]]]))
@@ -66,3 +68,11 @@ def test_science_probe_loss_uses_dynamic_fraction_and_horizon():
     np.testing.assert_allclose(f(target['fraction']), 1.75**2/6)
     gradient = jax.grad(f)(target['fraction'])
     np.testing.assert_allclose(gradient, np.tile([1.75/6, 3.5/6], (2,1)), rtol=1e-6)
+
+    # Teacher can mark an active PFT undefined; its NaN must not enter the loss.
+    undefined_target = dict(target, gpp=jnp.full((2,1,2),jnp.nan),
+                            gpp_defined=jnp.zeros((2,1,2),dtype=bool))
+    def masked(gpp):
+        return loss({}, states[0], dict(predicted,gpp=gpp), undefined_target, {'stock_weight':1.})
+    np.testing.assert_allclose(masked(predicted['gpp']),0.)
+    np.testing.assert_array_equal(jax.grad(masked)(predicted['gpp']),0.)

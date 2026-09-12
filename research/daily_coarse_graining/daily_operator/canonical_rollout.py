@@ -28,19 +28,26 @@ def make_canonical_step(head, retained_template):
     transition = bind_daily_operator_dynamic_retained_inputs(
         input_assembler=head.input_assembler, process_head=head,
         retained_tail_template=retained_template)
+    learned_output_names = tuple(field.name for field in head.learned_schema.fields)
 
     def step(parameters, state, discrete, day):
         template, retained_inputs = day
         current = rollout_input_from_template(template, state, discrete, head.contract)
         result = transition(parameters, current, retained_inputs)
+        gpp = result.prediction.named_outputs['daily.fast_gpp']
         observations = {
-            'gpp': result.prediction.named_outputs['daily.fast_gpp'],
+            'gpp': gpp,
+            'gpp_defined': jnp.broadcast_to(current.pft.active_pft_mask[None, :], gpp.shape),
             'fraction': current.pft.pft_fraction,
             'active': current.pft.active_pft_mask,
             'defined': result.next_state_defined.other,
             'discrete': result.next_discrete_state,
             'budgets': jnp.stack((result.diagnostics['water_budget_residual'],
                                   result.diagnostics['carbon_budget_residual'])),
+            'learned_output_nonfinite': sum(
+                (jnp.sum(~jnp.isfinite(result.prediction.named_outputs[name]), dtype=jnp.int32)
+                 for name in learned_output_names),
+                jnp.asarray(0, dtype=jnp.int32)),
         }
         return result.next_state.other, result.next_discrete_state, observations
 
@@ -58,7 +65,7 @@ def make_science_probe_loss(contract, scales):
         gpp = observations['gpp']
         return extract_biomass_productivity_trajectories(
             observations['state'], observations['defined'], daily_fast_gpp=gpp,
-            daily_fast_gpp_defined=jnp.broadcast_to(observations['active'][:, None, :], gpp.shape),
+            daily_fast_gpp_defined=observations['gpp_defined'],
             pft_fraction=observations['fraction'], active_pft_mask=observations['active'], contract=contract)
 
     def loss(parameters, initial_state, observations, targets, context):

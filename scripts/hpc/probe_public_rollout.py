@@ -20,6 +20,8 @@ def gradient_comparison(jax, actual, expected, *, labels=None):
         raise ValueError('gradient structures differ')
     for (path, left), (_, right) in zip(a,b,strict=True):
         left, right = np.asarray(left,dtype=float), np.asarray(right,dtype=float)
+        if left.shape != right.shape:
+            raise ValueError('gradient shapes differ')
         if labels is None:
             parts = [(str(path), left, right)]
         else:
@@ -28,13 +30,53 @@ def gradient_comparison(jax, actual, expected, *, labels=None):
         for name, left_part, right_part in parts:
             error = float(np.linalg.norm(left_part-right_part))
             reference = float(np.linalg.norm(right_part))
+            coordinate_error = np.abs(left_part-right_part)
+            coordinate_limit = 1e-6+1e-4*np.abs(right_part)
+            failed_coordinates = int(np.sum(~np.isfinite(coordinate_error) | (coordinate_error>coordinate_limit)))
             rows.append({'field':name,'error_l2':error,'reference_l2':reference,
-                         'passed':bool(np.isfinite(error) and error <=1e-6+1e-4*reference)})
+                         'failed_coordinates':failed_coordinates,
+                         'maximum_absolute_error':float(np.max(coordinate_error,initial=0.)),
+                         'passed':bool(failed_coordinates==0 and np.isfinite(error) and error <=1e-6+1e-4*reference)})
             total_error += error*error
             total_reference += reference*reference
     rows.sort(key=lambda row:row['error_l2']/max(row['reference_l2'],1e-6),reverse=True)
     return {'passed':all(row['passed'] for row in rows), 'error_l2':np.sqrt(total_error),
+            'failed_coordinates':sum(row['failed_coordinates'] for row in rows),
             'reference_l2':np.sqrt(total_reference),'largest_relative_errors':rows[:12]}
+
+
+def physical_checks(obs, targets, expected_discrete, templates, contract, scales):
+    """Use the union of predicted/Teacher validity for physical state checks."""
+    import jax
+
+    from research.daily_coarse_graining.daily_operator.successor_training import (
+        extract_biomass_productivity_trajectories,
+    )
+
+    state = np.asarray(obs['state'])
+    valid = np.asarray(obs['defined']) | np.asarray(targets['defined'])
+    budgets = np.asarray(obs['budgets'])
+    mismatch = int(np.sum((np.asarray(obs['defined']) != np.asarray(targets['defined']))
+                         & ~np.asarray(scales.state_declared_dynamic.other)[None,:]))
+    discrete_mismatch = sum(int(np.sum(np.asarray(a)!=np.asarray(b))) for a,b in zip(
+        jax.tree_util.tree_leaves(obs['discrete']),jax.tree_util.tree_leaves(expected_discrete),strict=True))
+    science = extract_biomass_productivity_trajectories(
+        state, valid, daily_fast_gpp=obs['gpp'], daily_fast_gpp_defined=obs['gpp_defined'],
+        pft_fraction=obs['fraction'], active_pft_mask=obs['active'], contract=contract)
+    gsmean = next(v for v in contract.state_leaves if v.key=='diffuco_previous_step_state.gsmean')
+    bare = np.asarray(templates.pft.pft_traits)[:,:,0] > .5
+    conductance = state[:,gsmean.start:gsmean.stop].reshape((state.shape[0],*gsmean.shape))
+    return {
+        'state_nonfinite':int(np.sum(valid & ~np.isfinite(state))),
+        'budget_failure':int(np.sum(~np.isfinite(budgets) | (abs(budgets)>2e-12))),
+        'mask_mismatch':mismatch, 'discrete_mismatch':discrete_mismatch,
+        'gpp_nonfinite':int(np.sum(~np.isfinite(np.asarray(obs['gpp'])))),
+        'fraction_nonfinite':int(np.sum(~np.isfinite(np.asarray(obs['fraction'])))),
+        'learned_output_nonfinite':int(np.sum(np.asarray(obs['learned_output_nonfinite']))),
+        'stock_negative':sum(int(np.sum(np.asarray(v.defined) & (np.asarray(v.value)<-1e-12)))
+                             for v in science.stocks.values()),
+        'bare_soil_gsmean_nonzero':int(np.sum(bare[:,None,:] & (conductance !=0.))),
+    }
 
 
 def run(args):
@@ -75,10 +117,12 @@ def run(args):
         targets = {'state':window.expected_next_state.other[1,:args.horizon],
                    'defined':window.expected_next_state_defined.other[1,:args.horizon],
                    'gpp':window.expected_fast_gpp[1,:args.horizon],
+                   'gpp_defined':window.expected_fast_gpp_defined[1,:args.horizon],
                    'fraction':templates.pft.pft_fraction,'active':templates.pft.active_pft_mask}
         expected_discrete = jax.tree_util.tree_map(lambda v:v[1,:args.horizon],window.expected_next_discrete_state)
         context = {'stock_weight':jnp.array(1.,dtype=jnp.float64)}
-        component = make_rollout_loss(jax,jnp,make_canonical_step(head,template),make_science_probe_loss(head.contract,scales))
+        component = make_rollout_loss(jax,jnp,make_canonical_step(head,template),make_science_probe_loss(head.contract,scales),
+                                      limit_bytes=18*1024**3)
         arguments = (parameters,initial,discrete,days,targets,context)
         reference_gradient = jax.jit(jax.value_and_grad(component.loss,argnums=(0,1)))
         checkpoint_gradient = jax.jit(jax.value_and_grad(component.checkpointed_loss,argnums=(0,1)))
@@ -92,20 +136,7 @@ def run(args):
         jax.block_until_ready(baseline)
 
         def physical(obs):
-            nonfinite = int(np.sum(np.asarray(obs['defined']) & ~np.isfinite(np.asarray(obs['state']))))
-            budgets = np.asarray(obs['budgets'])
-            budget = int(np.sum(~np.isfinite(budgets) | (abs(budgets)>2e-12)))
-            mismatch = int(np.sum((np.asarray(obs['defined']) != np.asarray(targets['defined']))
-                                 & ~np.asarray(scales.state_declared_dynamic.other)[None,:]))
-            discrete_mismatch = sum(int(np.sum(np.asarray(a)!=np.asarray(b))) for a,b in zip(
-                jax.tree_util.tree_leaves(obs['discrete']),jax.tree_util.tree_leaves(expected_discrete),strict=True))
-            gsmean = next(v for v in head.contract.state_leaves if v.key=='diffuco_previous_step_state.gsmean')
-            bare = np.asarray(templates.pft.pft_traits)[:,:,0] > .5
-            conductance = np.asarray(obs['state'])[:,gsmean.start:gsmean.stop].reshape((args.horizon,*gsmean.shape))
-            return {'state_nonfinite':nonfinite,'budget_failure':budget,'mask_mismatch':mismatch,'discrete_mismatch':discrete_mismatch,
-                    'gpp_nonfinite':int(np.sum(~np.isfinite(np.asarray(obs['gpp'])))),
-                    'fraction_nonfinite':int(np.sum(~np.isfinite(np.asarray(obs['fraction'])))),
-                    'bare_soil_gsmean_nonzero':int(np.sum(bare[:,None,:] & (conductance !=0.)))}
+            return physical_checks(obs,targets,expected_discrete,templates,head.contract,scales)
 
         hard = physical(baseline)
         emit('forward_completed',hard=hard)
@@ -120,7 +151,7 @@ def run(args):
             required = memory.argument_size_in_bytes+memory.output_size_in_bytes+memory.temp_size_in_bytes-memory.alias_size_in_bytes
             report['methods'][name] = {'compiled_bytes':int(required)}
             emit('memory_'+name)
-            if required>24*1024**3:
+            if required>18*1024**3:
                 emit('stopped',status='resource_limited',reason=name+'_reference_memory')
                 return report
             value, gradient = compiled(*arguments)

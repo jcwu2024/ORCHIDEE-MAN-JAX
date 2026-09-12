@@ -17,7 +17,8 @@ vmapped four-sample mean-loss gradient with the arithmetic mean of the four
 single-sample gradients at identical parameters. Preserve the v3 per-sample
 loss reduction; do not silently replace it with another batch-global bias
 formula. Check finite losses/gradients and every existing physical hard count.
-Use per-leaf/global gradient comparison atol1e-6,rtol1e-4. Record cold/hot
+Use per-coordinate and per-leaf gradient comparison atol1e-6,rtol1e-4,
+and report global norms. Record cold/hot
 evaluation times and actual active/pool memory separately. These shared-node
 timings are planning evidence, not formal throughput acceptance.
 

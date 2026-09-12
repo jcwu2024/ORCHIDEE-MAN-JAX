@@ -29,7 +29,8 @@ and discrete values at displacements, plus finite states/observations and
 budgets. This is fixed-branch local AD evidence, not Gate D2 or 7/30 acceptance.
 
 Compile and inspect each ordinary/checkpointed gradient's memory before
-execution. The same24GiB compiled buffer envelope applies; oversized reference
+execution. Use an18GiB compiled buffer envelope, leaving room for other live
+arrays within the launcher's observed20.63GiB JAX allocator pool; oversized reference
 is reported, never blindly executed. The streamed core also measures one-day
 VJP memory. No 30-day monolithic backward allocation is attempted.
 
@@ -52,4 +53,9 @@ canonical input. The adapter now broadcasts the selected per-window bundle
 along the prefix day axis explicitly. A scalar/annual-array layout regression
 joins the canonical binding tests;3 tests pass in13.83s.
 The original failed shape report remains `public-rollout-shapes-v1.json`.
-The corrected CPU shape run uses a new output path before GPU execution.
+The corrected CPU shape run passed at b7fd1bc in477.36s, report
+`public-rollout-shapes-v2.json`. Before GPU execution, integration review adds
+explicit Teacher GPP validity, Teacher-defined state finiteness, declared-stock
+and learned-output checks, and coordinate-wise gradient agreement at the same
+atol1e-6/rtol1e-4, retaining the declared per-leaf L2 gate. Updated CPU tracing
+is required for the revised observation structure.

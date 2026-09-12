@@ -17,9 +17,15 @@ The concrete scope is
 The component's local T1/2/3/7 direct/checkpointed/streamed matrix passes;
 current-model multi-day admission is still pending. Root's first real probe is
 [`public_rollout_real_probe_20260912.md`](research/daily_coarse_graining/public_rollout_real_probe_20260912.md).
-The sampler and bounded one-day cache are implemented/tested; next generate
-the real pool catalogue under
+The sampler, bounded one-day cache and real pool catalogue are complete under
 [`one_day_catalogue_preparation_20260912.md`](research/daily_coarse_graining/one_day_catalogue_preparation_20260912.md).
+The pool contains63,707 unique Teacher days across535 points and44 years after
+monitor exclusion. These are available data, not consumed training rows.
+Next run the frozen
+[`one_day_batch_resource_probe_20260912.md`](research/daily_coarse_graining/one_day_batch_resource_probe_20260912.md)
+on four distinct point-year samples, alongside the public two-day gradient
+comparison. Corrected public CPU shape tracing passed at b7fd1bc in477.36s;
+the reviewed Teacher masks/coordinate comparison need their updated preflight.
 Do not start full-network7/30-day updates based only on toy tests. No new paid
 job is approved; job15005758 is canceled. Earlier execution history follows.
 

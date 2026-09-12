@@ -25,7 +25,8 @@ an earlier experiment and does not control current work.
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
 | `research/daily_coarse_graining/parallel_training_infrastructure_plan_20260912.md` | Current approved parallel scope | Broader one-day data and unified multi-day derivatives |
 | `research/daily_coarse_graining/public_rollout_real_probe_20260912.md` | First real-model multi-day admission plan | Two-day full-network/initial-state gradients and measured memory |
-| `research/daily_coarse_graining/one_day_catalogue_preparation_20260912.md` | Current metadata/IO readiness task | Actual one-day pool coverage, holdout exclusions and bounded cache |
+| `research/daily_coarse_graining/one_day_catalogue_preparation_20260912.md` | Completed on free CPU | 63,707 unique available Teacher days, monitor exclusions and bounded cache |
+| `research/daily_coarse_graining/one_day_batch_resource_probe_20260912.md` | Frozen zero-update resource check | Four point-year samples, batch/single gradient agreement and measured memory |
 | `research/daily_coarse_graining/one_day_sampling_expansion_20260912.md` | Implemented and locally tested | Deterministic prepared-pool epochs and resume semantics |
 | `research/daily_coarse_graining/fresh_start_convergence_learning_v3_20260912.md` | Completed12 updates; bounded learning screen passes | Improved flux fit, actual memory and transient fraction overshoot |
 | `research/daily_coarse_graining/fresh_start_fd_convergence_20260911.md` | Completed; local plateau passes, all masks stable | Four passing small scales and large-step nonlinear state/process response |

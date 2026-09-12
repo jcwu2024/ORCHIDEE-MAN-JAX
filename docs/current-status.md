@@ -19,8 +19,15 @@ overshot at update1 and recovered by4; this is not final-model acceptance.
 The current authorized work is parallel one-day data expansion and public
 multi-day AD infrastructure. Native/checkpointed/streamed local recurrence
 tests pass, including initial-state and PFT-fraction routes. A real two-day
-full-network comparison and a metadata/IO catalogue of the2000 prepared
-packages are being prepared. No multi-day training or new paid submission yet.
+full-network comparison is being prepared. The2000-package one-day catalogue
+completed on free test02 in149.20s:63,707 unique Teacher days,535 points,
+17,677 point-years and44 years, excluding64 monitor days. This is availability,
+not actual training coverage. The corrected real two-day CPU direct/checkpointed
+gradient shape probe passed at b7fd1bc in477.36s. Review identified missing
+Teacher GPP validity and physical/coordinate comparison coverage in the probe;
+those are being corrected before GPU numerical execution. The independent
+batch4 resource probe is implemented and its related10 local tests pass.
+No multi-day training or new paid submission yet.
 See the linked current plan in `NEXT_STEPS.md`; prior chronological entries
 below retain their original scope.
 

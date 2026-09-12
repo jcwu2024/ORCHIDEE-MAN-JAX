@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-09-11.
+Last updated: 2026-09-12.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -73,9 +73,13 @@ prepared rows, semantic-day exclusions and compact resume cursors.
 `prepared_one_day.py` holds a bounded LRU of only one-day views.
 `scripts/hpc/prepare_one_day_catalogue.py` reconstructs admitted source metadata,
 builds monitor exclusions and measures one batch's cache behavior on free CPU.
+`scripts/hpc/probe_one_day_batch.py` compares four-sample direct-AD gradients
+with averaged single-sample gradients and measures memory/runtime on real rows;
+it does not update weights.
 
-Current next implementation: a checkpoint-independent initialization and
-all-parameter training entry point for the existing Attention design. See
+The checkpoint-independent initialization and all-parameter one-day prototype
+are implemented. The current next gate is broader-data batch resources and
+real-model public multi-day AD admission. The fresh route is specified in
 `fresh_start_training_route_20260911.md` in the research docs. The old conditioned
 continuation scripts require exploratory weight/report chains and select
 15.96M GPP-related parameters; they are not the intended final training entry.
