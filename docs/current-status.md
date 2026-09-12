@@ -75,10 +75,16 @@ also passes, without implying one-epoch learning or scientific acceptance.
 Report `runtime/outputs/diagnostics/one-day-pool-smoke-v1.json`.
 Server clock was about
 8m16s behind the local workstation; prefer elapsed durations to mixed clocks.
-Formal proposal: fresh one1998-update prepared-pool
-epoch, batch32/microbatch4, one V100/8CPUs/4h, CNY11.04 ceiling, not approved
-or submitted. See `fresh_start_one_day_pool_v1_20260912.md`.
-No multi-day training or new paid submission yet.
+The user approved fresh one1998-update prepared-pool-epoch training,
+batch32/microbatch4, one V100/8CPUs/32GiB/4h, CNY11.04 maximum (CPU2.24+GPU8.80).
+Job15048786 was submitted from gln01 and started immediately on ibc13b02n01,
+server2026-09-12 15:46:03. scontrol confirms the approved resources and time.
+Frozen code:12bac94 in `runtime/checkouts/one-day-pool-v1`. Startup log confirms
+that checkout and catalogue phase. Report:
+`runtime/outputs/training/fresh-one-day-pool-15048786/report.json`; log:
+`runtime/outputs/diagnostics/one-day-pool-15048786.log`.
+This is the approved one-day training job, not multi-day training or final
+model acceptance. See `fresh_start_one_day_pool_v1_20260912.md`.
 See the linked current plan in `NEXT_STEPS.md`; prior chronological entries
 below retain their original scope.
 

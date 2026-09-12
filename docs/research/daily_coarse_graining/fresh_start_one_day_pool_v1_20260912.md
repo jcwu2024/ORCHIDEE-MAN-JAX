@@ -1,7 +1,7 @@
 # Broad one-day learning v1: one reproducible prepared-pool epoch
 
-Frozen implementation/preflight plan. Paid execution is proposed, not submitted
-or approved. This proceeds independently of the public multi-day derivative
+Frozen method and completed preflight; paid execution is now approved and
+submitted as15048786 (record below). This proceeds independently of the public multi-day derivative
 probe; it uses ordinary direct JAX AD through one canonical daily transition.
 Executable settings: `manifests/coarse_graining/fresh_start_one_day_pool_v1.json`.
 
@@ -111,3 +111,26 @@ accumulator compilation. Peak active GPU memory9.49GiB and host8.14GiB fit the
 proposed allocation. Measured complete-update arithmetic for1998 updates is
 about132minutes before additional IO/checkpoint/monitor/compiler variability,
 supporting the proposed4-hour envelope. Formal training is still unsubmitted.
+
+## Approved submission
+
+The user explicitly approved this concrete one-epoch run. Submitted on gln01:
+
+```bash
+cd /WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/one-day-pool-v1
+/rmprog/slurm/v22.05.7/bin/sbatch scripts/hpc/slurm_fresh_start_one_day_pool.sh
+```
+
+Job15048786 started immediately on ibc13b02n01, server2026-09-12 15:46:03.
+scontrol confirms gnall, one node/GPU,8CPUs,32GiB host memory,4-hour limit and
+the declared working directory. Code is12bac94; leave that checkout fixed.
+Worst-case additive charge is CNY2.24 CPU+CNY8.80 GPU=CNY11.04.
+Actual approval is this user/session record; the frozen protocol's earlier
+proposal flag is not a runtime authorization mechanism or a change to the
+scientific method. The run starts fresh with no smoke checkpoint inheritance.
+
+Log: `runtime/outputs/diagnostics/one-day-pool-15048786.log`.
+Report/checkpoint directory:
+`runtime/outputs/training/fresh-one-day-pool-15048786/`.
+Monitoring: `squeue -j 15048786`; cancellation if the user requests it:
+`scancel 15048786`. No other paid job or automatic retry is authorized.

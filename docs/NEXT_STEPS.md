@@ -71,11 +71,15 @@ technical smoke completed at12bac94 in455.4s with exit0 and passed its technical
 gate. Actual peak GPU9.49GiB, host8.14GiB; second full32-row update3.956s.
 Report `runtime/outputs/diagnostics/one-day-pool-smoke-v1.json`.
 It is not a long-horizon accuracy or formal one-epoch result. Do not repeat it.
-Proposed formal work is one1998-
-update prepared-pool epoch, batch32/microbatch4; paid4-hour execution remains
-unapproved. One-day direct AD does not depend on multi-day admission.
-Do not start full-network7/30-day updates based only on toy tests. No new paid
-job is approved; job15005758 is canceled. Earlier execution history follows.
+The user approved the one1998-update prepared-pool epoch, batch32/microbatch4,
+one V100/8CPUs/32GiB/4h, maximum CNY11.04. Job15048786 was submitted from gln01
+and started immediately on ibc13b02n01 at server2026-09-12 15:46:03. Its frozen
+working checkout is `runtime/checkouts/one-day-pool-v1` at12bac94. Keep it fixed.
+Read `runtime/outputs/training/fresh-one-day-pool-15048786/report.json` and
+`runtime/outputs/diagnostics/one-day-pool-15048786.log`; no duplicate submission.
+One-day direct AD does not depend on multi-day admission. Do not start
+full-network7/30-day updates based only on toy tests. Historical job15005758
+remains canceled. Earlier execution history follows.
 
 The fixed-direction FD audit completed: all masks/discrete/hard gates remain
 valid, and four consecutive small scales agree with reverse/JVP at unchanged

@@ -28,7 +28,7 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/public_rollout_staged_completion_20260912.md` | Approved completion; implementation/local tests/review pass | Durable reference, streamed comparison, resumable JVP/FD, separate checkpointed check |
 | `research/daily_coarse_graining/one_day_catalogue_preparation_20260912.md` | Completed on free CPU | 63,707 unique available Teacher days, monitor exclusions and bounded cache |
 | `research/daily_coarse_graining/one_day_batch_resource_probe_20260912.md` | Completed; numerical/resource gate passed | Four point-year samples, all-coordinate gradient agreement and7.85GiB peak |
-| `research/daily_coarse_graining/fresh_start_one_day_pool_v1_20260912.md` | Implemented; local tests pass, real preflight next | Fresh one-epoch method, effective batch32, monitor panels and exact resume; paid run unapproved |
+| `research/daily_coarse_graining/fresh_start_one_day_pool_v1_20260912.md` | Preflight passed; approved job15048786 running | Fresh one-epoch method, batch32, fixed panels and exact resume; one V100/4h/CNY11.04 maximum |
 | `research/daily_coarse_graining/one_day_sampling_expansion_20260912.md` | Implemented and locally tested | Deterministic prepared-pool epochs and resume semantics |
 | `research/daily_coarse_graining/fresh_start_convergence_learning_v3_20260912.md` | Completed12 updates; bounded learning screen passes | Improved flux fit, actual memory and transient fraction overshoot |
 | `research/daily_coarse_graining/fresh_start_fd_convergence_20260911.md` | Completed; local plateau passes, all masks stable | Four passing small scales and large-step nonlinear state/process response |
