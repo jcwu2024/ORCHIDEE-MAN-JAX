@@ -27,17 +27,25 @@ on four distinct point-year samples, alongside the public two-day gradient
 comparison. Corrected public CPU shape tracing passed at b7fd1bc in477.36s;
 the reviewed Teacher masks/coordinate comparison are implemented at4410c41.
 Batch4 CPU full-gradient shapes passed at a49643f in662.2s. Its free gln01
-GPU0 probe is running at4410c41 (launcher PID108717, Python108758),45-minute
-cap; report `runtime/outputs/diagnostics/one-day-batch4-v1.json`.
+GPU0 numerical probe completed at4410c41 in2144.28s and passed every physical
+and coordinate comparison. Actual peak7.85GiB, hot batch4 gradient0.400s;
+report `runtime/outputs/diagnostics/one-day-batch4-v1.json`.
 Updated public T2 CPU shapes passed on test02 at4410c41 in275.3s; report
 `runtime/outputs/diagnostics/public-rollout-shapes-v3.json`. The frozen public
 T2 GPU probe started on free gln01 GPU1 at13:10 CST (launcher PID110317),
 90-minute cap; report `runtime/outputs/diagnostics/public-rollout-T2-v1.json`.
-Read both running GPU results before promoting batching or multi-day AD;
-do not duplicate either process. Keep the shared server checkout at4410c41
-while these processes run. The non-executable larger-training decision draft
-is `broader_one_day_training_draft_20260912.md` in the research docs; freeze
-its update budget and monitoring rules using these measurements, not guesses.
+Read the public T2 GPU result before promoting multi-day AD; do not duplicate
+that process. Keep the shared server checkout at4410c41 while it runs.
+The user explicitly asked to progress useful independent work while waiting.
+Broader one-day training now has an executable fresh method, weighted
+microbatch accumulation, full optimizer/sampler recovery and fixed physical
+monitor reports. See
+[`fresh_start_one_day_pool_v1_20260912.md`](research/daily_coarse_graining/fresh_start_one_day_pool_v1_20260912.md).
+Its11 local tests pass, including complete runner interruption/resume equality.
+Next perform real CPU shape/optimizer/monitor admission and a two-update free
+technical smoke from an isolated checkout. Proposed formal work is one1998-
+update prepared-pool epoch, batch32/microbatch4; paid4-hour execution remains
+unapproved. One-day direct AD does not depend on multi-day admission.
 Do not start full-network7/30-day updates based only on toy tests. No new paid
 job is approved; job15005758 is canceled. Earlier execution history follows.
 

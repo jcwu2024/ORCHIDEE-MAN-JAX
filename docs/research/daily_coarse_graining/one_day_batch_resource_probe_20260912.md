@@ -41,4 +41,10 @@ report `runtime/outputs/diagnostics/one-day-batch4-shapes-v1.json`.
 The free GPU0 numerical/resource probe started2026-09-12 13:04 CST at4410c41,
 launcher PID108717/Python108758,45-minute cap. Report and log are
 `runtime/outputs/diagnostics/one-day-batch4-v1.json` and `.log`.
-Current result is pending; no training or paid job was submitted.
+The probe completed in2144.28s and passed: every physical hard count is zero,
+all109,464,375 parameter coordinates agree at the frozen tolerances, and L2
+gradient difference is6.61e-7. Actual peak active JAX memory is7.85GiB versus
+20.63GiB allocator pool. Hot batch4 evaluation takes0.400s; the four single
+evaluations total0.930s including a cold first call. Batch4/single gradient
+compilations take957.90/953.13s. This admits microbatch4 for a complete-loop
+technical smoke; no optimizer or training has run in this resource probe.

@@ -1,0 +1,50 @@
+{
+  "schema_version": "fresh_start_one_day_pool_v1",
+  "purpose": "reproducible_broad_one_day_learning_not_final_model_acceptance",
+  "model_protocol": "manifests/coarse_graining/fresh_start_one_day_probe_v3.json",
+  "initialization": "fresh_seed_no_exploratory_weights",
+  "trainable_scope": "all_neural_parameters",
+  "sampling": {
+    "seed": 20260912,
+    "batch_size": 32,
+    "microbatch_size": 4,
+    "max_artifacts_per_batch": 4,
+    "epochs": 1,
+    "scope": "prepared_one_day_extension_1001_3000",
+    "monitor_exclusion": "all_occurrences_of_catalogue_monitor_days"
+  },
+  "monitoring": {
+    "training_panel": "first_epoch_first_batch",
+    "excluded_panel": "catalogue_64_unique_days",
+    "updates": [0, 100, 500, 1000, 1500],
+    "always_include_final": true,
+    "save_raw_physical_values": true,
+    "generalization_claim": false
+  },
+  "checkpoint": {"every_updates": 250, "include_optimizer_and_sampler_cursor": true},
+  "report_every_updates": 10,
+  "admission": {
+    "compiled_memory_limit_gib": 18,
+    "physical_hard_failures": 0,
+    "gradient_path": "direct_single_day_jax_ad",
+    "prior_evidence": ["fresh-start-learning-v3", "one-day-batch4-v1"],
+    "technical_smoke_updates": 2
+  },
+  "decision": {
+    "checkpoint_selection": "final_complete_update_no_monitor_selection",
+    "learning_screen": "fixed_train_and_excluded_panel_mean_flux_loss_and_total_loss_both_decrease",
+    "physical_gate": "all_sample_and_monitor_hard_counts_zero_and_all_updates_finite",
+    "long_horizon_acceptance": false
+  },
+  "execution": {
+    "free_smoke_minutes_max": 45,
+    "proposed_paid_nodes": 1,
+    "proposed_paid_gpus": 1,
+    "proposed_paid_cpus": 8,
+    "proposed_paid_host_memory_gib": 32,
+    "proposed_paid_hours_max": 4,
+    "paid_submission_authorized": false,
+    "teacher_regeneration": false,
+    "sealed_test_access": false
+  }
+}

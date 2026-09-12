@@ -76,6 +76,12 @@ builds monitor exclusions and measures one batch's cache behavior on free CPU.
 `scripts/hpc/probe_one_day_batch.py` compares four-sample direct-AD gradients
 with averaged single-sample gradients and measures memory/runtime on real rows;
 it does not update weights.
+`scripts/hpc/run_fresh_start_one_day_pool.py` composes the admitted direct-AD
+microbatch gradient with the sampler/cache, weighted accumulation and AdamW.
+`one_day_training_state.py` owns atomic parameters/Adam/cursor recovery;
+`one_day_monitoring.py` owns physical-unit fixed-panel summaries, separating
+stock levels from daily changes. The proposed one-epoch method is
+`fresh_start_one_day_pool_v1.json`; real preflight is still required.
 
 The checkpoint-independent initialization and all-parameter one-day prototype
 are implemented. The current next gate is broader-data batch resources and

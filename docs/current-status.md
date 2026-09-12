@@ -28,14 +28,26 @@ Teacher GPP validity and physical/coordinate comparison coverage in the probe;
 those are corrected at4410c41. Seven probe/canonical/batch tests and21 public/
 legacy-streamed regressions pass; batch sampling/cache tests also pass.
 The batch4 real CPU shape gate passed at a49643f in662.2s. Its free GPU0
-probe started2026-09-12 13:04 CST at4410c41, launcher PID108717/Python108758,
-45-minute cap. Report `runtime/outputs/diagnostics/one-day-batch4-v1.json`.
+probe completed at4410c41 in2144.28s: all physical checks and all109,464,375
+gradient-coordinate comparisons pass, gradient L2 difference6.61e-7. Actual
+peak7.85GiB versus20.63GiB pool; hot batch4 gradient0.400s. Two separate
+gradient compilations consumed957.90/953.13s. Report
+`runtime/outputs/diagnostics/one-day-batch4-v1.json`.
 The updated public T2 CPU shape gate passed on test02 at4410c41 in275.3s;
 report `runtime/outputs/diagnostics/public-rollout-shapes-v3.json`.
 The public T2 numerical comparison started on free gln01 GPU1 at13:10 CST,
 launcher PID110317,90-minute cap; report
-`runtime/outputs/diagnostics/public-rollout-T2-v1.json`. Both GPU results are
-pending. Keep the shared server checkout fixed until both processes finish.
+`runtime/outputs/diagnostics/public-rollout-T2-v1.json`. Its result is pending;
+the latest check reached completed_direct and compile_checkpointed after
+4126.9s. Keep the main server checkout fixed while it runs.
+The user asked to advance independent work instead of waiting. The broad
+one-day runner, weighted gradient accumulation, atomic full-state checkpoint
+and fixed physical monitor summaries are implemented. Eleven local tests pass,
+including the actual runner's interrupted/resumed AdamW equality and sample
+cursor behavior. Next real CPU preflight and2-update free technical smoke use
+an isolated checkout. Formal proposal: fresh one1998-update prepared-pool
+epoch, batch32/microbatch4, one V100/8CPUs/4h, CNY11.04 ceiling, not approved
+or submitted. See `fresh_start_one_day_pool_v1_20260912.md`.
 No multi-day training or new paid submission yet.
 See the linked current plan in `NEXT_STEPS.md`; prior chronological entries
 below retain their original scope.
