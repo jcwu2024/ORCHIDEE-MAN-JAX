@@ -13,8 +13,21 @@ from scripts.hpc.probe_public_rollout_staged import StageStore, bootstrap_case, 
 
 
 def project(jax, gradient, direction):
-    return float(sum(np.vdot(np.asarray(g,dtype=np.float64),np.asarray(d,dtype=np.float64))
-                     for g,d in zip(jax.tree_util.tree_leaves(gradient),jax.tree_util.tree_leaves(direction),strict=True)))
+    terms = []
+    for g,d in zip(jax.tree_util.tree_leaves(gradient),jax.tree_util.tree_leaves(direction),strict=True):
+        g,d = np.asarray(g,dtype=np.float64),np.asarray(d,dtype=np.float64)
+        if not np.all(np.isfinite(g)) or not np.all(np.isfinite(d)):
+            raise ValueError('projection requires finite gradients and tangents')
+        terms.append(np.vdot(g,d))
+    return float(sum(terms))
+
+
+def rounded_tangent(jax,jnp,plus,minus,direction,epsilon):
+    """Fixed coordinates have zero tangent, including undefined NaN primals."""
+    return jax.tree_util.tree_map(
+        lambda a,b,d:jnp.where(d==0,jnp.zeros_like(d),
+            (a.astype('float64')-b.astype('float64'))/(2*epsilon)).astype(d.dtype),
+        plus,minus,direction)
 
 
 def disagreement_directions(jax, parameters, initial, reference, streamed):
@@ -38,7 +51,7 @@ def joint_jvp(component):
 
 
 def replay_difference(jax, replay, forward, *, labels):
-    entries,nonfloating_mismatch = [],0
+    entries,nonfloating_mismatch,nonfinite_mismatch,nonfinite_defined = [],0,0,0
     left,lt = jax.tree_util.tree_flatten_with_path(replay)
     right,rt = jax.tree_util.tree_flatten_with_path(forward)
     if lt != rt:
@@ -48,11 +61,19 @@ def replay_difference(jax, replay, forward, *, labels):
         if not np.issubdtype(a.dtype,np.floating):
             nonfloating_mismatch += int(np.sum(a!=b))
             continue
-        error = np.abs(a.astype(float)-b.astype(float))
+        finite = np.isfinite(a) & np.isfinite(b)
+        matching_nonfinite = (np.isnan(a) & np.isnan(b)) | ((a==b) & ~finite)
+        nonfinite_mismatch += int(np.sum(~finite & ~matching_nonfinite))
+        is_state = len(path)==1 and getattr(path[0],'key',None)=='state'
+        defined = (np.asarray(replay['defined']) | np.asarray(forward['defined'])) if is_state else np.ones_like(finite)
+        nonfinite_defined += int(np.sum(defined & ~finite))
+        error = np.abs(np.where(finite,a,0.).astype(float)-np.where(finite,b,0.).astype(float))
         if np.any(error):
             entries.append({'path':str(path),'max_absolute':float(np.max(error)),
                             'error_l2':float(np.linalg.norm(error)),'different_coordinates':int(np.sum(error!=0.))})
-    state_error = np.abs(np.asarray(replay['state'],dtype=float)-np.asarray(forward['state'],dtype=float))
+    sa,sb = np.asarray(replay['state'],dtype=float),np.asarray(forward['state'],dtype=float)
+    sf = np.isfinite(sa) & np.isfinite(sb)
+    state_error = np.abs(np.where(sf,sa,0.)-np.where(sf,sb,0.))
     state_fields = []
     for leaf in labels:
         if leaf.start is not None:
@@ -62,8 +83,43 @@ def replay_difference(jax, replay, forward, *, labels):
                                      'error_l2':float(np.linalg.norm(part))})
     entries.sort(key=lambda r:r['max_absolute'],reverse=True)
     state_fields.sort(key=lambda r:r['max_absolute'],reverse=True)
-    return {'nonfloating_mismatch':nonfloating_mismatch,'floating_differences':entries,
-            'state_fields':state_fields,'exact_observations':not entries and nonfloating_mismatch==0}
+    return {'nonfloating_mismatch':nonfloating_mismatch,'nonfinite_mismatch':nonfinite_mismatch,
+            'nonfinite_defined':nonfinite_defined,'floating_differences':entries,
+            'state_fields':state_fields,'exact_observations':not entries and
+            nonfloating_mismatch==0 and nonfinite_mismatch==0 and nonfinite_defined==0}
+
+
+def recover_saved_projections(jax,jnp,arguments,reference,streamed,previous,checkpointed=None):
+    """Recover only report projections; no forward, gradient or JVP execution."""
+    import copy
+
+    parameters,initial = arguments[:2]
+    directions = dict(disagreement_directions(jax,parameters,initial,reference,streamed))
+    zero = jax.tree_util.tree_map(lambda p:np.zeros(p.shape,dtype=p.dtype),parameters)
+    unit = np.zeros_like(initial)
+    unit[previous['largest_state_coordinate']['index']] = 1.
+    directions['largest_state_coordinate'] = (zero,unit)
+    corrected = copy.deepcopy(previous['directions'])
+    for row in corrected:
+        dp,ds = jax.tree_util.tree_map(jnp.asarray,directions[row['name']])
+        if checkpointed is not None:
+            row['checkpointed_projection'] = project(jax,checkpointed['gradient'],(dp,ds))
+        for pair in row['pairs']:
+            epsilon = pair['epsilon']
+            plus = jax.tree_util.tree_map(lambda p,d:(p+epsilon*d).astype(p.dtype),parameters,dp)
+            minus = jax.tree_util.tree_map(lambda p,d:(p-epsilon*d).astype(p.dtype),parameters,dp)
+            sp,sm = (initial+epsilon*ds).astype(initial.dtype),(initial-epsilon*ds).astype(initial.dtype)
+            effective = jax.device_get((rounded_tangent(jax,jnp,plus,minus,dp,epsilon),
+                                        rounded_tangent(jax,jnp,sp,sm,ds,epsilon)))
+            a,b = project(jax,reference['gradient'],effective),project(jax,streamed['gradient'],effective)
+            pair.update(reference_projection=a,streamed_projection=b,
+                reference_jvp_abs_error=abs(a-pair['jvp']),streamed_jvp_abs_error=abs(b-pair['jvp']),
+                reference_fd_abs_error=abs(a-pair['fd']),streamed_fd_abs_error=abs(b-pair['fd']))
+            if checkpointed is not None:
+                c = project(jax,checkpointed['gradient'],effective)
+                pair.update(checkpointed_projection=c,checkpointed_jvp_abs_error=abs(c-pair['jvp']),
+                            checkpointed_fd_abs_error=abs(c-pair['fd']))
+    return corrected
 
 
 def run(args):
@@ -91,6 +147,16 @@ def run(args):
             raise ValueError('diagnosis requires both saved full gradients')
         parameters,initial,discrete,days,targets,context = arguments
         report['case_identity'] = identity
+        if getattr(args,'recover_projections_from',None):
+            previous = json.loads(args.recover_projections_from.read_text())
+            if previous['case_identity'] != identity:
+                raise ValueError('projection recovery case differs from the original run')
+            corrected = recover_saved_projections(jax,jnp,arguments,reference,streamed,previous,original.read('checkpointed'))
+            emit('completed',status='completed',directions=corrected,
+                 recovered_from=str(args.recover_projections_from),model_forward_runs=0,
+                 gradient_evaluations=0,jvp_evaluations=0,admission_claim=False,
+                 note='FD and JVP values retained; fixed undefined-coordinate tangents are zero in corrected projections')
+            return report
         directions = disagreement_directions(jax,parameters,initial,reference,streamed)
         state_delta = np.asarray(streamed['gradient'][1])-np.asarray(reference['gradient'][1])
         state_index = int(np.argmax(np.abs(state_delta)))
@@ -176,8 +242,8 @@ def run(args):
                 plus = jax.tree_util.tree_map(lambda p,d:(p+epsilon*d).astype(p.dtype),parameters,dp)
                 minus = jax.tree_util.tree_map(lambda p,d:(p-epsilon*d).astype(p.dtype),parameters,dp)
                 sp,sm = (initial+epsilon*ds).astype(initial.dtype),(initial-epsilon*ds).astype(initial.dtype)
-                effective_dp = jax.tree_util.tree_map(lambda a,b,p:((a.astype('float64')-b.astype('float64'))/(2*epsilon)).astype(p.dtype),plus,minus,parameters)
-                effective_ds = ((sp-sm)/(2*epsilon)).astype(initial.dtype)
+                effective_dp = rounded_tangent(jax,jnp,plus,minus,dp,epsilon)
+                effective_ds = rounded_tangent(jax,jnp,sp,sm,ds,epsilon)
                 effective = jax.device_get((effective_dp,effective_ds))
                 expected = project(jax,reference['gradient'],effective)
                 actual = project(jax,streamed['gradient'],effective)
@@ -205,4 +271,5 @@ if __name__=='__main__':
     parser.set_defaults(protocol=training.ROOT/'manifests/coarse_graining/fresh_start_one_day_probe_v3.json')
     parser.add_argument('--stage-directory',type=Path,required=True)
     parser.add_argument('--horizon',type=int,choices=(2,),default=2)
+    parser.add_argument('--recover-projections-from',type=Path)
     run(parser.parse_args())
