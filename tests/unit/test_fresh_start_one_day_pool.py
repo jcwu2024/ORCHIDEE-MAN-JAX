@@ -1,9 +1,11 @@
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import numpy as np
+import pytest
 
-from scripts.hpc.run_fresh_start_one_day_pool import hard_pass, pool_plan
+from scripts.hpc.run_fresh_start_one_day_pool import hard_pass, pool_plan, sampling_identity, validate_recovery
 
 
 def test_pool_plan_excludes_same_teacher_day_in_every_artifact_and_resumes():
@@ -22,6 +24,16 @@ def test_pool_plan_excludes_same_teacher_day_in_every_artifact_and_resumes():
     assert panels['training'] == [row.as_metadata() for row in batches[0].rows]
     assert panels['excluded_days'] == catalogue['monitor_rows']
     assert list(sampler.resume(batches[0].next_cursor)) == batches[1:]
+    saved = {'cursor':{'epoch':0,'batch_offset':1},'completed_updates':1,
+             'optimizer_state':SimpleNamespace(step=1)}
+    validate_recovery(saved,sampler,1)
+    with pytest.raises(ValueError,match='disagree'):
+        validate_recovery({**saved,'completed_updates':2},sampler,1)
+    with pytest.raises(ValueError,match='outside'):
+        validate_recovery({**saved,'cursor':{'epoch':0,'batch_offset':3}},sampler,1)
+    changed = {**catalogue,'one_day_entries':[entry(1,[0,2,1]),entry(2,[0,3,4])]}
+    assert sampling_identity(changed) != sampling_identity(catalogue)
+    assert sampling_identity({**catalogue,'one_day_entries':list(reversed(catalogue['one_day_entries']))}) == sampling_identity(catalogue)
 
 
 def test_hard_pass_requires_every_sample_to_pass():

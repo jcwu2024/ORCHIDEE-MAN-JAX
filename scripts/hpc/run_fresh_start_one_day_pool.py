@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import gzip
+import hashlib
 import json
 import subprocess
 import time
@@ -12,6 +13,16 @@ import numpy as np
 from scripts.hpc import run_fresh_start_one_day as prototype
 
 ROOT = Path(__file__).resolve().parents[2]
+METHOD_IMPLEMENTATION_VERSION = 'fresh_one_day_pool_v1'
+
+
+def host_peak_bytes():
+    try:
+        import resource
+    except ImportError:
+        return None
+    # The execution platform is Linux, where ru_maxrss is expressed in KiB.
+    return int(resource.getrusage(resource.RUSAGE_SELF).ru_maxrss)*1024
 
 
 def pool_plan(catalogue, configuration):
@@ -26,6 +37,26 @@ def pool_plan(catalogue, configuration):
         excluded_days=excluded)
     training_panel = [r.as_metadata() for r in next(sampler.iter_epoch(0)).rows]
     return sampler, {'training': training_panel, 'excluded_days': monitor}
+
+
+def sampling_identity(catalogue):
+    """Bind a recovery cursor to row meanings using already-loaded metadata only."""
+    rows = [(entry['update'],[(r['landpoint_id'],r['year'],start)
+             for r in entry['components']['one_day'] for start in r['start_rows']])
+            for entry in sorted(catalogue['one_day_entries'],key=lambda e:e['update'])]
+    return hashlib.sha256(json.dumps(rows,separators=(',',':')).encode()).hexdigest()
+
+
+def validate_recovery(saved, sampler, epochs):
+    cursor = saved['cursor']
+    if not 0 <= cursor['epoch'] < epochs:
+        raise ValueError('checkpoint epoch is outside the declared run')
+    counts = [sampler.batch_count(e) for e in range(cursor['epoch']+1)]
+    if not 0 <= cursor['batch_offset'] <= counts[-1]:
+        raise ValueError('checkpoint cursor is outside its epoch')
+    expected = sum(counts[:-1])+cursor['batch_offset']
+    if saved['completed_updates'] != expected or int(saved['optimizer_state'].step) != expected:
+        raise ValueError('checkpoint update count, sampler cursor and Adam step disagree')
 
 
 def hard_pass(hard):
@@ -85,7 +116,8 @@ def run(args):
         report['completed_updates'] = previous['completed_updates']
 
     def emit(stage, **values):
-        report.update(values, stage=stage, elapsed_seconds=time.perf_counter()-started)
+        report.update(values, stage=stage, elapsed_seconds=time.perf_counter()-started,
+                      host_peak_bytes=host_peak_bytes())
         _atomic_json(args.output, report)
         print(f'one_day_pool stage={stage} updates={report["completed_updates"]} seconds={report["elapsed_seconds"]:.1f}',flush=True)
 
@@ -100,6 +132,8 @@ def run(args):
         sampler, panels = pool_plan(catalogue, configuration)
         method = {'configuration': configuration, 'model_protocol': protocol,
                   'source_identity': catalogue['source_identity'], 'monitor_rows': catalogue['monitor_rows'],
+                  'sampling_rows_identity':sampling_identity(catalogue),
+                  'implementation_version':METHOD_IMPLEMENTATION_VERSION,
                   'execution_scope': report['execution_scope']}
         report.update(method=method, pool=sampler.pool_metadata())
         emit('bootstrap')
@@ -144,6 +178,7 @@ def run(args):
         cursor = {'epoch':0,'batch_offset':0}
         if args.resume:
             saved = load_training_checkpoint(args.resume,expected_method=method)
+            validate_recovery(saved,sampler,configuration['sampling']['epochs'])
             parameters, state = jax.device_put((saved['parameters'],saved['optimizer_state']))
             cursor = saved['cursor']
             report['completed_updates'] = saved['completed_updates']
@@ -177,6 +212,9 @@ def run(args):
         checkpoint_path = args.output.with_suffix('.checkpoint.pkl')
 
         def checkpoint():
+            # Publish audit history first. A crash can then leave it ahead of
+            # the atomic checkpoint; resume truncates it to the saved step.
+            emit('checkpoint_preparing',checkpoint=str(checkpoint_path),cursor=cursor)
             save_training_checkpoint(checkpoint_path,jax=jax,parameters=parameters,optimizer_state=state,
                 completed_updates=report['completed_updates'],cursor=cursor,method=method)
             report['checkpoint'] = str(checkpoint_path)

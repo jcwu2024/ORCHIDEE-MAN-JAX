@@ -59,6 +59,13 @@ Adam moments/step and sampler cursor atomically at initialization, every250
 updates, monitor milestones and final. Resume uses the original report to
 retain initial-panel evidence and checks the declared method, not bulk file
 hashes. Checkpoint selection is the final complete update, not the best monitor.
+Recovery binds the cursor to the canonical in-memory package/row metadata
+identity; it never rehashes data payloads. It also requires Adam step, completed
+updates and the bounded epoch cursor to agree. Publish the audit report before
+the atomic checkpoint; recovery truncates any newer report entries. Numerical
+method changes must update the explicit implementation version. The actual
+execution Git revision remains in the report for code reproduction; documentation
+commits alone need not invalidate recovery.
 
 The one-epoch learning screen requires both mean total loss and mean independent
 flux loss to fall on both fixed panels, with physical gates intact. Report
