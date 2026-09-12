@@ -8,6 +8,21 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-12)
 
+V3 completed all12 updates in757.37s; convergence, physical hard gates and
+checkpoint replay pass. Flux loss falls20.9% on three train samples, with
+transient lignin-fraction overshoot. The user approved two parallel next tracks:
+broader one-day sampling/IO and a public multi-day loss/gradient component.
+The concrete scope is
+[`parallel_training_infrastructure_plan_20260912.md`](research/daily_coarse_graining/parallel_training_infrastructure_plan_20260912.md).
+The component's local T1/2/3/7 direct/checkpointed/streamed matrix passes;
+current-model multi-day admission is still pending. Root's first real probe is
+[`public_rollout_real_probe_20260912.md`](research/daily_coarse_graining/public_rollout_real_probe_20260912.md).
+The sampler and bounded one-day cache are implemented/tested; next generate
+the real pool catalogue under
+[`one_day_catalogue_preparation_20260912.md`](research/daily_coarse_graining/one_day_catalogue_preparation_20260912.md).
+Do not start full-network7/30-day updates based only on toy tests. No new paid
+job is approved; job15005758 is canceled. Earlier execution history follows.
+
 The fixed-direction FD audit completed: all masks/discrete/hard gates remain
 valid, and four consecutive small scales agree with reverse/JVP at unchanged
 tolerance. The three-scale plateau passes. Larger perturbations show strong

@@ -61,6 +61,19 @@ No code under `research/` is imported by the ordinary Teacher path.
 
 ## Daily Research
 
+`daily_operator/rollout_loss.py` now owns ordinary/checkpointed scan losses and
+the public streamed value-and-gradient operation. It generates observation
+cotangents and direct parameter/initial-state terms internally, reusing the
+backward-compatible `streamed_adjoint.py` core. `canonical_rollout.py` binds
+the current full neural tree and state-derived PFT fraction to this component;
+`scripts/hpc/probe_public_rollout.py` owns real-model admission, not training.
+
+`daily_operator/one_day_sampling.py` provides reproducible shuffled epochs over
+prepared rows, semantic-day exclusions and compact resume cursors.
+`prepared_one_day.py` holds a bounded LRU of only one-day views.
+`scripts/hpc/prepare_one_day_catalogue.py` reconstructs admitted source metadata,
+builds monitor exclusions and measures one batch's cache behavior on free CPU.
+
 Current next implementation: a checkpoint-independent initialization and
 all-parameter training entry point for the existing Attention design. See
 `fresh_start_training_route_20260911.md` in the research docs. The old conditioned

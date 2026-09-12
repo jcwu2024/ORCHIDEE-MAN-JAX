@@ -23,7 +23,11 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `research/daily_coarse_graining/fresh_start_convergence_learning_v3_20260912.md` | Local/CPU checks pass; free GPU run active at0a3495e | Convergence admission, unchanged training settings and fraction monitoring |
+| `research/daily_coarse_graining/parallel_training_infrastructure_plan_20260912.md` | Current approved parallel scope | Broader one-day data and unified multi-day derivatives |
+| `research/daily_coarse_graining/public_rollout_real_probe_20260912.md` | First real-model multi-day admission plan | Two-day full-network/initial-state gradients and measured memory |
+| `research/daily_coarse_graining/one_day_catalogue_preparation_20260912.md` | Current metadata/IO readiness task | Actual one-day pool coverage, holdout exclusions and bounded cache |
+| `research/daily_coarse_graining/one_day_sampling_expansion_20260912.md` | Implemented and locally tested | Deterministic prepared-pool epochs and resume semantics |
+| `research/daily_coarse_graining/fresh_start_convergence_learning_v3_20260912.md` | Completed12 updates; bounded learning screen passes | Improved flux fit, actual memory and transient fraction overshoot |
 | `research/daily_coarse_graining/fresh_start_fd_convergence_20260911.md` | Completed; local plateau passes, all masks stable | Four passing small scales and large-step nonlinear state/process response |
 | `research/daily_coarse_graining/bare_soil_output_source_audit_20260911.md` | Completed source audit | Exact gsmean zero versus restart-carried litter/fuel semantics and explicit edge cases |
 | `research/daily_coarse_graining/fresh_start_normalization_loss_review_20260911.md` | Completed independent review | Pooled PFT moments, destination scales and why gsmean-only v2 settings remain appropriate |

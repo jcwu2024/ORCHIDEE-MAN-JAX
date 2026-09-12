@@ -85,3 +85,26 @@ Log: `runtime/logs/fresh-start-learning-v3.log`.
 Optional final prototype: `fresh-start-learning-v3.checkpoint.pkl` beside report.
 Read this run next. Do not modify its server checkout or launch a duplicate.
 Paid job15005758 stays canceled; no new paid submission.
+
+## Completed result
+
+Completed at0a3495e in757.37s (12m37s), all12 full-network updates, convergence
+admission and checkpoint replay pass. All monitored hard counts remain zero.
+Mean total loss0.05371482 ->0.05056542 (5.863%); flux loss0.00246382 ->0.00194893
+(20.898%). Only update12 clipped (scale0.7177); preceding updates had scale1.
+Peak active JAX memory4.771GiB, allocator pool20.630GiB. Hot updates about0.85s.
+
+Three-sample daily RMSE in gC m-2 day-1: GPP0.17902 ->0.15824, maintenance
+0.08553 ->0.07572, autotrophic respiration0.07409 ->0.06682, NPP0.23592 ->0.20588;
+growth respiration0.01792 ->0.01870. This is small-sample learning evidence,
+not generalization or a final model.
+
+Fraction monitoring shows a transient overshoot at update1: each sample has42
+zero-Teacher deeper coordinates above0.9, maxima0.9971/0.9998/0.9994. They return
+near zero by update4. The predeclared1e-6 opposite-end saturation count stayed
+zero, so that count alone would miss the visible overshoot; raw values/RMSE
+must remain part of review. Final fraction RMSE is near its initial value.
+
+The user approved parallel broader single-day data work and consolidation of
+multi-day AD before full-network7/30-day training. See
+[`parallel_training_infrastructure_plan_20260912.md`](parallel_training_infrastructure_plan_20260912.md).

@@ -13,6 +13,17 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest: v3 completed all12 updates in757.37s with convergence/physical/replay
+checks passing and20.9% lower three-sample flux loss. Fraction outputs briefly
+overshot at update1 and recovered by4; this is not final-model acceptance.
+The current authorized work is parallel one-day data expansion and public
+multi-day AD infrastructure. Native/checkpointed/streamed local recurrence
+tests pass, including initial-state and PFT-fraction routes. A real two-day
+full-network comparison and a metadata/IO catalogue of the2000 prepared
+packages are being prepared. No multi-day training or new paid submission yet.
+See the linked current plan in `NEXT_STEPS.md`; prior chronological entries
+below retain their original scope.
+
 Current step: v3 convergence-admitted fresh-start learning. The seven-scale
 audit completed in2266.39s; reverse/JVP/FD agree at3e-4,1e-4,3e-5,1e-5 with
 all masks/discrete/hard counts valid. Large-step differences are dominated by

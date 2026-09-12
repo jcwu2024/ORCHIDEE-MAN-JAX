@@ -64,6 +64,19 @@ class StreamedAdjoint:
         )
 
     def gradient(self, values, fixed, states, days, cotangents, *, callback=None):
+        """Return the complete recurrent parameter gradient.
+
+        This preserves the original public behavior. Use
+        :meth:`gradient_with_initial_state` when the day-one carry adjoint is
+        also required.
+        """
+        gradient, _ = self.gradient_with_initial_state(
+            values, fixed, states, days, cotangents, callback=callback
+        )
+        return gradient
+
+    def gradient_with_initial_state(self, values, fixed, states, days, cotangents, *, callback=None):
+        """Return parameter gradient and the adjoint of ``states[0]``."""
         jax, jnp = self.jax, self.jnp
         emit = callback or (lambda event, data: None)
         if not states or len(states) != len(days) or len(states) != len(cotangents):
@@ -96,5 +109,5 @@ class StreamedAdjoint:
             if int(self.nonfinite((gradient, future))) != 0:
                 raise RuntimeError(f"nonfinite streamed derivative at day {index + 1}")
             emit("reverse_day", {"day": index + 1})
-        jax.block_until_ready(accumulated)
-        return accumulated
+        jax.block_until_ready((accumulated, future))
+        return accumulated, future
