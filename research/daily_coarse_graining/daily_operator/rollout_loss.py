@@ -163,7 +163,11 @@ class RolloutLoss:
                 raise TypeError(f"every {name} leaf must have a bool or integer dtype")
 
     def _slice(self, tree, index):
-        return self.jax.tree_util.tree_map(lambda value: value[index], tree)
+        # float0 cotangents for scalar bool/int observations live in NumPy.
+        # Integer indexing creates numpy.void, rejected by JAX 0.4 AOT calls;
+        # preserve a zero-dimensional array and the original tangent dtype.
+        return self.jax.tree_util.tree_map(
+            lambda value: value[index:index + 1].reshape(value.shape[1:]), tree)
 
     def streamed_value_and_grad(
         self,

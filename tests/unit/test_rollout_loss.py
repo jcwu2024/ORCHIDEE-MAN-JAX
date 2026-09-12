@@ -275,3 +275,16 @@ def test_targets_context_and_days_are_dynamic_and_direct_initial_term_is_retaine
     np.testing.assert_allclose(streamed_value, direct_value, rtol=3e-10, atol=3e-11)
     assert_tree_close(streamed_gradient, direct_gradient, rtol=3e-10, atol=3e-11)
     assert component.reverse_compile_count == 1
+
+
+def test_daily_scalar_float0_cotangent_keeps_array_type_for_aot_runtime():
+    component = make_rollout_loss(jax,jnp,toy_step,toy_loss)
+    cotangent = {'count':np.zeros((2,),dtype=jax.dtypes.float0),
+                 'mask':np.zeros((2,3),dtype=jax.dtypes.float0),
+                 'state':jnp.arange(6.).reshape(2,3)}
+    day = component._slice(cotangent,1)
+    assert isinstance(day['count'],np.ndarray)
+    assert day['count'].shape == ()
+    assert day['count'].dtype == jax.dtypes.float0
+    assert day['mask'].shape == (3,)
+    np.testing.assert_array_equal(day['state'],[3.,4.,5.])
