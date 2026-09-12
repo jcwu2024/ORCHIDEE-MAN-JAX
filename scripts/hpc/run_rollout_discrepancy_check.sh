@@ -8,14 +8,14 @@ CHECK=${1:?checkpointed or directions}
 case "$(hostname -s)" in gln01|ibgln01|ibc13b02n04) ;; *) exit 2;; esac
 cd "$CODE_ROOT"
 BASE=$ROOT/runtime/outputs/diagnostics/public-rollout-T2-v2
+ARGS=(--horizon 2 --stage-directory "$BASE-stages")
 case "$CHECK" in
   checkpointed)
     MODULE=scripts.hpc.probe_public_rollout_staged
-    ARGS=(--stage checkpointed)
+    ARGS+=(--stage checkpointed)
     ;;
   directions)
     MODULE=scripts.hpc.diagnose_public_rollout_discrepancy
-    ARGS=()
     ;;
   *) exit 2;;
 esac
@@ -28,4 +28,4 @@ env CODE_ROOT="$CODE_ROOT" GPU_DEVICE="$GPU_DEVICE" \
   OUTPUT="$BASE-$CHECK-diagnosis.json" \
   bash scripts/hpc/run_fresh_start_one_day.sh \
     --protocol manifests/coarse_graining/fresh_start_one_day_probe_v3.json \
-    --horizon 2 --stage-directory "$BASE-stages" "${ARGS[@]}"
+    "${ARGS[@]}"
