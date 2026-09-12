@@ -92,3 +92,20 @@ and `public-rollout-T2-v2-pipeline-attempt1.log`. The chain resumed on free GPU1
 at8e522ce, launcher PID31604; existing reference.pkl is reused. Numerical
 cross-method admission remains pending. Single-day direct-AD training does not
 use this streamed interface and its isolated12bac94 checkout remains unchanged.
+
+The resumed core finished in326.30s and saved streamed.pkl, but numerical
+comparison is rejected. Scalar loss agrees and all gradients are finite.
+Parameter L2 error2.27232e-5 against reference norm0.24276435 (relative9.3602e-5);
+initial-state L2 error1.548636 against1473.4141 (relative1.05105e-3).
+Four parameter coordinates and49 state coordinates fail the coordinate gate;
+additional parameter leaves fail the per-leaf L2 criterion. The chain correctly
+stopped, so directional and checkpointed stages have not executed.
+
+An inexpensive free-CPU read of the saved arrays finds the four parameter
+coordinates at expert_blocks/5/0/attention/query/bias indices193/216/219/232.
+Their errors are1.09e-6--1.23e-6, against limits around1.09e-6. This does not
+explain the state discrepancies or establish harmless rounding. Report
+`public-rollout-T2-v2-differences.json` retains every failed coordinate and
+parameter-leaf detail. No model run or parameter update was required for that
+localization. Next investigate recurrence/precision and use targeted JVP/FD
+before changing a derivative implementation or accepting a different tolerance.

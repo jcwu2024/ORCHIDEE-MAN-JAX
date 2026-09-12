@@ -57,7 +57,19 @@ Each stage and each epsilon persists independently; only a passed stage starts
 the next. Read `runtime/outputs/diagnostics/public-rollout-T2-v2-pipeline.log`
 and the separate `public-rollout-T2-v2-{core,derivatives,checkpointed}.json`.
 Durable results are in `public-rollout-T2-v2-stages/` alongside those reports.
-Keep the server checkout fixed during this chain. No duplicate invocation.
+The resumed core completed in326.3s but its comparison is rejected; the chain
+stopped before derivatives/checkpointed stages. Loss agrees and all gradients
+are finite. Four parameter coordinates and49 initial-state coordinates exceed
+the declared coordinate tolerance; some parameter leaves also fail their L2
+gate. Overall relative gradient L2 errors are9.3602e-5 (parameters) and
+1.05105e-3 (initial state). Both complete gradients remain saved.
+Free-CPU inspection of saved arrays locates all four parameter-coordinate
+failures at `expert_blocks/5/0/attention/query/bias` indices193/216/219/232,
+absolute differences1.09e-6 to1.23e-6. Report
+`runtime/outputs/diagnostics/public-rollout-T2-v2-differences.json`.
+Next localize recurrence/precision with the saved reference and streamed
+results, then targeted JVP/FD; do not rerun the unchanged reference or relax
+tolerances merely to pass. No multi-day training is admitted.
 The user explicitly asked to progress useful independent work while waiting.
 Broader one-day training now has an executable fresh method, weighted
 microbatch accumulation, full optimizer/sampler recovery and fixed physical

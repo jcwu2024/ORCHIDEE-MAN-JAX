@@ -59,8 +59,17 @@ cotangents in the JAX0.4.38 AOT call. The array-preserving float0 slice fix at
 repaired streamed/direct comparison. Report `rollout-float0-compatibility-v1.json`.
 The chain resumed on free GPU1 at8e522ce, PID31604, reusing the saved reference;
 original attempt report/log are preserved with `-attempt1`. Cross-method
-results remain pending. This host streamed-interface issue is absent from the
-separate single-day direct-AD training route.
+core completed in326.3s with matching loss and finite gradients, but the
+comparison is rejected. Four parameter and49 initial-state coordinates exceed
+the declared tolerance; parameter leaf L2 gates also identify distributed
+differences. Overall relative L2 error9.3602e-5/1.05105e-3 respectively.
+The chain stopped before directional/checkpointed checks; PID31604 is absent.
+Saved-array CPU inspection identifies the four parameter coordinates in
+expert_blocks/5/0/attention/query/bias (indices193/216/219/232, absolute error
+about1.09e-6--1.23e-6). Full reference/streamed gradients are durable; inspect
+recurrence/precision and targeted directional checks before drawing a cause
+conclusion. This is not yet proof of either harmless rounding or an incorrect
+adjoint. The separate single-day direct-AD training remains independent.
 The user asked to advance independent work instead of waiting. The broad
 one-day runner, weighted gradient accumulation, atomic full-state checkpoint
 and fixed physical monitor summaries are implemented. Eleven local tests pass,
@@ -85,6 +94,13 @@ that checkout and catalogue phase. Report:
 `runtime/outputs/diagnostics/one-day-pool-15048786.log`.
 This is the approved one-day training job, not multi-day training or final
 model acceptance. See `fresh_start_one_day_pool_v1_20260912.md`.
+At the first40-update report, updates2--40 average4.113s each (3.883--6.656s),
+after about381s of initialization/compilation/initial monitoring. This supports
+roughly2.3hours of update arithmetic for the current1998-update pool. Naively
+scaling the unchanged single-V100 method to8,568,025 eligible days would take
+about306hours per full-data epoch, before extra IO/monitor costs. Full-data
+training therefore needs throughput/batch/multi-device measurements rather
+than blindly multiplying the present run or its4-hour stop limit.
 See the linked current plan in `NEXT_STEPS.md`; prior chronological entries
 below retain their original scope.
 
