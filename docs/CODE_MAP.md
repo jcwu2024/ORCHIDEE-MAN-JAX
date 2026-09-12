@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-09-12.
+Last updated: 2026-09-13.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -60,6 +60,16 @@ jax_orchidee.cli
 No code under `research/` is imported by the ordinary Teacher path.
 
 ## Daily Research
+
+`forward_screen_selection.py` owns metadata-only disjoint window selection;
+`scripts/hpc/prepare_trained_forward_screen.py` freezes the actual panel.
+`trained_screen_common.py` loads the final full-network checkpoint and the
+verified per-window payload boundary for both new evaluation routes.
+`run_trained_forward_screen.py` reports daily/cumulative physical errors and
+the existing13-key gates, using `forward_screen_metrics.py` for physical-unit
+summaries. `probe_trained_checkpointed_grad.py` measures native-checkpointed
+parameter gradients/JVP at the first fixed T7 window. `run_trained_evaluation.sh`
+owns actual-shell dry runs and exact-runtime preflight before either route.
 
 `daily_operator/rollout_loss.py` now owns ordinary/checkpointed scan losses and
 the public streamed value-and-gradient operation. It generates observation

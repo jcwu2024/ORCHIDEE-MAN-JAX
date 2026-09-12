@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-09-12.
+Last updated: 2026-09-13.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/trained_forward_and_native_ad_20260913.md` | Both free-GPU chains running | Final trained7/30 forward screen and native T7 parameter-only directional AD |
 | `research/daily_coarse_graining/parallel_training_infrastructure_plan_20260912.md` | Current approved parallel scope | Broader one-day data and unified multi-day derivatives |
 | `research/daily_coarse_graining/public_rollout_real_probe_20260912.md` | First real-model multi-day admission plan | Two-day full-network/initial-state gradients and measured memory |
 | `research/daily_coarse_graining/public_rollout_staged_completion_20260912.md` | Approved completion; implementation/local tests/review pass | Durable reference, streamed comparison, resumable JVP/FD, separate checkpointed check |

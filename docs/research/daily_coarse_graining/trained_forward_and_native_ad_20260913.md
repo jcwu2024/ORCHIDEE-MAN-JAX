@@ -76,3 +76,36 @@ rehashing. Forward screen: one free GPU,75-minute cap, per-window progress.
 Native reverse and JVP stages: separate90/60-minute caps and durable gradient,
 so a later timeout cannot discard the reverse result. These are maximum bounds,
 not runtime predictions. Use idle free GPUs; no new paid job is submitted.
+
+## Pre-execution evidence and resource adjustment
+
+The metadata selector completed in148.18s on free test02. It excludes63,771
+distinct one-day/monitor dates and selects16 windows,14 locations and7 years,
+with296 mutually disjoint Teacher days. Its first T7 window is artifact1887,
+window5, point277.0-091.0/year1995/start-row73. No model output selected it.
+
+The real T7/T30 forward graph and actual metric payload preflight passed at
+1b3aaa8 in141.17s. Eleven local selector/metrics/layout tests pass after review
+added exact panel/population checks and nonfinite-result rejection. These
+bookkeeping changes do not alter the traced forward graph.
+
+The combined native-gradient/JVP CPU preflight did not complete within its
+15-minute limit on test03; the last observation showed about7.5minutes CPU
+time on the shared node. No shape/type exception was captured, and the report
+remains an incomplete bootstrap-stage record, not a passed AD trace. Repeating
+that large abstract trace before GPU tracing would duplicate substantial work.
+Proceed with the already validated real forward boundary and the exact-runtime
+tiny AD gate, then let each bounded GPU lowering supply the actual gradient/JVP
+trace and memory result before evaluation. This resource adjustment does not
+promote numerical correctness or change the AD acceptance tolerances.
+
+## Launch record
+
+At c76c553, the forward screen runs on free GPU1 (launcher PID4617),75-minute
+limit after runtime preflight. The native AD chain runs independently on free
+GPU0 (PID6852),90minutes for reverse and60minutes for JVP after reverse success.
+Logs: `runtime/outputs/diagnostics/trained-forward-ad-v1-forward-pipeline.log`
+and `trained-forward-ad-v1-ad-pipeline.log`. Reports use the same prefix with
+`forward.json`, `ad-reverse.json` and `ad-verify.json`. Neither is a training job.
+The source checkout is fixed during execution; the final checkpoint remains
+the immutable result of job15048786. Results are pending.

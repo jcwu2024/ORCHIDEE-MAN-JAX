@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-12.
+Last updated: 2026-09-13.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -12,6 +12,26 @@ This page is the current status authority. Dated files under
 describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
+
+Current2026-09-13 execution: the final update1998 checkpoint is under a
+train-domain, training-day-disjoint forward screen (8 T7+8 T30 windows,
+14 locations/7 years/296 days). Selection excludes63,771 distinct one-day
+training/monitor days and precedes model evaluation. No sealed split is used.
+The metadata selection passed in148.18s and real CPU forward/metric-payload
+tracing passed in141.17s. The c76c553 reporting follow-up enforces complete
+panel populations and no filtering-away of defined nonfinite results;11 local
+selection/layout/metric tests pass. Free GPU1 runs forward, launcher PID4617.
+
+The first selected T7 window (artifact1887/window5, point277.0-091.0/year1995,
+start-row73) is also the fixed native-checkpointed parameter-AD probe, with
+two predeclared exact +/-1 Rademacher directions. CPU combined AD tracing hit
+its15-minute limit without a final result; actual GPU lowering is the next
+shape/memory evidence after exact-runtime interface checks. Free GPU0 runs
+native reverse then JVP on success, PID6852. The source checkout is c76c553
+for both chains and remains fixed. Reports/logs share the prefix
+`runtime/outputs/diagnostics/trained-forward-ad-v1-`. See
+`trained_forward_and_native_ad_20260913.md` for bounds and claim limits.
+No parameters are updated and no paid job is submitted by either chain.
 
 Latest completion: paid15048786 completed1998/1998 updates with exit0 in
 02:24:59, consuming63,936 draws/63,707 unique days. The bounded learning screen

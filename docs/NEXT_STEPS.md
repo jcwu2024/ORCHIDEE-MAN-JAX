@@ -1,14 +1,38 @@
 # Current Roadmap
 
-Last updated: 2026-09-12.
+Last updated: 2026-09-13.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
-## Current execution gate (2026-09-12)
+## Current execution gate (2026-09-13)
 
 Current actions, superseding launch instructions in the history below:
+
+- User authorized both the trained7/30-day forward screen and native T7 AD
+  continuation under
+  [`trained_forward_and_native_ad_20260913.md`](research/daily_coarse_graining/trained_forward_and_native_ad_20260913.md).
+  Frozen panel:8 windows per horizon,14 sites/7 years,296 mutually disjoint
+  Teacher days, excluding all63,771 one-day/monitor dates. Selection is
+  `runtime/outputs/diagnostics/trained-forward-selection-v1.json`.
+- Free GPU1 forward screen is running at c76c553, launcher PID4617. Log/report:
+  `runtime/outputs/diagnostics/trained-forward-ad-v1-forward-pipeline.log` and
+  `trained-forward-ad-v1-forward.json`. Real CPU forward and metric-payload
+  preflight passed in141.17s; reviewed population/finite-statistic checks pass
+  11 local tests and do not change that numerical graph.
+- Free GPU0 native T7 AD chain is running at c76c553, PID6852. Reverse report:
+  `trained-forward-ad-v1-ad-reverse.json`, followed on success by
+  `trained-forward-ad-v1-ad-verify.json`; log `trained-forward-ad-v1-ad-pipeline.log`.
+  The CPU combined AD trace did not finish its15-minute cap and is not a pass;
+  exact-runtime tiny checks and bounded actual GPU lowering now provide the
+  next evidence. Native reverse/JVP stages have90/60-minute bounds and preserve
+  the completed gradient. This is parameter-only directional admission for one
+  preselected trained T7 case, not broad multi-day or scientific acceptance.
+- Keep the server checkout c76c553 fixed while both chains run. No duplicate
+  invocation, new training, Teacher regeneration or paid submission.
+
+Previous completed results:
 
 - All three runs are finished. Paid job15048786 completed1998 updates with
   exit0 in02:24:59 and passed the declared bounded one-day learning screen.
