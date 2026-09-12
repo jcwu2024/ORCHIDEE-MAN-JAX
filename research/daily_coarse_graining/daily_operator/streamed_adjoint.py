@@ -75,7 +75,7 @@ class StreamedAdjoint:
         )
         return gradient
 
-    def gradient_with_initial_state(self, values, fixed, states, days, cotangents, *, callback=None):
+    def gradient_with_initial_state(self, values, fixed, states, days, cotangents, *, callback=None, primal_callback=None):
         """Return parameter gradient and the adjoint of ``states[0]``."""
         jax, jnp = self.jax, self.jnp
         emit = callback or (lambda event, data: None)
@@ -104,7 +104,9 @@ class StreamedAdjoint:
         accumulated = jax.tree_util.tree_map(lambda p: jnp.zeros_like(p, dtype=jnp.float64), values)
         for index in reversed(range(len(states))):
             cotangent = dict(cotangents[index], state=cotangents[index]["state"] + future)
-            _, gradient, future = self.compiled(values, states[index], fixed, days[index], cotangent)
+            primal, gradient, future = self.compiled(values, states[index], fixed, days[index], cotangent)
+            if primal_callback is not None:
+                primal_callback(index, primal)
             accumulated = self.add(accumulated, gradient)
             if int(self.nonfinite((gradient, future))) != 0:
                 raise RuntimeError(f"nonfinite streamed derivative at day {index + 1}")

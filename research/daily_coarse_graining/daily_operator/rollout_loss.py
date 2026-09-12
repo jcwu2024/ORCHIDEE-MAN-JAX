@@ -179,6 +179,7 @@ class RolloutLoss:
         loss_context,
         *,
         callback=None,
+        primal_callback=None,
     ):
         """Return loss and full gradients using bounded one-day reverse graphs.
 
@@ -187,6 +188,10 @@ class RolloutLoss:
         leaves and the continuous initial state must be floating. Discrete
         carry leaves must remain bool/integer because their derivative is held
         fixed rather than silently omitted.
+
+        ``primal_callback(index, replay, forward)`` optionally observes the
+        already-returned one-day VJP primal and its saved forward observation.
+        It is diagnostic only and cannot replace state or cotangent values.
         """
         jax = self.jax
         horizon = self._leading_length(days, "days")
@@ -221,6 +226,8 @@ class RolloutLoss:
             day_records,
             cotangent_days,
             callback=callback,
+            primal_callback=(None if primal_callback is None else
+                lambda index, replay: primal_callback(index, replay, self._slice(observations, index))),
         )
         parameter_gradient = self._streamed_adjoint.add(recurrent_parameter, direct_parameter)
         initial_gradient = jax.tree_util.tree_map(

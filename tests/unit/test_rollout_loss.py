@@ -288,3 +288,19 @@ def test_daily_scalar_float0_cotangent_keeps_array_type_for_aot_runtime():
     assert day['count'].dtype == jax.dtypes.float0
     assert day['mask'].shape == (3,)
     np.testing.assert_array_equal(day['state'],[3.,4.,5.])
+
+
+def test_primal_observer_sees_vjp_replay_without_changing_the_derivative():
+    arguments = case(jnp.float64,3)
+    component = make_rollout_loss(jax,jnp,toy_step,toy_loss)
+    expected = component.streamed_value_and_grad(*arguments)
+    observed = []
+
+    def observer(index,replay,forward):
+        observed.append(index)
+        assert_tree_close(replay,forward,rtol=1e-12,atol=1e-13)
+
+    actual = component.streamed_value_and_grad(*arguments,primal_callback=observer)
+    assert observed == [2,1,0]
+    assert_tree_close(actual,expected,rtol=0.,atol=0.)
+    assert component.reverse_compile_count == 1

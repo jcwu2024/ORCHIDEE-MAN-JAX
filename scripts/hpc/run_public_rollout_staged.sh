@@ -7,6 +7,9 @@ GPU_DEVICE=${GPU_DEVICE:?select an idle free GPU}
 BASE=$ROOT/runtime/outputs/diagnostics/public-rollout-T2-v2
 case "$(hostname -s)" in gln01|ibgln01|ibc13b02n04) ;; *) exit 2;; esac
 cd "$CODE_ROOT"
+env CODE_ROOT="$CODE_ROOT" GPU_DEVICE="$GPU_DEVICE" \
+  PYTHON_MODULE=scripts.hpc.check_daily_training_runtime RUN_TIMEOUT=3m \
+  OUTPUT="$BASE-runtime.json" bash scripts/hpc/run_fresh_start_one_day.sh --backend gpu
 for STAGE in core derivatives checkpointed; do
   STAGE_TIMEOUT=90m
   if [[ "$STAGE" == derivatives ]]; then STAGE_TIMEOUT=60m; fi
