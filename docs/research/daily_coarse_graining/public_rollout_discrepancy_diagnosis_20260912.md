@@ -63,3 +63,19 @@ diagnostic, at most90minutes each; no paid submission. Use durable results from
 the existing runtime stage directory and new output names. Native checkpointed
 uses the already CPU-traced numerical graph. The other diagnostic records the
 JVP compiled-memory estimate before execution and stops above18GiB.
+
+## Preparation and launches
+
+Observer/projection/staged local tests pass21 cases; legacy/public core
+regression coverage passes23 cases; runtime-gate tests pass2 cases. The actual
+GPU runtime matrix passes in59.73s on JAX0.4.38/NumPy2.4.6, including float0 AOT,
+all8 horizon/precision pairs, target/context changes, and weighted AdamW.
+The combined-JVP real-data CPU abstract trace passed at6b69128 in220.62s.
+
+GPU0 native checkpointed comparison started at6b69128, launcher PID38864.
+GPU1 replay/directional diagnosis started at isolated5d13be2, PID41558, from
+`runtime/checkouts/rollout-directions-v1`. Only the pre-execution host FD scales
+were broadened at5d13be2; the CPU-traced joint-JVP graph is unchanged.
+Each has90minutes after the small runtime gate; no paid task was submitted.
+Reports/logs use `runtime/outputs/diagnostics/public-rollout-T2-v2-` followed
+by `checkpointed-diagnosis` or `directions-diagnosis`. Results pending.

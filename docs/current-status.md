@@ -13,6 +13,31 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Current execution: paid one-day job15048786 continues, while two independent
+free-GPU diagnostics investigate the saved T2 mismatch. GPU0 checkpointed
+comparison runs at6b69128/PID38864; GPU1 replay plus joint-JVP/FD runs at
+isolated5d13be2/PID41558. Logs/reports:
+`runtime/outputs/diagnostics/public-rollout-T2-v2-{checkpointed,directions}-diagnosis.*`.
+The native/streamed acceptance gate is still unresolved. Neither diagnostic
+updates parameters or changes model/input-normalization rules.
+
+The actual GPU runtime matrix passes in59.73s on JAX0.4.38/NumPy2.4.6;
+local JAX0.10.1 alone did not cover the earlier scalar-float0 AOT failure.
+The gate now runs before expensive diagnostics. The new joint-JVP actual-data
+CPU shape trace passed at6b69128 in220.62s. It measured the dominant coordinate
+as PFT14 reserve carbon biomass[0,1,7,0]: value9.98185347e-9,
+mean4.24204611e-9, scale4.66846019e-9, float32 standardized1.2294861078 versus
+float64 arithmetic1.2294861953. This alone does not prove a normalization bug.
+
+Paid training's update500 fixed excluded-day panel improves GPP RMSE
+3.06484->0.67214, NPP2.61346->0.47197, autotrophic respiration
+0.52105->0.21476 gC/m2/day, and AGB one-day-change RMSE2.01949->0.35810 gC/m2.
+Training has continued beyond950 updates at the latest read. The panel excludes
+these days from updates but shares the train-domain locations/years; no
+independent-space/time or long-rollout scientific claim follows.
+
+The chronological evidence below preserves earlier completed/failed attempts.
+
 Latest: v3 completed all12 updates in757.37s with convergence/physical/replay
 checks passing and20.9% lower three-sample flux loss. Fraction outputs briefly
 overshot at update1 and recovered by4; this is not final-model acceptance.

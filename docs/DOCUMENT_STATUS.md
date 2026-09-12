@@ -26,6 +26,8 @@ an earlier experiment and does not control current work.
 | `research/daily_coarse_graining/parallel_training_infrastructure_plan_20260912.md` | Current approved parallel scope | Broader one-day data and unified multi-day derivatives |
 | `research/daily_coarse_graining/public_rollout_real_probe_20260912.md` | First real-model multi-day admission plan | Two-day full-network/initial-state gradients and measured memory |
 | `research/daily_coarse_graining/public_rollout_staged_completion_20260912.md` | Approved completion; implementation/local tests/review pass | Durable reference, streamed comparison, resumable JVP/FD, separate checkpointed check |
+| `research/daily_coarse_graining/public_rollout_discrepancy_diagnosis_20260912.md` | Running bounded free diagnostics | Native checkpointed arbitration, VJP primal replay, scaled targeted JVP/FD |
+| `research/daily_coarse_graining/gradient_reliability_workflow_20260912.md` | Implemented process improvement | Exact-runtime small checks, shared derivative ownership and preserved partial evidence |
 | `research/daily_coarse_graining/one_day_catalogue_preparation_20260912.md` | Completed on free CPU | 63,707 unique available Teacher days, monitor exclusions and bounded cache |
 | `research/daily_coarse_graining/one_day_batch_resource_probe_20260912.md` | Completed; numerical/resource gate passed | Four point-year samples, all-coordinate gradient agreement and7.85GiB peak |
 | `research/daily_coarse_graining/fresh_start_one_day_pool_v1_20260912.md` | Preflight passed; approved job15048786 running | Fresh one-epoch method, batch32, fixed panels and exact resume; one V100/4h/CNY11.04 maximum |

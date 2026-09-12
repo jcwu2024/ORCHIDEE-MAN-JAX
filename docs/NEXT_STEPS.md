@@ -8,6 +8,34 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-12)
 
+Current actions, superseding launch instructions in the history below:
+
+- Paid one-day job15048786 is running at the frozen12bac94 checkout. Its fixed
+  excluded-day monitor at update500 improves GPP RMSE3.06484->0.67214,
+  NPP2.61346->0.47197 and autotrophic respiration0.52105->0.21476 gC/m2/day.
+  This is not independent-site or long-horizon acceptance. Leave the running
+  checkout fixed; read its declared report and wait for the1998-update result.
+- Multi-day AD remains unadmitted. The saved native/streamed discrepancy is
+  being diagnosed under
+  [`public_rollout_discrepancy_diagnosis_20260912.md`](research/daily_coarse_graining/public_rollout_discrepancy_diagnosis_20260912.md).
+  Free GPU0 runs native checkpointed comparison at6b69128, PID38864.
+  Free GPU1 runs replay observation plus targeted parameter/state JVP/FD at
+  isolated5d13be2 (`runtime/checkouts/rollout-directions-v1`), PID41558.
+  Both have90-minute limits after a short exact-runtime preflight.
+  Read `public-rollout-T2-v2-{checkpointed,directions}-diagnosis.json` and
+  matching logs under `runtime/outputs/diagnostics/`.
+- The new joint-JVP actual-data CPU trace passed in220.6s. Index2250 is PFT14
+  reserve carbon: initial9.98185e-9, fitted mean4.24205e-9, scale4.66846e-9.
+  It drives about99.78% of state-gradient discrepancy squared norm; this is
+  sensitivity evidence, not permission to zero it or revise its normalization.
+- The exact GPU runtime preflight passes under JAX0.4.38/NumPy2.4.6 in59.7s.
+  Local JAX is0.10.1. New diagnostic launchers run that small runtime check
+  before large graphs. See
+  [`gradient_reliability_workflow_20260912.md`](research/daily_coarse_graining/gradient_reliability_workflow_20260912.md).
+  No new paid job or automatic training retry is authorized.
+
+## Accepted setup and preceding diagnostics
+
 V3 completed all12 updates in757.37s; convergence, physical hard gates and
 checkpoint replay pass. Flux loss falls20.9% on three train samples, with
 transient lignin-fraction overshoot. The user approved two parallel next tracks:
