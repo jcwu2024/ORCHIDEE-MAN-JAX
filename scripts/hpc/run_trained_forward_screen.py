@@ -75,6 +75,11 @@ def run(args):
             if args.shape_only:
                 if h not in executables:
                     jax.eval_shape(forward,*arguments)
+                    expected = extract(targets['state'],targets['defined'],targets['gpp'],targets['gpp_defined'],targets['fraction'],targets['active'])
+                    ef,es = _acceptance_trajectories(expected.fluxes,expected.stocks)
+                    summarize_windows([physical_window(ef,ef,es,es,es)])
+                    target_oriented_acceptance_sufficient_statistics(expected.fluxes,expected.fluxes,
+                        expected.stocks,expected.stocks,scales=acceptance_scales,horizon=h)
                     executables[h] = True
                 continue
             if h not in executables:
@@ -119,7 +124,7 @@ def run(args):
                 physical=summarize_windows(physical[h]))
             emit('window_completed',memory=_device_memory(runtime['devices'][0]))
         if args.shape_only:
-            emit('completed',status='passed',classification='both_forward_horizon_shapes_only')
+            emit('completed',status='passed',classification='both_forward_horizon_shapes_and_metric_payloads_only')
             return report
         hard_pass = all(not any(row['hard'].values()) for row in report['windows'])
         science_pass = all(row['science']['all_key_gates_passed'] for row in report['horizons'].values())
