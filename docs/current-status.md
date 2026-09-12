@@ -45,8 +45,15 @@ gradients finite; every hard count zero; loss0.00384148725; compiled buffer
 estimate5,699,182,032 bytes (5.31GiB). The checkpointed/streamed comparison and
 JVP/FD did not finish. This is an incomplete timing-limited probe, not a
 derivative mismatch or multi-day acceptance. Direct compilation alone took
-about62.8minutes. Preserve the partial evidence and revise execution ordering/
-reference persistence before a rerun; do not repeat the same serial pipeline.
+about62.8minutes. The approved staged completion is now implemented and
+independently reviewed;7 focused tests pass. It is running on free gln01 GPU1
+at4d128c3, launcher PID19594, using separate core/directional/checkpointed
+stages and durable gradient/epsilon artifacts. Limits90/60/90minutes are stop
+limits, not duration estimates; failed/limited stages stop the chain.
+Log `runtime/outputs/diagnostics/public-rollout-T2-v2-pipeline.log`; separate
+stage reports use `public-rollout-T2-v2-{core,derivatives,checkpointed}.json`.
+Results are pending. The26MB cache file for the old direct jit_loss exists;
+actual cache reuse still needs the new compile timing.
 The user asked to advance independent work instead of waiting. The broad
 one-day runner, weighted gradient accumulation, atomic full-state checkpoint
 and fixed physical monitor summaries are implemented. Eleven local tests pass,
@@ -54,11 +61,12 @@ including the actual runner's interrupted/resumed AdamW equality and sample
 cursor behavior. The real CPU gradient/optimizer/monitor tracing passed at
 fa05bc1 in277.7s. Recovery metadata/count/report-order fixes and host-memory
 reporting at12bac94 preserve that numerical graph; focused tests pass.
-The free GPU0 two-update technical smoke started at server14:39:55, launcher
-PID13362,45-minute limit, at12bac94 in
-`runtime/checkouts/one-day-pool-v1`. Report:
-`runtime/outputs/diagnostics/one-day-pool-smoke-v1.json`. It is independent of
-the public T2 test; keep its source checkout fixed. Server clock was about
+The free GPU0 two-update technical smoke completed at12bac94 in455.40s with
+exit0, both updates and technical gate passing. Second full32-row update3.956s,
+peak active GPU9.49GiB and host8.14GiB. The two-update fixed-panel loss screen
+also passes, without implying one-epoch learning or scientific acceptance.
+Report `runtime/outputs/diagnostics/one-day-pool-smoke-v1.json`.
+Server clock was about
 8m16s behind the local workstation; prefer elapsed durations to mixed clocks.
 Formal proposal: fresh one1998-update prepared-pool
 epoch, batch32/microbatch4, one V100/8CPUs/4h, CNY11.04 ceiling, not approved

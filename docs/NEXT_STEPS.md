@@ -44,9 +44,13 @@ do not blindly repeat three serial compilation paths under the same time cap.
 The user approved the staged completion. Its implementation and independent
 review are complete;7 focused tests pass. See
 [`public_rollout_staged_completion_20260912.md`](research/daily_coarse_graining/public_rollout_staged_completion_20260912.md).
-Next run `run_public_rollout_staged.sh` on one idle free GPU: core comparison,
-then directional checks, then separate checkpointed comparison. Each stage
-and each epsilon persists independently; only a passed stage starts the next.
+The chain is running on free gln01 GPU1 at4d128c3, launcher PID19594:
+core comparison, then directional checks, then separate checkpointed comparison.
+Each stage and each epsilon persists independently; only a passed stage starts
+the next. Read `runtime/outputs/diagnostics/public-rollout-T2-v2-pipeline.log`
+and the separate `public-rollout-T2-v2-{core,derivatives,checkpointed}.json`.
+Durable results are in `public-rollout-T2-v2-stages/` alongside those reports.
+Keep the server checkout fixed during this chain. No duplicate invocation.
 The user explicitly asked to progress useful independent work while waiting.
 Broader one-day training now has an executable fresh method, weighted
 microbatch accumulation, full optimizer/sampler recovery and fixed physical

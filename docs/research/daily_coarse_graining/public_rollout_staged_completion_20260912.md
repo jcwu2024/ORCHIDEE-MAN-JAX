@@ -64,3 +64,15 @@ The broader one-day two-update smoke completed independently with exit0. Its
 scientific/throughput review is separate from this AD completion task. Neither
 T2 AD success nor two one-day updates establishes7/30-day scientific accuracy,
 365-day stability, Gate D2 or product acceptance.
+
+## Launch record
+
+Seven staged/canonical/physical regression tests pass; independent review found
+no numerical or persistence blocker. The existing direct jit_loss cache file
+is present (26MB), but its reuse is not assumed. The staged chain started on
+free gln01 GPU1 at4d128c3, launcher PID19594. Pipeline log:
+`runtime/outputs/diagnostics/public-rollout-T2-v2-pipeline.log`.
+Reports: `public-rollout-T2-v2-core.json`, `-derivatives.json`,
+`-checkpointed.json`; shared stage directory `public-rollout-T2-v2-stages/`,
+all under the same diagnostics directory. The chain is currently in core
+bootstrap. Do not update its checkout or start a duplicate run. No paid job.
