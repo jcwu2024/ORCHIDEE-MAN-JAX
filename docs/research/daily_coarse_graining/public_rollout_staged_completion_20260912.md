@@ -1,0 +1,66 @@
+# Complete the T2 gradient probe with durable stages
+
+User authorized completion after the first90-minute test timed out during the
+checkpointed compile. Preserve its partial report. No architecture, loss,
+sample, initialization, derivative tolerance or physical gate is changed.
+
+## Frozen case and acceptance
+
+Same fresh109,464,375-parameter v3 tree, seed20260911, artifact322/window1/T2,
+canonical binding, full initial continuous/discrete state, current PFT fraction,
+Teacher validity, retained inputs, four cumulative fluxes and final AGB/BGB.
+Only daily transitions are differentiated. No training, v6 regeneration or
+validation/test access. Native reference and streamed parameters/initial-state
+gradients must agree per coordinate and per leaf at atol1e-6/rtol1e-4; scalar
+loss at atol1e-6/rtol1e-5. Rounded parameter-direction JVP/FD checks retain
+epsilons3e-4,1e-4,3e-5, atol1e-6/rtol1%, and all physical/mask-stability gates.
+
+## Executable sequence and persistence
+
+`scripts/hpc/probe_public_rollout_staged.py` uses the unchanged public component
+and canonical graph. The historical monolithic runner remains reproducible.
+
+1. `core`: compute/reuse the ordinary direct reference, save its complete
+   parameter and initial-state gradient immediately, then compute/save streamed
+   gradients and compare them. Never compile the checkpointed reference here.
+2. `derivatives`: only after the core comparison passes, load both gradients and
+   perform JVP/rounded central FD. Save each completed epsilon independently.
+3. `checkpointed`: separately compare the native rematerialized graph against
+   the saved ordinary reference. This is last, after the critical evidence.
+
+Every stage has a separate JSON report. Atomic pickle artifacts contain the
+case identity, complete gradient/value and numeric summary. Case identity uses
+the protocol, actual artifact schedule, selected window/days, and explicit
+loss/component versions; no bulk data hashing. A later failed/limited stage
+cannot erase an earlier complete reference. Each invocation reconstructs the
+fresh model, checks the canonical physical forward, and checks reference scalar
+replay before using saved derivatives. Source commits are recorded per run.
+No exploratory model checkpoint is inherited; these artifacts are gradients.
+
+The existing persistent compilation cache remains at the canonical runtime
+path. Cache hits are measured, not assumed. The ordinary reference graph and
+dynamic argument structure are unchanged; it still must be evaluated again
+because the previous process did not save its gradient arrays. Native compiled
+memory is checked before execution at18GiB; the public streamed core retains
+the same one-day VJP envelope. Stages preserve host-side gradient arrays, so
+subsequent comparisons do not depend on keeping the original process alive.
+
+## Execution bounds
+
+One idle free gln01 GPU after local staged-resume tests; use the existing
+CPU-traced numerical graph. The new orchestration gets a small local actual-JAX
+test covering durable reference, interrupted continuation, streamed comparison,
+directional checks and cached-stage reuse. No additional real-data full gradient
+tracing is needed merely for persistence/ordering; the admitted graph is unchanged.
+
+The runner chain gives core90minutes, derivatives60minutes and the separate
+checkpointed check90minutes. These are stop limits, not predicted durations.
+Only a completed, passed preceding stage starts the next stage. A failure or
+time limit stops the chain and retains all complete artifacts; explicit rerun
+resumes rather than discarding them. This is one bounded T2 diagnostic chain,
+not paid training. No paid submission is authorized.
+
+The broader one-day two-update smoke completed independently with exit0. Its
+scientific/throughput review is separate from this AD completion task. Neither
+T2 AD success nor two one-day updates establishes7/30-day scientific accuracy,
+365-day stability, Gate D2 or product acceptance.

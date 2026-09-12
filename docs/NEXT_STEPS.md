@@ -41,6 +41,12 @@ Report `runtime/outputs/diagnostics/public-rollout-T2-v1.json` is partial eviden
 not multi-day admission. Before rerunning, restructure the probe to prioritize
 the streamed/native comparison and preserve expensive reference results;
 do not blindly repeat three serial compilation paths under the same time cap.
+The user approved the staged completion. Its implementation and independent
+review are complete;7 focused tests pass. See
+[`public_rollout_staged_completion_20260912.md`](research/daily_coarse_graining/public_rollout_staged_completion_20260912.md).
+Next run `run_public_rollout_staged.sh` on one idle free GPU: core comparison,
+then directional checks, then separate checkpointed comparison. Each stage
+and each epsilon persists independently; only a passed stage starts the next.
 The user explicitly asked to progress useful independent work while waiting.
 Broader one-day training now has an executable fresh method, weighted
 microbatch accumulation, full optimizer/sampler recovery and fixed physical
@@ -50,10 +56,10 @@ Its11 local tests pass, including complete runner interruption/resume equality.
 Real CPU gradient/optimizer/monitor tracing passed at fa05bc1 in277.7s.
 Recovery-only review fixes and host-memory reporting are included at12bac94;
 they do not change that tested numerical graph. The two-update free GPU0
-technical smoke is running from isolated checkout
-`runtime/checkouts/one-day-pool-v1` at12bac94, launcher PID13362,45-minute cap;
-report `runtime/outputs/diagnostics/one-day-pool-smoke-v1.json`.
-Do not start a duplicate smoke or mutate that checkout while it runs.
+technical smoke completed at12bac94 in455.4s with exit0 and passed its technical
+gate. Actual peak GPU9.49GiB, host8.14GiB; second full32-row update3.956s.
+Report `runtime/outputs/diagnostics/one-day-pool-smoke-v1.json`.
+It is not a long-horizon accuracy or formal one-epoch result. Do not repeat it.
 Proposed formal work is one1998-
 update prepared-pool epoch, batch32/microbatch4; paid4-hour execution remains
 unapproved. One-day direct AD does not depend on multi-day admission.

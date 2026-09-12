@@ -102,3 +102,12 @@ in isolated `runtime/checkouts/one-day-pool-v1`, server14:39:55, PID13362,
 45-minute limit. Result pending:
 `runtime/outputs/diagnostics/one-day-pool-smoke-v1.json` and `.log`.
 No paid job has been submitted.
+
+The technical smoke completed with exit0 in455.40s: both32-row updates and
+all96-row before/after monitor forwards passed. Its technical flag and bounded
+two-update loss screen are true; this is not one-epoch or scientific acceptance.
+The second complete update took3.956s; the first68.49s includes optimizer/
+accumulator compilation. Peak active GPU memory9.49GiB and host8.14GiB fit the
+proposed allocation. Measured complete-update arithmetic for1998 updates is
+about132minutes before additional IO/checkpoint/monitor/compiler variability,
+supporting the proposed4-hour envelope. Formal training is still unsubmitted.

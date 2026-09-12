@@ -67,6 +67,10 @@ cotangents and direct parameter/initial-state terms internally, reusing the
 backward-compatible `streamed_adjoint.py` core. `canonical_rollout.py` binds
 the current full neural tree and state-derived PFT fraction to this component;
 `scripts/hpc/probe_public_rollout.py` owns real-model admission, not training.
+`probe_public_rollout_staged.py` preserves each real-model gradient and epsilon
+check so a later compile/time limit cannot discard completed evidence;
+`run_public_rollout_staged.sh` sequences core, directional and checkpointed
+checks with separate bounds/reports. The numerical public component is unchanged.
 
 `daily_operator/one_day_sampling.py` provides reproducible shuffled epochs over
 prepared rows, semantic-day exclusions and compact resume cursors.
