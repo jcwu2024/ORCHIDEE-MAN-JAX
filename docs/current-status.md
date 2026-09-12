@@ -16,10 +16,16 @@ describe an earlier gate without being rewritten.
 Current execution: paid one-day job15048786 continues, while two independent
 free-GPU diagnostics investigate the saved T2 mismatch. GPU0 checkpointed
 comparison runs at6b69128/PID38864; GPU1 replay plus joint-JVP/FD runs at
-isolated5d13be2/PID41558. Logs/reports:
+isolated4047130/PID44184. Logs/reports:
 `runtime/outputs/diagnostics/public-rollout-T2-v2-{checkpointed,directions}-diagnosis.*`.
 The native/streamed acceptance gate is still unresolved. Neither diagnostic
 updates parameters or changes model/input-normalization rules.
+The first two directions launch attempts stopped after the small runtime gate,
+before model computation: Bash4.2 rejects a nounset empty argument array, and
+the old starter invoked the main-checkout launcher despite a different child
+CODE_ROOT. The argument array is now always nonempty and the starter invokes
+the absolute launcher inside CODE_ROOT. Both command branches pass actual
+shell `--dry-run` expansion. Previous logs are preserved with attempt1/attempt2.
 
 The actual GPU runtime matrix passes in59.73s on JAX0.4.38/NumPy2.4.6;
 local JAX0.10.1 alone did not cover the earlier scalar-float0 AOT failure.
@@ -28,6 +34,12 @@ CPU shape trace passed at6b69128 in220.62s. It measured the dominant coordinate
 as PFT14 reserve carbon biomass[0,1,7,0]: value9.98185347e-9,
 mean4.24204611e-9, scale4.66846019e-9, float32 standardized1.2294861078 versus
 float64 arithmetic1.2294861953. This alone does not prove a normalization bug.
+Source review confirms reserve is a prognostic state, with negative-only repair
+to1e-8 and subsequent possible positive depletion; it must not be zeroed.
+At its fitted input scale, the native derivative is6.85867e-6 and the native/
+streamed difference7.22169e-9 per standard-deviation perturbation. This change
+of units is diagnostic only and does not amend acceptance. Provenance is in
+`reserve_carbon_gradient_case_20260912.md`.
 
 Paid training's update500 fixed excluded-day panel improves GPP RMSE
 3.06484->0.67214, NPP2.61346->0.47197, autotrophic respiration

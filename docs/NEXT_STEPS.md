@@ -20,7 +20,10 @@ Current actions, superseding launch instructions in the history below:
   [`public_rollout_discrepancy_diagnosis_20260912.md`](research/daily_coarse_graining/public_rollout_discrepancy_diagnosis_20260912.md).
   Free GPU0 runs native checkpointed comparison at6b69128, PID38864.
   Free GPU1 runs replay observation plus targeted parameter/state JVP/FD at
-  isolated5d13be2 (`runtime/checkouts/rollout-directions-v1`), PID41558.
+  isolated4047130 (`runtime/checkouts/rollout-directions-v1`), PID44184.
+  Two earlier launcher attempts stopped before model execution; empty-array
+  Bash4.2 expansion and a mixed-checkout parent entry are corrected. Both
+  actual shell branches now pass command-expansion dry runs.
   Both have90-minute limits after a short exact-runtime preflight.
   Read `public-rollout-T2-v2-{checkpointed,directions}-diagnosis.json` and
   matching logs under `runtime/outputs/diagnostics/`.
@@ -28,6 +31,8 @@ Current actions, superseding launch instructions in the history below:
   reserve carbon: initial9.98185e-9, fitted mean4.24205e-9, scale4.66846e-9.
   It drives about99.78% of state-gradient discrepancy squared norm; this is
   sensitivity evidence, not permission to zero it or revise its normalization.
+  Source review confirms real reserve dynamics and a negative-only1e-8 repair;
+  see `reserve_carbon_gradient_case_20260912.md` for provenance and unit scaling.
 - The exact GPU runtime preflight passes under JAX0.4.38/NumPy2.4.6 in59.7s.
   Local JAX is0.10.1. New diagnostic launchers run that small runtime check
   before large graphs. See

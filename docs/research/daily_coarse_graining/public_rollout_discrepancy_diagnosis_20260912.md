@@ -79,3 +79,12 @@ were broadened at5d13be2; the CPU-traced joint-JVP graph is unchanged.
 Each has90minutes after the small runtime gate; no paid task was submitted.
 Reports/logs use `runtime/outputs/diagnostics/public-rollout-T2-v2-` followed
 by `checkpointed-diagnosis` or `directions-diagnosis`. Results pending.
+
+The first two directions starts failed before the model launched: Bash4.2
+nounset handling of an empty array, followed by a parent launcher taken from
+the main checkout instead of CODE_ROOT. Fixed arguments, explicit absolute
+entry selection and actual-shell command-expansion checks now cover both
+branches. The current directions run is4047130/PID44184 in the same isolated
+checkout; its runtime gate passes in22.39s and the model has reached replay
+reverse compilation. Earlier logs are kept with attempt1/attempt2 suffixes.
+These launcher-only fixes do not change the CPU-traced JVP graph.

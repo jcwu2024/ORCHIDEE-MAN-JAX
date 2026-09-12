@@ -12,6 +12,11 @@ This is a working procedure, not a claim that all remaining errors are solved.
 - Prepared retained inputs have a window axis, not a window/day axis. The
   actual-data CPU trace caught this runner layout mistake. Synthetic arrays
   alone were not enough to validate the data boundary.
+- Launcher validation also missed Bash4.2 nounset/empty-array expansion and
+  a mixed-checkout entry path. A child printing the intended code revision
+  does not prove its parent launcher came from that checkout. The launcher
+  now offers `--dry-run` to execute real argument construction on the actual
+  shell; the starter resolves the launcher itself from absolute CODE_ROOT.
 - Putting direct, checkpointed and streamed compilations in one90-minute task
   without saving full intermediate gradients turned a time limit into lost
   useful work. Durable stages now prevent that loss; separate elapsed/compile/
@@ -33,13 +38,16 @@ float0 AOT arguments, T1/2/3/7, float32/64, state-dependent fraction, changing
 same-shaped targets/context, public adjoint cache reuse, weighted microbatches
 and the real AdamW routine. It reads no Teacher arrays or bulk hashes.
 Run it once for a relevant code/environment change or new diagnostic chain,
-not once per training batch. This takes seconds to tens of seconds and does
+not once per training batch. Measured GPU checks took23--60seconds and do
 not imply real-model or scientific acceptance.
 
 Then validate any changed actual-data boundary with a real-row shape/forward
 check. Changes only to logging/order/persistence do not justify recompiling an
 unchanged billion-operation graph. Keep the numerical graph separate from its
 orchestration and compare the cheapest meaningful real case before scaling.
+For launcher changes, exercise both parameter branches with `--dry-run` on
+the actual Bash version, in addition to syntax validation. The two diagnostic
+branches now pass that check without running a model or opening a GPU context.
 
 Persist a completed expensive reference before compiling another method.
 Use independent result files, bounded stages and reproducible case identity.
