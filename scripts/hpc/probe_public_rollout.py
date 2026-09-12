@@ -59,6 +59,7 @@ def run(args):
         from research.daily_coarse_graining.daily_operator.canonical_rollout import (
             make_canonical_step,
             make_science_probe_loss,
+            prepared_retained_days,
         )
         from research.daily_coarse_graining.daily_operator.rollout_loss import make_rollout_loss
         from scripts.hpc.run_successor_fast_owner_gpu_probe import _tree_numeric_report
@@ -68,7 +69,7 @@ def run(args):
             artifact = pickle.load(handle)
         window = artifact.batch.seven_day
         templates = jax.tree_util.tree_map(lambda v:v[1,:args.horizon],window.inputs)
-        retained = jax.tree_util.tree_map(lambda v:v[1,:args.horizon],window.day_inputs)
+        retained = prepared_retained_days(window.day_inputs,1,args.horizon)
         initial, discrete = templates.continuous_state[0], jax.tree_util.tree_map(lambda v:v[0],templates.discrete_state)
         days = (templates,retained)
         targets = {'state':window.expected_next_state.other[1,:args.horizon],

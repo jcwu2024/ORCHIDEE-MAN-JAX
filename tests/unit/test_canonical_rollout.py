@@ -9,6 +9,13 @@ from research.daily_coarse_graining.daily_operator.training_data import DailyPro
 from tests.unit.test_daily_operator_successor_process_head import _markov_contract, _synthetic_parent
 
 
+def test_prepared_retained_bundle_is_per_window_not_per_day():
+    bundle = {'year':np.array([1963,1982]), 'annual':np.arange(12).reshape(2,6)}
+    days = bridge.prepared_retained_days(bundle,1,3)
+    np.testing.assert_array_equal(days['year'], [1982,1982,1982])
+    np.testing.assert_array_equal(days['annual'], np.tile(np.arange(6,12),(3,1)))
+
+
 def test_canonical_step_rebuilds_fraction_and_keeps_its_state_gradient(monkeypatch):
     contract = _markov_contract()
     adapter = DailyProcessTrainingAdapter.from_contract(contract)

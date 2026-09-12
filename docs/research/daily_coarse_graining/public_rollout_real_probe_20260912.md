@@ -39,3 +39,17 @@ paths, not long data processing. Save reports incrementally. Any mismatch
 blocks promotion and larger multi-day training; do not infer current-model
 acceptance from toy tests or the earlier15.96M parameter route. After this
 bounded probe, extend the measured matrix to T3/7 where resources allow.
+
+## Integration preparation
+
+The generic component and prior streamed suite pass21 tests. Root's actual
+PFT-fraction binding/science loss and bounded data-cache tests also pass.
+First real-data CPU preflight at e3aa80f caught a runner layout error before
+any GPU work: prepared `window.day_inputs` has a window axis and contains a
+shared annual retained bundle; it does not have a second day axis to slice.
+The existing production rollout reuses that bundle with each actual day's
+canonical input. The adapter now broadcasts the selected per-window bundle
+along the prefix day axis explicitly. A scalar/annual-array layout regression
+joins the canonical binding tests;3 tests pass in13.83s.
+The original failed shape report remains `public-rollout-shapes-v1.json`.
+The corrected CPU shape run uses a new output path before GPU execution.

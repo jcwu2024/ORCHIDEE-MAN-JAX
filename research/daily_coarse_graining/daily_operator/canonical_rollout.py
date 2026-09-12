@@ -1,6 +1,7 @@
 """Full-parameter canonical daily binding for public rollout differentiation."""
 from __future__ import annotations
 
+import jax
 import jax.numpy as jnp
 
 from .model import bind_daily_operator_dynamic_retained_inputs
@@ -8,6 +9,18 @@ from .successor_training import extract_biomass_productivity_trajectories, rollo
 
 FLUX_FIELDS = ('gpp', 'maintenance_respiration', 'growth_respiration', 'heterotrophic_respiration')
 STOCK_FIELDS = ('aboveground_biomass_carbon', 'belowground_biomass_carbon')
+
+
+def prepared_retained_days(window_inputs, window_index, horizon):
+    """Broadcast the existing per-window retained bundle along its daily axis.
+
+    Prepared window.day_inputs has a window axis, not a window/day pair.
+    Calendar selection still uses each actual day's canonical input inside
+    the retained process, exactly as the existing production rollout does.
+    """
+    return jax.tree_util.tree_map(
+        lambda value: jnp.broadcast_to(jnp.asarray(value)[window_index], (horizon,)+jnp.asarray(value).shape[1:]),
+        window_inputs)
 
 
 def make_canonical_step(head, retained_template):

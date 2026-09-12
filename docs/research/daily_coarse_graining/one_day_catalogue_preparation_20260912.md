@@ -34,3 +34,23 @@ Run locally validated sampling/cache primitives on free test02, one process,
 15-minute cap. This produces a ready data catalogue and IO evidence. Batch4
 gradient memory and throughput still require a subsequent bounded GPU probe
 before fixing a larger training budget. No training or paid submission here.
+
+## Completed catalogue and IO pilot
+
+Free test02 completed at e3aa80f in149.20s. Original data schedule identity
+reproduces, selected payload schedules agree, and cached/uncached batch values
+match exactly. Result:
+
+- 2000 source packages,64000 one-day row occurrences before exclusions;
+-64 unique monitor days excluded from all matching training occurrences;
+-63936 remaining draws,63707 unique Teacher days,535 locations,
+ 17677 point-years, all44 years1961-2004;
+-1998 full32-row batches per prepared-pool epoch, no remainder for this pool;
+-first batch reads4 packages (13.45MB compressed), with73.51MB one-day cache;
+-application-cache-miss stack0.536s, cache-hit stack0.038s on a shared CPU node.
+
+Files: `runtime/outputs/diagnostics/one-day-catalogue-v1.json` and
+`one-day-catalogue-v1.catalogue.json.gz`; the JSON report is copied to local
+outputs. These are available rows, not consumed training data. The next
+bounded resource test uses the first four declared batch rows before a larger
+training budget is proposed.
