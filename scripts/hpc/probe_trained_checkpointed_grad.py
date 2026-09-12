@@ -49,7 +49,7 @@ def run(args):
         from scripts.hpc.probe_public_rollout import physical_checks
         from scripts.hpc.run_successor_fast_owner_gpu_probe import _tree_numeric_report
 
-        pool = WindowPool(args.selection)
+        pool = WindowPool(args.selection,method['source_identity'])
         row = next(r for r in pool.selection['windows'] if r['length']==7)
         initial,discrete,days,targets,expected_discrete = pool.case(jax,row)
         context = {'stock_weight':jnp.array(1.,dtype=jnp.float64)}

@@ -59,3 +59,22 @@ def summarize_windows(windows):
             p,t = (np.concatenate([np.asarray(r[key]).reshape(-1) for r in rows]) for key in (pkey,tkey))
             result['stocks'][name][kind] = summarize_errors(p,t,m)
     return result
+
+
+def complete_metric_gate(physical,science,horizon,window_count):
+    """Missing or nonfinite observations cannot become a successful screen."""
+    if window_count != 8 or len(science['keys']) != 13:
+        return False
+    if len(physical['fluxes']) != 8 or len(physical['stocks']) != 5:
+        return False
+    if any(row['evaluated_values'] != window_count for row in science['keys'].values()):
+        return False
+    for row in physical['fluxes'].values():
+        for key,count in [('cumulative_gC_m2',window_count),('daily_gC_m2_day',window_count*horizon)]:
+            if row[key]['nonfinite_defined'] or row[key]['count'] != count:
+                return False
+    for row in physical['stocks'].values():
+        for value in row.values():
+            if value['nonfinite_defined'] or value['count'] != window_count:
+                return False
+    return True

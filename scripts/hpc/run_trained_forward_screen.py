@@ -36,6 +36,7 @@ def run(args):
             make_science_probe_loss,
         )
         from research.daily_coarse_graining.daily_operator.forward_screen_metrics import (
+            complete_metric_gate,
             physical_window,
             summarize_windows,
         )
@@ -53,7 +54,7 @@ def run(args):
         from scripts.hpc.probe_one_day_batch import _compiled_memory, _device_memory
         from scripts.hpc.probe_public_rollout import physical_checks
 
-        pool = WindowPool(args.selection)
+        pool = WindowPool(args.selection,method['source_identity'])
         component = make_rollout_loss(jax,jnp,make_canonical_step(head,template),make_science_probe_loss(head.contract,scales))
         forward = jax.jit(component.rollout)
         acceptance_scales = derive_target_oriented_acceptance_scales(
@@ -127,9 +128,11 @@ def run(args):
             emit('completed',status='passed',classification='both_forward_horizon_shapes_and_metric_payloads_only')
             return report
         hard_pass = all(not any(row['hard'].values()) for row in report['windows'])
-        science_pass = all(row['science']['all_key_gates_passed'] for row in report['horizons'].values())
+        complete = set(report['horizons'])=={'7','30'} and all(complete_metric_gate(
+            row['physical'],row['science'],int(h),len(physical[int(h)])) for h,row in report['horizons'].items())
+        science_pass = complete and all(row['science']['all_key_gates_passed'] for row in report['horizons'].values())
         emit('completed',status='completed',physical_gate_passed=hard_pass,
-             panel_science_gates_passed=science_pass,preliminary_screen_passed=hard_pass and science_pass,
+             metric_population_complete=complete,panel_science_gates_passed=science_pass,preliminary_screen_passed=hard_pass and science_pass,
              formal_spatial_temporal_acceptance=False,memory=_device_memory(runtime['devices'][0]))
     except Exception as error:
         emit('failed',status='failed',error=f'{type(error).__name__}: {error}')

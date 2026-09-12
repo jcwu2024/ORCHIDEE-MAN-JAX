@@ -5,11 +5,16 @@ from typing import NamedTuple
 import jax
 import jax.numpy as jnp
 import numpy as np
+import pytest
 
-from research.daily_coarse_graining.daily_operator.forward_screen_metrics import physical_window, summarize_windows
+from research.daily_coarse_graining.daily_operator.forward_screen_metrics import (
+    complete_metric_gate,
+    physical_window,
+    summarize_windows,
+)
 from research.daily_coarse_graining.daily_operator.long_horizon_objective import MaskedTrajectory
 from scripts.hpc.probe_trained_checkpointed_grad import rademacher_direction
-from scripts.hpc.trained_screen_common import WindowPool, json_safe
+from scripts.hpc.trained_screen_common import WindowPool, json_safe, validate_selection
 
 
 class PFT(NamedTuple):
@@ -72,3 +77,32 @@ def test_rademacher_direction_is_seeded_exact_and_respects_parameter_tree():
     np.testing.assert_array_equal(a['w'],b['w'])
     assert set(np.unique(a['w'])) == {-1.,1.}
     assert not np.array_equal(a['w'],c['w'])
+
+
+def test_truncated_or_overlapping_panels_are_not_accepted():
+    rows = []
+    for h in (7,30):
+        for i in range(8):
+            start = 10 if h==7 else 100
+            rows.append({'length':h,'component':{7:'seven_day',30:'thirty_day'}[h],
+                'artifact_id':i,'landpoint_id':f'p{i}','year':2000,'start_row':start,
+                'teacher_day_keys':[(f'p{i}',2000,d) for d in range(start,start+h)]})
+    validate_selection({'windows':rows})
+    with pytest.raises(ValueError):
+        validate_selection({'windows':rows[:-1]})
+    with pytest.raises(ValueError):
+        validate_selection({'windows':rows[:8]+rows[:8]})
+
+
+def test_metric_gate_rejects_filtered_nonfinite_or_missing_population():
+    p = {'fluxes':{f'f{i}':{'cumulative_gC_m2':{'count':8,'nonfinite_defined':0},
+                          'daily_gC_m2_day':{'count':56,'nonfinite_defined':0}} for i in range(8)},
+         'stocks':{f's{i}':{'final':{'count':8,'nonfinite_defined':0},
+                            'change':{'count':8,'nonfinite_defined':0}} for i in range(5)}}
+    science = {'keys':{str(i):{'evaluated_values':8} for i in range(13)}}
+    assert complete_metric_gate(p,science,7,8)
+    p['fluxes']['f0']['daily_gC_m2_day'].update(count=55,nonfinite_defined=1)
+    assert not complete_metric_gate(p,science,7,8)
+    p['fluxes']['f0']['daily_gC_m2_day'].update(count=56,nonfinite_defined=0)
+    science['keys']['0']['evaluated_values'] = 7
+    assert not complete_metric_gate(p,science,7,8)

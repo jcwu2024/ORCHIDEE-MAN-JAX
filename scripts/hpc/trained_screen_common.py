@@ -38,12 +38,15 @@ def load_model(args):
 
 
 class WindowPool:
-    def __init__(self,selection_path):
+    def __init__(self,selection_path,expected_source_identity=None):
         from pathlib import Path
 
         self.selection = json.loads(selection_path.read_text())
         if self.selection['status'] != 'passed':
             raise ValueError('window selection is not accepted')
+        validate_selection(self.selection)
+        if expected_source_identity is not None and self.selection['source_identity'] != expected_source_identity:
+            raise ValueError('evaluation pool differs from the declared training source')
         source = Path(self.selection['source_manifest'])
         manifest = json.loads(source.read_text())
         if manifest['identity'] != self.selection['source_identity']:
@@ -90,3 +93,21 @@ class WindowPool:
                    'fraction':templates.pft.pft_fraction,'active':templates.pft.active_pft_mask}
         expected_discrete = jax.tree_util.tree_map(lambda v:v[k,:h],window.expected_next_discrete_state)
         return initial,discrete,(templates,retained),targets,expected_discrete
+
+
+def validate_selection(selection):
+    rows = selection['windows']
+    if len(rows)!=16 or {h:sum(r['length']==h for r in rows) for h in (7,30)}!={7:8,30:8}:
+        raise ValueError('screen requires exactly eight windows of each horizon')
+    used,artifacts = set(),set()
+    for r in rows:
+        if r['component'] != {7:'seven_day',30:'thirty_day'}[r['length']]:
+            raise ValueError('component/horizon mismatch')
+        days = [(r['landpoint_id'],r['year'],i) for i in range(r['start_row'],r['start_row']+r['length'])]
+        if [tuple(v) for v in r['teacher_day_keys']] != days or used.intersection(days):
+            raise ValueError('window day identities differ or overlap')
+        key = (r['artifact_id'],r['length'])
+        if key in artifacts:
+            raise ValueError('more than one window per artifact/horizon')
+        used.update(days)
+        artifacts.add(key)
