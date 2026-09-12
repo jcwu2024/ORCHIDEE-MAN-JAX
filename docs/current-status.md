@@ -13,6 +13,39 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest completion: paid15048786 completed1998/1998 updates with exit0 in
+02:24:59, consuming63,936 draws/63,707 unique days. The bounded learning screen
+passes. Final excluded-day RMSE is GPP0.59343, NPP0.42091, maintenance0.05530,
+growth0.16191, autotrophic0.18036 gC/m2/day; AGB/BGB one-day changes0.30753/
+0.12010 gC/m2. The64-date panel spans44 locations/4 years, not independent
+sites or a free-running trajectory. Late1500->1998 mild regression and negative
+bias remain material. The final checkpoint is retained by the declared rule.
+
+Both free diagnostics finished without process exceptions. Native checkpointed
+AD uses2.27GiB estimated compiled buffers but fails the old direct-reference
+comparison (46 state-coordinate failures; parameter leaf failures despite no
+parameter-coordinate failures). At reserve coordinate2250, checkpointed
+1470.28568 and JVP1470.29254 agree much more closely than either agrees with
+direct reverse1469.15114. Along the parameter-disagreement direction,
+checkpointed0.02122033 is also closest to JVP0.02122122. This supports further
+verification of native checkpointed execution, not immediate full AD admission.
+FD has no reliable reserve-coordinate plateau.
+
+Original directional report projection/replay NaNs were diagnostic masking
+defects on fixed undefined states. The code is repaired and6 tests pass.
+Projection recovery at7577899 completed in379.49s using regenerated initial
+parameters and saved gradients/epsilons, with zero rollout/JVP/gradient
+evaluations; `public-rollout-T2-v2-projections-recovered.json` is finite and
+retains the original FD/JVP observations. Original raw reports are unchanged.
+Replay's old global norms/counts remain excluded from conclusions where NaNs
+contaminated them. Full results:
+`fresh_one_day_epoch_and_gradient_results_20260912.md` in the research docs.
+No training or diagnostics remain running from these jobs. No new paid job
+has been authorized. Next priority is a disjoint7/30-day forward screen of the
+trained final checkpoint plus native-checkpointed numerical verification.
+
+The execution notes below preserve the chronology of those completed runs.
+
 Current execution: paid one-day job15048786 continues, while two independent
 free-GPU diagnostics investigate the saved T2 mismatch. GPU0 checkpointed
 comparison runs at6b69128/PID38864; GPU1 replay plus joint-JVP/FD runs at

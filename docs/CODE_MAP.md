@@ -84,12 +84,17 @@ it does not update weights.
 microbatch gradient with the sampler/cache, weighted accumulation and AdamW.
 `one_day_training_state.py` owns atomic parameters/Adam/cursor recovery;
 `one_day_monitoring.py` owns physical-unit fixed-panel summaries, separating
-stock levels from daily changes. The proposed one-epoch method is
-`fresh_start_one_day_pool_v1.json`; real preflight is still required.
+stock levels from daily changes. The one-epoch method is
+`fresh_start_one_day_pool_v1.json`. It has completed its real preflight and
+full1998-update job15048786;
+the resulting checkpoint is ready for independently defined forward evaluation.
+`diagnose_public_rollout_discrepancy.py` now treats fixed undefined-state
+tangents as zero in projection statistics and exposes a projection-only
+recovery mode. This does not alter model gradients or relax numerical gates.
 
 The checkpoint-independent initialization and all-parameter one-day prototype
-are implemented. The current next gate is broader-data batch resources and
-real-model public multi-day AD admission. The fresh route is specified in
+are implemented. The current next tasks are a trained-checkpoint forward screen
+and further native-checkpointed multi-day AD verification. The fresh route is specified in
 `fresh_start_training_route_20260911.md` in the research docs. The old conditioned
 continuation scripts require exploratory weight/report chains and select
 15.96M GPP-related parameters; they are not the intended final training entry.

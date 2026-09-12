@@ -10,16 +10,33 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
-- Paid one-day job15048786 is running at the frozen12bac94 checkout. Its fixed
+- All three runs are finished. Paid job15048786 completed1998 updates with
+  exit0 in02:24:59 and passed the declared bounded one-day learning screen.
+  The two free diagnostics also finished, but multi-day AD is still unadmitted.
+  Results and their limits are consolidated in
+  [`fresh_one_day_epoch_and_gradient_results_20260912.md`](research/daily_coarse_graining/fresh_one_day_epoch_and_gradient_results_20260912.md).
+- Next design a training-day-disjoint7/30-day forward screen of the final
+  checkpoint, focusing on accumulated productivity/respiration, biomass change,
+  physical validity and inference cost. Forward evaluation does not require
+  another multi-day backward implementation. No new paid training is approved.
+- For the derivative route, prioritize further verification of native JAX
+  checkpointed AD: its T2 buffer estimate is2.27GiB, and its projections are
+  closest to independent JVP in both targeted directions. Original strict
+  whole-gradient agreement and FD convergence are not closed. Recovered
+  per-scale projection statistics are finite; original reports are preserved.
+
+Completed-run detail (the PIDs below are historical, not live work):
+
+- Paid one-day job15048786 ran at the frozen12bac94 checkout. Its fixed
   excluded-day monitor at update500 improves GPP RMSE3.06484->0.67214,
   NPP2.61346->0.47197 and autotrophic respiration0.52105->0.21476 gC/m2/day.
-  This is not independent-site or long-horizon acceptance. Leave the running
-  checkout fixed; read its declared report and wait for the1998-update result.
-- Multi-day AD remains unadmitted. The saved native/streamed discrepancy is
-  being diagnosed under
+  This is not independent-site or long-horizon acceptance. The final checkpoint
+  remains at the declared runtime path; use the final1998-update result.
+- Multi-day AD remains unadmitted. The saved native/streamed discrepancy
+  was diagnosed under
   [`public_rollout_discrepancy_diagnosis_20260912.md`](research/daily_coarse_graining/public_rollout_discrepancy_diagnosis_20260912.md).
-  Free GPU0 runs native checkpointed comparison at6b69128, PID38864.
-  Free GPU1 runs replay observation plus targeted parameter/state JVP/FD at
+  Free GPU0 ran native checkpointed comparison at6b69128, PID38864.
+  Free GPU1 ran replay observation plus targeted parameter/state JVP/FD at
   isolated4047130 (`runtime/checkouts/rollout-directions-v1`), PID44184.
   Two earlier launcher attempts stopped before model execution; empty-array
   Bash4.2 expansion and a mixed-checkout parent entry are corrected. Both
