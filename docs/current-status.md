@@ -37,15 +37,30 @@ The updated public T2 CPU shape gate passed on test02 at4410c41 in275.3s;
 report `runtime/outputs/diagnostics/public-rollout-shapes-v3.json`.
 The public T2 numerical comparison started on free gln01 GPU1 at13:10 CST,
 launcher PID110317,90-minute cap; report
-`runtime/outputs/diagnostics/public-rollout-T2-v1.json`. Its result is pending;
-the latest check reached completed_direct and compile_checkpointed after
-4126.9s. Keep the main server checkout fixed while it runs.
+`runtime/outputs/diagnostics/public-rollout-T2-v1.json`. It has now exited at
+the configured90-minute boundary; PIDs110317/110360 are absent. The report
+still says running/compile_checkpointed because timeout produced no final JSON.
+Direct AD completed at4126.9s: all109,464,375 parameter and3854 initial-state
+gradients finite; every hard count zero; loss0.00384148725; compiled buffer
+estimate5,699,182,032 bytes (5.31GiB). The checkpointed/streamed comparison and
+JVP/FD did not finish. This is an incomplete timing-limited probe, not a
+derivative mismatch or multi-day acceptance. Direct compilation alone took
+about62.8minutes. Preserve the partial evidence and revise execution ordering/
+reference persistence before a rerun; do not repeat the same serial pipeline.
 The user asked to advance independent work instead of waiting. The broad
 one-day runner, weighted gradient accumulation, atomic full-state checkpoint
 and fixed physical monitor summaries are implemented. Eleven local tests pass,
 including the actual runner's interrupted/resumed AdamW equality and sample
-cursor behavior. Next real CPU preflight and2-update free technical smoke use
-an isolated checkout. Formal proposal: fresh one1998-update prepared-pool
+cursor behavior. The real CPU gradient/optimizer/monitor tracing passed at
+fa05bc1 in277.7s. Recovery metadata/count/report-order fixes and host-memory
+reporting at12bac94 preserve that numerical graph; focused tests pass.
+The free GPU0 two-update technical smoke started at server14:39:55, launcher
+PID13362,45-minute limit, at12bac94 in
+`runtime/checkouts/one-day-pool-v1`. Report:
+`runtime/outputs/diagnostics/one-day-pool-smoke-v1.json`. It is independent of
+the public T2 test; keep its source checkout fixed. Server clock was about
+8m16s behind the local workstation; prefer elapsed durations to mixed clocks.
+Formal proposal: fresh one1998-update prepared-pool
 epoch, batch32/microbatch4, one V100/8CPUs/4h, CNY11.04 ceiling, not approved
 or submitted. See `fresh_start_one_day_pool_v1_20260912.md`.
 No multi-day training or new paid submission yet.

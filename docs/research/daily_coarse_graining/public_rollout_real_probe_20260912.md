@@ -66,5 +66,18 @@ test02 at4410c41 in275.3s, `public-rollout-shapes-v3.json`.
 The free GPU1 T2 numerical probe started2026-09-12 13:10 CST at4410c41,
 launcher PID110317,90-minute limit. Report/log:
 `runtime/outputs/diagnostics/public-rollout-T2-v1.json` and `.log`.
-Its numerical acceptance is pending, independent of the batch4 resource test
-on GPU0. Do not treat CPU abstract tracing as measured numerical agreement.
+The run exited at its90-minute limit before the checkpointed compile finished.
+No final JSON was written; the report's running/compile_checkpointed state is
+stale, confirmed by absent launcher/Python PIDs after the deadline. No exit
+code was retained by the old wrapper, so timeout classification uses the
+configured limit and process observation rather than a captured code124.
+
+Partial result: direct AD completed at4126.9s, after about62.8minutes of direct
+compilation. All109,464,375 parameter gradients and3854 initial-state gradients
+are finite; every physical count is zero. Loss0.00384148725, parameter gradient
+norm0.24276435, initial-state norm1473.4141; compiled buffer estimate5.31GiB.
+The checkpointed/streamed and JVP/FD comparisons are absent. This does not
+admit multi-day training and does not show a derivative disagreement.
+Next revise execution ordering/reference persistence so the critical
+streamed/native comparison is not placed after two expensive compilations
+within one90-minute cap. The independent broader one-day training proceeds.

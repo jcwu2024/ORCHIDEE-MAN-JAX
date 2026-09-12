@@ -87,3 +87,18 @@ formal allocation is one V100,8 CPUs,32GiB host memory,4 hours: CPU2.24+GPU8.80
 =CNY11.04 worst case assuming additive rates. Confirm the full-loop smoke and
 present the exact Slurm command before requesting paid approval. Do not submit
 until approved. The existing cross-day test must not be duplicated or disturbed.
+
+## Local and real-data execution record
+
+Eleven local tests pass, including the real runner with a tiny model interrupted
+after a durable update, then resumed: parameters/Adam moments/step exactly match
+the uninterrupted run, with no repeated/missing batches. Review additionally
+checks cursor bounds/count agreement, row semantics and audit/checkpoint order.
+Real CPU gradient/optimizer/monitor shapes passed on test02 at fa05bc1 in277.7s;
+report `runtime/outputs/diagnostics/one-day-pool-shapes-v1.json`.
+The12bac94 follow-up modifies recovery bookkeeping and host-memory reporting,
+not the numerical graph. The free GPU0 two-update smoke started at that commit
+in isolated `runtime/checkouts/one-day-pool-v1`, server14:39:55, PID13362,
+45-minute limit. Result pending:
+`runtime/outputs/diagnostics/one-day-pool-smoke-v1.json` and `.log`.
+No paid job has been submitted.

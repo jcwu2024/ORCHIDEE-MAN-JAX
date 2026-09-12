@@ -32,18 +32,29 @@ and coordinate comparison. Actual peak7.85GiB, hot batch4 gradient0.400s;
 report `runtime/outputs/diagnostics/one-day-batch4-v1.json`.
 Updated public T2 CPU shapes passed on test02 at4410c41 in275.3s; report
 `runtime/outputs/diagnostics/public-rollout-shapes-v3.json`. The frozen public
-T2 GPU probe started on free gln01 GPU1 at13:10 CST (launcher PID110317),
-90-minute cap; report `runtime/outputs/diagnostics/public-rollout-T2-v1.json`.
-Read the public T2 GPU result before promoting multi-day AD; do not duplicate
-that process. Keep the shared server checkout at4410c41 while it runs.
+T2 GPU probe has exited at its90-minute cap (PIDs110317/110360 absent after
+the limit). The last report remains `running/compile_checkpointed`; it is
+stale, not a live process. Direct AD completed with all109,464,375 parameter
+and3854 initial-state gradients finite, every hard count zero, loss0.00384149,
+compiled buffers5.31GiB. Checkpointed/streamed agreement and JVP/FD did not finish.
+Report `runtime/outputs/diagnostics/public-rollout-T2-v1.json` is partial evidence,
+not multi-day admission. Before rerunning, restructure the probe to prioritize
+the streamed/native comparison and preserve expensive reference results;
+do not blindly repeat three serial compilation paths under the same time cap.
 The user explicitly asked to progress useful independent work while waiting.
 Broader one-day training now has an executable fresh method, weighted
 microbatch accumulation, full optimizer/sampler recovery and fixed physical
 monitor reports. See
 [`fresh_start_one_day_pool_v1_20260912.md`](research/daily_coarse_graining/fresh_start_one_day_pool_v1_20260912.md).
 Its11 local tests pass, including complete runner interruption/resume equality.
-Next perform real CPU shape/optimizer/monitor admission and a two-update free
-technical smoke from an isolated checkout. Proposed formal work is one1998-
+Real CPU gradient/optimizer/monitor tracing passed at fa05bc1 in277.7s.
+Recovery-only review fixes and host-memory reporting are included at12bac94;
+they do not change that tested numerical graph. The two-update free GPU0
+technical smoke is running from isolated checkout
+`runtime/checkouts/one-day-pool-v1` at12bac94, launcher PID13362,45-minute cap;
+report `runtime/outputs/diagnostics/one-day-pool-smoke-v1.json`.
+Do not start a duplicate smoke or mutate that checkout while it runs.
+Proposed formal work is one1998-
 update prepared-pool epoch, batch32/microbatch4; paid4-hour execution remains
 unapproved. One-day direct AD does not depend on multi-day admission.
 Do not start full-network7/30-day updates based only on toy tests. No new paid
