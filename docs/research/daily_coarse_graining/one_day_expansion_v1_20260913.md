@@ -2,8 +2,17 @@
 
 Status: user authorized expansion preparation; local implementation and
 actual metadata/four-point-year pilot and parallel workers pass. Final merge
-integration tests pass. Full CPU preparation proposed, not submitted. Paid training
+integration tests pass. Full CPU preparation approved and RUNNING as15061225. Paid training
 15061139 continues unchanged in its frozen checkout.
+
+Execution update: user approved the exact2h/CNY4.48 proposal below. Submitted
+from cln01 at2026-09-13 19:04:41 scheduler time; now RUNNING on ibc11b02n20
+and ibc13b07n26--28, cnall4nodes/32CPU/8 per node/noGPU. Frozen codefd47de3
+in runtime/checkouts/one-day-expansion-v1. Output root:
+`runtime/outputs/training/one-day-expansion-15061225`; scheduler log:
+`runtime/outputs/diagnostics/one-day-expansion-15061225.log`.
+This submission does not establish completed data preparation. Next read
+worker progress and require the complete final merge acceptance.
 
 ## Sampling and scientific scope
 
@@ -104,7 +113,7 @@ Proposed production allocation:cnall,4 nodes x8 single-CPU workers,32CPUs,
 no GPU,2h cap (110m workers+8m merge). Worst-case CPU cost
 4*8*2*0.07=CNY4.48. No CPU --mem directive because of documented scheduler
 memory metadata; measured8-worker data memory is well below node capacity.
-The job is preparation only and remains unapproved/unsubmitted.
+The job is preparation only; subsequent approval/submission is recorded above.
 
 Working directory: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/one-day-expansion-v1`.
 Proposed command: `/rmprog/slurm/v22.05.7/bin/sbatch scripts/hpc/slurm_one_day_expansion.sh`.
@@ -137,7 +146,7 @@ the merge entry point's actual test02 CLI import/help passes. The optional
 attempt to repeat its local pytest suite on test02 found no installed pytest;
 no environment change was made. Local compressed-artifact merge tests remain
 passed, and actual raw/persisted data pilots are recorded above. This does
-not block the bounded CPU preparation proposal. Next action is explicit
-approval of the2h/CNY4.48 CPU job, then submit once from cln01. A successful
+not block the bounded CPU preparation proposal. Approval and submission are
+now recorded above. A successful
 job must finish worker coverage and merge_report.json status=passed/stage=completed
 before the expanded pool is described as fully prepared.

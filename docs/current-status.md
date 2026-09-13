@@ -13,11 +13,20 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+CPU expansion job15061225 is user-approved and submitted from cln01 at
+2026-09-13 19:04:41 scheduler time, now RUNNING on ibc11b02n20 and
+ibc13b07n26--28. Resources:cnall4nodes/32CPU/8 per node/noGPU/2h,CNY4.48 cap.
+Checkout one-day-expansion-v1 is frozen atfd47de3. Log:
+runtime/outputs/diagnostics/one-day-expansion-15061225.log; worker/merge root:
+runtime/outputs/training/one-day-expansion-15061225/.
+Full preparation requires successful complete merge, not just scheduler exit.
+No duplicate submission or running checkout edits. GPU15061139 unchanged.
+
 Parallel data-expansion preparation: selected346539 unique TRAIN dates
 (63707 existing+282832 new) across17677 point-years/535 points/44 years.
 Actual free CPU pilot and two workers passed8 point-years/150 rows,128 new,
 exact old-row payload equality and persisted reader readback. Full preparation
-is not executed. Proposed cnall4nodes*8CPU/2h, CNY4.48 max, remains unapproved;
+is not yet complete. Approved cnall4nodes*8CPU/2h, CNY4.48 max, job15061225;
 isolated checkout one-day-expansion-v1. See
 `research/daily_coarse_graining/one_day_expansion_v1_20260913.md`.
 Current grouped sampler would produce13258 updates/4420 partial batches;
