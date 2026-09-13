@@ -10,6 +10,21 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Both free500/1998 evaluations COMPLETED16 windows/exit0 in358.3/355.2s;
+  physical gates pass. Important correction to aggregate-failure wording:
+  final1998 T7 passes13/13 keys; T30 passes11/13, failing only ecosystem and
+  nonliving ecosystem carbon. Final T30 GPP daily RMSE0.20125 gC/m2/day,
+  cumulative RMSE5.1583 gC/m2 versus500-step28.4665; NPP daily RMSE0.13638.
+  AGB/BGB T30 increment RMSE2.9695/0.9921 gC/m2. Nonliving T30 change bias
+  -9986.91 gC/m2 remains severe. This is meaningful development progress,
+  not a claim of365-day or independent spatial/temporal generalization.
+  Next proposed route: inspect physical coordinate loss balance and attribute
+  remaining nonliving drift, then specify a mixed one-day + recurrent T7/T30
+  objective; use native checkpointed AD with bounded actual-loss/update checks.
+  Broader reusable TRAIN data preparation proceeds alongside this, not after
+  small-pool perfection. Keep Attention; do not launch another unchanged-loss
+  longer training merely because total loss decreased. New training unsubmitted.
+
 - GPU15061139 COMPLETED1998/1998 updates,03:04:49 scheduler elapsed,exit0:0.
   Fresh full109464375-parameter training consumed63707 unique Teacher days,
   63936 draws; fixed training/excluded-panel total and flux learning screens

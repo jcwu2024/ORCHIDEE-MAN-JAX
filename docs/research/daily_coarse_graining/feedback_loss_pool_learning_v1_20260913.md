@@ -5,6 +5,70 @@ Frozen execution checkout commit:5502ce3.
 
 ## Completion and active development evaluation
 
+### Completed recurrent screen and next-route recommendation
+
+Both evaluations finished normally:500 at358.304s,1998 at355.163s,16/16
+windows each,exit0. All physical gates pass. Local JSON evidence:
+outputs/feedback-pool-15061139-forward-500.json and
+outputs/feedback-pool-15061139-forward-1998.json.
+
+| Checkpoint | T7 science | T30 science |
+| --- | --- | --- |
+| 500 | 10/13 pass; NPP, nonliving and total ecosystem carbon fail | 6/13 pass; GPP, NPP, growth respiration, NEE, NEP, nonliving and total ecosystem carbon fail |
+| 1998 (primary) | 13/13 pass | 11/13 pass; only nonliving and total ecosystem carbon fail |
+
+Aggregate panel_science_gates_passed=false for both checkpoints must not be
+reported as both horizons/all key fluxes failing. Final-model science shows
+substantial improvement within this fixed development panel. T7 and T30 use
+different selected windows; their averages are not a controlled horizon-growth
+comparison. Heterotrophic-respiration Teacher values are all zero here, so its
+pass does not establish active-branch accuracy. No independent spatial/
+temporal or365-day acceptance follows from this small informed panel.
+
+Final T30 physical results across8 windows/240 days:
+
+| Quantity | Daily RMSE (gC/m2/day) | Cumulative or stock-change RMSE (gC/m2) | Cumulative/change bias (gC/m2) |
+| --- | --- | --- | --- |
+| GPP | 0.20125 | 5.15825 | +0.40628 |
+| NPP | 0.13638 | 3.41226 | -1.42205 |
+| AGB increment | n/a | 2.96949 | -1.33312 |
+| BGB increment | n/a | 0.99210 | -0.08204 |
+| Nonliving carbon change | n/a | 18557.38404 | -9986.90581 |
+
+At500, T30 cumulative GPP RMSE was28.46650 and bias-20.18440; additional
+declared one-day training materially improved the recurrent trajectory. This
+does not isolate the causal contribution of amended loss versus more updates.
+Stock-level normalized passes do not by themselves prove relative growth
+accuracy; physical increments are reported separately above.
+
+Recommended next scientific route, not yet implemented or a paid proposal:
+
+1. Audit litterpart's physical-coordinate weighting and locate remaining
+   nonliving stock loss from saved states/labels. Current loss directly uses
+   neural input-normalization scales (fresh_start_training.py,
+   _litterpart_feedback_plan); input conditioning scales need not express the
+   desired scientific importance of output errors. Decide supervision using
+   physical error and source semantics rather than merely increasing all loss
+   weights. Keep the Attention architecture and physical boundary unchanged.
+2. Declare a mixed objective: broad Teacher-start one-day training plus free
+   recurrent T7 then T30 windows, supervising cumulative GPP/NPP/respiration,
+   AGB/BGB increments and implicated carbon-stock changes. Carry model states
+   across days with no Teacher resets inside the recurrent loss. Fix weighting,
+   sampling, transitions and selection rules before training.
+3. Use shared native checkpointed JAX AD, verify this actual changed objective
+   with bounded directional evidence and complete optimizer updates, then
+   scale the admitted run. Do not reopen historical custom reverse as a gate.
+4. Expand reusable TRAIN coverage in parallel, preserving exclusions and
+   contiguous window indices. More available data must be accompanied by an
+   explicit exposure/update budget. Existing diagnostic checkpoints can probe
+   resources; final paper method remains declared fresh initialization and
+   full-network training with any stages reproducible from that initialization.
+
+Neither data expansion alone nor multi-day optimization is a guarantee of
+success; the former broadens coverage, the latter directly penalizes error
+accumulation. Both are justified, while the demonstrated loss/physical-error
+imbalance should be resolved before another expensive training run.
+
 All updates finite; declared fixed training/excluded-panel total and flux
 learning screens pass. Consumed63707 unique days and63936 draws, matching
 the declared existing-pool epoch. No automatic extension or checkpoint

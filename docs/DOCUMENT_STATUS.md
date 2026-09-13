@@ -24,7 +24,7 @@ an earlier experiment and does not control current work.
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
 | `research/daily_coarse_graining/one_day_expansion_v1_20260913.md` | Job15061225 launcher failure;304786 rows preserved; approved recovery15061586 RUNNING | Partial resume, full TRAIN cache/file-count constraint and later fixed-batch training requirement |
-| `research/daily_coarse_graining/feedback_loss_pool_learning_v1_20260913.md` | Job15061139 completed1998 updates; free500/final T7/T30 evaluations running | Fixed training and checkpoint development evaluation |
+| `research/daily_coarse_graining/feedback_loss_pool_learning_v1_20260913.md` | Training/evaluations completed; final T7 passes13/13, T30 passes11/13; nonliving/total carbon fail | Completed science evidence and next loss/data/multiday proposal |
 | `research/daily_coarse_graining/feedback_loss_two_update_results_20260913.md` | Completed: native AD/JVP and two full updates pass; small mixed one-day science changes | Actual loss-update admission and next bounded learning gate |
 | `research/daily_coarse_graining/feedback_loss_calibration_results_20260913.md` | Completed calibration; trial weights declared | Measured gradient balance and next two-update admission |
 | `research/daily_coarse_graining/feedback_loss_parallel_preparation_20260913.md` | Preparation complete; see calibration-results report for live two-update launch | Parallel preparation and actual execution scope |

@@ -13,6 +13,18 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest forward results:500 and1998 completed16 windows each,358.3/355.2s,
+exit0; physical gates pass. Final1998 T7 passes all13 science keys and T30
+passes11/13, failing only ecosystem/nonliving carbon. Earlier aggregate
+"7/30 screen failed" wording must not be interpreted as both horizons or
+all fluxes failing. T30 final GPP daily RMSE0.20125, NPP0.13638 gC/m2/day;
+GPP cumulative RMSE5.1583 gC/m2 (500-step28.4665). AGB/BGB increment RMSE
+2.9695/0.9921 gC/m2; nonliving increment bias-9986.91 remains severe.
+Proposed next route couples physical loss-balance correction and a declared
+mixed one-day/recurrent T7/T30 objective, with broader TRAIN cache preparation
+in parallel. Native checkpointed AD is preferred; unchanged historic AD issues
+are not the main gate. No new training has been implemented/submitted here.
+
 GPU15061139 is now COMPLETED,1998/1998 updates,03:04:49,exit0:0. All updates
 finite; fixed train and excluded64-day total/flux learning screens pass.
 Consumed63707 unique days/63936 draws, one epoch of the existing pool.
