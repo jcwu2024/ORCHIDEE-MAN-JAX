@@ -13,6 +13,18 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+User approved the6h/CNY16.56 proposal. Job15061139 was submitted on gln01
+and started on ibc13b03n01 at2026-09-13 17:39:37 scheduler time; observed
+RUNNING,1GPU/8CPU/32GiB,6h cap. Fixed code5502ce3 in
+runtime/checkouts/feedback-pool-v1; keep immutable. Log:
+runtime/outputs/diagnostics/feedback-pool-15061139.log; report:
+runtime/outputs/training/fresh-feedback-pool-15061139/report.json.
+Next read learning progress and free500/final1998 developmental rollouts.
+Broader-data planning is next in parallel; the current63707 unique days
+represent0.74354% of8568025 eligible TRAIN days (0.52182% of12208581 total
+v6 transitions). Site/year presence does not establish dense date coverage.
+See NEXT_STEPS for the proposed expansion trigger and actual-exposure rule.
+
 The next fixed fresh-start pool epoch is specified and implemented with
 unchanged calibrated losses,1998 full-network updates and retained milestones.
 Local training/recovery and intermediate-checkpoint/feedback-report tests
@@ -22,8 +34,8 @@ host peak4659789824 bytes. TRAIN63707 unique days, excluded monitor64 days
 and disjoint rollout296 days/16 windows are verified; old-control sampling
 and source match. Local copies: outputs/feedback-pool-v1-plan.json and
 outputs/feedback-pool-v1-cpu-shape.json. Preparation is complete; next is
-approval of gnall1GPU/8CPU/32GiB/6h,CNY16.56 maximum and submission from
-runtime/checkouts/feedback-pool-v1 at5502ce3. No new paid task is submitted. Plan:
+the now-approved gnall1GPU/8CPU/32GiB/6h,CNY16.56 maximum submission from
+runtime/checkouts/feedback-pool-v1 at5502ce3, recorded as job15061139 above. Plan:
 `research/daily_coarse_graining/feedback_loss_pool_learning_v1_20260913.md`.
 
 Two-update admission completed on free GPU0 at497fe80 in2050.326s, exit0;

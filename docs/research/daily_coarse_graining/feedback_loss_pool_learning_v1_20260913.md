@@ -1,7 +1,16 @@
 # Fixed feedback-loss learning: one prepared-pool epoch
 
-Status: implementation and target preflight complete; paid approval pending,
-no paid submission. Frozen execution checkout commit:5502ce3.
+Status: user approved6h/CNY16.56; job15061139 submitted and observed RUNNING.
+Frozen execution checkout commit:5502ce3.
+
+Submission record:2026-09-13, via gln01, exact command/resources below.
+Scheduler start17:39:37, node ibc13b03n01,6h limit/end23:39:37 (scheduler
+timestamps; completion may occur earlier). Output directory:
+`runtime/outputs/training/fresh-feedback-pool-15061139/`; log:
+`runtime/outputs/diagnostics/feedback-pool-15061139.log`.
+The preparation-time protocol's paid_submission_authorized=false is preserved
+as immutable configuration provenance; this explicit user approval and job
+record establish execution authority. Do not edit the running checkout.
 
 ## Scientific question and fixed method
 
@@ -160,8 +169,7 @@ remains the numerical admission.
 
 Reports reside under remote `runtime/outputs/diagnostics/` and local `outputs/`:
 `feedback-pool-v1-plan.json` and `feedback-pool-v1-cpu-shape.json`.
-No test remains running and no new paid job has been submitted. The next
-action is user approval of the concrete6h/CNY16.56 proposal above, followed
-by submission on gln01 from the frozen execution checkout. Subsequent
+At preparation completion no test remained running and no paid job had been
+submitted. The subsequent approval/submission is recorded at the top. Subsequent
 documentation-only commits do not require redeployment or repeating these
 unchanged checks.

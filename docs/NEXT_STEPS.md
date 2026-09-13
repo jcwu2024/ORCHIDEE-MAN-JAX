@@ -10,6 +10,28 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- User approved the concrete6h/CNY16.56 training proposal. Job15061139
+  submitted from gln01 and RUNNING on ibc13b03n01, start2026-09-13 17:39:37
+  scheduler time; time limit6h,1GPU/8CPU/32GiB. Execution checkout
+  runtime/checkouts/feedback-pool-v1 remains frozen at5502ce3. Log:
+  runtime/outputs/diagnostics/feedback-pool-15061139.log; report:
+  runtime/outputs/training/fresh-feedback-pool-15061139/report.json.
+  Read progress and evaluate retained500/1998 snapshots on available free GPU.
+  Do not resubmit or change the running method.
+- Data expansion is a next-stage priority, not conditional on every current
+  science gate passing. Current63707 unique days are0.74354% of8568025
+  eligible TRAIN days, spanning535 sites/44 years but sparse within point-year.
+  Prepare a broader-data/read-throughput proposal while this fixed experiment
+  runs; after its learning/rollout evidence, decide the next training budget.
+  Suggested initial target is several hundred thousand distinct TRAIN days,
+  subject to actual materialization/IO measurements, not yet an approved run.
+  Reuse immutable v6, preserve development/validation/test exclusions and
+  reproducible seeds/stages. Do not count539171 prepared window days as
+  immediately usable one-day samples without verifying state/target mapping.
+  Increasing the pool alone does not increase consumed samples at a fixed
+  batch32/1998-update budget; explicitly budget unique exposure and updates.
+  Do not require small-pool perfection or infer architecture failure from it.
+
 - Current preparation: fixed amended-loss fresh pool epoch is specified and
   implemented (1998 updates/63707 unique Teacher days, all109M parameters;
   weights unchanged). Retain100/500/1000/1500/1998; primary final1998;
@@ -23,9 +45,7 @@ Current actions, superseding launch instructions in the history below:
   days across16 windows, with identical old-control sampling/source.
   Actual test02 gradient/optimizer/monitor shape preflight passes224.161s
   at execution commit5502ce3; zero updates, no new GPU repeat required.
-  Next obtain approval of the prepared paid resource/time/cost proposal,
-  then submit the frozen checkout runtime/checkouts/feedback-pool-v1.
-  Proposed gnall1GPU/8CPU/32GiB/6h,CNY16.56 cap remains UNAPPROVED/unsubmitted.
+  Approved gnall1GPU/8CPU/32GiB/6h,CNY16.56 cap; job15061139 is running above.
   See `research/daily_coarse_graining/feedback_loss_pool_learning_v1_20260913.md`.
 
 - Two-update admission completed at497fe80:2050.326s, exit0, updates2,
