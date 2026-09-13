@@ -353,9 +353,9 @@ def run(args: Any) -> Mapping[str, Any]:
                 horizon=horizon,
                 state_width=head.contract.continuous_state_width,
             )
-            if not np.array_equal(teacher_carry, np.asarray(templates.continuous_state)):
+            if not np.array_equal(teacher_carry, np.asarray(templates.continuous_state), equal_nan=True):
                 raise ValueError("archived Teacher start differs from prepared window")
-            if not np.array_equal(archive["teacher_state"], np.asarray(targets["state"])):
+            if not np.array_equal(archive["teacher_state"], np.asarray(targets["state"]), equal_nan=True):
                 raise ValueError("archived Teacher endpoint differs from prepared target")
 
             rows = []
