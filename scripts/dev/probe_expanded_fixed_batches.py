@@ -37,6 +37,7 @@ def run(args):
         raise ValueError('expanded fixed epoch coverage differs from declared pool')
     # Real reader exercises first/middle/terminal-padded batch without a network.
     import jax
+
     from research.daily_coarse_graining.daily_operator.prepared_one_day import PreparedOneDayPool
 
     pool = PreparedOneDayPool(Path(catalogue['source_manifest']), cache_size=4)

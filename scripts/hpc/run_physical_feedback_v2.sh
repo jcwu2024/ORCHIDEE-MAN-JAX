@@ -21,6 +21,9 @@ run_command() {
 }
 case "$MODE" in
   shape)
+    if [[ "$PRINT_ONLY" != --dry-run ]]; then
+      case "$(hostname -s)" in test0[1-4]|ibtest0[1-4]) ;; *) exit 2;; esac
+    fi
     export PYTHONPATH="$CODE_ROOT" PYTHONDONTWRITEBYTECODE=1
     export JAX_PLATFORMS=cpu JAX_ENABLE_X64=true OMP_NUM_THREADS=1 OPENBLAS_NUM_THREADS=1 MKL_NUM_THREADS=1
     export ORCHIDEE_REPO_ROOT="$CODE_ROOT" ORCHIDEE_RUNTIME_ROOT="$ROOT/runtime"
