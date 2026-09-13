@@ -10,12 +10,46 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Active implementation gate: physical feedback/recurrent science v2, specified
+  in `research/daily_coarse_graining/physical_feedback_and_recurrent_v2_20260913.md`.
+  Keep Attention and input conditioning. Source accounting attributes 92.90%
+  of the final T30 nonliving bias to canopy residuals; litterpart input-SD loss
+  weighted vegetation coordinates 16,058.5 times more than bare coordinates.
+  This motivates physical-unit fraction MSE and canopy pseudo-Huber supervision,
+  not another architecture replacement or historical custom-adjoint repair.
+  New one-day objective: base + 0.1 canopy + 0.1 litterpart. Real test02 shapes
+  pass (266.6s), exact GPU runtime passes (59.3s); free gln01 GPU0 is running
+  native-gradient/JVP and two fresh full-network batch32 updates, Python106777,
+  immutable checkout physical-feedback-v2 at64c0628. Pipeline/report prefix:
+  runtime/outputs/diagnostics/physical-feedback-v2-{pipeline.log,updates.json}.
+  Judge physical coordinate movement and canopy/flux changes separately from
+  technical admission. Runtime cap3min preflight +65min; no new paid job.
+
+- Shared `recurrent_science_loss.py` is implemented atb247e65, with public
+  rollout/native-checkpointed AD and shared physical science extraction. It
+  penalizes daily/cumulative flux and AGB/BGB/canopy trajectory/endpoint changes.
+  Local recurrent/selection/AD suite32 passes. TRAIN-only selection now passes:
+  8T7 +8T30 windows, seed20260914, excluding64 monitor +296 development days.
+  First T7, final1998 diagnostic weights, zero updates; full CPU shape admission
+  passes310.4s. Free GPU1 runtime passes24.9s; reverse is running, Python112477,
+  pipeline Bash111660 (reverse65min then verification35min caps). Checkout:
+  runtime/checkouts/recurrent-science-v2; outputs/diagnostics/recurrent-science-v2-*
+  under runtime. Preserve native.pkl before verification. This recurrent scalar
+  check does not certify the eventual combined one-day/recurrent optimizer.
+  Next: read both admissions, specify and verify bounded combined updates, then
+  extend to T30 and declare expanded learning budget/coverage/checkpoint rules.
+  Formal training remains reproducible fresh initialization/full-network joint
+  optimization; diagnostic checkpoint use does not define the paper method.
+
 - CPU recovery15061586 COMPLETED00:32:48,exit0:0. Full merge status=passed/
   stage=completed:346539 distinct TRAIN days,17677 point-year payloads,
   64 disjoint monitor days in4 monitor artifacts. Cross-point-year first-batch
   persisted reader passes; no Teacher regeneration or neural update.
   Evidence outputs/one-day-expansion-15061225-merge.json. Expanded data is
-  prepared; fixed32 packing and new-loss training integration remain next.
+  prepared. Fixed32 packing is now implemented and real-reader admitted:
+  10830 updates/346560 draws/346539 unique rows, only21 terminal replays,
+  micro4 and at most3 files/batch observed. Full sampler/reader check46.4s;
+  evidence outputs/expanded-fixed-batches-v2.json. Reuse this shared pool.
 
 - Both free500/1998 evaluations COMPLETED16 windows/exit0 in358.3/355.2s;
   physical gates pass. Important correction to aggregate-failure wording:
@@ -37,11 +71,10 @@ Current actions, superseding launch instructions in the history below:
   63936 draws; fixed training/excluded-panel total and flux learning screens
   pass. Peak actual device allocation9.941GiB versus20.631GiB reserved pool.
   This establishes bounded one-day learning, not long-horizon acceptance.
-  Free gln01 forward screens now running at unchanged5502ce3: update500 on
-  GPU0/Python98744, final1998 onGPU1/Python98816;75min cap each, fixed16-window
-  T7/T30 panel. Reports/logs runtime/outputs/diagnostics/
-  feedback-pool-15061139-forward-{500,1998}.{json,log}. Both reached bootstrap.
-  Read these outcomes before proposing more training; primary result1998.
+  Free gln01 forward screens at unchanged5502ce3 have completed; their former
+  Python98744/98816 processes have exited. Fixed16-window T7/T30 results are
+  recorded above. Reports/logs runtime/outputs/diagnostics/
+  feedback-pool-15061139-forward-{500,1998}.{json,log}; primary result1998.
   Physical review: excluded64 final GPP/NPP/autotrophic-respiration RMSE
   0.577/0.413/0.171 gC/m2/day improves from3.065/2.613/0.521 initially.
   However canopy-change mean-476.573 versus Teacher+7.720 remains very poor;

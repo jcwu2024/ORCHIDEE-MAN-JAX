@@ -13,12 +13,42 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Physical feedback/recurrent v2 is implemented and under bounded free admission.
+The active proposal is `research/daily_coarse_graining/physical_feedback_and_recurrent_v2_20260913.md`.
+Saved rollout accounting attributes9277.601 of9986.906 gC/m2 negative nonliving
+bias to canopy residuals (92.90%); this is component accounting, not causal
+intervention. Litterpart input scales yielded16058.5-fold coordinate weighting
+imbalance, explaining why its normalized score improved while physical RMSE
+worsened. The v2 objective uses base +0.1 canopy pseudo-Huber +0.1 physical-unit
+litterpart MSE, preserving input scaling/Attention/daily physical boundaries.
+
+Free test02 full-model shape check passes266.6s; deployed GPU runtime passes
+59.3s. At this handoff, GPU0 Python106777 is compiling/evaluating the new native
+gradient before two full fresh batch32/micro4 AdamW updates. Immutable checkout
+physical-feedback-v2 at64c0628; report/log prefix runtime/outputs/diagnostics/
+physical-feedback-v2. No scientific improvement is claimed before its result.
+
+Shared recurrent science loss and probe implemented atb247e65; focused combined
+suite32 passes. It uses daily/cumulative GPP/NPP/respiration, and elapsed-time
+normalized AGB/BGB/canopy changes, shared extraction and native checkpointed AD.
+Metadata-only TRAIN selection passes125.8s:8T7+8T30, seed20260914, excluding64
+monitor+296 development days; no Teacher payload read/regeneration. First T7
+uses final1998 weights only as a zero-update diagnostic asset. Real CPU shape
+check passes310.4s (outputs/recurrent-science-v2-shape.json). Free GPU1 runtime
+passes24.9s; native reverse is running as Python112477, pipeline Bash111660,
+with65min reverse and35min subsequent verification caps. Pipeline log:
+runtime/outputs/diagnostics/recurrent-science-v2-pipeline.log. The subsequent
+combined single-day/recurrent optimizer still requires actual update checks.
+No new paid run; final paper training remains a declared fresh/all-network recipe.
+
 CPU recovery15061586 COMPLETED00:32:48,exit0:0; estimated CPU chargeCNY0.3061.
 Merge passes in20.58s:346539 distinct TRAIN days,17677 point-year payloads,
 64 disjoint monitor days in4 artifacts, persisted mixed first batch read.
 No Teacher regeneration/training updates. Combined catalogue is admitted;
-fixed32 packing remains required before expanded GPU training. Local evidence:
-outputs/one-day-expansion-15061225-merge.json.
+fixed32 packing is implemented and admitted on the real pool in46.4s:
+10830 full batches/346560 draws/346539 source rows,21 final deterministic replays,
+all microbatches4. First/middle/last reader times0.129/0.105/0.071s. Evidence:
+outputs/one-day-expansion-15061225-merge.json and expanded-fixed-batches-v2.json.
 
 Latest forward results:500 and1998 completed16 windows each,358.3/355.2s,
 exit0; physical gates pass. Final1998 T7 passes all13 science keys and T30
@@ -30,7 +60,7 @@ GPP cumulative RMSE5.1583 gC/m2 (500-step28.4665). AGB/BGB increment RMSE
 Proposed next route couples physical loss-balance correction and a declared
 mixed one-day/recurrent T7/T30 objective, with broader TRAIN cache preparation
 in parallel. Native checkpointed AD is preferred; unchanged historic AD issues
-are not the main gate. No new training has been implemented/submitted here.
+are not the main gate. V2 implementation/free admission is recorded above.
 
 GPU15061139 is now COMPLETED,1998/1998 updates,03:04:49,exit0:0. All updates
 finite; fixed train and excluded64-day total/flux learning screens pass.
@@ -39,8 +69,8 @@ Peak actual device allocation10674317824 bytes (9.941GiB), reserved pool
 22151763456 bytes (20.631GiB). Estimated additive cost3.08028*2.76=CNY8.50.
 Local evidence outputs/feedback-pool-15061139-report.json. All five declared
 snapshots are saved/roundtrip-validated. No long-horizon acceptance yet.
-Free gln01 T7/T30 evaluation launched for500/GPU0/Python98744 and1998/GPU1/
-Python98816 using unchanged5502ce3;75min cap each. Both logs reached bootstrap.
+Free gln01 T7/T30 evaluations for500/GPU0/Python98744 and1998/GPU1/Python98816
+using unchanged5502ce3 have both completed; those processes are absent.
 Output prefix runtime/outputs/diagnostics/feedback-pool-15061139-forward-
 with500/1998 suffixes. These are day-disjoint development evaluations, not
 sealed spatial/temporal validation; no new paid submission.
@@ -51,7 +81,7 @@ stock-change RMSE remains667.62, predicted mean-476.573 versus Teacher+7.720.
 Litterpart physical RMSE worsens0.50005 ->0.70462 despite weighted loss decline;
 all four predicted coordinates approach0.9964, including two target-zero ones.
 This is demonstrated physical/objective imbalance, not a claimed AD failure.
-Complete pending rollouts and inspect coordinate weighting before new training.
+Completed rollouts and coordinate-weighting diagnosis motivate v2 above.
 
 CPU expansion15061225 FAILED after00:52:24, exit9:0. Missing srun --wait=0
 allowed cluster WaitTime=50s to kill remaining workers after normal first

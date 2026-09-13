@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/physical_feedback_and_recurrent_v2_20260913.md` | Active v2 loss/sampling specification; implementation and local tests pass, free full-model admission in progress | Physical-coordinate imbalance, canopy drift, expanded fixed batches, new recurrent objective and next combined-update gate |
 | `research/daily_coarse_graining/one_day_expansion_v1_20260913.md` | Recovery15061586 completed;346539-day merged pool admitted | Expanded pool, full TRAIN cache/file-count constraint and fixed-batch integration |
 | `research/daily_coarse_graining/feedback_loss_pool_learning_v1_20260913.md` | Training/evaluations completed; final T7 passes13/13, T30 passes11/13; nonliving/total carbon fail | Completed science evidence and next loss/data/multiday proposal |
 | `research/daily_coarse_graining/feedback_loss_two_update_results_20260913.md` | Completed: native AD/JVP and two full updates pass; small mixed one-day science changes | Actual loss-update admission and next bounded learning gate |

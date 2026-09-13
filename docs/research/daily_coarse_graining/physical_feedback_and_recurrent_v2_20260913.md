@@ -100,3 +100,38 @@ The old sampler and historical protocol remain unchanged. New runs share the
 same disk pool and sampler cursor; no per-update/window file duplication.
 Full TRAIN cache planning retains the user's10-million
 filesystem-entry ceiling; actual eligible TRAIN scope is8568025 days.
+
+## Implementation and bounded execution evidence
+
+Physical v2 is committed at64c0628, recurrent scalar/probe atb247e65. Both
+preserve the Attention architecture and canonical daily operator boundary.
+The expanded sampler's real metadata/reader probe completes46.371s: all10830
+batches have32 rows and all86640 micros have4. Observed files per batch are
+one(1 batch), two(4594), three(6235); first/middle/last reads take
+0.1293/0.1051/0.0709s. Local evidence: outputs/expanded-fixed-batches-v2.json.
+
+The actual physical-v2 full-array shape check passes266.6s on test02, with
+zero updates. Exact deployed GPU runtime passes59.252s (JAX0.4.38/NumPy2.4.6).
+The bounded two-update test is running on free gln01 GPU0/Python106777 from
+immutable runtime/checkouts/physical-feedback-v2. Its pipeline log and report
+are runtime/outputs/diagnostics/physical-feedback-v2-pipeline.log and
+physical-feedback-v2-updates.json. No completed-update/science claim yet.
+
+Shared recurrent loss tests cover public rollout T1/2/7 native/JVP/checkpointed
+equality, masks, endpoint shape and cumulative cancellation; combined relevant
+suite32 passes. Metadata-only selection completes125.8s on test03, selecting
+8T7+8T30 and preserving360 excluded days. First T7 is artifact1199, site
+233.0-103.0, year1970, start278; no selection by outcome. The actual selection
+is saved as outputs/recurrent-training-probe-v2-selection.json locally and in
+runtime/outputs/diagnostics remotely. CPU full-model shape admission passes
+310.4s (outputs/recurrent-science-v2-shape.json). Free GPU1 runtime passes24.9s;
+native reverse is running from runtime/checkouts/recurrent-science-v2 as
+Python112477, with pipeline Bash111660. Pipeline log is
+runtime/outputs/diagnostics/recurrent-science-v2-pipeline.log. Native65min and
+verification35min caps apply; no new optimizer updates or paid allocation.
+
+After those checks, the remaining implementation gate is a declared combined
+one-day/recurrent optimizer and bounded complete updates. Neither separate
+scalar checks nor two single-day updates establish successful multi-day learning.
+Only then extend the admitted update to T30 and choose a broader training budget,
+reporting unique data exposure alongside update count and wall time.

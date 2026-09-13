@@ -60,12 +60,17 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
-As of 2026-09-11, the immediate neural research task is a reproducible fresh-start
-training prototype: initialize the consolidated Attention architecture without
-exploratory checkpoint dependencies and admit full-network optimization on a
-bounded v6 learning test. Existing weights remain diagnostic assets. See the
-top of `NEXT_STEPS.md` and `fresh_start_training_route_20260911.md` in the
-research docs. The chronology below does not override this work order.
+As of 2026-09-13, fresh full-network Attention training has demonstrated bounded
+one-day learning. Its final checkpoint passes all 13 seven-day development keys
+and 11 of 13 thirty-day keys; nonliving and total ecosystem carbon still fail.
+The expanded 346,539-day TRAIN pool is prepared. The immediate gate is physical
+feedback loss v2 and a shared recurrent science objective: correct demonstrated
+litter-fraction weighting imbalance and canopy-carbon drift, then admit actual
+combined updates before broader training. Free GPU checks are in progress; see
+the top of `NEXT_STEPS.md` and `physical_feedback_and_recurrent_v2_20260913.md`
+in the research docs. The final paper method still requires a declared,
+reproducible fresh-initialization/full-network protocol. The chronology below
+does not override this work order.
 
 Gate A is complete. `main` and `research/daily-coarse-graining` contain the
 same scientific Teacher core. The research branch currently has one

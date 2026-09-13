@@ -61,6 +61,23 @@ No code under `research/` is imported by the ordinary Teacher path.
 
 ## Daily Research
 
+`daily_operator/one_day_sampling.py` owns opt-in `fixed_replay_pad`: fixed32
+cross-artifact batches, micro4, deterministic end padding and resumable cursor.
+`scripts/dev/probe_expanded_fixed_batches.py` verifies the real expanded pool.
+`daily_operator/canopy_change_loss.py` and `fresh_start_training.py` own the v2
+optional pseudo-Huber canopy and physical-unit litterpart policies; historical
+defaults remain unchanged. `probe_feedback_loss_updates.py` owns the declared
+v2 two-update admission, with `run_physical_feedback_v2.sh` for free execution.
+
+`daily_operator/recurrent_science_loss.py` owns the shared daily/cumulative
+flux and stock-change rollout scalar and diagnostic terms. It uses the public
+rollout loss/native checkpointed AD; no runner-specific cotangent construction.
+`scripts/hpc/prepare_recurrent_training_probe.py` selects TRAIN-only windows
+excluding fixed monitor/development dates from existing metadata.
+`probe_trained_checkpointed_grad.py --recurrent-protocol` admits this changed
+scalar with durable reverse/JVP stages; `run_recurrent_science_v2.sh` launches
+the bounded free check. This probe has no optimizer or final-training claim.
+
 `one_day_expansion_plan.py` selects16 stratified new TRAIN dates at every
 existing training point-year, preserving base rows and development exclusions.
 `expanded_one_day.py` reuses exact v6 input/target assembly with one parent
