@@ -88,6 +88,10 @@ organic carbon without a second PFT cover factor, following soilcarbon_leak.
 The same intervention runner's `--grouping litter_detail` mode supplies nine
 leaf masks and declared family/interaction masks, retaining the same32-arm
 graph; `run_trained_gpp_litter_detail.sh` owns its bounded free execution.
+`canopy_change_loss.py` provides a standalone source-direct stock-change loss
+with explicit masks, independent recurrent starts and bare-slot diagnostics.
+It is locally tested but not yet wired into the deployed training objective;
+its scale and coefficient must be supplied by the declared training method.
 
 `daily_operator/rollout_loss.py` now owns ordinary/checkpointed scan losses and
 the public streamed value-and-gradient operation. It generates observation

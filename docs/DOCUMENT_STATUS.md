@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/canopy_change_loss_proposal_20260913.md` | Helper/local tests complete; training integration and calibration pending | Source-direct stock change, train-only scales and proposed weighting check |
 | `research/daily_coarse_graining/trained_gpp_litter_detail_20260913.md` | Group diagnosis complete; leaf follow-up fixed | GPP mediation, DOC interaction and specific field attribution |
 | `research/daily_coarse_graining/native_ad_priority_and_canopy_metric_20260913.md` | Current science-first decision; source-confirmed metric fix | Native AD scope, research priority and canopy stock area basis |
 | `research/daily_coarse_graining/trained_gpp_state_intervention_plan_20260913.md` | Current forward-only diagnosis | Bidirectional state replacement on the fixed 16-window panel |
