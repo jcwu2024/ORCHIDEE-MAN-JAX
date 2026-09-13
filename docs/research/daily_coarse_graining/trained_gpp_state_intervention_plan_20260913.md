@@ -51,6 +51,14 @@ curves, defined masks, nonfinite counts, physical hard counts, RMSE, mean
 bias, and aggregate bias. Full-free and full-Teacher GPP must reproduce the
 saved attribution within its declared replay discrepancy.
 
+Control comparisons preserve all measured results before classification.
+They reuse the previous replay allclose tolerances (atol1e-8, rtol1e-6);
+the free control also allows its recorded raw-GPP replay discrepancy reduced
+by the actual PFT-fraction L1 bound. A mismatch invalidates the confirmed-owner
+claim, but does not abort or erase other window observations. Hybrid physical,
+mask and discrete counts remain visible alongside continuous effect sizes;
+material effects before validity filtering are also reported.
+
 For each group, both directions use the positive free-minus-Teacher-reset GPP
 MSE gap as denominator:
 

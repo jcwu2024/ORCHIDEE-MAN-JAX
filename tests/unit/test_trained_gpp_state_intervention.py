@@ -16,7 +16,7 @@ from research.daily_coarse_graining.daily_operator.trained_gpp_state_interventio
     build_intervention_arm_states,
     series_error_metrics,
 )
-from scripts.hpc.diagnose_trained_gpp_state_interventions import _load_archived_carries
+from scripts.hpc.diagnose_trained_gpp_state_interventions import _control_comparison, _load_archived_carries
 
 COMPONENTS = {
     "diffuco_previous_step_state": ("control_salinity", "control_inudate", "gsmean"),
@@ -169,3 +169,11 @@ def test_archived_free_carry_uses_previous_canonical_endpoint(tmp_path):
     np.testing.assert_array_equal(teacher_carry, teacher_start)
     np.testing.assert_array_equal(free_carry[0], teacher_start[0])
     np.testing.assert_array_equal(free_carry[1:], free_state[:-1])
+
+
+def test_control_replay_keeps_numeric_discrepancies_as_evidence():
+    assert _control_comparison([1.0 + 1.0e-7], [1.0])["valid"]
+    discrepancy = _control_comparison([1.1], [1.0])
+    assert not discrepancy["valid"]
+    assert np.isclose(discrepancy["maximum_absolute_error"], 0.1)
+    assert not _control_comparison([np.nan], [1.0])["valid"]

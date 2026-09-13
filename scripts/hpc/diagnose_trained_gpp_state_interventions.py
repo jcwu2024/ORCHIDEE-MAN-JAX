@@ -95,6 +95,19 @@ def _series(science: Any, name: str) -> tuple[np.ndarray, np.ndarray]:
     return np.asarray(value.value).reshape(-1), np.asarray(value.defined).reshape(-1)
 
 
+def _control_comparison(actual: Any, expected: Any, replay_allowance: float = 0.0) -> Mapping[str, Any]:
+    """Report graph replay differences without discarding scientific observations."""
+    actual, expected = np.asarray(actual), np.asarray(expected)
+    error = np.abs(actual - expected)
+    # Reuse the preceding attribution's replay tolerances. The free control
+    # additionally inherits its recorded raw-GPP discrepancy bound.
+    limit = replay_allowance + 1.0e-8 + 1.0e-6 * np.abs(expected)
+    return {"valid": bool(np.all(np.isfinite(error) & (error <= limit))),
+            "maximum_absolute_error": float(np.max(error)),
+            "replay_allowance": float(replay_allowance), "atol": 1.0e-8, "rtol": 1.0e-6,
+            "tolerance_source": "diagnose_trained_forward.py state replay allclose"}
+
+
 def _summarize_aggregates(
     aggregate: Mapping[int, Mapping[str, Mapping[str, list[np.ndarray]]]],
     groups: Any,
@@ -149,7 +162,9 @@ def _classify(
                 ),
             }
     primary = []
+    effect_candidates = []
     physical = {}
+    controls_valid = all(window["control_reproduction"]["valid"] for window in windows)
     for group in groups:
         aggregate = summary["30"]["gpp_bidirectional_attribution"][group.name]
         counts = consistency["30"][group.name]
@@ -164,15 +179,20 @@ def _classify(
             for arm in relevant_arms
         )
         physical[group.name] = physically_valid
-        if (
-            physically_valid
-            and aggregate["bidirectionally_material"]
+        effect_material = (
+            aggregate["bidirectionally_material"]
             and counts["positive_rescue_window_count"] >= 6
             and counts["positive_damage_window_count"] >= 6
-        ):
+        )
+        if effect_material:
+            effect_candidates.append(group.name)
+        if effect_material and physically_valid and controls_valid:
             primary.append(group.name)
     return {
         "primary_t30_bidirectional_owner_candidates": primary,
+        "t30_effect_candidates_before_validity_checks": effect_candidates,
+        "control_reproduction_valid": controls_valid,
+        "interpretation_limit": "hybrid mask/discrete changes are reported as limitations; all continuous effects remain available",
         "physically_valid_for_classification": physical,
         "window_sign_consistency": consistency,
         "classification": (
@@ -464,16 +484,25 @@ def run(args: Any) -> Mapping[str, Any]:
                     )
                 )
             )
-            if free_replay_error > float(prior["replay"]["gpp_max_abs_error"]) + 1.0e-9:
-                raise ValueError("archived free-carry GPP exceeds prior replay discrepancy")
-            if teacher_reset_error > 1.0e-9 or target_error > 1.0e-9:
-                raise ValueError("Teacher control or target GPP differs from prior attribution")
+            fraction_l1 = float(np.max(np.sum(np.abs(observations["fraction"][0]), axis=-1)))
+            comparisons = {
+                "free": _control_comparison(
+                    arms["control_free"]["fluxes"]["gpp"]["predicted_daily"],
+                    prior_fluxes["gpp"]["free"],
+                    float(prior["replay"]["gpp_max_abs_error"]) * fraction_l1),
+                "teacher_reset": _control_comparison(
+                    arms["control_teacher"]["fluxes"]["gpp"]["predicted_daily"],
+                    prior_fluxes["gpp"]["reset"]),
+                "teacher_target": _control_comparison(teacher_fluxes["gpp"], prior_fluxes["gpp"]["teacher"]),
+            }
             report["windows"].append(
                 {
                     "selection": selection,
                     "archive": str(archive_path),
                     "discrete_carry_mismatch": discrete_carry_mismatch,
                     "control_reproduction": {
+                        "valid": all(row["valid"] for row in comparisons.values()),
+                        "comparisons": comparisons,
                         "free_gpp_max_abs_error": free_replay_error,
                         "teacher_reset_gpp_max_abs_error": teacher_reset_error,
                         "teacher_target_gpp_max_abs_error": target_error,
