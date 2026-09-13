@@ -25,11 +25,14 @@ Current actions, superseding launch instructions in the history below:
   Sol(high) source review, Terra(high) integration and second Sol(high)
   calibration-runner work are complete. Root verified13 focused/integration
   regressions; runner component-gradient tests also pass. Actual shape/gpu
-  launcher expansions pass Bash on test02. The real batch4 CPU gradient-shape
-  check is running at ac5aa51 in `runtime/checkouts/trained-feedback-v1`;
-  prefix `feedback-loss-calibration-v1-cpu-shape`,15m cap. Keep checkout fixed.
-  On a successful shape check, use idle free gln01 for the once-per-new-graph
-  runtime check then the60m zero-update calibration; no paid job or updates.
+  launcher expansions pass Bash on test02. Real batch4 CPU objective/backward
+  shapes passed151.33s at ac5aa51. Free GPU0 was idle and the runtime-check
+  plus60m zero-update calibration chain is launched as PID61046 from
+  `runtime/checkouts/trained-feedback-v1`; keep that checkout fixed.
+  Prefix `runtime/outputs/diagnostics/feedback-loss-calibration-v1`, pipeline
+  log `-pipeline.log`, runtime `-runtime.json`, final `.json`. Read its four
+  batch/three-component results before selecting weights or running updates.
+  No paid allocation, parameter update or checkpoint.
 
 - Group GPP diagnosis completed16/16,905.16s, zero hard counts and valid
   controls. Litter metadata rescue95.31% / reciprocal damage78.30% of the T30

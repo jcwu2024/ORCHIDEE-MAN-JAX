@@ -27,6 +27,11 @@ supervision, followed by fresh training-only gradient-balance calibration and
 bounded optimizer admission. Keep Attention and input normalization unchanged.
 See `research/daily_coarse_graining/feedback_and_canopy_loss_amendment_20260913.md`.
 The first calibration is zero-update on a free GPU; no new paid training.
+Optional shared losses and local tests are complete. Actual batch4 CPU shapes
+pass151.33s at ac5aa51; the free GPU0 runtime-preflight/calibration chain is
+launched as PID61046 in `runtime/checkouts/trained-feedback-v1`,60m calibration
+cap. Output prefix `runtime/outputs/diagnostics/feedback-loss-calibration-v1`.
+No new weights exist; read the gradient components before choosing coefficients.
 
 Preceding group-level evidence:
 
