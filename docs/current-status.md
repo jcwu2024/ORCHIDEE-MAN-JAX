@@ -13,6 +13,17 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Parallel data-expansion preparation: selected346539 unique TRAIN dates
+(63707 existing+282832 new) across17677 point-years/535 points/44 years.
+Actual free CPU pilot and two workers passed8 point-years/150 rows,128 new,
+exact old-row payload equality and persisted reader readback. Full preparation
+is not executed. Proposed cnall4nodes*8CPU/2h, CNY4.48 max, remains unapproved;
+isolated checkout one-day-expansion-v1. See
+`research/daily_coarse_graining/one_day_expansion_v1_20260913.md`.
+Current grouped sampler would produce13258 updates/4420 partial batches;
+future expanded GPU training needs an explicit fixed32-row packing/cursor
+and final-remainder policy. This is batch engineering, not failed gradients.
+
 User approved the6h/CNY16.56 proposal. Job15061139 was submitted on gln01
 and started on ibc13b03n01 at2026-09-13 17:39:37 scheduler time; observed
 RUNNING,1GPU/8CPU/32GiB,6h cap. Fixed code5502ce3 in

@@ -10,6 +10,22 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Expansion preparation is now implemented and admitted on free CPU:
+  metadata63707 base+282832 new=346539 unique TRAIN days (4.04456% of eligible),
+  same535 points/44 years/17677 point-years;16 stratified new dates each,
+  monitor64/rollout296 excluded. Raw reader uses exact v6 adapter/labels and
+  same-point-year retained inputs. Four-point-year pilot55.35s plus parallel
+  test02/test03 workers45.00s/84.02s pass;150 prepared rows total,128 new,
+  all8 old-row comparisons and persisted readback exact. No full expansion yet.
+  Full merge/catalogue remaps unchanged monitor payloads and tests pass.
+  A proposed cnall4nodes*8CPU/2h/noGPU job (CNY4.48 cap) is prepared,
+  UNAPPROVED/unsubmitted; code in separate one-day-expansion-v1 checkout.
+  Do not change paid training15061139. See
+  `research/daily_coarse_graining/one_day_expansion_v1_20260913.md`.
+  Before later expanded GPU training, fix/declare full32-row batching:
+  existing sampler emits13258 updates with4420 partial batches on new chunks,
+  not10830 packed updates. Keep this separate from data validity/AD diagnosis.
+
 - User approved the concrete6h/CNY16.56 training proposal. Job15061139
   submitted from gln01 and RUNNING on ibc13b03n01, start2026-09-13 17:39:37
   scheduler time; time limit6h,1GPU/8CPU/32GiB. Execution checkout

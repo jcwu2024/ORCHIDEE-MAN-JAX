@@ -1,7 +1,8 @@
 # Broader one-day data: declared preparation and real-data pilot
 
-Status: user authorized expansion preparation; local implementation complete,
-actual metadata/pilot results pending. No new paid allocation. Paid training
+Status: user authorized expansion preparation; local implementation and
+actual metadata/four-point-year pilot and parallel workers pass. Final merge
+integration tests pass. Full CPU preparation proposed, not submitted. Paid training
 15061139 continues unchanged in its frozen checkout.
 
 ## Sampling and scientific scope
@@ -25,9 +26,15 @@ This is data preparation, not a new training run or a changed current run.
 No loss/architecture/normalization/AD boundary is changed. Full-data fitting
 does not wait for every small-pool science metric to pass. The next training
 contract will explicitly budget unique exposure, updates, initialization and
-checkpoint selection after current learning/rollout evidence. A346539-row
-deduplicated epoch would require10829 full batches of32 plus a final11 rows;
-its final-batch policy must be declared before training. Merely increasing
+checkpoint selection after current learning/rollout evidence. A fully packed
+346539-row epoch would require10829 full batches of32 plus a final11 rows,
+but the current sampler does NOT pack across exhausted artifact groups:
+the actual metadata audit emits13258 updates,8838 full and4420 partial,
+with microbatch sizes1/2/3/4. A future training-level carry layer should pack
+consecutive rows into fixed32-row updates while preserving declared sampling
+and checkpoint cursor semantics; its final11-row policy must be declared
+and tested before expanded GPU training. Do not submit the existing runner
+unchanged and assume10830 updates or only one remainder. Merely increasing
 the pool with unchanged1998 updates would still consume only63936 draws.
 
 ## Data route
@@ -70,3 +77,57 @@ Use measured time/storage to size full preparation, accounting for shared IO
 and parallel memory. Full paid CPU preparation requires a concrete resource,
 time, command and cost proposal. Do not launch hours of unbounded processing
 on free test nodes. Running paid training checkout stays immutable.
+
+## Actual free-node evidence
+
+At0a33541, test02 metadata selection passes in16.220s:63707 base+282832 new
+=346539 unique TRAIN days;17677 point-years,535 locations,all44 years;
+eligible fraction4.04456%; monitor64 and rollout296 excluded.
+Report: `runtime/outputs/diagnostics/one-day-expansion-plan-v1.json`, copied
+locally to `outputs/one-day-expansion-plan-v1.json`.
+
+The four-point-year pilot passes in55.352s, exit0;4x18=72 rows,64 new.
+All six one-day fields on the four reference rows match the old prepared
+payload exactly, including dtypes/masks; persisted training-reader readback
+also matches. Each parent+typed shard pair is4.47--4.54MB compressed;
+each18-row chunk is0.455--0.460MB compressed/10.337MB uncompressed.
+Per-point-year total times5.04--5.15s, assembly/read about4.90--4.91s;
+peak host1.377GiB; final persisted read0.031s. This is real data admission,
+not neural scientific acceptance. Runtime report:
+`runtime/outputs/training/one-day-expansion-pilot-v1/prepared_manifest.json`,
+local `outputs/one-day-expansion-pilot-v1.json`.
+
+Measured extrapolation: about24.9 serial CPU hours, ideally46.7 minutes
+with32 workers, before shared-IO/row-count effects; compressed output about
+8.2GiB. These four point-years are a pilot, not a throughput guarantee.
+Proposed production allocation:cnall,4 nodes x8 single-CPU workers,32CPUs,
+no GPU,2h cap (110m workers+8m merge). Worst-case CPU cost
+4*8*2*0.07=CNY4.48. No CPU --mem directive because of documented scheduler
+memory metadata; measured8-worker data memory is well below node capacity.
+The job is preparation only and remains unapproved/unsubmitted.
+
+Working directory: `/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/one-day-expansion-v1`.
+Proposed command: `/rmprog/slurm/v22.05.7/bin/sbatch scripts/hpc/slurm_one_day_expansion.sh`.
+Output root: `runtime/outputs/training/one-day-expansion-<jobid>`.
+Worker chunks are preserved independently; merge must verify completed range
+coverage and retain/remap the same64 monitor payloads before reporting a
+complete reader-compatible catalogue. Do not overwrite failed/partial chunks
+or resubmit all preparation merely because a later merge needs correction.
+
+At c6f51aa, parallel free test02/test03 workers prepare entries2--3/4--5,
+respectively. Both exit0/status passed/stage completed with exact saved-reader
+roundtrip, taking45.002s/84.025s including node-dependent bootstrap. Their
+four point-years take5.04--6.13s each,38/40 rows,64 new total; peaks1.404GiB.
+Together with the first pilot,8 different point-years/150 rows/128 new dates
+are materialized. Local reports: outputs/one-day-expansion-parallel-worker0.json
+and outputs/one-day-expansion-parallel-worker1.json. Free tests have finished.
+
+The merge step validates completed chunk coverage and per-entry schedule
+identities, remaps copied monitor artifacts beyond the new training IDs,
+and produces a catalogue usable by the existing reader/sampler. Synthetic
+compressed-artifact tests exercise its complete path, missing-chunk rejection,
+monitor values/dtypes and actual sampling histograms. Root's combined new
+data/merge/reader suite passes13 tests; earlier materializer/prepared-batch
+compatibility suite passes17. Actual Bash expansions for pilot, last worker
+range17125--17677 and production srun/merge command pass. No GPU preflight
+or training restart is required for these data-only preparation changes.

@@ -61,6 +61,16 @@ No code under `research/` is imported by the ordinary Teacher path.
 
 ## Daily Research
 
+`one_day_expansion_plan.py` selects16 stratified new TRAIN dates at every
+existing training point-year, preserving base rows and development exclusions.
+`expanded_one_day.py` reuses exact v6 input/target assembly with one parent
+and typed read per point-year. `prepare_one_day_expansion_plan.py` and
+`prepare_expanded_one_day.py` own metadata and bounded materialization;
+`merge_expanded_one_day.py` merges complete worker coverage and copies/remaps
+the unchanged monitor into the reader-compatible catalogue. Their free pilot,
+CPU worker and Slurm launchers live under scripts/hpc. None changes Teacher,
+neural architecture, losses or current running training.
+
 `forward_screen_selection.py` owns metadata-only disjoint window selection;
 `scripts/hpc/prepare_trained_forward_screen.py` freezes the actual panel.
 `trained_screen_common.py` loads the final full-network checkpoint and the
