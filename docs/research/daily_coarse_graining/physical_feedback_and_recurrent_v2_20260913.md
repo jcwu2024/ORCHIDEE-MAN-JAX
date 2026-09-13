@@ -66,6 +66,26 @@ must be frozen before training; do not use development windows for updates.
 Begin with T7, then T30 after resource/update evidence. Historical custom
 streamed reverse discrepancies do not block this native route.
 
+The next bounded recurrent-scalar specification is
+manifests/coarse_graining/recurrent_science_probe_v2.json: each of four fluxes
+gets0.125 for daily MSE and0.125 for horizon-mean cumulative MSE. AGB/BGB
+each get0.025 for elapsed-normalized trajectory and endpoint increment error;
+canopy gets0.05 for each, with the same pseudo-Huber penalty. Frozen TRAIN
+state-delta statistics supply biomass change scales, and source PFT14 supplies
+canopy change scale. These are declared diagnostic weights, not a final mixed
+training budget. A subsequent combined-update stage still needs admission.
+
+One TRAIN T7 case is selected before evaluation using seed20260914, excluding
+all64 monitor days and all296 fixed developmental window days. Prepared old
+multiday source manifests retain their existing identities; no new Teacher
+data. The first selected T7 is used without choosing by results. Final1998
+weights are explicitly a diagnostic asset for native-gradient/resource probing,
+not a formal training initialization. Reverse cap65min, then JVP cap35min on
+one free GPU, preserving completed native.pkl before verification. It measures
+two directions, finite/physical outcomes and resources, and executes zero
+optimizer updates. New actual recurrent scalar evidence is required; the old
+diagnostic scalar's pass is not claimed to certify it.
+
 Current checkpoints can be diagnostic assets. The final paper route remains
 fresh initialization/all-network optimization under a consolidated executable
 recipe, with any one-day then mixed stages and transitions specified up front.

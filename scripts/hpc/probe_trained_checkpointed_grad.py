@@ -1,4 +1,5 @@
 """Bounded native-checkpointed parameter AD at a frozen trained T7/T30 state."""
+import json
 import subprocess
 import time
 from pathlib import Path
@@ -22,6 +23,42 @@ def selected_window(selection,horizon):
     if horizon not in (7,30):
         raise ValueError('trained AD horizon must be 7 or 30')
     return next(row for row in selection['windows'] if row['length']==horizon)
+
+
+def recurrent_probe_loss(runtime, head, protocol_path):
+    """Bind declared physical scales/weights to the shared recurrent scalar."""
+    from research.daily_coarse_graining.daily_operator.fresh_start_training import _canopy_change_plan
+    from research.daily_coarse_graining.daily_operator.recurrent_science_loss import (
+        CANOPY_KEY,
+        FLUX_KEYS,
+        make_recurrent_science_loss,
+    )
+    from research.daily_coarse_graining.daily_operator.successor_training import derive_long_horizon_scales
+    from research.daily_coarse_graining.daily_operator.target_oriented_training import (
+        derive_target_oriented_acceptance_scales,
+    )
+
+    configuration = json.loads(protocol_path.read_text())
+    if configuration['schema_version'] != 'recurrent_science_probe_v2':
+        raise ValueError('unknown recurrent science probe protocol')
+    gpp_scale = runtime['process_statistics'].outputs['daily.fast_gpp'].scale
+    flux = derive_target_oriented_acceptance_scales(
+        runtime['base_statistics'].arrays['next_state'].scale, gpp_scale, head.contract)
+    delta = derive_long_horizon_scales(runtime['base_statistics'].arrays['state_delta'].scale,
+                                     gpp_scale, head.contract)
+    canopy = _canopy_change_plan(runtime, head.contract, {'canopy_carbon_stock_change':
+        {'weight': 1., 'scale_source_pft_index': 13}})
+    flux_scales = {key: flux.fluxes[key] for key in FLUX_KEYS}
+    stock_scales = {key: delta.stocks[key] for key in
+                    ('aboveground_biomass_carbon', 'belowground_biomass_carbon')}
+    stock_scales[CANOPY_KEY] = canopy.scale
+    import jax.numpy as jnp
+
+    scalar = make_recurrent_science_loss(runtime['jax'], jnp, contract=head.contract,
+        flux_scales=flux_scales, stock_daily_change_scales=stock_scales,
+        weights=configuration['weights'])
+    return scalar, {'configuration': configuration, 'flux_scales': flux_scales,
+                    'stock_daily_change_scales': stock_scales}
 
 
 def run(args):
@@ -60,10 +97,22 @@ def run(args):
         row = selected_window(pool.selection,args.horizon)
         initial,discrete,days,targets,expected_discrete = pool.case(jax,row)
         context = {'stock_weight':jnp.array(1.,dtype=jnp.float64)}
-        component = make_rollout_loss(jax,jnp,make_canonical_step(head,template),make_science_probe_loss(head.contract,scales))
+        recurrent = getattr(args, 'recurrent_protocol', None)
+        if recurrent is None:
+            loss_fn = make_science_probe_loss(head.contract,scales)
+            loss_specification = None
+        else:
+            loss_fn, loss_specification = recurrent_probe_loss(runtime, head, recurrent)
+            if (pool.selection.get('role') != loss_specification['configuration']['selection_role']
+                    or args.horizon != loss_specification['configuration']['horizon']):
+                raise ValueError('recurrent admission needs its declared TRAIN selection/horizon')
+        component = make_rollout_loss(jax,jnp,make_canonical_step(head,template),loss_fn)
         arguments = (parameters,initial,discrete,days,targets,context)
         identity = {'method':method,'window':row,'probe':f'trained_T{args.horizon}_native_parameter_ad_v1',
                     'direction_seeds':[20260913,20260914],'direction_scale':'exact_per_coordinate_plus_minus_one'}
+        if recurrent is not None:
+            identity.update(probe='recurrent_science_v2_native_T7_parameter_ad',
+                            loss_specification=loss_specification)
         store = StageStore(args.stage_directory,identity)
         native = jax.jit(jax.value_and_grad(component.checkpointed_loss,argnums=0))
         tangent = jax.jit(lambda p,d,s,z,day,t,c:
@@ -78,6 +127,15 @@ def run(args):
             return report
         _,obs = jax.jit(component.rollout)(parameters,initial,discrete,days)
         hard = physical_checks(obs,targets,expected_discrete,days[0],head.contract,scales)
+        if recurrent is not None:
+            terms = jax.device_get(loss_fn.terms(*arguments[:2], obs, targets, context))
+            for name in ('daily_flux','cumulative_flux','stock_endpoint','stock_trajectory'):
+                for key, term in getattr(terms, name).items():
+                    hard[f'{name}.{key}.invalid'] = int(term.invalid_prediction_count + term.invalid_target_count)
+            report['recurrent_science_terms'] = json_safe({
+                'total': terms.total, 'weighted_components': terms.weighted_components,
+                **{name: {key: term._asdict() for key, term in getattr(terms, name).items()}
+                   for name in ('daily_flux','cumulative_flux','stock_endpoint','stock_trajectory')}})
         emit('forward_completed',hard=hard)
         if any(hard.values()):
             emit('stopped',status='rejected',reason='physical_forward')
@@ -141,4 +199,7 @@ if __name__=='__main__':
         parser.add_argument('--'+name,type=Path,required=True)
     parser.add_argument('--phase',choices=('reverse','verify'),required=True)
     parser.add_argument('--horizon',type=int,choices=(7,30),default=7)
+    parser.add_argument('--recurrent-protocol',type=Path)
+    parser.add_argument('--expected-update',type=int)
+    parser.add_argument('--expected-pool-protocol',type=Path)
     run(parser.parse_args())

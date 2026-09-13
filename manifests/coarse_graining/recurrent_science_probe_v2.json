@@ -1,0 +1,18 @@
+{
+  "schema_version": "recurrent_science_probe_v2",
+  "purpose": "bounded_native_T7_parameter_AD_for_declared_recurrent_scalar_not_mixed_training_admission",
+  "initialization": "diagnostic_asset_final1998_of15061139; no_optimizer_updates",
+  "selection_role": "train_only_bounded_recurrent_admission_not_validation",
+  "flux_scales": "existing_frozen_train_next_state_and_fast_gpp_projection",
+  "stock_scales": "existing_frozen_train_state_delta_projection; canopy_source_PFT14_delta",
+  "weights": {
+    "daily_flux": {"gpp": 0.125, "npp": 0.125, "autotrophic_respiration": 0.125, "heterotrophic_respiration": 0.125},
+    "cumulative_flux": {"gpp": 0.125, "npp": 0.125, "autotrophic_respiration": 0.125, "heterotrophic_respiration": 0.125},
+    "stock_endpoint": {"aboveground_biomass_carbon": 0.025, "belowground_biomass_carbon": 0.025, "canopy_interception_organic_carbon": 0.05},
+    "stock_trajectory": {"aboveground_biomass_carbon": 0.025, "belowground_biomass_carbon": 0.025, "canopy_interception_organic_carbon": 0.05}
+  },
+  "horizon": 7,
+  "parameter_updates": 0,
+  "architecture_changed": false,
+  "teacher_regenerated": false
+}
