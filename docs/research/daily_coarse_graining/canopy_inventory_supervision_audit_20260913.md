@@ -89,8 +89,9 @@ The v6 process schema assigns both
 `carbon.ok_leak_inventory_endpoints` label. The outgoing field uses the
 unit-interval sigmoid direct decoder and unit scale. Incoming uses the
 mean/scale-centred softplus decoder and its frozen train/train standard
-deviation. The process objective pools valid coordinates within the label and
-then uses equal-label macro weighting.
+deviation. The process objective pools valid coordinates within each label,
+then averages active labels with the target contract's category weights (equal
+within a category). The one-day prototype also multiplies process loss by0.01.
 
 The v6 state scale for the stored carbon slots is `[1.0, 47559.687579]`
 gC m-2 for bare soil and PFT14. On the first reset archive, the physical
@@ -106,6 +107,39 @@ but has no coupling that proves ecosystem conservation against GPP,
 autotrophic respiration, or heterotrophic respiration.
 
 ## Required Follow-Up Probe
+
+### Completed raw-v6 readback
+
+The test02 execution at a136fda completed without a model run. Report:
+`runtime/outputs/diagnostics/trained-canopy-inventory-label-audit-v1.json`
+(local copy under outputs/ with the same name). All240 selected days match
+the raw v6 start/terminal state exactly; canopy fast and terminal coordinates
+also agree exactly. The production encoder, rather than an inferred gross
+transfer decomposition, supplies the targets.
+
+- Teacher PFT14 incoming mean4.54273245gC/m2/day; all240 outgoing targets zero.
+  Bare-slot incoming and outgoing targets are zero on every selected day.
+- Reset predicted PFT14 outgoing fraction mean0.0081325875, RMS0.00866934;
+  positive-start outgoing MSE7.51574489e-5. The earlier0.00725125 was a
+  window-specific value, not the full240-day mean.
+- Incoming field normalized MSE1.07545896 across both slots; PFT14 normalized
+  residual RMS1.46653529. Incoming fit is also poor, but its missing few grams
+  does not explain the hundreds of grams lost through outgoing.
+- Zero-start bare outgoing fractions remain unavailable from saved outgoing
+  amounts (240 coordinates). No exact full-label macro or gradient attribution
+  is claimed from this report.
+
+This confirms a mismatch between physical inventory-change importance and
+dimensionless outgoing-fraction error. Existing global train/train statistics
+provide canopy state_delta scale5.40392607gC/m2 (mean5.54059836), compared with
+next-state scale47559.68758. These are pre-existing training statistics, not
+scales fitted to this diagnostic panel. A separately weighted stock-change
+objective is now evidence-supported for the next loss proposal. Do not simply
+replace all state scales: measure the revised objective/gradient balance on
+training data first, and preserve the current science panel for assessment.
+
+The following describes the original readback plan and remaining full-label
+loss limitation; raw endpoint/label alignment is now complete.
 
 The Teacher branch split is deterministic, not a gross-flux decomposition. The
 v6 target builder calls `encode_inventory_endpoints` in

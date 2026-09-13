@@ -10,6 +10,21 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Latest: free GPU0 forward-only intervention chain launched at a136fda,
+  PID57120, isolated `runtime/checkouts/trained-feedback-v1`; keep it fixed.
+  Log/report prefix `runtime/outputs/diagnostics/trained-gpp-state-interventions-v1`.
+  CPU shapes pass all16 windows (100.8s); runtime preflight passes72.1s;
+  GPU diagnostic has a75m cap. No parameter update or paid submission.
+- CPU canopy readback completed: all240 selected T30 raw-v6 fast endpoints
+  equal the archived Teacher terminal coordinates exactly. All outgoing
+  fraction targets zero; reset prediction mean0.00813259, dimensionless
+  MSE7.5157e-5 despite large physical stock loss. Incoming target mean4.54273;
+  incoming normalized field MSE1.07546. Existing train/train state_delta scale
+  is5.40393 versus stock scale47559.69. Next combine GPP mediation results with
+  a separately weighted stock-change loss proposal; verify actual gradient
+  balance/updates on training data before scaling. Do not blindly rescale all
+  states or redesign the Attention backbone.
+
 - Implementation update: source-confirmed canopy metric correction removes a
   second cover weighting of interception_storage; selected Teacher PFT14
   cover is1, so this does not explain away the inventory drain. Local carbon

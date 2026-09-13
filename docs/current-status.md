@@ -13,6 +13,23 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest operations: a136fda free GPU0 state-intervention chain PID57120 is
+running under runtime/checkouts/trained-feedback-v1 (75m diagnostic cap;
+72.1s runtime preflight passed). All16 actual-data CPU shapes passed100.8s.
+The initial archive identity comparison incorrectly rejected matching NaNs;
+independent no-model inspection found identical finite values and matching
+NaN positions in all16 windows. equal_nan=True fixes comparison only.
+
+The test02 canopy raw-v6 readback completes all240 T30 days: start, fast/end
+and archive coordinates match exactly. Teacher outgoing targets all zero,
+predicted positive-start outgoing mean0.00813259 and MSE7.5157e-5; incoming
+normalized field MSE1.07546, Teacher incoming mean4.54273gC/m2/day.
+Global train/train state_delta scale5.40393 versus stock scale47559.69
+supports a separately weighted stock-change objective proposal. This does not
+yet prove a repaired training method or that canopy drift mediates GPP loss.
+Sol/Terra supplied initial implementations; root completed integration and
+raw endpoint readback after subagent provider interruptions.
+
 Current priority: use native checkpointed AD for the next specified training
 objective and verify that objective plus a few complete updates. Gradient
 infrastructure is no longer the main task; do not reopen passed unchanged
