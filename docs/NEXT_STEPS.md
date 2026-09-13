@@ -10,6 +10,16 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Execution update: corrected CPU objective/reverse/JVP/optimizer shapes pass
+ 204.898s at497fe80. Free GPU0 was idle; launched the two-update chain as
+ PID65767 in `runtime/checkouts/feedback-updates-v1` at that commit. Keep it
+ fixed. Prefix `runtime/outputs/diagnostics/feedback-loss-updates-v1`:
+ `-pipeline.log`, `-runtime.json`, final `.json`;60m update cap after3m
+ preflight cap. Read completed update count, native directional checks,
+ fixed64 TRAIN-row science and all hard counts before declaring admission.
+ GPU runtime preflight passed29.314s; the real probe reached bootstrap.
+ No checkpoint, paid allocation or long-horizon improvement claim.
+
 - Calibration completed at ac5aa51:1063.644s, four batch4 groups, exit0,
   finite losses/gradients and all hard counts zero; PID61046 has exited.
   Fixed trial coefficients are base1, canopy3e-9, litterpart2.5e-5, declared

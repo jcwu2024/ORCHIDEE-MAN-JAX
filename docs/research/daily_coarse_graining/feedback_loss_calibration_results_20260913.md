@@ -93,3 +93,21 @@ diagnostic correction, not a relaxation of numerical or physical criteria.
 The failure location implicates the added check, but the original log alone
 does not prove the native compiler's internal fault. A successful rerun will
 establish usability of the simplified path, not an exhaustive compiler cause.
+
+The corrected497fe80 path passed actual CPU objective/reverse/JVP/optimizer
+shape tracing on test02 in204.898s, exit0. Report
+`feedback-loss-updates-v1-cpu-shape.json` declares zero executed updates;
+the synthetic-shape label denotes no numerical science execution even though
+the supplied weights are the reviewed fixed trial weights. Launcher expansion
+evidence is reused because the shell/CLI did not change.
+
+Both free GPUs were idle. The GPU0 two-update/runtime chain launched as
+PID65767 from `runtime/checkouts/feedback-updates-v1` at497fe80. Keep that
+checkout fixed. Prefix `runtime/outputs/diagnostics/feedback-loss-updates-v1`;
+pipeline log `-pipeline.log`, runtime `-runtime.json`, final `.json`. Caps are
+3m runtime preflight then60m actual probe. No checkpoint or paid submission.
+Read the actual directional checks, completed update count, fixed-panel
+science and hard counts before calling this technical admission a pass.
+The deployed GPU runtime preflight passed29.314s (JAX0.4.38/NumPy2.4.6,
+GPU backend); the actual-model runner has reached bootstrap. This small
+preflight does not certify the pending full-model update result.

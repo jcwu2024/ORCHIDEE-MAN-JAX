@@ -13,6 +13,12 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Two-update admission is now running on free GPU0, PID65767, code497fe80 at
+`runtime/checkouts/feedback-updates-v1`. CPU shapes passed204.898s after
+removing the unnecessary separately compiled tree-finiteness diagnostic.
+Prefix `runtime/outputs/diagnostics/feedback-loss-updates-v1`,60m update cap
+after3m runtime preflight. No checkpoint, paid job or science claim yet.
+
 Update: the zero-update loss calibration below has completed at ac5aa51 in
 1063.644s, exit0, four batches, finite losses/gradients and zero hard counts.
 Root declared trial coefficients base1/canopy3e-9/litterpart2.5e-5 from its

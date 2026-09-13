@@ -24,7 +24,7 @@ an earlier experiment and does not control current work.
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
 | `research/daily_coarse_graining/feedback_loss_calibration_results_20260913.md` | Completed calibration; trial weights declared | Measured gradient balance and next two-update admission |
-| `research/daily_coarse_graining/feedback_loss_parallel_preparation_20260913.md` | Update runner and local tests complete; deployment pending | Parallel preparation and actual execution scope |
+| `research/daily_coarse_graining/feedback_loss_parallel_preparation_20260913.md` | Preparation complete; see calibration-results report for live two-update launch | Parallel preparation and actual execution scope |
 | `research/daily_coarse_graining/feedback_loss_learning_acceptance_20260913.md` | Prepared later learning/rollout plan | Absolute science criteria, development-panel scope and remaining evaluator work |
 | `research/daily_coarse_graining/canopy_change_loss_proposal_20260913.md` | Shared helper and optional one-day integration locally tested; calibration pending | Source-direct stock change, train-only scales and proposed weighting check |
 | `research/daily_coarse_graining/feedback_and_canopy_loss_amendment_20260913.md` | Implemented; calibration complete, two-update admission next | Diagnosed litterpart recurrence sensitivity and canopy stock-change losses |
