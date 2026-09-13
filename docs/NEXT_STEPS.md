@@ -18,7 +18,13 @@ Current actions, superseding launch instructions in the history below:
   admitted dynamic reverse graph and shared physical/feedback monitors;
   native JVP need not be rerun. Snapshot loader/evaluator accepts explicitly
   declared intermediate steps and shared optional validity/units.
-  Local tests pass; actual Bash/metadata/CPU shape preflight is next.
+  Local tests and actual Bash launcher expansions pass. Metadata verifies
+  63707 unique TRAIN days,64 excluded monitor days and296 disjoint rollout
+  days across16 windows, with identical old-control sampling/source.
+  Actual test02 gradient/optimizer/monitor shape preflight passes224.161s
+  at execution commit5502ce3; zero updates, no new GPU repeat required.
+  Next obtain approval of the prepared paid resource/time/cost proposal,
+  then submit the frozen checkout runtime/checkouts/feedback-pool-v1.
   Proposed gnall1GPU/8CPU/32GiB/6h,CNY16.56 cap remains UNAPPROVED/unsubmitted.
   See `research/daily_coarse_graining/feedback_loss_pool_learning_v1_20260913.md`.
 

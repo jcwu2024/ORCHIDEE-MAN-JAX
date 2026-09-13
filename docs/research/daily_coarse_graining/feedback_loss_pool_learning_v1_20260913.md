@@ -1,6 +1,7 @@
 # Fixed feedback-loss learning: one prepared-pool epoch
 
-Status: implementation/preflight preparation; no paid submission.
+Status: implementation and target preflight complete; paid approval pending,
+no paid submission. Frozen execution checkout commit:5502ce3.
 
 ## Scientific question and fixed method
 
@@ -132,3 +133,35 @@ model protocol and checkpoint method/step must agree. The old historical
 final1998 default still works. The actual dataset and CUDA admission from
 `feedback-loss-updates-v1` are reused; new monitor outputs do not alter reverse
 loss semantics or reimplement any cotangent.
+
+## Completed target preparation
+
+Execution checkout `runtime/checkouts/feedback-pool-v1` was fast-forwarded
+to5502ce35e2111b1fabb39605c743431b3326ceb5. The previously admitted
+`feedback-updates-v1` checkout was not changed. Actual test02 Bash syntax and
+`--dry-run` argument expansion pass for all three new shell launchers.
+
+Metadata-only `check_feedback_pool_plan` passes all seven checks: accepted
+catalogue/selection, declared epoch counts, excluded monitor, rollout disjoint
+from training and monitor, matched control sampling/source, and completed
+control epoch. Counts:1998 updates,63936 draws,63707 unique TRAIN days,
+64 excluded monitor days,296 rollout days across16 windows. This verification
+reads metadata without Teacher payloads and does not regenerate any data.
+
+Actual test02 CPU shape tracing completes with exit0/status passed in
+224.161274824291s, classification
+`pool_gradient_optimizer_monitor_shapes_only`, zero updates and host peak
+4659789824 bytes (4.34GiB). It loads real prepared inputs and traces the
+amended batch4 gradient, optimizer and enriched monitor using the new protocols.
+Recorded coefficients are base1/canopy3e-9/litterpart2.5e-5. This is integration
+evidence, not a numerical GPU or scientific accuracy pass; the unchanged
+reverse graph's previously completed deployed AD/JVP/two-update evidence
+remains the numerical admission.
+
+Reports reside under remote `runtime/outputs/diagnostics/` and local `outputs/`:
+`feedback-pool-v1-plan.json` and `feedback-pool-v1-cpu-shape.json`.
+No test remains running and no new paid job has been submitted. The next
+action is user approval of the concrete6h/CNY16.56 proposal above, followed
+by submission on gln01 from the frozen execution checkout. Subsequent
+documentation-only commits do not require redeployment or repeating these
+unchanged checks.

@@ -16,8 +16,14 @@ describe an earlier gate without being rewritten.
 The next fixed fresh-start pool epoch is specified and implemented with
 unchanged calibrated losses,1998 full-network updates and retained milestones.
 Local training/recovery and intermediate-checkpoint/feedback-report tests
-pass. Actual target metadata/Bash/CPU shapes remain to be recorded before
-the concrete paid submission request. No new paid task is submitted. Plan:
+pass. Actual target Bash expansions and metadata checks pass; test02 real-data
+gradient/optimizer/monitor shapes pass224.161s at5502ce3, zero updates,
+host peak4659789824 bytes. TRAIN63707 unique days, excluded monitor64 days
+and disjoint rollout296 days/16 windows are verified; old-control sampling
+and source match. Local copies: outputs/feedback-pool-v1-plan.json and
+outputs/feedback-pool-v1-cpu-shape.json. Preparation is complete; next is
+approval of gnall1GPU/8CPU/32GiB/6h,CNY16.56 maximum and submission from
+runtime/checkouts/feedback-pool-v1 at5502ce3. No new paid task is submitted. Plan:
 `research/daily_coarse_graining/feedback_loss_pool_learning_v1_20260913.md`.
 
 Two-update admission completed on free GPU0 at497fe80 in2050.326s, exit0;
