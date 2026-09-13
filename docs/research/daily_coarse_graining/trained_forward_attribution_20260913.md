@@ -41,3 +41,25 @@ one free GPU1 run,60-minute cap plus tiny runtime preflight. Actual shell
 argument expansion is checked before launch. The AD main checkout stays688e14c;
 use a separate runtime/checkouts/trained-forward-attribution-v1 checkout.
 This is a diagnosis, not a newly loosened model acceptance gate.
+
+## Source audit before numerical attribution
+
+Independent review finds no obvious stock-unit or double-counting error in
+the current extractor: Fortran stomate_soilcarbon.f90:1446 sums carbon_32l
+over depth;1843-1913 explicitly converts DOC stocks to water concentration
+then back before state writeback. The saved DOC therefore needs no additional
+layer-thickness multiplication. PFT weighting still needs numerical comparison.
+
+Current direct carbon outgoing heads use sigmoid(raw), without mean centering
+(output_transform.py:44-46); incoming heads use mean/scale-centered softplus.
+This makes a persistent overestimated outgoing fraction a source-supported
+hypothesis, not yet a measured cause. The one-day loss (fresh_start_training.py)
+is daily flux MSE +0.1 state anchor +0.01 essential-process supervision, with
+no dedicated nonliving-stock-change or ecosystem-budget-coupling term. Thus
+slow carbon is supervised, but improvement of total loss does not establish
+accurate slow-carbon increments. Do not change decoder/loss on source evidence
+alone; attribute actual predicted changes first.
+
+Keep compact state-layout metadata and full start/fast/incoming/outgoing
+inventory arrays in the diagnostic archives. This permits later pool/layer,
+effective-outgoing-fraction and fixed-PFT-weight analysis without new forward runs.

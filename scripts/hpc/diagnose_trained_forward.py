@@ -80,6 +80,11 @@ def run(args):
         extract = jax.jit(extract)
         executables, daily = {}, None
         report['checkpoint'] = str(args.checkpoint)
+        report['state_layout'] = [
+            {'field': leaf.path[0], 'start': leaf.start, 'stop': leaf.stop,
+             'shape': leaf.shape, 'axes': leaf.axis_names}
+            for leaf in head.contract.state_leaves
+            if leaf.component == 'slowproc_stomate_previous_step_state' and leaf.start is not None]
         for row in pool.selection['windows']:
             h = row['length']
             initial, discrete, days, targets, expected_discrete = pool.case(jax, row)
@@ -124,6 +129,11 @@ def run(args):
             reset = jax.tree_util.tree_map(lambda *x: np.stack(x), *reset_rows)
             obs_host = jax.device_get(obs)
             science = {key: jax.device_get(extract(value)) for key, value in [('free', obs), ('reset', reset), ('teacher', targets)]}
+            validity = {label: {group: {key: {
+                'undefined': int(np.sum(~np.asarray(series.defined))),
+                'defined_nonfinite': int(np.sum(np.asarray(series.defined) & ~np.isfinite(series.value)))}
+                for key, series in getattr(value, group).items()}
+                for group in ('fluxes', 'stocks')} for label, value in science.items()}
             pools = {key: state_pools(value['state'], value['fraction'], value['active'], head.contract)
                      for key, value in [('free', obs_host), ('reset', reset), ('teacher', targets)]}
             decomposition = {}
@@ -154,10 +164,13 @@ def run(args):
             archive = args.output.with_name(args.output.stem+f'-{row["artifact_id"]}-T{h}.npz')
             np.savez_compressed(archive, free_state=obs_host['state'], free_defined=obs_host['defined'],
                 teacher_state=np.asarray(targets['state']), teacher_defined=np.asarray(targets['defined']),
-                teacher_start=np.asarray(days[0].continuous_state), reset_state=reset['state'],
-                free_fraction=obs_host['fraction'], teacher_fraction=np.asarray(targets['fraction']))
+                teacher_start=np.asarray(days[0].continuous_state), reset_state=reset['state'], reset_defined=reset['defined'],
+                free_fraction=obs_host['fraction'], teacher_fraction=np.asarray(targets['fraction']),
+                **{f'{label}_carbon_{key}': value['carbon_'+key]
+                   for label, value in [('free', free), ('reset', reset)]
+                   for key in ('start', 'fast', 'input', 'output')})
             report['windows'].append({'selection': row, 'hard': hard, 'replay': replay,
-                'pools_gC_m2': pools, 'decomposition_gC_m2': decomposition,
+                'pools_gC_m2': pools, 'decomposition_gC_m2': decomposition, 'science_validity': validity,
                 'fluxes_gC_m2_day': fluxes, 'raw_state_archive': str(archive)})
             emit('window_completed', memory=_device_memory(runtime['devices'][0]))
         emit('completed', status='passed' if args.shape_only else 'completed',
