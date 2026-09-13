@@ -16,14 +16,20 @@ Current actions, superseding launch instructions in the history below:
   -31.58%->+1.13% under Teacher-value replacement. This is diagnostic evidence,
   not a repaired model. Its actual neural input scale0.00789 amplifies errors
   scored by existing output/state losses at scale1; reset prediction~0.67 vs1.
-- Next implement optional litterpart input-scale and canopy stock-change loss
-  terms, then measure their gradient balance on16 fresh train-only rows before
+- Optional litterpart input-scale and canopy stock-change loss terms are
+  implemented and locally tested; measure their gradient balance on16 fresh train-only rows before
   choosing coefficients or running updates. Attention, normalization, source
   boundary and Teacher data stay fixed. No constants/Teacher replacements at
   inference. Current proposal:
   `research/daily_coarse_graining/feedback_and_canopy_loss_amendment_20260913.md`.
-  Sol(high) reviews source routes; Terra(high) integrates the shared losses;
-  a second Sol(high) prepares the bounded zero-update calibration runner.
+  Sol(high) source review, Terra(high) integration and second Sol(high)
+  calibration-runner work are complete. Root verified13 focused/integration
+  regressions; runner component-gradient tests also pass. Actual shape/gpu
+  launcher expansions pass Bash on test02. The real batch4 CPU gradient-shape
+  check is running at ac5aa51 in `runtime/checkouts/trained-feedback-v1`;
+  prefix `feedback-loss-calibration-v1-cpu-shape`,15m cap. Keep checkout fixed.
+  On a successful shape check, use idle free gln01 for the once-per-new-graph
+  runtime check then the60m zero-update calibration; no paid job or updates.
 
 - Group GPP diagnosis completed16/16,905.16s, zero hard counts and valid
   controls. Litter metadata rescue95.31% / reciprocal damage78.30% of the T30

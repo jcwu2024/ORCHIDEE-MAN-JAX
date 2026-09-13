@@ -93,5 +93,12 @@ losses and a reproducible training-only coefficient-calibration stage. The
 AD evidence is reused within its scope; a changed actual training loss needs
 its own relevant gradient/update checks, not a repeat of all historical probes.
 
-Shared helpers and optional one-day integration are being locally tested.
+Shared helpers and optional one-day integration passed13 focused/integration
+regressions; a further runner test verifies dynamic component-gradient
+selection. Ruff and diff checks pass. At ac5aa51, the real shape/gpu launcher
+argument expansions pass on test02. The real batch4 full-objective and native
+parameter-backward shape check is running from the isolated checkout
+`runtime/checkouts/trained-feedback-v1`,15m cap. On success, run the bounded
+GPU calibration after the deployed-runtime preflight. All report/log paths
+share `runtime/outputs/diagnostics/feedback-loss-calibration-v1`.
 No new trained weights or scientific improvement have yet been produced.
