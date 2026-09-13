@@ -10,15 +10,19 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
-- Execution update: corrected CPU objective/reverse/JVP/optimizer shapes pass
- 204.898s at497fe80. Free GPU0 was idle; launched the two-update chain as
- PID65767 in `runtime/checkouts/feedback-updates-v1` at that commit. Keep it
- fixed. Prefix `runtime/outputs/diagnostics/feedback-loss-updates-v1`:
- `-pipeline.log`, `-runtime.json`, final `.json`;60m update cap after3m
- preflight cap. Read completed update count, native directional checks,
- fixed64 TRAIN-row science and all hard counts before declaring admission.
- GPU runtime preflight passed29.314s; the real probe reached bootstrap.
- No checkpoint, paid allocation or long-horizon improvement claim.
+- Two-update admission completed at497fe80:2050.326s, exit0, updates2,
+  technical_admission_passed=true; PID65767/Python66443 absent. Both native
+  JVP directions pass; all physical hard counts zero, full parameters/optimizer
+  finite. Fixed64 TRAIN-panel RMSE: GPP-0.119%, NPP-0.315%, AGB/BGB changes
+  -0.305%/-0.369%, canopy-0.191%, litterpart-0.442%, but total autotrophic
+  respiration+0.706%. This is bounded technical admission with small mixed
+  science changes, not longitudinal or final fit acceptance. Peak live9.862GiB.
+  Next declare the bounded learning budget/checkpoint rule, integrate fixed
+  coefficients into the existing pool trainer, and prepare free7/30 evaluation.
+  Reuse completed gradient/JVP evidence for unchanged boundaries and existing
+  control training where matched. Keep Attention/input normalization fixed.
+  No active test or new paid submission. See
+  `research/daily_coarse_graining/feedback_loss_two_update_results_20260913.md`.
 
 - Calibration completed at ac5aa51:1063.644s, four batch4 groups, exit0,
   finite losses/gradients and all hard counts zero; PID61046 has exited.

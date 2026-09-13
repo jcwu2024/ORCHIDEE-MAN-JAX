@@ -13,11 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Two-update admission is now running on free GPU0, PID65767, code497fe80 at
-`runtime/checkouts/feedback-updates-v1`. CPU shapes passed204.898s after
-removing the unnecessary separately compiled tree-finiteness diagnostic.
-Prefix `runtime/outputs/diagnostics/feedback-loss-updates-v1`,60m update cap
-after3m runtime preflight. No checkpoint, paid job or science claim yet.
+Two-update admission completed on free GPU0 at497fe80 in2050.326s, exit0;
+PID65767/Python66443 are absent. Both native JVP checks, both full-network
+AdamW updates, all finite and physical hard gates pass. Fixed64 TRAIN-panel
+GPP/NPP RMSE decreases0.119%/0.315%, AGB/BGB change RMSE decreases0.305%/0.369%,
+canopy/litterpart RMSE decreases0.191%/0.442%; total autotrophic respiration
+RMSE increases0.706%. This does not establish scientific or long-horizon fit.
+Next freeze a bounded learning/retained-checkpoint protocol and prepare7/30
+evaluation using the unchanged architecture/scales and declared loss weights.
+Detailed report: `research/daily_coarse_graining/feedback_loss_two_update_results_20260913.md`.
+No active test, checkpoint from this probe or paid allocation.
 
 Update: the zero-update loss calibration below has completed at ac5aa51 in
 1063.644s, exit0, four batches, finite losses/gradients and zero hard counts.
