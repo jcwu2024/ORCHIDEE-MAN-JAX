@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/feedback_loss_pool_learning_v1_20260913.md` | Fixed epoch/milestones and implementation; target preflight pending, paid run unsubmitted | Next training and500/1998 checkpoint development evaluation |
 | `research/daily_coarse_graining/feedback_loss_two_update_results_20260913.md` | Completed: native AD/JVP and two full updates pass; small mixed one-day science changes | Actual loss-update admission and next bounded learning gate |
 | `research/daily_coarse_graining/feedback_loss_calibration_results_20260913.md` | Completed calibration; trial weights declared | Measured gradient balance and next two-update admission |
 | `research/daily_coarse_graining/feedback_loss_parallel_preparation_20260913.md` | Preparation complete; see calibration-results report for live two-update launch | Parallel preparation and actual execution scope |

@@ -10,6 +10,18 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Current preparation: fixed amended-loss fresh pool epoch is specified and
+  implemented (1998 updates/63707 unique Teacher days, all109M parameters;
+  weights unchanged). Retain100/500/1000/1500/1998; primary final1998;
+  free developmental7/30 screens at500/1998. Existing15048786 is the matched
+  full-epoch control; do not repeat it. Existing pool runner now reuses the
+  admitted dynamic reverse graph and shared physical/feedback monitors;
+  native JVP need not be rerun. Snapshot loader/evaluator accepts explicitly
+  declared intermediate steps and shared optional validity/units.
+  Local tests pass; actual Bash/metadata/CPU shape preflight is next.
+  Proposed gnall1GPU/8CPU/32GiB/6h,CNY16.56 cap remains UNAPPROVED/unsubmitted.
+  See `research/daily_coarse_graining/feedback_loss_pool_learning_v1_20260913.md`.
+
 - Two-update admission completed at497fe80:2050.326s, exit0, updates2,
   technical_admission_passed=true; PID65767/Python66443 absent. Both native
   JVP directions pass; all physical hard counts zero, full parameters/optimizer

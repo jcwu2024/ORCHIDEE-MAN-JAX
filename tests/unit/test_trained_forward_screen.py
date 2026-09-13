@@ -14,7 +14,13 @@ from research.daily_coarse_graining.daily_operator.forward_screen_metrics import
 )
 from research.daily_coarse_graining.daily_operator.long_horizon_objective import MaskedTrajectory
 from scripts.hpc.probe_trained_checkpointed_grad import rademacher_direction
-from scripts.hpc.trained_screen_common import WindowPool, json_safe, validate_selection
+from scripts.hpc.run_trained_forward_screen import feedback_diagnostics, feedback_hard_counts
+from scripts.hpc.trained_screen_common import (
+    WindowPool,
+    json_safe,
+    validate_selection,
+    validate_training_report,
+)
 
 
 class PFT(NamedTuple):
@@ -92,6 +98,125 @@ def test_truncated_or_overlapping_panels_are_not_accepted():
         validate_selection({'windows':rows[:-1]})
     with pytest.raises(ValueError):
         validate_selection({'windows':rows[:8]+rows[:8]})
+
+
+def test_training_snapshot_boundary_requires_explicit_matching_pool_protocol(tmp_path):
+    model_protocol = {'parameter_count':1,'loss':{}}
+    model_path = tmp_path/'model.json'
+    model_path.write_text(json.dumps(model_protocol))
+    pool_protocol = {
+        'schema_version':'fresh_start_one_day_pool_v1',
+        'sampling':{'seed':20260912},
+        'model_protocol':str(model_path),
+    }
+    path = tmp_path/'pool.json'
+    path.write_text(json.dumps(pool_protocol))
+    report = {
+        'status':'running', 'completed_updates':500,
+        'method':{'configuration':pool_protocol,'model_protocol':model_protocol},
+        'model_protocol':model_protocol,
+    }
+    args = SimpleNamespace(expected_update=500,expected_pool_protocol=path)
+    assert validate_training_report(report,args) == 500
+    with pytest.raises(ValueError,match='not reached'):
+        validate_training_report({**report,'completed_updates':499},args)
+    with pytest.raises(ValueError,match='differs'):
+        validate_training_report(
+            {**report,'method':{'configuration':{},'model_protocol':model_protocol}},args,
+        )
+    with pytest.raises(ValueError,match='method and model'):
+        validate_training_report(
+            {**report,'method':{'configuration':pool_protocol,'model_protocol':{}}},args,
+        )
+    model_path.write_text(json.dumps({'parameter_count':2,'loss':{}}))
+    with pytest.raises(ValueError,match='expected pool model'):
+        validate_training_report(report,args)
+    with pytest.raises(ValueError,match='both'):
+        validate_training_report(report,SimpleNamespace(expected_update=500,expected_pool_protocol=None))
+
+
+def test_historical_training_snapshot_boundary_remains_final_update_1998_only():
+    model_protocol = {'parameter_count':1}
+    report = {
+        'status':'completed', 'completed_updates':1998,
+        'method':{'model_protocol':model_protocol}, 'model_protocol':model_protocol,
+    }
+    assert validate_training_report(report,SimpleNamespace()) == 1998
+    with pytest.raises(ValueError,match='update-1998'):
+        validate_training_report({**report,'status':'running'},SimpleNamespace())
+
+
+def test_feedback_diagnostics_use_recurrent_predicted_starts_and_loss_masks():
+    canopy_leaf = SimpleNamespace(
+        key='slowproc_stomate_previous_step_state.interception_storage', start=0, stop=2,
+        shape=(1,2,1), axis_names=('npts','nvm','nelements'), selected_pft_indices=(0,13),
+    )
+    litter_leaf = SimpleNamespace(
+        key='slowproc_stomate_previous_step_state.litterpart', start=2, stop=6,
+        shape=(1,2,2), axis_names=('npts','nvm','nlitt'), selected_pft_indices=(0,13),
+    )
+    contract = SimpleNamespace(state_leaves=(canopy_leaf,litter_leaf),continuous_state_width=6)
+    runtime = {'base_statistics':SimpleNamespace(arrays={
+        'state_delta':SimpleNamespace(scale=np.array([1.,5.,1.,1.,1.,1.])),
+    })}
+    head = SimpleNamespace(
+        contract=contract,
+        input_normalization=SimpleNamespace(continuous_scale=np.array([1.,1.,1.,1.,.5,.5])),
+    )
+    protocol = {
+        'loss':{'litterpart_feedback_mse':2.5e-5},
+        'canopy_carbon_stock_change':{'weight':3e-9,'scale_source_pft_index':13},
+    }
+    initial = jnp.array([10.,20.,0.,0.,1.,1.])
+    initial_defined = jnp.ones(6,dtype=bool)
+    observations = {
+        'state':jnp.array([
+            [13.,24.,0.,0.,2.,4.],
+            [14.,30.,0.,0.,3.,5.],
+        ]),
+        'defined':jnp.array([
+            [True,True,True,True,True,True],
+            [True,True,True,True,True,False],
+        ]),
+        'active':jnp.array([[True,True],[True,True]]),
+    }
+    targets = {
+        'state':jnp.array([
+            [11.,21.,0.,0.,1.,2.],
+            [12.,22.,0.,0.,1.,2.],
+        ]),
+        'defined':jnp.ones((2,6),dtype=bool),
+    }
+    assembled = SimpleNamespace(state_defined=SimpleNamespace(other=initial_defined))
+    templates = SimpleNamespace(pft=SimpleNamespace(pft_traits=jnp.array([
+        [[1.],[0.]], [[1.],[0.]],
+    ])))
+    diagnostics = feedback_diagnostics(
+        jax,jnp,runtime,head,protocol,initial,assembled,observations,targets,templates,
+    )
+    shapes = jax.eval_shape(
+        lambda observations: feedback_diagnostics(
+            jax,jnp,runtime,head,protocol,initial,assembled,observations,targets,templates,
+        ),
+        observations,
+    )
+    assert shapes['canopy_stock_change']['physical_residual'].shape == (2,)
+    assert shapes['litterpart_feedback']['physical_residual'].shape == (2,1,2,2)
+    canopy = diagnostics['canopy_stock_change']
+    np.testing.assert_allclose(canopy['predicted_delta'],[7.,7.])
+    np.testing.assert_allclose(canopy['teacher_delta'],[2.,2.])
+    np.testing.assert_allclose(canopy['physical_residual'],[5.,5.])
+    litterpart = diagnostics['litterpart_feedback']
+    np.testing.assert_allclose(litterpart['physical_residual'][0,0,1],[1.,2.])
+    np.testing.assert_allclose(litterpart['normalized_residual'][0,0,1],[2.,4.])
+    assert not np.asarray(litterpart['valid'])[1,0,1,1]
+    assert int(np.asarray(litterpart['invalid_count'])[1]) == 1
+    assert feedback_hard_counts(diagnostics) == {
+        'canopy_change_invalid':0,
+        'canopy_change_empty':0,
+        'litterpart_feedback_invalid':1,
+        'litterpart_feedback_empty':0,
+    }
 
 
 def test_metric_gate_rejects_filtered_nonfinite_or_missing_population():

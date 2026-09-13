@@ -1,0 +1,16 @@
+{
+  "schema_version": "fresh_start_one_day_pool_v1",
+  "purpose": "one_complete_prepared_pool_epoch_with_fixed_feedback_loss_amendment",
+  "model_protocol": "manifests/coarse_graining/fresh_start_feedback_model_v1.json",
+  "initialization": "fresh_seed_no_exploratory_or_two_update_weights",
+  "trainable_scope": "all_neural_parameters",
+  "sampling": {"seed": 20260912, "batch_size": 32, "microbatch_size": 4, "max_artifacts_per_batch": 4, "epochs": 1, "scope": "prepared_one_day_extension_1001_3000", "monitor_exclusion": "all_occurrences_of_catalogue_monitor_days"},
+  "declared_pool_budget": {"updates": 1998, "row_draws": 63936, "unique_teacher_days": 63707, "scope": "one_epoch_of_existing_prepared_pool_not_full_global_v6"},
+  "monitoring": {"training_panel": "first_epoch_first_batch", "excluded_panel": "catalogue_64_unique_days", "updates": [0, 100, 500, 1000, 1500], "always_include_final": true, "save_raw_physical_values": true, "generalization_claim": false},
+  "checkpoint": {"every_updates": 250, "retained_updates": [100, 500, 1000, 1500, 1998], "include_optimizer_and_sampler_cursor": true},
+  "report_every_updates": 10,
+  "admission": {"compiled_memory_limit_gib": 18, "physical_hard_failures": 0, "gradient_path": "admitted_dynamic_coefficient_native_single_day_jax_ad", "prior_evidence": ["feedback-loss-updates-v1 at497fe80", "one-day-pool-15048786"], "technical_smoke_updates": 2},
+  "decision": {"checkpoint_selection": "final_complete_epoch_update1998_no_monitor_selection", "learning_screen": "fixed_train_and_excluded_panel_mean_flux_loss_and_total_loss_both_decrease", "physical_gate": "all_sample_and_monitor_hard_counts_zero_and_all_updates_finite", "stop_rule": "stop_on_numerical_physical_or_resource_failure; no_loss_plateau_early_stop_or_automatic_epoch_extension", "long_horizon_acceptance": false},
+  "rollout_development": {"checkpoint_updates": [500, 1998], "selection": "runtime/outputs/diagnostics/trained-forward-selection-v1.json", "windows_per_horizon": 8, "horizons": [7, 30], "scope": "train_domain_day_disjoint_development_not_independent_final_validation", "control": "existing15048786_final_checkpoint_matches1998_only"},
+  "execution": {"free_smoke_minutes_max": 45, "proposed_paid_nodes": 1, "proposed_paid_gpus": 1, "proposed_paid_cpus": 8, "proposed_paid_host_memory_gib": 32, "proposed_paid_hours_max": 6, "paid_submission_authorized": false, "teacher_regeneration": false, "sealed_test_access": false}
+}

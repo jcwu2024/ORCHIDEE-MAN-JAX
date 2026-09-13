@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+The next fixed fresh-start pool epoch is specified and implemented with
+unchanged calibrated losses,1998 full-network updates and retained milestones.
+Local training/recovery and intermediate-checkpoint/feedback-report tests
+pass. Actual target metadata/Bash/CPU shapes remain to be recorded before
+the concrete paid submission request. No new paid task is submitted. Plan:
+`research/daily_coarse_graining/feedback_loss_pool_learning_v1_20260913.md`.
+
 Two-update admission completed on free GPU0 at497fe80 in2050.326s, exit0;
 PID65767/Python66443 are absent. Both native JVP checks, both full-network
 AdamW updates, all finite and physical hard gates pass. Fixed64 TRAIN-panel

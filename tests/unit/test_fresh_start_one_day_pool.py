@@ -5,7 +5,15 @@ from types import SimpleNamespace
 import numpy as np
 import pytest
 
-from scripts.hpc.run_fresh_start_one_day_pool import hard_pass, pool_plan, sampling_identity, validate_recovery
+from scripts.hpc.run_fresh_start_one_day_pool import (
+    feedback_loss_plan,
+    hard_pass,
+    pool_plan,
+    retained_checkpoint_path,
+    retained_checkpoint_updates,
+    sampling_identity,
+    validate_recovery,
+)
 
 
 def test_pool_plan_excludes_same_teacher_day_in_every_artifact_and_resumes():
@@ -51,3 +59,21 @@ def test_frozen_method_keeps_existing_v3_loss_and_full_network_initialization():
     assert config['sampling']['microbatch_size'] == 4
     assert model['loss'] == {'independent_daily_flux_mse':1.,'one_day_state_anchor':.1,'necessary_process_supervision':.01}
     assert not config['execution']['paid_submission_authorized']
+    assert feedback_loss_plan(model) is None
+    assert retained_checkpoint_updates(config) == ()
+
+
+def test_feedback_and_retained_checkpoint_extensions_fail_closed():
+    protocol = {
+        'loss': {'litterpart_feedback_mse': 2.5e-5},
+        'canopy_carbon_stock_change': {'weight': 3e-9, 'scale_source_pft_index': 13},
+    }
+    assert feedback_loss_plan(protocol)['coefficients'] == {
+        'base': 1., 'canopy_stock_change': 3e-9, 'litterpart_feedback': 2.5e-5}
+    with pytest.raises(ValueError,match='enabled together'):
+        feedback_loss_plan({'loss': {'litterpart_feedback_mse': 2.5e-5}})
+    assert retained_checkpoint_updates(
+        {'checkpoint': {'retained_updates': [100,500,1998]}}) == (100,500,1998)
+    with pytest.raises(ValueError,match='unique increasing'):
+        retained_checkpoint_updates({'checkpoint': {'retained_updates': [500,100]}})
+    assert retained_checkpoint_path(Path('run.json'),100).name == 'run.update-000100.checkpoint.pkl'

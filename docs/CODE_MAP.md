@@ -103,6 +103,17 @@ two full AdamW updates and native JVP checks, with fixed64 TRAIN-row monitoring;
 `daily_operator/feedback_loss_geometry.py` and
 `scripts/dev/summarize_feedback_loss_calibration.py` interpret saved component
 norms/dots on the host, without model execution or automatic weight selection.
+`run_fresh_start_one_day_pool.py` optionally reuses that admitted dynamic loss
+graph for the fixed feedback pool epoch, with retained checkpoint milestones
+in the existing format and shared physical/coordinate monitoring.
+`trained_screen_common.py` preserves the historical final1998 default and
+supports explicit expected pool/update boundaries for retained snapshots;
+`run_trained_forward_screen.py` adds shared canopy/litter diagnostics and their
+validity counts without changing canonical rollout or the13 science thresholds.
+`run_feedback_pool_preflight.sh`, `slurm_feedback_loss_pool.sh` and
+`run_feedback_pool_forward.sh` own the new bounded launch paths;
+`scripts/dev/check_feedback_pool_plan.py` verifies epoch counts and rollout
+exclusion from metadata only, without reading Teacher payloads.
 `scripts/dev/summarize_trained_litterpart_feedback.py` summarizes archived
 field values, actual input/output scales and reproduced intervention contrasts
 without a new neural or Teacher execution.

@@ -3,6 +3,7 @@ import gzip
 import json
 import pickle
 from collections import OrderedDict
+from pathlib import Path
 
 import numpy as np
 
@@ -21,16 +22,71 @@ def json_safe(value):
     return value
 
 
+def expected_training_boundary(args):
+    """Return the explicitly declared snapshot boundary for an evaluation."""
+
+    expected_update = getattr(args, "expected_update", None)
+    pool_protocol_path = getattr(args, "expected_pool_protocol", None)
+    explicit = expected_update is not None or pool_protocol_path is not None
+    if not explicit:
+        return 1998, None
+    if expected_update is None or pool_protocol_path is None:
+        raise ValueError(
+            "an explicit trained snapshot requires both --expected-update and --expected-pool-protocol"
+        )
+    if int(expected_update) < 1:
+        raise ValueError("expected trained update must be positive")
+    expected_pool_protocol = json.loads(pool_protocol_path.read_text())
+    if not isinstance(expected_pool_protocol, dict):
+        raise ValueError("expected pool protocol must be a JSON object")
+    return int(expected_update), expected_pool_protocol
+
+
+def validate_training_report(report, args):
+    """Reject reports outside the historical or explicitly declared snapshot boundary."""
+
+    expected_update, expected_pool_protocol = expected_training_boundary(args)
+    method = report.get("method")
+    model_protocol = report.get("model_protocol")
+    if not isinstance(method, dict) or not isinstance(model_protocol, dict):
+        raise ValueError("training report lacks the declared method or model protocol")
+    if method.get("model_protocol") != model_protocol:
+        raise ValueError("training report method and model protocol differ")
+    if expected_pool_protocol is None:
+        if report.get("status") != "completed" or report.get("completed_updates") != expected_update:
+            raise ValueError("screen requires the declared complete update-1998 run")
+    else:
+        if report.get("status") not in ("running", "completed"):
+            raise ValueError("explicit snapshot report must be running or completed")
+        completed_updates = report.get("completed_updates")
+        if not isinstance(completed_updates, int) or completed_updates < expected_update:
+            raise ValueError("training report has not reached the explicitly requested update")
+        if method.get("configuration") != expected_pool_protocol:
+            raise ValueError("training report method differs from the expected pool protocol")
+        model_reference = expected_pool_protocol.get("model_protocol")
+        if not isinstance(model_reference, str):
+            raise ValueError("expected pool protocol lacks a model protocol reference")
+        from scripts.hpc.probe_one_day_batch import _resolved_reference
+
+        expected_model_path = _resolved_reference(
+            model_reference,
+            relative_to=Path(args.expected_pool_protocol).resolve(),
+        )
+        expected_model_protocol = json.loads(expected_model_path.read_text())
+        if expected_model_protocol != model_protocol:
+            raise ValueError("expected pool model protocol differs from the training report")
+    return expected_update
+
+
 def load_model(args):
     report = json.loads(args.training_report.read_text())
-    if report['status'] != 'completed' or report['completed_updates'] != 1998:
-        raise ValueError('screen requires the declared complete update-1998 run')
+    expected_update = validate_training_report(report, args)
     runtime,head,template,scales,_,_,_ = training.bootstrap(args,report['model_protocol'])
     from research.daily_coarse_graining.daily_operator.one_day_training_state import load_training_checkpoint
 
     saved = load_training_checkpoint(args.checkpoint,expected_method=report['method'])
-    if saved['completed_updates'] != 1998:
-        raise ValueError('checkpoint is not the final declared update')
+    if saved['completed_updates'] != expected_update:
+        raise ValueError('checkpoint does not match the declared evaluation update')
     parameters = runtime['jax'].device_put(saved['parameters'])
     if sum(v.size for v in runtime['jax'].tree_util.tree_leaves(parameters)) != report['model_protocol']['parameter_count']:
         raise ValueError('trained parameter tree differs from declared architecture')

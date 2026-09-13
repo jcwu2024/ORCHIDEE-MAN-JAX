@@ -6,7 +6,106 @@ from pathlib import Path
 import numpy as np
 
 from scripts.hpc import run_fresh_start_one_day as training
-from scripts.hpc.trained_screen_common import WindowPool, json_safe, load_model
+from scripts.hpc.trained_screen_common import WindowPool, expected_training_boundary, json_safe, load_model
+
+
+def feedback_diagnostics(jax, jnp, runtime, head, model_protocol, initial, assembled, observations, targets, templates):
+    """Report existing optional-loss geometry on free canonical trajectories only."""
+
+    from research.daily_coarse_graining.daily_operator.canopy_change_loss import canopy_carbon_stock_change_loss
+    from research.daily_coarse_graining.daily_operator.feedback_state_loss import feedback_state_mse
+    from research.daily_coarse_graining.daily_operator.fresh_start_training import (
+        _canopy_change_plan,
+        _compact_canopy_carbon,
+        _litterpart_feedback_plan,
+        _pft_eligible,
+        _state_leaf,
+    )
+    from research.daily_coarse_graining.daily_operator.parameter_routing import PFT_TRAIT_BARE_SOIL
+
+    canopy_plan = _canopy_change_plan(runtime, head.contract, model_protocol)
+    litterpart_plan = _litterpart_feedback_plan(head, model_protocol['loss'])
+    result = {'enabled': bool(canopy_plan is not None or litterpart_plan is not None)}
+    if canopy_plan is not None:
+        compact = jax.vmap(lambda state: _compact_canopy_carbon(state, canopy_plan))
+        predicted_next = compact(observations['state'])
+        predicted_start = jnp.concatenate((compact(initial[None, :]), predicted_next[:-1]), axis=0)
+        teacher_next = compact(targets['state'])
+        teacher_start = jnp.concatenate((compact(initial[None, :]), teacher_next[:-1]), axis=0)
+        predicted_next_defined = compact(observations['defined'])
+        predicted_start_defined = jnp.concatenate((compact(assembled.state_defined.other[None, :]), predicted_next_defined[:-1]), axis=0)
+        teacher_next_defined = compact(targets['defined'])
+        teacher_start_defined = jnp.concatenate((compact(assembled.state_defined.other[None, :]), teacher_next_defined[:-1]), axis=0)
+        bare = templates.pft.pft_traits[:, :, PFT_TRAIT_BARE_SOIL] > 0.5
+        canopy = canopy_carbon_stock_change_loss(
+            start_pred=predicted_start,
+            next_pred=predicted_next,
+            start_teacher=teacher_start,
+            next_teacher=teacher_next,
+            start_pred_defined=predicted_start_defined,
+            next_pred_defined=predicted_next_defined,
+            start_teacher_defined=teacher_start_defined,
+            next_teacher_defined=teacher_next_defined,
+            active_pft_mask=observations['active'],
+            bare_pft_mask=bare,
+            scale=jnp.asarray(canopy_plan.scale, dtype=jnp.float64),
+        )
+        result['canopy_stock_change'] = {
+            **canopy._asdict(),
+            'weight': jnp.asarray(canopy_plan.weight, dtype=jnp.float64),
+            'scale': jnp.asarray(canopy_plan.scale, dtype=jnp.float64),
+            'scale_source_pft_index': jnp.asarray(canopy_plan.scale_source_pft_index, dtype=jnp.int32),
+            'scale_pft_applicable': observations['active'][:, canopy_plan.scale_pft_index]
+            & ~bare[:, canopy_plan.scale_pft_index],
+        }
+    if litterpart_plan is not None:
+        def leaf(state):
+            return _state_leaf(state, litterpart_plan.leaf)
+
+        eligible = jax.vmap(lambda active: _pft_eligible(active, litterpart_plan))(observations['active'])
+        litterpart = jax.vmap(
+            lambda predicted, teacher, predicted_defined, teacher_defined, eligible: feedback_state_mse(
+                predicted=predicted,
+                teacher=teacher,
+                predicted_defined=predicted_defined,
+                teacher_defined=teacher_defined,
+                eligible=eligible,
+                scale=litterpart_plan.scale,
+            )
+        )(
+            jax.vmap(leaf)(observations['state']),
+            jax.vmap(leaf)(targets['state']),
+            jax.vmap(leaf)(observations['defined']),
+            jax.vmap(leaf)(targets['defined']),
+            eligible,
+        )
+        result['litterpart_feedback'] = {
+            **litterpart._asdict(),
+            'weight': jnp.asarray(litterpart_plan.weight, dtype=jnp.float64),
+            'scale': litterpart_plan.scale,
+        }
+    return result
+
+
+def feedback_hard_counts(feedback):
+    """Apply the optional-loss validity requirements to one free rollout window."""
+
+    if not feedback['enabled']:
+        return {}
+    hard = {}
+    canopy = feedback.get('canopy_stock_change')
+    if canopy is not None:
+        row_valid = np.asarray(canopy['row_valid'], dtype=bool)
+        scale_valid = bool(np.asarray(canopy['scale_valid'], dtype=bool))
+        applicable = np.asarray(canopy['scale_pft_applicable'], dtype=bool)
+        active_slots = np.asarray(canopy['active_slot_count'])
+        hard['canopy_change_invalid'] = int(np.count_nonzero(~row_valid) + (not scale_valid) + np.count_nonzero(~applicable))
+        hard['canopy_change_empty'] = int(np.count_nonzero(active_slots == 0))
+    litterpart = feedback.get('litterpart_feedback')
+    if litterpart is not None:
+        hard['litterpart_feedback_invalid'] = int(np.sum(np.asarray(litterpart['invalid_count'])))
+        hard['litterpart_feedback_empty'] = int(np.count_nonzero(np.asarray(litterpart['expected_count']) == 0))
+    return hard
 
 
 def run(args):
@@ -28,6 +127,10 @@ def run(args):
     try:
         emit('bootstrap')
         runtime,head,template,scales,parameters,method = load_model(args)
+        expected_update, expected_pool_protocol = expected_training_boundary(args)
+        model_protocol = method['model_protocol']
+        report['checkpoint_update'] = expected_update
+        report['expected_pool_protocol'] = (None if expected_pool_protocol is None else str(args.expected_pool_protocol))
         jax = runtime['jax']
         import jax.numpy as jnp
 
@@ -73,9 +176,18 @@ def run(args):
             h = row['length']
             initial,discrete,days,targets,expected_discrete = pool.case(jax,row)
             arguments = (parameters,initial,discrete,days)
+            first = jax.tree_util.tree_map(lambda v:v[0],days[0])
+            assembled = head.input_assembler.assemble(first)
             if args.shape_only:
                 if h not in executables:
-                    jax.eval_shape(forward,*arguments)
+                    _, observation_shapes = jax.eval_shape(forward,*arguments)
+                    jax.eval_shape(
+                        lambda observations: feedback_diagnostics(
+                            jax, jnp, runtime, head, model_protocol, initial, assembled,
+                            observations, targets, days[0],
+                        ),
+                        observation_shapes,
+                    )
                     expected = extract(targets['state'],targets['defined'],targets['gpp'],targets['gpp_defined'],targets['fraction'],targets['active'])
                     ef,es = _acceptance_trajectories(expected.fluxes,expected.stocks)
                     summarize_windows([physical_window(ef,ef,es,es,es)])
@@ -100,8 +212,10 @@ def run(args):
             hard = physical_checks(obs,targets,expected_discrete,days[0],head.contract,scales)
             predicted = extract(obs['state'],obs['defined'],obs['gpp'],obs['gpp_defined'],obs['fraction'],obs['active'])
             expected = extract(targets['state'],targets['defined'],targets['gpp'],targets['gpp_defined'],targets['fraction'],targets['active'])
-            first = jax.tree_util.tree_map(lambda v:v[0],days[0])
-            assembled = head.input_assembler.assemble(first)
+            feedback = feedback_diagnostics(
+                jax, jnp, runtime, head, model_protocol, initial, assembled, obs, targets, days[0]
+            )
+            hard.update(feedback_hard_counts(feedback))
             initial_science = extract(initial[None,:],assembled.state_defined.other[None,:],
                 targets['gpp'][:1],targets['gpp_defined'][:1],targets['fraction'][:1],targets['active'][:1])
             pf,ps = _acceptance_trajectories(predicted.fluxes,predicted.stocks)
@@ -118,6 +232,7 @@ def run(args):
             npp_error = abs(np.where(npp_valid&npp_finite,a,0.)-np.where(npp_valid&npp_finite,b,0.))
             report['windows'].append({'selection':row,'prepared_day_indices':np.asarray(days[0].day_index),
                 'forward_seconds':elapsed,'hard':hard,'physical':metrics,
+                'feedback_diagnostics':feedback,
                 'source_npp_identity_error':float(np.max(npp_error,initial=0.)),
                 'source_npp_nonfinite_defined':int(np.sum(npp_valid&~npp_finite))})
             report['horizons'][str(h)].update(
@@ -144,4 +259,6 @@ if __name__=='__main__':
     parser = training.parser()
     for name in ('selection','training-report','checkpoint'):
         parser.add_argument('--'+name,type=Path,required=True)
+    parser.add_argument('--expected-update',type=int)
+    parser.add_argument('--expected-pool-protocol',type=Path)
     run(parser.parse_args())

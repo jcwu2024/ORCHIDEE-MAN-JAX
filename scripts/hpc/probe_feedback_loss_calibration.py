@@ -96,7 +96,8 @@ def _canopy_source_pft_index(runtime: Mapping[str, Any], head: Any) -> int:
 
 
 def _make_batch_objective(
-    jax: Any, jnp: Any, objective: Any, base_weights: Mapping[str, float]
+    jax: Any, jnp: Any, objective: Any, base_weights: Mapping[str, float],
+    *, include_base_components: bool = False,
 ) -> Any:
     """Build the shared coefficient-dynamic batch objective and diagnostics."""
 
@@ -119,6 +120,12 @@ def _make_batch_objective(
             "canopy_stock_change": values["canopy_stock_change"],
             "litterpart_feedback": values["litterpart_feedback"],
         }
+        if include_base_components:
+            selected_auxiliary.update(
+                flux_loss=values["flux_loss"],
+                state_loss=values["state_loss"],
+                process_loss=values["process_loss"],
+            )
         return jnp.vdot(coefficients, terms), selected_auxiliary
 
     def batch(parameters: Any, samples: Any, coefficients: Any) -> tuple[Any, Any]:

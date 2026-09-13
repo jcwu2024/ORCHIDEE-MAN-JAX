@@ -12,6 +12,7 @@ import numpy as np
 import pytest
 
 from research.daily_coarse_graining.daily_operator import fresh_start_training, one_day_training_state, prepared_one_day
+from scripts.hpc import probe_feedback_loss_calibration
 from scripts.hpc import run_fresh_start_one_day_pool as runner
 
 
@@ -24,17 +25,24 @@ class Sample(NamedTuple):
     target: object
 
 
-def test_full_loop_resume_matches_uninterrupted_update_and_sampling(tmp_path,monkeypatch):
+@pytest.mark.parametrize('feedback_enabled',[False,True])
+def test_full_loop_resume_matches_uninterrupted_update_sampling_and_retention(
+        tmp_path,monkeypatch,feedback_enabled):
     root = Path(__file__).resolve().parents[2]
     configuration = json.loads((root/'manifests/coarse_graining/fresh_start_one_day_pool_v1.json').read_text())
     model = json.loads((root/configuration['model_protocol']).read_text())
     model['parameter_count'] = 2
+    if feedback_enabled:
+        model['canopy_carbon_stock_change'] = {'weight':3e-9,'scale_source_pft_index':13}
+        model['loss']['litterpart_feedback_mse'] = 2.5e-5
     model_path = tmp_path/'model.json'
     model_path.write_text(json.dumps(model))
     configuration['model_protocol'] = str(model_path)
     configuration['sampling'].update(batch_size=4,microbatch_size=2,max_artifacts_per_batch=1)
     configuration['monitoring']['updates'] = [0,1]
     configuration['checkpoint']['every_updates'] = 1
+    if feedback_enabled:
+        configuration['checkpoint']['retained_updates'] = [1,2]
     config_path = tmp_path/'configuration.json'
     config_path.write_text(json.dumps(configuration))
     source = tmp_path/'source.json'
@@ -51,7 +59,8 @@ def test_full_loop_resume_matches_uninterrupted_update_and_sampling(tmp_path,mon
     catalogue_report.write_text(json.dumps({'status':'passed','catalogue':str(catalogue_path)}))
 
     def bootstrap(args,protocol):
-        return ({'jax':jax,'devices':jax.devices()},None,None,None,
+        head = SimpleNamespace(contract=SimpleNamespace(state_leaves=[]))
+        return ({'jax':jax,'devices':jax.devices()},head,None,None,
                 {'w':jnp.array(.1,dtype=jnp.float32),'b':jnp.array(.2,dtype=jnp.float32)},None,None)
 
     def objective(p,sample):
@@ -61,6 +70,8 @@ def test_full_loop_resume_matches_uninterrupted_update_and_sampling(tmp_path,mon
                  'defined':jnp.ones((1,),dtype=bool)}
         return loss,{'hard':{'nonfinite':jnp.sum(~jnp.isfinite(prediction))},
                      'flux_loss':loss,'state_loss':loss,'process_loss':loss,
+                     'canopy_stock_change':{'loss':.5*loss},
+                     'litterpart_feedback':{'loss':.25*loss},
                      'physical':{'fluxes':{'gpp':field},'stocks':{}}}
 
     class Pool:
@@ -77,10 +88,23 @@ def test_full_loop_resume_matches_uninterrupted_update_and_sampling(tmp_path,mon
     monkeypatch.setattr(runner.prototype,'bootstrap',bootstrap)
     monkeypatch.setattr(fresh_start_training,'make_objective',lambda *a,**k:objective)
     monkeypatch.setattr(prepared_one_day,'PreparedOneDayPool',Pool)
+    monkeypatch.setattr(probe_feedback_loss_calibration,'_diagnostics',lambda j,a,batch_size:{
+        'physical':{'sample_count':batch_size},
+        'canopy_stock_change':{'unit':'gC_m-2_day-1'},
+        'litterpart_feedback':{'unit':'litterpart_state_units'}})
 
-    def args(output,resume=None):
+    def args(output,resume=None,shape_only=False):
         return SimpleNamespace(pool_protocol=config_path,catalogue_report=catalogue_report,output=output,
-                               resume=resume,smoke_updates=None,shape_only=False,admission_only=False,cpu_forward_only=False)
+                               resume=resume,smoke_updates=None,shape_only=shape_only,
+                               admission_only=False,cpu_forward_only=False)
+
+    if feedback_enabled:
+        shape = runner.run(args(tmp_path/'shape.json',shape_only=True))
+        assert shape['status'] == 'passed'
+        assert shape['stage'] == 'completed'
+        assert shape['completed_updates'] == 0
+        assert 'feedback_initial_finiteness' not in shape
+        assert not (tmp_path/'shape.checkpoint.pkl').exists()
 
     straight_path = tmp_path/'straight.json'
     straight = runner.run(args(straight_path))
@@ -89,8 +113,26 @@ def test_full_loop_resume_matches_uninterrupted_update_and_sampling(tmp_path,mon
     assert straight['consumed_row_draws'] == 8
     assert straight['consumed_unique_teacher_days'] == 8
     assert [m['update'] for m in straight['monitors']] == [0,1,2]
+    assert [record['update'] for record in straight['retained_checkpoints']] == (
+        [1,2] if feedback_enabled else [])
+    assert all(record['roundtrip_validated'] for record in straight['retained_checkpoints'])
+    if feedback_enabled:
+        assert straight['feedback_loss']['coefficients'] == {
+            'base':1.,'canopy_stock_change':3e-9,'litterpart_feedback':2.5e-5}
+        assert straight['all_updates_finite']
+        assert all('mean_flux_loss' in panel for monitor in straight['monitors']
+                   for panel in monitor['panels'].values())
+        assert all(len(panel['physical']) == len(panel['rows']) for monitor in straight['monitors']
+                   for panel in monitor['panels'].values())
     with straight_path.with_suffix('.checkpoint.pkl').open('rb') as handle:
         expected = pickle.load(handle)
+    if feedback_enabled:
+        retained_final_path = runner.retained_checkpoint_path(straight_path,2)
+        with retained_final_path.open('rb') as handle:
+            retained_final = pickle.load(handle)
+        assert retained_final['schema_version'] == expected['schema_version']
+        assert retained_final['method'] == expected['method']
+        assert retained_final['cursor'] == expected['cursor']
 
     actual_save = one_day_training_state.save_training_checkpoint
 
@@ -109,6 +151,9 @@ def test_full_loop_resume_matches_uninterrupted_update_and_sampling(tmp_path,mon
     assert resumed['completed_updates'] == 2
     assert [r['batch_index'] for r in resumed['updates']] == [0,1]
     assert [m['update'] for m in resumed['monitors']] == [0,1,2]
+    assert [record['update'] for record in resumed['retained_checkpoints']] == (
+        [1,2] if feedback_enabled else [])
+    assert all(Path(record['path']).exists() for record in resumed['retained_checkpoints'])
     with interrupted_path.with_suffix('.checkpoint.pkl').open('rb') as handle:
         actual = pickle.load(handle)
     assert actual['cursor'] == expected['cursor'] == {'epoch':0,'batch_offset':2}
