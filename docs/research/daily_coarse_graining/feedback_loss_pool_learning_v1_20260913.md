@@ -1,7 +1,78 @@
 # Fixed feedback-loss learning: one prepared-pool epoch
 
-Status: user approved6h/CNY16.56; job15061139 submitted and observed RUNNING.
+Status: job15061139 COMPLETED1998/1998 updates,03:04:49,exit0:0.
 Frozen execution checkout commit:5502ce3.
+
+## Completion and active development evaluation
+
+All updates finite; declared fixed training/excluded-panel total and flux
+learning screens pass. Consumed63707 unique days and63936 draws, matching
+the declared existing-pool epoch. No automatic extension or checkpoint
+selection.100/500/1000/1500/1998 snapshots saved and roundtrip-validated.
+Elapsed runner11063.3s; scheduler11089s. Peak actual live device memory
+10674317824 bytes (9.941GiB), reserved pool22151763456 bytes (20.631GiB).
+Estimated additive charge11089/3600*(2.20+8*0.07)=CNY8.50, belowCNY16.56 cap.
+Evidence: outputs/feedback-pool-15061139-report.json downloaded unchanged.
+
+After observing both free gln01 V100s idle, launched the predeclared fixed
+16-window7/30-day evaluations at unchanged5502ce3. Actual Bash argument
+expansions pass; both processes reached forward_screen bootstrap with no
+initial exception.500 usesGPU0/Python98744;1998 usesGPU1/Python98816.
+Each bounded75min; logs and JSON outputs share prefix
+runtime/outputs/diagnostics/feedback-pool-15061139-forward- with500/1998
+suffixes. No new paid work or architecture/gradient-graph change.
+These outcomes are pending; one-day learning-screen success does not
+establish recurrent fit or independent generalization. The panel has informed
+loss development and must not be called a final untouched validation set.
+
+Fixed64 excluded TRAIN-day monitor trajectory:
+
+| Update | Total loss | Flux loss | Canopy change term (unweighted) | Litterpart term (unweighted) |
+| --- | --- | --- | --- | --- |
+| 0 | 0.794977 | 0.489405 | 64488993 | 2006.86 |
+| 500 | 0.041577 | 0.028514 | 464722 | 3.25 |
+| 1000 | 0.032148 | 0.020846 | 72381 | 0.97 |
+| 1500 | 0.034670 | 0.023952 | 29786 | 0.69 |
+| 1998 | 0.030684 | 0.020352 | 15263 | 0.60 |
+
+All fixed train32/excluded64 monitor physical hard counts are zero across
+0/100/500/1000/1500/1998. These objective terms show learning from fresh
+initialization; they are not percentages of physical prediction accuracy.
+Each one-day example starts at Teacher state, so recurrent feedback remains
+the separate active scientific question. Do not choose1000 post hoc because
+one monitor value later fluctuates; primary checkpoint remains1998.
+
+### Physical interpretation (independent Sol high read, root verified)
+
+Excluded64 TRAIN-domain day panel physical RMSE (all fluxes gC/m2/day;
+AGB/BGB daily increments gC/m2) from fresh initialization to final:
+
+| Quantity | Initial RMSE | Update500 RMSE | Final1998 RMSE | Final bias |
+| --- | --- | --- | --- | --- |
+| GPP | 3.065 | 0.683 | 0.577 | -0.170 |
+| NPP | 2.613 | 0.483 | 0.413 | -0.111 |
+| Autotrophic respiration | 0.521 | 0.214 | 0.171 | -0.058 |
+| AGB daily change | 2.019 | 0.367 | 0.305 | -0.090 |
+| BGB daily change | 0.647 | 0.125 | 0.114 | -0.022 |
+
+These are meaningful one-day learning improvements, with remaining negative
+bias. Stock level/change residuals coincide because the start state is Teacher
+supplied; low relative stock-level error does not prove stable accumulation.
+
+The canopy source-direct change remains badly wrong: excluded64 physical
+RMSE43396.25 ->3683.89 ->667.62 gC/m2/day. Final mean predicted change is
+-476.573 versus Teacher+7.720, bias-484.293. Large improvement from a very poor
+fresh model is not adequate absolute accuracy and still has the wrong sign.
+
+Litterpart physical RMSE worsens0.50005 ->0.69413 ->0.70462 despite normalized
+loss2006.86 ->3.25 ->0.60. Final four coordinate predictions are near0.9964:
+target-one coordinates fit, target-zero coordinates have about0.9965 error.
+This exposes imbalance between the weighted objective and physical coordinate
+accuracy. It is not evidence that the AD tool is wrong. Do not silently change
+coefficients or select another checkpoint. Complete declared recurrent screens,
+then inspect the source-backed coordinate scaling/weight balance before the
+next training proposal. Larger data availability does not itself fix this
+demonstrated loss/physical-error mismatch. No final model acceptance.
 
 Submission record:2026-09-13, via gln01, exact command/resources below.
 Scheduler start17:39:37, node ibc13b03n01,6h limit/end23:39:37 (scheduler

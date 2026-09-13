@@ -10,6 +10,24 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- GPU15061139 COMPLETED1998/1998 updates,03:04:49 scheduler elapsed,exit0:0.
+  Fresh full109464375-parameter training consumed63707 unique Teacher days,
+  63936 draws; fixed training/excluded-panel total and flux learning screens
+  pass. Peak actual device allocation9.941GiB versus20.631GiB reserved pool.
+  This establishes bounded one-day learning, not long-horizon acceptance.
+  Free gln01 forward screens now running at unchanged5502ce3: update500 on
+  GPU0/Python98744, final1998 onGPU1/Python98816;75min cap each, fixed16-window
+  T7/T30 panel. Reports/logs runtime/outputs/diagnostics/
+  feedback-pool-15061139-forward-{500,1998}.{json,log}. Both reached bootstrap.
+  Read these outcomes before proposing more training; primary result1998.
+  Physical review: excluded64 final GPP/NPP/autotrophic-respiration RMSE
+  0.577/0.413/0.171 gC/m2/day improves from3.065/2.613/0.521 initially.
+  However canopy-change mean-476.573 versus Teacher+7.720 remains very poor;
+  litterpart physical RMSE worsens0.50005 ->0.70462 while weighted loss falls,
+  with all four predictions near0.9964 (including target-zero coordinates).
+  After declared rollouts, inspect coordinate scaling/weight imbalance before
+  further training; do not infer a gradient-tool failure or claim science pass.
+
 - CPU expansion15061225 FAILED after00:52:24, exit9:0: launcher omitted
   srun --wait=0, so cluster WaitTime=50s terminated unfinished workers after
   the first normal worker exits. Saved304786/346539 rows (15545/17677
@@ -21,7 +39,7 @@ Current actions, superseding launch instructions in the history below:
   15061586 at20:35:21 scheduler time, RUNNING since20:35:26 onibc13b07n01--02.
   Resume original worker directories, then require complete merge acceptance.
   See the dated expansion report for target-shell and real-data resume evidence.
-  GPU15061139 remains unchanged; latest read1770/1998 updates, RUNNING.
+  GPU15061139 completed; see active evaluation above.
 
 - User asks about preparing all data once. Recommend a reusable full TRAIN
   cache with day/window indices, independent of batch size/epochs/loss/weights.
@@ -53,13 +71,13 @@ Current actions, superseding launch instructions in the history below:
   not10830 packed updates. Keep this separate from data validity/AD diagnosis.
 
 - User approved the concrete6h/CNY16.56 training proposal. Job15061139
-  submitted from gln01 and RUNNING on ibc13b03n01, start2026-09-13 17:39:37
+  submitted from gln01 and COMPLETED on ibc13b03n01, start2026-09-13 17:39:37
   scheduler time; time limit6h,1GPU/8CPU/32GiB. Execution checkout
   runtime/checkouts/feedback-pool-v1 remains frozen at5502ce3. Log:
   runtime/outputs/diagnostics/feedback-pool-15061139.log; report:
   runtime/outputs/training/fresh-feedback-pool-15061139/report.json.
-  Read progress and evaluate retained500/1998 snapshots on available free GPU.
-  Do not resubmit or change the running method.
+  Retained500/1998 evaluations are now running on free GPUs as recorded above.
+  Do not resubmit or change the declared method.
 - Data expansion is a next-stage priority, not conditional on every current
   science gate passing. Current63707 unique days are0.74354% of8568025
   eligible TRAIN days, spanning535 sites/44 years but sparse within point-year.

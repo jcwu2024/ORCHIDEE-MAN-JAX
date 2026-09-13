@@ -13,6 +13,27 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+GPU15061139 is now COMPLETED,1998/1998 updates,03:04:49,exit0:0. All updates
+finite; fixed train and excluded64-day total/flux learning screens pass.
+Consumed63707 unique days/63936 draws, one epoch of the existing pool.
+Peak actual device allocation10674317824 bytes (9.941GiB), reserved pool
+22151763456 bytes (20.631GiB). Estimated additive cost3.08028*2.76=CNY8.50.
+Local evidence outputs/feedback-pool-15061139-report.json. All five declared
+snapshots are saved/roundtrip-validated. No long-horizon acceptance yet.
+Free gln01 T7/T30 evaluation launched for500/GPU0/Python98744 and1998/GPU1/
+Python98816 using unchanged5502ce3;75min cap each. Both logs reached bootstrap.
+Output prefix runtime/outputs/diagnostics/feedback-pool-15061139-forward-
+with500/1998 suffixes. These are day-disjoint development evaluations, not
+sealed spatial/temporal validation; no new paid submission.
+
+Physical one-day review is mixed: excluded64 GPP/NPP/autotrophic respiration
+RMSE improves from3.065/2.613/0.521 to0.577/0.413/0.171 gC/m2/day. Canopy
+stock-change RMSE remains667.62, predicted mean-476.573 versus Teacher+7.720.
+Litterpart physical RMSE worsens0.50005 ->0.70462 despite weighted loss decline;
+all four predicted coordinates approach0.9964, including two target-zero ones.
+This is demonstrated physical/objective imbalance, not a claimed AD failure.
+Complete pending rollouts and inspect coordinate weighting before new training.
+
 CPU expansion15061225 FAILED after00:52:24, exit9:0. Missing srun --wait=0
 allowed cluster WaitTime=50s to kill remaining workers after normal first
 exits. This is a launcher failure, not invalid Teacher data. Saved304786 of
@@ -23,7 +44,7 @@ Original checkoutfd47de3 and worker files are preserved. Recovery9e8b1a0
 uses explicit resume and --wait=0; proposed cnall2nodes*4CPU/noGPU/1h,
 CNY0.56 maximum, now approved/submitted as15061586. Started20:35:26 scheduler
 time onibc13b07n01--02; fixed recovery code9e8b1a0. See dated expansion report.
-GPU15061139 unchanged: latest scheduler RUNNING02:45:37,1770/1998 updates.
+GPU15061139 completed; latest evaluation state is recorded above.
 
 User proposes preparing all training data once. Recommended next data route
 is an indexed reusable TRAIN cache,8568025 eligible days/23540 point-years,
@@ -50,11 +71,11 @@ and final-remainder policy. This is batch engineering, not failed gradients.
 
 User approved the6h/CNY16.56 proposal. Job15061139 was submitted on gln01
 and started on ibc13b03n01 at2026-09-13 17:39:37 scheduler time; observed
-RUNNING,1GPU/8CPU/32GiB,6h cap. Fixed code5502ce3 in
+COMPLETED1998 updates,1GPU/8CPU/32GiB,6h cap. Fixed code5502ce3 in
 runtime/checkouts/feedback-pool-v1; keep immutable. Log:
 runtime/outputs/diagnostics/feedback-pool-15061139.log; report:
 runtime/outputs/training/fresh-feedback-pool-15061139/report.json.
-Next read learning progress and free500/final1998 developmental rollouts.
+Next read the running free500/final1998 developmental rollouts.
 Broader-data planning is next in parallel; the current63707 unique days
 represent0.74354% of8568025 eligible TRAIN days (0.52182% of12208581 total
 v6 transitions). Site/year presence does not establish dense date coverage.
