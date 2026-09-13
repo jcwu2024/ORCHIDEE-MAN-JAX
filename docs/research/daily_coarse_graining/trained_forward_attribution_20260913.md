@@ -75,3 +75,49 @@ Actual target-shell argument expansion passes. Free GPU1 launcher PID105072
 uses isolated `runtime/checkouts/trained-forward-attribution-v1` at a16ea78.
 Log/report are `runtime/outputs/diagnostics/trained-forward-attribution-v1-pipeline.log`
 and `trained-forward-attribution-v1.json`. Keep the checkout fixed until completion.
+
+## Completed numerical attribution
+
+All16 windows finish in468.207s, exit0. All shared flux/stock validity counts and
+canonical hard counts are zero. Canonical GPP exactly reproduces the prior
+screen. Independent pool sums match the shared extractor within2.91e-11gC/m2.
+Separate daily replay does not pass whole-state allclose: maximum raw state
+error0.05011; pool error0.004708gC/m2; raw PFT GPP error3.47e-6. Retain these
+limits; they cannot explain the thousands of gC/m2 inventory drift but preclude
+claiming exact all-state replay equality.
+
+| Horizon/output | Daily-reset RMSE | Free-run RMSE | Reset aggregate bias | Free aggregate bias |
+| --- | --- | --- | --- | --- |
+| T7 GPP | 0.40614 | 1.18555 | -2.257% | -30.535% |
+| T7 NPP | 0.30269 | 0.85186 | -4.743% | -65.719% |
+| T30 GPP | 0.10116 | 0.87144 | -0.179% | -31.581% |
+| T30 NPP | 0.06116 | 0.61604 | +1.110% | -68.727% |
+
+RMSE units are gC/m2/day; bias is sum residual/sum Teacher, not mean window
+percentages. T7/T30 are different selected panels, so this is not a horizon
+scaling comparison. Reset success shows conditional fitting is substantially
+better on this panel, not that all one-day training is complete. Recurrence
+worsens accuracy, but no specific state owner has yet been causally isolated.
+
+Mean T30 pool inventories in gC/m2:
+
+| Pool | Start | Teacher final | Free final | Predicted fast change |
+| --- | --- | --- | --- | --- |
+| litter_above | 478.96 | 480.16 | 312.28 | -166.68 |
+| litter_below | 1725.32 | 1730.31 | 1275.24 | -450.08 |
+| carbon_32l | 0.00145 | 0.00146 | 13.94 | +13.94 |
+| DOC | 868.65 | 851.45 | 613.52 | -255.12 |
+| interception_storage | 42078.70 | 42214.98 | 31011.25 | -11067.45 |
+
+All five measured retained-tail inventory changes are exactly zero; endpoint
+identity residual max2.36e-11. Canopy interception organic carbon contributes
+11203.73/12050.67=92.972% of the final nonliving carbon error. Even on daily
+Teacher reset its mean predicted fast change is-275.13gC/m2/day, so its drain
+is not solely created by feeding back erroneous model states. These values
+describe the existing Teacher/model configuration; they are not observations
+of real-world canopy carbon or evidence that canopy drift causes GPP decline.
+
+Next: identify the GPP feedback owner through targeted same-forcing state-group
+replacements; inspect canopy endpoint incoming/outgoing supervision against
+existing labels before deciding a decoder/loss correction. Use archived arrays
+for field/layer and weight decomposition, with no repeated AD or Teacher runs.

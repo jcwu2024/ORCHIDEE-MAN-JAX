@@ -10,6 +10,43 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Implementation update: source-confirmed canopy metric correction removes a
+  second cover weighting of interception_storage; selected Teacher PFT14
+  cover is1, so this does not explain away the inventory drain. Local carbon
+  extraction and state-intervention tests pass. The fixed-panel free-GPU
+  state replacements and CPU typed-label audit are being prepared under
+  [`trained_gpp_state_intervention_plan_20260913.md`](research/daily_coarse_graining/trained_gpp_state_intervention_plan_20260913.md)
+  and [`canopy_inventory_supervision_audit_20260913.md`](research/daily_coarse_graining/canopy_inventory_supervision_audit_20260913.md).
+  Durable priority and accounting rationale:
+  [`native_ad_priority_and_canopy_metric_20260913.md`](research/daily_coarse_graining/native_ad_priority_and_canopy_metric_20260913.md).
+
+- User decision2026-09-13: gradient infrastructure is no longer the main task.
+  Prefer native checkpointed JAX AD for the next actual training objective;
+  verify that objective plus a few complete optimizer updates when ready.
+  Do not repeat passed probes or require all old custom reverse issues closed.
+  Current science work is GPP same-forcing state replacement and canopy-carbon
+  label/loss audit. Sol(high) and Terra(high) assist those independent tasks;
+  root integrates results. No architecture change or paid training is authorized
+  by these diagnostics. This principle is also recorded in AGENTS.md.
+
+- Completion update: both chains below are finished, exit0; PIDs100003 and
+  105072 absent. Native T30 reverse/JVP pass the predeclared directional gate
+  (relative errors0.1190%/0.0637%, below1%); active reverse peak2.689GiB.
+  This is still one checkpoint/window/scalar/two parameter directions.
+- Forward attribution completed all16 windows in468.2s. On T30, Teacher-reset
+  GPP/NPP daily RMSE0.1012/0.0612 versus free-run0.8714/0.6160 gC/m2/day.
+  The reset aggregate biases are-0.179%/+1.110% versus free-31.581%/-68.727%.
+  Recurrence substantially worsens these outputs; the responsible state group
+  is not yet isolated. Canopy interception organic carbon accounts for92.972%
+  of the30-day nonliving-stock endpoint error. All measured nonliving pool
+  changes occur at the neural fast endpoint; retained-tail changes are zero.
+- Next isolate the GPP feedback owner with bounded same-forcing state-group
+  replacement, informed by saved states; audit canopy incoming/outgoing labels
+  and existing supervision against its measured drift. Do not infer that canopy
+  drift causes GPP loss without intervention evidence. Keep Attention unchanged;
+  no new paid training or repeat completed AD stages. Detailed results are in
+  the two active dated plans below. Their launch paragraphs are historical.
+
 - User approved separate execution of forward-error attribution and native T30
   parameter AD. Both are now launched on free gln01 GPUs; no paid submission.
   GPU0 T30 chain PID100003 uses main checkout688e14c, which must stay fixed.

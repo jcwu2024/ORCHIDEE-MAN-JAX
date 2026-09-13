@@ -76,6 +76,16 @@ transition for Teacher-reset and free-carry replay, exporting inventory stages
 and full state archives. `forward_attribution.py` performs independent host
 carbon-pool accounting; it is diagnostic, not part of inference or training.
 
+`trained_gpp_state_intervention.py` partitions the continuous carry into disjoint
+source-named groups. `diagnose_trained_gpp_state_interventions.py` compares
+same-day bidirectional replacements using saved free/Teacher starts; hybrid
+outputs are never propagated. `audit_trained_canopy_inventory.py` reads saved
+carbon endpoints, scales and existing labels without model execution.
+`run_trained_feedback_cpu_checks.sh` owns bounded data/shape checks;
+`run_trained_gpp_state_interventions.sh` owns free-GPU forward diagnostics.
+The shared science extractor and independent carbon reducer now sum canopy
+organic carbon without a second PFT cover factor, following soilcarbon_leak.
+
 `daily_operator/rollout_loss.py` now owns ordinary/checkpointed scan losses and
 the public streamed value-and-gradient operation. It generates observation
 cotangents and direct parameter/initial-state terms internally, reusing the

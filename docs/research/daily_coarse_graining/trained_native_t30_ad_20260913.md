@@ -58,3 +58,21 @@ argument expansion passes both modes. Deployed-runtime preflight passes in
 69.50s under JAX0.4.38/NumPy2.4.6. Real T30 forward completes in232.6s;
 native reverse compilation has started. Keep this checkout unchanged until
 the chain ends. No paid queue or parameter update.
+
+## Completion
+
+Both stages finish with exit0. Reverse2393.396s, including2154.499s compilation;
+JVP verification680.059s. All109,464,375 gradients finite, norm2.29534873.
+Compiled reverse buffers2435611512 bytes; active peak2887540224 bytes (2.689GiB),
+reserved pool22151763456 bytes. Loss0.001524612267955; JVP primal differs by
+2.7852e-9. All hard counts zero.
+
+| Seed | Reverse projection | JVP | Relative error vs JVP |
+| --- | --- | --- | --- |
+| 20260913 | 1.31378861148 | 1.31535392410 | 0.1190% |
+| 20260914 | 1.28933134654 | 1.28851012631 | 0.0637% |
+
+Both are resolved and pass the unchanged1% gate. Agreement is materially weaker
+than T7; do not describe it as exact or FD-certified. Reports explicitly retain
+full_multi_day_admission=false and finite_difference_certified=false. Preserve
+native.pkl and do not repeat completed compilation for status/documentation work.

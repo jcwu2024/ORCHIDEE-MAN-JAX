@@ -514,7 +514,10 @@ def extract_biomass_productivity_trajectories(
     )
     interception_stock = derive_area_weighted_pft_carbon_pool(
         interception,
-        fraction,
+        # This reservoir is already per land area, unlike litter/SOC/DOC.
+        # Fortran stomate_soilcarbon.f90::soilcarbon_leak:1225 includes
+        # veget_max in deposition;1245-1251 and2326-2332 add storage without it.
+        jnp.ones_like(fraction),
         active,
         pft_axis=2,
         element_axis=-1,

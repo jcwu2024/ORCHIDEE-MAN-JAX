@@ -14,6 +14,10 @@ def reduce_pool(values, fraction, active, leaf, field):
     days = values.shape[0]
     fraction = fraction.reshape(days, -1)
     active = active.reshape(days, -1)
+    if field == 'interception_storage':
+        # Already per land area: soilcarbon_leak pool_start/end add directly
+        # (stomate_soilcarbon.f90:1245-1251,2326-2332).
+        fraction = np.ones_like(fraction)
     axis = 1 + leaf.axis_names.index('nvm')
     shape = [1] * values.ndim
     shape[0], shape[axis] = days, fraction.shape[-1]

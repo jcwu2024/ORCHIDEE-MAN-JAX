@@ -13,6 +13,47 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Current priority: use native checkpointed AD for the next specified training
+objective and verify that objective plus a few complete updates. Gradient
+infrastructure is no longer the main task; do not reopen passed unchanged
+probes. Scientific work now isolates GPP state feedback and canopy label/loss
+geometry with Sol(high)/Terra(high) assistance, without architecture changes.
+
+Source correction: interception_storage is already land-area organic carbon.
+The research stock extractor and host reducer now remove its second cover
+factor, following soilcarbon_leak pool_start/end. Historical reports below
+retain their original weighted convention. Teacher PFT14 cover is exactly1
+on the selected T30 panel, so the large canopy decline remains real. Archived
+Teacher-reset fast change averages-275.061gC/m2/day against Teacher+4.543;
+predicted incoming/outgoing average0.159/275.219. Its frozen PFT14 state scale
+is47559.69gC/m2. Typed-label and same-day GPP mediation checks are the next
+bounded free-node operations. See the three new active20260913 documents.
+
+Latest completion: both free chains finished with exit0 and absent launcher
+PIDs. Native T30 directional gate passes: reverse/JVP projection errors0.1190%
+and0.0637%, within declared1% tolerance, but larger than the earlier T7 errors.
+All109,464,375 parameter gradients finite; reverse norm2.29535, active peak
+2.689GiB. Reverse2393.4s (compilation2154.5s), verify680.1s. Scope remains the
+single selected trained window/scalar/two parameter directions, not FD/D2.
+
+Forward attribution16/16 completes468.2s with zero reported science-invalid or
+hard-failure counts. T30 daily Teacher-reset GPP/NPP RMSE0.10116/0.06116 versus
+free0.87144/0.61604. Cumulative reset biases-0.179%/+1.110%; free biases
+-31.581%/-68.727%. Reset fitting is markedly better, although the different
+T7 panel retains reset RMSE0.40614/0.30269; this is not global fit acceptance.
+Canopy interception organic-carbon endpoint error11203.73gC/m2 explains
+92.972% of nonliving error12050.67gC/m2. Its mean predicted30-day fast change
+is-11067.45gC/m2; retained-tail change is zero, as for the other four inventories.
+This locates the carbon error, not yet the causal GPP feedback state.
+
+Canonical saved GPP reproduces exactly; independent carbon-pool sums agree
+with shared extraction within2.91e-11gC/m2. Daily diagnostic replay is not
+bitwise/state-allclose equivalent: raw-state max discrepancy0.05011, pool max
+0.004708gC/m2 and raw GPP max3.47e-6. These are too small to explain measured
+large stock losses, but do not certify all-state replay equality. Next use saved
+states for targeted feedback attribution and canopy label/loss audit; no new
+architecture or paid training. The following execution paragraphs are history.
+
 Current execution after user approval: native T30 parameter AD is running on
 free GPU0, PID100003, main checkout688e14c. Runtime preflight passes69.50s;
 the real T30 forward passes hard checks in232.6s and reverse compilation is
