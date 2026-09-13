@@ -10,6 +10,29 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- User approved separate execution of forward-error attribution and native T30
+  parameter AD. Both are now launched on free gln01 GPUs; no paid submission.
+  GPU0 T30 chain PID100003 uses main checkout688e14c, which must stay fixed.
+  Runtime preflight passed in69.50s; real T30 forward completed in232.6s and
+  native reverse compilation is running. Log/report prefix:
+  `runtime/outputs/diagnostics/trained-forward-ad-v1-ad-t30-`.
+  Reverse90m then JVP60m on a passed reverse; preserve durable native.pkl.
+- GPU1 forward attribution PID105072 uses isolated
+  `runtime/checkouts/trained-forward-attribution-v1` at a16ea78. Actual-data
+  CPU diagnostic shapes and independent pool extraction passed in199.3s at
+  fcbb035. Follow-up adds only archive/validity reporting; numerical graph
+  unchanged. Three accounting tests, Ruff and real-shell dry-run pass, plus
+  independent source/code review. Log `trained-forward-attribution-v1-pipeline.log`
+  and report `trained-forward-attribution-v1.json` under diagnostics;60m cap.
+- Read results before launching anything else. The attribution keeps the same
+  16 windows and distinguishes free-running versus daily-Teacher-reset fit,
+  fast inventory versus retained-tail changes, and raw state archives. The
+  existing inventory budget does not enforce GPP/Ra/Rh-linked ecosystem closure.
+  Current plans: [`trained_forward_attribution_20260913.md`](research/daily_coarse_graining/trained_forward_attribution_20260913.md)
+  and [`trained_native_t30_ad_20260913.md`](research/daily_coarse_graining/trained_native_t30_ad_20260913.md).
+
+Preceding completed screen and its historical launch records:
+
 - Completion update: both c76c553 free-GPU chains finished with exit0; PIDs4617
   and6852 are absent. Forward completed all16 windows in708.6s: population and
   physical checks pass, but both horizon science screens fail. Native trained

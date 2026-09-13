@@ -68,8 +68,13 @@ verified per-window payload boundary for both new evaluation routes.
 `run_trained_forward_screen.py` reports daily/cumulative physical errors and
 the existing13-key gates, using `forward_screen_metrics.py` for physical-unit
 summaries. `probe_trained_checkpointed_grad.py` measures native-checkpointed
-parameter gradients/JVP at the first fixed T7 window. `run_trained_evaluation.sh`
+parameter gradients/JVP at the first fixed T7 or T30 window. `run_trained_evaluation.sh`
 owns actual-shell dry runs and exact-runtime preflight before either route.
+`run_trained_t30_ad_chain.sh` sequences separately saved T30 reverse/JVP stages.
+`diagnose_trained_forward.py` reuses canonical free rollout and the bound daily
+transition for Teacher-reset and free-carry replay, exporting inventory stages
+and full state archives. `forward_attribution.py` performs independent host
+carbon-pool accounting; it is diagnostic, not part of inference or training.
 
 `daily_operator/rollout_loss.py` now owns ordinary/checkpointed scan losses and
 the public streamed value-and-gradient operation. It generates observation

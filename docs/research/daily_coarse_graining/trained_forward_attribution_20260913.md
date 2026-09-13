@@ -63,3 +63,15 @@ alone; attribute actual predicted changes first.
 Keep compact state-layout metadata and full start/fast/incoming/outgoing
 inventory arrays in the diagnostic archives. This permits later pool/layer,
 effective-outgoing-fraction and fixed-PFT-weight analysis without new forward runs.
+
+## Execution record
+
+Three local accounting tests and Ruff pass. Independent review found no blocking
+layout, carry-boundary or accounting issue; explicit science-validity counts and
+reset-defined masks are retained. Actual-data CPU shapes and independent pool
+extraction pass199.3s on test02 at fcbb035. Reporting-only follow-up a16ea78
+adds inventory archives and validity counts, leaving that numerical graph unchanged.
+Actual target-shell argument expansion passes. Free GPU1 launcher PID105072
+uses isolated `runtime/checkouts/trained-forward-attribution-v1` at a16ea78.
+Log/report are `runtime/outputs/diagnostics/trained-forward-attribution-v1-pipeline.log`
+and `trained-forward-attribution-v1.json`. Keep the checkout fixed until completion.

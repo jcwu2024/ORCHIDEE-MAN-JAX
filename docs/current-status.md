@@ -13,6 +13,24 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Current execution after user approval: native T30 parameter AD is running on
+free GPU0, PID100003, main checkout688e14c. Runtime preflight passes69.50s;
+the real T30 forward passes hard checks in232.6s and reverse compilation is
+active. GPU1 forward attribution launched as PID105072 at isolated a16ea78
+`runtime/checkouts/trained-forward-attribution-v1`. Real CPU diagnostic shapes
+and independent pool extraction passed199.3s at fcbb035; subsequent reporting
+changes preserve the numerical graph. Three local accounting tests, actual
+shell dry-run and independent code/source review pass. No new training or paid
+job. Keep both running checkouts fixed. Read the T30 reverse/verify reports and
+`trained-forward-attribution-v1.json` before further execution.
+
+Source review finds no obvious carbon stock-unit/double-counting error. The
+neural inventory representation labels decreases as external outgoing and
+increases as external incoming, with no internal transfer. Thus its zero budget
+residual is not ecosystem closure tied to GPP/Ra/Rh. The numerical attribution
+will measure actual incoming/outgoing per pool, fast versus retained changes,
+and Teacher-reset versus free-running GPP before assigning a causal mechanism.
+
 Completion update (2026-09-13): both c76c553 chains below have finished with
 exit0; their launcher PIDs are absent. Forward:16/16 windows,708.6s, complete
 metric populations and zero physical hard failures, but neither science

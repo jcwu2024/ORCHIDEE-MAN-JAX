@@ -50,3 +50,11 @@ It does not prove all coordinates, initial-state gradients, finite differences,
 all30-day cases, a future changed training loss, long-horizon accuracy or D2.
 It is evidence for designing the next reproducible multi-day training stage,
 not automatic authorization to launch that training.
+
+## Execution record
+
+Launched on free GPU0 at main checkout688e14c, PID100003. Actual Bash4.2
+argument expansion passes both modes. Deployed-runtime preflight passes in
+69.50s under JAX0.4.38/NumPy2.4.6. Real T30 forward completes in232.6s;
+native reverse compilation has started. Keep this checkout unchanged until
+the chain ends. No paid queue or parameter update.
