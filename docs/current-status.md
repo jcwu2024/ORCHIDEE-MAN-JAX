@@ -13,6 +13,25 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Completion update (2026-09-13): both c76c553 chains below have finished with
+exit0; their launcher PIDs are absent. Forward:16/16 windows,708.6s, complete
+metric populations and zero physical hard failures, but neither science
+horizon passes. Mean30-day Teacher/model cumulative GPP52.356/35.822,
+NPP17.243/5.392 and autotrophic respiration35.114/30.430 gC/m2. Mean AGB
+change+1.173/-7.423 and BGB+0.153/-2.990 gC/m2. Reported nonliving-carbon
+change+125.270/-11925.404 gC/m2 needs constituent/extractor attribution before
+assigning a mechanism. Stock-level acceptance alone is misleading here.
+The panel is disjoint from training dates, not an independent-site/year test.
+
+Native trained T7 parameter reverse/JVP directional gate passes: all109,464,375
+gradient entries finite, norm7.55134; two projection absolute errors7.472e-6
+and1.471e-6 (relative5.073e-6 and1.430e-6). Reverse/JVP stages take2180.8/
+667.0s, including compilation; reverse active GPU peak2.683GiB versus20.631GiB
+reserved pool. This is scoped evidence, not full multi-day AD admission or
+finite-difference certification. Next: attribute carbon/GPP forward errors and
+extend native parameter-AD evidence to the intended T30 objective. No new paid
+job is authorized. The following launch descriptions are historical.
+
 Current2026-09-13 execution: the final update1998 checkpoint is under a
 train-domain, training-day-disjoint forward screen (8 T7+8 T30 windows,
 14 locations/7 years/296 days). Selection excludes63,771 distinct one-day

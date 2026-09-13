@@ -108,4 +108,55 @@ Logs: `runtime/outputs/diagnostics/trained-forward-ad-v1-forward-pipeline.log`
 and `trained-forward-ad-v1-ad-pipeline.log`. Reports use the same prefix with
 `forward.json`, `ad-reverse.json` and `ad-verify.json`. Neither is a training job.
 The source checkout is fixed during execution; the final checkpoint remains
-the immutable result of job15048786. Results are pending.
+the immutable result of job15048786. See completed results below.
+
+## Completed results (2026-09-13)
+
+Both chains completed at c76c553 with exit0, with launcher PIDs absent.
+No training update or paid allocation was performed. Reports are retained at
+the declared remote paths and copied to local outputs/ with unchanged names.
+
+Forward completed all16 windows in708.62s. Metric populations and physical
+checks pass; both horizon science gates fail. These are train-domain disjoint
+days, not spatial/temporal holdouts. All heterotrophic Teacher totals are zero,
+so their exact matches provide no fitting evidence.
+
+Mean cumulative fluxes per window, Teacher -> model, in gC/m2:
+
+| Horizon | GPP | NPP | Autotrophic respiration |
+| --- | --- | --- | --- |
+| 7 days | 14.2708 -> 9.9132 | 4.9814 -> 1.7077 | 9.2894 -> 8.2055 |
+| 30 days | 52.3565 -> 35.8220 | 17.2429 -> 5.3923 | 35.1136 -> 30.4297 |
+
+The30-day aggregate relative biases (sum error / sum Teacher, not mean
+per-window percentages or training-normalized bias) are-31.58% GPP,-68.73%
+NPP and-13.34% autotrophic respiration. Mean30-day AGB change is+1.1731 ->
+-7.4233, BGB+0.1528 ->-2.9903 gC/m2. Small normalized final biomass errors
+do not establish accurate increments. Nonliving-carbon change is reported as
++125.2697 ->-11925.4042 gC/m2; attribute constituent pools and verify extractor
+semantics before concluding which process caused this large discrepancy.
+Existing budget hard checks passing do not certify this full carbon trajectory.
+
+Forward active GPU peak is1.280GiB (pool20.631GiB). After warmup, measured
+window calls take about0.272s/T7 and1.142-1.244s/T30. Initial T7 call takes
+17.97s beyond explicit compilation. These are single-window diagnostic calls,
+not a batched production benchmark or a Teacher speedup measurement.
+
+Native T7 reverse passes in2180.85s (1821.90s compilation); the full parameter
+gradient is finite with norm7.55134 and109,464,375 entries. Estimated compiled
+buffers2.266GiB, active peak2.683GiB. JVP verification passes in666.97s:
+
+| Direction seed | Reverse projection | JVP | Absolute error |
+| --- | --- | --- | --- |
+| 20260913 | -1.4729198971 | -1.4729273688 | 7.47168e-6 |
+| 20260914 | -1.0286162576 | -1.0286147868 | 1.47087e-6 |
+
+Both projections are resolved and meet the predeclared gate; relative errors
+are5.073e-6 and1.430e-6. Primal difference is3.493e-9 and all hard counts
+are zero. This admits only the stated checkpoint/window/scalar/two parameter
+directions. T30, initial-state gradients and the historical fresh-T2 finite
+difference discrepancy remain open. Do not repeat the completed reverse stage.
+
+Next work is forward carbon-pool/GPP attribution and bounded native parameter
+AD extension toward T30. The forward failures do not identify an architectural
+cause and do not authorize a new paid training run.

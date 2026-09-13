@@ -3,7 +3,7 @@ set -euo pipefail
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 CODE_ROOT=${CODE_ROOT:-$ROOT}
 GPU_DEVICE=${GPU_DEVICE:?select an idle free GPU}
-MODE=${1:?forward, ad-reverse or ad-verify}
+MODE=${1:?forward, ad-reverse, ad-verify, ad-t30-reverse or ad-t30-verify}
 PRINT_ONLY=${2:-}
 [[ -z "$PRINT_ONLY" || "$PRINT_ONLY" == --dry-run ]] || exit 2
 case "$(hostname -s)" in gln01|ibgln01|ibc13b02n04) ;; *) exit 2;; esac
@@ -14,11 +14,17 @@ ARGS=(--selection "$ROOT/runtime/outputs/diagnostics/trained-forward-selection-v
       --checkpoint "$ROOT/runtime/outputs/training/fresh-one-day-pool-15048786/report.checkpoint.pkl")
 case "$MODE" in
   forward) MODULE=scripts.hpc.run_trained_forward_screen; LIMIT=75m;;
-  ad-reverse|ad-verify)
+  ad-reverse|ad-verify|ad-t30-reverse|ad-t30-verify)
     MODULE=scripts.hpc.probe_trained_checkpointed_grad
-    ARGS+=(--phase "${MODE#ad-}" --stage-directory "$BASE-ad-stages")
+    HORIZON=7
+    STAGES="$BASE-ad-stages"
+    if [[ "$MODE" == ad-t30-* ]]; then
+      HORIZON=30
+      STAGES="$BASE-ad-t30-stages"
+    fi
+    ARGS+=(--phase "${MODE##*-}" --horizon "$HORIZON" --stage-directory "$STAGES")
     LIMIT=90m
-    [[ "$MODE" != ad-verify ]] || LIMIT=60m
+    [[ "$MODE" != *-verify ]] || LIMIT=60m
     ;;
   *) exit 2;;
 esac

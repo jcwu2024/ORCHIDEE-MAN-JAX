@@ -1,4 +1,4 @@
-"""Bounded native-checkpointed parameter AD at the intended trained T7 state."""
+"""Bounded native-checkpointed parameter AD at a frozen trained T7/T30 state."""
 import subprocess
 import time
 from pathlib import Path
@@ -17,6 +17,13 @@ def rademacher_direction(jax,parameters,seed):
     return jax.tree_util.tree_unflatten(tree,values),sum(v.size for v in values)
 
 
+def selected_window(selection,horizon):
+    """Use panel order, without selecting cases by their model results."""
+    if horizon not in (7,30):
+        raise ValueError('trained AD horizon must be 7 or 30')
+    return next(row for row in selection['windows'] if row['length']==horizon)
+
+
 def run(args):
     from scripts.hpc.probe_public_rollout_staged import StageStore
     from scripts.hpc.run_successor_process_head_canonical_gate import _atomic_json
@@ -26,7 +33,7 @@ def run(args):
     started = time.perf_counter()
     report = {'status':'running','phase':args.phase,'updates':0,
               'source_git_head':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
-              'scope':'trained_T7_parameter_directional_AD_only','directions':[]}
+              'scope':f'trained_T{args.horizon}_parameter_directional_AD_only','directions':[]}
 
     def emit(stage,**values):
         report.update(values,stage=stage,elapsed_seconds=time.perf_counter()-started)
@@ -50,12 +57,12 @@ def run(args):
         from scripts.hpc.run_successor_fast_owner_gpu_probe import _tree_numeric_report
 
         pool = WindowPool(args.selection,method['source_identity'])
-        row = next(r for r in pool.selection['windows'] if r['length']==7)
+        row = selected_window(pool.selection,args.horizon)
         initial,discrete,days,targets,expected_discrete = pool.case(jax,row)
         context = {'stock_weight':jnp.array(1.,dtype=jnp.float64)}
         component = make_rollout_loss(jax,jnp,make_canonical_step(head,template),make_science_probe_loss(head.contract,scales))
         arguments = (parameters,initial,discrete,days,targets,context)
-        identity = {'method':method,'window':row,'probe':'trained_T7_native_parameter_ad_v1',
+        identity = {'method':method,'window':row,'probe':f'trained_T{args.horizon}_native_parameter_ad_v1',
                     'direction_seeds':[20260913,20260914],'direction_scale':'exact_per_coordinate_plus_minus_one'}
         store = StageStore(args.stage_directory,identity)
         native = jax.jit(jax.value_and_grad(component.checkpointed_loss,argnums=0))
@@ -67,7 +74,7 @@ def run(args):
         if args.shape_only:
             jax.eval_shape(native,*arguments)
             jax.eval_shape(tangent,parameters,direction,*arguments[1:])
-            emit('completed',status='passed',classification='native_T7_parameter_grad_and_jvp_shapes_only')
+            emit('completed',status='passed',classification=f'native_T{args.horizon}_parameter_grad_and_jvp_shapes_only')
             return report
         _,obs = jax.jit(component.rollout)(parameters,initial,discrete,days)
         hard = physical_checks(obs,targets,expected_discrete,days[0],head.contract,scales)
@@ -133,4 +140,5 @@ if __name__=='__main__':
     for name in ('selection','training-report','checkpoint','stage-directory'):
         parser.add_argument('--'+name,type=Path,required=True)
     parser.add_argument('--phase',choices=('reverse','verify'),required=True)
+    parser.add_argument('--horizon',type=int,choices=(7,30),default=7)
     run(parser.parse_args())

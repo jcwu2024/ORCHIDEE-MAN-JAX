@@ -10,6 +10,19 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Completion update: both c76c553 free-GPU chains finished with exit0; PIDs4617
+  and6852 are absent. Forward completed all16 windows in708.6s: population and
+  physical checks pass, but both horizon science screens fail. Native trained
+  T7 reverse (2180.8s) and two-direction JVP verification (667.0s) pass their
+  bounded gate; this does not close T30, initial-state gradients or historical
+  fresh-T2 finite differences. See the completion section of the active contract.
+- Immediate next work: trace the large reported nonliving-carbon loss to the
+  shared extractor and constituent state/process changes, and distinguish
+  one-day GPP error from recurrent feedback on the same selected windows.
+  In parallel, extend the native-checkpointed parameter-AD evidence toward the
+  intended T30 objective using preserved stages. Do not replace the architecture
+  or launch new paid training from this screen. Launch records below are history.
+
 - User authorized both the trained7/30-day forward screen and native T7 AD
   continuation under
   [`trained_forward_and_native_ad_20260913.md`](research/daily_coarse_graining/trained_forward_and_native_ad_20260913.md).
