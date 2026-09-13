@@ -19,8 +19,14 @@ recurrence error. The independent state-replacement work remains the evidence
 route for that causal question.
 
 This document specifies the loss proposal; execution authority comes from the
-user's current instructions. The standalone helper is implemented and tested;
-it has not changed the deployed training objective or trained weights.
+user's current instructions. The shared helper and optional one-day objective
+integration are locally tested. Enable it with protocol
+`canopy_carbon_stock_change = {weight: lambda, scale_source_pft_index: 13}`;
+13 is the zero-based source index of PFT14. Absent/zero weight preserves the
+previous objective. No trained weights have changed. The combined calibration
+with litterpart supervision is specified in
+`feedback_and_canopy_loss_amendment_20260913.md` and supersedes the older
+canopy-only sequencing proposal below.
 
 ## Evidence fixed before this proposal
 

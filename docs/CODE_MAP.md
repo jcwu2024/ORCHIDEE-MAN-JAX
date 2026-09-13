@@ -88,10 +88,17 @@ organic carbon without a second PFT cover factor, following soilcarbon_leak.
 The same intervention runner's `--grouping litter_detail` mode supplies nine
 leaf masks and declared family/interaction masks, retaining the same32-arm
 graph; `run_trained_gpp_litter_detail.sh` owns its bounded free execution.
-`canopy_change_loss.py` provides a standalone source-direct stock-change loss
-with explicit masks, independent recurrent starts and bare-slot diagnostics.
-It is locally tested but not yet wired into the deployed training objective;
-its scale and coefficient must be supplied by the declared training method.
+`canopy_change_loss.py` provides source-direct stock-change supervision with
+explicit masks, independent recurrent starts and bare-slot diagnostics.
+`feedback_state_loss.py` measures diagnosed recurrent-state errors in frozen
+neural input units. `fresh_start_training.py` optionally binds these terms for
+canopy carbon and litterpart; absent/zero weights preserve the old objective.
+`probe_feedback_loss_calibration.py` measures three component gradients on16
+fresh train-only rows without optimizer updates; `run_feedback_loss_calibration.sh`
+owns its CPU shape and free-GPU runtime checks. Coefficients remain unselected.
+`scripts/dev/summarize_trained_litterpart_feedback.py` summarizes archived
+field values, actual input/output scales and reproduced intervention contrasts
+without a new neural or Teacher execution.
 
 `daily_operator/rollout_loss.py` now owns ordinary/checkpointed scan losses and
 the public streamed value-and-gradient operation. It generates observation

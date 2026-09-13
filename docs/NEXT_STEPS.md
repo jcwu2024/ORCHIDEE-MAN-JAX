@@ -10,20 +10,27 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
-- Leaf/family follow-up launched on free GPU0, PID18414 at a952bb1 using
-  isolated runtime/checkouts/trained-feedback-v1. Keep that checkout fixed.
-  Log/report prefix trained-gpp-litter-detail-v1;40m cap. Seven local tests,
-  Ruff, actual shell expansion and16 real-array CPU shapes pass183.1s.
-  Independent Sol(high) input-route audit and Terra(high) canopy change-loss
-  helper/proposal run in parallel. Read leaf results before selecting a GPP
-  correction or launching any new gradient graph/training.
+- Leaf/family follow-up completed at a952bb1:646.28s,16/16 windows, exit0,
+  valid controls, all hard counts zero. PID18414 is absent. Litterpart alone
+  removes95.1045% of excess T30 GPP MSE; reciprocal damage78.6935%. GPP bias
+  -31.58%->+1.13% under Teacher-value replacement. This is diagnostic evidence,
+  not a repaired model. Its actual neural input scale0.00789 amplifies errors
+  scored by existing output/state losses at scale1; reset prediction~0.67 vs1.
+- Next implement optional litterpart input-scale and canopy stock-change loss
+  terms, then measure their gradient balance on16 fresh train-only rows before
+  choosing coefficients or running updates. Attention, normalization, source
+  boundary and Teacher data stay fixed. No constants/Teacher replacements at
+  inference. Current proposal:
+  `research/daily_coarse_graining/feedback_and_canopy_loss_amendment_20260913.md`.
+  Sol(high) reviews source routes; Terra(high) integrates the shared losses;
+  a second Sol(high) prepares the bounded zero-update calibration runner.
 
 - Group GPP diagnosis completed16/16,905.16s, zero hard counts and valid
   controls. Litter metadata rescue95.31% / reciprocal damage78.30% of the T30
   free-reset MSE gap; DOC rescue43.46%/damage6.76%; canopy carbon rescue0.126%.
-  Next execute the fixed nine-leaf/family follow-up using the same32-arm graph
-  and review the actual GPP input route. In parallel specify separately weighted
-  canopy stock-change supervision, calibrated on training data before updates.
+  The fixed nine-leaf/family follow-up is now complete (see above). Combine its
+  input-route evidence with separately weighted canopy stock-change supervision,
+  calibrated on training data before updates.
   Current plan: `research/daily_coarse_graining/trained_gpp_litter_detail_20260913.md`.
   The PID57120 launch record below is completed, not an active job.
 

@@ -23,8 +23,10 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `research/daily_coarse_graining/canopy_change_loss_proposal_20260913.md` | Helper/local tests complete; training integration and calibration pending | Source-direct stock change, train-only scales and proposed weighting check |
-| `research/daily_coarse_graining/trained_gpp_litter_detail_20260913.md` | Group diagnosis complete; leaf follow-up fixed | GPP mediation, DOC interaction and specific field attribution |
+| `research/daily_coarse_graining/canopy_change_loss_proposal_20260913.md` | Shared helper and optional one-day integration locally tested; calibration pending | Source-direct stock change, train-only scales and proposed weighting check |
+| `research/daily_coarse_graining/feedback_and_canopy_loss_amendment_20260913.md` | Optional losses locally tested; train-only calibration is next | Diagnosed litterpart recurrence sensitivity and canopy stock-change losses |
+| `research/daily_coarse_graining/litter_gpp_input_route_audit_20260913.md` | Source/input-route audit | Actual normalization, shared and coordinate GPP contexts, and daily reconstruction limits |
+| `research/daily_coarse_graining/trained_gpp_litter_detail_20260913.md` | Completed: litterpart isolated; valid controls and zero hard counts | GPP mediation, DOC interaction and specific field attribution |
 | `research/daily_coarse_graining/native_ad_priority_and_canopy_metric_20260913.md` | Current science-first decision; source-confirmed metric fix | Native AD scope, research priority and canopy stock area basis |
 | `research/daily_coarse_graining/trained_gpp_state_intervention_plan_20260913.md` | Current forward-only diagnosis | Bidirectional state replacement on the fixed 16-window panel |
 | `research/daily_coarse_graining/canopy_inventory_supervision_audit_20260913.md` | Completed archive/source and240-day raw-v6 label readback | Canopy drain, supervision geometry and bare-slot applicability |

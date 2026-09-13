@@ -57,3 +57,57 @@ the40m forward-only run is launched as PID18414 from
 Log/report prefix: `runtime/outputs/diagnostics/trained-gpp-litter-detail-v1`.
 The numerical one-day32-arm graph is unchanged, so its completed real-GPU
 preflight is reused. No paid allocation or trainable update is involved.
+
+## Completed leaf result
+
+The a952bb1 run finished normally in646.2818s, all16 windows/296 days,
+exit0. PID18414 is absent. All controls reproduce, all32 arms' hard counts
+are zero. Full litter and DOC contrasts reproduce the preceding group run.
+`outputs/trained-gpp-litter-detail-v1.json` is the durable raw report.
+
+T30 (eight windows,240 days):
+
+| Replacement | Excess GPP MSE removed | Reciprocal damage / excess MSE | Positive rescue/damage windows |
+| --- | ---: | ---: | --- |
+| litterpart alone | 95.1045% | 78.6935% | 7/8;8/8 |
+| Full litter metadata | 95.3142% | 78.3014% | 7/8;8/8 |
+| DOC alone | 43.4600% | 6.7641% | 5/8;4/8 |
+| Full litter metadata + DOC | 98.1422% | 94.2508% | 8/8;8/8 |
+| Lignin family | 0.1964% | 0.3633% | 5/8;6/8 |
+| Fuel family | 0.9270% | 0.0646% | 3/8;4/8 |
+
+Here excess MSE is free MSE minus daily-Teacher-reset MSE. It is not the
+fraction of all GPP error, a variance decomposition or an additive causal
+allocation. Litterpart rescue changes RMSE0.871443->0.216585 gC/m2/day and
+aggregate bias-31.5805%->+1.1335%; reciprocal damage RMSE0.774460 and
+bias-19.8282%. T7 corroborates litterpart rescue87.7969% and damage112.7535%
+on its different panel. DOC interaction is horizon/panel dependent: adding
+DOC to litter rescue helps the T30 aggregate but slightly worsens T7.
+
+The archived-state audit resolves the training/input mismatch:
+
+- Actual neural input normalization comes from process statistics, not the
+  output loss scales. Its3854 mean/scale coordinates equal the corresponding
+  base state statistics. The fresh DOC tail does not affect litterpart.
+- PFT14 litterpart input mean0.99993773, scale0.0078909125. T30 Teacher
+  starts/endpoints are1 for both litter coordinates; predicted reset endpoints
+  average0.66768/0.67572. Recurrent input extrema reach81.35 standard deviations.
+- The actual fast-output normalization is pooled across compact PFT slots:
+  mean0.5,scale0.5. Its absolute unit-interval process loss uses scale1;
+  next-state litterpart scales are also1. Thus a modestly sized native-unit
+  endpoint loss permits a severe displacement in the next day's input units.
+  This is a diagnosed loss/recurrence mismatch, not an arithmetic bug in AD.
+
+The script `scripts/dev/summarize_trained_litterpart_feedback.py` reproduces
+these readings from existing archives/statistics with no model execution.
+Its terminal-state statistics are not a new raw typed fast-label readback.
+The independent input/source route audit is
+`litter_gpp_input_route_audit_20260913.md`.
+
+Next: implement separately reported litterpart feedback-scale supervision
+alongside canopy stock-change supervision, keep the Attention and normalization
+unchanged, calibrate gradient balance on training-only fresh samples and verify
+actual updates before another learning run. The new combined proposal is
+`feedback_and_canopy_loss_amendment_20260913.md`. No hybrid Teacher replacement
+enters inference or a reported model. These are train-domain day-disjoint
+diagnostics, not independent-site/year or sealed-test acceptance.

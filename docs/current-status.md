@@ -13,6 +13,23 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Leaf follow-up completed at a952bb1 in646.28s, all16 windows, exit0, all controls
+valid and hard counts zero. Litterpart alone gives95.1045% T30 excess-MSE rescue
+and78.6935% reciprocal damage; rescue RMSE0.216585 and bias+1.1335%, versus
+free RMSE0.871443/bias-31.5805%. This remains fixed-weight input mediation,
+not trained-model acceptance. Actual input scale0.00789091 versus output/state
+loss scales1 permits roughly40-standard-deviation input errors at typical
+predicted reset values0.67 instead of Teacher1. Full litter+DOC rescue98.1422%
+and damage94.2508% confirm an additional interaction; they do not sum additively.
+
+Next: optional input-scale litterpart MSE and source-direct canopy stock-change
+supervision, followed by fresh training-only gradient-balance calibration and
+bounded optimizer admission. Keep Attention and input normalization unchanged.
+See `research/daily_coarse_graining/feedback_and_canopy_loss_amendment_20260913.md`.
+The first calibration is zero-update on a free GPU; no new paid training.
+
+Preceding group-level evidence:
+
 Group intervention is now completed:905.16s,16/16 windows, all controls valid
 and all32 arms' hard counts zero. T30 litter_metadata teacher replacement
 removes95.314% of excess GPP MSE; reciprocal replacement restores78.301%.
@@ -20,9 +37,8 @@ Rescue improves7/8 windows, damage worsens8/8. GPP RMSE0.87144 to0.21293,
 bias-31.58% to+1.34%. This is a same-day hybrid-input diagnostic, not a repaired
 rollout. DOC rescue43.46% remains relevant to interactions; canopy stock
 rescue0.126% separates that inventory problem from dominant GPP mediation.
-Next: nine-leaf/family diagnosis, input-path audit and canopy change-loss
-proposal. No architecture change or paid training. Older launch logs below
-are history.
+The nine-leaf/family diagnosis is completed above. No architecture change or
+paid training. Older launch logs below are history.
 
 Latest operations: a136fda free GPU0 state-intervention chain PID57120 is
 running under runtime/checkouts/trained-feedback-v1 (75m diagnostic cap;
