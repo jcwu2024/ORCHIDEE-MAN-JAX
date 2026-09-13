@@ -10,15 +10,25 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
-- CPU expansion job15061225 is user-approved and submitted from cln01 at
-  2026-09-13 19:04:41 scheduler time; now RUNNING on ibc11b02n20 and
-  ibc13b07n26--28. Resources:cnall4nodes/32CPU/8 per node/noGPU/2h,
-  CNY4.48 cap. Checkout runtime/checkouts/one-day-expansion-v1 frozen atfd47de3.
-  Log:runtime/outputs/diagnostics/one-day-expansion-15061225.log; outputs:
-  runtime/outputs/training/one-day-expansion-15061225/.
-  Next inspect worker progress and require complete coverage plus
-  merge_report.json status=passed/stage=completed before admitting full pool.
-  Do not resubmit or edit running checkouts. GPU15061139 unchanged.
+- CPU expansion15061225 FAILED after00:52:24, exit9:0: launcher omitted
+  srun --wait=0, so cluster WaitTime=50s terminated unfinished workers after
+  the first normal worker exits. Saved304786/346539 rows (15545/17677
+  point-years); remaining41753 rows/2132 point-years. Preserve committed data.
+  Inventory: outputs/one-day-expansion-15061225-inventory.json.
+  Recovery implementation9e8b1a0 adds --wait=0 and explicit committed-prefix
+  resume. Separate checkout runtime/checkouts/one-day-expansion-recovery-v1.
+  Proposed cnall2nodes*4CPU/noGPU/1h/CNY0.56 recovery is NOT submitted;
+  resume original worker directories, then require complete merge acceptance.
+  See the dated expansion report for target-shell and real-data resume evidence.
+  GPU15061139 remains unchanged; latest read1770/1998 updates, RUNNING.
+
+- User asks about preparing all data once. Recommend a reusable full TRAIN
+  cache with day/window indices, independent of batch size/epochs/loss/weights.
+  Eligible scope8568025 days/23540 point-years; retain all split and monitor
+  exclusions. Rough sparse-cache linear extrapolation is203GiB compressed
+  and751 CPU-hours/CNY52.58, NOT a production quote. First measure a bounded
+  complete-point-year cache and random-batch IO; avoid repeated static inputs
+  and whole-year decompression for each draw. No full-cache paid run approved.
 
 - Expansion preparation is now implemented and admitted on free CPU:
   metadata63707 base+282832 new=346539 unique TRAIN days (4.04456% of eligible),
@@ -28,8 +38,8 @@ Current actions, superseding launch instructions in the history below:
   test02/test03 workers45.00s/84.02s pass;150 prepared rows total,128 new,
   all8 old-row comparisons and persisted readback exact. No full expansion yet.
   Full merge/catalogue remaps unchanged monitor payloads and tests pass.
-  The cnall4nodes*8CPU/2h/noGPU job (CNY4.48 cap) is approved and running
-  as15061225; code in separate one-day-expansion-v1 checkout.
+  The cnall4nodes*8CPU/2h/noGPU job15061225 failed partially as recorded above;
+  original code remains in separate one-day-expansion-v1 checkout.
   Do not change paid training15061139. See
   `research/daily_coarse_graining/one_day_expansion_v1_20260913.md`.
   Before later expanded GPU training, fix/declare full32-row batching:

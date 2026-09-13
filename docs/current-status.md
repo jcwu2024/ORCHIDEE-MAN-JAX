@@ -13,14 +13,23 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-CPU expansion job15061225 is user-approved and submitted from cln01 at
-2026-09-13 19:04:41 scheduler time, now RUNNING on ibc11b02n20 and
-ibc13b07n26--28. Resources:cnall4nodes/32CPU/8 per node/noGPU/2h,CNY4.48 cap.
-Checkout one-day-expansion-v1 is frozen atfd47de3. Log:
-runtime/outputs/diagnostics/one-day-expansion-15061225.log; worker/merge root:
-runtime/outputs/training/one-day-expansion-15061225/.
-Full preparation requires successful complete merge, not just scheduler exit.
-No duplicate submission or running checkout edits. GPU15061139 unchanged.
+CPU expansion15061225 FAILED after00:52:24, exit9:0. Missing srun --wait=0
+allowed cluster WaitTime=50s to kill remaining workers after normal first
+exits. This is a launcher failure, not invalid Teacher data. Saved304786 of
+346539 rows/15545 of17677 point-years;41753 rows/2132 point-years remain.
+Saved compressed bytes7742125326; all recorded old-row comparisons exact.
+Inventory: outputs/one-day-expansion-15061225-inventory.json. No final merge.
+Original checkoutfd47de3 and worker files are preserved. Recovery9e8b1a0
+uses explicit resume and --wait=0; proposed cnall2nodes*4CPU/noGPU/1h,
+CNY0.56 maximum, not yet approved/submitted. See dated expansion report.
+GPU15061139 unchanged: latest scheduler RUNNING02:45:37,1770/1998 updates.
+
+User proposes preparing all training data once. Recommended next data route
+is an indexed reusable TRAIN cache,8568025 eligible days/23540 point-years,
+preserving held-out/monitor exclusions and chronology for window sampling.
+Sparse-row extrapolation suggests203GiB compressed/751 CPU-hours/CNY52.58;
+full-point-year amortization, compression and actual random-read throughput
+must be measured before a production quote. No full-cache job is approved.
 
 Parallel data-expansion preparation: selected346539 unique TRAIN dates
 (63707 existing+282832 new) across17677 point-years/535 points/44 years.
