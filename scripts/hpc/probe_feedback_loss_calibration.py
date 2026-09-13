@@ -95,10 +95,10 @@ def _canopy_source_pft_index(runtime: Mapping[str, Any], head: Any) -> int:
     return vegetation[0]
 
 
-def _make_evaluator(
+def _make_batch_objective(
     jax: Any, jnp: Any, objective: Any, base_weights: Mapping[str, float]
 ) -> Any:
-    """Differentiate only parameters; the data and three coefficients are dynamic."""
+    """Build the shared coefficient-dynamic batch objective and diagnostics."""
 
     def one(parameters: Any, sample: Any, coefficients: Any) -> tuple[Any, Any]:
         _, auxiliary = objective(parameters, sample)
@@ -127,6 +127,28 @@ def _make_evaluator(
         )
         return jnp.mean(losses), auxiliary
 
+    return batch
+
+
+def _make_batch_loss(
+    jax: Any, jnp: Any, objective: Any, base_weights: Mapping[str, float]
+) -> Any:
+    """Build the scalar batch loss used by independent directional AD checks."""
+
+    batch = _make_batch_objective(jax, jnp, objective, base_weights)
+
+    def loss(parameters: Any, samples: Any, coefficients: Any) -> Any:
+        return batch(parameters, samples, coefficients)[0]
+
+    return loss
+
+
+def _make_evaluator(
+    jax: Any, jnp: Any, objective: Any, base_weights: Mapping[str, float]
+) -> Any:
+    """Differentiate only parameters; the data and three coefficients are dynamic."""
+
+    batch = _make_batch_objective(jax, jnp, objective, base_weights)
     return jax.jit(jax.value_and_grad(batch, argnums=0, has_aux=True))
 
 

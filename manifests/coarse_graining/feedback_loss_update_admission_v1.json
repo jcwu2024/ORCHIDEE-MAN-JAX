@@ -1,0 +1,12 @@
+{
+  "schema_version": "feedback_loss_update_admission_v1",
+  "status": "coefficients_declared_before_updates",
+  "coefficients": {"base": 1.0, "canopy_stock_change": 3e-9, "litterpart_feedback": 2.5e-5},
+  "calibration_evidence": "feedback-loss-calibration-v1.json at ac5aa51, four completed train-only batches, 1063.6441567391157 seconds",
+  "decision": "rounded weights placing each supplementary gradient near the base gradient magnitude across the four fresh-initialization batches; inspect joint raw-gradient geometry, then measure actual AdamW steps",
+  "initialization": "fresh_seed_20260911_full_network_no_checkpoint_inheritance",
+  "training_rows": "first_two_epoch0_batches_of_existing_sampler_seed20260912_batch32_micro4",
+  "maximum_optimizer_updates": 2,
+  "checkpoint_written": false,
+  "purpose": "technical_admission_and_fixed_train_panel_science_readout_not_long_horizon_acceptance"
+}

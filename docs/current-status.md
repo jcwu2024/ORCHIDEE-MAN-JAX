@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Update: the zero-update loss calibration below has completed at ac5aa51 in
+1063.644s, exit0, four batches, finite losses/gradients and zero hard counts.
+Root declared trial coefficients base1/canopy3e-9/litterpart2.5e-5 from its
+train-only gradient balance. Two-update native-AD/JVP runner and later7/30
+acceptance plan are prepared, with local tests passing; real deployment
+admission is next. No new trained model or paid job exists. See
+`research/daily_coarse_graining/feedback_loss_calibration_results_20260913.md`.
+
 Leaf follow-up completed at a952bb1 in646.28s, all16 windows, exit0, all controls
 valid and hard counts zero. Litterpart alone gives95.1045% T30 excess-MSE rescue
 and78.6935% reciprocal damage; rescue RMSE0.216585 and bias+1.1335%, versus

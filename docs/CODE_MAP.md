@@ -95,7 +95,14 @@ neural input units. `fresh_start_training.py` optionally binds these terms for
 canopy carbon and litterpart; absent/zero weights preserve the old objective.
 `probe_feedback_loss_calibration.py` measures three component gradients on16
 fresh train-only rows without optimizer updates; `run_feedback_loss_calibration.sh`
-owns its CPU shape and free-GPU runtime checks. Coefficients remain unselected.
+owns its CPU shape and free-GPU runtime checks. Calibration is completed;
+fixed trial coefficients are recorded in `feedback_loss_update_admission_v1.json`.
+`probe_feedback_loss_updates.py` reuses the coefficient-dynamic objective for
+two full AdamW updates and native JVP checks, with fixed64 TRAIN-row monitoring;
+`run_feedback_loss_updates.sh` provides bounded CPU/GPU launch modes.
+`daily_operator/feedback_loss_geometry.py` and
+`scripts/dev/summarize_feedback_loss_calibration.py` interpret saved component
+norms/dots on the host, without model execution or automatic weight selection.
 `scripts/dev/summarize_trained_litterpart_feedback.py` summarizes archived
 field values, actual input/output scales and reproduced intervention contrasts
 without a new neural or Teacher execution.

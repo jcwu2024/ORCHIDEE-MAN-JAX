@@ -10,6 +10,18 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Calibration completed at ac5aa51:1063.644s, four batch4 groups, exit0,
+  finite losses/gradients and all hard counts zero; PID61046 has exited.
+  Fixed trial coefficients are base1, canopy3e-9, litterpart2.5e-5, declared
+  from train-only gradient geometry before any updates. Next run the prepared
+  native-AD/JVP two-full-AdamW-update admission, first two batch32 draws,
+  micro4, fresh seed20260911, fixed64 TRAIN-row monitoring. Local runner and
+  geometry tests pass; target CPU shapes and GPU execution remain pending.
+  No checkpoint or paid job. See
+  `research/daily_coarse_graining/feedback_loss_calibration_results_20260913.md`.
+  Parallel preparation also produced the later7/30-day acceptance plan;
+  bounded learning budget/checkpoint rule is not yet declared.
+
 - Leaf/family follow-up completed at a952bb1:646.28s,16/16 windows, exit0,
   valid controls, all hard counts zero. PID18414 is absent. Litterpart alone
   removes95.1045% of excess T30 GPP MSE; reciprocal damage78.6935%. GPP bias
