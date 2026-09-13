@@ -85,6 +85,9 @@ carbon endpoints, scales and existing labels without model execution.
 `run_trained_gpp_state_interventions.sh` owns free-GPU forward diagnostics.
 The shared science extractor and independent carbon reducer now sum canopy
 organic carbon without a second PFT cover factor, following soilcarbon_leak.
+The same intervention runner's `--grouping litter_detail` mode supplies nine
+leaf masks and declared family/interaction masks, retaining the same32-arm
+graph; `run_trained_gpp_litter_detail.sh` owns its bounded free execution.
 
 `daily_operator/rollout_loss.py` now owns ordinary/checkpointed scan losses and
 the public streamed value-and-gradient operation. It generates observation

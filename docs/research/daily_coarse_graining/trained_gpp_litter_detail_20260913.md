@@ -47,3 +47,13 @@ Next deliverable: identify leaf/family, its normalization and GPP context path,
 then specify the smallest supported training/input correction. The stock-change
 loss is separately specified using existing train/train statistics and needs
 training-only gradient/update calibration before becoming a training method.
+
+## Execution record
+
+At a952bb1, seven targeted local tests and Ruff pass. Actual test02 shell
+expansion and all16 real-array shapes pass (183.1s). Free GPU0 was idle;
+the40m forward-only run is launched as PID18414 from
+`runtime/checkouts/trained-feedback-v1`, which stays fixed while running.
+Log/report prefix: `runtime/outputs/diagnostics/trained-gpp-litter-detail-v1`.
+The numerical one-day32-arm graph is unchanged, so its completed real-GPU
+preflight is reused. No paid allocation or trainable update is involved.
