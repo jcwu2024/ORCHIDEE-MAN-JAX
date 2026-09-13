@@ -32,6 +32,9 @@ Current actions, superseding launch instructions in the history below:
   Prefix `runtime/outputs/diagnostics/feedback-loss-calibration-v1`, pipeline
   log `-pipeline.log`, runtime `-runtime.json`, final `.json`. Read its four
   batch/three-component results before selecting weights or running updates.
+  Deployed GPU runtime check passed22.67s (JAX0.4.38/NumPy2.4.6); calibration
+  has entered fresh-model bootstrap. Do not repeat that passed preflight for
+  unchanged graph/logging-only edits.
   No paid allocation, parameter update or checkpoint.
 
 - Group GPP diagnosis completed16/16,905.16s, zero hard counts and valid

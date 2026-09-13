@@ -103,4 +103,7 @@ runtime-preflight/calibration chain launched as PID61046, at the same ac5aa51
 checkout. Keep it fixed while running. GPU calibration cap60m after the3m
 runtime-preflight cap; no update/checkpoint. All report/log paths
 share `runtime/outputs/diagnostics/feedback-loss-calibration-v1`.
+The deployed JAX0.4.38/NumPy2.4.6 GPU runtime check passed in22.67s; the
+calibration process has reached fresh-model bootstrap. This runtime check
+does not itself certify the new full-model gradients or scientific outcomes.
 No new trained weights or scientific improvement have yet been produced.
