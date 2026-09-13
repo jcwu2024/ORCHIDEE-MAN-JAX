@@ -37,7 +37,7 @@ case "$MODE" in
       --archive-dir "$DIAG"
       --base-statistics "$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance-v2/training_statistics.npz"
       --process-statistics "$ROOT/runtime/outputs/training/first-neural-process-head-v1-statistics/process_training_statistics.npz"
-      --prepared-manifest "$ROOT/runtime/outputs/training/conditioned-coverage-expanded-14992138/prepared_manifest.json"
+      --dataset-manifest "$ROOT/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json"
       --output "$DIAG/trained-canopy-inventory-label-audit-v1.json")
     ;;
   *) exit 2;;
