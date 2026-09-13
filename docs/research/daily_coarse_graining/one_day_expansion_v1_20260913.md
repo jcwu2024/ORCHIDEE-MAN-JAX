@@ -2,6 +2,13 @@
 
 ## Completion audit and recovery
 
+Latest execution update: user explicitly approved the recovery below.
+Submitted from cln01 as15061586 at2026-09-13 20:35:21 scheduler time;
+RUNNING since20:35:26 onibc13b07n01--02. Confirmed allocation2nodes/8CPU,
+1h,noGPU,CNY0.56 cap; code checkout9e8b1a0 clean and unchanged.
+Log: runtime/outputs/diagnostics/one-day-recovery-15061586.log.
+Next inspect completion and original-root merge acceptance; do not resubmit.
+
 Job15061225 ended FAILED/exit9:0 after00:52:24. Cluster configuration is
 WaitTime=50 seconds. Four workers10/11/20/23 completed normally; the srun
 launcher, which omitted --wait=0, killed the other workers50 seconds after
@@ -33,7 +40,7 @@ one newly prepared; source pilot/production files untouched. Local evidence:
 outputs/one-day-expansion-resume-smoke-v1.json. This admits the resume path,
 not a whole-job throughput guarantee; free-node time varied from prior pilots.
 
-Concrete recovery proposal (unsubmitted): cnall,2 nodes x4 single-CPU tasks,
+Concrete recovery proposal (now approved/submitted above): cnall,2 nodes x4 single-CPU tasks,
 8 CPUs,noGPU,1h limit,CNY0.56 maximum.28 unfinished old worker ranges are
 balanced across8 ranks; estimated longest rank41.4min including bootstrap
 allowances, subject to node/IO variation. Worker cap50min, final merge8min.
@@ -42,7 +49,7 @@ Working directory:
 Command:
 `/rmprog/slurm/v22.05.7/bin/sbatch scripts/hpc/slurm_one_day_expansion_recovery.sh`.
 The recovery resumes original15061225 worker output paths and completes the
-existing merge/catalogue. New paid resources/time require user approval;
+existing merge/catalogue. User explicitly approved these new resources/time;
 the earlier approval applied to the original2h job. Do not resubmit all rows.
 
 ## Reusable full TRAIN cache recommendation
@@ -74,6 +81,25 @@ Check exact retained-owner coverage for all23540 point-years; existing
 expansion covers17677. Prefer chunked row access and explicit chronological
 indices, with recovery at chunk boundaries. No full-cache paid run approved.
 
+User storage clarification: storage capacity can grow, but the administrator
+will not expand it after file count exceeds10 million. Persist this constraint
+in cache design. Current implementation writes one point-year payload file,
+not one per day. Complete expansion has17677 such files plus32 worker
+manifests, at most64 monitor payloads and a few root indices/reports, roughly
+17800 total files. Direct test02 count immediately after recovery start was
+15609 files, including partial payloads/metadata. No account-wide scan was
+performed; this does not establish remaining quota headroom.
+
+Full TRAIN even with one container per point-year has23540 data files
+(0.2354% of10 million), plus metadata and any separately required retained
+input cache. Prefer internal compressed chunks supporting partial reads and
+consolidated indices; avoid one filesystem file per variable/chunk/day/window.
+An HDF5-like container is a format option pending IO measurements, not a
+committed new dependency. Different runs must share the immutable data pool;
+save only their sampling configuration/cursor and necessary checkpoints.
+Track file/directory counts including temporary build copies in the eventual
+production estimate. Do not delete existing artifacts without scoped authority.
+
 Expanded training separately needs fixed32-row packing, a reproducible
 shuffle/cursor and an explicit final11-row policy: old grouped sampling
 produces13258 updates/4420 partial batches, not10830 fixed packed updates.
@@ -82,7 +108,7 @@ Data availability must be reported separately from actual consumed coverage.
 ## Original preparation record
 
 Status: CPU15061225 ended FAILED from launcher WaitTime behavior.304786 of
-346539 rows are preserved; recovery prepared at9e8b1a0, not submitted.
+346539 rows are preserved; recovery9e8b1a0 now RUNNING as15061586.
 Paid training15061139 continues unchanged in its frozen checkout.
 
 Execution update: user approved the exact2h/CNY4.48 proposal below. Submitted

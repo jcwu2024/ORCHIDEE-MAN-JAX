@@ -21,7 +21,8 @@ Saved compressed bytes7742125326; all recorded old-row comparisons exact.
 Inventory: outputs/one-day-expansion-15061225-inventory.json. No final merge.
 Original checkoutfd47de3 and worker files are preserved. Recovery9e8b1a0
 uses explicit resume and --wait=0; proposed cnall2nodes*4CPU/noGPU/1h,
-CNY0.56 maximum, not yet approved/submitted. See dated expansion report.
+CNY0.56 maximum, now approved/submitted as15061586. Started20:35:26 scheduler
+time onibc13b07n01--02; fixed recovery code9e8b1a0. See dated expansion report.
 GPU15061139 unchanged: latest scheduler RUNNING02:45:37,1770/1998 updates.
 
 User proposes preparing all training data once. Recommended next data route
@@ -30,6 +31,11 @@ preserving held-out/monitor exclusions and chronology for window sampling.
 Sparse-row extrapolation suggests203GiB compressed/751 CPU-hours/CNY52.58;
 full-point-year amortization, compression and actual random-read throughput
 must be measured before a production quote. No full-cache job is approved.
+User reports a10-million-file storage expansion ceiling; use shared multi-row
+container files and consolidated indices. Expansion root read-only count was
+15609 files just after recovery start (includes metadata and incomplete files,
+not an accepted-row count); final data files17677, full TRAIN point-years23540.
+This is not an account-wide quota inventory. Reuse the pool between runs.
 
 Parallel data-expansion preparation: selected346539 unique TRAIN dates
 (63707 existing+282832 new) across17677 point-years/535 points/44 years.

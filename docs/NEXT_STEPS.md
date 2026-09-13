@@ -17,8 +17,9 @@ Current actions, superseding launch instructions in the history below:
   Inventory: outputs/one-day-expansion-15061225-inventory.json.
   Recovery implementation9e8b1a0 adds --wait=0 and explicit committed-prefix
   resume. Separate checkout runtime/checkouts/one-day-expansion-recovery-v1.
-  Proposed cnall2nodes*4CPU/noGPU/1h/CNY0.56 recovery is NOT submitted;
-  resume original worker directories, then require complete merge acceptance.
+  User approved cnall2nodes*4CPU/noGPU/1h/CNY0.56 recovery; submitted as
+  15061586 at20:35:21 scheduler time, RUNNING since20:35:26 onibc13b07n01--02.
+  Resume original worker directories, then require complete merge acceptance.
   See the dated expansion report for target-shell and real-data resume evidence.
   GPU15061139 remains unchanged; latest read1770/1998 updates, RUNNING.
 
@@ -29,6 +30,11 @@ Current actions, superseding launch instructions in the history below:
   and751 CPU-hours/CNY52.58, NOT a production quote. First measure a bounded
   complete-point-year cache and random-batch IO; avoid repeated static inputs
   and whole-year decompression for each draw. No full-cache paid run approved.
+  User reports10-million-file expansion ceiling. Use shared multi-sample
+  container shards and consolidated indices; account for directories too.
+  Current expansion has17677 data files when complete; full TRAIN point-year
+  grouping would have23540 data files, not8568025 individual day files.
+  Do not replicate the cache per training run. Account-wide usage is unmeasured.
 
 - Expansion preparation is now implemented and admitted on free CPU:
   metadata63707 base+282832 new=346539 unique TRAIN days (4.04456% of eligible),
