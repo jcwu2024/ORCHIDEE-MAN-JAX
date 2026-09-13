@@ -15,6 +15,7 @@ from research.daily_coarse_graining.daily_operator.trained_gpp_state_interventio
     bidirectional_gap_metrics,
     build_gpp_state_intervention_groups,
     build_intervention_arm_states,
+    build_litter_detail_intervention_groups,
     group_report,
     series_error_metrics,
 )
@@ -257,7 +258,10 @@ def run(args: Any) -> Mapping[str, Any]:
             raise ValueError("archived free rollout did not preserve Teacher discrete state")
 
         pool = WindowPool(args.selection, method["source_identity"])
-        groups = build_gpp_state_intervention_groups(head.contract)
+        grouping = getattr(args, "grouping", "all_state")
+        groups = (build_litter_detail_intervention_groups(head.contract)
+                  if grouping == "litter_detail" else build_gpp_state_intervention_groups(head.contract))
+        report["grouping"] = grouping
         report["groups"] = group_report(groups, head.contract)
         report["state_coordinate_count"] = int(head.contract.continuous_state_width)
         report["arm_order"], _ = build_intervention_arm_states(
@@ -540,6 +544,7 @@ def run(args: Any) -> Mapping[str, Any]:
 
 if __name__ == "__main__":
     parser = training.parser()
+    parser.add_argument("--grouping", choices=("all_state", "litter_detail"), default="all_state")
     for name in (
         "selection",
         "training-report",

@@ -15,7 +15,7 @@ export ORCHIDEE_DATA_ROOT="$ROOT/runtime/data" ORCHIDEE_REFERENCE_ROOT="$ROOT/ru
 export ORCHIDEE_OUTPUT_ROOT="$ROOT/runtime/outputs" PYTHONDONTWRITEBYTECODE=1
 DIAG=$ROOT/runtime/outputs/diagnostics
 case "$MODE" in
-  shape)
+  shape|litter-shape)
     MODULE=scripts.hpc.diagnose_trained_gpp_state_interventions
     ARGS=(--shape-only
       --dataset-manifest "$ROOT/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json"
@@ -30,6 +30,9 @@ case "$MODE" in
       --attribution-report "$DIAG/trained-forward-attribution-v1.json"
       --archive-directory "$DIAG"
       --output "$DIAG/trained-gpp-state-interventions-v1-cpu-shape.json")
+    if [[ "$MODE" == litter-shape ]]; then
+      ARGS+=(--grouping litter_detail --output "$DIAG/trained-gpp-litter-detail-v1-cpu-shape.json")
+    fi
     ;;
   labels)
     MODULE=scripts.dev.audit_trained_canopy_inventory

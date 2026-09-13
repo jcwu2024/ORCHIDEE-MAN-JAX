@@ -14,6 +14,7 @@ from research.daily_coarse_graining.daily_operator.trained_gpp_state_interventio
     bidirectional_gap_metrics,
     build_gpp_state_intervention_groups,
     build_intervention_arm_states,
+    build_litter_detail_intervention_groups,
     series_error_metrics,
 )
 from scripts.hpc.diagnose_trained_gpp_state_interventions import _control_comparison, _load_archived_carries
@@ -177,3 +178,15 @@ def test_control_replay_keeps_numeric_discrepancies_as_evidence():
     assert not discrepancy["valid"]
     assert np.isclose(discrepancy["maximum_absolute_error"], 0.1)
     assert not _control_comparison([np.nan], [1.0])["valid"]
+
+
+def test_litter_detail_singletons_unions_and_complement():
+    contract = _contract()
+    groups = build_litter_detail_intervention_groups(contract)
+    named = {group.name: group.mask for group in groups}
+    singleton_sum = np.stack([group.mask for group in groups[:9]]).sum(axis=0)
+    np.testing.assert_array_equal(singleton_sum, named['litter_metadata'])
+    np.testing.assert_array_equal(named['litter_metadata_and_doc'],
+                                  named['litter_metadata'] | named['doc_inventory'])
+    np.testing.assert_array_equal(named['outside_litter_and_doc'], ~named['litter_metadata_and_doc'])
+    assert len(groups) == 15

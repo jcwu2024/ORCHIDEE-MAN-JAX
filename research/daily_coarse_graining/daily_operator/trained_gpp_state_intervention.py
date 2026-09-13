@@ -193,6 +193,33 @@ def build_gpp_state_intervention_groups(
     return tuple(groups)
 
 
+def build_litter_detail_intervention_groups(markov_contract: Any) -> tuple[StateInterventionGroup, ...]:
+    """Fixed follow-up contrasts; overlapping unions are intentional here."""
+    original = {group.name: group for group in build_gpp_state_intervention_groups(markov_contract)}
+    leaves = {leaf.key: leaf for leaf in markov_contract.state_leaves if not leaf.discrete}
+    keys = LITTER_METADATA_KEYS
+    selections = [(f"leaf_{key.rsplit('.', 1)[1]}", (key,)) for key in keys]
+    selections.extend([
+        ("litter_metadata", keys),
+        ("doc_inventory", (DOC_INVENTORY_KEY,)),
+        ("litter_metadata_and_doc", (*keys, DOC_INVENTORY_KEY)),
+        ("lignin_family", tuple(key for key in keys if ".lignin_struc" in key)),
+        ("fuel_family", tuple(key for key in keys if ".fuel_" in key)),
+        ("outside_litter_and_doc", tuple(key for key in leaves if key not in {*keys, DOC_INVENTORY_KEY})),
+    ])
+    groups = []
+    for name, selected in selections:
+        mask = np.zeros(markov_contract.continuous_state_width, dtype=bool)
+        for key in selected:
+            leaf = leaves[key]
+            mask[leaf.start:leaf.stop] = True
+        groups.append(StateInterventionGroup(name, "followup_leaf_or_declared_union", tuple(selected), mask))
+    # Same 15 groups / 32 arms as the admitted diagnostic: only input masks change.
+    assert len(groups) == 15
+    assert np.array_equal(groups[9].mask, original["litter_metadata"].mask)
+    return tuple(groups)
+
+
 def build_intervention_arm_states(
     free_state: Any,
     teacher_state: Any,

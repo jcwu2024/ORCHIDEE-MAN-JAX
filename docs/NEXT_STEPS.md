@@ -10,6 +10,15 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Group GPP diagnosis completed16/16,905.16s, zero hard counts and valid
+  controls. Litter metadata rescue95.31% / reciprocal damage78.30% of the T30
+  free-reset MSE gap; DOC rescue43.46%/damage6.76%; canopy carbon rescue0.126%.
+  Next execute the fixed nine-leaf/family follow-up using the same32-arm graph
+  and review the actual GPP input route. In parallel specify separately weighted
+  canopy stock-change supervision, calibrated on training data before updates.
+  Current plan: `research/daily_coarse_graining/trained_gpp_litter_detail_20260913.md`.
+  The PID57120 launch record below is completed, not an active job.
+
 - Latest: free GPU0 forward-only intervention chain launched at a136fda,
   PID57120, isolated `runtime/checkouts/trained-feedback-v1`; keep it fixed.
   Log/report prefix `runtime/outputs/diagnostics/trained-gpp-state-interventions-v1`.
