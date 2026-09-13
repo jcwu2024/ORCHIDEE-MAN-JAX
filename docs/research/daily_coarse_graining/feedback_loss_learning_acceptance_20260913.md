@@ -92,6 +92,28 @@ The current `run_trained_forward_screen.py` depends on `run_fresh_start_one_day`
 
 ## Remaining implementation
 
+### Existing unchanged-loss control can be reused
+
+Terra(high) static audit confirms job15048786 uses the same fresh seed,
+full parameter scope, architecture/input conditioning/scales, prepared source,
+sampler row order, batch32/micro4 and AdamW settings. The new canopy area
+correction changes physical stock reporting/hard diagnostics, not the base
+flux/state/process scalar. Disabled supplemental terms preserve that scalar.
+Default to reusing this completed control, without a bitwise equivalence gate
+or an expensive duplicate control training.
+
+Its stored report must match the declared pool/method identity. Per-update
+scalars and monitors at0/100/500/1000/1500/final support report-level prefix
+comparison. The runner overwrites one checkpoint; arbitrary prefix weights
+are not retained by its source. The final1998-update checkpoint supports a
+matched full-epoch checkpoint comparison, not a shorter treatment budget.
+Old physical stock summaries need corrected re-evaluation or explicit scope
+labels; they cannot be assumed numerically identical to corrected accounting.
+Later bounded training should distinguish these available report-level and
+checkpoint-level comparisons instead of automatically rerunning a control.
+
+### Implementation work
+
 1. Freeze the coefficient decision and bounded-learning manifest; verify its training pool is the existing TRAIN pool and its monitor exclusions remain.
 2. Complete the two-update technical report with native AD/JVP and all physical fields above. Preserve it as technical evidence only.
 3. Reuse the existing checkpoint and panel formats; expose the specific expected run metadata at the shared loader boundary and test that path.

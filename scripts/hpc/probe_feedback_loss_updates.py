@@ -83,10 +83,9 @@ def _validate_inputs(
         raise ValueError("completed finite zero-hard-count calibration is required before updates")
 
 
-def _make_finite_evaluator(jax: Any, jnp: Any) -> Any:
-    return jax.jit(
-        lambda tree: jnp.all(jnp.stack([jnp.all(jnp.isfinite(value)) for value in jax.tree_util.tree_leaves(tree)]))
-    )
+def _host_tree_finite(jax: Any, tree: Any) -> bool:
+    leaves = jax.tree_util.tree_leaves(jax.device_get(tree))
+    return bool(leaves) and all(np.all(np.isfinite(np.asarray(value))) for value in leaves)
 
 
 def _random_unit_direction(jax: Any, jnp: Any, parameters: Any, seed: int) -> Any:
@@ -340,7 +339,6 @@ def run(args: Any) -> Mapping[str, Any]:
         forward = jax.jit(batch_objective)
         update = make_update(model_protocol)
         add_gradient, mean_gradient = make_gradient_accumulator(jax, jnp)
-        finite = _make_finite_evaluator(jax, jnp)
         coefficients = jnp.asarray(coefficient_values, dtype=jnp.float64)
         source_manifest = _resolved_reference(catalogue["source_manifest"], relative_to=catalogue_path)
         pool = PreparedOneDayPool(source_manifest, cache_size=pool_configuration["sampling"]["max_artifacts_per_batch"])
@@ -348,25 +346,33 @@ def run(args: Any) -> Mapping[str, Any]:
             raise ValueError("catalogue and prepared-pool source identities differ")
         first_microbatch = parent_batches[0].microbatches[0]
         first_samples = pool.batch([(row.artifact_id, row.batch_row) for row in first_microbatch.rows])
-        optimizer = initialize_target_oriented_adamw(parameters)
         report.update(
             parameter_count=parameter_count,
+            litterpart_field_layout=[
+                {
+                    "key": leaf.key,
+                    "axis_names": list(leaf.axis_names),
+                    "shape": list(leaf.shape),
+                    "selected_pft_indices": list(leaf.selected_pft_indices),
+                }
+                for leaf in head.contract.state_leaves
+                if leaf.key == "slowproc_stomate_previous_step_state.litterpart"
+            ],
             trainable_parameter_count=parameter_count,
             initialization_seed=calibration.INITIALIZATION_SEED,
             optimizer=model_protocol["optimizer"],
-            parameter_finite_initial=bool(finite(parameters)),
-            optimizer_finite_initial=bool(finite(optimizer)),
             reader=pool.statistics(),
             device=str(runtime["devices"][0]),
             memory_after_bootstrap=_device_memory(runtime["devices"][0]),
         )
-        if not report["parameter_finite_initial"] or not report["optimizer_finite_initial"]:
-            raise ValueError("fresh parameters or optimizer state are nonfinite")
 
         if args.shape_only:
             emit("trace_gradient_jvp_optimizer_and_monitor")
             (_, _), gradient_shape = jax.eval_shape(evaluator, parameters, first_samples, coefficients)
-            direction_shape = jax.tree_util.tree_map(jnp.zeros_like, parameters)
+            direction_shape = jax.tree_util.tree_map(
+                lambda value: jax.ShapeDtypeStruct(value.shape, value.dtype), parameters
+            )
+            optimizer_shape = jax.eval_shape(initialize_target_oriented_adamw, parameters)
             jax.eval_shape(
                 lambda p, d, samples, weights: jax.jvp(
                     lambda current: scalar_loss(current, samples, weights), (p,), (d,)
@@ -376,7 +382,7 @@ def run(args: Any) -> Mapping[str, Any]:
                 first_samples,
                 coefficients,
             )
-            jax.eval_shape(update, parameters, gradient_shape, optimizer)
+            jax.eval_shape(update, parameters, gradient_shape, optimizer_shape)
             jax.eval_shape(forward, parameters, first_samples, coefficients)
             emit(
                 "completed",
@@ -386,6 +392,18 @@ def run(args: Any) -> Mapping[str, Any]:
                 scientific_acceptance_claim=False,
             )
             return report
+
+        emit("real_parameter_optimizer_finiteness_started")
+        optimizer = initialize_target_oriented_adamw(parameters)
+        parameter_finite_initial = _host_tree_finite(jax, parameters)
+        optimizer_finite_initial = _host_tree_finite(jax, optimizer)
+        report.update(
+            parameter_finite_initial=parameter_finite_initial,
+            optimizer_finite_initial=optimizer_finite_initial,
+        )
+        emit("real_parameter_optimizer_finiteness_completed")
+        if not parameter_finite_initial or not optimizer_finite_initial:
+            raise ValueError("fresh parameters or optimizer state are nonfinite")
 
         emit("initial_fixed_train_panel")
         initial_monitor = _panel_record(parameters, monitor_rows, pool, forward, coefficients, jax)
@@ -534,8 +552,8 @@ def run(args: Any) -> Mapping[str, Any]:
             proposed_parameters, proposed_optimizer, norm, clip_scale = update(parameters, gradient, optimizer)
             jax.block_until_ready((proposed_parameters, proposed_optimizer, norm, clip_scale))
             optimizer_seconds = time.perf_counter() - update_started
-            finite_parameters = bool(finite(proposed_parameters))
-            finite_optimizer = bool(finite(proposed_optimizer))
+            finite_parameters = _host_tree_finite(jax, proposed_parameters)
+            finite_optimizer = _host_tree_finite(jax, proposed_optimizer)
             if (
                 not np.isfinite(float(norm))
                 or not np.isfinite(float(clip_scale))
@@ -584,6 +602,8 @@ def run(args: Any) -> Mapping[str, Any]:
             for update_record in report["updates"]
             for micro in update_record["microbatches"]
         )
+        final_parameters_finite = _host_tree_finite(jax, parameters)
+        final_optimizer_finite = _host_tree_finite(jax, optimizer)
         emit(
             "completed",
             status="completed",
@@ -592,11 +612,12 @@ def run(args: Any) -> Mapping[str, Any]:
                 report["completed_updates"] == UPDATE_COUNT
                 and report["bounded_directional_gate_passed"]
                 and all_hard_zero
-                and bool(finite((parameters, optimizer)))
+                and final_parameters_finite
+                and final_optimizer_finite
             ),
             all_hard_counts_zero=all_hard_zero,
-            parameters_all_finite=bool(finite(parameters)),
-            optimizer_all_finite=bool(finite(optimizer)),
+            parameters_all_finite=final_parameters_finite,
+            optimizer_all_finite=final_optimizer_finite,
             clipped_update_count=sum(int(record["clipped"]) for record in report["updates"]),
             checkpoint_written=False,
             reader=pool.statistics(),

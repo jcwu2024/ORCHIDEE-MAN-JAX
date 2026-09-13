@@ -5,12 +5,13 @@ import jax.numpy as jnp
 import numpy as np
 import pytest
 
-from scripts.hpc.probe_feedback_loss_calibration import _make_batch_loss
+from scripts.hpc.probe_feedback_loss_calibration import _feedback_coordinate_statistics, _make_batch_loss
 from scripts.hpc.probe_feedback_loss_updates import (
     CONFIG_SCHEMA_VERSION,
     _calibration_complete,
     _coefficients,
     _directional_record,
+    _host_tree_finite,
     _validate_inputs,
     parser,
 )
@@ -23,6 +24,24 @@ def _model_protocol():
         "parameter_count": 109_464_375,
         "trainable_scope": "all_neural_parameters",
     }
+
+
+def test_coordinate_reporting_preserves_opposite_feedback_errors():
+    predicted = np.array([[0.5, 0.5], [0.6, 0.4]])
+    teacher = np.array([[0.0, 1.0], [0.0, 1.0]])
+    residual = predicted - teacher
+    rows = _feedback_coordinate_statistics(
+        {
+            "predicted": predicted,
+            "teacher": teacher,
+            "physical_residual": residual,
+            "normalized_residual": residual,
+            "valid": np.ones_like(residual, dtype=bool),
+        }
+    )
+    assert float(residual.mean()) == 0.0
+    assert rows[0]["physical_residual"]["mean"] == pytest.approx(0.55)
+    assert rows[1]["physical_residual"]["mean"] == pytest.approx(-0.55)
 
 
 def _pool_protocol():
@@ -132,6 +151,17 @@ def test_shared_combined_scalar_has_two_bounded_reverse_jvp_agreements():
     np.testing.assert_allclose(float(value), records[0]["primal"])
     assert all(record["passed"] for record in records)
     assert [record["seed"] for record in records] == [20260913, 20260914]
+
+
+def test_host_finiteness_check_handles_parameter_and_optimizer_style_trees():
+    assert _host_tree_finite(
+        jax,
+        {
+            "parameters": {"weight": jnp.asarray([1.0, -2.0])},
+            "optimizer": (jnp.asarray(0, dtype=jnp.int32), jnp.asarray([0.0, 3.0])),
+        },
+    )
+    assert not _host_tree_finite(jax, {"weight": jnp.asarray([1.0, jnp.nan])})
 
 
 def test_cli_keeps_v3_default_and_requires_both_evidence_inputs(tmp_path):

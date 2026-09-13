@@ -12,6 +12,9 @@ Evidence: `outputs/feedback-loss-calibration-v1.json` and its host-only
 `runtime/outputs/diagnostics/feedback-loss-calibration-v1`. Runtime check
 passed22.67s; CPU shapes passed151.33s. Compiled reverse estimated live
 storage8,381,437,268 bytes (7.806GiB), not a measurement of whole-process peak.
+The reported JAX allocator peak bytes in use across all batches is8.631GiB;
+its reserved pool is20.630GiB. Reserved GPU memory is therefore substantially
+larger than live allocations; neither value predicts the optimizer/JVP peak.
 
 ## Observed scale and decision
 
@@ -60,7 +63,10 @@ checkout from the completed calibration.
 Sol(high) implemented the update runner and Terra(high) prepared the future
 learning/7/30-day acceptance plan; root reviewed both and added the host-only
 gradient geometry reader. Local focused calibration/update/geometry tests
-pass7 tests. Real-model deployment remains a separate evidence step.
+pass8 tests including preservation of opposite per-coordinate litterpart
+errors. The report-only addition exposes coordinate statistics and their
+contract PFT layout without changing the objective or AD graph. Real-model
+deployment remains a separate evidence step.
 
 `feedback_loss_parallel_preparation_20260913.md` describes this preparation.
 `feedback_loss_learning_acceptance_20260913.md` describes the subsequent
@@ -68,3 +74,22 @@ bounded learning and rollout sequence; its training budget and checkpoint
 rule still need declaration. The old16-window panel is development evidence,
 not final independent validation. Two updates cannot establish improved
 long-term GPP, respiration or biomass and are not a repaired trained model.
+
+## CPU admission attempt and bounded correction
+
+At f364c44, actual Bash shape/gpu expansions pass on test02. The CPU shape
+attempt then exited with SIGSEGV after an XLA slow-compile alarm for
+`jit__lambda_`, before the trace stage. The report remains at bootstrap and
+is preserved as `feedback-loss-updates-v1-cpu-shape-f364c44-interrupted.json`;
+its stale running field is not evidence of a live task. There is no full-model
+AD discrepancy or scientific result from this attempt.
+
+The update runner introduced a separately jitted full-tree finiteness
+reduction before its shape branch. Remove that unnecessary compilation and
+use ordinary host-side finite checks for the bounded real update probe.
+Shape mode traces the new objective/JVP/optimizer interfaces; actual GPU
+execution retains the parameter/optimizer finite checks. This is a localized
+diagnostic correction, not a relaxation of numerical or physical criteria.
+The failure location implicates the added check, but the original log alone
+does not prove the native compiler's internal fault. A successful rerun will
+establish usability of the simplified path, not an exhaustive compiler cause.

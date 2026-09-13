@@ -21,6 +21,11 @@ Current actions, superseding launch instructions in the history below:
   `research/daily_coarse_graining/feedback_loss_calibration_results_20260913.md`.
   Parallel preparation also produced the later7/30-day acceptance plan;
   bounded learning budget/checkpoint rule is not yet declared.
+  Actual Bash expansions pass at f364c44. The first CPU shape attempt exited
+  SIGSEGV before trace, with a `jit__lambda_` compile alarm. Preserve its
+  `-cpu-shape-f364c44-interrupted.json`; remove the unnecessary separately
+  compiled full-tree finite check and rerun shape tracing before GPU updates.
+  Actual update finiteness gates remain. No paid allocation was involved.
 
 - Leaf/family follow-up completed at a952bb1:646.28s,16/16 windows, exit0,
   valid controls, all hard counts zero. PID18414 is absent. Litterpart alone

@@ -283,6 +283,22 @@ def _finite_statistics(values: Any, valid: Any) -> dict[str, Any]:
     }
 
 
+def _feedback_coordinate_statistics(litter: Mapping[str, Any]) -> list[dict[str, Any]]:
+    """Keep opposite bare/vegetation errors visible in host-only reporting."""
+    valid = np.asarray(litter["valid"], dtype=np.bool_)
+    return [
+        {
+            "field_index": list(index),
+            **{
+                name: _finite_statistics(np.asarray(litter[name])[(slice(None), *index)],
+                                         valid[(slice(None), *index)])
+                for name in ("predicted", "teacher", "physical_residual", "normalized_residual")
+            },
+        }
+        for index in np.ndindex(valid.shape[1:])
+    ]
+
+
 def _diagnostics(jax: Any, auxiliary: Mapping[str, Any], *, batch_size: int) -> dict[str, Any]:
     from research.daily_coarse_graining.daily_operator.one_day_monitoring import summarize_monitor
 
@@ -320,6 +336,7 @@ def _diagnostics(jax: Any, auxiliary: Mapping[str, Any], *, batch_size: int) -> 
         },
         "litterpart_feedback": {
             "unit": "litterpart_state_units",
+            "coordinates": _feedback_coordinate_statistics(litter),
             "valid_coordinate_count": int(np.count_nonzero(litter_valid)),
             "expected_coordinate_count": int(np.sum(np.asarray(litter["expected_count"]))),
             "invalid_coordinate_count": int(np.sum(np.asarray(litter["invalid_count"]))),
