@@ -22,7 +22,7 @@ export JAX_PLATFORMS=cpu JAX_ENABLE_X64=true
 export ORCHIDEE_RUNTIME_ROOT="$ROOT/runtime"
 cd "$CODE_ROOT"
 PREPARE=(/rmprog/slurm/v22.05.7/bin/srun --ntasks=32 --ntasks-per-node=8 --cpus-per-task=1
-  --cpu-bind=cores --kill-on-bad-exit=1 --output="$RESULT_ROOT/worker-%t.log"
+  --cpu-bind=cores --wait=0 --kill-on-bad-exit=1 --output="$RESULT_ROOT/worker-%t.log"
   bash "$CODE_ROOT/scripts/hpc/run_expanded_one_day_worker.sh")
 MERGE=(timeout --signal=TERM 8m "$ROOT/.venvs/orcjax_cpu/bin/python"
   -m scripts.hpc.merge_expanded_one_day

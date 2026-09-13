@@ -36,6 +36,9 @@ COMMAND=(timeout --signal=TERM "${RUN_TIMEOUT:-110m}" "$ROOT/.venvs/orcjax_cpu/b
   --process-statistics "$ROOT/runtime/outputs/training/first-neural-process-head-v1-statistics/process_training_statistics.json"
   --fast-statistics "$ROOT/runtime/outputs/training/successor-fast-owner-statistics-c9f35c0/successor_fast_owner_statistics.json"
   --output-dir "$OUTPUT_DIR")
+if [[ "${RESUME:-0}" == 1 ]]; then
+  COMMAND+=(--resume)
+fi
 if [[ "$PRINT_ONLY" == --dry-run ]]; then
   printf '%q ' "${COMMAND[@]}"
   printf '\n'
