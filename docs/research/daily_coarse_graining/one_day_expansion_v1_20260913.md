@@ -131,3 +131,13 @@ data/merge/reader suite passes13 tests; earlier materializer/prepared-batch
 compatibility suite passes17. Actual Bash expansions for pilot, last worker
 range17125--17677 and production srun/merge command pass. No GPU preflight
 or training restart is required for these data-only preparation changes.
+
+Final execution checkout is fd47de3, observed after fast-forward deployment;
+the merge entry point's actual test02 CLI import/help passes. The optional
+attempt to repeat its local pytest suite on test02 found no installed pytest;
+no environment change was made. Local compressed-artifact merge tests remain
+passed, and actual raw/persisted data pilots are recorded above. This does
+not block the bounded CPU preparation proposal. Next action is explicit
+approval of the2h/CNY4.48 CPU job, then submit once from cln01. A successful
+job must finish worker coverage and merge_report.json status=passed/stage=completed
+before the expanded pool is described as fully prepared.
