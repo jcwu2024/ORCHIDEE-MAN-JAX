@@ -218,6 +218,20 @@ def test_feedback_diagnostics_use_recurrent_predicted_starts_and_loss_masks():
         'litterpart_feedback_empty':0,
     }
 
+    physical_protocol = {
+        **protocol,
+        'feedback_state_scaling': {'litterpart': 'physical_unit'},
+    }
+    physical_diagnostics = feedback_diagnostics(
+        jax,jnp,runtime,head,physical_protocol,initial,assembled,observations,targets,templates,
+    )
+    physical_litterpart = physical_diagnostics['litterpart_feedback']
+    np.testing.assert_allclose(physical_litterpart['scale'], np.ones((1,2,2)))
+    np.testing.assert_allclose(
+        physical_litterpart['normalized_residual'],
+        physical_litterpart['physical_residual'],
+    )
+
 
 def test_metric_gate_rejects_filtered_nonfinite_or_missing_population():
     p = {'fluxes':{f'f{i}':{'cumulative_gC_m2':{'count':8,'nonfinite_defined':0},

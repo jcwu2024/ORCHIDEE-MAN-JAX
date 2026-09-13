@@ -10,6 +10,13 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- CPU recovery15061586 COMPLETED00:32:48,exit0:0. Full merge status=passed/
+  stage=completed:346539 distinct TRAIN days,17677 point-year payloads,
+  64 disjoint monitor days in4 monitor artifacts. Cross-point-year first-batch
+  persisted reader passes; no Teacher regeneration or neural update.
+  Evidence outputs/one-day-expansion-15061225-merge.json. Expanded data is
+  prepared; fixed32 packing and new-loss training integration remain next.
+
 - Both free500/1998 evaluations COMPLETED16 windows/exit0 in358.3/355.2s;
   physical gates pass. Important correction to aggregate-failure wording:
   final1998 T7 passes13/13 keys; T30 passes11/13, failing only ecosystem and

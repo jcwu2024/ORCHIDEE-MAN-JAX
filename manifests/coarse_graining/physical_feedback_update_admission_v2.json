@@ -1,0 +1,14 @@
+{
+  "schema_version": "physical_feedback_update_admission_v2",
+  "status": "declared_before_any_optimizer_update",
+  "coefficients": {"base": 1.0, "canopy_stock_change": 0.1, "litterpart_feedback": 0.1},
+  "decision": "physical unit litterpart coordinate balance and pseudo-Huber canopy daily-change penalty; bounded declared trial, not coefficients selected from old gradient geometry",
+  "initialization": "fresh_seed_20260911_full_network_no_inherited_checkpoint",
+  "training_rows": "first_two_epoch0_fixed32_batches_of_expanded346539_pool",
+  "maximum_optimizer_updates": 2,
+  "direction_seeds": [20260913, 20260914],
+  "direction_rtol": 0.01,
+  "direction_atol": 1e-6,
+  "scientific_acceptance_claim": false,
+  "paid_submission_authorized": false
+}

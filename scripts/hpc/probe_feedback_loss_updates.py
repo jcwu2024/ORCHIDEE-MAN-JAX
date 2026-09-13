@@ -24,6 +24,7 @@ from scripts.hpc import run_fresh_start_one_day as prototype
 ROOT = Path(__file__).resolve().parents[2]
 SCHEMA_VERSION = "feedback_loss_update_admission_result_v1"
 CONFIG_SCHEMA_VERSION = "feedback_loss_update_admission_v1"
+PHYSICAL_CONFIG_SCHEMA_VERSION = "physical_feedback_update_admission_v2"
 UPDATE_COUNT = 2
 PARENT_BATCH_SIZE = 32
 MICROBATCH_SIZE = 4
@@ -42,7 +43,7 @@ def _read_json(path: Path, *, name: str) -> Mapping[str, Any]:
 
 
 def _coefficients(configuration: Mapping[str, Any]) -> tuple[float, float, float]:
-    if configuration.get("schema_version") != CONFIG_SCHEMA_VERSION:
+    if configuration.get("schema_version") not in (CONFIG_SCHEMA_VERSION, PHYSICAL_CONFIG_SCHEMA_VERSION):
         raise ValueError("feedback update admission configuration schema drift")
     values = configuration.get("coefficients")
     if not isinstance(values, dict) or set(values) != set(calibration.LOSS_NAMES):
@@ -77,7 +78,22 @@ def _validate_inputs(
     calibration_report: Mapping[str, Any],
     *,
     shape_only: bool,
+    admission_configuration: Mapping[str, Any] | None = None,
 ) -> None:
+    if (admission_configuration or {}).get('schema_version') == PHYSICAL_CONFIG_SCHEMA_VERSION:
+        calibration._validate_protocols(pool_protocol, model_protocol,
+                                        expected_scope='expanded_one_day_pool_346539')
+        if (model_protocol.get('feedback_state_scaling') != {'litterpart': 'physical_unit'}
+                or model_protocol.get('canopy_carbon_stock_change') != {
+                    'weight': .1, 'scale_source_pft_index': 13, 'penalty': 'pseudo_huber'}
+                or model_protocol.get('loss', {}).get('litterpart_feedback_mse') != .1
+                or pool_protocol['sampling'].get('batch_packing') != 'fixed_replay_pad'
+                or _coefficients(admission_configuration) != (1., .1, .1)):
+            raise ValueError('declared physical v2 loss/sampling differs from trial')
+        # These coefficients are declared from physical loss geometry before
+        # testing. This run verifies the actual AD/optimizer; no old gradient
+        # calibration is represented as evidence for the changed objective.
+        return
     calibration._validate_protocols(pool_protocol, model_protocol)
     if not shape_only and not _calibration_complete(calibration_report):
         raise ValueError("completed finite zero-hard-count calibration is required before updates")
@@ -236,13 +252,15 @@ def run(args: Any) -> Mapping[str, Any]:
         pool_configuration = _read_json(args.pool_protocol, name="pool protocol")
         model_protocol = _read_json(args.protocol, name="model protocol")
         admission_configuration = _read_json(args.admission_config, name="admission configuration")
-        calibration_report = _read_json(args.calibration_report, name="calibration report")
+        calibration_report = (_read_json(args.calibration_report, name="calibration report")
+                              if args.calibration_report is not None else {})
         coefficient_values = _coefficients(admission_configuration)
         _validate_inputs(
             pool_configuration,
             model_protocol,
             calibration_report,
             shape_only=args.shape_only,
+            admission_configuration=admission_configuration,
         )
         configured_protocol = _resolved_reference(
             pool_configuration["model_protocol"], relative_to=args.pool_protocol.resolve()
@@ -255,7 +273,9 @@ def run(args: Any) -> Mapping[str, Any]:
         report.update(
             coefficients=dict(zip(calibration.LOSS_NAMES, coefficient_values, strict=True)),
             coefficient_source=(
-                "explicit_synthetic_shape_only" if args.shape_only else "externally_selected_after_calibration"
+                "declared_physical_trial_before_updates"
+                if admission_configuration['schema_version'] == PHYSICAL_CONFIG_SCHEMA_VERSION
+                else ("explicit_synthetic_shape_only" if args.shape_only else "externally_selected_after_calibration")
             ),
             calibration_complete=_calibration_complete(calibration_report),
             admission_configuration=admission_configuration,
@@ -271,7 +291,7 @@ def run(args: Any) -> Mapping[str, Any]:
                     int(isinstance(batch, dict) and batch.get("completed") is True) for batch in calibration_batches
                 ),
             },
-            calibration_report_path=str(args.calibration_report.resolve()),
+            calibration_report_path=(None if args.calibration_report is None else str(args.calibration_report.resolve())),
             pool_protocol_path=str(args.pool_protocol.resolve()),
             protocol_path=str(args.protocol.resolve()),
             training_updates=UPDATE_COUNT,
@@ -292,7 +312,10 @@ def run(args: Any) -> Mapping[str, Any]:
         catalogue_report = _read_json(args.catalogue_report, name="catalogue report")
         if catalogue_report.get("status") != "passed":
             raise ValueError("one-day catalogue report is not accepted")
-        if catalogue_report.get("schema_version") != "prepared_one_day_catalogue_v1":
+        expected_catalogue_schema = ('expanded_one_day_merge_v1'
+            if admission_configuration['schema_version'] == PHYSICAL_CONFIG_SCHEMA_VERSION
+            else 'prepared_one_day_catalogue_v1')
+        if catalogue_report.get("schema_version") != expected_catalogue_schema:
             raise ValueError("one-day catalogue report schema drift")
         catalogue_path = _resolved_reference(catalogue_report["catalogue"], relative_to=args.catalogue_report.resolve())
         with gzip.open(catalogue_path, "rt", encoding="utf-8") as handle:
@@ -447,6 +470,15 @@ def run(args: Any) -> Mapping[str, Any]:
             emit("stopped", status="rejected", reason="directional_batch_hard_counts")
             return report
 
+        if admission_configuration['schema_version'] == PHYSICAL_CONFIG_SCHEMA_VERSION:
+            from scripts.hpc.probe_public_rollout_staged import StageStore
+            stage_directory = args.output.with_suffix('.stages')
+            StageStore(stage_directory, {'model_protocol': model_protocol,
+                       'coefficients': coefficient_values,
+                       'first_microbatch': _rows(first_microbatch.rows)}).write(
+                'native', {'loss': float(first_loss), 'gradient': first_gradient}, jax)
+            emit('native_gradient_saved', native_gradient=str(stage_directory / 'native.pkl'))
+
         def tangent(current: Any, direction: Any, samples: Any, weights: Any) -> Any:
             return jax.jvp(
                 lambda candidate: scalar_loss(candidate, samples, weights),
@@ -507,7 +539,7 @@ def run(args: Any) -> Mapping[str, Any]:
             directional.append(row)
             emit("directional_projection_completed", directional_checks=directional)
             del direction
-        report["bounded_directional_gate_passed"] = all(row["passed"] for row in directional)
+        report["bounded_directional_gate_passed"] = all(row["passed"] and row['resolved_projection'] for row in directional)
         if not report["bounded_directional_gate_passed"]:
             emit("stopped", status="rejected", reason="bounded_directional_agreement")
             return report
@@ -640,7 +672,7 @@ def parser() -> argparse.ArgumentParser:
     )
     result.add_argument("--catalogue-report", type=Path, required=True)
     result.add_argument("--admission-config", type=Path, required=True)
-    result.add_argument("--calibration-report", type=Path, required=True)
+    result.add_argument("--calibration-report", type=Path)
     return result
 
 

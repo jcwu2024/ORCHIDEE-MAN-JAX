@@ -14,6 +14,9 @@ import numpy as np
 
 ArtifactId: TypeAlias = int | str
 EPOCH_SCOPE = "prepared_one_day_pool"
+ARTIFACT_GROUPED_PACKING = "artifact_grouped"
+FIXED_REPLAY_PAD_PACKING = "fixed_replay_pad"
+_BATCH_PACKINGS = frozenset((ARTIFACT_GROUPED_PACKING, FIXED_REPLAY_PAD_PACKING))
 
 
 def _integer(value: Any, *, name: str, minimum: int | None = None) -> int:
@@ -228,6 +231,7 @@ class OneDaySamplingConfig:
     batch_size: int = 32
     microbatch_size: int = 4
     max_artifacts_per_batch: int = 4
+    batch_packing: str = ARTIFACT_GROUPED_PACKING
 
     def __post_init__(self) -> None:
         object.__setattr__(self, "seed", _integer(self.seed, name="seed", minimum=0))
@@ -242,8 +246,19 @@ class OneDaySamplingConfig:
             "max_artifacts_per_batch",
             _integer(self.max_artifacts_per_batch, name="max_artifacts_per_batch", minimum=1),
         )
+        if not isinstance(self.batch_packing, str) or self.batch_packing not in _BATCH_PACKINGS:
+            raise ValueError(
+                "batch_packing must be artifact_grouped or fixed_replay_pad"
+            )
         if self.microbatch_size > self.batch_size:
             raise ValueError("microbatch_size must not exceed batch_size")
+        if (
+            self.batch_packing == FIXED_REPLAY_PAD_PACKING
+            and self.batch_size % self.microbatch_size
+        ):
+            raise ValueError(
+                "fixed_replay_pad packing requires microbatch_size to divide batch_size"
+            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -264,10 +279,19 @@ class OneDaySamplingCursor:
 class OneDayMicrobatch:
     index: int
     rows: tuple[OneDayPreparedRow, ...]
+    source_row_count: int | None = None
 
     @property
     def draw_count(self) -> int:
         return len(self.rows)
+
+    @property
+    def source_draw_count(self) -> int:
+        return self.draw_count if self.source_row_count is None else self.source_row_count
+
+    @property
+    def padding_draw_count(self) -> int:
+        return self.draw_count - self.source_draw_count
 
     @property
     def unique_day_count(self) -> int:
@@ -293,6 +317,9 @@ class OneDayBatch:
     epoch_draw_count: int
     epoch_unique_day_count: int
     epoch_unique_day_count_through_batch: int
+    source_row_count: int | None = None
+    epoch_source_row_count: int | None = None
+    epoch_padding_draw_count: int = 0
 
     @property
     def cursor(self) -> OneDaySamplingCursor:
@@ -307,6 +334,20 @@ class OneDayBatch:
         return len(self.rows)
 
     @property
+    def source_draw_count(self) -> int:
+        """Source row occurrences before any terminal replay padding."""
+
+        return self.draw_count if self.source_row_count is None else self.source_row_count
+
+    @property
+    def padding_draw_count(self) -> int:
+        return self.draw_count - self.source_draw_count
+
+    @property
+    def epoch_source_draw_count(self) -> int:
+        return self.epoch_draw_count if self.epoch_source_row_count is None else self.epoch_source_row_count
+
+    @property
     def unique_day_count(self) -> int:
         return len({row.day_key for row in self.rows})
 
@@ -317,7 +358,15 @@ class OneDayBatch:
     @property
     def microbatches(self) -> tuple[OneDayMicrobatch, ...]:
         return tuple(
-            OneDayMicrobatch(index=index, rows=self.rows[start : start + self.microbatch_size])
+            OneDayMicrobatch(
+                index=index,
+                rows=self.rows[start : start + self.microbatch_size],
+                source_row_count=(
+                    None
+                    if self.source_row_count is None
+                    else max(0, min(self.source_draw_count - start, self.microbatch_size))
+                ),
+            )
             for index, start in enumerate(range(0, len(self.rows), self.microbatch_size))
         )
 
@@ -326,18 +375,22 @@ class OneDayBatch:
         start = 0
         for microbatch in self.microbatches:
             stop = start + microbatch.draw_count
-            microbatches.append(
-                {
-                    "index": microbatch.index,
-                    "start": start,
-                    "stop": stop,
-                    "draw_count": microbatch.draw_count,
-                    "unique_day_count": microbatch.unique_day_count,
-                    "artifact_ids": list(microbatch.artifact_ids),
-                }
-            )
+            metadata = {
+                "index": microbatch.index,
+                "start": start,
+                "stop": stop,
+                "draw_count": microbatch.draw_count,
+                "unique_day_count": microbatch.unique_day_count,
+                "artifact_ids": list(microbatch.artifact_ids),
+            }
+            if microbatch.source_row_count is not None:
+                metadata.update(
+                    source_draw_count=microbatch.source_draw_count,
+                    padding_draw_count=microbatch.padding_draw_count,
+                )
+            microbatches.append(metadata)
             start = stop
-        return {
+        result = {
             "schema_version": "prepared_one_day_batch_plan_v1",
             "epoch_scope": EPOCH_SCOPE,
             "epoch": self.epoch,
@@ -358,6 +411,14 @@ class OneDayBatch:
                 "batch_offset": self.next_cursor.batch_offset,
             },
         }
+        if self.source_row_count is not None:
+            result.update(
+                source_draw_count=self.source_draw_count,
+                padding_draw_count=self.padding_draw_count,
+                epoch_source_draw_count=self.epoch_source_draw_count,
+                epoch_padding_draw_count=self.epoch_padding_draw_count,
+            )
+        return result
 
 
 @dataclass(slots=True)
@@ -377,7 +438,14 @@ class _ArtifactCursor:
 
 
 class OneDaySampler:
-    """Re-derivable epoch iterator over prepared rows with bounded package mixing."""
+    """Re-derivable epoch iterator over prepared rows with bounded package mixing.
+
+    ``artifact_grouped`` preserves the historical grouped behaviour.  The
+    opt-in ``fixed_replay_pad`` mode carries an unfinished artifact into the
+    next batch and pads only the final source remainder by replaying rows
+    already in that final batch.  It consequently has fixed JAX shapes without
+    creating data files or admitting an unbounded number of artifact reads.
+    """
 
     def __init__(
         self,
@@ -387,6 +455,7 @@ class OneDaySampler:
         batch_size: int = 32,
         microbatch_size: int = 4,
         max_artifacts_per_batch: int = 4,
+        batch_packing: str = ARTIFACT_GROUPED_PACKING,
         excluded_rows: Iterable[PreparedRowKey] = (),
         excluded_days: Iterable[DayKey] = (),
     ) -> None:
@@ -395,6 +464,7 @@ class OneDaySampler:
             batch_size=batch_size,
             microbatch_size=microbatch_size,
             max_artifacts_per_batch=max_artifacts_per_batch,
+            batch_packing=batch_packing,
         )
         supplied = tuple(artifacts)
         if not supplied:
@@ -433,16 +503,33 @@ class OneDaySampler:
             raise ValueError("one-day exclusions removed the complete prepared pool")
 
         self._rows_by_artifact = tuple(filtered)
-        self._draw_count = sum(len(rows) for _artifact_id_value, rows in filtered)
+        self._source_draw_count = sum(len(rows) for _artifact_id_value, rows in filtered)
         self._unique_day_count = len({row.day_key for _artifact_id_value, rows in filtered for row in rows})
-        self._excluded_draw_count = len(all_rows) - self._draw_count
+        self._excluded_draw_count = len(all_rows) - self._source_draw_count
         self._source_artifact_count = len(supplied)
 
     @property
     def draw_count(self) -> int:
-        """Prepared row occurrences consumed once in every epoch."""
+        """Optimizer draws per epoch, including fixed-mode terminal replay padding."""
 
-        return self._draw_count
+        if self.config.batch_packing == FIXED_REPLAY_PAD_PACKING:
+            return (
+                (self._source_draw_count + self.config.batch_size - 1)
+                // self.config.batch_size
+            ) * self.config.batch_size
+        return self._source_draw_count
+
+    @property
+    def source_draw_count(self) -> int:
+        """Prepared row occurrences consumed exactly once before any padding."""
+
+        return self._source_draw_count
+
+    @property
+    def padding_draw_count(self) -> int:
+        """Deterministic terminal replay draws in a fixed-size epoch."""
+
+        return self.draw_count - self.source_draw_count
 
     @property
     def unique_day_count(self) -> int:
@@ -459,7 +546,7 @@ class OneDaySampler:
         return len(self._rows_by_artifact)
 
     def pool_metadata(self) -> Mapping[str, Any]:
-        return {
+        metadata = {
             "epoch_scope": EPOCH_SCOPE,
             "seed": self.config.seed,
             "source_artifact_count": self._source_artifact_count,
@@ -471,6 +558,13 @@ class OneDaySampler:
             "microbatch_size": self.config.microbatch_size,
             "max_artifacts_per_batch": self.config.max_artifacts_per_batch,
         }
+        if self.config.batch_packing == FIXED_REPLAY_PAD_PACKING:
+            metadata.update(
+                batch_packing=self.config.batch_packing,
+                source_draw_count=self.source_draw_count,
+                padding_draw_count=self.padding_draw_count,
+            )
+        return metadata
 
     def _ordered_rows(self, epoch: int) -> tuple[tuple[ArtifactId, tuple[OneDayPreparedRow, ...]], ...]:
         canonical_artifacts = tuple(
@@ -495,7 +589,7 @@ class OneDaySampler:
             )
         return tuple(shuffled_rows[int(index)] for index in artifact_permutation)
 
-    def _iter_complete_epoch(self, epoch: int) -> Iterator[OneDayBatch]:
+    def _iter_artifact_grouped_epoch(self, epoch: int) -> Iterator[OneDayBatch]:
         ordered = self._ordered_rows(epoch)
         pending = 0
         active: list[_ArtifactCursor] = []
@@ -545,8 +639,101 @@ class OneDaySampler:
             draw_offset += len(rows)
             batch_index += 1
 
-        if draw_offset != self.draw_count or len(seen_days) != self.unique_day_count:
+        if draw_offset != self.source_draw_count or len(seen_days) != self.unique_day_count:
             raise RuntimeError("one-day sampler epoch coverage drift")
+
+    def _iter_fixed_replay_pad_epoch(self, epoch: int) -> Iterator[OneDayBatch]:
+        """Pack shuffled artifact rows into full batches without widening package IO.
+
+        At most one artifact can carry across a batch boundary.  If filling a
+        nonterminal batch would need another artifact beyond the configured
+        bound, the pool cannot safely support this fixed packing and fails
+        closed.  The sole terminal source remainder is replay-padded from its
+        own ordered rows, retaining its package bound.
+        """
+
+        ordered = self._ordered_rows(epoch)
+        pending = 0
+        carry: _ArtifactCursor | None = None
+        batch_index = 0
+        draw_offset = 0
+        source_offset = 0
+        seen_days: set[DayKey] = set()
+
+        while carry is not None or pending < len(ordered):
+            batch_rows: list[OneDayPreparedRow] = []
+            artifact_ids: set[ArtifactId] = set()
+            while len(batch_rows) < self.config.batch_size:
+                if carry is None:
+                    if pending == len(ordered):
+                        break
+                    artifact_id, rows = ordered[pending]
+                    pending += 1
+                    carry = _ArtifactCursor(artifact_id=artifact_id, rows=rows)
+                if carry.artifact_id not in artifact_ids:
+                    if len(artifact_ids) == self.config.max_artifacts_per_batch:
+                        raise ValueError(
+                            "fixed_replay_pad packing would exceed max_artifacts_per_batch; "
+                            "increase the bound or use artifact_grouped packing"
+                        )
+                    artifact_ids.add(carry.artifact_id)
+                remaining = self.config.batch_size - len(batch_rows)
+                available = len(carry.rows) - carry.offset
+                take_count = min(remaining, available)
+                batch_rows.extend(carry.take() for _ in range(take_count))
+                if carry.exhausted:
+                    carry = None
+
+            if not batch_rows:
+                raise RuntimeError("fixed one-day sampler made no progress")
+
+            source_row_count = len(batch_rows)
+            terminal = carry is None and pending == len(ordered)
+            if source_row_count < self.config.batch_size:
+                if not terminal:
+                    raise RuntimeError("fixed one-day sampler stopped before terminal source rows")
+                replay = tuple(batch_rows)
+                batch_rows.extend(
+                    replay[index % len(replay)]
+                    for index in range(self.config.batch_size - source_row_count)
+                )
+            rows = tuple(batch_rows)
+            if len({row.artifact_id for row in rows}) > self.config.max_artifacts_per_batch:
+                raise RuntimeError("fixed one-day sampler artifact bound drift")
+
+            seen_days.update(row.day_key for row in rows[:source_row_count])
+            yield OneDayBatch(
+                epoch=epoch,
+                seed=self.config.seed,
+                batch_index=batch_index,
+                draw_offset=draw_offset,
+                rows=rows,
+                requested_batch_size=self.config.batch_size,
+                microbatch_size=self.config.microbatch_size,
+                max_artifacts_per_batch=self.config.max_artifacts_per_batch,
+                epoch_draw_count=self.draw_count,
+                epoch_unique_day_count=self.unique_day_count,
+                epoch_unique_day_count_through_batch=len(seen_days),
+                source_row_count=source_row_count,
+                epoch_source_row_count=self.source_draw_count,
+                epoch_padding_draw_count=self.padding_draw_count,
+            )
+            draw_offset += len(rows)
+            source_offset += source_row_count
+            batch_index += 1
+
+        if (
+            draw_offset != self.draw_count
+            or source_offset != self.source_draw_count
+            or len(seen_days) != self.unique_day_count
+        ):
+            raise RuntimeError("fixed one-day sampler epoch coverage drift")
+
+    def _iter_complete_epoch(self, epoch: int) -> Iterator[OneDayBatch]:
+        if self.config.batch_packing == ARTIFACT_GROUPED_PACKING:
+            yield from self._iter_artifact_grouped_epoch(epoch)
+            return
+        yield from self._iter_fixed_replay_pad_epoch(epoch)
 
     def iter_epoch(self, epoch: int, *, start_batch: int = 0) -> Iterator[OneDayBatch]:
         """Yield one deterministic prepared-pool epoch, optionally resuming by batch offset."""
@@ -571,7 +758,9 @@ class OneDaySampler:
 
 
 __all__ = [
+    "ARTIFACT_GROUPED_PACKING",
     "EPOCH_SCOPE",
+    "FIXED_REPLAY_PAD_PACKING",
     "DayKey",
     "OneDayArtifact",
     "OneDayBatch",

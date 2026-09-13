@@ -24,7 +24,11 @@ def feedback_diagnostics(jax, jnp, runtime, head, model_protocol, initial, assem
     from research.daily_coarse_graining.daily_operator.parameter_routing import PFT_TRAIT_BARE_SOIL
 
     canopy_plan = _canopy_change_plan(runtime, head.contract, model_protocol)
-    litterpart_plan = _litterpart_feedback_plan(head, model_protocol['loss'])
+    litterpart_plan = _litterpart_feedback_plan(
+        head,
+        model_protocol['loss'],
+        scaling=model_protocol.get('feedback_state_scaling'),
+    )
     result = {'enabled': bool(canopy_plan is not None or litterpart_plan is not None)}
     if canopy_plan is not None:
         compact = jax.vmap(lambda state: _compact_canopy_carbon(state, canopy_plan))
@@ -49,6 +53,7 @@ def feedback_diagnostics(jax, jnp, runtime, head, model_protocol, initial, assem
             active_pft_mask=observations['active'],
             bare_pft_mask=bare,
             scale=jnp.asarray(canopy_plan.scale, dtype=jnp.float64),
+            penalty=canopy_plan.penalty,
         )
         result['canopy_stock_change'] = {
             **canopy._asdict(),

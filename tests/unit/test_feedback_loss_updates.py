@@ -106,6 +106,26 @@ def test_execution_requires_the_complete_finite_zero_hard_calibration():
     _validate_inputs(_pool_protocol(), _model_protocol(), incomplete, shape_only=True)
 
 
+def test_declared_physical_trial_uses_its_own_geometry_and_expanded_pool():
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2] / 'manifests/coarse_graining'
+    model = json.loads((root / 'physical_feedback_model_v2.json').read_text())
+    pool = json.loads((root / 'physical_feedback_probe_pool_v2.json').read_text())
+    admission = json.loads((root / 'physical_feedback_update_admission_v2.json').read_text())
+    _validate_inputs(pool, model, {}, shape_only=False, admission_configuration=admission)
+    with pytest.raises(ValueError, match='physical v2'):
+        _validate_inputs(pool, {**model, 'feedback_state_scaling': {}}, {},
+                         shape_only=False, admission_configuration=admission)
+    with pytest.raises(ValueError):
+        _validate_inputs(pool, model, {}, shape_only=False)
+    from scripts.hpc.probe_feedback_loss_calibration import _loss_protocol
+    graph = _loss_protocol(model, canopy_source_pft_index=13)
+    assert graph['canopy_carbon_stock_change']['penalty'] == 'pseudo_huber'
+    assert graph['feedback_state_scaling'] == {'litterpart': 'physical_unit'}
+
+
 def test_shared_combined_scalar_has_two_bounded_reverse_jvp_agreements():
     base_weights = {
         "independent_daily_flux_mse": 1.0,

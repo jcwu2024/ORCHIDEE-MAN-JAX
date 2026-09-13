@@ -59,6 +59,7 @@ def canopy_carbon_stock_change_loss(
     active_pft_mask: Any,
     bare_pft_mask: Any,
     scale: Any,
+    penalty: str = "mse",
 ) -> CanopyChangeLossResult:
     """Return source-direct stock-change MSE for compact ``[..., pft]`` vectors.
 
@@ -69,6 +70,8 @@ def canopy_carbon_stock_change_loss(
     subtraction, preventing an undefined NaN from entering a JAX gradient.
     """
 
+    if penalty not in ("mse", "pseudo_huber"):
+        raise ValueError("unknown canopy stock-change penalty")
     start_pred = _as_stock(start_pred, name="start_pred")
     next_pred = _as_stock(next_pred, name="next_pred")
     start_teacher = _as_stock(start_teacher, name="start_teacher")
@@ -126,7 +129,11 @@ def canopy_carbon_stock_change_loss(
     safe_scale = jnp.where(scale_valid, scale, 1.0)
     normalized_residual = jnp.where(loss_valid, physical_residual / safe_scale, 0.0)
     count = jnp.sum(loss_valid, dtype=jnp.float64)
-    loss = jnp.sum(normalized_residual * normalized_residual, dtype=jnp.float64) / jnp.maximum(count, 1.0)
+    squared = normalized_residual * normalized_residual
+    # Algebraically sqrt(1+r^2)-1, with accurate small-residual values and a
+    # bounded large-residual derivative. No clipping or stop_gradient.
+    penalties = squared if penalty == "mse" else squared / (jnp.sqrt(1.0 + squared) + 1.0)
+    loss = jnp.sum(penalties, dtype=jnp.float64) / jnp.maximum(count, 1.0)
 
     bare_active = active & bare
     bare_predicted_delta = jnp.where(

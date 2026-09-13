@@ -35,7 +35,7 @@ def pool_plan(catalogue, configuration):
     sampling = configuration['sampling']
     sampler = OneDaySampler(artifacts, seed=sampling['seed'], batch_size=sampling['batch_size'],
         microbatch_size=sampling['microbatch_size'], max_artifacts_per_batch=sampling['max_artifacts_per_batch'],
-        excluded_days=excluded)
+        excluded_days=excluded, batch_packing=sampling.get('batch_packing', 'artifact_grouped'))
     training_panel = [r.as_metadata() for r in next(sampler.iter_epoch(0)).rows]
     return sampler, {'training': training_panel, 'excluded_days': monitor}
 
@@ -95,9 +95,12 @@ def feedback_loss_plan(protocol):
         return None
     if canopy is None or not has_litterpart:
         raise ValueError('canopy and litterpart feedback losses must be enabled together')
-    if not isinstance(canopy, dict) or set(canopy) != {'weight', 'scale_source_pft_index'}:
+    if (not isinstance(canopy, dict) or not {'weight', 'scale_source_pft_index'} <= set(canopy)
+            or set(canopy) - {'weight', 'scale_source_pft_index', 'penalty'}):
         raise ValueError('canopy feedback-loss protocol keys drift')
     canopy_weight = float(canopy['weight'])
+    if canopy.get('penalty', 'mse') not in ('mse', 'pseudo_huber'):
+        raise ValueError('unknown canopy feedback penalty')
     litterpart_weight = float(loss['litterpart_feedback_mse'])
     source_pft_index = int(canopy['scale_source_pft_index'])
     if source_pft_index != 13:

@@ -1,7 +1,8 @@
-"""Supervise a diagnosed recurrent state in its actual neural input units.
+"""Supervise a diagnosed recurrent state under a caller-declared scale policy.
 
 This is loss geometry, not a physical transition or input-normalization change.
-The caller declares the field and supplies its frozen input scales.
+The legacy caller supplies frozen neural-input scales; revised protocols may
+instead supply physical-unit scales explicitly.
 """
 from __future__ import annotations
 
@@ -24,7 +25,7 @@ class FeedbackStateLossResult(NamedTuple):
 
 def feedback_state_mse(*, predicted, teacher, predicted_defined, teacher_defined,
                        eligible, scale) -> FeedbackStateLossResult:
-    """Coordinate MSE after scaling by the frozen neural input standard deviation.
+    """Coordinate MSE after division by the supplied positive scale.
 
     No PFT cover weighting or coordinate pooling precedes the square. An eligible
     Teacher-defined coordinate with an invalid prediction/scale is explicitly

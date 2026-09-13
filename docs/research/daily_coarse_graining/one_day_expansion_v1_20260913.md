@@ -2,6 +2,16 @@
 
 ## Completion audit and recovery
 
+Final completion: recovery15061586 COMPLETED00:32:48,exit0:0, estimatedCNY0.3061.
+Original-root merge_report.json status=passed/stage=completed in20.583s.
+All17677 point-years/346539 distinct TRAIN days are present;64 monitor days
+are retained in4 artifacts and disjoint. First32-row mixed batch read4 files
+in0.1604s (2119220 compressed bytes,47666568 cached uncompressed bytes).
+No Teacher regenerated and zero neural updates. Local evidence:
+outputs/one-day-expansion-15061225-merge.json. Complete data pool is admitted;
+the grouped sampler's13258 updates/4420 partials remain an integration issue,
+not a data-preparation failure. Do not resubmit preparation.
+
 Latest execution update: user explicitly approved the recovery below.
 Submitted from cln01 as15061586 at2026-09-13 20:35:21 scheduler time;
 RUNNING since20:35:26 onibc13b07n01--02. Confirmed allocation2nodes/8CPU,

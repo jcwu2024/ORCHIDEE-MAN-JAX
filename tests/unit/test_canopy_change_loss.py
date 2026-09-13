@@ -40,6 +40,25 @@ def test_active_source_direct_sum_includes_bare_and_reports_its_contribution():
     np.testing.assert_array_equal(result.bare_active_slot_count, [1])
 
 
+def test_pseudo_huber_preserves_direction_with_bounded_large_error_gradient():
+    def objective(value):
+        # Teacher total increment is7; two fixed predicted increments sum7.
+        return _loss(next_pred=jnp.asarray([[10.0 + value, 23.0, 34.0]]),
+                     penalty="pseudo_huber").loss
+
+    for value in (-1.e5, -2., 0., 2., 1.e5):
+        loss, gradient = jax.value_and_grad(objective)(jnp.asarray(value))
+        residual = value / 2.0
+        np.testing.assert_allclose(loss, np.hypot(1., residual) - 1., rtol=1.e-6, atol=1.e-8)
+        np.testing.assert_allclose(gradient, residual / np.hypot(1., residual) / 2., rtol=1.e-6)
+        assert abs(float(gradient)) <= .5
+        if value:
+            assert np.sign(float(gradient)) == np.sign(value)
+    # Source diagnostics retain physical units regardless of optimization penalty.
+    np.testing.assert_allclose(_loss(penalty="pseudo_huber").physical_residual,
+                               _loss().physical_residual)
+
+
 def test_recurrent_change_ignores_counteracting_initial_stock_offsets():
     result = _loss(
         start_pred=jnp.asarray([[100.0, 0.0]]),

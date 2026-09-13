@@ -1,0 +1,11 @@
+{
+  "model_protocol": "manifests/coarse_graining/physical_feedback_model_v2.json",
+  "sampling": {
+    "seed": 20260912, "batch_size": 32, "microbatch_size": 4,
+    "max_artifacts_per_batch": 4, "epochs": 1,
+    "scope": "expanded_one_day_pool_346539", "batch_packing": "fixed_replay_pad"
+  },
+  "purpose": "select_first_two_fixed_batches_for_bounded_admission_not_full_epoch_training",
+  "full_pool": {"source_rows": 346539, "row_draws": 346560, "terminal_replay_draws": 21, "full_batches": 10830},
+  "admission": {"optimizer_updates": 2, "monitor_rows": 64, "checkpoint_written": false}
+}

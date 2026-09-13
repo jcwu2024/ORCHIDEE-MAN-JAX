@@ -34,7 +34,8 @@ COEFFICIENT_CANDIDATES = (1e-5, 3e-5, 1e-4, 3e-4, 1e-3, 3e-3, 1e-2)
 CANOPY_STOCK_KEY = "slowproc_stomate_previous_step_state.interception_storage"
 
 
-def _validate_protocols(configuration: Mapping[str, Any], protocol: Mapping[str, Any]) -> None:
+def _validate_protocols(configuration: Mapping[str, Any], protocol: Mapping[str, Any], *,
+                        expected_scope: str = "prepared_one_day_extension_1001_3000") -> None:
     sampling = configuration.get("sampling", {})
     expected_sampling = {
         "seed": SAMPLING_SEED,
@@ -46,7 +47,7 @@ def _validate_protocols(configuration: Mapping[str, Any], protocol: Mapping[str,
     for name, expected in expected_sampling.items():
         if sampling.get(name) != expected:
             raise ValueError(f"one-day pool sampling {name!r} differs from the calibration contract")
-    if sampling.get("scope") != "prepared_one_day_extension_1001_3000":
+    if sampling.get("scope") != expected_scope:
         raise ValueError("feedback calibration requires the declared broad prepared train pool")
     if protocol.get("schema_version") != "fresh_start_one_day_probe_v3":
         raise ValueError("feedback calibration requires fresh-start protocol v3")
@@ -66,6 +67,8 @@ def _loss_protocol(protocol: Mapping[str, Any], *, canopy_source_pft_index: int)
         "weight": 1.0,
         "scale_source_pft_index": int(canopy_source_pft_index),
     }
+    if "penalty" in protocol.get("canopy_carbon_stock_change", {}):
+        result["canopy_carbon_stock_change"]["penalty"] = protocol["canopy_carbon_stock_change"]["penalty"]
     result["loss"]["litterpart_feedback_mse"] = 1.0
     return result
 

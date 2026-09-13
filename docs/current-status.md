@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+CPU recovery15061586 COMPLETED00:32:48,exit0:0; estimated CPU chargeCNY0.3061.
+Merge passes in20.58s:346539 distinct TRAIN days,17677 point-year payloads,
+64 disjoint monitor days in4 artifacts, persisted mixed first batch read.
+No Teacher regeneration/training updates. Combined catalogue is admitted;
+fixed32 packing remains required before expanded GPU training. Local evidence:
+outputs/one-day-expansion-15061225-merge.json.
+
 Latest forward results:500 and1998 completed16 windows each,358.3/355.2s,
 exit0; physical gates pass. Final1998 T7 passes all13 science keys and T30
 passes11/13, failing only ecosystem/nonliving carbon. Earlier aggregate

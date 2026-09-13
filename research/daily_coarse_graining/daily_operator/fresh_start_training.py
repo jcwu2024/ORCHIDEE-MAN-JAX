@@ -35,10 +35,14 @@ def _canopy_change_plan(runtime, contract, protocol):
     if not isinstance(specification, dict):
         raise ValueError("canopy carbon stock-change protocol must be a mapping")
     required = {"weight", "scale_source_pft_index"}
-    if set(specification) != required:
+    allowed = required | {"penalty"}
+    if not required.issubset(specification) or not set(specification).issubset(allowed):
         raise ValueError("canopy carbon stock-change protocol keys drift")
     weight = float(specification["weight"])
     source_pft_index = int(specification["scale_source_pft_index"])
+    penalty = str(specification.get("penalty", "mse"))
+    if penalty not in {"mse", "pseudo_huber"}:
+        raise ValueError("canopy carbon stock-change penalty is unsupported")
     if not np.isfinite(weight) or weight < 0.0:
         raise ValueError("canopy carbon stock-change weight must be finite and nonnegative")
     if weight == 0.0:
@@ -89,6 +93,7 @@ def _canopy_change_plan(runtime, contract, protocol):
         compact_pft_axis=compact_pft_axis,
         pft_count=len(selected_pft),
         scale=scale,
+        penalty=penalty,
         scale_pft_index=scale_pft_index,
         scale_source_pft_index=source_pft_index,
     )
@@ -101,14 +106,22 @@ def _compact_canopy_carbon(other, plan):
     return jnp.moveaxis(carbon, plan.compact_pft_axis, -1).reshape((plan.pft_count,))
 
 
-def _litterpart_feedback_plan(head, weights):
-    """Resolve the optional diagnosed recurrent-state loss from head input scales."""
+def _litterpart_feedback_plan(head, weights, *, scaling=None):
+    """Resolve optional litterpart supervision with an explicit scale policy."""
 
     weight = float(weights.get("litterpart_feedback_mse", 0.0))
     if not np.isfinite(weight) or weight < 0.0:
         raise ValueError("litterpart feedback weight must be finite and nonnegative")
     if weight == 0.0:
         return None
+    if scaling is None:
+        scale_policy = "input_standard_deviation"
+    else:
+        if not isinstance(scaling, dict) or set(scaling) != {"litterpart"}:
+            raise ValueError("feedback-state scaling protocol keys drift")
+        scale_policy = str(scaling["litterpart"])
+        if scale_policy not in {"input_standard_deviation", "physical_unit"}:
+            raise ValueError("litterpart feedback-state scaling policy is unsupported")
     matches = tuple(leaf for leaf in head.contract.state_leaves if leaf.key == LITTERPART_FEEDBACK_KEY)
     if len(matches) != 1:
         raise ValueError("litterpart feedback state owner drift")
@@ -122,12 +135,16 @@ def _litterpart_feedback_plan(head, weights):
     input_scale = np.asarray(head.input_normalization.continuous_scale, dtype=np.float64)
     if input_scale.shape != (head.contract.continuous_state_width,):
         raise ValueError("litterpart feedback input-normalization scale width drift")
+    field_scale = input_scale[leaf.start : leaf.stop].reshape(leaf.shape)
+    if scale_policy == "physical_unit":
+        field_scale = np.ones_like(field_scale)
     return SimpleNamespace(
         weight=weight,
         leaf=leaf,
         pft_axis=pft_axis,
         pft_count=pft_count,
-        scale=jnp.asarray(input_scale[leaf.start : leaf.stop], dtype=jnp.float64).reshape(leaf.shape),
+        scale=jnp.asarray(field_scale, dtype=jnp.float64),
+        scale_policy=scale_policy,
     )
 
 
@@ -161,7 +178,11 @@ def make_objective(runtime, head, template, scales, protocol, *, state_diagnosti
     flux_names = tuple(protocol['fluxes'])
     weights = protocol['loss']
     canopy_plan = _canopy_change_plan(runtime, head.contract, protocol)
-    litterpart_plan = _litterpart_feedback_plan(head, weights)
+    litterpart_plan = _litterpart_feedback_plan(
+        head,
+        weights,
+        scaling=protocol.get("feedback_state_scaling"),
+    )
     check_gsmean = protocol.get('output_applicability', {}).get('gsmean_bare_soil_zero', False)
     if check_gsmean:
         gsmean_key = 'endpoint.fast_state.diffuco_previous_step_state.gsmean'
@@ -226,6 +247,7 @@ def make_objective(runtime, head, template, scales, protocol, *, state_diagnosti
                 active_pft_mask=active,
                 bare_pft_mask=bare,
                 scale=jnp.asarray(canopy_plan.scale, dtype=jnp.float64),
+                penalty=canopy_plan.penalty,
             )
             loss = base_loss + canopy_plan.weight * canopy_result.loss
         else:

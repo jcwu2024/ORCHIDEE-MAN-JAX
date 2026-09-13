@@ -237,3 +237,48 @@ def test_optional_litterpart_feedback_uses_input_scale_and_propagates_validity(m
     )
     _, empty_auxiliary = empty(parameters, empty_sample)
     assert int(empty_auxiliary["hard"]["litterpart_feedback_empty"]) == 1
+
+
+def test_litterpart_physical_unit_policy_balances_coordinate_gradients_and_preserves_default():
+    leaf = SimpleNamespace(
+        key="slowproc_stomate_previous_step_state.litterpart",
+        start=0,
+        stop=4,
+        shape=(1, 2, 2),
+        axis_names=("npts", "nvm", "nlitt"),
+        selected_pft_indices=(0, 13),
+    )
+    head = SimpleNamespace(
+        contract=SimpleNamespace(state_leaves=(leaf,), continuous_state_width=4),
+        input_normalization=SimpleNamespace(
+            continuous_scale=np.asarray([1.0, 1.0, 0.007890912518918275, 0.007890912518918275])
+        ),
+    )
+    weights = {"litterpart_feedback_mse": 1.0}
+    legacy = fresh_start_training._litterpart_feedback_plan(head, weights)
+    physical = fresh_start_training._litterpart_feedback_plan(
+        head,
+        weights,
+        scaling={"litterpart": "physical_unit"},
+    )
+    np.testing.assert_array_equal(legacy.scale, head.input_normalization.continuous_scale.reshape(leaf.shape))
+    np.testing.assert_array_equal(physical.scale, np.ones(leaf.shape))
+
+    teacher = jnp.asarray([[[0.0, 0.0], [1.0, 1.0]]])
+    predicted = jnp.full(leaf.shape, 0.5)
+
+    def loss(value, scale):
+        return fresh_start_training.feedback_state_mse(
+            predicted=value,
+            teacher=teacher,
+            predicted_defined=True,
+            teacher_defined=True,
+            eligible=True,
+            scale=scale,
+        ).loss
+
+    legacy_gradient = jax.grad(loss)(predicted, legacy.scale)
+    physical_gradient = jax.grad(loss)(predicted, physical.scale)
+    imbalance = abs(float(legacy_gradient[0, 1, 0] / legacy_gradient[0, 0, 0]))
+    np.testing.assert_allclose(imbalance, 1.0 / 0.007890912518918275**2)
+    np.testing.assert_allclose(physical_gradient, [[[0.25, 0.25], [-0.25, -0.25]]])
