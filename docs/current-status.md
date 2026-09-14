@@ -13,8 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-User-approved batch64/microbatch8-vs16 resource probe is now running on free
-gln01 GPU0, chain Bash62878 and first Python62924. Frozen checkout
+User-approved batch64/microbatch8-vs16 resource probe has completed. No active
+GPU process; original Bash62878/Python62924 and follow-up78597/78680 exited.
+Results: `research/daily_coarse_graining/physical_microbatch_results_20260914.md`.
+Micro8:6.095s/update,16.369GiB peak; micro16:5.547s,26.690GiB after actual runtime
+completion. Both actual update/physical gates pass. Gradients compare within
+declared tolerance; displacement gate retains4 tiny coordinate failures and
+must not be relabeled as passed. Next use batch64/micro8 for combined T7
+admission with memory headroom. Frozen execution checkout
 runtime/checkouts/physical-microbatch-v1 at76e756e. CPU full-model shape checks
 passed209.6/210.1s at23e562e; subsequent changes add device metadata, sequential
 launch and CPU comparison only, preserving objective/AD/update graphs.

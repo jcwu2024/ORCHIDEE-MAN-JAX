@@ -11,20 +11,21 @@ from scripts.dev.compare_physical_microbatches import (
 )
 
 
-def _identity():
+def _identity(*, compiled_memory_limit_gib=24, gpu_memory_fraction=0.85):
     return {
         "model_protocol": {"seed": 20260911, "loss": "physical-v2"},
         "benchmark_protocol": {
             "schema_version": "physical_microbatch_benchmark_v1",
             "timed_updates": 3,
-            "compiled_memory_limit_gib": 24,
+            "compiled_memory_limit_gib": compiled_memory_limit_gib,
+            "gpu_memory_fraction": gpu_memory_fraction,
         },
         "rows": [{"artifact_id": index // 32, "batch_row": index} for index in range(64)],
         "coefficients": [1.0, 0.1, 0.1],
     }
 
 
-def _report(microbatch_size, seconds):
+def _report(microbatch_size, seconds, *, compiled_memory_limit_gib=24, gpu_memory_fraction=0.85):
     updates = [
         {
             "update": index + 1,
@@ -41,7 +42,11 @@ def _report(microbatch_size, seconds):
         "source_git_head": "same-commit",
         "microbatch_size": microbatch_size,
         "parent_batch_size": 64,
-        "identity": _identity(),
+        "identity": _identity(
+            compiled_memory_limit_gib=compiled_memory_limit_gib,
+            gpu_memory_fraction=gpu_memory_fraction,
+        ),
+        "memory_fraction": str(gpu_memory_fraction),
         "updates": updates,
         "completed_updates": 3,
         "median_compute_seconds": float(np.median(seconds)),
@@ -61,9 +66,9 @@ def _report(microbatch_size, seconds):
     }
 
 
-def _stage(*, gradient_shift=0.0, delta_shift=0.0):
+def _stage(*, identity=None, gradient_shift=0.0, delta_shift=0.0):
     return {
-        "identity": _identity(),
+        "identity": _identity() if identity is None else copy.deepcopy(identity),
         "stage": "first_update",
         "result": {
             "loss": 3.0,
@@ -89,6 +94,7 @@ def test_equivalent_complete_updates_select_faster_feasible_mode():
 
     assert result["status"] == "passed"
     assert result["identity_matches"]
+    assert result["identity_comparison"]["model_data_objective_identity_matches"]
     assert result["first_update"]["gradient"]["structure_matches"]
     assert result["first_update"]["gradient"]["dtypes_match"]
     assert result["first_update"]["parameter_delta"]["passed"]
@@ -132,6 +138,18 @@ def test_tree_comparison_requires_exact_structure_shape_and_dtype():
         "structure_matches"
     ]
 
+
+def test_inactive_axis_embedding_none_is_an_empty_pytree_node():
+    reference = {"axis_position_embedding": [np.ones(3, dtype=np.float32), None]}
+    result = compare_numeric_trees(reference, copy.deepcopy(reference), tolerance=TOLERANCES["gradient"])
+    assert result["passed"]
+    assert result["coordinate_count"] == 3
+    changed = {"axis_position_embedding": [np.ones(3, dtype=np.float32), np.zeros(1, dtype=np.float32)]}
+    assert not compare_numeric_trees(reference, changed, tolerance=TOLERANCES["gradient"])["structure_matches"]
+
+
+def test_nonfinite_numeric_tree_returns_a_serializable_rejection():
+    reference = {"weight": np.asarray([1.0, 2.0], dtype=np.float32)}
     nonfinite = compare_numeric_trees(
         reference,
         {"weight": np.asarray([1.0, np.nan], dtype=np.float32)},
@@ -155,6 +173,57 @@ def test_identity_and_resource_failures_prevent_a_speed_recommendation():
     resource_failure = compare_physical_microbatches(report8, _stage(), report16, _stage())
     assert not resource_failure["both_modes_feasible"]
     assert resource_failure["recommended_microbatch_size"] is None
+
+
+def test_only_declared_resource_envelope_differences_are_compatible():
+    report8 = _report(8, [2.0, 2.1, 2.2])
+    report16 = _report(
+        16,
+        [1.0, 1.1, 1.2],
+        compiled_memory_limit_gib=26,
+        gpu_memory_fraction=0.90,
+    )
+    stage16 = _stage(identity=report16["identity"])
+
+    result = compare_physical_microbatches(report8, _stage(), report16, stage16)
+
+    assert result["status"] == "passed"
+    assert result["identity_matches"]
+    identity = result["identity_comparison"]
+    assert identity["stage_identities_match_own_reports"]
+    assert identity["all_non_resource_envelope_fields_match"]
+    assert identity["model_data_objective_identity_matches"]
+    assert identity["model_or_loss_change_inferred"] is False
+    assert identity["resource_envelope_differences"]["compiled_memory_limit_gib"] == {
+        "microbatch_8": 24.0,
+        "microbatch_16": 26.0,
+        "changed": True,
+    }
+    assert identity["resource_envelope_differences"]["gpu_memory_fraction"] == {
+        "microbatch_8": 0.85,
+        "microbatch_16": 0.90,
+        "changed": True,
+    }
+
+
+def test_method_or_data_difference_is_not_masked_as_a_resource_envelope_change():
+    report8 = _report(8, [2.0, 2.1, 2.2])
+    report16 = _report(
+        16,
+        [1.0, 1.1, 1.2],
+        compiled_memory_limit_gib=26,
+        gpu_memory_fraction=0.90,
+    )
+    report16["identity"]["rows"][0]["batch_row"] = 999
+    stage16 = _stage(identity=report16["identity"])
+
+    result = compare_physical_microbatches(report8, _stage(), report16, stage16)
+
+    assert result["status"] == "rejected"
+    assert not result["identity_matches"]
+    assert not result["identity_comparison"]["all_non_resource_envelope_fields_match"]
+    assert result["identity_comparison"]["model_or_loss_change_inferred"] is None
+    assert result["recommended_microbatch_size"] is None
 
 
 def test_near_tied_speed_prefers_lower_peak_memory():

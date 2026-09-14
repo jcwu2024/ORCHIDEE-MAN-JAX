@@ -20,6 +20,7 @@ EXPECTED_PARENT_BATCH_SIZE = 64
 EXPECTED_TIMED_UPDATES = 3
 CHUNK_ELEMENTS = 1_000_000
 MINIMUM_SPEED_GAIN_FRACTION = 0.05
+RESOURCE_ENVELOPE_KEYS = ("compiled_memory_limit_gib", "gpu_memory_fraction")
 
 # Frozen before the benchmark results are inspected. The coordinate floors
 # cover reduction-order noise near zero; the relative L2 gates constrain the
@@ -43,6 +44,9 @@ def _type_name(value: Any) -> str:
 def _flatten_tree(value: Any, path: str = "root") -> tuple[Any, list[tuple[str, np.ndarray]]]:
     """Return a strict, JSON-compatible structure descriptor and array leaves."""
 
+    # JAX treats None as an empty pytree node, used by inactive axis embeddings.
+    if value is None:
+        return ("none",), []
     if isinstance(value, Mapping):
         children = []
         leaves: list[tuple[str, np.ndarray]] = []
@@ -255,6 +259,13 @@ def _validate_probe(report: Mapping[str, Any], *, microbatch_size: int) -> dict[
         raise ValueError("benchmark protocol identity drift")
     if protocol.get("timed_updates") != EXPECTED_TIMED_UPDATES:
         raise ValueError("benchmark must declare three timed updates")
+    declared_memory_fraction = float(protocol.get("gpu_memory_fraction", math.nan))
+    observed_memory_fraction = float(report.get("memory_fraction", math.nan))
+    memory_fraction_consistent = bool(
+        np.isfinite(declared_memory_fraction)
+        and 0.0 < declared_memory_fraction <= 1.0
+        and np.isclose(declared_memory_fraction, observed_memory_fraction, rtol=0.0, atol=1.0e-12)
+    )
 
     updates = report.get("updates")
     if not isinstance(updates, list) or len(updates) != EXPECTED_TIMED_UPDATES:
@@ -305,6 +316,7 @@ def _validate_probe(report: Mapping[str, Any], *, microbatch_size: int) -> dict[
         and report.get("checkpoint_inherited") is False
         and all(update_gates)
         and median_consistent
+        and memory_fraction_consistent
     )
     return {
         "passed": bool(execution_passed and resource_feasible),
@@ -312,6 +324,9 @@ def _validate_probe(report: Mapping[str, Any], *, microbatch_size: int) -> dict[
         "resource_feasible": resource_feasible,
         "update_gates": update_gates,
         "median_consistent": median_consistent,
+        "declared_gpu_memory_fraction": declared_memory_fraction,
+        "observed_gpu_memory_fraction": observed_memory_fraction,
+        "gpu_memory_fraction_consistent": memory_fraction_consistent,
         "median_compute_seconds": observed_median,
         "samples_per_second": EXPECTED_PARENT_BATCH_SIZE / observed_median,
         "compiled_estimated_live_bytes": compiled_bytes,
@@ -320,6 +335,23 @@ def _validate_probe(report: Mapping[str, Any], *, microbatch_size: int) -> dict[
         "bytes_limit": bytes_limit,
         "peak_headroom_bytes": bytes_limit - peak_bytes if bytes_limit > 0 and peak_bytes >= 0 else None,
     }
+
+
+def _split_identity(identity: Mapping[str, Any]) -> tuple[dict[str, Any], dict[str, float]]:
+    """Separate the two permitted runtime-envelope fields from method identity."""
+
+    if not isinstance(identity, dict) or not isinstance(identity.get("benchmark_protocol"), dict):
+        raise ValueError("benchmark identity is malformed")
+    protocol = dict(identity["benchmark_protocol"])
+    envelope = {}
+    for key in RESOURCE_ENVELOPE_KEYS:
+        value = float(protocol.pop(key, math.nan))
+        if not np.isfinite(value) or value <= 0.0:
+            raise ValueError(f"benchmark identity has invalid {key}")
+        envelope[key] = value
+    method = dict(identity)
+    method["benchmark_protocol"] = protocol
+    return method, envelope
 
 
 def _read_stage(path: Path) -> Mapping[str, Any]:
@@ -344,11 +376,21 @@ def compare_physical_microbatches(
     """Compare complete-update equivalence and select the faster feasible mode."""
 
     checks = {"8": _validate_probe(report8, microbatch_size=8), "16": _validate_probe(report16, microbatch_size=16)}
-    identity_matches = bool(
-        report8["identity"] == report16["identity"]
-        and stage8.get("identity") == report8["identity"]
-        and stage16.get("identity") == report16["identity"]
+    method8, envelope8 = _split_identity(report8["identity"])
+    method16, envelope16 = _split_identity(report16["identity"])
+    stage_identities_match_reports = bool(
+        stage8.get("identity") == report8["identity"] and stage16.get("identity") == report16["identity"]
     )
+    method_identity_matches = method8 == method16
+    identity_matches = bool(stage_identities_match_reports and method_identity_matches)
+    envelope_differences = {
+        key: {
+            "microbatch_8": envelope8[key],
+            "microbatch_16": envelope16[key],
+            "changed": envelope8[key] != envelope16[key],
+        }
+        for key in RESOURCE_ENVELOPE_KEYS
+    }
     source_git_head_matches = report8.get("source_git_head") == report16.get("source_git_head")
     stage_names_match = stage8.get("stage") == STAGE_NAME and stage16.get("stage") == STAGE_NAME
     first8, first16 = stage8["result"], stage16["result"]
@@ -394,6 +436,15 @@ def compare_physical_microbatches(
         "tolerances_declared_before_results": TOLERANCES,
         "probe_checks": checks,
         "identity_matches": identity_matches,
+        "identity_comparison": {
+            "passed": identity_matches,
+            "stage_identities_match_own_reports": stage_identities_match_reports,
+            "all_non_resource_envelope_fields_match": method_identity_matches,
+            "model_data_objective_identity_matches": method_identity_matches,
+            "permitted_cross_run_difference_keys": list(RESOURCE_ENVELOPE_KEYS),
+            "resource_envelope_differences": envelope_differences,
+            "model_or_loss_change_inferred": False if method_identity_matches else None,
+        },
         "source_git_head_matches": source_git_head_matches,
         "first_update": {
             "loss": first_loss,

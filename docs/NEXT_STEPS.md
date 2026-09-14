@@ -10,10 +10,22 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Microbatch resource probe completed; no active GPU process. See
+  `research/daily_coarse_graining/physical_microbatch_results_20260914.md`.
+  Same batch64: micro8 median6.095s/16.369GiB peak; micro16 median5.547s/
+  26.690GiB peak, both finite/physical update gates pass. Micro16 first stopped
+  at compiled24GiB cap; its runtime completion used26GiB/.90 on the same code,
+  reusing cache and micro8 evidence. Gradient comparison passes; displacement
+  gate retains4 float32-rounding-scale coordinate failures (max1.1921e-7),
+  despite relative-L2 error1.70e-5. Do not claim full comparison passed.
+  Next combined one-day+T7 admission uses batch64/micro8 for memory headroom.
+  Return to science training; no new microbatch or historical AD investigation
+  is required before implementing that bounded actual-update gate.
+
 - User approved batch64 microbatch8/16 throughput checks (2026-09-14). Implemented
   same64 TRAIN rows/fresh weights/physical-v2 loss, one discarded warmup and3
   timed complete updates. CPU gradient/optimizer shapes pass209.6/210.1s.
-  GPU chain launched on free gln01 GPU0: Bash62878, first Python62924,
+  Original GPU chain completed on free gln01 GPU0: Bash62878/Python62924 exited,
   immutable checkout physical-microbatch-v1 at76e756e. Sequential8 then16,60min cap each,
   JAX pool fraction0.85; original launcher default remains0.65. No paid job.
   `research/daily_coarse_graining/physical_microbatch_benchmark_20260914.md` owns
@@ -22,9 +34,9 @@ Current actions, superseding launch instructions in the history below:
   lower memory. This bounded throughput probe precedes the already planned
   combined one-day+T7 optimizer admission; it does not replace that science task.
   Log runtime/outputs/diagnostics/physical-microbatch-chain.log; per-size reports
-  physical-microbatch-{8,16}.json. After both pass, chain invokes free test02
-  comparison (5min cap) and writes physical-microbatch-comparison.json.
-  Query the stable chain PID62878; Python PID changes between configurations.
+  physical-microbatch-{8,16}.json. Micro16's completed follow-up is
+  physical-microbatch-16-runtime.json; Bash78597/Python78680 exited. Free test02
+  comparison completed as physical-microbatch-comparison.json, classified above.
 
 - Both v2 free admissions are COMPLETED/exit0; their processes are absent.
   Current new batching probe is above; no paid job. See
