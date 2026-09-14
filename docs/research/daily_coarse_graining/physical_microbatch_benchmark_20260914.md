@@ -46,3 +46,20 @@ report that limit. Multi-day windows need their own later batch/memory choice.
 After this short probe, return to combined single-day+T7 optimizer admission,
 then T30 and broader reproducible learning; do not let batching become an
 open-ended infrastructure workstream.
+
+## Execution
+
+Implementation23e562e passes real free test02/test03 gradient/optimizer shapes
+in209.6268/210.0881s, zero updates, all109464375 parameters. Local evidence:
+outputs/physical-microbatch-{8,16}-shape.json. Later76e756e adds device metadata,
+CPU comparison and sequential launcher, without changing the numerical graph.
+Target Bash syntax and actual8/16/comparison dry-run expansions pass. Sol review
+finds no launch blocker; comparison tests and existing accumulation tests pass.
+
+Chain launched at76e756e on free gln01 GPU0, Bash62878, first Python62924.
+It will proceed8 then16 on the same V100 and run the CPU comparison on test02
+after successful executions. Each GPU process is capped60min, comparison5min.
+Live files under runtime/outputs/diagnostics: physical-microbatch-chain.log,
+physical-microbatch-{8,16}.json, physical-microbatch-comparison.json. Each size
+saves only one first_update.pkl diagnostic container, not a resumable model.
+No result/throughput recommendation exists until reports complete.

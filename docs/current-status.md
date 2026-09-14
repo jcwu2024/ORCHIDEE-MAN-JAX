@@ -13,12 +13,25 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+User-approved batch64/microbatch8-vs16 resource probe is now running on free
+gln01 GPU0, chain Bash62878 and first Python62924. Frozen checkout
+runtime/checkouts/physical-microbatch-v1 at76e756e. CPU full-model shape checks
+passed209.6/210.1s at23e562e; subsequent changes add device metadata, sequential
+launch and CPU comparison only, preserving objective/AD/update graphs.
+Sol independently reviewed integration; local comparison and accumulation
+tests pass. Chain runs each mode for at most60min, then free test02 comparison
+at most5min. Same64 TRAIN rows/fresh weights, one discarded warmup and3 timed
+updates per mode,0.85 JAX memory fraction. No paid job or Teacher preparation.
+Log runtime/outputs/diagnostics/physical-microbatch-chain.log; final report
+physical-microbatch-comparison.json in the same directory. This short throughput
+probe precedes, and does not replace, combined one-day+T7 optimizer admission.
+
 Physical feedback/recurrent v2 bounded free admissions both completed/exit0.
 Results: `research/daily_coarse_graining/physical_recurrent_v2_results_20260914.md`.
 Two fresh single-day updates pass technical gates with tiny canopy/fraction
 improvements and mixed flux changes. New actual recurrent T7 loss passes both
 native/JVP directions, all physical counts zero, actual peak2.684GiB without
-optimizer. No active GPU process. Next is combined single-day+T7 optimizer
+optimizer. Those admission processes have exited. Next is combined single-day+T7 optimizer
 admission, followed by T30 and expanded learning; no final science claim.
 The active proposal is `research/daily_coarse_graining/physical_feedback_and_recurrent_v2_20260913.md`.
 Saved rollout accounting attributes9277.601 of9986.906 gC/m2 negative nonliving

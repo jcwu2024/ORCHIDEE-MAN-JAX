@@ -13,16 +13,22 @@ Current actions, superseding launch instructions in the history below:
 - User approved batch64 microbatch8/16 throughput checks (2026-09-14). Implemented
   same64 TRAIN rows/fresh weights/physical-v2 loss, one discarded warmup and3
   timed complete updates. CPU gradient/optimizer shapes pass209.6/210.1s.
-  GPU plan: sequential8 then16 on the same idle free gln01 GPU,60min cap each,
+  GPU chain launched on free gln01 GPU0: Bash62878, first Python62924,
+  immutable checkout physical-microbatch-v1 at76e756e. Sequential8 then16,60min cap each,
   JAX pool fraction0.85; original launcher default remains0.65. No paid job.
   `research/daily_coarse_graining/physical_microbatch_benchmark_20260914.md` owns
   the specification. Compare full gradient/Adam displacement and actual peak,
   separately report compilation and warm update times. Difference below5% favors
   lower memory. This bounded throughput probe precedes the already planned
   combined one-day+T7 optimizer admission; it does not replace that science task.
+  Log runtime/outputs/diagnostics/physical-microbatch-chain.log; per-size reports
+  physical-microbatch-{8,16}.json. After both pass, chain invokes free test02
+  comparison (5min cap) and writes physical-microbatch-comparison.json.
+  Query the stable chain PID62878; Python PID changes between configurations.
 
-- Both v2 free admissions are COMPLETED/exit0; no active GPU process or paid
-  job. See `research/daily_coarse_graining/physical_recurrent_v2_results_20260914.md`.
+- Both v2 free admissions are COMPLETED/exit0; their processes are absent.
+  Current new batching probe is above; no paid job. See
+  `research/daily_coarse_graining/physical_recurrent_v2_results_20260914.md`.
   Physical loss: two fresh full-network updates, native/JVP and physical gates
   pass; all four litterpart means move toward target, but improvements are tiny
   (canopy RMSE-0.129%, litterpart-0.048%) and autotrophic respiration+0.492%.
