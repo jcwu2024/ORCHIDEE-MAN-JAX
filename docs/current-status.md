@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-14.
+Last updated: 2026-09-15.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -13,11 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Current work: user authorized consolidation of recurrent scalar and physical
-checks into one native checkpointed rollout. Implemented opt-in training and
-bounded fixed-update200 A/B admission; local equivalence checks precede free
-GPU T7/T30 full-gradient/counter/timing comparisons. No new science training
-or paid submission. See `research/daily_coarse_graining/checked_recurrent_execution_20260914.md`.
+Current work: eliminate duplicate recurrent forward while retaining native
+checkpointed AD and all checks. First free admission (45da5f9) exited124 at55min;
+no checked loss/gradient/speed result. Runtime check passed, original profile
+completed and T7 reference preserved. Bash81582/Python82371 exited. Next split
+the physical reducer into a separate GPU program using the same observations
+(T30 ~1MiB); keep compact host counts and reuse completed reference evidence.
+Local integration underway; no active GPU task, science training or paid job.
+See `research/daily_coarse_graining/checked_recurrent_execution_20260914.md`.
 
 Performance profile COMPLETED, free gln01 GPU0, immutable6f26537, exit0,
 runner1048.85s. Fixed-update200 normal14.09s vs instrumented14.57s (+3.41%);

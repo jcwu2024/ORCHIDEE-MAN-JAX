@@ -1,5 +1,47 @@
 # Shared recurrent loss and compact checks
 
+## September15 execution revision
+
+V1 stopped at its55min ceiling (wrapper exit124); its JSON still contains
+the last running stage because timeout interrupted the report writer. Both
+processes exited. Original timing and the T7 gradient were preserved; no
+checked equivalence or speed result exists. The last stage combined compile,
+first execution and host comparison, so it is not evidence that compilation
+alone caused the timeout.
+
+The next bounded attempt uses `--separate-checked-validation`: native
+`value_and_grad(..., has_aux=True)` returns observations and science counters
+from the same primal rollout; a separate parameter-free JIT reduces physical
+and feedback counters. Inputs and observations stay on GPU, and only the scalar
+and final compact count vector cross to the host during normal execution.
+The ordinary full-gradient host copy is diagnostic-only. No second rollout,
+loss change, precision change, custom cotangents or relaxed gates are introduced.
+Canonical T30 observations are approximately1MiB, small compared with the
+measured16GiB live requirement. This removes unnecessary compiler coupling;
+it is a candidate optimization, not an established cause/fix for the timeout.
+
+The wrapper records raw AD compile, first execution, validator compile/memory,
+observation bytes and full-coordinate comparison separately. Warm calls add
+no new diagnostic synchronization. Original profile and saved T7 reference
+are reused; any missing reference is computed/preserved at its own horizon.
+Daily compilation is delayed until both recurrent comparisons pass. Source
+runtime is unchanged and its78.45s passing synthetic check is reused.
+
+Free attempt: independent checkout `runtime/checkouts/mixed-learning-checked-reuse-v1`,
+new output `mixed-learning-checked-profile-v2.json`,80min diagnostic ceiling.
+Use `CHECKED_REFERENCE_REPORT` pointing to the v1 report and shell mode
+`checked-profile --separate-checked-validation`. Reused baseline timing is
+from another process and must be labelled accordingly. Training stays opt-in;
+no paid job is authorized. The inline variant below remains diagnostic.
+
+Local split-route verification:38 focused tests pass across public rollout,
+compact aux, invalid physical counters, split wrapper, mixed runner and
+profiling; Ruff and diff whitespace checks pass. The wrapper test checks exact
+inline/split loss/gradient/count equality, one primal rollout, dynamic expected
+discrete values, no full-observation host transfer and one validator compilation.
+
+## Initial inline implementation
+
 User authorized implementing the first performance optimization after the
 fixed-checkpoint profile. Keep architecture, FP32 neural parameters/FP64
 physics, objective/scales, sampling, native checkpointed AD and AdamW unchanged.

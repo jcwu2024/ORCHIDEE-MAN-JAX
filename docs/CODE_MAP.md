@@ -71,6 +71,9 @@ The opt-in checked recurrent route uses
 `daily_operator/recurrent_validation.py` counters, bound by
 `scripts/hpc/checked_recurrent_execution.py`; its `checked-profile` mode
 compares full original/checked gradients and complete-update throughput.
+`--separate-checked-validation` retains the same primal observations on GPU
+for a separate parameter-free validation JIT; the shared wrapper preserves
+the runner's compact scalar/count/gradient interface without a second rollout.
 
 `scripts/hpc/prepare_mixed_learning_schedule.py` and its free-CPU shell wrapper
 reconstruct existing prepared TRAIN source metadata, exclude monitor and

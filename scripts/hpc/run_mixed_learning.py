@@ -135,6 +135,8 @@ def run(args):
         raise ValueError('checked-recurrent admission requires fixed-checkpoint profiling')
     if args.checked_reference_report and not args.compare_checked_recurrent:
         raise ValueError('reference reuse is only for checked-recurrent admission')
+    if args.separate_checked_validation and not (args.compare_checked_recurrent or args.checked_recurrent):
+        raise ValueError('separate validation requires checked execution or comparison')
     if args.checked_recurrent and profiling:
         raise ValueError('use compare-checked-recurrent for fixed-checkpoint admission')
     if args.checked_recurrent and args.shape_only:
@@ -181,7 +183,8 @@ def run(args):
                       model_protocol=model, scope=scope, integration_updates=args.integration_updates,
                       source_git_head=current_head)
         if args.checked_recurrent:
-            method['recurrent_execution'] = 'compact_checked_v1'
+            method['recurrent_execution'] = ('split_checked_v1' if args.separate_checked_validation
+                                             else 'compact_checked_v1')
         fresh_identity = dict(seed=model['seed'],initialization=model['initialization'],
                               parameter_count=model['parameter_count'],inherited_weights=False)
         recovery_identity = dict(expected_method=method,expected_source_identities=identities,
@@ -345,21 +348,28 @@ def run(args):
                 raise ValueError('saved original profile does not match this diagnostic')
             report['original_reference_report'] = str(args.checked_reference_report)
         if args.compare_checked_recurrent or args.checked_recurrent:
-            from scripts.hpc.checked_recurrent_execution import bind_checked_backward
+            from scripts.hpc.checked_recurrent_execution import bind_checked_backward, wrap_separate_checked
 
-            checked_backward, checked_names = bind_checked_backward(
-                jax,jnp,component,recurrent_loss,runtime,head,scales,model)
+            checked_backward, checked_names, checked_validator = bind_checked_backward(
+                jax,jnp,component,recurrent_loss,runtime,head,scales,model,
+                separate_validation=args.separate_checked_validation)
+            report['checked_validation_placement'] = ('separate_device_program'
+                if checked_validator is not None else 'inline_aux')
             for horizon, case in cases.items():
                 emit(f'checked_lower_T{horizon}')
-                checked_lowerings[horizon] = checked_backward.lower(parameters,*case[:4],context,case[4])
+                checked_arguments = (parameters,*case[:4],context)
+                if checked_validator is None:
+                    checked_arguments += (case[4],)
+                checked_lowerings[horizon] = checked_backward.lower(*checked_arguments)
+            del checked_arguments
 
         executables, lowered = {}, None
         for name,fn,arguments in [('T7',backward,(parameters,*cases[7][:4],context)),
                                   ('T30',backward,(parameters,*cases[30][:4],context)),
                                   ('daily',daily_backward,(parameters,first_daily,coefficients))]:
             if reference_report is not None:
-                if name == 'daily' or saved_gradient_path(args.checked_reference_report,reference_report,name).is_file():
-                    continue
+                # Compile missing references only when their horizon is reached.
+                continue
             emit('compile_'+name)
             began = time.perf_counter()
             lowered = (checked_lowerings.pop(int(name[1:]))
@@ -371,6 +381,8 @@ def run(args):
                 report['compilation'][name]['precision'] = lowered_precision_summary(lowered)
             if memory['estimated_live_bytes'] > config['compiled_memory_limit_gib']*1024**3:
                 raise MemoryError(name+' compiled live memory exceeds bound')
+            if args.checked_recurrent and name != 'daily' and checked_validator is not None:
+                executable = wrap_separate_checked(jax,executable,checked_validator)
             executables[name] = executable
             emit('compiled_'+name)
         del cases, first_daily, arguments, lowered
@@ -442,6 +454,16 @@ def run(args):
                         case = train_pool.case(jax,row)
                     else:
                         case, old_hard = valid_recurrent(row)
+                        if key not in executables:
+                            emit('compile_reference_'+key)
+                            began = time.perf_counter()
+                            original = backward.lower(parameters,*case[:4],context).compile()
+                            memory = _compiled_memory(original)
+                            report['compilation'][key] = dict(seconds=time.perf_counter()-began,memory=memory)
+                            if memory['estimated_live_bytes'] > config['compiled_memory_limit_gib']*1024**3:
+                                raise MemoryError(key+' reference compiled live memory exceeds bound')
+                            executables[key] = original
+                            emit('compiled_reference_'+key)
                         value, old_gradient = executables[key](parameters,*case[:4],context)
                         old_value, reference = jax.device_get((value,old_gradient))
                         path = args.output.with_suffix(f'.{key}.reference.pkl')
@@ -455,10 +477,22 @@ def run(args):
                     report['compilation']['checked_'+key] = dict(seconds=time.perf_counter()-began,memory=memory)
                     if memory['estimated_live_bytes'] > config['compiled_memory_limit_gib']*1024**3:
                         raise MemoryError('checked '+key+' compiled live memory exceeds bound')
+                    emit('checked_compiled_'+key)
+                    if checked_validator is not None:
+                        executable = wrap_separate_checked(jax,executable,checked_validator,
+                            emit=lambda stage, key=key: emit('checked_'+stage+'_'+key))
+                    began = time.perf_counter()
                     (new_value, counts), gradient = executable(parameters,*case[:4],context,case[4])
+                    jax.block_until_ready(gradient)
                     new_value, counts = jax.device_get((new_value,counts))
+                    report['compilation']['checked_'+key]['first_call_seconds'] = time.perf_counter()-began
+                    if checked_validator is not None:
+                        report['compilation']['checked_'+key]['validation'] = dict(executable.statistics)
+                    emit('checked_executed_'+key)
                     hard = decode_counts(checked_names,counts)
+                    began = time.perf_counter()
                     comparison = gradient_comparison(jax,gradient,reference)
+                    comparison['comparison_seconds'] = time.perf_counter()-began
                     comparison.update(loss_equal=bool(np.isclose(new_value,old_value,atol=1e-6,rtol=1e-5)),
                         old_loss=float(old_value),new_loss=float(new_value),
                         physical_counts_equal=hard==old_hard,all_hard_zero=not any(hard.values()),
@@ -592,6 +626,7 @@ def parser():
     result.add_argument('--profile-trace',action='store_true')
     result.add_argument('--compare-checked-recurrent',action='store_true')
     result.add_argument('--checked-recurrent',action='store_true')
+    result.add_argument('--separate-checked-validation',action='store_true')
     result.add_argument('--checked-reference-report',type=Path)
     return result
 

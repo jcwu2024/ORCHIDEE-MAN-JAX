@@ -1,25 +1,27 @@
 # Current Roadmap
 
-Last updated: 2026-09-14.
+Last updated: 2026-09-15.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
-## Current execution gate (2026-09-14)
+## Current execution gate (2026-09-15)
 
 Current actions, superseding launch instructions in the history below:
 
-- User authorized shared recurrent scalar/compact-check implementation.
-  Implemented opt-in checked execution; bounded free-GPU admission RUNNING:
-  gln01 GPU0, Bash81582/Python82371, immutable45da5f9 in checkout
-  `runtime/checkouts/mixed-learning-checked-v1`. Deployed runtime check passes;
-  changed T7/T30 lowerings pass. JSON/log are diagnostics
-  `mixed-learning-checked-profile-v1.{json,log}`. Next inspect completion of
-  T7/T30 full-gradient/counter comparisons with original, then warm complete
-  mixed-update timing. No architecture/loss/precision change or paid job.
-  Use `run_mixed_learning.sh checked-profile` (3min runtime +55min diagnostic
-  ceilings). Preserve reference gradients before changed compilation. Protocol:
+- Checked execution v1 exited124 at its55min ceiling; Bash81582/Python82371
+  are gone. Runtime check, changed lowerings, original timing and saved T7
+  reference succeeded; no checked gradient/speed acceptance was obtained.
+  Its last stage combined compilation/execution/comparison, so the timeout
+  cannot be attributed specifically to compilation. Next finish split-device
+  validation: keep observations (~1MiB for T30) on GPU after the single native
+  checkpointed gradient rollout, then reduce checks in a separate small JIT.
+  Reuse the original profile/T7 reference and passed runtime check; preserve
+  any newly computed reference. Free diagnostic ceiling80min, independent
+  checkout `runtime/checkouts/mixed-learning-checked-reuse-v1`; not launched yet.
+  No architecture/loss/precision change or paid job. Record compilation,
+  first execution and gradient comparison separately. Protocol:
   `research/daily_coarse_graining/checked_recurrent_execution_20260914.md`.
 
 - Performance profile COMPLETED on free gln01 GPU0, code6f26537, wrapper exit0.
