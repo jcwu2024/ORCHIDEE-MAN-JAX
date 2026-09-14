@@ -19,7 +19,11 @@ Current actions, superseding launch instructions in the history below:
   checkpointed gradient rollout, then reduce checks in a separate small JIT.
   Reuse the original profile/T7 reference and passed runtime check; preserve
   any newly computed reference. Free diagnostic ceiling80min, independent
-  checkout `runtime/checkouts/mixed-learning-checked-reuse-v1`; not launched yet.
+  checkout `runtime/checkouts/mixed-learning-checked-reuse-v1`, immutablefec83e0.
+  Split attempt RUNNING on free gln01 GPU0: Bash89392/Python89436 (parent89390),
+  diagnostics `mixed-learning-checked-profile-v2.{json,log}`. Local38 tests and
+  target-shell dry-run pass; runtime metadata started. Next inspect T7/T30
+  equivalence and full-update timing. Do not mutate this running checkout.
   No architecture/loss/precision change or paid job. Record compilation,
   first execution and gradient comparison separately. Protocol:
   `research/daily_coarse_graining/checked_recurrent_execution_20260914.md`.

@@ -40,6 +40,10 @@ profiling; Ruff and diff whitespace checks pass. The wrapper test checks exact
 inline/split loss/gradient/count equality, one primal rollout, dynamic expected
 discrete values, no full-observation host transfer and one validator compilation.
 
+Deployment: target-shell dry-run passed; free gln01 GPU0 launch uses immutable
+fec83e0, Bash89392/Python89436 (parent89390), with both GPUs idle before launch.
+The actual runner reached metadata. Results pending; keep this checkout immutable.
+
 ## Initial inline implementation
 
 User authorized implementing the first performance optimization after the
