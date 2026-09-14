@@ -6,7 +6,7 @@ import gzip
 import hashlib
 import json
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Mapping
 
 from scripts.hpc.run_fresh_start_one_day_pool import pool_plan, sampling_identity
 from scripts.hpc.trained_screen_common import validate_selection

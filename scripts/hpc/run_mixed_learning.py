@@ -64,15 +64,19 @@ def run(args):
     from research.daily_coarse_graining.daily_operator.fresh_start_training import make_objective, make_update
     from research.daily_coarse_graining.daily_operator.mixed_objective import make_mixed_gradient
     from research.daily_coarse_graining.daily_operator.mixed_training_state import (
-        load_mixed_training_checkpoint, save_mixed_training_checkpoint)
+        load_mixed_training_checkpoint,
+        save_mixed_training_checkpoint,
+    )
     from research.daily_coarse_graining.daily_operator.one_day_training_state import make_gradient_accumulator
     from research.daily_coarse_graining.daily_operator.prepared_one_day import PreparedOneDayPool
     from research.daily_coarse_graining.daily_operator.recurrent_science_loss import (
-        WEIGHT_COMPONENTS, bind_recurrent_science_loss)
+        WEIGHT_COMPONENTS,
+        bind_recurrent_science_loss,
+    )
     from research.daily_coarse_graining.daily_operator.rollout_loss import make_rollout_loss
     from research.daily_coarse_graining.daily_operator.target_oriented_training import initialize_target_oriented_adamw
-    from scripts.hpc.mixed_learning_plan import load_plan
     from scripts.hpc.mixed_learning_monitor import build_mixed_rollout_monitor
+    from scripts.hpc.mixed_learning_plan import load_plan
     from scripts.hpc.probe_one_day_batch import _compiled_memory, _device_memory
     from scripts.hpc.probe_public_rollout import physical_checks
     from scripts.hpc.run_fresh_start_one_day_pool import host_peak_bytes
@@ -213,7 +217,8 @@ def run(args):
             for i in range(0,len(rows),8):
                 loss, aux = daily_forward(parameters,sample(rows[i:i+8]),coefficients)
                 loss, aux = jax.device_get((loss,aux))
-                losses.append(float(loss)); aux_rows.append(aux)
+                losses.append(float(loss))
+                aux_rows.append(aux)
             aux = admission._concatenate_auxiliary(jax,aux_rows)
             hard = calibration._hard_summary(aux['hard'],batch_size=len(rows))
             result = dict(mean_loss=float(np.mean(losses)),count=len(rows),hard=hard,
@@ -302,7 +307,8 @@ def run(args):
                 if not np.isfinite(float(value)) or not hard['all_zero']:
                     report['failed_training_daily'] = dict(update=index+1,microbatch=i//8,hard=hard)
                     raise ValueError('daily training physical/finite gate failed')
-                for key,count in hard['totals'].items(): hard_totals[key] = hard_totals.get(key,0)+count
+                for key,count in hard['totals'].items():
+                    hard_totals[key] = hard_totals.get(key,0)+count
                 daily_total = add(daily_total,gradient,8)
                 daily_loss += float(value)/8
             daily_mean = finish(daily_total,64)
