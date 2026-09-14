@@ -157,6 +157,8 @@ def profile_components(
     repeats=3,
     trace_dir=None,
     emit=None,
+    checked_recurrent_executables=None,
+    checked_counter_names=(),
 ):
     """Replay and time the fixed daily64 plus first T7/T30 mixed update.
 
@@ -179,6 +181,10 @@ def profile_components(
         )
         for horizon in _HORIZONS
     }
+    checked = (None if checked_recurrent_executables is None else {
+        horizon: _recurrent_value(checked_recurrent_executables, horizon, name='checked executables')
+        for horizon in _HORIZONS
+    })
     notify: Callable[..., None] = emit if emit is not None else lambda stage, **info: None
     inventory = _parameter_inventory(jax, parameters)
 
@@ -254,37 +260,51 @@ def profile_components(
             else:
                 case = window_pool.case(jax, recurrent[horizon])
             initial, discrete, days, targets, expected_discrete = case
-            rollout = timed(
-                timings,
-                key + "_forward",
-                lambda: forward(parameters, initial, discrete, days),
-            )
-            observations = rollout[1]
-            if not instrumented:
-                jax.block_until_ready(observations)
-
-            def check_recurrent():
-                hard = _host_hard_map(
-                    jax,
-                    validate_recurrent(case, observations),
-                    name=key + " validation",
+            if checked is None:
+                rollout = timed(
+                    timings,
+                    key + "_forward",
+                    lambda: forward(parameters, initial, discrete, days),
                 )
-                if any(hard.values()):
-                    raise ValueError(key + " profiling replay failed physical/finite gates")
-                return hard
+                observations = rollout[1]
+                if not instrumented:
+                    jax.block_until_ready(observations)
 
-            recurrent_hard = timed(timings, key + "_validity_loss_checks", check_recurrent)
+                def check_recurrent():
+                    hard = _host_hard_map(
+                        jax, validate_recurrent(case, observations), name=key + " validation",
+                    )
+                    if any(hard.values()):
+                        raise ValueError(key + " profiling replay failed physical/finite gates")
+                    return hard
+
+                recurrent_hard = timed(timings, key + "_validity_loss_checks", check_recurrent)
+                del rollout, observations
+                value, gradient = timed(
+                    timings, key + "_backward",
+                    lambda horizon=horizon: executables[horizon](parameters, *case[:4], context),
+                )
+            else:
+                from scripts.hpc.checked_recurrent_execution import decode_counts
+
+                (value, counts), gradient = timed(
+                    timings, key + '_checked_backward',
+                    lambda horizon=horizon: checked[horizon](parameters, *case[:4], context, case[4]),
+                )
+
+                def check_compact():
+                    loss_host, counts_host = jax.device_get((value, counts))
+                    hard = decode_counts(checked_counter_names, counts_host)
+                    if not np.isfinite(loss_host) or any(hard.values()):
+                        raise ValueError(key + ' checked replay failed physical/finite gates')
+                    return hard
+
+                recurrent_hard = timed(timings, key + '_compact_checks', check_compact)
+                del counts
             all_hard_counts_zero = bool(
                 all_hard_counts_zero and not any(recurrent_hard.values())
             )
-            del rollout, observations, recurrent_hard
-            value, gradient = timed(
-                timings,
-                key + "_backward",
-                lambda horizon=horizon: executables[horizon](
-                    parameters, *case[:4], context
-                ),
-            )
+            del recurrent_hard
             if not np.isfinite(float(value)):
                 raise ValueError(key + " profiling loss is nonfinite")
 
@@ -420,6 +440,7 @@ def profile_components(
 
     result = {
         "schema_version": SCHEMA_VERSION,
+        "recurrent_execution": 'compact_checked' if checked is not None else 'separate_forward_checks',
         "status": "completed",
         "repeats": repeats,
         "daily_batch_size": DAILY_BATCH_SIZE,

@@ -66,6 +66,11 @@ learning, shared physical monitors and checkpoint recovery. Its diagnostic
 `profile` shell mode calls `mixed_learning_profiling.py` with fixed update200
 weights, timing existing component callbacks without retaining proposals or
 introducing another loss/AD implementation.
+The opt-in checked recurrent route uses
+`daily_operator/rollout_loss.py::bind_checkpointed_loss_with_aux` and pure-JAX
+`daily_operator/recurrent_validation.py` counters, bound by
+`scripts/hpc/checked_recurrent_execution.py`; its `checked-profile` mode
+compares full original/checked gradients and complete-update throughput.
 
 `scripts/hpc/prepare_mixed_learning_schedule.py` and its free-CPU shell wrapper
 reconstruct existing prepared TRAIN source metadata, exclude monitor and

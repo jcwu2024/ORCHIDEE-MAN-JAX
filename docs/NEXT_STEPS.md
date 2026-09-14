@@ -10,6 +10,14 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- User authorized shared recurrent scalar/compact-check implementation.
+  Implemented opt-in checked execution, pending bounded free-GPU admission:
+  T7/T30 full-gradient/counter comparisons with original, then warm complete
+  mixed-update timing. No architecture/loss/precision change or paid job.
+  Use `run_mixed_learning.sh checked-profile` (3min runtime +55min diagnostic
+  ceilings). Preserve reference gradients before changed compilation. Protocol:
+  `research/daily_coarse_graining/checked_recurrent_execution_20260914.md`.
+
 - Performance profile COMPLETED on free gln01 GPU0, code6f26537, wrapper exit0.
   Fixed update200, zero retained updates; physical/finite and scalar/norm parity
   pass. Normal replay14.09s, instrumented14.57s (+3.41%); daily gradient5.24s,

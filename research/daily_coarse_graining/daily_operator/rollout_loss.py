@@ -126,6 +126,40 @@ class RolloutLoss:
         )
         return self.loss_fn(params, initial_continuous, observations, targets, loss_context)
 
+    def bind_checkpointed_loss_with_aux(self, loss_with_aux_fn):
+        """Bind a compact auxiliary reducer to one checkpointed rollout.
+
+        ``loss_with_aux_fn`` receives ``(params, initial_continuous,
+        observations, targets, loss_context)`` and must return ``(loss, aux)``.
+        The returned callable has the same dynamic arguments as
+        :meth:`checkpointed_loss` and is suitable for native
+        ``jax.value_and_grad(..., has_aux=True)``.
+        """
+        def checkpointed_loss_with_aux(
+            params,
+            initial_continuous,
+            initial_discrete,
+            days,
+            targets,
+            loss_context,
+        ):
+            _, observations = self.rollout(
+                params,
+                initial_continuous,
+                initial_discrete,
+                days,
+                checkpointed=True,
+            )
+            return loss_with_aux_fn(
+                params,
+                initial_continuous,
+                observations,
+                targets,
+                loss_context,
+            )
+
+        return checkpointed_loss_with_aux
+
     def _leading_length(self, tree, name):
         leaves = self.jax.tree_util.tree_leaves(tree)
         if not leaves:

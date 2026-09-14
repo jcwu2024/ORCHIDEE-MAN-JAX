@@ -3,7 +3,7 @@
 set -euo pipefail
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 CODE_ROOT=${CODE_ROOT:?declare reviewed checkout}
-MODE=${1:?metadata, shape, integration, profile, or train}
+MODE=${1:?metadata, shape, integration, profile, checked-profile, or train}
 shift
 PRINT_ONLY=false
 if [[ "${1:-}" == --dry-run ]]; then PRINT_ONLY=true; shift; fi
@@ -41,17 +41,28 @@ case "$MODE" in
         --output "${OUTPUT:-$DIAG/mixed-learning-v1-shape.json}" "$@"
     fi
     ;;
-  integration|profile|train)
-    if [[ "$MODE" == integration || "$MODE" == profile ]]; then
+  integration|profile|checked-profile|train)
+    if [[ "$MODE" == integration || "$MODE" == profile || "$MODE" == checked-profile ]]; then
       if ! "$PRINT_ONLY"; then
         case "$(hostname -s)" in gln01|ibgln01|ibc13b02n04) ;; *) exit 2;; esac
       fi
-      if [[ "$MODE" == profile ]]; then
+      if [[ "$MODE" == profile || "$MODE" == checked-profile ]]; then
         ARGS+=(--profile-checkpoint "$ROOT/runtime/outputs/training/mixed-learning-v1/report.update-000200.checkpoint.pkl"
           --profile-training-report "$ROOT/runtime/outputs/training/mixed-learning-v1/report.json"
-          --profile-repeats 3 --profile-trace)
+          --profile-repeats 3)
         DEFAULT_OUTPUT=$DIAG/mixed-learning-profile-v1.json
         DEFAULT_TIMEOUT=40m
+        if [[ "$MODE" == checked-profile ]]; then
+          ARGS+=(--compare-checked-recurrent)
+          DEFAULT_OUTPUT=$DIAG/mixed-learning-checked-profile-v1.json
+          DEFAULT_TIMEOUT=55m
+          run_command env CODE_ROOT="$CODE_ROOT" GPU_DEVICE="${GPU_DEVICE:?select allocated GPU}" \
+            PYTHON_MODULE=scripts.hpc.check_daily_training_runtime RUN_TIMEOUT=3m \
+            OUTPUT="$DIAG/mixed-learning-checked-profile-v1-runtime.json" \
+            bash "$CODE_ROOT/scripts/hpc/run_fresh_start_one_day.sh" --backend gpu
+        else
+          ARGS+=(--profile-trace)
+        fi
       else
         ARGS+=(--integration-updates 1)
         DEFAULT_OUTPUT=$DIAG/mixed-learning-v1-integration.json

@@ -135,6 +135,7 @@ def test_profile_components_has_declared_keyword_only_api_and_replays_without_re
         "recurrent_rows", "window_pool", "daily_executable", "recurrent_executables",
         "coefficients", "context", "forward", "validate_recurrent", "update", "add",
         "finish", "combine", "finite", "norm_fn", "repeats", "trace_dir", "emit",
+        "checked_recurrent_executables", "checked_counter_names",
     ]
     assert all(
         parameter.kind is inspect.Parameter.KEYWORD_ONLY
@@ -199,3 +200,26 @@ def test_trace_failure_is_reported_once_without_repeating_trace_replay(tmp_path)
     assert result["trace"]["status"] == "failed"
     assert "profiler unavailable" in result["trace"]["error"]
     assert len(calls) == 1
+
+
+def test_checked_replay_uses_compact_aux_without_a_separate_forward():
+    callbacks = _callbacks()
+    reference = profile_components(**callbacks, repeats=1)
+
+    def checked(parameters, initial, discrete, days, targets, context, expected):
+        value, gradient = callbacks['recurrent_executables'][7](
+            parameters, initial, discrete, days, targets, context)
+        return (value, jnp.zeros((1,), dtype=jnp.int64)), gradient
+
+    def forbidden(*args):
+        raise AssertionError('checked replay must not invoke a separate forward/check')
+
+    callbacks.update(forward=forbidden, validate_recurrent=forbidden)
+    observed = profile_components(**callbacks, repeats=1,
+        checked_recurrent_executables={7: checked, 30: checked},
+        checked_counter_names=('physical',))
+    assert observed['parity']['reference'] == reference['parity']['reference']
+    assert observed['recurrent_execution'] == 'compact_checked'
+    keys = observed['instrumented']['components']
+    assert 'T30_checked_backward' in keys
+    assert 'T30_forward' not in keys

@@ -123,6 +123,10 @@ def run(args):
         raise ValueError('profiling is a separate diagnostic, not resume or integration training')
     if args.profile_trace and not profiling:
         raise ValueError('trace is available only in diagnostic profiling mode')
+    if args.compare_checked_recurrent and not profiling:
+        raise ValueError('checked-recurrent admission requires fixed-checkpoint profiling')
+    if args.checked_recurrent and profiling:
+        raise ValueError('use compare-checked-recurrent for fixed-checkpoint admission')
     if args.output.exists() and not args.resume:
         raise FileExistsError('fresh run requires a new output; use --resume for recovery')
     if args.resume and not args.output.is_file():
@@ -164,6 +168,8 @@ def run(args):
         method = dict(implementation='mixed_learning_v1', configuration=config,
                       model_protocol=model, scope=scope, integration_updates=args.integration_updates,
                       source_git_head=current_head)
+        if args.checked_recurrent:
+            method['recurrent_execution'] = 'compact_checked_v1'
         fresh_identity = dict(seed=model['seed'],initialization=model['initialization'],
                               parameter_count=model['parameter_count'],inherited_weights=False)
         recovery_identity = dict(expected_method=method,expected_source_identities=identities,
@@ -316,13 +322,24 @@ def run(args):
         elif report['completed_updates'] in config['milestones']:
             monitor_milestone(report['completed_updates'])
 
+        checked_lowerings = {}
+        if args.compare_checked_recurrent or args.checked_recurrent:
+            from scripts.hpc.checked_recurrent_execution import bind_checked_backward
+
+            checked_backward, checked_names = bind_checked_backward(
+                jax,jnp,component,recurrent_loss,runtime,head,scales,model)
+            for horizon, case in cases.items():
+                emit(f'checked_lower_T{horizon}')
+                checked_lowerings[horizon] = checked_backward.lower(parameters,*case[:4],context,case[4])
+
         executables = {}
         for name,fn,arguments in [('T7',backward,(parameters,*cases[7][:4],context)),
                                   ('T30',backward,(parameters,*cases[30][:4],context)),
                                   ('daily',daily_backward,(parameters,first_daily,coefficients))]:
             emit('compile_'+name)
             began = time.perf_counter()
-            lowered = fn.lower(*arguments)
+            lowered = (checked_lowerings.pop(int(name[1:]))
+                       if args.checked_recurrent and name != 'daily' else fn.lower(*arguments))
             executable = lowered.compile()
             memory = _compiled_memory(executable)
             report['compilation'][name] = dict(seconds=time.perf_counter()-began,memory=memory)
@@ -364,9 +381,9 @@ def run(args):
             return case,hard
 
         if profiling:
-            from scripts.hpc.mixed_learning_profiling import profile_components
+            from scripts.hpc.mixed_learning_profiling import _parity, profile_components
 
-            profile = profile_components(jax=jax,jnp=jnp,parameters=parameters,optimizer=optimizer,
+            profile_arguments = dict(jax=jax,jnp=jnp,parameters=parameters,optimizer=optimizer,
                 sample=sample,daily_rows=fixed_rows,
                 recurrent_rows={row['length']:row for row in fixed_windows},window_pool=train_pool,
                 daily_executable=executables['daily'],
@@ -375,6 +392,54 @@ def run(args):
                 validate_recurrent=validate_recurrent,update=update,add=add,finish=finish,
                 combine=combine,finite=finite,norm_fn=norm_fn,repeats=args.profile_repeats,
                 trace_dir=args.output.with_suffix('.trace') if args.profile_trace else None,emit=emit)
+            profile = profile_components(**profile_arguments)
+            emit('original_profile_completed',profile=profile)
+            if args.compare_checked_recurrent:
+                from research.daily_coarse_graining.daily_operator.one_day_training_state import _atomic_pickle
+                from scripts.hpc.checked_recurrent_execution import decode_counts
+                from scripts.hpc.probe_public_rollout import gradient_comparison
+
+                checked_executables, comparisons = {}, {}
+                for row in fixed_windows:
+                    horizon, key = row['length'], f"T{row['length']}"
+                    case, old_hard = valid_recurrent(row)
+                    value, old_gradient = executables[key](parameters,*case[:4],context)
+                    old_value, reference = jax.device_get((value,old_gradient))
+                    path = args.output.with_suffix(f'.{key}.reference.pkl')
+                    _atomic_pickle(path,dict(value=old_value,gradient=reference,hard=old_hard,
+                                             checkpoint=str(args.profile_checkpoint),window=row))
+                    del value, old_gradient
+                    emit('checked_compile_'+key,reference_gradient=str(path))
+                    began = time.perf_counter()
+                    executable = checked_lowerings.pop(horizon).compile()
+                    memory = _compiled_memory(executable)
+                    report['compilation']['checked_'+key] = dict(seconds=time.perf_counter()-began,memory=memory)
+                    if memory['estimated_live_bytes'] > config['compiled_memory_limit_gib']*1024**3:
+                        raise MemoryError('checked '+key+' compiled live memory exceeds bound')
+                    (new_value, counts), gradient = executable(parameters,*case[:4],context,case[4])
+                    new_value, counts = jax.device_get((new_value,counts))
+                    hard = decode_counts(checked_names,counts)
+                    comparison = gradient_comparison(jax,gradient,reference)
+                    comparison.update(loss_equal=bool(np.isclose(new_value,old_value,atol=1e-6,rtol=1e-5)),
+                        old_loss=float(old_value),new_loss=float(new_value),
+                        physical_counts_equal=hard==old_hard,all_hard_zero=not any(hard.values()),
+                        reference_gradient=str(path),hard=hard)
+                    comparisons[key] = comparison
+                    emit('checked_compared_'+key,checked_comparisons=comparisons)
+                    if not (comparison['passed'] and comparison['loss_equal']
+                            and comparison['physical_counts_equal'] and comparison['all_hard_zero']):
+                        raise ValueError('checked '+key+' loss/gradient/physical comparison failed')
+                    checked_executables[horizon] = executable
+                    del reference,gradient,case
+                checked_profile = profile_components(**profile_arguments,
+                    checked_recurrent_executables=checked_executables,checked_counter_names=checked_names)
+                parity = _parity(profile['baseline']['records'],checked_profile['baseline']['records'])
+                if not parity['passed']:
+                    raise ValueError('checked complete mixed update differs from original')
+                before, after = profile['baseline']['median_seconds'], checked_profile['baseline']['median_seconds']
+                emit('checked_admission_completed',checked_profile=checked_profile,
+                     checked_mixed_parity=parity,checked_speedup=before/after,
+                     checked_time_reduction=1.-after/before)
             emit('completed',status='completed',profile=profile,persistent_parameter_updates=0,
                  memory=_device_memory(runtime['devices'][0]),daily_reader=daily_pool.statistics())
             return report
@@ -403,8 +468,20 @@ def run(args):
             losses, recurrent_hard = {}, {}
             for h in (7,30):
                 key = f'T{h}'
-                case,hard = valid_recurrent(schedule['update_rows'][index][key])
-                value,gradient = executables[key](parameters,*case[:4],context)
+                row = schedule['update_rows'][index][key]
+                if args.checked_recurrent:
+                    from scripts.hpc.checked_recurrent_execution import decode_counts
+
+                    case = train_pool.case(jax,row)
+                    (value,counts),gradient = executables[key](parameters,*case[:4],context,case[4])
+                    value,counts = jax.device_get((value,counts))
+                    hard = decode_counts(checked_names,counts)
+                    if any(hard.values()) or not np.isfinite(value):
+                        report['failed_training_window'] = dict(window=row,hard=hard,loss=float(value))
+                        raise ValueError('checked TRAIN trajectory physical/finite gate failed')
+                else:
+                    case,hard = valid_recurrent(row)
+                    value,gradient = executables[key](parameters,*case[:4],context)
                 losses[key], recurrent_hard[key] = float(value),hard
                 component_norms[key] = float(norm_fn(gradient))
                 mixed = combine(mixed,gradient,1.,.5)
@@ -463,6 +540,8 @@ def parser():
     result.add_argument('--profile-training-report',type=Path)
     result.add_argument('--profile-repeats',type=int,choices=(3,5),default=3)
     result.add_argument('--profile-trace',action='store_true')
+    result.add_argument('--compare-checked-recurrent',action='store_true')
+    result.add_argument('--checked-recurrent',action='store_true')
     return result
 
 

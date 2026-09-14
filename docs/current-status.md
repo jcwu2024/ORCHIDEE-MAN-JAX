@@ -13,6 +13,12 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Current work: user authorized consolidation of recurrent scalar and physical
+checks into one native checkpointed rollout. Implemented opt-in training and
+bounded fixed-update200 A/B admission; local equivalence checks precede free
+GPU T7/T30 full-gradient/counter/timing comparisons. No new science training
+or paid submission. See `research/daily_coarse_graining/checked_recurrent_execution_20260914.md`.
+
 Performance profile COMPLETED, free gln01 GPU0, immutable6f26537, exit0,
 runner1048.85s. Fixed-update200 normal14.09s vs instrumented14.57s (+3.41%);
 all physical/finite checks and scalar/norm parity pass, no retained updates.
