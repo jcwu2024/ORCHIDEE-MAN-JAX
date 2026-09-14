@@ -13,11 +13,17 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Current authorized work: bounded free-GPU component profiling of the completed
-update200 model before planning greater data coverage. No scientific training
-or precision/AD/architecture change. Fixed input and optimizer replays discard
-all proposals; compare production-like and synchronized component totals.
-See `research/daily_coarse_graining/mixed_learning_performance_profile_20260914.md`.
+Performance profile COMPLETED, free gln01 GPU0, immutable6f26537, exit0,
+runner1048.85s. Fixed-update200 normal14.09s vs instrumented14.57s (+3.41%);
+all physical/finite checks and scalar/norm parity pass, no retained updates.
+Daily gradient5.24s, T7/T30 gradients5.32s, extra validation forward/checks2.34s,
+preparation/transfers .65s, AdamW .069s. Live15.96GiB; all109M parametersFP32.
+Incomplete GPU trace prevents full utilization/FP64 time attribution. Next
+candidate is shared recurrent scalar+compact checks from one differentiable
+rollout, eliminating duplicate forward/terms; forward alone costs1.41s, so
+do not promise multiple-fold speedup. No new training or precision/AD change;
+no active task. See
+`research/daily_coarse_graining/mixed_learning_performance_profile_20260914.md`.
 
 Latest result: job15069880 COMPLETED200/200, exit0,01:17:20, estimated3.56yuan.
 All fixed physical/population checks and checkpoint replay pass; science gates

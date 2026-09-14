@@ -10,12 +10,17 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
-- User authorized a short performance check before data-coverage scale-up.
-  Implementing free gln01 fixed-update200 component profiling (40min ceiling),
-  with warmups and three production-like/instrumented repetitions; proposals
-  discarded. No new training, precision, architecture or AD change. Measure
-  daily/T7/T30, data preparation, checks, gradient operations and AdamW before
-  recommending optimization or a larger paid budget. Protocol:
+- Performance profile COMPLETED on free gln01 GPU0, code6f26537, wrapper exit0.
+  Fixed update200, zero retained updates; physical/finite and scalar/norm parity
+  pass. Normal replay14.09s, instrumented14.57s (+3.41%); daily gradient5.24s,
+  T7/T30 gradients5.32s, extra recurrent forward/checks2.34s, preparation/transfer
+  .65s, AdamW .069s. Live15.96GiB. All109M paramsFP32; partial CUPTI trace cannot
+  quantify full GPU utilization or FP64 time. Next candidate: consolidate
+  recurrent scalar+compact check aux on the same differentiable rollout,
+  eliminating separate validation forward/terms while preserving checks.
+  Duplicate-forward cost1.41s; do not promise several-fold gain. No optimization,
+  new training, precision or AD implementation change yet; no active job.
+  Evidence and next optimization scope:
   `research/daily_coarse_graining/mixed_learning_performance_profile_20260914.md`.
 
 - Job15069880 COMPLETED200/200, Slurm exit0,01:17:20, estimated3.56yuan.

@@ -23,7 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `research/daily_coarse_graining/mixed_learning_performance_profile_20260914.md` | Authorized bounded free-GPU diagnostic | Fixed update200 component timing before throughput/coverage scale-up; no retained updates |
+| `research/daily_coarse_graining/mixed_learning_performance_profile_20260914.md` | Completed free-GPU component timing, exit0 | 14.09s replay; duplicate recurrent forward/checks16.1%; FP32 parameters; GPU trace coverage incomplete |
 | `research/daily_coarse_graining/mixed_learning_200_results_20260914.md` | Completed200 updates; learning progress, science gates still fail | Actual data exposure, physical-unit changes, throughput/cost and next coverage planning |
 | `research/daily_coarse_graining/mixed_learning_integration_results_20260914.md` | Completed: full mixed update, physical checks and checkpoint replay pass | Actual runtime/memory, accuracy limitations, ready200-update resource envelope |
 | `research/daily_coarse_graining/mixed_learning_protocol_20260914.md` | Implemented200-update method; free integration completed | Executable fresh joint daily/T7/T30 training, paired recovery, fixed monitors and paid envelope |
