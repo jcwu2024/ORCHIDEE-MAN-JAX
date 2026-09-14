@@ -13,10 +13,19 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-T30 mixed admission is running on free gln01 GPU0 Bash18684/Python19718 at immutable
+T30 mixed admission COMPLETED: two updates, exit0, native/JVP and all physical
+gates pass; processes18684/19718 exited. Evidence:
+`research/daily_coarse_graining/mixed_physical_recurrent_t30_results_20260914.md`.
+Directional differences0.04969%/0.10665%; same-draw mixed losses fall0.13233%/
+0.11877%. Peak live16.801GiB; second complete update20.76s. Science gains are
+tiny, autotrophic respiration slightly worse and canopy drift unresolved.
+Next implement200-update fresh mixed learning on the ready broader pool/index.
+No further identical two-update check and no paid job currently submitted.
+
+Completed T30 launch: free gln01 GPU0 Bash18684/Python19718 at immutable
 checkout `runtime/checkouts/mixed-physical-recurrent-t30-v1`, commit70dd976.
 Local41 tests and test02 actual gradient/JVP/optimizer shapes pass398.4s;
-target-shell dry runs and deployed runtime (48.8s) pass. Actual results pending in
+target-shell dry runs and deployed runtime (48.8s) pass. Completed results in
 `runtime/outputs/diagnostics/mixed-physical-recurrent-t30-v1-gpu.json`.
 Parallel free test03 metadata preparation completed124.9s; Bash20119 exited.
 At a9c2d03 it selected400 unique semantic windows across267 sites/44 years/

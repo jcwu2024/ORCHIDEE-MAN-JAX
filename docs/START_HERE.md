@@ -68,8 +68,9 @@ feedback loss v2 and a shared recurrent science objective: correct demonstrated
 litter-fraction weighting imbalance and canopy-carbon drift, then admit actual
 combined updates before broader training. The separate single-day two-update
 and recurrent T7 directional checks have passed. Two fresh combined one-day+T7
-updates now pass technical gates with tiny science changes; actual T30 mixed
-admission and a larger learning budget are next. See
+updates now pass technical gates with tiny science changes. Actual T30 native/JVP
+and two mixed updates also pass; the next step is the200-update mixed-learning
+implementation on the expanded pool and prepared rotating-window index. See
 the top of `NEXT_STEPS.md` and `physical_feedback_and_recurrent_v2_20260913.md`
 in the research docs. The final paper method still requires a declared,
 reproducible fresh-initialization/full-network protocol. The chronology below

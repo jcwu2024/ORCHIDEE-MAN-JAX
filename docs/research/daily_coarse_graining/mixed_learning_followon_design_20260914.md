@@ -1,5 +1,12 @@
 # Mixed Learning Follow-On Design
 
+T30 prerequisite is now completed: actual native/JVP and two mixed updates
+pass. See `mixed_physical_recurrent_t30_results_20260914.md`. Measured live
+peak16.801GiB and second complete update20.76s support preparing the bounded
+learning resource envelope; they do not establish convergence or eliminate
+startup/IO/evaluation costs. Persistent learning implementation and a concrete
+resource request are now next, rather than another two-update admission.
+
 Metadata preparation update: implementation a9c2d03 passed13 focused tests and
 completed on free test03 in124.9s. Report/index:
 `runtime/outputs/diagnostics/mixed-learning-200-recurrent-schedule-v1.json`

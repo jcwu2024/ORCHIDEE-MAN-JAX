@@ -55,6 +55,11 @@ estimate. Existing exploratory checkpoints must not become the default start.
 
 ## Execution record
 
+Completed: exit0, two updates, both native/JVP directions and all physical
+gates pass. Final evidence and limitations are in
+`mixed_physical_recurrent_t30_results_20260914.md`. The launch record below is
+historical; Bash18684/Python19718 have exited.
+
 Commit70dd976 passes41 focused mixed/recurrent/rollout tests. Actual test02
 shapes, including the optional T30 JVP and full optimizer, pass398.4s;
 target-shell argument expansion passes. Free gln01 GPU0 Bash18684/Python19718 launched

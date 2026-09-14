@@ -10,12 +10,23 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
-- T30 mixed admission running on free gln01 GPU0, Bash18684/Python19718, immutable
+- T30 mixed admission COMPLETED: exit0, two updates, actual native/JVP checks
+  and all physical gates pass. Two directional differences0.04969%/0.10665%;
+  same-draw mixed losses fall0.13233%/0.11877%. Peak live16.801GiB, reserved
+  26.978GiB; second full update20.76s, total49.25min dominated by compilation.
+  Science changes remain tiny; canopy drift unresolved. See
+  `research/daily_coarse_graining/mixed_physical_recurrent_t30_results_20260914.md`.
+  Processes18684/19718 exited; no active task for this admission. Next implement
+  the200-update mixed-learning runner/protocol, using ready daily pool and
+  400-window index. Reuse T7/T30 AD/caches; no repeat two-update prerequisite.
+  No paid learning job submitted or current concrete paid envelope approved.
+
+- Completed T30 launch provenance: free gln01 GPU0, Bash18684/Python19718, immutable
   `runtime/checkouts/mixed-physical-recurrent-t30-v1` at70dd976. Local41 tests
   and actual test02 daily/T30/native/JVP/optimizer shapes pass (398.4s);
   target-shell shape/GPU dry runs pass. Log/report:
   `runtime/outputs/diagnostics/mixed-physical-recurrent-t30-v1-gpu.{log,json}`.
-  Deployed GPU runtime check passed48.8s; actual model is running, results pending.
+  Deployed GPU runtime check passed48.8s; actual-model run completed.
   No paid submission. Metadata-only200-update recurrent schedule preparation
   COMPLETED on free test03, Bash20119 exited, at a9c2d03, checkout
   `mixed-learning-schedule-v1`; log/report
@@ -25,10 +36,10 @@ Current actions, superseding launch instructions in the history below:
   7387 unique Teacher days (7400 occurrences,13 cross-update repeats). Within-update
   overlap zero. One1535205-byte index, zero payload reads/copies,124.9s preparation.
   Eligible unique source windows:15968 T7 and7988 T30 after exclusions/dedup.
-  The200-update learning runner/resource request remains pending T30 evidence;
+  The200-update learning runner/resource request is now the next work;
   design is `research/daily_coarse_graining/mixed_learning_followon_design_20260914.md`.
 
-- Active specification: extend admitted mixed runner to T30, using the first
+- Completed specification: extend admitted mixed runner to T30, using the first
   four accepted TRAIN T30 windows, unchanged daily128 rows and fresh full-network
   initialization. Specification: `research/daily_coarse_graining/mixed_physical_recurrent_t30_admission_20260914.md`.
   Preserve first native T30 gradient, verify two JVP directions of that actual
