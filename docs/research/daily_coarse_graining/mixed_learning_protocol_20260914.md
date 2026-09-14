@@ -1,5 +1,11 @@
 # Fresh 200-update mixed learning protocol
 
+Integration completed successfully; see `mixed_learning_integration_results_20260914.md`
+for actual timing, physical checks and checkpoint replay. Execution checkout
+is now12eb22c and the paid launcher dry-run passed; concrete16.56yuan envelope
+awaits confirmation before submission. Running/pending statements below record
+the original launch context.
+
 User approved the 200-update task on 2026-09-14. This is bounded learning,
 not a final model or independent validation. It supersedes the implementation
 pending language in `mixed_learning_followon_design_20260914.md`.

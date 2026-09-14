@@ -10,6 +10,19 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Mixed-learning integration COMPLETED: exit0, one full fresh update, all
+  training and monitor physical counts zero, complete development metrics,
+  exact checkpoint forward replay. Total17.99min; peak live15.97GiB, reserved
+  26.98GiB, host19.24GiB. Science gates still fail; one update is technical
+  evidence only. See `research/daily_coarse_graining/mixed_learning_integration_results_20260914.md`.
+  Bash65184/Python65235 exited. Execution checkout `mixed-learning-v1` now
+  at12eb22c with tested report/memory-lifetime fixes; actual Slurm launcher
+  dry-run passes. Next submit the200-update job upon approval of the concrete
+  8CPU/1V100/64GiB/6h/16.56yuan envelope. No paid job submitted, no new data or
+  standalone AD/throughput task needed. Retain initial/50/100/200 science
+  monitors and one rolling recovery; complete the declared budget unless a
+  technical failure occurs.
+
 - User approved200-update learning. Implemented executable protocol/runner,
   strict TRAIN/development readers, full recovery and physical-unit monitors;
   see `research/daily_coarse_graining/mixed_learning_protocol_20260914.md`.

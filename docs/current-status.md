@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest: mixed-learning integration COMPLETED, exit0, full update plus exact
+checkpoint replay; all hard checks pass. Total17.99min/live15.97GiB/host19.24GiB.
+Initial/updated development metric populations complete; science gates both
+fail (one fresh update, not a trained model). Bash65184/Python65235 exited.
+Evidence: `research/daily_coarse_graining/mixed_learning_integration_results_20260914.md`.
+Execution checkout now12eb22c, Slurm-entry dry-run passed.200-update task
+approved; concrete6h/8CPU/1V100/64GiB/16.56yuan envelope awaits confirmation.
+No paid task submitted. Proceed directly to learning after that approval.
+
 200-update learning is implemented and user-approved as a task. Executable
 method is `research/daily_coarse_graining/mixed_learning_protocol_20260914.md`.
 Local43 relevant tests and test02 actual metadata/launcher expansion pass.
