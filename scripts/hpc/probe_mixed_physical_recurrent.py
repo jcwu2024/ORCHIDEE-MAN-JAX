@@ -1,6 +1,7 @@
 """Bounded fresh full-network daily + native recurrent optimizer admission."""
 from __future__ import annotations
 
+import gc
 import gzip
 import itertools
 import json
@@ -16,21 +17,54 @@ from scripts.hpc import probe_feedback_loss_updates as admission
 from scripts.hpc import run_fresh_start_one_day as prototype
 
 
-def select_draws(sampler, selection):
-    """Pair consecutive fixed32 draws and TRAIN T7 windows without outcome selection."""
+def select_draws(sampler, selection, horizon=7):
+    """Pair consecutive fixed32 draws and ordered TRAIN windows without outcome selection."""
     if selection.get('role') != 'train_only_bounded_recurrent_admission_not_validation':
         raise ValueError('mixed training requires the accepted TRAIN-only recurrent selection')
+    if horizon not in (7, 30):
+        raise ValueError('mixed recurrent horizon must be 7 or 30 days')
     batches = tuple(itertools.islice(sampler.iter_epoch(0), 4))
     if len(batches) != 4 or any(b.batch_index != i or b.draw_count != 32 for i, b in enumerate(batches)):
         raise ValueError('expected first four complete fixed32 epoch0 batches')
     rows = tuple(row for batch in batches for row in batch.rows)
     if len(rows) != 128 or len({(r.artifact_id, r.batch_row) for r in rows}) != 128:
         raise ValueError('mixed admission requires 128 distinct TRAIN examples')
-    windows = tuple(row for row in selection['windows'] if row['length'] == 7)[:4]
+    windows = tuple(row for row in selection['windows'] if row['length'] == horizon)[:4]
     keys = [tuple(key) for row in windows for key in row['teacher_day_keys']]
-    if len(windows) != 4 or len(keys) != 28 or len(set(keys)) != 28:
-        raise ValueError('expected four distinct seven-day TRAIN windows')
+    if len(windows) != 4 or len(keys) != 4*horizon or len(set(keys)) != 4*horizon:
+        raise ValueError(f'expected four distinct {horizon}-day TRAIN windows')
     return (rows[:64], rows[64:]), (windows[:2], windows[2:])
+
+
+def validate_configuration(config):
+    """Validate the bounded T7/T30 runner contract and optional T30 AD check."""
+    horizon = config.get('horizon')
+    if (config.get('schema_version') != 'mixed_physical_recurrent_admission_v1'
+            or config.get('outer_weights') != {'daily': 1., 'recurrent': 1.}
+            or (config.get('updates'), config.get('daily_batch'), config.get('daily_microbatch'),
+                config.get('windows_per_update')) != (2, 64, 8, 2)
+            or horizon not in (7, 30)):
+        raise ValueError('runner supports declared two-update 64/micro8/two-window T7/T30 admission')
+    directional = config.get('directional_check')
+    if directional is not None:
+        if (horizon != 30 or set(directional) != {'seeds', 'rtol', 'atol'}
+                or tuple(directional['seeds']) != (20260913, 20260914)
+                or directional['rtol'] != .01 or directional['atol'] != 1e-6):
+            raise ValueError('optional directional check must be the declared two-direction T30 gate')
+    return horizon, directional
+
+
+def directional_record(primal, reverse, forward, reference, *, seed, rtol, atol):
+    """Classify one declared native reverse/JVP comparison."""
+    primal, reverse, forward, reference = map(float, (primal, reverse, forward, reference))
+    resolved = max(abs(reverse), abs(forward)) > 1e-5
+    primal_matches = bool(np.isclose(primal, reference, rtol=1e-5, atol=1e-6))
+    passed = bool(all(np.isfinite((primal, reverse, forward))) and primal_matches
+                  and np.isclose(reverse, forward, rtol=rtol, atol=atol))
+    return dict(seed=seed, primal=primal, reverse_projection=reverse, jvp_projection=forward,
+                absolute_error=abs(reverse-forward), relative_tolerance=rtol,
+                absolute_tolerance=atol, resolved_projection=resolved,
+                primal_matches_reverse_evaluation=primal_matches, passed=passed)
 
 
 def run(args):
@@ -73,11 +107,7 @@ def run(args):
         if args.admission_only or args.cpu_forward_only:
             raise ValueError('use --shape-only, --forward-only, or full two-update execution')
         config = json.loads(args.mixed_protocol.read_text())
-        if (config['schema_version'] != 'mixed_physical_recurrent_admission_v1'
-                or config['outer_weights'] != {'daily': 1., 'recurrent': 1.}
-                or (config['updates'], config['daily_batch'], config['daily_microbatch'],
-                    config['windows_per_update'], config['horizon']) != (2, 64, 8, 2, 7)):
-            raise ValueError('runner supports the declared two-update 64/micro8/twoT7 admission')
+        horizon, directional_config = validate_configuration(config)
         model = json.loads(args.protocol.read_text())
         pool_config = json.loads(args.pool_protocol.read_text())
         daily_config = json.loads(args.admission_config.read_text())
@@ -93,11 +123,14 @@ def run(args):
             catalogue = json.load(handle)
         sampler, _ = pool_plan(catalogue, pool_config)
         windows = WindowPool(args.selection)
-        daily_groups, recurrent_groups = select_draws(sampler, windows.selection)
+        daily_groups, recurrent_groups = select_draws(sampler, windows.selection, horizon=horizon)
         monitor_rows = tuple(catalogue['monitor_rows'])
         if len(monitor_rows) != 64:
             raise ValueError('expected fixed64 excluded TRAIN monitor')
-        report.update(configuration=config, model_protocol=model,
+        report.update(configuration=config, model_protocol=model, horizon_days=horizon,
+                      scope=f'fresh_daily_plus_T{horizon}_mixed_optimizer_admission',
+                      directional_check={'requested': directional_config is not None,
+                                         'status': 'pending' if directional_config is not None else 'not_requested'},
                       daily_rows=[[r.as_metadata() for r in rows] for rows in daily_groups],
                       recurrent_windows=recurrent_groups, monitor_rows=monitor_rows,
                       daily_source_identity=catalogue['source_identity'],
@@ -122,6 +155,11 @@ def run(args):
         report['recurrent_scales'] = loss_spec
         component = make_rollout_loss(jax, jnp, make_canonical_step(head, template), recurrent_loss)
         recurrent_backward = jax.jit(jax.value_and_grad(component.checkpointed_loss, argnums=0))
+        recurrent_tangent = None
+        if directional_config is not None:
+            recurrent_tangent = jax.jit(lambda p, d, s, z, day, t, c:
+                jax.jvp(lambda candidate: component.checkpointed_loss(candidate, s, z, day, t, c),
+                        (p,), (d,)))
         recurrent_forward = jax.jit(component.rollout)
         recurrent_terms = jax.jit(recurrent_loss.terms)
         extract = jax.jit(lambda obs: _accepted_science(shared_science_trajectories(obs, head.contract)))
@@ -145,13 +183,18 @@ def run(args):
         if args.shape_only:
             (_, _), dg = jax.eval_shape(daily_backward, parameters, first_daily, coefficients)
             _, rg = jax.eval_shape(recurrent_backward, *arguments)
+            if recurrent_tangent is not None:
+                direction_shape = jax.tree_util.tree_map(jnp.zeros_like, parameters)
+                jax.eval_shape(recurrent_tangent, parameters, direction_shape, *arguments[1:])
             mixed = jax.eval_shape(combine, dg, rg, outer['daily'], outer['recurrent'])
             state = jax.eval_shape(initialize_target_oriented_adamw, parameters)
             jax.eval_shape(update, parameters, mixed, state)
             _, obs = jax.eval_shape(recurrent_forward, parameters, *first_case[:3])
             jax.eval_shape(recurrent_terms, parameters, first_case[0], obs, first_case[3], context)
             jax.eval_shape(extract, obs)
-            emit('completed', status='passed', classification='actual_daily_T7_gradient_optimizer_shapes_only')
+            classification = ('actual_daily_T7_gradient_optimizer_shapes_only' if horizon == 7 else
+                              'actual_daily_T30_gradient_optimizer_shapes_only')
+            emit('completed', status='passed', classification=classification)
             return report
 
         def daily_panel(current, rows):
@@ -216,7 +259,9 @@ def run(args):
         # All selected fresh trajectories must be physically valid before reverse compilation.
         panels(parameters, 0)
         if args.forward_only:
-            emit('completed', status='passed', classification='fresh_forward_only_no_updates')
+            classification = ('fresh_forward_only_no_updates' if horizon == 7 else
+                              'fresh_daily_T30_forward_only_no_updates')
+            emit('completed', status='passed', classification=classification)
             return report
 
         def compile_gradient(name, evaluator, values):
@@ -237,6 +282,80 @@ def run(args):
         store = StageStore(args.output.with_suffix('.stages'), dict(configuration=config,
             source_git_head=report['source_git_head'], daily_rows=report['daily_rows'],
             recurrent_windows=json_safe(recurrent_groups)))
+
+        def check_first_recurrent_gradient(value, gradient, case, row):
+            """Persist the actual first-window reverse result before compiling its JVP."""
+            from scripts.hpc.probe_trained_checkpointed_grad import rademacher_direction
+
+            numeric = _tree_numeric_report(jax, gradient)
+            if not np.isfinite(float(value)) or not numeric['all_finite'] or numeric['l2_norm'] <= 0:
+                raise ValueError('first recurrent native gradient is nonfinite or empty')
+            native = dict(value=float(value), gradient=gradient, summary=numeric,
+                          window=json_safe(row))
+            store.write('first_recurrent_native_gradient', native, jax)
+            report['first_recurrent_native_gradient'] = dict(
+                value=float(value), summary=numeric, window=json_safe(row),
+                stage_file=str(store.directory/'first_recurrent_native_gradient.pkl'))
+            emit('first_recurrent_native_gradient_saved')
+
+            references, first_direction = [], None
+            dot = jax.jit(lambda left, right: admission._tree_dot(jax, jnp, left, right))
+            for index, seed in enumerate(directional_config['seeds']):
+                began = time.perf_counter()
+                host_direction, count = rademacher_direction(jax, parameters, seed)
+                direction = jax.tree_util.tree_map(jnp.asarray, host_direction)
+                projection = dot(gradient, direction)
+                jax.block_until_ready(projection)
+                references.append(dict(seed=seed, reverse_projection=float(projection),
+                                       parameter_count=count, seconds=time.perf_counter()-began))
+                if index == 0:
+                    first_direction = direction
+                del host_direction, direction, projection
+            report['directional_check'].update(reverse_projections=references)
+            emit('recurrent_reverse_projections_completed')
+
+            emit('compile_recurrent_jvp')
+            began = time.perf_counter()
+            executable = recurrent_tangent.lower(parameters, first_direction, *case[:4], context).compile()
+            memory = _compiled_memory(executable)
+            report['compilation']['recurrent_jvp'] = dict(
+                seconds=time.perf_counter()-began, memory=memory)
+            emit('compiled_recurrent_jvp', memory=_device_memory(runtime['devices'][0]))
+            if memory['estimated_live_bytes'] > config['compiled_memory_limit_gib'] * 1024**3:
+                raise MemoryError('recurrent_jvp exceeds declared compiled-memory envelope')
+
+            directions = []
+            for index, reference in enumerate(references):
+                direction = first_direction
+                if index:
+                    host_direction, _ = rademacher_direction(jax, parameters, reference['seed'])
+                    direction = jax.tree_util.tree_map(jnp.asarray, host_direction)
+                    del host_direction
+                began = time.perf_counter()
+                primal, tangent = executable(parameters, direction, *case[:4], context)
+                jax.block_until_ready((primal, tangent))
+                result = directional_record(
+                    primal, reference['reverse_projection'], tangent, value,
+                    seed=reference['seed'], rtol=directional_config['rtol'],
+                    atol=directional_config['atol'])
+                result['seconds'] = time.perf_counter()-began
+                directions.append(result)
+                report['directional_check'].update(directions=directions)
+                emit('recurrent_direction_completed')
+                if index:
+                    del direction
+            passed = all(row['passed'] and row['resolved_projection'] for row in directions)
+            report['directional_check'].update(status='passed' if passed else 'rejected',
+                                               bounded_directional_gate_passed=passed,
+                                               memory_before_release=_device_memory(runtime['devices'][0]))
+            report['bounded_directional_gate_passed'] = passed
+            del executable, first_direction, dot
+            gc.collect()
+            report['directional_check']['memory_after_release'] = _device_memory(runtime['devices'][0])
+            emit('recurrent_directional_check_completed')
+            if not passed:
+                raise ValueError('bounded recurrent directional check failed')
+
         for index in range(2):
             emit('update_gradient', update_index=index+1)
             began = time.perf_counter()
@@ -252,13 +371,15 @@ def run(args):
             daily_mean = finish(daily_total, 64)
             del daily_total, gradient, aux
             recurrent_total = jax.tree_util.tree_map(jnp.zeros_like, parameters)
-            for row in recurrent_groups[index]:
+            for window_index, row in enumerate(recurrent_groups[index]):
                 case = windows.case(jax, row)
                 value, gradient = recurrent_executable(parameters, *case[:4], context)
                 recurrent_total = add(recurrent_total, gradient, 1)
                 jax.block_until_ready((value, recurrent_total))
                 if not np.isfinite(float(value)):
                     raise ValueError('recurrent gradient primal nonfinite')
+                if index == 0 and window_index == 0 and directional_config is not None:
+                    check_first_recurrent_gradient(value, gradient, case, row)
                 recurrent_value += float(value)/2
             recurrent_mean = finish(recurrent_total, 2)
             del recurrent_total, gradient
@@ -296,7 +417,9 @@ def run(args):
             after = report['panels'][-1]['matched_training_mixed_losses'][index]
             record.update(same_draw_forward_loss_before=before, same_draw_forward_loss_after=after,
                           same_draw_loss_decreased=bool(after < before))
-        emit('completed', status='passed', classification='two_mixed_updates_technically_admitted',
+        classification = ('two_mixed_updates_technically_admitted' if horizon == 7 else
+                          'two_mixed_daily_T30_updates_technically_admitted')
+        emit('completed', status='passed', classification=classification,
              all_hard_counts_zero=True, memory=_device_memory(runtime['devices'][0]),
              scientific_acceptance=False, daily_reader=daily_pool.statistics())
         return report

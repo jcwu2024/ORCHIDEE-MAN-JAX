@@ -10,6 +10,14 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Active implementation: extend admitted mixed runner to T30, using the first
+  four accepted TRAIN T30 windows, unchanged daily128 rows and fresh full-network
+  initialization. Specification: `research/daily_coarse_graining/mixed_physical_recurrent_t30_admission_20260914.md`.
+  Preserve first native T30 gradient, verify two JVP directions of that actual
+  scalar, then two full updates. Free GPU90min bound; paid unsubmitted. After
+  this gate, proceed to a declared learning budget with broader rotating TRAIN
+  windows rather than more two-update probes. T7 evidence/caches are reusable.
+
 - Mixed daily+T7 admission COMPLETED: two updates, exit0, all physical gates
   zero; same-draw losses decrease0.1263%/0.0889%. Processes97713/99324 exited.
   Peak live16.803GiB (reserved26.978GiB), warm second update13.58s including

@@ -1,17 +1,23 @@
 #!/bin/bash
-# Small free-node mixed daily/T7 admission, no paid submission path.
+# Small free-node mixed daily/T7 or T30 admission, no paid submission path.
 set -euo pipefail
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 CODE_ROOT=${CODE_ROOT:?declare reviewed checkout}
 MODE=${1:?shape, forward, or gpu}
 PRINT_ONLY=${2:-}
 [[ -z "$PRINT_ONLY" || "$PRINT_ONLY" == --dry-run ]] || exit 2
+HORIZON=${HORIZON:-7}
+case "$HORIZON" in
+  7) STEM=mixed-physical-recurrent-v1; MIXED_PROTOCOL=mixed_physical_recurrent_admission_v1.json ;;
+  30) STEM=mixed-physical-recurrent-t30-v1; MIXED_PROTOCOL=mixed_physical_recurrent_t30_admission_v1.json ;;
+  *) exit 2 ;;
+esac
 cd "$CODE_ROOT"
 DIAG=$ROOT/runtime/outputs/diagnostics
 ARGS=(--protocol "$CODE_ROOT/manifests/coarse_graining/physical_feedback_model_v2.json"
   --pool-protocol "$CODE_ROOT/manifests/coarse_graining/physical_feedback_probe_pool_v2.json"
   --admission-config "$CODE_ROOT/manifests/coarse_graining/physical_feedback_update_admission_v2.json"
-  --mixed-protocol "$CODE_ROOT/manifests/coarse_graining/mixed_physical_recurrent_admission_v1.json"
+  --mixed-protocol "$CODE_ROOT/manifests/coarse_graining/$MIXED_PROTOCOL"
   --catalogue-report "$ROOT/runtime/outputs/training/one-day-expansion-15061225/merge_report.json"
   --selection "$DIAG/recurrent-training-probe-v2-selection.json")
 run_command() {
@@ -39,7 +45,7 @@ case "$MODE" in
       --process-statistics "$ROOT/runtime/outputs/training/first-neural-process-head-v1-statistics/process_training_statistics.json" \
       --fast-statistics "$ROOT/runtime/outputs/training/successor-fast-owner-statistics-c9f35c0/successor_fast_owner_statistics.json" \
       --prepared-manifest "$ROOT/runtime/outputs/training/target-oriented-prepared-1000-a243029/prepared_manifest.json" \
-      --output "$DIAG/mixed-physical-recurrent-v1-shape.json" "${ARGS[@]}"
+      --output "$DIAG/${STEM}-shape.json" "${ARGS[@]}"
     ;;
   forward|gpu)
     if [[ "$PRINT_ONLY" != --dry-run ]]; then
@@ -49,12 +55,12 @@ case "$MODE" in
     if [[ "$MODE" == gpu ]]; then
       run_command env CODE_ROOT="$CODE_ROOT" GPU_DEVICE="${GPU_DEVICE:?select idle free GPU}" \
         PYTHON_MODULE=scripts.hpc.check_daily_training_runtime RUN_TIMEOUT=3m \
-        OUTPUT="$DIAG/mixed-physical-recurrent-v1-runtime.json" \
+        OUTPUT="$DIAG/${STEM}-runtime.json" \
         bash "$CODE_ROOT/scripts/hpc/run_fresh_start_one_day.sh" --backend gpu
     fi
     run_command env CODE_ROOT="$CODE_ROOT" GPU_DEVICE="${GPU_DEVICE:?select idle free GPU}" \
       GPU_MEMORY_FRACTION=0.85 PYTHON_MODULE=scripts.hpc.probe_mixed_physical_recurrent RUN_TIMEOUT=90m \
-      OUTPUT="$DIAG/mixed-physical-recurrent-v1-${MODE}.json" \
+      OUTPUT="$DIAG/${STEM}-${MODE}.json" \
       bash "$CODE_ROOT/scripts/hpc/run_fresh_start_one_day.sh" "${ARGS[@]}"
     ;;
   *) exit 2 ;;

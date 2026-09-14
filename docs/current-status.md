@@ -13,6 +13,12 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Current implementation is T30 mixed admission under
+`research/daily_coarse_graining/mixed_physical_recurrent_t30_admission_20260914.md`:
+unchanged Attention/scales/weights/daily batch, fresh full-network parameters,
+first four accepted TRAIN T30 windows, native/JVP actual-scalar check and two
+complete updates. Local/deployed checks and launch pending; no paid submission.
+
 Mixed daily+T7 admission COMPLETED two fresh all-parameter updates, exit0;
 all physical gates pass. See
 `research/daily_coarse_graining/mixed_physical_recurrent_results_20260914.md`.

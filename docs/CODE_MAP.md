@@ -66,8 +66,11 @@ recurrent gradients; clipping/AdamW remain after their sum.
 `recurrent_science_loss.bind_recurrent_science_loss` shares frozen TRAIN scale
 binding between probes and training. `scripts/hpc/probe_mixed_physical_recurrent.py`
 and `run_mixed_physical_recurrent.sh` own two fresh full-network daily64/micro8
-+twoT7 updates and physical-unit monitoring on free nodes, using public native
-checkpointed rollout AD. They introduce no custom cotangents or new architecture.
++twoT7 or twoT30 updates and physical-unit monitoring on free nodes, using
+public native checkpointed rollout AD. `HORIZON=30` selects its separate
+protocol/results and optional two-direction actual T30 native/JVP check,
+preserving the first native gradient before JVP compilation. They introduce
+no custom cotangents or new architecture.
 
 `scripts/hpc/probe_physical_microbatch.py` reuses the admitted physical-v2
 objective/gradient accumulator/AdamW for a same-batch64 microbatch8/16 probe.

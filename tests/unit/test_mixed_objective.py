@@ -15,7 +15,12 @@ from research.daily_coarse_graining.daily_operator.one_day_training_state import
 from research.daily_coarse_graining.daily_operator.target_oriented_training import (
     initialize_target_oriented_adamw,
 )
-from scripts.hpc.probe_mixed_physical_recurrent import parser, select_draws
+from scripts.hpc.probe_mixed_physical_recurrent import (
+    directional_record,
+    parser,
+    select_draws,
+    validate_configuration,
+)
 
 jax.config.update("jax_enable_x64", True)
 
@@ -190,6 +195,103 @@ def test_select_draws_uses_successive_daily_batches_and_stored_t7_order():
         t7_identifiers[:2],
         t7_identifiers[2:4],
     ]
+
+
+def test_select_draws_uses_stored_t30_order_without_changing_daily_draws():
+    batches = []
+    for batch_index in range(5):
+        rows = tuple(
+            SimpleNamespace(artifact_id=batch_index, batch_row=row, day_key=(batch_index, row))
+            for row in range(32)
+        )
+        batches.append(SimpleNamespace(batch_index=batch_index, draw_count=32, rows=rows))
+    sampler = SimpleNamespace(iter_epoch=lambda epoch: iter(batches) if epoch == 0 else iter(()))
+    windows = []
+    t30_identifiers = []
+    for index in range(6):
+        windows.append(
+            {
+                "identifier": f"t7-{index}",
+                "length": 7,
+                "teacher_day_keys": [[index, day] for day in range(7)],
+            }
+        )
+        t30_identifiers.append(f"t30-{index}")
+        windows.append(
+            {
+                "identifier": t30_identifiers[-1],
+                "length": 30,
+                "teacher_day_keys": [[100 + index, day] for day in range(30)],
+            }
+        )
+    selection = {
+        "role": "train_only_bounded_recurrent_admission_not_validation",
+        "windows": windows,
+    }
+
+    daily, recurrent = select_draws(sampler, selection, horizon=30)
+
+    assert tuple((row.artifact_id, row.batch_row) for group in daily for row in group) == tuple(
+        (batch, row) for batch in range(4) for row in range(32)
+    )
+    assert [[row["identifier"] for row in group] for group in recurrent] == [
+        t30_identifiers[:2],
+        t30_identifiers[2:4],
+    ]
+
+
+def test_configuration_preserves_t7_default_and_accepts_declared_t30_directional_check():
+    base = {
+        "schema_version": "mixed_physical_recurrent_admission_v1",
+        "outer_weights": {"daily": 1.0, "recurrent": 1.0},
+        "updates": 2,
+        "daily_batch": 64,
+        "daily_microbatch": 8,
+        "windows_per_update": 2,
+        "horizon": 7,
+    }
+    assert validate_configuration(base) == (7, None)
+
+    t30 = {
+        **base,
+        "horizon": 30,
+        "directional_check": {
+            "seeds": [20260913, 20260914],
+            "rtol": 0.01,
+            "atol": 1e-6,
+        },
+    }
+    assert validate_configuration(t30) == (30, t30["directional_check"])
+
+    with pytest.raises(ValueError, match="two-direction T30 gate"):
+        validate_configuration({**base, "directional_check": t30["directional_check"]})
+
+
+def test_directional_record_requires_primal_agreement_and_resolved_reverse_jvp():
+    passed = directional_record(
+        2.0, 3.0e-3, 3.01e-3, 2.0,
+        seed=20260913, rtol=0.01, atol=1e-6,
+    )
+    assert passed["passed"] and passed["resolved_projection"]
+    assert passed["primal_matches_reverse_evaluation"]
+
+    unresolved = directional_record(
+        2.0, 2.0e-7, 2.0e-7, 2.0,
+        seed=20260914, rtol=0.01, atol=1e-6,
+    )
+    assert unresolved["passed"] and not unresolved["resolved_projection"]
+
+    wrong_primal = directional_record(
+        2.1, 3.0e-3, 3.0e-3, 2.0,
+        seed=20260914, rtol=0.01, atol=1e-6,
+    )
+    assert not wrong_primal["passed"]
+
+    disagreement = directional_record(
+        2.0, 3.0e-3, 4.0e-3, 2.0,
+        seed=20260914, rtol=0.01, atol=1e-6,
+    )
+    assert disagreement["resolved_projection"] and not disagreement["passed"]
 
 
 def test_select_draws_rejects_replayed_daily_example():
