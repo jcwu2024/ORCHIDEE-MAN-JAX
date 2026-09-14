@@ -1,5 +1,11 @@
 # Fresh 200-update mixed learning protocol
 
+Launch update: concrete envelope approved, paid Slurm15069880 RUNNING on
+gnall/ibc13b02n01, code12eb22c, start2026-09-14 16:02:55 server time. Requested
+8CPU/1V100/64GiB/6h, cost ceiling16.56yuan; inner timeout355min. Output/report
+and Slurm log reside in `runtime/outputs/training/mixed-learning-v1/`.
+The approval-pending statements below describe the preparation history.
+
 Integration completed successfully; see `mixed_learning_integration_results_20260914.md`
 for actual timing, physical checks and checkpoint replay. Execution checkout
 is now12eb22c and the paid launcher dry-run passed; concrete16.56yuan envelope

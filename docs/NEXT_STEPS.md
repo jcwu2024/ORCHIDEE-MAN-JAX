@@ -10,6 +10,16 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Paid200-update mixed learning APPROVED and RUNNING: Slurm15069880,
+  gnall nodeibc13b02n01, immutable checkout `runtime/checkouts/mixed-learning-v1`
+  at12eb22c. User approved the concrete8CPU/1V100/64GiB/6h/16.56yuan envelope.
+  Scheduler start2026-09-14 16:02:55 (server clock), hard end22:02:55;
+  inner timeout355min. Output `runtime/outputs/training/mixed-learning-v1/report.json`,
+  log `slurm-15069880.log` in the same directory. Next inspect job/report;
+  do not modify the running checkout or start another training job.
+  Fresh full109464375 parameters,200 updates of D+.5R7+.5R30, daily64/micro8,
+  12800 unique daily draws and400 recurrent windows; milestones0/50/100/200.
+
 - Mixed-learning integration COMPLETED: exit0, one full fresh update, all
   training and monitor physical counts zero, complete development metrics,
   exact checkpoint forward replay. Total17.99min; peak live15.97GiB, reserved

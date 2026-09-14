@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest execution: user approved concrete paid envelope; job15069880 is RUNNING
+on gnall/ibc13b02n01 at immutable12eb22c. Resources8CPU/1V100/64GiB,6h limit,
+additive ceiling16.56yuan. Scheduler start2026-09-14 16:02:55, end22:02:55
+(server clock); inner timeout355min. Report/log under
+`runtime/outputs/training/mixed-learning-v1/{report.json,slurm-15069880.log}`.
+This is the fresh200-update learning run, not a continuation of integration
+weights. Monitor milestone0/50/100/200 science and complete the budget unless
+a technical failure occurs. Keep this paid checkout immutable.
+
 Latest: mixed-learning integration COMPLETED, exit0, full update plus exact
 checkpoint replay; all hard checks pass. Total17.99min/live15.97GiB/host19.24GiB.
 Initial/updated development metric populations complete; science gates both
