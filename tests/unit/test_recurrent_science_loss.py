@@ -1,3 +1,5 @@
+from types import SimpleNamespace
+
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -7,6 +9,7 @@ from research.daily_coarse_graining.daily_operator.long_horizon_objective import
 from research.daily_coarse_graining.daily_operator.recurrent_science_loss import (
     CANOPY_KEY,
     ScienceTrajectories,
+    bind_recurrent_science_loss,
     make_recurrent_science_loss,
 )
 from research.daily_coarse_graining.daily_operator.rollout_loss import RolloutLoss
@@ -162,3 +165,68 @@ def test_rollout_loss_native_gradient_and_jvp_are_finite_for_short_recurrences(h
     assert np.isfinite(float(tangent))
     np.testing.assert_allclose(tangent, gradient, rtol=1e-10, atol=1e-10)
     np.testing.assert_allclose(checkpointed, value, rtol=1e-12, atol=1e-12)
+
+
+def test_shared_binding_resolves_the_probe_scales(monkeypatch):
+    import research.daily_coarse_graining.daily_operator.fresh_start_training as fresh
+    import research.daily_coarse_graining.daily_operator.successor_training as successor
+    import research.daily_coarse_graining.daily_operator.target_oriented_training as target
+
+    contract = object()
+    runtime = {
+        "jax": jax,
+        "process_statistics": SimpleNamespace(
+            outputs={"daily.fast_gpp": SimpleNamespace(scale=2.0)}
+        ),
+        "base_statistics": SimpleNamespace(
+            arrays={
+                "next_state": SimpleNamespace(scale="next-state-scale"),
+                "state_delta": SimpleNamespace(scale="state-delta-scale"),
+            }
+        ),
+    }
+    observed = {}
+
+    def acceptance(scale, gpp_scale, actual_contract):
+        observed["acceptance"] = (scale, gpp_scale, actual_contract)
+        return SimpleNamespace(fluxes={key: index + 1.0 for index, key in enumerate((
+            "gpp", "npp", "autotrophic_respiration", "heterotrophic_respiration"
+        ))})
+
+    def long_horizon(scale, gpp_scale, actual_contract):
+        observed["long_horizon"] = (scale, gpp_scale, actual_contract)
+        return SimpleNamespace(stocks={
+            "aboveground_biomass_carbon": 5.0,
+            "belowground_biomass_carbon": 6.0,
+        })
+
+    def canopy(actual_runtime, actual_contract, protocol):
+        observed["canopy"] = (actual_runtime, actual_contract, protocol)
+        return SimpleNamespace(scale=7.0)
+
+    monkeypatch.setattr(target, "derive_target_oriented_acceptance_scales", acceptance)
+    monkeypatch.setattr(successor, "derive_long_horizon_scales", long_horizon)
+    monkeypatch.setattr(fresh, "_canopy_change_plan", canopy)
+    scalar, metadata = bind_recurrent_science_loss(runtime, SimpleNamespace(contract=contract), _weights())
+
+    assert callable(scalar)
+    assert metadata == {
+        "flux_scales": {
+            "gpp": 1.0,
+            "npp": 2.0,
+            "autotrophic_respiration": 3.0,
+            "heterotrophic_respiration": 4.0,
+        },
+        "stock_daily_change_scales": {
+            "aboveground_biomass_carbon": 5.0,
+            "belowground_biomass_carbon": 6.0,
+            CANOPY_KEY: 7.0,
+        },
+    }
+    assert observed["acceptance"] == ("next-state-scale", 2.0, contract)
+    assert observed["long_horizon"] == ("state-delta-scale", 2.0, contract)
+    assert observed["canopy"] == (
+        runtime,
+        contract,
+        {"canopy_carbon_stock_change": {"weight": 1.0, "scale_source_pft_index": 13}},
+    )

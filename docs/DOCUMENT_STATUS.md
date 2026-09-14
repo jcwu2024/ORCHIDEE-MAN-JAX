@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/mixed_physical_recurrent_admission_20260914.md` | Active: two fresh mixed daily64+twoT7 optimizer updates, declared before execution | Loss means, sampling, free-node gates, physical monitoring and later T30/learning scope |
 | `research/daily_coarse_graining/physical_microbatch_results_20260914.md` | Completed: both modes run; gradient comparison passes,4 tiny displacement differences retain strict rejection; next micro8 | Actual speed/memory, resource-cap completion, numerical scope and return to mixed training |
 | `research/daily_coarse_graining/physical_microbatch_benchmark_20260914.md` | Completed specification; see results for runtime-envelope amendment and outcomes | Batch64, microbatch8/16, same-data gradient/update comparison and free-GPU throughput |
 | `research/daily_coarse_graining/physical_recurrent_v2_results_20260914.md` | Both free admissions completed; technical gates pass, tiny mixed single-day changes | Actual-loss directional evidence, physical outcomes, memory and next combined-update gate |

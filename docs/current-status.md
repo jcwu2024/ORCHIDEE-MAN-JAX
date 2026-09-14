@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Mixed daily+T7 admission is now implemented and specified before execution in
+`research/daily_coarse_graining/mixed_physical_recurrent_admission_20260914.md`.
+Each of two fresh full-network updates uses64 one-day rows/micro8 plus2 T7
+TRAIN windows; independently averaged objectives are summed before one AdamW
+update. Actual deployed shapes and free GPU execution are pending. This is
+bounded optimizer admission, not long-horizon science or final-method acceptance.
+
 User-approved batch64/microbatch8-vs16 resource probe has completed. No active
 GPU process; original Bash62878/Python62924 and follow-up78597/78680 exited.
 Results: `research/daily_coarse_graining/physical_microbatch_results_20260914.md`.

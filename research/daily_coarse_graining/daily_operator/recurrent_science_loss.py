@@ -337,3 +337,50 @@ def make_recurrent_science_loss(
     # Keep the RolloutLoss callable scalar while retaining pure-JAX diagnostics.
     loss_fn.terms = terms
     return loss_fn
+
+
+def bind_recurrent_science_loss(
+    runtime: Mapping[str, Any],
+    head: Any,
+    weights: Mapping[str, Mapping[str, float]],
+) -> tuple[Callable[[Any, Any, Mapping[str, Any], Mapping[str, Any], Any], Any], dict[str, Any]]:
+    """Bind shared TRAIN-derived physical scales to the recurrent scalar."""
+
+    from .fresh_start_training import _canopy_change_plan
+    from .successor_training import derive_long_horizon_scales
+    from .target_oriented_training import derive_target_oriented_acceptance_scales
+
+    gpp_scale = runtime["process_statistics"].outputs["daily.fast_gpp"].scale
+    flux = derive_target_oriented_acceptance_scales(
+        runtime["base_statistics"].arrays["next_state"].scale,
+        gpp_scale,
+        head.contract,
+    )
+    delta = derive_long_horizon_scales(
+        runtime["base_statistics"].arrays["state_delta"].scale,
+        gpp_scale,
+        head.contract,
+    )
+    canopy = _canopy_change_plan(
+        runtime,
+        head.contract,
+        {"canopy_carbon_stock_change": {"weight": 1.0, "scale_source_pft_index": 13}},
+    )
+    flux_scales = {key: flux.fluxes[key] for key in FLUX_KEYS}
+    stock_scales = {
+        key: delta.stocks[key]
+        for key in ("aboveground_biomass_carbon", "belowground_biomass_carbon")
+    }
+    stock_scales[CANOPY_KEY] = canopy.scale
+    scalar = make_recurrent_science_loss(
+        runtime["jax"],
+        jnp,
+        contract=head.contract,
+        flux_scales=flux_scales,
+        stock_daily_change_scales=stock_scales,
+        weights=weights,
+    )
+    return scalar, {
+        "flux_scales": flux_scales,
+        "stock_daily_change_scales": stock_scales,
+    }
