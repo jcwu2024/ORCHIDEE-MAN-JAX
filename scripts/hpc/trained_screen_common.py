@@ -93,22 +93,20 @@ def load_model(args):
     return runtime,head,template,scales,parameters,report['method']
 
 
-class WindowPool:
-    def __init__(self,selection_path,expected_source_identity=None):
-        from pathlib import Path
+class PreparedWindowPool:
+    """Bounded reader for explicit window rows in a prepared artifact manifest."""
 
-        self.selection = json.loads(selection_path.read_text())
-        if self.selection['status'] != 'passed':
-            raise ValueError('window selection is not accepted')
-        validate_selection(self.selection)
-        if expected_source_identity is not None and self.selection['source_identity'] != expected_source_identity:
-            raise ValueError('evaluation pool differs from the declared training source')
-        source = Path(self.selection['source_manifest'])
-        manifest = json.loads(source.read_text())
-        if manifest['identity'] != self.selection['source_identity']:
-            raise ValueError('selection and prepared source identities differ')
-        self.root = source.parent
+    def __init__(self,source_manifest,cache_size=2):
+        self.manifest_path = Path(source_manifest).resolve()
+        manifest = json.loads(self.manifest_path.read_text())
+        if manifest['status'] != 'passed' or cache_size < 1:
+            raise ValueError('window pool requires an accepted manifest and positive cache size')
         self.records = {int(r['update']):r for r in manifest['entries']}
+        if len(self.records) != len(manifest['entries']):
+            raise ValueError('duplicate prepared artifact identity')
+        self.identity = manifest['identity']
+        self.root = self.manifest_path.parent
+        self.cache_size = cache_size
         self.cache = OrderedDict()
 
     def load(self,identifier):
@@ -120,7 +118,7 @@ class WindowPool:
             if int(artifact.schedule_entry['update']) != identifier:
                 raise ValueError('prepared artifact identity differs')
             self.cache[identifier] = artifact
-            while len(self.cache)>2:
+            while len(self.cache)>self.cache_size:
                 self.cache.popitem(last=False)
         self.cache.move_to_end(identifier)
         return self.cache[identifier]
@@ -128,6 +126,15 @@ class WindowPool:
     def case(self,jax,row):
         from research.daily_coarse_graining.daily_operator.canonical_rollout import prepared_retained_days
 
+        length = row['length']
+        expected_component = {7:'seven_day',30:'thirty_day'}.get(length)
+        if expected_component is None or row['component'] != expected_component:
+            raise ValueError('component/horizon mismatch')
+        semantic_days = [(row['landpoint_id'],row['year'],day)
+                         for day in range(row['start_row'],row['start_row']+length)]
+        if ('teacher_day_keys' in row
+                and [tuple(value) for value in row['teacher_day_keys']] != semantic_days):
+            raise ValueError('window Teacher-day identities differ from metadata')
         artifact = self.load(row['artifact_id'])
         component = row['component']
         records = [(r,start) for r in artifact.schedule_entry['components'][component] for start in r['start_rows']]
@@ -135,7 +142,7 @@ class WindowPool:
         if (record['landpoint_id'],record['year'],start) != (row['landpoint_id'],row['year'],row['start_row']):
             raise ValueError('metadata selection does not match the actual window row')
         window = getattr(artifact.batch,component)
-        k,h = row['window_index'],row['length']
+        k,h = row['window_index'],length
         templates = jax.tree_util.tree_map(lambda v:v[k,:h],window.inputs)
         if len(templates.continuous_state) != h or not np.all(np.diff(np.asarray(templates.day_index).reshape(-1))==1):
             raise ValueError('prepared window does not contain the declared consecutive days')
@@ -149,6 +156,21 @@ class WindowPool:
                    'fraction':templates.pft.pft_fraction,'active':templates.pft.active_pft_mask}
         expected_discrete = jax.tree_util.tree_map(lambda v:v[k,:h],window.expected_next_discrete_state)
         return initial,discrete,(templates,retained),targets,expected_discrete
+
+
+class WindowPool(PreparedWindowPool):
+    """Strict accepted 8xT7 plus 8xT30 development-screen pool."""
+
+    def __init__(self,selection_path,expected_source_identity=None):
+        self.selection = json.loads(selection_path.read_text())
+        if self.selection['status'] != 'passed':
+            raise ValueError('window selection is not accepted')
+        validate_selection(self.selection)
+        if expected_source_identity is not None and self.selection['source_identity'] != expected_source_identity:
+            raise ValueError('evaluation pool differs from the declared training source')
+        super().__init__(self.selection['source_manifest'],cache_size=2)
+        if self.identity != self.selection['source_identity']:
+            raise ValueError('selection and prepared source identities differ')
 
 
 def validate_selection(selection):

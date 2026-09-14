@@ -1,0 +1,147 @@
+from __future__ import annotations
+
+import jax
+import jax.numpy as jnp
+import numpy as np
+
+from research.daily_coarse_graining.daily_operator.fresh_start_training import make_update
+from research.daily_coarse_graining.daily_operator.mixed_objective import make_mixed_gradient
+from research.daily_coarse_graining.daily_operator.one_day_training_state import (
+    make_gradient_accumulator,
+)
+from research.daily_coarse_graining.daily_operator.target_oriented_training import (
+    initialize_target_oriented_adamw,
+)
+from scripts.hpc.run_mixed_learning import (
+    checkpoint_path,
+    newest_checkpoint,
+    trim_resume_report,
+)
+
+jax.config.update("jax_enable_x64", True)
+
+
+def _loss(parameters, features, targets):
+    prediction = features @ parameters["weight"] + parameters["bias"]
+    return jnp.mean((prediction - targets) ** 2)
+
+
+def _assert_tree_allclose(left, right):
+    left_leaves, left_tree = jax.tree_util.tree_flatten(left)
+    right_leaves, right_tree = jax.tree_util.tree_flatten(right)
+    assert left_tree == right_tree
+    for actual, expected in zip(left_leaves, right_leaves, strict=True):
+        np.testing.assert_allclose(actual, expected, rtol=1e-12, atol=1e-12)
+
+
+def test_three_component_gradient_and_single_clipped_adamw_match_direct_scalar():
+    parameters = {
+        "weight": jnp.asarray([0.4, -0.7, 0.2], dtype=jnp.float64),
+        "bias": jnp.asarray(-0.15, dtype=jnp.float64),
+    }
+    index = jnp.arange(64, dtype=jnp.float64)
+    daily_features = jnp.stack(
+        (0.1 + index / 50.0, jnp.sin(index / 7.0), jnp.cos(index / 11.0)),
+        axis=1,
+    )
+    daily_targets = 0.2 - index / 100.0
+    t7_features = jnp.asarray([[2.0, -1.0, 0.5]], dtype=jnp.float64)
+    t7_targets = jnp.asarray([-0.6], dtype=jnp.float64)
+    t30_features = jnp.asarray([[-0.4, 1.7, 0.9]], dtype=jnp.float64)
+    t30_targets = jnp.asarray([1.2], dtype=jnp.float64)
+
+    gradient = jax.grad(_loss)
+    add, finish = make_gradient_accumulator(jax, jnp)
+    daily_total = jax.tree_util.tree_map(jnp.zeros_like, parameters)
+    for start in range(0, 64, 8):
+        microgradient = gradient(
+            parameters,
+            daily_features[start : start + 8],
+            daily_targets[start : start + 8],
+        )
+        daily_total = add(daily_total, microgradient, 8)
+    daily_mean = finish(daily_total, 64)
+    t7_gradient = gradient(parameters, t7_features, t7_targets)
+    t30_gradient = gradient(parameters, t30_features, t30_targets)
+
+    combine = make_mixed_gradient(jax, jnp)
+    mixed = combine(daily_mean, t7_gradient, 1.0, 0.5)
+    mixed = combine(mixed, t30_gradient, 1.0, 0.5)
+    direct = jax.grad(
+        lambda current: _loss(current, daily_features, daily_targets)
+        + 0.5 * _loss(current, t7_features, t7_targets)
+        + 0.5 * _loss(current, t30_features, t30_targets)
+    )(parameters)
+    _assert_tree_allclose(mixed, direct)
+
+    protocol = {
+        "optimizer": {
+            "beta1": 0.9,
+            "beta2": 0.999,
+            "epsilon": 1.0e-8,
+            "weight_decay": 0.0,
+            "learning_rate": 1.0e-5,
+            "clip_norm": 1.0,
+        }
+    }
+    update = make_update(protocol)
+    optimizer = initialize_target_oriented_adamw(parameters)
+    actual = update(parameters, mixed, optimizer)
+    expected = update(parameters, direct, optimizer)
+    _assert_tree_allclose(actual[0], expected[0])
+    _assert_tree_allclose(actual[1], expected[1])
+    np.testing.assert_allclose(actual[2], expected[2], rtol=1e-12, atol=1e-12)
+    np.testing.assert_allclose(actual[3], expected[3], rtol=1e-12, atol=1e-12)
+    assert float(actual[3]) < 1.0
+
+
+def test_resume_report_discards_state_ahead_of_checkpoint_and_stale_failure():
+    report = {
+        "status": "failed",
+        "stage": "failed",
+        "completed_updates": 12,
+        "updates": [{"update": value} for value in range(1, 13)],
+        "monitors": [{"update": value} for value in (0, 10)],
+        "checkpoints": [
+            {"update": value, "path": f"update-{value}.pkl"}
+            for value in (0, 10, 12)
+        ],
+        "failed_training_window": {"update": 12},
+        "error": "ValueError: interrupted after report write",
+        "next_update": 13,
+        "monitor_update": 10,
+        "scientific_acceptance": False,
+    }
+
+    result = trim_resume_report(report, 10)
+
+    assert result["completed_updates"] == 10
+    assert [row["update"] for row in result["updates"]] == list(range(1, 11))
+    assert [row["update"] for row in result["monitors"]] == [0, 10]
+    assert [row["update"] for row in result["checkpoints"]] == [0, 10]
+    assert result["status"] == "running"
+    for stale in (
+        "failed_training_window",
+        "error",
+        "next_update",
+        "monitor_update",
+    ):
+        assert stale not in result
+
+
+def test_checkpoint_names_separate_rolling_recovery_and_retained_milestones(tmp_path):
+    output = tmp_path / "mixed-learning.json"
+    assert checkpoint_path(output).name == "mixed-learning.recovery.checkpoint.pkl"
+    assert checkpoint_path(output, 0).name == "mixed-learning.update-000000.checkpoint.pkl"
+    assert checkpoint_path(output, 200).name == "mixed-learning.update-000200.checkpoint.pkl"
+
+
+def test_resume_prefers_newest_retained_milestone_over_stale_rolling_file(tmp_path):
+    output = tmp_path / "mixed-learning.json"
+    rolling = checkpoint_path(output)
+    rolling.touch()
+    checkpoint_path(output, 50).touch()
+    checkpoint_path(output, 100).touch()
+
+    assert newest_checkpoint(output, rolling, 90) == checkpoint_path(output, 100)
+    assert newest_checkpoint(output, rolling, 100) == rolling
