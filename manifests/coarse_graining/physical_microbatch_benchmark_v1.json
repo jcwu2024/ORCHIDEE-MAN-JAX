@@ -1,0 +1,16 @@
+{
+  "schema_version": "physical_microbatch_benchmark_v1",
+  "purpose": "same_batch64_micro8_vs16_numerical_and_throughput_probe_not_learning_comparison",
+  "microbatch_sizes": [8, 16],
+  "parent_batch_size": 64,
+  "sampling": "concatenate_first_two_fixed32_batches_of_physical_feedback_probe_pool_v2_epoch0",
+  "initialization": "fresh_seed20260911_all109464375_parameters",
+  "warmup_updates_discarded": 1,
+  "timed_updates": 3,
+  "timed_data": "same64_TRAIN_rows_repeated; no_monitor_or_validation",
+  "compiled_memory_limit_gib": 24,
+  "gpu_memory_fraction": 0.85,
+  "runtime_evidence": "physical-feedback-v2-runtime.json passed on same deployed JAX0.4.38/CUDA; unchanged scalar AD and optimizer admitted in physical-feedback-v2-updates.json",
+  "scientific_acceptance": false,
+  "paid_submission_authorized": false
+}
