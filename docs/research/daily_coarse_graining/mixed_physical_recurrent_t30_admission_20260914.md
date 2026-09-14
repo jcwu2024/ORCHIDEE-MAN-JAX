@@ -52,3 +52,13 @@ After T30 passes, the next work is a declared learning run on the expanded
 benchmark. Freeze its update budget, sampling, monitor/checkpoint schedule and
 science interpretation before running; use actual T30 timing for the resource
 estimate. Existing exploratory checkpoints must not become the default start.
+
+## Execution record
+
+Commit70dd976 passes41 focused mixed/recurrent/rollout tests. Actual test02
+shapes, including the optional T30 JVP and full optimizer, pass398.4s;
+target-shell argument expansion passes. Free gln01 GPU0 Bash18684/Python19718 launched
+from immutable `runtime/checkouts/mixed-physical-recurrent-t30-v1`.
+Log/report: `runtime/outputs/diagnostics/mixed-physical-recurrent-t30-v1-gpu.{log,json}`.
+Deployed GPU runtime check passes48.8s (JAX0.4.38/NumPy2.4.6), and actual-model
+bootstrap is running. Numerical/update results are pending. No paid submission.

@@ -10,7 +10,25 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
-- Active implementation: extend admitted mixed runner to T30, using the first
+- T30 mixed admission running on free gln01 GPU0, Bash18684/Python19718, immutable
+  `runtime/checkouts/mixed-physical-recurrent-t30-v1` at70dd976. Local41 tests
+  and actual test02 daily/T30/native/JVP/optimizer shapes pass (398.4s);
+  target-shell shape/GPU dry runs pass. Log/report:
+  `runtime/outputs/diagnostics/mixed-physical-recurrent-t30-v1-gpu.{log,json}`.
+  Deployed GPU runtime check passed48.8s; actual model is running, results pending.
+  No paid submission. Metadata-only200-update recurrent schedule preparation
+  COMPLETED on free test03, Bash20119 exited, at a9c2d03, checkout
+  `mixed-learning-schedule-v1`; log/report
+  `runtime/outputs/diagnostics/mixed-learning-200-recurrent-schedule-v1.{log,json}`.
+  Its13 local tests pass. Semantic Teacher windows are deduplicated before
+  selection. Result:400 unique semantic windows,267 sites,44 years,395 point-years,
+  7387 unique Teacher days (7400 occurrences,13 cross-update repeats). Within-update
+  overlap zero. One1535205-byte index, zero payload reads/copies,124.9s preparation.
+  Eligible unique source windows:15968 T7 and7988 T30 after exclusions/dedup.
+  The200-update learning runner/resource request remains pending T30 evidence;
+  design is `research/daily_coarse_graining/mixed_learning_followon_design_20260914.md`.
+
+- Active specification: extend admitted mixed runner to T30, using the first
   four accepted TRAIN T30 windows, unchanged daily128 rows and fresh full-network
   initialization. Specification: `research/daily_coarse_graining/mixed_physical_recurrent_t30_admission_20260914.md`.
   Preserve first native T30 gradient, verify two JVP directions of that actual

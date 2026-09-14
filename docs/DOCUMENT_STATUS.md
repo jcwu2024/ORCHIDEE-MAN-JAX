@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/mixed_learning_followon_design_20260914.md` | Conditional 200-update learning design; metadata preparer implemented | Broader rotating TRAIN windows, fresh full-network updates, checkpoints and resource decision after T30 |
 | `research/daily_coarse_graining/mixed_physical_recurrent_t30_admission_20260914.md` | Active T30 extension, declared before execution | Fixed TRAIN windows, native/JVP actual-scalar check, two updates and resource envelope |
 | `research/daily_coarse_graining/mixed_physical_recurrent_results_20260914.md` | Completed: two mixed updates technically admitted; science changes tiny | Same-draw descent, physical results, live/reserved memory and next T30 admission |
 | `research/daily_coarse_graining/mixed_physical_recurrent_admission_20260914.md` | Completed specification: see results | Loss means, sampling, free-node gates, physical monitoring and later T30/learning scope |

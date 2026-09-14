@@ -61,6 +61,12 @@ No code under `research/` is imported by the ordinary Teacher path.
 
 ## Daily Research
 
+`scripts/hpc/prepare_mixed_learning_schedule.py` and its free-CPU shell wrapper
+reconstruct existing prepared TRAIN source metadata, exclude monitor and
+development dates, deduplicate semantic windows, and write one deterministic
+200-update T7/T30 schedule with measured coverage. No Teacher payloads are
+materialized and the strict development `WindowPool` selection is unchanged.
+
 `daily_operator/mixed_objective.py` combines independently averaged daily and
 recurrent gradients; clipping/AdamW remain after their sum.
 `recurrent_science_loss.bind_recurrent_science_loss` shares frozen TRAIN scale

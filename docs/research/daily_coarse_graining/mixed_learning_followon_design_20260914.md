@@ -1,5 +1,18 @@
 # Mixed Learning Follow-On Design
 
+Metadata preparation update: implementation a9c2d03 passed13 focused tests and
+completed on free test03 in124.9s. Report/index:
+`runtime/outputs/diagnostics/mixed-learning-200-recurrent-schedule-v1.json`
+(local copy under `outputs/`). It contains400 unique semantic windows,
+267 sites,44 years,395 point-years and7387 unique Teacher days. The7400 day
+occurrences include13 cross-update repeats; no same-update overlap. It excludes
+the64 monitor and296 development dates. The single JSON is1535205 bytes;
+there are zero Teacher payload reads/copies and no new per-window files.
+Available unique candidates after exclusions/alias dedup:15968 T7 and7988 T30.
+The preparer removed20 T7 and2 T30 duplicate semantic references. This admits
+the metadata schedule only; a persistent learning runner and resource request
+still need implementation and the T30 actual-update result.
+
 Date: 2026-09-14. Status: design audit only; implementation, executable
 manifest, resource envelope, and launch remain pending the active T30 mixed
 admission. This is a bounded learning run, not the final reproducible training
