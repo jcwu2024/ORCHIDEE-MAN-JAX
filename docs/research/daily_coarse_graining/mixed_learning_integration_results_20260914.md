@@ -16,6 +16,14 @@ expected for this fresh one-update technical test; do not label it learning
 or generalization success. Training daily loss312.456552 ->312.004942;
 excluded64-day loss581.752321 ->581.195920. Changes remain small.
 
+On the unchanged T30 development panel, daily GPP RMSE2.103943 ->2.102212,
+NPP1.825608 ->1.822899, RA.347214 ->.348057gC/m2/day. AGB change RMSE37.238195
+->37.178992 and BGB17.207383 ->17.183978gC/m2. Canopy change RMSE81478.757226
+->81478.746796gC/m2 is effectively unchanged. Thus tiny improvements coexist
+with slightly worse RA and unresolved canopy error. These fresh one-update
+results do not justify any architecture or loss retuning before the declared
+200-update learning budget.
+
 Full initial and update1 recovery checkpoints were written, and the restored
 update1 checkpoint reproduced the actual daily forward value exactly. Local
 tests additionally cover interrupted/resumed AdamW equivalence and both data
