@@ -3,6 +3,7 @@ from __future__ import annotations
 import jax
 import jax.numpy as jnp
 import numpy as np
+import pytest
 
 from research.daily_coarse_graining.daily_operator.fresh_start_training import make_update
 from research.daily_coarse_graining.daily_operator.mixed_objective import make_mixed_gradient
@@ -134,6 +135,11 @@ def test_checkpoint_names_separate_rolling_recovery_and_retained_milestones(tmp_
     assert checkpoint_path(output).name == "mixed-learning.recovery.checkpoint.pkl"
     assert checkpoint_path(output, 0).name == "mixed-learning.update-000000.checkpoint.pkl"
     assert checkpoint_path(output, 200).name == "mixed-learning.update-000200.checkpoint.pkl"
+
+
+def test_resume_report_cannot_silently_omit_completed_updates():
+    with pytest.raises(ValueError, match="missing completed update records"):
+        trim_resume_report({"updates": [{"update": 2}], "monitors": []}, 2)
 
 
 def test_resume_prefers_newest_retained_milestone_over_stale_rolling_file(tmp_path):

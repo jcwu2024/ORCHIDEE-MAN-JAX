@@ -377,6 +377,12 @@ def build_mixed_rollout_monitor(
                 f"horizon=T{horizon} stage=completed seconds={elapsed:.1f}",
                 flush=True,
             )
+            # Metrics above are host summaries; release this device trajectory
+            # before the next window's forward allocation.
+            del observations, predicted, expected, initial_science
+            del predicted_fluxes, expected_fluxes, predicted_stocks, expected_stocks, start_stocks
+            del predicted_canopy, expected_canopy, initial_canopy, accepted_npp, source_npp
+            del initial, discrete, days, targets, expected_discrete, first, assembled
 
         for horizon in sorted(statistics):
             summary = summarize_windows(physical[horizon])

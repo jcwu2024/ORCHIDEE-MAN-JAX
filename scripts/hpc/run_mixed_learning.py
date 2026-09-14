@@ -41,6 +41,8 @@ def checkpoint_path(output, index=None):
 def trim_resume_report(report, completed):
     """A report can be ahead of an atomic checkpoint after an interrupted write."""
     report['updates'] = [r for r in report['updates'] if r['update'] <= completed]
+    if [r['update'] for r in report['updates']] != list(range(1,completed+1)):
+        raise ValueError('recovery report is missing completed update records')
     report['monitors'] = [r for r in report['monitors'] if r['update'] <= completed]
     report['checkpoints'] = [r for r in report.get('checkpoints',[]) if r['update'] <= completed]
     for key in tuple(report):
@@ -88,6 +90,8 @@ def run(args):
         raise ValueError('use shape-only or integration-updates for bounded checks')
     if args.output.exists() and not args.resume:
         raise FileExistsError('fresh run requires a new output; use --resume for recovery')
+    if args.resume and not args.output.is_file():
+        raise FileNotFoundError('resume requires the original report alongside its checkpoint')
     config = json.loads(args.mixed_protocol.read_text())
     model = json.loads(args.protocol.read_text())
     validate_configuration(config, model)
