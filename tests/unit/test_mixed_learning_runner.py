@@ -18,6 +18,7 @@ from scripts.hpc.run_mixed_learning import (
     lowered_precision_summary,
     newest_checkpoint,
     profile_source_method,
+    saved_gradient_path,
     trim_resume_report,
 )
 
@@ -41,6 +42,15 @@ def test_static_precision_summary_reads_real_lowered_matrix_result_types():
     lowered = fn.lower(jnp.ones((2, 2), jnp.float32), jnp.ones((2, 2), jnp.float64))
     summary = lowered_precision_summary(lowered)
     assert summary["matrix_operation_result_types"] == {"f32": 1, "f64": 1}
+
+
+def test_reference_reuse_keeps_original_paths_across_interrupted_attempts(tmp_path):
+    original = tmp_path / 'first.T7.reference.pkl'
+    later = tmp_path / 'second.json'
+    assert saved_gradient_path(later, {'reference_gradient': str(original)}, 'T7') == original
+    assert saved_gradient_path(later, {'reference_gradient': str(original)}, 'T30') == later.with_suffix('.T30.reference.pkl')
+    record = {'checked_comparisons': {'T7': {'reference_gradient': str(original)}}}
+    assert saved_gradient_path(later, record, 'T7') == original
 
 
 def _loss(parameters, features, targets):

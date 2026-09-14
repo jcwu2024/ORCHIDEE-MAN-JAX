@@ -56,10 +56,14 @@ case "$MODE" in
           ARGS+=(--compare-checked-recurrent)
           DEFAULT_OUTPUT=$DIAG/mixed-learning-checked-profile-v1.json
           DEFAULT_TIMEOUT=55m
-          run_command env CODE_ROOT="$CODE_ROOT" GPU_DEVICE="${GPU_DEVICE:?select allocated GPU}" \
-            PYTHON_MODULE=scripts.hpc.check_daily_training_runtime RUN_TIMEOUT=3m \
-            OUTPUT="$DIAG/mixed-learning-checked-profile-v1-runtime.json" \
-            bash "$CODE_ROOT/scripts/hpc/run_fresh_start_one_day.sh" --backend gpu
+          if [[ -n "${CHECKED_REFERENCE_REPORT:-}" ]]; then
+            ARGS+=(--checked-reference-report "$CHECKED_REFERENCE_REPORT")
+          else
+            run_command env CODE_ROOT="$CODE_ROOT" GPU_DEVICE="${GPU_DEVICE:?select allocated GPU}" \
+              PYTHON_MODULE=scripts.hpc.check_daily_training_runtime RUN_TIMEOUT=3m \
+              OUTPUT="$DIAG/mixed-learning-checked-profile-v1-runtime.json" \
+              bash "$CODE_ROOT/scripts/hpc/run_fresh_start_one_day.sh" --backend gpu
+          fi
         else
           ARGS+=(--profile-trace)
         fi

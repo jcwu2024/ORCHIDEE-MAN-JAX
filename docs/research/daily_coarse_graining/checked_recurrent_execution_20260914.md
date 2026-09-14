@@ -62,6 +62,23 @@ reference executables. Local follow-up rejects `--shape-only --checked-recurrent
 because that legacy shape path cannot certify the checked branch; the active
 checked-profile already exercises its real lowerings and is unaffected.
 
+The original daily compilation took965.81s in this run (prior profile~103s),
+including an XLA slow-compilation warning; no cause has been established.
+Original complete replay did finish (~14.2s/update), and the T7 reference was
+preserved before checked compilation. At50min the checked T7 comparison had
+not completed. This is not a demonstrated numerical failure or speed benefit.
+
+Reference-reuse support now accepts `--checked-reference-report` (shell
+`CHECKED_REFERENCE_REPORT`). It reuses a matching completed original profile
+and preserved gradient files, including paths inherited through attempts,
+and postpones daily compilation until checked gradient comparisons finish.
+It keeps the same model/loss/AD graph; reuse the already passed deployed
+runtime check. If continuation is needed after the55min ceiling, use a new
+isolated checkout/output and an80min free diagnostic ceiling informed by the
+observed compilation cost. Reused timings are explicitly labelled as coming
+from another process, so do not claim a contemporaneous paired speed test.
+Reference reuse/checked profiling tests:11 pass. No paid work is authorized.
+
 Acceptance establishes execution equivalence and speed for a bounded panel;
 it neither improves model accuracy by itself nor establishes long-run science
 acceptance. Larger data exposure and the RA/canopy imbalance remain subsequent

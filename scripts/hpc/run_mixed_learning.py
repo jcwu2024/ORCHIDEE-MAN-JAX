@@ -89,6 +89,14 @@ def lowered_precision_summary(lowered):
                 interpretation='static_operation_counts_not_runtime_or_FLOP_proportions')
 
 
+def saved_gradient_path(report_path, report, name):
+    recorded = report.get('checked_comparisons',{}).get(name,{}).get('reference_gradient')
+    active = report.get('reference_gradient')
+    if not recorded and active and Path(active).name.endswith(f'.{name}.reference.pkl'):
+        recorded = active
+    return Path(recorded) if recorded else report_path.with_suffix(f'.{name}.reference.pkl')
+
+
 def run(args):
     from research.daily_coarse_graining.daily_operator.canonical_rollout import make_canonical_step
     from research.daily_coarse_graining.daily_operator.fresh_start_training import make_objective, make_update
@@ -125,6 +133,8 @@ def run(args):
         raise ValueError('trace is available only in diagnostic profiling mode')
     if args.compare_checked_recurrent and not profiling:
         raise ValueError('checked-recurrent admission requires fixed-checkpoint profiling')
+    if args.checked_reference_report and not args.compare_checked_recurrent:
+        raise ValueError('reference reuse is only for checked-recurrent admission')
     if args.checked_recurrent and profiling:
         raise ValueError('use compare-checked-recurrent for fixed-checkpoint admission')
     if args.checked_recurrent and args.shape_only:
@@ -325,6 +335,15 @@ def run(args):
             monitor_milestone(report['completed_updates'])
 
         checked_lowerings = {}
+        reference_report = None
+        if args.checked_reference_report:
+            reference_report = json.loads(args.checked_reference_report.read_text())
+            if (reference_report.get('configuration') != config
+                    or reference_report.get('model_protocol') != model
+                    or reference_report.get('profile_source_checkpoint') != str(args.profile_checkpoint)
+                    or reference_report.get('profile',{}).get('status') != 'completed'):
+                raise ValueError('saved original profile does not match this diagnostic')
+            report['original_reference_report'] = str(args.checked_reference_report)
         if args.compare_checked_recurrent or args.checked_recurrent:
             from scripts.hpc.checked_recurrent_execution import bind_checked_backward
 
@@ -334,10 +353,13 @@ def run(args):
                 emit(f'checked_lower_T{horizon}')
                 checked_lowerings[horizon] = checked_backward.lower(parameters,*case[:4],context,case[4])
 
-        executables = {}
+        executables, lowered = {}, None
         for name,fn,arguments in [('T7',backward,(parameters,*cases[7][:4],context)),
                                   ('T30',backward,(parameters,*cases[30][:4],context)),
                                   ('daily',daily_backward,(parameters,first_daily,coefficients))]:
+            if reference_report is not None:
+                if name == 'daily' or saved_gradient_path(args.checked_reference_report,reference_report,name).is_file():
+                    continue
             emit('compile_'+name)
             began = time.perf_counter()
             lowered = (checked_lowerings.pop(int(name[1:]))
@@ -388,13 +410,14 @@ def run(args):
             profile_arguments = dict(jax=jax,jnp=jnp,parameters=parameters,optimizer=optimizer,
                 sample=sample,daily_rows=fixed_rows,
                 recurrent_rows={row['length']:row for row in fixed_windows},window_pool=train_pool,
-                daily_executable=executables['daily'],
-                recurrent_executables={7:executables['T7'],30:executables['T30']},
+                daily_executable=executables.get('daily'),
+                recurrent_executables={7:executables.get('T7'),30:executables.get('T30')},
                 coefficients=coefficients,context=context,forward=forward,
                 validate_recurrent=validate_recurrent,update=update,add=add,finish=finish,
                 combine=combine,finite=finite,norm_fn=norm_fn,repeats=args.profile_repeats,
                 trace_dir=args.output.with_suffix('.trace') if args.profile_trace else None,emit=emit)
-            profile = profile_components(**profile_arguments)
+            profile = (reference_report['profile'] if reference_report is not None else
+                       profile_components(**profile_arguments))
             emit('original_profile_completed',profile=profile)
             if args.compare_checked_recurrent:
                 from research.daily_coarse_graining.daily_operator.one_day_training_state import _atomic_pickle
@@ -404,13 +427,27 @@ def run(args):
                 checked_executables, comparisons = {}, {}
                 for row in fixed_windows:
                     horizon, key = row['length'], f"T{row['length']}"
-                    case, old_hard = valid_recurrent(row)
-                    value, old_gradient = executables[key](parameters,*case[:4],context)
-                    old_value, reference = jax.device_get((value,old_gradient))
-                    path = args.output.with_suffix(f'.{key}.reference.pkl')
-                    _atomic_pickle(path,dict(value=old_value,gradient=reference,hard=old_hard,
-                                             checkpoint=str(args.profile_checkpoint),window=row))
-                    del value, old_gradient
+                    path = (saved_gradient_path(args.checked_reference_report,reference_report,key)
+                            if reference_report is not None else args.output.with_suffix(f'.{key}.reference.pkl'))
+                    if reference_report is not None and path.is_file():
+                        import pickle
+
+                        with path.open('rb') as handle:
+                            saved_reference = pickle.load(handle)
+                        if (saved_reference['checkpoint'] != str(args.profile_checkpoint)
+                                or saved_reference['window'] != row):
+                            raise ValueError('saved gradient belongs to a different checkpoint/window')
+                        old_value, reference, old_hard = (saved_reference[key] for key in ('value','gradient','hard'))
+                        del saved_reference
+                        case = train_pool.case(jax,row)
+                    else:
+                        case, old_hard = valid_recurrent(row)
+                        value, old_gradient = executables[key](parameters,*case[:4],context)
+                        old_value, reference = jax.device_get((value,old_gradient))
+                        path = args.output.with_suffix(f'.{key}.reference.pkl')
+                        _atomic_pickle(path,dict(value=old_value,gradient=reference,hard=old_hard,
+                                                 checkpoint=str(args.profile_checkpoint),window=row))
+                        del value, old_gradient
                     emit('checked_compile_'+key,reference_gradient=str(path))
                     began = time.perf_counter()
                     executable = checked_lowerings.pop(horizon).compile()
@@ -433,6 +470,15 @@ def run(args):
                         raise ValueError('checked '+key+' loss/gradient/physical comparison failed')
                     checked_executables[horizon] = executable
                     del reference,gradient,case
+                if profile_arguments['daily_executable'] is None:
+                    emit('compile_daily_for_checked_replay')
+                    began = time.perf_counter()
+                    executable = daily_backward.lower(parameters,sample(fixed_rows[:8]),coefficients).compile()
+                    memory = _compiled_memory(executable)
+                    report['compilation']['daily'] = dict(seconds=time.perf_counter()-began,memory=memory)
+                    if memory['estimated_live_bytes'] > config['compiled_memory_limit_gib']*1024**3:
+                        raise MemoryError('daily compiled live memory exceeds bound')
+                    profile_arguments['daily_executable'] = executable
                 checked_profile = profile_components(**profile_arguments,
                     checked_recurrent_executables=checked_executables,checked_counter_names=checked_names)
                 parity = _parity(profile['baseline']['records'],checked_profile['baseline']['records'])
@@ -441,7 +487,9 @@ def run(args):
                 before, after = profile['baseline']['median_seconds'], checked_profile['baseline']['median_seconds']
                 emit('checked_admission_completed',checked_profile=checked_profile,
                      checked_mixed_parity=parity,checked_speedup=before/after,
-                     checked_time_reduction=1.-after/before)
+                     checked_time_reduction=1.-after/before,
+                     checked_speed_admission_passed=bool(1.-after/before >= .05),
+                     same_process_timing_comparison=reference_report is None)
             emit('completed',status='completed',profile=profile,persistent_parameter_updates=0,
                  memory=_device_memory(runtime['devices'][0]),daily_reader=daily_pool.statistics())
             return report
@@ -544,6 +592,7 @@ def parser():
     result.add_argument('--profile-trace',action='store_true')
     result.add_argument('--compare-checked-recurrent',action='store_true')
     result.add_argument('--checked-recurrent',action='store_true')
+    result.add_argument('--checked-reference-report',type=Path)
     return result
 
 
