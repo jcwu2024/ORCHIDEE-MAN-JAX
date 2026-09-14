@@ -11,7 +11,11 @@ validation. Do not start another neural training job until Gates A-C pass.
 Current actions, superseding launch instructions in the history below:
 
 - User authorized shared recurrent scalar/compact-check implementation.
-  Implemented opt-in checked execution, pending bounded free-GPU admission:
+  Implemented opt-in checked execution; bounded free-GPU admission RUNNING:
+  gln01 GPU0, Bash81582/Python82371, immutable45da5f9 in checkout
+  `runtime/checkouts/mixed-learning-checked-v1`. Deployed runtime check passes;
+  changed T7/T30 lowerings pass. JSON/log are diagnostics
+  `mixed-learning-checked-profile-v1.{json,log}`. Next inspect completion of
   T7/T30 full-gradient/counter comparisons with original, then warm complete
   mixed-update timing. No architecture/loss/precision change or paid job.
   Use `run_mixed_learning.sh checked-profile` (3min runtime +55min diagnostic

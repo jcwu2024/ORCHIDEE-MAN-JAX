@@ -53,6 +53,14 @@ and profiling checkouts remain immutable.
 
 Local validation:50 relevant tests pass, including public rollout, compact aux,
 invalid physical/feedback counters, mixed profile/update and checkpoint tests.
+Target-shell dry-run passes. Free gln01 GPU0 chain started at immutable45da5f9,
+Bash81582, with both GPUs idle at launch. Pending runtime and real-model result;
+no paid job submitted.
+Deployed synthetic runtime check passes78.45s, exit0. Actual-model Python82371
+has lowered both checked horizons successfully and is preparing the original
+reference executables. Local follow-up rejects `--shape-only --checked-recurrent`
+because that legacy shape path cannot certify the checked branch; the active
+checked-profile already exercises its real lowerings and is unaffected.
 
 Acceptance establishes execution equivalence and speed for a bounded panel;
 it neither improves model accuracy by itself nor establishes long-run science

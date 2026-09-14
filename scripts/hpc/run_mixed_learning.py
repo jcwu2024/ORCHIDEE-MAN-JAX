@@ -127,6 +127,8 @@ def run(args):
         raise ValueError('checked-recurrent admission requires fixed-checkpoint profiling')
     if args.checked_recurrent and profiling:
         raise ValueError('use compare-checked-recurrent for fixed-checkpoint admission')
+    if args.checked_recurrent and args.shape_only:
+        raise ValueError('checked execution is admitted by checked-profile, not the legacy shape-only path')
     if args.output.exists() and not args.resume:
         raise FileExistsError('fresh run requires a new output; use --resume for recovery')
     if args.resume and not args.output.is_file():
