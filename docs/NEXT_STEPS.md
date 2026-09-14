@@ -13,17 +13,22 @@ Current actions, superseding launch instructions in the history below:
 - User approved200-update learning. Implemented executable protocol/runner,
   strict TRAIN/development readers, full recovery and physical-unit monitors;
   see `research/daily_coarse_graining/mixed_learning_protocol_20260914.md`.
-  Local42 relevant tests pass. Actual test02 metadata and launcher dry runs
+  Local43 relevant tests pass. Actual test02 metadata and launcher dry runs
   pass:12800 distinct daily draws,372 sites,44 years,655 point-years; max5
   artifacts per batch, plus ready400 recurrent windows. No Teacher payload copies.
   Free gln01 GPU0 integration RUNNING, Bash65184, immutable checkout
-  `runtime/checkouts/mixed-learning-v1` at48659ae; report/log
+  `runtime/checkouts/mixed-learning-v1` at48659ae (Python65235); report/log
   `runtime/outputs/diagnostics/mixed-learning-v1-integration.{json,log}`.
   This is the new runner's one-update/checkpoint/monitor integration, not a
   repeat JVP admission. Next inspect its completion, then submit the200-update
   learning run after concrete gnall envelope approval. Proposed8CPU/1V100/64GiB/
   6h ceiling16.56yuan; script `scripts/hpc/job_mixed_learning.sh`. No paid job
   submitted; task approval and this newly specified fee envelope are distinct.
+  Latest observed integration: update0 full checkpoint saved at203s, initial
+  fixed monitors running. Localce6e655 adds report-only recovery completeness
+  and explicit release of monitor trajectory references;43 tests pass. Deploy
+  those small fixes after the active free checkout exits, before paid launch;
+  they do not change model/loss/AD or require repeated directional checks.
 
 - T30 mixed admission COMPLETED: exit0, two updates, actual native/JVP checks
   and all physical gates pass. Two directional differences0.04969%/0.10665%;

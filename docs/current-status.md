@@ -15,16 +15,20 @@ describe an earlier gate without being rewritten.
 
 200-update learning is implemented and user-approved as a task. Executable
 method is `research/daily_coarse_graining/mixed_learning_protocol_20260914.md`.
-Local42 relevant tests and test02 actual metadata/launcher expansion pass.
+Local43 relevant tests and test02 actual metadata/launcher expansion pass.
 Daily exposure12800 unique days/372 sites/44 years/655 point-years; batch64,
 micro8,max5 artifacts. Ready400 TRAIN recurrent windows are reused. Fresh
 all109464375-parameter Attention optimizes D+.5R7+.5R30 with one AdamW step.
-Free GPU0 integration is RUNNING (Bash65184, commit48659ae, checkout
+Free GPU0 integration is RUNNING (Bash65184/Python65235, commit48659ae, checkout
 `runtime/checkouts/mixed-learning-v1`); log/report under diagnostics
 `mixed-learning-v1-integration.{log,json}`. The one-update check exercises
 new monitor/full checkpoint/replay paths without another native/JVP audit.
 No paid learning submitted. Concrete proposed envelope8CPU/1V100/64GiB/6h,
 16.56yuan ceiling awaits completion evidence and specific approval.
+Observed update0 full checkpoint saved at203s; initial fixed monitors running.
+Localce6e655 only completes recovery-report bookkeeping and promptly releases
+monitor trajectory references; deploy after the active checkout exits. No new
+gradient graph or repeat JVP check follows from these small fixes.
 
 T30 mixed admission COMPLETED: two updates, exit0, native/JVP and all physical
 gates pass; processes18684/19718 exited. Evidence:

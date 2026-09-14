@@ -58,7 +58,11 @@ daily/T7/T30 gradient evidence: this integration is not another JVP audit.
 
 ## Resources and current execution
 
-Implementation and local tests are completed; remote integration pending.
+Implementation and43 relevant local tests pass. Actual test02 metadata and
+target-shell launcher expansion pass. Free GPU0 integration is running at
+48659ae (Bash65184/Python65235): update0 full checkpoint saved203s, initial
+fixed monitors in progress. Localce6e655 contains only recovery-report and
+monitor-reference cleanup, to be deployed after that checkout exits.
 Free gln01 integration is limited to90 minutes on one idle V10032GiB.
 `job_mixed_learning.sh` prepares gnall, one V100,8 allocated CPUs,64GiB host RAM,
 6-hour limit. At additive rates its ceiling is CPU8*6*.07=3.36 yuan plus
