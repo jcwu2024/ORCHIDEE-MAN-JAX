@@ -1,5 +1,9 @@
 # Mixed Learning Follow-On Design
 
+Operational update: the executable200-update method is now implemented in
+`mixed_learning_protocol_20260914.md`; use that document and NEXT_STEPS for
+current tests/launch status. Implementation-pending wording below is history.
+
 T30 prerequisite is now completed: actual native/JVP and two mixed updates
 pass. See `mixed_physical_recurrent_t30_results_20260914.md`. Measured live
 peak16.801GiB and second complete update20.76s support preparing the bounded

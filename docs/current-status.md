@@ -13,6 +13,19 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+200-update learning is implemented and user-approved as a task. Executable
+method is `research/daily_coarse_graining/mixed_learning_protocol_20260914.md`.
+Local42 relevant tests and test02 actual metadata/launcher expansion pass.
+Daily exposure12800 unique days/372 sites/44 years/655 point-years; batch64,
+micro8,max5 artifacts. Ready400 TRAIN recurrent windows are reused. Fresh
+all109464375-parameter Attention optimizes D+.5R7+.5R30 with one AdamW step.
+Free GPU0 integration is RUNNING (Bash65184, commit48659ae, checkout
+`runtime/checkouts/mixed-learning-v1`); log/report under diagnostics
+`mixed-learning-v1-integration.{log,json}`. The one-update check exercises
+new monitor/full checkpoint/replay paths without another native/JVP audit.
+No paid learning submitted. Concrete proposed envelope8CPU/1V100/64GiB/6h,
+16.56yuan ceiling awaits completion evidence and specific approval.
+
 T30 mixed admission COMPLETED: two updates, exit0, native/JVP and all physical
 gates pass; processes18684/19718 exited. Evidence:
 `research/daily_coarse_graining/mixed_physical_recurrent_t30_results_20260914.md`.
