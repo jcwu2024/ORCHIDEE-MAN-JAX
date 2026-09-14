@@ -61,6 +61,14 @@ No code under `research/` is imported by the ordinary Teacher path.
 
 ## Daily Research
 
+`scripts/hpc/probe_physical_microbatch.py` reuses the admitted physical-v2
+objective/gradient accumulator/AdamW for a same-batch64 microbatch8/16 probe.
+`run_physical_microbatch.sh` provides CPU shapes or free GPU execution; its
+chain wrapper runs configurations sequentially on one GPU. Diagnostic gradients
+and first-update displacements are single-container evidence, not checkpoints.
+`scripts/dev/compare_physical_microbatches.py` compares those arrays and measured
+throughput with declared tolerances and a5% speed-margin selection rule.
+
 `daily_operator/one_day_sampling.py` owns opt-in `fixed_replay_pad`: fixed32
 cross-artifact batches, micro4, deterministic end padding and resumable cursor.
 `scripts/dev/probe_expanded_fixed_batches.py` verifies the real expanded pool.

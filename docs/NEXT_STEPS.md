@@ -10,6 +10,17 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- User approved batch64 microbatch8/16 throughput checks (2026-09-14). Implemented
+  same64 TRAIN rows/fresh weights/physical-v2 loss, one discarded warmup and3
+  timed complete updates. CPU gradient/optimizer shapes pass209.6/210.1s.
+  GPU plan: sequential8 then16 on the same idle free gln01 GPU,60min cap each,
+  JAX pool fraction0.85; original launcher default remains0.65. No paid job.
+  `research/daily_coarse_graining/physical_microbatch_benchmark_20260914.md` owns
+  the specification. Compare full gradient/Adam displacement and actual peak,
+  separately report compilation and warm update times. Difference below5% favors
+  lower memory. This bounded throughput probe precedes the already planned
+  combined one-day+T7 optimizer admission; it does not replace that science task.
+
 - Both v2 free admissions are COMPLETED/exit0; no active GPU process or paid
   job. See `research/daily_coarse_graining/physical_recurrent_v2_results_20260914.md`.
   Physical loss: two fresh full-network updates, native/JVP and physical gates

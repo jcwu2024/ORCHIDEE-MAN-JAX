@@ -4,6 +4,8 @@ from __future__ import annotations
 import gzip
 import itertools
 import json
+import os
+import platform
 import subprocess
 import time
 from pathlib import Path
@@ -74,6 +76,10 @@ def run(args):
         jax = runtime['jax']
         import jax.numpy as jnp
 
+        report.update(hostname=platform.node(), device=str(runtime['devices'][0]),
+                      device_kind=runtime['devices'][0].device_kind,
+                      cuda_visible_devices=os.environ.get('CUDA_VISIBLE_DEVICES'),
+                      memory_fraction=os.environ.get('XLA_PYTHON_CLIENT_MEM_FRACTION'))
         report['parameter_count'] = sum(p.size for p in jax.tree_util.tree_leaves(parameters))
         graph = calibration._loss_protocol(model, canopy_source_pft_index=calibration._canopy_source_pft_index(runtime, head))
         objective = make_objective(runtime, head, template, scales, graph)

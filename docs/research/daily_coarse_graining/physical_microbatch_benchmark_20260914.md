@@ -32,13 +32,16 @@ JAX pool fraction is0.85 of32GiB; unchanged launchers default to0.65. This leave
 device space for runtime allocations while allowing larger microbatches. Stop
 before execution if compiled estimated live exceeds24GiB; actual resource errors
 remain resource outcomes, not gradient/science failures. One free GPU/process,
-60min cap each, no paid fallback. CPU full-array gradient/optimizer shapes and
+60min cap each, no paid fallback. Configurations run sequentially on the same
+free GPU to avoid cross-device or simultaneous compilation differences; other
+users can still affect shared-node timing, which remains a bounded estimate.
+CPU full-array gradient/optimizer shapes and
 actual target-Bash dry runs precede launch. Reuse successful deployed runtime
 and physical-v2 AD evidence; no Teacher data preparation or regeneration.
 
 Prefer the faster numerically admitted configuration that leaves adequate
-measured headroom for later mixed training. A small/no speed gain favors the
-lower-memory option. Microbatch8-vs16 alone does not prove either faster than4;
+measured headroom for later mixed training. A speed gain below5% favors the
+lower-memory option (tie goes to8). Microbatch8-vs16 alone does not prove either faster than4;
 report that limit. Multi-day windows need their own later batch/memory choice.
 After this short probe, return to combined single-day+T7 optimizer admission,
 then T30 and broader reproducible learning; do not let batching become an

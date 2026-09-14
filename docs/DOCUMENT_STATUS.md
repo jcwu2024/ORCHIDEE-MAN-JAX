@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/physical_microbatch_benchmark_20260914.md` | Active user-approved batching probe; implementation/review/local and CPU shape checks pass | Batch64, microbatch8/16, same-data gradient/update comparison and free-GPU throughput |
 | `research/daily_coarse_graining/physical_recurrent_v2_results_20260914.md` | Both free admissions completed; technical gates pass, tiny mixed single-day changes | Actual-loss directional evidence, physical outcomes, memory and next combined-update gate |
 | `research/daily_coarse_graining/physical_feedback_and_recurrent_v2_20260913.md` | Active v2 loss/sampling specification; bounded free admissions completed, see results | Physical-coordinate imbalance, canopy drift, expanded fixed batches, new recurrent objective and next combined-update gate |
 | `research/daily_coarse_graining/one_day_expansion_v1_20260913.md` | Recovery15061586 completed;346539-day merged pool admitted | Expanded pool, full TRAIN cache/file-count constraint and fixed-batch integration |
