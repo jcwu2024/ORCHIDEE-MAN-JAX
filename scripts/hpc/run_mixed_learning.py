@@ -61,6 +61,34 @@ def newest_checkpoint(output, requested, completed):
     return checkpoint_path(output,max(available)) if available else requested
 
 
+def profile_source_method(training_report, config, model):
+    """Bind a diagnostic checkpoint to the completed run without resuming it."""
+    if (training_report.get('status') != 'completed'
+            or training_report.get('completed_updates') != 200
+            or training_report.get('configuration') != config
+            or training_report.get('model_protocol') != model
+            or training_report.get('scope') != 'bounded_200_update_learning'):
+        raise ValueError('profile requires the completed declared 200-update run')
+    return dict(implementation='mixed_learning_v1',configuration=config,
+                model_protocol=model,scope='bounded_200_update_learning',
+                integration_updates=None,source_git_head=training_report['source_git_head'])
+
+
+def lowered_precision_summary(lowered):
+    """Static matrix result types; counts are not execution time or FLOP shares."""
+    import re
+    from collections import Counter
+
+    text = lowered.as_text()
+    types = Counter()
+    for line in text.splitlines():
+        if 'stablehlo.dot_general ' in line or 'stablehlo.convolution ' in line:
+            match = re.search(r'->\s*tensor<[^>]*?((?:bf|f)\d+)>',line)
+            types[match.group(1) if match else 'unresolved'] += 1
+    return dict(matrix_operation_result_types=dict(types),
+                interpretation='static_operation_counts_not_runtime_or_FLOP_proportions')
+
+
 def run(args):
     from research.daily_coarse_graining.daily_operator.canonical_rollout import make_canonical_step
     from research.daily_coarse_graining.daily_operator.fresh_start_training import make_objective, make_update
@@ -88,6 +116,13 @@ def run(args):
 
     if args.admission_only or args.cpu_forward_only:
         raise ValueError('use shape-only or integration-updates for bounded checks')
+    profiling = args.profile_checkpoint is not None
+    if profiling != (args.profile_training_report is not None):
+        raise ValueError('profile checkpoint and source training report are required together')
+    if profiling and (args.resume or args.integration_updates or args.shape_only):
+        raise ValueError('profiling is a separate diagnostic, not resume or integration training')
+    if args.profile_trace and not profiling:
+        raise ValueError('trace is available only in diagnostic profiling mode')
     if args.output.exists() and not args.resume:
         raise FileExistsError('fresh run requires a new output; use --resume for recovery')
     if args.resume and not args.output.is_file():
@@ -98,7 +133,8 @@ def run(args):
     if (args.mixed_protocol.parent/config['model_protocol']).resolve() != args.protocol.resolve():
         raise ValueError('CLI and mixed model protocols differ')
     limit = args.integration_updates or config['updates']
-    scope = 'integration_only' if args.integration_updates else 'bounded_200_update_learning'
+    scope = ('performance_profile_not_training' if profiling else
+             'integration_only' if args.integration_updates else 'bounded_200_update_learning')
     started = time.perf_counter()
     current_head = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
     report = dict(schema_version='mixed_learning_result_v1', status='running',
@@ -188,7 +224,19 @@ def run(args):
             emit('completed',status='passed',classification='daily_T7_T30_optimizer_shapes')
             return report
 
-        if args.resume:
+        if profiling:
+            source_report = json.loads(args.profile_training_report.read_text())
+            profile_identity = dict(recovery_identity,
+                expected_method=profile_source_method(source_report,config,model))
+            saved = load_mixed_training_checkpoint(args.profile_checkpoint,**profile_identity)
+            if saved['completed_updates'] != 200:
+                raise ValueError('profile checkpoint must be at update200')
+            del parameters
+            parameters, optimizer = jax.device_put((saved['parameters'],saved['optimizer_state']))
+            report.update(checkpoint_inherited=True,profile_source_checkpoint=str(args.profile_checkpoint),
+                          profile_source_update=200,persistent_parameter_updates=0)
+            del saved
+        elif args.resume:
             saved = load_mixed_training_checkpoint(args.resume, **recovery_identity)
             resolved_resume = newest_checkpoint(args.output,args.resume,saved['completed_updates'])
             if resolved_resume != args.resume:
@@ -259,7 +307,9 @@ def run(args):
             report['monitors'].append(record)
             emit('monitor_completed',memory=_device_memory(runtime['devices'][0]))
 
-        if report['completed_updates'] == 0:
+        if profiling:
+            emit('profile_ready')
+        elif report['completed_updates'] == 0:
             if not args.resume:
                 save(0)
             monitor_milestone(0)
@@ -272,20 +322,20 @@ def run(args):
                                   ('daily',daily_backward,(parameters,first_daily,coefficients))]:
             emit('compile_'+name)
             began = time.perf_counter()
-            executable = fn.lower(*arguments).compile()
+            lowered = fn.lower(*arguments)
+            executable = lowered.compile()
             memory = _compiled_memory(executable)
             report['compilation'][name] = dict(seconds=time.perf_counter()-began,memory=memory)
+            if profiling:
+                report['compilation'][name]['precision'] = lowered_precision_summary(lowered)
             if memory['estimated_live_bytes'] > config['compiled_memory_limit_gib']*1024**3:
                 raise MemoryError(name+' compiled live memory exceeds bound')
             executables[name] = executable
             emit('compiled_'+name)
-        del cases, first_daily, arguments
+        del cases, first_daily, arguments, lowered
 
-        def valid_recurrent(row):
-            case = train_pool.case(jax,row)
+        def validate_recurrent(case, obs):
             initial,discrete,days,targets,expected_discrete = case
-            _, obs = forward(parameters,initial,discrete,days)
-            jax.block_until_ready(obs)
             hard = physical_checks(obs,targets,expected_discrete,days[0],head.contract,scales)
             terms = terms_fn(parameters,initial,obs,targets,context)
             for section in WEIGHT_COMPONENTS:
@@ -297,9 +347,37 @@ def run(args):
             feedback = feedback_diagnostics(jax,jnp,runtime,head,model,initial,assembled,obs,targets,days[0])
             hard.update(feedback_hard_counts(feedback))
             if any(hard.values()) or not np.isfinite(float(terms.total)):
-                report['failed_training_window'] = dict(window=row,hard=hard,loss=float(terms.total))
+                report['failed_training_window'] = dict(hard=hard,loss=float(terms.total))
                 raise ValueError('rotating TRAIN trajectory physical/finite gate failed')
+            return hard
+
+        def valid_recurrent(row):
+            case = train_pool.case(jax,row)
+            _, obs = forward(parameters,*case[:3])
+            jax.block_until_ready(obs)
+            try:
+                hard = validate_recurrent(case,obs)
+            except ValueError:
+                if 'failed_training_window' in report:
+                    report['failed_training_window']['window'] = row
+                raise
             return case,hard
+
+        if profiling:
+            from scripts.hpc.mixed_learning_profiling import profile_components
+
+            profile = profile_components(jax=jax,jnp=jnp,parameters=parameters,optimizer=optimizer,
+                sample=sample,daily_rows=fixed_rows,
+                recurrent_rows={row['length']:row for row in fixed_windows},window_pool=train_pool,
+                daily_executable=executables['daily'],
+                recurrent_executables={7:executables['T7'],30:executables['T30']},
+                coefficients=coefficients,context=context,forward=forward,
+                validate_recurrent=validate_recurrent,update=update,add=add,finish=finish,
+                combine=combine,finite=finite,norm_fn=norm_fn,repeats=args.profile_repeats,
+                trace_dir=args.output.with_suffix('.trace') if args.profile_trace else None,emit=emit)
+            emit('completed',status='completed',profile=profile,persistent_parameter_updates=0,
+                 memory=_device_memory(runtime['devices'][0]),daily_reader=daily_pool.statistics())
+            return report
 
         for index in range(report['completed_updates'],limit):
             emit('training',next_update=index+1)
@@ -381,6 +459,10 @@ def parser():
         result.add_argument('--'+name,type=Path,required=True)
     result.add_argument('--integration-updates',type=int,choices=(1,2))
     result.add_argument('--resume',type=Path)
+    result.add_argument('--profile-checkpoint',type=Path)
+    result.add_argument('--profile-training-report',type=Path)
+    result.add_argument('--profile-repeats',type=int,choices=(3,5),default=3)
+    result.add_argument('--profile-trace',action='store_true')
     return result
 
 

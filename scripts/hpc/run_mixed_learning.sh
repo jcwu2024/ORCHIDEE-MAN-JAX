@@ -1,9 +1,9 @@
 #!/bin/bash
-# Shared metadata, CPU-shape, free integration and approved production entry.
+# Shared metadata, CPU-shape, free integration/profile and production entry.
 set -euo pipefail
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 CODE_ROOT=${CODE_ROOT:?declare reviewed checkout}
-MODE=${1:?metadata, shape, integration, or train}
+MODE=${1:?metadata, shape, integration, profile, or train}
 shift
 PRINT_ONLY=false
 if [[ "${1:-}" == --dry-run ]]; then PRINT_ONLY=true; shift; fi
@@ -41,14 +41,22 @@ case "$MODE" in
         --output "${OUTPUT:-$DIAG/mixed-learning-v1-shape.json}" "$@"
     fi
     ;;
-  integration|train)
-    if [[ "$MODE" == integration ]]; then
+  integration|profile|train)
+    if [[ "$MODE" == integration || "$MODE" == profile ]]; then
       if ! "$PRINT_ONLY"; then
         case "$(hostname -s)" in gln01|ibgln01|ibc13b02n04) ;; *) exit 2;; esac
       fi
-      ARGS+=(--integration-updates 1)
-      DEFAULT_OUTPUT=$DIAG/mixed-learning-v1-integration.json
-      DEFAULT_TIMEOUT=90m
+      if [[ "$MODE" == profile ]]; then
+        ARGS+=(--profile-checkpoint "$ROOT/runtime/outputs/training/mixed-learning-v1/report.update-000200.checkpoint.pkl"
+          --profile-training-report "$ROOT/runtime/outputs/training/mixed-learning-v1/report.json"
+          --profile-repeats 3 --profile-trace)
+        DEFAULT_OUTPUT=$DIAG/mixed-learning-profile-v1.json
+        DEFAULT_TIMEOUT=40m
+      else
+        ARGS+=(--integration-updates 1)
+        DEFAULT_OUTPUT=$DIAG/mixed-learning-v1-integration.json
+        DEFAULT_TIMEOUT=90m
+      fi
     else
       if ! "$PRINT_ONLY"; then
         [[ -n "${SLURM_JOB_ID:-}" && "${SLURM_JOB_PARTITION:-}" == gnall ]] || exit 2

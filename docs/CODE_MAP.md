@@ -61,6 +61,12 @@ No code under `research/` is imported by the ordinary Teacher path.
 
 ## Daily Research
 
+`scripts/hpc/run_mixed_learning.py` composes fresh full-network daily/T7/T30
+learning, shared physical monitors and checkpoint recovery. Its diagnostic
+`profile` shell mode calls `mixed_learning_profiling.py` with fixed update200
+weights, timing existing component callbacks without retaining proposals or
+introducing another loss/AD implementation.
+
 `scripts/hpc/prepare_mixed_learning_schedule.py` and its free-CPU shell wrapper
 reconstruct existing prepared TRAIN source metadata, exclude monitor and
 development dates, deduplicate semantic windows, and write one deterministic

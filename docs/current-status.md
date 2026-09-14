@@ -13,6 +13,12 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Current authorized work: bounded free-GPU component profiling of the completed
+update200 model before planning greater data coverage. No scientific training
+or precision/AD/architecture change. Fixed input and optimizer replays discard
+all proposals; compare production-like and synchronized component totals.
+See `research/daily_coarse_graining/mixed_learning_performance_profile_20260914.md`.
+
 Latest result: job15069880 COMPLETED200/200, exit0,01:17:20, estimated3.56yuan.
 All fixed physical/population checks and checkpoint replay pass; science gates
 still fail. Fixed TRAIN and excluded losses fall~61%; T30 GPP improves21.4%,

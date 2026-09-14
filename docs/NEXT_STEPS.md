@@ -10,6 +10,14 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- User authorized a short performance check before data-coverage scale-up.
+  Implementing free gln01 fixed-update200 component profiling (40min ceiling),
+  with warmups and three production-like/instrumented repetitions; proposals
+  discarded. No new training, precision, architecture or AD change. Measure
+  daily/T7/T30, data preparation, checks, gradient operations and AdamW before
+  recommending optimization or a larger paid budget. Protocol:
+  `research/daily_coarse_graining/mixed_learning_performance_profile_20260914.md`.
+
 - Job15069880 COMPLETED200/200, Slurm exit0,01:17:20, estimated3.56yuan.
   Checkpoint replay and all fixed-panel physical/population checks pass.
   Fixed TRAIN/excluded daily losses both fall~61%; T30 GPP improves21.4%,

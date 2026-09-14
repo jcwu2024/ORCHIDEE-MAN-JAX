@@ -15,11 +15,32 @@ from research.daily_coarse_graining.daily_operator.target_oriented_training impo
 )
 from scripts.hpc.run_mixed_learning import (
     checkpoint_path,
+    lowered_precision_summary,
     newest_checkpoint,
+    profile_source_method,
     trim_resume_report,
 )
 
 jax.config.update("jax_enable_x64", True)
+
+
+def test_profile_uses_completed_checkpoint_method_not_diagnostic_head():
+    report = dict(status="completed", completed_updates=200, configuration={"x": 1},
+                  model_protocol={"seed": 2}, scope="bounded_200_update_learning",
+                  source_git_head="original_training_head")
+    method = profile_source_method(report, {"x": 1}, {"seed": 2})
+    assert method["source_git_head"] == "original_training_head"
+    assert method["scope"] == "bounded_200_update_learning"
+    assert method["integration_updates"] is None
+    with pytest.raises(ValueError):
+        profile_source_method(dict(report, completed_updates=100), {"x": 1}, {"seed": 2})
+
+
+def test_static_precision_summary_reads_real_lowered_matrix_result_types():
+    fn = jax.jit(lambda a, b: (a @ a, b @ b))
+    lowered = fn.lower(jnp.ones((2, 2), jnp.float32), jnp.ones((2, 2), jnp.float64))
+    summary = lowered_precision_summary(lowered)
+    assert summary["matrix_operation_result_types"] == {"f32": 1, "f64": 1}
 
 
 def _loss(parameters, features, targets):
