@@ -66,7 +66,8 @@ and 11 of 13 thirty-day keys; nonliving and total ecosystem carbon still fail.
 The expanded 346,539-day TRAIN pool is prepared. The immediate gate is physical
 feedback loss v2 and a shared recurrent science objective: correct demonstrated
 litter-fraction weighting imbalance and canopy-carbon drift, then admit actual
-combined updates before broader training. Free GPU checks are in progress; see
+combined updates before broader training. The separate single-day two-update
+and recurrent T7 directional checks have passed; combined updates remain next. See
 the top of `NEXT_STEPS.md` and `physical_feedback_and_recurrent_v2_20260913.md`
 in the research docs. The final paper method still requires a declared,
 reproducible fresh-initialization/full-network protocol. The chronology below

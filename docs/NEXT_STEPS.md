@@ -1,14 +1,25 @@
 # Current Roadmap
 
-Last updated: 2026-09-13.
+Last updated: 2026-09-14.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
-## Current execution gate (2026-09-13)
+## Current execution gate (2026-09-14)
 
 Current actions, superseding launch instructions in the history below:
+
+- Both v2 free admissions are COMPLETED/exit0; no active GPU process or paid
+  job. See `research/daily_coarse_graining/physical_recurrent_v2_results_20260914.md`.
+  Physical loss: two fresh full-network updates, native/JVP and physical gates
+  pass; all four litterpart means move toward target, but improvements are tiny
+  (canopy RMSE-0.129%, litterpart-0.048%) and autotrophic respiration+0.492%.
+  New recurrent T7 scalar: native/JVP both directions pass, physical gates zero,
+  actual peak2.684GiB for one trajectory without optimizer. Native saved.
+  Next implement/declare bounded combined one-day+T7 complete optimizer updates,
+  then T30 and expanded learning budget. Reuse completed unchanged scalar checks.
+  Do not claim long-horizon fitting or final method accepted from these checks.
 
 - Active implementation gate: physical feedback/recurrent science v2, specified
   in `research/daily_coarse_graining/physical_feedback_and_recurrent_v2_20260913.md`.
@@ -18,8 +29,8 @@ Current actions, superseding launch instructions in the history below:
   This motivates physical-unit fraction MSE and canopy pseudo-Huber supervision,
   not another architecture replacement or historical custom-adjoint repair.
   New one-day objective: base + 0.1 canopy + 0.1 litterpart. Real test02 shapes
-  pass (266.6s), exact GPU runtime passes (59.3s); free gln01 GPU0 is running
-  native-gradient/JVP and two fresh full-network batch32 updates, Python106777,
+  pass (266.6s), exact GPU runtime passes (59.3s); free gln01 GPU0 completed
+  native-gradient/JVP and two fresh full-network batch32 updates, Python106777 exited,
   immutable checkout physical-feedback-v2 at64c0628. Pipeline/report prefix:
   runtime/outputs/diagnostics/physical-feedback-v2-{pipeline.log,updates.json}.
   Judge physical coordinate movement and canopy/flux changes separately from
@@ -31,8 +42,8 @@ Current actions, superseding launch instructions in the history below:
   Local recurrent/selection/AD suite32 passes. TRAIN-only selection now passes:
   8T7 +8T30 windows, seed20260914, excluding64 monitor +296 development days.
   First T7, final1998 diagnostic weights, zero updates; full CPU shape admission
-  passes310.4s. Free GPU1 runtime passes24.9s; reverse is running, Python112477,
-  pipeline Bash111660 (reverse65min then verification35min caps). Checkout:
+  passes310.4s. Free GPU1 runtime passes24.9s; reverse/verify completed2013.2/647.5s,
+  Python112477 and pipeline Bash111660 exited. Checkout:
   runtime/checkouts/recurrent-science-v2; outputs/diagnostics/recurrent-science-v2-*
   under runtime. Preserve native.pkl before verification. This recurrent scalar
   check does not certify the eventual combined one-day/recurrent optimizer.

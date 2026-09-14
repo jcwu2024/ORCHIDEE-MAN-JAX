@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-13.
+Last updated: 2026-09-14.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -13,7 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Physical feedback/recurrent v2 is implemented and under bounded free admission.
+Physical feedback/recurrent v2 bounded free admissions both completed/exit0.
+Results: `research/daily_coarse_graining/physical_recurrent_v2_results_20260914.md`.
+Two fresh single-day updates pass technical gates with tiny canopy/fraction
+improvements and mixed flux changes. New actual recurrent T7 loss passes both
+native/JVP directions, all physical counts zero, actual peak2.684GiB without
+optimizer. No active GPU process. Next is combined single-day+T7 optimizer
+admission, followed by T30 and expanded learning; no final science claim.
 The active proposal is `research/daily_coarse_graining/physical_feedback_and_recurrent_v2_20260913.md`.
 Saved rollout accounting attributes9277.601 of9986.906 gC/m2 negative nonliving
 bias to canopy residuals (92.90%); this is component accounting, not causal
@@ -23,10 +29,11 @@ worsened. The v2 objective uses base +0.1 canopy pseudo-Huber +0.1 physical-unit
 litterpart MSE, preserving input scaling/Attention/daily physical boundaries.
 
 Free test02 full-model shape check passes266.6s; deployed GPU runtime passes
-59.3s. At this handoff, GPU0 Python106777 is compiling/evaluating the new native
-gradient before two full fresh batch32/micro4 AdamW updates. Immutable checkout
+59.3s. GPU0 Python106777 completed2066.9s with two full fresh batch32/micro4
+AdamW updates and passing native/JVP. Immutable checkout
 physical-feedback-v2 at64c0628; report/log prefix runtime/outputs/diagnostics/
-physical-feedback-v2. No scientific improvement is claimed before its result.
+physical-feedback-v2. Canopy RMSE-0.129%, litterpart-0.048%, respiration+0.492%:
+bounded mixed early movement, not a trained-model scientific acceptance.
 
 Shared recurrent science loss and probe implemented atb247e65; focused combined
 suite32 passes. It uses daily/cumulative GPP/NPP/respiration, and elapsed-time
@@ -35,8 +42,8 @@ Metadata-only TRAIN selection passes125.8s:8T7+8T30, seed20260914, excluding64
 monitor+296 development days; no Teacher payload read/regeneration. First T7
 uses final1998 weights only as a zero-update diagnostic asset. Real CPU shape
 check passes310.4s (outputs/recurrent-science-v2-shape.json). Free GPU1 runtime
-passes24.9s; native reverse is running as Python112477, pipeline Bash111660,
-with65min reverse and35min subsequent verification caps. Pipeline log:
+passes24.9s; native reverse and JVP completed2013.2/647.5s and passed. Former
+Python112477/pipeline Bash111660 are absent. Pipeline log:
 runtime/outputs/diagnostics/recurrent-science-v2-pipeline.log. The subsequent
 combined single-day/recurrent optimizer still requires actual update checks.
 No new paid run; final paper training remains a declared fresh/all-network recipe.
