@@ -184,17 +184,19 @@ def run(args):
             emit('completed',status='passed',classification='daily_T7_T30_optimizer_shapes')
             return report
 
-        optimizer = initialize_target_oriented_adamw(parameters)
         if args.resume:
             saved = load_mixed_training_checkpoint(args.resume, **recovery_identity)
             resolved_resume = newest_checkpoint(args.output,args.resume,saved['completed_updates'])
             if resolved_resume != args.resume:
                 del saved
                 saved = load_mixed_training_checkpoint(resolved_resume, **recovery_identity)
+            del parameters
             parameters, optimizer = jax.device_put((saved['parameters'],saved['optimizer_state']))
             trim_resume_report(report,saved['completed_updates'])
             report['resumed_from'] = str(resolved_resume)
             del saved
+        else:
+            optimizer = initialize_target_oriented_adamw(parameters)
         if report['completed_updates'] > limit:
             raise ValueError('recovery exceeds this execution budget')
 
@@ -273,7 +275,7 @@ def run(args):
                 raise MemoryError(name+' compiled live memory exceeds bound')
             executables[name] = executable
             emit('compiled_'+name)
-        del cases, first_daily
+        del cases, first_daily, arguments
 
         def valid_recurrent(row):
             case = train_pool.case(jax,row)
