@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/mixed_learning_200_results_20260914.md` | Completed200 updates; learning progress, science gates still fail | Actual data exposure, physical-unit changes, throughput/cost and next coverage planning |
 | `research/daily_coarse_graining/mixed_learning_integration_results_20260914.md` | Completed: full mixed update, physical checks and checkpoint replay pass | Actual runtime/memory, accuracy limitations, ready200-update resource envelope |
 | `research/daily_coarse_graining/mixed_learning_protocol_20260914.md` | Implemented200-update method; free integration completed | Executable fresh joint daily/T7/T30 training, paired recovery, fixed monitors and paid envelope |
 | `research/daily_coarse_graining/mixed_physical_recurrent_t30_results_20260914.md` | Completed: actual T30 native/JVP and two mixed updates admitted | Physical accuracy limitations, runtime/memory, next200-update learning |

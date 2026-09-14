@@ -10,6 +10,21 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Job15069880 COMPLETED200/200, Slurm exit0,01:17:20, estimated3.56yuan.
+  Checkpoint replay and all fixed-panel physical/population checks pass.
+  Fixed TRAIN/excluded daily losses both fall~61%; T30 GPP improves21.4%,
+  NPP/AGB/BGB~30%, RA worsens19.7%, canopy/nonliving errors scarcely improve.
+  Science screen remains failed. Report:
+  `research/daily_coarse_graining/mixed_learning_200_results_20260914.md`.
+  User questions insufficient data exposure:12800 unique daily draws=3.69%
+  of ready346539-day pool. The200 budget, not memory or missing data, limited
+  exposure. Next design meaningful coverage (proposed one complete pool pass,
+  5415 updates) with extended recurrent metadata and declared reproducible
+  initialization/continuation and recovery segments. Use15.26s measured warm
+  complete-update time for estimates; no new AD gate or architecture reset.
+  RA/canopy imbalance remains a science concern alongside greater data/steps.
+  No next job submitted or larger compute budget approved.
+
 - Paid200-update mixed learning APPROVED and RUNNING: Slurm15069880,
   gnall nodeibc13b02n01, immutable checkout `runtime/checkouts/mixed-learning-v1`
   at12eb22c. User approved the concrete8CPU/1V100/64GiB/6h/16.56yuan envelope.

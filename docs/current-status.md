@@ -13,6 +13,17 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest result: job15069880 COMPLETED200/200, exit0,01:17:20, estimated3.56yuan.
+All fixed physical/population checks and checkpoint replay pass; science gates
+still fail. Fixed TRAIN and excluded losses fall~61%; T30 GPP improves21.4%,
+NPP/AGB/BGB~30%, RA worsens19.7%, canopy/nonliving nearly unchanged. Evidence:
+`research/daily_coarse_graining/mixed_learning_200_results_20260914.md`.
+Actual warm update15.26s, live16.52GiB. User highlights data underuse; only
+3.69% of ready daily pool used. Next planning should address full-pool coverage
+and learning budget, while tracking RA/canopy imbalance; do not infer
+architecture failure or adequate training from200 updates. No active job or
+new compute approval for this workstream.
+
 Latest execution: user approved concrete paid envelope; job15069880 is RUNNING
 on gnall/ibc13b02n01 at immutable12eb22c. Resources8CPU/1V100/64GiB,6h limit,
 additive ceiling16.56yuan. Scheduler start2026-09-14 16:02:55, end22:02:55
