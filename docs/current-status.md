@@ -13,6 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Mixed daily+T7 admission COMPLETED two fresh all-parameter updates, exit0;
+all physical gates pass. See
+`research/daily_coarse_graining/mixed_physical_recurrent_results_20260914.md`.
+Same-draw losses fall0.1263%/0.0889%; T7 GPP/NPP/AGB/BGB improve slightly,
+autotrophic respiration worsens0.3135%, canopy RMSE remains100506.27gC/m².
+These are fresh two-update TRAIN results, not trained-model/generalization
+acceptance. Peak live16.803GiB, reserved26.978GiB; second complete update13.58s,
+total1824.4s mainly compilation/setup. Processes97713/99324 exited.
+Next actual T30 mixed-update admission, then expanded-pool science learning.
+
 Mixed daily+T7 admission is now implemented and specified before execution in
 `research/daily_coarse_graining/mixed_physical_recurrent_admission_20260914.md`.
 Each of two fresh full-network updates uses64 one-day rows/micro8 plus2 T7
@@ -20,7 +30,7 @@ TRAIN windows; independently averaged objectives are summed before one AdamW
 update. Local28 tests and test02 actual-model daily/T7 gradient+optimizer shapes
 pass (338.4s), target-shell dry runs pass. GPU runtime check passes56.7s under
 JAX0.4.38/NumPy2.4.6. Free gln01 GPU0 launcher Bash97713/Python99324
-is running the actual model from immutable `runtime/checkouts/mixed-physical-recurrent-v1`
+completed the actual model from immutable `runtime/checkouts/mixed-physical-recurrent-v1`
 at9e0b7bd; log/report `runtime/outputs/diagnostics/mixed-physical-recurrent-v1-gpu.{log,json}`.
 This is bounded optimizer admission, not long-horizon science or final-method acceptance.
 

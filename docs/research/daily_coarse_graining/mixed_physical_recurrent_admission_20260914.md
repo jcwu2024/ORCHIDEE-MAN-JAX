@@ -55,6 +55,10 @@ larger expanded-pool learning run.
 
 ## Execution admission
 
+Completed: two updates, exit0, all physical gates pass. Final evidence and
+limitations are in `mixed_physical_recurrent_results_20260914.md`; the launch
+description below records the state before completion.
+
 Implementation commit9e0b7bd:28 local mixed/recurrent/public-rollout tests pass;
 independent Sol review found no remaining material math or panel issue.
 The real-data CPU check on test02 passes in338.4s, including one-day and T7

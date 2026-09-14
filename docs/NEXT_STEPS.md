@@ -10,11 +10,21 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
-- Mixed daily+T7 optimizer admission is running on free gln01 GPU0,
+- Mixed daily+T7 admission COMPLETED: two updates, exit0, all physical gates
+  zero; same-draw losses decrease0.1263%/0.0889%. Processes97713/99324 exited.
+  Peak live16.803GiB (reserved26.978GiB), warm second update13.58s including
+  checks; total30.41min dominated by setup/compilation. See
+  `research/daily_coarse_graining/mixed_physical_recurrent_results_20260914.md`.
+  Science gains are tiny; autotrophic respiration slightly worsens and fresh
+  canopy stock remains severely inaccurate. RH targets are zero here, so zero
+  error is not learned-response evidence. Next actual T30 mixed-update
+  admission, then declared expanded-pool learning; reuse T7/caches, keep Attention.
+
+- Completed launch provenance (not an active process): free gln01 GPU0,
   Bash97713/Python99324, immutable checkout `runtime/checkouts/mixed-physical-recurrent-v1`
   at9e0b7bd. Local28 tests and real test02 full-gradient/optimizer shapes passed
   (338.4s). Target-shell shape/GPU dry runs and deployed GPU runtime check
-  (56.7s, JAX0.4.38/NumPy2.4.6) passed; actual model has entered bootstrap. Log/report:
+  (56.7s, JAX0.4.38/NumPy2.4.6) passed. Log/report:
   `runtime/outputs/diagnostics/mixed-physical-recurrent-v1-gpu.{log,json}`.
   See `research/daily_coarse_graining/mixed_physical_recurrent_admission_20260914.md`.
   Two fresh full-network updates each combine a mean64 one-day physical-v2 loss
@@ -22,10 +32,8 @@ Current actions, superseding launch instructions in the history below:
   Use the first128 expanded-pool TRAIN rows and first4 accepted TRAIN T7 windows;
   report same-draw changes and excluded64-day monitor separately. Free gln01,
   90-minute cap; no paid submission. Technical success is not science acceptance.
-  Next read completed report, same-draw before/after scalar, component gradient
-  norms/cosine, physical panels and peak memory. If fresh-forward or actual
-  updates fail, localize the recorded case before increasing budget. If admitted,
-  proceed to actual T30 mixed admission and declared expanded science learning.
+  Completed report, same-draw scalar, component gradients, physical panels and
+  peak memory have been reviewed; next work is specified in the top entry.
 
 - Microbatch resource probe completed; its processes have exited. See
   `research/daily_coarse_graining/physical_microbatch_results_20260914.md`.
