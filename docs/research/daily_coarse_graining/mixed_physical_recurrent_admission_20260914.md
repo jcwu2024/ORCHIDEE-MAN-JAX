@@ -52,3 +52,20 @@ Microbatch 8 is chosen because 16 saved only about 0.55 s per one-day update
 while adding about 10.32 GiB peak memory. Paid submission is not authorized by
 this protocol. After this gate, admit actual T30 mixed updates and specify a
 larger expanded-pool learning run.
+
+## Execution admission
+
+Implementation commit9e0b7bd:28 local mixed/recurrent/public-rollout tests pass;
+independent Sol review found no remaining material math or panel issue.
+The real-data CPU check on test02 passes in338.4s, including one-day and T7
+native gradients, their sum, full AdamW state/update and science reporting
+shapes. Target-shell actual argument expansion passes for both launcher modes.
+
+Free gln01 GPU0 launcher Bash97713/Python99324 is running from the immutable checkout
+`runtime/checkouts/mixed-physical-recurrent-v1`. It executes the small deployed
+runtime check, then a90-minute actual forward/two-update gate. Log and report
+are `runtime/outputs/diagnostics/mixed-physical-recurrent-v1-gpu.{log,json}`.
+Deployed synthetic GPU runtime check passes in56.7s (JAX0.4.38, NumPy2.4.6);
+the actual-model process has entered bootstrap. Actual update/science results
+are pending; no paid submission. Inspect same-draw mixed descent, both gradient
+contributions, excluded TRAIN monitor and physical T7 panels before T30/scale-up.

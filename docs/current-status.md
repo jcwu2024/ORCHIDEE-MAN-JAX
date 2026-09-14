@@ -17,11 +17,15 @@ Mixed daily+T7 admission is now implemented and specified before execution in
 `research/daily_coarse_graining/mixed_physical_recurrent_admission_20260914.md`.
 Each of two fresh full-network updates uses64 one-day rows/micro8 plus2 T7
 TRAIN windows; independently averaged objectives are summed before one AdamW
-update. Actual deployed shapes and free GPU execution are pending. This is
-bounded optimizer admission, not long-horizon science or final-method acceptance.
+update. Local28 tests and test02 actual-model daily/T7 gradient+optimizer shapes
+pass (338.4s), target-shell dry runs pass. GPU runtime check passes56.7s under
+JAX0.4.38/NumPy2.4.6. Free gln01 GPU0 launcher Bash97713/Python99324
+is running the actual model from immutable `runtime/checkouts/mixed-physical-recurrent-v1`
+at9e0b7bd; log/report `runtime/outputs/diagnostics/mixed-physical-recurrent-v1-gpu.{log,json}`.
+This is bounded optimizer admission, not long-horizon science or final-method acceptance.
 
-User-approved batch64/microbatch8-vs16 resource probe has completed. No active
-GPU process; original Bash62878/Python62924 and follow-up78597/78680 exited.
+User-approved batch64/microbatch8-vs16 resource probe has completed. Its
+original Bash62878/Python62924 and follow-up78597/78680 exited.
 Results: `research/daily_coarse_graining/physical_microbatch_results_20260914.md`.
 Micro8:6.095s/update,16.369GiB peak; micro16:5.547s,26.690GiB after actual runtime
 completion. Both actual update/physical gates pass. Gradients compare within

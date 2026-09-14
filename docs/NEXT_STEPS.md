@@ -10,15 +10,24 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
-- Mixed daily+T7 optimizer admission is specified and implemented; deployment
-  checks are next. See `research/daily_coarse_graining/mixed_physical_recurrent_admission_20260914.md`.
+- Mixed daily+T7 optimizer admission is running on free gln01 GPU0,
+  Bash97713/Python99324, immutable checkout `runtime/checkouts/mixed-physical-recurrent-v1`
+  at9e0b7bd. Local28 tests and real test02 full-gradient/optimizer shapes passed
+  (338.4s). Target-shell shape/GPU dry runs and deployed GPU runtime check
+  (56.7s, JAX0.4.38/NumPy2.4.6) passed; actual model has entered bootstrap. Log/report:
+  `runtime/outputs/diagnostics/mixed-physical-recurrent-v1-gpu.{log,json}`.
+  See `research/daily_coarse_graining/mixed_physical_recurrent_admission_20260914.md`.
   Two fresh full-network updates each combine a mean64 one-day physical-v2 loss
   (micro8) and a mean2 T7 recurrent science loss, weights1+1, one clip/AdamW.
   Use the first128 expanded-pool TRAIN rows and first4 accepted TRAIN T7 windows;
   report same-draw changes and excluded64-day monitor separately. Free gln01,
   90-minute cap; no paid submission. Technical success is not science acceptance.
+  Next read completed report, same-draw before/after scalar, component gradient
+  norms/cosine, physical panels and peak memory. If fresh-forward or actual
+  updates fail, localize the recorded case before increasing budget. If admitted,
+  proceed to actual T30 mixed admission and declared expanded science learning.
 
-- Microbatch resource probe completed; no active GPU process. See
+- Microbatch resource probe completed; its processes have exited. See
   `research/daily_coarse_graining/physical_microbatch_results_20260914.md`.
   Same batch64: micro8 median6.095s/16.369GiB peak; micro16 median5.547s/
   26.690GiB peak, both finite/physical update gates pass. Micro16 first stopped
