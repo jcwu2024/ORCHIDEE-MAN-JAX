@@ -13,6 +13,19 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Combined Attention FP32 + checked split implemented364cdef. Explicit
+`manifests/coarse_graining/mixed_learning_execution_fp32_checked_v1.json` binds
+both execution options and is recorded in report/checkpoint identity. Local15
+runner/profile tests and revised12 runner tests pass; independent Sol review,
+Ruff, real shell dry-run and deployed runtime check48.50s pass. Combined real
+admission RUNNING free gln01 GPU0, Bash91078/Python91133,90min ceiling,
+immutable364cdef in `runtime/checkouts/mixed-learning-checked-reuse-v1`;
+`mixed-learning-fp32-checked-v1.{json,log}`. Reuses original references and saves
+combined gradients. User agrees that this should close currently justified
+performance work, then return to broader data exposure and training. Tiny
+pooling/norm optimizations do not block that transition. No paid task.
+See `research/daily_coarse_graining/combined_execution_admission_20260915.md`.
+
 User now authorizes unnecessary-FP64 removal independently of future hardware.
 Explicit full-head Attention/pooling policies and staged real-model comparisons
 implemented. Legacy daily first attempt failed on a new metadata conversion;

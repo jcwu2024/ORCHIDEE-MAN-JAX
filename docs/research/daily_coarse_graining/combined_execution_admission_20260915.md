@@ -63,3 +63,19 @@ serve diagnostics, not an unexplained formal pretraining chain.
 
 Paid submission remains a separate concrete resource/cost approval. No paid
 work or new architecture is authorized or needed by this integration step.
+
+## Implementation and live admission
+
+Implementation commits85147e3/364cdef; local15 runner/profile tests pass,
+then12 runner tests pass after independent Sol review. Ruff/diff checks pass.
+Review follow-up requires the saved reference for combined admission and passes
+the resolved policy into bootstrap. Diagnostic source-checkpoint method is
+recorded separately from effective execution policy. No new reference gradient
+or file-hashing preflight is introduced.
+
+Deployed JAX0.4.38 runtime check passes48.50s on GPU0; target-shell dry-run
+confirms `checked-profile`, legacy reference report, execution-policy and90min
+timeout arguments. Server checkout is fast-forwarded to364cdef and immutable.
+Combined run launched on free gln01 GPU0: Bash91078 / Python91133. Report/log
+use the output stem above. No paid submission. Combined numerical/speed result
+is pending; the small synthetic runtime check is not real-model acceptance.

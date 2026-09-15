@@ -11,6 +11,10 @@ is the shared explicit policy, threaded by `fresh_start.build_fresh_head`.
 Attention score and source-family pooling FP32 options are independent and
 default off. `scripts/hpc/run_mixed_learning.py --precision-stage` owns the
 fixed-checkpoint daily/T7/T30/full comparison, using existing AD and loss code.
+Its `--execution-policy` loads the explicit combined FP32/checked-split manifest,
+records effective policy in report/checkpoint method, and uses the existing
+checked-profile comparison and shared recurrent AD. Ordinary legacy defaults
+remain available; current combined admission status is in `NEXT_STEPS.md`.
 `probe_attention_fp32.py`, `probe_source_pooling_fp32.py` and
 `probe_reporting_norm_fp32.py` under `scripts/hpc/` own bounded component probes;
 their measurements do not establish full-model or scientific acceptance.

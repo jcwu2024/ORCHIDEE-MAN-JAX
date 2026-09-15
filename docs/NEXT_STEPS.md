@@ -10,6 +10,22 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- User approves combining Attention FP32 and checked split, then closing this
+  performance phase and returning to broader training. Implementation364cdef
+  adds explicit `mixed_learning_execution_fp32_checked_v1.json` policy to CLI,
+  reports and checkpoint method; legacy defaults and source-checkpoint identity
+  are preserved. Local15 runner/profiling tests, Sol review, revised12 runner
+  tests/Ruff, target-shell dry-run and deployed runtime check48.50s all pass.
+  Combined admission RUNNING free gln01 GPU0, Bash91078/Python91133,90min ceiling,
+  immutable364cdef in `runtime/checkouts/mixed-learning-checked-reuse-v1`;
+  diagnostics `mixed-learning-fp32-checked-v1.{json,log}`. Reuses original
+  T7/T30 gradients and timings; saves new gradients before further compilation.
+  After combined full-gradient/physical/update/timing admission, return to
+  meaningful pool coverage and sufficient full-network daily+T7/T30 training.
+  Do not make pooling/norm micro-optimizations another prerequisite. No paid
+  task or new architecture. Protocol:
+  `research/daily_coarse_graining/combined_execution_admission_20260915.md`.
+
 - User authorizes implementing unnecessary-FP64 removal independently of5090.
   Full-model explicit Attention/pooling policies and staged trained precision
   comparisons implemented7018492; local16 focused tests/Ruff and target-shell
