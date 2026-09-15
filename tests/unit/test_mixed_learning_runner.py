@@ -57,10 +57,15 @@ def test_declared_combined_policy_binds_real_parser_and_checkpoint_method():
     assert train_args.attention_score_dtype == 'fp32'
     assert train_args.checked_recurrent and train_args.separate_checked_validation
     compare_args = cli.parse_args(base + ['--execution-policy', str(policy_path),
-                                         '--compare-checked-recurrent'])
+        '--compare-checked-recurrent', '--checked-reference-report', 'legacy.json'])
     assert configure_execution(compare_args) == policy
     assert not compare_args.checked_recurrent
     assert compare_args.separate_checked_validation
+    assert compare_args.resolved_execution_policy == policy
+    missing_reference = cli.parse_args(base + ['--execution-policy', str(policy_path),
+                                               '--compare-checked-recurrent'])
+    with pytest.raises(ValueError, match='preserved legacy reference'):
+        configure_execution(missing_reference)
     report = dict(status='completed', completed_updates=200, configuration={},
                   model_protocol={}, scope='bounded_200_update_learning',
                   source_git_head='trained', execution_policy=policy)

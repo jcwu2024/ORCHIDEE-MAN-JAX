@@ -71,7 +71,7 @@ def bootstrap(args, protocol):
             or getattr(args, 'cpu_forward_only', False)
             or getattr(args, 'precision_stage', None)
             or (getattr(args, 'mixed_protocol', None)
-                and getattr(args, 'execution_policy', None)))):
+                and getattr(args, 'resolved_execution_policy', None)))):
         raise ValueError('FP32 Attention requires diagnostic admission or a mixed execution policy')
     head = build_fresh_head(
         _head(runtime, target), template, threshold=protocol['input_conditioning']['threshold'],

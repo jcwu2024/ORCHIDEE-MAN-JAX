@@ -88,6 +88,9 @@ def configure_execution(args):
         source_family_pooling_dtype='legacy', physical_dtype='float64')
     if policy != supported:
         raise ValueError('unsupported mixed-learning execution policy')
+    if args.compare_checked_recurrent and args.checked_reference_report is None:
+        raise ValueError('combined admission requires the preserved legacy reference report')
+    args.resolved_execution_policy = policy
     args.attention_score_dtype = policy['attention_score_dtype']
     args.separate_checked_validation = True
     args.checked_recurrent = not args.compare_checked_recurrent
@@ -392,7 +395,8 @@ def run(args):
             del parameters
             parameters, optimizer = jax.device_put((saved['parameters'],saved['optimizer_state']))
             report.update(checkpoint_inherited=True,profile_source_checkpoint=str(args.profile_checkpoint),
-                          profile_source_update=200,persistent_parameter_updates=0)
+                          profile_source_update=200,persistent_parameter_updates=0,
+                          profile_source_method=profile_identity['expected_method'])
             del saved
         elif args.resume:
             saved = load_mixed_training_checkpoint(args.resume, **recovery_identity)
