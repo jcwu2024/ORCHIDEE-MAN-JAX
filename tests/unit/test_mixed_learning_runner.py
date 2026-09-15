@@ -16,6 +16,7 @@ from research.daily_coarse_graining.daily_operator.target_oriented_training impo
 from scripts.hpc.run_mixed_learning import (
     checkpoint_path,
     lowered_precision_summary,
+    masked_precision_daily_auxiliary,
     newest_checkpoint,
     precision_reference_identity,
     precision_reference_path,
@@ -85,6 +86,28 @@ def test_precision_stages_and_reference_paths_are_component_specific(tmp_path):
 def _loss(parameters, features, targets):
     prediction = features @ parameters["weight"] + parameters["bias"]
     return jnp.mean((prediction - targets) ** 2)
+
+
+def test_precision_auxiliary_masks_only_undefined_values_and_retains_masks():
+    valid = np.asarray([True, False])
+    auxiliary = {
+        'terms': np.asarray([[1., 2., 3.], [4., 5., 6.]]),
+        'physical': {'fluxes': {'gpp': {
+            'predicted': np.asarray([7., np.nan]),
+            'teacher': np.asarray([8., np.nan]), 'defined': valid}}},
+        'canopy_stock_change': {'row_valid': valid, 'scale_valid': np.ones(2, dtype=bool),
+                                'predicted_change': np.asarray([.1, np.nan])},
+        'litterpart_feedback': {'valid': valid[:, None],
+                               'predicted': np.asarray([[.3], [np.nan]])},
+    }
+    result = masked_precision_daily_auxiliary(jax, auxiliary)
+    np.testing.assert_array_equal(result['physical']['fluxes']['gpp']['predicted'], [7., 0.])
+    np.testing.assert_array_equal(result['physical']['fluxes']['gpp']['defined'], valid)
+    np.testing.assert_array_equal(result['litterpart_feedback']['predicted'], [[.3], [0.]])
+    np.testing.assert_array_equal(result['canopy_stock_change']['predicted_change'], [.1, 0.])
+    # An invalid numerical value in a defined slot must still fail comparison.
+    auxiliary['physical']['fluxes']['gpp']['predicted'][0] = np.nan
+    assert np.isnan(masked_precision_daily_auxiliary(jax, auxiliary)['physical']['fluxes']['gpp']['predicted'][0])
 
 
 def _assert_tree_allclose(left, right):

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+from dataclasses import replace
 from pathlib import Path
 
 import jax
@@ -29,6 +30,7 @@ from research.daily_coarse_graining.daily_operator import (
     validate_conservative_result,
 )
 from research.daily_coarse_graining.daily_operator.strong_baseline_architecture import (
+    NeuralPrecisionPolicy,
     strong_baseline_parameter_count,
 )
 from scripts.hpc import audit_target_oriented_coupled_gpp_conditioned_attention as runner
@@ -132,6 +134,26 @@ def test_conditioning_contract_parameters_and_matched_reference(conditioned_gpp_
         rebuilt["target_oriented"]["coupled_gpp_conditioning"]
         is parameters["target_oriented"]["coupled_gpp_conditioning"]
     )
+
+
+def test_full_active_head_accepts_attention_fp32_policy(conditioned_gpp_setup):
+    setup = conditioned_gpp_setup
+    head = setup["candidate_head"]
+    policy = NeuralPrecisionPolicy(attention_scores_fp32=True)
+    head = replace(head, config=replace(head.config, neural_precision=policy))
+
+    shaped = jax.eval_shape(
+        lambda values: head.learned_outputs(
+            values,
+            head.assemble_context(values, setup["assembled"]),
+            setup["assembled"],
+        ),
+        setup["candidate_parameters"],
+    )
+
+    assert head.config.neural_precision == policy
+    assert shaped[GPP_FIELD].shape == (1, 2)
+    assert shaped[GPP_FIELD].dtype == jnp.float64
 
 
 def test_bounded_cosine_logits_ignore_projected_magnitude_and_remain_bounded():

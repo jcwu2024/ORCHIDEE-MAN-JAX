@@ -11,9 +11,14 @@ validation. Do not start another neural training job until Gates A-C pass.
 Current actions, superseding launch instructions in the history below:
 
 - User authorizes implementing unnecessary-FP64 removal independently of5090.
-  Work in progress: full-model explicit Attention/pooling policies and staged
-  trained precision comparisons; reporting-only norms measured separately on
-  saved actual gradients. Free-node tests authorized, no paid submission.
+  Full-model explicit Attention/pooling policies and staged trained precision
+  comparisons implemented7018492; local16 focused tests/Ruff and target-shell
+  dry-run pass. Legacy daily64 reference RUNNING free GPU0, Bash38715/Python38761,
+  50min ceiling, checkout `runtime/checkouts/mixed-learning-checked-reuse-v1`.
+  Diagnostics `mixed-learning-attention-legacy-daily-v1.{json,log}`. After this,
+  compare FP32 daily, then T7/T30 against preserved references, then full timing.
+  Reporting norms completed separately: <5e-8 relative error but only0.06--0.13ms
+  saved per norm. Free-node tests authorized, no paid submission.
   First real-model comparison is Attention-only; physics/loss/optimizer remain
   unchanged. Do not treat a primitive pass as full-model admission.
 

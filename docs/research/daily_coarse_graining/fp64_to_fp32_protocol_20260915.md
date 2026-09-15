@@ -15,6 +15,27 @@ optimizer's clipping norm. Free primitive/norm probes have a10-minute ceiling;
 real-model daily/T7/T30 checks use separate bounded runs with saved partial
 results and cache reuse, rather than repeating all reference computations.
 
+Implementation at `7018492`: `NeuralPrecisionPolicy` on `StrongBaselineConfig`
+owns independent `attention_scores_fp32` and `source_family_pooling_fp32`
+booleans; `build_fresh_head(..., neural_precision=...)` threads the policy through
+the active heads and direct GPP-factor diagnostic. Physical outputs remain FP64.
+The runner's first intervention is `--attention-score-dtype fp32`, available only
+in explicit diagnostic mode; pooling remains unchanged in this first run.
+`run_mixed_learning.sh precision-profile` stages `daily`, `T7`, `T30`, then `full`.
+It records the effective Attention policy, preserves failed candidate gradients,
+and compares daily component terms and masked physical flux/stock values as well
+as complete parameter gradients and all existing physical counters. Full timing
+uses the original recurrent execution on both sides for precision attribution;
+it must not be described as a comparison against the separate checked split's
+12.08s baseline. A subsequent joint adoption needs the efficient checked route.
+
+The legacy daily stage is running on free GPU0, Bash38715/Python38761,50min
+ceiling, immutable `runtime/checkouts/mixed-learning-checked-reuse-v1` at7018492.
+Output: `runtime/outputs/diagnostics/mixed-learning-attention-legacy-daily-v1`
+`.json/.log`. It supplies only the missing daily64 full-gradient/auxiliary
+reference. Existing T7/T30 reference files are reused. Local16 focused tests and
+Ruff pass; target-shell new-branch argument expansion passed `--dry-run`.
+
 User priority: establish which FP64 operations could bottleneck a future RTX5090,
 which can be FP32 and how much time is saved. This supersedes immediate larger
 training as the next performance task. Do not substitute FP16/TF32 investigation
