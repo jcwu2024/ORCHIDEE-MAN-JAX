@@ -17,11 +17,15 @@ Combined Attention FP32 + checked split implemented364cdef. Explicit
 `manifests/coarse_graining/mixed_learning_execution_fp32_checked_v1.json` binds
 both execution options and is recorded in report/checkpoint identity. Local15
 runner/profile tests and revised12 runner tests pass; independent Sol review,
-Ruff, real shell dry-run and deployed runtime check48.50s pass. Combined real
-admission RUNNING free gln01 GPU0, Bash91078/Python91133,90min ceiling,
-immutable364cdef in `runtime/checkouts/mixed-learning-checked-reuse-v1`;
-`mixed-learning-fp32-checked-v1.{json,log}`. Reuses original references and saves
-combined gradients. User agrees that this should close currently justified
+Ruff, real shell dry-run and deployed runtime check48.50s pass. Combined v1
+exited124 at90min in daily compilation. T7/T30 complete gradients, loss and
+physical counts pass, relative L2 errors1.454e-7/1.615e-7, all hard counts zero.
+Candidate gradients preserved. Complete updates/timing remain unmeasured;
+raw partial JSON running status does not override wrapper termination.
+Follow-up v2 RUNNING free gln01 GPU0, Bash58101/Python58147,45min ceiling,
+unchanged immutable364cdef in `runtime/checkouts/mixed-learning-checked-reuse-v1`;
+`mixed-learning-fp32-checked-v2.{json,log}`. Reuses references and completed
+recurrent compilation; no graph or numerical changes. User agrees that this should close currently justified
 performance work, then return to broader data exposure and training. Tiny
 pooling/norm optimizations do not block that transition. No paid task.
 See `research/daily_coarse_graining/combined_execution_admission_20260915.md`.

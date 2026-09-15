@@ -79,3 +79,30 @@ timeout arguments. Server checkout is fast-forwarded to364cdef and immutable.
 Combined run launched on free gln01 GPU0: Bash91078 / Python91133. Report/log
 use the output stem above. No paid submission. Combined numerical/speed result
 is pending; the small synthetic runtime check is not real-model acceptance.
+
+## V1 outcome and bounded completion
+
+V1 wrapper exited124 at the90-minute ceiling. Python91133 has exited. The
+partial JSON retains `status=running`, last stage `compile_daily_for_checked_replay`
+at4419.29s; this is a stale in-progress status, not a live process or success.
+The launcher log establishes timeout. No runtime exception or numerical
+rejection was reported.
+
+Both combined T7/T30 comparisons PASS: zero failed gradient coordinates,
+relative full-gradient L2 differences1.45383045e-7/1.61472640e-7, scalar loss
+comparisons pass, all named physical counts agree and are zero. Full candidate
+gradients are saved as `mixed-learning-fp32-checked-v1.T7.checked-gradient.pkl`
+and `.T30.checked-gradient.pkl` under the diagnostic root. The two changed
+compilations took1946.91s and1984.80s, about65.53min combined. The daily compile
+then exceeded the remaining budget. No complete-update parity, combined speed
+or final memory result is available. Admission of the full execution remains
+pending; do not relabel this as a gradient failure.
+
+V2 runs unchanged364cdef on free gln01 GPU0, Bash58101/Python58147,45min ceiling;
+report/log `mixed-learning-fp32-checked-v2.{json,log}`. The existing target-shell
+dry-run passes with only output and timeout changed. It reuses the compiled
+recurrent artifacts and original gradients, repeats the cheap candidate
+comparisons, then completes daily compilation and warm full replay. Cache hits
+are intended, not yet measured; do not claim they occurred until logs prove it.
+Unchanged runtime evidence is reused; no additional preflight or model change.
+V1 logs/reports/gradients remain intact. No paid task was submitted.

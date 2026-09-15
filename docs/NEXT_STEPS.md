@@ -16,10 +16,16 @@ Current actions, superseding launch instructions in the history below:
   reports and checkpoint method; legacy defaults and source-checkpoint identity
   are preserved. Local15 runner/profiling tests, Sol review, revised12 runner
   tests/Ruff, target-shell dry-run and deployed runtime check48.50s all pass.
-  Combined admission RUNNING free gln01 GPU0, Bash91078/Python91133,90min ceiling,
-  immutable364cdef in `runtime/checkouts/mixed-learning-checked-reuse-v1`;
-  diagnostics `mixed-learning-fp32-checked-v1.{json,log}`. Reuses original
-  T7/T30 gradients and timings; saves new gradients before further compilation.
+  Combined v1 reached90min ceiling (wrapper124), stopped in daily compilation;
+  T7/T30 full gradients/loss/counters PASSED, zero failed coordinates/hard counts.
+  Relative gradient L2 differences1.454e-7/1.615e-7; both candidates preserved.
+  No complete-update/timing result. Raw JSON still says running; wrapper status
+  is authoritative for termination. Follow-up v2 RUNNING free gln01 GPU0,
+  Bash58101/Python58147,45min ceiling, unchanged immutable364cdef in
+  `runtime/checkouts/mixed-learning-checked-reuse-v1`; diagnostics
+  `mixed-learning-fp32-checked-v2.{json,log}`. Reuse compiled recurrent graphs
+  and original references to finish daily compilation/full replay; no new
+  runtime preflight, code, architecture, loss or precision intervention.
   After combined full-gradient/physical/update/timing admission, return to
   meaningful pool coverage and sufficient full-network daily+T7/T30 training.
   Do not make pooling/norm micro-optimizations another prerequisite. No paid
