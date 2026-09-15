@@ -14,7 +14,9 @@ fixed-checkpoint daily/T7/T30/full comparison, using existing AD and loss code.
 Its `--execution-policy` loads the explicit combined FP32/checked-split manifest,
 records effective policy in report/checkpoint method, and uses the existing
 checked-profile comparison and shared recurrent AD. Ordinary legacy defaults
-remain available; current combined admission status is in `NEXT_STEPS.md`.
+remain available. The combined policy passed bounded real-model admission and
+complete-update timing; use it explicitly for the next declared training run.
+Current training preparation is in `NEXT_STEPS.md`.
 `probe_attention_fp32.py`, `probe_source_pooling_fp32.py` and
 `probe_reporting_norm_fp32.py` under `scripts/hpc/` own bounded component probes;
 their measurements do not establish full-model or scientific acceptance.

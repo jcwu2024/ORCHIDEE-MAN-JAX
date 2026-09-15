@@ -23,7 +23,8 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `research/daily_coarse_graining/combined_execution_admission_20260915.md` | T7/T30 pass; v1 timed out during daily compilation, v2 running | Explicit FP32 + checked split; full update/timing pending, then close performance phase and return to training |
+| `research/daily_coarse_graining/combined_execution_results_20260915.md` | Combined policy admitted; performance phase closed | Full-gradient/physical/update checks pass;11.761s,17.065% less time; return to substantial-coverage training |
+| `research/daily_coarse_graining/combined_execution_admission_20260915.md` | Completed specification; v2 result admitted | Explicit FP32 + checked split; preserves v1 timeout and v2 completion history |
 | `research/daily_coarse_graining/attention_fp32_full_results_20260915.md` | Completed bounded precision/timing study, exit0 | 14.181->13.730s,3.181% lower warm complete-update time; full gradients and physical/scalar checks pass, combined checked-route adoption next |
 | `research/daily_coarse_graining/attention_fp32_recurrent_results_20260915.md` | Completed fixed T7/T30 numerical pass | Complete gradients differ by1.499e-7/1.328e-7 relative L2; hard counters zero, later timing in full results |
 | `research/daily_coarse_graining/attention_fp32_daily_results_20260915.md` | Completed real daily64 full-gradient/physical comparison | Attention FP32 numerical pass, matrix counts725->2; subsequent T7/T30 evidence in recurrent results |

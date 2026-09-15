@@ -1,5 +1,11 @@
 # Combined Attention FP32 and checked recurrent execution
 
+Completed: v2 passed full-gradient/physical/complete-update checks and measured
+11.761s per warm update,17.065% below original. The combined policy is admitted;
+see `combined_execution_results_20260915.md`. Performance work now closes in
+favor of substantial-coverage training preparation. Running statements below
+are execution history.
+
 User approves combining the two demonstrated optimizations and returning to
 training afterwards. This is the final currently justified performance gate;
 small pooling/norm experiments and exhaustive cache investigations do not

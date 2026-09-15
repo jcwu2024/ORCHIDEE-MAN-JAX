@@ -6,8 +6,10 @@ See `attention_fp32_primitive_results_20260915.md` for measured values and limit
 User now authorizes removing unnecessary FP64 independently of any5090 plan.
 Actual-model Attention-only daily/T7/T30 and complete-update comparison now pass.
 Warm V100 time14.18122->13.73007s (3.181% reduction); see
-`attention_fp32_full_results_20260915.md`. Next combine the explicit policy with
-the admitted checked execution route before ordinary training adoption.
+`attention_fp32_full_results_20260915.md`. The subsequent combined checked
+execution also passes:11.761s per update,17.065% below original; see
+`combined_execution_results_20260915.md`. Admit the explicit combined policy
+and return to training; small further precision probes do not block progress.
 
 Implementation sequence: explicit independently selectable Attention FP32 and
 neural-pooling FP32 policies, plus an isolated reporting-norm benchmark using the

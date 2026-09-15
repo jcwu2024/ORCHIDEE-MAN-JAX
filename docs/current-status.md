@@ -20,15 +20,16 @@ runner/profile tests and revised12 runner tests pass; independent Sol review,
 Ruff, real shell dry-run and deployed runtime check48.50s pass. Combined v1
 exited124 at90min in daily compilation. T7/T30 complete gradients, loss and
 physical counts pass, relative L2 errors1.454e-7/1.615e-7, all hard counts zero.
-Candidate gradients preserved. Complete updates/timing remain unmeasured;
-raw partial JSON running status does not override wrapper termination.
-Follow-up v2 RUNNING free gln01 GPU0, Bash58101/Python58147,45min ceiling,
-unchanged immutable364cdef in `runtime/checkouts/mixed-learning-checked-reuse-v1`;
-`mixed-learning-fp32-checked-v2.{json,log}`. Reuses references and completed
-recurrent compilation; no graph or numerical changes. User agrees that this should close currently justified
-performance work, then return to broader data exposure and training. Tiny
-pooling/norm optimizations do not block that transition. No paid task.
-See `research/daily_coarse_graining/combined_execution_admission_20260915.md`.
+Candidate gradients preserved. Follow-up v2 COMPLETED exit0,923.85s at364cdef.
+T7/T30 full-gradient and all physical comparisons pass; complete-update
+scalar/norm parity and finite optimizer proposals pass. Warm median11.76113s
+versus original14.18122s (17.065% less time) and checked-only12.07914s
+(2.633% further saving); cross-process reference limitation. Peak live15.658GiB,
+reserved26.978GiB. T7/T30/daily cached compile80.63/80.51/99.04s. Combined
+policy ADMITTED, current performance phase CLOSED, no active job. Next substantial
+data-coverage/learning protocol (~one ready-pool pass), explicit fresh full-network
+method and paid resource proposal. Tiny pooling/norm work does not block training.
+See `research/daily_coarse_graining/combined_execution_results_20260915.md`.
 
 User now authorizes unnecessary-FP64 removal independently of future hardware.
 Explicit full-head Attention/pooling policies and staged real-model comparisons

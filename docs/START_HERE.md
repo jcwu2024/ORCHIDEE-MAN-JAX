@@ -60,21 +60,21 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
-As of 2026-09-13, fresh full-network Attention training has demonstrated bounded
-one-day learning. Its final checkpoint passes all 13 seven-day development keys
-and 11 of 13 thirty-day keys; nonliving and total ecosystem carbon still fail.
-The expanded 346,539-day TRAIN pool is prepared. The immediate gate is physical
-feedback loss v2 and a shared recurrent science objective: correct demonstrated
-litter-fraction weighting imbalance and canopy-carbon drift, then admit actual
-combined updates before broader training. The separate single-day two-update
-and recurrent T7 directional checks have passed. Two fresh combined one-day+T7
-updates now pass technical gates with tiny science changes. Actual T30 native/JVP
-and two mixed updates also pass; the next step is the200-update mixed-learning
-implementation on the expanded pool and prepared rotating-window index. See
-the top of `NEXT_STEPS.md` and `physical_feedback_and_recurrent_v2_20260913.md`
-in the research docs. The final paper method still requires a declared,
-reproducible fresh-initialization/full-network protocol. The chronology below
-does not override this work order.
+As of 2026-09-15, fresh full-network Attention has completed200 mixed daily,
+T7 and T30 training updates. Learning improves several primary outputs, but
+scientific gates still fail; respiration and canopy/nonliving carbon remain
+concerns. Only12,800 unique daily draws were used from the ready346,539-day
+TRAIN pool. The next main task is a declared substantial-coverage training
+protocol, targeting roughly one pool pass with rotating recurrent windows.
+
+The performance phase is complete: explicit Attention FP32 plus checked
+recurrent execution passes bounded full-gradient/physical/update admission.
+Warm complete updates take11.76s versus14.18s originally (17.1% less time;
+fixed-data, cross-process V100 comparison). Adopt the explicit execution policy
+for subsequent training; small further optimizations do not block learning.
+See `NEXT_STEPS.md` and `combined_execution_results_20260915.md` in the research
+docs. The paper method requires declared reproducible fresh initialization and
+full-network optimization. The chronology below does not override this order.
 
 Gate A is complete. `main` and `research/daily-coarse-graining` contain the
 same scientific Teacher core. The research branch currently has one
