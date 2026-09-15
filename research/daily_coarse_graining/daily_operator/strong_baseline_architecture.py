@@ -875,6 +875,7 @@ def _attention(
     *,
     heads: int,
     mask: Any,
+    score_dtype: Any = None,
 ) -> Any:
     query = _linear(parameters["query"], query)
     key = _linear(parameters["key"], key_value)
@@ -884,7 +885,13 @@ def _attention(
     query = query.reshape(query.shape[:-1] + (heads, head_width)).swapaxes(-3, -2)
     key = key.reshape(key.shape[:-1] + (heads, head_width)).swapaxes(-3, -2)
     value = value.reshape(value.shape[:-1] + (heads, head_width)).swapaxes(-3, -2)
-    logits = jnp.einsum("...hqd,...hkd->...hqk", query, key) / np.sqrt(float(head_width))
+    # Preserve historical numerics by default. An explicit score dtype is a
+    # precision-study option: NumPy's float64 scalar otherwise promotes logits,
+    # softmax and the value aggregation despite the FP32 learned projections.
+    scale = np.sqrt(float(head_width))
+    if score_dtype is not None:
+        scale = jnp.asarray(scale, dtype=score_dtype)
+    logits = jnp.einsum("...hqd,...hkd->...hqk", query, key) / scale
     mask = jnp.asarray(mask, dtype=jnp.bool_)
     logits = jnp.where(mask[..., None, :, :], logits, -jnp.inf)
     row_valid = jnp.any(mask, axis=-1, keepdims=True)
