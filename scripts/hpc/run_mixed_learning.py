@@ -124,6 +124,7 @@ def precision_reference_identity(component, *, checkpoint, rows=None, window=Non
     if component == 'daily':
         if rows is None or window is not None:
             raise ValueError('daily precision reference requires rows only')
+        rows = admission._rows(rows)
     elif component in ('T7', 'T30'):
         if window is None or rows is not None:
             raise ValueError('recurrent precision reference requires one window only')
@@ -557,9 +558,8 @@ def run(args):
                 comparisons = {}
                 for name in precision_components:
                     if name == 'daily':
-                        row_identity = [dict(row) for row in fixed_rows]
                         identity = precision_reference_identity(
-                            name, checkpoint=args.profile_checkpoint, rows=row_identity
+                            name, checkpoint=args.profile_checkpoint, rows=fixed_rows
                         )
                         daily_total = jax.tree_util.tree_map(jnp.zeros_like, parameters)
                         daily_loss, daily_hard = 0., {}

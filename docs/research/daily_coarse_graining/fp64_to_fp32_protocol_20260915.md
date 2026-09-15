@@ -29,11 +29,15 @@ uses the original recurrent execution on both sides for precision attribution;
 it must not be described as a comparison against the separate checked split's
 12.08s baseline. A subsequent joint adoption needs the efficient checked route.
 
-The legacy daily stage is running on free GPU0, Bash38715/Python38761,50min
-ceiling, immutable `runtime/checkouts/mixed-learning-checked-reuse-v1` at7018492.
+The first legacy daily stage exited after314.8s on free GPU0, Bash38715/Python38761,
+immutable `runtime/checkouts/mixed-learning-checked-reuse-v1` at7018492.
 Output: `runtime/outputs/diagnostics/mixed-learning-attention-legacy-daily-v1`
-`.json/.log`. It supplies only the missing daily64 full-gradient/auxiliary
-reference. Existing T7/T30 reference files are reused. Local16 focused tests and
+`.json/.log`. It compiled daily successfully (cached103.77s) but failed before
+gradient execution because the new runner called `dict(row)` on an actual
+`OneDayPreparedRow`. Corrected to the established `admission._rows` conversion
+with a production-class test;10 runner tests now pass. The rerun supplies only
+the missing daily64 full-gradient/auxiliary reference; existing T7/T30 references
+are reused. Local16 initial focused tests and
 Ruff pass; target-shell new-branch argument expansion passed `--dry-run`.
 
 User priority: establish which FP64 operations could bottleneck a future RTX5090,

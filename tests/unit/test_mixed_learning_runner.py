@@ -58,6 +58,8 @@ def test_reference_reuse_keeps_original_paths_across_interrupted_attempts(tmp_pa
 
 
 def test_precision_stages_and_reference_paths_are_component_specific(tmp_path):
+    from research.daily_coarse_graining.daily_operator.one_day_sampling import OneDayPreparedRow
+
     assert precision_stage_components('daily') == ('daily',)
     assert precision_stage_components('T7') == ('T7',)
     assert precision_stage_components('full') == ('daily', 'T7', 'T30')
@@ -81,6 +83,10 @@ def test_precision_stages_and_reference_paths_are_component_specific(tmp_path):
     }
     with pytest.raises(ValueError, match='daily precision'):
         precision_reference_identity('daily', checkpoint='checkpoint.pkl')
+    prepared = OneDayPreparedRow(artifact_id=1, batch_row=2, record_index=0,
+        row_index_within_record=2, landpoint_id='001', year=1962, start_row=3)
+    identity = precision_reference_identity('daily', checkpoint='checkpoint.pkl', rows=[prepared])
+    assert identity['rows'] == [prepared.as_metadata()]
 
 
 def _loss(parameters, features, targets):

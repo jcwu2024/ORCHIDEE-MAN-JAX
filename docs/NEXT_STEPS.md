@@ -13,9 +13,12 @@ Current actions, superseding launch instructions in the history below:
 - User authorizes implementing unnecessary-FP64 removal independently of5090.
   Full-model explicit Attention/pooling policies and staged trained precision
   comparisons implemented7018492; local16 focused tests/Ruff and target-shell
-  dry-run pass. Legacy daily64 reference RUNNING free GPU0, Bash38715/Python38761,
-  50min ceiling, checkout `runtime/checkouts/mixed-learning-checked-reuse-v1`.
-  Diagnostics `mixed-learning-attention-legacy-daily-v1.{json,log}`. After this,
+  dry-run pass. First legacy daily64 attempt exited after314.8s with a new runner
+  metadata-conversion error (`OneDayPreparedRow` is not a dict); no gradient
+  computed. Corrected to the existing `admission._rows` conversion and added a
+  production-row regression test (10 runner tests pass). Daily cache retained.
+  Repaired free rerun pending, checkout `runtime/checkouts/mixed-learning-checked-reuse-v1`.
+  Diagnostics first attempt `mixed-learning-attention-legacy-daily-v1.{json,log}`. After reference capture,
   compare FP32 daily, then T7/T30 against preserved references, then full timing.
   Reporting norms completed separately: <5e-8 relative error but only0.06--0.13ms
   saved per norm. Free-node tests authorized, no paid submission.
