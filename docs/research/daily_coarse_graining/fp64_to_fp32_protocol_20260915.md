@@ -4,8 +4,10 @@ Stage1 is now complete: source-shaped V100 run43e039a exits0 in26.85 seconds,
 all5 numerical cases pass, local forward+gradient medians4.81--14.99% lower.
 See `attention_fp32_primitive_results_20260915.md` for measured values and limits.
 User now authorizes removing unnecessary FP64 independently of any5090 plan.
-Actual-model policy and diagnostic implementation are in progress. Keep ordinary
-training defaults legacy until bounded real-data comparison admits the change.
+Actual-model Attention-only daily/T7/T30 and complete-update comparison now pass.
+Warm V100 time14.18122->13.73007s (3.181% reduction); see
+`attention_fp32_full_results_20260915.md`. Next combine the explicit policy with
+the admitted checked execution route before ordinary training adoption.
 
 Implementation sequence: explicit independently selectable Attention FP32 and
 neural-pooling FP32 policies, plus an isolated reporting-norm benchmark using the
@@ -48,10 +50,12 @@ zero failed coordinates and zero hard counts. See
 `attention_fp32_daily_results_20260915.md` for scope and timing limitations.
 T7/T30 now pass with exit0: full-gradient relative L2 differences1.499e-7/
 1.328e-7, zero failed coordinates and zero physical hard counts. See
-`attention_fp32_recurrent_results_20260915.md`. Full-stage timing is running
-on the same immutablec11efa6 checkout, free GPU0, Bash/Python65605/65655,
-40min ceiling. Shell-expanded FP32/full/reference arguments passed `--dry-run`;
-existing compilation caches and original gradient references are reused.
+`attention_fp32_recurrent_results_20260915.md`. Full-stage timing completed
+exit0 on the same immutablec11efa6 checkout, free GPU0,31.12min. All component
+and scalar/norm checks pass; original warm baseline14.18122s versus13.73007s.
+No active task; Bash/Python65605/65655 exited. Shell-expanded arguments passed
+`--dry-run`. Original gradient references were reused, but daily compile took
+972.58s despite a prior artifact; do not describe the entire run as cached.
 The separate pooling primitive has also passed; see
 `source_pooling_fp32_results_20260915.md`. Do not activate pooling in the first
 real-model Attention-only comparison.

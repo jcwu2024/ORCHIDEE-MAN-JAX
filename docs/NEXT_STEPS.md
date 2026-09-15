@@ -27,13 +27,18 @@ Current actions, superseding launch instructions in the history below:
   1.499e-7/1.328e-7, zero failed coordinates, equal loss and zero hard counts
   within existing tolerances. See
   `research/daily_coarse_graining/attention_fp32_recurrent_results_20260915.md`.
-  Full timing RUNNING free GPU0, Bash/Python65605/65655,40min ceiling,
-  immutablec11efa6 in `runtime/checkouts/mixed-learning-checked-reuse-v1`;
-  diagnostics `mixed-learning-attention-fp32-full-v1.{json,log}`. Reuse caches
-  and references; no retained updates. Compare original recurrent execution
-  on both sides, not against checked-split12.08s. Pooling primitive also passes:
+  Full timing COMPLETED exit0,31.12min:14.18122->13.73007s (3.181% less time),
+  peak live15.676GiB/reserved26.978GiB. All component full-gradient/physical
+  comparisons and mixed scalar/norm parity pass; proposals finite, discarded.
+  Cross-process original-recurrent baseline; do not compare against checked
+  split12.08s or add the gains. See
+  `research/daily_coarse_graining/attention_fp32_full_results_20260915.md`.
+  No active task. Next integrate explicit FP32 policy with the admitted checked
+  split route, then bounded combined validation/timing and declared training
+  protocol adoption. Daily startup recompiled972.58s despite prior artifact;
+  cause unconfirmed, keep startup separate from warm speed. Pooling also passes:
   seven-bank forward+grad0.2320->0.1944ms; Attention-only remains first real test.
-  Do not launch duplicate tests or alter the running checkout.
+  Preserve completed references; no reason to repeat isolated admission.
   Additional local active-head forward/
   gradient, FP32 eval-shape and undefined-auxiliary mask tests pass.
   Reporting norms completed separately: <5e-8 relative error but only0.06--0.13ms

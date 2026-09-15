@@ -21,18 +21,22 @@ completed241.1s, all physical hard counts zero, daily64 loss120.4785230 and full
 gradient/auxiliary saved. FP32 daily PASSED, exit0,1128.05s: relative loss
 difference1.213e-8, full-gradient relative L2 difference7.551e-8; zero failed
 coordinates, auxiliary comparisons pass and all hard counts zero. Static FP64
-matrix result counts725->2; estimated live memory14.71->14.44GiB. No qualified
-full-update speed result yet. See
+matrix result counts725->2; estimated daily live memory14.71->14.44GiB. See
 `research/daily_coarse_graining/attention_fp32_daily_results_20260915.md`.
 T7/T30 PASSED, exit0,37.35/39.08min; full-gradient relative L2 differences
 1.499e-7/1.328e-7, zero failed coordinates, scalar comparisons pass and all
 hard counts zero. See
 `research/daily_coarse_graining/attention_fp32_recurrent_results_20260915.md`.
-Full timing RUNNING free GPU0, Bash/Python65605/65655,40min ceiling,
-immutablec11efa6 in `runtime/checkouts/mixed-learning-checked-reuse-v1`;
-diagnostics `mixed-learning-attention-fp32-full-v1.{json,log}`. Reuse compiled
-artifacts and saved references; compare original recurrent execution on both
-sides. No qualified full-update precision speed claim yet.
+Full timing COMPLETED exit0,31.12min atc11efa6:14.18122->13.73007s,
+3.181% less warm complete-update time; peak live15.676GiB, reserved26.978GiB.
+All component full gradients/physical counters and mixed scalar/norm parity
+pass; optimizer proposals finite and discarded. Same original execution on
+both sides, baseline from another process; not comparable with checked-split
+12.08s as a precision-only gain. No active GPU task. Daily compile972.58s
+despite prior artifact; cache-miss cause unknown. See
+`research/daily_coarse_graining/attention_fp32_full_results_20260915.md`.
+Next combine explicit FP32 with admitted checked split, validate the combined
+route and record policy in the reproducible method before broader training.
 Pooling primitive completed21.94s on GPU1,
 numeric/mask checks pass; seven-bank forward+grad0.2320->0.1944ms, not full-model
 admission. Reporting norm probe completed19.65s on free V100:
