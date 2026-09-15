@@ -10,6 +10,13 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- User authorizes implementing unnecessary-FP64 removal independently of5090.
+  Work in progress: full-model explicit Attention/pooling policies and staged
+  trained precision comparisons; reporting-only norms measured separately on
+  saved actual gradients. Free-node tests authorized, no paid submission.
+  First real-model comparison is Attention-only; physics/loss/optimizer remain
+  unchanged. Do not treat a primitive pass as full-model admission.
+
 - User prioritizes FP64 burden before a possible RTX5090 migration: identify
   slow FP64 work, safe FP32 candidates and measured gain. Confirmed Attention
   NumPy scale promotes scores/softmax/value matmul to FP64 despite FP32

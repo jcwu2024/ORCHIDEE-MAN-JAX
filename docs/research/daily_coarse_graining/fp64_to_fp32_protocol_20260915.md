@@ -3,7 +3,17 @@
 Stage1 is now complete: source-shaped V100 run43e039a exits0 in26.85 seconds,
 all5 numerical cases pass, local forward+gradient medians4.81--14.99% lower.
 See `attention_fp32_primitive_results_20260915.md` for measured values and limits.
-No precision task remains running; actual-model precision validation is next.
+User now authorizes removing unnecessary FP64 independently of any5090 plan.
+Actual-model policy and diagnostic implementation are in progress. Keep ordinary
+training defaults legacy until bounded real-data comparison admits the change.
+
+Implementation sequence: explicit independently selectable Attention FP32 and
+neural-pooling FP32 policies, plus an isolated reporting-norm benchmark using the
+already saved T7/T30 gradients. First full-model comparison changes Attention
+only; physics, losses and optimizer stay unchanged. Reporting norms are not the
+optimizer's clipping norm. Free primitive/norm probes have a10-minute ceiling;
+real-model daily/T7/T30 checks use separate bounded runs with saved partial
+results and cache reuse, rather than repeating all reference computations.
 
 User priority: establish which FP64 operations could bottleneck a future RTX5090,
 which can be FP32 and how much time is saved. This supersedes immediate larger
