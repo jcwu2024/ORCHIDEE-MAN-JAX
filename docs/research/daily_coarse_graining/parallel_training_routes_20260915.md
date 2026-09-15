@@ -77,3 +77,39 @@ remain integration-only. Reports are under runtime diagnostics and locally at
 `outputs/mixed-learning-epoch-v1-integration.json`. The existing5415 schedule
 and346539-day pool supply both pilots; no Teacher regeneration or new sample
 files are needed.
+
+## Implementation and running checks
+
+Implemented e5878fb/dea4083. Sol implemented the staged runner and recovery
+extension; Terra reviewed dual-device placement and gradient lifetimes. Main
+agent integrated the code and source review.37 focused stage/state/runner/
+profiling/dual tests passed, Ruff and diff checks passed. Shell syntax and
+actual target-shell argument expansion passed for dual profiling, stage
+integration and both paid-pilot arms (dry-run only).
+
+Staged checkpoints derive their allowed update range from the declared method
+and validate the independent recurrent cursor. This also removes the historical
+200-update checkpoint ceiling for the prepared5415 route. Tests actually save
+and load a2500-update checkpoint and stage-boundary checkpoints. The accepted
+one-update epoch integration alone did not exercise that historical ceiling.
+
+Actual JAX0.4.38/CUDA preflight passed27.43s; dual-device tiny two-update check
+passed2.04s. AOT per-device placement variant also passed1.97s atdea4083, zero
+serial/dual parameter/optimizer discrepancies. No Teacher payload reads in
+these runtime checks. They do not certify real-model speed or numerical parity.
+
+Real-model dual profile is RUNNING on free gln01 GPU0+GPU1 at immutabledea4083,
+Bash7920/Python7963,90min ceiling. Checkout:
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-parallel-routes-v1`.
+Log/report: runtime diagnostics `mixed-learning-dual-profile-v1.{log,json}`.
+Next collect full-gradient/AdamW/physical parity and warmed serial/dual/daily-only
+timings. Then run the independent stage integration on GPU0 after the two-GPU
+test releases resources; do not change a running checkout. Free integration:
+`GPU_DEVICE=0 CODE_ROOT=<checkout> bash scripts/hpc/run_mixed_learning_stages.sh integration`.
+
+Provisional paid pilot script `job_mixed_learning_stages_pilot.sh` runs joint
+then staged on1V100/8CPU/64GiB with8h cap, maximum22.08yuan under additive
+rates. Each arm has220min ceiling; no automatic requeue. Create its Slurm log
+directory before submission. It is NOT approved, submitted or ready for paid
+adoption until the free phase-transition check passes and the nominal matched
+joint count is frozen from timing. The24h epoch job remains paused.

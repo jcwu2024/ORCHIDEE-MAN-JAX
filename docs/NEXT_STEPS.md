@@ -21,8 +21,13 @@ Current actions, superseding launch instructions in the history below:
   PASSED at e5878fb, zero serial/dual update discrepancies in the tiny probe.
   These certify runtime plumbing, not real-model parity or speed.
   New checkout `runtime/checkouts/mixed-learning-parallel-routes-v1`.
-  Next real-model fixed-checkpoint paired timing and full-gradient/update
-  comparison; staged1daily+1mixed transition/recovery integration separately.
+  Implemented dea4083,37 focused tests/Ruff/diff check pass. AOT two-device
+  placement/two-update probe also PASSED1.97s, zero discrepancies. Real-model
+  paired timing/full-gradient/AdamW comparison is RUNNING on free gln01 GPUs0+1,
+  Bash7920/Python7963,90min ceiling; diagnostics `mixed-learning-dual-profile-v1`.
+  Checkout immutable atdea4083. Then run staged1daily+1mixed transition/recovery
+  integration on released GPU0. Paid pilot script is prepared with1V100/8CPU/
+  64GiB/8h cap22.08yuan, not approved/submitted; actual-shell dry-run passed.
   The staged pilot is400daily+400mixed; joint count is initially600 and must
   be frozen from complete-update timing before either paid learning arm.
 

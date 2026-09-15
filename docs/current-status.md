@@ -22,6 +22,10 @@ JAX0.4.38/V100 GPUs at e5878fb; this is not real-model numerical/speed admission
 Local helper tests4 and twoCPU probe pass. Protocol and latest next steps:
 `research/daily_coarse_graining/parallel_training_routes_20260915.md` and
 `NEXT_STEPS.md`. No paid job submitted or approved for these workstreams.
+Implemented staged entry and dual runner hook atdea4083,37 focused tests pass.
+AOT device placement probe passed1.97s. Real dual profile now RUNNING on free
+gln01 GPUs0+1, Bash7920/Python7963,90min ceiling. Staged2-update integration
+is prepared and waits for those GPUs to be released; no long paid experiment.
 
 One-pool-pass training preparation is implemented through afb7b5f, reusing the
 admitted execution policy below. Fresh full-network seed20260911,5415 updates,
