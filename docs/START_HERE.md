@@ -64,8 +64,10 @@ As of 2026-09-15, fresh full-network Attention has completed200 mixed daily,
 T7 and T30 training updates. Learning improves several primary outputs, but
 scientific gates still fail; respiration and canopy/nonliving carbon remain
 concerns. Only12,800 unique daily draws were used from the ready346,539-day
-TRAIN pool. The next main task is a declared substantial-coverage training
-protocol, targeting roughly one pool pass with rotating recurrent windows.
+TRAIN pool. The5415-update one-pool-pass protocol is prepared but user now
+pauses its paid submission. The current work is two bounded routes: same-update
+dual-GPU execution/cost, and equal-compute joint versus daily-then-mixed training.
+See `research/daily_coarse_graining/parallel_training_routes_20260915.md`.
 
 The performance phase is complete: explicit Attention FP32 plus checked
 recurrent execution passes bounded full-gradient/physical/update admission.

@@ -42,6 +42,14 @@ def run(args):
         return jnp.mean(jnp.square(states-jnp.asarray(.1, jnp.float32)))
 
     backward = jax.jit(jax.value_and_grad(loss))
+    executables = {}
+    for device in devices:
+        with jax.default_device(device):
+            placed = jax.device_put(parameters, device)
+            executables[device.id] = {
+                h: backward.lower(placed, jax.device_put(data[h], device)).compile()
+                for h in (1, 7, 30)
+            }
     combine = make_mixed_gradient(jax, jnp)
     update = make_update(dict(optimizer=dict(learning_rate=1e-5, clip_norm=1.,
         beta1=.9, beta2=.999, epsilon=1e-8, weight_decay=0.)))
@@ -52,12 +60,13 @@ def run(args):
 
             def daily():
                 with jax.default_device(primary):
-                    return backward(parameters, jax.device_put(data[1], primary))
+                    return executables[primary.id][1](parameters, jax.device_put(data[1], primary))
 
             def recurrent(device):
                 weights = parameters if device == primary else peer_parameters
                 with jax.default_device(device):
-                    return tuple(backward(weights, jax.device_put(data[h], device)) for h in (7, 30))
+                    return tuple(executables[device.id][h](weights, jax.device_put(data[h], device))
+                                 for h in (7, 30))
 
             outputs = []
             for dual in (False, True):

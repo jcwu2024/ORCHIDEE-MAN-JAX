@@ -82,6 +82,8 @@ def profile_source_method(training_report, config, model):
 def configure_execution(args):
     """Resolve the declared combined policy before bootstrap and checkpoint IO."""
     if args.execution_policy is None:
+        if getattr(args, 'dual_device_profile', False):
+            raise ValueError('dual-device profiling requires the admitted execution policy')
         return None
     policy = json.loads(args.execution_policy.read_text())
     supported = dict(schema_version='mixed_learning_execution_v1',
@@ -218,6 +220,7 @@ def run(args):
     from research.daily_coarse_graining.daily_operator.target_oriented_training import initialize_target_oriented_adamw
     from scripts.hpc.mixed_learning_monitor import build_mixed_rollout_monitor
     from scripts.hpc.mixed_learning_plan import load_plan
+    from scripts.hpc.mixed_learning_stages import load_learning_schedule
     from scripts.hpc.probe_one_day_batch import _compiled_memory, _device_memory
     from scripts.hpc.probe_public_rollout import physical_checks
     from scripts.hpc.run_fresh_start_one_day_pool import host_peak_bytes
@@ -235,6 +238,13 @@ def run(args):
         raise ValueError('profiling is a separate diagnostic, not resume or integration training')
     if args.profile_trace and not profiling:
         raise ValueError('trace is available only in diagnostic profiling mode')
+    if args.learning_schedule and profiling:
+        raise ValueError('learning schedules are training methods, not fixed-checkpoint diagnostics')
+    if args.dual_device_profile and not profiling:
+        raise ValueError('dual-device profiling requires fixed-checkpoint profiling')
+    if args.dual_device_profile and (args.profile_trace or args.precision_stage
+                                     or args.compare_checked_recurrent):
+        raise ValueError('dual-device profiling is separate from legacy comparison diagnostics')
     if args.compare_checked_recurrent and not profiling:
         raise ValueError('checked-recurrent admission requires fixed-checkpoint profiling')
     if args.checked_reference_report and not args.compare_checked_recurrent:
@@ -249,7 +259,7 @@ def run(args):
         raise ValueError('precision staging and checked-recurrent admission are separate diagnostics')
     if args.separate_checked_validation and not (args.compare_checked_recurrent or args.checked_recurrent):
         raise ValueError('separate validation requires checked execution or comparison')
-    if args.checked_recurrent and profiling:
+    if args.checked_recurrent and profiling and not args.dual_device_profile:
         raise ValueError('use compare-checked-recurrent for fixed-checkpoint admission')
     if args.checked_recurrent and args.shape_only:
         raise ValueError('checked execution is admitted by checked-profile, not the legacy shape-only path')
@@ -262,6 +272,15 @@ def run(args):
     validate_configuration(config, model)
     if (args.mixed_protocol.parent/config['model_protocol']).resolve() != args.protocol.resolve():
         raise ValueError('CLI and mixed model protocols differ')
+    learning_schedule = (None if args.learning_schedule is None else load_learning_schedule(
+        args.learning_schedule,
+        outer_weights=config['outer_weights'],
+        available_updates=config['updates'],
+    ))
+    training_total = (config['updates'] if learning_schedule is None
+                      else learning_schedule.total_updates)
+    training_milestones = (tuple(config['milestones']) if learning_schedule is None
+                           else learning_schedule.milestones)
     precision_stage = args.precision_stage
     precision_components = (() if precision_stage is None
                             else precision_stage_components(precision_stage))
@@ -279,9 +298,12 @@ def run(args):
             raise ValueError('FP32 recurrent precision staging requires an immutable legacy profile report')
         if needs_daily_reference and args.precision_daily_reference is None:
             raise ValueError('FP32 daily precision staging requires an immutable legacy daily gradient')
-    limit = args.integration_updates or config['updates']
+    limit = args.integration_updates or training_total
+    if limit > training_total:
+        raise ValueError('integration budget exceeds the declared learning schedule')
     scope = ('performance_profile_not_training' if profiling else
              'integration_only' if args.integration_updates else
+             'declared_learning_schedule' if learning_schedule is not None else
              'one_pool_pass_learning' if config['schema_version'] == 'mixed_learning_epoch_v1'
              else 'bounded_200_update_learning')
     started = time.perf_counter()
@@ -293,6 +315,9 @@ def run(args):
         scientific_acceptance=False, checkpoint_inherited=False)
     if execution_policy is not None:
         report['execution_policy'] = execution_policy
+    if learning_schedule is not None:
+        report['learning_schedule'] = learning_schedule.record
+        report['learning_progress'] = learning_schedule.progress(0)
     if precision_stage:
         report.update(precision_study=dict(stage=precision_stage,
             candidate_attention_score_dtype=getattr(args, 'attention_score_dtype', 'legacy'),
@@ -300,18 +325,47 @@ def run(args):
             recurrent_execution='legacy_original_for_attention_attribution',
             claim_scope='fixed loss/full-gradient/hard-counter parity; not full-state equivalence',
             retained_parameter_or_optimizer_state=False))
+    resume_data_consumption = None
     if args.resume and args.output.exists():
         previous = json.loads(args.output.read_text())
         if (previous['configuration'], previous['model_protocol'], previous['scope']) != (config,model,scope):
             raise ValueError('recovery report method mismatch')
         if previous.get('execution_policy') != execution_policy:
             raise ValueError('recovery report execution policy mismatch')
+        if learning_schedule is not None:
+            if previous.get('learning_schedule') != learning_schedule.record:
+                raise ValueError('recovery report learning schedule mismatch')
+            learning_schedule.validate_progress(
+                previous.get('learning_progress'),
+                completed_updates=previous['completed_updates'],
+            )
+            learning_schedule.validate_update_records(
+                previous.get('updates'),
+                completed_updates=previous['completed_updates'],
+            )
+            resume_data_consumption = previous.get('data_consumption')
         report = previous
         report['prior_elapsed_seconds'] = report.get('prior_elapsed_seconds',0.)+report.get('elapsed_seconds',0.)
+
+    batches = None
 
     def emit(stage, **values):
         report.update(values, stage=stage, elapsed_seconds=time.perf_counter()-started,
                       host_peak_bytes=host_peak_bytes())
+        if learning_schedule is not None:
+            progress = learning_schedule.progress(report['completed_updates'])
+            report['learning_progress'] = progress
+            if batches is not None:
+                report['data_consumption'] = learning_schedule.data_consumption(
+                    report['completed_updates'],batches)
+            report['training_seconds'] = sum(
+                row.get('seconds', 0.) for row in report['updates']
+            )
+            report['phase_training_seconds'] = {
+                phase.name: sum(row.get('seconds', 0.) for row in report['updates']
+                                if row.get('phase') == phase.name)
+                for phase in learning_schedule.phases
+            }
         _atomic_json(args.output, json_safe(report))
         print(f'mixed_learning stage={stage} updates={report["completed_updates"]} '
               f'seconds={report["elapsed_seconds"]:.1f}', flush=True)
@@ -324,6 +378,8 @@ def run(args):
         method = dict(implementation='mixed_learning_v1', configuration=config,
                       model_protocol=model, scope=scope, integration_updates=args.integration_updates,
                       source_git_head=current_head)
+        if learning_schedule is not None:
+            method['learning_schedule'] = learning_schedule.record
         if args.checked_recurrent:
             method['recurrent_execution'] = ('split_checked_v1' if args.separate_checked_validation
                                              else 'compact_checked_v1')
@@ -335,6 +391,16 @@ def run(args):
         recovery_identity = dict(expected_method=method,expected_source_identities=identities,
             expected_schedule_identity=identities,expected_fresh_initialization_identity=fresh_identity)
         batches, schedule = plan['batches'], plan['schedule']
+        recurrent_updates = (training_total if learning_schedule is None
+                             else learning_schedule.recurrent_cursor(training_total))
+        if training_total > len(batches) or recurrent_updates > len(schedule['update_rows']):
+            raise ValueError('learning schedule exceeds the loaded daily/recurrent plan')
+        if learning_schedule is not None and args.resume:
+            learning_schedule.validate_data_consumption(
+                resume_data_consumption,
+                completed_updates=report['completed_updates'],
+                batches=batches,
+            )
         train_pool = PreparedWindowPool(schedule['source_manifest'], cache_size=2)
         development = WindowPool(args.selection)
         daily_pool = PreparedOneDayPool(plan['daily_source'], cache_size=5)
@@ -394,7 +460,9 @@ def run(args):
             source_report = json.loads(args.profile_training_report.read_text())
             profile_identity = dict(recovery_identity,
                 expected_method=profile_source_method(source_report,config,model))
-            saved = load_mixed_training_checkpoint(args.profile_checkpoint,**profile_identity)
+            saved = load_mixed_training_checkpoint(
+                args.profile_checkpoint, maximum_updates=training_total, **profile_identity
+            )
             if saved['completed_updates'] != 200:
                 raise ValueError('profile checkpoint must be at update200')
             del parameters
@@ -404,11 +472,17 @@ def run(args):
                           profile_source_method=profile_identity['expected_method'])
             del saved
         elif args.resume:
-            saved = load_mixed_training_checkpoint(args.resume, **recovery_identity)
-            resolved_resume = newest_checkpoint(args.output,args.resume,saved['completed_updates'],config['milestones'])
+            saved = load_mixed_training_checkpoint(
+                args.resume, maximum_updates=training_total, **recovery_identity
+            )
+            resolved_resume = newest_checkpoint(
+                args.output,args.resume,saved['completed_updates'],training_milestones
+            )
             if resolved_resume != args.resume:
                 del saved
-                saved = load_mixed_training_checkpoint(resolved_resume, **recovery_identity)
+                saved = load_mixed_training_checkpoint(
+                    resolved_resume, maximum_updates=training_total, **recovery_identity
+                )
             del parameters
             parameters, optimizer = jax.device_put((saved['parameters'],saved['optimizer_state']))
             trim_resume_report(report,saved['completed_updates'])
@@ -419,13 +493,38 @@ def run(args):
         if report['completed_updates'] > limit:
             raise ValueError('recovery exceeds this execution budget')
 
+        if args.dual_device_profile:
+            from scripts.hpc.checked_recurrent_execution import bind_checked_backward
+            from scripts.hpc.mixed_learning_dual_device import profile_dual_device
+
+            emit('profile_ready')
+            checked_backward, checked_names, checked_validator = bind_checked_backward(
+                jax,jnp,component,recurrent_loss,runtime,head,scales,model,
+                separate_validation=True)
+            if checked_validator is None:
+                raise ValueError('dual-device profiling requires separate checked validation')
+            result = profile_dual_device(
+                jax=jax,jnp=jnp,parameters=parameters,optimizer=optimizer,
+                sample=sample,daily_rows=fixed_rows,
+                recurrent_rows={h:schedule['update_rows'][0][f'T{h}'] for h in (7,30)},
+                window_pool=train_pool,daily_backward=daily_backward,
+                checked_backward=checked_backward,checked_validator=checked_validator,
+                checked_counter_names=checked_names,coefficients=coefficients,
+                context=context,update=update,repeats=args.profile_repeats,emit=emit,
+                output=args.output,compiled_memory_limit_gib=config['compiled_memory_limit_gib'])
+            emit('completed',status='completed',dual_device_profile=result,
+                 persistent_parameter_updates=0)
+            return report
+
         def save(index=None):
             began = time.perf_counter()
             count = report['completed_updates']
             path = checkpoint_path(args.output,index)
             save_mixed_training_checkpoint(path,jax=jax,parameters=parameters,optimizer_state=optimizer,
                 completed_updates=count,daily_sampler_cursor={'epoch':0,'batch_offset':count},
-                recurrent_schedule_cursor=count,method=method,
+                recurrent_schedule_cursor=(count if learning_schedule is None
+                                           else learning_schedule.recurrent_cursor(count)),
+                method=method,maximum_updates=training_total,
                 source_identities=identities,schedule_identity=identities,
                 fresh_initialization_identity=fresh_identity,replace=index is None)
             record = dict(update=count,path=str(path),bytes=path.stat().st_size,
@@ -480,7 +579,7 @@ def run(args):
             if not args.resume:
                 save(0)
             monitor_milestone(0)
-        elif report['completed_updates'] in config['milestones']:
+        elif report['completed_updates'] in training_milestones:
             monitor_milestone(report['completed_updates'])
 
         checked_lowerings = {}
@@ -874,6 +973,10 @@ def run(args):
         for index in range(report['completed_updates'],limit):
             emit('training',next_update=index+1)
             began = time.perf_counter()
+            phase = (None if learning_schedule is None
+                     else learning_schedule.phase_for_update(index+1))
+            objective_name = 'mixed' if phase is None else phase.objective
+            phase_weights = config['outer_weights'] if phase is None else phase.outer_weights
             batch = batches[index]
             daily_total = jax.tree_util.tree_map(jnp.zeros_like,parameters)
             daily_loss, hard_totals = 0., {}
@@ -893,29 +996,37 @@ def run(args):
             mixed = daily_mean
             del daily_mean
             losses, recurrent_hard = {}, {}
-            for h in (7,30):
-                key = f'T{h}'
-                row = schedule['update_rows'][index][key]
-                if args.checked_recurrent:
-                    from scripts.hpc.checked_recurrent_execution import decode_counts
+            recurrent_index = None
+            if objective_name == 'mixed':
+                recurrent_index = (index if learning_schedule is None
+                                   else learning_schedule.recurrent_cursor(index))
+                for h in (7,30):
+                    key = f'T{h}'
+                    row = schedule['update_rows'][recurrent_index][key]
+                    if args.checked_recurrent:
+                        from scripts.hpc.checked_recurrent_execution import decode_counts
 
-                    case = train_pool.case(jax,row)
-                    (value,counts),gradient = executables[key](parameters,*case[:4],context,case[4])
-                    value,counts = jax.device_get((value,counts))
-                    hard = decode_counts(checked_names,counts)
-                    if any(hard.values()) or not np.isfinite(value):
-                        report['failed_training_window'] = dict(window=row,hard=hard,loss=float(value))
-                        raise ValueError('checked TRAIN trajectory physical/finite gate failed')
-                else:
-                    case,hard = valid_recurrent(row)
-                    value,gradient = executables[key](parameters,*case[:4],context)
-                losses[key], recurrent_hard[key] = float(value),hard
-                component_norms[key] = float(norm_fn(gradient))
-                mixed = combine(mixed,gradient,1.,.5)
-                jax.block_until_ready(mixed)
-                del gradient,case
+                        case = train_pool.case(jax,row)
+                        (value,counts),gradient = executables[key](
+                            parameters,*case[:4],context,case[4])
+                        value,counts = jax.device_get((value,counts))
+                        hard = decode_counts(checked_names,counts)
+                        if any(hard.values()) or not np.isfinite(value):
+                            report['failed_training_window'] = dict(
+                                window=row,hard=hard,loss=float(value))
+                            raise ValueError(
+                                'checked TRAIN trajectory physical/finite gate failed')
+                    else:
+                        case,hard = valid_recurrent(row)
+                        value,gradient = executables[key](parameters,*case[:4],context)
+                    losses[key], recurrent_hard[key] = float(value),hard
+                    component_norms[key] = float(norm_fn(gradient))
+                    mixed = combine(mixed,gradient,1.,phase_weights[key])
+                    jax.block_until_ready(mixed)
+                    del gradient,case
             if (not all(np.isfinite(v) and v>0 for v in component_norms.values())
-                    or not np.all(np.isfinite(list(losses.values()))) or not bool(finite(mixed))):
+                    or not all(np.isfinite(v) for v in losses.values())
+                    or not bool(finite(mixed))):
                 raise ValueError('component/mixed gradient is nonfinite or empty')
             proposed,state,norm,clip = update(parameters,mixed,optimizer)
             jax.block_until_ready((proposed,state,norm,clip))
@@ -925,13 +1036,25 @@ def run(args):
             parameters,optimizer = proposed,state
             del mixed,proposed,state
             report['completed_updates'] = index+1
-            report['updates'].append(dict(update=index+1,daily_loss=daily_loss,**losses,
-                mixed_loss=daily_loss+.5*(losses['T7']+losses['T30']),gradient_norms=component_norms,
-                norm=float(norm),clip=float(clip),daily_hard=hard_totals,recurrent_hard=recurrent_hard,
-                seconds=time.perf_counter()-began))
+            update_seconds = time.perf_counter()-began
+            mixed_loss = phase_weights['daily']*daily_loss + sum(
+                phase_weights[key]*value for key,value in losses.items())
+            record = dict(update=index+1,daily_loss=daily_loss,**losses,
+                mixed_loss=mixed_loss,gradient_norms=component_norms,norm=float(norm),
+                clip=float(clip),daily_hard=hard_totals,recurrent_hard=recurrent_hard,
+                seconds=update_seconds)
+            if learning_schedule is not None:
+                record.update(
+                    phase=phase.name,objective=objective_name,daily_batch_index=index,
+                    recurrent_schedule_index=recurrent_index,
+                    recurrent_schedule_cursor_after=learning_schedule.recurrent_cursor(index+1),
+                    training_cumulative_seconds=sum(
+                        row.get('seconds',0.) for row in report['updates'])+update_seconds,
+                )
+            report['updates'].append(record)
             emit('optimizer_completed',memory=_device_memory(runtime['devices'][0]),
-                 daily_reader=daily_pool.statistics())
-            if index+1 in config['milestones']:
+                  daily_reader=daily_pool.statistics())
+            if index+1 in training_milestones:
                 save(index+1)
                 monitor_milestone(index+1)
             elif (index+1)%config['rolling_recovery_interval']==0 or index+1==limit:
@@ -939,9 +1062,11 @@ def run(args):
             if args.integration_updates and index+1==limit:
                 monitor_milestone(index+1)
         # Replay persisted weights through the actual daily forward entry point.
-        final_path = checkpoint_path(args.output,limit if limit in config['milestones'] else None)
+        final_path = checkpoint_path(
+            args.output,limit if limit in training_milestones else None)
         expected = float(daily_forward(parameters,sample(fixed_rows[:8]),coefficients)[0])
-        saved = load_mixed_training_checkpoint(final_path,**recovery_identity)
+        saved = load_mixed_training_checkpoint(
+            final_path,maximum_updates=training_total,**recovery_identity)
         restored = jax.device_put(saved['parameters'])
         actual = float(daily_forward(restored,sample(fixed_rows[:8]),coefficients)[0])
         if actual != expected:
@@ -973,6 +1098,10 @@ def parser():
     result.add_argument('--checked-reference-report',type=Path)
     result.add_argument('--execution-policy',type=Path,
                         help='explicit neural precision and recurrent execution identity')
+    result.add_argument('--learning-schedule',type=Path,
+                        help='opt-in declared daily/mixed phase schedule')
+    result.add_argument('--dual-device-profile',action='store_true',
+                        help='fixed-checkpoint daily/recurrent two-device profile; never trains')
     result.add_argument('--precision-stage', choices=_PRECISION_STAGES,
                         help='fixed-checkpoint legacy/FP32 component admission; never trains')
     result.add_argument('--precision-reference-report', type=Path,

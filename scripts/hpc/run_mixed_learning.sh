@@ -83,7 +83,7 @@ case "$MODE" in
           ARGS+=(--profile-trace)
         fi
       else
-        ARGS+=(--integration-updates 1)
+        ARGS+=(--integration-updates "${INTEGRATION_UPDATES:-1}")
         DEFAULT_OUTPUT=$DIAG/mixed-learning-v1-integration.json
         DEFAULT_TIMEOUT=90m
       fi

@@ -5,6 +5,15 @@ Last updated: 2026-09-15.
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
 
+Current bounded training-efficiency routes: `scripts/hpc/mixed_learning_dual_device.py`
+owns serial/dual same-update orchestration and cost/timing, reusing admitted
+gradients. `probe_dual_device_runtime.py` checks two-device placement and two
+AdamW updates with tiny synthetic inputs. `mixed_learning_stages.py` declares
+phase/cursor arithmetic for the shared `run_mixed_learning.py`; checkpoint
+progress is validated by `daily_operator/mixed_training_state.py`. Launchers
+`run_mixed_learning_dual_device.sh` and `run_mixed_learning_stages.sh` keep
+the execution and learning-method studies separate. No new adjoint or head.
+
 Current neural precision work: `NeuralPrecisionPolicy` in
 `research/daily_coarse_graining/daily_operator/strong_baseline_architecture.py`
 is the shared explicit policy, threaded by `fresh_start.build_fresh_head`.

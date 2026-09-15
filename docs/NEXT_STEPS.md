@@ -10,6 +10,22 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- User authorizes two bounded routes in parallel and PAUSES the unsubmitted
+  5415-update/24h job. First route measures dual-GPU speed/cost for the identical
+  D64/micro8+T7+T30 update. Second implements a reproducible daily-only then
+  mixed schedule, compared with joint training at nominal matched compute.
+  No paid approval. Protocol: `research/daily_coarse_graining/parallel_training_routes_20260915.md`.
+  Epoch free integration COMPLETED1270.75s, one update and checkpoint replay,
+  exit0; no active epoch job. Dual helper tests4 pass; local twoCPU update probe
+  passes. Deployed two-GPU runtime27.43s and placement/two-update probe2.04s
+  PASSED at e5878fb, zero serial/dual update discrepancies in the tiny probe.
+  These certify runtime plumbing, not real-model parity or speed.
+  New checkout `runtime/checkouts/mixed-learning-parallel-routes-v1`.
+  Next real-model fixed-checkpoint paired timing and full-gradient/update
+  comparison; staged1daily+1mixed transition/recovery integration separately.
+  The staged pilot is400daily+400mixed; joint count is initially600 and must
+  be frozen from complete-update timing before either paid learning arm.
+
 - One prepared-pool pass is implemented and under free integration, not paid
   submission. Protocol: `research/daily_coarse_graining/mixed_learning_epoch_protocol_20260915.md`.
   Fresh seed20260911/full109,464,375 weights; unchanged D+.5R7+.5R30 and AdamW;

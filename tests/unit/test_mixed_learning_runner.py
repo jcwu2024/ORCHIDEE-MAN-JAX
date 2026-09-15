@@ -63,6 +63,11 @@ def test_declared_combined_policy_binds_real_parser_and_checkpoint_method():
     assert not compare_args.checked_recurrent
     assert compare_args.separate_checked_validation
     assert compare_args.resolved_execution_policy == policy
+    dual_args = cli.parse_args(base + ['--execution-policy', str(policy_path),
+        '--dual-device-profile', '--profile-checkpoint', 'checkpoint.pkl',
+        '--profile-training-report', 'training.json'])
+    assert configure_execution(dual_args) == policy
+    assert dual_args.checked_recurrent and dual_args.separate_checked_validation
     missing_reference = cli.parse_args(base + ['--execution-policy', str(policy_path),
                                                '--compare-checked-recurrent'])
     with pytest.raises(ValueError, match='preserved legacy reference'):
@@ -77,6 +82,9 @@ def test_declared_combined_policy_binds_real_parser_and_checkpoint_method():
     assert configure_execution(legacy_args) is None
     assert legacy_args.attention_score_dtype == 'legacy'
     assert not legacy_args.checked_recurrent
+    unsupported_dual = cli.parse_args(base + ['--dual-device-profile'])
+    with pytest.raises(ValueError, match='requires the admitted execution policy'):
+        configure_execution(unsupported_dual)
 
 
 def test_execution_policy_cannot_silently_change_physical_precision(tmp_path):

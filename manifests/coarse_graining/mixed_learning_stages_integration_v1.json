@@ -1,0 +1,10 @@
+{
+  "schema_version": "mixed_learning_stages_v1",
+  "name": "integration_daily_then_mixed_v1",
+  "total_updates": 2,
+  "milestones": [0, 1, 2],
+  "phases": [
+    {"name": "daily_pretraining", "objective": "daily", "end_update": 1, "outer_weights": {"daily": 1.0}},
+    {"name": "mixed_finetuning", "objective": "mixed", "end_update": 2, "outer_weights": {"daily": 1.0, "T7": 0.5, "T30": 0.5}}
+  ]
+}

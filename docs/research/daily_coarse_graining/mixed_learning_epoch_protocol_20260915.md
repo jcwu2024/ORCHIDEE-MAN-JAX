@@ -1,6 +1,8 @@
 # One prepared-pool pass: method and bounded budget
 
-Prepared for user review; not submitted or scientifically accepted. This moves
+Paid submission PAUSED by the user's subsequent two-route decision; free
+integration completed1270.75s, one mixed update and checkpoint replay, exit0.
+Current work is `parallel_training_routes_20260915.md`. Not scientifically accepted. This moves
 from the200-update pilot to substantial data coverage with the admitted
 Attention FP32 + checked recurrent execution. It does not reopen architecture,
 loss or performance research.

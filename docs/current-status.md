@@ -13,6 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+User now pauses the unsubmitted5415-update long job and authorizes two parallel
+bounded workstreams: same-objective dual-GPU execution, and equal-compute staged
+versus joint learning. The epoch integration below completed1270.75s, exit0,
+one full update, physical monitoring and checkpoint replay. Dual runtime
+preflight27.43s and two-device synthetic two-update test2.04s pass on actual
+JAX0.4.38/V100 GPUs at e5878fb; this is not real-model numerical/speed admission.
+Local helper tests4 and twoCPU probe pass. Protocol and latest next steps:
+`research/daily_coarse_graining/parallel_training_routes_20260915.md` and
+`NEXT_STEPS.md`. No paid job submitted or approved for these workstreams.
+
 One-pool-pass training preparation is implemented through afb7b5f, reusing the
 admitted execution policy below. Fresh full-network seed20260911,5415 updates,
 unchanged daily/T7/T30 objective and constant AdamW lr1e-5. CPU metadata passes:

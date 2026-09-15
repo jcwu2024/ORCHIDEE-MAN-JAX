@@ -42,16 +42,76 @@ def _optimizer_step(optimizer_state: Any) -> int:
     return _nonnegative_integer(optimizer_state.step, name="optimizer step")
 
 
+def _declared_maximum_updates(
+    method: Mapping[str, Any], maximum_updates: Any | None
+) -> int:
+    schedule = method.get("learning_schedule")
+    configuration = method.get("configuration")
+    if schedule is not None:
+        if not isinstance(schedule, Mapping):
+            raise TypeError("method learning_schedule must be a mapping")
+        declared = _nonnegative_integer(
+            schedule.get("total_updates"), name="learning schedule total_updates"
+        )
+    elif isinstance(configuration, Mapping) and "updates" in configuration:
+        declared = _nonnegative_integer(
+            configuration["updates"], name="configuration updates"
+        )
+    elif "updates" in method:
+        declared = _nonnegative_integer(method["updates"], name="method updates")
+    else:
+        declared = MAXIMUM_UPDATES
+    if declared <= 0:
+        raise ValueError("declared maximum updates must be positive")
+    if maximum_updates is not None:
+        requested = _nonnegative_integer(maximum_updates, name="maximum_updates")
+        if requested != declared:
+            raise ValueError("maximum_updates differs from the checkpoint method")
+    return declared
+
+
+def _declared_recurrent_cursor(method: Mapping[str, Any], completed: int) -> int:
+    schedule = method.get("learning_schedule")
+    if schedule is None:
+        return completed
+    if not isinstance(schedule, Mapping):
+        raise TypeError("method learning_schedule must be a mapping")
+    phases = schedule.get("phases")
+    total = _nonnegative_integer(
+        schedule.get("total_updates"), name="learning schedule total_updates"
+    )
+    if not isinstance(phases, list) or not phases:
+        raise ValueError("method learning_schedule phases are invalid")
+    start, recurrent = 1, 0
+    for phase in phases:
+        if not isinstance(phase, Mapping):
+            raise TypeError("method learning phase must be a mapping")
+        end = _nonnegative_integer(phase.get("end_update"), name="phase end_update")
+        objective = phase.get("objective")
+        if end < start or end > total or objective not in ("daily", "mixed"):
+            raise ValueError("method learning phase is invalid")
+        phase_completed = max(0, min(completed, end) - start + 1)
+        if objective == "mixed":
+            recurrent += phase_completed
+        start = end + 1
+    if start != total + 1:
+        raise ValueError("method learning phases do not reach total_updates")
+    return recurrent
+
+
 def _progress(
     *,
     completed_updates: Any,
     daily_sampler_cursor: Any,
     recurrent_schedule_cursor: Any,
     optimizer_state: Any,
+    method: Mapping[str, Any],
+    maximum_updates: Any | None,
 ) -> tuple[int, dict[str, int], int]:
     completed = _nonnegative_integer(completed_updates, name="completed_updates")
-    if completed > MAXIMUM_UPDATES:
-        raise ValueError("completed_updates exceeds the 200-update protocol")
+    maximum = _declared_maximum_updates(method, maximum_updates)
+    if completed > maximum:
+        raise ValueError("completed_updates exceeds the declared training protocol")
 
     daily = _cursor(daily_sampler_cursor)
     recurrent = _nonnegative_integer(
@@ -62,9 +122,9 @@ def _progress(
         raise ValueError(
             "daily sampler cursor disagrees with fixed mixed-training progress"
         )
-    if recurrent != completed:
+    if recurrent != _declared_recurrent_cursor(method, completed):
         raise ValueError(
-            "recurrent schedule cursor disagrees with mixed-training progress"
+            "recurrent schedule cursor disagrees with declared phase progress"
         )
     if _optimizer_step(optimizer_state) != completed:
         raise ValueError("AdamW step disagrees with mixed-training progress")
@@ -84,6 +144,7 @@ def save_mixed_training_checkpoint(
     source_identities: Mapping[str, Any],
     schedule_identity: Mapping[str, Any],
     fresh_initialization_identity: Mapping[str, Any],
+    maximum_updates: int | None = None,
     replace: bool = False,
 ) -> Mapping[str, Any]:
     """Atomically save parameters, AdamW moments, identities, and paired cursors.
@@ -94,11 +155,14 @@ def save_mixed_training_checkpoint(
 
     if not isinstance(replace, bool):
         raise TypeError("replace must be a bool")
+    normalized_method = _identity(method, name="method")
     completed, daily, recurrent = _progress(
         completed_updates=completed_updates,
         daily_sampler_cursor=daily_sampler_cursor,
         recurrent_schedule_cursor=recurrent_schedule_cursor,
         optimizer_state=optimizer_state,
+        method=normalized_method,
+        maximum_updates=maximum_updates,
     )
     payload = {
         "schema_version": CHECKPOINT_SCHEMA,
@@ -107,7 +171,7 @@ def save_mixed_training_checkpoint(
         "completed_updates": completed,
         "daily_sampler_cursor": daily,
         "recurrent_schedule_cursor": recurrent,
-        "method": _identity(method, name="method"),
+        "method": normalized_method,
         "source_identities": _identity(
             source_identities, name="source_identities"
         ),
@@ -134,6 +198,7 @@ def load_mixed_training_checkpoint(
     expected_source_identities: Mapping[str, Any],
     expected_schedule_identity: Mapping[str, Any],
     expected_fresh_initialization_identity: Mapping[str, Any],
+    maximum_updates: int | None = None,
 ) -> Mapping[str, Any]:
     """Load a full host-resident state and fail closed on identity/cursor drift."""
 
@@ -166,6 +231,8 @@ def load_mixed_training_checkpoint(
         daily_sampler_cursor=payload.get("daily_sampler_cursor"),
         recurrent_schedule_cursor=payload.get("recurrent_schedule_cursor"),
         optimizer_state=payload.get("optimizer_state"),
+        method=normalized["method"],
+        maximum_updates=maximum_updates,
     )
     return {
         **payload,
