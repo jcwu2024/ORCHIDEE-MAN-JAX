@@ -14,12 +14,16 @@ Current actions, superseding launch instructions in the history below:
   slow FP64 work, safe FP32 candidates and measured gain. Confirmed Attention
   NumPy scale promotes scores/softmax/value matmul to FP64 despite FP32
   parameters/projections. Explicit FP32 scale is opt-in, ordinary numerics
-  unchanged. Local3 tests and5 functional cases pass; bounded free GPU
-  primitive comparison running at76e4b83, diagnostics
-  `attention-fp32-v100-v1.json`,10min ceiling. No full-model accuracy or
-  RTX5090 gain claim from representative synthetic shapes. Protocol:
+  unchanged. Local3 tests pass; both free GPU primitive panels COMPLETED.
+  Source-shaped43e039a panel: exit0,26.85s, all5 numerical cases pass;
+  forward+gradient time4.81--14.99% lower, no full-update/RTX5090 gain claim.
+  No active precision job. Evidence:
+  `research/daily_coarse_graining/attention_fp32_primitive_results_20260915.md`.
+  Protocol:
   `research/daily_coarse_graining/fp64_to_fp32_protocol_20260915.md`.
-  Next use measured evidence to choose actual-model precision validation;
+  Next thread an explicit opt-in Attention precision policy into actual-model
+  configuration, validate fixed trained one-day/T7/T30 values/gradients, then
+  time complete updates. Reporting norms and neural pooling are later candidates;
   retain physics/loss/state FP64 and original physical tolerances meanwhile.
 
 - Checked split execution admission COMPLETED, v3 exit0,48.87min, code427ccce.

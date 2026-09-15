@@ -17,9 +17,14 @@ User-directed current priority: FP64-to-FP32 attribution for possible RTX5090
 migration. The shared Attention denominator is a NumPy FP64 scalar, promoting
 scores, softmax and value matmul. All parameter/projection arrays being FP32
 does not make the whole neural path FP32. Added explicit opt-in score dtype;
-default unchanged. Local3 tests and5 synthetic functional cases pass. Free
-V100 primitive comparison underway (76e4b83),10min ceiling; it is not trained
-model or full-update admission. See `research/daily_coarse_graining/fp64_to_fp32_protocol_20260915.md`.
+default unchanged. Local3 tests and both free V100 primitive panels pass.
+Source-shaped43e039a run completed26.85s, exit0: all5 numerical cases pass,
+zero failed gradient coordinates; forward+gradient time4.81--14.99% lower.
+No active precision task, trained-model admission or full-update/RTX5090 gain
+claim. Next explicit full-head opt-in policy and fixed trained one-day/T7/T30
+comparison before complete-update timing. Physics/loss precision stays FP64.
+See `research/daily_coarse_graining/attention_fp32_primitive_results_20260915.md`
+and `research/daily_coarse_graining/fp64_to_fp32_protocol_20260915.md`.
 
 Latest result: checked split v3 COMPLETED, exit0,48.87min, immutable427ccce.
 Both T7/T30 full-gradient/loss/counter comparisons pass with zero hard counts;

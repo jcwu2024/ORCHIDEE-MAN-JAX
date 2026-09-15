@@ -1,5 +1,10 @@
 # FP64 burden and an explicit FP32 attention candidate
 
+Stage1 is now complete: source-shaped V100 run43e039a exits0 in26.85 seconds,
+all5 numerical cases pass, local forward+gradient medians4.81--14.99% lower.
+See `attention_fp32_primitive_results_20260915.md` for measured values and limits.
+No precision task remains running; actual-model precision validation is next.
+
 User priority: establish which FP64 operations could bottleneck a future RTX5090,
 which can be FP32 and how much time is saved. This supersedes immediate larger
 training as the next performance task. Do not substitute FP16/TF32 investigation
