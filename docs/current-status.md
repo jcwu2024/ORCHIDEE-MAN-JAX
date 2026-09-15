@@ -13,6 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest result: checked split v3 COMPLETED, exit0,48.87min, immutable427ccce.
+Both T7/T30 full-gradient/loss/counter comparisons pass with zero hard counts;
+complete fixed-update timing14.181s ->12.079s (14.82% reduction), live15.95GiB.
+Bounded opt-in execution admitted; original timing is from a previous process.
+No accuracy improvement is implied and no updates were retained. Both recurrent
+compiled artifacts are cached. Bash15683/Python15724 exited; no active task.
+Next scientific work is broader data exposure and sufficient learning with
+RA/canopy monitoring; no new paid submission. See
+`research/daily_coarse_graining/checked_recurrent_results_20260915.md`.
+
 Latest: cache inspection COMPLETED229.8s, exit0, no new graph compilation or
 Teacher reads. Original T30 cache records1714s backend compile versus checked
 T7's1940s; direct deserialization41.03/66.68s. Previous cold-versus-cached

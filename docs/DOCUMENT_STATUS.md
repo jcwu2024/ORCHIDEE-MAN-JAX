@@ -24,7 +24,8 @@ an earlier experiment and does not control current work.
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
 | `research/daily_coarse_graining/recurrent_compile_cache_diagnosis_20260915.md` | Completed cache inspection, no new training | Correct cold/cache comparison; original also requires long first compilation; reuse T7 cache and both references for T30/timing |
-| `research/daily_coarse_graining/checked_recurrent_execution_20260914.md` | Implemented, pending free-GPU admission | Same recurrent scalar with compact checks from one checkpointed rollout; full-gradient/counter/speed A/B |
+| `research/daily_coarse_graining/checked_recurrent_results_20260915.md` | Bounded split execution admitted, v3 exit0 | T7/T30 full-gradient/counter equivalence;14.82% lower complete-update time; fixed-data cross-process timing limitation |
+| `research/daily_coarse_graining/checked_recurrent_execution_20260914.md` | Protocol; split route now admitted by September15 results | Same recurrent scalar with compact checks from one checkpointed rollout; full-gradient/counter/speed A/B |
 | `research/daily_coarse_graining/mixed_learning_performance_profile_20260914.md` | Completed free-GPU component timing, exit0 | 14.09s replay; duplicate recurrent forward/checks16.1%; FP32 parameters; GPU trace coverage incomplete |
 | `research/daily_coarse_graining/mixed_learning_200_results_20260914.md` | Completed200 updates; learning progress, science gates still fail | Actual data exposure, physical-unit changes, throughput/cost and next coverage planning |
 | `research/daily_coarse_graining/mixed_learning_integration_results_20260914.md` | Completed: full mixed update, physical checks and checkpoint replay pass | Actual runtime/memory, accuracy limitations, ready200-update resource envelope |

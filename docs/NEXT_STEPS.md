@@ -10,12 +10,23 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Checked split execution admission COMPLETED, v3 exit0,48.87min, code427ccce.
+  T7/T30 full gradients, losses and all named counters pass; no hard failures.
+  Complete-update median14.181s ->12.079s (14.82% less time), live15.95GiB.
+  Baseline was preserved from another process, not contemporaneous paired
+  timing. Both recurrent caches now exist; Bash15683/Python15724 exited.
+  Bounded opt-in route admitted; default CLI unchanged. No model accuracy gain
+  or retained updates. Next return to coverage/learning-duration planning and
+  RA/canopy science monitoring, using this execution path and a declared
+  reproducible method. No new paid job/budget approved. Evidence:
+  `research/daily_coarse_graining/checked_recurrent_results_20260915.md`.
+
 - Cache diagnosis COMPLETED229.8s, exit0: original T30 cold backend compile
   was1714s, checked T7 was1940s; direct cache loading now41.0/66.7s. The prior
   1980.8s/221.6s contrast mixed cold and cached work; it does not establish
   a large checked-graph regression. No model/loss/AD/check change is needed
   on that evidence. See `research/daily_coarse_graining/recurrent_compile_cache_diagnosis_20260915.md`.
-  Follow-up RUNNING free gln01 GPU0, Bash15683/Python15724, immutable427ccce
+  Follow-up COMPLETED free gln01 GPU0, Bash15683/Python15724 exited, immutable427ccce
   in `runtime/checkouts/mixed-learning-checked-reuse-v1`;65min ceiling.
   Diagnostics `mixed-learning-checked-profile-v3.{json,log}`, reference reportv2.
   Reuse T7 cache and both original gradients; finish checked T30 and warm
