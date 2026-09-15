@@ -13,6 +13,17 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest: cache inspection COMPLETED229.8s, exit0, no new graph compilation or
+Teacher reads. Original T30 cache records1714s backend compile versus checked
+T7's1940s; direct deserialization41.03/66.68s. Previous cold-versus-cached
+runner times cannot establish a compile regression. Follow-up RUNNING on
+free gln01 GPU0, Bash15683/Python15724, immutable427ccce,65min ceiling, checkout
+`runtime/checkouts/mixed-learning-checked-reuse-v1`, diagnostics
+`mixed-learning-checked-profile-v3.{json,log}`. Reuses checked T7 cache and both
+reference gradients to complete T30 equivalence and full warm-update timing.
+No additional model/loss/AD/check change or paid job. See
+`research/daily_coarse_graining/recurrent_compile_cache_diagnosis_20260915.md`.
+
 Current work: eliminate duplicate recurrent forward while retaining native
 checkpointed AD and all checks. First free admission (45da5f9) exited124 at55min;
 no checked loss/gradient/speed result. Runtime check passed, original profile

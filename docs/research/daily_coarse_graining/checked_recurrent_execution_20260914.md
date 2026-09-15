@@ -1,5 +1,12 @@
 # Shared recurrent loss and compact checks
 
+September15 interpretation correction: direct cache inspection shows original
+T30 backend compilation also took1714s; checked T7 took1940s. The earlier
+1980.8s/221.6s runner comparison mixed cold compilation with cache reuse.
+See `recurrent_compile_cache_diagnosis_20260915.md`. Keep code unchanged and
+reuse T7 cache plus both references to finish T30 and warm complete timing;
+do not diagnose a large compile regression from the unmatched timings.
+
 ## September15 execution revision
 
 V1 stopped at its55min ceiling (wrapper exit124); its JSON still contains

@@ -10,6 +10,17 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Cache diagnosis COMPLETED229.8s, exit0: original T30 cold backend compile
+  was1714s, checked T7 was1940s; direct cache loading now41.0/66.7s. The prior
+  1980.8s/221.6s contrast mixed cold and cached work; it does not establish
+  a large checked-graph regression. No model/loss/AD/check change is needed
+  on that evidence. See `research/daily_coarse_graining/recurrent_compile_cache_diagnosis_20260915.md`.
+  Follow-up RUNNING free gln01 GPU0, Bash15683/Python15724, immutable427ccce
+  in `runtime/checkouts/mixed-learning-checked-reuse-v1`;65min ceiling.
+  Diagnostics `mixed-learning-checked-profile-v3.{json,log}`, reference reportv2.
+  Reuse T7 cache and both original gradients; finish checked T30 and warm
+  full-update speed. Keep default training unchanged; no paid submission.
+
 - Checked execution v1 exited124 at its55min ceiling; Bash81582/Python82371
   are gone. Runtime check, changed lowerings, original timing and saved T7
   reference succeeded; no checked gradient/speed acceptance was obtained.

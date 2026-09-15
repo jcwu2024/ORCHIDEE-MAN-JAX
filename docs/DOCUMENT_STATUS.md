@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-09-14.
+Last updated: 2026-09-15.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/recurrent_compile_cache_diagnosis_20260915.md` | Completed cache inspection, no new training | Correct cold/cache comparison; original also requires long first compilation; reuse T7 cache and both references for T30/timing |
 | `research/daily_coarse_graining/checked_recurrent_execution_20260914.md` | Implemented, pending free-GPU admission | Same recurrent scalar with compact checks from one checkpointed rollout; full-gradient/counter/speed A/B |
 | `research/daily_coarse_graining/mixed_learning_performance_profile_20260914.md` | Completed free-GPU component timing, exit0 | 14.09s replay; duplicate recurrent forward/checks16.1%; FP32 parameters; GPU trace coverage incomplete |
 | `research/daily_coarse_graining/mixed_learning_200_results_20260914.md` | Completed200 updates; learning progress, science gates still fail | Actual data exposure, physical-unit changes, throughput/cost and next coverage planning |
