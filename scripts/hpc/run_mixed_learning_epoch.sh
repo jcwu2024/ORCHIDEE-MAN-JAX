@@ -21,9 +21,9 @@ case "$MODE" in
       export RUN_TIMEOUT=${RUN_TIMEOUT:-1435m}
     fi
     # Preserve --dry-run as the first argument to the shared launcher.
-    DRY=()
-    if [[ "${1:-}" == --dry-run ]]; then DRY=(--dry-run); shift; fi
-    exec bash "$CODE_ROOT/scripts/hpc/run_mixed_learning.sh" "$MODE" "${DRY[@]}" \
+    ARGS=("$MODE")
+    if [[ "${1:-}" == --dry-run ]]; then ARGS+=(--dry-run); shift; fi
+    exec bash "$CODE_ROOT/scripts/hpc/run_mixed_learning.sh" "${ARGS[@]}" \
       --execution-policy "$CODE_ROOT/manifests/coarse_graining/mixed_learning_execution_fp32_checked_v1.json" "$@" ;;
   *) exit 2 ;;
 esac
