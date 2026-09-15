@@ -10,6 +10,21 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- User explicitly authorizes moving the staged check to paid GPU rather than
+  waiting for free dual profiling. Job15209522 is RUNNING on gnall/ibc13b02n01,
+  started2026-09-15 23:29:02;1V100/8 allocated CPU/64GiB/90min cap, maximum
+  4.14yuan additive estimate. Immutable eba219d in
+  `runtime/checkouts/mixed-learning-stages-integration-paid-v1`.
+  `job_mixed_learning_stages_integration.sh` uses the paid Slurm entry with
+  `--integration-updates 2` and the1daily+1mixed schedule; Python scope remains
+  integration_only. Target-shell dry-run and syntax passed. Log diagnostics
+  `mixed-learning-stages-integration-paid-15209522.log`; report
+  `mixed-learning-stages-integration-paid-v1.json`. Internal85min timeout,
+  Slurm deadline2026-09-16 00:59:02; no requeue. Collect this result and do NOT
+  launch a duplicate staged integration on free GPU when dual profiling ends.
+  Free dual profile stays atdea4083, Bash7920/Python7963. The8h learning pilot
+  and24h epoch job remain unsubmitted; only this bounded check was moved paid.
+
 - User authorizes two bounded routes in parallel and PAUSES the unsubmitted
   5415-update/24h job. First route measures dual-GPU speed/cost for the identical
   D64/micro8+T7+T30 update. Second implements a reproducible daily-only then

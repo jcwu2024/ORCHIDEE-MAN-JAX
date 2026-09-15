@@ -1,5 +1,8 @@
 # Two bounded routes before long training
 
+Latest update: user directed the stage-transition check onto available paid
+GPU. Job15209522 is RUNNING; details below supersede waiting for free GPU0.
+
 User authorized implementation and free-node tests on2026-09-15. The prepared
 5415-update/24h job is paused before submission. No paid job is authorized by
 this protocol. Model architecture, Teacher release and derivative mathematics
@@ -113,3 +116,26 @@ rates. Each arm has220min ceiling; no automatic requeue. Create its Slurm log
 directory before submission. It is NOT approved, submitted or ready for paid
 adoption until the free phase-transition check passes and the nominal matched
 joint count is frozen from timing. The24h epoch job remains paused.
+
+## Paid stage-transition check
+
+User explicitly authorized using paid GPUs to avoid waiting for the free
+two-GPU test. Prepared eba219d adds `job_mixed_learning_stages_integration.sh`.
+No new gradient/model code; it uses the existing paid Slurm launcher and passes
+the two-update integration budget plus1daily+1mixed schedule. The free-only
+integration host guard is not used on a paid node. Actual target-shell dry-run
+and shell syntax passed before submission; no redundant AD or payload hashing.
+
+Submitted15209522 and observed RUNNING ongnall/ibc13b02n01. Start2026-09-15
+23:29:02, Slurm deadline2026-09-16 00:59:02. Confirmed1GPU and8 allocated CPUs,
+64GiB requested RAM.90min cap with85min inner timeout, no requeue. Budget shown
+before submission: CPU8*1.5*.07=.84 plus GPU1*1.5*2.20=3.30, maximum4.14yuan.
+
+Immutable checkout:
+`/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX/runtime/checkouts/mixed-learning-stages-integration-paid-v1`
+at eba219d. Command `sbatch scripts/hpc/job_mixed_learning_stages_integration.sh`.
+Log: runtime diagnostics `mixed-learning-stages-integration-paid-15209522.log`;
+report: `mixed-learning-stages-integration-paid-v1.json`. Startup log confirms
+actual node/code/output. This replaces the waiting free integration; do not
+duplicate it after the dual test. Larger paid learning pilots remain pending
+the check, timing-based schedule freeze and their concrete resource decision.

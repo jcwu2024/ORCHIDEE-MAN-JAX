@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Paid staged integration15209522 is RUNNING after explicit user direction to
+use available paid GPUs. It started2026-09-15 23:29:02 onibc13b02n01 with
+1V100/8CPU/64GiB,90min cap, maximum4.14yuan; immutableeba219d in
+`runtime/checkouts/mixed-learning-stages-integration-paid-v1`. Actual Python
+entry has started, two-update integration identity. This replaces the pending
+free staged integration below; do not run a duplicate. Free dual profile
+continues independently atdea4083. No paid8h learning pilot or24h epoch job.
+
 User now pauses the unsubmitted5415-update long job and authorizes two parallel
 bounded workstreams: same-objective dual-GPU execution, and equal-compute staged
 versus joint learning. The epoch integration below completed1270.75s, exit0,
