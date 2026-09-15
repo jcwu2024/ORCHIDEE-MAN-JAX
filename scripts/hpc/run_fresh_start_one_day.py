@@ -69,8 +69,10 @@ def bootstrap(args, protocol):
     if (attention_score_dtype == 'fp32' and not (
             getattr(args, 'admission_only', False) or getattr(args, 'shape_only', False)
             or getattr(args, 'cpu_forward_only', False)
-            or getattr(args, 'precision_stage', None))):
-        raise ValueError('FP32 Attention is limited to an explicit diagnostic admission')
+            or getattr(args, 'precision_stage', None)
+            or (getattr(args, 'mixed_protocol', None)
+                and getattr(args, 'execution_policy', None)))):
+        raise ValueError('FP32 Attention requires diagnostic admission or a mixed execution policy')
     head = build_fresh_head(
         _head(runtime, target), template, threshold=protocol['input_conditioning']['threshold'],
         apply_gsmean_applicability=protocol.get('output_applicability', {}).get('gsmean_bare_soil_zero', False),

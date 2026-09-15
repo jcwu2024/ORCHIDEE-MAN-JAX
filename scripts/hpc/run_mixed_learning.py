@@ -69,9 +69,29 @@ def profile_source_method(training_report, config, model):
             or training_report.get('model_protocol') != model
             or training_report.get('scope') != 'bounded_200_update_learning'):
         raise ValueError('profile requires the completed declared 200-update run')
-    return dict(implementation='mixed_learning_v1',configuration=config,
+    method = dict(implementation='mixed_learning_v1',configuration=config,
                 model_protocol=model,scope='bounded_200_update_learning',
                 integration_updates=None,source_git_head=training_report['source_git_head'])
+    if training_report.get('execution_policy') is not None:
+        method.update(execution_policy=training_report['execution_policy'],
+                      recurrent_execution=training_report['execution_policy']['recurrent_execution'])
+    return method
+
+
+def configure_execution(args):
+    """Resolve the declared combined policy before bootstrap and checkpoint IO."""
+    if args.execution_policy is None:
+        return None
+    policy = json.loads(args.execution_policy.read_text())
+    supported = dict(schema_version='mixed_learning_execution_v1',
+        attention_score_dtype='fp32', recurrent_execution='split_checked_v1',
+        source_family_pooling_dtype='legacy', physical_dtype='float64')
+    if policy != supported:
+        raise ValueError('unsupported mixed-learning execution policy')
+    args.attention_score_dtype = policy['attention_score_dtype']
+    args.separate_checked_validation = True
+    args.checked_recurrent = not args.compare_checked_recurrent
+    return policy
 
 
 def lowered_precision_summary(lowered):
@@ -201,6 +221,7 @@ def run(args):
     from scripts.hpc.run_trained_forward_screen import feedback_diagnostics, feedback_hard_counts
     from scripts.hpc.trained_screen_common import PreparedWindowPool, WindowPool, json_safe
 
+    execution_policy = configure_execution(args)
     if args.admission_only or args.cpu_forward_only:
         raise ValueError('use shape-only or integration-updates for bounded checks')
     profiling = args.profile_checkpoint is not None
@@ -241,8 +262,10 @@ def run(args):
     precision_components = (() if precision_stage is None
                             else precision_stage_components(precision_stage))
     precision_candidate = getattr(args, 'attention_score_dtype', 'legacy') == 'fp32'
-    if precision_candidate and precision_stage is None:
-        raise ValueError('FP32 Attention is limited to explicit fixed-checkpoint precision staging')
+    if precision_candidate and precision_stage is None and execution_policy is None:
+        raise ValueError('FP32 Attention requires precision staging or a declared execution policy')
+    if execution_policy is not None and precision_stage:
+        raise ValueError('combined execution uses checked-profile, not isolated precision staging')
     if precision_candidate and precision_stage:
         needs_profile_reference = any(name in ('T7', 'T30') for name in precision_components)
         needs_daily_reference = 'daily' in precision_components
@@ -260,6 +283,8 @@ def run(args):
         configuration=config, model_protocol=model, scope=scope, completed_updates=0,
         updates=[], monitors=[], compilation={}, checkpoints=[],
         scientific_acceptance=False, checkpoint_inherited=False)
+    if execution_policy is not None:
+        report['execution_policy'] = execution_policy
     if precision_stage:
         report.update(precision_study=dict(stage=precision_stage,
             candidate_attention_score_dtype=getattr(args, 'attention_score_dtype', 'legacy'),
@@ -271,6 +296,8 @@ def run(args):
         previous = json.loads(args.output.read_text())
         if (previous['configuration'], previous['model_protocol'], previous['scope']) != (config,model,scope):
             raise ValueError('recovery report method mismatch')
+        if previous.get('execution_policy') != execution_policy:
+            raise ValueError('recovery report execution policy mismatch')
         report = previous
         report['prior_elapsed_seconds'] = report.get('prior_elapsed_seconds',0.)+report.get('elapsed_seconds',0.)
 
@@ -292,6 +319,9 @@ def run(args):
         if args.checked_recurrent:
             method['recurrent_execution'] = ('split_checked_v1' if args.separate_checked_validation
                                              else 'compact_checked_v1')
+        if execution_policy is not None:
+            method.update(execution_policy=execution_policy,
+                          recurrent_execution=execution_policy['recurrent_execution'])
         fresh_identity = dict(seed=model['seed'],initialization=model['initialization'],
                               parameter_count=model['parameter_count'],inherited_weights=False)
         recovery_identity = dict(expected_method=method,expected_source_identities=identities,
@@ -788,6 +818,12 @@ def run(args):
                         old_loss=float(old_value),new_loss=float(new_value),
                         physical_counts_equal=hard==old_hard,all_hard_zero=not any(hard.values()),
                         reference_gradient=str(path),hard=hard)
+                    candidate_path = args.output.with_suffix(f'.{key}.checked-gradient.pkl')
+                    _atomic_pickle(candidate_path,dict(value=new_value,
+                        gradient=jax.device_get(gradient),hard=hard,
+                        checkpoint=str(args.profile_checkpoint),window=row,
+                        execution_policy=execution_policy))
+                    comparison['candidate_gradient'] = str(candidate_path)
                     comparisons[key] = comparison
                     emit('checked_compared_'+key,checked_comparisons=comparisons)
                     if not (comparison['passed'] and comparison['loss_equal']
@@ -815,6 +851,13 @@ def run(args):
                      checked_time_reduction=1.-after/before,
                      checked_speed_admission_passed=bool(1.-after/before >= .05),
                      same_process_timing_comparison=reference_report is None)
+                if execution_policy is not None and reference_report is not None:
+                    prior_checked = reference_report.get('checked_profile',{}).get('baseline',{}).get('median_seconds')
+                    if prior_checked is not None:
+                        emit('combined_execution_completed',
+                             legacy_checked_baseline_seconds=prior_checked,
+                             combined_baseline_seconds=after,
+                             incremental_time_reduction=1.-after/prior_checked)
             emit('completed',status='completed',profile=profile,persistent_parameter_updates=0,
                  memory=_device_memory(runtime['devices'][0]),daily_reader=daily_pool.statistics())
             return report
@@ -919,6 +962,8 @@ def parser():
     result.add_argument('--checked-recurrent',action='store_true')
     result.add_argument('--separate-checked-validation',action='store_true')
     result.add_argument('--checked-reference-report',type=Path)
+    result.add_argument('--execution-policy',type=Path,
+                        help='explicit neural precision and recurrent execution identity')
     result.add_argument('--precision-stage', choices=_PRECISION_STAGES,
                         help='fixed-checkpoint legacy/FP32 component admission; never trains')
     result.add_argument('--precision-reference-report', type=Path,

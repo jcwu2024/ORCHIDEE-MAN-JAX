@@ -15,6 +15,7 @@ from research.daily_coarse_graining.daily_operator.target_oriented_training impo
 )
 from scripts.hpc.run_mixed_learning import (
     checkpoint_path,
+    configure_execution,
     lowered_precision_summary,
     masked_precision_daily_auxiliary,
     newest_checkpoint,
@@ -39,6 +40,49 @@ def test_profile_uses_completed_checkpoint_method_not_diagnostic_head():
     assert method["integration_updates"] is None
     with pytest.raises(ValueError):
         profile_source_method(dict(report, completed_updates=100), {"x": 1}, {"seed": 2})
+
+
+def test_declared_combined_policy_binds_real_parser_and_checkpoint_method():
+    from pathlib import Path
+
+    from scripts.hpc.run_mixed_learning import parser
+
+    policy_path = Path(__file__).resolve().parents[2] / 'manifests/coarse_graining/mixed_learning_execution_fp32_checked_v1.json'
+    # Populate inherited required parser fields without loading any Teacher data.
+    cli = parser()
+    required = [action for action in cli._actions if action.required]
+    base = [value for action in required for value in (action.option_strings[0], 'unused')]
+    train_args = cli.parse_args(base + ['--execution-policy', str(policy_path)])
+    policy = configure_execution(train_args)
+    assert train_args.attention_score_dtype == 'fp32'
+    assert train_args.checked_recurrent and train_args.separate_checked_validation
+    compare_args = cli.parse_args(base + ['--execution-policy', str(policy_path),
+                                         '--compare-checked-recurrent'])
+    assert configure_execution(compare_args) == policy
+    assert not compare_args.checked_recurrent
+    assert compare_args.separate_checked_validation
+    report = dict(status='completed', completed_updates=200, configuration={},
+                  model_protocol={}, scope='bounded_200_update_learning',
+                  source_git_head='trained', execution_policy=policy)
+    method = profile_source_method(report, {}, {})
+    assert method['execution_policy'] == policy
+    assert method['recurrent_execution'] == 'split_checked_v1'
+    legacy_args = cli.parse_args(base)
+    assert configure_execution(legacy_args) is None
+    assert legacy_args.attention_score_dtype == 'legacy'
+    assert not legacy_args.checked_recurrent
+
+
+def test_execution_policy_cannot_silently_change_physical_precision(tmp_path):
+    import json
+    from argparse import Namespace
+
+    path = tmp_path / 'execution.json'
+    path.write_text(json.dumps(dict(schema_version='mixed_learning_execution_v1',
+        attention_score_dtype='fp32', recurrent_execution='split_checked_v1',
+        source_family_pooling_dtype='legacy', physical_dtype='float32')))
+    with pytest.raises(ValueError, match='unsupported mixed-learning execution policy'):
+        configure_execution(Namespace(execution_policy=path))
 
 
 def test_static_precision_summary_reads_real_lowered_matrix_result_types():
