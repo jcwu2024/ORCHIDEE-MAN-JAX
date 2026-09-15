@@ -20,10 +20,14 @@ Current actions, superseding launch instructions in the history below:
   Reuse the original profile/T7 reference and passed runtime check; preserve
   any newly computed reference. Free diagnostic ceiling80min, independent
   checkout `runtime/checkouts/mixed-learning-checked-reuse-v1`, immutablefec83e0.
-  Split attempt RUNNING on free gln01 GPU0: Bash89392/Python89436 (parent89390),
-  diagnostics `mixed-learning-checked-profile-v2.{json,log}`. Local38 tests and
-  target-shell dry-run pass; runtime metadata started. Next inspect T7/T30
-  equivalence and full-update timing. Do not mutate this running checkout.
+  Split attempt exited124 at80min; Bash89392/Python89436 exited. Diagnostics
+  `mixed-learning-checked-profile-v2.{json,log}`: T7 full-gradient/loss/counter
+  comparison PASSED, all hard counts zero. Changed T7 compilation1980.8s;
+  validator compilation1.66s and gradient comparison1.96s. T30 original
+  reference preserved; changed T30 compilation unfinished at timeout.
+  No full-update speed result or optimization adoption. Next address the
+  demonstrated cold-compilation cost and finish T30/timing, reusing saved
+  references; do not restart the completed reference work or launch paid work.
   No architecture/loss/precision change or paid job. Record compilation,
   first execution and gradient comparison separately. Protocol:
   `research/daily_coarse_graining/checked_recurrent_execution_20260914.md`.

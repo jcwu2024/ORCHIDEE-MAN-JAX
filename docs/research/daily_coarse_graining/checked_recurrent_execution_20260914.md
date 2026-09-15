@@ -44,6 +44,19 @@ Deployment: target-shell dry-run passed; free gln01 GPU0 launch uses immutable
 fec83e0, Bash89392/Python89436 (parent89390), with both GPUs idle before launch.
 The actual runner reached metadata. Results pending; keep this checkout immutable.
 
+V2 outcome: wrapper exited124 at80min; both task processes exited. T7 native
+gradient/loss/full-counter comparison passes (zero failed gradient coordinates,
+all hard counts zero). Original/new losses121.8003196598/121.8003208346;
+gradient error/reference L2=.0002910945/2634.8539. Changed T7 compilation
+took1980.81s, including an XLA slow operation lasting23m58s. First raw execution
+15.87s, validator compilation1.656s, full host comparison1.961s; observations
+243418bytes. These first-call timings are not warm throughput evidence.
+Original T30 compiled221.61s and its full reference was saved before changed
+T30 compilation, which remained incomplete at timeout. No numerical failure
+was demonstrated, but T30 equivalence and complete-update speed remain unknown.
+The raw JSON retains its interrupted running stage; the log exit124 controls
+completion status. No active job or paid submission. Reuse both references.
+
 ## Initial inline implementation
 
 User authorized implementing the first performance optimization after the

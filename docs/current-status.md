@@ -19,10 +19,13 @@ no checked loss/gradient/speed result. Runtime check passed, original profile
 completed and T7 reference preserved. Bash81582/Python82371 exited. Next split
 the physical reducer into a separate GPU program using the same observations
 (T30 ~1MiB); keep compact host counts and reuse completed reference evidence.
-Local38 tests and target-shell dry-run pass. Split free GPU0 attempt RUNNING,
-immutablefec83e0, Bash89392/Python89436 (parent89390),80min ceiling, checkout
+Local38 tests and target-shell dry-run pass. Split free GPU0 attempt exited124
+at80min, immutablefec83e0; Bash89392/Python89436 exited. Checkout
 `runtime/checkouts/mixed-learning-checked-reuse-v1`; diagnostics
-`mixed-learning-checked-profile-v2.{json,log}`. No science training or paid job.
+`mixed-learning-checked-profile-v2.{json,log}`. T7 loss/full-gradient/counters
+pass, all hard counts zero; its changed compilation took1980.8s, validator
+compile1.66s, comparison1.96s. T30 original reference preserved, changed T30
+compile timed out. No complete speed result, science training or paid job.
 See `research/daily_coarse_graining/checked_recurrent_execution_20260914.md`.
 
 Performance profile COMPLETED, free gln01 GPU0, immutable6f26537, exit0,
