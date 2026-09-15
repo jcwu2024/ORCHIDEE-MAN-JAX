@@ -14,8 +14,16 @@ describe an earlier gate without being rewritten.
 ## Active Daily-Coarse-Graining Gate
 
 User now authorizes unnecessary-FP64 removal independently of future hardware.
-Implementing explicit full-head Attention/pooling policies and staged real-model
-precision comparisons. Reporting norm probe completed19.65s on free V100:
+Explicit full-head Attention/pooling policies and staged real-model comparisons
+implemented. Legacy daily first attempt failed on a new metadata conversion;
+corrected via existing row adapter, regression test passes. Repaired legacy v2
+completed241.1s, all physical hard counts zero, daily64 loss120.4785230 and full
+gradient/auxiliary saved. FP32 daily RUNNING free GPU0, Bash42810/Python42854,50min ceiling,
+immutablec11efa6 in `runtime/checkouts/mixed-learning-checked-reuse-v1`; diagnostics
+`mixed-learning-attention-fp32-daily-v1.{json,log}`. Follow with existing T7/T30
+references and full-update timing. Pooling primitive completed21.94s on GPU1,
+numeric/mask checks pass; seven-bank forward+grad0.2320->0.1944ms, not full-model
+admission. Reporting norm probe completed19.65s on free V100:
 actual109M T7/T30 gradient norms match within5e-8 relative, saving only0.06--0.13ms
 per norm. This is a minor cost; prioritize neural Attention. The deployed runtime
 check passed22.12s. No paid task or retained training updates in this work.

@@ -17,9 +17,16 @@ Current actions, superseding launch instructions in the history below:
   metadata-conversion error (`OneDayPreparedRow` is not a dict); no gradient
   computed. Corrected to the existing `admission._rows` conversion and added a
   production-row regression test (10 runner tests pass). Daily cache retained.
-  Repaired free rerun pending, checkout `runtime/checkouts/mixed-learning-checked-reuse-v1`.
-  Diagnostics first attempt `mixed-learning-attention-legacy-daily-v1.{json,log}`. After reference capture,
-  compare FP32 daily, then T7/T30 against preserved references, then full timing.
+  Repaired legacy v2 COMPLETED241.1s, all hard counts zero; daily64 loss120.4785230
+  and complete gradient/physical auxiliary saved. FP32 daily comparison RUNNING
+  free GPU0, Bash42810/Python42854,50min ceiling, immutablec11efa6 in
+  `runtime/checkouts/mixed-learning-checked-reuse-v1`; diagnostics
+  `mixed-learning-attention-fp32-daily-v1.{json,log}`. Then T7/T30 against
+  preserved references, then full timing. Pooling primitive also passes on GPU1:
+  seven-bank forward+grad0.2320->0.1944ms; Attention-only remains first real test.
+  Current stage: compile_daily after124s bootstrap; do not launch another
+  copy or alter the running checkout. Additional local active-head forward/
+  gradient, FP32 eval-shape and undefined-auxiliary mask tests pass.
   Reporting norms completed separately: <5e-8 relative error but only0.06--0.13ms
   saved per norm. Free-node tests authorized, no paid submission.
   First real-model comparison is Attention-only; physics/loss/optimizer remain
