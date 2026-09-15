@@ -13,6 +13,20 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+One-pool-pass training preparation is implemented through afb7b5f, reusing the
+admitted execution policy below. Fresh full-network seed20260911,5415 updates,
+unchanged daily/T7/T30 objective and constant AdamW lr1e-5. CPU metadata passes:
+346539 unique daily days,535 sites,44 years,17677 point-years;21 terminal padding
+draws;5415 distinct windows per recurrent horizon,198101 unique recurrent days.
+Daily/recurrent union is not obtained by adding these counts. Schedule creation
+took124.86s without Teacher payload reads. Local24 tests pass. Paid script has
+1V100/8CPU/64GiB/24h cap, estimated maximum66.24yuan; expected20-24h excludes
+queue. Not submitted or approved. Free integration at afb7b5f is active on
+gln01 GPU0, Bash93015/Python93060,90min ceiling; actual update/recovery result
+pending. Initial launch failed before Python on an old-Bash empty-array/nounset
+case; fixed before the active launch. No paid compute used. See
+`research/daily_coarse_graining/mixed_learning_epoch_protocol_20260915.md`.
+
 Combined Attention FP32 + checked split implemented364cdef. Explicit
 `manifests/coarse_graining/mixed_learning_execution_fp32_checked_v1.json` binds
 both execution options and is recorded in report/checkpoint identity. Local15

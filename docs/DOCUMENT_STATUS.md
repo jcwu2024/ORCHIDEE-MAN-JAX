@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/mixed_learning_epoch_protocol_20260915.md` | Implemented5415-update method; CPU coverage passed, free integration running | Fresh full-network one prepared-pool pass, unchanged mixed objective,24h/66.24yuan budget pending approval |
 | `research/daily_coarse_graining/combined_execution_results_20260915.md` | Combined policy admitted; performance phase closed | Full-gradient/physical/update checks pass;11.761s,17.065% less time; return to substantial-coverage training |
 | `research/daily_coarse_graining/combined_execution_admission_20260915.md` | Completed specification; v2 result admitted | Explicit FP32 + checked split; preserves v1 timeout and v2 completion history |
 | `research/daily_coarse_graining/attention_fp32_full_results_20260915.md` | Completed bounded precision/timing study, exit0 | 14.181->13.730s,3.181% lower warm complete-update time; full gradients and physical/scalar checks pass, combined checked-route adoption next |

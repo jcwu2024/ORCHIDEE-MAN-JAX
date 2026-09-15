@@ -81,3 +81,29 @@ Before submission, finish the CPU schedule/coverage validation, actual-shell
 argument check and bounded fresh one-update integration/recovery check on free
 nodes. Reuse accepted native-AD evidence; no new standalone gradient audit.
 Paid submission requires explicit approval of the above66.24yuan envelope.
+
+## Preparation evidence and immediate handoff
+
+Implementation:04992ef (runner/manifests/launchers),3146c8b (full-pool metadata),
+afb7b5f (cluster Bash compatibility). Local plan/runner suites24 passed; Ruff
+and diff checks pass. Target-shell metadata/train/integration dry-run and shell
+syntax checks pass. The initial non-dry free launch failed before Python because
+old Bash treats an empty array expansion under nounset as unbound; afb7b5f uses
+a nonempty mode/argument array. This used no paid resources.
+
+Free test02 schedule preparation completed124.86s, no Teacher payload reads or
+parameter updates. Metadata validation PASSED. Actual daily coverage is346539
+unique days over535 sites,44 years and17677 point-years,5415 batches with21
+terminal replay rows. Recurrent selection has10830 distinct windows covering
+198101 unique days over535 sites,44 years and8730 point-years. Within-update
+T7/T30 day overlap is zero; across-update repeated-day occurrences2254 are
+declared. The daily/recurrent union is not their sum.
+
+Evidence: local `outputs/mixed-learning-epoch-v1-metadata.json`; remote diagnostics
+`mixed-learning-5415-recurrent-schedule-v1.json`. The free one-update integration
+is running on gln01 GPU0 at immutable afb7b5f in
+`runtime/checkouts/mixed-learning-epoch-v1`: Bash93015/Python93060,90min ceiling.
+Log `runtime/outputs/diagnostics/mixed-learning-epoch-v1-integration-v2.log`;
+report `runtime/outputs/diagnostics/mixed-learning-epoch-v1-integration.json`.
+Next collect update/physical/recovery result; do not inherit the integration
+checkpoint in the paid fresh run. No paid job has been submitted or approved.

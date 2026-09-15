@@ -10,6 +10,23 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- One prepared-pool pass is implemented and under free integration, not paid
+  submission. Protocol: `research/daily_coarse_graining/mixed_learning_epoch_protocol_20260915.md`.
+  Fresh seed20260911/full109,464,375 weights; unchanged D+.5R7+.5R30 and AdamW;
+  explicit admitted FP32/checked policy. CPU schedule completed124.86s and
+  coverage validation PASSED:5415 daily batches,346539 unique days across535
+  sites/44 years/17677 point-years,21 terminal replay rows;10830 distinct
+  recurrent windows,198101 unique recurrent days (overlap with daily not summed).
+  Local24 plan/runner tests and target-shell dry-run pass. Initial free launch
+  exposed old Bash nounset handling of an empty array before Python; fixed in
+  afb7b5f with a nonempty mode/argument array. Free gln01 GPU0 integration now
+  runs at immutable afb7b5f: Bash93015/Python93060,90min ceiling, diagnostics
+  `mixed-learning-epoch-v1-integration.json` and `-integration-v2.log`.
+  Next collect full fresh-update/checkpoint-replay result. No new AD audit.
+  Paid envelope prepared:1V100/8CPU/64GiB/24h,66.24yuan maximum; expected20-24h
+  excluding queue, not a completion guarantee. No paid approval or submission.
+  Milestones0/200/1000/2500/4000/5415; rolling recovery50; no automatic paid restart.
+
 - User approves combining Attention FP32 and checked split, then closing this
   performance phase and returning to broader training. Implementation364cdef
   adds explicit `mixed_learning_execution_fp32_checked_v1.json` policy to CLI,

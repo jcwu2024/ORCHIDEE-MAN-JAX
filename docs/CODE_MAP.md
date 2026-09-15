@@ -17,6 +17,12 @@ checked-profile comparison and shared recurrent AD. Ordinary legacy defaults
 remain available. The combined policy passed bounded real-model admission and
 complete-update timing; use it explicitly for the next declared training run.
 Current training preparation is in `NEXT_STEPS.md`.
+`mixed_learning_plan.py` supports the legacy200-update plan and the declared
+5415-update pool pass, validating unique source coverage and terminal padding.
+`run_mixed_learning_epoch.sh` binds its model/objective/schedule/execution
+manifests to the shared runner; `job_mixed_learning_epoch.sh` supplies the
+bounded24h paid resources. No new model, loss or AD implementation is introduced.
+
 `probe_attention_fp32.py`, `probe_source_pooling_fp32.py` and
 `probe_reporting_norm_fp32.py` under `scripts/hpc/` own bounded component probes;
 their measurements do not establish full-model or scientific acceptance.
