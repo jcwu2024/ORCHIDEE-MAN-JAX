@@ -1,12 +1,26 @@
 import gzip
 import json
 from copy import deepcopy
+from dataclasses import replace
 from types import SimpleNamespace
 
 import pytest
 
-from scripts.hpc.mixed_learning_plan import EXPECTED_SAMPLING, load_plan
-
+from research.daily_coarse_graining.daily_operator.one_day_sampling import (
+    OneDayArtifact,
+    OneDaySampler,
+)
+from scripts.hpc.mixed_learning_plan import (
+    EXPECTED_EPOCH_DRAWS,
+    EXPECTED_EPOCH_PADDING_DRAWS,
+    EXPECTED_EPOCH_SOURCE_DRAWS,
+    EXPECTED_EPOCH_UPDATES,
+    EXPECTED_SAMPLING,
+    _epoch_daily_coverage,
+    _validate_configuration,
+    _validate_recurrent_schedule,
+    load_plan,
+)
 
 IDENTITY = {
     'dataset_manifest_sha256':'dataset',
@@ -27,6 +41,19 @@ def _window(prefix,artifact_id,length,start=0):
         'start_row':start,
         'teacher_day_keys':[[prefix,2000,day] for day in range(start,start+length)],
     }
+
+
+def _fixed_sampler():
+    artifact = OneDayArtifact.from_schedule_entry(1, {
+        'runtime_year':2000,
+        'components':{'one_day':[{
+            'landpoint_id':'daily-source','year':2000,'start_rows':list(range(5)),
+        }]},
+    })
+    return OneDaySampler(
+        [artifact],seed=20260912,batch_size=4,microbatch_size=2,
+        max_artifacts_per_batch=1,batch_packing='fixed_replay_pad',
+    )
 
 
 def _fixture(tmp_path):
@@ -148,6 +175,64 @@ def test_load_plan_freezes_200_daily_batches_and_recurrent_pairs(tmp_path):
     assert len(plan['identities']['catalogue_order']) == 64
     assert len(plan['identities']['recurrent_schedule']) == 64
     assert plan['daily_source'] == plan['paths']['daily_source']
+
+
+def test_epoch_schema_declares_one_complete_pool_pass():
+    configuration = {
+        'schema_version':'mixed_learning_epoch_v1',
+        'updates':EXPECTED_EPOCH_UPDATES,
+        'sampling':dict(EXPECTED_SAMPLING),
+        'recurrent_seed':20260914,
+    }
+
+    assert _validate_configuration(configuration) == 5415
+    assert EXPECTED_EPOCH_SOURCE_DRAWS == 346539
+    assert EXPECTED_EPOCH_DRAWS == 346560
+    assert EXPECTED_EPOCH_PADDING_DRAWS == 21
+
+
+def test_epoch_daily_coverage_accepts_only_sampler_terminal_replay_padding():
+    sampler = _fixed_sampler()
+    batches = tuple(sampler.iter_epoch(0))
+
+    rows,source_days = _epoch_daily_coverage(batches,sampler,batch_size=4)
+
+    assert len(rows) == sampler.draw_count == 8
+    assert len(source_days) == sampler.source_draw_count == 5
+    assert tuple(batch.padding_draw_count for batch in batches) == (0,3)
+    assert [row.day_key for row in rows[-3:]] == [batches[-1].rows[0].day_key]*3
+
+
+def test_epoch_daily_coverage_rejects_missing_distinct_source_day():
+    sampler = _fixed_sampler()
+    first,terminal = tuple(sampler.iter_epoch(0))
+    duplicated = replace(
+        terminal,
+        rows=(first.rows[0],)*len(terminal.rows),
+    )
+
+    with pytest.raises(ValueError,match='every source Teacher day exactly once'):
+        _epoch_daily_coverage((first,duplicated),sampler,batch_size=4)
+
+
+def test_recurrent_schedule_validation_uses_declared_update_budget(tmp_path):
+    args,_,schedule_path = _fixture(tmp_path)
+    schedule = json.loads(schedule_path.read_text())
+    schedule['updates'] = 2
+    schedule['update_rows'] = schedule['update_rows'][:2]
+    schedule['window_table'] = schedule['window_table'][:4]
+    development = json.loads(args.selection.read_text())
+    catalogue_path = json.loads(args.catalogue_report.read_text())['catalogue']
+    with gzip.open(catalogue_path,'rt',encoding='utf-8') as handle:
+        monitor_rows = json.load(handle)['monitor_rows']
+
+    rows = _validate_recurrent_schedule(
+        schedule,development,monitor_rows,updates=2,
+    )
+
+    assert len(rows) == 2
+    assert {row['T7']['landpoint_id'] for row in rows} == {'train-7-1','train-7-2'}
+    assert {row['T30']['landpoint_id'] for row in rows} == {'train-30-1','train-30-2'}
 
 
 @pytest.mark.parametrize('drift,match',[
