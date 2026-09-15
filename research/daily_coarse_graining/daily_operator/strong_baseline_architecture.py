@@ -31,6 +31,28 @@ from .types import AssembledDailyOperatorInput
 
 
 @dataclass(frozen=True)
+class NeuralPrecisionPolicy:
+    """Default-off precision options confined to low-sensitivity neural work."""
+
+    attention_scores_fp32: bool = False
+    source_family_pooling_fp32: bool = False
+
+    def validate(self) -> None:
+        if not isinstance(self.attention_scores_fp32, bool):
+            raise TypeError("attention_scores_fp32 must be boolean")
+        if not isinstance(self.source_family_pooling_fp32, bool):
+            raise TypeError("source_family_pooling_fp32 must be boolean")
+
+    @property
+    def attention_score_dtype(self) -> Any:
+        return jnp.float32 if self.attention_scores_fp32 else None
+
+    @property
+    def source_family_pooling_dtype(self) -> Any:
+        return jnp.float32 if self.source_family_pooling_fp32 else jnp.float64
+
+
+@dataclass(frozen=True)
 class StrongBaselineConfig:
     d_model: int = 384
     attention_heads: int = 8
@@ -43,8 +65,10 @@ class StrongBaselineConfig:
     axial_blocks: int = 1
     head_width: int = 256
     graph_rounds: int = 2
+    neural_precision: NeuralPrecisionPolicy = NeuralPrecisionPolicy()
 
     def validate(self, contract: StrongBaselineContract | None = None) -> None:
+        self.neural_precision.validate()
         if self.d_model % self.attention_heads or self.forcing_width % self.forcing_heads:
             raise ValueError("strong-baseline attention widths must divide their head counts")
         if self.ffn_width != 4 * self.d_model:
@@ -962,7 +986,14 @@ def _forcing_tokens(
     family = jnp.tile(jnp.asarray(layout.forcing_family_index, dtype=jnp.int32), records)
     pair_mask = valid[:, None] & valid[None, :] & (family[:, None] == family[None, :])
     for block in parameters["forcing_blocks"]:
-        message = _attention(block["attention"], tokens, tokens, heads=config.forcing_heads, mask=pair_mask)
+        message = _attention(
+            block["attention"],
+            tokens,
+            tokens,
+            heads=config.forcing_heads,
+            mask=pair_mask,
+            score_dtype=config.neural_precision.attention_score_dtype,
+        )
         tokens = _layer_norm(
             tokens + message,
             block["attention_norm_scale"],
@@ -1013,6 +1044,7 @@ def _factorized_axial_tokens(
             grouped_tokens,
             heads=config.attention_heads,
             mask=pair_mask,
+            score_dtype=config.neural_precision.attention_score_dtype,
         )
         grouped_tokens = _layer_norm(
             grouped_tokens + message,
@@ -1317,6 +1349,7 @@ def encode_strong_baseline_experts(
                 tokens,
                 heads=config.attention_heads,
                 mask=mask[None, :],
+                score_dtype=config.neural_precision.attention_score_dtype,
             )
             query = _layer_norm(
                 query + message,
@@ -1553,6 +1586,7 @@ def strong_baseline_process_outputs(
 
 
 __all__ = [
+    "NeuralPrecisionPolicy",
     "StrongBaselineConfig",
     "StrongBaselineContext",
     "StrongBaselineFieldContext",

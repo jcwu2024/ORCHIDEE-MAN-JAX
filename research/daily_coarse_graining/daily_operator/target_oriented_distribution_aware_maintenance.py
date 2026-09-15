@@ -20,6 +20,7 @@ from .neural_architecture import (
 from .parameter_routing import apply_fast_parameter_routes
 from .process_derivations import NativeForcingFieldLayout
 from .strong_baseline_architecture import (
+    NeuralPrecisionPolicy,
     StrongBaselineConfig,
     StrongBaselineContext,
     StrongBaselineLayout,
@@ -188,6 +189,7 @@ def distribution_aware_maintenance_corrections(
     maintenance_hidden: Any,
     *,
     config: DistributionAwareMaintenanceConfig = DistributionAwareMaintenanceConfig(),
+    neural_precision: NeuralPrecisionPolicy = NeuralPrecisionPolicy(),
 ) -> Any:
     """Return one bounded correction for every compact PFT/part coordinate."""
 
@@ -235,6 +237,7 @@ def distribution_aware_maintenance_corrections(
                 bank,
                 heads=config.attention_heads,
                 mask=attention_mask,
+                score_dtype=neural_precision.attention_score_dtype,
             ),
             block["attention_norm_scale"],
             block["attention_norm_bias"],
@@ -293,6 +296,7 @@ def target_oriented_distribution_aware_maintenance_process_outputs(
         context,
         hidden[MAINTENANCE_FIELD],
         config=config,
+        neural_precision=baseline_config.neural_precision,
     )
     outputs[MAINTENANCE_FIELD] = materialize_part_resolved_source_shaped_maintenance(
         inputs,

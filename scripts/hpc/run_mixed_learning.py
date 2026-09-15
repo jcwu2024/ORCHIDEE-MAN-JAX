@@ -97,6 +97,84 @@ def saved_gradient_path(report_path, report, name):
     return Path(recorded) if recorded else report_path.with_suffix(f'.{name}.reference.pkl')
 
 
+_PRECISION_STAGES = ('daily', 'T7', 'T30', 'full')
+
+
+def precision_stage_components(stage):
+    """Return the fixed update components admitted by a precision stage."""
+    if stage not in _PRECISION_STAGES:
+        raise ValueError('unsupported precision stage')
+    return ('daily', 'T7', 'T30') if stage == 'full' else (stage,)
+
+
+def precision_reference_path(report_path, report, component):
+    """Resolve an immutable legacy full-gradient reference for one component."""
+    if component not in ('daily', 'T7', 'T30'):
+        raise ValueError('unsupported precision reference component')
+    if component == 'daily':
+        recorded = report.get('precision_comparisons', {}).get('daily', {}).get(
+            'reference_gradient'
+        )
+        return Path(recorded) if recorded else None
+    return saved_gradient_path(report_path, report, component)
+
+
+def precision_reference_identity(component, *, checkpoint, rows=None, window=None):
+    """Small, serializable identity for a cached fixed-panel gradient."""
+    if component == 'daily':
+        if rows is None or window is not None:
+            raise ValueError('daily precision reference requires rows only')
+    elif component in ('T7', 'T30'):
+        if window is None or rows is not None:
+            raise ValueError('recurrent precision reference requires one window only')
+    else:
+        raise ValueError('unsupported precision reference component')
+    return dict(component=component, checkpoint=str(checkpoint), rows=rows, window=window)
+
+
+def _mask_precision_auxiliary_rows(values, valid):
+    """Zero undefined row values while retaining the validity mask itself."""
+    result = {}
+    valid = np.asarray(valid, dtype=np.bool_)
+    for name, value in values.items():
+        array = np.asarray(value)
+        if (array.dtype.kind in 'fc' and array.ndim >= valid.ndim
+                and array.shape[:valid.ndim] == valid.shape):
+            mask = valid.reshape(valid.shape + (1,) * (array.ndim - valid.ndim))
+            array = np.where(mask, array, 0.)
+        result[name] = array
+    return result
+
+
+def masked_precision_daily_auxiliary(jax, auxiliary):
+    """Keep daily loss terms plus only defined canopy/litter numeric entries."""
+    host = jax.device_get({
+        'terms': auxiliary['terms'],
+        'physical': auxiliary['physical'],
+        'canopy_stock_change': auxiliary['canopy_stock_change'],
+        'litterpart_feedback': auxiliary['litterpart_feedback'],
+    })
+    canopy = host['canopy_stock_change']
+    litter = host['litterpart_feedback']
+    physical = {
+        group: {
+            name: _mask_precision_auxiliary_rows(field, np.asarray(field['defined']))
+            for name, field in fields.items()
+        }
+        for group, fields in host['physical'].items()
+    }
+    return {
+        'terms': np.asarray(host['terms']),
+        'physical': physical,
+        'canopy_stock_change': _mask_precision_auxiliary_rows(
+            canopy, np.asarray(canopy['row_valid']) & np.asarray(canopy['scale_valid'])
+        ),
+        'litterpart_feedback': _mask_precision_auxiliary_rows(
+            litter, np.asarray(litter['valid'])
+        ),
+    }
+
+
 def run(args):
     from research.daily_coarse_graining.daily_operator.canonical_rollout import make_canonical_step
     from research.daily_coarse_graining.daily_operator.fresh_start_training import make_objective, make_update
@@ -135,6 +213,14 @@ def run(args):
         raise ValueError('checked-recurrent admission requires fixed-checkpoint profiling')
     if args.checked_reference_report and not args.compare_checked_recurrent:
         raise ValueError('reference reuse is only for checked-recurrent admission')
+    if args.precision_stage and not profiling:
+        raise ValueError('precision staging requires fixed-checkpoint profiling')
+    if args.precision_reference_report and not args.precision_stage:
+        raise ValueError('precision reference reuse requires a precision stage')
+    if args.precision_daily_reference and not args.precision_stage:
+        raise ValueError('daily precision reference reuse requires a precision stage')
+    if args.precision_stage and args.compare_checked_recurrent:
+        raise ValueError('precision staging and checked-recurrent admission are separate diagnostics')
     if args.separate_checked_validation and not (args.compare_checked_recurrent or args.checked_recurrent):
         raise ValueError('separate validation requires checked execution or comparison')
     if args.checked_recurrent and profiling:
@@ -150,6 +236,19 @@ def run(args):
     validate_configuration(config, model)
     if (args.mixed_protocol.parent/config['model_protocol']).resolve() != args.protocol.resolve():
         raise ValueError('CLI and mixed model protocols differ')
+    precision_stage = args.precision_stage
+    precision_components = (() if precision_stage is None
+                            else precision_stage_components(precision_stage))
+    precision_candidate = getattr(args, 'attention_score_dtype', 'legacy') == 'fp32'
+    if precision_candidate and precision_stage is None:
+        raise ValueError('FP32 Attention is limited to explicit fixed-checkpoint precision staging')
+    if precision_candidate and precision_stage:
+        needs_profile_reference = any(name in ('T7', 'T30') for name in precision_components)
+        needs_daily_reference = 'daily' in precision_components
+        if needs_profile_reference and args.precision_reference_report is None:
+            raise ValueError('FP32 recurrent precision staging requires an immutable legacy profile report')
+        if needs_daily_reference and args.precision_daily_reference is None:
+            raise ValueError('FP32 daily precision staging requires an immutable legacy daily gradient')
     limit = args.integration_updates or config['updates']
     scope = ('performance_profile_not_training' if profiling else
              'integration_only' if args.integration_updates else 'bounded_200_update_learning')
@@ -160,6 +259,13 @@ def run(args):
         configuration=config, model_protocol=model, scope=scope, completed_updates=0,
         updates=[], monitors=[], compilation={}, checkpoints=[],
         scientific_acceptance=False, checkpoint_inherited=False)
+    if precision_stage:
+        report.update(precision_study=dict(stage=precision_stage,
+            candidate_attention_score_dtype=getattr(args, 'attention_score_dtype', 'legacy'),
+            components=list(precision_components),
+            recurrent_execution='legacy_original_for_attention_attribution',
+            claim_scope='fixed loss/full-gradient/hard-counter parity; not full-state equivalence',
+            retained_parameter_or_optimizer_state=False))
     if args.resume and args.output.exists():
         previous = json.loads(args.output.read_text())
         if (previous['configuration'], previous['model_protocol'], previous['scope']) != (config,model,scope):
@@ -339,6 +445,8 @@ def run(args):
 
         checked_lowerings = {}
         reference_report = None
+        precision_reference_report = None
+        precision_reference_paths = {}
         if args.checked_reference_report:
             reference_report = json.loads(args.checked_reference_report.read_text())
             if (reference_report.get('configuration') != config
@@ -347,6 +455,27 @@ def run(args):
                     or reference_report.get('profile',{}).get('status') != 'completed'):
                 raise ValueError('saved original profile does not match this diagnostic')
             report['original_reference_report'] = str(args.checked_reference_report)
+        if args.precision_reference_report:
+            precision_reference_report = json.loads(args.precision_reference_report.read_text())
+            if (precision_reference_report.get('configuration') != config
+                    or precision_reference_report.get('model_protocol') != model
+                    or precision_reference_report.get('profile_source_checkpoint') != str(args.profile_checkpoint)
+                    or precision_reference_report.get('status') != 'completed'):
+                raise ValueError('precision reference does not match this fixed checkpoint')
+            report['precision_reference_report'] = str(args.precision_reference_report)
+        if precision_stage:
+            for name in precision_components:
+                path = (args.precision_daily_reference if name == 'daily'
+                        and args.precision_daily_reference is not None else None)
+                if path is None and precision_reference_report is not None:
+                    path = precision_reference_path(
+                        args.precision_reference_report, precision_reference_report, name
+                    )
+                if precision_candidate and (path is None or not path.is_file()):
+                    raise FileNotFoundError('immutable legacy precision reference is unavailable for ' + name)
+                if path is not None and not path.is_file():
+                    raise FileNotFoundError('precision reference gradient is unavailable for ' + name)
+                precision_reference_paths[name] = path
         if args.compare_checked_recurrent or args.checked_recurrent:
             from scripts.hpc.checked_recurrent_execution import bind_checked_backward, wrap_separate_checked
 
@@ -367,6 +496,8 @@ def run(args):
         for name,fn,arguments in [('T7',backward,(parameters,*cases[7][:4],context)),
                                   ('T30',backward,(parameters,*cases[30][:4],context)),
                                   ('daily',daily_backward,(parameters,first_daily,coefficients))]:
+            if precision_stage and name not in precision_components:
+                continue
             if reference_report is not None:
                 # Compile missing references only when their horizon is reached.
                 continue
@@ -418,6 +549,166 @@ def run(args):
 
         if profiling:
             from scripts.hpc.mixed_learning_profiling import _parity, profile_components
+
+            if precision_stage:
+                from research.daily_coarse_graining.daily_operator.one_day_training_state import _atomic_pickle
+                from scripts.hpc.probe_public_rollout import gradient_comparison
+
+                comparisons = {}
+                for name in precision_components:
+                    if name == 'daily':
+                        row_identity = [dict(row) for row in fixed_rows]
+                        identity = precision_reference_identity(
+                            name, checkpoint=args.profile_checkpoint, rows=row_identity
+                        )
+                        daily_total = jax.tree_util.tree_map(jnp.zeros_like, parameters)
+                        daily_loss, daily_hard = 0., {}
+                        daily_auxiliary_rows = []
+                        began = time.perf_counter()
+                        for start in range(0, 64, 8):
+                            (value, auxiliary), gradient = executables[name](
+                                parameters, sample(fixed_rows[start:start + 8]), coefficients
+                            )
+                            hard = calibration._hard_summary(
+                                jax.device_get(auxiliary['hard']), batch_size=8
+                            )
+                            if not np.isfinite(float(value)) or not hard['all_zero']:
+                                raise ValueError('daily precision stage failed physical/finite gates')
+                            daily_auxiliary_rows.append(
+                                masked_precision_daily_auxiliary(jax, auxiliary)
+                            )
+                            for hard_name, count in hard['totals'].items():
+                                daily_hard[hard_name] = daily_hard.get(hard_name, 0) + count
+                            daily_total = add(daily_total, gradient, 8)
+                            daily_loss += float(value) / 8
+                            del value, auxiliary, gradient, hard
+                        value, gradient = daily_loss, finish(daily_total, 64)
+                        jax.block_until_ready(gradient)
+                        hard = daily_hard
+                        daily_auxiliary = jax.tree_util.tree_map(
+                            lambda *rows: np.concatenate([np.asarray(row) for row in rows], axis=0),
+                            *daily_auxiliary_rows,
+                        )
+                        del daily_total
+                    else:
+                        row = next(row for row in fixed_windows if row['length'] == int(name[1:]))
+                        identity = precision_reference_identity(
+                            name, checkpoint=args.profile_checkpoint, window=row
+                        )
+                        case, hard = valid_recurrent(row)
+                        began = time.perf_counter()
+                        value, gradient = executables[name](parameters, *case[:4], context)
+                        jax.block_until_ready(gradient)
+                        value = float(value)
+                        del case
+                    execution_seconds = time.perf_counter() - began
+                    path = precision_reference_paths[name]
+                    if path is None and precision_candidate:
+                        raise ValueError('FP32 precision stage cannot generate its own legacy reference')
+                    if path is None:
+                        path = args.output.with_suffix(f'.{name}.precision-reference.pkl')
+
+                    if path.is_file():
+                        import pickle
+
+                        with path.open('rb') as handle:
+                            saved_reference = pickle.load(handle)
+                        saved_identity = saved_reference.get('identity')
+                        if saved_identity is None:
+                            # Checked recurrent references predate the generic precision cache.
+                            if (name == 'daily' or saved_reference.get('checkpoint') != str(args.profile_checkpoint)
+                                    or saved_reference.get('window') != identity['window']):
+                                raise ValueError('precision reference belongs to a different fixed panel')
+                        elif saved_identity != identity:
+                            raise ValueError('precision reference identity differs')
+                        old_value, reference, old_hard = (
+                            saved_reference[key] for key in ('value', 'gradient', 'hard')
+                        )
+                        reference_auxiliary = saved_reference.get('daily_auxiliary')
+                        del saved_reference
+                        comparison = gradient_comparison(jax, gradient, reference)
+                        if name == 'daily':
+                            if reference_auxiliary is None:
+                                raise ValueError('daily precision reference lacks auxiliary-term evidence')
+                            auxiliary_comparison = gradient_comparison(
+                                jax, daily_auxiliary, reference_auxiliary
+                            )
+                            comparison['daily_auxiliary_comparison'] = auxiliary_comparison
+                        comparison.update(
+                            loss_equal=bool(np.isclose(value, old_value, atol=1e-6, rtol=1e-5)),
+                            old_loss=float(old_value), new_loss=float(value),
+                            physical_counts_equal=hard == old_hard,
+                            all_hard_zero=not any(hard.values()),
+                            reference_gradient=str(path), hard=hard,
+                            execution_seconds=execution_seconds,
+                        )
+                        candidate_path = args.output.with_suffix(f'.{name}.candidate-gradient.pkl')
+                        candidate = dict(identity=identity, value=value,
+                                         gradient=jax.device_get(gradient), hard=hard)
+                        if name == 'daily':
+                            candidate['daily_auxiliary'] = daily_auxiliary
+                        _atomic_pickle(candidate_path, candidate)
+                        comparison['candidate_gradient'] = str(candidate_path)
+                        comparisons[name] = comparison
+                        report['precision_comparisons'] = comparisons
+                        emit('precision_compared_' + name, precision_comparisons=comparisons)
+                        if not (comparison['passed'] and comparison['loss_equal']
+                                and comparison['physical_counts_equal'] and comparison['all_hard_zero']
+                                and (name != 'daily' or comparison['daily_auxiliary_comparison']['passed'])):
+                            raise ValueError(name + ' precision loss/gradient/physical comparison failed')
+                    else:
+                        reference_payload = dict(identity=identity, value=value,
+                                                 gradient=jax.device_get(gradient), hard=hard)
+                        if name == 'daily':
+                            reference_payload['daily_auxiliary'] = daily_auxiliary
+                        _atomic_pickle(path, reference_payload)
+                        comparison = dict(reference_gradient=str(path), baseline_captured=True,
+                                          loss=float(value), hard=hard,
+                                          all_hard_zero=not any(hard.values()),
+                                          execution_seconds=execution_seconds)
+                        if not comparison['all_hard_zero']:
+                            raise ValueError(name + ' legacy precision reference has hard failures')
+                        comparisons[name] = comparison
+                        report['precision_comparisons'] = comparisons
+                        emit('precision_compared_' + name, precision_comparisons=comparisons)
+                    del gradient
+
+                if precision_stage != 'full':
+                    emit('completed', status='completed', persistent_parameter_updates=0,
+                         memory=_device_memory(runtime['devices'][0]),
+                         daily_reader=daily_pool.statistics())
+                    return report
+
+                if precision_reference_report is None:
+                    raise ValueError('full precision timing requires the immutable legacy profile report')
+                profile_arguments = dict(jax=jax,jnp=jnp,parameters=parameters,optimizer=optimizer,
+                    sample=sample,daily_rows=fixed_rows,
+                    recurrent_rows={row['length']:row for row in fixed_windows},window_pool=train_pool,
+                    daily_executable=executables['daily'],
+                    recurrent_executables={7:executables['T7'],30:executables['T30']},
+                    coefficients=coefficients,context=context,forward=forward,
+                    validate_recurrent=validate_recurrent,update=update,add=add,finish=finish,
+                    combine=combine,finite=finite,norm_fn=norm_fn,repeats=args.profile_repeats,
+                    trace_dir=None,emit=emit)
+                profile = profile_components(**profile_arguments)
+                legacy_profile = precision_reference_report.get('profile')
+                if not isinstance(legacy_profile, dict) or legacy_profile.get('status') != 'completed':
+                    raise ValueError('full precision timing reference lacks a completed legacy profile')
+                parity = _parity(legacy_profile['baseline']['records'], profile['baseline']['records'])
+                if not parity['passed']:
+                    raise ValueError('full precision update differs from immutable legacy profile')
+                before = legacy_profile['baseline']['median_seconds']
+                after = profile['baseline']['median_seconds']
+                emit('precision_full_profile_completed', profile=profile,
+                     precision_full_parity=parity, legacy_baseline_seconds=before,
+                     candidate_baseline_seconds=after, speedup=before / after,
+                     time_reduction=1. - after / before,
+                     same_process_timing_comparison=False,
+                     timing_scope='legacy_original_recurrent_execution_not_checked_split')
+                emit('completed', status='completed', profile=profile,
+                     persistent_parameter_updates=0, memory=_device_memory(runtime['devices'][0]),
+                     daily_reader=daily_pool.statistics())
+                return report
 
             profile_arguments = dict(jax=jax,jnp=jnp,parameters=parameters,optimizer=optimizer,
                 sample=sample,daily_rows=fixed_rows,
@@ -628,6 +919,12 @@ def parser():
     result.add_argument('--checked-recurrent',action='store_true')
     result.add_argument('--separate-checked-validation',action='store_true')
     result.add_argument('--checked-reference-report',type=Path)
+    result.add_argument('--precision-stage', choices=_PRECISION_STAGES,
+                        help='fixed-checkpoint legacy/FP32 component admission; never trains')
+    result.add_argument('--precision-reference-report', type=Path,
+                        help='immutable legacy precision-stage/profile result to reuse')
+    result.add_argument('--precision-daily-reference', type=Path,
+                        help='immutable legacy daily64 full-gradient cache')
     return result
 
 

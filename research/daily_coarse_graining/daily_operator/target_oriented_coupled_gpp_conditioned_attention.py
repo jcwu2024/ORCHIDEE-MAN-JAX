@@ -18,6 +18,7 @@ from .neural_architecture import (
 )
 from .process_derivations import NativeForcingFieldLayout
 from .strong_baseline_architecture import (
+    NeuralPrecisionPolicy,
     StrongBaselineConfig,
     StrongBaselineContext,
     StrongBaselineLayout,
@@ -301,6 +302,7 @@ def conditioned_coupled_gpp_factorization(
     structured_config: StructuredGPPConfig = StructuredGPPConfig(),
     coupled_config: CoupledGPPCarbonFeedbackConfig = CoupledGPPCarbonFeedbackConfig(),
     config: CoupledGPPConditionedAttentionConfig = CoupledGPPConditionedAttentionConfig(),
+    neural_precision: NeuralPrecisionPolicy = NeuralPrecisionPolicy(),
 ) -> StructuredGPPFactorization:
     return coupled_gpp_carbon_feedback_factorization(
         parameters,
@@ -314,6 +316,7 @@ def conditioned_coupled_gpp_factorization(
         output_normalization=output_normalization,
         structured_config=structured_config,
         config=coupled_config,
+        neural_precision=neural_precision,
         potential_attention_temperatures=coupled_gpp_conditioned_attention_temperatures(
             parameters,
             config=config,

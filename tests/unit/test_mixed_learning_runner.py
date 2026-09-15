@@ -17,6 +17,9 @@ from scripts.hpc.run_mixed_learning import (
     checkpoint_path,
     lowered_precision_summary,
     newest_checkpoint,
+    precision_reference_identity,
+    precision_reference_path,
+    precision_stage_components,
     profile_source_method,
     saved_gradient_path,
     trim_resume_report,
@@ -51,6 +54,32 @@ def test_reference_reuse_keeps_original_paths_across_interrupted_attempts(tmp_pa
     assert saved_gradient_path(later, {'reference_gradient': str(original)}, 'T30') == later.with_suffix('.T30.reference.pkl')
     record = {'checked_comparisons': {'T7': {'reference_gradient': str(original)}}}
     assert saved_gradient_path(later, record, 'T7') == original
+
+
+def test_precision_stages_and_reference_paths_are_component_specific(tmp_path):
+    assert precision_stage_components('daily') == ('daily',)
+    assert precision_stage_components('T7') == ('T7',)
+    assert precision_stage_components('full') == ('daily', 'T7', 'T30')
+    with pytest.raises(ValueError, match='unsupported precision stage'):
+        precision_stage_components('weekly')
+
+    daily = tmp_path / 'legacy.daily.precision-reference.pkl'
+    t7 = tmp_path / 'legacy.T7.reference.pkl'
+    report = {
+        'precision_comparisons': {'daily': {'reference_gradient': str(daily)}},
+        'checked_comparisons': {'T7': {'reference_gradient': str(t7)}},
+    }
+    report_path = tmp_path / 'legacy.json'
+    assert precision_reference_path(report_path, report, 'daily') == daily
+    assert precision_reference_path(report_path, report, 'T7') == t7
+    assert precision_reference_path(report_path, report, 'T30') == report_path.with_suffix('.T30.reference.pkl')
+
+    rows = [{'artifact_id': 1, 'batch_row': 2}]
+    assert precision_reference_identity('daily', checkpoint='checkpoint.pkl', rows=rows) == {
+        'component': 'daily', 'checkpoint': 'checkpoint.pkl', 'rows': rows, 'window': None,
+    }
+    with pytest.raises(ValueError, match='daily precision'):
+        precision_reference_identity('daily', checkpoint='checkpoint.pkl')
 
 
 def _loss(parameters, features, targets):

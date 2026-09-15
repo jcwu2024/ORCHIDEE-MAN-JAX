@@ -35,6 +35,7 @@ def bootstrap(args, protocol):
         load_mechanistic_output_contract,
     )
     from research.daily_coarse_graining.daily_operator.mechanistic_process_head import build_mechanistic_output_layout
+    from research.daily_coarse_graining.daily_operator.strong_baseline_architecture import NeuralPrecisionPolicy
     from research.daily_coarse_graining.daily_operator.strong_baseline_contract import load_strong_baseline_contract
     from research.daily_coarse_graining.daily_operator.target_oriented_contract import load_target_oriented_contract
     from research.daily_coarse_graining.daily_operator.target_oriented_training import (
@@ -62,9 +63,18 @@ def bootstrap(args, protocol):
         artifacts.append(artifact)
     template = _prepare_template(runtime, artifacts[0].schedule_entry)
     template = replace(template, static_owner=replace(template.static_owner, include_modelout_diagnostics=False))
+    attention_score_dtype = getattr(args, 'attention_score_dtype', 'legacy')
+    if attention_score_dtype not in ('legacy', 'fp32'):
+        raise ValueError('unsupported Attention score precision')
+    if (attention_score_dtype == 'fp32' and not (
+            getattr(args, 'admission_only', False) or getattr(args, 'shape_only', False)
+            or getattr(args, 'cpu_forward_only', False)
+            or getattr(args, 'precision_stage', None))):
+        raise ValueError('FP32 Attention is limited to an explicit diagnostic admission')
     head = build_fresh_head(
         _head(runtime, target), template, threshold=protocol['input_conditioning']['threshold'],
-        apply_gsmean_applicability=protocol.get('output_applicability', {}).get('gsmean_bare_soil_zero', False))
+        apply_gsmean_applicability=protocol.get('output_applicability', {}).get('gsmean_bare_soil_zero', False),
+        neural_precision=NeuralPrecisionPolicy(attention_scores_fp32=attention_score_dtype == 'fp32'))
     parameters = initialize_fresh_parameters(head, runtime['probe_assembled'], seed=protocol['seed'])
     scales = derive_target_oriented_scales(runtime['base_statistics'].arrays['next_state'].scale,
         runtime['process_statistics'].outputs['daily.fast_gpp'].scale, runtime['contract'],
@@ -306,6 +316,8 @@ def parser():
     result.add_argument('--admission-only', action='store_true')
     result.add_argument('--shape-only', action='store_true', help='CPU trace of the complete loss on actual samples; no model execution or updates')
     result.add_argument('--cpu-forward-only', action='store_true', help='CPU numerical forward/physical checks only; no gradients or training')
+    result.add_argument('--attention-score-dtype', choices=('legacy', 'fp32'), default='legacy',
+                        help='default-off diagnostic Attention score/softmax/value precision policy')
     return result
 
 

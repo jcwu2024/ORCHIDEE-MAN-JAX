@@ -3,7 +3,7 @@
 set -euo pipefail
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 CODE_ROOT=${CODE_ROOT:?declare reviewed checkout}
-MODE=${1:?metadata, shape, integration, profile, checked-profile, or train}
+MODE=${1:?metadata, shape, integration, profile, checked-profile, precision-profile, or train}
 shift
 PRINT_ONLY=false
 if [[ "${1:-}" == --dry-run ]]; then PRINT_ONLY=true; shift; fi
@@ -41,12 +41,12 @@ case "$MODE" in
         --output "${OUTPUT:-$DIAG/mixed-learning-v1-shape.json}" "$@"
     fi
     ;;
-  integration|profile|checked-profile|train)
-    if [[ "$MODE" == integration || "$MODE" == profile || "$MODE" == checked-profile ]]; then
+  integration|profile|checked-profile|precision-profile|train)
+    if [[ "$MODE" == integration || "$MODE" == profile || "$MODE" == checked-profile || "$MODE" == precision-profile ]]; then
       if ! "$PRINT_ONLY"; then
         case "$(hostname -s)" in gln01|ibgln01|ibc13b02n04) ;; *) exit 2;; esac
       fi
-      if [[ "$MODE" == profile || "$MODE" == checked-profile ]]; then
+      if [[ "$MODE" == profile || "$MODE" == checked-profile || "$MODE" == precision-profile ]]; then
         ARGS+=(--profile-checkpoint "$ROOT/runtime/outputs/training/mixed-learning-v1/report.update-000200.checkpoint.pkl"
           --profile-training-report "$ROOT/runtime/outputs/training/mixed-learning-v1/report.json"
           --profile-repeats 3)
@@ -63,6 +63,18 @@ case "$MODE" in
               PYTHON_MODULE=scripts.hpc.check_daily_training_runtime RUN_TIMEOUT=3m \
               OUTPUT="$DIAG/mixed-learning-checked-profile-v1-runtime.json" \
               bash "$CODE_ROOT/scripts/hpc/run_fresh_start_one_day.sh" --backend gpu
+          fi
+        elif [[ "$MODE" == precision-profile ]]; then
+          : "${PRECISION_STAGE:?daily, T7, T30, or full}"
+          ARGS+=(--precision-stage "$PRECISION_STAGE"
+            --attention-score-dtype "${ATTENTION_SCORE_DTYPE:-legacy}")
+          DEFAULT_OUTPUT=$DIAG/mixed-learning-attention-${ATTENTION_SCORE_DTYPE:-legacy}-${PRECISION_STAGE}-v1.json
+          DEFAULT_TIMEOUT=50m
+          if [[ -n "${PRECISION_REFERENCE_REPORT:-}" ]]; then
+            ARGS+=(--precision-reference-report "$PRECISION_REFERENCE_REPORT")
+          fi
+          if [[ -n "${PRECISION_DAILY_REFERENCE:-}" ]]; then
+            ARGS+=(--precision-daily-reference "$PRECISION_DAILY_REFERENCE")
           fi
         else
           ARGS+=(--profile-trace)

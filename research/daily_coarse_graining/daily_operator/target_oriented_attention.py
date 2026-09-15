@@ -18,6 +18,7 @@ from .output_transform import normalized_output_to_physical
 from .parameter_routing import apply_fast_parameter_routes
 from .process_derivations import NativeForcingFieldLayout
 from .strong_baseline_architecture import (
+    NeuralPrecisionPolicy,
     StrongBaselineConfig,
     StrongBaselineContext,
     StrongBaselineLayout,
@@ -309,6 +310,8 @@ def _source_family_bank(
     context: StrongBaselineContext,
     layout: StrongBaselineLayout,
     expert_index: int,
+    *,
+    neural_precision: NeuralPrecisionPolicy = NeuralPrecisionPolicy(),
 ) -> tuple[Any, Any]:
     family_count = len(layout.source_family_names)
     family = jnp.asarray(context.source_family_index, dtype=jnp.int32)
@@ -316,10 +319,12 @@ def _source_family_bank(
     selected &= jnp.asarray(context.source_mask, dtype=jnp.bool_)[None, :]
     selected &= jnp.asarray(layout.source_allowed[expert_index], dtype=jnp.bool_)[:, None]
     count = jnp.sum(selected, axis=1, dtype=jnp.float32)
+    pooling_dtype = neural_precision.source_family_pooling_dtype
     tokens = jnp.sum(
-        selected[:, :, None].astype(jnp.float64) * jnp.asarray(context.source_tokens, dtype=jnp.float64)[None, :, :],
+        selected[:, :, None].astype(pooling_dtype)
+        * jnp.asarray(context.source_tokens, dtype=pooling_dtype)[None, :, :],
         axis=1,
-        dtype=jnp.float64,
+        dtype=pooling_dtype,
     ) / jnp.maximum(count[:, None], 1.0)
     valid = count > 0.0
     return jnp.asarray(jnp.where(valid[:, None], tokens, 0.0), dtype=jnp.float32), valid
@@ -374,6 +379,7 @@ def encode_target_oriented_domains(
                 bank,
                 heads=config.attention_heads,
                 mask=mask[None, :],
+                score_dtype=baseline_config.neural_precision.attention_score_dtype,
             )
             query = _layer_norm(
                 query + message,
@@ -397,6 +403,7 @@ def encode_target_oriented_domains(
             domain_tokens,
             heads=config.attention_heads,
             mask=science_mask,
+            score_dtype=baseline_config.neural_precision.attention_score_dtype,
         )
         science = _layer_norm(
             science + message,
@@ -419,6 +426,7 @@ def encode_target_oriented_domains(
             science,
             heads=config.attention_heads,
             mask=full_mask,
+            score_dtype=baseline_config.neural_precision.attention_score_dtype,
         )
         science = _layer_norm(
             science + message,
@@ -443,6 +451,7 @@ def _coordinate_attention(
     category_index: int,
     blocks: tuple[Mapping[str, Any], ...],
     config: TargetOrientedAttentionConfig,
+    neural_precision: NeuralPrecisionPolicy = NeuralPrecisionPolicy(),
 ) -> Any:
     size = field_context.features.shape[0]
     family_bank = jnp.broadcast_to(
@@ -483,6 +492,7 @@ def _coordinate_attention(
             bank,
             heads=config.attention_heads,
             mask=mask[:, None, :],
+            score_dtype=neural_precision.attention_score_dtype,
         )
         query = _layer_norm(
             query + message,
@@ -526,7 +536,13 @@ def _target_oriented_attention_decoded_outputs(
         config=config,
     )
     family_banks = tuple(
-        _source_family_bank(context, layout, expert_index) for expert_index in range(len(layout.expert_names))
+        _source_family_bank(
+            context,
+            layout,
+            expert_index,
+            neural_precision=baseline_config.neural_precision,
+        )
+        for expert_index in range(len(layout.expert_names))
     )
     target = parameters["target_oriented"]
     science_summary = jnp.mean(science_tokens, axis=0)
@@ -560,6 +576,7 @@ def _target_oriented_attention_decoded_outputs(
                 category_index=LEARNED_CATEGORIES.index(category),
                 blocks=target["primary_blocks"],
                 config=config,
+                neural_precision=baseline_config.neural_precision,
             )
             hidden = jax.nn.gelu(_linear(target["primary_decoder"], encoded))
             if field.name in deferred_primary_fields:
@@ -575,6 +592,7 @@ def _target_oriented_attention_decoded_outputs(
                 category_index=LEARNED_CATEGORIES.index(category),
                 blocks=target["state_blocks"],
                 config=config,
+                neural_precision=baseline_config.neural_precision,
             )
             hidden = jax.nn.gelu(_linear(target["state_decoder"], encoded))
             raw = _linear(target["state_heads"][field_index], hidden)[:, 0]

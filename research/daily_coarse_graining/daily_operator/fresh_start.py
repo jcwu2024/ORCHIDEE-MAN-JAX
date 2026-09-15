@@ -6,6 +6,7 @@ from dataclasses import replace
 import jax
 import numpy as np
 
+from .strong_baseline_architecture import NeuralPrecisionPolicy
 from .target_oriented_attention import initialize_target_oriented_attention_parameters
 from .target_oriented_coupled_gpp_carbon_feedback import initialize_coupled_gpp_carbon_feedback_parameters
 from .target_oriented_coupled_gpp_conditioned_attention import initialize_coupled_gpp_conditioned_attention_parameters
@@ -25,8 +26,13 @@ def build_fresh_head(
     *,
     threshold=16.0,
     apply_gsmean_applicability=False,
+    neural_precision: NeuralPrecisionPolicy = NeuralPrecisionPolicy(),
 ):
     """Construct the existing topology with exact static owners and DOC conditioning."""
+    parent_head = replace(
+        parent_head,
+        config=replace(parent_head.config, neural_precision=neural_precision),
+    )
     head = build_target_oriented_distribution_aware_maintenance_head(parent_head, retained_tail)
     head = build_target_oriented_structured_gpp_head(head)
     head = build_target_oriented_coupled_gpp_carbon_feedback_head(head)

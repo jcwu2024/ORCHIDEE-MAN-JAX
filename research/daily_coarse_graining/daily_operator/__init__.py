@@ -178,6 +178,7 @@ from .retained_tail import (
     plumbing_test_retained_tail_adapter,
 )
 from .strong_baseline_architecture import (
+    NeuralPrecisionPolicy,
     StrongBaselineConfig,
     StrongBaselineContext,
     StrongBaselineFieldContext,
@@ -515,6 +516,7 @@ __all__ = [
     "RolloutHardGateCounts",
     "SOURCE_ROUTED_ATTENTION",
     "SOURCE_ROUTED_GRAPH_CONTROL",
+    "NeuralPrecisionPolicy",
     "StrongBaselineConfig",
     "StrongBaselineContext",
     "StrongBaselineFieldContext",

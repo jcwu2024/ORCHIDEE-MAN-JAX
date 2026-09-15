@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+User now authorizes unnecessary-FP64 removal independently of future hardware.
+Implementing explicit full-head Attention/pooling policies and staged real-model
+precision comparisons. Reporting norm probe completed19.65s on free V100:
+actual109M T7/T30 gradient norms match within5e-8 relative, saving only0.06--0.13ms
+per norm. This is a minor cost; prioritize neural Attention. The deployed runtime
+check passed22.12s. No paid task or retained training updates in this work.
+See `research/daily_coarse_graining/reporting_norm_fp32_results_20260915.md`.
+
 User-directed current priority: FP64-to-FP32 attribution for possible RTX5090
 migration. The shared Attention denominator is a NumPy FP64 scalar, promoting
 scores, softmax and value matmul. All parameter/projection arrays being FP32

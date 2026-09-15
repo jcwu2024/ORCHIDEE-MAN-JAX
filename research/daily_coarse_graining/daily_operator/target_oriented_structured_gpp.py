@@ -26,6 +26,7 @@ from .parameter_routing import (
 )
 from .process_derivations import NativeForcingFieldLayout
 from .strong_baseline_architecture import (
+    NeuralPrecisionPolicy,
     StrongBaselineConfig,
     StrongBaselineContext,
     StrongBaselineLayout,
@@ -334,6 +335,7 @@ def _structured_forcing_tokens(
     inputs: AssembledDailyOperatorInput,
     normalization: NeuralInputNormalization,
     config: StructuredGPPConfig,
+    neural_precision: NeuralPrecisionPolicy = NeuralPrecisionPolicy(),
 ) -> tuple[Any, Any, Any]:
     forcing = inputs.forcing
     values = _standardize(forcing.values, normalization.forcing_mean, normalization.forcing_scale)
@@ -360,6 +362,7 @@ def _structured_forcing_tokens(
                 tokens,
                 heads=config.attention_heads,
                 mask=pair_mask,
+                score_dtype=neural_precision.attention_score_dtype,
             ),
             block["attention_norm_scale"],
             block["attention_norm_bias"],
@@ -532,6 +535,7 @@ def _run_gpp_branch(
     *,
     active: Any,
     config: StructuredGPPConfig,
+    neural_precision: NeuralPrecisionPolicy = NeuralPrecisionPolicy(),
     attention_temperatures: Any | None = None,
     attention_normalization_epsilon: float = 1.0e-6,
 ) -> Any:
@@ -548,6 +552,7 @@ def _run_gpp_branch(
                 bank,
                 heads=config.attention_heads,
                 mask=bank_mask[:, None, :],
+                score_dtype=neural_precision.attention_score_dtype,
             )
             if attention_temperatures is None
             else bounded_cosine_attention(
@@ -620,6 +625,7 @@ def structured_gpp_factorization(
     input_normalization: NeuralInputNormalization,
     output_normalization: NeuralOutputNormalization,
     config: StructuredGPPConfig = StructuredGPPConfig(),
+    neural_precision: NeuralPrecisionPolicy = NeuralPrecisionPolicy(),
     query_state: StructuredGPPQueryState | None = None,
     query_residuals: tuple[Any, Any, Any] | None = None,
     potential_attention_temperatures: Any | None = None,
@@ -629,7 +635,11 @@ def structured_gpp_factorization(
 
     specialist = parameters["target_oriented"]["structured_gpp"]
     forcing_tokens, forcing_valid, forcing_field = _structured_forcing_tokens(
-        specialist, inputs, input_normalization, config
+        specialist,
+        inputs,
+        input_normalization,
+        config,
+        neural_precision=neural_precision,
     )
     query_state = (
         structured_gpp_query_state(
@@ -704,6 +714,7 @@ def structured_gpp_factorization(
         specialist["potential_blocks"],
         active=local_active,
         config=config,
+        neural_precision=neural_precision,
         attention_temperatures=potential_attention_temperatures,
         attention_normalization_epsilon=potential_attention_normalization_epsilon,
     )
@@ -715,6 +726,7 @@ def structured_gpp_factorization(
         specialist["limitation_blocks"],
         active=local_active,
         config=config,
+        neural_precision=neural_precision,
     )
     correction_hidden = _run_gpp_branch(
         specialist,
@@ -724,6 +736,7 @@ def structured_gpp_factorization(
         specialist["correction_blocks"],
         active=local_active,
         config=config,
+        neural_precision=neural_precision,
     )
     potential = jax.nn.softplus(_linear(specialist["potential_output"], potential_hidden)[:, 0])
     limitation = jax.nn.sigmoid(_linear(specialist["limitation_output"], limitation_hidden)[:, 0])
@@ -759,6 +772,7 @@ def structured_gpp_base_response(
     input_normalization: NeuralInputNormalization,
     output_normalization: NeuralOutputNormalization,
     config: StructuredGPPConfig = StructuredGPPConfig(),
+    neural_precision: NeuralPrecisionPolicy = NeuralPrecisionPolicy(),
     query_state: StructuredGPPQueryState | None = None,
     query_residuals: tuple[Any, Any, Any] | None = None,
     potential_attention_temperatures: Any | None = None,
@@ -776,6 +790,7 @@ def structured_gpp_base_response(
         input_normalization=input_normalization,
         output_normalization=output_normalization,
         config=config,
+        neural_precision=neural_precision,
         query_state=query_state,
         query_residuals=query_residuals,
         potential_attention_temperatures=potential_attention_temperatures,
@@ -828,6 +843,7 @@ def target_oriented_structured_gpp_process_outputs(
         context,
         hidden[MAINTENANCE_FIELD],
         config=distribution_config,
+        neural_precision=baseline_config.neural_precision,
     )
     outputs[MAINTENANCE_FIELD] = materialize_part_resolved_source_shaped_maintenance(
         inputs,
@@ -849,6 +865,7 @@ def target_oriented_structured_gpp_process_outputs(
         input_normalization=input_normalization,
         output_normalization=output_normalization,
         config=config,
+        neural_precision=baseline_config.neural_precision,
     )
     return apply_fast_parameter_routes(
         outputs,

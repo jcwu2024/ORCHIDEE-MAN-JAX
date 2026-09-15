@@ -18,6 +18,7 @@ from .neural_architecture import NeuralInputNormalization, NeuralOutputNormaliza
 from .parameter_routing import apply_fast_parameter_routes
 from .process_derivations import NativeForcingFieldLayout
 from .strong_baseline_architecture import (
+    NeuralPrecisionPolicy,
     StrongBaselineConfig,
     StrongBaselineContext,
     StrongBaselineLayout,
@@ -347,6 +348,7 @@ def carbon_feedback_query_residuals(
     state_layout: CarbonFeedbackStateLayout,
     input_normalization: NeuralInputNormalization,
     config: CoupledGPPCarbonFeedbackConfig = CoupledGPPCarbonFeedbackConfig(),
+    neural_precision: NeuralPrecisionPolicy = NeuralPrecisionPolicy(),
 ) -> tuple[Any, Any, Any]:
     """Read global and same-PFT carbon coordinates with shared query weights."""
 
@@ -369,6 +371,7 @@ def carbon_feedback_query_residuals(
                 bank,
                 heads=config.attention_heads,
                 mask=bank_mask[:, None, :],
+                score_dtype=neural_precision.attention_score_dtype,
             ),
             block["attention_norm_scale"],
             block["attention_norm_bias"],
@@ -395,6 +398,7 @@ def coupled_gpp_carbon_feedback_base_response(
     output_normalization: NeuralOutputNormalization,
     structured_config: StructuredGPPConfig = StructuredGPPConfig(),
     config: CoupledGPPCarbonFeedbackConfig = CoupledGPPCarbonFeedbackConfig(),
+    neural_precision: NeuralPrecisionPolicy = NeuralPrecisionPolicy(),
     potential_attention_temperatures: Any | None = None,
     potential_attention_normalization_epsilon: float = 1.0e-6,
 ) -> Any:
@@ -410,6 +414,7 @@ def coupled_gpp_carbon_feedback_base_response(
         output_normalization=output_normalization,
         structured_config=structured_config,
         config=config,
+        neural_precision=neural_precision,
         potential_attention_temperatures=potential_attention_temperatures,
         potential_attention_normalization_epsilon=potential_attention_normalization_epsilon,
     ).pre_vcmax_gpp
@@ -428,6 +433,7 @@ def coupled_gpp_carbon_feedback_factorization(
     output_normalization: NeuralOutputNormalization,
     structured_config: StructuredGPPConfig = StructuredGPPConfig(),
     config: CoupledGPPCarbonFeedbackConfig = CoupledGPPCarbonFeedbackConfig(),
+    neural_precision: NeuralPrecisionPolicy = NeuralPrecisionPolicy(),
     potential_attention_temperatures: Any | None = None,
     potential_attention_normalization_epsilon: float = 1.0e-6,
 ) -> StructuredGPPFactorization:
@@ -450,6 +456,7 @@ def coupled_gpp_carbon_feedback_factorization(
         state_layout=carbon_state_layout,
         input_normalization=input_normalization,
         config=config,
+        neural_precision=neural_precision,
     )
     return structured_gpp_factorization(
         parameters,
@@ -461,6 +468,7 @@ def coupled_gpp_carbon_feedback_factorization(
         input_normalization=input_normalization,
         output_normalization=output_normalization,
         config=structured_config,
+        neural_precision=neural_precision,
         query_state=query_state,
         query_residuals=residuals,
         potential_attention_temperatures=potential_attention_temperatures,
@@ -517,6 +525,7 @@ def target_oriented_coupled_gpp_carbon_feedback_process_outputs(
         context,
         hidden[MAINTENANCE_FIELD],
         config=distribution_config,
+        neural_precision=baseline_config.neural_precision,
     )
     outputs[MAINTENANCE_FIELD] = materialize_part_resolved_source_shaped_maintenance(
         inputs,
@@ -540,6 +549,7 @@ def target_oriented_coupled_gpp_carbon_feedback_process_outputs(
         output_normalization=output_normalization,
         structured_config=structured_config,
         config=config,
+        neural_precision=baseline_config.neural_precision,
         potential_attention_temperatures=potential_attention_temperatures,
         potential_attention_normalization_epsilon=potential_attention_normalization_epsilon,
     )

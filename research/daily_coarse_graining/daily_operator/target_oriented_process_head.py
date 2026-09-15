@@ -344,6 +344,7 @@ class MechanisticTargetOrientedCoupledGPPCarbonFeedbackProcessHead(MechanisticTa
             output_normalization=self.output_normalization,
             structured_config=self.structured_config,
             config=self.coupled_config,
+            neural_precision=self.config.neural_precision,
             potential_attention_temperatures=self.potential_attention_temperatures(parameters),
             potential_attention_normalization_epsilon=self.potential_attention_normalization_epsilon(),
         )
