@@ -23,12 +23,15 @@ Current actions, superseding launch instructions in the history below:
   L2 difference7.551e-8, zero failed coordinates and all hard counts zero.
   Daily matrix FP64 result counts725->2 are not runtime/FLOP shares. See
   `research/daily_coarse_graining/attention_fp32_daily_results_20260915.md`.
-  T7/T30 RUNNING on free GPU0/GPU1, Bash/Python49620/49665 and49702/49800,
-  each50min ceiling, immutablec11efa6 in
-  `runtime/checkouts/mixed-learning-checked-reuse-v1`; diagnostics
-  `mixed-learning-attention-fp32-T7-v1.{json,log}` and corresponding T30-v1.
-  Both reached candidate compilation after143s bootstrap; reuse preserved
-  references, then measure warm full timing. Pooling primitive also passes:
+  T7/T30 PASSED, exit0,37.35/39.08min: full-gradient relative L2 differences
+  1.499e-7/1.328e-7, zero failed coordinates, equal loss and zero hard counts
+  within existing tolerances. See
+  `research/daily_coarse_graining/attention_fp32_recurrent_results_20260915.md`.
+  Full timing RUNNING free GPU0, Bash/Python65605/65655,40min ceiling,
+  immutablec11efa6 in `runtime/checkouts/mixed-learning-checked-reuse-v1`;
+  diagnostics `mixed-learning-attention-fp32-full-v1.{json,log}`. Reuse caches
+  and references; no retained updates. Compare original recurrent execution
+  on both sides, not against checked-split12.08s. Pooling primitive also passes:
   seven-bank forward+grad0.2320->0.1944ms; Attention-only remains first real test.
   Do not launch duplicate tests or alter the running checkout.
   Additional local active-head forward/

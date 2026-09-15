@@ -24,12 +24,16 @@ coordinates, auxiliary comparisons pass and all hard counts zero. Static FP64
 matrix result counts725->2; estimated live memory14.71->14.44GiB. No qualified
 full-update speed result yet. See
 `research/daily_coarse_graining/attention_fp32_daily_results_20260915.md`.
-T7/T30 RUNNING free GPU0/GPU1, Bash/Python49620/49665 and49702/49800,
-each50min ceiling, immutablec11efa6 in
-`runtime/checkouts/mixed-learning-checked-reuse-v1`; diagnostics
-`mixed-learning-attention-fp32-T7-v1.{json,log}` and corresponding T30-v1.
-Both reached compilation after143s bootstrap. Reuse existing T7/T30 references,
-then measure full-update timing. Pooling primitive completed21.94s on GPU1,
+T7/T30 PASSED, exit0,37.35/39.08min; full-gradient relative L2 differences
+1.499e-7/1.328e-7, zero failed coordinates, scalar comparisons pass and all
+hard counts zero. See
+`research/daily_coarse_graining/attention_fp32_recurrent_results_20260915.md`.
+Full timing RUNNING free GPU0, Bash/Python65605/65655,40min ceiling,
+immutablec11efa6 in `runtime/checkouts/mixed-learning-checked-reuse-v1`;
+diagnostics `mixed-learning-attention-fp32-full-v1.{json,log}`. Reuse compiled
+artifacts and saved references; compare original recurrent execution on both
+sides. No qualified full-update precision speed claim yet.
+Pooling primitive completed21.94s on GPU1,
 numeric/mask checks pass; seven-bank forward+grad0.2320->0.1944ms, not full-model
 admission. Reporting norm probe completed19.65s on free V100:
 actual109M T7/T30 gradient norms match within5e-8 relative, saving only0.06--0.13ms

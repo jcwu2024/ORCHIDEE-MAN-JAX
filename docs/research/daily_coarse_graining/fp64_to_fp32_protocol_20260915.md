@@ -46,10 +46,12 @@ includes full gradient and masked physical/loss auxiliary. FP32 daily v1 now
 passes: exit0,1128.05s, relative loss/gradient differences1.213e-8/7.551e-8,
 zero failed coordinates and zero hard counts. See
 `attention_fp32_daily_results_20260915.md` for scope and timing limitations.
-T7/T30 are running on the same immutablec11efa6 checkout, free GPU0/GPU1,
-Bash/Python49620/49665 and49702/49800, each50min ceiling. Both reached
-compilation after143s. Shell-expanded FP32/stage/reference arguments were
-checked with `--dry-run`; existing T7/T30 references are reused.
+T7/T30 now pass with exit0: full-gradient relative L2 differences1.499e-7/
+1.328e-7, zero failed coordinates and zero physical hard counts. See
+`attention_fp32_recurrent_results_20260915.md`. Full-stage timing is running
+on the same immutablec11efa6 checkout, free GPU0, Bash/Python65605/65655,
+40min ceiling. Shell-expanded FP32/full/reference arguments passed `--dry-run`;
+existing compilation caches and original gradient references are reused.
 The separate pooling primitive has also passed; see
 `source_pooling_fp32_results_20260915.md`. Do not activate pooling in the first
 real-model Attention-only comparison.
