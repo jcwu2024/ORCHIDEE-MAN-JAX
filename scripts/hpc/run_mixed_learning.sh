@@ -9,9 +9,12 @@ PRINT_ONLY=false
 if [[ "${1:-}" == --dry-run ]]; then PRINT_ONLY=true; shift; fi
 cd "$CODE_ROOT"
 DIAG=$ROOT/runtime/outputs/diagnostics
-ARGS=(--mixed-protocol "$CODE_ROOT/manifests/coarse_graining/mixed_learning_v1.json"
+MIXED_PROTOCOL=${MIXED_PROTOCOL:-$CODE_ROOT/manifests/coarse_graining/mixed_learning_v1.json}
+MODEL_PROTOCOL=${MODEL_PROTOCOL:-$CODE_ROOT/manifests/coarse_graining/mixed_learning_model_v1.json}
+RECURRENT_SCHEDULE=${RECURRENT_SCHEDULE:-$DIAG/mixed-learning-200-recurrent-schedule-v1.json}
+ARGS=(--mixed-protocol "$MIXED_PROTOCOL"
   --catalogue-report "$ROOT/runtime/outputs/training/one-day-expansion-15061225/merge_report.json"
-  --recurrent-schedule "$DIAG/mixed-learning-200-recurrent-schedule-v1.json"
+  --recurrent-schedule "$RECURRENT_SCHEDULE"
   --selection "$DIAG/trained-forward-selection-v1.json")
 run_command() {
   if "$PRINT_ONLY"; then printf '%q ' "$@"; printf '\n'; else "$@"; fi
@@ -31,7 +34,7 @@ case "$MODE" in
         "${ARGS[@]}" --output "${OUTPUT:-$DIAG/mixed-learning-v1-metadata.json}" "$@"
     else
       run_command timeout 20m "$ROOT/.venvs/orcjax_cpu/bin/python" -m scripts.hpc.run_mixed_learning \
-        --shape-only "${ARGS[@]}" --protocol "$CODE_ROOT/manifests/coarse_graining/mixed_learning_model_v1.json" \
+        --shape-only "${ARGS[@]}" --protocol "$MODEL_PROTOCOL" \
         --dataset-manifest "$ROOT/runtime/outputs/training/pft14-daily-teacher-v6/dataset_manifest.json" \
         --acceptance-report "$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance-v2/acceptance_report.json" \
         --base-statistics "$ROOT/runtime/outputs/training/pft14-daily-teacher-v6-acceptance-v2/training_statistics.json" \
@@ -95,7 +98,7 @@ case "$MODE" in
       GPU_MEMORY_FRACTION=0.85 PYTHON_MODULE=scripts.hpc.run_mixed_learning \
       RUN_TIMEOUT="${RUN_TIMEOUT:-$DEFAULT_TIMEOUT}" OUTPUT="${OUTPUT:-$DEFAULT_OUTPUT}" \
       bash "$CODE_ROOT/scripts/hpc/run_fresh_start_one_day.sh" \
-      --protocol "$CODE_ROOT/manifests/coarse_graining/mixed_learning_model_v1.json" "${ARGS[@]}" "$@"
+      --protocol "$MODEL_PROTOCOL" "${ARGS[@]}" "$@"
     ;;
   *) exit 2 ;;
 esac

@@ -25,6 +25,7 @@ from scripts.hpc.run_mixed_learning import (
     profile_source_method,
     saved_gradient_path,
     trim_resume_report,
+    validate_configuration,
 )
 
 jax.config.update("jax_enable_x64", True)
@@ -289,3 +290,32 @@ def test_resume_prefers_newest_retained_milestone_over_stale_rolling_file(tmp_pa
 
     assert newest_checkpoint(output, rolling, 90) == checkpoint_path(output, 100)
     assert newest_checkpoint(output, rolling, 100) == rolling
+
+
+def test_epoch_protocol_uses_full_budget_and_preserves_admitted_objective():
+    import json
+    from pathlib import Path
+
+    root = Path(__file__).resolve().parents[2] / 'manifests/coarse_graining'
+    old = json.loads((root / 'mixed_learning_v1.json').read_text())
+    config = json.loads((root / 'mixed_learning_epoch_v1.json').read_text())
+    old_model = json.loads((root / old['model_protocol']).read_text())
+    model = json.loads((root / config['model_protocol']).read_text())
+    validate_configuration(old, old_model)
+    validate_configuration(config, model)
+    assert config['updates'] == 5415
+    for key in ('sampling', 'outer_weights', 'recurrent_weights', 'recurrent_seed'):
+        assert config[key] == old[key]
+    for key in ('loss', 'canopy_carbon_stock_change', 'input_conditioning', 'initialization', 'seed'):
+        assert model[key] == old_model[key]
+    assert {k:v for k,v in model['optimizer'].items() if k != 'schedule'} == {
+        k:v for k,v in old_model['optimizer'].items() if k != 'schedule'}
+
+
+def test_epoch_recovery_prefers_declared_later_milestone(tmp_path):
+    output = tmp_path / 'epoch.json'
+    rolling = checkpoint_path(output)
+    checkpoint_path(output, 2500).touch()
+    milestones = (0, 200, 1000, 2500, 4000, 5415)
+    assert newest_checkpoint(output, rolling, 2450, milestones) == checkpoint_path(output, 2500)
+    assert newest_checkpoint(output, rolling, 2500, milestones) == rolling

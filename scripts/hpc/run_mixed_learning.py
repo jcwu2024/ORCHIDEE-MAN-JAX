@@ -20,17 +20,18 @@ from scripts.hpc import run_fresh_start_one_day as prototype
 
 
 def validate_configuration(config, model):
-    if (config.get('schema_version') != 'mixed_learning_v1'
-            or config.get('updates') != 200
-            or config.get('milestones') != [0, 50, 100, 200]
+    epoch = config.get('schema_version') == 'mixed_learning_epoch_v1'
+    if (config.get('schema_version') not in ('mixed_learning_v1', 'mixed_learning_epoch_v1')
+            or config.get('updates') != (5415 if epoch else 200)
+            or config.get('milestones') != ([0,200,1000,2500,4000,5415] if epoch else [0,50,100,200])
             or config.get('outer_weights') != {'daily': 1., 'T7': .5, 'T30': .5}
             or config.get('sampling') != dict(seed=20260912, batch_size=64,
                 microbatch_size=8, max_artifacts_per_batch=5, batch_packing='fixed_replay_pad')
             or model.get('seed') != 20260911
             or model.get('parameter_count') != 109464375
             or model.get('trainable_scope') != 'all_neural_parameters'
-            or model['optimizer']['schedule'] != 'constant_200_updates'):
-        raise ValueError('mixed learning differs from declared fresh 200-update protocol')
+            or model['optimizer']['schedule'] != ('constant_one_pool_pass' if epoch else 'constant_200_updates')):
+        raise ValueError('mixed learning differs from declared fresh learning protocol')
 
 
 def checkpoint_path(output, index=None):
@@ -54,9 +55,9 @@ def trim_resume_report(report, completed):
     return report
 
 
-def newest_checkpoint(output, requested, completed):
+def newest_checkpoint(output, requested, completed, milestones=(0,50,100,200)):
     """Prefer a newer retained milestone over an older rolling recovery file."""
-    available = [index for index in (0,50,100,200)
+    available = [index for index in milestones
                  if index > completed and checkpoint_path(output,index).is_file()]
     return checkpoint_path(output,max(available)) if available else requested
 
@@ -265,6 +266,8 @@ def run(args):
     precision_components = (() if precision_stage is None
                             else precision_stage_components(precision_stage))
     precision_candidate = getattr(args, 'attention_score_dtype', 'legacy') == 'fp32'
+    if config['schema_version'] == 'mixed_learning_epoch_v1' and execution_policy is None:
+        raise ValueError('one-pool-pass training requires the admitted execution policy')
     if precision_candidate and precision_stage is None and execution_policy is None:
         raise ValueError('FP32 Attention requires precision staging or a declared execution policy')
     if execution_policy is not None and precision_stage:
@@ -278,7 +281,9 @@ def run(args):
             raise ValueError('FP32 daily precision staging requires an immutable legacy daily gradient')
     limit = args.integration_updates or config['updates']
     scope = ('performance_profile_not_training' if profiling else
-             'integration_only' if args.integration_updates else 'bounded_200_update_learning')
+             'integration_only' if args.integration_updates else
+             'one_pool_pass_learning' if config['schema_version'] == 'mixed_learning_epoch_v1'
+             else 'bounded_200_update_learning')
     started = time.perf_counter()
     current_head = subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip()
     report = dict(schema_version='mixed_learning_result_v1', status='running',
@@ -400,7 +405,7 @@ def run(args):
             del saved
         elif args.resume:
             saved = load_mixed_training_checkpoint(args.resume, **recovery_identity)
-            resolved_resume = newest_checkpoint(args.output,args.resume,saved['completed_updates'])
+            resolved_resume = newest_checkpoint(args.output,args.resume,saved['completed_updates'],config['milestones'])
             if resolved_resume != args.resume:
                 del saved
                 saved = load_mixed_training_checkpoint(resolved_resume, **recovery_identity)
