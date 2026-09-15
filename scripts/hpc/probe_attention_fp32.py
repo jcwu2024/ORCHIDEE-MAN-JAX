@@ -12,6 +12,8 @@ import numpy as np
 # sampled training-distribution histogram: (batch, query tokens, key tokens, width).
 CASES = ((1, 32, 32, 256), (8, 32, 32, 256), (1, 128, 128, 384),
          (32, 1, 48, 384), (256, 1, 48, 384))
+SOURCE_CASES = ((1, 45, 45, 256), (126, 32, 32, 384), (1, 1, 533, 384),
+                (1, 24, 419, 768), (1, 2, 2386, 384))
 
 
 def main():
@@ -20,6 +22,8 @@ def main():
     parser.add_argument('--backend', choices=('explore_gpu', 'gpu', 'cpu'), default='explore_gpu')
     parser.add_argument('--repeats', type=int, default=15)
     parser.add_argument('--quick', action='store_true')
+    parser.add_argument('--source-shaped', action='store_true')
+    parser.add_argument('--warmup-seconds', type=float, default=0.5)
     for name in ('dataset-manifest', 'acceptance-report', 'base-statistics',
                  'process-statistics', 'fast-statistics', 'prepared-manifest'):
         parser.add_argument('--'+name)
@@ -30,6 +34,8 @@ def main():
     report = dict(status='running', cases=[], teacher_data_read=False, parameter_updates=0,
                   scope='representative_attention_shapes_not_full_model_speed_or_science',
                   repeats=args.repeats, matrix_precision='highest_no_TF32_or_FP16', seed=20260915)
+    report.update(shape_panel='source_fixture' if args.source_shaped else 'representative',
+                  warmup_seconds=args.warmup_seconds)
 
     def emit(stage):
         report.update(stage=stage, elapsed_seconds=time.perf_counter()-started)
@@ -58,14 +64,18 @@ def main():
 
         report.update(jax_version=jax.__version__, device=str(devices[0]),
                       device_kind=devices[0].device_kind, backend=devices[0].platform)
-        for batch, nq, nk, width in CASES[:1] if args.quick else CASES:
+        cases = SOURCE_CASES if args.source_shaped else CASES
+        for batch, nq, nk, width in cases[:1] if args.quick else cases:
             keys = jax.random.split(jax.random.PRNGKey(report['seed']), 7)
             p = {name: _linear_parameters(key, width, width)
                  for name, key in zip(('query', 'key', 'value', 'output'), keys)}
             q = jax.random.normal(keys[4], (batch, nq, width), dtype=jnp.float32)
             kv = jax.random.normal(keys[5], (batch, nk, width), dtype=jnp.float32)
             weights = jax.random.normal(keys[6], (batch, nq, width), dtype=jnp.float32)
-            mask = jnp.ones((batch, nq, nk), dtype=bool).at[0, 0, :].set(False)
+            mask = jnp.ones((batch, nq, nk), dtype=bool)
+            fully_masked = batch*nq > 1
+            if fully_masked:
+                mask = mask.at[0, 0, :].set(False)
             mask = mask.at[:, :, -1].set(False)
             row = dict(shape=dict(batch=batch, query_tokens=nq, key_tokens=nk, width=width, heads=8),
                        modes={}, comparisons={})
@@ -105,9 +115,16 @@ def main():
             row['comparisons']['gradient'] = gradient_comparison(jax, new_grad, old_grad)
             row['comparisons']['loss'] = dict(old=float(old_loss), new=float(new_loss),
                 passed=bool(np.isclose(new_loss, old_loss, atol=1e-6, rtol=1e-5)))
-            row['comparisons']['masked_query_gradient_zero'] = bool(np.all(new_grad[1][0, 0, :] == 0))
+            row['comparisons']['fully_masked_query_tested'] = fully_masked
+            row['comparisons']['masked_query_gradient_zero'] = (
+                bool(np.all(new_grad[1][0, 0, :] == 0)) if fully_masked else None)
             row['comparisons']['masked_key_gradient_zero'] = bool(np.all(new_grad[2][:, -1, :] == 0))
             emit('compare_completed')
+            warmup_until = time.perf_counter()+args.warmup_seconds
+            while time.perf_counter() < warmup_until:
+                for phases in executables.values():
+                    for fn in phases.values():
+                        jax.block_until_ready(fn(p, q, kv))
             # Alternate order after two additional warmups to reduce clock/order bias.
             for repeat in range(-2, args.repeats):
                 modes = tuple(executables) if repeat % 2 else tuple(reversed(executables))
@@ -129,7 +146,7 @@ def main():
                 for phase in ('forward', 'value_and_grad')}
             row['passed'] = bool(all(row['comparisons'][key]['passed'] for key in ('output', 'gradient', 'loss'))
                 and row['nontrivial_reference']
-                and row['comparisons']['masked_query_gradient_zero']
+                and row['comparisons']['masked_query_gradient_zero'] is not False
                 and row['comparisons']['masked_key_gradient_zero'])
             emit('case_completed')
             del executables, first, compiled, lowered

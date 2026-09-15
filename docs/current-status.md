@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+User-directed current priority: FP64-to-FP32 attribution for possible RTX5090
+migration. The shared Attention denominator is a NumPy FP64 scalar, promoting
+scores, softmax and value matmul. All parameter/projection arrays being FP32
+does not make the whole neural path FP32. Added explicit opt-in score dtype;
+default unchanged. Local3 tests and5 synthetic functional cases pass. Free
+V100 primitive comparison underway (76e4b83),10min ceiling; it is not trained
+model or full-update admission. See `research/daily_coarse_graining/fp64_to_fp32_protocol_20260915.md`.
+
 Latest result: checked split v3 COMPLETED, exit0,48.87min, immutable427ccce.
 Both T7/T30 full-gradient/loss/counter comparisons pass with zero hard counts;
 complete fixed-update timing14.181s ->12.079s (14.82% reduction), live15.95GiB.

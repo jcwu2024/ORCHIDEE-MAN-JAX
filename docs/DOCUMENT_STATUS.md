@@ -23,6 +23,8 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/fp64_to_fp32_protocol_20260915.md` | Active user-directed hardware-migration precision study | Confirmed implicit FP64 Attention; explicit FP32 scale candidate, primitive then actual-model validation; separate V100 and RTX5090 evidence |
+| `research/daily_coarse_graining/fp64_trace_audit_20260915.md` | Bounded existing-trace audit | Captured DGEMM identifies Attention aggregation; incomplete trace cannot establish full FP64 time fraction |
 | `research/daily_coarse_graining/recurrent_compile_cache_diagnosis_20260915.md` | Completed cache inspection, no new training | Correct cold/cache comparison; original also requires long first compilation; reuse T7 cache and both references for T30/timing |
 | `research/daily_coarse_graining/checked_recurrent_results_20260915.md` | Bounded split execution admitted, v3 exit0 | T7/T30 full-gradient/counter equivalence;14.82% lower complete-update time; fixed-data cross-process timing limitation |
 | `research/daily_coarse_graining/checked_recurrent_execution_20260914.md` | Protocol; split route now admitted by September15 results | Same recurrent scalar with compact checks from one checkpointed rollout; full-gradient/counter/speed A/B |

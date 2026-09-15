@@ -33,6 +33,17 @@ not repaired by changing tolerances. Speed is measured even if negligible/negati
 No model weights are saved. Local3 unit tests and all5 CPU functional cases pass;
 CPU timings are not GPU evidence. Free gln01 GPU0,10min ceiling; no paid job.
 
+First free primitive pass completed81.14s, exit0, all5 numerical cases pass.
+Its15-repeat timings show early clock/runtime warmup drift, so do not treat the
+1--21% per-shape gradient reductions as a final full-model estimate. The next
+short pass uses source-fixture-derived forcing45 tokens/width256, axial126x32
+groups/width384, expert1x533/width384, maintenance24x419/width768 and carbon
+feedback2x2386/width384 (`--source-shaped`). Inputs/weights/masks remain synthetic,
+not captured trained activations. Add0.5s alternating workload warmup and51
+paired repetitions; no clock settings are modified. Each source-shaped CPU
+functional case passes before launch. A singleton query case tests masked keys
+but cannot also zero its only query without making the whole workload trivial.
+
 Stage2 captures actual attention call shapes/counts and inventories FP64 sources
 in the active full-model graph. Small primitive gains alone do not establish
 whole-update speed. Complete traces must have bounded scopes and evidence of

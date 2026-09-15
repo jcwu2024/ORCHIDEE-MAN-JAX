@@ -1,5 +1,12 @@
 # Mixed-learning performance profile
 
+Correction from September15 precision audit: neural parameters and learned
+projections are FP32, but the shared Attention denominator `np.sqrt(...)`
+promotes logits, softmax and value aggregation to FP64 under x64 enablement.
+The original source-audit wording below did not capture this implicit promotion.
+See `fp64_to_fp32_protocol_20260915.md`; old trace remains insufficient for a
+whole-update FP64 time share. Historical timing measurements are unchanged.
+
 User authorized a bounded performance diagnosis before expanding learning.
 This is a free gln01 V100 probe, capped at 40 minutes including startup and
 compilation. It is not another scientific training run or a paid submission.

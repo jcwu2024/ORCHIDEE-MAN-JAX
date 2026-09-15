@@ -10,6 +10,18 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- User prioritizes FP64 burden before a possible RTX5090 migration: identify
+  slow FP64 work, safe FP32 candidates and measured gain. Confirmed Attention
+  NumPy scale promotes scores/softmax/value matmul to FP64 despite FP32
+  parameters/projections. Explicit FP32 scale is opt-in, ordinary numerics
+  unchanged. Local3 tests and5 functional cases pass; bounded free GPU
+  primitive comparison running at76e4b83, diagnostics
+  `attention-fp32-v100-v1.json`,10min ceiling. No full-model accuracy or
+  RTX5090 gain claim from representative synthetic shapes. Protocol:
+  `research/daily_coarse_graining/fp64_to_fp32_protocol_20260915.md`.
+  Next use measured evidence to choose actual-model precision validation;
+  retain physics/loss/state FP64 and original physical tolerances meanwhile.
+
 - Checked split execution admission COMPLETED, v3 exit0,48.87min, code427ccce.
   T7/T30 full gradients, losses and all named counters pass; no hard failures.
   Complete-update median14.181s ->12.079s (14.82% less time), live15.95GiB.
