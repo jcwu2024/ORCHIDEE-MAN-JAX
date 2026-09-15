@@ -1,9 +1,19 @@
 # Code Map
 
-Last updated: 2026-09-13.
+Last updated: 2026-09-15.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
+
+Current neural precision work: `NeuralPrecisionPolicy` in
+`research/daily_coarse_graining/daily_operator/strong_baseline_architecture.py`
+is the shared explicit policy, threaded by `fresh_start.build_fresh_head`.
+Attention score and source-family pooling FP32 options are independent and
+default off. `scripts/hpc/run_mixed_learning.py --precision-stage` owns the
+fixed-checkpoint daily/T7/T30/full comparison, using existing AD and loss code.
+`probe_attention_fp32.py`, `probe_source_pooling_fp32.py` and
+`probe_reporting_norm_fp32.py` under `scripts/hpc/` own bounded component probes;
+their measurements do not establish full-model or scientific acceptance.
 
 ## Branches
 
