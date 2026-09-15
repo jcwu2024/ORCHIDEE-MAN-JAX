@@ -42,9 +42,14 @@ Ruff pass; target-shell new-branch argument expansion passed `--dry-run`.
 
 Repaired legacy daily v2 completed241.1s, all hard counts zero, loss120.4785230;
 reference `mixed-learning-attention-legacy-daily-v2.daily.precision-reference.pkl`
-includes full gradient and masked physical/loss auxiliary. FP32 daily v1 is now
-running on the same checkout atc11efa6, free GPU0/Bash42810,50min ceiling.
-Its shell-expanded FP32/reference arguments were checked with `--dry-run`.
+includes full gradient and masked physical/loss auxiliary. FP32 daily v1 now
+passes: exit0,1128.05s, relative loss/gradient differences1.213e-8/7.551e-8,
+zero failed coordinates and zero hard counts. See
+`attention_fp32_daily_results_20260915.md` for scope and timing limitations.
+T7/T30 are running on the same immutablec11efa6 checkout, free GPU0/GPU1,
+Bash/Python49620/49665 and49702/49800, each50min ceiling. Both reached
+compilation after143s. Shell-expanded FP32/stage/reference arguments were
+checked with `--dry-run`; existing T7/T30 references are reused.
 The separate pooling primitive has also passed; see
 `source_pooling_fp32_results_20260915.md`. Do not activate pooling in the first
 real-model Attention-only comparison.

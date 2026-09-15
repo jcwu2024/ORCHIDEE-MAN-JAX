@@ -18,10 +18,18 @@ Explicit full-head Attention/pooling policies and staged real-model comparisons
 implemented. Legacy daily first attempt failed on a new metadata conversion;
 corrected via existing row adapter, regression test passes. Repaired legacy v2
 completed241.1s, all physical hard counts zero, daily64 loss120.4785230 and full
-gradient/auxiliary saved. FP32 daily RUNNING free GPU0, Bash42810/Python42854,50min ceiling,
-immutablec11efa6 in `runtime/checkouts/mixed-learning-checked-reuse-v1`; diagnostics
-`mixed-learning-attention-fp32-daily-v1.{json,log}`. Follow with existing T7/T30
-references and full-update timing. Pooling primitive completed21.94s on GPU1,
+gradient/auxiliary saved. FP32 daily PASSED, exit0,1128.05s: relative loss
+difference1.213e-8, full-gradient relative L2 difference7.551e-8; zero failed
+coordinates, auxiliary comparisons pass and all hard counts zero. Static FP64
+matrix result counts725->2; estimated live memory14.71->14.44GiB. No qualified
+full-update speed result yet. See
+`research/daily_coarse_graining/attention_fp32_daily_results_20260915.md`.
+T7/T30 RUNNING free GPU0/GPU1, Bash/Python49620/49665 and49702/49800,
+each50min ceiling, immutablec11efa6 in
+`runtime/checkouts/mixed-learning-checked-reuse-v1`; diagnostics
+`mixed-learning-attention-fp32-T7-v1.{json,log}` and corresponding T30-v1.
+Both reached compilation after143s bootstrap. Reuse existing T7/T30 references,
+then measure full-update timing. Pooling primitive completed21.94s on GPU1,
 numeric/mask checks pass; seven-bank forward+grad0.2320->0.1944ms, not full-model
 admission. Reporting norm probe completed19.65s on free V100:
 actual109M T7/T30 gradient norms match within5e-8 relative, saving only0.06--0.13ms

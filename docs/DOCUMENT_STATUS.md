@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/attention_fp32_daily_results_20260915.md` | Completed real daily64 full-gradient/physical comparison; T7/T30 running | Attention FP32 numerical pass, matrix counts725->2; full-update speed and multiday admission pending |
 | `research/daily_coarse_graining/fp64_to_fp32_protocol_20260915.md` | Active user-directed hardware-migration precision study | Confirmed implicit FP64 Attention; explicit FP32 scale candidate, primitive then actual-model validation; separate V100 and RTX5090 evidence |
 | `research/daily_coarse_graining/attention_fp32_primitive_results_20260915.md` | Completed bounded V100 comparison; full model pending | Five source-shaped synthetic cases pass;4.81--14.99% lower local forward+gradient time, not whole-update or5090 gain |
 | `research/daily_coarse_graining/fp64_source_inventory_20260915.md` | Completed active-source audit | Attention promotion, neural pooling, reporting norms and sensitive physical FP64; static counts are not wall-time shares |

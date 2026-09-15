@@ -18,14 +18,20 @@ Current actions, superseding launch instructions in the history below:
   computed. Corrected to the existing `admission._rows` conversion and added a
   production-row regression test (10 runner tests pass). Daily cache retained.
   Repaired legacy v2 COMPLETED241.1s, all hard counts zero; daily64 loss120.4785230
-  and complete gradient/physical auxiliary saved. FP32 daily comparison RUNNING
-  free GPU0, Bash42810/Python42854,50min ceiling, immutablec11efa6 in
+  and complete gradient/physical auxiliary saved. FP32 daily comparison PASSED,
+  exit0 in1128.05s: loss relative difference1.213e-8, full-gradient relative
+  L2 difference7.551e-8, zero failed coordinates and all hard counts zero.
+  Daily matrix FP64 result counts725->2 are not runtime/FLOP shares. See
+  `research/daily_coarse_graining/attention_fp32_daily_results_20260915.md`.
+  T7/T30 RUNNING on free GPU0/GPU1, Bash/Python49620/49665 and49702/49800,
+  each50min ceiling, immutablec11efa6 in
   `runtime/checkouts/mixed-learning-checked-reuse-v1`; diagnostics
-  `mixed-learning-attention-fp32-daily-v1.{json,log}`. Then T7/T30 against
-  preserved references, then full timing. Pooling primitive also passes on GPU1:
+  `mixed-learning-attention-fp32-T7-v1.{json,log}` and corresponding T30-v1.
+  Both reached candidate compilation after143s bootstrap; reuse preserved
+  references, then measure warm full timing. Pooling primitive also passes:
   seven-bank forward+grad0.2320->0.1944ms; Attention-only remains first real test.
-  Current stage: compile_daily after124s bootstrap; do not launch another
-  copy or alter the running checkout. Additional local active-head forward/
+  Do not launch duplicate tests or alter the running checkout.
+  Additional local active-head forward/
   gradient, FP32 eval-shape and undefined-auxiliary mask tests pass.
   Reporting norms completed separately: <5e-8 relative error but only0.06--0.13ms
   saved per norm. Free-node tests authorized, no paid submission.
