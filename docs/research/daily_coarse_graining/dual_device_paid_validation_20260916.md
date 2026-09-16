@@ -1,8 +1,9 @@
 # Dual-device completion plan and paid validation envelope
 
-Latest: user approved the concrete7.44yuan envelope. Job15230086 was submitted
-and is RUNNING; the submission record below supersedes preparation-time
-pending-approval statements. No duplicate/retry or longer training authorized.
+Latest: job15230086 COMPLETED0:0 in28m45s. Real-model update parity passed;
+warm12.5849s ->7.2221s,1.7426x speedup. Full results/limits are recorded in
+`dual_device_paid_results_20260916.md`. Preparation and submission records below
+are retained as history. No duplicate/retry or longer training authorized.
 
 User prioritizes completing the dual-device route after both learning pilots
 finished and permits paid GPUs so the run has a Slurm job identity. This file

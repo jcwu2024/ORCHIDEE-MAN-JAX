@@ -10,6 +10,20 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Paid dual job15230086 COMPLETED0:0 in28m45s, estimated2.38yuan. Real-model
+  full gradient/updated weights/AdamW and physical/scalar parity PASS at existing
+  tolerances. Warm complete mixed median12.5849s single ->7.2221s dual,
+  1.7426x/42.61% less time; same-update additive charge estimate+3.13%.
+  This closes repeated device/helper-cache failures for the measured path.
+  Next integrate continuous two-device updates into the shared runner and
+  validate changing batches, peer-weight synchronization and checkpoint/recovery.
+  Existing profile discarded proposals; rotating-data throughput remains untested.
+  Do not repeat unchanged profiling/AD or claim final scientific acceptance.
+  No active task or new paid submission. Evidence:
+  `research/daily_coarse_graining/dual_device_paid_results_20260916.md`.
+
+The following launch records are superseded by this completion result.
+
 - User prioritizes dual execution and permits paid Slurm for queryable job state.
   Full helper cache scopes and allocated-GPU propagation fixed atb2e1562;
   immutable `runtime/checkouts/mixed-learning-dual-paid-v1` is ready. Actual

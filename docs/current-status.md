@@ -13,6 +13,19 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest dual result: job15230086 COMPLETED0:0,28m45s, ended16:23:35 server time.
+Real-model same-update gradient/parameters/AdamW and physical/scalar parity PASS;
+zero coordinates outside the existing tolerances. Three warmed repeats give
+12.5849s single versus7.2221s dual:1.7426x,42.61% less time. Equal-update total
+charge estimate+3.13% with8CPUs either way; actual diagnostic estimated2.38yuan.
+Branches are reasonably balanced (~6.8s daily versus6.2s recurrent). Peak live
+GPU0/GPU1=15.662/2.646GiB; reserved26.978GiB each. No learned update retained.
+Same-update execution/timing accepted; rotating-data continuous training and
+checkpoint/recovery are the next integration gate, not yet validated. No active
+task/new paid submission. Full result:
+`research/daily_coarse_graining/dual_device_paid_results_20260916.md`.
+Older preparation/submission chronology follows.
+
 Current preparation: user prioritizes dual execution and permits paid Slurm.
 General helper-cache isolation plus allocated GPU propagation implemented and
 deployed immutableb2e1562 to `runtime/checkouts/mixed-learning-dual-paid-v1`.

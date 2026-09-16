@@ -71,8 +71,11 @@ long-term validation. Actual daily exposure was38400/51200 draws from the ready
 remains paused. Next specify the further learning/coverage budget without
 changing architecture or claiming a settled schedule ranking. Results:
 `research/daily_coarse_graining/staged_learning_pilot_results_20260916.md`.
-Dual-GPU execution is a separate performance route, currently blocked by
-cross-device persistent-cache reuse in a norm helper; no speed result yet.
+Dual-GPU same-update execution now passes real-model numerical checks:
+12.58s ->7.22s per warm mixed update (1.74x), with estimated equal-work charge
+only3.1% higher. Next integrate changing-batch continuous updates and checkpoint
+recovery before long training. This is throughput evidence, not new learning.
+See `research/daily_coarse_graining/dual_device_paid_results_20260916.md`.
 No active paid/free computation or new submission follows from this report.
 
 The performance phase is complete: explicit Attention FP32 plus checked
