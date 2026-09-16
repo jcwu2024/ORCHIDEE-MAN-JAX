@@ -1,5 +1,9 @@
 # First matched-compute learning segment
 
+Latest: user confirmed the22.08yuan envelope. Array15225197 was submitted and
+both tasks started2026-09-16 12:03:41 server time. Submission record below
+supersedes the historical pending-approval statements in the preparation section.
+
 This freezes the first learning segment before seeing either arm's outcomes.
 It compares early compute efficiency and learning trends, not converged-model
 superiority. A temporarily worse arm must not be rejected merely on this
@@ -90,3 +94,20 @@ dry-runs on gln01 pass. Both output identities are unused and the Slurm log
 parent exists. Only manifests, the array launcher and documentation changed;
 reuse the accepted runtime/AD and completed stage-transition evidence. Live
 gnall inspection found idle nodes. No sbatch has been issued.
+
+## Approved submission
+
+Executed the declared sbatch command from the declared working directory,
+unchanged0d18d3c. Slurm returned array15225197. Both tasks RUNNING:
+
+| Task | Arm | Node | Underlying job |
+| --- | --- | --- | --- |
+|15225197_0|600 mixed updates|ibc13b03n01|15225198|
+|15225197_1|400 daily then400 mixed|ibc13b03n02|15225197|
+
+Submitted2026-09-16 12:03:40, both started12:03:41 server time. Confirmed each
+1GPU,8 allocated CPUs,64GiB requested memory,4h limit, no requeue; deadline
+16:03:41. Total additive budget cap22.08yuan is explicitly approved. Logs
+`slurm-15225197_0.log`/`slurm-15225197_1.log` confirm arm, node, code and distinct
+output paths. Monitor with `squeue -j 15225197`; do not submit duplicates.
+No new accuracy outcome follows from scheduler/launcher acceptance.

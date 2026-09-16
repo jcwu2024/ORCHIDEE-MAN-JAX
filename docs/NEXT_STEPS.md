@@ -10,6 +10,17 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Paid learning array15225197 SUBMITTED after explicit22.08yuan total approval;
+  both tasks RUNNING since2026-09-16 12:03:41 server time. Task0 is joint600 on
+  ibc13b03n01 (underlying job15225198); task1 is daily400+mixed400 onibc13b03n02.
+  Each1V100/8allocated CPU/64GiB/4h; Slurm deadline16:03:41, inner220min limit,
+  no requeue. Immutable0d18d3c in `runtime/checkouts/mixed-learning-stages-pilot-v1`.
+  Outputs: `runtime/outputs/training/mixed-learning-stages-pilot-v1/{joint,staged}/report.json`;
+  logs `slurm-15225197_0.log` and `slurm-15225197_1.log` in their parent.
+  Both launcher logs confirm correct arm/node/code/output. Next collect both
+  complete learning curves and physical metrics, not only endpoint ranking.
+  Keep free dual v2 independent; do not modify running checkouts or resubmit.
+
 - User authorizes using paid cards while free dual profiling continues. The
   budget check COMPLETED exit0, daily median5.98965s and mixed11.76926s;
   all physical/finite checks pass. Freeze joint600 against400daily+400mixed.
@@ -17,8 +28,8 @@ Current actions, superseding launch instructions in the history below:
   retain all intermediate/final physical science panels. This is the first
   learning-curve segment, not a final route-elimination experiment.
   Ready proposal: gnall array0-1%2, each1V100/8CPU/64GiB/4h,220min inner limit;
-  total maximum22.08yuan. No sbatch yet: concrete envelope confirmation is
-  pending. New immutable pilot checkout, separate from free running checkouts.
+  total maximum22.08yuan. The concrete envelope is now approved and submitted
+  as recorded above. Immutable pilot checkout is separate from free checkouts.
   Frozen method and interpretation:
   `research/daily_coarse_graining/staged_learning_pilot_frozen_20260916.md`.
 

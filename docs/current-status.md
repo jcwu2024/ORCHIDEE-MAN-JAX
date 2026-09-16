@@ -13,11 +13,18 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Paid array15225197 is RUNNING after explicit user approval of the22.08yuan
+two-task envelope. Start2026-09-16 12:03:41 server time; joint task0 onibc13b03n01,
+staged task1 onibc13b03n02. Each1V100/8CPU/64GiB/4h, no requeue, deadline16:03:41.
+Immutable0d18d3c in `runtime/checkouts/mixed-learning-stages-pilot-v1`.
+Both startup logs show the intended arm and distinct report path. No learning
+result yet; retrieve full intermediate physical-unit curves when complete.
+
 Single-device budget profiling is COMPLETED, exit0,905.51s Python;
 daily median5.98965s, mixed11.76926s. Frozen matched count600 (raw603.569)
 versus400daily+400mixed. User authorizes paid cards; prepared two concurrent
-single-GPU array tasks, each4h/8CPU/64GiB, combined cap22.08yuan, pending the
-concrete resource/cost confirmation before sbatch. No architecture/AD change.
+single-GPU array tasks, each4h/8CPU/64GiB, combined cap22.08yuan, now explicitly
+approved and submitted as recorded above. No architecture/AD change.
 Protocol `research/daily_coarse_graining/staged_learning_pilot_frozen_20260916.md`
 explicitly preserves intermediate curves and an inconclusive outcome when
 short-run rankings cannot establish eventual convergence. Free dual v2 remains
