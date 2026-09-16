@@ -13,6 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Single-device budget profiling is COMPLETED, exit0,905.51s Python;
+daily median5.98965s, mixed11.76926s. Frozen matched count600 (raw603.569)
+versus400daily+400mixed. User authorizes paid cards; prepared two concurrent
+single-GPU array tasks, each4h/8CPU/64GiB, combined cap22.08yuan, pending the
+concrete resource/cost confirmation before sbatch. No architecture/AD change.
+Protocol `research/daily_coarse_graining/staged_learning_pilot_frozen_20260916.md`
+explicitly preserves intermediate curves and an inconclusive outcome when
+short-run rankings cannot establish eventual convergence. Free dual v2 remains
+independent (Python76180, last checked compiling GPU1).
+
 Free follow-up is now active: Bash73219 at e3150b9,
 `runtime/checkouts/mixed-learning-budget-profile-v1`, start2026-09-16 10:45:08
 server time. Independent budget profile onGPU0 (90min cap) precedes unchanged

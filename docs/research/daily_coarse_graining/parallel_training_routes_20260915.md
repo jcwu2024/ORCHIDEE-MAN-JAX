@@ -1,8 +1,11 @@
 # Two bounded routes before long training
 
-Latest2026-09-16: paid stage-transition15209522 completed and passed; dual v1
-timed out during compilation. See `parallel_training_routes_results_20260916.md`.
-Continue independent daily/mixed budget timing and dual cache-assisted checks.
+Latest2026-09-16: stage-transition15209522 and independent daily/mixed budget
+timing passed. Freeze600 joint vs400daily+400mixed; user authorizes paid use,
+with a concrete two-task22.08yuan resource proposal awaiting confirmation.
+See `staged_learning_pilot_frozen_20260916.md` for method/interpretation and
+`parallel_training_routes_results_20260916.md` for preceding diagnostic evidence.
+Dual v2 continues independently; v1 timed out during compilation.
 Running-job descriptions below are retained historical launch records.
 
 User authorized implementation and free-node tests on2026-09-15. The prepared

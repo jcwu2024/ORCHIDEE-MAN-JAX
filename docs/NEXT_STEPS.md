@@ -10,6 +10,18 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- User authorizes using paid cards while free dual profiling continues. The
+  budget check COMPLETED exit0, daily median5.98965s and mixed11.76926s;
+  all physical/finite checks pass. Freeze joint600 against400daily+400mixed.
+  Add joint milestone100 to match staged200 at approximate equal compute;
+  retain all intermediate/final physical science panels. This is the first
+  learning-curve segment, not a final route-elimination experiment.
+  Ready proposal: gnall array0-1%2, each1V100/8CPU/64GiB/4h,220min inner limit;
+  total maximum22.08yuan. No sbatch yet: concrete envelope confirmation is
+  pending. New immutable pilot checkout, separate from free running checkouts.
+  Frozen method and interpretation:
+  `research/daily_coarse_graining/staged_learning_pilot_frozen_20260916.md`.
+
 - Free continuation launched2026-09-16 10:45:08 server time: outer Bash73219,
   immutable e3150b9 in `runtime/checkouts/mixed-learning-budget-profile-v1`.
   First GPU0 runs `mixed-learning-budget-profile-v1` (90min ceiling), using
