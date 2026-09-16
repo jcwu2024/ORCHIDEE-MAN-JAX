@@ -11,7 +11,11 @@ from research.daily_coarse_graining.daily_operator.mixed_objective import make_m
 from research.daily_coarse_graining.daily_operator.one_day_training_state import (
     make_gradient_accumulator,
 )
-from scripts.hpc.mixed_learning_profiling import profile_components
+from scripts.hpc.mixed_learning_profiling import (
+    equal_compute_joint_updates,
+    profile_components,
+    profile_learning_budget,
+)
 
 jax.config.update("jax_enable_x64", True)
 
@@ -223,3 +227,81 @@ def test_checked_replay_uses_compact_aux_without_a_separate_forward():
     keys = observed['instrumented']['components']
     assert 'T30_checked_backward' in keys
     assert 'T30_forward' not in keys
+
+
+def _budget_callbacks():
+    callbacks = _callbacks()
+
+    def checked(horizon):
+        def execute(parameters, initial, discrete, days, targets, context, expected):
+            value, gradient = callbacks['recurrent_executables'][horizon](
+                parameters, initial, discrete, days, targets, context)
+            return (value, jnp.zeros((1,), dtype=jnp.int64)), gradient
+
+        return execute
+
+    return {
+        key: value
+        for key, value in callbacks.items()
+        if key not in ('forward', 'validate_recurrent')
+    } | {
+        'recurrent_executables': {7: checked(7), 30: checked(30)},
+        'checked_counter_names': ('physical',),
+    }
+
+
+def test_learning_budget_interleaves_complete_discarded_objectives():
+    callbacks = _budget_callbacks()
+    original_parameters = jax.tree_util.tree_map(np.asarray, callbacks['parameters'])
+    original_step = int(callbacks['optimizer']['step'])
+    events = []
+
+    result = profile_learning_budget(
+        **callbacks,
+        repeats=3,
+        emit=lambda stage, **info: events.append((stage, info)),
+    )
+
+    assert result['status'] == 'completed'
+    assert result['schema_version'] == 'mixed_learning_budget_profile_v1'
+    assert result['retained_parameter_or_optimizer_state'] is False
+    assert result['rotating_data_throughput_accepted'] is False
+    assert result['fixed_checkpoint'] and result['fixed_daily_and_recurrent_inputs']
+    assert len(result['daily_only']['samples_seconds']) == 3
+    assert len(result['mixed']['samples_seconds']) == 3
+    assert [row['objective'] for row in result['replay_order']] == [
+        'daily_only', 'mixed', 'mixed', 'daily_only', 'daily_only', 'mixed'
+    ]
+    assert all(set(row['losses']) == {'daily'} for row in result['daily_only']['records'])
+    assert all(
+        set(row['losses']) == {'daily', 'T7', 'T30'}
+        for row in result['mixed']['records']
+    )
+    expected = equal_compute_joint_updates(
+        result['daily_only']['median_seconds'], result['mixed']['median_seconds'])
+    assert result['equal_compute'] == expected
+    assert events[:2] == [
+        ('learning_budget_warmup', {'objective': 'daily_only', 'discarded': True}),
+        ('learning_budget_warmup', {'objective': 'mixed', 'discarded': True}),
+    ]
+    assert events[-1][0] == 'learning_budget_completed'
+    for actual, expected_value in zip(
+        jax.tree_util.tree_leaves(callbacks['parameters']),
+        jax.tree_util.tree_leaves(original_parameters),
+        strict=True,
+    ):
+        np.testing.assert_array_equal(actual, expected_value)
+    assert int(callbacks['optimizer']['step']) == original_step
+
+
+def test_equal_compute_joint_budget_uses_declared_nearest_ten_formula():
+    result = equal_compute_joint_updates(2.0, 4.0)
+    assert result['unrounded_joint_updates'] == 600.0
+    assert result['joint_updates_nearest_10'] == 600
+    assert result['formula'] == (
+        'nearest10(400*daily_median_seconds/mixed_median_seconds+400)'
+    )
+    assert equal_compute_joint_updates(1.04, 4.0)['joint_updates_nearest_10'] == 500
+    for daily, mixed in ((0.0, 1.0), (1.0, float('nan'))):
+        with np.testing.assert_raises(ValueError):
+            equal_compute_joint_updates(daily, mixed)

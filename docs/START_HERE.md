@@ -60,7 +60,7 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
-As of 2026-09-15, fresh full-network Attention has completed200 mixed daily,
+As of 2026-09-16, fresh full-network Attention has completed200 mixed daily,
 T7 and T30 training updates. Learning improves several primary outputs, but
 scientific gates still fail; respiration and canopy/nonliving carbon remain
 concerns. Only12,800 unique daily draws were used from the ready346,539-day
@@ -68,6 +68,11 @@ TRAIN pool. The5415-update one-pool-pass protocol is prepared but user now
 pauses its paid submission. The current work is two bounded routes: same-update
 dual-GPU execution/cost, and equal-compute joint versus daily-then-mixed training.
 See `research/daily_coarse_graining/parallel_training_routes_20260915.md`.
+The staged1daily+1mixed transition/recovery check passed. Dual real-model
+profiling reached its compilation time limit without a speed result. Independent
+single-GPU daily/mixed timing will set the pilot comparison budget; the dual
+retry does not block that learning route. Latest results:
+`research/daily_coarse_graining/parallel_training_routes_results_20260916.md`.
 
 The performance phase is complete: explicit Attention FP32 plus checked
 recurrent execution passes bounded full-gradient/physical/update admission.

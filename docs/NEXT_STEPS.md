@@ -1,14 +1,31 @@
 # Current Roadmap
 
-Last updated: 2026-09-15.
+Last updated: 2026-09-16.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
-## Current execution gate (2026-09-15)
+## Current execution gate (2026-09-16)
 
 Current actions, superseding launch instructions in the history below:
+
+- Both routes continue independently. Paid stage-transition job15209522
+  COMPLETED exit0 in19m55s (Python1128.39s), with1daily+1mixed update,
+  correct recurrent cursor0->1, physical/finite checks and checkpoint replay.
+  Estimated additive charge0.92yuan. This is technical integration acceptance,
+  NOT scientific learning acceptance; do not repeat it. Free dual v1 reached
+  its90min ceiling (exit124) during T30_GPU0 compilation; daily_GPU0 and T7_GPU0
+  compiled, but no real-model serial/dual comparison or speed result exists.
+  Its last JSON says running because external timeout prevented final emission;
+  the process has exited. Next: independently time warmed complete single-GPU
+  daily-only/mixed updates to freeze the matched-compute joint count, and
+  continue dual compilation/parity/timing using the persistent cache. Do not
+  make dual success a prerequisite for staged learning. The8h/22.08yuan pilot
+  and24h epoch run remain unsubmitted. Evidence:
+  `research/daily_coarse_graining/parallel_training_routes_results_20260916.md`.
+
+Historical launch entries below are superseded by this completion record.
 
 - User explicitly authorizes moving the staged check to paid GPU rather than
   waiting for free dual profiling. Job15209522 is RUNNING on gnall/ibc13b02n01,

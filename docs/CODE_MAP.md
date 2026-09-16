@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-09-15.
+Last updated: 2026-09-16.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -13,6 +13,12 @@ phase/cursor arithmetic for the shared `run_mixed_learning.py`; checkpoint
 progress is validated by `daily_operator/mixed_training_state.py`. Launchers
 `run_mixed_learning_dual_device.sh` and `run_mixed_learning_stages.sh` keep
 the execution and learning-method studies separate. No new adjoint or head.
+`mixed_learning_profiling.py::profile_learning_budget` separately times complete
+single-device daily-only/mixed updates from the fixed trained200 checkpoint;
+`run_mixed_learning_budget_profile.sh` launches it on free GPU. This diagnostic
+discards proposals and never supplies initialization for either learning arm.
+`run_mixed_learning_routes_followup.sh` runs that check before a cache-assisted
+dual retry, with separate outputs and no paid submission.
 
 Current neural precision work: `NeuralPrecisionPolicy` in
 `research/daily_coarse_graining/daily_operator/strong_baseline_architecture.py`

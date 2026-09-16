@@ -17,8 +17,8 @@ import numpy as np
 from scripts.hpc import probe_feedback_loss_calibration as calibration
 from scripts.hpc import probe_feedback_loss_updates as admission
 
-
 SCHEMA_VERSION = "mixed_learning_component_profile_v1"
+LEARNING_BUDGET_SCHEMA_VERSION = "mixed_learning_budget_profile_v1"
 PARITY_RTOL = 1e-5
 PARITY_ATOL = 1e-6
 MICROBATCH_SIZE = 8
@@ -469,4 +469,224 @@ def profile_components(
     return result
 
 
-__all__ = ["profile_components"]
+def equal_compute_joint_updates(
+    daily_seconds: float,
+    mixed_seconds: float,
+) -> dict[str, Any]:
+    """Convert staged warm timing into a nearest-10 equal-compute joint count."""
+
+    daily_seconds, mixed_seconds = float(daily_seconds), float(mixed_seconds)
+    if not (math.isfinite(daily_seconds) and daily_seconds > 0):
+        raise ValueError("daily_seconds must be finite and positive")
+    if not (math.isfinite(mixed_seconds) and mixed_seconds > 0):
+        raise ValueError("mixed_seconds must be finite and positive")
+    staged_daily_updates = staged_mixed_updates = 400
+    unrounded = 400 * daily_seconds / mixed_seconds + 400
+    nearest = int(math.floor(unrounded / 10.0 + 0.5) * 10)
+    return {
+        "formula": "nearest10(400*daily_median_seconds/mixed_median_seconds+400)",
+        "staged_daily_updates": staged_daily_updates,
+        "staged_mixed_updates": staged_mixed_updates,
+        "unrounded_joint_updates": unrounded,
+        "joint_updates_nearest_10": nearest,
+    }
+
+
+def profile_learning_budget(
+    *,
+    jax,
+    jnp,
+    parameters,
+    optimizer,
+    sample,
+    daily_rows,
+    recurrent_rows,
+    window_pool,
+    daily_executable,
+    recurrent_executables,
+    checked_counter_names,
+    coefficients,
+    context,
+    update,
+    add,
+    finish,
+    combine,
+    finite,
+    norm_fn,
+    repeats=3,
+    emit=None,
+):
+    """Time discarded complete daily-only and checked mixed updates."""
+
+    from scripts.hpc.checked_recurrent_execution import decode_counts
+
+    if isinstance(repeats, bool) or repeats not in (3, 5):
+        raise ValueError("learning-budget repeats must be 3 or 5")
+    if not checked_counter_names:
+        raise ValueError("learning-budget profiling requires checked counter names")
+    rows = admission._rows(daily_rows)
+    if len(rows) != DAILY_BATCH_SIZE:
+        raise ValueError("learning-budget profiling requires exactly daily64")
+    recurrent = {
+        horizon: _recurrent_value(recurrent_rows, horizon, name="recurrent_rows")
+        for horizon in _HORIZONS
+    }
+    executables = {
+        horizon: _recurrent_value(
+            recurrent_executables, horizon, name="recurrent_executables"
+        )
+        for horizon in _HORIZONS
+    }
+    notify: Callable[..., None] = emit if emit is not None else lambda stage, **info: None
+
+    def replay(objective: str) -> dict[str, Any]:
+        if objective not in ("daily_only", "mixed"):
+            raise ValueError("unsupported learning-budget objective")
+        daily_total = jax.tree_util.tree_map(jnp.zeros_like, parameters)
+        daily_loss = 0.0
+        for start in range(0, DAILY_BATCH_SIZE, MICROBATCH_SIZE):
+            batch = sample(rows[start : start + MICROBATCH_SIZE])
+            (value, auxiliary), gradient = daily_executable(
+                parameters, batch, coefficients
+            )
+            hard = calibration._hard_summary(
+                jax.device_get(auxiliary["hard"]), batch_size=MICROBATCH_SIZE
+            )
+            if not np.isfinite(float(value)) or not hard["all_zero"]:
+                raise ValueError(
+                    "daily learning-budget replay failed physical/finite gates"
+                )
+            daily_total = add(daily_total, gradient, MICROBATCH_SIZE)
+            daily_loss += float(value) / (DAILY_BATCH_SIZE / MICROBATCH_SIZE)
+            del batch, value, auxiliary, gradient, hard
+
+        daily_mean = finish(daily_total, DAILY_BATCH_SIZE)
+        daily_norm = float(norm_fn(daily_mean))
+        losses = {"daily": daily_loss}
+        component_norms = {"daily": daily_norm}
+        combined = daily_mean
+        del daily_total, daily_mean
+
+        if objective == "mixed":
+            for horizon in _HORIZONS:
+                key = f"T{horizon}"
+                case = window_pool.case(jax, recurrent[horizon])
+                (value, counts), gradient = executables[horizon](
+                    parameters, *case[:4], context, case[4]
+                )
+                value_host, counts_host = jax.device_get((value, counts))
+                hard = decode_counts(checked_counter_names, counts_host)
+                if not np.isfinite(value_host) or any(hard.values()):
+                    raise ValueError(
+                        key + " checked learning-budget replay failed gates"
+                    )
+                losses[key] = float(value_host)
+                component_norms[key] = float(norm_fn(gradient))
+                combined = combine(combined, gradient, 1.0, 0.5)
+                jax.block_until_ready(combined)
+                del case, value, counts, gradient, value_host, counts_host, hard
+
+        combined_finite = bool(finite(combined))
+        if not combined_finite or not all(
+            np.isfinite(value) and value > 0 for value in component_norms.values()
+        ):
+            raise ValueError("learning-budget gradient is nonfinite or empty")
+        proposed, proposed_optimizer, combined_norm, clip = update(
+            parameters, combined, optimizer
+        )
+        jax.block_until_ready(
+            (proposed, proposed_optimizer, combined_norm, clip)
+        )
+        proposal_finite = bool(finite((proposed, proposed_optimizer)))
+        combined_norm_value, clip_value = float(combined_norm), float(clip)
+        if (
+            not proposal_finite
+            or not np.isfinite(combined_norm_value)
+            or not 0 < clip_value <= 1
+        ):
+            raise ValueError("learning-budget AdamW proposal is invalid")
+        mixed_loss = losses["daily"] + 0.5 * sum(
+            losses[key] for key in ("T7", "T30") if key in losses
+        )
+        record = {
+            "objective": objective,
+            "losses": losses,
+            "objective_loss": mixed_loss,
+            "gradient_norms": component_norms,
+            "combined_gradient_norm": combined_norm_value,
+            "clip": clip_value,
+            "combined_finite": combined_finite,
+            "proposal_finite": proposal_finite,
+            "all_hard_counts_zero": True,
+        }
+        del combined, proposed, proposed_optimizer, combined_norm, clip
+        return record
+
+    for objective in ("daily_only", "mixed"):
+        notify("learning_budget_warmup", objective=objective, discarded=True)
+        replay(objective)
+
+    samples = {"daily_only": [], "mixed": []}
+    records = {"daily_only": [], "mixed": []}
+    order = []
+    for repeat in range(repeats):
+        objectives = (
+            ("daily_only", "mixed")
+            if repeat % 2 == 0
+            else ("mixed", "daily_only")
+        )
+        for objective in objectives:
+            notify(
+                "learning_budget_replay",
+                objective=objective,
+                repeat=repeat + 1,
+                repeats=repeats,
+                discarded=True,
+            )
+            began = time.perf_counter()
+            record = replay(objective)
+            elapsed = time.perf_counter() - began
+            samples[objective].append(elapsed)
+            records[objective].append(record)
+            order.append({"repeat": repeat + 1, "objective": objective})
+
+    daily_timing = _summary(samples["daily_only"])
+    mixed_timing = _summary(samples["mixed"])
+    equal_compute = equal_compute_joint_updates(
+        daily_timing["median_seconds"], mixed_timing["median_seconds"]
+    )
+    result = {
+        "schema_version": LEARNING_BUDGET_SCHEMA_VERSION,
+        "status": "completed",
+        "repeats": repeats,
+        "replay_order": order,
+        "daily_only": {**daily_timing, "records": records["daily_only"]},
+        "mixed": {**mixed_timing, "records": records["mixed"]},
+        "equal_compute": equal_compute,
+        "timing_boundary": [
+            "host_data_read_and_pack",
+            "device_execution_and_transfer",
+            "physical_and_finite_checks",
+            "gradient_norm_and_merge",
+            "discarded_AdamW_proposal_and_checks",
+        ],
+        "fixed_checkpoint": True,
+        "fixed_daily_and_recurrent_inputs": True,
+        "rotating_data_throughput_accepted": False,
+        "retained_parameter_or_optimizer_state": False,
+        "claim_scope": "single_GPU_fixed_input_warm_timing_for_budgeting_only",
+    }
+    notify(
+        "learning_budget_completed",
+        daily_median_seconds=daily_timing["median_seconds"],
+        mixed_median_seconds=mixed_timing["median_seconds"],
+        joint_updates_nearest_10=equal_compute["joint_updates_nearest_10"],
+    )
+    return result
+
+
+__all__ = [
+    "equal_compute_joint_updates",
+    "profile_components",
+    "profile_learning_budget",
+]

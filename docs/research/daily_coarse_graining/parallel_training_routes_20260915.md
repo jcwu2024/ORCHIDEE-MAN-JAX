@@ -1,7 +1,9 @@
 # Two bounded routes before long training
 
-Latest update: user directed the stage-transition check onto available paid
-GPU. Job15209522 is RUNNING; details below supersede waiting for free GPU0.
+Latest2026-09-16: paid stage-transition15209522 completed and passed; dual v1
+timed out during compilation. See `parallel_training_routes_results_20260916.md`.
+Continue independent daily/mixed budget timing and dual cache-assisted checks.
+Running-job descriptions below are retained historical launch records.
 
 User authorized implementation and free-node tests on2026-09-15. The prepared
 5415-update/24h job is paused before submission. No paid job is authorized by

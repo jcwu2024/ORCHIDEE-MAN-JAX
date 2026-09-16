@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-09-15.
+Last updated: 2026-09-16.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -23,7 +23,8 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `research/daily_coarse_graining/parallel_training_routes_20260915.md` | Real dual profile running free; stage-transition job15209522 running paid | User moved bounded staged check paid;1GPU/90min/4.14yuan cap; larger learning pilots remain pending |
+| `research/daily_coarse_graining/parallel_training_routes_results_20260916.md` | Stage transition passed; dual v1 compilation timed out | Independent daily/mixed budget timing and cache-assisted dual continuation; no scientific or dual speed acceptance yet |
+| `research/daily_coarse_graining/parallel_training_routes_20260915.md` | Active two-route specification; stage integration completed |400daily+400mixed versus timing-matched joint; larger paid learning pilot pending |
 | `research/daily_coarse_graining/mixed_learning_epoch_protocol_20260915.md` | Prepared5415-update method; free integration passed, paid submission paused | Larger coverage protocol retained while dual execution and staged learning are studied |
 | `research/daily_coarse_graining/combined_execution_results_20260915.md` | Combined policy admitted; performance phase closed | Full-gradient/physical/update checks pass;11.761s,17.065% less time; return to substantial-coverage training |
 | `research/daily_coarse_graining/combined_execution_admission_20260915.md` | Completed specification; v2 result admitted | Explicit FP32 + checked split; preserves v1 timeout and v2 completion history |

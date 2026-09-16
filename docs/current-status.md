@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-15.
+Last updated: 2026-09-16.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -12,6 +12,17 @@ This page is the current status authority. Dated files under
 describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
+
+Latest2026-09-16: stage-transition job15209522 COMPLETED exit0,19m55s,
+Python1128.39s; both updates, phase/cursor transition, physical checks and
+checkpoint forward replay pass. Scientific acceptance remains false. The
+free dual v1 instead reached90min timeout during T30_GPU0 compilation (124),
+after daily_GPU0/T7_GPU0 completed; it produced no real-model parity/speed
+result. Both old processes have exited. User authorizes continuing both
+routes: independent single-GPU budget timing and cache-assisted dual retry.
+No paid learning pilot submitted. See
+`research/daily_coarse_graining/parallel_training_routes_results_20260916.md`.
+The following launch records are historical and superseded by these results.
 
 Paid staged integration15209522 is RUNNING after explicit user direction to
 use available paid GPUs. It started2026-09-15 23:29:02 onibc13b02n01 with

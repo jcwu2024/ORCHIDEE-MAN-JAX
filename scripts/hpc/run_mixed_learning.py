@@ -100,6 +100,32 @@ def configure_execution(args):
     return policy
 
 
+def validate_learning_budget_mode(args, *, profiling, execution_policy):
+    """Fail closed before a fixed-checkpoint learning-budget diagnostic."""
+    if not getattr(args, 'learning_budget_profile', False):
+        return
+    if not profiling:
+        raise ValueError('learning-budget profiling requires fixed-checkpoint profiling')
+    if execution_policy is None:
+        raise ValueError('learning-budget profiling requires the admitted execution policy')
+    conflicts = (
+        args.profile_trace,
+        args.precision_stage is not None,
+        args.dual_device_profile,
+        args.compare_checked_recurrent,
+        args.checked_reference_report is not None,
+        args.precision_reference_report is not None,
+        args.precision_daily_reference is not None,
+        args.learning_schedule is not None,
+    )
+    if any(conflicts):
+        raise ValueError(
+            'learning-budget profiling is separate from trace, precision, dual, '
+            'comparison, and staged-training modes')
+    if not args.checked_recurrent or not args.separate_checked_validation:
+        raise ValueError('learning-budget profiling requires checked split execution')
+
+
 def lowered_precision_summary(lowered):
     """Static matrix result types; counts are not execution time or FLOP shares."""
     import re
@@ -234,6 +260,8 @@ def run(args):
     profiling = args.profile_checkpoint is not None
     if profiling != (args.profile_training_report is not None):
         raise ValueError('profile checkpoint and source training report are required together')
+    validate_learning_budget_mode(
+        args, profiling=profiling, execution_policy=execution_policy)
     if profiling and (args.resume or args.integration_updates or args.shape_only):
         raise ValueError('profiling is a separate diagnostic, not resume or integration training')
     if args.profile_trace and not profiling:
@@ -243,7 +271,8 @@ def run(args):
     if args.dual_device_profile and not profiling:
         raise ValueError('dual-device profiling requires fixed-checkpoint profiling')
     if args.dual_device_profile and (args.profile_trace or args.precision_stage
-                                     or args.compare_checked_recurrent):
+                                     or args.compare_checked_recurrent
+                                     or args.learning_budget_profile):
         raise ValueError('dual-device profiling is separate from legacy comparison diagnostics')
     if args.compare_checked_recurrent and not profiling:
         raise ValueError('checked-recurrent admission requires fixed-checkpoint profiling')
@@ -259,7 +288,8 @@ def run(args):
         raise ValueError('precision staging and checked-recurrent admission are separate diagnostics')
     if args.separate_checked_validation and not (args.compare_checked_recurrent or args.checked_recurrent):
         raise ValueError('separate validation requires checked execution or comparison')
-    if args.checked_recurrent and profiling and not args.dual_device_profile:
+    if (args.checked_recurrent and profiling
+            and not (args.dual_device_profile or args.learning_budget_profile)):
         raise ValueError('use compare-checked-recurrent for fixed-checkpoint admission')
     if args.checked_recurrent and args.shape_only:
         raise ValueError('checked execution is admitted by checked-profile, not the legacy shape-only path')
@@ -647,7 +677,7 @@ def run(args):
             executable = lowered.compile()
             memory = _compiled_memory(executable)
             report['compilation'][name] = dict(seconds=time.perf_counter()-began,memory=memory)
-            if profiling:
+            if profiling and not args.learning_budget_profile:
                 report['compilation'][name]['precision'] = lowered_precision_summary(lowered)
             if memory['estimated_live_bytes'] > config['compiled_memory_limit_gib']*1024**3:
                 raise MemoryError(name+' compiled live memory exceeds bound')
@@ -688,6 +718,25 @@ def run(args):
 
         if profiling:
             from scripts.hpc.mixed_learning_profiling import _parity, profile_components
+
+            if args.learning_budget_profile:
+                from scripts.hpc.mixed_learning_profiling import profile_learning_budget
+
+                budget_profile = profile_learning_budget(
+                    jax=jax,jnp=jnp,parameters=parameters,optimizer=optimizer,
+                    sample=sample,daily_rows=fixed_rows,
+                    recurrent_rows={row['length']:row for row in fixed_windows},
+                    window_pool=train_pool,daily_executable=executables['daily'],
+                    recurrent_executables={7:executables['T7'],30:executables['T30']},
+                    checked_counter_names=checked_names,coefficients=coefficients,
+                    context=context,update=update,add=add,finish=finish,
+                    combine=combine,finite=finite,norm_fn=norm_fn,
+                    repeats=args.profile_repeats,emit=emit)
+                emit('completed',status='completed',learning_budget_profile=budget_profile,
+                     persistent_parameter_updates=0,
+                     memory=_device_memory(runtime['devices'][0]),
+                     daily_reader=daily_pool.statistics())
+                return report
 
             if precision_stage:
                 from research.daily_coarse_graining.daily_operator.one_day_training_state import _atomic_pickle
@@ -1102,6 +1151,8 @@ def parser():
                         help='opt-in declared daily/mixed phase schedule')
     result.add_argument('--dual-device-profile',action='store_true',
                         help='fixed-checkpoint daily/recurrent two-device profile; never trains')
+    result.add_argument('--learning-budget-profile',action='store_true',
+                        help='fixed-checkpoint daily-only versus mixed warm timing; never trains')
     result.add_argument('--precision-stage', choices=_PRECISION_STAGES,
                         help='fixed-checkpoint legacy/FP32 component admission; never trains')
     result.add_argument('--precision-reference-report', type=Path,
