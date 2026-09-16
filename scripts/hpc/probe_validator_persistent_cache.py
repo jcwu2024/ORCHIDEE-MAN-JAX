@@ -77,7 +77,10 @@ def run(args):
             assert cache_key.custom_hook() != baseline_hook
             assert executor.submit(cache_key.custom_hook).result() == baseline_hook
         assert cache_key.custom_hook() == baseline_hook
-    split = probe(jax, jnp, devices)
+    if args.require_reproduction and legacy_error is None:
+        raise AssertionError('deployed regression must reproduce the old cache assignment error')
+    print(dict(legacy_peer_error=legacy_error, fixed_device_checks=fixed), flush=True)
+    split = probe(jax, jnp, devices, scope_raw_cache=True)
     report = dict(schema_version='validator_persistent_cache_probe_v1', status='passed',
                   jax_version=jax.__version__, elapsed_seconds=time.perf_counter()-began,
                   cache_directory=str(cache), initial_cache_entries=cache_files,
@@ -90,4 +93,6 @@ def run(args):
 
 
 if __name__ == '__main__':
-    run(parser().parse_args())
+    argument_parser = parser()
+    argument_parser.add_argument('--require-reproduction', action='store_true')
+    run(argument_parser.parse_args())

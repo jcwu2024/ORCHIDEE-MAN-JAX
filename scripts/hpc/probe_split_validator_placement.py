@@ -3,15 +3,16 @@ from __future__ import annotations
 
 import time
 from concurrent.futures import ThreadPoolExecutor
+from contextlib import nullcontext
 
 import numpy as np
 
 from scripts.hpc.check_daily_training_runtime import _atomic_json
-from scripts.hpc.checked_recurrent_execution import wrap_separate_checked
+from scripts.hpc.checked_recurrent_execution import _device_validator_cache, wrap_separate_checked
 from scripts.hpc.probe_dual_device_runtime import parser
 
 
-def probe(jax, jnp, devices):
+def probe(jax, jnp, devices, *, scope_raw_cache=False):
     """Exercise captured primary constants and lazy peer compilation in a thread."""
     primary, secondary = devices
     captured = jax.device_put(np.asarray([2., 3.], dtype=np.float64), primary)
@@ -38,7 +39,12 @@ def probe(jax, jnp, devices):
                 (np.zeros((horizon, 2)), np.ones((horizon, 2))),
                 np.zeros(2), np.asarray(0.), np.zeros((horizon, 2)),
             ), device)
-            executable = raw.lower(*arguments[:-1]).compile()
+            # Only the forced-cache regression uses this: its synthetic raw
+            # function is identical on both GPUs and hits the same JAX issue.
+            # Isolate it so this harness tests the production validator wrapper.
+            scope = _device_validator_cache(device) if scope_raw_cache else nullcontext()
+            with scope:
+                executable = raw.lower(*arguments[:-1]).compile()
             checked = wrap_separate_checked(
                 jax, executable, validator, device=device if explicit else None)
             result = checked(*arguments)
