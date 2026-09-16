@@ -13,6 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Current preparation: user prioritizes dual execution and permits paid Slurm.
+General helper-cache isolation plus allocated GPU propagation implemented and
+deployed immutableb2e1562 to `runtime/checkouts/mixed-learning-dual-paid-v1`.
+Deployed full synthetic profiler/cache regression PASSED38.13245s with exact
+old-error reproduction, two positive runs, zero full-tree discrepancies and
+disk-cache reload evidence. Local6 tests, Sol/high review and actual-shell
+GPU3,5 dry-run pass. Ready gnall2GPU/8CPU/64GiB/90min, maximum7.44yuan; NOT
+submitted, awaiting approval of this concrete envelope. No task currently active.
+See `research/daily_coarse_graining/dual_device_paid_validation_20260916.md`.
+
 Latest completion: paid array15225197_0/_1 both COMPLETED0:0, joint600 in2:46:36
 and staged400daily+400mixed in2:49:00. Physical checks and checkpoint replay pass;
 scientific acceptance is false. Actual compute differs by only0.62%; estimated

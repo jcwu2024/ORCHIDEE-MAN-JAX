@@ -64,3 +64,34 @@ integration step if the measured speed/cost tradeoff is useful. Do not switch
 either completed learning arm to dual execution or submit a longer training
 job automatically. Neither a speed result nor tiny numerical parity establishes
 long-term scientific accuracy.
+
+## Preparation completed
+
+Immutable deployed checkout is b2e1562 at the path above. Local6 split/dual
+tests, Python compilation/Ruff and diff check pass. Sol/high independently
+reviewed all relevant helper/device edges; Luna/high implemented the bounded
+synthetic fixture, which calls the actual production profiler. Graph coverage
+was metadata-stale, so exact current sources were read for these conclusions.
+
+Deployed JAX0.4.38 probe `dual-profile-cache-v1` PASSED exit0 in38.13245s on
+gln01 GPUs0+1. Its negative control reproduced the exact XLA assignment error
+afterGPU1 T7 validator compilation. Two positive complete profile runs passed,
+each with3 interleaved timing repetitions; gradient, updated-parameter and
+AdamW-state tree errors were zero, physical counters/scalars agreed. Active
+clipping was exercised. Memory caches were cleared between positive runs;
+compiler logs show disk-cache hits for corrected helper and validator entries.
+The isolated tiny cache never changes thresholds for the production cache.
+No real-model timing or persistent training outcome is inferred from this test.
+Local evidence: `outputs/dual-profile-cache-v1.{json,log}`; remote same basename
+under runtime/outputs/diagnostics. Prior unchanged expensive AD evidence reused.
+
+Target shell syntax and actual job `--dry-run` passed on gln01 with simulated
+Slurm job424242 and CUDA_VISIBLE_DEVICES=3,5. Expanded launcher preserves
+GPU_DEVICE=3,5,85min inner timeout, reviewed checkout and job-specific outputs.
+The fake job number is a dry-run label, NOT a scheduler submission. Live gnall
+inspection at15:29 server time found4 idle nodes; availability may change.
+
+All preparation is complete; no paid job submitted. Await explicit approval
+of2GPUs/8CPUs/64GiB/90min/7.44yuan envelope. After approval, use exactly the
+declared sbatch command and preserve b2e1562 while running. Do not repeat this
+tiny probe or the old gradient audit merely for unchanged submission metadata.

@@ -13,6 +13,12 @@ phase/cursor arithmetic for the shared `run_mixed_learning.py`; checkpoint
 progress is validated by `daily_operator/mixed_training_state.py`. Launchers
 `run_mixed_learning_dual_device.sh` and `run_mixed_learning_stages.sh` keep
 the execution and learning-method studies separate. No new adjoint or head.
+`checked_recurrent_execution.py::device_helper_cache` isolates device-bound
+validator and execution-helper persistent caches. `probe_dual_profile_cache.py`
+exercises the actual complete profiler with tiny fixtures and forced cache
+reloads, including the known unscoped-helper failure control.
+`job_mixed_learning_dual_profile.sh` is the bounded90min paid validation entry;
+the shared dual launcher preserves Slurm's allocated GPU mask.
 `mixed_learning_profiling.py::profile_learning_budget` separately times complete
 single-device daily-only/mixed updates from the fixed trained200 checkpoint;
 `run_mixed_learning_budget_profile.sh` launches it on free GPU. This diagnostic

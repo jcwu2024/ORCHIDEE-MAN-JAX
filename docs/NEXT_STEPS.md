@@ -10,6 +10,18 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- User prioritizes dual execution and permits paid Slurm for queryable job state.
+  Full helper cache scopes and allocated-GPU propagation fixed atb2e1562;
+  immutable `runtime/checkouts/mixed-learning-dual-paid-v1` is ready. Actual
+  JAX0.4.38 tiny full-profile cache regression PASSED38.13s: known legacy error
+  reproduced; two positive runs (3 repeats each) match full gradient/parameters/
+  AdamW and physical/scalar checks, including persisted reloads. Local6 tests,
+  independent Sol/high review and target-shell dry-runGPU3,5 pass.
+  Next submit concrete gnall1node/2V100/8CPU/64GiB/90min envelope only after
+  explicit7.44yuan approval; command `sbatch scripts/hpc/job_mixed_learning_dual_profile.sh`.
+  No current free/paid task. No repeat gradient audit or changed teacher/loss.
+  Protocol: `research/daily_coarse_graining/dual_device_paid_validation_20260916.md`.
+
 - Paid array15225197 both COMPLETED0:0: joint600 in2:46:36 and staged800 in2:49:00.
   All update/monitor physical checks and checkpoint replay pass; scientific
   acceptance remains false. Actual update compute matched within0.62%.
