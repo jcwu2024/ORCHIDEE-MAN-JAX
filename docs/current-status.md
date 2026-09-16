@@ -19,8 +19,11 @@ deployed immutableb2e1562 to `runtime/checkouts/mixed-learning-dual-paid-v1`.
 Deployed full synthetic profiler/cache regression PASSED38.13245s with exact
 old-error reproduction, two positive runs, zero full-tree discrepancies and
 disk-cache reload evidence. Local6 tests, Sol/high review and actual-shell
-GPU3,5 dry-run pass. Ready gnall2GPU/8CPU/64GiB/90min, maximum7.44yuan; NOT
-submitted, awaiting approval of this concrete envelope. No task currently active.
+GPU3,5 dry-run pass. User approved gnall2GPU/8CPU/64GiB/90min, maximum7.44yuan;
+job15230086 submitted and RUNNING since15:54:50 server time onibc13b03n01.
+Slurm deadline17:24:50;85min inner timeout, no requeue. Launcher confirms
+b2e1562/GPU0,1 and diagnostics `mixed-learning-dual-paid-15230086.{json,log}`.
+No new parity/speed result yet. Do not change checkout or launch duplicates.
 See `research/daily_coarse_graining/dual_device_paid_validation_20260916.md`.
 
 Latest completion: paid array15225197_0/_1 both COMPLETED0:0, joint600 in2:46:36

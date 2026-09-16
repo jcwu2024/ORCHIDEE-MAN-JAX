@@ -17,9 +17,12 @@ Current actions, superseding launch instructions in the history below:
   reproduced; two positive runs (3 repeats each) match full gradient/parameters/
   AdamW and physical/scalar checks, including persisted reloads. Local6 tests,
   independent Sol/high review and target-shell dry-runGPU3,5 pass.
-  Next submit concrete gnall1node/2V100/8CPU/64GiB/90min envelope only after
-  explicit7.44yuan approval; command `sbatch scripts/hpc/job_mixed_learning_dual_profile.sh`.
-  No current free/paid task. No repeat gradient audit or changed teacher/loss.
+  User approved7.44yuan envelope; submitted job15230086, RUNNING since15:54:50
+  server time onibc13b03n01, gnall1node/2V100/8CPU/64GiB/90min. Slurm deadline
+  17:24:50;85min inner timeout, no requeue. Launcher confirmsb2e1562 andGPU0,1.
+  Diagnostics `mixed-learning-dual-paid-15230086.{json,log}`. Collect parity and
+  warmed speed/cost; no duplicate/retry or learning extension authorized.
+  No repeat gradient audit or changed teacher/loss.
   Protocol: `research/daily_coarse_graining/dual_device_paid_validation_20260916.md`.
 
 - Paid array15225197 both COMPLETED0:0: joint600 in2:46:36 and staged800 in2:49:00.

@@ -1,5 +1,9 @@
 # Dual-device completion plan and paid validation envelope
 
+Latest: user approved the concrete7.44yuan envelope. Job15230086 was submitted
+and is RUNNING; the submission record below supersedes preparation-time
+pending-approval statements. No duplicate/retry or longer training authorized.
+
 User prioritizes completing the dual-device route after both learning pilots
 finished and permits paid GPUs so the run has a Slurm job identity. This file
 defines the concrete job; submission awaits approval of the resource/cost
@@ -95,3 +99,17 @@ All preparation is complete; no paid job submitted. Await explicit approval
 of2GPUs/8CPUs/64GiB/90min/7.44yuan envelope. After approval, use exactly the
 declared sbatch command and preserve b2e1562 while running. Do not repeat this
 tiny probe or the old gradient audit merely for unchanged submission metadata.
+
+## Approved submission
+
+Executed `sbatch scripts/hpc/job_mixed_learning_dual_profile.sh` from the exact
+declared clean checkout, unchangedb2e1562. Slurm job15230086 submitted15:54:49
+and started15:54:50 on2026-09-16 server time, nodeibc13b03n01. Verified RUNNING,
+2GPUs/8allocatedCPUs/64GiB/90min, no requeue/restarts; deadline17:24:50. The
+launcher confirms codeb2e1562, allocatedGPU0,1 and the job-specific output.
+Logs/report: runtime/outputs/diagnostics/mixed-learning-dual-paid-15230086.log
+and.json; inner85min timeout. Do not edit the running checkout or resubmit.
+
+Check active status with `squeue -j 15230086`; completed status/exit with
+`sacct -j 15230086 --format=JobID,State,ExitCode,Elapsed`. Scheduler RUNNING
+does not certify numerical parity or speed; collect the full report when done.
