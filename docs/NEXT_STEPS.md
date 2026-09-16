@@ -10,6 +10,18 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Free continuation launched2026-09-16 10:45:08 server time: outer Bash73219,
+  immutable e3150b9 in `runtime/checkouts/mixed-learning-budget-profile-v1`.
+  First GPU0 runs `mixed-learning-budget-profile-v1` (90min ceiling), using
+  normal single-device caches and3 interleaved daily/mixed timing repeats.
+  Afterwards, if both GPUs are idle, the same wrapper launches dual v2 from
+  unchanged dea4083, with150min ceiling and cache-hit logging. No paid job.
+  Aggregate log `runtime/outputs/diagnostics/mixed-learning-routes-followup-v1.log`
+  records each start/exit. Each diagnostic has its own basename `.json/.log`.
+  Do not launch duplicates; collect budget timing first and freeze joint count
+  even if dual remains pending.47 focused tests, independent review, actual
+  target-shell dry-run and syntax pass. Running checkouts stay immutable.
+
 - Both routes continue independently. Paid stage-transition job15209522
   COMPLETED exit0 in19m55s (Python1128.39s), with1daily+1mixed update,
   correct recurrent cursor0->1, physical/finite checks and checkpoint replay.

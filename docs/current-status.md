@@ -13,6 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Free follow-up is now active: Bash73219 at e3150b9,
+`runtime/checkouts/mixed-learning-budget-profile-v1`, start2026-09-16 10:45:08
+server time. Independent budget profile onGPU0 (90min cap) precedes unchanged
+dea4083 dual v2 (150min cap, starts only if bothGPUs idle). Aggregate diagnostic
+log `mixed-learning-routes-followup-v1.log`; no new paid job.47 focused tests
+and actual-shell dry-run pass. Budget timing, not dual success, controls the
+next joint-count freeze. This supersedes the no-active-process state below.
+
 Latest2026-09-16: stage-transition job15209522 COMPLETED exit0,19m55s,
 Python1128.39s; both updates, phase/cursor transition, physical checks and
 checkpoint forward replay pass. Scientific acceptance remains false. The

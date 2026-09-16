@@ -67,3 +67,23 @@ the budget replay. Shell syntax and diff checks pass. Budget profiling skips
 legacy HLO precision-text inspection, retains normal compile/memory checks,
 warms both objectives and interleaves3 repeats. This is orchestration evidence,
 not a new gradient or scientific acceptance claim.
+
+## Free continuation launch
+
+At server time2026-09-16 10:45:08, launched outer Bash73219 on gln01 after
+both GPUs were confirmed idle. Budget code is e3150b9 in
+`runtime/checkouts/mixed-learning-budget-profile-v1`. Target-shell syntax and
+actual `--dry-run` expansion passed before launch. The dual child retains
+dea4083 in `runtime/checkouts/mixed-learning-parallel-routes-v1`.
+
+Under `runtime/outputs/diagnostics/`:
+
+- `mixed-learning-routes-followup-v1.log`: aggregate start/exit statuses.
+- `mixed-learning-budget-profile-v1.{json,log}`: singleGPU0 budget profile.
+- `mixed-learning-dual-profile-v2.{json,log}`: subsequent twoGPU retry.
+
+The wrapper can be checked on gln01 with
+`ps -p 73219 -o pid,etime,pcpu,comm`. Its lifetime includes both children;
+consult individual logs to distinguish which diagnostic is active. GPU1 is
+not occupied during the first diagnostic. No paid submission or learning
+outcome is implied by this launch. Do not rerun either output identity.
