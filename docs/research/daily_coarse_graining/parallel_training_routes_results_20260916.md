@@ -132,3 +132,57 @@ before any dual adoption. No paid submission was made for this repair.
 
 Graph project/coverage tools returned Transport closed; bounded source review
 used the exact traceback files and tests, without exhaustive impact claims.
+
+## Dual v3 cache diagnosis and v4 retry
+
+V3 Python100778 exited1 after1294.3561s. All five main programs loaded/compiled
+in101.33/223.76/234.86/234.88/228.98s and a complete serial reference was saved.
+The same validator device error occurred; explicit sharding did not fix it.
+Decisive log evidence: GPU0 T7 writes key
+`jit_validator-9404837b9c58a3104b702d9444a4a42f2423016f5f317b3b63d8755ea9e89d7e`;
+GPU1 requests `device_assignment=[[CudaDevice(id=1)]]` but hits that identical
+key, then execution reports the replica assigned toGPU0. This is a persistent
+executable-cache assignment problem, not a gradient/scientific rejection.
+
+JAX0.4.38 strips assignment information in persistent-key construction. Its
+cache-enabled decision is memoized process-wide, so a later thread-local
+cache-off setting is not a reliable fix. Independent Sol/high source review
+confirmed the mechanism. Repair e6d7e7a uses JAX's custom cache-key hook, with
+a ContextVar suffix including platform/process/device only around validator
+lower/compile. The previous hook's value is preserved exactly outside that
+scope, retaining all expensive raw-program cache keys. Explicit sharding stays.
+The hook is installed once under a lock; scope resets in finally. Single-device
+production calls with device=None retain their behavior. No loss/AD changes.
+
+New `probe_validator_persistent_cache.py` configures a new tiny diagnostic cache
+before compilation and forces writes even for sub-second compiles. Primary old
+validator -> peer old validator reproduces the failure; scoped validators then
+pass on both devices, including a second round after clearing only in-memory
+caches. It checks thread isolation/restoration and actual split wrappers atT7/T30
+with changed targets and repeated calls. Initial probe attempts also exposed
+this same cache defect in the synthetic raw program and a test-only add kernel;
+the harness now scopes its synthetic raw compile and constructs changed inputs
+on host. Production raw caches are NOT changed. These small failed probe logs
+are retained, not reported as successful end-to-end checks.
+
+Final deployed probe at1332940: `validator-persistent-cache-v3.{json,log}`,
+JAX0.4.38, exit0,2.379772s. `--require-reproduction` enforces the negative control;
+both direct and split legacy controls fail as expected; all fixed checks pass.
+GPU0 andGPU1 produce identical expected values. Local JAX0.10.1 CPU probe passes
+but does not reproduce the old-runtime failure; local6 split/dual tests and Ruff
+pass. No repeated long gradient audit: runtime evidence from the previous check
+is reused because the numerical graph/AD boundary did not change. The probe does
+not read Teacher data and is not real-model parity or scientific acceptance.
+
+After idle-GPU check and target-shell dry-run, launched full v4 at14:34:54 server
+time, GPUs0+1,60min ceiling, Python110215 (timeout110184). Immutable1332940 checkout
+`runtime/checkouts/mixed-learning-validator-cache-v1`; outputs under diagnostics
+`mixed-learning-dual-profile-v4.{json,log}`. Main-program caches and all serial
+references remain intact. Collect full gradient/optimizer/physical comparisons
+and warmed speed/cost before adopting dual execution. No new paid job.
+
+Paid array15225197 remains independent/unchanged at0d18d3c. At14:34:56 server time,
+both tasks RUNNING: joint544/600, staged734/800. Results are still pending; do not
+treat early ranking as eventual convergence. Existing approval remains bounded
+to those two jobs. Graph tools recovered this turn; generation2026-09-16T05:39:56Z
+reports metadata_changed for relevant sources, so direct source review was used.

@@ -13,14 +13,20 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Free dual v2 completed abnormally, exit1,5120.97s Python: validator executable
-assigned toGPU0 receivedGPU1 buffers. Full dual parity and speed remain unknown.
-Main five compilations and serial reference are preserved. Explicit validator
-placement repair b31c523 passed local6 tests and deployed runtime/placement
-checks; small legacy control did not reproduce the real-model failure. Full
-v3 is active on free GPUs0+1, Bash100711,60min ceiling, separate immutable
-`runtime/checkouts/mixed-learning-dual-placement-v1`. Paid array15225197 remains
-on0d18d3c and was observed advancing normally to143joint/269staged updates.
+Free dual v3 (Python100778) FAILED exit1 after1294.36s. Despite explicit GPU1
+sharding, JAX0.4.38 loaded the GPU0 validator under the same persistent-cache
+key, then rejected the GPU1 buffers. Prior tiny test omitted forced cache writes.
+The repair adds a thread-local per-device cache-key suffix ONLY while compiling
+explicitly device-bound validators; ordinary/raw keys stay unchanged. Sol/high
+review supported this mechanism. Local6 tests pass. Actual twoGPU forced-cache
+regression PASSED2.3798s, reproducing the old error and passing fixed fresh and
+reloaded executables plus T7/T30 wrappers. These are runtime, not science, results.
+Free full dual v4 is RUNNING since14:34:54 server time, Python110215/timeout110184,
+60min ceiling; immutable1332940 in `runtime/checkouts/mixed-learning-validator-cache-v1`.
+Diagnostics `mixed-learning-dual-profile-v4.{json,log}`. Full dual parity/speed
+remain unknown. Preserve existing caches/serial references; no new paid job.
+Paid array15225197 remains on0d18d3c, RUNNING at14:34:56 with544joint/734staged
+completed updates. Learning interpretation proceeds independently.
 
 Paid array15225197 is RUNNING after explicit user approval of the22.08yuan
 two-task envelope. Start2026-09-16 12:03:41 server time; joint task0 onibc13b03n01,

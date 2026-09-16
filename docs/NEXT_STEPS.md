@@ -10,17 +10,20 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
-- Free dual v2 FAILED exit1 after5120.97s Python: peer GPU1 observations were
-  passed to a validator executable assigned toGPU0. All five main programs
-  compiled and the serial reference was saved; no full dual parity/speed result.
-  Fix b31c523 adds explicit device sharding to the split validator only when
-  dual callers request it; default single-device route is unchanged. Local6
-  tests and actual JAX0.4.38 twoGPU placement probe pass (2.38s); tiny negative
-  control did not reproduce the real-model failure, so full acceptance pending.
-  Runtime check passed60.09s. Free dual v3 launched onGPUs0+1, Bash100711/Python100778,
-  60min ceiling, immutable `runtime/checkouts/mixed-learning-dual-placement-v1`.
-  Diagnostics `mixed-learning-dual-profile-v3.{json,log}`. Keep paid array15225197
-  at0d18d3c; both arms observed training normally (143/600 and269/800).
+- Free dual v3 (Python100778) FAILED exit1 after1294.36s: GPU1 explicitly
+  requested its own validator but loaded the identical GPU0 persistent-cache
+  key and then rejected GPU1 buffers. Explicit sharding alone was insufficient.
+  New repair namespaces ONLY device-bound validator cache keys by device;
+  expensive raw-program keys and default single-device behavior stay unchanged.
+  Deployed JAX0.4.38 forced-cache regression PASSED2.38s: old error reproduced,
+  fixed fresh/reloaded executables and T7/T30 split wrappers passed on bothGPUs.
+  Local6 tests pass; no loss/AD changes or repeated long gradient audit.
+  Free dual v4 launched14:34:54 server time onGPUs0+1, Python110215/timeout110184,
+  60min ceiling, immutable1332940 in `runtime/checkouts/mixed-learning-validator-cache-v1`.
+  Diagnostics `mixed-learning-dual-profile-v4.{json,log}`; full-model parity/speed
+  still pending. Keep all serial references/caches. No new paid submission.
+  Paid array15225197 remains at0d18d3c, RUNNING at14:34:56 with544/600 joint and
+  734/800 staged updates. Collect learning curves independently of dual outcome.
 
 - Paid learning array15225197 SUBMITTED after explicit22.08yuan total approval;
   both tasks RUNNING since2026-09-16 12:03:41 server time. Task0 is joint600 on
