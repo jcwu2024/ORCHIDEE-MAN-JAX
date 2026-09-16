@@ -10,6 +10,23 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Paid array15225197 both COMPLETED0:0: joint600 in2:46:36 and staged800 in2:49:00.
+  All update/monitor physical checks and checkpoint replay pass; scientific
+  acceptance remains false. Actual update compute matched within0.62%.
+  T30 GPP/NPP RMSE: joint8.70/7.47, staged13.29/11.05gC/m2; canopy RMSE2418/362,
+  nonliving8969/6007. Both improve substantially, with a real tradeoff rather
+  than a settled winner. Stock totals still hide inaccurate growth; both lose
+  too much nonliving carbon. StagedT7 NPP regressed between600 and800.
+  Preserve checkpoints and architecture/loss; specify a longer coverage/learning
+  segment and budget before any new paid submission. No extension authorized.
+  Evidence: `research/daily_coarse_graining/staged_learning_pilot_results_20260916.md`.
+  Free dual v4 also exited1: validator repair worked, subsequent GPU1 gradient
+  norm helper hit aGPU0 executable cache. Python110215 is gone; no free task
+  or retry active. Next free check must cover the complete tiny two-device update
+  and its helper kernels. Dual speed remains unknown and does not block learning.
+
+The entries below preserve prior launch details and are superseded by this result.
+
 - Free dual v3 (Python100778) FAILED exit1 after1294.36s: GPU1 explicitly
   requested its own validator but loaded the identical GPU0 persistent-cache
   key and then rejected GPU1 buffers. Explicit sharding alone was insufficient.

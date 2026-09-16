@@ -1,7 +1,11 @@
 # Two-route integration results and continuation
 
-Latest: dual v2 failed on peer validator device placement; repaired v3 is
-running free. See final section. Paid scientific learning continues independently.
+Latest: both paid learning arms completed normally; see
+`staged_learning_pilot_results_20260916.md` for all curves and interpretation.
+Dual v4 also failed: the repairedGPU1 validator passed, but the following
+gradient-norm helper reusedGPU0's executable cache. Python110215 exited1 after
+1328.9s. No full dual parity/speed result or active retry. Next free check must
+cover the complete tiny update and helpers. Earlier launch chronology follows.
 
 ## Staged learning: transition integration accepted
 

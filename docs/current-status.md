@@ -13,6 +13,24 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest completion: paid array15225197_0/_1 both COMPLETED0:0, joint600 in2:46:36
+and staged400daily+400mixed in2:49:00. Physical checks and checkpoint replay pass;
+scientific acceptance is false. Actual compute differs by only0.62%; estimated
+combined additive charge15.44yuan. Both show substantial learning. Joint has
+lower developmentT30 GPP/NPP/biomass RMSE; staged has lower canopy/nonliving
+carbon error and mean production/growth biases. Neither is an accepted long-term
+model. In particular, Teacher meanT30 BGB change0.153gC/m2 versus joint2.133 and
+staged0.685, and nonliving carbon continues to drift strongly downward. The
+stagedT7 panel regressed onNPP from600 to800. One seed and8 windows/horizon
+cannot settle eventual route superiority. No paid extension submitted.
+Full metrics/curves: `research/daily_coarse_graining/staged_learning_pilot_results_20260916.md`.
+
+Free dual v4 FAILED exit1 after1328.9s. ScopedGPU1 T7 validator passes; unscoped
+gradient-norm helper then loadsGPU0's cached executable and fails. Python110215
+has exited. No dual parity/speed result and no new retry. Next free diagnostic
+must exercise all helpers in a complete tiny update; paid learning is unaffected.
+The following paragraphs retain superseded launch/diagnostic chronology.
+
 Free dual v3 (Python100778) FAILED exit1 after1294.36s. Despite explicit GPU1
 sharding, JAX0.4.38 loaded the GPU0 validator under the same persistent-cache
 key, then rejected the GPU1 buffers. Prior tiny test omitted forced cache writes.

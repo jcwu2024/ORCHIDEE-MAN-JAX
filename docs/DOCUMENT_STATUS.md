@@ -23,8 +23,9 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `research/daily_coarse_graining/staged_learning_pilot_frozen_20260916.md` | Paid array15225197 running both arms at0d18d3c | Joint600 vs daily400+mixed400; first learning-curve segment, intermediate physical metrics, approved22.08yuan total cap |
-| `research/daily_coarse_graining/parallel_training_routes_results_20260916.md` | Stage transition passed; dual v1 compilation timed out | Independent daily/mixed budget timing and cache-assisted dual continuation; no scientific or dual speed acceptance yet |
+| `research/daily_coarse_graining/staged_learning_pilot_results_20260916.md` | Both paid arms completed; real learning, no full scientific pass | All curves/physical metrics, growth/carbon drift, matched compute, no settled final ranking; dual v4 norm-cache failure |
+| `research/daily_coarse_graining/staged_learning_pilot_frozen_20260916.md` | Frozen method; paid array15225197 completed both arms at0d18d3c | Joint600 vs daily400+mixed400; first learning-curve segment, intermediate physical metrics, approved22.08yuan total cap |
+| `research/daily_coarse_graining/parallel_training_routes_results_20260916.md` | Stage transition passed; dual v1-v4 have no complete speed result | Budget timing, validator cache reproduction/repair; v4 later failed at norm helper, see pilot results |
 | `research/daily_coarse_graining/parallel_training_routes_20260915.md` | Active two-route specification; stage integration completed |400daily+400mixed versus timing-matched joint; larger paid learning pilot pending |
 | `research/daily_coarse_graining/mixed_learning_epoch_protocol_20260915.md` | Prepared5415-update method; free integration passed, paid submission paused | Larger coverage protocol retained while dual execution and staged learning are studied |
 | `research/daily_coarse_graining/combined_execution_results_20260915.md` | Combined policy admitted; performance phase closed | Full-gradient/physical/update checks pass;11.761s,17.065% less time; return to substantial-coverage training |

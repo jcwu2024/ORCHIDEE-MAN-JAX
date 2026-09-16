@@ -1,5 +1,9 @@
 # First matched-compute learning segment
 
+Completion: both arms finished normally; results and all interpretation limits
+are in `staged_learning_pilot_results_20260916.md`. The original frozen method
+and submission record below are retained unchanged. No extension submitted.
+
 Latest: user confirmed the22.08yuan envelope. Array15225197 was submitted and
 both tasks started2026-09-16 12:03:41 server time. Submission record below
 supersedes the historical pending-approval statements in the preparation section.

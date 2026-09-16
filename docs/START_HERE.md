@@ -60,19 +60,20 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
-As of 2026-09-16, fresh full-network Attention has completed200 mixed daily,
-T7 and T30 training updates. Learning improves several primary outputs, but
-scientific gates still fail; respiration and canopy/nonliving carbon remain
-concerns. Only12,800 unique daily draws were used from the ready346,539-day
-TRAIN pool. The5415-update one-pool-pass protocol is prepared but user now
-pauses its paid submission. The current work is two bounded routes: same-update
-dual-GPU execution/cost, and equal-compute joint versus daily-then-mixed training.
-See `research/daily_coarse_graining/parallel_training_routes_20260915.md`.
-The staged1daily+1mixed transition/recovery check passed. Dual real-model
-profiling reached its compilation time limit without a speed result. Independent
-single-GPU daily/mixed timing will set the pilot comparison budget; the dual
-retry does not block that learning route. Latest results:
-`research/daily_coarse_graining/parallel_training_routes_results_20260916.md`.
+As of 2026-09-16, the matched-compute fresh full-network Attention pilot has
+completed600 mixed updates versus400 daily+400 mixed updates. Both learn
+substantially and pass physical/runtime checks; neither passes full scientific
+acceptance. Joint is better on developmentT30 productivity/biomass RMSE, staged
+on canopy/nonliving carbon and daily accuracy. Growth rates and carbon drift
+remain material concerns; these8-window/horizon development panels are not a
+long-term validation. Actual daily exposure was38400/51200 draws from the ready
+346539-day TRAIN pool; neither run is an epoch. The5415-update pool-pass job
+remains paused. Next specify the further learning/coverage budget without
+changing architecture or claiming a settled schedule ranking. Results:
+`research/daily_coarse_graining/staged_learning_pilot_results_20260916.md`.
+Dual-GPU execution is a separate performance route, currently blocked by
+cross-device persistent-cache reuse in a norm helper; no speed result yet.
+No active paid/free computation or new submission follows from this report.
 
 The performance phase is complete: explicit Attention FP32 plus checked
 recurrent execution passes bounded full-gradient/physical/update admission.
