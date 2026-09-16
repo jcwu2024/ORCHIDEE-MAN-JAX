@@ -83,3 +83,10 @@ Slurm log: `slurm-%A_%a.log` in their parent directory. Create that directory
 before submission. Free dual v2 remains independent and its running checkout
 must not be changed. User authorized use of paid cards; concrete22.08yuan
 two-task envelope is to be confirmed before sbatch under AGENTS.md.
+
+Prepared and deployed at0d18d3c in the exact checkout above. Local16
+phase/checkpoint tests pass; shell syntax and both array-index actual-shell
+dry-runs on gln01 pass. Both output identities are unused and the Slurm log
+parent exists. Only manifests, the array launcher and documentation changed;
+reuse the accepted runtime/AD and completed stage-transition evidence. Live
+gnall inspection found idle nodes. No sbatch has been issued.
