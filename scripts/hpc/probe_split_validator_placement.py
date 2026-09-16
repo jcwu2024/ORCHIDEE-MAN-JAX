@@ -55,7 +55,7 @@ def probe(jax, jnp, devices, *, scope_raw_cache=False):
             np.testing.assert_array_equal(np.asarray(result[1]['gain']), [1., 2.])
             if explicit:
                 assert all(v.devices() == {device} for v in jax.tree_util.tree_leaves(result))
-            changed = arguments[:-1] + (arguments[-1] + 1.,)
+            changed = arguments[:-1] + (jax.device_put(np.ones((horizon, 2)), device),)
             changed_result = checked(*changed)
             jax.block_until_ready(changed_result)
             np.testing.assert_allclose(np.asarray(changed_result[0][1]),
