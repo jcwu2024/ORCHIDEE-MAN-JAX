@@ -7,7 +7,11 @@ from concurrent.futures import ThreadPoolExecutor
 import numpy as np
 
 from scripts.hpc import probe_feedback_loss_calibration as calibration
-from scripts.hpc.checked_recurrent_execution import decode_counts, wrap_separate_checked
+from scripts.hpc.checked_recurrent_execution import (
+    decode_counts,
+    device_helper_cache,
+    wrap_separate_checked,
+)
 from scripts.hpc.mixed_learning_profiling import _parity, _summary
 
 
@@ -92,7 +96,9 @@ def profile_dual_device(*, jax, jnp, parameters, optimizer, sample, daily_rows,
         return executable
 
     with jax.default_device(primary):
-        first = jax.device_put(sample(daily_rows[:8]), primary)
+        with device_helper_cache(primary):
+            first = jax.device_put(sample(daily_rows[:8]), primary)
+        # Preserve the admitted, expensive raw-program cache identities.
         daily_executable = compile_function('daily_gpu0', daily_backward,
                                              (parameters, first, coefficients))
         del first
@@ -102,8 +108,9 @@ def profile_dual_device(*, jax, jnp, parameters, optimizer, sample, daily_rows,
         results = {}
         with jax.default_device(device):
             for horizon in (7, 30):
-                case = jax.device_put(window_pool.case(jax, recurrent_rows[horizon]), device)
-                local_context = jax.device_put(context, device)
+                with device_helper_cache(device):
+                    case = jax.device_put(window_pool.case(jax, recurrent_rows[horizon]), device)
+                    local_context = jax.device_put(context, device)
                 name = f'T{horizon}_gpu{device.id}'
                 raw = compile_function(name, checked_backward,
                                        (local_parameters, *case[:4], local_context))
@@ -115,7 +122,7 @@ def profile_dual_device(*, jax, jnp, parameters, optimizer, sample, daily_rows,
 
     def daily_branch():
         began = time.perf_counter()
-        with jax.default_device(primary):
+        with jax.default_device(primary), device_helper_cache(primary):
             total = jax.tree_util.tree_map(jnp.zeros_like, parameters)
             loss, counts = 0., {}
             for start in range(0, 64, 8):
@@ -138,7 +145,7 @@ def profile_dual_device(*, jax, jnp, parameters, optimizer, sample, daily_rows,
         began = time.perf_counter()
         local_parameters = parameters if device == primary else parameters_secondary
         results = {}
-        with jax.default_device(device):
+        with jax.default_device(device), device_helper_cache(device):
             local_context = jax.device_put(context, device)
             for horizon in (7, 30):
                 started = time.perf_counter()
@@ -175,7 +182,7 @@ def profile_dual_device(*, jax, jnp, parameters, optimizer, sample, daily_rows,
         branch_elapsed = time.perf_counter()-began
         merge_started = time.perf_counter()
         losses, norms = dict(daily=daily['loss']), dict(daily=daily['norm'])
-        with jax.default_device(primary):
+        with jax.default_device(primary), device_helper_cache(primary):
             mixed = daily.pop('gradient')
             for horizon in (7, 30):
                 if horizon not in recurrent:

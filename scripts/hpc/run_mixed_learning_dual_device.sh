@@ -1,11 +1,16 @@
 #!/bin/bash
-# Free two-GPU diagnostic; trained weights are reused only for a timing probe.
+# Two-GPU diagnostic on free or approved Slurm nodes; weights are a timing asset.
 set -euo pipefail
 ROOT=/WORK/liwei_work/jcwu/ORCHIDEE-MAN-JAX
 CODE_ROOT=${CODE_ROOT:?declare reviewed checkout}
 MODE=${1:?runtime or profile}
 shift
 DIAG=$ROOT/runtime/outputs/diagnostics
+if [[ -n "${SLURM_JOB_ID:-}" ]]; then
+  GPU_DEVICE=${CUDA_VISIBLE_DEVICES:?Slurm must declare allocated GPU devices}
+else
+  GPU_DEVICE=${GPU_DEVICE:-0,1}
+fi
 PRINT_ONLY=false
 if [[ "${1:-}" == --dry-run ]]; then PRINT_ONLY=true; shift; fi
 run_command() {
@@ -13,16 +18,16 @@ run_command() {
 }
 case "$MODE" in
   runtime)
-    run_command env CODE_ROOT="$CODE_ROOT" GPU_DEVICE=0,1 \
+    run_command env CODE_ROOT="$CODE_ROOT" GPU_DEVICE="$GPU_DEVICE" \
       PYTHON_MODULE=scripts.hpc.check_daily_training_runtime RUN_TIMEOUT=3m \
       OUTPUT="$DIAG/mixed-learning-dual-runtime-v1.json" \
       bash "$CODE_ROOT/scripts/hpc/run_fresh_start_one_day.sh" --backend gpu
-    run_command env CODE_ROOT="$CODE_ROOT" GPU_DEVICE=0,1 \
+    run_command env CODE_ROOT="$CODE_ROOT" GPU_DEVICE="$GPU_DEVICE" \
       PYTHON_MODULE=scripts.hpc.probe_dual_device_runtime RUN_TIMEOUT=3m \
       OUTPUT="$DIAG/mixed-learning-dual-placement-v1.json" \
       bash "$CODE_ROOT/scripts/hpc/run_fresh_start_one_day.sh" --backend gpu ;;
   profile)
-    run_command env CODE_ROOT="$CODE_ROOT" GPU_DEVICE=0,1 GPU_MEMORY_FRACTION=0.85 \
+    run_command env CODE_ROOT="$CODE_ROOT" GPU_DEVICE="$GPU_DEVICE" GPU_MEMORY_FRACTION=0.85 \
       PYTHON_MODULE=scripts.hpc.run_mixed_learning RUN_TIMEOUT="${RUN_TIMEOUT:-90m}" \
       OUTPUT="${OUTPUT:-$DIAG/mixed-learning-dual-profile-v1.json}" \
       bash "$CODE_ROOT/scripts/hpc/run_fresh_start_one_day.sh" \

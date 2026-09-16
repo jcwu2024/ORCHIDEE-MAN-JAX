@@ -14,10 +14,10 @@ _cache_hook_installed = False
 
 
 @contextmanager
-def _device_validator_cache(device):
-    """Namespace device-bound validators, preserving every ordinary cache key.
+def device_helper_cache(device):
+    """Namespace device-bound helpers, preserving every ordinary cache key.
 
-    JAX 0.4.38 can reuse GPU0's serialized single-device validator on GPU1.
+    JAX 0.4.38 can reuse GPU0's serialized single-device executable on GPU1.
     Its custom cache-key hook is read during compilation; ContextVar keeps the
     suffix local to this compilation thread, including during parallel replay.
     Merely disabling the cache locally is insufficient once is_cache_used has
@@ -37,12 +37,17 @@ def _device_validator_cache(device):
 
             cache_key.custom_hook = scoped_hook
             _cache_hook_installed = True
+    # Retain the existing suffix to reuse already corrected validator entries.
     token = _validator_cache_scope.set(
         f'orchidee-split-validator-v1:{device.platform}:{device.process_index}:{device.id}')
     try:
         yield
     finally:
         _validator_cache_scope.reset(token)
+
+
+# Compatibility for the earlier standalone validator regression probe.
+_device_validator_cache = device_helper_cache
 
 
 def bind_checked_backward(
