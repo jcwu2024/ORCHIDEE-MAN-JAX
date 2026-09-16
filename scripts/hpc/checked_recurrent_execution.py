@@ -135,10 +135,15 @@ def _tree_bytes(jax, tree):
     )
 
 
-def wrap_separate_checked(jax, raw_executable, validator, emit=None):
+def wrap_separate_checked(jax, raw_executable, validator, emit=None, *, device=None):
     """Join a split backward and validator behind the checked seven-argument API."""
     from scripts.hpc.probe_one_day_batch import _compiled_memory
 
+    if device is not None:
+        # Captured validation constants can otherwise select the primary device
+        # even when the raw backward and its outputs live on a peer device.
+        placement = jax.sharding.SingleDeviceSharding(device)
+        validator = jax.jit(validator, in_shardings=placement, out_shardings=placement)
     compiled_validator = None
     notify = emit if emit is not None else lambda stage: None
     statistics = {
@@ -151,8 +156,9 @@ def wrap_separate_checked(jax, raw_executable, validator, emit=None):
 
     def checked(parameters, initial, discrete, days, targets, context, expected_discrete):
         nonlocal compiled_validator
-        initial, discrete, days, targets, context, expected_discrete = jax.device_put(
-            (initial, discrete, days, targets, context, expected_discrete)
+        arguments = (initial, discrete, days, targets, context, expected_discrete)
+        initial, discrete, days, targets, context, expected_discrete = (
+            jax.device_put(arguments) if device is None else jax.device_put(arguments, device)
         )
         first_execution = statistics['raw_first_execution_seconds'] is None
         began = time.perf_counter() if first_execution else None

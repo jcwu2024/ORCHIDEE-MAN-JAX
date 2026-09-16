@@ -108,7 +108,7 @@ def profile_dual_device(*, jax, jnp, parameters, optimizer, sample, daily_rows,
                 raw = compile_function(name, checked_backward,
                                        (local_parameters, *case[:4], local_context))
                 results[horizon] = wrap_separate_checked(
-                    jax, raw, checked_validator,
+                    jax, raw, checked_validator, device=device,
                     emit=lambda stage, name=name: emit('dual_'+name+'_'+stage))
                 del case
         checked[device.id] = results
