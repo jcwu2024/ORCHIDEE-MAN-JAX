@@ -10,6 +10,18 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Free dual v2 FAILED exit1 after5120.97s Python: peer GPU1 observations were
+  passed to a validator executable assigned toGPU0. All five main programs
+  compiled and the serial reference was saved; no full dual parity/speed result.
+  Fix b31c523 adds explicit device sharding to the split validator only when
+  dual callers request it; default single-device route is unchanged. Local6
+  tests and actual JAX0.4.38 twoGPU placement probe pass (2.38s); tiny negative
+  control did not reproduce the real-model failure, so full acceptance pending.
+  Runtime check passed60.09s. Free dual v3 launched onGPUs0+1, Bash100711/Python100778,
+  60min ceiling, immutable `runtime/checkouts/mixed-learning-dual-placement-v1`.
+  Diagnostics `mixed-learning-dual-profile-v3.{json,log}`. Keep paid array15225197
+  at0d18d3c; both arms observed training normally (143/600 and269/800).
+
 - Paid learning array15225197 SUBMITTED after explicit22.08yuan total approval;
   both tasks RUNNING since2026-09-16 12:03:41 server time. Task0 is joint600 on
   ibc13b03n01 (underlying job15225198); task1 is daily400+mixed400 onibc13b03n02.

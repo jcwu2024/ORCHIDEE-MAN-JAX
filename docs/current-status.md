@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Free dual v2 completed abnormally, exit1,5120.97s Python: validator executable
+assigned toGPU0 receivedGPU1 buffers. Full dual parity and speed remain unknown.
+Main five compilations and serial reference are preserved. Explicit validator
+placement repair b31c523 passed local6 tests and deployed runtime/placement
+checks; small legacy control did not reproduce the real-model failure. Full
+v3 is active on free GPUs0+1, Bash100711,60min ceiling, separate immutable
+`runtime/checkouts/mixed-learning-dual-placement-v1`. Paid array15225197 remains
+on0d18d3c and was observed advancing normally to143joint/269staged updates.
+
 Paid array15225197 is RUNNING after explicit user approval of the22.08yuan
 two-task envelope. Start2026-09-16 12:03:41 server time; joint task0 onibc13b03n01,
 staged task1 onibc13b03n02. Each1V100/8CPU/64GiB/4h, no requeue, deadline16:03:41.

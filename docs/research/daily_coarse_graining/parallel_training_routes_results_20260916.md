@@ -1,5 +1,8 @@
 # Two-route integration results and continuation
 
+Latest: dual v2 failed on peer validator device placement; repaired v3 is
+running free. See final section. Paid scientific learning continues independently.
+
 ## Staged learning: transition integration accepted
 
 Paid gnall job15209522, immutable eba219d, completed with Slurm exit0:0 in
@@ -87,3 +90,45 @@ The wrapper can be checked on gln01 with
 consult individual logs to distinguish which diagnostic is active. GPU1 is
 not occupied during the first diagnostic. No paid submission or learning
 outcome is implied by this launch. Do not rerun either output identity.
+
+## Dual v2 device-placement failure and v3 repair
+
+V2 started11:01:17 and exited1 at12:27:22 server time, Python5120.9666s.
+Error: `Buffer passed to Execute() as argument 0 to replica 0 is on device
+cuda:1, but replica is assigned to device cuda:0.` The traceback identifies
+`wrap_separate_checked` calling its compiled validator after the peer raw
+backward. This is a device-placement runtime failure, not a scientific-accuracy
+or gradient-numerics rejection. No real-model dual parity/timing exists yet.
+
+Primary daily/T7/T30 cache hits are explicit in the log; compile calls took
+102.48/224.43/225.50s including lowering/loading. Secondary T7/T30 compiled
+in2111.07/2148.48s. All five main programs completed compilation. The
+complete serial reference remains at `mixed-learning-dual-profile-v2.serial-reference.pkl`;
+do not erase it or the persistent cache. JSON copied locally under outputs.
+
+Repair b31c523 adds optional explicit device binding to the existing split
+wrapper, using SingleDeviceSharding for validator input/output plus explicit
+argument placement. Dual callers pass their device. The default single-device
+wrapper remains unchanged in behavior; paid checkouts are immutable0d18d3c.
+No loss, architecture, optimizer or AD mathematics changed. The prior synthetic
+dual probe omitted the lazy split-validator path; this was a test-coverage gap.
+
+New `probe_split_validator_placement.py` exercises primary-captured constants,
+primary then threaded peer validation, T7/T30 shapes, changed expected values
+and repeated calls with one compilation per wrapper. Local twoCPU JAX0.10.1
+and actual twoGPU JAX0.4.38 probes pass; deployed elapsed2.3838s. Existing6
+split/dual tests pass. Deployed runtime preflight passed60.0869s. Importantly,
+the legacy control also passed on these small inputs: this is positive evidence
+for explicit placement, NOT an exact reproduction or full-model acceptance.
+The precise inference/capture interaction behind the old full-model assignment
+is not isolated beyond the observed wrong validator executable device.
+
+Actual-shell dry-run passed; both free GPUs idle before launch. V3 runs from
+`runtime/checkouts/mixed-learning-dual-placement-v1` atb31c523, Bash100711,
+60min ceiling, Python100778 confirmed active. New diagnostics basename `mixed-learning-dual-profile-v3`,
+compiler cache logging enabled. Reuse all existing main-program caches and
+preserve prior reports. Collect full gradient/AdamW/physical parity and timing
+before any dual adoption. No paid submission was made for this repair.
+
+Graph project/coverage tools returned Transport closed; bounded source review
+used the exact traceback files and tests, without exhaustive impact claims.
