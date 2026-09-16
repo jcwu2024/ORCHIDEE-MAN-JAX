@@ -2,8 +2,47 @@
 from __future__ import annotations
 
 import time
+from contextlib import contextmanager, nullcontext
+from contextvars import ContextVar
+from threading import Lock
 
 import numpy as np
+
+_validator_cache_scope = ContextVar('orchidee_validator_cache_scope', default='')
+_cache_hook_lock = Lock()
+_cache_hook_installed = False
+
+
+@contextmanager
+def _device_validator_cache(device):
+    """Namespace device-bound validators, preserving every ordinary cache key.
+
+    JAX 0.4.38 can reuse GPU0's serialized single-device validator on GPU1.
+    Its custom cache-key hook is read during compilation; ContextVar keeps the
+    suffix local to this compilation thread, including during parallel replay.
+    Merely disabling the cache locally is insufficient once is_cache_used has
+    memoized the process-wide enabled state in that JAX release.
+    """
+    from jax._src import cache_key
+
+    global _cache_hook_installed
+    with _cache_hook_lock:
+        if not _cache_hook_installed:
+            previous = cache_key.custom_hook
+
+            def scoped_hook():
+                original = previous()
+                scope = _validator_cache_scope.get()
+                return original if not scope else original + '|' + scope
+
+            cache_key.custom_hook = scoped_hook
+            _cache_hook_installed = True
+    token = _validator_cache_scope.set(
+        f'orchidee-split-validator-v1:{device.platform}:{device.process_index}:{device.id}')
+    try:
+        yield
+    finally:
+        _validator_cache_scope.reset(token)
 
 
 def bind_checked_backward(
@@ -152,6 +191,7 @@ def wrap_separate_checked(jax, raw_executable, validator, emit=None, *, device=N
         'validator_compile_seconds': None,
         'validator_memory': None,
         'validator_compile_count': 0,
+        'validator_cache_device': None if device is None else str(device),
     }
 
     def checked(parameters, initial, discrete, days, targets, context, expected_discrete):
@@ -174,10 +214,11 @@ def wrap_separate_checked(jax, raw_executable, validator, emit=None, *, device=N
         if compiled_validator is None:
             notify('validator_compile')
             began = time.perf_counter()
-            lowered = validator.lower(
-                initial, observations, targets, expected_discrete, days[0], science_counts
-            )
-            compiled_validator = lowered.compile()
+            cache_scope = nullcontext() if device is None else _device_validator_cache(device)
+            with cache_scope:
+                compiled_validator = validator.lower(
+                    initial, observations, targets, expected_discrete, days[0], science_counts
+                ).compile()
             statistics['validator_compile_seconds'] = time.perf_counter() - began
             statistics['validator_memory'] = _compiled_memory(compiled_validator)
             statistics['validator_compile_count'] = 1
