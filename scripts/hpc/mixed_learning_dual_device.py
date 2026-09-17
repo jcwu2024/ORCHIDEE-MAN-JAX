@@ -14,6 +14,16 @@ from scripts.hpc.checked_recurrent_execution import (
 )
 from scripts.hpc.mixed_learning_profiling import _parity, _summary
 
+DUAL_DEVICE_TRAINING_LAYOUT = dict(
+    schema_version='mixed_learning_dual_device_training_v1',
+    authoritative_parameters='device_0',
+    authoritative_optimizer='device_0',
+    daily_backward='device_0',
+    recurrent_backward='device_1',
+    gradient_merge_and_adamw='device_0',
+    peer_parameter_synchronization='after_every_update',
+)
+
 
 def split_components(daily, recurrent, *, executor=None):
     """Run independent pre-update branches, joining before any optimizer step."""
@@ -30,6 +40,158 @@ def split_components(daily, recurrent, *, executor=None):
             pass
         raise
     return result, future.result()
+
+
+class ContinuousDualDeviceTrainer:
+    """Execute changing daily/recurrent updates with one authoritative device.
+
+    Branch callbacks receive ``(parameters, payload)`` and return dictionaries
+    containing ``gradient``, ``loss``, ``norm``, ``hard`` and ``seconds``.
+    The recurrent callback returns ``(rows_by_horizon, total_seconds)``. Raw
+    model executables are compiled by the caller; this class namespaces only
+    the smaller device-specific helpers and their executions.
+    """
+
+    def __init__(self, *, jax, jnp, parameters, optimizer, daily_branch,
+                 recurrent_branch, combine, update, finite, devices=None,
+                 require_gpus=True):
+        selected = tuple(jax.local_devices() if devices is None else devices)
+        if len(selected) != 2:
+            raise ValueError('dual-device training requires exactly two devices')
+        if require_gpus and any(device.platform != 'gpu' for device in selected):
+            raise ValueError('dual-device training requires exactly two visible GPUs')
+        self.jax, self.jnp = jax, jnp
+        self.primary, self.secondary = selected
+        self.daily_branch, self.recurrent_branch = daily_branch, recurrent_branch
+        self.combine, self.update, self.finite = combine, update, finite
+        with jax.default_device(self.primary), device_helper_cache(self.primary):
+            self.parameters, self.optimizer = jax.device_put(
+                (parameters, optimizer), self.primary)
+            jax.block_until_ready((self.parameters, self.optimizer))
+        with jax.default_device(self.secondary), device_helper_cache(self.secondary):
+            self.peer_parameters = jax.device_put(self.parameters, self.secondary)
+            jax.block_until_ready(self.peer_parameters)
+        self._executor = ThreadPoolExecutor(
+            max_workers=1, thread_name_prefix='recurrent_device')
+
+    def close(self):
+        if self._executor is not None:
+            self._executor.shutdown(wait=True)
+            self._executor = None
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *_):
+        self.close()
+
+    def _daily(self, payload):
+        with (self.jax.default_device(self.primary),
+              device_helper_cache(self.primary)):
+            return self.daily_branch(self.parameters, payload)
+
+    def _recurrent(self, payload):
+        with (self.jax.default_device(self.secondary),
+              device_helper_cache(self.secondary)):
+            return self.recurrent_branch(self.peer_parameters, payload)
+
+    def step(self, *, daily_payload, recurrent_payload=None, weights=None,
+             expected_optimizer_step=None, persist=True):
+        """Run one daily-only or mixed update and optionally retain its state."""
+        if self._executor is None:
+            raise RuntimeError('dual-device trainer is closed')
+        began = time.perf_counter()
+        if recurrent_payload is None:
+            daily, recurrent, recurrent_seconds = self._daily(daily_payload), {}, 0.
+        else:
+            daily, (recurrent, recurrent_seconds) = split_components(
+                lambda: self._daily(daily_payload),
+                lambda: self._recurrent(recurrent_payload),
+                executor=self._executor,
+            )
+        branch_elapsed = time.perf_counter()-began
+        weights = {} if weights is None else weights
+        merge_started = time.perf_counter()
+        losses = dict(daily=float(daily['loss']))
+        norms = dict(daily=float(daily['norm']))
+        hard = dict(daily=daily['hard'])
+
+        def any_hard(value):
+            if isinstance(value, dict):
+                return any(any_hard(item) for item in value.values())
+            return bool(value)
+
+        if any_hard(hard):
+            raise ValueError('daily branch returned nonzero physical counters')
+        with (self.jax.default_device(self.primary),
+              device_helper_cache(self.primary)):
+            mixed = daily['gradient']
+            for horizon in (7, 30):
+                if horizon not in recurrent:
+                    continue
+                row = recurrent[horizon]
+                transferred = self.jax.device_put(row['gradient'], self.primary)
+                mixed = self.combine(mixed, transferred, 1., weights[f'T{horizon}'])
+                self.jax.block_until_ready(mixed)
+                losses[f'T{horizon}'] = float(row['loss'])
+                norms[f'T{horizon}'] = float(row['norm'])
+                hard[f'T{horizon}'] = row['hard']
+                if any_hard(row['hard']):
+                    raise ValueError(
+                        f'T{horizon} branch returned nonzero physical counters')
+            if (not all(np.isfinite(value) and value > 0 for value in norms.values())
+                    or not all(np.isfinite(value) for value in losses.values())
+                    or not bool(self.finite(mixed))):
+                raise ValueError('component/mixed gradient is nonfinite or empty')
+            proposal, next_optimizer, gradient_norm, clip = self.update(
+                self.parameters, mixed, self.optimizer)
+            self.jax.block_until_ready(
+                (proposal, next_optimizer, gradient_norm, clip))
+            expected = (int(self.optimizer.step)+1 if expected_optimizer_step is None
+                        else expected_optimizer_step)
+            if (not bool(self.finite((proposal, next_optimizer)))
+                    or not np.isfinite(float(gradient_norm))
+                    or not 0 < float(clip) <= 1
+                    or int(next_optimizer.step) != expected):
+                raise ValueError('complete AdamW proposal invalid')
+        merge_seconds = time.perf_counter()-merge_started
+        sync_started = time.perf_counter()
+        with (self.jax.default_device(self.secondary),
+              device_helper_cache(self.secondary)):
+            peer_proposal = self.jax.device_put(proposal, self.secondary)
+            self.jax.block_until_ready(peer_proposal)
+        synchronize_seconds = time.perf_counter()-sync_started
+        if persist:
+            self.parameters, self.optimizer = proposal, next_optimizer
+            self.peer_parameters = peer_proposal
+        mixed_loss = losses['daily'] + sum(
+            weights[f'T{horizon}']*losses[f'T{horizon}']
+            for horizon in (7, 30) if f'T{horizon}' in losses)
+        record = dict(
+            losses=losses,
+            gradient_norms=norms,
+            mixed_loss=mixed_loss,
+            combined_gradient_norm=float(gradient_norm),
+            clip=float(clip),
+            optimizer_step=int(next_optimizer.step),
+            all_hard_counts_zero=not any_hard(hard),
+            combined_finite=True,
+            proposal_finite=True,
+            seconds=time.perf_counter()-began,
+            daily_branch_seconds=float(daily['seconds']),
+            recurrent_branch_seconds=float(recurrent_seconds),
+            branch_elapsed_seconds=branch_elapsed,
+            merge_checks_optimizer_seconds=merge_seconds,
+            weight_synchronize_seconds=synchronize_seconds,
+            synchronized_parameter_bytes=sum(
+                int(leaf.size)*int(np.dtype(leaf.dtype).itemsize)
+                for leaf in self.jax.tree_util.tree_leaves(peer_proposal)),
+            peer_synchronized_optimizer_step=int(next_optimizer.step),
+            hard=hard,
+        )
+        return record, dict(
+            gradient=mixed, parameters=proposal, optimizer=next_optimizer,
+            peer_parameters=peer_proposal)
 
 
 def cost_comparison(serial_seconds, dual_seconds, *, cpu_cores=8):

@@ -1,13 +1,20 @@
 # Code Map
 
-Last updated: 2026-09-16.
+Last updated: 2026-09-18.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
 
 Current bounded training-efficiency routes: `scripts/hpc/mixed_learning_dual_device.py`
-owns serial/dual same-update orchestration and cost/timing, reusing admitted
-gradients. `probe_dual_device_runtime.py` checks two-device placement and two
+owns serial/dual same-update orchestration and cost/timing, plus
+`ContinuousDualDeviceTrainer` for retained updates and explicit peer sync.
+The shared runner opts in with `--dual-device-training`, retaining common
+sampling, loss, checkpoint and monitor paths. `probe_dual_training_continuity.py`
+tests changing-data updates, shared checkpoint restoration and daily-to-mixed
+peer synchronization with tiny arrays. `run_dual_training_integration.py`
+orchestrates serial3, dual3 and dual2/resume3 in separate processes;
+`job_mixed_learning_dual_integration.sh` prepares one bounded paid admission.
+These paths reuse admitted gradients. `probe_dual_device_runtime.py` checks two-device placement and two
 AdamW updates with tiny synthetic inputs. `mixed_learning_stages.py` declares
 phase/cursor arithmetic for the shared `run_mixed_learning.py`; checkpoint
 progress is validated by `daily_operator/mixed_training_state.py`. Launchers

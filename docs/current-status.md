@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-16.
+Last updated: 2026-09-18.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -12,6 +12,15 @@ This page is the current status authority. Dated files under
 describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
+
+Continuous dual training is now implemented in the shared runner, including
+authoritative GPU0 parameters/AdamW, GPU1 updated-weight synchronization,
+changing data, daily/mixed phases, and shared checkpoint recovery. Bounded
+three-update integration and new-process stop2/resume3 are prepared;40 focused
+local tests pass. Tiny deployed-runtime checks are still being completed.
+The proposed2GPU/8CPU/64GiB/2h integration has a9.92yuan additive ceiling and
+has not been submitted. This is technical preparation, not a new learning
+result. See `research/daily_coarse_graining/dual_device_continuous_integration_20260918.md`.
 
 Latest dual result: job15230086 COMPLETED0:0,28m45s, ended16:23:35 server time.
 Real-model same-update gradient/parameters/AdamW and physical/scalar parity PASS;

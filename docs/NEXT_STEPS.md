@@ -1,14 +1,24 @@
 # Current Roadmap
 
-Last updated: 2026-09-16.
+Last updated: 2026-09-18.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
-## Current execution gate (2026-09-16)
+## Current execution gate (2026-09-18)
 
 Current actions, superseding launch instructions in the history below:
+
+- Continuous dual execution is implemented in the shared training runner;
+  single-device remains the default. Next bounded gate is serial3 versus
+  dual3 versus dual2+new-process recovery to3, using changing batches/windows
+  from the same fresh initialization. Tiny runtime checks and deployment are
+  being completed; no new paid job has been submitted. The proposed single
+  gnall job contains all paths,2V100/8CPU/64GiB/2h, ceiling9.92yuan, and needs
+  its own approval. Do not rerun the accepted fixed-update profiler or claim
+  this integration is scientific learning acceptance. Protocol:
+  `research/daily_coarse_graining/dual_device_continuous_integration_20260918.md`.
 
 - Paid dual job15230086 COMPLETED0:0 in28m45s, estimated2.38yuan. Real-model
   full gradient/updated weights/AdamW and physical/scalar parity PASS at existing
