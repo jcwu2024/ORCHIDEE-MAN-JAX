@@ -13,8 +13,9 @@ Current actions, superseding launch instructions in the history below:
 - Continuous dual execution is implemented in the shared training runner;
   single-device remains the default. Next bounded gate is serial3 versus
   dual3 versus dual2+new-process recovery to3, using changing batches/windows
-  from the same fresh initialization. Tiny runtime checks and deployment are
-  being completed; no new paid job has been submitted. The proposed single
+  from the same fresh initialization. Immutable9cc50dd is deployed;41 local
+  tests, deployed JAX0.4.38 two-CPU continuity, actual V100 runtime check and
+  target-shell dry-run pass. No new paid job has been submitted. The proposed single
   gnall job contains all paths,2V100/8CPU/64GiB/2h, ceiling9.92yuan, and needs
   its own approval. Do not rerun the accepted fixed-update profiler or claim
   this integration is scientific learning acceptance. Protocol:

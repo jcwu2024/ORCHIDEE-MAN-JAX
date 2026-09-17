@@ -16,11 +16,15 @@ describe an earlier gate without being rewritten.
 Continuous dual training is now implemented in the shared runner, including
 authoritative GPU0 parameters/AdamW, GPU1 updated-weight synchronization,
 changing data, daily/mixed phases, and shared checkpoint recovery. Bounded
-three-update integration and new-process stop2/resume3 are prepared;40 focused
-local tests pass. Tiny deployed-runtime checks are still being completed.
+three-update integration and new-process stop2/resume3 are prepared;41 focused
+local tests pass. Immutable9cc50dd is deployed. JAX0.4.38 two-CPU continuity
+passes with zero gradient/parameter/AdamW/recovery discrepancies; actual free
+V100 runtime check also passes63.87s, and target-shell dry-run passes.
 The proposed2GPU/8CPU/64GiB/2h integration has a9.92yuan additive ceiling and
 has not been submitted. This is technical preparation, not a new learning
-result. See `research/daily_coarse_graining/dual_device_continuous_integration_20260918.md`.
+result. Simultaneous two-GPU CUDA continuity and real-model changing-data
+acceptance are still pending. See
+`research/daily_coarse_graining/dual_device_continuous_integration_20260918.md`.
 
 Latest dual result: job15230086 COMPLETED0:0,28m45s, ended16:23:35 server time.
 Real-model same-update gradient/parameters/AdamW and physical/scalar parity PASS;

@@ -1,6 +1,32 @@
 # Continuous dual-device training admission
 
-Status: implementation and bounded tests in progress; no paid submission.
+Status: implementation, local and deployed tiny tests complete; real-model
+paid integration is ready for resource approval and has not been submitted.
+
+## Preparation evidence
+
+- Implemented code9cc50dd; immutable remote checkout below has that exact HEAD.
+  Sol/high implemented the executor/runner and reviewed orchestration; Luna/high
+  implemented the tiny continuity test; lead integrated and checked results.
+-41 focused local tests pass; changed Python passes Ruff and Git whitespace checks.
+- Deployed JAX0.4.38 on test01, two CPU devices: continuity probe PASSED,
+  measured probe1.9598s excluding interpreter/container startup. All three
+  gradient/parameter/AdamW comparisons and checkpoint/peer-sync errors are zero.
+  Clipping is active; changing daily andT7/T30 data, daily-to-mixed transition
+  and physical-failure rejection are exercised. Evidence:
+  `outputs/dual-training-continuity-9cc50dd-cpu.json`.
+- Actual free V100 GPU1 on gln01: unchanged small runtime gate PASSED63.8724s
+  under JAX0.4.38, no Teacher reads or real training updates. Evidence:
+  `outputs/dual-training-runtime-9cc50dd.json`.
+- Target-shell `bash -n` and launcher `--dry-run` with allocated mask3,5 pass;
+  four generated commands also parse through the actual runner locally.
+- Free node has only one idle GPU, so simultaneous two-GPU CUDA continuity
+  remains the paid job's first tiny precheck before real-model work.
+- Deployment uses a complete self-contained Git bundle. A new shared clone
+  exposed a pre-existing chain of alternates exceeding Git's nesting limit;
+  its incomplete directory was preserved with the `-incomplete` suffix, then
+  a clean independent checkout was created. No old checkout was changed and
+  no compute allocation was consumed by this transfer correction.
 
 ## Purpose and fixed method
 
