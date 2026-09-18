@@ -20,8 +20,10 @@ three-update integration and new-process stop2/resume3 are prepared;41 focused
 local tests pass. Immutable9cc50dd is deployed. JAX0.4.38 two-CPU continuity
 passes with zero gradient/parameter/AdamW/recovery discrepancies; actual free
 V100 runtime check also passes63.87s, and target-shell dry-run passes.
-The proposed2GPU/8CPU/64GiB/2h integration has a9.92yuan additive ceiling and
-has not been submitted. This is technical preparation, not a new learning
+User approved the2GPU/8CPU/64GiB/2h integration with9.92yuan additive ceiling.
+Job15269596 is RUNNING onibc13b02n02 since2026-09-18 10:29:25 server time;
+deadline12:29:25, inner115min timeout, no requeue. Launcher confirms9cc50dd and
+GPU0,1. This is technical integration, not a new scientific learning
 result. Simultaneous two-GPU CUDA continuity and real-model changing-data
 acceptance are still pending. See
 `research/daily_coarse_graining/dual_device_continuous_integration_20260918.md`.

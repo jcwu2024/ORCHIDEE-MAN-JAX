@@ -1,7 +1,12 @@
 # Continuous dual-device training admission
 
-Status: implementation, local and deployed tiny tests complete; real-model
-paid integration is ready for resource approval and has not been submitted.
+Status: user approved the9.92yuan envelope. Job15269596 submitted and RUNNING
+onibc13b02n02 since2026-09-18 10:29:25 server time. Slurm deadline12:29:25;
+115min inner timeout. Allocation matches2GPU/8CPU/64GiB/2h, no requeue.
+Launcher confirms immutable9cc50dd and GPU0,1. Logs/reports use prefix
+`runtime/outputs/diagnostics/mixed-learning-dual-integration-15269596`.
+Collect tiny GPU continuity, serial3, dual3, stop2/resume3 and final comparison;
+no duplicate submission or expanded learning is authorized by this approval.
 
 ## Preparation evidence
 
@@ -94,7 +99,8 @@ The paid entry first runs the tiny continuity fixture on its allocated GPUs,
 then starts real runner legs only if that passes. Work already authorized on
 free nodes continues without another permission request. A new paid submission
 requires the explicit resource/time/directory/command/cost approval required by
-AGENTS.md and the Explore1000 skill. Previous job15230086 approval is exhausted.
+AGENTS.md and the Explore1000 skill. This envelope was explicitly approved and
+submitted as15269596; previous job15230086 approval is exhausted.
 
 After this gate passes, return to a declared larger-coverage learning segment;
 do not extend profiling or historical AD audits as an independent workstream.

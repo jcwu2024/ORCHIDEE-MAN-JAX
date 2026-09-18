@@ -63,7 +63,8 @@ three pages above direct you to them.
 As of2026-09-18, the admitted dual update is integrated into the shared runner.
 Next validate three changing-data updates against serial execution and a
 stop2/restart/continue-to3 path.41 local tests, deployed two-CPU continuity and
-actual V100 runtime checks pass; no paid integration job has been submitted. See
+actual V100 runtime checks pass. Approved job15269596 is RUNNING on gnall with
+2GPU/8CPU/64GiB/2h and9.92yuan ceiling; collect its comparison before scale-up. See
 `research/daily_coarse_graining/dual_device_continuous_integration_20260918.md`.
 This completes the training execution path before another larger learning run.
 

@@ -15,9 +15,11 @@ Current actions, superseding launch instructions in the history below:
   dual3 versus dual2+new-process recovery to3, using changing batches/windows
   from the same fresh initialization. Immutable9cc50dd is deployed;41 local
   tests, deployed JAX0.4.38 two-CPU continuity, actual V100 runtime check and
-  target-shell dry-run pass. No new paid job has been submitted. The proposed single
-  gnall job contains all paths,2V100/8CPU/64GiB/2h, ceiling9.92yuan, and needs
-  its own approval. Do not rerun the accepted fixed-update profiler or claim
+  target-shell dry-run pass. User approved9.92yuan; job15269596 is RUNNING on
+  ibc13b02n02 since2026-09-18 10:29:25 server time, deadline12:29:25.
+  Allocation2V100/8CPU/64GiB/2h, inner115min timeout, no requeue; launcher
+  confirms9cc50dd/GPU0,1. Collect all paths and final comparison; do not submit
+  a duplicate or extend the budget. Do not rerun the accepted fixed-update profiler or claim
   this integration is scientific learning acceptance. Protocol:
   `research/daily_coarse_graining/dual_device_continuous_integration_20260918.md`.
 
