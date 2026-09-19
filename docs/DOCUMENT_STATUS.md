@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/direct_joint_dual_pool_protocol_20260919.md` | Next direct-joint dual-GPU pool pass; preparing, not submitted | Fresh5415 updates, ready-pool coverage, milestones and16h/79.36yuan ceiling |
 | `research/daily_coarse_graining/dual_device_continuous_results_20260919.md` | Job15269596 timeout; free CPU saved-state parity PASS | Continuous/recovery numerical evidence,1.67x warm changing-data speed, missing final recovered forward replay |
 | `research/daily_coarse_graining/dual_device_continuous_integration_20260918.md` | Frozen specification and submission history; result supersedes RUNNING entry | Changing-data updates, peer synchronization, serial parity and new-process checkpoint recovery |
 | `research/daily_coarse_graining/dual_device_paid_results_20260916.md` | Job15230086 completed; real-model same-update parity/timing accepted | 1.7426x speedup, estimated+3.13% equal-work charge; continuous changing-data/recovery integration next |

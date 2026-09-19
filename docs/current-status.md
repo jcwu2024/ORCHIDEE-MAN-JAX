@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Next learning method is prepared as a fresh direct-joint5415update dual-GPU
+pool pass, with existing architecture/loss/AD and batch64/micro8. Reuses ready
+346539daily rows and5415windows/horizon; monitors0/200/600/1000/2500/4000/5415.
+It expands exposure9.025x versus joint600. Proposed16h ceiling79.36yuan;
+not yet approved/submitted. Free saved-forward supplement preparation is active.
+See `research/daily_coarse_graining/direct_joint_dual_pool_protocol_20260919.md`.
+
 Job15269596 ended FAILED124 at115min, estimated9.51yuan. All three real paths
 saved update3 and final monitors; recovered final saved-forward replay is
 unrecorded. Free CPU full saved-state audit passes dual/serial and recovered/

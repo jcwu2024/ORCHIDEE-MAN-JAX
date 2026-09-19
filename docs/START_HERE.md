@@ -60,6 +60,14 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
+The next prepared learning run is fresh full-network direct-joint dual-GPU
+training for5415updates, covering the entire ready346539-day daily pool once
+(not the whole Teacher TRAIN release), with existing7/30day losses. It reuses
+existing data and graphs; no new architecture/microbatch experiment. Proposed
+16h/79.36yuan ceiling is not yet approved. Preparation and supplementary saved
+forward replay are active. Protocol:
+`research/daily_coarse_graining/direct_joint_dual_pool_protocol_20260919.md`.
+
 As of2026-09-19, job15269596 timed out during final recovery-run wrap-up;
 all three paths saved update3 and completed monitoring. A free CPU audit
 passes full saved-parameter/AdamW and per-update parity, supporting bounded

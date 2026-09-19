@@ -1,6 +1,6 @@
 # Code Map
 
-Last updated: 2026-09-18.
+Last updated: 2026-09-19.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
@@ -20,6 +20,10 @@ phase/cursor arithmetic for the shared `run_mixed_learning.py`; checkpoint
 progress is validated by `daily_operator/mixed_training_state.py`. Launchers
 `run_mixed_learning_dual_device.sh` and `run_mixed_learning_stages.sh` keep
 the execution and learning-method studies separate. No new adjoint or head.
+`job_mixed_learning_dual_pool.sh` launches the existing epoch runner with
+`mixed_learning_joint_pool_v1.json`: one fresh mixed phase of5415updates,
+explicit consumed-data reporting, milestone600 and the admitted dual executor.
+No separate training loop or derivative implementation is introduced.
 `checked_recurrent_execution.py::device_helper_cache` isolates device-bound
 validator and execution-helper persistent caches. `probe_dual_profile_cache.py`
 exercises the actual complete profiler with tiny fixtures and forced cache

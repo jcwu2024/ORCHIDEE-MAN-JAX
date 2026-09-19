@@ -10,6 +10,15 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
+- Prepare one fresh direct-joint dual-GPU prepared-pool pass:5415updates,
+  daily64/micro8 +oneT7+oneT30, all109,464,375parameters. Reuse ready346539
+  daily rows/535sites/44years and existing5415-window-per-horizon schedule.
+  New single-phase schedule adds milestone600 and explicit consumed-data counts.
+  Expected13-15h, proposed16h/2V100/8CPU/64GiB ceiling79.36yuan, not yet approved
+  or submitted. Supplemental read-only saved forward replay is being prepared
+  for free GPU; do not redo the four-process integration or historical AD.
+  Protocol: `research/daily_coarse_graining/direct_joint_dual_pool_protocol_20260919.md`.
+
 - Job15269596 timed out115min (FAILED124, estimated9.51yuan) after all three
   paths saved update3 and completed final monitors. Serial/dual fully finish;
   recovered final persisted-forward replay/completion marker is missing.
