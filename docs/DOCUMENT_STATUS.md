@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-09-18.
+Last updated: 2026-09-19.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -23,7 +23,8 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `research/daily_coarse_graining/dual_device_continuous_integration_20260918.md` | Approved job15269596 RUNNING at9cc50dd;9.92yuan ceiling | Changing-data updates, peer synchronization, serial parity and new-process checkpoint recovery |
+| `research/daily_coarse_graining/dual_device_continuous_results_20260919.md` | Job15269596 timeout; free CPU saved-state parity PASS | Continuous/recovery numerical evidence,1.67x warm changing-data speed, missing final recovered forward replay |
+| `research/daily_coarse_graining/dual_device_continuous_integration_20260918.md` | Frozen specification and submission history; result supersedes RUNNING entry | Changing-data updates, peer synchronization, serial parity and new-process checkpoint recovery |
 | `research/daily_coarse_graining/dual_device_paid_results_20260916.md` | Job15230086 completed; real-model same-update parity/timing accepted | 1.7426x speedup, estimated+3.13% equal-work charge; continuous changing-data/recovery integration next |
 | `research/daily_coarse_graining/dual_device_paid_validation_20260916.md` | Frozen specification; job15230086 completed atb2e1562 | Complete helper scopes, Slurm GPU allocation, resource and submission evidence |
 | `research/daily_coarse_graining/staged_learning_pilot_results_20260916.md` | Both paid arms completed; real learning, no full scientific pass | All curves/physical metrics, growth/carbon drift, matched compute, no settled final ranking; dual v4 norm-cache failure |

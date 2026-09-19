@@ -1,14 +1,28 @@
 # Current Roadmap
 
-Last updated: 2026-09-18.
+Last updated: 2026-09-19.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
-## Current execution gate (2026-09-18)
+## Current execution gate (2026-09-19)
 
 Current actions, superseding launch instructions in the history below:
+
+- Job15269596 timed out115min (FAILED124, estimated9.51yuan) after all three
+  paths saved update3 and completed final monitors. Serial/dual fully finish;
+  recovered final persisted-forward replay/completion marker is missing.
+  Free CPU saved-state audit PASSES all full parameter/AdamW, scalar, physical
+  and changing-data comparisons at existing tolerances, zero failed coordinates.
+  Bounded continuous dual and recovery parity are supported; do not call the
+  original full protocol completed. Warm changing updates12.72s ->7.60s (~1.67x).
+  Next prepare a larger-coverage direct mixed-learning dual plan; carry missing
+  final replay into next authorized execution without rerunning all GPU legs.
+  No active job or new paid submission. Evidence:
+  `research/daily_coarse_graining/dual_device_continuous_results_20260919.md`.
+
+The following submission entry is superseded by the completion audit above.
 
 - Continuous dual execution is implemented in the shared training runner;
   single-device remains the default. Next bounded gate is serial3 versus

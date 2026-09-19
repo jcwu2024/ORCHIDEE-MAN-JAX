@@ -60,6 +60,15 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
+As of2026-09-19, job15269596 timed out during final recovery-run wrap-up;
+all three paths saved update3 and completed monitoring. A free CPU audit
+passes full saved-parameter/AdamW and per-update parity, supporting bounded
+continuous dual execution and recovery. Warm changing-data speedup~1.67x.
+Final recovered checkpoint-forward replay remains unrecorded. Next prepare
+larger-coverage direct mixed training; no new paid job submitted. See
+`research/daily_coarse_graining/dual_device_continuous_results_20260919.md`.
+The earlier preparation history below is superseded by this result.
+
 As of2026-09-18, the admitted dual update is integrated into the shared runner.
 Next validate three changing-data updates against serial execution and a
 stop2/restart/continue-to3 path.41 local tests, deployed two-CPU continuity and

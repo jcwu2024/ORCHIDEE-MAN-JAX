@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-18.
+Last updated: 2026-09-19.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -12,6 +12,18 @@ This page is the current status authority. Dated files under
 describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
+
+Job15269596 ended FAILED124 at115min, estimated9.51yuan. All three real paths
+saved update3 and final monitors; recovered final saved-forward replay is
+unrecorded. Free CPU full saved-state audit passes dual/serial and recovered/
+uninterrupted parameter/AdamW parity, all scalar/physical/data checks, zero
+failed coordinates. This supports bounded continuous dual/recovery correctness,
+not completion of the original entire protocol or scientific acceptance.
+Warm changing-data updates12.72s single versus7.60s dual (~1.67x). No new
+paid run; prepare larger-coverage direct mixed training and carry the narrow
+replay gap into next authorized execution. Full evidence:
+`research/daily_coarse_graining/dual_device_continuous_results_20260919.md`.
+Older submission history follows.
 
 Continuous dual training is now implemented in the shared runner, including
 authoritative GPU0 parameters/AdamW, GPU1 updated-weight synchronization,
