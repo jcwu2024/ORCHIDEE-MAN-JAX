@@ -1,7 +1,7 @@
 # Direct joint dual-GPU learning: one prepared-pool pass
 
-Status: prepared and checked; awaiting budget approval, not submitted or
-scientifically accepted. This is the next
+Status: user approved79.36yuan; job15279139 RUNNING, not scientifically
+accepted. This is the next
 substantial learning run after the short joint/staged pilots and bounded
 continuous dual/recovery parity. It supersedes the paused single-GPU epoch
 resource proposal; no new architecture, loss, AD or batching study is required.
@@ -124,6 +124,22 @@ Command: `sbatch scripts/hpc/job_mixed_learning_dual_pool.sh`.
 Output: `runtime/outputs/training/mixed-learning-dual-pool-v1/report.json`.
 Paid submission requires user approval of this specific envelope after preparation.
 
+### Approved submission
+
+User explicitly approved submission after discussing the full-Teacher cost.
+Submitted once from gln01 with the declared command; job15279139 started
+2026-09-19 16:54:55 server time onibc13b02n02. Slurm confirms2GPUs/8CPUs/64GiB,
+16h, no requeue and deadline2026-09-20 08:54:55. Launcher confirmsd1183e6 and
+GPU0,1. Slurm log is
+`runtime/outputs/training/mixed-learning-dual-pool-v1/slurm-15279139.log`.
+
+The approval covers this run only, not a second paid learning arm or automatic
+extension. Keep its code and declared method fixed. Larger-data training cost
+remains unresolved: linear extrapolation at the same daily/recurrent ratio is
+roughly13-16days per eligible Teacher daily pass, not a measured final-method
+runtime. Existing timing/learning records may support a later lower-frequency
+recurrent-training design while this substantive learning run proceeds.
+
 ## Completed preparation checks
 
 Immutable execution checkout is `d1183e6` at the working directory above.
@@ -143,4 +159,4 @@ These checks establish preparation and data availability, not trained accuracy.
 Supplemental GPU evidence is saved at
 `outputs/mixed-learning-15269596-forward-supplement.json`; exit0, zero optimizer
 updates and zero gradient evaluations. The job/log directory was confirmed
-present after this check. No paid job has been submitted.
+present after this check. These checks preceded the approved submission above.

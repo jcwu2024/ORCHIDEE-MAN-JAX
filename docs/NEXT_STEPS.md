@@ -10,14 +10,20 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
-- Ready for budget approval: one fresh direct-joint dual-GPU prepared-pool pass:5415updates,
+- User approved79.36yuan and job15279139 is RUNNING: one fresh direct-joint dual-GPU prepared-pool pass:5415updates,
   daily64/micro8 +oneT7+oneT30, all109,464,375parameters. Reuse ready346539
   daily rows/535sites/44years and existing5415-window-per-horizon schedule.
   New single-phase schedule adds milestone600 and explicit consumed-data counts.
-  Expected13-15h, proposed16h/2V100/8CPU/64GiB ceiling79.36yuan, not yet approved
-  or submitted. Immutable checkoutd1183e6, target-shell dry-run, free CPU data
+  Expected13-15h, approved16h/2V100/8CPU/64GiB ceiling79.36yuan.
+  Started2026-09-19 16:54:55 server time onibc13b02n02, Slurm deadline
+  2026-09-20 08:54:55;950min inner timeout, no requeue. Launcher confirms
+  immutable checkoutd1183e6 andGPU0,1. Target-shell dry-run, free CPU data
   coverage check,43 local tests and independent review pass. Free GPU saved
-  forward supplement PASSED516.63s, physical counters zero. No active task.
+  forward supplement PASSED516.63s, physical counters zero. Collect this run's
+  learning curves and data counts; do not duplicate it or mutate its checkout.
+  No additional paid experiment/extension approved. Existing timing/learning
+  records can support future daily-versus-recurrent frequency planning without
+  changing this run's fixed method or interrupting its learning experiment.
   Do not redo the four-process integration or historical AD.
   Protocol: `research/daily_coarse_graining/direct_joint_dual_pool_protocol_20260919.md`.
 
