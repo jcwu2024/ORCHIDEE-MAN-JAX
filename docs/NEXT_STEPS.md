@@ -10,24 +10,27 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 Current actions, superseding launch instructions in the history below:
 
-- Prepare one fresh direct-joint dual-GPU prepared-pool pass:5415updates,
+- Ready for budget approval: one fresh direct-joint dual-GPU prepared-pool pass:5415updates,
   daily64/micro8 +oneT7+oneT30, all109,464,375parameters. Reuse ready346539
   daily rows/535sites/44years and existing5415-window-per-horizon schedule.
   New single-phase schedule adds milestone600 and explicit consumed-data counts.
   Expected13-15h, proposed16h/2V100/8CPU/64GiB ceiling79.36yuan, not yet approved
-  or submitted. Supplemental read-only saved forward replay is being prepared
-  for free GPU; do not redo the four-process integration or historical AD.
+  or submitted. Immutable checkoutd1183e6, target-shell dry-run, free CPU data
+  coverage check,43 local tests and independent review pass. Free GPU saved
+  forward supplement PASSED516.63s, physical counters zero. No active task.
+  Do not redo the four-process integration or historical AD.
   Protocol: `research/daily_coarse_graining/direct_joint_dual_pool_protocol_20260919.md`.
 
 - Job15269596 timed out115min (FAILED124, estimated9.51yuan) after all three
   paths saved update3 and completed final monitors. Serial/dual fully finish;
-  recovered final persisted-forward replay/completion marker is missing.
+  recovered original live-vs-disk replay/completion marker remains missing.
   Free CPU saved-state audit PASSES all full parameter/AdamW, scalar, physical
   and changing-data comparisons at existing tolerances, zero failed coordinates.
   Bounded continuous dual and recovery parity are supported; do not call the
   original full protocol completed. Warm changing updates12.72s ->7.60s (~1.67x).
-  Next prepare a larger-coverage direct mixed-learning dual plan; carry missing
-  final replay into next authorized execution without rerunning all GPU legs.
+  Free GPU supplement now passes recovered-vs-continuous saved-model forward
+  on eight identical daily inputs; original timeout remains recorded as failed.
+  The larger-coverage direct mixed-learning dual plan above is ready.
   No active job or new paid submission. Evidence:
   `research/daily_coarse_graining/dual_device_continuous_results_20260919.md`.
 

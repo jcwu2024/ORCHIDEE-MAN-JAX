@@ -24,6 +24,10 @@ the execution and learning-method studies separate. No new adjoint or head.
 `mixed_learning_joint_pool_v1.json`: one fresh mixed phase of5415updates,
 explicit consumed-data reporting, milestone600 and the admitted dual executor.
 No separate training loop or derivative implementation is introduced.
+`probe_saved_mixed_forward.py` compares recovered and uninterrupted persisted
+checkpoints on the same eight daily inputs, using the shared objective and
+checkpoint loader. It performs no AD or optimizer update and preserves the
+original job's timeout status; it is a narrow supplement, not a training runner.
 `checked_recurrent_execution.py::device_helper_cache` isolates device-bound
 validator and execution-helper persistent caches. `probe_dual_profile_cache.py`
 exercises the actual complete profiler with tiny fixtures and forced cache

@@ -219,8 +219,8 @@ def run(args: Any) -> dict[str, Any]:
     from research.daily_coarse_graining.daily_operator.fresh_start_training import make_objective
     from research.daily_coarse_graining.daily_operator.prepared_one_day import PreparedOneDayPool
     from scripts.hpc.check_daily_training_runtime import _atomic_json
-    from scripts.hpc.mixed_learning_plan import load_plan
     from scripts.hpc.mixed_learning_dual_device import DUAL_DEVICE_TRAINING_LAYOUT
+    from scripts.hpc.mixed_learning_plan import load_plan
     from scripts.hpc.trained_screen_common import json_safe
 
     started = time.perf_counter()

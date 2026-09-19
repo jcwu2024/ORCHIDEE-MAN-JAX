@@ -41,6 +41,23 @@ an operational evidence gap, not an observed mismatch. Keep it explicit; fold
 its completion into the next authorized execution rather than repeat the entire
 paid test. No additional paid submission has been made.
 
+## Subsequent free GPU forward supplement
+
+After the CPU audit above, `probe_saved_mixed_forward.py` atd1183e6 ran on
+gln01 GPU0 and completed exit0 in516.626s. It loaded the recovered update3
+and uninterrupted dual update3 checkpoints through the shared loader, then
+evaluated the shared daily objective on the same first8 inputs. No gradient,
+optimizer update or recurrent rollout was performed. Evidence:
+`outputs/mixed-learning-15269596-forward-supplement.json`.
+
+Combined daily loss is279.9585481835971 recovered versus279.95854801389874
+continuous, absolute difference1.697e-7. Maximum per-sample three-term difference
+is3.845e-6. Both comparisons pass unchanged rtol1e-5/atol1e-6; all physical
+counters are identical and zero. This closes the narrow saved-model forward
+comparison for the tested inputs. It does not recover the original process's
+missing live-versus-disk observation, relabel the failed job, or establish
+scientific accuracy. Both free audit processes have exited.
+
 ## Timings and memory
 
 | Path | Update1 seconds | Update2 seconds | Update3 seconds |

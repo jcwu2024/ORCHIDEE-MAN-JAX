@@ -17,18 +17,23 @@ Next learning method is prepared as a fresh direct-joint5415update dual-GPU
 pool pass, with existing architecture/loss/AD and batch64/micro8. Reuses ready
 346539daily rows and5415windows/horizon; monitors0/200/600/1000/2500/4000/5415.
 It expands exposure9.025x versus joint600. Proposed16h ceiling79.36yuan;
-not yet approved/submitted. Free saved-forward supplement preparation is active.
+not yet approved/submitted. Checkoutd1183e6, target-shell dry-run, free CPU
+metadata coverage check,43 local tests and independent review pass. The free
+GPU saved-forward supplement PASSED in516.63s with zero physical counters;
+combined loss absolute difference1.697e-7, per-sample term maximum3.845e-6,
+within unchanged rtol1e-5/atol1e-6. No active job. Budget approval is next.
 See `research/daily_coarse_graining/direct_joint_dual_pool_protocol_20260919.md`.
 
 Job15269596 ended FAILED124 at115min, estimated9.51yuan. All three real paths
-saved update3 and final monitors; recovered final saved-forward replay is
-unrecorded. Free CPU full saved-state audit passes dual/serial and recovered/
+saved update3 and final monitors; recovered original live-vs-disk replay is
+unrecorded. The subsequent free saved-vs-saved forward supplement passes,
+without changing the original timeout status. Free CPU full saved-state audit passes dual/serial and recovered/
 uninterrupted parameter/AdamW parity, all scalar/physical/data checks, zero
 failed coordinates. This supports bounded continuous dual/recovery correctness,
 not completion of the original entire protocol or scientific acceptance.
 Warm changing-data updates12.72s single versus7.60s dual (~1.67x). No new
-paid run; prepare larger-coverage direct mixed training and carry the narrow
-replay gap into next authorized execution. Full evidence:
+paid run; larger-coverage direct mixed training is ready for budget approval.
+Full evidence:
 `research/daily_coarse_graining/dual_device_continuous_results_20260919.md`.
 Older submission history follows.
 

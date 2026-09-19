@@ -1,6 +1,7 @@
 # Direct joint dual-GPU learning: one prepared-pool pass
 
-Status: preparation, not submitted or scientifically accepted. This is the next
+Status: prepared and checked; awaiting budget approval, not submitted or
+scientifically accepted. This is the next
 substantial learning run after the short joint/staged pilots and bounded
 continuous dual/recovery parity. It supersedes the paused single-GPU epoch
 resource proposal; no new architecture, loss, AD or batching study is required.
@@ -91,9 +92,11 @@ Approximately8*1.23GiB permanent checkpoints plus1.23GiB atomic temporary;
 reports/logs add modest bytes. File count is bounded, not per sample or step.
 
 Job15269596's timeout is retained as a failure of full orchestration completion.
-Its saved full-state and scalar parity passes. A supplemental read-only saved
-forward comparison will evaluate recovered3 versus completed dual3 on the same
-fixed first8 daily inputs, retaining physical checks. It cannot reconstruct a
+Its saved full-state and scalar parity passes. The supplemental read-only saved
+forward comparison PASSED on free gln01 GPU0 in516.63s: recovered3 versus
+completed dual3 on the same fixed first8 daily inputs, with physical checks
+all zero. Loss difference1.697e-7 and largest per-sample term difference3.845e-6
+pass unchanged rtol1e-5/atol1e-6. It cannot reconstruct a
 lost original live-vs-disk scalar or retroactively mark that job completed.
 The new long run retains its ordinary final persisted-forward replay; no costly
 repeat of the four-process integration is required.
@@ -120,3 +123,24 @@ Working directory:
 Command: `sbatch scripts/hpc/job_mixed_learning_dual_pool.sh`.
 Output: `runtime/outputs/training/mixed-learning-dual-pool-v1/report.json`.
 Paid submission requires user approval of this specific envelope after preparation.
+
+## Completed preparation checks
+
+Immutable execution checkout is `d1183e6` at the working directory above.
+The actual target Bash launcher passed syntax and argument-expansion dry-run,
+including a non-default two-GPU mask `3,5`, the declared schedule and950min
+timeout. The Slurm output directory exists. An independent Sol/high source
+review found no launch blocker: fresh initialization, phase/cursor arithmetic,
+milestones, rolling checkpoints and two-device propagation use the shared paths.
+
+The existing metadata loader passed on free CPU test02, without Teacher payload
+reads or optimizer updates. Saved evidence:
+`outputs/mixed-learning-dual-pool-v1-metadata.json`. Its base epoch configuration
+lists six milestones; the explicit learning schedule adds600, so the effective
+run has the seven milestones listed above. Local schedule validation and43
+focused tests passed. The supplemental forward script also passes Ruff.
+These checks establish preparation and data availability, not trained accuracy.
+Supplemental GPU evidence is saved at
+`outputs/mixed-learning-15269596-forward-supplement.json`; exit0, zero optimizer
+updates and zero gradient evaluations. The job/log directory was confirmed
+present after this check. No paid job has been submitted.
