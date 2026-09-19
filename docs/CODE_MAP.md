@@ -30,6 +30,12 @@ frequency. `probe_mixed_report_overhead.py` replays only JSON formatting on CPU.
 `summarize_mixed_learning.py` produces physical-unit learning/growth figures and
 per-window Teacher comparisons from saved reports; no checkpoint/inference/AD.
 These analysis tools do not modify the running training checkout or method.
+`mixed_learning_reporting.py::MixedLearningReporter` owns compact progress and
+periodic full reports for the shared runner. `--report-interval` defaults to25;
+all checkpoints/monitors/failure/completion flush full history. The runner
+flushes before checkpoint replacement and reconciles loaded checkpoint metadata
+on resume. `probe_mixed_reporting_cadence.py` compares report event formatting
+without model execution. No optimizer/loss/sampling behavior is changed.
 `probe_saved_mixed_forward.py` compares recovered and uninterrupted persisted
 checkpoints on the same eight daily inputs, using the shared objective and
 checkpoint loader. It performs no AD or optimizer update and preserves the

@@ -13,12 +13,23 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Reporting optimization is implemented in separate checkout16c0bad, with30local
+tests and independent recovery review passing. Compact progress is emitted
+each event; full history every25updates plus boundaries, before and after
+checkpoint replacement. Free CPU identical-payload replay55 ->6 full reports
+over25updates reduced formatting48.260s ->6.093s (87.37%); this is not measured
+whole-training speedup. Actual target-shell dry-run passes. Active paid job
+15279139 remains atd1183e6, last observed running at922updates. Details:
+`research/daily_coarse_graining/compact_training_reporting_20260919.md`.
+
 Concurrent read-only efficiency audit: fixed-profile arithmetic gives only4.75%
 update-wall savings for half-frequency recurrent work under dual execution.
 Historical ordinary wall cycles have1.897s joint/1.536s staged average outside
 the update timer, increasing with report growth. Two full JSON report writes
 per update are a confirmed contributor: diagnostic free CPU formatting replay
-alone took0.745-0.779s/call on a14.6MB report, excluding disk IO. No reporting
+alone took0.745-0.779s/call on a14.6MB report, excluding disk IO; that earlier
+proxy omitted the actual writer's second conversion, corrected in the new
+cadence probe above. No reporting
 change was applied to job15279139. Timing/science tools now prepare per-window
 physical-unit outcomes from existing JSON snapshots. See
 `research/daily_coarse_graining/training_wall_and_science_review_20260919.md`.

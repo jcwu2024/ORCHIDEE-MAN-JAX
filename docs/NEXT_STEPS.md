@@ -30,9 +30,16 @@ Current actions, superseding launch instructions in the history below:
 - Concurrent read-only wall/science review: saved profile implies only4.75%
   update-wall savings from half-frequency recurrent work on the dual layout,
   not a major speed route. Pilot logs expose1.5-1.9s average non-update overhead,
-  with repeated full-report formatting a confirmed contributor. Keep active
-  training unchanged; consider compact progress plus periodic complete-report
-  persistence for a future checked revision. Reusable timing/science summaries
+  with repeated full-report formatting a confirmed contributor. Compact progress
+  plus full reports every25updates/all checkpoint and monitor boundaries is now
+  implemented at16c0bad in separate `runtime/checkouts/mixed-reporting-v1`.
+  Local30 tests and independent recovery review pass. Free CPU actual-codec
+  replay48.26s ->6.09s for25events, identical final complete report; this is
+  formatting time only, not whole-training speedup. Keep active paid code
+  unchanged; use the checked reporting revision in a future declared checkout.
+  No new GPU/AD admission is needed for this reporting-only change. Details:
+  `research/daily_coarse_graining/compact_training_reporting_20260919.md`.
+  Reusable timing/science summaries
   use report snapshots only, with no new inference or paid task. Evidence and
   interpretation: `research/daily_coarse_graining/training_wall_and_science_review_20260919.md`.
 

@@ -75,6 +75,18 @@ also not be treated as an allocated whole-training benchmark.
 
 Evidence: `outputs/mixed-learning-review/report-cadence-local.json`.
 
+The separate server checkout `runtime/checkouts/mixed-reporting-v1` is at
+`16c0bad`. Free test02 replay also PASSED: eager48.260s versus periodic6.093s,
+87.37% less formatting time;55 versus6 full writes,55 compact writes each,
+exactly identical final complete JSON. Artifact:
+`outputs/mixed-learning-review/report-cadence-test02.json`. Actual target-shell
+dry-run accepts `--report-interval 25` and propagates a non-default GPU mask3,5.
+This dry-run submits and computes nothing. The test01 CPU environment lacks
+pytest, so the30-test regression result is local; no package was installed.
+The dependency-free server cadence replay ran against the actual deployed
+formatter/reporter. Active job15279139 remained running, observed at922updates,
+without any checkout or command change.
+
 ```powershell
 conda run -n ORCJAX python scripts/hpc/probe_mixed_reporting_cadence.py --source-root E:/ORCHIDEE-MAN-JAX --report outputs/staged-pilot-joint-600-report.json --output outputs/mixed-learning-review/report-cadence-local.json --updates 25
 ```
