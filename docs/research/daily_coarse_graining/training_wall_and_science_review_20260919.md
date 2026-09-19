@@ -67,17 +67,23 @@ excluding intervals containing monitors or checkpoints:
 Source attribution: `run_mixed_learning.py::emit` runs before and after every
 update, outside `record['seconds']`. It traverses `json_safe(report)` and writes
 the entire accumulated report with `_atomic_json`, including all detailed
-monitor trajectories, indenting/sorting JSON and calling fsync. Reader-memory
+monitor trajectories. The actual imported writer performs another `_json_value`
+conversion, `json.dumps`, `write_text` and `os.replace`; it does not call fsync.
+The original audit confused that last detail with another same-named helper;
+this correction does not change the observed outside-update log timings. Reader-memory
 statistics and other Python bookkeeping also lie outside the update timer.
 Therefore the measured residual is NOT solely disk IO or solely serialization.
 The timestamp is taken before formatting, and log precision is0.1s.
 
-A small free-test02 CPU replay of the actual `json_safe` plus `json.dump`
+A small free-test02 CPU replay of `json_safe` plus `json.dump`
 formatting on the saved14,583,383-byte joint600 report took0.779/0.745s per call;
-process CPU times0.770/0.743s. No file writes/fsync, model evaluation or GPU work
+process CPU times0.770/0.743s. This v1 proxy did not include the actual writer's
+second `_json_value` conversion and used dump rather than dumps. No file writes, model evaluation or GPU work
 were included. Local Windows replay took0.614/0.605s. These are diagnostic
 causal evidence for nontrivial formatting work, not an accepted training-speed
 benchmark or a promise of the same speedup on the allocated GPU host.
+The v2 probe now uses the actual conversion/dumps chain. Full cadence replay,
+implementation and tests are recorded in `compact_training_reporting_20260919.md`.
 
 Rolling checkpoint metadata replaces each old duration for the same path, so
 the sum of retained checkpoint timings is only a lower bound. Do not assign

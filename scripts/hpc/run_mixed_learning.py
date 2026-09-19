@@ -62,6 +62,19 @@ def newest_checkpoint(output, requested, completed, milestones=(0,50,100,200)):
     return checkpoint_path(output,max(available)) if available else requested
 
 
+def reconcile_resume_checkpoint(report, path, completed):
+    """Recover metadata if a process died after checkpoint rename, before emit."""
+    path = Path(path).resolve()
+    records = report.get('checkpoints', [])
+    matching = [row for row in records if Path(row['path']).resolve() == path]
+    if any(row['update'] == completed for row in matching):
+        return
+    report['checkpoints'] = [row for row in records
+                             if Path(row['path']).resolve() != path] + [
+        dict(update=completed, path=str(path), bytes=path.stat().st_size,
+             recovered_metadata=True)]
+
+
 def profile_source_method(training_report, config, model):
     """Bind a diagnostic checkpoint to the completed run without resuming it."""
     if (training_report.get('status') != 'completed'
@@ -247,6 +260,7 @@ def run(args):
     from research.daily_coarse_graining.daily_operator.target_oriented_training import initialize_target_oriented_adamw
     from scripts.hpc.mixed_learning_monitor import build_mixed_rollout_monitor
     from scripts.hpc.mixed_learning_plan import load_plan
+    from scripts.hpc.mixed_learning_reporting import MixedLearningReporter
     from scripts.hpc.mixed_learning_stages import load_learning_schedule
     from scripts.hpc.probe_one_day_batch import _compiled_memory, _device_memory
     from scripts.hpc.probe_public_rollout import physical_checks
@@ -398,6 +412,10 @@ def run(args):
         report['prior_elapsed_seconds'] = report.get('prior_elapsed_seconds',0.)+report.get('elapsed_seconds',0.)
 
     batches = None
+    reporter = MixedLearningReporter(
+        args.output, write_json=_atomic_json, json_safe=json_safe,
+        interval=1 if profiling else getattr(args, 'report_interval', 25))
+    report['reporting_policy'] = reporter.policy
 
     def emit(stage, **values):
         report.update(values, stage=stage, elapsed_seconds=time.perf_counter()-started,
@@ -416,7 +434,7 @@ def run(args):
                                 if row.get('phase') == phase.name)
                 for phase in learning_schedule.phases
             }
-        _atomic_json(args.output, json_safe(report))
+        reporter.publish(report)
         print(f'mixed_learning stage={stage} updates={report["completed_updates"]} '
               f'seconds={report["elapsed_seconds"]:.1f}', flush=True)
 
@@ -568,6 +586,7 @@ def run(args):
             del parameters
             parameters, optimizer = jax.device_put((saved['parameters'],saved['optimizer_state']))
             trim_resume_report(report,saved['completed_updates'])
+            reconcile_resume_checkpoint(report,resolved_resume,saved['completed_updates'])
             report['resumed_from'] = str(resolved_resume)
             del saved
         else:
@@ -605,6 +624,10 @@ def run(args):
             return report
 
         def save(index=None):
+            # Persist all update records before the atomic checkpoint replacement.
+            # Recovery may trim a report ahead of an old checkpoint, never infer
+            # missing records for a newer checkpoint after an abrupt interruption.
+            emit('checkpoint_saving')
             began = time.perf_counter()
             count = report['completed_updates']
             path = checkpoint_path(args.output,index)
@@ -1361,6 +1384,9 @@ def parser():
     result.add_argument('--stop-after-update',type=int,
                         help='integration-only recoverable early stop; not part of method identity')
     result.add_argument('--resume',type=Path)
+    result.add_argument('--report-interval',type=int,default=25,
+                        help='full report every N updates plus all checkpoints/monitors; '
+                             'compact progress every event; 1 keeps eager reports')
     result.add_argument('--profile-checkpoint',type=Path)
     result.add_argument('--profile-training-report',type=Path)
     result.add_argument('--profile-repeats',type=int,choices=(3,5),default=3)
