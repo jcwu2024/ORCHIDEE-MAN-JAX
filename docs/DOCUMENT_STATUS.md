@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/training_wall_and_science_review_20260919.md` | Read-only efficiency audit and reusable science reporting; active training unchanged | Dual recurrent-frequency limit, report-formatting overhead, physical-unit milestone interpretation |
 | `research/daily_coarse_graining/direct_joint_dual_pool_protocol_20260919.md` | Approved79.36yuan; job15279139 RUNNING atd1183e6 | Fresh5415 updates, ready-pool coverage, milestones and16h ceiling; collect science and sustained throughput |
 | `research/daily_coarse_graining/dual_device_continuous_results_20260919.md` | Job15269596 timeout retained; free CPU saved-state and free GPU saved-forward parity PASS | Continuous/recovery numerical evidence,1.67x warm changing-data speed; original live-vs-disk replay remains unavailable |
 | `research/daily_coarse_graining/dual_device_continuous_integration_20260918.md` | Frozen specification and submission history; result supersedes RUNNING entry | Changing-data updates, peer synchronization, serial parity and new-process checkpoint recovery |

@@ -13,6 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Concurrent read-only efficiency audit: fixed-profile arithmetic gives only4.75%
+update-wall savings for half-frequency recurrent work under dual execution.
+Historical ordinary wall cycles have1.897s joint/1.536s staged average outside
+the update timer, increasing with report growth. Two full JSON report writes
+per update are a confirmed contributor: diagnostic free CPU formatting replay
+alone took0.745-0.779s/call on a14.6MB report, excluding disk IO. No reporting
+change was applied to job15279139. Timing/science tools now prepare per-window
+physical-unit outcomes from existing JSON snapshots. See
+`research/daily_coarse_graining/training_wall_and_science_review_20260919.md`.
+
 Next learning method is prepared as a fresh direct-joint5415update dual-GPU
 pool pass, with existing architecture/loss/AD and batch64/micro8. Reuses ready
 346539daily rows and5415windows/horizon; monitors0/200/600/1000/2500/4000/5415.

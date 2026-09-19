@@ -27,6 +27,15 @@ Current actions, superseding launch instructions in the history below:
   Do not redo the four-process integration or historical AD.
   Protocol: `research/daily_coarse_graining/direct_joint_dual_pool_protocol_20260919.md`.
 
+- Concurrent read-only wall/science review: saved profile implies only4.75%
+  update-wall savings from half-frequency recurrent work on the dual layout,
+  not a major speed route. Pilot logs expose1.5-1.9s average non-update overhead,
+  with repeated full-report formatting a confirmed contributor. Keep active
+  training unchanged; consider compact progress plus periodic complete-report
+  persistence for a future checked revision. Reusable timing/science summaries
+  use report snapshots only, with no new inference or paid task. Evidence and
+  interpretation: `research/daily_coarse_graining/training_wall_and_science_review_20260919.md`.
+
 - Job15269596 timed out115min (FAILED124, estimated9.51yuan) after all three
   paths saved update3 and completed final monitors. Serial/dual fully finish;
   recovered original live-vs-disk replay/completion marker remains missing.
