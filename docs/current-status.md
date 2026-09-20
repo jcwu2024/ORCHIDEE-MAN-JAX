@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Latest read-only check of array15290789: all four RUNNING at29min elapsed;
+new updates A63/B61/C61/D58. First100-update science assessment not yet due.
+User reaffirmed that inherited-weight comparisons do not determine fresh-start
+training performance. Next method preparation now recorded in
+`research/daily_coarse_graining/fresh_method_verification_plan_20260920.md`;
+no extra paid job, changes to active tasks, or claim of fresh-method admission.
+
 Four-arm paid experiment RUNNING, array15290789_0..3,immutable2918966,
 started22:23:45 serverCST2026-09-20,deadline01:23:45 next day. Each1V100/8CPU/
 64GiB/3h; total ceiling33.12yuan. A onibc13b02n01, B/C/D onibc13b02n02;

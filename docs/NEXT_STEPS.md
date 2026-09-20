@@ -8,13 +8,24 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-20)
 
+Parallel work while array15290789 runs: prepare the next complete method from
+random initialization/fresh AdamW, not another default checkpoint-chain sweep.
+The user explicitly raised training-order/optimizer-history dependence.
+Current-arm ranking is conditional on selected100 and cannot establish a
+fresh-start method ranking. Draft comparison/seed/data/evaluation rules:
+`research/daily_coarse_graining/fresh_method_verification_plan_20260920.md`.
+This is preparation only; exact next coefficients, implementation admission,
+independent panel and paid budget remain open. No additional job submitted.
+Latest live check: all four running at29min elapsed, new updates A63/B61/C61/
+D58, no runtime error reported; first100-update assessment still pending.
+
 Four paid parallel learning arms are RUNNING as array15290789_0..3 from
 22:23:45 serverCST2026-09-20, immutable2918966, maximum33.12yuan total:
 each1V100/8CPUs/64GiB/3h,500 NEW updates from common
 selected100/absolute4100. A unchanged; B quarter litter coefficient; C double
 T30 outer weight; D LR3e-6. Same data order/Attention/native AD, milestones at
-100/250/500 new updates. All four reached metadata_validated and were loading
-the model at last check; first two live updates are not yet confirmed. Protocol:
+100/250/500 new updates. All four have entered complete optimizer updates;
+see the latest count snapshot above. Protocol:
 `research/daily_coarse_graining/litter_parallel_training_protocol_20260920.md`.
 28 local tests/Ruff pass; actual target-shell mappings and all four deployed
 source-checkpoint/schedule preparations pass. Read the four isolated reports

@@ -62,11 +62,17 @@ three pages above direct you to them.
 
 Four paid parallel arms RUNNING, array15290789_0..3,immutable2918966,
 500 new updates/arm from common selected100, maximum33.12yuan. All started
-22:23:45 serverCST2026-09-20; metadata validated, model loading at last check.
+22:23:45 serverCST2026-09-20; at29min elapsed A/B/C/D had63/61/61/58 new
+updates completed; first100-update assessment still pending at that check.
 Vary only duration reference/litter weight/T30 weight/LR, preserving Attention
 and AD.28 local tests and four deployed metadata/checkpoint preparations pass.
 Read
 `research/daily_coarse_graining/litter_parallel_training_protocol_20260920.md`.
+
+While these run, prepare fresh-init/full-network method verification; current
+inherited-arm rankings are conditional on the training history. See
+`research/daily_coarse_graining/fresh_method_verification_plan_20260920.md`
+(draft only, no new paid job).
 
 Selected20->100 continuation COMPLETED0 on free gln01 GPU1,5fdfd5e,
 2205.56s; all four milestone assessments/checkpoints complete. No active task.
