@@ -8,14 +8,23 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-20)
 
-Free experiment is RUNNING on gln01 GPU1 from14:51:12CST2026-09-20,
-immutable1391a75, wrapper101505/timeout101520/Python101558;90min ceiling
-about16:21. Metadata validated; model loading at last check. Read
+First free1391a75 attempt ended at90min (exit124): old20 logged/saved,
+selected5 logged/2 saved, both calibration bundles saved; no final science
+panels yet. All logged update hard counters zero. Recurrent compilation
+consumed70.12min; warm updates12.7-12.8s. Lambda selected5.22171689e-5.
+Reviewed recovery RUNNING on gln01 GPU1 from16:28:10CST2026-09-20,
+same immutable1391a75, wrapper62014/timeout62028/Python62065;45min ceiling
+about17:13. Metadata recovery passed. Reuse old20,
+restore selected2 and finish18 updates plus unchanged monitors. Preserve
+first-attempt report/log; new log `.resume1.log`. No paid submission. See
+`research/daily_coarse_graining/litter_mixed_partial_results_20260920.md`.
+Read
 `runtime/outputs/diagnostics/litter-mixed-admission-v1.{json,log}` on server;
 do not duplicate or modify its checkout. Two frozen-source TRAIN
 gradient decompositions select one litter coefficient against D+.5R7+.5R30;
 then each matched arm passes2 full mixed updates and continues to20 in the
-same90min bounded process. Save calibration components and2/20 checkpoints
+original90min bounded process (first attempt timed out; recovery above).
+Save calibration components and2/20 checkpoints
 before further compilations/monitoring. Evaluate unchanged16-window7/30day
 development panels; do not claim final/generalization acceptance. No new
 architecture, data regeneration, historical AD rerun or paid submission.

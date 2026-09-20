@@ -13,9 +13,17 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Free mixed follow-up RUNNING from14:51:12CST2026-09-20 on gln01 GPU1,
-immutable1391a75. Wrapper101505/timeout101520/Python101558;90min ceiling
-about16:21. Metadata validated; model loading at last check. Output prefix:
+First1391a75 free mixed attempt timed out90min (exit124). Old20 completed/
+saved; selected5 logged but2 saved. Both calibration bundles saved; selected
+lambda5.22171689e-5. All25 logged update hard counters zero; no final science
+assessment yet. Recurrent compilation70.12min dominated wall; warm updates
+12.7-12.8s. Reviewed same-checkout recovery started16:28:10CST2026-09-20
+on freeGPU1, wrapper62014/timeout62028/Python62065,45min ceiling about17:13.
+Metadata recovery passed. Old20 will not retrain;
+selected restores2 and recomputes3-5 while finishing through20. Original
+report/log preserved; new `.resume1.log`. No paid job. Details:
+`research/daily_coarse_graining/litter_mixed_partial_results_20260920.md`.
+Output prefix:
 `runtime/outputs/diagnostics/litter-mixed-admission-v1` (.json/.log).
 Original checkpoint4000,
 two TRAIN calibration batch/pairs to balance added litter against the whole
