@@ -60,6 +60,11 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
+Selected20->100 continuation is implemented;22 local tests pass.
+Hold architecture/loss coefficient fixed; physical monitors each20 updates,
+recovery every5; one freeGPU up to60min, not yet launched. Protocol:
+`research/daily_coarse_graining/litter_mixed_continuation_protocol_20260920.md`.
+
 Balanced litter mixed learning now COMPLETED0: each arm20updates and all
 fixed7/30day development evaluations. Nonliving carbon-change RMSE falls
 60%T7/44%T30 versus matched old loss, but remaining change is wrong-sign and

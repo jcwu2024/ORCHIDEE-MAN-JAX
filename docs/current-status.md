@@ -13,6 +13,13 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Next selected-only continuation is specified before execution: selected20->100,
+fixed lambda5.22171689e-5, same joint loss/sampling/optimizer, monitors each20
+and recovery each5. FreeGPU60min envelope; implementation complete and22
+local tests/Ruff/diff checks plus actual parent-report validation pass.
+No new launch or paid submission. Protocol:
+`research/daily_coarse_graining/litter_mixed_continuation_protocol_20260920.md`.
+
 Balanced litter mixed experiment COMPLETED0, recovery1718.32s,1391a75.
 Both arms20updates/saved4020AdamW, full initial/old/selected16-window
 development assessments, all update/monitor hard counters zero. Nonliving

@@ -8,6 +8,13 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-20)
 
+User authorized continued exploration. Selected20->100 protocol now frozen:
+80 new joint updates, same lambda/LR/data/architecture, physical monitors at
+40/60/80/100, recovery every5. FreeGPU60min ceiling; no paid submission.
+Implementation complete;22 local tests/Ruff/diff checks and actual parent
+report validation pass. Deploy/dry-run next; nothing launched yet. Read
+`research/daily_coarse_graining/litter_mixed_continuation_protocol_20260920.md`.
+
 Balanced litter mixed experiment COMPLETED0 after reviewed free recovery
 (1391a75,1718.32s). Both20-update arms and source/old/selected full16-window
 monitors complete; all hard counters zero. Versus old20, selected nonliving

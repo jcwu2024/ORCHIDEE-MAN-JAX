@@ -28,8 +28,12 @@ from scripts.hpc.run_mixed_learning import configure_execution, validate_configu
 
 SCHEMA_VERSION = "litter_mixed_admission_result_v1"
 PROTOCOL_SCHEMA_VERSION = "litter_mixed_admission_v1"
+CONTINUATION_SCHEMA_VERSION = "litter_mixed_continuation_result_v1"
+CONTINUATION_PROTOCOL_SCHEMA_VERSION = "litter_mixed_continuation_v1"
 GRADIENT_BUNDLE_SCHEMA_VERSION = "litter_mixed_gradient_bundle_v1"
 EXPECTED_PARAMETER_COUNT = 109_464_375
+EXPECTED_SELECTED_WEIGHT = 5.221716892123007e-5
+EXPECTED_SOURCE_ADMISSION_GIT_HEAD = "1391a75b1fc7ee322c7a73d4877f9f53a22c3a18"
 COMPONENTS = balance.COMPONENTS
 ARMS = ("old", "selected")
 PANEL_NAMES = ("fixed_training_daily", "excluded_train_daily")
@@ -293,7 +297,191 @@ def _checkpoint_method(*, source_checkpoint: Path, source_update: int, selected_
     }
 
 
-def run(args: argparse.Namespace) -> Mapping[str, Any]:
+def _validate_continuation_protocol(protocol: Mapping[str, Any]) -> dict[str, Any]:
+    """Validate the fixed selected20-to-selected100 continuation geometry."""
+
+    if protocol.get("schema_version") != CONTINUATION_PROTOCOL_SCHEMA_VERSION:
+        raise ValueError("litter mixed-continuation protocol schema drift")
+    expected = {
+        "source_relative_update": 20,
+        "target_relative_update": 100,
+        "source_absolute_update": 4020,
+        "milestones": [40, 60, 80, 100],
+        "recovery_interval": 5,
+        "daily_batch": 64,
+        "microbatch": 8,
+        "outer_weights": {"daily": 1.0, "T7": 0.5, "T30": 0.5},
+        "scientific_stop": {
+            "consecutive_monitors": 2,
+            "rmse_ratio": 2.0,
+            "minimum_absolute_increase_gC_m2": {
+                "flux": 1.0,
+                "biomass": 1.0,
+                "canopy": 5.0,
+                "nonliving": 10.0,
+            },
+        },
+        "scientific_acceptance": False,
+    }
+    for key, value in expected.items():
+        if protocol.get(key) != value:
+            raise ValueError(f"litter mixed-continuation {key} drift")
+    if float(protocol.get("selected_weight", np.nan)) != EXPECTED_SELECTED_WEIGHT:
+        raise ValueError("litter mixed-continuation selected weight drift")
+    return {
+        **expected,
+        "milestones": tuple(expected["milestones"]),
+        "selected_weight": EXPECTED_SELECTED_WEIGHT,
+        "update_indices": tuple(range(4020, 4100)),
+    }
+
+
+def _source_admission_method(report: Mapping[str, Any]) -> dict[str, Any]:
+    """Reconstruct the exact method stored by the completed selected20 checkpoint."""
+
+    if report.get("schema_version") != SCHEMA_VERSION or report.get("status") != "completed":
+        raise ValueError("source admission report is not a completed mixed admission")
+    if (
+        report.get("technical_admission_passed") is not True
+        or report.get("bounded_continuation_completed") is not True
+        or report.get("full_mixed_admission") is not True
+        or report.get("monitor_gates_passed") is not True
+        or report.get("scientific_acceptance") is not False
+    ):
+        raise ValueError("source admission report lacks completed technical gates")
+    if report.get("source_git_head") != EXPECTED_SOURCE_ADMISSION_GIT_HEAD:
+        raise ValueError("source admission code revision drift")
+    source_protocol = report.get("protocol")
+    if not isinstance(source_protocol, Mapping):
+        raise ValueError("source admission protocol is unavailable")
+    admitted = _validate_protocol(source_protocol)
+    selected_weight = float(report.get("selected_weight", np.nan))
+    selection = report.get("weight_selection")
+    selected_arm = report.get("arms", {}).get("selected")
+    if (
+        selected_weight != EXPECTED_SELECTED_WEIGHT
+        or not isinstance(selection, Mapping)
+        or float(selection.get("selected_weight", np.nan)) != selected_weight
+        or not isinstance(selected_arm, Mapping)
+        or float(selected_arm.get("litter_weight", np.nan)) != selected_weight
+    ):
+        raise ValueError("source admission selected weight drift")
+    if (
+        selected_arm.get("status") != "completed"
+        or int(selected_arm.get("completed_updates", -1)) != 20
+        or int(selected_arm.get("final_optimizer_step", -1)) != 4020
+        or admitted["source_update"] != 4000
+        or admitted["updates_per_arm"] != 20
+    ):
+        raise ValueError("source admission selected20 progress drift")
+    monitor = report.get("development_monitors", {}).get("selected")
+    panels = selected_arm.get("final_daily_panels", {})
+    if (
+        not isinstance(monitor, Mapping)
+        or monitor.get("physical_gate_passed") is not True
+        or monitor.get("metric_population_complete") is not True
+        or set(panels) != set(PANEL_NAMES)
+    ):
+        raise ValueError("source admission selected20 monitor evidence is incomplete")
+    for panel in panels.values():
+        if (
+            panel.get("hard_counts", {}).get("all_zero") is not True
+            or int(panel.get("litter_stock_change", {}).get("hard_invalid_count", -1)) != 0
+            or int(panel.get("litter_stock_change", {}).get("hard_empty_count", -1)) != 0
+        ):
+            raise ValueError("source admission selected20 daily physical gate failed")
+    return _checkpoint_method(
+        source_checkpoint=Path(str(report["source_checkpoint_path"])),
+        source_update=admitted["source_update"],
+        selected_weight=selected_weight,
+        arm="selected",
+        protocol=source_protocol,
+        source_git_head=str(report["source_git_head"]),
+    )
+
+
+def _continuation_checkpoint_method(
+    *, source_checkpoint: Path, source_method: Mapping[str, Any],
+    protocol: Mapping[str, Any], runner_git_head: str,
+) -> dict[str, Any]:
+    return {
+        "implementation": "litter_mixed_selected_continuation_v1",
+        "parent_checkpoint": str(Path(source_checkpoint).resolve()),
+        "parent_method": dict(source_method),
+        "protocol": dict(protocol),
+        "runner_git_head": str(runner_git_head),
+        "claim": "bounded_selected_only_diagnostic_continuation_not_final_model",
+    }
+
+
+def _continuation_artifact_path(
+    output: Path, *, relative_update: int | None = None, recovery: bool = False,
+) -> Path:
+    if recovery == (relative_update is not None):
+        raise ValueError("choose exactly one continuation checkpoint identity")
+    suffix = (
+        "selected-continuation-recovery.checkpoint.pkl"
+        if recovery
+        else f"selected-continuation-update-{int(relative_update):06d}.checkpoint.pkl"
+    )
+    return Path(output).with_name(f"{Path(output).stem}.{suffix}")
+
+
+def _align_continuation_history(
+    updates: Sequence[Mapping[str, Any]],
+    monitors: Sequence[Mapping[str, Any]],
+    *,
+    completed: int,
+    milestones: Sequence[int],
+) -> tuple[list[Mapping[str, Any]], list[Mapping[str, Any]], int | None]:
+    """Align durable report evidence to a recovered checkpoint.
+
+    A milestone checkpoint may exist before its monitor finishes. That exact
+    milestone is returned as due; a missing earlier monitor is invalid because
+    training must never have advanced past an unevaluated milestone.
+    """
+
+    retained_updates = [
+        row for row in updates if int(row.get("relative_update", -1)) <= completed
+    ]
+    if [int(row.get("relative_update", -1)) for row in retained_updates] != list(
+        range(21, completed + 1)
+    ):
+        raise ValueError("continuation report history is not aligned with recovery checkpoint")
+    retained_monitors = [
+        row for row in monitors if int(row.get("relative_update", -1)) <= completed
+    ]
+    monitor_updates = [
+        int(row.get("relative_update", -1)) for row in retained_monitors
+    ]
+    if len(monitor_updates) != len(set(monitor_updates)):
+        raise ValueError("continuation milestone-monitor history is duplicated")
+    if any(milestone < completed and milestone not in monitor_updates for milestone in milestones):
+        raise ValueError("continuation advanced past an unevaluated milestone")
+    due = completed if completed in milestones and completed not in monitor_updates else None
+    return retained_updates, retained_monitors, due
+
+
+def _resume_continuation_report(
+    previous: Mapping[str, Any], current_metadata: Mapping[str, Any]
+) -> dict[str, Any]:
+    """Refresh immutable metadata without discarding durable progress lists."""
+
+    result = dict(previous)
+    result.update(current_metadata)
+    for key in ("updates", "milestone_monitors", "milestone_checkpoints"):
+        result[key] = list(previous.get(key, ()))
+    if previous.get("recovery_checkpoint") is not None:
+        result["recovery_checkpoint"] = dict(previous["recovery_checkpoint"])
+    result["prior_elapsed_seconds"] = (
+        float(previous.get("prior_elapsed_seconds", 0.0))
+        + float(previous.get("elapsed_seconds", 0.0))
+    )
+    result["resumed_incomplete_report"] = True
+    return result
+
+
+def _run_admission(args: argparse.Namespace) -> Mapping[str, Any]:
     from research.daily_coarse_graining.daily_operator.canonical_rollout import make_canonical_step
     from research.daily_coarse_graining.daily_operator.fresh_start_training import make_objective, make_update
     from research.daily_coarse_graining.daily_operator.mixed_objective import make_mixed_gradient
@@ -342,6 +530,8 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
             raise ValueError("litter mixed admission requires complete GPU execution")
         configuration = _read_json(args.mixed_protocol, name="mixed protocol")
         model_protocol = _read_json(args.protocol, name="model protocol")
+        if args.mixed_admission_protocol is None:
+            raise ValueError("mixed admission protocol is required for the admission branch")
         protocol = _read_json(args.mixed_admission_protocol, name="mixed admission protocol")
         admitted = _validate_protocol(protocol)
         if int(args.expected_update) != admitted["source_update"]:
@@ -1060,10 +1250,676 @@ def run(args: argparse.Namespace) -> Mapping[str, Any]:
     return report
 
 
+def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
+    """Continue only the admitted selected arm without recalibration or replay."""
+
+    from research.daily_coarse_graining.daily_operator.canonical_rollout import make_canonical_step
+    from research.daily_coarse_graining.daily_operator.fresh_start_training import make_objective, make_update
+    from research.daily_coarse_graining.daily_operator.mixed_objective import make_mixed_gradient
+    from research.daily_coarse_graining.daily_operator.one_day_training_state import (
+        load_training_checkpoint,
+        make_gradient_accumulator,
+        save_training_checkpoint,
+    )
+    from research.daily_coarse_graining.daily_operator.prepared_one_day import PreparedOneDayPool
+    from research.daily_coarse_graining.daily_operator.recurrent_science_loss import bind_recurrent_science_loss
+    from research.daily_coarse_graining.daily_operator.rollout_loss import make_rollout_loss
+    from scripts.hpc.check_daily_training_runtime import _atomic_json
+    from scripts.hpc.checked_recurrent_execution import bind_checked_backward, decode_counts, wrap_separate_checked
+    from scripts.hpc.litter_continuation_monitor import should_stop, summarize_progress
+    from scripts.hpc.mixed_learning_monitor import build_mixed_rollout_monitor
+    from scripts.hpc.mixed_learning_plan import load_plan
+    from scripts.hpc.probe_one_day_batch import _compiled_memory, _device_memory
+    from scripts.hpc.trained_screen_common import PreparedWindowPool, WindowPool, json_safe
+
+    started = time.perf_counter()
+    current_head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
+    report: dict[str, Any] = {
+        "schema_version": CONTINUATION_SCHEMA_VERSION,
+        "status": "running",
+        "stage": "created",
+        "claim_scope": "bounded_selected_only_litter_mixed_continuation",
+        "source_git_head": current_head,
+        "scientific_acceptance": False,
+        "updates": [],
+        "milestone_monitors": [],
+        "milestone_checkpoints": [],
+    }
+    output_owned = not args.output.exists()
+
+    def emit(stage: str, **values: Any) -> None:
+        report.update(values, stage=stage, elapsed_seconds=time.perf_counter() - started)
+        flush = (
+            stage != "update_completed"
+            or int(report.get("completed_relative_update", 20)) % 5 == 0
+        )
+        if flush:
+            _atomic_json(args.output, json_safe(report))
+        print(
+            f"litter_mixed_continuation stage={stage} "
+            f"relative_update={report.get('completed_relative_update', 20)} "
+            f"seconds={report['elapsed_seconds']:.1f}",
+            flush=True,
+        )
+
+    try:
+        if args.shape_only or args.admission_only or args.cpu_forward_only:
+            raise ValueError("litter mixed continuation requires complete GPU execution")
+        configuration = _read_json(args.mixed_protocol, name="mixed protocol")
+        model_protocol = _read_json(args.protocol, name="model protocol")
+        protocol = _read_json(args.continuation_protocol, name="continuation protocol")
+        admitted = _validate_continuation_protocol(protocol)
+        source_admission = _read_json(
+            args.source_admission_report, name="source admission report"
+        )
+        source_method = _source_admission_method(source_admission)
+        if args.mixed_admission_protocol is not None:
+            supplied_source_protocol = _read_json(
+                args.mixed_admission_protocol, name="mixed admission protocol"
+            )
+            if supplied_source_protocol != source_admission["protocol"]:
+                raise ValueError("supplied mixed admission protocol differs from source report")
+        if int(args.expected_update) != 4000:
+            raise ValueError("continuation retains expected-update 4000 for its source report")
+        daily_admission._validate_model_protocol(model_protocol)
+        validate_configuration(configuration, model_protocol)
+        optimizer_contract = model_protocol.get("optimizer", {})
+        if (
+            optimizer_contract.get("name") != "AdamW"
+            or float(optimizer_contract.get("learning_rate", np.nan)) != 1e-5
+            or float(optimizer_contract.get("clip_norm", np.nan)) != 1.0
+            or int(model_protocol.get("parameter_count", -1)) != EXPECTED_PARAMETER_COUNT
+        ):
+            raise ValueError("continuation model/AdamW contract drift")
+        configured_protocol = (args.mixed_protocol.parent / configuration["model_protocol"]).resolve()
+        if configured_protocol != args.protocol.resolve():
+            raise ValueError("CLI and mixed model protocols differ")
+        execution_policy = configure_execution(args)
+        if execution_policy is None or not args.checked_recurrent or not args.separate_checked_validation:
+            raise ValueError("litter mixed continuation requires admitted split checked recurrent execution")
+        plan = load_plan(args, configuration)
+        update_batches = _select_batches(plan, admitted["update_indices"])
+        schedule = plan["schedule"]
+        if len(schedule["update_rows"]) <= admitted["update_indices"][-1]:
+            raise ValueError("recurrent schedule does not cover continuation updates")
+        training_report = _read_json(args.training_report, name="training report")
+        source_identity = endpoints._checkpoint_identity(
+            training_report,
+            configuration=configuration,
+            model_protocol=model_protocol,
+            execution_policy=execution_policy,
+            plan=plan,
+            expected_update=4000,
+        )
+        source_rows = [
+            row for row in training_report.get("checkpoints", ())
+            if int(row.get("update", -1)) == 4000
+        ]
+        if (
+            len(source_rows) != 1
+            or Path(str(source_rows[0].get("path", ""))).resolve()
+            != Path(str(source_admission["source_checkpoint_path"])).resolve()
+            or Path(str(source_admission.get("source_training_report_path", ""))).resolve()
+            != args.training_report.resolve()
+        ):
+            raise ValueError("source4000 training metadata differs from completed admission")
+        del source_identity
+
+        source_checkpoint_rows = [
+            row for row in source_admission["arms"]["selected"].get("checkpoints", ())
+            if int(row.get("update", -1)) == admitted["source_relative_update"]
+        ]
+        if (
+            len(source_checkpoint_rows) != 1
+            or Path(str(source_checkpoint_rows[0].get("path", ""))).resolve()
+            != args.checkpoint.resolve()
+        ):
+            raise ValueError("--checkpoint is not the completed selected20 checkpoint")
+        checkpoint_method = _continuation_checkpoint_method(
+            source_checkpoint=args.checkpoint,
+            source_method=source_method,
+            protocol=protocol,
+            runner_git_head=current_head,
+        )
+        baseline_monitor = source_admission["development_monitors"]["selected"]
+        baseline_daily_panels = source_admission["arms"]["selected"]["final_daily_panels"]
+        report.update(
+            protocol=protocol,
+            protocol_path=str(args.continuation_protocol.resolve()),
+            source_admission_report_path=str(args.source_admission_report.resolve()),
+            source_training_report_path=str(args.training_report.resolve()),
+            source_checkpoint_path=str(args.checkpoint.resolve()),
+            source_checkpoint_method=source_method,
+            checkpoint_method=checkpoint_method,
+            execution_policy=execution_policy,
+            plan_identities=plan["identities"],
+            selected_batches=[batch.as_metadata() for batch in update_batches],
+            selected_weight=admitted["selected_weight"],
+            baseline_selected20={
+                "development_monitor": baseline_monitor,
+                "daily_panels": baseline_daily_panels,
+            },
+            completed_relative_update=admitted["source_relative_update"],
+            completed_absolute_update=admitted["source_absolute_update"],
+        )
+        if args.output.is_file():
+            previous = _read_json(args.output, name="incomplete continuation report")
+            compatible = (
+                previous.get("schema_version") == CONTINUATION_SCHEMA_VERSION
+                and previous.get("protocol") == protocol
+                and Path(str(previous.get("source_checkpoint_path", ""))).resolve()
+                == args.checkpoint.resolve()
+                and previous.get("source_git_head") == current_head
+                and previous.get("plan_identities") == plan["identities"]
+                and previous.get("checkpoint_method") == checkpoint_method
+            )
+            if not compatible:
+                raise ValueError("existing continuation report belongs to a different run")
+            if previous.get("status") in ("completed", "stopped_science_guard"):
+                raise FileExistsError("terminal litter continuation output already exists")
+            current_metadata = dict(report)
+            report = _resume_continuation_report(previous, current_metadata)
+            output_owned = True
+        emit("metadata_validated")
+
+        runtime, head, template, scales, fresh_parameters, _, _ = prototype.bootstrap(
+            args, model_protocol
+        )
+        jax = runtime["jax"]
+        import jax.numpy as jnp
+
+        devices = tuple(jax.local_devices())
+        if len(devices) != 1 or devices[0].platform != "gpu":
+            raise ValueError("litter mixed continuation requires exactly one visible FREE GPU")
+        device = devices[0]
+        if sum(int(value.size) for value in jax.tree_util.tree_leaves(fresh_parameters)) != EXPECTED_PARAMETER_COUNT:
+            raise ValueError("actual full-network parameter count differs from continuation contract")
+        del fresh_parameters
+
+        recovery_path = _continuation_artifact_path(args.output, recovery=True)
+        if recovery_path.is_file():
+            saved = load_training_checkpoint(recovery_path, expected_method=checkpoint_method)
+            resumed_from = recovery_path
+        else:
+            saved = load_training_checkpoint(args.checkpoint, expected_method=source_method)
+            resumed_from = args.checkpoint
+        completed = int(saved["completed_updates"])
+        if (
+            completed < admitted["source_relative_update"]
+            or completed > admitted["target_relative_update"]
+            or (completed - admitted["source_relative_update"]) % admitted["recovery_interval"] != 0
+            or saved["cursor"] != {"epoch": 0, "batch_offset": 4000 + completed}
+            or int(np.asarray(saved["optimizer_state"].step)) != 4000 + completed
+        ):
+            raise ValueError("continuation recovery checkpoint progress drift")
+        parameters_host = saved["parameters"]
+        optimizer_host = saved["optimizer_state"]
+        del saved
+        report["resumed_from"] = str(Path(resumed_from).resolve())
+        report["completed_relative_update"] = completed
+        report["completed_absolute_update"] = 4000 + completed
+        aligned_updates, aligned_monitors, due_monitor = _align_continuation_history(
+            report["updates"],
+            report["milestone_monitors"],
+            completed=completed,
+            milestones=admitted["milestones"],
+        )
+        report["updates"] = aligned_updates
+        report["milestone_monitors"] = aligned_monitors
+        report["milestone_checkpoints"] = [
+            row for row in report["milestone_checkpoints"]
+            if int(row.get("relative_update", -1)) <= completed
+        ]
+        emit("checkpoint_restored")
+
+        candidate_protocol = daily_admission._candidate_model_protocol(
+            model_protocol, source_admission["protocol"]
+        )
+        graph_protocol = calibration._loss_protocol(
+            candidate_protocol,
+            canopy_source_pft_index=calibration._canopy_source_pft_index(runtime, head),
+        )
+        objective = make_objective(runtime, head, template, scales, graph_protocol)
+        base_weights = calibration._base_weights(graph_protocol)
+        batch_objective = calibration._make_batch_objective(jax, jnp, objective, base_weights)
+        daily_evaluator = jax.jit(jax.value_and_grad(batch_objective, argnums=0, has_aux=True))
+        daily_forward = jax.jit(batch_objective)
+        add_gradient, mean_gradient = make_gradient_accumulator(jax, jnp)
+        combine = make_mixed_gradient(jax, jnp)
+        optimizer_update = make_update(model_protocol)
+        finite = jax.jit(lambda tree: jnp.all(jnp.stack([
+            jnp.all(jnp.isfinite(value)) for value in jax.tree_util.tree_leaves(tree)
+        ])))
+        norm = jax.jit(lambda tree: jnp.sqrt(sum(
+            jnp.sum(jnp.square(value.astype(jnp.float64)))
+            for value in jax.tree_util.tree_leaves(tree)
+        )))
+        selected_coefficients = jax.device_put(
+            jnp.asarray((1.0, 0.1, 0.1, admitted["selected_weight"]), dtype=jnp.float64),
+            device,
+        )
+        daily_pool = PreparedOneDayPool(plan["daily_source"], cache_size=5)
+        recurrent_pool = PreparedWindowPool(schedule["source_manifest"], cache_size=2)
+        development_pool = WindowPool(args.selection)
+        if daily_pool.identity != plan["catalogue"]["source_identity"] or recurrent_pool.identity != schedule["source_identity"]:
+            raise ValueError("daily/recurrent readers differ from validated source identities")
+        panel_rows = daily_admission._panel_rows(plan)
+        baseline_selections = [row["selection"] for row in baseline_monitor["windows"]]
+        if development_pool.selection["windows"] != baseline_selections:
+            raise ValueError("continuation development windows differ from selected20 baseline")
+        if any(
+            list(panel_rows[name]) != baseline_daily_panels[name]["rows"]
+            for name in PANEL_NAMES
+        ):
+            raise ValueError("continuation daily panels differ from selected20 baseline")
+
+        def sample(rows: Sequence[Any]) -> Any:
+            metadata = admission._rows(rows)
+            return daily_pool.batch([
+                (int(row["artifact_id"]), int(row["batch_row"])) for row in metadata
+            ])
+
+        parameters, optimizer = jax.device_put((parameters_host, optimizer_host), device)
+        del parameters_host, optimizer_host
+        first_samples = jax.device_put(sample(update_batches[0].microbatches[0].rows), device)
+        emit("compile_daily_gradient")
+        began = time.perf_counter()
+        daily_executable = daily_evaluator.lower(
+            parameters, first_samples, selected_coefficients
+        ).compile()
+        daily_memory = _compiled_memory(daily_executable)
+        if daily_memory["estimated_live_bytes"] > configuration["compiled_memory_limit_gib"] * 1024**3:
+            raise MemoryError("daily gradient exceeds compiled-memory envelope")
+        report["compilation"] = {
+            "daily": {"seconds": time.perf_counter() - began, "memory": daily_memory}
+        }
+        emit("daily_gradient_compiled", memory=_device_memory(device))
+
+        recurrent_loss, recurrent_scales = bind_recurrent_science_loss(
+            runtime, head, configuration["recurrent_weights"]
+        )
+        rollout = make_rollout_loss(
+            jax, jnp, make_canonical_step(head, template), recurrent_loss
+        )
+        checked_backward, checked_names, validator = bind_checked_backward(
+            jax, jnp, rollout, recurrent_loss, runtime, head, scales, model_protocol,
+            separate_validation=True,
+        )
+        if validator is None:
+            raise ValueError("split checked recurrent validator was not constructed")
+        context = {"stock_weight": jnp.asarray(1.0, dtype=jnp.float64)}
+        recurrent_executables: dict[int, Any] = {}
+        report.update(
+            parameter_count=EXPECTED_PARAMETER_COUNT,
+            device=str(device),
+            recurrent_scales=recurrent_scales,
+        )
+
+        def daily_component(current_parameters: Any, batch: Any) -> tuple[Any, dict[str, Any]]:
+            total = jax.tree_util.tree_map(jnp.zeros_like, current_parameters)
+            loss = 0.0
+            terms = np.zeros((4,), dtype=np.float64)
+            hard_totals: dict[str, int] = {}
+            for micro_index, microbatch in enumerate(batch.microbatches):
+                samples = jax.device_put(sample(microbatch.rows), device)
+                (value_auxiliary, gradient) = daily_executable(
+                    current_parameters, samples, selected_coefficients
+                )
+                value, auxiliary = value_auxiliary
+                jax.block_until_ready((value, auxiliary, gradient))
+                hard = calibration._hard_summary(
+                    jax.device_get(auxiliary["hard"]), batch_size=microbatch.draw_count
+                )
+                litter_auxiliary = jax.device_get(auxiliary["litter_stock_change"])
+                if (
+                    not np.isfinite(float(value))
+                    or not hard["all_zero"]
+                    or int(np.sum(np.asarray(litter_auxiliary["hard_invalid_count"])))
+                    or int(np.sum(np.asarray(litter_auxiliary["hard_empty_count"])))
+                ):
+                    raise ValueError(
+                        f"daily selected physical/finite gate failed at batch "
+                        f"{batch.batch_index} microbatch {micro_index}"
+                    )
+                total = add_gradient(total, gradient, microbatch.draw_count)
+                loss += float(value) * microbatch.draw_count
+                terms += np.mean(
+                    np.asarray(jax.device_get(auxiliary["terms"]), dtype=np.float64), axis=0
+                ) * microbatch.draw_count
+                for key, count in hard["totals"].items():
+                    hard_totals[key] = hard_totals.get(key, 0) + int(count)
+                del samples, auxiliary, gradient
+            return mean_gradient(total, batch.draw_count), {
+                "loss": loss / batch.draw_count,
+                "terms": (terms / batch.draw_count).tolist(),
+                "hard": hard_totals,
+            }
+
+        def recurrent_component(
+            current_parameters: Any, batch_index: int, horizon: int
+        ) -> tuple[Any, float, dict[str, int]]:
+            row = schedule["update_rows"][batch_index][f"T{horizon}"]
+            case = recurrent_pool.case(jax, row)
+            if horizon not in recurrent_executables:
+                emit(f"compile_T{horizon}", active_batch_index=batch_index)
+                compile_started = time.perf_counter()
+                raw = checked_backward.lower(current_parameters, *case[:4], context).compile()
+                memory = _compiled_memory(raw)
+                if memory["estimated_live_bytes"] > configuration["compiled_memory_limit_gib"] * 1024**3:
+                    raise MemoryError(f"T{horizon} checked gradient exceeds compiled-memory envelope")
+                recurrent_executables[horizon] = wrap_separate_checked(jax, raw, validator)
+                report["compilation"][f"T{horizon}"] = {
+                    "seconds": time.perf_counter() - compile_started,
+                    "memory": memory,
+                }
+                del raw
+                emit(f"compiled_T{horizon}", active_batch_index=batch_index)
+            (value, counts), gradient = recurrent_executables[horizon](
+                current_parameters, *case[:4], context, case[4]
+            )
+            value, counts = jax.device_get((value, counts))
+            hard = decode_counts(checked_names, counts)
+            if not np.isfinite(float(value)) or any(hard.values()):
+                raise ValueError(
+                    f"checked T{horizon} physical/finite gate failed at batch {batch_index}"
+                )
+            return gradient, float(value), hard
+
+        monitor = build_mixed_rollout_monitor(
+            runtime,
+            head,
+            template,
+            scales,
+            model_protocol,
+            compiled_memory_limit_bytes=configuration["compiled_memory_limit_gib"] * 1024**3,
+        )
+
+        def save_milestone_checkpoint(relative_update: int) -> None:
+            milestone_path = _continuation_artifact_path(
+                args.output, relative_update=relative_update
+            )
+            existing = [
+                row for row in report["milestone_checkpoints"]
+                if int(row.get("relative_update", -1)) == relative_update
+            ]
+            if len(existing) > 1:
+                raise ValueError("duplicate continuation milestone checkpoint records")
+            if existing and milestone_path.is_file():
+                return
+            if milestone_path.is_file():
+                persisted = load_training_checkpoint(
+                    milestone_path, expected_method=checkpoint_method
+                )
+                if (
+                    int(persisted["completed_updates"]) != relative_update
+                    or persisted["cursor"] != {
+                        "epoch": 0, "batch_offset": 4000 + relative_update
+                    }
+                    or int(np.asarray(persisted["optimizer_state"].step))
+                    != 4000 + relative_update
+                ):
+                    raise ValueError("persisted milestone checkpoint progress drift")
+                del persisted
+            else:
+                save_training_checkpoint(
+                    milestone_path,
+                    jax=jax,
+                    parameters=parameters,
+                    optimizer_state=optimizer,
+                    completed_updates=relative_update,
+                    cursor={"epoch": 0, "batch_offset": 4000 + relative_update},
+                    method=checkpoint_method,
+                )
+            checkpoint_record = {
+                "relative_update": relative_update,
+                "absolute_update": 4000 + relative_update,
+                "path": str(milestone_path.resolve()),
+                "bytes": milestone_path.stat().st_size,
+            }
+            report["milestone_checkpoints"] = [
+                row for row in report["milestone_checkpoints"]
+                if int(row.get("relative_update", -1)) != relative_update
+            ] + [checkpoint_record]
+            emit("milestone_checkpoint_saved", active_relative_update=relative_update)
+
+        def evaluate_milestone(relative_update: int) -> dict[str, Any]:
+            existing = [
+                row for row in report["milestone_monitors"]
+                if int(row.get("relative_update", -1)) == relative_update
+            ]
+            if existing:
+                return dict(existing[0]["stop_decision"])
+            daily_panels = {
+                panel_name: daily_admission._panel_record(
+                    parameters,
+                    panel_rows[panel_name],
+                    daily_pool,
+                    daily_forward,
+                    selected_coefficients,
+                    jax,
+                )
+                for panel_name in PANEL_NAMES
+            }
+            development = monitor(
+                parameters,
+                development_pool,
+                development_pool.selection["windows"],
+                panel_name=f"selected_after_{relative_update}_relative_updates",
+                development=True,
+                apply_science_gates=True,
+            )
+            daily_clean = all(
+                panel["hard_counts"]["all_zero"]
+                and panel["litter_stock_change"]["hard_invalid_count"] == 0
+                and panel["litter_stock_change"]["hard_empty_count"] == 0
+                for panel in daily_panels.values()
+            )
+            recurrent_clean = bool(
+                development["physical_gate_passed"]
+                and development["metric_population_complete"]
+            )
+            if not daily_clean or not recurrent_clean:
+                raise ValueError(
+                    f"relative update {relative_update} physical or metric-population gate failed"
+                )
+            progress = summarize_progress(baseline_monitor, development)
+            progress["relative_update"] = relative_update
+            progress["absolute_update"] = 4000 + relative_update
+            history = [
+                row["progress_summary"] for row in report["milestone_monitors"]
+            ] + [progress]
+            stop_decision = should_stop(history, admitted["scientific_stop"])
+            record = {
+                "relative_update": relative_update,
+                "absolute_update": 4000 + relative_update,
+                "daily_panels": daily_panels,
+                "development_monitor": development,
+                "progress_summary": progress,
+                "stop_decision": stop_decision,
+                "physical_gate_passed": True,
+                "metric_population_complete": True,
+                "science_accuracy_gate_required": False,
+                "scientific_acceptance": False,
+            }
+            report["milestone_monitors"].append(record)
+            emit(
+                "milestone_monitor_completed",
+                active_relative_update=relative_update,
+                latest_stop_decision=stop_decision,
+            )
+            return stop_decision
+
+        stopped = False
+        if due_monitor is not None:
+            save_milestone_checkpoint(due_monitor)
+            stopped = bool(evaluate_milestone(due_monitor)["stop"])
+        elif completed in admitted["milestones"]:
+            completed_monitor = next(
+                row for row in report["milestone_monitors"]
+                if int(row["relative_update"]) == completed
+            )
+            stopped = bool(completed_monitor["stop_decision"]["stop"])
+
+        for relative_update in range(completed + 1, admitted["target_relative_update"] + 1):
+            if stopped:
+                break
+            batch = update_batches[
+                relative_update - admitted["source_relative_update"] - 1
+            ]
+            batch_index = int(batch.batch_index)
+            update_started = time.perf_counter()
+            daily_gradient, daily_record = daily_component(parameters, batch)
+            losses = {
+                "daily_weighted": float(daily_record["loss"]),
+                "daily_component_means": dict(zip(
+                    daily_admission.LOSS_NAMES, daily_record["terms"], strict=True
+                )),
+            }
+            hard_counts: dict[str, Any] = {"daily": daily_record["hard"]}
+            recurrent_gradients = {}
+            for horizon in (7, 30):
+                gradient, value, hard = recurrent_component(
+                    parameters, batch_index, horizon
+                )
+                recurrent_gradients[f"T{horizon}"] = gradient
+                losses[f"T{horizon}"] = value
+                hard_counts[f"T{horizon}"] = hard
+            component_geometry = {
+                "components": ["daily_weighted", "T7", "T30"],
+                "raw_norms": {
+                    "daily_weighted": float(norm(daily_gradient)),
+                    "T7": float(norm(recurrent_gradients["T7"])),
+                    "T30": float(norm(recurrent_gradients["T30"])),
+                },
+                "litter_weight": admitted["selected_weight"],
+            }
+            mixed = combine(daily_gradient, recurrent_gradients["T7"], 1.0, 0.5)
+            mixed = combine(mixed, recurrent_gradients["T30"], 1.0, 0.5)
+            jax.block_until_ready(mixed)
+            if not bool(finite(mixed)):
+                raise ValueError("combined continuation gradient is nonfinite")
+            proposed, proposed_optimizer, gradient_norm, clip = optimizer_update(
+                parameters, mixed, optimizer
+            )
+            jax.block_until_ready((proposed, proposed_optimizer, gradient_norm, clip))
+            expected_step = 4000 + relative_update
+            if (
+                not bool(finite((proposed, proposed_optimizer)))
+                or not np.isfinite(float(gradient_norm))
+                or not 0.0 < float(clip) <= 1.0
+                or int(np.asarray(jax.device_get(proposed_optimizer.step))) != expected_step
+            ):
+                raise ValueError("complete continuation AdamW proposal is invalid")
+            parameters, optimizer = proposed, proposed_optimizer
+            report["updates"].append({
+                "relative_update": relative_update,
+                "source_absolute_update": expected_step,
+                "daily_batch_index": batch_index,
+                "losses": losses,
+                "mixed_loss": losses["daily_weighted"] + 0.5 * losses["T7"] + 0.5 * losses["T30"],
+                "component_geometry": component_geometry,
+                "combined_gradient_norm": float(gradient_norm),
+                "clip": float(clip),
+                "hard_counts": hard_counts,
+                "optimizer_step": expected_step,
+                "seconds": time.perf_counter() - update_started,
+            })
+            report["completed_relative_update"] = relative_update
+            report["completed_absolute_update"] = expected_step
+            del mixed, proposed, proposed_optimizer, daily_gradient, recurrent_gradients, gradient
+            emit("update_completed", active_relative_update=relative_update)
+
+            if relative_update % admitted["recovery_interval"] == 0:
+                save_training_checkpoint(
+                    recovery_path,
+                    jax=jax,
+                    parameters=parameters,
+                    optimizer_state=optimizer,
+                    completed_updates=relative_update,
+                    cursor={"epoch": 0, "batch_offset": 4000 + relative_update},
+                    method=checkpoint_method,
+                )
+                report["recovery_checkpoint"] = {
+                    "relative_update": relative_update,
+                    "absolute_update": 4000 + relative_update,
+                    "path": str(recovery_path.resolve()),
+                    "bytes": recovery_path.stat().st_size,
+                }
+                emit("recovery_checkpoint_saved", active_relative_update=relative_update)
+
+            if relative_update in admitted["milestones"]:
+                save_milestone_checkpoint(relative_update)
+                gc.collect()
+                stopped = bool(evaluate_milestone(relative_update)["stop"])
+
+        final_relative_update = int(report["completed_relative_update"])
+        final_monitors = [
+            int(row["relative_update"]) for row in report["milestone_monitors"]
+        ]
+        expected_milestones = [
+            value for value in admitted["milestones"] if value <= final_relative_update
+        ]
+        checkpoint_updates = sorted(
+            int(row["relative_update"]) for row in report["milestone_checkpoints"]
+        )
+        recovery_record = report.get("recovery_checkpoint", {})
+        if (
+            final_monitors != expected_milestones
+            or checkpoint_updates != expected_milestones
+            or int(recovery_record.get("relative_update", -1)) != final_relative_update
+            or any(not Path(row["path"]).is_file() for row in report["milestone_checkpoints"])
+        ):
+            raise ValueError("terminal continuation checkpoint/monitor evidence is incomplete")
+        if stopped:
+            terminal_status = "stopped_science_guard"
+        else:
+            terminal_status = "completed"
+            if (
+                final_relative_update != admitted["target_relative_update"]
+                or final_monitors != list(admitted["milestones"])
+                or len(report["updates"]) != 80
+                or int(np.asarray(jax.device_get(optimizer.step))) != 4100
+            ):
+                raise ValueError("continuation completion evidence is incomplete")
+        emit(
+            terminal_status,
+            status=terminal_status,
+            classification="bounded_selected_only_litter_mixed_continuation",
+            technical_continuation_passed=True,
+            physical_monitoring_passed=True,
+            bounded_continuation_completed=terminal_status == "completed",
+            stopped_by_science_guard=terminal_status == "stopped_science_guard",
+            scientific_acceptance=False,
+            final_memory=_device_memory(device),
+            daily_reader=daily_pool.statistics(),
+            active_relative_update=None,
+        )
+    except Exception as error:
+        if not output_owned:
+            raise
+        if not args.output.exists():
+            report["output_creation_failed_before_first_emit"] = True
+        emit("failed", status="failed", error=f"{type(error).__name__}: {error}")
+        raise
+    return report
+
+
+def run(args: argparse.Namespace) -> Mapping[str, Any]:
+    continuation_requested = args.continuation_protocol is not None
+    source_requested = args.source_admission_report is not None
+    if continuation_requested != source_requested:
+        raise ValueError(
+            "continuation protocol and source admission report are required together"
+        )
+    return _run_continuation(args) if continuation_requested else _run_admission(args)
+
+
 def parser() -> argparse.ArgumentParser:
     result = endpoints.parser()
     result.description = __doc__
-    result.add_argument("--mixed-admission-protocol", type=Path, required=True)
+    result.add_argument("--mixed-admission-protocol", type=Path)
+    result.add_argument("--continuation-protocol", type=Path)
+    result.add_argument("--source-admission-report", type=Path)
     result.set_defaults(
         compare_checked_recurrent=False,
         checked_reference_report=None,
@@ -1075,5 +1931,12 @@ def parser() -> argparse.ArgumentParser:
 
 if __name__ == "__main__":
     result = run(parser().parse_args())
-    if result.get("status") != "completed" or result.get("technical_admission_passed") is not True:
+    clean = (
+        result.get("status") == "completed"
+        and result.get("technical_admission_passed") is True
+    ) or (
+        result.get("status") in ("completed", "stopped_science_guard")
+        and result.get("technical_continuation_passed") is True
+    )
+    if not clean:
         raise SystemExit(2)

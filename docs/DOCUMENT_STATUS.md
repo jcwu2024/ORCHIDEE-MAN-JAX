@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/litter_mixed_continuation_protocol_20260920.md` | Frozen before execution; implemented,22 local tests pass | Selected20->100, fixed loss/architecture/data,20-update physical monitors,5-update recovery; free60min |
 | `research/daily_coarse_graining/litter_mixed_results_20260920.md` | COMPLETED0, recovery1718.32s; bounded technical admission passes, final science unaccepted | Both20update arms/full16-window panels; nonliving RMSE60%/44% lower but wrong-sign, production/canopy tradeoffs |
 | `research/daily_coarse_graining/litter_mixed_partial_results_20260920.md` | Historical timeout/recovery launch; completed results supersede it | Saved-state recovery and first-attempt70min compilation |
 | `research/daily_coarse_graining/litter_mixed_admission_protocol_20260920.md` | Frozen method; partial results/recovery supersede launch status | TRAIN-only joint-gradient coefficient rule,2-update gate then20/arm and7/30day development assessment |

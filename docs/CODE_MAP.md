@@ -18,6 +18,10 @@ from two fixed TRAIN gradient Gram matrices, including recurrent cross terms.
 `probe_litter_mixed_admission.py` reuses canonical daily/checked recurrent AD,
 optimizer and development monitor for the bounded matched joint follow-up;
 it preserves calibration components and diagnostic model states separately.
+Its optional continuation branch resumes only selected20 and retains the
+same admitted gradient functions/optimizer. `litter_continuation_monitor.py`
+compares physical-unit metrics with selected20 and applies a declared,
+two-milestone severe-regression ceiling; it is not final science acceptance.
 
 `scripts/hpc/analyze_mixed_carbon_drift.py` decomposes saved nonliving carbon
 into canopy/noncanopy error and reports single-day component errors. It reads
