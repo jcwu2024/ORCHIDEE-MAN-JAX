@@ -8,6 +8,18 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-20)
 
+Next free experiment is specified before execution: two frozen-source TRAIN
+gradient decompositions select one litter coefficient against D+.5R7+.5R30;
+then each matched arm passes2 full mixed updates and continues to20 in the
+same90min bounded process. Save calibration components and2/20 checkpoints
+before further compilations/monitoring. Evaluate unchanged16-window7/30day
+development panels; do not claim final/generalization acceptance. No new
+architecture, data regeneration, historical AD rerun or paid submission.
+Implementation complete;44 focused local tests, Ruff and diff checks pass.
+Next deploy the immutable checkout, target-shell dry-run and launch on idle
+free GPU1; no launch yet. Protocol:
+`research/daily_coarse_graining/litter_mixed_admission_protocol_20260920.md`.
+
 Free litter admission22e7fb9 COMPLETED0 in2512.68s; Python89790 ended.
 Native AD/JVP and paired two daily updates pass; all hard counters zero.
 Litter change RMSE improves8.6% above/12.1-12.2% below after2updates, versus

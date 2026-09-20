@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/litter_mixed_admission_protocol_20260920.md` | Frozen before execution; implemented,44 local tests pass | TRAIN-only joint-gradient coefficient rule,2-update gate then20/arm and7/30day development assessment; free90min |
 | `research/daily_coarse_graining/litter_change_admission_results_20260920.md` | FreeGPU COMPLETED0,2512.68s; daily technical admission passes | Litter RMSE improves8.6-12.2%, large absolute error remains, production tradeoff and dominant new gradient; mixed scope still pending |
 | `research/daily_coarse_graining/litter_change_admission_protocol_20260920.md` | Frozen protocol; completion results supersede launch status | Separate physical litter daily-change loss, TRAIN variance scales, matched two-update daily-only scope |
 | `research/daily_coarse_graining/carbon_endpoint_results_20260920.md` | Free forward completed0,16samples; excess litter outgoing confirmed | ~19% above/~3.8% below removal, tiny Teacher target, tail excluded on sampled inputs; focused loss candidate next |

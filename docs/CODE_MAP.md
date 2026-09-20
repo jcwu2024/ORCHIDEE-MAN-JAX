@@ -13,6 +13,11 @@ and supports a dynamic fourth coefficient for matched diagnostic arms.
 `scripts/hpc/probe_litter_change_admission.py` and its launcher test this
 changed daily term from the exact saved update4000 parameter/AdamW state.
 They do not certify recurrent updates or establish a final training recipe.
+`scripts/hpc/litter_gradient_balance.py` selects one diagnostic coefficient
+from two fixed TRAIN gradient Gram matrices, including recurrent cross terms.
+`probe_litter_mixed_admission.py` reuses canonical daily/checked recurrent AD,
+optimizer and development monitor for the bounded matched joint follow-up;
+it preserves calibration components and diagnostic model states separately.
 
 `scripts/hpc/analyze_mixed_carbon_drift.py` decomposes saved nonliving carbon
 into canopy/noncanopy error and reports single-day component errors. It reads

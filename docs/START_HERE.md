@@ -66,6 +66,9 @@ absolute carbon errors remain large; GPP/NPP do not improve from initialization.
 Next balance the new term in a short matched joint D+R7+R30 experiment and
 evaluate7/30days. Keep Attention/decoder; no active/new paid task. See
 `research/daily_coarse_graining/litter_change_admission_results_20260920.md`.
+That next free protocol is now specified: TRAIN gradient calibration,2-update
+joint admission then20updates/arm, checkpointed and bounded90min. See
+`research/daily_coarse_graining/litter_mixed_admission_protocol_20260920.md`.
 
 The free16-sample endpoint probe is now complete: excessive learned litter
 outgoing explains the one-day deficit on these inputs; retained tail does not
