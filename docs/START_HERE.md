@@ -60,6 +60,15 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
+Balanced litter mixed learning now COMPLETED0: each arm20updates and all
+fixed7/30day development evaluations. Nonliving carbon-change RMSE falls
+60%T7/44%T30 versus matched old loss, but remaining change is wrong-sign and
+NPP/BGB/canopy have tradeoffs. This is scientific progress, not final-model
+acceptance. No active/new paid task. Next specify a bounded selected-only
+continuation toward100updates with physical monitoring. Result:
+`research/daily_coarse_graining/litter_mixed_results_20260920.md`.
+Launch/partial records below are historical.
+
 The focused litter-change loss passes free GPU gradient/two-update admission
 (22e7fb9,2512.68s,exit0). Litter daily-change RMSE improves8.6-12.2%, but
 absolute carbon errors remain large; GPP/NPP do not improve from initialization.

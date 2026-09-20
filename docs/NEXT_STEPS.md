@@ -8,6 +8,18 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-20)
 
+Balanced litter mixed experiment COMPLETED0 after reviewed free recovery
+(1391a75,1718.32s). Both20-update arms and source/old/selected full16-window
+monitors complete; all hard counters zero. Versus old20, selected nonliving
+change RMSE falls60.02%T7/43.75%T30;16/16 windows improve but remain wrong-sign.
+T30 GPP/RA improve7.56%/27.79%; NPP/BGB/canopy tradeoffs remain. Final model
+unaccepted despite normalized screens passing. No active task/new paid job.
+Next specify bounded selected-only continuation toward100updates with fixed
+physical20-update monitors; preserve architecture, loss, checkpoints and AD.
+No automatic long run or architecture switch. Evidence:
+`research/daily_coarse_graining/litter_mixed_results_20260920.md`.
+The first-attempt/recovery launch records below are historical and superseded.
+
 First free1391a75 attempt ended at90min (exit124): old20 logged/saved,
 selected5 logged/2 saved, both calibration bundles saved; no final science
 panels yet. All logged update hard counters zero. Recurrent compilation

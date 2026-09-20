@@ -13,6 +13,18 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Balanced litter mixed experiment COMPLETED0, recovery1718.32s,1391a75.
+Both arms20updates/saved4020AdamW, full initial/old/selected16-window
+development assessments, all update/monitor hard counters zero. Nonliving
+change RMSE selected vsold falls60.02%T7/43.75%T30; all16 windows improve but
+all still wrong-sign. T30 GPP4.2911->3.9665,NPP2.9544->3.0811,RA1.8033->1.3021,
+BGBchange0.7222->0.8702,nonliving4439.09->2497.01gC/m2. Both final normalized
+screens pass, scientific acceptance remains false. No active task/new paid
+submission. Next declare selected-only bounded continuation toward100 with
+physical20-update monitoring, not architecture replacement or long training.
+See `research/daily_coarse_graining/litter_mixed_results_20260920.md`.
+The launch records below are historical, superseded by this completion.
+
 First1391a75 free mixed attempt timed out90min (exit124). Old20 completed/
 saved; selected5 logged but2 saved. Both calibration bundles saved; selected
 lambda5.22171689e-5. All25 logged update hard counters zero; no final science
