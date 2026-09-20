@@ -8,6 +8,18 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-20)
 
+Focused litter-change protocol is now frozen before learning: separate
+above/below carbon-change pseudo-Huber, weight0.1, TRAIN coordinate-variance
+scales0.09929/0.05960gC/m2/day (floor0.01 inactive). General normalizer scales
+must not be used:42 belowground zero-variance coordinates store scale1.
+Implement/check optional daily loss and paired two-update DAILY-ONLY admission
+from identical update4000 parameters/AdamW and TRAIN batches4000/4001.
+This is a diagnostic fork, not continuation or full mixed/7/30 acceptance.
+Actual free GPU JAX0.4.38 small runtime interface check passes23.01s.
+46 local tests and Ruff pass; real-model new-loss AD/updates pending.
+No paid submission. See
+`research/daily_coarse_graining/litter_change_admission_protocol_20260920.md`.
+
 Saved-result attribution is complete:99.24% of update4000 T30 nonliving signed
 deficit is outside canopy. Fixed/excluded TRAIN daily deficits are dominated
 by litter (-68.16/-204.21gC/m2), not just transfer failure. Active recurrent loss

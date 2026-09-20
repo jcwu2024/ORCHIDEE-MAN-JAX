@@ -13,6 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Focused litter supervision protocol fixed2026-09-20: daily objective adds0.1
+times mean separate above/below normalized pseudo-Huber carbon-change loss.
+Existing TRAIN variances imply scales0.09929/0.05960gC/m2/day; floor0.01 is
+inactive. Reading original variance avoids42 belowground zero-variance
+coordinates whose generic normalization scale is1. This does not regenerate
+Teacher data. Free GPU synthetic runtime check passes23.01s underJAX0.4.38.
+Implementation/local tests underway; actual new-loss gradients and paired
+two-update daily-only diagnostic from4000 remain pending. No paid submission.
+Protocol: `research/daily_coarse_graining/litter_change_admission_protocol_20260920.md`.
+
 Saved carbon/loss audit: update4000 T30 deficit is99.24% outside canopy;
 single-day TRAIN/excluded panels localize the largest error to litter stock.
 Recurrent objective directly supervises only AGB/BGB/canopy stocks. The existing

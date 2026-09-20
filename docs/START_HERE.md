@@ -60,6 +60,11 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
+The focused litter-change loss protocol is frozen and being implemented/tested.
+Next is free GPU new-loss gradient and paired two-update daily admission;
+Attention/decoder and the old paid run stay fixed. See
+`research/daily_coarse_graining/litter_change_admission_protocol_20260920.md`.
+
 The free16-sample endpoint probe is now complete: excessive learned litter
 outgoing explains the one-day deficit on these inputs; retained tail does not
 introduce it. Next declare/test focused physical litter-change supervision,

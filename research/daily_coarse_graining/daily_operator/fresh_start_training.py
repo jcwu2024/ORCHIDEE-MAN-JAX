@@ -11,6 +11,13 @@ from jax_orchidee.stomate.carbon_kernels import ICARBON
 
 from .canopy_change_loss import canopy_carbon_stock_change_loss
 from .feedback_state_loss import feedback_state_mse
+from .litter_change_loss import (
+    LITTER_OWNER_NAMES,
+    derive_litter_change_scales,
+    extract_litter_carbon_pools,
+    litter_carbon_stock_change_loss,
+    resolve_litter_carbon_layout,
+)
 from .mechanistic_output_loss import masked_mechanistic_output_loss
 from .model import bind_daily_operator_dynamic_retained_inputs
 from .parameter_routing import PFT_TRAIT_BARE_SOIL
@@ -106,6 +113,42 @@ def _compact_canopy_carbon(other, plan):
     return jnp.moveaxis(carbon, plan.compact_pft_axis, -1).reshape((plan.pft_count,))
 
 
+def _litter_change_plan(runtime, contract, protocol):
+    """Resolve the optional two-owner litter-change loss and frozen scales."""
+
+    specification = protocol.get("litter_carbon_stock_change")
+    if specification is None:
+        return None
+    required = {
+        "weight",
+        "penalty",
+        "scale_source_pft_index",
+        "minimum_scale_gC_m2_day",
+    }
+    if not isinstance(specification, dict) or set(specification) != required:
+        raise ValueError("litter carbon stock-change protocol keys drift")
+    weight = float(specification["weight"])
+    if not np.isfinite(weight) or weight < 0.0:
+        raise ValueError("litter carbon stock-change weight must be finite and nonnegative")
+    penalty = str(specification["penalty"])
+    if penalty != "pseudo_huber":
+        raise ValueError("litter carbon stock-change penalty must be pseudo_huber")
+    if weight == 0.0:
+        return None
+    scales = derive_litter_change_scales(
+        runtime["base_statistics"].arrays["state_delta"].variance,
+        contract,
+        scale_source_pft_index=int(specification["scale_source_pft_index"]),
+        minimum_scale_gC_m2_day=float(specification["minimum_scale_gC_m2_day"]),
+    )
+    return SimpleNamespace(
+        weight=weight,
+        penalty=penalty,
+        layout=resolve_litter_carbon_layout(contract),
+        scales=scales,
+    )
+
+
 def _litterpart_feedback_plan(head, weights, *, scaling=None):
     """Resolve optional litterpart supervision with an explicit scale policy."""
 
@@ -178,6 +221,7 @@ def make_objective(runtime, head, template, scales, protocol, *, state_diagnosti
     flux_names = tuple(protocol['fluxes'])
     weights = protocol['loss']
     canopy_plan = _canopy_change_plan(runtime, head.contract, protocol)
+    litter_change_plan = _litter_change_plan(runtime, head.contract, protocol)
     litterpart_plan = _litterpart_feedback_plan(
         head,
         weights,
@@ -252,6 +296,37 @@ def make_objective(runtime, head, template, scales, protocol, *, state_diagnosti
             loss = base_loss + canopy_plan.weight * canopy_result.loss
         else:
             loss = base_loss
+        litter_change_result = None
+        if litter_change_plan is not None:
+            litter_arguments = {
+                "pft_fraction": assembled.pft.pft_fraction,
+                "active_pft_mask": assembled.pft.active_pft_mask,
+                "contract": head.contract,
+                "layout": litter_change_plan.layout,
+            }
+            initial_litter = extract_litter_carbon_pools(
+                assembled.state.other,
+                assembled.state_defined.other,
+                **litter_arguments,
+            )
+            predicted_litter = extract_litter_carbon_pools(
+                result.next_state.other,
+                result.next_state_defined.other,
+                **litter_arguments,
+            )
+            teacher_litter = extract_litter_carbon_pools(
+                sample.expected_next_state.other,
+                sample.expected_next_state_defined.other,
+                **litter_arguments,
+            )
+            litter_change_result = litter_carbon_stock_change_loss(
+                initial_teacher=initial_litter,
+                next_predicted=predicted_litter,
+                next_teacher=teacher_litter,
+                scale=jnp.asarray(litter_change_plan.scales.effective_scale, dtype=jnp.float64),
+                penalty=litter_change_plan.penalty,
+            )
+            loss = loss + litter_change_plan.weight * litter_change_result.loss
         litterpart_result = None
         if litterpart_plan is not None:
             litterpart_result = feedback_state_mse(
@@ -288,6 +363,9 @@ def make_objective(runtime, head, template, scales, protocol, *, state_diagnosti
                 + jnp.asarray(~canopy_result.scale_valid, dtype=jnp.int32)
                 + jnp.asarray(~canopy_scale_pft_applicable, dtype=jnp.int32)
             )
+        if litter_change_result is not None:
+            hard['litter_change_invalid'] = litter_change_result.invalid_count
+            hard['litter_change_empty'] = litter_change_result.empty_count
         if litterpart_result is not None:
             hard['litterpart_feedback_invalid'] = litterpart_result.invalid_count
             hard['litterpart_feedback_empty'] = jnp.asarray(
@@ -330,6 +408,36 @@ def make_objective(runtime, head, template, scales, protocol, *, state_diagnosti
                 'scale': jnp.asarray(canopy_plan.scale, dtype=jnp.float64),
                 'scale_source_pft_index': jnp.asarray(canopy_plan.scale_source_pft_index, dtype=jnp.int32),
                 'scale_pft_applicable': canopy_scale_pft_applicable,
+            }
+        if litter_change_result is not None:
+            scale_record = litter_change_plan.scales
+            per_owner = {}
+            for owner_index, owner_name in enumerate(LITTER_OWNER_NAMES):
+                per_owner[owner_name] = {
+                    'loss': litter_change_result.owner_loss[owner_index],
+                    'predicted_delta': litter_change_result.predicted_delta[..., owner_index],
+                    'teacher_delta': litter_change_result.teacher_delta[..., owner_index],
+                    'physical_residual': litter_change_result.physical_residual[..., owner_index],
+                    'normalized_residual': litter_change_result.normalized_residual[..., owner_index],
+                    'valid': litter_change_result.valid[..., owner_index],
+                    'valid_count': litter_change_result.valid_count[owner_index],
+                    'expected_count': litter_change_result.expected_count[owner_index],
+                    'invalid_prediction_count': litter_change_result.invalid_prediction_count[owner_index],
+                    'invalid_target_count': litter_change_result.invalid_target_count[owner_index],
+                    'raw_scale': jnp.asarray(scale_record.raw_scale[owner_index], dtype=jnp.float64),
+                    'effective_scale': jnp.asarray(scale_record.effective_scale[owner_index], dtype=jnp.float64),
+                    'scale_coordinate_count': jnp.asarray(scale_record.coordinate_count[owner_index], dtype=jnp.int32),
+                }
+            auxiliary['litter_stock_change'] = {
+                'total': jnp.asarray(litter_change_plan.weight, dtype=jnp.float64) * litter_change_result.loss,
+                'unweighted_loss': litter_change_result.loss,
+                'weight': jnp.asarray(litter_change_plan.weight, dtype=jnp.float64),
+                'scale_source_pft_index': jnp.asarray(scale_record.scale_source_pft_index, dtype=jnp.int32),
+                'scale_compact_pft_index': jnp.asarray(scale_record.scale_compact_pft_index, dtype=jnp.int32),
+                'minimum_scale_gC_m2_day': jnp.asarray(scale_record.minimum_scale_gC_m2_day, dtype=jnp.float64),
+                'hard_invalid_count': litter_change_result.invalid_count,
+                'hard_empty_count': litter_change_result.empty_count,
+                'per_owner': per_owner,
             }
         if litterpart_result is not None:
             auxiliary['litterpart_feedback'] = {

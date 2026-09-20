@@ -23,6 +23,7 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/litter_change_admission_protocol_20260920.md` | Frozen before learning; local/free admission in progress | Separate physical litter daily-change loss, TRAIN variance scales, matched two-update daily-only scope |
 | `research/daily_coarse_graining/carbon_endpoint_results_20260920.md` | Free forward completed0,16samples; excess litter outgoing confirmed | ~19% above/~3.8% below removal, tiny Teacher target, tail excluded on sampled inputs; focused loss candidate next |
 | `research/daily_coarse_graining/carbon_drift_attribution_20260920.md` | Saved-result/source attribution and probe protocol; probe now complete | Litter-dominated one-day deficit, absent direct recurrent noncanopy term, budget-counter scope and NPP rebound |
 | `research/daily_coarse_graining/compact_training_reporting_20260919.md` | Implemented16c0bad;30 local tests, free CPU replay and independent recovery review pass | Compact progress/periodic full reports, interruption semantics and formatting-only87% reduction; active paid code unchanged |

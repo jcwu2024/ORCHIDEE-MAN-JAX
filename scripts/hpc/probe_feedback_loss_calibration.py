@@ -116,6 +116,18 @@ def _make_batch_objective(
                 values["litterpart_feedback"]["loss"],
             )
         )
+        litter_change = values.get("litter_stock_change")
+        if coefficients.shape == (4,):
+            if litter_change is None:
+                raise ValueError("four coefficients require litter stock-change supervision")
+            terms = jnp.concatenate((terms, jnp.reshape(litter_change["unweighted_loss"], (1,))))
+        elif coefficients.shape == (3,):
+            if litter_change is not None:
+                # Existing mixed runners use three coefficients. Preserve any
+                # explicitly declared new term instead of silently dropping it.
+                terms = terms.at[0].add(litter_change["total"])
+        else:
+            raise ValueError("daily objective requires three or four coefficients")
         selected_auxiliary = {
             "terms": terms,
             "hard": values["hard"],
@@ -123,6 +135,8 @@ def _make_batch_objective(
             "canopy_stock_change": values["canopy_stock_change"],
             "litterpart_feedback": values["litterpart_feedback"],
         }
+        if litter_change is not None:
+            selected_auxiliary["litter_stock_change"] = litter_change
         if include_base_components:
             selected_auxiliary.update(
                 flux_loss=values["flux_loss"],
@@ -156,7 +170,7 @@ def _make_batch_loss(
 def _make_evaluator(
     jax: Any, jnp: Any, objective: Any, base_weights: Mapping[str, float]
 ) -> Any:
-    """Differentiate only parameters; the data and three coefficients are dynamic."""
+    """Differentiate parameters with dynamic data and loss coefficients."""
 
     batch = _make_batch_objective(jax, jnp, objective, base_weights)
     return jax.jit(jax.value_and_grad(batch, argnums=0, has_aux=True))

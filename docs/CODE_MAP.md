@@ -5,6 +5,15 @@ Last updated: 2026-09-20.
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
 
+`daily_operator/litter_change_loss.py` owns optional separate above/below
+area-weighted carbon-change supervision and TRAIN coordinate-variance scales.
+`fresh_start_training.py` applies it only under an explicit protocol;
+`probe_feedback_loss_calibration.py` preserves it in shared daily composition
+and supports a dynamic fourth coefficient for matched diagnostic arms.
+`scripts/hpc/probe_litter_change_admission.py` and its launcher test this
+changed daily term from the exact saved update4000 parameter/AdamW state.
+They do not certify recurrent updates or establish a final training recipe.
+
 `scripts/hpc/analyze_mixed_carbon_drift.py` decomposes saved nonliving carbon
 into canopy/noncanopy error and reports single-day component errors. It reads
 JSON only. `probe_mixed_carbon_endpoints.py` and its launcher own the bounded
