@@ -20,7 +20,8 @@ budget counter verifies endpoint bookkeeping, not whole-ecosystem closure;
 external-coded inventory decreases can be arbitrary while this residual is0.
 This narrows the next diagnostic to litter incoming/outgoing and retained-tail
 attribution, without a new AD investigation or architecture change. Free-only
-16sample forward probe prepared,60min ceiling; no new paid submission.
+16sample forward probe running GPU0 atb2092a4, Python82727 (wrapper82679),
+60min ceiling; no new paid submission. Four local tests and shell dry-run pass.
 See `research/daily_coarse_graining/carbon_drift_attribution_20260920.md`.
 
 Job15279139 is finished: FAILED124 at950min,4643/5415 updates, recovery4600,

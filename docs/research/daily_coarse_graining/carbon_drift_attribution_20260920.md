@@ -97,6 +97,13 @@ Use one idle free gln01 GPU,60min ceiling, separate diagnostic checkout and
 output. No paid submission authorized by this plan. A production-runtime
 forward is required; local synthetic tests do not claim actual-model success.
 
+Launched on free gln01 GPU0 after both GPUs were observed idle, immutable
+`b2092a4` in `runtime/checkouts/mixed-carbon-attribution-v1`. WrapperPID82679,
+timeout82694, Python82727;60min maximum. Actual target-shell dry-run and four
+local analysis/endpoint tests pass. Output/log:
+`runtime/outputs/diagnostics/mixed-carbon-endpoints-4000-v1.{json,log}`.
+The diagnostic is running; numerical attribution is not yet available.
+
 After attribution, specify one focused corrective candidate (e.g. physical
 litter-change supervision if the drain is weakly penalized), preserve Attention,
 sampling and scientific outputs, then verify the changed loss/gradient and a

@@ -15,6 +15,7 @@ has no direct litter/DOC/particulate term. Existing `budget_failure=0` checks
 endpoint bookkeeping, not independent ecosystem carbon-flux closure.
 Next bounded action: forward-only update4000 on8fixed+8excluded daily inputs,
 report predicted/Teacher incoming and outgoing by carbon owner plus tail change.
+Running free gln01 GPU0 atb2092a4, Python82727/wrapper82679/timeout82694.
 No gradients/updates or new paid job. One idle free GPU,60min maximum;
 `scripts/hpc/run_mixed_carbon_endpoints.sh`. Preserve Attention and the old run.
 See `research/daily_coarse_graining/carbon_drift_attribution_20260920.md`.
