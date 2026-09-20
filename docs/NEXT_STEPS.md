@@ -8,6 +8,13 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-20)
 
+Free GPU0 litter admission RUNNING at immutable22e7fb9 since12:58:13 CST.
+Python89790, timeout89756, wrapper89740 on gln01;60min ceiling (~13:58).
+Checkout `runtime/checkouts/litter-change-admission-v1`; outputs
+`runtime/outputs/diagnostics/litter-change-admission-v1.{json,log}`.
+Collect new-term AD, each arm's two daily updates and physical before/after
+panels. Do not infer learning success from launch or local test passes.
+
 Focused litter-change protocol is now frozen before learning: separate
 above/below carbon-change pseudo-Huber, weight0.1, TRAIN coordinate-variance
 scales0.09929/0.05960gC/m2/day (floor0.01 inactive). General normalizer scales

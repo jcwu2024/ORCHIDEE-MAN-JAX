@@ -2,7 +2,10 @@
 
 Status: protocol fixed before learning on 2026-09-20; implementation complete,
 46 focused local tests and Ruff pass. Actual GPU runtime interface check
-passes in23.01s; real-model admission next. No new paid training is authorized.
+passes in23.01s. Free real-model admission RUNNING at22e7fb9 since12:58:13 CST,
+GPU0/gln01, Python89790, timeout89756, wrapper89740;60min ceiling (~13:58).
+Report/log `runtime/outputs/diagnostics/litter-change-admission-v1.{json,log}`.
+No new paid training is authorized. Launch is not acceptance.
 
 ## Mechanism and scope
 

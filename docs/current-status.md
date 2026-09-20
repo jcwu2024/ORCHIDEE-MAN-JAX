@@ -13,6 +13,12 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Free litter-change admission launched12:58:13 CST on gln01 GPU0, immutable
+22e7fb9, Python89790/timeout89756/wrapper89740,60min limit (~13:58).
+46 local tests and Ruff pass; real-model result pending. Output prefix
+`runtime/outputs/diagnostics/litter-change-admission-v1`, separate checkout
+`runtime/checkouts/litter-change-admission-v1`. No new paid task.
+
 Focused litter supervision protocol fixed2026-09-20: daily objective adds0.1
 times mean separate above/below normalized pseudo-Huber carbon-change loss.
 Existing TRAIN variances imply scales0.09929/0.05960gC/m2/day; floor0.01 is
