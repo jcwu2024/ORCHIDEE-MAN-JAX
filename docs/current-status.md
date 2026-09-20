@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-19.
+Last updated: 2026-09-20.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -12,6 +12,26 @@ This page is the current status authority. Dated files under
 describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
+
+Saved carbon/loss audit: update4000 T30 deficit is99.24% outside canopy;
+single-day TRAIN/excluded panels localize the largest error to litter stock.
+Recurrent objective directly supervises only AGB/BGB/canopy stocks. The existing
+budget counter verifies endpoint bookkeeping, not whole-ecosystem closure;
+external-coded inventory decreases can be arbitrary while this residual is0.
+This narrows the next diagnostic to litter incoming/outgoing and retained-tail
+attribution, without a new AD investigation or architecture change. Free-only
+16sample forward probe prepared,60min ceiling; no new paid submission.
+See `research/daily_coarse_graining/carbon_drift_attribution_20260920.md`.
+
+Job15279139 is finished: FAILED124 at950min,4643/5415 updates, recovery4600,
+science through4000. Estimated78.54yuan; no new paid task. Ready-pool daily
+coverage85.75%. Recorded hard counters all zero, but science is not accepted.
+T30 GPP/NPP RMSE8.20/6.39 at2500 ->9.30/7.41 at4000; canopy60.25 ->19.00,
+nonliving4995 ->4589gC/m2. Nonliving change remains wrong-sign in every reused
+development window; inventory-normalized passes do not certify carbon changes.
+Next saved-evidence analysis targets this drift and NPP bias, not new AD gates.
+Full result: `research/daily_coarse_graining/direct_joint_dual_pool_results_20260920.md`.
+The RUNNING records below are superseded history.
 
 Reporting optimization is implemented in separate checkout16c0bad, with30local
 tests and independent recovery review passing. Compact progress is emitted

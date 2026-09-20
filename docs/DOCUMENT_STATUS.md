@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-09-19.
+Last updated: 2026-09-20.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -23,9 +23,11 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
+| `research/daily_coarse_graining/carbon_drift_attribution_20260920.md` | Saved-result/source attribution complete; forward-only endpoint probe next | Litter-dominated one-day deficit, absent direct recurrent noncanopy term, budget-counter scope and NPP rebound |
 | `research/daily_coarse_graining/compact_training_reporting_20260919.md` | Implemented16c0bad;30 local tests, free CPU replay and independent recovery review pass | Compact progress/periodic full reports, interruption semantics and formatting-only87% reduction; active paid code unchanged |
 | `research/daily_coarse_graining/training_wall_and_science_review_20260919.md` | Read-only efficiency audit and reusable science reporting; active training unchanged | Dual recurrent-frequency limit, report-formatting overhead, physical-unit milestone interpretation |
-| `research/daily_coarse_graining/direct_joint_dual_pool_protocol_20260919.md` | Approved79.36yuan; job15279139 RUNNING atd1183e6 | Fresh5415 updates, ready-pool coverage, milestones and16h ceiling; collect science and sustained throughput |
+| `research/daily_coarse_graining/direct_joint_dual_pool_results_20260920.md` | FAILED124 at950min;4643 logged/recovery4600/science4000 | Learning, remaining growth/nonliving drift, runtime and bounded next steps; no continuation submitted |
+| `research/daily_coarse_graining/direct_joint_dual_pool_protocol_20260919.md` | Frozen protocol; job15279139 interrupted, see September20 result | Fresh5415-update target, ready-pool coverage, milestones and16h ceiling |
 | `research/daily_coarse_graining/dual_device_continuous_results_20260919.md` | Job15269596 timeout retained; free CPU saved-state and free GPU saved-forward parity PASS | Continuous/recovery numerical evidence,1.67x warm changing-data speed; original live-vs-disk replay remains unavailable |
 | `research/daily_coarse_graining/dual_device_continuous_integration_20260918.md` | Frozen specification and submission history; result supersedes RUNNING entry | Changing-data updates, peer synchronization, serial parity and new-process checkpoint recovery |
 | `research/daily_coarse_graining/dual_device_paid_results_20260916.md` | Job15230086 completed; real-model same-update parity/timing accepted | 1.7426x speedup, estimated+3.13% equal-work charge; continuous changing-data/recovery integration next |

@@ -1,7 +1,9 @@
 # Direct joint dual-GPU learning: one prepared-pool pass
 
-Status: user approved79.36yuan; job15279139 RUNNING, not scientifically
-accepted. This is the next
+Status2026-09-20: job15279139 ended FAILED124 at950min,4643/5415 updates;
+recovery4600, science4000. Not scientifically accepted; see
+`direct_joint_dual_pool_results_20260920.md`. The frozen protocol and submission
+record below remain unchanged. This was the next
 substantial learning run after the short joint/staged pilots and bounded
 continuous dual/recovery parity. It supersedes the paused single-GPU epoch
 resource proposal; no new architecture, loss, AD or batching study is required.

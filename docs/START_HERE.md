@@ -60,6 +60,14 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
+Update2026-09-20: job15279139 hit950min (FAILED124),4643/5415 logged updates,
+saved recovery4600, science through4000. Learning is substantial but unaccepted:
+canopy improves; production/growth rebound after2500 and nonliving-carbon change
+remains wrong-sign. Analyze saved science/loss evidence before another training
+decision. No new paid continuation submitted. See
+`research/daily_coarse_graining/direct_joint_dual_pool_results_20260920.md`.
+The following launch descriptions are historical.
+
 The next prepared learning run is fresh full-network direct-joint dual-GPU
 training for5415updates, covering the entire ready346539-day daily pool once
 (not the whole Teacher TRAIN release), with existing7/30day losses. It reuses

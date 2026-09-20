@@ -1,9 +1,15 @@
 # Code Map
 
-Last updated: 2026-09-19.
+Last updated: 2026-09-20.
 
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
+
+`scripts/hpc/analyze_mixed_carbon_drift.py` decomposes saved nonliving carbon
+into canopy/noncanopy error and reports single-day component errors. It reads
+JSON only. `probe_mixed_carbon_endpoints.py` and its launcher own the bounded
+saved-checkpoint forward diagnostic for per-owner incoming/outgoing attribution;
+they do not update parameters or change the shared training method.
 
 Current bounded training-efficiency routes: `scripts/hpc/mixed_learning_dual_device.py`
 owns serial/dual same-update orchestration and cost/timing, plus

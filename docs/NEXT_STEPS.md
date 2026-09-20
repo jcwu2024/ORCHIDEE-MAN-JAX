@@ -1,12 +1,35 @@
 # Current Roadmap
 
-Last updated: 2026-09-19.
+Last updated: 2026-09-20.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
-## Current execution gate (2026-09-19)
+## Current execution gate (2026-09-20)
+
+Saved-result attribution is complete:99.24% of update4000 T30 nonliving signed
+deficit is outside canopy. Fixed/excluded TRAIN daily deficits are dominated
+by litter (-68.16/-204.21gC/m2), not just transfer failure. Active recurrent loss
+has no direct litter/DOC/particulate term. Existing `budget_failure=0` checks
+endpoint bookkeeping, not independent ecosystem carbon-flux closure.
+Next bounded action: forward-only update4000 on8fixed+8excluded daily inputs,
+report predicted/Teacher incoming and outgoing by carbon owner plus tail change.
+No gradients/updates or new paid job. One idle free GPU,60min maximum;
+`scripts/hpc/run_mixed_carbon_endpoints.sh`. Preserve Attention and the old run.
+See `research/daily_coarse_graining/carbon_drift_attribution_20260920.md`.
+Do not immediately increase training duration or replace the architecture.
+
+Job15279139 ended at950min (FAILED124),4643/5415 logged updates, recovery4600,
+latest science4000. No numerical hard failures recorded, but science remains
+unaccepted: canopy improves strongly; GPP/NPP/growth rebound after2500;
+nonliving carbon change remains wrong-sign on every development window.
+Next inspect saved loss/trajectory evidence for this carbon drift and production
+bias, preserving architecture and all milestones. Do not silently choose2500
+as final or infer science after4000. Finishing the declared pass would need815
+updates from recovery and a separately approved paid envelope. No new submission.
+Read `research/daily_coarse_graining/direct_joint_dual_pool_results_20260920.md`.
+The RUNNING/submission instructions below are historical and superseded.
 
 Current actions, superseding launch instructions in the history below:
 
