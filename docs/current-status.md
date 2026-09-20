@@ -13,15 +13,20 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Next free mixed follow-up is frozen before execution: original checkpoint4000,
+Free mixed follow-up RUNNING from14:51:12CST2026-09-20 on gln01 GPU1,
+immutable1391a75. Wrapper101505/timeout101520/Python101558;90min ceiling
+about16:21. Metadata validated; model loading at last check. Output prefix:
+`runtime/outputs/diagnostics/litter-mixed-admission-v1` (.json/.log).
+Original checkpoint4000,
 two TRAIN calibration batch/pairs to balance added litter against the whole
 old mixed gradient, then2-update technical gate and20 updates per arm within
 one90min envelope. Shared canonical AD and unchanged16-window development
 monitor; saved calibration/checkpoints prevent losing completed computation.
 Implementation complete;44 focused local tests/Ruff/diff checks pass. Lazy
 recurrent compilation preserves daily calibration first; weighted updates
-reuse one daily backward per microbatch. GPU1 was idle at14:42CST; recheck
-before launching. No launch or paid job yet. Protocol:
+reuse one daily backward per microbatch. GPU1 was rechecked idle immediately
+before launch. Target-shell dry-run and deployed container CLI check pass.
+No new paid job. Protocol:
 `research/daily_coarse_graining/litter_mixed_admission_protocol_20260920.md`.
 
 Free litter-change admission COMPLETED0 in2512.68s on gln01 GPU0, immutable

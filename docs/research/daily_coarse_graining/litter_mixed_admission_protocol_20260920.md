@@ -107,3 +107,15 @@ reordering, train-only coefficient selection, recoverable gradient bundles,
 daily litter masks/PFT derivatives, shared gradient accumulation/checkpoints
 and physical monitor classification. This is local integration evidence;
 actual full mixed GPU admission remains the purpose of the bounded run.
+
+## Launch record
+
+Started2026-09-20 14:51:12CST on gln01 (ibc13b02n04) idleGPU1 from immutable
+commit1391a75 in `runtime/checkouts/litter-mixed-admission-v1`. Target-shell
+dry-run and actual GPU-container CLI parsing/import check passed first.
+Wrapper101505, timeout101520, container starter101521, Python101558;
+90min ceiling about16:21CST.
+Outputs `runtime/outputs/diagnostics/litter-mixed-admission-v1.{json,log}`.
+Initial launch log confirms checkout/GPU and metadata validation passes;
+model loading was in progress at the last check. No paid submission and no
+scientific result yet.

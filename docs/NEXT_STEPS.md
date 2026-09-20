@@ -8,16 +8,19 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-20)
 
-Next free experiment is specified before execution: two frozen-source TRAIN
+Free experiment is RUNNING on gln01 GPU1 from14:51:12CST2026-09-20,
+immutable1391a75, wrapper101505/timeout101520/Python101558;90min ceiling
+about16:21. Metadata validated; model loading at last check. Read
+`runtime/outputs/diagnostics/litter-mixed-admission-v1.{json,log}` on server;
+do not duplicate or modify its checkout. Two frozen-source TRAIN
 gradient decompositions select one litter coefficient against D+.5R7+.5R30;
 then each matched arm passes2 full mixed updates and continues to20 in the
 same90min bounded process. Save calibration components and2/20 checkpoints
 before further compilations/monitoring. Evaluate unchanged16-window7/30day
 development panels; do not claim final/generalization acceptance. No new
 architecture, data regeneration, historical AD rerun or paid submission.
-Implementation complete;44 focused local tests, Ruff and diff checks pass.
-Next deploy the immutable checkout, target-shell dry-run and launch on idle
-free GPU1; no launch yet. Protocol:
+Implementation complete;44 focused local tests, Ruff/diff checks, actual
+target-shell dry-run and deployed GPU-container CLI check pass. Protocol:
 `research/daily_coarse_graining/litter_mixed_admission_protocol_20260920.md`.
 
 Free litter admission22e7fb9 COMPLETED0 in2512.68s; Python89790 ended.
@@ -29,7 +32,8 @@ weight0.1 dominates daily gradients (first batch norm1471.74 vsold1.16).
 Next specify short matched mixed D+R7+R30 learning with explicit balanced
 weighting and7/30day physical evaluation; first bounded full mixed update.
 Reuse accepted daily AD, keep architecture/decoder, no long automatic resume.
-No active process or new paid submission. See
+That completed daily-only process is inactive; mixed follow-up above is now
+running. No new paid submission. See
 `research/daily_coarse_graining/litter_change_admission_results_20260920.md`.
 
 Focused litter-change protocol is now frozen before learning: separate
