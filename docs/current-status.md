@@ -13,9 +13,17 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Free litter-change admission launched12:58:13 CST on gln01 GPU0, immutable
-22e7fb9, Python89790/timeout89756/wrapper89740,60min limit (~13:58).
-46 local tests and Ruff pass; real-model result pending. Output prefix
+Free litter-change admission COMPLETED0 in2512.68s on gln01 GPU0, immutable
+22e7fb9. Python89790/timeout89756 ended. Native AD/JVP and both paired
+two-update daily arms pass with zero hard counters. Litter daily-change RMSE
+improves8.6-12.2%, versus0.5-0.8% with old loss; all32 sample/owner errors
+improve. Absolute wrong-sign carbon depletion remains large. GPP/NPP worsen
+from initialization in both arms; new0.1 coefficient dominates the daily
+gradient (first batch1471.74 vsold1.16). Next explicit weight balance and
+short matched mixed D+R7+R30 evaluation, not long training or new architecture.
+No active/new paid job. Details:
+`research/daily_coarse_graining/litter_change_admission_results_20260920.md`.
+46 local tests and Ruff pass. Output prefix
 `runtime/outputs/diagnostics/litter-change-admission-v1`, separate checkout
 `runtime/checkouts/litter-change-admission-v1`. No new paid task.
 
@@ -25,8 +33,8 @@ Existing TRAIN variances imply scales0.09929/0.05960gC/m2/day; floor0.01 is
 inactive. Reading original variance avoids42 belowground zero-variance
 coordinates whose generic normalization scale is1. This does not regenerate
 Teacher data. Free GPU synthetic runtime check passes23.01s underJAX0.4.38.
-Implementation/local tests underway; actual new-loss gradients and paired
-two-update daily-only diagnostic from4000 remain pending. No paid submission.
+Implementation/local tests and real-model daily-only admission from4000
+completed; mixed/7/30 acceptance remains pending. No paid submission.
 Protocol: `research/daily_coarse_graining/litter_change_admission_protocol_20260920.md`.
 
 Saved carbon/loss audit: update4000 T30 deficit is99.24% outside canopy;

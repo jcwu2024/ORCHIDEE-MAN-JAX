@@ -60,11 +60,12 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
-The focused litter-change loss is implemented;46 local tests pass. FreeGPU0
-new-loss gradient and paired two-update daily admission is RUNNING22e7fb9
-(Python89790,12:58:13 CST,60min ceiling) with no result yet;
-Attention/decoder and the old paid run stay fixed. See
-`research/daily_coarse_graining/litter_change_admission_protocol_20260920.md`.
+The focused litter-change loss passes free GPU gradient/two-update admission
+(22e7fb9,2512.68s,exit0). Litter daily-change RMSE improves8.6-12.2%, but
+absolute carbon errors remain large; GPP/NPP do not improve from initialization.
+Next balance the new term in a short matched joint D+R7+R30 experiment and
+evaluate7/30days. Keep Attention/decoder; no active/new paid task. See
+`research/daily_coarse_graining/litter_change_admission_results_20260920.md`.
 
 The free16-sample endpoint probe is now complete: excessive learned litter
 outgoing explains the one-day deficit on these inputs; retained tail does not

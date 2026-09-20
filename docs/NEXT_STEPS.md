@@ -8,22 +8,27 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-20)
 
-Free GPU0 litter admission RUNNING at immutable22e7fb9 since12:58:13 CST.
-Python89790, timeout89756, wrapper89740 on gln01;60min ceiling (~13:58).
-Checkout `runtime/checkouts/litter-change-admission-v1`; outputs
-`runtime/outputs/diagnostics/litter-change-admission-v1.{json,log}`.
-Collect new-term AD, each arm's two daily updates and physical before/after
-panels. Do not infer learning success from launch or local test passes.
+Free litter admission22e7fb9 COMPLETED0 in2512.68s; Python89790 ended.
+Native AD/JVP and paired two daily updates pass; all hard counters zero.
+Litter change RMSE improves8.6% above/12.1-12.2% below after2updates, versus
+only0.5-0.8% under old loss. Absolute daily carbon errors remain large and
+wrong-sign. GPP/NPP errors worsen from initialization in both arms. New
+weight0.1 dominates daily gradients (first batch norm1471.74 vsold1.16).
+Next specify short matched mixed D+R7+R30 learning with explicit balanced
+weighting and7/30day physical evaluation; first bounded full mixed update.
+Reuse accepted daily AD, keep architecture/decoder, no long automatic resume.
+No active process or new paid submission. See
+`research/daily_coarse_graining/litter_change_admission_results_20260920.md`.
 
 Focused litter-change protocol is now frozen before learning: separate
 above/below carbon-change pseudo-Huber, weight0.1, TRAIN coordinate-variance
 scales0.09929/0.05960gC/m2/day (floor0.01 inactive). General normalizer scales
 must not be used:42 belowground zero-variance coordinates store scale1.
-Implement/check optional daily loss and paired two-update DAILY-ONLY admission
+Completed optional daily loss and paired two-update DAILY-ONLY admission
 from identical update4000 parameters/AdamW and TRAIN batches4000/4001.
 This is a diagnostic fork, not continuation or full mixed/7/30 acceptance.
 Actual free GPU JAX0.4.38 small runtime interface check passes23.01s.
-46 local tests and Ruff pass; real-model new-loss AD/updates pending.
+46 local tests/Ruff and real-model new-loss AD/daily updates pass.
 No paid submission. See
 `research/daily_coarse_graining/litter_change_admission_protocol_20260920.md`.
 

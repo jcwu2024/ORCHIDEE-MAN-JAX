@@ -1,5 +1,10 @@
 # Focused physical litter-change admission
 
+Completion: the declared run finished exit0 in2512.68s. Daily technical
+admission passes; full mixed/scientific acceptance remains false. See
+`litter_change_admission_results_20260920.md` for physical results and next gate.
+The launch status below is historical.
+
 Status: protocol fixed before learning on 2026-09-20; implementation complete,
 46 focused local tests and Ruff pass. Actual GPU runtime interface check
 passes in23.01s. Free real-model admission RUNNING at22e7fb9 since12:58:13 CST,
