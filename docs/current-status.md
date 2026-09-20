@@ -13,17 +13,26 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Selected-only continuation RUNNING18:25:23CST2026-09-20,free gln01 GPU1,
-immutable5fdfd5e; wrapper72153/timeout72165/Python72207,60min ceiling19:25.
-Metadata validated; loading model at last check. Server output prefix
-`runtime/outputs/diagnostics/litter-mixed-continuation-v1` (.json/.log).
-Selected20->100,
-fixed lambda5.22171689e-5, same joint loss/sampling/optimizer, monitors each20
-and recovery each5. FreeGPU60min envelope; implementation complete and22
-local tests/Ruff/diff checks plus actual parent-report validation pass.
-Target-shell dry-run and deployed GPU-container CLI check pass. No paid job.
-Protocol:
-`research/daily_coarse_graining/litter_mixed_continuation_protocol_20260920.md`.
+Four-arm paid experiment APPROVED, preparation in progress. Each1V100/8CPU/
+64GiB/3h; total ceiling33.12yuan. All source selected100 absolute4100;
+500 new updates/arm, identical schedule4100..4599. A unchanged,B litter/4,
+C T30 coefficient0.5->1,D LR1e-5->3e-6. No job submitted yet. See
+`research/daily_coarse_graining/litter_parallel_training_protocol_20260920.md`.
+
+Selected-only continuation COMPLETED0,free gln01 GPU1,immutable5fdfd5e,
+2205.56s. Started18:25:23CST2026-09-20; Python72207 ended. No active task.
+Selected20->100 (absolute4020->4100), same lambda5.22171689e-5 and full-network
+joint optimization. Four milestone monitors/checkpoints complete; technical
+and physical monitoring pass, scientific acceptance false. T7 nonliving
+RMSE271.11->58.18; T30 2497.01->903.10gC/m2. T30 GPP3.97->5.77,
+NPP3.08->4.59,AGBchange2.23->3.14,BGBchange0.87->1.47; T7 metrics improve.
+T30 nonliving mean change -295.48 versusTeacher+125.27,5/8wrong-sign.
+Peak live allocator15.75GiB versus reserved pool25.39GiB. Next localize saved
+per-window tradeoffs before any loss adjustment/long training; preserve
+Attention/native AD. No paid submission. Read
+`research/daily_coarse_graining/litter_mixed_continuation_results_20260920.md`.
+
+Earlier records below are historical and superseded by this completion.
 
 Balanced litter mixed experiment COMPLETED0, recovery1718.32s,1391a75.
 Both arms20updates/saved4020AdamW, full initial/old/selected16-window

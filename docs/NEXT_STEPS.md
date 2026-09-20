@@ -8,16 +8,33 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-20)
 
-Selected20->100 is RUNNING on free gln01 GPU1 from18:25:23CST2026-09-20,
-immutable5fdfd5e; wrapper72153/timeout72165/Python72207. Metadata validated;
-loading model at last check.60min ceiling about19:25. Output prefix
-`runtime/outputs/diagnostics/litter-mixed-continuation-v1` (.json/.log).
-Do not duplicate or mutate its checkout. User authorized continued exploration:
-80 new joint updates, same lambda/LR/data/architecture, physical monitors at
-40/60/80/100, recovery every5. FreeGPU60min ceiling; no paid submission.
-22 local tests/Ruff/diff checks, actual parent-report validation, deployed
-target-shell dry-run and GPU-container CLI check pass. No new paid job. Read
-`research/daily_coarse_graining/litter_mixed_continuation_protocol_20260920.md`.
+Four paid parallel learning arms are APPROVED and being prepared, maximum
+33.12yuan total: each1V100/8CPUs/64GiB/3h,500 NEW updates from common
+selected100/absolute4100. A unchanged; B quarter litter coefficient; C double
+T30 outer weight; D LR3e-6. Same data order/Attention/native AD, milestones at
+100/250/500 new updates. No submission yet. Protocol:
+`research/daily_coarse_graining/litter_parallel_training_protocol_20260920.md`.
+Finish targeted recovery/weighting tests and actual deployed metadata/launcher
+checks, then submit the authorized four-arm array without further approval.
+Earlier suggestion to complete attribution before training is superseded:
+saved-result analysis can proceed alongside these controlled learning arms.
+
+Selected20->100 COMPLETED0 on free gln01 GPU1,immutable5fdfd5e,2205.56s.
+All80 new joint updates, four physical milestone monitors and checkpoints
+complete. Technical/physical monitoring passes; scientific acceptance false.
+No active process or new paid submission. Nonliving change RMSE improves
+78.54%T7/63.83%T30 versus selected20; T7 production improves but T30 production
+and biomass regress. T30 nonliving mean change remains -295.48 versusTeacher
++125.27gC/m2, wrong-sign in5/8windows. Do not automatically extend training.
+Next: analyze saved per-window production/carbon trajectories across20/40/60/
+80/100 to identify whether regressions concentrate in particular windows and
+coincide with stock corrections. Then specify a bounded learning/loss-balance
+experiment if supported; correlation alone cannot establish causal conflict.
+Preserve Attention, admitted native AD and checkpoints. No new Teacher data.
+Read `research/daily_coarse_graining/litter_mixed_continuation_results_20260920.md`.
+
+Earlier records below are historical; their next steps and launch statuses
+are superseded by the current completion and work order above.
 
 Balanced litter mixed experiment COMPLETED0 after reviewed free recovery
 (1391a75,1718.32s). Both20-update arms and source/old/selected full16-window

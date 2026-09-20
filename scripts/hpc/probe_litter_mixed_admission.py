@@ -1,4 +1,4 @@
-"""Calibrate and run matched litter-weight mixed-gradient arms on one FREE GPU.
+"""Calibrate and run matched litter-weight mixed-gradient arms on one GPU.
 
 The runner composes the admitted daily objective, checked recurrent native AD,
 shared mixed-gradient merge, and AdamW update.  It introduces no alternate
@@ -19,6 +19,7 @@ from typing import Any, Mapping, Sequence
 import numpy as np
 
 from scripts.hpc import litter_gradient_balance as balance
+from scripts.hpc import litter_parallel_protocol as parallel_protocol
 from scripts.hpc import probe_feedback_loss_calibration as calibration
 from scripts.hpc import probe_feedback_loss_updates as admission
 from scripts.hpc import probe_litter_change_admission as daily_admission
@@ -332,6 +333,7 @@ def _validate_continuation_protocol(protocol: Mapping[str, Any]) -> dict[str, An
         **expected,
         "milestones": tuple(expected["milestones"]),
         "selected_weight": EXPECTED_SELECTED_WEIGHT,
+        "updates_per_arm": 80,
         "update_indices": tuple(range(4020, 4100)),
     }
 
@@ -433,6 +435,7 @@ def _align_continuation_history(
     *,
     completed: int,
     milestones: Sequence[int],
+    source_relative_update: int = 20,
 ) -> tuple[list[Mapping[str, Any]], list[Mapping[str, Any]], int | None]:
     """Align durable report evidence to a recovered checkpoint.
 
@@ -445,7 +448,7 @@ def _align_continuation_history(
         row for row in updates if int(row.get("relative_update", -1)) <= completed
     ]
     if [int(row.get("relative_update", -1)) for row in retained_updates] != list(
-        range(21, completed + 1)
+        range(source_relative_update + 1, completed + 1)
     ):
         raise ValueError("continuation report history is not aligned with recovery checkpoint")
     retained_monitors = [
@@ -1251,7 +1254,7 @@ def _run_admission(args: argparse.Namespace) -> Mapping[str, Any]:
 
 
 def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
-    """Continue only the admitted selected arm without recalibration or replay."""
+    """Run selected continuation or a source100 parallel arm on the same engine."""
 
     from research.daily_coarse_graining.daily_operator.canonical_rollout import make_canonical_step
     from research.daily_coarse_graining.daily_operator.fresh_start_training import make_objective, make_update
@@ -1273,12 +1276,19 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
     from scripts.hpc.trained_screen_common import PreparedWindowPool, WindowPool, json_safe
 
     started = time.perf_counter()
+    parallel = getattr(args, "parallel_protocol", None) is not None
+    arm = getattr(args, "parallel_arm", None) if parallel else None
     current_head = subprocess.check_output(["git", "rev-parse", "HEAD"], text=True).strip()
     report: dict[str, Any] = {
-        "schema_version": CONTINUATION_SCHEMA_VERSION,
+        "schema_version": (
+            parallel_protocol.RESULT_SCHEMA_VERSION if parallel else CONTINUATION_SCHEMA_VERSION
+        ),
         "status": "running",
         "stage": "created",
-        "claim_scope": "bounded_selected_only_litter_mixed_continuation",
+        "claim_scope": (
+            "bounded_four_arm_litter_parallel_training"
+            if parallel else "bounded_selected_only_litter_mixed_continuation"
+        ),
         "source_git_head": current_head,
         "scientific_acceptance": False,
         "updates": [],
@@ -1289,36 +1299,48 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
 
     def emit(stage: str, **values: Any) -> None:
         report.update(values, stage=stage, elapsed_seconds=time.perf_counter() - started)
+        flush_interval = int(report.get("report_flush_interval", 5))
         flush = (
             stage != "update_completed"
-            or int(report.get("completed_relative_update", 20)) % 5 == 0
+            or int(report.get("completed_relative_update", 20)) % flush_interval == 0
         )
         if flush:
             _atomic_json(args.output, json_safe(report))
         print(
-            f"litter_mixed_continuation stage={stage} "
+            f"{'litter_parallel_training' if parallel else 'litter_mixed_continuation'} "
+            f"arm={arm or 'selected'} stage={stage} "
             f"relative_update={report.get('completed_relative_update', 20)} "
+            f"new_updates={report.get('completed_new_updates', 'n/a')} "
             f"seconds={report['elapsed_seconds']:.1f}",
             flush=True,
         )
 
     try:
-        if args.shape_only or args.admission_only or args.cpu_forward_only:
+        prepare_only = bool(getattr(args, "prepare_only", False))
+        if (args.shape_only or args.admission_only or args.cpu_forward_only) and not prepare_only:
             raise ValueError("litter mixed continuation requires complete GPU execution")
         configuration = _read_json(args.mixed_protocol, name="mixed protocol")
         model_protocol = _read_json(args.protocol, name="model protocol")
-        protocol = _read_json(args.continuation_protocol, name="continuation protocol")
-        admitted = _validate_continuation_protocol(protocol)
-        source_admission = _read_json(
-            args.source_admission_report, name="source admission report"
-        )
-        source_method = _source_admission_method(source_admission)
-        if args.mixed_admission_protocol is not None:
-            supplied_source_protocol = _read_json(
-                args.mixed_admission_protocol, name="mixed admission protocol"
+        if parallel:
+            protocol = _read_json(args.parallel_protocol, name="parallel protocol")
+            admitted = parallel_protocol.validate_protocol(protocol, arm)
+            source_report = _read_json(
+                args.source_continuation_report, name="source continuation report"
             )
-            if supplied_source_protocol != source_admission["protocol"]:
-                raise ValueError("supplied mixed admission protocol differs from source report")
+            source_admission = None
+        else:
+            protocol = _read_json(args.continuation_protocol, name="continuation protocol")
+            admitted = _validate_continuation_protocol(protocol)
+            source_admission = _read_json(
+                args.source_admission_report, name="source admission report"
+            )
+            source_method = _source_admission_method(source_admission)
+            if args.mixed_admission_protocol is not None:
+                supplied_source_protocol = _read_json(
+                    args.mixed_admission_protocol, name="mixed admission protocol"
+                )
+                if supplied_source_protocol != source_admission["protocol"]:
+                    raise ValueError("supplied mixed admission protocol differs from source report")
         if int(args.expected_update) != 4000:
             raise ValueError("continuation retains expected-update 4000 for its source report")
         daily_admission._validate_model_protocol(model_protocol)
@@ -1342,6 +1364,32 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
         schedule = plan["schedule"]
         if len(schedule["update_rows"]) <= admitted["update_indices"][-1]:
             raise ValueError("recurrent schedule does not cover continuation updates")
+        if parallel:
+            source_method, baseline_monitor, baseline_daily_panels = (
+                parallel_protocol.source_continuation_method(
+                    source_report, checkpoint=args.checkpoint,
+                    plan_identities=plan["identities"],
+                )
+            )
+            source_admission_protocol = source_method.get("parent_method", {}).get("protocol")
+            if not isinstance(source_admission_protocol, Mapping):
+                raise ValueError("selected100 checkpoint lacks source admission protocol provenance")
+            if args.mixed_admission_protocol is not None:
+                supplied_source_protocol = _read_json(
+                    args.mixed_admission_protocol, name="mixed admission protocol"
+                )
+                if supplied_source_protocol != source_admission_protocol:
+                    raise ValueError("supplied mixed admission protocol differs from selected100 provenance")
+            if args.source_admission_report is not None:
+                supplied_admission_report = _read_json(
+                    args.source_admission_report, name="source admission report"
+                )
+                if _source_admission_method(supplied_admission_report) != source_method["parent_method"]:
+                    raise ValueError("source admission report differs from selected100 provenance")
+        else:
+            baseline_monitor = source_admission["development_monitors"]["selected"]
+            baseline_daily_panels = source_admission["arms"]["selected"]["final_daily_panels"]
+            source_admission_protocol = source_admission["protocol"]
         training_report = _read_json(args.training_report, name="training report")
         source_identity = endpoints._checkpoint_identity(
             training_report,
@@ -1358,35 +1406,57 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
         if (
             len(source_rows) != 1
             or Path(str(source_rows[0].get("path", ""))).resolve()
-            != Path(str(source_admission["source_checkpoint_path"])).resolve()
-            or Path(str(source_admission.get("source_training_report_path", ""))).resolve()
+            != Path(str(
+                source_method.get("parent_method", {}).get("source_checkpoint")
+                if parallel else source_admission["source_checkpoint_path"]
+            )).resolve()
+            or Path(str(
+                source_report.get("source_training_report_path")
+                if parallel else source_admission.get("source_training_report_path", "")
+            )).resolve()
             != args.training_report.resolve()
         ):
             raise ValueError("source4000 training metadata differs from completed admission")
         del source_identity
 
-        source_checkpoint_rows = [
-            row for row in source_admission["arms"]["selected"].get("checkpoints", ())
-            if int(row.get("update", -1)) == admitted["source_relative_update"]
-        ]
-        if (
-            len(source_checkpoint_rows) != 1
-            or Path(str(source_checkpoint_rows[0].get("path", ""))).resolve()
-            != args.checkpoint.resolve()
-        ):
-            raise ValueError("--checkpoint is not the completed selected20 checkpoint")
-        checkpoint_method = _continuation_checkpoint_method(
-            source_checkpoint=args.checkpoint,
-            source_method=source_method,
-            protocol=protocol,
-            runner_git_head=current_head,
-        )
-        baseline_monitor = source_admission["development_monitors"]["selected"]
-        baseline_daily_panels = source_admission["arms"]["selected"]["final_daily_panels"]
+        if parallel:
+            effective_model_protocol = parallel_protocol.effective_optimizer_protocol(
+                model_protocol, arm=arm, learning_rate=admitted["learning_rate"]
+            )
+            checkpoint_method = parallel_protocol.checkpoint_method(
+                source_checkpoint=args.checkpoint,
+                source_method=source_method,
+                protocol=protocol,
+                arm=arm,
+                effective_optimizer=effective_model_protocol["optimizer"],
+                runner_git_head=current_head,
+            )
+        else:
+            source_checkpoint_rows = [
+                row for row in source_admission["arms"]["selected"].get("checkpoints", ())
+                if int(row.get("update", -1)) == admitted["source_relative_update"]
+            ]
+            if (
+                len(source_checkpoint_rows) != 1
+                or Path(str(source_checkpoint_rows[0].get("path", ""))).resolve()
+                != args.checkpoint.resolve()
+            ):
+                raise ValueError("--checkpoint is not the completed selected20 checkpoint")
+            effective_model_protocol = model_protocol
+            checkpoint_method = _continuation_checkpoint_method(
+                source_checkpoint=args.checkpoint,
+                source_method=source_method,
+                protocol=protocol,
+                runner_git_head=current_head,
+            )
         report.update(
             protocol=protocol,
-            protocol_path=str(args.continuation_protocol.resolve()),
-            source_admission_report_path=str(args.source_admission_report.resolve()),
+            protocol_path=str(
+                (args.parallel_protocol if parallel else args.continuation_protocol).resolve()
+            ),
+            source_report_path=str(
+                (args.source_continuation_report if parallel else args.source_admission_report).resolve()
+            ),
             source_training_report_path=str(args.training_report.resolve()),
             source_checkpoint_path=str(args.checkpoint.resolve()),
             source_checkpoint_method=source_method,
@@ -1395,17 +1465,34 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
             plan_identities=plan["identities"],
             selected_batches=[batch.as_metadata() for batch in update_batches],
             selected_weight=admitted["selected_weight"],
-            baseline_selected20={
+            outer_weights=admitted["outer_weights"],
+            arm=arm,
+            effective_optimizer=dict(effective_model_protocol["optimizer"]),
+            report_flush_interval=int(admitted.get("report_flush_interval", 5)),
+            baseline_source={
+                "relative_update": admitted["source_relative_update"],
+                "absolute_update": admitted["source_absolute_update"],
                 "development_monitor": baseline_monitor,
                 "daily_panels": baseline_daily_panels,
             },
             completed_relative_update=admitted["source_relative_update"],
             completed_absolute_update=admitted["source_absolute_update"],
         )
+        if parallel:
+            report["source_continuation_report_path"] = str(
+                args.source_continuation_report.resolve()
+            )
+            report["completed_new_updates"] = 0
+        else:
+            report["source_admission_report_path"] = str(args.source_admission_report.resolve())
+            report["baseline_selected20"] = {
+                "development_monitor": baseline_monitor,
+                "daily_panels": baseline_daily_panels,
+            }
         if args.output.is_file():
             previous = _read_json(args.output, name="incomplete continuation report")
             compatible = (
-                previous.get("schema_version") == CONTINUATION_SCHEMA_VERSION
+                previous.get("schema_version") == report["schema_version"]
                 and previous.get("protocol") == protocol
                 and Path(str(previous.get("source_checkpoint_path", ""))).resolve()
                 == args.checkpoint.resolve()
@@ -1422,6 +1509,30 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
             output_owned = True
         emit("metadata_validated")
 
+        if prepare_only:
+            prepared = load_training_checkpoint(args.checkpoint, expected_method=source_method)
+            prepared_completed = int(prepared["completed_updates"])
+            prepared_step = int(np.asarray(prepared["optimizer_state"].step))
+            if (
+                prepared_completed != admitted["source_relative_update"]
+                or prepared["cursor"] != {
+                    "epoch": 0, "batch_offset": admitted["source_absolute_update"]
+                }
+                or prepared_step != admitted["source_absolute_update"]
+            ):
+                raise ValueError("source checkpoint progress differs from parallel protocol")
+            del prepared
+            emit(
+                "prepared",
+                status="prepared",
+                classification="parallel_training_metadata_and_checkpoint_prepared",
+                technical_parallel_preparation_passed=True,
+                prepared_checkpoint_optimizer_step=prepared_step,
+                bounded_continuation_completed=False,
+                scientific_acceptance=False,
+            )
+            return report
+
         runtime, head, template, scales, fresh_parameters, _, _ = prototype.bootstrap(
             args, model_protocol
         )
@@ -1430,13 +1541,16 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
 
         devices = tuple(jax.local_devices())
         if len(devices) != 1 or devices[0].platform != "gpu":
-            raise ValueError("litter mixed continuation requires exactly one visible FREE GPU")
+            raise ValueError("litter mixed continuation requires exactly one visible GPU")
         device = devices[0]
         if sum(int(value.size) for value in jax.tree_util.tree_leaves(fresh_parameters)) != EXPECTED_PARAMETER_COUNT:
             raise ValueError("actual full-network parameter count differs from continuation contract")
         del fresh_parameters
 
-        recovery_path = _continuation_artifact_path(args.output, recovery=True)
+        recovery_path = (
+            parallel_protocol.artifact_path(args.output, arm=arm, recovery=True)
+            if parallel else _continuation_artifact_path(args.output, recovery=True)
+        )
         if recovery_path.is_file():
             saved = load_training_checkpoint(recovery_path, expected_method=checkpoint_method)
             resumed_from = recovery_path
@@ -1447,9 +1561,20 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
         if (
             completed < admitted["source_relative_update"]
             or completed > admitted["target_relative_update"]
-            or (completed - admitted["source_relative_update"]) % admitted["recovery_interval"] != 0
-            or saved["cursor"] != {"epoch": 0, "batch_offset": 4000 + completed}
-            or int(np.asarray(saved["optimizer_state"].step)) != 4000 + completed
+            or (
+                (completed - admitted["source_relative_update"])
+                % admitted["recovery_interval"] != 0
+                and not (parallel and completed == admitted["source_relative_update"] + 2)
+            )
+            or saved["cursor"] != {
+                "epoch": 0,
+                "batch_offset": admitted["source_absolute_update"]
+                + completed - admitted["source_relative_update"],
+            }
+            or int(np.asarray(saved["optimizer_state"].step)) != (
+                admitted["source_absolute_update"]
+                + completed - admitted["source_relative_update"]
+            )
         ):
             raise ValueError("continuation recovery checkpoint progress drift")
         parameters_host = saved["parameters"]
@@ -1457,12 +1582,18 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
         del saved
         report["resumed_from"] = str(Path(resumed_from).resolve())
         report["completed_relative_update"] = completed
-        report["completed_absolute_update"] = 4000 + completed
+        report["completed_absolute_update"] = (
+            admitted["source_absolute_update"]
+            + completed - admitted["source_relative_update"]
+        )
+        if parallel:
+            report["completed_new_updates"] = completed - admitted["source_relative_update"]
         aligned_updates, aligned_monitors, due_monitor = _align_continuation_history(
             report["updates"],
             report["milestone_monitors"],
             completed=completed,
             milestones=admitted["milestones"],
+            source_relative_update=admitted["source_relative_update"],
         )
         report["updates"] = aligned_updates
         report["milestone_monitors"] = aligned_monitors
@@ -1473,7 +1604,7 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
         emit("checkpoint_restored")
 
         candidate_protocol = daily_admission._candidate_model_protocol(
-            model_protocol, source_admission["protocol"]
+            model_protocol, source_admission_protocol
         )
         graph_protocol = calibration._loss_protocol(
             candidate_protocol,
@@ -1486,7 +1617,7 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
         daily_forward = jax.jit(batch_objective)
         add_gradient, mean_gradient = make_gradient_accumulator(jax, jnp)
         combine = make_mixed_gradient(jax, jnp)
-        optimizer_update = make_update(model_protocol)
+        optimizer_update = make_update(effective_model_protocol)
         finite = jax.jit(lambda tree: jnp.all(jnp.stack([
             jnp.all(jnp.isfinite(value)) for value in jax.tree_util.tree_leaves(tree)
         ])))
@@ -1637,6 +1768,8 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
         def save_milestone_checkpoint(relative_update: int) -> None:
             milestone_path = _continuation_artifact_path(
                 args.output, relative_update=relative_update
+            ) if not parallel else parallel_protocol.artifact_path(
+                args.output, arm=arm, relative_update=relative_update
             )
             existing = [
                 row for row in report["milestone_checkpoints"]
@@ -1653,10 +1786,12 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
                 if (
                     int(persisted["completed_updates"]) != relative_update
                     or persisted["cursor"] != {
-                        "epoch": 0, "batch_offset": 4000 + relative_update
+                        "epoch": 0,
+                        "batch_offset": admitted["source_absolute_update"]
+                        + relative_update - admitted["source_relative_update"],
                     }
                     or int(np.asarray(persisted["optimizer_state"].step))
-                    != 4000 + relative_update
+                    != admitted["source_absolute_update"] + relative_update - admitted["source_relative_update"]
                 ):
                     raise ValueError("persisted milestone checkpoint progress drift")
                 del persisted
@@ -1667,12 +1802,16 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
                     parameters=parameters,
                     optimizer_state=optimizer,
                     completed_updates=relative_update,
-                    cursor={"epoch": 0, "batch_offset": 4000 + relative_update},
+                    cursor={
+                        "epoch": 0,
+                        "batch_offset": admitted["source_absolute_update"]
+                        + relative_update - admitted["source_relative_update"],
+                    },
                     method=checkpoint_method,
                 )
             checkpoint_record = {
                 "relative_update": relative_update,
-                "absolute_update": 4000 + relative_update,
+                "absolute_update": admitted["source_absolute_update"] + relative_update - admitted["source_relative_update"],
                 "path": str(milestone_path.resolve()),
                 "bytes": milestone_path.stat().st_size,
             }
@@ -1704,7 +1843,10 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
                 parameters,
                 development_pool,
                 development_pool.selection["windows"],
-                panel_name=f"selected_after_{relative_update}_relative_updates",
+                panel_name=(
+                    f"arm_{arm}_after_{relative_update - admitted['source_relative_update']}_new_updates"
+                    if parallel else f"selected_after_{relative_update}_relative_updates"
+                ),
                 development=True,
                 apply_science_gates=True,
             )
@@ -1723,15 +1865,18 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
                     f"relative update {relative_update} physical or metric-population gate failed"
                 )
             progress = summarize_progress(baseline_monitor, development)
+            if parallel:
+                progress["baseline"] = "fixed_selected100_development_panel"
+                progress["new_updates"] = relative_update - admitted["source_relative_update"]
             progress["relative_update"] = relative_update
-            progress["absolute_update"] = 4000 + relative_update
+            progress["absolute_update"] = admitted["source_absolute_update"] + relative_update - admitted["source_relative_update"]
             history = [
                 row["progress_summary"] for row in report["milestone_monitors"]
             ] + [progress]
             stop_decision = should_stop(history, admitted["scientific_stop"])
             record = {
                 "relative_update": relative_update,
-                "absolute_update": 4000 + relative_update,
+                "absolute_update": admitted["source_absolute_update"] + relative_update - admitted["source_relative_update"],
                 "daily_panels": daily_panels,
                 "development_monitor": development,
                 "progress_summary": progress,
@@ -1760,7 +1905,19 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
             )
             stopped = bool(completed_monitor["stop_decision"]["stop"])
 
-        for relative_update in range(completed + 1, admitted["target_relative_update"] + 1):
+        maximum_new_updates = getattr(args, "max_new_updates", None)
+        run_target = admitted["target_relative_update"]
+        if maximum_new_updates is not None:
+            if not parallel or int(maximum_new_updates) != 2:
+                raise ValueError("--max-new-updates currently supports exactly 2 parallel updates")
+            run_target = min(
+                run_target,
+                admitted["source_relative_update"] + int(maximum_new_updates),
+            )
+        report["requested_target_relative_update"] = run_target
+        report["bounded_probe"] = bool(run_target < admitted["target_relative_update"])
+
+        for relative_update in range(completed + 1, run_target + 1):
             if stopped:
                 break
             batch = update_batches[
@@ -1792,9 +1949,17 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
                     "T30": float(norm(recurrent_gradients["T30"])),
                 },
                 "litter_weight": admitted["selected_weight"],
+                "outer_weights": dict(admitted["outer_weights"]),
             }
-            mixed = combine(daily_gradient, recurrent_gradients["T7"], 1.0, 0.5)
-            mixed = combine(mixed, recurrent_gradients["T30"], 1.0, 0.5)
+            mixed = combine(
+                daily_gradient,
+                recurrent_gradients["T7"],
+                admitted["outer_weights"]["daily"],
+                admitted["outer_weights"]["T7"],
+            )
+            mixed = combine(
+                mixed, recurrent_gradients["T30"], 1.0, admitted["outer_weights"]["T30"]
+            )
             jax.block_until_ready(mixed)
             if not bool(finite(mixed)):
                 raise ValueError("combined continuation gradient is nonfinite")
@@ -1802,7 +1967,10 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
                 parameters, mixed, optimizer
             )
             jax.block_until_ready((proposed, proposed_optimizer, gradient_norm, clip))
-            expected_step = 4000 + relative_update
+            expected_step = (
+                admitted["source_absolute_update"]
+                + relative_update - admitted["source_relative_update"]
+            )
             if (
                 not bool(finite((proposed, proposed_optimizer)))
                 or not np.isfinite(float(gradient_norm))
@@ -1811,41 +1979,68 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
             ):
                 raise ValueError("complete continuation AdamW proposal is invalid")
             parameters, optimizer = proposed, proposed_optimizer
-            report["updates"].append({
+            update_record = {
                 "relative_update": relative_update,
                 "source_absolute_update": expected_step,
                 "daily_batch_index": batch_index,
                 "losses": losses,
-                "mixed_loss": losses["daily_weighted"] + 0.5 * losses["T7"] + 0.5 * losses["T30"],
+                "mixed_loss": (
+                    admitted["outer_weights"]["daily"] * losses["daily_weighted"]
+                    + admitted["outer_weights"]["T7"] * losses["T7"]
+                    + admitted["outer_weights"]["T30"] * losses["T30"]
+                ),
                 "component_geometry": component_geometry,
                 "combined_gradient_norm": float(gradient_norm),
                 "clip": float(clip),
                 "hard_counts": hard_counts,
                 "optimizer_step": expected_step,
                 "seconds": time.perf_counter() - update_started,
-            })
+            }
+            if parallel:
+                update_record["new_update"] = relative_update - admitted["source_relative_update"]
+            report["updates"].append(update_record)
             report["completed_relative_update"] = relative_update
             report["completed_absolute_update"] = expected_step
+            if parallel:
+                report["completed_new_updates"] = relative_update - admitted["source_relative_update"]
             del mixed, proposed, proposed_optimizer, daily_gradient, recurrent_gradients, gradient
             emit("update_completed", active_relative_update=relative_update)
 
-            if relative_update % admitted["recovery_interval"] == 0:
+            new_updates = relative_update - admitted["source_relative_update"]
+            save_recovery = (
+                new_updates % admitted["recovery_interval"] == 0
+                or (parallel and new_updates == 2)
+                or relative_update == run_target
+            )
+            if save_recovery:
                 save_training_checkpoint(
                     recovery_path,
                     jax=jax,
                     parameters=parameters,
                     optimizer_state=optimizer,
                     completed_updates=relative_update,
-                    cursor={"epoch": 0, "batch_offset": 4000 + relative_update},
+                    cursor={"epoch": 0, "batch_offset": expected_step},
                     method=checkpoint_method,
                 )
                 report["recovery_checkpoint"] = {
                     "relative_update": relative_update,
-                    "absolute_update": 4000 + relative_update,
+                    "absolute_update": expected_step,
                     "path": str(recovery_path.resolve()),
                     "bytes": recovery_path.stat().st_size,
                 }
                 emit("recovery_checkpoint_saved", active_relative_update=relative_update)
+                if parallel and new_updates == 2:
+                    report["admission_after_two_updates"] = {
+                        "passed": True,
+                        "new_updates": 2,
+                        "relative_update": relative_update,
+                        "absolute_update": expected_step,
+                        "optimizer_step": expected_step,
+                        "all_update_gates_finite_and_physical": True,
+                        "recovery_checkpoint": dict(report["recovery_checkpoint"]),
+                        "scientific_acceptance": False,
+                    }
+                    emit("admission_after_two_updates", active_relative_update=relative_update)
 
             if relative_update in admitted["milestones"]:
                 save_milestone_checkpoint(relative_update)
@@ -1872,22 +2067,40 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
             raise ValueError("terminal continuation checkpoint/monitor evidence is incomplete")
         if stopped:
             terminal_status = "stopped_science_guard"
+        elif run_target < admitted["target_relative_update"]:
+            terminal_status = "bounded_probe_completed"
+            if (
+                final_relative_update != run_target
+                or len(report["updates"])
+                != final_relative_update - admitted["source_relative_update"]
+                or int(np.asarray(jax.device_get(optimizer.step)))
+                != admitted["source_absolute_update"] + final_relative_update - admitted["source_relative_update"]
+            ):
+                raise ValueError("bounded parallel probe completion evidence is incomplete")
         else:
             terminal_status = "completed"
             if (
                 final_relative_update != admitted["target_relative_update"]
                 or final_monitors != list(admitted["milestones"])
-                or len(report["updates"]) != 80
-                or int(np.asarray(jax.device_get(optimizer.step))) != 4100
+                or len(report["updates"]) != admitted["updates_per_arm"]
+                or int(np.asarray(jax.device_get(optimizer.step)))
+                != admitted["source_absolute_update"] + admitted["updates_per_arm"]
             ):
                 raise ValueError("continuation completion evidence is incomplete")
         emit(
             terminal_status,
             status=terminal_status,
-            classification="bounded_selected_only_litter_mixed_continuation",
+            classification=(
+                "bounded_four_arm_litter_parallel_training"
+                if parallel else "bounded_selected_only_litter_mixed_continuation"
+            ),
             technical_continuation_passed=True,
+            technical_parallel_training_passed=bool(parallel),
             physical_monitoring_passed=True,
             bounded_continuation_completed=terminal_status == "completed",
+            completed_new_updates=(
+                final_relative_update - admitted["source_relative_update"]
+            ),
             stopped_by_science_guard=terminal_status == "stopped_science_guard",
             scientific_acceptance=False,
             final_memory=_device_memory(device),
@@ -1905,13 +2118,29 @@ def _run_continuation(args: argparse.Namespace) -> Mapping[str, Any]:
 
 
 def run(args: argparse.Namespace) -> Mapping[str, Any]:
-    continuation_requested = args.continuation_protocol is not None
-    source_requested = args.source_admission_report is not None
-    if continuation_requested != source_requested:
+    parallel_values = (
+        getattr(args, "parallel_protocol", None),
+        getattr(args, "parallel_arm", None),
+        getattr(args, "source_continuation_report", None),
+    )
+    parallel_requested = any(value is not None for value in parallel_values)
+    if parallel_requested and not all(value is not None for value in parallel_values):
+        raise ValueError(
+            "parallel protocol, parallel arm, and source continuation report are required together"
+        )
+    continuation_requested = getattr(args, "continuation_protocol", None) is not None
+    source_requested = getattr(args, "source_admission_report", None) is not None
+    if not parallel_requested and continuation_requested != source_requested:
         raise ValueError(
             "continuation protocol and source admission report are required together"
         )
-    return _run_continuation(args) if continuation_requested else _run_admission(args)
+    if parallel_requested and continuation_requested:
+        raise ValueError("parallel training and selected20 continuation modes are mutually exclusive")
+    if getattr(args, "prepare_only", False) and not parallel_requested:
+        raise ValueError("--prepare-only requires parallel training mode")
+    if getattr(args, "max_new_updates", None) is not None and not parallel_requested:
+        raise ValueError("--max-new-updates requires parallel training mode")
+    return _run_continuation(args) if continuation_requested or parallel_requested else _run_admission(args)
 
 
 def parser() -> argparse.ArgumentParser:
@@ -1920,6 +2149,11 @@ def parser() -> argparse.ArgumentParser:
     result.add_argument("--mixed-admission-protocol", type=Path)
     result.add_argument("--continuation-protocol", type=Path)
     result.add_argument("--source-admission-report", type=Path)
+    result.add_argument("--parallel-protocol", type=Path)
+    result.add_argument("--parallel-arm", choices=parallel_protocol.ARMS)
+    result.add_argument("--source-continuation-report", type=Path)
+    result.add_argument("--prepare-only", action="store_true")
+    result.add_argument("--max-new-updates", type=int)
     result.set_defaults(
         compare_checked_recurrent=False,
         checked_reference_report=None,
@@ -1935,8 +2169,13 @@ if __name__ == "__main__":
         result.get("status") == "completed"
         and result.get("technical_admission_passed") is True
     ) or (
-        result.get("status") in ("completed", "stopped_science_guard")
+        result.get("status") in (
+            "completed", "stopped_science_guard", "bounded_probe_completed"
+        )
         and result.get("technical_continuation_passed") is True
+    ) or (
+        result.get("status") == "prepared"
+        and result.get("technical_parallel_preparation_passed") is True
     )
     if not clean:
         raise SystemExit(2)

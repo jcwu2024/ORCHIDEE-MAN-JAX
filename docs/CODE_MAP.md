@@ -5,6 +5,14 @@ Last updated: 2026-09-20.
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
 
+`scripts/hpc/litter_parallel_protocol.py` declares the four-arm source100
+experiment, effective optimizer metadata and checkpoint provenance.
+The parallel mode in `probe_litter_mixed_admission.py` reuses its existing
+continuation gradient/update/monitor engine with arm-specific scalar weights
+and LR. `run_litter_parallel_training.sh` and `job_litter_parallel_training.sh`
+route the approved four independent single-GPU jobs; `--prepare-only` checks
+actual source checkpoint/schedule metadata without training.
+
 `daily_operator/litter_change_loss.py` owns optional separate above/below
 area-weighted carbon-change supervision and TRAIN coordinate-variance scales.
 `fresh_start_training.py` applies it only under an explicit protocol;

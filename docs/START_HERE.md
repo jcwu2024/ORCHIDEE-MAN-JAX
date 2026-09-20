@@ -60,11 +60,21 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
-Selected20->100 continuation RUNNING on freeGPU1 from18:25CST2026-09-20,
-5fdfd5e,Python72207;22 local tests pass.
-Hold architecture/loss coefficient fixed; physical monitors each20 updates,
-recovery every5;60min ceiling about19:25. No new paid job. Protocol:
-`research/daily_coarse_graining/litter_mixed_continuation_protocol_20260920.md`.
+Four paid parallel arms APPROVED, preparing500 new updates/arm from common
+selected100, maximum33.12yuan. Vary only duration reference/litter weight/
+T30 weight/LR, preserving Attention and AD. No submission yet. Read
+`research/daily_coarse_graining/litter_parallel_training_protocol_20260920.md`.
+
+Selected20->100 continuation COMPLETED0 on free gln01 GPU1,5fdfd5e,
+2205.56s; all four milestone assessments/checkpoints complete. No active task.
+Versus selected20, nonliving carbon-change RMSE falls78.54%T7/63.83%T30.
+T7 production/biomass improve, but T30 GPP/NPP/AGB/BGB errors increase.
+This is partial scientific progress, not model acceptance. Next use saved
+per-window results to localize T30 tradeoffs before proposing a bounded loss
+adjustment; preserve Attention/native AD, no automatic long continuation.
+Read `research/daily_coarse_graining/litter_mixed_continuation_results_20260920.md`.
+
+Earlier matched experiment (historical; continuation above supersedes its next step):
 
 Balanced litter mixed learning now COMPLETED0: each arm20updates and all
 fixed7/30day development evaluations. Nonliving carbon-change RMSE falls
