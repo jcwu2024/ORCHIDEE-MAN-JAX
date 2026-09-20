@@ -20,8 +20,12 @@ budget counter verifies endpoint bookkeeping, not whole-ecosystem closure;
 external-coded inventory decreases can be arbitrary while this residual is0.
 This narrows the next diagnostic to litter incoming/outgoing and retained-tail
 attribution, without a new AD investigation or architecture change. Free-only
-16sample forward probe running GPU0 atb2092a4, Python82727 (wrapper82679),
-60min ceiling; no new paid submission. Four local tests and shell dry-run pass.
+16sample forward probe COMPLETED0 in652.59s atb2092a4; Python82727 exited.
+Aboveground litter predicted outgoing~19%/day versusTeacher~0.002-0.003%;
+belowground~3.8% versus0. Incoming error is small and tail adds no deficit on
+these inputs. Next declare focused physical litter-change supervision and
+bounded learning comparison, holding architecture fixed. No active/new paid job.
+See `research/daily_coarse_graining/carbon_endpoint_results_20260920.md`.
 See `research/daily_coarse_graining/carbon_drift_attribution_20260920.md`.
 
 Job15279139 is finished: FAILED124 at950min,4643/5415 updates, recovery4600,

@@ -10,6 +10,8 @@ into canopy/noncanopy error and reports single-day component errors. It reads
 JSON only. `probe_mixed_carbon_endpoints.py` and its launcher own the bounded
 saved-checkpoint forward diagnostic for per-owner incoming/outgoing attribution;
 they do not update parameters or change the shared training method.
+`summarize_carbon_endpoints.py` turns that saved output into additive outgoing,
+incoming and tail-error contributions, preserving per-sample masks/counts.
 
 Current bounded training-efficiency routes: `scripts/hpc/mixed_learning_dual_device.py`
 owns serial/dual same-update orchestration and cost/timing, plus

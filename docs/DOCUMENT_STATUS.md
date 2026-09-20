@@ -23,7 +23,8 @@ an earlier experiment and does not control current work.
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
-| `research/daily_coarse_graining/carbon_drift_attribution_20260920.md` | Saved-result/source attribution complete; forward-only endpoint probe next | Litter-dominated one-day deficit, absent direct recurrent noncanopy term, budget-counter scope and NPP rebound |
+| `research/daily_coarse_graining/carbon_endpoint_results_20260920.md` | Free forward completed0,16samples; excess litter outgoing confirmed | ~19% above/~3.8% below removal, tiny Teacher target, tail excluded on sampled inputs; focused loss candidate next |
+| `research/daily_coarse_graining/carbon_drift_attribution_20260920.md` | Saved-result/source attribution and probe protocol; probe now complete | Litter-dominated one-day deficit, absent direct recurrent noncanopy term, budget-counter scope and NPP rebound |
 | `research/daily_coarse_graining/compact_training_reporting_20260919.md` | Implemented16c0bad;30 local tests, free CPU replay and independent recovery review pass | Compact progress/periodic full reports, interruption semantics and formatting-only87% reduction; active paid code unchanged |
 | `research/daily_coarse_graining/training_wall_and_science_review_20260919.md` | Read-only efficiency audit and reusable science reporting; active training unchanged | Dual recurrent-frequency limit, report-formatting overhead, physical-unit milestone interpretation |
 | `research/daily_coarse_graining/direct_joint_dual_pool_results_20260920.md` | FAILED124 at950min;4643 logged/recovery4600/science4000 | Learning, remaining growth/nonliving drift, runtime and bounded next steps; no continuation submitted |

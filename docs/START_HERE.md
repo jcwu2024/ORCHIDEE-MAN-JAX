@@ -60,6 +60,12 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
+The free16-sample endpoint probe is now complete: excessive learned litter
+outgoing explains the one-day deficit on these inputs; retained tail does not
+introduce it. Next declare/test focused physical litter-change supervision,
+keeping Attention/decoder fixed initially. No active/new paid job. Result:
+`research/daily_coarse_graining/carbon_endpoint_results_20260920.md`.
+
 Update2026-09-20: job15279139 hit950min (FAILED124),4643/5415 logged updates,
 saved recovery4600, science through4000. Learning is substantial but unaccepted:
 canopy improves; production/growth rebound after2500 and nonliving-carbon change

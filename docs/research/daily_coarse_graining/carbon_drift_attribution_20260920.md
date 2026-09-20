@@ -102,7 +102,9 @@ Launched on free gln01 GPU0 after both GPUs were observed idle, immutable
 timeout82694, Python82727;60min maximum. Actual target-shell dry-run and four
 local analysis/endpoint tests pass. Output/log:
 `runtime/outputs/diagnostics/mixed-carbon-endpoints-4000-v1.{json,log}`.
-The diagnostic is running; numerical attribution is not yet available.
+The diagnostic subsequently completed exit0,16/16samples in652.59s. Excessive
+litter outgoing is confirmed; the tail does not add the deficit on these
+inputs. See `carbon_endpoint_results_20260920.md`; no process remains active.
 
 After attribution, specify one focused corrective candidate (e.g. physical
 litter-change supervision if the drain is weakly penalized), preserve Attention,
