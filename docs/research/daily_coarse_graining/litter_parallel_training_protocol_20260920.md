@@ -111,4 +111,22 @@ the prior continuation/admission/physical-monitor behavior. Module compilation
 and CLI help pass. The actual saved selected100 report validates with all16
 development windows and two daily panels. Target-shell array mappings were
 exercised with a non-default GPU index; log/output directories exist before
-submission. Final deployed source-checkpoint reads and submission are pending.
+submission. All four actual deployed `--prepare-only` runs passed, reading
+the real selected100 checkpoint and validating schedule/optimizer provenance;
+each took11.6–12.8s excluding container startup. Ruff/diff checks pass. No new
+teacher computation, historical gradient rerun, or separate paid probe.
+
+## Submitted execution
+
+Submitted once as array15290789 with tasks0=A,1=B,2=C,3=D. All four entered
+RUNNING at22:23:45 serverCST2026-09-20. Scheduler deadline01:23:45 next day;
+the175min inner timeout is earlier. Code2918966 in the declared immutable
+checkout; A allocatedibc13b02n01 and B/C/D allocatedibc13b02n02 with independent
+GPU allocations. Scheduler confirms8CPUs/1GPU/64GiB/3h per task,no requeue.
+All logs confirm correct arm/code/output and metadata_validated. Model loading
+at last check; do not claim two-update admission or scientific results yet.
+
+Query: `squeue -r -j 15290789`.
+After completion: `sacct -j 15290789 --format=JobID,State,Elapsed,ExitCode`.
+The reported user-facing estimate remains2–3h from start, not a completion
+guarantee. Run-time status must be rechecked on future requests.

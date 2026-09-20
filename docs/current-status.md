@@ -13,10 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Four-arm paid experiment APPROVED, preparation in progress. Each1V100/8CPU/
-64GiB/3h; total ceiling33.12yuan. All source selected100 absolute4100;
+Four-arm paid experiment RUNNING, array15290789_0..3,immutable2918966,
+started22:23:45 serverCST2026-09-20,deadline01:23:45 next day. Each1V100/8CPU/
+64GiB/3h; total ceiling33.12yuan. A onibc13b02n01, B/C/D onibc13b02n02;
+four independent Slurm GPU allocations. All source selected100 absolute4100;
 500 new updates/arm, identical schedule4100..4599. A unchanged,B litter/4,
-C T30 coefficient0.5->1,D LR1e-5->3e-6. No job submitted yet. See
+C T30 coefficient0.5->1,D LR1e-5->3e-6. All metadata validated; model loading
+at last check, live optimizer admission not yet confirmed.28 local tests,
+Ruff and all four deployed source-checkpoint/plan preparations pass.
+Reports `runtime/outputs/training/litter-parallel-v1/{A,B,C,D}/report.json`,
+logs `slurm-15290789_0.log` through`_3.log`. No duplicate/automatic extension. See
 `research/daily_coarse_graining/litter_parallel_training_protocol_20260920.md`.
 
 Selected-only continuation COMPLETED0,free gln01 GPU1,immutable5fdfd5e,

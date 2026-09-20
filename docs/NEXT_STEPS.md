@@ -8,14 +8,20 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-20)
 
-Four paid parallel learning arms are APPROVED and being prepared, maximum
-33.12yuan total: each1V100/8CPUs/64GiB/3h,500 NEW updates from common
+Four paid parallel learning arms are RUNNING as array15290789_0..3 from
+22:23:45 serverCST2026-09-20, immutable2918966, maximum33.12yuan total:
+each1V100/8CPUs/64GiB/3h,500 NEW updates from common
 selected100/absolute4100. A unchanged; B quarter litter coefficient; C double
 T30 outer weight; D LR3e-6. Same data order/Attention/native AD, milestones at
-100/250/500 new updates. No submission yet. Protocol:
+100/250/500 new updates. All four reached metadata_validated and were loading
+the model at last check; first two live updates are not yet confirmed. Protocol:
 `research/daily_coarse_graining/litter_parallel_training_protocol_20260920.md`.
-Finish targeted recovery/weighting tests and actual deployed metadata/launcher
-checks, then submit the authorized four-arm array without further approval.
+28 local tests/Ruff pass; actual target-shell mappings and all four deployed
+source-checkpoint/schedule preparations pass. Read the four isolated reports
+under `runtime/outputs/training/litter-parallel-v1/{A,B,C,D}/report.json` and
+Slurm logs `slurm-15290789_0.log` through`_3.log`; do not mutate this checkout
+or submit duplicates. First establish two-update execution, then compare all
+completed100/250/500 milestones in physical units. No automatic paid extension.
 Earlier suggestion to complete attribution before training is superseded:
 saved-result analysis can proceed alongside these controlled learning arms.
 

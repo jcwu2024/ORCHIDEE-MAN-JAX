@@ -60,9 +60,12 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
-Four paid parallel arms APPROVED, preparing500 new updates/arm from common
-selected100, maximum33.12yuan. Vary only duration reference/litter weight/
-T30 weight/LR, preserving Attention and AD. No submission yet. Read
+Four paid parallel arms RUNNING, array15290789_0..3,immutable2918966,
+500 new updates/arm from common selected100, maximum33.12yuan. All started
+22:23:45 serverCST2026-09-20; metadata validated, model loading at last check.
+Vary only duration reference/litter weight/T30 weight/LR, preserving Attention
+and AD.28 local tests and four deployed metadata/checkpoint preparations pass.
+Read
 `research/daily_coarse_graining/litter_parallel_training_protocol_20260920.md`.
 
 Selected20->100 continuation COMPLETED0 on free gln01 GPU1,5fdfd5e,
