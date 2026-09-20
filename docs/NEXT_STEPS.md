@@ -1,12 +1,33 @@
 # Current Roadmap
 
-Last updated: 2026-09-20.
+Last updated: 2026-09-21.
 
 This is the authority for what to do next. It deliberately separates the
 forward Teacher, the daily surrogate, multi-PFT extensibility, and gradient
 validation. Do not start another neural training job until Gates A-C pass.
 
-## Current execution gate (2026-09-20)
+## Current execution gate (2026-09-21)
+
+Array15290789_0..3 COMPLETED0:0, all500 new updates and100/250/500
+assessments/checkpoints. Each~2h10m, estimated24.07yuan total. No active task
+or new paid submission. All technical/physical monitoring passes, scientific
+acceptance false. A finalT7 GPP2.81->0.91 and nonliving58.18->26.50 improve;
+all four finalT30 GPP/NPP/RA/biomass errors exceed their common start despite
+lower nonliving drift. Favorable100-update production trends did not persist.
+A finalT30 GPP error is concentrated in two189.0-093.0 windows; nonliving
+error is dominated by141.0-075.0/year2000/start192 across all arms.
+Read `research/daily_coarse_graining/litter_parallel_training_results_20260921.md`.
+
+Next main work is the declared fresh-init/full-network method preparation in
+`research/daily_coarse_graining/fresh_method_verification_plan_20260920.md`:
+freeze at most two justified recipes, integrate effective optional litter loss
+into the fresh joint path, verify fresh-state admission, and prepare independent
+evaluation before any newly approved paid run. A is a minimal-change reference
+candidate, not an accepted optimum. Do not extend the inherited chain by default
+or claim global fresh-start rankings from these four arms. Localized error
+diagnostics can inform coverage without special-casing/removing hard windows.
+
+The running snapshots below are historical and superseded by this completion.
 
 Parallel work while array15290789 runs: prepare the next complete method from
 random initialization/fresh AdamW, not another default checkpoint-chain sweep.

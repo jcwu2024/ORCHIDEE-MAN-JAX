@@ -1,6 +1,6 @@
 # Current Project Status
 
-Last updated: 2026-09-20.
+Last updated: 2026-09-21.
 
 This is the detailed status and evidence authority, not the shortest
 onboarding page. Current work order is in [`NEXT_STEPS.md`](NEXT_STEPS.md),
@@ -12,6 +12,20 @@ This page is the current status authority. Dated files under
 describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
+
+Array15290789_0..3 COMPLETED0:0: A2:10:23,B/C2:10:43,D2:11:27. All500
+new updates, three milestones/checkpoints, technical/physical passes, no
+science guard stop, scientific acceptance false. Total tariff estimate24.07
+yuan versus33.12 cap. No active task or new paid job. Local full reports:
+`outputs/litter-parallel-v1-{A,B,C,D}.json`. FinalT30 GPP A7.657/B8.637/
+C8.176/D8.818 versusstart5.769; nonliving A629.72/B788.48/C787.31/D697.33
+versus903.10. All finalT30 production/biomass errors regress versusstart;
+T7 improves. A T30 GPP squared error97.90% in two189.0-093.0 windows;
+all-arm nonliving squared error~97.7% in141.0-075.0/year2000/start192.
+Next prepare declared fresh-init/full-network method and broader evaluation;
+no model promotion or automatic continuation. Full evidence:
+`research/daily_coarse_graining/litter_parallel_training_results_20260921.md`.
+Earlier running snapshots below are historical.
 
 Latest read-only check of array15290789: all four RUNNING at29min elapsed;
 new updates A63/B61/C61/D58. First100-update science assessment not yet due.

@@ -1,6 +1,6 @@
 # Documentation Status
 
-Last updated: 2026-09-20.
+Last updated: 2026-09-21.
 
 Use this page to decide what must be read and what is historical evidence.
 
@@ -24,7 +24,8 @@ an earlier experiment and does not control current work.
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |
 | `research/daily_coarse_graining/fresh_method_verification_plan_20260920.md` | Preparation draft; no new job or frozen final recipe | Path-dependence limit of inherited arms; next fresh-init/full-network method, paired ordering, second seed and independent evaluation |
-| `research/daily_coarse_graining/litter_parallel_training_protocol_20260920.md` | RUNNING array15290789_0..3,2918966;33.12yuan cap | Common selected100 start,500 new updates each; A unchanged/B litter divided4/C double T30/D lower LR;28 local tests and four deployed preparations pass |
+| `research/daily_coarse_graining/litter_parallel_training_results_20260921.md` | All four COMPLETED0:0,500 new updates,24.07yuan estimate; no science acceptance | T7/carbon improvement but finalT30 production/biomass regression, localized GPP/nonliving errors; fresh-method preparation next |
+| `research/daily_coarse_graining/litter_parallel_training_protocol_20260920.md` | Frozen method; completed September21 results supersede running snapshots | Common selected100 start,500 new updates each; A unchanged/B litter divided4/C double T30/D lower LR;28 local tests and four deployed preparations pass |
 | `research/daily_coarse_graining/litter_mixed_continuation_results_20260920.md` | COMPLETED0,2205.56s; partial science improvement, no final acceptance | Selected20->100; nonliving drift improves but T30 production/biomass regress; next saved-window attribution |
 | `research/daily_coarse_graining/litter_mixed_continuation_protocol_20260920.md` | Frozen method; completed result supersedes launch status | Selected20->100, fixed loss/architecture/data,20-update physical monitors,5-update recovery; free60min |
 | `research/daily_coarse_graining/litter_mixed_results_20260920.md` | COMPLETED0, recovery1718.32s; bounded technical admission passes, final science unaccepted | Both20update arms/full16-window panels; nonliving RMSE60%/44% lower but wrong-sign, production/canopy tradeoffs |

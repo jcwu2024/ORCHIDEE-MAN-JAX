@@ -4,6 +4,12 @@ Status: preparation draft, not a submitted job or frozen final method.
 Prepared while array15290789 runs. No running checkout, sampling or objective
 is changed by this document, and no additional paid work is authorized here.
 
+Update2026-09-21: all four arms completed500 updates; see
+`litter_parallel_training_results_20260921.md`. T7/carbon improvements did not
+produce jointT30 accuracy. A is a minimal-change reference candidate only;
+the exact fresh recipe remains to be frozen and admitted. The next main task
+remains fresh-method preparation, not another inherited-checkpoint sweep.
+
 ## Why the current four arms are insufficient
 
 Their common starting point is fresh joint-training step4000, followed by20

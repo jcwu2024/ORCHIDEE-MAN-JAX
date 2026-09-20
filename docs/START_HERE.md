@@ -60,6 +60,16 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
+Array15290789_0..3 COMPLETED0:0,500 new updates/arm, all three assessments.
+Each~2h10m; total tariff estimate24.07yuan. No active task. T7 and nonliving
+carbon errors improve, but all finalT30 production/biomass errors exceed the
+common start. No scientifically accepted arm. Results and localized windows:
+`research/daily_coarse_graining/litter_parallel_training_results_20260921.md`.
+Next prepare fresh-init/full-network method verification rather than another
+default inherited-weight sweep; see the fresh-method draft below.
+
+Earlier launch/progress snapshots below are historical.
+
 Four paid parallel arms RUNNING, array15290789_0..3,immutable2918966,
 500 new updates/arm from common selected100, maximum33.12yuan. All started
 22:23:45 serverCST2026-09-20; at29min elapsed A/B/C/D had63/61/61/58 new
