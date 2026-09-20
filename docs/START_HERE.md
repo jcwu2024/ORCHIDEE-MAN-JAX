@@ -60,9 +60,10 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
-Selected20->100 continuation is implemented;22 local tests pass.
+Selected20->100 continuation RUNNING on freeGPU1 from18:25CST2026-09-20,
+5fdfd5e,Python72207;22 local tests pass.
 Hold architecture/loss coefficient fixed; physical monitors each20 updates,
-recovery every5; one freeGPU up to60min, not yet launched. Protocol:
+recovery every5;60min ceiling about19:25. No new paid job. Protocol:
 `research/daily_coarse_graining/litter_mixed_continuation_protocol_20260920.md`.
 
 Balanced litter mixed learning now COMPLETED0: each arm20updates and all

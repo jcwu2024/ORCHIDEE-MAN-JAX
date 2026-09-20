@@ -94,3 +94,14 @@ body remains unchanged; continuation invokes the same shared loss/AD/update
 functions. Full reports flush every5 updates and lifecycle boundaries,
 with compact progress each update. No new gradient graph validation is
 required for this unchanged objective.
+
+## Launch
+
+Started2026-09-20 18:25:23CST on gln01 (ibc13b02n04) idleGPU1 from immutable
+5fdfd5e in `runtime/checkouts/litter-mixed-continuation-v1`. Actual target-shell
+dry-run and deployed GPU-container CLI parsing/import check pass.
+Wrapper72153/timeout72165/container72166/Python72207;60min ceiling about19:25.
+Log confirms metadata validation and selected relative20 start; model loading
+in progress at last check. Output prefix as above. No paid submission.
+Sol/high implemented the continuation branch and focused tests; lead reviewed
+recovery/monitor behavior, ran the combined22-test check and deployed.

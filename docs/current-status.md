@@ -13,11 +13,16 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-Next selected-only continuation is specified before execution: selected20->100,
+Selected-only continuation RUNNING18:25:23CST2026-09-20,free gln01 GPU1,
+immutable5fdfd5e; wrapper72153/timeout72165/Python72207,60min ceiling19:25.
+Metadata validated; loading model at last check. Server output prefix
+`runtime/outputs/diagnostics/litter-mixed-continuation-v1` (.json/.log).
+Selected20->100,
 fixed lambda5.22171689e-5, same joint loss/sampling/optimizer, monitors each20
 and recovery each5. FreeGPU60min envelope; implementation complete and22
 local tests/Ruff/diff checks plus actual parent-report validation pass.
-No new launch or paid submission. Protocol:
+Target-shell dry-run and deployed GPU-container CLI check pass. No paid job.
+Protocol:
 `research/daily_coarse_graining/litter_mixed_continuation_protocol_20260920.md`.
 
 Balanced litter mixed experiment COMPLETED0, recovery1718.32s,1391a75.

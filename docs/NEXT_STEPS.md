@@ -8,11 +8,15 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-20)
 
-User authorized continued exploration. Selected20->100 protocol now frozen:
+Selected20->100 is RUNNING on free gln01 GPU1 from18:25:23CST2026-09-20,
+immutable5fdfd5e; wrapper72153/timeout72165/Python72207. Metadata validated;
+loading model at last check.60min ceiling about19:25. Output prefix
+`runtime/outputs/diagnostics/litter-mixed-continuation-v1` (.json/.log).
+Do not duplicate or mutate its checkout. User authorized continued exploration:
 80 new joint updates, same lambda/LR/data/architecture, physical monitors at
 40/60/80/100, recovery every5. FreeGPU60min ceiling; no paid submission.
-Implementation complete;22 local tests/Ruff/diff checks and actual parent
-report validation pass. Deploy/dry-run next; nothing launched yet. Read
+22 local tests/Ruff/diff checks, actual parent-report validation, deployed
+target-shell dry-run and GPU-container CLI check pass. No new paid job. Read
 `research/daily_coarse_graining/litter_mixed_continuation_protocol_20260920.md`.
 
 Balanced litter mixed experiment COMPLETED0 after reviewed free recovery
