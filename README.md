@@ -64,23 +64,22 @@ transitions. See the
 Use this coherent release; do not regenerate it or mix historical v5 rows into
 training. Dataset acceptance does not establish daily-model accuracy.
 
-### Research status — 2026-09-08
+### Research status — 2026-09-21
 
 The daily model, physical coupling, and training/rollout infrastructure are
-implemented. The active architecture is Transformer/Attention with Q/K
-normalization, and training
-includes one-day state and 7/30-day science objectives. A model that passes
-the required long-term accuracy gates is **not yet available**.
+implemented. Existing Transformer/Attention experiments use daily and 7/30-day
+science objectives and native checkpointed JAX differentiation. A model that
+passes the required long-term accuracy gates is **not yet available**.
 
-Current work addresses numerical consistency in multiday backpropagation.
-A full streamed-backward trial of the previously rejected training update
-now improves direct GPP, state, and both 7/30-day aggregate losses while
-passing physical gates. However, seven seven-day windows disagree between
-two loss-evaluation paths, so overall integration is not yet admitted and no
-new weights were retained. The immediate next task is to locate those
-differences, then verify transfer on the fixed independent evaluation panel
-before retained continuation. See the
-[result and next diagnostic](docs/research/daily_coarse_graining/conditioned_attention_streamed_integration_20260908.md).
+Recent training improved some short-window and carbon metrics but did not
+establish simultaneous productivity, respiration and biomass accuracy. Fresh
+full-network two-update integration passed execution checks, not scientific
+acceptance. Current work implements the user-approved simpler shared
+Transformer and explicit carbon-trajectory objectives, starting with local and
+free-node forward/gradient/update admission. No accuracy improvement is yet
+claimed for this candidate. The prior paid continuation proposal is on hold. See the
+[architecture and long-term-method proposal](docs/research/daily_coarse_graining/shared_transformer_long_term_design_20260921.md)
+and [current work order](docs/NEXT_STEPS.md).
 
 365-day rollouts, long-term held-out-site validation, daily-model physical-
 parameter gradient acceptance (Gate D2), and product acceptance remain later

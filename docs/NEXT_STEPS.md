@@ -8,6 +8,30 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-21)
 
+The user has approved implementation of the consolidated shared Transformer.
+Implement explicit process readouts, source ownership and long-term
+carbon/biomass objectives from the agreed design:
+`research/daily_coarse_graining/shared_transformer_long_term_design_20260921.md`.
+The active gate is local/free-node implementation admission: canonical forward,
+loss/native AD, physical state checks and two full-network optimizer updates.
+This is not authorization for paid training or scientific acceptance.
+
+The previous fresh-litter1000-update/24.80yuan paid proposal is ON HOLD, not the
+next submission. Its execution evidence, checkpoints and data remain valid
+within their original scope. Do not interpret the discussion as authorization
+to launch it. Current7/30 losses already include
+cumulative fluxes and AGB/BGB/canopy trajectories; the design addresses their
+limits and missing recurrent carbon-stock components rather than claiming
+long-term supervision was entirely absent. Inventory budget counters prove
+endpoint bookkeeping, not independently identified ecosystem-flux closure.
+
+Next: finish the agreed implementation, verify locally/free-node, then verify
+the actual joint T7/T30 loss and prepare one bounded learning contract. No v6
+regeneration, v5 mixing, hidden half-hour scan or automatic checkpoint-chain
+continuation. Preserve the later7/30 ->365day ->long-held ->D2/product order.
+
+### Completed evidence and superseded submission proposal
+
 Fresh-litter free integration COMPLETED0 at7b9e0ae in2560s: two full joint
 updates, zero hard counters, complete monitors and persisted-forward replay
 pass. Warm second update7.52s; peak used memory16.07/2.65GiB (reserved26.98GiB
@@ -19,7 +43,7 @@ the new shared-monitor adapter/shape readback on CPU; no predictions viewed.
 Prepared payload71,056,631bytes,52files including manifests/log/selection.
 The forward-only evaluator is ready at2fc3883, target-shell dry-run and
 deployed GPU-container CLI pass. Both free tasks are finished.
-Next request the concrete1000-update gnall segment approval:2V100/8CPU/64GiB,
+Superseded proposal (on hold):1000-update gnall segment,2V100/8CPU/64GiB,
 5h/max24.80yuan. Working directory `runtime/checkouts/fresh-litter-v1`,
 command `sbatch scripts/hpc/job_mixed_learning_fresh_litter.sh`. Output log
 directory exists; no paid submission. Preserve training checkout7b9e0ae.
@@ -45,7 +69,7 @@ A finalT30 GPP error is concentrated in two189.0-093.0 windows; nonliving
 error is dominated by141.0-075.0/year2000/start192 across all arms.
 Read `research/daily_coarse_graining/litter_parallel_training_results_20260921.md`.
 
-Next main work is the declared fresh-init/full-network method preparation in
+At completion, the next work was fresh-init/full-network method preparation in
 `research/daily_coarse_graining/fresh_method_verification_plan_20260920.md`:
 freeze at most two justified recipes, integrate effective optional litter loss
 into the fresh joint path, verify fresh-state admission, and prepare independent

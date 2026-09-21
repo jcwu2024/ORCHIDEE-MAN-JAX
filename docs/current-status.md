@@ -13,6 +13,17 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+2026-09-21 user-approved architecture implementation supersedes the pending fresh-litter
+submission. The user requests a simple, coherent architecture and a training
+method judged by long-term biomass/productivity/respiration, with discussion
+before building the network; that discussion is complete and implementation
+is authorized. The shared-Transformer/trajectory-objective
+proposal is in `research/daily_coarse_graining/shared_transformer_long_term_design_20260921.md`.
+The shared neural tree, physical wrapper, three-group loss and bounded runtime
+are being integrated and checked locally/free-node. This is not a scientific
+result or paid-training authorization. The old1000-update/24.80yuan proposal
+is on hold. Existing evidence below is retained.
+
 2026-09-21 free integration COMPLETED0 on gln01 GPU0,1 at7b9e0ae,
 2560s, two fresh full-network joint updates. Physical/hard checks and checkpoint
 replay pass; no scientific acceptance. Gradient norms2499/5352 with strong

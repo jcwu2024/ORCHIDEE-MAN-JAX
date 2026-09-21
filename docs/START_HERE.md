@@ -60,6 +60,18 @@ three pages above direct you to them.
 
 ## Current Next Milestone
 
+Implement and verify the user-approved shared architecture and long-term
+method on local/free resources before any new paid training. Read
+`research/daily_coarse_graining/shared_transformer_long_term_design_20260921.md`:
+one shared masked Transformer, common coordinate decoder, small process heads,
+explicit carbon trajectory/accumulation objectives and staged evidence gates.
+Implementation admission is in progress; scientific acceptance is pending. The previously
+prepared fresh-litter1000-update/24.80yuan submission is on hold. Existing v6,
+canonical binding, retained physics, native AD and runtime evidence are reused.
+
+The completed experiment chronology below is background; `NEXT_STEPS.md`
+controls current work and supersedes older forward-looking instructions here.
+
 Array15290789_0..3 COMPLETED0:0,500 new updates/arm, all three assessments.
 Each~2h10m; total tariff estimate24.07yuan. No active task. T7 and nonliving
 carbon errors improve, but all finalT30 production/biomass errors exceed the

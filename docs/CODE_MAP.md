@@ -5,6 +5,19 @@ Last updated: 2026-09-21.
 This page explains where code belongs and which paths are production,
 research, evidence, or generated assets.
 
+Current work implements the user-approved consolidation, documented in
+`research/daily_coarse_graining/shared_transformer_long_term_design_20260921.md`.
+`daily_operator/shared_transformer.py` owns the shared masked backbone and
+coordinate decoder; `shared_process_head.py` connects its raw outputs to the
+canonical physical boundary. `shared_trajectory_loss.py` owns four independent
+fluxes and seven stock components; `shared_training.py` composes the daily
+three-group objective. `scripts/hpc/shared_transformer_runtime.py` loads only
+existing TRAIN artifacts and metadata, without old neural initialization.
+`run_shared_transformer_admission.py` and its shell launcher own bounded CPU
+shape/scales and free GPU forward/gradient/two-update admission. The admission
+manifest is not a production-training contract. Existing runners below remain
+historical/current-method assets; the fresh-litter paid proposal stays on hold.
+
 `scripts/hpc/run_mixed_learning.py` remains the fresh daily/T7/T30 training
 entry. The fresh-litter manifest declares the optional fourth daily coefficient
 and all-parameter initialization; the runner records separate litter physical

@@ -1,0 +1,53 @@
+{
+  "schema_version": "shared_transformer_admission_v1",
+  "purpose": "free_bounded_implementation_admission_not_scientific_acceptance",
+  "seed": 20260921,
+  "architecture": {
+    "width": 768,
+    "parameter_count": 75578497,
+    "heads": 8,
+    "ffn_width": 3072,
+    "backbone_blocks": 8,
+    "decoder_blocks": 2,
+    "query_chunk_size": 64,
+    "attention": "fp32_unit_L2_qk_logits_cosine_times_sqrt_head_width",
+    "outgoing_center": "existing_v6_TRAIN_mean_in_logit_space",
+    "outgoing_center_floor": 1e-8,
+    "all_parameters_trainable": true,
+    "inherited_weights": false
+  },
+  "calibration": {
+    "artifact_count": 16,
+    "split": "train/train",
+    "selection": "deterministic_metadata_only",
+    "scale": "extracted_physical_TRAIN_RMS",
+    "flux_floor_gC_m2_day": 0.01,
+    "stock_change_floor_gC_m2_day": 0.01,
+    "claim": "bounded_admission_scales_not_final_global_training_statistics"
+  },
+  "objective": {
+    "groups": ["process_day", "flux", "stock"],
+    "group_weights": [0.3333333333333333, 0.3333333333333333, 0.3333333333333333],
+    "science_penalty": "pseudo_huber_delta1",
+    "prefix_denominator": "TRAIN_daily_RMS_times_sqrt_elapsed_days",
+    "living_nonliving_stock_weights": [0.5, 0.5],
+    "checkpoint_source": "none"
+  },
+  "optimizer": {
+    "name": "AdamW", "learning_rate": 1e-5,
+    "beta1": 0.9, "beta2": 0.999, "epsilon": 1e-8,
+    "weight_decay": 0.0, "clip_norm": 1.0
+  },
+  "admission": {
+    "updates": 2,
+    "direction_seed": 20260922,
+    "direction_rtol": 0.01,
+    "direction_atol": 1e-6,
+    "gradient_memory_limit_gib": 24,
+    "progression": ["CPU_shape_and_TRAIN_scales", "GPU_one_day", "GPU_T7", "GPU_T30"],
+    "scientific_acceptance": false,
+    "paid_submission": false,
+    "teacher_regeneration": false,
+    "sealed_test_access": false
+  }
+}

@@ -36,12 +36,18 @@ class NeuralPrecisionPolicy:
 
     attention_scores_fp32: bool = False
     source_family_pooling_fp32: bool = False
+    normalize_attention_qk: bool = False
+    attention_normalization_epsilon: float = 1.0e-6
 
     def validate(self) -> None:
         if not isinstance(self.attention_scores_fp32, bool):
             raise TypeError("attention_scores_fp32 must be boolean")
         if not isinstance(self.source_family_pooling_fp32, bool):
             raise TypeError("source_family_pooling_fp32 must be boolean")
+        if not isinstance(self.normalize_attention_qk, bool):
+            raise TypeError("normalize_attention_qk must be boolean")
+        if not 0.0 < self.attention_normalization_epsilon < 1.0:
+            raise ValueError("attention normalization epsilon must lie in (0, 1)")
 
     @property
     def attention_score_dtype(self) -> Any:
@@ -892,6 +898,18 @@ def _ffn(parameters: Mapping[str, Any], value: Any) -> Any:
     return _linear(parameters["second"], jax.nn.gelu(_linear(parameters["first"], value)))
 
 
+def _stable_head_l2_normalize(value: Any, epsilon: float) -> Any:
+    """Return FP32 unit-length head vectors without overflowing their raw norm."""
+
+    value = jnp.asarray(value, dtype=jnp.float32)
+    epsilon_value = jnp.asarray(epsilon, dtype=value.dtype)
+    maximum = jnp.max(jnp.abs(value), axis=-1, keepdims=True)
+    scaled = value / jnp.where(maximum > 0.0, maximum, 1.0)
+    scaled_norm = jnp.sqrt(jnp.sum(scaled * scaled, axis=-1, keepdims=True) + epsilon_value**2)
+    raw_norm = maximum * scaled_norm
+    return jnp.where(raw_norm > epsilon_value, scaled / scaled_norm, 0.0)
+
+
 def _attention(
     parameters: Mapping[str, Any],
     query: Any,
@@ -900,6 +918,8 @@ def _attention(
     heads: int,
     mask: Any,
     score_dtype: Any = None,
+    normalize_qk: bool = False,
+    normalization_epsilon: float = 1.0e-6,
 ) -> Any:
     query = _linear(parameters["query"], query)
     key = _linear(parameters["key"], key_value)
@@ -909,13 +929,20 @@ def _attention(
     query = query.reshape(query.shape[:-1] + (heads, head_width)).swapaxes(-3, -2)
     key = key.reshape(key.shape[:-1] + (heads, head_width)).swapaxes(-3, -2)
     value = value.reshape(value.shape[:-1] + (heads, head_width)).swapaxes(-3, -2)
-    # Preserve historical numerics by default. An explicit score dtype is a
-    # precision-study option: NumPy's float64 scalar otherwise promotes logits,
-    # softmax and the value aggregation despite the FP32 learned projections.
-    scale = np.sqrt(float(head_width))
-    if score_dtype is not None:
-        scale = jnp.asarray(scale, dtype=score_dtype)
-    logits = jnp.einsum("...hqd,...hkd->...hqk", query, key) / scale
+    if normalize_qk:
+        # The approved cosine score uses fixed inverse-temperature sqrt(d_head).
+        query = _stable_head_l2_normalize(query, normalization_epsilon)
+        key = _stable_head_l2_normalize(key, normalization_epsilon)
+        scale = jnp.sqrt(jnp.asarray(head_width, dtype=jnp.float32))
+        logits = jnp.clip(jnp.einsum("...hqd,...hkd->...hqk", query, key), -1.0, 1.0) * scale
+    else:
+        # Preserve historical numerics by default. An explicit score dtype is a
+        # precision-study option: NumPy's float64 scalar otherwise promotes logits,
+        # softmax and the value aggregation despite the FP32 learned projections.
+        scale = np.sqrt(float(head_width))
+        if score_dtype is not None:
+            scale = jnp.asarray(scale, dtype=score_dtype)
+        logits = jnp.einsum("...hqd,...hkd->...hqk", query, key) / scale
     mask = jnp.asarray(mask, dtype=jnp.bool_)
     logits = jnp.where(mask[..., None, :, :], logits, -jnp.inf)
     row_valid = jnp.any(mask, axis=-1, keepdims=True)
@@ -993,6 +1020,8 @@ def _forcing_tokens(
             heads=config.forcing_heads,
             mask=pair_mask,
             score_dtype=config.neural_precision.attention_score_dtype,
+            normalize_qk=config.neural_precision.normalize_attention_qk,
+            normalization_epsilon=config.neural_precision.attention_normalization_epsilon,
         )
         tokens = _layer_norm(
             tokens + message,
@@ -1045,6 +1074,8 @@ def _factorized_axial_tokens(
             heads=config.attention_heads,
             mask=pair_mask,
             score_dtype=config.neural_precision.attention_score_dtype,
+            normalize_qk=config.neural_precision.normalize_attention_qk,
+            normalization_epsilon=config.neural_precision.attention_normalization_epsilon,
         )
         grouped_tokens = _layer_norm(
             grouped_tokens + message,
@@ -1350,6 +1381,8 @@ def encode_strong_baseline_experts(
                 heads=config.attention_heads,
                 mask=mask[None, :],
                 score_dtype=config.neural_precision.attention_score_dtype,
+                normalize_qk=config.neural_precision.normalize_attention_qk,
+                normalization_epsilon=config.neural_precision.attention_normalization_epsilon,
             )
             query = _layer_norm(
                 query + message,
