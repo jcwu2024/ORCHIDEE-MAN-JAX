@@ -20,6 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
+| `research/daily_coarse_graining/shared_decoder_admission_results_20260921.md` | One-day gradient memory6.67GiB, full reverse finite/saved; timed out at JVP,0updates | Completed optimization evidence, thermal loss attribution and exact remaining admission work |
 | `research/daily_coarse_graining/shared_decoder_execution_plan_20260921.md` | Execution steps1+2 implemented; local parity and free runtime admission in progress | Preserve outputs/capacity through PFT gather and projection reuse; checkpointing only if measured memory still requires it |
 | `research/daily_coarse_graining/shared_transformer_implementation_20260921.md` | Implemented75,578,497-parameter shared tree; GPU gradient admission stopped at36.17GiB estimated memory,0updates | Exact topology, passed forward checks, memory and state-loss blockers; no scientific or paid-training acceptance |
 | `research/daily_coarse_graining/shared_transformer_long_term_design_20260921.md` | User-approved implementation; local/free admission in progress, no scientific acceptance | Shared Transformer, module consolidation, output initialization, trajectory-aware objective and later long-term gates; prior paid proposal on hold |

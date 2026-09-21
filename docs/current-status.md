@@ -55,10 +55,16 @@ At094dfd2, bounded four-field/two-block output and Jacobian comparisons pass
 (3 tests,158.45s), and canonical161-field physical outputs match original
 execution at small width. Free test02 actual-data forward/gradient shape
 admission PASSED417.41s; deployed plan confirms8550 eligible coordinates,
-unchanged75,578,497 parameters. Free gln01 GPU0 wrapper10651/Python11462 is
-RUNNING with60min main-test ceiling; synthetic GPU environment check passed
-in70.95s. Prefix: `runtime/outputs/diagnostics/shared-decoder-094dfd2-gpu`.
-No paid submission.
+unchanged75,578,497 parameters. Free gln01 GPU0 wrapper10651/Python11462 has
+exited124 at60min during directional JVP. Estimated one-day gradient memory
+fell36.17->6.67GiB (81.55%); full reverse gradient executed, all finite, saved
+as604649034-byte gradient artifact. Zero optimizer updates; correctness
+comparison remains incomplete. The report's running status is stale after
+external timeout. Initial losses agree with original within1.83e-7 relative.
+ptn+tdeep account for98.95% of the state anchor; physical errors80-87K and
+~0.000119K daily-change scales both matter. Next resume saved-gradient admission
+and audit this thermal path before learning. No rematerialization or paid task.
+See `research/daily_coarse_graining/shared_decoder_admission_results_20260921.md`.
 
 2026-09-21 free integration COMPLETED0 on gln01 GPU0,1 at7b9e0ae,
 2560s, two fresh full-network joint updates. Physical/hard checks and checkpoint

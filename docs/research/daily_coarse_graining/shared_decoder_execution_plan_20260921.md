@@ -1,5 +1,11 @@
 # Shared decoder: preserve capacity while reducing memory
 
+Latest result: optimized free GPU run fits the one-day gradient at6.67GiB
+estimated live memory and saves a finite full reverse gradient; timed out
+during JVP with0updates. The running snapshot below is historical. See
+`shared_decoder_admission_results_20260921.md` for remaining gates and thermal
+state-loss attribution. No decoder rematerialization has been added.
+
 2026-09-21. Planning/source audit after the4eeb168 admission memory rejection.
 No replacement architecture or new training is claimed in this document.
 

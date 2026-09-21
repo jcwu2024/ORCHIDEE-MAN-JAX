@@ -49,11 +49,18 @@ silently alter its weights or claim the scaling cause before those results.
 At immutable094dfd2, local equivalence passes and free test02 forward/gradient
 shape admission PASSED in417.41seconds; actual layout confirms8550/39006
 coordinates,75,578,497 trainable parameters, no decoder rematerialization.
-Free gln01 GPU0 admission is RUNNING (wrapper10651/Python11462,60min main-test
-bound). Synthetic GPU runtime check PASSED70.95s. Report/log prefix:
+Free gln01 GPU0 admission TIMED OUT124 at the60min main-test bound;
+wrapper10651/Python11462 have exited. Compiled gradient memory fell36.17 to
+6.67GiB (81.55%); the complete reverse gradient executed and is finite/saved.
+JVP comparison and two updates remain incomplete. No decoder rematerialization
+is needed for this one-day case; joint T7/T30 still requires measurement.
+Synthetic GPU runtime check PASSED70.95s. Report/log prefix:
 `runtime/outputs/diagnostics/shared-decoder-094dfd2-gpu`.
-Collect its memory, native AD, update and state-field attribution results;
-do not start a duplicate or a paid task. Joint T7/T30 remains the next gate.
+Next prepare resumption from the saved gradient/cache to finish admission,
+and audit dominant thermal output/scaling: ptn+tdeep account for98.95% of the
+state anchor, with deep-soil errors80-87K amplified by~0.000119K change scales.
+Do not hide this with a weight reduction. No new task is running or submitted.
+Read `research/daily_coarse_graining/shared_decoder_admission_results_20260921.md`.
 
 The previous fresh-litter1000-update/24.80yuan paid proposal is ON HOLD, not the
 next submission. Its execution evidence, checkpoints and data remain valid
