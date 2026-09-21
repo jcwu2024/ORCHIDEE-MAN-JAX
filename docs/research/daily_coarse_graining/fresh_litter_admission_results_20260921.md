@@ -63,12 +63,20 @@ capacity or future longer-horizon certification.
 
 ## Next action
 
-Finish the already-running48-window validation preparation on free test02;
-its metadata-only selection succeeded at96fa02d before any candidate forward
+The48-window validation preparation on free test02 completed at96fa02d
+(artifact loop1165.09s); its metadata-only selection preceded any candidate forward
 on those windows. Seed20260921, eight windows per temporal/spatial/joint x
 T7/T30 cell, four documented consumed panels excluded (239 distinct point-years).
 The sealed test is untouched. This is fresh held-out point-year validation,
 not a claim that every historical exploratory site has never been consulted.
+
+All48 actual artifacts pass shared-monitor adapter and target/discrete/day
+shape readback on free CPU at2fc3883. Payload71,056,631bytes (67.77MiB),
+52files including manifest, panel, selection report and log. The evaluator's
+target-shell dry-run and GPU-container CLI pass. No model prediction has been
+made on this panel; no accuracy result exists yet. Both free tasks are ended.
+Local metadata: `outputs/fresh-method-validation-panel-20260921.json` and
+`outputs/fresh-method-validation-prepared-20260921.json`.
 
 The next paid proposal is one fresh1000-update segment of the frozen5415-update
 method:2V100/8CPUs/64GiB/5h, maximum24.80yuan, no automatic extension. Checkpoints

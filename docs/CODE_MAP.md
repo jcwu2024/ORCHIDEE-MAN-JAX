@@ -13,6 +13,13 @@ method or checkpoint-selection rule. `run_mixed_learning_fresh_litter.sh`
 reuses the prepared data and dual-device engine; its job script is a pending
 paid proposal. Historical exploratory runners do not initialize this method.
 
+`prepare_fresh_method_validation.py` selects48 held-out point-year windows
+using existing split metadata and prepares existing v6 targets on CPU.
+`fresh_method_validation_pool.py` adapts the validation artifact format to
+the shared physical rollout monitor. `evaluate_fresh_method_validation.py`
+restores a declared fresh-method milestone for forward-only per-split metrics;
+it does not construct training gradients or apply the old16-window gates.
+
 `scripts/hpc/litter_parallel_protocol.py` declares the four-arm source100
 experiment, effective optimizer metadata and checkpoint provenance.
 The parallel mode in `probe_litter_mixed_admission.py` reuses its existing

@@ -13,12 +13,16 @@ updates, zero hard counters, complete monitors and persisted-forward replay
 pass. Warm second update7.52s; peak used memory16.07/2.65GiB (reserved26.98GiB
 each). Scientific acceptance remains false. GPU process85878 is inactive.
 See `research/daily_coarse_graining/fresh_litter_admission_results_20260921.md`.
-The48-window metadata-only held-out selection passed at96fa02d, excluding239
-point-years from four documented consumed panels. CPU preparation RUNNING
-on test02, wrapper24555,60min ceiling, output
-`runtime/outputs/training/fresh-method-validation-20260921/prepare.log`.
-Finish preparation and read actual artifacts before the paid proposal.
-No paid submission; preserve training checkout7b9e0ae.
+The48-window held-out preparation COMPLETED on test02 at96fa02d, excluding239
+point-years from four documented consumed panels. All48 actual artifacts pass
+the new shared-monitor adapter/shape readback on CPU; no predictions viewed.
+Prepared payload71,056,631bytes,52files including manifests/log/selection.
+The forward-only evaluator is ready at2fc3883, target-shell dry-run and
+deployed GPU-container CLI pass. Both free tasks are finished.
+Next request the concrete1000-update gnall segment approval:2V100/8CPU/64GiB,
+5h/max24.80yuan. Working directory `runtime/checkouts/fresh-litter-v1`,
+command `sbatch scripts/hpc/job_mixed_learning_fresh_litter.sh`. Output log
+directory exists; no paid submission. Preserve training checkout7b9e0ae.
 
 Fresh-method preparation now has one executable candidate:
 `research/daily_coarse_graining/fresh_litter_joint_protocol_20260921.md`.
@@ -27,7 +31,7 @@ apply all daily/T7/T30 objectives including litter from update1. Explicit
 fourth daily coefficient prevents ambiguous loss reporting. The declared
 method remains5415updates; a proposed1000-update resource segment preserves
 the same method and optimizer. Free two-update actual-runtime integration
-and broader evaluation preparation precede any new paid submission.
+and broader evaluation preparation are complete before any new paid submission.
 The5h/2V100/8CPU proposal costs at most24.80yuan and is NOT yet approved.
 Do not resume the completed inherited four-arm chain by default.
 

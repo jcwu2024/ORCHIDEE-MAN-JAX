@@ -5,6 +5,9 @@ See `fresh_litter_admission_results_20260921.md`; its completion supersedes
 the initial launch record at the end of this document.
 No new paid run is submitted or authorized. This is a method-development
 candidate, not the accepted final scientific model.
+The48-window held-out selection/preparation and actual reader checks are also
+complete; its evaluator is ready at2fc3883. All scientific predictions on
+that new panel remain pending a trained checkpoint.
 
 ## Scientific question and fixed method
 
