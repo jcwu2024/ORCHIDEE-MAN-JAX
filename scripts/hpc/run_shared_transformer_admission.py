@@ -117,7 +117,11 @@ def run(args):
             calibration, scale_mapping = prior["calibration"], prior["scales"]
             report["calibration_reused"] = True
         emit("calibration_completed", calibration=calibration, scales=scale_mapping)
-        head = build_shared_process_head(parent, template, config=shared_config(protocol["architecture"]))
+        # v1 predates centered thermal outputs; its saved gradients remain tied
+        # to direct tanh even when run from a newer checkout.
+        head = build_shared_process_head(
+            parent, template, config=shared_config(protocol["architecture"]),
+            thermal_transform=protocol["architecture"].get("thermal_transform", "direct_tanh"))
         state_scales = derive_target_oriented_scales(
             runtime["base_statistics"].arrays["state_delta"].scale,
             runtime["process_statistics"].outputs["daily.fast_gpp"].scale,
@@ -200,6 +204,9 @@ def run(args):
                                     else runtime["devices"][0].memory_stats()))
         if not all(np.isfinite(float(value)) and hard_ok(aux) for value, aux in initial):
             return reject("initial_forward_physical")
+        if getattr(args, "forward_only", False):
+            emit("completed", status="passed", classification="canonical_one_day_forward_only")
+            return report
         gradient_function = jax.jit(jax.value_and_grad(objective, has_aux=True))
         compiled = None
         if prior is None:
@@ -314,6 +321,8 @@ def parser():
     result.add_argument("--protocol", type=Path,
                         default=ROOT / "manifests/coarse_graining/shared_transformer_admission_v1.json")
     result.add_argument("--shape-only", action="store_true")
+    result.add_argument("--forward-only", action="store_true",
+                        help="Stop after canonical physical/loss and state-attribution forwards; no AD or updates")
     result.add_argument("--resume-report", type=Path,
                         help="reuse a completed initial gradient and its unchanged calibration")
     return result

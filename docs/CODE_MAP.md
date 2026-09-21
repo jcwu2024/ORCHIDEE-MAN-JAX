@@ -24,6 +24,11 @@ The decoder now exposes original/gather-only/gather-reuse execution for bounded
 parity checks, with no parameter-tree change or decoder rematerialization.
 `scripts/hpc/shared_state_anchor_diagnostics.py` attributes forward-only state
 loss reports without changing the shared objective or its AD outputs.
+`shared_admission_recovery.py` restores the unchanged zero-update gradient and
+scales after interrupted admission. `--resume-report` preserves source evidence;
+`--forward-only` stops before AD/updates. Protocol v1 selects direct thermal
+tanh, while v2 selects the shared-head TRAIN-centered bounded thermal transform.
+Both retain the same network tree, output masks and physical/loss boundaries.
 
 `scripts/hpc/run_mixed_learning.py` remains the fresh daily/T7/T30 training
 entry. The fresh-litter manifest declares the optional fourth daily coefficient

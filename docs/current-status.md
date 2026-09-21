@@ -66,6 +66,15 @@ ptn+tdeep account for98.95% of the state anchor; physical errors80-87K and
 and audit this thermal path before learning. No rematerialization or paid task.
 See `research/daily_coarse_graining/shared_decoder_admission_results_20260921.md`.
 
+Recovery8004a11: local3-test resumed/uninterrupted comparison PASSED8.31s;
+free test02 saved-gradient structure admission PASSED215.51s. Free gln01 GPU0
+wrapper25784 is RUNNING with90min main-test limit, reusing source parameters,
+gradient, scales and initial forwards. Remaining stages are JVP/reverse,
+two optimizer updates and checkpoint replay. Prefix
+`runtime/outputs/diagnostics/shared-recovery-8004a11-gpu`. No scientific pass
+or paid submission. Thermal output audit proceeds separately; any correction
+must use a new checkout and cannot inherit this unchanged-graph qualification.
+
 2026-09-21 free integration COMPLETED0 on gln01 GPU0,1 at7b9e0ae,
 2560s, two fresh full-network joint updates. Physical/hard checks and checkpoint
 replay pass; no scientific acceptance. Gradient norms2499/5352 with strong

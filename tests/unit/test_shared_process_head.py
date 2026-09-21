@@ -49,6 +49,46 @@ def test_slow_stock_prior_and_gradient_are_not_half_daily_depletion():
     assert grad[0] > 0 and grad[1] > 0 and grad[2] == 0
 
 
+def test_thermal_center_scale_and_mask_preserve_physical_units_and_gradients():
+    field = OutputFieldSpec("thermal.thermosoil_previous_step_state.ptn.normalized_tendency",
+                            (3,), 0, "signed_unit")
+    mean = np.array([-2.5e-6, 1e-6, 0.])
+    scale = np.array([1.186178330e-6, 0.01136814890, 1.])
+    norm = SimpleNamespace(mean={field.name: mean}, scale={field.name: scale})
+    def fn(raw):
+        return transform_shared_output(raw, jnp.array([True, True, False]), field=field,
+                                       normalization=norm, inputs=None)
+    zero = jnp.zeros(3)
+    np.testing.assert_allclose(jax.jit(fn)(zero), mean, rtol=1e-10, atol=1e-14)
+    # The physical updater adds 100 K times the normalized tendency.
+    jacobian = jax.jacrev(lambda raw: 100. * fn(raw))(zero)
+    np.testing.assert_allclose(jacobian, np.diag([100.*scale[0], 100.*scale[1], 0.]), rtol=1e-10)
+    perturbed = 100. * np.asarray(fn(jnp.ones(3)))
+    assert abs(perturbed[0]) < .001 and abs(perturbed[1]) < 2.
+    assert perturbed[2] == 0.
+    legacy = transform_shared_output(jnp.ones(3), jnp.array([True, True, False]), field=field,
+                                     normalization=norm, inputs=None, thermal_transform="direct_tanh")
+    np.testing.assert_allclose(legacy, [np.tanh(1.), np.tanh(1.), 0.], rtol=1e-10)
+
+
+def test_thermal_scaling_keeps_full_range_and_finite_derivatives():
+    field = OutputFieldSpec("thermal.thermosoil_previous_step_state.ptn.normalized_tendency",
+                            (4,), 0, "signed_unit")
+    mean = np.array([-.2, 0., .2, .8])
+    scale = np.array([1e-6, .01, .1, .02])
+    norm = SimpleNamespace(mean={field.name: mean}, scale={field.name: scale})
+    def fn(raw):
+        return transform_shared_output(raw, jnp.ones(4, dtype=bool), field=field,
+                                       normalization=norm, inputs=None)
+    desired = np.array([-.95, -.5, .5, .95])
+    raw = (np.arctanh(desired) - np.arctanh(mean)) * (1.-mean**2) / scale
+    np.testing.assert_allclose(jax.jit(fn)(raw), desired, rtol=1e-10)
+    derivative = np.asarray(jax.grad(lambda value: fn(value).sum())(raw))
+    assert np.all(np.isfinite(derivative)) and np.all(derivative > 0.)
+    extreme = np.asarray(fn(jnp.array([-1e10, -1e10, 1e10, 1e10])))
+    assert np.all(np.isfinite(extreme)) and np.all(np.abs(extreme) <= 1.)
+
+
 def test_explicit_gpp_factor_has_no_other_physical_parameter_route():
     routing = DEFAULT_PFT_PARAMETER_ROUTING
     values = jnp.ones((3, len(routing.channel_names)))

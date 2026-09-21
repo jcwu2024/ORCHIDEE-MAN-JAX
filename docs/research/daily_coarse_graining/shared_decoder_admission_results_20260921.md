@@ -76,3 +76,18 @@ Server prefix: `runtime/outputs/diagnostics/shared-decoder-094dfd2-gpu`.
 Saved `.gradient.pkl` is604649034bytes and contains fresh parameters, the
 completed full gradient, value and protocol/source identity. Keep it remote.
 Local evidence: `outputs/shared-decoder-094dfd2-gpu.json` and `.log`.
+
+## Saved-gradient recovery
+
+Code8004a11 adds `--resume-report` without changing the model or objective.
+The source protocol, calibration, initial forwards, parameters and numerical
+gradient are reused. The first update uses the saved gradient; the second
+uses the unchanged graph and persistent cache. Completed updates checkpoint
+individually. Source artifacts are retained intact.
+
+Three local tests pass in8.31s, including tiny resumed/uninterrupted two-update
+equivalence and no recalibration. Free test02 saved-gradient structure check
+passes in215.51s. Target-shell CPU/GPU dry runs passed. Free gln01 GPU0
+recovery wrapper25784 is running with90min main-test bound; prefix
+`runtime/outputs/diagnostics/shared-recovery-8004a11-gpu`. JVP and update
+acceptance remain pending. No paid job was submitted.

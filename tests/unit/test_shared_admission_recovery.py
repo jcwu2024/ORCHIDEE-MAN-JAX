@@ -65,7 +65,8 @@ def test_saved_gradient_must_match_current_tree(tmp_path):
         restore_gradient(jax, source, {"shared_transformer": jax.ShapeDtypeStruct((3,), jnp.float32)})
 
 
-def test_resumed_runner_matches_two_uninterrupted_updates_without_recalibration(tmp_path, monkeypatch):
+@pytest.mark.parametrize("forward_only", [False, True])
+def test_resumed_runner_matches_two_uninterrupted_updates_without_recalibration(tmp_path, monkeypatch, forward_only):
     import research.daily_coarse_graining.daily_operator.shared_process_head as head_module
     import research.daily_coarse_graining.daily_operator.shared_training as training
     import research.daily_coarse_graining.daily_operator.shared_transformer as architecture
@@ -91,14 +92,24 @@ def test_resumed_runner_matches_two_uninterrupted_updates_without_recalibration(
     def forbidden_calibration(*args, **kwargs):
         raise AssertionError("recovery must reuse completed TRAIN calibration")
     monkeypatch.setattr(runtime_module, "prepare_shared_trajectory_scales", forbidden_calibration)
-    monkeypatch.setattr(head_module, "build_shared_process_head", lambda *args, **kwargs: head)
+    selected_thermal_policy = []
+    def build_head(*args, **kwargs):
+        selected_thermal_policy.append(kwargs["thermal_transform"])
+        return head
+    monkeypatch.setattr(head_module, "build_shared_process_head", build_head)
     monkeypatch.setattr(training, "make_shared_daily_objective", lambda *args, **kwargs: objective)
     monkeypatch.setattr(target, "derive_target_oriented_scales", lambda *args, **kwargs: None)
     monkeypatch.setattr(architecture, "shared_transformer_static_coordinate_indices", lambda **kwargs: {"x": [0, 1]})
     output = tmp_path / "recovered.json"
     result = run(SimpleNamespace(protocol=protocol_path, resume_report=path, output=output,
-                                 prepared_manifest=manifest, shape_only=False))
+                                 prepared_manifest=manifest, shape_only=False, forward_only=forward_only))
     assert result["status"] == "passed"
+    assert selected_thermal_policy == ["direct_tanh"]
+    if forward_only:
+        assert result["completed_updates"] == 0
+        assert result["classification"] == "canonical_one_day_forward_only"
+        assert "derivative" not in result and "checkpoint" not in result
+        return
     assert result["completed_updates"] == 2
     assert result["derivative"]["passed"]
     assert result["gradient_artifact"] == source["gradient_artifact"]

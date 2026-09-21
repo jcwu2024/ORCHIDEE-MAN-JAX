@@ -56,11 +56,27 @@ JVP comparison and two updates remain incomplete. No decoder rematerialization
 is needed for this one-day case; joint T7/T30 still requires measurement.
 Synthetic GPU runtime check PASSED70.95s. Report/log prefix:
 `runtime/outputs/diagnostics/shared-decoder-094dfd2-gpu`.
-Next prepare resumption from the saved gradient/cache to finish admission,
-and audit dominant thermal output/scaling: ptn+tdeep account for98.95% of the
+Resumption at8004a11 reuses the saved gradient, parameters, calibration and
+initial forwards. Local recovery tests pass (3 tests,8.31s); free test02
+saved-gradient structure check PASSED in215.51s. Free gln01 GPU0 recovery
+wrapper25784 is RUNNING with a90min main-test bound, only JVP/reverse and two
+optimizer updates; prefix `runtime/outputs/diagnostics/shared-recovery-8004a11-gpu`.
+Do not relaunch or mutate its immutable checkout. Concurrently audit dominant
+thermal output/scaling: ptn+tdeep account for98.95% of the
 state anchor, with deep-soil errors80-87K amplified by~0.000119K change scales.
-Do not hide this with a weight reduction. No new task is running or submitted.
+Do not hide this with a weight reduction. No paid task is submitted.
 Read `research/daily_coarse_graining/shared_decoder_admission_results_20260921.md`.
+
+The thermal source/statistics audit identifies direct `tanh(raw)` ignoring
+TRAIN means/scales, producing order-one normalized tendencies and80-87K errors.
+All64 eligible ptn coordinates have observed finite/interior means and valid
+scales; all384 unit-scale fallbacks are inactive PFT coordinates. Implement
+the shared-only TRAIN-centered bounded transform under v2, preserving v1 for
+the running recovery. Plan and matched-forward gates:
+`research/daily_coarse_graining/shared_thermal_output_plan_20260921.md`.
+Keep loss weights and duplicate state terms unchanged in this isolated test.
+Local tests -> free CPU shape -> free GPU two-row forward -> revised AD/two
+updates -> joint T7/T30. No new paid training or accuracy claim.
 
 The previous fresh-litter1000-update/24.80yuan paid proposal is ON HOLD, not the
 next submission. Its execution evidence, checkpoints and data remain valid

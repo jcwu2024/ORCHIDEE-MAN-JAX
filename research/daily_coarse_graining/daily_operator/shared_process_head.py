@@ -40,13 +40,26 @@ OUTGOING_CENTER_FLOOR = 1.0e-8
 
 
 def transform_shared_output(raw, active, *, field, normalization, inputs,
-                            outgoing_center_floor=OUTGOING_CENTER_FLOOR):
-    """Use the frozen TRAIN fraction mean as the outgoing logit origin.
+                            outgoing_center_floor=OUTGOING_CENTER_FLOOR,
+                            thermal_transform="train_centered"):
+    """Center outgoing fractions and thermal tendencies in frozen TRAIN units.
 
 The floor is a numerical interior point, not a learned decay rate. Keeping
 the residual logit trainable preserves the full (0,1) range and its gradient.
+Thermal residuals have the TRAIN scale as their local derivative at raw=0,
+while retaining the full signed-unit range. ``direct_tanh`` reproduces the
+original shared admission; it must be explicit when reusing that gradient.
 All other typed transformations retain their existing implementation.
 """
+    if (thermal_transform == "train_centered" and field.name.startswith("thermal.")
+            and field.value_representation == "direct" and field.constraint == "signed_unit"):
+        center = jnp.clip(jnp.asarray(normalization.mean[field.name], jnp.float64).reshape(field.shape),
+                          -1.0 + 1e-6, 1.0 - 1e-6)
+        scale = jnp.asarray(normalization.scale[field.name], jnp.float64).reshape(field.shape)
+        raw = jnp.asarray(raw, jnp.float64).reshape(field.shape)
+        slope = jnp.maximum(1.0 - center * center, 1e-6)
+        value = jnp.tanh(jnp.arctanh(center) + raw * scale / slope)
+        return jnp.where(jnp.asarray(active).reshape(field.shape), value, 0.0)
     if (field.name.endswith(".outgoing_fraction")
             and field.value_representation == "direct"
             and field.constraint == "unit_interval"):
@@ -80,10 +93,13 @@ class SharedTransformerProcessHead(MechanisticStrongBaselineProcessHead):
     target_contract: Any
     shared_config: SharedTransformerConfig = SharedTransformerConfig()
     outgoing_center_floor: float = OUTGOING_CENTER_FLOOR
+    thermal_transform: str = "train_centered"
     apply_gsmean_applicability: bool = True
 
     def __post_init__(self):
         super().__post_init__()
+        if self.thermal_transform not in {"direct_tanh", "train_centered"}:
+            raise ValueError("unknown shared thermal output transform")
         if not 0.0 < self.outgoing_center_floor < 0.5:
             raise ValueError("outgoing fraction center floor must lie in (0,0.5)")
         if np.shape(self.coeff_maint_zero) != (len(self.layout.active_pft_indices), 12):
@@ -113,7 +129,8 @@ class SharedTransformerProcessHead(MechanisticStrongBaselineProcessHead):
             field.name: transform_shared_output(
                 raw[field.name], active[field.name], field=field,
                 normalization=self.output_normalization, inputs=inputs,
-                outgoing_center_floor=self.outgoing_center_floor)
+                outgoing_center_floor=self.outgoing_center_floor,
+                thermal_transform=self.thermal_transform)
             for field in self.learned_schema.fields if field.name != MAINTENANCE_FIELD
         }
         outputs[GPP_FIELD] = apply_shared_gpp_factor(outputs[GPP_FIELD], inputs)
@@ -128,7 +145,8 @@ class SharedTransformerProcessHead(MechanisticStrongBaselineProcessHead):
         return outputs
 
 
-def build_shared_process_head(parent_head, retained_tail, *, config=SharedTransformerConfig()):
+def build_shared_process_head(parent_head, retained_tail, *, config=SharedTransformerConfig(),
+                              thermal_transform="train_centered"):
     """Reuse canonical data/physics metadata, never the parent's neural weights."""
     kwargs = {field.name: getattr(parent_head, field.name)
               for field in fields(MechanisticStrongBaselineProcessHead) if field.init}
@@ -151,5 +169,6 @@ def build_shared_process_head(parent_head, retained_tail, *, config=SharedTransf
         coupled_contract=load_coupled_gpp_carbon_feedback_contract())
     return SharedTransformerProcessHead(
         **kwargs, shared_config=config, carbon_state_layout=carbon_layout,
+        thermal_transform=thermal_transform,
         target_contract=load_target_oriented_contract(),
         coeff_maint_zero=compact_coeff_maint_zero_from_retained_tail(retained_tail))
