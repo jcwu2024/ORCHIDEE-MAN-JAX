@@ -16,6 +16,11 @@ Neither changes the canonical target/loss schema. `shared_trajectory_loss.py` ow
 fluxes and seven stock components; `shared_training.py` composes the daily
 three-group objective. `scripts/hpc/shared_transformer_runtime.py` loads only
 existing TRAIN artifacts and metadata, without old neural initialization.
+`shared_recurrent_training.py` adapts existing T7/T30 windows and binds the
+public checkpointed rollout to shared science terms with exact joint weights.
+`scripts/hpc/prepare_shared_recurrent_admission.py/.sh` reuses accepted TRAIN
+calibration and checks actual-data forward/gradient shapes on free CPU only;
+it does not run numerical full-model AD or claim GPU/scientific acceptance.
 `run_shared_transformer_admission.py` and its shell launcher own bounded CPU
 shape/scales and free GPU forward/gradient/two-update admission. The admission
 manifest is not a production-training contract. Existing runners below remain

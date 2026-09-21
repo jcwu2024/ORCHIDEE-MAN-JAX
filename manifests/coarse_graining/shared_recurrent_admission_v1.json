@@ -1,0 +1,22 @@
+{
+  "schema_version": "shared_recurrent_admission_v1",
+  "daily_protocol": "shared_transformer_admission_v3.json",
+  "purpose": "bounded_shared_daily_T7_T30_admission_not_production_training",
+  "horizons": [7, 30],
+  "artifact_selection": "first_two_existing_daily_calibration_artifacts",
+  "window_indices": [0],
+  "initialization": "fresh_from_daily_protocol_seed_no_checkpoint_weights",
+  "scale_source": "reuse_accepted_v3_TRAIN_calibration_report",
+  "joint_daily_coefficients": [0.3333333333333333, 0.1111111111111111, 0.1111111111111111],
+  "joint_recurrent_flux_stock_coefficients": [0.1111111111111111, 0.1111111111111111],
+  "ad": "native_JAX_checkpointed_daily_scan",
+  "gradient_memory_limit_gib": 24,
+  "direction_rtol": 0.01,
+  "direction_atol": 1e-6,
+  "complete_joint_updates": 2,
+  "gpu_requires_completed_v3_daily_AD_admission": true,
+  "paid_submission": false,
+  "teacher_regeneration": false,
+  "sealed_test_access": false,
+  "scientific_acceptance": false
+}

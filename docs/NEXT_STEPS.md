@@ -21,6 +21,10 @@ Carbon science is exactly unchanged; this repairs initialization, not learning.
 Free GPU1 full native AD/JVP/two-update wrapper100848 is RUNNING from158192f
 under120min main-test bound, prefix
 `runtime/outputs/diagnostics/shared-persistent-158192f-admission`.
+While100848 runs, shared T7/T30 adapter/loss and CPU preparation are being
+implemented under `shared_recurrent_admission_v1.json`. Reuse the passed v3
+TRAIN calibration; no new GPU launch before daily numerical AD/update pass.
+See `research/daily_coarse_graining/shared_recurrent_preparation_20260921.md`.
 Read its report/log before another launch; do not repeat completed CPU/forward
 checks or start another output audit solely because untrained errors remain.
 Evidence: `research/daily_coarse_graining/shared_persistent_forward_results_20260921.md`.
