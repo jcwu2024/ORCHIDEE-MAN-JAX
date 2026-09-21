@@ -53,6 +53,11 @@ def test_recovery_rejects_changed_loss_and_preserves_source(tmp_path):
     changed["objective"]["group_weights"] = [0., 0.5, 0.5]
     with pytest.raises(ValueError, match="changed admission protocol"):
         load_resume_report(path, tmp_path / "result.json", changed)
+    changed = deepcopy(source["protocol"])
+    changed["architecture"].update(persistent_output_coordinates="day_start_train_delta_v3",
+                                   source_bare_cimean=True)
+    with pytest.raises(ValueError, match="changed admission protocol"):
+        load_resume_report(path, tmp_path / "result.json", changed)
 
 
 def test_saved_gradient_must_match_current_tree(tmp_path):

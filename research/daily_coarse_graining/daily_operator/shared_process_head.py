@@ -94,6 +94,8 @@ class SharedTransformerProcessHead(MechanisticStrongBaselineProcessHead):
     shared_config: SharedTransformerConfig = SharedTransformerConfig()
     outgoing_center_floor: float = OUTGOING_CENTER_FLOOR
     thermal_transform: str = "train_centered"
+    persistent_coordinates: Any = None
+    source_bare_cimean: bool = False
     apply_gsmean_applicability: bool = True
 
     def __post_init__(self):
@@ -127,8 +129,13 @@ class SharedTransformerProcessHead(MechanisticStrongBaselineProcessHead):
             carbon_state_layout=self.carbon_state_layout)
         outputs = {
             field.name: transform_shared_output(
-                raw[field.name], active[field.name], field=field,
-                normalization=self.output_normalization, inputs=inputs,
+                raw[field.name], active[field.name],
+                field=(self.persistent_coordinates.fields.get(field.name, field)
+                       if self.persistent_coordinates is not None else field),
+                normalization=(self.persistent_coordinates.normalization
+                               if self.persistent_coordinates is not None
+                               and field.name in self.persistent_coordinates.fields
+                               else self.output_normalization), inputs=inputs,
                 outgoing_center_floor=self.outgoing_center_floor,
                 thermal_transform=self.thermal_transform)
             for field in self.learned_schema.fields if field.name != MAINTENANCE_FIELD
@@ -142,11 +149,18 @@ class SharedTransformerProcessHead(MechanisticStrongBaselineProcessHead):
             layout=self.layout, forcing_layout=self.forcing_layout)
         if self.apply_gsmean_applicability:
             outputs = apply_gsmean_output_applicability(outputs, inputs, schema=self.learned_schema)
+        if self.source_bare_cimean:
+            from .shared_cimean import apply_shared_cimean
+
+            outputs = apply_shared_cimean(
+                outputs, inputs, schema=self.learned_schema,
+                contract=self.contract, active_masks=active)
         return outputs
 
 
 def build_shared_process_head(parent_head, retained_tail, *, config=SharedTransformerConfig(),
-                              thermal_transform="train_centered"):
+                              thermal_transform="train_centered", persistent_coordinates=None,
+                              source_bare_cimean=False):
     """Reuse canonical data/physics metadata, never the parent's neural weights."""
     kwargs = {field.name: getattr(parent_head, field.name)
               for field in fields(MechanisticStrongBaselineProcessHead) if field.init}
@@ -170,5 +184,6 @@ def build_shared_process_head(parent_head, retained_tail, *, config=SharedTransf
     return SharedTransformerProcessHead(
         **kwargs, shared_config=config, carbon_state_layout=carbon_layout,
         thermal_transform=thermal_transform,
+        persistent_coordinates=persistent_coordinates, source_bare_cimean=source_bare_cimean,
         target_contract=load_target_oriented_contract(),
         coeff_maint_zero=compact_coeff_maint_zero_from_retained_tail(retained_tail))

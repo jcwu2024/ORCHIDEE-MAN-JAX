@@ -20,6 +20,9 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
+| `research/daily_coarse_graining/shared_persistent_output_plan_20260921.md` | Shared-v3 isolated coordinate/source correction, local/free admission in progress | Eight recurrent readouts, full-TRAIN delta scales, bare cimean=annualCa; unchanged loss/backbone |
+| `research/daily_coarse_graining/shared_remaining_state_source_audit_20260921.md` | Source plus512-row fast-endpoint/final-state identity PASS | All eight OK_LEAK state owners and limits of reusing existing delta statistics |
+| `research/daily_coarse_graining/shared_cimean_source_audit_20260921.md` | Source audit complete | Bare-soil Ca identity, current annual input and cross-year delta semantics |
 | `research/daily_coarse_graining/shared_thermal_forward_results_20260921.md` | Both free tasks COMPLETED0; original AD/two updates pass, centered thermal forward passes | Actual memory7.52GiB, corrected deep temperatures, unchanged carbon metrics and remaining output-scale audit |
 | `research/daily_coarse_graining/shared_thermal_output_audit_20260921.md` | Source plus actual TRAIN statistics;64 valid ptn coordinates,384 inactive fallbacks | Direct-tanh initialization cause, physical updater provenance and duplicate state-loss ownership |
 | `research/daily_coarse_graining/shared_thermal_output_plan_20260921.md` | TRAIN audit supports shared-only centered bounded thermal transform; local/free admission pending | Matched fresh-seed forward, unchanged loss/masks and revised gradient/update gates; not a new backbone |

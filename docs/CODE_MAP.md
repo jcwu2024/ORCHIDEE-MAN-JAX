@@ -9,7 +9,10 @@ Current work implements the user-approved consolidation, documented in
 `research/daily_coarse_graining/shared_transformer_long_term_design_20260921.md`.
 `daily_operator/shared_transformer.py` owns the shared masked backbone and
 coordinate decoder; `shared_process_head.py` connects its raw outputs to the
-canonical physical boundary. `shared_trajectory_loss.py` owns four independent
+canonical physical boundary. `shared_persistent_outputs.py` builds the v3
+decoder-local day-start/TRAIN-delta coordinates for eight persistent endpoints;
+`shared_cimean.py` materializes the source-backed bare-soil annualCa identity.
+Neither changes the canonical target/loss schema. `shared_trajectory_loss.py` owns four independent
 fluxes and seven stock components; `shared_training.py` composes the daily
 three-group objective. `scripts/hpc/shared_transformer_runtime.py` loads only
 existing TRAIN artifacts and metadata, without old neural initialization.

@@ -13,6 +13,15 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+Shared-v3 output corrections are implemented for local/free admission:
+eight persistent OK_LEAK readouts now have a decoder-local daily-residual
+policy, using full-TRAIN state-delta moments after the source audit and a
+512-row fast-endpoint/final-state identity check (all eight differences zero).
+Bare cimean uses legal current annualCa, including year transitions, rather
+than a vegetation-pooled neural residual. Loss/target contracts, architecture
+and capacity are unchanged; fresh inference/AD gates remain before training.
+See `research/daily_coarse_graining/shared_persistent_output_plan_20260921.md`.
+
 Latest result: freeGPU recovery8004a11 and centered-thermal forward6467453 both
 COMPLETED0, no active task. Recovery2080s: both updates, directional AD,
 hard counters and checkpoint roundtrip/replay pass; allocator peak7.52GiB.

@@ -8,6 +8,16 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-21)
 
+The remaining-output source/statistics audit is complete: all eight persistent
+OK_LEAK fast endpoints equal the final state in512 existing TRAIN rows, with
+zero difference. Shared-v3 implements decoder-local day-start plus full-TRAIN
+delta coordinates for those eight fields, and source-owned bare cimean=legal
+current annualCa. Canonical targets/losses and75,578,497 parameters are unchanged.
+Local integration/free-node admission is in progress; no v3 GPU result yet.
+Follow `research/daily_coarse_graining/shared_persistent_output_plan_20260921.md`:
+actual-data CPU shape -> matched two-row free GPU forward -> native AD/two
+updates -> jointT7/T30. No paid launch and no learned-science acceptance.
+
 Latest completion: both free GPU tasks exited0; no current task or paid launch.
 Original-transform recovery8004a11 completed2079.96s, both full-network updates,
 directional AD PASS1.511e-7 relative, checkpoint roundtrip/physical checks pass,

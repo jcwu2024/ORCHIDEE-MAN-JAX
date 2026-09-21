@@ -119,9 +119,28 @@ def run(args):
         emit("calibration_completed", calibration=calibration, scales=scale_mapping)
         # v1 predates centered thermal outputs; its saved gradients remain tied
         # to direct tanh even when run from a newer checkout.
+        persistent_coordinates = None
+        persistent_policy = protocol["architecture"].get("persistent_output_coordinates", "absolute_v1")
+        if persistent_policy == "day_start_train_delta_v3":
+            from research.daily_coarse_graining.daily_operator.shared_persistent_outputs import (
+                build_shared_persistent_coordinates,
+            )
+
+            persistent_coordinates = build_shared_persistent_coordinates(
+                parent.learned_schema, parent.contract, runtime["base_statistics"].arrays["state_delta"])
+        elif persistent_policy != "absolute_v1":
+            raise ValueError("unknown shared persistent output coordinates")
         head = build_shared_process_head(
             parent, template, config=shared_config(protocol["architecture"]),
-            thermal_transform=protocol["architecture"].get("thermal_transform", "direct_tanh"))
+            thermal_transform=protocol["architecture"].get("thermal_transform", "direct_tanh"),
+            persistent_coordinates=persistent_coordinates,
+            source_bare_cimean=protocol["architecture"].get("source_bare_cimean", False))
+        if persistent_coordinates is not None:
+            report["persistent_output_coordinates"] = {
+                name: {"owner": spec.day_start_owner,
+                       "mean": np.asarray(persistent_coordinates.normalization.mean[name]).tolist(),
+                       "scale": np.asarray(persistent_coordinates.normalization.scale[name]).tolist()}
+                for name, spec in persistent_coordinates.fields.items()}
         state_scales = derive_target_oriented_scales(
             runtime["base_statistics"].arrays["state_delta"].scale,
             runtime["process_statistics"].outputs["daily.fast_gpp"].scale,

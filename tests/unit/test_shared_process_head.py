@@ -185,3 +185,22 @@ def test_canonical_shared_head_forward_covers_full_learned_schema_without_legacy
         assert np.all(np.isfinite(value)), field.name
         np.testing.assert_allclose(value, reference_outputs[field.name], rtol=2e-5, atol=2e-6,
                                    err_msg=field.name)
+    # v3 changes only eight physical readout transforms and the source-owned
+    # bare cimean coordinate; it preserves the full neural tree/schema.
+    from research.daily_coarse_graining.daily_operator.shared_persistent_outputs import (
+        build_shared_persistent_coordinates,
+    )
+    width = len(setup["assembled"].canonical_input.continuous_state)
+    coordinates = build_shared_persistent_coordinates(
+        head.learned_schema, head.contract,
+        SimpleNamespace(count=np.full(width, 100), mean=np.zeros(width),
+                        variance=np.full(width, 1e-6)))
+    revised = replace(head, persistent_coordinates=coordinates, source_bare_cimean=True)
+    revised_outputs = revised.learned_outputs(parameters, context, setup["assembled"])
+    assert set(revised_outputs) == set(outputs)
+    changed = set(coordinates.fields) | {"endpoint.fast_state.diffuco_previous_step_state.cimean"}
+    for field in fields:
+        value = np.asarray(revised_outputs[field.name])
+        assert value.shape == field.shape and np.all(np.isfinite(value)), field.name
+        if field.name not in changed:
+            np.testing.assert_array_equal(value, outputs[field.name])
