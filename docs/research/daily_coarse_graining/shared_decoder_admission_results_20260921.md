@@ -89,5 +89,9 @@ Three local tests pass in8.31s, including tiny resumed/uninterrupted two-update
 equivalence and no recalibration. Free test02 saved-gradient structure check
 passes in215.51s. Target-shell CPU/GPU dry runs passed. Free gln01 GPU0
 recovery wrapper25784 is running with90min main-test bound; prefix
-`runtime/outputs/diagnostics/shared-recovery-8004a11-gpu`. JVP and update
-acceptance remain pending. No paid job was submitted.
+`runtime/outputs/diagnostics/shared-recovery-8004a11-gpu`, Python26637.
+At1325.46s the normalized-full-gradient directional comparison PASSED:
+JVP8185972383.687063 versus reverse projection8185973620.733777, relative
+difference1.511e-7 (0.00001511%). This is one directional check, not coordinatewise
+equality. Update1 completed at1763.7s; update2/checkpoint admission remains
+pending. No paid job was submitted.

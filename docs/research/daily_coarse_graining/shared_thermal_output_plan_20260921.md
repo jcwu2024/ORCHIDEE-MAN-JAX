@@ -82,3 +82,10 @@ canonical161-field physical output parity between original and optimized
 decoder execution, thermal center/local Jacobian/mask and wide-range inversion.
 After adding forward-only and v1-policy regression coverage, recovery suite
 4 tests PASSED3.37s; focused thermal2 tests PASSED3.36s. Ruff/diff checks pass.
+
+Deployed code6467453, CPU/GPU target-shell dry runs pass. Free test02 canonical
+forward/gradient shape admission COMPLETED0 in352.60s, no change in parameter
+count. Free gln01 GPU1 forward-only wrapper30682 is running with30min main-test
+limit, prefix `runtime/outputs/diagnostics/shared-thermal-6467453-forward`.
+The same fresh seed and two TRAIN rows are used; zero updates are requested.
+Actual forward outcome remains pending.

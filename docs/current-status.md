@@ -69,11 +69,24 @@ See `research/daily_coarse_graining/shared_decoder_admission_results_20260921.md
 Recovery8004a11: local3-test resumed/uninterrupted comparison PASSED8.31s;
 free test02 saved-gradient structure admission PASSED215.51s. Free gln01 GPU0
 wrapper25784 is RUNNING with90min main-test limit, reusing source parameters,
-gradient, scales and initial forwards. Remaining stages are JVP/reverse,
-two optimizer updates and checkpoint replay. Prefix
+gradient, scales and initial forwards. Python26637 reached directional PASS
+at1325.46s, relative difference1.511e-7; update1 completed at1763.7s.
+Update2 and checkpoint replay remain pending. Prefix
 `runtime/outputs/diagnostics/shared-recovery-8004a11-gpu`. No scientific pass
 or paid submission. Thermal output audit proceeds separately; any correction
 must use a new checkout and cannot inherit this unchanged-graph qualification.
+
+Thermal correction6467453 changes only shared direct signed-unit thermal
+output coordinates to use frozen TRAIN center/scale in bounded tanh space.
+Every64 observed ptn coordinate has finite interior mean and positive scale;
+384 fallback columns are structurally inactive. Loss/weights/duplicate state
+terms and parameter tree remain unchanged. Local full-schema/thermal/recovery
+tests pass; free test02 shape test wrapper18250 COMPLETED0 in352.60s.
+Free gln01 GPU1 forward-only v2 wrapper30682 is RUNNING with30min bound,
+prefix `runtime/outputs/diagnostics/shared-thermal-6467453-forward`.
+See `research/daily_coarse_graining/shared_thermal_output_plan_20260921.md`
+and `shared_thermal_output_audit_20260921.md`. No trained-model improvement
+or revised-gradient acceptance is established yet.
 
 2026-09-21 free integration COMPLETED0 on gln01 GPU0,1 at7b9e0ae,
 2560s, two fresh full-network joint updates. Physical/hard checks and checkpoint

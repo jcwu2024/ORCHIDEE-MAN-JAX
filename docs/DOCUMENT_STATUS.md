@@ -20,6 +20,7 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
+| `research/daily_coarse_graining/shared_thermal_output_audit_20260921.md` | Source plus actual TRAIN statistics;64 valid ptn coordinates,384 inactive fallbacks | Direct-tanh initialization cause, physical updater provenance and duplicate state-loss ownership |
 | `research/daily_coarse_graining/shared_thermal_output_plan_20260921.md` | TRAIN audit supports shared-only centered bounded thermal transform; local/free admission pending | Matched fresh-seed forward, unchanged loss/masks and revised gradient/update gates; not a new backbone |
 | `research/daily_coarse_graining/shared_decoder_admission_results_20260921.md` | One-day gradient memory6.67GiB, full reverse finite/saved; timed out at JVP,0updates | Completed optimization evidence, thermal loss attribution and exact remaining admission work |
 | `research/daily_coarse_graining/shared_decoder_execution_plan_20260921.md` | Execution steps1+2 implemented; local parity and free runtime admission in progress | Preserve outputs/capacity through PFT gather and projection reuse; checkpointing only if measured memory still requires it |

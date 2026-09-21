@@ -61,6 +61,8 @@ initial forwards. Local recovery tests pass (3 tests,8.31s); free test02
 saved-gradient structure check PASSED in215.51s. Free gln01 GPU0 recovery
 wrapper25784 is RUNNING with a90min main-test bound, only JVP/reverse and two
 optimizer updates; prefix `runtime/outputs/diagnostics/shared-recovery-8004a11-gpu`.
+Python26637 reached directional PASS at1325.46s, relative difference1.511e-7;
+update1 completed at1763.7s and update2/checkpoint completion is still pending.
 Do not relaunch or mutate its immutable checkout. Concurrently audit dominant
 thermal output/scaling: ptn+tdeep account for98.95% of the
 state anchor, with deep-soil errors80-87K amplified by~0.000119K change scales.
@@ -77,6 +79,16 @@ the running recovery. Plan and matched-forward gates:
 Keep loss weights and duplicate state terms unchanged in this isolated test.
 Local tests -> free CPU shape -> free GPU two-row forward -> revised AD/two
 updates -> joint T7/T30. No new paid training or accuracy claim.
+At6467453, local shared-head/recovery9 tests pass177.24s; additional recovery
+forward-only/v1-policy4 tests pass3.37s. Target-shell CPU/GPU dry runs pass.
+Free test02 shape admission wrapper18250 COMPLETED0 in352.60s, prefix
+`runtime/outputs/diagnostics/shared-thermal-6467453-cpu`. Free gln01 GPU1 v2
+forward-only wrapper30682 is RUNNING with30min bound, prefix
+`runtime/outputs/diagnostics/shared-thermal-6467453-forward`. It uses the same
+fresh seed/two TRAIN rows, no optimizer updates; compare temperature errors and
+all loss/physical groups before revised AD admission. Do not relaunch it.
+Source/statistics evidence:
+`research/daily_coarse_graining/shared_thermal_output_audit_20260921.md`.
 
 The previous fresh-litter1000-update/24.80yuan paid proposal is ON HOLD, not the
 next submission. Its execution evidence, checkpoints and data remain valid
