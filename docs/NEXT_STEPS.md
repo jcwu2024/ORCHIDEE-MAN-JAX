@@ -8,6 +8,13 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-21)
 
+Free fresh-litter integration RUNNING on gln01 GPU0,1, immutable7b9e0ae;
+wrapper85836/Python85878,90min ceiling. Metadata plan and deployed small
+runtime check passed (61.64s). Fresh initialization completed and update0
+checkpoint is saved; initial physical monitors and two full updates are next.
+Read `runtime/outputs/diagnostics/fresh-litter-v1-integration.{json,log}`.
+Do not duplicate or modify that checkout. No paid submission.
+
 Fresh-method preparation now has one executable candidate:
 `research/daily_coarse_graining/fresh_litter_joint_protocol_20260921.md`.
 Keep Attention, fresh seed20260911/fresh AdamW/all109,464,375 parameters;

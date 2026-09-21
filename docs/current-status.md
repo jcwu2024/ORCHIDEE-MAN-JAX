@@ -13,6 +13,12 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
+2026-09-21 free integration RUNNING on gln01 GPU0,1 at7b9e0ae,
+wrapper85836/Python85878,90min ceiling. Free CPU metadata passes; deployed
+JAX0.4.38 synthetic interface check passes in61.64s. Fresh update0 weights
+are saved; two actual joint updates and their monitors are not yet accepted.
+Output: `runtime/outputs/diagnostics/fresh-litter-v1-integration.json`.
+
 2026-09-21 fresh-method implementation: one Attention/direct-joint recipe
 is declared in `research/daily_coarse_graining/fresh_litter_joint_protocol_20260921.md`.
 All parameters and AdamW initialize afresh, with optional litter supervision

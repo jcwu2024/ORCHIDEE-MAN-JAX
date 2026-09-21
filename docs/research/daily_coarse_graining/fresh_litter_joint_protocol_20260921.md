@@ -103,3 +103,29 @@ Prior sustained full-run and litter-arm timings justify roughly4–5h planning
 for1000updates including startup and monitors; it is not a completion promise.
 Keep eight milestone checkpoints plus rolling recovery for the complete pass,
 roughly11GiB plus one temporary checkpoint, with bounded file count.
+
+## Preparation evidence and active check
+
+Training implementation is committed at7b9e0ae. Local checks pass48 existing
+focused tests plus7 optional-composition/resource-segment tests; Ruff and diff
+checks pass. Source bootstrap initializes parameters from the declared seed
+and has no checkpoint load on the fresh path. Target Bash syntax and actual
+argument expansion pass, including integration2 and nondefault GPU mask3,5.
+Free test02 metadata confirms all prepared data and the5415-update schedule.
+The actual GPU JAX0.4.38 runtime-interface check passes in61.64s; it uses
+synthetic arrays and does not establish real-model gradient accuracy.
+
+Free integration launched on gln01 GPU0,1 with90min timeout, wrapper85836,
+Python85878. Immutable checkout `runtime/checkouts/fresh-litter-v1`, report/log
+`runtime/outputs/diagnostics/fresh-litter-v1-integration.{json,log}`. Update0
+checkpoint is saved. Actual two-update completion remains pending.
+
+Independent-panel investigation found four already consulted held-out panels;
+none can be described as a new confirmation set. Prepare48 new windows,
+8 per temporal/spatial/joint split and T7/T30 cell, seed20260921, excluding
+the union of consumed point-years. Split policy: temporal=train/validation;
+spatial=validation/train; joint=validation/validation. No test split is read.
+The existing24-window preparation occupies34MiB, so48 are estimated near68MiB
+and50 regular files plus one directory. This is a bounded validation asset,
+not the full-cache design; no new per-day or per-update files are introduced.
+The new selection and current-model evaluator still require preparation.
