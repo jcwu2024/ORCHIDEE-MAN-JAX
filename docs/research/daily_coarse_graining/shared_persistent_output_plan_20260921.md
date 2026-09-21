@@ -54,3 +54,35 @@ running with30min main-test bound (plus separate5min runtime check), prefix
 `runtime/outputs/diagnostics/shared-persistent-158192f-forward`. Target-shell
 CPU/GPU dry-runs passed before execution. Inspect completed report first;
 v3 native numerical AD/two updates still follow a valid paired forward.
+GPU environment check passed67.73s (synthetic only). Latest observed main
+stage is `initial_canonical_forward`; full physical/loss results are not yet
+available. Do not treat the runtime check or CPU shape pass as v3 numerical AD.
+
+## Prepared next step: shared T7/T30 admission
+
+Reuse `canonical_rollout.make_canonical_step` and the public
+`RolloutLoss.bind_checkpointed_loss_with_aux`; no custom adjoint or old
+architecture/loss recipe. Adapt a window as in
+`scripts/hpc/trained_screen_common.py::PreparedWindowPool.case`: slice
+canonical templates on window/day axes, broadcast the per-window retained
+bundle with `prepared_retained_days`, and initialize from template day0.
+Canonical step overwrites subsequent state/discrete/PFT views from the
+recurrent prediction; later Teacher template states must not teacher-force it.
+
+Assemble day0 once to obtain the common initial stock-defined masks and apply
+them to both prediction and targets in the science extractor. Targets include
+state/defined/GPP/GPP-defined and Teacher fraction/active trajectories; retain
+expected discrete states for physical checks. Use shared trajectory terms
+and generic `recurrent_validation.physical_counts` with compact auxiliaries.
+
+With exactly daily,T7,T30 horizons, the daily contribution is
+`process_day/3 + daily_flux/9 + daily_stock/9`; each recurrent contribution is
+`(flux + stock)/9`. Summing their gradients must match `compose_shared_groups`.
+Averaging the three old standalone totals would incorrectly change weights.
+
+Before joint updates: CPU adapter/shape checks; size-one T7/T30 forward,
+physical counters and measured compiled-memory admission; finite full-tree
+native checkpointed AD and bounded directional checks on the actual loss;
+then two complete optimizer updates with pre/post science/physical reports.
+Preserve expensive gradients before later compilation. This is an
+implementation map, not completed T7/T30 evidence or paid authorization.
