@@ -17,6 +17,9 @@ existing TRAIN artifacts and metadata, without old neural initialization.
 shape/scales and free GPU forward/gradient/two-update admission. The admission
 manifest is not a production-training contract. Existing runners below remain
 historical/current-method assets; the fresh-litter paid proposal stays on hold.
+The first full-gradient compilation exceeded GPU memory; execution-only
+optimization is planned in `research/daily_coarse_graining/shared_decoder_execution_plan_20260921.md`.
+Historical auxiliary categories do not authorize output-capacity reductions.
 
 `scripts/hpc/run_mixed_learning.py` remains the fresh daily/T7/T30 training
 entry. The fresh-litter manifest declares the optional fourth daily coefficient

@@ -80,7 +80,8 @@ There were no nonzero RH examples: this panel cannot certify nonzero RH fit.
 Admission update rows are307.0-095.0/year1961/start86 (artifact819) and
 137.0-087.0/year1963/start171 (artifact982); these are TRAIN, not held-out scores.
 
-Free gln01 GPU0 admission is RUNNING, wrapperPID107435, PythonPID108244. Its report/log prefix
+Free gln01 GPU0 admission has STOPPED; wrapperPID107435 and PythonPID108244
+are inactive. Its report/log prefix
 is `runtime/outputs/diagnostics/shared-transformer-4eeb168-gpu`.
 Check the wrapper with `ssh gln01 'ps -p 107435 -o pid,etime,pcpu,comm'` from
 the login node, or query PythonPID108244 for actual CPU utilization. JSON status and the
@@ -95,6 +96,28 @@ check is distinct from the running real-model test.
 It persists the first full gradient before another compilation, then checks
 saved parameter/optimizer readback. GPU model test timeout60minutes plus a
 separate5minute runtime-check bound; no Slurm job or paid resource charge.
+
+### Collected GPU outcome
+
+Exit1 after2822.12seconds (about47minutes), reason `compiled_gradient_memory`.
+Both initial canonical forwards completed at666.4seconds and every reported
+physical/science hard counter is zero. Compilation finished at2822.1seconds;
+estimated live gradient memory38,842,265,019bytes =36.17GiB, including
+38,237,190,912bytes =35.61GiB temporaries. Parameter/input arguments are0.28GiB.
+The estimate exceeds both the24GiB admission ceiling and physical32GiB V100
+capacity. This was a pre-execution resource rejection, not an observed OOM,
+nonfinite gradient or failed learning experiment. Completed updates:0.
+JVP/reverse agreement and checkpoint replay were not reached.
+Local report: `outputs/shared-transformer-4eeb168-gpu.json`.
+
+The initial loss is also badly imbalanced: state-change anchor1.45136e9 and
+1.32871e9 on the two rows, versus necessary-process labels1.35565/0.65867,
+flux0.04585/0.16122 and stock0.45404/0.85899. The state anchor, not the separate
+carbon science terms, dominates the objective. Its responsible fields and
+scales remain to be diagnosed; this does not establish a specific scaling bug
+or trained-model accuracy. Next reduce decoder gradient intermediates and
+attribute this loss before attempting learning. Do not simply raise the memory
+ceiling, change network architecture or retune loss weights without evidence.
 
 ## Next gates and limitations
 

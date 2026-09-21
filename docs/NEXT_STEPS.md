@@ -19,10 +19,24 @@ Implementation and local/runtime evidence:
 `research/daily_coarse_graining/shared_transformer_implementation_20260921.md`.
 The full shared tree has75,578,497 parameters. Free test02 actual-data
 calibration/forward-gradient tracing PASSED in416.48seconds. Free gln01 GPU0
-admission is running at4eeb168, wrapperPID107435/Python108244,60minute model-test
-bound. Its actual GPU-environment runtime check passed in76.10seconds.
-Collect its report before any next graph: full gradient, JVP/reverse agreement,
-two updates, physical counters and checkpoint readback. No science pass yet.
+admission at4eeb168 STOPPED after2822.12seconds with compiled_gradient_memory;
+wrapper107435/Python108244 have exited. Actual forward and all physical/hard
+counters pass on both TRAIN rows. Estimated full-gradient live memory36.17GiB
+(35.61GiB temporaries) exceeds the32GiB V100 as well as the24GiB admission
+ceiling. No numerical gradient, JVP comparison or optimizer update ran.
+The initial state-change anchor is1.33-1.45e9 and dominates other groups;
+attribute its fields/scales before learning. Next address decoder intermediate
+memory and loss balance, preserving the agreed architecture and physical gates.
+The separate GPU-environment check passed; no scientific acceptance is claimed.
+
+User clarification: the historical auxiliary category is not evidence of low
+long-term importance or sufficient low-capacity heads. Follow
+`research/daily_coarse_graining/shared_decoder_execution_plan_20260921.md`:
+preserve the architecture/capacity and first investigate static PFT gather/
+scatter, identical K/V reuse and native checkpoint/recompute. A metadata-only
+count finds8550 potentially active coordinates out of39006 under the current
+declared PFT layout; other coordinates are already structurally masked, not
+judged scientifically unimportant. Actual memory savings remain unmeasured.
 
 The previous fresh-litter1000-update/24.80yuan paid proposal is ON HOLD, not the
 next submission. Its execution evidence, checkpoints and data remain valid
