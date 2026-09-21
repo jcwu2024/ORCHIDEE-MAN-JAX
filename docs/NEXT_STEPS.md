@@ -8,12 +8,17 @@ validation. Do not start another neural training job until Gates A-C pass.
 
 ## Current execution gate (2026-09-21)
 
-Free fresh-litter integration RUNNING on gln01 GPU0,1, immutable7b9e0ae;
-wrapper85836/Python85878,90min ceiling. Metadata plan and deployed small
-runtime check passed (61.64s). Fresh initialization completed and update0
-checkpoint is saved; initial physical monitors and two full updates are next.
-Read `runtime/outputs/diagnostics/fresh-litter-v1-integration.{json,log}`.
-Do not duplicate or modify that checkout. No paid submission.
+Fresh-litter free integration COMPLETED0 at7b9e0ae in2560s: two full joint
+updates, zero hard counters, complete monitors and persisted-forward replay
+pass. Warm second update7.52s; peak used memory16.07/2.65GiB (reserved26.98GiB
+each). Scientific acceptance remains false. GPU process85878 is inactive.
+See `research/daily_coarse_graining/fresh_litter_admission_results_20260921.md`.
+The48-window metadata-only held-out selection passed at96fa02d, excluding239
+point-years from four documented consumed panels. CPU preparation RUNNING
+on test02, wrapper24555,60min ceiling, output
+`runtime/outputs/training/fresh-method-validation-20260921/prepare.log`.
+Finish preparation and read actual artifacts before the paid proposal.
+No paid submission; preserve training checkout7b9e0ae.
 
 Fresh-method preparation now has one executable candidate:
 `research/daily_coarse_graining/fresh_litter_joint_protocol_20260921.md`.

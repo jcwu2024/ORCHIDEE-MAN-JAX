@@ -13,11 +13,14 @@ describe an earlier gate without being rewritten.
 
 ## Active Daily-Coarse-Graining Gate
 
-2026-09-21 free integration RUNNING on gln01 GPU0,1 at7b9e0ae,
-wrapper85836/Python85878,90min ceiling. Free CPU metadata passes; deployed
-JAX0.4.38 synthetic interface check passes in61.64s. Fresh update0 weights
-are saved; two actual joint updates and their monitors are not yet accepted.
-Output: `runtime/outputs/diagnostics/fresh-litter-v1-integration.json`.
+2026-09-21 free integration COMPLETED0 on gln01 GPU0,1 at7b9e0ae,
+2560s, two fresh full-network joint updates. Physical/hard checks and checkpoint
+replay pass; no scientific acceptance. Gradient norms2499/5352 with strong
+clipping; fixed-day learning is tiny, not a trained-model result. Warm second
+update7.52s; actual allocator peaks16.07/2.65GiB. See
+`research/daily_coarse_graining/fresh_litter_admission_results_20260921.md`.
+New48 held-out windows selected at96fa02d, exclude239 consumed point-years,
+no sealed-test use; CPU preparation running on test02 (wrapper24555).
 
 2026-09-21 fresh-method implementation: one Attention/direct-joint recipe
 is declared in `research/daily_coarse_graining/fresh_litter_joint_protocol_20260921.md`.

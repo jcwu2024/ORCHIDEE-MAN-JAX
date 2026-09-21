@@ -20,7 +20,8 @@ an earlier experiment and does not control current work.
 
 | Document | Status | Read when |
 | --- | --- | --- |
-| `research/daily_coarse_graining/fresh_litter_joint_protocol_20260921.md` | Executable fresh recipe; free integration pending, no paid submission | From-init litter supervision, whole-network joint training, resumable1000-update resource proposal |
+| `research/daily_coarse_graining/fresh_litter_admission_results_20260921.md` | Free dual-GPU integration COMPLETED0; two updates and physical/replay checks pass | Actual runtime/memory, limited learning evidence and pending24.80yuan paid proposal |
+| `research/daily_coarse_graining/fresh_litter_joint_protocol_20260921.md` | Frozen fresh recipe; free integration passed, no paid submission | From-init litter supervision, whole-network joint training, resumable1000-update resource proposal |
 | `NEXT_STEPS.md` | Current operation authority | Always |
 | `CODE_MAP.md` | Current repository map | Always |
 | `current-status.md` | Detailed status authority | Looking up accepted evidence |

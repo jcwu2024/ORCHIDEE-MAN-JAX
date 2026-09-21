@@ -1,6 +1,8 @@
 # Fresh joint training with litter supervision from initialization
 
-Status: recipe and launch preparation, pending real-model fresh admission.
+Status: recipe frozen; free two-update real-model admission passed at7b9e0ae.
+See `fresh_litter_admission_results_20260921.md`; its completion supersedes
+the initial launch record at the end of this document.
 No new paid run is submitted or authorized. This is a method-development
 candidate, not the accepted final scientific model.
 
